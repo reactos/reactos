@@ -39,11 +39,6 @@ static HWND hTotalsHandleCountEdit;          /* Total Handles Edit Control */
 static HWND hTotalsProcessCountEdit;         /* Total Processes Edit Control */
 static HWND hTotalsThreadCountEdit;          /* Total Threads Edit Control */
 
-#ifdef RUN_PERF_PAGE
-static HANDLE hPerformanceThread = NULL;
-static DWORD  dwPerformanceThread;
-#endif
-
 static int nPerformancePageWidth;
 static int nPerformancePageHeight;
 static int lastX, lastY;
@@ -106,9 +101,6 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY:
             GraphCtrl_Dispose(&PerformancePageCpuUsageHistoryGraph);
             GraphCtrl_Dispose(&PerformancePageMemUsageHistoryGraph);
-#ifdef RUN_PERF_PAGE
-            EndLocalThread(&hPerformanceThread, dwPerformanceThread);
-#endif
             break;
 
         case WM_INITDIALOG:
@@ -178,11 +170,6 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 EndDialog(hDlg, 0);
                 return FALSE;
             }
-
-            /* Start our refresh thread */
-#ifdef RUN_PERF_PAGE
-            hPerformanceThread = CreateThread(NULL, 0, PerformancePageRefreshThread, NULL, 0, &dwPerformanceThread);
-#endif
 
             /*
              * Subclass graph buttons
@@ -289,11 +276,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void RefreshPerformancePage(void)
 {
-#ifdef RUN_PERF_PAGE
-    /* Signal the event so that our refresh thread
-     * will wake up and refresh the performance page */
-    PostThreadMessage(dwPerformanceThread, WM_TIMER, 0, 0);
-#endif
+    PerformancePageRefreshThread(NULL);
 }
 
 DWORD WINAPI PerformancePageRefreshThread(PVOID Parameter)
@@ -317,8 +300,6 @@ DWORD WINAPI PerformancePageRefreshThread(PVOID Parameter)
     ULONG TotalThreads;
     ULONG TotalProcesses;
 
-    MSG msg;
-
     WCHAR Text[260];
     WCHAR szMemUsage[256], szCpuUsage[256], szProcesses[256];
 
@@ -326,19 +307,20 @@ DWORD WINAPI PerformancePageRefreshThread(PVOID Parameter)
     LoadStringW(hInst, IDS_STATUS_MEMUSAGE, szMemUsage, ARRAYSIZE(szMemUsage));
     LoadStringW(hInst, IDS_STATUS_PROCESSES, szProcesses, ARRAYSIZE(szProcesses));
 
-    while (1)
+    // while (1)
     {
+        // MSG msg;
         int nBarsUsed1;
         int nBarsUsed2;
 
         WCHAR szChargeTotalFormat[256];
         WCHAR szChargeLimitFormat[256];
 
-        /* Wait for an the event or application close */
-        if (GetMessage(&msg, NULL, 0, 0) <= 0)
-            return 0;
+        ///* Wait for an the event or application close */
+        //if (GetMessage(&msg, NULL, 0, 0) <= 0)
+        //    return 0;
 
-        if (msg.message == WM_TIMER)
+        //if (msg.message == WM_TIMER)
         {
             /*
              * Update the commit charge info
