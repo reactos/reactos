@@ -725,7 +725,7 @@ BEGIN
     LTEXT "预览：", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
     GROUPBOX "文件夹图标", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "对于除缩略图以外的所有视图，您可以将标准""文件夹""图标更改为另一个图标。", IDC_STATIC, 15, 180, 210, 25
+    LTEXT "对于除缩略图以外的所有视图，您可以将标准“文件夹”图标更改为另一个图标。", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
     PUSHBUTTON "更改图标(&I)...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
