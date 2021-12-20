@@ -2,6 +2,7 @@
 
 #define TEMP_FILE "shell-notify-temporary.txt"
 #define CLASSNAME L"SHChangeNotify testcase"
+#define EVENT_NAME "SHChangeNotify testcase event"
 
 typedef enum TYPE
 {

@@ -18,6 +18,7 @@ static INT s_nSources = 0;
 static LPITEMIDLIST s_pidl = NULL;
 static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
 static BYTE s_counters[TYPE_MAX + 1];
+static HANDLE s_hEvent = NULL;
 
 static BOOL
 OnCreate(HWND hwnd)
@@ -88,23 +89,38 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
     {
         case SHCNE_RENAMEITEM:
             if (DoPathes(pidl1, pidl2))
+            {
                 s_counters[TYPE_RENAMEITEM] = 1;
+                SetEvent(s_hEvent);
+            }
             break;
         case SHCNE_CREATE:
             if (DoPathes(pidl1, pidl2))
+            {
                 s_counters[TYPE_CREATE] = 1;
+                SetEvent(s_hEvent);
+            }
             break;
         case SHCNE_DELETE:
             if (DoPathes(pidl1, pidl2))
+            {
                 s_counters[TYPE_DELETE] = 1;
+                SetEvent(s_hEvent);
+            }
             break;
         case SHCNE_MKDIR:
             if (DoPathes(pidl1, pidl2))
+            {
                 s_counters[TYPE_MKDIR] = 1;
+                SetEvent(s_hEvent);
+            }
             break;
         case SHCNE_RMDIR:
             if (DoPathes(pidl1, pidl2))
+            {
                 s_counters[TYPE_RMDIR] = 1;
+                SetEvent(s_hEvent);
+            }
             break;
         case SHCNE_MEDIAINSERTED:
             break;
@@ -122,7 +138,10 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
             break;
         case SHCNE_UPDATEDIR:
             if (DoPathes(pidl1, pidl2))
+            {
                 s_counters[TYPE_UPDATEDIR] = 1;
+                SetEvent(s_hEvent);
+            }
             break;
         case SHCNE_UPDATEITEM:
             break;
@@ -134,7 +153,10 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
             break;
         case SHCNE_RENAMEFOLDER:
             if (DoPathes(pidl1, pidl2))
+            {
                 s_counters[TYPE_RENAMEFOLDER] = 1;
+                SetEvent(s_hEvent);
+            }
             break;
         case SHCNE_FREESPACE:
             break;
@@ -265,6 +287,8 @@ wWinMain(HINSTANCE hInstance,
     if (!ParseCommandLine(lpCmdLine))
         return -1;
 
+    s_hEvent = OpenEventA(EVENT_ALL_ACCESS, TRUE, EVENT_NAME);
+
     WNDCLASSW wc;
     ZeroMemory(&wc, sizeof(wc));
     wc.lpfnWndProc = WindowProc;
@@ -291,6 +315,8 @@ wWinMain(HINSTANCE hInstance,
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
+
+    CloseHandle(s_hEvent);
 
     return 0;
 }

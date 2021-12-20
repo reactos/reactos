@@ -14,9 +14,14 @@
 #include <versionhelpers.h>
 #include "SHChangeNotify.h"
 
+//#define DO_TRIVIAL
+//#define NO_INTERRUPT
+//#define INTERRUPT_ONLY
+
 static HWND s_hwnd = NULL;
 static WCHAR s_szSubProgram[MAX_PATH];
 static HANDLE s_hThread = NULL;
+static HANDLE s_hEvent = NULL;
 
 struct TEST_ENTRY;
 
@@ -744,23 +749,42 @@ DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
 static void
 DoTestEntry(const TEST_ENTRY *entry, INT nSources)
 {
+    DWORD flags;
+    LPCSTR pattern;
+
+    ResetEvent(s_hEvent);
+
     if (entry->action)
     {
         (*entry->action)(entry);
     }
 
     if (nSources & SHCNRF_InterruptLevel)
-        Sleep(80);
+    {
+        if (lstrcmpiA(pattern, "0000000") == 0)
+            Sleep(150);
 
-    DWORD flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
-    LPCSTR pattern = PatternFromFlags(flags);
+        for (INT iTry = 0; iTry < 15; ++iTry)
+        {
+            flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
+            pattern = PatternFromFlags(flags);
+            if (lstrcmpiA(pattern, "0000000") != 0 || lstrcmpiA(entry->pattern, "0000000") != 0)
+                break;
+            Sleep(40);
+        }
+    }
+    else
+    {
+        if (WaitForSingleObject(s_hEvent, 100) == WAIT_OBJECT_0)
+        {
+            Sleep(30);
+        }
+
+        flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
+        pattern = PatternFromFlags(flags);
+    }
 
     SendMessageW(s_hwnd, WM_SET_PATHS, 0, 0);
-
-    if (nSources & SHCNRF_InterruptLevel)
-        Sleep(80);
-    else
-        Sleep(50);
 
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     szPath1[0] = szPath2[0] = 0;
@@ -772,14 +796,14 @@ DoTestEntry(const TEST_ENTRY *entry, INT nSources)
     }
     else if (pattern[TYPE_UPDATEDIR] == '1')
     {
-        trace("Line %d: SHCNE_UPDATEDIR\n", entry->line);
+        trace("Line %d: SHCNE_UPDATEDIR: Calm down...\n", entry->line);
+        Sleep(3000);
         if (entry->pattern)
             ok(TRUE, "Line %d:\n", entry->line);
         if (entry->path1)
             ok(TRUE, "Line %d:\n", entry->line);
         if (entry->path2)
             ok(TRUE, "Line %d:\n", entry->line);
-        Sleep(3000);
     }
     else
     {
@@ -930,10 +954,13 @@ GetSubProgramPath(void)
     return TRUE;
 }
 
+#ifndef INTERRUPT_ONLY
 #define SOURCES_00  0
 #define SOURCES_01  SHCNRF_ShellLevel
 #define SOURCES_02  (SHCNRF_NewDelivery)
 #define SOURCES_03  (SHCNRF_NewDelivery | SHCNRF_ShellLevel)
+#endif
+#ifndef NO_INTERRUPT
 #define SOURCES_04  SHCNRF_InterruptLevel
 #define SOURCES_05  (SHCNRF_InterruptLevel | SHCNRF_ShellLevel)
 #define SOURCES_06  (SHCNRF_InterruptLevel | SHCNRF_NewDelivery)
@@ -942,6 +969,7 @@ GetSubProgramPath(void)
 #define SOURCES_09  (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_ShellLevel)
 #define SOURCES_10  (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_NewDelivery)
 #define SOURCES_11  (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_NewDelivery | SHCNRF_ShellLevel)
+#endif
 
 #define WATCHDIR_0 WATCHDIR_NULL
 #define WATCHDIR_1 WATCHDIR_DESKTOP
@@ -984,6 +1012,13 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
     RemoveDirectoryW(s_szDocumentTestDir);
     RemoveDirectoryW(s_szDocumentTestDirRenamed);
 
+    if (s_hEvent)
+    {
+        CloseHandle(s_hEvent);
+        s_hEvent = NULL;
+    }
+    s_hEvent = CreateEventA(NULL, TRUE, FALSE, EVENT_NAME);
+
     WCHAR szParams[64];
     wsprintfW(szParams, L"%u,%u,%u", fRecursive, iWatchDir, nSources);
 
@@ -1017,15 +1052,24 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
     DoEnd();
 
     DoWaitForWindow(TRUE);
+
+    if (s_hEvent)
+    {
+        CloseHandle(s_hEvent);
+        s_hEvent = NULL;
+    }
 }
 
 static unsigned __stdcall TestThreadProc(void *)
 {
     // fRecursive == FALSE.
+#ifndef INTERRUPT_ONLY
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SOURCES_01, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SOURCES_03, WATCHDIR_0);
+#endif
+#ifndef NO_INTERRUPT
     DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SOURCES_04, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SOURCES_05, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SOURCES_06, WATCHDIR_0);
@@ -1034,10 +1078,15 @@ static unsigned __stdcall TestThreadProc(void *)
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SOURCES_09, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SOURCES_10, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SOURCES_11, WATCHDIR_0);
+#endif
+
+#ifndef INTERRUPT_ONLY
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SOURCES_01, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SOURCES_03, WATCHDIR_1);
+#endif
+#ifndef NO_INTERRUPT
     if (IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater())
         DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_04, WATCHDIR_1);
     else
@@ -1049,10 +1098,16 @@ static unsigned __stdcall TestThreadProc(void *)
     DoTestGroup(__LINE__, _countof(s_group_13), s_group_13, FALSE, SOURCES_09, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_12), s_group_12, FALSE, SOURCES_10, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_13), s_group_13, FALSE, SOURCES_11, WATCHDIR_1);
+#endif
+
+#ifdef DO_TRIVIAL
+# ifndef INTERRUPT_ONLY
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_01, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_03, WATCHDIR_2);
+# endif
+# ifndef NO_INTERRUPT
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_04, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_05, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_06, WATCHDIR_2);
@@ -1061,10 +1116,16 @@ static unsigned __stdcall TestThreadProc(void *)
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_09, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_10, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_11, WATCHDIR_2);
+# endif
+#endif
+
+#ifndef INTERRUPT_ONLY
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SOURCES_01, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SOURCES_03, WATCHDIR_3);
+#endif
+#ifndef NO_INTERRUPT
     DoTestGroup(__LINE__, _countof(s_group_14), s_group_14, FALSE, SOURCES_04, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_15), s_group_15, FALSE, SOURCES_05, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_14), s_group_14, FALSE, SOURCES_06, WATCHDIR_3);
@@ -1073,11 +1134,16 @@ static unsigned __stdcall TestThreadProc(void *)
     DoTestGroup(__LINE__, _countof(s_group_15), s_group_15, FALSE, SOURCES_09, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_14), s_group_14, FALSE, SOURCES_10, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_16), s_group_16, FALSE, SOURCES_11, WATCHDIR_3);
+#endif
+
     // fRecursive == TRUE.
+#ifndef INTERRUPT_ONLY
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_0);
+#endif
+#ifndef NO_INTERRUPT
     DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_04, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_05, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_12), s_group_12, TRUE, SOURCES_06, WATCHDIR_0);
@@ -1086,10 +1152,15 @@ static unsigned __stdcall TestThreadProc(void *)
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_09, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_10), s_group_10, TRUE, SOURCES_10, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_11, WATCHDIR_0);
+#endif
+
+#ifndef INTERRUPT_ONLY
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_1);
+#endif
+#ifndef NO_INTERRUPT
     DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_04, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_05, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_12), s_group_12, TRUE, SOURCES_06, WATCHDIR_1);
@@ -1098,10 +1169,15 @@ static unsigned __stdcall TestThreadProc(void *)
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_09, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_10), s_group_10, TRUE, SOURCES_10, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_11, WATCHDIR_1);
+#endif
+
+#ifndef INTERRUPT_ONLY
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_2);
+#endif
+#ifndef NO_INTERRUPT
     DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_04, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_05, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_12), s_group_12, TRUE, SOURCES_06, WATCHDIR_2);
@@ -1110,10 +1186,15 @@ static unsigned __stdcall TestThreadProc(void *)
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_09, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_10), s_group_10, TRUE, SOURCES_10, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_11, WATCHDIR_2);
+#endif
+
+#ifndef INTERRUPT_ONLY
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, TRUE, SOURCES_01, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_03, WATCHDIR_3);
+#endif
+#ifndef NO_INTERRUPT
     DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, TRUE, SOURCES_04, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_16), s_group_16, TRUE, SOURCES_05, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_14), s_group_14, TRUE, SOURCES_06, WATCHDIR_3);
@@ -1122,6 +1203,8 @@ static unsigned __stdcall TestThreadProc(void *)
     DoTestGroup(__LINE__, _countof(s_group_15), s_group_15, TRUE, SOURCES_09, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_14), s_group_14, TRUE, SOURCES_10, WATCHDIR_3);
     DoTestGroup(__LINE__, _countof(s_group_16), s_group_16, TRUE, SOURCES_11, WATCHDIR_3);
+#endif
+
     return 0;
 }
 
