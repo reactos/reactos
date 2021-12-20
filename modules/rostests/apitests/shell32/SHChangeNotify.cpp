@@ -11,6 +11,7 @@
 #include <shlwapi.h>
 #include <stdio.h>
 #include <process.h> // for _beginthreadex
+#include <versionhelpers.h>
 #include "SHChangeNotify.h"
 
 static HWND s_hwnd = NULL;
@@ -29,6 +30,7 @@ typedef struct TEST_ENTRY
     LPCWSTR path1;
     LPCWSTR path2;
     ACTION action;
+    LPCWSTR path3;
 } TEST_ENTRY;
 
 static BOOL
@@ -165,12 +167,14 @@ DoAction12(const TEST_ENTRY *pEntry)
 }
 
 #define WRITEDIR_0 WATCHDIR_DESKTOP
+static WCHAR s_szDesktop[MAX_PATH];
 static WCHAR s_szDesktopTestFile[MAX_PATH];
 static WCHAR s_szDesktopTestFileRenamed[MAX_PATH];
 static WCHAR s_szDesktopTestDir[MAX_PATH];
 static WCHAR s_szDesktopTestDirRenamed[MAX_PATH];
 
 #define WRITEDIR_1 WATCHDIR_MYDOCUMENTS
+static WCHAR s_szDocuments[MAX_PATH];
 static WCHAR s_szDocumentTestFile[MAX_PATH];
 static WCHAR s_szDocumentTestFileRenamed[MAX_PATH];
 static WCHAR s_szDocumentTestDir[MAX_PATH];
@@ -218,10 +222,10 @@ static const TEST_ENTRY s_group_01[] =
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction12 },
+    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction9, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction10, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction11, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction12, s_szDesktop },
 
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
@@ -232,10 +236,10 @@ static const TEST_ENTRY s_group_01[] =
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12 },
+    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12, s_szDocumentTestDir },
 };
 
 static const TEST_ENTRY s_group_02[] =
@@ -249,10 +253,10 @@ static const TEST_ENTRY s_group_02[] =
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction12 },
+    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction9, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction10, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction11, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction12, s_szDesktop },
 
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
@@ -263,10 +267,10 @@ static const TEST_ENTRY s_group_02[] =
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12 },
+    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12, s_szDocumentTestDir },
 };
 
 static const TEST_ENTRY s_group_03[] =
@@ -294,10 +298,10 @@ static const TEST_ENTRY s_group_03[] =
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12 },
+    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12, s_szDocumentTestDir },
 };
 
 static const TEST_ENTRY s_group_04[] =
@@ -325,72 +329,10 @@ static const TEST_ENTRY s_group_04[] =
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_05[] =
-{
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_06[] =
-{
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12 },
+    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12, s_szDocumentTestDir },
 };
 
 static const TEST_ENTRY s_group_07[] =
@@ -404,10 +346,10 @@ static const TEST_ENTRY s_group_07[] =
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction12 },
+    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction9, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction10, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction11, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction12, s_szDesktop },
 
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
@@ -435,10 +377,10 @@ static const TEST_ENTRY s_group_08[] =
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction12 },
+    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction9, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction10, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction11, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction12, s_szDesktop },
 
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
@@ -455,79 +397,17 @@ static const TEST_ENTRY s_group_08[] =
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_group_09[] =
-{
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_10[] =
-{
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction12 },
-};
-
 static const TEST_ENTRY s_group_11[] =
 {
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szDesktopTestFile, s_szDesktopTestFileRenamed, DoAction2 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szDesktopTestFileRenamed, s_szDesktopTestFile, DoAction3 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szDesktopTestDir, s_szDesktopTestDirRenamed, DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szDesktopTestDirRenamed, s_szDesktopTestDir, DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction8 },
+    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction1, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "1000000", s_szDesktopTestFile, s_szDesktopTestFileRenamed, DoAction2, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "1000000", s_szDesktopTestFileRenamed, s_szDesktopTestFile, DoAction3, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction4, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction5, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0000010", s_szDesktopTestDir, s_szDesktopTestDirRenamed, DoAction6, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0000010", s_szDesktopTestDirRenamed, s_szDesktopTestDir, DoAction7, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction8, s_szDesktop },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction11 },
@@ -565,14 +445,14 @@ static const TEST_ENTRY s_group_12[] =
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
 
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_1, "0100000", s_szDocumentTestFile, L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "1000000", s_szDocumentTestFile, s_szDocumentTestFileRenamed, DoAction2 },
-    { __LINE__, WRITEDIR_1, "1000000", s_szDocumentTestFileRenamed, s_szDocumentTestFile, DoAction3 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000010", s_szDocumentTestDir, s_szDocumentTestDirRenamed, DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000010", s_szDocumentTestDirRenamed, s_szDocumentTestDir, DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction8 },
+    { __LINE__, WRITEDIR_1, NULL, NULL, L"", DoAction1, s_szDocuments }, // Why?
+    { __LINE__, WRITEDIR_1, "1000000", s_szDocumentTestFile, s_szDocumentTestFileRenamed, DoAction2, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "1000000", s_szDocumentTestFileRenamed, s_szDocumentTestFile, DoAction3, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0010000", s_szDocumentTestFile, L"", DoAction4, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0001000", s_szDocumentTestDir, L"", DoAction5, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0000010", s_szDocumentTestDir, s_szDocumentTestDirRenamed, DoAction6, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0000010", s_szDocumentTestDirRenamed, s_szDocumentTestDir, DoAction7, s_szDocuments },
+    { __LINE__, WRITEDIR_1, "0000100", s_szDocumentTestDir, L"", DoAction8, s_szDocuments },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction9 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction10 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction11 },
@@ -582,45 +462,14 @@ static const TEST_ENTRY s_group_12[] =
 static const TEST_ENTRY s_group_13[] =
 {
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szDesktopTestFile, s_szDesktopTestFileRenamed, DoAction2 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szDesktopTestFileRenamed, s_szDesktopTestFile, DoAction3 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szDesktopTestDir, s_szDesktopTestDirRenamed, DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szDesktopTestDirRenamed, s_szDesktopTestDir, DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_14[] =
-{
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", NULL },
-    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szDesktopTestFile, s_szDesktopTestFileRenamed, DoAction2 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szDesktopTestFileRenamed, s_szDesktopTestFile, DoAction3 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szDesktopTestDir, s_szDesktopTestDirRenamed, DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szDesktopTestDirRenamed, s_szDesktopTestDir, DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction8 },
+    { __LINE__, WRITEDIR_0, "0100000", s_szDesktopTestFile, L"", DoAction1, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "1000000", s_szDesktopTestFile, s_szDesktopTestFileRenamed, DoAction2, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "1000000", s_szDesktopTestFileRenamed, s_szDesktopTestFile, DoAction3, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0010000", s_szDesktopTestFile, L"", DoAction4, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0001000", s_szDesktopTestDir, L"", DoAction5, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0000010", s_szDesktopTestDir, s_szDesktopTestDirRenamed, DoAction6, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0000010", s_szDesktopTestDirRenamed, s_szDesktopTestDir, DoAction7, s_szDesktop },
+    { __LINE__, WRITEDIR_0, "0000100", s_szDesktopTestDir, L"", DoAction8, s_szDesktop },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction11 },
@@ -685,7 +534,7 @@ DoTestEntry(const TEST_ENTRY *entry, INT nSources)
     }
 
     if (nSources & SHCNRF_InterruptLevel)
-        Sleep(150);
+        Sleep(100);
 
     DWORD flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
     LPCSTR pattern = PatternFromFlags(flags);
@@ -708,9 +557,22 @@ DoTestEntry(const TEST_ENTRY *entry, INT nSources)
     else if (pattern[TYPE_UPDATEDIR] == '1')
     {
         trace("Line %d: SHCNE_UPDATEDIR\n", entry->line);
-        ok(TRUE, "Line %d:\n", entry->line);
-        ok(TRUE, "Line %d:\n", entry->line);
-        ok(TRUE, "Line %d:\n", entry->line);
+        if (entry->pattern)
+            ok(TRUE, "Line %d:\n", entry->line);
+        if (entry->path1)
+        {
+            if (entry->path3)
+            {
+                ok(bOK && lstrcmpiW(entry->path3, szPath1) == 0,
+                   "Line %d: path3 mismatch '%S' (%d)\n", entry->line, szPath1, bOK);
+            }
+            else
+            {
+                ok(TRUE, "Line %d:\n", entry->line);
+            }
+        }
+        if (entry->path2)
+            ok(TRUE, "Line %d:\n", entry->line);
     }
     else
     {
@@ -767,6 +629,9 @@ DoInit(void)
     LPWSTR psz;
 
     psz = GetWatchDir(WATCHDIR_DESKTOP);
+    lstrcpynW(s_szDesktop, psz, _countof(s_szDesktop));
+
+    psz = GetWatchDir(WATCHDIR_DESKTOP);
     PathAppendW(psz, TEST_FILE);
     lstrcpynW(s_szDesktopTestFile, psz, _countof(s_szDesktopTestFile));
 
@@ -781,6 +646,9 @@ DoInit(void)
     psz = GetWatchDir(WATCHDIR_DESKTOP);
     PathAppendW(psz, TEST_DIR_RENAMED);
     lstrcpynW(s_szDesktopTestDirRenamed, psz, _countof(s_szDesktopTestDirRenamed));
+
+    psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
+    lstrcpynW(s_szDocuments, psz, _countof(s_szDocuments));
 
     psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
     PathAppendW(psz, TEST_FILE);
@@ -868,62 +736,6 @@ GetSubProgramPath(void)
 #define WATCHDIR_2 WATCHDIR_MYCOMPUTER
 #define WATCHDIR_3 WATCHDIR_MYDOCUMENTS
 
-typedef struct TEST_GROUP
-{
-    INT line;
-    UINT cEntries;
-    const TEST_ENTRY *pEntries;
-    BOOL fRecursive;
-    INT nSources;
-    WATCHDIR iWatchDir;
-} TEST_GROUP;
-
-static const TEST_GROUP s_groups[] =
-{
-    // fRecursive == FALSE.
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_0 },
-    { __LINE__, _countof(s_group_05), s_group_05, FALSE, SOURCES_01, WATCHDIR_0 },
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_0 },
-    { __LINE__, _countof(s_group_06), s_group_06, FALSE, SOURCES_03, WATCHDIR_0 },
-    { __LINE__, _countof(s_group_11), s_group_11, FALSE, SOURCES_04, WATCHDIR_0 },
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_1 },
-    { __LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_01, WATCHDIR_1 },
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_1 },
-    { __LINE__, _countof(s_group_08), s_group_08, FALSE, SOURCES_03, WATCHDIR_1 },
-    { __LINE__, _countof(s_group_14), s_group_14, FALSE, SOURCES_04, WATCHDIR_1 },
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_2 },
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_01, WATCHDIR_2 },
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_2 },
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_03, WATCHDIR_2 },
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_04, WATCHDIR_2 },
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_3 },
-    { __LINE__, _countof(s_group_09), s_group_09, FALSE, SOURCES_01, WATCHDIR_3 },
-    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_3 },
-    { __LINE__, _countof(s_group_10), s_group_10, FALSE, SOURCES_03, WATCHDIR_3 },
-    { __LINE__, _countof(s_group_12), s_group_12, FALSE, SOURCES_04, WATCHDIR_3 },
-    // fRecursive == TRUE.
-    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_0 },
-    { __LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_0 },
-    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_0 },
-    { __LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_0 },
-    { __LINE__, _countof(s_group_11), s_group_11, TRUE, SOURCES_04, WATCHDIR_0 },
-    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_1 },
-    { __LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_1 },
-    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_1 },
-    { __LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_1 },
-    { __LINE__, _countof(s_group_11), s_group_11, TRUE, SOURCES_04, WATCHDIR_1 },
-    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_2 },
-    { __LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_2 },
-    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_2 },
-    { __LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_2 },
-    { __LINE__, _countof(s_group_13), s_group_13, TRUE, SOURCES_04, WATCHDIR_2 },
-    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_3 },
-    { __LINE__, _countof(s_group_03), s_group_03, TRUE, SOURCES_01, WATCHDIR_3 },
-    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_3 },
-    { __LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_03, WATCHDIR_3 },
-    { __LINE__, _countof(s_group_12), s_group_12, TRUE, SOURCES_04, WATCHDIR_3 },
-};
-
 static void DoWaitForWindow(BOOL bClosing)
 {
     for (INT i = 0; i < 15; ++i)
@@ -944,15 +756,10 @@ static void DoWaitForWindow(BOOL bClosing)
     }
 }
 
-static void DoTestGroup(const TEST_GROUP *pGroup)
+static void
+DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive,
+            INT nSources, WATCHDIR iWatchDir)
 {
-    INT               line          = pGroup->line;
-    UINT              cEntries      = pGroup->cEntries;
-    const TEST_ENTRY *pEntries      = pGroup->pEntries;
-    BOOL              fRecursive    = pGroup->fRecursive;
-    INT               nSources      = pGroup->nSources;
-    WATCHDIR          iWatchDir     = pGroup->iWatchDir;
-
     trace("DoTestGroup: Line %d, fRecursive:%u, iWatchDir:%u, nSources:0x%08X\n",
           line, fRecursive, iWatchDir, nSources);
 
@@ -1002,10 +809,51 @@ static void DoTestGroup(const TEST_GROUP *pGroup)
 
 static unsigned __stdcall TestThreadProc(void *)
 {
-    for (UINT iGroup = 0; iGroup < _countof(s_groups); ++iGroup)
-    {
-        DoTestGroup(&s_groups[iGroup]);
-    }
+    // fRecursive == FALSE.
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SOURCES_01, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SOURCES_03, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_11), s_group_11, FALSE, SOURCES_04, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_01, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SOURCES_03, WATCHDIR_1);
+    if (IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater())
+        DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_04, WATCHDIR_1);
+    else
+        DoTestGroup(__LINE__, _countof(s_group_13), s_group_13, FALSE, SOURCES_04, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_01, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_03, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_04, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SOURCES_01, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SOURCES_03, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_12), s_group_12, FALSE, SOURCES_04, WATCHDIR_3);
+    // fRecursive == TRUE.
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_11), s_group_11, TRUE, SOURCES_04, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_11), s_group_11, TRUE, SOURCES_04, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_13), s_group_13, TRUE, SOURCES_04, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, TRUE, SOURCES_01, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_03, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_12), s_group_12, TRUE, SOURCES_04, WATCHDIR_3);
     return 0;
 }
 
