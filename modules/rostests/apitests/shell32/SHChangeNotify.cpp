@@ -28,7 +28,7 @@ typedef struct TEST_ENTRY
     LPCWSTR path1;
     LPCWSTR path2;
     ACTION action;
-} TEST_ENTRY, *LPTEST_ENTRY;
+} TEST_ENTRY;
 
 static BOOL
 DoCreateEmptyFile(LPCWSTR pszFileName)
@@ -168,7 +168,7 @@ static WCHAR s_szDocumentTestFileRenamed[MAX_PATH];
 static WCHAR s_szDocumentTestDir[MAX_PATH];
 static WCHAR s_szDocumentTestDirRenamed[MAX_PATH];
 
-static const TEST_ENTRY s_group_0[] =
+static const TEST_ENTRY s_group_00[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -199,7 +199,7 @@ static const TEST_ENTRY s_group_0[] =
     { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_group_1[] =
+static const TEST_ENTRY s_group_01[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -230,7 +230,7 @@ static const TEST_ENTRY s_group_1[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_group_2[] =
+static const TEST_ENTRY s_group_02[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -261,7 +261,7 @@ static const TEST_ENTRY s_group_2[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_group_3[] =
+static const TEST_ENTRY s_group_03[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -292,7 +292,7 @@ static const TEST_ENTRY s_group_3[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_group_4[] =
+static const TEST_ENTRY s_group_04[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -323,7 +323,7 @@ static const TEST_ENTRY s_group_4[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_group_5[] =
+static const TEST_ENTRY s_group_05[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -354,7 +354,7 @@ static const TEST_ENTRY s_group_5[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_group_6[] =
+static const TEST_ENTRY s_group_06[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -385,7 +385,7 @@ static const TEST_ENTRY s_group_6[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_group_7[] =
+static const TEST_ENTRY s_group_07[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -416,7 +416,7 @@ static const TEST_ENTRY s_group_7[] =
     { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_group_8[] =
+static const TEST_ENTRY s_group_08[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -447,7 +447,7 @@ static const TEST_ENTRY s_group_8[] =
     { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_group_9[] =
+static const TEST_ENTRY s_group_09[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -685,10 +685,73 @@ GetSubProgramPath(void)
     return TRUE;
 }
 
-static void
-DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, INT nSources,
-            BOOL fRecursive, WATCHDIR iWatchDir)
+#define SOURCES_00   0
+#define SOURCES_01   SHCNRF_ShellLevel
+#define SOURCES_02   (SHCNRF_NewDelivery)
+#define SOURCES_03   (SHCNRF_NewDelivery | SHCNRF_ShellLevel)
+// TODO: SHCNRF_InterruptLevel, SHCNRF_RecursiveInterrupt
+
+#define WATCHDIR_0 WATCHDIR_NULL
+#define WATCHDIR_1 WATCHDIR_DESKTOP
+#define WATCHDIR_2 WATCHDIR_MYCOMPUTER
+#define WATCHDIR_3 WATCHDIR_MYDOCUMENTS
+
+typedef struct TEST_GROUP
 {
+    INT line;
+    UINT cEntries;
+    const TEST_ENTRY *pEntries;
+    BOOL fRecursive;
+    INT nSources;
+    WATCHDIR iWatchDir;
+} TEST_GROUP;
+
+static const TEST_GROUP s_groups[] =
+{
+    // fRecursive == FALSE.
+    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_0 },
+    { __LINE__, _countof(s_group_05), s_group_05, FALSE, SOURCES_01, WATCHDIR_0 },
+    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_0 },
+    { __LINE__, _countof(s_group_06), s_group_06, FALSE, SOURCES_03, WATCHDIR_0 },
+    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_1 },
+    { __LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_01, WATCHDIR_1 },
+    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_1 },
+    { __LINE__, _countof(s_group_08), s_group_08, FALSE, SOURCES_03, WATCHDIR_1 },
+    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_2 },
+    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_01, WATCHDIR_2 },
+    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_2 },
+    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_03, WATCHDIR_2 },
+    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_3 },
+    { __LINE__, _countof(s_group_09), s_group_09, FALSE, SOURCES_01, WATCHDIR_3 },
+    { __LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_3 },
+    { __LINE__, _countof(s_group_10), s_group_10, FALSE, SOURCES_03, WATCHDIR_3 },
+    // fRecursive == TRUE.
+    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_0 },
+    { __LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_0 },
+    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_0 },
+    { __LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_0 },
+    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_1 },
+    { __LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_1 },
+    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_1 },
+    { __LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_1 },
+    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_2 },
+    { __LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_2 },
+    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_2 },
+    { __LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_2 },
+    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_3 },
+    { __LINE__, _countof(s_group_03), s_group_03, TRUE, SOURCES_01, WATCHDIR_3 },
+    { __LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_3 },
+    { __LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_03, WATCHDIR_3 },
+};
+
+static void DoTestGroup(const TEST_GROUP *pGroup)
+{
+    INT line = pGroup->line;
+    UINT cEntries = pGroup->cEntries;
+    const TEST_ENTRY *pEntries = pGroup->pEntries;
+    BOOL fRecursive = pGroup->fRecursive;
+    INT nSources = pGroup->nSources;
+    WATCHDIR iWatchDir = pGroup->iWatchDir;
     trace("DoTestGroup: Line %d, fRecursive:%u, iWatchDir:%u, nSources:0x%08X\n",
           line, fRecursive, iWatchDir, nSources);
 
@@ -732,61 +795,26 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, INT nSources,
     }
 }
 
-#define SOURCES_00   0
-#define SOURCES_01   SHCNRF_ShellLevel
-#define SOURCES_02   (SHCNRF_NewDelivery)
-#define SOURCES_03   (SHCNRF_NewDelivery | SHCNRF_ShellLevel)
-// TODO: SHCNRF_InterruptLevel, SHCNRF_RecursiveInterrupt
-
-#define WATCHDIR_0 WATCHDIR_NULL
-#define WATCHDIR_1 WATCHDIR_DESKTOP
-#define WATCHDIR_2 WATCHDIR_MYCOMPUTER
-#define WATCHDIR_3 WATCHDIR_MYDOCUMENTS
-
 static unsigned __stdcall TestThreadProc(void *)
 {
-    // fRecursive == TRUE.
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, TRUE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_1), s_group_1, SOURCES_01, TRUE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, TRUE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_2), s_group_2, SOURCES_03, TRUE, WATCHDIR_0);
-
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, TRUE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_1), s_group_1, SOURCES_01, TRUE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, TRUE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_2), s_group_2, SOURCES_03, TRUE, WATCHDIR_1);
-
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, TRUE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_1), s_group_1, SOURCES_01, TRUE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, TRUE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_2), s_group_2, SOURCES_03, TRUE, WATCHDIR_2);
-
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, TRUE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_3), s_group_3, SOURCES_01, TRUE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, TRUE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_4), s_group_4, SOURCES_03, TRUE, WATCHDIR_3);
-
-    // fRecursive == FALSE.
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, FALSE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_5), s_group_5, SOURCES_01, FALSE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, FALSE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_6), s_group_6, SOURCES_03, FALSE, WATCHDIR_0);
-
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, FALSE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_7), s_group_7, SOURCES_01, FALSE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, FALSE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_8), s_group_8, SOURCES_03, FALSE, WATCHDIR_1);
-
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, FALSE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_01, FALSE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, FALSE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_03, FALSE, WATCHDIR_2);
-
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, FALSE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_9), s_group_9, SOURCES_01, FALSE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, FALSE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_10), s_group_10, SOURCES_03, FALSE, WATCHDIR_3);
-
+    for (UINT iGroup0 = 0; iGroup0 < _countof(s_groups); ++iGroup0)
+    {
+        for (UINT iGroup1 = iGroup0 + 1; iGroup1 < _countof(s_groups); ++iGroup1)
+        {
+            const TEST_GROUP *pGroup0 = &s_groups[iGroup0];
+            const TEST_GROUP *pGroup1 = &s_groups[iGroup1];
+            if (pGroup0->cEntries != pGroup1->cEntries)
+                continue;
+            if (memcmp(pGroup0, pGroup1, pGroup0->cEntries * sizeof(TEST_ENTRY)) == 0)
+            {
+                trace("Group %u and Group %u are same.\n", iGroup0, iGroup1);
+            }
+        }
+    }
+    for (UINT iGroup = 0; iGroup < _countof(s_groups); ++iGroup)
+    {
+        DoTestGroup(&s_groups[iGroup]);
+    }
     return 0;
 }
 
