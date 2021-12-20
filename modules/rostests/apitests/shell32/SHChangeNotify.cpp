@@ -9,17 +9,22 @@
 
 #include "shelltest.h"
 #include <shlwapi.h>
+#include <stdlib.h>
 #include <stdio.h>
-#include <process.h> // for _beginthreadex
+#include <time.h>
+#include <process.h>
 #include <versionhelpers.h>
 #include "SHChangeNotify.h"
 
+// The selection of tests
 //#define DO_TRIVIAL
 //#define NO_INTERRUPT_LEVEL
 //#define NO_SHELL_LEVEL
 //#define SHELL_LEVEL_ONLY
 //#define INTERRUPT_LEVEL_ONLY
 #define NEW_DELIVERY_ONLY
+#define RANDOM_HAlF
+
 //#define ENTRY_TICK
 //#define GROUP_TICK
 #define TOTAL_TICK
@@ -684,6 +689,11 @@ DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
 static void
 DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
 {
+#ifdef RANDOM_HAlF
+    if (rand() & 1)
+        return;
+#endif
+
     DWORD flags;
     LPCSTR pattern;
 #ifdef ENTRY_TICK
@@ -1041,6 +1051,11 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
 
 static unsigned __stdcall TestThreadProc(void *)
 {
+#ifdef RANDOM_HAlF
+    srand(time(NULL));
+    skip("RANDOM_HAlF\n");
+#endif
+
     // fRecursive == FALSE.
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SOURCES_01, WATCHDIR_0);
