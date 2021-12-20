@@ -698,7 +698,7 @@ DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
     if (nSources & SHCNRF_InterruptLevel)
     {
         // The event won't work at here. Manually waiting...
-        UINT cTry = ((iEntry == 0) ? 100 : 50);
+        UINT cTry = ((iEntry == 0) ? 100 : 60);
         for (UINT iTry = 0; iTry < cTry; ++iTry)
         {
             flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
@@ -725,17 +725,22 @@ DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     szPath1[0] = szPath2[0] = 0;
     BOOL bOK = DoGetPaths(szPath1, szPath2);
+    static UINT s_cCalmDown = 0;
 
     if (wcsstr(szPath1, L"Recent") != NULL)
     {
         skip("Recent written\n");
+        s_cCalmDown = 0;
     }
     else if (pattern[TYPE_UPDATEDIR] == '1')
     {
-        trace("Line %d: SHCNE_UPDATEDIR: Calm down...\n", entry->line);
+        ++s_cCalmDown;
+        trace("Line %d: SHCNE_UPDATEDIR: Calming down (%u)...\n", entry->line, s_cCalmDown);
 
-        // Calm down.
-        Sleep(3000);
+        if (s_cCalmDown < 3)
+        {
+            Sleep(3000);
+        }
 
         if (entry->pattern)
             ok(TRUE, "Line %d:\n", entry->line);
@@ -746,6 +751,7 @@ DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
     }
     else
     {
+        s_cCalmDown = 0;
         if (entry->pattern)
         {
             ok(strcmp(pattern, entry->pattern) == 0,
@@ -1056,14 +1062,21 @@ static unsigned __stdcall TestThreadProc(void *)
     if (IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater())
         DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_04, WATCHDIR_1);
     else
-        DoTestGroup(__LINE__, _countof(s_group_10), s_group_10, FALSE, SOURCES_04, WATCHDIR_1); // NG
+        DoTestGroup(__LINE__, _countof(s_group_10), s_group_10, FALSE, SOURCES_04, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_09), s_group_09, FALSE, SOURCES_05, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_10), s_group_10, FALSE, SOURCES_06, WATCHDIR_1);
+    if (IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater())
+        DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_06, WATCHDIR_1);
+    else
+        DoTestGroup(__LINE__, _countof(s_group_10), s_group_10, FALSE, SOURCES_06, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_11), s_group_11, FALSE, SOURCES_07, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_12), s_group_12, FALSE, SOURCES_08, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_13), s_group_13, FALSE, SOURCES_09, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_12), s_group_12, FALSE, SOURCES_10, WATCHDIR_1);
+    if (IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater())
+        DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_06, WATCHDIR_1);
+    else
+        DoTestGroup(__LINE__, _countof(s_group_12), s_group_12, FALSE, SOURCES_10, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_13), s_group_13, FALSE, SOURCES_11, WATCHDIR_1);
+#endif
 
 #ifdef DO_TRIVIAL
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_2);
