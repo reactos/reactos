@@ -122,8 +122,8 @@
 #define IDC_MEM_USAGE_GRAPH2             1048
 #define IDC_MEM_USAGE_GRAPH              1048
 #define IDC_CPU30                        1049
-#define IDC_MEM_USAGE_HISTORY_GRAPH      1049
-#define IDC_CPU_USAGE_HISTORY_GRAPH      1050
+#define IDC_CPU_USAGE_HISTORY_GRAPH      1049
+#define IDC_MEM_USAGE_HISTORY_GRAPH      1050
 #define IDC_CPU31                        1051
 
 #define IDS_TOTALS_HANDLE_COUNT          1060

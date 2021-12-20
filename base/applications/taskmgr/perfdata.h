@@ -45,15 +45,24 @@ typedef struct _CMD_LINE_CACHE
     struct _CMD_LINE_CACHE* pnext;
 } CMD_LINE_CACHE, *PCMD_LINE_CACHE;
 
-BOOL	PerfDataInitialize(void);
-void	PerfDataUninitialize(void);
-void	PerfDataRefresh(void);
+BOOL PerfDataInitialize(VOID);
+VOID PerfDataUninitialize(VOID);
+VOID PerfDataRefresh(VOID);
+
+VOID PerfDataAcquireLock(VOID);
+VOID PerfDataReleaseLock(VOID);
 
 BOOL	PerfDataGet(ULONG Index, PPERFDATA *lppData);
 ULONG	PerfDataGetProcessIndex(ULONG pid);
 ULONG	PerfDataGetProcessCount(void);
-ULONG	PerfDataGetProcessorUsage(void);
-ULONG	PerfDataGetProcessorSystemUsage(void);
+
+ULONG PerfDataGetProcessorCount(VOID);
+ULONG PerfDataGetProcessorUsage(VOID);
+ULONG PerfDataGetProcessorSystemUsage(VOID);
+/****/
+ULONG PerfDataGetProcessorUsagePerCPU(ULONG CPUIndex);
+ULONG PerfDataGetProcessorSystemUsagePerCPU(ULONG CPUIndex);
+/****/
 
 BOOL	PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, ULONG nMaxCount);
 ULONG	PerfDataGetProcessId(ULONG Index);
@@ -80,17 +89,23 @@ ULONG	PerfDataGetUSERObjectCount(ULONG Index);
 ULONG	PerfDataGetGDIObjectCount(ULONG Index);
 BOOL	PerfDataGetIOCounters(ULONG Index, PIO_COUNTERS pIoCounters);
 
-ULONG	PerfDataGetCommitChargeTotalK(void);
-ULONG	PerfDataGetCommitChargeLimitK(void);
-ULONG	PerfDataGetCommitChargePeakK(void);
+VOID
+PerfDataGetCommitChargeK(
+    _Out_opt_ PULONGLONG Total,
+    _Out_opt_ PULONGLONG Limit,
+    _Out_opt_ PULONGLONG Peak);
 
-ULONG	PerfDataGetKernelMemoryTotalK(void);
-ULONG	PerfDataGetKernelMemoryPagedK(void);
-ULONG	PerfDataGetKernelMemoryNonPagedK(void);
+VOID
+PerfDataGetKernelMemoryK(
+    _Out_opt_ PULONGLONG MemTotal,
+    _Out_opt_ PULONGLONG MemPaged,
+    _Out_opt_ PULONGLONG MemNonPaged);
 
-ULONG	PerfDataGetPhysicalMemoryTotalK(void);
-ULONG	PerfDataGetPhysicalMemoryAvailableK(void);
-ULONG	PerfDataGetPhysicalMemorySystemCacheK(void);
+VOID
+PerfDataGetPhysicalMemoryK(
+    _Out_opt_ PULONGLONG MemTotal,
+    _Out_opt_ PULONGLONG MemAvailable,
+    _Out_opt_ PULONGLONG MemSysCache);
 
 ULONG	PerfDataGetSystemHandleCount(void);
 
