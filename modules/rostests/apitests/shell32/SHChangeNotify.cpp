@@ -15,6 +15,7 @@
 
 static HWND s_hwnd = NULL;
 static WCHAR s_szSubProgram[MAX_PATH];
+static HANDLE s_hThread = NULL;
 
 struct TEST_ENTRY;
 
@@ -586,6 +587,31 @@ DoTestEntry(const TEST_ENTRY *entry)
     SendMessageW(s_hwnd, WM_CLEAR_FLAGS, 0, 0);
 }
 
+static void DoEnd()
+{
+    DeleteFileA(TEMP_FILE);
+    SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
+}
+
+static BOOL CALLBACK HandlerRoutine(DWORD dwCtrlType)
+{
+    switch (dwCtrlType)
+    {
+        case CTRL_C_EVENT:
+        case CTRL_BREAK_EVENT:
+        {
+            if (s_hThread)
+            {
+                TerminateThread(s_hThread, -1);
+                s_hThread = NULL;
+            }
+            DoEnd();
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 static BOOL
 DoInit(void)
 {
@@ -627,6 +653,8 @@ DoInit(void)
     if (fp)
         fclose(fp);
 
+    SetConsoleCtrlHandler(HandlerRoutine, TRUE);
+
     // close Explorer windows
     INT i, nCount = 50;
     trace("Closing Explorer windows...\n");
@@ -655,13 +683,6 @@ DoInit(void)
     }
 
     return (i < nCount);
-}
-
-static void
-DoEnd(HWND hwnd)
-{
-    DeleteFileA(TEMP_FILE);
-    SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
 }
 
 static BOOL
@@ -783,7 +804,7 @@ static void DoTestGroup(const TEST_GROUP *pGroup)
     for (UINT i = 0; i < cEntries; ++i)
         DoTestEntry(&pEntries[i]);
 
-    DoEnd(s_hwnd);
+    DoEnd();
 
     for (int i = 0; i < 15; ++i)
     {
@@ -836,7 +857,7 @@ START_TEST(SHChangeNotify)
 
     trace("Please don't operate your PC while testing...\n");
 
-    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, TestThreadProc, NULL, 0, NULL);
-    WaitForSingleObject(hThread, INFINITE);
-    CloseHandle(hThread);
+    s_hThread = (HANDLE)_beginthreadex(NULL, 0, TestThreadProc, NULL, 0, NULL);
+    WaitForSingleObject(s_hThread, INFINITE);
+    CloseHandle(s_hThread);
 }
