@@ -812,6 +812,7 @@ static void DoTestGroup(const TEST_GROUP *pGroup)
         if (!IsWindow(s_hwnd))
         {
             DoAbortThread();
+            DoEnd();
             break;
         }
         DoTestEntry(&pEntries[i]);
