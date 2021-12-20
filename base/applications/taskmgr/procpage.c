@@ -33,10 +33,6 @@ BOOL bProcessPageSelectionMade = FALSE; /* Is item in ListCtrl selected */
 
 static int  nProcessPageWidth;
 static int  nProcessPageHeight;
-#ifdef RUN_PROC_PAGE
-static HANDLE   hProcessThread = NULL;
-static DWORD    dwProcessThread;
-#endif
 
 int CALLBACK    ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 void AddProcess(ULONG Index);
@@ -45,7 +41,7 @@ void gethmsfromlargeint(LARGE_INTEGER largeint, DWORD *dwHours, DWORD *dwMinutes
 void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam);
 void ProcessPageShowContextMenu(DWORD dwProcessId);
 BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCount);
-DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
+DWORD WINAPI ProcessPageRefreshThread(PVOID Parameter);
 int ProcessRunning(ULONG ProcessId);
 
 void Cleanup(void)
@@ -158,22 +154,12 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
          */
         OldProcessListWndProc = (WNDPROC)SetWindowLongPtrW(hProcessPageListCtrl, GWLP_WNDPROC, (LONG_PTR)ProcessListWndProc);
 
-#ifdef RUN_PROC_PAGE
-        /* Start our refresh thread */
-        hProcessThread = CreateThread(NULL, 0, ProcessPageRefreshThread, NULL, 0, &dwProcessThread);
-#endif
-
         /* Refresh page */
         ProcessPageUpdate();
 
         return TRUE;
 
     case WM_DESTROY:
-        /* Close the event handle, this will make the */
-        /* refresh thread exit when the wait fails */
-#ifdef RUN_PROC_PAGE
-        EndLocalThread(&hProcessThread, dwProcessThread);
-#endif
         SaveColumnSettings();
         Cleanup();
         break;
@@ -447,24 +433,21 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
 
 void RefreshProcessPage(void)
 {
-#ifdef RUN_PROC_PAGE
-    /* Signal the event so that our refresh thread */
-    /* will wake up and refresh the process page */
-    PostThreadMessage(dwProcessThread, WM_TIMER, 0, 0);
-#endif
+    ProcessPageRefreshThread(NULL);
 }
 
-DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
+DWORD WINAPI ProcessPageRefreshThread(PVOID Parameter)
 {
-    MSG      msg;
+    //MSG msg;
 
-    while (1) {
-        /*  Wait for an the event or application close */
-        if (GetMessage(&msg, NULL, 0, 0) <= 0)
-            return 0;
+    //while (1)
+    {
+        ///*  Wait for an the event or application close */
+        //if (GetMessage(&msg, NULL, 0, 0) <= 0)
+        //    return 0;
 
-        if (msg.message == WM_TIMER) {
-
+        //if (msg.message == WM_TIMER)
+        {
             UpdateProcesses();
 
             if (IsWindowVisible(hProcessPage))
