@@ -475,7 +475,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_DESTROY:
         ShowWindow(hDlg, SW_HIDE);
-        TrayIcon_ShellRemoveTrayIcon();
+        TrayIcon_RemoveIcon();
         wp.length = sizeof(WINDOWPLACEMENT);
         GetWindowPlacement(hDlg, &wp);
         TaskManagerSettings.Left = wp.rcNormalPosition.left;
@@ -498,7 +498,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         RefreshApplicationPage();
         RefreshProcessPage();
         RefreshPerformancePage();
-        TrayIcon_ShellUpdateTrayIcon();
+        TrayIcon_UpdateIcon();
         break;
 
     case WM_ENTERMENULOOP:
@@ -763,7 +763,7 @@ BOOL OnCreate(HWND hWnd)
     RefreshProcessPage();
     RefreshPerformancePage();
 
-    TrayIcon_ShellAddTrayIcon();
+    TrayIcon_AddIcon();
 
     return TRUE;
 }

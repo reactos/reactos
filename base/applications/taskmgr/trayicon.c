@@ -8,7 +8,9 @@
 
 #include "precomp.h"
 
-HICON TrayIcon_GetProcessorUsageIcon(void)
+static HICON
+TrayIcon_GetProcessorUsageIcon(
+    _In_ ULONG CpuUsage)
 {
     HICON    hTrayIcon = NULL;
     HDC      hScreenDC = NULL;
@@ -17,7 +19,6 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
     HBITMAP  hOldBitmap = NULL;
     HBITMAP  hBitmapMask = NULL;
     ICONINFO iconInfo;
-    ULONG    ProcessorUsage;
     int      nLinesToDraw;
     HBRUSH   hBitmapBrush = NULL;
     RECT     rc;
@@ -51,17 +52,12 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
     hOldBitmap = SelectObject(hDC, hBitmap);
 
     /*
-     * Get the cpu usage
-     */
-    ProcessorUsage = PerfDataGetProcessorUsage();
-
-    /*
      * Calculate how many lines to draw
      * since we have 11 rows of space
      * to draw the cpu usage instead of
      * just having 10.
      */
-    nLinesToDraw = (ProcessorUsage + (ProcessorUsage / 10)) / 11;
+    nLinesToDraw = (CpuUsage + (CpuUsage / 10)) / 11;
     rc.left = 3;
     rc.top = 12 - nLinesToDraw;
     rc.right = 13;
@@ -103,29 +99,35 @@ done:
     return hTrayIcon;
 }
 
-BOOL TrayIcon_ShellAddTrayIcon(void)
+static BOOL
+TrayIcon_Update(
+    _In_ DWORD dwMessage)
 {
+    static WCHAR szMsg[64] = L"";
+
     NOTIFYICONDATAW nid;
-    HICON           hIcon = NULL;
-    BOOL            bRetVal;
-    WCHAR           szMsg[64];
+    ULONG CpuUsage;
+    HICON hIcon = NULL;
+    BOOL  bRetVal;
 
-    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
+    if (!*szMsg)
+        LoadStringW(hInst, IDS_MSG_TRAYICONCPUUSAGE, szMsg, ARRAYSIZE(szMsg));
 
-    hIcon = TrayIcon_GetProcessorUsageIcon();
+    ZeroMemory(&nid, sizeof(nid));
 
-    nid.cbSize = sizeof(NOTIFYICONDATAW);
+    CpuUsage = PerfDataGetProcessorUsage();
+    hIcon = TrayIcon_GetProcessorUsageIcon(CpuUsage);
+
+    nid.cbSize = sizeof(nid);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_ONTRAYICON;
     nid.hIcon = hIcon;
 
+    wsprintfW(nid.szTip, szMsg, CpuUsage);
 
-    LoadStringW( GetModuleHandleW(NULL), IDS_MSG_TRAYICONCPUUSAGE, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
-    wsprintfW(nid.szTip, szMsg, PerfDataGetProcessorUsage());
-
-    bRetVal = Shell_NotifyIconW(NIM_ADD, &nid);
+    bRetVal = Shell_NotifyIconW(dwMessage, &nid);
 
     if (hIcon)
         DestroyIcon(hIcon);
@@ -133,48 +135,27 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
     return bRetVal;
 }
 
-BOOL TrayIcon_ShellRemoveTrayIcon(void)
+BOOL TrayIcon_AddIcon(VOID)
+{
+    return TrayIcon_Update(NIM_ADD);
+}
+
+BOOL TrayIcon_RemoveIcon(VOID)
 {
     NOTIFYICONDATAW nid;
-    BOOL            bRetVal;
 
-    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
+    ZeroMemory(&nid, sizeof(nid));
 
-    nid.cbSize = sizeof(NOTIFYICONDATAW);
+    nid.cbSize = sizeof(nid);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = 0;
     nid.uCallbackMessage = WM_ONTRAYICON;
 
-    bRetVal = Shell_NotifyIconW(NIM_DELETE, &nid);
-
-    return bRetVal;
+    return Shell_NotifyIconW(NIM_DELETE, &nid);
 }
 
-BOOL TrayIcon_ShellUpdateTrayIcon(void)
+BOOL TrayIcon_UpdateIcon(VOID)
 {
-    NOTIFYICONDATAW nid;
-    HICON           hIcon = NULL;
-    BOOL            bRetVal;
-    WCHAR           szTemp[64];
-
-    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
-
-    hIcon = TrayIcon_GetProcessorUsageIcon();
-
-    nid.cbSize = sizeof(NOTIFYICONDATAW);
-    nid.hWnd = hMainWnd;
-    nid.uID = 0;
-    nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-    nid.uCallbackMessage = WM_ONTRAYICON;
-    nid.hIcon = hIcon;
-    LoadStringW(hInst, IDS_MSG_TRAYICONCPUUSAGE, szTemp, sizeof(szTemp)/sizeof(szTemp[0]));
-    wsprintfW(nid.szTip, szTemp, PerfDataGetProcessorUsage());
-
-    bRetVal = Shell_NotifyIconW(NIM_MODIFY, &nid);
-
-    if (hIcon)
-        DestroyIcon(hIcon);
-
-    return bRetVal;
+    return TrayIcon_Update(NIM_MODIFY);
 }

@@ -8,9 +8,8 @@
 
 #pragma once
 
-#define WM_ONTRAYICON   WM_USER + 5
+#define WM_ONTRAYICON   (WM_USER + 5)
 
-HICON	TrayIcon_GetProcessorUsageIcon(void);
-BOOL	TrayIcon_ShellAddTrayIcon(void);
-BOOL	TrayIcon_ShellRemoveTrayIcon(void);
-BOOL	TrayIcon_ShellUpdateTrayIcon(void);
+BOOL TrayIcon_AddIcon(VOID);
+BOOL TrayIcon_RemoveIcon(VOID);
+BOOL TrayIcon_UpdateIcon(VOID);
