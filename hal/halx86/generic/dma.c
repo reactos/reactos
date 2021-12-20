@@ -477,12 +477,6 @@ HalpDmaAllocateChildAdapter(IN ULONG NumberOfMapRegisters,
                             (PVOID)&AdapterObject);
     if (!NT_SUCCESS(Status)) return NULL;
 
-    Status = ObReferenceObjectByPointer(AdapterObject,
-                                        FILE_READ_DATA | FILE_WRITE_DATA,
-                                        IoAdapterObjectType,
-                                        KernelMode);
-    if (!NT_SUCCESS(Status)) return NULL;
-
     RtlZeroMemory(AdapterObject, sizeof(ADAPTER_OBJECT));
 
     Status = ObInsertObject(AdapterObject,
@@ -492,6 +486,8 @@ HalpDmaAllocateChildAdapter(IN ULONG NumberOfMapRegisters,
                             NULL,
                             &Handle);
     if (!NT_SUCCESS(Status)) return NULL;
+
+    ObReferenceObject(AdapterObject);
 
     ZwClose(Handle);
 
