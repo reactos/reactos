@@ -167,7 +167,7 @@ static WCHAR s_szDocumentTestFileRenamed[MAX_PATH];
 static WCHAR s_szDocumentTestDir[MAX_PATH];
 static WCHAR s_szDocumentTestDirRenamed[MAX_PATH];
 
-static const TEST_ENTRY s_entries_0[] =
+static const TEST_ENTRY s_group_0[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -198,7 +198,7 @@ static const TEST_ENTRY s_entries_0[] =
     { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_entries_1[] =
+static const TEST_ENTRY s_group_1[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -229,7 +229,7 @@ static const TEST_ENTRY s_entries_1[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_entries_2[] =
+static const TEST_ENTRY s_group_2[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -260,7 +260,7 @@ static const TEST_ENTRY s_entries_2[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_entries_3[] =
+static const TEST_ENTRY s_group_3[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -291,7 +291,7 @@ static const TEST_ENTRY s_entries_3[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_entries_4[] =
+static const TEST_ENTRY s_group_4[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -322,7 +322,7 @@ static const TEST_ENTRY s_entries_4[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_entries_5[] =
+static const TEST_ENTRY s_group_5[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -353,7 +353,7 @@ static const TEST_ENTRY s_entries_5[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_entries_6[] =
+static const TEST_ENTRY s_group_6[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -384,7 +384,7 @@ static const TEST_ENTRY s_entries_6[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_entries_7[] =
+static const TEST_ENTRY s_group_7[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -415,7 +415,7 @@ static const TEST_ENTRY s_entries_7[] =
     { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_entries_8[] =
+static const TEST_ENTRY s_group_8[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -446,7 +446,7 @@ static const TEST_ENTRY s_entries_8[] =
     { __LINE__, WRITEDIR_1, "000000", L"", L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_entries_9[] =
+static const TEST_ENTRY s_group_9[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -477,7 +477,7 @@ static const TEST_ENTRY s_entries_9[] =
     { __LINE__, WRITEDIR_1, "000010", s_szDocumentTestDir, L"", DoAction12 },
 };
 
-static const TEST_ENTRY s_entries_10[] =
+static const TEST_ENTRY s_group_10[] =
 {
     { __LINE__, WRITEDIR_0, "000000", L"", L"", NULL },
     { __LINE__, WRITEDIR_0, "000000", L"", L"", DoAction1 },
@@ -761,44 +761,44 @@ START_TEST(SHChangeNotify)
     trace("Please don't operate your PC while testing...\n");
 
     // fRecursive == TRUE.
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_03, TRUE, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, TRUE, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_1), s_group_1, SOURCES_01, TRUE, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, TRUE, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_2), s_group_2, SOURCES_03, TRUE, WATCHDIR_0);
 
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_03, TRUE, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, TRUE, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_1), s_group_1, SOURCES_01, TRUE, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, TRUE, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_2), s_group_2, SOURCES_03, TRUE, WATCHDIR_1);
 
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_entries_1), s_entries_1, SOURCES_01, TRUE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_entries_2), s_entries_2, SOURCES_03, TRUE, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, TRUE, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_1), s_group_1, SOURCES_01, TRUE, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, TRUE, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_2), s_group_2, SOURCES_03, TRUE, WATCHDIR_2);
 
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, TRUE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_entries_3), s_entries_3, SOURCES_01, TRUE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, TRUE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_entries_4), s_entries_4, SOURCES_03, TRUE, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, TRUE, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_3), s_group_3, SOURCES_01, TRUE, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, TRUE, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_4), s_group_4, SOURCES_03, TRUE, WATCHDIR_3);
 
     // fRecursive == FALSE.
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_entries_5), s_entries_5, SOURCES_01, FALSE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_entries_6), s_entries_6, SOURCES_03, FALSE, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, FALSE, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_5), s_group_5, SOURCES_01, FALSE, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, FALSE, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_6), s_group_6, SOURCES_03, FALSE, WATCHDIR_0);
 
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_entries_7), s_entries_7, SOURCES_01, FALSE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_entries_8), s_entries_8, SOURCES_03, FALSE, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, FALSE, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_7), s_group_7, SOURCES_01, FALSE, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, FALSE, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_8), s_group_8, SOURCES_03, FALSE, WATCHDIR_1);
 
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_01, FALSE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_03, FALSE, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, FALSE, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_01, FALSE, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, FALSE, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_03, FALSE, WATCHDIR_2);
 
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_00, FALSE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_entries_9), s_entries_9, SOURCES_01, FALSE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_entries_0), s_entries_0, SOURCES_02, FALSE, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_entries_10), s_entries_10, SOURCES_03, FALSE, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_00, FALSE, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_9), s_group_9, SOURCES_01, FALSE, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_0), s_group_0, SOURCES_02, FALSE, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_10), s_group_10, SOURCES_03, FALSE, WATCHDIR_3);
 }
