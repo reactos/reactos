@@ -1091,7 +1091,6 @@ static unsigned __stdcall TestThreadProc(void *)
     else
         DoTestGroup(__LINE__, _countof(s_group_12), s_group_12, FALSE, SOURCES_10, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_13), s_group_13, FALSE, SOURCES_11, WATCHDIR_1);
-#endif
 
 #ifdef DO_TRIVIAL
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_2);
