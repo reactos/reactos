@@ -233,10 +233,10 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             PerformancePage_OnViewShowKernelTimes();
             break;
         case ID_VIEW_CPUHISTORY_ONEGRAPHALL:
-            PerformancePage_OnViewCPUHistoryOneGraphAll();
+            PerformancePage_OnViewCPUHistoryGraph(TRUE);
             break;
         case ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU:
-            PerformancePage_OnViewCPUHistoryOneGraphPerCPU();
+            PerformancePage_OnViewCPUHistoryGraph(FALSE);
             break;
         case ID_VIEW_UPDATESPEED_HIGH:
         case ID_VIEW_UPDATESPEED_NORMAL:
@@ -497,7 +497,8 @@ void FillSolidRect(HDC hDC, LPCRECT lpRect, COLORREF clr)
 static void SetUpdateSpeed(HWND hWnd)
 {
     /* Setup update speed (pause=fall down) */
-    switch (TaskManagerSettings.UpdateSpeed) {
+    switch (TaskManagerSettings.UpdateSpeed)
+    {
     case ID_VIEW_UPDATESPEED_HIGH:
         SetTimer(hWnd, 1, 500, NULL);
         break;
@@ -693,9 +694,8 @@ BOOL OnCreate(HWND hWnd)
     SetUpdateSpeed(hWnd);
 
     /*
-     * Refresh the performance data
-     * Sample it twice so we can establish
-     * the delta values & cpu usage
+     * Refresh the performance data. Sample it twice
+     * so we can establish the delta values & cpu usage.
      */
     PerfDataRefresh();
     PerfDataRefresh();
@@ -1106,6 +1106,7 @@ LPWSTR GetLastErrorText(LPWSTR lpszBuf, DWORD dwSize)
     return lpszBuf;
 }
 
+#if 0
 DWORD EndLocalThread(HANDLE *hThread, DWORD dwThread)
 {
     DWORD dwExitCodeThread = 0;
@@ -1128,4 +1129,4 @@ DWORD EndLocalThread(HANDLE *hThread, DWORD dwThread)
     }
     return dwExitCodeThread;
 }
-
+#endif
