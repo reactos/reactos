@@ -82,45 +82,34 @@ static BOOL DoPathes(PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2)
     return TRUE;
 }
 
+static VOID DoPathesAndFlags(UINT type, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2)
+{
+    if (DoPathes(pidl1, pidl2))
+    {
+        s_counters[type] = 1;
+        SetEvent(s_hEvent);
+    }
+}
+
 static void
 DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
 {
     switch (lEvent)
     {
         case SHCNE_RENAMEITEM:
-            if (DoPathes(pidl1, pidl2))
-            {
-                s_counters[TYPE_RENAMEITEM] = 1;
-                SetEvent(s_hEvent);
-            }
+            DoPathesAndFlags(TYPE_RENAMEITEM, pidl1, pidl2);
             break;
         case SHCNE_CREATE:
-            if (DoPathes(pidl1, pidl2))
-            {
-                s_counters[TYPE_CREATE] = 1;
-                SetEvent(s_hEvent);
-            }
+            DoPathesAndFlags(TYPE_CREATE, pidl1, pidl2);
             break;
         case SHCNE_DELETE:
-            if (DoPathes(pidl1, pidl2))
-            {
-                s_counters[TYPE_DELETE] = 1;
-                SetEvent(s_hEvent);
-            }
+            DoPathesAndFlags(TYPE_DELETE, pidl1, pidl2);
             break;
         case SHCNE_MKDIR:
-            if (DoPathes(pidl1, pidl2))
-            {
-                s_counters[TYPE_MKDIR] = 1;
-                SetEvent(s_hEvent);
-            }
+            DoPathesAndFlags(TYPE_MKDIR, pidl1, pidl2);
             break;
         case SHCNE_RMDIR:
-            if (DoPathes(pidl1, pidl2))
-            {
-                s_counters[TYPE_RMDIR] = 1;
-                SetEvent(s_hEvent);
-            }
+            DoPathesAndFlags(TYPE_RMDIR, pidl1, pidl2);
             break;
         case SHCNE_MEDIAINSERTED:
             break;
@@ -137,11 +126,7 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
         case SHCNE_ATTRIBUTES:
             break;
         case SHCNE_UPDATEDIR:
-            if (DoPathes(pidl1, pidl2))
-            {
-                s_counters[TYPE_UPDATEDIR] = 1;
-                SetEvent(s_hEvent);
-            }
+            DoPathesAndFlags(TYPE_UPDATEDIR, pidl1, pidl2);
             break;
         case SHCNE_UPDATEITEM:
             break;
@@ -152,11 +137,7 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
         case SHCNE_DRIVEADDGUI:
             break;
         case SHCNE_RENAMEFOLDER:
-            if (DoPathes(pidl1, pidl2))
-            {
-                s_counters[TYPE_RENAMEFOLDER] = 1;
-                SetEvent(s_hEvent);
-            }
+            DoPathesAndFlags(TYPE_RENAMEFOLDER, pidl1, pidl2);
             break;
         case SHCNE_FREESPACE:
             break;
