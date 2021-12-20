@@ -23,7 +23,8 @@
 //#define SHELL_LEVEL_ONLY
 //#define INTERRUPT_LEVEL_ONLY
 #define NEW_DELIVERY_ONLY
-#define RANDOM_HAlF
+//#define RANDOM_HAlF
+#define RANDOM_QUARTER
 
 //#define ENTRY_TICK
 //#define GROUP_TICK
@@ -689,7 +690,10 @@ DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
 static void
 DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
 {
-#ifdef RANDOM_HAlF
+#ifdef RANDOM_QUARTER
+    if ((rand() & 3) == 0)
+        return;
+#elif defined(RANDOM_HAlF)
     if (rand() & 1)
         return;
 #endif
@@ -1051,7 +1055,10 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
 
 static unsigned __stdcall TestThreadProc(void *)
 {
-#ifdef RANDOM_HAlF
+#ifdef RANDOM_QUARTER
+    srand(time(NULL));
+    skip("RANDOM_QUARTER\n");
+#elif defined(RANDOM_HAlF)
     srand(time(NULL));
     skip("RANDOM_HAlF\n");
 #endif
