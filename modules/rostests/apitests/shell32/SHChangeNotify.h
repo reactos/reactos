@@ -1,7 +1,12 @@
 #pragma once
 
+#include <shlwapi.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <strsafe.h>
+
 #define TEMP_FILE   L"shell-notify-temporary.txt"
-#define CLASSNAME   L"SHChangeNotify testcase"
+#define CLASSNAME   L"SHChangeNotify testcase window"
 #define EVENT_NAME  L"SHChangeNotify testcase event"
 
 #define WM_SHELL_NOTIFY     (WM_USER + 100)

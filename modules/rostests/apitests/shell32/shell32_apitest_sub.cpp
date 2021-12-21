@@ -6,8 +6,6 @@
  */
 
 #include "shelltest.h"
-#include <shlwapi.h>
-#include <stdio.h>
 #include "SHChangeNotify.h"
 
 static HWND s_hwnd = NULL;

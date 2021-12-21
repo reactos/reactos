@@ -8,9 +8,6 @@
 // NOTE: This test program closes the Explorer cabinets before tests.
 
 #include "shelltest.h"
-#include <shlwapi.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <time.h>
 #include <process.h>
 #include <versionhelpers.h>
@@ -213,6 +210,19 @@ static WCHAR s_szTestFile1[MAX_PATH];
 static WCHAR s_szTestFile1Renamed[MAX_PATH];
 static WCHAR s_szTestDir1[MAX_PATH];
 static WCHAR s_szTestDir1Renamed[MAX_PATH];
+
+static void DoDeleteFilesAndDirs(void)
+{
+    DeleteFileW(TEMP_FILE);
+    DeleteFileW(s_szTestFile0);
+    DeleteFileW(s_szTestFile0Renamed);
+    DeleteFileW(s_szTestFile1);
+    DeleteFileW(s_szTestFile1Renamed);
+    RemoveDirectoryW(s_szTestDir0);
+    RemoveDirectoryW(s_szTestDir0Renamed);
+    RemoveDirectoryW(s_szTestDir1);
+    RemoveDirectoryW(s_szTestDir1Renamed);
+}
 
 static const TEST_ENTRY s_group_00[] =
 {
@@ -599,7 +609,6 @@ static void DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
 static void DoQuitTest(BOOL bForce)
 {
     PostMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
-    DeleteFileW(TEMP_FILE);
 
     DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, bForce);
     s_hwnd = NULL;
@@ -610,14 +619,7 @@ static void DoQuitTest(BOOL bForce)
         s_hEvent = NULL;
     }
 
-    DeleteFileW(s_szTestFile0);
-    DeleteFileW(s_szTestFile0Renamed);
-    DeleteFileW(s_szTestFile1);
-    DeleteFileW(s_szTestFile1Renamed);
-    RemoveDirectoryW(s_szTestDir0);
-    RemoveDirectoryW(s_szTestDir0Renamed);
-    RemoveDirectoryW(s_szTestDir1);
-    RemoveDirectoryW(s_szTestDir1Renamed);
+    DoDeleteFilesAndDirs();
 }
 
 static void DoAbortThread(void)
@@ -647,6 +649,7 @@ static BOOL CALLBACK HandlerRoutine(DWORD dwCtrlType)
 
 static BOOL DoInitTest(void)
 {
+    DoDeleteFilesAndDirs();
     DoCreateEmptyFile(TEMP_FILE);
 
     SetConsoleCtrlHandler(HandlerRoutine, TRUE);
