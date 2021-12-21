@@ -66,7 +66,7 @@ static BOOL DoCreateEmptyFile(LPCWSTR pszFileName)
 
 struct TEST_ENTRY;
 
-typedef BOOL (*ACTION)(const struct TEST_ENTRY *pEntry);
+typedef BOOL (*ACTION)(const struct TEST_ENTRY *entry);
 
 typedef struct TEST_ENTRY
 {
@@ -78,114 +78,114 @@ typedef struct TEST_ENTRY
     ACTION action;
 } TEST_ENTRY;
 
-#define TEST_FILE           L"_TEST_.txt"
-#define TEST_FILE_RENAMED   L"_TEST_RENAMED_.txt"
-#define TEST_DIR            L"_TESTDIR_"
-#define TEST_DIR_RENAMED    L"_TESTDIR_RENAMED_"
+#define TEST_FILE      L"_TEST_.txt"
+#define TEST_FILE_KAI  L"_TEST_KAI_.txt"
+#define TEST_DIR       L"_TESTDIR_"
+#define TEST_DIR_KAI   L"_TESTDIR_KAI_"
 #define MOVE_FILE(from, to) MoveFileW((from), (to))
 
-static BOOL DoAction1(const TEST_ENTRY *pEntry)
+static BOOL DoAction1(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
-    ok(DoCreateEmptyFile(pszPath), "Line %d: DoCreateEmptyFile failed\n", pEntry->line);
+    ok(DoCreateEmptyFile(pszPath), "Line %d: DoCreateEmptyFile failed\n", entry->line);
     return TRUE;
 }
 
-static BOOL DoAction2(const TEST_ENTRY *pEntry)
+static BOOL DoAction2(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir), pszPath2 = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath1 = DoGetDir(entry->iWriteDir), pszPath2 = DoGetDir(entry->iWriteDir);
     PathAppendW(pszPath1, TEST_FILE);
-    PathAppendW(pszPath2, TEST_FILE_RENAMED);
+    PathAppendW(pszPath2, TEST_FILE_KAI);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
-       pEntry->line, pszPath1, pszPath2, GetLastError());
+       entry->line, pszPath1, pszPath2, GetLastError());
     return TRUE;
 }
 
-static BOOL DoAction3(const TEST_ENTRY *pEntry)
+static BOOL DoAction3(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir), pszPath2 = DoGetDir(pEntry->iWriteDir);
-    PathAppendW(pszPath1, TEST_FILE_RENAMED);
+    LPWSTR pszPath1 = DoGetDir(entry->iWriteDir), pszPath2 = DoGetDir(entry->iWriteDir);
+    PathAppendW(pszPath1, TEST_FILE_KAI);
     PathAppendW(pszPath2, TEST_FILE);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
-       pEntry->line, pszPath1, pszPath2, GetLastError());
+       entry->line, pszPath1, pszPath2, GetLastError());
     return TRUE;
 }
 
-static BOOL DoAction4(const TEST_ENTRY *pEntry)
+static BOOL DoAction4(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     ok(DeleteFileW(pszPath), "Line %d: DeleteFileW(%ls) failed (%ld)\n",
-       pEntry->line, pszPath, GetLastError());
+       entry->line, pszPath, GetLastError());
     return TRUE;
 }
 
-static BOOL DoAction5(const TEST_ENTRY *pEntry)
+static BOOL DoAction5(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     ok(CreateDirectoryW(pszPath, NULL), "Line %d: CreateDirectoryW(%ls) failed (%ld)\n",
-       pEntry->line, pszPath, GetLastError());
+       entry->line, pszPath, GetLastError());
     return TRUE;
 }
 
-static BOOL DoAction6(const TEST_ENTRY *pEntry)
+static BOOL DoAction6(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir), pszPath2 = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath1 = DoGetDir(entry->iWriteDir), pszPath2 = DoGetDir(entry->iWriteDir);
     PathAppendW(pszPath1, TEST_DIR);
-    PathAppendW(pszPath2, TEST_DIR_RENAMED);
+    PathAppendW(pszPath2, TEST_DIR_KAI);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
-       pEntry->line, pszPath1, pszPath2, GetLastError());
+       entry->line, pszPath1, pszPath2, GetLastError());
     return TRUE;
 }
 
-static BOOL DoAction7(const TEST_ENTRY *pEntry)
+static BOOL DoAction7(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir), pszPath2 = DoGetDir(pEntry->iWriteDir);
-    PathAppendW(pszPath1, TEST_DIR_RENAMED);
+    LPWSTR pszPath1 = DoGetDir(entry->iWriteDir), pszPath2 = DoGetDir(entry->iWriteDir);
+    PathAppendW(pszPath1, TEST_DIR_KAI);
     PathAppendW(pszPath2, TEST_DIR);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
-       pEntry->line, pszPath1, pszPath2, GetLastError());
+       entry->line, pszPath1, pszPath2, GetLastError());
     return TRUE;
 }
 
-static BOOL DoAction8(const TEST_ENTRY *pEntry)
+static BOOL DoAction8(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     ok(RemoveDirectoryW(pszPath), "Line %d: RemoveDirectoryW(%ls) failed (%ld)\n",
-       pEntry->line, pszPath, GetLastError());
+       entry->line, pszPath, GetLastError());
     return TRUE;
 }
 
-static BOOL DoAction9(const TEST_ENTRY *pEntry)
+static BOOL DoAction9(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
     return FALSE;
 }
 
-static BOOL DoAction10(const TEST_ENTRY *pEntry)
+static BOOL DoAction10(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
     return FALSE;
 }
 
-static BOOL DoAction11(const TEST_ENTRY *pEntry)
+static BOOL DoAction11(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
     return FALSE;
 }
 
-static BOOL DoAction12(const TEST_ENTRY *pEntry)
+static BOOL DoAction12(const TEST_ENTRY *entry)
 {
-    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
     return FALSE;
@@ -646,7 +646,7 @@ static BOOL DoInitTest(void)
     StringCchCopyW(s_szTestFile0, _countof(s_szTestFile0), psz);
 
     PathRemoveFileSpecW(psz);
-    PathAppendW(psz, TEST_FILE_RENAMED);
+    PathAppendW(psz, TEST_FILE_KAI);
     StringCchCopyW(s_szTestFile0Kai, _countof(s_szTestFile0Kai), psz);
 
     PathRemoveFileSpecW(psz);
@@ -654,7 +654,7 @@ static BOOL DoInitTest(void)
     StringCchCopyW(s_szTestDir0, _countof(s_szTestDir0), psz);
 
     PathRemoveFileSpecW(psz);
-    PathAppendW(psz, TEST_DIR_RENAMED);
+    PathAppendW(psz, TEST_DIR_KAI);
     StringCchCopyW(s_szTestDir0Kai, _countof(s_szTestDir0Kai), psz);
 
     // DIRTYPE_MYDOCUMENTS
@@ -665,7 +665,7 @@ static BOOL DoInitTest(void)
     StringCchCopyW(s_szTestFile1, _countof(s_szTestFile1), psz);
 
     PathRemoveFileSpecW(psz);
-    PathAppendW(psz, TEST_FILE_RENAMED);
+    PathAppendW(psz, TEST_FILE_KAI);
     StringCchCopyW(s_szTestFile1Kai, _countof(s_szTestFile1Kai), psz);
 
     PathRemoveFileSpecW(psz);
@@ -673,7 +673,7 @@ static BOOL DoInitTest(void)
     StringCchCopyW(s_szTestDir1, _countof(s_szTestDir1), psz);
 
     PathRemoveFileSpecW(psz);
-    PathAppendW(psz, TEST_DIR_RENAMED);
+    PathAppendW(psz, TEST_DIR_KAI);
     StringCchCopyW(s_szTestDir1Kai, _countof(s_szTestDir1Kai), psz);
 
     // prepare for files and dirs
