@@ -61,8 +61,7 @@ static HWND DoWaitForWindow(LPCWSTR clsname, LPCWSTR text, BOOL bClosing, BOOL b
     return hwnd;
 }
 
-static BOOL
-DoCreateEmptyFile(LPCWSTR pszFileName)
+static BOOL DoCreateEmptyFile(LPCWSTR pszFileName)
 {
     FILE *fp = _wfopen(pszFileName, L"wb");
     if (fp)
@@ -92,7 +91,7 @@ typedef struct TEST_ENTRY
 
 static BOOL DoAction1(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     ok(DoCreateEmptyFile(pszPath), "Line %d: DoCreateEmptyFile failed\n", pEntry->line);
     return TRUE;
@@ -100,8 +99,8 @@ static BOOL DoAction1(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction2(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
-    LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath2 = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_FILE);
     PathAppendW(pszPath2, TEST_FILE_RENAMED);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
@@ -111,8 +110,8 @@ static BOOL DoAction2(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction3(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
-    LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath2 = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_FILE_RENAMED);
     PathAppendW(pszPath2, TEST_FILE);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
@@ -122,7 +121,7 @@ static BOOL DoAction3(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction4(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     ok(DeleteFileW(pszPath), "Line %d: DeleteFileW(%ls) failed (%ld)\n",
        pEntry->line, pszPath, GetLastError());
@@ -131,7 +130,7 @@ static BOOL DoAction4(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction5(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     ok(CreateDirectoryW(pszPath, NULL), "Line %d: CreateDirectoryW(%ls) failed (%ld)\n",
        pEntry->line, pszPath, GetLastError());
@@ -140,8 +139,8 @@ static BOOL DoAction5(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction6(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
-    LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath2 = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_DIR);
     PathAppendW(pszPath2, TEST_DIR_RENAMED);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
@@ -151,8 +150,8 @@ static BOOL DoAction6(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction7(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
-    LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath2 = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_DIR_RENAMED);
     PathAppendW(pszPath2, TEST_DIR);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
@@ -162,7 +161,7 @@ static BOOL DoAction7(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction8(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     ok(RemoveDirectoryW(pszPath), "Line %d: RemoveDirectoryW(%ls) failed (%ld)\n",
        pEntry->line, pszPath, GetLastError());
@@ -171,7 +170,7 @@ static BOOL DoAction8(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction9(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
     return FALSE;
@@ -179,7 +178,7 @@ static BOOL DoAction9(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction10(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
     return FALSE;
@@ -187,7 +186,7 @@ static BOOL DoAction10(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction11(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
     return FALSE;
@@ -195,7 +194,7 @@ static BOOL DoAction11(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction12(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
+    LPWSTR pszPath = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
     return FALSE;
@@ -476,7 +475,7 @@ static const TEST_ENTRY s_group_08[] =
     { __LINE__, WRITEDIR_1, "0000100", s_szTestDir1, L"", DoAction12 },
 };
 
-LPCSTR PatternFromFlags(DWORD flags)
+static LPCSTR PatternFromFlags(DWORD flags)
 {
     static char s_buf[TYPE_MAX + 1];
     DWORD i;
@@ -488,14 +487,14 @@ LPCSTR PatternFromFlags(DWORD flags)
     return s_buf;
 }
 
-static BOOL
-DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
+static BOOL DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
 {
     pszPath1[0] = pszPath2[0] = 0;
 
     WCHAR szText[MAX_PATH * 2];
     szText[0] = 0;
-    if (FILE *fp = fopen(TEMP_FILE, "rb"))
+    FILE *fp = _wfopen(TEMP_FILE, L"rb");
+    if (fp)
     {
         fread(szText, 1, sizeof(szText), fp);
         fclose(fp);
@@ -511,8 +510,7 @@ DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
     return TRUE;
 }
 
-static void
-DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
+static void DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
 {
     DWORD flags;
     LPCSTR pattern;
@@ -543,9 +541,7 @@ DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
     else
     {
         if (WaitForSingleObject(s_hEvent, 100) == WAIT_OBJECT_0)
-        {
             Sleep(50);
-        }
 
         flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
         pattern = PatternFromFlags(flags);
@@ -558,20 +554,12 @@ DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
     BOOL bOK = DoGetPaths(szPath1, szPath2);
     static UINT s_cCalmDown = 0;
 
-    if (wcsstr(szPath1, L"Recent") != NULL)
+    if (pattern[TYPE_UPDATEDIR] == '1')
     {
-        skip("Recent written\n");
-        s_cCalmDown = 0;
-    }
-    else if (pattern[TYPE_UPDATEDIR] == '1')
-    {
-        ++s_cCalmDown;
         trace("Line %d: SHCNE_UPDATEDIR: Calming down (%u)...\n", entry->line, s_cCalmDown);
 
-        if (s_cCalmDown < 3)
-        {
+        if (++s_cCalmDown < 3)
             Sleep(3000);
-        }
 
         if (entry->pattern)
             ok(TRUE, "Line %d:\n", entry->line);
@@ -611,7 +599,7 @@ DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
 static void DoQuitTest(BOOL bForce)
 {
     PostMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
-    DeleteFileA(TEMP_FILE);
+    DeleteFileW(TEMP_FILE);
 
     DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, bForce);
     s_hwnd = NULL;
@@ -657,54 +645,49 @@ static BOOL CALLBACK HandlerRoutine(DWORD dwCtrlType)
     return FALSE;
 }
 
-static BOOL
-DoInitTest(void)
+static BOOL DoInitTest(void)
 {
-    LPWSTR psz;
+    DoCreateEmptyFile(TEMP_FILE);
 
-    psz = GetWatchDir(WATCHDIR_DESKTOP);
+    SetConsoleCtrlHandler(HandlerRoutine, TRUE);
+
+    // WATCHDIR_DESKTOP
+    LPWSTR psz = DoGetDir(WATCHDIR_DESKTOP);
     lstrcpynW(s_szDesktop, psz, _countof(s_szDesktop));
 
-    psz = GetWatchDir(WATCHDIR_DESKTOP);
     PathAppendW(psz, TEST_FILE);
     lstrcpynW(s_szTestFile0, psz, _countof(s_szTestFile0));
 
-    psz = GetWatchDir(WATCHDIR_DESKTOP);
+    PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_FILE_RENAMED);
     lstrcpynW(s_szTestFile0Renamed, psz, _countof(s_szTestFile0Renamed));
 
-    psz = GetWatchDir(WATCHDIR_DESKTOP);
+    PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR);
     lstrcpynW(s_szTestDir0, psz, _countof(s_szTestDir0));
 
-    psz = GetWatchDir(WATCHDIR_DESKTOP);
+    PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR_RENAMED);
     lstrcpynW(s_szTestDir0Renamed, psz, _countof(s_szTestDir0Renamed));
 
-    psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
+    // WATCHDIR_MYDOCUMENTS
+    psz = DoGetDir(WATCHDIR_MYDOCUMENTS);
     lstrcpynW(s_szDocuments, psz, _countof(s_szDocuments));
 
-    psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
     PathAppendW(psz, TEST_FILE);
     lstrcpynW(s_szTestFile1, psz, _countof(s_szTestFile1));
 
-    psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
+    PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_FILE_RENAMED);
     lstrcpynW(s_szTestFile1Renamed, psz, _countof(s_szTestFile1Renamed));
 
-    psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
+    PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR);
     lstrcpynW(s_szTestDir1, psz, _countof(s_szTestDir1));
 
-    psz = GetWatchDir(WATCHDIR_MYDOCUMENTS);
+    PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR_RENAMED);
     lstrcpynW(s_szTestDir1Renamed, psz, _countof(s_szTestDir1Renamed));
-
-    FILE *fp = fopen(TEMP_FILE, "wb");
-    if (fp)
-        fclose(fp);
-
-    SetConsoleCtrlHandler(HandlerRoutine, TRUE);
 
     // close Explorer windows
     trace("Closing Explorer windows...\n");
@@ -727,9 +710,7 @@ GetSubProgramPath(void)
         PathAppendW(s_szSubProgram, L"testdata\\shell32_apitest_sub.exe");
 
         if (!PathFileExistsW(s_szSubProgram))
-        {
             return FALSE;
-        }
     }
 
     return TRUE;
@@ -796,7 +777,7 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
         CloseHandle(s_hEvent);
         s_hEvent = NULL;
     }
-    s_hEvent = CreateEventA(NULL, TRUE, FALSE, EVENT_NAME);
+    s_hEvent = CreateEventW(NULL, TRUE, FALSE, EVENT_NAME);
 
     WCHAR szParams[64];
     wsprintfW(szParams, L"%u,%u,%u", fRecursive, iWatchDir, nSources);
@@ -809,7 +790,6 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
     }
 
     s_hwnd = DoWaitForWindow(CLASSNAME, CLASSNAME, FALSE, FALSE);
-
     if (!s_hwnd)
     {
         skip("Unable to find window.\n");
@@ -861,27 +841,22 @@ static unsigned __stdcall TestThreadProc(void *)
     DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SOURCES_10, WATCHDIR_0);
     DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SOURCES_11, WATCHDIR_0);
 
+    BOOL bTarget = IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater();
+
+#define SWITCH(x, y) (bTarget ? (x) : (y))
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SOURCES_01, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SOURCES_03, WATCHDIR_1);
-    if (IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater())
-        DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_04, WATCHDIR_1);
-    else
-        DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SOURCES_04, WATCHDIR_1);
+    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SOURCES_04, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_05, WATCHDIR_1);
-    if (IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater())
-        DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_06, WATCHDIR_1);
-    else
-        DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SOURCES_06, WATCHDIR_1);
+    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SOURCES_06, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_07, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SOURCES_08, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_09, WATCHDIR_1);
-    if (IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater())
-        DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_06, WATCHDIR_1);
-    else
-        DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SOURCES_10, WATCHDIR_1);
+    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SOURCES_06, WATCHDIR_1);
     DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_11, WATCHDIR_1);
+#undef SWITCH
 
 #ifdef DO_TRIVIAL
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_2);
@@ -974,9 +949,7 @@ START_TEST(SHChangeNotify)
 #endif
 
     if (!GetSubProgramPath())
-    {
         skip("shell32_apitest_sub.exe not found\n");
-    }
 
     if (!DoInitTest())
     {

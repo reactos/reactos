@@ -24,7 +24,7 @@ static BOOL
 OnCreate(HWND hwnd)
 {
     s_hwnd = hwnd;
-    s_pidl = GetWatchPidl(s_iWatchDir);
+    s_pidl = DoGetPidl(s_iWatchDir);
 
     SHChangeNotifyEntry entry;
     entry.pidl = s_pidl;
@@ -60,23 +60,13 @@ OnDestroy(HWND hwnd)
 
 static BOOL DoPathes(PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2)
 {
-    WCHAR szPath[MAX_PATH];
-
-    if (pidl1)
+    if (!SHGetPathFromIDListW(pidl1, s_path1) || wcsstr(s_path1, L"Recent") != NULL)
     {
-        SHGetPathFromIDListW(pidl1, szPath);
-        if (wcsstr(szPath, L"Recent") != NULL)
-            return FALSE;
+        s_path1[0] = s_path2[0] = 0;
+        return FALSE;
     }
-    else
-    {
-        szPath[0] = 0;
-    }
-    lstrcpynW(s_path1, szPath, _countof(s_path1));
 
-    if (pidl2)
-        SHGetPathFromIDListW(pidl2, s_path2);
-    else
+    if (!SHGetPathFromIDListW(pidl2, s_path2))
         s_path2[0] = 0;
 
     return TRUE;
@@ -192,7 +182,8 @@ DoSetPaths(HWND hwnd)
     lstrcatW(szText, L"|");
     lstrcatW(szText, s_path2);
 
-    if (FILE *fp = fopen(TEMP_FILE, "wb"))
+    FILE *fp = _wfopen(TEMP_FILE, L"wb");
+    if (fp)
     {
         fwrite(szText, (lstrlenW(szText) + 1) * sizeof(WCHAR), 1, fp);
         fflush(fp);
@@ -268,7 +259,7 @@ wWinMain(HINSTANCE hInstance,
     if (!ParseCommandLine(lpCmdLine))
         return -1;
 
-    s_hEvent = OpenEventA(EVENT_ALL_ACCESS, TRUE, EVENT_NAME);
+    s_hEvent = OpenEventW(EVENT_ALL_ACCESS, TRUE, EVENT_NAME);
 
     WNDCLASSW wc;
     ZeroMemory(&wc, sizeof(wc));
