@@ -36,6 +36,40 @@ static WCHAR s_szSubProgram[MAX_PATH];
 static HANDLE s_hThread = NULL;
 static HANDLE s_hEvent = NULL;
 
+static HWND DoWaitForWindow(LPCWSTR clsname, LPCWSTR text, BOOL bClosing, BOOL bForce)
+{
+    HWND hwnd = NULL;
+    for (INT i = 0; i < 50; ++i)
+    {
+        hwnd = FindWindowW(clsname, text);
+        if (bClosing)
+        {
+            if (!hwnd)
+                break;
+
+            if (bForce)
+                PostMessage(hwnd, WM_CLOSE, 0, 0);
+        }
+        else
+        {
+            if (hwnd)
+                break;
+        }
+
+        Sleep(50);
+    }
+    return hwnd;
+}
+
+static BOOL
+DoCreateEmptyFile(LPCWSTR pszFileName)
+{
+    FILE *fp = _wfopen(pszFileName, L"wb");
+    if (fp)
+        fclose(fp);
+    return fp != NULL;
+}
+
 struct TEST_ENTRY;
 
 typedef BOOL (*ACTION)(const struct TEST_ENTRY *pEntry);
@@ -49,15 +83,6 @@ typedef struct TEST_ENTRY
     LPCWSTR path2;
     ACTION action;
 } TEST_ENTRY;
-
-static BOOL
-DoCreateEmptyFile(LPCWSTR pszFileName)
-{
-    FILE *fp = _wfopen(pszFileName, L"wb");
-    if (fp)
-        fclose(fp);
-    return fp != NULL;
-}
 
 #define TEST_FILE           L"_TEST_.txt"
 #define TEST_FILE_RENAMED   L"_TEST_RENAMED_.txt"
@@ -583,10 +608,28 @@ DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
 #endif
 }
 
-static void DoEnd(void)
+static void DoQuitTest(BOOL bForce)
 {
-    SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
+    PostMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
     DeleteFileA(TEMP_FILE);
+
+    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, bForce);
+    s_hwnd = NULL;
+
+    if (s_hEvent)
+    {
+        CloseHandle(s_hEvent);
+        s_hEvent = NULL;
+    }
+
+    DeleteFileW(s_szTestFile0);
+    DeleteFileW(s_szTestFile0Renamed);
+    DeleteFileW(s_szTestFile1);
+    DeleteFileW(s_szTestFile1Renamed);
+    RemoveDirectoryW(s_szTestDir0);
+    RemoveDirectoryW(s_szTestDir0Renamed);
+    RemoveDirectoryW(s_szTestDir1);
+    RemoveDirectoryW(s_szTestDir1Renamed);
 }
 
 static void DoAbortThread(void)
@@ -607,7 +650,7 @@ static BOOL CALLBACK HandlerRoutine(DWORD dwCtrlType)
         case CTRL_BREAK_EVENT:
         {
             DoAbortThread();
-            DoEnd();
+            DoQuitTest(TRUE);
             return TRUE;
         }
     }
@@ -615,7 +658,7 @@ static BOOL CALLBACK HandlerRoutine(DWORD dwCtrlType)
 }
 
 static BOOL
-DoInit(void)
+DoInitTest(void)
 {
     LPWSTR psz;
 
@@ -664,33 +707,11 @@ DoInit(void)
     SetConsoleCtrlHandler(HandlerRoutine, TRUE);
 
     // close Explorer windows
-    INT i, nCount = 50;
     trace("Closing Explorer windows...\n");
-    for (i = 0; i < nCount; ++i)
-    {
-        HWND hwnd = FindWindowW(L"CabinetWClass", NULL);
-        if (hwnd == NULL)
-            break;
-
-        PostMessage(hwnd, WM_CLOSE, 0, 0);
-        Sleep(50);
-    }
-
-    if (i >= nCount)
-        return FALSE;
+    DoWaitForWindow(L"CabinetWClass", NULL, TRUE, TRUE);
 
     // close the CLASSNAME windows
-    for (i = 0; i < nCount; ++i)
-    {
-        HWND hwnd = FindWindowW(CLASSNAME, CLASSNAME);
-        if (hwnd == NULL)
-            break;
-
-        PostMessage(hwnd, WM_CLOSE, 0, 0);
-        Sleep(50);
-    }
-
-    return (i < nCount);
+    return DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE) == NULL;
 }
 
 static BOOL
@@ -731,26 +752,6 @@ GetSubProgramPath(void)
 #define WATCHDIR_1 WATCHDIR_DESKTOP
 #define WATCHDIR_2 WATCHDIR_MYCOMPUTER
 #define WATCHDIR_3 WATCHDIR_MYDOCUMENTS
-
-static void DoWaitForWindow(BOOL bClosing)
-{
-    for (INT i = 0; i < 15; ++i)
-    {
-        s_hwnd = FindWindowW(CLASSNAME, CLASSNAME);
-        if (bClosing)
-        {
-            if (!s_hwnd)
-                break;
-        }
-        else
-        {
-            if (s_hwnd)
-                break;
-        }
-
-        Sleep(50);
-    }
-}
 
 static void
 DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive,
@@ -807,7 +808,7 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
         return;
     }
 
-    DoWaitForWindow(FALSE);
+    s_hwnd = DoWaitForWindow(CLASSNAME, CLASSNAME, FALSE, FALSE);
 
     if (!s_hwnd)
     {
@@ -820,31 +821,14 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
         if (!IsWindow(s_hwnd))
         {
             DoAbortThread();
-            DoEnd();
+            DoQuitTest(TRUE);
             break;
         }
 
         DoTestEntry(i, &pEntries[i], nSources);
     }
 
-    DoEnd();
-
-    DoWaitForWindow(TRUE);
-
-    if (s_hEvent)
-    {
-        CloseHandle(s_hEvent);
-        s_hEvent = NULL;
-    }
-
-    DeleteFileW(s_szTestFile0);
-    DeleteFileW(s_szTestFile0Renamed);
-    DeleteFileW(s_szTestFile1);
-    DeleteFileW(s_szTestFile1Renamed);
-    RemoveDirectoryW(s_szTestDir0);
-    RemoveDirectoryW(s_szTestDir0Renamed);
-    RemoveDirectoryW(s_szTestDir1);
-    RemoveDirectoryW(s_szTestDir1Renamed);
+    DoQuitTest(FALSE);
 
 #ifdef GROUP_TICK
     DWORD dwNewTick = GetTickCount();
@@ -994,9 +978,10 @@ START_TEST(SHChangeNotify)
         skip("shell32_apitest_sub.exe not found\n");
     }
 
-    if (!DoInit())
+    if (!DoInitTest())
     {
         skip("Unable to initialize.\n");
+        DoQuitTest(TRUE);
         return;
     }
 
