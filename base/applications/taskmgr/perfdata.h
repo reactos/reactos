@@ -84,17 +84,23 @@ ULONG	PerfDataGetUSERObjectCount(ULONG Index);
 ULONG	PerfDataGetGDIObjectCount(ULONG Index);
 BOOL	PerfDataGetIOCounters(ULONG Index, PIO_COUNTERS pIoCounters);
 
-ULONG	PerfDataGetCommitChargeTotalK(void);
-ULONG	PerfDataGetCommitChargeLimitK(void);
-ULONG	PerfDataGetCommitChargePeakK(void);
+VOID
+PerfDataGetCommitChargeK(
+    _Out_opt_ PULONGLONG Total,
+    _Out_opt_ PULONGLONG Limit,
+    _Out_opt_ PULONGLONG Peak);
 
-ULONG	PerfDataGetKernelMemoryTotalK(void);
-ULONG	PerfDataGetKernelMemoryPagedK(void);
-ULONG	PerfDataGetKernelMemoryNonPagedK(void);
+VOID
+PerfDataGetKernelMemoryK(
+    _Out_opt_ PULONGLONG MemTotal,
+    _Out_opt_ PULONGLONG MemPaged,
+    _Out_opt_ PULONGLONG MemNonPaged);
 
-ULONG	PerfDataGetPhysicalMemoryTotalK(void);
-ULONG	PerfDataGetPhysicalMemoryAvailableK(void);
-ULONG	PerfDataGetPhysicalMemorySystemCacheK(void);
+VOID
+PerfDataGetPhysicalMemoryK(
+    _Out_opt_ PULONGLONG MemTotal,
+    _Out_opt_ PULONGLONG MemAvailable,
+    _Out_opt_ PULONGLONG MemSysCache);
 
 ULONG	PerfDataGetSystemHandleCount(void);
 

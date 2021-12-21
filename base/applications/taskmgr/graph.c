@@ -312,8 +312,9 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
     /*
      * Get the memory usage
      */
-    CommitChargeTotal = (ULONGLONG)PerfDataGetCommitChargeTotalK();
-    CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
+    PerfDataGetCommitChargeK(&CommitChargeTotal,
+                             &CommitChargeLimit,
+                             NULL);
 
     if (CommitChargeTotal > 1024)
         wsprintfW(Text, L"%d MB", (int)(CommitChargeTotal / 1024));

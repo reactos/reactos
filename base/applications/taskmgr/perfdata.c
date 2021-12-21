@@ -918,161 +918,86 @@ BOOL PerfDataGetIOCounters(ULONG Index, PIO_COUNTERS pIoCounters)
     return bSuccessful;
 }
 
-ULONG PerfDataGetCommitChargeTotalK(void)
+VOID
+PerfDataGetCommitChargeK(
+    _Out_opt_ PULONGLONG ChargeTotal,
+    _Out_opt_ PULONGLONG ChargeLimit,
+    _Out_opt_ PULONGLONG ChargePeak)
 {
-    ULONG  Total;
-    ULONG  PageSize;
+    ULONG Total;
+    ULONG Limit;
+    ULONG Peak;
+    ULONG PageSize;
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
     Total = SystemPerfInfo.CommittedPages;
-    PageSize = SystemBasicInfo.PageSize;
-
-    LeaveCriticalSection(&PerfDataCriticalSection);
-
-    Total = Total * (PageSize / 1024);
-
-    return Total;
-}
-
-ULONG PerfDataGetCommitChargeLimitK(void)
-{
-    ULONG  Limit;
-    ULONG  PageSize;
-
-    EnterCriticalSection(&PerfDataCriticalSection);
-
     Limit = SystemPerfInfo.CommitLimit;
+    Peak  = SystemPerfInfo.PeakCommitment;
     PageSize = SystemBasicInfo.PageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
-    Limit = Limit * (PageSize / 1024);
-
-    return Limit;
+    if (ChargeTotal)
+        *ChargeTotal = (ULONGLONG)Total * (PageSize / 1024);
+    if (ChargeLimit)
+        *ChargeLimit = (ULONGLONG)Limit * (PageSize / 1024);
+    if (ChargePeak)
+        *ChargePeak = (ULONGLONG)Peak * (PageSize / 1024);
 }
 
-ULONG PerfDataGetCommitChargePeakK(void)
+VOID
+PerfDataGetKernelMemoryK(
+    _Out_opt_ PULONGLONG MemTotal,
+    _Out_opt_ PULONGLONG MemPaged,
+    _Out_opt_ PULONGLONG MemNonPaged)
 {
-    ULONG  Peak;
-    ULONG  PageSize;
+    ULONG Paged;
+    ULONG NonPaged;
+    ULONG PageSize;
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    Peak = SystemPerfInfo.PeakCommitment;
-    PageSize = SystemBasicInfo.PageSize;
-
-    LeaveCriticalSection(&PerfDataCriticalSection);
-
-    Peak = Peak * (PageSize / 1024);
-
-    return Peak;
-}
-
-ULONG PerfDataGetKernelMemoryTotalK(void)
-{
-    ULONG  Total;
-    ULONG  Paged;
-    ULONG  NonPaged;
-    ULONG  PageSize;
-
-    EnterCriticalSection(&PerfDataCriticalSection);
-
-    Paged = SystemPerfInfo.PagedPoolPages;
+    Paged    = SystemPerfInfo.PagedPoolPages;
     NonPaged = SystemPerfInfo.NonPagedPoolPages;
     PageSize = SystemBasicInfo.PageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
-    Paged = Paged * (PageSize / 1024);
-    NonPaged = NonPaged * (PageSize / 1024);
-
-    Total = Paged + NonPaged;
-
-    return Total;
+    if (MemTotal)
+        *MemTotal = (ULONGLONG)(Paged + NonPaged) * (PageSize / 1024);
+    if (MemPaged)
+        *MemPaged = (ULONGLONG)Paged * (PageSize / 1024);
+    if (MemNonPaged)
+        *MemNonPaged = (ULONGLONG)NonPaged * (PageSize / 1024);
 }
 
-ULONG PerfDataGetKernelMemoryPagedK(void)
+VOID
+PerfDataGetPhysicalMemoryK(
+    _Out_opt_ PULONGLONG MemTotal,
+    _Out_opt_ PULONGLONG MemAvailable,
+    _Out_opt_ PULONGLONG MemSysCache)
 {
-    ULONG  Paged;
-    ULONG  PageSize;
-
-    EnterCriticalSection(&PerfDataCriticalSection);
-
-    Paged = SystemPerfInfo.PagedPoolPages;
-    PageSize = SystemBasicInfo.PageSize;
-
-    LeaveCriticalSection(&PerfDataCriticalSection);
-
-    Paged = Paged * (PageSize / 1024);
-
-    return Paged;
-}
-
-ULONG PerfDataGetKernelMemoryNonPagedK(void)
-{
-    ULONG  NonPaged;
-    ULONG  PageSize;
-
-    EnterCriticalSection(&PerfDataCriticalSection);
-
-    NonPaged = SystemPerfInfo.NonPagedPoolPages;
-    PageSize = SystemBasicInfo.PageSize;
-
-    LeaveCriticalSection(&PerfDataCriticalSection);
-
-    NonPaged = NonPaged * (PageSize / 1024);
-
-    return NonPaged;
-}
-
-ULONG PerfDataGetPhysicalMemoryTotalK(void)
-{
-    ULONG  Total;
-    ULONG  PageSize;
+    ULONG Total;
+    ULONG Available;
+    ULONG SystemCache;
+    ULONG PageSize;
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
     Total = SystemBasicInfo.NumberOfPhysicalPages;
+    Available   = SystemPerfInfo.AvailablePages;
+    SystemCache = SystemCacheInfo.CurrentSizeIncludingTransitionInPages;
     PageSize = SystemBasicInfo.PageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
-    Total = Total * (PageSize / 1024);
-
-    return Total;
-}
-
-ULONG PerfDataGetPhysicalMemoryAvailableK(void)
-{
-    ULONG  Available;
-    ULONG  PageSize;
-
-    EnterCriticalSection(&PerfDataCriticalSection);
-
-    Available = SystemPerfInfo.AvailablePages;
-    PageSize = SystemBasicInfo.PageSize;
-
-    LeaveCriticalSection(&PerfDataCriticalSection);
-
-    Available = Available * (PageSize / 1024);
-
-    return Available;
-}
-
-ULONG PerfDataGetPhysicalMemorySystemCacheK(void)
-{
-    ULONG  SystemCache;
-    ULONG  PageSize;
-
-    EnterCriticalSection(&PerfDataCriticalSection);
-
-    PageSize = SystemBasicInfo.PageSize;
-    SystemCache = SystemCacheInfo.CurrentSizeIncludingTransitionInPages * PageSize;
-
-    LeaveCriticalSection(&PerfDataCriticalSection);
-
-    return SystemCache / 1024;
+    if (MemTotal)
+        *MemTotal = (ULONGLONG)Total * (PageSize / 1024);
+    if (MemAvailable)
+        *MemAvailable = (ULONGLONG)Available * (PageSize / 1024);
+    if (MemSysCache)
+        *MemSysCache = (ULONGLONG)SystemCache * (PageSize / 1024);
 }
 
 ULONG PerfDataGetSystemHandleCount(void)

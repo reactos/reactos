@@ -304,9 +304,10 @@ void RefreshPerformancePage(void)
     /*
      * Update the commit charge info
      */
-    CommitChargeTotal = PerfDataGetCommitChargeTotalK();
-    CommitChargeLimit = PerfDataGetCommitChargeLimitK();
-    CommitChargePeak  = PerfDataGetCommitChargePeakK();
+    PerfDataGetCommitChargeK(&CommitChargeTotal,
+                             &CommitChargeLimit,
+                             &CommitChargePeak);
+
     _ui64tow(CommitChargeTotal, Text, 10);
     SetDlgItemTextW(hPerformancePage, IDC_COMMIT_CHARGE_TOTAL, Text);
     _ui64tow(CommitChargeLimit, Text, 10);
@@ -317,9 +318,10 @@ void RefreshPerformancePage(void)
     /*
      * Update the kernel memory info
      */
-    KernelMemoryTotal = PerfDataGetKernelMemoryTotalK();
-    KernelMemoryPaged = PerfDataGetKernelMemoryPagedK();
-    KernelMemoryNonPaged = PerfDataGetKernelMemoryNonPagedK();
+    PerfDataGetKernelMemoryK(&KernelMemoryTotal,
+                             &KernelMemoryPaged,
+                             &KernelMemoryNonPaged);
+
     _ui64tow(KernelMemoryTotal, Text, 10);
     SetDlgItemTextW(hPerformancePage, IDC_KERNEL_MEMORY_TOTAL, Text);
     _ui64tow(KernelMemoryPaged, Text, 10);
@@ -330,9 +332,10 @@ void RefreshPerformancePage(void)
     /*
      * Update the physical memory info
      */
-    PhysicalMemoryTotal = PerfDataGetPhysicalMemoryTotalK();
-    PhysicalMemoryAvailable = PerfDataGetPhysicalMemoryAvailableK();
-    PhysicalMemorySystemCache = PerfDataGetPhysicalMemorySystemCacheK();
+    PerfDataGetPhysicalMemoryK(&PhysicalMemoryTotal,
+                               &PhysicalMemoryAvailable,
+                               &PhysicalMemorySystemCache);
+
     _ui64tow(PhysicalMemoryTotal, Text, 10);
     SetDlgItemTextW(hPerformancePage, IDC_PHYSICAL_MEMORY_TOTAL, Text);
     _ui64tow(PhysicalMemoryAvailable, Text, 10);
@@ -346,6 +349,7 @@ void RefreshPerformancePage(void)
     TotalHandles = PerfDataGetSystemHandleCount();
     TotalThreads = PerfDataGetTotalThreadCount();
     TotalProcesses = PerfDataGetProcessCount();
+
     _ultow(TotalHandles, Text, 10);
     SetDlgItemTextW(hPerformancePage, IDC_TOTALS_HANDLE_COUNT, Text);
     _ultow(TotalThreads, Text, 10);
