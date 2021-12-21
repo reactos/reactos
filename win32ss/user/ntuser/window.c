@@ -1623,7 +1623,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    PTHREADINFO pti = NULL;
    BOOL MenuChanged;
    BOOL bUnicodeWindow;
-   PCALLPROCDATA pcpd = NULL;
+   PCALLPROCDATA pcpd;
 
    pti = pdeskCreated ? gptiDesktopThread : GetW32ThreadInfo();
 
@@ -1775,7 +1775,6 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       pcpd = UserGetObject(gHandleTable, pWnd->pcls->lpfnWndProc, TYPE_CALLPROC);
       if (pcpd)
          pWnd->lpfnWndProc = pcpd->pfnClientPrevious;
-      pcpd = NULL;
    }
    else
    {
