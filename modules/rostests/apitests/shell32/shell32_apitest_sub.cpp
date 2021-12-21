@@ -58,11 +58,17 @@ OnDestroy(HWND hwnd)
 
 static BOOL DoPathes(PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2)
 {
-    if (!SHGetPathFromIDListW(pidl1, s_path1) || wcsstr(s_path1, L"Recent") != NULL)
+    WCHAR path[MAX_PATH];
+    if (!SHGetPathFromIDListW(pidl1, path))
     {
         s_path1[0] = s_path2[0] = 0;
         return FALSE;
     }
+
+    if (wcsstr(path, L"Recent") != NULL)
+        return FALSE;
+
+    StringCchCopyW(s_path1, _countof(s_path1), path);
 
     if (!SHGetPathFromIDListW(pidl2, s_path2))
         s_path2[0] = 0;
