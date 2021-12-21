@@ -38,7 +38,7 @@ static HANDLE s_hEvent = NULL;
 
 struct TEST_ENTRY;
 
-typedef void (*ACTION)(const struct TEST_ENTRY *pEntry);
+typedef BOOL (*ACTION)(const struct TEST_ENTRY *pEntry);
 
 typedef struct TEST_ENTRY
 {
@@ -65,16 +65,15 @@ DoCreateEmptyFile(LPCWSTR pszFileName)
 #define TEST_DIR_RENAMED    L"_TESTDIR_RENAMED_"
 #define MOVE_FILE(from, to) MoveFileW((from), (to))
 
-static void
-DoAction1(const TEST_ENTRY *pEntry)
+static BOOL DoAction1(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     ok(DoCreateEmptyFile(pszPath), "Line %d: DoCreateEmptyFile failed\n", pEntry->line);
+    return TRUE;
 }
 
-static void
-DoAction2(const TEST_ENTRY *pEntry)
+static BOOL DoAction2(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
@@ -82,10 +81,10 @@ DoAction2(const TEST_ENTRY *pEntry)
     PathAppendW(pszPath2, TEST_FILE_RENAMED);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
        pEntry->line, pszPath1, pszPath2, GetLastError());
+    return TRUE;
 }
 
-static void
-DoAction3(const TEST_ENTRY *pEntry)
+static BOOL DoAction3(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
@@ -93,28 +92,28 @@ DoAction3(const TEST_ENTRY *pEntry)
     PathAppendW(pszPath2, TEST_FILE);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
        pEntry->line, pszPath1, pszPath2, GetLastError());
+    return TRUE;
 }
 
-static void
-DoAction4(const TEST_ENTRY *pEntry)
+static BOOL DoAction4(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     ok(DeleteFileW(pszPath), "Line %d: DeleteFileW(%ls) failed (%ld)\n",
        pEntry->line, pszPath, GetLastError());
+    return TRUE;
 }
 
-static void
-DoAction5(const TEST_ENTRY *pEntry)
+static BOOL DoAction5(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     ok(CreateDirectoryW(pszPath, NULL), "Line %d: CreateDirectoryW(%ls) failed (%ld)\n",
        pEntry->line, pszPath, GetLastError());
+    return TRUE;
 }
 
-static void
-DoAction6(const TEST_ENTRY *pEntry)
+static BOOL DoAction6(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
@@ -122,10 +121,10 @@ DoAction6(const TEST_ENTRY *pEntry)
     PathAppendW(pszPath2, TEST_DIR_RENAMED);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
        pEntry->line, pszPath1, pszPath2, GetLastError());
+    return TRUE;
 }
 
-static void
-DoAction7(const TEST_ENTRY *pEntry)
+static BOOL DoAction7(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath1 = GetWatchDir(pEntry->iWriteDir);
     LPWSTR pszPath2 = GetWatchDir(pEntry->iWriteDir);
@@ -133,47 +132,48 @@ DoAction7(const TEST_ENTRY *pEntry)
     PathAppendW(pszPath2, TEST_DIR);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
        pEntry->line, pszPath1, pszPath2, GetLastError());
+    return TRUE;
 }
 
-static void
-DoAction8(const TEST_ENTRY *pEntry)
+static BOOL DoAction8(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     ok(RemoveDirectoryW(pszPath), "Line %d: RemoveDirectoryW(%ls) failed (%ld)\n",
        pEntry->line, pszPath, GetLastError());
+    return TRUE;
 }
 
-static void
-DoAction9(const TEST_ENTRY *pEntry)
+static BOOL DoAction9(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
+    return FALSE;
 }
 
-static void
-DoAction10(const TEST_ENTRY *pEntry)
+static BOOL DoAction10(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_FILE);
     SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
+    return FALSE;
 }
 
-static void
-DoAction11(const TEST_ENTRY *pEntry)
+static BOOL DoAction11(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
+    return FALSE;
 }
 
-static void
-DoAction12(const TEST_ENTRY *pEntry)
+static BOOL DoAction12(const TEST_ENTRY *pEntry)
 {
     LPWSTR pszPath = GetWatchDir(pEntry->iWriteDir);
     PathAppendW(pszPath, TEST_DIR);
     SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
+    return FALSE;
 }
 
 #define WRITEDIR_0 WATCHDIR_DESKTOP
@@ -495,12 +495,13 @@ DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
     DWORD dwOldTick = GetTickCount();
 #endif
 
+    BOOL bInterrupting = FALSE;
     if (entry->action)
     {
-        entry->action(entry);
+        bInterrupting = entry->action(entry);
     }
 
-    if (nSources & SHCNRF_InterruptLevel)
+    if ((nSources & SHCNRF_InterruptLevel) && bInterrupting)
     {
         // The event won't work at here. Manually waiting...
         UINT cTry = ((iEntry == 0) ? 100 : 60);
