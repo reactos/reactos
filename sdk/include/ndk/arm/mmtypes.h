@@ -1,20 +1,10 @@
-/*++ NDK Version: 0095
-
-Copyright (c) Alex Ionescu.  All rights reserved.
-
-Header Name:
-
-    mmtypes.h (ARM)
-
-Abstract:
-
-    ARM Type definitions for the Memory Manager
-
-Author:
-
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
-
---*/
+/*
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     NDK mmtypes for ARMv7
+ * COPYRIGHT:   Copyright 2004 Alex Ionescu <alex.ionescu@reactos.com>
+ *              Copyright 2021 Leandro Friedrich <email@leandrofriedrich.de>
+ */
 
 #ifndef _ARM_MMTYPES_H
 #define _ARM_MMTYPES_H
@@ -62,7 +52,7 @@ C_ASSERT(MM_ALLOCATION_GRANULARITY >= PAGE_SIZE);
 //
 // Page Table Entry Definitions
 //
-typedef struct _HARDWARE_PDE_ARMV6
+ typedef struct _HARDWARE_PDE
 {
     ULONG Valid:1;     // Only for small pages
     ULONG LargePage:1; // Note, if large then Valid = 0
@@ -74,7 +64,7 @@ typedef struct _HARDWARE_PDE_ARMV6
     ULONG PageFrameNumber:22;
 } HARDWARE_PDE_ARMV6, *PHARDWARE_PDE_ARMV6;
 
-typedef struct _HARDWARE_LARGE_PTE_ARMV6
+typedef struct _HARDWARE_LARGE_PTE
 {
     ULONG Valid:1;     // Only for small pages
     ULONG LargePage:1; // Note, if large then Valid = 0
@@ -92,48 +82,45 @@ typedef struct _HARDWARE_LARGE_PTE_ARMV6
     ULONG SuperLagePage:1;
     ULONG Reserved:1;
     ULONG PageFrameNumber:12;
-} HARDWARE_LARGE_PTE_ARMV6, *PHARDWARE_LARGE_PTE_ARMV6;
+} HARDWARE_LARGE_PTE, *PHARDWARE_LARGE_PTE;
 
-typedef struct _HARDWARE_PTE_ARMV6
+typedef struct _HARDWARE_PTE
 {
-    ULONG NoExecute:1;
-    ULONG Valid:1;
-    ULONG Buffered:1;
-    ULONG Cached:1;
-    ULONG Sbo:1; // ULONG Accessed:1;?
-    ULONG Owner:1;
-    ULONG CacheAttributes:3;
-    ULONG ReadOnly:1;
-    ULONG Shared:1;
-    ULONG NonGlobal:1;
-    ULONG PageFrameNumber:20;
-} HARDWARE_PTE_ARMV6, *PHARDWARE_PTE_ARMV6;
-
-C_ASSERT(sizeof(HARDWARE_PDE_ARMV6) == sizeof(ULONG));
-C_ASSERT(sizeof(HARDWARE_LARGE_PTE_ARMV6) == sizeof(ULONG));
-C_ASSERT(sizeof(HARDWARE_PTE_ARMV6) == sizeof(ULONG));
+	ULONG Valid:1;
+	ULONG CacheType:2;
+	ULONG Accessed:1;
+	ULONG Owner:1;
+	ULONG TypeExtention:1;
+	ULONG Writable:1;
+	ULONG CopyOnWrite:1;
+	ULONG ReadOnly:1;
+	ULONG LargePage:1
+	ULONG NonGlobal:1;
+	ULONG PageFrameNumber:20;
+} HARDWARE_PTE, *PHARDWARE_PTE;
 
 typedef struct _MMPTE_SOFTWARE
 {
-    ULONG Valid:2;
-    ULONG PageFileLow:4;
-    ULONG Protection:4;
-    ULONG Prototype:1;
-    ULONG Transition:1;
-    ULONG PageFileHigh:20;
+	ULONG Valid:2;
+	ULONG PageFileLow:1;
+	ULONG PageFileReserved:1;
+	ULONG PageFileAllocated:1;
+	ULONG Protection:5;
+	ULONG Prototype:1
+	ULONG Transition:1;
+	ULONG InStore:1;
+	ULONG PageFileHigh:19;
 } MMPTE_SOFTWARE;
 
 typedef struct _MMPTE_TRANSITION
 {
-    ULONG Valid:2;
-    ULONG Buffered:1;
-    ULONG Cached:1;
-    ULONG Owner:1;
-    ULONG Protection:4;
-    ULONG ReadOnly:1;
-    ULONG Prototype:1;
-    ULONG Transition:1;
-    ULONG PageFrameNumber:20;
+	ULONG Valid:2;
+	ULONG CacheType:2;
+	ULONG Spare:1;
+	ULONG Protection:5;
+	ULONG Prototype:1
+	ULONG Transition:1;
+	ULONG PageFrameNumber:20;
 } MMPTE_TRANSITION;
 
 typedef struct _MMPTE_PROTOTYPE
@@ -148,43 +135,42 @@ typedef struct _MMPTE_PROTOTYPE
 typedef struct _MMPTE_SUBSECTION
 {
     ULONG Valid:2;
-    ULONG SubsectionAddressLow:4;
-    ULONG Protection:4;
+    ULONG SubsectionAddressLow:8;
     ULONG Prototype:1;
-    ULONG SubsectionAddressHigh:20;
-    ULONG WhichPool:1;
+    ULONG SubsectionAddressHigh:21;
 } MMPTE_SUBSECTION;
 
 typedef struct _MMPTE_LIST
 {
     ULONG Valid:2;
     ULONG OneEntry:1;
-    ULONG filler0:8;
+    ULONG filler0:7;
+	ULONG Prototype:1;
+	ULONG filler1:1;
     ULONG NextEntry:20;
-    ULONG Prototype:1;
 } MMPTE_LIST;
 
 typedef struct _MMPTE_HARDWARE
 {
-    ULONG NoExecute:1;
-    ULONG Valid:1;
-    ULONG Buffered:1;
-    ULONG Cached:1;
-    ULONG Sbo:1;
-    ULONG Owner:1;
-    ULONG CacheAttributes:3;
-    ULONG ReadOnly:1;
-    ULONG Prototype:1;
-    ULONG NonGlobal:1;
-    ULONG PageFrameNumber:20;
+	ULONG Valid:2;
+	ULONG CacheType:2;
+	ULONG Accessed:1;
+	ULONG Owner:1;
+	ULONG TypeExtention:1;
+	ULONG Writable:1
+	ULONG CopyOnWrite:1;
+	ULONG NotDirty:1;
+	ULONG LargePage:1;
+	ULONG NonGlobal:1;
+	ULONG PageFrameNumber:20;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
 
 
 //
 // Use the right PTE structure
 //
-#define HARDWARE_PTE        HARDWARE_PTE_ARMV6
-#define PHARDWARE_PTE       PHARDWARE_PTE_ARMV6
+#define HARDWARE_PTE        HARDWARE_PTE
+#define PHARDWARE_PTE       PHARDWARE_PTE
 
 typedef struct _MMPTE
 {
@@ -203,14 +189,17 @@ typedef struct _MMPTE
 
 typedef union _MMPDE_HARDWARE
 {
-    ULONG Valid:1;
-    ULONG LargePage:1;
-    ULONG Buffered:1;
-    ULONG Cached:1;
-    ULONG NoExecute:1;
-    ULONG Domain:4;
-    ULONG Ecc:1;
-    ULONG PageFrameNumber:22;
+	ULONG Valid:2;
+	ULONG CacheType:2;
+	ULONG Accessed:1;
+	ULONG Owner:1;
+	ULONG TypeExtention:1;
+	ULONG Writable:1
+	ULONG CopyOnWrite:1;
+	ULONG NotDirty:1;
+	ULONG LargePage:1;
+	ULONG NonGlobal:1;
+	ULONG PageFrameNumber:20;
 } MMPDE_HARDWARE, *PMMPDE_HARDWARE;
 
 typedef struct _MMPDE
