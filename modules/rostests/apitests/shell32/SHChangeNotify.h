@@ -62,10 +62,10 @@ inline LPITEMIDLIST DoGetPidl(DIRTYPE iDir)
 inline LPWSTR DoGetDir(DIRTYPE iDir)
 {
     static size_t s_index = 0;
-    static WCHAR s_pathes[4][MAX_PATH];
+    static WCHAR s_pathes[3][MAX_PATH];
     LPWSTR psz = s_pathes[s_index];
-    psz[0] = 0;
     LPITEMIDLIST pidl = DoGetPidl(iDir);
+    psz[0] = 0;
     SHGetPathFromIDListW(pidl, psz);
     CoTaskMemFree(pidl);
     s_index = (s_index + 1) % _countof(s_pathes);

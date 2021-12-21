@@ -14,11 +14,9 @@
 #include <versionhelpers.h>
 
 // --- The selection of tests ---
-//#define DO_TRIVIAL
+#define NO_TRIVIAL
 //#define NO_INTERRUPT_LEVEL
 //#define NO_SHELL_LEVEL
-//#define SHELL_LEVEL_ONLY
-//#define INTERRUPT_LEVEL_ONLY
 #define NEW_DELIVERY_ONLY
 //#define RANDOM_HALF
 #define RANDOM_QUARTER
@@ -96,8 +94,7 @@ static BOOL DoAction1(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction2(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir);
-    LPWSTR pszPath2 = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir), pszPath2 = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_FILE);
     PathAppendW(pszPath2, TEST_FILE_RENAMED);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
@@ -107,8 +104,7 @@ static BOOL DoAction2(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction3(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir);
-    LPWSTR pszPath2 = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir), pszPath2 = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_FILE_RENAMED);
     PathAppendW(pszPath2, TEST_FILE);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
@@ -136,8 +132,7 @@ static BOOL DoAction5(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction6(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir);
-    LPWSTR pszPath2 = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir), pszPath2 = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_DIR);
     PathAppendW(pszPath2, TEST_DIR_RENAMED);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
@@ -147,8 +142,7 @@ static BOOL DoAction6(const TEST_ENTRY *pEntry)
 
 static BOOL DoAction7(const TEST_ENTRY *pEntry)
 {
-    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir);
-    LPWSTR pszPath2 = DoGetDir(pEntry->iWriteDir);
+    LPWSTR pszPath1 = DoGetDir(pEntry->iWriteDir), pszPath2 = DoGetDir(pEntry->iWriteDir);
     PathAppendW(pszPath1, TEST_DIR_RENAMED);
     PathAppendW(pszPath2, TEST_DIR);
     ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
@@ -200,28 +194,28 @@ static BOOL DoAction12(const TEST_ENTRY *pEntry)
 #define WRITEDIR_0 DIRTYPE_DESKTOP
 static WCHAR s_szDesktop[MAX_PATH];
 static WCHAR s_szTestFile0[MAX_PATH];
-static WCHAR s_szTestFile0Renamed[MAX_PATH];
+static WCHAR s_szTestFile0Kai[MAX_PATH];
 static WCHAR s_szTestDir0[MAX_PATH];
-static WCHAR s_szTestDir0Renamed[MAX_PATH];
+static WCHAR s_szTestDir0Kai[MAX_PATH];
 
 #define WRITEDIR_1 DIRTYPE_MYDOCUMENTS
 static WCHAR s_szDocuments[MAX_PATH];
 static WCHAR s_szTestFile1[MAX_PATH];
-static WCHAR s_szTestFile1Renamed[MAX_PATH];
+static WCHAR s_szTestFile1Kai[MAX_PATH];
 static WCHAR s_szTestDir1[MAX_PATH];
-static WCHAR s_szTestDir1Renamed[MAX_PATH];
+static WCHAR s_szTestDir1Kai[MAX_PATH];
 
 static void DoDeleteFilesAndDirs(void)
 {
     DeleteFileW(TEMP_FILE);
     DeleteFileW(s_szTestFile0);
-    DeleteFileW(s_szTestFile0Renamed);
+    DeleteFileW(s_szTestFile0Kai);
     DeleteFileW(s_szTestFile1);
-    DeleteFileW(s_szTestFile1Renamed);
+    DeleteFileW(s_szTestFile1Kai);
     RemoveDirectoryW(s_szTestDir0);
-    RemoveDirectoryW(s_szTestDir0Renamed);
+    RemoveDirectoryW(s_szTestDir0Kai);
     RemoveDirectoryW(s_szTestDir1);
-    RemoveDirectoryW(s_szTestDir1Renamed);
+    RemoveDirectoryW(s_szTestDir1Kai);
 }
 
 static const TEST_ENTRY s_group_00[] =
@@ -343,12 +337,12 @@ static const TEST_ENTRY s_group_03[] =
 static const TEST_ENTRY s_group_04[] =
 {
     { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0, s_szTestFile0Renamed, DoAction2 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0Renamed, s_szTestFile0, DoAction3 },
+    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0, s_szTestFile0Kai, DoAction2 },
+    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0Kai, s_szTestFile0, DoAction3 },
     { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction4 },
     { __LINE__, WRITEDIR_0, "0001000", s_szTestDir0, L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0, s_szTestDir0Renamed, DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0Renamed, s_szTestDir0, DoAction7 },
+    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0, s_szTestDir0Kai, DoAction6 },
+    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0Kai, s_szTestDir0, DoAction7 },
     { __LINE__, WRITEDIR_0, "0000100", s_szTestDir0, L"", DoAction8 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
@@ -385,12 +379,12 @@ static const TEST_ENTRY s_group_05[] =
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
 
     { __LINE__, WRITEDIR_1, "0100000", s_szTestFile1, L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1, s_szTestFile1Renamed, DoAction2 },
-    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1Renamed, s_szTestFile1, DoAction3 },
+    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1, s_szTestFile1Kai, DoAction2 },
+    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1Kai, s_szTestFile1, DoAction3 },
     { __LINE__, WRITEDIR_1, "0010000", s_szTestFile1, L"", DoAction4 },
     { __LINE__, WRITEDIR_1, "0001000", s_szTestDir1, L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1, s_szTestDir1Renamed, DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1Renamed, s_szTestDir1, DoAction7 },
+    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1, s_szTestDir1Kai, DoAction6 },
+    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1Kai, s_szTestDir1, DoAction7 },
     { __LINE__, WRITEDIR_1, "0000100", s_szTestDir1, L"", DoAction8 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction9 },
     { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction10 },
@@ -401,12 +395,12 @@ static const TEST_ENTRY s_group_05[] =
 static const TEST_ENTRY s_group_06[] =
 {
     { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0, s_szTestFile0Renamed, DoAction2 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0Renamed, s_szTestFile0, DoAction3 },
+    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0, s_szTestFile0Kai, DoAction2 },
+    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0Kai, s_szTestFile0, DoAction3 },
     { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction4 },
     { __LINE__, WRITEDIR_0, "0001000", s_szTestDir0, L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0, s_szTestDir0Renamed, DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0Renamed, s_szTestDir0, DoAction7 },
+    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0, s_szTestDir0Kai, DoAction6 },
+    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0Kai, s_szTestDir0, DoAction7 },
     { __LINE__, WRITEDIR_0, "0000100", s_szTestDir0, L"", DoAction8 },
     { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction9 },
     { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction10 },
@@ -430,12 +424,12 @@ static const TEST_ENTRY s_group_06[] =
 static const TEST_ENTRY s_group_07[] =
 {
     { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0, s_szTestFile0Renamed, DoAction2 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0Renamed, s_szTestFile0, DoAction3 },
+    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0, s_szTestFile0Kai, DoAction2 },
+    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0Kai, s_szTestFile0, DoAction3 },
     { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction4 },
     { __LINE__, WRITEDIR_0, "0001000", s_szTestDir0, L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0, s_szTestDir0Renamed, DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0Renamed, s_szTestDir0, DoAction7 },
+    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0, s_szTestDir0Kai, DoAction6 },
+    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0Kai, s_szTestDir0, DoAction7 },
     { __LINE__, WRITEDIR_0, "0000100", s_szTestDir0, L"", DoAction8 },
     { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction9 },
     { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction10 },
@@ -472,12 +466,12 @@ static const TEST_ENTRY s_group_08[] =
     { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
 
     { __LINE__, WRITEDIR_1, "0100000", s_szTestFile1, L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1, s_szTestFile1Renamed, DoAction2 },
-    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1Renamed, s_szTestFile1, DoAction3 },
+    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1, s_szTestFile1Kai, DoAction2 },
+    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1Kai, s_szTestFile1, DoAction3 },
     { __LINE__, WRITEDIR_1, "0010000", s_szTestFile1, L"", DoAction4 },
     { __LINE__, WRITEDIR_1, "0001000", s_szTestDir1, L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1, s_szTestDir1Renamed, DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1Renamed, s_szTestDir1, DoAction7 },
+    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1, s_szTestDir1Kai, DoAction6 },
+    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1Kai, s_szTestDir1, DoAction7 },
     { __LINE__, WRITEDIR_1, "0000100", s_szTestDir1, L"", DoAction8 },
     { __LINE__, WRITEDIR_1, "0100000", s_szTestFile1, L"", DoAction9 },
     { __LINE__, WRITEDIR_1, "0010000", s_szTestFile1, L"", DoAction10 },
@@ -487,13 +481,11 @@ static const TEST_ENTRY s_group_08[] =
 
 static LPCSTR PatternFromFlags(DWORD flags)
 {
-    static char s_buf[TYPE_MAX + 1];
-    DWORD i;
-    for (i = 0; i <= TYPE_MAX; ++i)
-    {
+    static CHAR s_buf[(TYPE_MAX + 1) + 1];
+    for (INT i = 0; i < (TYPE_MAX + 1); ++i)
         s_buf[i] = (char)('0' + !!(flags & (1 << i)));
-    }
-    s_buf[i] = 0;
+
+    s_buf[TYPE_MAX + 1] = 0;
     return s_buf;
 }
 
@@ -522,18 +514,16 @@ static BOOL DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
 
 static void DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
 {
-    DWORD flags;
-    LPCSTR pattern;
 #ifdef ENTRY_TICK
     DWORD dwOldTick = GetTickCount();
 #endif
 
     BOOL bInterrupting = FALSE;
     if (entry->action)
-    {
         bInterrupting = entry->action(entry);
-    }
 
+    DWORD flags;
+    LPCSTR pattern;
     if ((nSources & SHCNRF_InterruptLevel) && bInterrupting)
     {
         // The event won't work at here. Manually waiting...
@@ -562,11 +552,12 @@ static void DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     szPath1[0] = szPath2[0] = 0;
     BOOL bOK = DoGetPaths(szPath1, szPath2);
+
     static UINT s_cCalmDown = 0;
 
     if (pattern[TYPE_UPDATEDIR] == '1')
     {
-        trace("Line %d: SHCNE_UPDATEDIR: Calming down (%u)...\n", entry->line, s_cCalmDown);
+        trace("Line %d: SHCNE_UPDATEDIR: Calm down (%u)...\n", entry->line, s_cCalmDown);
 
         if (++s_cCalmDown < 3)
             Sleep(3000);
@@ -638,19 +629,15 @@ static BOOL CALLBACK HandlerRoutine(DWORD dwCtrlType)
     {
         case CTRL_C_EVENT:
         case CTRL_BREAK_EVENT:
-        {
             DoAbortThread();
             DoQuitTest(TRUE);
             return TRUE;
-        }
     }
     return FALSE;
 }
 
 static BOOL DoInitTest(void)
 {
-    SetConsoleCtrlHandler(HandlerRoutine, TRUE);
-
     // DIRTYPE_DESKTOP
     LPWSTR psz = DoGetDir(DIRTYPE_DESKTOP);
     StringCchCopyW(s_szDesktop, _countof(s_szDesktop), psz);
@@ -660,7 +647,7 @@ static BOOL DoInitTest(void)
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_FILE_RENAMED);
-    StringCchCopyW(s_szTestFile0Renamed, _countof(s_szTestFile0Renamed), psz);
+    StringCchCopyW(s_szTestFile0Kai, _countof(s_szTestFile0Kai), psz);
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR);
@@ -668,7 +655,7 @@ static BOOL DoInitTest(void)
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR_RENAMED);
-    StringCchCopyW(s_szTestDir0Renamed, _countof(s_szTestDir0Renamed), psz);
+    StringCchCopyW(s_szTestDir0Kai, _countof(s_szTestDir0Kai), psz);
 
     // DIRTYPE_MYDOCUMENTS
     psz = DoGetDir(DIRTYPE_MYDOCUMENTS);
@@ -679,7 +666,7 @@ static BOOL DoInitTest(void)
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_FILE_RENAMED);
-    StringCchCopyW(s_szTestFile1Renamed, _countof(s_szTestFile1Renamed), psz);
+    StringCchCopyW(s_szTestFile1Kai, _countof(s_szTestFile1Kai), psz);
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR);
@@ -687,11 +674,14 @@ static BOOL DoInitTest(void)
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR_RENAMED);
-    StringCchCopyW(s_szTestDir1Renamed, _countof(s_szTestDir1Renamed), psz);
+    StringCchCopyW(s_szTestDir1Kai, _countof(s_szTestDir1Kai), psz);
 
     // prepare for files and dirs
     DoDeleteFilesAndDirs();
     DoCreateEmptyFile(TEMP_FILE);
+
+    // Ctrl+C
+    SetConsoleCtrlHandler(HandlerRoutine, TRUE);
 
     // close Explorer windows
     trace("Closing Explorer windows...\n");
@@ -748,14 +738,6 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
 #endif
 #ifdef NO_SHELL_LEVEL
     if (nSources & SHCNRF_ShellLevel)
-        return;
-#endif
-#ifdef INTERRUPT_LEVEL_ONLY
-    if (!(nSources & SHCNRF_InterruptLevel))
-        return;
-#endif
-#ifdef SHELL_LEVEL_ONLY
-    if (!(nSources & SHCNRF_ShellLevel))
         return;
 #endif
 #ifdef NEW_DELIVERY_ONLY
@@ -861,7 +843,7 @@ static unsigned __stdcall TestThreadProc(void *)
     DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SRC_11, WATCHDIR_1);
 #undef SWITCH
 
-#ifdef DO_TRIVIAL
+#ifndef NO_TRIVIAL
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_00, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_01, WATCHDIR_2);
     DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_02, WATCHDIR_2);
@@ -951,8 +933,13 @@ START_TEST(SHChangeNotify)
     DWORD dwOldTick = GetTickCount();
 #endif
 
+    trace("Please don't operate your PC while testing...\n");
+
     if (!GetSubProgramPath())
+    {
         skip("shell32_apitest_sub.exe not found\n");
+        return;
+    }
 
     if (!DoInitTest())
     {
@@ -960,8 +947,6 @@ START_TEST(SHChangeNotify)
         DoQuitTest(TRUE);
         return;
     }
-
-    trace("Please don't operate your PC while testing...\n");
 
     s_hThread = (HANDLE)_beginthreadex(NULL, 0, TestThreadProc, NULL, 0, NULL);
     WaitForSingleObject(s_hThread, INFINITE);
