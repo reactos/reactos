@@ -423,21 +423,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
-#if 0
-    case WM_NCPAINT:
-        hdc = GetDC(hDlg);
-        GetClientRect(hDlg, &rc);
-        Draw3dRect(hdc, rc.left, rc.top, rc.right, rc.top + 2, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
-        ReleaseDC(hDlg, hdc);
-        break;
 
-    case WM_PAINT:
-        hdc = BeginPaint(hDlg, &ps);
-        GetClientRect(hDlg, &rc);
-        Draw3dRect(hdc, rc.left, rc.top, rc.right, rc.top + 2, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
-        EndPaint(hDlg, &ps);
-        break;
-#endif
     case WM_SIZING:
         /* Make sure the user is sizing the dialog */
         /* in an acceptable range */
@@ -525,32 +511,6 @@ void FillSolidRect(HDC hDC, LPCRECT lpRect, COLORREF clr)
 {
     SetBkColor(hDC, clr);
     ExtTextOutW(hDC, 0, 0, ETO_OPAQUE, lpRect, NULL, 0, NULL);
-}
-
-void FillSolidRect2(HDC hDC, int x, int y, int cx, int cy, COLORREF clr)
-{
-    RECT rect;
-
-    SetBkColor(hDC, clr);
-    rect.left = x;
-    rect.top = y;
-    rect.right = x + cx;
-    rect.bottom = y + cy;
-    ExtTextOutW(hDC, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
-}
-
-void Draw3dRect(HDC hDC, int x, int y, int cx, int cy, COLORREF clrTopLeft, COLORREF clrBottomRight)
-{
-    FillSolidRect2(hDC, x, y, cx - 1, 1, clrTopLeft);
-    FillSolidRect2(hDC, x, y, 1, cy - 1, clrTopLeft);
-    FillSolidRect2(hDC, x + cx, y, -1, cy, clrBottomRight);
-    FillSolidRect2(hDC, x, y + cy, cx, -1, clrBottomRight);
-}
-
-void Draw3dRect2(HDC hDC, LPRECT lpRect, COLORREF clrTopLeft, COLORREF clrBottomRight)
-{
-    Draw3dRect(hDC, lpRect->left, lpRect->top, lpRect->right - lpRect->left,
-        lpRect->bottom - lpRect->top, clrTopLeft, clrBottomRight);
 }
 
 static void SetUpdateSpeed(HWND hWnd)
