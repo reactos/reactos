@@ -51,7 +51,7 @@ static HWND DoWaitForWindow(LPCWSTR clsname, LPCWSTR text, BOOL bClosing, BOOL b
                 break;
         }
 
-        Sleep(50);
+        Sleep(1);
     }
     return hwnd;
 }
@@ -535,13 +535,13 @@ static void DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
             if (strcmp(pattern, "0000000") != 0)
                 break;
 
-            Sleep(50);
+            Sleep(1);
         }
     }
     else
     {
         if (WaitForSingleObject(s_hEvent, 100) == WAIT_OBJECT_0)
-            Sleep(50);
+            Sleep(1);
 
         flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
         pattern = PatternFromFlags(flags);
