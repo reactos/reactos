@@ -1779,7 +1779,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    }
    else
    {
-      pWnd->lpfnWndProc  = pWnd->pcls->lpfnWndProc;
+      pWnd->lpfnWndProc = pWnd->pcls->lpfnWndProc;
    }
 
    // GetWindowProc, test for non server side default classes and set WndProc.
