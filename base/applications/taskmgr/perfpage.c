@@ -13,6 +13,9 @@ extern BOOL bInMenuLoop;    /* Tells us if we are in the menu loop - from taskmg
 static TM_GRAPH_CONTROL CpuUsageHistoryGraph;
 static TM_GRAPH_CONTROL MemUsageHistoryGraph;
 
+static TM_GAUGE_CONTROL CpuUsageGraph = {0};
+static TM_GAUGE_CONTROL MemUsageGraph = {0};
+
 HWND hPerformancePage;              /* Performance Property Page */
 static HWND hCpuUsageGraph;         /* CPU Usage Graph */
 static HWND hMemUsageGraph;         /* MEM Usage Graph */
@@ -112,6 +115,11 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             hMemUsageHistoryGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
 
             /* Create the graph controls */
+            CpuUsageGraph.bIsCPU = TRUE;
+            // CpuUsageGraph.hWnd = hCpuUsageGraph;
+            MemUsageGraph.bIsCPU = FALSE;
+            // MemUsageGraph.hWnd = hMemUsageGraph;
+
             fmt.clrBack = RGB(0, 0, 0);
             fmt.clrGrid = RGB(0, 128, 64);
             fmt.clrPlot0 = RGB(0, 255, 0);
@@ -157,11 +165,17 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                                  graph,
                                  (WPARAM)drawItem->hDC, 0);
             }
-            else
-            if ((drawItem->CtlID == IDC_CPU_USAGE_GRAPH) ||
-                (drawItem->CtlID == IDC_MEM_USAGE_GRAPH))
+            else if (drawItem->CtlID == IDC_CPU_USAGE_GRAPH)
             {
-                Graph_Draw(drawItem->hwndItem, (WPARAM)drawItem->hDC, 0);
+                Graph_DrawUsageGraph(drawItem->hwndItem,
+                                     &CpuUsageGraph,
+                                     (WPARAM)drawItem->hDC, 0);
+            }
+            else if (drawItem->CtlID == IDC_MEM_USAGE_GRAPH)
+            {
+                Graph_DrawUsageGraph(drawItem->hwndItem,
+                                     &MemUsageGraph,
+                                     (WPARAM)drawItem->hDC, 0);
             }
 
             break;
@@ -422,6 +436,19 @@ void RefreshPerformancePage(void)
     nBarsUsed2 = PhysicalMemoryTotal ? ((PhysicalMemoryAvailable * 100) / PhysicalMemoryTotal) : 0;
     GraphCtrl_AddPoint(&CpuUsageHistoryGraph, CpuUsage, CpuKernelUsage);
     GraphCtrl_AddPoint(&MemUsageHistoryGraph, nBarsUsed1, nBarsUsed2);
+
+    // CpuUsageGraph.Maximum  = 100;
+    CpuUsageGraph.Current1 = CpuUsage;
+    CpuUsageGraph.Current2 = CpuKernelUsage;
+
+    Meter_CommitChargeTotal = CommitChargeTotal;
+    Meter_CommitChargeLimit = CommitChargeLimit;
+
+    // MemUsageGraph.Maximum = Meter_CommitChargeLimit;
+    if (Meter_CommitChargeLimit)
+        MemUsageGraph.Current1 = (ULONG)((Meter_CommitChargeTotal * 100) / Meter_CommitChargeLimit);
+    else
+        MemUsageGraph.Current1 = 0;
 
     /* Update the status bar */
     UpdatePerfStatusBar(TotalProcesses, CpuUsage, CommitChargeTotal, CommitChargeLimit);
