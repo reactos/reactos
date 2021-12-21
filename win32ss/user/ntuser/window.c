@@ -1623,6 +1623,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    PTHREADINFO pti = NULL;
    BOOL MenuChanged;
    BOOL bUnicodeWindow;
+   PCALLPROCDATA pcpd = NULL;
 
    pti = pdeskCreated ? gptiDesktopThread : GetW32ThreadInfo();
 
@@ -1769,7 +1770,17 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
     see what problems this would cause. */
 
    // Set WndProc from Class.
-   pWnd->lpfnWndProc  = pWnd->pcls->lpfnWndProc;
+   if (IsCallProcHandle(pWnd->pcls->lpfnWndProc))
+   {
+      pcpd = UserGetObject(gHandleTable, pWnd->pcls->lpfnWndProc, TYPE_CALLPROC);
+      if (pcpd)
+         pWnd->lpfnWndProc = pcpd->pfnClientPrevious;
+      pcpd = NULL;
+   }
+   else
+   {
+      pWnd->lpfnWndProc  = pWnd->pcls->lpfnWndProc;
+   }
 
    // GetWindowProc, test for non server side default classes and set WndProc.
     if ( pWnd->pcls->fnid <= FNID_GHOST && pWnd->pcls->fnid >= FNID_BUTTON )
