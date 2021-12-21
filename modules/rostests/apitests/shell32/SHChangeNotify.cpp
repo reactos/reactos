@@ -5,13 +5,13 @@
  * COPYRIGHT:   Copyright 2020-2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-// NOTE: This test program closes the Explorer cabinets before tests.
+// NOTE: This test program closes the Explorer windows before tests.
 
 #include "shelltest.h"
+#include "SHChangeNotify.h"
 #include <time.h>
 #include <process.h>
 #include <versionhelpers.h>
-#include "SHChangeNotify.h"
 
 // --- The selection of tests ---
 //#define DO_TRIVIAL
@@ -73,7 +73,7 @@ typedef BOOL (*ACTION)(const struct TEST_ENTRY *pEntry);
 typedef struct TEST_ENTRY
 {
     INT line;
-    WATCHDIR iWriteDir;
+    DIRTYPE iWriteDir;
     LPCSTR pattern;
     LPCWSTR path1;
     LPCWSTR path2;
@@ -197,14 +197,14 @@ static BOOL DoAction12(const TEST_ENTRY *pEntry)
     return FALSE;
 }
 
-#define WRITEDIR_0 WATCHDIR_DESKTOP
+#define WRITEDIR_0 DIRTYPE_DESKTOP
 static WCHAR s_szDesktop[MAX_PATH];
 static WCHAR s_szTestFile0[MAX_PATH];
 static WCHAR s_szTestFile0Renamed[MAX_PATH];
 static WCHAR s_szTestDir0[MAX_PATH];
 static WCHAR s_szTestDir0Renamed[MAX_PATH];
 
-#define WRITEDIR_1 WATCHDIR_MYDOCUMENTS
+#define WRITEDIR_1 DIRTYPE_MYDOCUMENTS
 static WCHAR s_szDocuments[MAX_PATH];
 static WCHAR s_szTestFile1[MAX_PATH];
 static WCHAR s_szTestFile1Renamed[MAX_PATH];
@@ -515,8 +515,8 @@ static BOOL DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
         return FALSE;
 
     *pch = 0;
-    lstrcpynW(pszPath1, szText, MAX_PATH);
-    lstrcpynW(pszPath2, pch + 1, MAX_PATH);
+    StringCchCopyW(pszPath1, MAX_PATH, szText);
+    StringCchCopyW(pszPath2, MAX_PATH, pch + 1);
     return TRUE;
 }
 
@@ -649,48 +649,49 @@ static BOOL CALLBACK HandlerRoutine(DWORD dwCtrlType)
 
 static BOOL DoInitTest(void)
 {
-    DoDeleteFilesAndDirs();
-    DoCreateEmptyFile(TEMP_FILE);
-
     SetConsoleCtrlHandler(HandlerRoutine, TRUE);
 
-    // WATCHDIR_DESKTOP
-    LPWSTR psz = DoGetDir(WATCHDIR_DESKTOP);
-    lstrcpynW(s_szDesktop, psz, _countof(s_szDesktop));
+    // DIRTYPE_DESKTOP
+    LPWSTR psz = DoGetDir(DIRTYPE_DESKTOP);
+    StringCchCopyW(s_szDesktop, _countof(s_szDesktop), psz);
 
     PathAppendW(psz, TEST_FILE);
-    lstrcpynW(s_szTestFile0, psz, _countof(s_szTestFile0));
+    StringCchCopyW(s_szTestFile0, _countof(s_szTestFile0), psz);
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_FILE_RENAMED);
-    lstrcpynW(s_szTestFile0Renamed, psz, _countof(s_szTestFile0Renamed));
+    StringCchCopyW(s_szTestFile0Renamed, _countof(s_szTestFile0Renamed), psz);
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR);
-    lstrcpynW(s_szTestDir0, psz, _countof(s_szTestDir0));
+    StringCchCopyW(s_szTestDir0, _countof(s_szTestDir0), psz);
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR_RENAMED);
-    lstrcpynW(s_szTestDir0Renamed, psz, _countof(s_szTestDir0Renamed));
+    StringCchCopyW(s_szTestDir0Renamed, _countof(s_szTestDir0Renamed), psz);
 
-    // WATCHDIR_MYDOCUMENTS
-    psz = DoGetDir(WATCHDIR_MYDOCUMENTS);
-    lstrcpynW(s_szDocuments, psz, _countof(s_szDocuments));
+    // DIRTYPE_MYDOCUMENTS
+    psz = DoGetDir(DIRTYPE_MYDOCUMENTS);
+    StringCchCopyW(s_szDocuments, _countof(s_szDocuments), psz);
 
     PathAppendW(psz, TEST_FILE);
-    lstrcpynW(s_szTestFile1, psz, _countof(s_szTestFile1));
+    StringCchCopyW(s_szTestFile1, _countof(s_szTestFile1), psz);
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_FILE_RENAMED);
-    lstrcpynW(s_szTestFile1Renamed, psz, _countof(s_szTestFile1Renamed));
+    StringCchCopyW(s_szTestFile1Renamed, _countof(s_szTestFile1Renamed), psz);
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR);
-    lstrcpynW(s_szTestDir1, psz, _countof(s_szTestDir1));
+    StringCchCopyW(s_szTestDir1, _countof(s_szTestDir1), psz);
 
     PathRemoveFileSpecW(psz);
     PathAppendW(psz, TEST_DIR_RENAMED);
-    lstrcpynW(s_szTestDir1Renamed, psz, _countof(s_szTestDir1Renamed));
+    StringCchCopyW(s_szTestDir1Renamed, _countof(s_szTestDir1Renamed), psz);
+
+    // prepare for files and dirs
+    DoDeleteFilesAndDirs();
+    DoCreateEmptyFile(TEMP_FILE);
 
     // close Explorer windows
     trace("Closing Explorer windows...\n");
@@ -719,27 +720,27 @@ GetSubProgramPath(void)
     return TRUE;
 }
 
-#define SOURCES_00  0
-#define SOURCES_01  SHCNRF_ShellLevel
-#define SOURCES_02  (SHCNRF_NewDelivery)
-#define SOURCES_03  (SHCNRF_NewDelivery | SHCNRF_ShellLevel)
-#define SOURCES_04  SHCNRF_InterruptLevel
-#define SOURCES_05  (SHCNRF_InterruptLevel | SHCNRF_ShellLevel)
-#define SOURCES_06  (SHCNRF_InterruptLevel | SHCNRF_NewDelivery)
-#define SOURCES_07  (SHCNRF_InterruptLevel | SHCNRF_NewDelivery | SHCNRF_ShellLevel)
-#define SOURCES_08  (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel)
-#define SOURCES_09  (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_ShellLevel)
-#define SOURCES_10  (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_NewDelivery)
-#define SOURCES_11  (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_NewDelivery | SHCNRF_ShellLevel)
+#define SRC_00 0
+#define SRC_01 SHCNRF_ShellLevel
+#define SRC_02 (SHCNRF_NewDelivery)
+#define SRC_03 (SHCNRF_NewDelivery | SHCNRF_ShellLevel)
+#define SRC_04 SHCNRF_InterruptLevel
+#define SRC_05 (SHCNRF_InterruptLevel | SHCNRF_ShellLevel)
+#define SRC_06 (SHCNRF_InterruptLevel | SHCNRF_NewDelivery)
+#define SRC_07 (SHCNRF_InterruptLevel | SHCNRF_NewDelivery | SHCNRF_ShellLevel)
+#define SRC_08 (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel)
+#define SRC_09 (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_ShellLevel)
+#define SRC_10 (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_NewDelivery)
+#define SRC_11 (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_NewDelivery | SHCNRF_ShellLevel)
 
-#define WATCHDIR_0 WATCHDIR_NULL
-#define WATCHDIR_1 WATCHDIR_DESKTOP
-#define WATCHDIR_2 WATCHDIR_MYCOMPUTER
-#define WATCHDIR_3 WATCHDIR_MYDOCUMENTS
+#define WATCHDIR_0 DIRTYPE_NULL
+#define WATCHDIR_1 DIRTYPE_DESKTOP
+#define WATCHDIR_2 DIRTYPE_MYCOMPUTER
+#define WATCHDIR_3 DIRTYPE_MYDOCUMENTS
 
 static void
 DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive,
-            INT nSources, WATCHDIR iWatchDir)
+            INT nSources, DIRTYPE iWatchDir)
 {
 #ifdef NO_INTERRUPT_LEVEL
     if (nSources & SHCNRF_InterruptLevel)
@@ -783,7 +784,7 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
     s_hEvent = CreateEventW(NULL, TRUE, FALSE, EVENT_NAME);
 
     WCHAR szParams[64];
-    wsprintfW(szParams, L"%u,%u,%u", fRecursive, iWatchDir, nSources);
+    StringCchPrintfW(szParams, _countof(szParams), L"%u,%u,%u", fRecursive, iWatchDir, nSources);
 
     HINSTANCE hinst = ShellExecuteW(NULL, NULL, s_szSubProgram, szParams, NULL, SW_SHOWNORMAL);
     if ((INT_PTR)hinst <= 32)
@@ -822,125 +823,124 @@ DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive
 
 static unsigned __stdcall TestThreadProc(void *)
 {
-#ifdef RANDOM_QUARTER
     srand(time(NULL));
+#ifdef RANDOM_QUARTER
     skip("RANDOM_QUARTER\n");
 #elif defined(RANDOM_HALF)
-    srand(time(NULL));
     skip("RANDOM_HALF\n");
 #endif
 
     // fRecursive == FALSE.
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SOURCES_01, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SOURCES_03, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SOURCES_04, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SOURCES_05, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SOURCES_06, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SOURCES_07, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SOURCES_08, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SOURCES_09, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SOURCES_10, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SOURCES_11, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_00, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SRC_01, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_02, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SRC_03, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SRC_04, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SRC_05, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SRC_06, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SRC_07, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SRC_08, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SRC_09, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SRC_10, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SRC_11, WATCHDIR_0);
 
     BOOL bTarget = IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater();
 
 #define SWITCH(x, y) (bTarget ? (x) : (y))
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SOURCES_01, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SOURCES_03, WATCHDIR_1);
-    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SOURCES_04, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_05, WATCHDIR_1);
-    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SOURCES_06, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_07, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SOURCES_08, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_09, WATCHDIR_1);
-    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SOURCES_06, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SOURCES_11, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_00, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SRC_01, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_02, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SRC_03, WATCHDIR_1);
+    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SRC_04, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SRC_05, WATCHDIR_1);
+    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SRC_06, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SRC_07, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SRC_08, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SRC_09, WATCHDIR_1);
+    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SRC_06, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SRC_11, WATCHDIR_1);
 #undef SWITCH
 
 #ifdef DO_TRIVIAL
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_01, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_03, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_04, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_05, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_06, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_07, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_08, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_09, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_10, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_11, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_00, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_01, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_02, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_03, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_04, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_05, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_06, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_07, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_08, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_09, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_10, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_11, WATCHDIR_2);
 #endif
 
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_00, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, FALSE, SOURCES_01, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SOURCES_02, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, FALSE, SOURCES_03, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SOURCES_04, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SOURCES_05, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SOURCES_06, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SOURCES_07, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SOURCES_08, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SOURCES_09, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SOURCES_10, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SOURCES_11, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_00, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, FALSE, SRC_01, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_02, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, FALSE, SRC_03, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SRC_04, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SRC_05, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SRC_06, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SRC_07, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SRC_08, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SRC_09, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SRC_10, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SRC_11, WATCHDIR_3);
 
     // fRecursive == TRUE.
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_03, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_04, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_05, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_06, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_07, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_08, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_09, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_10, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_11, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_00, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_01, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_02, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_03, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_04, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_05, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_06, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_07, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_08, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_09, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_10, WATCHDIR_0);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_11, WATCHDIR_0);
 
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_03, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_04, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_05, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_06, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_07, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_08, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_09, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_10, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_11, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_00, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_01, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_02, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_03, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_04, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_05, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_06, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_07, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_08, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_09, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_10, WATCHDIR_1);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_11, WATCHDIR_1);
 
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_01, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SOURCES_03, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_04, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_05, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_06, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_07, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_08, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_09, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SOURCES_10, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SOURCES_11, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_00, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_01, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_02, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_03, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_04, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_05, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_06, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_07, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_08, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_09, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_10, WATCHDIR_2);
+    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_11, WATCHDIR_2);
 
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_00, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_01, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SOURCES_02, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SOURCES_03, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SOURCES_04, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_05, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SOURCES_06, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_07, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SOURCES_08, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_09, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SOURCES_10, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SOURCES_11, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_00, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SRC_01, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_02, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SRC_03, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SRC_04, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SRC_05, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SRC_06, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SRC_07, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SRC_08, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SRC_09, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SRC_10, WATCHDIR_3);
+    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SRC_11, WATCHDIR_3);
 
     return 0;
 }

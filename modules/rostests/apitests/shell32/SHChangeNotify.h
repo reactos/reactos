@@ -26,32 +26,32 @@ typedef enum TYPE
     TYPE_MAX = TYPE_UPDATEDIR
 } TYPE;
 
-typedef enum WATCHDIR
+typedef enum DIRTYPE
 {
-    WATCHDIR_NULL = 0,
-    WATCHDIR_DESKTOP,
-    WATCHDIR_MYCOMPUTER,
-    WATCHDIR_MYDOCUMENTS
-} WATCHDIR;
+    DIRTYPE_NULL = 0,
+    DIRTYPE_DESKTOP,
+    DIRTYPE_MYCOMPUTER,
+    DIRTYPE_MYDOCUMENTS
+} DIRTYPE;
 
-inline LPITEMIDLIST DoGetPidl(WATCHDIR iWatchDir)
+inline LPITEMIDLIST DoGetPidl(DIRTYPE iDir)
 {
     LPITEMIDLIST ret = NULL;
 
-    switch (iWatchDir)
+    switch (iDir)
     {
-        case WATCHDIR_NULL:
+        case DIRTYPE_NULL:
             break;
 
-        case WATCHDIR_DESKTOP:
+        case DIRTYPE_DESKTOP:
             SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &ret);
             break;
 
-        case WATCHDIR_MYCOMPUTER:
+        case DIRTYPE_MYCOMPUTER:
             SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &ret);
             break;
 
-        case WATCHDIR_MYDOCUMENTS:
+        case DIRTYPE_MYDOCUMENTS:
             SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &ret);
             break;
     }
@@ -59,13 +59,13 @@ inline LPITEMIDLIST DoGetPidl(WATCHDIR iWatchDir)
     return ret;
 }
 
-inline LPWSTR DoGetDir(WATCHDIR iWatchDir)
+inline LPWSTR DoGetDir(DIRTYPE iDir)
 {
     static size_t s_index = 0;
     static WCHAR s_pathes[4][MAX_PATH];
     LPWSTR psz = s_pathes[s_index];
     psz[0] = 0;
-    LPITEMIDLIST pidl = DoGetPidl(iWatchDir);
+    LPITEMIDLIST pidl = DoGetPidl(iDir);
     SHGetPathFromIDListW(pidl, psz);
     CoTaskMemFree(pidl);
     s_index = (s_index + 1) % _countof(s_pathes);

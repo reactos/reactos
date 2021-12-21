@@ -11,7 +11,7 @@
 static HWND s_hwnd = NULL;
 static UINT s_uRegID = 0;
 static BOOL s_fRecursive = FALSE;
-static WATCHDIR s_iWatchDir = WATCHDIR_NULL;
+static DIRTYPE s_iWatchDir = DIRTYPE_NULL;
 static INT s_nSources = 0;
 static LPITEMIDLIST s_pidl = NULL;
 static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
@@ -176,14 +176,14 @@ static void
 DoSetPaths(HWND hwnd)
 {
     WCHAR szText[MAX_PATH * 2];
-    lstrcpyW(szText, s_path1);
-    lstrcatW(szText, L"|");
-    lstrcatW(szText, s_path2);
+    StringCchCopyW(szText, _countof(szText), s_path1);
+    StringCchCatW(szText, _countof(szText), L"|");
+    StringCchCatW(szText, _countof(szText), s_path2);
 
     FILE *fp = _wfopen(TEMP_FILE, L"wb");
     if (fp)
     {
-        fwrite(szText, (lstrlenW(szText) + 1) * sizeof(WCHAR), 1, fp);
+        fwrite(szText, (wcslen(szText) + 1) * sizeof(WCHAR), 1, fp);
         fflush(fp);
         fclose(fp);
     }
@@ -235,7 +235,7 @@ static BOOL ParseCommandLine(LPWSTR lpCmdLine)
         return FALSE;
     ++pch;
 
-    s_iWatchDir = (WATCHDIR)wcstoul(pch, NULL, 0);
+    s_iWatchDir = (DIRTYPE)wcstoul(pch, NULL, 0);
     pch = wcschr(pch, L',');
     if (!pch)
         return FALSE;
