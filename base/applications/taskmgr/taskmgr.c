@@ -518,7 +518,7 @@ static void SetUpdateSpeed(HWND hWnd)
     /* Setup update speed (pause=fall down) */
     switch (TaskManagerSettings.UpdateSpeed) {
     case ID_VIEW_UPDATESPEED_HIGH:
-        SetTimer(hWnd, 1, 1000, NULL);
+        SetTimer(hWnd, 1, 500, NULL);
         break;
     case ID_VIEW_UPDATESPEED_NORMAL:
         SetTimer(hWnd, 1, 2000, NULL);
