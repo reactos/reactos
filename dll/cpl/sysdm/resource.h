@@ -63,6 +63,9 @@
 
 #define IDS_UPTIME_FORMAT 140
 
+#define IDS_ENVIRONMENT_WARNING            150
+#define IDS_ENVIRONMENT_WARNING_TITLE      151
+
 /* Propsheet - general */
 #define IDD_PROPPAGEGENERAL  100
 #define IDC_MACHINELINE1     101
@@ -131,9 +134,19 @@
 #define IDC_SYSTEM_VARIABLE_DELETE 608
 
 /* Edit environment variables */
-#define IDD_EDIT_VARIABLE  700
-#define IDC_VARIABLE_NAME  701
-#define IDC_VARIABLE_VALUE 702
+#define IDD_EDIT_VARIABLE        700
+#define IDC_VARIABLE_NAME        701
+#define IDC_VARIABLE_VALUE       702
+#define IDC_BUTTON_BROWSE_FILE   703
+#define IDC_BUTTON_BROWSE_FOLDER 704
+#define IDD_EDIT_VARIABLE_FANCY  705
+#define IDC_LIST_VARIABLE_VALUE  706
+#define IDC_BUTTON_NEW           707
+#define IDC_BUTTON_EDIT          708
+#define IDC_BUTTON_DELETE        709
+#define IDC_BUTTON_MOVE_UP       710
+#define IDC_BUTTON_MOVE_DOWN     711
+#define IDC_BUTTON_EDIT_TEXT     712
 
 /* Virtual memory */
 #define IDD_VIRTMEM      900
@@ -211,3 +224,5 @@
 #define RTDATA               1503
 
 #define IDS_DEVS 2000
+
+#define IDC_DIALOG_GRIP     3000
