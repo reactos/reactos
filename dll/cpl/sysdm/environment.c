@@ -269,6 +269,7 @@ AddValuesToList(HWND hwndDlg,
         return;
 
     StringCchCopy(lpTemp, dwValueLength, DlgData->VarData->lpRawValue);
+
     for (lpToken = _tcstok(lpTemp, _T(";")), i = 0;
          lpToken != NULL;
          lpToken = _tcstok(NULL, _T(";")), i++)
