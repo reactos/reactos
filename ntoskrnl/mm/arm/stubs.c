@@ -20,6 +20,21 @@ MMPDE_HARDWARE MiArmTemplatePde;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+VOID
+NTAPI
+MmSetDirtyBit(PEPROCESS Process, PVOID Address, BOOLEAN Bit)
+{
+    UNIMPLEMENTED;
+}
+
+BOOLEAN
+MiArchCreateProcessAddressSpace(
+    _In_ PEPROCESS Process,
+    _In_ PULONG_PTR DirectoryTableBase)
+{
+    return 0;
+}
+
 BOOLEAN
 NTAPI
 MiUnmapPageTable(IN PMMPTE PointerPde)

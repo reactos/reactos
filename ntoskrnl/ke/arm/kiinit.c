@@ -31,6 +31,7 @@ extern PVOID KiArmVectorTable;
 
 /* FUNCTIONS ******************************************************************/
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitMachineDependent(VOID)
@@ -305,6 +306,7 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 #endif
 }
 
+CODE_SEG("INIT")
 VOID
 KiInitializeMachineType(VOID)
 {
@@ -427,6 +429,16 @@ AppCpuInit:
     KiIdleLoop();
 }
 
+#define QEMUUART 0x09000000
+volatile unsigned int * UART0DR = (unsigned int *) QEMUUART;
+
+/* Forcefully shove UART data through qemu */
+VOID
+QemuHackPutByte(UCHAR ByteToSend)
+{
+    *UART0DR = ByteToSend;
+}
+
 ULONG
 DbgPrintEarly(const char *fmt, ...)
 {
@@ -444,9 +456,9 @@ DbgPrintEarly(const char *fmt, ...)
     {
         if (*String == '\n')
         {
-            KdPortPutByteEx(NULL, '\r');
+            QemuHackPutByte('\r');
         }
-        KdPortPutByteEx(NULL, *String);
+        QemuHackPutByte(*String);
         String++;
     }
 

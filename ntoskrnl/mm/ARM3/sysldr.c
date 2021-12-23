@@ -2462,11 +2462,12 @@ MiSetSystemCodeProtection(
             ASSERT(TempPte.u.Hard.Valid == 1);
             break;
         }
-
+#ifndef _M_ARM
         /* Update the protection */
         TempPte.u.Hard.Write = BooleanFlagOn(Protection, IMAGE_SCN_MEM_WRITE);
 #if _MI_HAS_NO_EXECUTE
         TempPte.u.Hard.NoExecute = !BooleanFlagOn(Protection, IMAGE_SCN_MEM_EXECUTE);
+#endif
 #endif
 
         MI_UPDATE_VALID_PTE(PointerPte, TempPte);

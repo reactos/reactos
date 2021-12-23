@@ -364,7 +364,7 @@ MiCheckPdeForSessionSpace(IN PVOID Address)
 
         /* Now get the session-specific page table for this address */
         SessionAddress = MiPteToAddress(Address);
-        PointerPde = MiAddressToPte(Address);
+        PointerPde = (PMMPDE)MiAddressToPte(Address);
         if (PointerPde->u.Hard.Valid) return STATUS_WAIT_1;
 
         /* It's not valid, so find it in the page table array */
@@ -2234,7 +2234,7 @@ UserFault:
             MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
             return Status;
         }
-
+#ifndef _M_ARM
         /* Resolve a demand zero fault */
         Status = MiResolveDemandZeroFault(PointerPte,
                                  PointerPde,
@@ -2245,7 +2245,10 @@ UserFault:
         {
             goto ExitUser;
         }
-
+#else
+    //TODO: ARM is broken.
+    __debugbreak();
+#endif
 #if _MI_PAGING_LEVELS >= 3
         MiIncrementPageTableReferences(PointerPte);
 #endif
@@ -2312,7 +2315,9 @@ UserFault:
                 /* And make a new shiny one with our page */
                 MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
                 TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
+#ifndef _M_ARM
                 TempPte.u.Hard.Write = 1;
+#endif
                 TempPte.u.Hard.CopyOnWrite = 0;
 
                 MI_WRITE_VALID_PTE(PointerPte, TempPte);
@@ -2341,8 +2346,13 @@ UserFault:
             /* Check if execute enable was set */
             if (CurrentProcess->Pcb.Flags.ExecuteEnable)
             {
+#ifndef _M_ARM
                 /* Fix up the PTE to be executable */
                 TempPte.u.Hard.NoExecute = 0;
+#else
+                //TODO: ARM is broken
+                __debugbreak();
+#endif
                 MI_UPDATE_VALID_PTE(PointerPte, TempPte);
                 MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
                 return STATUS_SUCCESS;

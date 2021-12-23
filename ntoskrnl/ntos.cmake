@@ -382,6 +382,7 @@ elseif(ARCH STREQUAL "arm")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/arm/kdarm.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/cpu.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/exp.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/freeze.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/interrupt.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/kiinit.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/thrdini.c

@@ -151,8 +151,10 @@ MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
     TempPte = ValidKernelPte;
 
     /* Disable cache. Write through */
+#ifdef _M_IX86
     MI_PAGE_DISABLE_CACHE(&TempPte);
     MI_PAGE_WRITE_THROUGH(&TempPte);
+#endif
 
     /* Make sure the list isn't empty and loop it */
     ASSERT(Pfn1 != (PVOID)LIST_HEAD);
