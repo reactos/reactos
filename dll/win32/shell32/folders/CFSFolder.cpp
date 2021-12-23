@@ -321,7 +321,10 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
                 if (ret <= 0)
                 {
                     StringCbCopyW(wTemp, sizeof(wTemp), swShell32Name);
-                    icon_idx = -IDI_SHELL_EXE;
+                    if (lstrcmpiW(pExtension, L".exe") == 0 || lstrcmpiW(pExtension, L".scr") == 0)
+                        icon_idx = -IDI_SHELL_EXE;
+                    else
+                        icon_idx = -IDI_SHELL_DOCUMENT;
                 }
             }
 
