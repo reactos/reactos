@@ -353,6 +353,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
     WCHAR   szText[260];
     BOOL    bLargeIcon;
     BOOL    bHung = FALSE;
+    LRESULT bAlive;
 
     typedef int (FAR __stdcall *IsHungAppWindowProc)(HWND);
     IsHungAppWindowProc IsHungAppWindow;
@@ -377,20 +378,26 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 
     noApps = FALSE;
 
+#define GET_ICON(type) \
+    SendMessageTimeoutW(hWnd, WM_GETICON, (type), 0, SMTO_ABORTIFHUNG, 100, (PDWORD_PTR)&hIcon)
+
     /* Get the icon for this window */
     hIcon = NULL;
-    SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_BIG : ICON_SMALL, 0, 0, 1000, (PDWORD_PTR)&hIcon);
+    bAlive = GET_ICON(bLargeIcon ? ICON_BIG : ICON_SMALL);
     if (!hIcon)
     {
         /* We failed, try to retrieve other icons... */
-        hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICON : GCL_HICONSM);
-        if (!hIcon) hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICONSM : GCL_HICON);
-        if (!hIcon) SendMessageTimeoutW(hWnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (PDWORD_PTR)&hIcon);
-        if (!hIcon) SendMessageTimeoutW(hWnd, WM_GETICON, bLargeIcon ? ICON_SMALL : ICON_BIG, 0, 0, 1000, (PDWORD_PTR)&hIcon);
+        if (!hIcon && bAlive)
+            GET_ICON(bLargeIcon ? ICON_SMALL : ICON_BIG);
+        if (!hIcon)
+            hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICON : GCL_HICONSM);
+        if (!hIcon)
+            hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICONSM : GCL_HICON);
 
         /* If we still do not have any icon, load the default one */
         if (!hIcon) hIcon = LoadIconW(hInst, bLargeIcon ? MAKEINTRESOURCEW(IDI_WINDOW) : MAKEINTRESOURCEW(IDI_WINDOWSM));
     }
+#undef GET_ICON
 
     bHung = FALSE;
 
