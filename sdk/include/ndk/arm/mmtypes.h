@@ -94,7 +94,7 @@ typedef struct _HARDWARE_PTE
 	ULONG Writable:1;
 	ULONG CopyOnWrite:1;
 	ULONG ReadOnly:1;
-	ULONG LargePage:1
+	ULONG LargePage:1;
 	ULONG NonGlobal:1;
 	ULONG PageFrameNumber:20;
 } HARDWARE_PTE, *PHARDWARE_PTE;
@@ -106,7 +106,7 @@ typedef struct _MMPTE_SOFTWARE
 	ULONG PageFileReserved:1;
 	ULONG PageFileAllocated:1;
 	ULONG Protection:5;
-	ULONG Prototype:1
+	ULONG Prototype:1;
 	ULONG Transition:1;
 	ULONG InStore:1;
 	ULONG PageFileHigh:19;
@@ -118,7 +118,7 @@ typedef struct _MMPTE_TRANSITION
 	ULONG CacheType:2;
 	ULONG Spare:1;
 	ULONG Protection:5;
-	ULONG Prototype:1
+	ULONG Prototype:1;
 	ULONG Transition:1;
 	ULONG PageFrameNumber:20;
 } MMPTE_TRANSITION;
@@ -157,20 +157,13 @@ typedef struct _MMPTE_HARDWARE
 	ULONG Accessed:1;
 	ULONG Owner:1;
 	ULONG TypeExtention:1;
-	ULONG Writable:1
+	ULONG Writable:1;
 	ULONG CopyOnWrite:1;
 	ULONG NotDirty:1;
 	ULONG LargePage:1;
 	ULONG NonGlobal:1;
 	ULONG PageFrameNumber:20;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
-
-
-//
-// Use the right PTE structure
-//
-#define HARDWARE_PTE        HARDWARE_PTE
-#define PHARDWARE_PTE       PHARDWARE_PTE
 
 typedef struct _MMPTE
 {
@@ -194,7 +187,7 @@ typedef union _MMPDE_HARDWARE
 	ULONG Accessed:1;
 	ULONG Owner:1;
 	ULONG TypeExtention:1;
-	ULONG Writable:1
+	ULONG Writable:1;
 	ULONG CopyOnWrite:1;
 	ULONG NotDirty:1;
 	ULONG LargePage:1;

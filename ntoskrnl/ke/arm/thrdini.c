@@ -225,7 +225,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     ARM_TTB_REGISTER TtbRegister;
 
     /* We are on the new thread stack now */
-    NewThread = Pcr->Prcb.CurrentThread;
+    NewThread = Pcr->PrcbData.CurrentThread;
 
     /* Now we are the new thread. Check if it's in a new process */
     OldProcess = OldThread->ApcState.Process;
@@ -241,7 +241,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     NewThread->ContextSwitches++;
 
     /* DPCs shouldn't be active */
-    if (Pcr->Prcb.DpcRoutineActive)
+    if (Pcr->PrcbData.DpcRoutineActive)
     {
         /* Crash the machine */
         KeBugCheckEx(ATTEMPTED_SWITCH_FROM_DPC,
@@ -279,7 +279,7 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     SwitchFrame->ApcBypassDisable = OldThreadAndApcFlag & 3;
 
     /* Increase context switch count and check if tracing is enabled */
-    Pcr->Prcb.KeContextSwitches++;
+    Pcr->PrcbData.KeContextSwitches++;
 #if 0
     if (Pcr->PerfGlobalGroupMask)
     {
@@ -291,7 +291,7 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
 
     /* Get thread pointers */
     OldThread = (PKTHREAD)(OldThreadAndApcFlag & ~3);
-    NewThread = Pcr->Prcb.CurrentThread;
+    NewThread = Pcr->PrcbData.CurrentThread;
 
     /* Get the old thread and set its kernel stack */
     OldThread->KernelStack = SwitchFrame;
@@ -305,7 +305,7 @@ NTAPI
 KiDispatchInterrupt(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
-    PKPRCB Prcb = &Pcr->Prcb;
+    PKPRCB Prcb = &Pcr->PrcbData;
     PKTHREAD NewThread, OldThread;
 
     /* Disable interrupts */

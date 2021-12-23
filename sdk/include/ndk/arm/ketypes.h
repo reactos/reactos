@@ -1089,10 +1089,10 @@ typedef struct _KIPCR
     PVOID* IdtExt;
     ULONG PcrAlign2[19];
     UCHAR _PADDING1_[0x4];
-    KPRCB Prcb;
+    KPRCB PrcbData;
 } KIPCR, *PKIPCR;
 
-C_ASSERT(FIELD_OFFSET(KIPCR, Prcb.LegacyNumber) == 0x580);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData.LegacyNumber) == 0x580);
 
 //
 // Macro to get current KPRCB

@@ -314,25 +314,25 @@ OFFSET(PcLockArray, KIPCR, LockArray), // 0x14
 OFFSET(PcTeb, KIPCR, Used_Self), // 0x18
 OFFSET(PcStallScaleFactor, KIPCR, StallScaleFactor), // 0x30
 OFFSET(PcHalReserved, KIPCR, HalReserved), // 0x84
-OFFSET(PcPrcb, KIPCR, Prcb), // 0x580
-OFFSET(PcIdleHalt, KIPCR, Prcb.IdleHalt), // 0x582
-OFFSET(PcCurrentThread, KIPCR, Prcb.CurrentThread), // 0x584
-OFFSET(PcNextThread, KIPCR, Prcb.NextThread), // 0x588
-OFFSET(PcIdleThread, KIPCR, Prcb.IdleThread), // 0x58c
-OFFSET(PcNestingLevel, KIPCR, Prcb.NestingLevel), // 0x590
-OFFSET(PcNumber, KIPCR, Prcb.Number), // 0x594
-OFFSET(PcPrcbLock, KIPCR, Prcb.PrcbLock), // 0x598
-OFFSET(PcGroupSetMember, KIPCR, Prcb.GroupSetMember), // 0x998
-OFFSET(PcFeatureBits, KIPCR, Prcb.FeatureBits), // 0xa8c
-OFFSET(PcDeferredReadyListHead, KIPCR, Prcb.DeferredReadyListHead), // 0xb84
-OFFSET(PcSystemCalls, KIPCR, Prcb.KeSystemCalls), // 0xbb0
-OFFSET(PcSpBase, KIPCR, Prcb.SpBase), // 0xc44
-OFFSET(PcDpcRoutineActive, KIPCR, Prcb.DpcRoutineActive), // 0xc5a
-OFFSET(PcInterruptCount, KIPCR, Prcb.InterruptCount), // 0xe80
-OFFSET(PcSkipTick, KIPCR, Prcb.SkipTick), // 0xe98
-OFFSET(PcDebuggerSavedIRQL, KIPCR, Prcb.DebuggerSavedIRQL), // 0xe99
-OFFSET(PcStartCycles, KIPCR, Prcb.StartCycles), // 0xec8
-OFFSET(PcCycleCounterHigh, KIPCR, Prcb.CycleCounterHigh), // 0xed8
+OFFSET(PcPrcb, KIPCR, PrcbData), // 0x580
+OFFSET(PcIdleHalt, KIPCR, PrcbData.IdleHalt), // 0x582
+OFFSET(PcCurrentThread, KIPCR, PrcbData.CurrentThread), // 0x584
+OFFSET(PcNextThread, KIPCR, PrcbData.NextThread), // 0x588
+OFFSET(PcIdleThread, KIPCR, PrcbData.IdleThread), // 0x58c
+OFFSET(PcNestingLevel, KIPCR, PrcbData.NestingLevel), // 0x590
+OFFSET(PcNumber, KIPCR, PrcbData.Number), // 0x594
+OFFSET(PcPrcbLock, KIPCR, PrcbData.PrcbLock), // 0x598
+OFFSET(PcGroupSetMember, KIPCR, PrcbData.GroupSetMember), // 0x998
+OFFSET(PcFeatureBits, KIPCR, PrcbData.FeatureBits), // 0xa8c
+OFFSET(PcDeferredReadyListHead, KIPCR, PrcbData.DeferredReadyListHead), // 0xb84
+OFFSET(PcSystemCalls, KIPCR, PrcbData.KeSystemCalls), // 0xbb0
+OFFSET(PcSpBase, KIPCR, PrcbData.SpBase), // 0xc44
+OFFSET(PcDpcRoutineActive, KIPCR, PrcbData.DpcRoutineActive), // 0xc5a
+OFFSET(PcInterruptCount, KIPCR, PrcbData.InterruptCount), // 0xe80
+OFFSET(PcSkipTick, KIPCR, PrcbData.SkipTick), // 0xe98
+OFFSET(PcDebuggerSavedIRQL, KIPCR, PrcbData.DebuggerSavedIRQL), // 0xe99
+OFFSET(PcStartCycles, KIPCR, PrcbData.StartCycles), // 0xec8
+OFFSET(PcCycleCounterHigh, KIPCR, PrcbData.CycleCounterHigh), // 0xed8
 SIZE(ProcessorControlRegisterLength, KIPCR), // 0x5b80
 
 HEADER("KPRCB offsets"),

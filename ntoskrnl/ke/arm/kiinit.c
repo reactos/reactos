@@ -60,7 +60,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Set stack pointers */
     //Pcr->InitialStack = IdleStack;
-    Pcr->Prcb.SpBase = IdleStack; // ???
+    Pcr->PrcbData.SpBase = IdleStack; // ???
 
     /* Check if this is the Boot CPU */
     if (!Number)
@@ -83,8 +83,8 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_ARM;
         KeFeatureBits = 0;
         /// FIXME: just a wild guess
-        KeProcessorLevel = (USHORT)(Pcr->Prcb.ProcessorState.ArchState.Cp15_Cr0_CpuId >> 8);
-        KeProcessorRevision = (USHORT)(Pcr->Prcb.ProcessorState.ArchState.Cp15_Cr0_CpuId & 0xFF);
+        KeProcessorLevel = (USHORT)(Pcr->PrcbData.ProcessorState.ArchState.Cp15_Cr0_CpuId >> 8);
+        KeProcessorRevision = (USHORT)(Pcr->PrcbData.ProcessorState.ArchState.Cp15_Cr0_CpuId & 0xFF);
 #if 0
         /* Set the current MP Master KPRCB to the Boot PRCB */
         Prcb->MultiThreadSetMaster = Prcb;
@@ -184,32 +184,32 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     ULONG i;
 
     /* Set the Current Thread */
-    Pcr->Prcb.CurrentThread = IdleThread;
+    Pcr->PrcbData.CurrentThread = IdleThread;
 
     /* Set pointers to ourselves */
     Pcr->Self = (PKPCR)Pcr;
-    Pcr->CurrentPrcb = &Pcr->Prcb;
+    Pcr->CurrentPrcb = &Pcr->PrcbData;
 
     /* Set the PCR Version */
     Pcr->MajorVersion = PCR_MAJOR_VERSION;
     Pcr->MinorVersion = PCR_MINOR_VERSION;
 
     /* Set the PCRB Version */
-    Pcr->Prcb.MajorVersion = PRCB_MAJOR_VERSION;
-    Pcr->Prcb.MinorVersion = PRCB_MINOR_VERSION;
+    Pcr->PrcbData.MajorVersion = 1;
+    Pcr->PrcbData.MinorVersion = 1;
 
     /* Set the Build Type */
-    Pcr->Prcb.BuildType = 0;
+    Pcr->PrcbData.BuildType = 0;
 #ifndef CONFIG_SMP
-    Pcr->Prcb.BuildType |= PRCB_BUILD_UNIPROCESSOR;
+    Pcr->PrcbData.BuildType |= PRCB_BUILD_UNIPROCESSOR;
 #endif
 #if DBG
-    Pcr->Prcb.BuildType |= PRCB_BUILD_DEBUG;
+    Pcr->PrcbData.BuildType |= PRCB_BUILD_DEBUG;
 #endif
 
     /* Set the Processor Number and current Processor Mask */
-    Pcr->Prcb.Number = (UCHAR)ProcessorNumber;
-    Pcr->Prcb.SetMember = 1 << ProcessorNumber;
+    Pcr->PrcbData.Number = (UCHAR)ProcessorNumber;
+    Pcr->PrcbData.SetMember = 1 << ProcessorNumber;
 
     /* Set the PRCB for this Processor */
     KiProcessorBlock[ProcessorNumber] = Pcr->CurrentPrcb;
@@ -218,63 +218,63 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->CurrentIrql = PASSIVE_LEVEL;
 
     /* Set the stacks */
-    Pcr->Prcb.PanicStackBase = (ULONG)PanicStack;
-    Pcr->Prcb.IsrStack = InterruptStack;
+    Pcr->PrcbData.PanicStackBase = (ULONG)PanicStack;
+    Pcr->PrcbData.IsrStack = InterruptStack;
 #if 0
     /* Setup the processor set */
-    Pcr->Prcb.MultiThreadProcessorSet = Pcr->Prcb.SetMember;
+    Pcr->PrcbData.MultiThreadProcessorSet = Pcr->PrcbData.SetMember;
 #endif
 
     /* Copy cache information from the loader block */
-    Pcr->Prcb.Cache[FirstLevelDcache].Type = CacheData;
-    Pcr->Prcb.Cache[FirstLevelDcache].Level = 1;
-    Pcr->Prcb.Cache[FirstLevelDcache].Associativity = 0; // FIXME
-    Pcr->Prcb.Cache[FirstLevelDcache].LineSize = KeLoaderBlock->u.Arm.FirstLevelDcacheFillSize;
-    Pcr->Prcb.Cache[FirstLevelDcache].Size = KeLoaderBlock->u.Arm.FirstLevelDcacheSize;
+    Pcr->PrcbData.Cache[FirstLevelDcache].Type = CacheData;
+    Pcr->PrcbData.Cache[FirstLevelDcache].Level = 1;
+    Pcr->PrcbData.Cache[FirstLevelDcache].Associativity = 0; // FIXME
+    Pcr->PrcbData.Cache[FirstLevelDcache].LineSize = KeLoaderBlock->u.Arm.FirstLevelDcacheFillSize;
+    Pcr->PrcbData.Cache[FirstLevelDcache].Size = KeLoaderBlock->u.Arm.FirstLevelDcacheSize;
 
-    Pcr->Prcb.Cache[SecondLevelDcache].Type = CacheData;
-    Pcr->Prcb.Cache[SecondLevelDcache].Level = 2;
-    Pcr->Prcb.Cache[SecondLevelDcache].Associativity = 0; // FIXME
-    Pcr->Prcb.Cache[SecondLevelDcache].LineSize = KeLoaderBlock->u.Arm.SecondLevelDcacheFillSize;
-    Pcr->Prcb.Cache[SecondLevelDcache].Size = KeLoaderBlock->u.Arm.SecondLevelDcacheSize;
+    Pcr->PrcbData.Cache[SecondLevelDcache].Type = CacheData;
+    Pcr->PrcbData.Cache[SecondLevelDcache].Level = 2;
+    Pcr->PrcbData.Cache[SecondLevelDcache].Associativity = 0; // FIXME
+    Pcr->PrcbData.Cache[SecondLevelDcache].LineSize = KeLoaderBlock->u.Arm.SecondLevelDcacheFillSize;
+    Pcr->PrcbData.Cache[SecondLevelDcache].Size = KeLoaderBlock->u.Arm.SecondLevelDcacheSize;
 
-    Pcr->Prcb.Cache[FirstLevelIcache].Type = CacheInstruction;
-    Pcr->Prcb.Cache[FirstLevelIcache].Level = 1;
-    Pcr->Prcb.Cache[FirstLevelIcache].Associativity = 0; // FIXME
-    Pcr->Prcb.Cache[FirstLevelIcache].LineSize = KeLoaderBlock->u.Arm.FirstLevelIcacheFillSize;
-    Pcr->Prcb.Cache[FirstLevelIcache].Size = KeLoaderBlock->u.Arm.FirstLevelIcacheSize;
+    Pcr->PrcbData.Cache[FirstLevelIcache].Type = CacheInstruction;
+    Pcr->PrcbData.Cache[FirstLevelIcache].Level = 1;
+    Pcr->PrcbData.Cache[FirstLevelIcache].Associativity = 0; // FIXME
+    Pcr->PrcbData.Cache[FirstLevelIcache].LineSize = KeLoaderBlock->u.Arm.FirstLevelIcacheFillSize;
+    Pcr->PrcbData.Cache[FirstLevelIcache].Size = KeLoaderBlock->u.Arm.FirstLevelIcacheSize;
 
-    Pcr->Prcb.Cache[SecondLevelIcache].Type = CacheInstruction;
-    Pcr->Prcb.Cache[SecondLevelIcache].Level = 2;
-    Pcr->Prcb.Cache[SecondLevelIcache].Associativity = 0; // FIXME
-    Pcr->Prcb.Cache[SecondLevelIcache].LineSize = KeLoaderBlock->u.Arm.SecondLevelIcacheFillSize;
-    Pcr->Prcb.Cache[SecondLevelIcache].Size = KeLoaderBlock->u.Arm.SecondLevelIcacheSize;
+    Pcr->PrcbData.Cache[SecondLevelIcache].Type = CacheInstruction;
+    Pcr->PrcbData.Cache[SecondLevelIcache].Level = 2;
+    Pcr->PrcbData.Cache[SecondLevelIcache].Associativity = 0; // FIXME
+    Pcr->PrcbData.Cache[SecondLevelIcache].LineSize = KeLoaderBlock->u.Arm.SecondLevelIcacheFillSize;
+    Pcr->PrcbData.Cache[SecondLevelIcache].Size = KeLoaderBlock->u.Arm.SecondLevelIcacheSize;
 
     /* Set global d-cache fill and alignment values */
-    if (Pcr->Prcb.Cache[SecondLevelDcache].Size == 0)
+    if (Pcr->PrcbData.Cache[SecondLevelDcache].Size == 0)
     {
         /* Use the first level */
-        Pcr->Prcb.Cache[GlobalDcache] = Pcr->Prcb.Cache[FirstLevelDcache];
+        Pcr->PrcbData.Cache[GlobalDcache] = Pcr->PrcbData.Cache[FirstLevelDcache];
     }
     else
     {
         /* Use the second level */
-        Pcr->Prcb.Cache[GlobalDcache] = Pcr->Prcb.Cache[SecondLevelDcache];
+        Pcr->PrcbData.Cache[GlobalDcache] = Pcr->PrcbData.Cache[SecondLevelDcache];
     }
 
     /* Set the alignment */
     //Pcr->DcacheAlignment = Pcr->DcacheFillSize - 1;
 
     /* Set global i-cache fill and alignment values */
-    if (Pcr->Prcb.Cache[SecondLevelIcache].Size == 0)
+    if (Pcr->PrcbData.Cache[SecondLevelIcache].Size == 0)
     {
         /* Use the first level */
-        Pcr->Prcb.Cache[GlobalIcache] = Pcr->Prcb.Cache[FirstLevelIcache];
+        Pcr->PrcbData.Cache[GlobalIcache] = Pcr->PrcbData.Cache[FirstLevelIcache];
     }
     else
     {
         /* Use the second level */
-        Pcr->Prcb.Cache[GlobalIcache] = Pcr->Prcb.Cache[SecondLevelIcache];
+        Pcr->PrcbData.Cache[GlobalIcache] = Pcr->PrcbData.Cache[SecondLevelIcache];
     }
 
     /* Set the alignment */
@@ -373,14 +373,14 @@ KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 AppCpuInit:
     /* Setup CPU-related fields */
-    Pcr->Prcb.Number = Cpu;
-    Pcr->Prcb.SetMember = 1 << Cpu;
+    Pcr->PrcbData.Number = Cpu;
+    Pcr->PrcbData.SetMember = 1 << Cpu;
 
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);
 
     /* Set active processors */
-    KeActiveProcessors |= Pcr->Prcb.SetMember;
+    KeActiveProcessors |= Pcr->PrcbData.SetMember;
     KeNumberProcessors++;
 
     /* Check if this is the boot CPU */
@@ -408,8 +408,8 @@ AppCpuInit:
     KiInitializeKernel((PKPROCESS)LoaderBlock->Process,
                        (PKTHREAD)LoaderBlock->Thread,
                        (PVOID)LoaderBlock->KernelStack,
-                       &Pcr->Prcb,
-                       Pcr->Prcb.Number,
+                       &Pcr->PrcbData,
+                       Pcr->PrcbData.Number,
                        KeLoaderBlock);
 
     /* Set the priority of this thread to 0 */
