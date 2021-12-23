@@ -1869,8 +1869,8 @@ ChangePos:
 
     void ProcessAutoHide()
     {
-        INT w = m_TraySize.cx - (GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXEDGE));
-        INT h = m_TraySize.cy - (GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CYEDGE));
+        INT w = m_TraySize.cx - GetSystemMetrics(SM_CXSIZEFRAME);
+        INT h = m_TraySize.cy - GetSystemMetrics(SM_CYSIZEFRAME);
 
         switch (m_AutoHideState)
         {
