@@ -863,9 +863,9 @@ void LoadSettings(void)
     TaskManagerSettings.ActiveTabPage = 0;
 
     /* Options menu settings */
-    TaskManagerSettings.AlwaysOnTop = FALSE;
+    TaskManagerSettings.AlwaysOnTop = TRUE;
     TaskManagerSettings.MinimizeOnUse = TRUE;
-    TaskManagerSettings.HideWhenMinimized = TRUE;
+    TaskManagerSettings.HideWhenMinimized = FALSE;
     TaskManagerSettings.Show16BitTasks = TRUE;
 
     /* Update speed settings */
@@ -875,7 +875,7 @@ void LoadSettings(void)
     TaskManagerSettings.ViewMode = ID_VIEW_DETAILS;
 
     /* Processes page settings */
-    TaskManagerSettings.ShowProcessesFromAllUsers = FALSE; /* Server-only? */
+    TaskManagerSettings.ShowProcessesFromAllUsers = FALSE; /* It's the default */
 
     for (i = 0; i < COLUMN_NMAX; i++) {
         TaskManagerSettings.Columns[i] = ColumnPresets[i].bDefaults;
