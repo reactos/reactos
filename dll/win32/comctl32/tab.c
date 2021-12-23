@@ -285,6 +285,9 @@ static LRESULT TAB_SetCurFocus (TAB_INFO *infoPtr, INT iItem)
   if (iItem < 0) {
       infoPtr->uFocus = -1;
       if (infoPtr->iSelected != -1) {
+#ifdef __REACTOS__
+          TAB_GetItem(infoPtr, infoPtr->iSelected)->dwState &= ~TCIS_BUTTONPRESSED;
+#endif
           infoPtr->iSelected = -1;
           TAB_SendSimpleNotify(infoPtr, TCN_SELCHANGE);
           TAB_InvalidateTabArea(infoPtr);
@@ -310,12 +313,22 @@ static LRESULT TAB_SetCurFocus (TAB_INFO *infoPtr, INT iItem)
         TAB_SendSimpleNotify(infoPtr, TCN_FOCUSCHANGE);
       }
     } else {
+#ifdef __REACTOS__
+      INT oldItem = infoPtr->iSelected;
+#endif
       INT oldFocus = infoPtr->uFocus;
       if (infoPtr->iSelected != iItem || oldFocus == -1 ) {
         infoPtr->uFocus = iItem;
         if (oldFocus != -1) {
           if (!TAB_SendSimpleNotify(infoPtr, TCN_SELCHANGING))  {
+#ifdef __REACTOS__
+            if (oldItem != -1)
+              TAB_GetItem(infoPtr, oldItem)->dwState &= ~TCIS_BUTTONPRESSED;
+#endif
             infoPtr->iSelected = iItem;
+#ifdef __REACTOS__
+            TAB_GetItem(infoPtr, iItem)->dwState |= TCIS_BUTTONPRESSED;
+#endif
             TAB_SendSimpleNotify(infoPtr, TCN_SELCHANGE);
           }
           else
