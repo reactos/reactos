@@ -304,7 +304,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     // Choose PNG
     for (INT i = 0; i < aguidFileTypesE.GetSize(); ++i)
     {
-        if (IsEqualIID(aguidFileTypesE[i], Gdiplus::ImageFormatPNG))
+        if (aguidFileTypesE[i] == Gdiplus::ImageFormatPNG)
         {
             sfn.nFilterIndex = i + 1;
             break;
