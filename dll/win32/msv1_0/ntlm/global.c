@@ -1,9 +1,9 @@
 /*
  * PROJECT:     Authentication Package DLL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     ntlm globals definitions (header)
+ * PURPOSE:     NTLM globals definitions (header)
  * COPYRIGHT:   Copyright 2011 Samuel Serapión
- *              Copyright 2020 Andreas Maier (staubim@quantentunnel.de)
+ *              Copyright 2020 Andreas Maier <staubim@quantentunnel.de>
  */
 
 #include "../precomp.h"

@@ -1,12 +1,11 @@
 /*
  * PROJECT:     Authentication Package DLL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     header for user.c
- * COPYRIGHT:   Copyright 2019-2020 Andreas Maier (staubim@quantentunnel.de)
+ * PURPOSE:     Header for user.c
+ * COPYRIGHT:   Copyright 2019-2020 Andreas Maier <staubim@quantentunnel.de>
  */
 
-#ifndef _MSV1_0_USER_H_
-#define _MSV1_0_USER_H_
+#pragma once
 
 NTSTATUS
 NTAPI
@@ -64,7 +63,7 @@ NTSTATUS
 NTAPI
 UsrSpCompleteAuthToken(
     _In_ LSA_SEC_HANDLE ContextHandle,
-    PSecBufferDesc InputBuffer);
+    _In_ PSecBufferDesc InputBuffer);
 
 NTSTATUS
 NTAPI
@@ -99,5 +98,3 @@ UsrSpImportSecurityContext(
     _In_ PSecBuffer pPackedContext,
     _In_ HANDLE Token,
     _Inout_ PLSA_SEC_HANDLE phContext);
-
-#endif

@@ -1,9 +1,8 @@
 /*
  * PROJECT:     Authentication Package DLL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     NTLM-functions returned from SpLsaModeInitialize
-                (PSECPKG_FUNCTION_TABLE)
- * COPYRIGHT:   Copyright 2019-2020 Andreas Maier (staubim@quantentunnel.de)
+ * PURPOSE:     NTLM functions returned from SpLsaModeInitialize (PSECPKG_FUNCTION_TABLE)
+ * COPYRIGHT:   Copyright 2019-2020 Andreas Maier <staubim@quantentunnel.de>
  */
 
 #include "precomp.h"
