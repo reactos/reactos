@@ -1906,12 +1906,9 @@ static HBITMAP hbitmap_from_emf(HENHMETAFILE hemf)
     ENHMETAHEADER header;
     HGDIOBJ hbmOld;
     RECT rc;
-    LPVOID pvBits;
     HDC hdc;
 
     GetEnhMetaFileHeader(hemf, sizeof(header), &header);
-
-    hdc = CreateCompatibleDC(NULL);
     size.cx = header.rclBounds.right - header.rclBounds.left + 1;
     size.cy = header.rclBounds.bottom - header.rclBounds.top + 1;
 
@@ -1921,7 +1918,9 @@ static HBITMAP hbitmap_from_emf(HENHMETAFILE hemf)
     bmi.bmiHeader.biHeight = size.cy;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 24;
-    hbm = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
+
+    hdc = CreateCompatibleDC(NULL);
+    hbm = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
 
     hbmOld = SelectObject(hdc, hbm);
     SetRect(&rc, 0, 0, size.cx, size.cy);
