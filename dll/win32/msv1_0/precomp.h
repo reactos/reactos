@@ -30,8 +30,12 @@
 #include <samsrv/samsrv.h>
 //#include <lsass/lsasrv.h>
 
+#include "ntlm/global.h"
 #include "lsa.h"
 #include "msv1_0.h"
+#include "user.h"
+#include "usercontext.h"
+
 
 #include <wine/debug.h>
 

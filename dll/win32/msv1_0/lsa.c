@@ -1,9 +1,7 @@
 /*
  * PROJECT:     Authentication Package DLL
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/msv1_0/lsa.c
- * PURPOSE:     NTLM-functions returned from SpLsaModeInitialize
-                (PSECPKG_FUNCTION_TABLE)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     NTLM functions returned from SpLsaModeInitialize (PSECPKG_FUNCTION_TABLE)
  * COPYRIGHT:   Copyright 2019-2020 Andreas Maier <staubim@quantentunnel.de>
  */
 
