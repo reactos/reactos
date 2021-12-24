@@ -193,7 +193,7 @@ BEGIN
     IDS_INFOTITLE "צייר עבור ReactOS"
     IDS_INFOTEXT "Available under the GNU Lesser General Public License (LGPL, see www.gnu.org)"
     IDS_SAVEPROMPTTEXT "האם ברצונך לשמור את השינויים של %s?"
-    IDS_DEFAULTFILENAME "ללא שם.bmp"
+    IDS_DEFAULTFILENAME "ללא שם.png"
     IDS_MINIATURETITLE "ממוזער"
     IDS_TOOLTIP1 "בחירה חופשית"
     IDS_TOOLTIP2 "בחירה"

@@ -190,7 +190,7 @@ BEGIN
     IDS_INFOTITLE "ReactOS-ko Paint"
     IDS_INFOTEXT "Available under the GNU Lesser General Public License (LGPL, ver www.gnu.org)"
     IDS_SAVEPROMPTTEXT "%s aldaketak gorde nahi duzu?"
-    IDS_DEFAULTFILENAME "Izegabea.bmp"
+    IDS_DEFAULTFILENAME "Izegabea.png"
     IDS_MINIATURETITLE "Miniatura"
     IDS_TOOLTIP1 "Hautatu forma librea"
     IDS_TOOLTIP2 "Hautatu"

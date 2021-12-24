@@ -198,7 +198,7 @@ BEGIN
     IDS_INFOTITLE "Paint für ReactOS"
     IDS_INFOTEXT "Unter der GNU Lesser General Public License stehen (LGPL, siehe www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Möchten Sie die Änderungen an %s speichern?"
-    IDS_DEFAULTFILENAME "Unbenannt.bmp"
+    IDS_DEFAULTFILENAME "Unbenannt.png"
     IDS_MINIATURETITLE "Miniaturansicht"
     IDS_TOOLTIP1 "Freie Auswahl"
     IDS_TOOLTIP2 "Auswahl"
