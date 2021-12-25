@@ -354,7 +354,7 @@ BEGIN
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirme borrado"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Cuenta desconocida"
     IDS_USERPROFILE_ACCOUNT_DELETED "Cuenta borrada"
-    IDS_USERPROFILE_TYPE_TEXT "Cuando %s inicie sesión en este equipo, usar el perfil móvil, o la copia en caché local del perfil móvil."
+    IDS_USERPROFILE_TYPE_TEXT "Cuando %s inicie sesión en este equipo, aplicar el perfil móvil, o la copia en caché local del perfil móvil."
     IDS_MESSAGEBOXTITLE "Applet de sistema del Panel de control"
     IDS_WARNINITIALSIZE "Introduzca el tamaño inicial del archivo de paginación."
     IDS_WARNMAXIMUMSIZE "Introduzca el tamaño máximo del archivo de paginación."
