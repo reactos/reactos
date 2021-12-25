@@ -31,60 +31,59 @@ RTL_RESOURCE JobListLock;
 
 LIST_ENTRY StartListHead;
 RTL_RESOURCE StartListLock;
+FILETIME NextJobStartTime;
+BOOL bValidNextJobStartTime = FALSE;
+
 
 static WORD wDaysArray[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 
 /* FUNCTIONS *****************************************************************/
 
-DWORD
-GetNextJobTimeout(VOID)
+VOID
+GetNextJobTimeout(HANDLE hTimer)
 {
-    FILETIME FileTime;
-    SYSTEMTIME SystemTime;
-    ULARGE_INTEGER CurrentTime, Timeout;
-    PJOB pNextJob;
+    PLIST_ENTRY CurrentEntry;
+    FILETIME DueTime;
+    PJOB CurrentJob;
 
-    if (IsListEmpty(&StartListHead))
+    bValidNextJobStartTime = FALSE;
+    CurrentEntry = JobListHead.Flink;
+    while (CurrentEntry != &JobListHead)
     {
-        TRACE("No job in list! Wait until next update.\n");
-        return INFINITE;
+        CurrentJob = CONTAINING_RECORD(CurrentEntry, JOB, JobEntry);
+
+        if (bValidNextJobStartTime == FALSE)
+        {
+            CopyMemory(&NextJobStartTime, &CurrentJob->StartTime, sizeof(FILETIME));
+            bValidNextJobStartTime = TRUE;
+        }
+        else
+        {
+            if (CompareFileTime(&NextJobStartTime, &CurrentJob->StartTime) > 0)
+                CopyMemory(&NextJobStartTime, &CurrentJob->StartTime, sizeof(FILETIME));
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
     }
 
-    pNextJob = CONTAINING_RECORD((&StartListHead)->Flink, JOB, StartEntry);
-
-    FileTime.dwLowDateTime = pNextJob->StartTime.u.LowPart;
-    FileTime.dwHighDateTime = pNextJob->StartTime.u.HighPart;
-    FileTimeToSystemTime(&FileTime, &SystemTime);
-
-    TRACE("Start next job (%lu) at %02hu:%02hu %02hu.%02hu.%hu\n",
-          pNextJob->JobId, SystemTime.wHour, SystemTime.wMinute,
-          SystemTime.wDay, SystemTime.wMonth, SystemTime.wYear);
-
-    GetLocalTime(&SystemTime);
-    SystemTimeToFileTime(&SystemTime, &FileTime);
-
-    CurrentTime.u.LowPart = FileTime.dwLowDateTime;
-    CurrentTime.u.HighPart = FileTime.dwHighDateTime;
-
-    if (CurrentTime.QuadPart >= pNextJob->StartTime.QuadPart)
+    if (bValidNextJobStartTime == FALSE)
     {
-        TRACE("Next event has already gone by!\n");
-        return 0;
+        TRACE("No valid job!\n");
+        return;
     }
 
-    Timeout.QuadPart = (pNextJob->StartTime.QuadPart - CurrentTime.QuadPart) / 10000;
-    if (Timeout.u.HighPart != 0)
-    {
-        TRACE("Event happens too far in the future!\n");
-        return INFINITE;
-    }
+    LocalFileTimeToFileTime(&DueTime, &NextJobStartTime);
 
-    TRACE("Timeout: %lu\n", Timeout.u.LowPart);
-    return Timeout.u.LowPart;
+    SetWaitableTimer(hTimer,
+                     (PLARGE_INTEGER)&DueTime,
+                     0,
+                     NULL,
+                     NULL,
+                     TRUE);
 }
 
-
+#if 0
 static
 VOID
 ReScheduleJob(
@@ -117,59 +116,61 @@ ReScheduleJob(
     DumpStartList(&StartListHead);
 #endif
 }
-
+#endif
 
 VOID
-RunNextJob(VOID)
+RunCurrentJobs(VOID)
 {
     PROCESS_INFORMATION ProcessInformation;
     STARTUPINFOW StartupInfo;
+    PLIST_ENTRY CurrentEntry;
+    PJOB CurrentJob;
     BOOL bRet;
-    PJOB pNextJob;
 
-    if (IsListEmpty(&StartListHead))
+    CurrentEntry = JobListHead.Flink;
+    while (CurrentEntry != &JobListHead)
     {
-        ERR("No job in list!\n");
-        return;
+        CurrentJob = CONTAINING_RECORD(CurrentEntry, JOB, JobEntry);
+
+        if (CompareFileTime(&NextJobStartTime, &CurrentJob->StartTime) == 0)
+        {
+            TRACE("Run job %ld: %S\n", CurrentJob->JobId, CurrentJob->Command);
+
+            ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+            StartupInfo.cb = sizeof(StartupInfo);
+            StartupInfo.lpTitle = CurrentJob->Command;
+            StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
+            StartupInfo.wShowWindow = SW_SHOWDEFAULT;
+
+            if ((CurrentJob->Flags & JOB_NONINTERACTIVE) == 0)
+            {
+                StartupInfo.dwFlags |= STARTF_INHERITDESKTOP;
+                StartupInfo.lpDesktop = L"WinSta0\\Default";
+            }
+
+            bRet = CreateProcessW(NULL,
+                                  CurrentJob->Command,
+                                  NULL,
+                                  NULL,
+                                  FALSE,
+                                  CREATE_NEW_CONSOLE,
+                                  NULL,
+                                  NULL,
+                                  &StartupInfo,
+                                  &ProcessInformation);
+            if (bRet == FALSE)
+            {
+                ERR("CreateProcessW() failed (Error %lu)\n", GetLastError());
+            }
+            else
+            {
+                CloseHandle(ProcessInformation.hThread);
+                CloseHandle(ProcessInformation.hProcess);
+            }
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
     }
-
-    pNextJob = CONTAINING_RECORD((&StartListHead)->Flink, JOB, StartEntry);
-
-    TRACE("Run job %ld: %S\n", pNextJob->JobId, pNextJob->Command);
-
-    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
-    StartupInfo.cb = sizeof(StartupInfo);
-    StartupInfo.lpTitle = pNextJob->Command;
-    StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-    StartupInfo.wShowWindow = SW_SHOWDEFAULT;
-
-    if ((pNextJob->Flags & JOB_NONINTERACTIVE) == 0)
-    {
-        StartupInfo.dwFlags |= STARTF_INHERITDESKTOP;
-        StartupInfo.lpDesktop = L"WinSta0\\Default";
-    }
-
-    bRet = CreateProcessW(NULL,
-                          pNextJob->Command,
-                          NULL,
-                          NULL,
-                          FALSE,
-                          CREATE_NEW_CONSOLE,
-                          NULL,
-                          NULL,
-                          &StartupInfo,
-                          &ProcessInformation);
-    if (bRet == FALSE)
-    {
-        ERR("CreateProcessW() failed (Error %lu)\n", GetLastError());
-    }
-    else
-    {
-        CloseHandle(ProcessInformation.hThread);
-        CloseHandle(ProcessInformation.hProcess);
-    }
-
-    ReScheduleJob(pNextJob);
 }
 
 
@@ -420,8 +421,6 @@ LoadJobs(VOID)
                 /* Calculate the next start time */
                 CalculateNextStartTime(pJob);
 
-                /* Insert the job into the start list */
-                InsertJobIntoStartList(&StartListHead, pJob);
 #if 0
                 DumpStartList(&StartListHead);
 #endif
@@ -473,6 +472,7 @@ CalculateNextStartTime(
     WORD wDaysOffset, wTempOffset, i, wJobDayOfWeek, wJobDayOfMonth;
     DWORD_PTR CurrentTimeMs;
     BOOL bDaysOffsetValid;
+    ULARGE_INTEGER LocalStartTime;
 
     TRACE("CalculateNextStartTime(%p)\n", pJob);
     TRACE("JobTime: %lu\n", pJob->JobTime);
@@ -590,66 +590,18 @@ CalculateNextStartTime(
 
     SystemTimeToFileTime(&StartSystemTime, &StartFileTime);
 
-    pJob->StartTime.u.LowPart = StartFileTime.dwLowDateTime;
-    pJob->StartTime.u.HighPart = StartFileTime.dwHighDateTime;
+    LocalStartTime.u.LowPart = StartFileTime.dwLowDateTime;
+    LocalStartTime.u.HighPart = StartFileTime.dwHighDateTime;
     if (bDaysOffsetValid && wDaysOffset != 0)
     {
-        pJob->StartTime.QuadPart += ((ULONGLONG)wDaysOffset * 24 * 60 * 60 * 10000);
+        LocalStartTime.QuadPart += ((ULONGLONG)wDaysOffset * 24 * 60 * 60 * 10000);
     }
+
+    pJob->StartTime.dwLowDateTime = LocalStartTime.u.LowPart;
+    pJob->StartTime.dwHighDateTime = LocalStartTime.u.HighPart;
 }
 
-
-VOID
-InsertJobIntoStartList(
-    _In_ PLIST_ENTRY StartListHead,
-    _In_ PJOB pJob)
-{
-    PLIST_ENTRY CurrentEntry, PreviousEntry;
-    PJOB CurrentJob;
-
-    if (IsListEmpty(StartListHead))
-    {
-         InsertHeadList(StartListHead, &pJob->StartEntry);
-         return;
-    }
-
-    CurrentEntry = StartListHead->Flink;
-    while (CurrentEntry != StartListHead)
-    {
-        CurrentJob = CONTAINING_RECORD(CurrentEntry, JOB, StartEntry);
-
-        if ((CurrentEntry == StartListHead->Flink) &&
-            (pJob->StartTime.QuadPart < CurrentJob->StartTime.QuadPart))
-        {
-            /* Insert before the first entry */
-            InsertHeadList(StartListHead, &pJob->StartEntry);
-            return;
-        }
-
-        if (pJob->StartTime.QuadPart < CurrentJob->StartTime.QuadPart)
-        {
-            /* Insert between the previous and the current entry */
-            PreviousEntry = CurrentEntry->Blink;
-            pJob->StartEntry.Blink = PreviousEntry;
-            pJob->StartEntry.Flink = CurrentEntry;
-            PreviousEntry->Flink = &pJob->StartEntry;
-            CurrentEntry->Blink = &pJob->StartEntry;
-            return;
-        }
-
-        if ((CurrentEntry->Flink == StartListHead) &&
-            (pJob->StartTime.QuadPart >= CurrentJob->StartTime.QuadPart))
-        {
-            /* Insert after the last entry */
-            InsertTailList(StartListHead, &pJob->StartEntry);
-            return;
-        }
-
-        CurrentEntry = CurrentEntry->Flink;
-    }
-}
-
-
+#if 0
 VOID
 DumpStartList(
     _In_ PLIST_ENTRY StartListHead)
@@ -657,8 +609,8 @@ DumpStartList(
     PLIST_ENTRY CurrentEntry;
     PJOB CurrentJob;
 
-    CurrentEntry = StartListHead->Flink;
-    while (CurrentEntry != StartListHead)
+    CurrentEntry = JobListHead->Flink;
+    while (CurrentEntry != &JobListHead)
     {
         CurrentJob = CONTAINING_RECORD(CurrentEntry, JOB, StartEntry);
 
@@ -667,5 +619,5 @@ DumpStartList(
         CurrentEntry = CurrentEntry->Flink;
     }
 }
-
+#endif
 /* EOF */
