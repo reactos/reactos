@@ -198,7 +198,7 @@ BEGIN
     IDS_INFOTITLE "Paint for ReactOS"
     IDS_INFOTEXT "Tilgjengelig under GNU Lesser General Public License (LGPL, se http://www.gnu.org/home.nb.html)"
     IDS_SAVEPROMPTTEXT "Vil du lagre endringene til %s?"
-    IDS_DEFAULTFILENAME "Utennavn.png"
+    IDS_DEFAULTFILENAME "Utennavn"
     IDS_MINIATURETITLE "Miniature"
     IDS_TOOLTIP1 "Frihåndmerking"
     IDS_TOOLTIP2 "Merk"

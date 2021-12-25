@@ -190,7 +190,7 @@ BEGIN
     IDS_INFOTITLE "Paint для ReactOS"
     IDS_INFOTEXT "Распространяется под лицензией GNU Lesser General Public License (LGPL, см. www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Сохранить изменения в %s?"
-    IDS_DEFAULTFILENAME "Безымянный.png"
+    IDS_DEFAULTFILENAME "Безымянный"
     IDS_MINIATURETITLE "Эскиз"
     IDS_TOOLTIP1 "Выделение произвольной области"
     IDS_TOOLTIP2 "Выделение"

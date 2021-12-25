@@ -199,7 +199,7 @@ BEGIN
     IDS_INFOTITLE "ReactOS 画图"
     IDS_INFOTEXT "GNU LGPL 许可证下发布的 (详见 www.gnu.org)"
     IDS_SAVEPROMPTTEXT "您想把改变保存到 %s 吗？"
-    IDS_DEFAULTFILENAME "未命名.png"
+    IDS_DEFAULTFILENAME "未命名"
     IDS_MINIATURETITLE "缩略图"
     IDS_TOOLTIP1 "自由选择"
     IDS_TOOLTIP2 "选择"

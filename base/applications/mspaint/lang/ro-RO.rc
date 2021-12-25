@@ -199,7 +199,7 @@ BEGIN
     IDS_INFOTITLE "Pictare pentru ReactOS"
     IDS_INFOTEXT "Disponibilă sub licența GNU Lesser General Public (vedeți www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Doriți păstrarea modificărilor din %s?"
-    IDS_DEFAULTFILENAME "FărăNume.png"
+    IDS_DEFAULTFILENAME "FărăNume"
     IDS_MINIATURETITLE "Miniatură"
     IDS_TOOLTIP1 "Golire selecție"
     IDS_TOOLTIP2 "Selecție"

@@ -198,7 +198,7 @@ BEGIN
     IDS_INFOTITLE "Trình Vẽ cho ReactOS"
     IDS_INFOTEXT "Được cung cấp theo điều lệ trong GNU Lesser General Public License (LGPL, xem www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Bạn có muốn lưu lại những thay đổi trong %s?"
-    IDS_DEFAULTFILENAME "Khongten.png"
+    IDS_DEFAULTFILENAME "Khongten"
     IDS_MINIATURETITLE "Ảnh nhỏ"
     IDS_TOOLTIP1 "Chọn tự do"
     IDS_TOOLTIP2 "Chọn"
