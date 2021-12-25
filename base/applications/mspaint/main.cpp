@@ -264,7 +264,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     choosecolor.lpCustColors   = custColors;
 
     /* initializing the OPENFILENAME structure for use with GetOpenFileName and GetSaveFileName */
-    CopyMemory(ofnFilename, filepathname, sizeof(filepathname));
+    ofnFilename[0] = 0;
     CString strImporters;
     CSimpleArray<GUID> aguidFileTypesI;
     CString strAllPictureFiles;
@@ -283,7 +283,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     ofn.lpstrFileTitle = ofnFiletitle;
     ofn.nMaxFileTitle  = SIZEOF(ofnFiletitle);
     ofn.Flags          = OFN_EXPLORER | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt    = L"bmp";
+    ofn.lpstrDefExt    = L"png";
 
     CopyMemory(sfnFilename, filepathname, sizeof(filepathname));
     CString strExporters;
@@ -300,7 +300,16 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     sfn.nMaxFileTitle  = SIZEOF(sfnFiletitle);
     sfn.Flags          = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLEHOOK;
     sfn.lpfnHook       = OFNHookProc;
-    sfn.lpstrDefExt    = L"bmp";
+    sfn.lpstrDefExt    = L"png";
+    // Choose PNG
+    for (INT i = 0; i < aguidFileTypesE.GetSize(); ++i)
+    {
+        if (aguidFileTypesE[i] == Gdiplus::ImageFormatPNG)
+        {
+            sfn.nFilterIndex = i + 1;
+            break;
+        }
+    }
 
     /* creating the size boxes */
     RECT sizeboxPos = {0, 0, 0 + 3, 0 + 3};

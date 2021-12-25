@@ -198,7 +198,7 @@ BEGIN
     IDS_INFOTITLE "ReactOS ペイント"
     IDS_INFOTEXT "GNU Lesser General Public License (LGPL, 詳細は www.gnu.org) の下で利用可能です。"
     IDS_SAVEPROMPTTEXT "%s の変更内容を保存しますか？"
-    IDS_DEFAULTFILENAME "無題.bmp"
+    IDS_DEFAULTFILENAME "無題.png"
     IDS_MINIATURETITLE "縮小図"
     IDS_TOOLTIP1 "自由選択"
     IDS_TOOLTIP2 "選択"

@@ -190,7 +190,7 @@ BEGIN
     IDS_INFOTITLE "Paint för ReactOS"
     IDS_INFOTEXT "Tillgänglig under GNU Lesser General Public License (LGPL, se www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Vill du spara ändringarna till %s?"
-    IDS_DEFAULTFILENAME "Namnlös.bmp"
+    IDS_DEFAULTFILENAME "Namnlös.png"
     IDS_MINIATURETITLE "Miniatyr"
     IDS_TOOLTIP1 "Lasso"
     IDS_TOOLTIP2 "Markering"

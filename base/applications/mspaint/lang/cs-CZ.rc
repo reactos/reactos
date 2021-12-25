@@ -198,7 +198,7 @@ BEGIN
     IDS_INFOTITLE "ReactOS Malování"
     IDS_INFOTEXT "Dostupné pod licencí GNU Lesser General Public License (LGPL, viz. www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Chcete uložit provedené změny v %s?"
-    IDS_DEFAULTFILENAME "Bez názvu.bmp"
+    IDS_DEFAULTFILENAME "Bez názvu.png"
     IDS_MINIATURETITLE "Miniatura"
     IDS_TOOLTIP1 "Volný výběr"
     IDS_TOOLTIP2 "Výběr"
