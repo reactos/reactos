@@ -1,0 +1,49 @@
+; NETB57XX.INF
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Net
+ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 12/24/2021,1.00
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%BroadcomMfg% = BroadcomMfg
+
+[BroadcomMfg]
+%Broadcom5752.DeviceDesc% = B57XX_Inst.ndi,PCI\VEN_14E4&DEV_1600
+; %Broadcom5752M.DeviceDesc% = B57XX_Inst.ndi,PCI\VEN_14E4&DEV_1601
+
+;----------------------------- B57XX DRIVER -----------------------------
+
+[B57XX_Inst.ndi.NT]
+Characteristics = 0x4 ; NCF_PHYSICAL
+BusType = 5 ; PCIBus
+CopyFiles = B57XX_CopyFiles.NT
+
+[B57XX_CopyFiles.NT]
+b57xx.sys
+
+[B57XX_Inst.ndi.NT.Services]
+AddService = b57xx, 0x00000002, B57XX_Service_Inst
+
+[B57XX_Service_Inst]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 0
+ServiceBinary = %12%\b57xx.sys
+LoadOrderGroup = NDIS
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+
+BroadcomMfg = "Broadcom"
+
+Broadcom5752.DeviceDesc = "Broadcom NetXtreme 5752 Gigabit Controller"
