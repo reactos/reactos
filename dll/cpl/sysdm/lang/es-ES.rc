@@ -351,7 +351,7 @@ BEGIN
     IDS_USERPROFILE_ROAMING "Móvil"
     IDS_USERPROFILE_MANDATORY "Obligatorio"
     IDS_USERPROFILE_CONFIRM_DELETE "¿Está seguro de que quiere borrar el perfil %s'?"
-    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirme borrado"
+    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirmar borrado"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Cuenta desconocida"
     IDS_USERPROFILE_ACCOUNT_DELETED "Cuenta borrada"
     IDS_USERPROFILE_TYPE_TEXT "Cuando %s inicie sesión en este equipo, aplicar el perfil móvil, o la copia en caché local del perfil móvil."
