@@ -91,10 +91,10 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                GRIP_SIZE, GRIP_SIZE, TRUE);
     sizeboxLeftBottom.MoveWindow(
                0,
-               Zoomed(imgYRes) + GRIP_SIZE, GRIP_SIZE, GRIP_SIZE, TRUE);
+               GRIP_SIZE + Zoomed(imgYRes), GRIP_SIZE, GRIP_SIZE, TRUE);
     sizeboxCenterBottom.MoveWindow(
                GRIP_SIZE + Zoomed(imgXRes - GRIP_SIZE) / 2,
-               Zoomed(imgYRes) + GRIP_SIZE, GRIP_SIZE, GRIP_SIZE, TRUE);
+               GRIP_SIZE + Zoomed(imgYRes), GRIP_SIZE, GRIP_SIZE, TRUE);
     sizeboxRightBottom.MoveWindow(
                GRIP_SIZE + Zoomed(imgXRes),
                GRIP_SIZE + Zoomed(imgYRes), GRIP_SIZE, GRIP_SIZE, TRUE);
