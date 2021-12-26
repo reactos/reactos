@@ -104,12 +104,11 @@ void RegistrySettings::Load()
         ReadFileHistory(files, _T("File4"), strFile4);
     }
 
-    if (BMPWidth > 4096 || BMPHeight > 2304)
-    {
-        // Too large. Fix it.
-        BMPWidth = 400;
-        BMPHeight = 300;
-    }
+    // Fix the bitmap size if too large
+    if (BMPHeight > 5000)
+        BMPHeight = 460;
+    if (BMPWidth > 5000)
+        BMPWidth = 819;
 }
 
 void RegistrySettings::Store()
