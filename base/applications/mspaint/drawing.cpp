@@ -108,9 +108,9 @@ Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, COLORREF color, int thic
     LONG distance13 = GetDistancePow2(p1, p3);
     LONG distance42 = GetDistancePow2(p4, p2);
     LONG distance43 = GetDistancePow2(p4, p3);
-    LONG norm1 = distance12 - distance42;
-    LONG norm2 = distance13 - distance43;
-    if (norm1 > norm2)
+    LONG norm2 = distance12 - distance42;
+    LONG norm3 = distance13 - distance43;
+    if (norm2 > norm3)
     {
         fourPoints[1] = p3;
         fourPoints[2] = p2;
