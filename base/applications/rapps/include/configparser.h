@@ -1,6 +1,5 @@
 #pragma once
 
-#include <windef.h>
 #include <atlstr.h>
 
 class CConfigParser

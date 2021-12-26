@@ -4,7 +4,6 @@
 #include "rosui.h"
 #include "crichedit.h"
 #include "asyncinet.h"
-#include "misc.h"
 #include "appview.h"
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
