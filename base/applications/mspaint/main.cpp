@@ -322,7 +322,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     sizeboxCenterBottom.Create(scrlClientWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
     sizeboxRightBottom.Create(scrlClientWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
     /* placing the size boxes around the image */
-    imageArea.PostMessage(WM_SIZE, 0, 0);
+    imageArea.SendMessage(WM_SIZE, 0, 0);
 
     /* by moving the window, the things in WM_SIZE are done */
     mainWindow.SetWindowPlacement(&(registrySettings.WindowPlacement));
