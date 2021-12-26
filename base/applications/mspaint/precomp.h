@@ -21,7 +21,6 @@
 #include <shellapi.h>
 #include <htmlhelp.h>
 
-#include "common.h"
 #include "definitions.h"
 #include "drawing.h"
 #include "dib.h"
@@ -43,5 +42,6 @@
 #include "toolsettings.h"
 #include "toolsmodel.h"
 #include "winproc.h"
+#include "common.h"
 
 #endif /* _MSPAINT_H */

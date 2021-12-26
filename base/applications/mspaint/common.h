@@ -5,13 +5,10 @@
  * PURPOSE:     Commonly used functions
  * PROGRAMMERS: Benedikt Freisen
  *              Stanislav Motylkov
+ *              Katayama Hirofumi MZ
  */
 
 #pragma once
-
-#include "toolsmodel.h"
-
-extern ToolsModel toolsModel;
 
 /* FUNCTIONS ********************************************************/
 
