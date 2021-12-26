@@ -65,29 +65,29 @@ ForceRefreshSelectionContents()
 
 int CSelectionWindow::IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeight)
 {
-    if (iYPos < 3)
+    if (iYPos < GRIP_SIZE)
     {
-        if (iXPos < 3)
+        if (iXPos < GRIP_SIZE)
             return ACTION_RESIZE_TOP_LEFT;
         if ((iXPos < iWidth / 2 + 2) && (iXPos >= iWidth / 2 - 1))
             return ACTION_RESIZE_TOP;
-        if (iXPos >= iWidth - 3)
+        if (iXPos >= iWidth - GRIP_SIZE)
             return ACTION_RESIZE_TOP_RIGHT;
     }
     if ((iYPos < iHeight / 2 + 2) && (iYPos >= iHeight / 2 - 1))
     {
-        if (iXPos < 3)
+        if (iXPos < GRIP_SIZE)
             return ACTION_RESIZE_LEFT;
-        if (iXPos >= iWidth - 3)
+        if (iXPos >= iWidth - GRIP_SIZE)
             return ACTION_RESIZE_RIGHT;
     }
-    if (iYPos >= iHeight - 3)
+    if (iYPos >= iHeight - GRIP_SIZE)
     {
-        if (iXPos < 3)
+        if (iXPos < GRIP_SIZE)
             return ACTION_RESIZE_BOTTOM_LEFT;
         if ((iXPos < iWidth / 2 + 2) && (iXPos >= iWidth / 2 - 1))
             return ACTION_RESIZE_BOTTOM;
-        if (iXPos >= iWidth - 3)
+        if (iXPos >= iWidth - GRIP_SIZE)
             return ACTION_RESIZE_BOTTOM_RIGHT;
     }
     return 0;

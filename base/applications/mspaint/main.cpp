@@ -248,7 +248,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     selectionWindow.Create(scrlClientWindow.m_hWnd, selectionWindowPos, NULL, WS_CHILD | BS_OWNERDRAW);
 
     /* creating the window inside the scroll box, on which the image in hDrawingDC's bitmap is drawn */
-    RECT imageAreaPos = {3, 3, 3 + imageModel.GetWidth(), 3 + imageModel.GetHeight()};
+    RECT imageAreaPos = {GRIP_SIZE, GRIP_SIZE, GRIP_SIZE + imageModel.GetWidth(), GRIP_SIZE + imageModel.GetHeight()};
     imageArea.Create(scrlClientWindow.m_hWnd, imageAreaPos, NULL, WS_CHILD | WS_VISIBLE);
 
     if (__argc >= 2)
@@ -312,7 +312,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     }
 
     /* creating the size boxes */
-    RECT sizeboxPos = {0, 0, 0 + 3, 0 + 3};
+    RECT sizeboxPos = {0, 0, GRIP_SIZE, GRIP_SIZE};
     sizeboxLeftTop.Create(scrlClientWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
     sizeboxCenterTop.Create(scrlClientWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
     sizeboxRightTop.Create(scrlClientWindow.m_hWnd, sizeboxPos, NULL, WS_CHILD | WS_VISIBLE);
