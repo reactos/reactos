@@ -27,8 +27,6 @@ KGUARDED_MUTEX PopVolumeLock;
 LIST_ENTRY PopVolumeDevices;
 KSPIN_LOCK PopDopeGlobalLock;
 
-#define TAG_PO_DOPE 'EPOD'
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 PDEVICE_OBJECT_POWER_EXTENSION

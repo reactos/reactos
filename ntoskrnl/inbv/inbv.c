@@ -11,10 +11,6 @@
 #define MM_READONLY     1   // PAGE_READONLY
 #define MM_READWRITE    4   // PAGE_WRITECOPY
 
-#ifndef TAG_OSTR
-#define TAG_OSTR    'RTSO'
-#endif
-
 /* GLOBALS *******************************************************************/
 
 /*

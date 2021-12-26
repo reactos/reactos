@@ -50,8 +50,6 @@ KSPIN_LOCK IopDeviceActionLock;
 KEVENT PiEnumerationFinished;
 static const WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
 
-#define TAG_PNP_DEVACTION 'aDpP'
-
 /* TYPES *********************************************************************/
 
 typedef struct _DEVICE_ACTION_REQUEST

@@ -12,8 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ERR ' rrE'
-
 /* GLOBALS ******************************************************************/
 
 BOOLEAN ExReadyForErrors = FALSE;
