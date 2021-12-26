@@ -50,7 +50,7 @@ void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::Wallpa
 
 void RegistrySettings::LoadPresets()
 {
-    BMPHeight = GetSystemMetrics(SM_CYSCREEN) / 2
+    BMPHeight = GetSystemMetrics(SM_CYSCREEN) / 2;
     BMPWidth = GetSystemMetrics(SM_CXSCREEN) / 2;
     GridExtent = 1;
     NoStretching = 0;
