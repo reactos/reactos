@@ -338,7 +338,7 @@ StartScreenSaver(
                                NULL,
                                NULL,
                                FALSE,
-                               0,
+                               IDLE_PRIORITY_CLASS,
                                NULL,
                                NULL,
                                &StartupInfo,
