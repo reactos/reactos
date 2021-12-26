@@ -39,7 +39,7 @@ zoomTo(int newZoom, int mouseX, int mouseY)
     toolsModel.SetZoom(newZoom);
 
     selectionWindow.ShowWindow(SW_HIDE);
-    imageArea.MoveWindow(3, 3, Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()), FALSE);
+    imageArea.MoveWindow(GRIP_SIZE, GRIP_SIZE, Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()), FALSE);
     scrollboxWindow.Invalidate(TRUE);
     imageArea.Invalidate(FALSE);
 

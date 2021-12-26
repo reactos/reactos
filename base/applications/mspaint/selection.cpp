@@ -65,31 +65,24 @@ ForceRefreshSelectionContents()
 
 int CSelectionWindow::IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeight)
 {
-    if (iYPos < 3)
-    {
-        if (iXPos < 3)
-            return ACTION_RESIZE_TOP_LEFT;
-        if ((iXPos < iWidth / 2 + 2) && (iXPos >= iWidth / 2 - 1))
-            return ACTION_RESIZE_TOP;
-        if (iXPos >= iWidth - 3)
-            return ACTION_RESIZE_TOP_RIGHT;
-    }
-    if ((iYPos < iHeight / 2 + 2) && (iYPos >= iHeight / 2 - 1))
-    {
-        if (iXPos < 3)
-            return ACTION_RESIZE_LEFT;
-        if (iXPos >= iWidth - 3)
-            return ACTION_RESIZE_RIGHT;
-    }
-    if (iYPos >= iHeight - 3)
-    {
-        if (iXPos < 3)
-            return ACTION_RESIZE_BOTTOM_LEFT;
-        if ((iXPos < iWidth / 2 + 2) && (iXPos >= iWidth / 2 - 1))
-            return ACTION_RESIZE_BOTTOM;
-        if (iXPos >= iWidth - 3)
-            return ACTION_RESIZE_BOTTOM_RIGHT;
-    }
+    POINT pt = { iXPos, iYPos };
+    HWND hwndChild = ChildWindowFromPointEx(pt, CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
+    if (hwndChild == sizeboxLeftTop)
+        return ACTION_RESIZE_TOP_LEFT;
+    if (hwndChild == sizeboxCenterTop)
+        return ACTION_RESIZE_TOP;
+    if (hwndChild == sizeboxRightTop)
+        return ACTION_RESIZE_TOP_RIGHT;
+    if (hwndChild == sizeboxRightCenter)
+        return ACTION_RESIZE_RIGHT;
+    if (hwndChild == sizeboxLeftCenter)
+        return ACTION_RESIZE_LEFT;
+    if (hwndChild == sizeboxCenterBottom)
+        return ACTION_RESIZE_BOTTOM;
+    if (hwndChild == sizeboxRightBottom)
+        return ACTION_RESIZE_BOTTOM_RIGHT;
+    if (hwndChild == sizeboxLeftBottom)
+        return ACTION_RESIZE_BOTTOM_LEFT;
     return 0;
 }
 
@@ -197,8 +190,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     }
     else
     {
-        int w = Zoomed(selectionModel.GetDestRectWidth()) + 6;
-        int h = Zoomed(selectionModel.GetDestRectHeight()) + 6;
+        int w = Zoomed(selectionModel.GetDestRectWidth()) + 2 * GRIP_SIZE;
+        int h = Zoomed(selectionModel.GetDestRectHeight()) + 2 * GRIP_SIZE;
         m_ptPos.x = GET_X_LPARAM(lParam);
         m_ptPos.y = GET_Y_LPARAM(lParam);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);

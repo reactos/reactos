@@ -52,8 +52,6 @@ CONST INT VSCROLL_WIDTH = ::GetSystemMetrics(SM_CXVSCROLL);
 void
 UpdateScrollbox()
 {
-    CONST INT EXTRASIZE = 5; /* 3 px of selection markers + 2 px of border */
-
     CRect tempRect;
     CSize sizeImageArea;
     CSize sizeScrollBox;
@@ -65,7 +63,7 @@ UpdateScrollbox()
 
     imageArea.GetClientRect(&tempRect);
     sizeImageArea = CSize(tempRect.Width(), tempRect.Height());
-    sizeImageArea += CSize(EXTRASIZE * 2, EXTRASIZE * 2);
+    sizeImageArea += CSize(GRIP_SIZE * 2, GRIP_SIZE * 2);
 
     /* show/hide the scrollbars */
     vmode = (sizeScrollBox.cy < sizeImageArea.cy ? 0 :
@@ -132,8 +130,9 @@ LRESULT CScrollboxWindow::OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         scrollboxWindow.SetScrollInfo(SB_HORZ, &si);
         scrlClientWindow.MoveWindow(-scrollboxWindow.GetScrollPos(SB_HORZ),
-                   -scrollboxWindow.GetScrollPos(SB_VERT), Zoomed(imageModel.GetWidth()) + 6,
-                   Zoomed(imageModel.GetHeight()) + 6, TRUE);
+                   -scrollboxWindow.GetScrollPos(SB_VERT),
+                   Zoomed(imageModel.GetWidth()) + 2 * GRIP_SIZE,
+                   Zoomed(imageModel.GetHeight()) + 2 * GRIP_SIZE, TRUE);
     }
     return 0;
 }
@@ -167,8 +166,9 @@ LRESULT CScrollboxWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         scrollboxWindow.SetScrollInfo(SB_VERT, &si);
         scrlClientWindow.MoveWindow(-scrollboxWindow.GetScrollPos(SB_HORZ),
-                   -scrollboxWindow.GetScrollPos(SB_VERT), Zoomed(imageModel.GetWidth()) + 6,
-                   Zoomed(imageModel.GetHeight()) + 6, TRUE);
+                   -scrollboxWindow.GetScrollPos(SB_VERT),
+                   Zoomed(imageModel.GetWidth()) + 2 * GRIP_SIZE,
+                   Zoomed(imageModel.GetHeight()) + 2 * GRIP_SIZE, TRUE);
     }
     return 0;
 }

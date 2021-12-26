@@ -23,3 +23,5 @@ static inline int UnZoomed(int xy)
 {
     return xy * 1000 / toolsModel.GetZoom();
 }
+
+#define GRIP_SIZE 3
