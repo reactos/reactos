@@ -568,39 +568,51 @@ public:
         return E_FAIL;//FIXME stub
     }
 
-    HWND GetDlgItem(int nID)
+    HWND GetDlgItem(_In_ int nID) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::GetDlgItem(m_hWnd, nID);
     }
 
-    UINT GetDlgItemInt(int nID, BOOL* lpTrans = NULL, BOOL bSigned = TRUE) const
+    UINT GetDlgItemInt(
+        _In_ int nID,
+        _Out_opt_ BOOL* lpTrans = NULL,
+        _In_ BOOL bSigned = TRUE) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::GetDlgItemInt(m_hWnd, nID, lpTrans, bSigned);
     }
 
-    UINT GetDlgItemText(int nID, LPTSTR lpStr, int nMaxCount) const
+    UINT GetDlgItemText(
+        _In_ int nID,
+        _Out_writes_to_(nMaxCount, return + 1) LPTSTR lpStr,
+        _In_ int nMaxCount) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::GetDlgItemText(m_hWnd, nID, lpStr, nMaxCount);
     }
 
 #ifdef __ATLSTR_H__
-    UINT GetDlgItemText(int nID, CSimpleString& string)
+    UINT GetDlgItemText(_In_ int nID, _Inout_ CSimpleString& strText) const
     {
         HWND item = GetDlgItem(nID);
-        int len = ::GetWindowTextLength(item);
-        len = GetDlgItemText(nID, string.GetBuffer(len+1), len+1);
-        string.ReleaseBuffer(len);
-        return len;
+        if (!item)
+        {
+            strText.Empty();
+            return 0;
+        }
+        return CWindow(item).GetWindowText(strText);
     }
 #endif
 
-    BOOL GetDlgItemText(int nID, BSTR& bstrText) const
+    BOOL GetDlgItemText(
+        _In_ int nID,
+        _Inout_ _Outref_result_maybenull_ _Post_z_ BSTR& bstrText) const
     {
-        ATLASSERT(::IsWindow(m_hWnd));
-        return FALSE;//FIXME stub
+        HWND item = GetDlgItem(nID);
+        if (!item)
+            return FALSE;
+        return CWindow(item).GetWindowText(bstrText);
     }
 
     DWORD GetExStyle() const
@@ -690,7 +702,13 @@ public:
     HWND GetTopLevelParent() const
     {
         ATLASSERT(::IsWindow(m_hWnd));
-        return NULL;//FIXME stub
+
+        HWND hWndParent = m_hWnd;
+        HWND hWndTmp;
+        while ((hWndTmp = ::GetParent(hWndParent)) != NULL)
+            hWndParent = hWndTmp;
+
+        return hWndParent;
     }
 
     HWND GetTopLevelWindow() const
@@ -773,13 +791,26 @@ public:
         return ::GetWindowRgn(m_hWnd, hRgn);
     }
 
-    int GetWindowText(LPTSTR lpszStringBuf, int nMaxCount) const
+    int GetWindowText(
+        _Out_writes_to_(nMaxCount, return + 1) LPTSTR lpszStringBuf,
+        _In_ int nMaxCount) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::GetWindowText(m_hWnd, lpszStringBuf, nMaxCount);
     }
 
-    BOOL GetWindowText(BSTR& bstrText)
+#ifdef __ATLSTR_H__
+    int GetWindowText(_Inout_ CSimpleString& strText) const
+    {
+        int len = GetWindowTextLength();
+        len = GetWindowText(strText.GetBuffer(len + 1), len + 1);
+        strText.ReleaseBuffer(len);
+        return len;
+    }
+#endif
+
+    BOOL GetWindowText(
+        _Inout_ _Outref_result_maybenull_ _Post_z_ BSTR& bstrText) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         INT length = ::GetWindowTextLengthW(m_hWnd);
