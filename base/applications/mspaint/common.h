@@ -9,8 +9,20 @@
 
 #pragma once
 
+#include "toolsmodel.h"
+
+extern ToolsModel toolsModel;
+
 /* FUNCTIONS ********************************************************/
 
 BOOL zoomTo(int newZoom, int mouseX, int mouseY);
-int Zoomed(int xy);
-int UnZoomed(int xy);
+
+static inline int Zoomed(int xy)
+{
+    return xy * toolsModel.GetZoom() / 1000;
+}
+
+static inline int UnZoomed(int xy)
+{
+    return xy * 1000 / toolsModel.GetZoom();
+}

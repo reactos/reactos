@@ -12,16 +12,6 @@
 
 /* FUNCTIONS ********************************************************/
 
-int Zoomed(int xy)
-{
-    return xy * toolsModel.GetZoom() / 1000;
-}
-
-int UnZoomed(int xy)
-{
-    return xy * 1000 / toolsModel.GetZoom();
-}
-
 ToolsModel::ToolsModel()
 {
     m_lineWidth = 1;
