@@ -91,7 +91,7 @@ Poly(HDC hdc, POINT * lpPoints, int nCount,  COLORREF fg,  COLORREF bg, int thic
     SetROP2(hdc, oldRop);
 }
 
-double GetDistancePow2(POINT p1, POINT p2)
+LONG GetDistancePow2(POINT p1, POINT p2)
 {
     LONG dx = p2.x - p1.x;
     LONG dy = p2.y - p1.y;
@@ -103,12 +103,12 @@ Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, COLORREF color, int thic
 {
     HPEN oldPen;
     POINT fourPoints[4];
-    double distance12 = GetDistancePow2(p1, p2);
-    double distance13 = GetDistancePow2(p1, p3);
-    double distance42 = GetDistancePow2(p4, p2);
-    double distance43 = GetDistancePow2(p4, p3);
-    double norm1 = distance42 - distance12;
-    double norm2 = distance43 - distance13;
+    LONG distance12 = GetDistancePow2(p1, p2);
+    LONG distance13 = GetDistancePow2(p1, p3);
+    LONG distance42 = GetDistancePow2(p4, p2);
+    LONG distance43 = GetDistancePow2(p4, p3);
+    LONG norm1 = distance42 - distance12;
+    LONG norm2 = distance43 - distance13;
     if (norm1 < norm2)
     {
         fourPoints[1] = p3;
