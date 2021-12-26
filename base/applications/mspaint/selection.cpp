@@ -197,8 +197,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     }
     else
     {
-        int w = Zoomed(selectionModel.GetDestRectWidth()) + 6;
-        int h = Zoomed(selectionModel.GetDestRectHeight()) + 6;
+        int w = Zoomed(selectionModel.GetDestRectWidth()) + 2 * GRIP_SIZE;
+        int h = Zoomed(selectionModel.GetDestRectHeight()) + 2 * GRIP_SIZE;
         m_ptPos.x = GET_X_LPARAM(lParam);
         m_ptPos.y = GET_Y_LPARAM(lParam);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);
