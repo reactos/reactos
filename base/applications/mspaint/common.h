@@ -11,6 +11,6 @@
 
 /* FUNCTIONS ********************************************************/
 
-BOOL zoomTo(int, int, int);
+BOOL zoomTo(int newZoom, int mouseX, int mouseY);
 int Zoomed(int xy);
 int UnZoomed(int xy);
