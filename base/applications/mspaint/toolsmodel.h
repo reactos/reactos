@@ -28,6 +28,8 @@ private:
 
 public:
     ToolsModel();
+    int Zoomed(int xy) const;
+    int UnZoomed(int xy) const;
     int GetLineWidth();
     void SetLineWidth(int nLineWidth);
     int GetShapeStyle();
@@ -42,6 +44,6 @@ public:
     void SetRubberRadius(int nRubberRadius);
     BOOL IsBackgroundTransparent();
     void SetBackgroundTransparent(BOOL bTransparent);
-    int GetZoom();
+    int GetZoom() const;
     void SetZoom(int nZoom);
 };

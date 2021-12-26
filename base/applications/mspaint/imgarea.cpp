@@ -21,8 +21,8 @@ updateCanvasAndScrollbars()
 {
     selectionWindow.ShowWindow(SW_HIDE);
 
-    int zoomedWidth = imageModel.GetWidth() * toolsModel.GetZoom() / 1000;
-    int zoomedHeight = imageModel.GetHeight() * toolsModel.GetZoom() / 1000;
+    int zoomedWidth = toolsModel.Zoomed(imageModel.GetWidth());
+    int zoomedHeight = toolsModel.Zoomed(imageModel.GetHeight());
     imageArea.MoveWindow(3, 3, zoomedWidth, zoomedHeight, FALSE);
 
     scrollboxWindow.Invalidate(TRUE);
@@ -76,26 +76,26 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                0,
                0, 3, 3, TRUE);
     sizeboxCenterTop.MoveWindow(
-               imgXRes * toolsModel.GetZoom() / 2000 + 3 * 3 / 4,
+               toolsModel.Zoomed(imgXRes) + 3 * 3 / 4,
                0, 3, 3, TRUE);
     sizeboxRightTop.MoveWindow(
-               imgXRes * toolsModel.GetZoom() / 1000 + 3,
+               toolsModel.Zoomed(imgXRes) + 3,
                0, 3, 3, TRUE);
     sizeboxLeftCenter.MoveWindow(
                0,
-               imgYRes * toolsModel.GetZoom() / 2000 + 3 * 3 / 4, 3, 3, TRUE);
+               toolsModel.Zoomed(imgYRes / 2) + 3 * 3 / 4, 3, 3, TRUE);
     sizeboxRightCenter.MoveWindow(
-               imgXRes * toolsModel.GetZoom() / 1000 + 3,
-               imgYRes * toolsModel.GetZoom() / 2000 + 3 * 3 / 4, 3, 3, TRUE);
+               toolsModel.Zoomed(imgXRes) + 3,
+               toolsModel.Zoomed(imgYRes / 2) + 3 * 3 / 4, 3, 3, TRUE);
     sizeboxLeftBottom.MoveWindow(
                0,
-               imgYRes * toolsModel.GetZoom() / 1000 + 3, 3, 3, TRUE);
+               toolsModel.Zoomed(imgYRes) + 3, 3, 3, TRUE);
     sizeboxCenterBottom.MoveWindow(
-               imgXRes * toolsModel.GetZoom() / 2000 + 3 * 3 / 4,
-               imgYRes * toolsModel.GetZoom() / 1000 + 3, 3, 3, TRUE);
+               toolsModel.Zoomed(imgXRes / 2) + 3 * 3 / 4,
+               toolsModel.Zoomed(imgYRes) + 3, 3, 3, TRUE);
     sizeboxRightBottom.MoveWindow(
-               imgXRes * toolsModel.GetZoom() / 1000 + 3,
-               imgYRes * toolsModel.GetZoom() / 1000 + 3, 3, 3, TRUE);
+               toolsModel.Zoomed(imgXRes) + 3,
+               toolsModel.Zoomed(imgYRes) + 3, 3, 3, TRUE);
     UpdateScrollbox();
     return 0;
 }
@@ -106,7 +106,7 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     HDC hdc = GetDC();
     int imgXRes = imageModel.GetWidth();
     int imgYRes = imageModel.GetHeight();
-    StretchBlt(hdc, 0, 0, imgXRes * toolsModel.GetZoom() / 1000, imgYRes * toolsModel.GetZoom() / 1000, imageModel.GetDC(), 0, 0, imgXRes,
+    StretchBlt(hdc, 0, 0, toolsModel.Zoomed(imgXRes), toolsModel.Zoomed(imgYRes), imageModel.GetDC(), 0, 0, imgXRes,
                imgYRes, SRCCOPY);
     if (showGrid && (toolsModel.GetZoom() >= 4000))
     {
@@ -114,13 +114,13 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         int counter;
         for(counter = 0; counter <= imgYRes; counter++)
         {
-            MoveToEx(hdc, 0, counter * toolsModel.GetZoom() / 1000, NULL);
-            LineTo(hdc, imgXRes * toolsModel.GetZoom() / 1000, counter * toolsModel.GetZoom() / 1000);
+            MoveToEx(hdc, 0, toolsModel.Zoomed(counter), NULL);
+            LineTo(hdc, toolsModel.Zoomed(imgXRes), toolsModel.Zoomed(counter));
         }
         for(counter = 0; counter <= imgXRes; counter++)
         {
-            MoveToEx(hdc, counter * toolsModel.GetZoom() / 1000, 0, NULL);
-            LineTo(hdc, counter * toolsModel.GetZoom() / 1000, imgYRes * toolsModel.GetZoom() / 1000);
+            MoveToEx(hdc, toolsModel.Zoomed(counter), 0, NULL);
+            LineTo(hdc, toolsModel.Zoomed(counter), toolsModel.Zoomed(imgYRes));
         }
         DeleteObject(SelectObject(hdc, oldPen));
     }
@@ -161,7 +161,7 @@ LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     {
         SetCapture();
         drawing = TRUE;
-        startPaintingL(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(),
+        startPaintingL(imageModel.GetDC(), toolsModel.UnZoomed(GET_X_LPARAM(lParam)), toolsModel.UnZoomed(GET_Y_LPARAM(lParam)),
                        paletteModel.GetFgColor(), paletteModel.GetBgColor());
     }
     else
@@ -181,7 +181,7 @@ LRESULT CImgAreaWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     {
         SetCapture();
         drawing = TRUE;
-        startPaintingR(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(),
+        startPaintingR(imageModel.GetDC(), toolsModel.UnZoomed(GET_X_LPARAM(lParam)), toolsModel.UnZoomed(GET_Y_LPARAM(lParam)),
                        paletteModel.GetFgColor(), paletteModel.GetBgColor());
     }
     else
@@ -199,13 +199,13 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     if (drawing)
     {
-        endPaintingL(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
+        endPaintingL(imageModel.GetDC(), toolsModel.UnZoomed(GET_X_LPARAM(lParam)), toolsModel.UnZoomed(GET_Y_LPARAM(lParam)), paletteModel.GetFgColor(),
                      paletteModel.GetBgColor());
         Invalidate(FALSE);
         if (toolsModel.GetActiveTool() == TOOL_COLOR)
         {
             COLORREF tempColor =
-                GetPixel(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom());
+                GetPixel(imageModel.GetDC(), toolsModel.UnZoomed(GET_X_LPARAM(lParam)), toolsModel.UnZoomed(GET_Y_LPARAM(lParam)));
             if (tempColor != CLR_INVALID)
                 paletteModel.SetFgColor(tempColor);
         }
@@ -234,12 +234,12 @@ void CImgAreaWindow::cancelDrawing()
             // FIXME: dirty hack
             if (GetKeyState(VK_LBUTTON) < 0)
             {
-                endPaintingL(imageModel.GetDC(), pt.x * 1000 / toolsModel.GetZoom(), pt.y * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
+                endPaintingL(imageModel.GetDC(), toolsModel.UnZoomed(pt.x), toolsModel.UnZoomed(pt.y), paletteModel.GetFgColor(),
                              paletteModel.GetBgColor());
             }
             else if (GetKeyState(VK_RBUTTON) < 0)
             {
-                endPaintingR(imageModel.GetDC(), pt.x * 1000 / toolsModel.GetZoom(), pt.y * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
+                endPaintingR(imageModel.GetDC(), toolsModel.UnZoomed(pt.x), toolsModel.UnZoomed(pt.y), paletteModel.GetFgColor(),
                              paletteModel.GetBgColor());
             }
             imageModel.Undo();
@@ -283,13 +283,13 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     if (drawing)
     {
-        endPaintingR(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), paletteModel.GetFgColor(),
+        endPaintingR(imageModel.GetDC(), toolsModel.UnZoomed(GET_X_LPARAM(lParam)), toolsModel.UnZoomed(GET_Y_LPARAM(lParam)), paletteModel.GetFgColor(),
                      paletteModel.GetBgColor());
         Invalidate(FALSE);
         if (toolsModel.GetActiveTool() == TOOL_COLOR)
         {
             COLORREF tempColor =
-                GetPixel(imageModel.GetDC(), GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom(), GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom());
+                GetPixel(imageModel.GetDC(), toolsModel.UnZoomed(GET_X_LPARAM(lParam)), toolsModel.UnZoomed(GET_Y_LPARAM(lParam)));
             if (tempColor != CLR_INVALID)
                 paletteModel.SetBgColor(tempColor);
         }
@@ -302,8 +302,8 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    LONG xNow = GET_X_LPARAM(lParam) * 1000 / toolsModel.GetZoom();
-    LONG yNow = GET_Y_LPARAM(lParam) * 1000 / toolsModel.GetZoom();
+    LONG xNow = toolsModel.UnZoomed(GET_X_LPARAM(lParam));
+    LONG yNow = toolsModel.UnZoomed(GET_Y_LPARAM(lParam));
     if ((!drawing) || (toolsModel.GetActiveTool() <= TOOL_AIRBRUSH))
     {
         TRACKMOUSEEVENT tme;

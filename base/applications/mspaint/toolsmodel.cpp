@@ -12,6 +12,16 @@
 
 /* FUNCTIONS ********************************************************/
 
+int ToolsModel::Zoomed(int xy) const
+{
+    return xy * GetZoom() / 1000;
+}
+
+int ToolsModel::UnZoomed(int xy) const
+{
+    return xy * 1000 / GetZoom();
+}
+
 ToolsModel::ToolsModel()
 {
     m_lineWidth = 1;
@@ -101,7 +111,7 @@ void ToolsModel::SetBackgroundTransparent(BOOL bTransparent)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetZoom()
+int ToolsModel::GetZoom() const
 {
     return m_zoom;
 }
