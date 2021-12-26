@@ -1037,7 +1037,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     hResult = IUnknown_GetWindow(menuBar, &fMenuBandWindow);
     fMenuBar.Attach(menuBar.Detach());                  // transfer the ref count
 
-    // FIXME: The ros Rebar does not properly support fixed-size items such as the brandband,
+    // FIXME: The ROS Rebar does not properly support fixed-size items such as the brandband,
     // and it will put them in their own row, sized to take up the whole row.
 #if 0
     /* Create and attach the brand/logo to the rebar */

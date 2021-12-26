@@ -40,7 +40,7 @@
 
 #include <debug.h>
 
-#include <rosctrls.h>
+#include <ui/rosctrls.h>
 #include <windowsx.h>
 #include <process.h>
 #undef SubclassWindow
