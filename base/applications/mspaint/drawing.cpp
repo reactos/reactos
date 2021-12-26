@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/drawing.cpp
  * PURPOSE:     The drawing functions used by the tools
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
