@@ -91,7 +91,7 @@ Poly(HDC hdc, POINT * lpPoints, int nCount,  COLORREF fg,  COLORREF bg, int thic
     SetROP2(hdc, oldRop);
 }
 
-LONG GetDistancePow2(POINT p1, POINT p2)
+static inline LONG GetDistancePow2(POINT p1, POINT p2)
 {
     LONG dx = p2.x - p1.x;
     LONG dy = p2.y - p1.y;
