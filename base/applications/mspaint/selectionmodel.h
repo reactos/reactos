@@ -54,17 +54,17 @@ public:
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
-    HBITMAP GetBitmap();
-    int PtStackSize();
+    HBITMAP GetBitmap() const;
+    int PtStackSize() const;
     void DrawFramePoly(HDC hDCImage);
     void SetSrcAndDestRectFromPoints(const POINT& ptFrom, const POINT& ptTo);
     void SetSrcRectSizeToZero();
-    BOOL IsSrcRectSizeNonzero();
+    BOOL IsSrcRectSizeNonzero() const;
     void ModifyDestRect(POINT& ptDelta, int iAction);
-    LONG GetDestRectWidth();
-    LONG GetDestRectHeight();
-    LONG GetDestRectLeft();
-    LONG GetDestRectTop();
+    LONG GetDestRectWidth() const;
+    LONG GetDestRectHeight() const;
+    LONG GetDestRectLeft() const;
+    LONG GetDestRectTop() const;
     void DrawTextToolText(HDC hDCImage, COLORREF crFg, COLORREF crBg, BOOL bBgTransparent = FALSE);
 
 private:
