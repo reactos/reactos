@@ -71,14 +71,14 @@ int CSelectionWindow::IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeig
             return ACTION_RESIZE_TOP_LEFT;
         if ((iWidth / 2 - 1 <= iXPos) && (iXPos < iWidth / 2 + 2))
             return ACTION_RESIZE_TOP;
-        if (iXPos >= iWidth - GRIP_SIZE)
+        if (iWidth - GRIP_SIZE <= iXPos)
             return ACTION_RESIZE_TOP_RIGHT;
     }
     if ((iHeight / 2 - 1 <= iYPos) && (iYPos < iHeight / 2 + 2))
     {
         if (iXPos < GRIP_SIZE)
             return ACTION_RESIZE_LEFT;
-        if (iXPos >= iWidth - GRIP_SIZE)
+        if (iWidth - GRIP_SIZE <= iXPos)
             return ACTION_RESIZE_RIGHT;
     }
     if (iYPos >= iHeight - GRIP_SIZE)
@@ -87,7 +87,7 @@ int CSelectionWindow::IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeig
             return ACTION_RESIZE_BOTTOM_LEFT;
         if ((iWidth / 2 - 1 <= iXPos) && (iXPos < iWidth / 2 + 2))
             return ACTION_RESIZE_BOTTOM;
-        if (iXPos >= iWidth - GRIP_SIZE)
+        if (iWidth - GRIP_SIZE <= iXPos)
             return ACTION_RESIZE_BOTTOM_RIGHT;
     }
     return 0;
