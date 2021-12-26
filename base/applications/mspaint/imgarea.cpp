@@ -76,22 +76,22 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                0,
                0, 3, 3, TRUE);
     sizeboxCenterTop.MoveWindow(
-               Zoomed(imgXRes / 2) + 3 * 3 / 4,
+               Zoomed(imgXRes) / 2 + 3 * 3 / 4,
                0, 3, 3, TRUE);
     sizeboxRightTop.MoveWindow(
                Zoomed(imgXRes) + 3,
                0, 3, 3, TRUE);
     sizeboxLeftCenter.MoveWindow(
                0,
-               Zoomed(imgYRes / 2) + 3 * 3 / 4, 3, 3, TRUE);
+               Zoomed(imgYRes) / 2 + 3 * 3 / 4, 3, 3, TRUE);
     sizeboxRightCenter.MoveWindow(
                Zoomed(imgXRes) + 3,
-               Zoomed(imgYRes / 2) + 3 * 3 / 4, 3, 3, TRUE);
+               Zoomed(imgYRes) / 2 + 3 * 3 / 4, 3, 3, TRUE);
     sizeboxLeftBottom.MoveWindow(
                0,
                Zoomed(imgYRes) + 3, 3, 3, TRUE);
     sizeboxCenterBottom.MoveWindow(
-               Zoomed(imgXRes / 2) + 3 * 3 / 4,
+               Zoomed(imgXRes) / 2 + 3 * 3 / 4,
                Zoomed(imgYRes) + 3, 3, 3, TRUE);
     sizeboxRightBottom.MoveWindow(
                Zoomed(imgXRes) + 3,
