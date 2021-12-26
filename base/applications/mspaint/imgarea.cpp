@@ -76,7 +76,7 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                0,
                0, 3, 3, TRUE);
     sizeboxCenterTop.MoveWindow(
-               toolsModel.Zoomed(imgXRes) + 3 * 3 / 4,
+               toolsModel.Zoomed(imgXRes / 2) + 3 * 3 / 4,
                0, 3, 3, TRUE);
     sizeboxRightTop.MoveWindow(
                toolsModel.Zoomed(imgXRes) + 3,
