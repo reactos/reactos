@@ -12,14 +12,14 @@
 
 /* FUNCTIONS ********************************************************/
 
-int ToolsModel::Zoomed(int xy) const
+int Zoomed(int xy)
 {
-    return xy * GetZoom() / 1000;
+    return xy * toolsModel.GetZoom() / 1000;
 }
 
-int ToolsModel::UnZoomed(int xy) const
+int UnZoomed(int xy)
 {
-    return xy * 1000 / GetZoom();
+    return xy * 1000 / toolsModel.GetZoom();
 }
 
 ToolsModel::ToolsModel()

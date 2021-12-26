@@ -99,8 +99,8 @@ LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     {
         HDC hDC = GetDC();
         DefWindowProc(WM_PAINT, wParam, lParam);
-        SelectionFrame(hDC, 1, 1, toolsModel.Zoomed(selectionModel.GetDestRectWidth()) + 5,
-                       toolsModel.Zoomed(selectionModel.GetDestRectHeight()) + 5,
+        SelectionFrame(hDC, 1, 1, Zoomed(selectionModel.GetDestRectWidth()) + 5,
+                       Zoomed(selectionModel.GetDestRectHeight()) + 5,
                        m_dwSystemSelectionColor);
         ReleaseDC(hDC);
     }
@@ -161,8 +161,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         imageModel.ResetToPrevious();
         m_ptFrac.x += GET_X_LPARAM(lParam) - m_ptPos.x;
         m_ptFrac.y += GET_Y_LPARAM(lParam) - m_ptPos.y;
-        m_ptDelta.x += toolsModel.UnZoomed(m_ptFrac.x);
-        m_ptDelta.y += toolsModel.UnZoomed(m_ptFrac.y);
+        m_ptDelta.x += UnZoomed(m_ptFrac.x);
+        m_ptDelta.y += UnZoomed(m_ptFrac.y);
         if (toolsModel.GetZoom() < 1000)
         {
             m_ptFrac.x = 0;
@@ -170,8 +170,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         }
         else
         {
-            m_ptFrac.x -= toolsModel.Zoomed(toolsModel.UnZoomed(m_ptFrac.x));
-            m_ptFrac.y -= toolsModel.Zoomed(toolsModel.UnZoomed(m_ptFrac.y));
+            m_ptFrac.x -= Zoomed(UnZoomed(m_ptFrac.x));
+            m_ptFrac.y -= Zoomed(UnZoomed(m_ptFrac.y));
         }
         selectionModel.ModifyDestRect(m_ptDelta, m_iAction);
 
@@ -197,8 +197,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     }
     else
     {
-        int w = toolsModel.Zoomed(selectionModel.GetDestRectWidth()) + 6;
-        int h = toolsModel.Zoomed(selectionModel.GetDestRectHeight()) + 6;
+        int w = Zoomed(selectionModel.GetDestRectWidth()) + 6;
+        int h = Zoomed(selectionModel.GetDestRectHeight()) + 6;
         m_ptPos.x = GET_X_LPARAM(lParam);
         m_ptPos.y = GET_Y_LPARAM(lParam);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);

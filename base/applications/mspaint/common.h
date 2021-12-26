@@ -11,4 +11,6 @@
 
 /* FUNCTIONS ********************************************************/
 
-extern BOOL zoomTo(int, int, int);
+BOOL zoomTo(int, int, int);
+int Zoomed(int xy);
+int UnZoomed(int xy);
