@@ -52,8 +52,6 @@ CONST INT VSCROLL_WIDTH = ::GetSystemMetrics(SM_CXVSCROLL);
 void
 UpdateScrollbox()
 {
-    CONST INT EXTRASIZE = 5; /* 3 px of selection markers + 2 px of border */
-
     CRect tempRect;
     CSize sizeImageArea;
     CSize sizeScrollBox;
@@ -65,7 +63,7 @@ UpdateScrollbox()
 
     imageArea.GetClientRect(&tempRect);
     sizeImageArea = CSize(tempRect.Width(), tempRect.Height());
-    sizeImageArea += CSize(EXTRASIZE * 2, EXTRASIZE * 2);
+    sizeImageArea += CSize(GRIP_SIZE * 2, GRIP_SIZE * 2);
 
     /* show/hide the scrollbars */
     vmode = (sizeScrollBox.cy < sizeImageArea.cy ? 0 :

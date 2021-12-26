@@ -65,31 +65,24 @@ ForceRefreshSelectionContents()
 
 int CSelectionWindow::IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeight)
 {
-    if (iYPos < GRIP_SIZE)
-    {
-        if (iXPos < GRIP_SIZE)
-            return ACTION_RESIZE_TOP_LEFT;
-        if ((iWidth / 2 - 1 <= iXPos) && (iXPos < iWidth / 2 + 2))
-            return ACTION_RESIZE_TOP;
-        if (iWidth - GRIP_SIZE <= iXPos)
-            return ACTION_RESIZE_TOP_RIGHT;
-    }
-    if ((iHeight / 2 - 1 <= iYPos) && (iYPos < iHeight / 2 + 2))
-    {
-        if (iXPos < GRIP_SIZE)
-            return ACTION_RESIZE_LEFT;
-        if (iWidth - GRIP_SIZE <= iXPos)
-            return ACTION_RESIZE_RIGHT;
-    }
-    if (iYPos >= iHeight - GRIP_SIZE)
-    {
-        if (iXPos < GRIP_SIZE)
-            return ACTION_RESIZE_BOTTOM_LEFT;
-        if ((iWidth / 2 - 1 <= iXPos) && (iXPos < iWidth / 2 + 2))
-            return ACTION_RESIZE_BOTTOM;
-        if (iWidth - GRIP_SIZE <= iXPos)
-            return ACTION_RESIZE_BOTTOM_RIGHT;
-    }
+    POINT pt = { iXPos, iYPos };
+    HWND hwndChild = ChildWindowFromPointEx(pt, CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
+    if (hwndChild == sizeboxLeftTop)
+        return ACTION_RESIZE_TOP_LEFT;
+    if (hwndChild == sizeboxCenterTop)
+        return ACTION_RESIZE_TOP;
+    if (hwndChild == sizeboxRightTop)
+        return ACTION_RESIZE_TOP_RIGHT;
+    if (hwndChild == sizeboxRightCenter)
+        return ACTION_RESIZE_RIGHT;
+    if (hwndChild == sizeboxLeftCenter)
+        return ACTION_RESIZE_LEFT;
+    if (hwndChild == sizeboxCenterBottom)
+        return ACTION_RESIZE_BOTTOM;
+    if (hwndChild == sizeboxRightBottom)
+        return ACTION_RESIZE_BOTTOM_RIGHT;
+    if (hwndChild == sizeboxLeftBottom)
+        return ACTION_RESIZE_BOTTOM_LEFT;
     return 0;
 }
 
