@@ -99,8 +99,8 @@ LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     {
         HDC hDC = GetDC();
         DefWindowProc(WM_PAINT, wParam, lParam);
-        SelectionFrame(hDC, 1, 1, selectionModel.GetDestRectWidth() * toolsModel.GetZoom() / 1000 + 5,
-                       selectionModel.GetDestRectHeight() * toolsModel.GetZoom() / 1000 + 5,
+        SelectionFrame(hDC, 1, 1, Zoomed(selectionModel.GetDestRectWidth()) + 5,
+                       Zoomed(selectionModel.GetDestRectHeight()) + 5,
                        m_dwSystemSelectionColor);
         ReleaseDC(hDC);
     }
@@ -161,8 +161,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         imageModel.ResetToPrevious();
         m_ptFrac.x += GET_X_LPARAM(lParam) - m_ptPos.x;
         m_ptFrac.y += GET_Y_LPARAM(lParam) - m_ptPos.y;
-        m_ptDelta.x += m_ptFrac.x * 1000 / toolsModel.GetZoom();
-        m_ptDelta.y += m_ptFrac.y * 1000 / toolsModel.GetZoom();
+        m_ptDelta.x += UnZoomed(m_ptFrac.x);
+        m_ptDelta.y += UnZoomed(m_ptFrac.y);
         if (toolsModel.GetZoom() < 1000)
         {
             m_ptFrac.x = 0;
@@ -170,8 +170,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         }
         else
         {
-            m_ptFrac.x -= (m_ptFrac.x * 1000 / toolsModel.GetZoom()) * toolsModel.GetZoom() / 1000;
-            m_ptFrac.y -= (m_ptFrac.y * 1000 / toolsModel.GetZoom()) * toolsModel.GetZoom() / 1000;
+            m_ptFrac.x -= Zoomed(UnZoomed(m_ptFrac.x));
+            m_ptFrac.y -= Zoomed(UnZoomed(m_ptFrac.y));
         }
         selectionModel.ModifyDestRect(m_ptDelta, m_iAction);
 
@@ -197,8 +197,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     }
     else
     {
-        int w = selectionModel.GetDestRectWidth() * toolsModel.GetZoom() / 1000 + 6;
-        int h = selectionModel.GetDestRectHeight() * toolsModel.GetZoom() / 1000 + 6;
+        int w = Zoomed(selectionModel.GetDestRectWidth()) + 6;
+        int h = Zoomed(selectionModel.GetDestRectHeight()) + 6;
         m_ptPos.x = GET_X_LPARAM(lParam);
         m_ptPos.y = GET_Y_LPARAM(lParam);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);

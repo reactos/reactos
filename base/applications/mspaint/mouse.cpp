@@ -15,8 +15,8 @@
 void
 placeSelWin()
 {
-    selectionWindow.MoveWindow(selectionModel.GetDestRectLeft() * toolsModel.GetZoom() / 1000, selectionModel.GetDestRectTop() * toolsModel.GetZoom() / 1000,
-        selectionModel.GetDestRectWidth() * toolsModel.GetZoom() / 1000 + 6, selectionModel.GetDestRectHeight() * toolsModel.GetZoom() / 1000 + 6, TRUE);
+    selectionWindow.MoveWindow(Zoomed(selectionModel.GetDestRectLeft()), Zoomed(selectionModel.GetDestRectTop()),
+        Zoomed(selectionModel.GetDestRectWidth()) + 6, Zoomed(selectionModel.GetDestRectHeight()) + 6, TRUE);
     selectionWindow.BringWindowToTop();
     imageArea.InvalidateRect(NULL, FALSE);
 }

@@ -101,7 +101,7 @@ void ToolsModel::SetBackgroundTransparent(BOOL bTransparent)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetZoom()
+int ToolsModel::GetZoom() const
 {
     return m_zoom;
 }

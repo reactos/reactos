@@ -42,6 +42,6 @@ public:
     void SetRubberRadius(int nRubberRadius);
     BOOL IsBackgroundTransparent();
     void SetBackgroundTransparent(BOOL bTransparent);
-    int GetZoom();
+    int GetZoom() const;
     void SetZoom(int nZoom);
 };
