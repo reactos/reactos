@@ -1,9 +1,8 @@
 /*
- * PROJECT:    ReactOS Explorer
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/shell/explorer/lang/eu-ES.rc
- * PURPOSE:    Basque Language File for ReactOS Explorer
- * TRANSLATOR: 2021       Julen Urizar Compains      (julenuri [at] hotmail [dot] com)
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish (Basque) resource file
+ * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
  */
 
 LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL

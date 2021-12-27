@@ -1,9 +1,10 @@
 /*
- * PROJECT:     ReactOS Samsrv
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Basque locale file
- * COPYRIGHT:   Julen Urizar Compains (2021)
+ * PROJECT:     SAM Server DLL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish (Basque) resource file
+ * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
  */
+
 LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
 
 STRINGTABLE

@@ -3,6 +3,7 @@
  *
  * Copyright 1999 Bertho Stultiens
  * Copyright 1999 Eric Kohl
+ * Copyright 2021 Julen Urizar Compains
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Basque translation by Julen Urizar Compains */
 LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
 
 STRINGTABLE
