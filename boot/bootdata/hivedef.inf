@@ -2046,14 +2046,14 @@ HKCU,"AppEvents\Schemes\Apps\.Default\SystemAsterisk",,0x00000012
 HKCU,"AppEvents\Schemes\Apps\.Default\SystemAsterisk\.Current","",0x00020000,""
 HKCU,"AppEvents\Schemes\Apps\.Default\SystemAsterisk\.Default","",0x00020000,""
 HKCU,"AppEvents\Schemes\Apps\.Default\SystemExclamation",,0x00000012
-HKCU,"AppEvents\Schemes\Apps\.Default\SystemExclamation\.Current","",0x00020000,""
-HKCU,"AppEvents\Schemes\Apps\.Default\SystemExclamation\.Default","",0x00020000,""
+HKCU,"AppEvents\Schemes\Apps\.Default\SystemExclamation\.Current","",0x00020000,"%SystemRoot%\media\ReactOS_Notice.wav"
+HKCU,"AppEvents\Schemes\Apps\.Default\SystemExclamation\.Default","",0x00020000,"%SystemRoot%\media\ReactOS_Notice.wav"
 HKCU,"AppEvents\Schemes\Apps\.Default\SystemExit",,0x00000012
 HKCU,"AppEvents\Schemes\Apps\.Default\SystemExit\.Current","",0x00020000,""
 HKCU,"AppEvents\Schemes\Apps\.Default\SystemExit\.Default","",0x00020000,""
 HKCU,"AppEvents\Schemes\Apps\.Default\SystemHand",,0x00000012
-HKCU,"AppEvents\Schemes\Apps\.Default\SystemHand\.Current","",0x00020000,""
-HKCU,"AppEvents\Schemes\Apps\.Default\SystemHand\.Default","",0x00020000,""
+HKCU,"AppEvents\Schemes\Apps\.Default\SystemHand\.Current","",0x00020000,"%SystemRoot%\media\ReactOS_Error.wav"
+HKCU,"AppEvents\Schemes\Apps\.Default\SystemHand\.Default","",0x00020000,"%SystemRoot%\media\ReactOS_Error.wav"
 HKCU,"AppEvents\Schemes\Apps\.Default\SystemNotification",,0x00000012
 HKCU,"AppEvents\Schemes\Apps\.Default\SystemNotification\.Current","",0x00020000,""
 HKCU,"AppEvents\Schemes\Apps\.Default\SystemNotification\.Default","",0x00020000,""
@@ -2072,8 +2072,8 @@ HKCU,"AppEvents\Schemes\Apps\.Default\WindowsLogon\.Default","",0x00020000,"%Sys
 HKCU,"AppEvents\Schemes\Apps\Explorer","",0x00000002,"ReactOS Explorer"
 HKCU,"AppEvents\Schemes\Apps\Explorer","DispFileName",0x00000000,"@mmsys.cpl,-5854"
 HKCU,"AppEvents\Schemes\Apps\Explorer\EmptyRecycleBin",,0x00000012
-HKCU,"AppEvents\Schemes\Apps\Explorer\EmptyRecycleBin\.Current","",0x00020000,""
-HKCU,"AppEvents\Schemes\Apps\Explorer\EmptyRecycleBin\.Default","",0x00020000,""
+HKCU,"AppEvents\Schemes\Apps\Explorer\EmptyRecycleBin\.Current","",0x00020000,"%SystemRoot%\media\ReactOS_Recycle.wav"
+HKCU,"AppEvents\Schemes\Apps\Explorer\EmptyRecycleBin\.Default","",0x00020000,"%SystemRoot%\media\ReactOS_Recycle.wav"
 HKCU,"AppEvents\Schemes\Apps\Explorer\Navigating",,0x00000012
 HKCU,"AppEvents\Schemes\Apps\Explorer\Navigating\.Current","",0x00020000,""
 HKCU,"AppEvents\Schemes\Apps\Explorer\Navigating\.Default","",0x00020000,""
