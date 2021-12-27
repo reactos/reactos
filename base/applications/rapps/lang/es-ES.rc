@@ -214,9 +214,9 @@ BEGIN
     IDS_SELECTEDFORINST "Seleccionados para instalar"
     IDS_MISMATCH_CERT_INFO "El certificado que usa es desconocido:\nSujeto: %s\nEmisor: %s\n¿Quiere continuar a pesar de ello?"
     IDS_UNABLE_PATH "Formato de ruta incorrecto."
-    IDS_APP_DISPLAY_DETAILS "detalles"
-    IDS_APP_DISPLAY_LIST "lista"
-    IDS_APP_DISPLAY_TILE "título"
+    IDS_APP_DISPLAY_DETAILS "Detalles"
+    IDS_APP_DISPLAY_LIST "Lista"
+    IDS_APP_DISPLAY_TILE "Título"
 END
 
 STRINGTABLE
