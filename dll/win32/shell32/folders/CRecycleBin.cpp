@@ -982,6 +982,119 @@ TRASH_TrashFile(LPCWSTR wszPath)
     return DeleteFileToRecycleBin(wszPath);
 }
 
+static void TRASH_PlayEmptyRecycleBinSound()
+{
+    LPCWSTR lpRegSubKey = L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin";
+    HKEY hRegKey = NULL;
+    HKEY hRegSnd = NULL;
+    LPWSTR lpRegVal = NULL;
+    LPWSTR lpSndPath = NULL;
+    DWORD dwRegValType, dwRegValSize, dwSndPathLen;
+    LONG lError;
+
+    /* Open registry key */
+    lError = RegOpenKeyExW(HKEY_CURRENT_USER, lpRegSubKey, 0, KEY_QUERY_VALUE, &hRegKey);
+
+    if (lError != ERROR_SUCCESS)
+    {
+        hRegKey = NULL;
+        
+        goto Cleanup;
+    }
+
+    /* Open .Current */
+    lError = RegOpenKeyExW(hRegKey, L".Current", 0, KEY_QUERY_VALUE, &hRegSnd);
+
+    if (lError != ERROR_SUCCESS)
+    {
+        /* If fail then open .Default */
+        lError = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_QUERY_VALUE, &hRegSnd);
+
+        if (lError != ERROR_SUCCESS)
+        {
+            hRegSnd = NULL;
+            
+            goto Cleanup;
+        }
+    }
+
+    /* Get registry value size */
+    lError = RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, NULL, &dwRegValSize);
+    
+    if (lError != ERROR_SUCCESS)
+    {
+        goto Cleanup;
+    }
+
+    /* Check whether the type is valid */
+    if (dwRegValType != REG_SZ && dwRegValType != REG_EXPAND_SZ)
+    {
+        goto Cleanup;
+    }
+
+    /* Allocate buffer for registry value */
+    lpRegVal = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, dwRegValSize);
+
+    if (!lpRegVal)
+    {
+        goto Cleanup;
+    }
+
+    /* Get registry value */
+    lError = RegQueryValueExW(hRegSnd, NULL, NULL, &dwRegValType, (LPBYTE)lpRegVal, &dwRegValSize);
+
+    if (lError != ERROR_SUCCESS)
+    {
+        goto Cleanup;
+    }
+
+    /* Get full sound path length (including the terminating null character) */
+    dwSndPathLen = ExpandEnvironmentStringsW(lpRegVal, NULL, 0);
+
+    if (dwSndPathLen == 0)
+    {
+        goto Cleanup;
+    }
+
+    /* Allocate buffer for sound path */
+    lpSndPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, dwSndPathLen * sizeof(WCHAR));
+
+    if (!lpSndPath)
+    {
+        goto Cleanup;
+    }
+
+    if (ExpandEnvironmentStringsW(lpRegVal, lpSndPath, dwSndPathLen) == 0)
+    {
+        goto Cleanup;
+    }
+
+    /* Play sound */
+    PlaySoundW(lpSndPath, NULL, SND_FILENAME | SND_ASYNC | SND_NODEFAULT);
+    
+Cleanup:
+    
+    if (lpSndPath)
+    {
+        HeapFree(GetProcessHeap(), 0, lpSndPath);
+    }
+    
+    if (lpRegVal)
+    {
+        HeapFree(GetProcessHeap(), 0, lpRegVal);
+    }
+    
+    if (hRegSnd)
+    {
+        RegCloseKey(hRegSnd);
+    }
+    
+    if (hRegKey)
+    {
+        RegCloseKey(hRegKey);
+    }
+}
+
 /*************************************************************************
  * SHUpdateCRecycleBinIcon                                [SHELL32.@]
  *
@@ -1121,23 +1234,10 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 
     if (!(dwFlags & SHERB_NOSOUND))
     {
-        dwSize = sizeof(szPath);
-        ret = RegGetValueW(HKEY_CURRENT_USER,
-                           L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current",
-                           NULL,
-                           RRF_RT_REG_SZ,
-                           &dwType,
-                           (PVOID)szPath,
-                           &dwSize);
-        if (ret != ERROR_SUCCESS)
-            return S_OK;
-
-        if (dwType != REG_EXPAND_SZ) /* type dismatch */
-            return S_OK;
-
-        szPath[_countof(szPath)-1] = L'\0';
-        PlaySoundW(szPath, NULL, SND_FILENAME);
+        /* Play empty recycle bin sound */
+        TRASH_PlayEmptyRecycleBinSound();
     }
+    
     return S_OK;
 }
 
