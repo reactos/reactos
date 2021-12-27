@@ -179,6 +179,9 @@ LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         UINT nCount = 3;
         if (::GetAsyncKeyState(VK_SHIFT) < 0)
         {
+#ifndef SPI_GETWHEELSCROLLCHARS
+    #define SPI_GETWHEELSCROLLCHARS 0x006C
+#endif
             SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
             for (UINT i = 0; i < nCount; ++i)
             {
