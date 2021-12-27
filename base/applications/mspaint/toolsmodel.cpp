@@ -24,7 +24,7 @@ ToolsModel::ToolsModel()
     m_zoom = 1000;
 }
 
-int ToolsModel::GetLineWidth()
+int ToolsModel::GetLineWidth() const
 {
     return m_lineWidth;
 }
@@ -35,7 +35,7 @@ void ToolsModel::SetLineWidth(int nLineWidth)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetShapeStyle()
+int ToolsModel::GetShapeStyle() const
 {
     return m_shapeStyle;
 }
@@ -46,7 +46,7 @@ void ToolsModel::SetShapeStyle(int nShapeStyle)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetBrushStyle()
+int ToolsModel::GetBrushStyle() const
 {
     return m_brushStyle;
 }
@@ -57,7 +57,7 @@ void ToolsModel::SetBrushStyle(int nBrushStyle)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetActiveTool()
+int ToolsModel::GetActiveTool() const
 {
     return m_activeTool;
 }
@@ -68,7 +68,7 @@ void ToolsModel::SetActiveTool(int nActiveTool)
     NotifyToolChanged();
 }
 
-int ToolsModel::GetAirBrushWidth()
+int ToolsModel::GetAirBrushWidth() const
 {
     return m_airBrushWidth;
 }
@@ -79,7 +79,7 @@ void ToolsModel::SetAirBrushWidth(int nAirBrushWidth)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetRubberRadius()
+int ToolsModel::GetRubberRadius() const
 {
     return m_rubberRadius;
 }
@@ -90,7 +90,7 @@ void ToolsModel::SetRubberRadius(int nRubberRadius)
     NotifyToolSettingsChanged();
 }
 
-BOOL ToolsModel::IsBackgroundTransparent()
+BOOL ToolsModel::IsBackgroundTransparent() const
 {
     return m_transpBg;
 }
