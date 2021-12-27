@@ -1,0 +1,53 @@
+/*
+ * PROJECT:     ReactOS Userinit Logon Application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish (Basque) resource file
+ * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
+ */
+
+LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
+
+IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS LiveCD-a"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "IDB_LOGO", IDC_LOCALELOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
+    RTEXT "&Hizkuntza:", IDC_STATIC, 20, 109, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_LANGUAGELIST, 132, 107, 176, 142, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    RTEXT "&Teklatu diztribuzioa:", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    COMBOBOX IDC_LAYOUTLIST, 132, 130, 176, 81, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Hautatu hizkuntza eta teklatuen distribuzioa, eta sakatu Haurrera jarraitzeko.", IDC_STATIC, 7, 152, 300, 8
+
+    CONTROL "", IDC_STATIC, "STATIC", SS_ETCHEDHORZ, 0, 165, 317, 1
+    DEFPUSHBUTTON "&Aurrera", IDOK, 205, 172, 50, 14
+    PUSHBUTTON "&Utzi", IDCANCEL, 260, 172, 50, 14
+END
+
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS LiveCD-a"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "IDB_LOGO", IDC_STARTLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
+    DEFPUSHBUTTON "Hasi ReactOS &Live CD-a", IDC_RUN, 71, 108, 175, 21
+    PUSHBUTTON "&Instalatu ReactOS", IDC_INSTALL, 71, 136, 175, 21
+
+    // LTEXT "", IDC_STATIC, 7, 152, 300, 8
+
+    CONTROL "", IDC_STATIC, "STATIC", SS_ETCHEDHORZ, 0, 165, 317, 1
+    PUSHBUTTON "A&tzera", IDOK, 205, 172, 50, 14
+    PUSHBUTTON "&Utzi", IDCANCEL, 260, 172, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SHELL_FAIL "¡Userinit no pudo iniciar el shell con éxito!"
+    IDS_INSTALLER_FAIL "¡Userinit no pudo iniciar el instalador!"
+    IDS_CANCEL_CONFIRM "¿Seguro que quieres salir de LiveCD de ReactOS?\nSi es así, tu equipo se reiniciará."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SPAIN "Español (España)"
+END

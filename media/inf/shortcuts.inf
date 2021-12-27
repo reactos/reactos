@@ -1632,6 +1632,74 @@ SPIDER_DESC=Пас'янс Павук
 UTILMAN_TITLE=Диспетчер службових програм
 UTILMAN_DESC=Забезпечує запуск і настройку програм підтримки спеціальних можливостей.
 
+; Basque
+[Strings.042D]
+ACCESSORIES=Osagarriak
+SYSTOOLS=Sistemaren Tresnak
+ACCESSIBILITY=Irisgarritasuna
+ENTERTAINMENT=Dembora-pasa
+COMMUNICATIONS=Komunikazioak
+GAMES=Jolasak
+
+README_TITLE=Irakurri hau
+README_DESC=ReactOS gidaliburua irakurtzeko
+
+CMD_TITLE=Kontsola
+CMD_DESC=Ireki komanduen konstsola.
+EXPLORER_TITLE=ReactOS Esploradorea
+EXPLORER_DESC=Ireki fitxategi-esploradore lehio bat.
+RAPPS_TITLE=ReactOS aplikazio denda eta eragilea
+RAPPS_TITLE_SHORT=ReactOS app denda
+RAPPS_DESC=Deskargatu eta instalatu nahibaduzun aplikazioak.
+SERVMAN_TITLE=Konfiguratu zerbitzaria
+SERVMAN_DESC=Hasi Zerbitzu kudeaketa.
+DEVMGMT_TITLE=Gailu administratzaile
+DEVMGMT_DESC=Hasi gailu administratzaile.
+EVENTVWR_TITLE=Gertaerak ikustailea
+EVENTVWR_DESC=Hasi gertareak ikustailea.
+MSCONFIG_TITLE=Sistemaren konfigurazioa
+MSCONFIG_DESC=Hasi sistemaren konfigurazioa.
+CALC_TITLE=Kalkulagailua
+CALC_DESC=Kalkulagailua hasi.
+NOTEPAD_TITLE=Ohar-bloka
+NOTEPAD_DESC=Hasi ohar koadernoa.
+MSTSC_TITLE=Mahaigain urrunekoa
+MSTSC_DESC=Hasi mahaigain hurrunekoa.
+WORDPAD_TITLE=WordPad
+WORDPAD_DESC=Hasi testu dokumentu editorea.
+MSPAINT_TITLE=Paint
+MSPAINT_DESC=Hasi irudiaren editore funtsezkoa.
+CHARMAP_TITLE=Karaktere-mapa
+CHARMAP_DESC=Karaktere-mapa hasi.
+CLIPBRD_TITLE=Arbel-ikustailea
+CLIPBRD_DESC=Controla lo que copias y pegas en el visor del portapapeles de ReactOS.
+KBSWITCH_TITLE=Teklatuen diztribuzio aukerak
+KBSWITCH_DESC=Cambia la distribución de teclas del equipo.
+REGEDIT_TITLE=Erregistro editorea
+REGEDIT_DESC=Ejecuta la utilidad de configuración del Registro del sistema operativo.
+TASKMGR_TITLE=Ataza-kudeatzaile
+TASKMGR_DESC=Administre y gestione las tareas y procesos en funcionamiento.
+DXDIAG_TITLE=ReactX analisia
+DXDIAG_DESC=Hasi ReactX analisia.
+MAGNIFY_TITLE=Lupa
+MAGNIFY_DESC=Zabaldu pantailaren atalak eta hobetu irisgarritasuna.
+OSK_TITLE=Pantailako teklatua
+OSK_DESC=Ejecuta un teclado virtual, útil para escribir en otras aplicaciones.
+MPLAY_TITLE=Multimedia erreproduzgailua
+MPLAY_DESC=Ejecuta el reproductor de audio y vídeo.
+SNDVOL_TITLE=Bolumen kontrola
+SNDVOL_DESC=Ejecuta una utilidad con la que controlar la salida de audio.
+SNDREC32_TITLE=Soinu-grabagailua
+SNDREC32_DESC=Ejecuta una utilidad para grabar audio desde un micrófono conectado al equipo.
+SOL_TITLE=Solitarioa
+SOL_DESC=Jugar al popular juego de cartas de un sólo jugador.
+WINMINE_TITLE=Minaren-bila
+WINMINE_DESC=Jugar al popular juego en el que se debe despejar un campo de minas sin detonar ninguna.
+SPIDER_TITLE=Spider Solitarioa
+SPIDER_DESC=Jugar al popular juego de cartas de un sólo jugador.
+UTILMAN_TITLE=Irisgarritasun tresnak
+UTILMAN_DESC=Gestiona las Herramientas de Accesibilidad y su interacción con el sistema.
+
 ; Simplified Chinese
 [Strings.0804]
 ACCESSORIES=附件
