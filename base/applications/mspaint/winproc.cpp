@@ -182,7 +182,7 @@ LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         if (::GetAsyncKeyState(VK_SHIFT) < 0)
         {
             SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
-            for (INT i = 0; i < nCount; ++i)
+            for (UINT i = 0; i < nCount; ++i)
             {
                 if (zDelta < 0)
                     ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
@@ -193,7 +193,7 @@ LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         else
         {
             SystemParametersInfoW(SPI_GETWHEELSCROLLLINES, 0, &nCount, 0);
-            for (INT i = 0; i < nCount; ++i)
+            for (UINT i = 0; i < nCount; ++i)
             {
                 if (zDelta < 0)
                     ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);

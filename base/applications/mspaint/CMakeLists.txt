@@ -1,5 +1,7 @@
 project(MSPAINT)
 
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600) # SPI_GETWHEELSCROLLCHARS needs this
 add_definitions(-DINITGUID)
 
 list(APPEND SOURCE
