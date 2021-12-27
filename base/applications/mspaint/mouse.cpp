@@ -53,8 +53,8 @@ roundTo8Directions(LONG x0, LONG y0, LONG& x1, LONG& y1)
 
 BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1)
 {
-    INT cxThreshold = Zoomed(toolsModel.GetLineWidth()) + GetSystemMetrics(SM_CXDRAG);
-    INT cyThreshold = Zoomed(toolsModel.GetLineWidth()) + GetSystemMetrics(SM_CYDRAG);
+    INT cxThreshold = toolsModel.GetLineWidth() + GetSystemMetrics(SM_CXDRAG);
+    INT cyThreshold = toolsModel.GetLineWidth() + GetSystemMetrics(SM_CYDRAG);
     return (abs(x1 - x0) <= cxThreshold) && (abs(y1 - y0) <= cyThreshold);
 }
 
