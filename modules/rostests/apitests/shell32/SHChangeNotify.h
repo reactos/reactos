@@ -1,6 +1,18 @@
 #pragma once
 
-#define TEMP_FILE "shell-notify-temporary.txt"
+#include <shlwapi.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <strsafe.h>
+
+#define TEMP_FILE   L"shell-notify-temporary.txt"
+#define CLASSNAME   L"SHChangeNotify testcase window"
+#define EVENT_NAME  L"SHChangeNotify testcase event"
+
+#define WM_SHELL_NOTIFY     (WM_USER + 100)
+#define WM_GET_NOTIFY_FLAGS (WM_USER + 101)
+#define WM_CLEAR_FLAGS      (WM_USER + 102)
+#define WM_SET_PATHS        (WM_USER + 103)
 
 typedef enum TYPE
 {
@@ -9,40 +21,53 @@ typedef enum TYPE
     TYPE_DELETE,
     TYPE_MKDIR,
     TYPE_RMDIR,
+    TYPE_RENAMEFOLDER,
     TYPE_UPDATEDIR,
-    TYPE_UPDATEITEM,
-    TYPE_RENAMEFOLDER
+    TYPE_MAX = TYPE_UPDATEDIR
 } TYPE;
 
-#define WM_SHELL_NOTIFY (WM_USER + 100)
-#define WM_GET_NOTIFY_FLAGS (WM_USER + 101)
-#define WM_CLEAR_FLAGS (WM_USER + 102)
-#define WM_SET_PATHS (WM_USER + 103)
-
-static WCHAR s_dir1[MAX_PATH];  // "%TEMP%\\WatchDir1"
-static WCHAR s_dir2[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir2"
-static WCHAR s_dir3[MAX_PATH];  // "%TEMP%\\WatchDir1\\Dir3"
-static WCHAR s_file1[MAX_PATH]; // "%TEMP%\\WatchDir1\\File1.txt"
-static WCHAR s_file2[MAX_PATH]; // "%TEMP%\\WatchDir1\\File2.txt"
-
-inline void DoInitPaths(void)
+typedef enum DIRTYPE
 {
-    WCHAR szTemp[MAX_PATH], szPath[MAX_PATH];
-    GetTempPathW(_countof(szTemp), szTemp);
-    GetLongPathNameW(szTemp, szPath, _countof(szPath));
+    DIRTYPE_NULL = 0,
+    DIRTYPE_DESKTOP,
+    DIRTYPE_MYCOMPUTER,
+    DIRTYPE_MYDOCUMENTS
+} DIRTYPE;
 
-    lstrcpyW(s_dir1, szPath);
-    PathAppendW(s_dir1, L"WatchDir1");
+inline LPITEMIDLIST DoGetPidl(DIRTYPE iDir)
+{
+    LPITEMIDLIST ret = NULL;
 
-    lstrcpyW(s_dir2, s_dir1);
-    PathAppendW(s_dir2, L"Dir2");
+    switch (iDir)
+    {
+        case DIRTYPE_NULL:
+            break;
 
-    lstrcpyW(s_dir3, s_dir1);
-    PathAppendW(s_dir3, L"Dir3");
+        case DIRTYPE_DESKTOP:
+            SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &ret);
+            break;
 
-    lstrcpyW(s_file1, s_dir1);
-    PathAppendW(s_file1, L"File1.txt");
+        case DIRTYPE_MYCOMPUTER:
+            SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &ret);
+            break;
 
-    lstrcpyW(s_file2, s_dir1);
-    PathAppendW(s_file2, L"File2.txt");
+        case DIRTYPE_MYDOCUMENTS:
+            SHGetSpecialFolderLocation(NULL, CSIDL_PERSONAL, &ret);
+            break;
+    }
+
+    return ret;
+}
+
+inline LPWSTR DoGetDir(DIRTYPE iDir)
+{
+    static size_t s_index = 0;
+    static WCHAR s_pathes[3][MAX_PATH];
+    LPWSTR psz = s_pathes[s_index];
+    LPITEMIDLIST pidl = DoGetPidl(iDir);
+    psz[0] = 0;
+    SHGetPathFromIDListW(pidl, psz);
+    CoTaskMemFree(pidl);
+    s_index = (s_index + 1) % _countof(s_pathes);
+    return psz;
 }
