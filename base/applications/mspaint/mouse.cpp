@@ -127,6 +127,9 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 pointSP++;
             }
             break;
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+            break;
     }
 }
 
@@ -216,6 +219,10 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, x, y);
             RRect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+            break;
+        case TOOL_FILL:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
             break;
     }
 
@@ -330,6 +337,12 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 regularize(start.x, start.y, x, y);
             RRect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
+        case TOOL_FILL:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_BRUSH:
+        case TOOL_AIRBRUSH:
+            break;
     }
 }
 
@@ -389,6 +402,10 @@ startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 imageModel.CopyPrevious();
                 pointSP++;
             }
+            break;
+        case TOOL_RECTSEL:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
             break;
     }
 }
@@ -462,6 +479,13 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 regularize(start.x, start.y, x, y);
             RRect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
             break;
+        case TOOL_FREESEL:
+        case TOOL_RECTSEL:
+        case TOOL_FILL:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_TEXT:
+            break;
     }
 
     last.x = x;
@@ -531,6 +555,15 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(start.x, start.y, x, y);
             RRect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+            break;
+        case TOOL_FREESEL:
+        case TOOL_RECTSEL:
+        case TOOL_FILL:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_BRUSH:
+        case TOOL_AIRBRUSH:
+        case TOOL_TEXT:
             break;
     }
 }

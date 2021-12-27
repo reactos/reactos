@@ -275,6 +275,8 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
                 case TOOL_SHAPE: case TOOL_BEZIER:
                     cancelDrawing();
                     break;
+                default:
+                    break;
             }
         }
     }
@@ -369,6 +371,8 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
                 SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
                 break;
             }
+            default:
+                break;
         }
         if ((wParam & MK_LBUTTON) != 0)
         {
