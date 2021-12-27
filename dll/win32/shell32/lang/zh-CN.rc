@@ -1021,7 +1021,7 @@ BEGIN
     IDS_SPECIFY_ACTION "您必须指定一个操作。"
     IDS_INVALID_PROGRAM "找不到指定的程序。请确保文件名和路径正确无误。"
     IDS_REMOVE_ACTION "您确定要移除此操作吗？"
-    IDS_ACTION_EXISTS "已为此文件类型注册了操作 “%s”。请输入其他名称，然后重试。"
+    IDS_ACTION_EXISTS "已为此文件类型注册了操作“%s”。请输入其他名称，然后重试。"
     IDS_EXE_FILTER "程序\0*.exe\0所有文件\0*.*\0"
     IDS_EDITING_ACTION "编辑操作类型："
     IDS_NO_ICONS "文件“%s”不包含图标\n\n从列表中选择一个图标或指定其他文件。"
