@@ -4,6 +4,7 @@
  * FILE:        base/applications/mspaint/mouse.cpp
  * PURPOSE:     Things which should not be in the mouse event handler itself
  * PROGRAMMERS: Benedikt Freisen
+ *              Katayama Hirofumi MZ
  */
 
 /* INCLUDES *********************************************************/
@@ -48,6 +49,13 @@ roundTo8Directions(LONG x0, LONG y0, LONG& x1, LONG& y1)
         else
             x1 = x0 + (x1 > x0 ? abs(y1 - y0) : -abs(y1 - y0));
     }
+}
+
+BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1)
+{
+    INT cxThreshold = toolsModel.GetLineWidth() + UnZoomed(GetSystemMetrics(SM_CXDRAG));
+    INT cyThreshold = toolsModel.GetLineWidth() + UnZoomed(GetSystemMetrics(SM_CYDRAG));
+    return (abs(x1 - x0) <= cxThreshold) && (abs(y1 - y0) <= cyThreshold);
 }
 
 POINT pointStack[256];
@@ -297,8 +305,7 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointSP++;
             if (pointSP >= 2)
             {
-                if ((pointStack[0].x - x) * (pointStack[0].x - x) +
-                    (pointStack[0].y - y) * (pointStack[0].y - y) <= toolsModel.GetLineWidth() * toolsModel.GetLineWidth() + 1)
+                if (nearlyEqualPoints(x, y, pointStack[0].x, pointStack[0].y))
                 {
                     Poly(hdc, pointStack, pointSP, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), TRUE, FALSE);
                     pointSP = 0;
@@ -500,8 +507,7 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointSP++;
             if (pointSP >= 2)
             {
-                if ((pointStack[0].x - x) * (pointStack[0].x - x) +
-                    (pointStack[0].y - y) * (pointStack[0].y - y) <= toolsModel.GetLineWidth() * toolsModel.GetLineWidth() + 1)
+                if (nearlyEqualPoints(x, y, pointStack[0].x, pointStack[0].y))
                 {
                     Poly(hdc, pointStack, pointSP, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), TRUE, FALSE);
                     pointSP = 0;
