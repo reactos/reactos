@@ -1,11 +1,10 @@
 /*
  * PROJECT:     ReactOS Shell32
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/shell32/lang/zh-CN.rc
- * PURPOSE:     Chinese (Simplified) Language Resources
- * TRANSLATORS: 2008        zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
-                2011        Elton Chung aka MfldElton <elton328@gmail.com>
-                2018-2021   Luo Yufan <njlyf2011@hotmail.com>
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2008 Zhang Bing <e_zb@21cn.com> <ezb@mail.gywb.cn>
+ *              Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2018-2021 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
