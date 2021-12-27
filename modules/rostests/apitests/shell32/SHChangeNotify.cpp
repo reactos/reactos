@@ -14,6 +14,7 @@
 #include <versionhelpers.h>
 
 // --- The selection of tests ---
+//#define DISABLE_THIS_TESTCASE
 #define NO_TRIVIAL
 //#define NO_INTERRUPT_LEVEL
 //#define NO_SHELL_LEVEL
@@ -929,6 +930,9 @@ static unsigned __stdcall TestThreadProc(void *)
 
 START_TEST(SHChangeNotify)
 {
+#ifdef DISABLE_THIS_TESTCASE
+    skip("This testcase is disabled by DISABLE_THIS_TESTCASE macro.\n");
+#endif
 #ifdef TOTAL_TICK
     DWORD dwOldTick = GetTickCount();
 #endif
