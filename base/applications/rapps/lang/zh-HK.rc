@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS ReactOS Applications Manager
+ * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2020-2021 Chan Chilung <eason066@gmail.com> 
@@ -220,9 +220,9 @@ BEGIN
     IDS_SELECTEDFORINST "選中以安裝"
     IDS_MISMATCH_CERT_INFO "使用了不明的證書：\n主題：%s\n發行方：%s\n您是否仍然要繼續？"
     IDS_UNABLE_PATH "不正確的 URL 格式。"
-    IDS_APP_DISPLAY_DETAILS "詳情"
+    IDS_APP_DISPLAY_DETAILS "詳細資料"
     IDS_APP_DISPLAY_LIST "列表"
-    IDS_APP_DISPLAY_TILE "卡片"
+    IDS_APP_DISPLAY_TILE "並排"
 END
 
 STRINGTABLE

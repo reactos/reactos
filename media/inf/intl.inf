@@ -1842,7 +1842,6 @@ LG_INDIAN              = "Indian"
 LG_GEORGIAN            = "Georgian"
 LG_ARMENIAN            = "Armean"
 
-
 ; Chinese Hong Kong
 [Strings.0c04]
 ; Locales
@@ -2198,5 +2197,3 @@ LG_VIETNAMESE          = "越南文"
 LG_INDIAN              = "印度語系"
 LG_GEORGIAN            = "喬治亞文"
 LG_ARMENIAN            = "亞美尼亞文"
-
-

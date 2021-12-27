@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Chinese (Hong Kong) translation resource
- * COPYRIGHT:       Copyright 2019-2020 George Bișoc (george.bisoc@reactos.org)
- * TRANSLATOR:      2020 Chan Chilung (eason066 at gmail dot com)
+ * PROJECT:     ReactOS Utility Manager (Accessibility)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATOR:  Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG

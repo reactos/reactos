@@ -1171,7 +1171,6 @@ CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 ;REPAIR="Onar"
 ;TEST="Dene"
 
-
 ; LANG_CHINESE SUBLANG_CHINESE_HONGKONG
 [Strings.0c04]
 ;; In shell32.dll
@@ -1211,6 +1210,5 @@ INSTALL="安裝"
 UNINSTALL="解除安裝"
 REPAIR="修復"
 TEST="測試"
-
 
 ; EOF
