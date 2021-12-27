@@ -748,7 +748,7 @@ CMainWindow::SearchTextChanged(CStringW &SearchText)
 }
 
 void
-CMainWindow::HandleTabOrder(int direction)
+CMainWindow::HandleTabOrder(INT direction)
 {
     ATL::CSimpleArray<HWND> TabOrderHwndList;
 
@@ -808,9 +808,8 @@ MainWindowLoop(CAppDB *db, INT nShowCmd)
         {
             if (Msg.message == WM_CHAR && Msg.wParam == VK_TAB)
             {
-                // Move backwards if shift is held down
-                int direction = (GetKeyState(VK_SHIFT) & 0x8000) ? -1 : 1;
-
+                /* Move backwards if shift is held down */
+                INT direction = (GetKeyState(VK_SHIFT) & 0x8000) ? -1 : 1;
                 wnd->HandleTabOrder(direction);
                 continue;
             }

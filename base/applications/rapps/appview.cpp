@@ -817,7 +817,7 @@ CAppInfoDisplay::ResizeChildren(int Width, int Height)
 
         if (hDwp)
         {
-            // hide the padding if scrnshot window width == 0
+            // hide the padding if screenshot window width == 0
             int RicheditPosX = ScrnshotWidth ? (ScrnshotWidth + INFO_DISPLAY_PADDING) : 0;
 
             hDwp = ::DeferWindowPos(hDwp, RichEdit->m_hWnd, NULL, RicheditPosX, 0, Width - RicheditPosX, Height, 0);
@@ -1411,7 +1411,7 @@ CApplicationView::ProcessWindowMessage(
         case WM_NOTIFY:
         {
             LPNMHDR pNotifyHeader = (LPNMHDR)lParam;
-            if (pNotifyHeader->hwndFrom == m_ListView->GetWindow())
+            if (pNotifyHeader->hwndFrom == m_ListView->m_hWnd)
             {
                 switch (pNotifyHeader->code)
                 {
@@ -1490,7 +1490,7 @@ CApplicationView::ProcessWindowMessage(
                     break;
                 }
             }
-            else if (pNotifyHeader->hwndFrom == m_Toolbar->GetWindow())
+            else if (pNotifyHeader->hwndFrom == m_Toolbar->m_hWnd)
             {
                 switch (pNotifyHeader->code)
                 {
@@ -1660,6 +1660,7 @@ CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     }
 
     m_ComboBox->m_Margin.right = m_SearchBar->m_Width + m_SearchBar->m_Margin.right + TOOLBAR_PADDING;
+
     count = m_ComboBox->CountSizableChildren();
     hdwp = BeginDeferWindowPos(count);
     if (hdwp)
@@ -1677,7 +1678,7 @@ CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
 {
     if (lParam)
     {
-        if ((HWND)lParam == m_SearchBar->GetWindow())
+        if ((HWND)lParam == m_SearchBar->m_hWnd)
         {
             CStringW szBuf;
             switch (HIWORD(wParam))
@@ -1727,7 +1728,7 @@ CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
 
             return;
         }
-        else if ((HWND)lParam == m_ComboBox->GetWindow())
+        else if ((HWND)lParam == m_ComboBox->m_hWnd)
         {
             int NotifyCode = HIWORD(wParam);
             switch (NotifyCode)
@@ -1746,7 +1747,7 @@ CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
 
             return;
         }
-        else if ((HWND)lParam == m_Toolbar->GetWindow())
+        else if ((HWND)lParam == m_Toolbar->m_hWnd)
         {
             // the message is sent from Toolbar. fall down to continue process
         }
@@ -1881,7 +1882,7 @@ CApplicationView::GetItemCount()
 }
 
 VOID
-CApplicationView::AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList)
+CApplicationView::AppendTabOrderWindow(INT Direction, ATL::CSimpleArray<HWND>& TabOrderList)
 {
     m_Toolbar->AppendTabOrderWindow(Direction, TabOrderList);
     m_ComboBox->AppendTabOrderWindow(Direction, TabOrderList);

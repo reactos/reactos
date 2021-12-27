@@ -408,7 +408,7 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     int
     GetItemCount();
     VOID
-    AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList);
+    AppendTabOrderWindow(INT Direction, ATL::CSimpleArray<HWND>& TabOrderList);
 
     // this function is called when a item of listview get focus.
     // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
