@@ -14,7 +14,7 @@
 #include <versionhelpers.h>
 
 // --- The selection of tests ---
-//#define DISABLE_THIS_TESTCASE
+#define DISABLE_THIS_TESTCASE
 #define NO_TRIVIAL
 //#define NO_INTERRUPT_LEVEL
 //#define NO_SHELL_LEVEL
