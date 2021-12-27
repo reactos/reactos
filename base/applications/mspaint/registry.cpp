@@ -50,8 +50,8 @@ void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::Wallpa
 
 void RegistrySettings::LoadPresets()
 {
-    BMPHeight = 300;
-    BMPWidth = 400;
+    BMPHeight = GetSystemMetrics(SM_CYSCREEN) / 2;
+    BMPWidth = GetSystemMetrics(SM_CXSCREEN) / 2;
     GridExtent = 1;
     NoStretching = 0;
     ShowThumbnail = 0;
@@ -103,6 +103,12 @@ void RegistrySettings::Load()
         ReadFileHistory(files, _T("File3"), strFile3);
         ReadFileHistory(files, _T("File4"), strFile4);
     }
+
+    // Fix the bitmap size if too large
+    if (BMPWidth > 5000)
+        BMPWidth = (GetSystemMetrics(SM_CXSCREEN) * 6) / 10;
+    if (BMPHeight > 5000)
+        BMPHeight = (GetSystemMetrics(SM_CYSCREEN) * 6) / 10;
 }
 
 void RegistrySettings::Store()

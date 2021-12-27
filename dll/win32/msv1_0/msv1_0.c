@@ -13,82 +13,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 
 
-/* GLOBALS *****************************************************************/
-
-LSA_DISPATCH_TABLE DispatchTable;
-
-
 /* FUNCTIONS ***************************************************************/
-
-static
-NTSTATUS
-GetAccountDomainSid(PRPC_SID *Sid)
-{
-    LSAPR_HANDLE PolicyHandle = NULL;
-    PLSAPR_POLICY_INFORMATION PolicyInfo = NULL;
-    ULONG Length = 0;
-    NTSTATUS Status;
-
-    Status = LsaIOpenPolicyTrusted(&PolicyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("LsaIOpenPolicyTrusted() failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    Status = LsarQueryInformationPolicy(PolicyHandle,
-                                        PolicyAccountDomainInformation,
-                                        &PolicyInfo);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("LsarQueryInformationPolicy() failed (Status 0x%08lx)\n", Status);
-        goto done;
-    }
-
-    Length = RtlLengthSid(PolicyInfo->PolicyAccountDomainInfo.Sid);
-
-    *Sid = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
-    if (*Sid == NULL)
-    {
-        ERR("Failed to allocate SID\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    memcpy(*Sid, PolicyInfo->PolicyAccountDomainInfo.Sid, Length);
-
-done:
-    if (PolicyInfo != NULL)
-        LsaIFree_LSAPR_POLICY_INFORMATION(PolicyAccountDomainInformation,
-                                          PolicyInfo);
-
-    if (PolicyHandle != NULL)
-        LsarClose(&PolicyHandle);
-
-    return Status;
-}
-
-
-static
-NTSTATUS
-GetNtAuthorityDomainSid(PRPC_SID *Sid)
-{
-    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-    ULONG Length = 0;
-
-    Length = RtlLengthRequiredSid(0);
-    *Sid = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
-    if (*Sid == NULL)
-    {
-        ERR("Failed to allocate SID\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlInitializeSid(*Sid,&NtAuthority, 0);
-
-    return STATUS_SUCCESS;
-}
-
 
 static
 NTSTATUS
@@ -245,6 +170,110 @@ done:
     return Status;
 }
 
+
+static
+NTSTATUS
+BuildLm20LogonProfileBuffer(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PSAMPR_USER_INFO_BUFFER UserInfo,
+    _In_ PLSA_SAM_PWD_DATA LogonPwdData,
+    _Out_ PMSV1_0_LM20_LOGON_PROFILE *ProfileBuffer,
+    _Out_ PULONG ProfileBufferLength)
+{
+    PMSV1_0_LM20_LOGON_PROFILE LocalBuffer;
+    NTLM_CLIENT_BUFFER Buffer;
+    PBYTE PtrOffset;
+    ULONG BufferLength;
+    NTSTATUS Status = STATUS_SUCCESS;
+    UNICODE_STRING ComputerNameUCS;
+
+    *ProfileBuffer = NULL;
+    *ProfileBufferLength = 0;
+
+    if (!NtlmUStrAlloc(&ComputerNameUCS, LogonPwdData->ComputerName->Length + sizeof(WCHAR) * 3, 0))
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+    Status = RtlAppendUnicodeToString(&ComputerNameUCS, L"\\\\");
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlAppendUnicodeToString failed 0x%lx\n", Status);
+        goto done;
+    }
+    Status = RtlAppendUnicodeStringToString(&ComputerNameUCS, LogonPwdData->ComputerName);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlAppendUnicodeStringToString failed 0x%lx\n", Status);
+        goto done;
+    }
+
+    BufferLength = sizeof(MSV1_0_LM20_LOGON_PROFILE) + ComputerNameUCS.Length + sizeof(WCHAR);
+
+    Status = NtlmAllocateClientBuffer(ClientRequest, BufferLength, &Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("DispatchTable.AllocateClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    TRACE("ClientBaseAddress: %p\n", Buffer.ClientBaseAddress);
+
+    LocalBuffer = (PMSV1_0_LM20_LOGON_PROFILE)Buffer.LocalBuffer;
+    PtrOffset = (PBYTE)(LocalBuffer + 1);
+
+    LocalBuffer->MessageType = MsV1_0Lm20LogonProfile;
+    LocalBuffer->KickOffTime.LowPart = UserInfo->All.AccountExpires.LowPart;
+    LocalBuffer->KickOffTime.HighPart = UserInfo->All.AccountExpires.HighPart;
+    LocalBuffer->LogoffTime.LowPart = UserInfo->All.AccountExpires.LowPart;
+    LocalBuffer->LogoffTime.HighPart = UserInfo->All.AccountExpires.HighPart;
+
+    memcpy(LocalBuffer->UserSessionKey,
+           &LogonPwdData->UserSessionKey,
+           MSV1_0_USER_SESSION_KEY_LENGTH);
+
+    //FIXME: Set Domainname if we domain joined
+    //       what to do if not? WORKGROUP
+    RtlInitUnicodeString(&LocalBuffer->LogonDomainName, NULL);
+
+    memcpy(LocalBuffer->LanmanSessionKey,
+           &LogonPwdData->LanmanSessionKey,
+           MSV1_0_LANMAN_SESSION_KEY_LENGTH);
+
+    if (!NtlmUStrWriteToStruct(LocalBuffer,
+                               BufferLength,
+                               &LocalBuffer->LogonServer,
+                               &ComputerNameUCS,
+                               &PtrOffset,
+                               TRUE))
+    {
+        ERR("NtlmStructWriteUCS failed.\n");
+        Status = ERROR_INTERNAL_ERROR;
+        goto done;
+    }
+    /* not supported */
+    RtlInitUnicodeString(&LocalBuffer->UserParameters, NULL);
+    /* Build user flags */
+    LocalBuffer->UserFlags = 0x0;
+    if (LogonPwdData->LogonType == NetLogonLmKey)
+        LocalBuffer->UserFlags |= LOGON_USED_LM_PASSWORD;
+
+    /* copy data to client buffer */
+    Status = NtlmCopyToClientBuffer(ClientRequest, BufferLength, &Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("DispatchTable.CopyToClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    *ProfileBuffer = (PMSV1_0_LM20_LOGON_PROFILE)Buffer.ClientBaseAddress;
+    *ProfileBufferLength = BufferLength;
+done:
+    /* On success Buffer.ClientBaseAddress will not be free */
+    NtlmFreeClientBuffer(ClientRequest, !NT_SUCCESS(Status), &Buffer);
+    NtlmUStrFree(&ComputerNameUCS);
+    return Status;
+}
 
 static
 PSID
@@ -790,182 +819,6 @@ done:
 }
 
 
-static
-NTSTATUS
-MsvpCheckPassword(PUNICODE_STRING UserPassword,
-                  PSAMPR_USER_INFO_BUFFER UserInfo)
-{
-    ENCRYPTED_NT_OWF_PASSWORD UserNtPassword;
-    ENCRYPTED_LM_OWF_PASSWORD UserLmPassword;
-    BOOLEAN UserLmPasswordPresent = FALSE;
-    BOOLEAN UserNtPasswordPresent = FALSE;
-    OEM_STRING LmPwdString;
-    CHAR LmPwdBuffer[15];
-    NTSTATUS Status;
-
-    TRACE("(%p %p)\n", UserPassword, UserInfo);
-
-    /* Calculate the LM password and hash for the users password */
-    LmPwdString.Length = 15;
-    LmPwdString.MaximumLength = 15;
-    LmPwdString.Buffer = LmPwdBuffer;
-    ZeroMemory(LmPwdString.Buffer, LmPwdString.MaximumLength);
-
-    Status = RtlUpcaseUnicodeStringToOemString(&LmPwdString,
-                                               UserPassword,
-                                               FALSE);
-    if (NT_SUCCESS(Status))
-    {
-        /* Calculate the LM hash value of the users password */
-        Status = SystemFunction006(LmPwdString.Buffer,
-                                   (LPSTR)&UserLmPassword);
-        if (NT_SUCCESS(Status))
-        {
-            UserLmPasswordPresent = TRUE;
-        }
-    }
-
-    /* Calculate the NT hash of the users password */
-    Status = SystemFunction007(UserPassword,
-                               (LPBYTE)&UserNtPassword);
-    if (NT_SUCCESS(Status))
-    {
-        UserNtPasswordPresent = TRUE;
-    }
-
-    Status = STATUS_WRONG_PASSWORD;
-
-    /* Succeed, if no password has been set */
-    if (UserInfo->All.NtPasswordPresent == FALSE &&
-        UserInfo->All.LmPasswordPresent == FALSE)
-    {
-        TRACE("No password check!\n");
-        Status = STATUS_SUCCESS;
-        goto done;
-    }
-
-    /* Succeed, if NT password matches */
-    if (UserNtPasswordPresent && UserInfo->All.NtPasswordPresent)
-    {
-        TRACE("Check NT password hashes:\n");
-        if (RtlEqualMemory(&UserNtPassword,
-                           UserInfo->All.NtOwfPassword.Buffer,
-                           sizeof(ENCRYPTED_NT_OWF_PASSWORD)))
-        {
-            TRACE("  success!\n");
-            Status = STATUS_SUCCESS;
-            goto done;
-        }
-
-        TRACE("  failed!\n");
-    }
-
-    /* Succeed, if LM password matches */
-    if (UserLmPasswordPresent && UserInfo->All.LmPasswordPresent)
-    {
-        TRACE("Check LM password hashes:\n");
-        if (RtlEqualMemory(&UserLmPassword,
-                           UserInfo->All.LmOwfPassword.Buffer,
-                           sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
-        {
-            TRACE("  success!\n");
-            Status = STATUS_SUCCESS;
-            goto done;
-        }
-        TRACE("  failed!\n");
-    }
-
-done:
-    return Status;
-}
-
-
-static
-BOOL
-MsvpCheckLogonHours(
-    _In_ PSAMPR_LOGON_HOURS LogonHours,
-    _In_ PLARGE_INTEGER LogonTime)
-{
-#if 0
-    LARGE_INTEGER LocalLogonTime;
-    TIME_FIELDS TimeFields;
-    USHORT MinutesPerUnit, Offset;
-    BOOL bFound;
-
-    FIXME("MsvpCheckLogonHours(%p %p)\n", LogonHours, LogonTime);
-
-    if (LogonHours->UnitsPerWeek == 0 || LogonHours->LogonHours == NULL)
-    {
-        FIXME("No logon hours!\n");
-        return TRUE;
-    }
-
-    RtlSystemTimeToLocalTime(LogonTime, &LocalLogonTime);
-    RtlTimeToTimeFields(&LocalLogonTime, &TimeFields);
-
-    FIXME("UnitsPerWeek: %u\n", LogonHours->UnitsPerWeek);
-    MinutesPerUnit = 10080 / LogonHours->UnitsPerWeek;
-
-    Offset = ((TimeFields.Weekday * 24 + TimeFields.Hour) * 60 + TimeFields.Minute) / MinutesPerUnit;
-    FIXME("Offset: %us\n", Offset);
-
-    bFound = (BOOL)(LogonHours->LogonHours[Offset / 8] & (1 << (Offset % 8)));
-    FIXME("Logon permitted: %s\n", bFound ? "Yes" : "No");
-
-    return bFound;
-#endif
-    return TRUE;
-}
-
-
-static
-BOOL
-MsvpCheckWorkstations(
-    _In_ PRPC_UNICODE_STRING WorkStations,
-    _In_ PWSTR ComputerName)
-{
-    PWSTR pStart, pEnd;
-    BOOL bFound = FALSE;
-
-    TRACE("MsvpCheckWorkstations(%p %S)\n", WorkStations, ComputerName);
-
-    if (WorkStations->Length == 0 || WorkStations->Buffer == NULL)
-    {
-        TRACE("No workstations!\n");
-        return TRUE;
-    }
-
-    TRACE("Workstations: %wZ\n", WorkStations);
-
-    pStart = WorkStations->Buffer;
-    for (;;)
-    {
-        pEnd = wcschr(pStart, L',');
-        if (pEnd != NULL)
-            *pEnd = UNICODE_NULL;
-
-        TRACE("Comparing '%S' and '%S'\n", ComputerName, pStart);
-        if (_wcsicmp(ComputerName, pStart) == 0)
-        {
-            bFound = TRUE;
-            if (pEnd != NULL)
-                *pEnd = L',';
-            break;
-        }
-
-        if (pEnd == NULL)
-            break;
-
-        *pEnd = L',';
-        pStart = pEnd + 1;
-    }
-
-    TRACE("Found allowed workstation: %s\n", (bFound) ? "Yes" : "No");
-
-    return bFound;
-}
-
-
 /*
  * @unimplemented
  */
@@ -1156,6 +1009,96 @@ LsaApLogonTerminated(IN PLUID LogonId)
 
 
 /*
+ * Handle Network logon
+ */
+static
+NTSTATUS
+LsaApLogonUserEx2_Network(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferSize,
+    _In_ PUNICODE_STRING ComputerName,
+    _Out_ PUNICODE_STRING* LogonUserRef,
+    _Out_ PUNICODE_STRING* LogonDomainRef,
+    _Inout_ PLSA_SAM_PWD_DATA LogonPwdData,
+    _Out_ SAMPR_HANDLE* UserHandlePtr,
+    _Out_ PSAMPR_USER_INFO_BUFFER* UserInfoPtr,
+    _Out_ PRPC_SID* AccountDomainSidPtr,
+    _Out_ PBOOL SpecialAccount,
+    _Out_ PMSV1_0_LM20_LOGON_PROFILE *LogonProfile,
+    _Out_ PULONG LogonProfileSize,
+    _Out_ PNTSTATUS SubStatus)
+{
+    NTSTATUS Status;
+    PMSV1_0_LM20_LOGON LogonInfo;
+    ULONG_PTR PtrOffset;
+
+    *LogonProfile = NULL;
+    *LogonProfileSize = 0;
+    *UserInfoPtr = NULL;
+    *AccountDomainSidPtr = NULL;
+    *SpecialAccount = FALSE;
+    LogonInfo = ProtocolSubmitBuffer;
+
+    if (SubmitBufferSize < sizeof(MSV1_0_LM20_LOGON))
+    {
+        ERR("Invalid SubmitBufferSize %lu\n", SubmitBufferSize);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Fix-up pointers in the authentication info */
+    PtrOffset = (ULONG_PTR)ProtocolSubmitBuffer - (ULONG_PTR)ClientBufferBase;
+
+    if ((!NtlmFixupAndValidateUStr(&LogonInfo->LogonDomainName, PtrOffset)) ||
+        (!NtlmFixupAndValidateUStr(&LogonInfo->UserName, PtrOffset)) ||
+        (!NtlmFixupAndValidateUStr(&LogonInfo->Workstation, PtrOffset)) ||
+        (!NtlmFixupAStr(&LogonInfo->CaseSensitiveChallengeResponse, PtrOffset)) ||
+        (!NtlmFixupAStr(&LogonInfo->CaseInsensitiveChallengeResponse, PtrOffset)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    LogonPwdData->IsNetwork = TRUE;
+    LogonPwdData->LogonInfo = LogonInfo;
+    LogonPwdData->ComputerName = ComputerName;
+    Status = SamValidateUser(Network,
+                             &LogonInfo->UserName,
+                             &LogonInfo->LogonDomainName,
+                             LogonPwdData,
+                             ComputerName,
+                             SpecialAccount,
+                             AccountDomainSidPtr,
+                             UserHandlePtr,
+                             UserInfoPtr,
+                             SubStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamValidateUser failed with 0x%lx\n", Status);
+        return Status;
+    }
+
+    if (LogonInfo->ParameterControl & MSV1_0_RETURN_PROFILE_PATH)
+    {
+        Status = BuildLm20LogonProfileBuffer(ClientRequest,
+                                             *UserInfoPtr,
+                                             LogonPwdData,
+                                             LogonProfile,
+                                             LogonProfileSize);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("BuildLm20LogonProfileBuffer failed with 0x%lx\n", Status);
+            return Status;
+        }
+    }
+
+    *LogonUserRef = &LogonInfo->UserName;
+    *LogonDomainRef = &LogonInfo->LogonDomainName;
+
+    return Status;
+}
+
+/*
  * @implemented
  */
 NTSTATUS
@@ -1177,26 +1120,16 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
                   OUT PSECPKG_PRIMARY_CRED PrimaryCredentials, /* Not supported yet */
                   OUT PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials) /* Not supported yet */
 {
-    static const UNICODE_STRING NtAuthorityU = RTL_CONSTANT_STRING(L"NT AUTHORITY");
-    static const UNICODE_STRING LocalServiceU = RTL_CONSTANT_STRING(L"LocalService");
-    static const UNICODE_STRING NetworkServiceU = RTL_CONSTANT_STRING(L"NetworkService");
-
     NTSTATUS Status;
-    PMSV1_0_INTERACTIVE_LOGON LogonInfo;
-    WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-    SAMPR_HANDLE ServerHandle = NULL;
-    SAMPR_HANDLE DomainHandle = NULL;
+    UNICODE_STRING ComputerName;
+    WCHAR ComputerNameData[MAX_COMPUTERNAME_LENGTH + 1];
+    PUNICODE_STRING LogonUserName = NULL;
+    LSA_SAM_PWD_DATA LogonPwdData = { FALSE, NULL };
+    PUNICODE_STRING LogonDomain = NULL;
     SAMPR_HANDLE UserHandle = NULL;
     PRPC_SID AccountDomainSid = NULL;
-    RPC_UNICODE_STRING Names[1];
-    SAMPR_ULONG_ARRAY RelativeIds = {0, NULL};
-    SAMPR_ULONG_ARRAY Use = {0, NULL};
     PSAMPR_USER_INFO_BUFFER UserInfo = NULL;
     BOOLEAN SessionCreated = FALSE;
-    LARGE_INTEGER LogonTime;
-    LARGE_INTEGER AccountExpires;
-    LARGE_INTEGER PasswordMustChange;
-    LARGE_INTEGER PasswordLastSet;
     DWORD ComputerNameSize;
     BOOL SpecialAccount = FALSE;
     UCHAR LogonPassHash;
@@ -1214,11 +1147,21 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     *AccountName = NULL;
     *AuthenticatingAuthority = NULL;
 
+    /* Get the computer name */
+    ComputerNameSize = ARRAYSIZE(ComputerNameData);
+    if (!GetComputerNameW(ComputerNameData, &ComputerNameSize))
+    {
+        ERR("Failed to get Computername.\n");
+        return STATUS_INTERNAL_ERROR;
+    }
+    RtlInitUnicodeString(&ComputerName, ComputerNameData);
+
     /* Parameters validation */
     if (LogonType == Interactive ||
         LogonType == Batch ||
         LogonType == Service)
     {
+        PMSV1_0_INTERACTIVE_LOGON LogonInfo;
         ULONG_PTR PtrOffset;
 
         if (SubmitBufferSize < sizeof(MSV1_0_INTERACTIVE_LOGON))
@@ -1314,11 +1257,37 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         if (!NT_SUCCESS(Status))
             return STATUS_INVALID_PARAMETER;
 
+        LogonUserName = &LogonInfo->UserName;
+        LogonDomain = &LogonInfo->LogonDomainName;
+        LogonPwdData.IsNetwork = FALSE;
+        LogonPwdData.PlainPwd = &LogonInfo->Password;
+        LogonPwdData.ComputerName = &ComputerName;
+
         TRACE("Domain: %wZ\n", &LogonInfo->LogonDomainName);
         TRACE("User: %wZ\n", &LogonInfo->UserName);
         TRACE("Password: %wZ\n", &LogonInfo->Password);
 
         // TODO: If LogonType == Service, do some extra work using LogonInfo->Password.
+    }
+    else if (LogonType == Network)
+    {
+        Status = LsaApLogonUserEx2_Network(ClientRequest,
+                                           ProtocolSubmitBuffer,
+                                           ClientBufferBase,
+                                           SubmitBufferSize,
+                                           &ComputerName,
+                                           &LogonUserName,
+                                           &LogonDomain,
+                                           &LogonPwdData,
+                                           &UserHandle,
+                                           &UserInfo,
+                                           &AccountDomainSid,
+                                           &SpecialAccount,
+                                           (PMSV1_0_LM20_LOGON_PROFILE*)ProfileBuffer,
+                                           ProfileBufferSize,
+                                           SubStatus);
+        if (!NT_SUCCESS(Status))
+            goto done;
     }
     else
     {
@@ -1327,234 +1296,18 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     }
     // TODO: Add other LogonType validity checks.
 
-    /* Get the logon time */
-    NtQuerySystemTime(&LogonTime);
-
-    /* Get the computer name */
-    ComputerNameSize = ARRAYSIZE(ComputerName);
-    GetComputerNameW(ComputerName, &ComputerNameSize);
-
-    /* Check for special accounts */
-    // FIXME: Windows does not do this that way!! (msv1_0 does not contain these hardcoded values)
-    if (RtlEqualUnicodeString(&LogonInfo->LogonDomainName, &NtAuthorityU, TRUE))
-    {
-        SpecialAccount = TRUE;
-
-        /* Get the authority domain SID */
-        Status = GetNtAuthorityDomainSid(&AccountDomainSid);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("GetNtAuthorityDomainSid() failed (Status 0x%08lx)\n", Status);
-            return Status;
-        }
-
-        if (RtlEqualUnicodeString(&LogonInfo->UserName, &LocalServiceU, TRUE))
-        {
-            TRACE("SpecialAccount: LocalService\n");
-
-            if (LogonType != Service)
-                return STATUS_LOGON_FAILURE;
-
-            UserInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-                                       HEAP_ZERO_MEMORY,
-                                       sizeof(SAMPR_USER_ALL_INFORMATION));
-            if (UserInfo == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto done;
-            }
-
-            UserInfo->All.UserId = SECURITY_LOCAL_SERVICE_RID;
-            UserInfo->All.PrimaryGroupId = SECURITY_LOCAL_SERVICE_RID;
-        }
-        else if (RtlEqualUnicodeString(&LogonInfo->UserName, &NetworkServiceU, TRUE))
-        {
-            TRACE("SpecialAccount: NetworkService\n");
-
-            if (LogonType != Service)
-                return STATUS_LOGON_FAILURE;
-
-            UserInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-                                       HEAP_ZERO_MEMORY,
-                                       sizeof(SAMPR_USER_ALL_INFORMATION));
-            if (UserInfo == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto done;
-            }
-
-            UserInfo->All.UserId = SECURITY_NETWORK_SERVICE_RID;
-            UserInfo->All.PrimaryGroupId = SECURITY_NETWORK_SERVICE_RID;
-        }
-        else
-        {
-            Status = STATUS_NO_SUCH_USER;
-            goto done;
-        }
-    }
-    else
-    {
-        TRACE("NormalAccount\n");
-
-        /* Get the account domain SID */
-        Status = GetAccountDomainSid(&AccountDomainSid);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("GetAccountDomainSid() failed (Status 0x%08lx)\n", Status);
-            return Status;
-        }
-
-        /* Connect to the SAM server */
-        Status = SamIConnect(NULL,
-                             &ServerHandle,
-                             SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
-                             TRUE);
-        if (!NT_SUCCESS(Status))
-        {
-            TRACE("SamIConnect() failed (Status 0x%08lx)\n", Status);
-            goto done;
-        }
-
-        /* Open the account domain */
-        Status = SamrOpenDomain(ServerHandle,
-                                DOMAIN_LOOKUP,
-                                AccountDomainSid,
-                                &DomainHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamrOpenDomain failed (Status %08lx)\n", Status);
-            goto done;
-        }
-
-        Names[0].Length = LogonInfo->UserName.Length;
-        Names[0].MaximumLength = LogonInfo->UserName.MaximumLength;
-        Names[0].Buffer = LogonInfo->UserName.Buffer;
-
-        /* Try to get the RID for the user name */
-        Status = SamrLookupNamesInDomain(DomainHandle,
-                                         1,
-                                         Names,
-                                         &RelativeIds,
-                                         &Use);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamrLookupNamesInDomain failed (Status %08lx)\n", Status);
-            Status = STATUS_NO_SUCH_USER;
-            goto done;
-        }
-
-        /* Fail, if it is not a user account */
-        if (Use.Element[0] != SidTypeUser)
-        {
-            ERR("Account is not a user account!\n");
-            Status = STATUS_NO_SUCH_USER;
-            goto done;
-        }
-
-        /* Open the user object */
-        Status = SamrOpenUser(DomainHandle,
-                              USER_READ_GENERAL | USER_READ_LOGON |
-                              USER_READ_ACCOUNT | USER_READ_PREFERENCES, /* FIXME */
-                              RelativeIds.Element[0],
-                              &UserHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamrOpenUser failed (Status %08lx)\n", Status);
-            goto done;
-        }
-
-        Status = SamrQueryInformationUser(UserHandle,
-                                          UserAllInformation,
-                                          &UserInfo);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamrQueryInformationUser failed (Status %08lx)\n", Status);
-            goto done;
-        }
-
-        TRACE("UserName: %wZ\n", &UserInfo->All.UserName);
-
-        /* Check the password */
-        if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
-        {
-            Status = MsvpCheckPassword(&LogonInfo->Password,
-                                       UserInfo);
-            if (!NT_SUCCESS(Status))
-            {
-                ERR("MsvpCheckPassword failed (Status %08lx)\n", Status);
-                goto done;
-            }
-        }
-
-        /* Check account restrictions for non-administrator accounts */
-        if (RelativeIds.Element[0] != DOMAIN_USER_RID_ADMIN)
-        {
-            /* Check if the account has been disabled */
-            if (UserInfo->All.UserAccountControl & USER_ACCOUNT_DISABLED)
-            {
-                ERR("Account disabled!\n");
-                *SubStatus = STATUS_ACCOUNT_DISABLED;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-
-            /* Check if the account has been locked */
-            if (UserInfo->All.UserAccountControl & USER_ACCOUNT_AUTO_LOCKED)
-            {
-                ERR("Account locked!\n");
-                *SubStatus = STATUS_ACCOUNT_LOCKED_OUT;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-
-            /* Check if the account expired */
-            AccountExpires.LowPart = UserInfo->All.AccountExpires.LowPart;
-            AccountExpires.HighPart = UserInfo->All.AccountExpires.HighPart;
-            if (LogonTime.QuadPart >= AccountExpires.QuadPart)
-            {
-                ERR("Account expired!\n");
-                *SubStatus = STATUS_ACCOUNT_EXPIRED;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-
-            /* Check if the password expired */
-            PasswordMustChange.LowPart = UserInfo->All.PasswordMustChange.LowPart;
-            PasswordMustChange.HighPart = UserInfo->All.PasswordMustChange.HighPart;
-            PasswordLastSet.LowPart = UserInfo->All.PasswordLastSet.LowPart;
-            PasswordLastSet.HighPart = UserInfo->All.PasswordLastSet.HighPart;
-
-            if (LogonTime.QuadPart >= PasswordMustChange.QuadPart)
-            {
-                ERR("Password expired!\n");
-                if (PasswordLastSet.QuadPart == 0)
-                    *SubStatus = STATUS_PASSWORD_MUST_CHANGE;
-                else
-                    *SubStatus = STATUS_PASSWORD_EXPIRED;
-
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-
-            /* Check logon hours */
-            if (!MsvpCheckLogonHours(&UserInfo->All.LogonHours, &LogonTime))
-            {
-                ERR("Invalid logon hours!\n");
-                *SubStatus = STATUS_INVALID_LOGON_HOURS;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-
-            /* Check workstations */
-            if (!MsvpCheckWorkstations(&UserInfo->All.WorkStations, ComputerName))
-            {
-                ERR("Invalid workstation!\n");
-                *SubStatus = STATUS_INVALID_WORKSTATION;
-                Status = STATUS_ACCOUNT_RESTRICTION;
-                goto done;
-            }
-        }
-    }
+    Status = SamValidateUser(LogonType,
+                             LogonUserName,
+                             LogonDomain,
+                             &LogonPwdData,
+                             &ComputerName,
+                             &SpecialAccount,
+                             &AccountDomainSid,
+                             &UserHandle,
+                             &UserInfo,
+                             SubStatus);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     /* Return logon information */
 
@@ -1576,16 +1329,23 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     SessionCreated = TRUE;
 
-    /* Build and fill the interactive profile buffer */
-    Status = BuildInteractiveProfileBuffer(ClientRequest,
-                                           UserInfo,
-                                           ComputerName,
-                                           (PMSV1_0_INTERACTIVE_PROFILE*)ProfileBuffer,
-                                           ProfileBufferSize);
-    if (!NT_SUCCESS(Status))
+    if (LogonType == Interactive || LogonType == Batch || LogonType == Service)
     {
-        TRACE("BuildInteractiveProfileBuffer failed (Status %08lx)\n", Status);
-        goto done;
+        /* Build and fill the interactive profile buffer */
+        Status = BuildInteractiveProfileBuffer(ClientRequest,
+                                               UserInfo,
+                                               ComputerName.Buffer,
+                                               (PMSV1_0_INTERACTIVE_PROFILE*)ProfileBuffer,
+                                               ProfileBufferSize);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("BuildInteractiveProfileBuffer failed (Status %08lx)\n", Status);
+            goto done;
+        }
+    }
+    else if (LogonType == Network)
+    {
+        //FIXME: no need to do anything, its already done ...
     }
 
     /* Return the token information type */
@@ -1627,44 +1387,51 @@ done:
                                &InternalInfo);
     }
 
-    /* Return the account name */
-    *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
-    if (*AccountName != NULL)
+    if (NT_SUCCESS(Status))
     {
-        (*AccountName)->Buffer = DispatchTable.AllocateLsaHeap(LogonInfo->UserName.Length +
-                                                               sizeof(UNICODE_NULL));
-        if ((*AccountName)->Buffer != NULL)
+        /* Return the account name */
+        *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
+        if ((LogonUserName != NULL) &&
+            (*AccountName != NULL))
         {
-            (*AccountName)->MaximumLength = LogonInfo->UserName.Length +
-                                            sizeof(UNICODE_NULL);
-            RtlCopyUnicodeString(*AccountName, &LogonInfo->UserName);
+            (*AccountName)->Buffer = DispatchTable.AllocateLsaHeap(LogonUserName->Length +
+                                                                   sizeof(UNICODE_NULL));
+            if ((*AccountName)->Buffer != NULL)
+            {
+                (*AccountName)->MaximumLength = LogonUserName->Length +
+                                                sizeof(UNICODE_NULL);
+                RtlCopyUnicodeString(*AccountName, LogonUserName);
+            }
         }
-    }
 
-    /* Return the authenticating authority */
-    *AuthenticatingAuthority = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
-    if (*AuthenticatingAuthority != NULL)
-    {
-        (*AuthenticatingAuthority)->Buffer = DispatchTable.AllocateLsaHeap(LogonInfo->LogonDomainName.Length +
-                                                                           sizeof(UNICODE_NULL));
-        if ((*AuthenticatingAuthority)->Buffer != NULL)
+        /* Return the authenticating authority */
+        *AuthenticatingAuthority = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
+        if ((LogonDomain != NULL) &&
+            (*AuthenticatingAuthority != NULL))
         {
-            (*AuthenticatingAuthority)->MaximumLength = LogonInfo->LogonDomainName.Length +
-                                                        sizeof(UNICODE_NULL);
-            RtlCopyUnicodeString(*AuthenticatingAuthority, &LogonInfo->LogonDomainName);
+            (*AuthenticatingAuthority)->Buffer = DispatchTable.AllocateLsaHeap(LogonDomain->Length +
+                                                                               sizeof(UNICODE_NULL));
+            if ((*AuthenticatingAuthority)->Buffer != NULL)
+            {
+                (*AuthenticatingAuthority)->MaximumLength = LogonDomain->Length +
+                                                            sizeof(UNICODE_NULL);
+                RtlCopyUnicodeString(*AuthenticatingAuthority, LogonDomain);
+            }
         }
-    }
 
-    /* Return the machine name */
-    *MachineName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
-    if (*MachineName != NULL)
-    {
-        (*MachineName)->Buffer = DispatchTable.AllocateLsaHeap((ComputerNameSize + 1) * sizeof(WCHAR));
-        if ((*MachineName)->Buffer != NULL)
+        /* Return the machine name */
+        *MachineName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
+        if (*MachineName != NULL)
         {
-            (*MachineName)->MaximumLength = (ComputerNameSize + 1) * sizeof(WCHAR);
-            (*MachineName)->Length = ComputerNameSize * sizeof(WCHAR);
-            RtlCopyMemory((*MachineName)->Buffer, ComputerName, (*MachineName)->MaximumLength);
+            (*MachineName)->Buffer = DispatchTable.AllocateLsaHeap(ComputerName.MaximumLength);
+            if ((*MachineName)->Buffer != NULL)
+            {
+                (*MachineName)->MaximumLength = ComputerName.MaximumLength;
+                (*MachineName)->Length = ComputerName.Length;
+                RtlCopyMemory((*MachineName)->Buffer,
+                              ComputerName.Buffer,
+                              ComputerName.MaximumLength);
+            }
         }
     }
 
@@ -1686,14 +1453,6 @@ done:
 
     SamIFree_SAMPR_USER_INFO_BUFFER(UserInfo,
                                     UserAllInformation);
-    SamIFree_SAMPR_ULONG_ARRAY(&RelativeIds);
-    SamIFree_SAMPR_ULONG_ARRAY(&Use);
-
-    if (DomainHandle != NULL)
-        SamrCloseHandle(&DomainHandle);
-
-    if (ServerHandle != NULL)
-        SamrCloseHandle(&ServerHandle);
 
     if (AccountDomainSid != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
@@ -1730,45 +1489,11 @@ SpLsaModeInitialize(
 
     *PackageVersion = SECPKG_INTERFACE_VERSION;
 
-    RtlZeroMemory(NtlmLsaFn, sizeof(NtlmLsaFn));
-
-    /* msv1_0 (XP, win2k) returns NULL for
-     * InitializePackage, LsaLogonUser,LsaLogonUserEx,
-     * SpQueryContextAttributes and SpAddCredentials */
-    NtlmLsaFn[0].InitializePackage = NULL;
-    NtlmLsaFn[0].LsaLogonUser = NULL;
-    NtlmLsaFn[0].CallPackage = LsaApCallPackage;
-    NtlmLsaFn[0].LogonTerminated = LsaApLogonTerminated;
-    NtlmLsaFn[0].CallPackageUntrusted = LsaApCallPackageUntrusted;
-    NtlmLsaFn[0].CallPackagePassthrough = LsaApCallPackagePassthrough;
-    NtlmLsaFn[0].LogonUserEx = NULL;
-    NtlmLsaFn[0].LogonUserEx2 = LsaApLogonUserEx2;
-    NtlmLsaFn[0].Initialize = SpInitialize;
-    NtlmLsaFn[0].Shutdown = LsaSpShutDown;
-    NtlmLsaFn[0].GetInfo = LsaSpGetInfoW;
-    NtlmLsaFn[0].AcceptCredentials = SpAcceptCredentials;
-    NtlmLsaFn[0].SpAcquireCredentialsHandle = LsaSpAcquireCredentialsHandle;
-    NtlmLsaFn[0].SpQueryCredentialsAttributes = LsaSpQueryCredentialsAttributes;
-    NtlmLsaFn[0].FreeCredentialsHandle = LsaSpFreeCredentialsHandle;
-    NtlmLsaFn[0].SaveCredentials = LsaSpSaveCredentials;
-    NtlmLsaFn[0].GetCredentials = LsaSpGetCredentials;
-    NtlmLsaFn[0].DeleteCredentials = LsaSpDeleteCredentials;
-    NtlmLsaFn[0].InitLsaModeContext = LsaSpInitLsaModeContext;
-    NtlmLsaFn[0].AcceptLsaModeContext = LsaSpAcceptLsaModeContext;
-    NtlmLsaFn[0].DeleteContext = LsaSpDeleteContext;
-    NtlmLsaFn[0].ApplyControlToken = LsaSpApplyControlToken;
-    NtlmLsaFn[0].GetUserInfo = LsaSpGetUserInfo;
-    NtlmLsaFn[0].GetExtendedInformation = LsaSpGetExtendedInformation;
-    NtlmLsaFn[0].SpQueryContextAttributes = NULL;
-    NtlmLsaFn[0].SpAddCredentials = NULL;
-    NtlmLsaFn[0].SetExtendedInformation = LsaSpSetExtendedInformation;
-
     *ppTables = NtlmLsaFn;
     *pcTables = 1;
 
     return STATUS_SUCCESS;
 }
-
 
 /*
  * @unimplemented
@@ -1781,8 +1506,6 @@ SpUserModeInitialize(
     _Out_ PSECPKG_USER_FUNCTION_TABLE *ppTables,
     _Out_ PULONG pcTables)
 {
-    SECPKG_USER_FUNCTION_TABLE Tables[1];
-
     TRACE("SpUserModeInitialize(0x%lx %p %p %p)\n",
           LsaVersion, PackageVersion, ppTables, pcTables);
 
@@ -1791,24 +1514,7 @@ SpUserModeInitialize(
 
     *PackageVersion = SECPKG_INTERFACE_VERSION;
 
-    RtlZeroMemory(&Tables, sizeof(Tables));
-
-//    Tables[0].InstanceInit = SpInstanceInit;
-//    Tables[0].InitUserModeContext = NULL;
-//    Tables[0].MakeSignature = NULL;
-//    Tables[0].VerifySignature = NULL;
-//    Tables[0].SealMessage = NULL;
-//    Tables[0].UnsealMessage = NULL;
-//    Tables[0].GetContextToken = NULL;
-//    Tables[0].SpQueryContextAttributes = NULL;
-//    Tables[0].CompleteAuthToken = NULL;
-//    Tables[0].DeleteUserModeContext = NULL;
-//    Tables[0].FormatCredentials = NULL;
-//    Tables[0].MarshallSupplementalCreds = NULL;
-//    Tables[0].ExportContext = NULL;
-//    Tables[0].ImportContext = NULL;
-
-    *ppTables = Tables;
+    *ppTables = NtlmUsrFn;
     *pcTables = 1;
 
     return STATUS_SUCCESS;

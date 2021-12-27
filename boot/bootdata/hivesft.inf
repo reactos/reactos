@@ -88,8 +88,8 @@ HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".jpeg",0x000000
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".jpe",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".jfif",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".gif",0x00000000,""
-; HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".emf",0x00000000,"" ; NOT SUPPORTED YET
-; HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".wmf",0x00000000,"" ; NOT SUPPORTED YET
+HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".emf",0x00000000,""
+HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".wmf",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".tif",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".tiff",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".png",0x00000000,""

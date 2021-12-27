@@ -28,20 +28,20 @@ private:
 
 public:
     ToolsModel();
-    int GetLineWidth();
+    int GetLineWidth() const;
     void SetLineWidth(int nLineWidth);
-    int GetShapeStyle();
+    int GetShapeStyle() const;
     void SetShapeStyle(int nShapeStyle);
-    int GetBrushStyle();
+    int GetBrushStyle() const;
     void SetBrushStyle(int nBrushStyle);
-    int GetActiveTool();
+    int GetActiveTool() const;
     void SetActiveTool(int nActiveTool);
-    int GetAirBrushWidth();
+    int GetAirBrushWidth() const;
     void SetAirBrushWidth(int nAirBrushWidth);
-    int GetRubberRadius();
+    int GetRubberRadius() const;
     void SetRubberRadius(int nRubberRadius);
-    BOOL IsBackgroundTransparent();
+    BOOL IsBackgroundTransparent() const;
     void SetBackgroundTransparent(BOOL bTransparent);
-    int GetZoom();
+    int GetZoom() const;
     void SetZoom(int nZoom);
 };

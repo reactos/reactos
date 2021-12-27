@@ -1897,6 +1897,41 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
     return Ok;
 }
 
+#ifdef __REACTOS__
+static HBITMAP hbitmap_from_emf(HENHMETAFILE hemf)
+{
+    BITMAPINFO bmi;
+    HBITMAP hbm;
+    SIZE size;
+    ENHMETAHEADER header;
+    HGDIOBJ hbmOld;
+    RECT rc;
+    HDC hdc;
+
+    GetEnhMetaFileHeader(hemf, sizeof(header), &header);
+    size.cx = header.rclBounds.right - header.rclBounds.left + 1;
+    size.cy = header.rclBounds.bottom - header.rclBounds.top + 1;
+
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = size.cx;
+    bmi.bmiHeader.biHeight = size.cy;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 24;
+
+    hdc = CreateCompatibleDC(NULL);
+    hbm = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
+
+    hbmOld = SelectObject(hdc, hbm);
+    SetRect(&rc, 0, 0, size.cx, size.cy);
+    PlayEnhMetaFile(hdc, hemf, &rc);
+    SelectObject(hdc, hbmOld);
+
+    DeleteDC(hdc);
+    return hbm;
+}
+
+#endif
 GpStatus WINGDIPAPI GdipCreateBitmapFromStream(IStream* stream,
     GpBitmap **bitmap)
 {
@@ -1909,6 +1944,19 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromStream(IStream* stream,
     if(stat != Ok)
         return stat;
 
+#ifdef __REACTOS__
+    if ((*bitmap)->image.type == ImageTypeMetafile)
+    {
+        HBITMAP hbm = hbitmap_from_emf(((GpMetafile*)*bitmap)->hemf);
+        GdipDisposeImage(&(*bitmap)->image);
+        if (!hbm)
+            return GenericError; /* FIXME: what error to return? */
+
+        GdipCreateBitmapFromHBITMAP(hbm, NULL, bitmap);
+        DeleteObject(hbm);
+    }
+    else
+#endif
     if((*bitmap)->image.type != ImageTypeBitmap){
         GdipDisposeImage(&(*bitmap)->image);
         *bitmap = NULL;

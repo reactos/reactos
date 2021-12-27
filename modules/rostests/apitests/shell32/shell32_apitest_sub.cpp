@@ -6,72 +6,28 @@
  */
 
 #include "shelltest.h"
-#include <shlwapi.h>
-#include <stdio.h>
 #include "SHChangeNotify.h"
 
 static HWND s_hwnd = NULL;
-static const WCHAR s_szName[] = L"SHChangeNotify testcase";
-static INT s_nMode;
-
-static BYTE s_counters[TYPE_RENAMEFOLDER + 1];
 static UINT s_uRegID = 0;
-
-static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
-
+static BOOL s_fRecursive = FALSE;
+static DIRTYPE s_iWatchDir = DIRTYPE_NULL;
+static INT s_nSources = 0;
 static LPITEMIDLIST s_pidl = NULL;
-static SHChangeNotifyEntry s_entry;
+static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
+static BYTE s_counters[TYPE_MAX + 1];
+static HANDLE s_hEvent = NULL;
 
 static BOOL
 OnCreate(HWND hwnd)
 {
     s_hwnd = hwnd;
+    s_pidl = DoGetPidl(s_iWatchDir);
 
-    DoInitPaths();
-
-    s_pidl = ILCreateFromPathW(s_dir1);
-    s_entry.pidl = s_pidl;
-
-    INT nSources;
-    switch (s_nMode)
-    {
-        case 0:
-            s_entry.fRecursive = TRUE;
-            nSources = SHCNRF_ShellLevel;
-            break;
-
-        case 1:
-            s_entry.fRecursive = TRUE;
-            nSources = SHCNRF_ShellLevel | SHCNRF_InterruptLevel;
-            break;
-
-        case 2:
-            s_entry.fRecursive = FALSE;
-            nSources = SHCNRF_ShellLevel | SHCNRF_NewDelivery;
-            break;
-
-        case 3:
-            s_entry.fRecursive = TRUE;
-            nSources = SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt | SHCNRF_NewDelivery;
-            break;
-
-        case 4:
-            s_entry.fRecursive = FALSE;
-            nSources = SHCNRF_InterruptLevel | SHCNRF_NewDelivery;
-            break;
-
-        case 5:
-            s_entry.fRecursive = TRUE;
-            nSources = SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt | SHCNRF_NewDelivery;
-            s_entry.pidl = NULL;
-            break;
-
-        default:
-            return FALSE;
-    }
-    LONG fEvents = SHCNE_ALLEVENTS;
-    s_uRegID = SHChangeNotifyRegister(hwnd, nSources, fEvents, WM_SHELL_NOTIFY,
-                                      1, &s_entry);
+    SHChangeNotifyEntry entry;
+    entry.pidl = s_pidl;
+    entry.fRecursive = s_fRecursive;
+    s_uRegID = SHChangeNotifyRegister(hwnd, s_nSources, SHCNE_ALLEVENTS, WM_SHELL_NOTIFY, 1, &entry);
     return s_uRegID != 0;
 }
 
@@ -100,35 +56,54 @@ OnDestroy(HWND hwnd)
     s_hwnd = NULL;
 }
 
+static BOOL DoPathes(PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2)
+{
+    WCHAR path[MAX_PATH];
+    if (!SHGetPathFromIDListW(pidl1, path))
+    {
+        s_path1[0] = s_path2[0] = 0;
+        return FALSE;
+    }
+
+    if (wcsstr(path, L"Recent") != NULL)
+        return FALSE;
+
+    StringCchCopyW(s_path1, _countof(s_path1), path);
+
+    if (!SHGetPathFromIDListW(pidl2, s_path2))
+        s_path2[0] = 0;
+
+    return TRUE;
+}
+
+static VOID DoPathesAndFlags(UINT type, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2)
+{
+    if (DoPathes(pidl1, pidl2))
+    {
+        s_counters[type] = 1;
+        SetEvent(s_hEvent);
+    }
+}
+
 static void
 DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
 {
-    if (pidl1)
-        SHGetPathFromIDListW(pidl1, s_path1);
-    else
-        s_path1[0] = 0;
-
-    if (pidl2)
-        SHGetPathFromIDListW(pidl2, s_path2);
-    else
-        s_path2[0] = 0;
-
     switch (lEvent)
     {
         case SHCNE_RENAMEITEM:
-            s_counters[TYPE_RENAMEITEM] = 1;
+            DoPathesAndFlags(TYPE_RENAMEITEM, pidl1, pidl2);
             break;
         case SHCNE_CREATE:
-            s_counters[TYPE_CREATE] = 1;
+            DoPathesAndFlags(TYPE_CREATE, pidl1, pidl2);
             break;
         case SHCNE_DELETE:
-            s_counters[TYPE_DELETE] = 1;
+            DoPathesAndFlags(TYPE_DELETE, pidl1, pidl2);
             break;
         case SHCNE_MKDIR:
-            s_counters[TYPE_MKDIR] = 1;
+            DoPathesAndFlags(TYPE_MKDIR, pidl1, pidl2);
             break;
         case SHCNE_RMDIR:
-            s_counters[TYPE_RMDIR] = 1;
+            DoPathesAndFlags(TYPE_RMDIR, pidl1, pidl2);
             break;
         case SHCNE_MEDIAINSERTED:
             break;
@@ -145,10 +120,9 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
         case SHCNE_ATTRIBUTES:
             break;
         case SHCNE_UPDATEDIR:
-            s_counters[TYPE_UPDATEDIR] = 1;
+            DoPathesAndFlags(TYPE_UPDATEDIR, pidl1, pidl2);
             break;
         case SHCNE_UPDATEITEM:
-            s_counters[TYPE_UPDATEITEM] = 1;
             break;
         case SHCNE_SERVERDISCONNECT:
             break;
@@ -157,7 +131,7 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
         case SHCNE_DRIVEADDGUI:
             break;
         case SHCNE_RENAMEFOLDER:
-            s_counters[TYPE_RENAMEFOLDER] = 1;
+            DoPathesAndFlags(TYPE_RENAMEFOLDER, pidl1, pidl2);
             break;
         case SHCNE_FREESPACE:
             break;
@@ -208,13 +182,14 @@ static void
 DoSetPaths(HWND hwnd)
 {
     WCHAR szText[MAX_PATH * 2];
-    lstrcpyW(szText, s_path1);
-    lstrcatW(szText, L"|");
-    lstrcatW(szText, s_path2);
+    StringCchCopyW(szText, _countof(szText), s_path1);
+    StringCchCatW(szText, _countof(szText), L"|");
+    StringCchCatW(szText, _countof(szText), s_path2);
 
-    if (FILE *fp = fopen(TEMP_FILE, "wb"))
+    FILE *fp = _wfopen(TEMP_FILE, L"wb");
+    if (fp)
     {
-        fwrite(szText, (lstrlenW(szText) + 1) * sizeof(WCHAR), 1, fp);
+        fwrite(szText, (wcslen(szText) + 1) * sizeof(WCHAR), 1, fp);
         fflush(fp);
         fclose(fp);
     }
@@ -244,6 +219,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_CLEAR_FLAGS:
             ZeroMemory(&s_counters, sizeof(s_counters));
+            s_path1[0] = s_path2[0] = 0;
             break;
 
         case WM_SET_PATHS:
@@ -256,6 +232,25 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+static BOOL ParseCommandLine(LPWSTR lpCmdLine)
+{
+    LPWSTR pch = lpCmdLine; // fRecursive,iWatchDir,nSources
+    s_fRecursive = !!wcstoul(pch, NULL, 0);
+    pch = wcschr(pch, L',');
+    if (!pch)
+        return FALSE;
+    ++pch;
+
+    s_iWatchDir = (DIRTYPE)wcstoul(pch, NULL, 0);
+    pch = wcschr(pch, L',');
+    if (!pch)
+        return FALSE;
+    ++pch;
+
+    s_nSources = wcstoul(pch, NULL, 0);
+    return TRUE;
+}
+
 INT APIENTRY
 wWinMain(HINSTANCE hInstance,
          HINSTANCE hPrevInstance,
@@ -265,7 +260,10 @@ wWinMain(HINSTANCE hInstance,
     if (lstrcmpiW(lpCmdLine, L"") == 0 || lstrcmpiW(lpCmdLine, L"TEST") == 0)
         return 0;
 
-    s_nMode = _wtoi(lpCmdLine);
+    if (!ParseCommandLine(lpCmdLine))
+        return -1;
+
+    s_hEvent = OpenEventW(EVENT_ALL_ACCESS, TRUE, EVENT_NAME);
 
     WNDCLASSW wc;
     ZeroMemory(&wc, sizeof(wc));
@@ -274,12 +272,12 @@ wWinMain(HINSTANCE hInstance,
     wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
-    wc.lpszClassName = s_szName;
+    wc.lpszClassName = CLASSNAME;
     if (!RegisterClassW(&wc))
         return -1;
 
-    HWND hwnd = CreateWindowW(s_szName, s_szName, WS_OVERLAPPEDWINDOW,
-                              CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
+    HWND hwnd = CreateWindowW(CLASSNAME, CLASSNAME, WS_OVERLAPPEDWINDOW,
+                              CW_USEDEFAULT, CW_USEDEFAULT, 400, 100,
                               NULL, NULL, GetModuleHandleW(NULL), NULL);
     if (!hwnd)
         return -1;
@@ -293,6 +291,8 @@ wWinMain(HINSTANCE hInstance,
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
+
+    CloseHandle(s_hEvent);
 
     return 0;
 }

@@ -190,7 +190,7 @@ BEGIN
     IDS_INFOTITLE "ReactOS Paint"
     IDS_INFOTEXT "A GNU Lesser General Public License (LGPL) alatt érhető el (lásd www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Kívánja menteni %s változásait?"
-    IDS_DEFAULTFILENAME "Névtelen.bmp"
+    IDS_DEFAULTFILENAME "Névtelen"
     IDS_MINIATURETITLE "Miniatúra"
     IDS_TOOLTIP1 "Szabadkézi kijelölés"
     IDS_TOOLTIP2 "Kijelölés"

@@ -48,8 +48,8 @@ LRESULT CSizeboxWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         short yRel;
         int imgXRes = imageModel.GetWidth();
         int imgYRes = imageModel.GetHeight();
-        xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / toolsModel.GetZoom();
-        yRel = (GET_Y_LPARAM(lParam) - yOrig) * 1000 / toolsModel.GetZoom();
+        xRel = UnZoomed(GET_X_LPARAM(lParam) - xOrig);
+        yRel = UnZoomed(GET_Y_LPARAM(lParam) - yOrig);
         if (m_hWnd == sizeboxLeftTop.m_hWnd)
             strSize.Format(_T("%d x %d"), imgXRes - xRel, imgYRes - yRel);
         if (m_hWnd == sizeboxCenterTop.m_hWnd)

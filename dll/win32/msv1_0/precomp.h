@@ -5,6 +5,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #include <stdarg.h>
+#include <stdbool.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
@@ -30,8 +31,14 @@
 #include <samsrv/samsrv.h>
 //#include <lsass/lsasrv.h>
 
+#include "ntlm/global.h"
+#include "ntlm/protocol.h"
+#include "ntlm/util.h"
 #include "lsa.h"
 #include "msv1_0.h"
+#include "sam.h"
+#include "user.h"
+#include "usercontext.h"
 
 #include <wine/debug.h>
 
