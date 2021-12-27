@@ -31,11 +31,11 @@ static BOOL PlaySoundRoutine(LPCWSTR FileName, BOOL bLogon, UINT Flags)
 
     hLibrary = LoadLibraryW(L"winmm.dll");
 
-    if (hLibrary != NULL)
+    if (hLibrary)
     {
         WINMM_waveOutGetNumDevs = (PFN_WAVEOUTGETNUMDEVS)GetProcAddress(hLibrary, "waveOutGetNumDevs");
 
-        if (WINMM_waveOutGetNumDevs != NULL)
+        if (WINMM_waveOutGetNumDevs)
         {
             uNumDevs = WINMM_waveOutGetNumDevs();
 
@@ -54,7 +54,7 @@ static BOOL PlaySoundRoutine(LPCWSTR FileName, BOOL bLogon, UINT Flags)
 
         WINMM_PlaySoundW = (PFN_PLAYSOUNDW)GetProcAddress(hLibrary, "PlaySoundW");
 
-        if (WINMM_PlaySoundW != NULL)
+        if (WINMM_PlaySoundW)
         {
             bRet = WINMM_PlaySoundW(FileName, NULL, Flags);
         }
@@ -236,7 +236,7 @@ static DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     /* Allocate buffer for registry value */
     lpRegVal = HeapAlloc(GetProcessHeap(), 0, dwRegValSize);
 
-    if (lpRegVal == NULL)
+    if (!lpRegVal)
     {
         goto Cleanup;
     }
@@ -260,7 +260,7 @@ static DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     /* Allocate buffer for sound path */
     lpSndPath = HeapAlloc(GetProcessHeap(), 0, dwSndPathLen * sizeof(WCHAR));
 
-    if (lpSndPath == NULL)
+    if (!lpSndPath)
     {
         goto Cleanup;
     }
@@ -277,27 +277,27 @@ static DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
 
 Cleanup:
   
-    if (lpSndPath != NULL)
+    if (lpSndPath)
     {
         HeapFree(GetProcessHeap(), 0, lpSndPath);
     }
   
-    if (lpRegVal != NULL)
+    if (lpRegVal)
     {
         HeapFree(GetProcessHeap(), 0, lpRegVal);
     }
   
-    if (hRegSnd != NULL)
+    if (hRegSnd)
     {
         RegCloseKey(hRegSnd);
     }
   
-    if (hRegKey != NULL)
+    if (hRegKey)
     {
         RegCloseKey(hRegKey);
     }
   
-    if (hHKCU != NULL)
+    if (hHKCU)
     {
         RegCloseKey(hHKCU);
     }
@@ -322,7 +322,7 @@ BOOL PlaySystemSound(PWLSESSION Session, WINLOGON_SYSTEM_SOUND Sound)
 
     PSData = HeapAlloc(GetProcessHeap(), 0, sizeof(WINLOGON_PLAYSOUND_DATA));
 
-    if (PSData == NULL)
+    if (!PSData)
     {
         return FALSE;
     }
@@ -332,7 +332,7 @@ BOOL PlaySystemSound(PWLSESSION Session, WINLOGON_SYSTEM_SOUND Sound)
 
     hThread = CreateThread(NULL, 0, PlaySystemSoundThread, (LPVOID)PSData, CREATE_SUSPENDED, NULL);
 
-    if (hThread != NULL)
+    if (hThread)
     {
         if (Sound != SYSTEMSND_LOGON && Sound != SYSTEMSND_LOGOFF)
         {
