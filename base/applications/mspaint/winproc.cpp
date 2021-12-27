@@ -159,21 +159,19 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 
 LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    INT xPos = GET_X_LPARAM(lParam), yPos = GET_Y_LPARAM(lParam);
     INT zDelta = (SHORT)HIWORD(wParam);
-    //UINT fwKeys = LOWORD(wParam);
 
     if (::GetAsyncKeyState(VK_CONTROL) < 0)
     {
         if (zDelta < 0)
         {
             if (toolsModel.GetZoom() > MIN_ZOOM)
-                zoomTo(toolsModel.GetZoom() / 2, xPos, yPos);
+                zoomTo(toolsModel.GetZoom() / 2, 0, 0);
         }
         else if (zDelta > 0)
         {
             if (toolsModel.GetZoom() < MAX_ZOOM)
-                zoomTo(toolsModel.GetZoom() * 2, xPos, yPos);
+                zoomTo(toolsModel.GetZoom() * 2, 0, 0);
         }
     }
     else
