@@ -157,6 +157,56 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     ForceRefreshSelectionContents();
 }
 
+LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    INT zDelta = (SHORT)HIWORD(wParam);
+
+    if (::GetAsyncKeyState(VK_CONTROL) < 0)
+    {
+        if (zDelta < 0)
+        {
+            if (toolsModel.GetZoom() > MIN_ZOOM)
+                zoomTo(toolsModel.GetZoom() / 2, 0, 0);
+        }
+        else if (zDelta > 0)
+        {
+            if (toolsModel.GetZoom() < MAX_ZOOM)
+                zoomTo(toolsModel.GetZoom() * 2, 0, 0);
+        }
+    }
+    else
+    {
+        UINT nCount = 3;
+        if (::GetAsyncKeyState(VK_SHIFT) < 0)
+        {
+#ifndef SPI_GETWHEELSCROLLCHARS
+    #define SPI_GETWHEELSCROLLCHARS 0x006C  // Needed for pre-NT6 PSDK
+#endif
+            SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
+            for (UINT i = 0; i < nCount; ++i)
+            {
+                if (zDelta < 0)
+                    ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+                else if (zDelta > 0)
+                    ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+            }
+        }
+        else
+        {
+            SystemParametersInfoW(SPI_GETWHEELSCROLLLINES, 0, &nCount, 0);
+            for (UINT i = 0; i < nCount; ++i)
+            {
+                if (zDelta < 0)
+                    ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+                else if (zDelta > 0)
+                    ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+            }
+        }
+    }
+
+    return 0;
+}
+
 LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TCHAR droppedfile[MAX_PATH];

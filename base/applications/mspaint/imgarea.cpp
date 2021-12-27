@@ -172,7 +172,7 @@ LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         imageModel.Undo();
     }
     Invalidate(FALSE);
-    if ((toolsModel.GetActiveTool() == TOOL_ZOOM) && (toolsModel.GetZoom() < 8000))
+    if ((toolsModel.GetActiveTool() == TOOL_ZOOM) && (toolsModel.GetZoom() < MAX_ZOOM))
         zoomTo(toolsModel.GetZoom() * 2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     return 0;
 }
@@ -192,7 +192,7 @@ LRESULT CImgAreaWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         imageModel.Undo();
     }
     Invalidate(FALSE);
-    if ((toolsModel.GetActiveTool() == TOOL_ZOOM) && (toolsModel.GetZoom() > 125))
+    if ((toolsModel.GetActiveTool() == TOOL_ZOOM) && (toolsModel.GetZoom() > MIN_ZOOM))
         zoomTo(toolsModel.GetZoom() / 2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     return 0;
 }
@@ -418,4 +418,9 @@ LRESULT CImgAreaWindow::OnImageModelImageChanged(UINT nMsg, WPARAM wParam, LPARA
 {
     Invalidate(FALSE);
     return 0;
+}
+
+LRESULT CImgAreaWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
 }
