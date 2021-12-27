@@ -157,6 +157,51 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     ForceRefreshSelectionContents();
 }
 
+LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    INT xPos = GET_X_LPARAM(lParam), yPos = GET_Y_LPARAM(lParam);
+    INT zDelta = (SHORT)HIWORD(wParam);
+    //UINT fwKeys = LOWORD(wParam);
+
+    if (::GetAsyncKeyState(VK_CONTROL) < 0)
+    {
+        if (zDelta < 0)
+        {
+            if (toolsModel.GetZoom() > MIN_ZOOM)
+                zoomTo(toolsModel.GetZoom() / 2, xPos, yPos);
+        }
+        else if (zDelta > 0)
+        {
+            if (toolsModel.GetZoom() < MAX_ZOOM)
+                zoomTo(toolsModel.GetZoom() * 2, xPos, yPos);
+        }
+    }
+    else
+    {
+#define SCROLL_COUNT 5
+        for (INT i = 0; i < SCROLL_COUNT; ++i)
+        {
+            if (::GetAsyncKeyState(VK_SHIFT) < 0)
+            {
+                if (zDelta < 0)
+                    ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+                else if (zDelta > 0)
+                    ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+            }
+            else
+            {
+                if (zDelta < 0)
+                    ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
+                else if (zDelta > 0)
+                    ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
+            }
+        }
+#undef SCROLL_COUNT
+    }
+
+    return 0;
+}
+
 LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TCHAR droppedfile[MAX_PATH];

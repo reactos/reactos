@@ -255,7 +255,7 @@ LRESULT CToolSettingsWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, L
     int tbPos = 0;
     int tempZoom = toolsModel.GetZoom();
 
-    while (tempZoom > 125)
+    while (tempZoom > MIN_ZOOM)
     {
         tbPos++;
         tempZoom = tempZoom >> 1;

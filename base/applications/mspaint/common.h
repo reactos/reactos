@@ -26,3 +26,5 @@ static inline int UnZoomed(int xy)
 }
 
 #define GRIP_SIZE 3
+#define MIN_ZOOM 125
+#define MAX_ZOOM 8000

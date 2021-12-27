@@ -179,3 +179,8 @@ LRESULT CScrollboxWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
     pointSP = 0;    // resets the point-buffer of the polygon and bezier functions
     return 0;
 }
+
+LRESULT CScrollboxWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+}
