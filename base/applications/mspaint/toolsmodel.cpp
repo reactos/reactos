@@ -57,12 +57,12 @@ void ToolsModel::SetBrushStyle(int nBrushStyle)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetActiveTool() const
+TOOLTYPE ToolsModel::GetActiveTool() const
 {
     return m_activeTool;
 }
 
-void ToolsModel::SetActiveTool(int nActiveTool)
+void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
     m_activeTool = nActiveTool;
     NotifyToolChanged();
