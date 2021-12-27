@@ -178,17 +178,22 @@ LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     }
     else
     {
-#define SCROLL_COUNT 5
-        for (INT i = 0; i < SCROLL_COUNT; ++i)
+        UINT nCount = 3;
+        if (::GetAsyncKeyState(VK_SHIFT) < 0)
         {
-            if (::GetAsyncKeyState(VK_SHIFT) < 0)
+            SystemParametersInfoW(SPI_GETWHEELSCROLLCHARS, 0, &nCount, 0);
+            for (INT i = 0; i < nCount; ++i)
             {
                 if (zDelta < 0)
                     ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
                 else if (zDelta > 0)
                     ::PostMessageW(scrollboxWindow, WM_HSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
             }
-            else
+        }
+        else
+        {
+            SystemParametersInfoW(SPI_GETWHEELSCROLLLINES, 0, &nCount, 0);
+            for (INT i = 0; i < nCount; ++i)
             {
                 if (zDelta < 0)
                     ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEDOWN, 0), 0);
@@ -196,7 +201,6 @@ LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
                     ::PostMessageW(scrollboxWindow, WM_VSCROLL, MAKEWPARAM(SB_LINEUP, 0), 0);
             }
         }
-#undef SCROLL_COUNT
     }
 
     return 0;
