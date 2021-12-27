@@ -13,6 +13,7 @@ list(APPEND SOURCE
     screensaver.c
     setup.c
     shutdown.c
+    sounds.c
     winlogon.c
     wlx.c
     winlogon.h
