@@ -1713,13 +1713,6 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
 
     lpBand->fMask |= lprbbi->fMask;
 
-    if( (lprbbi->fMask & RBBIM_STYLE) &&
-        (lpBand->fStyle != lprbbi->fStyle ) )
-    {
-	lpBand->fStyle = lprbbi->fStyle;
-        uChanged |= RBBIM_STYLE;
-    }
-
     if( (lprbbi->fMask & RBBIM_COLORS) &&
        ( ( lpBand->clrFore != lprbbi->clrFore ) ||
          ( lpBand->clrBack != lprbbi->clrBack ) ) )
@@ -1754,6 +1747,17 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
 	    lpBand->hwndPrevParent = 0;
 	}
         uChanged |= RBBIM_CHILD;
+    }
+
+    if( (lprbbi->fMask & RBBIM_STYLE) &&
+        (lpBand->fStyle != lprbbi->fStyle ) )
+    {
+#ifdef __REACTOS__
+    if (lpBand->hwndChild && ((lpBand->fStyle & RBBS_HIDDEN) != (lprbbi->fStyle & RBBS_HIDDEN)))
+            ShowWindow(lpBand->hwndChild, (lprbbi->fStyle & RBBS_HIDDEN) ? SW_HIDE : (SW_SHOWNOACTIVATE | SW_SHOWNORMAL));
+#endif
+	lpBand->fStyle = lprbbi->fStyle;
+        uChanged |= RBBIM_STYLE;
     }
 
     if( (lprbbi->fMask & RBBIM_CHILDSIZE) &&
