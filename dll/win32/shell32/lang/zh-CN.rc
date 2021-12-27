@@ -973,7 +973,7 @@ BEGIN
 
     IDS_SHLEXEC_NOASSOC "没有为 ReactOS 配置关联的程序以打开这种类型的文件。"
 
-    IDS_FILE_DETAILS "“%S”扩展名的详细信息"
+    IDS_FILE_DETAILS "“%s”扩展名的详细信息"
     IDS_FILE_DETAILSADV "文件扩展名为“%s”的类型“%s”。若要更改会影响所有的“%s”文件的设置，请单击高级。"
     IDS_FILE_TYPES "文件类型"
     IDS_COLUMN_EXTENSION "扩展名"
