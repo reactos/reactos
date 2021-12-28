@@ -266,21 +266,6 @@ struct FillTool : ToolBase
         else
             Fill(m_hdc, x, y, m_bg);
     }
-
-    virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
-    {
-        ToolBase::OnMouseMove(bLeftButton, x, y);
-    }
-
-    virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
-    {
-        ToolBase::OnButtonUp(bLeftButton, x, y);
-    }
-
-    virtual void OnCancelDraw()
-    {
-        ToolBase::OnCancelDraw();
-    }
 };
 
 // TOOL_COLOR
@@ -353,16 +338,6 @@ struct ZoomTool : ToolBase
             if (toolsModel.GetZoom() > MIN_ZOOM)
                 zoomTo(toolsModel.GetZoom() / 2, x, y);
         }
-    }
-
-    virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
-    {
-        ToolBase::OnMouseMove(bLeftButton, x, y);
-    }
-
-    virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
-    {
-        ToolBase::OnButtonUp(bLeftButton, x, y);
     }
 
     virtual void OnCancelDraw()
@@ -493,11 +468,6 @@ struct AirBrushTool : ToolBase
     {
         draw(bLeftButton, x, y);
         ToolBase::OnMouseMove(bLeftButton, x, y);
-    }
-
-    virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
-    {
-        ToolBase::OnButtonUp(bLeftButton, x, y);
     }
 
     virtual void OnCancelDraw()
