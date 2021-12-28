@@ -94,6 +94,6 @@ public:
 
     void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick);
     void OnMove(BOOL bLeftButton, LONG x, LONG y);
-    void OnUp(BUTTON_TYPE button, LONG x, LONG y);
+    void OnUp(BOOL bLeftButton, LONG x, LONG y);
     void OnCancelDraw();
 };

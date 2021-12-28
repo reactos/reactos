@@ -650,15 +650,10 @@ struct RectTool : ToolBase
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             regularize(start.x, start.y, x, y);
-        switch (button)
-        {
-            case BUTTON_LEFT:
-                Rect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-                break;
-            case BUTTON_RIGHT:
-                Rect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-                break;
-        }
+        if (bLeftButton)
+            Rect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+        else
+            Rect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
         ToolBase::OnMove(bLeftButton, x, y);
     }
     virtual void OnUp(BOOL bLeftButton, LONG x, LONG y)
@@ -840,15 +835,10 @@ struct RRectTool : ToolBase
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             regularize(start.x, start.y, x, y);
-        switch (button)
-        {
-            case BUTTON_LEFT:
-                RRect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-                break;
-            case BUTTON_RIGHT:
-                RRect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-                break;
-        }
+        if (bLeftButton)
+            RRect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+        else
+            RRect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
         ToolBase::OnMove(bLeftButton, x, y);
     }
     virtual void OnUp(BOOL bLeftButton, LONG x, LONG y)
@@ -857,15 +847,10 @@ struct RRectTool : ToolBase
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             regularize(start.x, start.y, x, y);
-        switch (button)
-        {
-            case BUTTON_LEFT:
-                RRect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-                break;
-            case BUTTON_RIGHT:
-                RRect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-                break;
-        }
+        if (bLeftButton)
+            RRect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+        else
+            RRect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
     }
     virtual void OnCancelDraw()
     {
