@@ -137,9 +137,9 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL i
 
     // update filepathname
     if (name && name[0])
-        GetFullPathName(name, SIZEOF(filepathname), filepathname, NULL);
+        GetFullPathName(name, _countof(filepathname), filepathname, NULL);
     else
-        LoadString(hProgInstance, IDS_DEFAULTFILENAME, filepathname, SIZEOF(filepathname));
+        LoadString(hProgInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
 
     // set title
     CString strTitle;

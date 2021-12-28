@@ -88,8 +88,8 @@ LRESULT CAttributesDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam,
     {
         TCHAR date[100];
         TCHAR temp[100];
-        GetDateFormat(LOCALE_USER_DEFAULT, 0, &fileTime, NULL, date, SIZEOF(date));
-        GetTimeFormat(LOCALE_USER_DEFAULT, 0, &fileTime, NULL, temp, SIZEOF(temp));
+        GetDateFormat(LOCALE_USER_DEFAULT, 0, &fileTime, NULL, date, _countof(date));
+        GetTimeFormat(LOCALE_USER_DEFAULT, 0, &fileTime, NULL, temp, _countof(temp));
         _tcscat(date, _T(" "));
         _tcscat(date, temp);
         CString strSize;
@@ -166,17 +166,17 @@ LRESULT CAttributesDialog::OnEdit1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         TCHAR tempS[100];
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
-            GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, SIZEOF(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
             newWidth = max(1, (int) (_tcstod(tempS, NULL) * fileHPPM * 0.0254));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
-            GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, SIZEOF(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
             newWidth = max(1, (int) (_tcstod(tempS, NULL) * fileHPPM / 100));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
-            GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, SIZEOF(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
             newWidth = max(1, _tstoi(tempS));
         }
         Edit_SetModify(hWndCtl, FALSE);
@@ -191,17 +191,17 @@ LRESULT CAttributesDialog::OnEdit2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         TCHAR tempS[100];
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
-            GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, SIZEOF(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
             newHeight = max(1, (int) (_tcstod(tempS, NULL) * fileVPPM * 0.0254));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
-            GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, SIZEOF(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
             newHeight = max(1, (int) (_tcstod(tempS, NULL) * fileVPPM / 100));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
-            GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, SIZEOF(tempS));
+            GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
             newHeight = max(1, _tstoi(tempS));
         }
         Edit_SetModify(hWndCtl, FALSE);

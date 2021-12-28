@@ -120,7 +120,7 @@ OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             hParent = GetParent(hwnd);
             TCHAR Path[MAX_PATH];
-            SendMessage(hParent, CDM_GETFILEPATH, SIZEOF(Path), (LPARAM)Path);
+            SendMessage(hParent, CDM_GETFILEPATH, _countof(Path), (LPARAM)Path);
             LPTSTR pchTitle = _tcsrchr(Path, _T('\\'));
             if (pchTitle == NULL)
                 pchTitle = _tcsrchr(Path, _T('/'));
@@ -173,12 +173,12 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* initialize common controls library */
     InitCommonControls();
 
-    LoadString(hThisInstance, IDS_DEFAULTFILENAME, filepathname, SIZEOF(filepathname));
+    LoadString(hThisInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
     CPath pathFileName(filepathname);
     pathFileName.StripPath();
     CString strTitle;
     strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
-    LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, SIZEOF(miniaturetitle));
+    LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, _countof(miniaturetitle));
 
     /* load settings from registry */
     registrySettings.Load();
@@ -279,9 +279,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     ofn.hInstance      = hThisInstance;
     ofn.lpstrFilter    = strImporters;
     ofn.lpstrFile      = ofnFilename;
-    ofn.nMaxFile       = SIZEOF(ofnFilename);
+    ofn.nMaxFile       = _countof(ofnFilename);
     ofn.lpstrFileTitle = ofnFiletitle;
-    ofn.nMaxFileTitle  = SIZEOF(ofnFiletitle);
+    ofn.nMaxFileTitle  = _countof(ofnFiletitle);
     ofn.Flags          = OFN_EXPLORER | OFN_HIDEREADONLY;
     ofn.lpstrDefExt    = L"png";
 
@@ -295,9 +295,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     sfn.hInstance      = hThisInstance;
     sfn.lpstrFilter    = strExporters;
     sfn.lpstrFile      = sfnFilename;
-    sfn.nMaxFile       = SIZEOF(sfnFilename);
+    sfn.nMaxFile       = _countof(sfnFilename);
     sfn.lpstrFileTitle = sfnFiletitle;
-    sfn.nMaxFileTitle  = SIZEOF(sfnFiletitle);
+    sfn.nMaxFileTitle  = _countof(sfnFiletitle);
     sfn.Flags          = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLEHOOK;
     sfn.lpfnHook       = OFNHookProc;
     sfn.lpstrDefExt    = L"png";

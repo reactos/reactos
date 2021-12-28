@@ -94,7 +94,7 @@ void CMainWindow::saveImage(BOOL overwrite)
     else if (GetSaveFileName(&sfn) != 0)
     {
         imageModel.SaveImage(sfn.lpstrFile);
-        _tcsncpy(filepathname, sfn.lpstrFile, SIZEOF(filepathname));
+        _tcsncpy(filepathname, sfn.lpstrFile, _countof(filepathname));
         CString strTitle;
         strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)sfn.lpstrFileTitle);
         SetWindowText(strTitle);
@@ -118,8 +118,8 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
             TCHAR programname[20];
             TCHAR shouldEnlargePromptText[100];
 
-            LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
-            LoadString(hProgInstance, IDS_ENLARGEPROMPTTEXT, shouldEnlargePromptText, SIZEOF(shouldEnlargePromptText));
+            LoadString(hProgInstance, IDS_PROGRAMNAME, programname, _countof(programname));
+            LoadString(hProgInstance, IDS_ENLARGEPROMPTTEXT, shouldEnlargePromptText, _countof(shouldEnlargePromptText));
 
             switch (MessageBox(shouldEnlargePromptText, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
             {
@@ -212,7 +212,7 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     TCHAR droppedfile[MAX_PATH];
 
     HDROP hDrop = (HDROP)wParam;
-    DragQueryFile(hDrop, 0, droppedfile, SIZEOF(droppedfile));
+    DragQueryFile(hDrop, 0, droppedfile, _countof(droppedfile));
     DragFinish(hDrop);
 
     ConfirmSave() && DoLoadImageFile(m_hWnd, droppedfile, TRUE);
@@ -430,8 +430,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             HICON paintIcon = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON));
             TCHAR infotitle[100];
             TCHAR infotext[200];
-            LoadString(hProgInstance, IDS_INFOTITLE, infotitle, SIZEOF(infotitle));
-            LoadString(hProgInstance, IDS_INFOTEXT, infotext, SIZEOF(infotext));
+            LoadString(hProgInstance, IDS_INFOTITLE, infotitle, _countof(infotitle));
+            LoadString(hProgInstance, IDS_INFOTEXT, infotext, _countof(infotext));
             ShellAbout(m_hWnd, infotitle, infotext, paintIcon);
             DeleteObject(paintIcon);
             break;
