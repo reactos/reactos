@@ -993,7 +993,7 @@ static void TRASH_PlayEmptyRecycleBinSound()
     LONG lError;
 
     /* Open registry key */
-    lError = RegOpenKeyExW(HKEY_CURRENT_USER, lpRegSubKey, 0, KEY_QUERY_VALUE, &hRegKey);
+    lError = RegOpenKeyExW(HKEY_CURRENT_USER, lpRegSubKey, 0, KEY_READ, &hRegKey);
 
     if (lError != ERROR_SUCCESS)
     {
@@ -1003,12 +1003,12 @@ static void TRASH_PlayEmptyRecycleBinSound()
     }
 
     /* Open .Current */
-    lError = RegOpenKeyExW(hRegKey, L".Current", 0, KEY_QUERY_VALUE, &hRegSnd);
+    lError = RegOpenKeyExW(hRegKey, L".Current", 0, KEY_READ, &hRegSnd);
 
     if (lError != ERROR_SUCCESS)
     {
         /* If fail then open .Default */
-        lError = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_QUERY_VALUE, &hRegSnd);
+        lError = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_READ, &hRegSnd);
 
         if (lError != ERROR_SUCCESS)
         {
