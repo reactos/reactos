@@ -251,7 +251,10 @@ IopCreateDeviceInstancePath(
     Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopQueryDeviceCapabilities() failed (Status 0x%08lx)\n", Status);
+        if (Status != STATUS_NOT_SUPPORTED)
+        {
+            DPRINT1("IopQueryDeviceCapabilities() failed (Status 0x%08lx)\n", Status);
+        }
         RtlFreeUnicodeString(&DeviceId);
         return Status;
     }
