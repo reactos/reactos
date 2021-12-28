@@ -200,6 +200,7 @@ struct RectSelTool : ToolBase
             }
         }
     }
+
     virtual void OnCancelDraw()
     {
         imageModel.ResetToPrevious();
