@@ -120,6 +120,7 @@ struct FreeSelTool : ToolBase
         selectionModel.DrawFramePoly(m_hdc);
         ToolBase::OnMove(bLeftButton, x, y);
     }
+
     virtual void OnUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnUp(bLeftButton, x, y);
