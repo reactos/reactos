@@ -101,6 +101,7 @@ struct FreeSelTool : ToolBase
     FreeSelTool() : ToolBase(TOOL_FREESEL)
     {
     }
+
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
