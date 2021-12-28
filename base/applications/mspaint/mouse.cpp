@@ -224,6 +224,7 @@ struct RubberTool : ToolBase
         else
             Replace(m_hdc, x, y, x, y, m_fg, m_bg, toolsModel.GetRubberRadius());
     }
+
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
