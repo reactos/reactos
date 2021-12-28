@@ -258,11 +258,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: La opción %1 espera un(o) o más nombre(s) de paquete(s).\n"
-    IDS_CMD_NEED_FILE_NAME "Error: La opción %1 espera un nombre de fichero.\n"
-    IDS_CMD_NEED_PARAMS "Error: La opción %1 espera un(o) o más parámetro(s).\n"
-    IDS_CMD_INVALID_OPTION "Error: Opción de línea de comando especificada desconocida o inválida.\n"
+    IDS_CMD_NEED_PACKAGE_NAME "Error: La opción %1 espera uno o más nombres de paquetes.\n"
+    IDS_CMD_NEED_FILE_NAME "Error: La opción %1 espera un nombre de archivo.\n"
+    IDS_CMD_NEED_PARAMS "Error: La opción %1 espera uno o más parámetros.\n"
+    IDS_CMD_INVALID_OPTION "Error: Opción de línea de comando desconocida o no válida.\n"
     IDS_CMD_FIND_RESULT_FOR "Resultado de la búsqueda para %1:\n"
     IDS_CMD_PACKAGE_NOT_FOUND "No se pudo encontrar el paquete %1.\n"
-    IDS_CMD_PACKAGE_INFO "Información acerca del paquete %1:\n"
+    IDS_CMD_PACKAGE_INFO "Información del paquete %1:\n"
 END
