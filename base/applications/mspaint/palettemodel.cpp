@@ -48,7 +48,7 @@ void PaletteModel::SelectPalette(int nPalette)
     NotifyPaletteChanged();
 }
 
-int PaletteModel::GetColor(int nIndex)
+int PaletteModel::GetColor(int nIndex) const
 {
     if (nIndex < 28)
         return m_colors[nIndex];
@@ -65,7 +65,7 @@ void PaletteModel::SetColor(int nIndex, int newColor)
     }
 }
 
-int PaletteModel::GetFgColor()
+int PaletteModel::GetFgColor() const
 {
     return m_fgColor;
 }
@@ -76,7 +76,7 @@ void PaletteModel::SetFgColor(int newColor)
     NotifyColorChanged();
 }
 
-int PaletteModel::GetBgColor()
+int PaletteModel::GetBgColor() const
 {
     return m_bgColor;
 }
