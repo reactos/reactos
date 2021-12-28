@@ -231,6 +231,7 @@ struct RubberTool : ToolBase
         imageModel.CopyPrevious();
         draw(bLeftButton, x, y);
     }
+
     virtual void OnMove(BOOL bLeftButton, LONG x, LONG y)
     {
         draw(bLeftButton, x, y);
