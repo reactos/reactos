@@ -64,7 +64,6 @@ BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1)
 
 void ToolBase::OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
 {
-    imageModel.CopyPrevious();
     start.x = last.x = x;
     start.y = last.y = y;
 }
@@ -105,6 +104,7 @@ struct FreeSelTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
         selectionWindow.ShowWindow(SW_HIDE);
         selectionModel.ResetPtStack();
         selectionModel.PushToPtStack(x, y);
@@ -153,6 +153,7 @@ struct RectSelTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
         if (bLeftButton)
         {
             imageModel.CopyPrevious();
@@ -211,6 +212,7 @@ struct RubberTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
         if (bLeftButton)
             Erase(m_hdc, x, y, x, y, m_bg, toolsModel.GetRubberRadius());
         else
@@ -248,6 +250,7 @@ struct FillTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
         if (bLeftButton)
             Fill(m_hdc, x, y, m_fg);
         else
@@ -276,6 +279,7 @@ struct ColorTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
     }
     virtual void OnMove(BOOL bLeftButton, LONG x, LONG y)
     {
@@ -326,6 +330,7 @@ struct ZoomTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
         if (bLeftButton)
         {
             if (toolsModel.GetZoom() < MAX_ZOOM)
@@ -363,6 +368,7 @@ struct PenTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
         if (bLeftButton)
             SetPixel(m_hdc, x, y, m_fg);
         else
@@ -409,6 +415,7 @@ struct BrushTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
         if (bLeftButton)
             Brush(m_hdc, x, y, x, y, m_fg, toolsModel.GetBrushStyle());
         else
@@ -445,6 +452,7 @@ struct AirBrushTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
         if (bLeftButton)
             Airbrush(m_hdc, x, y, m_fg, toolsModel.GetAirBrushWidth());
         else
@@ -481,6 +489,7 @@ struct TextTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
     }
     virtual void OnMove(BOOL bLeftButton, LONG x, LONG y)
     {
@@ -529,6 +538,7 @@ struct LineTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
     }
     virtual void OnMove(BOOL bLeftButton, LONG x, LONG y)
     {
@@ -579,49 +589,41 @@ struct BezierTool : ToolBase
             pointSP++;
         }
     }
+    void drawLine(COLORREF rgb)
+    {
+        switch (pointSP)
+        {
+            case 1:
+                Line(m_hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, rgb,
+                     toolsModel.GetLineWidth());
+                break;
+            case 2:
+                Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], rgb, toolsModel.GetLineWidth());
+                break;
+            case 3:
+                Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], rgb, toolsModel.GetLineWidth());
+                break;
+        }
+    }
     virtual void OnMove(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
         pointStack[pointSP].x = x;
         pointStack[pointSP].y = y;
         if (bLeftButton)
-        {
-            switch (pointSP)
-            {
-                case 1:
-                    Line(m_hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, m_fg,
-                         toolsModel.GetLineWidth());
-                    break;
-                case 2:
-                    Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], m_fg, toolsModel.GetLineWidth());
-                    break;
-                case 3:
-                    Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], m_fg, toolsModel.GetLineWidth());
-                    break;
-            }
-        }
+            drawLine(m_fg);
         else
-        {
-            switch (pointSP)
-            {
-                case 1:
-                    Line(m_hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, m_bg,
-                         toolsModel.GetLineWidth());
-                    break;
-                case 2:
-                    Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], m_bg, toolsModel.GetLineWidth());
-                    break;
-                case 3:
-                    Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], m_bg, toolsModel.GetLineWidth());
-                    break;
-            }
-        }
+            drawLine(m_bg);
         ToolBase::OnMove(bLeftButton, x, y);
     }
     virtual void OnUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnUp(bLeftButton, x, y);
         imageModel.ResetToPrevious();
+        if (bLeftButton)
+            drawLine(m_fg);
+        else
+            drawLine(m_bg);
         pointSP++;
         if (pointSP == 4)
             pointSP = 0;
@@ -645,6 +647,7 @@ struct RectTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
     }
     virtual void OnMove(BOOL bLeftButton, LONG x, LONG y)
     {
@@ -786,6 +789,7 @@ struct EllipseTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
     }
     virtual void OnMove(BOOL bLeftButton, LONG x, LONG y)
     {
@@ -830,6 +834,7 @@ struct RRectTool : ToolBase
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
+        imageModel.CopyPrevious();
     }
     virtual void OnMove(BOOL bLeftButton, LONG x, LONG y)
     {
