@@ -580,8 +580,8 @@
 @ cdecl _getpid() kernel32.GetCurrentProcessId
 @ cdecl _getsystime(ptr)
 @ cdecl _getw(ptr)
-@ cdecl -stub _getwch()
-@ cdecl -stub _getwche()
+@ cdecl _getwch()
+@ cdecl _getwche()
 @ cdecl _getws(ptr)
 @ cdecl -arch=i386 _global_unwind2(ptr)
 @ cdecl -version=0x600+ _gmtime32(ptr)
