@@ -246,3 +246,7 @@ void ImageModel::RotateNTimes90Degrees(int iN)
     }
     NotifyImageChanged();
 }
+
+void ImageModel::ReleaseDC(HDC hDC)
+{
+}

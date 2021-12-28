@@ -10,6 +10,8 @@
 
 #pragma once
 
+extern BOOL drawing;
+
 class CImgAreaWindow : public CWindowImpl<CMainWindow>
 {
 public:
@@ -31,8 +33,6 @@ public:
         MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
     END_MSG_MAP()
-
-    BOOL drawing;
 
 private:
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

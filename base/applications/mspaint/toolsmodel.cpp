@@ -22,6 +22,12 @@ ToolsModel::ToolsModel()
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
+    m_pToolObject = ToolBase::createToolObject(m_activeTool);
+}
+
+ToolsModel::~ToolsModel()
+{
+    delete m_pToolObject;
 }
 
 int ToolsModel::GetLineWidth() const
@@ -65,6 +71,8 @@ TOOLTYPE ToolsModel::GetActiveTool() const
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
     m_activeTool = nActiveTool;
+    delete m_pToolObject;
+    m_pToolObject = ToolBase::createToolObject(nActiveTool);
     NotifyToolChanged();
 }
 
@@ -128,4 +136,32 @@ void ToolsModel::NotifyToolSettingsChanged()
 void ToolsModel::NotifyZoomChanged()
 {
     toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
+}
+
+void ToolsModel::OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+{
+    m_pToolObject->begin();
+    m_pToolObject->OnDown(button, x, y, bDoubleClick);
+    m_pToolObject->end();
+}
+
+void ToolsModel::OnMove(BUTTON_TYPE button, LONG x, LONG y)
+{
+    m_pToolObject->begin();
+    m_pToolObject->OnMove(button, x, y);
+    m_pToolObject->end();
+}
+
+void ToolsModel::OnUp(BUTTON_TYPE button, LONG x, LONG y)
+{
+    m_pToolObject->begin();
+    m_pToolObject->OnUp(button, x, y);
+    m_pToolObject->end();
+}
+
+void ToolsModel::OnCancelDraw()
+{
+    m_pToolObject->begin();
+    m_pToolObject->OnCancelDraw();
+    m_pToolObject->end();
 }

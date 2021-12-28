@@ -11,6 +11,10 @@
 
 #include "precomp.h"
 
+POINT pointStack[256];
+INT pointSP = 0;
+BOOL drawing = FALSE;
+
 /* FUNCTIONS ********************************************************/
 
 void
@@ -58,512 +62,973 @@ BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1)
     return (abs(x1 - x0) <= cxThreshold) && (abs(y1 - y0) <= cyThreshold);
 }
 
-POINT pointStack[256];
-short pointSP;
-
-void
-startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
+void ToolBase::OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
 {
-    start.x = x;
-    start.y = y;
-    last.x = x;
-    last.y = y;
-    switch (toolsModel.GetActiveTool())
-    {
-        case TOOL_FREESEL:
-            selectionWindow.ShowWindow(SW_HIDE);
-            selectionModel.ResetPtStack();
-            selectionModel.PushToPtStack(x, y);
-            break;
-        case TOOL_LINE:
-        case TOOL_RECT:
-        case TOOL_ELLIPSE:
-        case TOOL_RRECT:
-            imageModel.CopyPrevious();
-            break;
-        case TOOL_RECTSEL:
-        case TOOL_TEXT:
-            imageModel.CopyPrevious();
-            selectionWindow.ShowWindow(SW_HIDE);
-            selectionModel.SetSrcRectSizeToZero();
-            break;
-        case TOOL_RUBBER:
-            imageModel.CopyPrevious();
-            Erase(hdc, x, y, x, y, bg, toolsModel.GetRubberRadius());
-            break;
-        case TOOL_FILL:
-            imageModel.CopyPrevious();
-            Fill(hdc, x, y, fg);
-            break;
-        case TOOL_PEN:
-            imageModel.CopyPrevious();
-            SetPixel(hdc, x, y, fg);
-            break;
-        case TOOL_BRUSH:
-            imageModel.CopyPrevious();
-            Brush(hdc, x, y, x, y, fg, toolsModel.GetBrushStyle());
-            break;
-        case TOOL_AIRBRUSH:
-            imageModel.CopyPrevious();
-            Airbrush(hdc, x, y, fg, toolsModel.GetAirBrushWidth());
-            break;
-        case TOOL_BEZIER:
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
-            if (pointSP == 0)
-            {
-                imageModel.CopyPrevious();
-                pointSP++;
-            }
-            break;
-        case TOOL_SHAPE:
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
-            if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
-            if (pointSP == 0)
-            {
-                imageModel.CopyPrevious();
-                pointSP++;
-            }
-            break;
-        case TOOL_COLOR:
-        case TOOL_ZOOM:
-            break;
-    }
+    imageModel.CopyPrevious();
+    start.x = last.x = x;
+    start.y = last.y = y;
 }
 
-void
-whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
+void ToolBase::OnMove(BUTTON_TYPE button, LONG x, LONG y)
 {
-    switch (toolsModel.GetActiveTool())
+    last.x = x;
+    last.y = y;
+}
+
+void ToolBase::OnUp(BUTTON_TYPE button, LONG x, LONG y)
+{
+}
+
+void ToolBase::OnCancelDraw()
+{
+    pointSP = 0;
+}
+
+void ToolBase::begin()
+{
+    m_hdc = imageModel.GetDC();
+    m_fg = paletteModel.GetFgColor();
+    m_bg = paletteModel.GetBgColor();
+}
+
+void ToolBase::end()
+{
+    m_hdc = NULL;
+}
+
+// TOOL_FREESEL
+struct FreeSelTool : ToolBase
+{
+    FreeSelTool() : ToolBase(TOOL_FREESEL)
     {
-        case TOOL_FREESEL:
-            if (selectionModel.PtStackSize() == 1)
-                imageModel.CopyPrevious();
-            selectionModel.PushToPtStack(max(0, min(x, imageModel.GetWidth())), max(0, min(y, imageModel.GetHeight())));
-            imageModel.ResetToPrevious();
-            selectionModel.DrawFramePoly(hdc);
-            break;
-        case TOOL_RECTSEL:
-        case TOOL_TEXT:
+    }
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+        selectionWindow.ShowWindow(SW_HIDE);
+        selectionModel.ResetPtStack();
+        selectionModel.PushToPtStack(x, y);
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        if (selectionModel.PtStackSize() == 1)
+            imageModel.CopyPrevious();
+        selectionModel.PushToPtStack(max(0, min(x, imageModel.GetWidth())), max(0, min(y, imageModel.GetHeight())));
+        imageModel.ResetToPrevious();
+        selectionModel.DrawFramePoly(m_hdc);
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        selectionModel.CalculateBoundingBoxAndContents(m_hdc);
+        if (selectionModel.PtStackSize() > 1)
         {
-            POINT temp;
-            imageModel.ResetToPrevious();
-            temp.x = max(0, min(x, imageModel.GetWidth()));
-            temp.y = max(0, min(y, imageModel.GetHeight()));
-            selectionModel.SetSrcAndDestRectFromPoints(start, temp);
-            RectSel(hdc, start.x, start.y, temp.x, temp.y);
-            break;
+            selectionModel.DrawBackgroundPoly(m_hdc, m_bg);
+            imageModel.CopyPrevious();
+
+            selectionModel.DrawSelection(m_hdc);
+
+            placeSelWin();
+            selectionWindow.ShowWindow(SW_SHOW);
+            ForceRefreshSelectionContents();
         }
-        case TOOL_RUBBER:
-            Erase(hdc, last.x, last.y, x, y, bg, toolsModel.GetRubberRadius());
-            break;
-        case TOOL_PEN:
-            Line(hdc, last.x, last.y, x, y, fg, 1);
-            break;
-        case TOOL_BRUSH:
-            Brush(hdc, last.x, last.y, x, y, fg, toolsModel.GetBrushStyle());
-            break;
-        case TOOL_AIRBRUSH:
-            Airbrush(hdc, x, y, fg, toolsModel.GetAirBrushWidth());
-            break;
-        case TOOL_LINE:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(start.x, start.y, x, y);
-            Line(hdc, start.x, start.y, x, y, fg, toolsModel.GetLineWidth());
-            break;
-        case TOOL_BEZIER:
-            imageModel.ResetToPrevious();
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
-            switch (pointSP)
-            {
-                case 1:
-                    Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, fg,
-                         toolsModel.GetLineWidth());
-                    break;
-                case 2:
-                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], fg, toolsModel.GetLineWidth());
-                    break;
-                case 3:
-                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], fg, toolsModel.GetLineWidth());
-                    break;
-            }
-            break;
-        case TOOL_RECT:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            Rect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_SHAPE:
-            imageModel.ResetToPrevious();
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
-            if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   pointStack[pointSP].x, pointStack[pointSP].y);
-            if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
-            break;
-        case TOOL_ELLIPSE:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            Ellp(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_RRECT:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            RRect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_FILL:
-        case TOOL_COLOR:
-        case TOOL_ZOOM:
-            break;
+        selectionModel.ResetPtStack();
+    }
+    virtual void OnCancelDraw()
+    {
+        imageModel.ResetToPrevious();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_RECTSEL
+struct RectSelTool : ToolBase
+{
+    RectSelTool() : ToolBase(TOOL_RECTSEL)
+    {
     }
 
-    last.x = x;
-    last.y = y;
-}
-
-void
-endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
-{
-    switch (toolsModel.GetActiveTool())
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
     {
-        case TOOL_FREESEL:
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+        switch (button)
         {
-            selectionModel.CalculateBoundingBoxAndContents(hdc);
-            if (selectionModel.PtStackSize() > 1)
-            {
-                selectionModel.DrawBackgroundPoly(hdc, bg);
+            case BUTTON_LEFT:
                 imageModel.CopyPrevious();
-
-                selectionModel.DrawSelection(hdc);
-
-                placeSelWin();
-                selectionWindow.ShowWindow(SW_SHOW);
-                ForceRefreshSelectionContents();
-            }
-            selectionModel.ResetPtStack();
-            break;
+                selectionWindow.ShowWindow(SW_HIDE);
+                selectionModel.SetSrcRectSizeToZero();
+                break;
+            case BUTTON_RIGHT:
+                break;
         }
-        case TOOL_RECTSEL:
-            imageModel.ResetToPrevious();
-            if (selectionModel.IsSrcRectSizeNonzero())
-            {
-                selectionModel.CalculateContents(hdc);
-                selectionModel.DrawBackgroundRect(hdc, bg);
-                imageModel.CopyPrevious();
-
-                selectionModel.DrawSelection(hdc);
-
-                placeSelWin();
-                selectionWindow.ShowWindow(SW_SHOW);
-                ForceRefreshSelectionContents();
-            }
-            break;
-        case TOOL_TEXT:
-            imageModel.ResetToPrevious();
-            if (selectionModel.IsSrcRectSizeNonzero())
-            {
-                imageModel.CopyPrevious();
-
-                placeSelWin();
-                selectionWindow.ShowWindow(SW_SHOW);
-                ForceRefreshSelectionContents();
-            }
-            break;
-        case TOOL_RUBBER:
-            Erase(hdc, last.x, last.y, x, y, bg, toolsModel.GetRubberRadius());
-            break;
-        case TOOL_PEN:
-            Line(hdc, last.x, last.y, x, y, fg, 1);
-            SetPixel(hdc, x, y, fg);
-            break;
-        case TOOL_LINE:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(start.x, start.y, x, y);
-            Line(hdc, start.x, start.y, x, y, fg, toolsModel.GetLineWidth());
-            break;
-        case TOOL_BEZIER:
-            pointSP++;
-            if (pointSP == 4)
-                pointSP = 0;
-            break;
-        case TOOL_RECT:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            Rect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_SHAPE:
-            imageModel.ResetToPrevious();
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
-            if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   pointStack[pointSP].x, pointStack[pointSP].y);
-            pointSP++;
-            if (pointSP >= 2)
-            {
-                if (nearlyEqualPoints(x, y, pointStack[0].x, pointStack[0].y))
-                {
-                    Poly(hdc, pointStack, pointSP, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), TRUE, FALSE);
-                    pointSP = 0;
-                }
-                else
-                {
-                    Poly(hdc, pointStack, pointSP, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
-                }
-            }
-            if (pointSP == 255)
-                pointSP--;
-            break;
-        case TOOL_ELLIPSE:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            Ellp(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_RRECT:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            RRect(hdc, start.x, start.y, x, y, fg, bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_FILL:
-        case TOOL_COLOR:
-        case TOOL_ZOOM:
-        case TOOL_BRUSH:
-        case TOOL_AIRBRUSH:
-            break;
     }
-}
-
-void
-startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
-{
-    start.x = x;
-    start.y = y;
-    last.x = x;
-    last.y = y;
-    switch (toolsModel.GetActiveTool())
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
     {
-        case TOOL_FREESEL:
-        case TOOL_TEXT:
-        case TOOL_LINE:
-        case TOOL_RECT:
-        case TOOL_ELLIPSE:
-        case TOOL_RRECT:
-            imageModel.CopyPrevious();
-            break;
-        case TOOL_RUBBER:
-            imageModel.CopyPrevious();
-            Replace(hdc, x, y, x, y, fg, bg, toolsModel.GetRubberRadius());
-            break;
-        case TOOL_FILL:
-            imageModel.CopyPrevious();
-            Fill(hdc, x, y, bg);
-            break;
-        case TOOL_PEN:
-            imageModel.CopyPrevious();
-            SetPixel(hdc, x, y, bg);
-            break;
-        case TOOL_BRUSH:
-            imageModel.CopyPrevious();
-            Brush(hdc, x, y, x, y, bg, toolsModel.GetBrushStyle());
-            break;
-        case TOOL_AIRBRUSH:
-            imageModel.CopyPrevious();
-            Airbrush(hdc, x, y, bg, toolsModel.GetAirBrushWidth());
-            break;
-        case TOOL_BEZIER:
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
-            if (pointSP == 0)
+        POINT temp;
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                imageModel.ResetToPrevious();
+                temp.x = max(0, min(x, imageModel.GetWidth()));
+                temp.y = max(0, min(y, imageModel.GetHeight()));
+                selectionModel.SetSrcAndDestRectFromPoints(start, temp);
+                RectSel(m_hdc, start.x, start.y, temp.x, temp.y);
+                break;
+            case BUTTON_RIGHT:
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                imageModel.ResetToPrevious();
+                if (selectionModel.IsSrcRectSizeNonzero())
+                {
+                    selectionModel.CalculateContents(m_hdc);
+                    selectionModel.DrawBackgroundRect(m_hdc, m_bg);
+                    imageModel.CopyPrevious();
+
+                    selectionModel.DrawSelection(m_hdc);
+
+                    placeSelWin();
+                    selectionWindow.ShowWindow(SW_SHOW);
+                    ForceRefreshSelectionContents();
+                }
+                break;
+            case BUTTON_RIGHT:
+                break;
+        }
+    }
+    virtual void OnCancelDraw()
+    {
+        imageModel.ResetToPrevious();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_RUBBER
+struct RubberTool : ToolBase
+{
+    RubberTool() : ToolBase(TOOL_RUBBER)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Erase(m_hdc, x, y, x, y, m_bg, toolsModel.GetRubberRadius());
+                break;
+            case BUTTON_RIGHT:
+                Replace(m_hdc, x, y, x, y, m_fg, m_bg, toolsModel.GetRubberRadius());
+                break;
+        }
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Erase(m_hdc, last.x, last.y, x, y, m_bg, toolsModel.GetRubberRadius());
+                break;
+            case BUTTON_RIGHT:
+                Replace(m_hdc, last.x, last.y, x, y, m_fg, m_bg, toolsModel.GetRubberRadius());
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Erase(m_hdc, last.x, last.y, x, y, m_bg, toolsModel.GetRubberRadius());
+                break;
+            case BUTTON_RIGHT:
+                Replace(m_hdc, last.x, last.y, x, y, m_fg, m_bg, toolsModel.GetRubberRadius());
+                break;
+        }
+    }
+    virtual void OnCancelDraw()
+    {
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_FILL
+struct FillTool : ToolBase
+{
+    FillTool() : ToolBase(TOOL_FILL)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Fill(m_hdc, x, y, m_fg);
+                break;
+            case BUTTON_RIGHT:
+                Fill(m_hdc, x, y, m_bg);
+                break;
+        }
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+    }
+    virtual void OnCancelDraw()
+    {
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_COLOR
+struct ColorTool : ToolBase
+{
+    ColorTool() : ToolBase(TOOL_COLOR)
+    {
+    }
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        COLORREF tempColor = GetPixel(m_hdc, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                if (tempColor != CLR_INVALID)
+                    paletteModel.SetFgColor(tempColor);
+                break;
+            case BUTTON_RIGHT:
+                if (tempColor != CLR_INVALID)
+                    paletteModel.SetBgColor(tempColor);
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        COLORREF tempColor = GetPixel(m_hdc, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                if (tempColor != CLR_INVALID)
+                    paletteModel.SetFgColor(tempColor);
+                break;
+            case BUTTON_RIGHT:
+                if (tempColor != CLR_INVALID)
+                    paletteModel.SetBgColor(tempColor);
+                break;
+        }
+    }
+    virtual void OnCancelDraw()
+    {
+        OnUp(BUTTON_LEFT, 0, 0);
+        imageModel.Undo();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_ZOOM
+struct ZoomTool : ToolBase
+{
+    ZoomTool() : ToolBase(TOOL_ZOOM)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+        switch (button)
+        {
+            case BUTTON_LEFT:
             {
-                imageModel.CopyPrevious();
+                if (toolsModel.GetZoom() < MAX_ZOOM)
+                    zoomTo(toolsModel.GetZoom() * 2, x, y);
+                break;
+            }
+            case BUTTON_RIGHT:
+            {
+                if (toolsModel.GetZoom() > MIN_ZOOM)
+                    zoomTo(toolsModel.GetZoom() / 2, x, y);
+                break;
+            }
+        }
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+    }
+    virtual void OnCancelDraw()
+    {
+        imageModel.ResetToPrevious();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_PEN
+struct PenTool : ToolBase
+{
+    PenTool() : ToolBase(TOOL_PEN)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+            {
+                SetPixel(m_hdc, x, y, m_fg);
+                break;
+            }
+            case BUTTON_RIGHT:
+            {
+                SetPixel(m_hdc, x, y, m_bg);
+                break;
+            }
+        }
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        switch (button)
+        {
+            case BUTTON_LEFT:
+            {
+                Line(m_hdc, last.x, last.y, x, y, m_fg, 1);
+                break;
+            }
+            case BUTTON_RIGHT:
+            {
+                Line(m_hdc, last.x, last.y, x, y, m_bg, 1);
+                break;
+            }
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+            {
+                Line(m_hdc, last.x, last.y, x, y, m_fg, 1);
+                SetPixel(m_hdc, x, y, m_fg);
+                break;
+            }
+            case BUTTON_RIGHT:
+            {
+                Line(m_hdc, last.x, last.y, x, y, m_bg, 1);
+                SetPixel(m_hdc, x, y, m_bg);
+                break;
+            }
+        }
+    }
+    virtual void OnCancelDraw()
+    {
+        OnUp(BUTTON_LEFT, 0, 0);
+        imageModel.Undo();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_BRUSH
+struct BrushTool : ToolBase
+{
+    BrushTool() : ToolBase(TOOL_BRUSH)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Brush(m_hdc, x, y, x, y, m_fg, toolsModel.GetBrushStyle());
+                break;
+            case BUTTON_RIGHT:
+                Brush(m_hdc, x, y, x, y, m_bg, toolsModel.GetBrushStyle());
+                break;
+        }
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Brush(m_hdc, last.x, last.y, x, y, m_fg, toolsModel.GetBrushStyle());
+                break;
+            case BUTTON_RIGHT:
+                Brush(m_hdc, last.x, last.y, x, y, m_bg, toolsModel.GetBrushStyle());
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+    }
+    virtual void OnCancelDraw()
+    {
+        OnUp(BUTTON_LEFT, 0, 0);
+        imageModel.Undo();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_AIRBRUSH
+struct AirBrushTool : ToolBase
+{
+    AirBrushTool() : ToolBase(TOOL_AIRBRUSH)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Airbrush(m_hdc, x, y, m_fg, toolsModel.GetAirBrushWidth());
+                break;
+            case BUTTON_RIGHT:
+                Airbrush(m_hdc, x, y, m_bg, toolsModel.GetAirBrushWidth());
+                break;
+        }
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Airbrush(m_hdc, x, y, m_fg, toolsModel.GetAirBrushWidth());
+                break;
+            case BUTTON_RIGHT:
+                Airbrush(m_hdc, x, y, m_bg, toolsModel.GetAirBrushWidth());
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+    }
+    virtual void OnCancelDraw()
+    {
+        OnUp(BUTTON_LEFT, 0, 0);
+        imageModel.Undo();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_TEXT
+struct TextTool : ToolBase
+{
+    TextTool() : ToolBase(TOOL_TEXT)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        POINT temp;
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                imageModel.ResetToPrevious();
+                temp.x = max(0, min(x, imageModel.GetWidth()));
+                temp.y = max(0, min(y, imageModel.GetHeight()));
+                selectionModel.SetSrcAndDestRectFromPoints(start, temp);
+                RectSel(m_hdc, start.x, start.y, temp.x, temp.y);
+                break;
+            case BUTTON_RIGHT:
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                imageModel.ResetToPrevious();
+                if (selectionModel.IsSrcRectSizeNonzero())
+                {
+                    imageModel.CopyPrevious();
+
+                    placeSelWin();
+                    selectionWindow.ShowWindow(SW_SHOW);
+                    ForceRefreshSelectionContents();
+                }
+                break;
+            case BUTTON_RIGHT:
+                break;
+        }
+    }
+    virtual void OnCancelDraw()
+    {
+        imageModel.ResetToPrevious();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_LINE
+struct LineTool : ToolBase
+{
+    LineTool() : ToolBase(TOOL_LINE)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        imageModel.ResetToPrevious();
+        if (GetAsyncKeyState(VK_SHIFT) < 0)
+            roundTo8Directions(start.x, start.y, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Line(m_hdc, start.x, start.y, x, y, m_fg, toolsModel.GetLineWidth());
+                break;
+            case BUTTON_RIGHT:
+                Line(m_hdc, start.x, start.y, x, y, m_bg, toolsModel.GetLineWidth());
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        imageModel.ResetToPrevious();
+        if (GetAsyncKeyState(VK_SHIFT) < 0)
+            roundTo8Directions(start.x, start.y, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Line(m_hdc, start.x, start.y, x, y, m_fg, toolsModel.GetLineWidth());
+                break;
+            case BUTTON_RIGHT:
+                Line(m_hdc, start.x, start.y, x, y, m_bg, toolsModel.GetLineWidth());
+                break;
+        }
+    }
+    virtual void OnCancelDraw()
+    {
+        OnUp(BUTTON_LEFT, 0, 0);
+        imageModel.Undo();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_BEZIER
+struct BezierTool : ToolBase
+{
+    BezierTool() : ToolBase(TOOL_BEZIER)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+        pointStack[pointSP].x = x;
+        pointStack[pointSP].y = y;
+        if (pointSP == 0)
+        {
+            imageModel.CopyPrevious();
+            pointSP++;
+        }
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        imageModel.ResetToPrevious();
+        pointStack[pointSP].x = x;
+        pointStack[pointSP].y = y;
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                switch (pointSP)
+                {
+                    case 1:
+                        Line(m_hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, m_fg,
+                             toolsModel.GetLineWidth());
+                        break;
+                    case 2:
+                        Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], m_fg, toolsModel.GetLineWidth());
+                        break;
+                    case 3:
+                        Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], m_fg, toolsModel.GetLineWidth());
+                        break;
+                }
+                break;
+            case BUTTON_RIGHT:
+                switch (pointSP)
+                {
+                    case 1:
+                        Line(m_hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, m_bg,
+                             toolsModel.GetLineWidth());
+                        break;
+                    case 2:
+                        Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], m_bg, toolsModel.GetLineWidth());
+                        break;
+                    case 3:
+                        Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], m_bg, toolsModel.GetLineWidth());
+                        break;
+                }
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
                 pointSP++;
-            }
-            break;
-        case TOOL_SHAPE:
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
-            if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
-            if (pointSP == 0)
-            {
-                imageModel.CopyPrevious();
-                pointSP++;
-            }
-            break;
-        case TOOL_RECTSEL:
-        case TOOL_COLOR:
-        case TOOL_ZOOM:
-            break;
-    }
-}
-
-void
-whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
-{
-    switch (toolsModel.GetActiveTool())
-    {
-        case TOOL_RUBBER:
-            Replace(hdc, last.x, last.y, x, y, fg, bg, toolsModel.GetRubberRadius());
-            break;
-        case TOOL_PEN:
-            Line(hdc, last.x, last.y, x, y, bg, 1);
-            break;
-        case TOOL_BRUSH:
-            Brush(hdc, last.x, last.y, x, y, bg, toolsModel.GetBrushStyle());
-            break;
-        case TOOL_AIRBRUSH:
-            Airbrush(hdc, x, y, bg, toolsModel.GetAirBrushWidth());
-            break;
-        case TOOL_LINE:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(start.x, start.y, x, y);
-            Line(hdc, start.x, start.y, x, y, bg, toolsModel.GetLineWidth());
-            break;
-        case TOOL_BEZIER:
-            imageModel.ResetToPrevious();
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
-            switch (pointSP)
-            {
-                case 1:
-                    Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, bg,
-                         toolsModel.GetLineWidth());
-                    break;
-                case 2:
-                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], bg, toolsModel.GetLineWidth());
-                    break;
-                case 3:
-                    Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], bg, toolsModel.GetLineWidth());
-                    break;
-            }
-            break;
-        case TOOL_RECT:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            Rect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_SHAPE:
-            imageModel.ResetToPrevious();
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
-            if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   pointStack[pointSP].x, pointStack[pointSP].y);
-            if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
-            break;
-        case TOOL_ELLIPSE:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            Ellp(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_RRECT:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            RRect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_FREESEL:
-        case TOOL_RECTSEL:
-        case TOOL_FILL:
-        case TOOL_COLOR:
-        case TOOL_ZOOM:
-        case TOOL_TEXT:
-            break;
-    }
-
-    last.x = x;
-    last.y = y;
-}
-
-void
-endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
-{
-    switch (toolsModel.GetActiveTool())
-    {
-        case TOOL_RUBBER:
-            Replace(hdc, last.x, last.y, x, y, fg, bg, toolsModel.GetRubberRadius());
-            break;
-        case TOOL_PEN:
-            Line(hdc, last.x, last.y, x, y, bg, 1);
-            SetPixel(hdc, x, y, bg);
-            break;
-        case TOOL_LINE:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(start.x, start.y, x, y);
-            Line(hdc, start.x, start.y, x, y, bg, toolsModel.GetLineWidth());
-            break;
-        case TOOL_BEZIER:
-            pointSP++;
-            if (pointSP == 4)
-                pointSP = 0;
-            break;
-        case TOOL_RECT:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            Rect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_SHAPE:
-            imageModel.ResetToPrevious();
-            pointStack[pointSP].x = x;
-            pointStack[pointSP].y = y;
-            if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   pointStack[pointSP].x, pointStack[pointSP].y);
-            pointSP++;
-            if (pointSP >= 2)
-            {
-                if (nearlyEqualPoints(x, y, pointStack[0].x, pointStack[0].y))
-                {
-                    Poly(hdc, pointStack, pointSP, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), TRUE, FALSE);
+                if (pointSP == 4)
                     pointSP = 0;
-                }
-                else
-                {
-                    Poly(hdc, pointStack, pointSP, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
-                }
-            }
-            if (pointSP == 255)
-                pointSP--;
-            break;
-        case TOOL_ELLIPSE:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            Ellp(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_RRECT:
-            imageModel.ResetToPrevious();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(start.x, start.y, x, y);
-            RRect(hdc, start.x, start.y, x, y, bg, fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-            break;
-        case TOOL_FREESEL:
-        case TOOL_RECTSEL:
-        case TOOL_FILL:
-        case TOOL_COLOR:
-        case TOOL_ZOOM:
-        case TOOL_BRUSH:
-        case TOOL_AIRBRUSH:
-        case TOOL_TEXT:
-            break;
+                break;
+            case BUTTON_RIGHT:
+                pointSP++;
+                if (pointSP == 4)
+                    pointSP = 0;
+                break;
+        }
     }
+    virtual void OnCancelDraw()
+    {
+        OnUp(BUTTON_LEFT, 0, 0);
+        imageModel.Undo();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_RECT
+struct RectTool : ToolBase
+{
+    RectTool() : ToolBase(TOOL_RECT)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        imageModel.ResetToPrevious();
+        if (GetAsyncKeyState(VK_SHIFT) < 0)
+            regularize(start.x, start.y, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Rect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+            case BUTTON_RIGHT:
+                Rect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        imageModel.ResetToPrevious();
+        if (GetAsyncKeyState(VK_SHIFT) < 0)
+            regularize(start.x, start.y, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Rect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+            case BUTTON_RIGHT:
+                Rect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+        }
+    }
+    virtual void OnCancelDraw()
+    {
+        OnUp(BUTTON_LEFT, 0, 0);
+        imageModel.Undo();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_SHAPE
+struct ShapeTool : ToolBase
+{
+    ShapeTool() : ToolBase(TOOL_SHAPE)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+        pointStack[pointSP].x = x;
+        pointStack[pointSP].y = y;
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                if (pointSP + 1 >= 2)
+                    Poly(m_hdc, pointStack, pointSP + 1, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
+                break;
+            case BUTTON_RIGHT:
+                if (pointSP + 1 >= 2)
+                    Poly(m_hdc, pointStack, pointSP + 1, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
+                break;
+        }
+        if (pointSP == 0)
+        {
+            imageModel.CopyPrevious();
+            pointSP++;
+        }
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        imageModel.ResetToPrevious();
+        pointStack[pointSP].x = x;
+        pointStack[pointSP].y = y;
+        if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
+            roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
+                               pointStack[pointSP].x, pointStack[pointSP].y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                if (pointSP + 1 >= 2)
+                    Poly(m_hdc, pointStack, pointSP + 1, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
+                break;
+            case BUTTON_RIGHT:
+                if (pointSP + 1 >= 2)
+                    Poly(m_hdc, pointStack, pointSP + 1, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        imageModel.ResetToPrevious();
+        pointStack[pointSP].x = x;
+        pointStack[pointSP].y = y;
+        if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
+            roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
+                               pointStack[pointSP].x, pointStack[pointSP].y);
+        pointSP++;
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                if (pointSP >= 2)
+                {
+                    if (nearlyEqualPoints(x, y, pointStack[0].x, pointStack[0].y))
+                    {
+                        Poly(m_hdc, pointStack, pointSP, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), TRUE, FALSE);
+                        pointSP = 0;
+                    }
+                    else
+                    {
+                        Poly(m_hdc, pointStack, pointSP, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
+                    }
+                }
+                if (pointSP == 255)
+                    pointSP--;
+                break;
+            case BUTTON_RIGHT:
+                if (pointSP >= 2)
+                {
+                    if (nearlyEqualPoints(x, y, pointStack[0].x, pointStack[0].y))
+                    {
+                        Poly(m_hdc, pointStack, pointSP, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), TRUE, FALSE);
+                        pointSP = 0;
+                    }
+                    else
+                    {
+                        Poly(m_hdc, pointStack, pointSP, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), FALSE, FALSE);
+                    }
+                }
+                if (pointSP == 255)
+                    pointSP--;
+                break;
+        }
+    }
+    virtual void OnCancelDraw()
+    {
+        imageModel.ResetToPrevious();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_ELLIPSE
+struct EllipseTool : ToolBase
+{
+    EllipseTool() : ToolBase(TOOL_ELLIPSE)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        imageModel.ResetToPrevious();
+        if (GetAsyncKeyState(VK_SHIFT) < 0)
+            regularize(start.x, start.y, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Ellp(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+            case BUTTON_RIGHT:
+                Ellp(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+
+        imageModel.ResetToPrevious();
+        if (GetAsyncKeyState(VK_SHIFT) < 0)
+            regularize(start.x, start.y, x, y);
+
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                Ellp(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+            case BUTTON_RIGHT:
+                Ellp(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+        }
+    }
+    virtual void OnCancelDraw()
+    {
+        OnUp(BUTTON_LEFT, 0, 0);
+        imageModel.Undo();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+// TOOL_RRECT
+struct RRectTool : ToolBase
+{
+    RRectTool() : ToolBase(TOOL_RRECT)
+    {
+    }
+
+    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        ToolBase::OnDown(button, x, y, bDoubleClick);
+    }
+    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        imageModel.ResetToPrevious();
+        if (GetAsyncKeyState(VK_SHIFT) < 0)
+            regularize(start.x, start.y, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                RRect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+            case BUTTON_RIGHT:
+                RRect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+        }
+        ToolBase::OnMove(button, x, y);
+    }
+    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y)
+    {
+        ToolBase::OnUp(button, x, y);
+        imageModel.ResetToPrevious();
+        if (GetAsyncKeyState(VK_SHIFT) < 0)
+            regularize(start.x, start.y, x, y);
+        switch (button)
+        {
+            case BUTTON_LEFT:
+                RRect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+            case BUTTON_RIGHT:
+                RRect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+                break;
+        }
+    }
+    virtual void OnCancelDraw()
+    {
+        OnUp(BUTTON_LEFT, 0, 0);
+        imageModel.Undo();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
+};
+
+/*static*/ ToolBase*
+ToolBase::createToolObject(TOOLTYPE type)
+{
+    switch (type)
+    {
+        case TOOL_FREESEL:  return new FreeSelTool();
+        case TOOL_RECTSEL:  return new RectSelTool();
+        case TOOL_RUBBER:   return new RubberTool();
+        case TOOL_FILL:     return new FillTool();
+        case TOOL_COLOR:    return new ColorTool();
+        case TOOL_ZOOM:     return new ZoomTool();
+        case TOOL_PEN:      return new PenTool();
+        case TOOL_BRUSH:    return new BrushTool();
+        case TOOL_AIRBRUSH: return new AirBrushTool();
+        case TOOL_TEXT:     return new TextTool();
+        case TOOL_LINE:     return new LineTool();
+        case TOOL_BEZIER:   return new BezierTool();
+        case TOOL_RECT:     return new RectTool();
+        case TOOL_SHAPE:    return new ShapeTool();
+        case TOOL_ELLIPSE:  return new EllipseTool();
+        case TOOL_RRECT:    return new RRectTool();
+    }
+    UNREACHABLE;
+    return NULL;
 }

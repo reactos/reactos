@@ -30,6 +30,7 @@
 
 BOOL zoomTo(int newZoom, int mouseX, int mouseY);
 BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1);
+void placeSelWin(void);
 
 static inline int Zoomed(int xy)
 {
