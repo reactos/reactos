@@ -2,50 +2,176 @@
  * PROJECT:     ReactOS Broadcom NetXtreme Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Interrupt handlers
- * COPYRIGHT:   Copyright 2021 Scott Maday <coldasdryice1@gmail.com>
+ * COPYRIGHT:   Copyright 2021-2022 Scott Maday <coldasdryice1@gmail.com>
  */
 
 #include "nic.h"
 
-#include "debug.h"
+#define NDEBUG
+#include <debug.h>
 
 VOID
 NTAPI
-MiniportISR(OUT PBOOLEAN InterruptRecognized,
-            OUT PBOOLEAN QueueMiniportHandleInterrupt,
-            IN NDIS_HANDLE MiniportAdapterContext)
+MiniportDisableInterrupt(_In_ NDIS_HANDLE MiniportAdapterContext)
 {
-    //ULONG Value;
-    //PB57XX_ADAPTER Adapter = (PB57XX_ADAPTER)MiniportAdapterContext;
+    PB57XX_ADAPTER Adapter = (PB57XX_ADAPTER)MiniportAdapterContext;
     
-    NDIS_MinDbgPrint("B57XX ISR\n");
-
-    /* Reading the interrupt acknowledges them */
-    /*B57XXReadUlong(Adapter, B57XX_REG_ICR, &Value);
-
-    Value &= Adapter->InterruptMask;
-    _InterlockedOr(&Adapter->InterruptPending, Value);
-
-    if (Value)
-    {
-        *InterruptRecognized = TRUE;
-        // Mark the events pending service
-        *QueueMiniportHandleInterrupt = TRUE;
-    }
-    else
-    {
-        // This is not ours.
-        *InterruptRecognized = FALSE;
-        *QueueMiniportHandleInterrupt = FALSE;
-    }*/
+    NICDisableInterrupts(Adapter);
 }
 
 VOID
 NTAPI
-MiniportHandleInterrupt(IN NDIS_HANDLE MiniportAdapterContext)
+MiniportEnableInterrupt(_In_ NDIS_HANDLE MiniportAdapterContext)
 {
-    //ULONG InterruptPending;
-    //PB57XX_ADAPTER Adapter = (PB57XX_ADAPTER)MiniportAdapterContext;
+    PB57XX_ADAPTER Adapter = (PB57XX_ADAPTER)MiniportAdapterContext;
+    
+    NICEnableInterrupts(Adapter);
+}
 
-    NDIS_MinDbgPrint("B57XX HandleInterrupt\n");
+VOID
+NTAPI
+MiniportISR(_Out_ PBOOLEAN InterruptRecognized,
+            _Out_ PBOOLEAN QueueMiniportHandleInterrupt,
+            _In_  NDIS_HANDLE MiniportAdapterContext)
+{
+    PB57XX_ADAPTER Adapter = (PB57XX_ADAPTER)MiniportAdapterContext;
+    
+    if (Adapter->Status.pBlock->Status & B57XX_SB_UPDATED && Adapter->Interrupt.Pending == FALSE)
+    {
+        NICInterruptAcknowledge(Adapter);
+        
+        Adapter->Status.LastTag = Adapter->Status.pBlock->StatusTag;
+        Adapter->Status.pBlock->Status &= ~B57XX_SB_UPDATED;
+        
+        Adapter->Interrupt.Pending = TRUE;
+        
+        *InterruptRecognized = TRUE;
+        *QueueMiniportHandleInterrupt = TRUE;
+    }
+    else
+    {
+        *InterruptRecognized = FALSE;
+        *QueueMiniportHandleInterrupt = FALSE;
+    }
+}
+
+VOID
+NTAPI
+MiniportHandleInterrupt(_In_ NDIS_HANDLE MiniportAdapterContext)
+{
+    ULONG ProducerIndex;
+    ULONG ConsumerIndex;
+    PCHAR BufferBase;
+    PB57XX_RECEIVE_BUFFER_DESCRIPTOR pReceiveDescriptor;
+    PB57XX_ADAPTER Adapter = (PB57XX_ADAPTER)MiniportAdapterContext;
+    BOOLEAN LinkStateChange = FALSE;
+    BOOLEAN GotAny = FALSE;
+    
+    if (Adapter->HardwareStatus != NdisHardwareStatusReady)
+    {
+        return;
+    }
+    
+    NdisDprAcquireSpinLock(&Adapter->Interrupt.Lock);
+    if (Adapter->Interrupt.Pending == FALSE)
+    {
+        return;
+    }
+    Adapter->Interrupt.Pending = FALSE;
+    
+    do
+    {
+        Adapter->Status.pBlock->Status &= ~B57XX_SB_UPDATED;
+        
+        /* Process any link changes */
+        if (Adapter->Status.pBlock->Status & B57XX_SB_LINKSTATE)
+        {
+            Adapter->Status.pBlock->Status &= ~B57XX_SB_LINKSTATE;
+            
+            LinkStateChange = TRUE;
+            NDIS_MinDbgPrint("Link state change\n");
+            
+            NdisMIndicateStatus(Adapter->MiniportAdapterHandle,
+                                NICUpdateLinkStatus(Adapter),
+                                NULL,
+                                0);
+            NdisMIndicateStatusComplete(Adapter->MiniportAdapterHandle);
+        }
+        
+        /* Process any received frames (receive interrupts) */
+        while (Adapter->ReturnConsumer[0].Index !=
+               Adapter->Status.pBlock->RingIndexPairs[0].ReceiveProducerIndex)
+        {
+            ConsumerIndex = Adapter->ReturnConsumer[0].Index;
+            ProducerIndex = Adapter->StandardProducer.Index;
+            pReceiveDescriptor = Adapter->ReturnConsumer[0].pRing + ConsumerIndex;
+            
+            if (pReceiveDescriptor->Flags & B57XX_RBD_FRAME_HAS_ERROR)
+            {
+                NDIS_MinDbgPrint("RX error (0x%x)\n", pReceiveDescriptor->Flags);
+                Adapter->Statistics.ReceiveErrors++;
+                goto ContinueReceive;
+            }
+            
+            BufferBase = (PCHAR)Adapter->StandardProducer.HostBuffer +
+                         Adapter->StandardProducer.FrameBufferLength * pReceiveDescriptor->Index;
+            
+            NdisMEthIndicateReceive(Adapter->MiniportAdapterHandle,
+                                    NULL,
+                                    BufferBase,
+                                    sizeof(ETH_HEADER),
+                                    BufferBase + sizeof(ETH_HEADER),
+                                    pReceiveDescriptor->Length - sizeof(ETH_HEADER),
+                                    pReceiveDescriptor->Length - sizeof(ETH_HEADER));
+            GotAny = TRUE;
+            
+            Adapter->Statistics.ReceiveSuccesses++;
+
+ContinueReceive:
+            ConsumerIndex = (ConsumerIndex + 1) % Adapter->ReturnConsumer[0].Count;
+            Adapter->ReturnConsumer[0].Index = ConsumerIndex;
+            
+            ProducerIndex = (ProducerIndex + 1) % Adapter->StandardProducer.Count;
+            Adapter->StandardProducer.Index = ProducerIndex;
+        }
+        
+        if (GotAny)
+        {
+            NICReceiveSignalComplete(Adapter);
+            NdisMEthIndicateReceiveComplete(Adapter->MiniportAdapterHandle);
+        }
+        
+        /* Process any completed frames (transmit interrupts) */
+        while (Adapter->SendProducer[0].ConsumerIndex !=
+               Adapter->Status.pBlock->RingIndexPairs[0].SendConsumerIndex)
+        {
+            ConsumerIndex = Adapter->SendProducer[0].ConsumerIndex;
+            
+            NdisMSendComplete(Adapter->MiniportAdapterHandle,
+                             Adapter->SendProducer[0].pPacketList[ConsumerIndex],
+                             NDIS_STATUS_SUCCESS);
+            Adapter->SendProducer[0].RingFull = FALSE;
+            
+            Adapter->Statistics.TransmitSuccesses++;
+            
+            ConsumerIndex = (ConsumerIndex + 1) % Adapter->SendProducer[0].Count;
+            Adapter->SendProducer[0].ConsumerIndex = ConsumerIndex;
+        }
+    }
+    while (NICInterruptCheckAvailability(Adapter));
+    
+    if (Adapter->Status.pBlock->Status & B57XX_SB_ERROR)
+    {
+        // It may "error" due to the link state change generating a MAC attention
+        if (LinkStateChange == FALSE)
+        {
+            NDIS_MinDbgPrint("Error detected\n");
+            NICOutputDebugInfo(Adapter);
+        }
+        
+        Adapter->Status.pBlock->Status &= ~B57XX_SB_ERROR;
+    }
+    
+    NICInterruptSignalComplete(Adapter);
+    NdisDprReleaseSpinLock(&Adapter->Interrupt.Lock);
 }

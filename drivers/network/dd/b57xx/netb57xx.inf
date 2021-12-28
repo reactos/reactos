@@ -7,7 +7,7 @@ LayoutFile = layout.inf
 Class      = Net
 ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 12/24/2021,1.00
+DriverVer  = 02/04/2022,1.00
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -16,28 +16,78 @@ DefaultDestDir = 12
 %BroadcomMfg% = BroadcomMfg
 
 [BroadcomMfg]
-%Broadcom5752.DeviceDesc% = B57XX_Inst.ndi,PCI\VEN_14E4&DEV_1600
-; %Broadcom5752M.DeviceDesc% = B57XX_Inst.ndi,PCI\VEN_14E4&DEV_1601
+%Broadcom5700.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1644
+%Broadcom5701.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1645
+%Broadcom5702.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_16A6
+%Broadcom5702.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1646
+%Broadcom5702.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_16C6
+%Broadcom5703C.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_16C7
+%Broadcom5703C.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1647
+%Broadcom5703C.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_16A7
+%Broadcom5703S.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_16C7&SUBSYS_000A14E4
+%Broadcom5703S.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1647&SUBSYS_000A14E4
+%Broadcom5703S.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_16A7&SUBSYS_000A14E4
+%Broadcom5704C.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1648
+%Broadcom5704S.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_16A8
+%Broadcom5704S.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_16A8
+%Broadcom5705.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1653
+%Broadcom5705.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1654
+%Broadcom5705M.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_165D
+%Broadcom5705M.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_165E
+%Broadcom5721.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1659
+%Broadcom5751.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1677
+%Broadcom5751M.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_167D
+%Broadcom5752.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1600
+%Broadcom5752M.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1601
+%Broadcom5714C.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1668
+%Broadcom5714S.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1669
+%Broadcom5715C.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1678
+%Broadcom5715S.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1679
+%Broadcom5722.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_165A
+%Broadcom5755.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_167B
+%Broadcom5755M.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1673
+%Broadcom5754.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_167A
+%Broadcom5754M.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1672
+%Broadcom5756M.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1674
+%Broadcom5757.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1670
+%Broadcom5786.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_169A
+%Broadcom5787.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_169B
+%Broadcom5787M.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1693
+%Broadcom5784M.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1698
+%Broadcom5764M.DeviceDesc% = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1684
 
 ;----------------------------- B57XX DRIVER -----------------------------
 
-[B57XX_Inst.ndi.NT]
+[B57XX.Inst.ndi.NT]
 Characteristics = 0x4 ; NCF_PHYSICAL
 BusType = 5 ; PCIBus
-CopyFiles = B57XX_CopyFiles.NT
+CopyFiles = B57XX.Inst.CopyFiles
+AddReg = B57XX.Inst.AddReg
 
-[B57XX_CopyFiles.NT]
+[B57XX.Inst.CopyFiles]
 b57xx.sys
 
-[B57XX_Inst.ndi.NT.Services]
-AddService = b57xx, 0x00000002, B57XX_Service_Inst
+[B57XX.Inst.ndi.NT.Services]
+AddService = b57xx, 0x00000002, B57XX.Inst.AddService, B57XX.Inst.AddEventLog
 
-[B57XX_Service_Inst]
-ServiceType   = 1
-StartType     = 3
-ErrorControl  = 0
-ServiceBinary = %12%\b57xx.sys
+[B57XX.Inst.AddService]
+ServiceType    = 1
+StartType      = 3
+ErrorControl   = 1
+ServiceBinary  = %12%\b57xx.sys
 LoadOrderGroup = NDIS
+
+[B57XX.Inst.AddEventLog]
+AddReg = B57XX.Inst.AddEventLog.AddReg
+
+[B57XX.Inst.AddReg]
+HKR, Ndi, Service, 0, "b57xx"
+HKR, Ndi\Interfaces, UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces, LowerRange, 0, "ethernet"
+
+[B57XX.Inst.AddEventLog.AddReg]
+HKR, , EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll;%%SystemRoot%%\System32\drivers\b57xx.sys"
+HKR, , TypesSupported  , 0x00010001, 7
 
 ;-------------------------------- STRINGS -------------------------------
 
@@ -46,4 +96,34 @@ ReactOS = "ReactOS Team"
 
 BroadcomMfg = "Broadcom"
 
-Broadcom5752.DeviceDesc = "Broadcom NetXtreme 5752 Gigabit Controller"
+Broadcom5700.DeviceDesc  = "Broadcom NetXtreme 5700 Gigabit Ethernet MAC"
+Broadcom5701.DeviceDesc  = "Broadcom NetXtreme 5701 Gigabit Ethernet Adapter"
+Broadcom5702.DeviceDesc  = "Broadcom NetXtreme 5702 Gigabit Ethernet Adapter"
+Broadcom5703C.DeviceDesc = "Broadcom NetXtreme 5703C Gigabit Ethernet Adapter"
+Broadcom5703S.DeviceDesc = "Broadcom NetXtreme 5703S Gigabit Fiber Adapter"
+Broadcom5704C.DeviceDesc = "Broadcom NetXtreme 5704C Gigabit Ethernet Adapter"
+Broadcom5704S.DeviceDesc = "Broadcom NetXtreme 5705S Gigabit Fiber Adapter"
+Broadcom5705.DeviceDesc  = "Broadcom NetXtreme 5705 Gigabit Ethernet Adapter"
+Broadcom5705M.DeviceDesc = "Broadcom NetXtreme 5705M Gigabit Ethernet Adapter"
+Broadcom5788.DeviceDesc  = "Broadcom NetXtreme 5788 Gigabit Ethernet Adapter"
+Broadcom5721.DeviceDesc  = "Broadcom NetXtreme 5721 Gigabit Ethernet Adapter"
+Broadcom5751.DeviceDesc  = "Broadcom NetXtreme 5751 Gigabit Ethernet Adapter"
+Broadcom5751M.DeviceDesc = "Broadcom NetXtreme 5751M Gigabit Ethernet Adapter"
+Broadcom5752.DeviceDesc  = "Broadcom NetXtreme 5752 Gigabit Ethernet Adapter"
+Broadcom5752M.DeviceDesc = "Broadcom NetXtreme 5752M Gigabit Ethernet Adapter"
+Broadcom5714C.DeviceDesc = "Broadcom NetXtreme 5714C Gigabit Ethernet Adapter"
+Broadcom5714S.DeviceDesc = "Broadcom NetXtreme 5714S Gigabit Fiber Adapter"
+Broadcom5715C.DeviceDesc = "Broadcom NetXtreme 5715C Gigabit Ethernet Adapter"
+Broadcom5715S.DeviceDesc = "Broadcom NetXtreme 5715S Gigabit Fiber Adapter"
+Broadcom5722.DeviceDesc  = "Broadcom NetXtreme 5722 Gigabit Ethernet Adapter"
+Broadcom5755.DeviceDesc  = "Broadcom NetXtreme 5755 Gigabit Ethernet Adapter"
+Broadcom5755M.DeviceDesc = "Broadcom NetXtreme 5755M Gigabit Ethernet Adapter"
+Broadcom5754.DeviceDesc  = "Broadcom NetXtreme 5754 Gigabit Ethernet Adapter"
+Broadcom5754M.DeviceDesc = "Broadcom NetXtreme 5754M Gigabit Ethernet Adapter"
+Broadcom5756M.DeviceDesc = "Broadcom NetXtreme 5756M Gigabit Ethernet Adapter"
+Broadcom5757.DeviceDesc  = "Broadcom NetXtreme 5757 Gigabit Ethernet Adapter"
+Broadcom5786.DeviceDesc  = "Broadcom NetXtreme 5786 Gigabit Ethernet Adapter"
+Broadcom5787.DeviceDesc  = "Broadcom NetXtreme 5787 Gigabit Ethernet Adapter"
+Broadcom5787M.DeviceDesc = "Broadcom NetXtreme 5787M Gigabit Ethernet Adapter"
+Broadcom5784M.DeviceDesc = "Broadcom NetXtreme 5784M Gigabit Ethernet Adapter"
+Broadcom5764M.DeviceDesc = "Broadcom NetXtreme 5764M Gigabit Ethernet Adapter"

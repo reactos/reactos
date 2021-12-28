@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Broadcom NetXtreme Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Hardware driver definitions
- * COPYRIGHT:   Copyright 2021 Scott Maday <coldasdryice1@gmail.com>
+ * COPYRIGHT:   Copyright 2021-2022 Scott Maday <coldasdryice1@gmail.com>
  */
 #pragma once
 
@@ -10,225 +10,447 @@
 
 #include "b57xxhw.h"
 
-#define B57XX_TAG '075b'
+#define B57XX_TAG       '075b'
+#define DRIVER_VERSION  1
 
-#define MAXIMUM_FRAME_SIZE 1522
-#define RECEIVE_BUFFER_SIZE 2048
-
-#define DRIVER_VERSION 1
-
-#define DEFAULT_INTERRUPT_MASK  0
+#define PAYLOAD_SIZE_MINI       500
+#define PAYLOAD_SIZE_STANDARD   1500
+#define PAYLOAD_SIZE_JUMBO      9000
 
 typedef struct _B57XX_ADAPTER
 {
     /* NIC Memory */
     NDIS_HANDLE MiniportAdapterHandle;
+    NDIS_HARDWARE_STATUS HardwareStatus;
     volatile PUCHAR IoBase;
     NDIS_PHYSICAL_ADDRESS IoAddress;
     ULONG IoLength;
-
-    UCHAR PermanentMacAddress[IEEE_802_ADDR_LENGTH];
     
-    struct {
-        UCHAR MacAddress[IEEE_802_ADDR_LENGTH];
-    } MulticastList[MAXIMUM_MULTICAST_ADDRESSES];
+    B57XX_DEVICE_ID DeviceID;
+    BOOLEAN B5705Plus;
+    BOOLEAN B5721Plus;
+    BOOLEAN IsSerDes;
+    
+    struct _B57XX_PCI_STATE
+    {
+        USHORT VendorID;
+        USHORT DeviceID;
+        USHORT Command;
+        UCHAR CacheLineSize;
+        USHORT SubVendorID; 
+        USHORT SubSystemID; 
+        UCHAR RevisionID;
+    } PciState;
+    
+    struct _B57XX_INTERRUPT
+    {
+        ULONG Vector;
+        ULONG Level;
+        BOOLEAN Shared;
+        ULONG Flags;
+        NDIS_MINIPORT_INTERRUPT Interrupt;
+        BOOLEAN Registered;
+        BOOLEAN Pending;
+        NDIS_SPIN_LOCK Lock;
+    } Interrupt;
+    
+    /* RX */
+    B57XX_RECEIVE_PRODUCER_BLOCK MiniProducer;
+    B57XX_RECEIVE_PRODUCER_BLOCK StandardProducer;
+    B57XX_RECEIVE_PRODUCER_BLOCK JumboProducer;
+    B57XX_RECEIVE_CONSUMER_BLOCK ReturnConsumer[1];
+    
+    /* TX */
+    B57XX_SEND_BLOCK SendProducer[1];
+    NDIS_SPIN_LOCK SendLock;
+    
+    /* Status */
+    struct _B57XX_STATUS
+    {
+        PB57XX_STATUS_BLOCK pBlock;
+        NDIS_PHYSICAL_ADDRESS HostAddress;
+        ULONG LastTag;
+    } Status;
+
+    /* Statistics */
+    struct _B57XX_STATISTICS
+    {
+        PB57XX_STATISTICS_BLOCK pBlock;
+        NDIS_PHYSICAL_ADDRESS HostAddress;
+        ULONG64 TransmitSuccesses;
+        ULONG64 ReceiveSuccesses;
+        ULONG64 TransmitErrors;
+        ULONG64 ReceiveErrors;
+        ULONG64 ReceiveBufferErrors;
+    } Statistics;
+    
+    /* NIC Info */
+    ULONG MaxFrameSize;
+    MAC_ADDRESS MACAddresses[1];
+    MAC_ADDRESS MulticastList[MAXIMUM_MULTICAST_ADDRESSES];
     ULONG MulticastListSize;
-
-    ULONG LinkSpeedMbps;
-    ULONG MediaState;
+    
+    NDIS_SPIN_LOCK InfoLock;
     ULONG PacketFilter;
-
-    /* Io Port */
-    ULONG IoPortAddress;
-    ULONG IoPortLength;
-    volatile PUCHAR IoPort;
-
-    /* Interrupt */
-    ULONG InterruptVector;
-    ULONG InterruptLevel;
-    BOOLEAN InterruptShared;
-    ULONG InterruptFlags;
-
-    NDIS_MINIPORT_INTERRUPT Interrupt;
-    BOOLEAN InterruptRegistered;
-
-    LONG InterruptMask;
+    USHORT LinkStatus;
 } B57XX_ADAPTER, *PB57XX_ADAPTER;
 
+/* MINIPORT FUNCTIONS *****************************************************************************/
 
-/* MINIPORT FUNCTIONS *********************************************************/
+NDIS_STATUS
+NTAPI
+MiniportInitialize(_Out_ PNDIS_STATUS OpenErrorStatus,
+                   _Out_ PUINT SelectedMediumIndex,
+                   _In_  PNDIS_MEDIUM MediumArray,
+                   _In_  UINT MediumArraySize,
+                   _In_  NDIS_HANDLE MiniportAdapterHandle,
+                   _In_  NDIS_HANDLE WrapperConfigurationContext);
+             
+NDIS_STATUS
+NTAPI
+MiniportReset(_Out_ PBOOLEAN AddressingReset,
+              _In_  NDIS_HANDLE MiniportAdapterContext);
 
 VOID
 NTAPI
-MiniportHalt(IN NDIS_HANDLE MiniportAdapterContext);
+MiniportHalt(_In_ NDIS_HANDLE MiniportAdapterContext);
 
 NDIS_STATUS
 NTAPI
-MiniportInitialize(OUT PNDIS_STATUS OpenErrorStatus,
-                   OUT PUINT SelectedMediumIndex,
-                   IN PNDIS_MEDIUM MediumArray,
-                   IN UINT MediumArraySize,
-                   IN NDIS_HANDLE MiniportAdapterHandle,
-                   IN NDIS_HANDLE WrapperConfigurationContext);
+MiniportSend(_In_ NDIS_HANDLE MiniportAdapterContext,
+             _In_ PNDIS_PACKET Packet,
+             _In_ UINT Flags);
 
 NDIS_STATUS
 NTAPI
-MiniportSetInformation(IN NDIS_HANDLE MiniportAdapterContext,
-                       IN NDIS_OID Oid,
-                       IN PVOID InformationBuffer,
-                       IN ULONG InformationBufferLength,
-                       OUT PULONG BytesRead,
-                       OUT PULONG BytesNeeded);
+MiniportSetInformation(_In_  NDIS_HANDLE MiniportAdapterContext,
+                       _In_  NDIS_OID Oid,
+                       _In_  PVOID InformationBuffer,
+                       _In_  ULONG InformationBufferLength,
+                       _Out_ PULONG BytesRead,
+                       _Out_ PULONG BytesNeeded);
 
 NDIS_STATUS
 NTAPI
-MiniportQueryInformation(IN NDIS_HANDLE MiniportAdapterContext,
-                         IN NDIS_OID Oid,
-                         IN PVOID InformationBuffer,
-                         IN ULONG InformationBufferLength,
-                         OUT PULONG BytesWritten,
-                         OUT PULONG BytesNeeded);
-
-NDIS_STATUS
-NTAPI
-MiniportSetInformation(IN NDIS_HANDLE MiniportAdapterContext,
-                       IN NDIS_OID Oid,
-                       IN PVOID InformationBuffer,
-                       IN ULONG InformationBufferLength,
-                       OUT PULONG BytesRead,
-                       OUT PULONG BytesNeeded);
-
+MiniportQueryInformation(_In_  NDIS_HANDLE MiniportAdapterContext,
+                         _In_  NDIS_OID Oid,
+                         _In_  PVOID InformationBuffer,
+                         _In_  ULONG InformationBufferLength,
+                         _Out_ PULONG BytesWritten,
+                         _Out_ PULONG BytesNeeded);
 
 VOID
 NTAPI
-MiniportISR(OUT PBOOLEAN InterruptRecognized,
-            OUT PBOOLEAN QueueMiniportHandleInterrupt,
-            IN NDIS_HANDLE MiniportAdapterContext);
+MiniportDisableInterrupt(_In_ NDIS_HANDLE MiniportAdapterContext);
+
 VOID
 NTAPI
-MiniportHandleInterrupt(IN NDIS_HANDLE MiniportAdapterContext);
+MiniportEnableInterrupt(_In_ NDIS_HANDLE MiniportAdapterContext);
 
-NDIS_STATUS
+VOID
 NTAPI
-MiniportSend(IN NDIS_HANDLE MiniportAdapterContext,
-             IN PNDIS_PACKET Packet,
-             IN UINT Flags);
+MiniportISR(_Out_ PBOOLEAN InterruptRecognized,
+            _Out_ PBOOLEAN QueueMiniportHandleInterrupt,
+            _In_  NDIS_HANDLE MiniportAdapterContext);
 
+VOID
+NTAPI
+MiniportHandleInterrupt(_In_ NDIS_HANDLE MiniportAdapterContext);
 
-/* NIC FUNCTIONS **************************************************************/
+/* NIC FUNCTIONS **********************************************************************************/
+
+#define NICISDEVICE(Adapter, ...)                                                                  \
+    NICIsDevice(Adapter,                                                                           \
+                sizeof((B57XX_DEVICE_ID[]){__VA_ARGS__})/sizeof(B57XX_DEVICE_ID),                  \
+                (B57XX_DEVICE_ID[]){__VA_ARGS__})
 
 BOOLEAN
 NTAPI
-NICRecognizeHardware(IN PB57XX_ADAPTER Adapter);
+NICIsDevice(_In_ PB57XX_ADAPTER Adapter,
+            _In_ ULONG DeviceIDListLength,
+            _In_reads_(DeviceIDListLength) const B57XX_DEVICE_ID DeviceIDList[]);
+
+_Check_return_
+NDIS_STATUS
+NTAPI
+NICConfigureAdapter(_In_ PB57XX_ADAPTER Adapter);
+
+_Check_return_
+NDIS_STATUS
+NTAPI
+NICPowerOn(_In_ PB57XX_ADAPTER Adapter);
+
+_Check_return_
+NDIS_STATUS
+NTAPI
+NICSoftReset(_In_ PB57XX_ADAPTER Adapter);
 
 NDIS_STATUS
 NTAPI
-NICInitializeAdapterResources(IN PB57XX_ADAPTER Adapter,
-                              IN PNDIS_RESOURCE_LIST ResourceList);
+NICSetupPHY(_In_ PB57XX_ADAPTER Adapter);
 
 NDIS_STATUS
 NTAPI
-NICAllocateIoResources(IN PB57XX_ADAPTER Adapter);
-
-NDIS_STATUS
-NTAPI
-NICRegisterInterrupts(IN PB57XX_ADAPTER Adapter);
-
-NDIS_STATUS
-NTAPI
-NICUnregisterInterrupts(IN PB57XX_ADAPTER Adapter);
-
-NDIS_STATUS
-NTAPI
-NICReleaseIoResources(IN PB57XX_ADAPTER Adapter);
-
-NDIS_STATUS
-NTAPI
-NICPowerOn(IN PB57XX_ADAPTER Adapter);
-
-NDIS_STATUS
-NTAPI
-NICSoftReset(IN PB57XX_ADAPTER Adapter);
-
-NDIS_STATUS
-NTAPI
-NICEnableTxRx(IN PB57XX_ADAPTER Adapter);
-
-NDIS_STATUS
-NTAPI
-NICDisableTxRx(IN PB57XX_ADAPTER Adapter);
-
-NDIS_STATUS
-NTAPI
-NICGetPermanentMacAddress(IN PB57XX_ADAPTER Adapter,
-                          OUT PUCHAR MacAddress);
-
-NDIS_STATUS
-NTAPI
-NICUpdateMulticastList(IN PB57XX_ADAPTER Adapter);
-
-NDIS_STATUS
-NTAPI
-NICApplyPacketFilter(IN PB57XX_ADAPTER Adapter);
+NICUpdateLinkStatus(_In_ PB57XX_ADAPTER Adapter);
 
 VOID
 NTAPI
-NICUpdateLinkStatus(IN PB57XX_ADAPTER Adapter);
+NICSetupFlowControl(_In_ PB57XX_ADAPTER Adapter);
 
 NDIS_STATUS
 NTAPI
-NICTransmitPacket(IN PB57XX_ADAPTER Adapter,
-                  IN PHYSICAL_ADDRESS PhysicalAddress,
-                  IN ULONG Length);
+NICShutdown(_In_ PB57XX_ADAPTER Adapter);
 
-/* B57XX FUNCTIONS ************************************************************/
+VOID
+NTAPI
+NICUpdateMACAddresses(_In_ PB57XX_ADAPTER Adapter);
+
+NDIS_STATUS
+NTAPI
+NICUpdateMulticastList(_In_ PB57XX_ADAPTER Adapter);
+
+NDIS_STATUS
+NTAPI
+NICApplyPacketFilter(_In_ PB57XX_ADAPTER Adapter);
+
+_Check_return_
+NDIS_STATUS
+NTAPI
+NICTransmitPacket(_In_ PB57XX_ADAPTER Adapter,
+                  _In_ PHYSICAL_ADDRESS PhysicalAddress,
+                  _In_ ULONG Length,
+                  _In_ USHORT Flags);
+
+VOID
+NTAPI
+NICEnableInterrupts(_In_ PB57XX_ADAPTER Adapter);
+
+VOID
+NTAPI
+NICDisableInterrupts(_In_ PB57XX_ADAPTER Adapter);
+
+VOID
+NTAPI
+NICInterruptAcknowledge(_In_ PB57XX_ADAPTER Adapter);
 
 BOOLEAN
-B57XXReadEeprom(IN PB57XX_ADAPTER Adapter,
-                IN UCHAR Address,
-                USHORT *Result);
+NTAPI
+NICInterruptCheckAvailability(_In_ PB57XX_ADAPTER Adapter);
+
+VOID
+NTAPI
+NICInterruptSignalComplete(_In_ PB57XX_ADAPTER Adapter);
+
+VOID
+NTAPI
+NICReceiveSignalComplete(_In_ PB57XX_ADAPTER Adapter);
+
+VOID
+NTAPI
+NICQueryStatisticCounter(_In_  PB57XX_ADAPTER Adapter,
+                         _In_  NDIS_OID Oid,
+                         _Out_ PULONG64 pValue64);
+
+NDIS_STATUS
+NTAPI
+NICFillPowerManagementCapabilities(_In_  PB57XX_ADAPTER Adapter,
+                                   _Out_ PNDIS_PNP_CAPABILITIES Capabilities);
+
+VOID
+NTAPI
+NICOutputDebugInfo(_In_ PB57XX_ADAPTER Adapter);
+
+/* B57XX FUNCTIONS ********************************************************************************/
 
 FORCEINLINE
-VOID
-B57XXReadUlong(IN PB57XX_ADAPTER Adapter,
-               IN ULONG Address,
-               OUT PULONG Value)
+ULONG
+B57XXReadPciConfigULong(_In_  PB57XX_ADAPTER Adapter,
+                        _In_  ULONG Offset,
+                        _Out_ PULONG pValue)
 {
-    NdisReadRegisterUlong((PULONG)(Adapter->IoBase + Address), Value);
+    return NdisReadPciSlotInformation(Adapter->MiniportAdapterHandle,
+                                      0,
+                                      Offset,
+                                      (PVOID)pValue,
+                                      sizeof(ULONG));
+}
+
+FORCEINLINE
+ULONG
+B57XXWritePciConfigULong(_In_ PB57XX_ADAPTER Adapter,
+                         _In_ ULONG Offset,
+                         _In_ ULONG Value)
+{
+    return NdisWritePciSlotInformation(Adapter->MiniportAdapterHandle,
+                                       0,
+                                       Offset,
+                                       (PVOID)&Value,
+                                       sizeof(ULONG));
 }
 
 FORCEINLINE
 VOID
-B57XXWriteUlong(IN PB57XX_ADAPTER Adapter,
-                IN ULONG Address,
-                IN ULONG Value)
+B57XXEnableUShort(_In_ PB57XX_ADAPTER Adapter,
+                  _In_ ULONG Address,
+                  _Inout_ PULONG pValue,
+                  _In_ ULONG Mask)
+{
+    NdisReadRegisterUshort((PUSHORT)(Adapter->IoBase + Address), pValue);
+    *pValue |= Mask;
+    NdisWriteRegisterUshort((PUSHORT)(Adapter->IoBase + Address), *pValue);
+}
+
+FORCEINLINE
+VOID
+B57XXReadULong(_In_  PB57XX_ADAPTER Adapter,
+               _In_  ULONG Address,
+               _Out_ PULONG pValue)
+{
+    NdisReadRegisterUlong((PULONG)(Adapter->IoBase + Address), pValue);
+}
+
+FORCEINLINE
+VOID
+B57XXWriteULong(_In_ PB57XX_ADAPTER Adapter,
+                _In_ ULONG Address,
+                _In_ ULONG Value)
 {
     NdisWriteRegisterUlong((PULONG)(Adapter->IoBase + Address), Value);
 }
 
 FORCEINLINE
 VOID
-B57XXWriteIoUlong(IN PB57XX_ADAPTER Adapter,
-                  IN ULONG Address,
-                  IN ULONG Value)
+B57XXEnableULong(_In_ PB57XX_ADAPTER Adapter,
+                 _In_ ULONG Address,
+                 _Inout_ PULONG pValue,
+                 _In_ ULONG Mask)
 {
-    //volatile ULONG Dummy;
-
-    NdisRawWritePortUlong((PULONG)(Adapter->IoPort), Address);
-    //NdisReadRegisterUlong(Adapter->IoBase + B57XX_REG_STATUS, &Dummy); TODO
-    NdisRawWritePortUlong((PULONG)(Adapter->IoPort + 4), Value);
+    B57XXReadULong(Adapter, Address, pValue);
+    *pValue |= Mask;
+    B57XXWriteULong(Adapter, Address, *pValue);
 }
 
 FORCEINLINE
 VOID
-NICApplyInterruptMask(IN PB57XX_ADAPTER Adapter)
+B57XXReadRegister(_In_  PB57XX_ADAPTER Adapter,
+                  _In_  ULONG Address,
+                  _Out_ PULONG pValue)
 {
-    //B57XXWriteUlong(Adapter, B57XX_REG_IMS, Adapter->InterruptMask);
+    B57XXWritePciConfigULong(Adapter, B57XX_REG_REG_BASE, Address);
+    B57XXReadPciConfigULong(Adapter, B57XX_REG_REG_DATA, pValue);
 }
 
 FORCEINLINE
 VOID
-NICDisableInterrupts(IN PB57XX_ADAPTER Adapter)
+B57XXWriteRegister(_In_ PB57XX_ADAPTER Adapter,
+                   _In_ ULONG Address,
+                   _In_ ULONG Value)
 {
-    //B57XXWriteUlong(Adapter, B57XX_REG_IMC, ~0);
+    B57XXWritePciConfigULong(Adapter, B57XX_REG_REG_BASE, Address);
+    B57XXWritePciConfigULong(Adapter, B57XX_REG_REG_DATA, Value);
+    
+    B57XXWriteULong(Adapter, Address, Value);
 }
+
+FORCEINLINE
+VOID
+B57XXEnableRegister(_In_ PB57XX_ADAPTER Adapter,
+                    _In_ ULONG Address,
+                    _Inout_ PULONG pValue,
+                    _In_ ULONG Mask)
+{
+    B57XXWritePciConfigULong(Adapter, B57XX_REG_REG_BASE, Address);
+    B57XXReadPciConfigULong(Adapter, B57XX_REG_REG_DATA, pValue);
+    *pValue |= Mask;
+    B57XXWritePciConfigULong(Adapter, B57XX_REG_REG_DATA, *pValue);
+}
+
+FORCEINLINE
+VOID
+B57XXDisableRegister(_In_ PB57XX_ADAPTER Adapter,
+                     _In_ ULONG Address,
+                     _Inout_ PULONG pValue,
+                     _In_ ULONG Mask)
+{
+    B57XXWritePciConfigULong(Adapter, B57XX_REG_REG_BASE, Address);
+    B57XXReadPciConfigULong(Adapter, B57XX_REG_REG_DATA, pValue);
+    *pValue &= ~Mask;
+    B57XXWritePciConfigULong(Adapter, B57XX_REG_REG_DATA, *pValue);
+}
+
+FORCEINLINE
+VOID
+B57XXWriteMailbox(_In_ PB57XX_ADAPTER Adapter,
+                  _In_ ULONG Address,
+                  _In_ ULONG Value)
+{
+    B57XXWriteULong(Adapter, Address + 4, Value);
+}
+
+FORCEINLINE
+VOID
+B57XXReadMemoryULong(_In_ PB57XX_ADAPTER Adapter,
+                     _In_ ULONG Address,
+                     _Out_ PULONG pValue)
+{
+    B57XXWritePciConfigULong(Adapter, B57XX_REG_MEM_BASE, Address);
+    B57XXReadPciConfigULong(Adapter, B57XX_REG_MEM_DATA, pValue);
+}
+
+FORCEINLINE
+VOID
+B57XXWriteMemoryULong(_In_ PB57XX_ADAPTER Adapter,
+                      _In_ ULONG Address,
+                      _In_ ULONG Value)
+{
+    B57XXWritePciConfigULong(Adapter, B57XX_REG_MEM_BASE, Address);
+    B57XXWritePciConfigULong(Adapter, B57XX_REG_MEM_DATA, Value);
+}
+
+FORCEINLINE
+VOID
+B57XXConvertAddress(_Out_ PB57XX_PHYSICAL_ADDRESS pDestination,
+                    _In_  PNDIS_PHYSICAL_ADDRESS pAddress)
+{
+    pDestination->HighPart = pAddress->HighPart;
+    pDestination->LowPart = pAddress->LowPart;
+}
+
+VOID
+B57XXWriteMemoryRCB(_In_ PB57XX_ADAPTER Adapter,
+                    _In_ ULONG Address,
+                    _In_ volatile PB57XX_RING_CONTROL_BLOCK pRCB);
+
+NDIS_STATUS
+B57XXReadPHY(_In_  PB57XX_ADAPTER Adapter,
+             _In_  USHORT PHYRegOffset,
+             _Out_ PUSHORT pValue);
+
+NDIS_STATUS
+B57XXWritePHY(_In_ PB57XX_ADAPTER Adapter,
+              _In_ USHORT PHYRegOffset,
+              _In_ USHORT Value);
+
+VOID
+B57XXReadAndClearPHYInterrupts(_In_  PB57XX_ADAPTER Adapter,
+                               _Out_ PUSHORT Interrupts);
+
+VOID
+B57XXClearMACAttentions(_In_ PB57XX_ADAPTER Adapter);
+
+VOID
+B57XXReadStatistic(_In_  PB57XX_ADAPTER Adapter,
+                   _In_  ULONG BlockOffset,
+                   _In_  ULONG RegOffset,
+                   _In_  BOOLEAN Is64Bit,
+                   _Out_ PULONG64 pValue64);
+
+VOID
+B57XXAccumulateAddress(_Out_ PB57XX_PHYSICAL_ADDRESS pDestination,
+                       _In_  LONG Offset);
+
+ULONG
+B57XXComputeInverseCrc32(_In_ PUCHAR pBuffer,
+                         _In_ ULONG BufferSize);
+
+/* EOF */
