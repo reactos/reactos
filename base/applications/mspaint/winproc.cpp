@@ -346,8 +346,8 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     CheckMenuItem(menu, IDM_VIEWZOOM400, CHECKED_IF(toolsModel.GetZoom() == 4000));
     CheckMenuItem(menu, IDM_VIEWZOOM800, CHECKED_IF(toolsModel.GetZoom() == 8000));
 
-    CheckMenuItem(menu, IDM_COLORSMODERNPALETTE, CHECKED_IF(paletteModel.SelectedPalette() == 1));
-    CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(paletteModel.SelectedPalette() == 2));
+    CheckMenuItem(menu, IDM_COLORSMODERNPALETTE, CHECKED_IF(paletteModel.SelectedPalette() == PAL_MODERN));
+    CheckMenuItem(menu, IDM_COLORSOLDPALETTE,    CHECKED_IF(paletteModel.SelectedPalette() == PAL_OLDTYPE));
     return 0;
 }
 
@@ -586,10 +586,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 paletteModel.SetFgColor(choosecolor.rgbResult);
             break;
         case IDM_COLORSMODERNPALETTE:
-            paletteModel.SelectPalette(1);
+            paletteModel.SelectPalette(PAL_MODERN);
             break;
         case IDM_COLORSOLDPALETTE:
-            paletteModel.SelectPalette(2);
+            paletteModel.SelectPalette(PAL_OLDTYPE);
             break;
         case IDM_IMAGEINVERTCOLORS:
         {

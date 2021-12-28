@@ -17,7 +17,7 @@ PaletteModel::PaletteModel()
 {
     m_fgColor = 0x00000000;
     m_bgColor = 0x00ffffff;
-    SelectPalette(1);
+    SelectPalette(PAL_MODERN);
 }
 
 PAL_TYPE PaletteModel::SelectedPalette()
