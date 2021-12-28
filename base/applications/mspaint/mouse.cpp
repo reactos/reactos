@@ -283,6 +283,7 @@ struct ColorTool : ToolBase
     ColorTool() : ToolBase(TOOL_COLOR)
     {
     }
+
     virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnDown(bLeftButton, x, y, bDoubleClick);
