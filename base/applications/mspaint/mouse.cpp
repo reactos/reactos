@@ -110,6 +110,7 @@ struct FreeSelTool : ToolBase
         selectionModel.ResetPtStack();
         selectionModel.PushToPtStack(x, y);
     }
+
     virtual void OnMove(BOOL bLeftButton, LONG x, LONG y)
     {
         if (selectionModel.PtStackSize() == 1)
