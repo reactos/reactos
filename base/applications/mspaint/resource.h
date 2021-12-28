@@ -2,7 +2,7 @@
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
  * FILE:        base/applications/mspaint/resource.h
- * PURPOSE:     Defines the resource ids and other stuff
+ * PURPOSE:     Defines the resource IDs
  * PROGRAMMERS: Benedikt Freisen
  */
 
