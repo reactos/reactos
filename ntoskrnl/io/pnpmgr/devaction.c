@@ -50,8 +50,6 @@ KSPIN_LOCK IopDeviceActionLock;
 KEVENT PiEnumerationFinished;
 static const WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
 
-#define TAG_PNP_DEVACTION 'aDpP'
-
 /* TYPES *********************************************************************/
 
 typedef struct _DEVICE_ACTION_REQUEST
@@ -253,7 +251,10 @@ IopCreateDeviceInstancePath(
     Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopQueryDeviceCapabilities() failed (Status 0x%08lx)\n", Status);
+        if (Status != STATUS_NOT_SUPPORTED)
+        {
+            DPRINT1("IopQueryDeviceCapabilities() failed (Status 0x%08lx)\n", Status);
+        }
         RtlFreeUnicodeString(&DeviceId);
         return Status;
     }

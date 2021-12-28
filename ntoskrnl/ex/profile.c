@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_PROFILE 'forP'
-
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE ExProfileObjectType = NULL;
