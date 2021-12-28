@@ -621,6 +621,7 @@ struct BezierTool : ToolBase
     virtual void OnUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnUp(bLeftButton, x, y);
+        imageModel.ResetToPrevious();
         pointSP++;
         if (pointSP == 4)
             pointSP = 0;
