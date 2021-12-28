@@ -3,8 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Chinese (Hong Kong) resources file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
- * REFERENCES:  Chinese (Simplified) resource translation
- *              Copyright 2018 Li Keqing <auroracloud4096@gmail.com>
+ * REFERENCES:  Chinese (Simplified) resource file
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG

@@ -3,8 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
- * REFERENCES:  Chinese (Traditional) resource translation
- *              Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
@@ -90,5 +89,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "新增、刪除或設定遊戲控制器硬體，例如遊戲桿及遊戲手柄。"
     IDS_CONTROLLER "控制器"
     IDS_STATUS "狀態"
-    IDS_NONE "(None)"
+    IDS_NONE "（無）"
 END

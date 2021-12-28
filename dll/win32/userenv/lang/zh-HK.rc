@@ -2,9 +2,8 @@
  * PROJECT:      ReactOS Win32 User Environment
  * COPYRIGHT:    GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:      Chinese (Hong Kong) resource file
- * TRANSLATORS:  Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
- *               Copyright 2021 Chan Chilung <eason066@gmail.com>
- * REFERENCES:   Chinese (Traditional) resource translation
+ * TRANSLATORS:  Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:   Chinese (Traditional) resource file
  */
 
 /* ATTENTION: Please DO NOT change English folder names into Chinese
