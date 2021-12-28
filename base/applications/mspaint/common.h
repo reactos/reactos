@@ -10,9 +10,9 @@
 
 #pragma once
 
-#define GRIP_SIZE 3
-#define MIN_ZOOM 125
-#define MAX_ZOOM 8000
+#define GRIP_SIZE   3
+#define MIN_ZOOM    125
+#define MAX_ZOOM    8000
 
 /* width of the rectangle defined by a RECT structure */
 #define RECT_WIDTH(a)  ((a).right - (a).left)
