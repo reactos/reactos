@@ -266,14 +266,17 @@ struct FillTool : ToolBase
         else
             Fill(m_hdc, x, y, m_bg);
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         ToolBase::OnCancelDraw();
@@ -292,6 +295,7 @@ struct ColorTool : ToolBase
         ToolBase::OnButtonDown(bLeftButton, x, y, bDoubleClick);
         imageModel.CopyPrevious();
     }
+
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         COLORREF tempColor = GetPixel(m_hdc, x, y);
@@ -306,16 +310,19 @@ struct ColorTool : ToolBase
                 paletteModel.SetBgColor(tempColor);
         }
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         draw(bLeftButton, x, y);
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
         draw(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         OnButtonUp(FALSE, 0, 0);
@@ -347,14 +354,17 @@ struct ZoomTool : ToolBase
                 zoomTo(toolsModel.GetZoom() / 2, x, y);
         }
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         imageModel.ResetToPrevious();
@@ -379,6 +389,7 @@ struct PenTool : ToolBase
         else
             SetPixel(m_hdc, x, y, m_bg);
     }
+
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         if (bLeftButton)
@@ -392,16 +403,19 @@ struct PenTool : ToolBase
             SetPixel(m_hdc, x, y, m_bg);
         }
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         draw(bLeftButton, x, y);
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
         draw(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         OnButtonUp(FALSE, 0, 0);
@@ -417,6 +431,7 @@ struct BrushTool : ToolBase
     BrushTool() : ToolBase(TOOL_BRUSH)
     {
     }
+
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         if (bLeftButton)
@@ -424,21 +439,25 @@ struct BrushTool : ToolBase
         else
             Brush(m_hdc, x, y, x, y, m_bg, toolsModel.GetBrushStyle());
     }
+
     virtual void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnButtonDown(bLeftButton, x, y, bDoubleClick);
         imageModel.CopyPrevious();
         draw(bLeftButton, x, y);
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         draw(bLeftButton, x, y);
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         OnButtonUp(FALSE, 0, 0);
@@ -454,6 +473,7 @@ struct AirBrushTool : ToolBase
     AirBrushTool() : ToolBase(TOOL_AIRBRUSH)
     {
     }
+
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         if (bLeftButton)
@@ -461,21 +481,25 @@ struct AirBrushTool : ToolBase
         else
             Airbrush(m_hdc, x, y, m_bg, toolsModel.GetAirBrushWidth());
     }
+
     virtual void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnButtonDown(bLeftButton, x, y, bDoubleClick);
         imageModel.CopyPrevious();
         draw(bLeftButton, x, y);
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         draw(bLeftButton, x, y);
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         OnButtonUp(FALSE, 0, 0);
@@ -497,6 +521,7 @@ struct TextTool : ToolBase
         ToolBase::OnButtonDown(bLeftButton, x, y, bDoubleClick);
         imageModel.CopyPrevious();
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         POINT temp;
@@ -510,6 +535,7 @@ struct TextTool : ToolBase
         }
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
@@ -526,6 +552,7 @@ struct TextTool : ToolBase
             }
         }
     }
+
     virtual void OnCancelDraw()
     {
         imageModel.ResetToPrevious();
@@ -546,6 +573,7 @@ struct LineTool : ToolBase
         ToolBase::OnButtonDown(bLeftButton, x, y, bDoubleClick);
         imageModel.CopyPrevious();
     }
+
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         if (bLeftButton)
@@ -553,6 +581,7 @@ struct LineTool : ToolBase
         else
             Line(m_hdc, start.x, start.y, x, y, m_bg, toolsModel.GetLineWidth());
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
@@ -561,6 +590,7 @@ struct LineTool : ToolBase
         draw(bLeftButton, x, y);
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
@@ -569,6 +599,7 @@ struct LineTool : ToolBase
             roundTo8Directions(start.x, start.y, x, y);
         draw(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         OnButtonUp(FALSE, 0, 0);
@@ -596,6 +627,7 @@ struct BezierTool : ToolBase
             pointSP++;
         }
     }
+
     void draw(BOOL bLeftButton)
     {
         COLORREF rgb = (bLeftButton ? m_fg : m_bg);
@@ -613,6 +645,7 @@ struct BezierTool : ToolBase
                 break;
         }
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
@@ -621,6 +654,7 @@ struct BezierTool : ToolBase
         draw(bLeftButton);
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
@@ -630,6 +664,7 @@ struct BezierTool : ToolBase
         if (pointSP == 4)
             pointSP = 0;
     }
+
     virtual void OnCancelDraw()
     {
         OnButtonUp(FALSE, 0, 0);
@@ -651,6 +686,7 @@ struct RectTool : ToolBase
         ToolBase::OnButtonDown(bLeftButton, x, y, bDoubleClick);
         imageModel.CopyPrevious();
     }
+
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         if (bLeftButton)
@@ -658,6 +694,7 @@ struct RectTool : ToolBase
         else
             Rect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
@@ -666,6 +703,7 @@ struct RectTool : ToolBase
         draw(bLeftButton, x, y);
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
@@ -674,6 +712,7 @@ struct RectTool : ToolBase
             regularize(start.x, start.y, x, y);
         draw(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         OnButtonUp(FALSE, 0, 0);
@@ -703,6 +742,7 @@ struct ShapeTool : ToolBase
                 Poly(m_hdc, pointStack, pointSP + 1, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), bClosed, FALSE);
         }
     }
+
     virtual void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         ToolBase::OnButtonDown(bLeftButton, x, y, bDoubleClick);
@@ -715,6 +755,7 @@ struct ShapeTool : ToolBase
             pointSP++;
         }
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
@@ -725,6 +766,7 @@ struct ShapeTool : ToolBase
         draw(bLeftButton, x, y, FALSE);
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
@@ -748,6 +790,7 @@ struct ShapeTool : ToolBase
         if (pointSP == 255)
             pointSP--;
     }
+
     virtual void OnCancelDraw()
     {
         imageModel.ResetToPrevious();
@@ -768,6 +811,7 @@ struct EllipseTool : ToolBase
         ToolBase::OnButtonDown(bLeftButton, x, y, bDoubleClick);
         imageModel.CopyPrevious();
     }
+
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         if (bLeftButton)
@@ -775,6 +819,7 @@ struct EllipseTool : ToolBase
         else
             Ellp(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
@@ -783,6 +828,7 @@ struct EllipseTool : ToolBase
         draw(bLeftButton, x, y);
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
@@ -791,6 +837,7 @@ struct EllipseTool : ToolBase
             regularize(start.x, start.y, x, y);
         draw(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         OnButtonUp(FALSE, 0, 0);
@@ -812,6 +859,7 @@ struct RRectTool : ToolBase
         ToolBase::OnButtonDown(bLeftButton, x, y, bDoubleClick);
         imageModel.CopyPrevious();
     }
+
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         if (bLeftButton)
@@ -819,6 +867,7 @@ struct RRectTool : ToolBase
         else
             RRect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
     }
+
     virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
@@ -827,12 +876,14 @@ struct RRectTool : ToolBase
         draw(bLeftButton, x, y);
         ToolBase::OnMouseMove(bLeftButton, x, y);
     }
+
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnButtonUp(bLeftButton, x, y);
         imageModel.ResetToPrevious();
         draw(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         OnButtonUp(FALSE, 0, 0);
