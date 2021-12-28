@@ -18,12 +18,15 @@ wint_t _getwch(void)
     HANDLE ConsoleHandle;
     BOOL RestoreMode;
     DWORD ConsoleMode;
-	INPUT_RECORD InputRecord;
+    INPUT_RECORD InputRecord;
 
-    if (char_avail) {
+    if (char_avail)
+    {
         c = ungot_char;
         char_avail = 0;
-    } else {
+    } 
+    else 
+    {
         /*
          * _getch() is documented to NOT echo characters. Testing shows it
          * doesn't wait for a CR either. So we need to switch off
@@ -41,17 +44,18 @@ wint_t _getwch(void)
         }
         for ( ;; )
         {
-            if( !ReadConsoleInput(ConsoleHandle,
+            if ( !ReadConsoleInput(ConsoleHandle,
                      &InputRecord,
                      1,
                      &NumberOfCharsRead) || !NumberOfCharsRead)
             {
                 break;
             }
+
             if (InputRecord.EventType == KEY_EVENT &&
                 InputRecord.Event.KeyEvent.bKeyDown)
             {
-                if((c = InputRecord.Event.KeyEvent.uChar.UnicodeChar) != 0)
+                if ((c = InputRecord.Event.KeyEvent.uChar.UnicodeChar) != 0)
                     break;
 
                 if (InputRecord.Event.KeyEvent.wVirtualScanCode == 0x1d || /* Ctrl */
