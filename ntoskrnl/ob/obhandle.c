@@ -19,8 +19,6 @@
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
-#define TAG_OB_HANDLE 'dHbO'
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 PHANDLE_TABLE
