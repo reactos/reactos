@@ -8,12 +8,14 @@
 
 #pragma once
 
+#define NUM_COLORS 28
+
 /* CLASSES **********************************************************/
 
 class PaletteModel
 {
 private:
-    int m_colors[28];
+    int m_colors[NUM_COLORS];
     int m_nSelectedPalette;
     int m_fgColor;
     int m_bgColor;
