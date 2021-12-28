@@ -2752,6 +2752,7 @@ WSPGetSockOpt(IN SOCKET Handle,
             RtlCopyMemory(OptionValue, Buffer, BufferSize);
 
             return 0;
+
         /* These are handled at a lower level */
         case IPPROTO_IP:
         case IPPROTO_IPV6:
