@@ -216,6 +216,7 @@ struct RubberTool : ToolBase
     {
     }
 
+
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         if (bLeftButton)
