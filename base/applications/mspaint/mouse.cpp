@@ -235,6 +235,7 @@ struct RubberTool : ToolBase
         ToolBase::OnUp(bLeftButton, x, y);
         draw(bLeftButton, x, y);
     }
+
     virtual void OnCancelDraw()
     {
         ToolBase::OnCancelDraw();
