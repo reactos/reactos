@@ -138,24 +138,24 @@ void ToolsModel::NotifyZoomChanged()
     toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
 }
 
-void ToolsModel::OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
 {
     m_pToolObject->begin();
-    m_pToolObject->OnDown(bLeftButton, x, y, bDoubleClick);
+    m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
     m_pToolObject->end();
 }
 
-void ToolsModel::OnMove(BOOL bLeftButton, LONG x, LONG y)
+void ToolsModel::OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
 {
     m_pToolObject->begin();
-    m_pToolObject->OnMove(bLeftButton, x, y);
+    m_pToolObject->OnMouseMove(bLeftButton, x, y);
     m_pToolObject->end();
 }
 
-void ToolsModel::OnUp(BOOL bLeftButton, LONG x, LONG y)
+void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
 {
     m_pToolObject->begin();
-    m_pToolObject->OnUp(bLeftButton, x, y);
+    m_pToolObject->OnButtonUp(bLeftButton, x, y);
     m_pToolObject->end();
 }
 

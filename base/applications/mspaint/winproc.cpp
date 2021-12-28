@@ -561,9 +561,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
             toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
             //TODO: do this properly
-            toolsModel.OnDown(FALSE, 0, 0, FALSE);
-            toolsModel.OnMove(FALSE, 0, 0);
-            toolsModel.OnUp(FALSE, 0, 0);
+            toolsModel.OnButtonDown(FALSE, 0, 0, FALSE);
+            toolsModel.OnMouseMove(FALSE, 0, 0);
+            toolsModel.OnButtonUp(FALSE, 0, 0);
             break;
         }
         case IDM_EDITCOPYTO:
