@@ -33,8 +33,8 @@ public:
     PaletteModel();
     PAL_TYPE SelectedPalette();
     void SelectPalette(PAL_TYPE nPalette);
-    COLORREF GetColor(int nIndex) const;
-    void SetColor(int nIndex, COLORREF newColor);
+    COLORREF GetColor(UINT nIndex) const;
+    void SetColor(UINT nIndex, COLORREF newColor);
     COLORREF GetFgColor() const;
     void SetFgColor(COLORREF newColor);
     COLORREF GetBgColor() const;
