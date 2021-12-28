@@ -430,7 +430,7 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
     {
         hdwp = BeginDeferWindowPos(5);
 
-        /* For edit control */
+        /* For the edit control */
         hItemWnd = GetDlgItem(hwndDlg, IDC_VARIABLE_NAME);
         GetWindowRect(hItemWnd, &rect);
         MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
@@ -439,11 +439,11 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
         {
             hdwp = DeferWindowPos(hdwp,
                                   hItemWnd,
-                                  0,
-                                  rect.left, rect.top,
+                                  NULL,
+                                  0, 0,
                                   (rect.right - rect.left) + (cx - DlgData->cxOld),
                                   rect.bottom - rect.top,
-                                  SWP_NOZORDER | SWP_NOACTIVATE);
+                                  SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
         }
 
         hItemWnd = GetDlgItem(hwndDlg, IDC_VARIABLE_VALUE);
@@ -454,18 +454,18 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
         {
             hdwp = DeferWindowPos(hdwp,
                                   hItemWnd,
-                                  0,
-                                  rect.left, rect.top,
+                                  NULL,
+                                  0, 0,
                                   (rect.right - rect.left) + (cx - DlgData->cxOld),
                                   rect.bottom - rect.top,
-                                  SWP_NOZORDER | SWP_NOACTIVATE);
+                                  SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
         }
     }
     else if (DlgData->dwDlgID == IDD_EDIT_VARIABLE_FANCY)
     {
         hdwp = BeginDeferWindowPos(11);
 
-        /* For list view control */
+        /* For the list view control */
         hItemWnd = GetDlgItem(hwndDlg, IDC_LIST_VARIABLE_VALUE);
         GetWindowRect(hItemWnd, &rect);
         MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
@@ -474,15 +474,15 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
         {
             hdwp = DeferWindowPos(hdwp,
                                   hItemWnd,
-                                  0,
-                                  rect.left, rect.top,
+                                  NULL,
+                                  0, 0,
                                   (rect.right - rect.left) + (cx - DlgData->cxOld),
                                   (rect.bottom - rect.top) + (cy - DlgData->cyOld),
-                                  SWP_NOZORDER | SWP_NOACTIVATE);
+                                  SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
             ListView_SetColumnWidth(hItemWnd, 0, (rect.right - rect.left) + (cx - DlgData->cxOld));
         }
 
-        /* For buttons */
+        /* For the buttons */
         hItemWnd = GetDlgItem(hwndDlg, IDC_BUTTON_BROWSE_FOLDER);
         GetWindowRect(hItemWnd, &rect);
         MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
@@ -491,7 +491,7 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
         {
             hdwp = DeferWindowPos(hdwp,
                                   hItemWnd,
-                                  0,
+                                  NULL,
                                   rect.left + (cx - DlgData->cxOld),
                                   rect.top,
                                   0, 0,
@@ -505,12 +505,12 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
         if (hdwp)
         {
             hdwp = DeferWindowPos(hdwp,
-                              hItemWnd,
-                              0,
-                              rect.left + (cx - DlgData->cxOld),
-                              rect.top,
-                              0, 0,
-                              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+                                  hItemWnd,
+                                  NULL,
+                                  rect.left + (cx - DlgData->cxOld),
+                                  rect.top,
+                                  0, 0,
+                                  SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
         }
 
         hItemWnd = GetDlgItem(hwndDlg, IDC_BUTTON_EDIT);
@@ -521,7 +521,7 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
         {
             hdwp = DeferWindowPos(hdwp,
                                   hItemWnd,
-                                  0,
+                                  NULL,
                                   rect.left + (cx - DlgData->cxOld),
                                   rect.top,
                                   0, 0,
@@ -536,7 +536,7 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
         {
             hdwp = DeferWindowPos(hdwp,
                                   hItemWnd,
-                                  0,
+                                  NULL,
                                   rect.left + (cx - DlgData->cxOld),
                                   rect.top,
                                   0, 0,
@@ -551,26 +551,26 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
         {
             hdwp = DeferWindowPos(hdwp,
                                   hItemWnd,
-                                  0,
+                                  NULL,
                                   rect.left + (cx - DlgData->cxOld),
                                   rect.top,
                                   0, 0,
                                   SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
         }
 
-            hItemWnd = GetDlgItem(hwndDlg, IDC_BUTTON_MOVE_DOWN);
-            GetWindowRect(hItemWnd, &rect);
-            MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+        hItemWnd = GetDlgItem(hwndDlg, IDC_BUTTON_MOVE_DOWN);
+        GetWindowRect(hItemWnd, &rect);
+        MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
 
-            if (hdwp)
-            {
-                hdwp = DeferWindowPos(hdwp,
-                                      hItemWnd,
-                                      0,
-                                      rect.left + (cx - DlgData->cxOld),
-                                      rect.top,
-                                      0, 0,
-                                      SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        if (hdwp)
+        {
+            hdwp = DeferWindowPos(hdwp,
+                                  hItemWnd,
+                                  NULL,
+                                  rect.left + (cx - DlgData->cxOld),
+                                  rect.top,
+                                  0, 0,
+                                  SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
         }
 
         hItemWnd = GetDlgItem(hwndDlg, IDC_BUTTON_EDIT_TEXT);
@@ -579,9 +579,9 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
 
         if (hdwp)
         {
-                hdwp = DeferWindowPos(hdwp,
+            hdwp = DeferWindowPos(hdwp,
                                   hItemWnd,
-                                  0,
+                                  NULL,
                                   rect.left + (cx - DlgData->cxOld),
                                   rect.top,
                                   0, 0,
@@ -597,7 +597,7 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
                               rect.top + (cy - DlgData->cyOld),
                               0, 0,
@@ -612,7 +612,7 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
                               rect.top + (cy - DlgData->cyOld),
                               0, 0,
@@ -628,7 +628,7 @@ OnEnvironmentEditDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
                               rect.top + (cy - DlgData->cyOld),
                               0, 0,
@@ -717,7 +717,7 @@ OnNotifyEditVariableDlg(HWND hwndDlg, PEDIT_DIALOG_DATA DlgData, NMHDR *phdr)
     switch (phdr->idFrom)
     {
         case IDC_LIST_VARIABLE_VALUE:
-            switch(phdr->code)
+            switch (phdr->code)
             {
                 case NM_CLICK:
                 {
@@ -769,15 +769,16 @@ EditVariableDlgProc(HWND hwndDlg,
     PEDIT_DIALOG_DATA DlgData;
     HWND hwndListView;
 
-    DlgData = (PEDIT_DIALOG_DATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    DlgData = (PEDIT_DIALOG_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
     hwndListView = GetDlgItem(hwndDlg, IDC_LIST_VARIABLE_VALUE);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
             RECT rect;
 
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
             DlgData = (PEDIT_DIALOG_DATA)lParam;
 
             GetClientRect(hwndDlg, &rect);
@@ -817,26 +818,56 @@ EditVariableDlgProc(HWND hwndDlg,
         case WM_SIZE:
         {
             OnEnvironmentEditDlgResize(hwndDlg, DlgData, LOWORD(lParam), HIWORD(lParam));
-            break;
+            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, 0);
+            return TRUE;
         }
 
         case WM_SIZING:
         {
-            LPRECT pRect = (LPRECT)lParam;
+            /* Forbid resizing the dialog smaller than its minimal size */
+            PRECT pRect = (PRECT)lParam;
 
-            if (pRect->right - pRect->left < DlgData->cxMin)
-                pRect->right = pRect->left + DlgData->cxMin;
-
-            if (pRect->bottom - pRect->top < DlgData->cyMin)
-                pRect->bottom = pRect->top + DlgData->cyMin;
-
-            /* Make sure the normal variable edit dialog doesn't change its width */
-            if (DlgData->dwDlgID == IDD_EDIT_VARIABLE)
+            if ((wParam == WMSZ_LEFT) || (wParam == WMSZ_TOPLEFT) || (wParam == WMSZ_BOTTOMLEFT))
             {
-                if (pRect->bottom - pRect->top > DlgData->cyMin)
+                if (pRect->right - pRect->left < DlgData->cxMin)
+                    pRect->left = pRect->right - DlgData->cxMin;
+            }
+            else
+            if ((wParam == WMSZ_RIGHT) || (wParam == WMSZ_TOPRIGHT) || (wParam == WMSZ_BOTTOMRIGHT))
+            {
+                if (pRect->right - pRect->left < DlgData->cxMin)
+                    pRect->right = pRect->left + DlgData->cxMin;
+            }
+
+            if ((wParam == WMSZ_TOP) || (wParam == WMSZ_TOPLEFT) || (wParam == WMSZ_TOPRIGHT))
+            {
+                if (pRect->bottom - pRect->top < DlgData->cyMin)
+                    pRect->top = pRect->bottom - DlgData->cyMin;
+            }
+            else
+            if ((wParam == WMSZ_BOTTOM) || (wParam == WMSZ_BOTTOMLEFT) || (wParam == WMSZ_BOTTOMRIGHT))
+            {
+                if (pRect->bottom - pRect->top < DlgData->cyMin)
                     pRect->bottom = pRect->top + DlgData->cyMin;
             }
 
+            /* Make sure the normal variable edit dialog doesn't change its height */
+            if (DlgData->dwDlgID == IDD_EDIT_VARIABLE)
+            {
+                if ((wParam == WMSZ_TOP) || (wParam == WMSZ_TOPLEFT) || (wParam == WMSZ_TOPRIGHT))
+                {
+                    if (pRect->bottom - pRect->top > DlgData->cyMin)
+                        pRect->top = pRect->bottom - DlgData->cyMin;
+                }
+                else
+                if ((wParam == WMSZ_BOTTOM) || (wParam == WMSZ_BOTTOMLEFT) || (wParam == WMSZ_BOTTOMRIGHT))
+                {
+                    if (pRect->bottom - pRect->top > DlgData->cyMin)
+                        pRect->bottom = pRect->top + DlgData->cyMin;
+                }
+            }
+
+            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
             return TRUE;
         }
 
@@ -1371,7 +1402,7 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     else
         y -= (DlgData->cyOld - cy + 1) / 2;
 
-    /* For group box control */
+    /* For the group box controls */
     hItemWnd = GetDlgItem(hwndDlg, IDC_USER_VARIABLE_GROUP);
     GetWindowRect(hItemWnd, &rect);
     MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
@@ -1380,11 +1411,11 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
-                              rect.left, rect.top,
+                              NULL,
+                              0, 0,
                               (rect.right - rect.left) + (cx - DlgData->cxOld),
                               (rect.bottom - rect.top) + y,
-                              SWP_NOZORDER | SWP_NOACTIVATE);
+                              SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
     hItemWnd = GetDlgItem(hwndDlg, IDC_SYSTEM_VARIABLE_GROUP);
@@ -1395,14 +1426,14 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left, rect.top + y,
                               (rect.right - rect.left) + (cx - DlgData->cxOld),
                               (rect.bottom - rect.top) + y,
                               SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
-    /* For list view control */
+    /* For the list view controls */
     hItemWnd = GetDlgItem(hwndDlg, IDC_USER_VARIABLE_LIST);
     GetWindowRect(hItemWnd, &rect);
     MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
@@ -1411,11 +1442,11 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
-                              rect.left, rect.top,
+                              NULL,
+                              0, 0,
                               (rect.right - rect.left) + (cx - DlgData->cxOld),
                               (rect.bottom - rect.top) + y,
-                              SWP_NOZORDER | SWP_NOACTIVATE);
+                              SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
         Colx = ListView_GetColumnWidth(hItemWnd, 1);
         ListView_SetColumnWidth(hItemWnd, 1, Colx + (cx - DlgData->cxOld));
     }
@@ -1428,7 +1459,7 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left, rect.top + y,
                               (rect.right - rect.left) + (cx - DlgData->cxOld),
                               (rect.bottom - rect.top) + y,
@@ -1446,7 +1477,7 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
                               rect.top + y,
                               0, 0,
@@ -1461,7 +1492,7 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
                               rect.top + y,
                               0, 0,
@@ -1476,7 +1507,7 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
                               rect.top + y,
                               0, 0,
@@ -1491,7 +1522,7 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
                               rect.top + y * 2,
                               0, 0,
@@ -1506,7 +1537,7 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
                               rect.top + y * 2,
                               0, 0,
@@ -1521,7 +1552,7 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
                               rect.top + y * 2,
                               0, 0,
@@ -1536,9 +1567,9 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
-                              rect.top + (cy - DlgData->cyOld * 2),
+                              rect.top + (cy - DlgData->cyOld),
                               0, 0,
                               SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
@@ -1551,9 +1582,9 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
-                              rect.top + y * 2,
+                              rect.top + (cy - DlgData->cyOld),
                               0, 0,
                               SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
@@ -1567,7 +1598,7 @@ OnEnvironmentDlgResize(HWND hwndDlg,
     {
         hdwp = DeferWindowPos(hdwp,
                               hItemWnd,
-                              0,
+                              NULL,
                               rect.left + (cx - DlgData->cxOld),
                               rect.top + (cy - DlgData->cyOld),
                               0, 0,
@@ -1764,7 +1795,7 @@ SetAllVars(HWND hwndDlg,
 static BOOL
 OnNotify(HWND hwndDlg, NMHDR *phdr)
 {
-    switch(phdr->code)
+    switch (phdr->code)
     {
         case NM_DBLCLK:
             if (phdr->idFrom == IDC_USER_VARIABLE_LIST ||
@@ -1798,7 +1829,7 @@ EnvironmentDlgProc(HWND hwndDlg,
                    LPARAM lParam)
 {
     PENVIRONMENT_DIALOG_DATA DlgData;
-    DlgData = (PENVIRONMENT_DIALOG_DATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    DlgData = (PENVIRONMENT_DIALOG_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -1812,7 +1843,7 @@ EnvironmentDlgProc(HWND hwndDlg,
                 EndDialog(hwndDlg, 0);
                 return (INT_PTR)TRUE;
             }
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)DlgData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)DlgData);
 
             GetClientRect(hwndDlg, &rect);
             DlgData->cxOld = rect.right - rect.left;
@@ -1829,19 +1860,40 @@ EnvironmentDlgProc(HWND hwndDlg,
         case WM_SIZE:
         {
             OnEnvironmentDlgResize(hwndDlg, DlgData, LOWORD(lParam), HIWORD(lParam));
-            break;
+            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, 0);
+            return TRUE;
         }
 
         case WM_SIZING:
         {
-            LPRECT pRect = (LPRECT)lParam;
+            /* Forbid resizing the dialog smaller than its minimal size */
+            PRECT pRect = (PRECT)lParam;
 
-            if (pRect->right - pRect->left < DlgData->cxMin)
-                pRect->right = pRect->left + DlgData->cxMin;
+            if ((wParam == WMSZ_LEFT) || (wParam == WMSZ_TOPLEFT) || (wParam == WMSZ_BOTTOMLEFT))
+            {
+                if (pRect->right - pRect->left < DlgData->cxMin)
+                    pRect->left = pRect->right - DlgData->cxMin;
+            }
+            else
+            if ((wParam == WMSZ_RIGHT) || (wParam == WMSZ_TOPRIGHT) || (wParam == WMSZ_BOTTOMRIGHT))
+            {
+                if (pRect->right - pRect->left < DlgData->cxMin)
+                    pRect->right = pRect->left + DlgData->cxMin;
+            }
 
-            if (pRect->bottom - pRect->top < DlgData->cyMin)
-                pRect->bottom = pRect->top + DlgData->cyMin;
+            if ((wParam == WMSZ_TOP) || (wParam == WMSZ_TOPLEFT) || (wParam == WMSZ_TOPRIGHT))
+            {
+                if (pRect->bottom - pRect->top < DlgData->cyMin)
+                    pRect->top = pRect->bottom - DlgData->cyMin;
+            }
+            else
+            if ((wParam == WMSZ_BOTTOM) || (wParam == WMSZ_BOTTOMLEFT) || (wParam == WMSZ_BOTTOMRIGHT))
+            {
+                if (pRect->bottom - pRect->top < DlgData->cyMin)
+                    pRect->bottom = pRect->top + DlgData->cyMin;
+            }
 
+            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, TRUE);
             return TRUE;
         }
 
