@@ -20,12 +20,12 @@ PaletteModel::PaletteModel()
     SelectPalette(1);
 }
 
-int PaletteModel::SelectedPalette()
+PAL_TYPE PaletteModel::SelectedPalette()
 {
     return m_nSelectedPalette;
 }
 
-void PaletteModel::SelectPalette(int nPalette)
+void PaletteModel::SelectPalette(PAL_TYPE nPalette)
 {
     static const COLORREF modernColors[NUM_COLORS] =
     {
@@ -41,12 +41,14 @@ void PaletteModel::SelectPalette(int nPalette)
         0xffffff, 0xc0c0c0, 0x0000ff, 0x00ffff, 0x00ff00, 0xffff00, 0xff0000,
         0xff00ff, 0x80ffff, 0x80ff00, 0xffff80, 0xff8080, 0x8000ff, 0x4080ff
     };
-    if (nPalette == 1)
-        CopyMemory(m_colors, modernColors, sizeof(m_colors));
-    else if (nPalette == 2)
-        CopyMemory(m_colors, oldColors, sizeof(m_colors));
-    else
-        return;
+    switch (nPalette)
+    {
+        case PAL_MODERN:
+            CopyMemory(m_colors, modernColors, sizeof(m_colors));
+            break;
+        case PAL_OLDTYPE:
+            CopyMemory(m_colors, oldColors, sizeof(m_colors));
+    }
     m_nSelectedPalette = nPalette;
     NotifyPaletteChanged();
 }

@@ -10,23 +10,29 @@
 
 #define NUM_COLORS 28
 
+enum PAL_TYPE
+{
+    PAL_MODERN = 1,
+    PAL_OLDTYPE = 2,
+};
+
 /* CLASSES **********************************************************/
 
 class PaletteModel
 {
 private:
     COLORREF m_colors[NUM_COLORS];
-    int m_nSelectedPalette;
-    int m_fgColor;
-    int m_bgColor;
+    PAL_TYPE m_nSelectedPalette;
+    COLORREF m_fgColor;
+    COLORREF m_bgColor;
 
     void NotifyColorChanged();
     void NotifyPaletteChanged();
 
 public:
     PaletteModel();
-    int SelectedPalette();
-    void SelectPalette(int nPalette);
+    PAL_TYPE SelectedPalette();
+    void SelectPalette(PAL_TYPE nPalette);
     COLORREF GetColor(int nIndex) const;
     void SetColor(int nIndex, COLORREF newColor);
     COLORREF GetFgColor() const;
