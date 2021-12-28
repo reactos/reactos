@@ -138,6 +138,7 @@ struct FreeSelTool : ToolBase
         }
         selectionModel.ResetPtStack();
     }
+
     virtual void OnCancelDraw()
     {
         imageModel.ResetToPrevious();
