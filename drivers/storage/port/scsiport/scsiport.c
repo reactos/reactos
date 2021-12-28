@@ -981,8 +981,6 @@ ScsiPortInitialize(
             break;
         }
 
-        DPRINT1("Created device: %wZ (%p)\n", &DeviceName, PortDeviceObject);
-
         /* Set the buffering strategy here... */
         PortDeviceObject->Flags |= DO_DIRECT_IO;
         PortDeviceObject->AlignmentRequirement = FILE_WORD_ALIGNMENT; /* FIXME: Is this really needed? */
@@ -2494,7 +2492,7 @@ TryNextAd:
             else
             {
                 /* Info was not found, exit */
-                DPRINT1("ZwOpenKey() failed with Status=0x%08X\n", Status);
+                DPRINT("ZwOpenKey() failed with Status=0x%08X\n", Status);
                 return STATUS_DEVICE_DOES_NOT_EXIST;
             }
         }

@@ -25,10 +25,10 @@ public:
     PaletteModel();
     int SelectedPalette();
     void SelectPalette(int nPalette);
-    int GetColor(int nIndex);
+    int GetColor(int nIndex) const;
     void SetColor(int nIndex, int newColor);
-    int GetFgColor();
+    int GetFgColor() const;
     void SetFgColor(int newColor);
-    int GetBgColor();
+    int GetBgColor() const;
     void SetBgColor(int newColor);
 };
