@@ -2745,13 +2745,15 @@ WSPGetSockOpt(IN SOCKET Handle,
 
             if (*OptionLength < BufferSize)
             {
-                if (lpErrno) *lpErrno = WSAEFAULT;
+                if (lpErrno) 
+                    *lpErrno = WSAEFAULT;
                 *OptionLength = BufferSize;
                 return SOCKET_ERROR;
             }
             RtlCopyMemory(OptionValue, Buffer, BufferSize);
 
             return 0;
+
         /* These are handled at a lower level */
         case IPPROTO_IP:
         case IPPROTO_IPV6:
@@ -2979,8 +2981,8 @@ WSPSetSockOpt(
             DbgPrint("Invalid option level (%x)\n", level);
             if (lpErrno) *lpErrno = WSAEINVAL;
             return SOCKET_ERROR;
-         }
         }
+        
     }
 
 SendToHelper:
