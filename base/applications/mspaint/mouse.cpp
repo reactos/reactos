@@ -165,6 +165,7 @@ struct RectSelTool : ToolBase
             selectionModel.SetSrcRectSizeToZero();
         }
     }
+
     virtual void OnMove(BOOL bLeftButton, LONG x, LONG y)
     {
         POINT temp;
