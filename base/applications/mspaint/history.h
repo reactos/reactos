@@ -8,6 +8,9 @@
 
 #pragma once
 
+/* HISTORYSIZE = number of possible undo-steps + 1 */
+#define HISTORYSIZE 11
+
 class ImageModel
 {
 private:
