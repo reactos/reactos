@@ -179,6 +179,7 @@ struct RectSelTool : ToolBase
         }
         ToolBase::OnMove(bLeftButton, x, y);
     }
+
     virtual void OnUp(BOOL bLeftButton, LONG x, LONG y)
     {
         ToolBase::OnUp(bLeftButton, x, y);
