@@ -2,7 +2,7 @@
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
  * FILE:        base/applications/mspaint/common.h
- * PURPOSE:     Commonly used functions
+ * PURPOSE:     Commonly used functions and definitions
  * PROGRAMMERS: Benedikt Freisen
  *              Stanislav Motylkov
  *              Katayama Hirofumi MZ
