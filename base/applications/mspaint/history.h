@@ -45,5 +45,4 @@ public:
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
-    void ReleaseDC(HDC hDC);
 };
