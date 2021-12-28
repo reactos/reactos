@@ -28,12 +28,6 @@ enum TOOLTYPE
     TOOL_RRECT    = 16,
 };
 
-enum BUTTON_TYPE
-{
-    BUTTON_LEFT,
-    BUTTON_RIGHT,
-};
-
 /* CLASSES **********************************************************/
 
 struct ToolBase
@@ -50,9 +44,9 @@ struct ToolBase
     {
     }
 
-    virtual void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick);
-    virtual void OnMove(BUTTON_TYPE button, LONG x, LONG y);
-    virtual void OnUp(BUTTON_TYPE button, LONG x, LONG y);
+    virtual void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick);
+    virtual void OnMove(BOOL bLeftButton, LONG x, LONG y);
+    virtual void OnUp(BOOL bLeftButton, LONG x, LONG y);
     virtual void OnCancelDraw();
 
     void begin();
@@ -98,8 +92,8 @@ public:
     int GetZoom() const;
     void SetZoom(int nZoom);
 
-    void OnDown(BUTTON_TYPE button, LONG x, LONG y, BOOL bDoubleClick);
-    void OnMove(BUTTON_TYPE button, LONG x, LONG y);
+    void OnDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick);
+    void OnMove(BOOL bLeftButton, LONG x, LONG y);
     void OnUp(BUTTON_TYPE button, LONG x, LONG y);
     void OnCancelDraw();
 };
