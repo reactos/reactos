@@ -184,7 +184,7 @@ static DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     }
 
     /* Open user's HKCU */
-    lError = RegOpenCurrentUser(KEY_QUERY_VALUE, &hHKCU);
+    lError = RegOpenCurrentUser(KEY_READ, &hHKCU);
 
     if (lError != ERROR_SUCCESS)
     {
@@ -194,7 +194,7 @@ static DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     }
 
     /* Open registry key */
-    lError = RegOpenKeyExW(hHKCU, lpRegSubKey, 0, KEY_QUERY_VALUE, &hRegKey);
+    lError = RegOpenKeyExW(hHKCU, lpRegSubKey, 0, KEY_READ, &hRegKey);
 
     if (lError != ERROR_SUCCESS)
     {
@@ -204,12 +204,12 @@ static DWORD WINAPI PlaySystemSoundThread(LPVOID lpParameter)
     }
 
     /* Open .Current */
-    lError = RegOpenKeyExW(hRegKey, L".Current", 0, KEY_QUERY_VALUE, &hRegSnd);
+    lError = RegOpenKeyExW(hRegKey, L".Current", 0, KEY_READ, &hRegSnd);
 
     if (lError != ERROR_SUCCESS)
     {
         /* If fail then open .Default */
-        lError = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_QUERY_VALUE, &hRegSnd);
+        lError = RegOpenKeyExW(hRegKey, L".Default", 0, KEY_READ, &hRegSnd);
 
         if (lError != ERROR_SUCCESS)
         {
