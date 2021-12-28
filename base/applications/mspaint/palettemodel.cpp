@@ -48,6 +48,7 @@ void PaletteModel::SelectPalette(PAL_TYPE nPalette)
             break;
         case PAL_OLDTYPE:
             CopyMemory(m_colors, oldColors, sizeof(m_colors));
+            break;
     }
     m_nSelectedPalette = nPalette;
     NotifyPaletteChanged();
