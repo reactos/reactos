@@ -27,14 +27,14 @@ int PaletteModel::SelectedPalette()
 
 void PaletteModel::SelectPalette(int nPalette)
 {
-    static const int modernColors[NUM_COLORS] =
+    static const COLORREF modernColors[NUM_COLORS] =
     {
         0x000000, 0x464646, 0x787878, 0x300099, 0x241ced, 0x0078ff, 0x0ec2ff,
         0x00f2ff, 0x1de6a8, 0x4cb122, 0xefb700, 0xf36d4d, 0x99362f, 0x98316f,
         0xffffff, 0xdcdcdc, 0xb4b4b4, 0x3c5a9c, 0xb1a3ff, 0x7aaae5, 0x9ce4f5,
         0xbdf9ff, 0xbcf9d3, 0x61bb9d, 0xead999, 0xd19a70, 0x8e6d54, 0xd5a5b5
     };
-    static const int oldColors[NUM_COLORS] =
+    static const COLORREF oldColors[NUM_COLORS] =
     {
         0x000000, 0x808080, 0x000080, 0x008080, 0x008000, 0x808000, 0x800000,
         0x800080, 0x408080, 0x404000, 0xff8000, 0x804000, 0xff0040, 0x004080,
@@ -51,7 +51,7 @@ void PaletteModel::SelectPalette(int nPalette)
     NotifyPaletteChanged();
 }
 
-int PaletteModel::GetColor(int nIndex) const
+COLORREF PaletteModel::GetColor(int nIndex) const
 {
     if (nIndex < NUM_COLORS)
         return m_colors[nIndex];
@@ -59,7 +59,7 @@ int PaletteModel::GetColor(int nIndex) const
         return 0;
 }
 
-void PaletteModel::SetColor(int nIndex, int newColor)
+void PaletteModel::SetColor(int nIndex, COLORREF newColor)
 {
     if (nIndex < NUM_COLORS)
     {
@@ -68,23 +68,23 @@ void PaletteModel::SetColor(int nIndex, int newColor)
     }
 }
 
-int PaletteModel::GetFgColor() const
+COLORREF PaletteModel::GetFgColor() const
 {
     return m_fgColor;
 }
 
-void PaletteModel::SetFgColor(int newColor)
+void PaletteModel::SetFgColor(COLORREF newColor)
 {
     m_fgColor = newColor;
     NotifyColorChanged();
 }
 
-int PaletteModel::GetBgColor() const
+COLORREF PaletteModel::GetBgColor() const
 {
     return m_bgColor;
 }
 
-void PaletteModel::SetBgColor(int newColor)
+void PaletteModel::SetBgColor(COLORREF newColor)
 {
     m_bgColor = newColor;
     NotifyColorChanged();

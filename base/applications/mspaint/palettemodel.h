@@ -15,7 +15,7 @@
 class PaletteModel
 {
 private:
-    int m_colors[NUM_COLORS];
+    COLORREF m_colors[NUM_COLORS];
     int m_nSelectedPalette;
     int m_fgColor;
     int m_bgColor;
@@ -27,10 +27,10 @@ public:
     PaletteModel();
     int SelectedPalette();
     void SelectPalette(int nPalette);
-    int GetColor(int nIndex) const;
-    void SetColor(int nIndex, int newColor);
-    int GetFgColor() const;
-    void SetFgColor(int newColor);
-    int GetBgColor() const;
-    void SetBgColor(int newColor);
+    COLORREF GetColor(int nIndex) const;
+    void SetColor(int nIndex, COLORREF newColor);
+    COLORREF GetFgColor() const;
+    void SetFgColor(COLORREF newColor);
+    COLORREF GetBgColor() const;
+    void SetBgColor(COLORREF newColor);
 };
