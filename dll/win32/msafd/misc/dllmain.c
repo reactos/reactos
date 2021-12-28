@@ -2752,10 +2752,19 @@ WSPGetSockOpt(IN SOCKET Handle,
             RtlCopyMemory(OptionValue, Buffer, BufferSize);
 
             return 0;
+        /* These are handled at a lower level */
+        case IPPROTO_IP:
+        case IPPROTO_IPV6:
+        case IPPROTO_TCP:
+        case IPPROTO_UDP:
+            goto SendToHelper;
 
         default:
+        {
+            DbgPrint("Invalid option level (%x)\n", Level);
             if (lpErrno) *lpErrno = WSAEINVAL;
             return SOCKET_ERROR;
+        }
     }
 
 SendToHelper:
@@ -2796,166 +2805,181 @@ WSPSetSockOpt(
         if (lpErrno) *lpErrno = WSAEFAULT;
         return SOCKET_ERROR;
     }
-
-
-    /* FIXME: We should handle some more cases here */
-    if (level == SOL_SOCKET)
+    switch (level)
     {
-        switch (optname)
+        case SOL_SOCKET:
+            /* FIXME: We should handle some more cases here */
+            switch (optname)
+            {
+                case SO_BROADCAST:
+                    if (optlen < sizeof(BOOL))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+                    Socket->SharedData->Broadcast = (*optval != 0) ? 1 : 0;
+                    return NO_ERROR;
+
+                case SO_OOBINLINE:
+                    if (optlen < sizeof(BOOL))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+                    Socket->SharedData->OobInline = (*optval != 0) ? 1 : 0;
+                    return NO_ERROR;
+
+                case SO_DONTLINGER:
+                    if (optlen < sizeof(BOOL))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+                    Socket->SharedData->LingerData.l_onoff = (*optval != 0) ? 0 : 1;
+                    return NO_ERROR;
+ 
+                case SO_REUSEADDR:
+                    if (optlen < sizeof(BOOL))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+                    Socket->SharedData->ReuseAddresses = (*optval != 0) ? 1 : 0;
+                    return NO_ERROR;
+
+
+                case SO_EXCLUSIVEADDRUSE:
+                    if (optlen < sizeof(BOOL))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+                    Socket->SharedData->ExclusiveAddressUse = (*optval != 0) ? 1 : 0;
+                    return NO_ERROR;
+
+                case SO_LINGER:
+                    if (optlen < sizeof(struct linger))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+                    RtlCopyMemory(&Socket->SharedData->LingerData,
+                                  optval,
+                                  sizeof(struct linger));
+                    return NO_ERROR;
+
+                case SO_SNDBUF:
+                    if (optlen < sizeof(ULONG))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+
+                    SetSocketInformation(Socket,
+                                         AFD_INFO_SEND_WINDOW_SIZE,
+                                         NULL,
+                                         (PULONG)optval,
+                                         NULL,
+                                         NULL,
+                                         NULL);
+                    GetSocketInformation(Socket,
+                                         AFD_INFO_SEND_WINDOW_SIZE,
+                                         NULL,
+                                         &Socket->SharedData->SizeOfSendBuffer,
+                                         NULL,
+                                         NULL,
+                                         NULL);
+
+                    return NO_ERROR;
+
+                case SO_RCVBUF:
+                    if (optlen < sizeof(ULONG))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+
+                    /* FIXME: We should not have to limit the packet receive buffer size like this. workaround for CORE-15804 */
+                    if (*(PULONG)optval > 0x2000)
+                        *(PULONG)optval = 0x2000;
+
+                    SetSocketInformation(Socket,
+                                         AFD_INFO_RECEIVE_WINDOW_SIZE,
+                                         NULL,
+                                         (PULONG)optval,
+                                         NULL,
+                                         NULL,
+                                         NULL);
+                    GetSocketInformation(Socket,
+                                         AFD_INFO_RECEIVE_WINDOW_SIZE,
+                                         NULL,
+                                         &Socket->SharedData->SizeOfRecvBuffer,
+                                         NULL,
+                                         NULL,
+                                         NULL);
+
+                    return NO_ERROR;
+
+                case SO_ERROR:
+                    if (optlen < sizeof(INT))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+
+                    RtlCopyMemory(&Socket->SharedData->SocketLastError,
+                                  optval,
+                                  sizeof(INT));
+                    return NO_ERROR;
+
+                case SO_SNDTIMEO:
+                    if (optlen < sizeof(DWORD))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+
+                    RtlCopyMemory(&Socket->SharedData->SendTimeout,
+                                  optval,
+                                  sizeof(DWORD));
+                    return NO_ERROR;
+
+                case SO_RCVTIMEO:
+                    if (optlen < sizeof(DWORD))
+                    {
+                        if (lpErrno) *lpErrno = WSAEFAULT;
+                        return SOCKET_ERROR;
+                    }
+
+                    RtlCopyMemory(&Socket->SharedData->RecvTimeout,
+                                  optval,
+                                  sizeof(DWORD));
+                    return NO_ERROR;
+
+                case SO_KEEPALIVE:
+                case SO_DONTROUTE:
+                    /* These go directly to the helper dll */
+                    goto SendToHelper;
+
+                default:
+                    /* Obviously this is a hack */
+                    ERR("MSAFD: Set SOL_SOCKET unknown optname %x\n", optname);
+                    return NO_ERROR;
+            }
+
+        /* These are handled at a lower level */
+        case IPPROTO_IP:
+        case IPPROTO_IPV6:
+        case IPPROTO_TCP:
+        case IPPROTO_UDP:
+            goto SendToHelper;
+
+        default:
         {
-           case SO_BROADCAST:
-              if (optlen < sizeof(BOOL))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-              Socket->SharedData->Broadcast = (*optval != 0) ? 1 : 0;
-              return NO_ERROR;
-
-           case SO_OOBINLINE:
-              if (optlen < sizeof(BOOL))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-              Socket->SharedData->OobInline = (*optval != 0) ? 1 : 0;
-              return NO_ERROR;
-
-           case SO_DONTLINGER:
-              if (optlen < sizeof(BOOL))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-              Socket->SharedData->LingerData.l_onoff = (*optval != 0) ? 0 : 1;
-              return NO_ERROR;
-
-           case SO_REUSEADDR:
-              if (optlen < sizeof(BOOL))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-              Socket->SharedData->ReuseAddresses = (*optval != 0) ? 1 : 0;
-              return NO_ERROR;
-
-           case SO_EXCLUSIVEADDRUSE:
-              if (optlen < sizeof(BOOL))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-              Socket->SharedData->ExclusiveAddressUse = (*optval != 0) ? 1 : 0;
-              return NO_ERROR;
-
-           case SO_LINGER:
-              if (optlen < sizeof(struct linger))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-              RtlCopyMemory(&Socket->SharedData->LingerData,
-                            optval,
-                            sizeof(struct linger));
-              return NO_ERROR;
-
-           case SO_SNDBUF:
-              if (optlen < sizeof(ULONG))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-
-              SetSocketInformation(Socket,
-                                   AFD_INFO_SEND_WINDOW_SIZE,
-                                   NULL,
-                                   (PULONG)optval,
-                                   NULL,
-                                   NULL,
-                                   NULL);
-              GetSocketInformation(Socket,
-                                   AFD_INFO_SEND_WINDOW_SIZE,
-                                   NULL,
-                                   &Socket->SharedData->SizeOfSendBuffer,
-                                   NULL,
-                                   NULL,
-                                   NULL);
-
-              return NO_ERROR;
-
-           case SO_RCVBUF:
-              if (optlen < sizeof(ULONG))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-
-              /* FIXME: We should not have to limit the packet receive buffer size like this. workaround for CORE-15804 */
-              if (*(PULONG)optval > 0x2000)
-                  *(PULONG)optval = 0x2000;
-
-              SetSocketInformation(Socket,
-                                   AFD_INFO_RECEIVE_WINDOW_SIZE,
-                                   NULL,
-                                   (PULONG)optval,
-                                   NULL,
-                                   NULL,
-                                   NULL);
-              GetSocketInformation(Socket,
-                                   AFD_INFO_RECEIVE_WINDOW_SIZE,
-                                   NULL,
-                                   &Socket->SharedData->SizeOfRecvBuffer,
-                                   NULL,
-                                   NULL,
-                                   NULL);
-
-              return NO_ERROR;
-
-           case SO_ERROR:
-              if (optlen < sizeof(INT))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-
-              RtlCopyMemory(&Socket->SharedData->SocketLastError,
-                            optval,
-                            sizeof(INT));
-              return NO_ERROR;
-
-           case SO_SNDTIMEO:
-              if (optlen < sizeof(DWORD))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-
-              RtlCopyMemory(&Socket->SharedData->SendTimeout,
-                            optval,
-                            sizeof(DWORD));
-              return NO_ERROR;
-
-           case SO_RCVTIMEO:
-              if (optlen < sizeof(DWORD))
-              {
-                  if (lpErrno) *lpErrno = WSAEFAULT;
-                  return SOCKET_ERROR;
-              }
-
-              RtlCopyMemory(&Socket->SharedData->RecvTimeout,
-                            optval,
-                            sizeof(DWORD));
-              return NO_ERROR;
-
-           case SO_KEEPALIVE:
-           case SO_DONTROUTE:
-              /* These go directly to the helper dll */
-              goto SendToHelper;
-
-           default:
-              /* Obviously this is a hack */
-              ERR("MSAFD: Set unknown optname %x\n", optname);
-              return NO_ERROR;
+            DbgPrint("Invalid option level (%x)\n", level);
+            if (lpErrno) *lpErrno = WSAEINVAL;
+            return SOCKET_ERROR;
+         }
         }
     }
 
