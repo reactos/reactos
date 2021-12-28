@@ -162,7 +162,7 @@ LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     drawing = TRUE;
     SetCapture();
     INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-    toolsModel.OnDown(FALSE, UnZoomed(x), UnZoomed(y), FALSE);
+    toolsModel.OnDown(TRUE, UnZoomed(x), UnZoomed(y), FALSE);
     Invalidate(FALSE);
     return 0;
 }
@@ -320,7 +320,7 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         if (wParam & MK_LBUTTON)
         {
-            toolsModel.OnMove(FALSE, xNow, yNow);
+            toolsModel.OnMove(TRUE, xNow, yNow);
             Invalidate(FALSE);
             if ((toolsModel.GetActiveTool() >= TOOL_TEXT) || (toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
             {
@@ -333,7 +333,7 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         if (wParam & MK_RBUTTON)
         {
-            toolsModel.OnMove(TRUE, xNow, yNow);
+            toolsModel.OnMove(FALSE, xNow, yNow);
             Invalidate(FALSE);
             if (toolsModel.GetActiveTool() >= TOOL_TEXT)
             {
