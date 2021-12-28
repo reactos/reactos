@@ -77,7 +77,7 @@ StartPortThread( LPWSTR pName, HWND hWnd, LPWSTR pPortName, PPfpFunction fpFunct
 
     CloseHandle( htHandle );
 
-    while ( MsgWaitForMultipleObjects( 1, &PortThreadInfo.hEvent, FALSE, INFINITE, QS_SENDMESSAGE|QS_ALLEVENTS ) == 1 )
+    while ( MsgWaitForMultipleObjects( 1, &PortThreadInfo.hEvent, FALSE, INFINITE, QS_ALLINPUT ) == 1 )
     {
         while ( PeekMessageW( &Msg, NULL, 0, 0, PM_REMOVE ) )
         {

@@ -101,7 +101,7 @@
 @ stdcall ImmSetCompositionStringW(ptr long ptr long ptr long)
 @ stdcall ImmSetCompositionWindow(ptr ptr)
 @ stdcall ImmSetConversionStatus(ptr long long)
-#@ stdcall ImmSetHotKey(long long long ptr) user32.CliImmSetHotKey
+@ stdcall ImmSetHotKey(long long long ptr) user32.CliImmSetHotKey
 @ stdcall ImmSetOpenStatus(ptr long)
 @ stdcall ImmSetStatusWindowPos(ptr ptr)
 @ stdcall ImmShowSoftKeyboard(ptr long)

@@ -113,6 +113,7 @@ AddReg=Classes
 11,,stobject.dll,1
 11,,urlmon.dll,3
 11,,vbscript.dll,1
+11,,w32time.dll,1
 11,,windowscodecs.dll,1
 11,,winhttp.dll,1
 11,,wininet.dll,2
@@ -126,6 +127,7 @@ AddReg=Classes
 11,,zipfldr.dll,1
 
 [TypeLibraries]
+riched20.dll
 stdole2.tlb
 stdole32.tlb
 mshtml.tlb

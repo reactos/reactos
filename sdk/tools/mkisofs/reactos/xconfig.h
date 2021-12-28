@@ -180,7 +180,9 @@
 #define HAVE_LONGLONG 1
 
 #ifndef _WIN32
+#if !defined(__arm__) && !defined(__aarch64__)
     #define VA_LIST_IS_ARRAY 1
+#endif
 #endif
 
 #ifdef _WIN32

@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "The system locale should match the language of the applications you want to use. The user locale controls how numbers, currencies, and dates appear.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "To change system or user locale settings, click Customise.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "&Customise...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "The keyboard layout controls the characters that appear when you type.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "To change the keyboard layout, click Customise.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "C&ustomise...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -174,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "You must provide a name and an Administrator Password for your computer."
     IDS_LOCALETITLE "Regional settings"
     IDS_LOCALESUBTITLE "You can customise ReactOS for different regions and languages."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Date and Time"
     IDS_DATETIMESUBTITLE "Set the correct date and time for your computer."
     IDS_PROCESSTITLE "Registering Components"

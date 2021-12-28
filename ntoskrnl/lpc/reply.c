@@ -664,7 +664,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
             Message = NULL;
 
             /* Setup the receive message */
-            ReceiveMessage->u1.s1.TotalLength = (CSHORT)(sizeof(LPCP_MESSAGE) +
+            ReceiveMessage->u1.s1.TotalLength = (CSHORT)(sizeof(PORT_MESSAGE) +
                                                          ConnectionInfoLength);
             ReceiveMessage->u1.s1.DataLength = (CSHORT)ConnectionInfoLength;
             RtlCopyMemory(ReceiveMessage + 1,

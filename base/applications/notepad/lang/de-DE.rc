@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Datei"
     BEGIN
         MENUITEM "&Neu\tStrg+N", CMD_NEW
-        MENUITEM "&Neues Fenster\tStrg+Umschalt+N", CMD_NEW_WINDOW
+        MENUITEM "Neues &Fenster\tStrg+Umschalt+N", CMD_NEW_WINDOW
         MENUITEM "Ö&ffnen\tStrg+O", CMD_OPEN
         MENUITEM "&Speichern\tStrg+S", CMD_SAVE
         MENUITEM "Speichern &unter...", CMD_SAVE_AS

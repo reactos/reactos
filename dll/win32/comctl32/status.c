@@ -432,6 +432,10 @@ STATUSBAR_GetParts (const STATUS_INFO *infoPtr, INT num_parts, INT parts[])
 
     TRACE("(%d)\n", num_parts);
     if (parts) {
+#ifdef __REACTOS__
+        if (num_parts > infoPtr->numParts)
+            num_parts = infoPtr->numParts;
+#endif
 	for (i = 0; i < num_parts; i++) {
 	    parts[i] = infoPtr->parts[i].x;
 	}

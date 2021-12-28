@@ -1,10 +1,9 @@
 /*
- * PROJECT: ReactOS system setup
- * FILE:    dll/win32/syssetup/lang/ro-RO.rc
- * PURPOSE: Romanian Language File for system setup
- * TRANSLATORS:
- *          Petru Dimitriu (petrimetri at gmail dot com)
- *          Ștefan Fulea (stefan dot fulea at mail dot com)
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
+ *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -83,11 +82,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Localizarea regională trebuie să se potrivească cu limba aplicațiilor utilizate. De ea depinde cum vor apărea numerele, valutele și data.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Modificați configurația de localizare a sistemului.", IDC_STATIC, 53, 60, 186, 8
     PUSHBUTTON "&Configurare…", IDC_CUSTOMLOCALE, 230, 57, 70, 14
+    LTEXT "", IDC_STATIC, 53, 78, 246, 1, SS_ETCHEDHORZ
     LTEXT "Configurări și localizări pentru tastatură, aranjamente ale caracterelor asociate tastelor la dactilografiere, și alte servicii de text.", IDC_STATIC, 53, 82, 253, 20
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Configurați aranjamentele de tastatură.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Config&urare…", IDC_CUSTOMLAYOUT, 230, 122, 70, 14
 END
@@ -183,6 +183,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Furnizare nume pentru calculator și parolă pentru contul Administrator"
     IDS_LOCALETITLE "Particularizări regionale"
     IDS_LOCALESUBTITLE "Particularizare sistem pentru anumite regiuni sau limbi"
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Dată și oră"
     IDS_DATETIMESUBTITLE "Stabilire dată și oră corectă pentru calculator"
     IDS_PROCESSTITLE "Înregistrare componente"

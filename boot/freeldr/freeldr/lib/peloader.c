@@ -19,8 +19,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(PELOADER);
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -590,7 +590,7 @@ PeLdrAllocateDataTableEntry(
     OUT PLDR_DATA_TABLE_ENTRY *NewEntry)
 {
     PVOID BaseVA = PaToVa(BasePA);
-    PWSTR Buffer;
+    PWSTR BaseDllNameBuffer, Buffer;
     PLDR_DATA_TABLE_ENTRY DataTableEntry;
     PIMAGE_NT_HEADERS NtHeaders;
     USHORT Length;
@@ -603,12 +603,12 @@ PeLdrAllocateDataTableEntry(
                                                            TAG_WLDR_DTE);
     if (DataTableEntry == NULL)
         return FALSE;
-    RtlZeroMemory(DataTableEntry, sizeof(LDR_DATA_TABLE_ENTRY));
 
     /* Get NT headers from the image */
     NtHeaders = RtlImageNtHeader(BasePA);
 
     /* Initialize corresponding fields of DTE based on NT headers value */
+    RtlZeroMemory(DataTableEntry, sizeof(LDR_DATA_TABLE_ENTRY));
     DataTableEntry->DllBase = BaseVA;
     DataTableEntry->SizeOfImage = NtHeaders->OptionalHeader.SizeOfImage;
     DataTableEntry->EntryPoint = RVA(BaseVA, NtHeaders->OptionalHeader.AddressOfEntryPoint);
@@ -624,12 +624,17 @@ PeLdrAllocateDataTableEntry(
         FrLdrHeapFree(DataTableEntry, TAG_WLDR_DTE);
         return FALSE;
     }
-    RtlZeroMemory(Buffer, Length);
+
+    /* Save Buffer, in case of later failure */
+    BaseDllNameBuffer = Buffer;
 
     DataTableEntry->BaseDllName.Length = Length;
     DataTableEntry->BaseDllName.MaximumLength = Length;
     DataTableEntry->BaseDllName.Buffer = PaToVa(Buffer);
-    while (*BaseDllName != 0)
+
+    RtlZeroMemory(Buffer, Length);
+    Length /= sizeof(WCHAR);
+    while (Length--)
     {
         *Buffer++ = *BaseDllName++;
     }
@@ -640,15 +645,18 @@ PeLdrAllocateDataTableEntry(
     Buffer = (PWSTR)FrLdrHeapAlloc(Length, TAG_WLDR_NAME);
     if (Buffer == NULL)
     {
+        FrLdrHeapFree(BaseDllNameBuffer, TAG_WLDR_NAME);
         FrLdrHeapFree(DataTableEntry, TAG_WLDR_DTE);
         return FALSE;
     }
-    RtlZeroMemory(Buffer, Length);
 
     DataTableEntry->FullDllName.Length = Length;
     DataTableEntry->FullDllName.MaximumLength = Length;
     DataTableEntry->FullDllName.Buffer = PaToVa(Buffer);
-    while (*FullDllName != 0)
+
+    RtlZeroMemory(Buffer, Length);
+    Length /= sizeof(WCHAR);
+    while (Length--)
     {
         *Buffer++ = *FullDllName++;
     }
@@ -679,7 +687,7 @@ PeLdrAllocateDataTableEntry(
     /* Insert this DTE to a list in the LPB */
     InsertTailList(ModuleListHead, &DataTableEntry->InLoadOrderLinks);
     TRACE("Inserting DTE %p, name='%.*S' DllBase=%p\n", DataTableEntry,
-          DataTableEntry->BaseDllName.Length / 2,
+          DataTableEntry->BaseDllName.Length / sizeof(WCHAR),
           VaToPa(DataTableEntry->BaseDllName.Buffer),
           DataTableEntry->DllBase);
 

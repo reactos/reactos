@@ -1030,12 +1030,12 @@ BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInf
     return TRUE;
 }
 
-BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal)
+BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo)
 {
     if (!pAppInfo)
         return FALSE;
 
-    CDownloadManager::Download(*pAppInfo, bIsModal);
+    CDownloadManager::Download(*pAppInfo, FALSE);
     return TRUE;
 }
 

@@ -1,5 +1,10 @@
-/* Russian translation by Dmitry Chapyshev, 2007-06-13
-   Updated by Oleg Dubinskiy, 2020-02-14               */
+/*
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2007 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2020 Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -77,11 +82,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Язык системы устанавливается и действует во всех приложениях. Можно выбрать систему исчисления, формат чисел и даты.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Для изменения языка системы нажмите ""Настроить"".", IDC_STATIC, 53, 60, 197, 8
     PUSHBUTTON "&Настроить...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "Выбрав раскладку вы сможете вводить символы на вашем языке.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Для изменения раскладки нажмите ""Настроить"".", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Н&астроить...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END
@@ -177,6 +183,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Вы должны ввести имя и администраторский пароль для вашего компьютера."
     IDS_LOCALETITLE "Региональные настройки"
     IDS_LOCALESUBTITLE "Вы можете настраивать ReactOS для разных регионов и языков."
+    IDS_LOCALETEXT "Языковые стандарты и форматы: %s, расположение: %s."
+    IDS_LAYOUTTEXT "Ваш язык и метод ввода текста по умолчанию: %s раскладка клавиатуры"
     IDS_DATETIMETITLE "Дата и время"
     IDS_DATETIMESUBTITLE "Установите правильную дату и время на вашем компьютере."
     IDS_PROCESSTITLE "Процесс установки"

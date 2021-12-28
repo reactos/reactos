@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Οι τοπικές ρυθμισεις πρέπει να ταιριάζουν με τη γλώσσα των εφαρμογών  που θέλετε να χρησιμοποιήσετε. Επίσης ελέγχουν τον τρόπο  με τον οποίο θα εμφανίζονται οι αριθμοί, τα νομίσματα και οι ημερομηνίες.", IDC_STATIC, 53, 7, 253, 31
-    LTEXT "", IDC_LOCALETEXT, 53, 31, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "Για να αλλάξετε τις τοπικές ρυθμίσεις, πατήστε το κουμπί 'Προσαρμογή'.", IDC_STATIC, 53, 57, 184, 16
     PUSHBUTTON "&Προσαρμογή...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "Η διάταξη πληκτρολογίου έλέγχει τους χαρακτήρες που θα εμφανίζονται καθώς πληκτρολογείτε.", IDC_STATIC, 53, 86, 253, 20
-    LTEXT "", IDC_LAYOUTTEXT, 53, 102, 253, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 106, 253, 16
     LTEXT "Για να αλλάξετε τη διάταξη του πληκτρολογίου, πατήστε το κουμπί 'Προσαρμογή'.", IDC_STATIC, 53, 122, 184, 16
     PUSHBUTTON "Π&ροσαρμογή...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -174,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Πρέπει να δώσετε ένα όνομα και έναν κωδικό πρόσβασης για τον υπολογιστή σας."
     IDS_LOCALETITLE "Τοπικές ρυθμίσεις"
     IDS_LOCALESUBTITLE "Μπορείτε να προσαρμόσετε το ReactOS για διαφορετικές περιοχές και γλώσσες."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Ημερομηνία και ώρα"
     IDS_DATETIMESUBTITLE "Ορίστε τη σωστή ημερομηνία και ώρα για τον υπολογιστή σας."
     IDS_PROCESSTITLE "Τίτλος"

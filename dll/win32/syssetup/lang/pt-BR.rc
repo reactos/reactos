@@ -73,12 +73,13 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "A localidade do sistema deve coincidir com o idioma das aplicações que você quer utilizar. A localidade de usuário controla como números, moeda e datas aparecem.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "A localidade do sistema deve coincidir com o idioma das aplicações que você quer utilizar. A localidade de usuário controla como números, moeda e datas aparecem.", IDC_STATIC, 53, 7, 253, 25
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "Para alterar a localidade de sistema ou usuário, clique Personalizar.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "&Personalizar...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "O layout do teclado controla os caracteres que aparecem quando você digita.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Para alterar o layout do teclado, clique Personalizar.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "P&ersonalizar...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -174,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Você deve fornecer um nome e senha de administrador para o seu computador."
     IDS_LOCALETITLE "Configurações Regionais"
     IDS_LOCALESUBTITLE "Você pode personalizar o ReactOS para diferentes regiões e línguas."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Data e Hora"
     IDS_DATETIMESUBTITLE "Definir a data e a hora corretas para o seu computador."
     IDS_PROCESSTITLE "Registrando componentes"

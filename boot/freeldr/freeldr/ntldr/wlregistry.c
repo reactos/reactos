@@ -54,7 +54,6 @@ WinLdrLoadSystemHive(
     if (Status != ESUCCESS)
     {
         WARN("Error while opening '%s', Status: %u\n", FullHiveName, Status);
-        UiMessageBox("Opening hive file failed!");
         return FALSE;
     }
 
@@ -62,8 +61,8 @@ WinLdrLoadSystemHive(
     Status = ArcGetFileInformation(FileId, &FileInfo);
     if (Status != ESUCCESS)
     {
+        WARN("Hive file has 0 size!");
         ArcClose(FileId);
-        UiMessageBox("Hive file has 0 size!");
         return FALSE;
     }
     HiveFileSize = FileInfo.EndingAddress.LowPart;
@@ -75,8 +74,8 @@ WinLdrLoadSystemHive(
 
     if (HiveDataPhysical == NULL)
     {
+        WARN("Could not alloc memory for hive!");
         ArcClose(FileId);
-        UiMessageBox("Unable to alloc memory for a hive!");
         return FALSE;
     }
 
@@ -91,9 +90,8 @@ WinLdrLoadSystemHive(
     Status = ArcRead(FileId, HiveDataPhysical, HiveFileSize, &BytesRead);
     if (Status != ESUCCESS)
     {
-        ArcClose(FileId);
         WARN("Error while reading '%s', Status: %u\n", FullHiveName, Status);
-        UiMessageBox("Unable to read from hive file!");
+        ArcClose(FileId);
         return FALSE;
     }
 
@@ -102,17 +100,17 @@ WinLdrLoadSystemHive(
     if (FsService)
     {
         BOOLEAN Success;
-        TRACE("  Adding filesystem service %S\n", FsService);
+        TRACE("Adding filesystem service %S\n", FsService);
         Success = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
                                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
                                         NULL,
                                         (PWSTR)FsService);
         if (!Success)
-            TRACE(" Failed to add filesystem service\n");
+            TRACE("Failed to add filesystem service\n");
     }
     else
     {
-        TRACE("  No required filesystem service\n");
+        TRACE("No required filesystem service\n");
     }
 
     ArcClose(FileId);
@@ -147,10 +145,11 @@ WinLdrInitSystemHive(
 
     TRACE("WinLdrInitSystemHive: loading hive %s%s\n", SearchPath, HiveName);
     Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, HiveName);
-
-    /* Fail if failed... */
     if (!Success)
+    {
+        UiMessageBox("Could not load %s hive!", HiveName);
         return FALSE;
+    }
 
     /* Import what was loaded */
     Success = RegImportBinaryHive(VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength);
@@ -220,8 +219,8 @@ WinLdrGetNLSNames(PSTR AnsiName,
 
     /* Open the CodePage key */
     rc = RegOpenKey(NULL,
-        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage",
-        &hKey);
+                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage",
+                    &hKey);
     if (rc != ERROR_SUCCESS)
     {
         //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't open CodePage registry key");
@@ -234,6 +233,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     if (rc != ERROR_SUCCESS)
     {
         //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get ACP NLS setting");
+        RegCloseKey(hKey);
         return FALSE;
     }
 
@@ -242,6 +242,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     if (rc != ERROR_SUCCESS)
     {
         //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "ACP NLS Setting exists, but isn't readable");
+        //RegCloseKey(hKey);
         //return FALSE;
         wcscpy(NameBuffer, L"c_1252.nls"); // HACK: ReactOS bug CORE-6105
     }
@@ -253,6 +254,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     if (rc != ERROR_SUCCESS)
     {
         //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get OEMCP NLS setting");
+        RegCloseKey(hKey);
         return FALSE;
     }
 
@@ -261,15 +263,18 @@ WinLdrGetNLSNames(PSTR AnsiName,
     if (rc != ERROR_SUCCESS)
     {
         //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "OEMCP NLS setting exists, but isn't readable");
+        //RegCloseKey(hKey);
         //return FALSE;
         wcscpy(NameBuffer, L"c_437.nls"); // HACK: ReactOS bug CORE-6105
     }
     sprintf(OemName, "%S", NameBuffer);
 
+    RegCloseKey(hKey);
+
     /* Open the Language key */
     rc = RegOpenKey(NULL,
-        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
-        &hKey);
+                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
+                    &hKey);
     if (rc != ERROR_SUCCESS)
     {
         //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't open Language registry key");
@@ -282,6 +287,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     if (rc != ERROR_SUCCESS)
     {
         //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get Language Default setting");
+        RegCloseKey(hKey);
         return FALSE;
     }
 
@@ -290,10 +296,12 @@ WinLdrGetNLSNames(PSTR AnsiName,
     if (rc != ERROR_SUCCESS)
     {
         //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Language Default setting exists, but isn't readable");
+        RegCloseKey(hKey);
         return FALSE;
     }
     sprintf(LangName, "%S", NameBuffer);
 
+    RegCloseKey(hKey);
     return TRUE;
 }
 
@@ -482,8 +490,8 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                    IN PCSTR SystemRoot)
 {
     LONG rc = 0;
-    HKEY hGroupKey, hOrderKey, hServiceKey, hDriverKey;
-    PWSTR GroupNameBuffer;
+    HKEY hOrderKey, hServiceKey, hGroupKey, hDriverKey;
+    PWSTR GroupNameBuffer = NULL;
     WCHAR ServiceName[256];
     ULONG OrderList[128];
     ULONG BufferSize;
@@ -503,43 +511,54 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
 
     BOOLEAN Success;
 
-    /* get 'service group order' key */
+    /* Get 'group order list' key */
     rc = RegOpenKey(NULL,
-        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ServiceGroupOrder",
-        &hGroupKey);
-    if (rc != ERROR_SUCCESS) {
-
-        TRACE_CH(REACTOS, "Failed to open the 'ServiceGroupOrder' key (rc %d)\n", (int)rc);
-        return;
-    }
-
-    /* get 'group order list' key */
-    rc = RegOpenKey(NULL,
-        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\GroupOrderList",
-        &hOrderKey);
-    if (rc != ERROR_SUCCESS) {
-
+                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\GroupOrderList",
+                    &hOrderKey);
+    if (rc != ERROR_SUCCESS)
+    {
         TRACE_CH(REACTOS, "Failed to open the 'GroupOrderList' key (rc %d)\n", (int)rc);
         return;
     }
 
-    /* enumerate drivers */
+    /* Get 'services' key */
     rc = RegOpenKey(NULL,
-        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services",
-        &hServiceKey);
-    if (rc != ERROR_SUCCESS)  {
-
+                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services",
+                    &hServiceKey);
+    if (rc != ERROR_SUCCESS)
+    {
         TRACE_CH(REACTOS, "Failed to open the 'Services' key (rc %d)\n", (int)rc);
+        RegCloseKey(hOrderKey);
         return;
     }
 
-    /* Get the Name Group */
+    /* Get 'service group order' key */
+    rc = RegOpenKey(NULL,
+                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ServiceGroupOrder",
+                    &hGroupKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        TRACE_CH(REACTOS, "Failed to open the 'ServiceGroupOrder' key (rc %d)\n", (int)rc);
+        goto Quit;
+    }
+
+    /* Get the Group Order List */
     BufferSize = 4096;
     GroupNameBuffer = FrLdrHeapAlloc(BufferSize, TAG_WLDR_NAME);
+    if (!GroupNameBuffer)
+    {
+        TRACE_CH(REACTOS, "Failed to allocate buffer\n");
+        RegCloseKey(hGroupKey);
+        goto Quit;
+    }
     rc = RegQueryValue(hGroupKey, L"List", NULL, (PUCHAR)GroupNameBuffer, &BufferSize);
-    TRACE_CH(REACTOS, "RegQueryValue(): rc %d\n", (int)rc);
+    RegCloseKey(hGroupKey);
+
     if (rc != ERROR_SUCCESS)
-        return;
+    {
+        TRACE_CH(REACTOS, "Failed to query the 'List' value (rc %d)\n", (int)rc);
+        goto Quit;
+    }
     TRACE_CH(REACTOS, "BufferSize: %d\n", (int)BufferSize);
     TRACE_CH(REACTOS, "GroupNameBuffer: '%S'\n", GroupNameBuffer);
 
@@ -554,12 +573,10 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
         rc = RegQueryValue(hOrderKey, GroupName, NULL, (PUCHAR)OrderList, &BufferSize);
         if (rc != ERROR_SUCCESS) OrderList[0] = 0;
 
-        /* enumerate all drivers */
+        /* Enumerate all drivers */
         for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++)
         {
-            Index = 0;
-
-            while (TRUE)
+            for (Index = 0; TRUE; Index++)
             {
                 /* Get the Driver's Name */
                 ValueSize = sizeof(ServiceName);
@@ -570,10 +587,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                 if (rc == ERROR_NO_MORE_ITEMS)
                     break;
                 if (rc != ERROR_SUCCESS)
-                {
-                    FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
-                    return;
-                }
+                    goto Quit;
                 //TRACE_CH(REACTOS, "Service %d: '%S'\n", (int)Index, ServiceName);
 
                 /* Read the Start Value */
@@ -634,12 +648,11 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                     //    ServiceName, StartValue, TagValue, DriverGroup, OrderList[TagIndex], GroupName);
                 }
 
-                Index++;
+                RegCloseKey(hDriverKey);
             }
         }
 
-        Index = 0;
-        while (TRUE)
+        for (Index = 0; TRUE; Index++)
         {
             /* Get the Driver's Name */
             ValueSize = sizeof(ServiceName);
@@ -649,10 +662,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
             if (rc == ERROR_NO_MORE_ITEMS)
                 break;
             if (rc != ERROR_SUCCESS)
-            {
-                FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
-                return;
-            }
+                goto Quit;
             TRACE("Service %d: '%S'\n", (int)Index, ServiceName);
 
             /* Read the Start Value */
@@ -713,15 +723,21 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                 //    ServiceName, StartValue, TagValue, DriverGroup, GroupName);
             }
 
-            Index++;
+            RegCloseKey(hDriverKey);
         }
 
         /* Move to the next group name */
         GroupName = GroupName + wcslen(GroupName) + 1;
     }
 
+Quit:
     /* Free allocated memory */
-    FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
+    if (GroupNameBuffer)
+        FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
+
+    /* Close the registry key handles */
+    RegCloseKey(hServiceKey);
+    RegCloseKey(hOrderKey);
 }
 
 static
@@ -775,7 +791,6 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
     USHORT PathLength;
 
     BootDriverEntry = FrLdrHeapAlloc(sizeof(BOOT_DRIVER_LIST_ENTRY), TAG_WLDR_BDE);
-
     if (!BootDriverEntry)
         return FALSE;
 
@@ -792,7 +807,6 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
         BootDriverEntry->FilePath.Length = 0;
         BootDriverEntry->FilePath.MaximumLength = PathLength;
         BootDriverEntry->FilePath.Buffer = FrLdrHeapAlloc(PathLength, TAG_WLDR_NAME);
-
         if (!BootDriverEntry->FilePath.Buffer)
         {
             FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
@@ -814,10 +828,9 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
         BootDriverEntry->FilePath.Length = 0;
         BootDriverEntry->FilePath.MaximumLength = PathLength;
         BootDriverEntry->FilePath.Buffer = FrLdrHeapAlloc(PathLength, TAG_WLDR_NAME);
-
         if (!BootDriverEntry->FilePath.Buffer)
         {
-            FrLdrHeapFree(BootDriverEntry, TAG_WLDR_NAME);
+            FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
             return FALSE;
         }
 
@@ -825,7 +838,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
         if (!NT_SUCCESS(Status))
         {
             FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
-            FrLdrHeapFree(BootDriverEntry, TAG_WLDR_NAME);
+            FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
             return FALSE;
         }
 
@@ -833,7 +846,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
         if (!NT_SUCCESS(Status))
         {
             FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
-            FrLdrHeapFree(BootDriverEntry, TAG_WLDR_NAME);
+            FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
             return FALSE;
         }
 
@@ -841,7 +854,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
         if (!NT_SUCCESS(Status))
         {
             FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
-            FrLdrHeapFree(BootDriverEntry, TAG_WLDR_NAME);
+            FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
             return FALSE;
         }
     }
@@ -852,22 +865,36 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
     BootDriverEntry->RegistryPath.MaximumLength = PathLength;
     BootDriverEntry->RegistryPath.Buffer = FrLdrHeapAlloc(PathLength, TAG_WLDR_NAME);
     if (!BootDriverEntry->RegistryPath.Buffer)
+    {
+        FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
+        FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
         return FALSE;
+    }
 
     Status = RtlAppendUnicodeToString(&BootDriverEntry->RegistryPath, RegistryPath);
     if (!NT_SUCCESS(Status))
+    {
+        FrLdrHeapFree(BootDriverEntry->RegistryPath.Buffer, TAG_WLDR_NAME);
+        FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
+        FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
         return FALSE;
+    }
 
     Status = RtlAppendUnicodeToString(&BootDriverEntry->RegistryPath, ServiceName);
     if (!NT_SUCCESS(Status))
+    {
+        FrLdrHeapFree(BootDriverEntry->RegistryPath.Buffer, TAG_WLDR_NAME);
+        FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
+        FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
         return FALSE;
+    }
 
     // Insert entry into the list
     if (!InsertInBootDriverList(BootDriverListHead, BootDriverEntry))
     {
         // It was already there, so delete our entry
-        if (BootDriverEntry->FilePath.Buffer) FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
-        if (BootDriverEntry->RegistryPath.Buffer) FrLdrHeapFree(BootDriverEntry->RegistryPath.Buffer, TAG_WLDR_NAME);
+        FrLdrHeapFree(BootDriverEntry->RegistryPath.Buffer, TAG_WLDR_NAME);
+        FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
         FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
     }
 

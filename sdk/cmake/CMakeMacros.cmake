@@ -669,8 +669,10 @@ function(set_module_type MODULE TYPE)
 
     if(TYPE STREQUAL kernel)
         # Kernels are executables with exports
-        set_property(TARGET ${MODULE} PROPERTY ENABLE_EXPORTS TRUE)
-        set_target_properties(${MODULE} PROPERTIES DEFINE_SYMBOL "")
+        set_target_properties(${MODULE}
+            PROPERTIES
+            ENABLE_EXPORTS TRUE
+            DEFINE_SYMBOL "")
     endif()
 
     if(${TYPE} STREQUAL win32ocx)

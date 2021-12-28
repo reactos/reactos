@@ -92,12 +92,13 @@ CAPTION "Ndërto ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Sistemi vendorë duhet të përputhet me gjuhën e aplikacioneve që dëshironi të përdorni. Përdoruesi vendorë kontrollon se si duket numrat, monedhat, dhe datat.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "Sistemi vendorë duhet të përputhet me gjuhën e aplikacioneve që dëshironi të përdorni. Përdoruesi vendorë kontrollon se si duket numrat, monedhat, dhe datat.", IDC_STATIC, 53, 7, 253, 25
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "Për të ndryshuar parametrat e sistemit ose përdoruesit vendorë, kliko Ndrysho.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "&Ndrysho...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "Paraqitja Tastierës kontrollon karakteret që shfaqen kur ju shkruani.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Për të ndryshuar paraqitje tastieres, kliko Ndrysho.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Ndrysho...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -193,6 +194,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Ju duhet të siguroni një emër dhe një Fjalëkalim Administratori për kompjuterin tuaj."
     IDS_LOCALETITLE "Cilësimet Rajonale"
     IDS_LOCALESUBTITLE "Ju mund ta rregulloje ReactOS për rajone dhe gjuhë të ndryshme."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Data dhe Ora"
     IDS_DATETIMESUBTITLE "Vendos datën e saktë dhe orën për kompjuterin tuaj."
     IDS_PROCESSTITLE "Regjistrimi Komponenteve"

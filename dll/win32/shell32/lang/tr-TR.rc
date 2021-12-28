@@ -807,6 +807,8 @@ BEGIN
     IDS_COPYERRORSAME "'%s' kopyalanamıyor: Kaynak ve hedef dosya adları aynı."
     IDS_MOVEERRORSUBFOLDER "'%s' taşınamıyor: Hedef dizin, kaynak dizinin bir alt dizinidir."
     IDS_COPYERRORSUBFOLDER "'%s' kopyalanamıyor: Hedef dizin, kaynak dizinin bir alt dizinidir."
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED """%1"" dizini oluşturulamıyor."
     IDS_CREATEFOLDER_CAPTION "Dizin Oluşturulamıyor"

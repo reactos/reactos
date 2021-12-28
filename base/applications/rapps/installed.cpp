@@ -2,123 +2,122 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Classes for working with installed applications
- * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev         (dmitry@reactos.org)
- *              Copyright 2017 Alexander Shaposhnikov   (sanchaez@reactos.org)
- *              Copyright 2020 He Yang                  (1160386205@qq.com)
+ * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2017 Alexander Shaposhnikov <sanchaez@reactos.org>
+ *              Copyright 2020 He Yang <1160386205@qq.com>
+ *              Copyright 2021 Mark Jansen <mark.jansen@reactos.org>
  */
+
 #include "rapps.h"
-
 #include "installed.h"
-
 #include "misc.h"
 
-CInstalledApplicationInfo::CInstalledApplicationInfo(BOOL bIsUserKey, REGSAM RegWowKey, HKEY hKey)
-    : IsUserKey(bIsUserKey), WowKey(RegWowKey), hSubKey(hKey)
+CInstalledApplicationInfo::CInstalledApplicationInfo(BOOL bIsUserKey, REGSAM RegWowKey, HKEY hKey, const CStringW& szKeyName)
+    : m_IsUserKey(bIsUserKey)
+    , m_WowKey(RegWowKey)
+    , m_hSubKey(hKey)
+    , m_szKeyName(szKeyName)
 {
-    // if Initialize failed, hSubKey will be closed automatically and set to zero
-
-    DWORD dwSize = MAX_PATH, dwType, dwValue;
-    BOOL bIsSystemComponent;
-    ATL::CStringW szParentKeyName;
-
-    dwType = REG_DWORD;
-    dwSize = sizeof(DWORD);
-
-    if (RegQueryValueExW(hSubKey,
-        L"SystemComponent",
-        NULL,
-        &dwType,
-        (LPBYTE)&dwValue,
-        &dwSize) == ERROR_SUCCESS)
-    {
-        bIsSystemComponent = (dwValue == 0x1);
-    }
-    else
-    {
-        bIsSystemComponent = FALSE;
-    }
-
-    dwType = REG_SZ;
-    dwSize = MAX_PATH * sizeof(WCHAR);
-    bIsUpdate = (RegQueryValueExW(hSubKey,
-        L"ParentKeyName",
-        NULL,
-        &dwType,
-        (LPBYTE)szParentKeyName.GetBuffer(MAX_PATH),
-        &dwSize) == ERROR_SUCCESS);
-    szParentKeyName.ReleaseBuffer();
-
-    if (bIsSystemComponent)
-    {
-        CloseHandle(hSubKey);
-        hSubKey = NULL;
-    }
-
+    DWORD dwSize = 0;
+    bIsUpdate = (RegQueryValueExW(m_hSubKey, L"ParentKeyName", NULL, NULL, NULL, &dwSize) == ERROR_SUCCESS);
 }
 
 CInstalledApplicationInfo::~CInstalledApplicationInfo()
 {
-    if (hSubKey)
+    if (m_hSubKey)
     {
-        CloseHandle(hSubKey);
-        hSubKey = NULL;
+        CloseHandle(m_hSubKey);
+        m_hSubKey = NULL;
+    }
+}
+
+void CInstalledApplicationInfo::EnsureDetailsLoaded()
+{
+    // Key not closed, so we have not loaded details yet
+    if (m_hSubKey)
+    {
+        GetApplicationRegString(L"Publisher", szPublisher);
+        GetApplicationRegString(L"RegOwner", szRegOwner);
+        GetApplicationRegString(L"ProductID", szProductID);
+        GetApplicationRegString(L"HelpLink", szHelpLink);
+        GetApplicationRegString(L"HelpTelephone", szHelpTelephone);
+        GetApplicationRegString(L"Readme", szReadme);
+        GetApplicationRegString(L"Contact", szContact);
+        GetApplicationRegString(L"URLUpdateInfo", szURLUpdateInfo);
+        GetApplicationRegString(L"URLInfoAbout", szURLInfoAbout);
+        if (GetApplicationRegString(L"InstallDate", szInstallDate) == FALSE)
+        {
+            // It might be a DWORD (Unix timestamp). try again.
+            DWORD dwInstallTimeStamp;
+            if (GetApplicationRegDword(L"InstallDate", &dwInstallTimeStamp))
+            {
+                FILETIME InstallFileTime;
+                SYSTEMTIME InstallSystemTime, InstallLocalTime;
+
+                UnixTimeToFileTime(dwInstallTimeStamp, &InstallFileTime);
+                FileTimeToSystemTime(&InstallFileTime, &InstallSystemTime);
+
+                // convert to localtime
+                SystemTimeToTzSpecificLocalTime(NULL, &InstallSystemTime, &InstallLocalTime);
+
+                // convert to readable date string
+                int cchTimeStrLen = GetDateFormatW(LOCALE_USER_DEFAULT, 0, &InstallLocalTime, NULL, 0, 0);
+
+                GetDateFormatW(
+                    LOCALE_USER_DEFAULT, // use default locale for current user
+                    0, &InstallLocalTime, NULL, szInstallDate.GetBuffer(cchTimeStrLen), cchTimeStrLen);
+                szInstallDate.ReleaseBuffer();
+            }
+        }
+        GetApplicationRegString(L"InstallLocation", szInstallLocation);
+        GetApplicationRegString(L"InstallSource", szInstallSource);
+        GetApplicationRegString(L"UninstallString", szUninstallString);
+        GetApplicationRegString(L"ModifyPath",szModifyPath);
+
+        CloseHandle(m_hSubKey);
+        m_hSubKey = NULL;
     }
 }
 
 BOOL CInstalledApplicationInfo::GetApplicationRegString(LPCWSTR lpKeyName, ATL::CStringW& String)
 {
-    DWORD dwSize = 0;
-    String.Empty();
-    DWORD dwType;
+    DWORD dwAllocated = 0, dwSize, dwType;
 
     // retrieve the size of value first.
-    if (RegQueryValueExW(hSubKey,
-        lpKeyName,
-        NULL,
-        &dwType,
-        NULL,
-        &dwSize) != ERROR_SUCCESS)
+    if (RegQueryValueExW(m_hSubKey, lpKeyName, NULL, &dwType, NULL, &dwAllocated) != ERROR_SUCCESS ||
+        dwType != REG_SZ)
     {
-        return FALSE;
-    }
-
-    // TODO: I assume the type as REG_SZ. but I think REG_EXPAND_SZ should be handled correctly too.
-    if (dwType != REG_SZ)
-    {
-        return FALSE;
-    }
-
-    // allocate buffer.
-    // attention: dwSize is size in bytes, and RegQueryValueExW does not guarantee the terminating null character.
-    String.GetBuffer(dwSize + sizeof(WCHAR));
-
-    // query the value
-    if (RegQueryValueExW(hSubKey,
-        lpKeyName,
-        NULL,
-        NULL,
-        (LPBYTE)String.GetBuffer(),
-        &dwSize) != ERROR_SUCCESS)
-    {
-        String.ReleaseBuffer();
         String.Empty();
         return FALSE;
     }
-    String.GetBuffer()[dwSize / sizeof(WCHAR)] = L'\0'; // ensure zero terminated
-    String.ReleaseBuffer();
+
+    // query the value
+    dwSize = dwAllocated;
+    LSTATUS Result =
+        RegQueryValueExW(m_hSubKey, lpKeyName, NULL, NULL, (LPBYTE)String.GetBuffer(dwAllocated / sizeof(WCHAR)), &dwSize);
+
+    dwSize = min(dwAllocated, dwSize);
+    // CString takes care of zero-terminating it
+    String.ReleaseBuffer(dwSize / sizeof(WCHAR));
+
+    if (Result != ERROR_SUCCESS)
+    {
+        String.Empty();
+        return FALSE;
+    }
+
     return TRUE;
 }
 
 BOOL CInstalledApplicationInfo::GetApplicationRegDword(LPCWSTR lpKeyName, DWORD *lpValue)
 {
-    DWORD dwType = REG_DWORD;
-    DWORD dwSize = sizeof(DWORD);
-    if (RegQueryValueExW(hSubKey,
+    DWORD dwSize = sizeof(DWORD), dwType;
+    if (RegQueryValueExW(m_hSubKey,
         lpKeyName,
         NULL,
         &dwType,
         (LPBYTE)lpValue,
-        &dwSize) != ERROR_SUCCESS)
+        &dwSize) != ERROR_SUCCESS || dwType != REG_DWORD)
     {
         return FALSE;
     }
@@ -148,7 +147,7 @@ typedef LSTATUS (WINAPI *RegDeleteKeyExWProc)(HKEY, LPCWSTR, REGSAM, DWORD);
 
 LSTATUS CInstalledApplicationInfo::RemoveFromRegistry()
 {
-    ATL::CStringW szFullName = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + szKeyName;
+    ATL::CStringW szFullName = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + m_szKeyName;
     HMODULE hMod = GetModuleHandleW(L"advapi32.dll");
     RegDeleteKeyExWProc pRegDeleteKeyExW;
 
@@ -166,12 +165,12 @@ LSTATUS CInstalledApplicationInfo::RemoveFromRegistry()
         if (pRegDeleteKeyExW)
         {
             /* Return it */
-            return pRegDeleteKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szFullName, WowKey, 0);
+            return pRegDeleteKeyExW(m_IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szFullName, m_WowKey, 0);
         }
     }
 
     /* Otherwise, return non-Ex function */
-    return RegDeleteKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szFullName);
+    return RegDeleteKeyW(m_IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szFullName);
 }
 
 BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
@@ -225,72 +224,34 @@ BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
             ItemIndex++;
 
             szKeyName.ReleaseBuffer();
-            if (RegOpenKeyW(hKey, szKeyName.GetString(), &hSubKey) == ERROR_SUCCESS)
+            if (RegOpenKeyW(hKey, szKeyName, &hSubKey) == ERROR_SUCCESS)
             {
-                BOOL bSuccess = FALSE;
-                CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(RootKeyEnum[i] == HKEY_CURRENT_USER, RegSamEnum[i], hSubKey);
-                Info->szKeyName = szKeyName;
+                DWORD dwValue = 0;
+                BOOL bIsSystemComponent = FALSE;
 
-                // check for failure. if failed to init, Info->hSubKey will be set to NULL
-                if (Info->hSubKey)
+                dwSize = sizeof(DWORD);
+                if (RegQueryValueExW(hSubKey, L"SystemComponent", NULL, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
                 {
-                    // those items without display name are ignored
-                    if (Info->GetApplicationRegString(L"DisplayName", Info->szDisplayName))
-                    {
-                        Info->GetApplicationRegString(L"DisplayIcon", Info->szDisplayIcon);
-                        Info->GetApplicationRegString(L"DisplayVersion", Info->szDisplayVersion);
-                        Info->GetApplicationRegString(L"Publisher", Info->szPublisher);
-                        Info->GetApplicationRegString(L"RegOwner", Info->szRegOwner);
-                        Info->GetApplicationRegString(L"ProductID", Info->szProductID);
-                        Info->GetApplicationRegString(L"HelpLink", Info->szHelpLink);
-                        Info->GetApplicationRegString(L"HelpTelephone", Info->szHelpTelephone);
-                        Info->GetApplicationRegString(L"Readme", Info->szReadme);
-                        Info->GetApplicationRegString(L"Contact", Info->szContact);
-                        Info->GetApplicationRegString(L"URLUpdateInfo", Info->szURLUpdateInfo);
-                        Info->GetApplicationRegString(L"URLInfoAbout", Info->szURLInfoAbout);
-                        Info->GetApplicationRegString(L"Comments", Info->szComments);
-                        if (Info->GetApplicationRegString(L"InstallDate", Info->szInstallDate) == FALSE)
-                        {
-                            // It might be a DWORD (Unix timestamp). try again.
-                            DWORD dwInstallTimeStamp;
-                            if (Info->GetApplicationRegDword(L"InstallDate", &dwInstallTimeStamp))
-                            {
-                                FILETIME InstallFileTime;
-                                SYSTEMTIME InstallSystemTime, InstallLocalTime;
-
-                                UnixTimeToFileTime(dwInstallTimeStamp, &InstallFileTime);
-                                FileTimeToSystemTime(&InstallFileTime, &InstallSystemTime);
-
-                                // convert to localtime
-                                SystemTimeToTzSpecificLocalTime(NULL, &InstallSystemTime, &InstallLocalTime);
-
-                                // convert to readable date string
-                                int cchTimeStrLen = GetDateFormatW(LOCALE_USER_DEFAULT,
-                                    0,
-                                    &InstallLocalTime,
-                                    NULL, 0, 0);
-
-                                GetDateFormatW(LOCALE_USER_DEFAULT, // use default locale for current user
-                                    0,
-                                    &InstallLocalTime,
-                                    NULL, Info->szInstallDate.GetBuffer(cchTimeStrLen), cchTimeStrLen);
-                                Info->szInstallDate.ReleaseBuffer();
-                            }
-                        }
-                        Info->GetApplicationRegString(L"InstallLocation", Info->szInstallLocation);
-                        Info->GetApplicationRegString(L"InstallSource", Info->szInstallSource);
-                        Info->GetApplicationRegString(L"UninstallString", Info->szUninstallString);
-                        Info->GetApplicationRegString(L"ModifyPath", Info->szModifyPath);
-
-                        bSuccess = TRUE;
-                    }
+                    bIsSystemComponent = (dwValue == 0x1);
+                }
+                // Ignore system components
+                if (bIsSystemComponent)
+                {
+                    RegCloseKey(hSubKey);
+                    continue;
                 }
 
-                // close handle
-                if (Info->hSubKey)
+                BOOL bSuccess = FALSE;
+                CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(RootKeyEnum[i] == HKEY_CURRENT_USER, RegSamEnum[i], hSubKey, szKeyName);
+
+                // items without display name are ignored
+                if (Info->GetApplicationRegString(L"DisplayName", Info->szDisplayName))
                 {
-                    CloseHandle(Info->hSubKey);
-                    Info->hSubKey = NULL;
+                    Info->GetApplicationRegString(L"DisplayIcon", Info->szDisplayIcon);
+                    Info->GetApplicationRegString(L"DisplayVersion", Info->szDisplayVersion);
+                    Info->GetApplicationRegString(L"Comments", Info->szComments);
+
+                    bSuccess = TRUE;
                 }
 
                 if (bSuccess)

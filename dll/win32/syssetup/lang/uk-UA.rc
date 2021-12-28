@@ -1,9 +1,10 @@
 /*
- * PROJECT:     System setup
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/syssetup/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for syssetup
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk, Yaroslav Kibysh
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukraianian resource file
+ * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2010-2011 Igor Paliychuk <mansonigor@gmail.com>
+ *              Copyright 2018-2021 Yaroslav Kibysh <yanet.prod@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -82,11 +83,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Мова системи має відповідати мові додатків, які ви хочете використовувати. Мова користувача задає формат виведення чисел, грошових одиниць і дат.", IDC_STATIC, 53, 5, 253, 27
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "Для зміни мови системи або мови користувача натисніть ""Налаштувати"".", IDC_STATIC, 53, 60, 184, 16
     PUSHBUTTON "На&лаштувати...", IDC_CUSTOMLOCALE, 240, 57, 57, 14
+    LTEXT "", IDC_STATIC, 53, 81, 246, 1, SS_ETCHEDHORZ
     LTEXT "Розкладка клавіатури визначає символи, що вводяться при натисненні клавіш.", IDC_STATIC, 53, 84, 253, 18
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 106, 250, 16
     LTEXT "Для зміни розкладки клавіатури натисніть ""Налаштувати"".", IDC_STATIC, 53, 126, 184, 18
     PUSHBUTTON "Нал&аштувати...", IDC_CUSTOMLAYOUT, 240, 122, 57, 14
 END
@@ -182,6 +184,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Ви маєте вказати ім'я та пароль адміністратора Вашого комп'ютера."
     IDS_LOCALETITLE "Регіональні налаштування"
     IDS_LOCALESUBTITLE "Ви можете налаштувати ReactOS для різних регіонів і мов."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Дата та час"
     IDS_DATETIMESUBTITLE "Встановіть правильні дату і час для Вашого комп'ютера."
     IDS_PROCESSTITLE "Реєстрація компонентів"

@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Soubor"
     BEGIN
         MENUITEM "&Nový\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Otevřít\tCtrl+O", CMD_OPEN
         MENUITEM "&Uložit\tCtrl+S", CMD_SAVE
         MENUITEM "Uložit j&ako...", CMD_SAVE_AS

@@ -321,7 +321,10 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
                 if (ret <= 0)
                 {
                     StringCbCopyW(wTemp, sizeof(wTemp), swShell32Name);
-                    icon_idx = -IDI_SHELL_EXE;
+                    if (lstrcmpiW(pExtension, L".exe") == 0 || lstrcmpiW(pExtension, L".scr") == 0)
+                        icon_idx = -IDI_SHELL_EXE;
+                    else
+                        icon_idx = -IDI_SHELL_DOCUMENT;
                 }
             }
 
@@ -1279,34 +1282,46 @@ static const WCHAR NeverShowExtW[] = L"NeverShowExt";
  *  TRUE, if the filename's extension should be hidden
  *  FALSE, otherwise.
  */
-BOOL SHELL_FS_HideExtension(LPWSTR szPath)
+BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
 {
     HKEY hKey;
-    DWORD dwData;
-    DWORD dwDataSize = sizeof (DWORD);
+    DWORD dwData, dwDataSize = sizeof(DWORD);
     BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
+    LONG lError;
 
-    if (!RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, 0, 0, KEY_ALL_ACCESS, 0, &hKey, 0)) {
-        if (!RegQueryValueExW(hKey, HideFileExtW, 0, 0, (LPBYTE) &dwData, &dwDataSize))
+    lError = RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, NULL, 0, KEY_ALL_ACCESS, NULL,
+                             &hKey, NULL);
+    if (lError == ERROR_SUCCESS)
+    {
+        lError = RegQueryValueExW(hKey, HideFileExtW, NULL, NULL, (LPBYTE)&dwData, &dwDataSize);
+        if (lError == ERROR_SUCCESS)
             doHide = dwData;
-        RegCloseKey (hKey);
+        RegCloseKey(hKey);
     }
 
-    if (!doHide) {
-        LPWSTR ext = PathFindExtensionW(szPath);
-
-        if (*ext != '\0') {
+    if (!doHide)
+    {
+        LPCWSTR DotExt = PathFindExtensionW(szPath);
+        if (*DotExt != 0)
+        {
             WCHAR classname[MAX_PATH];
             LONG classlen = sizeof(classname);
-
-            if (!RegQueryValueW(HKEY_CLASSES_ROOT, ext, classname, &classlen))
-                if (!RegOpenKeyW(HKEY_CLASSES_ROOT, classname, &hKey)) {
-                    if (!RegQueryValueExW(hKey, NeverShowExtW, 0, NULL, NULL, NULL))
+            lError = RegQueryValueW(HKEY_CLASSES_ROOT, DotExt, classname, &classlen);
+            if (lError == ERROR_SUCCESS)
+            {
+                lError = RegOpenKeyW(HKEY_CLASSES_ROOT, classname, &hKey);
+                if (lError == ERROR_SUCCESS)
+                {
+                    lError = RegQueryValueExW(hKey, NeverShowExtW, NULL, NULL, NULL, NULL);
+                    if (lError == ERROR_SUCCESS)
                         doHide = TRUE;
+
                     RegCloseKey(hKey);
                 }
+            }
         }
     }
+
     return doHide;
 }
 

@@ -802,6 +802,8 @@ BEGIN
     IDS_COPYERRORSAME "コピーできません '%s': コピー元とコピー先のファイル名が同じです。"
     IDS_MOVEERRORSUBFOLDER "移動できません '%s': 移動先のフォルダは移動元のフォルダのサブフォルダです。"
     IDS_COPYERRORSUBFOLDER "コピーできません '%s': コピー先のフォルダはコピー元のフォルダのサブフォルダです。"
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "フォルダ '%1' を作成できません"
     IDS_CREATEFOLDER_CAPTION "フォルダを作成できません"

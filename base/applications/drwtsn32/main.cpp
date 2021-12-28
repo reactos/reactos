@@ -2,7 +2,7 @@
  * PROJECT:     Dr. Watson crash reporter
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Entrypoint / main print function
- * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2017 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include "precomp.h"
@@ -62,10 +62,15 @@ static void PrintThread(FILE* output, DumpData& data, DWORD tid, ThreadData& thr
         xfprintf(output, "eax:%p ebx:%p ecx:%p edx:%p esi:%p edi:%p" NEWLINE,
                  ctx.Eax, ctx.Ebx, ctx.Ecx, ctx.Edx, ctx.Esi, ctx.Edi);
 #elif defined(_M_AMD64)
-        xfprintf(output, "rax:%p rbx:%p rcx:%p rdx:%p rsi:%p rdi:%p" NEWLINE,
-                 ctx.Rax, ctx.Rbx, ctx.Rcx, ctx.Rdx, ctx.Rsi, ctx.Rdi);
+        xfprintf(output, "rax:%p rbx:%p rcx:%p rdx:%p rsi:%p rdi:%p rbp:%p rsp:%p" NEWLINE,
+                 ctx.Rax, ctx.Rbx, ctx.Rcx, ctx.Rdx, ctx.Rsi, ctx.Rdi, ctx.Rbp, ctx.Rsp);
         xfprintf(output, "r8:%p r9:%p r10:%p r11:%p r12:%p r13:%p r14:%p r15:%p" NEWLINE,
                  ctx.R8, ctx.R9, ctx.R10, ctx.R11, ctx.R12, ctx.R13, ctx.R14, ctx.R15);
+#elif defined(_M_ARM)
+        xfprintf(output, "r0:%p r1:%p r2:%p r3:%p r4:%p r5:%p r6:%p" NEWLINE,
+                 ctx.R0, ctx.R1, ctx.R2, ctx.R3, ctx.R4, ctx.R5, ctx.R6);
+        xfprintf(output, "r7:%p r8:%p r9:%p r10:%p r11:%p r12:%p" NEWLINE,
+                 ctx.R7, ctx.R8, ctx.R9, ctx.R10, ctx.R11, ctx.R12);
 #else
 #error Unknown architecture
 #endif
@@ -79,6 +84,9 @@ static void PrintThread(FILE* output, DumpData& data, DWORD tid, ThreadData& thr
 #elif defined(_M_AMD64)
         xfprintf(output, "rip:%p rsp:%p rbp:%p" NEWLINE,
                  ctx.Rip, ctx.Rsp, ctx.Rbp);
+#elif defined(_M_ARM)
+        xfprintf(output, "sp:%p lr:%p pc:%p cpsr:%p" NEWLINE,
+                 ctx.Sp, ctx.Lr, ctx.Pc, ctx.Cpsr);
 #else
 #error Unknown architecture
 #endif
@@ -89,6 +97,16 @@ static void PrintThread(FILE* output, DumpData& data, DWORD tid, ThreadData& thr
 #if defined(_M_IX86) || defined(_M_AMD64)
         xfprintf(output, "dr0:%p dr1:%p dr2:%p dr3:%p dr6:%p dr7:%p" NEWLINE,
                  ctx.Dr0, ctx.Dr1, ctx.Dr2, ctx.Dr3, ctx.Dr6, ctx.Dr7);
+#elif defined(_M_ARM)
+        for (int n = 0; n < ARM_MAX_BREAKPOINTS; ++n)
+            xfprintf(output, "Bvr%d:%p%s", n, ctx.Bvr[n], ((n + 1) == ARM_MAX_BREAKPOINTS) ? NEWLINE : " ");
+        for (int n = 0; n < ARM_MAX_BREAKPOINTS; ++n)
+            xfprintf(output, "Bcr%d:%p%s", n, ctx.Bcr[n], ((n + 1) == ARM_MAX_BREAKPOINTS) ? NEWLINE : " ");
+
+        for (int n = 0; n < ARM_MAX_WATCHPOINTS; ++n)
+            xfprintf(output, "Wvr%d:%p%s", n, ctx.Wvr[n], ((n + 1) == ARM_MAX_WATCHPOINTS) ? NEWLINE : " ");
+        for (int n = 0; n < ARM_MAX_WATCHPOINTS; ++n)
+            xfprintf(output, "Wcr%d:%p%s", n, ctx.Wcr[n], ((n + 1) == ARM_MAX_WATCHPOINTS) ? NEWLINE : " ");
 #else
 #error Unknown architecture
 #endif

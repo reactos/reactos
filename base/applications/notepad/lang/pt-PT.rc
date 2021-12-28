@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Arquivo"
     BEGIN
         MENUITEM "&Novo\tCtrl+N", CMD_NEW
-        MENUITEM "&Nova janela\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "Nova &janela\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "A&brir\tCtrl+O", CMD_OPEN
         MENUITEM "&Guardar\tCtrl+S", CMD_SAVE
         MENUITEM "Guardar &como...", CMD_SAVE_AS

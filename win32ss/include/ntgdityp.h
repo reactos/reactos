@@ -48,7 +48,7 @@ typedef enum _GETDCDWORD
     GdiGetJournal,
     GdiGetRelAbs,
     GdiGetBreakExtra,
-    GdiGerCharBreak,
+    GdiGetCharBreak,
     GdiGetArcDirection,
     GdiGetEMFRestorDc,
     GdiGetFontLanguageInfo,

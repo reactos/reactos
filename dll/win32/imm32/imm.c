@@ -51,54 +51,64 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 /***********************************************************************
  *		ImmLoadLayout (IMM32.@)
  */
-HKL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
+BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 {
     DWORD cbData;
-    UNICODE_STRING UnicodeString;
     HKEY hLayoutKey = NULL, hLayoutsKey = NULL;
     LONG error;
-    NTSTATUS Status;
     WCHAR szLayout[MAX_PATH];
 
     TRACE("(%p, %p)\n", hKL, pImeInfoEx);
 
     if (IS_IME_HKL(hKL) || !Imm32IsCiceroMode() || Imm32Is16BitMode())
     {
-        UnicodeString.Buffer = szLayout;
-        UnicodeString.MaximumLength = sizeof(szLayout);
-        Status = RtlIntegerToUnicodeString((DWORD_PTR)hKL, 16, &UnicodeString);
-        if (!NT_SUCCESS(Status))
-            return NULL;
+        Imm32UIntToStr((DWORD)(DWORD_PTR)hKL, 16, szLayout, _countof(szLayout));
 
         error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_KEYBOARD_LAYOUTS, &hLayoutsKey);
         if (error)
-            return NULL;
+        {
+            ERR("RegOpenKeyW: 0x%08lX\n", error);
+            return FALSE;
+        }
 
         error = RegOpenKeyW(hLayoutsKey, szLayout, &hLayoutKey);
+        if (error)
+        {
+            ERR("RegOpenKeyW: 0x%08lX\n", error);
+            RegCloseKey(hLayoutsKey);
+            return FALSE;
+        }
     }
     else
     {
         error = RegOpenKeyW(HKEY_LOCAL_MACHINE, REGKEY_IMM, &hLayoutKey);
+        if (error)
+        {
+            ERR("RegOpenKeyW: 0x%08lX\n", error);
+            return FALSE;
+        }
     }
 
-    if (error)
-    {
-        ERR("RegOpenKeyW error: 0x%08lX\n", error);
-        hKL = NULL;
-    }
-    else
-    {
-        cbData = sizeof(pImeInfoEx->wszImeFile);
-        error = RegQueryValueExW(hLayoutKey, L"Ime File", 0, 0,
-                                 (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
-        if (error)
-            hKL = NULL;
-    }
+    cbData = sizeof(pImeInfoEx->wszImeFile);
+    error = RegQueryValueExW(hLayoutKey, L"Ime File", 0, 0,
+                             (LPBYTE)pImeInfoEx->wszImeFile, &cbData);
+    pImeInfoEx->wszImeFile[_countof(pImeInfoEx->wszImeFile) - 1] = 0;
 
     RegCloseKey(hLayoutKey);
     if (hLayoutsKey)
         RegCloseKey(hLayoutsKey);
-    return hKL;
+
+    pImeInfoEx->fLoadFlag = 0;
+
+    if (error)
+    {
+        ERR("RegQueryValueExW: 0x%08lX\n", error);
+        pImeInfoEx->hkl = NULL;
+        return FALSE;
+    }
+
+    pImeInfoEx->hkl = hKL;
+    return Imm32LoadImeVerInfo(pImeInfoEx);
 }
 
 /***********************************************************************
@@ -474,74 +484,6 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
         SendMessageW(hwndDefIME, WM_IME_SELECT, TRUE, (LPARAM)hKL);
 
     return TRUE;
-}
-
-typedef struct _tagImmHkl
-{
-    struct list entry;
-    HKL         hkl;
-    HMODULE     hIME;
-    IMEINFO     imeInfo;
-    WCHAR       imeClassName[17]; /* 16 character max */
-    ULONG       uSelected;
-    HWND        UIWnd;
-
-    /* Function Pointers */
-    BOOL (WINAPI *pImeInquire)(IMEINFO *, WCHAR *, const WCHAR *);
-    BOOL (WINAPI *pImeConfigure)(HKL, HWND, DWORD, void *);
-    BOOL (WINAPI *pImeDestroy)(UINT);
-    LRESULT (WINAPI *pImeEscape)(HIMC, UINT, void *);
-    BOOL (WINAPI *pImeSelect)(HIMC, BOOL);
-    BOOL (WINAPI *pImeSetActiveContext)(HIMC, BOOL);
-    UINT (WINAPI *pImeToAsciiEx)(UINT, UINT, const BYTE *, DWORD *, UINT, HIMC);
-    BOOL (WINAPI *pNotifyIME)(HIMC, DWORD, DWORD, DWORD);
-    BOOL (WINAPI *pImeRegisterWord)(const WCHAR *, DWORD, const WCHAR *);
-    BOOL (WINAPI *pImeUnregisterWord)(const WCHAR *, DWORD, const WCHAR *);
-    UINT (WINAPI *pImeEnumRegisterWord)(REGISTERWORDENUMPROCW, const WCHAR *, DWORD, const WCHAR *, void *);
-    BOOL (WINAPI *pImeSetCompositionString)(HIMC, DWORD, const void *, DWORD, const void *, DWORD);
-    DWORD (WINAPI *pImeConversionList)(HIMC, const WCHAR *, CANDIDATELIST *, DWORD, UINT);
-    BOOL (WINAPI *pImeProcessKey)(HIMC, UINT, LPARAM, const BYTE *);
-    UINT (WINAPI *pImeGetRegisterWordStyle)(UINT, STYLEBUFW *);
-    DWORD (WINAPI *pImeGetImeMenuItems)(HIMC, DWORD, DWORD, IMEMENUITEMINFOW *, IMEMENUITEMINFOW *, DWORD);
-} ImmHkl;
-
-typedef struct tagInputContextData
-{
-    DWORD           dwLock;
-    INPUTCONTEXT    IMC;
-    DWORD           threadID;
-
-    ImmHkl          *immKbd;
-    UINT            lastVK;
-    BOOL            threadDefault;
-    DWORD           magic;
-} InputContextData;
-
-#define WINE_IMC_VALID_MAGIC 0x56434D49
-
-static const WCHAR szwWineIMCProperty[] = {'W','i','n','e','I','m','m','H','I','M','C','P','r','o','p','e','r','t','y',0};
-static const WCHAR szImeFileW[] = {'I','m','e',' ','F','i','l','e',0};
-static const WCHAR szLayoutTextW[] = {'L','a','y','o','u','t',' ','T','e','x','t',0};
-static const WCHAR szImeRegFmt[] = {'S','y','s','t','e','m','\\','C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\','C','o','n','t','r','o','l','\\','K','e','y','b','o','a','r','d',' ','L','a','y','o','u','t','s','\\','%','0','8','l','x',0};
-
-static inline BOOL is_himc_ime_unicode(const InputContextData *data)
-{
-    return !!(data->immKbd->imeInfo.fdwProperty & IME_PROP_UNICODE);
-}
-
-static InputContextData* get_imc_data(HIMC hIMC)
-{
-    InputContextData *data = (InputContextData *)hIMC;
-
-    if (hIMC == NULL)
-        return NULL;
-
-    if(IsBadReadPtr(data, sizeof(InputContextData)) || data->magic != WINE_IMC_VALID_MAGIC)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return NULL;
-    }
-    return data;
 }
 
 static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
@@ -1060,297 +1002,6 @@ Quit:
     return hIMC;
 }
 
-
-/* Helpers for the GetCompositionString functions */
-
-/* Source encoding is defined by context, source length is always given in respective characters. Destination buffer
-   length is always in bytes. */
-static INT
-CopyCompStringIMEtoClient(const InputContextData *data, const void *src, INT src_len, void *dst,
-                          INT dst_len, BOOL unicode)
-{
-    int char_size = unicode ? sizeof(WCHAR) : sizeof(char);
-    INT ret;
-
-    if (is_himc_ime_unicode(data) ^ unicode)
-    {
-        if (unicode)
-            ret = MultiByteToWideChar(CP_ACP, 0, src, src_len, dst, dst_len / sizeof(WCHAR));
-        else
-            ret = WideCharToMultiByte(CP_ACP, 0, src, src_len, dst, dst_len, NULL, NULL);
-        ret *= char_size;
-    }
-    else
-    {
-        if (dst_len)
-        {
-            ret = min(src_len * char_size, dst_len);
-            memcpy(dst, src, ret);
-        }
-        else
-            ret = src_len * char_size;
-    }
-
-    return ret;
-}
-
-/* Composition string encoding is defined by context, returned attributes correspond to string, converted according to
-   passed mode. String length is in characters, attributes are in byte arrays. */
-static INT
-CopyCompAttrIMEtoClient(const InputContextData *data, const BYTE *src, INT src_len, const void *comp_string,
-                        INT str_len, BYTE *dst, INT dst_len, BOOL unicode)
-{
-    union
-    {
-        const void *str;
-        const WCHAR *strW;
-        const char *strA;
-    } string;
-    INT rc;
-
-    string.str = comp_string;
-
-    if (is_himc_ime_unicode(data) && !unicode)
-    {
-        rc = WideCharToMultiByte(CP_ACP, 0, string.strW, str_len, NULL, 0, NULL, NULL);
-        if (dst_len)
-        {
-            int i, j = 0, k = 0;
-
-            if (rc < dst_len)
-                dst_len = rc;
-            for (i = 0; i < str_len; ++i)
-            {
-                int len;
-
-                len = WideCharToMultiByte(CP_ACP, 0, string.strW + i, 1, NULL, 0, NULL, NULL);
-                for (; len > 0; --len)
-                {
-                    dst[j++] = src[k];
-
-                    if (j >= dst_len)
-                        goto end;
-                }
-                ++k;
-            }
-        end:
-            rc = j;
-        }
-    }
-    else if (!is_himc_ime_unicode(data) && unicode)
-    {
-        rc = MultiByteToWideChar(CP_ACP, 0, string.strA, str_len, NULL, 0);
-        if (dst_len)
-        {
-            int i, j = 0;
-
-            if (rc < dst_len)
-                dst_len = rc;
-            for (i = 0; i < str_len; ++i)
-            {
-                if (IsDBCSLeadByte(string.strA[i]))
-                    continue;
-
-                dst[j++] = src[i];
-
-                if (j >= dst_len)
-                    break;
-            }
-            rc = j;
-        }
-    }
-    else
-    {
-        memcpy(dst, src, min(src_len, dst_len));
-        rc = src_len;
-    }
-
-    return rc;
-}
-
-static INT
-CopyCompClauseIMEtoClient(InputContextData *data, LPBYTE source, INT slen, LPBYTE ssource,
-                          LPBYTE target, INT tlen, BOOL unicode )
-{
-    INT rc;
-
-    if (is_himc_ime_unicode(data) && !unicode)
-    {
-        if (tlen)
-        {
-            int i;
-
-            if (slen < tlen)
-                tlen = slen;
-            tlen /= sizeof (DWORD);
-            for (i = 0; i < tlen; ++i)
-            {
-                ((DWORD *)target)[i] = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)ssource,
-                                                          ((DWORD *)source)[i],
-                                                          NULL, 0,
-                                                          NULL, NULL);
-            }
-            rc = sizeof (DWORD) * i;
-        }
-        else
-            rc = slen;
-    }
-    else if (!is_himc_ime_unicode(data) && unicode)
-    {
-        if (tlen)
-        {
-            int i;
-
-            if (slen < tlen)
-                tlen = slen;
-            tlen /= sizeof (DWORD);
-            for (i = 0; i < tlen; ++i)
-            {
-                ((DWORD *)target)[i] = MultiByteToWideChar(CP_ACP, 0, (LPSTR)ssource,
-                                                          ((DWORD *)source)[i],
-                                                          NULL, 0);
-            }
-            rc = sizeof (DWORD) * i;
-        }
-        else
-            rc = slen;
-    }
-    else
-    {
-        memcpy( target, source, min(slen,tlen));
-        rc = slen;
-    }
-
-    return rc;
-}
-
-static INT
-CopyCompOffsetIMEtoClient(InputContextData *data, DWORD offset, LPBYTE ssource, BOOL unicode)
-{
-    int rc;
-
-    if (is_himc_ime_unicode(data) && !unicode)
-    {
-        rc = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)ssource, offset, NULL, 0, NULL, NULL);
-    }
-    else if (!is_himc_ime_unicode(data) && unicode)
-    {
-        rc = MultiByteToWideChar(CP_ACP, 0, (LPSTR)ssource, offset, NULL, 0);
-    }
-    else
-        rc = offset;
-
-    return rc;
-}
-
-static LONG
-ImmGetCompositionStringT(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf,
-                         DWORD dwBufLen, BOOL unicode)
-{
-    LONG rc = 0;
-    InputContextData *data = get_imc_data(hIMC);
-    LPCOMPOSITIONSTRING compstr;
-    LPBYTE compdata;
-
-    TRACE("(%p, 0x%x, %p, %d)\n", hIMC, dwIndex, lpBuf, dwBufLen);
-
-    if (!data)
-       return FALSE;
-
-    if (!data->IMC.hCompStr)
-       return FALSE;
-
-    compdata = ImmLockIMCC(data->IMC.hCompStr);
-    compstr = (LPCOMPOSITIONSTRING)compdata;
-
-    switch (dwIndex)
-    {
-    case GCS_RESULTSTR:
-        TRACE("GCS_RESULTSTR\n");
-        rc = CopyCompStringIMEtoClient(data, compdata + compstr->dwResultStrOffset, compstr->dwResultStrLen, lpBuf, dwBufLen, unicode);
-        break;
-    case GCS_COMPSTR:
-        TRACE("GCS_COMPSTR\n");
-        rc = CopyCompStringIMEtoClient(data, compdata + compstr->dwCompStrOffset, compstr->dwCompStrLen, lpBuf, dwBufLen, unicode);
-        break;
-    case GCS_COMPATTR:
-        TRACE("GCS_COMPATTR\n");
-        rc = CopyCompAttrIMEtoClient(data, compdata + compstr->dwCompAttrOffset, compstr->dwCompAttrLen,
-                                     compdata + compstr->dwCompStrOffset, compstr->dwCompStrLen,
-                                     lpBuf, dwBufLen, unicode);
-        break;
-    case GCS_COMPCLAUSE:
-        TRACE("GCS_COMPCLAUSE\n");
-        rc = CopyCompClauseIMEtoClient(data, compdata + compstr->dwCompClauseOffset,compstr->dwCompClauseLen,
-                                       compdata + compstr->dwCompStrOffset,
-                                       lpBuf, dwBufLen, unicode);
-        break;
-    case GCS_RESULTCLAUSE:
-        TRACE("GCS_RESULTCLAUSE\n");
-        rc = CopyCompClauseIMEtoClient(data, compdata + compstr->dwResultClauseOffset,compstr->dwResultClauseLen,
-                                       compdata + compstr->dwResultStrOffset,
-                                       lpBuf, dwBufLen, unicode);
-        break;
-    case GCS_RESULTREADSTR:
-        TRACE("GCS_RESULTREADSTR\n");
-        rc = CopyCompStringIMEtoClient(data, compdata + compstr->dwResultReadStrOffset, compstr->dwResultReadStrLen, lpBuf, dwBufLen, unicode);
-        break;
-    case GCS_RESULTREADCLAUSE:
-        TRACE("GCS_RESULTREADCLAUSE\n");
-        rc = CopyCompClauseIMEtoClient(data, compdata + compstr->dwResultReadClauseOffset,compstr->dwResultReadClauseLen,
-                                       compdata + compstr->dwResultStrOffset,
-                                       lpBuf, dwBufLen, unicode);
-        break;
-    case GCS_COMPREADSTR:
-        TRACE("GCS_COMPREADSTR\n");
-        rc = CopyCompStringIMEtoClient(data, compdata + compstr->dwCompReadStrOffset, compstr->dwCompReadStrLen, lpBuf, dwBufLen, unicode);
-        break;
-    case GCS_COMPREADATTR:
-        TRACE("GCS_COMPREADATTR\n");
-        rc = CopyCompAttrIMEtoClient(data, compdata + compstr->dwCompReadAttrOffset, compstr->dwCompReadAttrLen,
-                                     compdata + compstr->dwCompReadStrOffset, compstr->dwCompReadStrLen,
-                                     lpBuf, dwBufLen, unicode);
-        break;
-    case GCS_COMPREADCLAUSE:
-        TRACE("GCS_COMPREADCLAUSE\n");
-        rc = CopyCompClauseIMEtoClient(data, compdata + compstr->dwCompReadClauseOffset,compstr->dwCompReadClauseLen,
-                                       compdata + compstr->dwCompStrOffset,
-                                       lpBuf, dwBufLen, unicode);
-        break;
-    case GCS_CURSORPOS:
-        TRACE("GCS_CURSORPOS\n");
-        rc = CopyCompOffsetIMEtoClient(data, compstr->dwCursorPos, compdata + compstr->dwCompStrOffset, unicode);
-        break;
-    case GCS_DELTASTART:
-        TRACE("GCS_DELTASTART\n");
-        rc = CopyCompOffsetIMEtoClient(data, compstr->dwDeltaStart, compdata + compstr->dwCompStrOffset, unicode);
-        break;
-    default:
-        FIXME("Unhandled index 0x%x\n",dwIndex);
-        break;
-    }
-
-    ImmUnlockIMCC(data->IMC.hCompStr);
-
-    return rc;
-}
-
-/***********************************************************************
- *		ImmGetCompositionStringA (IMM32.@)
- */
-LONG WINAPI ImmGetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen)
-{
-    return ImmGetCompositionStringT(hIMC, dwIndex, lpBuf, dwBufLen, FALSE);
-}
-
-/***********************************************************************
- *		ImmGetCompositionStringW (IMM32.@)
- */
-LONG WINAPI ImmGetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpBuf, DWORD dwBufLen)
-{
-    return ImmGetCompositionStringT(hIMC, dwIndex, lpBuf, dwBufLen, TRUE);
-}
-
 /***********************************************************************
  *		ImmGetContext (IMM32.@)
  */
@@ -1368,89 +1019,6 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
 BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
 {
     return Imm32IsCiceroMode();
-}
-
-/***********************************************************************
- *		ImmInstallIMEA (IMM32.@)
- */
-HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
-{
-    HKL hKL = NULL;
-    LPWSTR pszFileNameW = NULL, pszLayoutTextW = NULL;
-
-    TRACE("(%s, %s)\n", debugstr_a(lpszIMEFileName), debugstr_a(lpszLayoutText));
-
-    pszFileNameW = Imm32WideFromAnsi(lpszIMEFileName);
-    if (pszFileNameW == NULL)
-        goto Quit;
-
-    pszLayoutTextW = Imm32WideFromAnsi(lpszLayoutText);
-    if (pszLayoutTextW == NULL)
-        goto Quit;
-
-    hKL = ImmInstallIMEW(pszFileNameW, pszLayoutTextW);
-
-Quit:
-    Imm32HeapFree(pszFileNameW);
-    Imm32HeapFree(pszLayoutTextW);
-    return hKL;
-}
-
-/***********************************************************************
- *		ImmInstallIMEW (IMM32.@)
- */
-HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
-{
-    INT lcid = GetUserDefaultLCID();
-    INT count;
-    HKL hkl;
-    DWORD rc;
-    HKEY hkey;
-    WCHAR regKey[ARRAY_SIZE(szImeRegFmt)+8];
-
-    TRACE ("(%s, %s):\n", debugstr_w(lpszIMEFileName),
-                          debugstr_w(lpszLayoutText));
-
-    /* Start with 2.  e001 will be blank and so default to the wine internal IME */
-    count = 2;
-
-    while (count < 0xfff)
-    {
-        DWORD disposition = 0;
-
-        hkl = (HKL)MAKELPARAM( lcid, 0xe000 | count );
-        wsprintfW( regKey, szImeRegFmt, (ULONG_PTR)hkl);
-
-        rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, regKey, 0, NULL, 0, KEY_WRITE, NULL, &hkey, &disposition);
-        if (rc == ERROR_SUCCESS && disposition == REG_CREATED_NEW_KEY)
-            break;
-        else if (rc == ERROR_SUCCESS)
-            RegCloseKey(hkey);
-
-        count++;
-    }
-
-    if (count == 0xfff)
-    {
-        WARN("Unable to find slot to install IME\n");
-        return 0;
-    }
-
-    if (rc == ERROR_SUCCESS)
-    {
-        rc = RegSetValueExW(hkey, szImeFileW, 0, REG_SZ, (const BYTE*)lpszIMEFileName,
-                            (lstrlenW(lpszIMEFileName) + 1) * sizeof(WCHAR));
-        if (rc == ERROR_SUCCESS)
-            rc = RegSetValueExW(hkey, szLayoutTextW, 0, REG_SZ, (const BYTE*)lpszLayoutText,
-                                (lstrlenW(lpszLayoutText) + 1) * sizeof(WCHAR));
-        RegCloseKey(hkey);
-        return hkl;
-    }
-    else
-    {
-        WARN("Unable to set IME registry values\n");
-        return 0;
-    }
 }
 
 /***********************************************************************
@@ -1492,120 +1060,6 @@ BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
     UNREFERENCED_PARAMETER(hWnd);
     UNREFERENCED_PARAMETER(hIMC);
     return TRUE; // Do nothing. This is correct.
-}
-
-/***********************************************************************
- *		ImmSetCompositionStringA (IMM32.@)
- */
-BOOL WINAPI
-ImmSetCompositionStringA(HIMC hIMC, DWORD dwIndex,
-                         LPCVOID lpComp, DWORD dwCompLen,
-                         LPCVOID lpRead, DWORD dwReadLen)
-{
-    DWORD comp_len;
-    DWORD read_len;
-    WCHAR *CompBuffer = NULL;
-    WCHAR *ReadBuffer = NULL;
-    BOOL rc;
-    InputContextData *data = get_imc_data(hIMC);
-
-    TRACE("(%p, %d, %p, %d, %p, %d):\n",
-            hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
-
-    if (!data)
-        return FALSE;
-
-    if (!(dwIndex == SCS_SETSTR ||
-          dwIndex == SCS_CHANGEATTR ||
-          dwIndex == SCS_CHANGECLAUSE ||
-          dwIndex == SCS_SETRECONVERTSTRING ||
-          dwIndex == SCS_QUERYRECONVERTSTRING))
-        return FALSE;
-
-    if (!is_himc_ime_unicode(data))
-        return data->immKbd->pImeSetCompositionString(hIMC, dwIndex, lpComp,
-                        dwCompLen, lpRead, dwReadLen);
-
-    comp_len = MultiByteToWideChar(CP_ACP, 0, lpComp, dwCompLen, NULL, 0);
-    if (comp_len)
-    {
-        CompBuffer = HeapAlloc(GetProcessHeap(),0,comp_len * sizeof(WCHAR));
-        MultiByteToWideChar(CP_ACP, 0, lpComp, dwCompLen, CompBuffer, comp_len);
-    }
-
-    read_len = MultiByteToWideChar(CP_ACP, 0, lpRead, dwReadLen, NULL, 0);
-    if (read_len)
-    {
-        ReadBuffer = HeapAlloc(GetProcessHeap(),0,read_len * sizeof(WCHAR));
-        MultiByteToWideChar(CP_ACP, 0, lpRead, dwReadLen, ReadBuffer, read_len);
-    }
-
-    rc =  ImmSetCompositionStringW(hIMC, dwIndex, CompBuffer, comp_len,
-                                   ReadBuffer, read_len);
-
-    HeapFree(GetProcessHeap(), 0, CompBuffer);
-    HeapFree(GetProcessHeap(), 0, ReadBuffer);
-
-    return rc;
-}
-
-/***********************************************************************
- *		ImmSetCompositionStringW (IMM32.@)
- */
-BOOL WINAPI
-ImmSetCompositionStringW(HIMC hIMC, DWORD dwIndex,
-                         LPCVOID lpComp, DWORD dwCompLen,
-                         LPCVOID lpRead, DWORD dwReadLen)
-{
-    DWORD comp_len;
-    DWORD read_len;
-    CHAR *CompBuffer = NULL;
-    CHAR *ReadBuffer = NULL;
-    BOOL rc;
-    InputContextData *data = get_imc_data(hIMC);
-
-    TRACE("(%p, %d, %p, %d, %p, %d):\n",
-            hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
-
-    if (!data)
-        return FALSE;
-
-    if (!(dwIndex == SCS_SETSTR ||
-          dwIndex == SCS_CHANGEATTR ||
-          dwIndex == SCS_CHANGECLAUSE ||
-          dwIndex == SCS_SETRECONVERTSTRING ||
-          dwIndex == SCS_QUERYRECONVERTSTRING))
-        return FALSE;
-
-    if (is_himc_ime_unicode(data))
-        return data->immKbd->pImeSetCompositionString(hIMC, dwIndex, lpComp,
-                        dwCompLen, lpRead, dwReadLen);
-
-    comp_len = WideCharToMultiByte(CP_ACP, 0, lpComp, dwCompLen, NULL, 0, NULL,
-                                   NULL);
-    if (comp_len)
-    {
-        CompBuffer = HeapAlloc(GetProcessHeap(),0,comp_len);
-        WideCharToMultiByte(CP_ACP, 0, lpComp, dwCompLen, CompBuffer, comp_len,
-                            NULL, NULL);
-    }
-
-    read_len = WideCharToMultiByte(CP_ACP, 0, lpRead, dwReadLen, NULL, 0, NULL,
-                                   NULL);
-    if (read_len)
-    {
-        ReadBuffer = HeapAlloc(GetProcessHeap(),0,read_len);
-        WideCharToMultiByte(CP_ACP, 0, lpRead, dwReadLen, ReadBuffer, read_len,
-                            NULL, NULL);
-    }
-
-    rc =  ImmSetCompositionStringA(hIMC, dwIndex, CompBuffer, comp_len,
-                                   ReadBuffer, read_len);
-
-    HeapFree(GetProcessHeap(), 0, CompBuffer);
-    HeapFree(GetProcessHeap(), 0, ReadBuffer);
-
-    return rc;
 }
 
 /***********************************************************************

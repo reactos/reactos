@@ -9,8 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mydocs);
 
-static CLIPFORMAT g_cfHIDA = 0;
-
 CMyDocsDropHandler::CMyDocsDropHandler()
 {
     InterlockedIncrement(&g_ModuleRefCnt);
@@ -68,23 +66,15 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    // get the clipboard format
-    if (g_cfHIDA == 0)
-        g_cfHIDA = ::RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-
     // Retrieve an HIDA (handle of IDA)
-    STGMEDIUM medium;
-    FORMATETC fmt = { g_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-    hr = pDataObject->GetData(&fmt, &medium);
-    if (FAILED_UNEXPECTEDLY(hr))
+    CDataObjectHIDA pida(pDataObject);
+    if (FAILED_UNEXPECTEDLY(pida.hr()))
     {
         *pdwEffect = 0;
         DragLeave();
-        return E_FAIL;
+        return pida.hr();
     }
 
-    // lock HIDA
-    LPIDA pida = reinterpret_cast<LPIDA>(GlobalLock(medium.hGlobal));
     UINT iItem, cItems = pida->cidl;
 
     // get the path of "My Documents"
@@ -122,9 +112,6 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
             strSrcList += L'|'; // separator is '|'
         strSrcList += szSrc;
     }
-
-    // unlock HIDA
-    GlobalUnlock(medium.hGlobal);
 
     if (iItem != cItems)
     {

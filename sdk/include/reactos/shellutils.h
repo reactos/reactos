@@ -559,6 +559,71 @@ static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
 
 #ifdef __cplusplus
 
+DECLSPEC_SELECTANY CLIPFORMAT g_cfHIDA = NULL;
+
+// Allow to use the HIDA from an IDataObject without copying it
+struct CDataObjectHIDA
+{
+private:
+    STGMEDIUM m_medium;
+    CIDA* m_cida;
+    HRESULT m_hr;
+
+public:
+    explicit CDataObjectHIDA(IDataObject* pDataObject)
+        : m_cida(nullptr)
+    {
+        m_medium.tymed = TYMED_NULL;
+
+        if (g_cfHIDA == NULL)
+        {
+            g_cfHIDA = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLISTW);
+        }
+        FORMATETC fmt = { g_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+
+        m_hr = pDataObject->GetData(&fmt, &m_medium);
+        if (FAILED(m_hr))
+        {
+            m_medium.tymed = TYMED_NULL;
+            return;
+        }
+
+        m_cida = (CIDA*)::GlobalLock(m_medium.hGlobal);
+        if (m_cida == nullptr)
+        {
+            m_hr = E_UNEXPECTED;
+        }
+    }
+
+    ~CDataObjectHIDA()
+    {
+        if (m_cida)
+            ::GlobalUnlock(m_cida);
+
+        ReleaseStgMedium(&m_medium);
+    }
+
+    HRESULT hr() const
+    {
+        return m_hr;
+    }
+
+    operator bool() const
+    {
+        return m_cida != nullptr;
+    }
+
+    operator const CIDA* () const
+    {
+        return m_cida;
+    }
+
+    const CIDA* operator->() const
+    {
+        return m_cida;
+    }
+};
+
 inline
 HRESULT DataObject_GetData(IDataObject* pDataObject, CLIPFORMAT clipformat, PVOID pBuffer, SIZE_T dwBufferSize)
 {

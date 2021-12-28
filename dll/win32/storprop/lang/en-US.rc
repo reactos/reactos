@@ -1,0 +1,18 @@
+/*
+ * PROJECT:     ReactOS system libraries
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Storage device properties
+ * COPYRIGHT:   2021 Eric Kohl (eric.kohl@reactos.org)
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDD_DISK_POLICIES DIALOGEX 0, 0, 252, 218
+STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Policies"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Removal Policy", -1, 7, 7, 238, 204
+    AUTORADIOBUTTON "Quick removal", IDC_QUICK_REMOVAL_BUTTON, 14, 28, 127, 10
+    AUTORADIOBUTTON "Better performance", IDC_BETTER_PERFORMANCE_BUTTON, 14, 28, 127, 10
+END

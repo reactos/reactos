@@ -1,0 +1,46 @@
+/*
+ * PROJECT:     SAM Server DLL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish (Basque) resource file
+ * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
+ */
+
+LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "Builtin"
+    IDS_GROUP_NONE_NAME "Ninguno"
+    IDS_GROUP_NONE_COMMENT "Usuarios normales"
+    IDS_ALIAS_ADMINISTRATORS_NAME "Administradores"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "Los administradores tienen acceso sin restricciones al equipo o dominio."
+    IDS_ALIAS_GUESTS_NAME "Invitados"
+    IDS_ALIAS_GUESTS_COMMENT "Los invitados tienen de forma predeterminada los mismos derechos que los del grupo Usuarios."
+    IDS_ALIAS_POWER_USERS_NAME "Usuarios avanzados"
+    IDS_ALIAS_POWER_USERS_COMMENT "Los usuarios avanzados obtienen la mayor parte de los derechos administrativos con algunas restricciones."
+    IDS_ALIAS_USERS_NAME "Usuarios"
+    IDS_ALIAS_USERS_COMMENT "Los usuarios no pueden hacer cambios que afecten al sistema."
+    IDS_ALIAS_PRINT_OPS_NAME "Print Operators"
+    IDS_ALIAS_PRINT_OPS_COMMENT "Members can administer domain printers"
+    IDS_ALIAS_BACKUP_OPS_NAME "Backup Operators"
+    IDS_ALIAS_BACKUP_OPS_COMMENT "Backup Operators can override security restrictions for the sole purpose of backing up or resoring files"
+    IDS_ALIAS_REPLICATOR_NAME "Replicator"
+    IDS_ALIAS_REPLICATOR_COMMENT "Supports file replication in a domain"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Remote Desktop Users"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Members in this group are granted the right to logon remotely"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Network Configuration Operators"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Members in this group can have some administrative privileges to manage configuration of networking features"
+    IDS_ALIAS_MONITORING_USERS_NAME "Performance Monitor Users"
+    IDS_ALIAS_MONITORING_USERS_COMMENT "Members of this group have remote access to monitor this computer"
+    IDS_ALIAS_LOGGING_USERS_NAME "Performance Log Users"
+    IDS_ALIAS_LOGGING_USERS_COMMENT "Members of this group have remote access to schedule logging of performance counters on this computer"
+    /*
+     * ATTENTION: 
+     *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "Administratzaile"
+    IDS_USER_ADMINISTRATOR_COMMENT "Cuenta predeterminada de uso administrativo local, o en el dominio."
+    IDS_USER_GUEST_NAME "Invitado"
+    IDS_USER_GUEST_COMMENT "Cuenta predeterminada para el acceso de invitados al equipo o dominio."
+END

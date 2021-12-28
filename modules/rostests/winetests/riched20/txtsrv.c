@@ -129,11 +129,6 @@ static ULONG WINAPI ITextHostImpl_Release(ITextHost *iface)
     }
 }
 
-#ifdef __REACTOS__
-#undef __thiscall
-#define __thiscall WINAPI
-#endif /* __REACTOS__ */
-
 static HDC __thiscall ITextHostImpl_TxGetDC(ITextHost *iface)
 {
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
@@ -423,10 +418,6 @@ static HRESULT __thiscall ITextHostImpl_TxGetSelectionBarWidth(ITextHost *iface,
     *lSelBarWidth = 0;
     return E_NOTIMPL;
 }
-
-#ifdef __REACTOS__
-#undef __thiscall
-#endif /* __REACTOS__ */
 
 static ITextHostVtbl itextHostVtbl = {
     ITextHostImpl_QueryInterface,

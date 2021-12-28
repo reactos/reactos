@@ -148,6 +148,8 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
         if (Status != STATUS_PENDING)
         {
             /* Complete it ourselves */
+            NormalRoutine = NULL;
+            NormalContext = NULL;
             ASSERT(!Irp->PendingReturned);
             KeRaiseIrql(APC_LEVEL, &OldIrql);
             IopCompleteRequest(&Irp->Tail.Apc,
@@ -285,7 +287,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                        &HandleInformation);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Can't use an I/O completion port and an APC in the same time */
+    /* Can't use an I/O completion port and an APC at the same time */
     if ((FileObject->CompletionContext) && (UserApcRoutine))
     {
         /* Fail */
@@ -1673,6 +1675,14 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Can't use an I/O completion port and an APC at the same time */
+    if ((FileObject->CompletionContext) && (ApcRoutine))
+    {
+        /* Fail */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Check if we have an event handle */
     if (EventHandle)
     {
@@ -1791,6 +1801,14 @@ NtLockFile(IN HANDLE FileHandle,
     /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Can't use an I/O completion port and an APC at the same time */
+        if ((FileObject->CompletionContext) && (ApcRoutine))
+        {
+            /* Fail */
+            ObDereferenceObject(FileObject);
+            return STATUS_INVALID_PARAMETER;
+        }
+
         /* Must have either FILE_READ_DATA or FILE_WRITE_DATA access */
         if (!(HandleInformation.GrantedAccess &
             (FILE_WRITE_DATA | FILE_READ_DATA)))
@@ -2640,6 +2658,8 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         Irp->UserIosb = IoStatusBlock;
 
         /* The IRP wasn't completed, complete it ourselves */
+        NormalRoutine = NULL;
+        NormalContext = NULL;
         KeRaiseIrql(APC_LEVEL, &OldIrql);
         IopCompleteRequest(&Irp->Tail.Apc,
                            &NormalRoutine,
@@ -2737,6 +2757,14 @@ NtReadFile(IN HANDLE FileHandle,
             {
                 /* Capture and probe it */
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
+            }
+
+            /* Can't use an I/O completion port and an APC at the same time */
+            if ((FileObject->CompletionContext) && (ApcRoutine))
+            {
+                /* Fail */
+                ObDereferenceObject(FileObject);
+                return STATUS_INVALID_PARAMETER;
             }
 
             /* Perform additional checks for non-cached file access */
@@ -3480,6 +3508,8 @@ NtSetInformationFile(IN HANDLE FileHandle,
         Irp->UserIosb = IoStatusBlock;
 
         /* The IRP wasn't completed, complete it ourselves */
+        NormalRoutine = NULL;
+        NormalContext = NULL;
         KeRaiseIrql(APC_LEVEL, &OldIrql);
         IopCompleteRequest(&Irp->Tail.Apc,
                            &NormalRoutine,
@@ -3788,6 +3818,14 @@ NtWriteFile(IN HANDLE FileHandle,
             {
                 /* Capture and probe it */
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
+            }
+
+            /* Can't use an I/O completion port and an APC at the same time */
+            if ((FileObject->CompletionContext) && (ApcRoutine))
+            {
+                /* Fail */
+                ObDereferenceObject(FileObject);
+                return STATUS_INVALID_PARAMETER;
             }
 
             /* Perform additional checks for non-cached file access */
@@ -4253,7 +4291,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     /* This is to be handled by the kernel, not by FSD */
     else if (FsInformationClass == FileFsDriverPathInformation)
     {
-        PFILE_FS_DRIVER_PATH_INFORMATION DriverPathInfo;
+        _SEH2_VOLATILE PFILE_FS_DRIVER_PATH_INFORMATION DriverPathInfo = NULL;
 
         _SEH2_TRY
         {
@@ -4264,7 +4302,9 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
             RtlCopyMemory(DriverPathInfo, FsInformation, Length);
 
             /* Is the driver in the IO path? */
-            Status = IopGetDriverPathInformation(FileObject, DriverPathInfo, Length);
+            Status = IopGetDriverPathInformation(FileObject,
+                                                 (PFILE_FS_DRIVER_PATH_INFORMATION)DriverPathInfo,
+                                                 Length);
             /* We failed, don't continue execution */
             if (!NT_SUCCESS(Status))
             {

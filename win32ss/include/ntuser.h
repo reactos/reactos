@@ -1183,7 +1183,7 @@ typedef struct tagIMEINFOEX
     };
 } IMEINFOEX, *PIMEINFOEX;
 
-typedef enum IMEINFOEXCLASS
+typedef enum IMEINFOEXCLASS /* unconfirmed: buggy */
 {
     ImeInfoExKeyboardLayout,
     ImeInfoExImeWindow,
@@ -2129,7 +2129,7 @@ BOOL
 NTAPI
 NtUserEndDeferWindowPosEx(
     HDWP WinPosInfo,
-    DWORD Unknown1);
+    BOOL bAsync);
 
 BOOL
 NTAPI

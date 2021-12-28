@@ -58,6 +58,7 @@ RegImportBinaryHive(
     _In_ ULONG ChunkSize)
 {
     NTSTATUS Status;
+
     TRACE("RegImportBinaryHive(%p, 0x%lx)\n", ChunkBase, ChunkSize);
 
     /* Allocate and initialize the hive */
@@ -77,8 +78,8 @@ RegImportBinaryHive(
                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        CmpFree(CmHive, 0);
         ERR("Corrupted hive %p!\n", ChunkBase);
+        CmpFree(CmHive, 0);
         return FALSE;
     }
 
@@ -101,6 +102,7 @@ RegInitCurrentControlSet(
     ULONG LastKnownGoodSet = 0;
     ULONG DataSize;
     LONG Error;
+
     TRACE("RegInitCurrentControlSet\n");
 
     Error = RegOpenKey(NULL,
@@ -121,6 +123,7 @@ RegInitCurrentControlSet(
     if (Error != ERROR_SUCCESS)
     {
         ERR("RegQueryValue('Default') failed (Error %u)\n", (int)Error);
+        RegCloseKey(SelectKey);
         return Error;
     }
 
@@ -133,8 +136,11 @@ RegInitCurrentControlSet(
     if (Error != ERROR_SUCCESS)
     {
         ERR("RegQueryValue('LastKnownGood') failed (Error %u)\n", (int)Error);
+        RegCloseKey(SelectKey);
         return Error;
     }
+
+    RegCloseKey(SelectKey);
 
     CurrentSet = (LastKnownGood) ? LastKnownGoodSet : DefaultSet;
     wcscpy(ControlSetKeyName, L"ControlSet");
@@ -169,6 +175,9 @@ RegInitCurrentControlSet(
     Error = RegOpenKey(SystemKey,
                        ControlSetKeyName,
                        &CurrentControlSetKey);
+
+    RegCloseKey(SystemKey);
+
     if (Error != ERROR_SUCCESS)
     {
         ERR("RegOpenKey(CurrentControlSetKey) failed (Error %lu)\n", Error);
@@ -283,6 +292,8 @@ RegEnumKey(
 
     if (SubKey != NULL)
         *SubKey = (HKEY)SubKeyNode;
+    // else
+        // RegCloseKey((HKEY)SubKeyNode);
 
     TRACE("RegEnumKey done -> %u, '%.*S'\n", *NameSize, *NameSize, Name);
     return ERROR_SUCCESS;
@@ -299,6 +310,7 @@ RegOpenKey(
     PHHIVE Hive = &CmHive->Hive;
     PCM_KEY_NODE KeyNode;
     HCELL_INDEX CellIndex;
+
     TRACE("RegOpenKey(%p, '%S', %p)\n", ParentKey, KeyName, Key);
 
     /* Initialize the remaining path name */
@@ -314,6 +326,7 @@ RegOpenKey(
         UNICODE_STRING RegistryPath = RTL_CONSTANT_STRING(L"Registry");
         UNICODE_STRING MachinePath = RTL_CONSTANT_STRING(L"MACHINE");
         UNICODE_STRING SystemPath = RTL_CONSTANT_STRING(L"SYSTEM");
+
         TRACE("RegOpenKey: absolute path\n");
 
         if ((RemainingPath.Length < sizeof(WCHAR)) ||

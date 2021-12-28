@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Die Spracheinstellungen des Systems sollten mit der Sprache der Anwendungen, die Sie nutzen wollen übereinstimmen. Die Nutzereinstellungen geben vor, wie Zahlen, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
-    LTEXT "", IDC_LOCALETEXT, 54, 34, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 34, 250, 16
     LTEXT "Klicken Sie auf Einstellen, um die regionalen Einstellungen zu ändern.", IDC_STATIC, 53, 57, 188, 16
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "Das Tastaturlayout gibt vor, welches Zeichen ein Tastendruck bewirkt.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Klicken Sie auf Einstellen, um das Tastaturlayout zu ändern.", IDC_STATIC, 53, 122, 188, 16
     PUSHBUTTON "Eins&tellen...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -174,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Sie müssen einen Namen und ein Adminstratorpasswort für Ihren Computer festlegen."
     IDS_LOCALETITLE "Regionale Einstellungen"
     IDS_LOCALESUBTITLE "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Datum und Uhrzeit"
     IDS_DATETIMESUBTITLE "Stellen Sie das korrekte Datum und die Uhrzeit für Ihren Computer ein."
     IDS_PROCESSTITLE "Komponenten werden registriert"

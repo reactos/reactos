@@ -24,6 +24,7 @@ HKR, , Icon,           0, "-27"
 [Manufacturer]
 %GenericMfg% = GenericMfg
 %IntelMfg% = IntelMfg
+%NecMfg% = NecMfg
 %nVidiaMfg% = nVidiaMfg
 
 [GenericMfg]
@@ -69,6 +70,13 @@ HKR, , Icon,           0, "-27"
 %PCI\VEN_8086&DEV_7180.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7180
 %PCI\VEN_8086&DEV_7190.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7190
 %PCI\VEN_8086&DEV_7192.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7192
+
+[NecMfg]
+%NecCb.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_1033&DEV_0001
+%NecVl.DeviceDesc% = NO_DRV,PCI\VEN_1033&DEV_0002
+%NecVl.DeviceDesc% = NO_DRV,PCI\VEN_1033&DEV_0016
+%NecCb.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_1033&DEV_002D
+%NecCb.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_1033&DEV_003B
 
 [nVidiaMfg]
 %PCI\VEN_10DE&DEV_01B2.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_10DE&DEV_01B2
@@ -200,6 +208,10 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Power Management Controller
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU to PCI Bridge"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI Bridge"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI Bridge"
+
+NecMfg = "NEC"
+NecCb.DeviceDesc = "NEC PCI to C-bus Bridge"
+NecVl.DeviceDesc = "NEC PCI to VL bus Bridge"
 
 nVidiaMfg = "nVidia"
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce PCI to ISA Bridge"
@@ -662,6 +674,9 @@ PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II мост CPU 
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II мост CPU - PCI"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II мост CPU - PCI"
 
+NecCb.DeviceDesc = "NEC мост PCI - C-bus"
+NecVl.DeviceDesc = "NEC мост PCI - VL"
+
 PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce мост PCI - ISA"
 PCI\VEN_10DE&DEV_01B4.DeviceDesc = "nVidia nForce контроллер SMBus"
 PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce мост AGP - PCI"
@@ -875,3 +890,42 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB 电源管理控制器"
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU - PCI 桥"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU - PCI 桥"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU - PCI 桥"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+SystemClassName = "Dispositivos do sistema"
+
+GenericMfg = "(Dispositivos do sistema padrão)"
+*PNP0000.DeviceDesc = "Controlador de interrupções programável (PIC)"
+*PNP0001.DeviceDesc = "Controlador EISA de interrupções programável"
+*PNP0100.DeviceDesc = "Cronómetro do sistema"
+*PNP0200.DeviceDesc = "Controlador de acesso directo a memória (DMA)"
+*PNP0800.DeviceDesc = "Altifalante do sistema"
+*PNP0A03.DeviceDesc = "Barramento PCI"
+*PNP0A05.DeviceDesc = "Barramento ACPI padrão"
+*PNP0B00.DeviceDesc = "Sistema CMOS/relógio em tempo real"
+*PNP0C01.DeviceDesc = "Placa base do sistema"
+*PNP0C02.DeviceDesc = "Recursos da placa base"
+*PNP0C04.DeviceDesc = "Coprocessador matemático"
+*PNP0C0B.DeviceDesc = "Ventilador ACPI"
+*PNP0C0C.DeviceDesc = "Botão de energía ACPI"
+*PNP0C0D.DeviceDesc = "Tampa ACPI"
+*PNP0C0E.DeviceDesc = "Botão de suspensão ACPI"
+*PNP0C0F.DeviceDesc = "Dispositivo de link de interrupção PCI "
+*PNP0C15.DeviceDesc = "Docking Station"
+ACPI\FixedButton.DeviceDesc = "Botão de recurso fixo ACPI"
+PCI\CC_0500.DeviceDesc = "Controlador PCI RAM padrão"
+PCI\CC_0600.DeviceDesc = "Ponte CPU-PCI padrão"
+PCI\CC_0601.DeviceDesc = "Ponte PCI-ISA padrão"
+PCI\CC_0604.DeviceDesc = "Ponte PCI-PCI padrão"
+*ThermalZone.DeviceDesc = "Zona térmica ACPI"
+
+*INT0800.DeviceDesc = "Dispositivo concentrador Firmware Intel 82802"
+PCI\VEN_8086&DEV_1237.DeviceDesc = "Intel 440FX - 82441FX PMC [Natoma]"
+PCI\VEN_8086&DEV_2413.DeviceDesc = "Intel 82801AA SMBus"
+PCI\VEN_8086&DEV_7000.DeviceDesc = "Intel 82371SB PIIX3 Ponte PCI-ISA"
+PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB Ponte PCI-ISA"
+PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Controlador de gestão de energia "
+PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II Ponte CPU-PCI"
+PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II Ponte CPU-PCI"
+PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II Ponte CPU-PCI"

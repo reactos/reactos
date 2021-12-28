@@ -805,6 +805,8 @@ BEGIN
     IDS_COPYERRORSAME "Impossivel copiar '%s': Os nomes dos arquivos de origem e de destino são os mesmos."
     IDS_MOVEERRORSUBFOLDER "Impossivel mover '%s': A pasta de destino é uma subpasta da pasta de origem."
     IDS_COPYERRORSUBFOLDER "Impossivel copiar '%s': A pasta de destino é uma subpasta da pasta de origem."
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "Impossivel criar pasta '%1'"
     IDS_CREATEFOLDER_CAPTION "Impossivel criar pasta"

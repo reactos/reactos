@@ -512,28 +512,28 @@ NtUserCallTwoParam(
             Ret = 0;
             Window = UserGetWindowObject(hwnd);
             if (!Window)
-            {
                 break;
-            }
-            if (MsqIsHung(Window->head.pti, MSQ_HUNG))
+
+            if (gpqForeground && !fAltTab)
             {
-                // TODO: Make the window ghosted and activate.
-                break;
-            }
-            if (fAltTab)
-            {
-                if (Window->style & WS_MINIMIZE)
+                PWND pwndActive = gpqForeground->spwndActive;
+                if (pwndActive && !(pwndActive->ExStyle & WS_EX_TOPMOST))
                 {
-                    UserPostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+                    co_WinPosSetWindowPos(pwndActive, HWND_BOTTOM, 0, 0, 0, 0,
+                                          SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
+                                          SWP_ASYNCWINDOWPOS);
                 }
-                /* bring window to top and activate */
-                co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0,
-                                      SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING |
-                                      SWP_NOOWNERZORDER | SWP_ASYNCWINDOWPOS);
-            }
-            else
-            {
+
                 UserSetActiveWindow(Window);
+                break;
+            }
+
+            co_IntSetForegroundWindowMouse(Window);
+
+            if (fAltTab && (Window->style & WS_MINIMIZE))
+            {
+                MSG msg = { Window->head.h, WM_SYSCOMMAND, SC_RESTORE, 0 };
+                MsqPostMessage(Window->head.pti, &msg, FALSE, QS_POSTMESSAGE, 0, 0);
             }
             break;
         }

@@ -293,7 +293,11 @@ static void cleanup(void) {
 }
 
 static void test_ImmNotifyIME(void) {
+#ifdef __REACTOS__
+    static char string[] = "wine";
+#else
     static const char string[] = "wine";
+#endif
     char resstr[16] = "";
     HIMC imc;
     BOOL ret;
@@ -422,7 +426,11 @@ static LRESULT WINAPI test_ime_wnd_proc(HWND hWnd, UINT msg, WPARAM wParam, LPAR
 static void test_ImmGetCompositionString(void)
 {
     HIMC imc;
+#ifdef __REACTOS__
+    static WCHAR string[] = {'w','i','n','e',0x65e5,0x672c,0x8a9e};
+#else
     static const WCHAR string[] = {'w','i','n','e',0x65e5,0x672c,0x8a9e};
+#endif
     char cstring[20];
     WCHAR wstring[20];
     LONG len;

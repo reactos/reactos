@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Αρχείο"
     BEGIN
         MENUITEM "&Νέο\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Άνοιγμα\tCtrl+O", CMD_OPEN
         MENUITEM "Αποθήκευ&ση\tCtrl+S", CMD_SAVE
         MENUITEM "Αποθήκευση &ως...", CMD_SAVE_AS

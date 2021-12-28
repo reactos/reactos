@@ -24,6 +24,7 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <winnls32.h>
+#include <winver.h>
 
 #include <imm.h>
 #include <ddk/imm.h>
@@ -61,6 +62,13 @@
 
 #define ROUNDUP4(n) (((n) + 3) & ~3)  /* DWORD alignment */
 
+typedef struct REG_IME
+{
+    HKL hKL;
+    WCHAR szImeKey[20];     /* "E0XXYYYY": "E0XX" is the device handle. "YYYY" is a LANGID. */
+    WCHAR szFileName[80];   /* The IME module filename */
+} REG_IME, *PREG_IME;
+
 extern HMODULE g_hImm32Inst;
 extern RTL_CRITICAL_SECTION g_csImeDpi;
 extern PIMEDPI g_pImeDpiList;
@@ -81,8 +89,8 @@ LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes);
 
 LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA);
 LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW);
-DWORD APIENTRY IchWideFromAnsi(DWORD cchAnsi, LPCSTR pchAnsi, UINT uCodePage);
-DWORD APIENTRY IchAnsiFromWide(DWORD cchWide, LPCWSTR pchWide, UINT uCodePage);
+LONG APIENTRY IchWideFromAnsi(LONG cchAnsi, LPCSTR pchAnsi, UINT uCodePage);
+LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
 PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL);
 LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
@@ -134,3 +142,16 @@ BOOL APIENTRY
 Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL);
 BOOL APIENTRY
 Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL);
+
+DWORD APIENTRY
+Imm32ReconvertAnsiFromWide(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc, UINT uCodePage);
+DWORD APIENTRY
+Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc, UINT uCodePage);
+
+HRESULT APIENTRY Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase);
+HRESULT APIENTRY Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff);
+BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx);
+UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts);
+BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
+HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
+BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);

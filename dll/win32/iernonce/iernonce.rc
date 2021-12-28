@@ -14,6 +14,9 @@ IDI_ICON ICON "res/setup.ico"
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif

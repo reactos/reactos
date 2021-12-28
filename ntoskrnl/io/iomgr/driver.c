@@ -32,8 +32,6 @@ static const WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentCon
 
 POBJECT_TYPE IoDriverObjectType = NULL;
 
-#define TAG_RTLREGISTRY 'vrqR'
-
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
 extern BOOLEAN PnPBootDriversLoaded;

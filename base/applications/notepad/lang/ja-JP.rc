@@ -24,7 +24,7 @@ BEGIN
     POPUP "ファイル(&F)"
     BEGIN
         MENUITEM "新規作成(&N)\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "新規ウィンドウ(&W)\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "開く(&O)...\tCtrl+O", CMD_OPEN
         MENUITEM "上書き保存(&S)\tCtrl+S", CMD_SAVE
         MENUITEM "名前を付けて保存(&A)...", CMD_SAVE_AS
@@ -64,7 +64,7 @@ BEGIN
     BEGIN
         MENUITEM "目次(&C)", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "メモ帳について(&A)", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

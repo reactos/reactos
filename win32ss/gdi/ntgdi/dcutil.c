@@ -492,7 +492,7 @@ NtGdiGetDCDword(
             SafeResult = pdcattr->lBreakExtra;
             break;
 
-        case GdiGerCharBreak:
+        case GdiGetCharBreak:
             SafeResult = pdcattr->cBreak;
             break;
 

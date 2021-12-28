@@ -20,7 +20,7 @@ KeInitializeEvent(
     IN EVENT_TYPE Type,
     IN BOOLEAN State)
 {
-    memset(Event, 0, sizeof(*Event));
+    RtlZeroMemory(Event, sizeof(*Event));
 }
 
 VOID

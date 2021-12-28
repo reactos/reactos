@@ -9,38 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-HRESULT _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida)
-{
-    static CLIPFORMAT s_cfHIDA = 0;
-    if (s_cfHIDA == 0)
-    {
-        s_cfHIDA = static_cast<CLIPFORMAT>(RegisterClipboardFormatW(CFSTR_SHELLIDLIST));
-    }
-
-    FORMATETC fmt = { s_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-    STGMEDIUM medium;
-
-    HRESULT hr = pDataObject->GetData(&fmt, &medium);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    LPVOID lpSrc = GlobalLock(medium.hGlobal);
-    SIZE_T cbSize = GlobalSize(medium.hGlobal);
-
-    *ppcida = reinterpret_cast<CIDA *>(::CoTaskMemAlloc(cbSize));
-    if (*ppcida)
-    {
-        memcpy(*ppcida, lpSrc, cbSize);
-        hr = S_OK;
-    }
-    else
-    {
-        ERR("Out of memory\n");
-        hr = E_FAIL;
-    }
-    ReleaseStgMedium(&medium);
-    return hr;
-}
 
 CCopyToMenu::CCopyToMenu() :
     m_idCmdFirst(0),
@@ -157,10 +125,9 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 
 HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 {
-    CComHeapPtr<CIDA> pCIDA;
-    HRESULT hr = _GetCidlFromDataObject(m_pDataObject, &pCIDA);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    CDataObjectHIDA pCIDA(m_pDataObject);
+    if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
+        return pCIDA.hr();
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);
     if (!pidlParent)
@@ -224,9 +191,8 @@ CStringW CCopyToMenu::DoGetFileTitle()
 {
     CStringW ret = L"(file)";
 
-    CComHeapPtr<CIDA> pCIDA;
-    HRESULT hr = _GetCidlFromDataObject(m_pDataObject, &pCIDA);
-    if (FAILED_UNEXPECTEDLY(hr))
+    CDataObjectHIDA pCIDA(m_pDataObject);
+    if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
         return ret;
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);

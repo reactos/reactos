@@ -32,7 +32,7 @@ BEGIN
     POPUP "&Fail"
     BEGIN
         MENUITEM "&Uus\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Ava...\tCtrl+O", CMD_OPEN
         MENUITEM "&Salvesta\tCtrl+S", CMD_SAVE
         MENUITEM "Salvesta &nimega...", CMD_SAVE_AS

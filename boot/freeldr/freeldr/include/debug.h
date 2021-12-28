@@ -44,7 +44,7 @@
     ULONG   DbgPrint(const char *Format, ...);
     VOID    DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, ...);
     VOID    DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
-    VOID    DebugDisableScreenPort();
+    VOID    DebugDisableScreenPort(VOID);
     VOID    DbgParseDebugChannels(PCHAR Value);
 
     #define ERR_LEVEL      0x1
@@ -117,6 +117,7 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
     #define DebugInit(FrLdrSectionId)
     #define BugCheck(fmt, ...)
     #define DbgDumpBuffer(mask, buf, len)
+    #define DebugDisableScreenPort()
     #define DbgParseDebugChannels(val)
 
 #endif // DBG

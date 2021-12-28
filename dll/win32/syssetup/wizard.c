@@ -7,6 +7,7 @@
  *                  Pierre Schweitzer <heis_spiter@hotmail.com>
  *                  Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *                  Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
  */
 
 /* INCLUDES *****************************************************************/
@@ -395,6 +396,8 @@ static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\
 static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
 static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
 static const WCHAR s_szWinlogon[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon";
+static const WCHAR s_szDefaultSoundEvents[] = L"AppEvents\\Schemes\\Apps\\.Default";
+static const WCHAR s_szExplorerSoundEvents[] = L"AppEvents\\Schemes\\Apps\\Explorer";
 
 typedef struct _PRODUCT_OPTION_DATA
 {
@@ -410,6 +413,125 @@ static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
     { L"Terminal Server\0", L"ServerNT", 0, 0x200, 0 },
     { L"\0", L"WinNT", 1, 0x300, 1 }
 };
+
+static const WCHAR* s_DefaultSoundEvents[][2] = 
+{
+    { L".Default", L"%SystemRoot%\\Media\\ReactOS_Default.wav" },
+    { L"AppGPFault", L"" },
+    { L"Close", L"" },
+    { L"CriticalBatteryAlarm", L"%SystemRoot%\\Media\\ReactOS_Battery_Critical.wav" },
+    { L"DeviceConnect",  L"%SystemRoot%\\Media\\ReactOS_Hardware_Insert.wav" },
+    { L"DeviceDisconnect", L"%SystemRoot%\\Media\\ReactOS_Hardware_Remove.wav" },
+    { L"DeviceFail", L"%SystemRoot%\\Media\\ReactOS_Hardware_Fail.wav" },
+    { L"LowBatteryAlarm", L"%SystemRoot%\\Media\\ReactOS_Battery_Low.wav" },
+    { L"MailBeep", L"%SystemRoot%\\Media\\ReactOS_Notify.wav" },
+    { L"Maximize", L"%SystemRoot%\\Media\\ReactOS_Restore.wav" },
+    { L"MenuCommand", L"%SystemRoot%\\Media\\ReactOS_Menu_Command.wav" },
+    { L"MenuPopup", L"" },
+    { L"Minimize", L"%SystemRoot%\\Media\\ReactOS_Minimize.wav" },
+    { L"Open", L"" },
+    { L"PrintComplete", L"%SystemRoot%\\Media\\ReactOS_Print_Complete.wav" },
+    { L"RestoreDown", L"" },
+    { L"RestoreUp", L"" },
+    { L"SystemAsterisk", L"%SystemRoot%\\Media\\ReactOS_Ding.wav" },
+    { L"SystemExclamation", L"%SystemRoot%\\Media\\ReactOS_Exclamation.wav" },
+    { L"SystemExit", L"%SystemRoot%\\Media\\ReactOS_Shutdown.wav" },
+    { L"SystemHand", L"%SystemRoot%\\Media\\ReactOS_Critical_Stop.wav" },
+    { L"SystemNotification", L"%SystemRoot%\\Media\\ReactOS_Balloon.wav" },
+    { L"SystemQuestion", L"%SystemRoot%\\Media\\ReactOS_Ding.wav" },
+    { L"SystemStart", L"%SystemRoot%\\Media\\ReactOS_Startup.wav" },
+    { L"WindowsLogoff", L"%SystemRoot%\\Media\\ReactOS_LogOff.wav" }
+/* Logon sound is already set by default for both Server and Workstation */
+};
+
+static const WCHAR* s_ExplorerSoundEvents[][2] = 
+{
+    { L"EmptyRecycleBin", L"%SystemRoot%\\Media\\ReactOS_Recycle.wav" },
+    { L"Navigating", L"%SystemRoot%\\Media\\ReactOS_Start.wav" }
+};
+
+static BOOL
+DoWriteSoundEvents(HKEY hKey,
+                   LPCWSTR lpSubkey,
+                   LPCWSTR lpEventsArray[][2],
+                   DWORD dwSize)
+{
+    HKEY hRootKey, hEventKey, hDefaultKey;
+    LONG error;
+    ULONG i;
+    WCHAR szDest[MAX_PATH];
+    DWORD dwAttribs;
+    DWORD cbData;
+
+    /* Open the sound events key */
+    error = RegOpenKeyExW(hKey, lpSubkey, 0, KEY_READ, &hRootKey);
+    if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
+
+    /* Set each sound event */
+    for (i = 0; i < dwSize; i++)
+    {
+        /*
+         * Verify that the sound file exists and is an actual file.
+         */
+
+        /* Expand the sound file path */
+        if (!ExpandEnvironmentStringsW(lpEventsArray[i][1], szDest, _countof(szDest)))
+        {
+            /* Failed to expand, continue with the next sound event */
+            continue;
+        }
+
+        /* Check if the sound file exists and isn't a directory */
+        dwAttribs = GetFileAttributesW(szDest);
+        if ((dwAttribs == INVALID_FILE_ATTRIBUTES) ||
+            (dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            /* It does not, just continue with the next sound event */
+            continue;
+        }
+
+        /*
+         * Create the sound event entry.
+         */
+
+        /* Open the sound event subkey */
+        error = RegOpenKeyExW(hRootKey, lpEventsArray[i][0], 0, KEY_READ, &hEventKey);
+        if (error)
+        {
+            /* Failed to open, continue with next sound event */
+            continue;
+        }
+
+        /* Open .Default subkey */
+        error = RegOpenKeyExW(hEventKey, L".Default", 0, KEY_WRITE, &hDefaultKey);
+        RegCloseKey(hEventKey);
+        if (error)
+        {
+            /* Failed to open, continue with next sound event */
+            continue;
+        }
+
+        /* Associate the sound file to this sound event */
+        cbData = (lstrlenW(lpEventsArray[i][1]) + 1) * sizeof(WCHAR);
+        error = RegSetValueExW(hDefaultKey, NULL, 0, REG_EXPAND_SZ, (const BYTE *)lpEventsArray[i][1], cbData);
+        RegCloseKey(hDefaultKey);
+        if (error)
+        {
+            /* Failed to set the value, continue with next sound event */
+            continue;
+        }
+    }
+
+Error:
+    if (hRootKey)
+        RegCloseKey(hRootKey);
+
+    return error == ERROR_SUCCESS;
+}
 
 static BOOL
 DoWriteProductOption(PRODUCT_OPTION nOption)
@@ -507,6 +629,13 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     {
         DPRINT1("RegSetValueExW failed\n");
         goto Error;
+    }
+
+    if (nOption == PRODUCT_OPTION_WORKSTATION)
+    {
+        /* Write system sound events values for Workstation */
+        DoWriteSoundEvents(HKEY_CURRENT_USER, s_szDefaultSoundEvents, s_DefaultSoundEvents, _countof(s_DefaultSoundEvents));
+        DoWriteSoundEvents(HKEY_CURRENT_USER, s_szExplorerSoundEvents, s_ExplorerSoundEvents, _countof(s_ExplorerSoundEvents));
     }
 
 Error:
@@ -1087,59 +1216,101 @@ ComputerPageDlgProc(HWND hwndDlg,
 
 
 static VOID
+SetUserLocaleName(HWND hwnd)
+{
+    WCHAR CurLocale[256] = L"";
+    WCHAR CurGeo[256] = L"";
+    WCHAR ResText[256] = L"";
+    WCHAR LocaleText[256 * 2];
+
+    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_SLANGUAGE, CurLocale, ARRAYSIZE(CurLocale));
+    GetGeoInfoW(GetUserGeoID(GEOCLASS_NATION), GEO_FRIENDLYNAME, CurGeo, ARRAYSIZE(CurGeo), GetThreadLocale());
+
+    LoadStringW(hDllInstance, IDS_LOCALETEXT, ResText, ARRAYSIZE(ResText));
+    StringCchPrintfW(LocaleText, ARRAYSIZE(LocaleText), ResText, CurLocale, CurGeo);
+
+    SetWindowTextW(hwnd, LocaleText);
+}
+
+static VOID
 SetKeyboardLayoutName(HWND hwnd)
 {
-#if 0
-    TCHAR szLayoutPath[256];
-    TCHAR szLocaleName[32];
-    DWORD dwLocaleSize;
+    HKL hkl;
+    BOOL LayoutSpecial = FALSE;
+    WCHAR LayoutPath[256];
+    WCHAR LocaleName[32];
+    WCHAR SpecialId[5] = L"";
+    WCHAR ResText[256] = L"";
+    DWORD dwValueSize;
     HKEY hKey;
+    UINT i;
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Locale"),
-                     0,
-                     KEY_ALL_ACCESS,
-                     &hKey))
-        return;
-
-    dwValueSize = 16 * sizeof(TCHAR);
-    if (RegQueryValueEx(hKey,
-                        NULL,
-                        NULL,
-                        NULL,
-                        szLocaleName,
-                        &dwLocaleSize))
+    /* Get the default input language and method */
+    if (!SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG, 0, (LPDWORD)&hkl, 0))
     {
-        RegCloseKey(hKey);
-        return;
+        hkl = GetKeyboardLayout(0);
     }
 
-    _tcscpy(szLayoutPath,
-            _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\"));
-    _tcscat(szLayoutPath,
-            szLocaleName);
-
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     szLayoutPath,
-                     0,
-                     KEY_ALL_ACCESS,
-                     &hKey))
-        return;
-
-    dwValueSize = 32 * sizeof(TCHAR);
-    if (RegQueryValueEx(hKey,
-                        _T("Layout Text"),
-                        NULL,
-                        NULL,
-                        szLocaleName,
-                        &dwLocaleSize))
+    if ((HIWORD(hkl) & 0xF000) == 0xF000)
     {
-        RegCloseKey(hKey);
-        return;
+        /* Process keyboard layout with special id */
+        StringCchPrintfW(SpecialId, ARRAYSIZE(SpecialId), L"%04x", (HIWORD(hkl) & 0x0FFF));
+        LayoutSpecial = TRUE;
     }
 
-    RegCloseKey(hKey);
-#endif
+#define MAX_LAYOUTS_PER_LANGID 0x10000
+    for (i = 0; i < (LayoutSpecial ? MAX_LAYOUTS_PER_LANGID : 1); i++)
+    {
+        /* Generate a hexadecimal identifier for keyboard layout registry key */
+        StringCchPrintfW(LocaleName, ARRAYSIZE(LocaleName), L"%08lx", (i << 16) | LOWORD(hkl));
+
+        StringCchCopyW(LayoutPath, ARRAYSIZE(LayoutPath), L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\");
+        StringCchCatW(LayoutPath, ARRAYSIZE(LayoutPath), LocaleName);
+        *LocaleName = UNICODE_NULL;
+
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          LayoutPath,
+                          0,
+                          KEY_ALL_ACCESS,
+                          &hKey) == ERROR_SUCCESS)
+        {
+            /* Make sure the keyboard layout key we opened is the one we need.
+             * If the layout has no special id, just pass this check. */
+            dwValueSize = sizeof(LocaleName);
+            if (!LayoutSpecial ||
+                ((RegQueryValueExW(hKey,
+                                   L"Layout Id",
+                                   NULL,
+                                   NULL,
+                                   (PVOID)&LocaleName,
+                                   &dwValueSize) == ERROR_SUCCESS) &&
+                (wcscmp(LocaleName, SpecialId) == 0)))
+            {
+                *LocaleName = UNICODE_NULL;
+                dwValueSize = sizeof(LocaleName);
+                RegQueryValueExW(hKey,
+                                 L"Layout Text",
+                                 NULL,
+                                 NULL,
+                                 (PVOID)&LocaleName,
+                                 &dwValueSize);
+                /* Let the loop know where to stop */
+                i = MAX_LAYOUTS_PER_LANGID;
+            }
+            RegCloseKey(hKey);
+        }
+        else
+        {
+            /* Keyboard layout registry keys are expected to go in order without gaps */
+            break;
+        }
+    }
+#undef MAX_LAYOUTS_PER_LANGID
+
+    LoadStringW(hDllInstance, IDS_LAYOUTTEXT, ResText, ARRAYSIZE(ResText));
+    StringCchPrintfW(LayoutPath, ARRAYSIZE(LayoutPath), ResText, LocaleName);
+
+    SetWindowTextW(hwnd, LayoutPath);
 }
 
 
@@ -1147,6 +1318,7 @@ static BOOL
 RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
 {
     MSG msg;
+    HWND MainWindow = GetParent(hwnd);
     STARTUPINFOW StartupInfo;
     PROCESS_INFORMATION ProcessInformation;
     WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
@@ -1179,8 +1351,14 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
         return FALSE;
     }
 
+    /* Disable the Back and Next buttons and the main window
+     * while we're interacting with the control panel applet */
+    PropSheet_SetWizButtons(MainWindow, 0);
+    EnableWindow(MainWindow, FALSE);
+
     while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
     {
+       /* We still need to process main window messages to avoid freeze */
        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
        {
            TranslateMessage(&msg);
@@ -1189,6 +1367,11 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
     }
     CloseHandle(ProcessInformation.hThread);
     CloseHandle(ProcessInformation.hProcess);
+
+    /* Enable the Back and Next buttons and the main window again */
+    PropSheet_SetWizButtons(MainWindow, PSWIZB_BACK | PSWIZB_NEXT);
+    EnableWindow(MainWindow, TRUE);
+
     return TRUE;
 }
 
@@ -1233,6 +1416,7 @@ LocalePageDlgProc(HWND hwndDlg,
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
             WriteUserLocale();
 
+            SetUserLocaleName(GetDlgItem(hwndDlg, IDC_LOCALETEXT));
             SetKeyboardLayoutName(GetDlgItem(hwndDlg, IDC_LAYOUTTEXT));
         }
         break;
@@ -1244,11 +1428,12 @@ LocalePageDlgProc(HWND hwndDlg,
                 {
                     case IDC_CUSTOMLOCALE:
                         RunControlPanelApplet(hwndDlg, L"intl.cpl,,5");
-                        /* FIXME: Update input locale name */
+                        SetUserLocaleName(GetDlgItem(hwndDlg, IDC_LOCALETEXT));
                         break;
 
                     case IDC_CUSTOMLAYOUT:
                         RunControlPanelApplet(hwndDlg, L"input.dll,@1");
+                        SetKeyboardLayoutName(GetDlgItem(hwndDlg, IDC_LAYOUTTEXT));
                         break;
                 }
             }

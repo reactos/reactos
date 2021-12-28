@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Systemets språk og region burde samsvare med språket på programmene du vil bruke. Innstillingene for språk og region kontrollerer hvordan tall, valutaer, og dato vises.", IDC_STATIC, 55, 7, 259, 24
-    LTEXT "", IDC_LOCALETEXT, 53, 32, 250, 18
+    LTEXT "%s", IDC_LOCALETEXT, 53, 32, 250, 16
     LTEXT "For å forandre systemets språk og region instilling, Trykk på Tilpass.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Tilpass...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "Tastatur oppsettet kontrollerer karakterene som kommer opp når du trykker.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "For å forandre tastatur oppsettet, trykk på Tilpass.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "T&ilpass...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -174,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Du må angi et navn og et administrator passord for din datamaskin."
     IDS_LOCALETITLE "Regionale innstillinger"
     IDS_LOCALESUBTITLE "Du kan stille inn ReactOS for andre regioner og språk."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Dato og tid"
     IDS_DATETIMESUBTITLE "Still inn dato og tid for din datamaskin."
     IDS_PROCESSTITLE "Bearbeid side tittel"

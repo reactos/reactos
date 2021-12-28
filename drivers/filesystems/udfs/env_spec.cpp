@@ -307,7 +307,7 @@ UDFPhWriteSynchronous(
     KeQuerySystemTime((PLARGE_INTEGER)&IoEnterTime);
 #endif //MEASURE_IO_PERFORMANCE
 
-#if defined UDF_DBG || defined USE_PERF_PRINT
+#ifdef USE_PERF_PRINT
     ULONG Lba = (ULONG)(Offset>>0xb);
 //    ASSERT(!(Lba & (32-1)));
     PerfPrint(("UDFPhWrite: Length: %x Lba: %lx\n",Length>>0xb,Lba));

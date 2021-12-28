@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Süsteemi lokaat peaks olema ühtiv nende programmide keelega, mida soovid kasutada. Kasutaja lokaat määrab, kuidas näidatakse numbreid, valuutat ja kuupäeva.", IDC_STATIC, 53, 7, 253, 24
-    LTEXT "", IDC_LOCALETEXT, 53, 31, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "Süsteemi või kasutaja lokaadi muutmiseks vajutage Täpsusta.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "Tä&psusta...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "Klaviatuuriasetus määrab tähemärgid, mis klaviatuuril kirjutades ilmuvad.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Klaviatuuriasetuse muutmiseks vajuta Täp&susta.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Täp&susta...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -174,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Arvutile tuleb anda nimi ja administraatori parool."
     IDS_LOCALETITLE "Regionaalsed seaded"
     IDS_LOCALESUBTITLE "ReactOS'i saab kohandada erinevatele regioonidele ja keeltele vastavaks."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Kuupäev ja kellaaeg"
     IDS_DATETIMESUBTITLE "Sisesta õige kellaaeg ja kuupäev."
     IDS_PROCESSTITLE "Komponentide registreerimine"

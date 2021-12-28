@@ -1,8 +1,8 @@
 /*
- * PROJECT:     SYSSETUP Hindi Translation
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Hindi translation of SYSSETUP
- * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hindi resource file
+ * TRANSLATORS: Copyright 2019 Arnav Bhatt <arnavbhatt2004@gmail.com>
  */
 
 LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
@@ -80,12 +80,13 @@ CAPTION "रिऐक्ट ओएस सेटअप"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "सिस्टम लोकेल को उन एप्लिकेशन की भाषा से मेल खाना चाहिए जिनका आप उपयोग करना चाहते हैं। उपयोगकर्ता का स्थान नियंत्रित करता है कि संख्याएँ, मुद्राएँ और दिनांक कैसे दिखाई देते हैं।", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "सिस्टम लोकेल को उन एप्लिकेशन की भाषा से मेल खाना चाहिए जिनका आप उपयोग करना चाहते हैं। उपयोगकर्ता का स्थान नियंत्रित करता है कि संख्याएँ, मुद्राएँ और दिनांक कैसे दिखाई देते हैं।", IDC_STATIC, 53, 7, 253, 25
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "सिस्टम या उपयोगकर्ता लोकेल सेटिंग बदलने के लिए, अनुकूलित करें पर क्लिक करें।", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "&अनुकूलित...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "कीबोर्ड लेआउट आपके द्वारा टाइप किए जाने पर दिखाई देने वाले अक्षरों को नियंत्रित करता है।", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "कीबोर्ड लेआउट बदलने के लिए, अनुकूलित करें पर क्लिक करें।", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "&अनुकूलित...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -181,6 +182,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "आपको अपने कंप्यूटर के लिए एक नाम और एक एडमिनिस्ट्रेटर पासवर्ड प्रदान करना होगा।"
     IDS_LOCALETITLE "क्षेत्रीय सेटिंग"
     IDS_LOCALESUBTITLE "आप विभिन्न क्षेत्रों और भाषाओं के लिए रिऐक्ट ओएस को अनुकूलित कर सकते हैं।"
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "दिनांक और समय"
     IDS_DATETIMESUBTITLE "अपने कंप्यूटर के लिए सही तारीख और समय निर्धारित करें।"
     IDS_PROCESSTITLE "कम्पोनन्ट का दर्ज"

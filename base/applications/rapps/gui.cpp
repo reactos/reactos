@@ -545,6 +545,10 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
             PostMessageW(WM_CLOSE, 0, 0);
             break;
 
+        case ID_SEARCH:
+            m_ApplicationView->SetFocusOnSearchBar();
+            break;
+
         case ID_INSTALL:
             if (IsAvailableEnum(SelectedEnumType))
             {
@@ -567,7 +571,7 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                     CAvailableApplicationInfo *FocusedApps = (CAvailableApplicationInfo *)m_ApplicationView->GetFocusedItemData();
                     if (FocusedApps)
                     {
-                        if (DownloadApplication(FocusedApps, FALSE))
+                        if (DownloadApplication(FocusedApps))
                         {
                             UpdateApplicationsList(-1);
                         }
@@ -782,7 +786,7 @@ BOOL CMainWindow::InstallApplication(CAvailableApplicationInfo *Info)
 {
     if (Info)
     {
-        if (DownloadApplication(Info, FALSE))
+        if (DownloadApplication(Info))
         {
             UpdateApplicationsList(-1);
             return TRUE;

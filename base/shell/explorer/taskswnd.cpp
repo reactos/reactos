@@ -488,27 +488,34 @@ public:
 
     HICON GetWndIcon(HWND hwnd)
     {
-        HICON hIcon = 0;
+        HICON hIcon = NULL;
+#define GET_ICON(type) \
+    SendMessageTimeout(hwnd, WM_GETICON, (type), 0, SMTO_ABORTIFHUNG, 100, (PDWORD_PTR)&hIcon)
 
-        SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
+        LRESULT bAlive = GET_ICON(ICON_SMALL2);
         if (hIcon)
             return hIcon;
 
-        SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
+        if (bAlive)
+        {
+            bAlive = GET_ICON(ICON_SMALL);
+            if (hIcon)
+                return hIcon;
+        }
+
+        if (bAlive)
+        {
+            GET_ICON(ICON_BIG);
+            if (hIcon)
+                return hIcon;
+        }
+#undef GET_ICON
+
+        hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
         if (hIcon)
             return hIcon;
 
-        SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
-        if (hIcon)
-            return hIcon;
-
-        hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICONSM);
-        if (hIcon)
-            return hIcon;
-
-        hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICON);
-
-        return hIcon;
+        return (HICON)GetClassLongPtr(hwnd, GCL_HICON);
     }
 
     INT UpdateTaskItemButton(IN PTASK_ITEM TaskItem)
@@ -1630,6 +1637,11 @@ public:
         return FALSE;
     }
 
+    static VOID CALLBACK
+    SendAsyncProc(HWND hwnd, UINT uMsg, DWORD_PTR dwData, LRESULT lResult)
+    {
+        ::PostMessageW(hwnd, WM_NULL, 0, 0);
+    }
 
     VOID HandleTaskItemRightClick(IN OUT PTASK_ITEM TaskItem)
     {
@@ -1640,14 +1652,11 @@ public:
 
         ActivateTask(TaskItem->hWnd);
 
-       /* Wait up to 2 seconds for the window to process the foreground notification. */
-        DWORD_PTR resultDummy;
-        if (!SendMessageTimeout(TaskItem->hWnd, WM_NULL, 0, 0, 0, 2000, &resultDummy))
-            ERR("HandleTaskItemRightClick detected the window was unresponsive for 2 seconds, or was destroyed\n");
         if (GetForegroundWindow() != TaskItem->hWnd)
             ERR("HandleTaskItemRightClick detected the window did not become foreground\n");
 
-        ::SendMessageW(TaskItem->hWnd, WM_POPUPSYSTEMMENU, 0, MAKELPARAM(pt.x, pt.y));
+        ::SendMessageCallbackW(TaskItem->hWnd, WM_POPUPSYSTEMMENU, 0, MAKELPARAM(pt.x, pt.y),
+                               SendAsyncProc, (ULONG_PTR)TaskItem);
     }
 
     VOID HandleTaskGroupRightClick(IN OUT PTASK_GROUP TaskGroup)

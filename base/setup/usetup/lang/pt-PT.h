@@ -220,7 +220,7 @@ static MUI_ENTRY ptPTIntroPageEntries[] =
     {
         6,
         15,
-        "Fa\207a c\242pia de segur\306n\207 dos seus dados ou teste num computador",
+        "Fa\207a c\242pia de seguran\207a dos seus dados ou teste num computador",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -734,7 +734,7 @@ static MUI_ENTRY ptPTFlushPageEntries[] =
     {
         10,
         6,
-        "O sistema est\240 a certificar que todos os dados est\306 a ser",
+        "O sistema est\240 a certificar que todos os dados est\306o a ser",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -949,7 +949,7 @@ static MUI_ENTRY ptPTBootPageEntries[] =
     {
         6,
         8,
-        "O instalador n\306o pode instalar o ger\210nciador de inicializa\207\306o no disco",
+        "O instalador n\306o pode instalar o gestor de inicializa\207\306o no disco",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1009,7 +1009,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         6,
         8,
-        "n\306o-particionados neste computador.",
+        "n\306o particionados neste computador.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1493,35 +1493,35 @@ static MUI_ENTRY ptPTBootLoaderEntries[] =
     {
         6,
         8,
-        "O instalador ir\240 configurar o ger\210nciador de inicializa\207\306o",
+        "O instalador ir\240 configurar o gestor de arranque.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         12,
-        "Instalar o ger\210nciador de inicializa\207\306o no disco r\241gido (MBR e VBR)",
+        "Instalar o gestor de arranque no disco r\241gido (MBR e VBR)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         13,
-        "Instalar o ger\210nciador de inicializa\207\306o no disco r\241gido (apenas VBR)",
+        "Instalar o gestor de arranque no disco r\241gido (apenas VBR)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         14,
-        "Instalar o ger\210nciador de inicializa\207\306o numa disquete",
+        "Instalar o gestor de arranque numa disquete",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         15,
-        "Saltar a instala\207\306o do ger\210nciador de inicializa\207\306o",
+        "Saltar a instala\207\306o do gestor de arranque",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1753,7 +1753,7 @@ static MUI_ENTRY ptPTSelectFSEntries[] =
     {
         6,
         18,
-        "sistema de arquivos de arquivos desejado e pressione ENTER.",
+        "sistema de arquivos desejado e pressione ENTER.",
         0
     },
     {
@@ -2306,7 +2306,7 @@ MUI_STRING ptPTStrings[] =
     {STRING_REBOOTPROGRESSBAR,
     " O computador ir\240 reiniciar em %li segundo(s)... "},
     {STRING_CONSOLEFAIL1,
-    "N\306o foi poss\241vel abrir o console\r\n\r\n"},
+    "N\306o foi poss\241vel abrir a consola\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
     "A causa mais com\243m \202 a utiliza\207\306o de um teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,

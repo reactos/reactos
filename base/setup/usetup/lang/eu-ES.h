@@ -414,7 +414,7 @@ static MUI_ENTRY euESDevicePageEntries[] =
     {
         6,
         8,
-        "Ondoren zerrenda erakutsi dizkizu zure gailuen/dispositiboen konfigurazioa.",
+        "Ondoren zerrenda erakutsi dizkizu zure gailuen konfigurazioa.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1432,14 +1432,14 @@ static MUI_ENTRY euESFileCopyEntries[] =
     {
         0,
         12,
-        "Itxaron mesedez ReactOS Instalazioa fitxategiak kopiatuen bitartean ReactOS-n",
+        "Itxaron mesedez ReactOS Instalazioa fitxategiak kopiatuen",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
     {
         0,
         13,
-        "karpeta.",
+        "bitartean ReactOS-n karpeta.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1529,14 +1529,14 @@ static MUI_ENTRY euESBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "Installing the bootloader onto the media, please wait...",
+        "Instalatzen ari du bootloader unitatean, itxaron mezedez...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

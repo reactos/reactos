@@ -22,89 +22,61 @@
 
 #pragma once
 
-#define MAX_PLOTS 4
-#define MAX_CTRLS 4
+#define NUM_PLOTS    2
+#define PLOT_SHIFT   2
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if 0
 
-/* Attributes */
-public:
-  void SetXUnits(const char* string);
-  void SetYUnits(const char* string);
 
-  /* Operations */
-public:
-  BOOL Create(DWORD dwStyle, const RECT& rect, HWND hParentWnd, UINT nID=NULL);
-
-#endif
-
-typedef struct
+typedef struct _TM_GRAPH_CONTROL
 {
-  int m_nShiftPixels;          /* amount to shift with each new point */
-  int m_nYDecimals;
+    HWND     hParentWnd;
+    HWND     hWnd;
+    HDC      hdcGraph;
+    HBITMAP  hbmGraph;
+    HPEN     hPenGrid;
+    HPEN     hPen0;
+    HPEN     hPen1;
+    HBRUSH   hBrushBack;
 
-  char m_strXUnitsString[50];
-  char m_strYUnitsString[50];
+    INT      BitmapWidth;
+    INT      BitmapHeight;
+    INT      GridCellWidth;
+    INT      GridCellHeight;
+    INT      CurrShift;
 
-  COLORREF m_crBackColor;                 /* background color */
-  COLORREF m_crGridColor;                 /* grid color */
-  COLORREF m_crPlotColor[MAX_PLOTS];      /* data color   */
+    PBYTE    PointBuffer;
+    UINT32   NumberOfPoints;
+    UINT32   CurrIndex;
 
-  double m_dCurrentPosition[MAX_PLOTS];   /* current position */
-  double m_dPreviousPosition[MAX_PLOTS];  /* previous position */
+    FLOAT    ftPixelsPerPercent;
+    BOOL     DrawSecondaryPlot;
+}
+TM_GRAPH_CONTROL, *PTM_GRAPH_CONTROL;
 
-/* those were protected fields */
-  int m_nHalfShiftPixels;
-  int m_nPlotShiftPixels;
-  int m_nClientHeight;
-  int m_nClientWidth;
-  int m_nPlotHeight;
-  int m_nPlotWidth;
-
-  double m_dLowerLimit;        /* lower bounds */
-  double m_dUpperLimit;        /* upper bounds */
-  double m_dRange;
-  double m_dVerticalFactor;
-
-  HWND     m_hWnd;
-  HWND     m_hParentWnd;
-  HDC      m_dcGrid;
-  HDC      m_dcPlot;
-  HBITMAP  m_bitmapOldGrid;
-  HBITMAP  m_bitmapOldPlot;
-  HBITMAP  m_bitmapGrid;
-  HBITMAP  m_bitmapPlot;
-  HBRUSH   m_brushBack;
-  HPEN     m_penPlot[MAX_PLOTS];
-  RECT     m_rectClient;
-  RECT     m_rectPlot;
-} TGraphCtrl;
+typedef struct _TM_FORMAT
+{
+    COLORREF  clrBack;
+    COLORREF  clrGrid;
+    COLORREF  clrPlot0;
+    COLORREF  clrPlot1;
+    INT       GridCellWidth;
+    INT       GridCellHeight;
+    BOOL      DrawSecondaryPlot;
+}
+TM_FORMAT, *PTM_FORMAT;
 
 extern WNDPROC OldGraphCtrlWndProc;
-double  GraphCtrl_AppendPoint(TGraphCtrl* this,
-                              double dNewPoint0, double dNewPoint1,
-                              double dNewPoint2, double dNewPoint3);
-void    GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd,
-UINT nID);
-void    GraphCtrl_Dispose(TGraphCtrl* this);
-void    GraphCtrl_DrawPoint(TGraphCtrl* this);
-void    GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize);
-void    GraphCtrl_Paint(TGraphCtrl* this, HWND hWnd, HDC dc);
-void    GraphCtrl_Reset(TGraphCtrl* this);
-void    GraphCtrl_Resize(TGraphCtrl* this);
-void    GraphCtrl_SetBackgroundColor(TGraphCtrl* this, COLORREF
-color);
-void    GraphCtrl_SetGridColor(TGraphCtrl* this, COLORREF color);
-void    GraphCtrl_SetPlotColor(TGraphCtrl* this, int plot, COLORREF
-color);
-void    GraphCtrl_SetRange(TGraphCtrl* this, double dLower, double
-dUpper, int nDecimalPlaces);
-
 INT_PTR CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+BOOL GraphCtrl_Create(PTM_GRAPH_CONTROL inst, HWND hWnd, HWND hParentWnd, PTM_FORMAT fmt);
+void GraphCtrl_Dispose(PTM_GRAPH_CONTROL inst);
+void GraphCtrl_AddPoint(PTM_GRAPH_CONTROL inst, BYTE val0, BYTE val1);
+void GraphCtrl_RedrawOnHeightChange(PTM_GRAPH_CONTROL inst, INT nh);
+void GraphCtrl_RedrawBitmap(PTM_GRAPH_CONTROL inst, INT h);
 
 #ifdef __cplusplus
 }

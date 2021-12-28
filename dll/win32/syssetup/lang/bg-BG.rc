@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Местната стойност на уредбата трябва да отговаря на езика на приложенията, които ще използвате. Местната стойност определя как се изобразават паричните стойности и датите.", IDC_STATIC, 53, 2, 253, 26
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "За промяна на уредбените или местните настройки, натиснете „Нагласяване“.", IDC_STATIC, 53, 60, 184, 16
     PUSHBUTTON "&Нагласяване...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
+    LTEXT "", IDC_STATIC, 53, 82, 246, 1, SS_ETCHEDHORZ
     LTEXT "Клавиатурната подредба определя знаците, появяващи се при писане.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "За смяна на клавиатурната подредба, натиснете „Нагласяване“.", IDC_STATIC, 53, 126, 184, 16
     PUSHBUTTON "На&гласяване...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END
@@ -174,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Трябва да въведете администраторска парола и име на компютъра"
     IDS_LOCALETITLE "Местни настройки"
     IDS_LOCALESUBTITLE "Можете да нагласите РеактОС за различни области и езици."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Дата и време"
     IDS_DATETIMESUBTITLE "Задайте правилните дата и време."
     IDS_PROCESSTITLE "Вписване на съставните"

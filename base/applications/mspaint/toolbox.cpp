@@ -76,52 +76,52 @@ LRESULT CToolBox::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
     switch (LOWORD(wParam))
     {
         case ID_FREESEL:
-            toolsModel.SetActiveTool(1);
+            toolsModel.SetActiveTool(TOOL_FREESEL);
             break;
         case ID_RECTSEL:
-            toolsModel.SetActiveTool(2);
+            toolsModel.SetActiveTool(TOOL_RECTSEL);
             break;
         case ID_RUBBER:
-            toolsModel.SetActiveTool(3);
+            toolsModel.SetActiveTool(TOOL_RUBBER);
             break;
         case ID_FILL:
-            toolsModel.SetActiveTool(4);
+            toolsModel.SetActiveTool(TOOL_FILL);
             break;
         case ID_COLOR:
-            toolsModel.SetActiveTool(5);
+            toolsModel.SetActiveTool(TOOL_COLOR);
             break;
         case ID_ZOOM:
-            toolsModel.SetActiveTool(6);
+            toolsModel.SetActiveTool(TOOL_ZOOM);
             break;
         case ID_PEN:
-            toolsModel.SetActiveTool(7);
+            toolsModel.SetActiveTool(TOOL_PEN);
             break;
         case ID_BRUSH:
-            toolsModel.SetActiveTool(8);
+            toolsModel.SetActiveTool(TOOL_BRUSH);
             break;
         case ID_AIRBRUSH:
-            toolsModel.SetActiveTool(9);
+            toolsModel.SetActiveTool(TOOL_AIRBRUSH);
             break;
         case ID_TEXT:
-            toolsModel.SetActiveTool(10);
+            toolsModel.SetActiveTool(TOOL_TEXT);
             break;
         case ID_LINE:
-            toolsModel.SetActiveTool(11);
+            toolsModel.SetActiveTool(TOOL_LINE);
             break;
         case ID_BEZIER:
-            toolsModel.SetActiveTool(12);
+            toolsModel.SetActiveTool(TOOL_BEZIER);
             break;
         case ID_RECT:
-            toolsModel.SetActiveTool(13);
+            toolsModel.SetActiveTool(TOOL_RECT);
             break;
         case ID_SHAPE:
-            toolsModel.SetActiveTool(14);
+            toolsModel.SetActiveTool(TOOL_SHAPE);
             break;
         case ID_ELLIPSE:
-            toolsModel.SetActiveTool(15);
+            toolsModel.SetActiveTool(TOOL_ELLIPSE);
             break;
         case ID_RRECT:
-            toolsModel.SetActiveTool(16);
+            toolsModel.SetActiveTool(TOOL_RRECT);
             break;
     }
     return 0;

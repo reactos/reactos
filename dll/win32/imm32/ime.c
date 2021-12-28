@@ -152,6 +152,7 @@ BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     WCHAR szPath[MAX_PATH];
     HINSTANCE hIME;
     FARPROC fn;
+    BOOL ret = FALSE;
 
     if (!Imm32GetSystemLibraryPath(szPath, _countof(szPath), pImeInfoEx->wszImeFile))
         return FALSE;
@@ -172,27 +173,46 @@ BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
     do { \
         fn = GetProcAddress(hIME, #name); \
         if (fn) pImeDpi->name = (FN_##name)fn; \
-        else if (!(optional)) goto Failed; \
+        else if (!(optional)) { \
+            ERR("'%s' not found in the IME module '%s'.\n", #name, debugstr_w(szPath)); \
+            goto Failed; \
+        } \
     } while (0);
 #include "imetable.h"
 #undef DEFINE_IME_ENTRY
 
-    if (!Imm32InquireIme(pImeDpi))
+    if (Imm32InquireIme(pImeDpi))
     {
-        ERR("Imm32LoadImeInfo: Imm32InquireIme failed\n");
-        goto Failed;
+        ret = TRUE;
+    }
+    else
+    {
+        ERR("Imm32InquireIme failed\n");
+Failed:
+        ret = FALSE;
+        FreeLibrary(pImeDpi->hInst);
+        pImeDpi->hInst = NULL;
     }
 
-    if (pImeInfoEx->fLoadFlag)
-        return TRUE;
+    if (pImeInfoEx->fLoadFlag == 0)
+    {
+        if (ret)
+        {
+            C_ASSERT(sizeof(pImeInfoEx->wszUIClass) == sizeof(pImeDpi->szUIClass));
+            pImeInfoEx->ImeInfo = pImeDpi->ImeInfo;
+            RtlCopyMemory(pImeInfoEx->wszUIClass, pImeDpi->szUIClass,
+                          sizeof(pImeInfoEx->wszUIClass));
+            pImeInfoEx->fLoadFlag = 2;
+        }
+        else
+        {
+            pImeInfoEx->fLoadFlag = 1;
+        }
 
-    NtUserSetImeOwnerWindow(pImeInfoEx, TRUE);
-    return TRUE;
+        NtUserSetImeInfoEx(pImeInfoEx);
+    }
 
-Failed:
-    FreeLibrary(pImeDpi->hInst);
-    pImeDpi->hInst = NULL;
-    return FALSE;
+    return ret;
 }
 
 PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
@@ -476,13 +496,135 @@ Quit:
 }
 
 /***********************************************************************
+ *		ImmInstallIMEA (IMM32.@)
+ */
+HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
+{
+    HKL hKL = NULL;
+    LPWSTR pszFileNameW = NULL, pszLayoutTextW = NULL;
+
+    TRACE("(%s, %s)\n", debugstr_a(lpszIMEFileName), debugstr_a(lpszLayoutText));
+
+    pszFileNameW = Imm32WideFromAnsi(lpszIMEFileName);
+    if (!pszFileNameW)
+        goto Quit;
+
+    pszLayoutTextW = Imm32WideFromAnsi(lpszLayoutText);
+    if (!pszLayoutTextW)
+        goto Quit;
+
+    hKL = ImmInstallIMEW(pszFileNameW, pszLayoutTextW);
+
+Quit:
+    Imm32HeapFree(pszFileNameW);
+    Imm32HeapFree(pszLayoutTextW);
+    return hKL;
+}
+
+/***********************************************************************
+ *		ImmInstallIMEW (IMM32.@)
+ */
+HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
+{
+    WCHAR szImeFileName[MAX_PATH], szImeDestPath[MAX_PATH], szImeKey[20];
+    IMEINFOEX InfoEx;
+    LPWSTR pchFilePart;
+    UINT iLayout, cLayouts;
+    HKL hNewKL;
+    WORD wLangID;
+    PREG_IME pLayouts = NULL;
+
+    TRACE("(%s, %s)\n", debugstr_w(lpszIMEFileName), debugstr_w(lpszLayoutText));
+
+    GetFullPathNameW(lpszIMEFileName, _countof(szImeFileName), szImeFileName, &pchFilePart);
+    CharUpperW(szImeFileName);
+    if (!pchFilePart)
+        return NULL;
+
+    /* Load the IME version info */
+    InfoEx.hkl = hNewKL = NULL;
+    StringCchCopyW(InfoEx.wszImeFile, _countof(InfoEx.wszImeFile), pchFilePart);
+    if (Imm32LoadImeVerInfo(&InfoEx) && InfoEx.hkl)
+        wLangID = LOWORD(InfoEx.hkl);
+    else
+        return NULL;
+
+    /* Get the IME layouts from registry */
+    cLayouts = Imm32GetRegImes(NULL, 0);
+    if (cLayouts)
+    {
+        pLayouts = Imm32HeapAlloc(0, cLayouts * sizeof(REG_IME));
+        if (!pLayouts || !Imm32GetRegImes(pLayouts, cLayouts))
+        {
+            Imm32HeapFree(pLayouts);
+            return NULL;
+        }
+
+        for (iLayout = 0; iLayout < cLayouts; ++iLayout)
+        {
+            if (lstrcmpiW(pLayouts[iLayout].szFileName, pchFilePart) == 0)
+            {
+                if (wLangID != LOWORD(pLayouts[iLayout].hKL))
+                    goto Quit; /* The language is different */
+
+                hNewKL = pLayouts[iLayout].hKL; /* Found */
+                break;
+            }
+        }
+    }
+
+    /* If the IME for the specified filename is valid, then unload it now */
+    /* FIXME: ImmGetImeInfoEx is broken */
+    if (ImmGetImeInfoEx(&InfoEx, 3, pchFilePart) &&
+        !UnloadKeyboardLayout(InfoEx.hkl))
+    {
+        hNewKL = NULL;
+        goto Quit;
+    }
+
+    Imm32GetSystemLibraryPath(szImeDestPath, _countof(szImeDestPath), pchFilePart);
+    CharUpperW(szImeDestPath);
+
+    /* If the source and the destination pathnames were different, then copy the IME file */
+    if (lstrcmpiW(szImeFileName, szImeDestPath) != 0 &&
+        !Imm32CopyFile(szImeFileName, szImeDestPath))
+    {
+        hNewKL = NULL;
+        goto Quit;
+    }
+
+    if (hNewKL == NULL)
+        hNewKL = Imm32GetNextHKL(cLayouts, pLayouts, wLangID);
+
+    if (hNewKL)
+    {
+        /* Write the IME layout to registry */
+        if (Imm32WriteRegIme(hNewKL, pchFilePart, lpszLayoutText))
+        {
+            /* Load the keyboard layout */
+            Imm32UIntToStr((DWORD)(DWORD_PTR)hNewKL, 16, szImeKey, _countof(szImeKey));
+            hNewKL = LoadKeyboardLayoutW(szImeKey, KLF_REPLACELANG);
+        }
+        else
+        {
+            hNewKL = NULL;
+        }
+    }
+
+Quit:
+    Imm32HeapFree(pLayouts);
+    return hNewKL;
+}
+
+/***********************************************************************
  *		ImmIsIME (IMM32.@)
  */
 BOOL WINAPI ImmIsIME(HKL hKL)
 {
     IMEINFOEX info;
     TRACE("(%p)\n", hKL);
-    return !!ImmGetImeInfoEx(&info, ImeInfoExImeWindow, &hKL);
+    /* FIXME: ImmGetImeInfoEx is broken */
+    return !!ImmGetImeInfoEx(&info, 1, &hKL);
 }
 
 /***********************************************************************
@@ -542,6 +684,7 @@ ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearch
     BOOL bDisabled = FALSE;
     HKL hKL;
 
+    /* FIXME: broken */
     switch (SearchType)
     {
         case ImeInfoExKeyboardLayout:

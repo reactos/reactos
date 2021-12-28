@@ -153,7 +153,11 @@ DuplicateTokenAsEffective(VOID)
     trace("Number of privileges of effective only token -- %lu\n", TokenStats->PrivilegeCount);
     trace("Number of groups of effective only token -- %lu\n", TokenStats->GroupCount);
 
-    /* We finished our tests, close the handles now */
+    /*
+     * We finished our tests, free the memory
+     * block and close the handles now.
+     */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, TokenStats);
     CloseHandle(TokenHandle),
     CloseHandle(DuplicatedTokenHandle);
 }

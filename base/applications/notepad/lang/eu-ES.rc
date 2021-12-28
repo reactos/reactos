@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Fitxategia"
     BEGIN
         MENUITEM "&Berria\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Ireki\tCtrl+O", CMD_OPEN
         MENUITEM "&Gorde\tCtrl+S", CMD_SAVE
         MENUITEM "Gorde &honela...", CMD_SAVE_AS

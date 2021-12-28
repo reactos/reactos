@@ -414,7 +414,7 @@ UserPaintCaption(PWND pWnd, INT Flags)
          * RealUserDrawCaption in order to draw the classic caption when themes
          * are disabled but the themes service is enabled
          */
-         TRACE("UDCB Flags %08x\n");
+         TRACE("UDCB Flags %08x\n", Flags);
          co_IntSendMessage(UserHMGetHandle(pWnd), WM_NCUAHDRAWCAPTION, Flags, 0);
       }
       else
@@ -486,8 +486,7 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
         case ICON_SMALL2:
             hIconRet = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
             break;
-        default:
-            break;
+        DEFAULT_UNREACHABLE;
     }
     return (LRESULT)hIconRet;
 }
@@ -816,9 +815,16 @@ IntDefWindowProc(
                if (wParam == VK_DOWN)
                {
                    if (topWnd->style & WS_MAXIMIZE)
+                   {
                        co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_RESTORE, lParam);
+
+                       /* "Normal size" must be erased after restoring, otherwise it will block next side snap actions */
+                       RECTL_vSetEmptyRect(&topWnd->InternalPos.NormalRect);
+                   }
                    else
+                   {
                        co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_MINIMIZE, lParam);
+                   }
                }
                else if (wParam == VK_UP)
                {

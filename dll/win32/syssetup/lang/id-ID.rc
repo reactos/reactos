@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Bahasa sistem lokal harus sama dengan aplikasi yang ingin anda gunakan. Pengguna lokal mengontrol tampilan angka, kurs, dan tanggal.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Untuk mengubah setelan lokal sistem atau pengguna, klik Sesuaikan.", IDC_STATIC, 53, 60, 184, 16
     PUSHBUTTON "&Sesuaikan...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 81, 241, 1, SS_ETCHEDHORZ
     LTEXT "Tata letak papan ketik mengontrol tampilan karakter yang muncul ketika anda ketik.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Untuk mengubah tata letak papan ketik, klik Sesuaikan.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "S&esuaikan...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -174,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Anda harus menyediakan nama dan Kata sandi Administrator untuk komputer anda."
     IDS_LOCALETITLE "Setelan Daerah"
     IDS_LOCALESUBTITLE "Anda bisa menyesuaikan ReactOS untuk daerah dan bahasa berbeda."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Tanggal dan Jam"
     IDS_DATETIMESUBTITLE "Setel tanggal dan jam yang benar untuk komputer anda."
     IDS_PROCESSTITLE "Judul halaman proses"

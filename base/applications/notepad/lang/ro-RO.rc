@@ -29,7 +29,7 @@ BEGIN
     POPUP "&Fișier"
     BEGIN
         MENUITEM "&Nou\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Deschidere…\tCtrl+O", CMD_OPEN
         MENUITEM "&Păstrează\tCtrl+S", CMD_SAVE
         MENUITEM "Păst&rare în…", CMD_SAVE_AS

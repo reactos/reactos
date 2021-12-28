@@ -34,7 +34,7 @@ jobs:
     - name: Install LLVM
       if: ${{ matrix.compiler == 'clang' }}
       run: |
-        export LLVM_VERSION=12
+        export LLVM_VERSION=13
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh $LLVM_VERSION
@@ -137,6 +137,7 @@ jobs:
       matrix:
         toolset: ['14.2', '14.1'] # VS 2019, 2017
         arch: [arm]
+        config: [Debug, Release]
       fail-fast: false
     runs-on: windows-latest
     steps:
@@ -159,9 +160,40 @@ jobs:
       with:
         path: src
     - name: Configure
-      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
-    - name: Build rapps
-      run: cmake --build build --target rapps
+      run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
+    - name: Build applications
+      run: cmake --build build --target base/applications/all
+    - name: Build control panel applets
+      run: cmake --build build --target dll/cpl/all
+    - name: Build rosapps
+      run: cmake --build build --target modules/rosapps/all
+    - name: Upload compiled binaries
+      uses: actions/upload-artifact@v2
+      with:
+        name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
+        path: |
+          build/base/applications
+          build/dll/cpl
+          build/modules/rosapps
+          !**/CMakeFiles
+          !**/cmake_install.cmake
+          !**/*.asm
+          !**/*.bin
+          !**/*.c
+          !**/*.def
+          !**/*.exp
+          !**/*.h
+          !**/*.lib
+          !**/*.mc
+          !**/*.obj
+          !**/*.rc
+          !**/*.tlb
+    - name: Upload debug symbols
+      if: ${{ matrix.config == 'Debug' }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
+        path: build/msvc_pdb
 
   build-clang-cl:
     strategy:

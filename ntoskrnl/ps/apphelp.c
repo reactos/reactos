@@ -39,7 +39,6 @@ static UNICODE_STRING AppCompatCacheValue = RTL_CONSTANT_STRING(L"AppCompatCache
 
 #define EMPTY_SHIM_ENTRY    { { 0 }, { { 0 } }, 0 }
 #define MAX_SHIM_ENTRIES    0x200
-#define TAG_SHIM            'MIHS'
 
 #ifndef INVALID_HANDLE_VALUE
 #define INVALID_HANDLE_VALUE (HANDLE)(-1)

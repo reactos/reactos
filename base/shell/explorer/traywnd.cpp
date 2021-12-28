@@ -1562,7 +1562,7 @@ ChangePos:
         else
         {
             WndSize.cx = StartBtnSize.cx;
-            WndSize.cy = StartBtnSize.cy - EdgeSize.cx;
+            WndSize.cy = StartBtnSize.cy - EdgeSize.cy;
         }
 
         if (WndSize.cx < g_TaskbarSettings.sr.Size.cx)
@@ -1628,14 +1628,13 @@ ChangePos:
         if (StartSize.cx > rcClient.right)
             StartSize.cx = rcClient.right;
 
-        if (!m_Theme)
+        HWND hwndTaskToolbar = ::GetWindow(m_TaskSwitch, GW_CHILD);
+        if (hwndTaskToolbar)
         {
-            HWND hwndTaskToolbar = ::GetWindow(m_TaskSwitch, GW_CHILD);
-            if (hwndTaskToolbar)
-            {
-                DWORD size = SendMessageW(hwndTaskToolbar, TB_GETBUTTONSIZE, 0, 0);
-                StartSize.cy = HIWORD(size);
-            }
+            DWORD size = SendMessageW(hwndTaskToolbar, TB_GETBUTTONSIZE, 0, 0);
+
+            /* Themed button covers Edge area as well */
+            StartSize.cy = HIWORD(size) + (m_Theme ? GetSystemMetrics(SM_CYEDGE) : 0);
         }
 
         if (m_StartButton.m_hWnd != NULL)
@@ -1870,8 +1869,8 @@ ChangePos:
 
     void ProcessAutoHide()
     {
-        INT w = m_TraySize.cx - GetSystemMetrics(SM_CXBORDER) * 2 - 1;
-        INT h = m_TraySize.cy - GetSystemMetrics(SM_CYBORDER) * 2 - 1;
+        INT w = m_TraySize.cx - GetSystemMetrics(SM_CXSIZEFRAME);
+        INT h = m_TraySize.cy - GetSystemMetrics(SM_CYSIZEFRAME);
 
         switch (m_AutoHideState)
         {
@@ -1882,13 +1881,13 @@ ChangePos:
                 m_AutoHideOffset.cy = 0;
                 m_AutoHideOffset.cx -= AUTOHIDE_SPEED_HIDE;
                 if (m_AutoHideOffset.cx < -w)
-                    m_AutoHideOffset.cx = -w;
+                    m_AutoHideOffset.cx = w;
                 break;
             case ABE_TOP:
                 m_AutoHideOffset.cx = 0;
                 m_AutoHideOffset.cy -= AUTOHIDE_SPEED_HIDE;
                 if (m_AutoHideOffset.cy < -h)
-                    m_AutoHideOffset.cy = -h;
+                    m_AutoHideOffset.cy = h;
                 break;
             case ABE_RIGHT:
                 m_AutoHideOffset.cy = 0;
@@ -2906,7 +2905,7 @@ HandleTrayContextMenu:
             HWND hwnd = g_MinimizedAll[i];
             if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
             {
-                ::ShowWindow(hwnd, SW_RESTORE);
+                ::ShowWindowAsync(hwnd, SW_RESTORE);
             }
         }
         g_MinimizedAll.RemoveAll();

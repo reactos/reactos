@@ -106,11 +106,11 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
-        ERR("Failed to allocate a full resource descriptor\n");
+        ERR("Failed to allocate resource descriptor\n");
         return NULL;
     }
 
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;
@@ -175,9 +175,9 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
         ERR("Failed to allocate resource descriptor\n");
         return;
     }
-    memset(PartialResourceList, 0, Size);
 
     /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;
@@ -218,12 +218,12 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
-        TRACE("Failed to allocate resource descriptor\n");
+        ERR("Failed to allocate resource descriptor\n");
         return;
     }
 
     /* Initialize resource descriptor */
-    memset(PartialResourceList, 0, Size);
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 0;
@@ -304,8 +304,6 @@ MachInit(const char *CmdLine)
     PCI_TYPE1_CFG_BITS PciCfg1;
     ULONG PciId;
 
-    memset(&MachVtbl, 0, sizeof(MACHVTBL));
-
     /* Check for Xbox by identifying device at PCI 0:0:0, if it's
      * 0x10DE/0x02A5 then we're running on an Xbox */
 
@@ -322,19 +320,21 @@ MachInit(const char *CmdLine)
     PciId = READ_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT);
     if (PciId != 0x02A510DE)
     {
-        ERR("This is not original Xbox!\n");
+        ERR("This is not an original Xbox!\n");
 
         /* Disable and halt the CPU */
         _disable();
         __halt();
 
-        while (TRUE);
+        while (TRUE)
+            NOTHING;
     }
 
     /* Set LEDs to red before anything is initialized */
     XboxSetLED("rrrr");
 
     /* Setup vtbl */
+    RtlZeroMemory(&MachVtbl, sizeof(MachVtbl));
     MachVtbl.ConsPutChar = XboxConsPutChar;
     MachVtbl.ConsKbHit = XboxConsKbHit;
     MachVtbl.ConsGetCh = XboxConsGetCh;

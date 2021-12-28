@@ -261,7 +261,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
     {
         if ((Address >= MmSystemRangeStart) || Add2Ptr(Address, PAGE_SIZE) >= MmSystemRangeStart)
         {
-            DPRINT1("Process %p given for kernel-mode mapping at %p -- %lu pages starting at %Ix\n", Process, Address);
+            DPRINT1("Process %p given for kernel-mode mapping at %p\n", Process, Address);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
 
@@ -625,7 +625,8 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     {
         if ((Address >= MmSystemRangeStart) || Add2Ptr(Address, PAGE_SIZE) >= MmSystemRangeStart)
         {
-            DPRINT1("Process %p given for kernel-mode mapping at %p -- %lu pages starting at %Ix\n", Process, Address);
+            DPRINT1("Process %p given for kernel-mode mapping at %p -- 1 page starting at %Ix\n",
+                    Process, Address, Page);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
 

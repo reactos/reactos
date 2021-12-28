@@ -142,3 +142,8 @@ USB\CLASS_09.DeviceDesc = "Standartinis USB šakotuvas"
 GenericMfg = "(通用 USB 集线器)"
 USB\COMPOSITE.DeviceDesc = "USB 聚合设备"
 USB\CLASS_09.DeviceDesc = "通用 USB 集线器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+GenericMfg = "(Hub USB padrão)"
+USB\CLASS_09.DeviceDesc = "Hub USB padrão"

@@ -18,7 +18,7 @@ BEGIN
     EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
     PUSHBUTTON      "瀏覽...",IDC_BROWSE,189,42,54,14
     PUSHBUTTON      "密碼",IDC_PASSWORD,189,66,54,14
-    LTEXT           "點擊［下一步］來解壓縮",IDC_STATUSTEXT,86,114,80,8
+    LTEXT           "按［下一步］來解壓縮",IDC_STATUSTEXT,86,114,80,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
@@ -31,7 +31,7 @@ BEGIN
     LTEXT           "檔案已被解壓縮至下列目錄：",IDC_STATIC,86,12,157,18
     LTEXT           "%s",IDC_DESTDIR,86,36,157,8
     CONTROL         "顯示已解壓縮的檔案",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,81,10
-    LTEXT           "點擊完成以繼續。",IDC_STATIC,86,84,84,8
+    LTEXT           "按［完成］以繼續。",IDC_STATIC,86,84,84,8
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
@@ -75,12 +75,12 @@ BEGIN
     IDS_ERRORTITLE "壓縮的（zipped）資料夾發生錯誤"
     IDS_CANTSTARTTHREAD "無法開始壓縮檔案的執行緒。"
     IDS_NOFILES "指定的目錄 '%s' 是空的，所以壓縮的（zipped）資料夾無法將它新增到保存檔中。"
-    IDS_CANTCREATEZIP "無法建立壓縮的資料夾「%s」。（錯誤碼: %d）"
+    IDS_CANTCREATEZIP "無法建立壓縮的資料夾「%s」。（錯誤碼：%d）"
     IDS_CANTREADFILE "無法讀取檔案「%s」。"
     IDS_EXTRACTING "正在解壓縮..."
-    IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
-    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
-    IDS_UNKNOWNERROR "Unknown error 0x%08x."
+    IDS_CANTEXTRACTFILE "無法解壓縮檔案「%1」。"
+    IDS_DECOMPRESSERROR "不支援的壓縮方法 %d。您想要繼續嗎？"
+    IDS_UNKNOWNERROR "不明錯誤 0x%08x。"
 
     IDS_WIZ_TITLE "解壓縮精靈"
     IDS_WIZ_DEST_TITLE "選擇一個目標資料夾"

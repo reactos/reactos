@@ -1,3 +1,13 @@
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         ReactOS NT kernel pool allocation tags
+ * COPYRIGHT:       Copyright 2005 Steven Edwards <sedwards@reactos.com>
+ *                  Copyright 2006 Alex Ionescu <alex.ionescu@reactos.org>
+ *                  Copyright 2015 Thomas Faber <thomas.faber@reactos.org>
+ *                  Copyright 2021 George Bișoc <george.bisoc@reactos.org>
+ */
+
 #pragma once
 
 /* Cache Manager Tags */
@@ -7,167 +17,128 @@
 #define TAG_PRIVATE_CACHE_MAP   'cPcC'
 #define TAG_BCB                 'cBcC'
 
-/* Executive Callbacks */
+/* Executive Tags */
 #define TAG_CALLBACK_ROUTINE_BLOCK 'brbC'
 #define TAG_CALLBACK_REGISTRATION  'eRBC'
+#define TAG_RESOURCE_TABLE         'aTeR'
+#define TAG_RESOURCE_EVENT         'aTeR'
+#define TAG_RESOURCE_SEMAPHORE     'aTeR'
+#define TAG_OBJECT_TABLE           'btbO'
+#define TAG_INIT                   'tinI'
+#define TAG_RTLI                   'iltR'
+#define TAG_ATOM                   'motA'
+#define TAG_PROFILE                'forP'
+#define TAG_ERR                    ' rrE'
 
-/* formely located in dbg/dbgkobj.c */
-#define TAG_DEBUG_EVENT     'EgbD'
+/* User Mode Debugging Manager Tag */
+#define TAG_DEBUG_EVENT 'EgbD'
 
-/* formerly located in ex/resource.c */
-#define TAG_RESOURCE_TABLE      'aTeR'
-#define TAG_RESOURCE_EVENT      'aTeR'
-#define TAG_RESOURCE_SEMAPHORE  'aTeR'
+/* Kernel Debugger Tags */
+#define TAG_KDBS 'SBDK'
+#define TAG_KDBG 'GBDK'
 
-/* formerly located in ex/handle.c */
-#define TAG_OBJECT_TABLE 'btbO'
+/* Kernel Tags */
+#define TAG_KNMI    'IMNK'
+#define TAG_KERNEL  '  eK'
 
-/* formerly located in ex/init.c */
-#define TAG_INIT 'tinI'
-#define TAG_RTLI 'iltR'
+/* File-System Run-Time Library Tags */
+#define TAG_UNC    'nuSF'
+#define TAG_TABLE  'BATL'
+#define TAG_RANGE  'ARSF'
+#define TAG_FLOCK  'KCLF'
+#define TAG_OPLOCK 'orSF'
 
-/* formerly located in fs/notify.c */
-#define FSRTL_NOTIFY_TAG 'ITON'
-
-/* formerly located in fsrtl/unc.c */
-#define TAG_UNC 'nuSF'
-
-/* formerly located in io/device.c */
+/* I/O Manager Tags */
 #define TAG_DEVICE_EXTENSION   'TXED'
-#define TAG_SHUTDOWN_ENTRY    'TUHS'
-#define TAG_IO_TIMER      'MTOI'
-
-/* formerly located in io/driver.c */
+#define TAG_SHUTDOWN_ENTRY     'TUHS'
+#define TAG_IO_TIMER           'MTOI'
 #define TAG_DRIVER             'RVRD'
 #define TAG_DRIVER_EXTENSION   'EVRD'
+#define TAG_SYSB               'BSYS'
+#define TAG_LOCK               'kclF'
+#define TAG_FILE_NAME          'MANF'
+#define TAG_FILE_SYSTEM        'SYSF'
+#define TAG_FS_CHANGE_NOTIFY   'NCSF'
+#define IFS_POOL_TAG           'trSF'
+#define TAG_FS_NOTIFICATIONS   'NrSF'
+#define IOC_TAG                'TCOI'
+#define TAG_DEVICE_TYPE        'TVED'
+#define TAG_FILE_TYPE          'ELIF'
+#define TAG_ADAPTER_TYPE       'TPDA'
+#define IO_LARGEIRP            'lprI'
+#define IO_SMALLIRP            'sprI'
+#define IO_LARGEIRP_CPU        'LprI'
+#define IO_SMALLIRP_CPU        'SprI'
+#define IOC_TAG1               ' cpI'
+#define IOC_CPU                'PcpI'
+#define TAG_APC                'CPAK'
+#define TAG_IO                 '  oI'
+#define TAG_ERROR_LOG          'rEoI'
+#define TAG_EA                 'aEoI'
+#define TAG_IO_NAME            'mNoI'
+#define TAG_REINIT             'iRoI'
+#define TAG_IOWI               'IWOI'
+#define TAG_IRP                ' prI'
+#define TAG_SYS_BUF            'BSYS'
+#define TAG_KINTERRUPT         'RSIK'
+#define TAG_MDL                ' LDM'
+#define TAG_IO_DEVNODE         'donD'
+#define TAG_PNP_NOTIFY         'NPnP'
+#define TAG_PNP_ROOT           'RPnP'
+#define TAG_IO_RESOURCE        'CRSR'
+#define TAG_IO_TIMER           'MTOI'
+#define TAG_VPB                ' BPV'
+#define TAG_SYSB               'BSYS'
+#define TAG_RTLREGISTRY        'vrqR'
+#define TAG_PNP_DEVACTION      'aDpP'
 
-/* formerly located in io/file.c */
-#define TAG_SYSB        'BSYS'
-#define TAG_LOCK        'kclF'
-#define TAG_FILE_NAME   'MANF'
-
-/* formerly located in io/fs.c */
-#define TAG_FILE_SYSTEM       'SYSF'
-#define TAG_FS_CHANGE_NOTIFY  'NCSF'
-#define IFS_POOL_TAG          'trSF'
-#define TAG_FS_NOTIFICATIONS  'NrSF'
-
-/* formerly located in io/iocomp.c */
-#define IOC_TAG   'TCOI'
-
-/* formerly located in io/iomgr.c */
-#define TAG_DEVICE_TYPE     'TVED'
-#define TAG_FILE_TYPE       'ELIF'
-#define TAG_ADAPTER_TYPE    'TPDA'
-#define IO_LARGEIRP         'lprI'
-#define IO_SMALLIRP         'sprI'
-#define IO_LARGEIRP_CPU     'LprI'
-#define IO_SMALLIRP_CPU     'SprI'
-#define IOC_TAG1            ' cpI'
-#define IOC_CPU             'PcpI'
-#define TAG_APC             'CPAK'
-#define TAG_IO              '  oI'
-#define TAG_ERROR_LOG       'rEoI'
-#define TAG_EA              'aEoI'
-#define TAG_IO_NAME         'mNoI'
-#define TAG_REINIT          'iRoI'
-
-/* formerly located in io/work.c */
-#define TAG_IOWI 'IWOI'
-
-/* formerly located in io/irp.c */
-#define TAG_IRP      ' prI'
-#define TAG_SYS_BUF  'BSYS'
-
-/* formerly located in io/irq.c */
-#define TAG_KINTERRUPT   'RSIK'
-
-/* formerly located in io/mdl.c */
-#define TAG_MDL    ' LDM'
-
-/* formerly located in io/pnpmgr.c */
-#define TAG_IO_DEVNODE 'donD'
-
-/* formerly located in io/pnpnotify.c */
-#define TAG_PNP_NOTIFY  'NPnP'
-
-/* for io/pnproot.c */
-#define TAG_PNP_ROOT    'RPnP'
-
-/* formerly located in io/resource.c */
-#define TAG_IO_RESOURCE    'CRSR'
-
-/* formerly located in io/timer.c */
-#define TAG_IO_TIMER      'MTOI'
-
-/* formerly located in io/vpb.c */
-#define TAG_VPB    ' BPV'
-#define TAG_SYSB   'BSYS'
-
-/* formerly located in ldr/loader.c */
-#define TAG_DRIVER_MEM  'MVRD' /* drvm */
+/* Loader Related Tags */
 #define TAG_MODULE_OBJECT 'omlk' /* klmo - kernel ldr module object */
-#define TAG_LDR_WSTR 'swlk' /* klws - kernel ldr wide string */
-#define TAG_LDR_IMPORTS 'milk' /* klim - kernel ldr imports */
+#define TAG_LDR_WSTR      'swlk' /* klws - kernel ldr wide string */
+#define TAG_LDR_IMPORTS   'milk' /* klim - kernel ldr imports */
 
-/* formerly located in lpc/connect */
-#define TAG_LPC_CONNECT_MESSAGE   'CCPL'
-
-/* formerly located in mm/aspace.c */
-#define TAG_PTRC      'CRTP'
-
-/* formerly located in mm/marea.c */
-#define TAG_MAREA   'ERAM'
-#define TAG_MVAD    'VADM'
-
-/* formerly located in mm/pageop.c */
-#define TAG_MM_PAGEOP   'POPM'
-
-/* formerly located in mm/pool.c */
-#define TAG_NONE 'enoN'
-
-/* formerly located in mm/region.c */
-#define TAG_MM_REGION    'NGRM'
-
-/* formerly located in mm/rmap.c */
-#define TAG_RMAP    'PAMR'
-
-/* formerly located in mm/ARM3/section.c */
-#define TAG_MM      '  mM'
-
-/* formerly located in mm/section.c */
+/* Memory Manager Tags */
+#define TAG_PTRC                 'CRTP'
+#define TAG_MAREA                'ERAM'
+#define TAG_MVAD                 'VADM'
+#define TAG_MM_PAGEOP            'POPM'
+#define TAG_NONE                 'enoN'
+#define TAG_MM_REGION            'NGRM'
+#define TAG_RMAP                 'PAMR'
+#define TAG_MM                   '  mM'
 #define TAG_MM_SECTION_SEGMENT   'SSMM'
 #define TAG_SECTION_PAGE_TABLE   'TPSM'
-
-/* formerly located in ob/symlink.c */
-#define TAG_OBJECT_TYPE         'TjbO'
-#define TAG_SYMLINK_TTARGET     'TTYS'
-#define TAG_SYMLINK_TARGET      'TMYS'
-
-/* formerly located in ob/obsdcach.c */
-#define TAG_OB_SD_CACHE         'cSbO'
 
 /* Object Manager Tags */
 #define OB_NAME_TAG             'mNbO'
 #define OB_DIR_TAG              'iDbO'
+#define TAG_WAIT                'tiaW'
+#define TAG_SEC_QUERY           'qSbO'
+#define TAG_OBJECT_TYPE         'TjbO'
+#define TAG_SYMLINK_TTARGET     'TTYS'
+#define TAG_SYMLINK_TARGET      'TMYS'
+#define TAG_OB_SD_CACHE         'cSbO'
+#define TAG_OB_HANDLE           'dHbO'
 
+/* Power Manager Tag */
+#define TAG_PO_DOPE 'EPOD'
 
-/* formerly located in ps/cid.c */
-#define TAG_CIDOBJECT 'ODIC'
+/* Process Manager Tags */
+#define TAG_CIDOBJECT           'ODIC'
 #define TAG_PS_IMPERSONATION    'mIsP'
+#define TAG_EJOB                'BOJE' /* EJOB */
+#define TAG_TERMINATE_APC       'CPAT'
+#define TAG_KAPC                'papk' /* kpap - kernel ps apc */
+#define TAG_PS_APC              'pasP' /* Psap - Ps APC */
+#define TAG_SHIM                'MIHS'
 
-/* formerly located in ps/job.c */
-#define TAG_EJOB 'BOJE' /* EJOB */
-
-/* formerly located in ps/kill.c */
-#define TAG_TERMINATE_APC   'CPAT'
-
-/* formerly located in ps/notify.c */
-#define TAG_KAPC 'papk' /* kpap - kernel ps apc */
-#define TAG_PS_APC 'pasP' /* Psap - Ps APC */
-
-/* formerly located in rtl/handle.c */
+/* Run-Time Library Tags */
 #define TAG_HDTB  'BTDH'
+#define TAG_ATMT  'TotA' /* Atom table */
+#define TAG_RTHL  'LHtR' /* Heap Lock */
+#define TAG_USTR  'RTSU'
+#define TAG_ASTR  'RTSA'
+#define TAG_OSTR  'RTSO'
 
 /* Security Manager Tags */
 #define TAG_SE                 '  eS'
@@ -186,13 +157,12 @@
 #define TAG_LOGON_SESSION      'sLeS'
 #define TAG_LOGON_NOTIFICATION 'nLeS'
 #define TAG_SID_AND_ATTRIBUTES 'aSeS'
+#define TAG_SID_VALIDATE       'vSeS'
 
 /* LPC Tags */
-#define TAG_LPC_MESSAGE   'McpL'
-#define TAG_LPC_ZONE      'ZcpL'
+#define TAG_LPC_MESSAGE           'McpL'
+#define TAG_LPC_ZONE              'ZcpL'
+#define TAG_LPC_CONNECT_MESSAGE   'CCPL'
 
-#define TAG_WAIT            'tiaW'
-#define TAG_SEC_QUERY       'qSbO'
-
-/* FSTUB */
+/* FSTUB Tag */
 #define TAG_FSTUB 'BtsF'

@@ -1763,9 +1763,10 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
 
             pIfTable->Adapter[ndx].Index = table->indexes[ndx];
             name = getInterfaceNameByIndex(table->indexes[ndx]);
-            for (walker = name, assigner = pIfTable->Adapter[ndx].Name;
+            wcscpy(pIfTable->Adapter[ndx].Name, L"\\DEVICE\\TCPIP_");
+            for (walker = name, assigner = &pIfTable->Adapter[ndx].Name[14];
              walker && *walker &&
-             assigner - pIfTable->Adapter[ndx].Name < MAX_ADAPTER_NAME - 1;
+             assigner - pIfTable->Adapter[ndx].Name < MAX_ADAPTER_NAME - 1 - 14;
              walker++, assigner++)
               *assigner = *walker;
             *assigner = 0;

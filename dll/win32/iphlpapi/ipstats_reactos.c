@@ -179,7 +179,7 @@ NTSTATUS tdiGetIpAddrsForIpEntity
                                 INFO_TYPE_PROVIDER,
                                 IP_MIB_ADDRTABLE_ENTRY_ID,
                                 CL_NL_ENTITY,
-				ent->tei_instance,
+                                ent->tei_instance,
                                 0,
                                 sizeof(IPAddrEntry),
                                 (PVOID *)addrs,
@@ -334,6 +334,10 @@ DWORD getIPStats(PMIB_IPSTATS stats, DWORD family)
 {
   if (!stats)
     return ERROR_INVALID_PARAMETER;
+
+  if (family != AF_INET && family != AF_INET6)
+    return ERROR_INVALID_PARAMETER;
+
   return NO_ERROR;
 }
 
@@ -341,6 +345,10 @@ DWORD getTCPStats(MIB_TCPSTATS *stats, DWORD family)
 {
   if (!stats)
     return ERROR_INVALID_PARAMETER;
+
+  if (family != AF_INET && family != AF_INET6)
+    return ERROR_INVALID_PARAMETER;
+
   return NO_ERROR;
 }
 
@@ -348,6 +356,10 @@ DWORD getUDPStats(MIB_UDPSTATS *stats, DWORD family)
 {
   if (!stats)
     return ERROR_INVALID_PARAMETER;
+
+  if (family != AF_INET && family != AF_INET6)
+    return ERROR_INVALID_PARAMETER;
+
   return NO_ERROR;
 }
 

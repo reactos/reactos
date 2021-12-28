@@ -37,7 +37,7 @@ static WCHAR ServiceName[] = L"Schedule";
 static SERVICE_STATUS_HANDLE ServiceStatusHandle;
 static SERVICE_STATUS ServiceStatus;
 
-HANDLE Events[2] = {NULL, NULL}; // StopEvent, UpdateEvent
+HANDLE Events[3] = {NULL, NULL, NULL}; // StopEvent, UpdateEvent, Timer
 
 
 /* FUNCTIONS *****************************************************************/
@@ -181,6 +181,15 @@ ServiceInit(VOID)
         return GetLastError();
     }
 
+    Events[2] = CreateWaitableTimerW(NULL, FALSE, NULL);
+    if (Events[2] == NULL)
+    {
+        ERR("Could not create the timer\n");
+        CloseHandle(Events[1]);
+        CloseHandle(Events[0]);
+        return GetLastError();
+    }
+
     return ERROR_SUCCESS;
 }
 
@@ -188,7 +197,7 @@ ServiceInit(VOID)
 VOID WINAPI
 SchedServiceMain(DWORD argc, LPTSTR *argv)
 {
-    DWORD dwWait, dwTimeout, dwError;
+    DWORD dwWait, dwError;
 
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
@@ -216,13 +225,13 @@ SchedServiceMain(DWORD argc, LPTSTR *argv)
 
     UpdateServiceStatus(SERVICE_RUNNING);
 
-    dwTimeout = GetNextJobTimeout();
+    GetNextJobTimeout(Events[2]);
 
     for (;;)
     {
         /* Wait for the next event */
         TRACE("Wait for next event!\n");
-        dwWait = WaitForMultipleObjects(2, Events, FALSE, dwTimeout);
+        dwWait = WaitForMultipleObjects(3, Events, FALSE, INFINITE);
         if (dwWait == WAIT_OBJECT_0)
         {
             TRACE("Stop event signaled!\n");
@@ -233,16 +242,16 @@ SchedServiceMain(DWORD argc, LPTSTR *argv)
             TRACE("Update event signaled!\n");
 
             RtlAcquireResourceShared(&JobListLock, TRUE);
-            dwTimeout = GetNextJobTimeout();
+            GetNextJobTimeout(Events[2]);
             RtlReleaseResource(&JobListLock);
         }
-        else if (dwWait == WAIT_TIMEOUT)
+        else if (dwWait == WAIT_OBJECT_0 + 2)
         {
             TRACE("Timeout: Start the next job!\n");
 
             RtlAcquireResourceExclusive(&JobListLock, TRUE);
-            RunNextJob();
-            dwTimeout = GetNextJobTimeout();
+            RunCurrentJobs();
+            GetNextJobTimeout(Events[2]);
             RtlReleaseResource(&JobListLock);
         }
     }
@@ -250,6 +259,7 @@ SchedServiceMain(DWORD argc, LPTSTR *argv)
     /* Close the start and update event handles */
     CloseHandle(Events[0]);
     CloseHandle(Events[1]);
+    CloseHandle(Events[2]);
 
     /* Stop the service */
     UpdateServiceStatus(SERVICE_STOPPED);

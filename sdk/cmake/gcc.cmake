@@ -45,8 +45,6 @@ add_compile_options(-pipe -fms-extensions -fno-strict-aliasing)
 # The case for C++ is handled through the reactos_c++ INTERFACE library
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
-add_compile_options(-mstackrealign)
-
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fno-aggressive-loop-optimizations)
     if (DBG)
@@ -145,7 +143,7 @@ if(LTCG)
 endif()
 
 if(ARCH STREQUAL "i386")
-    add_compile_options(-fno-optimize-sibling-calls -fno-omit-frame-pointer)
+    add_compile_options(-fno-optimize-sibling-calls -fno-omit-frame-pointer -mstackrealign)
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
         add_compile_options(-mpreferred-stack-boundary=3 -fno-set-stack-executable)
     endif()
@@ -167,8 +165,6 @@ elseif(ARCH STREQUAL "arm")
     add_definitions(-U_UNICODE -UUNICODE)
     add_definitions(-D__MSVCRT__) # DUBIOUS
 endif()
-
-add_definitions(-D_inline=__inline)
 
 # Fix build with GLIBCXX + our c++ headers
 add_definitions(-D_GLIBCXX_HAVE_BROKEN_VSWPRINTF)

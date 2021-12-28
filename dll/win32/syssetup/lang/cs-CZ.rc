@@ -1,7 +1,9 @@
-/* FILE:       dll/win32/syssetup/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2014-04-21
- * THANKS TO:  Filip Navara and Kamil Hornicek, who translated major part of this file
+/*
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2008-2014 Radek Liška aka Black_Fox <radekliska@gmail.com>
+ *              Copyright 2014-2017 Kamil Hornicek <kamil.hornicek@reactos.org>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -80,11 +82,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Lokalizace systému by měla souhlasit s jazykem aplikací, které chcete používat. Localizace určí, jak budou zobrazena čísla, měny a kalendářní data.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pro změnu lokalizace systému klikněte na Změnit.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Změnit...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "Rozložení kláves určí znaky, které se zobrazí, když píšete.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pro změnu rozložení kláves, klikněte na Změnit.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Z&měnit...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -180,6 +183,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Zadejte jméno a heslo pro účet Administrator."
     IDS_LOCALETITLE "Regionální nastavení"
     IDS_LOCALESUBTITLE "Systém ReactOS můžete přizpůsobit různým regionům a jazykům."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Datum a čas"
     IDS_DATETIMESUBTITLE "Nastavte správný čas pro Váš počítač."
     IDS_PROCESSTITLE "Registrace součástí"

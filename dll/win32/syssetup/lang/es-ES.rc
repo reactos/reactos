@@ -1,10 +1,10 @@
 /*
- * PROJECT:     ReactOS Win32 Setup
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Spanish locale file
- * COPYRIGHT:   2014 Ismael Ferreras Morezuelas
- *              2018 Julio Carchi Ruiz
- *              2020 Julen Urizar Compains
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Spanish resource file
+ * TRANSLATORS: Copyright 2014 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *              Copyright 2018 Julio Carchi Ruiz <contacto@julcar.info.tm>
+ *              Copyright 2020 Julen Urizar Compains <julenuri@hotmail.com>
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -83,11 +83,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Las opciones regionales y de idioma permiten configurar la forma en la que se representan fechas, números, monedas y horas. También permite compatibilizar con otros idiomas y cambiar los ajustes de ubicación.", IDC_STATIC, 53, 6, 253, 30
-    LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 34, 250, 16
     LTEXT "Para modificar esta configuración, pulse Modificar.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "La distribución del teclado determina el caracter que se muestra al presionar cada tecla.", IDC_STATIC, 53, 86, 253, 32
-    LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 109, 250, 16
     LTEXT "Para cambiar la distribución del teclado, pulse Modificar.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -183,6 +184,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Debe dar un nombre y una contraseña de Administrador a su equipo."
     IDS_LOCALETITLE "Opciones regionales"
     IDS_LOCALESUBTITLE "Puede personalizar ReactOS para diferentes regiones e idiomas."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Fecha y hora"
     IDS_DATETIMESUBTITLE "Fije la fecha y hora correcta de su equipo."
     IDS_PROCESSTITLE "Registrando componentes"

@@ -175,3 +175,14 @@ MsftMfg = "Microsoft Corporation"
 xbox.DeviceDesc = "Original Xbox (x86 based)"
 
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+ComputerClassName = "Computador"
+GenericMfg = "(Computador Genérico)"
+acpipic_up.DeviceDesc = "ACPI Uniprocessor PC"
+e_isa_up.DeviceDesc = "Standard Uniprocessor PC"
+MsftMfg = "Microsoft Corporation"
+xbox.DeviceDesc = "Original Xbox (x86 based)"
+NecMfg = "NEC"
+pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"

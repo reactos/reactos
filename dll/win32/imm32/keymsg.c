@@ -355,106 +355,6 @@ VOID APIENTRY Imm32RequestError(DWORD dwError)
     SetLastError(dwError);
 }
 
-DWORD APIENTRY Imm32ReconvertSize(DWORD dwSize, BOOL bAnsi, BOOL bConvert)
-{
-    DWORD dwOffset;
-    if (dwSize < sizeof(RECONVERTSTRING))
-        return 0;
-    if (!bConvert)
-        return dwSize;
-    dwOffset = dwSize - sizeof(RECONVERTSTRING);
-    if (bAnsi)
-        dwOffset /= sizeof(WCHAR);
-    else
-        dwOffset *= sizeof(WCHAR);
-    return sizeof(RECONVERTSTRING) + dwOffset;
-}
-
-DWORD APIENTRY
-Imm32ConvertReconvert(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc, BOOL bAnsi,
-                      UINT uCodePage)
-{
-    DWORD ret = sizeof(RECONVERTSTRING), cch0, cch1, cchDest;
-
-    if ((pSrc->dwVersion != 0) || (pDest->dwVersion != 0))
-        return 0;
-
-    pDest->dwStrOffset = sizeof(RECONVERTSTRING);
-
-    /*
-     * See RECONVERTSTRING structure:
-     * https://katahiromz.web.fc2.com/colony3rd/imehackerz/en/RECONVERTSTRING.html
-     *
-     * The dwCompStrOffset and dwTargetOffset members are the relative position of dwStrOffset.
-     * dwStrLen, dwCompStrLen, and dwTargetStrLen are the TCHAR count. dwStrOffset,
-     * dwCompStrOffset, and dwTargetStrOffset are the byte offset.
-     */
-    if (bAnsi) /* Ansi <-- Wide */
-    {
-        LPCWSTR pchSrc = (LPCWSTR)((LPCSTR)pSrc + pSrc->dwStrOffset);
-        LPSTR pchDest = (LPSTR)pDest + pDest->dwStrOffset;
-
-        cchDest = WideCharToMultiByte(uCodePage, 0, pchSrc, pSrc->dwStrLen,
-                                      pchDest, pSrc->dwStrLen, NULL, NULL);
-
-        /* dwCompStrOffset */
-        cch1 = pSrc->dwCompStrOffset / sizeof(WCHAR);
-        cch0 = IchAnsiFromWide(cch1, pchSrc, uCodePage);
-        pDest->dwCompStrOffset = cch0 * sizeof(CHAR);
-
-        /* dwCompStrLen */
-        cch0 = IchAnsiFromWide(cch1 + pSrc->dwCompStrLen, pchSrc, uCodePage);
-        pDest->dwCompStrLen = cch0 * sizeof(CHAR) - pDest->dwCompStrOffset;
-
-        /* dwTargetStrOffset */
-        cch1 = pSrc->dwTargetStrOffset / sizeof(WCHAR);
-        cch0 = IchAnsiFromWide(cch1, pchSrc, uCodePage);
-        pDest->dwTargetStrOffset = cch0 * sizeof(CHAR);
-
-        /* dwTargetStrLen */
-        cch0 = IchAnsiFromWide(cch1 + pSrc->dwTargetStrLen, pchSrc, uCodePage);
-        pDest->dwTargetStrLen = cch0 * sizeof(CHAR) - pDest->dwTargetStrOffset;
-
-        /* dwStrLen */
-        pDest->dwStrLen = cchDest;
-        pchDest[cchDest] = 0;
-
-        ret += (cchDest + 1) * sizeof(CHAR);
-    }
-    else /* Wide <-- Ansi */
-    {
-        LPCSTR pchSrc = (LPCSTR)pSrc + pSrc->dwStrOffset;
-        LPWSTR pchDest = (LPWSTR)((LPBYTE)pDest + pDest->dwStrOffset);
-
-        cchDest = MultiByteToWideChar(uCodePage, MB_PRECOMPOSED, pchSrc, pSrc->dwStrLen,
-                                      pchDest, pSrc->dwStrLen);
-
-        /* dwCompStrOffset */
-        cch0 = IchWideFromAnsi(pSrc->dwCompStrOffset, pchSrc, uCodePage);
-        pDest->dwCompStrOffset = cch0 * sizeof(WCHAR);
-
-        /* dwCompStrLen */
-        cch0 = IchWideFromAnsi(pSrc->dwCompStrOffset + pSrc->dwCompStrLen, pchSrc, uCodePage);
-        pDest->dwCompStrLen = (cch0 * sizeof(WCHAR) - pDest->dwCompStrOffset) / sizeof(WCHAR);
-
-        /* dwTargetStrOffset */
-        cch0 = IchWideFromAnsi(pSrc->dwTargetStrOffset, pchSrc, uCodePage);
-        pDest->dwTargetStrOffset = cch0 * sizeof(WCHAR);
-
-        /* dwTargetStrLen */
-        cch0 = IchWideFromAnsi(pSrc->dwTargetStrOffset + pSrc->dwTargetStrLen, pchSrc, uCodePage);
-        pDest->dwTargetStrLen = (cch0 * sizeof(WCHAR) - pSrc->dwTargetStrOffset) / sizeof(WCHAR);
-
-        /* dwStrLen */
-        pDest->dwStrLen = cchDest;
-        pchDest[cchDest] = 0;
-
-        ret += (cchDest + 1) * sizeof(WCHAR);
-    }
-
-    return ret;
-}
-
 LRESULT APIENTRY
 Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bAnsiAPI)
 {
@@ -539,8 +439,11 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
             if (bAnsiAPI == bAnsiWnd || !pData)
                 goto DoIt;
 
-            pRS = pData;
-            ret = Imm32ReconvertSize(pRS->dwSize, FALSE, bAnsiWnd);
+            if (bAnsiWnd)
+                ret = Imm32ReconvertAnsiFromWide(NULL, pData, uCodePage);
+            else
+                ret = Imm32ReconvertWideFromAnsi(NULL, pData, uCodePage);
+
             pTempData = Imm32HeapAlloc(0, ret + sizeof(WCHAR));
             if (!pTempData)
                 return 0;
@@ -550,7 +453,12 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
             pRS->dwVersion = 0;
 
             if (dwCommand == IMR_CONFIRMRECONVERTSTRING)
-                Imm32ConvertReconvert(pData, pTempData, bAnsiWnd, uCodePage);
+            {
+                if (bAnsiWnd)
+                    ret = Imm32ReconvertAnsiFromWide(pTempData, pData, uCodePage);
+                else
+                    ret = Imm32ReconvertWideFromAnsi(pTempData, pData, uCodePage);
+            }
             break;
 
         case IMR_QUERYCHARPOSITION:
@@ -617,13 +525,20 @@ DoIt:
 
         case IMR_RECONVERTSTRING: case IMR_DOCUMENTFEED:
             if (!ret)
-                goto Quit;
+                break;
 
-            ret = Imm32ReconvertSize(ret, TRUE, bAnsiWnd);
-            if (ret < sizeof(RECONVERTSTRING) ||
-                (pTempData && !Imm32ConvertReconvert(pData, pTempData, bAnsiAPI, uCodePage)))
+            if (ret < sizeof(RECONVERTSTRING))
             {
                 ret = 0;
+                break;
+            }
+
+            if (pTempData)
+            {
+                if (bAnsiWnd)
+                    ret = Imm32ReconvertWideFromAnsi(pData, pTempData, uCodePage);
+                else
+                    ret = Imm32ReconvertAnsiFromWide(pData, pTempData, uCodePage);
             }
             break;
 

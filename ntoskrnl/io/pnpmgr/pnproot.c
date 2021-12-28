@@ -94,7 +94,7 @@ LocateChildDevice(
     IN PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension,
     IN PCUNICODE_STRING DeviceId,
     IN PCWSTR InstanceId,
-    OUT PPNPROOT_DEVICE* ChildDevice)
+    OUT PPNPROOT_DEVICE* ChildDevice OPTIONAL)
 {
     PPNPROOT_DEVICE Device;
     UNICODE_STRING InstanceIdU;
@@ -116,7 +116,8 @@ LocateChildDevice(
             RtlEqualUnicodeString(&InstanceIdU, &Device->InstanceID, TRUE))
         {
             /* They do, so set the pointer and return success */
-            *ChildDevice = Device;
+            if (ChildDevice)
+                *ChildDevice = Device;
             return STATUS_SUCCESS;
         }
     }
@@ -240,7 +241,7 @@ PnpRootCreateDevice(
                                    OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                    EnumHandle,
                                    NULL);
-        Status = ZwCreateKey(&DeviceKeyHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+        Status = ZwCreateKey(&DeviceKeyHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
         ObCloseHandle(EnumHandle, KernelMode);
     }
 
@@ -261,26 +262,23 @@ tryagain:
                                     QueryTable,
                                     NULL,
                                     NULL);
-    if (!NT_SUCCESS(Status))
+    for (NextInstance = 0; NextInstance <= 9999; NextInstance++)
     {
-        for (NextInstance = 0; NextInstance <= 9999; NextInstance++)
-        {
-             _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", NextInstance);
-             Status = LocateChildDevice(DeviceExtension, &Device->DeviceID, InstancePath, &Device);
-             if (Status == STATUS_NO_SUCH_DEVICE)
-                 break;
-        }
+        _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", NextInstance);
+        Status = LocateChildDevice(DeviceExtension, &Device->DeviceID, InstancePath, NULL);
+        if (Status == STATUS_NO_SUCH_DEVICE)
+            break;
+    }
 
-        if (NextInstance > 9999)
-        {
-            DPRINT1("Too many legacy devices reported for service '%wZ'\n", ServiceName);
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto cleanup;
-        }
+    if (NextInstance > 9999)
+    {
+        DPRINT1("Too many legacy devices reported for service '%wZ'\n", ServiceName);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
     }
 
     _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", NextInstance);
-    Status = LocateChildDevice(DeviceExtension, &Device->DeviceID, InstancePath, &Device);
+    Status = LocateChildDevice(DeviceExtension, &Device->DeviceID, InstancePath, NULL);
     if (Status != STATUS_NO_SUCH_DEVICE || NextInstance > 9999)
     {
         DPRINT1("NextInstance value is corrupt! (%lu)\n", NextInstance);
@@ -315,7 +313,7 @@ tryagain:
                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                DeviceKeyHandle,
                                NULL);
-    Status = ZwCreateKey(&InstanceKeyHandle, KEY_QUERY_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+    Status = ZwCreateKey(&InstanceKeyHandle, KEY_QUERY_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create instance path (0x%x)\n", Status);
@@ -555,6 +553,114 @@ cleanup:
 }
 
 static NTSTATUS
+IopShouldProcessDevice(
+    IN HANDLE SubKey,
+    IN PCWSTR InstanceID)
+{
+    UNICODE_STRING DeviceReportedValue = RTL_CONSTANT_STRING(L"DeviceReported");
+    UNICODE_STRING Control = RTL_CONSTANT_STRING(L"Control");
+    UNICODE_STRING InstanceIDU;
+    PKEY_VALUE_FULL_INFORMATION pKeyValueFullInformation;
+    HANDLE InstanceKey, ControlKey;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG Size, DeviceReported, ResultLength;
+    NTSTATUS Status;
+
+    Size = 128;
+    pKeyValueFullInformation = ExAllocatePool(PagedPool, Size);
+    if (!pKeyValueFullInformation)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Open Instance key */
+    RtlInitUnicodeString(&InstanceIDU, InstanceID);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &InstanceIDU,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               SubKey,
+                               NULL);
+    Status = ZwOpenKey(&InstanceKey,
+                       KEY_QUERY_VALUE,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(pKeyValueFullInformation);
+        return Status;
+    }
+
+    /* Read 'DeviceReported' Key */
+    Status = ZwQueryValueKey(InstanceKey, &DeviceReportedValue, KeyValueFullInformation, pKeyValueFullInformation, Size, &ResultLength);
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        ZwClose(InstanceKey);
+        ExFreePool(pKeyValueFullInformation);
+        DPRINT("No 'DeviceReported' value\n");
+        return STATUS_SUCCESS;
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        ZwClose(InstanceKey);
+        ExFreePool(pKeyValueFullInformation);
+        return Status;
+    }
+    if (pKeyValueFullInformation->Type != REG_DWORD || pKeyValueFullInformation->DataLength != sizeof(DeviceReported))
+    {
+        ZwClose(InstanceKey);
+        ExFreePool(pKeyValueFullInformation);
+        return STATUS_UNSUCCESSFUL;
+    }
+    RtlCopyMemory(&DeviceReported, (PVOID)((ULONG_PTR)pKeyValueFullInformation + pKeyValueFullInformation->DataOffset), sizeof(DeviceReported));
+    /* FIXME: Check DeviceReported value? */
+    ASSERT(DeviceReported == 1);
+
+    /* Open Control key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Control,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               InstanceKey,
+                               NULL);
+    Status = ZwOpenKey(&ControlKey,
+                       KEY_QUERY_VALUE,
+                       &ObjectAttributes);
+    ZwClose(InstanceKey);
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        DPRINT("No 'Control' key\n");
+        return STATUS_NO_SUCH_DEVICE;
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(pKeyValueFullInformation);
+        return Status;
+    }
+
+    /* Read 'DeviceReported' Key */
+    Status = ZwQueryValueKey(ControlKey, &DeviceReportedValue, KeyValueFullInformation, pKeyValueFullInformation, Size, &ResultLength);
+    ZwClose(ControlKey);
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        ExFreePool(pKeyValueFullInformation);
+        DPRINT("No 'DeviceReported' value\n");
+        return STATUS_NO_SUCH_DEVICE;
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(pKeyValueFullInformation);
+        return Status;
+    }
+    if (pKeyValueFullInformation->Type != REG_DWORD || pKeyValueFullInformation->DataLength != sizeof(DeviceReported))
+    {
+        ExFreePool(pKeyValueFullInformation);
+        return STATUS_UNSUCCESSFUL;
+    }
+    RtlCopyMemory(&DeviceReported, (PVOID)((ULONG_PTR)pKeyValueFullInformation + pKeyValueFullInformation->DataOffset), sizeof(DeviceReported));
+    /* FIXME: Check DeviceReported value? */
+    ASSERT(DeviceReported == 1);
+
+    ExFreePool(pKeyValueFullInformation);
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
 EnumerateDevices(
     IN PDEVICE_OBJECT DeviceObject)
 {
@@ -725,17 +831,30 @@ EnumerateDevices(
             RtlAppendUnicodeToString(&DevicePath, REGSTR_KEY_ROOTENUM L"\\");
             RtlAppendUnicodeStringToString(&DevicePath, &SubKeyName);
             DPRINT("Found device %wZ\\%S!\n", &DevicePath, SubKeyInfo->Name);
-            Status = CreateDeviceFromRegistry(DeviceExtension,
-                                              &DevicePath,
-                                              SubKeyInfo->Name,
-                                              SubKeyHandle);
 
-            /* If CreateDeviceFromRegistry didn't take ownership and zero this,
-             * we need to free it
-             */
-            RtlFreeUnicodeString(&DevicePath);
+            Status = IopShouldProcessDevice(SubKeyHandle, SubKeyInfo->Name);
+            if (NT_SUCCESS(Status))
+            {
+                Status = CreateDeviceFromRegistry(DeviceExtension,
+                                                  &DevicePath,
+                                                  SubKeyInfo->Name,
+                                                  SubKeyHandle);
 
-            if (!NT_SUCCESS(Status))
+                /* If CreateDeviceFromRegistry didn't take ownership and zero this,
+                 * we need to free it
+                 */
+                RtlFreeUnicodeString(&DevicePath);
+
+                if (!NT_SUCCESS(Status))
+                {
+                    goto cleanup;
+                }
+            }
+            else if (Status == STATUS_NO_SUCH_DEVICE)
+            {
+                DPRINT("Skipping device %wZ\\%S (not reported yet)\n", &DevicePath, SubKeyInfo->Name);
+            }
+            else
             {
                 goto cleanup;
             }

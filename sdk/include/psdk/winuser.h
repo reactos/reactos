@@ -865,32 +865,36 @@ extern "C" {
 #define DWLP_DLGPROC (DWLP_MSGRESULT + sizeof(LRESULT))
 #define DWLP_USER (DWLP_DLGPROC + sizeof(DLGPROC))
 
+#define QS_KEY              1
+#define QS_MOUSEMOVE        2
+#define QS_MOUSEBUTTON      4
+#define QS_POSTMESSAGE      8
+#define QS_TIMER            16
+#define QS_PAINT            32
+#define QS_SENDMESSAGE      64
+#define QS_HOTKEY           128
+#define QS_ALLPOSTMESSAGE   256
+
 #if (_WIN32_WINNT >= 0x0501)
-#define QS_ALLEVENTS 1215
-#define QS_ALLINPUT 1279
-#define QS_RAWINPUT 1024
+#define QS_RAWINPUT         1024
+#endif
+#if (_WIN32_WINNT >= 0x0602)
+#define QS_TOUCH            2048
+#define QS_POINTER          4096
+#endif
+
+#define QS_MOUSE            (QS_MOUSEMOVE | QS_MOUSEBUTTON)
+
+#if (_WIN32_WINNT >= 0x0602)
+#define QS_INPUT            (QS_KEY | QS_MOUSE | QS_RAWINPUT | QS_TOUCH | QS_POINTER)
+#elif (_WIN32_WINNT >= 0x0501)
+#define QS_INPUT            (QS_KEY | QS_MOUSE | QS_RAWINPUT)
 #else
-#define QS_ALLEVENTS 191
-#define QS_ALLINPUT 255
+#define QS_INPUT            (QS_KEY | QS_MOUSE)
 #endif
-#define QS_ALLPOSTMESSAGE 256
-#define QS_HOTKEY 128
-#if (_WIN32_WINNT >= 0x0501)
-#define QS_INPUT 1031
-#else
-#define QS_INPUT 7
-#endif
-#define QS_KEY 1
-#define QS_MOUSE 6
-#define QS_MOUSEBUTTON 4
-#define QS_MOUSEMOVE 2
-#define QS_PAINT 32
-#define QS_POSTMESSAGE 8
-#if (_WIN32_WINNT >= 0x0501)
-#define QS_RAWINPUT 1024
-#endif
-#define QS_SENDMESSAGE 64
-#define QS_TIMER 16
+
+#define QS_ALLEVENTS        (QS_INPUT | QS_POSTMESSAGE | QS_TIMER | QS_PAINT | QS_HOTKEY)
+#define QS_ALLINPUT         (QS_ALLEVENTS | QS_SENDMESSAGE)
 
 #define USER_TIMER_MAXIMUM  2147483647
 #define USER_TIMER_MINIMUM  10

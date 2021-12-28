@@ -398,6 +398,8 @@ BOOL CAppRichEdit::ShowInstalledAppInfo(CInstalledApplicationInfo *Info)
     SetText(Info->szDisplayName, CFE_BOLD);
     InsertText(L"\n", 0);
 
+    Info->EnsureDetailsLoaded();
+
     InsertTextWithString(IDS_INFO_VERSION, CFE_BOLD, Info->szDisplayVersion, 0);
     InsertTextWithString(IDS_INFO_PUBLISHER, CFE_BOLD, Info->szPublisher, 0);
     InsertTextWithString(IDS_INFO_REGOWNER, CFE_BOLD, Info->szRegOwner, 0);
@@ -1709,6 +1711,11 @@ void CApplicationView::SetRedraw(BOOL bRedraw)
 {
     CWindow::SetRedraw(bRedraw);
     m_ListView->SetRedraw(bRedraw);
+}
+
+void CApplicationView::SetFocusOnSearchBar()
+{
+    m_SearchBar->SetFocus();
 }
 
 VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
