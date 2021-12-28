@@ -56,7 +56,7 @@ void PaletteModel::SelectPalette(PAL_TYPE nPalette)
 
 COLORREF PaletteModel::GetColor(int nIndex) const
 {
-    if (nIndex < NUM_COLORS)
+    if (0 <= nIndex && nIndex < NUM_COLORS)
         return m_colors[nIndex];
     else
         return 0;
@@ -64,7 +64,7 @@ COLORREF PaletteModel::GetColor(int nIndex) const
 
 void PaletteModel::SetColor(int nIndex, COLORREF newColor)
 {
-    if (nIndex < NUM_COLORS)
+    if (0 <= nIndex && nIndex < NUM_COLORS)
     {
         m_colors[nIndex] = newColor;
         NotifyPaletteChanged();
