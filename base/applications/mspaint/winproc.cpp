@@ -559,11 +559,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
             SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
-            toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
-            //TODO: do this properly
-            toolsModel.OnButtonDown(FALSE, 0, 0, FALSE);
-            toolsModel.OnMouseMove(FALSE, 0, 0);
-            toolsModel.OnButtonUp(FALSE, 0, 0);
+            toolsModel.selectAll();
+            imageArea.Invalidate(TRUE);
             break;
         }
         case IDM_EDITCOPYTO:

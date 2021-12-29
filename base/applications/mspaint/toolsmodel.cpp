@@ -182,3 +182,11 @@ void ToolsModel::resetTool()
 {
     m_pToolObject->reset();
 }
+
+void ToolsModel::selectAll()
+{
+    SetActiveTool(TOOL_RECTSEL);
+    OnButtonDown(TRUE, 0, 0, FALSE);
+    OnMouseMove(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
+    OnButtonUp(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
+}

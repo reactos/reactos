@@ -105,4 +105,5 @@ public:
     void OnCancelDraw();
 
     void resetTool();
+    void selectAll();
 };
