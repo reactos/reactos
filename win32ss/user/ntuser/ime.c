@@ -111,6 +111,7 @@ NtUserDisableThreadIme(
             if (pti->spwndDefaultIme)
             {
                 co_UserDestroyWindow(pti->spwndDefaultIme);
+                pti->spwndDefaultIme = NULL;
                 pti = ptiCurrent->ppi->ptiList;
                 continue;
             }
@@ -134,7 +135,10 @@ NtUserDisableThreadIme(
         pti->TIF_flags |= TIF_DISABLEIME;
 
         if (pti->spwndDefaultIme)
+        {
             co_UserDestroyWindow(pti->spwndDefaultIme);
+            pti->spwndDefaultIme = NULL;
+        }
     }
 
     ret = TRUE;
