@@ -82,7 +82,7 @@ private:
     ToolBase *m_pTools[TOOL_MAX + 1];
     ToolBase *m_pToolObject;
 
-    ToolBase *fetchToolObject(TOOLTYPE nTool);
+    ToolBase *GetOrCreateTool(TOOLTYPE nTool);
 
     void NotifyToolChanged();
     void NotifyToolSettingsChanged();
