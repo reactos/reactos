@@ -428,6 +428,9 @@ struct LineTool : ToolBase
 
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
+        imageModel.ResetToPrevious();
+        if (GetAsyncKeyState(VK_SHIFT) < 0)
+            roundTo8Directions(start.x, start.y, x, y);
         if (bLeftButton)
             Line(m_hdc, start.x, start.y, x, y, m_fg, toolsModel.GetLineWidth());
         else
@@ -441,17 +444,11 @@ struct LineTool : ToolBase
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.ResetToPrevious();
-        if (GetAsyncKeyState(VK_SHIFT) < 0)
-            roundTo8Directions(start.x, start.y, x, y);
         draw(bLeftButton, x, y);
     }
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.ResetToPrevious();
-        if (GetAsyncKeyState(VK_SHIFT) < 0)
-            roundTo8Directions(start.x, start.y, x, y);
         draw(bLeftButton, x, y);
     }
 
