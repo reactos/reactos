@@ -294,6 +294,7 @@ struct ColorTool : ToolBase
     {
         ToolBase::OnButtonDown(bLeftButton, x, y, bDoubleClick);
         imageModel.CopyPrevious();
+        draw(bLeftButton, x, y);
     }
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
