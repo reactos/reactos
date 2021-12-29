@@ -34,17 +34,17 @@ private:
     
 public:
     
-    CDesktopThread();
+    CDesktopThread(ITrayWindow* pTray);
     virtual ~CDesktopThread();
 
-    HRESULT Initialize(ITrayWindow* pTray);
+    HRESULT Initialize();
     void Destroy();
 };
 
 /*******************************************************************/
 
-CDesktopThread::CDesktopThread() :
-    m_Tray(NULL),
+CDesktopThread::CDesktopThread(ITrayWindow* pTray) :
+    m_Tray(pTray),
     m_hEvent(NULL),
     m_hThread(NULL)
 {
@@ -63,11 +63,9 @@ CDesktopThread::~CDesktopThread()
     }
 }
 
-HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
+HRESULT CDesktopThread::Initialize()
 {
     HANDLE Handles[2];
-
-    m_Tray = pTray;
     
     m_hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
@@ -170,11 +168,11 @@ DWORD WINAPI CDesktopThread::s_DesktopThreadProc(LPVOID lpParameter)
 /*******************************************************************/
 
 HANDLE
-DesktopCreateWindow(IN OUT ITrayWindow *Tray)
+DesktopCreateWindow(IN OUT ITrayWindow* Tray)
 {
-    CDesktopThread* pDesktopThread = new CDesktopThread();
+    CDesktopThread* pDesktopThread = new CDesktopThread(Tray);
 
-    HRESULT hres = pDesktopThread->Initialize(Tray);
+    HRESULT hres = pDesktopThread->Initialize();
 
     if (FAILED_UNEXPECTEDLY(hres))
     {
