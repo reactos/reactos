@@ -80,14 +80,68 @@ NtUserCheckImeHotKey(
     return 0;
 }
 
-
-DWORD
+BOOL
 APIENTRY
 NtUserDisableThreadIme(
-    DWORD dwUnknown1)
+    DWORD dwThreadID)
 {
-    STUB;
-    return 0;
+    PTHREADINFO pti, ptiCurrent;
+    PPROCESSINFO ppi;
+    BOOL ret = FALSE;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+    {
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+    }
+
+    ptiCurrent = GetW32ThreadInfo();
+
+    if (dwThreadID == (DWORD)-1)
+    {
+        ppi = pti->ppi;
+        ppi->W32PF_flags |= W32PF_DISABLEIME;
+
+        for (pti = ppi->ptiList; pti; )
+        {
+            pti->TIF_flags |= TIF_DISABLEIME;
+
+            if (pti->spwndDefaultIme)
+            {
+                co_UserDestroyWindow(pti->spwndDefaultIme);
+                pti = ptiCurrent->ppi->ptiList;
+                continue;
+            }
+
+            pti = pti->ptiSibling;
+        }
+    }
+    else
+    {
+        if (dwThreadID == 0)
+        {
+            pti = ptiCurrent;
+        }
+        else
+        {
+            pti = IntTID2PTI(UlongToHandle(dwThreadID));
+            if (!pti || pti->ppi != ptiCurrent->ppi)
+                goto Quit;
+        }
+
+        pti->TIF_flags |= TIF_DISABLEIME;
+
+        if (pti->spwndDefaultIme)
+            co_UserDestroyWindow(pti->spwndDefaultIme);
+    }
+
+    ret = TRUE;
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 DWORD
