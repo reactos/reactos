@@ -1414,7 +1414,7 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
 
     if (!hIcon)
     {
-        /* Load default icon */
+        /* Load the default icon */
         hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
     }
 
@@ -1442,17 +1442,17 @@ BOOL CAppsListView::AddAvailableApplication(CAvailableApplicationInfo *AvlbAppIn
     if (AvlbAppInfo->RetrieveIcon(szIconPath))
     {
         hIcon = (HICON)LoadImageW(NULL,
-            szIconPath.GetString(),
-            IMAGE_ICON,
-            LISTVIEW_ICON_SIZE,
-            LISTVIEW_ICON_SIZE,
-            LR_LOADFROMFILE);
+                                  szIconPath.GetString(),
+                                  IMAGE_ICON,
+                                  LISTVIEW_ICON_SIZE,
+                                  LISTVIEW_ICON_SIZE,
+                                  LR_LOADFROMFILE);
     }
 
     if (!hIcon || GetLastError() != ERROR_SUCCESS)
     {
-        /* Load default icon */
-        hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        /* Load the default icon */
+        hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
     }
 
     int IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
