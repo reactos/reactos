@@ -215,9 +215,9 @@ struct RubberTool : ToolBase
     void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         if (bLeftButton)
-            Erase(m_hdc, x, y, x, y, m_bg, toolsModel.GetRubberRadius());
+            Erase(m_hdc, last.x, last.y, x, y, m_bg, toolsModel.GetRubberRadius());
         else
-            Replace(m_hdc, x, y, x, y, m_fg, m_bg, toolsModel.GetRubberRadius());
+            Replace(m_hdc, last.x, last.y, x, y, m_fg, m_bg, toolsModel.GetRubberRadius());
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
