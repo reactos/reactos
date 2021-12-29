@@ -25,6 +25,7 @@ class CDesktopThread
 private:
     
     CComPtr<ITrayWindow> m_Tray;
+    
     HANDLE m_hEvent;
     HANDLE m_hThread;
 
@@ -67,6 +68,7 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
     HANDLE Handles[2];
 
     m_Tray = pTray;
+    
     m_hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
     if (!m_hEvent)
@@ -124,6 +126,7 @@ void CDesktopThread::Destroy()
 DWORD CDesktopThread::DesktopThreadProc()
 {
     CComPtr<IShellDesktopTray> pSdt;
+    
     HANDLE hDesktop;
     HRESULT hRet;
 
