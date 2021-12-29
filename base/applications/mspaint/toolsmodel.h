@@ -100,9 +100,13 @@ public:
     int GetZoom() const;
     void SetZoom(int nZoom);
 
-    void resetTool();
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick);
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y);
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y);
     void OnCancelDraw();
+
+    void resetTool()
+    {
+        m_pToolObject->reset();
+    }
 };
