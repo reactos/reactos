@@ -25,13 +25,12 @@ class CDesktopThread
 private:
     
     CComPtr<ITrayWindow> m_Tray;
-    
     HANDLE m_hEvent;
     HANDLE m_hThread;
 
     DWORD DesktopThreadProc();
     static DWORD WINAPI s_DesktopThreadProc(LPVOID lpParameter);
-
+    
 public:
     
     CDesktopThread();
@@ -43,11 +42,11 @@ public:
 
 /*******************************************************************/
 
-CDesktopThread::CDesktopThread()
+CDesktopThread::CDesktopThread() :
+    m_Tray(NULL),
+    m_hEvent(NULL),
+    m_hThread(NULL)
 {
-    m_Tray = NULL;
-    m_hEvent = NULL;
-    m_hThread = NULL;
 }
 
 CDesktopThread::~CDesktopThread()
@@ -68,7 +67,6 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
     HANDLE Handles[2];
 
     m_Tray = pTray;
-
     m_hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
     if (!m_hEvent)
@@ -80,13 +78,17 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
 
     if (!m_hThread)
     {   
+        CloseHandle(m_hEvent);
+        
+        m_hEvent = NULL;
+        
         return E_FAIL;
     }
 
     Handles[0] = m_hThread;
     Handles[1] = m_hEvent;
 
-    while (true)
+    for (;;)
     {
         DWORD WaitResult = MsgWaitForMultipleObjects(_countof(Handles), Handles, FALSE, INFINITE, QS_ALLEVENTS);
 
@@ -94,7 +96,7 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
         {
             TrayProcessMessages(m_Tray);
         }
-
+        
         else if (WaitResult != WAIT_FAILED && WaitResult != WAIT_OBJECT_0)
         {
             break;
@@ -122,7 +124,6 @@ void CDesktopThread::Destroy()
 DWORD CDesktopThread::DesktopThreadProc()
 {
     CComPtr<IShellDesktopTray> pSdt;
-
     HANDLE hDesktop;
     HRESULT hRet;
 
@@ -193,6 +194,6 @@ DesktopDestroyShellWindow(IN HANDLE hDesktop)
     }
 
     pDesktopThread->Destroy();
-
+    
     delete pDesktopThread;
 }
