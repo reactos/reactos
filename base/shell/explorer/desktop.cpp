@@ -28,7 +28,6 @@ private:
     
     HANDLE m_hEvent;
     HANDLE m_hThread;
-    bool m_Cleanup;
 
     DWORD DesktopThreadProc();
     static DWORD WINAPI s_DesktopThreadProc(LPVOID lpParameter);
@@ -47,18 +46,11 @@ public:
 CDesktopThread::CDesktopThread() :
     m_Tray(NULL),
     m_hEvent(NULL),
-    m_hThread(NULL),
-    m_Cleanup(false)
+    m_hThread(NULL)
 {
 }
 
-CDesktopThread::~CDesktopThread()
-{
-    if (m_Cleanup)
-    {
-        Destroy();
-    }
-}
+CDesktopThread::~CDesktopThread() { }
 
 HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
 {
@@ -106,8 +98,6 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
         }
     }
     
-    m_Cleanup = true;
-
     return S_OK;
 }
 
@@ -131,8 +121,6 @@ void CDesktopThread::Destroy()
     {
         CloseHandle(m_hEvent);
     }
-    
-    m_Cleanup = false;
 }
 
 DWORD CDesktopThread::DesktopThreadProc()
