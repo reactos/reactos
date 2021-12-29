@@ -79,9 +79,7 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
     m_hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (LPVOID)this, 0, NULL);
 
     if (!m_hThread)
-    {
-        CloseHandle(m_hEvent);
-        
+    {   
         return E_FAIL;
     }
 
