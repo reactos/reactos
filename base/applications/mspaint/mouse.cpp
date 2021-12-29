@@ -583,14 +583,11 @@ struct ShapeTool : ToolBase
 
     void draw(BOOL bLeftButton, LONG x, LONG y, BOOL bClosed = FALSE)
     {
-        if (bLeftButton)
+        if (pointSP + 1 >= 2)
         {
-            if (pointSP + 1 >= 2)
+            if (bLeftButton)
                 Poly(m_hdc, pointStack, pointSP + 1, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), bClosed, FALSE);
-        }
-        else
-        {
-            if (pointSP + 1 >= 2)
+            else
                 Poly(m_hdc, pointStack, pointSP + 1, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), bClosed, FALSE);
         }
     }
