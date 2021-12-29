@@ -50,7 +50,18 @@ CDesktopThread::CDesktopThread() :
 {
 }
 
-CDesktopThread::~CDesktopThread() { }
+CDesktopThread::~CDesktopThread()
+{
+    if (m_hThread)
+    {
+        CloseHandle(m_hThread);
+    }
+    
+    if (m_hEvent)
+    {
+        CloseHandle(m_hEvent);
+    }
+}
 
 HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
 {
@@ -113,17 +124,6 @@ void CDesktopThread::Destroy()
         {
             TerminateThread(m_hThread, 0);
         }
-        
-        CloseHandle(m_hThread);
-        
-        m_hThread = NULL;
-    }
-    
-    if (m_hEvent)
-    {
-        CloseHandle(m_hEvent);
-        
-        m_hEvent = NULL;
     }
 }
 
