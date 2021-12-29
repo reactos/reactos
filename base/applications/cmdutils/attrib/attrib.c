@@ -139,7 +139,7 @@ PrintAttribute(
 
             wcscpy(pszFileName, findData.cFileName);
             wcscat(pszFileName, L"\\");
-            bFound != PrintAttribute(szFullName, pszFile, bRecurse, bDirectories);
+            bFound |= PrintAttribute(szFullName, pszFile, bRecurse, bDirectories);
         }
         while (FindNextFileW(hFind, &findData));
         FindClose(hFind);
@@ -243,7 +243,7 @@ ChangeAttribute(
 
             wcscpy(pszFileName, findData.cFileName);
             wcscat(pszFileName, L"\\");
-            bFound != ChangeAttribute(szFullName, pszFile, bRecurse, bDirectories, 
+            bFound |= ChangeAttribute(szFullName, pszFile, bRecurse, bDirectories,
                                       dwMask, dwAttrib);
         }
         while (FindNextFileW(hFind, &findData));
