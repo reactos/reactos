@@ -246,7 +246,7 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                         CStringW szMsgText;
                         szMsgText.LoadStringW(IDS_URL_INVALID);
 
-                        MessageBoxW(hDlg, szMsgText, NULL, 0);
+                        MessageBoxW(hDlg, szMsgText, NULL, MB_OK);
                         SetFocus(GetDlgItem(hDlg, IDC_SOURCE_URL));
                         break;
                     }

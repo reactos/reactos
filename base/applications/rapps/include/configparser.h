@@ -13,7 +13,7 @@ class CConfigParser
     ReadSection(CStringW &Buffer, const CStringW &Section, BOOL isArch);
 
   public:
-    CConfigParser(const CStringW &FileName);
+    CConfigParser(const CStringW &FilePath);
 
     BOOL
     GetString(const CStringW &KeyName, CStringW &ResultString);

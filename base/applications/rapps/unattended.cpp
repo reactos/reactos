@@ -241,13 +241,13 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
     if (argc == 1) // RAPPS is launched without options
     {
-        // Check for if rapps MainWindow is already launched in another process
+        // Check whether the RAPPS MainWindow is already launched in another process
         HANDLE hMutex;
 
         hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
         if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         {
-            /* If already started, it is found its window */
+            /* If already started, find its window */
             HWND hWindow = FindWindowW(szWindowClass, NULL);
 
             /* Activate window */
