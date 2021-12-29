@@ -391,29 +391,23 @@ struct TextTool : ToolBase
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
         POINT temp;
-        if (bLeftButton)
-        {
-            imageModel.ResetToPrevious();
-            temp.x = max(0, min(x, imageModel.GetWidth()));
-            temp.y = max(0, min(y, imageModel.GetHeight()));
-            selectionModel.SetSrcAndDestRectFromPoints(start, temp);
-            RectSel(m_hdc, start.x, start.y, temp.x, temp.y);
-        }
+        imageModel.ResetToPrevious();
+        temp.x = max(0, min(x, imageModel.GetWidth()));
+        temp.y = max(0, min(y, imageModel.GetHeight()));
+        selectionModel.SetSrcAndDestRectFromPoints(start, temp);
+        RectSel(m_hdc, start.x, start.y, temp.x, temp.y);
     }
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
-        if (bLeftButton)
+        imageModel.ResetToPrevious();
+        if (selectionModel.IsSrcRectSizeNonzero())
         {
-            imageModel.ResetToPrevious();
-            if (selectionModel.IsSrcRectSizeNonzero())
-            {
-                imageModel.CopyPrevious();
+            imageModel.CopyPrevious();
 
-                placeSelWin();
-                selectionWindow.ShowWindow(SW_SHOW);
-                ForceRefreshSelectionContents();
-            }
+            placeSelWin();
+            selectionWindow.ShowWindow(SW_SHOW);
+            ForceRefreshSelectionContents();
         }
     }
 
