@@ -87,6 +87,9 @@ IDI_APPICON ICON "res/dxdiag.ico"
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
+#endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif

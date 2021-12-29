@@ -75,3 +75,7 @@ GenericMfg = "(通用系统设备)"
 ReactOS = "Equipo de ReactOS"
 GenericMfg = "(Dispositivos genéricos del sistema)"
 *PNP0C14.DeviceDesc = "WMI para ACPI"
+
+[Strings.0C04]
+GenericMfg = "(標準系統裝置)"
+*PNP0C14.DeviceDesc = "ACPI 的 WMI"

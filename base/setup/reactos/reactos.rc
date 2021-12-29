@@ -111,6 +111,9 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "reactos.exe.manifest"
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
+#endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif

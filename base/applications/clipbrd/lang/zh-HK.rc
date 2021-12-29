@@ -1,0 +1,73 @@
+/*
+ * PROJECT:     ReactOS Clipboard Viewer
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "檔案(&F)"
+    BEGIN
+        MENUITEM "開啟(&O)...", CMD_OPEN
+        MENUITEM "另存新檔(&A)...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)", CMD_EXIT
+    END
+    POPUP "編輯(&E)"
+    BEGIN
+        MENUITEM "刪除(&D)\tDel", CMD_DELETE
+    END
+    POPUP "顯示(&D)"
+    BEGIN
+        MENUITEM "自動(&A)", CMD_AUTOMATIC
+    END
+    POPUP "説明(&H)"
+    BEGIN
+        MENUITEM "説明主題(&H)", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "關於(&A)", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "剪貼簿檢視器"
+    STRING_CLIPFILE  "剪貼簿項目"
+    STRING_DELETE_MSG "要清除剪貼簿的內容嗎？"
+    STRING_DELETE_TITLE "清除剪貼簿"
+    STRING_FORMAT_NT "ReactOS 剪貼簿檔案 (*.clp)"
+    STRING_FORMAT_GEN "剪貼簿檔案 (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "不明格式"
+    STRING_CF_TEXT "文字"
+    STRING_CF_BITMAP "點陣圖"
+    STRING_CF_OEMTEXT "OEM 文字"
+    STRING_CF_UNICODETEXT "Unicode 文字"
+    STRING_CF_DIB "DIB 點陣圖"
+    STRING_CF_LOCALE "本地日期"
+    STRING_CF_ENHMETAFILE "增強型圖元檔案"
+    STRING_CF_METAFILEPICT "圖元檔案"
+    STRING_CF_PALETTE "調色盤"
+    STRING_CF_DIBV5 "DIB 點陣圖 (第 5 版)"
+    STRING_CF_SYLK "符號連結格式"
+    STRING_CF_DIF "資料交換格式"
+    STRING_CF_HDROP "刪除資料"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "剪貼簿內的資料含有不能顯示的格式。"
+    ERROR_INVALID_FILE_FORMAT "所選的檔案不是一個有效的剪貼簿檔案。"
+END

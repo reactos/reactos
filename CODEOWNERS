@@ -349,4 +349,5 @@ ru-RU.*    @reactos/lang-russian
 tr-TR.*    @reactos/lang-turkish
 uk-UA.*    @reactos/lang-ukrainian
 zh-CN.*    @reactos/lang-chinese
+zh-HK.*    @reactos/lang-chinese
 zh-TW.*    @reactos/lang-chinese

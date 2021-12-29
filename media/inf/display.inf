@@ -177,3 +177,9 @@ DisplayClassName = "Adaptadores de vídeo"
 
 StdMfg = "(Adaptador de vídeo padrão)"
 VGA.DeviceDesc = "Adaptador de vídeo compatível com VGA"
+
+[Strings.0C04]
+DisplayClassName = "顯示配接器"
+
+StdMfg = "(標準顯示配接器)"
+VGA.DeviceDesc = "VGA 相容顯示卡"

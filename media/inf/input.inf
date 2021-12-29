@@ -163,3 +163,10 @@ HID.DeviceDesc        = "Dispositivos de interface humana USB"
 
 HID_DEVICE            = "Dispositivo compatível com outros dispositivos de interface humana"
 StdMfg                = "(Dispositivos de interface humana padrão)"
+
+[Strings.0c04]
+HID.ClassName         = "人體學介面裝置"
+HID.DeviceDesc        = "USB 人體學介面裝置"
+
+HID_DEVICE            = "HID 相容裝置"
+StdMfg                = "(標準人體學介面裝置)"

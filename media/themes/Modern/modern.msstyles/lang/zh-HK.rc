@@ -1,0 +1,46 @@
+/*
+ * PROJECT:     Modern Theme
+ * LICENSE:     GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE
+{
+1000, "淺色"
+1001, "深色"
+}
+
+STRINGTABLE
+{
+2000, "Modern (淺色)"
+2001, "Modern (深色)"
+}
+
+STRINGTABLE
+{
+3000, "標準"
+3001, "大字型"
+3002, "特大字型"
+}
+
+STRINGTABLE
+{
+4000, "標準"
+4001, "大字型"
+4002, "特大字型"
+}
+
+STRINGTABLE
+{
+5000, "Modern"
+5001, "視覺樣式"
+5002, "ReactOS Foundation"
+5003, "Polar, 基於 win10 預設樣式"
+5004, "於 2018 年以 GNU/GPL 3.0 條款發行"
+5005, "https://reactos.org/"
+5006, "1.0"
+5007, "ReactOS 的 Modern 主題"
+}

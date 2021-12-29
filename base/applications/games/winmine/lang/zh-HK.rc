@@ -1,0 +1,81 @@
+/*
+ * PROJECT:     ReactOS WineMine
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE
+BEGIN
+    IDS_APPNAME "Wine 地雷"
+    IDS_NOBODY "無名氏"
+    IDS_ABOUT "Copyright 2000 Joshua Thielen"
+END
+
+IDM_WINEMINE MENU
+BEGIN
+    POPUP "選項(&O)"
+    BEGIN
+        MENUITEM "新遊戲(&N)\tF2", IDM_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "標出問題(&M)", IDM_MARKQ
+        MENUITEM SEPARATOR
+        MENUITEM "新手(&B)", IDM_BEGINNER
+        MENUITEM "進階(&A)", IDM_ADVANCED
+        MENUITEM "專家(&E)", IDM_EXPERT
+        MENUITEM "自訂(&C)", IDM_CUSTOM
+        MENUITEM SEPARATOR
+        MENUITEM "結束(&X)\tAlt+X", IDM_EXIT
+    END
+    POPUP "資訊(&I)"
+    BEGIN
+        MENUITEM "最快時間(&F)", IDM_TIMES
+        MENUITEM "關於(&A)", IDM_ABOUT
+    END
+END
+
+DLG_TIMES DIALOGEX 0, 0, 160, 80
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "最快時間"
+FONT 9, "新細明體"
+BEGIN
+    GROUPBOX "最快時間", -1, 10, 10, 140, 45
+    LTEXT "新手", -1, 20, 20, 40, 8
+    LTEXT "高級", -1, 20, 30, 40, 8
+    LTEXT "專家", -1, 20, 40, 40, 8
+    LTEXT "999", IDC_TIME1, 70, 20, 15, 8
+    LTEXT "999", IDC_TIME2, 70, 30, 15, 8
+    LTEXT "999", IDC_TIME3, 70, 40, 15, 8
+    LTEXT "", IDC_NAME1, 90, 20, 55, 8
+    LTEXT "", IDC_NAME2, 90, 30, 55, 8
+    LTEXT "", IDC_NAME3, 90, 40, 55, 8
+    DEFPUSHBUTTON "確定", IDOK, 55, 60, 50, 15
+END
+
+DLG_CONGRATS DIALOGEX 0, 0, 160, 60
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "恭喜！"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "請輸入您的名稱", -1, 10, 10, 150, 10
+    EDITTEXT IDC_EDITNAME, 25, 20, 110, 12
+    DEFPUSHBUTTON "確定", IDOK, 60, 40, 40, 15
+END
+
+DLG_CUSTOM DIALOGEX 0, 0, 100, 100
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "自訂遊戲"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "列", -1, 5, 5, 30, 10
+    LTEXT "行", -1, 5, 35, 30, 10
+    LTEXT "地雷", -1, 5, 65, 30, 10
+    EDITTEXT IDC_EDITROWS, 5, 15, 20, 12, ES_NUMBER
+    EDITTEXT IDC_EDITCOLS, 5, 45, 20, 12, ES_NUMBER
+    EDITTEXT IDC_EDITMINES, 5, 75, 20, 12, ES_NUMBER
+    DEFPUSHBUTTON "確定", IDOK, 40, 30, 50, 15
+    PUSHBUTTON "取消", IDCANCEL, 40, 50, 50, 15
+END
