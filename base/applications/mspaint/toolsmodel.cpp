@@ -177,3 +177,8 @@ void ToolsModel::OnCancelDraw()
     m_pToolObject->OnCancelDraw();
     m_pToolObject->endEvent();
 }
+
+void ToolsModel::resetTool()
+{
+    m_pToolObject->reset();
+}

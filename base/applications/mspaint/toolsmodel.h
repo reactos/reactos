@@ -36,12 +36,11 @@ struct ToolBase
     TOOLTYPE m_tool;
     HDC m_hdc;
     COLORREF m_fg, m_bg;
-    INT pointSP;
-    POINT pointStack[256];
+    static INT pointSP;
+    static POINT pointStack[256];
 
     ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL)
     {
-        reset();
     }
 
     virtual ~ToolBase()
@@ -105,8 +104,5 @@ public:
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y);
     void OnCancelDraw();
 
-    void resetTool()
-    {
-        m_pToolObject->reset();
-    }
+    void resetTool();
 };

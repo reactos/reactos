@@ -11,6 +11,9 @@
 
 #include "precomp.h"
 
+INT ToolBase::pointSP = 0;
+POINT ToolBase::pointStack[256] = { { 0 } };
+
 /* FUNCTIONS ********************************************************/
 
 void
@@ -58,6 +61,11 @@ BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1)
     return (abs(x1 - x0) <= cxThreshold) && (abs(y1 - y0) <= cyThreshold);
 }
 
+void ToolBase::reset()
+{
+    pointSP = 0;
+}
+
 void ToolBase::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
 {
     start.x = last.x = x;
@@ -77,12 +85,6 @@ void ToolBase::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
 void ToolBase::OnCancelDraw()
 {
     reset();
-}
-
-void ToolBase::reset()
-{
-    pointSP = 0;
-    ZeroMemory(pointStack, sizeof(pointStack));
 }
 
 void ToolBase::beginEvent()
@@ -726,6 +728,7 @@ struct ShapeTool : ToolBase
         imageModel.ResetToPrevious();
         if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
             roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y, x, y);
+
         if (nearlyEqualPoints(x, y, pointStack[0].x, pointStack[0].y))
         {
             pointStack[pointSP].x = pointStack[0].x;
@@ -740,7 +743,8 @@ struct ShapeTool : ToolBase
             pointStack[pointSP].y = y;
             draw(bLeftButton, x, y, FALSE);
         }
-        if (pointSP == 255)
+
+        if (pointSP == _countof(pointStack))
             pointSP--;
     }
 
