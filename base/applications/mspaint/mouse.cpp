@@ -235,6 +235,14 @@ struct RubberTool : ToolBase
     {
         draw(bLeftButton, x, y);
     }
+
+    void OnCancelDraw()
+    {
+        OnButtonUp(FALSE, 0, 0);
+        imageModel.Undo();
+        selectionModel.ResetPtStack();
+        ToolBase::OnCancelDraw();
+    }
 };
 
 // TOOL_FILL
