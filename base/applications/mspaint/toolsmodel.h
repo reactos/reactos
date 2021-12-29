@@ -47,9 +47,18 @@ struct ToolBase
     {
     }
 
-    virtual void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick);
-    virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y);
-    virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y);
+    virtual void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+    {
+    }
+
+    virtual void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+    {
+    }
+
+    virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
+    {
+    }
+
     virtual void OnCancelDraw();
 
     void beginEvent();
