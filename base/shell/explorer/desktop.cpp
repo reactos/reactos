@@ -165,7 +165,8 @@ DWORD WINAPI CDesktopThread::s_DesktopThreadProc(LPVOID lpParameter)
 
 /*******************************************************************/
 
-HANDLE DesktopCreateWindow(ITrayWindow* Tray)
+HANDLE
+DesktopCreateWindow(IN OUT ITrayWindow *Tray)
 {
     CDesktopThread* pDesktopThread = new CDesktopThread();
 
@@ -181,7 +182,8 @@ HANDLE DesktopCreateWindow(ITrayWindow* Tray)
     return pDesktopThread;
 }
 
-void DesktopDestroyShellWindow(HANDLE hDesktop)
+VOID
+DesktopDestroyShellWindow(IN HANDLE hDesktop)
 {
     CDesktopThread* pDesktopThread = reinterpret_cast<CDesktopThread*>(hDesktop);
 
