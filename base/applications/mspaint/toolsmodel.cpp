@@ -23,10 +23,10 @@ ToolsModel::ToolsModel()
     m_transpBg = FALSE;
     m_zoom = 1000;
     ZeroMemory(m_pTools, sizeof(m_pTools));
-    m_pToolObject = getToolObject(m_activeTool);
+    m_pToolObject = fetchToolObject(m_activeTool);
 }
 
-ToolBase *ToolsModel::getToolObject(TOOLTYPE nTool)
+ToolBase *ToolsModel::fetchToolObject(TOOLTYPE nTool)
 {
     if (!m_pTools[nTool])
         m_pTools[nTool] = ToolBase::createToolObject(nTool);
@@ -84,7 +84,7 @@ TOOLTYPE ToolsModel::GetActiveTool() const
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
     m_activeTool = nActiveTool;
-    m_pToolObject = getToolObject(m_activeTool);
+    m_pToolObject = fetchToolObject(m_activeTool);
     NotifyToolChanged();
 }
 
