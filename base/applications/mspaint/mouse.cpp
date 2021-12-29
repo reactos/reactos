@@ -593,6 +593,10 @@ struct ShapeTool : ToolBase
             draw(bLeftButton, x, y);
             pointSP++;
         }
+        else
+        {
+            draw(bLeftButton, x, y);
+        }
     }
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
