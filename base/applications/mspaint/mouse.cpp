@@ -272,13 +272,13 @@ struct FillTool : ToolBase
 };
 
 // TOOL_COLOR
-struct ColorTool : GenericDrawTool
+struct ColorTool : ToolBase
 {
-    ColorTool() : GenericDrawTool(TOOL_COLOR)
+    ColorTool() : ToolBase(TOOL_COLOR)
     {
     }
 
-    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
+    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         COLORREF tempColor = GetPixel(m_hdc, x, y);
         if (bLeftButton)
@@ -291,11 +291,6 @@ struct ColorTool : GenericDrawTool
             if (tempColor != CLR_INVALID)
                 paletteModel.SetBgColor(tempColor);
         }
-    }
-
-    void OnCancelDraw()
-    {
-        ToolBase::OnCancelDraw();
     }
 };
 
