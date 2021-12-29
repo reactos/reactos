@@ -362,3 +362,11 @@ DNSCLIENT_DESC = "Serviço que armazena em cache consultas DNS locais"
 DHCPCLIENT_NAME = "DHCP Client"
 DHCPCLIENT_DESC = "Tenta obter configurações de rede automaticamente de um servidor DHCP disponível"
 TCPIP_DEF = "Transmission Control Protocol/Internet Protocol"
+
+[Strings.0C04]
+MS_TCPIP.DisplayName = "互聯網通訊協定第四版 (TCP/IPv4)"
+DNSCLIENT_NAME = "DNS 用户端" 
+DNSCLIENT_DESC = "快取本地 DNS 查詢的服務" 
+DHCPCLIENT_NAME = "DHCP 用户端" 
+DHCPCLIENT_DESC = "嘗試從可用的 DHCP 伺服器中自動取得網絡設定"
+TCPIP_DEF = "傳輸控制協議 / 互聯網協議"

@@ -214,3 +214,9 @@ ReactOS = "Equipa ReactOS"
 KeyboardClassName = "Teclados"
 StdMfg = "(Teclado padrão)"
 *PNP0303.DeviceDesc = "Teclado IBM PC/AT"
+
+[Strings.0C04]
+KeyboardClassName = "鍵盤"
+HID.KeyboardDevice    = "HID 鍵盤"
+StdMfg = "(標準鍵盤)"
+*PNP0303.DeviceDesc = "IBM PC/AT 鍵盤"
