@@ -26,6 +26,7 @@ enum TOOLTYPE
     TOOL_SHAPE    = 14,
     TOOL_ELLIPSE  = 15,
     TOOL_RRECT    = 16,
+    TOOL_MAX = TOOL_RRECT,
 };
 
 /* CLASSES **********************************************************/
@@ -35,9 +36,12 @@ struct ToolBase
     TOOLTYPE m_tool;
     HDC m_hdc;
     COLORREF m_fg, m_bg;
+    INT pointSP;
+    POINT pointStack[256];
 
     ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL), m_fg(0), m_bg(0)
     {
+        reset();
     }
 
     virtual ~ToolBase()
@@ -51,6 +55,12 @@ struct ToolBase
 
     void begin();
     void end();
+
+    void reset()
+    {
+        pointSP = 0;
+        ZeroMemory(pointStack, sizeof(pointStack));
+    }
 
     static ToolBase* createToolObject(TOOLTYPE type);
 };
@@ -66,7 +76,10 @@ private:
     int m_rubberRadius;
     BOOL m_transpBg;
     int m_zoom;
+    ToolBase *m_pTools[TOOL_MAX + 1];
     ToolBase *m_pToolObject;
+
+    ToolBase *getToolObject(TOOLTYPE nActiveTool);
 
     void NotifyToolChanged();
     void NotifyToolSettingsChanged();
@@ -92,6 +105,7 @@ public:
     int GetZoom() const;
     void SetZoom(int nZoom);
 
+    void resetTool();
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick);
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y);
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y);

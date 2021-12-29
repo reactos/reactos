@@ -13,6 +13,10 @@
 class CImgAreaWindow : public CWindowImpl<CMainWindow>
 {
 public:
+    CImgAreaWindow() : drawing(FALSE)
+    {
+    }
+
     DECLARE_WND_CLASS_EX(_T("ImgAreaWindow"), CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CImgAreaWindow)

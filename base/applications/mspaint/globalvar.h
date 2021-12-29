@@ -106,6 +106,3 @@ extern CStretchSkewDialog stretchSkewDialog;
 
 /* VARIABLES declared in mouse.cpp **********************************/
 
-extern POINT pointStack[256];
-extern INT pointSP;
-extern BOOL drawing;

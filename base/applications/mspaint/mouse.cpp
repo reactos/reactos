@@ -11,10 +11,6 @@
 
 #include "precomp.h"
 
-POINT pointStack[256];
-INT pointSP = 0;
-BOOL drawing = FALSE;
-
 /* FUNCTIONS ********************************************************/
 
 void

@@ -22,12 +22,25 @@ ToolsModel::ToolsModel()
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
-    m_pToolObject = ToolBase::createToolObject(m_activeTool);
+    ZeroMemory(m_pTools, sizeof(m_pTools));
+    m_pToolObject = getToolObject(m_activeTool);
+}
+
+ToolBase *ToolsModel::getToolObject(TOOLTYPE nActiveTool)
+{
+    if (!m_pTools[nActiveTool])
+        m_pTools[nActiveTool] = ToolBase::createToolObject(nActiveTool);
+
+    return m_pTools[nActiveTool];
 }
 
 ToolsModel::~ToolsModel()
 {
-    delete m_pToolObject;
+    for (size_t i = 0; i < _countof(m_pTools); ++i)
+    {
+        delete m_pTools[i];
+        m_pTools[i] = NULL;
+    }
 }
 
 int ToolsModel::GetLineWidth() const
@@ -71,8 +84,7 @@ TOOLTYPE ToolsModel::GetActiveTool() const
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
     m_activeTool = nActiveTool;
-    delete m_pToolObject;
-    m_pToolObject = ToolBase::createToolObject(nActiveTool);
+    m_pToolObject = getToolObject(m_activeTool);
     NotifyToolChanged();
 }
 
@@ -164,4 +176,9 @@ void ToolsModel::OnCancelDraw()
     m_pToolObject->begin();
     m_pToolObject->OnCancelDraw();
     m_pToolObject->end();
+}
+
+void ToolsModel::resetTool()
+{
+    m_pToolObject->reset();
 }

@@ -130,6 +130,6 @@ LRESULT CToolBox::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 LRESULT CToolBox::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     selectionWindow.ShowWindow(SW_HIDE);
-    pointSP = 0;                // resets the point-buffer of the polygon and bezier functions
+    toolsModel.resetTool(); // resets the point-buffer of the polygon and bezier functions
     return 0;
 }
