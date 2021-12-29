@@ -2,7 +2,7 @@
  * Setupapi install routines
  *
  * Copyright 2002 Alexandre Julliard for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 Hervï¿½ Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -2079,6 +2079,7 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
 {
     struct DeviceInfoSet *list = NULL;
     BOOL ret = FALSE;
+    BOOL found_section = FALSE;
 
     TRACE("%p, %s, 0x%lx, %p, %p, %p, %p\n", hinf, debugstr_w(sectionname),
         flags, DeviceInfoSet, DeviceInfoData, reserved1, reserved2);
@@ -2145,6 +2146,8 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
         ret = SetupFindFirstLineW(hinf, sectionname, AddService, &ContextService);
         while (ret)
         {
+            found_section = TRUE;
+            
             if (!GetStringField(&ContextService, 1, &ServiceName))
                 goto done;
 
@@ -2178,11 +2181,14 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
             ret = SetupFindNextMatchLineW(&ContextService, AddService, &ContextService);
         }
 
-        if (bNeedReboot)
-            SetLastError(ERROR_SUCCESS_REBOOT_REQUIRED);
-        else
-            SetLastError(ERROR_SUCCESS);
-        ret = TRUE;
+        if (found_section)
+        {
+            if (bNeedReboot)
+                SetLastError(ERROR_SUCCESS_REBOOT_REQUIRED);
+            else
+                SetLastError(ERROR_SUCCESS);
+            ret = TRUE;
+        }
     }
 done:
     TRACE("Returning %d\n", ret);
