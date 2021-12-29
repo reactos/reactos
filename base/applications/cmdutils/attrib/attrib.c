@@ -1,35 +1,10 @@
 /*
- *  ATTRIB.C - attrib internal command.
- *
- *
- *  History:
- *
- *    04-Dec-1998 Eric Kohl
- *        started
- *
- *    09-Dec-1998 Eric Kohl
- *        implementation works, except recursion ("attrib /s").
- *
- *    05-Jan-1999 Eric Kohl
- *        major rewrite.
- *        fixed recursion ("attrib /s").
- *        started directory support ("attrib /s /d").
- *        updated help text.
- *
- *    14-Jan-1999 Eric Kohl
- *        Unicode ready!
- *
- *    19-Jan-1999 Eric Kohl
- *        Redirection ready!
- *
- *    21-Jan-1999 Eric Kohl
- *        Added check for invalid filenames.
- *
- *    23-Jan-1999 Eric Kohl
- *        Added handling of multiple filenames.
- *
- *    02-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
- *        Remove all hardcoded strings in En.rc
+ * PROJECT:     ReactOS Attrib Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Displays or changes file attributes recursively.
+ * COPYRIGHT:   Copyright 1998-2019 Eric Kohl <eric.kohl@reactos.org>
+ *              Copyright 2021 Doug Lyons <douglyons@douglyons.com>
+ *              Copyright 2021-2023 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #include <stdio.h>
@@ -39,15 +14,22 @@
 #include <winbase.h>
 #include <wincon.h>
 #include <winuser.h>
+#include <strsafe.h>
 
 #include <conutils.h>
 
 #include "resource.h"
 
+/* Enable to support extended attributes.
+ * See https://ss64.com/nt/attrib.html for an exhaustive list. */
+// TODO: If you enable this, translations need to be updated as well!
+//#define EXTENDED_ATTRIBUTES
+
+#define ALL_FILES_PATTERN   L"*.*" // It may also be possible to use L"*" (shorter)
+
 CON_SCREEN StdOutScreen = INIT_CON_SCREEN(StdOut);
 
-static
-VOID
+static VOID
 ErrorMessage(
     _In_ DWORD dwErrorCode,
     _In_opt_ PCWSTR pszMsg,
@@ -77,217 +59,257 @@ ErrorMessage(
         ConPrintf(StdErr, L"  %s\n", pszMsg);
 }
 
-/* Returns TRUE if anything is printed, FALSE otherwise */
-static
-BOOL
-PrintAttribute(
-    LPWSTR pszPath,
-    LPWSTR pszFile,
-    BOOL   bRecurse,
-    BOOL   bDirectories)
+
+/**
+ * @brief   Displays attributes for the given file.
+ * @return  Always TRUE (success).
+ **/
+static BOOL
+PrintAttributes(
+    _In_ PWIN32_FIND_DATAW pFindData,
+    _In_ PCWSTR pszFullName,
+    _Inout_opt_ PVOID Context)
 {
+    DWORD dwAttributes = pFindData->dwFileAttributes;
+
+    UNREFERENCED_PARAMETER(Context);
+
+    ConPrintf(StdOut,
+#ifdef EXTENDED_ATTRIBUTES
+              L"%c  %c%c%c  %c    %s\n",
+#else
+              L"%c  %c%c%c     %s\n",
+#endif
+              (dwAttributes & FILE_ATTRIBUTE_ARCHIVE)  ? L'A' : L' ',
+              (dwAttributes & FILE_ATTRIBUTE_SYSTEM)   ? L'S' : L' ',
+              (dwAttributes & FILE_ATTRIBUTE_HIDDEN)   ? L'H' : L' ',
+              (dwAttributes & FILE_ATTRIBUTE_READONLY) ? L'R' : L' ',
+#ifdef EXTENDED_ATTRIBUTES
+              (dwAttributes & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED) ? L'I' : L' ',
+#endif
+              pszFullName);
+
+    return TRUE;
+}
+
+typedef struct _ATTRIBS_MASKS
+{
+    DWORD dwMask;
+    DWORD dwAttrib;
+} ATTRIBS_MASKS, *PATTRIBS_MASKS;
+
+/**
+ * @brief   Changes attributes for the given file.
+ * @return  TRUE if anything changed, FALSE otherwise.
+ **/
+static BOOL
+ChangeAttributes(
+    _In_ PWIN32_FIND_DATAW pFindData,
+    _In_ PCWSTR pszFullName,
+    _Inout_opt_ PVOID Context)
+{
+    PATTRIBS_MASKS AttribsMasks = (PATTRIBS_MASKS)Context;
+    DWORD dwAttributes;
+
+    dwAttributes = ((pFindData->dwFileAttributes & ~AttribsMasks->dwMask) | AttribsMasks->dwAttrib);
+    return SetFileAttributesW(pszFullName, dwAttributes);
+}
+
+
+#define ENUM_RECURSE        0x01
+#define ENUM_DIRECTORIES    0x02
+
+typedef BOOL
+(*PENUMFILES_CALLBACK)(
+    _In_ PWIN32_FIND_DATAW pFindData,
+    _In_ PCWSTR pszFullName,
+    _Inout_opt_ PVOID Context);
+
+typedef struct _ENUMFILES_CTX
+{
+    /* Fixed data */
+    _In_ PCWSTR FileName;
+    _In_ DWORD Flags;
+
+    /* Callback invoked on each enumerated file/directory */
+    _In_ PENUMFILES_CALLBACK Callback;
+    _In_ PVOID Context;
+
+    /* Dynamic data */
     WIN32_FIND_DATAW findData;
+    ULONG uReparseLevel;
+
+    /* The full path buffer the function will act recursively */
+    // PWSTR FullPath; // Use a relocated buffer once long paths become supported!
+    size_t cchBuffer; // Buffer size
+    WCHAR FullPathBuffer[MAX_PATH + _countof("\\" ALL_FILES_PATTERN)];
+
+} ENUMFILES_CTX, *PENUMFILES_CTX;
+
+/* Returns TRUE if anything is done, FALSE otherwise */
+static BOOL
+EnumFilesWorker(
+    _Inout_ PENUMFILES_CTX EnumCtx,
+    _Inout_ off_t offFilePart) // Offset to the file name inside FullPathBuffer
+{
+    BOOL bFound = FALSE;
+    HRESULT hRes;
     HANDLE hFind;
-    WCHAR  szFullName[MAX_PATH];
-    LPWSTR pszFileName;
-    BOOL   bFound = FALSE;
-    BOOL   bIsDir;
-    BOOL   bExactMatch;
-    DWORD  Error;
+    PWSTR findFileName = EnumCtx->findData.cFileName;
+    PWSTR pFilePart = EnumCtx->FullPathBuffer + offFilePart;
+    size_t cchRemaining = EnumCtx->cchBuffer - offFilePart;
 
-    /* prepare full file name buffer */
-    wcscpy(szFullName, pszPath);
-    pszFileName = szFullName + wcslen(szFullName);
-
-    /* display all subdirectories */
-    if (bRecurse)
+    /* Recurse over all subdirectories */
+    if (EnumCtx->Flags & ENUM_RECURSE)
     {
-        /* append *.* */
-        wcscpy(pszFileName, L"*.*");
+        /* Append '*.*' */
+        hRes = StringCchCopyW(pFilePart, cchRemaining, ALL_FILES_PATTERN);
+        if (hRes != S_OK)
+        {
+            if (hRes == STRSAFE_E_INSUFFICIENT_BUFFER)
+            {
+                // TODO: If this fails, try to reallocate EnumCtx->FullPathBuffer by
+                // increasing its size by _countof(EnumCtx->findData.cFileName) + 1
+                // to satisfy this copy, as well as the one made in the loop below.
+            }
+            // else
+            ConPrintf(StdErr, L"Directory level too deep: %s\n", EnumCtx->FullPathBuffer);
+            return FALSE;
+        }
 
-        hFind = FindFirstFileW(szFullName, &findData);
+        hFind = FindFirstFileW(EnumCtx->FullPathBuffer, &EnumCtx->findData);
         if (hFind == INVALID_HANDLE_VALUE)
         {
-            Error = GetLastError();
-            if ((Error != ERROR_DIRECTORY) && (Error != ERROR_SHARING_VIOLATION)
-                  && (Error != ERROR_FILE_NOT_FOUND))
+            DWORD Error = GetLastError();
+            if ((Error != ERROR_DIRECTORY) &&
+                (Error != ERROR_SHARING_VIOLATION) &&
+                (Error != ERROR_FILE_NOT_FOUND))
             {
-                ErrorMessage(Error, pszFile);
+                ErrorMessage(Error, EnumCtx->FullPathBuffer);
             }
             return FALSE;
         }
 
         do
         {
-            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            BOOL bIsReparse;
+            size_t offNewFilePart;
+
+            if (!(EnumCtx->findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 continue;
 
-            if (!wcscmp(findData.cFileName, L".") ||
-                !wcscmp(findData.cFileName, L".."))
-            {
+            if (!wcscmp(findFileName, L".") || !wcscmp(findFileName, L".."))
                 continue;
+
+            /* Allow at most 2 levels of reparse points / symbolic links */
+            bIsReparse = !!(EnumCtx->findData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT);
+            if (bIsReparse)
+            {
+                if (EnumCtx->uReparseLevel < 2)
+                    EnumCtx->uReparseLevel++;
+                else
+                    continue;
             }
 
-            wcscpy(pszFileName, findData.cFileName);
-            wcscat(pszFileName, L"\\");
-            bFound |= PrintAttribute(szFullName, pszFile, bRecurse, bDirectories);
+            hRes = StringCchPrintfExW(pFilePart, cchRemaining,
+                                      NULL, &offNewFilePart, 0,
+                                      L"%s\\", findFileName);
+            /* Offset to the new file name part */
+            offNewFilePart = EnumCtx->cchBuffer - offNewFilePart;
+
+            bFound |= EnumFilesWorker(EnumCtx, offNewFilePart);
+
+            /* Recalculate the file part pointer and the number of characters
+             * remaining: the buffer may have been enlarged and relocated. */
+            pFilePart = EnumCtx->FullPathBuffer + offFilePart;
+            cchRemaining = EnumCtx->cchBuffer - offFilePart;
+
+            /* If we went through a reparse point / symbolic link, decrease level */
+            if (bIsReparse)
+                EnumCtx->uReparseLevel--;
         }
-        while (FindNextFileW(hFind, &findData));
+        while (FindNextFileW(hFind, &EnumCtx->findData));
         FindClose(hFind);
     }
 
-    /* append file name */
-    wcscpy(pszFileName, pszFile);
+    /* Append the file name pattern to search for */
+    hRes = StringCchCopyW(pFilePart, cchRemaining, EnumCtx->FileName);
 
-    /* search current directory */
-    hFind = FindFirstFileW(szFullName, &findData);
+    /* Search in the current directory */
+    hFind = FindFirstFileW(EnumCtx->FullPathBuffer, &EnumCtx->findData);
     if (hFind == INVALID_HANDLE_VALUE)
-    {
         return bFound;
-    }
 
     do
     {
-        bIsDir = findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-        bExactMatch = wcsicmp(findData.cFileName, pszFile) == 0;
+        BOOL bIsDir = !!(EnumCtx->findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+        BOOL bExactMatch = (wcsicmp(findFileName, EnumCtx->FileName) == 0);
 
-        if (bIsDir && !bDirectories && !bExactMatch)
+        if (bIsDir && !(EnumCtx->Flags & ENUM_DIRECTORIES) && !bExactMatch)
             continue;
 
-        if (!wcscmp(findData.cFileName, L".") ||
-            !wcscmp(findData.cFileName, L".."))
-        {
+        if (!wcscmp(findFileName, L".") || !wcscmp(findFileName, L".."))
             continue;
-        }
 
-        wcscpy(pszFileName, findData.cFileName);
+        /* If we recursively enumerate files excluding directories,
+         * exclude any directory from the enumeration. */
+        if (bIsDir && !(EnumCtx->Flags & ENUM_DIRECTORIES) && (EnumCtx->Flags & ENUM_RECURSE))
+            continue;
 
-        ConPrintf(StdOut,
-                  L"%c  %c%c%c     %s\n",
-                  (findData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE) ? L'A' : L' ',
-                  (findData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) ? L'S' : L' ',
-                  (findData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? L'H' : L' ',
-                  (findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ? L'R' : L' ',
-                  szFullName);
+        StringCchCopyW(pFilePart, cchRemaining, findFileName);
+        /* bFound = */ EnumCtx->Callback(&EnumCtx->findData, EnumCtx->FullPathBuffer, EnumCtx->Context);
         bFound = TRUE;
     }
-    while (FindNextFileW(hFind, &findData));
+    while (FindNextFileW(hFind, &EnumCtx->findData));
     FindClose(hFind);
 
     return bFound;
 }
 
-
-/* Returns TRUE if anything changed, FALSE otherwise */
-static
-BOOL
-ChangeAttribute(
-    LPWSTR pszPath,
-    LPWSTR pszFile,
-    BOOL  bRecurse,
-    BOOL  bDirectories,
-    DWORD dwMask,
-    DWORD dwAttrib)
+static BOOL
+AttribEnumFiles(
+    _In_ PCWSTR pszPath,
+    _In_ PCWSTR pszFile,
+    _In_ DWORD fFlags,
+    _In_ PATTRIBS_MASKS AttribsMasks)
 {
-    WIN32_FIND_DATAW findData;
-    HANDLE hFind;
-    WCHAR  szFullName[MAX_PATH];
-    LPWSTR pszFileName;
-    BOOL   bFound = FALSE;
-    BOOL   bIsDir;
-    BOOL   bExactMatch;
-    DWORD  dwAttribute;
-    DWORD  Error;
+    ENUMFILES_CTX EnumContext = {0};
+    size_t offFilePart;
+    HRESULT hRes;
 
-    /* prepare full file name buffer */
-    wcscpy(szFullName, pszPath);
-    pszFileName = szFullName + wcslen(szFullName);
+    EnumContext.FileName = pszFile;
+    EnumContext.Flags    = fFlags;
+    EnumContext.Callback = (AttribsMasks->dwMask == 0 ? PrintAttributes : ChangeAttributes);
+    EnumContext.Context  = (AttribsMasks->dwMask == 0 ? NULL : AttribsMasks);
 
-    /* display all subdirectories */
-    if (bRecurse)
+    /* Prepare the full file path buffer */
+    EnumContext.cchBuffer = _countof(EnumContext.FullPathBuffer);
+    hRes = StringCchCopyExW(EnumContext.FullPathBuffer,
+                            EnumContext.cchBuffer,
+                            pszPath,
+                            NULL,
+                            &offFilePart,
+                            0);
+    if (hRes != S_OK)
+        return FALSE;
+
+    /* Offset to the file name part */
+    offFilePart = EnumContext.cchBuffer - offFilePart;
+    if (EnumContext.FullPathBuffer[offFilePart - 1] != L'\\')
     {
-        /* append *.* */
-        wcscpy(pszFileName, L"*.*");
-
-        hFind = FindFirstFileW(szFullName, &findData);
-        if (hFind == INVALID_HANDLE_VALUE)
-        {
-            Error = GetLastError();
-            if ((Error != ERROR_DIRECTORY) && (Error != ERROR_SHARING_VIOLATION)
-                  && (Error != ERROR_FILE_NOT_FOUND))
-            {
-                ErrorMessage(Error, pszFile);
-            }
-            return FALSE;
-        }
-
-        do
-        {
-            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-                continue;
-
-            if (!wcscmp(findData.cFileName, L".") ||
-                !wcscmp(findData.cFileName, L".."))
-            {
-                continue;
-            }
-
-            wcscpy(pszFileName, findData.cFileName);
-            wcscat(pszFileName, L"\\");
-            bFound |= ChangeAttribute(szFullName, pszFile, bRecurse, bDirectories,
-                                      dwMask, dwAttrib);
-        }
-        while (FindNextFileW(hFind, &findData));
-        FindClose(hFind);
+        EnumContext.FullPathBuffer[offFilePart] = L'\\';
+        EnumContext.FullPathBuffer[offFilePart + 1] = UNICODE_NULL;
+        offFilePart++;
     }
 
-    /* append file name */
-    wcscpy(pszFileName, pszFile);
-
-    /* search current directory */
-    hFind = FindFirstFileW(szFullName, &findData);
-    if (hFind == INVALID_HANDLE_VALUE)
-    {
-        return bFound;
-    }
-
-    do
-    {
-        bIsDir = findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-        bExactMatch = wcsicmp(findData.cFileName, pszFile) == 0;
-
-        if (bIsDir && !bDirectories && !bExactMatch)
-            continue;
-
-        if (!wcscmp(findData.cFileName, L".") ||
-            !wcscmp(findData.cFileName, L".."))
-        {
-            continue;
-        }
-
-        if (bRecurse && bIsDir && !bDirectories)
-            continue;
-
-        wcscpy(pszFileName, findData.cFileName);
-
-        dwAttribute = (findData.dwFileAttributes & ~dwMask) | dwAttrib;
-
-        SetFileAttributes(szFullName, dwAttribute);
-        bFound = TRUE;
-    }
-    while (FindNextFileW(hFind, &findData));
-    FindClose(hFind);
-
-    return bFound;
+    return EnumFilesWorker(&EnumContext, offFilePart);
 }
 
 int wmain(int argc, WCHAR *argv[])
 {
     INT i;
-    BOOL bRecurse = FALSE;
-    BOOL bDirectories = FALSE;
-    DWORD dwAttrib = 0;
-    DWORD dwMask = 0;
+    DWORD dwEnumFlags = 0;
+    ATTRIBS_MASKS AttribsMasks = {0};
     BOOL bFound = FALSE;
     PWSTR pszFileName;
     WCHAR szFilePath[MAX_PATH + 2] = L""; // + 2 to reserve an extra path separator and a NULL-terminator.
@@ -309,9 +331,9 @@ int wmain(int argc, WCHAR *argv[])
             else
             /* Retrieve the enumeration modes */
             if (wcsicmp(argv[i], L"/s") == 0)
-                bRecurse = TRUE;
+                dwEnumFlags |= ENUM_RECURSE;
             else if (wcsicmp(argv[i], L"/d") == 0)
-                bDirectories = TRUE;
+                dwEnumFlags |= ENUM_DIRECTORIES;
             else
             {
                 /* Unknown option */
@@ -334,36 +356,46 @@ int wmain(int argc, WCHAR *argv[])
             switch (towupper(argv[i][1]))
             {
                 case L'A':
-                    dwMask |= FILE_ATTRIBUTE_ARCHIVE;
+                    AttribsMasks.dwMask |= FILE_ATTRIBUTE_ARCHIVE;
                     if (bAdd)
-                        dwAttrib |= FILE_ATTRIBUTE_ARCHIVE;
+                        AttribsMasks.dwAttrib |= FILE_ATTRIBUTE_ARCHIVE;
                     else
-                        dwAttrib &= ~FILE_ATTRIBUTE_ARCHIVE;
+                        AttribsMasks.dwAttrib &= ~FILE_ATTRIBUTE_ARCHIVE;
                     break;
 
                 case L'S':
-                    dwMask |= FILE_ATTRIBUTE_SYSTEM;
+                    AttribsMasks.dwMask |= FILE_ATTRIBUTE_SYSTEM;
                     if (bAdd)
-                        dwAttrib |= FILE_ATTRIBUTE_SYSTEM;
+                        AttribsMasks.dwAttrib |= FILE_ATTRIBUTE_SYSTEM;
                     else
-                        dwAttrib &= ~FILE_ATTRIBUTE_SYSTEM;
+                        AttribsMasks.dwAttrib &= ~FILE_ATTRIBUTE_SYSTEM;
                     break;
 
                 case L'H':
-                    dwMask |= FILE_ATTRIBUTE_HIDDEN;
+                    AttribsMasks.dwMask |= FILE_ATTRIBUTE_HIDDEN;
                     if (bAdd)
-                        dwAttrib |= FILE_ATTRIBUTE_HIDDEN;
+                        AttribsMasks.dwAttrib |= FILE_ATTRIBUTE_HIDDEN;
                     else
-                        dwAttrib &= ~FILE_ATTRIBUTE_HIDDEN;
+                        AttribsMasks.dwAttrib &= ~FILE_ATTRIBUTE_HIDDEN;
                     break;
 
                 case L'R':
-                    dwMask |= FILE_ATTRIBUTE_READONLY;
+                    AttribsMasks.dwMask |= FILE_ATTRIBUTE_READONLY;
                     if (bAdd)
-                        dwAttrib |= FILE_ATTRIBUTE_READONLY;
+                        AttribsMasks.dwAttrib |= FILE_ATTRIBUTE_READONLY;
                     else
-                        dwAttrib &= ~FILE_ATTRIBUTE_READONLY;
+                        AttribsMasks.dwAttrib &= ~FILE_ATTRIBUTE_READONLY;
                     break;
+
+#ifdef EXTENDED_ATTRIBUTES
+                case L'I':
+                    AttribsMasks.dwMask |= FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
+                    if (bAdd)
+                        AttribsMasks.dwAttrib |= FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
+                    else
+                        AttribsMasks.dwAttrib &= ~FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
+                    break;
+#endif
 
                 default:
                     ConResPrintf(StdErr, STRING_ERROR_INVALID_PARAM_FORMAT, argv[i]);
@@ -380,19 +412,10 @@ int wmain(int argc, WCHAR *argv[])
     /* If no file specification was found, operate on all files of the current directory */
     if (!bFound)
     {
-        DWORD len = GetCurrentDirectoryW(_countof(szFilePath) - 2, szFilePath);
-        if (szFilePath[len - 1] != L'\\')
-        {
-            szFilePath[len] = L'\\';
-            szFilePath[len + 1] = UNICODE_NULL;
-        }
-        pszFileName = L"*.*";
+        GetCurrentDirectoryW(_countof(szFilePath) - 2, szFilePath);
+        pszFileName = ALL_FILES_PATTERN;
 
-        if (dwMask == 0)
-            bFound = PrintAttribute(szFilePath, pszFileName, bRecurse, bDirectories);
-        else
-            bFound = ChangeAttribute(szFilePath, pszFileName, bRecurse, bDirectories, dwMask, dwAttrib);
-
+        bFound = AttribEnumFiles(szFilePath, pszFileName, dwEnumFlags, &AttribsMasks);
         if (!bFound)
             ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, pszFileName);
 
@@ -419,11 +442,7 @@ int wmain(int argc, WCHAR *argv[])
             pszFileName = L"";
         }
 
-        if (dwMask == 0)
-            bFound = PrintAttribute(szFilePath, pszFileName, bRecurse, bDirectories);
-        else
-            bFound = ChangeAttribute(szFilePath, pszFileName, bRecurse, bDirectories, dwMask, dwAttrib);
-
+        bFound = AttribEnumFiles(szFilePath, pszFileName, dwEnumFlags, &AttribsMasks);
         if (!bFound)
             ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, argv[i]);
     }
