@@ -613,19 +613,4 @@ ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindAppsByPkgNameLi
     }
     return result;
 }
-
-const ATL::CStringW& CAvailableApps::GetFolderPath() const
-{
-    return m_Strings.szPath;
-}
-
-const ATL::CStringW& CAvailableApps::GetAppPath() const
-{
-    return m_Strings.szAppsPath;
-}
-
-const ATL::CStringW& CAvailableApps::GetCabPath() const
-{
-    return m_Strings.szCabPath;
-}
 // CAvailableApps
