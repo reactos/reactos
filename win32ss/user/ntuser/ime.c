@@ -94,7 +94,7 @@ NtUserDisableThreadIme(
     if (!IS_IMM_MODE())
     {
         EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return FALSE;
+        goto Quit;
     }
 
     ptiCurrent = GetW32ThreadInfo();
