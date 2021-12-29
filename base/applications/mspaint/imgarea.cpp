@@ -204,7 +204,10 @@ void CImgAreaWindow::cancelDrawing()
 LRESULT CImgAreaWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (drawing)
+    {
         cancelDrawing();
+        drawing = FALSE;
+    }
     return 0;
 }
 
