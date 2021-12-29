@@ -2,8 +2,7 @@
  * PROJECT:     Dr. Watson crash reporter
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     es-ES resource file
- * COPYRIGHT:   Copyright 2018 William Kent (wjk011 [at] gmail [dot] com)
- * TRANSLATOR:  Javier Fernández, aka "Elhoir" 2021 <elhoir AT gmail DOT com>
+ * COPYRIGHT:   Copyright 2021 Javier Fernández, aka "Elhoir" <elhoir AT gmail DOT com>
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
