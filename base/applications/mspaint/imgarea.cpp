@@ -193,21 +193,15 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 void CImgAreaWindow::cancelDrawing()
 {
-    if (drawing)
-    {
-        toolsModel.OnCancelDraw();
-        Invalidate(FALSE);
-        drawing = FALSE;
-    }
+    drawing = FALSE;
+    toolsModel.OnCancelDraw();
+    Invalidate(FALSE);
 }
 
 LRESULT CImgAreaWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (drawing)
-    {
         cancelDrawing();
-        drawing = FALSE;
-    }
     return 0;
 }
 
@@ -216,20 +210,9 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     if (wParam == VK_ESCAPE)
     {
         if (GetCapture() == m_hWnd)
-        {
             ReleaseCapture();
-        }
         else
-        {
-            switch (toolsModel.GetActiveTool())
-            {
-                case TOOL_SHAPE: case TOOL_BEZIER:
-                    cancelDrawing();
-                    break;
-                default:
-                    break;
-            }
-        }
+            cancelDrawing();
     }
     return 0;
 }
