@@ -43,7 +43,7 @@ public:
 
 /*******************************************************************/
 
-CDesktopThread::CDesktopThread(ITrayWindow* pTray) :
+CDesktopThread::CDesktopThread() :
     m_Tray(NULL),
     m_hEvent(NULL),
     m_hThread(NULL)
