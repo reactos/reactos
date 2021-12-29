@@ -415,13 +415,13 @@ struct TextTool : ToolBase
 };
 
 // TOOL_LINE
-struct LineTool : ToolBase
+struct LineTool : GenericDrawTool
 {
-    LineTool() : ToolBase(TOOL_LINE)
+    LineTool() : GenericDrawTool(TOOL_LINE)
     {
     }
 
-    void draw(BOOL bLeftButton, LONG x, LONG y)
+    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -430,29 +430,6 @@ struct LineTool : ToolBase
             Line(m_hdc, start.x, start.y, x, y, m_fg, toolsModel.GetLineWidth());
         else
             Line(m_hdc, start.x, start.y, x, y, m_bg, toolsModel.GetLineWidth());
-    }
-
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
-    {
-        imageModel.CopyPrevious();
-    }
-
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
-    {
-        draw(bLeftButton, x, y);
-    }
-
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
-    {
-        draw(bLeftButton, x, y);
-    }
-
-    void OnCancelDraw()
-    {
-        OnButtonUp(FALSE, 0, 0);
-        imageModel.Undo();
-        selectionModel.ResetPtStack();
-        ToolBase::OnCancelDraw();
     }
 };
 
@@ -519,13 +496,13 @@ struct BezierTool : ToolBase
 };
 
 // TOOL_RECT
-struct RectTool : ToolBase
+struct RectTool : GenericDrawTool
 {
-    RectTool() : ToolBase(TOOL_RECT)
+    RectTool() : GenericDrawTool(TOOL_RECT)
     {
     }
 
-    void draw(BOOL bLeftButton, LONG x, LONG y)
+    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -534,29 +511,6 @@ struct RectTool : ToolBase
             Rect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
         else
             Rect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-    }
-
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
-    {
-        imageModel.CopyPrevious();
-    }
-
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
-    {
-        draw(bLeftButton, x, y);
-    }
-
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
-    {
-        draw(bLeftButton, x, y);
-    }
-
-    void OnCancelDraw()
-    {
-        OnButtonUp(FALSE, 0, 0);
-        imageModel.Undo();
-        selectionModel.ResetPtStack();
-        ToolBase::OnCancelDraw();
     }
 };
 
@@ -637,13 +591,13 @@ struct ShapeTool : ToolBase
 };
 
 // TOOL_ELLIPSE
-struct EllipseTool : ToolBase
+struct EllipseTool : GenericDrawTool
 {
-    EllipseTool() : ToolBase(TOOL_ELLIPSE)
+    EllipseTool() : GenericDrawTool(TOOL_ELLIPSE)
     {
     }
 
-    void draw(BOOL bLeftButton, LONG x, LONG y)
+    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -653,39 +607,16 @@ struct EllipseTool : ToolBase
         else
             Ellp(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
     }
-
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
-    {
-        imageModel.CopyPrevious();
-    }
-
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
-    {
-        draw(bLeftButton, x, y);
-    }
-
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
-    {
-        draw(bLeftButton, x, y);
-    }
-
-    void OnCancelDraw()
-    {
-        OnButtonUp(FALSE, 0, 0);
-        imageModel.Undo();
-        selectionModel.ResetPtStack();
-        ToolBase::OnCancelDraw();
-    }
 };
 
 // TOOL_RRECT
-struct RRectTool : ToolBase
+struct RRectTool : GenericDrawTool
 {
-    RRectTool() : ToolBase(TOOL_RRECT)
+    RRectTool() : GenericDrawTool(TOOL_RRECT)
     {
     }
 
-    void draw(BOOL bLeftButton, LONG x, LONG y)
+    virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -694,29 +625,6 @@ struct RRectTool : ToolBase
             RRect(m_hdc, start.x, start.y, x, y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
         else
             RRect(m_hdc, start.x, start.y, x, y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
-    }
-
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
-    {
-        imageModel.CopyPrevious();
-    }
-
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
-    {
-        draw(bLeftButton, x, y);
-    }
-
-    void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
-    {
-        draw(bLeftButton, x, y);
-    }
-
-    void OnCancelDraw()
-    {
-        OnButtonUp(FALSE, 0, 0);
-        imageModel.Undo();
-        selectionModel.ResetPtStack();
-        ToolBase::OnCancelDraw();
     }
 };
 
