@@ -101,7 +101,7 @@ NtUserDisableThreadIme(
 
     if (dwThreadID == (DWORD)-1)
     {
-        ppi = pti->ppi;
+        ppi = ptiCurrent->ppi;
         ppi->W32PF_flags |= W32PF_DISABLEIME;
 
         for (pti = ppi->ptiList; pti; )
