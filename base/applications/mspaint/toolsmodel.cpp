@@ -26,12 +26,12 @@ ToolsModel::ToolsModel()
     m_pToolObject = getToolObject(m_activeTool);
 }
 
-ToolBase *ToolsModel::getToolObject(TOOLTYPE nActiveTool)
+ToolBase *ToolsModel::getToolObject(TOOLTYPE nTool)
 {
-    if (!m_pTools[nActiveTool])
-        m_pTools[nActiveTool] = ToolBase::createToolObject(nActiveTool);
+    if (!m_pTools[nTool])
+        m_pTools[nTool] = ToolBase::createToolObject(nTool);
 
-    return m_pTools[nActiveTool];
+    return m_pTools[nTool];
 }
 
 ToolsModel::~ToolsModel()
@@ -152,30 +152,30 @@ void ToolsModel::NotifyZoomChanged()
 
 void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
 {
-    m_pToolObject->begin();
+    m_pToolObject->beginEvent();
     m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
-    m_pToolObject->end();
+    m_pToolObject->endEvent();
 }
 
 void ToolsModel::OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
 {
-    m_pToolObject->begin();
+    m_pToolObject->beginEvent();
     m_pToolObject->OnMouseMove(bLeftButton, x, y);
-    m_pToolObject->end();
+    m_pToolObject->endEvent();
 }
 
 void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
 {
-    m_pToolObject->begin();
+    m_pToolObject->beginEvent();
     m_pToolObject->OnButtonUp(bLeftButton, x, y);
-    m_pToolObject->end();
+    m_pToolObject->endEvent();
 }
 
 void ToolsModel::OnCancelDraw()
 {
-    m_pToolObject->begin();
+    m_pToolObject->beginEvent();
     m_pToolObject->OnCancelDraw();
-    m_pToolObject->end();
+    m_pToolObject->endEvent();
 }
 
 void ToolsModel::resetTool()

@@ -39,7 +39,7 @@ struct ToolBase
     INT pointSP;
     POINT pointStack[256];
 
-    ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL), m_fg(0), m_bg(0)
+    ToolBase(TOOLTYPE tool) : m_tool(tool), m_hdc(NULL)
     {
         reset();
     }
@@ -53,14 +53,9 @@ struct ToolBase
     virtual void OnButtonUp(BOOL bLeftButton, LONG x, LONG y);
     virtual void OnCancelDraw();
 
-    void begin();
-    void end();
-
-    void reset()
-    {
-        pointSP = 0;
-        ZeroMemory(pointStack, sizeof(pointStack));
-    }
+    void beginEvent();
+    void endEvent();
+    void reset();
 
     static ToolBase* createToolObject(TOOLTYPE type);
 };
@@ -79,7 +74,7 @@ private:
     ToolBase *m_pTools[TOOL_MAX + 1];
     ToolBase *m_pToolObject;
 
-    ToolBase *getToolObject(TOOLTYPE nActiveTool);
+    ToolBase *getToolObject(TOOLTYPE nTool);
 
     void NotifyToolChanged();
     void NotifyToolSettingsChanged();

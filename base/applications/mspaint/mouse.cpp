@@ -76,17 +76,23 @@ void ToolBase::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
 
 void ToolBase::OnCancelDraw()
 {
-    pointSP = 0;
+    reset();
 }
 
-void ToolBase::begin()
+void ToolBase::reset()
+{
+    pointSP = 0;
+    ZeroMemory(pointStack, sizeof(pointStack));
+}
+
+void ToolBase::beginEvent()
 {
     m_hdc = imageModel.GetDC();
     m_fg = paletteModel.GetFgColor();
     m_bg = paletteModel.GetBgColor();
 }
 
-void ToolBase::end()
+void ToolBase::endEvent()
 {
     m_hdc = NULL;
 }
