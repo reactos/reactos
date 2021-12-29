@@ -56,13 +56,12 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
 {
     HANDLE Handles[2];
     
-    m_Tray = pTray;
-    
-    if (!m_Tray)
+    if (!pTray)
     {
         return E_FAIL;
     }
     
+    m_Tray = pTray;
     m_hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
     if (!m_hEvent)
