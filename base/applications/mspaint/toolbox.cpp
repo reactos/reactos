@@ -71,58 +71,42 @@ LRESULT CToolBox::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     return 0;
 }
 
+struct COMMAND_TO_TOOL
+{
+    UINT id;
+    TOOLTYPE tool;
+};
+
+static const COMMAND_TO_TOOL CommandToToolMapping[] =
+{
+    { ID_FREESEL, TOOL_FREESEL },
+    { ID_RECTSEL, TOOL_RECTSEL },
+    { ID_RUBBER, TOOL_RUBBER },
+    { ID_FILL, TOOL_FILL },
+    { ID_COLOR, TOOL_COLOR },
+    { ID_ZOOM, TOOL_ZOOM },
+    { ID_PEN, TOOL_PEN },
+    { ID_BRUSH, TOOL_BRUSH },
+    { ID_AIRBRUSH, TOOL_AIRBRUSH },
+    { ID_TEXT, TOOL_TEXT },
+    { ID_LINE, TOOL_LINE },
+    { ID_BEZIER, TOOL_BEZIER },
+    { ID_RECT, TOOL_RECT },
+    { ID_SHAPE, TOOL_SHAPE },
+    { ID_ELLIPSE, TOOL_ELLIPSE },
+    { ID_RRECT, TOOL_RRECT },
+};
+
 LRESULT CToolBox::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    switch (LOWORD(wParam))
+    UINT id = LOWORD(wParam);
+    for (size_t i = 0; i < _countof(CommandToToolMapping); ++i)
     {
-        case ID_FREESEL:
-            toolsModel.SetActiveTool(TOOL_FREESEL);
+        if (CommandToToolMapping[i].id == id)
+        {
+            toolsModel.SetActiveTool(CommandToToolMapping[i].tool);
             break;
-        case ID_RECTSEL:
-            toolsModel.SetActiveTool(TOOL_RECTSEL);
-            break;
-        case ID_RUBBER:
-            toolsModel.SetActiveTool(TOOL_RUBBER);
-            break;
-        case ID_FILL:
-            toolsModel.SetActiveTool(TOOL_FILL);
-            break;
-        case ID_COLOR:
-            toolsModel.SetActiveTool(TOOL_COLOR);
-            break;
-        case ID_ZOOM:
-            toolsModel.SetActiveTool(TOOL_ZOOM);
-            break;
-        case ID_PEN:
-            toolsModel.SetActiveTool(TOOL_PEN);
-            break;
-        case ID_BRUSH:
-            toolsModel.SetActiveTool(TOOL_BRUSH);
-            break;
-        case ID_AIRBRUSH:
-            toolsModel.SetActiveTool(TOOL_AIRBRUSH);
-            break;
-        case ID_TEXT:
-            toolsModel.SetActiveTool(TOOL_TEXT);
-            break;
-        case ID_LINE:
-            toolsModel.SetActiveTool(TOOL_LINE);
-            break;
-        case ID_BEZIER:
-            toolsModel.SetActiveTool(TOOL_BEZIER);
-            break;
-        case ID_RECT:
-            toolsModel.SetActiveTool(TOOL_RECT);
-            break;
-        case ID_SHAPE:
-            toolsModel.SetActiveTool(TOOL_SHAPE);
-            break;
-        case ID_ELLIPSE:
-            toolsModel.SetActiveTool(TOOL_ELLIPSE);
-            break;
-        case ID_RRECT:
-            toolsModel.SetActiveTool(TOOL_RRECT);
-            break;
+        }
     }
     return 0;
 }
@@ -131,5 +115,17 @@ LRESULT CToolBox::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lPara
 {
     selectionWindow.ShowWindow(SW_HIDE);
     toolsModel.resetTool(); // resets the point-buffer of the polygon and bezier functions
+
+    // Check the toolbar button
+    TOOLTYPE tool = toolsModel.GetActiveTool();
+    for (size_t i = 0; i < _countof(CommandToToolMapping); ++i)
+    {
+        if (CommandToToolMapping[i].tool == tool)
+        {
+            toolbar.SendMessage(TB_CHECKBUTTON, CommandToToolMapping[i].id, TRUE);
+            break;
+        }
+    }
+
     return 0;
 }

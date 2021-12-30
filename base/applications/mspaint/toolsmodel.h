@@ -75,6 +75,7 @@ private:
     int m_shapeStyle;
     int m_brushStyle;
     TOOLTYPE m_activeTool;
+    TOOLTYPE m_oldActiveTool;
     int m_airBrushWidth;
     int m_rubberRadius;
     BOOL m_transpBg;
@@ -98,6 +99,7 @@ public:
     int GetBrushStyle() const;
     void SetBrushStyle(int nBrushStyle);
     TOOLTYPE GetActiveTool() const;
+    TOOLTYPE GetOldActiveTool() const;
     void SetActiveTool(TOOLTYPE nActiveTool);
     int GetAirBrushWidth() const;
     void SetAirBrushWidth(int nAirBrushWidth);

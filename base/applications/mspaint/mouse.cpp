@@ -288,15 +288,11 @@ struct ColorTool : ToolBase
             tempColor = RGB(255, 255, 255); // Outside is white
 
         if (bLeftButton)
-        {
-            if (tempColor != CLR_INVALID)
-                paletteModel.SetFgColor(tempColor);
-        }
+            paletteModel.SetFgColor(tempColor);
         else
-        {
-            if (tempColor != CLR_INVALID)
-                paletteModel.SetBgColor(tempColor);
-        }
+            paletteModel.SetBgColor(tempColor);
+
+        toolsModel.SetActiveTool(toolsModel.GetOldActiveTool());
     }
 };
 

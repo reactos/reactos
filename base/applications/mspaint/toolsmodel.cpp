@@ -17,7 +17,7 @@ ToolsModel::ToolsModel()
     m_lineWidth = 1;
     m_shapeStyle = 0;
     m_brushStyle = 0;
-    m_activeTool = TOOL_PEN;
+    m_oldActiveTool = m_activeTool = TOOL_PEN;
     m_airBrushWidth = 5;
     m_rubberRadius = 4;
     m_transpBg = FALSE;
@@ -81,8 +81,16 @@ TOOLTYPE ToolsModel::GetActiveTool() const
     return m_activeTool;
 }
 
+TOOLTYPE ToolsModel::GetOldActiveTool() const
+{
+    return m_oldActiveTool;
+}
+
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
+    if (nActiveTool == TOOL_COLOR && m_activeTool != TOOL_COLOR)
+        m_oldActiveTool = m_activeTool;
+
     m_activeTool = nActiveTool;
     m_pToolObject = GetOrCreateTool(m_activeTool);
     NotifyToolChanged();
