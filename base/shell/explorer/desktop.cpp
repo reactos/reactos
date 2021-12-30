@@ -54,11 +54,15 @@ CDesktopThread::~CDesktopThread() { }
 
 HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
 {
-    HANDLE Handles[2];
-    
     if (!pTray)
     {
         return E_FAIL;
+    }
+    
+    /* Re-initialize if already initialized. */
+    if (m_hEvent || m_hThread)
+    {
+        Destroy();
     }
     
     m_Tray = pTray;
@@ -79,6 +83,8 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
         
         return E_FAIL;
     }
+    
+    HANDLE Handles[2];
 
     Handles[0] = m_hThread;
     Handles[1] = m_hEvent;
@@ -115,11 +121,15 @@ void CDesktopThread::Destroy()
         }
         
         CloseHandle(m_hThread);
+        
+        m_hThread = NULL;
     }
     
     if (m_hEvent)
     {
         CloseHandle(m_hEvent);
+        
+        m_hEvent = NULL;
     }
 }
 
