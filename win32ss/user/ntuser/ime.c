@@ -128,6 +128,8 @@ NtUserDisableThreadIme(
         else
         {
             pti = IntTID2PTI(UlongToHandle(dwThreadID));
+
+            /* The thread needs to reside in the current process. */
             if (!pti || pti->ppi != ptiCurrent->ppi)
                 goto Quit;
         }
