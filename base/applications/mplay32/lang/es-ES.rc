@@ -51,7 +51,7 @@ BEGIN
     IDS_MODE_PAUSE       "Pausado"
     IDS_MODE_RECORD      "Grabando"
     IDS_MODE_SEEK        "Buscando"
-    IDS_MODE_NOT_READY   "No Preparado"
+    IDS_MODE_NOT_READY   "No está listo"
     IDS_ALL_TYPES_FILTER "Todos los archivos soportados"
     IDS_TOOLTIP_PLAY     "Reproducir"
     IDS_TOOLTIP_STOP     "Detener"
