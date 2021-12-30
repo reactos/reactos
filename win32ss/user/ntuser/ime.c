@@ -112,7 +112,7 @@ NtUserDisableThreadIme(
             {
                 co_UserDestroyWindow(pti->spwndDefaultIme);
                 pti->spwndDefaultIme = NULL;
-                pti = ptiCurrent->ppi->ptiList;
+                pti = ppi->ptiList;
                 continue;
             }
 
