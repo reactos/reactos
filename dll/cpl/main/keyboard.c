@@ -196,7 +196,6 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                     HDC hDC = GetDC(hwndDlg);
                     HBRUSH hBrush = GetSysColorBrush(COLOR_BTNTEXT);
                     FillRect(hDC, &pSpeedData->rcCursor, hBrush);
-                    DeleteObject(hBrush);
                     ReleaseDC(hwndDlg, hDC);
                 }
                 else

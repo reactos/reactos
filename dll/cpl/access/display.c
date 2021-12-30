@@ -209,7 +209,6 @@ DisplayPageProc(HWND hwndDlg,
                         HDC hDC = GetDC(hwndDlg);
                         HBRUSH hBrush = GetSysColorBrush(COLOR_BTNTEXT);
                         FillRect(hDC, &pGlobalData->rcCaret, hBrush);
-                        DeleteObject(hBrush);
                         ReleaseDC(hwndDlg, hDC);
                     }
                     else
@@ -229,7 +228,6 @@ DisplayPageProc(HWND hwndDlg,
                     HDC hDC = GetDC(hwndDlg);
                     HBRUSH hBrush = GetSysColorBrush(COLOR_BTNTEXT);
                     FillRect(hDC, &pGlobalData->rcCaret, hBrush);
-                    DeleteObject(hBrush);
                     ReleaseDC(hwndDlg, hDC);
                 }
                 else
