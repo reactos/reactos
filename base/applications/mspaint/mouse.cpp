@@ -547,8 +547,6 @@ struct ShapeTool : ToolBase
         else
         {
             draw(bLeftButton, x, y, bDoubleClick);
-            if (bDoubleClick)
-                reset();
         }
     }
 

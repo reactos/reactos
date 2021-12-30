@@ -173,6 +173,7 @@ LRESULT CImgAreaWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
     ReleaseCapture();
     INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
     toolsModel.OnButtonDown(TRUE, UnZoomed(x), UnZoomed(y), TRUE);
+    toolsModel.resetTool();
     Invalidate(FALSE);
     return 0;
 }
@@ -193,6 +194,7 @@ LRESULT CImgAreaWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam,
     ReleaseCapture();
     INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
     toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), TRUE);
+    toolsModel.resetTool();
     Invalidate(FALSE);
     return 0;
 }
