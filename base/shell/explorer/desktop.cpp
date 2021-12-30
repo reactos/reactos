@@ -60,9 +60,9 @@ CDesktopThread::~CDesktopThread()
 
 HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
 {
-    HANDLE Handles[2];
     HANDLE hEvent;
     HANDLE hThread;
+    HANDLE Handles[2];
     
     if (!pTray)
     {
