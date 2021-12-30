@@ -50,41 +50,51 @@ CDesktopThread::CDesktopThread() :
 {
 }
 
-CDesktopThread::~CDesktopThread() { }
-
-HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
+CDesktopThread::~CDesktopThread()
 {
     if (m_hEvent || m_hThread)
     {
-        /* Destroy previous initialization. */
         Destroy();
     }
+}
+
+HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
+{
+    HANDLE Handles[2];
+    HANDLE hEvent;
+    HANDLE hThread;
     
     if (!pTray)
     {
         return E_FAIL;
     }
     
-    m_Tray = pTray;
-    m_hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
-    if (!m_hEvent)
+    if (!hEvent)
     {
         return E_FAIL;
     }
 
-    m_hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (LPVOID)this, 0, NULL);
+    hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (LPVOID)this, CREATE_SUSPENDED, NULL);
 
-    if (!m_hThread)
+    if (!hThread)
     {   
-        CloseHandle(m_hEvent);
-        
-        m_hEvent = NULL;
+        CloseHandle(hEvent);
         
         return E_FAIL;
     }
     
-    HANDLE Handles[2];
+    if (m_hEvent || m_hThread)
+    {
+        Destroy();
+    }
+    
+    m_Tray = pTray;
+    m_hEvent = hEvent;
+    m_hThread = hThread;
+    
+    ResumeThread(hThread);
 
     Handles[0] = m_hThread;
     Handles[1] = m_hEvent;
