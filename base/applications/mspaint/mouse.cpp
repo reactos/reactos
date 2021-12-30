@@ -538,7 +538,7 @@ struct ShapeTool : ToolBase
     {
         pointStack[pointSP].x = x;
         pointStack[pointSP].y = y;
-        if (pointSP == 0)
+        if (pointSP == 0 && !bDoubleClick)
         {
             imageModel.CopyPrevious();
             draw(bLeftButton, x, y);
@@ -546,7 +546,9 @@ struct ShapeTool : ToolBase
         }
         else
         {
-            draw(bLeftButton, x, y);
+            draw(bLeftButton, x, y, bDoubleClick);
+            if (bDoubleClick)
+                reset();
         }
     }
 

@@ -167,12 +167,32 @@ LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     return 0;
 }
 
+LRESULT CImgAreaWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    drawing = FALSE;
+    ReleaseCapture();
+    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+    toolsModel.OnButtonDown(TRUE, UnZoomed(x), UnZoomed(y), TRUE);
+    Invalidate(FALSE);
+    return 0;
+}
+
 LRESULT CImgAreaWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     drawing = TRUE;
     SetCapture();
     INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
     toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), FALSE);
+    Invalidate(FALSE);
+    return 0;
+}
+
+LRESULT CImgAreaWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    drawing = FALSE;
+    ReleaseCapture();
+    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+    toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), TRUE);
     Invalidate(FALSE);
     return 0;
 }
