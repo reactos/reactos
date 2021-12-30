@@ -10,6 +10,7 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
+#define INVALID_THREAD_ID  0xFFFFFFFF
 
 UINT FASTCALL
 IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -99,7 +100,7 @@ NtUserDisableThreadIme(
 
     ptiCurrent = GetW32ThreadInfo();
 
-    if (dwThreadID == (DWORD)-1)
+    if (dwThreadID == INVALID_THREAD_ID)
     {
         ppi = ptiCurrent->ppi;
         ppi->W32PF_flags |= W32PF_DISABLEIME;
