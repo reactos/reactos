@@ -54,15 +54,15 @@ CDesktopThread::~CDesktopThread() { }
 
 HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
 {
-    if (!pTray)
-    {
-        return E_FAIL;
-    }
-    
     if (m_hEvent || m_hThread)
     {
         /* Destroy previous initialization. */
         Destroy();
+    }
+    
+    if (!pTray)
+    {
+        return E_FAIL;
     }
     
     m_Tray = pTray;
