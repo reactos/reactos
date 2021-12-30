@@ -105,7 +105,8 @@ NtUserDisableThreadIme(
         ppi = ptiCurrent->ppi;
         ppi->W32PF_flags |= W32PF_DISABLEIME;
 
-        for (pti = ppi->ptiList; pti; )
+Retry:
+        for (pti = ppi->ptiList; pti; pti = pti->ptiSibling)
         {
             pti->TIF_flags |= TIF_DISABLEIME;
 
@@ -113,11 +114,8 @@ NtUserDisableThreadIme(
             {
                 co_UserDestroyWindow(pti->spwndDefaultIme);
                 pti->spwndDefaultIme = NULL;
-                pti = ppi->ptiList;
-                continue;
+                goto Retry;
             }
-
-            pti = pti->ptiSibling;
         }
     }
     else
