@@ -345,15 +345,17 @@ HRESULT WINAPI SHCreateDefaultExtractIcon(REFIID riid, void **ppv)
  * Currently (march 2018) our shell does not handle IExtractIconW with an invalid path,
  * so this (wrong) implementation actually works better for us.
  */
-EXTERN_C HRESULT
+EXTERN_C
+HRESULT
 WINAPI
-SHCreateFileExtractIconW(LPCWSTR pszPath,
-                         DWORD dwFileAttributes,
-                         REFIID riid,
-                         void **ppv)
+SHCreateFileExtractIconW(
+    _In_ LPCWSTR pszFile,
+    _In_ DWORD dwFileAttributes,
+    _In_ REFIID riid,
+    _Outptr_ void **ppv)
 {
     SHFILEINFOW shfi;
-    ULONG_PTR firet = SHGetFileInfoW(pszPath, dwFileAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_ICONLOCATION);
+    ULONG_PTR firet = SHGetFileInfoW(pszFile, dwFileAttributes, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_ICONLOCATION);
     HRESULT hr = E_FAIL;
     if (firet)
     {
@@ -373,4 +375,3 @@ SHCreateFileExtractIconW(LPCWSTR pszPath,
 
     return hr;
 }
-
