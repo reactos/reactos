@@ -3,10 +3,11 @@
  * LICENSE:     GPL v2 - See COPYING in the top level directory
  * FILE:        lib/recyclebin/recyclebin_v5_enumerator.c
  * PURPOSE:     Enumerates contents of a MS Windows 2000/XP/2003 recyclebin
- * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS: Copyright 2006-2007 HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "recyclebin_private.h"
+#include <shobjidl.h>
 
 struct RecycleBin5File
 {
@@ -16,6 +17,12 @@ struct RecycleBin5File
     IRecycleBinFile recycleBinFileImpl;
     WCHAR FullName[ANY_SIZE];
 };
+
+EXTERN_C HRESULT WINAPI SHCreateFileExtractIconW(LPCWSTR pszPath, DWORD dwFileAttributes, REFIID riid, void **ppv);
+static HRESULT STDMETHODCALLTYPE
+RecycleBin5File_RecycleBinFile_GetAttributes(
+    IN IRecycleBinFile *This,
+    OUT DWORD *pAttributes);
 
 static HRESULT STDMETHODCALLTYPE
 RecycleBin5File_RecycleBinFile_QueryInterface(
@@ -34,6 +41,14 @@ RecycleBin5File_RecycleBinFile_QueryInterface(
         *ppvObject = &s->recycleBinFileImpl;
     else if (IsEqualIID(riid, &IID_IRecycleBinFile))
         *ppvObject = &s->recycleBinFileImpl;
+    else if (IsEqualIID(riid, &IID_IExtractIconA) || IsEqualIID(riid, &IID_IExtractIconW))
+    {
+        DWORD dwAttributes;
+        if (RecycleBin5File_RecycleBinFile_GetAttributes(This, &dwAttributes) == S_OK)
+            return SHCreateFileExtractIconW(s->FullName, (dwAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL, riid, ppvObject);
+        else
+            return S_FALSE;
+    }
     else
     {
         *ppvObject = NULL;
