@@ -380,19 +380,18 @@ HRESULT WINAPI CRecycleBinItemContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO l
         if (!Context.bFound)
             return E_FAIL;
 
-        if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))
-        {
-            /* restore file */
-            if (RestoreFile(Context.hDeletedFile))
-                return S_OK;
-            else
-                return E_FAIL;
-        }
+        BOOL ret = TRUE;
+
+        /* restore file */
+        if (lpcmi->lpVerb == MAKEINTRESOURCEA(1)) 
+            ret = RestoreFile(Context.hDeletedFile);
+        /* delete file */
         else
-        {
             DeleteFileHandleToRecycleBin(Context.hDeletedFile);
-            return E_NOTIMPL;
-        }
+
+        CloseRecycleBinHandle(Context.hDeletedFile);
+
+        return (ret ? S_OK : E_FAIL);
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(3))
     {
