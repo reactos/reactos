@@ -176,6 +176,13 @@ LRESULT CScrollboxWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 LRESULT CScrollboxWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     selectionWindow.ShowWindow(SW_HIDE);
+
+    if (toolsModel.GetActiveTool() == TOOL_SHAPE)
+    {
+        toolsModel.OnButtonDown(TRUE, -1, -1, TRUE); // Finish the shape
+        imageArea.Invalidate();
+    }
+
     toolsModel.resetTool();  // resets the point-buffer of the polygon and bezier functions
     return 0;
 }
