@@ -802,7 +802,6 @@ UNINSTALL="Uninstall"
 REPAIR="Repair"
 TEST="Test"
 
-
 ; LANG_GERMAN SUBLANG_NEUTRAL
 [Strings.0007]
 ;; In shell32.dll
@@ -842,7 +841,6 @@ CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
 ;UNINSTALL="Uninstall"
 ;REPAIR="Repair"
 ;TEST="Test"
-
 
 ; LANG_SPANISH SUBLANG_NEUTRAL
 [Strings.000A]
@@ -884,7 +882,6 @@ UNINSTALL="Desinstalar"
 REPAIR="Reparar"
 TEST="Probar"
 
-
 ; LANG_FRENCH SUBLANG_NEUTRAL
 [Strings.000C]
 ;; In shell32.dll
@@ -924,7 +921,6 @@ INSTALL="Installer"
 UNINSTALL="Désinstaller"
 REPAIR="Réparer"
 TEST="Tester"
-
 
 ; LANG_ITALIAN SUBLANG_NEUTRAL
 [Strings.0010]
@@ -966,7 +962,6 @@ UNINSTALL="Rimuovi"
 REPAIR="Ripara"
 TEST="Prova"
 
-
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
 ;; In shell32.dll
@@ -1006,7 +1001,6 @@ INSTALL="Zainstaluj"
 UNINSTALL="Odinstaluj"
 REPAIR="Napraw"
 TEST="Testuj"
-
 
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]
@@ -1048,7 +1042,6 @@ UNINSTALL="Dezinstalează"
 REPAIR="Repară"
 TEST="Testează"
 
-
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
 ;; In shell32.dll
@@ -1089,7 +1082,6 @@ UNINSTALL="Удалить"
 REPAIR="Исправить"
 TEST="Тест"
 
-
 ; LANG_CHINESE SUBLANG_CHINESE_TRADITIONAL
 [Strings.0404]
 ;; In shell32.dll
@@ -1129,7 +1121,6 @@ INSTALL="安裝"
 UNINSTALL="解除安裝"
 REPAIR="修復"
 TEST="測試"
-
 
 ; LANG_TURKISH SUBLANG_DEFAULT
 [Strings.041F]
@@ -1172,7 +1163,7 @@ CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 ;TEST="Dene"
 
 ; LANG_CHINESE SUBLANG_CHINESE_HONGKONG
-[Strings.0c04]
+[Strings.0C04]
 ;; In shell32.dll
 CPLFILE_OPENWITH="以控制台開啟"
 

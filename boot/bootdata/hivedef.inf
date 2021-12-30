@@ -2208,7 +2208,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
-
 ; LANG_BULGARIAN SUBLANG_NEUTRAL
 [Strings.0002]
 EVENT_LABEL_0 = "Default Beep"
@@ -2276,7 +2275,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Местни настройки\Временни"
-
 
 ; LANG_CZECH SUBLANG_NEUTRAL
 [Strings.0005]
@@ -2346,7 +2344,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Výchozí velikost"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
-
 ; LANG_DANISH SUBLANG_NEUTRAL
 [Strings.0006]
 EVENT_LABEL_0 = "Default Beep"
@@ -2414,7 +2411,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Lokale Indstillinger\Temp"
-
 
 ; LANG_GERMAN SUBLANG_NEUTRAL
 [Strings.0007]
@@ -2484,7 +2480,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Standardgröße"
 TEMP_DIR="%USERPROFILE%\Lokale Einstellungen\Temp"
 
-
 ; LANG_GREEK SUBLANG_NEUTRAL
 [Strings.0008]
 EVENT_LABEL_0 = "Default Beep"
@@ -2552,7 +2547,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
-
 
 ; LANG_SPANISH SUBLANG_NEUTRAL
 [Strings.000A]
@@ -2622,7 +2616,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Tamaño predeterminado"
 TEMP_DIR="%USERPROFILE%\Configuración local\Temp"
 
-
 ; LANG_FINNISH SUBLANG_NEUTRAL
 [Strings.000B]
 EVENT_LABEL_0 = "Default Beep"
@@ -2690,7 +2683,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Paikalliset Asetukset\Temp"
-
 
 ; LANG_FRENCH SUBLANG_NEUTRAL
 [Strings.000C]
@@ -2760,7 +2752,6 @@ DESKTOP_SCHEME_22="Bleu, blanc, rouge"
 DESKTOP_SCHEME_SIZE_0="Taille par défaut"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
-
 ; LANG_HUNGARIAN SUBLANG_NEUTRAL
 [Strings.000E]
 EVENT_LABEL_0 = "Default Beep"
@@ -2828,7 +2819,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
-
 
 ; LANG_ITALIAN SUBLANG_NEUTRAL
 [Strings.0010]
@@ -2898,7 +2888,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Impostazioni locali\Temp"
 
-
 ; LANG_JAPANESE SUBLANG_NEUTRAL
 [Strings.0011]
 EVENT_LABEL_0 = "既定の警告音"
@@ -2966,7 +2955,6 @@ DESKTOP_SCHEME_21="小麦"
 DESKTOP_SCHEME_22="赤・白・青"
 DESKTOP_SCHEME_SIZE_0="デフォルトのサイズ"
 TEMP_DIR="%USERPROFILE%\ローカル設定\Temp"
-
 
 ; LANG_DUTCH SUBLANG_NEUTRAL
 [Strings.0013]
@@ -3036,7 +3024,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
-
 ; LANG_NORWEGIAN SUBLANG_NEUTRAL
 [Strings.0014]
 EVENT_LABEL_0 = "Default Beep"
@@ -3104,7 +3091,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Lokale innstillinger\Midlertidig"
-
 
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
@@ -3174,7 +3160,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Domyślny rozmiar"
 TEMP_DIR="%USERPROFILE%\Ustawienia lokalne\Temp"
 
-
 ; LANG_PORTUGUESE SUBLANG_NEUTRAL
 [Strings.0016]
 EVENT_LABEL_0 = "Alarme predefinido"
@@ -3242,7 +3227,6 @@ DESKTOP_SCHEME_21="Trigo"
 DESKTOP_SCHEME_22="Vermelho, branco e azul"
 DESKTOP_SCHEME_SIZE_0="Tamanho predefinido"
 TEMP_DIR="%USERPROFILE%\Configurações locais\Temp"
-
 
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]
@@ -3312,7 +3296,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Dimensiune implicită"
 TEMP_DIR="%USERPROFILE%\Preferințe locale\Temp"
 
-
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
 EVENT_LABEL_0 = "Звук по умолчанию"
@@ -3380,7 +3363,6 @@ DESKTOP_SCHEME_21="Пшеница"
 DESKTOP_SCHEME_22="Красный, белый, и голубой"
 DESKTOP_SCHEME_SIZE_0="Размер по умолчанию"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
-
 
 ; LANG_SLOVAK SUBLANG_NEUTRAL
 [Strings.001B]
@@ -3518,7 +3500,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Cilësimet lokale\Përk"
 
-
 ; LANG_SWEDISH SUBLANG_NEUTRAL
 [Strings.001D]
 EVENT_LABEL_0 = "Default Beep"
@@ -3586,7 +3567,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Lokala inställningar\Temp"
-
 
 ; LANG_THAI SUBLANG_NEUTRAL
 [Strings.001E]
@@ -3792,7 +3772,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Setelan Lokal\Temp"
 
-
 ; LANG_UKRAINIAN SUBLANG_NEUTRAL
 [Strings.0022]
 EVENT_LABEL_0 = "Default Beep"
@@ -3860,7 +3839,6 @@ DESKTOP_SCHEME_21="Пшениця"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
-
 
 ; LANG_LITHUANIAN SUBLANG_NEUTRAL
 [Strings.0027]
@@ -3999,7 +3977,7 @@ DESKTOP_SCHEME_SIZE_0="預設大小"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
 ; LANG_TURKISH SUBLANG_NEUTRAL
-[Strings.041f]
+[Strings.041F]
 EVENT_LABEL_0 = "Varsayılan Bipleme"
 EVENT_LABEL_1 = "Program hatası"
 EVENT_LABEL_2 = "Programı kapat"
@@ -4065,6 +4043,74 @@ DESKTOP_SCHEME_21="Buğday"
 DESKTOP_SCHEME_22="Kırmızı, Beyaz ve Mavi"
 DESKTOP_SCHEME_SIZE_0="Varsayılan Büyüklük"
 TEMP_DIR="%USERPROFILE%\Yerel Ayarlar\Geçici Dosyalar"
+
+; LANG_BASQUE SUBLANG_NEUTRAL
+[Strings.042D]
+EVENT_LABEL_0 = "Default Beep"
+EVENT_LABEL_1 = "Program error"
+EVENT_LABEL_2 = "Close program"
+EVENT_LABEL_3 = "Critical Battery Alarm"
+EVENT_LABEL_4 = "Device Connect"
+EVENT_LABEL_5 = "Device Disconnect"
+EVENT_LABEL_6 = "Device Failed to Connect"
+EVENT_LABEL_7 = "Empty Recycle Bin"
+EVENT_LABEL_8 = "Low Battery Alarm"
+EVENT_LABEL_9 = "Maximize"
+EVENT_LABEL_10 = "Menu command"
+EVENT_LABEL_11 = "Menu popup"
+EVENT_LABEL_12 = "Minimize"
+EVENT_LABEL_13 = "New Mail Notification"
+EVENT_LABEL_14 = "Start Navigation"
+EVENT_LABEL_15 = "Open program"
+EVENT_LABEL_16 = "Print Complete"
+EVENT_LABEL_17 = "Restore Down"
+EVENT_LABEL_18 = "Restore Up"
+EVENT_LABEL_19 = "Asterisk"
+EVENT_LABEL_20 = "Exclamation"
+EVENT_LABEL_21 = "Exit ReactOS"
+EVENT_LABEL_22 = "Critical Stop"
+EVENT_LABEL_23 = "System Notification"
+EVENT_LABEL_24 = "Question"
+EVENT_LABEL_25 = "Start ReactOS"
+EVENT_LABEL_26 = "ReactOS Logoff"
+EVENT_LABEL_27 = "ReactOS Logon"
+POWERCFG_NAME_0="Equipo doméstico o de oficina"
+POWERCFG_DESC_0="Este perfil es ideal para gran parte de los usuarios domésticos que dejan el equipo encendido todo el día."
+POWERCFG_NAME_1="Portátil"
+POWERCFG_DESC_1="Este perfil economiza la vida útil de la batería en portátiles que estén de viaje."
+POWERCFG_NAME_2="Presentación"
+POWERCFG_DESC_2="Este perfil mantiene el monitor encendido para hacer presentaciones."
+POWERCFG_NAME_3="Siempre encendido"
+POWERCFG_DESC_3="Este perfil mantiene el equipo siempre encendido para que pueda accederse desde la red. Útil a falta de hardware de arranque por red."
+POWERCFG_NAME_4="Alto rendimiento"
+POWERCFG_DESC_4="Este perfil mantiene el equipo funcionando de forma permanente y lo optimiza para un rendimiento óptimo."
+POWERCFG_NAME_5="Batería máxima"
+POWERCFG_DESC_5="Este perfil proporciona el máximo ahorro energético a costa de un rendimiento mínimo."
+DESKTOP_SCHEME_0="ReactOS estándar"
+DESKTOP_SCHEME_1="Ladrillo"
+DESKTOP_SCHEME_2="Berenjena"
+DESKTOP_SCHEME_3="Verde oliva"
+DESKTOP_SCHEME_4="Alto contraste 1"
+DESKTOP_SCHEME_5="Alto contraste 2"
+DESKTOP_SCHEME_6="Alto contraste oscuro"
+DESKTOP_SCHEME_7="Alto contraste claro"
+DESKTOP_SCHEME_8="Lila"
+DESKTOP_SCHEME_9="Arce"
+DESKTOP_SCHEME_10="Marino"
+DESKTOP_SCHEME_11="Ciruela"
+DESKTOP_SCHEME_12="Calabaza"
+DESKTOP_SCHEME_13="Días de lluvia"
+DESKTOP_SCHEME_14="ReactOS clásico"
+DESKTOP_SCHEME_15="Rosa"
+DESKTOP_SCHEME_16="Arenisca"
+DESKTOP_SCHEME_17="Cielo"
+DESKTOP_SCHEME_18="Pizarra"
+DESKTOP_SCHEME_19="Tormenta"
+DESKTOP_SCHEME_20="Verde turquesa"
+DESKTOP_SCHEME_21="Trigo"
+DESKTOP_SCHEME_22="Red, White, and Blue"
+DESKTOP_SCHEME_SIZE_0="Tamaño predeterminado"
+TEMP_DIR="%USERPROFILE%\Lokal konfigurazioa\\Temp"
 
 ; Simplified Chinese (LANG_CHINESE SUBLANG_CHINESE_SIMPLIFIED)
 [Strings.0804]
@@ -4135,7 +4181,7 @@ DESKTOP_SCHEME_SIZE_0="默认大小"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
 ; Hong Kong Chinese (LANG_CHINESE SUBLANG_CHINESE_HONGKONG)
-[Strings.0c04]
+[Strings.0C04]
 EVENT_LABEL_0 = "預設嗶嗶聲"
 EVENT_LABEL_1 = "程式錯誤"
 EVENT_LABEL_2 = "關閉程式"
@@ -4201,75 +4247,5 @@ DESKTOP_SCHEME_21="麥色"
 DESKTOP_SCHEME_22="紅、白、藍色"
 DESKTOP_SCHEME_SIZE_0="預設大小"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
-
-
-; LANG_BASQUE SUBLANG_NEUTRAL
-[Strings.042D]
-EVENT_LABEL_0 = "Default Beep"
-EVENT_LABEL_1 = "Program error"
-EVENT_LABEL_2 = "Close program"
-EVENT_LABEL_3 = "Critical Battery Alarm"
-EVENT_LABEL_4 = "Device Connect"
-EVENT_LABEL_5 = "Device Disconnect"
-EVENT_LABEL_6 = "Device Failed to Connect"
-EVENT_LABEL_7 = "Empty Recycle Bin"
-EVENT_LABEL_8 = "Low Battery Alarm"
-EVENT_LABEL_9 = "Maximize"
-EVENT_LABEL_10 = "Menu command"
-EVENT_LABEL_11 = "Menu popup"
-EVENT_LABEL_12 = "Minimize"
-EVENT_LABEL_13 = "New Mail Notification"
-EVENT_LABEL_14 = "Start Navigation"
-EVENT_LABEL_15 = "Open program"
-EVENT_LABEL_16 = "Print Complete"
-EVENT_LABEL_17 = "Restore Down"
-EVENT_LABEL_18 = "Restore Up"
-EVENT_LABEL_19 = "Asterisk"
-EVENT_LABEL_20 = "Exclamation"
-EVENT_LABEL_21 = "Exit ReactOS"
-EVENT_LABEL_22 = "Critical Stop"
-EVENT_LABEL_23 = "System Notification"
-EVENT_LABEL_24 = "Question"
-EVENT_LABEL_25 = "Start ReactOS"
-EVENT_LABEL_26 = "ReactOS Logoff"
-EVENT_LABEL_27 = "ReactOS Logon"
-POWERCFG_NAME_0="Equipo doméstico o de oficina"
-POWERCFG_DESC_0="Este perfil es ideal para gran parte de los usuarios domésticos que dejan el equipo encendido todo el día."
-POWERCFG_NAME_1="Portátil"
-POWERCFG_DESC_1="Este perfil economiza la vida útil de la batería en portátiles que estén de viaje."
-POWERCFG_NAME_2="Presentación"
-POWERCFG_DESC_2="Este perfil mantiene el monitor encendido para hacer presentaciones."
-POWERCFG_NAME_3="Siempre encendido"
-POWERCFG_DESC_3="Este perfil mantiene el equipo siempre encendido para que pueda accederse desde la red. Útil a falta de hardware de arranque por red."
-POWERCFG_NAME_4="Alto rendimiento"
-POWERCFG_DESC_4="Este perfil mantiene el equipo funcionando de forma permanente y lo optimiza para un rendimiento óptimo."
-POWERCFG_NAME_5="Batería máxima"
-POWERCFG_DESC_5="Este perfil proporciona el máximo ahorro energético a costa de un rendimiento mínimo."
-DESKTOP_SCHEME_0="ReactOS estándar"
-DESKTOP_SCHEME_1="Ladrillo"
-DESKTOP_SCHEME_2="Berenjena"
-DESKTOP_SCHEME_3="Verde oliva"
-DESKTOP_SCHEME_4="Alto contraste 1"
-DESKTOP_SCHEME_5="Alto contraste 2"
-DESKTOP_SCHEME_6="Alto contraste oscuro"
-DESKTOP_SCHEME_7="Alto contraste claro"
-DESKTOP_SCHEME_8="Lila"
-DESKTOP_SCHEME_9="Arce"
-DESKTOP_SCHEME_10="Marino"
-DESKTOP_SCHEME_11="Ciruela"
-DESKTOP_SCHEME_12="Calabaza"
-DESKTOP_SCHEME_13="Días de lluvia"
-DESKTOP_SCHEME_14="ReactOS clásico"
-DESKTOP_SCHEME_15="Rosa"
-DESKTOP_SCHEME_16="Arenisca"
-DESKTOP_SCHEME_17="Cielo"
-DESKTOP_SCHEME_18="Pizarra"
-DESKTOP_SCHEME_19="Tormenta"
-DESKTOP_SCHEME_20="Verde turquesa"
-DESKTOP_SCHEME_21="Trigo"
-DESKTOP_SCHEME_22="Red, White, and Blue"
-DESKTOP_SCHEME_SIZE_0="Tamaño predeterminado"
-TEMP_DIR="%USERPROFILE%\Lokal konfigurazioa\\Temp"
-
 
 ; EOF
