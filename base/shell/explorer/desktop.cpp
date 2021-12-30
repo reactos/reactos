@@ -59,9 +59,9 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
         return E_FAIL;
     }
     
-    /* Re-initialize if already initialized. */
     if (m_hEvent || m_hThread)
     {
+        /* Destroy previous initialization. */
         Destroy();
     }
     
