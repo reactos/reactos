@@ -88,8 +88,19 @@ TOOLTYPE ToolsModel::GetOldActiveTool() const
 
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
-    if (nActiveTool == TOOL_COLOR && m_activeTool != TOOL_COLOR)
-        m_oldActiveTool = m_activeTool;
+    switch (m_activeTool)
+    {
+        case TOOL_FREESEL:
+        case TOOL_RECTSEL:
+        case TOOL_RUBBER:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_TEXT:
+            break;
+        default:
+            m_oldActiveTool = m_activeTool;
+            break;
+    }
 
     m_activeTool = nActiveTool;
     m_pToolObject = GetOrCreateTool(m_activeTool);
