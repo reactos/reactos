@@ -3,7 +3,7 @@
  * LICENSE:     GPL v2 - See COPYING in the top level directory
  * FILE:        lib/recyclebin/recyclebin_v5_enumerator.c
  * PURPOSE:     Enumerates contents of a MS Windows 2000/XP/2003 recyclebin
- * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS: Copyright 2006-2007 HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "recyclebin_private.h"
@@ -211,6 +211,43 @@ RecycleBin5File_RecycleBinFile_GetFileName(
 }
 
 static HRESULT STDMETHODCALLTYPE
+RecycleBin5File_RecycleBinFile_GetTypeName(
+    IN IRecycleBinFile *This,
+    IN SIZE_T BufferSize,
+    IN OUT LPWSTR Buffer,
+    OUT SIZE_T *RequiredSize)
+{
+    HRESULT hr;
+
+    struct RecycleBin5File *s = CONTAINING_RECORD(This, struct RecycleBin5File, recycleBinFileImpl);
+    DWORD dwRequired;
+    DWORD dwAttributes;
+    SHFILEINFOW shFileInfo;
+
+    TRACE("(%p, %u, %p, %p)\n", This, BufferSize, Buffer, RequiredSize);
+
+    hr = RecycleBin5File_RecycleBinFile_GetAttributes(This, &dwAttributes);
+    if (!SUCCEEDED(hr))
+        return hr;
+
+    hr = SHGetFileInfoW(s->FullName, dwAttributes, &shFileInfo, sizeof(shFileInfo), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES);
+    if (!SUCCEEDED(hr))
+        return hr;
+
+    dwRequired = (DWORD)(wcslen(shFileInfo.szTypeName) + 1) * sizeof(WCHAR);
+    if (RequiredSize)
+        *RequiredSize = dwRequired;
+
+    if (BufferSize == 0 && !Buffer)
+        return S_OK;
+
+    if (BufferSize < dwRequired)
+        return E_OUTOFMEMORY;
+    CopyMemory(Buffer, shFileInfo.szTypeName, dwRequired);
+    return S_OK;
+}
+
+static HRESULT STDMETHODCALLTYPE
 RecycleBin5File_RecycleBinFile_Delete(
     IN IRecycleBinFile *This)
 {
@@ -239,6 +276,7 @@ CONST_VTBL struct IRecycleBinFileVtbl RecycleBin5FileVtbl =
     RecycleBin5File_RecycleBinFile_GetPhysicalFileSize,
     RecycleBin5File_RecycleBinFile_GetAttributes,
     RecycleBin5File_RecycleBinFile_GetFileName,
+    RecycleBin5File_RecycleBinFile_GetTypeName,
     RecycleBin5File_RecycleBinFile_Delete,
     RecycleBin5File_RecycleBinFile_Restore,
 };

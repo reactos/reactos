@@ -39,14 +39,14 @@ typedef struct
 
 static const columninfo RecycleBinColumns[] =
 {
-    {IDS_SHV_COLUMN_NAME,        &FMTID_Storage,   PID_STG_NAME,       SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
-    {IDS_SHV_COLUMN_DELFROM, &FMTID_Displaced, PID_DISPLACED_FROM, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  30},
-    {IDS_SHV_COLUMN_DELDATE, &FMTID_Displaced, PID_DISPLACED_DATE, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
-    {IDS_SHV_COLUMN_SIZE,        &FMTID_Storage,   PID_STG_SIZE,       SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_RIGHT, 20},
-    {IDS_SHV_COLUMN_TYPE,        &FMTID_Storage,   PID_STG_STORAGETYPE, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  20},
-    {IDS_SHV_COLUMN_MODIFIED,        &FMTID_Storage,   PID_STG_WRITETIME,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  20},
-    /*    {"creation time",  &FMTID_Storage,   PID_STG_CREATETIME, SHCOLSTATE_TYPE_DATE,                        LVCFMT_LEFT,  20}, */
-    /*    {"attribs",        &FMTID_Storage,   PID_STG_ATTRIBUTES, SHCOLSTATE_TYPE_STR,                         LVCFMT_LEFT,  20},       */
+    {IDS_SHV_COLUMN_NAME,     &FMTID_Storage,   PID_STG_NAME,        SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  25},
+    {IDS_SHV_COLUMN_DELFROM,  &FMTID_Displaced, PID_DISPLACED_FROM,  SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  35},
+    {IDS_SHV_COLUMN_DELDATE,  &FMTID_Displaced, PID_DISPLACED_DATE,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  15},
+    {IDS_SHV_COLUMN_SIZE,     &FMTID_Storage,   PID_STG_SIZE,        SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_RIGHT, 10},
+    {IDS_SHV_COLUMN_TYPE,     &FMTID_Storage,   PID_STG_STORAGETYPE, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT,  LVCFMT_LEFT,  15},
+    {IDS_SHV_COLUMN_MODIFIED, &FMTID_Storage,   PID_STG_WRITETIME,   SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT,  15},
+    /* {"creation time",  &FMTID_Storage,   PID_STG_CREATETIME, SHCOLSTATE_TYPE_DATE, LVCFMT_LEFT,  20}, */
+    /* {"attribs",        &FMTID_Storage,   PID_STG_ATTRIBUTES, SHCOLSTATE_TYPE_STR,  LVCFMT_LEFT,  20}, */
 };
 
 #define COLUMN_NAME    0
@@ -746,21 +746,26 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
             FormatDateTime(buffer, MAX_PATH, &pFileDetails->LastModification);
             break;
         case COLUMN_TYPE:
-            // FIXME: We should in fact use a UNICODE version of _ILGetFileType
-            szTypeName[0] = L'\0';
-            wcscpy(buffer, PathFindExtensionW(pFileDetails->szName));
-            if (!( HCR_MapTypeToValueW(buffer, buffer, _countof(buffer), TRUE) &&
-                    HCR_MapTypeToValueW(buffer, szTypeName, _countof(szTypeName), FALSE )))
             {
-                /* load localized file string */
-                szTypeName[0] = '\0';
-                if(LoadStringW(shell32_hInstance, IDS_ANY_FILE, szTypeName, _countof(szTypeName)))
+                SEARCH_CONTEXT Context;
+                Context.pFileDetails = pFileDetails;
+                Context.bFound = FALSE;
+                EnumerateRecycleBinW(NULL, CBSearchRecycleBin, (PVOID)&Context);
+
+                if (Context.bFound)
                 {
-                    szTypeName[63] = '\0';
+                    GetDeletedFileTypeNameW(Context.hDeletedFile, buffer, _countof(buffer), NULL);
+
+                    CloseRecycleBinHandle(Context.hDeletedFile);
+                }
+                /* load localized file string */
+                else if (LoadStringW(shell32_hInstance, IDS_ANY_FILE, szTypeName, _countof(szTypeName)))
+                {
                     StringCchPrintfW(buffer, _countof(buffer), szTypeName, PathFindExtensionW(pFileDetails->szName));
                 }
+
+                return SHSetStrRet(&pDetails->str, buffer);
             }
-            return SHSetStrRet(&pDetails->str, szTypeName);
         default:
             return E_FAIL;
     }

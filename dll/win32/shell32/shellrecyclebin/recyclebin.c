@@ -3,7 +3,7 @@
  * LICENSE:     GPL v2 - See COPYING in the top level directory
  * FILE:        lib/recyclebin/recyclebin.c
  * PURPOSE:     Public interface
- * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS: Copyright 2006-2007 HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "recyclebin_private.h"
@@ -245,6 +245,32 @@ cleanup:
         IRecycleBinEnumList_Release(prbel);
     if (SUCCEEDED(hr))
         return TRUE;
+    if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
+        SetLastError(HRESULT_CODE(hr));
+    else
+        SetLastError(ERROR_GEN_FAILURE);
+    return FALSE;
+}
+
+BOOL WINAPI
+GetDeletedFileTypeNameW(
+    IN HANDLE hDeletedFile,
+    OUT LPWSTR pTypeName,
+    IN DWORD BufferSize,
+    OUT LPDWORD RequiredSize OPTIONAL)
+{
+    IRecycleBinFile *prbf = (IRecycleBinFile *)hDeletedFile;
+    SIZE_T FinalSize;
+
+    HRESULT hr = IRecycleBinFile_GetTypeName(prbf, BufferSize, pTypeName, &FinalSize);
+
+    if (SUCCEEDED(hr))
+    {
+        if (RequiredSize)
+            *RequiredSize = (DWORD)FinalSize;
+
+        return TRUE;
+    }
     if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
         SetLastError(HRESULT_CODE(hr));
     else

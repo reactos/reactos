@@ -234,7 +234,7 @@ RecycleBin5_RecycleBin5_DeleteFile(
         return HRESULT_FROM_WIN32(ERROR_INVALID_NAME);
     }
 
-    hFile = CreateFileW(szFullName, 0, 0, NULL, OPEN_EXISTING, 0, NULL);
+    hFile = CreateFileW(szFullName, 0, 0, NULL, OPEN_EXISTING, (dwAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FILE_FLAG_BACKUP_SEMANTICS : 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         hr = HRESULT_FROM_WIN32(GetLastError());
