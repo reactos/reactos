@@ -28,6 +28,9 @@ extern KMUTANT MmSystemLoadLock;
 
 extern ULONG MmNumberOfPagingFiles;
 
+extern SIZE_T MmTotalNonPagedPoolQuota;
+extern SIZE_T MmTotalPagedPoolQuota;
+
 extern PVOID MmUnloadedDrivers;
 extern PVOID MmLastUnloadedDrivers;
 extern PVOID MmTriageActionTaken;
@@ -52,6 +55,14 @@ struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
 typedef ULONG_PTR SWAPENTRY;
+
+//
+// Pool Quota values
+//
+#define MI_QUOTA_NON_PAGED_NEEDED_PAGES             64
+#define MI_NON_PAGED_QUOTA_MIN_RESIDENT_PAGES       200
+#define MI_CHARGE_PAGED_POOL_QUOTA                  0x80000
+#define MI_CHARGE_NON_PAGED_POOL_QUOTA              0x10000
 
 //
 // Special IRQL value (found in assertions)
@@ -646,12 +657,21 @@ MiFreePoolPages(
 
 /* pool.c *******************************************************************/
 
+_Requires_lock_held_(PspQuotaLock)
 BOOLEAN
 NTAPI
-MiRaisePoolQuota(
-    IN POOL_TYPE PoolType,
-    IN ULONG CurrentMaxQuota,
-    OUT PULONG NewMaxQuota
+MmRaisePoolQuota(
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T CurrentMaxQuota,
+    _Out_ PSIZE_T NewMaxQuota
+);
+
+_Requires_lock_held_(PspQuotaLock)
+VOID
+NTAPI
+MmReturnPoolQuota(
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T QuotaToReturn
 );
 
 /* mdl.c *********************************************************************/
