@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <atlcoll.h>
+
 enum TOOLTYPE
 {
     TOOL_FREESEL  =  1,
@@ -68,6 +70,50 @@ struct ToolBase
     static ToolBase* createToolObject(TOOLTYPE type);
 };
 
+template <typename T>
+struct AutoPtr
+{
+    T *m_ptr;
+
+    AutoPtr() : m_ptr(NULL)
+    {
+    }
+
+    AutoPtr(T *ptr) : m_ptr(ptr)
+    {
+    }
+
+    AutoPtr& operator=(T *ptr)
+    {
+        if (m_ptr != ptr)
+        {
+            delete m_ptr;
+            m_ptr = ptr;
+        }
+        return *this;
+    }
+
+    ~AutoPtr()
+    {
+        delete m_ptr;
+    }
+
+    operator T*() const
+    {
+        return m_ptr;
+    }
+
+    T* operator->() const
+    {
+        return m_ptr;
+    }
+
+    T& operator*() const
+    {
+        return *m_ptr;
+    }
+};
+
 class ToolsModel
 {
 private:
@@ -80,7 +126,7 @@ private:
     int m_rubberRadius;
     BOOL m_transpBg;
     int m_zoom;
-    ToolBase *m_pTools[TOOL_MAX + 1];
+    CAtlArray<AutoPtr<ToolBase> > m_tools;
     ToolBase *m_pToolObject;
 
     ToolBase *GetOrCreateTool(TOOLTYPE nTool);
@@ -91,7 +137,6 @@ private:
 
 public:
     ToolsModel();
-    ~ToolsModel();
     int GetLineWidth() const;
     void SetLineWidth(int nLineWidth);
     int GetShapeStyle() const;

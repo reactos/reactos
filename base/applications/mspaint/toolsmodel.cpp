@@ -22,25 +22,16 @@ ToolsModel::ToolsModel()
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
-    ZeroMemory(m_pTools, sizeof(m_pTools));
+    m_tools.SetCount(TOOL_MAX + 1);
     m_pToolObject = GetOrCreateTool(m_activeTool);
 }
 
 ToolBase *ToolsModel::GetOrCreateTool(TOOLTYPE nTool)
 {
-    if (!m_pTools[nTool])
-        m_pTools[nTool] = ToolBase::createToolObject(nTool);
+    if (!m_tools[nTool])
+        m_tools[nTool] = ToolBase::createToolObject(nTool);
 
-    return m_pTools[nTool];
-}
-
-ToolsModel::~ToolsModel()
-{
-    for (size_t i = 0; i < _countof(m_pTools); ++i)
-    {
-        delete m_pTools[i];
-        m_pTools[i] = NULL;
-    }
+    return m_tools[nTool];
 }
 
 int ToolsModel::GetLineWidth() const
