@@ -201,7 +201,7 @@ public:
 };
 
 class CAppsListView :
-    public CUiWindow<CListView>
+    public CUiWindow<CWindowImpl<CAppsListView, CListView>>
 {
     struct SortContext
     {
@@ -221,11 +221,20 @@ class CAppsListView :
     APPLICATION_VIEW_TYPE ApplicationViewType = AppViewTypeEmpty;
 
     HIMAGELIST m_hImageListView = NULL;
+    CStringW m_Watermark;
+
+    BEGIN_MSG_MAP(CAppsListView)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+    END_MSG_MAP()
+
+
+    LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 public:
     CAppsListView();
     ~CAppsListView();
 
+    VOID SetWatermark(const CStringW& Text);
     VOID SetCheckboxesVisible(BOOL bIsVisible);
 
     VOID ColumnClick(LPNMLISTVIEW pnmv);
@@ -372,6 +381,8 @@ public:
 
     BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID param);
     BOOL AddAvailableApplication(CAvailableApplicationInfo *AvlbAppInfo, BOOL InitCheckState, LPVOID param);
+    VOID SetWatermark(const CStringW& Text);
+
 
     void CheckAll();
     PVOID GetFocusedItemData();
