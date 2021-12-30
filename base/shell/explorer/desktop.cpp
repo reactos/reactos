@@ -69,6 +69,11 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
         return E_FAIL;
     }
     
+    if (m_hEvent || m_hThread)
+    {
+        return E_FAIL;
+    }
+    
     hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
     if (!hEvent)
@@ -83,11 +88,6 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
         CloseHandle(hEvent);
         
         return E_FAIL;
-    }
-    
-    if (m_hEvent || m_hThread)
-    {
-        Destroy();
     }
     
     m_Tray = pTray;
