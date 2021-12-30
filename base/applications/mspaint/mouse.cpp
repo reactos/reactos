@@ -280,7 +280,13 @@ struct ColorTool : ToolBase
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
-        COLORREF tempColor = GetPixel(m_hdc, x, y);
+        COLORREF tempColor;
+
+        if (0 <= x && x < imageModel.GetWidth() && 0 <= y && y < imageModel.GetHeight())
+            tempColor = GetPixel(m_hdc, x, y);
+        else
+            tempColor = RGB(255, 255, 255); // Outside is white
+
         if (bLeftButton)
         {
             if (tempColor != CLR_INVALID)
