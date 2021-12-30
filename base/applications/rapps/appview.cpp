@@ -1127,6 +1127,30 @@ CAppsListView::~CAppsListView()
     }
 }
 
+LRESULT
+CAppsListView::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    LRESULT lRes = this->DefWindowProc(uMsg, wParam, lParam);
+    if (!m_Watermark.IsEmpty())
+    {
+        RECT rc;
+        GetClientRect(&rc);
+        HGDIOBJ oldFont = SelectFont(HDC(wParam), GetStockFont(DEFAULT_GUI_FONT));
+        DrawShadowText(
+            HDC(wParam), m_Watermark.GetString(), m_Watermark.GetLength(), &rc,
+            DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE, GetSysColor(COLOR_GRAYTEXT),
+            GetSysColor(COLOR_GRAYTEXT), 1, 1);
+        SelectFont(HDC(wParam), oldFont);
+    }
+    return lRes;
+}
+
+VOID CAppsListView::SetWatermark(const CStringW& Text)
+{
+    m_Watermark = Text;
+}
+
+
 VOID CAppsListView::SetCheckboxesVisible(BOOL bIsVisible)
 {
     if (bIsVisible)
@@ -1278,6 +1302,12 @@ HWND CAppsListView::Create(HWND hwndParent)
     // currently, this two Imagelist is the same one.
     SetImageList(m_hImageListView, LVSIL_SMALL);
     SetImageList(m_hImageListView, LVSIL_NORMAL);
+
+#pragma push_macro("SubclassWindow")
+#undef SubclassWindow
+    m_hWnd = NULL;
+    SubclassWindow(hwnd);
+#pragma pop_macro("SubclassWindow")
 
     return hwnd;
 }
@@ -2013,6 +2043,13 @@ BOOL CApplicationView::AddAvailableApplication(CAvailableApplicationInfo *AvlbAp
         return FALSE;
     }
     return m_ListView->AddAvailableApplication(AvlbAppInfo, InitCheckState, param);
+}
+
+VOID CApplicationView::SetWatermark(const CStringW& Text)
+{
+    ATLASSERT(GetItemCount() == 0);
+
+    m_ListView->SetWatermark(Text);
 }
 
 void CApplicationView::CheckAll()

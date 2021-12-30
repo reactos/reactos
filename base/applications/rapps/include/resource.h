@@ -123,6 +123,7 @@
 #define IDS_APP_DISPLAY_DETAILS  133
 #define IDS_APP_DISPLAY_LIST     134
 #define IDS_APP_DISPLAY_TILE     135
+#define IDS_NO_SEARCH_RESULTS    136
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200
