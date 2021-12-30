@@ -114,7 +114,7 @@ Retry:
             {
                 co_UserDestroyWindow(pti->spwndDefaultIme);
                 pti->spwndDefaultIme = NULL;
-                goto Retry;
+                goto Retry; /* The contents of ppi->ptiList may be changed. */
             }
         }
     }
