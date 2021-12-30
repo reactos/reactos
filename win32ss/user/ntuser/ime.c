@@ -10,7 +10,7 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
-#define INVALID_THREAD_ID  0xFFFFFFFF
+#define INVALID_THREAD_ID  ((ULONG)-1)
 
 UINT FASTCALL
 IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
