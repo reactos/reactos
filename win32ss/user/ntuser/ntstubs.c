@@ -680,7 +680,7 @@ NtUserQueryInputContext(
 
         case 2:
             if (ptiIMC->spwndDefaultIme)
-                ret = (DWORD_PTR)ptiIMC->spwndDefaultIme->head.h;
+                ret = (DWORD_PTR)UserHMGetHandle(ptiIMC->spwndDefaultIme);
             break;
 
         case 3:
