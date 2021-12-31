@@ -22,8 +22,15 @@ ToolsModel::ToolsModel()
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
-    m_tools.SetCount(TOOL_MAX + 1);
+    for (size_t i = 0; i < TOOL_MAX + 1; ++i)
+        m_tools.Add(NULL);
     m_pToolObject = GetOrCreateTool(m_activeTool);
+}
+
+ToolsModel::~ToolsModel()
+{
+    for (size_t i = 0; i < TOOL_MAX + 1; ++i)
+        delete m_tools[i];
 }
 
 ToolBase *ToolsModel::GetOrCreateTool(TOOLTYPE nTool)

@@ -177,10 +177,15 @@ LRESULT CScrollboxWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
 {
     selectionWindow.ShowWindow(SW_HIDE);
 
-    if (toolsModel.GetActiveTool() == TOOL_SHAPE)
+    switch (toolsModel.GetActiveTool())
     {
-        toolsModel.OnButtonDown(TRUE, -1, -1, TRUE); // Finish the shape
-        imageArea.Invalidate();
+        case TOOL_SHAPE:
+        case TOOL_BEZIER:
+            toolsModel.OnButtonDown(TRUE, -1, -1, TRUE); // Finish the shape
+            imageArea.Invalidate();
+            break;
+        default:
+            break;
     }
 
     toolsModel.resetTool();  // resets the point-buffer of the polygon and bezier functions

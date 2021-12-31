@@ -232,9 +232,14 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     if (wParam == VK_ESCAPE)
     {
         if (GetCapture() == m_hWnd)
+        {
             ReleaseCapture();
+        }
         else
-            cancelDrawing();
+        {
+            if (drawing || ToolBase::pointSP != 0)
+                cancelDrawing();
+        }
     }
     return 0;
 }

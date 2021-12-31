@@ -462,8 +462,11 @@ struct BezierTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
-        pointStack[pointSP].x = x;
-        pointStack[pointSP].y = y;
+        if (!(x == -1 && y == -1))
+        {
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+        }
         if (pointSP == 0)
         {
             imageModel.CopyPrevious();
