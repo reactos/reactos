@@ -349,7 +349,7 @@ NtUserSetSysColors(
 BOOL APIENTRY UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
 {
     PTHREADINFO pti = GetW32ThreadInfo();
-    PTHREADINFO ptiIMC = UserHMGetHandle(pIMC);
+    PTHREADINFO ptiIMC = pIMC->head.pti;
 
     if (pti->ppi != ptiIMC->ppi)
         return FALSE;
