@@ -80,7 +80,7 @@ private:
     int m_rubberRadius;
     BOOL m_transpBg;
     int m_zoom;
-    CSimpleArray<ToolBase*> m_tools;
+    ToolBase* m_tools[TOOL_MAX + 1];
     ToolBase *m_pToolObject;
 
     ToolBase *GetOrCreateTool(TOOLTYPE nTool);

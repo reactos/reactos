@@ -22,8 +22,7 @@ ToolsModel::ToolsModel()
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
-    for (size_t i = 0; i < TOOL_MAX + 1; ++i)
-        m_tools.Add(NULL);
+    ZeroMemory(&m_tools, sizeof(m_tools));
     m_pToolObject = GetOrCreateTool(m_activeTool);
 }
 
