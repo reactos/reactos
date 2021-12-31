@@ -647,14 +647,51 @@ Quit:
     return Status;
 }
 
-DWORD
+DWORD_PTR
 APIENTRY
 NtUserQueryInputContext(
     HIMC hIMC,
-    DWORD dwUnknown2)
+    DWORD dwType)
 {
-    TRACE("NtUserQueryInputContext(%p, 0x%lX)\n", hIMC, dwUnknown2);
-    return 0;
+    PIMC pIMC;
+    PTHREADINFO ptiIMC;
+    DWORD_PTR ret = 0;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+        goto Quit;
+
+    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (!pIMC)
+        goto Quit;
+
+    ptiIMC = pIMC->head.pti;
+
+    switch (dwType)
+    {
+    case 0:
+        ret = (DWORD_PTR)PsGetThreadProcessId(ptiIMC->pEThread);
+        break;
+
+    case 1:
+        ret = (DWORD_PTR)PsGetThreadId(ptiIMC->pEThread);
+        break;
+
+    case 2:
+        if (ptiIMC->spwndDefaultIme)
+            ret = (DWORD_PTR)ptiIMC->spwndDefaultIme->head.h;
+        break;
+
+    case 3:
+        if (ptiIMC->spDefaultImc)
+            ret = (DWORD_PTR)ptiIMC->spDefaultImc->head.h;
+        break;
+    }
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 BOOL

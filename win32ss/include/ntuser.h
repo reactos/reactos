@@ -2877,11 +2877,11 @@ NtUserQueryInformationThread(
     OUT PVOID ThreadInformation,
     IN ULONG ThreadInformationLength);
 
-DWORD
+DWORD_PTR
 NTAPI
 NtUserQueryInputContext(
     HIMC hIMC,
-    DWORD dwUnknown2);
+    DWORD dwType);
 
 DWORD
 NTAPI
