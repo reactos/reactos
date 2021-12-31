@@ -670,20 +670,20 @@ NtUserQueryInputContext(
 
     switch (dwType)
     {
-        case 0:
+        case QIC_INPUTPROCESSID:
             ret = (DWORD_PTR)PsGetThreadProcessId(ptiIMC->pEThread);
             break;
 
-        case 1:
+        case QIC_INPUTTHREADID:
             ret = (DWORD_PTR)PsGetThreadId(ptiIMC->pEThread);
             break;
 
-        case 2:
+        case QIC_DEFAULTWINDOWIME:
             if (ptiIMC->spwndDefaultIme)
                 ret = (DWORD_PTR)UserHMGetHandle(ptiIMC->spwndDefaultIme);
             break;
 
-        case 3:
+        case QIC_DEFAULTIMC:
             if (ptiIMC->spDefaultImc)
                 ret = (DWORD_PTR)UserHMGetHandle(ptiIMC->spDefaultImc);
             break;
