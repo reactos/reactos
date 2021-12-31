@@ -670,23 +670,23 @@ NtUserQueryInputContext(
 
     switch (dwType)
     {
-    case 0:
-        ret = (DWORD_PTR)PsGetThreadProcessId(ptiIMC->pEThread);
-        break;
+        case 0:
+            ret = (DWORD_PTR)PsGetThreadProcessId(ptiIMC->pEThread);
+            break;
 
-    case 1:
-        ret = (DWORD_PTR)PsGetThreadId(ptiIMC->pEThread);
-        break;
+        case 1:
+            ret = (DWORD_PTR)PsGetThreadId(ptiIMC->pEThread);
+            break;
 
-    case 2:
-        if (ptiIMC->spwndDefaultIme)
-            ret = (DWORD_PTR)ptiIMC->spwndDefaultIme->head.h;
-        break;
+        case 2:
+            if (ptiIMC->spwndDefaultIme)
+                ret = (DWORD_PTR)ptiIMC->spwndDefaultIme->head.h;
+            break;
 
-    case 3:
-        if (ptiIMC->spDefaultImc)
-            ret = (DWORD_PTR)ptiIMC->spDefaultImc->head.h;
-        break;
+        case 3:
+            if (ptiIMC->spDefaultImc)
+                ret = (DWORD_PTR)ptiIMC->spDefaultImc->head.h;
+            break;
     }
 
 Quit:
