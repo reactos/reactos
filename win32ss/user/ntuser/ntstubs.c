@@ -363,7 +363,8 @@ BOOL APIENTRY UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
             break;
 
         case UIC_IMEWINDOW:
-            pIMC->hImeWnd = (HWND)dwValue;
+            if (ValidateHwndNoErr((HWND)dwValue))
+                pIMC->hImeWnd = (HWND)dwValue;
             break;
 
         default:
