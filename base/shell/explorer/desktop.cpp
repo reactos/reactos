@@ -191,7 +191,7 @@ DWORD WINAPI CDesktopThread::s_DesktopThreadProc(LPVOID lpParameter)
 /*******************************************************************/
 
 HANDLE
-DesktopCreateWindow(IN OUT ITrayWindow* Tray)
+DesktopCreateWindow(IN OUT ITrayWindow *Tray)
 {
     CDesktopThread* pDesktopThread = new CDesktopThread();
 
