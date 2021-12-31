@@ -467,6 +467,7 @@ struct BezierTool : ToolBase
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
         }
+
         if (pointSP == 0)
         {
             imageModel.CopyPrevious();
