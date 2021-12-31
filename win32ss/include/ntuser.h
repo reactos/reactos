@@ -2038,10 +2038,10 @@ NTAPI
 NtUserDestroyWindow(
     HWND Wnd);
 
-DWORD
+BOOL
 NTAPI
 NtUserDisableThreadIme(
-    DWORD dwUnknown1);
+    DWORD dwThreadID);
 
 LRESULT
 NTAPI

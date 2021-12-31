@@ -10,6 +10,7 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
+#define INVALID_THREAD_ID  ((ULONG)-1)
 
 UINT FASTCALL
 IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -80,14 +81,72 @@ NtUserCheckImeHotKey(
     return 0;
 }
 
-
-DWORD
+BOOL
 APIENTRY
 NtUserDisableThreadIme(
-    DWORD dwUnknown1)
+    DWORD dwThreadID)
 {
-    STUB;
-    return 0;
+    PTHREADINFO pti, ptiCurrent;
+    PPROCESSINFO ppi;
+    BOOL ret = FALSE;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+    {
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        goto Quit;
+    }
+
+    ptiCurrent = GetW32ThreadInfo();
+
+    if (dwThreadID == INVALID_THREAD_ID)
+    {
+        ppi = ptiCurrent->ppi;
+        ppi->W32PF_flags |= W32PF_DISABLEIME;
+
+Retry:
+        for (pti = ppi->ptiList; pti; pti = pti->ptiSibling)
+        {
+            pti->TIF_flags |= TIF_DISABLEIME;
+
+            if (pti->spwndDefaultIme)
+            {
+                co_UserDestroyWindow(pti->spwndDefaultIme);
+                pti->spwndDefaultIme = NULL;
+                goto Retry; /* The contents of ppi->ptiList may be changed. */
+            }
+        }
+    }
+    else
+    {
+        if (dwThreadID == 0)
+        {
+            pti = ptiCurrent;
+        }
+        else
+        {
+            pti = IntTID2PTI(UlongToHandle(dwThreadID));
+
+            /* The thread needs to reside in the current process. */
+            if (!pti || pti->ppi != ptiCurrent->ppi)
+                goto Quit;
+        }
+
+        pti->TIF_flags |= TIF_DISABLEIME;
+
+        if (pti->spwndDefaultIme)
+        {
+            co_UserDestroyWindow(pti->spwndDefaultIme);
+            pti->spwndDefaultIme = NULL;
+        }
+    }
+
+    ret = TRUE;
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 DWORD

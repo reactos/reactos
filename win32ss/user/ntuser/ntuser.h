@@ -4,7 +4,7 @@
 #define RETURN(value) { _ret_ = value; goto _cleanup_; }
 #define CLEANUP /*unreachable*/ ASSERT(FALSE); _cleanup_
 #define END_CLEANUP return _ret_;
-
+#define IS_IMM_MODE() (gpsi && (gpsi->dwSRVIFlags & SRVINFO_IMM32))
 
 #define UserEnterCo UserEnterExclusive
 #define UserLeaveCo UserLeave
