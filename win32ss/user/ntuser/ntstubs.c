@@ -346,7 +346,7 @@ NtUserSetSysColors(
    return Ret;
 }
 
-BOOL APIENTRY UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
+BOOL FASTCALL UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
 {
     PTHREADINFO pti = GetW32ThreadInfo();
     PTHREADINFO ptiIMC = pIMC->head.pti;
