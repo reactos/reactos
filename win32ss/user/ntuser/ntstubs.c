@@ -422,28 +422,35 @@ PIMC APIENTRY UserCreateInputContext(ULONG_PTR dwClientImcData)
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
     PDESKTOP pdesk = pti->rpdesk;
 
-    if (!IS_IMM_MODE() || (pti->TIF_flags & TIF_DISABLEIME) || !pdesk)
+    if (!IS_IMM_MODE() || (pti->TIF_flags & TIF_DISABLEIME)) // Disabled?
         return NULL;
 
+    if (!pdesk) // No desktop?
+        return NULL;
+
+    // pti->spDefaultImc should be already set if non-first time.
     if (dwClientImcData && !pti->spDefaultImc)
         return NULL;
 
+    // Create an input context user object.
     pIMC = UserCreateObject(gHandleTable, pdesk, pti, NULL, TYPE_INPUTCONTEXT, sizeof(IMC));
     if (!pIMC)
         return NULL;
 
-    if (dwClientImcData)
+    if (dwClientImcData) // Non-first time.
     {
+        // Insert pIMC to the second position (non-default) of the list.
         pIMC->pImcNext = pti->spDefaultImc->pImcNext;
         pti->spDefaultImc->pImcNext = pIMC;
     }
-    else
+    else // First time. It's the default IMC.
     {
+        // Add the first one (default) to the list.
         pti->spDefaultImc = pIMC;
         pIMC->pImcNext = NULL;
     }
 
-    pIMC->dwClientImcData = dwClientImcData;
+    pIMC->dwClientImcData = dwClientImcData; // Set it.
     return pIMC;
 }
 
