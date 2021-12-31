@@ -14,6 +14,31 @@
 #define ID_BLINK_TIMER 346
 
 static VOID
+UpdateCaretBlinkTimeReg(
+    _In_ UINT uCaretBlinkTime)
+{
+    HKEY hKey;
+    WCHAR szBuffer[12];
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                      L"Control Panel\\Desktop",
+                      0, KEY_SET_VALUE,
+                      &hKey) != ERROR_SUCCESS)
+    {
+         return;
+    }
+
+    wsprintf(szBuffer, L"%d", uCaretBlinkTime);
+
+    RegSetValueExW(hKey, L"CursorBlinkRate",
+                   0, REG_SZ,
+                   (CONST BYTE*)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    RegCloseKey(hKey);
+}
+
+static VOID
 FillColorSchemeComboBox(HWND hwnd)
 {
     TCHAR szValue[128];
@@ -164,7 +189,16 @@ DisplayPageProc(HWND hwndDlg,
             SendDlgItemMessage(hwndDlg, IDC_CURSOR_WIDTH_TRACK, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pGlobalData->uCaretWidth - 1));
 
             /* Start the blink timer */
-            SetTimer(hwndDlg, ID_BLINK_TIMER, pGlobalData->uCaretBlinkTime, NULL);
+            pGlobalData->uCaretBlinkTime = pGlobalData->uCaretBlinkTime >= 1200 ? -1 : pGlobalData->uCaretBlinkTime;
+            if ((INT)pGlobalData->uCaretBlinkTime > 0)
+            {
+                SetTimer(hwndDlg, ID_BLINK_TIMER, pGlobalData->uCaretBlinkTime, NULL);
+            }
+            else
+            {
+                PostMessage(hwndDlg, WM_TIMER, ID_BLINK_TIMER, 0);
+            }
+
             return TRUE;
 
         case WM_COMMAND:
@@ -196,7 +230,15 @@ DisplayPageProc(HWND hwndDlg,
                     i = SendDlgItemMessage(hwndDlg, IDC_CURSOR_BLINK_TRACK, TBM_GETPOS, 0, 0);
                     pGlobalData->uCaretBlinkTime = (12 - (UINT)i) * 100;
                     KillTimer(hwndDlg, ID_BLINK_TIMER);
-                    SetTimer(hwndDlg, ID_BLINK_TIMER, pGlobalData->uCaretBlinkTime, NULL);
+                    pGlobalData->uCaretBlinkTime = pGlobalData->uCaretBlinkTime >= 1200 ? -1 : pGlobalData->uCaretBlinkTime;
+                    if ((INT)pGlobalData->uCaretBlinkTime > 0)
+                    {
+                        SetTimer(hwndDlg, ID_BLINK_TIMER, pGlobalData->uCaretBlinkTime, NULL);
+                    }
+                    else if (pGlobalData->fShowCaret)
+                    {
+                        SendMessage(hwndDlg, WM_TIMER, ID_BLINK_TIMER, 0);
+                    }
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
@@ -243,7 +285,11 @@ DisplayPageProc(HWND hwndDlg,
             lppsn = (LPPSHNOTIFY)lParam;
             if (lppsn->hdr.code == PSN_APPLY)
             {
-                SetCaretBlinkTime(pGlobalData->uCaretBlinkTime);
+                if (SetCaretBlinkTime(pGlobalData->uCaretBlinkTime))
+                {
+                    UpdateCaretBlinkTimeReg(pGlobalData->uCaretBlinkTime);
+                }
+
                 SystemParametersInfo(SPI_SETCARETWIDTH,
                                      0,
                                      IntToPtr(pGlobalData->uCaretWidth),

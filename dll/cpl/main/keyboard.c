@@ -39,6 +39,31 @@ typedef struct _SPEED_DATA
     RECT rcCursor;
 } SPEED_DATA, *PSPEED_DATA;
 
+static VOID
+UpdateCaretBlinkTimeReg(
+    _In_ UINT uCaretBlinkTime)
+{
+    HKEY hKey;
+    WCHAR szBuffer[12];
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                      L"Control Panel\\Desktop",
+                      0, KEY_SET_VALUE,
+                      &hKey) != ERROR_SUCCESS)
+    {
+         return;
+    }
+
+    wsprintf(szBuffer, L"%d", uCaretBlinkTime);
+
+    RegSetValueExW(hKey, L"CursorBlinkRate",
+                   0, REG_SZ,
+                   (CONST BYTE*)szBuffer,
+                   (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+    RegCloseKey(hKey);
+}
+
 /* Property page dialog callback */
 static INT_PTR CALLBACK
 KeyboardSpeedProc(IN HWND hwndDlg,
@@ -97,7 +122,16 @@ KeyboardSpeedProc(IN HWND hwndDlg,
             SendDlgItemMessage(hwndDlg, IDC_SLIDER_CURSOR_BLINK, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(12 - (pSpeedData->uCaretBlinkTime / 100)));
 
             /* Start the blink timer */
-            SetTimer(hwndDlg, ID_BLINK_TIMER, pSpeedData->uCaretBlinkTime, NULL);
+            pSpeedData->uCaretBlinkTime = pSpeedData->uCaretBlinkTime >= 1200 ? -1 : pSpeedData->uCaretBlinkTime;
+            if ((INT)pSpeedData->uCaretBlinkTime > 0)
+            {
+                SetTimer(hwndDlg, ID_BLINK_TIMER, pSpeedData->uCaretBlinkTime, NULL);
+            }
+            else
+            {
+                PostMessage(hwndDlg, WM_TIMER, ID_BLINK_TIMER, 0);
+            }
+
             break;
 
         case WM_HSCROLL:
@@ -172,7 +206,15 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                         case TB_ENDTRACK:
                             pSpeedData->uCaretBlinkTime = (12 - (UINT)SendDlgItemMessage(hwndDlg, IDC_SLIDER_CURSOR_BLINK, TBM_GETPOS, 0, 0)) * 100;
                             KillTimer(hwndDlg, ID_BLINK_TIMER);
-                            SetTimer(hwndDlg, ID_BLINK_TIMER, pSpeedData->uCaretBlinkTime, NULL);
+                            pSpeedData->uCaretBlinkTime = pSpeedData->uCaretBlinkTime >= 1200 ? -1 : pSpeedData->uCaretBlinkTime;
+                            if ((INT)pSpeedData->uCaretBlinkTime > 0)
+                            {
+                                SetTimer(hwndDlg, ID_BLINK_TIMER, pSpeedData->uCaretBlinkTime, NULL);
+                            }
+                            else if (pSpeedData->fShowCursor)
+                            {
+                                SendMessage(hwndDlg, WM_TIMER, ID_BLINK_TIMER, 0);
+                            }
                             SetCaretBlinkTime(pSpeedData->uCaretBlinkTime);
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
@@ -180,7 +222,15 @@ KeyboardSpeedProc(IN HWND hwndDlg,
                         case TB_THUMBTRACK:
                             pSpeedData->uCaretBlinkTime = (12 - (UINT)HIWORD(wParam)) * 100;
                             KillTimer(hwndDlg, ID_BLINK_TIMER);
-                            SetTimer(hwndDlg, ID_BLINK_TIMER, pSpeedData->uCaretBlinkTime, NULL);
+                            pSpeedData->uCaretBlinkTime = pSpeedData->uCaretBlinkTime >= 1200 ? -1 : pSpeedData->uCaretBlinkTime;
+                            if ((INT)pSpeedData->uCaretBlinkTime > 0)
+                            {
+                                SetTimer(hwndDlg, ID_BLINK_TIMER, pSpeedData->uCaretBlinkTime, NULL);
+                            }
+                            else if (pSpeedData->fShowCursor)
+                            {
+                                SendMessage(hwndDlg, WM_TIMER, ID_BLINK_TIMER, 0);
+                            }
                             SetCaretBlinkTime(pSpeedData->uCaretBlinkTime);
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
@@ -215,6 +265,11 @@ KeyboardSpeedProc(IN HWND hwndDlg,
             {
                 case PSN_APPLY:
                     /* Set the new keyboard settings */
+                    if (pSpeedData->uOrigCaretBlinkTime != pSpeedData->uCaretBlinkTime)
+                    {
+                        UpdateCaretBlinkTimeReg(pSpeedData->uCaretBlinkTime);
+                    }
+
                     SystemParametersInfo(SPI_SETKEYBOARDDELAY,
                                          pSpeedData->nKeyboardDelay,
                                          0,
