@@ -58,37 +58,37 @@ static const columninfo RecycleBinColumns[] =
 
 #define COLUMNS_COUNT  6
 
+/*
+ * Recycle Bin folder
+ */
+
 BOOL WINAPI CBSearchRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile);
 
 static PIDLRecycleStruct * _ILGetRecycleStruct(LPCITEMIDLIST pidl);
 
-typedef struct
+typedef struct _SEARCH_CONTEXT
 {
     PIDLRecycleStruct *pFileDetails;
     HANDLE hDeletedFile;
     BOOL bFound;
 } SEARCH_CONTEXT, *PSEARCH_CONTEXT;
 
-/*
- * Recycle Bin folder
- */
-
 HRESULT CRecyclerExtractIcon_CreateInstance(
     LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
 {
     PIDLRecycleStruct *pFileDetails = _ILGetRecycleStruct(pidl);
+    if (pFileDetails == NULL)
+        goto error;
 
     // Try to obtain the file
     SEARCH_CONTEXT Context;
     Context.pFileDetails = pFileDetails;
     Context.bFound = FALSE;
 
-    if (pFileDetails == NULL) goto error;
-
     EnumerateRecycleBinW(NULL, CBSearchRecycleBin, (PVOID)&Context);
     if (Context.bFound)
     {
-        // This should happen any time
+        // This should be executed any time, if not, there are some error in the implementation
         IRecycleBinFile* pRecycleFile = (IRecycleBinFile*)Context.hDeletedFile;
 
         // Query the interface from the private interface

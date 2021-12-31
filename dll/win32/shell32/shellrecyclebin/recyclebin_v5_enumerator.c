@@ -18,7 +18,6 @@ struct RecycleBin5File
     WCHAR FullName[ANY_SIZE];
 };
 
-EXTERN_C HRESULT WINAPI SHCreateFileExtractIconW(LPCWSTR pszPath, DWORD dwFileAttributes, REFIID riid, void **ppv);
 static HRESULT STDMETHODCALLTYPE
 RecycleBin5File_RecycleBinFile_GetAttributes(
     IN IRecycleBinFile *This,
@@ -45,7 +44,7 @@ RecycleBin5File_RecycleBinFile_QueryInterface(
     {
         DWORD dwAttributes;
         if (RecycleBin5File_RecycleBinFile_GetAttributes(This, &dwAttributes) == S_OK)
-            return SHCreateFileExtractIconW(s->FullName, (dwAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL, riid, ppvObject);
+            return SHCreateFileExtractIconW(s->FullName, dwAttributes, riid, ppvObject);
         else
             return S_FALSE;
     }
