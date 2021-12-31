@@ -350,10 +350,7 @@ struct BrushTool : GenericDrawTool
 
     virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
-        if (bLeftButton)
-            Brush(m_hdc, last.x, last.y, x, y, m_fg, toolsModel.GetBrushStyle());
-        else
-            Brush(m_hdc, last.x, last.y, x, y, m_bg, toolsModel.GetBrushStyle());
+        Brush(m_hdc, last.x, last.y, x, y, bLeftButton ? m_fg : m_bg, toolsModel.GetBrushStyle());
     }
 };
 
