@@ -416,7 +416,7 @@ NtUserYieldTask(VOID)
    return 0;
 }
 
-PIMC APIENTRY UserCreateInputContext(ULONG_PTR dwClientImcData)
+PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
 {
     PIMC pIMC;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
