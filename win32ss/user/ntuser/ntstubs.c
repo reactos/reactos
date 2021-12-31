@@ -356,13 +356,13 @@ BOOL APIENTRY UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
 
     switch (dwType)
     {
-        case 0:
+        case UIC_CLIENTIMCDATA:
             if (pIMC->dwClientImcData)
                 return FALSE;
             pIMC->dwClientImcData = dwValue;
             break;
 
-        case 1:
+        case UIC_IMEWINDOW:
             pIMC->hImeWnd = (HWND)dwValue;
             break;
 
