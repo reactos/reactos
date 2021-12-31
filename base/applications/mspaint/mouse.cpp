@@ -264,10 +264,7 @@ struct FillTool : ToolBase
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
         imageModel.CopyPrevious();
-        if (bLeftButton)
-            Fill(m_hdc, x, y, m_fg);
-        else
-            Fill(m_hdc, x, y, m_bg);
+        Fill(m_hdc, x, y, bLeftButton ? m_fg : m_bg);
     }
 };
 
@@ -328,16 +325,9 @@ struct PenTool : GenericDrawTool
 
     virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
-        if (bLeftButton)
-        {
-            Line(m_hdc, last.x, last.y, x, y, m_fg, 1);
-            SetPixel(m_hdc, x, y, m_fg);
-        }
-        else
-        {
-            Line(m_hdc, last.x, last.y, x, y, m_bg, 1);
-            SetPixel(m_hdc, x, y, m_bg);
-        }
+        COLORREF rgb = bLeftButton ? m_fg : m_bg;
+        Line(m_hdc, last.x, last.y, x, y, rgb, 1);
+        SetPixel(m_hdc, x, y, rgb);
     }
 };
 
@@ -350,7 +340,8 @@ struct BrushTool : GenericDrawTool
 
     virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
-        Brush(m_hdc, last.x, last.y, x, y, bLeftButton ? m_fg : m_bg, toolsModel.GetBrushStyle());
+        COLORREF rgb = bLeftButton ? m_fg : m_bg;
+        Brush(m_hdc, last.x, last.y, x, y, rgb, toolsModel.GetBrushStyle());
     }
 };
 
@@ -363,10 +354,8 @@ struct AirBrushTool : GenericDrawTool
 
     virtual void draw(BOOL bLeftButton, LONG x, LONG y)
     {
-        if (bLeftButton)
-            Airbrush(m_hdc, x, y, m_fg, toolsModel.GetAirBrushWidth());
-        else
-            Airbrush(m_hdc, x, y, m_bg, toolsModel.GetAirBrushWidth());
+        COLORREF rgb = bLeftButton ? m_fg : m_bg;
+        Airbrush(m_hdc, x, y, rgb, toolsModel.GetAirBrushWidth());
     }
 };
 
@@ -425,10 +414,8 @@ struct LineTool : GenericDrawTool
         imageModel.ResetToPrevious();
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             roundTo8Directions(start.x, start.y, x, y);
-        if (bLeftButton)
-            Line(m_hdc, start.x, start.y, x, y, m_fg, toolsModel.GetLineWidth());
-        else
-            Line(m_hdc, start.x, start.y, x, y, m_bg, toolsModel.GetLineWidth());
+        COLORREF rgb = bLeftButton ? m_fg : m_bg;
+        Line(m_hdc, start.x, start.y, x, y, rgb, toolsModel.GetLineWidth());
     }
 };
 
