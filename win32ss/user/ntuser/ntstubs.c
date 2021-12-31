@@ -685,7 +685,7 @@ NtUserQueryInputContext(
 
         case 3:
             if (ptiIMC->spDefaultImc)
-                ret = (DWORD_PTR)ptiIMC->spDefaultImc->head.h;
+                ret = (DWORD_PTR)UserHMGetHandle(ptiIMC->spDefaultImc);
             break;
     }
 
