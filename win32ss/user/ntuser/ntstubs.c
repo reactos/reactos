@@ -416,12 +416,56 @@ NtUserYieldTask(VOID)
    return 0;
 }
 
+PIMC APIENTRY UserCreateInputContext(ULONG_PTR dwClientImcData)
+{
+    PIMC pIMC;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    PDESKTOP pdesk = pti->rpdesk;
+
+    if (!IS_IMM_MODE() || (pti->TIF_flags & TIF_DISABLEIME) || !pdesk)
+        return NULL;
+
+    if (dwClientImcData && !pti->spDefaultImc)
+        return NULL;
+
+    pIMC = UserCreateObject(gHandleTable, pdesk, pti, NULL, TYPE_INPUTCONTEXT, sizeof(IMC));
+    if (!pIMC)
+        return NULL;
+
+    if (dwClientImcData)
+    {
+        pIMC->pImcNext = pti->spDefaultImc->pImcNext;
+        pti->spDefaultImc->pImcNext = pIMC;
+    }
+    else
+    {
+        pti->spDefaultImc = pIMC;
+        pIMC->pImcNext = NULL;
+    }
+
+    pIMC->dwClientImcData = dwClientImcData;
+    return pIMC;
+}
+
 HIMC
 APIENTRY
-NtUserCreateInputContext(PCLIENTIMC pClientImc)
+NtUserCreateInputContext(ULONG_PTR dwClientImcData)
 {
-    STUB;
-    return NULL;
+    PIMC pIMC;
+    HIMC ret = NULL;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE() || !dwClientImcData)
+        goto Quit;
+
+    pIMC = UserCreateInputContext(dwClientImcData);
+    if (pIMC)
+        ret = UserHMGetHandle(pIMC);
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 DWORD

@@ -1937,7 +1937,7 @@ NtUserCreateDesktop(
 
 HIMC
 NTAPI
-NtUserCreateInputContext(PCLIENTIMC pClientImc);
+NtUserCreateInputContext(ULONG_PTR dwClientImcData);
 
 NTSTATUS
 NTAPI
