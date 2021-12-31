@@ -1615,11 +1615,17 @@ static HRESULT delete_files(FILE_OPERATION *op, const FILE_LIST *flFrom)
         && TRASH_CanTrashFile(flFrom->feFiles[0].szFullPath);
 
     if (!(op->req->fFlags & FOF_NOCONFIRMATION) || (!bTrash && op->req->fFlags & FOF_WANTNUKEWARNING))
-        if (!confirm_delete_list(op->req->hwnd, op->req->fFlags, bTrash, flFrom))
+    {
+        DWORD dwConfirmDelete;
+        DWORD dwSize = sizeof(DWORD);
+
+        LSTATUS Result = RegGetValueW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer", L"ConfirmFileDelete", RRF_RT_DWORD, NULL, &dwConfirmDelete, &dwSize);
+        if ((Result == ERROR_SUCCESS && dwConfirmDelete) && !confirm_delete_list(op->req->hwnd, op->req->fFlags, bTrash, flFrom))
         {
             op->req->fAnyOperationsAborted = TRUE;
             return 0;
         }
+    }
 
     /* Check files. Do not delete one if one file does not exists */
     for (i = 0; i < flFrom->dwNumFiles; i++)

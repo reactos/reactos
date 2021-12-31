@@ -29,6 +29,7 @@ typedef struct
     DWORD dwSerial;
     DWORD dwMaxCapacity;
     DWORD dwNukeOnDelete;
+    DWORD dwConfirmDelete;
 } DRIVE_ITEM_CONTEXT, *PDRIVE_ITEM_CONTEXT;
 
 static void toggleNukeOnDeleteOption(HWND hwndDlg, BOOL bEnable)
@@ -146,6 +147,11 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
                                 defIndex = itemCount;
                                 pDefault = pItem;
                             }
+
+                            dwSize = sizeof(DWORD);
+                            RegGetValueW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer", L"ConfirmFileDelete", RRF_RT_DWORD | RRF_ZEROONFAILURE, NULL, &pItem->dwConfirmDelete, &dwSize);
+
+                            SendDlgItemMessage(hwndDlg, 14004, BM_SETCHECK, pItem->dwConfirmDelete ? BST_CHECKED : BST_UNCHECKED, 0);
                         }
                         if (!pFirst)
                             pFirst = pItem;
@@ -185,7 +191,7 @@ static BOOL StoreDriveSettings(HWND hwndDlg)
     HWND hDlgCtrl = GetDlgItem(hwndDlg, 14000);
     LVITEMW li;
     PDRIVE_ITEM_CONTEXT pItem;
-    HKEY hKey, hSubKey;
+    HKEY hKey, hSubKey, hExploreKey;
     WCHAR szSerial[20];
     DWORD dwSize;
 
@@ -214,7 +220,16 @@ static BOOL StoreDriveSettings(HWND hwndDlg)
             }
         }
     }
+
     RegCloseKey(hKey);
+
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer", 0, NULL, 0, KEY_WRITE, NULL, &hExploreKey, NULL) != ERROR_SUCCESS)
+        return FALSE;
+
+    dwSize = sizeof(DWORD);
+    RegSetValueExW(hExploreKey, L"ConfirmFileDelete", 0, REG_DWORD, (LPBYTE)&pItem->dwConfirmDelete, dwSize);
+
+    RegCloseKey(hExploreKey);
     return TRUE;
 }
 
@@ -338,10 +353,8 @@ RecycleBinDlg(
                             pItem->dwMaxCapacity = min(uResult, FreeBytesAvailable.LowPart);
                             SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
                         }
-                        if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                            pItem->dwNukeOnDelete = TRUE;
-                        else
-                            pItem->dwNukeOnDelete = FALSE;
+                        pItem->dwNukeOnDelete = (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                        pItem->dwConfirmDelete = (SendDlgItemMessageW(hwndDlg, 14004, BM_GETCHECK, 0, 0) == BST_CHECKED);
                     }
                 }
                 if (StoreDriveSettings(hwndDlg))
@@ -380,10 +393,8 @@ RecycleBinDlg(
                         pItem->dwMaxCapacity = min(uResult, FreeBytesAvailable.LowPart);
                         SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
                     }
-                    if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                        pItem->dwNukeOnDelete = TRUE;
-                    else
-                        pItem->dwNukeOnDelete = FALSE;
+                    pItem->dwNukeOnDelete = (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                    pItem->dwConfirmDelete = (SendDlgItemMessageW(hwndDlg, 14004, BM_GETCHECK, 0, 0) == BST_CHECKED);
                 }
                 return TRUE;
 
