@@ -527,7 +527,7 @@ Imm32SetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwComp
     UINT uCodePage;
     LPRECONVERTSTRING pRS;
 
-    dwThreadId = NtUserQueryInputContext(hIMC, 1);
+    dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
     if (dwThreadId != GetCurrentThreadId())
         return FALSE;
 
