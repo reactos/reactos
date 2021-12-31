@@ -928,7 +928,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
         // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
         pClientImc->unknown = NtUserGetThreadState(13);
 
-        if (!NtUserUpdateInputContext(hImc, 0, pClientImc))
+        if (!NtUserUpdateInputContext(hImc, UIC_CLIENTIMCDATA, (DWORD_PTR)pClientImc))
         {
             Imm32HeapFree(pClientImc);
             return NULL;
