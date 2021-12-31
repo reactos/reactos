@@ -121,13 +121,14 @@ void CDesktopThread::Destroy()
 {
     if (m_hThread)
     {
-        DWORD dwExitCode;
-
-        GetExitCodeThread(m_hThread, &dwExitCode);
-
-        if (dwExitCode == STILL_ACTIVE)
+        DWORD WaitResult = WaitForSingleObject(m_hThread, 0);
+        
+        if (WaitResult == WAIT_TIMEOUT)
         {
-            TerminateThread(m_hThread, 0);
+            /* Send WM_CLOSE message to the thread. */
+            PostThreadMessageW(GetThreadId(m_hThread), WM_CLOSE, 0, 0);
+            
+            WaitForSingleObject(m_hThread, INFINITE);
         }
         
         CloseHandle(m_hThread);
@@ -182,7 +183,7 @@ DWORD CDesktopThread::DesktopThreadProc()
 
 DWORD WINAPI CDesktopThread::s_DesktopThreadProc(LPVOID lpParameter)
 {
-    CDesktopThread* pDesktopThread = reinterpret_cast<CDesktopThread*>(lpParameter);
+    CDesktopThread* pDesktopThread = static_cast<CDesktopThread*>(lpParameter);
 
     return pDesktopThread->DesktopThreadProc();
 }
