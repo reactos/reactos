@@ -380,7 +380,7 @@ BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah);
 BOOL WINAPI UnregisterUserApiHook(VOID);
 
 /* dwType for NtUserQueryInputContext */
-typedef enum QUERY_INPUT_CONTEXT
+typedef enum _QUERY_INPUT_CONTEXT
 {
     QIC_INPUTPROCESSID = 0,
     QIC_INPUTTHREADID,
