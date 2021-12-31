@@ -541,6 +541,7 @@ struct ShapeTool : ToolBase
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
         }
+
         if (pointSP == 0 && !bDoubleClick)
         {
             imageModel.CopyPrevious();
