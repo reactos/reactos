@@ -351,14 +351,15 @@ BOOL APIENTRY UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
     PTHREADINFO pti = GetW32ThreadInfo();
     PTHREADINFO ptiIMC = pIMC->head.pti;
 
-    if (pti->ppi != ptiIMC->ppi)
+    if (pti->ppi != ptiIMC->ppi) // Different process?
         return FALSE;
 
     switch (dwType)
     {
         case UIC_CLIENTIMCDATA:
             if (pIMC->dwClientImcData)
-                return FALSE;
+                return FALSE; // Already set
+
             pIMC->dwClientImcData = dwValue;
             break;
 
