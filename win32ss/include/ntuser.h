@@ -3533,12 +3533,12 @@ BOOL
 NTAPI
 NtUserUnregisterUserApiHook(VOID);
 
-DWORD
+BOOL
 NTAPI
 NtUserUpdateInputContext(
     HIMC hIMC,
-    DWORD Unknown1,
-    LPVOID pClientImc);
+    DWORD dwType,
+    DWORD_PTR dwValue);
 
 DWORD
 NTAPI
