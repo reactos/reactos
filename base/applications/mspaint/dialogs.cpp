@@ -12,6 +12,7 @@
 
 #include "dialogs.h"
 
+#include <dlgs.h>
 #include <winnls.h>
 
 /* GLOBALS **********************************************************/
@@ -19,6 +20,7 @@
 CMirrorRotateDialog mirrorRotateDialog;
 CAttributesDialog attributesDialog;
 CStretchSkewDialog stretchSkewDialog;
+CFontsDialog fontsDialog;
 
 /* FUNCTIONS ********************************************************/
 
@@ -256,5 +258,272 @@ LRESULT CStretchSkewDialog::OnOk(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 LRESULT CStretchSkewDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     EndDialog(0);
+    return 0;
+}
+
+INT CALLBACK
+EnumFontFamProc(ENUMLOGFONT *lpelf,
+                NEWTEXTMETRIC *lpntm,
+                INT FontType,
+                LPARAM lParam)
+{
+    CFontsDialog *pThis = reinterpret_cast<CFontsDialog*>(lParam);
+    auto name = lpelf->elfLogFont.lfFaceName;
+    if (name[0] == '@')
+        return TRUE;
+
+    for (INT i = 0; i < pThis->m_arrFontNames.GetSize(); ++i)
+    {
+        if (pThis->m_arrFontNames[i] == name)
+            return TRUE;
+    }
+
+    pThis->m_arrFontNames.Add(name);
+    return TRUE;
+}
+
+static int CompareNames(const void *x, const void *y)
+{
+    const CString *a = reinterpret_cast<const CString *>(x);
+    const CString *b = reinterpret_cast<const CString *>(y);
+    if (*a < *b)
+        return -1;
+    if (*a > *b)
+        return 1;
+    return 0;
+}
+    
+void CFontsDialog::InitNames(HWND hwnd)
+{
+    HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
+
+    HDC hDC = CreateCompatibleDC(NULL);
+    if (hDC)
+    {
+        m_arrFontNames.RemoveAll();
+        EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc, reinterpret_cast<LPARAM>(this));
+        qsort(&m_arrFontNames[0], m_arrFontNames.GetSize(), sizeof(CString), CompareNames);
+
+        SendMessage(hwndNames, CB_RESETCONTENT, 0, 0);
+        for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
+        {
+            CString& name = m_arrFontNames[i];
+            COMBOBOXEXITEM item = { CBEIF_TEXT, -1 };
+            item.pszText = const_cast<LPWSTR>(&name[0]);
+            if (ComboBox_FindStringExact(hwndNames, -1, item.pszText) == CB_ERR)
+            {
+                SendMessage(hwndNames, CBEM_INSERTITEM, 0, (LPARAM)&item);
+            }
+        }
+
+        DeleteDC(hDC);
+    }
+}
+
+BOOL IsUserAsian(VOID)
+{
+    LANGID LangID = GetUserDefaultLangID();
+    switch (PRIMARYLANGID(LangID))
+    {
+    case LANG_CHINESE:
+    case LANG_JAPANESE:
+    case LANG_KOREAN:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
+void CFontsDialog::InitFontSizes(HWND hwnd)
+{
+    HWND hwndSizes = GetDlgItem(IDD_FONTSSIZES);
+    static const INT sizes[] =
+    {
+        8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72
+    };
+    INT nDefaultSize = (IsUserAsian() ? 9 : 8);
+    for (INT size : sizes)
+    {
+        TCHAR szText[64];
+        wsprintf(szText, TEXT("%d"), size);
+        INT iItem = ComboBox_AddString(hwndSizes, szText);
+        if (size == nDefaultSize)
+            ComboBox_SetCurSel(hwndSizes, iItem);
+    }
+}
+
+void InitToolbar(HWND hwnd)
+{
+    HWND hwndToolbar = GetDlgItem(hwnd, IDD_FONTSTOOLBAR);
+    SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+
+    SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(16, 16));
+    SendMessage(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(20, 20));
+    
+    TBADDBITMAP AddBitmap;
+    AddBitmap.hInst = hProgInstance;
+    AddBitmap.nID = IDB_FONTSTOOLBAR;
+    SendMessage(hwndToolbar, TB_ADDBITMAP, 4, (LPARAM)&AddBitmap);
+
+    HIMAGELIST himl = ImageList_LoadBitmap(hProgInstance, MAKEINTRESOURCE(IDB_FONTSTOOLBAR), 16, 8, RGB(255, 255, 255));
+    SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
+
+    TBBUTTON buttons[] =
+    {
+        { 0, IDM_BOLD, TBSTATE_ENABLED, TBSTYLE_CHECK, 0, 0, 1000 },
+        { 1, IDM_ITALIC, TBSTATE_ENABLED, TBSTYLE_CHECK, 0, 0, 1001 },
+        { 2, IDM_UNDERLINE, TBSTATE_ENABLED, TBSTYLE_CHECK, 0, 0, 1002 },
+        { 3, IDM_VERTICAL, 0, TBSTYLE_CHECK, 0, 0, 1003 },
+    };
+    SendMessage(hwndToolbar, TB_ADDBUTTONS, _countof(buttons), (LPARAM)&buttons);
+}
+
+LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    // get default gui font
+    TCHAR szFontName[LF_FACESIZE];
+    LOGFONT lf;
+    GetObject(GetStockFont(DEFAULT_GUI_FONT), sizeof(lf), &lf);
+    lstrcpyn(szFontName, lf.lfFaceName, _countof(szFontName));
+    CString curName = szFontName;
+
+    // init font sizes
+    InitFontSizes(m_hWnd);
+
+    // init font names
+    InitNames(m_hWnd);
+
+    // set the default font name
+    HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
+    INT iFont = ComboBox_FindStringExact(hwndNames, -1, szFontName);
+    if (iFont != CB_ERR)
+        ComboBox_SetCurSel(hwndNames, iFont);
+    ::SetWindowText(hwndNames, szFontName);
+
+    // init toolbar
+    InitToolbar(m_hWnd);
+
+    m_bBold = FALSE;
+    m_bItalic = FALSE;
+    m_bUnderline = FALSE;
+
+    return TRUE;
+}
+
+LRESULT CFontsDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    m_arrFontNames.RemoveAll();
+    return 0;
+}
+
+void CFontsDialog::OnFontName(HWND hwnd, UINT codeNotify)
+{
+    HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
+    WCHAR szText[LF_FACESIZE];
+    INT iItem;
+    switch (codeNotify)
+    {
+    case CBN_SELCHANGE:
+        iItem = ComboBox_GetCurSel(hwndNames);
+        if (iItem != CB_ERR)
+        {
+            COMBOBOXEXITEM item = { CBEIF_TEXT, iItem, szText, _countof(szText) };
+            SendMessage(hwndNames, CBEM_GETITEM, 0, (LPARAM)&item);
+            if (m_strFontName != szText)
+            {
+                m_strFontName = szText;
+                ::MessageBoxW(hwnd, szText, TEXT("OnFontName #1"), MB_ICONINFORMATION);
+            }
+        }
+        break;
+    case CBN_EDITCHANGE:
+        GetDlgItemText(IDD_FONTSNAMES, szText, _countof(szText));
+        for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
+        {
+            CString& name = m_arrFontNames[i];
+            if (name == szText)
+            {
+                if (m_strFontName != szText)
+                {
+                    m_strFontName = szText;
+                    ::MessageBoxW(hwnd, szText, TEXT("OnFontName #2"), MB_ICONINFORMATION);
+                }
+            }
+        }
+        break;
+    }
+}
+
+void CFontsDialog::OnFontSize(HWND hwnd, UINT codeNotify)
+{
+    HWND hwndSizes = GetDlgItem(IDD_FONTSSIZES);
+    WCHAR szText[LF_FACESIZE];
+    INT iItem;
+    switch (codeNotify)
+    {
+    case CBN_SELCHANGE:
+        iItem = ComboBox_GetCurSel(hwndSizes);
+        if (iItem != CB_ERR)
+        {
+            ComboBox_GetLBText(hwndSizes, iItem, szText);
+            ::MessageBoxW(hwnd, szText, TEXT("OnFontSize #1"), MB_ICONINFORMATION);
+        }
+        break;
+    case CBN_EDITCHANGE:
+        GetDlgItemText(IDD_FONTSSIZES, szText, _countof(szText));
+        ::MessageBoxW(hwnd, szText, TEXT("OnFontSize #2"), MB_ICONINFORMATION);
+        break;
+    }
+}
+
+BOOL CFontsDialog::IsBold() const
+{
+    return m_bBold;
+}
+
+BOOL CFontsDialog::IsItalic() const
+{
+    return m_bItalic;
+}
+
+BOOL CFontsDialog::IsUnderline() const
+{
+    return m_bUnderline;
+}
+
+const CString& CFontsDialog::GetFontName() const
+{
+    return m_strFontName;
+}
+
+LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    UINT id = LOWORD(wParam);
+    UINT codeNotify = HIWORD(wParam);
+    HWND hwndToolbar = GetDlgItem(IDD_FONTSTOOLBAR);
+    BOOL bChecked = ::SendMessage(hwndToolbar, TB_ISBUTTONCHECKED, id, 0);
+    switch (id)
+    {
+    case IDCANCEL:
+        DestroyWindow();
+        break;
+    case IDD_FONTSNAMES:
+        OnFontName(m_hWnd, codeNotify);
+        break;
+    case IDD_FONTSSIZES:
+        OnFontSize(m_hWnd, codeNotify);
+        break;
+    case IDM_BOLD:
+        m_bBold = bChecked;
+        break;
+    case IDM_ITALIC:
+        m_bItalic = bChecked;
+        break;
+    case IDM_UNDERLINE:
+        m_bUnderline = bChecked;
+        break;
+    case IDM_VERTICAL:
+        break;
+    }
     return 0;
 }

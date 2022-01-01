@@ -10,6 +10,8 @@
 
 #include "precomp.h"
 
+#include "dialogs.h"
+
 /* FUNCTIONS ********************************************************/
 
 ToolsModel::ToolsModel()
@@ -153,6 +155,14 @@ void ToolsModel::NotifyToolChanged()
     toolBoxContainer.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
     toolSettingsWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
     textEditWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
+    if (m_activeTool == TOOL_TEXT)
+    {
+        if (!fontsDialog.IsWindow())
+        {
+            fontsDialog.Create(mainWindow);
+            fontsDialog.ShowWindow(SW_SHOWNORMAL);
+        }
+    }
 }
 
 void ToolsModel::NotifyToolSettingsChanged()

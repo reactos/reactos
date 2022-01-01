@@ -10,6 +10,7 @@
 
 #include <windef.h>
 #include <winuser.h>
+#include <commctrl.h>
 
 #include "resource.h"
 
@@ -24,6 +25,7 @@
 IDI_APPICON ICON "icons/paint.ico"
 
 IDB_TOOLBARICONS BITMAP "icons/iconbar.bmp"
+IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar.bmp"
 
 IDI_TRANSPARENT ICON "icons/transparent.ico"
 IDI_NONTRANSPARENT ICON "icons/nontransparent.ico"

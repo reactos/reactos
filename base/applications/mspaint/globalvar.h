@@ -99,10 +99,12 @@ extern CTextEditWindow textEditWindow;
 class CMirrorRotateDialog;
 class CAttributesDialog;
 class CStretchSkewDialog;
+class CFontsDialog;
 
 extern CMirrorRotateDialog mirrorRotateDialog;
 extern CAttributesDialog attributesDialog;
 extern CStretchSkewDialog stretchSkewDialog;
+extern CFontsDialog fontsDialog;
 
 /* VARIABLES declared in mouse.cpp **********************************/
 

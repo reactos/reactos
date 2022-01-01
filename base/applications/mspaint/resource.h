@@ -13,6 +13,7 @@
 #define IDI_APPICON 500
 
 #define IDB_TOOLBARICONS 510
+#define IDB_FONTSTOOLBAR 511
 
 #define IDI_TRANSPARENT    526
 #define IDI_NONTRANSPARENT 527
@@ -96,6 +97,11 @@
 #define IDM_HELPHELPTOPICS 270
 #define IDM_HELPINFO       271
 
+#define IDM_BOLD        280
+#define IDM_ITALIC      281
+#define IDM_UNDERLINE   282
+#define IDM_VERTICAL    283
+
 /* the following 16 numbers need to be in order, increasing by 1 */
 #define ID_FREESEL  600
 #define ID_RECTSEL  601
@@ -164,6 +170,11 @@
 #define IDD_STRETCHSKEWTEXTVSKEW    756
 #define IDD_STRETCHSKEWEDITVSKEW    757
 #define IDD_STRETCHSKEWTEXTVDEG     758
+
+#define IDD_FONTS 760
+#define IDD_FONTSNAMES 761
+#define IDD_FONTSSIZES 762
+#define IDD_FONTSTOOLBAR 764
 
 #define IDS_PROGRAMNAME 900
 #define IDS_WINDOWTITLE 901
