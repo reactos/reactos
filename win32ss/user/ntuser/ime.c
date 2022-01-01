@@ -224,11 +224,12 @@ AllocInputContextObject(PDESKTOP pDesk,
 VOID UserFreeInputContext(PVOID Object)
 {
     PIMC pIMC = Object, pImc0;
-    PTHREADINFO pti = pIMC->head.pti;
+    PTHREADINFO pti;
 
     if (!pIMC)
         return;
 
+    pti = pIMC->head.pti;
     UserMarkObjectDestroy(pIMC);
 
     for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
