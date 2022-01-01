@@ -230,7 +230,6 @@ VOID UserFreeInputContext(PVOID Object)
         return;
 
     pti = pIMC->head.pti;
-    UserMarkObjectDestroy(pIMC);
 
     for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
     {
@@ -251,7 +250,10 @@ BOOLEAN UserDestroyInputContext(PVOID Object)
 {
     PIMC pIMC = Object;
     if (pIMC)
+    {
+        UserMarkObjectDestroy(pIMC);
         UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
+    }
     return TRUE;
 }
 
