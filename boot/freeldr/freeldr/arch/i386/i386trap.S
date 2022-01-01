@@ -82,7 +82,7 @@ MACRO(SAVE_CPU_REGS)
     push eax
 ENDM
 
-/* Set by each exception handler to the address of the description text */
+/* Set by each exception handler to the index of the description text */
 i386ExceptionIndex:
     .long   0
 
