@@ -250,7 +250,8 @@ VOID UserFreeInputContext(PVOID Object)
 BOOLEAN UserDestroyInputContext(PVOID Object)
 {
     PIMC pIMC = Object;
-    UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
+    if (pIMC)
+        UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
     return TRUE;
 }
 
