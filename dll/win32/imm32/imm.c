@@ -818,7 +818,7 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
 
     if (!pClientImc->hInputContext)
     {
-        dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, 1);
+        dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
 
         if (dwThreadId == GetCurrentThreadId() && Imm32IsCiceroMode() && !Imm32Is16BitMode())
         {
@@ -833,7 +833,7 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
             }
         }
 
-        if (!NtUserQueryInputContext(hIMC, 2))
+        if (!NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME))
         {
             RtlLeaveCriticalSection(&pClientImc->cs);
             goto Quit;

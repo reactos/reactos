@@ -186,7 +186,7 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
         return TRUE;
 
     hIMC = pIMC->head.h;
-    dwProcessID = NtUserQueryInputContext(hIMC, 0);
+    dwProcessID = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTPROCESSID);
     return dwProcessID == (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
 }
 
@@ -211,7 +211,7 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
 
     if (dwAction)
     {
-        dwThreadId = NtUserQueryInputContext(hIMC, 1);
+        dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
         if (dwThreadId)
         {
             /* find keyboard layout and lock it */

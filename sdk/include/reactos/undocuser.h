@@ -379,6 +379,15 @@ BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah);
 
 BOOL WINAPI UnregisterUserApiHook(VOID);
 
+/* dwType for NtUserQueryInputContext */
+typedef enum _QUERY_INPUT_CONTEXT
+{
+    QIC_INPUTPROCESSID = 0,
+    QIC_INPUTTHREADID,
+    QIC_DEFAULTWINDOWIME,
+    QIC_DEFAULTIMC
+} QUERY_INPUT_CONTEXT;
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
