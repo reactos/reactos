@@ -159,41 +159,43 @@ LRESULT CImgAreaWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CImgAreaWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if ((!drawing) || (toolsModel.GetActiveTool() == TOOL_COLOR))
-    {
-        SetCapture();
-        drawing = TRUE;
-        startPaintingL(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)),
-                       paletteModel.GetFgColor(), paletteModel.GetBgColor());
-    }
-    else
-    {
-        SendMessage(WM_LBUTTONUP, wParam, lParam);
-        imageModel.Undo();
-    }
+    drawing = TRUE;
+    SetCapture();
+    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+    toolsModel.OnButtonDown(TRUE, UnZoomed(x), UnZoomed(y), FALSE);
     Invalidate(FALSE);
-    if ((toolsModel.GetActiveTool() == TOOL_ZOOM) && (toolsModel.GetZoom() < MAX_ZOOM))
-        zoomTo(toolsModel.GetZoom() * 2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    return 0;
+}
+
+LRESULT CImgAreaWindow::OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    drawing = FALSE;
+    ReleaseCapture();
+    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+    toolsModel.OnButtonDown(TRUE, UnZoomed(x), UnZoomed(y), TRUE);
+    toolsModel.resetTool();
+    Invalidate(FALSE);
     return 0;
 }
 
 LRESULT CImgAreaWindow::OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if ((!drawing) || (toolsModel.GetActiveTool() == TOOL_COLOR))
-    {
-        SetCapture();
-        drawing = TRUE;
-        startPaintingR(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)),
-                       paletteModel.GetFgColor(), paletteModel.GetBgColor());
-    }
-    else
-    {
-        SendMessage(WM_RBUTTONUP, wParam, lParam);
-        imageModel.Undo();
-    }
+    drawing = TRUE;
+    SetCapture();
+    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+    toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), FALSE);
     Invalidate(FALSE);
-    if ((toolsModel.GetActiveTool() == TOOL_ZOOM) && (toolsModel.GetZoom() > MIN_ZOOM))
-        zoomTo(toolsModel.GetZoom() / 2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    return 0;
+}
+
+LRESULT CImgAreaWindow::OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    drawing = FALSE;
+    ReleaseCapture();
+    INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+    toolsModel.OnButtonDown(FALSE, UnZoomed(x), UnZoomed(y), TRUE);
+    toolsModel.resetTool();
+    Invalidate(FALSE);
     return 0;
 }
 
@@ -201,62 +203,27 @@ LRESULT CImgAreaWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     if (drawing)
     {
-        endPaintingL(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)), paletteModel.GetFgColor(),
-                     paletteModel.GetBgColor());
+        drawing = FALSE;
+        INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+        toolsModel.OnButtonUp(TRUE, UnZoomed(x), UnZoomed(y));
         Invalidate(FALSE);
-        if (toolsModel.GetActiveTool() == TOOL_COLOR)
-        {
-            COLORREF tempColor =
-                GetPixel(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)));
-            if (tempColor != CLR_INVALID)
-                paletteModel.SetFgColor(tempColor);
-        }
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }
-    drawing = FALSE;
     ReleaseCapture();
     return 0;
 }
 
 void CImgAreaWindow::cancelDrawing()
 {
-    POINT pt;
-    switch (toolsModel.GetActiveTool())
-    {
-        case TOOL_FREESEL: case TOOL_RECTSEL:
-        case TOOL_TEXT: case TOOL_ZOOM: case TOOL_SHAPE:
-            imageModel.ResetToPrevious();
-            selectionModel.ResetPtStack();
-            pointSP = 0;
-            Invalidate(FALSE);
-            break;
-        default:
-            GetCursorPos(&pt);
-            ScreenToClient(&pt);
-            // FIXME: dirty hack
-            if (GetKeyState(VK_LBUTTON) < 0)
-            {
-                endPaintingL(imageModel.GetDC(), UnZoomed(pt.x), UnZoomed(pt.y), paletteModel.GetFgColor(),
-                             paletteModel.GetBgColor());
-            }
-            else if (GetKeyState(VK_RBUTTON) < 0)
-            {
-                endPaintingR(imageModel.GetDC(), UnZoomed(pt.x), UnZoomed(pt.y), paletteModel.GetFgColor(),
-                             paletteModel.GetBgColor());
-            }
-            imageModel.Undo();
-            pointSP = 0;
-            selectionModel.ResetPtStack();
-    }
+    drawing = FALSE;
+    toolsModel.OnCancelDraw();
+    Invalidate(FALSE);
 }
 
 LRESULT CImgAreaWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (drawing)
-    {
         cancelDrawing();
-        drawing = FALSE;
-    }
     return 0;
 }
 
@@ -270,14 +237,8 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         }
         else
         {
-            switch (toolsModel.GetActiveTool())
-            {
-                case TOOL_SHAPE: case TOOL_BEZIER:
-                    cancelDrawing();
-                    break;
-                default:
-                    break;
-            }
+            if (drawing || ToolBase::pointSP != 0)
+                cancelDrawing();
         }
     }
     return 0;
@@ -287,19 +248,12 @@ LRESULT CImgAreaWindow::OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     if (drawing)
     {
-        endPaintingR(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)), paletteModel.GetFgColor(),
-                     paletteModel.GetBgColor());
+        drawing = FALSE;
+        INT x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+        toolsModel.OnButtonUp(FALSE, UnZoomed(x), UnZoomed(y));
         Invalidate(FALSE);
-        if (toolsModel.GetActiveTool() == TOOL_COLOR)
-        {
-            COLORREF tempColor =
-                GetPixel(imageModel.GetDC(), UnZoomed(GET_X_LPARAM(lParam)), UnZoomed(GET_Y_LPARAM(lParam)));
-            if (tempColor != CLR_INVALID)
-                paletteModel.SetBgColor(tempColor);
-        }
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
     }
-    drawing = FALSE;
     ReleaseCapture();
     return 0;
 }
@@ -374,9 +328,9 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             default:
                 break;
         }
-        if ((wParam & MK_LBUTTON) != 0)
+        if (wParam & MK_LBUTTON)
         {
-            whilePaintingL(imageModel.GetDC(), xNow, yNow, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            toolsModel.OnMouseMove(TRUE, xNow, yNow);
             Invalidate(FALSE);
             if ((toolsModel.GetActiveTool() >= TOOL_TEXT) || (toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
             {
@@ -387,9 +341,9 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
                 SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
             }
         }
-        if ((wParam & MK_RBUTTON) != 0)
+        if (wParam & MK_RBUTTON)
         {
-            whilePaintingR(imageModel.GetDC(), xNow, yNow, paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            toolsModel.OnMouseMove(FALSE, xNow, yNow);
             Invalidate(FALSE);
             if (toolsModel.GetActiveTool() >= TOOL_TEXT)
             {

@@ -171,10 +171,6 @@ static const WCHAR szHyperLink[] = {'H','y','p','e','r','L','i','n','k',0};
 static DWORD uiThreadId;
 static HWND hMsiHiddenWindow;
 
-#ifdef __REACTOS__
-static HANDLE hPrevious = NULL;
-#endif
-
 static LPWSTR msi_get_window_text( HWND hwnd )
 {
     UINT sz, r;
@@ -3823,9 +3819,6 @@ static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
 
     case WM_DESTROY:
         dialog->hwnd = NULL;
-#ifdef __REACTOS__
-        hPrevious = NULL;
-#endif
         return 0;
     case WM_NOTIFY:
         return msi_dialog_onnotify( dialog, lParam );
@@ -3848,7 +3841,7 @@ static void process_pending_messages( HWND hdlg )
 static UINT dialog_run_message_loop( msi_dialog *dialog )
 {
     DWORD style;
-    HWND hwnd;
+    HWND hwnd, parent;
 
     if( uiThreadId != GetCurrentThreadId() )
         return SendMessageW( hMsiHiddenWindow, WM_MSI_DIALOG_CREATE, 0, (LPARAM) dialog );
@@ -3861,25 +3854,17 @@ static UINT dialog_run_message_loop( msi_dialog *dialog )
     if (dialog->parent == NULL && (dialog->attributes & msidbDialogAttributesMinimize))
         style |= WS_MINIMIZEBOX;
 
-#ifdef __REACTOS__
+    parent = dialog->parent ? dialog->parent->hwnd : 0;
+
     hwnd = CreateWindowW( szMsiDialogClass, dialog->name, style,
                      CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                     hPrevious, NULL, NULL, dialog );
-#else
-    hwnd = CreateWindowW( szMsiDialogClass, dialog->name, style,
-                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                     NULL, NULL, NULL, dialog );
-#endif
+                     parent, NULL, NULL, dialog );
 
     if( !hwnd )
     {
         ERR("Failed to create dialog %s\n", debugstr_w( dialog->name ));
         return ERROR_FUNCTION_FAILED;
     }
-
-#ifdef __REACTOS__
-    hPrevious = hwnd;
-#endif
 
     ShowWindow( hwnd, SW_SHOW );
     /* UpdateWindow( hwnd ); - and causes the transparent static controls not to paint */

@@ -25,6 +25,7 @@
 #define W32PF_OLELOADED               0x00100000
 #define W32PF_SCREENSAVER             0x00200000
 #define W32PF_IDLESCREENSAVER         0x00400000
+#define W32PF_DISABLEIME              0x00800000
 #define W32PF_ICONTITLEREGISTERED     0x10000000
 #define W32PF_DPIAWARE                0x20000000
 // ReactOS

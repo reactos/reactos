@@ -1,0 +1,30 @@
+/*
+ * PROJECT:     ReactOS Font Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALL "安裝(&I)"
+    IDS_PRINT "列印(&P)"
+    IDS_STRING "路曼曼其脩遠兮，吾將上下而求索。1234567890"
+    IDS_OPEN "開啟字型..."
+    IDS_ERROR "錯誤"
+    IDS_ERROR_NOMEM "沒有足夠的記憶體來完成操作。"
+    IDS_ERROR_NOFONT "%1 不是一個有效的字型檔案。"
+    IDS_ERROR_NOCLASS "無法初始化視窗。"
+    IDS_FILTER_LIST "所有支援的字型 (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
+字型檔案 (*.fon;*.fnt)\0*.fon;*.fnt\0\
+TrueType 字型 (*.ttf)\0*.ttf\0\
+TrueType 字型集合 (*.ttc)\0*.ttc\0\
+OpenType 字型 (*.otf)\0*.otf\0\
+OpenType 字型集合 (*.otc)\0*.otc\0\
+所有檔案 (*.*)\0*.*\0"
+    IDS_PREVIOUS "< 上一步(&R)"
+    IDS_NEXT "下一步(&N) >"
+END

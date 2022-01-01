@@ -15,7 +15,7 @@
 #include "dialogs.h"
 
 
- // CAvailableApplicationInfo
+// CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& AvlbStrings)
     : m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
     m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
@@ -38,7 +38,8 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
 
     // TODO: I temporarily use the file name (without suffix) as package name.
     // It should be better to put this in a field of ini file.
-    // consider write a converter to do this and write a github action for rapps-db to ensure package_name is unique.
+    // Consider writing a converter to do this and write a github action for
+    // rapps-db to ensure package_name is unique.
     m_szPkgName = m_sFileName;
     PathRemoveExtensionW(m_szPkgName.GetBuffer(MAX_PATH));
     m_szPkgName.ReleaseBuffer();
@@ -71,7 +72,6 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
             // so screenshots _have_ to be consecutive
             break;
         }
-
 
         if (PathIsURLW(ScrnshotLocation.GetString()))
         {
@@ -416,7 +416,7 @@ BOOL CAvailableApps::UpdateAppsDB()
         return FALSE;
     }
 
-    //if there are some files in the db folder - we're good
+    // If there are some files in the db folder, we're good
     hFind = FindFirstFileW(m_Strings.szSearchPath, &FindFileData);
     if (hFind != INVALID_HANDLE_VALUE)
     {
@@ -425,7 +425,7 @@ BOOL CAvailableApps::UpdateAppsDB()
     }
 
     DownloadApplicationsDB(SettingsInfo.bUseSource ? SettingsInfo.szSourceURL : APPLICATION_DATABASE_URL,
-        !SettingsInfo.bUseSource);
+                           !SettingsInfo.bUseSource);
 
     if (!ExtractFilesFromCab(m_Strings.szCabName,
                              m_Strings.szCabDir,
@@ -612,20 +612,5 @@ ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindAppsByPkgNameLi
         }
     }
     return result;
-}
-
-const ATL::CStringW& CAvailableApps::GetFolderPath() const
-{
-    return m_Strings.szPath;
-}
-
-const ATL::CStringW& CAvailableApps::GetAppPath() const
-{
-    return m_Strings.szAppsPath;
-}
-
-const ATL::CStringW& CAvailableApps::GetCabPath() const
-{
-    return m_Strings.szCabPath;
 }
 // CAvailableApps

@@ -97,7 +97,7 @@ BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
 
 static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
 {
-    DWORD dwImeThreadId = NtUserQueryInputContext(hIMC, 1);
+    DWORD dwImeThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
     DWORD dwThreadId = GetCurrentThreadId();
     return (dwImeThreadId != dwThreadId);
 }

@@ -93,7 +93,7 @@ BOOL WINAPI InitiateSystemShutdownA(_In_opt_ LPSTR, _In_opt_ LPSTR, _In_ DWORD, 
 BOOL WINAPI InitiateSystemShutdownW(_In_opt_ LPWSTR, _In_opt_ LPWSTR, _In_ DWORD, _In_ BOOL, _In_ BOOL);
 BOOL WINAPI InitiateSystemShutdownExA(_In_opt_ LPSTR, _In_opt_ LPSTR, _In_ DWORD, _In_ BOOL, _In_ BOOL, _In_ DWORD);
 BOOL WINAPI InitiateSystemShutdownExW(_In_opt_ LPWSTR, _In_opt_ LPWSTR, _In_ DWORD, _In_ BOOL, _In_ BOOL, _In_ DWORD);
-LSTATUS WINAPI RegCloseKey(_In_ HKEY);
+LSTATUS WINAPI RegCloseKey(_In_ HKEY hKey);
 LSTATUS WINAPI RegConnectRegistryA(_In_opt_ LPCSTR, _In_ HKEY, _Out_ PHKEY);
 LSTATUS WINAPI RegConnectRegistryW(_In_opt_ LPCWSTR,_In_ HKEY, _Out_ PHKEY);
 
@@ -102,14 +102,14 @@ LSTATUS WINAPI RegCopyTreeA(_In_ HKEY, _In_opt_ LPCSTR, _In_ HKEY);
 LSTATUS WINAPI RegCopyTreeW(_In_ HKEY, _In_opt_ LPCWSTR, _In_ HKEY);
 #endif
 
-LSTATUS WINAPI RegCreateKeyA(_In_ HKEY, _In_opt_ LPCSTR, _Out_ PHKEY);
-LSTATUS WINAPI RegCreateKeyW(_In_ HKEY, _In_opt_ LPCWSTR, _Out_ PHKEY);
-LSTATUS WINAPI RegCreateKeyExA(_In_ HKEY, _In_ LPCSTR, _Reserved_ DWORD, _In_opt_ LPSTR, _In_ DWORD, _In_ REGSAM, _In_opt_ LPSECURITY_ATTRIBUTES, _Out_ PHKEY, _Out_opt_ PDWORD);
-LSTATUS WINAPI RegCreateKeyExW(_In_ HKEY, _In_ LPCWSTR, _Reserved_ DWORD, _In_opt_ LPWSTR, _In_ DWORD, _In_ REGSAM, _In_opt_ LPSECURITY_ATTRIBUTES, _Out_ PHKEY, _Out_opt_ PDWORD);
-LSTATUS WINAPI RegDeleteKeyA(_In_ HKEY, _In_ LPCSTR);
-LSTATUS WINAPI RegDeleteKeyW(_In_ HKEY, _In_ LPCWSTR);
-LSTATUS WINAPI RegDeleteKeyExA(_In_ HKEY, _In_ LPCSTR, _In_ REGSAM, _Reserved_ DWORD);
-LSTATUS WINAPI RegDeleteKeyExW(_In_ HKEY, _In_ LPCWSTR, _In_ REGSAM, _Reserved_ DWORD);
+LSTATUS WINAPI RegCreateKeyA(_In_ HKEY hKey, _In_opt_ LPCSTR lpSubKey, _Out_ PHKEY phkResult);
+LSTATUS WINAPI RegCreateKeyW(_In_ HKEY hKey, _In_opt_ LPCWSTR lpSubKey, _Out_ PHKEY phkResult);
+LSTATUS WINAPI RegCreateKeyExA(_In_ HKEY hKey, _In_ LPCSTR lpSubKey, _Reserved_ DWORD Reserved, _In_opt_ LPSTR lpClass, _In_ DWORD dwOptions, _In_ REGSAM samDesired, _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes, _Out_ PHKEY phkResult, _Out_opt_ PDWORD lpdwDisposition);
+LSTATUS WINAPI RegCreateKeyExW(_In_ HKEY hKey, _In_ LPCWSTR lpSubKey, _Reserved_ DWORD Reserved, _In_opt_ LPWSTR lpClass, _In_ DWORD dwOptions, _In_ REGSAM samDesired, _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes, _Out_ PHKEY phkResult, _Out_opt_ PDWORD lpdwDisposition);
+LSTATUS WINAPI RegDeleteKeyA(_In_ HKEY hKey, _In_ LPCSTR lpSubKey);
+LSTATUS WINAPI RegDeleteKeyW(_In_ HKEY hKey, _In_ LPCWSTR lpSubKey);
+LSTATUS WINAPI RegDeleteKeyExA(_In_ HKEY hKey, _In_ LPCSTR lpSubKey, _In_ REGSAM samDesired, _Reserved_ DWORD Reserved);
+LSTATUS WINAPI RegDeleteKeyExW(_In_ HKEY hKey, _In_ LPCWSTR lpSubKey, _In_ REGSAM samDesired, _Reserved_ DWORD Reserved);
 
 #if (_WIN32_WINNT >= 0x0600)
 LSTATUS WINAPI RegDeleteKeyValueA(_In_ HKEY, _In_opt_ LPCSTR, _In_opt_ LPCSTR);

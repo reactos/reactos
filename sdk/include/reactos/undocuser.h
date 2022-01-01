@@ -296,6 +296,12 @@ MessageBoxTimeoutW(
 
 LPCWSTR WINAPI MB_GetString(IN UINT wBtn);
 
+/* dwType for NtUserUpdateInputContext */
+typedef enum _UPDATE_INPUT_CONTEXT
+{
+    UIC_CLIENTIMCDATA = 0,
+    UIC_IMEWINDOW
+} UPDATE_INPUT_CONTEXT;
 
 //
 // User api hook
@@ -378,6 +384,15 @@ BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah);
 #endif
 
 BOOL WINAPI UnregisterUserApiHook(VOID);
+
+/* dwType for NtUserQueryInputContext */
+typedef enum _QUERY_INPUT_CONTEXT
+{
+    QIC_INPUTPROCESSID = 0,
+    QIC_INPUTTHREADID,
+    QIC_DEFAULTWINDOWIME,
+    QIC_DEFAULTIMC
+} QUERY_INPUT_CONTEXT;
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -1,0 +1,13 @@
+/*
+ * PROJECT:     ReactOS Console Server DLL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATOR:  Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE
+BEGIN
+    IDS_CONSOLE_TITLE "ReactOS 主控台"
+END

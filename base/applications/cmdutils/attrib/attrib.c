@@ -120,7 +120,9 @@ PrintAttribute(
             Error = GetLastError();
             if ((Error != ERROR_DIRECTORY) && (Error != ERROR_SHARING_VIOLATION)
                   && (Error != ERROR_FILE_NOT_FOUND))
+            {
                 ErrorMessage(Error, pszFile);
+            }
             return FALSE;
         }
 
@@ -131,11 +133,13 @@ PrintAttribute(
 
             if (!wcscmp(findData.cFileName, L".") ||
                 !wcscmp(findData.cFileName, L".."))
+            {
                 continue;
+            }
 
             wcscpy(pszFileName, findData.cFileName);
             wcscat(pszFileName, L"\\");
-            bFound != PrintAttribute(szFullName, pszFile, bRecurse, bDirectories);
+            bFound |= PrintAttribute(szFullName, pszFile, bRecurse, bDirectories);
         }
         while (FindNextFileW(hFind, &findData));
         FindClose(hFind);
@@ -161,7 +165,9 @@ PrintAttribute(
 
         if (!wcscmp(findData.cFileName, L".") ||
             !wcscmp(findData.cFileName, L".."))
+        {
             continue;
+        }
 
         wcscpy(pszFileName, findData.cFileName);
 
@@ -174,7 +180,7 @@ PrintAttribute(
                   szFullName);
         bFound = TRUE;
     }
-    while(FindNextFileW(hFind, &findData));
+    while (FindNextFileW(hFind, &findData));
     FindClose(hFind);
 
     return bFound;
@@ -218,7 +224,9 @@ ChangeAttribute(
             Error = GetLastError();
             if ((Error != ERROR_DIRECTORY) && (Error != ERROR_SHARING_VIOLATION)
                   && (Error != ERROR_FILE_NOT_FOUND))
+            {
                 ErrorMessage(Error, pszFile);
+            }
             return FALSE;
         }
 
@@ -229,11 +237,13 @@ ChangeAttribute(
 
             if (!wcscmp(findData.cFileName, L".") ||
                 !wcscmp(findData.cFileName, L".."))
+            {
                 continue;
+            }
 
             wcscpy(pszFileName, findData.cFileName);
             wcscat(pszFileName, L"\\");
-            bFound != ChangeAttribute(szFullName, pszFile, bRecurse, bDirectories, 
+            bFound |= ChangeAttribute(szFullName, pszFile, bRecurse, bDirectories,
                                       dwMask, dwAttrib);
         }
         while (FindNextFileW(hFind, &findData));
@@ -260,7 +270,9 @@ ChangeAttribute(
 
         if (!wcscmp(findData.cFileName, L".") ||
             !wcscmp(findData.cFileName, L".."))
+        {
             continue;
+        }
 
         if (bRecurse && bIsDir && !bDirectories)
             continue;
@@ -272,7 +284,7 @@ ChangeAttribute(
         SetFileAttributes(szFullName, dwAttribute);
         bFound = TRUE;
     }
-    while(FindNextFileW(hFind, &findData));
+    while (FindNextFileW(hFind, &findData));
     FindClose(hFind);
 
     return bFound;

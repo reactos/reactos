@@ -651,6 +651,12 @@ InitThreadCallback(PETHREAD Thread)
     }
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
 
+    /* Create the default input context */
+    if (IS_IMM_MODE())
+    {
+        UserCreateInputContext(0);
+    }
+
     /* Last things to do only if we are not a SYSTEM or CSRSS thread */
     if (!(ptiCurrent->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD)))
     {
