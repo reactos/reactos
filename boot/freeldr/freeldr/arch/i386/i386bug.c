@@ -140,18 +140,22 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
               TrapFrame->Dr6);
     PrintText("                                                               DR7: %.8lx\n\n",
               TrapFrame->Dr7);
+
+    /* NOTE: Segment registers are intrinsically 16 bits. Even if the x86
+     * KTRAP_FRAME structure stores them as ULONG, only their lower 16 bits
+     * are initialized. We thus cast them to USHORT before display. */
     PrintText("CS: %.4lx        EIP: %.8lx\n",
-              TrapFrame->SegCs, TrapFrame->Eip);
+              (USHORT)TrapFrame->SegCs, TrapFrame->Eip);
     PrintText("DS: %.4lx        ERROR CODE: %.8lx\n",
-              TrapFrame->SegDs, TrapFrame->ErrCode);
+              (USHORT)TrapFrame->SegDs, TrapFrame->ErrCode);
     PrintText("ES: %.4lx        EFLAGS: %.8lx\n",
-              TrapFrame->SegEs, TrapFrame->EFlags);
+              (USHORT)TrapFrame->SegEs, TrapFrame->EFlags);
     PrintText("FS: %.4lx        GDTR Base: %.8lx Limit: %.4x\n",
-              TrapFrame->SegFs, Special->Gdtr.Base, Special->Gdtr.Limit);
+              (USHORT)TrapFrame->SegFs, Special->Gdtr.Base, Special->Gdtr.Limit);
     PrintText("GS: %.4lx        IDTR Base: %.8lx Limit: %.4x\n",
-              TrapFrame->SegGs, Special->Idtr.Base, Special->Idtr.Limit);
+              (USHORT)TrapFrame->SegGs, Special->Idtr.Base, Special->Idtr.Limit);
     PrintText("SS: %.4lx        LDTR: %.4lx TR: %.4lx\n\n",
-              TrapFrame->HardwareSegSs, Special->Ldtr, Special->Idtr.Limit);
+              (USHORT)TrapFrame->HardwareSegSs, Special->Ldtr, Special->Tr);
 
     i386PrintFrames(TrapFrame);                        // Display frames
     InstructionPointer = (PUCHAR)TrapFrame->Eip;
@@ -176,7 +180,7 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
     PrintText("GS: %.4lx        IDTR Base: %.8lx Limit: %.4x\n",
               TrapFrame->SegGs, Special->Idtr.Base, Special->Idtr.Limit);
     PrintText("SS: %.4lx        LDTR: %.4lx TR: %.4lx\n\n",
-              TrapFrame->SegSs, Special->Ldtr, Special->Idtr.Limit);
+              TrapFrame->SegSs, Special->Ldtr, Special->Tr);
     InstructionPointer = (PUCHAR)TrapFrame->Rip;
 #endif
     PrintText("\nInstruction stream: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x \n",
