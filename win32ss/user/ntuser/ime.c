@@ -226,7 +226,10 @@ VOID UserFreeInputContext(PVOID Object)
     PIMC pIMC = Object, pImc0;
     PTHREADINFO pti = pIMC->head.pti;
 
-    UserMarkObjectDestroy(Object);
+    if (!pIMC)
+        return;
+
+    UserMarkObjectDestroy(pIMC);
 
     for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
     {
@@ -237,7 +240,7 @@ VOID UserFreeInputContext(PVOID Object)
         }
     }
 
-    UserHeapFree(Object);
+    UserHeapFree(pIMC);
 
     pti->ppi->UserHandleCount--;
     IntDereferenceThreadInfo(pti);
