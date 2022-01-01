@@ -231,6 +231,7 @@ VOID UserFreeInputContext(PVOID Object)
 
     pti = pIMC->head.pti;
 
+    /* Find the IMC in the list and remove it */
     for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
     {
         if (pImc0->pImcNext == pIMC)
