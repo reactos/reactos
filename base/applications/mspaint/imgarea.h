@@ -13,6 +13,10 @@
 class CImgAreaWindow : public CWindowImpl<CMainWindow>
 {
 public:
+    CImgAreaWindow() : drawing(FALSE)
+    {
+    }
+
     DECLARE_WND_CLASS_EX(_T("ImgAreaWindow"), CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CImgAreaWindow)
@@ -20,7 +24,9 @@ public:
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDblClk)
         MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRButtonDown)
+        MESSAGE_HANDLER(WM_RBUTTONDBLCLK, OnRButtonDblClk)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
         MESSAGE_HANDLER(WM_RBUTTONUP, OnRButtonUp)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
@@ -39,7 +45,9 @@ private:
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnLButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnRButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
