@@ -597,7 +597,7 @@ HIMC WINAPI ImmCreateContext(void)
     if (pClientImc == NULL)
         return NULL;
 
-    hIMC = NtUserCreateInputContext(pClientImc);
+    hIMC = NtUserCreateInputContext((ULONG_PTR)pClientImc);
     if (hIMC == NULL)
     {
         Imm32HeapFree(pClientImc);
