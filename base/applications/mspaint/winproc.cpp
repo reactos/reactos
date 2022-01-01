@@ -559,11 +559,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
             SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
-            toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
-            //TODO: do this properly
-            startPaintingL(imageModel.GetDC(), 0, 0, paletteModel.GetFgColor(), paletteModel.GetBgColor());
-            whilePaintingL(imageModel.GetDC(), imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetFgColor(), paletteModel.GetBgColor());
-            endPaintingL(imageModel.GetDC(), imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetFgColor(), paletteModel.GetBgColor());
+            toolsModel.selectAll();
+            imageArea.Invalidate(TRUE);
             break;
         }
         case IDM_EDITCOPYTO:
