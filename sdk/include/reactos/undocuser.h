@@ -296,6 +296,12 @@ MessageBoxTimeoutW(
 
 LPCWSTR WINAPI MB_GetString(IN UINT wBtn);
 
+/* dwType for NtUserUpdateInputContext */
+typedef enum _UPDATE_INPUT_CONTEXT
+{
+    UIC_CLIENTIMCDATA = 0,
+    UIC_IMEWINDOW
+} UPDATE_INPUT_CONTEXT;
 
 //
 // User api hook

@@ -346,16 +346,61 @@ NtUserSetSysColors(
    return Ret;
 }
 
-DWORD
+BOOL FASTCALL UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
+{
+    PTHREADINFO pti = GetW32ThreadInfo();
+    PTHREADINFO ptiIMC = pIMC->head.pti;
+
+    if (pti->ppi != ptiIMC->ppi) // Different process?
+        return FALSE;
+
+    switch (dwType)
+    {
+        case UIC_CLIENTIMCDATA:
+            if (pIMC->dwClientImcData)
+                return FALSE; // Already set
+
+            pIMC->dwClientImcData = dwValue;
+            break;
+
+        case UIC_IMEWINDOW:
+            if (!ValidateHwndNoErr((HWND)dwValue))
+                return FALSE; // Invalid HWND
+
+            pIMC->hImeWnd = (HWND)dwValue;
+            break;
+
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL
 APIENTRY
 NtUserUpdateInputContext(
     HIMC hIMC,
-    DWORD Unknown1,
-    LPVOID pClientImc)
+    DWORD dwType,
+    DWORD_PTR dwValue)
 {
-   STUB
+    PIMC pIMC;
+    BOOL ret = FALSE;
 
-   return 0;
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+        goto Quit;
+
+    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (!pIMC)
+        goto Quit;
+
+    ret = UserUpdateInputContext(pIMC, dwType, dwValue);
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 DWORD
