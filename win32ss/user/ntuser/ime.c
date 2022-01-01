@@ -224,10 +224,14 @@ AllocInputContextObject(PDESKTOP pDesk,
 VOID UserFreeInputContext(PVOID Object)
 {
     PIMC pIMC = Object, pImc0;
-    PTHREADINFO pti = pIMC->head.pti;
+    PTHREADINFO pti;
 
-    UserMarkObjectDestroy(Object);
+    if (!pIMC)
+        return;
 
+    pti = pIMC->head.pti;
+
+    /* Find the IMC in the list and remove it */
     for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
     {
         if (pImc0->pImcNext == pIMC)
@@ -237,7 +241,7 @@ VOID UserFreeInputContext(PVOID Object)
         }
     }
 
-    UserHeapFree(Object);
+    UserHeapFree(pIMC);
 
     pti->ppi->UserHandleCount--;
     IntDereferenceThreadInfo(pti);
@@ -246,7 +250,11 @@ VOID UserFreeInputContext(PVOID Object)
 BOOLEAN UserDestroyInputContext(PVOID Object)
 {
     PIMC pIMC = Object;
-    UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
+    if (pIMC)
+    {
+        UserMarkObjectDestroy(pIMC);
+        UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
+    }
     return TRUE;
 }
 
