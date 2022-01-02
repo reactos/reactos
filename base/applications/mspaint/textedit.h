@@ -12,12 +12,11 @@ class CTextEditWindow : public CWindowImpl<CTextEditWindow>
 {
 public:
     CTextEditWindow();
-    ~CTextEditWindow();
 
     HWND Create(HWND hwndParent);
     void DoFillBack(HWND hwnd, HDC hDC);
     void DoDraw(HWND hwnd, HDC hDC);
-    void InvalidateEdit(LPTSTR pszText);
+    void InvalidateEdit(LPTSTR pszOldText);
     void InvalidateEdit2();
 
     BEGIN_MSG_MAP(CTextEditWindow)
@@ -58,6 +57,7 @@ public:
     LRESULT OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 protected:
+    HWND m_hwndParent;
     HFONT m_hFont;
     LOGFONT m_lf;
 

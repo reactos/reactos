@@ -26,8 +26,7 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText, LPRECT pr
     DWORD dwMargin = (DWORD)DefWindowProc(EM_GETMARGINS, 0, 0);
     LONG leftMargin = LOWORD(dwMargin), rightMargin = HIWORD(dwMargin);
 
-    INT x = leftMargin, y = tm.tmHeight;
-    INT xMax = x, yMax = y;
+    INT x = leftMargin, y = tm.tmHeight, xMax = x, yMax = y;
     INT ich;
     for (ich = 0; ich < cchText; ++ich)
     {
@@ -148,13 +147,13 @@ void CTextEditWindow::DrawGrip(HDC hDC, RECT& rc)
     FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
 }
 
-void CTextEditWindow::InvalidateEdit(LPTSTR pszText)
+void CTextEditWindow::InvalidateEdit(LPTSTR pszOldText)
 {
     TCHAR szText[512];
     INT cchText = GetWindowText(szText, _countof(szText));
 
     RECT rcParent;
-    imageArea.GetWindowRect(&rcParent);
+    ::GetWindowRect(m_hwndParent, &rcParent);
 
     RECT rc, rcWnd, rcText;
     GetWindowRect(&rcWnd);
@@ -163,7 +162,7 @@ void CTextEditWindow::InvalidateEdit(LPTSTR pszText)
     if (HDC hDC = GetDC())
     {
         SelectObject(hDC, (HFONT)SendMessage(WM_GETFONT, 0, 0));
-        SIZE siz = DoCalcRect(hDC, szText, cchText, &rcParent, pszText);
+        SIZE siz = DoCalcRect(hDC, szText, cchText, &rcParent, pszOldText);
         ReleaseDC(hDC);
 
         rcText.right = rcText.left + siz.cx;
@@ -171,10 +170,10 @@ void CTextEditWindow::InvalidateEdit(LPTSTR pszText)
     }
 
     UnionRect(&rc, &rcText, &rcWnd);
-    ::MapWindowPoints(NULL, imageArea, (LPPOINT)&rc, 2);
+    ::MapWindowPoints(NULL, m_hwndParent, (LPPOINT)&rc, 2);
 
     rcWnd = rc;
-    imageArea.GetClientRect(&rcParent);
+    ::GetClientRect(m_hwndParent, &rcParent);
     IntersectRect(&rc, &rcParent, &rcWnd);
 
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
@@ -184,22 +183,18 @@ void CTextEditWindow::InvalidateEdit(LPTSTR pszText)
 
     rc.left += leftMargin;
     rc.right -= rightMargin;
-    ::MapWindowPoints(imageArea, m_hWnd, (LPPOINT)&rc, 2);
+    ::MapWindowPoints(m_hwndParent, m_hWnd, (LPPOINT)&rc, 2);
     SendMessage(EM_SETRECT, 0, (LPARAM)&rc);
 
     DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
     DefWindowProc(WM_VSCROLL, SB_TOP, 0);
 
-    imageArea.InvalidateRect(NULL, TRUE);
+    ::InvalidateRect(m_hwndParent, NULL, TRUE);
 }
 
 CTextEditWindow::CTextEditWindow() : m_hFont(NULL)
 {
     ZeroMemory(&m_lf, sizeof(m_lf));
-}
-
-CTextEditWindow::~CTextEditWindow()
-{
 }
 
 LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -289,7 +284,7 @@ LRESULT CTextEditWindow::OnNCHitTest(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CTextEditWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    imageArea.InvalidateRect(NULL, TRUE);
+    ::InvalidateRect(m_hwndParent, NULL, TRUE);
     return ret;
 }
 
@@ -298,24 +293,24 @@ LRESULT CTextEditWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
     RECT rc;
     GetClientRect(&rc);
-    SendMessage(EM_SETRECT, 0, (LPARAM)&rc);
+    SendMessage(EM_SETRECTNP, 0, (LPARAM)&rc);
     SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
-    imageArea.InvalidateRect(NULL, TRUE);
+    ::InvalidateRect(m_hwndParent, NULL, TRUE);
     return ret;
 }
 
 // Hack: Use DECLARE_WND_SUPERCLASS instead!
 HWND CTextEditWindow::Create(HWND hwndParent)
 {
+    m_hwndParent = hwndParent;
+
     DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL |
                   WS_CHILD | WS_THICKFRAME;
-    DWORD exstyle = 0;
-    m_hWnd = ::CreateWindowEx(exstyle, WC_EDIT, NULL, style,
-                              0, 0, 0, 0,
+    m_hWnd = ::CreateWindowEx(0, WC_EDIT, NULL, style, 0, 0, 0, 0,
                               hwndParent, NULL, hProgInstance, NULL);
     if (m_hWnd)
     {
-#undef SubclassWindow
+#undef SubclassWindow // Don't use macro
         SubclassWindow(m_hWnd);
 
         if (!m_hFont)
@@ -366,6 +361,7 @@ void CTextEditWindow::DoDraw(HWND hwnd, HDC hDC)
         FillRect(hDC, &rc, hbr);
         DeleteObject(hbr);
     }
+
     SetTextColor(hDC, paletteModel.GetFgColor());
     DrawText(hDC, szText, cchText, &rc, uFormat);
     SelectObject(hDC, hFontOld);
@@ -391,8 +387,8 @@ void CTextEditWindow::InvalidateEdit2()
 {
     RECT rc;
     GetWindowRect(&rc);
-    ::MapWindowPoints(NULL, imageArea, (LPPOINT)&rc, 2);
-    imageArea.InvalidateRect(&rc, TRUE);
+    ::MapWindowPoints(NULL, m_hwndParent, (LPPOINT)&rc, 2);
+    ::InvalidateRect(m_hwndParent, &rc, TRUE);
 }
 
 LRESULT CTextEditWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

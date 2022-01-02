@@ -354,7 +354,6 @@ void InitToolbar(HWND hwnd)
 {
     HWND hwndToolbar = GetDlgItem(hwnd, IDD_FONTSTOOLBAR);
     SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-
     SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(16, 16));
     SendMessage(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(20, 20));
     
@@ -436,13 +435,10 @@ void CFontsDialog::OnFontName(HWND hwnd, UINT codeNotify)
             for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
             {
                 CString& name = m_arrFontNames[i];
-                if (name == szText)
+                if (name == szText && m_strFontName != szText)
                 {
-                    if (m_strFontName != szText)
-                    {
-                        m_strFontName = szText;
-                        toolsModel.NotifyToolChanged();
-                    }
+                    m_strFontName = szText;
+                    toolsModel.NotifyToolChanged();
                 }
             }
             break;
@@ -543,5 +539,6 @@ LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 LRESULT CFontsDialog::OnNCActivate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    // TODO: Show active title bar
     return ::DefWindowProc(m_hWnd, nMsg, TRUE, lParam);
 }
