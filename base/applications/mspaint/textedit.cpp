@@ -393,12 +393,14 @@ void CTextEditWindow::InvalidateEdit2()
 
 LRESULT CTextEditWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    UpdateFont();
     InvalidateEdit2();
     return 0;
 }
 
 LRESULT CTextEditWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    UpdateFont();
     InvalidateEdit2();
     return 0;
 }
@@ -407,6 +409,7 @@ LRESULT CTextEditWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARA
 {
     if (wParam == TOOL_TEXT)
     {
+        UpdateFont();
         InvalidateEdit2();
     }
     else
