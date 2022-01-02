@@ -327,9 +327,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* by moving the window, the things in WM_SIZE are done */
     mainWindow.SetWindowPlacement(&(registrySettings.WindowPlacement));
 
-    /* create Fonts dialog */
-    fontsDialog.Create(mainWindow);
-
     /* Make the window visible on the screen */
     ShowWindow (hwnd, nFunsterStil);
 
