@@ -368,6 +368,11 @@ struct TextTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
+        if (!textEditWindow.IsWindow())
+        {
+            textEditWindow.Create(imageArea);
+            textEditWindow.UpdateFont();
+        }
         if (fontsDialog.IsWindowVisible())
         {
             if (textEditWindow.GetWindowTextLength() > 0)
@@ -403,8 +408,6 @@ struct TextTool : ToolBase
         if (!selectionModel.IsSrcRectSizeNonzero())
             SetRect(&rc, x, y, x + cxMin, y + cyMin);
 
-        if (!textEditWindow.IsWindow())
-            textEditWindow.Create(imageArea);
         textEditWindow.MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
         textEditWindow.InvalidateEdit(NULL);
         ForceRefreshSelectionContents();

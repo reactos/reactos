@@ -97,7 +97,8 @@ void PaletteModel::NotifyColorChanged()
 {
     paletteWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
     selectionWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
-    textEditWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
+    if (textEditWindow.IsWindow())
+        textEditWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
 }
 
 void PaletteModel::NotifyPaletteChanged()

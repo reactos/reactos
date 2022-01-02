@@ -18,6 +18,7 @@ public:
     void DoDraw(HWND hwnd, HDC hDC);
     void InvalidateEdit(LPTSTR pszOldText);
     void InvalidateEdit2();
+    void UpdateFont();
 
     BEGIN_MSG_MAP(CTextEditWindow)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

@@ -555,8 +555,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITSELECTALL:
         {
-            if (toolsModel.GetActiveTool() == TOOL_TEXT &&
-                textEditWindow.IsWindowVisible())
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
             {
                 textEditWindow.SendMessage(EM_SETSEL, 0, -1);
                 textEditWindow.InvalidateEdit2();

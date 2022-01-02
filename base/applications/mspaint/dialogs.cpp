@@ -301,10 +301,8 @@ static int CompareNames(const void *x, const void *y)
 }
 #endif
 
-void CFontsDialog::InitNames(HWND hwnd)
+void CFontsDialog::InitNames()
 {
-    HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
-
     HDC hDC = CreateCompatibleDC(NULL);
     if (hDC)
     {
@@ -314,6 +312,7 @@ void CFontsDialog::InitNames(HWND hwnd)
         // TODO: Sort m_arrFontNames
         //qsort(&m_arrFontNames[0], m_arrFontNames.GetSize(), sizeof(CString), CompareNames);
 
+        HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
         SendMessage(hwndNames, CB_RESETCONTENT, 0, 0);
         for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
         {
@@ -330,7 +329,7 @@ void CFontsDialog::InitNames(HWND hwnd)
     }
 }
 
-void CFontsDialog::InitFontSizes(HWND hwnd)
+void CFontsDialog::InitFontSizes()
 {
     HWND hwndSizes = GetDlgItem(IDD_FONTSSIZES);
     static const INT sizes[] =
@@ -348,9 +347,9 @@ void CFontsDialog::InitFontSizes(HWND hwnd)
     }
 }
 
-void InitToolbar(HWND hwnd)
+void CFontsDialog::InitToolbar()
 {
-    HWND hwndToolbar = GetDlgItem(hwnd, IDD_FONTSTOOLBAR);
+    HWND hwndToolbar = GetDlgItem(IDD_FONTSTOOLBAR);
     SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
     SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(16, 16));
     SendMessage(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(20, 20));
@@ -371,6 +370,10 @@ void InitToolbar(HWND hwnd)
         { 3, IDM_VERTICAL, 0, TBSTYLE_CHECK }, // TODO:
     };
     SendMessage(hwndToolbar, TB_ADDBUTTONS, _countof(buttons), (LPARAM)&buttons);
+
+    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_BOLD, m_bBold);
+    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_ITALIC, m_bItalic);
+    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_UNDERLINE, m_bUnderline);
 }
 
 LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -379,13 +382,13 @@ LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     TCHAR szFontName[LF_FACESIZE];
     LOGFONT lf;
     GetObject(GetStockFont(DEFAULT_GUI_FONT), sizeof(lf), &lf);
-    lstrcpyn(szFontName, lf.lfFaceName, _countof(szFontName));
+    if (m_strFontName.GetLength())
+        lstrcpyn(szFontName, m_strFontName, _countof(szFontName));
+    else
+        lstrcpyn(szFontName, lf.lfFaceName, _countof(szFontName));
 
-    // init font sizes
-    InitFontSizes(m_hWnd);
-
-    // init font names
-    InitNames(m_hWnd);
+    InitFontSizes();
+    InitNames();
 
     // set the default font name
     HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
@@ -395,7 +398,7 @@ LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     ::SetWindowText(hwndNames, szFontName);
 
     // init toolbar
-    InitToolbar(m_hWnd);
+    InitToolbar();
 
     return TRUE;
 }

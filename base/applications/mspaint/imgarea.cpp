@@ -141,7 +141,8 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     ReleaseDC(hdc);
     selectionWindow.Invalidate(FALSE);
     miniature.Invalidate(FALSE);
-    textEditWindow.Invalidate(TRUE);
+    if (textEditWindow.IsWindow())
+        textEditWindow.Invalidate(TRUE);
     return 0;
 }
 

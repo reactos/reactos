@@ -154,7 +154,8 @@ void ToolsModel::NotifyToolChanged()
 {
     toolBoxContainer.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
     toolSettingsWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
-    textEditWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
+    if (textEditWindow.IsWindow())
+        textEditWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
     if (m_activeTool == TOOL_TEXT)
     {
         if (!fontsDialog.IsWindow())
@@ -170,7 +171,8 @@ void ToolsModel::NotifyToolSettingsChanged()
 {
     toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
     selectionWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
-    textEditWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
+    if (textEditWindow.IsWindow())
+        textEditWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
 }
 
 void ToolsModel::NotifyZoomChanged()

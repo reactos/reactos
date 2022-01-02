@@ -102,8 +102,9 @@ public:
         MESSAGE_HANDLER(WM_NCACTIVATE, OnNCActivate)
     END_MSG_MAP()
 
-    void InitNames(HWND hwnd);
-    void InitFontSizes(HWND hwnd);
+    void InitNames();
+    void InitFontSizes();
+    void InitToolbar();
     BOOL IsBold() const                 { return m_bBold; }
     BOOL IsItalic() const               { return m_bItalic; }
     BOOL IsUnderline() const            { return m_bUnderline; }

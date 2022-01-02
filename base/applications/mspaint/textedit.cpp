@@ -407,27 +407,6 @@ LRESULT CTextEditWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARA
 {
     if (wParam == TOOL_TEXT)
     {
-        if (m_hFont)
-        {
-            DeleteObject(m_hFont);
-            m_hFont = NULL;
-        }
-
-        lstrcpyn(m_lf.lfFaceName, fontsDialog.GetFontName(), _countof(m_lf.lfFaceName));
-
-        INT nFontSize = fontsDialog.GetFontSize();
-        HDC hdc = GetDC();
-        m_lf.lfHeight = -MulDiv (nFontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
-        ReleaseDC(hdc);
-
-        m_lf.lfWeight = (fontsDialog.IsBold() ? FW_BOLD : FW_NORMAL);
-        m_lf.lfItalic = fontsDialog.IsItalic();
-        m_lf.lfUnderline = fontsDialog.IsUnderline();
-
-        if (!m_hFont)
-            m_hFont = ::CreateFontIndirect(&m_lf);
-
-        SetWindowFont(m_hWnd, m_hFont, TRUE);
         InvalidateEdit2();
     }
     else
@@ -435,6 +414,31 @@ LRESULT CTextEditWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARA
         ShowWindow(SW_HIDE);
     }
     return 0;
+}
+
+void CTextEditWindow::UpdateFont()
+{
+    if (m_hFont)
+    {
+        DeleteObject(m_hFont);
+        m_hFont = NULL;
+    }
+
+    lstrcpyn(m_lf.lfFaceName, fontsDialog.GetFontName(), _countof(m_lf.lfFaceName));
+
+    INT nFontSize = fontsDialog.GetFontSize();
+    HDC hdc = GetDC();
+    m_lf.lfHeight = -MulDiv (nFontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+    ReleaseDC(hdc);
+
+    m_lf.lfWeight = (fontsDialog.IsBold() ? FW_BOLD : FW_NORMAL);
+    m_lf.lfItalic = fontsDialog.IsItalic();
+    m_lf.lfUnderline = fontsDialog.IsUnderline();
+
+    if (!m_hFont)
+        m_hFont = ::CreateFontIndirect(&m_lf);
+
+    SetWindowFont(m_hWnd, m_hFont, TRUE);
 }
 
 LRESULT CTextEditWindow::OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
