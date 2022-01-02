@@ -467,31 +467,6 @@ void CFontsDialog::OnFontSize(HWND hwnd, UINT codeNotify)
     }
 }
 
-BOOL CFontsDialog::IsBold() const
-{
-    return m_bBold;
-}
-
-BOOL CFontsDialog::IsItalic() const
-{
-    return m_bItalic;
-}
-
-BOOL CFontsDialog::IsUnderline() const
-{
-    return m_bUnderline;
-}
-
-const CString& CFontsDialog::GetFontName() const
-{
-    return m_strFontName;
-}
-
-INT CFontsDialog::GetFontSize() const
-{
-    return m_nFontSize;
-}
-
 LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     UINT id = LOWORD(wParam);
