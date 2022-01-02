@@ -261,6 +261,7 @@ LRESULT CStretchSkewDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     return 0;
 }
 
+static
 INT CALLBACK
 EnumFontFamProc(ENUMLOGFONT *lpelf,
                 NEWTEXTMETRIC *lpntm,
@@ -290,6 +291,19 @@ CFontsDialog::CFontsDialog()
     m_nFontSize = 14;
 }
 
+#if 0
+static int CompareNames(const void *x, const void *y)
+{
+    const CString *a = reinterpret_cast<const CString *>(x);
+    const CString *b = reinterpret_cast<const CString *>(y);
+    if (*a < *b)
+        return -1;
+    if (*a > *b)
+        return 1;
+    return 0;
+}
+#endif
+
 void CFontsDialog::InitNames(HWND hwnd)
 {
     HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
@@ -299,6 +313,9 @@ void CFontsDialog::InitNames(HWND hwnd)
     {
         m_arrFontNames.RemoveAll();
         EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc, reinterpret_cast<LPARAM>(this));
+
+        // TODO: Sort m_arrFontNames
+        //qsort(&m_arrFontNames[0], m_arrFontNames.GetSize(), sizeof(CString), CompareNames);
 
         SendMessage(hwndNames, CB_RESETCONTENT, 0, 0);
         for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
@@ -355,7 +372,7 @@ void InitToolbar(HWND hwnd)
         { 0, IDM_BOLD, TBSTATE_ENABLED, TBSTYLE_CHECK, 0, 0, 1000 },
         { 1, IDM_ITALIC, TBSTATE_ENABLED, TBSTYLE_CHECK, 0, 0, 1001 },
         { 2, IDM_UNDERLINE, TBSTATE_ENABLED, TBSTYLE_CHECK, 0, 0, 1002 },
-        { 3, IDM_VERTICAL, 0, TBSTYLE_CHECK, 0, 0, 1003 },
+        { 3, IDM_VERTICAL, 0, TBSTYLE_CHECK, 0, 0, 1003 }, // TODO:
     };
     SendMessage(hwndToolbar, TB_ADDBUTTONS, _countof(buttons), (LPARAM)&buttons);
 }

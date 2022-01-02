@@ -672,6 +672,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 if (!fontsDialog.IsWindow())
                     fontsDialog.Create(mainWindow);
                 fontsDialog.ShowWindow(fontsDialog.IsWindowVisible() ? SW_HIDE : SW_SHOW);
+                fontsDialog.SendMessage(DM_REPOSITION, 0, 0);
             }
             break;
         case IDM_VIEWSHOWGRID:
