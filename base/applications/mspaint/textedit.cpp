@@ -162,7 +162,7 @@ void CTextEditWindow::InvalidateEdit(LPTSTR pszText)
 
     if (HDC hDC = GetDC())
     {
-        SelectObject(hDC, GetWindowFont(m_hWnd));
+        SelectObject(hDC, (HFONT)SendMessage(WM_GETFONT, 0, 0));
         SIZE siz = DoCalcRect(hDC, szText, cchText, &rcParent, pszText);
         ReleaseDC(hDC);
 

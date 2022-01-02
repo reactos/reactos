@@ -369,10 +369,10 @@ void InitToolbar(HWND hwnd)
 
     TBBUTTON buttons[] =
     {
-        { 0, IDM_BOLD, TBSTATE_ENABLED, TBSTYLE_CHECK, 0, 0, 1000 },
-        { 1, IDM_ITALIC, TBSTATE_ENABLED, TBSTYLE_CHECK, 0, 0, 1001 },
-        { 2, IDM_UNDERLINE, TBSTATE_ENABLED, TBSTYLE_CHECK, 0, 0, 1002 },
-        { 3, IDM_VERTICAL, 0, TBSTYLE_CHECK, 0, 0, 1003 }, // TODO:
+        { 0, IDM_BOLD, TBSTATE_ENABLED, TBSTYLE_CHECK },
+        { 1, IDM_ITALIC, TBSTATE_ENABLED, TBSTYLE_CHECK },
+        { 2, IDM_UNDERLINE, TBSTATE_ENABLED, TBSTYLE_CHECK },
+        { 3, IDM_VERTICAL, 0, TBSTYLE_CHECK }, // TODO:
     };
     SendMessage(hwndToolbar, TB_ADDBUTTONS, _countof(buttons), (LPARAM)&buttons);
 }
