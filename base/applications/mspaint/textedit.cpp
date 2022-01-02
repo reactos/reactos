@@ -23,11 +23,10 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText, LPRECT pr
     TEXTMETRIC tm;
     GetTextMetrics(hDC, &tm);
 
-    DWORD cxy = (DWORD)DefWindowProc(EM_GETMARGINS, 0, 0);
-    INT cxMargin = LOWORD(cxy);
-    INT cyMargin = HIWORD(cxy);
+    DWORD dwMargin = (DWORD)DefWindowProc(EM_GETMARGINS, 0, 0);
+    LONG leftMargin = LOWORD(dwMargin), rightMargin = HIWORD(dwMargin);
 
-    INT x = cxMargin, y = tm.tmHeight;
+    INT x = leftMargin, y = tm.tmHeight;
     INT xMax = x, yMax = y;
     INT ich;
     for (ich = 0; ich < cchText; ++ich)
@@ -37,12 +36,12 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText, LPRECT pr
 
         if (pszText[ich] == TEXT('\n'))
         {
-            if (rc.top + yMax + tm.tmHeight + cyMargin > prcParent->bottom)
+            if (rc.top + yMax + tm.tmHeight > prcParent->bottom)
             {
                 pszText[ich] = 0;
                 break;
             }
-            x = cxMargin;
+            x = leftMargin;
             y += tm.tmHeight;
             if (yMax < y)
                 yMax = y;
@@ -65,7 +64,7 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText, LPRECT pr
         MessageBeep(0xFFFFFFFF);
     }
 
-    SIZE ret = { xMax + cxMargin, yMax + cyMargin };
+    SIZE ret = { xMax + rightMargin, yMax };
     return ret;
 }
 
@@ -180,11 +179,11 @@ void CTextEditWindow::InvalidateEdit(LPTSTR pszText)
 
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
 
-    DWORD cxyMargin = (DWORD)SendMessage(EM_GETMARGINS, 0, 0);
-    UINT cxMargin = LOWORD(cxyMargin);
-    UINT cyMargin = HIWORD(cxyMargin);
+    DWORD dwMargin = (DWORD)SendMessage(EM_GETMARGINS, 0, 0);
+    LONG leftMargin = LOWORD(dwMargin), rightMargin = HIWORD(dwMargin);
 
-    InflateRect(&rc, -cxMargin, -cyMargin);
+    rc.left += leftMargin;
+    rc.right -= rightMargin;
     ::MapWindowPoints(imageArea, m_hWnd, (LPPOINT)&rc, 2);
     SendMessage(EM_SETRECT, 0, (LPARAM)&rc);
 
