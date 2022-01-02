@@ -286,9 +286,20 @@ LRESULT CTextEditWindow::OnNCHitTest(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     return HitTestGrip(rc, pt);
 }
 
-LRESULT CTextEditWindow::OnMoveSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CTextEditWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    imageArea.InvalidateRect(NULL, TRUE);
+    return ret;
+}
+
+LRESULT CTextEditWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    RECT rc;
+    GetClientRect(&rc);
+    SendMessage(EM_SETRECT, 0, (LPARAM)&rc);
+    SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
     imageArea.InvalidateRect(NULL, TRUE);
     return ret;
 }
@@ -309,6 +320,8 @@ HWND CTextEditWindow::Create(HWND hwndParent)
 
         if (!m_hFont)
             m_hFont = ::CreateFontIndirect(&m_lf);
+
+        PostMessage(WM_SIZE, 0, 0);
     }
 
     return m_hWnd;
@@ -359,11 +372,6 @@ void CTextEditWindow::DoDraw(HWND hwnd, HDC hDC)
 }
 
 LRESULT CTextEditWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    return 0;
-}
-
-LRESULT CTextEditWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     return 0;
 }
@@ -424,7 +432,6 @@ LRESULT CTextEditWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARA
             m_hFont = ::CreateFontIndirect(&m_lf);
 
         SetWindowFont(m_hWnd, m_hFont, TRUE);
-        ShowWindow(SW_SHOWNOACTIVATE);
         InvalidateEdit2();
     }
     else

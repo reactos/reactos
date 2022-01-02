@@ -22,7 +22,6 @@ public:
 
     BEGIN_MSG_MAP(CTextEditWindow)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_TOOLSMODELTOOLCHANGED, OnToolsModelToolChanged)
         MESSAGE_HANDLER(WM_TOOLSMODELSETTINGSCHANGED, OnToolsModelSettingsChanged)
@@ -35,13 +34,12 @@ public:
         MESSAGE_HANDLER(WM_NCPAINT, OnNCPaint)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNCCalcSize);
         MESSAGE_HANDLER(WM_NCHITTEST, OnNCHitTest);
-        MESSAGE_HANDLER(WM_MOVE, OnMoveSize);
-        MESSAGE_HANDLER(WM_SIZE, OnMoveSize);
+        MESSAGE_HANDLER(WM_MOVE, OnMove);
+        MESSAGE_HANDLER(WM_SIZE, OnSize);
         MESSAGE_HANDLER(EM_SETSEL, OnSetSel);
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -55,7 +53,8 @@ public:
     LRESULT OnNCPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnNCCalcSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnNCHitTest(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnMoveSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 protected:
