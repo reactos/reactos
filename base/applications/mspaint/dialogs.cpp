@@ -268,7 +268,7 @@ EnumFontFamProc(ENUMLOGFONT *lpelf,
                 LPARAM lParam)
 {
     CFontsDialog *pThis = reinterpret_cast<CFontsDialog*>(lParam);
-    auto name = lpelf->elfLogFont.lfFaceName;
+    LPTSTR name = lpelf->elfLogFont.lfFaceName;
     if (name[0] == '@')
         return TRUE;
 
