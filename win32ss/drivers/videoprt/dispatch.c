@@ -407,6 +407,9 @@ IntVideoPortDispatchOpen(
     {
         Status = STATUS_SUCCESS;
         InterlockedIncrement((PLONG)&DeviceExtension->DeviceOpened);
+
+        /* Query children, now that device is opened */
+        VideoPortEnumerateChildren(DeviceExtension->MiniPortDeviceExtension, NULL);
     }
     else
     {
@@ -938,6 +941,18 @@ IntVideoPortQueryBusRelations(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
     ULONG i;
     PLIST_ENTRY CurrentEntry;
+    NTSTATUS Status;
+
+    if (InterlockedCompareExchange((PLONG)&DeviceExtension->DeviceOpened, 0, 0) == 0)
+    {
+        /* Device not opened. Don't enumerate children yet */
+        WARN_(VIDEOPRT, "Skipping child enumeration because device is not opened");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    /* Query children of the device. */
+    Status = IntVideoPortEnumerateChildren(DeviceObject, Irp);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Count the children */
     i = 0;

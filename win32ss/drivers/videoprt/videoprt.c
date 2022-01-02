@@ -474,9 +474,6 @@ IntVideoPortFindAdapter(
                                     &HwResetAdaptersLock);
     }
 
-    /* Query children of the device. */
-    VideoPortEnumerateChildren(&DeviceExtension->MiniPortDeviceExtension, NULL);
-
     INFO_(VIDEOPRT, "STATUS_SUCCESS\n");
     return STATUS_SUCCESS;
 
@@ -1170,11 +1167,10 @@ VideoPortSynchronizeExecution(
 /*
  * @implemented
  */
-VP_STATUS
-NTAPI
-VideoPortEnumerateChildren(
-    IN PVOID HwDeviceExtension,
-    IN PVOID Reserved)
+NTSTATUS NTAPI
+IntVideoPortEnumerateChildren(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     ULONG Status;
@@ -1187,17 +1183,17 @@ VideoPortEnumerateChildren(
     PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
 
     INFO_(VIDEOPRT, "Starting child device probe\n");
-    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+    DeviceExtension = DeviceObject->DeviceExtension;
     if (DeviceExtension->DriverExtension->InitializationData.HwGetVideoChildDescriptor == NULL)
     {
         WARN_(VIDEOPRT, "Miniport's HwGetVideoChildDescriptor is NULL!\n");
-        return NO_ERROR;
+        return STATUS_SUCCESS;
     }
 
     if (!IsListEmpty(&DeviceExtension->ChildDeviceList))
     {
         ERR_(VIDEOPRT, "FIXME: Support calling VideoPortEnumerateChildren again!\n");
-        return NO_ERROR;
+        return STATUS_SUCCESS;
     }
 
     /* Enumerate the children */
@@ -1239,7 +1235,7 @@ VideoPortEnumerateChildren(
 
         INFO_(VIDEOPRT, "Probing child: %d\n", ChildEnumInfo.ChildIndex);
         Status = DeviceExtension->DriverExtension->InitializationData.HwGetVideoChildDescriptor(
-                     HwDeviceExtension,
+                     DeviceExtension->MiniPortDeviceExtension,
                      &ChildEnumInfo,
                      &ChildExtension->ChildType,
                      ChildExtension->ChildDescriptor,
@@ -1331,8 +1327,25 @@ VideoPortEnumerateChildren(
                        &ChildExtension->ListEntry);
     }
 
-    /* Trigger reenumeration by the PnP manager */
-    IoInvalidateDeviceRelations(DeviceExtension->PhysicalDeviceObject, BusRelations);
+    return STATUS_SUCCESS;
+}
+
+VP_STATUS
+NTAPI
+VideoPortEnumerateChildren(
+    IN PVOID HwDeviceExtension,
+    IN PVOID Reserved)
+{
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+    ASSERT(DeviceExtension);
+
+    if (DeviceExtension->PhysicalDeviceObject)
+    {
+        /* Trigger reenumeration by the PnP manager */
+        IoInvalidateDeviceRelations(DeviceExtension->PhysicalDeviceObject, BusRelations);
+    }
 
     return NO_ERROR;
 }
