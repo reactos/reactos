@@ -368,6 +368,13 @@ struct TextTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
+        if (fontsDialog.IsWindowVisible())
+        {
+            if (textEditWindow.GetWindowTextLength() > 0)
+                textEditWindow.DoDraw(imageArea, m_hdc);
+            textEditWindow.SetWindowText(NULL);
+            textEditWindow.ShowWindow(SW_HIDE);
+        }
         imageModel.CopyPrevious();
     }
 
@@ -384,14 +391,25 @@ struct TextTool : ToolBase
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
-        if (selectionModel.IsSrcRectSizeNonzero())
-        {
-            imageModel.CopyPrevious();
 
-            placeSelWin();
-            selectionWindow.ShowWindow(SW_SHOW);
-            ForceRefreshSelectionContents();
-        }
+        RECT rc;
+        selectionModel.GetRect(&rc);
+
+        INT cxMin = 80, cyMin = 24;
+        if (rc.right - rc.left < cxMin)
+            rc.right = rc.left + cxMin;
+        if (rc.bottom - rc.top < cyMin)
+            rc.bottom = rc.top + cyMin;
+        if (!selectionModel.IsSrcRectSizeNonzero())
+            SetRect(&rc, x, y, x + cxMin, y + cyMin);
+
+        if (!textEditWindow.IsWindow())
+            textEditWindow.Create(imageArea);
+        textEditWindow.MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
+        textEditWindow.InvalidateEdit(NULL);
+        ForceRefreshSelectionContents();
+        textEditWindow.ShowWindow(SW_SHOW);
+        textEditWindow.SetFocus();
     }
 
     void OnCancelDraw()

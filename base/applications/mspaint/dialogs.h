@@ -91,11 +91,13 @@ class CFontsDialog : public CDialogImpl<CFontsDialog>
 {
 public:
     enum { IDD = IDD_FONTS };
+    CFontsDialog();
 
     BEGIN_MSG_MAP(CFontsDialog)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+        MESSAGE_HANDLER(WM_NCACTIVATE, OnNCActivate)
     END_MSG_MAP()
 
     void InitNames(HWND hwnd);
@@ -107,6 +109,7 @@ public:
     BOOL IsItalic() const;
     BOOL IsUnderline() const;
     const CString& GetFontName() const;
+    INT GetFontSize() const;
 
     CSimpleArray<CString> m_arrFontNames;
 
@@ -114,9 +117,11 @@ protected:
     BOOL m_bBold;
     BOOL m_bItalic;
     BOOL m_bUnderline;
+    INT m_nFontSize;
     CString m_strFontName;
 
     LRESULT OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnNCActivate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };

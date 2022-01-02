@@ -10,8 +10,6 @@
 
 #include "precomp.h"
 
-#include "dialogs.h"
-
 /* FUNCTIONS ********************************************************/
 
 ToolsModel::ToolsModel()
@@ -94,7 +92,9 @@ void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
         case TOOL_RUBBER:
         case TOOL_COLOR:
         case TOOL_ZOOM:
+            break;
         case TOOL_TEXT:
+            OnButtonDown(TRUE, -1, -1, TRUE);
             break;
         default:
             m_oldActiveTool = m_activeTool;
@@ -160,8 +160,9 @@ void ToolsModel::NotifyToolChanged()
         if (!fontsDialog.IsWindow())
         {
             fontsDialog.Create(mainWindow);
-            fontsDialog.ShowWindow(SW_SHOWNORMAL);
         }
+        fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
+        mainWindow.BringWindowToTop();
     }
 }
 
@@ -169,6 +170,7 @@ void ToolsModel::NotifyToolSettingsChanged()
 {
     toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
     selectionWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
+    textEditWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
 }
 
 void ToolsModel::NotifyZoomChanged()

@@ -282,17 +282,14 @@ EnumFontFamProc(ENUMLOGFONT *lpelf,
     return TRUE;
 }
 
-static int CompareNames(const void *x, const void *y)
+CFontsDialog::CFontsDialog()
 {
-    const CString *a = reinterpret_cast<const CString *>(x);
-    const CString *b = reinterpret_cast<const CString *>(y);
-    if (*a < *b)
-        return -1;
-    if (*a > *b)
-        return 1;
-    return 0;
+    m_bBold = FALSE;
+    m_bItalic = FALSE;
+    m_bUnderline = FALSE;
+    m_nFontSize = 14;
 }
-    
+
 void CFontsDialog::InitNames(HWND hwnd)
 {
     HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
@@ -302,7 +299,6 @@ void CFontsDialog::InitNames(HWND hwnd)
     {
         m_arrFontNames.RemoveAll();
         EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc, reinterpret_cast<LPARAM>(this));
-        qsort(&m_arrFontNames[0], m_arrFontNames.GetSize(), sizeof(CString), CompareNames);
 
         SendMessage(hwndNames, CB_RESETCONTENT, 0, 0);
         for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
@@ -320,20 +316,6 @@ void CFontsDialog::InitNames(HWND hwnd)
     }
 }
 
-BOOL IsUserAsian(VOID)
-{
-    LANGID LangID = GetUserDefaultLangID();
-    switch (PRIMARYLANGID(LangID))
-    {
-    case LANG_CHINESE:
-    case LANG_JAPANESE:
-    case LANG_KOREAN:
-        return TRUE;
-    default:
-        return FALSE;
-    }
-}
-
 void CFontsDialog::InitFontSizes(HWND hwnd)
 {
     HWND hwndSizes = GetDlgItem(IDD_FONTSSIZES);
@@ -341,13 +323,13 @@ void CFontsDialog::InitFontSizes(HWND hwnd)
     {
         8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72
     };
-    INT nDefaultSize = (IsUserAsian() ? 9 : 8);
+    ComboBox_ResetContent(hwndSizes);
     for (INT size : sizes)
     {
         TCHAR szText[64];
         wsprintf(szText, TEXT("%d"), size);
         INT iItem = ComboBox_AddString(hwndSizes, szText);
-        if (size == nDefaultSize)
+        if (size == m_nFontSize)
             ComboBox_SetCurSel(hwndSizes, iItem);
     }
 }
@@ -403,16 +385,12 @@ LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     // init toolbar
     InitToolbar(m_hWnd);
 
-    m_bBold = FALSE;
-    m_bItalic = FALSE;
-    m_bUnderline = FALSE;
-
     return TRUE;
 }
 
 LRESULT CFontsDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    m_arrFontNames.RemoveAll();
+    ShowWindow(SW_HIDE);
     return 0;
 }
 
@@ -423,34 +401,35 @@ void CFontsDialog::OnFontName(HWND hwnd, UINT codeNotify)
     INT iItem;
     switch (codeNotify)
     {
-    case CBN_SELCHANGE:
-        iItem = ComboBox_GetCurSel(hwndNames);
-        if (iItem != CB_ERR)
-        {
-            COMBOBOXEXITEM item = { CBEIF_TEXT, iItem, szText, _countof(szText) };
-            SendMessage(hwndNames, CBEM_GETITEM, 0, (LPARAM)&item);
-            if (m_strFontName != szText)
+        case CBN_SELCHANGE:
+            iItem = ComboBox_GetCurSel(hwndNames);
+            if (iItem != CB_ERR)
             {
-                m_strFontName = szText;
-                ::MessageBoxW(hwnd, szText, TEXT("OnFontName #1"), MB_ICONINFORMATION);
-            }
-        }
-        break;
-    case CBN_EDITCHANGE:
-        GetDlgItemText(IDD_FONTSNAMES, szText, _countof(szText));
-        for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
-        {
-            CString& name = m_arrFontNames[i];
-            if (name == szText)
-            {
+                COMBOBOXEXITEM item = { CBEIF_TEXT, iItem, szText, _countof(szText) };
+                SendMessage(hwndNames, CBEM_GETITEM, 0, (LPARAM)&item);
                 if (m_strFontName != szText)
                 {
                     m_strFontName = szText;
-                    ::MessageBoxW(hwnd, szText, TEXT("OnFontName #2"), MB_ICONINFORMATION);
+                    toolsModel.NotifyToolChanged();
                 }
             }
-        }
-        break;
+            break;
+
+        case CBN_EDITCHANGE:
+            GetDlgItemText(IDD_FONTSNAMES, szText, _countof(szText));
+            for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
+            {
+                CString& name = m_arrFontNames[i];
+                if (name == szText)
+                {
+                    if (m_strFontName != szText)
+                    {
+                        m_strFontName = szText;
+                        toolsModel.NotifyToolChanged();
+                    }
+                }
+            }
+            break;
     }
 }
 
@@ -461,18 +440,21 @@ void CFontsDialog::OnFontSize(HWND hwnd, UINT codeNotify)
     INT iItem;
     switch (codeNotify)
     {
-    case CBN_SELCHANGE:
-        iItem = ComboBox_GetCurSel(hwndSizes);
-        if (iItem != CB_ERR)
-        {
-            ComboBox_GetLBText(hwndSizes, iItem, szText);
-            ::MessageBoxW(hwnd, szText, TEXT("OnFontSize #1"), MB_ICONINFORMATION);
-        }
-        break;
-    case CBN_EDITCHANGE:
-        GetDlgItemText(IDD_FONTSSIZES, szText, _countof(szText));
-        ::MessageBoxW(hwnd, szText, TEXT("OnFontSize #2"), MB_ICONINFORMATION);
-        break;
+        case CBN_SELCHANGE:
+            iItem = ComboBox_GetCurSel(hwndSizes);
+            if (iItem != CB_ERR)
+            {
+                ComboBox_GetLBText(hwndSizes, iItem, szText);
+                m_nFontSize = _ttoi(szText);
+                toolsModel.NotifyToolChanged();
+            }
+            break;
+
+        case CBN_EDITCHANGE:
+            GetDlgItemText(IDD_FONTSSIZES, szText, _countof(szText));
+            m_nFontSize = _ttoi(szText);
+            toolsModel.NotifyToolChanged();
+            break;
     }
 }
 
@@ -496,6 +478,11 @@ const CString& CFontsDialog::GetFontName() const
     return m_strFontName;
 }
 
+INT CFontsDialog::GetFontSize() const
+{
+    return m_nFontSize;
+}
+
 LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     UINT id = LOWORD(wParam);
@@ -504,26 +491,41 @@ LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     BOOL bChecked = ::SendMessage(hwndToolbar, TB_ISBUTTONCHECKED, id, 0);
     switch (id)
     {
-    case IDCANCEL:
-        DestroyWindow();
-        break;
-    case IDD_FONTSNAMES:
-        OnFontName(m_hWnd, codeNotify);
-        break;
-    case IDD_FONTSSIZES:
-        OnFontSize(m_hWnd, codeNotify);
-        break;
-    case IDM_BOLD:
-        m_bBold = bChecked;
-        break;
-    case IDM_ITALIC:
-        m_bItalic = bChecked;
-        break;
-    case IDM_UNDERLINE:
-        m_bUnderline = bChecked;
-        break;
-    case IDM_VERTICAL:
-        break;
+        case IDCANCEL:
+            DestroyWindow();
+            break;
+
+        case IDD_FONTSNAMES:
+            OnFontName(m_hWnd, codeNotify);
+            break;
+
+        case IDD_FONTSSIZES:
+            OnFontSize(m_hWnd, codeNotify);
+            break;
+
+        case IDM_BOLD:
+            m_bBold = bChecked;
+            toolsModel.NotifyToolChanged();
+            break;
+
+        case IDM_ITALIC:
+            m_bItalic = bChecked;
+            toolsModel.NotifyToolChanged();
+            break;
+
+        case IDM_UNDERLINE:
+            m_bUnderline = bChecked;
+            toolsModel.NotifyToolChanged();
+            break;
+
+        case IDM_VERTICAL:
+            // TODO:
+            break;
     }
     return 0;
+}
+
+LRESULT CFontsDialog::OnNCActivate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return ::DefWindowProc(m_hWnd, nMsg, TRUE, lParam);
 }

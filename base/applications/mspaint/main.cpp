@@ -327,9 +327,11 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* by moving the window, the things in WM_SIZE are done */
     mainWindow.SetWindowPlacement(&(registrySettings.WindowPlacement));
 
-    /* creating the text editor window for the text tool */
-    RECT textEditWindowPos = {300, 0, 300 + 300, 0 + 200};
-    textEditWindow.Create(hwnd, textEditWindowPos, NULL, WS_OVERLAPPEDWINDOW);
+    /* create the text edit */
+    textEditWindow.Create(imageArea);
+
+    /* create Fonts dialog */
+    fontsDialog.Create(mainWindow);
 
     /* Make the window visible on the screen */
     ShowWindow (hwnd, nFunsterStil);

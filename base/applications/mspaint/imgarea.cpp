@@ -12,8 +12,6 @@
 
 #include "precomp.h"
 
-#include "dialogs.h"
-
 /* FUNCTIONS ********************************************************/
 
 void
@@ -102,6 +100,20 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     return 0;
 }
 
+LRESULT CImgAreaWindow::OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    HDC hdc = (HDC)wParam;
+    if (!toolsModel.IsBackgroundTransparent())
+    {
+        HWND hChild = textEditWindow;
+        RECT rcChild;
+        ::GetWindowRect(hChild, &rcChild);
+        ::MapWindowPoints(NULL, m_hWnd, (LPPOINT)&rcChild, 2);
+        ExcludeClipRect(hdc, rcChild.left, rcChild.top, rcChild.right, rcChild.bottom);
+    }
+    return DefWindowProc(nMsg, wParam, lParam);
+}
+
 LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     DefWindowProc(WM_PAINT, wParam, lParam);
@@ -129,6 +141,7 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     ReleaseDC(hdc);
     selectionWindow.Invalidate(FALSE);
     miniature.Invalidate(FALSE);
+    textEditWindow.Invalidate(TRUE);
     return 0;
 }
 
@@ -381,4 +394,11 @@ LRESULT CImgAreaWindow::OnImageModelImageChanged(UINT nMsg, WPARAM wParam, LPARA
 LRESULT CImgAreaWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+}
+
+LRESULT CImgAreaWindow::OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    HDC hdc = (HDC)wParam;
+    SetBkMode(hdc, TRANSPARENT);
+    return (LRESULT)GetStockObject(NULL_BRUSH);
 }

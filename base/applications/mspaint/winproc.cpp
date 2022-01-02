@@ -13,8 +13,6 @@
 
 #include "precomp.h"
 
-#include "dialogs.h"
-
 /* FUNCTIONS ********************************************************/
 
 BOOL
@@ -326,7 +324,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
                 CheckMenuItem(menu, IDM_VIEWTOOLBOX,      CHECKED_IF(toolBoxContainer.IsWindowVisible()));
                 CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(paletteWindow.IsWindowVisible()));
                 CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(hStatusBar)));
-                CheckMenuItem(menu, IDM_FORMATICONBAR,    CHECKED_IF(textEditWindow.IsWindowVisible()));
+                CheckMenuItem(menu, IDM_FORMATICONBAR,    CHECKED_IF(fontsDialog.IsWindowVisible()));
                 EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
 
                 CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
@@ -557,6 +555,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITSELECTALL:
         {
+            if (toolsModel.GetActiveTool() == TOOL_TEXT &&
+                textEditWindow.IsWindowVisible())
+            {
+                textEditWindow.SendMessage(EM_SETSEL, 0, -1);
+                textEditWindow.InvalidateEdit2();
+                break;
+            }
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
             SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
             toolsModel.selectAll();
@@ -662,7 +667,12 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             alignChildrenToMainWindow();
             break;
         case IDM_FORMATICONBAR:
-            textEditWindow.ShowWindow(textEditWindow.IsWindowVisible() ? SW_HIDE : SW_SHOW);
+            if (toolsModel.GetActiveTool() == TOOL_TEXT)
+            {
+                if (!fontsDialog.IsWindow())
+                    fontsDialog.Create(mainWindow);
+                fontsDialog.ShowWindow(fontsDialog.IsWindowVisible() ? SW_HIDE : SW_SHOW);
+            }
             break;
         case IDM_VIEWSHOWGRID:
             showGrid = !showGrid;
