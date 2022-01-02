@@ -269,7 +269,7 @@ EnumFontFamProc(ENUMLOGFONT *lpelf,
 {
     CFontsDialog *pThis = reinterpret_cast<CFontsDialog*>(lParam);
     LPTSTR name = lpelf->elfLogFont.lfFaceName;
-    if (name[0] == '@')
+    if (name[0] == TEXT('@'))
         return TRUE;
 
     for (INT i = 0; i < pThis->m_arrFontNames.GetSize(); ++i)
@@ -284,9 +284,7 @@ EnumFontFamProc(ENUMLOGFONT *lpelf,
 
 CFontsDialog::CFontsDialog()
 {
-    m_bBold = FALSE;
-    m_bItalic = FALSE;
-    m_bUnderline = FALSE;
+    m_bBold = m_bItalic = m_bUnderline = FALSE;
     m_nFontSize = 14;
 }
 
