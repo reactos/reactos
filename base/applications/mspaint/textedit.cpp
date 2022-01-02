@@ -10,11 +10,12 @@
 
 #include "precomp.h"
 
-const INT c_cxyGrip = 4;
+#define CXY_GRIP 4
 
 /* FUNCTIONS ********************************************************/
 
-SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText, LPRECT prcParent, LPCTSTR pszOldText)
+SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
+                                 LPRECT prcParent, LPCTSTR pszOldText)
 {
     RECT rc;
     GetClientRect(&rc);
@@ -68,19 +69,19 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText, LPRECT pr
 }
 
 #define X0 rc.left
-#define X1 ((rc.left + rc.right - c_cxyGrip) / 2)
-#define X2 (rc.right - c_cxyGrip)
+#define X1 ((rc.left + rc.right - CXY_GRIP) / 2)
+#define X2 (rc.right - CXY_GRIP)
 #define Y0 rc.top
-#define Y1 ((rc.top + rc.bottom - c_cxyGrip) / 2)
-#define Y2 (rc.bottom - c_cxyGrip)
-#define RECT0 X0, Y0, X0 + c_cxyGrip, Y0 + c_cxyGrip
-#define RECT1 X1, Y0, X1 + c_cxyGrip, Y0 + c_cxyGrip
-#define RECT2 X2, Y0, X2 + c_cxyGrip, Y0 + c_cxyGrip
-#define RECT3 X0, Y1, X0 + c_cxyGrip, Y1 + c_cxyGrip
-#define RECT4 X2, Y1, X2 + c_cxyGrip, Y1 + c_cxyGrip
-#define RECT5 X0, Y2, X0 + c_cxyGrip, Y2 + c_cxyGrip
-#define RECT6 X1, Y2, X1 + c_cxyGrip, Y2 + c_cxyGrip
-#define RECT7 X2, Y2, X2 + c_cxyGrip, Y2 + c_cxyGrip
+#define Y1 ((rc.top + rc.bottom - CXY_GRIP) / 2)
+#define Y2 (rc.bottom - CXY_GRIP)
+#define RECT0 X0, Y0, X0 + CXY_GRIP, Y0 + CXY_GRIP
+#define RECT1 X1, Y0, X1 + CXY_GRIP, Y0 + CXY_GRIP
+#define RECT2 X2, Y0, X2 + CXY_GRIP, Y0 + CXY_GRIP
+#define RECT3 X0, Y1, X0 + CXY_GRIP, Y1 + CXY_GRIP
+#define RECT4 X2, Y1, X2 + CXY_GRIP, Y1 + CXY_GRIP
+#define RECT5 X0, Y2, X0 + CXY_GRIP, Y2 + CXY_GRIP
+#define RECT6 X1, Y2, X1 + CXY_GRIP, Y2 + CXY_GRIP
+#define RECT7 X2, Y2, X2 + CXY_GRIP, Y2 + CXY_GRIP
 
 INT CTextEditWindow::HitTestGrip(RECT& rc, POINT pt)
 {
@@ -159,7 +160,8 @@ void CTextEditWindow::InvalidateEdit(LPTSTR pszOldText)
     GetWindowRect(&rcWnd);
     rcText = rcWnd;
 
-    if (HDC hDC = GetDC())
+    HDC hDC = GetDC();
+    if (hDC)
     {
         SelectObject(hDC, (HFONT)SendMessage(WM_GETFONT, 0, 0));
         SIZE siz = DoCalcRect(hDC, szText, cchText, &rcParent, pszOldText);
@@ -246,7 +248,8 @@ LRESULT CTextEditWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 
     DefWindowProc(nMsg, wParam, lParam);
 
-    if (HDC hDC = GetDC())
+    HDC hDC = GetDC();
+    if (hDC)
     {
         DrawGrip(hDC, rc);
         ReleaseDC(hDC);
@@ -259,12 +262,15 @@ LRESULT CTextEditWindow::OnNCPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 {
     RECT rc;
     GetWindowRect(&rc);
-    if (HDC hDC = GetDCEx(NULL, DCX_WINDOW | DCX_PARENTCLIP))
+
+    HDC hDC = GetDCEx(NULL, DCX_WINDOW | DCX_PARENTCLIP);
+    if (hDC)
     {
         OffsetRect(&rc, -rc.left, -rc.top);
         DrawGrip(hDC, rc);
         ReleaseDC(hDC);
     }
+
     return 0;
 }
 
@@ -369,6 +375,7 @@ void CTextEditWindow::DoDraw(HWND hwnd, HDC hDC)
 
 LRESULT CTextEditWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    UpdateFont();
     return 0;
 }
 
@@ -431,15 +438,17 @@ void CTextEditWindow::UpdateFont()
 
     INT nFontSize = fontsDialog.GetFontSize();
     HDC hdc = GetDC();
-    m_lf.lfHeight = -MulDiv (nFontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
-    ReleaseDC(hdc);
+    if (hdc)
+    {
+        m_lf.lfHeight = -MulDiv(nFontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+        ReleaseDC(hdc);
+    }
 
     m_lf.lfWeight = (fontsDialog.IsBold() ? FW_BOLD : FW_NORMAL);
     m_lf.lfItalic = fontsDialog.IsItalic();
     m_lf.lfUnderline = fontsDialog.IsUnderline();
 
-    if (!m_hFont)
-        m_hFont = ::CreateFontIndirect(&m_lf);
+    m_hFont = ::CreateFontIndirect(&m_lf);
 
     SetWindowFont(m_hWnd, m_hFont, TRUE);
 }

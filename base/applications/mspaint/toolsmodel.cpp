@@ -159,8 +159,11 @@ void ToolsModel::NotifyToolChanged()
     if (m_activeTool == TOOL_TEXT)
     {
         if (!fontsDialog.IsWindow())
-        {
             fontsDialog.Create(mainWindow);
+        if (!textEditWindow.IsWindow())
+        {
+            textEditWindow.Create(imageArea);
+            textEditWindow.UpdateFont();
         }
         fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
         mainWindow.BringWindowToTop();

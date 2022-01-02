@@ -371,7 +371,6 @@ struct TextTool : ToolBase
         if (!textEditWindow.IsWindow())
         {
             textEditWindow.Create(imageArea);
-            textEditWindow.UpdateFont();
         }
         if (fontsDialog.IsWindowVisible())
         {
