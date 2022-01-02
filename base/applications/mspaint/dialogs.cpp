@@ -303,30 +303,41 @@ static int CompareNames(const void *x, const void *y)
 
 void CFontsDialog::InitNames()
 {
+    // get default gui font
+    LOGFONT lf;
+    GetObject(GetStockFont(DEFAULT_GUI_FONT), sizeof(lf), &lf);
+    if (!m_strFontName.GetLength())
+        m_strFontName = lf.lfFaceName;
+
     HDC hDC = CreateCompatibleDC(NULL);
-    if (hDC)
+    if (!hDC)
+        return;
+
+    m_arrFontNames.RemoveAll();
+    EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc, reinterpret_cast<LPARAM>(this));
+    DeleteDC(hDC);
+
+    // TODO: Sort m_arrFontNames
+    //qsort(&m_arrFontNames[0], m_arrFontNames.GetSize(), sizeof(CString), CompareNames);
+
+    HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
+    SendMessage(hwndNames, CB_RESETCONTENT, 0, 0);
+    for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
     {
-        m_arrFontNames.RemoveAll();
-        EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc, reinterpret_cast<LPARAM>(this));
-
-        // TODO: Sort m_arrFontNames
-        //qsort(&m_arrFontNames[0], m_arrFontNames.GetSize(), sizeof(CString), CompareNames);
-
-        HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
-        SendMessage(hwndNames, CB_RESETCONTENT, 0, 0);
-        for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
+        CString& name = m_arrFontNames[i];
+        COMBOBOXEXITEM item = { CBEIF_TEXT, -1 };
+        item.pszText = const_cast<LPWSTR>(&name[0]);
+        if (ComboBox_FindStringExact(hwndNames, -1, item.pszText) == CB_ERR)
         {
-            CString& name = m_arrFontNames[i];
-            COMBOBOXEXITEM item = { CBEIF_TEXT, -1 };
-            item.pszText = const_cast<LPWSTR>(&name[0]);
-            if (ComboBox_FindStringExact(hwndNames, -1, item.pszText) == CB_ERR)
-            {
-                SendMessage(hwndNames, CBEM_INSERTITEM, 0, (LPARAM)&item);
-            }
+            SendMessage(hwndNames, CBEM_INSERTITEM, 0, (LPARAM)&item);
         }
-
-        DeleteDC(hDC);
     }
+
+    // set the default font name
+    INT iFont = ComboBox_FindStringExact(hwndNames, -1, m_strFontName);
+    if (iFont != CB_ERR)
+        ComboBox_SetCurSel(hwndNames, iFont);
+    ::SetWindowText(hwndNames, m_strFontName);
 }
 
 void CFontsDialog::InitFontSizes()
@@ -362,6 +373,7 @@ void CFontsDialog::InitToolbar()
     HIMAGELIST himl = ImageList_LoadBitmap(hProgInstance, MAKEINTRESOURCE(IDB_FONTSTOOLBAR), 16, 8, RGB(255, 255, 255));
     SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
 
+    // TODO: Tooltips
     TBBUTTON buttons[] =
     {
         { 0, IDM_BOLD, TBSTATE_ENABLED, TBSTYLE_CHECK },
@@ -378,28 +390,9 @@ void CFontsDialog::InitToolbar()
 
 LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    // get default gui font
-    TCHAR szFontName[LF_FACESIZE];
-    LOGFONT lf;
-    GetObject(GetStockFont(DEFAULT_GUI_FONT), sizeof(lf), &lf);
-    if (m_strFontName.GetLength())
-        lstrcpyn(szFontName, m_strFontName, _countof(szFontName));
-    else
-        lstrcpyn(szFontName, lf.lfFaceName, _countof(szFontName));
-
-    InitFontSizes();
     InitNames();
-
-    // set the default font name
-    HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
-    INT iFont = ComboBox_FindStringExact(hwndNames, -1, szFontName);
-    if (iFont != CB_ERR)
-        ComboBox_SetCurSel(hwndNames, iFont);
-    ::SetWindowText(hwndNames, szFontName);
-
-    // init toolbar
+    InitFontSizes();
     InitToolbar();
-
     return TRUE;
 }
 
