@@ -12,7 +12,6 @@
 
 #include "dialogs.h"
 
-#include <dlgs.h>
 #include <winnls.h>
 
 /* GLOBALS **********************************************************/

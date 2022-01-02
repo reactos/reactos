@@ -14,7 +14,6 @@ public:
     CTextEditWindow();
     ~CTextEditWindow();
 
-    VOID Initialize();
     HWND Create(HWND hwndParent);
     void DoFillBack(HWND hwnd, HDC hDC);
     void DoDraw(HWND hwnd, HDC hDC);

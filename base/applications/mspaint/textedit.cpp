@@ -202,15 +202,6 @@ CTextEditWindow::~CTextEditWindow()
 {
 }
 
-VOID CTextEditWindow::Initialize()
-{
-#undef SubclassWindow
-    SubclassWindow(m_hWnd);
-
-    if (!m_hFont)
-        m_hFont = ::CreateFontIndirect(&m_lf);
-}
-
 LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TCHAR szText[512];
@@ -305,13 +296,20 @@ LRESULT CTextEditWindow::OnMoveSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 // Hack: Use DECLARE_WND_SUPERCLASS instead!
 HWND CTextEditWindow::Create(HWND hwndParent)
 {
-    DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL | WS_CHILD;
+    DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL |
+                  WS_CHILD | WS_THICKFRAME;
     DWORD exstyle = 0;
     m_hWnd = ::CreateWindowEx(exstyle, WC_EDIT, NULL, style,
                               0, 0, 0, 0,
                               hwndParent, NULL, hProgInstance, NULL);
     if (m_hWnd)
-        Initialize();
+    {
+#undef SubclassWindow
+        SubclassWindow(m_hWnd);
+
+        if (!m_hFont)
+            m_hFont = ::CreateFontIndirect(&m_lf);
+    }
 
     return m_hWnd;
 }
