@@ -380,7 +380,6 @@ LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     LOGFONT lf;
     GetObject(GetStockFont(DEFAULT_GUI_FONT), sizeof(lf), &lf);
     lstrcpyn(szFontName, lf.lfFaceName, _countof(szFontName));
-    CString curName = szFontName;
 
     // init font sizes
     InitFontSizes(m_hWnd);
