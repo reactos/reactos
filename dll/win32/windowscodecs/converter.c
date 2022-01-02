@@ -722,6 +722,15 @@ static HRESULT copypixels_to_32bppBGRA(struct FormatConverter *This, const WICRe
                     pbBuffer[cbStride*y+4*x+3] = 0xff;
         }
         return S_OK;
+    case format_32bppRGBA:
+        if (prc)
+        {
+            HRESULT res;
+            res = IWICBitmapSource_CopyPixels(This->source, prc, cbStride, cbBufferSize, pbBuffer);
+            if (FAILED(res)) return res;
+            convert_rgba_to_bgra(4, pbBuffer, prc->Width, prc->Height, cbStride);
+        }
+        return S_OK;
     case format_32bppBGRA:
         if (prc)
             return IWICBitmapSource_CopyPixels(This->source, prc, cbStride, cbBufferSize, pbBuffer);
@@ -859,6 +868,7 @@ static HRESULT copypixels_to_32bppBGRA(struct FormatConverter *This, const WICRe
         }
         return S_OK;
     default:
+        FIXME("Unimplemented conversion path!\n");
         return WINCODEC_ERR_UNSUPPORTEDOPERATION;
     }
 }
@@ -1038,6 +1048,7 @@ static HRESULT copypixels_to_24bppBGR(struct FormatConverter *This, const WICRec
     case format_32bppBGR:
     case format_32bppBGRA:
     case format_32bppPBGRA:
+    case format_32bppRGBA:
         if (prc)
         {
             HRESULT res;
@@ -1061,17 +1072,38 @@ static HRESULT copypixels_to_24bppBGR(struct FormatConverter *This, const WICRec
             {
                 srcrow = srcdata;
                 dstrow = pbBuffer;
-                for (y=0; y<prc->Height; y++) {
-                    srcpixel=srcrow;
-                    dstpixel=dstrow;
-                    for (x=0; x<prc->Width; x++) {
-                        *dstpixel++=*srcpixel++; /* blue */
-                        *dstpixel++=*srcpixel++; /* green */
-                        *dstpixel++=*srcpixel++; /* red */
-                        srcpixel++; /* alpha */
+
+                if (source_format == format_32bppRGBA)
+                {
+                    for (y = 0; y < prc->Height; y++)
+                    {
+                        srcpixel = srcrow;
+                        dstpixel = dstrow;
+                        for (x = 0; x < prc->Width; x++) {
+                            *dstpixel++ = srcpixel[2]; /* blue */
+                            *dstpixel++ = srcpixel[1]; /* green */
+                            *dstpixel++ = srcpixel[0]; /* red */
+                            srcpixel += 4;
+                        }
+                        srcrow += srcstride;
+                        dstrow += cbStride;
                     }
-                    srcrow += srcstride;
-                    dstrow += cbStride;
+                }
+                else
+                {
+                    for (y = 0; y < prc->Height; y++)
+                    {
+                        srcpixel = srcrow;
+                        dstpixel = dstrow;
+                        for (x = 0; x < prc->Width; x++) {
+                            *dstpixel++ = *srcpixel++; /* blue */
+                            *dstpixel++ = *srcpixel++; /* green */
+                            *dstpixel++ = *srcpixel++; /* red */
+                            srcpixel++; /* alpha */
+                        }
+                        srcrow += srcstride;
+                        dstrow += cbStride;
+                    }
                 }
             }
 
