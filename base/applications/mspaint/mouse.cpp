@@ -372,7 +372,7 @@ struct TextTool : ToolBase
         {
             textEditWindow.Create(imageArea);
         }
-        if (fontsDialog.IsWindowVisible())
+        if (textEditWindow.IsWindowVisible())
         {
             if (textEditWindow.GetWindowTextLength() > 0)
                 textEditWindow.DoDraw(imageArea, m_hdc);
