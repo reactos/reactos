@@ -388,7 +388,8 @@ void CTextEditWindow::DoDraw(HWND hwnd, HDC hDC)
     MapWindowPoints(hwnd, (LPPOINT)&rc, 2);
 
     HGDIOBJ hFontOld = SelectObject(hDC, m_hFont);
-    UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP;
+    UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX |
+                   DT_NOCLIP | DT_EXPANDTABS;
 
     if (toolsModel.IsBackgroundTransparent())
     {
