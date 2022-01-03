@@ -170,7 +170,7 @@ void CTextEditWindow::DrawGrip(HDC hDC, RECT& rc)
     FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
 }
 
-void CTextEditWindow::InvalidateEdit(LPTSTR pszOldText)
+void CTextEditWindow::FixEditSize(LPTSTR pszOldText)
 {
     TCHAR szText[512];
     INT cchText = GetWindowText(szText, _countof(szText));
@@ -200,20 +200,11 @@ void CTextEditWindow::InvalidateEdit(LPTSTR pszOldText)
     ::GetClientRect(m_hwndParent, &rcParent);
     IntersectRect(&rc, &rcParent, &rcWnd);
 
-    MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
+    MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
 
-    DWORD dwMargin = (DWORD)SendMessage(EM_GETMARGINS, 0, 0);
-    LONG leftMargin = LOWORD(dwMargin), rightMargin = HIWORD(dwMargin);
+    m_pfnSuperWindowProc(m_hWnd, WM_HSCROLL, SB_LEFT, 0);
+    m_pfnSuperWindowProc(m_hWnd, WM_VSCROLL, SB_TOP, 0);
 
-    rc.left += leftMargin;
-    rc.right -= rightMargin;
-    ::MapWindowPoints(m_hwndParent, m_hWnd, (LPPOINT)&rc, 2);
-    SendMessage(EM_SETRECT, 0, (LPARAM)&rc);
-
-    DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
-    DefWindowProc(WM_VSCROLL, SB_TOP, 0);
-
-    MapWindowPoints(m_hwndParent, (LPPOINT)&rc, 2);
     ::InvalidateRect(m_hwndParent, &rc, TRUE);
 }
 
@@ -231,7 +222,7 @@ LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    InvalidateEdit(szText);
+    FixEditSize(szText);
     return ret;
 }
 
@@ -245,7 +236,7 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    InvalidateEdit(szText);
+    FixEditSize(szText);
     return ret;
 }
 
@@ -254,7 +245,7 @@ LRESULT CTextEditWindow::OnKeyUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    InvalidateEdit(szText);
+    FixEditSize(szText);
     return ret;
 }
 
@@ -492,7 +483,7 @@ void CTextEditWindow::UpdateFont()
 
     SetWindowFont(m_hWnd, m_hFont, TRUE);
     DefWindowProc(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
-    InvalidateEdit(NULL);
+    FixEditSize(NULL);
 }
 
 LRESULT CTextEditWindow::OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -515,7 +506,7 @@ LRESULT CTextEditWindow::DefWindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
     {
         m_pfnSuperWindowProc(m_hWnd, WM_HSCROLL, SB_LEFT, 0);
         m_pfnSuperWindowProc(m_hWnd, WM_VSCROLL, SB_TOP, 0);
-        InvalidateEdit(NULL);
+        FixEditSize(NULL);
     }
     return ret;
 }

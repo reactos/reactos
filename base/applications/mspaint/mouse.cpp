@@ -407,8 +407,7 @@ struct TextTool : ToolBase
         if (!selectionModel.IsSrcRectSizeNonzero())
             SetRect(&rc, x, y, x + cxMin, y + cyMin);
 
-        textEditWindow.MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
-        textEditWindow.InvalidateEdit(NULL);
+        textEditWindow.MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
         ForceRefreshSelectionContents();
         textEditWindow.ShowWindow(SW_SHOW);
         textEditWindow.SetFocus();

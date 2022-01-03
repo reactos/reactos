@@ -16,7 +16,7 @@ public:
     HWND Create(HWND hwndParent);
     void DoFillBack(HWND hwnd, HDC hDC);
     void DoDraw(HWND hwnd, HDC hDC);
-    void InvalidateEdit(LPTSTR pszOldText);
+    void FixEditSize(LPTSTR pszOldText);
     void InvalidateEdit2();
     void UpdateFont();
 
