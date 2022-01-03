@@ -185,7 +185,7 @@ void CTextEditWindow::InvalidateEdit(LPTSTR pszOldText)
     HDC hDC = GetDC();
     if (hDC)
     {
-        SelectObject(hDC, (HFONT)SendMessage(WM_GETFONT, 0, 0));
+        SelectObject(hDC, m_hFont);
         SIZE siz = DoCalcRect(hDC, szText, cchText, &rcParent, pszOldText);
         ReleaseDC(hDC);
 
