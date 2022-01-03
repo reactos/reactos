@@ -3,7 +3,7 @@
  * PROJECT:         FreeLoader
  * FILE:            boot/freeldr/freeldr/include/ui/minitui.h
  * PURPOSE:         Mini Text UI interface header
- * PROGRAMMERS:     Hervé Poussineau
+ * PROGRAMMERS:     HervÃ© Poussineau
  */
 
 #pragma once

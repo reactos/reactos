@@ -153,28 +153,23 @@ VOID TuiDrawBackdrop(VOID)
  */
 VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    i, j;
+    PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
+    ULONG  i, j;
 
-    // Clip the area to the screen
+    /* Clip the area to the screen */
     if ((Left >= UiScreenWidth) || (Top >= UiScreenHeight))
     {
         return;
     }
     if (Right >= UiScreenWidth)
-    {
         Right = UiScreenWidth - 1;
-    }
     if (Bottom >= UiScreenHeight)
-    {
         Bottom = UiScreenHeight - 1;
-    }
 
-    // Loop through each line and fill it in
-    for (i=Top; i<=Bottom; i++)
+    /* Loop through each line and column and fill it in */
+    for (i = Top; i <= Bottom; ++i)
     {
-        // Loop through each character (column) in the line and fill it in
-        for (j=Left; j<=Right; j++)
+        for (j = Left; j <= Right; ++j)
         {
             ScreenMemory[((i*2)*UiScreenWidth)+(j*2)] = (UCHAR)FillChar;
             ScreenMemory[((i*2)*UiScreenWidth)+(j*2)+1] = Attr;
@@ -188,28 +183,24 @@ VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar
  */
 VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 {
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    Idx;
+    PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
+    ULONG  Idx;
 
-    // Shade the bottom of the area
+    /* Shade the bottom of the area */
     if (Bottom < (UiScreenHeight - 1))
     {
         if (UiScreenHeight < 34)
-        {
-            Idx=Left + 2;
-        }
+            Idx = Left + 2;
         else
-        {
-            Idx=Left + 1;
-        }
+            Idx = Left + 1;
 
-        for (; Idx<=Right; Idx++)
+        for (; Idx <= Right; ++Idx)
         {
             ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+(Idx*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
         }
     }
 
-    // Shade the right of the area
+    /* Shade the right of the area */
     if (Right < (UiScreenWidth - 1))
     {
         for (Idx=Top+1; Idx<=Bottom; Idx++)
@@ -228,7 +219,7 @@ VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
         }
     }
 
-    // Shade the bottom right corner
+    /* Shade the bottom right corner */
     if ((Right < (UiScreenWidth - 1)) && (Bottom < (UiScreenHeight - 1)))
     {
         ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+((Right+1)*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
@@ -648,9 +639,9 @@ VOID TuiMessageBoxCritical(PCSTR MessageText)
 
 VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 {
-    ULONG    Left, Top, Right, Bottom;
-    ULONG    Width = 50; // Allow for 50 "bars"
-    ULONG    Height = 2;
+    ULONG Left, Top, Right, Bottom;
+    ULONG Width = 50; // Allow for 50 "bars"
+    ULONG Height = 2;
 
     Left = (UiScreenWidth - Width - 4) / 2;
     Right = Left + Width + 3;
@@ -663,35 +654,32 @@ VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 
 VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
 {
-    ULONG    i;
-    ULONG    ProgressBarWidth = (Right - Left) - 3;
+    ULONG i;
+    ULONG ProgressBarWidth = (Right - Left) - 3;
 
-    // First make sure the progress bar text fits
+    /* First make sure the progress bar text fits */
     UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
 
     if (Position > Range)
-    {
         Position = Range;
-    }
 
-    // Draw the box
+    /* Draw the box */
     TuiDrawBox(Left, Top, Right, Bottom, VERT, HORZ, TRUE, TRUE, ATTR(UiMenuFgColor, UiMenuBgColor));
 
-    //
-    //  Draw the "Loading..." text
-    //
+    /* Draw the "Loading..." text */
     TuiDrawCenteredText(Left + 2, Top + 2, Right - 2, Top + 2, ProgressText, ATTR(UiTextColor, UiMenuBgColor));
 
-    // Draw the percent complete
-    for (i=0; i<(Position*ProgressBarWidth)/Range; i++)
+    /* Draw the percent complete */
+    for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
     {
-        TuiDrawText(Left+2+i, Top+2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
+        /* Use the fill character */
+        TuiDrawText(Left + 2 + i, Top + 2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
     }
 
-    // Draw the shadow
-    for (; i<ProgressBarWidth; i++)
+    /* Draw the shadow */
+    for (; i < ProgressBarWidth; i++)
     {
-        TuiDrawText(Left+2+i, Top+2, "\xB2", ATTR(UiTextColor, UiMenuBgColor));
+        TuiDrawText(Left + 2 + i, Top + 2, "\xB2", ATTR(UiTextColor, UiMenuBgColor));
     }
 
     TuiUpdateDateTime();

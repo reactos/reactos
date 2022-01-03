@@ -3,7 +3,7 @@
  * PROJECT:         FreeLoader
  * FILE:            boot/freeldr/freeldr/include/ui/noui.h
  * PURPOSE:         No UI interface header
- * PROGRAMMERS:     Hervé Poussineau
+ * PROGRAMMERS:     HervÃ© Poussineau
  */
 
 #pragma once

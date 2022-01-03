@@ -78,25 +78,27 @@ TuiDisplayMenu(
     IN UiMenuKeyPressFilterCallback KeyPressFilter OPTIONAL,
     IN PVOID Context OPTIONAL);
 
-/* Definitions for corners, depending on HORIZ and VERT */
-#define UL        (0xda)
-#define UR        (0xbf)  /* HORZ and VERT */
-#define LL        (0xc0)
-#define LR        (0xd9)
+/*
+ * Definitions for corners, depending on HORZ and VERT
+ */
+#define UL      0xDA    /* HORZ and VERT */
+#define UR      0xBF
+#define LL      0xC0
+#define LR      0xD9
 
-#define D_UL    (0xc9)
-#define D_UR    (0xbb)  /* D_HORZ and D_VERT */
-#define D_LL    (0xc8)
-#define D_LR    (0xbc)
+#define D_UL    0xC9    /* D_HORZ and D_VERT */
+#define D_UR    0xBB
+#define D_LL    0xC8
+#define D_LR    0xBC
 
-#define HD_UL    (0xd5)
-#define HD_UR    (0xb8)  /* D_HORZ and VERT */
-#define HD_LL    (0xd4)
-#define HD_LR    (0xbe)
+#define HD_UL   0xD5    /* D_HORZ and VERT */
+#define HD_UR   0xB8
+#define HD_LL   0xD4
+#define HD_LR   0xBE
 
-#define VD_UL    (0xd6)
-#define VD_UR    (0xb7)  /* HORZ and D_VERT */
-#define VD_LL    (0xd3)
-#define VD_LR    (0xbd)
+#define VD_UL   0xD6    /* HORZ and D_VERT */
+#define VD_UR   0xB7
+#define VD_LL   0xD3
+#define VD_LR   0xBD
 
 extern const UIVTBL TuiVtbl;

@@ -3,7 +3,7 @@
  * PROJECT:         FreeLoader
  * FILE:            boot/freeldr/freeldr/ui/noui.c
  * PURPOSE:         No Text UI interface
- * PROGRAMMERS:     Hervé Poussineau
+ * PROGRAMMERS:     HervÃ© Poussineau
  */
 #ifndef _M_ARM
 #include <freeldr.h>
