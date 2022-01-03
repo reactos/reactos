@@ -63,6 +63,6 @@ protected:
     LOGFONT m_lf;
 
     SIZE DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText, LPRECT prcParent, LPCTSTR pszOldText);
-    INT HitTest(RECT& rc, POINT pt);
+    INT DoHitTest(RECT& rc, POINT pt);
     void DrawGrip(HDC hDC, RECT& rc);
 };

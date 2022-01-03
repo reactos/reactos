@@ -98,7 +98,7 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
 #define RECT6 X1, Y2, X1 + CXY_GRIP, Y2 + CXY_GRIP
 #define RECT7 X2, Y2, X2 + CXY_GRIP, Y2 + CXY_GRIP
 
-INT CTextEditWindow::HitTest(RECT& rc, POINT pt)
+INT CTextEditWindow::DoHitTest(RECT& rc, POINT pt)
 {
     RECT rcGrip;
 
@@ -290,7 +290,7 @@ LRESULT CTextEditWindow::OnNCPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT CTextEditWindow::OnNCCalcSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    return 0;
+    return 0; // No frame.
 }
 
 LRESULT CTextEditWindow::OnNCHitTest(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -298,7 +298,7 @@ LRESULT CTextEditWindow::OnNCHitTest(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
     RECT rc;
     GetWindowRect(&rc);
-    return HitTest(rc, pt);
+    return DoHitTest(rc, pt);
 }
 
 LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -345,7 +345,7 @@ HWND CTextEditWindow::Create(HWND hwndParent)
                               hwndParent, NULL, hProgInstance, NULL);
     if (m_hWnd)
     {
-#undef SubclassWindow // Don't use macro
+#undef SubclassWindow // Don't use this macro
         SubclassWindow(m_hWnd);
 
         if (!m_hFont)
