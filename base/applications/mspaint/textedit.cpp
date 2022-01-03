@@ -459,14 +459,9 @@ LRESULT CTextEditWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, L
 LRESULT CTextEditWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (wParam == TOOL_TEXT)
-    {
         UpdateFont();
-    }
     else
-    {
         ShowWindow(SW_HIDE);
-        fontsDialog.ShowWindow(SW_HIDE);
-    }
     return 0;
 }
 

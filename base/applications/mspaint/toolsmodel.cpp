@@ -171,6 +171,10 @@ void ToolsModel::NotifyToolChanged()
         }
         fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
     }
+    else
+    {
+        fontsDialog.ShowWindow(SW_HIDE);
+    }
 }
 
 void ToolsModel::NotifyToolSettingsChanged()
