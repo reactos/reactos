@@ -238,8 +238,8 @@ BEGIN
     IDS_ANGLE "El ángulo debe de estar entre -89 y 89."
     IDS_LOADERRORTEXT "No se pudo cargar el archivo %s."
     IDS_ENLARGEPROMPTTEXT "La imagen en el Portapapeles es más grande que el lienzo.\n¿Quieres adaptar las dimensiones del lienzo a su nuevo tamaño?"
-    IDS_BOLD "Bold"
-    IDS_ITALIC "Italic"
-    IDS_UNDERLINE "Underline"
+    IDS_BOLD "Negrita"
+    IDS_ITALIC "Cursiva"
+    IDS_UNDERLINE "Subrayado"
     IDS_VERTICAL "Vertical"
 END
