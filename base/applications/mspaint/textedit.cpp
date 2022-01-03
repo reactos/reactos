@@ -98,7 +98,7 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
 #define RECT6 X1, Y2, X1 + CXY_GRIP, Y2 + CXY_GRIP
 #define RECT7 X2, Y2, X2 + CXY_GRIP, Y2 + CXY_GRIP
 
-INT CTextEditWindow::HitTestGrip(RECT& rc, POINT pt)
+INT CTextEditWindow::HitTest(RECT& rc, POINT pt)
 {
     RECT rcGrip;
 
@@ -307,7 +307,7 @@ LRESULT CTextEditWindow::OnNCHitTest(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
     RECT rc;
     GetWindowRect(&rc);
-    return HitTestGrip(rc, pt);
+    return HitTest(rc, pt);
 }
 
 LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
