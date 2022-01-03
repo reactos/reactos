@@ -423,7 +423,7 @@ LRESULT CTextEditWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     return 0;
 }
 
-void CTextEditWindow::InvalidateEdit2()
+void CTextEditWindow::InvalidateEdit()
 {
     RECT rc;
     GetWindowRect(&rc);

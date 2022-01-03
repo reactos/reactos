@@ -17,7 +17,7 @@ public:
     void DoFillBack(HWND hwnd, HDC hDC);
     void DoDraw(HWND hwnd, HDC hDC);
     void FixEditSize(LPTSTR pszOldText);
-    void InvalidateEdit2();
+    void InvalidateEdit();
     void UpdateFont();
 
     BEGIN_MSG_MAP(CTextEditWindow)
