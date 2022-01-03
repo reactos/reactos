@@ -501,6 +501,34 @@ LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     return 0;
 }
 
+LRESULT CFontsDialog::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    NMHDR *pnmhdr = (NMHDR *)lParam;
+    if (pnmhdr->code == TTN_NEEDTEXT)
+    {
+        LPTOOLTIPTEXT pToolTip = (LPTOOLTIPTEXT)pnmhdr;
+        pToolTip->hinst = hProgInstance;
+        switch (pnmhdr->idFrom)
+        {
+            case IDM_BOLD:
+                pToolTip->lpszText = MAKEINTRESOURCE(IDS_BOLD);
+                break;
+            case IDM_ITALIC:
+                pToolTip->lpszText = MAKEINTRESOURCE(IDS_ITALIC);
+                break;
+            case IDM_UNDERLINE:
+                pToolTip->lpszText = MAKEINTRESOURCE(IDS_UNDERLINE);
+                break;
+            case IDM_VERTICAL:
+                pToolTip->lpszText = MAKEINTRESOURCE(IDS_VERTICAL);
+                break;
+            default:
+                break;
+        }
+    }
+    return 0;
+}
+
 LRESULT CFontsDialog::OnNCActivate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     // TODO: Show active title bar

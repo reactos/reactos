@@ -200,7 +200,7 @@ FONT 9, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDD_FONTSNAMES, "ComboBoxEx32", CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP, 5, 5, 110, 250
     COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 55, 20
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 55, 20
 END
 
 STRINGTABLE
@@ -237,4 +237,8 @@ BEGIN
     IDS_ANGLE "Unghiul trebuie să fie între -89 și 89."
     IDS_LOADERRORTEXT "Fișierul %s nu poate fi încărcat."
     IDS_ENLARGEPROMPTTEXT "Imaginea din memorie este mai mare decât suprafața curent disponibilă în aplicație.\nDoriți să redimensionați suprafața de desen disponibilă?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
 END

@@ -201,7 +201,7 @@ FONT 9, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDD_FONTSNAMES, "ComboBoxEx32", CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP, 5, 5, 110, 250
     COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 55, 20
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 55, 20
 END
 
 STRINGTABLE
@@ -238,4 +238,8 @@ BEGIN
     IDS_ANGLE "El ángulo debe de estar entre -89 y 89."
     IDS_LOADERRORTEXT "No se pudo cargar el archivo %s."
     IDS_ENLARGEPROMPTTEXT "La imagen en el Portapapeles es más grande que el lienzo.\n¿Quieres adaptar las dimensiones del lienzo a su nuevo tamaño?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
 END
