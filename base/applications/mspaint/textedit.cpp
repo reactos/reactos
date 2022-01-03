@@ -219,6 +219,7 @@ void CTextEditWindow::InvalidateEdit(LPTSTR pszOldText)
 CTextEditWindow::CTextEditWindow() : m_hFont(NULL)
 {
     ZeroMemory(&m_lf, sizeof(m_lf));
+    m_lf.lfCharSet = DEFAULT_CHARSET;
 }
 
 LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
