@@ -105,6 +105,3 @@ extern CMirrorRotateDialog mirrorRotateDialog;
 extern CAttributesDialog attributesDialog;
 extern CStretchSkewDialog stretchSkewDialog;
 extern CFontsDialog fontsDialog;
-
-/* VARIABLES declared in mouse.cpp **********************************/
-

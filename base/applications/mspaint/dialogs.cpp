@@ -288,18 +288,12 @@ CFontsDialog::CFontsDialog()
     m_nFontSize = 14;
 }
 
-#if 0
-static int CompareNames(const void *x, const void *y)
+static int CompareFontNames(const void *x, const void *y)
 {
     const CString *a = reinterpret_cast<const CString *>(x);
     const CString *b = reinterpret_cast<const CString *>(y);
-    if (*a < *b)
-        return -1;
-    if (*a > *b)
-        return 1;
-    return 0;
+    return lstrcmpi(*a, *b);
 }
-#endif
 
 void CFontsDialog::InitNames()
 {
@@ -317,8 +311,7 @@ void CFontsDialog::InitNames()
     EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc, reinterpret_cast<LPARAM>(this));
     DeleteDC(hDC);
 
-    // TODO: Sort m_arrFontNames
-    //qsort(&m_arrFontNames[0], m_arrFontNames.GetSize(), sizeof(CString), CompareNames);
+    qsort(m_arrFontNames.GetData(), m_arrFontNames.GetSize(), sizeof(CString), CompareFontNames);
 
     HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
     SendMessage(hwndNames, CB_RESETCONTENT, 0, 0);
