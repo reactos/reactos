@@ -352,6 +352,9 @@ void CFontsDialog::InitFontSizes()
         if (s_sizes[i] == m_nFontSize)
             ComboBox_SetCurSel(hwndSizes, iItem);
     }
+
+    wsprintf(szText, TEXT("%d"), m_nFontSize);
+    ::SetWindowText(hwndSizes, szText);
 }
 
 void CFontsDialog::InitToolbar()
@@ -510,22 +513,10 @@ LRESULT CFontsDialog::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         pToolTip->hinst = hProgInstance;
         switch (pnmhdr->idFrom)
         {
-            case IDM_BOLD:
-                pToolTip->lpszText = MAKEINTRESOURCE(IDS_BOLD);
-                break;
-
-            case IDM_ITALIC:
-                pToolTip->lpszText = MAKEINTRESOURCE(IDS_ITALIC);
-                break;
-
-            case IDM_UNDERLINE:
-                pToolTip->lpszText = MAKEINTRESOURCE(IDS_UNDERLINE);
-                break;
-
-            case IDM_VERTICAL:
-                pToolTip->lpszText = MAKEINTRESOURCE(IDS_VERTICAL);
-                break;
-
+            case IDM_BOLD:      pToolTip->lpszText = MAKEINTRESOURCE(IDS_BOLD); break;
+            case IDM_ITALIC:    pToolTip->lpszText = MAKEINTRESOURCE(IDS_ITALIC); break;
+            case IDM_UNDERLINE: pToolTip->lpszText = MAKEINTRESOURCE(IDS_UNDERLINE); break;
+            case IDM_VERTICAL:  pToolTip->lpszText = MAKEINTRESOURCE(IDS_VERTICAL); break;
             default:
                 break;
         }
