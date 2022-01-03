@@ -1,9 +1,6 @@
 
 project(SHELL)
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(
     -D__WINESRC__
     -D_SHLWAPI_)
@@ -47,7 +44,7 @@ target_compile_definitions(shlwapi_autocomp PRIVATE $<TARGET_PROPERTY:shlwapi,CO
 target_compile_options(shlwapi_autocomp PRIVATE $<TARGET_PROPERTY:shlwapi,COMPILE_OPTIONS>)
 add_dependencies(shlwapi_autocomp psdk)
 
-set_module_type(shlwapi win32dll UNICODE)
+set_module_type(shlwapi win32dll UNICODE TARGET_VERSION vista)
 target_link_libraries(shlwapi uuid wine cpprt)
 add_delay_importlibs(shlwapi userenv oleaut32 ole32 comdlg32 mpr mlang urlmon shell32 winmm version)
 add_importlibs(shlwapi user32 gdi32 advapi32 wininet msvcrt kernel32 ntdll)

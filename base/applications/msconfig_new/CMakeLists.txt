@@ -31,7 +31,7 @@ list(APPEND CPP_SOURCE
 add_rc_deps(msconfig.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/msconfig.ico)
 add_executable(msconfig_new ${C_SOURCE} ${CPP_SOURCE} msconfig.rc)
 add_pch(msconfig_new precomp.h CPP_SOURCE)
-set_module_type(msconfig_new win32gui UNICODE)
+set_module_type(msconfig_new win32gui UNICODE TARGET_VERSION vista)
 target_link_libraries(msconfig_new comsupp cpprt atl_classes)
 set_target_cpp_properties(msconfig_new WITH_EXCEPTIONS)
 add_importlibs(msconfig_new user32 gdi32 comctl32 comdlg32 advapi32 version ole32 oleaut32 msxml3 shell32 shlwapi msvcrt kernel32)

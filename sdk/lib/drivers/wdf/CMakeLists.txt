@@ -1,6 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-
 list(APPEND SOURCE_SHARED
     shared/core/fxcxdeviceinit.cpp
     # shared/core/fxcxdeviceinitapi.cpp
@@ -186,9 +184,13 @@ list(APPEND SOURCE_KM
 # add_registry_inf(wdf01000_reg.inf)
 
 add_library(wdf01000 ${SOURCE_SHARED} ${SOURCE_KM})
+add_ntddi_defines(wdf01000 win8.1 PUBLIC)
+
+# Any component linking against wdf01000 must also target win8.1.
+add_ntddi_defines(wdf01000 win8.1)
 
 target_compile_definitions(wdf01000
-    PUBLIC WDF_DEVICE_NO_WDMSEC_H _WIN32_WINNT=0x603 NTDDI_VERSION=0x06030000 # NTDDI_WINBLUE
+    PUBLIC WDF_DEVICE_NO_WDMSEC_H
     PRIVATE FX_CORE_MODE=1 FX_CORE_KERNEL_MODE=1
     PRIVATE __WDF_MAJOR_VERSION=1 __WDF_MINOR_VERSION=17 __WDF_BUILD_NUMBER=7600)
 

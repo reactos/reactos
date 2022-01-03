@@ -1,8 +1,6 @@
 
 add_definitions(-DWINETEST_USE_DBGSTR_LONGLONG)
 
-remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
-
 list(APPEND SOURCE
     appbar.c
     assoc.c
@@ -33,7 +31,7 @@ add_executable(shell32_winetest
     rsrc.rc)
 
 target_link_libraries(shell32_winetest uuid)
-set_module_type(shell32_winetest win32cui)
+set_module_type(shell32_winetest win32cui TARGET_VERSION vista)
 add_importlibs(shell32_winetest shell32 shlwapi ole32 oleaut32 user32 gdi32 advapi32 msvcrt kernel32)
 
 if(MSVC)

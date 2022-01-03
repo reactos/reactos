@@ -1,6 +1,3 @@
-
-remove_definitions(-D_WIN32_WINNT=0x502)
-
 list(APPEND SOURCE
     data.c
     disk.c
@@ -12,9 +9,7 @@ list(APPEND SOURCE
 add_library(disk MODULE ${SOURCE} disk.rc)
 
 target_compile_definitions(disk PUBLIC
-    DEBUG_USE_KDPRINT
-    _WIN32_WINNT=0x602
-    NTDDI_VERSION=0x06020000) # NTDDI_WIN8
+    DEBUG_USE_KDPRINT)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(disk PRIVATE -Wno-format -Wno-pointer-sign)
@@ -25,7 +20,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(disk PRIVATE -Wno-unused-but-set-variable)
 endif()
 
-set_module_type(disk kernelmodedriver)
+set_module_type(disk kernelmodedriver TARGET_VERSION win8)
 target_link_libraries(disk ntoskrnl_vista libcntpr wdmguid)
 add_importlibs(disk classpnp ntoskrnl hal)
 add_cd_file(TARGET disk DESTINATION reactos/system32/drivers NO_CAB FOR all)

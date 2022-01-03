@@ -1,6 +1,3 @@
-
-remove_definitions(-D_WIN32_WINNT=0x502 -D_WIN32_IE=0x600)
-
 add_definitions(-DUSE_WINE_TODOS -DWINETEST_USE_DBGSTR_LONGLONG)
 
 list(APPEND SOURCE
@@ -49,7 +46,7 @@ endif()
 
 target_compile_options(comctl32_winetest PRIVATE $<$<NOT:$<C_COMPILER_ID:MSVC>>:-Wno-format>)
 
-set_module_type(comctl32_winetest win32cui)
+set_module_type(comctl32_winetest win32cui TARGET_VERSION vista)
 add_importlibs(comctl32_winetest comctl32 ole32 user32 gdi32 advapi32 msvcrt kernel32)
 
 if(MSVC)

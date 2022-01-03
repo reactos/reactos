@@ -1,9 +1,4 @@
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
-add_definitions(-DUNICODE -D_UNICODE -D_NTOSKRNL_ -D_NTSYSTEM_)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/rtl)
+add_definitions(-DUNICODE -D_UNICODE -D__NTOSKRNL__ -D_NTOSKRNL_ -D_NTSYSTEM_)
 
 list(APPEND SOURCE
     etw.c
@@ -16,5 +11,6 @@ list(APPEND SOURCE
 add_library(ntoskrnl_vista ${SOURCE})
 target_link_libraries(ntoskrnl_vista PRIVATE pseh) # rtl_vista)
 add_dependencies(ntoskrnl_vista bugcodes xdk)
+add_ntddi_defines(ntoskrnl_vista vista)
 
 target_compile_definitions(ntoskrnl_vista PUBLIC NTKRNLVISTA)

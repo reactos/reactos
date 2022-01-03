@@ -1,7 +1,3 @@
-
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x603)
-
 include_directories(${REACTOS_SOURCE_DIR}/drivers/filesystems/btrfs)
 
 spec2def(shellbtrfs.dll shellbtrfs.spec)
@@ -40,7 +36,7 @@ add_library(shellbtrfs MODULE
 file(GLOB shellbtrfs_rc_deps *.ico)
 add_rc_deps(shellbtrfs.rc ${shellbtrfs_rc_deps})
 
-set_module_type(shellbtrfs win32dll UNICODE)
+set_module_type(shellbtrfs win32dll UNICODE TARGET_VERSION win8.1)
 target_link_libraries(shellbtrfs uuid cppstl)
 set_target_cpp_properties(shellbtrfs WITH_EXCEPTIONS)
 add_importlibs(shellbtrfs advapi32 advapi32_vista ole32 shell32 shlwapi user32 comctl32 uxtheme setupapi comdlg32 gdi32 msvcrt kernel32_vista kernel32 ntdll)

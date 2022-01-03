@@ -1,7 +1,3 @@
-
-remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
-add_definitions(-D_WIN32_WINNT=0x601 -DWINVER=0x601)
-
 spec2def(fontext.dll fontext.spec)
 
 list(APPEND SOURCE
@@ -24,7 +20,7 @@ add_library(fontext MODULE
     fontext.spec
     ${CMAKE_CURRENT_BINARY_DIR}/fontext.def)
 
-set_module_type(fontext win32dll UNICODE)
+set_module_type(fontext win32dll UNICODE TARGET_VERSION win7)
 target_link_libraries(fontext uuid wine cpprt atl_classes)
 add_delay_importlibs(fontext ole32 oleaut32 shlwapi gdi32)
 add_importlibs(fontext shell32 advapi32 user32 msvcrt kernel32 ntdll)

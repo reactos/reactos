@@ -6,5 +6,6 @@ list(APPEND SOURCE
     rxce.c)
 
 add_library(rxce ${SOURCE})
+add_ntddi_defines(rxce xp)
 target_link_libraries(rxce PRIVATE pseh)
 add_dependencies(rxce bugcodes xdk)

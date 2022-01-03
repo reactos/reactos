@@ -1,8 +1,3 @@
-
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
-add_definitions(-DWINVER=0x600 -D_WIN32_WINNT=0x601)
-
 list(APPEND SOURCE
     actctx.c
     atom.c
@@ -60,7 +55,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(kernel32_winetest PRIVATE "-Wno-format")
 endif()
 
-set_module_type(kernel32_winetest win32cui)
+set_module_type(kernel32_winetest win32cui TARGET_VERSION win7)
 target_link_libraries(kernel32_winetest pseh)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(kernel32_winetest precomp.h "${PCH_SKIP_SOURCE}")

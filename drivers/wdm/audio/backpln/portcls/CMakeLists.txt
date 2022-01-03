@@ -1,8 +1,4 @@
 
-
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 spec2def(portcls.sys portcls.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -61,7 +57,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 target_link_libraries(portcls libcntpr ${PSEH_LIB})
-set_module_type(portcls kernelmodedriver ENTRYPOINT 0 )
+set_module_type(portcls kernelmodedriver ENTRYPOINT 0 TARGET_VERSION vista)
 add_pch(portcls private.hpp "${PCH_SKIP_SOURCE}")
 add_importlibs(portcls ntoskrnl ks drmk hal)
 add_cd_file(TARGET portcls DESTINATION reactos/system32/drivers FOR all)

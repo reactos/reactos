@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(mscoree.dll mscoree.spec)
@@ -25,7 +22,7 @@ add_library(mscoree MODULE
     mscoree.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mscoree.def)
 
-set_module_type(mscoree win32dll)
+set_module_type(mscoree win32dll TARGET_VERSION vista)
 target_link_libraries(mscoree uuid wine)
 add_importlibs(mscoree dbghelp advapi32 shell32 ole32 shlwapi msvcrt kernel32 ntdll)
 add_pch(mscoree mscoree_private.h "${PCH_SKIP_SOURCE}")

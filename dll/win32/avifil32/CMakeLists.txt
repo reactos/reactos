@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(-D__WINESRC__ -DENTRY_PREFIX=avifil32_)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(avifil32.dll avifil32.spec ADD_IMPORTLIB)
@@ -35,7 +32,7 @@ if(MSVC)
     target_compile_options(avifil32 PRIVATE /wd4146)
 endif()
 
-set_module_type(avifil32 win32dll)
+set_module_type(avifil32 win32dll TARGET_VERSION vista)
 target_link_libraries(avifil32 wine ${PSEH_LIB})
 add_importlibs(avifil32 msacm32 msvfw32 winmm ole32 user32 advapi32 rpcrt4 msvcrt kernel32 ntdll)
 add_pch(avifil32 precomp.h "${PCH_SKIP_SOURCE}")

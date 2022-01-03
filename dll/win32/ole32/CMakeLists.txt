@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(
     -D__WINESRC__
     -D_OLE32_
@@ -87,7 +84,7 @@ if(MSVC)
     target_compile_options(ole32 PRIVATE /wd4090 /wd4146)
 endif()
 
-set_module_type(ole32 win32dll)
+set_module_type(ole32 win32dll TARGET_VERSION vista)
 target_link_libraries(ole32 wine uuid ${PSEH_LIB})
 add_delay_importlibs(ole32 oleaut32)
 add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 kernel32_vista ntdll)

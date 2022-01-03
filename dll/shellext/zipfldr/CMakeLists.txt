@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/zlib/contrib)
@@ -34,7 +31,7 @@ add_library(zipfldr MODULE
     zipfldr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/zipfldr.def)
 
-set_module_type(zipfldr win32dll UNICODE)
+set_module_type(zipfldr win32dll UNICODE TARGET_VERSION vista)
 target_link_libraries(zipfldr minizip zlib uuid cpprt atl_classes)
 set_target_cpp_properties(zipfldr WITH_EXCEPTIONS)
 add_importlibs(zipfldr oleaut32 ole32 shlwapi comctl32 shell32 user32 advapi32 msvcrt kernel32 ntdll)

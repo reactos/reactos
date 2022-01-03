@@ -6,9 +6,6 @@ add_subdirectory(shellrecyclebin)
 
 spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(
     -D_SHELL32_
     -D_WINE)
@@ -111,7 +108,7 @@ endif()
 add_typelib(shell32_shldisp.idl)
 set_source_files_properties(shell32.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shell32_shldisp.tlb)
 
-set_module_type(shell32 win32dll UNICODE)
+set_module_type(shell32 win32dll UNICODE TARGET_VERSION vista)
 target_link_libraries(shell32 shellmenu shelldesktop wine uuid recyclebin cpprt atl_classes)
 add_delay_importlibs(shell32 powrprof shdocvw devmgr winspool.drv winmm mpr uxtheme ole32 oleaut32 userenv browseui version fmifs)
 add_importlibs(shell32 advapi32 gdi32 user32 comctl32 comdlg32 shlwapi msvcrt kernel32 ntdll)

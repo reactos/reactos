@@ -6,15 +6,6 @@
  * COPYRIGHT:   Copyright 2011-2012 Hermes BELUSCA - MAITO <hermes.belusca@sfr.fr>
  */
 
-// For TVIF_EXPANDEDIMAGE and TVIF_STATEEX (are they really useful ?)
-#if !defined(_WIN32_IE) || (_WIN32_IE < 0x0600)
-    #define _WIN32_IE 0x0600
-#endif
-
-// Fake _WIN32_WINNT to 0x0600 in order to get Vista+ style flags
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
-
 #include "precomp.h"
 #include "treeview.h"
 

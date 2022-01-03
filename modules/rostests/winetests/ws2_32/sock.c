@@ -21,11 +21,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifdef __REACTOS__
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
-#endif
-
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
 #include <winsock2.h>

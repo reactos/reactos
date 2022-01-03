@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(inseng.dll inseng.spec)
@@ -21,7 +18,7 @@ add_library(inseng MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/inseng_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inseng.def)
 
-set_module_type(inseng win32dll)
+set_module_type(inseng win32dll TARGET_VERSION vista)
 target_link_libraries(inseng uuid wine)
 add_importlibs(inseng ole32 urlmon kernel32_vista msvcrt kernel32 ntdll)
 add_pch(inseng precomp.h "${PCH_SKIP_SOURCE}")

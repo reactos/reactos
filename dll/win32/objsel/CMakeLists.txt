@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(objsel.dll objsel.spec)
@@ -16,7 +13,7 @@ add_library(objsel MODULE
     objsel.rc
     ${CMAKE_CURRENT_BINARY_DIR}/objsel.def)
 
-set_module_type(objsel win32dll)
+set_module_type(objsel win32dll TARGET_VERSION vista)
 target_link_libraries(objsel uuid wine)
 add_importlibs(objsel ole32 advapi32 msvcrt kernel32 ntdll)
 add_pch(objsel precomp.h SOURCE)

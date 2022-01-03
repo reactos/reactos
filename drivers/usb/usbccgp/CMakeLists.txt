@@ -1,7 +1,3 @@
-
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(-DDEBUG_MODE)
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
@@ -22,7 +18,7 @@ add_library(usbccgp MODULE
     usbccgp.rc)
 
 target_link_libraries(usbccgp ${PSEH_LIB})
-set_module_type(usbccgp kernelmodedriver)
+set_module_type(usbccgp kernelmodedriver TARGET_VERSION vista)
 add_importlibs(usbccgp ntoskrnl hal usbd)
 add_pch(usbccgp usbccgp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET usbccgp DESTINATION reactos/system32/drivers NO_CAB FOR all)

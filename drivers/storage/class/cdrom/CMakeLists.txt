@@ -1,6 +1,3 @@
-
-remove_definitions(-D_WIN32_WINNT=0x502)
-
 list(APPEND SOURCE
     aacs.c
     autorun.c
@@ -18,7 +15,7 @@ list(APPEND SOURCE
     cdrom.h)
 
 add_library(cdrom MODULE ${SOURCE} cdrom.rc)
-set_module_type(cdrom kernelmodedriver)
+set_module_type(cdrom kernelmodedriver TARGET_VERSION win8.1)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(cdrom PRIVATE -Wno-format -Wno-unused-variable -Wno-pointer-sign)

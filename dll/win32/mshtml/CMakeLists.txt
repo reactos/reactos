@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(
     -D__WINESRC__
     -D__ROS_LONG64__
@@ -106,7 +103,7 @@ list(APPEND mshtml_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/mshtml_classes.rgs)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${mshtml_rc_deps}")
-set_module_type(mshtml win32dll)
+set_module_type(mshtml win32dll TARGET_VERSION vista)
 target_link_libraries(mshtml uuid wine strmiids oldnames)
 add_delay_importlibs(mshtml wininet)
 add_importlibs(mshtml urlmon shlwapi shell32 ole32 oleaut32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)

@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 include_directories(
     concfg
     consrv)
@@ -60,4 +57,4 @@ add_pch(consrv consrv/consrv.h CONSRV_SOURCE)
 list(APPEND CONSRV_IMPORT_LIBS psapi)
 list(APPEND CONSRV_DELAY_IMPORT_LIBS shell32 ole32)
 list(APPEND CONSRV_TARGET_LINK_LIBS concfg uuid)
-set_module_type(consrv module UNICODE)
+set_module_type(consrv module UNICODE TARGET_VERSION vista)

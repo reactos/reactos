@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(
     -D__WINESRC__
     -D__ROS_LONG64__
@@ -57,7 +54,7 @@ endif()
 
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
 add_dependencies(oleaut32 oleaut32_idlheader)
-set_module_type(oleaut32 win32dll)
+set_module_type(oleaut32 win32dll TARGET_VERSION vista)
 target_link_libraries(oleaut32 wine wineldr uuid ${PSEH_LIB})
 add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
 add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 kernel32_vista msvcrt kernel32 ntdll)

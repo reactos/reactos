@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
-add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
-
 add_definitions(
     -D__WINESRC__
     -D__ROS_LONG64__
@@ -52,7 +49,7 @@ if(MSVC)
     target_compile_options(crypt32 PRIVATE /wd4090 /wd4312)
 endif()
 
-set_module_type(crypt32 win32dll)
+set_module_type(crypt32 win32dll TARGET_VERSION vista)
 target_link_libraries(crypt32 wine ${PSEH_LIB} oldnames)
 add_delay_importlibs(crypt32 cryptnet)
 add_importlibs(crypt32 bcrypt user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)

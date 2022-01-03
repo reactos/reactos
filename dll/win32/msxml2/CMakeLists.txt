@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x601)
-
 add_definitions(
     -D__WINESRC__
     -D_WINE)
@@ -15,7 +12,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msxml2.def)
 
 add_library(msxml2 MODULE ${SOURCE} msxml2.rc)
-set_module_type(msxml2 win32dll)
+set_module_type(msxml2 win32dll TARGET_VERSION win7)
 set_source_files_properties(msxml2.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msxml2_tlb.tlb)
 target_link_libraries(msxml2 wine)
 add_importlibs(msxml2 msxml3 msvcrt kernel32)

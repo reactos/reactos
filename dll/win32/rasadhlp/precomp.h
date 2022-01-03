@@ -1,7 +1,6 @@
 #ifndef _RASADHLP_H
 #define _RASADHLP_H
 
-#define _WIN32_WINNT 0x502
 #define _CRT_SECURE_NO_DEPRECATE
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS

@@ -6,9 +6,6 @@ add_definitions(
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL)
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 include_directories(
     BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libjpeg
@@ -78,7 +75,7 @@ if(MSVC)
     target_compile_options(windowscodecs PRIVATE /FItypeof.h)
 endif()
 
-set_module_type(windowscodecs win32dll)
+set_module_type(windowscodecs win32dll TARGET_VERSION vista)
 target_link_libraries(windowscodecs wine uuid ${PSEH_LIB})
 add_importlibs(windowscodecs ole32 oleaut32 rpcrt4 shlwapi user32 gdi32 advapi32 advapi32_vista propsys msvcrt kernel32 ntdll)
 add_pch(windowscodecs precomp.h "${PCH_SKIP_SOURCE}")

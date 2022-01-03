@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(
     -D__WINESRC__
     -D_WINE)
@@ -27,7 +24,7 @@ add_library(winhttp MODULE
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winhttp.def)
 
-set_module_type(winhttp win32dll)
+set_module_type(winhttp win32dll TARGET_VERSION vista)
 target_link_libraries(winhttp uuid wine)
 add_delay_importlibs(winhttp oleaut32 crypt32 secur32)
 add_importlibs(winhttp user32 advapi32 ws2_32 jsproxy kernel32_vista msvcrt kernel32 ntdll)

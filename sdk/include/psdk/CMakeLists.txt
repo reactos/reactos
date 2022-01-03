@@ -187,7 +187,7 @@ elseif(TARGET_VERSION STREQUAL "xp" OR TARGET_VERSION STREQUAL "")
     set(NTVERP_MINOR_VERSION 2)
     set(NTVERP_VERSION_W 0x0502)
 else()
-    message(SEND_ERROR "Could not detect version for ntverp.h")
+    message(SEND_ERROR "Could not detect version for ntverp.h: ${TARGET_VERSION}")
 endif()
 
 configure_file(ntverp.h.in ${CMAKE_CURRENT_BINARY_DIR}/ntverp.h)

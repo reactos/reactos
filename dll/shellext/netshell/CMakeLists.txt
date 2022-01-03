@@ -1,9 +1,6 @@
 
 project(SHELL)
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(-D_NETSHELL_)
 spec2def(netshell.dll netshell.spec)
 
@@ -28,7 +25,7 @@ add_library(netshell MODULE
     netshell.rc
     ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
 
-set_module_type(netshell win32dll UNICODE)
+set_module_type(netshell win32dll UNICODE TARGET_VERSION vista)
 target_link_libraries(netshell uuid wine cpprt atl_classes)
 add_delay_importlibs(netshell ole32 oleaut32 shlwapi shell32)
 add_importlibs(netshell version iphlpapi gdi32 user32 advapi32 setupapi ws2_32 comctl32 msvcrt kernel32 ntdll)

@@ -24,7 +24,7 @@ add_executable(shlwapi_winetest
     ${PCH_SKIP_SOURCE})
 
 target_link_libraries(shlwapi_winetest uuid)
-set_module_type(shlwapi_winetest win32cui)
+set_module_type(shlwapi_winetest win32cui TARGET_VERSION vista)
 add_importlibs(shlwapi_winetest shlwapi shell32 mlang oleaut32 ole32 user32 advapi32 msvcrt kernel32)
 
 if(MSVC)

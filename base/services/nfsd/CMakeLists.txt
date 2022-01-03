@@ -1,7 +1,3 @@
-remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
-add_definitions(-D_WIN32_WINNT=0x601)
-add_definitions(-DNTDDI_VERSION=0x06010000)
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/dll/3rdparty/libtirpc/tirpc
     ${REACTOS_SOURCE_DIR}/drivers/filesystems/nfs
@@ -56,7 +52,7 @@ else()
     target_compile_options(nfsd PRIVATE "-w")
 endif()
 
-set_module_type(nfsd win32cui)
+set_module_type(nfsd win32cui TARGET_VERSION vista)
 add_importlibs(nfsd advapi32 iphlpapi kernel32_vista libtirpc msvcrt shell32 ws2_32 wldap32 kernel32 ntdll)
 add_pch(nfsd precomp.h SOURCE)
 

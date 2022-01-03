@@ -7,6 +7,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(ws2_32_winetest PRIVATE "-Wno-format")
 endif()
 
-set_module_type(ws2_32_winetest win32cui)
+set_module_type(ws2_32_winetest win32cui TARGET_VERSION vista)
 add_importlibs(ws2_32_winetest ws2_32 user32 msvcrt kernel32)
 add_rostests_file(TARGET ws2_32_winetest)

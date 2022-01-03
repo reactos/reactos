@@ -5,9 +5,6 @@ add_definitions(
     -D__ROS_LONG64__
     -D_COMCTL32_)
 
-remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
-add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
-
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(comctl32.dll comctl32.spec ADD_IMPORTLIB)
 
@@ -71,7 +68,7 @@ if(MSVC)
     target_compile_options(comctl32 PRIVATE /wd4146 /wd4267 /wd4477)
 endif()
 
-set_module_type(comctl32 win32dll UNICODE)
+set_module_type(comctl32 win32dll UNICODE TARGET_VERSION vista)
 target_link_libraries(comctl32 uuid wine ${PSEH_LIB})
 add_delay_importlibs(comctl32 winmm uxtheme)
 add_importlibs(comctl32 user32 gdi32 advapi32 usp10 imm32 msvcrt kernel32 ntdll)

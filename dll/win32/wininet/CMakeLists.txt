@@ -1,11 +1,4 @@
 
-remove_definitions(
-    -DWINVER=0x502
-    -D_WIN32_WINNT=0x502)
-add_definitions(
-    -DWINVER=0x600
-    -D_WIN32_WINNT=0x600)
-
 add_definitions(
     -D__WINESRC__
     -D_WINE
@@ -44,7 +37,7 @@ if(MSVC)
     target_compile_options(wininet PRIVATE /wd4090)
 endif()
 
-set_module_type(wininet win32dll)
+set_module_type(wininet win32dll TARGET_VERSION vista)
 target_link_libraries(wininet wine ${PSEH_LIB} oldnames)
 
 add_delay_importlibs(wininet secur32 crypt32 cryptui iphlpapi dhcpcsvc)

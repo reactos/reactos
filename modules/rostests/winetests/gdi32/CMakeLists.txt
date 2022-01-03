@@ -1,6 +1,3 @@
-
-remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
-
 list(APPEND SOURCE
     bitmap.c
     brush.c
@@ -30,8 +27,8 @@ if(MSVC AND ARCH STREQUAL "amd64")
     target_compile_options(gdi32_winetest PRIVATE /wd4334)
 endif()
 
-set_module_type(gdi32_winetest win32cui)
-add_importlibs(gdi32_winetest gdi32 gdi32_vista user32 advapi32 msvcrt kernel32)
+set_module_type(gdi32_winetest win32cui TARGET_VERSION vista)
+add_importlibs(gdi32_winetest gdi32 user32 advapi32 msvcrt kernel32)
 
 if(MSVC)
     add_importlibs(gdi32_winetest ntdll)

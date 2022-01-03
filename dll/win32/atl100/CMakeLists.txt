@@ -1,7 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 add_definitions(
     -D__WINESRC__
     -D_ATL_VER=_ATL_VER_100)
@@ -20,7 +17,7 @@ add_library(atl100 MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/atl100.def)
 
-set_module_type(atl100 win32dll)
+set_module_type(atl100 win32dll TARGET_VERSION vista)
 target_link_libraries(atl100 uuid wine)
 add_importlibs(atl100 ole32 oleaut32 user32 gdi32 advapi32 advapi32_vista shlwapi msvcrt kernel32 ntdll)
 add_pch(atl100 precomp.h SOURCE)

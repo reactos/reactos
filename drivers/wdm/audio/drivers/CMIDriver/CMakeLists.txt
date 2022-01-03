@@ -2,12 +2,6 @@
 add_subdirectory(cmicontrol)
 add_subdirectory(cpl)
 
-
-# For (NT6+) WaveRT support.
-# See WAVERT define in debug.hpp.
-# remove_definitions(-D_WIN32_WINNT=0x502)
-# add_definitions(-D_WIN32_WINNT=0x600)
-
 list(APPEND SOURCE
     adapter.cpp
     common.cpp
@@ -24,6 +18,7 @@ add_library(cmipci MODULE
 
 target_link_libraries(cmipci stdunk libcntpr uuid)
 set_module_type(cmipci wdmdriver UNICODE)
+# set_module_type(cmipci wdmdriver UNICODE TARGET_VERSION vista) for NT6+ WaveRT support.
 add_importlibs(cmipci portcls hal ntoskrnl)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
