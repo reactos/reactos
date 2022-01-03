@@ -223,6 +223,9 @@ CTextEditWindow::CTextEditWindow() : m_hFont(NULL)
 
 LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (wParam == VK_TAB)
+        return 0; // FIXME: Tabs
+
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
