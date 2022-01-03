@@ -51,6 +51,8 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
 
         SIZE siz;
         GetTextExtentPoint32(hDC, &pszText[ich], 1, &siz);
+
+        // TODO: Tabs
         x += siz.cx;
         if (xMax < x)
             xMax = x;
