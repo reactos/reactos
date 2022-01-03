@@ -27,6 +27,7 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
     DWORD dwMargin = (DWORD)DefWindowProc(EM_GETMARGINS, 0, 0);
     LONG leftMargin = LOWORD(dwMargin), rightMargin = HIWORD(dwMargin);
 
+    // Calculate width and height of the text
     INT x = leftMargin, y = tm.tmHeight, xMax = x, yMax = y;
     INT ich;
     for (ich = 0; ich < cchText; ++ich)
@@ -38,7 +39,7 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
         {
             if (rc.top + yMax + tm.tmHeight > prcParent->bottom)
             {
-                pszText[ich] = 0;
+                pszText[ich] = 0; // Truncate
                 break;
             }
             x = leftMargin;
@@ -55,7 +56,7 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
             xMax = x;
     }
 
-    if (ich != cchText && pszOldText)
+    if (ich != cchText && pszOldText) // Truncated
     {
         DWORD iStart, iEnd;
         SendMessage(EM_GETSEL, (WPARAM)&iStart, (LPARAM)&iEnd);
@@ -65,15 +66,16 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
         cchText = ich;
     }
 
+    // Consider italic overhang
     ABCFLOAT WidthsABC;
+    FLOAT overhang = 0;
     if (cchText > 0)
+    {
         GetCharABCWidthsFloat(hDC, pszText[cchText - 1], pszText[cchText - 1], &WidthsABC);
-    else
-        WidthsABC.abcfC = 0;
-
-    FLOAT overhang = WidthsABC.abcfC;
-    if (overhang > 0)
-        overhang = 0;
+        overhang = WidthsABC.abcfC;
+        if (overhang > 0)
+            overhang = 0;
+    }
 
     SIZE ret = { xMax + rightMargin - LONG(overhang) + 1, yMax };
     return ret;
