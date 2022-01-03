@@ -164,17 +164,17 @@ void ImageModel::SaveImage(LPTSTR lpFileName)
     SaveDIBToFile(hBms[currInd], lpFileName, hDrawingDC);
 }
 
-BOOL ImageModel::IsImageSaved()
+BOOL ImageModel::IsImageSaved() const
 {
     return imageSaved;
 }
 
-BOOL ImageModel::HasUndoSteps()
+BOOL ImageModel::HasUndoSteps() const
 {
     return undoSteps > 0;
 }
 
-BOOL ImageModel::HasRedoSteps()
+BOOL ImageModel::HasRedoSteps() const
 {
     return redoSteps > 0;
 }
@@ -191,12 +191,12 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
     NotifyImageChanged();
 }
 
-int ImageModel::GetWidth()
+int ImageModel::GetWidth() const
 {
     return GetDIBWidth(hBms[currInd]);
 }
 
-int ImageModel::GetHeight()
+int ImageModel::GetHeight() const
 {
     return GetDIBHeight(hBms[currInd]);
 }

@@ -7,6 +7,7 @@
  *                  Pierre Schweitzer <heis_spiter@hotmail.com>
  *                  Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *                  Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
  */
 
 /* INCLUDES *****************************************************************/
@@ -395,6 +396,8 @@ static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\
 static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
 static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
 static const WCHAR s_szWinlogon[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon";
+static const WCHAR s_szDefaultSoundEvents[] = L"AppEvents\\Schemes\\Apps\\.Default";
+static const WCHAR s_szExplorerSoundEvents[] = L"AppEvents\\Schemes\\Apps\\Explorer";
 
 typedef struct _PRODUCT_OPTION_DATA
 {
@@ -410,6 +413,125 @@ static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
     { L"Terminal Server\0", L"ServerNT", 0, 0x200, 0 },
     { L"\0", L"WinNT", 1, 0x300, 1 }
 };
+
+static const WCHAR* s_DefaultSoundEvents[][2] = 
+{
+    { L".Default", L"%SystemRoot%\\Media\\ReactOS_Default.wav" },
+    { L"AppGPFault", L"" },
+    { L"Close", L"" },
+    { L"CriticalBatteryAlarm", L"%SystemRoot%\\Media\\ReactOS_Battery_Critical.wav" },
+    { L"DeviceConnect",  L"%SystemRoot%\\Media\\ReactOS_Hardware_Insert.wav" },
+    { L"DeviceDisconnect", L"%SystemRoot%\\Media\\ReactOS_Hardware_Remove.wav" },
+    { L"DeviceFail", L"%SystemRoot%\\Media\\ReactOS_Hardware_Fail.wav" },
+    { L"LowBatteryAlarm", L"%SystemRoot%\\Media\\ReactOS_Battery_Low.wav" },
+    { L"MailBeep", L"%SystemRoot%\\Media\\ReactOS_Notify.wav" },
+    { L"Maximize", L"%SystemRoot%\\Media\\ReactOS_Restore.wav" },
+    { L"MenuCommand", L"%SystemRoot%\\Media\\ReactOS_Menu_Command.wav" },
+    { L"MenuPopup", L"" },
+    { L"Minimize", L"%SystemRoot%\\Media\\ReactOS_Minimize.wav" },
+    { L"Open", L"" },
+    { L"PrintComplete", L"%SystemRoot%\\Media\\ReactOS_Print_Complete.wav" },
+    { L"RestoreDown", L"" },
+    { L"RestoreUp", L"" },
+    { L"SystemAsterisk", L"%SystemRoot%\\Media\\ReactOS_Ding.wav" },
+    { L"SystemExclamation", L"%SystemRoot%\\Media\\ReactOS_Exclamation.wav" },
+    { L"SystemExit", L"%SystemRoot%\\Media\\ReactOS_Shutdown.wav" },
+    { L"SystemHand", L"%SystemRoot%\\Media\\ReactOS_Critical_Stop.wav" },
+    { L"SystemNotification", L"%SystemRoot%\\Media\\ReactOS_Balloon.wav" },
+    { L"SystemQuestion", L"%SystemRoot%\\Media\\ReactOS_Ding.wav" },
+    { L"SystemStart", L"%SystemRoot%\\Media\\ReactOS_Startup.wav" },
+    { L"WindowsLogoff", L"%SystemRoot%\\Media\\ReactOS_LogOff.wav" }
+/* Logon sound is already set by default for both Server and Workstation */
+};
+
+static const WCHAR* s_ExplorerSoundEvents[][2] = 
+{
+    { L"EmptyRecycleBin", L"%SystemRoot%\\Media\\ReactOS_Recycle.wav" },
+    { L"Navigating", L"%SystemRoot%\\Media\\ReactOS_Start.wav" }
+};
+
+static BOOL
+DoWriteSoundEvents(HKEY hKey,
+                   LPCWSTR lpSubkey,
+                   LPCWSTR lpEventsArray[][2],
+                   DWORD dwSize)
+{
+    HKEY hRootKey, hEventKey, hDefaultKey;
+    LONG error;
+    ULONG i;
+    WCHAR szDest[MAX_PATH];
+    DWORD dwAttribs;
+    DWORD cbData;
+
+    /* Open the sound events key */
+    error = RegOpenKeyExW(hKey, lpSubkey, 0, KEY_READ, &hRootKey);
+    if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
+
+    /* Set each sound event */
+    for (i = 0; i < dwSize; i++)
+    {
+        /*
+         * Verify that the sound file exists and is an actual file.
+         */
+
+        /* Expand the sound file path */
+        if (!ExpandEnvironmentStringsW(lpEventsArray[i][1], szDest, _countof(szDest)))
+        {
+            /* Failed to expand, continue with the next sound event */
+            continue;
+        }
+
+        /* Check if the sound file exists and isn't a directory */
+        dwAttribs = GetFileAttributesW(szDest);
+        if ((dwAttribs == INVALID_FILE_ATTRIBUTES) ||
+            (dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            /* It does not, just continue with the next sound event */
+            continue;
+        }
+
+        /*
+         * Create the sound event entry.
+         */
+
+        /* Open the sound event subkey */
+        error = RegOpenKeyExW(hRootKey, lpEventsArray[i][0], 0, KEY_READ, &hEventKey);
+        if (error)
+        {
+            /* Failed to open, continue with next sound event */
+            continue;
+        }
+
+        /* Open .Default subkey */
+        error = RegOpenKeyExW(hEventKey, L".Default", 0, KEY_WRITE, &hDefaultKey);
+        RegCloseKey(hEventKey);
+        if (error)
+        {
+            /* Failed to open, continue with next sound event */
+            continue;
+        }
+
+        /* Associate the sound file to this sound event */
+        cbData = (lstrlenW(lpEventsArray[i][1]) + 1) * sizeof(WCHAR);
+        error = RegSetValueExW(hDefaultKey, NULL, 0, REG_EXPAND_SZ, (const BYTE *)lpEventsArray[i][1], cbData);
+        RegCloseKey(hDefaultKey);
+        if (error)
+        {
+            /* Failed to set the value, continue with next sound event */
+            continue;
+        }
+    }
+
+Error:
+    if (hRootKey)
+        RegCloseKey(hRootKey);
+
+    return error == ERROR_SUCCESS;
+}
 
 static BOOL
 DoWriteProductOption(PRODUCT_OPTION nOption)
@@ -507,6 +629,13 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     {
         DPRINT1("RegSetValueExW failed\n");
         goto Error;
+    }
+
+    if (nOption == PRODUCT_OPTION_WORKSTATION)
+    {
+        /* Write system sound events values for Workstation */
+        DoWriteSoundEvents(HKEY_CURRENT_USER, s_szDefaultSoundEvents, s_DefaultSoundEvents, _countof(s_DefaultSoundEvents));
+        DoWriteSoundEvents(HKEY_CURRENT_USER, s_szExplorerSoundEvents, s_ExplorerSoundEvents, _countof(s_ExplorerSoundEvents));
     }
 
 Error:
@@ -2041,6 +2170,12 @@ RegistrationProc(LPVOID Parameter)
     RegistrationNotify.Progress = RegistrationData->DllCount;
     RegistrationNotify.ActivityID = IDS_REGISTERING_COMPONENTS;
     RegistrationNotify.CurrentItem = NULL;
+
+    RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
+
+    // FIXME: Move this call to a separate cleanup page!
+    RtlCreateBootStatusDataFile();
+
     SendMessage(RegistrationData->hwndDlg, PM_REGISTRATION_NOTIFY,
                 1, (LPARAM) &RegistrationNotify);
     if (NULL != RegistrationNotify.ErrorMessage &&
@@ -2051,11 +2186,6 @@ RegistrationProc(LPVOID Parameter)
 
     SetupTermDefaultQueueCallback(RegistrationData->DefaultContext);
     HeapFree(GetProcessHeap(), 0, RegistrationData);
-
-    RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
-
-    // FIXME: Move this call to a separate cleanup page!
-    RtlCreateBootStatusDataFile();
 
     return 0;
 }

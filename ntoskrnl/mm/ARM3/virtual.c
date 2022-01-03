@@ -1842,7 +1842,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         /* Check if we were attached */
         if (ProcessHandle != NtCurrentProcess())
         {
-            /* Detach and derefernece the process */
+            /* Detach and dereference the process */
             KeUnstackDetachProcess(&ApcState);
             ObDereferenceObject(TargetProcess);
         }
@@ -1955,7 +1955,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     /* Check if we were attached */
     if (ProcessHandle != NtCurrentProcess())
     {
-        /* Detach and derefernece the process */
+        /* Detach and dereference the process */
         KeUnstackDetachProcess(&ApcState);
         ObDereferenceObject(TargetProcess);
     }
@@ -5617,7 +5617,7 @@ FinalPath:
     goto FinalPath;
 
     //
-    // In the failure path, we detach and derefernece the target process, and
+    // In the failure path, we detach and dereference the target process, and
     // return whatever failure code was sent.
     //
 FailPath:

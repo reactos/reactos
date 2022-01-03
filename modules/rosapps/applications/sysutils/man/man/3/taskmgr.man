@@ -1,8 +1,0 @@
-[]=====================[ReactOS GUI task Manager]======================[]
- Author:   Brian Palmer
- Purpose:  ROS task manager
- License:  GPL
-
-
-
- 

@@ -22,6 +22,7 @@ extern void func_PathResolve(void);
 extern void func_SHAppBarMessage(void);
 extern void func_SHChangeNotify(void);
 extern void func_SHCreateDataObject(void);
+extern void func_SHCreateFileDataObject(void);
 extern void func_SHCreateFileExtractIconW(void);
 extern void func_ShellExecCmdLine(void);
 extern void func_ShellExecuteEx(void);
@@ -53,6 +54,7 @@ const struct test winetest_testlist[] =
     { "SHAppBarMessage", func_SHAppBarMessage },
     { "SHChangeNotify", func_SHChangeNotify },
     { "SHCreateDataObject", func_SHCreateDataObject },
+    { "SHCreateFileDataObject", func_SHCreateFileDataObject },
     { "SHCreateFileExtractIconW", func_SHCreateFileExtractIconW },
     { "ShellExecCmdLine", func_ShellExecCmdLine },
     { "ShellExecuteEx", func_ShellExecuteEx },

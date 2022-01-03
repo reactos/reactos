@@ -31,7 +31,7 @@ if(MSVC AND ARCH STREQUAL "amd64")
 endif()
 
 set_module_type(gdi32_winetest win32cui)
-add_importlibs(gdi32_winetest gdi32 user32 advapi32 msvcrt kernel32)
+add_importlibs(gdi32_winetest gdi32 gdi32_vista user32 advapi32 msvcrt kernel32)
 
 if(MSVC)
     add_importlibs(gdi32_winetest ntdll)

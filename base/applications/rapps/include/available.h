@@ -129,8 +129,4 @@ public:
     CAvailableApplicationInfo* FindAppByPkgName(const ATL::CStringW& szPkgName) const;
     ATL::CSimpleArray<CAvailableApplicationInfo> FindAppsByPkgNameList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
     //ATL::CSimpleArray<CAvailableApplicationInfo> GetSelected() const;
-
-    const ATL::CStringW& GetFolderPath() const;
-    const ATL::CStringW& GetAppPath() const;
-    const ATL::CStringW& GetCabPath() const;
 };

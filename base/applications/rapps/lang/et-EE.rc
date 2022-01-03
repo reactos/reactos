@@ -219,9 +219,10 @@ BEGIN
     IDS_SELECTEDFORINST "Installimiseks valitud"
     IDS_MISMATCH_CERT_INFO "Kasutatud sertifikaat on tundmatu:\nSubject: %s\nIssuer: %s\nKas soovid siiski jätkata?"
     IDS_UNABLE_PATH "Incorrect path format."
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_APP_DISPLAY_DETAILS "Details"
+    IDS_APP_DISPLAY_LIST "List"
+    IDS_APP_DISPLAY_TILE "Tile"
+    IDS_NO_SEARCH_RESULTS "No search results"
 END
 
 STRINGTABLE

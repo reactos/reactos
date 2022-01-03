@@ -211,9 +211,10 @@ BEGIN
     IDS_SELECTEDFORINST "Выбрано для установки"
     IDS_MISMATCH_CERT_INFO "Используемый сертификат не опознан:\nНазначение: %s\nВыдан: %s\nВы хотите продолжить в любом случае?"
     IDS_UNABLE_PATH "Incorrect path format."
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_APP_DISPLAY_DETAILS "Details"
+    IDS_APP_DISPLAY_LIST "List"
+    IDS_APP_DISPLAY_TILE "Tile"
+    IDS_NO_SEARCH_RESULTS "No search results"
 END
 
 STRINGTABLE

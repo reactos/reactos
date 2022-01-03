@@ -220,9 +220,10 @@ BEGIN
     IDS_SELECTEDFORINST "Wybrane do instalacji"
     IDS_MISMATCH_CERT_INFO "Użyty certyfikat jest nieznany:\nSubject: %s\nIssuer: %s\nCzy chcesz mimo to kontynuować?"
     IDS_UNABLE_PATH "Niepoprawny format ścieżki."
-    IDS_APP_DISPLAY_DETAILS "szczegóły"
-    IDS_APP_DISPLAY_LIST "lista"
-    IDS_APP_DISPLAY_TILE "kafelki"
+    IDS_APP_DISPLAY_DETAILS "Szczegóły"
+    IDS_APP_DISPLAY_LIST "Lista"
+    IDS_APP_DISPLAY_TILE "Kafelki"
+    IDS_NO_SEARCH_RESULTS "No search results"
 END
 
 STRINGTABLE

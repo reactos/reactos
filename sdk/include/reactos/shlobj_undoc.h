@@ -711,6 +711,7 @@ DECLARE_INTERFACE_(ITrayPriv, IUnknown)
 
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray*);
 BOOL WINAPI SHDesktopMessageLoop(HANDLE);
+HRESULT WINAPI SHCreateFileDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, IDataObject* pDataInner, IDataObject** ppDataObj);
 
 #ifdef __cplusplus
 } /* extern "C" */

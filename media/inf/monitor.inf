@@ -126,3 +126,10 @@ MonitorClassName = "Monitores"
 StdMfg = "(Monitores genéricos)"
 DefaultMonitor.DeviceDesc = "Monitor predefinido"
 PnPMonitor.DeviceDesc = "Monitor Plug and Play"
+
+[Strings.0C04]
+MonitorClassName = "顯示器"
+
+StdMfg = "(標準顯示器類型)"
+DefaultMonitor.DeviceDesc = "預設顯示器"
+PnPMonitor.DeviceDesc = "隨插即用顯示器"

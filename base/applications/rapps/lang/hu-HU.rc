@@ -213,9 +213,10 @@ BEGIN
     IDS_SELECTEDFORINST "Telepítésre kijelölve"
     IDS_MISMATCH_CERT_INFO "A használt tanúsítvány ismeretlen:\nTárgy: %s\nKibocsátó: %s\nBiztosan folytatja?"
     IDS_UNABLE_PATH "Az elérési út formátuma érvénytelen."
-    IDS_APP_DISPLAY_DETAILS "részletek"
-    IDS_APP_DISPLAY_LIST "lista"
-    IDS_APP_DISPLAY_TILE "csempe"
+    IDS_APP_DISPLAY_DETAILS "Részletek"
+    IDS_APP_DISPLAY_LIST "Lista"
+    IDS_APP_DISPLAY_TILE "Csempe"
+    IDS_NO_SEARCH_RESULTS "No search results"
 END
 
 STRINGTABLE

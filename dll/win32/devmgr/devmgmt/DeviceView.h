@@ -45,6 +45,10 @@ public:
         _In_ int cy
         );
 
+    LRESULT OnDoubleClick(
+        _In_ LPNMHDR NmHdr
+        );
+
     LRESULT OnRightClick(
         _In_ LPNMHDR NmHdr
         );

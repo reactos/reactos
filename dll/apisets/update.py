@@ -405,6 +405,7 @@ def generate_specnames(dll_dir):
     yield (os.path.join(dll_dir, 'appcompat', 'apphelp', 'apphelp.spec'), 'apphelp')
     yield (os.path.join(dll_dir, '..', 'win32ss', 'user', 'user32', 'user32.spec'), 'user32')
     yield (os.path.join(dll_dir, '..', 'win32ss', 'gdi', 'gdi32', 'gdi32.spec'), 'gdi32')
+    yield (os.path.join(dll_dir, '..', 'win32ss', 'gdi', 'gdi32_vista', 'gdi32_vista.spec'), 'gdi32_vista')
 
 def run(wineroot):
     global NL_CHAR

@@ -346,16 +346,61 @@ NtUserSetSysColors(
    return Ret;
 }
 
-DWORD
+BOOL FASTCALL UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
+{
+    PTHREADINFO pti = GetW32ThreadInfo();
+    PTHREADINFO ptiIMC = pIMC->head.pti;
+
+    if (pti->ppi != ptiIMC->ppi) // Different process?
+        return FALSE;
+
+    switch (dwType)
+    {
+        case UIC_CLIENTIMCDATA:
+            if (pIMC->dwClientImcData)
+                return FALSE; // Already set
+
+            pIMC->dwClientImcData = dwValue;
+            break;
+
+        case UIC_IMEWINDOW:
+            if (!ValidateHwndNoErr((HWND)dwValue))
+                return FALSE; // Invalid HWND
+
+            pIMC->hImeWnd = (HWND)dwValue;
+            break;
+
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL
 APIENTRY
 NtUserUpdateInputContext(
     HIMC hIMC,
-    DWORD Unknown1,
-    LPVOID pClientImc)
+    DWORD dwType,
+    DWORD_PTR dwValue)
 {
-   STUB
+    PIMC pIMC;
+    BOOL ret = FALSE;
 
-   return 0;
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+        goto Quit;
+
+    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (!pIMC)
+        goto Quit;
+
+    ret = UserUpdateInputContext(pIMC, dwType, dwValue);
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 DWORD
@@ -416,12 +461,63 @@ NtUserYieldTask(VOID)
    return 0;
 }
 
+PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
+{
+    PIMC pIMC;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    PDESKTOP pdesk = pti->rpdesk;
+
+    if (!IS_IMM_MODE() || (pti->TIF_flags & TIF_DISABLEIME)) // Disabled?
+        return NULL;
+
+    if (!pdesk) // No desktop?
+        return NULL;
+
+    // pti->spDefaultImc should be already set if non-first time.
+    if (dwClientImcData && !pti->spDefaultImc)
+        return NULL;
+
+    // Create an input context user object.
+    pIMC = UserCreateObject(gHandleTable, pdesk, pti, NULL, TYPE_INPUTCONTEXT, sizeof(IMC));
+    if (!pIMC)
+        return NULL;
+
+    if (dwClientImcData) // Non-first time.
+    {
+        // Insert pIMC to the second position (non-default) of the list.
+        pIMC->pImcNext = pti->spDefaultImc->pImcNext;
+        pti->spDefaultImc->pImcNext = pIMC;
+    }
+    else // First time. It's the default IMC.
+    {
+        // Add the first one (default) to the list.
+        pti->spDefaultImc = pIMC;
+        pIMC->pImcNext = NULL;
+    }
+
+    pIMC->dwClientImcData = dwClientImcData; // Set it.
+    return pIMC;
+}
+
 HIMC
 APIENTRY
-NtUserCreateInputContext(PCLIENTIMC pClientImc)
+NtUserCreateInputContext(ULONG_PTR dwClientImcData)
 {
-    STUB;
-    return NULL;
+    PIMC pIMC;
+    HIMC ret = NULL;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE() || !dwClientImcData)
+        goto Quit;
+
+    pIMC = UserCreateInputContext(dwClientImcData);
+    if (pIMC)
+        ret = UserHMGetHandle(pIMC);
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 DWORD
@@ -647,14 +743,51 @@ Quit:
     return Status;
 }
 
-DWORD
+DWORD_PTR
 APIENTRY
 NtUserQueryInputContext(
     HIMC hIMC,
-    DWORD dwUnknown2)
+    DWORD dwType)
 {
-    TRACE("NtUserQueryInputContext(%p, 0x%lX)\n", hIMC, dwUnknown2);
-    return 0;
+    PIMC pIMC;
+    PTHREADINFO ptiIMC;
+    DWORD_PTR ret = 0;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+        goto Quit;
+
+    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (!pIMC)
+        goto Quit;
+
+    ptiIMC = pIMC->head.pti;
+
+    switch (dwType)
+    {
+        case QIC_INPUTPROCESSID:
+            ret = (DWORD_PTR)PsGetThreadProcessId(ptiIMC->pEThread);
+            break;
+
+        case QIC_INPUTTHREADID:
+            ret = (DWORD_PTR)PsGetThreadId(ptiIMC->pEThread);
+            break;
+
+        case QIC_DEFAULTWINDOWIME:
+            if (ptiIMC->spwndDefaultIme)
+                ret = (DWORD_PTR)UserHMGetHandle(ptiIMC->spwndDefaultIme);
+            break;
+
+        case QIC_DEFAULTIMC:
+            if (ptiIMC->spDefaultImc)
+                ret = (DWORD_PTR)UserHMGetHandle(ptiIMC->spDefaultImc);
+            break;
+    }
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 BOOL

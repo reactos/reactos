@@ -2183,8 +2183,8 @@ DWORD WINAPI GetLongPathNameA(LPCSTR,LPSTR,DWORD);
 DWORD WINAPI GetLongPathNameW(LPCWSTR,LPWSTR,DWORD);
 #endif
 BOOL WINAPI GetMailslotInfo(_In_ HANDLE, _Out_opt_ PDWORD, _Out_opt_ PDWORD, _Out_opt_ PDWORD, _Out_opt_ PDWORD);
-DWORD WINAPI GetModuleFileNameA(HINSTANCE,LPSTR,DWORD);
-DWORD WINAPI GetModuleFileNameW(HINSTANCE,LPWSTR,DWORD);
+DWORD WINAPI GetModuleFileNameA(HINSTANCE hModule,LPSTR lpFilename,DWORD nSize);
+DWORD WINAPI GetModuleFileNameW(HINSTANCE hModule,LPWSTR lpFilename,DWORD nSize);
 HMODULE WINAPI GetModuleHandleA(LPCSTR);
 HMODULE WINAPI GetModuleHandleW(LPCWSTR);
 #if (_WIN32_WINNT >= 0x0500)
@@ -2406,7 +2406,7 @@ BOOL WINAPI GetSystemPowerStatus(_Out_ LPSYSTEM_POWER_STATUS);
 #if (_WIN32_WINNT >= 0x0502)
 BOOL WINAPI GetSystemRegistryQuota(_Out_opt_ PDWORD, _Out_opt_ PDWORD);
 #endif
-VOID WINAPI GetSystemTime(LPSYSTEMTIME);
+VOID WINAPI GetSystemTime(LPSYSTEMTIME lpSystemTime);
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI GetSystemTimes(_Out_opt_ LPFILETIME, _Out_opt_ LPFILETIME, _Out_opt_ LPFILETIME);
 #endif

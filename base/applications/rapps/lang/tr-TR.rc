@@ -213,9 +213,10 @@ BEGIN
     IDS_SELECTEDFORINST "Kurulum için seçildi"
     IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de devam etmek istiyor musunuz?"
     IDS_UNABLE_PATH "Geçersiz dosya yolu biçimi."
-    IDS_APP_DISPLAY_DETAILS "detaylar"
-    IDS_APP_DISPLAY_LIST "liste"
-    IDS_APP_DISPLAY_TILE "karo"
+    IDS_APP_DISPLAY_DETAILS "Detaylar"
+    IDS_APP_DISPLAY_LIST "Liste"
+    IDS_APP_DISPLAY_TILE "Karo"
+    IDS_NO_SEARCH_RESULTS "No search results"
 END
 
 STRINGTABLE
