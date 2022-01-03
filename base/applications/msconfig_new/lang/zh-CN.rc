@@ -84,7 +84,7 @@ BEGIN
     CHECKBOX        "基本视频 (/BAS&EVIDEO)", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
     CHECKBOX        "OS 引导信息 (/S&OS)", IDC_CBX_SOS, 158, 138, 127, 12
     PUSHBUTTON      "高级选项(&V)...", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
-    LTEXT           "超时(&T):", IDC_STATIC, 296, 91, 32, 10
+    LTEXT           "超时(&T)：", IDC_STATIC, 296, 91, 32, 10
     EDITTEXT        IDC_TXT_BOOT_TIMEOUT, 295, 102, 33, 12, ES_RIGHT | ES_NUMBER
     LTEXT           "秒", IDC_STATIC, 330, 104, 31, 10
     CONTROL         "使所有的引导设置成为永久设置(&A)", 292,
@@ -124,7 +124,7 @@ BEGIN
     EDITTEXT        IDC_TOOLS_CMDLINE, 5, 139, 356, 14, ES_READONLY
     PUSHBUTTON      "运行(&R)", IDC_BTN_RUN, 311, 156, 50, 14
     CONTROL         "高级选项(&A)", IDC_CBX_TOOLS_ADVOPT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 134, 12
-    LTEXT           "所选的命令(&C):", IDC_STATIC, 5, 127, 128, 10
+    LTEXT           "所选的命令(&C)：", IDC_STATIC, 5, 127, 128, 10
 END
 
 IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
@@ -133,13 +133,13 @@ CAPTION "从安装源位置展开一个文件"
 FONT 9, "宋体"
 BEGIN
     LTEXT           "指定您要还原的文件，包含安装文件的源位置和文件的目标位置。", IDC_STATIC, 7, 7, 339, 17
-    LTEXT           "要还原的文件(&I):", IDC_STATIC, 7, 34, 93, 10
+    LTEXT           "要还原的文件(&I)：", IDC_STATIC, 7, 34, 93, 10
     EDITTEXT        IDC_TXT_FILE_TO_RESTORE, 103, 32, 158, 12, ES_AUTOHSCROLL
     PUSHBUTTON      "浏览文件(&B)...", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
-    LTEXT           "还原自(&R):", IDC_STATIC, 7, 55, 93, 10
+    LTEXT           "还原自(&R)：", IDC_STATIC, 7, 55, 93, 10
     COMBOBOX        IDC_DRP_CAB_FILE, 103, 53, 158, 56, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "浏览自(&F)...", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
-    LTEXT           "保存文件:(&S)", IDC_STATIC, 7, 76, 93, 10
+    LTEXT           "保存文件(&S)：", IDC_STATIC, 7, 76, 93, 10
     COMBOBOX        IDC_DRP_DEST_DIR, 103, 74, 158, 42, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "浏览到(&T)...", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
     DEFPUSHBUTTON   "展开", IDOK, 179, 96, 82, 14
@@ -151,7 +151,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "查找"
 FONT 9, "宋体"
 BEGIN
-    LTEXT           "查找内容(&F):", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
+    LTEXT           "查找内容(&F)：", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
     EDITTEXT        IDC_TXT_FIND_TEXT, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_GROUP
     CONTROL         "全字匹配(&W)", IDC_CBX_FIND_WHOLE_WORD_ONLY,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 4, 26, 100, 12
@@ -192,7 +192,7 @@ END
 
 IDD_REQUIRED_SERVICES_DISABLING_DIALOG DIALOGEX 0, 0, 237, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "系统配置实用程序"
+CAPTION "系统配置程序"
 FONT 9, "宋体"
 BEGIN
     DEFPUSHBUTTON   "确定", IDOK, 180, 41, 50, 14

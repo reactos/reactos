@@ -15,7 +15,7 @@ BEGIN
     BEGIN
         MENUITEM SEPARATOR
         MENUITEM "调整日期/时间(&A)", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "自定义通知...(&C)", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM "自定义通知(&C)...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
         MENUITEM "层叠窗口(&S)", ID_SHELL_CMD_CASCADE_WND
         MENUITEM "横向平铺窗口(&H)", ID_SHELL_CMD_TILE_WND_H
@@ -96,10 +96,10 @@ FONT 9, "宋体", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
     AUTORADIOBUTTON "开始菜单(&S)", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
-    LTEXT "这种菜单风格让您能方便地访问您的文件夹、收藏的程序和搜索。", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
+    LTEXT "这种菜单样式让您能方便地访问您的文件夹、收藏的程序和搜索。", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "自定义(&C)...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "经典开始菜单(&M)", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "这种菜单风格给您带来经典的外观和功能。", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
+    LTEXT "这种菜单样式给您带来经典的外观和功能。", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "自定义(&C)...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
 
@@ -110,7 +110,7 @@ CAPTION "自定义通知"
 FONT 9, "宋体"
 BEGIN
     LTEXT            "ReactOS 显示活动和紧急通知的图标，并隐藏不活动的通知。 您可以更改以下列表中的项目的此行为。", IDC_STATIC, 6, 6, 220, 30
-    LTEXT            "选择一个项目，然后选择它的通知行为:", IDC_STATIC, 6, 40, 220, 10
+    LTEXT            "选择一个项目，然后选择它的通知行为：", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
     PUSHBUTTON       "还原默认值(&R)", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
@@ -126,14 +126,14 @@ BEGIN
     GROUPBOX         "开始菜单", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
     LTEXT            "您可以通过添加或删除项目来自定义开始菜单。", IDC_STATIC, 48, 17, 108, 39
-    PUSHBUTTON       "添加...(&D)", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
-    PUSHBUTTON       "删除...(&R)", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
+    PUSHBUTTON       "添加(&D)...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
+    PUSHBUTTON       "删除(&R)...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
     PUSHBUTTON       "高级(&V)", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
     PUSHBUTTON       "排序(&S)", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
-    LTEXT            "要删除最近访问过的文档、 程序和网站点记录，单击清除。", IDC_STATIC, 49, 85, 108, 33
+    LTEXT            "要删除最近访问过的文档、程序和网站点记录，单击清除。", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "清除(&C)", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
-    LTEXT            "开始菜单中的高级的选项:(&T)", IDC_STATIC, 8, 129, 150, 8
+    LTEXT            "开始菜单中的高级的选项：(&T)", IDC_STATIC, 8, 129, 150, 8
     CONTROL          "开始菜单设置(&T)", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "确定", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "取消", IDCANCEL, 176, 220, 50, 14
@@ -149,7 +149,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "不要在启动时执行此检查(&D)", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "有是一个文件或文件夹在您的计算机被称为 %s 这可能会导致某些应用程序不能够正确。重命名为 %s 将解决这个问题。您想现在重命名它?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "有是一个文件或文件夹在您的计算机被称为 %s 这可能会导致某些应用程序不能够正确执行。重命名为 %s 将解决这个问题。您想现在重命名它？", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
@@ -160,7 +160,7 @@ BEGIN
     GROUPBOX         "开始菜单设置 ", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "当我用鼠标暂停它们时打开子菜单(&O)", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "突出显示新安装的程序(&N)", IDC_HIGHLIGHT, 14, 35, 224, 10
-    LTEXT            "开始菜单项:(&M)", IDC_STATIC, 7, 53, 238, 8
+    LTEXT            "开始菜单项：(&M)", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "开始菜单设置(&T)", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "最近使用的文档 ", IDC_STATIC, 7, 133, 238, 56
     LTEXT            "选择此选项来提供对您最近打开的文档的快速访问。清除此列表并不会删除文件。", IDC_STATIC, 14, 144, 224, 21
@@ -180,14 +180,14 @@ BEGIN
     AUTORADIOBUTTON  "小图标(&S)", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "程序 ", IDC_STATIC, 7, 49, 238, 70
     LTEXT            "开始菜单包含您最常使用的程序的快捷方式。清除快捷方式列表并不会删除程序。", IDC_STATIC, 14, 63, 224, 20
-    LTEXT            "开始菜单上的程序的数目:(&N)", IDC_STATIC, 14, 86, 112, 8
+    LTEXT            "开始菜单上的程序的数目：(&N)", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
     PUSHBUTTON       "清除列表(&C)", IDC_CLEARLIST, 182, 98, 57, 14
     GROUPBOX         "在开始菜单上显示 ", IDC_STATIC, 7, 126, 238, 63
-    AUTOCHECKBOX     "Internet:(&I)", IDC_SHOWINTERNET, 14, 140, 42, 10
+    AUTOCHECKBOX     "Internet：(&I)", IDC_SHOWINTERNET, 14, 140, 42, 10
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-    AUTOCHECKBOX     "电子邮件:(&E)", IDC_SHOWEMAIL, 14, 157, 37, 10
+    AUTOCHECKBOX     "电子邮件：(&E)", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
 END
 
@@ -197,7 +197,7 @@ BEGIN
     IDS_PROPERTIES "属性(&R)"
     IDS_OPEN_ALL_USERS "打开所有用户(&P)"
     IDS_EXPLORE_ALL_USERS "浏览所有用户(&X)"
-    IDS_STARTUP_ERROR "因为注册表损坏或不可用，系统无法启动资源管理器。"
+    IDS_STARTUP_ERROR "由于注册表损坏或不可用，系统无法启动资源管理器。"
 END
 
 STRINGTABLE
