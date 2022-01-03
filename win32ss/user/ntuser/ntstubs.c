@@ -513,7 +513,10 @@ NtUserCreateInputContext(ULONG_PTR dwClientImcData)
 
     pIMC = UserCreateInputContext(dwClientImcData);
     if (pIMC)
+    {
         ret = UserHMGetHandle(pIMC);
+        UserDereferenceObject(pIMC);
+    }
 
 Quit:
     UserLeave();
