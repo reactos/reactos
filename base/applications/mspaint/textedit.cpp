@@ -446,14 +446,12 @@ void CTextEditWindow::InvalidateEdit2()
 LRESULT CTextEditWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     UpdateFont();
-    InvalidateEdit2();
     return 0;
 }
 
 LRESULT CTextEditWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     UpdateFont();
-    InvalidateEdit2();
     return 0;
 }
 
@@ -462,7 +460,6 @@ LRESULT CTextEditWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARA
     if (wParam == TOOL_TEXT)
     {
         UpdateFont();
-        InvalidateEdit2();
     }
     else
     {
@@ -497,15 +494,13 @@ void CTextEditWindow::UpdateFont()
     m_hFont = ::CreateFontIndirect(&m_lf);
 
     SetWindowFont(m_hWnd, m_hFont, TRUE);
-    SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
-    InvalidateEdit2();
+    DefWindowProc(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
+    InvalidateEdit(NULL);
 }
 
 LRESULT CTextEditWindow::OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    InvalidateEdit2();
-    return ret;
+    return DefWindowProc(nMsg, wParam, lParam);
 }
 
 LRESULT CTextEditWindow::DefWindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
