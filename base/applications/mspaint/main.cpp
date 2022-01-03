@@ -256,6 +256,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         DoLoadImageFile(mainWindow, __targv[1], TRUE);
     }
 
+    imageModel.ClearHistory();
+
     /* initializing the CHOOSECOLOR structure for use with ChooseColor */
     ZeroMemory(&choosecolor, sizeof(choosecolor));
     choosecolor.lStructSize    = sizeof(CHOOSECOLOR);

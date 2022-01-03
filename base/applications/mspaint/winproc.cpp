@@ -520,10 +520,14 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_EDITUNDO:
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
+                break;
             imageModel.Undo();
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
+                break;
             imageModel.Redo();
             imageArea.Invalidate(FALSE);
             break;
