@@ -129,9 +129,9 @@ INT CTextEditWindow::HitTest(RECT& rc, POINT pt)
     if (PtInRect(&rcGrip, pt))
         return HTBOTTOMRIGHT;
 
+    // On border line?
     RECT rcInner = rc;
     InflateRect(&rcInner, -3, -3);
-
     if (!PtInRect(&rcInner, pt) && PtInRect(&rc, pt))
         return HTCAPTION;
 

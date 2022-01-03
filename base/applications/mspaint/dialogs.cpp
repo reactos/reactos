@@ -260,12 +260,8 @@ LRESULT CStretchSkewDialog::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     return 0;
 }
 
-static
-INT CALLBACK
-EnumFontFamProc(ENUMLOGFONT *lpelf,
-                NEWTEXTMETRIC *lpntm,
-                INT FontType,
-                LPARAM lParam)
+static INT CALLBACK
+EnumFontFamProc(ENUMLOGFONT *lpelf, NEWTEXTMETRIC *lpntm, INT FontType, LPARAM lParam)
 {
     CFontsDialog *pThis = reinterpret_cast<CFontsDialog*>(lParam);
     LPTSTR name = lpelf->elfLogFont.lfFaceName;
