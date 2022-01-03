@@ -394,7 +394,7 @@ LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 LRESULT CFontsDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    ShowWindow(SW_HIDE);
+    ShowWindow(SW_HIDE); // Just hide. Recycle for optimization
     return 0;
 }
 
@@ -468,7 +468,7 @@ LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     switch (id)
     {
         case IDCANCEL:
-            DestroyWindow();
+            ShowWindow(SW_HIDE);
             break;
 
         case IDD_FONTSNAMES:
@@ -513,15 +513,19 @@ LRESULT CFontsDialog::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             case IDM_BOLD:
                 pToolTip->lpszText = MAKEINTRESOURCE(IDS_BOLD);
                 break;
+
             case IDM_ITALIC:
                 pToolTip->lpszText = MAKEINTRESOURCE(IDS_ITALIC);
                 break;
+
             case IDM_UNDERLINE:
                 pToolTip->lpszText = MAKEINTRESOURCE(IDS_UNDERLINE);
                 break;
+
             case IDM_VERTICAL:
                 pToolTip->lpszText = MAKEINTRESOURCE(IDS_VERTICAL);
                 break;
+
             default:
                 break;
         }
