@@ -577,8 +577,58 @@ list(APPEND VALID_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativ
 list(APPEND KERNEL_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver)
 list(APPEND NATIVE_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll)
 
+function(add_ntddi_defines MODULE TARGET_VERSION)
+    cmake_parse_arguments(ntddi "PUBLIC" "" "" "" ${ARGN})
+
+    if(TARGET_VERSION STREQUAL "win10")
+        set(TARGET_VERSION_SYMBOL _WIN32_WINNT_WIN10)
+        set(TARGET_IE_VERSION_SYMBOL _WIN32_IE_IE110)
+        set(TARGET_NTDDI_VERSION_SYMBOL NTDDI_WIN10_19H1)
+    elseif(TARGET_VERSION STREQUAL "win8.1")
+        set(TARGET_VERSION_SYMBOL _WIN32_WINNT_WINBLUE)
+        set(TARGET_IE_VERSION_SYMBOL _WIN32_IE_IE110)
+        set(TARGET_NTDDI_VERSION_SYMBOL NTDDI_WINBLUE)
+    elseif(TARGET_VERSION STREQUAL "win8")
+        set(TARGET_VERSION_SYMBOL _WIN32_WINNT_WIN8)
+        set(TARGET_IE_VERSION_SYMBOL _WIN32_IE_IE100)
+        set(TARGET_NTDDI_VERSION_SYMBOL NTDDI_WIN8)
+    elseif(TARGET_VERSION STREQUAL "win7")
+        set(TARGET_VERSION_SYMBOL _WIN32_WINNT_WIN7)
+        set(TARGET_IE_VERSION_SYMBOL _WIN32_IE_IE80)
+        set(TARGET_NTDDI_VERSION_SYMBOL NTDDI_WIN7)
+    elseif(TARGET_VERSION STREQUAL "vista")
+        set(TARGET_VERSION_SYMBOL _WIN32_WINNT_LONGHORN)
+        set(TARGET_IE_VERSION_SYMBOL _WIN32_IE_IE70)
+        set(TARGET_NTDDI_VERSION_SYMBOL NTDDI_LONGHORN)
+    else()
+        set(TARGET_IE_VERSION_SYMBOL _WIN32_IE_WS03SP1)
+        set(TARGET_VERSION_SYMBOL _WIN32_WINNT_WS03)
+        set(TARGET_NTDDI_VERSION_SYMBOL NTDDI_WS03SP1)
+    endif()
+
+    if(ntddi_PUBLIC)
+        target_compile_definitions(${MODULE} PUBLIC
+            -DWINVER=${TARGET_VERSION_SYMBOL}
+            -D_WIN32_IE=${TARGET_IE_VERSION_SYMBOL}
+            -D_WIN32_WINNT=${TARGET_VERSION_SYMBOL}
+            -D_WIN32_WINDOWS=${TARGET_VERSION_SYMBOL}
+            -DNTDDI_VERSION=${TARGET_NTDDI_VERSION_SYMBOL}
+            -D_SETUPAPI_VER=0x502
+            -DMINGW_HAS_SECURE_API=1)
+    else()
+        target_compile_definitions(${MODULE} PRIVATE
+            -DWINVER=${TARGET_VERSION_SYMBOL}
+            -D_WIN32_IE=${TARGET_IE_VERSION_SYMBOL}
+            -D_WIN32_WINNT=${TARGET_VERSION_SYMBOL}
+            -D_WIN32_WINDOWS=${TARGET_VERSION_SYMBOL}
+            -DNTDDI_VERSION=${TARGET_NTDDI_VERSION_SYMBOL}
+            -D_SETUPAPI_VER=0x502
+            -DMINGW_HAS_SECURE_API=1)
+    endif()
+endfunction()
+
 function(set_module_type MODULE TYPE)
-    cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
+    cmake_parse_arguments(__module "UNICODE" "IMAGEBASE;TARGET_VERSION" "ENTRYPOINT" ${ARGN})
 
     if(__module_UNPARSED_ARGUMENTS)
         message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
@@ -681,6 +731,15 @@ function(set_module_type MODULE TYPE)
 
     if(${TYPE} STREQUAL cpl)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
+    endif()
+
+    # Set the Windows version being compiled for
+    if(TARGET_VERSION)
+        add_ntddi_defines(${MODULE} ${TARGET_VERSION})
+    elseif(__module_TARGET_VERSION)
+        add_ntddi_defines(${MODULE} ${__module_TARGET_VERSION})
+    else()
+        add_ntddi_defines(${MODULE} xp)
     endif()
 
     # Do compiler specific stuff

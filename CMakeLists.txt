@@ -236,15 +236,6 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         option(PCH "Whether to use precompiled headers" ON)
     endif()
 
-    # Version Options
-    add_definitions(-DWINVER=${TARGET_VERSION_SYMBOL}
-                    -D_WIN32_IE=${TARGET_IE_VERSION_SYMBOL}
-                    -D_WIN32_WINNT=${TARGET_VERSION_SYMBOL}
-                    -D_WIN32_WINDOWS=${TARGET_VERSION_SYMBOL}
-                    -DNTDDI_VERSION=${TARGET_NTDDI_VERSION_SYMBOL}
-                    -D_SETUPAPI_VER=0x502
-                    -DMINGW_HAS_SECURE_API=1)
-
     # Arch Options
     if(ARCH STREQUAL "i386")
         # clang-cl defines this one for itself
