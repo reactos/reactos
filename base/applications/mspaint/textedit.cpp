@@ -25,7 +25,10 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
     GetTextMetrics(hDC, &tm);
 
     ABCFLOAT WidthsABC;
-    GetCharABCWidthsFloat(hDC, pszText[cchText - 1], pszText[cchText - 1], &WidthsABC);
+    if (cchText > 0)
+        GetCharABCWidthsFloat(hDC, pszText[cchText - 1], pszText[cchText - 1], &WidthsABC);
+    else
+        WidthsABC.abcfC = 0;
 
     DWORD dwMargin = (DWORD)DefWindowProc(EM_GETMARGINS, 0, 0);
     LONG leftMargin = LOWORD(dwMargin), rightMargin = HIWORD(dwMargin);
