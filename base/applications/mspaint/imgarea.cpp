@@ -103,7 +103,8 @@ LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 LRESULT CImgAreaWindow::OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HDC hdc = (HDC)wParam;
-    if (!toolsModel.IsBackgroundTransparent())
+    if (toolsModel.GetActiveTool() == TOOL_TEXT && !toolsModel.IsBackgroundTransparent() &&
+        textEditWindow.IsWindowVisible())
     {
         HWND hChild = textEditWindow;
         RECT rcChild;
