@@ -166,7 +166,6 @@ void ToolsModel::NotifyToolChanged()
             textEditWindow.UpdateFont();
         }
         fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
-        mainWindow.BringWindowToTop();
     }
 }
 
