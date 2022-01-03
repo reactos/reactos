@@ -37,16 +37,6 @@
 #define inline
 #endif
 
-#ifdef HAVE_POLL
-#include <sys/poll.h>
-#else
-/* kludge it up */
-struct pollfd { int fd; short events; short revents; };
-#define POLLIN  1
-#define POLLPRI 2
-#define POLLOUT 4
-#endif
-
 /* GNU C attributes. */
 #ifndef FUNCATTR
 #ifdef HAVE_GNUC25_ATTRIB
