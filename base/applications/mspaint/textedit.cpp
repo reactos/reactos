@@ -517,6 +517,7 @@ LRESULT CTextEditWindow::DefWindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
     {
         m_pfnSuperWindowProc(m_hWnd, WM_HSCROLL, SB_LEFT, 0);
         m_pfnSuperWindowProc(m_hWnd, WM_VSCROLL, SB_TOP, 0);
+        InvalidateEdit(NULL);
     }
     return ret;
 }
