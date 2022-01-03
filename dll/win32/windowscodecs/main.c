@@ -243,7 +243,6 @@ void convert_rgba_to_bgra(UINT bytesperpixel, LPBYTE bits, UINT width, UINT heig
             pixel[3] = pixel[0];
             pixel[0] = pixel[1];
             pixel[1] = pixel[2];
-//            pixel[2] = pixel[3];
             pixel[2] = temp;
             pixel += bytesperpixel;
         }
