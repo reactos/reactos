@@ -24,6 +24,9 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
     TEXTMETRIC tm;
     GetTextMetrics(hDC, &tm);
 
+    ABCFLOAT WidthsABC;
+    GetCharABCWidthsFloat(hDC, pszText[cchText - 1], pszText[cchText - 1], &WidthsABC);
+
     DWORD dwMargin = (DWORD)DefWindowProc(EM_GETMARGINS, 0, 0);
     LONG leftMargin = LOWORD(dwMargin), rightMargin = HIWORD(dwMargin);
 
@@ -64,7 +67,11 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
         MessageBeep(0xFFFFFFFF);
     }
 
-    SIZE ret = { xMax + rightMargin, yMax };
+    FLOAT overhang = WidthsABC.abcfC;
+    if (overhang > 0)
+        overhang = 0;
+
+    SIZE ret = { xMax + rightMargin - LONG(overhang) + 1, yMax };
     return ret;
 }
 
