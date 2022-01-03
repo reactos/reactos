@@ -28,7 +28,6 @@ public:
         MESSAGE_HANDLER(WM_PALETTEMODELCOLORCHANGED, OnPaletteModelColorChanged)
         MESSAGE_HANDLER(WM_CHAR, OnChar)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
-        MESSAGE_HANDLER(WM_KEYUP, OnKeyUp)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkGnd)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_NCPAINT, OnNCPaint)
@@ -48,7 +47,6 @@ public:
 
     LRESULT OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnKeyUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnNCPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

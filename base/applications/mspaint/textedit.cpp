@@ -240,15 +240,6 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     return ret;
 }
 
-LRESULT CTextEditWindow::OnKeyUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    TCHAR szText[512];
-    GetWindowText(szText, _countof(szText));
-    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    FixEditSize(szText);
-    return ret;
-}
-
 LRESULT CTextEditWindow::OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HDC hDC = (HDC)wParam;
