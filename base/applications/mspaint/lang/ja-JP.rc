@@ -236,8 +236,8 @@ BEGIN
     IDS_ANGLE "角度は -89 から 89 の間でなければなりません。"
     IDS_LOADERRORTEXT "ファイル %s は読み込めませんでした。"
     IDS_ENLARGEPROMPTTEXT "クリップボードの画像はビットマップよりも大きいです。\nビットマップを拡張しますか？"
-    IDS_BOLD "Bold"
-    IDS_ITALIC "Italic"
-    IDS_UNDERLINE "Underline"
-    IDS_VERTICAL "Vertical"
+    IDS_BOLD "太字"
+    IDS_ITALIC "斜体"
+    IDS_UNDERLINE "下線"
+    IDS_VERTICAL "縦書き"
 END
