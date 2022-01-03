@@ -335,18 +335,21 @@ void CFontsDialog::InitNames()
 
 void CFontsDialog::InitFontSizes()
 {
-    HWND hwndSizes = GetDlgItem(IDD_FONTSSIZES);
-    static const INT sizes[] =
+    static const INT s_sizes[] =
     {
         8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72
     };
+
+    HWND hwndSizes = GetDlgItem(IDD_FONTSSIZES);
     ComboBox_ResetContent(hwndSizes);
-    for (INT size : sizes)
+
+    TCHAR szText[16];
+    INT iItem;
+    for (UINT i = 0; i < _countof(s_sizes); ++i)
     {
-        TCHAR szText[64];
-        wsprintf(szText, TEXT("%d"), size);
-        INT iItem = ComboBox_AddString(hwndSizes, szText);
-        if (size == m_nFontSize)
+        wsprintf(szText, TEXT("%d"), s_sizes[i]);
+        iItem = ComboBox_AddString(hwndSizes, szText);
+        if (s_sizes[i] == m_nFontSize)
             ComboBox_SetCurSel(hwndSizes, iItem);
     }
 }
@@ -356,7 +359,7 @@ void CFontsDialog::InitToolbar()
     HWND hwndToolbar = GetDlgItem(IDD_FONTSTOOLBAR);
     SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
     SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(16, 16));
-    SendMessage(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(20, 20));
+    SendMessage(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(22, 22));
     
     TBADDBITMAP AddBitmap;
     AddBitmap.hInst = hProgInstance;
