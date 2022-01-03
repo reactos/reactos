@@ -418,6 +418,8 @@ struct TextTool : ToolBase
     {
         imageModel.ResetToPrevious();
         selectionModel.ResetPtStack();
+        textEditWindow.SetWindowText(NULL);
+        textEditWindow.ShowWindow(SW_HIDE);
         ToolBase::OnCancelDraw();
     }
 };

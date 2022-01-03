@@ -230,6 +230,11 @@ LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
 LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (wParam == VK_ESCAPE)
+    {
+        toolsModel.OnCancelDraw();
+        return 0;
+    }
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
