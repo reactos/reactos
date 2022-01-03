@@ -453,6 +453,7 @@ LRESULT CTextEditWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARA
     else
     {
         ShowWindow(SW_HIDE);
+        fontsDialog.ShowWindow(SW_HIDE);
     }
     return 0;
 }
