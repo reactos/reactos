@@ -92,7 +92,13 @@ void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
         case TOOL_RUBBER:
         case TOOL_COLOR:
         case TOOL_ZOOM:
+            break;
         case TOOL_TEXT:
+            if (nActiveTool != TOOL_TEXT)
+            {
+                OnButtonDown(TRUE, -1, -1, TRUE);
+                OnButtonUp(TRUE, -1, -1);
+            }
             break;
         default:
             m_oldActiveTool = m_activeTool;
