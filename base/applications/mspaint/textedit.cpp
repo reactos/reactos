@@ -324,7 +324,10 @@ LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CTextEditWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    ::InvalidateRect(m_hwndParent, NULL, TRUE);
+    RECT rc;
+    GetClientRect(&rc);
+    MapWindowPoints(m_hwndParent, (LPPOINT)&rc, 2);
+    ::InvalidateRect(m_hwndParent, &rc, TRUE);
     return ret;
 }
 
@@ -335,7 +338,8 @@ LRESULT CTextEditWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     GetClientRect(&rc);
     SendMessage(EM_SETRECTNP, 0, (LPARAM)&rc);
     SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
-    ::InvalidateRect(m_hwndParent, NULL, TRUE);
+    MapWindowPoints(m_hwndParent, (LPPOINT)&rc, 2);
+    ::InvalidateRect(m_hwndParent, &rc, TRUE);
     return ret;
 }
 
@@ -488,25 +492,8 @@ void CTextEditWindow::UpdateFont()
 
 LRESULT CTextEditWindow::OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    return DefWindowProc(nMsg, wParam, lParam);
-}
-
-LRESULT CTextEditWindow::DefWindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
-{
-    LRESULT ret = m_pfnSuperWindowProc(m_hWnd, nMsg, wParam, lParam);
-    switch (nMsg)
-    {
-        case EM_GETFIRSTVISIBLELINE:
-        case WM_HSCROLL:
-        case WM_VSCROLL:
-        case EM_SCROLLCARET:
-            return ret;
-    }
-    if (m_pfnSuperWindowProc(m_hWnd, EM_GETFIRSTVISIBLELINE, 0, 0) > 0)
-    {
-        m_pfnSuperWindowProc(m_hWnd, WM_HSCROLL, SB_LEFT, 0);
-        m_pfnSuperWindowProc(m_hWnd, WM_VSCROLL, SB_TOP, 0);
-        FixEditSize(NULL);
-    }
+    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
+    DefWindowProc(WM_VSCROLL, SB_TOP, 0);
     return ret;
 }
