@@ -202,8 +202,8 @@ void CTextEditWindow::FixEditSize(LPTSTR pszOldText)
 
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
 
-    m_pfnSuperWindowProc(m_hWnd, WM_HSCROLL, SB_LEFT, 0);
-    m_pfnSuperWindowProc(m_hWnd, WM_VSCROLL, SB_TOP, 0);
+    DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
+    DefWindowProc(WM_VSCROLL, SB_TOP, 0);
 
     ::InvalidateRect(m_hwndParent, &rc, TRUE);
 }
