@@ -360,7 +360,7 @@ if(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     set(SPEC2DEF_ARCH arm)
 elseif(ARCH STREQUAL "arm64")
-    add_definitions(/D__arm64__) 
+    add_definitions(/D__arm64__)
     set(SPEC2DEF_ARCH arm64)
 else()
     set(SPEC2DEF_ARCH i386)
@@ -383,6 +383,8 @@ function(spec2def _dllname _spec_file)
 
     if(__spec2def_VERSION)
         set(__version_arg "--version=0x${__spec2def_VERSION}")
+    else()
+        set(__version_arg "--version=${SPEC_FILE_VERSION}")
     endif()
 
     # Generate exports def and C stubs file for the DLL
