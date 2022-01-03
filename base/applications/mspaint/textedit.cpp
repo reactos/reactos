@@ -388,7 +388,7 @@ void CTextEditWindow::DoDraw(HWND hwnd, HDC hDC)
     MapWindowPoints(hwnd, (LPPOINT)&rc, 2);
 
     HGDIOBJ hFontOld = SelectObject(hDC, m_hFont);
-    UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX;
+    UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP;
 
     if (toolsModel.IsBackgroundTransparent())
     {
@@ -404,8 +404,11 @@ void CTextEditWindow::DoDraw(HWND hwnd, HDC hDC)
         DeleteObject(hbr);
     }
 
+    INT iSaveDC = SaveDC(hDC);
+    IntersectClipRect(hDC, rc.left, rc.top, rc.right, rc.bottom);
     SetTextColor(hDC, paletteModel.GetFgColor());
     DrawText(hDC, szText, cchText, &rc, uFormat);
+    RestoreDC(hDC, iSaveDC);
     SelectObject(hDC, hFontOld);
 }
 
