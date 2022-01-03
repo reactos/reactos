@@ -409,7 +409,7 @@ struct TextTool : ToolBase
 
         textEditWindow.MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
         ForceRefreshSelectionContents();
-        textEditWindow.ShowWindow(SW_SHOW);
+        textEditWindow.ShowWindow(SW_SHOWNOACTIVATE);
         textEditWindow.SetFocus();
     }
 
