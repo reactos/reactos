@@ -1,4 +1,5 @@
 
+add_message_headers(UNICODE arp_msg.mc)
 add_executable(arp arp.c arp.rc)
 set_module_type(arp win32cui)
 add_dependencies(arp arp_msg)

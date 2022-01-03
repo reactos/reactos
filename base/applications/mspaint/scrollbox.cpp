@@ -176,7 +176,23 @@ LRESULT CScrollboxWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 LRESULT CScrollboxWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     selectionWindow.ShowWindow(SW_HIDE);
-    pointSP = 0;    // resets the point-buffer of the polygon and bezier functions
+
+    switch (toolsModel.GetActiveTool())
+    {
+        case TOOL_BEZIER:
+        case TOOL_SHAPE:
+            if (ToolBase::pointSP != 0)
+            {
+                toolsModel.OnCancelDraw();
+                imageArea.Invalidate();
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    toolsModel.resetTool();  // resets the point-buffer of the polygon and bezier functions
     return 0;
 }
 

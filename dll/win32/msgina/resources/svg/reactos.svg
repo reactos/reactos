@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -17,8 +15,8 @@
    inkscape:version="0.48.2 r9819"
    sodipodi:docname="reactos.svg"
    inkscape:export-filename="reactos.png"
-   inkscape:export-xdpi="90"
-   inkscape:export-ydpi="90">
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
   <defs
      id="defs4">
     <linearGradient
@@ -1930,7 +1928,7 @@
          x="5.59375"
          y="1047.7255"
          style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#1e2122;fill-opacity:1;font-family:Lucida Sans Unicode;-inkscape-font-specification:Lucida Sans Unicode"
-         id="tspan3618">Copyright © 1996-2021 ReactOS Team &amp; Contributors</tspan></text>
+         id="tspan3618">Copyright © 1996-2022 ReactOS Team &amp; Contributors</tspan></text>
     <g
        transform="matrix(0.16958533,0,0,0.16958533,89.849943,981.79073)"
        id="g15501">

@@ -1,0 +1,88 @@
+/*
+ * PROJECT:      ReactOS user32.dll
+ * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:      Chinese (Hong Kong) resource file
+ * TRANSLATORS:  Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:   Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+/* Dialogs */
+
+SELWINDOW DIALOGEX 20, 20, 220, 140
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 9, "新細明體"
+CAPTION "選取視窗"
+BEGIN
+    LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON "確定(&O)", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "取消(&C)", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+/* Menus */
+
+EDITMENU MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "復原(&U)", EM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "剪下(&T)", WM_CUT
+        MENUITEM "複製(&C)", WM_COPY
+        MENUITEM "貼上(&P)", WM_PASTE
+        MENUITEM "刪除(&D)", WM_CLEAR
+        MENUITEM SEPARATOR
+        MENUITEM "全選(&A)", EM_SETSEL
+    END
+END
+
+SYSMENU MENU
+BEGIN
+    MENUITEM "還原(&R)", SC_RESTORE
+    MENUITEM "移動(&M)", SC_MOVE
+    MENUITEM "大小(&S)", SC_SIZE
+    MENUITEM "最小化(&N)", SC_MINIMIZE
+    MENUITEM "最大化(&X)", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "關閉(&C)\tAlt+F4", SC_CLOSE
+END
+
+SYSMENUMDI MENU
+BEGIN
+    MENUITEM "還原(&R)", SC_RESTORE
+    MENUITEM "移動(&M)", SC_MOVE
+    MENUITEM "大小(&S)", SC_SIZE
+    MENUITEM "最小化(&N)", SC_MINIMIZE
+    MENUITEM "最大化(&X)", SC_MAXIMIZE
+    MENUITEM SEPARATOR
+    MENUITEM "關閉(&C)\tCtrl+F4", SC_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "下一步(&T)\tCtrl+F6", SC_NEXTWINDOW
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR "錯誤"
+    IDS_NOT_RESPONDING "（沒有回應）"
+    IDS_ASK_TERMINATE "這個應用程式沒有回應，是否要結束這個程式？"
+    IDS_HUNG_UP_TITLE "沒有回應。"
+    IDS_OK "確定"
+    IDS_CANCEL "取消"
+    IDS_ABORT "終止(&A)"
+    IDS_RETRY "重試(&R)"
+    IDS_IGNORE "略過(&I)"
+    IDS_YES "是(&Y)"
+    IDS_NO "否(&N)"
+    IDS_CLOSE "關閉(&C)"
+    IDS_HELP "説明"
+    IDS_TRYAGAIN "再試一次(&T)"
+    IDS_CONTINUE "繼續(&C)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MDI_MOREWINDOWS "更多視窗(&M)..."
+END

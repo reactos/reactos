@@ -406,16 +406,23 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
 
         bCancelled = FALSE;
 
-        hIconBg = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICON);
-        hIconSm = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
+        if (hMainWnd)
+        {
+            hIconBg = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICON);
+            hIconSm = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
+        }
+        if (!hMainWnd || (!hIconBg || !hIconSm))
+        {
+            /* Load the default icon */
+            hIconBg = hIconSm = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        }
 
         if (hIconBg && hIconSm)
         {
-            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM) hIconBg);
-            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) hIconSm);
+            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM)hIconBg);
+            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
         }
 
-        SetWindowLongPtrW(Dlg, GWLP_USERDATA, 0);
         HWND Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
         if (Item)
         {
@@ -448,7 +455,6 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         DownloadParam *param = new DownloadParam(Dlg, AppsDownloadList, szCaption);
         unsigned int ThreadId;
         HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, (void *) param, 0, &ThreadId);
-
         if (!Thread)
         {
             return FALSE;

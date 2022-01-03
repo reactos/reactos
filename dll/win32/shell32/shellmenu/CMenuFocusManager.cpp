@@ -577,6 +577,7 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
             break;
 
         case WM_NCLBUTTONDOWN:
+        case WM_LBUTTONDBLCLK:
         case WM_LBUTTONDOWN:
             isLButton = TRUE;
             TRACE("LB\n");

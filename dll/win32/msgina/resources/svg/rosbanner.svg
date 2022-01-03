@@ -13,7 +13,7 @@
    viewBox="0 0 109.27291 19.050001"
    version="1.1"
    id="svg8"
-   inkscape:export-filename=".\reactos.png"
+   inkscape:export-filename="reactos.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    inkscape:version="1.0.2-2 (e86c870879, 2021-01-15)"
@@ -1727,7 +1727,7 @@
          id="tspan196"
          x="48.681915"
          y="18.210854"
-         style="font-size:2.11667px;fill:#ffffff;stroke-width:0.264583">Copyright © 1996 - 2021 ReactOS Team &amp; Contributors</tspan></text>
+         style="font-size:2.11667px;fill:#ffffff;stroke-width:0.264583">Copyright © 1996 - 2022 ReactOS Team &amp; Contributors</tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"

@@ -1,0 +1,76 @@
+/*
+ * PROJECT:    ReactOS Sound Recorder
+ * LICENSE:    GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:    Chinese (Hong Kong) resource file
+ * TRANSLATOR: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCE:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+IDC_REACTOS_SNDREC32 ACCELERATORS
+BEGIN
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
+END
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "檔案"
+    BEGIN
+        MENUITEM "新增(&N)", ID_FILE_NEW
+        MENUITEM "開啟(&O)...", ID_FILE_OPEN
+        MENUITEM "儲存(&S)", ID_FILE_SAVE, GRAYED
+        MENUITEM "另存新檔(&A)...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "還原(&R)...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "內容(&P)", ID_FILE_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "結束(&X)", ID_FILE_EXIT
+    END
+    POPUP "編輯(&E)"
+    BEGIN
+        MENUITEM "複製(&C)", ID_EDIT_COPY
+        MENUITEM "貼上插入(&P)", ID_EDIT_PASTE, GRAYED
+        MENUITEM "貼上混合(&X)", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "插入檔案(&I)...", ID_EDIT_INSERTFILE
+        MENUITEM "與檔案混合(&M)...", ID_EDIT_MIXFILE
+        MENUITEM SEPARATOR
+        MENUITEM "刪除目前位置之前的內容(&B)",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "刪除目前位置之後的內容(&A)",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "音訊內容(&U)", ID_EDIT_AUDIOPROPS
+    END
+    POPUP "效果(&S)"
+    BEGIN
+        MENUITEM "調高音量（25%）(&I)", ID_EFFECTS_INCVOL
+        MENUITEM "減小音量(&D)", ID_EFFECTS_DECVOL
+        MENUITEM SEPARATOR
+        MENUITEM "增加速度（100%）(&I)", ID_EFFECTS_INCSPD
+        MENUITEM "降低速度(&D)", ID_EFFECTS_DECSPD
+        MENUITEM SEPARATOR
+        MENUITEM "新增回音(&A)", ID_EFFECTS_ECHO
+        MENUITEM "反轉(&R)", ID_EFFECTS_REVERSE
+    END
+    POPUP "說明(&?)"
+    BEGIN
+        MENUITEM "關於(&A)", ID_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "錄音機"
+    IDC_REACTOS_SNDREC32 "REACTOS_SNDREC32"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STRPOS "位置：%.2f 秒"
+    IDS_STRDUR "長度：%.2f 秒"
+    IDS_STRBUF "緩衝區：%.2f KB"
+    IDS_STRFMT "%.1f kHz %u 位元"
+    IDS_STRMONO "單聲道"
+    IDS_STRSTEREO "立體聲"
+    IDS_STRCHAN "%s"
+END

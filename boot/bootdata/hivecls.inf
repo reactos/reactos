@@ -802,7 +802,6 @@ UNINSTALL="Uninstall"
 REPAIR="Repair"
 TEST="Test"
 
-
 ; LANG_GERMAN SUBLANG_NEUTRAL
 [Strings.0007]
 ;; In shell32.dll
@@ -842,7 +841,6 @@ CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
 ;UNINSTALL="Uninstall"
 ;REPAIR="Repair"
 ;TEST="Test"
-
 
 ; LANG_SPANISH SUBLANG_NEUTRAL
 [Strings.000A]
@@ -884,7 +882,6 @@ UNINSTALL="Desinstalar"
 REPAIR="Reparar"
 TEST="Probar"
 
-
 ; LANG_FRENCH SUBLANG_NEUTRAL
 [Strings.000C]
 ;; In shell32.dll
@@ -924,7 +921,6 @@ INSTALL="Installer"
 UNINSTALL="Désinstaller"
 REPAIR="Réparer"
 TEST="Tester"
-
 
 ; LANG_ITALIAN SUBLANG_NEUTRAL
 [Strings.0010]
@@ -966,7 +962,6 @@ UNINSTALL="Rimuovi"
 REPAIR="Ripara"
 TEST="Prova"
 
-
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
 ;; In shell32.dll
@@ -1006,7 +1001,6 @@ INSTALL="Zainstaluj"
 UNINSTALL="Odinstaluj"
 REPAIR="Napraw"
 TEST="Testuj"
-
 
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]
@@ -1048,7 +1042,6 @@ UNINSTALL="Dezinstalează"
 REPAIR="Repară"
 TEST="Testează"
 
-
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
 ;; In shell32.dll
@@ -1088,7 +1081,6 @@ INSTALL="Установить"
 UNINSTALL="Удалить"
 REPAIR="Исправить"
 TEST="Тест"
-
 
 ; LANG_CHINESE SUBLANG_CHINESE_TRADITIONAL
 [Strings.0404]
@@ -1130,7 +1122,6 @@ UNINSTALL="解除安裝"
 REPAIR="修復"
 TEST="測試"
 
-
 ; LANG_TURKISH SUBLANG_DEFAULT
 [Strings.041F]
 ;; In shell32.dll
@@ -1170,5 +1161,45 @@ CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 ;UNINSTALL="Kaldır"
 ;REPAIR="Onar"
 ;TEST="Dene"
+
+; LANG_CHINESE SUBLANG_CHINESE_HONGKONG
+[Strings.0C04]
+;; In shell32.dll
+CPLFILE_OPENWITH="以控制台開啟"
+
+;; In hhctrl.ocx
+CHMFILE="已編譯 HTML 說明檔案"
+
+;; In msxml3r.dll
+XMLFILE="XML 文件"
+XSLFILE="XSL 樣式表"
+
+;; In msi.dll
+MSIPACK="ReactOS 安裝套件"
+
+;; In themeui.dll
+MSSTYLESFILE="視覺樣式檔案"
+THEMEFILE="主題檔案"
+
+;; In some multimedia exe/dll
+WAVFILE="WAVE 音訊"
+MIDFILE="MIDI 編曲"
+CDAFILE="CD 曲目"
+AVIFILE="視訊短片"
+
+;; Misc file types without friendly (localized in .dll resources) name
+CSSFILE="階層式樣式表"
+SCFFILE="ReactOS Explorer 命令"
+;WMZFILE="Compressed Enhanced Metafile"
+
+;; For .reg files, right-click menu
+MERGE="合併"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+CONFIGURE="設定"
+INSTALL="安裝"
+UNINSTALL="解除安裝"
+REPAIR="修復"
+TEST="測試"
 
 ; EOF

@@ -376,7 +376,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
     if (!hIMC)
         return 0;
 
-    dwProcessId = NtUserQueryInputContext(hIMC, 0);
+    dwProcessId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTPROCESSID);
     if (dwProcessId == 0)
         return 0;
 
@@ -392,7 +392,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
     if (pIC == NULL)
         return 0;
 
-    dwThreadId = NtUserQueryInputContext(hIMC, 1);
+    dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
     if (dwThreadId == 0)
     {
         ImmUnlockIMC(hIMC);

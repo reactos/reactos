@@ -2208,7 +2208,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
-
 ; LANG_BULGARIAN SUBLANG_NEUTRAL
 [Strings.0002]
 EVENT_LABEL_0 = "Default Beep"
@@ -2276,7 +2275,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Местни настройки\Временни"
-
 
 ; LANG_CZECH SUBLANG_NEUTRAL
 [Strings.0005]
@@ -2346,7 +2344,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Výchozí velikost"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
-
 ; LANG_DANISH SUBLANG_NEUTRAL
 [Strings.0006]
 EVENT_LABEL_0 = "Default Beep"
@@ -2414,7 +2411,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Lokale Indstillinger\Temp"
-
 
 ; LANG_GERMAN SUBLANG_NEUTRAL
 [Strings.0007]
@@ -2484,7 +2480,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Standardgröße"
 TEMP_DIR="%USERPROFILE%\Lokale Einstellungen\Temp"
 
-
 ; LANG_GREEK SUBLANG_NEUTRAL
 [Strings.0008]
 EVENT_LABEL_0 = "Default Beep"
@@ -2552,7 +2547,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
-
 
 ; LANG_SPANISH SUBLANG_NEUTRAL
 [Strings.000A]
@@ -2622,7 +2616,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Tamaño predeterminado"
 TEMP_DIR="%USERPROFILE%\Configuración local\Temp"
 
-
 ; LANG_FINNISH SUBLANG_NEUTRAL
 [Strings.000B]
 EVENT_LABEL_0 = "Default Beep"
@@ -2690,7 +2683,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Paikalliset Asetukset\Temp"
-
 
 ; LANG_FRENCH SUBLANG_NEUTRAL
 [Strings.000C]
@@ -2760,7 +2752,6 @@ DESKTOP_SCHEME_22="Bleu, blanc, rouge"
 DESKTOP_SCHEME_SIZE_0="Taille par défaut"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
-
 ; LANG_HUNGARIAN SUBLANG_NEUTRAL
 [Strings.000E]
 EVENT_LABEL_0 = "Default Beep"
@@ -2828,7 +2819,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
-
 
 ; LANG_ITALIAN SUBLANG_NEUTRAL
 [Strings.0010]
@@ -2898,7 +2888,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Impostazioni locali\Temp"
 
-
 ; LANG_JAPANESE SUBLANG_NEUTRAL
 [Strings.0011]
 EVENT_LABEL_0 = "既定の警告音"
@@ -2966,7 +2955,6 @@ DESKTOP_SCHEME_21="小麦"
 DESKTOP_SCHEME_22="赤・白・青"
 DESKTOP_SCHEME_SIZE_0="デフォルトのサイズ"
 TEMP_DIR="%USERPROFILE%\ローカル設定\Temp"
-
 
 ; LANG_DUTCH SUBLANG_NEUTRAL
 [Strings.0013]
@@ -3036,7 +3024,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
-
 ; LANG_NORWEGIAN SUBLANG_NEUTRAL
 [Strings.0014]
 EVENT_LABEL_0 = "Default Beep"
@@ -3104,7 +3091,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Lokale innstillinger\Midlertidig"
-
 
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
@@ -3174,7 +3160,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Domyślny rozmiar"
 TEMP_DIR="%USERPROFILE%\Ustawienia lokalne\Temp"
 
-
 ; LANG_PORTUGUESE SUBLANG_NEUTRAL
 [Strings.0016]
 EVENT_LABEL_0 = "Alarme predefinido"
@@ -3242,7 +3227,6 @@ DESKTOP_SCHEME_21="Trigo"
 DESKTOP_SCHEME_22="Vermelho, branco e azul"
 DESKTOP_SCHEME_SIZE_0="Tamanho predefinido"
 TEMP_DIR="%USERPROFILE%\Configurações locais\Temp"
-
 
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]
@@ -3312,7 +3296,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Dimensiune implicită"
 TEMP_DIR="%USERPROFILE%\Preferințe locale\Temp"
 
-
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
 EVENT_LABEL_0 = "Звук по умолчанию"
@@ -3380,7 +3363,6 @@ DESKTOP_SCHEME_21="Пшеница"
 DESKTOP_SCHEME_22="Красный, белый, и голубой"
 DESKTOP_SCHEME_SIZE_0="Размер по умолчанию"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
-
 
 ; LANG_SLOVAK SUBLANG_NEUTRAL
 [Strings.001B]
@@ -3518,7 +3500,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Cilësimet lokale\Përk"
 
-
 ; LANG_SWEDISH SUBLANG_NEUTRAL
 [Strings.001D]
 EVENT_LABEL_0 = "Default Beep"
@@ -3586,7 +3567,6 @@ DESKTOP_SCHEME_21="Wheat"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Lokala inställningar\Temp"
-
 
 ; LANG_THAI SUBLANG_NEUTRAL
 [Strings.001E]
@@ -3792,7 +3772,6 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Setelan Lokal\Temp"
 
-
 ; LANG_UKRAINIAN SUBLANG_NEUTRAL
 [Strings.0022]
 EVENT_LABEL_0 = "Default Beep"
@@ -3860,7 +3839,6 @@ DESKTOP_SCHEME_21="Пшениця"
 DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
-
 
 ; LANG_LITHUANIAN SUBLANG_NEUTRAL
 [Strings.0027]
@@ -3999,7 +3977,7 @@ DESKTOP_SCHEME_SIZE_0="預設大小"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
 ; LANG_TURKISH SUBLANG_NEUTRAL
-[Strings.041f]
+[Strings.041F]
 EVENT_LABEL_0 = "Varsayılan Bipleme"
 EVENT_LABEL_1 = "Program hatası"
 EVENT_LABEL_2 = "Programı kapat"
@@ -4065,75 +4043,6 @@ DESKTOP_SCHEME_21="Buğday"
 DESKTOP_SCHEME_22="Kırmızı, Beyaz ve Mavi"
 DESKTOP_SCHEME_SIZE_0="Varsayılan Büyüklük"
 TEMP_DIR="%USERPROFILE%\Yerel Ayarlar\Geçici Dosyalar"
-
-; Simplified Chinese (LANG_CHINESE SUBLANG_CHINESE_SIMPLIFIED)
-[Strings.0804]
-EVENT_LABEL_0 = "Default Beep"
-EVENT_LABEL_1 = "Program error"
-EVENT_LABEL_2 = "Close program"
-EVENT_LABEL_3 = "Critical Battery Alarm"
-EVENT_LABEL_4 = "Device Connect"
-EVENT_LABEL_5 = "Device Disconnect"
-EVENT_LABEL_6 = "Device Failed to Connect"
-EVENT_LABEL_7 = "Empty Recycle Bin"
-EVENT_LABEL_8 = "Low Battery Alarm"
-EVENT_LABEL_9 = "Maximize"
-EVENT_LABEL_10 = "Menu command"
-EVENT_LABEL_11 = "Menu popup"
-EVENT_LABEL_12 = "Minimize"
-EVENT_LABEL_13 = "New Mail Notification"
-EVENT_LABEL_14 = "Start Navigation"
-EVENT_LABEL_15 = "Open program"
-EVENT_LABEL_16 = "Print Complete"
-EVENT_LABEL_17 = "Restore Down"
-EVENT_LABEL_18 = "Restore Up"
-EVENT_LABEL_19 = "Asterisk"
-EVENT_LABEL_20 = "Exclamation"
-EVENT_LABEL_21 = "Exit ReactOS"
-EVENT_LABEL_22 = "Critical Stop"
-EVENT_LABEL_23 = "System Notification"
-EVENT_LABEL_24 = "Question"
-EVENT_LABEL_25 = "Start ReactOS"
-EVENT_LABEL_26 = "ReactOS Logoff"
-EVENT_LABEL_27 = "ReactOS Logon"
-POWERCFG_NAME_0="家庭/办公桌"
-POWERCFG_DESC_0="此方案适合大多数一直插电的台式计算机。"
-POWERCFG_NAME_1="便携式/笔记本电脑"
-POWERCFG_DESC_1="此方案旨在延长路上便携式计算机的电池寿命。
-POWERCFG_NAME_2="演示"
-POWERCFG_DESC_2="此方案能使显示器一直开启以进行演示。"
-POWERCFG_NAME_3="总是开启"
-POWERCFG_DESC_3="此方案使计算机保持运行，以便可以从网络访问它。如果您没有网络唤醒硬件，请使用此方案。"
-POWERCFG_NAME_4="最小电源管理"
-POWERCFG_DESC_4="此方案使计算机保持开启并对其进行优化以实现高性能。"
-POWERCFG_NAME_5="最大电池管理"
-POWERCFG_DESC_5="此方案能有效节省电池电力。"
-DESKTOP_SCHEME_0="ReactOS 标准"
-DESKTOP_SCHEME_1="红砖色"
-DESKTOP_SCHEME_2="茄子"
-DESKTOP_SCHEME_3="绿色橄榄"
-DESKTOP_SCHEME_4="高对比度 1"
-DESKTOP_SCHEME_5="高对比度 2"
-DESKTOP_SCHEME_6="高对比度（黑）"
-DESKTOP_SCHEME_7="高对比度（白）"
-DESKTOP_SCHEME_8="丁香"
-DESKTOP_SCHEME_9="枫树"
-DESKTOP_SCHEME_10="海洋"
-DESKTOP_SCHEME_11="梅花"
-DESKTOP_SCHEME_12="南瓜"
-DESKTOP_SCHEME_13="雨天"
-DESKTOP_SCHEME_14="ReactOS 经典"
-DESKTOP_SCHEME_15="玫瑰"
-DESKTOP_SCHEME_16="沙"
-DESKTOP_SCHEME_17="天空"
-DESKTOP_SCHEME_18="石板"
-DESKTOP_SCHEME_19="风暴"
-DESKTOP_SCHEME_20="青色"
-DESKTOP_SCHEME_21="麦色"
-DESKTOP_SCHEME_22="Red, White, and Blue"
-DESKTOP_SCHEME_SIZE_0="默认大小"
-TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
-
 
 ; LANG_BASQUE SUBLANG_NEUTRAL
 [Strings.042D]
@@ -4203,5 +4112,140 @@ DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Tamaño predeterminado"
 TEMP_DIR="%USERPROFILE%\Lokal konfigurazioa\\Temp"
 
+; Simplified Chinese (LANG_CHINESE SUBLANG_CHINESE_SIMPLIFIED)
+[Strings.0804]
+EVENT_LABEL_0 = "Default Beep"
+EVENT_LABEL_1 = "Program error"
+EVENT_LABEL_2 = "Close program"
+EVENT_LABEL_3 = "Critical Battery Alarm"
+EVENT_LABEL_4 = "Device Connect"
+EVENT_LABEL_5 = "Device Disconnect"
+EVENT_LABEL_6 = "Device Failed to Connect"
+EVENT_LABEL_7 = "Empty Recycle Bin"
+EVENT_LABEL_8 = "Low Battery Alarm"
+EVENT_LABEL_9 = "Maximize"
+EVENT_LABEL_10 = "Menu command"
+EVENT_LABEL_11 = "Menu popup"
+EVENT_LABEL_12 = "Minimize"
+EVENT_LABEL_13 = "New Mail Notification"
+EVENT_LABEL_14 = "Start Navigation"
+EVENT_LABEL_15 = "Open program"
+EVENT_LABEL_16 = "Print Complete"
+EVENT_LABEL_17 = "Restore Down"
+EVENT_LABEL_18 = "Restore Up"
+EVENT_LABEL_19 = "Asterisk"
+EVENT_LABEL_20 = "Exclamation"
+EVENT_LABEL_21 = "Exit ReactOS"
+EVENT_LABEL_22 = "Critical Stop"
+EVENT_LABEL_23 = "System Notification"
+EVENT_LABEL_24 = "Question"
+EVENT_LABEL_25 = "Start ReactOS"
+EVENT_LABEL_26 = "ReactOS Logoff"
+EVENT_LABEL_27 = "ReactOS Logon"
+POWERCFG_NAME_0="家庭/办公桌"
+POWERCFG_DESC_0="此方案适合大多数一直插电的台式计算机。"
+POWERCFG_NAME_1="便携式/笔记本电脑"
+POWERCFG_DESC_1="此方案旨在延长路上便携式计算机的电池寿命。
+POWERCFG_NAME_2="演示"
+POWERCFG_DESC_2="此方案能使显示器一直开启以进行演示。"
+POWERCFG_NAME_3="总是开启"
+POWERCFG_DESC_3="此方案使计算机保持运行，以便可以从网络访问它。如果您没有网络唤醒硬件，请使用此方案。"
+POWERCFG_NAME_4="最小电源管理"
+POWERCFG_DESC_4="此方案使计算机保持开启并对其进行优化以实现高性能。"
+POWERCFG_NAME_5="最大电池管理"
+POWERCFG_DESC_5="此方案能有效节省电池电力。"
+DESKTOP_SCHEME_0="ReactOS 标准"
+DESKTOP_SCHEME_1="红砖色"
+DESKTOP_SCHEME_2="茄子"
+DESKTOP_SCHEME_3="绿色橄榄"
+DESKTOP_SCHEME_4="高对比度 1"
+DESKTOP_SCHEME_5="高对比度 2"
+DESKTOP_SCHEME_6="高对比度（黑）"
+DESKTOP_SCHEME_7="高对比度（白）"
+DESKTOP_SCHEME_8="丁香"
+DESKTOP_SCHEME_9="枫树"
+DESKTOP_SCHEME_10="海洋"
+DESKTOP_SCHEME_11="梅花"
+DESKTOP_SCHEME_12="南瓜"
+DESKTOP_SCHEME_13="雨天"
+DESKTOP_SCHEME_14="ReactOS 经典"
+DESKTOP_SCHEME_15="玫瑰"
+DESKTOP_SCHEME_16="沙"
+DESKTOP_SCHEME_17="天空"
+DESKTOP_SCHEME_18="石板"
+DESKTOP_SCHEME_19="风暴"
+DESKTOP_SCHEME_20="青色"
+DESKTOP_SCHEME_21="麦色"
+DESKTOP_SCHEME_22="Red, White, and Blue"
+DESKTOP_SCHEME_SIZE_0="默认大小"
+TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
+
+; Hong Kong Chinese (LANG_CHINESE SUBLANG_CHINESE_HONGKONG)
+[Strings.0C04]
+EVENT_LABEL_0 = "預設嗶嗶聲"
+EVENT_LABEL_1 = "程式錯誤"
+EVENT_LABEL_2 = "關閉程式"
+EVENT_LABEL_3 = "電池電力不足警示"
+EVENT_LABEL_4 = "裝置連接"
+EVENT_LABEL_5 = "裝置中斷連接"
+EVENT_LABEL_6 = "裝置連接失敗"
+EVENT_LABEL_7 = "清理資源回收筒"
+EVENT_LABEL_8 = "電池電力偏低警示"
+EVENT_LABEL_9 = "最大化"
+EVENT_LABEL_10 = "功能表命令"
+EVENT_LABEL_11 = "快顯功能表"
+EVENT_LABEL_12 = "最小化"
+EVENT_LABEL_13 = "新郵件通知"
+EVENT_LABEL_14 = "開始瀏覽"
+EVENT_LABEL_15 = "開啟程式"
+EVENT_LABEL_16 = "列印完成"
+EVENT_LABEL_17 = "向下還原"
+EVENT_LABEL_18 = "向上還原"
+EVENT_LABEL_19 = "星號"
+EVENT_LABEL_20 = "驚嘆聲"
+EVENT_LABEL_21 = "離開 ReactOS"
+EVENT_LABEL_22 = "緊急停止"
+EVENT_LABEL_23 = "系統通知"
+EVENT_LABEL_24 = "問題"
+EVENT_LABEL_25 = "啟動 ReactOS"
+EVENT_LABEL_26 = "登出 ReactOS"
+EVENT_LABEL_27 = "登入 ReactOS"
+POWERCFG_NAME_0="家庭/辦公室"
+POWERCFG_DESC_0="依個方案適合多數一直通電嘅桌面電腦。"
+POWERCFG_NAME_1="便攜式/筆記型電腦"
+POWERCFG_DESC_1="依個方案旨在延長便攜式電腦喺使用電池時嘅續航力。"
+POWERCFG_NAME_2="演講"
+POWERCFG_DESC_2="依個方案可以喺進行演講時維持顯示器開啟。"
+POWERCFG_NAME_3="始終開啟"
+POWERCFG_DESC_3="依個方案會保持電腦為開啟狀態，以便從網絡存取本電腦。如果您沒有網絡喚醒硬件，請使用依個方案。"
+POWERCFG_NAME_4="最小電源管理"
+POWERCFG_DESC_4="依個方案會使電腦保持開啟並對其進行最佳化以提高性能。"
+POWERCFG_NAME_5="電池最大化"
+POWERCFG_DESC_5="依個方案會顯著節省電池電力。"
+DESKTOP_SCHEME_0="ReactOS 標準"
+DESKTOP_SCHEME_1="紅磚色"
+;DESKTOP_SCHEME_2="Eggplant"
+DESKTOP_SCHEME_3="橄欖綠"
+DESKTOP_SCHEME_4="高對比度 1"
+DESKTOP_SCHEME_5="高對比度 2"
+DESKTOP_SCHEME_6="高對比度 (黑)"
+DESKTOP_SCHEME_7="高對比度 (白)"
+DESKTOP_SCHEME_8="丁香紫"
+DESKTOP_SCHEME_9="楓樹"
+DESKTOP_SCHEME_10="海洋"
+DESKTOP_SCHEME_11="梅花色"
+DESKTOP_SCHEME_12="南瓜"
+DESKTOP_SCHEME_13="雨天"
+DESKTOP_SCHEME_14="ReactOS 經典"
+DESKTOP_SCHEME_15="玫瑰"
+DESKTOP_SCHEME_16="沙"
+DESKTOP_SCHEME_17="天空"
+DESKTOP_SCHEME_18="石板"
+DESKTOP_SCHEME_19="風暴"
+DESKTOP_SCHEME_20="青色"
+DESKTOP_SCHEME_21="麥色"
+DESKTOP_SCHEME_22="紅、白、藍色"
+DESKTOP_SCHEME_SIZE_0="預設大小"
+TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
 ; EOF

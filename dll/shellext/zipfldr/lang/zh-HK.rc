@@ -1,0 +1,98 @@
+/*
+ * PROJECT:     ReactOS Zip Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Hong Kong) resources file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Simplified) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 260, 156
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "選擇目標資料夾"
+FONT 9, "新細明體", 400, 0, 0x0
+BEGIN
+    LTEXT           "選擇目標資料夾",IDC_STATIC,86,12,154,8
+    EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "瀏覽...",IDC_BROWSE,189,42,54,14
+    PUSHBUTTON      "密碼",IDC_PASSWORD,189,66,54,14
+    LTEXT           "按［下一步］開始解壓縮",IDC_STATUSTEXT,86,114,80,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
+END
+
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 156
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "解壓縮完成"
+FONT 9, "新細明體", 400, 0, 0x0
+BEGIN
+    LTEXT           "檔案已被解壓縮至下列目錄：",IDC_STATIC,86,12,157,18
+    LTEXT           "%s",IDC_DESTDIR,86,36,157,8
+    CONTROL         "顯示已解壓縮的檔案",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,81,10
+    LTEXT           "按［完成］以繼續。",IDC_STATIC,86,84,84,8
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
+END
+
+IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "確認取代檔案"
+FONT 9, "新細明體", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "是(&Y)",IDYES,6,36,62,14
+    PUSHBUTTON      "全部皆是(&T)",IDYESALL,72,36,62,14
+    PUSHBUTTON      "否(&N)",IDNO,138,36,62,14
+    PUSHBUTTON      "取消",IDCANCEL,204,36,62,14
+    ICON            "",IDC_EXCLAMATION_ICON,6,6,24,22
+    LTEXT           "",IDC_MESSAGE,36,6,228,24
+END
+
+IDD_PASSWORD DIALOGEX 0, 0, 243, 62
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "需要密碼"
+FONT 9, "新細明體", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "確定",IDOK,186,6,50,14
+    PUSHBUTTON      "略過檔案",IDSKIP,186,24,50,14
+    PUSHBUTTON      "取消",IDCANCEL,186,42,50,14
+    LTEXT           "Static",IDC_MESSAGE,24,6,156,30
+    LTEXT           "密碼︰",IDC_STATIC,24,44,44,8
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME "名稱"
+    IDS_COL_TYPE "類型"
+    IDS_COL_COMPRSIZE "壓縮大小"
+    IDS_COL_PASSWORD "密碼"
+    IDS_COL_SIZE "大小"
+    IDS_COL_RATIO "壓縮率"
+    IDS_COL_DATE_MOD "修改日期"
+    IDS_YES "是"
+    IDS_NO "否"
+    IDS_ERRORTITLE "壓縮的（zipped）資料夾發生錯誤"
+    IDS_CANTSTARTTHREAD "無法開始壓縮檔案的執行緒。"
+    IDS_NOFILES "指定的目錄「%s」是空的，所以壓縮的（zipped）資料夾無法將它新增到保存檔中。"
+    IDS_CANTCREATEZIP "無法建立壓縮的資料夾「%s」（錯誤碼：%d）。"
+    IDS_CANTREADFILE "無法讀取檔案「%s」。"
+    IDS_EXTRACTING "正在解壓縮..."
+    IDS_CANTEXTRACTFILE "無法解壓縮檔案「%1」。"
+    IDS_DECOMPRESSERROR "不支援的壓縮方法 %d。您要繼續嗎？"
+    IDS_UNKNOWNERROR "不明錯誤 0x%08x。"
+
+    IDS_WIZ_TITLE "解壓縮精靈"
+    IDS_WIZ_DEST_TITLE "選擇一個目標資料夾"
+    IDS_WIZ_DEST_SUBTITLE "ZIP 檔中的檔案將被解壓縮至指定位置。"
+    IDS_WIZ_COMPL_TITLE "解壓縮完成"
+    IDS_WIZ_COMPL_SUBTITLE "ZIP 檔中的檔案已被解壓縮。"
+    IDS_WIZ_BROWSE_TITLE "選擇檔案解壓縮路徑。"
+
+    IDS_OVERWRITEFILE_TEXT "這個資料夾中已經有一個名為「%1」的檔案。\n您要取代它嗎？"
+    IDS_PASSWORD_FILE_TEXT "檔案「%1」正被密碼保護。請輸入密碼。"
+    IDS_PASSWORD_ZIP_TEXT "請指定解壓縮該壓縮檔時使用的密碼。"
+
+    IDS_MENUITEM "解壓縮全部(&A)..."
+    IDS_HELPTEXT "解壓縮資料夾内容"
+    IDS_FRIENDLYNAME "解壓縮資料夾"
+END

@@ -597,7 +597,7 @@ HIMC WINAPI ImmCreateContext(void)
     if (pClientImc == NULL)
         return NULL;
 
-    hIMC = NtUserCreateInputContext(pClientImc);
+    hIMC = NtUserCreateInputContext((ULONG_PTR)pClientImc);
     if (hIMC == NULL)
     {
         Imm32HeapFree(pClientImc);
@@ -818,7 +818,7 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
 
     if (!pClientImc->hInputContext)
     {
-        dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, 1);
+        dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
 
         if (dwThreadId == GetCurrentThreadId() && Imm32IsCiceroMode() && !Imm32Is16BitMode())
         {
@@ -833,7 +833,7 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
             }
         }
 
-        if (!NtUserQueryInputContext(hIMC, 2))
+        if (!NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME))
         {
             RtlLeaveCriticalSection(&pClientImc->cs);
             goto Quit;
@@ -928,7 +928,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
         // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
         pClientImc->unknown = NtUserGetThreadState(13);
 
-        if (!NtUserUpdateInputContext(hImc, 0, pClientImc))
+        if (!NtUserUpdateInputContext(hImc, UIC_CLIENTIMCDATA, (DWORD_PTR)pClientImc))
         {
             Imm32HeapFree(pClientImc);
             return NULL;

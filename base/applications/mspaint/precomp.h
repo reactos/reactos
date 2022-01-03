@@ -38,7 +38,6 @@
 #include "history.h"
 #include "imgarea.h"
 #include "miniature.h"
-#include "mouse.h"
 #include "palette.h"
 #include "palettemodel.h"
 #include "registry.h"
