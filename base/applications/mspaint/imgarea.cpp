@@ -116,8 +116,8 @@ LRESULT CImgAreaWindow::OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 
 LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    DefWindowProc(WM_PAINT, wParam, lParam);
-    HDC hdc = GetDC();
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(&ps);
     int imgXRes = imageModel.GetWidth();
     int imgYRes = imageModel.GetHeight();
     StretchBlt(hdc, 0, 0, Zoomed(imgXRes), Zoomed(imgYRes), imageModel.GetDC(), 0, 0, imgXRes,
@@ -138,10 +138,10 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         }
         DeleteObject(SelectObject(hdc, oldPen));
     }
-    ReleaseDC(hdc);
+    EndPaint(&ps);
     selectionWindow.Invalidate(FALSE);
     miniature.Invalidate(FALSE);
-    if (textEditWindow.IsWindow())
+    if (textEditWindow.IsWindowVisible())
         textEditWindow.Invalidate(FALSE);
     return 0;
 }
