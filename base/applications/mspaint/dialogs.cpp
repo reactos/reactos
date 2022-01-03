@@ -398,7 +398,7 @@ LRESULT CFontsDialog::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     return 0;
 }
 
-void CFontsDialog::OnFontName(HWND hwnd, UINT codeNotify)
+void CFontsDialog::OnFontName(UINT codeNotify)
 {
     HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
     WCHAR szText[LF_FACESIZE];
@@ -434,7 +434,7 @@ void CFontsDialog::OnFontName(HWND hwnd, UINT codeNotify)
     }
 }
 
-void CFontsDialog::OnFontSize(HWND hwnd, UINT codeNotify)
+void CFontsDialog::OnFontSize(UINT codeNotify)
 {
     HWND hwndSizes = GetDlgItem(IDD_FONTSSIZES);
     WCHAR szText[LF_FACESIZE];
@@ -472,11 +472,11 @@ LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
             break;
 
         case IDD_FONTSNAMES:
-            OnFontName(m_hWnd, codeNotify);
+            OnFontName(codeNotify);
             break;
 
         case IDD_FONTSSIZES:
-            OnFontSize(m_hWnd, codeNotify);
+            OnFontSize(codeNotify);
             break;
 
         case IDM_BOLD:
@@ -527,10 +527,4 @@ LRESULT CFontsDialog::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
     }
     return 0;
-}
-
-LRESULT CFontsDialog::OnNCActivate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    // TODO: Show active title bar
-    return ::DefWindowProc(m_hWnd, nMsg, TRUE, lParam);
 }
