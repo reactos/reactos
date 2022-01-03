@@ -358,9 +358,9 @@ typedef struct STRUCT(_TEB)
         };
     };
 #elif (NTDDI_VERSION >= NTDDI_LONGHORN)
-    BOOLEAN                SpareBool0;
-    BOOLEAN                SpareBool1;
-    BOOLEAN                SpareBool2;
+    BOOLEAN                InDbgPrint;
+    BOOLEAN                FreeStackOnTermination;
+    BOOLEAN                HasFiberData;
     UCHAR                  IdealProcessor;
 #else
     BOOLEAN                InDbgPrint;
