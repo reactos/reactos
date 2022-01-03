@@ -58,6 +58,7 @@ public:
     LRESULT OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT DefWindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam);
 
 protected:
     HWND m_hwndParent;

@@ -77,7 +77,7 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
             overhang = 0;
     }
 
-    SIZE ret = { xMax + rightMargin - LONG(overhang) + 1, yMax };
+    SIZE ret = { xMax + rightMargin - LONG(overhang) + 1, yMax + tm.tmDescent };
     return ret;
 }
 
@@ -499,5 +499,24 @@ LRESULT CTextEditWindow::OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
     InvalidateEdit2();
+    return ret;
+}
+
+LRESULT CTextEditWindow::DefWindowProc(UINT nMsg, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT ret = m_pfnSuperWindowProc(m_hWnd, nMsg, wParam, lParam);
+    switch (nMsg)
+    {
+        case EM_GETFIRSTVISIBLELINE:
+        case WM_HSCROLL:
+        case WM_VSCROLL:
+        case EM_SCROLLCARET:
+            return ret;
+    }
+    if (m_pfnSuperWindowProc(m_hWnd, EM_GETFIRSTVISIBLELINE, 0, 0) > 0)
+    {
+        m_pfnSuperWindowProc(m_hWnd, WM_HSCROLL, SB_LEFT, 0);
+        m_pfnSuperWindowProc(m_hWnd, WM_VSCROLL, SB_TOP, 0);
+    }
     return ret;
 }
