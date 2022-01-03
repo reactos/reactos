@@ -24,12 +24,6 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
     TEXTMETRIC tm;
     GetTextMetrics(hDC, &tm);
 
-    ABCFLOAT WidthsABC;
-    if (cchText > 0)
-        GetCharABCWidthsFloat(hDC, pszText[cchText - 1], pszText[cchText - 1], &WidthsABC);
-    else
-        WidthsABC.abcfC = 0;
-
     DWORD dwMargin = (DWORD)DefWindowProc(EM_GETMARGINS, 0, 0);
     LONG leftMargin = LOWORD(dwMargin), rightMargin = HIWORD(dwMargin);
 
@@ -68,7 +62,14 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
         SetWindowText(pszOldText);
         SendMessage(EM_SETSEL, iStart, iEnd);
         MessageBeep(0xFFFFFFFF);
+        cchText = ich;
     }
+
+    ABCFLOAT WidthsABC;
+    if (cchText > 0)
+        GetCharABCWidthsFloat(hDC, pszText[cchText - 1], pszText[cchText - 1], &WidthsABC);
+    else
+        WidthsABC.abcfC = 0;
 
     FLOAT overhang = WidthsABC.abcfC;
     if (overhang > 0)
