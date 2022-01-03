@@ -126,6 +126,13 @@ INT CTextEditWindow::HitTestGrip(RECT& rc, POINT pt)
     SetRect(&rcGrip, RECT7);
     if (PtInRect(&rcGrip, pt))
         return HTBOTTOMRIGHT;
+
+    RECT rcInner = rc;
+    InflateRect(&rcInner, -3, -3);
+
+    if (!PtInRect(&rcInner, pt) && PtInRect(&rc, pt))
+        return HTCAPTION;
+
     return HTCLIENT;
 }
 
@@ -298,6 +305,17 @@ LRESULT CTextEditWindow::OnNCHitTest(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     RECT rc;
     GetWindowRect(&rc);
     return HitTestGrip(rc, pt);
+}
+
+LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    UINT nHitTest = LOWORD(lParam);
+    if (nHitTest == HTCAPTION)
+    {
+        SetCursor(LoadCursor(NULL, IDC_SIZEALL));
+        return FALSE;
+    }
+    return DefWindowProc(nMsg, wParam, lParam);
 }
 
 LRESULT CTextEditWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
