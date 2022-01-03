@@ -376,7 +376,6 @@ void CTextEditWindow::DoDraw(HWND hwnd, HDC hDC)
 LRESULT CTextEditWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     UpdateFont();
-    SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
     return 0;
 }
 
@@ -452,6 +451,8 @@ void CTextEditWindow::UpdateFont()
     m_hFont = ::CreateFontIndirect(&m_lf);
 
     SetWindowFont(m_hWnd, m_hFont, TRUE);
+    SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
+    InvalidateEdit2();
 }
 
 LRESULT CTextEditWindow::OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
