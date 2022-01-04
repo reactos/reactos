@@ -1,5 +1,7 @@
 LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-fr-FR.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "&Fichier"

@@ -9,6 +9,8 @@
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-sk-SK.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "&Súbor"

@@ -8,6 +8,8 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-cs-CZ.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "&Soubor"

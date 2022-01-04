@@ -9,6 +9,8 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-ro-RO.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "&Fișier"

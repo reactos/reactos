@@ -8,6 +8,8 @@
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-ja-JP.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "ファイル(&F)"

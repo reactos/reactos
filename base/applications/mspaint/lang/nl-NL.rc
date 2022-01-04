@@ -8,6 +8,8 @@
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-nl-NL.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "&Bestand"
