@@ -654,11 +654,7 @@ InitThreadCallback(PETHREAD Thread)
     /* Create the default input context */
     if (IS_IMM_MODE())
     {
-        PIMC pIMC = UserCreateInputContext(0);
-        if (pIMC)
-        {
-            UserDereferenceObject(pIMC);
-        }
+        UserCreateInputContext(0);
     }
 
     /* Last things to do only if we are not a SYSTEM or CSRSS thread */
