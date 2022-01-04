@@ -410,7 +410,7 @@ struct TextTool : ToolBase
         RECT rc;
         selectionModel.GetRect(&rc);
 
-        INT cxMin = 80, cyMin = 24;
+        INT cxMin = CX_MINTEXTEDIT, cyMin = CY_MINTEXTEDIT;
         if (rc.right - rc.left < cxMin)
             rc.right = rc.left + cxMin;
         if (rc.bottom - rc.top < cyMin)
