@@ -315,8 +315,8 @@ LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CTextEditWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    FixEditPos(NULL);
     InvalidateEdit();
-
     return ret;
 }
 
@@ -328,6 +328,7 @@ LRESULT CTextEditWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     GetClientRect(&rc);
     SendMessage(EM_SETRECTNP, 0, (LPARAM)&rc);
     SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
+    FixEditPos(NULL);
     InvalidateEdit();
 
     return ret;
