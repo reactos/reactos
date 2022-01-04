@@ -509,9 +509,12 @@ NtUserCreateInputContext(ULONG_PTR dwClientImcData)
     PIMC pIMC;
     HIMC ret = NULL;
 
+    if (!dwClientImcData)
+        return NULL;
+
     UserEnterExclusive();
 
-    if (!IS_IMM_MODE() || !dwClientImcData)
+    if (!IS_IMM_MODE())
         goto Quit;
 
     pIMC = UserCreateInputContext(dwClientImcData);
