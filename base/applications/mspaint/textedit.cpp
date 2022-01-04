@@ -372,11 +372,11 @@ HWND CTextEditWindow::Create(HWND hwndParent)
     m_hwndParent = hwndParent;
 
 #ifdef NO_GROW_WIDTH
-    DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_CHILD |
-                  WS_THICKFRAME;
+    const DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL |
+                        WS_CHILD | WS_THICKFRAME;
 #else
-    DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL |
-                  WS_CHILD | WS_THICKFRAME;
+    const DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL |
+                        ES_AUTOVSCROLL | WS_CHILD | WS_THICKFRAME;
 #endif
     m_hWnd = ::CreateWindowEx(0, WC_EDIT, NULL, style, 0, 0, 0, 0,
                               hwndParent, NULL, hProgInstance, NULL);
