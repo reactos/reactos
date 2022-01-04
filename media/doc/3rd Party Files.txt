@@ -151,6 +151,12 @@ Used Version: ???
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
 URL: http://www.vmware.com/download/open_sources.html
 
+Title: AC97 Sample Driver
+Path: drivers/wdm/audio/drivers/ac97
+Used Version: git commit 411c271
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://github.com/microsoftarchive/msdn-code-gallery-microsoft/tree/master/Official%20Windows%20Driver%20Kit%20Sample/Windows%20Driver%20Kit%20(WDK)%208.1%20Samples/%5BC%2B%2B%5D-windows-driver-kit-81-cpp/WDK%208.1%20C%2B%2B%20Samples/AC97%20Driver%20Sample/C%2B%2B
+
 Title: Open Source WDM Drivers for C-Media 8738/8768 based soundcards
 Path: drivers/wdm/audio/drivers/CMIDriver
 Used Version: 1.2.6
