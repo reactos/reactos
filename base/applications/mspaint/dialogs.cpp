@@ -358,7 +358,7 @@ void CFontsDialog::InitToolbar()
     HWND hwndToolbar = GetDlgItem(IDD_FONTSTOOLBAR);
     SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
     SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(16, 16));
-    SendMessage(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(22, 22));
+    SendMessage(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(20, 20));
     
     TBADDBITMAP AddBitmap;
     AddBitmap.hInst = hProgInstance;
