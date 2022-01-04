@@ -14,7 +14,7 @@
 
 /* FUNCTIONS ********************************************************/
 
-CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL)
+CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL), m_nMoveSizeLock(0)
 {
     SetRectEmpty(&m_rc);
 }
@@ -219,7 +219,9 @@ void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
     ::GetClientRect(m_hwndParent, &rcParent);
     IntersectRect(&rc, &rcParent, &rcWnd);
 
+    InterlockedIncrement(&m_nMoveSizeLock);
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
+    InterlockedDecrement(&m_nMoveSizeLock);
 
     DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
     DefWindowProc(WM_VSCROLL, SB_TOP, 0);
@@ -234,8 +236,12 @@ LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
+
+    InterlockedIncrement(&m_nMoveSizeLock);
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    FixEditPos(szText);
+    if (InterlockedDecrement(&m_nMoveSizeLock) == 0)
+        FixEditPos(szText);
+
     return ret;
 }
 
@@ -246,10 +252,14 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         toolsModel.OnCancelDraw();
         return 0;
     }
+
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
+
+    InterlockedIncrement(&m_nMoveSizeLock);
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    FixEditPos(szText);
+    if (InterlockedDecrement(&m_nMoveSizeLock) == 0)
+        FixEditPos(szText);
     return ret;
 }
 
@@ -336,7 +346,9 @@ LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CTextEditWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    InvalidateEditRect();
+
+    if (m_nMoveSizeLock == 0)
+        InvalidateEditRect();
     return ret;
 }
 
@@ -349,7 +361,8 @@ LRESULT CTextEditWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     SendMessage(EM_SETRECTNP, 0, (LPARAM)&rc);
     SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
 
-    InvalidateEditRect();
+    if (m_nMoveSizeLock == 0)
+        InvalidateEditRect();
 
     return ret;
 }
@@ -497,7 +510,11 @@ void CTextEditWindow::UpdateFont()
 
     SetWindowFont(m_hWnd, m_hFontZoomed, TRUE);
     DefWindowProc(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
+
+    InterlockedIncrement(&m_nMoveSizeLock);
     FixEditPos(NULL);
+    InterlockedDecrement(&m_nMoveSizeLock);
+
     Invalidate();
 }
 
