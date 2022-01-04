@@ -89,14 +89,14 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
 #define Y0 rc.top
 #define Y1 ((rc.top + rc.bottom - CXY_GRIP) / 2)
 #define Y2 (rc.bottom - CXY_GRIP)
-#define RECT0 X0, Y0, X0 + CXY_GRIP, Y0 + CXY_GRIP
-#define RECT1 X1, Y0, X1 + CXY_GRIP, Y0 + CXY_GRIP
-#define RECT2 X2, Y0, X2 + CXY_GRIP, Y0 + CXY_GRIP
-#define RECT3 X0, Y1, X0 + CXY_GRIP, Y1 + CXY_GRIP
-#define RECT4 X2, Y1, X2 + CXY_GRIP, Y1 + CXY_GRIP
-#define RECT5 X0, Y2, X0 + CXY_GRIP, Y2 + CXY_GRIP
-#define RECT6 X1, Y2, X1 + CXY_GRIP, Y2 + CXY_GRIP
-#define RECT7 X2, Y2, X2 + CXY_GRIP, Y2 + CXY_GRIP
+#define RECT0 X0, Y0, X0 + CXY_GRIP, Y0 + CXY_GRIP // Upper Left
+#define RECT1 X1, Y0, X1 + CXY_GRIP, Y0 + CXY_GRIP // Top
+#define RECT2 X2, Y0, X2 + CXY_GRIP, Y0 + CXY_GRIP // Upper Right
+#define RECT3 X0, Y1, X0 + CXY_GRIP, Y1 + CXY_GRIP // Left
+#define RECT4 X2, Y1, X2 + CXY_GRIP, Y1 + CXY_GRIP // Right
+#define RECT5 X0, Y2, X0 + CXY_GRIP, Y2 + CXY_GRIP // Lower Left
+#define RECT6 X1, Y2, X1 + CXY_GRIP, Y2 + CXY_GRIP // Bottom
+#define RECT7 X2, Y2, X2 + CXY_GRIP, Y2 + CXY_GRIP // Lower Right
 
 INT CTextEditWindow::DoHitTest(RECT& rc, POINT pt)
 {
