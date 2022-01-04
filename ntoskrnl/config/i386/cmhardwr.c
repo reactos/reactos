@@ -14,8 +14,14 @@
 
 /* GLOBALS *******************************************************************/
 
+#ifdef _M_IX86
 PCHAR CmpID1 = "80%u86-%c%x";
 PCHAR CmpID2 = "x86 Family %u Model %u Stepping %u";
+#else
+PCHAR CmpID1 = "EM64T Family %u Model %u Stepping %u";
+PCHAR CmpID2 = "AMD64 Family %u Model %u Stepping %u";
+PCHAR CmpID3 = "VIA64 Family %u Model %u Stepping %u";
+#endif
 PCHAR CmpBiosStrings[] =
 {
     "Ver",
@@ -346,6 +352,9 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         /* Loop all CPUs */
         for (i = 0; i < KeNumberProcessors; i++)
         {
+#ifdef _M_AMD64
+            PCHAR CmpID;
+#endif
             /* Get the PRCB */
             Prcb = KiProcessorBlock[i];
 
@@ -357,6 +366,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
             ConfigData.ComponentEntry.AffinityMask = AFFINITY_MASK(i);
             ConfigData.ComponentEntry.Identifier = Buffer;
 
+#if defined(_M_IX86)
             /* Check if the CPU doesn't support CPUID */
             if (!Prcb->CpuID)
             {
@@ -376,6 +386,32 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                         (Prcb->CpuStep >> 8),
                         Prcb->CpuStep & 0xff);
             }
+#elif defined(_M_AMD64)
+            if (Prcb->CpuVendor == CPU_VIA)
+            {
+                /* This is VIA64 family */
+                CmpID = CmpID3;
+            }
+            else if (Prcb->CpuVendor == CPU_AMD)
+            {
+                /* This is AMD64 family */
+                CmpID = CmpID2;
+            }
+            else
+            {
+                /* This is generic EM64T family */
+                CmpID = CmpID1;
+            }
+
+            /* ID string has the same style for all 64-bit CPUs */
+            sprintf(Buffer,
+                    CmpID,
+                    Prcb->CpuType,
+                    (Prcb->CpuStep >> 8),
+                    Prcb->CpuStep & 0xff);
+#else
+#error Unknown architecture
+#endif
 
             /* Save the ID string length now that we've created it */
             ConfigData.ComponentEntry.IdentifierLength = (ULONG)strlen(Buffer) + 1;

@@ -62,6 +62,9 @@ HKR, , Icon,           0, "-28"
 %IntelP4Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_15
 %IntelProcessor.DeviceDesc%       = Processr_Inst,ACPI\GenuineIntel_-_x86
 
+[Intel.NTAMD64]
+%IntelProcessor.DeviceDesc%       = Processr_Inst,ACPI\GenuineIntel_-_EM64T
+
 [AMD]
 %AMDK6Processor.DeviceDesc%   = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_5_Model_7
 %AMDK62Processor.DeviceDesc%  = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_5_Model_8
@@ -74,6 +77,10 @@ HKR, , Icon,           0, "-28"
 %AMDQProcessor.DeviceDesc%    = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_17
 %AMDProcessor.DeviceDesc%     = Processr_Inst,ACPI\AuthenticAMD_-_x86
 
+[AMD.NTAMD64]
+%AMDK8Processor.DeviceDesc%   = Processr_Inst,ACPI\AuthenticAMD_-_AMD64_Family_15
+%AMDProcessor.DeviceDesc%     = Processr_Inst,ACPI\AuthenticAMD_-_AMD64
+
 [Transmeta]
 %TransmetaProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineTMx86_-_x86
 
@@ -83,6 +90,9 @@ HKR, , Icon,           0, "-28"
 %ViaC7Processor.DeviceDesc%   = Processr_Inst,ACPI\CentaurHauls_-_x86_Family_6_Model_13
 %ViaNANOProcessor.DeviceDesc% = Processr_Inst,ACPI\CentaurHauls_-_x86_Family_6_Model_15
 %ViaProcessor.DeviceDesc%     = Processr_Inst,ACPI\CentaurHauls_-_x86
+
+[VIA.NTAMD64]
+%ViaProcessor.DeviceDesc%     = Processr_Inst,ACPI\CentaurHauls_-_VIA64
 
 ;---------------------------- Processr Driver ---------------------------
 
