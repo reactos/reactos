@@ -74,11 +74,6 @@ KspRegisterDeviceInterfaces(
     IN PUNICODE_STRING ReferenceString,
     OUT PLIST_ENTRY SymbolicLinkList);
 
-NTSTATUS
-KspForwardIrpSynchronous(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
-
 PVOID
 AllocateItem(
     IN POOL_TYPE PoolType,

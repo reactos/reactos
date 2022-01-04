@@ -253,7 +253,14 @@ FDO_StartDevice(
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     /* First start lower device */
-    Status = USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
+    if (IoForwardIrpSynchronously(FDODeviceExtension->NextDeviceObject, Irp))
+    {
+        Status = Irp->IoStatus.Status;
+    }
+    else
+    {
+        Status = STATUS_UNSUCCESSFUL;
+    }
 
     if (!NT_SUCCESS(Status))
     {
@@ -435,11 +442,15 @@ FDO_HandlePnp(
             RtlCopyMemory(IoStack->Parameters.DeviceCapabilities.Capabilities,
                           &FDODeviceExtension->Capabilities,
                           sizeof(DEVICE_CAPABILITIES));
-            Status = USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
-            if (NT_SUCCESS(Status))
+            Status = STATUS_UNSUCCESSFUL;
+
+            if (IoForwardIrpSynchronously(FDODeviceExtension->NextDeviceObject, Irp))
             {
-                /* Surprise removal ok */
-                IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                {
+                    IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
+                }
             }
             break;
        }
@@ -527,7 +538,7 @@ FDO_HandleResetCyclePort(
         KeReleaseSpinLock(&FDODeviceExtension->Lock, OldLevel);
 
         /* Forward request synchronized */
-        USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
+        NT_VERIFY(IoForwardIrpSynchronously(FDODeviceExtension->NextDeviceObject, Irp));
 
         /* Reacquire lock */
         KeAcquireSpinLock(&FDODeviceExtension->Lock, &OldLevel);
