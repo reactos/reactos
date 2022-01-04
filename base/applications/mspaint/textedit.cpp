@@ -198,8 +198,8 @@ void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
         TEXTMETRIC tm;
         GetTextMetrics(hDC, &tm);
         lstrcat(szText, TEXT("x")); // This is a trick to enable the last newlines
-        UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
-                       DT_EXPANDTABS | DT_WORDBREAK;
+        const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
+                             DT_EXPANDTABS | DT_WORDBREAK;
         DrawText(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
         if (tm.tmDescent > 0)
             rcText.bottom += tm.tmDescent;

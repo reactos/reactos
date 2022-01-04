@@ -281,11 +281,11 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCT
 
     HGDIOBJ hFontOld = SelectObject(hdc, font);
 #ifdef NO_GROW_WIDTH
-    UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
-                   DT_EXPANDTABS | DT_WORDBREAK;
+    const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
+                         DT_EXPANDTABS | DT_WORDBREAK;
 #else
-    UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
-                   DT_EXPANDTABS;
+    const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
+                         DT_EXPANDTABS;
 #endif
 
     INT iOldBkMode;
