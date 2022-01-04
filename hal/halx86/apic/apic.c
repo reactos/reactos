@@ -138,7 +138,18 @@ FORCEINLINE
 VOID
 ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
 {
+    ULONG Flags;
     APIC_INTERRUPT_COMMAND_REGISTER Icr;
+    APIC_INTERRUPT_COMMAND_REGISTER IcrStatus;
+
+    /*
+     * The IRR registers are spaced 16 bytes apart and hold 32 status bits each.
+     * Pre-compute the register and bit that match our vector.
+     */
+    ULONG VectorHigh = Vector / 32;
+    ULONG VectorLow = Vector % 32;
+    ULONG Irr = APIC_IRR + 0x10 * VectorHigh;
+    ULONG IrrBit = 1UL << VectorLow;
 
     /* Setup the command register */
     Icr.Long0 = 0;
@@ -147,8 +158,32 @@ ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
     Icr.TriggerMode = TriggerMode;
     Icr.DestinationShortHand = APIC_DSH_Self;
 
+    /* Disable interrupts so that we can change IRR without being interrupted */
+    Flags = __readeflags();
+    _disable();
+
+    /* Wait for the APIC to be idle */
+    do
+    {
+        IcrStatus.Long0 = ApicRead(APIC_ICR0);
+    } while (IcrStatus.DeliveryStatus);
+
     /* Write the low dword to send the interrupt */
     ApicWrite(APIC_ICR0, Icr.Long0);
+
+    /* Wait until we see the interrupt request.
+     * It will stay in requested state until we re-enable interrupts.
+     */
+    while (!(ApicRead(Irr) & IrrBit))
+    {
+        NOTHING;
+    }
+
+    /* Finally, restore the original interrupt state */
+    if (Flags & EFLAGS_INTERRUPT_MASK)
+    {
+        _enable();
+    }
 }
 
 FORCEINLINE
