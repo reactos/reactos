@@ -315,6 +315,7 @@ LRESULT CTextEditWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
     InvalidateEdit();
+
     return ret;
 }
 
@@ -328,12 +329,6 @@ LRESULT CTextEditWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
     InvalidateEdit();
 
-    MapWindowPoints(imageArea, (LPPOINT)&rc, 2);
-    rc.left = UnZoomed(rc.left);
-    rc.top = UnZoomed(rc.top);
-    rc.right = UnZoomed(rc.right);
-    rc.bottom = UnZoomed(rc.bottom);
-    m_rc = rc;
     return ret;
 }
 
@@ -401,6 +396,14 @@ void CTextEditWindow::InvalidateEdit()
     GetWindowRect(&rc);
     ::MapWindowPoints(NULL, m_hwndParent, (LPPOINT)&rc, 2);
     ::InvalidateRect(m_hwndParent, &rc, TRUE);
+
+    GetClientRect(&rc);
+    MapWindowPoints(imageArea, (LPPOINT)&rc, 2);
+    rc.left = UnZoomed(rc.left);
+    rc.top = UnZoomed(rc.top);
+    rc.right = UnZoomed(rc.right);
+    rc.bottom = UnZoomed(rc.bottom);
+    m_rc = rc;
 }
 
 LRESULT CTextEditWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)

@@ -265,13 +265,13 @@ EnumFontFamProc(ENUMLOGFONT *lpelf, NEWTEXTMETRIC *lpntm, INT FontType, LPARAM l
 {
     CFontsDialog *pThis = reinterpret_cast<CFontsDialog*>(lParam);
     LPTSTR name = lpelf->elfLogFont.lfFaceName;
-    if (name[0] == TEXT('@'))
+    if (name[0] == TEXT('@')) // Vertical fonts
         return TRUE;
 
     for (INT i = 0; i < pThis->m_arrFontNames.GetSize(); ++i)
     {
         if (pThis->m_arrFontNames[i] == name)
-            return TRUE;
+            return TRUE; // Already exists
     }
 
     pThis->m_arrFontNames.Add(name);
@@ -282,6 +282,7 @@ CFontsDialog::CFontsDialog()
 {
 }
 
+// A callback function for qsort
 static int CompareFontNames(const void *x, const void *y)
 {
     const CString *a = reinterpret_cast<const CString *>(x);
@@ -301,12 +302,15 @@ void CFontsDialog::InitNames()
     if (!hDC)
         return;
 
+    // List the fonts
     m_arrFontNames.RemoveAll();
     EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc, reinterpret_cast<LPARAM>(this));
     DeleteDC(hDC);
 
+    // Sort
     qsort(m_arrFontNames.GetData(), m_arrFontNames.GetSize(), sizeof(CString), CompareFontNames);
 
+    // Actually add them to the combobox
     HWND hwndNames = GetDlgItem(IDD_FONTSNAMES);
     SendMessage(hwndNames, CB_RESETCONTENT, 0, 0);
     for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)

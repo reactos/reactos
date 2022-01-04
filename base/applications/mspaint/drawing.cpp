@@ -280,31 +280,35 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCT
     SetRect(&rc, x1, y1, x2, y2);
 
     HGDIOBJ hFontOld = SelectObject(hdc, font);
-    UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX |
-                   DT_NOCLIP | DT_EXPANDTABS;
+    UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP | DT_EXPANDTABS;
 
-    INT iOldBkMode, rgbBkColor;
-    if (style == 0)
+    INT iOldBkMode;
+    COLORREF rgbTextColor, rgbBkColor;
+
+    rgbTextColor = SetTextColor(hdc, fg);
+    if (style == 0) // Transparent
     {
         iOldBkMode = SetBkMode(hdc, TRANSPARENT);
         rgbBkColor = GetBkColor(hdc);
     }
-    else
+    else // Opaque
     {
         iOldBkMode = SetBkMode(hdc, OPAQUE);
         rgbBkColor = SetBkColor(hdc, bg);
 
         HBRUSH hbr = CreateSolidBrush(bg);
-        FillRect(hdc, &rc, hbr);
+        FillRect(hdc, &rc, hbr); // Fill the background
         DeleteObject(hbr);
     }
 
-    INT iSaveDC = SaveDC(hdc);
+
+    INT iSaveDC = SaveDC(hdc); // We want to restore clipping later
     IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
-    SetTextColor(hdc, fg);
     DrawText(hdc, lpchText, -1, &rc, uFormat);
-    RestoreDC(hdc, iSaveDC);
+    RestoreDC(hdc, iSaveDC); // Restore
+
     SelectObject(hdc, hFontOld);
     SetBkMode(hdc, iOldBkMode);
     SetBkColor(hdc, rgbBkColor);
+    SetTextColor(hdc, rgbTextColor);
 }
