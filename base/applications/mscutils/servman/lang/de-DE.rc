@@ -280,7 +280,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "ERSTELLOPTIONEN:\r\nBEACHTEN SIE: Der Optionsname enthält das Gleichheitszeichen.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (Standard = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (Standard = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (Standard = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Abhängigkeiten (getrennt durch / (Schrägstrich))>\r\n obj= <KontoName|ObjektName>\r\n       (Standard = LocalSystem)\r\n password= <Passwort>\r\n"
+    IDS_HELP_OPTIONS "ERSTELLOPTIONEN:\nBEACHTEN SIE: Der Optionsname enthält das Gleichheitszeichen.\n type= <own|share|interact|kernel|filesys|rec>\n       (Standard = own)\n start= <boot|system|auto|demand|disabled>\n       (Standard = demand)\n error= <normal|severe|critical|ignore>\n       (Standard = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Abhängigkeiten (getrennt durch / (Schrägstrich))>\n obj= <KontoName|ObjektName>\n       (Standard = LocalSystem)\n password= <Passwort>\n"
 END
 
 /* Hints */

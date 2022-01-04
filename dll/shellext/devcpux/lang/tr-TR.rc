@@ -1,0 +1,48 @@
+/*
+ * PROJECT:     ReactOS Processor Shell Extension
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+DLG_PROCESSORINFO DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "CPU"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Özellikler:", -1, 7, 23, 50, 8
+    LTEXT "test", IDC_FEATURES, 57, 23, 181, 8
+    LTEXT "Model:", -1, 7, 38, 50, 8
+    LTEXT "test", IDC_MODEL, 57, 38, 181, 8
+    LTEXT "Silikon Sürümü:", -1, 7, 53, 50, 51
+    LTEXT "test", IDC_STEPPING, 57, 53, 181, 8
+    LTEXT "Çekirdek Hızı:", -1, 7, 68, 50, 8
+    LTEXT "test", IDC_CORESPEED, 57, 68, 181, 8
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MEGAHERTZ "%ld MHz"
+END
+
+/*
+DLG_PROCESSORINFO DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "CPU"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Özellikler:", -1, 7, 23, 50, 8
+    LTEXT "<test>", IDC_FEATURES, 7, 34, 238, 8
+
+    LTEXT "Model:", -1, 7, 49, 50, 8
+    LTEXT "<test>", IDC_MODEL, 7, 60, 238, 8
+
+    LTEXT "Silikon Sürümü:", -1, 7, 75, 50, 8
+    LTEXT "<test>", IDC_STEPPING, 7, 86, 238, 8
+
+    LTEXT "Çekirdek Hızı:", -1, 7, 101, 50, 8
+    LTEXT "<test>", IDC_CORESPEED, 7, 112, 238, 8
+END
+*/

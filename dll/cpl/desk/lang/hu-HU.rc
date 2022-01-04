@@ -3,15 +3,15 @@
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_THEMES DIALOGEX 0, 0, 246, 210
-CAPTION "Themes"
+CAPTION "Témák"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Theme:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "A téma a háttérkép, hangok, ikonok és egyéb elemek együttesét jelenti, segítségével személyre szabhatja a számítógépét egy kattintással.", IDC_STATIC, 5, 5, 235, 30
+    LTEXT "Téma:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Save &As...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
-    PUSHBUTTON "&Delete", IDC_THEMES_DELETE, 170, 70, 70, 14
+    PUSHBUTTON "&Mentés másként...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
+    PUSHBUTTON "&Törlés", IDC_THEMES_DELETE, 170, 70, 70, 14
     CONTROL "", IDC_THEMES_PREVIEW, "STATIC", SS_BITMAP, 5, 90, 235, 115, WS_EX_CLIENTEDGE
 END
 
@@ -32,24 +32,24 @@ END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Screensaver"
+CAPTION "Képernyőkímélő"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX "&Screensaver", IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX "&Képernyőkímélő", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Se&ttings", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
-    PUSHBUTTON "Pre&view", IDC_SCREENS_TESTSC, 175, 102, 50, 15
-    LTEXT "&Wait", IDC_WAITTEXT, 14, 125, 20, 9
+    PUSHBUTTON "&Beállítások", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
+    PUSHBUTTON "&Előnézet", IDC_SCREENS_TESTSC, 175, 102, 50, 15
+    LTEXT "&Várjon", IDC_WAITTEXT, 14, 125, 24, 9
     EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
-    LTEXT "minutes", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Ask for &password on resume", IDC_SCREENS_USEPASSCHK, "button",
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 60, 123, 12, 13
+    LTEXT "percet", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL "&Jelszóvédelem a visszatéréshez", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX "&Energy Saving features of monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
-    LTEXT "To adjust the power settings for your monitor, click on Power Settings.", IDC_STATIC, 16, 161, 146, 27
-    PUSHBUTTON "P&ower...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
+    GROUPBOX "A monitor &energiatakarékossági tulajdonságai", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    LTEXT "A monitor energiaellátási tulajdonságainak megváltoztatásához kattintson az energiaellátás gombra.", IDC_STATIC, 16, 161, 146, 27
+    PUSHBUTTON "Ener&giaellátás...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
 
 IDD_APPEARANCE DIALOGEX 0, 0, 246, 212
@@ -58,76 +58,76 @@ CAPTION "Megjelenés"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Visual Style", IDC_STATIC, 7, 130, 104, 9
+    LTEXT "Megjelenítési stílus", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Colorscheme", IDC_STATIC, 7, 157, 104, 9
+    LTEXT "Színséma", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Size", IDC_STATIC, 7, 184, 104, 9
+    LTEXT "Méret", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Effects...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON "Ad&vanced...", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON "&Effektusok...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON "&Haladó...", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Advanced Appearance"
+CAPTION "Haladó megjelenés"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "If you select a theme other than ReactOS classic, it will override the following settings, except in some older programs.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
-    LTEXT "Element", 8, 5, 160, 50, 9
+    LTEXT "Ha a ReactOS classic-tól eltérő témát választ, az alábbi beállításokat felül fogja bírálni, kivéve néhány régebbi programnál.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "Elem", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Size", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
+    LTEXT "&Méret", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
             UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
-    LTEXT "&1st Color", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT "&1. szín", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "&2nd Color", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT "&2. szín", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "Font", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
+    LTEXT "Betűtípus", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Fontsize", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
+    LTEXT "Betűméret", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
-    LTEXT "Color", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
+    LTEXT "Szín", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
     AUTOCHECKBOX "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
-    PUSHBUTTON "Cancel", IDCANCEL, 191, 220, 50, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 191, 220, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
 END
 
 IDD_EFFAPPEARANCE DIALOGEX 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Effects"
+CAPTION "Effektusok"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Use the following transition effect for menus and tooltips",
+    CONTROL "Az alábbi áttünés &effektet használja menükhöz és eszköztippekhez",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "U&se the following method to smooth edges of screen fonts", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "Az alábbi módszert használja a képernyőn megjelenő &betűtípusok simítására.", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Us&e large icons", IDC_EFFAPPEARANCE_LARGEICONS, "button",
+    CONTROL "Nagy &ikonok használata", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "Show sh&adows under menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,
+    CONTROL "Árnyékok megjelenítése a &menük alatt", IDC_EFFAPPEARANCE_SETDROPSHADOW,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Show &window contents while dragging", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
+    CONTROL "&Ablakok tartalmának mutatása mozgatás közben", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Hide underlined letters for keyboard navigation until I press the Alt key",
+    CONTROL "Alá&húzott betűk elrejtése a billentyűzet navigációhoz az ALT megnyomásáig",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "&Lapos menük használata", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
-    PUSHBUTTON "Cancel", IDCANCEL, 226, 165, 50, 14
+    PUSHBUTTON "Mégse", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
 
@@ -136,15 +136,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Beállítások"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Drag the monitor icons to match the physical arrangement of your monitors.", -1, 3, 3, 240, 20
+    LTEXT "Mozgassa a monitor ikonokat úgy, hogy megegyezzen a monitorjai fizikai elrendezésével.", -1, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
     LTEXT "&Képernyő", 1820, 3, 107, 70, 9
     LTEXT "<nincs>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "Ké&pméret", 1818, 3, 127, 115, 43
-    CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
+    CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 53, 17
     LTEXT "Kisebb", 1815, 9, 137, 25, 9, NOT WS_GROUP
-    LTEXT "Nagyobb", 1816, 93, 137, 20, 9, NOT WS_GROUP
+    LTEXT "Nagyobb", 1816, 86, 137, 28, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
     GROUPBOX "&Színek", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -154,67 +154,67 @@ END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Általános"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Display", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Font Size", -1, 14, 20, 222, 9
+    GROUPBOX "Képernyő", -1, 7, 6, 237, 56, WS_GROUP
+    LTEXT "Betűméret", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
-    GROUPBOX "Compatibility", -1, 7, 67, 237, 97
-    LTEXT "Some programs operate improperly if you do not restart your computer after you change color settings.\n\nAfter I change color settings", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Restart the computer before applying the new color settings.", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Apply the new color settings without restarting.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Ask me before applying the new color settings.", IDC_ASKME_RB, 14, 146, 228, 10
+    GROUPBOX "Kompatibilitás", -1, 7, 67, 237, 97
+    LTEXT "Néhány program nem működik megfelelően ha nem indítja újra a számítógépet miután megváltoztatta a színbeállításokat.\n\nA színbeállítások megváltoztatása után", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&Indítsa újra a számítógépet az alkalmazás előtt.", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "Alkalmazza az új színbeállításokat újraindítás nélkül.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "Kérdezzen rá mielőtt alkalmazná az új színbeállításokat.", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Display Settings"
+CAPTION "Kijelző beállítások"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "Szeretné megtartani ezeket a kijelző beállításokat?", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
-    PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
-    DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
+    PUSHBUTTON "&Igen", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&Nem", IDNO, 175, 36, 50, 14
 END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Normal", ID_MENU_NORMAL
-    MENUITEM "Disabled", ID_MENU_DISABLED
-    MENUITEM "Selected", ID_MENU_SELECTED
+    MENUITEM "Normál", ID_MENU_NORMAL
+    MENUITEM "Letiltva", ID_MENU_DISABLED
+    MENUITEM "Kijelölt", ID_MENU_SELECTED
 END
 
 IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Attached", ID_MENU_ATTACHED
-        MENUITEM "&Primary", ID_MENU_PRIMARY
+        MENUITEM "&Csatlakoztatva", ID_MENU_ATTACHED
+        MENUITEM "&Elsődleges", ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identify", ID_MENU_IDENTIFY
-        MENUITEM "P&roperties", ID_MENU_PROPERTIES
+        MENUITEM "&Azonosítás", ID_MENU_IDENTIFY
+        MENUITEM "&Tulajdonságok", ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SLIDEEFFECT "Slide effect"
-    IDS_FADEEFFECT "Fade effect"
+    IDS_SLIDEEFFECT "Gördítés"
+    IDS_FADEEFFECT "Elhalványítás"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARDEFFECT "Standard"
-    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
+    IDS_STANDARDEFFECT "Normál"
+    IDS_CLEARTYPEEFFECT "FreeType élsimított"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Multiple Monitors)"
-    IDS_UNKNOWNMONITOR "(Unknown Monitor)"
-    IDS_ADVANCEDTITLEFMT "%s and %s"
+    IDS_MULTIPLEMONITORS "(Több képernyő)"
+    IDS_UNKNOWNMONITOR "(Ismeretlen képernyő)"
+    IDS_ADVANCEDTITLEFMT "%s és %s"
 END
 
 STRINGTABLE
@@ -224,9 +224,9 @@ BEGIN
     IDS_NONE "(Nincs)"
     IDS_CENTER "Középen"
     IDS_STRETCH "Széthúzva"
-    IDS_TILE "Mozaikszerűen"
-    IDS_FIT "Fit"
-    IDS_FILL "Fill"
+    IDS_TILE "Mozaik"
+    IDS_FIT "Illesztés"
+    IDS_FILL "Kitöltés"
 END
 
 STRINGTABLE
@@ -236,7 +236,7 @@ BEGIN
     IDS_COLOR_16BIT "65 ezer szín (16 bit)"
     IDS_COLOR_24BIT "16 millió szín (24 bit)"
     IDS_COLOR_32BIT "16 millió szín (32 bit)"
-    IDS_PIXEL "%lux%lu Képpont"
+    IDS_PIXEL "%lux%lu képpont"
 END
 
 STRINGTABLE
@@ -246,42 +246,42 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INACTWIN "Inactive Window"
-    IDS_ACTWIN "Active Window"
-    IDS_WINTEXT "Window Text"
-    IDS_MESSBOX "Message Box"
-    IDS_MESSTEXT "Message Text"
+    IDS_INACTWIN "Inaktív ablak"
+    IDS_ACTWIN "Aktív ablak"
+    IDS_WINTEXT "Ablak szöveg"
+    IDS_MESSBOX "Üzenetdoboz"
+    IDS_MESSTEXT "Üzenet szöveg"
     IDS_BUTTEXT "OK"
-    IDS_CLASSIC_THEME "Classic Theme"
+    IDS_CLASSIC_THEME "Klasszikus téma"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ELEMENT_0 "Desktop"
-    IDS_ELEMENT_1 "Caption of inactive windows"
-    IDS_ELEMENT_2 "Border of inactive windows"
-    IDS_ELEMENT_3 "Caption of active windows"
-    IDS_ELEMENT_4 "Border of active windows"
-    IDS_ELEMENT_5 "Menu"
-    IDS_ELEMENT_6 "Selected Items"
-    IDS_ELEMENT_7 "Windows"
-    IDS_ELEMENT_8 "Scrollbars"
-    IDS_ELEMENT_9 "3D objects"
-    IDS_ELEMENT_10 "Palette title"
-    IDS_ELEMENT_11 "Caption bar buttons"
-    IDS_ELEMENT_12 "Dialog"
-    IDS_ELEMENT_13 "Application background"
-    IDS_ELEMENT_14 "Icon distance (horizontal)"
-    IDS_ELEMENT_15 "Icon distance (vertical)"
-    IDS_ELEMENT_16 "Quickinfo"
-    IDS_ELEMENT_17 "Icon"
-//  IDS_ELEMENT_18 "Deactivated menu elements"
+    IDS_ELEMENT_0 "Asztal"
+    IDS_ELEMENT_1 "Inaktív ablakok címsora"
+    IDS_ELEMENT_2 "Inaktív ablakok kerete"
+    IDS_ELEMENT_3 "Aktív ablakok címsora"
+    IDS_ELEMENT_4 "Inaktív ablakok kerete"
+    IDS_ELEMENT_5 "Menü"
+    IDS_ELEMENT_6 "Kijelölt elemek"
+    IDS_ELEMENT_7 "Ablakok"
+    IDS_ELEMENT_8 "Görgetősávok"
+    IDS_ELEMENT_9 "3D objektumok"
+    IDS_ELEMENT_10 "Palettafelirat"
+    IDS_ELEMENT_11 "Címsor gombok"
+    IDS_ELEMENT_12 "Párbeszédpanel"
+    IDS_ELEMENT_13 "Alkalmazás háttér"
+    IDS_ELEMENT_14 "Ikontávolság (vízszintes)"
+    IDS_ELEMENT_15 "Ikontávolság (függőleges)"
+    IDS_ELEMENT_16 "Elemleírás"
+    IDS_ELEMENT_17 "Ikon"
+//  IDS_ELEMENT_18 "Deaktivált menü elemek"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Display settings"
-    IDS_APPLY_FAILED "Failed to apply new settings..."
-    IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
-    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
+    IDS_DISPLAY_SETTINGS "Megjelenítési beállítások"
+    IDS_APPLY_FAILED "Nem sikerült alkalmazni az új beállításokat..."
+    IDS_APPLY_NEEDS_RESTART "A változtatások életbe lépéséhez újra kell indítania a számítógépet."
+    IDS_TIMEOUTTEXT "Visszalépés az előző beállításokra %d másodperc múlva."
 END

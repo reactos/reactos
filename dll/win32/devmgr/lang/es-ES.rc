@@ -297,8 +297,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "Administrador de dispositivos de ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Deshabilitar este dispositivo hará que deje de funcionar.\r\n¿Seguro que quiere deshabilitarlo?"
-  IDS_CONFIRM_UNINSTALL     "Advertencia: Está a punto de desinstalar este dispositivo de su equipo.\r\n¿Seguro que quiere continuar?"
+  IDS_CONFIRM_DISABLE       "Deshabilitar este dispositivo hará que deje de funcionar.\n¿Seguro que quiere deshabilitarlo?"
+  IDS_CONFIRM_UNINSTALL     "Advertencia: Está a punto de desinstalar este dispositivo de su equipo.\n¿Seguro que quiere continuar?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN

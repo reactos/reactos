@@ -8,35 +8,34 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\r\n\
-Syntax: tracert [-d] [-h maximum_hops] [-j Hostliste] [-w Zeitlimit] Zielname \r\n\r\n\
-Optionen:\r\n\
-    -d                 Adressen nicht in Hostnamen auflösen.\r\n\
-    -h maximum_hops    Maximale Sprunganzahl bei Zielsuche.\r\n\
-    -j Hostliste       'Loose Source Route' gemäß Hostliste.\r\n\
-    -w Zeitlimit       Zeitlimit in Millisekunden für eine Antwort.\r\n\
-    -4                 erzwingt IPv4.\r\n\
-    -6                 erzwingt IPv6.\r\n\
-\r\n"
+    IDS_USAGE "\n\
+Syntax: tracert [-d] [-h maximum_hops] [-j Hostliste] [-w Zeitlimit] Zielname\n\n\
+Optionen:\n\
+    -d                 Adressen nicht in Hostnamen auflösen.\n\
+    -h maximum_hops    Maximale Sprunganzahl bei Zielsuche.\n\
+    -j Hostliste       'Loose Source Route' gemäß Hostliste.\n\
+    -w Zeitlimit       Zeitlimit in Millisekunden für eine Antwort.\n\
+    -4                 erzwingt IPv4.\n\
+    -6                 erzwingt IPv6.\n\
+\n"
 
-    IDS_INVALID_OPTION  "%1 ist keine gültige Befehlsoption.\r\n"
-    IDS_TRACE_INFO      "\r\nRoutenverfolgung zu %1 [%2]\r\nüber maximal %3!u! Hops:\r\n\r\n"
-    IDS_TRACE_COMPLETE  "\r\nRoutenverfolgung beendet.\r\n"
-    IDS_UNABLE_RESOLVE  "Der Zielname %1 konnte nicht aufgelöst werden.\r\n"
+    IDS_INVALID_OPTION  "%1 ist keine gültige Befehlsoption.\n"
+    IDS_TRACE_INFO      "\nRoutenverfolgung zu %1 [%2]\nüber maximal %3!u! Hops:\n\n"
+    IDS_TRACE_COMPLETE  "\nRoutenverfolgung beendet.\n"
+    IDS_UNABLE_RESOLVE  "Der Zielname %1 konnte nicht aufgelöst werden.\n"
 
-    IDS_GEN_FAILURE     "Allgemeiner Fehler.\r\n"
-    IDS_TRANSMIT_FAILED "Übertragungsfehler. (Fehler %1!u!)\r\n"
+    IDS_GEN_FAILURE     "Allgemeiner Fehler.\n"
+    IDS_TRANSMIT_FAILED "Übertragungsfehler. (Fehler %1!u!)\n"
 
-    IDS_HOP_COUNT       "%1!3lu!  %0\r\n"
-    IDS_HOP_TIME        "%1!4lu! ms  %0\r\n"
-    IDS_HOP_ZERO,       "  <1 ms  %0\r\n"
-    IDS_TIMEOUT         "   *     %0\r\n"
+    IDS_HOP_COUNT       "%1!3lu!  %0\n"
+    IDS_HOP_TIME        "%1!4lu! ms  %0\n"
+    IDS_HOP_ZERO        "  <1 ms  %0\n"
+    IDS_TIMEOUT         "   *     %0\n"
     IDS_HOP_RES_INFO    "%1 [%2]"
     IDS_HOP_IP_INFO     "%1"
     IDS_LINEBREAK       "\r\n"
-    IDS_REQ_TIMED_OUT   "Zeitüberschreitung der Anforderung.\r\n"
+    IDS_REQ_TIMED_OUT   "Zeitüberschreitung der Anforderung.\n"
     IDS_HOP_RESPONSE    "  Antwort: "
-    IDS_DEST_HOST_UNREACHABLE "Zielhost nicht erreichbar.\r\n"
-    IDS_DEST_NET_UNREACHABLE  "Zielnetz nicht erreichbar.\r\n"
-
+    IDS_DEST_HOST_UNREACHABLE "Zielhost nicht erreichbar.\n"
+    IDS_DEST_NET_UNREACHABLE  "Zielnetz nicht erreichbar.\n"
 END

@@ -751,7 +751,7 @@ enum dwarf_macinfo_record_type
     DW_MACINFO_end_file = 4,
     DW_MACINFO_vendor_ext = 255
   };
-
+
 /* @@@ For use with GNU frame unwind information.  */
 
 #define DW_EH_PE_absptr		0x00

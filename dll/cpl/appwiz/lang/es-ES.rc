@@ -5,6 +5,7 @@
  * COPYRIGHT:   Javier Remacha 2007-12-22
  *              Ismael Ferreras Morezuelas 2014-12-30
  *              Julio Carchi Ruiz 2018-10-19
+ *              Julen Urizar Compains 2021-08-08
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -94,5 +95,5 @@ BEGIN
     IDS_NO_MEMORY "No se pudo asignar memoria"
     IDS_NO_DIRECTORY "No se ha especificado directorio alguno"
     IDS_INVALID_PATH "La ruta proporcionada es inválida"
-    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
+    IDS_INVALID_NAME "El nombre del acceso directo que has introducido contiene o bien caracteres inválidos, o su nombre es demasiado largo."
 END

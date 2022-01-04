@@ -19,19 +19,19 @@
 BOOLEAN
 NTAPI
 HalpTranslateSystemBusAddress(IN PBUS_HANDLER BusHandler,
-                              IN PBUS_HANDLER RootHandler, 
+                              IN PBUS_HANDLER RootHandler,
                               IN PHYSICAL_ADDRESS BusAddress,
                               IN OUT PULONG AddressSpace,
                               OUT PPHYSICAL_ADDRESS TranslatedAddress)
 {
     PSUPPORTED_RANGE Range = NULL;
-    
+
     /* Check what kind of address space this is */
     switch (*AddressSpace)
     {
         /* Memory address */
         case 0:
-            
+
             /* Loop all prefetch memory */
             for (Range = &BusHandler->BusAddresses->PrefetchMemory;
                  Range;
@@ -45,7 +45,7 @@ HalpTranslateSystemBusAddress(IN PBUS_HANDLER BusHandler,
                     break;
                 }
             }
-            
+
             /* Check if we haven't found anything yet */
             if (!Range)
             {
@@ -63,10 +63,10 @@ HalpTranslateSystemBusAddress(IN PBUS_HANDLER BusHandler,
                     }
                 }
             }
-            
+
             /* Done */
             break;
-            
+
         /* I/O Space */
         case 1:
 
@@ -83,11 +83,11 @@ HalpTranslateSystemBusAddress(IN PBUS_HANDLER BusHandler,
                     break;
                 }
             }
-            
+
             /* Done */
             break;
     }
-    
+
     /* Check if we found a range */
     if (Range)
     {
@@ -104,39 +104,10 @@ HalpTranslateSystemBusAddress(IN PBUS_HANDLER BusHandler,
         *AddressSpace = Range->SystemAddressSpace;
         return TRUE;
     }
-    
+
     /* Nothing found */
     DPRINT1("Translation of %I64x failed!\n", BusAddress.QuadPart);
     return FALSE;
-}
-
-ULONG
-NTAPI
-HalpGetRootInterruptVector(IN ULONG BusInterruptLevel,
-                           IN ULONG BusInterruptVector,
-                           OUT PKIRQL Irql,
-                           OUT PKAFFINITY Affinity)
-{
-    UCHAR SystemVector;
-
-    /* Validate the IRQ */
-    if (BusInterruptLevel > 23)
-    {
-        /* Invalid vector */
-        DPRINT1("IRQ %lx is too high!\n", BusInterruptLevel);
-        return 0;
-    }
-
-    /* Get the system vector */
-    SystemVector = HalpIrqToVector((UCHAR)BusInterruptLevel);
-
-    /* Return the IRQL and affinity */
-    *Irql = HalpVectorToIrql(SystemVector);
-    *Affinity = HalpDefaultInterruptAffinity;
-    ASSERT(HalpDefaultInterruptAffinity);
-    
-    /* Return the vector */
-    return SystemVector;
 }
 
 ULONG
@@ -149,13 +120,13 @@ HalpGetSystemInterruptVector(IN PBUS_HANDLER BusHandler,
                              OUT PKAFFINITY Affinity)
 {
     ULONG Vector;
-    
+
     /* Get the root vector */
     Vector = HalpGetRootInterruptVector(BusInterruptLevel,
                                         BusInterruptVector,
                                         Irql,
                                         Affinity);
-    
+
     /* Check if the vector is owned by the HAL and fail if it is */
     if (HalpIDTUsageFlags[Vector].Flags & IDT_REGISTERED) DPRINT1("Vector %lx is ALREADY IN USE!\n", Vector);
     return (HalpIDTUsageFlags[Vector].Flags & IDT_REGISTERED) ? 0 : Vector;

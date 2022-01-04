@@ -16,7 +16,6 @@
 #include "usbdebug.h"
 
 ULONG
-NTAPI
 USBPORT_DbgPrint(IN PVOID MiniPortExtension,
                  IN ULONG Level,
                  IN PCH Format,

@@ -17,6 +17,7 @@
 #include <setupapi.h>
 #include <syssetup/syssetup.h>
 #include <pseh/pseh2.h>
+#include <cfgmgr32.h>
 
 #include "globals.h"
 #include "resource.h"

@@ -55,7 +55,7 @@ CUnregisterSubdevice::QueryInterface(
 {
     UNICODE_STRING GuidString;
 
-    if (IsEqualGUIDAligned(refiid, IID_IUnregisterSubdevice) || 
+    if (IsEqualGUIDAligned(refiid, IID_IUnregisterSubdevice) ||
         IsEqualGUIDAligned(refiid, IID_IUnknown))
     {
         *Output = PVOID(PUNREGISTERSUBDEVICE(this));

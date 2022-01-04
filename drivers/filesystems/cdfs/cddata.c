@@ -24,7 +24,7 @@ BOOLEAN CdTestTopLevel = TRUE;
 BOOLEAN CdTestRaisedStatus = TRUE;
 BOOLEAN CdBreakOnAnyRaise = FALSE;
 BOOLEAN CdTraceRaises = FALSE;
-NTSTATUS CdInterestingExceptionCodes[] = { STATUS_DISK_CORRUPT_ERROR, 
+NTSTATUS CdInterestingExceptionCodes[] = { STATUS_DISK_CORRUPT_ERROR,
                                            STATUS_FILE_CORRUPT_ERROR,
                                            0, 0, 0, 0, 0, 0, 0, 0 };
 #endif
@@ -427,7 +427,7 @@ Return Value:
                 break;
 
             case IRP_MJ_SHUTDOWN :
-            
+
                 Status = CdCommonShutdown( IrpContext, Irp );
                 break;
 
@@ -469,7 +469,7 @@ CdRaiseStatusEx (
     )
 {
     BOOLEAN BreakIn = FALSE;
-    
+
     AssertVerifyDevice( IrpContext, Status);
 
     if (CdTraceRaises)  {
@@ -481,8 +481,8 @@ CdRaiseStatusEx (
 
         ULONG Index;
 
-        for (Index = 0; 
-             Index < (sizeof( CdInterestingExceptionCodes) / sizeof( CdInterestingExceptionCodes[0])); 
+        for (Index = 0;
+             Index < (sizeof( CdInterestingExceptionCodes) / sizeof( CdInterestingExceptionCodes[0]));
              Index++)  {
 
             if ((STATUS_SUCCESS != CdInterestingExceptionCodes[Index]) &&
@@ -495,7 +495,7 @@ CdRaiseStatusEx (
     }
 
     if (BreakIn || CdBreakOnAnyRaise)  {
-        
+
         DbgPrint( "CDFS: Breaking on raised status %08x  (BI=%d,BA=%d)\n", Status, BreakIn, CdBreakOnAnyRaise);
         DbgPrint( "CDFS: (FILEID %d LINE %d)\n", FileId, Line);
         DbgPrint( "CDFS: Contact CDFS.SYS component owner for triage.\n");
@@ -503,7 +503,7 @@ CdRaiseStatusEx (
 
         NT_ASSERT(FALSE);
     }
-    
+
     if (NormalizeStatus)  {
 
         IrpContext->ExceptionStatus = FsRtlNormalizeNtstatus( Status, STATUS_UNEXPECTED_IO_ERROR);
@@ -514,7 +514,7 @@ CdRaiseStatusEx (
     }
 
     IrpContext->RaisedAtLineFile = (FileId << 16) | Line;
-    
+
     ExRaiseStatus( IrpContext->ExceptionStatus);
 }
 
@@ -591,7 +591,7 @@ Return Value:
     }
 
     AssertVerifyDevice( IrpContext, IrpContext->ExceptionStatus );
-    
+
     //
     //  Bug check if this status is not supported.
     //
@@ -610,7 +610,7 @@ Return Value:
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
-
+
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
@@ -653,7 +653,7 @@ Return Value:
 
     ASSERT_OPTIONAL_IRP_CONTEXT( IrpContext );
     ASSERT_IRP( Irp );
-    
+
     //
     //  If there is not an irp context, then complete the request with the
     //  current status code.
@@ -679,7 +679,7 @@ Return Value:
     //          or we are forcing this to be posted.
     //
     //      - Status code is STATUS_VERIFY_REQUIRED and we are at APC level
-    //          or higher, or within a guarded region.  Can't wait for IO in 
+    //          or higher, or within a guarded region.  Can't wait for IO in
     //          the verify path in this case.
     //
     //  Set the MORE_PROCESSING flag in the IrpContext to keep if from being
@@ -697,17 +697,17 @@ Return Value:
 
                 ExceptionCode = CdFsdPostRequest( IrpContext, Irp );
             }
-        } 
+        }
         else if ((ExceptionCode == STATUS_VERIFY_REQUIRED) &&
                  FlagOn( IrpContext->Flags, IRP_CONTEXT_FLAG_TOP_LEVEL ) &&
                  KeAreAllApcsDisabled()) {
-                 
+
             ExceptionCode = CdFsdPostRequest( IrpContext, Irp );
         }
     }
     _SEH2_EXCEPT( CdExceptionFilter( IrpContext, _SEH2_GetExceptionInformation() ))  {
-    
-        ExceptionCode = _SEH2_GetExceptionCode();        
+
+        ExceptionCode = _SEH2_GetExceptionCode();
     } _SEH2_END;
     //
     //  If we posted the request or our caller will retry then just return here.
@@ -756,7 +756,7 @@ Return Value:
 
             Device = IoGetDeviceToVerify( Irp->Tail.Overlay.Thread );
             IoSetDeviceToVerify( Irp->Tail.Overlay.Thread, NULL );
-            
+
             //
             //  If there is no device in that location then check in the
             //  current thread.
@@ -772,10 +772,10 @@ Return Value:
             }
 
             //
-            //  It turns out some storage drivers really do set invalid non-NULL device 
+            //  It turns out some storage drivers really do set invalid non-NULL device
             //  objects to verify.
             //
-            //  To work around this, completely ignore the device to verify in the thread, 
+            //  To work around this, completely ignore the device to verify in the thread,
             //  and just use our real device object instead.
             //
 
@@ -817,7 +817,7 @@ Return Value:
 
             return ExceptionCode;
 
-        } 
+        }
         //
         //  Generate a pop-up.
         //
@@ -850,10 +850,10 @@ Return Value:
             }
 
             //
-            //  It turns out some storage drivers really do set invalid non-NULL device 
+            //  It turns out some storage drivers really do set invalid non-NULL device
             //  objects to verify.
             //
-            //  To work around this, completely ignore the device to verify in the thread, 
+            //  To work around this, completely ignore the device to verify in the thread,
             //  and just use our real device object instead.
             //
 
@@ -909,7 +909,7 @@ Return Value:
     return ExceptionCode;
 }
 
-
+
 VOID
 CdCompleteRequest (
     _Inout_opt_ PIRP_CONTEXT IrpContext,
@@ -969,14 +969,14 @@ Return Value:
         Irp->IoStatus.Status = Status;
 
         AssertVerifyDeviceIrp( Irp );
-        
+
         IoCompleteRequest( Irp, IO_CD_ROM_INCREMENT );
     }
 
     return;
 }
 
-
+
 VOID
 CdSetThreadContext (
     _Inout_ PIRP_CONTEXT IrpContext,
@@ -1180,7 +1180,7 @@ Return Value:
     return FALSE;
 }
 
-
+
 ULONG
 CdSerial32 (
     _In_reads_bytes_(ByteCount) PCHAR Buffer,

@@ -885,8 +885,6 @@ xmlInitThreads(void)
         }
     }
 #endif /* XML_PTHREAD_WEAK */
-#elif defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
-    InitializeCriticalSection(&cleanup_helpers_cs);
 #endif
 }
 
@@ -958,6 +956,9 @@ xmlOnceInit(void)
     if (!run_once.done) {
         if (InterlockedIncrement(&run_once.control) == 1) {
 #if !defined(HAVE_COMPILER_TLS)
+#if !defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL)
+            InitializeCriticalSection(&cleanup_helpers_cs);
+#endif
             globalkey = TlsAlloc();
 #endif
             mainthread = GetCurrentThreadId();

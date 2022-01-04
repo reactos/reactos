@@ -63,7 +63,7 @@ PUBLIC @KiSwapContextInternal@0
  *
  * \param CurrentThread@<edx>
  *     Pointer to the KTHREAD of the current thread.
- *                    
+ *
  * \returns
  *     The WaitStatus of the Target Thread.
  *
@@ -72,7 +72,7 @@ PUBLIC @KiSwapContextInternal@0
  *     non-volatile registers so that the Internal function can use all of
  *     them. It will also save the old current thread and set the new one.
  *
- *     The calling thread does not return after KiSwapContextInternal until 
+ *     The calling thread does not return after KiSwapContextInternal until
  *     another thread switches to IT.
  *
  *--*/

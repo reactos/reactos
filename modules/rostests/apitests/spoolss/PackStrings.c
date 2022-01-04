@@ -32,7 +32,7 @@ START_TEST(PackStrings)
         FIELD_OFFSET(EXAMPLE_STRUCT, String2),
         MAXDWORD
     };
-    
+
     // Try a usual case with two strings. Verify that they are copied in reverse order.
     pEnd = PackStrings(Source1, Buffer, Offsets, &Buffer[sizeof(Buffer)]);
     ok(wcscmp(pStruct->String1, Source1[0]) == 0, "String1 and Source1[0] don't match!\n");

@@ -24,42 +24,42 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\nUSAGE:\n \
-        ipconfig [/? | /all | /renew [kort] | /release [kort] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid kort |\n \
-                  /setclassid kort [classid] ]\n \
-\n \
-    der\n \
-        kort            Tilkoblingsnavn\n \
-                       (jokertegnene * og ? er tillatt, se eksemplene)\n \
-\n \
-        Eksempler:\n \
-           /?           Viser denne hjelpe meldingen\n \
-           /all         Viser detaljert informasjon.\n \
-           /release     Frigir IP addressen for det angitte kortet.\n \
-           /renew       Forny alle IP addresser for alle valgte kort.\n \
-           /flushdns    Tømmer DNS Resolver-bufferen.\n \
-           /registerdns Oppdaterer alle DHCP leieavtaler og registerer DNS navn på nytt.\n \
-           /displaydns  Viser innhold av DNS Resolver-bufferen.\n \
-           /showclassid Viser alle klasse IDene for DHCP som er tillatt for kortet.\n \
-           /setclassid  Endrer klasse-IDene for DHCP.\n \
-\n \
-    Standardverdien er å bare vise IP-addressen, nettverksmasken og\n \
-    standard gatewayen for hver kort knyttet til TCP/IP.\n \
-\n \
-    For Release og Renew, hvis ingen kortnavn er angitt, vil IP addressen\n \
-    for alle kort knyttet til TCP/IP frigis eller fornyes hvis det ikke angis et kortnavn.\n \
-\n \
-    For Setclassid, fjernes ClassId hvis det ikke angis en ClassId.\n \
-\n \
-    Eksempler:\n \
-        > ipconfig                   ... Vis informasjon.\n \
-        > ipconfig /all              ... Vis detaljert informasjon\n \
-        > ipconfig /renew            ... Forny alle kort\n \
-        > ipconfig /renew EL*        ... Forny alle kort med navn som\n \
-                                         begynner med EL\n \
-        > ipconfig /release *Til*    ... Frigi alle samsvarende tilkoblinger,\n \
-                                         for eksempel ""Lokal tilkobling 1"" eller\n \
-                                             ""Lokaltilkobling 2""\n"
+    "\nUSAGE:\n\
+        ipconfig [/? | /all | /renew [kort] | /release [kort] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid kort |\n\
+                  /setclassid kort [classid] ]\n\
+\n\
+    der\n\
+        kort            Tilkoblingsnavn\n\
+                       (jokertegnene * og ? er tillatt, se eksemplene)\n\
+\n\
+        Eksempler:\n\
+           /?           Viser denne hjelpe meldingen\n\
+           /all         Viser detaljert informasjon.\n\
+           /release     Frigir IP addressen for det angitte kortet.\n\
+           /renew       Forny alle IP addresser for alle valgte kort.\n\
+           /flushdns    Tømmer DNS Resolver-bufferen.\n\
+           /registerdns Oppdaterer alle DHCP leieavtaler og registerer DNS navn på nytt.\n\
+           /displaydns  Viser innhold av DNS Resolver-bufferen.\n\
+           /showclassid Viser alle klasse IDene for DHCP som er tillatt for kortet.\n\
+           /setclassid  Endrer klasse-IDene for DHCP.\n\
+\n\
+    Standardverdien er å bare vise IP-addressen, nettverksmasken og\n\
+    standard gatewayen for hver kort knyttet til TCP/IP.\n\
+\n\
+    For Release og Renew, hvis ingen kortnavn er angitt, vil IP addressen\n\
+    for alle kort knyttet til TCP/IP frigis eller fornyes hvis det ikke angis et kortnavn.\n\
+\n\
+    For Setclassid, fjernes ClassId hvis det ikke angis en ClassId.\n\
+\n\
+    Eksempler:\n\
+        > ipconfig                   ... Vis informasjon.\n\
+        > ipconfig /all              ... Vis detaljert informasjon\n\
+        > ipconfig /renew            ... Forny alle kort\n\
+        > ipconfig /renew EL*        ... Forny alle kort med navn som\n\
+                                         begynner med EL\n\
+        > ipconfig /release *Til*    ... Frigi alle samsvarende tilkoblinger,\n\
+                                         for eksempel ""Lokal tilkobling 1"" eller\n\
+                                                      ""Lokaltilkobling 2""\n"
 END

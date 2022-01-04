@@ -29,7 +29,7 @@
 #include <crtdefs.h>
 
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) \
-     || !defined __STRICT_ANSI__ 
+     || !defined __STRICT_ANSI__
 
 /* These macros are specified by C99 standard */
 
@@ -46,7 +46,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 #ifndef RC_INVOKED
 
@@ -201,7 +201,7 @@ __CRT_INLINE  long double cargl (long double _Complex _Z)
 
 #ifdef __cplusplus
 }
-#endif 
+#endif
 
 #endif /* __STDC_VERSION__ >= 199901L */
 

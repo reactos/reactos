@@ -33,7 +33,7 @@ FtfdEnableDriver(
     ULONG cj,
     PDRVENABLEDATA pded)
 {
-    FT_Error fterror; 
+    FT_Error fterror;
 
     DbgPrint("FtfdEnableDriver()\n");
 

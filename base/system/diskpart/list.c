@@ -43,7 +43,7 @@ ListDisk(VOID)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
-        DiskSize = DiskEntry->SectorCount.QuadPart * 
+        DiskSize = DiskEntry->SectorCount.QuadPart *
                    (ULONGLONG)DiskEntry->BytesPerSector;
 
         if (DiskSize >= 10737418240) /* 10 GB */

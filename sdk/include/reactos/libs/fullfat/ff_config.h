@@ -35,7 +35,7 @@
 	platform.
 */
 //---------- ENDIANESS
-#define FF_LITTLE_ENDIAN				// Choosing the Byte-order of your system is important.	
+#define FF_LITTLE_ENDIAN				// Choosing the Byte-order of your system is important.
 //#define FF_BIG_ENDIAN					// You may be able to provide better Byte-order swapping routines to FullFAT.
 										// See ff_memory.c for more information.
 
@@ -109,7 +109,7 @@
 //---------- HASH CACHE					// Speed up File-creation with a HASH table. Provides up to 20x performance boost.
 //#define FF_HASH_CACHE					// Enable HASH to speed up file creation.
 #define FF_HASH_CACHE_DEPTH		10		// Number of Directories to be Hashed. (For CRC16 memory is 8KB * DEPTH)
-#define FF_HASH_FUNCTION		CRC16	// Choose a 16-bit hash. 
+#define FF_HASH_FUNCTION		CRC16	// Choose a 16-bit hash.
 //#define FF_HASH_FUNCTION		CRC8	// Choose an 8-bit hash.
 
 
@@ -214,7 +214,7 @@
 #elif FF_HASH_FUNCTION == CRC8
 #define FF_HASH_TABLE_SIZE 32
 #else
-#error FullFAT Invalid ff_config.h file: Invalid Hashing function selected. CRC16 or CRC8! 
+#error FullFAT Invalid ff_config.h file: Invalid Hashing function selected. CRC16 or CRC8!
 #endif
 
 #endif

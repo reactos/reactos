@@ -210,7 +210,7 @@ typedef enum _HARDERROR_RESPONSE
 } HARDERROR_RESPONSE, *PHARDERROR_RESPONSE;
 
 //
-//  System Information Classes for NtQuerySystemInformation
+// System Information Classes for NtQuerySystemInformation
 //
 typedef enum _SYSTEM_INFORMATION_CLASS
 {
@@ -316,7 +316,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS
 } SYSTEM_INFORMATION_CLASS;
 
 //
-//  System Information Classes for NtQueryMutant
+// System Information Classes for NtQueryMutant
 //
 typedef enum _MUTANT_INFORMATION_CLASS
 {
@@ -325,7 +325,7 @@ typedef enum _MUTANT_INFORMATION_CLASS
 } MUTANT_INFORMATION_CLASS;
 
 //
-//  System Information Classes for NtQueryAtom
+// System Information Classes for NtQueryAtom
 //
 typedef enum _ATOM_INFORMATION_CLASS
 {
@@ -334,7 +334,7 @@ typedef enum _ATOM_INFORMATION_CLASS
 } ATOM_INFORMATION_CLASS;
 
 //
-//  System Information Classes for NtQueryTimer
+// System Information Classes for NtQueryTimer
 //
 typedef enum _TIMER_INFORMATION_CLASS
 {
@@ -342,7 +342,7 @@ typedef enum _TIMER_INFORMATION_CLASS
 } TIMER_INFORMATION_CLASS;
 
 //
-//  System Information Classes for NtQuerySemaphore
+// System Information Classes for NtQuerySemaphore
 //
 typedef enum _SEMAPHORE_INFORMATION_CLASS
 {
@@ -350,7 +350,7 @@ typedef enum _SEMAPHORE_INFORMATION_CLASS
 } SEMAPHORE_INFORMATION_CLASS;
 
 //
-//  System Information Classes for NtQueryEvent
+// System Information Classes for NtQueryEvent
 //
 typedef enum _EVENT_INFORMATION_CLASS
 {
@@ -756,7 +756,11 @@ typedef struct _SYSTEM_PROCESSOR_INFORMATION
     USHORT ProcessorArchitecture;
     USHORT ProcessorLevel;
     USHORT ProcessorRevision;
+#if (NTDDI_VERSION < NTDDI_WIN8)
     USHORT Reserved;
+#else
+    USHORT MaximumProcessors;
+#endif
     ULONG ProcessorFeatureBits;
 } SYSTEM_PROCESSOR_INFORMATION, *PSYSTEM_PROCESSOR_INFORMATION;
 

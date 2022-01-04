@@ -71,15 +71,13 @@ InitUserAtoms(VOID)
 
 /* FUNCTIONS ******************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitUserImpl(VOID)
 {
     NTSTATUS Status;
     HKEY hKey;
-
-    ExInitializeResourceLite(&UserLock);
 
     if (!UserCreateHandleTable())
     {

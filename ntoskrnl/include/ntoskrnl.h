@@ -63,7 +63,9 @@
 #include <regstr.h>
 #include <ntstrsafe.h>
 #include <ntpoapi.h>
+#define ENABLE_INTSAFE_SIGNED_FUNCTIONS
 #include <ntintsafe.h>
+#undef ENABLE_INTSAFE_SIGNED_FUNCTIONS
 
 /* C Headers */
 #include <stdlib.h>
@@ -82,6 +84,12 @@
 #define NOEXTAPI
 #include <windbgkd.h>
 #include <wdbgexts.h>
+#ifdef KDBG
+#define KdDebuggerInitialize0 KdpDebuggerInitialize0
+#define KdDebuggerInitialize1 KdpDebuggerInitialize1
+#define KdSendPacket KdpSendPacket
+#define KdReceivePacket KdpReceivePacket
+#endif
 #include <kddll.h>
 #ifdef __ROS_ROSSYM__
 #include <reactos/rossym.h>
@@ -108,19 +116,19 @@
 C_ASSERT(MAX_WIN32_PATH == MAX_PATH);
 #undef MAX_PATH
 
-//
-// Switch for enabling global page support
-//
-
-//#define _GLOBAL_PAGES_ARE_AWESOME_
-
-
 /* Internal Headers */
-#include "internal/ntoskrnl.h"
 #include "config.h"
+#include "internal/ntoskrnl.h"
 
 #include <reactos/probe.h>
 #include "internal/probe.h"
 #include "resource.h"
+
+/* Internal Ps alignment probing header */
+#include "internal/ps_i.h"
+
+#ifdef _MSC_VER
+# pragma section("INITDATA", read,write,discard)
+#endif
 
 #endif /* _NTOSKRNL_PCH */

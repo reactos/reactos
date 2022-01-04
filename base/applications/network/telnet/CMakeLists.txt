@@ -1,12 +1,4 @@
 
-set_cpp(WITH_EXCEPTIONS WITH_STL)
-
-add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
-
-if(NOT MSVC)
-    add_compile_flags("-Wno-restrict")
-endif()
-
 list(APPEND SOURCE
     src/ansiprsr.cpp
     src/keytrans.cpp
@@ -29,11 +21,24 @@ list(APPEND SOURCE
     src/ttelhndl.cpp
     precomp.h)
 
-if(NOT MSVC)
-    add_compile_flags_language("-Wno-narrowing" "CXX")
+add_executable(telnet ${SOURCE} telnet.rc)
+target_link_libraries(telnet cppstl)
+set_target_cpp_properties(telnet WITH_EXCEPTIONS)
+
+if (MSVC)
+    # C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+    # C4996: 'strnicmp': Deprecated POSIX name, Try _strnicmp instead!
+    target_compile_options(telnet PRIVATE /wd4838 /wd4996)
 endif()
 
-add_executable(telnet ${SOURCE} telnet.rc)
+if (NOT MSVC)
+    target_compile_definitions(telnet PRIVATE _CRT_NONSTDC_NO_DEPRECATE)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(telnet PRIVATE -Wno-restrict $<$<COMPILE_LANGUAGE:CXX>:-Wno-narrowing>)
+endif()
+
 set_module_type(telnet win32cui)
 add_importlibs(telnet ws2_32 user32 msvcrt kernel32 ntdll)
 add_pch(telnet precomp.h SOURCE)

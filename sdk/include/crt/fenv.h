@@ -49,12 +49,12 @@ typedef struct
   unsigned short __status_word;
   unsigned short __unused1;
   unsigned short __tag_word;
-  unsigned short __unused2;  
+  unsigned short __unused2;
   unsigned int	 __ip_offset;    /* instruction pointer offset */
-  unsigned short __ip_selector;  
+  unsigned short __ip_selector;
   unsigned short __opcode;
   unsigned int	 __data_offset;
-  unsigned short __data_selector;  
+  unsigned short __data_selector;
   unsigned short __unused3;
   unsigned int   __mxcsr; /* contents of the MXCSR register  */
 } fenv_t;
@@ -62,7 +62,7 @@ typedef struct
 
 /*The C99 standard (7.6.9) allows us to define implementation-specific macros for
   different fp environments */
-  
+
 /* The default Intel x87 floating point environment (64-bit mantissa) */
 #define FE_PC64_ENV ((const fenv_t *)-1)
 

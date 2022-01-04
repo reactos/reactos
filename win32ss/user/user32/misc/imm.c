@@ -16,7 +16,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define IMM_INIT_MAGIC 0x19650412
 
+/* Is != NULL when we have loaded the IMM ourselves */
 HINSTANCE ghImm32 = NULL;
+
 BOOL bImmInitializing = FALSE;
 
 /* define stub functions */
@@ -33,43 +35,50 @@ Imm32ApiTable gImmApiEntries = {
 #include "immtable.h"
 };
 
-HRESULT WINAPI GetImmFileName(PWSTR lpBuffer, UINT uSize)
+HRESULT
+GetImmFileName(_Out_ LPWSTR lpBuffer,
+               _In_ size_t cchBuffer)
 {
-  UINT length;
-  STRSAFE_LPWSTR Safe = lpBuffer;
-
-  length = GetSystemDirectoryW(lpBuffer, uSize);
-  if ( length && length < uSize )
-  {
-    StringCchCatW(Safe, uSize, L"\\");
-    return StringCchCatW(Safe, uSize, L"imm32.dll");
-  }
-  return StringCchCopyW(Safe, uSize, L"imm32.dll");
-}  
+    UINT length = GetSystemDirectoryW(lpBuffer, cchBuffer);
+    if (length && length < cchBuffer)
+    {
+        StringCchCatW(lpBuffer, cchBuffer, L"\\");
+        return StringCchCatW(lpBuffer, cchBuffer, L"imm32.dll");
+    }
+    return StringCchCopyW(lpBuffer, cchBuffer, L"imm32.dll");
+}
 
 /*
  * @unimplemented
  */
-BOOL WINAPI IntInitializeImmEntryTable(VOID)
+static BOOL IntInitializeImmEntryTable(VOID)
 {
     WCHAR ImmFile[MAX_PATH];
     HMODULE imm32 = ghImm32;
 
-    GetImmFileName(ImmFile, sizeof(ImmFile));
-    TRACE("File %ws\n",ImmFile);
+    /* Check whether the IMM table has already been initialized */
+    if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
+        return TRUE;
 
+    GetImmFileName(ImmFile, _countof(ImmFile));
+    TRACE("File %S\n", ImmFile);
+
+    /* If IMM32 is already loaded, use it without increasing reference count. */
     if (imm32 == NULL)
-    {
-       imm32 = GetModuleHandleW(ImmFile);
-    }
+        imm32 = GetModuleHandleW(ImmFile);
 
+    /*
+     * Loading imm32.dll will call imm32!DllMain function.
+     * imm32!DllMain calls User32InitializeImmEntryTable.
+     * Thus, if imm32.dll was loaded, the table has been loaded.
+     */
     if (imm32 == NULL)
     {
         imm32 = ghImm32 = LoadLibraryW(ImmFile);
         if (imm32 == NULL)
         {
-           ERR("Did not load!\n");
-           return FALSE;
+            ERR("Did not load imm32.dll!\n");
+            return FALSE;
         }
         return TRUE;
     }
@@ -79,9 +88,11 @@ BOOL WINAPI IntInitializeImmEntryTable(VOID)
 #define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     do { \
         FN_##name proc = (FN_##name)GetProcAddress(imm32, #name); \
-        if (proc) { \
-            IMM_FN(name) = proc; \
+        if (!proc) { \
+            ERR("Could not load %s\n", #name); \
+            return FALSE; \
         } \
+        IMM_FN(name) = proc; \
     } while (0);
 #include "immtable.h"
 
@@ -90,8 +101,8 @@ BOOL WINAPI IntInitializeImmEntryTable(VOID)
 
 BOOL WINAPI InitializeImmEntryTable(VOID)
 {
-  bImmInitializing = TRUE;
-  return IntInitializeImmEntryTable();
+    bImmInitializing = TRUE;
+    return IntInitializeImmEntryTable();
 }
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
@@ -101,24 +112,25 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     if (magic != IMM_INIT_MAGIC)
         return FALSE;
 
-    if (IMM_FN(ImmIsIME) != IMMSTUB_ImmIsIME)
+    /* Check whether the IMM table has already been initialized */
+    if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
         return TRUE;
 
     IntInitializeImmEntryTable();
 
     if (ghImm32 == NULL && !bImmInitializing)
     {
-       WCHAR ImmFile[MAX_PATH];
-       GetImmFileName(ImmFile, sizeof(ImmFile));
-       ghImm32 = LoadLibraryW(ImmFile);
-       if (ghImm32 == NULL)
-       {
-          ERR("Did not load! 2\n");
-          return FALSE;
-       } 
+        WCHAR ImmFile[MAX_PATH];
+        GetImmFileName(ImmFile, _countof(ImmFile));
+        ghImm32 = LoadLibraryW(ImmFile);
+        if (ghImm32 == NULL)
+        {
+            ERR("Did not load imm32.dll!\n");
+            return FALSE;
+        }
     }
 
-    return TRUE;
+    return IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
 }
 
 LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS

@@ -25,7 +25,7 @@ GetUName(IN WORD wCharCode,
         return 0;
     }
     else
-    { 
+    {
         wcscpy(lpBuf, L"Undefined");
         return 0;
     }

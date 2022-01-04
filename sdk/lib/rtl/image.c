@@ -289,17 +289,38 @@ RtlImageDirectoryEntryToData(
     if (NtHeader == NULL)
         return NULL;
 
-    if (Directory >= SWAPD(NtHeader->OptionalHeader.NumberOfRvaAndSizes))
-        return NULL;
+    if (NtHeader->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+    {
+        PIMAGE_OPTIONAL_HEADER64 OptionalHeader = (PIMAGE_OPTIONAL_HEADER64)&NtHeader->OptionalHeader;
 
-    Va = SWAPD(NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress);
-    if (Va == 0)
-        return NULL;
+        if (Directory >= SWAPD(OptionalHeader->NumberOfRvaAndSizes))
+            return NULL;
 
-    *Size = SWAPD(NtHeader->OptionalHeader.DataDirectory[Directory].Size);
+        Va = SWAPD(OptionalHeader->DataDirectory[Directory].VirtualAddress);
+        if (Va == 0)
+            return NULL;
 
-    if (MappedAsImage || Va < SWAPD(NtHeader->OptionalHeader.SizeOfHeaders))
-        return (PVOID)((ULONG_PTR)BaseAddress + Va);
+        *Size = SWAPD(OptionalHeader->DataDirectory[Directory].Size);
+
+        if (MappedAsImage || Va < SWAPD(OptionalHeader->SizeOfHeaders))
+            return (PVOID)((ULONG_PTR)BaseAddress + Va);
+    }
+    else
+    {
+        PIMAGE_OPTIONAL_HEADER32 OptionalHeader = (PIMAGE_OPTIONAL_HEADER32)&NtHeader->OptionalHeader;
+
+        if (Directory >= SWAPD(OptionalHeader->NumberOfRvaAndSizes))
+            return NULL;
+
+        Va = SWAPD(OptionalHeader->DataDirectory[Directory].VirtualAddress);
+        if (Va == 0)
+            return NULL;
+
+        *Size = SWAPD(OptionalHeader->DataDirectory[Directory].Size);
+
+        if (MappedAsImage || Va < SWAPD(OptionalHeader->SizeOfHeaders))
+            return (PVOID)((ULONG_PTR)BaseAddress + Va);
+    }
 
     /* Image mapped as ordinary file, we must find raw pointer */
     return RtlImageRvaToVa(NtHeader, BaseAddress, Va, NULL);

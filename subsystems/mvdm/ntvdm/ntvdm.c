@@ -20,6 +20,9 @@
 
 #include "dos/dem.h"
 
+/* Extra PSDK/NDK Headers */
+#include <ndk/psfuncs.h>
+
 /* VARIABLES ******************************************************************/
 
 NTVDM_SETTINGS GlobalSettings;
@@ -27,6 +30,10 @@ NTVDM_SETTINGS GlobalSettings;
 // Command line of NTVDM
 INT     NtVdmArgc;
 WCHAR** NtVdmArgv;
+
+/* Full directory where NTVDM resides, or the SystemRoot\System32 path */
+WCHAR NtVdmPath[MAX_PATH];
+ULONG NtVdmPathSize; // Length without NULL terminator.
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -473,8 +480,7 @@ PrintMessageAnsi(IN CHAR_PRINT CharPrint,
 INT
 wmain(INT argc, WCHAR *argv[])
 {
-    NtVdmArgc = argc;
-    NtVdmArgv = argv;
+    BOOL Success;
 
 #ifdef STANDALONE
 
@@ -485,7 +491,26 @@ wmain(INT argc, WCHAR *argv[])
         return 0;
     }
 
+#else
+
+    /* For non-STANDALONE builds, we must be started as a VDM */
+    NTSTATUS Status;
+    ULONG VdmPower = 0;
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessWx86Information,
+                                       &VdmPower,
+                                       sizeof(VdmPower),
+                                       NULL);
+    if (!NT_SUCCESS(Status) || (VdmPower == 0))
+    {
+        /* Not a VDM, bail out */
+        return 0;
+    }
+
 #endif
+
+    NtVdmArgc = argc;
+    NtVdmArgv = argv;
 
 #ifdef ADVANCED_DEBUGGING
     {
@@ -506,22 +531,68 @@ wmain(INT argc, WCHAR *argv[])
     }
 #endif
 
+    DPRINT1("\n\n\n"
+            "NTVDM - Starting...\n"
+            "Command Line: '%s'\n"
+            "\n\n",
+            GetCommandLineA());
+
+    /*
+     * Retrieve the full directory of the current running NTVDM instance.
+     * In case of failure, use the default SystemRoot\System32 path.
+     */
+    NtVdmPathSize = GetModuleFileNameW(NULL, NtVdmPath, _countof(NtVdmPath));
+    NtVdmPath[_countof(NtVdmPath) - 1] = UNICODE_NULL; // Ensure NULL-termination (see WinXP bug)
+
+    Success = ((NtVdmPathSize != 0) && (NtVdmPathSize < _countof(NtVdmPath)) &&
+               (GetLastError() != ERROR_INSUFFICIENT_BUFFER));
+    if (Success)
+    {
+        /* Find the last path separator, remove it as well as the file name */
+        PWCHAR pch = wcsrchr(NtVdmPath, L'\\');
+        if (pch)
+            *pch = UNICODE_NULL;
+    }
+    else
+    {
+        /* We failed, use the default SystemRoot\System32 path */
+        NtVdmPathSize = GetSystemDirectoryW(NtVdmPath, _countof(NtVdmPath));
+        Success = ((NtVdmPathSize != 0) && (NtVdmPathSize < _countof(NtVdmPath)));
+        if (!Success)
+        {
+            /* We failed again, try to do it ourselves */
+            NtVdmPathSize = (ULONG)wcslen(SharedUserData->NtSystemRoot) + _countof("\\System32") - 1;
+            Success = (NtVdmPathSize < _countof(NtVdmPath));
+            if (Success)
+            {
+                Success = NT_SUCCESS(RtlStringCchPrintfW(NtVdmPath,
+                                                         _countof(NtVdmPath),
+                                                         L"%s\\System32",
+                                                         SharedUserData->NtSystemRoot));
+            }
+            if (!Success)
+            {
+                wprintf(L"FATAL: Could not retrieve NTVDM path.\n");
+                goto Cleanup;
+            }
+        }
+    }
+    NtVdmPathSize = (ULONG)wcslen(NtVdmPath);
+
     /* Load the global VDM settings */
     LoadGlobalSettings(&GlobalSettings);
-
-    DPRINT1("\n\n\nNTVDM - Starting...\n\n\n");
 
     /* Initialize the console */
     if (!ConsoleInit())
     {
-        wprintf(L"FATAL: A problem occurred when trying to initialize the console\n");
+        wprintf(L"FATAL: A problem occurred when trying to initialize the console.\n");
         goto Cleanup;
     }
 
     /* Initialize the emulator */
     if (!EmulatorInitialize(ConsoleInput, ConsoleOutput))
     {
-        wprintf(L"FATAL: Failed to initialize the emulator\n");
+        wprintf(L"FATAL: Failed to initialize the emulator.\n");
         goto Cleanup;
     }
 

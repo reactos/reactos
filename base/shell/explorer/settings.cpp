@@ -43,7 +43,7 @@ BOOL TaskbarSettings::Load()
     cbSize = sizeof(dwValue);
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarSizeMove", NULL, &dwValue, &cbSize);
     bLock = (dwRet == ERROR_SUCCESS) ? (dwValue == 0) : TRUE;
-    
+
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"ShowSeconds", NULL, &dwValue, &cbSize);
     bShowSeconds = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE;
 

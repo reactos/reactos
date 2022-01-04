@@ -1,0 +1,11 @@
+Outline of changes from the old legacy tree to clean up for the open.
+
+all
+- Removed commented out legacy code hooking to the old test.h system.
+- Formated to LLVM style.
+
+xcpt4u.c
+- Cleaned up old comments refering to old products/bug numbers.
+
+ihateeh.cxx
+- Switched main to return int.

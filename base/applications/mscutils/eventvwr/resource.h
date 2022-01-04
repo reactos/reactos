@@ -79,6 +79,7 @@
 #define IDM_SAVE_SETTINGS       32784
 #define IDM_HELP                32785
 #define IDM_ABOUT               32786
+#define IDM_EVENTWR_CTX         32787
 
 
 /* String IDs */

@@ -128,14 +128,6 @@ extern "C" {
 #define _WFINDDATA_T_DEFINED
 #endif /* !_WFINDDATA_T_DEFINED */
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifndef _CRT_CTYPEDATA_DEFINED
 # define _CRT_CTYPEDATA_DEFINED
 # ifndef _CTYPE_DISABLE_MACROS
@@ -1761,16 +1753,16 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _Pre_notnull_ _Post_z_ wchar_t *_DstBuf,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
   _wtoi64(
     _In_z_ const wchar_t *_Str);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1778,8 +1770,8 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_z_ const wchar_t *_Str,
     _In_opt_ _locale_t _Locale);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1788,8 +1780,8 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _Out_opt_ _Deref_post_z_ wchar_t **_EndPtr,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1799,8 +1791,8 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_ int _Radix,
     _In_opt_ _locale_t _Locale);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   unsigned __int64
   __cdecl
@@ -1809,8 +1801,8 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _Out_opt_ _Deref_post_z_ wchar_t **_EndPtr,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   unsigned __int64
   __cdecl
@@ -1929,6 +1921,7 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_z_ const wchar_t *_Str,
     _In_z_ const wchar_t *_Control);
 
+  _CRTIMP
   size_t
   __cdecl
   wcslen(

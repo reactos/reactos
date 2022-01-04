@@ -1,9 +1,10 @@
 /*
- * PROJECT:     System setup
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/syssetup/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for syssetup
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk, Yaroslav Kibysh
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukraianian resource file
+ * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2010-2011 Igor Paliychuk <mansonigor@gmail.com>
+ *              Copyright 2018-2021 Yaroslav Kibysh <yanet.prod@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -82,11 +83,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Мова системи має відповідати мові додатків, які ви хочете використовувати. Мова користувача задає формат виведення чисел, грошових одиниць і дат.", IDC_STATIC, 53, 5, 253, 27
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "Для зміни мови системи або мови користувача натисніть ""Налаштувати"".", IDC_STATIC, 53, 60, 184, 16
     PUSHBUTTON "На&лаштувати...", IDC_CUSTOMLOCALE, 240, 57, 57, 14
+    LTEXT "", IDC_STATIC, 53, 81, 246, 1, SS_ETCHEDHORZ
     LTEXT "Розкладка клавіатури визначає символи, що вводяться при натисненні клавіш.", IDC_STATIC, 53, 84, 253, 18
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 106, 250, 16
     LTEXT "Для зміни розкладки клавіатури натисніть ""Налаштувати"".", IDC_STATIC, 53, 126, 184, 18
     PUSHBUTTON "Нал&аштувати...", IDC_CUSTOMLAYOUT, 240, 122, 57, 14
 END
@@ -143,13 +145,14 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 141, 209, 50, 14
 END
 
-IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 37
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Зачекайте..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
-    CONTROL "Progress1", IDC_STATUSPROGRESS, "msctls_progress32", WS_BORDER | PBS_MARQUEE, 7, 21, 261, 10
+    CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUSLABEL, 7, 59, 235, 12, SS_WORDELLIPSIS
 END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
@@ -181,6 +184,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Ви маєте вказати ім'я та пароль адміністратора Вашого комп'ютера."
     IDS_LOCALETITLE "Регіональні налаштування"
     IDS_LOCALESUBTITLE "Ви можете налаштувати ReactOS для різних регіонів і мов."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Дата та час"
     IDS_DATETIMESUBTITLE "Встановіть правильні дату і час для Вашого комп'ютера."
     IDS_PROCESSTITLE "Реєстрація компонентів"

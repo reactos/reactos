@@ -77,7 +77,7 @@ ULONG FatDumpCurrentColumn;
     }                                                       \
 }
 
-
+
 VOID
 FatDump (
     IN PVOID Ptr
@@ -136,7 +136,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatDumpDataHeader (
     )
@@ -186,7 +186,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatDumpVcb (
     IN PVCB Ptr
@@ -249,7 +249,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatDumpFcb (
     IN PFCB Ptr
@@ -338,7 +338,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatDumpCcb (
     IN PCCB Ptr

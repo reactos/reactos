@@ -76,6 +76,16 @@ enum eZipConfirmResponse
 
 eZipConfirmResponse _CZipAskReplace(HWND hDlg, const char* FullPath);
 
+enum eZipExtractError
+{
+    eNoError,
+    eExtractAbort,
+    eDirectoryError,
+    eFileError,
+    eOpenError,
+    eUnpackError,
+};
+
 #include "CZipEnumerator.hpp"
 #include "CZipFolder.hpp"
 #include "CZipCreator.hpp"

@@ -221,6 +221,48 @@ typedef CCHAR KPROCESSOR_MODE;
 //
 #define SharedUserData                  ((KUSER_SHARED_DATA *)USER_SHARED_DATA)
 
+#ifdef _X86_
+/* Macros for user-mode run-time checks of X86 system architecture */
+
+#ifndef IsNEC_98
+#define IsNEC_98     (SharedUserData->AlternativeArchitecture == NEC98x86)
+#endif
+
+#ifndef IsNotNEC_98
+#define IsNotNEC_98  (SharedUserData->AlternativeArchitecture != NEC98x86)
+#endif
+
+/* User-mode cannot override the architecture */
+#ifndef SetNEC_98
+#define SetNEC_98
+#endif
+
+/* User-mode cannot override the architecture */
+#ifndef SetNotNEC_98
+#define SetNotNEC_98
+#endif
+
+#else // !_X86_
+/* Correctly define these run-time definitions for non X86 machines */
+
+#ifndef IsNEC_98
+#define IsNEC_98 (FALSE)
+#endif
+
+#ifndef IsNotNEC_98
+#define IsNotNEC_98 (TRUE)
+#endif
+
+#ifndef SetNEC_98
+#define SetNEC_98
+#endif
+
+#ifndef SetNotNEC_98
+#define SetNotNEC_98
+#endif
+
+#endif // _X86_
+
 //
 // Maximum WOW64 Entries in KUSER_SHARED_DATA
 //

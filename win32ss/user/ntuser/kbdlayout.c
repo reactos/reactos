@@ -27,6 +27,106 @@ typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
+#if 0 && DBG
+
+static VOID
+DumpKbdLayout(
+    IN PKBDTABLES pKbdTbl)
+{
+    PVK_TO_BIT pVkToBit;
+    PVK_TO_WCHAR_TABLE pVkToWchTbl;
+    PVSC_VK pVscVk;
+    ULONG i;
+
+    DbgPrint("Kbd layout: fLocaleFlags %x bMaxVSCtoVK %x\n",
+             pKbdTbl->fLocaleFlags, pKbdTbl->bMaxVSCtoVK);
+    DbgPrint("wMaxModBits %x\n",
+             pKbdTbl->pCharModifiers ? pKbdTbl->pCharModifiers->wMaxModBits
+                                     : 0);
+
+    if (pKbdTbl->pCharModifiers)
+    {
+        pVkToBit = pKbdTbl->pCharModifiers->pVkToBit;
+        if (pVkToBit)
+        {
+            for (; pVkToBit->Vk; ++pVkToBit)
+            {
+                DbgPrint("VkToBit %x -> %x\n", pVkToBit->Vk, pVkToBit->ModBits);
+            }
+        }
+
+        for (i = 0; i <= pKbdTbl->pCharModifiers->wMaxModBits; ++i)
+        {
+            DbgPrint("ModNumber %x -> %x\n", i, pKbdTbl->pCharModifiers->ModNumber[i]);
+        }
+    }
+
+    pVkToWchTbl = pKbdTbl->pVkToWcharTable;
+    if (pVkToWchTbl)
+    {
+        for (; pVkToWchTbl->pVkToWchars; ++pVkToWchTbl)
+        {
+            PVK_TO_WCHARS1 pVkToWch = pVkToWchTbl->pVkToWchars;
+
+            DbgPrint("pVkToWchTbl nModifications %x cbSize %x\n",
+                     pVkToWchTbl->nModifications, pVkToWchTbl->cbSize);
+            if (pVkToWch)
+            {
+                while (pVkToWch->VirtualKey)
+                {
+                    DbgPrint("pVkToWch VirtualKey %x Attributes %x wc { ",
+                             pVkToWch->VirtualKey, pVkToWch->Attributes);
+                    for (i = 0; i < pVkToWchTbl->nModifications; ++i)
+                    {
+                        DbgPrint("%x ", pVkToWch->wch[i]);
+                    }
+                    DbgPrint("}\n");
+                    pVkToWch = (PVK_TO_WCHARS1)(((PBYTE)pVkToWch) + pVkToWchTbl->cbSize);
+                }
+            }
+        }
+    }
+
+// TODO: DeadKeys, KeyNames, KeyNamesExt, KeyNamesDead
+
+    DbgPrint("pusVSCtoVK: { ");
+    if (pKbdTbl->pusVSCtoVK)
+    {
+        for (i = 0; i < pKbdTbl->bMaxVSCtoVK; ++i)
+        {
+            DbgPrint("%x -> %x, ", i, pKbdTbl->pusVSCtoVK[i]);
+        }
+    }
+    DbgPrint("}\n");
+
+    DbgPrint("pVSCtoVK_E0: { ");
+    pVscVk = pKbdTbl->pVSCtoVK_E0;
+    if (pVscVk)
+    {
+        for (; pVscVk->Vsc; ++pVscVk)
+        {
+            DbgPrint("%x -> %x, ", pVscVk->Vsc, pVscVk->Vk);
+        }
+    }
+    DbgPrint("}\n");
+
+    DbgPrint("pVSCtoVK_E1: { ");
+    pVscVk = pKbdTbl->pVSCtoVK_E1;
+    if (pVscVk)
+    {
+        for (; pVscVk->Vsc; ++pVscVk)
+        {
+            DbgPrint("%x -> %x, ", pVscVk->Vsc, pVscVk->Vk);
+        }
+    }
+    DbgPrint("}\n");
+
+// TODO: Ligatures
+}
+
+#endif // DBG
+
+
 /*
  * UserLoadKbdDll
  *
@@ -67,56 +167,9 @@ UserLoadKbdDll(WCHAR *pwszLayoutPath,
         return FALSE;
     }
 
-#if 0 /* Dump keyboard layout */
-    {
-        unsigned i;
-        PVK_TO_BIT pVkToBit = (*pKbdTables)->pCharModifiers->pVkToBit;
-        PVK_TO_WCHAR_TABLE pVkToWchTbl = (*pKbdTables)->pVkToWcharTable;
-        PVSC_VK pVscVk = (*pKbdTables)->pVSCtoVK_E0;
-        DbgPrint("Kbd layout: fLocaleFlags %x bMaxVSCtoVK %x\n", (*pKbdTables)->fLocaleFlags, (*pKbdTables)->bMaxVSCtoVK);
-        DbgPrint("wMaxModBits %x\n", (*pKbdTables)->pCharModifiers->wMaxModBits);
-        while (pVkToBit->Vk)
-        {
-            DbgPrint("VkToBit %x -> %x\n", pVkToBit->Vk, pVkToBit->ModBits);
-            ++pVkToBit;
-        }
-        for (i = 0; i <= (*pKbdTables)->pCharModifiers->wMaxModBits; ++i)
-            DbgPrint("ModNumber %x -> %x\n", i, (*pKbdTables)->pCharModifiers->ModNumber[i]);
-        while (pVkToWchTbl->pVkToWchars)
-        {
-            PVK_TO_WCHARS1 pVkToWch = pVkToWchTbl->pVkToWchars;
-            DbgPrint("pVkToWchTbl nModifications %x cbSize %x\n", pVkToWchTbl->nModifications, pVkToWchTbl->cbSize);
-            while (pVkToWch->VirtualKey)
-            {
-                DbgPrint("pVkToWch VirtualKey %x Attributes %x wc { ", pVkToWch->VirtualKey, pVkToWch->Attributes);
-                for (i = 0; i < pVkToWchTbl->nModifications; ++i)
-                    DbgPrint("%x ", pVkToWch->wch[i]);
-                DbgPrint("}\n");
-                pVkToWch = (PVK_TO_WCHARS1)(((PBYTE)pVkToWch) + pVkToWchTbl->cbSize);
-            }
-            ++pVkToWchTbl;
-        }
-        DbgPrint("pusVSCtoVK: { ");
-        for (i = 0; i < (*pKbdTables)->bMaxVSCtoVK; ++i)
-        DbgPrint("%x -> %x, ", i, (*pKbdTables)->pusVSCtoVK[i]);
-        DbgPrint("}\n");
-        DbgPrint("pVSCtoVK_E0: { ");
-        while (pVscVk->Vsc)
-        {
-            DbgPrint("%x -> %x, ", pVscVk->Vsc, pVscVk->Vk);
-            ++pVscVk;
-        }
-        DbgPrint("}\n");
-        pVscVk = (*pKbdTables)->pVSCtoVK_E1;
-        DbgPrint("pVSCtoVK_E1: { ");
-        while (pVscVk->Vsc)
-        {
-            DbgPrint("%x -> %x, ", pVscVk->Vsc, pVscVk->Vk);
-            ++pVscVk;
-        }
-        DbgPrint("}\n");
-        DbgBreakPoint();
-    }
+#if 0 && DBG
+    /* Dump keyboard layout */
+    DumpKbdLayout(*pKbdTables);
 #endif
 
     return TRUE;

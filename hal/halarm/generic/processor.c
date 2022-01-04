@@ -28,12 +28,12 @@ HalpIdentifyProcessor(VOID)
 
     /* Don't do it again */
     HalpProcessorIdentified = TRUE;
-    
+
     // fixfix: Use Pcr->ProcessorId
-    
+
     /* Read the ID Code */
     IdRegister = KeArmIdCodeRegisterGet();
-    
+
     /* Architecture "6" CPUs support test-and-clean (926EJ-S and 1026EJ-S) */
     HalpTestCleanSupported = (IdRegister.Architecture == 6);
 }
@@ -111,7 +111,7 @@ HalSweepDcache(VOID)
      * processor routines, so we need to figure out what CPU we're on.
      */
     if (!HalpProcessorIdentified) HalpIdentifyProcessor();
-    
+
     /*
      * Check if we can do it the ARMv5TE-J way
      */

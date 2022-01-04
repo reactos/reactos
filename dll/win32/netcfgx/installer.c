@@ -4,10 +4,11 @@
  * FILE:            dll/win32/netcfgx/installer.c
  * PURPOSE:         Network devices installer
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"
+#include <strsafe.h>
 
 
 /* Append a REG_SZ to an existing REG_MULTI_SZ string in the registry.
@@ -89,6 +90,59 @@ cleanup:
     return rc;
 }
 
+static
+DWORD
+GetUniqueConnectionName(
+    _In_ HKEY hNetworkKey,
+    _Out_ PWSTR *ppszNameBuffer)
+{
+    int Length = 0;
+    PWSTR pszDefaultName = NULL;
+    PWSTR pszNameBuffer = NULL;
+    DWORD dwSubKeys = 0;
+    DWORD dwError;
+
+    TRACE("GetNewConnectionName()\n");
+
+    Length = LoadStringW(netcfgx_hInstance, IDS_NET_CONNECT, (LPWSTR)&pszDefaultName, 0);
+    if (Length == 0)
+    {
+        pszDefaultName = L"Network Connection";
+        Length = wcslen(pszDefaultName);
+    }
+
+    TRACE("Length %d\n", Length);
+
+    dwError = RegQueryInfoKeyW(hNetworkKey,
+                               NULL, NULL, NULL, &dwSubKeys,
+                               NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        ERR("RegQueryInfoKeyW: Error %lu\n", dwError);
+        return dwError;
+    }
+
+    TRACE("Adapter Count: %lu\n", dwSubKeys);
+
+    pszNameBuffer = HeapAlloc(GetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              (Length + ((dwSubKeys != 0) ? 6 : 1)) * sizeof(WCHAR));
+    if (pszNameBuffer == NULL)
+    {
+        return ERROR_OUTOFMEMORY;
+    }
+
+    if (dwSubKeys != 0)
+        StringCchPrintfW(pszNameBuffer, Length + 6, L"%.*s %lu", Length, pszDefaultName, dwSubKeys + 1);
+    else
+        StringCchPrintfW(pszNameBuffer, Length + 1, L"%.*s", Length, pszDefaultName);
+
+    TRACE("Adapter Name: %S\n", pszNameBuffer);
+
+    *ppszNameBuffer = pszNameBuffer;
+
+    return ERROR_SUCCESS;
+}
 
 static
 DWORD
@@ -110,7 +164,7 @@ InstallNetDevice(
     HKEY hLinkageKey = NULL;
     HKEY hConnectionKey = NULL;
     DWORD dwShowIcon, dwLength, dwValue;
-    WCHAR szBuffer[300];
+    PWSTR pszNameBuffer = NULL;
     PWSTR ptr;
 
     DeviceInstallParams.cbSize = sizeof(DeviceInstallParams);
@@ -336,10 +390,25 @@ InstallNetDevice(
     hKey = NULL;
 
     /* Write connection information in network subkey */
-    rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hNetworkKey, NULL);
+    rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}",
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         KEY_CREATE_SUB_KEY | KEY_QUERY_VALUE,
+                         NULL,
+                         &hNetworkKey,
+                         NULL);
     if (rc != ERROR_SUCCESS)
     {
         ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
+        goto cleanup;
+    }
+
+    rc = GetUniqueConnectionName(hNetworkKey, &pszNameBuffer);
+    if (rc != ERROR_SUCCESS)
+    {
+        ERR("GetUniqueConnectionName() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -359,12 +428,7 @@ InstallNetDevice(
         goto cleanup;
     }
 
-    if (!LoadStringW(netcfgx_hInstance, IDS_NET_CONNECT, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
-    {
-        wcscpy(szBuffer, L"Network Connection");
-    }
-
-    rc = RegSetValueExW(hConnectionKey, L"Name", 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+    rc = RegSetValueExW(hConnectionKey, L"Name", 0, REG_SZ, (const BYTE*)pszNameBuffer, (wcslen(pszNameBuffer) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
         ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
@@ -423,6 +487,7 @@ InstallNetDevice(
     rc = ERROR_SUCCESS;
 
 cleanup:
+    HeapFree(GetProcessHeap(), 0, pszNameBuffer);
     HeapFree(GetProcessHeap(), 0, InstanceId);
     HeapFree(GetProcessHeap(), 0, ComponentId);
     HeapFree(GetProcessHeap(), 0, DeviceName);

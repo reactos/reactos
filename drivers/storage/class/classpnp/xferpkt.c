@@ -582,7 +582,7 @@ VOID EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, __drv_aliasesMem PTRANSFER_PA
                 // Queue a work item to trim down the total number of transfer packets to with the
                 // working size.
                 //
-                IoQueueWorkItemEx(workItem, CleanupTransferPacketToWorkingSetSizeWorker, DelayedWorkQueue, (PVOID) allocateNode);
+                IoQueueWorkItemEx(workItem, CleanupTransferPacketToWorkingSetSizeWorker, DelayedWorkQueue, (PVOID)(ULONG_PTR)allocateNode);
 
             } else {
 
@@ -960,9 +960,14 @@ TransferPktComplete(IN PDEVICE_OBJECT NullFdo, IN PIRP Irp, IN PVOID Context)
     //
 
 #ifdef _WIN64
+#ifndef __REACTOS__
     lastIoCompletionTime = ReadULong64NoFence((volatile ULONG64*)&fdoData->LastIoCompletionTime.QuadPart);
     WriteULong64NoFence((volatile ULONG64*)&fdoData->LastIoCompletionTime.QuadPart,
                         completionTime.QuadPart);
+#else
+    lastIoCompletionTime = *(volatile ULONG64*)&fdoData->LastIoCompletionTime.QuadPart;
+    *((volatile ULONG64*)&fdoData->LastIoCompletionTime.QuadPart) = completionTime.QuadPart;
+#endif
 #else
     lastIoCompletionTime = InterlockedExchangeNoFence64((volatile LONG64*)&fdoData->LastIoCompletionTime.QuadPart,
                                                         completionTime.QuadPart);

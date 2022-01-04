@@ -96,9 +96,13 @@ public:
 
     BOOL RemoveAt(INT i)
     {
-        T* ptr = (T*) DPA_GetPtr(m_hDpa, i);
-        OnRemoveItem(ptr);
-        return DPA_DeletePtr(m_hDpa, i);
+        PVOID ptr = DPA_DeletePtr(m_hDpa, i);
+        if (ptr != NULL)
+        {
+            OnRemoveItem(reinterpret_cast<T*>(ptr));
+            return TRUE;
+        }
+        return FALSE;
     }
 
     BOOL Clear()

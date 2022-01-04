@@ -57,7 +57,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     BOOL AclUiAvailable;
     HMENU hEditMenu;
-
+    INITCOMMONCONTROLSEX icce;
     WNDCLASSEXW wcFrame;
     WNDCLASSEXW wcChild;
     ATOM hFrameWndClass;
@@ -97,8 +97,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hPopupMenus = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDR_POPUP_MENUS));
 
     /* Initialize the Windows Common Controls DLL */
-    // TODO: Replace this call by InitCommonControlsEx(_something_)
-    InitCommonControls();
+    /* NOTE: Windows sets 0xFFFF to icce.dwICC but we use better value. */
+    icce.dwSize = sizeof(icce);
+    icce.dwICC = ICC_WIN95_CLASSES | ICC_STANDARD_CLASSES | ICC_USEREX_CLASSES;
+    InitCommonControlsEx(&icce);
 
     hEditMenu = GetSubMenu(hMenuFrame, 1);
 

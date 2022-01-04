@@ -103,63 +103,63 @@ static ULONG WINAPI ITextHostImpl_Release(ITextHost *iface)
     return ref;
 }
 
-DECLSPEC_HIDDEN HDC WINAPI ITextHostImpl_TxGetDC(ITextHost *iface)
+DECLSPEC_HIDDEN HDC __thiscall ITextHostImpl_TxGetDC(ITextHost *iface)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return GetDC(This->hWnd);
 }
 
-DECLSPEC_HIDDEN INT WINAPI ITextHostImpl_TxReleaseDC(ITextHost *iface, HDC hdc)
+DECLSPEC_HIDDEN INT __thiscall ITextHostImpl_TxReleaseDC(ITextHost *iface, HDC hdc)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return ReleaseDC(This->hWnd, hdc);
 }
 
-DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxShowScrollBar(ITextHost *iface, INT fnBar, BOOL fShow)
+DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxShowScrollBar(ITextHost *iface, INT fnBar, BOOL fShow)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return ShowScrollBar(This->hWnd, fnBar, fShow);
 }
 
-DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxEnableScrollBar(ITextHost *iface, INT fuSBFlags, INT fuArrowflags)
+DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxEnableScrollBar(ITextHost *iface, INT fuSBFlags, INT fuArrowflags)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return EnableScrollBar(This->hWnd, fuSBFlags, fuArrowflags);
 }
 
-DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxSetScrollRange(ITextHost *iface, INT fnBar, LONG nMinPos, INT nMaxPos,
-                                           BOOL fRedraw)
+DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxSetScrollRange(ITextHost *iface, INT fnBar, LONG nMinPos, INT nMaxPos,
+                                                               BOOL fRedraw)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return SetScrollRange(This->hWnd, fnBar, nMinPos, nMaxPos, fRedraw);
 }
 
-DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxSetScrollPos(ITextHost *iface, INT fnBar, INT nPos, BOOL fRedraw)
+DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxSetScrollPos(ITextHost *iface, INT fnBar, INT nPos, BOOL fRedraw)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return SetScrollPos(This->hWnd, fnBar, nPos, fRedraw) != 0;
 }
 
-DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxInvalidateRect(ITextHost *iface, LPCRECT prc, BOOL fMode)
+DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxInvalidateRect(ITextHost *iface, LPCRECT prc, BOOL fMode)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     InvalidateRect(This->hWnd, prc, fMode);
 }
 
-DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxViewChange(ITextHost *iface, BOOL fUpdate)
+DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxViewChange(ITextHost *iface, BOOL fUpdate)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     if (fUpdate)
         UpdateWindow(This->hWnd);
 }
 
-DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxCreateCaret(ITextHost *iface, HBITMAP hbmp, INT xWidth, INT yHeight)
+DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxCreateCaret(ITextHost *iface, HBITMAP hbmp, INT xWidth, INT yHeight)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return CreateCaret(This->hWnd, hbmp, xWidth, yHeight);
 }
 
-DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxShowCaret(ITextHost *iface, BOOL fShow)
+DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxShowCaret(ITextHost *iface, BOOL fShow)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     if (fShow)
@@ -168,34 +168,34 @@ DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxShowCaret(ITextHost *iface, BOOL fSh
         return HideCaret(This->hWnd);
 }
 
-DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxSetCaretPos(ITextHost *iface,
-                                        INT x, INT y)
+DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxSetCaretPos(ITextHost *iface,
+                                                            INT x, INT y)
 {
     return SetCaretPos(x, y);
 }
 
-DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxSetTimer(ITextHost *iface, UINT idTimer, UINT uTimeout)
+DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxSetTimer(ITextHost *iface, UINT idTimer, UINT uTimeout)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return SetTimer(This->hWnd, idTimer, uTimeout, NULL) != 0;
 }
 
-DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxKillTimer(ITextHost *iface, UINT idTimer)
+DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxKillTimer(ITextHost *iface, UINT idTimer)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     KillTimer(This->hWnd, idTimer);
 }
 
-DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxScrollWindowEx(ITextHost *iface, INT dx, INT dy, LPCRECT lprcScroll,
-                                           LPCRECT lprcClip, HRGN hRgnUpdate, LPRECT lprcUpdate,
-                                           UINT fuScroll)
+DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxScrollWindowEx(ITextHost *iface, INT dx, INT dy, LPCRECT lprcScroll,
+                                                               LPCRECT lprcClip, HRGN hRgnUpdate, LPRECT lprcUpdate,
+                                                               UINT fuScroll)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     ScrollWindowEx(This->hWnd, dx, dy, lprcScroll, lprcClip,
                    hRgnUpdate, lprcUpdate, fuScroll);
 }
 
-DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxSetCapture(ITextHost *iface, BOOL fCapture)
+DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxSetCapture(ITextHost *iface, BOOL fCapture)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     if (fCapture)
@@ -204,54 +204,50 @@ DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxSetCapture(ITextHost *iface, BOOL fC
         ReleaseCapture();
 }
 
-DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxSetFocus(ITextHost *iface)
+DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxSetFocus(ITextHost *iface)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     SetFocus(This->hWnd);
 }
 
-DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxSetCursor(ITextHost *iface,
-                                      HCURSOR hcur,
-                                      BOOL fText)
+DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxSetCursor(ITextHost *iface, HCURSOR hcur, BOOL fText)
 {
     SetCursor(hcur);
 }
 
-DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxScreenToClient(ITextHost *iface, LPPOINT lppt)
+DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxScreenToClient(ITextHost *iface, LPPOINT lppt)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return ScreenToClient(This->hWnd, lppt);
 }
 
-DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxClientToScreen(ITextHost *iface, LPPOINT lppt)
+DECLSPEC_HIDDEN BOOL __thiscall ITextHostImpl_TxClientToScreen(ITextHost *iface, LPPOINT lppt)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return ClientToScreen(This->hWnd, lppt);
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxActivate(ITextHost *iface, LONG *plOldState)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxActivate(ITextHost *iface, LONG *plOldState)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     *plOldState = HandleToLong(SetActiveWindow(This->hWnd));
     return (*plOldState ? S_OK : E_FAIL);
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxDeactivate(ITextHost *iface,
-                                          LONG lNewState)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxDeactivate(ITextHost *iface, LONG lNewState)
 {
     HWND ret = SetActiveWindow(LongToHandle(lNewState));
     return (ret ? S_OK : E_FAIL);
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetClientRect(ITextHost *iface, LPRECT prc)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetClientRect(ITextHost *iface, LPRECT prc)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     int ret = GetClientRect(This->hWnd, prc);
     return (ret ? S_OK : E_FAIL);
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetViewInset(ITextHost *iface,
-                                            LPRECT prc)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetViewInset(ITextHost *iface, LPRECT prc)
 {
     prc->top = 0;
     prc->left = 0;
@@ -260,41 +256,36 @@ DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetViewInset(ITextHost *iface,
     return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetCharFormat(ITextHost *iface,
-                                             const CHARFORMATW **ppCF)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetCharFormat(ITextHost *iface, const CHARFORMATW **ppCF)
 {
     return E_NOTIMPL;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetParaFormat(ITextHost *iface,
-                                                             const PARAFORMAT **fmt)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetParaFormat(ITextHost *iface, const PARAFORMAT **fmt)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     *fmt = (const PARAFORMAT *)&This->para_fmt;
     return S_OK;
 }
 
-DECLSPEC_HIDDEN COLORREF WINAPI ITextHostImpl_TxGetSysColor(ITextHost *iface,
-                                            int nIndex)
+DECLSPEC_HIDDEN COLORREF __thiscall ITextHostImpl_TxGetSysColor(ITextHost *iface, int nIndex)
 {
     return GetSysColor(nIndex);
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetBackStyle(ITextHost *iface,
-                                            TXTBACKSTYLE *pStyle)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetBackStyle(ITextHost *iface, TXTBACKSTYLE *pStyle)
 {
     *pStyle = TXTBACK_OPAQUE;
     return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetMaxLength(ITextHost *iface,
-                                            DWORD *pLength)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetMaxLength(ITextHost *iface, DWORD *pLength)
 {
     *pLength = INFINITE;
     return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetScrollBars(ITextHost *iface, DWORD *pdwScrollBar)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetScrollBars(ITextHost *iface, DWORD *pdwScrollBar)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     ME_TextEditor *editor = (ME_TextEditor*)GetWindowLongPtrW(This->hWnd, 0);
@@ -317,39 +308,34 @@ DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetScrollBars(ITextHost *iface, D
     return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetPasswordChar(ITextHost *iface,
-                                               WCHAR *pch)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetPasswordChar(ITextHost *iface, WCHAR *pch)
 {
     *pch = '*';
     return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetAcceleratorPos(ITextHost *iface,
-                                                 LONG *pch)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetAcceleratorPos(ITextHost *iface, LONG *pch)
 {
     *pch = -1;
     return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetExtent(ITextHost *iface,
-                                         LPSIZEL lpExtent)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetExtent(ITextHost *iface, LPSIZEL lpExtent)
 {
     return E_NOTIMPL;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_OnTxCharFormatChange(ITextHost *iface,
-                                                  const CHARFORMATW *pcf)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_OnTxCharFormatChange(ITextHost *iface, const CHARFORMATW *pcf)
 {
     return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_OnTxParaFormatChange(ITextHost *iface,
-                                                  const PARAFORMAT *ppf)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_OnTxParaFormatChange(ITextHost *iface, const PARAFORMAT *ppf)
 {
     return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetPropertyBits(ITextHost *iface, DWORD dwMask, DWORD *pdwBits)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetPropertyBits(ITextHost *iface, DWORD dwMask, DWORD *pdwBits)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     ME_TextEditor *editor = (ME_TextEditor *)GetWindowLongPtrW(This->hWnd, 0);
@@ -415,7 +401,7 @@ DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetPropertyBits(ITextHost *iface,
     return S_OK;
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxNotify(ITextHost *iface, DWORD iNotify, void *pv)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxNotify(ITextHost *iface, DWORD iNotify, void *pv)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     ME_TextEditor *editor = (ME_TextEditor*)GetWindowLongPtrW(This->hWnd, 0);
@@ -473,19 +459,19 @@ DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxNotify(ITextHost *iface, DWORD iN
     return S_OK;
 }
 
-DECLSPEC_HIDDEN HIMC WINAPI ITextHostImpl_TxImmGetContext(ITextHost *iface)
+DECLSPEC_HIDDEN HIMC __thiscall ITextHostImpl_TxImmGetContext(ITextHost *iface)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     return ImmGetContext(This->hWnd);
 }
 
-DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxImmReleaseContext(ITextHost *iface, HIMC himc)
+DECLSPEC_HIDDEN void __thiscall ITextHostImpl_TxImmReleaseContext(ITextHost *iface, HIMC himc)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     ImmReleaseContext(This->hWnd, himc);
 }
 
-DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetSelectionBarWidth(ITextHost *iface, LONG *lSelBarWidth)
+DECLSPEC_HIDDEN HRESULT __thiscall ITextHostImpl_TxGetSelectionBarWidth(ITextHost *iface, LONG *lSelBarWidth)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
     ME_TextEditor *editor = (ME_TextEditor *)GetWindowLongPtrW(This->hWnd, 0);

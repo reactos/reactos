@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  *
  * Copyright 2002 Raphael Junqueira
@@ -17,10 +20,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -130,6 +132,8 @@ HRESULT WINAPI D3DXCreateBuffer(DWORD size, ID3DXBuffer **buffer)
 {
     struct ID3DXBufferImpl *object;
     HRESULT hr;
+
+    TRACE("size %u, buffer %p.\n", size, buffer);
 
     if (!buffer)
     {

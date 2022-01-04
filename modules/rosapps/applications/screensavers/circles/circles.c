@@ -64,10 +64,10 @@ LRESULT WINAPI ScreenSaverProc (HWND hwnd, UINT iMsg, WPARAM wparam, LPARAM lpar
 
             /* Draw circle on screen */
             Ellipse (
-                hdc, 
-                x, 
-                y, 
-                x + width, 
+                hdc,
+                x,
+                y,
+                x + width,
                 y + width);
 
             //Track the number of painted circles on scren

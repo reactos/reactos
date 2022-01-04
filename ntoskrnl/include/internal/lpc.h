@@ -137,7 +137,7 @@ LpcExitThread(
 //
 // Initialization functions
 //
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 LpcInitSystem(

@@ -1,5 +1,5 @@
 /* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation improved by Aobi Chan CL 2020 (eason066@gmail.com) */
+/* Translation improved by Chan Chilung 2020 - 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -14,7 +14,7 @@ Usage: DISKPART [/S 檔名] [/T 逾時] [/?]\n\n\
 /?\t\t顯示此說明訊息。\n\n"
     IDS_APP_LICENSE "根據 GNU GPLv2 許可\n"
     IDS_APP_CURR_COMPUTER "在電腦: %s\n\n"
-    IDS_APP_LEAVING "\n正在離開 DiskPart ...\n"
+    IDS_APP_LEAVING "\n正在退出 DiskPart ...\n"
     IDS_APP_PROMPT "DISKPART> "
 END
 
@@ -60,15 +60,15 @@ END
 /* Select command strings */
 STRINGTABLE
 BEGIN
-    IDS_SELECT_NO_DISK "\n目前沒有選擇磁碟。\nP請選擇一個磁碟，然後再試一次。\n\n"
-    IDS_SELECT_DISK "\n磁碟 %lu 是所選的磁碟。\n\n"
+    IDS_SELECT_NO_DISK "\n目前沒有選擇磁碟。\n請選擇一個磁碟，然後再試一次。\n\n"
+    IDS_SELECT_DISK "\n磁碟 %lu 現在是所選的磁碟。\n\n"
     IDS_SELECT_DISK_INVALID "\n無效的磁碟。\n\n"
     IDS_SELECT_NO_PARTITION "\n目前選擇的磁碟沒有磁碟分割。\n請選擇一個磁碟，然後再試一次。\n\n"
-    IDS_SELECT_PARTITION "\n磁碟分割 %lu 是所選的磁碟分割。\n\n"
+    IDS_SELECT_PARTITION "\n磁碟分割 %lu 現在是所選的磁碟分割。\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\n沒有選擇要設定磁碟分割的磁碟。\n請選擇一個磁碟，然後再試一次。\n\n"
     IDS_SELECT_PARTITION_INVALID "\n無效的磁碟分割。\n\n"
     IDS_SELECT_NO_VOLUME "\n目前沒有選擇磁碟區。\n請選擇一個磁碟，然後再試一次。\n\n"
-    IDS_SELECT_VOLUME "\n磁碟區 %lu 是所選的磁碟區。\n\n"
+    IDS_SELECT_VOLUME "\n磁碟區 %lu 現在是所選的磁碟區。\n\n"
 END
 
 /* Disk Status */
@@ -95,7 +95,7 @@ STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DESC_ACTIVE "ACTIVE\t\t- 所選將磁碟分割標記為活動。\n"
     IDS_HELP_CMD_DESC_ADD "ADD\t\t- 將映象添加到一個簡單磁碟區。\n"
-    IDS_HELP_CMD_DESC_ASSIGN "ASSIGN\t\t- 為所選的磁碟區分配一個磁碟區代號或裝入點。\n"
+    IDS_HELP_CMD_DESC_ASSIGN "ASSIGN\t\t- 為所選的磁碟區分配一個代號或裝入點。\n"
     IDS_HELP_CMD_DESC_ATTACH "ATTACH\t\t- 附加的虛擬磁碟檔案。\n"
     IDS_HELP_CMD_DESC_ATTRIBUTES "ATTRIBUTES\t- 操縱磁碟區或磁碟的屬性。\n"
     IDS_HELP_CMD_DESC_AUTOMOUNT "AUTOMOUNT\t- 啟用和停用基本磁碟區的自動裝入。\n"

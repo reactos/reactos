@@ -84,7 +84,11 @@ CompBattGetDeviceObjectPointer(IN PUNICODE_STRING DeviceName,
     PAGED_CODE();
 
     /* Open a file object handle to the device */
-    InitializeObjectAttributes(&ObjectAttributes, DeviceName, 0, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               DeviceName,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
     Status = ZwCreateFile(&DeviceHandle,
                           DesiredAccess,
                           &ObjectAttributes,

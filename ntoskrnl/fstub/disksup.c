@@ -1704,7 +1704,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     if (NT_SUCCESS(Status))
     {
         /* Validate the MBR Signature */
-        if (((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
+        if (*(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
         {
             /* Failed */
             ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
@@ -1712,8 +1712,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Get the partition entry */
-        PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                               &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
+        PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Buffer[PARTITION_TABLE_OFFSET];
 
         /* Make sure it's what the caller wanted */
         if (PartitionDescriptor->PartitionType != MbrTypeIdentifier)
@@ -1831,7 +1830,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             DiskGeometryEx.DiskSize, MaxSector);
 
     /* Allocate our buffer */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, InputSize, TAG_FILE_SYSTEM);
+    Buffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned, InputSize, TAG_FILE_SYSTEM);
     if (!Buffer)
     {
         /* Fail, free the input buffer */
@@ -1886,7 +1885,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         if (IsEzDrive && (Offset.QuadPart == 512)) Offset.QuadPart = 0;
 
         /* Make sure this is a valid MBR */
-        if (((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
+        if (*(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
         {
             /* It's not, fail */
             DPRINT1("FSTUB: (IoReadPartitionTable) No 0xaa55 found in "
@@ -1901,12 +1900,11 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         if (!Offset.QuadPart)
         {
             /* Then read the signature off the disk */
-            (*PartitionBuffer)->Signature = ((PULONG)Buffer)[PARTITION_TABLE_OFFSET / 2 - 1];
+            (*PartitionBuffer)->Signature = *(PUINT32)&Buffer[DISK_SIGNATURE_OFFSET];
         }
 
         /* Get the partition descriptor array */
-        PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                               &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
+        PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Buffer[PARTITION_TABLE_OFFSET];
 
         /* Start looping partitions */
         j++;
@@ -2091,8 +2089,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         Offset.QuadPart = 0;
 
         /* Go back to the descriptor array and loop it */
-        PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                               &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
+        PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Buffer[PARTITION_TABLE_OFFSET];
         for (Entry = 1; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Check if this is a container partition, since we skipped them */
@@ -2237,7 +2234,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Allocate our partition buffer */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_FILE_SYSTEM);
+    Buffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned, PAGE_SIZE, TAG_FILE_SYSTEM);
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Initialize the event we'll use and loop partitions */
@@ -2282,7 +2279,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
         if (IsEzDrive && (Offset.QuadPart == 512)) Offset.QuadPart = 0;
 
         /* Make sure this is a valid MBR */
-        if (((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
+        if (*(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
         {
             /* It's not, fail */
             Status = STATUS_BAD_MASTER_BOOT_RECORD;
@@ -2290,8 +2287,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Get the partition descriptors and loop them */
-        PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                              &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
+        PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Buffer[PARTITION_TABLE_OFFSET];
         for (Entry = 1; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Check if it's unused or a container partition */
@@ -2352,8 +2348,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
         if (Entry <= NUM_PARTITION_TABLE_ENTRIES) break;
 
         /* Nothing found yet, get the partition array again */
-        PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                               &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
+        PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Buffer[PARTITION_TABLE_OFFSET];
         for (Entry = 1; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Check if this was a container partition (we skipped these) */
@@ -2400,7 +2395,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG BufferSize;
-    PUSHORT Buffer;
+    PUCHAR Buffer;
     PPTE Entry;
     PPARTITION_TABLE PartitionTable;
     LARGE_INTEGER Offset, NextOffset, ExtendedOffset, SectorOffset;
@@ -2469,7 +2464,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     DiskLayout->TableCount = (PartitionBuffer->PartitionCount + NUM_PARTITION_TABLE_ENTRIES - 1) / NUM_PARTITION_TABLE_ENTRIES;
 
     /* Allocate our partition buffer */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_FILE_SYSTEM);
+    Buffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned, PAGE_SIZE, TAG_FILE_SYSTEM);
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Loop the entries */
@@ -2520,7 +2515,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
         if (!IsSuperFloppy)
         {
             /* Set the boot record signature */
-            Buffer[BOOT_SIGNATURE_OFFSET] = BOOT_RECORD_SIGNATURE;
+            *(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] = BOOT_RECORD_SIGNATURE;
 
             /* By default, don't require a rewrite */
             DoRewrite = FALSE;
@@ -2529,12 +2524,10 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
             if (!Offset.QuadPart)
             {
                 /* Check if the signature doesn't match */
-                if (((PULONG)Buffer)[PARTITION_TABLE_OFFSET / 2 - 1] !=
-                    PartitionBuffer->Signature)
+                if (*(PUINT32)&Buffer[DISK_SIGNATURE_OFFSET] != PartitionBuffer->Signature)
                 {
                     /* Then write the signature and now we need a rewrite */
-                    ((PULONG)Buffer)[PARTITION_TABLE_OFFSET / 2 - 1] =
-                        PartitionBuffer->Signature;
+                    *(PUINT32)&Buffer[DISK_SIGNATURE_OFFSET] = PartitionBuffer->Signature;
                     DoRewrite = TRUE;
                 }
             }

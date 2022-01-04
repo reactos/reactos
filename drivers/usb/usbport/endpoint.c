@@ -86,7 +86,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
     EndpointProperties = &Endpoint->EndpointProperties;
     TransferType = EndpointProperties->TransferType;
 
-    if (TransferType == USBPORT_TRANSFER_TYPE_BULK || 
+    if (TransferType == USBPORT_TRANSFER_TYPE_BULK ||
         TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
         Endpoint->Flags & ENDPOINT_FLAG_ROOTHUB_EP0)
     {
@@ -108,7 +108,7 @@ USBPORT_AllocateBandwidth(IN PDEVICE_OBJECT FdoDevice,
 
         for (ix = 1; *Bandwidth >= EndpointBandwidth; ix++)
         {
-            MinBandwidth = min(MinBandwidth, *Bandwidth); 
+            MinBandwidth = min(MinBandwidth, *Bandwidth);
 
             Bandwidth++;
 
@@ -327,7 +327,7 @@ USBPORT_NukeAllEndpoints(IN PDEVICE_OBJECT FdoDevice)
     KeReleaseSpinLock(&FdoExtension->EndpointListSpinLock, OldIrql);
 }
 
-ULONG 
+ULONG
 NTAPI
 USBPORT_GetEndpointState(IN PUSBPORT_ENDPOINT Endpoint)
 {
@@ -483,9 +483,9 @@ USBPORT_ValidatePipeHandle(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
         CurrentHandle = CONTAINING_RECORD(HandleList,
                                           USBPORT_PIPE_HANDLE,
                                           PipeLink);
-  
+
         HandleList = HandleList->Flink;
-  
+
         if (CurrentHandle == PipeHandle)
             return TRUE;
     }

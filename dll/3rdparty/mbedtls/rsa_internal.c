@@ -1,7 +1,7 @@
 /*
  *  Helper functions for the RSA module
  *
- *  Copyright (C) 2006-2017, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -42,8 +42,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  *
  */
 
@@ -378,15 +376,20 @@ int mbedtls_rsa_validate_params( const mbedtls_mpi *N, const mbedtls_mpi *P,
      */
 
 #if defined(MBEDTLS_GENPRIME)
+    /*
+     * When generating keys, the strongest security we support aims for an error
+     * rate of at most 2^-100 and we are aiming for the same certainty here as
+     * well.
+     */
     if( f_rng != NULL && P != NULL &&
-        ( ret = mbedtls_mpi_is_prime( P, f_rng, p_rng ) ) != 0 )
+        ( ret = mbedtls_mpi_is_prime_ext( P, 50, f_rng, p_rng ) ) != 0 )
     {
         ret = MBEDTLS_ERR_RSA_KEY_CHECK_FAILED;
         goto cleanup;
     }
 
     if( f_rng != NULL && Q != NULL &&
-        ( ret = mbedtls_mpi_is_prime( Q, f_rng, p_rng ) ) != 0 )
+        ( ret = mbedtls_mpi_is_prime_ext( Q, 50, f_rng, p_rng ) ) != 0 )
     {
         ret = MBEDTLS_ERR_RSA_KEY_CHECK_FAILED;
         goto cleanup;

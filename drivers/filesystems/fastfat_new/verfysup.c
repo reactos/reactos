@@ -84,7 +84,7 @@ FatMarkVolumeCompletionRoutine(
 #pragma alloc_text(PAGE, FatVerifyFcb)
 #endif
 
-
+
 VOID
 FatMarkFcbCondition (
     IN PIRP_CONTEXT IrpContext,
@@ -200,7 +200,7 @@ Return Value:
             if (FcbCondition == FcbNeedsToBeVerified) {
                 FatResetFcb( IrpContext, Fcb );
             }
-            
+
         }
     }
 
@@ -265,7 +265,7 @@ Return Value:
     return Marked;
 }
 
-
+
 VOID
 FatVerifyVcb (
     IN PIRP_CONTEXT IrpContext,
@@ -306,7 +306,7 @@ Return Value:
     //
 
     DevMarkedForVerify = BooleanFlagOn(Vcb->Vpb->RealDevice->Flags, DO_VERIFY_VOLUME);
-    
+
     //
     //  We ALWAYS force CREATE requests on unmounted volumes through the
     //  verify path.  These requests could have been in limbo between
@@ -356,8 +356,8 @@ Return Value:
     DebugTrace(-1, Dbg, "FatVerifyVcb -> VOID\n", 0);
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatVerifyFcb (
     IN PIRP_CONTEXT IrpContext,
@@ -481,10 +481,10 @@ Return Value:
     default:
 
         DebugDump("Invalid FcbCondition\n", 0, Fcb);
-        
+
 #ifdef _MSC_VER
-#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )     
-#endif   
+#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
+#endif
         FatBugCheck( Fcb->FcbCondition, 0, 0 );
     }
 
@@ -492,7 +492,7 @@ Return Value:
 
     return;
 }
-
+
 
 VOID
 NTAPI
@@ -555,8 +555,8 @@ Return Value:
 
 #ifdef _MSC_VER
 #pragma prefast( push )
-#pragma prefast( disable: 28193, "this will always wait" )     
-#endif   
+#pragma prefast( disable: 28193, "this will always wait" )
+#endif
     FatAcquireSharedGlobal( &IrpContext );
 #ifdef _MSC_VER
 #pragma prefast( pop )
@@ -648,7 +648,7 @@ Return Value:
 }
 
 
-
+
 VOID
 NTAPI
 FatCleanVolumeDpc (
@@ -723,7 +723,7 @@ Return Value:
         ClearFlag( Packet->Vcb->VcbState, VCB_STATE_FLAG_VOLUME_DIRTY );
 
         ExInitializeWorkItem( &Packet->Item, &FatDeferredCleanVolume, Packet );
-        
+
 #ifdef _MSC_VER
 #pragma prefast( suppress:28159, "prefast indicates this is an obsolete API, but it is ok for fastfat to keep using it" )
 #endif
@@ -733,8 +733,8 @@ Return Value:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatMarkVolume (
     IN PIRP_CONTEXT IrpContext,
@@ -1092,7 +1092,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 NTAPI
 FatFspMarkVolumeDirtyWithRecover(
@@ -1180,7 +1180,7 @@ Return Value:
     DebugTrace(-1, Dbg, "FatFspMarkVolumeDirtyWithRecover -> VOID\n", 0);
 }
 
-
+
 VOID
 FatCheckDirtyBit (
     IN PIRP_CONTEXT IrpContext,
@@ -1299,7 +1299,7 @@ Return Value:
     } _SEH2_END;
 }
 
-
+
 VOID
 FatVerifyOperationIsLegal (
     IN PIRP_CONTEXT IrpContext
@@ -1386,7 +1386,7 @@ Return Value:
     return;
 }
 
-
+
 
 //
 //  Internal support routine
@@ -1425,7 +1425,7 @@ Return Value:
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     //
     //  Don't do the two following operations for the Root Dcb
     //  of a non FAT32 volume or paging files.  Paging files!?
@@ -1489,7 +1489,7 @@ Return Value:
     }
 }
 
-
+
 
 BOOLEAN
 FatMatchFileSize (
@@ -1587,7 +1587,7 @@ Return Value:
     if (DirentBcb == NULL) {
 
         FatMarkFcbCondition( IrpContext, Fcb, FcbBad, FALSE );
-        
+
         return;
     }
 
@@ -1624,7 +1624,7 @@ Return Value:
                 ||
 
              !FatMatchFileSize(IrpContext, Dirent, Fcb )
-                
+
                 ||
 
              (FirstClusterOfFile != Fcb->FirstClusterOfFile)
@@ -1652,7 +1652,7 @@ Return Value:
     return;
 }
 
-
+
 
 //
 //  Internal support routine
@@ -1779,13 +1779,13 @@ Return Value:
 
         DebugDump("Invalid VcbCondition\n", 0, Vcb);
 #ifdef _MSC_VER
-#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )        
+#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
 #endif
         FatBugCheck( Vcb->VcbCondition, 0, 0 );
     }
 }
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatPerformVerify (
     _In_ PIRP_CONTEXT IrpContext,
@@ -1920,7 +1920,7 @@ Return Value:
 
 #ifdef _MSC_VER
 #pragma prefast( push )
-#pragma prefast( disable: 28137, "prefast wants the wait to be a constant, but that isn't possible for the way fastfat is designed" )            
+#pragma prefast( disable: 28137, "prefast wants the wait to be a constant, but that isn't possible for the way fastfat is designed" )
 #pragma prefast( disable: 28193 )
 #endif
             FatAcquireExclusiveGlobal( IrpContext );
@@ -2003,7 +2003,7 @@ Return Value:
 
     return Status;
 }
-
+
 //
 //  Local support routine
 //

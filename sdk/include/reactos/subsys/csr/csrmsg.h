@@ -25,7 +25,7 @@ typedef enum _CSRSRV_API_NUMBER
     CsrpClientConnect = CSRSRV_FIRST_API_NUMBER,
     CsrpThreadConnect,
     CsrpProfileControl,
-    CsrpIdentifyAlertable,
+    CsrpIdentifyAlertableThread,
     CsrpSetPriorityClass,
 
     CsrpMaxApiNumber
@@ -65,10 +65,12 @@ C_ASSERT(sizeof(CSR_API_CONNECTINFO) == 0x24);
 C_ASSERT(sizeof(CSR_API_CONNECTINFO) <= LPC_MAX_DATA_LENGTH);
 
 
-typedef struct _CSR_IDENTIFY_ALTERTABLE_THREAD
+#if (NTDDI_VERSION < NTDDI_WS03)
+
+typedef struct _CSR_IDENTIFY_ALERTABLE_THREAD
 {
     CLIENT_ID Cid;
-} CSR_IDENTIFY_ALTERTABLE_THREAD, *PCSR_IDENTIFY_ALTERTABLE_THREAD;
+} CSR_IDENTIFY_ALERTABLE_THREAD, *PCSR_IDENTIFY_ALERTABLE_THREAD;
 
 typedef struct _CSR_SET_PRIORITY_CLASS
 {
@@ -76,11 +78,7 @@ typedef struct _CSR_SET_PRIORITY_CLASS
     ULONG PriorityClass;
 } CSR_SET_PRIORITY_CLASS, *PCSR_SET_PRIORITY_CLASS;
 
-typedef struct
-{
-    HANDLE  UniqueThread;
-    CLIENT_ID Cid;
-} CSRSS_IDENTIFY_ALERTABLE_THREAD, *PCSRSS_IDENTIFY_ALERTABLE_THREAD;
+#endif // (NTDDI_VERSION < NTDDI_WS03)
 
 typedef struct _CSR_CLIENT_CONNECT
 {
@@ -114,9 +112,10 @@ typedef struct _CSR_API_MESSAGE
             union
             {
                 CSR_CLIENT_CONNECT CsrClientConnect;
+#if (NTDDI_VERSION < NTDDI_WS03)
                 CSR_SET_PRIORITY_CLASS SetPriorityClass;
-                CSR_IDENTIFY_ALTERTABLE_THREAD IdentifyAlertableThread;
-
+                CSR_IDENTIFY_ALERTABLE_THREAD IdentifyAlertableThread;
+#endif
                 //
                 // This padding is used to make the CSR_API_MESSAGE structure
                 // large enough to hold full other API_MESSAGE-type structures

@@ -597,7 +597,7 @@ bool DriveVolume::GetClusterInfo (FileInfo &Info, HANDLE &HandleResult)
     Extents = Retrieval->ExtentCount;
 
     // Ok, we have the info. Now translate it. hrmrmr
-    
+
     Info.Fragments.clear ();
     for (uint64 i = 0; i < Extents; i++)
     {

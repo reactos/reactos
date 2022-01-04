@@ -170,8 +170,8 @@ AutoComplete_AdaptFlags(IN HWND hwndEdit,
     if (GetWindowLongPtrW(hwndEdit, GWL_EXSTYLE) & WS_EX_LAYOUTRTL)
         dwACO |= ACO_RTLREADING;
 
-    *pdwACO = dwACO;
     *pdwSHACF = dwSHACF;
+    *pdwACO = dwACO;
     *pdwACLO = dwACLO;
 }
 
@@ -192,8 +192,8 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
 {
     TRACE("SHAutoComplete(%p, 0x%lX)\n", hwndEdit, dwFlags);
 
-    DWORD dwACO = 0, dwACLO = 0, dwSHACF = dwFlags;
-    AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwACLO, &dwSHACF);
+    DWORD dwSHACF = dwFlags, dwACO = 0, dwACLO = 0;
+    AutoComplete_AdaptFlags(hwndEdit, &dwSHACF, &dwACO, &dwACLO);
 
     // Load the list (with IEnumString interface)
     CComPtr<IUnknown> pList = AutoComplete_LoadList(dwSHACF, dwACLO);

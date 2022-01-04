@@ -1,4 +1,7 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR:
+2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
+2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
+*/
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -12,7 +15,7 @@ BEGIN
     PUSHBUTTON "Yardım", IDC_CMHELP, 249, 5, 35, 13
     CONTROL "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP |
             WS_VSCROLL, 20, 22, 266, 156
-    LTEXT "Çoğaltılacak Damgalar:", IDC_STATIC, 6, 188, 66, 9
+    LTEXT "Çoğaltılacak Karakterler:", IDC_STATIC, 6, 188, 66, 9
     CONTROL "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER |
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
     DEFPUSHBUTTON "Seç", IDC_SELECT, 194, 186, 44, 13
@@ -25,23 +28,23 @@ IDD_ADVANCED DIALOGEX 0, 0, 292, 64
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Damga Öbeği:", IDC_STATIC, 8, 8, 48, 8
+    LTEXT "Karakter Yığını:", IDC_STATIC, 8, 8, 48, 8
     COMBOBOX IDC_COMBO_CHARSET, 72, 4, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Takımla:", IDC_STATIC, 8, 28, 50, 8
+    LTEXT "Gruplandır:", IDC_STATIC, 8, 28, 50, 8
     COMBOBOX IDC_COMBO_GROUPBY, 72, 24, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Ara", IDC_BUTTON_SEARCH, 200, 44, 50, 14
     EDITTEXT IDC_EDIT_SEARCH, 72, 44, 116, 14, ES_AUTOHSCROLL
     LTEXT "Ada Göre Ara:", IDC_STATIC, 8, 48, 42, 8
-    LTEXT "Evrenlik Kod:", IDC_STATIC, 200, 8, 30, 8
+    LTEXT "&Unicode:", IDC_STATIC, 200, 8, 30, 8
     EDITTEXT IDC_EDIT_UNICODE, 236, 4, 28, 12, ES_AUTOHSCROLL
 END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 210, 182
-CAPTION "Damga Eşlemi Üzerine"
+CAPTION "Karakter Seçici Hakkında"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-    LTEXT "Damga Eşlemi - Sürüm: 0.1\nTelif Hakkı: 2007 - Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+    LTEXT "Karakter Seçici - Sürüm: 0.1\nTelif Hakkı: 2007 - Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
     PUSHBUTTON "Tamam", IDOK, 75, 162, 44, 15
     ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
     EDITTEXT IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL |
@@ -50,9 +53,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu izlence özgür yazılımdır; bunu, Özgür Yazılım Vakfı'nın yayımladığı GNU Umûmî Kamu Ruhsatı'nın, 2. sürümünün ya da daha sonraki bir sürümünün (Orası size bağlı.) şartları altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu izlence, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bu izlencenin HİÇBİR GÜVENCESİ YOKTUR, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN demek istenilen güvencesi bile. Daha çok bilgi için GNU Umûmî Kamu Ruhsatı'na bakınız.\r\n\r\nBu izlenceyle birlikte GNU Umûmî Kamu Ruhsatı'nın bir kopyasını almış olmalısınız, eğer yoksa Özgür Yazılım Vakfı AŞ'ye (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
-    IDS_ABOUT "&Üzerine..."
-    IDS_TITLE "Damga Eşlemi"
+    IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmi olmayan çevirisidir. Çeviri metniyle özgün metin arasında farklar olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu program özgür yazılımdır; bunu, Özgür Yazılım Vakfı'nın yayımladığı GNU Genel Kamu Lisansı'nın, 2. sürümünün ya da daha sonraki bir sürümünün (seçiminize bağlı olarak.) şartları altında yeniden dağıtabilir veya değiştirebilirsiniz.\r\n\r\nBu program, kullanışlı olabileceği beklentisiyle dağıtılmıştır; ancak, bu program HİÇBİR GÜVENCE VEREMEZ, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN güvencesi de verilemez. Daha çok bilgi için GNU Genel Kamu Lisansı'na bakınız.\r\n\r\nBu programla birlikte GNU Genel Kamu Lisansı'nın bir kopyasını almış olmalısınız, eğer yoksa Özgür Yazılım Vakfı AŞ'ye (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_ABOUT "&Hakkında..."
+    IDS_TITLE "Karakter Seçici"
     IDS_UNICODE "Unicode"
-    IDS_ALL "All"
+    IDS_ALL "Hepsi"
 END

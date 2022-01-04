@@ -41,13 +41,13 @@ LlbHwGetUartBase(IN ULONG Port)
     }
     else if (Port == 2)
     {
-        return 0x4806C000;        
+        return 0x4806C000;
     }
     else if (Port == 3)
     {
-        return 0x49020000;        
+        return 0x49020000;
     }
-    
+
     return 0;
 }
 

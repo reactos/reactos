@@ -50,7 +50,7 @@ NTSTATUS
 NTAPI
 RPMRegisterAlternateDriver(
   IN PDRIVER_OBJECT  DriverObject,
-  IN LPCWSTR CompatibleId, 
+  IN LPCWSTR CompatibleId,
   OUT PHANDLE RegisteredDriver);
 
 USBRPMAPI

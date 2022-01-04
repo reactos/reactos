@@ -10,7 +10,9 @@
 
 #include <ndissys.h>
 
-__inline ULONG SkipToOffset(
+FORCEINLINE
+ULONG
+SkipToOffset(
     IN PNDIS_BUFFER Buffer,
     IN UINT Offset,
     IN OUT PUCHAR *Data,
@@ -481,7 +483,7 @@ NdisAllocatePacketPoolEx(
             NumberOfDescriptors = 0xffff;
         }
 
-        Length = sizeof(NDIS_PACKET) + sizeof(NDIS_PACKET_OOB_DATA) + 
+        Length = sizeof(NDIS_PACKET) + sizeof(NDIS_PACKET_OOB_DATA) +
                  sizeof(NDIS_PACKET_EXTENSION) + ProtocolReservedLength;
         Size   = sizeof(NDISI_PACKET_POOL) + Length * NumberOfDescriptors;
 
@@ -1163,7 +1165,7 @@ EXPORT
 NdisPacketSize(
     IN UINT  ProtocolReservedSize)
 {
-    return sizeof(NDIS_PACKET) + sizeof(NDIS_PACKET_OOB_DATA) + 
+    return sizeof(NDIS_PACKET) + sizeof(NDIS_PACKET_OOB_DATA) +
                  sizeof(NDIS_PACKET_EXTENSION) + ProtocolReservedSize;
 }
 

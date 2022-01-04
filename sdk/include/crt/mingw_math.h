@@ -6,7 +6,7 @@
 #ifndef __NO_ISOCEXT
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) \
 	|| !defined __STRICT_ANSI__ || defined __cplusplus
-    
+
 #if __MINGW_GNUC_PREREQ(3, 3)
 #define HUGE_VALF	__builtin_huge_valf()
 #define HUGE_VALL	__builtin_huge_vall()
@@ -24,7 +24,7 @@ extern const double __QNAN;
 
 /* Use the compiler's builtin define for FLT_EVAL_METHOD to
    set float_t and double_t.  */
-#if defined(__FLT_EVAL_METHOD__)  
+#if defined(__FLT_EVAL_METHOD__)
 # if ( __FLT_EVAL_METHOD__== 0)
 typedef float float_t;
 typedef double double_t;
@@ -56,8 +56,8 @@ typedef long double double_t;
 
 /*
   We can't inline float or double, because we want to ensure truncation
-  to semantic type before classification. 
-  (A normal long double value might become subnormal when 
+  to semantic type before classification.
+  (A normal long double value might become subnormal when
   converted to double, and zero when converted to float.)
 */
 
@@ -171,7 +171,7 @@ typedef long double double_t;
 /* 7.12.5 Hyperbolic functions: Double in C89  */
   // Already in math.h
 
-/* Inverse hyperbolic trig functions  */ 
+/* Inverse hyperbolic trig functions  */
 /* 7.12.5.1 */
   extern double __cdecl acosh (double);
   extern float __cdecl acoshf (float);
@@ -230,7 +230,7 @@ typedef long double double_t;
   extern double __cdecl log2 (double);
   extern float __cdecl log2f (float);
   extern long double __cdecl log2l (long double);
-  
+
 /* 7.12.6.11 */
   extern double __cdecl logb (double);
   extern float __cdecl logbf (float);
@@ -279,7 +279,7 @@ typedef long double double_t;
   extern long double __cdecl scalblnl (long double, long);
 
 /* 7.12.7.1 */
-/* Implementations adapted from Cephes versions */ 
+/* Implementations adapted from Cephes versions */
   extern double __cdecl cbrt (double);
   extern float __cdecl cbrtf (float);
   extern long double __cdecl cbrtl (long double);
@@ -342,7 +342,7 @@ __MINGW_EXTENSION long long __cdecl llrint (double);
 __MINGW_EXTENSION long long __cdecl llrintf (float);
 __MINGW_EXTENSION long long __cdecl llrintl (long double);
 
-/* Inline versions of above. 
+/* Inline versions of above.
    GCC 4.0+ can do a better fast-math job with __builtins. */
 
 #ifndef __CRT__NO_INLINE
@@ -368,7 +368,7 @@ __MINGW_EXTENSION long long __cdecl llrintl (long double);
     return retval;
   }
 
-  __CRT_INLINE long __cdecl lrint (double x) 
+  __CRT_INLINE long __cdecl lrint (double x)
   {
     long retval = 0;
     __asm__ __volatile__							      \
@@ -376,7 +376,7 @@ __MINGW_EXTENSION long long __cdecl llrintl (long double);
       return retval;
   }
 
-  __CRT_INLINE long __cdecl lrintf (float x) 
+  __CRT_INLINE long __cdecl lrintf (float x)
   {
     long retval = 0;
     __asm__ __volatile__							      \
@@ -384,7 +384,7 @@ __MINGW_EXTENSION long long __cdecl llrintl (long double);
       return retval;
   }
 
-  __CRT_INLINE long __cdecl lrintl (long double x) 
+  __CRT_INLINE long __cdecl lrintl (long double x)
   {
     long retval = 0;
     __asm__ __volatile__							      \
@@ -392,7 +392,7 @@ __MINGW_EXTENSION long long __cdecl llrintl (long double);
       return retval;
   }
 
-  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llrint (double x) 
+  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llrint (double x)
   {
     __MINGW_EXTENSION long long retval = 0ll;
     __asm__ __volatile__							      \
@@ -400,7 +400,7 @@ __MINGW_EXTENSION long long __cdecl llrintl (long double);
       return retval;
   }
 
-  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llrintf (float x) 
+  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llrintf (float x)
   {
     __MINGW_EXTENSION long long retval = 0ll;
     __asm__ __volatile__							      \
@@ -408,7 +408,7 @@ __MINGW_EXTENSION long long __cdecl llrintl (long double);
       return retval;
   }
 
-  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llrintl (long double x) 
+  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llrintl (long double x)
   {
     __MINGW_EXTENSION long long retval = 0ll;
     __asm__ __volatile__							      \
@@ -423,7 +423,7 @@ __MINGW_EXTENSION long long __cdecl llrintl (long double);
   extern double __cdecl round (double);
   extern float __cdecl roundf (float);
   extern long double __cdecl roundl (long double);
-  
+
 /* 7.12.9.7  */
   extern long __cdecl lround (double);
   extern long __cdecl lroundf (float);
@@ -431,7 +431,7 @@ __MINGW_EXTENSION long long __cdecl llrintl (long double);
   __MINGW_EXTENSION long long __cdecl llround (double);
   __MINGW_EXTENSION long long __cdecl llroundf (float);
   __MINGW_EXTENSION long long __cdecl llroundl (long double);
-  
+
 /* 7.12.9.8 */
 /* round towards zero, regardless of fpu control word settings */
   extern double __cdecl trunc (double);
@@ -441,7 +441,7 @@ __MINGW_EXTENSION long long __cdecl llrintl (long double);
 /* 7.12.10.1 Double in C89 */
   // fmod functions. Already in math.h
 
-/* 7.12.10.2 */ 
+/* 7.12.10.2 */
   extern double __cdecl remainder (double, double);
   extern float __cdecl remainderf (float, float);
   extern long double __cdecl remainderl (long double, long double);
@@ -499,17 +499,17 @@ __MINGW_EXTENSION long long __cdecl llrintl (long double);
   extern long double __cdecl fminl (long double, long double);
 
 /* 7.12.13.1 */
-/* return x * y + z as a ternary op */ 
+/* return x * y + z as a ternary op */
   extern double __cdecl fma (double, double, double);
   extern float __cdecl fmaf (float, float, float);
   extern long double __cdecl fmal (long double, long double, long double);
 
 /* 7.12.14 */
-/* 
+/*
  *  With these functions, comparisons involving quiet NaNs set the FP
  *  condition code to "unordered".  The IEEE floating-point spec
  *  dictates that the result of floating-point comparisons should be
- *  false whenever a NaN is involved, with the exception of the != op, 
+ *  false whenever a NaN is involved, with the exception of the != op,
  *  which always returns true: yes, (NaN != NaN) is true).
  */
 

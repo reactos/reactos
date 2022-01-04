@@ -63,6 +63,7 @@ char __syserr39[] = "No locks available (ENOLCK)";
 char __syserr40[] = "Function not implemented (ENOSYS)";
 char __syserr41[] = "Directory not empty (ENOTEMPTY)";
 char __syserr42[] = "Illegal byte sequence (EILSEQ)";
+char __syserr43[] = "Unknown/generic error";
 
 char *_sys_errlist[] = {
 __syserr00, __syserr01, __syserr02, __syserr03, __syserr04,
@@ -73,7 +74,7 @@ __syserr20, __syserr21, __syserr22, __syserr23, __syserr24,
 __syserr25, __syserr26, __syserr27, __syserr28, __syserr29,
 __syserr30, __syserr31, __syserr32, __syserr33, __syserr34,
 __syserr35, __syserr36, __syserr37, __syserr38, __syserr39,
-__syserr40, __syserr41, __syserr42
+__syserr40, __syserr41, __syserr42, __syserr43
 };
 
 int _sys_nerr = sizeof(_sys_errlist) / sizeof(_sys_errlist[0]) - 1;

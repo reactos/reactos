@@ -32,7 +32,7 @@ TestSetUnhandledExceptionFilter(VOID)
 	ok(p2 != Filter2, "SetUnhandledExceptionFilter returned what was set, not prev\n");
 	ok(p2 == Filter1, "SetUnhandledExceptionFilter didn't return previous filter\n");
 	ok(p1 != p2, "SetUnhandledExceptionFilter seems to return random stuff\n");
-    
+
     p1 = SetUnhandledExceptionFilter(NULL);
     ok(p1 == Filter2, "SetUnhandledExceptionFilter didn't return previous filter\n");
 }
@@ -41,19 +41,19 @@ static LONG WINAPI ExceptionFilterSSESupport(LPEXCEPTION_POINTERS exp)
 {
     PEXCEPTION_RECORD rec = exp->ExceptionRecord;
     PCONTEXT ctx = exp->ContextRecord;
-    
+
     trace("Exception raised while using SSE instructions.\n");
 
     ok(rec->ExceptionCode == EXCEPTION_ILLEGAL_INSTRUCTION, "Exception code is 0x%08x.\n", (unsigned int)rec->ExceptionCode);
-    
+
     if(rec->ExceptionCode != EXCEPTION_ILLEGAL_INSTRUCTION)
     {
         trace("Unexpected exception code, terminating!\n");
         return EXCEPTION_EXECUTE_HANDLER;
     }
-    
+
     ok((ctx->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL, "Context does not contain control register.\n");
-    
+
 #ifdef _M_IX86
     ctx->Eip += 3;
 #elif defined(_M_AMD64)
@@ -76,21 +76,21 @@ static LONG WINAPI ExceptionFilterSSEException(LPEXCEPTION_POINTERS exp)
 #else
     ULONG ExpectedExceptionCode = STATUS_FLOAT_MULTIPLE_TRAPS;
 #endif
-    
+
     trace("Exception raised while dividing by 0.\n");
-    
+
     ok(rec->ExceptionCode == ExpectedExceptionCode, "Exception code is 0x%08x.\n", (unsigned int)rec->ExceptionCode);
-    
+
     if(rec->ExceptionCode != ExpectedExceptionCode)
     {
         trace("Unexpected exception code, terminating!\n");
         return EXCEPTION_EXECUTE_HANDLER;
     }
-    
+
     ok((ctx->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL, "Context does not contain control register.\n");
-    
+
     ExceptionCaught = TRUE;
-    
+
 #ifdef _M_IX86
     ctx->Eip += 3;
 #elif defined(_M_AMD64)
@@ -102,50 +102,49 @@ static LONG WINAPI ExceptionFilterSSEException(LPEXCEPTION_POINTERS exp)
     return EXCEPTION_CONTINUE_EXECUTION;
 }
 
-#ifdef __clang__
+#if defined(__clang__) || defined(__GNUC__)
 __attribute__((__target__("sse")))
 #endif
 static
 VOID TestSSEExceptions(VOID)
 {
     LPTOP_LEVEL_EXCEPTION_FILTER p;
-    BOOL supportsSSE = FALSE;
     unsigned int csr;
-    
+
     /* Test SSE support for the CPU */
     p = SetUnhandledExceptionFilter(ExceptionFilterSSESupport);
     ok(p == NULL, "Previous filter should be NULL\n");
+
+#if !defined(_M_AMD64)
+    {
+        BOOL supportsSSE = FALSE;
 #ifdef _MSC_VER
-#if defined(_M_AMD64)
-    {
-        __m128 xmm = { { 0 } };
-        xmm = _mm_xor_ps(xmm, xmm);
-        if (!ExceptionCaught) supportsSSE = TRUE;
-    }
+            __asm
+            {
+                xorps xmm0, xmm0
+                mov supportsSSE, 0x1
+            }
 #else
-    __asm
-    {
-        xorps xmm0, xmm0
-        mov supportsSSE, 0x1
-    }
-#endif
-#else
-    __asm__(
-        "xorps %%xmm0, %%xmm0\n"
-        "movl $1, %0\n"
-        : "=r"(supportsSSE)
-    );
+            __asm__(
+                "xorps %%xmm0, %%xmm0\n"
+                "movl $1, %0\n"
+                : "=r"(supportsSSE)
+            );
 #endif /* _MSC_VER */
-    if(!supportsSSE)
-    {
-        skip("CPU doesn't support SSE instructions.\n");
-        SetUnhandledExceptionFilter(NULL);
-        return;
+
+        if(!supportsSSE)
+        {
+            skip("CPU doesn't support SSE instructions.\n");
+            SetUnhandledExceptionFilter(NULL);
+            return;
+        }
     }
+#endif /* !defined(_M_AMD64) */
+
     /* Deliberately throw a divide by 0 exception */
     p = SetUnhandledExceptionFilter(ExceptionFilterSSEException);
     ok(p == ExceptionFilterSSESupport, "Unexpected old filter : 0x%p", p);
-    
+
     /* Unmask divide by 0 exception */
     csr = _mm_getcsr();
     _mm_setcsr(csr & 0xFFFFFDFF);
@@ -157,7 +156,6 @@ VOID TestSSEExceptions(VOID)
         __m128 xmm1 = { { 1., 1. } }, xmm2 = { { 0 } };
         /* Wait, aren't exceptions masked? Yes, but actually no. */
         xmm1 = _mm_div_ps(xmm1, xmm2);
-        if (!ExceptionCaught) supportsSSE = TRUE;
     }
 #else
     __asm
@@ -178,20 +176,15 @@ VOID TestSSEExceptions(VOID)
     }
 #endif
 #else
+    ULONG zeros[4] = {0, 0, 0, 0};
+    ULONG ones[4] = {0x3f800000, 0x3f800000, 0x3f800000, 0x3f800000};
     __asm__ (
-        "xorps %%xmm0, %%xmm0\n"
-        "pushl $0x3f800000\n"
-        "pushl $0x3f800000\n"
-        "pushl $0x3f800000\n"
-        "pushl $0x3f800000\n"
-        "movups (%%esp), %%xmm1\n"
-
+        "movups (%0), %%xmm0\n"
+        "movups (%1), %%xmm1\n"
         /* Divide by 0 */
         "divps %%xmm0, %%xmm1\n"
 
-        /* Clean up */
-        "addl $16, %%esp\n"
-        :
+        : : "r"(&zeros), "r"(&ones) : "xmm0", "xmm1"
     );
 #endif /* _MSC_VER */
 

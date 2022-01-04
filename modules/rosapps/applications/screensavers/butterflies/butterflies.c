@@ -231,7 +231,7 @@ void Display()
 }
 
 INT_PTR CALLBACK AboutProc(HWND hdlg, UINT msg, WPARAM wpm, LPARAM lpm){
-    
+
 	switch(msg){
 	case WM_CTLCOLORSTATIC:
 		if(((HWND)lpm == GetDlgItem(hdlg, WEBPAGE1)) || ((HWND)lpm == GetDlgItem(hdlg, WEBPAGE2)))

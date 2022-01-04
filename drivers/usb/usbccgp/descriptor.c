@@ -291,7 +291,7 @@ DumpFullConfigurationDescriptor(
         DbgPrint("Descriptor Type %x Length %lu Offset %lu\n", Descriptor->bDescriptorType, Descriptor->bLength, ((ULONG_PTR)Descriptor - (ULONG_PTR)ConfigurationDescriptor));
 
         // check for invalid descriptors
-        if (!Descriptor->bLength) 
+        if (!Descriptor->bLength)
         {
             DbgPrint("Bogus Descriptor!!!\n");
             break;

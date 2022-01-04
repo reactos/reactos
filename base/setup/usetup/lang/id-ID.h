@@ -461,21 +461,21 @@ static MUI_ENTRY idIDDevicePageEntries[] =
     {
         6,
         19,
-        "Anda dapat mengubah pengaturan perangkat keras dengan menekan tombol ATAS atau",
+        "Anda dapat mengubah pengaturan perangkat keras dengan menekan tombol",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         20,
-        "BAWAH untuk menunjuk daftar. Kemudian tekan tombol ENTER untuk memilih pengaturan",
+        "ATAS atau BAWAH untuk menunjuk daftar. Kemudian tekan tombol ENTER",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         21,
-        "alternatif.",
+        "untuk memilih pengaturan alternatif.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -593,21 +593,21 @@ static MUI_ENTRY idIDUpgradePageEntries[] =
     {
         6,
         8,
-        "Penyetelan ReactOS dapat meningkatkan salah satu dari pemasangan ReactOS yang",
+        "Penyetelan ReactOS dapat meningkatkan salah satu dari pemasangan",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "tersedia di bawah ini, atau, jika pemasangan ReactOS ini rusak, program",
+        "ReactOS yang tersedia di bawah ini, atau, jika pemasangan ReactOS",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         10,
-        "penyetelan ini dapat mengupayakan perbaikan.",
+        "ini rusak, program penyetelan ini dapat mengupayakan perbaikan.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1329,6 +1329,37 @@ static MUI_ENTRY idIDFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY idIDCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Penyetelan ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Penyetelan sekarang memeriksa partisi terpilih.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Mohon tunggu...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY idIDInstallDirectoryEntries[] =
 {
     {
@@ -1355,21 +1386,21 @@ static MUI_ENTRY idIDInstallDirectoryEntries[] =
     {
         6,
         14,
-        "Untuk mengubah direktori yang disarankan, tekan BACKSPACE untuk menghapus",
+        "Untuk mengubah direktori yang disarankan, tekan BACKSPACE untuk",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         15,
-        "beberapa karakter dan kemudian ketikkan direktori yang anda inginkan untuk",
+        "menghapus beberapa karakter dan kemudian ketikkan direktori yang",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "memasang ReactOS.",
+        "anda inginkan untuk memasang ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1414,7 +1445,7 @@ static MUI_ENTRY idIDFileCopyEntries[] =
     {
         0,
         14,
-        "This may take several minutes to complete.",
+        "Mungkin butuh beberapa waktu untuk penyelesaiannya.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1481,6 +1512,30 @@ static MUI_ENTRY idIDBootLoaderEntries[] =
         0,
         0,
         "ENTER = Lanjut   F3 = Keluar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY idIDBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2101,6 +2156,10 @@ MUI_PAGE idIDPages[] =
         idIDFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        idIDCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         idIDDeletePartitionEntries
     },
@@ -2135,6 +2194,10 @@ MUI_PAGE idIDPages[] =
     {
         SUCCESS_PAGE,
         idIDSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        idIDBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2184,8 +2247,6 @@ MUI_STRING idIDStrings[] =
     "Partisi baru ini belum diformat."},
     {STRING_INSTALLONPART,
     "Penyetelan memasang ReactOS pada Partisi"},
-    {STRING_CHECKINGPART,
-    "Penyetelan sekarang memeriksa partisi terpilih."},
     {STRING_CONTINUE,
     "ENTER = Lanjut"},
     {STRING_QUITCONTINUE,
@@ -2231,41 +2292,27 @@ MUI_STRING idIDStrings[] =
     {STRING_CHECKINGDISK,
     "Penyetelan sedang memeriksa cakram anda"},
     {STRING_FORMATDISK1,
-    " Format partiti sebagai sistem berkas %S (format cepat) "},
+    " Format partisi sebagai sistem berkas %S (format cepat) "},
     {STRING_FORMATDISK2,
     " Format partisi sebagai sistem berkas %S  "},
     {STRING_KEEPFORMAT,
     " Tetapkan sistem berkas seperti ini (tanpa perubahan) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pada %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Jenis 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "pada %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pada %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "pada %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    // {STRING_HDINFOPARTZEROED_2,
-    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Jenis 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "pada Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    // {STRING_HDINFOPARTEXISTS_2,
-    // "pada Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sJenis %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) pada %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
+    "pada %s."},
+    {STRING_PARTTYPE,
+    "Jenis 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) pada %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Penyetelan membuat partisi baru pada"},
     {STRING_UNPSPACE,
-    "    %sUkuran yang belum dipartisi%s           %6lu %s"},
+    "Ukuran yang belum dipartisi"},
     {STRING_MAXSIZE,
     "MB (maks. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

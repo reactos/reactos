@@ -314,6 +314,9 @@ NtUserGetThreadState(
       case THREADSTATE_GETMESSAGEEXTRAINFO:
          ret = (DWORD_PTR)MsqGetMessageExtraInfo();
         break;
+      case THREADSTATE_UNKNOWN13:
+         ret = FALSE; /* FIXME: See imm32 */
+         break;
    }
 
    TRACE("Leave NtUserGetThreadState, ret=%lu\n", ret);
@@ -423,7 +426,7 @@ NtUserGetGUIThreadInfo(
         MsgQueue = W32Thread->MessageQueue;
       else
       {
-        if ( Desktop ) MsgQueue = Desktop->ActiveMessageQueue;
+        MsgQueue = Desktop->ActiveMessageQueue;
       }
    }
    else

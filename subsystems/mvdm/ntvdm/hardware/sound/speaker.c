@@ -18,6 +18,7 @@
 
 /* Extra PSDK/NDK Headers */
 #include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
 
 /* DDK Driver Headers */
 #include <ntddbeep.h>

@@ -22,23 +22,6 @@ PUBLIC ApicSpuriousService
 ApicSpuriousService:
     iretq
 
-PUBLIC HackEoi
-HackEoi:
-    xor rax, rax
-    mov ax, ss
-    push rax
-    push rsp
-    pushfq
-    mov ax, cs
-    push rax
-    lea rax, HackEoiReturn[rip]
-    push rax
-    mov dword ptr [HEX(0FFFFFFFFFFFE00B0)], 0
-    iretq
-HackEoiReturn:
-    add rsp, 8 // esp was changed by the iret to the pushed value
-    ret
-
 #else
 #include <ks386.inc>
 #include <internal/i386/asmmacro.S>
@@ -53,17 +36,6 @@ TRAP_ENTRY HalpDispatchInterrupt, KI_PUSH_FAKE_ERROR_CODE
 PUBLIC _ApicSpuriousService
 _ApicSpuriousService:
     iret
-
-// VBox APIC needs an iret more or less directly following the EOI
-PUBLIC _HackEoi
-_HackEoi:
-    pushfd
-    push cs
-    push offset OnlyOnePersonKnowsHowToHackAroundVBoxBugsAndThatIsNotYou // !!
-    mov dword ptr ds:[HEX(0FFFE00B0)], 0
-    iretd
-OnlyOnePersonKnowsHowToHackAroundVBoxBugsAndThatIsNotYou:
-    ret
 
 #endif
 

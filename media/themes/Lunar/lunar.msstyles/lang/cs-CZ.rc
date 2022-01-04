@@ -1,0 +1,38 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+1000, "ReactOS"
+}
+
+STRINGTABLE
+{
+2000, "Lunar ReactOS"
+}
+
+STRINGTABLE
+{
+3000, "Normální"
+3001, "Velké písmo"
+3002, "Velmi velké písmo"
+}
+
+STRINGTABLE
+{
+4000, "Normální"
+4001, "Velké písmo"
+4002, "Velmi velké písmo"
+}
+
+STRINGTABLE
+{
+5000, "Lunar"
+5001, "Vizuální styl"
+5002, "ReactOS Foundation"
+5003, "Cernodile & Illen, založeno na stylu Lautus"
+5004, "Vydáno pod licencí GNU/GPL 2.0, 2019"
+5005, "https://reactos.org/"
+5006, "1.1"
+5007, "Vizuální styl pro ReactOS"
+}
+

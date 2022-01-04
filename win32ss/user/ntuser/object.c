@@ -237,7 +237,7 @@ static const struct
     { AllocSysObject,           /*UserKbdFileCleanup*/NULL, FreeSysObject },        /* TYPE_KBDFILE */
     { AllocThreadObject,        IntRemoveEvent,             FreeThreadObject },     /* TYPE_WINEVENTHOOK */
     { AllocSysObject,           /*UserTimerCleanup*/NULL,   FreeSysObject },        /* TYPE_TIMER */
-    { NULL,                     NULL,                       NULL },                 /* TYPE_INPUTCONTEXT */
+    { AllocInputContextObject,  UserDestroyInputContext,    UserFreeInputContext }, /* TYPE_INPUTCONTEXT */
     { NULL,                     NULL,                       NULL },                 /* TYPE_HIDDATA */
     { NULL,                     NULL,                       NULL },                 /* TYPE_DEVICEINFO */
     { NULL,                     NULL,                       NULL },                 /* TYPE_TOUCHINPUTINFO */

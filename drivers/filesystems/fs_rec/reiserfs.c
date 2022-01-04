@@ -25,9 +25,9 @@ FsRecIsReiserfsVolume(IN PRFSD_SUPER_BLOCK sb)
     UCHAR currentChar;
     int   i;
 
-    // If any characters read from disk don't match the expected magic key, we don't have a ReiserFS volume.	
-    for (i = 0; i < MAGIC_KEY_LENGTH; i++) 
-    { 
+    // If any characters read from disk don't match the expected magic key, we don't have a ReiserFS volume.
+    for (i = 0; i < MAGIC_KEY_LENGTH; i++)
+    {
         currentChar = sb->s_magic[i];
         if (currentChar != sz_MagicKey[i])
         {

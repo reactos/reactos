@@ -104,7 +104,7 @@ typedef enum _TYPE_OF_OPEN {
 typedef BOOLEAN FINISHED;
 
 //
-//  Size (characters) of stack allocated name component buffers in 
+//  Size (characters) of stack allocated name component buffers in
 //  the create/rename paths.
 //
 
@@ -125,7 +125,7 @@ FatExtendString(
     _Inout_ PVOID String,
     _In_ USHORT DesiredBufferSize,
     _In_ BOOLEAN FreeOldBuffer,
-    __out_opt PBOOLEAN NeedsFree    
+    __out_opt PBOOLEAN NeedsFree
     );
 
 VOID
@@ -180,7 +180,7 @@ FatRemoveMcbEntry (
     IN ULONG SectorCount
     );
 
-
+
 //
 //  File access check routine, implemented in AcChkSup.c
 //
@@ -207,7 +207,7 @@ FatExplicitDeviceAccessGranted (
     IN KPROCESSOR_MODE ProcessorMode
     );
 
-
+
 //
 //  Allocation support routines, implemented in AllocSup.c
 //
@@ -389,7 +389,7 @@ FatLogOf(
     IN ULONG Value
     );
 
-
+
 //
 //   Buffer control routines for data caching, implemented in CacheSup.c
 //
@@ -567,7 +567,7 @@ FatSyncUninitializeCacheMap (
     IN PFILE_OBJECT FileObject
     );
 
-
+
 //
 //  Device I/O routines, implemented in DevIoSup.c
 //
@@ -661,7 +661,7 @@ FatPerformDevIoCtrl (
     IN ULONG IoControlCode,
     IN PDEVICE_OBJECT Device,
     IN PVOID InputBuffer OPTIONAL,
-    IN ULONG InputBufferLength,    
+    IN ULONG InputBufferLength,
     OUT PVOID OutputBuffer OPTIONAL,
     IN ULONG OutputBufferLength,
     IN BOOLEAN InternalDeviceIoControl,
@@ -675,7 +675,7 @@ FatBuildZeroMdl (
     __in ULONG Length
     );
 
-
+
 //
 //  Dirent support routines, implemented in DirSup.c
 //
@@ -731,7 +731,7 @@ FatLocateDirent (
     OUT PVBO ByteOffset,
     OUT PBOOLEAN FileNameDos OPTIONAL,
     IN OUT PUNICODE_STRING Lfn OPTIONAL,
-    IN OUT PUNICODE_STRING OrigLfn OPTIONAL        
+    IN OUT PUNICODE_STRING OrigLfn OPTIONAL
     );
 
 _Requires_lock_held_(_Global_critical_region_)
@@ -849,7 +849,7 @@ FatUpdateDirentFromFcb (
 
 #define FatDirectoryKey(FcbOrDcb)  ((ULONGLONG)((FcbOrDcb)->CreationTime.QuadPart ^ (FcbOrDcb)->FirstClusterOfFile))
 
-
+
 //
 //  The following routines are used to access and manipulate the
 //  clusters containing EA data in the ea data file.  They are
@@ -1029,7 +1029,7 @@ FatUnpinEaRange (
 
 #define SizeOfFullEa(EA) (4+1+1+2+(EA)->EaNameLength+1+(EA)->EaValueLength)
 
-
+
 //
 //  The following routines are used to manipulate the fscontext fields
 //  of the file object, implemented in FilObSup.c
@@ -1049,7 +1049,7 @@ typedef enum _TYPE_OF_OPEN {
 #endif
 
 typedef enum _FAT_FLUSH_TYPE {
-    
+
     NoFlush = 0,
     Flush,
     FlushAndInvalidate,
@@ -1089,7 +1089,7 @@ FatForceCacheMiss (
     IN FAT_FLUSH_TYPE FlushType
     );
 
-
+
 //
 //  File system control routines, implemented in FsCtrl.c
 //
@@ -1123,7 +1123,7 @@ FatUnlockVolumeInternal (
     IN PFILE_OBJECT FileObject OPTIONAL
     );
 
-
+
 //
 //  Name support routines, implemented in NameSup.c
 //
@@ -1326,13 +1326,13 @@ FatSpaceInName (
     );
 
 VOID
-FatUnicodeRestoreShortNameCase( 
+FatUnicodeRestoreShortNameCase(
     IN PUNICODE_STRING ShortNameWithCase,
     IN BOOLEAN LowerCase8,
     IN BOOLEAN LowerCase3
     );
 
-
+
 //
 //  Resources support routines/macros, implemented in ResrcSup.c
 //
@@ -1661,7 +1661,7 @@ FatFilterCallbackAcquireForCreateSection (
 
 #endif
 
-
+
 //
 //  In-memory structure support routine, implemented in StrucSup.c
 //
@@ -1704,7 +1704,7 @@ FatCreateFcb (
     IN ULONG DirentOffsetWithinDirectory,
     IN PDIRENT Dirent,
     IN PUNICODE_STRING Lfn OPTIONAL,
-    IN PUNICODE_STRING OrigLfn OPTIONAL,    
+    IN PUNICODE_STRING OrigLfn OPTIONAL,
     IN BOOLEAN IsPagingFile,
     IN BOOLEAN SingleResource
     );
@@ -1730,12 +1730,12 @@ PCCB
 FatCreateCcb (
     IN PIRP_CONTEXT IrpContext
     );
-    
+
 VOID
 FatDeallocateCcbStrings(
         IN PCCB Ccb
         );
-        
+
 VOID
 FatDeleteCcb (
     IN PIRP_CONTEXT IrpContext,
@@ -1830,7 +1830,7 @@ FatPreallocateCloseContext (
     );
 
 PCLOSE_CONTEXT
-FatAllocateCloseContext( 
+FatAllocateCloseContext(
     IN PVCB Vcb
     );
 
@@ -1847,7 +1847,7 @@ FatAllocateCloseContext(
     ((S) == STATUS_NO_MEDIA_IN_DEVICE)  \
 )
 
-
+
 //
 //  Routines to support managing file names Fcbs and Dcbs.
 //  Implemented in SplaySup.c
@@ -1902,7 +1902,7 @@ FatCompareNames (
     IsLessThan : IsGreaterThan :                           \
     FatCompareNames((PSTRING)(NAMEA), (PSTRING)(NAMEB))    \
 )
-
+
 //
 //  Time conversion support routines, implemented in TimeSup.c
 //
@@ -1935,7 +1935,7 @@ FatGetCurrentFatTime (
     _In_ PIRP_CONTEXT IrpContext
     );
 
-
+
 //
 //  Low level verification routines, implemented in VerfySup.c
 //
@@ -2030,7 +2030,7 @@ FatPerformVerify (
     _In_ PDEVICE_OBJECT Device
     );
 
-
+
 //
 //  Work queue routines for posting and retrieving an Irp, implemented in
 //  workque.c
@@ -2051,6 +2051,9 @@ FatPrePostIrp (
     );
 
 VOID
+#ifdef __REACTOS__
+NTAPI
+#endif
 FatAddToWorkque (
     IN PIRP_CONTEXT IrpContext,
     IN PIRP Irp
@@ -2061,7 +2064,7 @@ FatFsdPostRequest (
     IN PIRP_CONTEXT IrpContext,
     IN PIRP Irp
     );
-
+
 //
 //  Miscellaneous support routines
 //
@@ -2182,7 +2185,7 @@ typedef union _UCHAR4 {
                                  (PVOID)NULL );                                                     \
 }
 
-
+
 //
 //  The FSD Level dispatch routines.   These routines are called by the
 //  I/O system via the dispatch table in the Driver Object.
@@ -2221,7 +2224,7 @@ FatFsdCreate (                          //  implemented in Create.c
     _Inout_ PIRP Irp
     );
 
-    
+
 _Function_class_(IRP_MJ_DEVICE_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -2366,7 +2369,7 @@ FatFsdWrite (                           //  implemented in Write.c
 
 #define CanFsdWait(IRP) IoIsOperationSynchronous(Irp)
 
-
+
 //
 //  The FSP level dispatch/main routine.  This is the routine that takes
 //  IRP's off of the work queue and calls the appropriate FSP level
@@ -2604,7 +2607,7 @@ FatFlushDirentForFile (
 );
 
 
-
+
 //
 //  The following procedure is used by the FSP and FSD routines to complete
 //  an IRP.
@@ -2837,7 +2840,7 @@ FatScanForDataTrack(
     ((N) == FAT_NTC_DCB)                \
 )
 
-#else 
+#else
 
 #define FatIsNodeTypeOplockable(N) (    \
     ((N) == FAT_NTC_FCB)                \
@@ -2862,7 +2865,7 @@ FatScanForDataTrack(
 
 #define IsFileObjectReadOnly(FO) (!((FO)->WriteAccess | (FO)->DeleteAccess))
 
-
+
 //
 //  The following two macro are used by the Fsd/Fsp exception handlers to
 //  process an exception.  The first macro is the exception filter used in the
@@ -2976,7 +2979,7 @@ __pragma(warning(pop))                                                          
     DebugBreakOnStatus( (STATUS) )                      \
     ExRaiseStatus( (STATUS) );                          \
 }
-    
+
 #define FatResetExceptionState( IRPCONTEXT ) {          \
     (IRPCONTEXT)->ExceptionStatus = STATUS_SUCCESS;     \
 }
@@ -2994,7 +2997,7 @@ __pragma(warning(pop))                                                          
     ExRaiseStatus(FsRtlNormalizeNtstatus((STATUS),STATUS_UNEXPECTED_IO_ERROR)); \
 }
 
-
+
 //
 //  The following macros are used to establish the semantics needed
 //  to do a return from within a try-finally clause.  As a rule every
@@ -3026,14 +3029,14 @@ __pragma(warning(pop))                                                          
 #define try_return(S) { S; goto try_exit; }
 #define try_leave(S) { S; _SEH2_LEAVE; }
 
-
+
 CLUSTER_TYPE
 FatInterpretClusterType (
     IN PVCB Vcb,
     IN FAT_ENTRY Entry
     );
 
-
+
 //
 //  These routines define the FileId for FAT.  Lacking a fixed/uniquifiable
 //  notion, we simply come up with one which is unique in a given snapshot

@@ -48,7 +48,7 @@ LlbConvertRtcTime(IN ULONG RtcTime,
 
     /* Get the year, based on days since 1970 */
     Year = 1970 + Days / 365;
-    
+
     /* Account for leap years which changed the number of days/year */
     Days -= (Year - 1970) * 365 + LEAPS_THRU_END_OF(Year - 1) - LEAPS_THRU_END_OF(1970 - 1);
     if (Days < 0)
@@ -64,8 +64,8 @@ LlbConvertRtcTime(IN ULONG RtcTime,
         /* How many days in this month? */
         DaysLeft = Days - LlbDayOfMonth(Month, Year);
         if (DaysLeft < 0) break;
-        
-        /* How many days left total? */             
+
+        /* How many days left total? */
         Days = DaysLeft;
     }
 

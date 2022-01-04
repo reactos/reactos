@@ -135,10 +135,10 @@ LsapCheckLogonProcess(PLSA_API_MSG RequestMsg,
     TRACE("New LogonContext: %p\n", Context);
 
     Context->ClientProcessHandle = ProcessHandle;
-    Context->Untrusted = RequestMsg->ConnectInfo.Untrusted;
+    Context->TrustedCaller = RequestMsg->ConnectInfo.TrustedCaller;
 
-    if (Context->Untrusted == FALSE)
-        Context->Untrusted = LsapIsTrustedClient(ProcessHandle);
+    if (Context->TrustedCaller)
+        Context->TrustedCaller = LsapIsTrustedClient(ProcessHandle);
 
     *LogonContext = Context;
 

@@ -57,7 +57,7 @@ __pragma(warning(suppress: 6320))                           \
 #pragma alloc_text(PAGE, CdCommonWrite)
 #endif
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonWrite (
@@ -165,7 +165,7 @@ Return Value:
     _SEH2_TRY {
 
         //
-        //  Verify the Fcb.  Allow writes if this is a DASD handle that is 
+        //  Verify the Fcb.  Allow writes if this is a DASD handle that is
         //  dismounting the volume.
         //
 
@@ -334,7 +334,7 @@ Return Value:
             } else if (WriteByteCount != ByteCount) {
 
                 CdMapUserBuffer( IrpContext, &UserBuffer );
-                
+
                 SafeZeroMemory( IrpContext,
                                 Add2Ptr( UserBuffer,
                                          ByteCount,

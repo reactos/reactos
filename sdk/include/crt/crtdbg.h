@@ -10,14 +10,6 @@
 
 #pragma pack(push,_CRT_PACKING)
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -89,11 +81,6 @@ extern "C" {
     size_t lTotalCount;
   } _CrtMemState;
 
-#ifndef _STATIC_ASSERT
-#define _STATIC_ASSERT(expr) extern char (*static_assert(void)) [(expr) ? 1 : -1]
-#endif
-
-
 // Debug reporting functions
 
 #ifdef _DEBUG
@@ -133,7 +120,7 @@ extern "C" {
 
     #define _RPTF0(rptno,msg)
     #define _RPTFN(rptno,msg,...)
-  
+
     #define _RPTFW0(rptno,msg)
     #define _RPTFWN(rptno,msg,...)
 
@@ -170,7 +157,7 @@ extern "C" {
 
     #define _RPTF0(rptno,msg)       _RPT_BASE(rptno, __FILE__, __LINE__, NULL, "%s", msg)
     #define _RPTFN(rptno,msg,...)   _RPT_BASE(rptno, __FILE__, __LINE__, NULL, msg, __VA_ARGS__)
-  
+
     #define _RPTFW0(rptno,msg)      _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, L"%s", msg)
     #define _RPTFWN(rptno,msg,...)  _RPT_BASEW(rptno, _CRT_WIDE(__FILE__), __LINE__, NULL, msg, __VA_ARGS__)
 

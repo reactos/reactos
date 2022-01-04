@@ -150,13 +150,13 @@ GetSystemInfo(IN LPSYSTEM_INFO lpSystemInfo)
                                       sizeof(BasicInfo),
                                       0);
     if (!NT_SUCCESS(Status)) return;
-                                  
+
     Status = NtQuerySystemInformation(SystemProcessorInformation,
                                       &ProcInfo,
                                       sizeof(ProcInfo),
                                       0);
     if (!NT_SUCCESS(Status)) return;
-    
+
     GetSystemInfoInternal(&BasicInfo, &ProcInfo, lpSystemInfo);
 }
 
@@ -214,13 +214,13 @@ GetNativeSystemInfo(IN LPSYSTEM_INFO lpSystemInfo)
                                            sizeof(BasicInfo),
                                            0);
     if (!NT_SUCCESS(Status)) return;
-                                  
+
     Status = RtlGetNativeSystemInformation(SystemProcessorInformation,
                                            &ProcInfo,
                                            sizeof(ProcInfo),
                                            0);
     if (!NT_SUCCESS(Status)) return;
-    
+
     GetSystemInfoInternal(&BasicInfo, &ProcInfo, lpSystemInfo);
 }
 

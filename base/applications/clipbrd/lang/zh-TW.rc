@@ -35,10 +35,10 @@ END
 STRINGTABLE
 BEGIN
     STRING_CLIPBOARD "剪貼簿檢視器"
-    STRING_CLIPFILE  "剪貼簿上的元素"
+    STRING_CLIPFILE  "剪貼簿項目"
     STRING_DELETE_MSG "要清除剪貼簿的內容嗎？"
     STRING_DELETE_TITLE "清除剪貼簿"
-    STRING_FORMAT_NT "ReactOS 的剪貼簿檔案 (*.clp)"
+    STRING_FORMAT_NT "ReactOS 剪貼簿檔案 (*.clp)"
     STRING_FORMAT_GEN "剪貼簿檔案 (*.clp)"
 END
 

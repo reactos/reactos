@@ -299,7 +299,7 @@ LlbVideoDrawChar(IN UCHAR c,
             Buffer[x] = (Line & 1) ? Color : BackColor;
             Line >>= 1;
         }
-        
+
         /* Next line */
         Buffer += ScreenWidth;
     }
@@ -312,11 +312,11 @@ LlbVideoClearScreen(IN BOOLEAN OsLoader)
     ULONG ScreenSize, p;
     ULONG BackColor;
     PUSHORT VideoBuffer;
-    
+
     /* Get frame buffer and reset cursor position */
     VideoBuffer = LlbHwGetFrameBuffer();
     ScreenCursor = 0;
-    
+
     /* Backcolor on this machine */
     if (OsLoader)
     {
@@ -333,10 +333,10 @@ LlbVideoClearScreen(IN BOOLEAN OsLoader)
 #endif
         BackColor = (BackColor << 16) | BackColor;
     }
-    
+
     /* Screen size on this machine */
     ScreenSize = LlbHwGetScreenWidth() * LlbHwGetScreenHeight();
-    
+
     /* Clear the screen with the given color */
     for (p = 0; p < ScreenSize * 2; p += 4)
     {
@@ -349,14 +349,14 @@ NTAPI
 LlbVideoPutChar(IN UCHAR c)
 {
     ULONG cx, cy, CharsPerLine, BackColor, ScreenWidth;
-    
+
     /* Backcolor on this machine */
 #ifdef BLUE_SCREEN
       BackColor = LlbHwVideoCreateColor(14, 0, 82);
 #else
       BackColor = LlbHwVideoCreateColor(0, 0, 0);
 #endif
-    
+
     /* Amount of characters in a line */
     ScreenWidth = LlbHwGetScreenWidth();
     CharsPerLine = ScreenWidth / 8;
@@ -366,7 +366,7 @@ LlbVideoPutChar(IN UCHAR c)
     {
         /* Move a line down */
         ScreenCursor += CharsPerLine - (ScreenCursor % CharsPerLine);
-    
+
         /* FIXME: Scrolling */
     }
     else

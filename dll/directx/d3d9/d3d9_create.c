@@ -156,7 +156,7 @@ VOID DestroyD3D9DeviceData(IN LPD3D9_DEVICEDATA pDeviceData)
 static BOOL GetDirect3D9AdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapters, IN DWORD AdapterIndex)
 {
     LPD3D9_DEVICEDATA pDeviceData;
-    
+
     pDeviceData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(D3D9_DEVICEDATA));
     if (NULL == pDeviceData)
     {
@@ -184,7 +184,7 @@ static BOOL GetDisplayDeviceInfo(IN OUT LPDIRECT3D9_INT pDirect3D9)
     DWORD AdapterIndex;
 
     memset(&DisplayDevice, 0, sizeof(DISPLAY_DEVICEA));
-    DisplayDevice.cb = sizeof(DISPLAY_DEVICEA);   
+    DisplayDevice.cb = sizeof(DISPLAY_DEVICEA);
 
     pDirect3D9->NumDisplayAdapters = 0;
     D3D9_PrimaryDeviceName[0] = '\0';

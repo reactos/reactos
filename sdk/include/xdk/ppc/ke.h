@@ -1,4 +1,5 @@
 $if (_WDMDDK_)
+/** Kernel definitions for PPC **/
 
 /* Interrupt request levels */
 #define PASSIVE_LEVEL                      0
@@ -103,5 +104,3 @@ NTAPI
 KeRaiseIrqlToSynchLevel(VOID);
 
 $endif
-
-

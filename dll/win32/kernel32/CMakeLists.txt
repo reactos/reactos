@@ -10,7 +10,7 @@ add_library(kernel32_shared
     client/shared_utils.c
     client/file/fileutils.c
 )
-
+target_link_libraries(kernel32_shared PRIVATE pseh)
 add_dependencies(kernel32_shared psdk)
 
 list(APPEND SOURCE
@@ -93,14 +93,18 @@ list(APPEND SOURCE
     winnls/string/sortkey.c
     k32.h)
 
+if(MSVC)
+    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
+    set_source_files_properties(wine/res.c PROPERTIES COMPILE_FLAGS /wd4146)
+endif()
+
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE
         client/i386/fiber.S
         client/i386/thread.S)
 elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
-        client/amd64/fiber.S
-        client/amd64/thread.S)
+        client/amd64/fiber.S)
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE
         client/arm/fiber.S

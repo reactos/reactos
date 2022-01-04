@@ -47,7 +47,7 @@ FillCharacterSetComboList(HWND hwndCombo)
         if (GetCPInfoExW(codePages[i], 0, &cpInfo))
         {
             trimmedName = wcschr(cpInfo.CodePageName, L'(');
-            if (!trimmedName) 
+            if (!trimmedName)
                 trimmedName = cpInfo.CodePageName;
 
             SendMessageW(hwndCombo,
@@ -678,7 +678,7 @@ wWinMain(HINSTANCE hInst,
     MSG Msg;
 
     hInstance = hInst;
-    
+
     /* Mirroring code for the titlebar */
     switch (GetUserDefaultUILanguage())
     {

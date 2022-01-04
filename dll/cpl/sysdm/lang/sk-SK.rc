@@ -14,13 +14,13 @@ CAPTION "Všeobecné"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "Systém:", IDC_STATIC, 4, 116, 32, 9
+    LTEXT "Systém:", IDC_STATIC, 4, 116, 100, 9
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "Verzia", IDC_ROSVERSION, 10, 137, 116, 9
-    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
-    LTEXT "System Uptime:", IDC_STATIC, 4, 158, 86, 9
-    LTEXT "", IDC_UPTIME, 10, 170, 116, 9
-    LTEXT "Počítač:", IDC_STATIC, 124, 116, 34, 9
+    LTEXT KERNEL_VERSION_REVISION_RC, IDC_STATIC, 10, 146, 110, 9
+    LTEXT "System Uptime:", IDC_STATIC, 4, 161, 100, 9
+    LTEXT "", IDC_UPTIME, 10, 173, 116, 9
+    LTEXT "Počítač:", IDC_STATIC, 124, 116, 100, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
     LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
     LTEXT "", IDC_MACHINELINE3, 130, 146, 118, 9
@@ -266,17 +266,18 @@ BEGIN
 END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Premenné prostredia"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "&Používateľské premenné", IDC_STATIC, 7, 12, 238, 100
+    SCROLLBAR IDC_DIALOG_GRIP, 245, 238, 7, 7, SBS_SIZEGRIP
+    GROUPBOX "&Používateľské premenné", IDC_USER_VARIABLE_GROUP, 7, 12, 238, 100
     CONTROL "", IDC_USER_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Nová...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
     PUSHBUTTON "&Upraviť...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
     PUSHBUTTON "&Odstrániť", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
-    GROUPBOX "&Systémové premenné", IDC_STATIC, 7, 116, 238, 100
+    GROUPBOX "&Systémové premenné", IDC_SYSTEM_VARIABLE_GROUP, 7, 116, 238, 100
     CONTROL "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "No&vá...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
@@ -286,17 +287,39 @@ BEGIN
     PUSHBUTTON "Zrušiť", IDCANCEL, 195, 224, 50, 14
 END
 
-IDD_EDIT_VARIABLE DIALOGEX 10, 15, 227, 71
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_VARIABLE DIALOGEX 10, 15, 372, 71
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Upraviť premennú"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&Názov premennej:", IDC_STATIC, 7, 14, 68, 8
-    EDITTEXT IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT "&Hodnota premennej:", IDC_STATIC, 7, 32, 68, 8
-    EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 116, 50, 50, 14
-    PUSHBUTTON "Zrušiť", IDCANCEL, 170, 50, 50, 14
+    SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
+    LTEXT "&Názov premennej:", IDC_STATIC, 7, 14, 50, 8
+    EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
+    LTEXT "&Hodnota premennej:", IDC_STATIC, 7, 32, 50, 8
+    EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 260, 50, 50, 14
+    PUSHBUTTON "Zrušiť", IDCANCEL, 314, 50, 50, 14
+    PUSHBUTTON "Browse Directory...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14
+    PUSHBUTTON "Browse Files...", IDC_BUTTON_BROWSE_FILE, 86, 50, 75, 14
+END
+
+IDD_EDIT_VARIABLE_FANCY DIALOGEX 10, 15, 300, 250
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
+CAPTION "Upraviť premennú"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    SCROLLBAR IDC_DIALOG_GRIP, 293, 243, 7, 7, SBS_SIZEGRIP
+    CONTROL "", IDC_LIST_VARIABLE_VALUE, "SysListView32", LVS_NOCOLUMNHEADER | LVS_EDITLABELS | LVS_SHOWSELALWAYS |
+                LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 10, 10, 224, 208, WS_EX_CLIENTEDGE
+    PUSHBUTTON "New", IDC_BUTTON_NEW, 242, 10, 50, 14
+    PUSHBUTTON "Edit", IDC_BUTTON_EDIT, 242, 30, 50, 14
+    PUSHBUTTON "Browse...", IDC_BUTTON_BROWSE_FOLDER, 242, 50, 50, 14
+    PUSHBUTTON "Delete", IDC_BUTTON_DELETE, 242, 70, 50, 14
+    PUSHBUTTON "Move Up", IDC_BUTTON_MOVE_UP, 242, 100, 50, 14
+    PUSHBUTTON "Move Down", IDC_BUTTON_MOVE_DOWN, 242, 120, 50, 14
+    PUSHBUTTON "Edit text...", IDC_BUTTON_EDIT_TEXT, 242, 150, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 188, 228, 50, 14
+    PUSHBUTTON "Zrušiť", IDCANCEL, 242, 228, 50, 14
 END
 
 IDD_LICENCE DIALOGEX 6, 5, 267, 159
@@ -347,10 +370,11 @@ BEGIN
     IDS_PAGEFILE_NONE "Žiadne"
     IDS_PAGEFILE_SYSTEM "System Managed"
     IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."
-    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini\n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributors\nWine Team\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirm Profile Delete"
     IDS_HWPROFILE_CONFIRM_DELETE "Are you sure you want to delete the hardware profile ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "The profile name is already in use."
     IDS_HWPROFILE_PROFILE "Profile"
     IDS_HWPROFILE_WARNING "Warning"
+    IDS_ENVIRONMENT_WARNING "Any changes that have been done will be discarded and the variable's value will be edited as text."
+    IDS_ENVIRONMENT_WARNING_TITLE "System Properties"
 END

@@ -2,7 +2,7 @@
 #include <asm.inc>
 #include <ks386.inc>
 
-EXTERN _KdbEnterDebuggerException:PROC
+EXTERN _KdbEnterDebuggerFirstChanceException:PROC
 
 .code
 
@@ -61,12 +61,8 @@ _KdbEnter:
      * Call KDB
      */
     mov eax, esp
-    push 1                  /* FirstChance */
     push eax                /* Push a pointer to the trap frame */
-    push 0                  /* Context */
-    push 0                  /* PreviousMode (KernelMode) */
-    push 0                  /* ExceptionRecord */
-    call _KdbEnterDebuggerException
+    call _KdbEnterDebuggerFirstChanceException
 
     /*
      * Pop the arguments and unused portions of the trap frame:

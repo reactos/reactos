@@ -312,7 +312,7 @@ MmIsDisabledPage(PEPROCESS Process, PVOID Address)
     return FALSE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeSessionSpaceLayout(VOID)

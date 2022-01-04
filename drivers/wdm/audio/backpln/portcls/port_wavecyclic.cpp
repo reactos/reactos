@@ -61,7 +61,7 @@ protected:
 
 GUID KSPROPERTY_SETID_Topology                = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
-static GUID InterfaceGuids[4] = 
+static GUID InterfaceGuids[4] =
 {
     {
          //KS_CATEGORY_AUDIO
@@ -544,8 +544,8 @@ CPortWaveCyclic::PinCount(
     }
 
     // FIXME
-    // scan filter descriptor 
-    
+    // scan filter descriptor
+
     return STATUS_UNSUCCESSFUL;
 }
 

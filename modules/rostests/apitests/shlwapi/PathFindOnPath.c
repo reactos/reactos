@@ -20,6 +20,8 @@
 #include <shlwapi.h>
 #include <assert.h>
 
+#include <pseh/pseh2.h>
+
 #define EF_FULLPATH     1
 #define EF_TESTDATA     2
 #define EF_WIN_DIR      4

@@ -74,6 +74,7 @@
     {                                                                   \
         if (!VerifyEventWaitable(Attributes->x, &Object, &WaitObject))  \
         {                                                               \
+            Status = STATUS_INVALID_HANDLE;                             \
             goto FailChannel;                                           \
         }                                                               \
         Channel->x = Attributes->x;                                     \

@@ -755,7 +755,7 @@ NTSTATUS find_actctx_dll( PUNICODE_STRING pnameW, LPWSTR *fullname, PUNICODE_STR
     {
         status = STATUS_SXS_KEY_NOT_FOUND;
         goto done;
-    }    
+    }
 
     if ((p = wcsrchr( info->lpAssemblyManifestPath, '\\' )))
     {

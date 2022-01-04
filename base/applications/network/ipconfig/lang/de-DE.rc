@@ -23,44 +23,44 @@ END
 STRINGTABLE
 BEGIN
     IDS_USAGE
-    "\nSyntax:\n \
-        ipconfig [/? | /all | /renew [Adapter] | /release [Adapter] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid Adapter |\n \
-                  /setclassid Adapter [Klassen-ID] ]\n \
-\n \
-    wobei\n \
-        Adapter         Verbindungsname\n \
-                       (Wildcards * und ? sind möglich, siehe Beispiele)\n \
-\n \
-        Optionen:\n \
-           /?           Zeigt die Hilfe an.\n \
-           /all         Zeigt alle Konfigurationsinformationen an.\n \
-           /release     Gibt die IP-Adresse für den angegebenen Adapter frei.\n \
-           /renew       Erneuert die IP-Adresse für den angegebenen Adapter.\n \
-           /flushdns    Leert den DNS-Auflösungscache.\n \
-           /registerdns Aktualisiert alle DHCP-Leases und registriert DNS-Namen.\n \
-           /displaydns  Zeigt den Inhalt des DNS-Auflösungscaches an.\n \
-           /showclassid Zeigt alle DHCP-Klassen-IDs an, die für diesen\n \
-                        Adapter zugelassen sind.\n \
-           /setclassid  Ändert die DHCP-Klassen-ID\n \
-\n \
-    Standardmäßig wird nur die IP-Adresse, die Subnetzmaske und das Standard-\n \
-    gateway für jeden an TCP/IP gebundenen Adapter angezeigt.\n \
-\n \
-    Wird bei RELEASE oder RENEW kein Adaptername angegeben, so werden die IP-\n \
-    Adressen von allen an TCP/IP gebundenen Adapter freigegeben oder erneuert.\n \
-\n \
-    Wird bei SETCLASSID kein Klassenkennung angegeben, dann wird die Klassen-\n \
-    kennung gelöscht.\n \
-\n \
-    Beispiele:\n \
-        > ipconfig                   ... Zeigt Informationen an.\n \
-        > ipconfig /all              ... Zeigt detaillierte Informationen an.\n \
-        > ipconfig /renew            ... Erneuert alle Verbindungen.\n \
-        > ipconfig /renew EL*        ... Erneuert alle Verbindungen, deren Name\n \
-                                         mit EL beginnt.\n \
-        > ipconfig /release *Ver*    ... Gibt alle passenden Verbindungen frei,\n \
-                                         z.B. ""Lokale Verbindung 1"" oder\n \
+    "\nSyntax:\n\
+        ipconfig [/? | /all | /renew [Adapter] | /release [Adapter] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid Adapter |\n\
+                  /setclassid Adapter [Klassen-ID] ]\n\
+\n\
+    wobei\n\
+        Adapter         Verbindungsname\n\
+                       (Wildcards * und ? sind möglich, siehe Beispiele)\n\
+\n\
+        Optionen:\n\
+           /?           Zeigt die Hilfe an.\n\
+           /all         Zeigt alle Konfigurationsinformationen an.\n\
+           /release     Gibt die IP-Adresse für den angegebenen Adapter frei.\n\
+           /renew       Erneuert die IP-Adresse für den angegebenen Adapter.\n\
+           /flushdns    Leert den DNS-Auflösungscache.\n\
+           /registerdns Aktualisiert alle DHCP-Leases und registriert DNS-Namen.\n\
+           /displaydns  Zeigt den Inhalt des DNS-Auflösungscaches an.\n\
+           /showclassid Zeigt alle DHCP-Klassen-IDs an, die für diesen\n\
+                        Adapter zugelassen sind.\n\
+           /setclassid  Ändert die DHCP-Klassen-ID\n\
+\n\
+    Standardmäßig wird nur die IP-Adresse, die Subnetzmaske und das Standard-\n\
+    gateway für jeden an TCP/IP gebundenen Adapter angezeigt.\n\
+\n\
+    Wird bei RELEASE oder RENEW kein Adaptername angegeben, so werden die IP-\n\
+    Adressen von allen an TCP/IP gebundenen Adapter freigegeben oder erneuert.\n\
+\n\
+    Wird bei SETCLASSID kein Klassenkennung angegeben, dann wird die Klassen-\n\
+    kennung gelöscht.\n\
+\n\
+    Beispiele:\n\
+        > ipconfig                   ... Zeigt Informationen an.\n\
+        > ipconfig /all              ... Zeigt detaillierte Informationen an.\n\
+        > ipconfig /renew            ... Erneuert alle Verbindungen.\n\
+        > ipconfig /renew EL*        ... Erneuert alle Verbindungen, deren Name\n\
+                                         mit EL beginnt.\n\
+        > ipconfig /release *Ver*    ... Gibt alle passenden Verbindungen frei,\n\
+                                         z.B. ""Lokale Verbindung 1"" oder\n\
                                               ""Lokale Verbindung 2""\n"
 END

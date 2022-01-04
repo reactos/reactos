@@ -396,8 +396,8 @@ _getcwd(
 
 #if _INTEGRAL_MAX_BITS >= 64
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -452,8 +452,8 @@ _getcwd(
     _In_ intptr_t _FindHandle,
     _Out_ struct __finddata64_t *_FindData);
 
-  _Check_return_opt_
   __MINGW_EXTENSION
+  _Check_return_opt_
   _CRTIMP
   __int64
   __cdecl
@@ -462,8 +462,8 @@ _getcwd(
     _In_ __int64 _Offset,
     _In_ int _Origin);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl

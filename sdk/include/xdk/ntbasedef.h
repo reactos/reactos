@@ -119,7 +119,7 @@
 
 #if defined(_AMD64_) || defined(_X86_)
  #define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT($ULONG)
-#elif defined(_IA64_) || defined(_ARM_)
+#elif defined(_IA64_) || defined(_ARM_) || defined(_ARM64_)
  #define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT($ULONG))
 #elif !defined(RC_INVOKED)
  #error "Unknown architecture"
@@ -314,9 +314,8 @@
 #endif /* DEPRECATE_DDK_FUNCTIONS */
 
 /* Use to silence unused variable warnings when it is intentional */
-#define UNREFERENCED_PARAMETER(P) {(P)=(P);}
-#define UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
-#define DBG_UNREFERENCED_PARAMETER(P) {(P)=(P);}
+#define UNREFERENCED_PARAMETER(P) ((void)(P))
+#define DBG_UNREFERENCED_PARAMETER(P) ((void)(P))
 #define DBG_UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
 
 /* Void Pointers */
@@ -1082,6 +1081,24 @@ $endif(_WINNT_)
 #define LANG_YORUBA                               0x6a
 #define LANG_ZULU                                 0x35
 
+#ifdef __REACTOS__
+/* WINE extensions */
+/* These are documented by the MSDN but are missing from the Windows header */
+#define LANG_MALAGASY       0x8d
+
+/* FIXME: these are not defined anywhere */
+#define LANG_SUTU           0x30
+#define LANG_TSONGA         0x31
+#define LANG_VENDA          0x33
+
+/* non standard; keep the number high enough (but < 0xff) */
+#define LANG_ASTURIAN                    0xa5
+#define LANG_ESPERANTO                   0x8f
+#define LANG_WALON                       0x90
+#define LANG_CORNISH                     0x92
+#define LANG_MANX_GAELIC                 0x94
+#endif
+
 #define SUBLANG_NEUTRAL                             0x00
 #define SUBLANG_DEFAULT                             0x01
 #define SUBLANG_SYS_DEFAULT                         0x02
@@ -1326,6 +1343,15 @@ $endif(_WINNT_)
 #define SUBLANG_YI_PRC                              0x01
 #define SUBLANG_YORUBA_NIGERIA                      0x01
 #define SUBLANG_ZULU_SOUTH_AFRICA                   0x01
+
+#ifdef __REACTOS__
+/* WINE extensions */
+#define SUBLANG_DUTCH_SURINAM              0x03
+#define SUBLANG_ROMANIAN_MOLDAVIA          0x02
+#define SUBLANG_RUSSIAN_MOLDAVIA           0x02
+#define SUBLANG_LITHUANIAN_CLASSIC         0x02
+#define SUBLANG_MANX_GAELIC                0x01
+#endif
 
 #define SORT_DEFAULT                     0x0
 #define SORT_INVARIANT_MATH              0x1

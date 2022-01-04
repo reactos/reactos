@@ -59,13 +59,6 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         return E_POINTER;
     }
 
-    FORMATETC fmt;
-    fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_HGLOBAL;
-
     WCHAR szDir[MAX_PATH], szDest[MAX_PATH], szSrc[MAX_PATH];
     SHGetSpecialFolderPathW(NULL, szDir, CSIDL_DESKTOPDIRECTORY, FALSE);
 
@@ -74,24 +67,14 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    STGMEDIUM medium;
-    hr = pDataObject->GetData(&fmt, &medium);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    CDataObjectHIDA pida(pDataObject);
+    if (FAILED_UNEXPECTEDLY(pida.hr()))
+        return pida.hr();
 
-    LPIDA pida = reinterpret_cast<LPIDA>(GlobalLock(medium.hGlobal));
-    if (!pida)
+    LPCITEMIDLIST pidlParent = HIDA_GetPIDLFolder(pida);
+    for (UINT i = 0; i < pida->cidl; ++i)
     {
-        ERR("Error locking global\n");
-        ReleaseStgMedium(&medium);
-        return E_FAIL;
-    }
-
-    LPBYTE pb = reinterpret_cast<LPBYTE>(pida);
-    LPCITEMIDLIST pidlParent = reinterpret_cast<LPCITEMIDLIST>(pb + pida->aoffset[0]);
-    for (UINT i = 1; i <= pida->cidl; ++i)
-    {
-        LPCITEMIDLIST pidlChild = reinterpret_cast<LPCITEMIDLIST>(pb + pida->aoffset[i]);
+        LPCITEMIDLIST pidlChild = HIDA_GetPIDLItem(pida, i);
 
         CComHeapPtr<ITEMIDLIST> pidl(ILCombine(pidlParent, pidlChild));
         if (!pidl)
@@ -136,9 +119,6 @@ CDeskLinkDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         if (FAILED_UNEXPECTEDLY(hr))
             break;
     }
-
-    GlobalUnlock(medium.hGlobal);
-    ReleaseStgMedium(&medium);
 
     return hr;
 }

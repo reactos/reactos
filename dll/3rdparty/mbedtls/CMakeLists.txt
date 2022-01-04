@@ -9,6 +9,7 @@ list(APPEND SOURCE
     aes.c
     aesni.c
     arc4.c
+    #aria.c
     asn1parse.c
     asn1write.c
     #base64.c
@@ -17,6 +18,8 @@ list(APPEND SOURCE
     camellia.c
     ccm.c
     #certs.c
+    #chacha20.c
+    #chachapoly.c
     cipher.c
     cipher_wrap.c
     #cmac.c
@@ -33,6 +36,7 @@ list(APPEND SOURCE
     #error.c
     gcm.c
     #havege.c
+    #hkdf.c
     hmac_drbg.c
     #md2.c
     #md4.c
@@ -41,6 +45,7 @@ list(APPEND SOURCE
     md_wrap.c
     #memory_buffer_alloc.c
     #net_sockets.c
+    #nist_kw.c
     oid.c
     padlock.c
     #pem.c
@@ -52,6 +57,8 @@ list(APPEND SOURCE
     pk_wrap.c
     #pkwrite.c
     platform.c
+    platform_util.c
+    #poly1305.c
     ripemd160.c
     rsa.c
     rsa_internal.c

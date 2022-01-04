@@ -68,7 +68,7 @@ CopyKey(HKEY hDstKey,
     HKEY hDstSubKey;
     HKEY hSrcSubKey;
 
-    DPRINT ("CopyKey() called \n");
+    DPRINT ("CopyKey() called\n");
 
     Error = RegQueryInfoKey(hSrcKey,
                             NULL,
@@ -268,7 +268,7 @@ CopyKey(HKEY hDstKey,
                  lpNameBuffer);
     }
 
-    DPRINT("CopyKey() done \n");
+    DPRINT("CopyKey() done\n");
 
     return TRUE;
 #endif

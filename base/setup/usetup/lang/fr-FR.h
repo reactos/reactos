@@ -1366,6 +1366,37 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY frFRCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup v\202rifie la partition s\202lectionn\202e.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Veuillez patienter...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY frFRInstallDirectoryEntries[] =
 {
     {
@@ -1518,6 +1549,30 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
         0,
         0,
         "ENTR\220E = Continuer   F3 = Quitter",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY frFRBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2138,6 +2193,10 @@ MUI_PAGE frFRPages[] =
         frFRFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        frFRCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         frFRDeletePartitionEntries
     },
@@ -2172,6 +2231,10 @@ MUI_PAGE frFRPages[] =
     {
         SUCCESS_PAGE,
         frFRSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        frFRBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2221,8 +2284,6 @@ MUI_STRING frFRStrings[] =
     "La nouvelle partition n'est pas encore format\202e."},
     {STRING_INSTALLONPART,
     "Setup installe ReactOS sur la partition"},
-    {STRING_CHECKINGPART,
-    "Setup v\202rifie la partition s\202lectionn\202e."},
     {STRING_CONTINUE,
     "ENTR\220E = Continuer"},
     {STRING_QUITCONTINUE,
@@ -2274,31 +2335,21 @@ MUI_STRING frFRStrings[] =
     {STRING_KEEPFORMAT,
     " Garder le syst\212me de fichiers courant (pas de changements) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Type 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "sur %I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "sur %I64u %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "sur Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
+    "sur le %s."},
+    {STRING_PARTTYPE,
+    "Type 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Disque dur %lu (Port=%hu, Bus=%hu, Id=%hu) sur %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
+    "%I64u %s Disque dur %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup a cr\202\202 une nouvelle partition sur"},
     {STRING_UNPSPACE,
-    "    %sEspace non partitionn\202%s            %6lu %s"},
+    "Espace non partitionn\202"},
     {STRING_MAXSIZE,
     "Mo (max. %lu Mo)"},
     {STRING_EXTENDED_PARTITION,

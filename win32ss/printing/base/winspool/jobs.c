@@ -435,9 +435,9 @@ SetJobA(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command
         break;
     case 1:
       {
+        JOB_INFO_1A *info1A = (JOB_INFO_1A*)pJobInfo;
         JOB_INFO_1W *info1W = HeapAlloc(GetProcessHeap(), 0, sizeof(*info1W));
         ZeroMemory( info1W, sizeof(JOB_INFO_1W) );
-        JOB_INFO_1A *info1A = (JOB_INFO_1A*)pJobInfo;
 
         JobW = (LPBYTE)info1W;
         info1W->pUserName = AsciiToUnicode(&usBuffer, info1A->pUserName);
@@ -452,9 +452,9 @@ SetJobA(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command
       }
     case 2:
       {
+        JOB_INFO_2A *info2A = (JOB_INFO_2A*)pJobInfo;
         JOB_INFO_2W *info2W = HeapAlloc(GetProcessHeap(), 0, sizeof(*info2W));
         ZeroMemory( info2W, sizeof(JOB_INFO_2W) );
-        JOB_INFO_2A *info2A = (JOB_INFO_2A*)pJobInfo;
 
         JobW = (LPBYTE)info2W;
         info2W->pUserName = AsciiToUnicode(&usBuffer, info2A->pUserName);

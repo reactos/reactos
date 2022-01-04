@@ -411,8 +411,8 @@ USBAudioPnPSurpriseRemoval(
 {
     /* TODO: stop streams */
 	UNIMPLEMENTED;
-}  
-  
+}
+
 NTSTATUS
 NTAPI
 USBAudioPnPQueryPower(

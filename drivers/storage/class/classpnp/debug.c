@@ -422,7 +422,7 @@ Revision History:
         A pointer to the value to be incremented.
 
     --*/
-    __inline VOID DbgSafeInc(PULONG pValue)
+    static VOID DbgSafeInc(PULONG pValue)
     {
         ULONG incrementResult;
         if(NT_SUCCESS(RtlULongAdd(*pValue, 1, &incrementResult))) {

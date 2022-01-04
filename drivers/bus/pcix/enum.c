@@ -1601,7 +1601,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
 
         /* Check for hack which only allows bus to have one child device */
         if (PdoExtension->HackFlags & PCI_HACK_ONE_CHILD) MaxDevice = 1;
-      
+
         /* Check if the secondary bus number has changed */
         PciReadDeviceConfig(PdoExtension,
                             &SecondaryBus,

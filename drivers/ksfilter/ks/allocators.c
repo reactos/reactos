@@ -415,7 +415,7 @@ KsValidateAllocatorCreateRequest(
 
     /* allowed supported flags */
     SupportedFlags = (KSALLOCATOR_OPTIONF_COMPATIBLE | KSALLOCATOR_OPTIONF_SYSTEM_MEMORY |
-                      KSALLOCATOR_REQUIREMENTF_INPLACE_MODIFIER | KSALLOCATOR_REQUIREMENTF_SYSTEM_MEMORY | KSALLOCATOR_REQUIREMENTF_FRAME_INTEGRITY | 
+                      KSALLOCATOR_REQUIREMENTF_INPLACE_MODIFIER | KSALLOCATOR_REQUIREMENTF_SYSTEM_MEMORY | KSALLOCATOR_REQUIREMENTF_FRAME_INTEGRITY |
                       KSALLOCATOR_REQUIREMENTF_MUST_ALLOCATE);
 
 
@@ -607,7 +607,7 @@ KsCreateDefaultAllocatorEx(
     }
 
     /* allocate object header */
-    
+
     Status = KsAllocateObjectHeader((KSOBJECT_HEADER*)&Allocator->Header, 0, NULL, Irp, &DispatchTable);
     if (!NT_SUCCESS(Status))
     {

@@ -38,14 +38,14 @@ NTAPI
 LlbHwGetSerialUart(VOID)
 {
     return 0;
-} 
+}
 
 ULONG
 LlbHwRtcRead(VOID)
 {
     /* Issue the GET_TIME request on the RTC control register */
     LlbHwOmap3TwlWrite1(0x4B, 0x29, 0x41);
-    
+
     /* Read the BCD registers and convert them */
     LlbTime.Second = BCD_INT(LlbHwOmap3TwlRead1(0x4B, 0x1C));
     LlbTime.Minute = BCD_INT(LlbHwOmap3TwlRead1(0x4B, 0x1D));

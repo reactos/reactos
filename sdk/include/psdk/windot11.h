@@ -23,7 +23,7 @@ typedef enum _DOT11_PHY_TYPE {
     dot11_phy_type_erp,
     dot11_phy_type_ht,
     dot11_phy_type_IHV_start,
-    dot11_phy_type_IHV_end 
+    dot11_phy_type_IHV_end
 } DOT11_PHY_TYPE;
 
 typedef enum _DOT11_AUTH_ALGORITHM {
@@ -35,7 +35,7 @@ typedef enum _DOT11_AUTH_ALGORITHM {
     DOT11_AUTH_ALGO_RSNA,
     DOT11_AUTH_ALGO_RSNA_PSK,
     DOT11_AUTH_ALGO_IHV_START          = 0x80000000,
-    DOT11_AUTH_ALGO_IHV_END            = 0xffffffff 
+    DOT11_AUTH_ALGO_IHV_END            = 0xffffffff
 } DOT11_AUTH_ALGORITHM;
 
 typedef enum _DOT11_CIPHER_ALGORITHM {

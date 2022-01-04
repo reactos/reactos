@@ -112,7 +112,7 @@ struct err_msg_item mkudf_err_msg[] = {
 //    {MKUDF_INVALID_MT_FOR_BLANK     , "Can't blank WORM"},
 
     {CHKUDF_CANT_MOUNT              , "Can't mount volume for checking"},
-    
+
     {0xffffffff                     , "Unknown error"}
 };
 

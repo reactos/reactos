@@ -2190,7 +2190,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         ++ret;
     }
 
-    EndDeferWindowPos(hDWP);
+    NtUserEndDeferWindowPosEx(hDWP, TRUE);
 
     if (hwndPrev)
         SetForegroundWindow(hwndPrev);
@@ -2384,7 +2384,7 @@ TileWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         ++ret;
     }
 
-    EndDeferWindowPos(hDWP);
+    NtUserEndDeferWindowPosEx(hDWP, TRUE);
 
     if (hwndPrev)
         SetForegroundWindow(hwndPrev);

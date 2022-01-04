@@ -52,8 +52,6 @@ CONST INT VSCROLL_WIDTH = ::GetSystemMetrics(SM_CXVSCROLL);
 void
 UpdateScrollbox()
 {
-    CONST INT EXTRASIZE = 5; /* 3 px of selection markers + 2 px of border */
-
     CRect tempRect;
     CSize sizeImageArea;
     CSize sizeScrollBox;
@@ -65,7 +63,7 @@ UpdateScrollbox()
 
     imageArea.GetClientRect(&tempRect);
     sizeImageArea = CSize(tempRect.Width(), tempRect.Height());
-    sizeImageArea += CSize(EXTRASIZE * 2, EXTRASIZE * 2);
+    sizeImageArea += CSize(GRIP_SIZE * 2, GRIP_SIZE * 2);
 
     /* show/hide the scrollbars */
     vmode = (sizeScrollBox.cy < sizeImageArea.cy ? 0 :
@@ -132,8 +130,9 @@ LRESULT CScrollboxWindow::OnHScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         scrollboxWindow.SetScrollInfo(SB_HORZ, &si);
         scrlClientWindow.MoveWindow(-scrollboxWindow.GetScrollPos(SB_HORZ),
-                   -scrollboxWindow.GetScrollPos(SB_VERT), imageModel.GetWidth() * toolsModel.GetZoom() / 1000 + 6,
-                   imageModel.GetHeight() * toolsModel.GetZoom() / 1000 + 6, TRUE);
+                   -scrollboxWindow.GetScrollPos(SB_VERT),
+                   Zoomed(imageModel.GetWidth()) + 2 * GRIP_SIZE,
+                   Zoomed(imageModel.GetHeight()) + 2 * GRIP_SIZE, TRUE);
     }
     return 0;
 }
@@ -167,8 +166,9 @@ LRESULT CScrollboxWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         }
         scrollboxWindow.SetScrollInfo(SB_VERT, &si);
         scrlClientWindow.MoveWindow(-scrollboxWindow.GetScrollPos(SB_HORZ),
-                   -scrollboxWindow.GetScrollPos(SB_VERT), imageModel.GetWidth() * toolsModel.GetZoom() / 1000 + 6,
-                   imageModel.GetHeight() * toolsModel.GetZoom() / 1000 + 6, TRUE);
+                   -scrollboxWindow.GetScrollPos(SB_VERT),
+                   Zoomed(imageModel.GetWidth()) + 2 * GRIP_SIZE,
+                   Zoomed(imageModel.GetHeight()) + 2 * GRIP_SIZE, TRUE);
     }
     return 0;
 }
@@ -176,6 +176,27 @@ LRESULT CScrollboxWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 LRESULT CScrollboxWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     selectionWindow.ShowWindow(SW_HIDE);
-    pointSP = 0;    // resets the point-buffer of the polygon and bezier functions
+
+    switch (toolsModel.GetActiveTool())
+    {
+        case TOOL_BEZIER:
+        case TOOL_SHAPE:
+            if (ToolBase::pointSP != 0)
+            {
+                toolsModel.OnCancelDraw();
+                imageArea.Invalidate();
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    toolsModel.resetTool();  // resets the point-buffer of the polygon and bezier functions
     return 0;
+}
+
+LRESULT CScrollboxWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
 }

@@ -224,7 +224,7 @@ VideoPortGetCommonBuffer(IN PVOID HwDeviceExtension,
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
     /* maximum palette size */
-    if (DesiredLength > 262144) 
+    if (DesiredLength > 262144)
     {
         /* size exceeded */
         return NULL;
@@ -279,7 +279,7 @@ VideoPortUnmapDmaMemory(
 /*
  * @implemented
  */
-PDMA 
+PDMA
 NTAPI
 VideoPortMapDmaMemory(IN PVOID HwDeviceExtension,
                       IN PVIDEO_REQUEST_PACKET pVrp,

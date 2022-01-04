@@ -1,0 +1,351 @@
+/*
+ * PROJECT:     ReactOS browseui
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Spanish (Basque) resource file
+ * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
+ */
+
+LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
+
+/* Menus */
+
+IDM_CABINET_CONTEXTMENU MENUEX
+BEGIN
+    POPUP "", 264,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "Botones e&stándar", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Barra de direcciones", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Vínculos", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Bloquear las barras de &herramientas", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Personalizar...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Etiquetas", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+        MENUITEM "Botón Ir a", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDM_CABINET_MAINMENU MENUEX
+BEGIN
+    POPUP "&Fitxategia", FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "It&xi", IDM_FILE_CLOSE
+    END
+    POPUP "&Editatu", FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+    END
+    POPUP "&Ikusi", FCIDM_MENU_VIEW
+    BEGIN
+        POPUP "&Tresna-barrak", IDM_VIEW_TOOLBARS
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "&Egoera-barra", IDM_VIEW_STATUSBAR
+        POPUP "Ex&plorer-en barra", IDM_VIEW_EXPLORERBAR
+        BEGIN
+            MENUITEM "&Bilatu\tKtrl+E", IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Gogokoak\tKtrl+I", IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&Multimedia", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Historia\tKtrl+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "&Karpetak", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
+        END
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP "&Joan", FCIDM_MENU_EXPLORE
+        BEGIN
+            MENUITEM "&Atzera\tAlt+Ezker-gezia", IDM_GOTO_BACK
+            MENUITEM "A&urrera\tAlt+Eskuin-gezia", IDM_GOTO_FORWARD
+            MENUITEM "&Igo maila bat", IDM_GOTO_UPONELEVEL
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "Et&xeko orrira\tAlt+Hasi", IDM_GOTO_HOMEPAGE
+        END
+        MENUITEM "&Freskatu", IDM_VIEW_REFRESH
+    END
+    POPUP "&Gogokoak", FCIDM_MENU_FAVORITES
+    BEGIN
+        MENUITEM "&Gehitu gogokoetan...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Antolatu gogokoak...", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "(Hutsik)", IDM_FAVORITES_EMPTY
+    END
+    POPUP "Tr&esnak", FCIDM_MENU_TOOLS
+    BEGIN
+        MENUITEM "Conectar a &unidad de red...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "De&sconectar de unidad de red...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Sincroni&zar...", IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Opciones de carpeta...", IDM_TOOLS_FOLDEROPTIONS
+    END
+    POPUP "&Laguntza", FCIDM_MENU_HELP
+    BEGIN
+        MENUITEM "&ReactOS-i buruz", IDM_HELP_ABOUT
+    END
+END
+
+IDM_TASKBAR_TOOLBARS MENUEX
+BEGIN
+    POPUP "&Barras de herramientas", -1, MFT_STRING, MFS_ENABLED, 0
+    BEGIN
+        MENUITEM "&Escritorio", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
+        MENUITEM "&Inicio rápido", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
+        MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "&Nueva barra de herramientas...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
+    END
+END
+
+IDM_BAND_MENU MENUEX
+BEGIN
+    MENUITEM "Mostrar &título", IDM_BAND_TITLE
+    MENUITEM "&Cerrar barra de herramientas", IDM_BAND_CLOSE
+END
+
+IDM_POPUPMENU MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        POPUP "&Ikusi", IDM_VIEW_MENU
+        BEGIN
+            MENUITEM "Ikono &handiak", IDM_LARGE_ICONS
+            MENUITEM "Ikono &txikiak", IDM_SMALL_ICONS
+        END
+        MENUITEM "&Ireki karpeta", IDM_OPEN_FOLDER
+        MENUITEM "&Mostrar texto", IDM_SHOW_TEXT
+    END    
+END
+
+/* Dialogs */
+
+IDD_PROGRESS_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_ANIMATION, ANIMATE_CLASSA, 0, 12, 10, 236, 30 /* TODO: style */
+    LTEXT "", IDC_TEXT_LINE,     7, 45, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
+    PUSHBUTTON "Cancelar", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+END
+
+IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "Opciones de te&xto:", -1, 4, 2, 48, 15
+    COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Opciones de ico&nos:", -1, 4, 20, 48, 15
+    COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_SEARCH_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | WS_DLGFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Buscar por parte o todos los criterios a continuación.", IDC_SEARCH_LABEL, 4, 2, 120, 20
+
+    LTEXT "Todo o parte del nombre del &archivo:", -1, 10, 25, 500, 10
+    EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+
+    LTEXT "Una &palabra o frase en el archivo:", -1, 10, 50, 500, 10
+    EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+
+    LTEXT "&Buscar en:", -1, 10, 75, 500, 10
+    CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
+
+    DEFPUSHBUTTON "Bus&car", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Parar", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
+
+    AUTOCHECKBOX "Buscar archivos y carpetas ocultos.",
+                 IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
+END
+
+/* Accelerators */
+
+IDR_ACCELERATORS ACCELERATORS
+BEGIN
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F5, IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    "R", IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+    VK_HOME, IDM_GOTO_HOMEPAGE, VIRTKEY, ALT, NOINVERT
+    "D", IDM_FAVORITES_ADDTOFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
+    VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+    VK_UP, IDM_GOTO_UPONELEVEL, VIRTKEY, ALT
+    VK_BACK, 41010, NOINVERT, VIRTKEY
+    "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
+    "Q", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
+    "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
+    "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_CANCELLING "Cancelando..."
+    IDS_REMAINING  "restantes"
+END
+
+STRINGTABLE
+BEGIN
+    800 "Contiene órdenes para trabajar con los elementos seleccionados."
+END
+
+STRINGTABLE
+BEGIN
+    864 "Contiene órdenes de edición."
+END
+
+STRINGTABLE
+BEGIN
+    928 "Contiene órdenes para manipular la vista."
+END
+
+STRINGTABLE
+BEGIN
+    992 "Contiene órdenes de herramientas."
+END
+
+STRINGTABLE
+BEGIN
+    1056 "Contiene órdenes para mostrar la Ayuda."
+END
+
+STRINGTABLE
+BEGIN
+    9025 "Cierra la ventana."
+    9026 "Sube un nivel."
+END
+
+STRINGTABLE
+BEGIN
+    9121 "Conecta a unidad de red."
+    9122 "Desconecta de unidad de red."
+END
+
+STRINGTABLE
+BEGIN
+    9250 "Muestra información sobre el programa, número de versión y copyright."
+    9252 "Muestra información de depuración."
+END
+
+STRINGTABLE
+BEGIN
+    9281 "Ir a la página anterior."
+    9282 "Ir a la página siguiente."
+    9283 "Permite cambiar la configuración."
+    9285 "Ir a página de inicio."
+END
+
+STRINGTABLE
+BEGIN
+    9362 "Abre la carpeta Organizar Favoritos."
+    9363 "Añade la página actual a la lista de Favoritos."
+END
+
+STRINGTABLE
+BEGIN
+    9505 "Muestra u oculta las barras de herramientas."
+    9506 "Muestra u oculta la barra de estado."
+    9508 "Muestra los botones estándar de la barra de herramientas."
+    9509 "Muestra la barra de direcciones."
+    9510 "Muestra la barra de vínculos rápidos."
+    9516 "Bloquear el tamaño y la posición de las barras de herramientas."
+END
+
+STRINGTABLE
+BEGIN
+    9533 "Personalizar la barra de herramientas."
+END
+
+STRINGTABLE
+BEGIN
+    9552 "Muestra u oculta una de las barras del explorador."
+    9553 "Muestra la barra de búsqueda."
+    9554 "Muestra la barra de favoritos."
+    9555 "Muestra la barra de historial."
+    9557 "Muestra la barra de carpetas."
+    9559 "Muestra la barra de medios."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SMALLICONS "Iconos pequeños"
+    IDS_LARGEICONS "Iconos grandes"
+    IDS_SHOWTEXTLABELS "Muestra etiquetas de texto"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTEXTLABELS "Sin etiquetas de texto"
+    IDS_SELECTIVETEXTONRIGHT "Selecciona el texto a la derecha"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GOBUTTONLABEL "|Ir||"
+    IDS_GOBUTTONTIPTEMPLATE "Ir a ""%s"""
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCHLABEL "Búsqueda"
+    IDS_ADDRESSBANDLABEL "Dire&cción"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FOLDERSLABEL "Carpetas"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HISTORYTEXT "&Historial\tCtrl+H"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UP "Arriba"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BACK "Volver a %s"
+    IDS_FORWARD "Ir a %s"
+    IDS_FOLDER_OPTIONS "Opciones de carpeta"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STANDARD_TOOLBAR, "|Atrás|Adelante|Subir|Búsqueda|Carpetas|Mover a|Copiar a|Borrar|Deshacer|Vistas|Detener|Recargar|Inicio|Montar disco|Desconectar|Favoritos|Historial|Pantalla completa|Propiedades|Cortar|Copiar|Pegar|Opciones de carpeta||"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BROWSEFORNEWTOOLAR "Seleccione una carpeta"
+    IDS_TOOLBAR_ERR_TITLE "Barra de herramientas"
+    IDS_TOOLBAR_ERR_TEXT "No se pudo crear la barra de herramientas."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_RESULTS "Search Results"
+    IDS_SEARCHINVALID "'%1' no es una carpeta válida."
+    IDS_SEARCH_FOLDER "Buscando %s"
+    IDS_SEARCH_FILES_FOUND "%u archivos encontrados"
+    IDS_SEARCH_OPEN_FOLDER "Abrir ubicación de &archivo"
+    IDS_COL_NAME "Nombre"
+    IDS_COL_LOCATION "En la carpeta"
+    IDS_COL_RELEVANCE "Relevancia"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+END

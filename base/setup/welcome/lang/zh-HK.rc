@@ -1,0 +1,46 @@
+/*
+ * PROJECT:     ReactOS "Welcome"/AutoRun application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS - 歡迎"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "歡迎使用 ReactOS 作業系統。\n\n 請點選左邊的主題。"
+    IDS_FONTNAME "新細明體"
+    IDS_CHECKTEXT "再次顯示這個對話方塊(&S)"
+    IDS_CLOSETEXT "結束(&Q)"
+END
+
+/* Topic buttons */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_BUTTON0 "安裝 &ReactOS"
+    IDS_TOPIC_BUTTON1 "瀏覽 &CD"
+    IDS_TOPIC_BUTTON2 "結束(&Q)"
+END
+
+/* Topic titles */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_TITLE0 "安裝 ReactOS"
+    IDS_TOPIC_TITLE1 "瀏覽 CD"
+    IDS_TOPIC_TITLE2 "結束"
+END
+
+/* Topic descriptions */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_DESC0 "重新安裝 ReactOS 或更新您的 ReactOS。"
+    IDS_TOPIC_DESC1 "瀏覽 CD 的內容。"
+    IDS_TOPIC_DESC2 "按下以結束這個應用程式。"
+END

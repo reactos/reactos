@@ -154,7 +154,7 @@ void schan_imp_deinit(void)
 #define mbedtls_ssl_handshake           pmbedtls_ssl_handshake
 #define mbedtls_ssl_init                pmbedtls_ssl_init
 #define mbedtls_ssl_read                pmbedtls_ssl_read
-#define mbedtls_ssl_conf_authmode       pmbedtls_ssl_conf_authmode 
+#define mbedtls_ssl_conf_authmode       pmbedtls_ssl_conf_authmode
 #define mbedtls_ssl_set_bio             pmbedtls_ssl_set_bio
 #define mbedtls_ssl_conf_endpoint       pmbedtls_ssl_conf_endpoint
 #define mbedtls_ssl_set_hostname        pmbedtls_ssl_set_hostname
@@ -168,7 +168,7 @@ void schan_imp_deinit(void)
 #define mbedtls_ssl_config_defaults     pmbedtls_ssl_config_defaults
 #define mbedtls_ssl_conf_dbg            pmbedtls_ssl_conf_dbg
 #define mbedtls_ssl_setup               pmbedtls_ssl_setup
-#define mbedtls_cipher_info_from_type   pmbedtls_cipher_info_from_type      
+#define mbedtls_cipher_info_from_type   pmbedtls_cipher_info_from_type
 #define mbedtls_md_info_from_type       pmbedtls_md_info_from_type
 #define mbedtls_pk_get_bitlen           pmbedtls_pk_get_bitlen
 #define mbedtls_ctr_drbg_seed           pmbedtls_ctr_drbg_seed

@@ -21,6 +21,7 @@
 #include <winbase.h>
 #include <winreg.h>
 #define NTOS_MODE_USER
+#include <ndk/ketypes.h>
 #include <ndk/kefuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
@@ -119,6 +120,7 @@ extern PGENERIC_MAPPING pServerMapping;
 extern ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;
 extern ENCRYPTED_LM_OWF_PASSWORD EmptyLmHash;
 extern RTL_RESOURCE SampResource;
+extern NT_PRODUCT_TYPE SampProductType;
 
 
 /* alias.c */
@@ -206,6 +208,21 @@ SampSetObjectAttributeString(PSAM_DB_OBJECT DbObject,
                              LPWSTR AttributeName,
                              PRPC_UNICODE_STRING String);
 
+
+/* display.c */
+
+NTSTATUS
+SampInitializeDisplayCache(VOID);
+
+NTSTATUS
+SampShutdownDisplayCache(VOID);
+
+NTSTATUS
+SampFillDisplayCache(
+    _In_ PSAM_DB_OBJECT DomainObject,
+    _In_ DOMAIN_DISPLAY_INFORMATION DisplayInformationClass);
+
+
 /* domain.c */
 
 NTSTATUS
@@ -231,6 +248,7 @@ NTSTATUS
 SampCreateAccountSid(IN PSAM_DB_OBJECT DomainObject,
                      IN ULONG ulRelativeId,
                      IN OUT PSID *AccountSid);
+
 
 /* group.h */
 
@@ -341,6 +359,7 @@ NTSTATUS
 SampCreateUserSD(IN PSID UserSid,
                  OUT PSECURITY_DESCRIPTOR *UserSd,
                  OUT PULONG Size);
+
 
 /* setup.c */
 

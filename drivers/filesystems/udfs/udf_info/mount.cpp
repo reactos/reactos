@@ -295,7 +295,7 @@ UDFUpdateXSpaceBitmaps(
 /*
     This routine updates Partition Desc & associated data structures
  */
-OSSTATUS 
+OSSTATUS
 UDFUpdatePartDesc(
     PVCB Vcb,
     int8* Buf
@@ -313,7 +313,7 @@ UDFUpdatePartDesc(
             !strcmp((int8*)&(p->partitionContents.ident), PARTITION_CONTENTS_NSR03)))
         {
             PPARTITION_HEADER_DESC phd;
-            
+
             phd = (PPARTITION_HEADER_DESC)(p->partitionContentsUse);
 #ifdef UDF_DBG
             if(phd->unallocatedSpaceTable.extLength) {
@@ -505,7 +505,7 @@ swp_loc:
     } while(sorted);
 
     for(i=0;i<Vcb->SparingCount;i++) {
-        UDFPrint(("  @%x -> %x \n", 
+        UDFPrint(("  @%x -> %x \n",
             RelocMap[i].origLocation, RelocMap[i].mappedLocation));
     }
 
@@ -524,32 +524,32 @@ swp_loc:
         // tag should be set to TID_UNUSED_DESC
         if(OS_SUCCESS(status) && (SparTable->descTag.tagIdent == TID_UNUSED_DESC)) {
 
-            BC2 = ((sizeof(SPARING_TABLE) + 
+            BC2 = ((sizeof(SPARING_TABLE) +
                     SparTable->reallocationTableLen*sizeof(SparingEntry) +
-                    Vcb->BlockSize-1) 
+                    Vcb->BlockSize-1)
                                       >> Vcb->BlockSizeBits);
             if(BC2 > BC) {
-                UDFPrint((" sizeSparingTable @%x too long: %x > %x\n", 
+                UDFPrint((" sizeSparingTable @%x too long: %x > %x\n",
                     Vcb->SparingTableLoc[i], BC2, BC
                     ));
                 continue;
             }
             status = UDFReadSectors(Vcb, FALSE, Vcb->SparingTableLoc[i],
                 BC2, FALSE, (int8*)SparTable, &ReadBytes);
-        
+
             if(!OS_SUCCESS(status)) {
-                UDFPrint((" Error reading sizeSparingTable @%x (%x)\n", 
+                UDFPrint((" Error reading sizeSparingTable @%x (%x)\n",
                     Vcb->SparingTableLoc[i], BC2
                     ));
                 continue;
             }
 
-            BC2 = ((sizeof(SPARING_TABLE) + 
+            BC2 = ((sizeof(SPARING_TABLE) +
                     Vcb->SparingCount*sizeof(SparingEntry) +
-                    Vcb->BlockSize-1) 
+                    Vcb->BlockSize-1)
                                       >> Vcb->BlockSizeBits);
             if(BC2 > BC) {
-                UDFPrint((" new sizeSparingTable @%x too long: %x > %x\n", 
+                UDFPrint((" new sizeSparingTable @%x too long: %x > %x\n",
                     Vcb->SparingTableLoc[i], BC2, BC
                     ));
                 continue;
@@ -564,7 +564,7 @@ swp_loc:
                 for(m=0; m<Vcb->SparingCount; m++) {
                     if(RelocMap[m].mappedLocation == NewRelocMap[n].mappedLocation) {
                         if(RelocMap[m].origLocation != NewRelocMap[n].origLocation) {
-                            UDFPrint(("  update @%x (%x) -> @%x (%x)\n", 
+                            UDFPrint(("  update @%x (%x) -> @%x (%x)\n",
                                 NewRelocMap[m].origLocation, NewRelocMap[m].mappedLocation,
                                 RelocMap[m].origLocation, RelocMap[m].mappedLocation));
                             merged = TRUE;
@@ -2104,7 +2104,7 @@ UDFLoadPartDesc(
                     WCacheSetMode__(&(Vcb->FastCache), WCACHE_MODE_R);
                     Vcb->LastModifiedTrack = 0;
                 }
-            } 
+            }
         }
     }
 #ifdef UDF_DBG
@@ -2217,7 +2217,7 @@ UDFVerifyPartDesc(
                     WCacheSetMode__(&(Vcb->FastCache), WCACHE_MODE_R);
                     Vcb->LastModifiedTrack = 0;*/
                 }
-            } 
+            }
         }
     }
 #ifdef UDF_DBG
@@ -2443,9 +2443,9 @@ UDFProcessSequence(
                 }
             }
         }
-    
+
 try_exit: NOTHING;
-  
+
     } _SEH2_FINALLY {
         if(Buf) MyFreePool__(Buf);
         if(Buf2) MyFreePool__(Buf2);
@@ -2488,7 +2488,7 @@ UDFVerifySequence(
                 if(!OS_SUCCESS(RC = UDFReadTagged(Vcb, Buf, vds[i].block, vds[i].block, &ident)))
                     try_return(RC);
                 UDFRegisterFsStructure(Vcb, vds[i].block, Vcb->BlockSize);
-    
+
     /*            if(i == VDS_POS_PRIMARY_VOL_DESC)
                     UDFLoadPVolDesc(Vcb,Buf);
                 else if(i == VDS_POS_LOGICAL_VOL_DESC) {
@@ -2834,7 +2834,7 @@ UDFLoadSparingTable(
         SparTableLoc = ((uint32*)(PartMap+1))[i];
         for(n=0; n<Vcb->SparingTableCount; n++) {
             if(Vcb->SparingTableLoc[i] == SparTableLoc) {
-                UDFPrint((" already processed @%x\n", 
+                UDFPrint((" already processed @%x\n",
                     SparTableLoc
                     ));
                 continue;
@@ -2845,12 +2845,12 @@ UDFLoadSparingTable(
         if(OS_SUCCESS(status) && (SparTable->descTag.tagIdent == TID_UNUSED_DESC)) {
 
             UDFRegisterFsStructure(Vcb,  SparTableLoc, Vcb->BlockSize);
-            BC2 = ((sizeof(SPARING_TABLE) + 
+            BC2 = ((sizeof(SPARING_TABLE) +
                     SparTable->reallocationTableLen*sizeof(SparingEntry) +
-                    Vcb->BlockSize-1) 
+                    Vcb->BlockSize-1)
                                       >> Vcb->BlockSizeBits);
             if(BC2 > BC) {
-                UDFPrint((" sizeSparingTable @%x too long: %x > %x\n", 
+                UDFPrint((" sizeSparingTable @%x too long: %x > %x\n",
                     SparTableLoc, BC2, BC
                     ));
                 continue;
@@ -2858,9 +2858,9 @@ UDFLoadSparingTable(
             status = UDFReadSectors(Vcb, FALSE, SparTableLoc,
                 BC2, FALSE, (int8*)SparTable, &ReadBytes);
             UDFRegisterFsStructure(Vcb,  SparTableLoc, BC2<<Vcb->BlockSizeBits);
-        
+
             if(!OS_SUCCESS(status)) {
-                UDFPrint((" Error reading sizeSparingTable @%x (%x)\n", 
+                UDFPrint((" Error reading sizeSparingTable @%x (%x)\n",
                     SparTableLoc, BC2
                     ));
                 continue;
@@ -2887,7 +2887,7 @@ UDFLoadSparingTable(
                 merged = TRUE;
                 for(m=0; m<Vcb->SparingCount; m++) {
                     if(RelocMap[m].mappedLocation == NewRelocMap[n].mappedLocation) {
-                        UDFPrint(("  dup @%x (%x) vs @%x (%x)\n", 
+                        UDFPrint(("  dup @%x (%x) vs @%x (%x)\n",
                             RelocMap[m].origLocation, RelocMap[m].mappedLocation,
                             NewRelocMap[m].origLocation, NewRelocMap[m].mappedLocation));
                         merged = FALSE;
@@ -2896,7 +2896,7 @@ UDFLoadSparingTable(
                        (RelocMap[m].mappedLocation != NewRelocMap[n].mappedLocation) &&
                        (RelocMap[m].origLocation != SPARING_LOC_AVAILABLE) &&
                        (RelocMap[m].origLocation != SPARING_LOC_CORRUPTED)) {
-                        UDFPrint(("  conflict @%x (%x) vs @%x (%x)\n", 
+                        UDFPrint(("  conflict @%x (%x) vs @%x (%x)\n",
                             RelocMap[m].origLocation, RelocMap[m].mappedLocation,
                             NewRelocMap[n].origLocation, NewRelocMap[n].mappedLocation));
                         merged = FALSE;
@@ -2904,7 +2904,7 @@ UDFLoadSparingTable(
                 }
                 if(merged) {
                     RelocMap[Vcb->SparingCount] = NewRelocMap[n];
-                    UDFPrint(("  reloc %x -> %x\n", 
+                    UDFPrint(("  reloc %x -> %x\n",
                         RelocMap[Vcb->SparingCount].origLocation, RelocMap[Vcb->SparingCount].mappedLocation));
                     Vcb->SparingCount++;
                     if(RelocMap[Vcb->SparingCount].origLocation == SPARING_LOC_AVAILABLE) {

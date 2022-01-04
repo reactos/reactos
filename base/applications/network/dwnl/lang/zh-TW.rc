@@ -1,0 +1,32 @@
+/*
+ * PROJECT:     ReactOS File Download Utility
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "用法: dwnl URL [目標]\n"
+    IDS_RESOLVING "正在解析 %s... "
+    IDS_DONE "完成。\n"
+    IDS_LENGTH_FULL "長度: %I64u [%s]\n"
+    IDS_LENGTH "長度: %I64u\n"
+    IDS_FILE_SAVED "\n檔案已儲存 saved.\n"
+    IDS_CONNECTING_TO_FULL "正在連線到 %s [%s]... "
+    IDS_CONNECTING_TO "正在連線到 %s... "
+    IDS_REDIRECTING_TO "正在重新連線到 %s... "
+    IDS_SEND_REQUEST "正在傳送要求... "
+    IDS_BYTES_DOWNLOADED "已下載 %I64u 位元組"
+    IDS_BYTES_DOWNLOADED_FULL "%2d%% (已下載 %I64u 位元組)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_DOWNLOAD "\n錯誤: 下載失敗。\n"
+    IDS_ERROR_CODE "\n錯誤: %u\n"
+    IDS_ERROR_FILENAME "\n錯誤: 無法判斷檔案名稱，請指定目標檔案名稱。\n"
+    IDS_ERROR_PROTOCOL "\n錯誤: 不支援的協定。\n"
+END

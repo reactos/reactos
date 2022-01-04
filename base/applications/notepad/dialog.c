@@ -415,6 +415,13 @@ VOID DIALOG_FileNew(VOID)
     }
 }
 
+VOID DIALOG_FileNewWindow(VOID)
+{
+    TCHAR pszNotepadExe[MAX_PATH];
+    GetModuleFileName(NULL, pszNotepadExe, ARRAYSIZE(pszNotepadExe));
+    ShellExecute(NULL, NULL, pszNotepadExe, NULL, NULL, SW_SHOWNORMAL);
+}
+
 VOID DIALOG_FileOpen(VOID)
 {
     OPENFILENAME openfilename;
@@ -433,7 +440,7 @@ VOID DIALOG_FileOpen(VOID)
     openfilename.lpstrFilter = Globals.szFilter;
     openfilename.lpstrFile = szPath;
     openfilename.nMaxFile = ARRAY_SIZE(szPath);
-    openfilename.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    openfilename.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     openfilename.lpstrDefExt = szDefaultExt;
 
     if (GetOpenFileName(&openfilename)) {

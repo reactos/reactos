@@ -13,4 +13,4 @@ list(APPEND SOURCE
     zwfile.c)
 add_library(rossym ${SOURCE})
 add_dependencies(rossym psdk bugcodes)
-target_compile_definitions(rossym INTERFACE "-D__ROS_ROSSYM__")
+target_compile_definitions(rossym INTERFACE __ROS_ROSSYM__)

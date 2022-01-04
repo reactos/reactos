@@ -594,7 +594,7 @@ CON_API(SrvGetConsoleAlias,
 CON_API(SrvGetConsoleAliases,
         CONSOLE_GETALLALIASES, GetAllAliasesRequest)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     ULONG BytesWritten = 0;
     PALIAS_HEADER Header;
 
@@ -697,7 +697,7 @@ Quit:
 CON_API(SrvGetConsoleAliasesLength,
         CONSOLE_GETALLALIASESLENGTH, GetAllAliasesLengthRequest)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PALIAS_HEADER Header;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
@@ -731,7 +731,7 @@ CON_API(SrvGetConsoleAliasesLength,
 CON_API(SrvGetConsoleAliasExes,
         CONSOLE_GETALIASESEXES, GetAliasesExesRequest)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     UINT BytesWritten = 0;
 
     if (!CsrValidateMessageBuffer(ApiMessage,

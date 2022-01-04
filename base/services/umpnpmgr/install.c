@@ -22,7 +22,7 @@
  * FILE:             base/services/umpnpmgr/install.c
  * PURPOSE:          Device installer
  * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
- *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   HervÃ© Poussineau (hpoussin@reactos.org)
  *                   Colin Finck (colin@reactos.org)
  */
 
@@ -40,7 +40,9 @@ HANDLE hUserToken = NULL;
 HANDLE hInstallEvent = NULL;
 HANDLE hNoPendingInstalls = NULL;
 
-SLIST_HEADER DeviceInstallListHead;
+/* Device-install event list */
+HANDLE hDeviceInstallListMutex;
+LIST_ENTRY DeviceInstallListHead;
 HANDLE hDeviceInstallListNotEmpty;
 
 
@@ -354,19 +356,74 @@ DWORD
 WINAPI
 DeviceInstallThread(LPVOID lpParameter)
 {
-    PSLIST_ENTRY ListEntry;
+    PLIST_ENTRY ListEntry;
     DeviceInstallParams* Params;
-    BOOL showWizard;
 
     UNREFERENCED_PARAMETER(lpParameter);
 
-    WaitForSingleObject(hInstallEvent, INFINITE);
+    // Step 1: install all drivers which were configured during the boot
 
-    showWizard = !SetupIsActive() && !IsConsoleBoot();
+    DPRINT("Step 1: Installing devices configured during the boot\n");
+
+    PWSTR deviceList;
 
     while (TRUE)
     {
-        ListEntry = InterlockedPopEntrySList(&DeviceInstallListHead);
+        ULONG devListSize;
+        DWORD status = PNP_GetDeviceListSize(NULL, NULL, &devListSize, 0);
+        if (status != CR_SUCCESS)
+        {
+            goto Step2;
+        }
+
+        deviceList = HeapAlloc(GetProcessHeap(), 0, devListSize * sizeof(WCHAR));
+        if (!deviceList)
+        {
+            goto Step2;
+        }
+
+        status = PNP_GetDeviceList(NULL, NULL, deviceList, &devListSize, 0);
+        if (status == CR_BUFFER_SMALL)
+        {
+            HeapFree(GetProcessHeap(), 0, deviceList);
+        }
+        else if (status != CR_SUCCESS)
+        {
+            DPRINT1("PNP_GetDeviceList failed with error %u\n", status);
+            goto Cleanup;
+        }
+        else // status == CR_SUCCESS
+        {
+            break;
+        }
+    }
+
+    for (PWSTR currentDev = deviceList;
+         currentDev[0] != UNICODE_NULL;
+         currentDev += lstrlenW(currentDev) + 1)
+    {
+        InstallDevice(currentDev, FALSE);
+    }
+
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, deviceList);
+
+    // Step 2: start the wait-loop for newly added devices
+Step2:
+
+    DPRINT("Step 2: Starting the wait-loop\n");
+
+    WaitForSingleObject(hInstallEvent, INFINITE);
+
+    BOOL showWizard = !SetupIsActive() && !IsConsoleBoot();
+
+    while (TRUE)
+    {
+        /* Dequeue the next oldest device-install event */
+        WaitForSingleObject(hDeviceInstallListMutex, INFINITE);
+        ListEntry = (IsListEmpty(&DeviceInstallListHead)
+                        ? NULL : RemoveHeadList(&DeviceInstallListHead));
+        ReleaseMutex(hDeviceInstallListMutex);
 
         if (ListEntry == NULL)
         {

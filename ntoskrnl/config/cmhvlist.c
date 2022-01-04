@@ -193,7 +193,7 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Quickie;
         }
-    
+
         /* Try to get the value */
         Status = ZwQueryObject(Hive->FileHandles[HFILE_TYPE_PRIMARY],
                                ObjectNameInformation,

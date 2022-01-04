@@ -368,7 +368,7 @@ struct ICD_Data
     WCHAR DriverName[256];
     /* The DLL handle */
     HMODULE hModule;
-    
+
     /* The ICD DLL exports */
     BOOL      (WINAPI *DrvCopyContext)( DHGLRC, DHGLRC, UINT );
     DHGLRC    (WINAPI *DrvCreateContext)( HDC );
@@ -386,10 +386,10 @@ struct ICD_Data
     BOOL      (WINAPI *DrvShareLists)( DHGLRC, DHGLRC );
     BOOL      (WINAPI *DrvSwapBuffers)( HDC );
     BOOL      (WINAPI *DrvSwapLayerBuffers)( HDC, UINT );
-    
+
     /* Make this a linked list */
     struct ICD_Data* next;
 };
 
 struct ICD_Data* IntGetIcdData(HDC hdc);
-    
+

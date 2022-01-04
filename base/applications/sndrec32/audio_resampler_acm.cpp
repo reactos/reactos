@@ -25,7 +25,7 @@ audio_resampler_acm::init_(void)
     wformat_src.cbSize = sizeof(WAVEFORMATEX);
     wformat_dst.cbSize = sizeof(WAVEFORMATEX);
 
-    /* Setting WAVEFORMATEX structure parameters 
+    /* Setting WAVEFORMATEX structure parameters
        according to `audio_format' in/out classes */
 
     wformat_src.wFormatTag = WAVE_FORMAT_PCM;
@@ -189,7 +189,7 @@ audio_resampler_acm::close(void)
     /* ACM sream successfully closed */
 }
 
-void 
+void
 audio_resampler_acm::audio_receive(unsigned char *data, unsigned int size)
 {
     MMRESULT err;

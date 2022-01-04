@@ -1,0 +1,23 @@
+// Chinese Traditional (zh-TW) resources by Chan Chilung <eason066@gmail.com> 2021
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+
+    IDS_USAGE, "用法: TASKLIST [/?] [/NH]\n"
+    IDS_DESCRIPTION, "\n\
+說明:\
+    這個工具會顯示電腦上目前\n\
+    正在運行的處理程序的列表。\n"
+    IDS_OPTION_TOO_MUCH, "錯誤: 無效的語法。'%1' 選項不可使用超過 '%2!d!' 次。\n"
+    IDS_INVALID_SYNTAX, "錯誤: 無效的語法。\n"
+    IDS_INVALID_OPTION, "錯誤: 指定了不明或無效的命令行選項。\n"
+    IDS_ENUM_FAILED, "錯誤: 無法枚舉處理程序列表。\n"
+    IDS_OUT_OF_MEMORY, "錯誤: 記憶體不足。\n"
+    IDS_HEADER_IMAGENAME, "映像名稱"
+    IDS_HEADER_PID, "PID"
+    IDS_HEADER_SESSION, "工作階段#"
+    IDS_HEADER_MEMUSAGE, "記憶體使用量"
+    IDS_MEMORY_STR, "%s K"
+END

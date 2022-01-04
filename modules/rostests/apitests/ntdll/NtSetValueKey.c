@@ -64,6 +64,14 @@ START_TEST(NtSetValueKey)
     };
     ULONG i;
 
+#if defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-365: Skipping ntdll_apitest:NtSetValueKey because it hangs on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     Status = RtlOpenCurrentUser(READ_CONTROL, &ParentKeyHandle);
     ok(Status == STATUS_SUCCESS, "RtlOpenCurrentUser returned %lx\n", Status);
     if (!NT_SUCCESS(Status))

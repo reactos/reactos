@@ -19,9 +19,9 @@ NTAPI
 PspGetContext(IN PKTRAP_FRAME TrapFrame,
               IN PVOID NonVolatileContext,
               IN OUT PCONTEXT Context)
-{   
+{
     PAGED_CODE();
- 
+
     /* Convert the trap frame to a context */
     KeTrapFrameToContext(TrapFrame, NULL, Context);
 }
@@ -32,9 +32,9 @@ PspSetContext(OUT PKTRAP_FRAME TrapFrame,
               OUT PVOID NonVolatileContext,
               IN PCONTEXT Context,
               IN KPROCESSOR_MODE Mode)
-{   
+{
     PAGED_CODE();
-    
+
     /* Convert the context to a trap frame structure */
     KeContextToTrapFrame(Context, NULL, TrapFrame, Context->ContextFlags, Mode);
 }
@@ -61,10 +61,10 @@ PspGetOrSetContextKernelRoutine(IN PKAPC Apc,
     Event = &GetSetContext->Event;
     Mode = GetSetContext->Mode;
     Thread = Apc->SystemArgument2;
-    
+
     /* If this is a kernel-mode request, grab the saved trap frame */
     if (Mode == KernelMode) TrapFrame = Thread->Tcb.TrapFrame;
-    
+
     /* If we don't have one, grab it from the stack */
     if (!TrapFrame)
     {

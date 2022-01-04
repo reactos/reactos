@@ -626,16 +626,16 @@ done:
 }
 
 BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
-{    
+{
     UNREFERENCED_PARAMETER(wParam);
     *Result = TRUE;
-    
+
     switch (((LPNMHDR)lParam)->code)
     {
         case TVN_ITEMEXPANDING:
             *Result = !OnTreeExpanding(g_pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
             return TRUE;
-        case TVN_SELCHANGED:    
+        case TVN_SELCHANGED:
         {
             NMTREEVIEW* pnmtv = (NMTREEVIEW*)lParam;
             /* Get the parent of the current item */
@@ -655,7 +655,7 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                 EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_GRAYED);
                 EnableMenuItem(hMenuFrame , ID_EDIT_RENAME, MF_BYCOMMAND | MF_GRAYED);
                 EnableMenuItem(hPopupMenus, ID_TREE_DELETE, MF_BYCOMMAND | MF_GRAYED);
-                EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_GRAYED); 
+                EnableMenuItem(hPopupMenus, ID_TREE_RENAME, MF_BYCOMMAND | MF_GRAYED);
             }
             else
             {
@@ -686,7 +686,7 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             return TRUE;
         }
         case TVN_ENDLABELEDIT:
-        {    
+        {
             LPCWSTR keyPath;
             HKEY hRootKey;
             HKEY hKey = NULL;
@@ -747,7 +747,7 @@ HWND CreateTreeView(HWND hwndParent, LPWSTR pHostName, HMENU id)
                             0, 0, rcClient.right, rcClient.bottom,
                             hwndParent, id, hInst, NULL);
     if (!hwndTV) return NULL;
-    
+
     /* Initialize the image list, and add items to the control.  */
     if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV, pHostName))
     {

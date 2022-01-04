@@ -175,7 +175,7 @@ LPSPropValue WINAPI LpValFindProp(ULONG,ULONG,LPSPropValue);
 static inline FILETIME FtAddFt(FILETIME ftLeft, FILETIME ftRight)
 {
     LONG64 *pl = (LONG64*)&ftLeft, *pr = (LONG64*)&ftRight;
-    union { FILETIME ft; LONG64 ll; } ftmap;    
+    union { FILETIME ft; LONG64 ll; } ftmap;
     ftmap.ll = *pl + *pr;
     return ftmap.ft;
 }
@@ -183,7 +183,7 @@ static inline FILETIME FtAddFt(FILETIME ftLeft, FILETIME ftRight)
 static inline FILETIME FtSubFt(FILETIME ftLeft, FILETIME ftRight)
 {
     LONG64 *pl = (LONG64*)&ftLeft, *pr = (LONG64*)&ftRight;
-    union { FILETIME ft; LONG64 ll; } ftmap;    
+    union { FILETIME ft; LONG64 ll; } ftmap;
     ftmap.ll = *pl - *pr;
     return ftmap.ft;
 }
@@ -191,7 +191,7 @@ static inline FILETIME FtSubFt(FILETIME ftLeft, FILETIME ftRight)
 static inline FILETIME FtNegFt(FILETIME ftLeft)
 {
     LONG64 *p = (LONG64*)&ftLeft;
-    union { FILETIME ft; LONG64 ll; } ftmap;    
+    union { FILETIME ft; LONG64 ll; } ftmap;
     ftmap.ll = -*p;
     return ftmap.ft;
 }
@@ -199,7 +199,7 @@ static inline FILETIME FtNegFt(FILETIME ftLeft)
 static inline FILETIME FtMulDw(DWORD dwLeft, FILETIME ftRight)
 {
     LONG64 l = (LONG64)dwLeft, *pr = (LONG64*)&ftRight;
-    union { FILETIME ft; LONG64 ll; } ftmap;    
+    union { FILETIME ft; LONG64 ll; } ftmap;
     ftmap.ll = l * (*pr);
     return ftmap.ft;
 }
@@ -207,7 +207,7 @@ static inline FILETIME FtMulDw(DWORD dwLeft, FILETIME ftRight)
 static inline FILETIME FtMulDwDw(DWORD dwLeft, DWORD dwRight)
 {
     LONG64 l = (LONG64)dwLeft, r = (LONG64)dwRight;
-    union { FILETIME ft; LONG64 ll; } ftmap;    
+    union { FILETIME ft; LONG64 ll; } ftmap;
     ftmap.ll = l * r;
     return ftmap.ft;
 }
@@ -253,17 +253,17 @@ DECLARE_INTERFACE_(IPropData,IMAPIProp)
 #define IPropData_AddRef(p)                    (p)->lpVtbl->AddRef(p)
 #define IPropData_Release(p)                   (p)->lpVtbl->Release(p)
         /*** IMAPIProp methods ***/
-#define IPropData_GetLastError(p,a,b,c)        (p)->lpVtbl->GetLastError(p,a,b,c)        
-#define IPropData_SaveChanges(p,a)             (p)->lpVtbl->SaveChanges(p,a)             
-#define IPropData_GetProps(p,a,b,c,d)          (p)->lpVtbl->GetProps(p,a,b,c,d)          
-#define IPropData_GetPropList(p,a,b)           (p)->lpVtbl->GetPropList(p,a,b)           
-#define IPropData_OpenProperty(p,a,b,c,d,e)    (p)->lpVtbl->OpenProperty(p,a,b,c,d,e)    
-#define IPropData_SetProps(p,a,b,c)            (p)->lpVtbl->SetProps(p,a,b,c)            
-#define IPropData_DeleteProps(p,a,b)           (p)->lpVtbl->DeleteProps(p,a,b)           
-#define IPropData_CopyTo(p,a,b,c,d,e,f,g,h,i)  (p)->lpVtbl->CopyTo(p,a,b,c,d,e,f,g,h,i)  
-#define IPropData_CopyProps(p,a,b,c,d,e,f,g)   (p)->lpVtbl->CopyProps(p,a,b,c,d,e,f,g)   
-#define IPropData_GetNamesFromIDs(p,a,b,c,d,e) (p)->lpVtbl->GetNamesFromIDs(p,a,b,c,d,e) 
-#define IPropData_GetIDsFromNames(p,a,b,c,d)   (p)->lpVtbl->GetIDsFromNames(p,a,b,c,d)   
+#define IPropData_GetLastError(p,a,b,c)        (p)->lpVtbl->GetLastError(p,a,b,c)
+#define IPropData_SaveChanges(p,a)             (p)->lpVtbl->SaveChanges(p,a)
+#define IPropData_GetProps(p,a,b,c,d)          (p)->lpVtbl->GetProps(p,a,b,c,d)
+#define IPropData_GetPropList(p,a,b)           (p)->lpVtbl->GetPropList(p,a,b)
+#define IPropData_OpenProperty(p,a,b,c,d,e)    (p)->lpVtbl->OpenProperty(p,a,b,c,d,e)
+#define IPropData_SetProps(p,a,b,c)            (p)->lpVtbl->SetProps(p,a,b,c)
+#define IPropData_DeleteProps(p,a,b)           (p)->lpVtbl->DeleteProps(p,a,b)
+#define IPropData_CopyTo(p,a,b,c,d,e,f,g,h,i)  (p)->lpVtbl->CopyTo(p,a,b,c,d,e,f,g,h,i)
+#define IPropData_CopyProps(p,a,b,c,d,e,f,g)   (p)->lpVtbl->CopyProps(p,a,b,c,d,e,f,g)
+#define IPropData_GetNamesFromIDs(p,a,b,c,d,e) (p)->lpVtbl->GetNamesFromIDs(p,a,b,c,d,e)
+#define IPropData_GetIDsFromNames(p,a,b,c,d)   (p)->lpVtbl->GetIDsFromNames(p,a,b,c,d)
 #define IPropData_HrSetObjAccess(p,a)          (p)->lpVtbl->HrSetObjAccess(p,a)
 #define IPropData_HrSetPropAccess(p,a,b)       (p)->lpVtbl->HrSetPropAccess(p,a,b)
 #define IPropData_HrGetPropAccess(p,a,b)       (p)->lpVtbl->HrGetPropAccess(p,a,b)

@@ -50,7 +50,8 @@
 #include "misc.h"
 
 #ifdef USE_CERT_PINNING
-#define CERT_ISSUER_INFO "US\r\nLet's Encrypt\r\nLet's Encrypt Authority X3"
+#define CERT_ISSUER_INFO_OLD "US\r\nLet's Encrypt\r\nLet's Encrypt Authority X3"
+#define CERT_ISSUER_INFO_NEW "US\r\nLet's Encrypt\r\nR3"
 #define CERT_SUBJECT_INFO "rapps.reactos.org"
 #endif
 
@@ -305,9 +306,7 @@ public:
 };
 
 #ifdef USE_CERT_PINNING
-typedef CHeapPtr<char, CLocalAllocator> CLocalPtr;
-
-static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr& subjectInfo, CLocalPtr& issuerInfo)
+static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char>& subjectInfo, CLocalPtr<char>& issuerInfo)
 {
     DWORD certInfoLength;
     INTERNET_CERTIFICATE_INFOA certInfo;
@@ -407,16 +406,23 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
 
         bCancelled = FALSE;
 
-        hIconBg = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICON);
-        hIconSm = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
+        if (hMainWnd)
+        {
+            hIconBg = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICON);
+            hIconSm = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
+        }
+        if (!hMainWnd || (!hIconBg || !hIconSm))
+        {
+            /* Load the default icon */
+            hIconBg = hIconSm = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        }
 
         if (hIconBg && hIconSm)
         {
-            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM) hIconBg);
-            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) hIconSm);
+            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM)hIconBg);
+            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
         }
 
-        SetWindowLongPtrW(Dlg, GWLP_USERDATA, 0);
         HWND Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
         if (Item)
         {
@@ -449,7 +455,6 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         DownloadParam *param = new DownloadParam(Dlg, AppsDownloadList, szCaption);
         unsigned int ThreadId;
         HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, (void *) param, 0, &ThreadId);
-
         if (!Thread)
         {
             return FALSE;
@@ -524,26 +529,28 @@ VOID CDownloadManager::UpdateProgress(
     }
 }
 
-VOID ShowLastError(
+BOOL ShowLastError(
     HWND hWndOwner,
+    BOOL bInetError,
     DWORD dwLastError)
 {
-    LPWSTR lpMsg;
-    
+    CLocalPtr<WCHAR> lpMsg;
+
     if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                        FORMAT_MESSAGE_FROM_SYSTEM |
-                        FORMAT_MESSAGE_IGNORE_INSERTS,
-                        NULL,
+                        FORMAT_MESSAGE_IGNORE_INSERTS |
+                        (bInetError ? FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
+                        (bInetError ? GetModuleHandleW(L"wininet.dll") : NULL),
                         dwLastError,
                         LANG_USER_DEFAULT,
                         (LPWSTR)&lpMsg,
                         0, NULL))
     {
-        return;
+        DPRINT1("FormatMessageW unexpected failure (err %d)\n", GetLastError());
+        return FALSE;
     }
 
     MessageBoxW(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
-    LocalFree(lpMsg);
+    return TRUE;
 }
 
 unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
@@ -566,7 +573,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     HANDLE hOut = INVALID_HANDLE_VALUE;
 
     unsigned char lpBuffer[4096];
-    LPCWSTR lpszAgent = L"RApps/1.0";
+    LPCWSTR lpszAgent = L"RApps/1.1";
     URL_COMPONENTSW urlComponents;
     size_t urlLength, filenameLength;
 
@@ -599,7 +606,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         {
             if (!GetStorageDirectory(Path))
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, FALSE, GetLastError());
                 goto end;
             }
         }
@@ -621,7 +628,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP);
             break;
         }
-        
+
         if (!IsWindow(hDlg)) goto end;
         SetWindowTextW(hDlg, szNewCaption.GetString());
 
@@ -632,7 +639,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         // do we have a final slash separator?
         if (!p)
         {
-            MessageBox_LoadString(hMainWnd, IDS_UNABLE_PATH);            
+            MessageBox_LoadString(hMainWnd, IDS_UNABLE_PATH);
             goto end;
         }
 
@@ -649,7 +656,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         {
             if (!CreateDirectoryW(Path.GetString(), NULL))
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, FALSE, GetLastError());
                 goto end;
             }
         }
@@ -661,7 +668,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         {
         case DLTYPE_DBUPDATE:
         case DLTYPE_DBUPDATE_UNOFFICIAL:
-            PathAppendW(Path.GetBuffer(), L"rappmgr.cab"); // whatever the URL is, use the file name L"rappmgr.cab"
+            PathAppendW(Path.GetBuffer(), APPLICATION_DATABASE_NAME);
             break;
         case DLTYPE_APPLICATION:
             PathAppendW(Path.GetBuffer(), (LPWSTR)(p + 1)); // use the filename retrieved from URL
@@ -703,7 +710,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (!hOpen)
         {
-            ShowLastError(hMainWnd, GetLastError());
+            ShowLastError(hMainWnd, TRUE, GetLastError());
             goto end;
         }
 
@@ -718,27 +725,32 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (!InternetCrackUrlW(InfoArray[iAppId].szUrl, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
         {
-            ShowLastError(hMainWnd, GetLastError());
+            ShowLastError(hMainWnd, TRUE, GetLastError());
             goto end;
         }
 
         dwContentLen = 0;
 
-        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
+        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP ||
+            urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
         {
             hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
                                      dwUrlConnectFlags,
                                      0);
             if (!hFile)
             {
-                ShowLastError(hMainWnd, GetLastError());
+                if (!ShowLastError(hMainWnd, TRUE, GetLastError()))
+                {
+                    /* Workaround for CORE-17377 */
+                    MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
+                }
                 goto end;
             }
 
             // query connection
             if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, TRUE, GetLastError());
                 goto end;
             }
 
@@ -754,16 +766,45 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         else if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
         {
             // force passive mode on FTP
-            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
+            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl, NULL, 0,
                                      dwUrlConnectFlags | INTERNET_FLAG_PASSIVE,
                                      0);
             if (!hFile)
             {
-                ShowLastError(hMainWnd, GetLastError());
+                if (!ShowLastError(hMainWnd, TRUE, GetLastError()))
+                {
+                    /* Workaround for CORE-17377 */
+                    MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
+                }
                 goto end;
             }
 
             dwContentLen = FtpGetFileSize(hFile, &dwStatus);
+        }
+        else if (urlComponents.nScheme == INTERNET_SCHEME_FILE)
+        {
+            // Add support for the file scheme so testing locally is simpler
+            WCHAR LocalFilePath[MAX_PATH];
+            DWORD cchPath = _countof(LocalFilePath);
+            // Ideally we would use PathCreateFromUrlAlloc here, but that is not exported (yet)
+            HRESULT hr = PathCreateFromUrlW(InfoArray[iAppId].szUrl, LocalFilePath, &cchPath, 0);
+            if (SUCCEEDED(hr))
+            {
+                if (CopyFileW(LocalFilePath, Path, FALSE))
+                {
+                    goto run;
+                }
+                else
+                {
+                    ShowLastError(hMainWnd, FALSE, GetLastError());
+                    goto end;
+                }
+            }
+            else
+            {
+                ShowLastError(hMainWnd, FALSE, hr);
+                goto end;
+            }
         }
 
         if (!dwContentLen)
@@ -787,8 +828,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
             (InfoArray[iAppId].DLType == DLTYPE_DBUPDATE))
         {
-            CLocalPtr subjectName, issuerName;
-            CStringW szMsgText;
+            CLocalPtr<char> subjectName, issuerName;
+            CStringA szMsgText;
             bool bAskQuestion = false;
             if (!CertGetSubjectAndIssuer(hFile, subjectName, issuerName))
             {
@@ -798,7 +839,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             else
             {
                 if (strcmp(subjectName, CERT_SUBJECT_INFO) ||
-                    strcmp(issuerName, CERT_ISSUER_INFO))
+                    (strcmp(issuerName, CERT_ISSUER_INFO_OLD) &&
+                    strcmp(issuerName, CERT_ISSUER_INFO_NEW)))
                 {
                     szMsgText.Format(IDS_MISMATCH_CERT_INFO, (char*)subjectName, (const char*)issuerName);
                     bAskQuestion = true;
@@ -807,7 +849,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
             if (bAskQuestion)
             {
-                if (MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
+                if (MessageBoxA(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
                 {
                     goto end;
                 }
@@ -819,7 +861,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (hOut == INVALID_HANDLE_VALUE)
         {
-            ShowLastError(hMainWnd, GetLastError());
+            ShowLastError(hMainWnd, FALSE, GetLastError());
             goto end;
         }
 
@@ -828,13 +870,13 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         {
             if (!InternetReadFile(hFile, lpBuffer, _countof(lpBuffer), &dwBytesRead))
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, TRUE, GetLastError());
                 goto end;
             }
 
             if (!WriteFile(hOut, &lpBuffer[0], dwBytesRead, &dwBytesWritten, NULL))
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, FALSE, GetLastError());
                 goto end;
             }
 
@@ -908,6 +950,9 @@ run:
             shExInfo.lpParameters = L"";
             shExInfo.nShow = SW_SHOW;
 
+            /* FIXME: Do we want to log installer status? */
+            WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_INSTALL, InfoArray[iAppId].szName);
+
             if (ShellExecuteExW(&shExInfo))
             {
                 //reflect installation progress in the titlebar
@@ -924,7 +969,7 @@ run:
             }
             else
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, FALSE, GetLastError());
             }
         }
 
@@ -932,7 +977,8 @@ end:
         if (hOut != INVALID_HANDLE_VALUE)
             CloseHandle(hOut);
 
-        InternetCloseHandle(hFile);
+        if (hFile)
+            InternetCloseHandle(hFile);
         InternetCloseHandle(hOpen);
 
         if (bTempfile)
@@ -990,12 +1036,12 @@ BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInf
     return TRUE;
 }
 
-BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal)
+BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo)
 {
     if (!pAppInfo)
         return FALSE;
 
-    CDownloadManager::Download(*pAppInfo, bIsModal);
+    CDownloadManager::Download(*pAppInfo, FALSE);
     return TRUE;
 }
 

@@ -7,47 +7,6 @@
 
 #include <kmt_test.h>
 
-static
-NTSTATUS
-GetNextVolumeDevice(
-    _Inout_ PUNICODE_STRING VolumeDeviceName,
-    _Inout_ PULONG VolumeNumber,
-    _In_ NTSTATUS PreviousStatus)
-{
-    NTSTATUS Status;
-
-#ifndef __REACTOS__
-    *VolumeNumber++;
-    Status = RtlStringCbPrintfW(VolumeDeviceName->Buffer,
-                                VolumeDeviceName->MaximumLength,
-                                L"\\Device\\HarddiskVolume%lu",
-                                *VolumeNumber);
-#else
-    /* ROS's storage stack is old an broken, we don't have HarddiskVolumeN */
-    ULONG DiskNumber, PartitionNumber;
-    DiskNumber = *VolumeNumber >> 16;
-    PartitionNumber = *VolumeNumber & 0xffff;
-    if (!NT_SUCCESS(PreviousStatus))
-    {
-        if (PartitionNumber == 1)
-        {
-            /* Looks like this disk doesn't exist (or has no partitions),
-             * so we're done */
-            return STATUS_NO_MORE_ENTRIES;
-        }
-        DiskNumber++;
-        PartitionNumber = 0;
-    }
-    PartitionNumber++;
-    Status = RtlStringCbPrintfW(VolumeDeviceName->Buffer,
-                                VolumeDeviceName->MaximumLength,
-                                L"\\Device\\Harddisk%lu\\Partition%lu",
-                                DiskNumber,
-                                PartitionNumber);
-    *VolumeNumber = DiskNumber << 16 | PartitionNumber;
-#endif
-    return Status;
-}
 
 static
 void
@@ -66,15 +25,16 @@ TestIoVolumeDeviceToDosName(void)
                               VolumeDeviceNameBuffer,
                               sizeof(VolumeDeviceNameBuffer));
     VolumeNumber = 0;
-    Status = STATUS_SUCCESS;
     while (1)
     {
-        Status = GetNextVolumeDevice(&VolumeDeviceName,
-                                     &VolumeNumber,
-                                     Status);
+        VolumeNumber++;
+        Status = RtlStringCbPrintfW(VolumeDeviceName.Buffer,
+                                    VolumeDeviceName.MaximumLength,
+                                    L"\\Device\\HarddiskVolume%lu",
+                                    VolumeNumber);
         if (!NT_SUCCESS(Status))
         {
-            trace("GetNextVolumeDevice(0x%lx) failed with %lx\n",
+            trace("RtlStringCbPrintfW(0x%lx) failed with %lx\n",
                   VolumeNumber, Status);
             break;
         }
@@ -111,7 +71,6 @@ TestIoVolumeDeviceToDosName(void)
             RtlFreeUnicodeString(&DosName);
         }
         ObDereferenceObject(FileObject);
-        Status = STATUS_SUCCESS;
     }
     ok(VolumeNumber > 1, "No volumes found\n");
 }

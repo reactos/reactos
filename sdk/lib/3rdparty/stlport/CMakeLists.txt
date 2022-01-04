@@ -2,13 +2,6 @@
 #uncomment this if you want to test c++ compilation
 #add_subdirectory(test)
 
-set_cpp(WITH_RTTI WITH_EXCEPTIONS WITH_STL)
-
-add_definitions(
-    -D_STLP_USE_EXCEPTIONS
-    -D_DLL -D__USE_CRTIMP
-    -D_BUILD_STLPORT)
-
 list(APPEND SOURCE
     src/allocators.cpp
     src/bitset.cpp
@@ -52,6 +45,15 @@ if(USE_CLANG_CL)
     target_compile_options(stlport PRIVATE -Wno-infinite-recursion -Wno-deprecated-register)
     target_compile_options(stlport PRIVATE -Wno-tautological-unsigned-zero-compare)
 endif()
+
+target_include_directories(stlport PRIVATE ${REACTOS_SOURCE_DIR}/sdk/include/c++/stlport)
+target_compile_definitions(stlport PRIVATE
+    _STLP_USE_EXCEPTIONS _DLL __USE_CRTIMP
+    _BUILD_STLPORT NATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/sdk/include/c++)
+
+target_include_directories(stlport INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:${REACTOS_SOURCE_DIR}/sdk/include/c++/stlport>")
+target_compile_definitions(stlport INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:NATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/sdk/include/c++>")
+set_target_cpp_properties(stlport WITH_EXCEPTIONS WITH_RTTI)
 
 add_dependencies(stlport xdk)
 add_pch(stlport src/stlport_prefix.h SOURCE)

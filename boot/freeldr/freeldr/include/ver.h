@@ -21,7 +21,7 @@
 
 /* Just some stuff */
 #define VERSION         "FreeLoader v3.0"
-#define COPYRIGHT       "Copyright (C) 1998-2007 ReactOS Team"
+#define COPYRIGHT       "Copyright (C) 1998-" COPYRIGHT_YEAR " ReactOS Team"
 #define AUTHOR_EMAIL    "<www.reactos.org>"
 #define BY_AUTHOR       "by ReactOS Team"
 

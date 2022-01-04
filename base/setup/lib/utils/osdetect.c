@@ -320,7 +320,7 @@ CheckForValidPEAndVendor(
 
             RtlStringCbCopyNW(VendorName->Buffer, VendorName->MaximumLength,
                               pvData, BufLen * sizeof(WCHAR));
-            VendorName->Length = wcslen(VendorName->Buffer) * sizeof(WCHAR);
+            VendorName->Length = (USHORT)wcslen(VendorName->Buffer) * sizeof(WCHAR);
 
             Success = TRUE;
         }

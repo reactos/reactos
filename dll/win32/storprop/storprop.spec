@@ -1,10 +1,11 @@
-@ stub CdromDisableDigitalPlayback
-@ stub CdromEnableDigitalPlayback
-@ stub CdromIsDigitalPlaybackEnabled
+@ stdcall CdromDisableDigitalPlayback(ptr ptr)
+@ stdcall CdromEnableDigitalPlayback(ptr ptr long)
+@ stdcall CdromIsDigitalPlaybackEnabled(ptr ptr ptr)
+@ stdcall CdromKnownGoodDigitalPlayback(ptr ptr)
 @ stdcall DiskClassInstaller(long ptr ptr)
 @ stdcall DllMain(ptr long ptr)
-@ stub DvdClassInstaller
-@ stub DvdLauncher
-@ stub DvdPropPageProvider
-@ stub IdePropPageProvider
-@ stub VolumePropPageProvider
+@ stdcall DvdClassInstaller(long ptr ptr)
+@ stdcall DvdLauncher(ptr long)
+@ stdcall DvdPropPageProvider(ptr ptr long)
+@ stdcall IdePropPageProvider(ptr ptr long)
+@ stdcall VolumePropPageProvider(ptr ptr long)

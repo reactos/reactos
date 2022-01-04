@@ -25,8 +25,8 @@
 
 extern BOOL bInMenuLoop;        /* Tells us if we are in the menu loop - from taskmgr.c */
 
-TGraphCtrl PerformancePageCpuUsageHistoryGraph;
-TGraphCtrl PerformancePageMemUsageHistoryGraph;
+TM_GRAPH_CONTROL PerformancePageCpuUsageHistoryGraph;
+TM_GRAPH_CONTROL PerformancePageMemUsageHistoryGraph;
 
 HWND  hPerformancePage;                               /*  Performance Property Page */
 HWND  hPerformancePageCpuUsageGraph;                  /*  CPU Usage Graph */
@@ -128,6 +128,9 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_INITDIALOG:
+    {
+        BOOL bGraph;
+        TM_FORMAT fmt;
 
         /*  Save the width and height */
         GetClientRect(hDlg, &rc);
@@ -168,30 +171,30 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         hPerformancePageMemUsageHistoryGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
         hPerformancePageCpuUsageHistoryGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
 
-        GetClientRect(hPerformancePageCpuUsageHistoryGraph, &rc);
-        /*  create the control */
-        /* PerformancePageCpuUsageHistoryGraph.Create(0, rc, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH); */
-        GraphCtrl_Create(&PerformancePageCpuUsageHistoryGraph, hPerformancePageCpuUsageHistoryGraph, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
-        /*  customize the control */
-        GraphCtrl_SetRange(&PerformancePageCpuUsageHistoryGraph, 0.0, 100.0, 10);
-/*         PerformancePageCpuUsageHistoryGraph.SetYUnits("Current") ; */
-/*         PerformancePageCpuUsageHistoryGraph.SetXUnits("Samples (Windows Timer: 100 msec)") ; */
-/*         PerformancePageCpuUsageHistoryGraph.SetBackgroundColor(RGB(0, 0, 64)) ; */
-/*         PerformancePageCpuUsageHistoryGraph.SetGridColor(RGB(192, 192, 255)) ; */
-/*         PerformancePageCpuUsageHistoryGraph.SetPlotColor(RGB(255, 255, 255)) ; */
-        GraphCtrl_SetBackgroundColor(&PerformancePageCpuUsageHistoryGraph, RGB(0, 0, 0)) ;
-        GraphCtrl_SetGridColor(&PerformancePageCpuUsageHistoryGraph, RGB(0, 128, 64));
+        /*  Create the controls */
+        fmt.clrBack = RGB(0, 0, 0);
+        fmt.clrGrid = RGB(0, 128, 64);
+        fmt.clrPlot0 = RGB(0, 255, 0);
+        fmt.clrPlot1 = RGB(255, 0, 0);
+        fmt.GridCellWidth = fmt.GridCellHeight = 12;
+        fmt.DrawSecondaryPlot = TaskManagerSettings.ShowKernelTimes;
+        bGraph = GraphCtrl_Create(&PerformancePageCpuUsageHistoryGraph, hPerformancePageCpuUsageHistoryGraph, hDlg, &fmt);
+        if (!bGraph)
+        {
+            EndDialog(hDlg, 0);
+            return FALSE;
+        }
 
-        GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 0, RGB(0, 255, 0)) ;
-        GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 1, RGB(255, 0, 0)) ;
+        fmt.clrPlot0 = RGB(255, 255, 0);
+        fmt.clrPlot1 = RGB(100, 255, 255);
+        fmt.DrawSecondaryPlot = TRUE;
+        bGraph = GraphCtrl_Create(&PerformancePageMemUsageHistoryGraph, hPerformancePageMemUsageHistoryGraph, hDlg, &fmt);
+        if (!bGraph)
+        {
+            EndDialog(hDlg, 0);
+            return FALSE;
+        }
 
-
-        GetClientRect(hPerformancePageMemUsageHistoryGraph, &rc);
-        GraphCtrl_Create(&PerformancePageMemUsageHistoryGraph, hPerformancePageMemUsageHistoryGraph, hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
-        GraphCtrl_SetRange(&PerformancePageMemUsageHistoryGraph, 0.0, 100.0, 10) ;
-        GraphCtrl_SetBackgroundColor(&PerformancePageMemUsageHistoryGraph, RGB(0, 0, 0)) ;
-        GraphCtrl_SetGridColor(&PerformancePageMemUsageHistoryGraph, RGB(0, 128, 64)) ;
-        GraphCtrl_SetPlotColor(&PerformancePageMemUsageHistoryGraph, 0, RGB(255, 255, 0)) ;
         /*  Start our refresh thread */
 #ifdef RUN_PERF_PAGE
         hPerformanceThread = CreateThread(NULL, 0, PerformancePageRefreshThread, NULL, 0, &dwPerformanceThread);
@@ -205,6 +208,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         OldGraphCtrlWndProc = (WNDPROC)SetWindowLongPtrW(hPerformancePageMemUsageHistoryGraph, GWLP_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
         SetWindowLongPtrW(hPerformancePageCpuUsageHistoryGraph, GWLP_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
         return TRUE;
+    }
 
     case WM_COMMAND:
         break;
@@ -447,16 +451,12 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
                 SendMessageW(hStatusWnd, SB_SETTEXT, 1, (LPARAM)Text);
             }
 
-            if (TaskManagerSettings.ShowKernelTimes)
-            {
-                CpuKernelUsage = PerfDataGetProcessorSystemUsage();
-                if (CpuKernelUsage <= 0)   CpuKernelUsage = 0;
-                if (CpuKernelUsage > 100) CpuKernelUsage = 100;
-            }
-            else
-            {
+            CpuKernelUsage = PerfDataGetProcessorSystemUsage();
+            if (CpuKernelUsage <= 0)
                 CpuKernelUsage = 0;
-            }
+            else if (CpuKernelUsage > 100)
+                CpuKernelUsage = 100;
+
             /*
              *  Get the memory usage
              */
@@ -468,9 +468,8 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
             PhysicalMemoryAvailable = PerfDataGetPhysicalMemoryAvailableK();
             nBarsUsed2 = PhysicalMemoryTotal ? ((PhysicalMemoryAvailable * 100) / PhysicalMemoryTotal) : 0;
 
-            GraphCtrl_AppendPoint(&PerformancePageCpuUsageHistoryGraph, CpuUsage, CpuKernelUsage, 0.0, 0.0);
-            GraphCtrl_AppendPoint(&PerformancePageMemUsageHistoryGraph, nBarsUsed1, nBarsUsed2, 0.0, 0.0);
-            /* PerformancePageMemUsageHistoryGraph.SetRange(0.0, 100.0, 10) ; */
+            GraphCtrl_AddPoint(&PerformancePageCpuUsageHistoryGraph, CpuUsage, CpuKernelUsage);
+            GraphCtrl_AddPoint(&PerformancePageMemUsageHistoryGraph, nBarsUsed1, nBarsUsed2);
             InvalidateRect(hPerformancePageMemUsageHistoryGraph, NULL, FALSE);
             InvalidateRect(hPerformancePageCpuUsageHistoryGraph, NULL, FALSE);
         }
@@ -491,13 +490,16 @@ void PerformancePage_OnViewShowKernelTimes(void)
     {
         CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_UNCHECKED);
         TaskManagerSettings.ShowKernelTimes = FALSE;
+        PerformancePageCpuUsageHistoryGraph.DrawSecondaryPlot = FALSE;
     }
     else
     {
         CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_CHECKED);
         TaskManagerSettings.ShowKernelTimes = TRUE;
+        PerformancePageCpuUsageHistoryGraph.DrawSecondaryPlot = TRUE;
     }
 
+    GraphCtrl_RedrawBitmap(&PerformancePageCpuUsageHistoryGraph, PerformancePageCpuUsageHistoryGraph.BitmapHeight);
     RefreshPerformancePage();
 }
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * List of all GL functions exported by opengl32.dll.
  * Usage: USE_GL_FUNC(name, return type, prototype arguments, call arguments, icd offset, x86 stack size)
  */

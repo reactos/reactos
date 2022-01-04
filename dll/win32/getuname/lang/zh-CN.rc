@@ -1,6 +1,6 @@
 /*
  * PROJECT:     Unicode name dll
- * FILE:        dll/win32/getuname/lang/zn-CN.rc
+ * FILE:        dll/win32/getuname/lang/zh-CN.rc
  * PURPOSE:     Unicode Description Strings
  * PROGRAMMERS: Stopkin Sergey (stopkin dot sergey at gmail dot com)
  *              2017-05-10: update from unicode-table project (github.com/unicode-table/unicode-table-data)

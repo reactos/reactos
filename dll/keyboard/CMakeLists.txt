@@ -59,6 +59,7 @@ list(APPEND _keyboard_layouts
     kbdrost
     kbdru
     kbdru1
+    kbdsf
     kbdsg
     kbdsk
     kbdsk1
@@ -98,10 +99,10 @@ foreach(_keyboard_layout ${_keyboard_layouts})
 
     if(MSVC)
         # Merge the .text and .rdata section into the .data section
-        add_target_link_flags(${_keyboard_layout} "/ignore:4254 /SECTION:.data,ER /MERGE:.text=.data /MERGE:.rdata=.data /MERGE:.bss=.data /MERGE:.edata=.data")
+        target_link_options(${_keyboard_layout} PRIVATE "/ignore:4254;/SECTION:.data,ER;/MERGE:.text=.data;/MERGE:.rdata=.data;/MERGE:.bss=.data;/MERGE:.edata=.data")
     else()
         # Use a custom linker script
-        add_target_link_flags(${_keyboard_layout} "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds")
+        target_link_options(${_keyboard_layout} PRIVATE "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds")
 
         # Avoid "universal character names are only valid in C++ and C99" error.
         set_property(TARGET ${_keyboard_layout} PROPERTY C_STANDARD 99)
@@ -109,7 +110,7 @@ foreach(_keyboard_layout ${_keyboard_layouts})
 
     # dynamic analysis switches
     if(STACK_PROTECTOR)
-        target_link_libraries(${_keyboard_layout} gcc_ssp)
+        target_compile_options(${_keyboard_layout} PRIVATE -fno-stack-protector)
     endif()
 
     if(RUNTIME_CHECKS)

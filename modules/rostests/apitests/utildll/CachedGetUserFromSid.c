@@ -61,26 +61,26 @@ static void test_Sid_Null(void)
 START_TEST(CachedGetUserFromSid)
 {
     const char szFunction[] = "CachedGetUserFromSid";
+    void* pFunction;
 
     // TODO: Dynamically checking, until ReactOS implements this dll.
-    HMODULE hModule = LoadLibraryW(L"utildll.dll");
-    DWORD dwLE = GetLastError();
+    HMODULE hModule;
+    DWORD dwLE;
 
+    hModule = LoadLibraryW(L"utildll.dll");
     if (!hModule)
     {
+        dwLE = GetLastError();
         ok(FALSE, "LoadLibraryW(\"%S\") failed! (dwLE = %lu)\n", L"utildll.dll", dwLE);
-
         skip("No DLL\n");
         return;
     }
 
-    void *pFunction = (void *)GetProcAddress(hModule, szFunction);
-    dwLE = GetLastError();
-
+    pFunction = (void*)GetProcAddress(hModule, szFunction);
     if (!pFunction)
     {
+        dwLE = GetLastError();
         ok(FALSE, "GetProcAddress(\"%s\") failed! (dwLE = %lu)\n", szFunction, dwLE);
-
         skip("No function\n");
         FreeLibrary(hModule);
         return;

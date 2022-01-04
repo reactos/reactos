@@ -51,8 +51,8 @@ int main(int argc, char **argv)
     {
         if (stricmp(argv[1],"-dumpfile")==0)
         {
-            /* create or over write a file in binary mode, and redirect printf to the file */ 
-            if ( (fs_file = freopen(argv[2], "wb", stdout)) != NULL) 
+            /* create or over write a file in binary mode, and redirect printf to the file */
+            if ( (fs_file = freopen(argv[2], "wb", stdout)) != NULL)
             {
                 dumping_on = TRUE;
             }

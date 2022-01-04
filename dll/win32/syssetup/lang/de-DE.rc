@@ -28,11 +28,11 @@ STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
-    LTEXT "Please choose a product option:", IDC_STATIC, 35, 7, 230, 12
-    LTEXT "Product &Options:", IDC_STATIC, 5, 32, 85, 10
+    LTEXT "Bitte wählen Sie eines der folgenden Produkte:", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "Produktauswahl:", IDC_STATIC, 5, 32, 85, 10
     COMBOBOX IDC_PRODUCT_OPTIONS, 95, 30, 170, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "Product Information", IDC_STATIC, 5, 50, 305, 85
-    LTEXT "Description:", IDC_STATIC, 20, 65, 70, 10
+    GROUPBOX "Produktinformation", IDC_STATIC, 5, 50, 305, 85
+    LTEXT "Beschreibung:", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_PRODUCT_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
 
@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Die Spracheinstellungen des Systems sollten mit der Sprache der Anwendungen, die Sie nutzen wollen übereinstimmen. Die Nutzereinstellungen geben vor, wie Zahlen, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
-    LTEXT "", IDC_LOCALETEXT, 54, 34, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 34, 250, 16
     LTEXT "Klicken Sie auf Einstellen, um die regionalen Einstellungen zu ändern.", IDC_STATIC, 53, 57, 188, 16
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "Das Tastaturlayout gibt vor, welches Zeichen ein Tastendruck bewirkt.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Klicken Sie auf Einstellen, um das Tastaturlayout zu ändern.", IDC_STATIC, 53, 122, 188, 16
     PUSHBUTTON "Eins&tellen...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -121,9 +122,9 @@ CAPTION "Fertigstellung der Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Fertigstellung des ReactOS Installationsassistenten", IDC_FINISHTITLE, 115, 9, 195, 37
-    LTEXT "Die Installation von ReactOS wurde erfolgreich fertiggestellt.\n\nWenn Sie auf Beenden klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
+    LTEXT "Die Installation von ReactOS wurde erfolgreich fertiggestellt.\n\nWenn Sie auf Fertig klicken, wird der Computer neu gestartet.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Entfernen Sie die CD und klicken Sie auf Beenden, um den Computer neuzustarten.", IDC_STATIC, 115, 160, 195, 31
+    LTEXT "Entfernen Sie die CD und klicken Sie auf Fertig, um den Computer neuzustarten.", IDC_STATIC, 115, 160, 195, 31
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -135,13 +136,14 @@ BEGIN
     DEFPUSHBUTTON "Schließen", IDOK, 141, 209, 50, 14
 END
 
-IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 37
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Bitte warten..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
-    CONTROL "Progress1", IDC_STATUSPROGRESS, "msctls_progress32", WS_BORDER | PBS_MARQUEE, 7, 21, 261, 10
+    CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUSLABEL, 7, 59, 235, 12, SS_WORDELLIPSIS
 END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
@@ -173,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Sie müssen einen Namen und ein Adminstratorpasswort für Ihren Computer festlegen."
     IDS_LOCALETITLE "Regionale Einstellungen"
     IDS_LOCALESUBTITLE "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Datum und Uhrzeit"
     IDS_DATETIMESUBTITLE "Stellen Sie das korrekte Datum und die Uhrzeit für Ihren Computer ein."
     IDS_PROCESSTITLE "Komponenten werden registriert"
@@ -242,11 +246,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTTITLE "Produktauswahl"
+    IDS_PRODUCTSUBTITLE "Die Auswahl der folgenden Produkte wirkt sich auf das Verhalten des Systems aus."
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
-    IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
-    IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
-    IDS_DEFAULT "(Default)"
+    IDS_PRODUCTSERVERINFO "Das System wird als Server erkannt. Die persönlichen Ordner ""Eigene Bilder"", ""Eigene Videos"" und ""Eigene Musik"" sind unabhängig von ""Eigene Dokumente""."
+    IDS_PRODUCTWORKSTATIONINFO "Das System wird als Workstation erkannt. Die persönlichen Ordner ""Eigene Bilder"", ""Eigene Videos"" und ""Eigene Musik"" sind Unterordner von ""Eigene Dokumente""."
+    IDS_DEFAULT "(Standard)"
 END

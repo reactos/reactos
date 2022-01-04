@@ -15,6 +15,8 @@
 #include <winspool.h>
 #include <winsplp.h>
 
+#include <pseh/pseh2.h>
+
 #include "../localspl_apitest.h"
 #include <spoolss.h>
 

@@ -56,7 +56,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(RopeTest);
 //
 void RopeTest::io()
 {
-#if defined (STLPORT) && !defined (_STLP_NO_EXTENSIONS) && !defined (_STLP_USE_NO_IOSTREAMS) 
+#if defined (STLPORT) && !defined (_STLP_NO_EXTENSIONS) && !defined (_STLP_USE_NO_IOSTREAMS)
   char const* cstr = "rope test string";
   crope rstr(cstr);
 
@@ -72,7 +72,7 @@ void RopeTest::io()
 
 void RopeTest::find1()
 {
-#if defined (STLPORT) && !defined (_STLP_NO_EXTENSIONS) 
+#if defined (STLPORT) && !defined (_STLP_NO_EXTENSIONS)
   crope r("Fuzzy Wuzzy was a bear");
   crope::size_type n = r.find( "hair" );
   CPPUNIT_ASSERT( n == crope::npos );
@@ -85,7 +85,7 @@ void RopeTest::find1()
 
 void RopeTest::find2()
 {
-#if defined (STLPORT) && !defined (_STLP_NO_EXTENSIONS) 
+#if defined (STLPORT) && !defined (_STLP_NO_EXTENSIONS)
   crope r("Fuzzy Wuzzy was a bear");
   crope::size_type n = r.find( 'e' );
   CPPUNIT_ASSERT( n == (r.size() - 3) );
@@ -94,7 +94,7 @@ void RopeTest::find2()
 
 void RopeTest::construct_from_char()
 {
-#if defined (STLPORT) && !defined (_STLP_NO_EXTENSIONS) 
+#if defined (STLPORT) && !defined (_STLP_NO_EXTENSIONS)
   crope r('1');
   char const* s = r.c_str();
   CPPUNIT_ASSERT( '1' == s[0] && '\0' == s[1] );
@@ -104,7 +104,7 @@ void RopeTest::construct_from_char()
 // Test used for a bug report from Peter Hercek
 void RopeTest::bug_report()
 {
-#if defined (STLPORT) && !defined (_STLP_NO_EXTENSIONS) 
+#if defined (STLPORT) && !defined (_STLP_NO_EXTENSIONS)
   //first create a rope bigger than crope::_S_copy_max = 23
   // so that any string addition is added to a new leaf
   crope evilRope("12345678901234567890123_");

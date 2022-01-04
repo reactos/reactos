@@ -13,7 +13,7 @@ START_TEST(NtQuerySystemInformation)
 
     Status = NtQuerySystemInformation(0, NULL, 0, NULL);
     ok_hex(Status, STATUS_INFO_LENGTH_MISMATCH);
-    
+
     Status = NtQuerySystemInformation(0x80000000, NULL, 0, NULL);
     ok_hex(Status, STATUS_INVALID_INFO_CLASS);
 }

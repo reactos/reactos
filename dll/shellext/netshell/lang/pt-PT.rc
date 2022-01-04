@@ -9,7 +9,7 @@ BEGIN
     LTEXT "Ligar com:", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "Con&figurar", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "Esta ligação utiliza os seguintes items:", -1, 9, 59, 217, 8
+    LTEXT "Esta ligação utiliza os seguintes componentes:", -1, 9, 59, 217, 8
     PUSHBUTTON "Inst&alar", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Desinstalar", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Propriedades", IDC_PROPERTIES, 174, 130, 65, 14
@@ -85,7 +85,7 @@ BEGIN
     LTEXT "Seleccione  configuração típica ou personalizada:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Configuração &típica", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Configuração &personalizada", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
-    LTEXT "Cria ligações de rede utilizando  Cliente para Redes ReactOS, Arquivos e Impresoras partilhadas para Redes ReactOS, e o protocolo TCP/IP com endereçamento automático.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Cria ligações de rede utilizando Cliente para Redes ReactOS. Ficheiros e Impresoras partilhadas para Redes ReactOS, e o protocolo TCP/IP com endereçamento automático.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Permite configurar manualmente componentes de rede.", IDC_STATIC, 65, 90, 243, 20
 END
 
@@ -109,13 +109,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalador do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Deseja que este computador faça parte  de um domínio?\n\
-(Pode obter mais informações do seu administrador de rede.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "Este computador faz parte de um grupo de &trabalho.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Este computador é parte de um &domínio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    LTEXT "Deseja que este computador seja membro de um domínio?\n\
+(Pode obter esta informação do seu administrador de rede.)", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "Não, este computador fará parte de um grupo de &trabalho.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Sim, este computador fará parte de um &domínio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Nome do domínio ou grupo de trabalho:", IDC_STATIC, 33, 72, 152, 20
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "NOTE: Se este computador não fizer parte de uma rede, não terá privilégios suficientes para se juntar a um domínio, ou se simplesmente não sabe que escolher, então seleccione ""Grupo de trabalho"" por agora. Ésta opção pode ser alterada mais tarde.", IDC_STATIC, 33, 107, 263, 50
+    LTEXT "NOTA: Se este computador não fizer parte de uma rede, não terá privilégios suficientes para se juntar a um domínio, ou se simplesmente não sabe que escolher, então seleccione ""Grupo de trabalho"" por agora. Ésta opção pode ser alterada mais tarde.", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE
@@ -168,7 +168,7 @@ BEGIN
     IDS_NETWORKSETTINGSTITLE "Configuração de rede"
     IDS_NETWORKSETTINGSSUBTITLE "Instala aplicações de rede necessárias para ligar a outras redes, equipamentos, e à Internet."
     IDS_NETWORKCOMPONENTTITLE "Componetes de rede"
-    IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar no seu equipamento. Para adicionar novos componentes, clice em Instalar."
+    IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar no seu equipamento. Para adicionar novos componentes, clique em Instalar."
     IDS_NETWORKDOMAINTITLE "Grupo de trabalho ou domínio"
     IDS_NETWORKDOMAINSUBTITLE "Um domínio é um grupo de computadores gerido por um administrador de rede. Um grupo de trabalho é um grupo de computadores que partilham o mesmo nome."
     IDS_REACTOS_SETUP "Instalador do ReactOS"

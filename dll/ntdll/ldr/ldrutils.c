@@ -452,7 +452,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
 
 done:
     /* Release the context */
-    RtlDeactivateActivationContextUnsafeFast(&ActCtx);    
+    RtlDeactivateActivationContextUnsafeFast(&ActCtx);
 }
 
 VOID
@@ -641,10 +641,12 @@ LdrpCreateDllSection(IN PUNICODE_STRING FullName,
 
         /* Increment the error count */
         if (LdrpInLdrInit) LdrpFatalHardErrorCount++;
+
+        goto Exit;
     }
 
     /* Check for Safer restrictions */
-    if (DllCharacteristics &&
+    if (!DllCharacteristics ||
         !(*DllCharacteristics & IMAGE_FILE_SYSTEM))
     {
         /* Make sure it's executable */
@@ -683,6 +685,7 @@ LdrpCreateDllSection(IN PUNICODE_STRING FullName,
         }
     }
 
+Exit:
     /* Close the file handle, we don't need it */
     NtClose(FileHandle);
 

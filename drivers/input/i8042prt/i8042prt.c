@@ -511,7 +511,7 @@ DriverEntry(
 		return Status;
 	}
 
-	Status = ReadRegistryEntries(RegistryPath, &DriverExtension->Port.Settings);
+	Status = ReadRegistryEntries(&DriverExtension->RegistryPath, &DriverExtension->Port.Settings);
 	if (!NT_SUCCESS(Status))
 	{
 		WARN_(I8042PRT, "ReadRegistryEntries() failed with status 0x%08lx\n", Status);

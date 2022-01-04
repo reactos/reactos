@@ -152,7 +152,7 @@ CVPVBIConfig::NotifyGraphChange()
 HRESULT
 STDMETHODCALLTYPE
 CVPVBIConfig::GetConnectInfo(
-    LPDWORD pdwNumConnectInfo, 
+    LPDWORD pdwNumConnectInfo,
     IN OUT LPDDVIDEOPORTCONNECT pddVPConnectInfo)
 {
 #ifdef KSPROXY_TRACE
@@ -210,7 +210,7 @@ CVPVBIConfig::InformVPInputFormats(
 HRESULT
 STDMETHODCALLTYPE
 CVPVBIConfig::GetVideoFormats(
-    LPDWORD pdwNumFormats, 
+    LPDWORD pdwNumFormats,
     IN OUT LPDDPIXELFORMAT pddPixelFormats)
 {
 #ifdef KSPROXY_TRACE

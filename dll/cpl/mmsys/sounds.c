@@ -1056,8 +1056,7 @@ InitImageList(UINT StartResource,
                             LR_LOADTRANSPARENT);
         if (hImage == NULL)
         {
-            ImageList_Destroy(himl);
-            himl = NULL;
+            ret = -1;
             break;
         }
 
@@ -1151,7 +1150,7 @@ SoundsDlgProc(HWND hwndDlg,
                     LoadStringW(hApplet, IDS_BROWSE_FOR_SOUND, szTitle, _countof(szTitle));
                     ofn.lpstrTitle = szTitle;
                     ofn.lpstrInitialDir = L"%SystemRoot%\\Media";
-                    ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+                    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
                     if (GetOpenFileNameW(&ofn) != FALSE)
                     {

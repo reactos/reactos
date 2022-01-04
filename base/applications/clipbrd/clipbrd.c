@@ -32,7 +32,7 @@ static void SaveClipboardToFile(void)
     sfn.lpstrFilter = szFilterMask;
     sfn.lpstrFile = szFileName;
     sfn.nMaxFile = ARRAYSIZE(szFileName);
-    sfn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+    sfn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
     sfn.lpstrDefExt = L"clp";
 
     if (!GetSaveFileNameW(&sfn))

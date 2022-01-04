@@ -68,7 +68,7 @@ void ntom_set_ntom(mpg123_handle *fr, off_t num)
 	fr->ntom_val[1] = fr->ntom_val[0] = ntom_val(fr, num);
 }
 
-/* Carry out the ntom sample count operation for this one frame. 
+/* Carry out the ntom sample count operation for this one frame.
    No fear of integer overflow here. */
 off_t ntom_frame_outsamples(mpg123_handle *fr)
 {

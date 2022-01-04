@@ -358,7 +358,7 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
 
     /* Handle /select parameter */
     PUITEMID_CHILD pidlSelect = NULL;
-    if ((parameters->dwFlags & SH_EXPLORER_CMDLINE_FLAG_SELECT) && 
+    if ((parameters->dwFlags & SH_EXPLORER_CMDLINE_FLAG_SELECT) &&
         (ILGetNext(parameters->directoryPIDL) != NULL))
     {
         pidlSelect = ILClone(ILFindLastID(parameters->directoryPIDL));
@@ -454,7 +454,7 @@ extern "C" IEThreadParamBlock *WINAPI SHCreateIETHREADPARAM(
 
     TRACE("SHCreateIETHREADPARAM\n");
 
-    result = (IEThreadParamBlock *) LocalAlloc(LMEM_ZEROINIT, 256);
+    result = (IEThreadParamBlock *) LocalAlloc(LMEM_ZEROINIT, sizeof(*result));
     if (result == NULL)
         return NULL;
     result->offset0 = param8;
@@ -477,10 +477,10 @@ extern "C" IEThreadParamBlock *WINAPI SHCloneIETHREADPARAM(IEThreadParamBlock *p
 
     TRACE("SHCloneIETHREADPARAM\n");
 
-    result = (IEThreadParamBlock *) LocalAlloc(LMEM_FIXED, 256);
+    result = (IEThreadParamBlock *) LocalAlloc(LMEM_FIXED, sizeof(*result));
     if (result == NULL)
         return NULL;
-    memcpy(result, param, 0x40 * 4);
+    *result = *param;
     if (result->directoryPIDL != NULL)
         result->directoryPIDL = ILClone(result->directoryPIDL);
     if (result->offset7C != NULL)
@@ -550,10 +550,16 @@ extern "C" HRESULT WINAPI SHOpenFolderWindow(PIE_THREAD_PARAM_BLOCK parameters)
     HANDLE                                  threadHandle;
     DWORD                                   threadID;
 
-    WCHAR debugStr[MAX_PATH + 1];
-    SHGetPathFromIDListW(parameters->directoryPIDL, debugStr);
-
-    TRACE("SHOpenFolderWindow %p(%S)\n", parameters->directoryPIDL, debugStr);
+    // Only try to convert the pidl when it is going to be printed
+    if (TRACE_ON(browseui))
+    {
+        WCHAR debugStr[MAX_PATH + 2] = { 0 };
+        if (!ILGetDisplayName(parameters->directoryPIDL, debugStr))
+        {
+            debugStr[0] = UNICODE_NULL;
+        }
+        TRACE("SHOpenFolderWindow %p(%S)\n", parameters->directoryPIDL, debugStr);
+    }
 
     PIE_THREAD_PARAM_BLOCK paramsCopy = SHCloneIETHREADPARAM(parameters);
 
@@ -591,11 +597,11 @@ extern "C" HRESULT WINAPI SHOpenNewFrame(LPITEMIDLIST pidl, IUnknown *paramC, lo
         parameters->offset10 = param10;
     parameters->directoryPIDL = pidl;
     parameters->dwFlags = dwFlags;
-    
+
     HRESULT hr = SHOpenFolderWindow(parameters);
-    
+
     SHDestroyIETHREADPARAM(parameters);
-    
+
     return hr;
 }
 

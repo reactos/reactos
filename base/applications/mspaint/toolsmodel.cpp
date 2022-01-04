@@ -17,14 +17,30 @@ ToolsModel::ToolsModel()
     m_lineWidth = 1;
     m_shapeStyle = 0;
     m_brushStyle = 0;
-    m_activeTool = TOOL_PEN;
+    m_oldActiveTool = m_activeTool = TOOL_PEN;
     m_airBrushWidth = 5;
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
+    ZeroMemory(&m_tools, sizeof(m_tools));
+    m_pToolObject = GetOrCreateTool(m_activeTool);
 }
 
-int ToolsModel::GetLineWidth()
+ToolsModel::~ToolsModel()
+{
+    for (size_t i = 0; i < TOOL_MAX + 1; ++i)
+        delete m_tools[i];
+}
+
+ToolBase *ToolsModel::GetOrCreateTool(TOOLTYPE nTool)
+{
+    if (!m_tools[nTool])
+        m_tools[nTool] = ToolBase::createToolObject(nTool);
+
+    return m_tools[nTool];
+}
+
+int ToolsModel::GetLineWidth() const
 {
     return m_lineWidth;
 }
@@ -35,7 +51,7 @@ void ToolsModel::SetLineWidth(int nLineWidth)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetShapeStyle()
+int ToolsModel::GetShapeStyle() const
 {
     return m_shapeStyle;
 }
@@ -46,7 +62,7 @@ void ToolsModel::SetShapeStyle(int nShapeStyle)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetBrushStyle()
+int ToolsModel::GetBrushStyle() const
 {
     return m_brushStyle;
 }
@@ -57,18 +73,38 @@ void ToolsModel::SetBrushStyle(int nBrushStyle)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetActiveTool()
+TOOLTYPE ToolsModel::GetActiveTool() const
 {
     return m_activeTool;
 }
 
-void ToolsModel::SetActiveTool(int nActiveTool)
+TOOLTYPE ToolsModel::GetOldActiveTool() const
 {
+    return m_oldActiveTool;
+}
+
+void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
+{
+    switch (m_activeTool)
+    {
+        case TOOL_FREESEL:
+        case TOOL_RECTSEL:
+        case TOOL_RUBBER:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_TEXT:
+            break;
+        default:
+            m_oldActiveTool = m_activeTool;
+            break;
+    }
+
     m_activeTool = nActiveTool;
+    m_pToolObject = GetOrCreateTool(m_activeTool);
     NotifyToolChanged();
 }
 
-int ToolsModel::GetAirBrushWidth()
+int ToolsModel::GetAirBrushWidth() const
 {
     return m_airBrushWidth;
 }
@@ -79,7 +115,7 @@ void ToolsModel::SetAirBrushWidth(int nAirBrushWidth)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetRubberRadius()
+int ToolsModel::GetRubberRadius() const
 {
     return m_rubberRadius;
 }
@@ -90,7 +126,7 @@ void ToolsModel::SetRubberRadius(int nRubberRadius)
     NotifyToolSettingsChanged();
 }
 
-BOOL ToolsModel::IsBackgroundTransparent()
+BOOL ToolsModel::IsBackgroundTransparent() const
 {
     return m_transpBg;
 }
@@ -101,7 +137,7 @@ void ToolsModel::SetBackgroundTransparent(BOOL bTransparent)
     NotifyToolSettingsChanged();
 }
 
-int ToolsModel::GetZoom()
+int ToolsModel::GetZoom() const
 {
     return m_zoom;
 }
@@ -128,4 +164,48 @@ void ToolsModel::NotifyToolSettingsChanged()
 void ToolsModel::NotifyZoomChanged()
 {
     toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
+}
+
+void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+{
+    m_pToolObject->beginEvent();
+    updateStartAndLast(x, y);
+    m_pToolObject->OnButtonDown(bLeftButton, x, y, bDoubleClick);
+    m_pToolObject->endEvent();
+}
+
+void ToolsModel::OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+{
+    m_pToolObject->beginEvent();
+    m_pToolObject->OnMouseMove(bLeftButton, x, y);
+    updateLast(x, y);
+    m_pToolObject->endEvent();
+}
+
+void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
+{
+    m_pToolObject->beginEvent();
+    m_pToolObject->OnButtonUp(bLeftButton, x, y);
+    updateLast(x, y);
+    m_pToolObject->endEvent();
+}
+
+void ToolsModel::OnCancelDraw()
+{
+    m_pToolObject->beginEvent();
+    m_pToolObject->OnCancelDraw();
+    m_pToolObject->endEvent();
+}
+
+void ToolsModel::resetTool()
+{
+    m_pToolObject->reset();
+}
+
+void ToolsModel::selectAll()
+{
+    SetActiveTool(TOOL_RECTSEL);
+    OnButtonDown(TRUE, 0, 0, FALSE);
+    OnMouseMove(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
+    OnButtonUp(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
 }

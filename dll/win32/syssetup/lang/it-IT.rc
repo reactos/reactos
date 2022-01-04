@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Le impostazioni linguistiche del sistema devono coincidere con la lingua degli applicativi che si desidera usare. Le impostazioni linguistiche dell'utente stabiliscono come appaiono i numeri, i valori monetari e le date.", IDC_STATIC, 56, 7, 253, 26
-    LTEXT "", IDC_LOCALETEXT, 56, 35, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 56, 35, 250, 16
     LTEXT "Per cambiare le impostazioni linguistiche del sistema o dell'utente, selezionare Personalizza.", IDC_STATIC, 20, 55, 184, 16
     PUSHBUTTON "&Personalizza...", IDC_CUSTOMLOCALE, 240, 55, 60, 16
-    LTEXT "Il formato della tastiera stabilisce i caratteri che appaiono quando si preme un tasto.", IDC_STATIC, 20, 86, 253, 16
-    LTEXT "", IDC_LAYOUTTEXT, 20, 110, 250, 10
+    LTEXT "", IDC_STATIC, 20, 76, 278, 1, SS_ETCHEDHORZ
+    LTEXT "Il formato della tastiera stabilisce i caratteri che appaiono quando si preme un tasto.", IDC_STATIC, 20, 80, 253, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 20, 104, 250, 16
     LTEXT "Per cambiare il formato della tastiera, selezionare Personalizza.", IDC_STATIC, 20, 120, 184, 16
     PUSHBUTTON "P&ersonalizza...", IDC_CUSTOMLAYOUT, 240, 120, 60, 16
 END
@@ -135,13 +136,14 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 141, 209, 50, 14
 END
 
-IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 274, 37
+IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Attendere ..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
-    LTEXT "", IDC_STATUSLABEL, 7, 8, 234, 12, SS_WORDELLIPSIS
-    CONTROL "Progress1", IDC_STATUSPROGRESS, "msctls_progress32", WS_BORDER | PBS_MARQUEE, 7, 21, 261, 10
+    CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
+    LTEXT "", IDC_STATUSLABEL, 7, 59, 235, 12, SS_WORDELLIPSIS
 END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
@@ -173,6 +175,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "È necessario fornire un nome e una password di Administrator per il proprio computer."
     IDS_LOCALETITLE "Impostazioni regionali"
     IDS_LOCALESUBTITLE "È possibile personalizzare ReactOS per regioni e lingue differenti."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Data e ora"
     IDS_DATETIMESUBTITLE "Impostare la data e l'ora corrette per il proprio computer."
     IDS_PROCESSTITLE "Registrazione dei componenti"
@@ -243,7 +247,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."

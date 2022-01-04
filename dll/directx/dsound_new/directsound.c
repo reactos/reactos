@@ -217,7 +217,7 @@ HRESULT
 WINAPI
 IDirectSound8_fnDuplicateSoundBuffer(
     LPDIRECTSOUND8 iface,
-    LPDIRECTSOUNDBUFFER lpDsbOriginal, 
+    LPDIRECTSOUNDBUFFER lpDsbOriginal,
     LPLPDIRECTSOUNDBUFFER lplpDsbDuplicate)
 {
     UNIMPLEMENTED;
@@ -352,7 +352,7 @@ IDirectSound8_fnInitialize(
     if (SUCCEEDED(hr))
     {
         This->bInitialized = TRUE;
-        return DS_OK;	
+        return DS_OK;
     }
 
     DPRINT("Failed to find device\n");

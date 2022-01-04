@@ -227,7 +227,7 @@ static VOID
     DbgPrint("R0: %lx   R1: %lx   R2: %lx    R3: %lx\n", pc->R0, pc->R1, pc->R2, pc->R3);
     DbgPrint("R4: %lx   R5: %lx   R6: %lx    R7: %lx\n", pc->R4, pc->R5, pc->R6, pc->R7);
     DbgPrint("R8: %lx   R9: %lx  R10: %lx   R11: %lx\n", pc->R8, pc->R9, pc->R10, pc->R11);
-    DbgPrint("R12: %lx   \n", pc->R12);
+    DbgPrint("R12: %lx\n", pc->R12);
 #else
 #pragma message ("Unknown architecture")
 #endif
@@ -249,6 +249,13 @@ static VOID
         ExceptionRecord->NumberParameters == 2)
     {
         DbgPrint("Faulting Address: %8x\n", ExceptionRecord->ExceptionInformation[1]);
+    }
+
+    /* Trace the wine special error and show the modulename and functionname */
+    if (ExceptionRecord->ExceptionCode == 0x80000100 /* EXCEPTION_WINE_STUB */ &&
+        ExceptionRecord->NumberParameters == 2)
+    {
+        DbgPrint("Missing function: %s!%s\n", (PSZ)ExceptionRecord->ExceptionInformation[0], (PSZ)ExceptionRecord->ExceptionInformation[1]);
     }
 
     _dump_context(ContextRecord);

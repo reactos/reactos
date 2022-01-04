@@ -1098,7 +1098,7 @@ typedef struct _HW_CHANNEL {
 
     PUCHAR  DmaBuffer;
 
-    // 
+    //
     PIDE_AHCI_CHANNEL_CTL_BLOCK       AhciCtlBlock0; // unaligned
     PIDE_AHCI_CHANNEL_CTL_BLOCK       AhciCtlBlock;  // 128-byte aligned
     ULONGLONG                         AHCI_CTL_PhAddr;
@@ -1109,7 +1109,7 @@ typedef struct _HW_CHANNEL {
     ULONG                             AhciLastSError;
     //PVOID                    AHCI_FIS;  // is not actually used by UniATA now, but is required by AHCI controller
     //ULONGLONG                AHCI_FIS_PhAddr;
-    // Note: in contrast to FBSD, we keep PRD and CMD item in AtaReq structure 
+    // Note: in contrast to FBSD, we keep PRD and CMD item in AtaReq structure
     PATA_REQ                          AhciInternalAtaReq;
     PSCSI_REQUEST_BLOCK               AhciInternalSrb;
 
@@ -1212,7 +1212,7 @@ typedef struct _HW_LU_EXTENSION {
            mainly for mapping SATA ports to compatible PATA registers
            Treated as PHYSICAL port number, regardless of logical mapping.
          */
-        ULONG          SATA_lun_map; 
+        ULONG          SATA_lun_map;
     };
 
     struct _HW_DEVICE_EXTENSION* DeviceExtension;

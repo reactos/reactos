@@ -56,12 +56,13 @@ extern "C" {
 #define WM_DRAGLOOP	        0x0000022D
 #define WM_DRAGSELECT       0x0000022E
 #define WM_DRAGMOVE	        0x0000022F
+#define WM_IME_SYSTEM       0x00000287
 #define WM_POPUPSYSTEMMENU  0x00000313
 #define WM_UAHINIT          0x0000031b
 #define WM_CBT              0x000003FF // ReactOS only.
 #define WM_MAXIMUM          0x0001FFFF
 
-/* Non SDK DCE types.*/
+/* Non SDK DCE types */
 #define DCX_USESTYLE     0x00010000
 #define DCX_KEEPCLIPRGN  0x00040000
 #define DCX_KEEPLAYOUT   0x40000000
@@ -199,7 +200,7 @@ BOOL WINAPI SetShellWindowEx(HWND, HWND);
 
 BOOL WINAPI DrawCaptionTempA(HWND,HDC,const RECT*,HFONT,HICON,LPCSTR,UINT);
 BOOL WINAPI DrawCaptionTempW(HWND,HDC,const RECT*,HFONT,HICON,LPCWSTR,UINT);
-BOOL WINAPI PaintMenuBar(HWND hWnd, HDC hDC, ULONG left, ULONG right, ULONG top, BOOL bActive); 
+BOOL WINAPI PaintMenuBar(HWND hWnd, HDC hDC, ULONG left, ULONG right, ULONG top, BOOL bActive);
 
 #ifdef UNICODE
 #define DrawCaptionTemp DrawCaptionTempW
@@ -295,6 +296,12 @@ MessageBoxTimeoutW(
 
 LPCWSTR WINAPI MB_GetString(IN UINT wBtn);
 
+/* dwType for NtUserUpdateInputContext */
+typedef enum _UPDATE_INPUT_CONTEXT
+{
+    UIC_CLIENTIMCDATA = 0,
+    UIC_IMEWINDOW
+} UPDATE_INPUT_CONTEXT;
 
 //
 // User api hook
@@ -377,6 +384,15 @@ BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah);
 #endif
 
 BOOL WINAPI UnregisterUserApiHook(VOID);
+
+/* dwType for NtUserQueryInputContext */
+typedef enum _QUERY_INPUT_CONTEXT
+{
+    QIC_INPUTPROCESSID = 0,
+    QIC_INPUTTHREADID,
+    QIC_DEFAULTWINDOWIME,
+    QIC_DEFAULTIMC
+} QUERY_INPUT_CONTEXT;
 
 #ifdef __cplusplus
 } /* extern "C" */

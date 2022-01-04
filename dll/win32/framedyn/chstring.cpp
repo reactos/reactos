@@ -34,7 +34,7 @@
 // This is unsafe. This string show be LPCWSTR
 // However we have to assign it to LPWSTR var. So, let's ignore about const,
 // as MS does. Normally we check in our code that we don't overwrite this string.
-LPWSTR afxPchNil = (LPWSTR)L"\0";
+CHSTRING_WCHAR afxPchNil[1] = {0};
 // This is the data that are matching the null string upper
 CHStringData afxNullData = {0, 0, 0};
 // Exception we may throw in case of allocation failure
@@ -107,7 +107,7 @@ CHString::CHString()
 /*
  * @implemented
  */
-CHString::CHString(WCHAR ch, int nRepeat)
+CHString::CHString(CHSTRING_WCHAR ch, int nRepeat)
 {
     // Allow null initialize, in case something goes wrong
     m_pchData = afxPchNil;
@@ -131,7 +131,7 @@ CHString::CHString(WCHAR ch, int nRepeat)
 /*
  * @implemented
  */
-CHString::CHString(LPCWSTR lpsz)
+CHString::CHString(CHSTRING_LPCWSTR lpsz)
 {
     // Allow null initialize, in case something goes wrong
     m_pchData = afxPchNil;
@@ -146,7 +146,9 @@ CHString::CHString(LPCWSTR lpsz)
         if (Len)
         {
             AllocBuffer(Len);
-            wcsncpy(m_pchData, lpsz, Len);
+            wcsncpy(reinterpret_cast<LPWSTR>(m_pchData),
+                    reinterpret_cast<LPCWSTR>(lpsz),
+                    Len);
         }
     }
 }
@@ -154,7 +156,7 @@ CHString::CHString(LPCWSTR lpsz)
 /*
  * @implemented
  */
-CHString::CHString(LPCWSTR lpch, int nLength)
+CHString::CHString(CHSTRING_LPCWSTR lpch, int nLength)
 {
     // Allow null initialize, in case something goes wrong
     m_pchData = afxPchNil;
@@ -164,7 +166,9 @@ CHString::CHString(LPCWSTR lpch, int nLength)
     {
         // Just copy the string
         AllocBuffer(nLength);
-        wcsncpy(m_pchData, lpch, nLength);
+        wcsncpy(reinterpret_cast<LPWSTR>(m_pchData),
+                reinterpret_cast<LPCWSTR>(lpch),
+                nLength);
     }
 }
 
@@ -185,7 +189,7 @@ CHString::CHString(LPCSTR lpsz)
         {
             // Allocate and convert the string
             AllocBuffer(Len);
-            mbstowcsz(m_pchData, lpsz, Len + 1);
+            mbstowcsz(reinterpret_cast<LPWSTR>(m_pchData), lpsz, Len + 1);
             // Releasing buffer here is to allow to
             // update the buffer size. We notify we're
             // done with changing the string: recompute its
@@ -348,30 +352,32 @@ void CHString::AllocCopy(CHString& dest, int nCopyLen, int nCopyIndex, int nExtr
     // copying data from another. This is needed by Left/Mid/Right
     dest.AllocBuffer(nCopyLen + nExtraLen);
     // And copy our stuff in
-    wcsncpy(dest.m_pchData, m_pchData + nCopyIndex, nCopyLen);
+    wcsncpy(reinterpret_cast<LPWSTR>(dest.m_pchData),
+            reinterpret_cast<LPWSTR>(m_pchData + nCopyIndex),
+            nCopyLen);
 }
 
 /*
  * @implemented
  */
-BSTR CHString::AllocSysString() const
+CHSTRING_LPWSTR CHString::AllocSysString() const
 {
     BSTR SysString;
 
     // Just allocate the string
-    SysString = SysAllocStringLen(m_pchData, GetData()->nDataLength);
+    SysString = SysAllocStringLen(reinterpret_cast<LPWSTR>(m_pchData), GetData()->nDataLength);
     if (!SysString)
     {
         throw HeapException;
     }
 
-    return SysString;
+    return reinterpret_cast<CHSTRING_LPWSTR>(SysString);
 }
 
 /*
  * @implemented
  */
-void CHString::AssignCopy(int nSrcLen, LPCWSTR lpszSrcData)
+void CHString::AssignCopy(int nSrcLen, CHSTRING_LPCWSTR lpszSrcData)
 {
     // Don't allow negative len
     if (nSrcLen < 0)
@@ -389,7 +395,8 @@ void CHString::AssignCopy(int nSrcLen, LPCWSTR lpszSrcData)
     }
 
     // Just copy, write down new size, and ensure it's null terminated
-    wcsncpy(m_pchData, lpszSrcData, nSrcLen);
+    wcsncpy(reinterpret_cast<LPWSTR>(m_pchData),
+            reinterpret_cast<LPCWSTR>(lpszSrcData), nSrcLen);
     GetData()->nDataLength = nSrcLen;
     m_pchData[nSrcLen] = 0;
 }
@@ -397,37 +404,37 @@ void CHString::AssignCopy(int nSrcLen, LPCWSTR lpszSrcData)
 /*
  * @implemented
  */
-int CHString::Collate(LPCWSTR lpsz) const
+int CHString::Collate(CHSTRING_LPCWSTR lpsz) const
 {
     // Just call the deprecated function here - no matter we are null terminated
     // Did you read my statement about how safe is this implementation?
-    return wcscoll(m_pchData, lpsz);
+    return wcscoll(reinterpret_cast<LPCWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(lpsz));
 }
 
 /*
  * @implemented
  */
-int CHString::Compare(LPCWSTR lpsz) const
+int CHString::Compare(CHSTRING_LPCWSTR lpsz) const
 {
     // Just call the deprecated function here - no matter we are null terminated
     // Did you read my statement about how safe is this implementation?
-    return wcscmp(m_pchData, lpsz);
+    return wcscmp(reinterpret_cast<LPCWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(lpsz));
 }
 
 /*
  * @implemented
  */
-int CHString::CompareNoCase(LPCWSTR lpsz) const
+int CHString::CompareNoCase(CHSTRING_LPCWSTR lpsz) const
 {
     // Just call the deprecated function here - no matter we are null terminated
     // Did you read my statement about how safe is this implementation?
-    return wcsicmp(m_pchData, lpsz);
+    return wcsicmp(reinterpret_cast<LPCWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(lpsz));
 }
 
 /*
  * @implemented
  */
-void CHString::ConcatInPlace(int nSrcLen, LPCWSTR lpszSrcData)
+void CHString::ConcatInPlace(int nSrcLen, CHSTRING_LPCWSTR lpszSrcData)
 {
     // With null length, there's not that much to concat...
     if (nSrcLen == 0)
@@ -467,7 +474,9 @@ void CHString::ConcatInPlace(int nSrcLen, LPCWSTR lpszSrcData)
         }
 
         // Then, just copy and null terminate
-        wcsncpy(m_pchData + GetData()->nDataLength, lpszSrcData, nSrcLen);
+        wcsncpy(reinterpret_cast<LPWSTR>(m_pchData + GetData()->nDataLength),
+                reinterpret_cast<LPCWSTR>(lpszSrcData),
+                nSrcLen);
         GetData()->nDataLength += nSrcLen;
         m_pchData[GetData()->nDataLength] = 0;
     }
@@ -476,7 +485,9 @@ void CHString::ConcatInPlace(int nSrcLen, LPCWSTR lpszSrcData)
 /*
  * @implemented
  */
-void CHString::ConcatCopy(int nSrc1Len, LPCWSTR lpszSrc1Data, int nSrc2Len, LPCWSTR lpszSrc2Data)
+void CHString::ConcatCopy(
+    int nSrc1Len, CHSTRING_LPCWSTR lpszSrc1Data,
+    int nSrc2Len, CHSTRING_LPCWSTR lpszSrc2Data)
 {
     int TotalLen;
 
@@ -495,8 +506,12 @@ void CHString::ConcatCopy(int nSrc1Len, LPCWSTR lpszSrc1Data, int nSrc2Len, LPCW
     // Otherwise, allocate a new buffer to hold everything (caller will release previous buffer)
     AllocBuffer(TotalLen);
     // And concat stuff
-    wcsncpy(m_pchData, lpszSrc1Data, nSrc1Len);
-    wcsncpy(m_pchData + nSrc1Len, lpszSrc2Data, nSrc2Len);
+    wcsncpy(reinterpret_cast<LPWSTR>(m_pchData),
+            reinterpret_cast<LPCWSTR>(lpszSrc1Data),
+            nSrc1Len);
+    wcsncpy(reinterpret_cast<LPWSTR>(m_pchData + nSrc1Len),
+            reinterpret_cast<LPCWSTR>(lpszSrc2Data),
+            nSrc2Len);
 }
 
 /*
@@ -521,7 +536,9 @@ void CHString::CopyBeforeWrite()
     Release();
     // Alloc new buffer and copy old data in it
     AllocBuffer(Data->nDataLength);
-    wcsncpy(m_pchData, Data->data(), Data->nDataLength);
+    wcsncpy(reinterpret_cast<LPWSTR>(m_pchData),
+            reinterpret_cast<LPCWSTR>(Data->data()),
+            Data->nDataLength);
 }
 
 /*
@@ -552,12 +569,12 @@ void CHString::Empty()
 /*
  * @implemented
  */
-int CHString::Find(WCHAR ch) const
+int CHString::Find(CHSTRING_WCHAR ch) const
 {
-    WCHAR *Found;
+    CHSTRING_LPCWSTR Found;
 
     // Let's use appropriate helper
-    Found = wcschr(m_pchData, ch);
+    Found = reinterpret_cast<CHSTRING_LPCWSTR>(wcschr(reinterpret_cast<LPCWSTR>(m_pchData), ch));
     // We have to return a position, so compute it
     if (Found)
     {
@@ -571,12 +588,12 @@ int CHString::Find(WCHAR ch) const
 /*
  * @implemented
  */
-int CHString::Find(LPCWSTR lpszSub) const
+int CHString::Find(CHSTRING_LPCWSTR lpszSub) const
 {
-    WCHAR *Found;
+    CHSTRING_LPCWSTR Found;
 
     // Let's use appropriate helper
-    Found = wcsstr(m_pchData, lpszSub);
+    Found = reinterpret_cast<CHSTRING_LPCWSTR>(wcsstr(reinterpret_cast<LPCWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(lpszSub)));
     // We have to return a position, so compute it
     if (Found)
     {
@@ -590,12 +607,12 @@ int CHString::Find(LPCWSTR lpszSub) const
 /*
  * @implemented
  */
-int CHString::FindOneOf(LPCWSTR lpszCharSet) const
+int CHString::FindOneOf(CHSTRING_LPCWSTR lpszCharSet) const
 {
-    WCHAR *Found;
+    CHSTRING_LPCWSTR Found;
 
     // Let's use appropriate helper
-    Found = wcspbrk(m_pchData, lpszCharSet);
+    Found = reinterpret_cast<CHSTRING_LPCWSTR>(wcspbrk(reinterpret_cast<LPCWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(lpszCharSet)));
     // We have to return a position, so compute it
     if (Found)
     {
@@ -618,7 +635,7 @@ void CHString::Format(UINT nFormatID, ...)
 /*
  * @implemented
  */
-void CHString::Format(LPCWSTR lpszFormat, ...)
+void CHString::Format(CHSTRING_LPCWSTR lpszFormat, ...)
 {
     // Forward to FormatV
     va_list ArgsList;
@@ -640,7 +657,7 @@ void CHString::FormatMessageW(UINT nFormatID, ...)
 /*
  * @unimplemented
  */
-void CHString::FormatMessageW(LPCWSTR lpszFormat, ...)
+void CHString::FormatMessageW(CHSTRING_LPCWSTR lpszFormat, ...)
 {
     UNIMPLEMENTED;
 }
@@ -648,7 +665,7 @@ void CHString::FormatMessageW(LPCWSTR lpszFormat, ...)
 /*
  * @unimplemented
  */
-void CHString::FormatV(LPCWSTR lpszFormat, va_list argList)
+void CHString::FormatV(CHSTRING_LPCWSTR lpszFormat, va_list argList)
 {
     UNIMPLEMENTED;
 }
@@ -671,7 +688,7 @@ void CHString::FreeExtra()
     // Allocate a new one, at the right size (with no place for \0 :-))
     AllocBuffer(GetData()->nDataLength);
     // Copy old and release it
-    wcsncpy(m_pchData, OldData->data(), OldData->nDataLength);
+    wcsncpy(reinterpret_cast<LPWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(OldData->data()), OldData->nDataLength);
     Release(OldData);
 }
 
@@ -686,7 +703,7 @@ int CHString::GetAllocLength() const
 /*
  * @implemented
  */
-WCHAR CHString::GetAt(int nIndex) const
+CHSTRING_WCHAR CHString::GetAt(int nIndex) const
 {
     // It's up to you to check the index!
     return m_pchData[nIndex];
@@ -695,9 +712,9 @@ WCHAR CHString::GetAt(int nIndex) const
 /*
  * @implemented
  */
-LPWSTR CHString::GetBuffer(int nMinBufLength)
+CHSTRING_LPWSTR CHString::GetBuffer(int nMinBufLength)
 {
-    LPWSTR OldBuffer = m_pchData;
+    CHSTRING_LPWSTR OldBuffer = m_pchData;
 
     // We'll have to allocate a new buffer if it's not big enough
     // or if it's shared by several strings
@@ -715,7 +732,7 @@ LPWSTR CHString::GetBuffer(int nMinBufLength)
         // Allocate new buffer
         AllocBuffer(nMinBufLength);
         // Copy contents
-        wcsncpy(m_pchData, OldBuffer, OldLen);
+        wcsncpy(reinterpret_cast<LPWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(OldBuffer), OldLen);
         GetData()->nDataLength = OldLen;
 
         // Release old
@@ -730,7 +747,7 @@ LPWSTR CHString::GetBuffer(int nMinBufLength)
 /*
  * @implemented
  */
-LPWSTR CHString::GetBufferSetLength(int nNewLength)
+CHSTRING_LPWSTR CHString::GetBufferSetLength(int nNewLength)
 {
     // Get a buffer big enough
     // We don't care about the return, it will be set in the string
@@ -813,7 +830,7 @@ int CHString::LoadStringW(UINT nID)
 /*
  * @implemented
  */
-int CHString::LoadStringW(UINT nID, LPWSTR lpszBuf, UINT nMaxBuf)
+int CHString::LoadStringW(UINT nID, CHSTRING_LPWSTR lpszBuf, UINT nMaxBuf)
 {
     // Deprecated and not implemented any longer - well, this is its implementation
     return 0;
@@ -822,9 +839,9 @@ int CHString::LoadStringW(UINT nID, LPWSTR lpszBuf, UINT nMaxBuf)
 /*
  * @implemented
  */
-LPWSTR CHString::LockBuffer()
+CHSTRING_LPWSTR CHString::LockBuffer()
 {
-    LPWSTR LockedBuffer;
+    CHSTRING_LPWSTR LockedBuffer;
 
     // The purpose here is basically to set the nRefs to max int
     LockedBuffer = GetBuffer(0);
@@ -842,7 +859,7 @@ void CHString::MakeLower()
     CopyBeforeWrite();
 
     // Let's use appropriate helper
-    _wcslwr(m_pchData);
+    _wcslwr(reinterpret_cast<LPWSTR>(m_pchData));
 }
 
 /*
@@ -854,7 +871,7 @@ void CHString::MakeReverse()
     CopyBeforeWrite();
 
     // Let's use appropriate helper
-    _wcsrev(m_pchData);
+    _wcsrev(reinterpret_cast<LPWSTR>(m_pchData));
 }
 
 /*
@@ -866,7 +883,7 @@ void CHString::MakeUpper()
     CopyBeforeWrite();
 
     // Let's use appropriate helper
-    _wcsupr(m_pchData);
+    _wcsupr(reinterpret_cast<LPWSTR>(m_pchData));
 }
 
 /*
@@ -968,7 +985,7 @@ void CHString::ReleaseBuffer(int nNewLength)
     // If no len provided, get one
     if (nNewLength == -1)
     {
-        nNewLength = (int)wcslen(m_pchData);
+        nNewLength = (int)wcslen(reinterpret_cast<LPCWSTR>(m_pchData));
     }
 
     // Set appropriate size and null-terminate
@@ -980,12 +997,12 @@ void CHString::ReleaseBuffer(int nNewLength)
 /*
  * @implemented
  */
-int CHString::ReverseFind(WCHAR ch) const
+int CHString::ReverseFind(CHSTRING_WCHAR ch) const
 {
-    WCHAR *Last;
+    CHSTRING_WCHAR *Last;
 
     // Let's use appropriate helper
-    Last = wcsrchr(m_pchData, ch);
+    Last = reinterpret_cast<CHSTRING_WCHAR*>(wcsrchr(reinterpret_cast<LPCWSTR>(m_pchData), ch));
     // We have to return a position, so compute it
     if (Last)
     {
@@ -1020,7 +1037,7 @@ CHString CHString::Right(int nCount) const
 /*
  * @implemented
  */
-int CHString::SafeStrlen(LPCWSTR lpsz)
+int CHString::SafeStrlen(CHSTRING_LPCWSTR lpsz)
 {
     // Check we have a string and then get its length
     if (lpsz == 0)
@@ -1031,13 +1048,13 @@ int CHString::SafeStrlen(LPCWSTR lpsz)
     // Of course, it's not safe at all in case string is not null-terminated.
     // Things that may happen given strings are not to be null-terminated
     // in this class...
-    return (int)wcslen(lpsz);
+    return (int)wcslen(reinterpret_cast<LPCWSTR>(lpsz));
 }
 
 /*
  * @implemented
  */
-void CHString::SetAt(int nIndex, WCHAR ch)
+void CHString::SetAt(int nIndex, CHSTRING_WCHAR ch)
 {
     CopyBeforeWrite();
 
@@ -1047,24 +1064,24 @@ void CHString::SetAt(int nIndex, WCHAR ch)
 /*
  * @implemented
  */
-CHString CHString::SpanExcluding(LPCWSTR lpszCharSet) const
+CHString CHString::SpanExcluding(CHSTRING_LPCWSTR lpszCharSet) const
 {
     int Count;
 
     // Get position and then, extract
-    Count = (int)wcscspn(m_pchData, lpszCharSet);
+    Count = (int)wcscspn(reinterpret_cast<LPCWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(lpszCharSet));
     return Left(Count);
 }
 
 /*
  * @implemented
  */
-CHString CHString::SpanIncluding(LPCWSTR lpszCharSet) const
+CHString CHString::SpanIncluding(CHSTRING_LPCWSTR lpszCharSet) const
 {
     int Count;
 
     // Get position and then, extract
-    Count = (int)wcsspn(m_pchData, lpszCharSet);
+    Count = (int)wcsspn(reinterpret_cast<LPCWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(lpszCharSet));
     return Left(Count);
 }
 
@@ -1075,7 +1092,7 @@ void CHString::TrimLeft()
 {
     int NewBegin;
     int NewLength;
-    WCHAR *CurrentChar;
+    CHSTRING_WCHAR *CurrentChar;
 
     // We'll modify, so copy first
     CopyBeforeWrite();
@@ -1097,7 +1114,7 @@ void CHString::TrimLeft()
     // And move memory
     NewBegin = (CurrentChar - m_pchData);
     NewLength = GetData()->nDataLength - NewBegin;
-    memmove(m_pchData, CurrentChar, NewLength * sizeof(WCHAR));
+    memmove(m_pchData, CurrentChar, NewLength * sizeof(CHSTRING_WCHAR));
     GetData()->nDataLength = NewLength;
 }
 
@@ -1106,8 +1123,8 @@ void CHString::TrimLeft()
  */
 void CHString::TrimRight()
 {
-    WCHAR *CurrentChar;
-    WCHAR *CanBeEaten;
+    CHSTRING_WCHAR *CurrentChar;
+    CHSTRING_WCHAR *CanBeEaten;
 
     // We'll modify, so copy first
     CopyBeforeWrite();
@@ -1167,14 +1184,14 @@ void CHString::UnlockBuffer()
  */
 const CHString& CHString::operator=(char ch)
 {
-    *this = (WCHAR)ch;
+    *this = (CHSTRING_WCHAR)ch;
     return *this;
 }
 
 /*
  * @implemented
  */
-const CHString& CHString::operator=(WCHAR ch)
+const CHString& CHString::operator=(CHSTRING_WCHAR ch)
 {
     AssignCopy(1, &ch);
     return *this;
@@ -1215,7 +1232,7 @@ const CHString& CHString::operator=(LPCSTR lpsz)
     }
 
     // Convert and copy
-    mbstowcsz(m_pchData, lpsz, Len + 1);
+    mbstowcsz(reinterpret_cast<LPWSTR>(m_pchData), lpsz, Len + 1);
     // Get new size and so on
     ReleaseBuffer();
 
@@ -1225,7 +1242,7 @@ const CHString& CHString::operator=(LPCSTR lpsz)
 /*
  * @implemented
  */
-const CHString& CHString::operator=(LPCWSTR lpsz)
+const CHString& CHString::operator=(CHSTRING_LPCWSTR lpsz)
 {
     int Len;
 
@@ -1279,14 +1296,14 @@ const CHString& CHString::operator=(const unsigned char* lpsz)
  */
 const CHString& CHString::operator+=(char ch)
 {
-    *this += (WCHAR)ch;
+    *this += (CHSTRING_WCHAR)ch;
     return *this;
 }
 
 /*
  * @implemented
  */
-const CHString& CHString::operator+=(WCHAR ch)
+const CHString& CHString::operator+=(CHSTRING_WCHAR ch)
 {
     ConcatInPlace(1, &ch);
     return *this;
@@ -1295,7 +1312,7 @@ const CHString& CHString::operator+=(WCHAR ch)
 /*
  * @implemented
  */
-const CHString& CHString::operator+=(LPCWSTR lpsz)
+const CHString& CHString::operator+=(CHSTRING_LPCWSTR lpsz)
 {
     int Len;
 
@@ -1318,7 +1335,7 @@ const CHString& CHString::operator+=(const CHString& string)
 /*
  * @implemented
  */
-WCHAR CHString::operator[](int nIndex) const
+CHSTRING_WCHAR CHString::operator[](int nIndex) const
 {
     return m_pchData[nIndex];
 }
@@ -1326,7 +1343,7 @@ WCHAR CHString::operator[](int nIndex) const
 /*
  * @implemented
  */
-CHString::operator LPCWSTR() const
+CHString::operator CHSTRING_LPCWSTR() const
 {
     return m_pchData;
 }
@@ -1334,7 +1351,7 @@ CHString::operator LPCWSTR() const
 /*
  * @implemented
  */
-CHString WINAPI operator+(WCHAR ch, const CHString& string)
+CHString WINAPI operator+(CHSTRING_WCHAR ch, const CHString& string)
 {
     CHString NewString;
 
@@ -1347,7 +1364,7 @@ CHString WINAPI operator+(WCHAR ch, const CHString& string)
 /*
  * @implemented
  */
-CHString WINAPI operator+(const CHString& string, WCHAR ch)
+CHString WINAPI operator+(const CHString& string, CHSTRING_WCHAR ch)
 {
     CHString NewString;
 
@@ -1360,7 +1377,7 @@ CHString WINAPI operator+(const CHString& string, WCHAR ch)
 /*
  * @implemented
  */
-CHString WINAPI operator+(const CHString& string, LPCWSTR lpsz)
+CHString WINAPI operator+(const CHString& string, CHSTRING_LPCWSTR lpsz)
 {
     int Len;
     CHString NewString;
@@ -1376,7 +1393,7 @@ CHString WINAPI operator+(const CHString& string, LPCWSTR lpsz)
 /*
  * @implemented
  */
-CHString WINAPI operator+(LPCWSTR lpsz, const CHString& string)
+CHString WINAPI operator+(CHSTRING_LPCWSTR lpsz, const CHString& string)
 {
     int Len;
     CHString NewString;

@@ -325,6 +325,7 @@ KiInitializeMachineType(VOID)
     }
 }
 
+DECLSPEC_NORETURN
 VOID
 KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {

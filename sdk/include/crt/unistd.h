@@ -37,4 +37,4 @@ __CRT_INLINE int ftruncate(int __fd, off_t __length)
 }
 #endif
 
-#endif 
+#endif

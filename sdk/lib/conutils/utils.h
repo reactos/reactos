@@ -3,8 +3,8 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Base set of functions for loading string resources
  *              and message strings, and handle type identification.
- * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
- *              Copyright 2017-2018 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2017-2021 ReactOS Team
+ *              Copyright 2017-2021 Hermes Belusca-Maito
  */
 
 /**
@@ -55,6 +55,10 @@ FormatMessageSafeW(
     OUT LPWSTR  lpBuffer,
     IN  DWORD   nSize,
     IN  va_list *Arguments OPTIONAL);
+
+LANGID
+ConSetThreadUILanguage(
+    IN LANGID LangId OPTIONAL);
 
 BOOL
 IsTTYHandle(IN HANDLE hHandle);

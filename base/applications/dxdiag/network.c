@@ -43,7 +43,7 @@ static DIRECTPLAY_GUID DirectPlay8SP[] =
     }
 };
 
-static DIRECTPLAY_GUID DirectPlaySP[] = 
+static DIRECTPLAY_GUID DirectPlaySP[] =
 {
     {
         L"{36E95EE0-8577-11cf-960C-0080C7534E82}",
@@ -232,7 +232,7 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
                 Item.iItem = ListView_GetItemCount(hDlgCtrl);
 
                 /* FIXME
-                 * on Windows Vista we need to use RegLoadMUIString which is not available for older systems 
+                 * on Windows Vista we need to use RegLoadMUIString which is not available for older systems
                  */
                 if (!GetRegValue(hKey, szName, L"Friendly Name", REG_SZ, szResult, sizeof(szResult)))
                     if (!GetRegValue(hKey, szName, L"DescriptionW", REG_SZ, szResult, sizeof(szResult)))

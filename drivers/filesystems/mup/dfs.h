@@ -51,7 +51,7 @@ DfsUnload(
     PDRIVER_OBJECT DriverObject
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 DfsDriverEntry(
     PDRIVER_OBJECT DriverObject,

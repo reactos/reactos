@@ -101,10 +101,14 @@ CcMdlReadComplete (
     /* Check if we support Fast Calls, and check this one */
     if (FastDispatch && FastDispatch->MdlReadComplete)
     {
-         /* Use the fast path */
-        FastDispatch->MdlReadComplete(FileObject,
-                                      MdlChain,
-                                      DeviceObject);
+        /* Use the fast path */
+        if (FastDispatch->MdlReadComplete(FileObject,
+                                          MdlChain,
+                                          DeviceObject))
+        {
+            /* Request was handled */
+            return;
+        }
     }
 
     /* Use slow path */
@@ -131,11 +135,15 @@ CcMdlWriteComplete (
     /* Check if we support Fast Calls, and check this one */
     if (FastDispatch && FastDispatch->MdlWriteComplete)
     {
-         /* Use the fast path */
-        FastDispatch->MdlWriteComplete(FileObject,
-                                       FileOffset,
-                                       MdlChain,
-                                       DeviceObject);
+        /* Use the fast path */
+        if (FastDispatch->MdlWriteComplete(FileObject,
+                                           FileOffset,
+                                           MdlChain,
+                                           DeviceObject))
+        {
+            /* Request was handled */
+            return;
+        }
     }
 
     /* Use slow path */

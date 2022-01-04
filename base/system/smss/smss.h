@@ -31,6 +31,8 @@
 #include <ndk/umfuncs.h>
 #include <ndk/kefuncs.h>
 
+#include <ntstrsafe.h>
+
 /* SM Protocol Header */
 #include <sm/smmsg.h>
 
@@ -286,6 +288,13 @@ NTAPI
 SmpCheckDuplicateMuSessionId(
     IN ULONG MuSessionId
 );
+
+NTSTATUS
+NTAPI
+SmpExecuteInitialCommand(IN ULONG MuSessionId,
+                         IN PUNICODE_STRING InitialCommand,
+                         IN HANDLE InitialCommandProcess,
+                         OUT PHANDLE ReturnPid);
 
 NTSTATUS
 NTAPI

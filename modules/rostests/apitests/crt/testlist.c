@@ -6,6 +6,14 @@
 #if defined(TEST_MSVCRT)
 extern void func__vscprintf(void);
 extern void func__vscwprintf(void);
+extern void func_atexit(void);
+#endif
+#if defined(TEST_STATIC_CRT) || defined(TEST_MSVCRT)
+#if defined(_M_ARM)
+extern void func___rt_div(void);
+extern void func___fto64(void);
+extern void func___64tof(void);
+#endif
 #endif
 #if defined(TEST_NTDLL)
 extern void func__vscwprintf(void);
@@ -31,6 +39,7 @@ extern void func___getmainargs(void);
 
 extern void func_static_construct(void);
 extern void func_static_init(void);
+extern void func_crtdata(void);
 
 const struct test winetest_testlist[] =
 {
@@ -51,10 +60,16 @@ const struct test winetest_testlist[] =
     // ...
 #endif
 #if defined(TEST_STATIC_CRT) || defined(TEST_MSVCRT)
-    // ...
+#if defined(_M_ARM)
+    { "__rt_div", func___rt_div },
+    { "__fto64", func___fto64 },
+    { "__64tof", func___64tof },
+#endif
 #endif
 #if defined(TEST_STATIC_CRT)
 #elif defined(TEST_MSVCRT)
+    { "atexit", func_atexit },
+    { "crtdata", func_crtdata },
 #if defined(_M_IX86)
     { "__getmainargs", func___getmainargs },
 #endif

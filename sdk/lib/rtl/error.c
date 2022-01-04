@@ -203,7 +203,7 @@ RtlSetThreadErrorMode(IN ULONG NewMode,
 
     /* Return old mode */
     if (OldMode) *OldMode = Teb->HardErrorMode;
-    
+
     /* Set new one and return success */
     Teb->HardErrorMode = NewMode;
     return STATUS_SUCCESS;

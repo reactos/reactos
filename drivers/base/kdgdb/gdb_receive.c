@@ -59,13 +59,13 @@ get_packet:
             break;
         }
         CheckSum += (CHAR)Byte;
-        
+
         /* See if we should escape */
         if (Byte == 0x7d)
         {
             Status = KdpReceiveByte(&Byte);
             if (Status != KdPacketReceived)
-                return Status;         
+                return Status;
             CheckSum += (CHAR)Byte;
             Byte ^= 0x20;
         }
@@ -100,7 +100,7 @@ end:
             case '$':
                 KDDBGPRINT("Received new packet just after %s.\n", gdb_input);
                 goto get_packet;
-            case 0x03: 
+            case 0x03:
                 KdContext->KdpControlCPending = TRUE;
                 break;
         }

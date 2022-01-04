@@ -43,6 +43,7 @@ typedef struct _NOTIFICATION_ITEM
     BOOL bImpersonate;
     BOOL bSmartCardLogon;
     DWORD dwMaxWait;
+    BOOL bSfcNotification;
 } NOTIFICATION_ITEM, *PNOTIFICATION_ITEM;
 
 
@@ -50,6 +51,58 @@ static LIST_ENTRY NotificationDllListHead;
 
 
 /* FUNCTIONS *****************************************************************/
+
+static
+VOID
+AddSfcNotification(VOID)
+{
+    WCHAR szSfcFileName[MAX_PATH];
+    PNOTIFICATION_ITEM NotificationDll;
+    DWORD dwError = ERROR_SUCCESS;
+
+    ExpandEnvironmentStringsW(L"%windir%\\system32\\sfc.dll",
+                              szSfcFileName,
+                              ARRAYSIZE(szSfcFileName));
+
+    NotificationDll = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      HEAP_ZERO_MEMORY,
+                                      sizeof(NOTIFICATION_ITEM));
+    if (NotificationDll == NULL)
+    {
+        dwError = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    NotificationDll->pszDllName = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                  HEAP_ZERO_MEMORY,
+                                                  (wcslen(szSfcFileName) + 1) * sizeof(WCHAR));
+    if (NotificationDll->pszDllName == NULL)
+    {
+        dwError = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    wcscpy(NotificationDll->pszDllName, szSfcFileName);
+
+    NotificationDll->bEnabled = TRUE;
+    NotificationDll->dwMaxWait = 30; /* FIXME: ??? */
+    NotificationDll->bSfcNotification = TRUE;
+
+    InsertHeadList(&NotificationDllListHead,
+                   &NotificationDll->ListEntry);
+
+done:
+    if (dwError != ERROR_SUCCESS)
+    {
+        if (NotificationDll != NULL)
+        {
+            if (NotificationDll->pszDllName != NULL)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, NotificationDll->pszDllName);
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, NotificationDll);
+        }
+    }
+}
 
 static
 VOID
@@ -209,6 +262,8 @@ InitNotifications(VOID)
 
     InitializeListHead(&NotificationDllListHead);
 
+    AddSfcNotification();
+
     lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                            L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Notify",
                            0,
@@ -262,27 +317,47 @@ CallNotificationDll(
     CHAR szFuncBuffer[128];
     DWORD dwSize;
     DWORD dwType;
-    DWORD dwError;
+    DWORD dwError = ERROR_SUCCESS;
     PWLX_NOTIFY_HANDLER pNotifyHandler;
 
-    dwError = RegOpenKeyExW(hNotifyKey,
-                            NotificationDll->pszKeyName,
-                            0,
-                            KEY_READ,
-                            &hDllKey);
-    if (dwError != ERROR_SUCCESS)
+    if (NotificationDll->bSfcNotification)
     {
-        TRACE("RegOpenKeyExW()\n");
-        return;
+        switch (Type)
+        {
+            case LogonHandler:
+                strcpy(szFuncBuffer, "SfcWLEventLogon");
+                break;
+
+            case LogoffHandler:
+                strcpy(szFuncBuffer, "SfcWLEventLogoff");
+                break;
+
+            default:
+                return;
+        }
+    }
+    else
+    {
+        dwError = RegOpenKeyExW(hNotifyKey,
+                                NotificationDll->pszKeyName,
+                                0,
+                                KEY_READ,
+                                &hDllKey);
+        if (dwError != ERROR_SUCCESS)
+        {
+            TRACE("RegOpenKeyExW()\n");
+            return;
+        }
+
+        dwSize = sizeof(szFuncBuffer);
+        dwError = RegQueryValueExA(hDllKey,
+                                   FuncNames[Type],
+                                   NULL,
+                                   &dwType,
+                                   (PBYTE)szFuncBuffer,
+                                   &dwSize);
     }
 
-    dwSize = sizeof(szFuncBuffer);
-    dwError = RegQueryValueExA(hDllKey,
-                               FuncNames[Type],
-                               NULL,
-                               &dwType,
-                               (PBYTE)szFuncBuffer,
-                               &dwSize);
     if (dwError == ERROR_SUCCESS)
     {
         hModule = LoadLibraryW(NotificationDll->pszDllName);
@@ -296,7 +371,8 @@ CallNotificationDll(
         }
     }
 
-    RegCloseKey(hDllKey);
+    if (hDllKey != NULL)
+        RegCloseKey(hDllKey);
 }
 
 

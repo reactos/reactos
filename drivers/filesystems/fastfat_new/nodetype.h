@@ -103,7 +103,7 @@ typedef CSHORT NODE_BYTE_SIZE;
 
 #define FatBugCheck(A,B,C) { KeBugCheckEx(FAT_FILE_SYSTEM, BugCheckFileId | __LINE__, A, B, C ); }
 
-
+
 //
 //  In this module we'll also define some globally known constants
 //

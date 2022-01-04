@@ -19,7 +19,7 @@ LIST_ENTRY GlobalAdapterList;
 NDIS_STRING ProtocolName = RTL_CONSTANT_STRING(L"NDISUIO");
 
 VOID NTAPI NduUnload(PDRIVER_OBJECT DriverObject)
-{    
+{
     DPRINT("NDISUIO: Unloaded\n");
 }
 
@@ -40,7 +40,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_READ] = NduDispatchRead;
     DriverObject->MajorFunction[IRP_MJ_WRITE] = NduDispatchWrite;
     DriverObject->DriverUnload = NduUnload;
-    
+
     /* Setup global state */
     InitializeListHead(&GlobalAdapterList);
     KeInitializeSpinLock(&GlobalAdapterListLock);
@@ -58,7 +58,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
         DPRINT1("Failed to create device object with status 0x%x\n", Status);
         return Status;
     }
-    
+
     /* Create a symbolic link into the DOS devices namespace */
     Status = IoCreateSymbolicLink(&DosDeviceName, &NtDeviceName);
     if (!NT_SUCCESS(Status))
@@ -86,7 +86,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     Chars.Name = ProtocolName;
     Chars.BindAdapterHandler = NduBindAdapter;
     Chars.UnbindAdapterHandler = NduUnbindAdapter;
-    
+
     NdisRegisterProtocol(&Status,
                          &GlobalProtocolHandle,
                          &Chars,

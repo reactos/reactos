@@ -96,7 +96,7 @@
  *    30-Apr-2004 (Filip Navara <xnavara@volny.cz>)
  *        Fixed problems when the screen was scrolled away.
  *
- *    28-September-2007 (Hervé Poussineau)
+ *    28-September-2007 (HervÃ© Poussineau)
  *        Added history possibilities to right key.
  */
 
@@ -142,7 +142,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
     SHORT orgy;
     SHORT curx;     /*current x/y cursor position*/
     SHORT cury;
-    SHORT tempscreen;
+    SIZE_T tempscreen;
     INT   count;    /*used in some for loops*/
     INT   current = 0;  /*the position of the cursor in the string (str)*/
     INT   charcount = 0;/*chars in the string (str)*/

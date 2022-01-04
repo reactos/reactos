@@ -82,7 +82,7 @@ RetryPowerRequest(
 #ifdef ALLOC_PRAGMA
     #pragma alloc_text(PAGE, ClasspPowerSettingCallback)
 #endif
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassDispatchPower()
@@ -141,7 +141,7 @@ ClassDispatchPower(
 
     return commonExtension->DevInfo->ClassPowerDevice(DeviceObject, Irp);
 } // end ClassDispatchPower()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspPowerUpCompletion()
@@ -718,7 +718,7 @@ ClasspPowerUpCompletionFailure:
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 } // end ClasspPowerUpCompletion()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspPowerDownCompletion()
@@ -1527,7 +1527,7 @@ ClasspPowerDownCompletion(
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 } // end ClasspPowerDownCompletion()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspPowerHandler()
@@ -1874,7 +1874,7 @@ ClasspPowerHandlerCleanup:
                            TRUE);
     return PoCallDriver(lowerDevice, Irp);
 } // end ClasspPowerHandler()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassMinimalPowerHandler()
@@ -1953,7 +1953,7 @@ ClassMinimalPowerHandler(
 
     return status;
 } // end ClassMinimalPowerHandler()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSpinDownPowerHandler()
@@ -2028,7 +2028,7 @@ ClassSpinDownPowerHandler(
 
     return ClasspPowerHandler(DeviceObject, Irp, options);
 } // end ClassSpinDownPowerHandler()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassStopUnitPowerHandler()
@@ -2070,7 +2070,7 @@ ClassStopUnitPowerHandler(
 
     return ClassSpinDownPowerHandler(DeviceObject, Irp);
 } // end ClassStopUnitPowerHandler()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 RetryPowerRequest()
@@ -2191,7 +2191,7 @@ RetryPowerRequest(
     return;
 
 } // end RetryRequest()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspStartNextPowerIrpCompletion()

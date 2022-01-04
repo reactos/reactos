@@ -8,7 +8,7 @@
 #include <asm.inc>
 #include <ks386.inc>
 
-/* Code is taken from wine 1.3.33, 
+/* Code is taken from wine 1.3.33,
  * Copyright Jon Griffiths and Alexandre Julliard
  */
 EXTERN __chkesp_failed:PROC
@@ -18,7 +18,7 @@ PUBLIC __chkesp
 __chkesp:
     jnz .test_failed
     ret
-           
+
 .test_failed:
     push  ebp
     mov ebp, esp
@@ -32,5 +32,5 @@ __chkesp:
     pop eax
     leave
     ret
-    
+
 END

@@ -338,7 +338,7 @@ CSR_API(BaseSrvNlsGetUserInfo)
     PBASE_NLS_GET_USER_INFO NlsMsg = &((PBASE_API_MESSAGE)ApiMessage)->Data.NlsGetUserInfo;
 
     /* Make sure the buffer is valid and of the right size */
-    if ((CsrValidateMessageBuffer(ApiMessage, &NlsMsg->NlsUserInfo, NlsMsg->Size, TRUE)) &&
+    if ((CsrValidateMessageBuffer(ApiMessage, &NlsMsg->NlsUserInfo, NlsMsg->Size, sizeof(BYTE))) &&
         (NlsMsg->Size == sizeof(NLS_USER_INFO)))
     {
         /* Acquire the lock to prevent updates while we copy */

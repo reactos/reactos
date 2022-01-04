@@ -30,7 +30,7 @@ Abstract:
 #pragma alloc_text(PAGE, FatUnicodeRestoreShortNameCase)
 #endif
 
-
+
 BOOLEAN
 FatIsNameInExpression (
     IN PIRP_CONTEXT IrpContext,
@@ -74,7 +74,7 @@ Return Value:
     UNREFERENCED_PARAMETER( IrpContext );
 }
 
-
+
 VOID
 FatStringTo8dot3 (
     _In_ PIRP_CONTEXT IrpContext,
@@ -174,7 +174,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 Fat8dot3ToString (
     _In_ PIRP_CONTEXT IrpContext,
@@ -267,13 +267,13 @@ Return Value:
                 //  there could be double-byte OEM characters lying in wait here.
                 //  Gotta skip them.
                 //
-                
+
                 if (FsRtlIsLeadDbcsCharacter(OutputString->Buffer[StringIndex])) {
 
                     StringIndex += 1;
                     continue;
                 }
-                
+
                 if ((OutputString->Buffer[StringIndex] >= 'A') &&
                     (OutputString->Buffer[StringIndex] <= 'Z')) {
 
@@ -338,13 +338,13 @@ Return Value:
                 //  there could be double-byte OEM characters lying in wait here.
                 //  Gotta skip them.
                 //
-                
+
                 if (FsRtlIsLeadDbcsCharacter(OutputString->Buffer[StringIndex])) {
 
                     StringIndex += 1;
                     continue;
                 }
-                
+
                 if ((OutputString->Buffer[StringIndex] >= 'A') &&
                     (OutputString->Buffer[StringIndex] <= 'Z')) {
 
@@ -412,7 +412,7 @@ Return Value:
     PAGED_CODE();
 
     NT_ASSERT((MAX_LFN_CHARACTERS * sizeof( WCHAR)) == Lfn->MaximumLength);
-    
+
     //
     //  We'll start by locating the dirent for the name.
     //
@@ -463,7 +463,7 @@ Return Value:
             //  we're as dead.  This shouldn't happen in normal operation, but
             //  if someone scrambles a directory by hand ...
             //
-            
+
             NT_ASSERT( Fcb->LfnOffsetWithinDirectory == Fcb->DirentOffsetWithinDirectory );
 
             if (Fcb->LfnOffsetWithinDirectory != Fcb->DirentOffsetWithinDirectory) {
@@ -627,7 +627,7 @@ Return Value:
         } _SEH2_END;
     }
 }
-
+
 VOID
 FatUnicodeToUpcaseOem (
     IN PIRP_CONTEXT IrpContext,
@@ -694,7 +694,7 @@ Return Value:
     return;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 FatSelectNames (
@@ -749,7 +749,7 @@ Return Value:
 
 {
     BOOLEAN GenerateShortName;
-    
+
     PAGED_CODE();
 
     //
@@ -773,7 +773,7 @@ Return Value:
         GenerateShortName = TRUE;
 
         TrySuggestedShortName = (SuggestedShortName != NULL);
-    
+
         //
         //  Now generate a short name.
         //
@@ -785,7 +785,7 @@ Return Value:
         RtlZeroMemory( &Context, sizeof( GENERATE_NAME_CONTEXT ) );
 
         _SEH2_TRY {
-            
+
             while ( TRUE ) {
 
                 FatUnpinBcb( IrpContext, Bcb );
@@ -836,7 +836,7 @@ Return Value:
             }
 
         } _SEH2_FINALLY {
-            
+
             FatUnpinBcb( IrpContext, Bcb );
         } _SEH2_END;
 
@@ -886,7 +886,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatEvaluateNameCase (
     IN PIRP_CONTEXT IrpContext,
@@ -928,7 +928,7 @@ Return Value:
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     *CreateLfn = FALSE;
 
     for (i = 0; i < UnicodeName->Length / sizeof(WCHAR); i++) {
@@ -998,7 +998,7 @@ Return Value:
     return;
 }
 
-
+
 BOOLEAN
 FatSpaceInName (
     IN PIRP_CONTEXT IrpContext,
@@ -1026,7 +1026,7 @@ Return Value:
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     for (i=0; i < UnicodeName->Length/sizeof(WCHAR); i++) {
 
         if (UnicodeName->Buffer[i] == L' ') {
@@ -1038,7 +1038,7 @@ Return Value:
 }
 
 VOID
-FatUnicodeRestoreShortNameCase( 
+FatUnicodeRestoreShortNameCase(
     IN PUNICODE_STRING ShortNameWithCase,
     IN BOOLEAN LowerCase8,
     IN BOOLEAN LowerCase3
@@ -1055,12 +1055,12 @@ Arguments:
 
     ShortNameWithCase - the UNICODE_STRING containing the short name.
     LowerCase8, LowerCase3 - the flag indicating whether to downcase the 8dot3 name component.
-   
+
 Return Value:
 
     None.
 
---*/    
+--*/
 {
     USHORT i;
     UNICODE_STRING DownCaseSeg;
@@ -1068,7 +1068,7 @@ Return Value:
     PAGED_CODE();
 
     NT_ASSERT( ShortNameWithCase->Length <= 24 );
-    
+
     //
     //  Have to repair the case of the short name
     //
@@ -1108,7 +1108,7 @@ Return Value:
             RtlDowncaseUnicodeString(&DownCaseSeg, &DownCaseSeg, FALSE);
         }
     }
-    
+
 }
 
 

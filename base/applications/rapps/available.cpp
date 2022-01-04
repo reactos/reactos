@@ -7,17 +7,15 @@
  *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
  *              Copyright 2020 He Yang                    (1160386205@qq.com)
  */
+
 #include "rapps.h"
 
 #include "available.h"
 #include "misc.h"
 #include "dialogs.h"
 
-#include <atlcoll.h>
-#include <atlsimpcoll.h>
-#include <atlstr.h>
 
- // CAvailableApplicationInfo
+// CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& AvlbStrings)
     : m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
     m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
@@ -40,7 +38,8 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
 
     // TODO: I temporarily use the file name (without suffix) as package name.
     // It should be better to put this in a field of ini file.
-    // consider write a converter to do this and write a github action for rapps-db to ensure package_name is unique.
+    // Consider writing a converter to do this and write a github action for
+    // rapps-db to ensure package_name is unique.
     m_szPkgName = m_sFileName;
     PathRemoveExtensionW(m_szPkgName.GetBuffer(MAX_PATH));
     m_szPkgName.ReleaseBuffer();
@@ -69,9 +68,10 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
         CStringW ScrnshotLocation;
         if (!GetString(ScrnshotField, ScrnshotLocation))
         {
-            continue;
+            // We stop at the first screenshot not found,
+            // so screenshots _have_ to be consecutive
+            break;
         }
-
 
         if (PathIsURLW(ScrnshotLocation.GetString()))
         {
@@ -92,18 +92,32 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
         }
     }
 
+    ATL::CStringW IconPath = AvlbStrings.szAppsPath;
+    PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
+
     // TODO: are we going to support specify an URL for an icon ?
     ATL::CStringW IconLocation;
     if (GetString(L"Icon", IconLocation))
     {
-        // TODO: Does the filename contain anything stuff like ":" "<" ">" ?
-        // these stuff may lead to security issues
-        ATL::CStringW IconPath = AvlbStrings.szAppsPath;
-        PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
         BOOL bSuccess = PathAppendNoDirEscapeW(IconPath.GetBuffer(), IconLocation.GetString());
         IconPath.ReleaseBuffer();
 
-        if (bSuccess)
+        if (!bSuccess)
+        {
+            IconPath.Empty();
+        }
+    }
+    else
+    {
+        // inifile.ico
+        PathAppendW(IconPath.GetBuffer(), m_szPkgName);
+        IconPath.ReleaseBuffer();
+        IconPath += L".ico";
+    }
+
+    if (!IconPath.IsEmpty())
+    {
+        if (PathFileExistsW(IconPath))
         {
             m_szIconLocation = IconPath;
         }
@@ -308,7 +322,7 @@ AvailableStrings::AvailableStrings()
         PathAppendW(szAppsPath.GetBuffer(MAX_PATH), L"rapps");
         szAppsPath.ReleaseBuffer();
 
-        szCabName = L"rappmgr.cab";
+        szCabName = APPLICATION_DATABASE_NAME;
         szCabDir = szPath;
         szCabPath = szCabDir;
         PathAppendW(szCabPath.GetBuffer(MAX_PATH), szCabName);
@@ -342,26 +356,52 @@ VOID CAvailableApps::FreeCachedEntries()
     m_InfoList.RemoveAll();
 }
 
-VOID CAvailableApps::DeleteCurrentAppsDB()
+static void DeleteWithWildcard(const CStringW& DirWithFilter)
 {
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
 
-    hFind = FindFirstFileW(m_Strings.szSearchPath.GetString(), &FindFileData);
+    hFind = FindFirstFileW(DirWithFilter, &FindFileData);
 
-    if (hFind != INVALID_HANDLE_VALUE)
+    if (hFind == INVALID_HANDLE_VALUE)
+        return;
+
+    CStringW Dir = DirWithFilter;
+    PathRemoveFileSpecW(Dir.GetBuffer(MAX_PATH));
+    Dir.ReleaseBuffer();
+
+    do
     {
-        ATL::CStringW szTmp;
-        do
-        {
-            szTmp = m_Strings.szAppsPath;
-            PathAppendW(szTmp.GetBuffer(MAX_PATH), FindFileData.cFileName);
-            szTmp.ReleaseBuffer();
-            DeleteFileW(szTmp.GetString());
-        } while (FindNextFileW(hFind, &FindFileData) != 0);
-        FindClose(hFind);
-    }
+        ATL::CStringW szTmp = Dir + L"\\";
+        szTmp += FindFileData.cFileName;
 
+        if (!(FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            DeleteFileW(szTmp);
+        }
+    } while (FindNextFileW(hFind, &FindFileData) != 0);
+    FindClose(hFind);
+}
+
+VOID CAvailableApps::DeleteCurrentAppsDB()
+{
+    // Delete icons
+    ATL::CStringW IconPath = m_Strings.szAppsPath;
+    PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
+    IconPath.ReleaseBuffer();
+    DeleteWithWildcard(IconPath + L"\\*.ico");
+
+    // Delete leftover screenshots
+    ATL::CStringW ScrnshotFolder = m_Strings.szAppsPath;
+    PathAppendW(ScrnshotFolder.GetBuffer(MAX_PATH), L"screenshots");
+    ScrnshotFolder.ReleaseBuffer();
+    DeleteWithWildcard(IconPath + L"\\*.tmp");
+
+    // Delete data base files (*.txt)
+    DeleteWithWildcard(m_Strings.szSearchPath);
+
+    RemoveDirectoryW(IconPath);
+    RemoveDirectoryW(ScrnshotFolder);
     RemoveDirectoryW(m_Strings.szAppsPath);
     RemoveDirectoryW(m_Strings.szPath);
 }
@@ -376,7 +416,7 @@ BOOL CAvailableApps::UpdateAppsDB()
         return FALSE;
     }
 
-    //if there are some files in the db folder - we're good
+    // If there are some files in the db folder, we're good
     hFind = FindFirstFileW(m_Strings.szSearchPath, &FindFileData);
     if (hFind != INVALID_HANDLE_VALUE)
     {
@@ -385,9 +425,9 @@ BOOL CAvailableApps::UpdateAppsDB()
     }
 
     DownloadApplicationsDB(SettingsInfo.bUseSource ? SettingsInfo.szSourceURL : APPLICATION_DATABASE_URL,
-        !SettingsInfo.bUseSource);
-    
-    if (!ExtractFilesFromCab(m_Strings.szCabName, 
+                           !SettingsInfo.bUseSource);
+
+    if (!ExtractFilesFromCab(m_Strings.szCabName,
                              m_Strings.szCabDir,
                              m_Strings.szAppsPath))
     {
@@ -476,6 +516,15 @@ BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
 
             // set a timestamp for the next time
             Info->SetLastWriteTime(&FindFileData.ftLastWriteTime);
+
+            /* Check if we have the download URL */
+            if (Info->m_szUrlDownload.IsEmpty())
+            {
+                /* Can't use it, delete it */
+                delete Info;
+                continue;
+            }
+
             m_InfoList.AddTail(Info);
 
         skip_if_cached:
@@ -563,20 +612,5 @@ ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindAppsByPkgNameLi
         }
     }
     return result;
-}
-
-const ATL::CStringW& CAvailableApps::GetFolderPath() const
-{
-    return m_Strings.szPath;
-}
-
-const ATL::CStringW& CAvailableApps::GetAppPath() const
-{
-    return m_Strings.szAppsPath;
-}
-
-const ATL::CStringW& CAvailableApps::GetCabPath() const
-{
-    return m_Strings.szCabPath;
 }
 // CAvailableApps

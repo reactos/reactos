@@ -39,6 +39,7 @@ getcwd==_getcwd
 getpid==_getpid
 getw==_getw
 heapwalk==_heapwalk
+isascii==__isascii
 isatty==_isatty
 itoa==_itoa
 kbhit==_kbhit

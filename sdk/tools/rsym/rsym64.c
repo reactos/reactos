@@ -270,7 +270,7 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
 
                /* These work differently. We are in a new function.
                  * We have to parse a lea opcode to find the adress of
-                 * the jump target. This is the reference to find the 
+                 * the jump target. This is the reference to find the
                  * appropriate C_SCOPE_TABLE. */
                 case 6: /* Filter func */
 //                    printf("Found a filter func at 0x%lx\n", State->Location);
@@ -292,9 +292,9 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
             fprintf(stderr, "unknown instruction 0x%x at 0x%p\n", Code, pc);
             exit(1);
     }
-    
+
     State->FramePtrDiff = State->FramePtr - PrevFramePtr;
-    DPRINT("@%p: code=%x, Loc=%lx, offset=%lx, reg=0x%lx:%s\n", 
+    DPRINT("@%p: code=%x, Loc=%lx, offset=%lx, reg=0x%lx:%s\n",
         (void*)((ULONG)pc - g_ehframep), Code, State->Location, State->Offset, State->Reg, regs[State->Reg].name);
     return Length;
 }
@@ -441,7 +441,7 @@ StoreUnwindInfo(PUNWIND_INFO Info, PDW2FDE pFde, ULONG FunctionStart)
         ULONG *pExceptionHandler;
         PC_SCOPE_TABLE pScopeTable;
 
-        /* Set flag for exception handler */ 
+        /* Set flag for exception handler */
         Info->Flags |= UNW_FLAG_EHANDLER;
 
         /* Store address of handler and number of scope tables */
@@ -460,7 +460,7 @@ StoreUnwindInfo(PUNWIND_INFO Info, PDW2FDE pFde, ULONG FunctionStart)
             pScopeTable->Entry[i].Handler = 1;//State.SehBlock[i].Handler;
             pScopeTable->Entry[i].Target = State.SehBlock[i].Target;
         }
-        
+
         /* Update size */
         cbSize += 8 + State.cScopes * sizeof(C_SCOPE_TABLE_ENTRY);
     }
@@ -535,7 +535,7 @@ GeneratePData(PFILE_INFO File)
 
     /* Get sizes */
     CountUnwindData(File);
-//    printf("cFuncs = %ld, cUWOPS = %ld, cScopes = %ld\n", 
+//    printf("cFuncs = %ld, cUWOPS = %ld, cScopes = %ld\n",
 //        File->cFuncs, File->cUWOP, File->cScopes);
 
     /* Initialize section header for .pdata */
@@ -727,7 +727,7 @@ ParsePEHeaders(PFILE_INFO File)
 
     /* Check if MZ header exists  */
     File->DosHeader = (PIMAGE_DOS_HEADER)File->FilePtr;
-    if ((File->DosHeader->e_magic != IMAGE_DOS_MAGIC) || 
+    if ((File->DosHeader->e_magic != IMAGE_DOS_MAGIC) ||
         (File->DosHeader->e_lfanew == 0L))
     {
         perror("Input file is not a PE image.\n");
@@ -735,7 +735,7 @@ ParsePEHeaders(PFILE_INFO File)
     }
 
     /* Locate PE file header  */
-    File->FileHeader = (PIMAGE_FILE_HEADER)(File->FilePtr + 
+    File->FileHeader = (PIMAGE_FILE_HEADER)(File->FilePtr +
                                File->DosHeader->e_lfanew + sizeof(ULONG));
 
     /* Check for x64 image */
@@ -769,12 +769,6 @@ ParsePEHeaders(PFILE_INFO File)
                        + sizeof(IMAGE_FILE_HEADER)
                        + File->FileHeader->SizeOfOptionalHeader;
 
-    if (!File->FileHeader->PointerToSymbolTable)
-    {
-        fprintf(stderr, "No symbol table.\n");
-        return -1;
-    }
-
     /* Create some shortcuts */
     File->ImageBase = File->OptionalHeader->ImageBase;
     File->Symbols = File->FilePtr + File->FileHeader->PointerToSymbolTable;
@@ -800,7 +794,7 @@ ParsePEHeaders(PFILE_INFO File)
         {
             unsigned long index = strtoul(pName+1, 0, 10);
             pName = File->Strings + index;
-            
+
             // Hack, simply remove all sections with long names
             File->UseSection[i] = 0;
         }
@@ -812,7 +806,7 @@ ParsePEHeaders(PFILE_INFO File)
             File->eh_frame.idx = i;
             File->eh_frame.p = File->FilePtr + File->eh_frame.psh->PointerToRawData;
         }
-        
+
         /* Increase number of used sections */
         if (File->UseSection[i])
             File->UsedSections = i+1;
@@ -820,7 +814,7 @@ ParsePEHeaders(PFILE_INFO File)
     }
 
     /* This is the actual size of the new section headers */
-    File->NewSectionHeaderSize = 
+    File->NewSectionHeaderSize =
         (File->UsedSections+2) * sizeof(IMAGE_SECTION_HEADER);
 
     /* Calculate the position to start writing the sections to */
@@ -865,15 +859,47 @@ int main(int argc, char* argv[])
     FILE_INFO File;
     FILE* outfile;
     int ret;
+    int arg, argstate = 0;
+    char *SourcePath = NULL;
 
-    if (argc != 3)
+    for (arg = 1; arg < argc; arg++)
     {
-        fprintf(stderr, "Usage: rsym <exefile> <symfile>\n");
-        exit(1);
+        switch (argstate)
+        {
+            default:
+                argstate = -1;
+                break;
+
+            case 0:
+                if (!strcmp(argv[arg], "-s"))
+                {
+                    argstate = 1;
+                }
+                else
+                {
+                    argstate = 2;
+                    pszInFile = convert_path(argv[arg]);
+                }
+            break;
+
+            case 1:
+                free(SourcePath);
+                SourcePath = strdup(argv[arg]);
+                argstate = 0;
+                break;
+
+            case 2:
+                pszOutFile = convert_path(argv[arg]);
+                argstate = 3;
+                break;
+        }
     }
 
-    pszInFile = convert_path(argv[1]);
-    pszOutFile = convert_path(argv[2]);
+    if (argstate != 3)
+    {
+        fprintf(stderr, "Usage: rsym [-s <sources>] <input> <output>\n");
+        exit(1);
+    }
 
     File.FilePtr = load_file(pszInFile, &File.cbInFileSize);
     if (!File.FilePtr)

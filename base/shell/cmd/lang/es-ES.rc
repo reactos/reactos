@@ -298,7 +298,7 @@ PAUSE [mensaje]"
     STRING_PROMPT_HELP1 "Cambia el símbolo de comandos.\n\n\
 PROMPT [texto]\n\n\
   texto   Epecifica un nuevo símbolo de comandos.\n\n\
-El símbolo de comandos puede hacerce con carácteres normales y los siguientes\n\
+El símbolo de comandos puede hacerse con carácteres normales y los siguientes\n\
 códigos especiales:\n\n\
   $A   & (Signo y)\n\
   $B   | (Linea horizontal)\n\
@@ -535,7 +535,7 @@ title         Nuevo título\n"
     STRING_REPLACE_ERROR6 "No se han encontrado archivos - %s\n"
     STRING_REPLACE_ERROR7 "Error extendido 32\n"
     STRING_CMD_INFOLINE "  Consola de comandos de ReactOS                Escribe HELP para ver la ayuda  "
-    STRING_REACTOS_VERSION "Sistema operativo ReactOS [Versión %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Versión %s %s]\n"
     STRING_CMD_SHELLINFO "\nIntérprete de comandos de ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Funcionando en: "
     STRING_VERSION_RUNVER "%s [Versión %d.%d.%d] %s"

@@ -49,7 +49,8 @@ typedef unsigned __int64        UInt64;
 /* Sparc        */
 /* MIPS         */
 /* PPC          */
-#elif __i386__ || __sun || __sgi || __ppc__
+/* ARM (32-bit) */
+#elif __i386__ || __sun || __sgi || __ppc__ || __arm__
 typedef unsigned char           UChar;
 typedef short                   Int16;
 typedef unsigned short          UInt16;
@@ -58,9 +59,11 @@ typedef unsigned long           UInt32;
 typedef long long               Int64;
 typedef unsigned long long      UInt64;
 
-/* x86-64 */
+/* x86-64        */
+/* IA-64         */
+/* ARM64/AArch64 */
 /* Note that these may be appropriate for other 64-bit machines. */
-#elif __x86_64__ || __ia64__
+#elif __x86_64__ || __ia64__ || __aarch64__
 typedef unsigned char           UChar;
 typedef short                   Int16;
 typedef unsigned short          UInt16;

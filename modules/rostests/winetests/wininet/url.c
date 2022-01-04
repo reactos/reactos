@@ -168,7 +168,13 @@ static const crack_url_test_t crack_url_tests[] = {
         "file", "", "", "", "C:\\Program Files\\Atmel\\.\\Asdf.xml", ""},
     {"C:\\file.txt",
         0, 1, INTERNET_SCHEME_UNKNOWN, -1, 0, -1, 0, -1, 0, -1, 0, 2, 9, -1, 0,
-        "C", "", "", "", "\\file.txt", ""}
+        "C", "", "", "", "\\file.txt", ""},
+    {"res://IELib.dll/test.htm",
+        0, 3, INTERNET_SCHEME_RES, 6, 9, -1, 0, -1, 0, -1, 0, 15, 9, -1, 0,
+        "res", "IELib.dll", "", "", "/test.htm", ""},
+    {"gopher://www.winehq.org/site/about#hi",
+        0, 6, INTERNET_SCHEME_GOPHER, 9, 14, -1, 0, -1, 0, -1, 0, 23, 11, 34, 3,
+        "gopher", "www.winehq.org", "", "", "/site/about", "#hi"},
 };
 
 static WCHAR *a2w(const char *str)

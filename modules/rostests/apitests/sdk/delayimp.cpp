@@ -20,6 +20,8 @@
 #include <imagehlp.h>
 #include <mmddk.h>
 
+#include <pseh/pseh2.h>
+
 /* Compatibility with the MS defines */
 
 #ifndef FACILITY_VISUALCPP
@@ -198,7 +200,7 @@ FARPROC WINAPI DliHook(unsigned dliNotify, PDelayLoadInfo pdli)
             g_VersionDll = LoadLibraryA("version.dll");
             return (FARPROC)1;
         }
-            
+
     }
     else if (dliNotify == dliNotePreGetProcAddress)
     {
@@ -482,7 +484,7 @@ START_TEST(delayimp)
     ok(err == MMSYSERR_INVALHANDLE, "Expected err to be MMSYSERR_INVALHANDLE, was 0x%lx\n", err);
     CheckDliDone();
     ok(g_BreakFunctionName == false, "Expected the functionname to be changed\n");
-    
+
     /* Make the LoadLib fail, manually load the library in the Failure Hook,
     Respond to the dliNotePreGetProcAddress with an alternate function address */
     SetExpectedDli(g_sfc_key);

@@ -18,9 +18,6 @@
 #include <debug.h>
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
-ULONG ObpAccessProtectCloseBit = MAXIMUM_ALLOWED;
-
-#define TAG_OB_HANDLE 'dHbO'
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -726,7 +723,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     }
 
     /* The callback allowed us to close it, but does the handle itself? */
-    if ((HandleEntry->ObAttributes & OBJ_PROTECT_CLOSE) &&
+    if ((HandleEntry->GrantedAccess & ObpAccessProtectCloseBit) &&
         !(IgnoreHandleProtection))
     {
         /* It doesn't, are we from user mode? */

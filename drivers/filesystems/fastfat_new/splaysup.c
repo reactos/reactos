@@ -34,7 +34,7 @@ Abstract:
 #pragma alloc_text(PAGE, FatCompareNames)
 #endif
 
-
+
 VOID
 FatInsertName (
     IN PIRP_CONTEXT IrpContext,
@@ -116,12 +116,12 @@ Restart:
             //  The old one is gone.  Only if the old one is in normal state
             //  do we really have a problem.
             //
-            
+
             if (Node->Fcb->FcbState == FcbGood) {
 
 #ifdef _MSC_VER
-#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )         
-#endif       
+#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
+#endif
                 FatBugCheck( (ULONG_PTR)*RootNode, (ULONG_PTR)Name, (ULONG_PTR)Node );
             }
 
@@ -130,7 +130,7 @@ Restart:
             //  of the tree. Note that we aren't properly synchronized to
             //  recursively mark bad.
             //
-            
+
             FatMarkFcbCondition( IrpContext, Node->Fcb, FcbBad, FALSE );
             FatRemoveNames( IrpContext, Node->Fcb );
 
@@ -247,7 +247,7 @@ Return Value:
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     Parent = Fcb->ParentDcb;
 
     //
@@ -301,7 +301,7 @@ Return Value:
     return;
 }
 
-
+
 PFCB
 FatFindFcb (
     IN PIRP_CONTEXT IrpContext,
@@ -339,7 +339,7 @@ Return Value:
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( IrpContext );
-    
+
     Links = *RootNode;
 
     while (Links != NULL) {
@@ -412,7 +412,7 @@ Return Value:
     return NULL;
 }
 
-
+
 //
 //  Local support routine
 //

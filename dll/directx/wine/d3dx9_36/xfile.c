@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright (C) 2012 Christian Costa
  *
@@ -17,13 +20,12 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
 #include "d3dx9xof.h"
 #undef MAKE_DDHRESULT
 #include "dxfile.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -588,7 +590,7 @@ static HRESULT WINAPI d3dx9_file_CreateEnumObject(ID3DXFile *iface, const void *
     {
         D3DXF_FILELOADMEMORY *memory = (D3DXF_FILELOADMEMORY*)source;
 
-        dxfile_memory.lpMemory = memory->lpMemory;
+        dxfile_memory.lpMemory = (void *)memory->lpMemory;
         dxfile_memory.dSize = memory->dSize;
         dxfile_source = &dxfile_memory;
         dxfile_options = DXFILELOAD_FROMMEMORY;

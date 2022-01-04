@@ -1,6 +1,4 @@
 
-set_cpp(WITH_EXCEPTIONS WITH_STL)
-
 list(APPEND SOURCE
     CConfiguration.cpp
     CFatalException.cpp
@@ -21,6 +19,8 @@ list(APPEND SOURCE
     precomp.h)
 
 add_executable(rosautotest ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/rosautotestmsg.rc)
+target_link_libraries(rosautotest cppstl)
+set_target_cpp_properties(rosautotest WITH_EXCEPTIONS)
 set_module_type(rosautotest win32cui UNICODE)
 add_importlibs(rosautotest advapi32 shell32 user32 wininet msvcrt kernel32 ntdll)
 add_pch(rosautotest precomp.h SOURCE)

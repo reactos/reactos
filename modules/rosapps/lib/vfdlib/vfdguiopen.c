@@ -404,7 +404,7 @@ void OnBrowse(
 	ofn.nMaxFile	= sizeof(file);
 	ofn.lpstrInitialDir = dir;
 	ofn.lpstrTitle	= title ? title : FALLBACK_IMAGE_TITLE;
-	ofn.Flags		= OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+	ofn.Flags		= OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
 
 	//	show the open file dialog box
 

@@ -7,7 +7,7 @@
 *
 * File: Sys_Spec.cpp
 *
-* Module: UDF File System Driver 
+* Module: UDF File System Driver
 * (both User and Kernel mode execution)
 *
 * Description:
@@ -177,7 +177,7 @@ UDFAttributesToUDF(
     FCharact = &(FileDirNdx->FileCharacteristics);
 
     if((*FCharact & FILE_DIRECTORY) ||
-       (*Type == UDF_FILE_TYPE_STREAMDIR) || 
+       (*Type == UDF_FILE_TYPE_STREAMDIR) ||
        (*Type == UDF_FILE_TYPE_DIRECTORY)) {
         *FCharact |= FILE_DIRECTORY;
         if(*Type != UDF_FILE_TYPE_STREAMDIR)
@@ -247,7 +247,7 @@ UDFFileDirInfoToNT(
 
     ASSERT((ULONG_PTR)NTFileInfo > 0x1000);
     RtlZeroMemory(NTFileInfo, sizeof(FILE_BOTH_DIR_INFORMATION));
-    
+
     DosName.Buffer = (PWCHAR)&(NTFileInfo->ShortName);
     DosName.MaximumLength = sizeof(NTFileInfo->ShortName); // 12*sizeof(WCHAR)
 
@@ -532,7 +532,7 @@ UDFGetFileXTime(
 
     }
     if(CrtTime) {
-        if(!(*CrtTime)) 
+        if(!(*CrtTime))
             KeQuerySystemTime((PLARGE_INTEGER)CrtTime);
         if(AccTime && !(*AccTime)) (*AccTime) = *CrtTime;
         if(AttrTime && !(*AttrTime)) (*AttrTime) = *CrtTime;
@@ -576,7 +576,7 @@ UDFNormalizeFileName(
 
 #ifndef _CONSOLE
 
-void 
+void
 __fastcall
 UDFDOSNameOsNative(
     IN OUT PUNICODE_STRING DosName,
@@ -599,7 +599,7 @@ UDFDOSNameOsNative(
     }
     RtlZeroMemory(&Ctx, sizeof(GENERATE_NAME_CONTEXT));
     RtlGenerate8dot3Name(UdfName, FALSE, &Ctx, DosName);
-    
+
 } // UDFDOSNameOsNative()
 
 #endif //_CONSOLE
@@ -671,7 +671,7 @@ UDFNormalizeFileName(
         int localExtIndex = 0;
         if (hasExt) {
             int maxFilenameLen;
-            // Translate extension, and store it in ext. 
+            // Translate extension, and store it in ext.
             for(index = 0; index<UDF_EXT_SIZE && extIndex + index +1 < udfLen; index++ ) {
                 current = udfName[extIndex + index + 1];
                 if (UDFIsIllegalChar(current) //|| !UnicodeIsPrint(current)) {
@@ -699,15 +699,15 @@ UDFNormalizeFileName(
             //If no extension, make sure to leave room for CRC.
             newIndex = UDF_NAME_LEN - 5;
         }
-        newName[newIndex++] = UNICODE_CRC_MARK; // Add mark for CRC. 
+        newName[newIndex++] = UNICODE_CRC_MARK; // Add mark for CRC.
         //Calculate CRC from original filename from FileIdentifier.
 //        valueCRC = UDFUnicodeCksum(fidName, fidNameLen);
-//        / Convert 16-bits of CRC to hex characters. 
+//        / Convert 16-bits of CRC to hex characters.
         newName[newIndex++] = hexChar[(valueCRC & 0xf000) >> 12];
         newName[newIndex++] = hexChar[(valueCRC & 0x0f00) >> 8];
         newName[newIndex++] = hexChar[(valueCRC & 0x00f0) >> 4];
         newName[newIndex++] = hexChar[(valueCRC & 0x000f)];
-        // Place a translated extension at end, if found. 
+        // Place a translated extension at end, if found.
         if (hasExt) {
             newName[newIndex++] = UNICODE_PERIOD;
             for (index = 0;index < localExtIndex ;index++ ) {
@@ -744,7 +744,7 @@ MyAppendUnicodeStringToString_(
     IN PUNICODE_STRING Str2
 #ifdef UDF_TRACK_UNICODE_STR
    ,IN PCHAR Tag
-#endif 
+#endif
     )
 {
     PWCHAR tmp;
@@ -754,7 +754,7 @@ MyAppendUnicodeStringToString_(
   #define UDF_UNC_STR_TAG Tag
 #else
   #define UDF_UNC_STR_TAG "AppUStr"
-#endif 
+#endif
 
     tmp = Str1->Buffer;
     i = Str1->Length + Str2->Length + sizeof(WCHAR);
@@ -794,7 +794,7 @@ MyAppendUnicodeToString_(
     IN PCWSTR Str2
 #ifdef UDF_TRACK_UNICODE_STR
    ,IN PCHAR Tag
-#endif 
+#endif
     )
 {
     PWCHAR tmp;
@@ -804,7 +804,7 @@ MyAppendUnicodeToString_(
   #define UDF_UNC_STR_TAG Tag
 #else
   #define UDF_UNC_STR_TAG "AppStr"
-#endif 
+#endif
 
 #if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
 

@@ -106,7 +106,7 @@ DllMain(HANDLE hDll,
         {
             /* Set no filter initially */
             GlobalTopLevelExceptionFilter = RtlEncodePointer(NULL);
-            
+
             /* Enable the Rtl thread pool and timer queue to use proper Win32 thread */
             RtlSetThreadPoolStartFunc(BaseCreateThreadPoolThread, BaseExitThreadPoolThread);
 

@@ -11,10 +11,6 @@
 #define MM_READONLY     1   // PAGE_READONLY
 #define MM_READWRITE    4   // PAGE_WRITECOPY
 
-#ifndef TAG_OSTR
-#define TAG_OSTR    'RTSO'
-#endif
-
 /* GLOBALS *******************************************************************/
 
 /*
@@ -347,7 +343,7 @@ BitBltAligned(
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 PVOID
 NTAPI
 FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -412,7 +408,7 @@ FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     return Data;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -756,7 +752,7 @@ InbvSolidColorFill(IN ULONG Left,
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvUpdateProgressBar(IN ULONG Progress)
@@ -844,7 +840,7 @@ InbvScreenToBufferBlt(OUT PUCHAR Buffer,
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvSetProgressBarCoordinates(IN ULONG Left,
@@ -862,7 +858,7 @@ InbvSetProgressBarCoordinates(IN ULONG Left,
     ShowProgressBar = TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvSetProgressBarSubset(IN ULONG Floor,
@@ -878,7 +874,7 @@ InbvSetProgressBarSubset(IN ULONG Floor,
     InbvProgressState.Bias = (Ceiling * 100) - Floor;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvIndicateProgress(VOID)
@@ -960,7 +956,12 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
         Status = STATUS_NO_MEMORY;
         goto Quit;
     }
-    RtlUnicodeStringToOemString(&OemString, &CapturedString, FALSE);
+    Status = RtlUnicodeStringToOemString(&OemString, &CapturedString, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(OemString.Buffer, TAG_OSTR);
+        goto Quit;
+    }
 
     /* Display the string */
     InbvDisplayString(OemString.Buffer);
@@ -1070,7 +1071,7 @@ InbvRotationThread(
     PsTerminateSystemThread(STATUS_SUCCESS);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvRotBarInit(VOID)
@@ -1080,7 +1081,7 @@ InbvRotBarInit(VOID)
 }
 #endif
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 DisplayBootBitmap(IN BOOLEAN TextMode)
@@ -1364,7 +1365,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 DisplayFilter(PCHAR *String)
@@ -1388,7 +1389,7 @@ DisplayFilter(PCHAR *String)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 FinalizeBootLogo(VOID)

@@ -28,11 +28,11 @@ using namespace __gnu_cxx;
 class SlistTest : public CPPUNIT_NS::TestCase
 {
   CPPUNIT_TEST_SUITE(SlistTest);
-#if !defined (STLPORT) || defined (_STLP_NO_EXTENSIONS) || defined (_STLP_USE_NO_IOSTREAMS) 
+#if !defined (STLPORT) || defined (_STLP_NO_EXTENSIONS) || defined (_STLP_USE_NO_IOSTREAMS)
   CPPUNIT_IGNORE;
 #endif
   CPPUNIT_TEST(slist1);
-#if defined (STLPORT) && defined (_STLP_USE_NO_IOSTREAMS) 
+#if defined (STLPORT) && defined (_STLP_USE_NO_IOSTREAMS)
   CPPUNIT_STOP_IGNORE;
 #endif
   CPPUNIT_TEST(erase);

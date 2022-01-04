@@ -151,6 +151,12 @@ FdoEnumerateDevices(
                    PciConfig.VendorID,
                    PciConfig.DeviceID);
 
+            if (PciConfig.VendorID == 0 && PciConfig.DeviceID == 0)
+            {
+                DPRINT("Filter out devices with null vendor and device ID\n");
+                continue;
+            }
+
             Status = FdoLocateChildDevice(&Device, DeviceExtension, SlotNumber, &PciConfig);
             if (!NT_SUCCESS(Status))
             {
@@ -425,7 +431,7 @@ FdoStartDevice(
         switch (ResourceDescriptor->Type)
         {
             case CmResourceTypeBusNumber:
-                if (FoundBusNumber || ResourceDescriptor->u.BusNumber.Length != 1)
+                if (FoundBusNumber || ResourceDescriptor->u.BusNumber.Length < 1)
                     return STATUS_INVALID_PARAMETER;
 
                 /* Use this one instead */

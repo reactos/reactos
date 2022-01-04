@@ -153,27 +153,29 @@ FreeDeviceData(IN PDEVICE_OBJECT DeviceObject)
 
     /* Get the device extension and see how far we had gotten */
     DeviceExtension = (PSAC_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    if ((GlobalDataInitialized) && (DeviceExtension->Initialized))
+    if (!(GlobalDataInitialized) || !(DeviceExtension->Initialized))
     {
-        /* Attempt to rundown while holding the lock */
+        goto Exit;
+    }
+
+    /* Attempt to rundown while holding the lock */
+    KeAcquireSpinLock(&DeviceExtension->Lock, &OldIrql);
+    while (DeviceExtension->RundownInProgress)
+    {
+        SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC FreeDeviceData: Waiting....\n");
+
+        /* Initiate and wait for rundown */
+        KeInitializeEvent(&DeviceExtension->RundownEvent, SynchronizationEvent, 0);
+        KeReleaseSpinLock(&DeviceExtension->Lock, OldIrql);
+        Status = KeWaitForSingleObject(&DeviceExtension->RundownEvent,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       NULL);
+        ASSERT(Status == STATUS_SUCCESS);
+
+        /* Re-acquire the lock and check if rundown is done */
         KeAcquireSpinLock(&DeviceExtension->Lock, &OldIrql);
-        while (DeviceExtension->RundownInProgress)
-        {
-            SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC FreeDeviceData: Waiting....\n");
-
-            /* Initiate and wait for rundown */
-            KeInitializeEvent(&DeviceExtension->RundownEvent, SynchronizationEvent, 0);
-            KeReleaseSpinLock(&DeviceExtension->Lock, OldIrql);
-            Status = KeWaitForSingleObject(&DeviceExtension->RundownEvent,
-                                           Executive,
-                                           KernelMode,
-                                           FALSE,
-                                           NULL);
-            ASSERT(Status == STATUS_SUCCESS);
-
-            /* Re-acquire the lock and check if rundown is done */
-            KeAcquireSpinLock(&DeviceExtension->Lock, &OldIrql);
-        }
     }
 
     /* Now set the rundown flag while we cancel the timer */
@@ -205,6 +207,7 @@ FreeDeviceData(IN PDEVICE_OBJECT DeviceObject)
     KeAcquireSpinLock(&DeviceExtension->Lock, &OldIrql);
     DeviceExtension->Initialized = FALSE;
     KeReleaseSpinLock(&DeviceExtension->Lock, OldIrql);
+Exit:
     SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC FreeDeviceData: Exiting.\n");
 }
 
@@ -247,7 +250,7 @@ InitializeDeviceData(IN PDEVICE_OBJECT DeviceObject)
                               &EnableData,
                               sizeof(EnableData),
                               NULL,
-                              0);
+                              NULL);
     if (!NT_SUCCESS(Status))
     {
         /* Bail out if we couldn't even get this far */
@@ -332,7 +335,7 @@ InitializeDeviceData(IN PDEVICE_OBJECT DeviceObject)
                                   &EnableData,
                                   sizeof(EnableData),
                                   NULL,
-                                  0);
+                                  NULL);
         if (!NT_SUCCESS(Status)) SAC_DBG(SAC_DBG_INIT, "Failed dispatch\n");
 
         /* Bail out */

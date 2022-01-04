@@ -25,7 +25,7 @@ XIPDispatch(IN ULONG DispatchCode,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 PMEMORY_ALLOCATION_DESCRIPTOR
 NTAPI
 XIPpFindMemoryDescriptor(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -49,7 +49,7 @@ XIPpFindMemoryDescriptor(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return NULL;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 XIPInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -82,7 +82,7 @@ XIPInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Find the XIP memory descriptor */
     XipDescriptor = XIPpFindMemoryDescriptor(LoaderBlock);
     if (!XipDescriptor) return;
-    
+
     //
     // Make sure this is really XIP, and not RAM Disk -- also validate XIP
     // Basically, either this is a ROM boot or a RAM boot, but not both nor none

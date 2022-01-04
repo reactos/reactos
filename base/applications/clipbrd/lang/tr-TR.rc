@@ -1,4 +1,8 @@
-/* TRANSLATOR: 2015, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+/* TRANSLATOR:
+2015, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
+2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net),
+2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
+*/
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -36,10 +40,10 @@ STRINGTABLE
 BEGIN
     STRING_CLIPBOARD "Pano Görüntüleyicisi"
     STRING_CLIPFILE  "Pano Ögesi"
-    STRING_DELETE_MSG "Pano içeriğini sil?"
-    STRING_DELETE_TITLE "Pano Sil"
-    STRING_FORMAT_NT "ReactOS İçin Pano Kütükleri (*.clp)"
-    STRING_FORMAT_GEN "Pano Kütükleri (*.clp)"
+    STRING_DELETE_MSG "Pano içeriği silinsin mi?"
+    STRING_DELETE_TITLE "Panoyu Temizle"
+    STRING_FORMAT_NT "ReactOS İçin Pano Dosyaları (*.clp)"
+    STRING_FORMAT_GEN "Pano Dosyaları (*.clp)"
 END
 
 STRINGTABLE
@@ -47,17 +51,17 @@ BEGIN
     STRING_CF_UNKNOWN "Bilinmeyen Biçim"
     STRING_CF_TEXT "Metin"
     STRING_CF_BITMAP "Bit Eşlem"
-    STRING_CF_OEMTEXT "OEM Metin"
-    STRING_CF_UNICODETEXT "Evrenlik Kodlu Metin"
+    STRING_CF_OEMTEXT "OEM Metni"
+    STRING_CF_UNICODETEXT "Evrensel Kodlu Metin"
     STRING_CF_DIB "DIB Bit Eşlem"
-    STRING_CF_LOCALE "Yerli Veri"
-    STRING_CF_ENHMETAFILE "Geliştirilmiş Metafile"
+    STRING_CF_LOCALE "Yerel Veri"
+    STRING_CF_ENHMETAFILE "Geliştirilmiş Meta Dosyasıs"
     STRING_CF_METAFILEPICT "Meta dosyası"
     STRING_CF_PALETTE "Renklik"
     STRING_CF_DIBV5 "DIB Bit Eşlem (Sürüm 5)"
-    STRING_CF_SYLK "Simgelik Bağlantı Biçimi"
+    STRING_CF_SYLK "Sembolik Bağlantı Biçimi"
     STRING_CF_DIF "Veri Değiş Tokuş Biçimi"
-    STRING_CF_HDROP "Bırakma Verisi"
+    STRING_CF_HDROP "Veriyi Kaldır"
 END
 
 STRINGTABLE

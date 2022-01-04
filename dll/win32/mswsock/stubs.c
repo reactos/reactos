@@ -442,7 +442,7 @@ StopWsdpService()
 
 /*
  * @unimplemented
- * 
+ *
  * See https://www.geoffchappell.com/studies/windows/win32/services/svchost/dll/svchostpushserviceglobals.htm
  */
 VOID

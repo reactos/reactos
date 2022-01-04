@@ -41,12 +41,12 @@ CHAR PspJobSchedulingClasses[PSP_JOB_SCHEDULING_CLASSES] =
 GENERIC_MAPPING PspJobMapping =
 {
     STANDARD_RIGHTS_READ | JOB_OBJECT_QUERY,
-    
+
     STANDARD_RIGHTS_WRITE | JOB_OBJECT_ASSIGN_PROCESS |
     JOB_OBJECT_SET_ATTRIBUTES | JOB_OBJECT_TERMINATE,
-    
+
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
-    
+
     STANDARD_RIGHTS_ALL | THREAD_ALL_ACCESS // bug fixed only in vista
 };
 
@@ -105,7 +105,7 @@ PspDeleteJob ( PVOID ObjectBody )
     ExDeleteResource(&Job->JobLock);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 PspInitializeJobStructures(VOID)
@@ -546,10 +546,10 @@ NtQueryInformationJobObject (
                 ProbeForWrite(JobInformation, JobInformationLength, RequiredAlign);
             }
 
-            /* But also return lenght if asked */
+            /* But also return length if asked */
             if (ReturnLength != NULL)
             {
-                ProbeForWrite(JobInformation, sizeof(ULONG), sizeof(ULONG));
+                ProbeForWriteUlong(ReturnLength);
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

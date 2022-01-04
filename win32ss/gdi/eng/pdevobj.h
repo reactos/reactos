@@ -196,7 +196,7 @@ PDEVOBJ_vGetDeviceCaps(
     _In_ PPDEVOBJ ppdev,
     _Out_ PDEVCAPS pDevCaps);
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitPDEVImpl(VOID);

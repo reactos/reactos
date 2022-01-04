@@ -180,7 +180,7 @@ void add_group_mapping(WCHAR* sidstring, ULONG sidstringlength, uint32_t gid) {
     while (sidstringlength > 0) {
         val = 0;
         i = 0;
-        while (sidstring[i] != '-' && i < sidstringlength) {
+        while (i < sidstringlength && sidstring[i] != '-') {
             if (sidstring[i] >= '0' && sidstring[i] <= '9') {
                 val *= 10;
                 val += sidstring[i] - '0';

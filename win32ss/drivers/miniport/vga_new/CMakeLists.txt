@@ -15,4 +15,8 @@ target_link_libraries(vga libcntpr)
 set_module_type(vga kernelmodedriver)
 add_importlibs(vga videoprt)
 add_pch(vga vga.h SOURCE)
-add_cd_file(TARGET vga DESTINATION reactos/system32/drivers FOR all)
+
+# pc98vid takes place of vga.sys on PC-98 platform
+if(NOT SARCH STREQUAL "pc98")
+    add_cd_file(TARGET vga DESTINATION reactos/system32/drivers FOR all)
+endif()

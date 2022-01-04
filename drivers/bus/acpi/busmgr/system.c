@@ -24,7 +24,7 @@
  */
 
 /* Modified for ReactOS and latest ACPICA
- * Copyright (C)2009  Samuel Serapion 
+ * Copyright (C)2009  Samuel Serapion
  */
 
 #include <precomp.h>
@@ -84,7 +84,7 @@ acpi_system_add (
 	sprintf(acpi_device_class(device), "%s", ACPI_SYSTEM_CLASS);
 	acpi_driver_data(device) = system;
 
-	DPRINT("%s [%s] (supports", 
+	DPRINT("%s [%s] (supports",
 		acpi_device_name(device), acpi_device_bid(device));
 	for (i=0; i<ACPI_S_STATE_COUNT; i++) {
 		UINT8 type_a, type_b;
@@ -97,7 +97,7 @@ acpi_system_add (
 				system->states[i] = 1;
 			}
 			/* no break */
-		default: 
+		default:
 			if (ACPI_SUCCESS(status)) {
 				system->states[i] = 1;
 				DPRINT(" S%d", i);
@@ -156,7 +156,7 @@ ACPI_STATUS
 acpi_system_restore_state(
 	UINT32			state)
 {
-	/* 
+	/*
 	 * We should only be here if we're coming back from STR or STD.
 	 * And, in the case of the latter, the memory image should have already
 	 * been loaded from disk.
@@ -167,7 +167,7 @@ acpi_system_restore_state(
 		/* Do _early_ resume for irqs.  Required by
 		 * ACPI specs.
 		 */
-		/* TBD: call arch dependant reinitialization of the 
+		/* TBD: call arch dependant reinitialization of the
 		 * interrupts.
 		 */
 #ifdef _X86_
@@ -239,7 +239,7 @@ acpi_system_save_state(
 	//			return error;
 	//		}
 	//	}
-		
+
 		/* flush caches */
 		ACPI_FLUSH_CPU_CACHE();
 
@@ -395,7 +395,7 @@ acpi_suspend (
 	return status;
 }
 
-int 
+int
 acpi_system_init (void)
 {
 	int			result = 0;

@@ -327,7 +327,7 @@ BEGIN
     IDS_BAD_VALUE "不能查询值 '%s'"
     IDS_UNSUPPORTED_TYPE "不能编辑这种类型的键 (%ld)"
     IDS_TOO_BIG_VALUE "数值过大 (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 类型的数据不能包含空字符串。\r\n注册表编辑器将删除找到得空字符串。"
+    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ 类型的数据不能包含空字符串。\n注册表编辑器将删除找到得空字符串。"
     IDS_QUERY_DELETE_KEY_ONE "确实要删除这个键吗?"
     IDS_QUERY_DELETE_KEY_MORE "确实要删除这些键吗?"
     IDS_QUERY_DELETE_KEY_CONFIRM "确认删除键"

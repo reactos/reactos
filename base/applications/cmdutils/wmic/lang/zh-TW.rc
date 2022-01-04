@@ -7,5 +7,5 @@ STRINGTABLE
     STRING_CMDLINE_NOT_SUPPORTED, "錯誤: 不支援的命令列\n"
     STRING_ALIAS_NOT_FOUND, "錯誤: 別名未找到\n"
     STRING_INVALID_QUERY, "錯誤: 無效的查詢\n"
-    STRING_INVALID_PATH, "Error: Invalid syntax for PATH\n"
+    STRING_INVALID_PATH, "錯誤: 無效的 PATH 命令語法\n"
 }

@@ -220,7 +220,7 @@ static MUI_ENTRY ptPTIntroPageEntries[] =
     {
         6,
         15,
-        "Fa\207a c\242pia de segur\306n\207 dos seus dados ou teste num computador",
+        "Fa\207a c\242pia de seguran\207a dos seus dados ou teste num computador",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -734,7 +734,7 @@ static MUI_ENTRY ptPTFlushPageEntries[] =
     {
         10,
         6,
-        "O sistema est\240 a certificar que todos os dados est\306 a ser",
+        "O sistema est\240 a certificar que todos os dados est\306o a ser",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -949,7 +949,7 @@ static MUI_ENTRY ptPTBootPageEntries[] =
     {
         6,
         8,
-        "O instalador n\306o pode instalar o ger\210nciador de inicializa\207\306o no disco",
+        "O instalador n\306o pode instalar o gestor de inicializa\207\306o no disco",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1009,7 +1009,7 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         6,
         8,
-        "n\306o-particionados neste computador.",
+        "n\306o particionados neste computador.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1104,7 +1104,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         6,
         16,
-        "formato não suportado pelo ReactOS.",
+        "formato n\306o suportado pelo ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1146,7 +1146,7 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         8,
         28,
-        "   à lista de selec\207\306o de parti\207\306o e, em seguida, seleccione ou crie um novo tipo",
+        "   \205 lista de sele\207\306o de parti\207\306o e, em seguida, seleccione ou crie um novo tipo",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1346,6 +1346,37 @@ static MUI_ENTRY ptPTFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY ptPTCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "O instalador est\240 a verificar a parti\207\306o seleccionada.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Por favor, aguarde...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ptPTInstallDirectoryEntries[] =
 {
     {
@@ -1462,35 +1493,35 @@ static MUI_ENTRY ptPTBootLoaderEntries[] =
     {
         6,
         8,
-        "O instalador ir\240 configurar o ger\210nciador de inicializa\207\306o",
+        "O instalador ir\240 configurar o gestor de arranque.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         12,
-        "Instalar o ger\210nciador de inicializa\207\306o no disco r\241gido (MBR e VBR)",
+        "Instalar o gestor de arranque no disco r\241gido (MBR e VBR)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         13,
-        "Instalar o ger\210nciador de inicializa\207\306o no disco r\241gido (apenas VBR)",
+        "Instalar o gestor de arranque no disco r\241gido (apenas VBR)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         14,
-        "Instalar o ger\210nciador de inicializa\207\306o numa disquete",
+        "Instalar o gestor de arranque numa disquete",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         15,
-        "Saltar a instala\207\306o do ger\210nciador de inicializa\207\306o",
+        "Saltar a instala\207\306o do gestor de arranque",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1499,6 +1530,30 @@ static MUI_ENTRY ptPTBootLoaderEntries[] =
         0,
         "ENTER=Continuar  F3=Sair",
         TEXT_TYPE_STATUS  | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ptPTBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "A instalar o programa de arranque no disco de instala\207\306o. Por favor aguarde...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -1698,7 +1753,7 @@ static MUI_ENTRY ptPTSelectFSEntries[] =
     {
         6,
         18,
-        "sistema de arquivos de arquivos desejado e pressione ENTER.",
+        "sistema de arquivos desejado e pressione ENTER.",
         0
     },
     {
@@ -1755,7 +1810,7 @@ static MUI_ENTRY ptPTDeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Para retornar \205 tela anterior sem excluir",
+        "\x07  Para retornar \205 ecr\306 anterior sem excluir",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -2046,7 +2101,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_FORMATTING_PARTITION,
-        "A instalação n\306o consegue formatar a parti\207\306o:\n"
+        "A instala\207\306o n\306o consegue formatar a parti\207\306o:\n"
         " %S\n"
         "\n"
         "ENTER = Reiniciar o computador"
@@ -2124,6 +2179,10 @@ MUI_PAGE ptPTPages[] =
         ptPTFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        ptPTCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         ptPTDeletePartitionEntries
     },
@@ -2158,6 +2217,10 @@ MUI_PAGE ptPTPages[] =
     {
         SUCCESS_PAGE,
         ptPTSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        ptPTBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2208,8 +2271,6 @@ MUI_STRING ptPTStrings[] =
     "A nova parti\207\306o ainda n\306o est\240 formatada."},
     {STRING_INSTALLONPART,
     "O instalador instala o ReactOS na parti\207\306o"},
-    {STRING_CHECKINGPART,
-    "O instalador est\240 a verificar a parti\207\306o seleccionada."},
     {STRING_CONTINUE,
     "ENTER=Continuar"},
     {STRING_QUITCONTINUE,
@@ -2245,7 +2306,7 @@ MUI_STRING ptPTStrings[] =
     {STRING_REBOOTPROGRESSBAR,
     " O computador ir\240 reiniciar em %li segundo(s)... "},
     {STRING_CONSOLEFAIL1,
-    "N\306o foi poss\241vel abrir o console\r\n\r\n"},
+    "N\306o foi poss\241vel abrir a consola\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
     "A causa mais com\243m \202 a utiliza\207\306o de um teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,
@@ -2261,31 +2322,21 @@ MUI_STRING ptPTStrings[] =
     {STRING_KEEPFORMAT,
     " Manter o sistema de arquivos actual (sem altera\207\344es) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  Tipo 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "em %I64u %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "em %I64u %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  Tipo 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "em Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %sTipo %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) [%s]"},
+    "em %s."},
+    {STRING_PARTTYPE,
+    "Tipo 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ) [%s]"
+    "%I64u %s Disco %lu (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu [%s]"
+    "%I64u %s Disco %lu (Porta=%hu, Barramento=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "O instalador criou uma nova parti\207\306o em"},
     {STRING_UNPSPACE,
-    "    %sEspa\207o n\306o particionado%s            %6lu %s"},
+    "Espa\207o n\306o particionado"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,

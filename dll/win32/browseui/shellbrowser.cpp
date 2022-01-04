@@ -913,7 +913,6 @@ long IEGetNameAndFlags(LPITEMIDLIST pidl, SHGDNF uFlags, LPWSTR pszBuf, UINT cch
 HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     LPCITEMIDLIST absolutePIDL, FOLDERSETTINGS *folderSettings, long flags)
 {
-    CComPtr<IObjectWithSite>                objectWithSite;
     CComPtr<IShellFolder>                   saveCurrentShellFolder;
     CComPtr<IShellView>                     saveCurrentShellView;
     CComPtr<IShellView>                     newShellView;
@@ -975,6 +974,10 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         ZeroMemory(&shellViewWindowBounds, sizeof(shellViewWindowBounds));
     ::MapWindowPoints(0, m_hWnd, reinterpret_cast<POINT *>(&shellViewWindowBounds), 2);
 
+    // update current pidl
+    ILFree(fCurrentDirectoryPIDL);
+    fCurrentDirectoryPIDL = ILClone(absolutePIDL);
+
     // create view window
     hResult = newShellView->CreateViewWindow(saveCurrentShellView, folderSettings,
         this, &shellViewWindowBounds, &newShellViewWindow);
@@ -988,13 +991,6 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         SetCursor(saveCursor);
         return hResult;
     }
-
-    if (objectWithSite.p != NULL)
-        hResult = objectWithSite->SetSite(NULL);
-
-    // update current pidl
-    ILFree(fCurrentDirectoryPIDL);
-    fCurrentDirectoryPIDL = ILClone(absolutePIDL);
 
     // update view window
     if (saveCurrentShellView != NULL)
@@ -1122,11 +1118,11 @@ HRESULT CShellBrowser::GetBaseBar(bool vertical, REFIID riid, void **theBaseBar)
         hResult = CBaseBarSite_CreateInstance(IID_PPV_ARG(IUnknown, &newBaseBarSite), vertical);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-    
+
         // we have to store our basebar into cache now
         *cache = newBaseBar;
         newBaseBar->AddRef();
-        
+
         // tell the new base bar about the shell browser
         hResult = IUnknown_SetSite(newBaseBar, static_cast<IDropTarget *>(this));
         if (FAILED_UNEXPECTEDLY(hResult))
@@ -1214,7 +1210,7 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
     hResult = GetBaseBar(vertical, IID_PPV_ARG(IDeskBar, &deskBar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    
+
     hResult = deskBar->GetClient(&baseBarSite);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
@@ -1222,7 +1218,7 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
     hResult = deskBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    
+
     if (!IsBandLoaded(classID, vertical, &dwBandID))
     {
         TRACE("ShowBand called for CLSID %s, vertical=%d...\n", wine_dbgstr_guid(&classID), vertical);
@@ -1757,7 +1753,7 @@ HRESULT CShellBrowser::BuildExplorerBandMenu()
     if (!nbFound)
     {
         // Remove separator
-        DeleteMenu(hBandsMenu, IDM_EXPLORERBAR_SEPARATOR, MF_BYCOMMAND); 
+        DeleteMenu(hBandsMenu, IDM_EXPLORERBAR_SEPARATOR, MF_BYCOMMAND);
     }
     // Remove media menu since XP does it (according to API Monitor)
     DeleteMenu(hBandsMenu, IDM_EXPLORERBAR_MEDIA, MF_BYCOMMAND);
@@ -3432,14 +3428,14 @@ LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             CComPtr<IDeskBar> bar;
             CComPtr<IUnknown> pBarSite;
             CComPtr<IDeskBarClient> pClient;
- 
+
             if (fClientBars[i].clientBar == NULL)
                 continue;
 
             hr = fClientBars[i].clientBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &pdw));
             if (FAILED_UNEXPECTEDLY(hr))
                 continue;
-            
+
             /* We should destroy our basebarsite too */
             hr = pdw->QueryInterface(IID_PPV_ARG(IDeskBar, &bar));
             if (SUCCEEDED(hr))

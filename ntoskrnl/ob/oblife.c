@@ -635,7 +635,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     {
         /* Use default tag and non-paged pool */
         PoolType = NonPagedPool;
-        Tag = 'TjbO';
+        Tag = TAG_OBJECT_TYPE;
     }
     else
     {
@@ -1093,8 +1093,8 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* Check if we've already created the directory of types */
     if (ObpTypeDirectoryObject)
     {
-        /* Acquire the directory lock */
-        ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
+        /* Lock the lookup context */
+        ObpAcquireLookupContextLock(&Context, ObpTypeDirectoryObject);
 
         /* Do the lookup */
         if (ObpLookupEntryDirectory(ObpTypeDirectoryObject,
@@ -1159,7 +1159,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
         /* Set the hard-coded key and object count */
         LocalObjectType->TotalNumberOfObjects = 1;
-        LocalObjectType->Key = 'TjbO';
+        LocalObjectType->Key = TAG_OBJECT_TYPE;
     }
     else
     {
@@ -1849,9 +1849,17 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
                                                    NULL);
                 if (NT_SUCCESS(Status))
                 {
-                    /* FIXME: Missng locks */
-                    /* Set its session ID */
+                    /* Setup a lookup context */
+                    OBP_LOOKUP_CONTEXT LookupContext;
+                    ObpInitializeLookupContext(&LookupContext);
+
+                    /* Set the directory session ID */
+                    ObpAcquireDirectoryLockExclusive(Directory, &LookupContext);
                     Directory->SessionId = PsGetCurrentProcessSessionId();
+                    ObpReleaseDirectoryLock(Directory, &LookupContext);
+
+                    /* We're done, release the context and dereference the directory */
+                    ObpReleaseLookupContext(&LookupContext);
                     ObDereferenceObject(Directory);
                 }
             }

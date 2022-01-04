@@ -266,7 +266,7 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
                     pDrawItem->rcItem.right, pDrawItem->rcItem.bottom - 10);
 
             SelectObject(pDrawItem->hDC, hMagBrush);
-            
+
             if (m_FreeSpacePerc > 0)
             {
                 Pie(pDrawItem->hDC, pDrawItem->rcItem.left, pDrawItem->rcItem.top, pDrawItem->rcItem.right,
@@ -419,14 +419,14 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     {
         /* volume label textbox */
         SendMessage(GetDlgItem(hwndDlg, 14000), EM_SETREADONLY, TRUE, 0);
-        
+
         /* disk compression */
         ShowWindow(GetDlgItem(hwndDlg, 14011), FALSE);
 
         /* index */
         ShowWindow(GetDlgItem(hwndDlg, 14012), FALSE);
     }
-    
+
     HICON hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IconId), IMAGE_ICON, 32, 32, LR_SHARED);
     if (hIcon)
         SendDlgItemMessageW(hwndDlg, 14016, STM_SETICON, (WPARAM)hIcon, 0);
@@ -483,7 +483,7 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     GetDlgItemTextW(hwndDlg, 14009, wszFormat, _countof(wszFormat));
     swprintf(wszBuf, wszFormat, m_wszDrive[0]);
     SetDlgItemTextW(hwndDlg, 14009, wszBuf);
-    
+
     /* show disk cleanup button only for fixed drives */
     ShowWindow(GetDlgItem(hwndDlg, 14010), DriveType == DRIVE_FIXED);
 }

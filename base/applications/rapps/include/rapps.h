@@ -7,5 +7,6 @@
 #include "installed.h"
 #include "available.h"
 #include "misc.h"
+#include "configparser.h"
 
 #endif /* _RAPPS_H */

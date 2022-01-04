@@ -500,7 +500,7 @@ FATAddEntry(
                         ASSERT(SearchContext.DirEntry.Fat.FileSize == MoveContext->FileSize);
                         break;
                     }
-                } 
+                }
             }
         }
         if (i == 100) /* FIXME : what to do after this ? */
@@ -537,7 +537,7 @@ FATAddEntry(
                 needLong = TRUE;
                 break;
             }
-            
+
             if (c == L'.')
             {
                 InExtension = TRUE;

@@ -76,7 +76,7 @@ typedef struct _DHCP_ADAPTER {
     unsigned char recv_buf[1];
 } DHCP_ADAPTER, *PDHCP_ADAPTER;
 
-typedef DWORD (*PipeSendFunc)( COMM_DHCP_REPLY *Reply );
+typedef DWORD (*PipeSendFunc)(HANDLE CommPipe, COMM_DHCP_REPLY *Reply );
 
 #define random rand
 #define srandom srand
@@ -85,24 +85,24 @@ int  init_client(void);
 void stop_client(void);
 
 void AdapterInit(VOID);
-HANDLE StartAdapterDiscovery(VOID);
+HANDLE StartAdapterDiscovery(HANDLE hStopEvent);
 void AdapterStop(VOID);
 extern PDHCP_ADAPTER AdapterGetFirst(VOID);
 extern PDHCP_ADAPTER AdapterGetNext(PDHCP_ADAPTER);
 extern PDHCP_ADAPTER AdapterFindIndex( unsigned int AdapterIndex );
 extern PDHCP_ADAPTER AdapterFindInfo( struct interface_info *info );
 extern PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t haddr[16], u_int8_t hlen );
-extern HANDLE PipeInit(VOID);
+extern HANDLE PipeInit(HANDLE hStopEvent);
 extern VOID ApiInit(VOID);
 extern VOID ApiFree(VOID);
 extern VOID ApiLock(VOID);
 extern VOID ApiUnlock(VOID);
-extern DWORD DSQueryHWInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req );
-extern DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req );
-extern DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req );
-extern DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req );
-extern DWORD DSStaticRefreshParams( PipeSendFunc Send, COMM_DHCP_REQ *Req );
-extern DWORD DSGetAdapterInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req );
+extern DWORD DSQueryHWInfo( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req );
+extern DWORD DSLeaseIpAddress( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req );
+extern DWORD DSRenewIpAddressLease( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req );
+extern DWORD DSReleaseIpAddressLease( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req );
+extern DWORD DSStaticRefreshParams( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req );
+extern DWORD DSGetAdapterInfo( PipeSendFunc Send, HANDLE CommPipe, COMM_DHCP_REQ *Req );
 extern int inet_aton(const char *s, struct in_addr *addr);
 int warn( char *format, ... );
 

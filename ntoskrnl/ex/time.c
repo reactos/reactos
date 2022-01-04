@@ -225,6 +225,8 @@ BOOLEAN
 NTAPI
 ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 {
+    LARGE_INTEGER StandardTime;
+    LARGE_INTEGER DaylightTime;
     LARGE_INTEGER CurrentTime;
     NTSTATUS Status;
 
@@ -232,20 +234,73 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
     Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
     if (!NT_SUCCESS(Status))
     {
-        /* Failed, clear all data */
-        RtlZeroMemory(&ExpTimeZoneInfo, sizeof(RTL_TIME_ZONE_INFORMATION));
-        ExpTimeZoneBias.QuadPart = (LONGLONG)0;
-        ExpTimeZoneId = TIME_ZONE_ID_UNKNOWN;
+        DPRINT1("RtlQueryTimeZoneInformation() failed (Status 0x%08lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Get the default bias */
+    ExpTimeZoneBias.QuadPart = (LONGLONG)ExpTimeZoneInfo.Bias * TICKSPERMINUTE;
+
+    if (ExpTimeZoneInfo.StandardDate.Month != 0 &&
+        ExpTimeZoneInfo.DaylightDate.Month != 0)
+    {
+        /* Get this years standard start time */
+        if (!RtlCutoverTimeToSystemTime(&ExpTimeZoneInfo.StandardDate,
+                                        &StandardTime,
+                                        CurrentBootTime,
+                                        TRUE))
+        {
+            DPRINT1("RtlCutoverTimeToSystemTime() for StandardDate failed!\n");
+            return FALSE;
+        }
+
+        /* Get this years daylight start time */
+        if (!RtlCutoverTimeToSystemTime(&ExpTimeZoneInfo.DaylightDate,
+                                        &DaylightTime,
+                                        CurrentBootTime,
+                                        TRUE))
+        {
+            DPRINT1("RtlCutoverTimeToSystemTime() for DaylightDate failed!\n");
+            return FALSE;
+        }
+
+        /* Determine the time zone id and update the time zone bias */
+        if (DaylightTime.QuadPart < StandardTime.QuadPart)
+        {
+            if ((CurrentBootTime->QuadPart >= DaylightTime.QuadPart) &&
+                (CurrentBootTime->QuadPart < StandardTime.QuadPart))
+            {
+                DPRINT("Daylight time!\n");
+                ExpTimeZoneId = TIME_ZONE_ID_DAYLIGHT;
+                ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
+            }
+            else
+            {
+                DPRINT("Standard time!\n");
+                ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+                ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.StandardBias * TICKSPERMINUTE;
+            }
+        }
+        else
+        {
+            if ((CurrentBootTime->QuadPart >= StandardTime.QuadPart) &&
+                (CurrentBootTime->QuadPart < DaylightTime.QuadPart))
+            {
+                DPRINT("Standard time!\n");
+                ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+                ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.StandardBias * TICKSPERMINUTE;
+            }
+            else
+            {
+                DPRINT("Daylight time!\n");
+                ExpTimeZoneId = TIME_ZONE_ID_DAYLIGHT;
+                ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
+            }
+        }
     }
     else
     {
-        /* FIXME: Calculate transition dates */
-
-        /* Set bias and ID */
-        ExpTimeZoneBias.QuadPart = ((LONGLONG)(ExpTimeZoneInfo.Bias +
-            ExpTimeZoneInfo.StandardBias)) *
-            TICKSPERMINUTE;
-        ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+        ExpTimeZoneId = TIME_ZONE_ID_UNKNOWN;
     }
 
     /* Change it for user-mode applications */

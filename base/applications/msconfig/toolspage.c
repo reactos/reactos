@@ -105,7 +105,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     {
                         if (SHGetSpecialFolderPath(NULL, szTemp, ListItems_Locations[ListView_GetSelectionMark(hToolsListCtrl)], FALSE))
                             Ptr = PathAddBackslash(szTemp);
-    
+
                         if (!Ptr)
                             Ptr = szTemp;
 
@@ -157,7 +157,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         {
                             if (SHGetSpecialFolderPath(NULL, szTemp, ListItems_Locations[ListView_GetSelectionMark(hToolsListCtrl)], FALSE))
                                 Ptr = PathAddBackslash(szTemp);
-    
+
                             if (!Ptr)
                                 Ptr = szTemp;
 

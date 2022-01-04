@@ -94,7 +94,7 @@ enum
 	RESH,
 	SHIN,
 	TAV,
-    
+
     // symbols
     SHEQEL = 0x20AA
 };

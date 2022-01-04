@@ -100,7 +100,7 @@ PciIdeGetControllerProperties(
 	ControllerProperties->AlignmentRequirement = 1;
 	ControllerProperties->DefaultPIO = 0; /* FIXME */
 	ControllerProperties->PciIdeUdmaModesSupported = NULL; /* optional */
-	
+
 	ControllerProperties->SupportedTransferMode[0][0] =
 	ControllerProperties->SupportedTransferMode[0][1] =
 	ControllerProperties->SupportedTransferMode[1][0] =

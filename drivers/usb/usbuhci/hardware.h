@@ -26,22 +26,22 @@
 /* LEGSUP Legacy support register (PCI  Configuration - Function 2) */
 typedef union _UHCI_PCI_LEGSUP {
   struct {
-    USHORT Smi60Read           : 1; // (60REN) Trap/SMI On 60h Read Enable. R/W. 
-    USHORT Smi60Write          : 1; // (60WEN) Trap/SMI On 60h Write Enable. R/W. 
-    USHORT Smi64Read           : 1; // (64REN) Trap/SMI On 64h Read Enable. R/W. 
-    USHORT Smi64Write          : 1; // (64WEN) Trap/SMI On 64h Write Enable. R/W. 
+    USHORT Smi60Read           : 1; // (60REN) Trap/SMI On 60h Read Enable. R/W.
+    USHORT Smi60Write          : 1; // (60WEN) Trap/SMI On 60h Write Enable. R/W.
+    USHORT Smi64Read           : 1; // (64REN) Trap/SMI On 64h Read Enable. R/W.
+    USHORT Smi64Write          : 1; // (64WEN) Trap/SMI On 64h Write Enable. R/W.
     USHORT SmiIrq              : 1; // (USBSMIEN) Trap/SMI ON IRQ Enable. R/W.
-    USHORT A20Gate             : 1; // (A20PTEN) A20Gate Pass Through Enable. R/W. 
+    USHORT A20Gate             : 1; // (A20PTEN) A20Gate Pass Through Enable. R/W.
     USHORT PassThroughStatus   : 1; // (PSS) Pass Through Status. RO.
     USHORT SmiEndPassThrough   : 1; // (SMIEPTE) SMI At End Of Pass Through Enable. R/W.
-    USHORT TrapBy60ReadStatus  : 1; // (TBY60R) Trap By 60h Read Status. R/WC.  
+    USHORT TrapBy60ReadStatus  : 1; // (TBY60R) Trap By 60h Read Status. R/WC.
     USHORT TrapBy60WriteStatus : 1; // (TBY60W) Trap By 60h Write Status. R/WC.
-    USHORT TrapBy64ReadStatus  : 1; // (TBY64R) Trap By 64h Read Status. R/WC. 
+    USHORT TrapBy64ReadStatus  : 1; // (TBY64R) Trap By 64h Read Status. R/WC.
     USHORT TrapBy64WriteStatus : 1; // (TBY64W) Trap By 64h Write Status. R/WC.
     USHORT UsbIrqStatus        : 1; // (USBIRQS) USB IRQ Status. RO.
     USHORT UsbPIRQ             : 1; // (USBPIRQDEN) USB PIRQ Enable.  R/W.
     USHORT Reserved            : 1;
-    USHORT EndA20GateStatus    : 1; // (A20PTS) End OF A20GATE Pass Through Status. R/WC. 
+    USHORT EndA20GateStatus    : 1; // (A20PTS) End OF A20GATE Pass Through Status. R/WC.
   };
   USHORT AsUSHORT;
 } UHCI_PCI_LEGSUP;
@@ -99,9 +99,9 @@ typedef union _UHCI_INTERRUPT_ENABLE {
 C_ASSERT(sizeof(UHCI_INTERRUPT_ENABLE) == sizeof(USHORT));
 
 /* FRNUM Frame Number register */
-#define UHCI_FRNUM_FRAME_MASK     0x7FF 
-#define UHCI_FRNUM_INDEX_MASK     0x3FF 
-#define UHCI_FRNUM_OVERFLOW_LIST  0x400 
+#define UHCI_FRNUM_FRAME_MASK     0x7FF
+#define UHCI_FRNUM_INDEX_MASK     0x3FF
+#define UHCI_FRNUM_OVERFLOW_LIST  0x400
 
 /* PORTSC(1|2) USB port status and control registers */
 typedef union _UHCI_PORT_STATUS_CONTROL {

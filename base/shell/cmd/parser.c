@@ -93,6 +93,9 @@ static BOOL bLineContinuations;
 static PTCHAR ParsePos;
 static PTCHAR OldParsePos;
 
+BOOL bIgnoreParserComments = TRUE;
+BOOL bHandleContinuations  = TRUE;
+
 static TCHAR CurrentToken[CMDLINE_LENGTH];
 static TOK_TYPE CurrentTokenType = TOK_END;
 #ifndef MSCMD_PARSER_BUGS
@@ -206,6 +209,9 @@ restart:
         if (!ReadLine(ParseLine, TRUE))
         {
             /* ^C pressed, or line was too long */
+            //
+            // FIXME: Distinguish with respect to BATCH end of file !!
+            //
             bParseError = TRUE;
         }
         else
@@ -445,7 +451,7 @@ ParseToken(
     IN TCHAR ExtraEnd OPTIONAL,
     IN PCTSTR Separators OPTIONAL)
 {
-    return ParseTokenEx(0, ExtraEnd, Separators, TRUE);
+    return ParseTokenEx(0, ExtraEnd, Separators, bHandleContinuations);
 }
 
 
@@ -1294,7 +1300,7 @@ ParseCommandBinaryOp(
     if (OpType == C_OP_LOWEST) // i.e. CP_MULTI
     {
         /* Ignore any parser-level comments */
-        if (*CurrentToken == _T(':'))
+        if (bIgnoreParserComments && (*CurrentToken == _T(':')))
         {
             /* Ignore the rest of the line, including line continuations */
             while (ParseToken(0, NULL) != TOK_END)
@@ -1445,7 +1451,7 @@ ParseCommandOp(
 
     /* Parse the prefix "quiet" operator '@' as a separate command.
      * Thus, @@foo@bar is parsed as: '@', '@', 'foo@bar'. */
-    ParseTokenEx(_T('@'), _T('('), STANDARD_SEPS, TRUE);
+    ParseTokenEx(_T('@'), _T('('), STANDARD_SEPS, bHandleContinuations);
 
     return ParseCommandBinaryOp(OpType);
 }

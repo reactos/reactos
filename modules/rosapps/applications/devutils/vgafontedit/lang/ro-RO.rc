@@ -16,7 +16,7 @@ BEGIN
     ICON           IDI_MAIN,                          IDC_STATIC, 10, 10, 20, 20
     LTEXT          "Editor de font VGA ReactOS",      IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Drept de autor 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
-    DEFPUSHBUTTON  "Î&nchide",                        IDCANCEL,   40, 44, 55, 15 
+    DEFPUSHBUTTON  "Î&nchide",                        IDCANCEL,   40, 44, 55, 15
 END
 
 IDD_EDITGLYPH DIALOGEX 32768, 32768, 246, 197

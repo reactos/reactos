@@ -403,7 +403,7 @@ GetRegistryValueBuffer(IN PCWSTR KeyName,
     CHECK_PARAMETER2(ValueName);
 
     /* Open the specified key */
-    RtlInitUnicodeString(&DestinationString, KeyName); 
+    RtlInitUnicodeString(&DestinationString, KeyName);
     InitializeObjectAttributes(&ObjectAttributes,
                                &DestinationString,
                                OBJ_CASE_INSENSITIVE,
@@ -475,7 +475,7 @@ SetRegistryValue(IN PCWSTR KeyName,
     CHECK_PARAMETER4(Data);
 
     /* Open the specified key */
-    RtlInitUnicodeString(&DestinationString, KeyName); 
+    RtlInitUnicodeString(&DestinationString, KeyName);
     InitializeObjectAttributes(&ObjectAttributes,
                                &DestinationString,
                                OBJ_CASE_INSENSITIVE,
@@ -1083,7 +1083,7 @@ InitializeCmdEventInfo(VOID)
         }
     }
 
-    /* Claer everything */ 
+    /* Claer everything */
     RequestSacCmdEventObjectBody = NULL;
     RequestSacCmdEventWaitObjectBody = NULL;
     RequestSacCmdSuccessEventObjectBody = NULL;

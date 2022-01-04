@@ -1486,8 +1486,8 @@ BOOL WINAPI SHRunControlPanel (_In_ LPCWSTR commandLine, _In_opt_ HWND parent)
      * However we need to keep it "alive" even when ReactOS is compliled as NT6+
      * in order to keep control panel elements launch commands.
      */
-    TRACE("(%s, %p)n", debugstr_w(commandLine), parent);
     WCHAR parameters[MAX_PATH] = L"shell32.dll,Control_RunDLL ";
+    TRACE("(%s, %p)n", debugstr_w(commandLine), parent);
     wcscat(parameters, commandLine);
 
     return ((INT_PTR)ShellExecuteW(parent, L"open", L"rundll32.exe", parameters, NULL, SW_SHOWNORMAL) > 32);

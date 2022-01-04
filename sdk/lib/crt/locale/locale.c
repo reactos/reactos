@@ -632,7 +632,7 @@ unsigned int CDECL ___lc_codepage_func(void)
 /*********************************************************************
  *      ___lc_collate_cp_func (MSVCRT.@)
  */
-int CDECL ___lc_collate_cp_func(void)
+unsigned int CDECL ___lc_collate_cp_func(void)
 {
     return get_locinfo()->lc_collate_cp;
 }

@@ -79,7 +79,7 @@ static ULONG MiniportOIDList[] =
   OID_802_3_XMIT_MORE_COLLISIONS
 };
 
-
+
 NDIS_STATUS
 NTAPI
 MiniportQueryInformation(

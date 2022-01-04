@@ -951,7 +951,7 @@ MMixerGetNextNodesFromPinIndex(
         TopologyNodes = Pin->NodesConnectedFrom;
         TopologyNodesCount = Pin->NodesConnectedFromCount;
     }
-    else 
+    else
     {
         /* get down stream nodes */
         TopologyNodes = Pin->NodesConnectedTo;
@@ -990,7 +990,7 @@ MMixerGetNextNodesFromNodeIndex(
         TopologyNodes = Topology->TopologyNodes[NodeIndex].NodeConnectedFrom;
         TopologyNodesCount = Topology->TopologyNodes[NodeIndex].NodeConnectedFromCount;
     }
-    else 
+    else
     {
         /* get down stream nodes */
         TopologyNodes = Topology->TopologyNodes[NodeIndex].NodeConnectedTo;

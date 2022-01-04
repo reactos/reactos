@@ -51,9 +51,9 @@ RosSymGetAddressInformation
     DwarfSym proc = { };
     int i;
 	int res = dwarfpctoline
-		(RosSymInfo, 
+		(RosSymInfo,
          &proc,
-		 RelativeAddress + RosSymInfo->pe->imagebase, 
+		 RelativeAddress + RosSymInfo->pe->imagebase,
 		 &RosSymLineInfo->FileName,
 		 &RosSymLineInfo->FunctionName,
 		 &RosSymLineInfo->LineNumber);
@@ -70,9 +70,9 @@ RosSymGetAddressInformation
     DwarfExpr cfa = { };
     ulong cfaLocation;
     if (dwarfregunwind
-        (RosSymInfo, 
-         RelativeAddress + RosSymInfo->pe->imagebase, 
-         proc.attrs.framebase.c, 
+        (RosSymInfo,
+         RelativeAddress + RosSymInfo->pe->imagebase,
+         proc.attrs.framebase.c,
          &cfa,
          &registers) == -1) {
         werrstr("Can't get cfa location for %s", RosSymLineInfo->FunctionName);
@@ -102,11 +102,11 @@ RosSymGetAddressInformation
     }
 
     for (i = 0; i < RosSymLineInfo->NumParams; i++) {
-        werrstr("Getting arg %s, unit %x, type %x", 
+        werrstr("Getting arg %s, unit %x, type %x",
                 params[i].name, params[i].unit, params[i].type);
         res = dwarfargvalue
-            (RosSymInfo, 
-             &proc, 
+            (RosSymInfo,
+             &proc,
              RelativeAddress + RosSymInfo->pe->imagebase,
              cfaLocation,
              &registers,
@@ -153,27 +153,27 @@ RosSymAggregate(PROSSYM_INFO RosSymInfo, PCHAR Type, PROSSYM_AGGREGATE Aggregate
     } else if (dwarflookupnameinunit(RosSymInfo, unit, Type, &type) != 0 ||
         (type.attrs.tag != TagStructType && type.attrs.tag != TagUnionType))
         return FALSE;
-    
+
     DwarfSym element = { }, inner = { };
     int count = 0;
-    
+
     werrstr("type %s (want %s) type %x\n", type.attrs.name, Type, type.attrs.type);
-    
+
     if (type.attrs.have.type) {
         if (dwarfseeksym(RosSymInfo, unit, type.attrs.type, &inner) == -1)
             return FALSE;
         type = inner;
     }
-    
+
     werrstr("finding members %d\n", type.attrs.haskids);
     while (dwarfnextsymat(RosSymInfo, &type, &element) != -1) {
         if (element.attrs.have.name)
             werrstr("%x %s\n", element.attrs.tag, element.attrs.name);
         if (element.attrs.tag == TagMember) count++;
     }
-    
+
     werrstr("%d members\n", count);
-    
+
     if (!count) return FALSE;
     memset(&element, 0, sizeof(element));
     Aggregate->NumElements = count;
@@ -191,7 +191,7 @@ RosSymAggregate(PROSSYM_INFO RosSymInfo, PCHAR Type, PROSSYM_AGGREGATE Aggregate
             // Seek our range in loc
             DwarfBuf locbuf;
             DwarfBuf instream = { };
-            
+
             locbuf.d = RosSymInfo;
             locbuf.addrsize = RosSymInfo->addrsize;
 
@@ -199,15 +199,15 @@ RosSymAggregate(PROSSYM_INFO RosSymInfo, PCHAR Type, PROSSYM_AGGREGATE Aggregate
                 instream = locbuf;
                 instream.p = element.attrs.datamemberloc.b.data;
                 instream.ep = element.attrs.datamemberloc.b.data + element.attrs.datamemberloc.b.len;
-                werrstr("datamemberloc type %x %p:%x\n", 
+                werrstr("datamemberloc type %x %p:%x\n",
                         element.attrs.have.datamemberloc,
                         element.attrs.datamemberloc.b.data, element.attrs.datamemberloc.b.len);
             }
 
             if (dwarfgetarg(RosSymInfo, element.attrs.name, &instream, 0, NULL, &Aggregate->Elements[count].BaseOffset) == -1)
                 Aggregate->Elements[count].BaseOffset = -1;
-            werrstr("tag %x name %s base %x type %x\n", 
-                    element.attrs.tag, element.attrs.name, 
+            werrstr("tag %x name %s base %x type %x\n",
+                    element.attrs.tag, element.attrs.name,
                     Aggregate->Elements[count].BaseOffset,
                     Aggregate->Elements[count].TypeId);
             count++;
@@ -216,7 +216,7 @@ RosSymAggregate(PROSSYM_INFO RosSymInfo, PCHAR Type, PROSSYM_AGGREGATE Aggregate
     for (count = 0; count < Aggregate->NumElements; count++) {
         memset(&type, 0, sizeof(type));
         memset(&inner, 0, sizeof(inner));
-        werrstr("seeking type %x (%s) from %s\n", 
+        werrstr("seeking type %x (%s) from %s\n",
                 Aggregate->Elements[count].TypeId,
                 Aggregate->Elements[count].Type,
                 Aggregate->Elements[count].Name);

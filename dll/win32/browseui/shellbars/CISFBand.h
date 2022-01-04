@@ -13,7 +13,7 @@ class CISFBand :
     public CComCoClass<CBandSiteMenu, &CLSID_ISFBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IObjectWithSite,
-    public IDeskBand,    
+    public IDeskBand,
     public IPersistStream,
     public IWinEventHandler,
     public IOleCommandTarget,
@@ -24,15 +24,15 @@ class CISFBand :
     DWORD m_BandID;
     CComPtr<IUnknown> m_Site;
 
-    // Toolbar     
-    CComPtr<IShellFolder> m_pISF;     
+    // Toolbar
+    CComPtr<IShellFolder> m_pISF;
     PIDLIST_ABSOLUTE m_pidl;
 
-    // Menu      
+    // Menu
     BOOL m_textFlag;
     BOOL m_iconFlag;
     BOOL m_QLaunch;
-    
+
 public:
 
     CISFBand();
@@ -40,7 +40,7 @@ public:
 
 // Personal Methods
     HRESULT CreateSimpleToolbar(HWND hWndParent);
-    
+
 // IObjectWithSite
 
     virtual STDMETHODIMP GetSite(
@@ -51,30 +51,30 @@ public:
     virtual STDMETHODIMP SetSite(
         IN IUnknown *pUnkSite
     );
- 
+
 // IDeskBand
 
     virtual STDMETHODIMP GetWindow(
         OUT HWND *phwnd
-    );    
+    );
 
     virtual STDMETHODIMP ContextSensitiveHelp(
         IN BOOL fEnterMode
-    );    
+    );
 
     virtual STDMETHODIMP ShowDW(
         IN BOOL bShow
-    );    
+    );
 
     virtual STDMETHODIMP CloseDW(
         IN DWORD dwReserved
-    );    
+    );
 
     virtual STDMETHODIMP ResizeBorderDW(
         LPCRECT prcBorder,
         IUnknown *punkToolbarSite,
         BOOL fReserved
-    );    
+    );
 
     virtual STDMETHODIMP GetBandInfo(
         IN DWORD dwBandID,
@@ -103,17 +103,17 @@ public:
         IN BOOL    fClearDirty
     );
 
-// IWinEventHandler    
+// IWinEventHandler
 
     virtual STDMETHODIMP ContainsWindow(
         IN HWND hWnd
     );
 
     virtual STDMETHODIMP OnWinEvent(
-        HWND hWnd, 
-        UINT uMsg, 
-        WPARAM wParam, 
-        LPARAM lParam, 
+        HWND hWnd,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam,
         LRESULT *theResult
     );
 
@@ -139,7 +139,7 @@ public:
     );
 
 // IShellFolderBand
-    virtual STDMETHODIMP GetBandInfoSFB( 
+    virtual STDMETHODIMP GetBandInfoSFB(
         PBANDINFOSFB pbi
     );
 
@@ -172,8 +172,8 @@ public:
         UINT idCmdLast,
         UINT uFlags
     );
-    
-//*****************************************************************************************************   
+
+//*****************************************************************************************************
 
     DECLARE_REGISTRY_RESOURCEID(IDR_ISFBAND)
     DECLARE_NOT_AGGREGATABLE(CISFBand)
@@ -190,7 +190,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderBand, IShellFolderBand)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-    END_COM_MAP()    
+    END_COM_MAP()
 };
 
 extern "C" HRESULT WINAPI RSHELL_CISFBand_CreateInstance(REFIID riid, void** ppv);

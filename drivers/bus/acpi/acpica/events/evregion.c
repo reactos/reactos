@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2020, Intel Corp.
+ * Copyright (C) 2000 - 2021, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  * NO WARRANTY
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
@@ -56,8 +56,10 @@ extern UINT8        AcpiGbl_DefaultAddressSpaces[];
 /* Local prototypes */
 
 static void
-AcpiEvOrphanEcRegMethod (
-    ACPI_NAMESPACE_NODE     *EcDeviceNode);
+AcpiEvExecuteOrphanRegMethod (
+    ACPI_NAMESPACE_NODE     *DeviceNode,
+    ACPI_ADR_SPACE_TYPE     SpaceId);
+
 
 static ACPI_STATUS
 AcpiEvRegRun (
@@ -160,6 +162,8 @@ AcpiEvAddressSpaceDispatch (
     ACPI_OPERAND_OBJECT     *RegionObj2;
     void                    *RegionContext = NULL;
     ACPI_CONNECTION_INFO    *Context;
+    ACPI_MUTEX              ContextMutex;
+    BOOLEAN                 ContextLocked;
     ACPI_PHYSICAL_ADDRESS   Address;
 
 
@@ -186,6 +190,8 @@ AcpiEvAddressSpaceDispatch (
     }
 
     Context = HandlerDesc->AddressSpace.Context;
+    ContextMutex = HandlerDesc->AddressSpace.ContextMutex;
+    ContextLocked = FALSE;
 
     /*
      * It may be the case that the region has never been initialized.
@@ -252,43 +258,6 @@ AcpiEvAddressSpaceDispatch (
     Handler = HandlerDesc->AddressSpace.Handler;
     Address = (RegionObj->Region.Address + RegionOffset);
 
-    /*
-     * Special handling for GenericSerialBus and GeneralPurposeIo:
-     * There are three extra parameters that must be passed to the
-     * handler via the context:
-     *   1) Connection buffer, a resource template from Connection() op
-     *   2) Length of the above buffer
-     *   3) Actual access length from the AccessAs() op
-     *
-     * In addition, for GeneralPurposeIo, the Address and BitWidth fields
-     * are defined as follows:
-     *   1) Address is the pin number index of the field (bit offset from
-     *      the previous Connection)
-     *   2) BitWidth is the actual bit length of the field (number of pins)
-     */
-    if ((RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GSBUS) &&
-        Context &&
-        FieldObj)
-    {
-        /* Get the Connection (ResourceTemplate) buffer */
-
-        Context->Connection = FieldObj->Field.ResourceBuffer;
-        Context->Length = FieldObj->Field.ResourceLength;
-        Context->AccessLength = FieldObj->Field.AccessLength;
-    }
-    if ((RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GPIO) &&
-        Context &&
-        FieldObj)
-    {
-        /* Get the Connection (ResourceTemplate) buffer */
-
-        Context->Connection = FieldObj->Field.ResourceBuffer;
-        Context->Length = FieldObj->Field.ResourceLength;
-        Context->AccessLength = FieldObj->Field.AccessLength;
-        Address = FieldObj->Field.PinNumberIndex;
-        BitWidth = FieldObj->Field.BitLength;
-    }
-
     ACPI_DEBUG_PRINT ((ACPI_DB_OPREGION,
         "Handler %p (@%p) Address %8.8X%8.8X [%s]\n",
         &RegionObj->Region.Handler->AddressSpace, Handler,
@@ -306,10 +275,61 @@ AcpiEvAddressSpaceDispatch (
         AcpiExExitInterpreter();
     }
 
+    /*
+     * Special handling for GenericSerialBus and GeneralPurposeIo:
+     * There are three extra parameters that must be passed to the
+     * handler via the context:
+     *   1) Connection buffer, a resource template from Connection() op
+     *   2) Length of the above buffer
+     *   3) Actual access length from the AccessAs() op
+     *
+     * Since we pass these extra parameters via the context, which is
+     * shared between threads, we must lock the context to avoid these
+     * parameters being changed from another thread before the handler
+     * has completed running.
+     *
+     * In addition, for GeneralPurposeIo, the Address and BitWidth fields
+     * are defined as follows:
+     *   1) Address is the pin number index of the field (bit offset from
+     *      the previous Connection)
+     *   2) BitWidth is the actual bit length of the field (number of pins)
+     */
+    if ((RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GSBUS ||
+         RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GPIO) &&
+        Context &&
+        FieldObj)
+    {
+
+        Status = AcpiOsAcquireMutex (ContextMutex, ACPI_WAIT_FOREVER);
+        if (ACPI_FAILURE (Status))
+        {
+            goto ReEnterInterpreter;
+        }
+
+        ContextLocked = TRUE;
+
+        /* Get the Connection (ResourceTemplate) buffer */
+
+        Context->Connection = FieldObj->Field.ResourceBuffer;
+        Context->Length = FieldObj->Field.ResourceLength;
+        Context->AccessLength = FieldObj->Field.AccessLength;
+
+        if (RegionObj->Region.SpaceId == ACPI_ADR_SPACE_GPIO)
+        {
+            Address = FieldObj->Field.PinNumberIndex;
+            BitWidth = FieldObj->Field.BitLength;
+        }
+    }
+
     /* Call the handler */
 
     Status = Handler (Function, Address, BitWidth, Value, Context,
         RegionObj2->Extra.RegionContext);
+
+    if (ContextLocked)
+    {
+        AcpiOsReleaseMutex (ContextMutex);
+    }
 
     if (ACPI_FAILURE (Status))
     {
@@ -328,6 +348,7 @@ AcpiEvAddressSpaceDispatch (
         }
     }
 
+ReEnterInterpreter:
     if (!(HandlerDesc->AddressSpace.HandlerFlags &
         ACPI_ADDR_HANDLER_DEFAULT_INSTALLED))
     {
@@ -761,11 +782,13 @@ AcpiEvExecuteRegMethods (
     (void) AcpiNsWalkNamespace (ACPI_TYPE_ANY, Node, ACPI_UINT32_MAX,
         ACPI_NS_WALK_UNLOCK, AcpiEvRegRun, NULL, &Info, NULL);
 
-    /* Special case for EC: handle "orphan" _REG methods with no region */
-
-    if (SpaceId == ACPI_ADR_SPACE_EC)
+    /*
+     * Special case for EC and GPIO: handle "orphan" _REG methods with
+     * no region.
+     */
+    if (SpaceId == ACPI_ADR_SPACE_EC || SpaceId == ACPI_ADR_SPACE_GPIO)
     {
-        AcpiEvOrphanEcRegMethod (Node);
+        AcpiEvExecuteOrphanRegMethod (Node, SpaceId);
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_NAMES,
@@ -846,32 +869,29 @@ AcpiEvRegRun (
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiEvOrphanEcRegMethod
+ * FUNCTION:    AcpiEvExecuteOrphanRegMethod
  *
- * PARAMETERS:  EcDeviceNode        - Namespace node for an EC device
+ * PARAMETERS:  DeviceNode          - Namespace node for an ACPI device
+ *              SpaceId             - The address space ID
  *
  * RETURN:      None
  *
- * DESCRIPTION: Execute an "orphan" _REG method that appears under the EC
+ * DESCRIPTION: Execute an "orphan" _REG method that appears under an ACPI
  *              device. This is a _REG method that has no corresponding region
- *              within the EC device scope. The orphan _REG method appears to
- *              have been enabled by the description of the ECDT in the ACPI
- *              specification: "The availability of the region space can be
- *              detected by providing a _REG method object underneath the
- *              Embedded Controller device."
- *
- *              To quickly access the EC device, we use the EcDeviceNode used
- *              during EC handler installation. Otherwise, we would need to
- *              perform a time consuming namespace walk, executing _HID
- *              methods to find the EC device.
+ *              within the device's scope. ACPI tables depending on these
+ *              "orphan" _REG methods have been seen for both EC and GPIO
+ *              Operation Regions. Presumably the Windows ACPI implementation
+ *              always calls the _REG method independent of the presence of
+ *              an actual Operation Region with the correct address space ID.
  *
  *  MUTEX:      Assumes the namespace is locked
  *
  ******************************************************************************/
 
 static void
-AcpiEvOrphanEcRegMethod (
-    ACPI_NAMESPACE_NODE     *EcDeviceNode)
+AcpiEvExecuteOrphanRegMethod (
+    ACPI_NAMESPACE_NODE     *DeviceNode,
+    ACPI_ADR_SPACE_TYPE     SpaceId)
 {
     ACPI_HANDLE             RegMethod;
     ACPI_NAMESPACE_NODE     *NextNode;
@@ -880,10 +900,10 @@ AcpiEvOrphanEcRegMethod (
     ACPI_OBJECT             Objects[2];
 
 
-    ACPI_FUNCTION_TRACE (EvOrphanEcRegMethod);
+    ACPI_FUNCTION_TRACE (EvExecuteOrphanRegMethod);
 
 
-    if (!EcDeviceNode)
+    if (!DeviceNode)
     {
         return_VOID;
     }
@@ -894,7 +914,7 @@ AcpiEvOrphanEcRegMethod (
 
     /* Get a handle to a _REG method immediately under the EC device */
 
-    Status = AcpiGetHandle (EcDeviceNode, METHOD_NAME__REG, &RegMethod);
+    Status = AcpiGetHandle (DeviceNode, METHOD_NAME__REG, &RegMethod);
     if (ACPI_FAILURE (Status))
     {
         goto Exit; /* There is no _REG method present */
@@ -907,25 +927,25 @@ AcpiEvOrphanEcRegMethod (
      * with other space IDs to be present; but the code below will then
      * execute the _REG method with the EmbeddedControl SpaceID argument.
      */
-    NextNode = AcpiNsGetNextNode (EcDeviceNode, NULL);
+    NextNode = AcpiNsGetNextNode (DeviceNode, NULL);
     while (NextNode)
     {
         if ((NextNode->Type == ACPI_TYPE_REGION) &&
             (NextNode->Object) &&
-            (NextNode->Object->Region.SpaceId == ACPI_ADR_SPACE_EC))
+            (NextNode->Object->Region.SpaceId == SpaceId))
         {
             goto Exit; /* Do not execute the _REG */
         }
 
-        NextNode = AcpiNsGetNextNode (EcDeviceNode, NextNode);
+        NextNode = AcpiNsGetNextNode (DeviceNode, NextNode);
     }
 
-    /* Evaluate the _REG(EmbeddedControl,Connect) method */
+    /* Evaluate the _REG(SpaceId,Connect) method */
 
     Args.Count = 2;
     Args.Pointer = Objects;
     Objects[0].Type = ACPI_TYPE_INTEGER;
-    Objects[0].Integer.Value = ACPI_ADR_SPACE_EC;
+    Objects[0].Integer.Value = SpaceId;
     Objects[1].Type = ACPI_TYPE_INTEGER;
     Objects[1].Integer.Value = ACPI_REG_CONNECT;
 

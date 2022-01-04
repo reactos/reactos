@@ -118,7 +118,7 @@ INT GetIPSNMPInfo(
 {
     TCP_REQUEST_QUERY_INFORMATION_EX inTcpReq;
     ULONG BufLenNeeded;
-    
+
     RtlZeroMemory(&inTcpReq, sizeof(inTcpReq));
     inTcpReq.ID.toi_entity = *pEntityID;
     inTcpReq.ID.toi_class = INFO_CLASS_PROTOCOL;
@@ -136,8 +136,8 @@ INT GetIPSNMPInfo(
     {
         DPRINT("DeviceIoControl (IPSNMPInfo) failed, Status %li!\n", GetLastError());
         return WSAEFAULT;
-    }    
-   
+    }
+
     return NO_ERROR;
 }
 
@@ -148,7 +148,7 @@ INT GetTdiEntityType(
 {
     TCP_REQUEST_QUERY_INFORMATION_EX inTcpReq;
     ULONG BufLenNeeded;
-    
+
     RtlZeroMemory(&inTcpReq, sizeof(inTcpReq));
     inTcpReq.ID.toi_entity = *pEntityID;
     inTcpReq.ID.toi_class = INFO_CLASS_GENERIC;
@@ -166,8 +166,8 @@ INT GetTdiEntityType(
     {
         DPRINT("DeviceIoControl (TdiEntityType) failed, Status %li!\n", GetLastError());
         return WSAEFAULT;
-    }    
-   
+    }
+
     return NO_ERROR;
 }
 
@@ -179,7 +179,7 @@ INT GetIFEntry(
 {
     TCP_REQUEST_QUERY_INFORMATION_EX inTcpReq;
     ULONG BufLenNeeded;
-    
+
     RtlZeroMemory(&inTcpReq, sizeof(inTcpReq));
     inTcpReq.ID.toi_entity = *pEntityID;
     inTcpReq.ID.toi_class = INFO_CLASS_PROTOCOL;
@@ -197,8 +197,8 @@ INT GetIFEntry(
     {
         DPRINT("DeviceIoControl (IFEntry) failed, Status %li!\n", GetLastError());
         return WSAEFAULT;
-    }    
-   
+    }
+
     return NO_ERROR;
 }
 
@@ -229,7 +229,7 @@ WSHIoctl_GetInterfaceList(
     LPINTERFACE_INFO pIntfInfo;
     DWORD outIDCount, i1, iAddr;
     DWORD bCastAddr, outNumberOfBytes;
-    ULONG BufLenNeeded, BufLen, IFEntryLen, TdiType; 
+    ULONG BufLenNeeded, BufLen, IFEntryLen, TdiType;
     HANDLE TcpFile = 0;
     HANDLE hHeap = GetProcessHeap();
     DWORD LastErr;
@@ -263,8 +263,8 @@ WSHIoctl_GetInterfaceList(
         DPRINT("ERROR\n");
         res = ERROR_OUTOFMEMORY;
         goto cleanup;
-    } 
-    
+    }
+
     /* get addresses */
     pEntityID = outEntityID;
     for (i1 = 0; i1 < outIDCount; i1++)
@@ -280,7 +280,7 @@ WSHIoctl_GetInterfaceList(
         res = GetIPSNMPInfo(TcpFile, pEntityID, &outIPSNMPInfo);
         if (res != NO_ERROR)
             goto cleanup;
-       
+
         /* add to array */
         pIntfIDItem = (IntfIDItem*)HeapAlloc(hHeap, 0, sizeof(IntfIDItem));
         list_add_head(&IntfIDList->entry, &pIntfIDItem->entry);
@@ -291,13 +291,13 @@ WSHIoctl_GetInterfaceList(
 
         pEntityID++;
     }
-    
+
     /* Calculate needed size */
     outNumberOfBytes = 0;
     LIST_FOR_EACH_ENTRY(pIntfIDItem, &IntfIDList->entry, struct _IntfIDItem, entry)
     {
         outNumberOfBytes += (pIntfIDItem->numaddr * sizeof(INTERFACE_INFO));
-    }   
+    }
     DPRINT("Buffer size needed: %lu\n", outNumberOfBytes);
     if (outNumberOfBytes > OutputBufferLength)
     {
@@ -307,7 +307,7 @@ WSHIoctl_GetInterfaceList(
         res = WSAEFAULT;
         goto cleanup;
     }
-    
+
     /* Get address info */
     RtlZeroMemory(&inTcpReq1,sizeof(inTcpReq1));
     inTcpReq1.ID.toi_class = INFO_CLASS_PROTOCOL;
@@ -319,7 +319,7 @@ WSHIoctl_GetInterfaceList(
 
         BufLen = sizeof(IPAddrEntry) * pIntfIDItem->numaddr;
         pIntfIDItem->pIPAddrEntry0 = HeapAlloc(hHeap, 0, BufLen);
-        
+
         if (!DeviceIoControl(
                 TcpFile,
                 IOCTL_TCP_QUERY_INFORMATION_EX,
@@ -368,21 +368,21 @@ WSHIoctl_GetInterfaceList(
             pIntfInfo->iiFlags = IFF_BROADCAST | IFF_MULTICAST;
             if (pIPAddrEntry->iae_addr == ntohl(INADDR_LOOPBACK))
                 pIntfInfo->iiFlags |= IFF_LOOPBACK;
-            
+
             pIPAddrEntry++;
             pIntfInfo++;
         }
         res = NO_ERROR;
     }
-    
+
     /* Get Interface up/down-state and patch pIntfInfo->iiFlags */
     pEntityID = outEntityID;
-    for (i1 = 0; i1 < outIDCount; i1++)        
-    {           
+    for (i1 = 0; i1 < outIDCount; i1++)
+    {
         res = GetTdiEntityType(TcpFile, pEntityID, &TdiType);
         if (res != NO_ERROR)
             goto cleanup;
-       
+
         if (TdiType != IF_MIB)
         {
             pEntityID++;
@@ -392,7 +392,7 @@ WSHIoctl_GetInterfaceList(
         res = GetIFEntry(TcpFile, pEntityID, pIFEntry, IFEntryLen);
         if (res != NO_ERROR)
             goto cleanup;
-        
+
         /* if network isn't up -> no patch needed */
         if (pIFEntry->if_operstatus < IF_OPER_STATUS_CONNECTING)
         {
@@ -405,7 +405,7 @@ WSHIoctl_GetInterfaceList(
         LIST_FOR_EACH_ENTRY(pIntfIDItem, &IntfIDList->entry, struct _IntfIDItem, entry)
         {
             pIPAddrEntry = pIntfIDItem->pIPAddrEntry0;
-            for (iAddr = 0; iAddr < pIntfIDItem->numaddr; iAddr++) 
+            for (iAddr = 0; iAddr < pIntfIDItem->numaddr; iAddr++)
             {
                 if (pIPAddrEntry->iae_index == pIFEntry->if_index)
                     pIntfInfo->iiFlags |= IFF_UP;
@@ -414,7 +414,7 @@ WSHIoctl_GetInterfaceList(
                 pIntfInfo++;
             }
         }
-        
+
         pEntityID++;
     }
 

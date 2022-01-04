@@ -20,8 +20,6 @@
 PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
 PMMPTE MiFirstReservedZeroingPte;
 MMPTE HyperTemplatePte;
-PEPROCESS HyperProcess;
-KIRQL HyperIrql;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -151,6 +149,10 @@ MiMapPagesInZeroSpace(IN PMMPFN Pfn1,
     /* Choose the correct PTE to use, and which template */
     PointerPte += (Offset + 1);
     TempPte = ValidKernelPte;
+
+    /* Disable cache. Write through */
+    MI_PAGE_DISABLE_CACHE(&TempPte);
+    MI_PAGE_WRITE_THROUGH(&TempPte);
 
     /* Make sure the list isn't empty and loop it */
     ASSERT(Pfn1 != (PVOID)LIST_HEAD);

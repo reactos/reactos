@@ -237,7 +237,7 @@ int main(int oargc, char* oargv[])
 
                         label[i] = ch;
                     }
-                
+
                     if (!invalid)
                     {
                         // Pad the label with spaces

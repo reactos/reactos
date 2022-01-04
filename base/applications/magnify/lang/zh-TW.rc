@@ -68,7 +68,7 @@ FONT 9, "新細明體", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "確定", IDOK, 193, 76, 50, 14
     ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "放大鏡是為有輕微視覺障礙的用戶提供的一個最低限度的功能。大多數有視覺障礙的用戶需要一個較高功能性的放大鏡作日常使用。", IDC_STATIC, 36, 7, 207, 33
+    LTEXT "放大鏡是為有輕微視覺障礙的使用者提供基本的輔助功能。有視覺障礙的用戶大多需要一個功能較強的放大鏡作日常使用。", IDC_STATIC, 36, 7, 207, 33
     CONTROL "不要再次顯示此訊息", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END

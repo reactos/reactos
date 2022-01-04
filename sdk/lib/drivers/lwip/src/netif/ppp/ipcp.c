@@ -9,13 +9,13 @@
 * The authors hereby grant permission to use, copy, modify, distribute,
 * and license this software and its documentation for any purpose, provided
 * that existing copyright notices are retained in all copies and that this
-* notice and the following disclaimer are included verbatim in any 
+* notice and the following disclaimer are included verbatim in any
 * distributions. No written agreement, license, or royalty fee is required
 * for any of the authorized uses.
 *
 * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS *AS IS* AND ANY EXPRESS OR
 * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
 * IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
 * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
@@ -280,7 +280,7 @@ static void
 ipcp_resetci(fsm *f)
 {
   ipcp_options *wo = &ipcp_wantoptions[f->unit];
-  
+
   wo->req_addr = wo->neg_addr && ipcp_allowoptions[f->unit].neg_addr;
   if (wo->ouraddr == 0) {
     wo->accept_local = 1;
@@ -462,7 +462,7 @@ ipcp_ackci(fsm *f, u_char *p, int len)
       } \
     } \
   }
-  
+
 #define ACKCIADDR(opt, neg, old, val1, val2) \
   if (neg) { \
     int addrlen = (old? CILEN_ADDRS: CILEN_ADDR); \
@@ -591,7 +591,7 @@ ipcp_nakci(fsm *f, u_char *p, int len)
     no.neg = 1; \
     code \
   }
-  
+
 #define NAKCIDNS(opt, neg, code) \
   if (go->neg && \
       ((cilen = p[1]) == CILEN_ADDR) && \
@@ -1091,7 +1091,7 @@ ipcp_reqci(fsm *f, u_char *inp/* Requested CIs */,int *len/* Length of requested
         ho->vj_protocol = cishort;
         if (cilen == CILEN_VJ) {
           GETCHAR(maxslotindex, p);
-          if (maxslotindex > ao->maxslotindex) { 
+          if (maxslotindex > ao->maxslotindex) {
             IPCPDEBUG(LOG_INFO, ("ipcp_reqci: Naking VJ max slot %d\n", maxslotindex));
             orc = CONFNAK;
             if (!reject_if_disagree) {
@@ -1152,7 +1152,7 @@ endswitch:
       rc = CONFREJ;
       ucp = inp;        /* Backup */
     }
-    
+
     /* Need to move CI? */
     if (ucp != cip) {
       BCOPY(cip, ucp, cilen);  /* Move it */

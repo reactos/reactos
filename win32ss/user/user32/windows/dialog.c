@@ -36,9 +36,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define DF_END  0x0001
 #define DF_DIALOGACTIVE 0x4000 // ReactOS
-#define DWLP_ROS_DIALOGINFO (DWLP_USER+sizeof(ULONG_PTR))
 #define GETDLGINFO(hwnd) DIALOG_get_info(hwnd, FALSE)
-#define SETDLGINFO(hwnd, info) SetWindowLongPtrW((hwnd), DWLP_ROS_DIALOGINFO, (LONG_PTR)(info))
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
 #define GET_LONG(ptr) (*(const LONG *)(ptr))
@@ -141,7 +139,7 @@ DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
        return NULL;
     }
 
-    dlgInfo = (DIALOGINFO *)GetWindowLongPtrW( hWnd, DWLP_ROS_DIALOGINFO );
+    dlgInfo = pWindow->DialogPointer;
 
     if (!dlgInfo && create)
     {
@@ -151,7 +149,7 @@ DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
                 return NULL;
 
             dlgInfo->idResult = IDOK;
-            SETDLGINFO( hWnd, dlgInfo );
+            NtUserxSetDialogPointer( hWnd, dlgInfo );
        }
        else
        {
@@ -159,13 +157,6 @@ DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
        }
     }
 
-    if (dlgInfo)
-    {
-        if (!(pWindow->state & WNDS_DIALOGWINDOW))
-        {
-           NtUserxSetDialogPointer( hWnd, dlgInfo );
-        }
-    }
     return dlgInfo;
 }
 
@@ -1258,7 +1249,8 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
         }
         case WM_NCDESTROY:
 //// ReactOS
-            if ((dlgInfo = (DIALOGINFO *)SetWindowLongPtrW( hwnd, DWLP_ROS_DIALOGINFO, 0 )))
+            dlgInfo = DIALOG_get_info(hwnd, FALSE);
+            if (dlgInfo != NULL)
             {
                 if (dlgInfo->hUserFont) DeleteObject( dlgInfo->hUserFont );
                 if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );

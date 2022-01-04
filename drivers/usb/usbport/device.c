@@ -908,7 +908,7 @@ USBPORT_AbortTransfers(IN PDEVICE_OBJECT FdoDevice,
 }
 
 PUSB2_TT_EXTENSION
-NTAPI 
+NTAPI
 USBPORT_GetTt(IN PDEVICE_OBJECT FdoDevice,
               IN PUSBPORT_DEVICE_HANDLE HubDeviceHandle,
               OUT PUSHORT OutPort,

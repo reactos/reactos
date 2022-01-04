@@ -7,13 +7,13 @@
 * The authors hereby grant permission to use, copy, modify, distribute,
 * and license this software and its documentation for any purpose, provided
 * that existing copyright notices are retained in all copies and that this
-* notice and the following disclaimer are included verbatim in any 
+* notice and the following disclaimer are included verbatim in any
 * distributions. No written agreement, license, or royalty fee is required
 * for any of the authorized uses.
 *
 * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS *AS IS* AND ANY EXPRESS OR
 * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
 * IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
 * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
@@ -49,7 +49,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
- 
+
 
 #include "lwip/opt.h"
 
@@ -107,7 +107,7 @@ static u32_t lcp_echo_number        = 0;                /* ID number of next ech
 static u32_t lcp_echo_timer_running = 0;                /* TRUE if a timer is running */
 
 /* @todo: do we really need such a large buffer? The typical 1500 bytes seem too much. */
-static u_char nak_buffer[PPP_MRU]; /* where we construct a nak packet */ 
+static u_char nak_buffer[PPP_MRU]; /* where we construct a nak packet */
 
 /*
  * Callbacks for fsm code.  (CI = Configuration Information)
@@ -278,7 +278,7 @@ lcp_init(int unit)
   ao->neg_lqr           = 0;               /* no LQR implementation yet */
   ao->neg_cbcp          = (CBCP_SUPPORT != 0);
 
-  /* 
+  /*
    * Set transmit escape for the flag and escape characters plus anything
    * set for the allowable options.
    */
@@ -293,7 +293,7 @@ lcp_init(int unit)
         xmit_accm[unit][1],
         xmit_accm[unit][2],
         xmit_accm[unit][3]));
-  
+
   lcp_phase[unit] = PHASE_INITIALIZE;
 }
 
@@ -412,7 +412,7 @@ lcp_extcode(fsm *f, int code, u_char id, u_char *inp, int len)
     case PROTREJ:
       lcp_rprotrej(f, inp, len);
       break;
-  
+
     case ECHOREQ:
       if (f->state != LS_OPENED) {
         break;
@@ -892,7 +892,7 @@ lcp_nakci(fsm *f, u_char *p, int len)
         goto bad;
       }
       try.neg_chap = 0;
-    
+
     } else if (cishort == PPP_CHAP && cilen == CILEN_CHAP) {
       GETCHAR(cichar, p);
       if (go->neg_chap) {
@@ -910,7 +910,7 @@ lcp_nakci(fsm *f, u_char *p, int len)
          */
         try.neg_upap = 0;
       }
-    
+
     } else {
       /*
        * We don't recognize what they're suggesting.
@@ -1179,7 +1179,7 @@ lcp_rejci(fsm *f, u_char *p, int len)
     try.neg = 0; \
     LCPDEBUG(LOG_INFO, ("lcp_rejci: Callback opt %d rejected\n", opt)); \
   }
-  
+
   REJCISHORT(CI_MRU, neg_mru, go->mru);
   REJCILONG(CI_ASYNCMAP, neg_asyncmap, go->asyncmap);
   REJCICHAP(CI_AUTHTYPE, neg_chap, PPP_CHAP, go->chap_mdtype);
@@ -1191,7 +1191,7 @@ lcp_rejci(fsm *f, u_char *p, int len)
   REJCILONG(CI_MAGICNUMBER, neg_magicnumber, go->magicnumber);
   REJCIVOID(CI_PCOMPRESSION, neg_pcompression);
   REJCIVOID(CI_ACCOMPRESSION, neg_accompression);
-  
+
   /*
    * If there are any remaining CIs, then this packet is bad.
    */
@@ -1205,7 +1205,7 @@ lcp_rejci(fsm *f, u_char *p, int len)
     *go = try;
   }
   return 1;
-  
+
 bad:
   LCPDEBUG(LOG_WARNING, ("lcp_rejci: received bad Reject!\n"));
   return 0;
@@ -1220,7 +1220,7 @@ bad:
  * CONFNAK; returns CONFREJ if it can't return CONFACK.
  */
 static int
-lcp_reqci(fsm *f, 
+lcp_reqci(fsm *f,
           u_char *inp,    /* Requested CIs */
           int *lenp,      /* Length of requested CIs */
           int reject_if_disagree)
@@ -1318,13 +1318,13 @@ lcp_reqci(fsm *f,
           break;
         }
         GETLONG(cilong, p);
-        
+
         /*
          * Asyncmap must have set at least the bits
          * which are set in lcp_allowoptions[unit].asyncmap.
          */
         if ((ao->asyncmap & ~cilong) != 0) {
-          LCPDEBUG(LOG_INFO, ("lcp_reqci: Nak ASYNCMAP %lX missing %lX\n", 
+          LCPDEBUG(LOG_INFO, ("lcp_reqci: Nak ASYNCMAP %lX missing %lX\n",
                     cilong, ao->asyncmap));
           orc = CONFNAK;
           PUTCHAR(CI_ASYNCMAP, nakp);
@@ -1354,7 +1354,7 @@ lcp_reqci(fsm *f,
           break;
         }
         GETSHORT(cishort, p);
-        
+
         /*
          * Authtype must be UPAP or CHAP.
          *
@@ -1365,7 +1365,7 @@ lcp_reqci(fsm *f,
          * Whether we end up doing CHAP or UPAP depends then on
          * the ordering of the CIs in the peer's Configure-Request.
          */
-        
+
         if (cishort == PPP_PAP) {
           if (ho->neg_chap) {  /* we've already accepted CHAP */
             LCPDEBUG(LOG_WARNING, ("lcp_reqci: Reject AUTHTYPE PAP already accepted\n"));
@@ -1432,7 +1432,7 @@ lcp_reqci(fsm *f,
           ho->neg_chap = 1;
           break;
         }
-        
+
         /*
          * We don't recognize the protocol they're asking for.
          * Nak it with something we're willing to do.
@@ -1451,7 +1451,7 @@ lcp_reqci(fsm *f,
           PUTSHORT(PPP_PAP, nakp);
         }
         break;
-      
+
       case CI_QUALITY:
         GETSHORT(cishort, p);
         GETLONG(cilong, p);
@@ -1465,7 +1465,7 @@ lcp_reqci(fsm *f,
           orc = CONFREJ;
           break;
         }
-        
+
         /*
          * Check the protocol and the reporting period.
          * XXX When should we Nak this, and what with?
@@ -1479,7 +1479,7 @@ lcp_reqci(fsm *f,
           break;
         }
         break;
-      
+
       case CI_MAGICNUMBER:
         if (!(ao->neg_magicnumber || go->neg_magicnumber) ||
             cilen != CILEN_LONG) {
@@ -1507,8 +1507,8 @@ lcp_reqci(fsm *f,
         ho->neg_magicnumber = 1;
         ho->magicnumber = cilong;
         break;
-      
-      
+
+
       case CI_PCOMPRESSION:
 #if TRACELCP > 0
         snprintf(&traceBuf[traceNdx], sizeof(traceBuf), " PCOMPRESSION");
@@ -1521,7 +1521,7 @@ lcp_reqci(fsm *f,
         }
         ho->neg_pcompression = 1;
         break;
-      
+
       case CI_ACCOMPRESSION:
 #if TRACELCP > 0
         snprintf(&traceBuf[traceNdx], sizeof(traceBuf), " ACCOMPRESSION");
@@ -1534,7 +1534,7 @@ lcp_reqci(fsm *f,
         }
         ho->neg_accompression = 1;
         break;
-      
+
       case CI_MRRU:
 #if TRACELCP > 0
         snprintf(&traceBuf[traceNdx], sizeof(traceBuf), " CI_MRRU");
@@ -1542,7 +1542,7 @@ lcp_reqci(fsm *f,
 #endif
         orc = CONFREJ;
         break;
-      
+
       case CI_SSNHF:
 #if TRACELCP > 0
         snprintf(&traceBuf[traceNdx], sizeof(traceBuf), " CI_SSNHF");
@@ -1550,7 +1550,7 @@ lcp_reqci(fsm *f,
 #endif
         orc = CONFREJ;
         break;
-      
+
       case CI_EPDISC:
 #if TRACELCP > 0
         snprintf(&traceBuf[traceNdx], sizeof(traceBuf), " CI_EPDISC");
@@ -1558,7 +1558,7 @@ lcp_reqci(fsm *f,
 #endif
         orc = CONFREJ;
         break;
-      
+
       default:
 #if TRACELCP
         snprintf(&traceBuf[traceNdx], sizeof(traceBuf), " unknown %d", citype);
@@ -1730,7 +1730,7 @@ static void
 print_string( char *p, int len, void (*printer) (void *, char *, ...), void *arg)
 {
   int c;
-  
+
   printer(arg, "\"");
   for (; len > 0; --len) {
     c = *p++;
@@ -1897,7 +1897,7 @@ lcp_printpkt( u_char *p, int plen, void (*printer) (void *, char *, ...), void *
         printer(arg, ">");
       }
       break;
-    
+
     case TERMACK:
     case TERMREQ:
       if (len > 0 && *p >= ' ' && *p < 0x7f) {
@@ -1907,7 +1907,7 @@ lcp_printpkt( u_char *p, int plen, void (*printer) (void *, char *, ...), void *
         len = 0;
       }
       break;
-    
+
     case ECHOREQ:
     case ECHOREP:
     case DISCREQ:

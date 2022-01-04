@@ -1339,6 +1339,36 @@ static MUI_ENTRY bgBGFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY bgBGCheckFSEntries[] =
+{
+    {
+        4,
+        3, " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\222\245\347\245 \257\340\256\242\245\340\252\240 \255\240 \250\247\241\340\240\255\250\357 \244\357\253.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\217\256\347\240\252\240\251\342\245...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY bgBGInstallDirectoryEntries[] =
 {
     {
@@ -1493,6 +1523,30 @@ static MUI_ENTRY bgBGBootLoaderEntries[] =
         0,
         "   ENTER = \217\340\256\244\352\253\246\240\242\240\255\245   F3 = \210\247\345\256\244",
         TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY bgBGBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
     {
@@ -2114,6 +2168,10 @@ MUI_PAGE bgBGPages[] =
         bgBGFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        bgBGCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         bgBGDeletePartitionEntries
     },
@@ -2148,6 +2206,10 @@ MUI_PAGE bgBGPages[] =
     {
         SUCCESS_PAGE,
         bgBGSuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        bgBGBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
@@ -2199,8 +2261,6 @@ MUI_STRING bgBGStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "\221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 \242\352\340\345\343 \244\357\253"},
-    {STRING_CHECKINGPART,
-    "\222\245\347\245 \257\340\256\242\245\340\252\240 \255\240 \250\247\241\340\240\255\250\357 \244\357\253."},
     {STRING_CONTINUE,
     "ENTER = \217\340\256\244\352\253\246\240\242\240\255\245"},
     {STRING_QUITCONTINUE,
@@ -2252,31 +2312,21 @@ MUI_STRING bgBGStrings[] =
     {STRING_KEEPFORMAT,
     " \207\240\257\240\247\242\240\255\245 \255\240 \344\240\251\253\256\242\240\342\240 \343\340\245\244\241\240 (\241\245\247 \257\340\256\254\245\255\250) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  \342\242\352\340\244 \244\250\341\252 %lu  (\210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu) \255\240 %wZ [%s]."},
-    {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  \342\242\352\340\244 \244\250\341\252 %lu  (\210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu) [%s]."},
-    {STRING_HDDINFOUNK2,
-    "   %c%c  \242\250\244 0x%02X    %I64u %s"},
+    "%s."},
     {STRING_HDINFOPARTDELETE_1,
-    "\255\240 %I64u %s  \342\242\352\340\244 \244\250\341\252 %lu  (\210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu) \255\240 %wZ [%s]."},
-    {STRING_HDINFOPARTDELETE_2,
-    "\255\240 %I64u %s  \342\242\352\340\244 \244\250\341\252 %lu  (\210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu) [%s]."},
-    {STRING_HDINFOPARTZEROED_1,
-    "\342\242\352\340\244 \244\250\341\252 %lu (%I64u %s), \210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK4,
-    "%c%c  \242\250\244 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS_1,
-    "\255\240 \342\242\352\340\244 \244\250\341\252 %lu (%I64u %s), \210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu (%wZ) [%s]."},
-    {STRING_HDDINFOUNK5,
-    "%c%c %c %s\242\250\244 %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  \342\242\352\340\244 \244\250\341\252 %lu  (\210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu) \255\240 %wZ [%s]"},
-    {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  \342\242\352\340\244 \244\250\341\252 %lu  (\210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu) [%s]"},
+    "\255\240: %s."},
+    {STRING_PARTTYPE,
+    "\242\250\244 0x%02x"},
+    {STRING_HDDINFO_1,
+    // "\342\242\352\340\244 \244\250\341\252 %lu (%I64u %s), \210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu (%wZ) [%s]"
+    "%I64u %s \342\242\352\340\244 \244\250\341\252 %lu (\210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu) \255\240 %wZ [%s]"},
+    {STRING_HDDINFO_2,
+    // "\342\242\352\340\244 \244\250\341\252 %lu (%I64u %s), \210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu [%s]"
+    "%I64u %s \342\242\352\340\244 \244\250\341\252 %lu (\210\247\242\256\244=%hu, \230\250\255\240=%hu, \216\223=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "\201\245 \341\352\247\244\240\244\245\255 \255\256\242 \244\357\253 \255\240"},
     {STRING_UNPSPACE,
-    "    %s\215\245\340\240\247\257\340\245\244\245\253\245\255\256 \254\357\341\342\256%s            %6lu %s"},
+    "\215\245\340\240\247\257\340\245\244\245\253\245\255\256 \254\357\341\342\256"},
     {STRING_MAXSIZE,
     "\214\201 (\244\256 %lu \214\201)"},
     {STRING_EXTENDED_PARTITION,

@@ -113,7 +113,7 @@ extern "C" {
 typedef unsigned long(WINAPIV *WRITEEMBEDPROC)
 (
     void* lpvWriteStream,
-    const void* lpvBuffer, 
+    const void* lpvBuffer,
     const unsigned long cbBuffer
 );
 
@@ -126,7 +126,7 @@ typedef unsigned long(WINAPIV *READEMBEDPROC)
 
 
 typedef struct
-{ 
+{
     unsigned long ulStructSize;
     long lTestFromSize;
     long lTestToSize;
@@ -137,7 +137,7 @@ typedef struct
 } TTVALIDATIONTESTPARAMS;
 
 typedef struct
-{ 
+{
     unsigned long ulStructSize;
     long lTestFromSize;
     long lTestToSize;
@@ -148,14 +148,14 @@ typedef struct
 } TTVALIDATIONTESTPARAMSEX;
 
 typedef struct
-{ 
+{
     unsigned short usStructSize;
     unsigned short usRootStrSize;
     unsigned short *pusRootStr;
 } TTEMBEDINFO;
 
 typedef struct
-{ 
+{
     unsigned short usStructSize;
     unsigned short usRefStrSize;
     unsigned short *pusRefStr;

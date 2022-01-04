@@ -170,14 +170,14 @@ typedef struct _RTL_QUERY_REGISTRY_TABLE {
 
 
 
-NTSYSAPI                                            
-NTSTATUS                                            
-NTAPI                                               
-RtlCharToInteger (                                  
-    PCSZ String,                                    
-    ULONG Base,                                     
-    PULONG Value                                    
-    );                                              
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCharToInteger (
+    PCSZ String,
+    ULONG Base,
+    PULONG Value
+    );
 
 NTSYSAPI
 NTSTATUS
@@ -197,7 +197,7 @@ RtlUnicodeStringToInteger (
     PULONG Value
     );
 
-
+
 //
 //  String manipulation routines
 //
@@ -935,48 +935,48 @@ typedef enum _FILE_INFORMATION_CLASS {
 // Define the various structures which are returned on query operations
 //
 
-typedef struct _FILE_BASIC_INFORMATION {                    
-    LARGE_INTEGER CreationTime;                             
-    LARGE_INTEGER LastAccessTime;                           
-    LARGE_INTEGER LastWriteTime;                            
-    LARGE_INTEGER ChangeTime;                               
-    ULONG FileAttributes;                                   
-} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;         
-                                                            
-typedef struct _FILE_STANDARD_INFORMATION {                 
-    LARGE_INTEGER AllocationSize;                           
-    LARGE_INTEGER EndOfFile;                                
-    ULONG NumberOfLinks;                                    
-    BOOLEAN DeletePending;                                  
-    BOOLEAN Directory;                                      
-} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;   
-                                                            
-typedef struct _FILE_POSITION_INFORMATION {                 
-    LARGE_INTEGER CurrentByteOffset;                        
-} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;   
-                                                            
-typedef struct _FILE_ALIGNMENT_INFORMATION {                
-    ULONG AlignmentRequirement;                             
-} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION; 
-                                                            
-typedef struct _FILE_NETWORK_OPEN_INFORMATION {                 
-    LARGE_INTEGER CreationTime;                                 
-    LARGE_INTEGER LastAccessTime;                               
-    LARGE_INTEGER LastWriteTime;                                
-    LARGE_INTEGER ChangeTime;                                   
-    LARGE_INTEGER AllocationSize;                               
-    LARGE_INTEGER EndOfFile;                                    
-    ULONG FileAttributes;                                       
-} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;   
-                                                                
-typedef struct _FILE_DISPOSITION_INFORMATION {                  
-    BOOLEAN DeleteFile;                                         
-} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION; 
-                                                                
-typedef struct _FILE_END_OF_FILE_INFORMATION {                  
-    LARGE_INTEGER EndOfFile;                                    
-} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION; 
-                                                                
+typedef struct _FILE_BASIC_INFORMATION {
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    ULONG FileAttributes;
+} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+
+typedef struct _FILE_STANDARD_INFORMATION {
+    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER EndOfFile;
+    ULONG NumberOfLinks;
+    BOOLEAN DeletePending;
+    BOOLEAN Directory;
+} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
+
+typedef struct _FILE_POSITION_INFORMATION {
+    LARGE_INTEGER CurrentByteOffset;
+} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
+
+typedef struct _FILE_ALIGNMENT_INFORMATION {
+    ULONG AlignmentRequirement;
+} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
+
+typedef struct _FILE_NETWORK_OPEN_INFORMATION {
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER EndOfFile;
+    ULONG FileAttributes;
+} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
+
+typedef struct _FILE_DISPOSITION_INFORMATION {
+    BOOLEAN DeleteFile;
+} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
+
+typedef struct _FILE_END_OF_FILE_INFORMATION {
+    LARGE_INTEGER EndOfFile;
+} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
+
 
 typedef struct _FILE_FULL_EA_INFORMATION {
     ULONG NextEntryOffset;
@@ -1004,10 +1004,10 @@ typedef enum _FSINFOCLASS {
     FileFsMaximumInformation
 } FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 
-typedef struct _FILE_FS_DEVICE_INFORMATION {                    
-    DEVICE_TYPE DeviceType;                                     
-    ULONG Characteristics;                                      
-} FILE_FS_DEVICE_INFORMATION, *PFILE_FS_DEVICE_INFORMATION;     
+typedef struct _FILE_FS_DEVICE_INFORMATION {
+    DEVICE_TYPE DeviceType;
+    ULONG Characteristics;
+} FILE_FS_DEVICE_INFORMATION, *PFILE_FS_DEVICE_INFORMATION;
 
 //
 // Registry Specific Access Rights.
@@ -1266,9 +1266,9 @@ NtDeleteValueKey(
 
 #define SYMBOLIC_LINK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
 
-typedef struct _OBJECT_NAME_INFORMATION {               
-    UNICODE_STRING Name;                                
-} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;   
+typedef struct _OBJECT_NAME_INFORMATION {
+    UNICODE_STRING Name;
+} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 
 //
 // Section Information Structures.
@@ -1310,17 +1310,17 @@ typedef enum _SECTION_INHERIT {
 #define PAGE_GUARD            0x100     // winnt
 #define PAGE_NOCACHE          0x200     // winnt
 
-#define MEM_COMMIT           0x1000     
-#define MEM_RESERVE          0x2000     
-#define MEM_DECOMMIT         0x4000     
-#define MEM_RELEASE          0x8000     
-#define MEM_FREE            0x10000     
-#define MEM_PRIVATE         0x20000     
-#define MEM_MAPPED          0x40000     
-#define MEM_RESET           0x80000     
-#define MEM_TOP_DOWN       0x100000     
-#define MEM_LARGE_PAGES  0x20000000     
-#define SEC_RESERVE       0x4000000     
+#define MEM_COMMIT           0x1000
+#define MEM_RESERVE          0x2000
+#define MEM_DECOMMIT         0x4000
+#define MEM_RELEASE          0x8000
+#define MEM_FREE            0x10000
+#define MEM_PRIVATE         0x20000
+#define MEM_MAPPED          0x40000
+#define MEM_RESET           0x80000
+#define MEM_TOP_DOWN       0x100000
+#define MEM_LARGE_PAGES  0x20000000
+#define SEC_RESERVE       0x4000000
 #define PROCESS_ALL_ACCESS        (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | \
                                    0xFFF)
 
@@ -1543,7 +1543,7 @@ InterlockedCompareExchange(
 // image file name
 //
 typedef struct {
-       ULONG            Unknown[21];     
+       ULONG            Unknown[21];
        UNICODE_STRING   CommandLine;
        UNICODE_STRING   ImageFile;
 } ENVIRONMENT_INFORMATION, *PENVIRONMENT_INFORMATION;
@@ -1570,21 +1570,21 @@ typedef struct {
 // Native NT api function to write something to the boot-time
 // blue screen
 //
-NTSTATUS 
-NTAPI 
+NTSTATUS
+NTAPI
 NtDisplayString(
-        PUNICODE_STRING String 
+        PUNICODE_STRING String
         );
 
 //
 // Native applications must kill themselves when done - the job
 // of this native API
 //
-NTSTATUS 
-NTAPI 
+NTSTATUS
+NTAPI
 NtTerminateProcess(
-           HANDLE ProcessHandle, 
-           LONG ExitStatus 
+           HANDLE ProcessHandle,
+           LONG ExitStatus
            );
 
 //
@@ -1747,23 +1747,23 @@ RtlDestroyHeap(
 //
 // Heap allocation function (ala "malloc")
 //
-PVOID 
-NTAPI 
+PVOID
+NTAPI
 RtlAllocateHeap(
-        HANDLE Heap, 
-        ULONG Flags, 
-        ULONG Size 
+        HANDLE Heap,
+        ULONG Flags,
+        ULONG Size
         );
 
 //
 // Heap free function (ala "free")
 //
-BOOLEAN 
-NTAPI 
+BOOLEAN
+NTAPI
 RtlFreeHeap(
-        HANDLE Heap, 
-        ULONG Flags, 
-        PVOID Address 
+        HANDLE Heap,
+        ULONG Flags,
+        PVOID Address
         );
 
 

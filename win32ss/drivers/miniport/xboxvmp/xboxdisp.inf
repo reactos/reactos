@@ -36,7 +36,7 @@ ServiceType   = 1
 StartType     = 1
 ErrorControl  = 0
 ServiceBinary = %12%\xboxvmp.sys
-LoadOrderGroup = Video
+LoadOrderGroup = Video Save
 
 [xboxvmp.SoftwareSettings]
 AddReg = xboxvmp_SoftwareDeviceSettings

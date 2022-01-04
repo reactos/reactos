@@ -138,7 +138,10 @@ WINAPI
 RealizePalette(
     _In_ HDC hdc) /* [in] Handle of device context */
 {
-    HANDLE_METADC0P(UINT, RealizePalette, GDI_ERROR, hdc);
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
+    {
+       return METADC_RealizePalette(hdc);
+    }
 
     if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE)
     {

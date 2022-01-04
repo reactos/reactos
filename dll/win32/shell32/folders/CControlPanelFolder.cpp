@@ -155,9 +155,9 @@ BOOL CControlPanelEnum::RegisterCPanelApp(LPCWSTR wpath)
             else
                 iconIdx = 0;
 
-            LPITEMIDLIST pidl = _ILCreateCPanelApplet(wpath, 
-                                                      applet->info[i].name, 
-                                                      applet->info[i].info, 
+            LPITEMIDLIST pidl = _ILCreateCPanelApplet(wpath,
+                                                      applet->info[i].name,
+                                                      applet->info[i].info,
                                                       iconIdx);
 
             if (pidl)
@@ -328,7 +328,7 @@ HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE
         return E_INVALIDARG;
 
     int result;
-    switch(LOWORD(lParam)) 
+    switch(LOWORD(lParam))
     {
         case 0:        /* name */
             result = wcsicmp(pData1->szName + pData1->offsDispName, pData2->szName + pData2->offsDispName);
@@ -443,7 +443,7 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
         *ppvOut = NULL;
 
         if (IsEqualIID(riid, IID_IContextMenu) && (cidl >= 1)) {
-            
+
             /* HACK: We should use callbacks from CDefaultContextMenu instead of creating one on our own */
             BOOL bHasCpl = FALSE;
             for (UINT i = 0; i < cidl; i++)
@@ -560,7 +560,7 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
     if (!psd || iColumn >= CONROLPANELSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
 
-    if (!pidl) 
+    if (!pidl)
     {
         psd->fmt = ControlPanelSFHeader[iColumn].fmt;
         psd->cxChar = ControlPanelSFHeader[iColumn].cxChar;
@@ -570,14 +570,14 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
     {
         return m_regFolder->GetDetailsOf(pidl, iColumn, psd);
     }
-    else 
+    else
     {
         PIDLCPanelStruct *pCPanel = _ILGetCPanelPointer(pidl);
 
         if (!pCPanel)
             return E_FAIL;
 
-        switch(iColumn) 
+        switch(iColumn)
         {
             case 0:        /* name */
                 return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsDispName);
@@ -626,7 +626,7 @@ HRESULT WINAPI CControlPanelFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
     static const WCHAR* pszCPanelPath = L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}";
     hr = CRegFolder_CreateInstance(&CLSID_ControlPanel,
                                    pidlRoot,
-                                   pszCPanelPath, 
+                                   pszCPanelPath,
                                    L"ControlPanel",
                                    IID_PPV_ARG(IShellFolder2, &m_regFolder));
     if (FAILED_UNEXPECTEDLY(hr))
@@ -676,9 +676,9 @@ HRESULT WINAPI CCPLItemMenu::QueryContextMenu(
     UINT idCmdLast,
     UINT uFlags)
 {
-    _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_OPEN, MFT_STRING, MAKEINTRESOURCEW(IDS_OPEN), MFS_DEFAULT);
-    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 1, MFT_SEPARATOR, NULL, MFS_ENABLED);
-    _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_CREATELINK, MFT_STRING, MAKEINTRESOURCEW(IDS_CREATELINK), MFS_ENABLED);
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst, MFT_STRING, MAKEINTRESOURCEW(IDS_OPEN), MFS_DEFAULT);
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDC_STATIC, MFT_SEPARATOR, NULL, MFS_ENABLED);
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 1, MFT_STRING, MAKEINTRESOURCEW(IDS_CREATELINK), MFS_ENABLED);
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 2);
 }
@@ -699,7 +699,7 @@ HRESULT WINAPI CCPLItemMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
     TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n", this, lpcmi, lpcmi->lpVerb, lpcmi->hwnd);
 
-    if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_OPEN)) //FIXME
+    if (lpcmi->lpVerb == MAKEINTRESOURCEA(0))
     {
         /* Hardcode the command here; Executing a cpl file would be fine but we also need to run things like console.dll */
         WCHAR wszParams[MAX_PATH];
@@ -711,7 +711,7 @@ HRESULT WINAPI CCPLItemMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         /* Note: we pass the applet name to Control_RunDLL to distinguish between multiple applets in one .cpl file */
         ShellExecuteW(NULL, NULL, wszFile, wszParams, NULL, 0);
     }
-    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_CREATELINK)) //FIXME
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(1)) //FIXME
     {
         CComPtr<IDataObject> pDataObj;
         LPITEMIDLIST pidl = _ILCreateControlPanel();

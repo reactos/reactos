@@ -48,7 +48,7 @@ extern "C" {
 DEFINE_GUID(CLSID_DirectMusic,                    0x636b9f10,0x0c7d,0x11d1,0x95,0xb2,0x00,0x20,0xaf,0xdc,0x74,0x21);
 DEFINE_GUID(CLSID_DirectMusicCollection,          0x480ff4b0,0x28b2,0x11d1,0xbe,0xf7,0x00,0xc0,0x4f,0xbf,0x8f,0xef);
 DEFINE_GUID(CLSID_DirectMusicSynth,               0x58c2b4d0,0x46e7,0x11d1,0x89,0xac,0x00,0xa0,0xc9,0x05,0x41,0x29);
-	
+
 /* IIDs */
 DEFINE_GUID(IID_IDirectMusic,                     0x6536115a,0x7b2d,0x11d2,0xba,0x18,0x00,0x00,0xf8,0x75,0xac,0x12);
 DEFINE_GUID(IID_IDirectMusic2,                    0x6fc2cae1,0xbc78,0x11d2,0xaf,0xa6,0x00,0xaa,0x00,0x24,0xd8,0xb6);
@@ -89,7 +89,7 @@ DEFINE_GUID(GUID_DMUS_PROP_WavesReverb,           0x04cb5622,0x32e5,0x11d2,0xaf,
 DEFINE_GUID(GUID_DMUS_PROP_WriteLatency,          0x268a0fa0,0x60f2,0x11d2,0xaf,0xa6,0x00,0xaa,0x00,0x24,0xd8,0xb6);
 DEFINE_GUID(GUID_DMUS_PROP_WritePeriod,           0x268a0fa1,0x60f2,0x11d2,0xaf,0xa6,0x00,0xaa,0x00,0x24,0xd8,0xb6);
 DEFINE_GUID(GUID_DMUS_PROP_XG_Capable,            0x6496aba1,0x61b0,0x11d2,0xaf,0xa6,0x00,0xaa,0x00,0x24,0xd8,0xb6);
-DEFINE_GUID(GUID_DMUS_PROP_XG_Hardware,           0x178f2f26,0xc364,0x11d1,0xa7,0x60,0x00,0x00,0xf8,0x75,0xac,0x12);	
+DEFINE_GUID(GUID_DMUS_PROP_XG_Hardware,           0x178f2f26,0xc364,0x11d1,0xa7,0x60,0x00,0x00,0xf8,0x75,0xac,0x12);
 
 /* typedef definitions */
 typedef struct IDirectMusic *LPDIRECTMUSIC;
@@ -117,7 +117,7 @@ typedef struct IReferenceClock *LPREFERENCECLOCK;
  * Typedef definitions
  */
 typedef ULONGLONG    SAMPLE_TIME, *LPSAMPLE_TIME;
-typedef ULONGLONG    SAMPLE_POSITION, *LPSAMPLE_POSITION;	
+typedef ULONGLONG    SAMPLE_POSITION, *LPSAMPLE_POSITION;
 
 
 /*****************************************************************************
@@ -173,7 +173,7 @@ typedef ULONGLONG    SAMPLE_POSITION, *LPSAMPLE_POSITION;
 #define DMUS_EFFECT_REVERB 0x1
 #define DMUS_EFFECT_CHORUS 0x2
 #define DMUS_EFFECT_DELAY  0x4
-	
+
 #define DMUS_MAX_DESCRIPTION 0x80
 #define DMUS_MAX_DRIVER 0x80
 
@@ -229,7 +229,7 @@ typedef ULONGLONG    SAMPLE_POSITION, *LPSAMPLE_POSITION;
 #define DSBUSID_LOW_FREQUENCY         0x00000003
 #define DSBUSID_BACK_LEFT             0x00000004
 #define DSBUSID_BACK_RIGHT            0x00000005
-#define DSBUSID_FRONT_LEFT_OF_CENTER  0x00000006 
+#define DSBUSID_FRONT_LEFT_OF_CENTER  0x00000006
 #define DSBUSID_FRONT_RIGHT_OF_CENTER 0x00000007
 #define DSBUSID_BACK_CENTER           0x00000008
 #define DSBUSID_SIDE_LEFT             0x00000009
@@ -247,7 +247,7 @@ typedef ULONGLONG    SAMPLE_POSITION, *LPSAMPLE_POSITION;
 #define DSBUSID_REVERB_SEND           0x00000040
 #define DSBUSID_CHORUS_SEND           0x00000041
 
-#define DSBUSID_DYNAMIC_0             0x00000200 
+#define DSBUSID_DYNAMIC_0             0x00000200
 
 #define DSBUSID_NULL			      0xFFFFFFFF
 
@@ -293,7 +293,7 @@ struct _DMUS_PORTCAPS {
 	DWORD dwType;
 	DWORD dwMemorySize;
 	DWORD dwMaxChannelGroups;
-	DWORD dwMaxVoices;    
+	DWORD dwMaxVoices;
 	DWORD dwMaxAudioChannels;
 	DWORD dwEffectFlags;
 	WCHAR wszDescription[DMUS_MAX_DESCRIPTION];
@@ -364,7 +364,7 @@ struct _DMUS_CLOCKINFO8 {
     DMUS_CLOCKTYPE ctType;
     GUID           guidClock;
     WCHAR          wszDescription[DMUS_MAX_DESCRIPTION];
-    DWORD          dwFlags;           
+    DWORD          dwFlags;
 };
 
 

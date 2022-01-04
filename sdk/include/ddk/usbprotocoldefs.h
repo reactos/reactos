@@ -507,7 +507,7 @@ typedef struct _USBHUBPORTDATA {
 #define USB_MAKE_LANGID(lang, sublang)         \
   ((((USHORT)(sublang)) << 10) | (USHORT)(lang))
 
-#define USB_LANG_RESERVED                                   0x00 
+#define USB_LANG_RESERVED                                   0x00
 #define USB_LANG_ARABIC                                     0x01
 #define USB_LANG_BULGARIAN                                  0x02
 #define USB_LANG_CATALAN                                    0x03

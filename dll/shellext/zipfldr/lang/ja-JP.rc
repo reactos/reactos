@@ -76,6 +76,9 @@ BEGIN
     IDS_CANTCREATEZIP "圧縮フォルダ '%s' を作るのに失敗しました (エラーコード: %d) 。"
     IDS_CANTREADFILE "ファイル '%s' が読めません。"
     IDS_EXTRACTING "展開中..."
+    IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
+    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
+    IDS_UNKNOWNERROR "Unknown error 0x%08x."
 
     IDS_WIZ_TITLE "展開ウィザード"
     IDS_WIZ_DEST_TITLE "展開先を選んで下さい"

@@ -5,7 +5,7 @@
  * PURPOSE:         Mixer Control Iteration Functions
  * PROGRAMMER:      Johannes Anderwald
  */
- 
+
 #include "precomp.h"
 
 #define YDEBUG
@@ -1576,7 +1576,7 @@ MMixerInitializeFilter(
     /* store mixer info */
     *OutMixerInfo = MixerInfo;
 
-    /* now allocate an array which will receive the indices of the pin 
+    /* now allocate an array which will receive the indices of the pin
      * which has a ADC / DAC nodetype in its path
      */
     Status = MMixerAllocateTopologyPinArray(MixerContext, Topology, &Pins);
@@ -1624,7 +1624,7 @@ MMixerInitializeFilter(
     }
 
 
-    /* now get the bridge pin which is at the end of node path 
+    /* now get the bridge pin which is at the end of node path
      * For sink pins (wave out) search down stream
      * For source pins (wave in) search up stream
      */
@@ -1886,7 +1886,7 @@ MMixerRemoveEvent(
     IN PMIXER_EVENT MixerEventRoutine)
 {
     PLIST_ENTRY EventList;
-    PEVENT_NOTIFICATION_ENTRY NotificationEntry; 
+    PEVENT_NOTIFICATION_ENTRY NotificationEntry;
 
     /* Lookup through mixers */
     EventList = MixerInfo->EventList.Flink;

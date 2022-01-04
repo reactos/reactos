@@ -46,7 +46,7 @@ PspDumpThreads(BOOLEAN IncludeSystem)
                 nThreads++;
 
                 /* Print the Info */
-                DbgPrint("State %u Affinity %08x Priority %d PID.TID %d.%d Name %.8s Stack: \n",
+                DbgPrint("State %u Affinity %08x Priority %d PID.TID %d.%d Name %.8s Stack:\n",
                          Thread->Tcb.State,
                          Thread->Tcb.Affinity,
                          Thread->Tcb.Priority,
@@ -70,9 +70,24 @@ PspDumpThreads(BOOLEAN IncludeSystem)
                     /* Walk it */
                     while(Ebp != 0 && Ebp >= (PULONG)Thread->Tcb.StackLimit)
                     {
-                        /* Print what's on the stack */
-                        DbgPrint("%.8X %.8X%s", Ebp[0], Ebp[1], (i % 8) == 7 ? "\n" : "  ");
-                        Ebp = (PULONG)Ebp[0];
+                        ULONG EbpContent[2];
+                        ULONG MemoryCopied;
+                        NTSTATUS Status;
+
+                        /* Get stack frame content */
+                        Status = KdpCopyMemoryChunks((ULONG64)(ULONG_PTR)Ebp,
+                                                     EbpContent,
+                                                     sizeof(EbpContent),
+                                                     sizeof(EbpContent),
+                                                     MMDBG_COPY_UNSAFE,
+                                                     &MemoryCopied);
+                        if (!NT_SUCCESS(Status) || (MemoryCopied < sizeof(EbpContent)))
+                        {
+                            break;
+                        }
+
+                        DbgPrint("%.8X %.8X%s", EbpContent[0], EbpContent[1], (i % 8) == 7 ? "\n" : "  ");
+                        Ebp = (PULONG)EbpContent[0];
                         i++;
                     }
 

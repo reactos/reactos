@@ -210,7 +210,7 @@ Ext2UnlinkFcb(IN PEXT2_FCB Fcb)
     DEBUG(DL_INF, ("Ext2FreeFcb: Fcb (%p) to be unlinked: %wZ.\n",
                     Fcb, Mcb ? &Mcb->FullName : NULL));
 
-    if ((Mcb != NULL) && 
+    if ((Mcb != NULL) &&
         (Mcb->Identifier.Type == EXT2MCB) &&
         (Mcb->Identifier.Size == sizeof(EXT2_MCB))) {
 

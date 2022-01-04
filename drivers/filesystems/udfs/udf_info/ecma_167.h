@@ -182,7 +182,7 @@ struct NSRDesc {
     uint8 reserved;
     uint8 structData[2040];
 };
-    
+
 /* Primary Volume Descriptor (ECMA 167 3/10.1) */
 struct PrimaryVolDesc {
     tag descTag;
@@ -312,7 +312,7 @@ struct GenericPartitionMap1 {
 /* Type 2 Partition Map (ECMA 167 3/10.7.3) */
 struct GenericPartitionMap2 {
     uint8 partitionMapType; /* 2 */
-    uint8 partitionMapLength; 
+    uint8 partitionMapLength;
     uint8 partitionIdent[62];
 };
 
@@ -424,7 +424,7 @@ typedef struct _PARTITION_HEADER_DESC {
 
 typedef struct _FILE_IDENT_DESC {
     tag descTag;
-    uint16 fileVersionNum; 
+    uint16 fileVersionNum;
     uint8 fileCharacteristics;
     uint8 lengthFileIdent;
     long_ad icb;
@@ -732,7 +732,7 @@ struct PathComponent {
 };
 
 #define COMPONENT_TYPE_ROOT_X  0x01 /* originator & recipient know its value */
-#define COMPONENT_TYPE_ROOT    0x02 /* root of the volume */ 
+#define COMPONENT_TYPE_ROOT    0x02 /* root of the volume */
 #define COMPONENT_TYPE_PARENT  0x03 /* predecessor's parent dir */
 #define COMPONENT_TYPE_CURENT  0x04 /* same as predecessor's dir */
 #define COMPONENT_TYPE_OBJECT  0x05 /* terminal entry */

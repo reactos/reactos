@@ -11,7 +11,7 @@
 #include <debug.h>
 
 static const UCHAR CMASKS[USB2_MICROFRAMES] = {
-  0x1C, 0x38, 0x70, 0xE0, 0xC1, 0x83, 0x07, 0x0E 
+  0x1C, 0x38, 0x70, 0xE0, 0xC1, 0x83, 0x07, 0x0E
 };
 
 BOOLEAN
@@ -389,7 +389,7 @@ USB2_AllocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
             Result = FALSE;
         }
 
-        if (Tt->NumStartSplits[frame][uframe] > 
+        if (Tt->NumStartSplits[frame][uframe] >
             (USB2_MAX_FS_LS_TRANSACTIONS_IN_UFRAME - 1))
         {
             DPRINT1("USB2_AllocateHS: Num Start Splits - %X\n",
@@ -994,7 +994,7 @@ USB2_Rebalance(IN PDEVICE_OBJECT FdoDevice,
 
             case USBPORT_TRANSFER_TYPE_INTERRUPT:
                 if (SMask != EndpointProperties->InterruptScheduleMask ||
-                    CMask != EndpointProperties->SplitCompletionMask || 
+                    CMask != EndpointProperties->SplitCompletionMask ||
                     ScheduleOffset != EndpointProperties->ScheduleOffset ||
                     ActualPeriod != EndpointProperties->Period)
                 {

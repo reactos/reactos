@@ -28,6 +28,8 @@
 #include "nfs41_np.h"
 #include "options.h"
 
+#include <pseh/pseh2.h>
+
 #ifdef DBG
 #define DbgP(_x_) NFS41DbgPrint _x_
 #else

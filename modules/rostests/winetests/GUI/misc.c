@@ -249,10 +249,11 @@ InitImageList(UINT StartResource,
 
         Ret = ImageList_AddIcon(hImageList,
                                 hIcon);
-        if (Ret == -1)
-            goto fail;
 
         DestroyIcon(hIcon);
+
+        if (Ret == -1)
+            goto fail;
     }
 
     return hImageList;

@@ -123,8 +123,6 @@ KdpCopyMemoryChunks(
     return RemainingLength == 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
-#ifdef _WINKD_
-
 VOID
 NTAPI
 KdpQueryMemory(IN PDBGKD_MANIPULATE_STATE64 State,
@@ -1892,7 +1890,7 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
     /* Save the current IRQL */
     KeGetCurrentPrcb()->DebuggerSavedIRQL = KeGetCurrentIrql();
 
-    /* Freeze all CPUs */
+    /* Freeze all CPUs, raising also the IRQL to HIGH_LEVEL */
     Enable = KeFreezeExecution(TrapFrame, ExceptionFrame);
 
     /* Lock the port, save the state and set debugger entered */
@@ -1931,7 +1929,7 @@ KdExitDebugger(IN BOOLEAN Enable)
     KdRestore(FALSE);
     if (KdpPortLocked) KdpPortUnlock();
 
-    /* Unfreeze the CPUs */
+    /* Unfreeze the CPUs, restoring also the IRQL */
     KeThawExecution(Enable);
 
     /* Compare time with the one from KdEnterDebugger */
@@ -1989,8 +1987,8 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
         if (NeedLock)
         {
             /* Do the unlock */
-            KeLowerIrql(OldIrql);
             KdpPortUnlock();
+            KeLowerIrql(OldIrql);
 
             /* Fail: We're already enabled */
             return STATUS_INVALID_PARAMETER;
@@ -2024,8 +2022,8 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
     if (NeedLock)
     {
         /* Yes, now unlock it */
-        KeLowerIrql(OldIrql);
         KdpPortUnlock();
+        KeLowerIrql(OldIrql);
     }
 
     /* We're done */
@@ -2085,8 +2083,8 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
             if (!NT_SUCCESS(Status))
             {
                 /* Release the lock and fail */
-                KeLowerIrql(OldIrql);
                 KdpPortUnlock();
+                KeLowerIrql(OldIrql);
                 return Status;
             }
         }
@@ -2114,19 +2112,15 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
     if (NeedLock)
     {
         /* Yes, now unlock it */
-        KeLowerIrql(OldIrql);
         KdpPortUnlock();
+        KeLowerIrql(OldIrql);
     }
 
     /* We're done */
     return STATUS_SUCCESS;
 }
 
-#endif // _WINKD_
-
 /* PUBLIC FUNCTIONS **********************************************************/
-
-#ifdef _WINKD_
 
 /*
  * @implemented
@@ -2190,12 +2184,38 @@ KdSystemDebugControl(
             return STATUS_SUCCESS;
         }
 
+#if defined(_M_IX86) && !defined(_WINKD_) // See ke/i386/traphdlr.c
+        /* Register a debug callback */
+        case 'CsoR':
+        {
+            switch (InputBufferLength)
+            {
+                case ID_Win32PreServiceHook:
+                    KeWin32PreServiceHook = InputBuffer;
+                    break;
+
+                case ID_Win32PostServiceHook:
+                    KeWin32PostServiceHook = InputBuffer;
+                    break;
+
+            }
+            break;
+        }
+#endif
+
         /* Special case for stack frame dumps */
         case 'DsoR':
         {
             KeRosDumpStackFrames((PULONG_PTR)InputBuffer, InputBufferLength);
             break;
         }
+#if defined(KDBG)
+        /* Register KDBG CLI callback */
+        case 'RbdK':
+        {
+            return KdbRegisterCliCallback(InputBuffer, InputBufferLength);
+        }
+#endif /* KDBG */
 #endif
         default:
             break;
@@ -2323,8 +2343,6 @@ KdRefreshDebuggerNotPresent(VOID)
     KdExitDebugger(Enable);
     return DebuggerNotPresent;
 }
-
-#endif // _WINKD_
 
 /*
  * @implemented

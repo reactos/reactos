@@ -450,14 +450,14 @@
 731 stdcall -noname -stub SHRegisterDarwinLink(long long long)
 732 stdcall -noname SHReValidateDarwinCache()
 733 stdcall -noname CheckDiskSpace()
-740 stub -noname SHCreateFileDataObject
+740 stdcall -noname SHCreateFileDataObject(ptr long ptr ptr ptr)
 743 stdcall SHCreateFileExtractIconW(wstr long ptr ptr)
 744 stub -noname Create_IEnumUICommand
 745 stub -noname Create_IUIElement
 747 stdcall SHLimitInputEdit(ptr ptr)
 748 stdcall -noname SHLimitInputCombo(ptr ptr)
-749 stub SHGetShellStyleHInstance
-750 stub SHGetAttributesFromDataObject
+749 stdcall -noname -version=0x501-0x502 SHGetShellStyleHInstance()
+750 stdcall -noname SHGetAttributesFromDataObject(ptr long ptr ptr)
 751 stub -noname SHSimulateDropOnClsid
 752 stdcall -noname SHGetComputerDisplayNameW(long long long long)
 753 stdcall -noname CheckStagingArea()

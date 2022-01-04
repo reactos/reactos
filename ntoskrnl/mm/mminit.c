@@ -17,8 +17,6 @@
 
 /* GLOBALS *******************************************************************/
 
-VOID NTAPI MiInitializeUserPfnBitmap(VOID);
-
 BOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
 //
@@ -39,7 +37,7 @@ extern NTSTATUS MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed);
 // Helper function to create initial memory areas.
 // The created area is always read/write.
 //
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiCreateArm3StaticMemoryArea(PVOID BaseAddress, SIZE_T Size, BOOLEAN Executable)
@@ -61,7 +59,7 @@ MiCreateArm3StaticMemoryArea(PVOID BaseAddress, SIZE_T Size, BOOLEAN Executable)
     // TODO: Perhaps it would be  prudent to bugcheck here, not only assert?
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitSystemMemoryAreas(VOID)
@@ -69,6 +67,11 @@ MiInitSystemMemoryAreas(VOID)
     //
     // Create all the static memory areas.
     //
+
+#ifdef _M_AMD64
+    // Reserved range FFFF800000000000 - FFFFF68000000000
+    MiCreateArm3StaticMemoryArea((PVOID)MI_REAL_SYSTEM_RANGE_START, PTE_BASE - MI_REAL_SYSTEM_RANGE_START, FALSE);
+#endif /* _M_AMD64 */
 
     // The loader mappings. The only Executable area.
     MiCreateArm3StaticMemoryArea((PVOID)KSEG0_BASE, MmBootImageSize, TRUE);
@@ -117,7 +120,7 @@ MiInitSystemMemoryAreas(VOID)
 #endif /* _X86_ */
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiDbgDumpAddressSpace(VOID)
@@ -169,7 +172,7 @@ MiDbgDumpAddressSpace(VOID)
             "Non Paged Pool Expansion PTE Space");
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MmInitBsmThread(VOID)
@@ -193,7 +196,7 @@ MmInitBsmThread(VOID)
     return Status;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 MmInitSystem(IN ULONG Phase,
@@ -209,12 +212,17 @@ MmInitSystem(IN ULONG Phase,
     /* Initialize the kernel address space */
     ASSERT(Phase == 1);
 
+#ifdef NEWCC
     InitializeListHead(&MiSegmentList);
     ExInitializeFastMutex(&MiGlobalPageOperation);
     KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
     // Until we're fully demand paged, we can do things the old way through
     // the balance manager
+    // CcInitView will override this...
     MmInitializeMemoryConsumer(MC_CACHE, MiRosTrimCache);
+#else
+    KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
+#endif
 
     MmKernelAddressSpace = &PsIdleProcess->Vm;
 
@@ -225,7 +233,6 @@ MmInitSystem(IN ULONG Phase,
     MiDbgDumpAddressSpace();
 
     MmInitGlobalKernelPageDirectory();
-    MiInitializeUserPfnBitmap();
     MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
     MmInitializeRmapList();
     MmInitSectionImplementation();
@@ -273,7 +280,8 @@ MmInitSystem(IN ULONG Phase,
     /* Initialize the balance set manager */
     MmInitBsmThread();
 
-    /* Loop the boot loaded images */
+    /* Loop the boot loaded images (under lock) */
+    ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE);
     for (ListEntry = PsLoadedModuleList.Flink;
          ListEntry != &PsLoadedModuleList;
          ListEntry = ListEntry->Flink)
@@ -284,6 +292,7 @@ MmInitSystem(IN ULONG Phase,
         /* Set up the image protection */
         MiWriteProtectSystemImage(DataTableEntry->DllBase);
     }
+    ExReleaseResourceLite(&PsLoadedModuleResource);
 
     return TRUE;
 }

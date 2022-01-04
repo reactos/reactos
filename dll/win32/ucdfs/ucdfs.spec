@@ -1,2 +1,2 @@
-@ stdcall ChkdskEx(ptr long long long long ptr) CdfsChkdsk
-@ stdcall FormatEx(ptr long ptr long long ptr) CdfsFormat
+@ stdcall Chkdsk(ptr ptr long long long long ptr ptr ptr ptr ptr) CdfsChkdsk
+@ stdcall Format(ptr ptr long long long ptr long) CdfsFormat

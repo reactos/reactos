@@ -26,6 +26,13 @@
  #if !defined(_M_ARM)
   #define _M_ARM 1
  #endif
+#elif defined(__arm64__)
+ #if !defined(_ARM64_)
+  #define _ARM64_ 1
+ #endif
+ #if !defined(_M_ARM64)
+  #define _M_ARM64 1
+ #endif
 #elif defined(__ia64__)
  #if !defined(_IA64_)
   #define _IA64_ 1

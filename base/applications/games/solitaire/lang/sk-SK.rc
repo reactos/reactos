@@ -72,6 +72,7 @@ BEGIN
     BEGIN
         MENUITEM "&Rozdať\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Balíček...", IDM_GAME_DECK
         MENUITEM "&Možnosti...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

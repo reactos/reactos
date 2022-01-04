@@ -1,0 +1,27 @@
+<MSCONFIGTOOLFILE>
+
+<_locDefinition>
+  <_locDefault _loc="locNone"/>
+  <_locTag _locAttrData="NAME,HELP">TOOL</_locTag>
+</_locDefinition>
+
+<MSCONFIGTOOLS>
+  <TOOL _locID="About ReactOS" NAME="關於 ReactOS" PATH="%windir%\system32\winver.exe" DEFAULT_OPT="" ADV_OPT="" HELP="查看 ReactOS 版本資訊。"/>
+  <TOOL _locID="Action Center" NAME="行動中心" PATH="%windir%\System32\wscui.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="開啟行動中心。"/>
+  <TOOL _locID="Computer Management" NAME="電腦管理" PATH="%windir%\System32\compmgmt.msc" DEFAULT_OPT="" ADV_OPT="" HELP="查看並配置系統設定及組件。"/>
+  <TOOL _locID="System Information" NAME="系統資訊" PATH="%windir%\System32\msinfo32.exe" DEFAULT_OPT="" ADV_OPT="" HELP="查看關於硬件和軟件設定的更多資訊。"/>
+  <TOOL _locID="Event Viewer" NAME="事件查看器" PATH="%windir%\System32\eventvwr.exe" DEFAULT_OPT="" ADV_OPT="" HELP="查看、監視並排除故障訊息。"/>
+  <TOOL _locID="Programs" NAME="程式" PATH="%windir%\System32\appwiz.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="啟動、新增或移除程式和 ReactOS 組件。"/>
+  <TOOL _locID="System Properties" NAME="系統內容" PATH="%windir%\System32\control.exe" DEFAULT_OPT="system" ADV_OPT="" HELP="查看關於您的電腦系統設定的基本資訊。"/>
+  <TOOL _locID="Internet Options" NAME="Internet 選項" PATH="%windir%\System32\inetcpl.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="查看互聯網內容。"/>
+  <TOOL _locID="Internet Protocol Configuration" NAME="Internet 協定配置" PATH="%windir%\System32\cmd.exe" DEFAULT_OPT="/k %windir%\system32\ipconfig.exe" ADV_OPT="/k %windir%\system32\ipconfig.exe /all" HELP="查看並配置網絡位址設定。"/>
+  <TOOL _locID="Performance Monitor" NAME="性能監視器" PATH="%windir%\System32\perfmon.exe" DEFAULT_OPT="" ADV_OPT="/sys" HELP="監控本地或遠端電腦的性能。"/>
+  <TOOL _locID="Resource Monitor" NAME="資源監視器" PATH="%windir%\System32\resmon.exe" DEFAULT_OPT="" ADV_OPT="" HELP="監控本地電腦的性能及資源的使用情況。"/>
+  <TOOL _locID="Task Manager" NAME="任務管理器" PATH="%windir%\System32\taskmgr.exe" DEFAULT_OPT="" ADV_OPT="" HELP="查看正在您的電腦上執行的程式和處理程序的詳細資訊。"/>
+  <TOOL _locID="Command Prompt" NAME="命令提示字元" PATH="%windir%\System32\cmd.exe" DEFAULT_OPT="" ADV_OPT="" HELP="開啟一個命令提示字元視窗。"/>
+  <TOOL _locID="Registry Editor" NAME="註冊表編輯器" PATH="%windir%\System32\regedt32.exe" DEFAULT_OPT="" ADV_OPT="" HELP="修改 ReactOS 的註冊表。"/>
+  <TOOL _locID="Remote Assistance" NAME="遠端協助" PATH="%windir%\System32\msra.exe" DEFAULT_OPT="" ADV_OPT="" HELP="透過互聯網，從（向）您的朋友取得（提供）幫助。"/>
+  <TOOL _locID="System Restore" NAME="系統還原" PATH="%windir%\System32\rstrui.exe" DEFAULT_OPT="" ADV_OPT="" HELP="將您的電腦系統恢復到上一個狀態。"/>
+</MSCONFIGTOOLS>
+
+</MSCONFIGTOOLFILE>

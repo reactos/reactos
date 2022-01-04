@@ -167,3 +167,84 @@ SmSessionComplete(IN HANDLE SmApiPort,
     /* Return status */
     return Status;
 }
+
+NTSTATUS
+NTAPI
+SmStartCsr(IN HANDLE SmApiPort,
+           OUT PULONG pMuSessionId,
+           IN PUNICODE_STRING CommandLine,
+           OUT PHANDLE pWindowsSubSysProcessId,
+           OUT PHANDLE pInitialCommandProcessId)
+{
+    NTSTATUS Status;
+    SM_API_MSG SmApiMsg;
+
+    /* Initialize the generic LPC header */
+    RtlZeroMemory(&SmApiMsg, sizeof(SmApiMsg));
+    SmApiMsg.h.u1.s1.DataLength = sizeof(SM_EXEC_PGM_MSG) + 8;
+    SmApiMsg.h.u1.s1.TotalLength = sizeof(SmApiMsg);
+
+    /* Initialize this specific API's parameters */
+    SmApiMsg.ApiNumber = SmpStartCsrApi;
+    if (CommandLine)
+    {
+        if (CommandLine->Length > ARRAYSIZE(SmApiMsg.u.StartCsr.Buffer))
+        {
+            DPRINT1("SmStartCsr: Command line too long\n");
+            return STATUS_INVALID_PARAMETER;
+        }
+        RtlCopyMemory(SmApiMsg.u.StartCsr.Buffer, CommandLine->Buffer, CommandLine->Length);
+        SmApiMsg.u.StartCsr.Length = CommandLine->Length;
+    }
+
+    /* Send the message to SMSS */
+    Status = NtRequestWaitReplyPort(SmApiPort, &SmApiMsg.h, &SmApiMsg.h);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SmStartCsr: NtRequestWaitReply Failed %lx\n", Status);
+    }
+    else
+    {
+        /* Upon success, we use the API's return value */
+        Status = SmApiMsg.ReturnValue;
+    }
+
+    /* Give back informations to caller */
+    *pMuSessionId = SmApiMsg.u.StartCsr.MuSessionId;
+    *pWindowsSubSysProcessId = SmApiMsg.u.StartCsr.WindowsSubSysProcessId;
+    *pInitialCommandProcessId = SmApiMsg.u.StartCsr.SmpInitialCommandProcessId;
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+SmStopCsr(IN HANDLE SmApiPort,
+          IN ULONG SessionId)
+{
+    NTSTATUS Status;
+    SM_API_MSG SmApiMsg;
+
+    /* Initialize the generic LPC header */
+    RtlZeroMemory(&SmApiMsg, sizeof(SmApiMsg));
+    SmApiMsg.h.u1.s1.DataLength = sizeof(SM_EXEC_PGM_MSG) + 8;
+    SmApiMsg.h.u1.s1.TotalLength = sizeof(SmApiMsg);
+
+    /* Initialize this specific API's parameters */
+    SmApiMsg.ApiNumber = SmpStopCsrApi;
+    SmApiMsg.u.StopCsr.MuSessionId = SessionId;
+
+    /* Send the message to SMSS */
+    Status = NtRequestWaitReplyPort(SmApiPort, &SmApiMsg.h, &SmApiMsg.h);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SmStopCsr: NtRequestWaitReply Failed %lx\n", Status);
+    }
+    else
+    {
+        /* Upon success, we use the API's return value */
+        Status = SmApiMsg.ReturnValue;
+    }
+
+    return Status;
+}

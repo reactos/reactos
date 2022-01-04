@@ -102,7 +102,7 @@ BOOL JapaneseEra_IsFirstYearGannen(void)
 #endif
 }
 
-/* 
+/*
  * SEE ALSO:
  * https://en.wikipedia.org/wiki/Japanese_era_name
  * https://docs.microsoft.com/en-us/windows/desktop/Intl/era-handling-for-the-japanese-calendar

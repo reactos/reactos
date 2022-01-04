@@ -34,7 +34,7 @@ NTAPI
 LlbHwGetSerialUart(VOID)
 {
     return 3;
-} 
+}
 
 VOID
 NTAPI
@@ -70,7 +70,7 @@ LlbHwGetScreenHeight(VOID)
 {
      return 720;
 }
- 
+
 PVOID
 NTAPI
 LlbHwGetFrameBuffer(VOID)
@@ -102,28 +102,28 @@ LlbHwBuildMemoryMap(IN PBIOS_MEMORY_MAP MemoryMap)
 {
     PBIOS_MEMORY_MAP MapEntry;
     ULONG Base, Size, FsBase, FsSize;
-    
+
     /* Parse hardware memory map */
     MapEntry = LlbHwOmap3MemoryMap;
     while (MapEntry->Length)
     {
         /* Add this entry */
         LlbAllocateMemoryEntry(MapEntry->Type, MapEntry->BaseAddress, MapEntry->Length);
-        
+
         /* Move to the next one */
         MapEntry++;
     }
-    
+
     /* Query memory and RAMDISK information */
     LlbEnvGetMemoryInformation(&Base, &Size);
     LlbEnvGetRamDiskInformation(&FsBase, &FsSize);
-    
+
     /* Add-in the size of the ramdisk */
     Base = FsBase + FsSize;
-    
+
     /* Subtract size of ramdisk and anything else before it */
     Size -= Base;
-    
+
     /* Allocate an entry for it */
     LlbAllocateMemoryEntry(BiosMemoryUsable, Base, Size);
 }

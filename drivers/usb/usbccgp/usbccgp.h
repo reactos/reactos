@@ -127,14 +127,14 @@ DumpFunctionDescriptor(
 
 NTSTATUS
 FDO_Dispatch(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp);
 
 /* pdo.c */
 
 NTSTATUS
 PDO_Dispatch(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp);
 
 /* function.c */

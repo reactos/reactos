@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ATMT 'TotA' /* Atom table */
-#define TAG_RTHL 'LHtR' /* Heap Lock */
-
 extern ULONG NtGlobalFlag;
 
 typedef struct _RTL_RANGE_ENTRY
@@ -37,17 +34,24 @@ RtlPcToFileHeader(
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InSystem;
+    KIRQL OldIrql;
 
     /* Get the base for this file */
     if ((ULONG_PTR)PcValue > (ULONG_PTR)MmHighestUserAddress)
     {
+        /* Acquire the loaded module spinlock */
+        KeAcquireSpinLock(&PsLoadedModuleSpinLock, &OldIrql);
+
         /* We are in kernel */
         *BaseOfImage = KiPcToFileHeader(PcValue, &LdrEntry, FALSE, &InSystem);
+
+        /* Release lock */
+        KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
     }
     else
     {
-        /* We are in user land */
-        *BaseOfImage = KiRosPcToUserFileHeader(PcValue, &LdrEntry);
+        /* User mode is not handled here! */
+        *BaseOfImage = NULL;
     }
 
     return *BaseOfImage;
@@ -107,10 +111,6 @@ RtlpAllocateMemory(ULONG Bytes,
                                  Tag);
 }
 
-
-#define TAG_USTR        'RTSU'
-#define TAG_ASTR        'RTSA'
-#define TAG_OSTR        'RTSO'
 VOID
 NTAPI
 RtlpFreeMemory(PVOID Mem,

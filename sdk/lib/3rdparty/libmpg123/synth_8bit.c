@@ -10,7 +10,7 @@
 #include "sample.h"
 #include "debug.h"
 
-/* 
+/*
 	Part 2: All synth functions that produce 8bit output.
 	What we need is just a special WRITE_SAMPLE. For the generic and i386 functions, that is.
 	For the rather optimized synth_1to1, we will need the postprocessing 8bit converters from synth_8bit.h .

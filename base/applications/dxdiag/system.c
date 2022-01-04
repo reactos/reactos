@@ -40,7 +40,7 @@ GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR R
 }
 
 
-static 
+static
 BOOL
 GetDirectXVersion(WCHAR * szBuffer)
 {
@@ -109,7 +109,7 @@ VOID GetSystemCPU(WCHAR *szBuffer)
     the program is not running in WOW64. */
     fnIsWow64Process = (ISWOW64PROC)GetProcAddress(
         GetModuleHandleW(L"kernel32"), "IsWow64Process");
-    
+
     if (fnIsWow64Process != NULL)
         fnIsWow64Process(GetCurrentProcess(), &isWow64);
 
@@ -196,6 +196,7 @@ InitializeSystemPage(HWND hwndDlg)
     OSVERSIONINFO VersionInfo;
     PVOID SMBiosBuf;
     PCHAR DmiStrings[ID_STRINGS_MAX] = { 0 };
+    BOOL Result;
 
     /* set date/time */
     szTime[0] = L'\0';
@@ -322,7 +323,16 @@ InitializeSystemPage(HWND hwndDlg)
     FreeSMBiosData(SMBiosBuf);
 
     /* set processor string */
-    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\CentralProcessor\\0", L"ProcessorNameString", REG_SZ, szDesc, sizeof(szDesc)))
+    Result = GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\CentralProcessor\\0", L"ProcessorNameString", REG_SZ, szDesc, sizeof(szDesc));
+    if (!Result)
+    {
+        /* Processor Brand String not found */
+        /* FIXME: Implement CPU name detection routine */
+
+        /* Finally try to use Identifier string */
+        Result = GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\CentralProcessor\\0", L"Identifier", REG_SZ, szDesc, sizeof(szDesc));
+    }
+    if (Result)
     {
         TrimDmiStringW(szDesc);
         /* FIXME retrieve current speed */

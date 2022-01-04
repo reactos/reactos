@@ -891,7 +891,7 @@ NDIS_STATUS ParaNdis_InitializeContext(
     status = FinalizeFeatures(pContext);
 
     pContext->ReuseBufferProc = (tReuseReceiveBufferProc)ReuseReceiveBufferRegular;
-    
+
     NdisInitializeEvent(&pContext->ResetEvent);
     DEBUG_EXIT_STATUS(0, status);
     return status;
@@ -1532,7 +1532,7 @@ void ReuseReceiveBufferRegular(PARANDIS_ADAPTER *pContext, pIONetDescriptor pBuf
 
 /**********************************************************
 It is called from Rx processing routines between power off and power on in non-paused mode (Win8).
-Returns received buffer to NetReceiveBuffers. 
+Returns received buffer to NetReceiveBuffers.
 All the buffers will be placed into Virtio queue during power-on procedure
 
 Must be called with &pContext->ReceiveLock acquired
@@ -2754,12 +2754,12 @@ NDIS_STATUS ParaNdis_PowerOn(PARANDIS_ADAPTER *pContext)
     ParaNdis_UpdateDeviceFilters(pContext);
 
     InitializeListHead(&TempList);
-    
+
     /* submit all the receive buffers */
     NdisAcquireSpinLock(&pContext->ReceiveLock);
-    
+
     pContext->ReuseBufferProc = (tReuseReceiveBufferProc)ReuseReceiveBufferRegular;
-    
+
     while (!IsListEmpty(&pContext->NetReceiveBuffers))
     {
         pIONetDescriptor pBufferDescriptor =
@@ -2787,7 +2787,7 @@ NDIS_STATUS ParaNdis_PowerOn(PARANDIS_ADAPTER *pContext)
     ParaNdis_SetPowerState(pContext, NdisDeviceStateD0);
     pContext->bEnableInterruptHandlingDPC = TRUE;
     virtio_device_ready(&pContext->IODevice);
-    
+
     NdisReleaseSpinLock(&pContext->ReceiveLock);
 
     // if bFastSuspendInProcess is set by Win8 power-off procedure,
@@ -2795,7 +2795,7 @@ NDIS_STATUS ParaNdis_PowerOn(PARANDIS_ADAPTER *pContext)
     // otherwise it does not do anything in Vista+ (Tx and RX are enabled after power-on by Restart)
     ParaNdis_Resume(pContext);
     pContext->bFastSuspendInProcess = FALSE;
-    
+
     ParaNdis_ReportLinkStatus(pContext, TRUE);
     ParaNdis_DebugHistory(pContext, hopPowerOn, NULL, 0, 0, 0);
 
@@ -2818,14 +2818,14 @@ VOID ParaNdis_PowerOff(PARANDIS_ADAPTER *pContext)
         /* back compat - remove the OK flag only in legacy mode */
         VirtIODeviceRemoveStatus(&pContext->IODevice, VIRTIO_CONFIG_S_DRIVER_OK);
     }
-    
+
     if (pContext->bFastSuspendInProcess)
     {
         NdisAcquireSpinLock(&pContext->ReceiveLock);
         pContext->ReuseBufferProc = (tReuseReceiveBufferProc)ReuseReceiveBufferPowerOff;
         NdisReleaseSpinLock(&pContext->ReceiveLock);
     }
-    
+
     ParaNdis_SetPowerState(pContext, NdisDeviceStateD3);
 
     PreventDPCServicing(pContext);

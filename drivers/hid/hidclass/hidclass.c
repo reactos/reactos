@@ -1123,7 +1123,7 @@ HidClass_Power(
 {
     PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
     CommonDeviceExtension = DeviceObject->DeviceExtension;
- 
+
     if (CommonDeviceExtension->IsFDO)
     {
         IoCopyCurrentIrpStackLocationToNext(Irp);

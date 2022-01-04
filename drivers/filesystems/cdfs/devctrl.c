@@ -41,7 +41,7 @@ CdDevCtrlCompletionRoutine (
 #pragma alloc_text(PAGE, CdCommonDevControl)
 #endif
 
-
+
 NTSTATUS
 CdCommonDevControl (
     _Inout_ PIRP_CONTEXT IrpContext,
@@ -167,7 +167,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //

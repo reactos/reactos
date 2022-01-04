@@ -57,13 +57,13 @@ Some useful links:
 * KDE-LOOK.ORG
   http://www.kde-look.org/
 
-* Frik85's ReactOS Fanpage 
+* Frik85's ReactOS Fanpage
   http://frik85.reactos.at
   (-> http://reactosde.re.funpic.de/mediagroup.php?sec=Graphic%20arts)
 
 
 
-History: 
+History:
 
 2005-02-25 Klemens Friedl
 2005-05-31 Klemens Friedl

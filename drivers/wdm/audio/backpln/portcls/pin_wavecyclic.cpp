@@ -177,7 +177,7 @@ KSPROPERTY_SET PinWaveCyclicPropertySet[] =
     }
 };
 
-KSEVENT_SET PinWaveCyclicEventSet[] = 
+KSEVENT_SET PinWaveCyclicEventSet[] =
 {
     {
         &KSEVENTSETID_LoopedStreaming,
@@ -202,7 +202,7 @@ CPortPinWaveCyclic::QueryInterface(
 {
     DPRINT("IServiceSink_fnQueryInterface entered\n");
 
-    if (IsEqualGUIDAligned(refiid, IID_IIrpTarget) || 
+    if (IsEqualGUIDAligned(refiid, IID_IIrpTarget) ||
         IsEqualGUIDAligned(refiid, IID_IUnknown))
     {
         *Output = PVOID(PUNKNOWN((IIrpTarget*)this));
@@ -244,10 +244,10 @@ PinWaveCyclicAddEndOfStreamEvent(
     PSUBDEVICE_DESCRIPTOR Descriptor;
     CPortPinWaveCyclic *Pin;
 
-    // get sub device descriptor 
+    // get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check 
+    // sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
@@ -280,10 +280,10 @@ PinWaveCyclicAddLoopedStreamEvent(
     PSUBDEVICE_DESCRIPTOR Descriptor;
     CPortPinWaveCyclic *Pin;
 
-    // get sub device descriptor 
+    // get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSEVENT_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check 
+    // sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
@@ -319,10 +319,10 @@ PinWaveCyclicAllocatorFraming(
     CPortPinWaveCyclic *Pin;
     PSUBDEVICE_DESCRIPTOR Descriptor;
 
-    // get sub device descriptor 
+    // get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSEVENT_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check 
+    // sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
@@ -355,10 +355,10 @@ PinWaveCyclicAudioPosition(
     PSUBDEVICE_DESCRIPTOR Descriptor;
     PKSAUDIO_POSITION Position;
 
-    // get sub device descriptor 
+    // get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check 
+    // sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
@@ -460,10 +460,10 @@ PinWaveCyclicState(
     PSUBDEVICE_DESCRIPTOR Descriptor;
     PKSSTATE State = (PKSSTATE)Data;
 
-    // get sub device descriptor 
+    // get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check 
+    // sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
@@ -535,10 +535,10 @@ PinWaveCyclicDataFormat(
     // get current irp stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    // get sub device descriptor 
+    // get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check 
+    // sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
 

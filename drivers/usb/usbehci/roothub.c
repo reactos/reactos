@@ -154,7 +154,7 @@ EHCI_RH_GetRootHubData(IN PVOID ehciExtension,
     }
     else
     {
-        /* Ganged power switching (all ports’ power at once) */
+        /* Ganged power switching (all ports' power at once) */
         HubCharacteristics.PowerControlMode = 0;
     }
 
@@ -355,7 +355,7 @@ EHCI_RH_PortResetComplete(IN PVOID ehciExtension,
     RegPacket.UsbPortRequestAsyncCallback(EhciExtension,
                                           50, // TimerValue
                                           Port,
-                                          sizeof(Port),
+                                          sizeof(*Port),
                                           EHCI_RH_FinishReset);
 }
 

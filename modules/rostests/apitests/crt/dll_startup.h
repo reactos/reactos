@@ -5,7 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
-#pragma once 
+#pragma once
 
 struct counter_values
 {

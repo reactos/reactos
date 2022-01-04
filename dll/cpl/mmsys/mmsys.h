@@ -16,7 +16,7 @@
 #include <cpl.h>
 #include <tchar.h>
 #include <setupapi.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 
 #include "resource.h"
 

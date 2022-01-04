@@ -175,6 +175,11 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             DeleteObject(SelectObject(hdc, oldPen));
             break;
         }
+        case TOOL_FILL:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_PEN:
+            break;
     }
     ReleaseDC(hdc);
     return 0;
@@ -233,6 +238,11 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
             if ((y >= 70) && (y <= 132))
                 toolsModel.SetLineWidth((y - 72) / 12 + 1);
             break;
+        case TOOL_FILL:
+        case TOOL_COLOR:
+        case TOOL_ZOOM:
+        case TOOL_PEN:
+            break;
     }
     return 0;
 }
@@ -255,7 +265,7 @@ LRESULT CToolSettingsWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, L
     int tbPos = 0;
     int tempZoom = toolsModel.GetZoom();
 
-    while (tempZoom > 125)
+    while (tempZoom > MIN_ZOOM)
     {
         tbPos++;
         tempZoom = tempZoom >> 1;

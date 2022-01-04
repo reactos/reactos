@@ -22,6 +22,10 @@
 
 #include <wine/debug.h>
 
+extern OSVERSIONINFOW VersionInfo;
+extern HANDLE LsaHandle;
+extern ULONG LsaAuthenticationPackage;
+
 /* domain.c */
 
 NET_API_STATUS

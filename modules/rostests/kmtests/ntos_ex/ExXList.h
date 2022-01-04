@@ -12,7 +12,7 @@ TestXListFunctional(
     Ret = FlushXList(ListHead);
     ok_eq_pointer(Ret, NULL);
     CheckXListHeader(ListHead, NULL, 0);
-    
+
     Ret = PopXList(ListHead, pSpinLock);
     ok_eq_pointer(Ret, NULL);
     CheckXListHeader(ListHead, NULL, 0);
@@ -41,7 +41,7 @@ TestXListFunctional(
     ok_free_xlist(Entries[0].Next, NULL);
     ok_free_xlist(Entries[1].Next, &Entries[0]);
     CheckXListHeader(ListHead, NULL, 0);
-    
+
     Ret = PopXList(ListHead, pSpinLock);
     ok_eq_pointer(Ret, NULL);
     ok_free_xlist(Entries[0].Next, NULL);

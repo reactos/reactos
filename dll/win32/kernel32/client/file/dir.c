@@ -209,7 +209,7 @@ CreateDirectoryExW(IN LPCWSTR lpTemplateDirectory,
     FILE_ATTRIBUTE_TAG_INFORMATION FileTagInfo;
     UNICODE_STRING NtPathU, NtTemplatePathU, NewDirectory;
     RTL_RELATIVE_NAME_U RelativeName, TemplateRelativeName;
-    PWSTR TemplateBuffer, PathUBuffer, FilePart, SubstituteName;        
+    PWSTR TemplateBuffer, PathUBuffer, FilePart, SubstituteName;
 
     /* Get relative name of the template */
     if (!RtlDosPathNameToRelativeNtPathName_U(lpTemplateDirectory, &NtTemplatePathU, NULL, &TemplateRelativeName))
@@ -423,7 +423,7 @@ OpenWithoutReparseSupport:
         CloseHandle(TemplateHandle);
         BaseSetLastNTError(Status);
         return FALSE;
-    } 
+    }
 
     /* Start reading extended attributes */
     if (FileEaInfo.EaSize != 0)

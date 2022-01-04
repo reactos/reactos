@@ -13,8 +13,14 @@
 /* CODE **********************************************************************/
 .code64
 
+#ifdef _USE_ML
+/* fabs is now allowed as label name, so create _fabs instead and alias fabs to it */
 PUBLIC _fabs
 _fabs:
+#else
+PUBLIC fabs
+fabs:
+#endif
     UNIMPLEMENTED fabs
     ret
 

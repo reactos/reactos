@@ -9,10 +9,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
+#include "apicp.h"
 #define NDEBUG
 #include <debug.h>
-
-#include "apic.h"
 
 extern LARGE_INTEGER HalpCpuClockFrequency;
 
@@ -60,6 +59,13 @@ ApicInitializeTimer(ULONG Cpu)
     ApicSetTimerInterval(1000);
 
 // KeSetTimeIncrement
+}
+
+VOID
+FASTCALL
+HalpProfileInterruptHandler(_In_ PKTRAP_FRAME TrapFrame)
+{
+    KeProfileInterruptWithSource(TrapFrame, ProfileTime);
 }
 
 

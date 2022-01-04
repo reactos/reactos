@@ -31,10 +31,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined(ALLOC_PRAGMA)
-#pragma alloc_text(INIT, DfsDriverEntry)
-#endif
-
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
@@ -82,7 +78,7 @@ DfsUnload(PDRIVER_OBJECT DriverObject)
     UNIMPLEMENTED;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 DfsDriverEntry(PDRIVER_OBJECT DriverObject,
                PUNICODE_STRING RegistryPath)

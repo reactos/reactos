@@ -71,9 +71,9 @@ static INT CALLBACK SIC_CompareEntries( LPVOID p1, LPVOID p2, LPARAM lparam)
     if (e1->dwSourceIndex != e2->dwSourceIndex)
       return (e1->dwSourceIndex < e2->dwSourceIndex) ? -1 : 1;
 
-    if ((e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT)) 
+    if ((e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT))
       return ((e1->dwFlags & GIL_FORSHORTCUT) < (e2->dwFlags & GIL_FORSHORTCUT)) ? -1 : 1;
-  
+
     return wcsicmp(e1->sSourceFile,e2->sSourceFile);
 }
 
@@ -89,7 +89,7 @@ static int SIC_LoadOverlayIcon(int icon_idx);
  * FIXME: This should go to the ImageList implementation!
  */
 static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
-{    
+{
     ICONINFO ShortcutIconInfo, TargetIconInfo;
     HICON ShortcutIcon = NULL, TargetIcon;
     BITMAP TargetBitmapInfo, ShortcutBitmapInfo;
@@ -106,7 +106,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
      * We will write over the source bitmaps to get the final ones */
     if (! GetIconInfo(SourceIcon, &TargetIconInfo))
         return NULL;
-    
+
     /* Is it possible with the ImageList implementation? */
     if(!TargetIconInfo.hbmColor)
     {
@@ -114,7 +114,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
         FIXME("1bpp icon wants its overlay!\n");
         goto fail;
     }
-        
+
     if(!GetObjectW(TargetIconInfo.hbmColor, sizeof(BITMAP), &TargetBitmapInfo))
     {
         goto fail;
@@ -140,7 +140,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
     {
         goto fail;
     }
-    
+
     /* Is it possible with the ImageLists ? */
     if(!ShortcutIconInfo.hbmColor)
     {
@@ -148,7 +148,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
         FIXME("Should draw 1bpp overlay!\n");
         goto fail;
     }
-    
+
     if(!GetObjectW(ShortcutIconInfo.hbmColor, sizeof(BITMAP), &ShortcutBitmapInfo))
     {
         goto fail;
@@ -191,7 +191,7 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
         PVOID bits;
         PULONG pixel;
         INT i, j;
-        
+
         /* Find if the source bitmap has an alpha channel */
         if(TargetBitmapInfo.bmBitsPixel != 32) add_alpha = FALSE;
         else
@@ -202,21 +202,21 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
             lpbmi->bmiHeader.biHeight = TargetBitmapInfo.bmHeight;
             lpbmi->bmiHeader.biPlanes = 1;
             lpbmi->bmiHeader.biBitCount = 32;
-            
+
             bits = HeapAlloc(GetProcessHeap(), 0, TargetBitmapInfo.bmHeight * TargetBitmapInfo.bmWidthBytes);
-            
+
             if(!bits) goto fail;
-            
+
             if(!GetDIBits(TargetDC, TargetIconInfo.hbmColor, 0, TargetBitmapInfo.bmHeight, bits, lpbmi, DIB_RGB_COLORS))
             {
                 ERR("GetBIBits failed!\n");
                 HeapFree(GetProcessHeap(), 0, bits);
                 goto fail;
             }
-            
+
             i = j = 0;
             pixel = (PULONG)bits;
-            
+
             for(i=0; i<TargetBitmapInfo.bmHeight; i++)
             {
                 for(j=0; j<TargetBitmapInfo.bmWidth; j++)
@@ -228,25 +228,25 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
             }
             HeapFree(GetProcessHeap(), 0, bits);
         }
-        
+
         /* Allocate the bits */
         bits = HeapAlloc(GetProcessHeap(), 0, ShortcutBitmapInfo.bmHeight*ShortcutBitmapInfo.bmWidthBytes);
         if(!bits) goto fail;
-        
+
         ZeroMemory(buffer, sizeof(buffer));
         lpbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
         lpbmi->bmiHeader.biWidth = ShortcutBitmapInfo.bmWidth;
         lpbmi->bmiHeader.biHeight = ShortcutBitmapInfo.bmHeight;
         lpbmi->bmiHeader.biPlanes = 1;
         lpbmi->bmiHeader.biBitCount = 32;
-        
+
         if(!GetDIBits(TargetDC, ShortcutIconInfo.hbmColor, 0, ShortcutBitmapInfo.bmHeight, bits, lpbmi, DIB_RGB_COLORS))
         {
             ERR("GetBIBits failed!\n");
             HeapFree(GetProcessHeap(), 0, bits);
             goto fail;
         }
-        
+
         pixel = (PULONG)bits;
         /* Remove alpha channel component or make it totally opaque */
         for(i=0; i<ShortcutBitmapInfo.bmHeight; i++)
@@ -257,10 +257,10 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
                 else *pixel++ &= 0x00FFFFFF;
             }
         }
-        
+
         /* GetDIBits return BI_BITFIELDS with masks set to 0, and SetDIBits fails when masks are 0. The irony... */
         lpbmi->bmiHeader.biCompression = BI_RGB;
-        
+
         /* Set the bits again */
         if(!SetDIBits(TargetDC, ShortcutIconInfo.hbmColor, 0, ShortcutBitmapInfo.bmHeight, bits, lpbmi, DIB_RGB_COLORS))
         {
@@ -556,7 +556,7 @@ BOOL SIC_Initialize(void)
         ERR("Failed to create the big icon list.\n");
         goto end;
     }
-    
+
     /* Load the document icon, which is used as the default if an icon isn't found. */
     hSm = (HICON)LoadImageW(shell32_hInstance,
                             MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
@@ -592,15 +592,15 @@ BOOL SIC_Initialize(void)
         ERR("Failed to add IDI_SHELL_DOCUMENT icon to cache.\n");
         goto end;
     }
-    
+
     /* Everything went fine */
     result = TRUE;
-    
+
 end:
     /* The image list keeps a copy of the icons, we must destroy them */
     if(hSm) DestroyIcon(hSm);
     if(hLg) DestroyIcon(hLg);
-    
+
     /* Clean everything if something went wrong */
     if(!result)
     {

@@ -1,0 +1,5 @@
+ReactOS uses the following files that are not wine synced, but unique to ReactOS:
+
+1) wordpad/res/formatbar.bmp
+2) wordpad/res/toolbar.bmp
+

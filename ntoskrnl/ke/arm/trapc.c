@@ -15,6 +15,7 @@
 /* FUNCTIONS ******************************************************************/
 
 #if 0
+DECLSPEC_NORETURN
 VOID
 KiIdleLoop(VOID)
 {

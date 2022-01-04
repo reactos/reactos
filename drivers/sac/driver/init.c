@@ -32,8 +32,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                      0,
                      &HeadlessInformation,
                      &InfoSize);
-    if ((HeadlessInformation.Serial.TerminalType != HeadlessUndefinedPortType) &&
-        ((HeadlessInformation.Serial.TerminalType != HeadlessSerialPort) ||
+    if ((HeadlessInformation.PortType != HeadlessUndefinedPortType) &&
+        ((HeadlessInformation.PortType != HeadlessSerialPort) ||
          (HeadlessInformation.Serial.TerminalAttached)))
     {
         /* It is, so create the device */

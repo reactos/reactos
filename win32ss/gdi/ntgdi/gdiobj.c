@@ -253,7 +253,7 @@ InitLookasideList(UCHAR objt, ULONG cjSize)
                                    0);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitGdiHandleTable(void)
@@ -526,7 +526,10 @@ ENTRY_ReferenceEntryByHandle(HGDIOBJ hobj, FLONG fl)
 
     /* Integrity checks */
     ASSERT((pentry->FullUnique & 0x1f) == pentry->Objt);
-    ASSERT(pentry->einfo.pobj && pentry->einfo.pobj->hHmgr == hobj);
+    ASSERT(pentry->einfo.pobj != NULL);
+
+    /* Check if lower 32 bits match, the upper 32 bits are ignored */
+    ASSERT(pentry->einfo.pobj->hHmgr == UlongToPtr(PtrToUlong(hobj)));
 
     return pentry;
 }
@@ -1471,6 +1474,40 @@ GDIOBJ_ConvertToStockObj(HGDIOBJ *phObj)
 
     /* Calculate the new handle */
     pobj->hHmgr = (HGDIOBJ)((ULONG_PTR)pobj->hHmgr | GDI_HANDLE_STOCK_MASK);
+
+    /* Return the new handle */
+    *phObj = pobj->hHmgr;
+
+    /* Dereference the handle */
+    GDIOBJ_vDereferenceObject(pobj);
+
+    return TRUE;
+}
+
+BOOL
+NTAPI
+GDIOBJ_ConvertFromStockObj(HGDIOBJ *phObj)
+{
+    PENTRY pentry;
+    POBJ pobj;
+
+    /* Reference the handle entry */
+    pentry = ENTRY_ReferenceEntryByHandle(*phObj, 0);
+    if (!pentry)
+    {
+        DPRINT1("GDIOBJ: Requested handle 0x%p is not valid.\n", *phObj);
+        return FALSE;
+    }
+
+    /* Update the entry */
+    pentry->FullUnique &= ~GDI_ENTRY_STOCK_MASK;
+    pentry->ObjectOwner.ulObj = PtrToUlong(PsGetCurrentProcessId());
+
+    /* Get the pointer to the BASEOBJECT */
+    pobj = pentry->einfo.pobj;
+
+    /* Calculate the new handle */
+    pobj->hHmgr = (HGDIOBJ)((ULONG_PTR)pobj->hHmgr & ~GDI_HANDLE_STOCK_MASK);
 
     /* Return the new handle */
     *phObj = pobj->hHmgr;

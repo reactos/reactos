@@ -210,13 +210,16 @@ LsapDeleteLogonSession(IN PLUID LogonId)
     if (Session == NULL)
         return STATUS_NO_SUCH_LOGON_SESSION;
 
-    TRACE("LsapDeleteLogonSession(<0x%lx,0x%lx>)\n",
+    TRACE("LsapDeleteLogonSession(0x%08lx%08lx)\n",
           LogonId->HighPart, LogonId->LowPart);
 
     /* Tell ntoskrnl to delete the logon session */
     Status = LsapRmDeleteLogonSession(LogonId);
     if (!NT_SUCCESS(Status))
         return Status;
+
+    /* Notify the authentication packages */
+    LsapTerminateLogon(LogonId);
 
     /* Remove the session entry from the list */
     RemoveEntryList(&Session->Entry);

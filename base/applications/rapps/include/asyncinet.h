@@ -12,7 +12,7 @@ enum ASYNC_EVENT
     ASYNCINET_CANCELLED,      // wParam and lParam are not used.
                               // when receiving this, AsyncInet will be free soon and should not used anymore
 
-    ASYNCINET_ERROR           // wParam is not used. lParam specify the error code (if there is one). 
+    ASYNCINET_ERROR           // wParam is not used. lParam specify the error code (if there is one).
                               // when receiving this, AsyncInet will be free soon and should not used anymore
 };
 

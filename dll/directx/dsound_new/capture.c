@@ -84,7 +84,7 @@ HRESULT
 WINAPI
 CDirectSoundCapture_fnCreateCaptureBuffer(
     LPDIRECTSOUNDCAPTURE8 iface,
-    LPCDSCBUFFERDESC lpcDSBufferDesc, 
+    LPCDSCBUFFERDESC lpcDSBufferDesc,
     LPDIRECTSOUNDCAPTUREBUFFER *ppDSCBuffer,
     LPUNKNOWN pUnkOuter)
 {
@@ -104,7 +104,7 @@ CDirectSoundCapture_fnCreateCaptureBuffer(
     }
 
     /* check buffer description */
-    if ((lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC) && lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC1)) || 
+    if ((lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC) && lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC1)) ||
         lpcDSBufferDesc->dwReserved != 0 || lpcDSBufferDesc->dwBufferBytes == 0 || lpcDSBufferDesc->lpwfxFormat == NULL)
     {
         /* invalid buffer description */

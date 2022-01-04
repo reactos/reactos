@@ -11,10 +11,7 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 
 DWORD
 APIENTRY
-NtUserAssociateInputContext(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 {
     STUB
     return 0;
@@ -54,16 +51,12 @@ NtUserBitBltSysBmp(
    return Ret;
 }
 
-DWORD
+NTSTATUS
 APIENTRY
-NtUserBuildHimcList(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
+NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
 {
     STUB;
-    return 0;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 DWORD
@@ -353,16 +346,61 @@ NtUserSetSysColors(
    return Ret;
 }
 
-DWORD
+BOOL FASTCALL UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
+{
+    PTHREADINFO pti = GetW32ThreadInfo();
+    PTHREADINFO ptiIMC = pIMC->head.pti;
+
+    if (pti->ppi != ptiIMC->ppi) // Different process?
+        return FALSE;
+
+    switch (dwType)
+    {
+        case UIC_CLIENTIMCDATA:
+            if (pIMC->dwClientImcData)
+                return FALSE; // Already set
+
+            pIMC->dwClientImcData = dwValue;
+            break;
+
+        case UIC_IMEWINDOW:
+            if (!ValidateHwndNoErr((HWND)dwValue))
+                return FALSE; // Invalid HWND
+
+            pIMC->hImeWnd = (HWND)dwValue;
+            break;
+
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL
 APIENTRY
 NtUserUpdateInputContext(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+    HIMC hIMC,
+    DWORD dwType,
+    DWORD_PTR dwValue)
 {
-   STUB
+    PIMC pIMC;
+    BOOL ret = FALSE;
 
-   return 0;
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+        goto Quit;
+
+    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (!pIMC)
+        goto Quit;
+
+    ret = UserUpdateInputContext(pIMC, dwType, dwValue);
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 DWORD
@@ -423,22 +461,66 @@ NtUserYieldTask(VOID)
    return 0;
 }
 
-DWORD
-APIENTRY
-NtUserCreateInputContext(
-    DWORD dwUnknown1)
+PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
 {
-    STUB;
-    return 0;
+    PIMC pIMC;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    PDESKTOP pdesk = pti->rpdesk;
+
+    if (!IS_IMM_MODE() || (pti->TIF_flags & TIF_DISABLEIME)) // Disabled?
+        return NULL;
+
+    if (!pdesk) // No desktop?
+        return NULL;
+
+    // pti->spDefaultImc should be already set if non-first time.
+    if (dwClientImcData && !pti->spDefaultImc)
+        return NULL;
+
+    // Create an input context user object.
+    pIMC = UserCreateObject(gHandleTable, pdesk, pti, NULL, TYPE_INPUTCONTEXT, sizeof(IMC));
+    if (!pIMC)
+        return NULL;
+
+    if (dwClientImcData) // Non-first time.
+    {
+        // Insert pIMC to the second position (non-default) of the list.
+        pIMC->pImcNext = pti->spDefaultImc->pImcNext;
+        pti->spDefaultImc->pImcNext = pIMC;
+    }
+    else // First time. It's the default IMC.
+    {
+        // Add the first one (default) to the list.
+        pti->spDefaultImc = pIMC;
+        pIMC->pImcNext = NULL;
+    }
+
+    pIMC->dwClientImcData = dwClientImcData; // Set it.
+    return pIMC;
 }
 
-DWORD
+HIMC
 APIENTRY
-NtUserDestroyInputContext(
-    DWORD dwUnknown1)
+NtUserCreateInputContext(ULONG_PTR dwClientImcData)
 {
-    STUB;
-    return 0;
+    PIMC pIMC;
+    HIMC ret = NULL;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE() || !dwClientImcData)
+        goto Quit;
+
+    pIMC = UserCreateInputContext(dwClientImcData);
+    if (pIMC)
+    {
+        ret = UserHMGetHandle(pIMC);
+        UserDereferenceObject(pIMC);
+    }
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 DWORD
@@ -537,8 +619,8 @@ NtUserProcessConnect(
 
     TRACE("NtUserProcessConnect\n");
 
-    if ( pUserConnect == NULL ||
-         Size         != sizeof(*pUserConnect) )
+    if (pUserConnect == NULL ||
+        Size != sizeof(*pUserConnect))
     {
         return STATUS_UNSUCCESSFUL;
     }
@@ -559,14 +641,51 @@ NtUserProcessConnect(
 
     _SEH2_TRY
     {
+        UINT i;
+
         // FIXME: Check that pUserConnect->ulVersion == USER_VERSION;
+        // FIXME: Check the value of pUserConnect->dwDispatchCount.
 
         ProbeForWrite(pUserConnect, sizeof(*pUserConnect), sizeof(PVOID));
-        pUserConnect->siClient.psi = gpsi;
-        pUserConnect->siClient.aheList = gHandleTable;
+
+        // FIXME: Instead of assuming that the mapping of the heap desktop
+        // also holds there, we **MUST** create and map instead the shared
+        // section! Its client base must be stored in W32Process->pClientBase.
+        // What is currently done (ReactOS-specific only), is that within the
+        // IntUserHeapCommitRoutine()/MapGlobalUserHeap() routines we assume
+        // it's going to be also called early, so that we manually add a very
+        // first memory mapping that corresponds to the "global user heap",
+        // and that we use instead of a actual win32 "shared USER section"
+        // (see slide 29 of https://paper.bobylive.com/Meeting_Papers/BlackHat/USA-2011/BH_US_11_Mandt_win32k_Slides.pdf )
+
         pUserConnect->siClient.ulSharedDelta =
             (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
             (ULONG_PTR)W32Process->HeapMappings.UserMapping;
+
+#define SERVER_TO_CLIENT(ptr) \
+    ((PVOID)((ULONG_PTR)ptr - pUserConnect->siClient.ulSharedDelta))
+
+        ASSERT(gpsi);
+        ASSERT(gHandleTable);
+
+        pUserConnect->siClient.psi       = SERVER_TO_CLIENT(gpsi);
+        pUserConnect->siClient.aheList   = SERVER_TO_CLIENT(gHandleTable);
+        pUserConnect->siClient.pDispInfo = NULL;
+
+        // NOTE: kernel server should also have a SHAREDINFO gSharedInfo;
+        // FIXME: These USER window-proc data should be used somehow!
+
+        pUserConnect->siClient.DefWindowMsgs.maxMsgs     = 0;
+        pUserConnect->siClient.DefWindowMsgs.abMsgs      = NULL;
+        pUserConnect->siClient.DefWindowSpecMsgs.maxMsgs = 0;
+        pUserConnect->siClient.DefWindowSpecMsgs.abMsgs  = NULL;
+
+        for (i = 0; i < ARRAYSIZE(pUserConnect->siClient.awmControl); ++i)
+        {
+            pUserConnect->siClient.awmControl[i].maxMsgs = 0;
+            pUserConnect->siClient.awmControl[i].abMsgs  = NULL;
+        }
+#undef SERVER_TO_CLIENT
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -627,14 +746,51 @@ Quit:
     return Status;
 }
 
-DWORD
+DWORD_PTR
 APIENTRY
 NtUserQueryInputContext(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+    HIMC hIMC,
+    DWORD dwType)
 {
-    STUB;
-    return 0;
+    PIMC pIMC;
+    PTHREADINFO ptiIMC;
+    DWORD_PTR ret = 0;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+        goto Quit;
+
+    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (!pIMC)
+        goto Quit;
+
+    ptiIMC = pIMC->head.pti;
+
+    switch (dwType)
+    {
+        case QIC_INPUTPROCESSID:
+            ret = (DWORD_PTR)PsGetThreadProcessId(ptiIMC->pEThread);
+            break;
+
+        case QIC_INPUTTHREADID:
+            ret = (DWORD_PTR)PsGetThreadId(ptiIMC->pEThread);
+            break;
+
+        case QIC_DEFAULTWINDOWIME:
+            if (ptiIMC->spwndDefaultIme)
+                ret = (DWORD_PTR)UserHMGetHandle(ptiIMC->spwndDefaultIme);
+            break;
+
+        case QIC_DEFAULTIMC:
+            if (ptiIMC->spDefaultImc)
+                ret = (DWORD_PTR)UserHMGetHandle(ptiIMC->spDefaultImc);
+            break;
+    }
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 BOOL
@@ -866,9 +1022,7 @@ Quit:
 
 DWORD
 APIENTRY
-NtUserSetThreadLayoutHandles(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
 {
     STUB;
     return 0;

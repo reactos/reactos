@@ -1,0 +1,89 @@
+/* Hungarian translation by Tibor Lajos Füzi (2020) */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Számítógépnév"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT "A ReactOS az alábbi információkat használja a számítógép azonosítására a hálózaton.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "Számítógép leírása:", IDC_STATIC, 7, 40, 90, 9
+    EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "A számítógép teljes neve:", IDC_STATIC, 7, 68, 87, 9
+    EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Munkacsoport:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
+    EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Ha szeretné használni a Hálózati azonosító varázslót tartományhoz csatlakozáshoz és egy helyi felhasználói fiók létrehozásához, kattintson a ""Hálózati azonosító"" gombra.", IDC_STATIC, 7, 113, 165, 32
+    PUSHBUTTON "&Hálózati azonosító", IDC_NETWORK_ID, 176, 114, 72, 15
+    LTEXT "A számítógép átnevezéséhez vagy tartományhoz csatlakozáshoz kattintson a Módosítás gombra.", IDC_STATIC, 7, 149, 170, 17
+    PUSHBUTTON "&Módosítás...", IDC_NETWORK_PROPERTY, 176, 149, 72, 15
+    LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
+    ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
+    LTEXT "A módosítások a számítógép újraindítása után lépnek érvénybe.", IDC_RESTARTTEXT, 25, 195, 215, 8
+END
+
+IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Számítógép nevének módosítása"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "(ide jön az üzenet)", 1017, 7, 5, 218, 30
+    LTEXT "&Számítógépnév:", -1, 7, 41, 219, 8
+    EDITTEXT 1002, 7, 53, 218, 14, ES_AUTOHSCROLL | ES_OEMCONVERT
+    LTEXT "Számítógép teljes neve:", 1016, 7, 72, 218, 10
+    EDITTEXT 1001, 7, 82, 219, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    PUSHBUTTON "&Részletek...", 1003, 150, 102, 75, 14
+    GROUPBOX "Tagság", 1018, 7, 119, 219, 73
+    AUTORADIOBUTTON "&Tartomány:", 1008, 17, 132, 192, 10, WS_GROUP
+    AUTORADIOBUTTON "&Munkacsoport:", 1004, 17, 161, 191, 10
+    EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
+    PUSHBUTTON "&Saját tartomány keresése", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
+    DEFPUSHBUTTON "OK", 1, 121, 203, 50, 14, WS_GROUP
+    PUSHBUTTON "Mégse", 2, 176, 203, 50, 14
+END
+
+IDD_PROPPAGEDNSANDNETBIOS DIALOGEX 0, 0, 266, 125
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "DNS-utótag és NetBIOS számítógépnév"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&A számítógép elsődleges DNS-utótagja:", -1, 7, 5, 253, 8
+    EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
+    AUTOCHECKBOX "&Elsődleges DNS-utótag módosítása, ha megváltozik a tartomány tagság.", 115, 11, 39, 250, 10
+    LTEXT "&NetBIOS számítógépnév:", -1, 7, 57, 148, 8
+    EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
+    DEFPUSHBUTTON "OK", 1, 153, 104, 50, 14
+    PUSHBUTTON "Mégse", 2, 209, 104, 50, 14
+    LTEXT "Ez a név a régebbi számítógépekkel és szolgáltatásokkal való együttműködéshez szükséges.", 13, 7, 88, 253, 16
+END
+
+STRINGTABLE
+BEGIN
+    1 "* Ismeretlen *"
+    2 "MUNKACSOPORT"
+    3 "A következő hiba történt a tartomány tagsági információk olvasása közben:"
+    4 "Számítógépnév megváltoztatása"
+    5 "Munkacsoport:"
+    6 "Tartomány:"
+    7 "A(z) ""%1"" tartománynév nem felel meg a hivatalos Internet Domain Name Service specifikációinak, jóllehet a ReactOS megengedi. A nem standard nevekhez ReactOS DNS szervert kell használnia."
+    8 "A(z) ""%1"" tartománynév nincs megfelelően formázva. A tartományokat ponttal (.) kell elválasztani. Minden tartomány maximum 63 karakter hosszú lehet. Például: domain-1.reactos.org."
+    10 "A számítógép új neve (""%1"") túl hosszú. A név nem lehet 63 karakternél hosszabb."
+    11 "A számítógép új neve nincs megfelelően formázva. A szabvány nevek csak betűket (a-z, A-Z), számokat (0-9) és kötőjeleket (-) tartalmazhatnak, szóközöket és pontokat (.) nem. A név nem állhat csak számokból."
+    22 "Üdvözöljük a(z) %1 munkacsoportban."
+    23 "Üdvözöljük a(z) %1 tartományban."
+    24 "A változtatások életbe lépéséhez újra kell indítania a számítógépet."
+    25 "Megváltoztathatja a számítógép nevét és a hovatartozását. A változtatások befolyásolhatják a hálózati erőforrásokhoz való hozzáférést."
+    1021 "Megjegyzés: Csak rendszergazdák módosíthatják a számítógép azonosítóját."
+    1022 "Megjegyzés: A számítógép azonosítóját nem lehet megváltoztatni az alábbi ok miatt:"
+    1029 "A számítógép új neve (""%1"") egy szám. A név nem lehet szám."
+    1030 "A számítógép új neve (""%1"") nem megengedett karaktereket tartalmaz. Az alábbi karakterek nem engedélyezettek: ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / és ?"
+    1031 "A tartománynév első tartománya (""%1"") egy szám. Az első tartomány nem lehet szám."
+    1032 "A tartománynév (""%1"") nem megengedett karaktereket tartalmaz. A szabványos DNS nevek csak betűket (a-z, A-Z), számokat (0-9) és kötőjeleket tartalmazatnak, de szóközöket nem. A pontok (.) a tartományok elválasztására szolgálnak. Például: domain-1.reactos.org."
+    3210 "&Részletek >>"
+    3220 "<< &Részletek"
+    4000 "Információ"
+    4001 "Nem lehet beállítani az új számítógépnevet!"
+END

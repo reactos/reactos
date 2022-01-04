@@ -5,7 +5,7 @@
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>
  */
 
- 
+
 #ifndef _KMTEST_MMMAPLOCKEDPAGESSPECIFYCACHE_H_
 #define _KMTEST_MMMAPLOCKEDPAGESSPECIFYCACHE_H_
 

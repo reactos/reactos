@@ -69,7 +69,7 @@ int SYNTH_NAME(real *bandPtr,int channel, mpg123_handle *fr, int final)
 	SAMPLE_T *samples = (SAMPLE_T *) (fr->buffer.data + fr->buffer.fill);
 
 	real *b0, **buf; /* (*buf)[0x110]; */
-	int clip = 0; 
+	int clip = 0;
 	int bo1;
 	int ntom;
 #ifndef NO_EQUALIZER

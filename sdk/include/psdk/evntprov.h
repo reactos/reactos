@@ -173,7 +173,7 @@ EventWriteEx(
   _In_reads_opt_(UserDataCount) PEVENT_DATA_DESCRIPTOR UserData);
 #endif
 
-#endif // _ETW_KM_ 
+#endif // _ETW_KM_
 
 FORCEINLINE
 VOID

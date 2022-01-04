@@ -26,16 +26,6 @@ static NTSTATUS NTAPI PciPowerControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
 static DRIVER_DISPATCH PciPnpControl;
 static NTSTATUS NTAPI PciPnpControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
-
-#ifdef  ALLOC_PRAGMA
-
-// Make the initialization routines discardable, so that they
-// don't waste space
-
-#pragma  alloc_text(INIT, DriverEntry)
-
-#endif  /*  ALLOC_PRAGMA  */
-
 /*** PUBLIC ******************************************************************/
 
 PPCI_DRIVER_EXTENSION DriverExtension = NULL;
@@ -204,6 +194,7 @@ PciUnload(
     UNREFERENCED_PARAMETER(DriverObject);
 }
 
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(

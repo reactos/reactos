@@ -25,12 +25,15 @@ struct lwip_callback_msg
 {
     /* Synchronization */
     KEVENT Event;
-    
+
     /* Input */
     union {
         struct {
             PVOID Arg;
         } Socket;
+        struct {
+            struct tcp_pcb* pcb;
+        } FreeSocket;
         struct {
             PCONNECTION_ENDPOINT Connection;
             struct ip_addr *IpAddress;
@@ -60,7 +63,7 @@ struct lwip_callback_msg
             int Callback;
         } Close;
     } Input;
-    
+
     /* Output */
     union {
         struct {
@@ -99,6 +102,7 @@ extern void TCPRecvEventHandler(void *arg);
 
 /* TCP functions */
 PTCP_PCB    LibTCPSocket(void *arg);
+VOID        LibTCPFreeSocket(PTCP_PCB pcb);
 err_t       LibTCPBind(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const u16_t port);
 PTCP_PCB    LibTCPListen(PCONNECTION_ENDPOINT Connection, const u8_t backlog);
 err_t       LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, u32_t *sent, const int safe);

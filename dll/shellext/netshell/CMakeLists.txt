@@ -1,20 +1,8 @@
 
 project(SHELL)
 
-set_cpp(WITH_RUNTIME)
-
-if(NOT MSVC)
-    # HACK: this should be enabled globally!
-    add_compile_flags_language("-std=c++11 -Wshadow" "CXX")
-endif()
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-
-add_definitions(
-    -D_ATL_NO_EXCEPTIONS)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 add_definitions(-D_NETSHELL_)
 spec2def(netshell.dll netshell.spec)
@@ -41,7 +29,7 @@ add_library(netshell MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
 
 set_module_type(netshell win32dll UNICODE)
-target_link_libraries(netshell uuid wine)
+target_link_libraries(netshell uuid wine cpprt atl_classes)
 add_delay_importlibs(netshell ole32 oleaut32 shlwapi shell32)
 add_importlibs(netshell version iphlpapi gdi32 user32 advapi32 setupapi ws2_32 comctl32 msvcrt kernel32 ntdll)
 add_pch(netshell precomp.h "${PCH_SKIP_SOURCE}")

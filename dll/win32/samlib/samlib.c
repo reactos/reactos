@@ -75,7 +75,28 @@ PSAMPR_SERVER_NAME_bind(PSAMPR_SERVER_NAME pszSystemName)
     LPWSTR pszStringBinding;
     RPC_STATUS status;
 
-    TRACE("PSAMPR_SERVER_NAME_bind() called\n");
+    TRACE("PSAMPR_SERVER_NAME_bind(%S)\n", pszSystemName);
+
+    /* Check the server name prefix and server name length */
+    if (pszSystemName != NULL)
+    {
+        int nLength = wcslen(pszSystemName);
+        int nNameLength = nLength;
+
+        if (nLength >= 1 && pszSystemName[0] == L'\\')
+            nNameLength--;
+
+        if (nLength >= 2 && pszSystemName[1] == L'\\')
+            nNameLength--;
+
+        if (((nLength - nNameLength != 0) &&
+             (nLength - nNameLength != 2)) ||
+            (nNameLength == 0))
+        {
+            WARN("Invalid server name %S", pszSystemName);
+            RpcRaiseException(STATUS_OBJECT_NAME_INVALID);
+        }
+    }
 
     status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
@@ -113,7 +134,7 @@ PSAMPR_SERVER_NAME_unbind(PSAMPR_SERVER_NAME pszSystemName,
 {
     RPC_STATUS status;
 
-    TRACE("PSAMPR_SERVER_NAME_unbind() called\n");
+    TRACE("PSAMPR_SERVER_NAME_unbind(%S)\n", pszSystemName);
 
     status = RpcBindingFree(&hBinding);
     if (status)
@@ -134,7 +155,7 @@ SampCheckPassword(IN SAMPR_HANDLE UserHandle,
     ULONG Upper = 0, Lower = 0, Digit = 0, Punct = 0, Alpha = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    TRACE("(%p %p)\n", UserHandle, Password);
+    TRACE("SampCheckPassword(%p %p)\n", UserHandle, Password);
 
     /* Get the domain password information */
     Status = SamrGetUserDomainPasswordInformation(UserHandle,
@@ -500,14 +521,26 @@ SamConnect(IN OUT PUNICODE_STRING ServerName OPTIONAL,
            IN ACCESS_MASK DesiredAccess,
            IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
+    PSAMPR_SERVER_NAME pServerName = NULL;
     NTSTATUS Status;
 
     TRACE("SamConnect(%p %p 0x%08x %p)\n",
           ServerName, ServerHandle, DesiredAccess, ObjectAttributes);
 
+    if (ServerName != NULL && ServerName->Length > 0 && ServerName->Buffer != NULL)
+    {
+        /* Create a zero-terminated server name */
+        pServerName = midl_user_allocate(ServerName->Length + sizeof(WCHAR));
+        if (pServerName == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        CopyMemory(pServerName, ServerName->Buffer, ServerName->Length);
+        pServerName[ServerName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
     RpcTryExcept
     {
-        Status = SamrConnect((PSAMPR_SERVER_NAME)ServerName,
+        Status = SamrConnect(pServerName,
                              (SAMPR_HANDLE *)ServerHandle,
                              DesiredAccess);
     }
@@ -516,6 +549,9 @@ SamConnect(IN OUT PUNICODE_STRING ServerName OPTIONAL,
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    if (pServerName)
+        midl_user_free(pServerName);
 
     return Status;
 }
@@ -1009,7 +1045,7 @@ NTAPI
 SamGetCompatibilityMode(IN SAM_HANDLE ObjectHandle,
                         OUT PULONG Mode)
 {
-    TRACE("(%p %p)\n", ObjectHandle, Mode);
+    TRACE("SamGetCompatibilityMode(%p %p)\n", ObjectHandle, Mode);
 
     if (Mode == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1029,7 +1065,7 @@ SamGetDisplayEnumerationIndex(IN SAM_HANDLE DomainHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p %lu %wZ %p)\n",
+    TRACE("SamGetDisplayEnumerationIndex(%p %lu %wZ %p)\n",
            DomainHandle, DisplayInformation, Prefix, Index);
 
     if ((Prefix == NULL) ||
@@ -1538,7 +1574,7 @@ SamQueryDisplayInformation(IN SAM_HANDLE DomainHandle,
     SAMPR_DISPLAY_INFO_BUFFER LocalBuffer;
     NTSTATUS Status;
 
-    TRACE("(%p %lu %lu %lu %lu %p %p %p %p)\n",
+    TRACE("SamQueryDisplayInformation(%p %lu %lu %lu %lu %p %p %p %p)\n",
           DomainHandle, DisplayInformation, Index, EntryCount,
           PreferredMaximumLength, TotalAvailable, TotalReturned,
           ReturnedEntryCount, SortedBuffer);
@@ -2252,7 +2288,7 @@ SamShutdownSamServer(IN SAM_HANDLE ServerHandle)
 {
     NTSTATUS Status;
 
-    TRACE("(%p)\n", ServerHandle);
+    TRACE("SamShutdownSamServer(%p)\n", ServerHandle);
 
     RpcTryExcept
     {

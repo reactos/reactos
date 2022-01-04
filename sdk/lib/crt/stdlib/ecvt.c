@@ -19,7 +19,7 @@ _ecvt (double value, int ndigits, int *decpt, int *sign)
   char *cvtbuf, *s, *d;
 
   if (ndigits < 0) ndigits = 0;
-  s = cvtbuf = (char*)malloc(ndigits + NUMBER_EFMT); 
+  s = cvtbuf = (char*)malloc(ndigits + NUMBER_EFMT);
   d = ecvtbuf;
 
   *sign = 0;
@@ -40,7 +40,7 @@ _ecvt (double value, int ndigits, int *decpt, int *sign)
   {
     memcpy(ecvtbuf, s, 5);
   }
-  else 
+  else
   {
     /* Set the sign */
     if (*s && *s == '-')

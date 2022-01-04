@@ -20,12 +20,11 @@ list(APPEND SOURCE
     table.c
     wbemlocator.c)
 
+BISON_TARGET(wql wql.y ${CMAKE_CURRENT_BINARY_DIR}/wql.tab.c COMPILE_FLAGS "-p wql_")
+
 list(APPEND PCH_SKIP_SOURCE
     guid.c
-    wql.tab.c)
-
-# wql.tab.c has been generated with relative file paths...
-set_source_files_properties(wql.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
+    ${BISON_wql_OUTPUTS})
 
 add_library(wbemprox MODULE
     ${SOURCE}

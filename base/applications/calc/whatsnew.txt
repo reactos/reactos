@@ -133,7 +133,7 @@
 * "DOT" function can be used for starting a number (integer part will be zero).
 * Added repeat function.
 * If the number is greater than maximum resolution, it will be displayed with exponential notation.
-* Removed mouse and keyboard focuses from displayed buttons. 
+* Removed mouse and keyboard focuses from displayed buttons.
 * Added normal and small icons.
 
 1.00 (20070323)

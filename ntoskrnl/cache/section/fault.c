@@ -82,6 +82,8 @@ rmaps, so each mapping should be immediately followed by an rmap addition.
 #define DPRINTC DPRINT
 
 extern KEVENT MmWaitPageEvent;
+
+#ifdef NEWCC
 extern PMMWSL MmWorkingSetList;
 
 /*
@@ -150,6 +152,7 @@ MmNotPresentFaultCachePage (
 
     if (Segment->FileObject)
     {
+        __debugbreak();
         DPRINT("FileName %wZ\n", &Segment->FileObject->FileName);
     }
 
@@ -453,9 +456,11 @@ MiCowCacheSectionPage (
     DPRINT("Address 0x%p\n", Address);
     return STATUS_SUCCESS;
 }
+#endif
 
 KEVENT MmWaitPageEvent;
 
+#ifdef NEWCC
 typedef struct _WORK_QUEUE_WITH_CONTEXT
 {
     WORK_QUEUE_ITEM WorkItem;
@@ -960,3 +965,4 @@ MmNotPresentFaultCacheSection(KPROCESSOR_MODE Mode,
 
     return Status;
 }
+#endif

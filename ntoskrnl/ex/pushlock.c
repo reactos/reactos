@@ -39,7 +39,7 @@ ULONG ExPushLockSpinCount = 0;
  * @remarks The ExpInitializePushLocks routine sets up the spin on SMP machines.
  *
  *--*/
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpInitializePushLocks(VOID)

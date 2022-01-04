@@ -19,7 +19,7 @@ ReadIrpCancel(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PNDISUIO_ADAPTER_CONTEXT AdapterContext = IrpSp->FileObject->FsContext;
     PNDISUIO_PACKET_ENTRY PacketEntry;
-    
+
     /* Release the cancel spin lock */
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
@@ -28,11 +28,11 @@ ReadIrpCancel(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     if (PacketEntry)
     {
         PacketEntry->PacketLength = 0;
-        
+
         ExInterlockedInsertHeadList(&AdapterContext->PacketList,
                                     &PacketEntry->ListEntry,
                                     &AdapterContext->Spinlock);
-        
+
         KeSetEvent(&AdapterContext->PacketReadEvent, IO_NO_INCREMENT, FALSE);
     }
 }
@@ -58,7 +58,7 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
         Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        
+
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -73,7 +73,7 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        
+
         return STATUS_SUCCESS;
     }
     IoReleaseCancelSpinLock(OldCancelIrql);
@@ -109,20 +109,20 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
             IoAcquireCancelSpinLock(&OldCancelIrql);
             IoSetCancelRoutine(Irp, NULL);
             IoReleaseCancelSpinLock(OldCancelIrql);
-            
+
             /* Remove the first packet in the list */
             ListEntry = RemoveHeadList(&AdapterContext->PacketList);
             PacketEntry = CONTAINING_RECORD(ListEntry, NDISUIO_PACKET_ENTRY, ListEntry);
 
             /* Release the adapter lock */
             KeReleaseSpinLock(&AdapterContext->Spinlock, OldIrql);
-            
+
             /* And we're done with this loop */
             Status = STATUS_SUCCESS;
             break;
         }
     }
-    
+
     /* Check if we got a packet */
     if (PacketEntry != NULL)
     {
@@ -135,7 +135,7 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
                       &PacketEntry->PacketData[0],
                       BytesCopied);
-        
+
         /* Free the packet entry */
         ExFreePool(PacketEntry);
     }
@@ -149,7 +149,7 @@ NduDispatchRead(PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = BytesCopied;
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-    
+
     return Status;
 }
 
@@ -165,7 +165,7 @@ NduDispatchWrite(PDEVICE_OBJECT DeviceObject,
     ULONG BytesCopied = 0;
 
     ASSERT(DeviceObject == GlobalDeviceObject);
-    
+
     /* Create a packet and buffer descriptor for this user buffer */
     Packet = CreatePacketFromPoolBuffer(AdapterContext,
                                         Irp->AssociatedIrp.SystemBuffer,

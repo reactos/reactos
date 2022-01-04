@@ -831,7 +831,7 @@ ConResPrintf(
  *     Similarly to ConPuts(), no terminating new-line character is appended.
  *
  * @see ConPuts(), ConResPuts() and associated functions,
- *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
+ *      <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage() (on MSDN)</a>
  **/
 INT
 ConMsgPuts(
@@ -846,7 +846,7 @@ ConMsgPuts(
     LPWSTR lpMsgBuf = NULL;
 
     /*
-     * Sanitize dwFlags. This version always ignore explicitely the inserts
+     * Sanitize dwFlags. This version always ignores explicitly the inserts
      * as we emulate the behaviour of the (f)puts function.
      */
     dwFlags |= FORMAT_MESSAGE_ALLOCATE_BUFFER; // Always allocate an internal buffer.
@@ -919,7 +919,7 @@ ConMsgPrintf2V(
     LPWSTR lpMsgBuf = NULL;
 
     /*
-     * Sanitize dwFlags. This version always ignore explicitely the inserts.
+     * Sanitize dwFlags. This version always ignores explicitly the inserts.
      * The string that we will return to the user will not be pre-formatted.
      */
     dwFlags |= FORMAT_MESSAGE_ALLOCATE_BUFFER; // Always allocate an internal buffer.
@@ -1024,7 +1024,7 @@ ConMsgPrintf2V(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintf(),
- *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
+ *      <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage() (on MSDN)</a>
  **/
 INT
 ConMsgPrintfV(
@@ -1123,7 +1123,7 @@ ConMsgPrintfV(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintfV(),
- *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
+ *      <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage() (on MSDN)</a>
  **/
 INT
 __cdecl
@@ -1212,7 +1212,7 @@ ConMsgPrintf(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintf(),
- *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
+ *      <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage() (on MSDN)</a>
  **/
 INT
 ConResMsgPrintfExV(
@@ -1323,7 +1323,7 @@ ConResMsgPrintfExV(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintf(),
- *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
+ *      <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage() (on MSDN)</a>
  **/
 INT
 ConResMsgPrintfV(
@@ -1387,7 +1387,7 @@ ConResMsgPrintfV(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintf(),
- *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
+ *      <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage() (on MSDN)</a>
  **/
 INT
 __cdecl
@@ -1454,7 +1454,7 @@ ConResMsgPrintfEx(
  *     Numbers of characters successfully written to @p Stream.
  *
  * @see ConPrintf(), ConResPrintf() and associated functions, ConMsgPrintf(),
- *      <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx">FormatMessage() (on MSDN)</a>
+ *      <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage() (on MSDN)</a>
  **/
 INT
 __cdecl

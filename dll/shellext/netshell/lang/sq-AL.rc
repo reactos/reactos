@@ -115,7 +115,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Do you want this computer to be a member of a domain?\n\
 (You can obtain this information from your network administrator.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "No, this computer will be part of a workgroup.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "No, this computer will be part of a workgroup instead.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Yes, this computer will be part of a domain.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Workgroup or Domain Name:", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL

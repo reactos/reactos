@@ -43,8 +43,6 @@ __do_global_ctors (void)
     {
       __CTOR_LIST__[i] ();
     }
-
-  atexit (__do_global_dtors);
 }
 
 static int initialized = 0;

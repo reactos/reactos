@@ -1,6 +1,4 @@
 
-set_cpp(WITH_EXCEPTIONS)
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/crt/include
     ${REACTOS_SOURCE_DIR}/sdk/include/c++)
@@ -21,4 +19,5 @@ elseif(ARCH STREQUAL "arm")
 endif()
 
 add_library(cpprt ${SOURCE} ${cpprt_asm})
+set_target_cpp_properties(cpprt WITH_EXCEPTIONS)
 add_dependencies(cpprt xdk)

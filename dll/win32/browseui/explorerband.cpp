@@ -82,7 +82,7 @@ HRESULT GetDisplayName(LPCITEMIDLIST pidlDirectory,TCHAR *szDisplayName,UINT cch
 }
 
 /*
- This is a Windows hack, because shell event messages in Windows gives an 
+ This is a Windows hack, because shell event messages in Windows gives an
  ill-formed PIDL stripped from useful data that parses incorrectly with SHGetFileInfo.
  So we need to re-enumerate subfolders until we find one with the same name.
  */
@@ -348,7 +348,7 @@ BOOL CExplorerBand::OnTreeItemDeleted(LPNMTREEVIEW pnmtv)
     /* Destroy memory associated to our node */
     NodeInfo* ptr = GetNodeInfo(pnmtv->itemNew.hItem);
     if (ptr)
-    {    
+    {
         ILFree(ptr->relativePidl);
         ILFree(ptr->absolutePidl);
         delete ptr;
@@ -776,7 +776,7 @@ BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExp
             // Try to get a child
             tmp = TreeView_GetChild(m_hWnd, current);
             if (tmp)
-            { 
+            {
                 // We have a child, let's continue with it
                 parent = current;
                 current = tmp;
@@ -820,7 +820,7 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
     CComPtr<IBrowserService>            pBrowserService;
     HRESULT                             hr;
     HTREEITEM                           dummy;
-    BOOL                                result; 
+    BOOL                                result;
     explorerPidl = NULL;
 
     hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &pBrowserService));

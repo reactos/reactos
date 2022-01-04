@@ -10,7 +10,7 @@
 * Module: User-mode applications (User mode execution only)
 *
 * Description:
-*   
+*
 *
 * Author: Alter
 *
@@ -61,7 +61,7 @@
 #ifndef CDRW_W32
 #define UDF_DBG
 #endif //CDRW_W32
-#endif 
+#endif
 
 #define ERESEOURCE        ULONG
 #define PERESEOURCE       PULONG
@@ -268,7 +268,7 @@ SkinPrintf(
 
   #ifdef USE_AD_PRINT
     #define AdPrint(_x_) {DbgPrint("Thrd:%x:",PsGetCurrentThread());DbgPrint _x_;}
-  #else 
+  #else
     #define AdPrint(_x_) {NOTHING;}
   #endif
 
@@ -411,9 +411,9 @@ typedef ANSI_STRING *PANSI_STRING;
 #endif //NT_NATIVE_MODE
 
 typedef struct _DEVICE_OBJECT {
-    
+
 #ifndef LIBUDF
-    
+
     HANDLE h;
     PVOID  DeviceExtension;
     ULONG  Flags;
@@ -445,7 +445,7 @@ typedef ULONG PDEVICE_OBJECT;
 
 typedef struct _PACKET {
     // Node Identifier
-//  UDFIdentifier               NodeIdentifier; 
+//  UDFIdentifier               NodeIdentifier;
     // Pointer to the buffer (in non-paged pool)
     PCHAR           buffer;
     // Offset, from which this data was read
@@ -486,7 +486,7 @@ MyRtlCompareMemory(
 
 /*#define RtlCompareUnicodeString(s1,s2,cs) \
  (((s1)->Length == (s2)->Length) && \
-  (RtlCompareMemory(s1,s2,(s1)->Length))) 
+  (RtlCompareMemory(s1,s2,(s1)->Length)))
 */
 #ifndef CDRW_W32
 #ifdef _X86_
@@ -654,9 +654,9 @@ NTSTATUS inline ExInitializeResourceLite(PULONG res)
 #ifndef CDRW_W32
 
 #define UDFAcquireResourceExclusive(Resource,CanWait)  \
-    ExAcquireResourceExclusiveLite((Resource),(CanWait)) 
+    ExAcquireResourceExclusiveLite((Resource),(CanWait))
 #define UDFAcquireResourceShared(Resource,CanWait) \
-    ExAcquireResourceSharedLite((Resource),(CanWait)) 
+    ExAcquireResourceSharedLite((Resource),(CanWait))
 // a convenient macro (must be invoked in the context of the thread that acquired the resource)
 #define UDFReleaseResource(Resource)    \
     ExReleaseResourceForThreadLite((Resource), ExGetCurrentResourceThread())

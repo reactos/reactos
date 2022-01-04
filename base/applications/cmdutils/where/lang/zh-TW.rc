@@ -1,0 +1,55 @@
+/*
+ * PROJECT:     ReactOS WHERE command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "用法: WHERE [選項] pattern...\n\
+\n\
+描述:\n\
+    顯示符合指定的搜尋模式的檔案位置。\n\
+    預設情況下，本工具會按照指定的搜尋模式\n\
+	和 PATH 環境變數所指定的路徑搜尋。\n\
+\n\
+選項:\n\
+  /F       將所有符合的檔案名稱以雙括號顯示。\n\
+  /Q       啟用安靜模式。不顯示任何檔案和訊息。\n\
+  /R dir   從指定的目錄開始搜尋，並進行遞迴搜尋。\n\
+  /T       顯示所有符合的檔案的大小和上次修改日期。\n\
+  pattern  指定檔案的搜尋模式。模式中可以使用萬用字元 * 和 ?。\n\
+           同時亦可以指定 ""$env:pattern"" and ""path:pattern"" 格式。\n\
+           ""env"" 是環境變數，搜尋將於指定的 ""env"" 環境變數中執行。\n\
+           這些格式不能與 /R 同時使用。\n\
+		   搜尋亦可以藉由將 PATHEXT 變數的副檔名附加到搜尋模式來執行。\n\
+  /?       顯示這個訊息。\n\
+\n\
+注意: 如果搜尋成功，工具傳回的錯誤等級將為 0，否則將為 1，\n\
+      如果搜尋出現錯誤，錯誤等級將為 2。\n\
+\n\
+示例:\n\
+    WHERE myfile*.exe\n\
+    WHERE /F /T mspaint\n\
+    WHERE $WINDIR:notepad myfile???\n\
+    WHERE C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
+    WHERE /R ""C:\\Program Files"" *.dll\n"
+
+    IDS_BAD_ARG "錯誤: 無效的引數 - '%ls'.\n"
+    IDS_NOT_FOUND "資訊: 無法從指定的模式搜尋檔案。\n"
+    IDS_FILE_INFO "%10I64u  %-12ls %-12ls %ls\n"
+    IDS_WANT_VALUE "錯誤: '%ls' 需要至少一個值。\n"
+    IDS_TYPE_HELP "輸入 ""WHERE /?"" 來取得說明訊息。\n"
+    IDS_ENVPAT_WITH_R "錯誤: ""$env:pattern"" 格式無法與 /R 同時使用。\n"
+    IDS_PATHPAT_WITH_R "錯誤: ""path:pattern"" 格式無法與 /R 同時使用。\n"
+    IDS_BAD_PATHPAT "錯誤:  ""path:pattern"" 中指定了無效的模式。\n"
+    IDS_OUTOFMEMORY "錯誤: 記憶體不足。\n"
+    IDS_BAD_ENVVAR "錯誤: 找不到環境變數 ""%ls""。\n"
+    IDS_CANT_FOUND "錯誤: 系統找不到指定的檔案。\n"
+    IDS_BAD_DIR "錯誤: 指定了無效的目錄。\n"
+    IDS_BAD_NAME "錯誤: 錯誤的檔案名稱、目錄名稱或磁碟區標籤。\n"
+    IDS_TOO_MANY "錯誤: 選項 '%ls' 不允許使用多於 '%u' 次。\n"
+END

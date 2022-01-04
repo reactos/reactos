@@ -135,7 +135,7 @@ dwarflookupnameinunit(Dwarf *d, ulong unit, char *name, DwarfSym *s)
 	werrstr("symbol '%s' not found", name);
 	return -1;
 }
-	
+
 
 int
 dwarflookupsubname(Dwarf *d, DwarfSym *parent, char *name, DwarfSym *s)
@@ -193,7 +193,7 @@ dwarflookupfn(Dwarf *d, ulong unit, ulong pc, DwarfSym *s)
 			continue;
 		if(s->attrs.lowpc <= pc && pc < s->attrs.highpc)
 			return 0;
-	} 
+	}
 	werrstr("fn containing pc 0x%lux not found", pc);
 	return -1;
 }
@@ -304,11 +304,11 @@ dwarfnextsymat(Dwarf *d, DwarfSym *s, int depth)
 	}
 
 	/*
-	 * The funny game with t and s make sure that 
+	 * The funny game with t and s make sure that
 	 * if we get to the end of a run of a particular
 	 * depth, we leave s so that a call to nextsymat with depth-1
 	 * will actually produce the desired guy.  We could change
-	 * the interface to dwarfnextsym instead, but I'm scared 
+	 * the interface to dwarfnextsym instead, but I'm scared
 	 * to touch it.
 	 */
 	t = *s;

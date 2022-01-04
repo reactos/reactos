@@ -174,9 +174,10 @@ ScmCopyTree(
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
+        /* RegSetValueExW tries to read behind the maximum length, so give it space for that */
         lpDataBuffer = HeapAlloc(GetProcessHeap(),
-                                 0,
-                                 dwMaxValueLength);
+                                 HEAP_ZERO_MEMORY,
+                                 dwMaxValueLength + sizeof(WCHAR));
         if (lpDataBuffer == NULL)
         {
             DPRINT1("Buffer allocation failed\n");
@@ -238,7 +239,7 @@ ScmCopyTree(
                  lpNameBuffer);
     }
 
-    DPRINT("ScmCopyTree() done \n");
+    DPRINT("ScmCopyTree() done\n");
 
     return ERROR_SUCCESS;
 }

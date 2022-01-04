@@ -1,26 +1,6 @@
 /* taken from wine exit.c */
 #include <precomp.h>
 
-_onexit_t *atexit_table = NULL;
-int atexit_table_size = 0;
-int atexit_registered = 0; /* Points to free slot */
-
-/* INTERNAL: call atexit functions */
-void __call_atexit(void)
-{
-  /* Note: should only be called with the exit lock held */
-  TRACE("%d atext functions to call\n", atexit_registered);
-  /* Last registered gets executed first */
-  while (atexit_registered > 0)
-  {
-    atexit_registered--;
-    TRACE("next is %p\n",atexit_table[atexit_registered]);
-    if (atexit_table[atexit_registered])
-      (*atexit_table[atexit_registered])();
-    TRACE("returned\n");
-  }
-}
-
 /*********************************************************************
  *		__dllonexit (MSVCRT.@)
  */
@@ -53,46 +33,3 @@ _onexit_t CDECL __dllonexit(_onexit_t func, _onexit_t **start, _onexit_t **end)
   TRACE("new table start %p-%p, %d entries\n", *start, *end, len);
   return func;
 }
-
-/*********************************************************************
- *		_onexit (MSVCRT.@)
- */
-_onexit_t CDECL _onexit(_onexit_t func)
-{
-  TRACE("(%p)\n",func);
-
-  if (!func)
-    return NULL;
-
-  LOCK_EXIT;
-  if (atexit_registered > atexit_table_size - 1)
-  {
-    _onexit_t *newtable;
-    TRACE("expanding table\n");
-    newtable = calloc(atexit_table_size + 32, sizeof(_onexit_t));
-    if (!newtable)
-    {
-      TRACE("failed!\n");
-      UNLOCK_EXIT;
-      return NULL;
-    }
-    memcpy (newtable, atexit_table, atexit_table_size*sizeof(_onexit_t));
-    atexit_table_size += 32;
-    free (atexit_table);
-    atexit_table = newtable;
-  }
-  atexit_table[atexit_registered] = func;
-  atexit_registered++;
-  UNLOCK_EXIT;
-  return func;
-}
-
-/*********************************************************************
- *		atexit (MSVCRT.@)
- */
-int CDECL atexit(void (*func)(void))
-{
-  TRACE("(%p)\n", func);
-  return _onexit((_onexit_t)func) == (_onexit_t)func ? 0 : -1;
-}
-

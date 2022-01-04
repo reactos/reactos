@@ -288,7 +288,7 @@ KsValidateClockCreateRequest(
     Size = sizeof(KSCLOCK_CREATE);
 
     /* copy create request */
-    Status = KspCopyCreateRequest(Irp, 
+    Status = KspCopyCreateRequest(Irp,
                                   KSSTRING_Clock,
                                   &Size,
                                   (PVOID*)&ClockCreate);

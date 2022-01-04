@@ -5,9 +5,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Compatibilidade"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Se tiver problemas para executar este programa no ReactOS, seleccione o sistema operacional que o ReactOS deve reportar ao aplicativo.\nTenha em atenção que este é um trabalho em desenvolvimento.", IDC_EXPLANATION, 7, 7, 210, 31
-    GROUPBOX "Mode de compatibilidade", IDC_COMPATGROUP, 7, 41, 210, 49
-    CHECKBOX "Exec. este programa em modo de compatibilidade para:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Se tiver problemas em executar este programa no ReactOS, seleccione o sistema operacional que o ReactOS deve reportar ao aplicativo.\nTenha em atenção que este é um trabalho em desenvolvimento.", IDC_EXPLANATION, 7, 7, 210, 32
+    GROUPBOX "Modo de compatibilidade", IDC_COMPATGROUP, 7, 41, 210, 49
+    CHECKBOX "Executar em modo de compatibilidade para:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
     GROUPBOX "Definições de visualização", -1, 7, 99, 210, 61, BS_GROUPBOX
     CHECKBOX "Executar em 256 cores", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -15,7 +15,7 @@ BEGIN
     CHECKBOX "Desactivar temas visuais", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     PUSHBUTTON "E&ditar modos de compatibilidade...", IDC_EDITCOMPATIBILITYMODES, 105, 167, 112, 15
     LTEXT "",IDC_ENABLED_LAYERS,7,185,210,21
-    CONTROL "Aprenda mais acerca <A>compatibilidade de programas</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
+    CONTROL "Aprender mais acerca de <A>compatibilidade de programas</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 309, 134

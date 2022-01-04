@@ -4,8 +4,8 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_NTOBJFLD_NAME "NT 物件名稱空間"
+    IDS_NTOBJFLD_NAME "NT 物件命名空間"
     IDS_REGISTRY_NAME "系統登錄"
-    IDS_NTOBJFLD_COMMENT "Allows browsing of the NT Object Namespace"
-    IDS_REGISTRY_COMMENT "Allows browsing of the System Registry"
+    IDS_NTOBJFLD_COMMENT "允許瀏覽 NT 物件命名空間"
+    IDS_REGISTRY_COMMENT "允許瀏覽系統登錄"
 END

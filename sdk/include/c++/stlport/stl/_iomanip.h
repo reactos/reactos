@@ -123,7 +123,7 @@ setprecision(int __n) {
 
 inline _STLP_PRIV _Ios_Manip_1<streamsize>  _STLP_CALL
 setw(int __n) {
-  _STLP_PRIV _Ios_Manip_1<streamsize>::__f_ptr_type __f = &ios_base::width;  
+  _STLP_PRIV _Ios_Manip_1<streamsize>::__f_ptr_type __f = &ios_base::width;
   return _STLP_PRIV _Ios_Manip_1<streamsize>(__f, __n);
 }
 

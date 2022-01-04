@@ -27,8 +27,8 @@
 #pragma once
 
 NTSTATUS
-FormatPartition(
-    IN PUNICODE_STRING DriveRoot,
+DoFormat(
+    IN PPARTENTRY PartEntry,
     IN PCWSTR FileSystemName,
     IN BOOLEAN QuickFormat);
 

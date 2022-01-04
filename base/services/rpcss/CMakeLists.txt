@@ -2,7 +2,7 @@
 add_rpc_files(server
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine/epm.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine/irot.idl)
-    
+
 
 list(APPEND SOURCE
     epmp.c

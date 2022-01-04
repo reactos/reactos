@@ -1,0 +1,104 @@
+/* Translation and UTF-8 Conversion by Gabriel Aguiar(fgsoftware1) <fgygh5804@gmail.com,fgsoftwarestudio@gmail.com> (July, 2021) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDD_GUI DIALOGEX 0, 0, 240, 255
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Remote Shutdown"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "&OK", IDC_OK, 125, 232, 50, 14
+    PUSHBUTTON "&Cancelar", IDC_CANCEL, 178, 232, 50, 14
+    LTEXT "Co&mputadores:", IDC_STATIC, 9, 9, 35, 36
+    LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
+    PUSHBUTTON "&Adicionar...", IDC_ADD_SYSTEM, 179, 19, 50, 14
+    PUSHBUTTON "&Remover", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Navegar...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    LTEXT "Acção", IDC_ACTION, 11, 81, 20, 14
+    COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
+    CHECKBOX "Avisar utilizadores", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Mostrar aviso para", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
+    EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
+    LTEXT "segundo(s)", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
+    GROUPBOX "A encerrar o rastreador de eventos", IDC_STATIC, 5, 114, 224, 114
+    LTEXT "Motivo:", IDC_STATIC, 16, 130, 27, 8
+    CHECKBOX "Planeado", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
+    LTEXT "Come&ntar:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
+END
+
+/* Information and error messages */
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Utilitário de encerramento do ReactOS\n\
+\n\
+Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\
+\n\
+    No arguments or /?    Display this help.\n\
+    /i      Mostrar a interface de utilizador(UI). This option must be the\n\
+            a primeira.\n\
+    /l      Terminar sessão apenas no sistema local. Nao pode ser usado com /m or /d.\n\
+    /s      Encerramento do computador.\n\
+    /r      Reinicio do computador.\n\
+    /g      Reinicio do computador e todas as aplicações registadas.\n\
+    /a      Cancelar um encerramento atrasado. Só pode ser usado durante o periodo de\n\
+            atraso.\n\
+    /p      A encerrar computador local sem nenhum aviso de excepções. Pode ser\n\
+            usado com /d ou /f.\n\
+    /h      hibernar o computador local. Pode ser usado com /f.\n\
+    /e      Documente o motivo do encerramento inesperado do computador.\n\
+    /m \\\\computer  Especifique o computador alvo (UNC/IP address).\n\
+    /t xxx  Defina o periodo de tempo de limite para xxx segundos antes de encerrar.\n\
+            O intervalo válido é de 0 até 315360000 (10 anos),\n\
+            30 é o valor padrao.\n\
+    /c ""comment""  Diga o motivo do encerramento ou reinicialização.\n\
+            512 caracteres máximo permitido.\n\
+    /f      Forçar o encerramento de aplicações abertas sem avisar. Se não\n\
+            especificar outro parâmetro, esta operação também terminará a sessão.\n\
+    /d [p|u:]xx:yy  Forneça o código de razão para o encerramento ou reinicialização.\n\
+            p indica que o encerramento ou uma reinicialização está planejada.\n\
+            u indica o motivo definido pelo utilizador.\n\
+            Se nenhum 'p' ou 'u' for especificado, o encerramento ou reinicialização é\n\
+            não planejada.\n\
+            xx é o código de razão maior (inteiro positivo menor que 256).\n\
+            yy é o código de razão menor (inteiro positivo menor que 65536).\n"
+
+    IDS_ERROR_SHUTDOWN_REBOOT "ERRO: Incapaz de encerrar e reiniciar ao mesmo tempo.\n"
+    IDS_ERROR_TIMEOUT "ERRO: Tempo esgotado valor de %u está fora dos limites (0-315360000).\n"
+    IDS_ERROR_ABORT "ERRO: Incapaz de abortar o encerramento do sistema.\n"
+    IDS_ERROR_LOGOFF "ERRO: Incapaz de terminar sessão do sistema.\n"
+    IDS_ERROR_SHUTDOWN "ERRO: Incapaz de encerrar o sistema.\n"
+    IDS_ERROR_RESTART "ERRO: Incapz de reiniciar o sistema.\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "ERRO: O comprimento do comentário excede o limite máximo de caracteres definido pelo sistema.\n"
+    IDS_ERROR_HIBERNATE "ERRO: Incapaz de hibernar o sistema.\n"
+    IDS_ERROR_HIBERNATE_LOCAL "ERRO: Modo de hibernação nao pode ser definido remotamente.\n"
+    IDS_ERROR_HIBERNATE_ENABLED "ERRO: O modo de hibernação não está habilitado.\n"
+    IDS_ERROR_DIALOG_CAPTION "Encerramento remoto"
+    IDS_ERROR_DIALOG_INIT "Incapaz de mostrar interface gráfica."
+END
+
+/* Remote shutdown action strings */
+STRINGTABLE
+BEGIN
+    IDS_ACTION_SHUTDOWN "Encerrar o sistema"
+    IDS_ACTION_RESTART "Reiniciar o sistema"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "Anote o encerramento inesperado"
+END
+
+/* Remote shutdown reason strings */
+STRINGTABLE
+BEGIN
+    IDS_REASON_OTHER "Outro"
+    IDS_REASON_HARDWARE_MAINTENANCE "Hardware: Manutenção"
+    IDS_REASON_HARDWARE_INSTALL "Hardware: Instalação"
+    IDS_REASON_OS_RECOVER "Sistema Operativo: Recuperação"
+    IDS_REASON_OS_RECONFIGURE "Sistema Operativo: Reconfiguração"
+    IDS_REASON_APP_MAINTENANCE "Aplicação: Manutenção"
+    IDS_REASON_APP_INSTALL "Aplicação: Instalação"
+    IDS_REASON_APP_UNRESPONSIVE "Aplicação: não responsivo"
+    IDS_REASON_APP_UNSTABLE "Aplicação: instável"
+    IDS_REASON_SECURITY "Problema de segurança"
+    IDS_REASON_NETWORK "Perda de ligação à internet"
+END

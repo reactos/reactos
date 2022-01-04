@@ -1521,7 +1521,7 @@ BlockIoFirmwareOpen (
 
     /* Free the device handle buffer array */
     BlMmFreeHeap(DeviceHandles);
- 
+
     /* Return status */
     return Status;
 }
@@ -2260,7 +2260,7 @@ BlpDeviceOpen (
         /* It's a network device, call the UDP device handler */
         Status = UdpFunctionTable.Open(Device, DeviceEntry);
     }
-    else 
+    else
     {
         /* Unsupported type of device */
         Status = STATUS_NOT_IMPLEMENTED;

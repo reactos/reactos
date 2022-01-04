@@ -478,7 +478,7 @@ DsppReinitialize (
         {
             return Status;
         }
-        
+
         /* Now check our current graphical resolution */
         Status = ((PBL_GRAPHICS_CONSOLE_VTABLE)GraphicsConsole->TextConsole.Callbacks)->GetGraphicalResolution(GraphicsConsole,
                                                                                                                &CurrentResolution);

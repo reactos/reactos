@@ -78,7 +78,7 @@ BEGIN
     LTEXT "Du kan beholde systemfeltet ryddig ved å skjule ikoner som du ikke har brukt så ofte.", IDC_STATIC, 13, 169, 223, 16
     AUTOCHECKBOX "&Skjul inaktive ikoner", IDC_TASKBARPROP_HIDEICONS, 13, 191, 125, 10
     PUSHBUTTON "&Tilpass...", IDC_TASKBARPROP_ICONCUST, 188, 191, 50, 14
-    
+
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218

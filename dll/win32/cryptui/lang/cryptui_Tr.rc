@@ -24,162 +24,162 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_CERTIFICATE "Onay Belgesi"
-    IDS_CERTIFICATEINFORMATION "Onay Belgesi Bilgisi"
-    IDS_CERT_INFO_BAD_SIG "Bu onay belgesinde geçersiz bir imzâ vardır. Bu onay belgesi değiştirilmiş veyâ bozulmuş olabilir."
-    IDS_CERT_INFO_UNTRUSTED_CA "Bu kök onay belgesi güvenilen değil. Bunu güvenilen yapmak için, bunu dizgenizin güvenilen kök onay belgesi deposuna ekleyiniz."
-    IDS_CERT_INFO_UNTRUSTED_ROOT "Bu onay belgesi, bir güvenilen kök onay belgesine doğrulanamadı."
-    IDS_CERT_INFO_PARTIAL_CHAIN "Bu onay belgesinin yayımcısı bulunamadı."
-    IDS_CERT_INFO_BAD_PURPOSES "Bu onay belgesinin tüm kullanım amaçları doğrulanamadı."
-    IDS_CERT_INFO_PURPOSES "Bu onay belgesi aşağıdaki amaçlar için tasarlanmıştır:"
-    IDS_SUBJECT_HEADING "Şuraya Yayımlandı: "
-    IDS_ISSUER_HEADING "Şu Yayımladı: "
-    IDS_VALID_FROM "Şuradan geçerlidir "
-    IDS_VALID_TO " şuraya "
-    IDS_CERTIFICATE_BAD_SIGNATURE "Bu onay belgesinde geçersiz bir imzâ vardır."
-    IDS_CERTIFICATE_BAD_TIME "Bu onay belgesinin, süresi dolmuştur ya da daha geçerli değildir."
-    IDS_CERTIFICATE_BAD_TIMENEST "Bu onay belgesinin geçerlilik dönemi yayımcısınınkisini aşıyor."
-    IDS_CERTIFICATE_REVOKED "Bu onay belgesi, yayımcısı eliyle iptal edildi."
-    IDS_CERTIFICATE_VALID "Bu onay belgesi tamam."
+    IDS_CERTIFICATE "Sertifika"
+    IDS_CERTIFICATEINFORMATION "Sertifika Bilgisi"
+    IDS_CERT_INFO_BAD_SIG "Bu sertifikada geçersiz bir imza var. Sertifika değiştirilmiş veya bozulmuş olabilir."
+    IDS_CERT_INFO_UNTRUSTED_CA "Bu kök sertifikaya güvenilmiyor. Güvenilen yapmak için, bunu sisteminizin güvenilen kök sertifika deposuna ekleyiniz."
+    IDS_CERT_INFO_UNTRUSTED_ROOT "Bu sertifika, bir güvenilen kök sertifikaya doğrulanamadı."
+    IDS_CERT_INFO_PARTIAL_CHAIN "Bu sertifikanın yayımcısı bulunamadı."
+    IDS_CERT_INFO_BAD_PURPOSES "Bu sertifikanın tüm kullanım amaçları doğrulanamadı."
+    IDS_CERT_INFO_PURPOSES "Bu sertifika aşağıdaki amaçlar için tasarlanmıştır:"
+    IDS_SUBJECT_HEADING "Yayımlanan: "
+    IDS_ISSUER_HEADING "Yayımcı: "
+    IDS_VALID_FROM "Bu tarihten "
+    IDS_VALID_TO " bu tarihe kadar "
+    IDS_CERTIFICATE_BAD_SIGNATURE "Bu sertifikada geçersiz bir imza var."
+    IDS_CERTIFICATE_BAD_TIME "Bu sertifikanın süresi dolmuş veya sertifika artık geçerli değil."
+    IDS_CERTIFICATE_BAD_TIMENEST "Bu sertifikanın geçerlilik dönemi yayımcısınınkisini aşıyor."
+    IDS_CERTIFICATE_REVOKED "Bu sertifika, yayımcısı tarafından iptal edildi."
+    IDS_CERTIFICATE_VALID "Bu sertifika sorunsuz."
     IDS_FIELD "Alan"
     IDS_VALUE "Değer"
     IDS_FIELDS_ALL "<Tümü>"
     IDS_FIELDS_V1 "Yalnızca Sürüm 1 Alanları"
-    IDS_FIELDS_EXTENSIONS "Yalnızca Eklentiler"
-    IDS_FIELDS_CRITICAL_EXTENSIONS "Yalnızca Önemli Eklentiler"
-    IDS_FIELDS_PROPERTIES "Yalnızca Husûsiyetler"
+    IDS_FIELDS_EXTENSIONS "Yalnızca Uzantılar"
+    IDS_FIELDS_CRITICAL_EXTENSIONS "Yalnızca Önemli Uzantılar"
+    IDS_FIELDS_PROPERTIES "Yalnızca Özellikler"
     IDS_FIELD_VERSION "Sürüm"
-    IDS_FIELD_SERIAL_NUMBER "Dizi Numarası"
+    IDS_FIELD_SERIAL_NUMBER "Seri Numarası"
     IDS_FIELD_ISSUER "Yayımcı"
-    IDS_FIELD_VALID_FROM "Şuradan Geçerlidir"
-    IDS_FIELD_VALID_TO "Şuraya Geçerlidir"
+    IDS_FIELD_VALID_FROM "Şu Tarihten Geçerlidir"
+    IDS_FIELD_VALID_TO "Şu Tarihe Geçerlidir"
     IDS_FIELD_SUBJECT "Konu"
     IDS_FIELD_PUBLIC_KEY "Açık Anahtar"
     IDS_FIELD_PUBLIC_KEY_FORMAT "%1 (%2!d! bit)"
     IDS_PROP_HASH "SHA1 Kodu"
-    IDS_PROP_ENHKEY_USAGE "Gelişmiş Anahtar Kullanımı (husûsiyet)"
+    IDS_PROP_ENHKEY_USAGE "Gelişmiş Anahtar Kullanımı (özellik)"
     IDS_PROP_FRIENDLY_NAME "Kolay Adı"
     IDS_PROP_DESCRIPTION "Tanımı"
-    IDS_CERTIFICATE_PROPERTIES "Onay Belgesi Husûsiyetleri"
+    IDS_CERTIFICATE_PROPERTIES "Sertifika Özellikleri"
     IDS_CERTIFICATE_PURPOSE_ERROR "Lütfen 1.2.3.4 biçiminde bir OID giriniz."
-    IDS_CERTIFICATE_PURPOSE_EXISTS "Girdiğiniz OID önceden var."
-    IDS_SELECT_STORE_TITLE "Onay Belgesi Deposunu Seç"
-    IDS_SELECT_STORE "Lütfen bir onay belgesi deposu seçiniz."
-    IDS_IMPORT_WIZARD "Onay Belgesi Alma Yardımcısı"
-    IDS_IMPORT_TYPE_MISMATCH "Bu kütük, verilen ölçütlere uymayan nesneler içeriyor. Lütfen başka bir kütük seçiniz."
-    IDS_IMPORT_FILE_TITLE "Alınacak Kütük"
-    IDS_IMPORT_FILE_SUBTITLE "Almak istediğiniz kütüğü belirtiniz."
-    IDS_IMPORT_STORE_TITLE "Onay Belgesi Deposu"
-    IDS_IMPORT_STORE_SUBTITLE "Onay belgesi depoları; onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin derlemleridir."
-    IDS_IMPORT_FILTER_CERT "X.509 Onay Belgesi (*.cer; *.crt)"
-    IDS_IMPORT_FILTER_PFX "Şahsî Bilgi Değişimi (*.pfx; *.p12)"
-    IDS_IMPORT_FILTER_CRL "Onay Belgesi İptal Dizelgesi (*.crl)"
-    IDS_IMPORT_FILTER_CTL "Onay Belgesi Güven Dizelgesi (*.stl)"
-    IDS_IMPORT_FILTER_SERIALIZED_STORE "Microsoft Dizilendirilmiş Onay Belgesi Deposu (*.sst)"
+    IDS_CERTIFICATE_PURPOSE_EXISTS "Girdiğiniz OID zaten var."
+    IDS_SELECT_STORE_TITLE "Sertifika Deposunu Seç"
+    IDS_SELECT_STORE "Lütfen bir sertifika deposu seçiniz."
+    IDS_IMPORT_WIZARD "Sertifika Alma Sihirbazı"
+    IDS_IMPORT_TYPE_MISMATCH "Bu dosya, verilen ölçütlere uymayan nesneler içeriyor. Lütfen başka bir dosya seçiniz."
+    IDS_IMPORT_FILE_TITLE "Alınacak Dosya"
+    IDS_IMPORT_FILE_SUBTITLE "Almak istediğiniz dosyayı belirtiniz."
+    IDS_IMPORT_STORE_TITLE "Sertifika Deposu"
+    IDS_IMPORT_STORE_SUBTITLE "Sertifika depoları; sertifikaların, sertifika iptal listelerinin ve sertifika güven listelerinin toplamasıdır."
+    IDS_IMPORT_FILTER_CERT "X.509 Sertifikası (*.cer; *.crt)"
+    IDS_IMPORT_FILTER_PFX "Kişisel Bilgi Değişimi (*.pfx; *.p12)"
+    IDS_IMPORT_FILTER_CRL "Sertifika İptal Listesi (*.crl)"
+    IDS_IMPORT_FILTER_CTL "Sertifika Güven Listesi (*.stl)"
+    IDS_IMPORT_FILTER_SERIALIZED_STORE "Microsoft Seri Sertifika Deposu (*.sst)"
     IDS_IMPORT_FILTER_CMS "CMS/PKCS #7 İletileri (*.spc; *.p7b)"
-    IDS_IMPORT_FILTER_ALL "Tüm Kütükler (*.*)"
-    IDS_IMPORT_EMPTY_FILE "Lütfen bir kütük seçiniz."
-    IDS_IMPORT_BAD_FORMAT "Bu kütük biçimi tanınmış değil. Lütfen başka bir kütük seçiniz."
-    IDS_IMPORT_OPEN_FAILED "Açılamadı."
-    IDS_IMPORT_DEST_DETERMINED "İzlence eliyle belirlendi."
+    IDS_IMPORT_FILTER_ALL "Tüm Dosyalar (*.*)"
+    IDS_IMPORT_EMPTY_FILE "Lütfen bir dosya seçiniz."
+    IDS_IMPORT_BAD_FORMAT "Bu dosya biçimi tanınmıyor. Lütfen başka bir dosya seçiniz."
+    IDS_IMPORT_OPEN_FAILED "Açılamadı "
+    IDS_IMPORT_DEST_DETERMINED "Program tarafından belirlenen"
     IDS_IMPORT_SELECT_STORE "Lütfen bir depo seçiniz."
-    IDS_IMPORT_STORE_SELECTION "Onay belgesi deposu seçildi."
-    IDS_IMPORT_DEST_AUTOMATIC "İzlence eliyle kendilğinden belirlendi."
-    IDS_IMPORT_FILE "Kütük"
+    IDS_IMPORT_STORE_SELECTION "Seçilen Sertifika Deposu"
+    IDS_IMPORT_DEST_AUTOMATIC "Program tarafından otomatik belirlenen"
+    IDS_IMPORT_FILE "Dosya"
     IDS_IMPORT_CONTENT "İçerik"
-    IDS_IMPORT_CONTENT_CERT "Onay Belgesi"
-    IDS_IMPORT_CONTENT_CRL "Onay Belgesi İptal Dizelgesi"
-    IDS_IMPORT_CONTENT_CTL "Onay Belgesi Güven Dizelgesi"
+    IDS_IMPORT_CONTENT_CERT "Sertifika"
+    IDS_IMPORT_CONTENT_CRL "Sertifika İptal Listesi"
+    IDS_IMPORT_CONTENT_CTL "Sertifika Güven Listesi"
     IDS_IMPORT_CONTENT_CMS "CMS/PKCS #7 İletisi"
-    IDS_IMPORT_CONTENT_PFX "Şahsî Bilgi Değişimi"
-    IDS_IMPORT_CONTENT_STORE "Onay Belgesi Deposu"
-    IDS_IMPORT_SUCCEEDED "Alma başarılı oldu."
+    IDS_IMPORT_CONTENT_PFX "Kişisel Bilgi Değişimi"
+    IDS_IMPORT_CONTENT_STORE "Sertifika Deposu"
+    IDS_IMPORT_SUCCEEDED "Başarıyla alındı."
     IDS_IMPORT_FAILED "Alma başarısız oldu."
     IDS_WIZARD_TITLE_FONT "Arial"
     IDS_PURPOSE_ALL "<Tümü>"
     IDS_PURPOSE_ADVANCED "<Gelişmiş Amaçlar>"
-    IDS_SUBJECT_COLUMN "Şuraya Yayımlandı"
-    IDS_ISSUER_COLUMN "Eliyle Yayımlandı"
-    IDS_EXPIRATION_COLUMN "Son Kullanma Târihi"
+    IDS_SUBJECT_COLUMN "Yayımlanan"
+    IDS_ISSUER_COLUMN "Yayımcı"
+    IDS_EXPIRATION_COLUMN "Son Kullanma Tarihi"
     IDS_FRIENDLY_NAME_COLUMN "Kolay Adı"
     IDS_ALLOWED_PURPOSE_ALL "<Tümü>"
     IDS_ALLOWED_PURPOSE_NONE "<Yok>"
-    IDS_WARN_REMOVE_MY "Artık bu onay belgesiyle, iletileri çözemeyeceksiniz veyâ iletileri imzâlayamayacaksınız.\nBu onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_MY "Artık bu onay belgeleriyle, iletileri çözemeyeceksiniz veyâ iletileri imzâlayamayacaksınız.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Artık bu onay belgesiyle, iletileri şifreleyemeyeceksiniz veyâ imzâlı iletileri doğrulayamayacaksınız.\nBu onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Artık, bu onay belgeleriyle iletileri şifreleyemeyeceksiniz veyâ onlarla imzâlı iletileri doğrulayamayacaksınız.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_CA "Artık bu onay belgesi yetkilisiyle yayımlanan onay belgeleri güvenilen olmayacaktır.\nBu onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_CA "Artık bu onay belgesi yetkilileriyle yayımlanan onay belgeleri güvenilen olmayacaktır.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_ROOT "Artık, bu kök onay belgesi yetkilisiyle yayımlanan onay belgeleri ve onay belgesi yetkilileri güvenilir olmayacaktır.\nBu güvenilen kök onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "Artık, bu kök onay belgesi yetkilileriyle yayımlanan onay belgeleri ve onay belgesi yetkilileri güvenilir olmayacaktır.\nBu güvenilen kök onay belgelerini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Artık, bu yayımcı eliyle imzâlanan yazılım güvenilen olmayacaktır.\nBu onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Artık, bu yayımcılar eliyle imzâlanan yazılım güvenilen olmayacaktır.\nBu onay belgelerini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_DEFAULT "Bu onay belgesini silmek istediğinizden emin misiniz?"
-    IDS_WARN_REMOVE_PLURAL_DEFAULT "Bu onay belgelerini silmek istediğinizden emin misiniz?"
-    IDS_CERT_MGR "Onay Belgeleri"
+    IDS_WARN_REMOVE_MY "Artık bu sertifikayla, iletileri çözemeyeceksiniz veya iletileri imzalayamayacaksınız.\nBu sertifikayı silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_MY "Artık bu sertifikalarla, iletileri çözemeyeceksiniz veya iletileri imzalayamayacaksınız.\nBu sertifikaları silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Artık bu sertifikayla, iletileri şifreleyemeyeceksiniz veya imzalı iletileri doğrulayamayacaksınız.\nBu sertifikayı silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Artık bu sertifikalarla, iletileri şifreleyemeyeceksiniz veya onlarla imzalı iletileri doğrulayamayacaksınız.\nBu sertifikaları silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_CA "Artık bu sertifika yetkilisiyle yayımlanan sertifikalara güvenilmeyecek.\nBu sertifikayı silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_CA "Artık bu sertifika yetkilileriyle yayımlanan sertifikalara güvenilmeyecek.\nBu sertifikaları silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_ROOT "Artık, bu kök sertifika yetkilisiyle yayımlanan sertifikalara ve sertifika yetkililerine güvenilmeyecek.\nBu güvenilen kök sertifikayı silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Artık, bu kök sertifika yetkilileriyle yayımlanan sertifikalara ve sertifika yetkililerine güvenilmeyecek.\nBu güvenilen kök sertifikaları silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Artık, bu yayımcı tarafından imzalanan yazılımlara güvenilmeyecek.\nBu sertifikayı silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Artık, bu yayımcılar tarafından imzalanan yazılımlara güvenilmeyecek.\nBu sertifikaları silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_DEFAULT "Bu sertifikayı silmek istediğinizden emin misiniz?"
+    IDS_WARN_REMOVE_PLURAL_DEFAULT "Bu sertifikaları silmek istediğinizden emin misiniz?"
+    IDS_CERT_MGR "Sertifikalar"
     IDS_FRIENDLY_NAME_NONE "<Yok>"
-    IDS_PURPOSE_SERVER_AUTH "Bir uzak bilgisayarın kimliğini sağlar."
-    IDS_PURPOSE_CLIENT_AUTH "Bir uzak bilgisayara kimliğinizi tanıtlar."
-    IDS_PURPOSE_CODE_SIGNING "Yazılım yayımcısından gelen yazılımı korur.\nYazılımı yayımlamadan sonraki değişikliklerden korur."
-    IDS_PURPOSE_EMAIL_PROTECTION "Mektup iletilerini korur."
-    IDS_PURPOSE_IPSEC "Umûmî Ağ üzerinden güvenli iletişim sağlar."
-    IDS_PURPOSE_TIMESTAMP_SIGNING "Verilerin şimdiki zamanla imzâlanmasına olanak sağlar."
-    IDS_PURPOSE_CTL_USAGE_SIGNING "Bir onay belgesi güven dizelgesini sayılık olarak imzâlamanıza olanak sağlar."
+    IDS_PURPOSE_SERVER_AUTH "Bir uzak bilgisayarın kimliğini kanıtlar."
+    IDS_PURPOSE_CLIENT_AUTH "Bir uzak bilgisayara kimliğinizi tanıtır."
+    IDS_PURPOSE_CODE_SIGNING "Yazılım yayımcısından gelen yazılımı kanıtlar.\nYazılımı yayımlamadan sonraki değişikliklerden korur."
+    IDS_PURPOSE_EMAIL_PROTECTION "E-posta iletilerini korur."
+    IDS_PURPOSE_IPSEC "Genel Ağ üzerinden güvenli iletişim sağlar."
+    IDS_PURPOSE_TIMESTAMP_SIGNING "Verilerin şimdiki zamanla imzalanmasına olanak sağlar."
+    IDS_PURPOSE_CTL_USAGE_SIGNING "Bir sertifika güven listesini dijital olarak imzalamanıza olanak sağlar."
     IDS_PURPOSE_EFS "Diskteki verilerin şifrelenmesine olanak sağlar."
-    IDS_PURPOSE_EFS_RECOVERY "Kütük Kurtarma"
+    IDS_PURPOSE_EFS_RECOVERY "Dosya Kurtarma"
     IDS_PURPOSE_WHQL "Windows Donanım Sürücüsü Doğrulaması"
-    IDS_PURPOSE_NT5 "Windows Dizge Bileşeni Doğrulaması"
-    IDS_PURPOSE_OEM_WHQL "OEM Windows Dizge Bileşeni Doğrulaması"
-    IDS_PURPOSE_EMBEDDED_NT "Gömülü Windows Dizge Bileşeni Doğrulaması"
-    IDS_PURPOSE_ROOT_LIST_SIGNER "Kök Dizelgesi İmzâlayıcısı"
+    IDS_PURPOSE_NT5 "Windows Sistem Bileşeni Doğrulaması"
+    IDS_PURPOSE_OEM_WHQL "OEM Windows Sistem Bileşeni Doğrulaması"
+    IDS_PURPOSE_EMBEDDED_NT "Gömülü Windows Sistem Bileşeni Doğrulaması"
+    IDS_PURPOSE_ROOT_LIST_SIGNER "Kök Liste İmzalayıcısı"
     IDS_PURPOSE_QUALIFIED_SUBORDINATION "Nitelikli Bağlılık"
     IDS_PURPOSE_KEY_RECOVERY "Anahtar Kurtarma"
-    IDS_PURPOSE_DOCUMENT_SIGNING "Belge İmzâlama"
-    IDS_PURPOSE_LIFETIME_SIGNING "Yaşam Boyu İmzâlama"
-    IDS_PURPOSE_DRM "Sayılık Yetkileri"
-    IDS_PURPOSE_LICENSES "Anahtar Paketi Ruhsatları"
-    IDS_PURPOSE_LICENSE_SERVER "Ruhsat Sunucusu Doğrulaması"
-    IDS_PURPOSE_ENROLLMENT_AGENT "Onay Belgesi İstek Yardımcısı"
+    IDS_PURPOSE_DOCUMENT_SIGNING "Belge İmzalama"
+    IDS_PURPOSE_LIFETIME_SIGNING "Yaşam Boyu İmzalama"
+    IDS_PURPOSE_DRM "Dijital Haklar"
+    IDS_PURPOSE_LICENSES "Anahtar Paketi Lisansları"
+    IDS_PURPOSE_LICENSE_SERVER "Lisans Sunucusu Doğrulaması"
+    IDS_PURPOSE_ENROLLMENT_AGENT "Sertifika İstek Yardımcısı"
     IDS_PURPOSE_SMARTCARD_LOGON "Akıllı Kartla Oturum Açma"
-    IDS_PURPOSE_CA_EXCHANGE "Husûsî Anahtar Belgelikliği"
+    IDS_PURPOSE_CA_EXCHANGE "Özel Anahtar Arşivleme"
     IDS_PURPOSE_KEY_RECOVERY_AGENT "Anahtar Kurtarma Yardımcısı"
-    IDS_PURPOSE_DS_EMAIL_REPLICATION "Dizin Hizmeti Mektup Çoğlatması"
-    IDS_EXPORT_WIZARD "Onay Belgesi Verme Yardımcısı"
+    IDS_PURPOSE_DS_EMAIL_REPLICATION "Dizin Hizmeti E-posta Çoğaltması"
+    IDS_EXPORT_WIZARD "Sertifika Verme Sihirbazı"
     IDS_EXPORT_FORMAT_TITLE "Verme Biçimi"
     IDS_EXPORT_FORMAT_SUBTITLE "İçeriğin saklanacağı biçimi seçiniz."
-    IDS_EXPORT_FILE_TITLE "Verme Kütük Adı"
-    IDS_EXPORT_FILE_SUBTITLE "İçeriğin saklanacağı kütüğün adını belirtiniz."
-    IDS_EXPORT_FILE_EXISTS "Belirtilen kütük önceden var. Onu değiştirmek ister misiniz?"
+    IDS_EXPORT_FILE_TITLE "Verme Dosyası Adı"
+    IDS_EXPORT_FILE_SUBTITLE "İçeriğin saklanacağı dosyanın adını belirtiniz."
+    IDS_EXPORT_FILE_EXISTS "Belirtilen dosya zaten var. Dosyayı değiştirmek ister misiniz?"
     IDS_EXPORT_FILTER_CERT "DER Şifrelenmiş İkili X.509 (*.cer)"
     IDS_EXPORT_FILTER_BASE64_CERT "Base64 Şifrelenmiş X.509 (*.cer)"
-    IDS_EXPORT_FILTER_CRL "Onay Belgesi İptal Dizelgesi (*.crl)"
-    IDS_EXPORT_FILTER_CTL "Onay Belgesi Güven Dizelgesi (*.stl)"
+    IDS_EXPORT_FILTER_CRL "Sertifika İptal Listesi (*.crl)"
+    IDS_EXPORT_FILTER_CTL "Sertifika Güven Listesi (*.stl)"
     IDS_EXPORT_FILTER_CMS "CMS/PKCS #7 İletileri (*.p7b)"
-    IDS_EXPORT_FILTER_PFX "Şahsî Bilgi Değişimi (*.pfx)"
-    IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "Dizilendirilmiş Onay Belgesi Deposu (*.sst)"
-    IDS_EXPORT_FORMAT "Kütük Biçimi"
-    IDS_EXPORT_INCLUDE_CHAIN "Onay Belgesi Yolunda Tüm Onay Belgelerini Ekle"
+    IDS_EXPORT_FILTER_PFX "Kişisel Bilgi Değişimi (*.pfx)"
+    IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "Seri Sertifika Deposu (*.sst)"
+    IDS_EXPORT_FORMAT "Dosya Biçimi"
+    IDS_EXPORT_INCLUDE_CHAIN "Sertifika yolundaki tüm sertifikaları ekle"
     IDS_EXPORT_KEYS "Verilen Anahtarlar"
     IDS_YES "Evet"
     IDS_NO "Hayır"
     IDS_EXPORT_SUCCEEDED "Verme işlemi başarılı oldu."
     IDS_EXPORT_FAILED "Verme işlemi başarısız oldu."
-    IDS_EXPORT_PRIVATE_KEY_TITLE "Husûsî Anahtarı Verme"
-    IDS_EXPORT_PRIVATE_KEY_SUBTITLE "Bu onay belgesi, kendisiyle birlikte verilebilen bir husûsî anahtar içerir."
+    IDS_EXPORT_PRIVATE_KEY_TITLE "Özel Anahtarı Verme"
+    IDS_EXPORT_PRIVATE_KEY_SUBTITLE "Bu sertifika, kendisiyle birlikte verilebilen bir özel anahtar içerir."
     IDS_EXPORT_PASSWORD_TITLE "Şifre Girme"
-    IDS_EXPORT_PASSWORD_SUBTITLE "Bir husûsî anahtarı şifreyle koruyabilirsiniz."
+    IDS_EXPORT_PASSWORD_SUBTITLE "Bir özel anahtarı şifreyle koruyabilirsiniz."
     IDS_EXPORT_PASSWORD_MISMATCH "Şifreler uyuşmuyor."
-    IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "Önemli: Bu onay belgesinin husûsî anahtarı açılamadı."
-    IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Önemli: Bu onay belgesinin husûsî anahtarı verilebilen değil."
-    IDS_INTENDED_USE_COLUMN "Intended Use"
-    IDS_LOCATION_COLUMN "Location"
-    IDS_SELECT_CERT_TITLE "Select Certificate"
-    IDS_SELECT_CERT "Select a certificate"
-    IDS_NO_IMPL "Not yet implemented"
+    IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "Önemli: Bu sertifikanın anahtarı açılamadı."
+    IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Önemli: Bu sertifikanın anahtarı verilemez."
+    IDS_INTENDED_USE_COLUMN "Amaçlanan Kullanım"
+    IDS_LOCATION_COLUMN "Konum"
+    IDS_SELECT_CERT_TITLE "Sertifika Seç"
+    IDS_SELECT_CERT "Bir sertifika seçin"
+    IDS_NO_IMPL "Henüz eklenmedi/geliştirilmedi"
 }
 
 IDD_GENERAL DIALOGEX 0, 0, 255, 236
-CAPTION "Umûmî"
+CAPTION "Genel"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -190,7 +190,7 @@ BEGIN
   CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W", ES_READONLY|ES_MULTILINE,8,38,238,78
   CONTROL "", -1, "Static", SS_BLACKFRAME, 16,116,222,1
   CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W", ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
-  PUSHBUTTON "&Onay Belgesini Kur...", IDC_ADDTOSTORE,53,216,95,14
+  PUSHBUTTON "&Sertifikayı Kur...", IDC_ADDTOSTORE,53,216,95,14
   PUSHBUTTON "&Yayımcı Açıklaması", IDC_ISSUERSTATEMENT,152,216,95,14
 END
 
@@ -204,26 +204,26 @@ BEGIN
   CONTROL "", IDC_DETAIL_LIST, "SysListView32",
     LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 6,28,241,100
   CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W", ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
-  PUSHBUTTON "&Husûsiyetleri Düzenle...", IDC_EDITPROPERTIES,53,216,95,14
-  PUSHBUTTON "&Kütüğe Çoğalt...", IDC_EXPORT,152,216,95,14
+  PUSHBUTTON "Ö&zellikleri Düzenle...", IDC_EDITPROPERTIES,53,216,95,14
+  PUSHBUTTON "&Dosyaya Kopyala...", IDC_EXPORT,152,216,95,14
 END
 
 IDD_HIERARCHY DIALOGEX 0, 0, 255, 236
-CAPTION "Onay Belgesi Yolu"
+CAPTION "Sertifika Yolu"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Onay Belgesi Yolu", -1,6,10,245,165, BS_GROUPBOX
+  GROUPBOX "Sertifika Yolu", -1,6,10,245,165, BS_GROUPBOX
   CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
     13,22,231,130
-  PUSHBUTTON "&Onay Belgesini Göster", IDC_VIEWCERTIFICATE,155,156,90,14
-  LTEXT "O&nay Belgesi Durumu:", IDC_CERTIFICATESTATUS,6,183,200,14
+  PUSHBUTTON "S&ertifikayı Göster", IDC_VIEWCERTIFICATE,155,156,90,14
+  LTEXT "Se&rtifika Durumu:", IDC_CERTIFICATESTATUS,6,183,200,14
   CONTROL "", IDC_CERTIFICATESTATUSTEXT,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
 
 IDD_USERNOTICE DIALOGEX 0, 0, 255, 256
-CAPTION "Geri Çevirme"
+CAPTION "Sorumluluk Reddi"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -234,7 +234,7 @@ BEGIN
 END
 
 IDD_CERT_PROPERTIES_GENERAL DIALOGEX 0, 0, 255, 236
-CAPTION "Umûmî"
+CAPTION "Genel"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -242,12 +242,12 @@ BEGIN
   EDITTEXT IDC_FRIENDLY_NAME, 70,12,181,14, ES_AUTOHSCROLL|WS_TABSTOP
   LTEXT "&Tanımı:", -1, 6,32,60,14
   EDITTEXT IDC_DESCRIPTION, 70,30,181,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
-  GROUPBOX "Onay Belgesi Amaçları", -1,6,48,245,185, BS_GROUPBOX
-  AUTORADIOBUTTON "&Bu Onay Belgesi İçin Tüm Amaçları Etkinleştir.",
+  GROUPBOX "Sertifika Amaçları", -1,6,48,245,185, BS_GROUPBOX
+  AUTORADIOBUTTON "&Bu Sertifika İçin Tüm Amaçları Etkinleştir.",
     IDC_ENABLE_ALL_PURPOSES, 12,58,230,14, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "B&u Onay Belgesi İçin Tüm Amaçları Edilginleştir.",
+  AUTORADIOBUTTON "B&u Sertifika İçin Tüm Amaçları Edilginleştir.",
     IDC_DISABLE_ALL_PURPOSES, 12,70,230,14, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "Bu &Onay Belgesi İçin Yalnızca Aşağıdaki Amaçları Etkinleştir:",
+  AUTORADIOBUTTON "Bu &Sertifika İçin Yalnızca Aşağıdaki Amaçları Etkinleştir:",
     IDC_ENABLE_SELECTED_PURPOSES, 12,82,230,14, BS_AUTORADIOBUTTON
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
@@ -260,7 +260,7 @@ CAPTION "Amaç Ekle"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Eklemek istediğiniz onay belgesi amacı için nesne tanımlayıcısını (OID'sini) ekleyiniz:",
+  LTEXT "Eklemek istediğiniz sertifika amacı için nesne tanımlayıcısını (OID'sini) ekleyiniz:",
     -1, 6,6,190,28
   EDITTEXT IDC_NEW_PURPOSE, 6,28,190,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
   PUSHBUTTON "Tamam", IDOK, 33,48,60,14
@@ -268,71 +268,71 @@ BEGIN
 END
 
 IDD_SELECT_STORE DIALOGEX 0,0,200,136
-CAPTION "Onay Belgesi Deposunu Seç"
+CAPTION "Sertifika Deposunu Seç"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Kullanmak istediğiniz onay belgesi deposunu seçiniz:", IDC_STORE_TEXT, 6,6,190,28
+  LTEXT "Kullanmak istediğiniz sertifika deposunu seçiniz:", IDC_STORE_TEXT, 6,6,190,28
   CONTROL "",IDC_STORE_LIST, "SysTreeView32", TVS_HASLINES|WS_BORDER|WS_TABSTOP,
     6,28,188,70
-  CHECKBOX "&Fizîkî Depoları Göster", IDC_SHOW_PHYSICAL_STORES, 6,102,180,14, BS_AUTOCHECKBOX|WS_TABSTOP
+  CHECKBOX "&Fiziksel Depoları Göster", IDC_SHOW_PHYSICAL_STORES, 6,102,180,14, BS_AUTOCHECKBOX|WS_TABSTOP
   PUSHBUTTON "Tamam", IDOK, 90,118,50,14, BS_DEFPUSHBUTTON
   PUSHBUTTON "İptal", IDCANCEL, 144,118,50,14
 END
 
 IDD_IMPORT_WELCOME DIALOGEX 0,0,317,143
-CAPTION "Onay Belgesi Alma Yardımcısı"
+CAPTION "Sertifika Alma Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Onay Belgesi Alma Yardımcısı'na Hoşgeldiniz", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Bu yardımcı; bir kütükten, onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin bir onay belgesi deposuna vermenize yardım eder.\n\n\
-Bir onay belgesi, sizi veyâ iletişim kuruyor olduğunuz bilgisayarı tanılamak için kullanılabilir. Bu onay belgesi, kimlik doğrulaması için ve iletileri imzâlamak için de kullanılabilir. Onay belgesi depoları; onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin derlemleridir.\n\n\
-Sürdürmek için İleri'ye tıklayınız.",
+  LTEXT "Sertifika Alma Sihirbazı'na Hoşgeldiniz", IDC_IMPORT_TITLE, 115,7,195,30
+  LTEXT "Bu sihirbaz, bir dosyadan; sertifikaları, sertifika iptal listelerini ve sertifika güven listelerini bir sertifika deposuna almanıza yardım eder.\n\n\
+Bir sertifika, sizi veya iletişim kuruyor olduğunuz bilgisayarı tanımak için kullanılabilir. Bu sertifika, kimlik doğrulaması için ve iletileri imzalamak için de kullanılabilir. Sertifika depoları; sertifikaların, sertifika iptal listelerinin ve sertifika güven listelerinin toplamasıdır.\n\n\
+Devam için İleri'ye tıklayınız.",
     -1, 115,40,195,120
 END
 
 IDD_IMPORT_FILE DIALOGEX 0,0,317,178
-CAPTION "Onay Belgesi Alma Yardımcısı"
+CAPTION "Sertifika Alma Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&Kütük Adı:", -1, 21,1,195,10
+  LTEXT "&Dosya Adı:", -1, 21,1,195,10
   EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   PUSHBUTTON "&Göz At...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
-  LTEXT "Önemli: Aşağıdaki kütük biçimleri, bir onay belgesinden, bir onay belgesi iptal dizelgesinden veyâ bir onay belgesi güven dizelgesinden daha çoğunu içerebilir:",
+  LTEXT "Önemli: Aşağıdaki dosya biçimleri, bir sertifikadan, bir sertifika iptal listesinden veya bir sertifika güven listesinden daha çoğunu içerebilir:",
     -1, 21,30,265,16
-  LTEXT "Kriptografik İleti Söz Dizimi Ölçünü/PKCS #7 İletileri (*.p7b)",
+  LTEXT "Kriptografik İleti Söz Dizimi Standardı/PKCS #7 İletileri (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Şahsî Bilgi Değişimi/PKCS #12 (*.pfx; *.p12)",
+  LTEXT "Kişisel Bilgi Değişimi/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Microsoft Dizilendirilmiş Onay Belgesi Deposu (*.sst)",
+  LTEXT "Microsoft Seri Sertifika Deposu (*.sst)",
     -1, 31,83,265,10
 END
 
 IDD_IMPORT_STORE DIALOGEX 0,0,317,143
-CAPTION "Onay Belgesi Alma Yardımcısı"
+CAPTION "Sertifika Alma Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "ReactOS, onay belgesi deposunu kendiliğinden seçebilir ya da onay belgeleri için bir konum belirleyebilirsiniz.",
+  LTEXT "ReactOS, sertifika deposunu otomatik olarak seçebilir ya da sertifikalar için bir konum belirleyebilirsiniz.",
     -1, 21,1,220,25
-  AUTORADIOBUTTON "&Onay Belgesi Deposunu Kendiliğinden Seç",
+  AUTORADIOBUTTON "&Sertifika Deposunu Otomatik Seç",
     IDC_IMPORT_AUTO_STORE, 31,28,220,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "&Tüm Onay Belgelerini Aşağıdaki Depoya Yerleştir:",
+  AUTORADIOBUTTON "&Tüm Sertifikaları Aşağıdaki Depoya Yerleştir:",
     IDC_IMPORT_SPECIFY_STORE, 31,42,220,12, BS_AUTORADIOBUTTON
   EDITTEXT IDC_IMPORT_STORE, 44,61,185,14, ES_READONLY
   PUSHBUTTON "&Göz At...", IDC_IMPORT_BROWSE_STORE, 236,61,60,14
 END
 
 IDD_IMPORT_FINISH DIALOGEX 0,0,317,178
-CAPTION "Onay Belgesi Alma Yardımcısı"
+CAPTION "Sertifika Alma Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Onay Belgesi Alma Yardımcısı'nın Bitirilmesi", IDC_IMPORT_TITLE,
+  LTEXT "Sertifika Alma Sihirbazı'nın Sonu", IDC_IMPORT_TITLE,
     115,1,195,40
-  LTEXT "Onay Belgesi Alma Yardımcısı'nı başarıyla bitirdiniz.",
+  LTEXT "Sertifika Alma Sihirbazı'nı başarıyla bitirdiniz.",
     -1, 115,33,195,24
   LTEXT "Aşağıdaki ayarları belirlediniz:",
     -1, 115,57,195,12
@@ -342,7 +342,7 @@ BEGIN
 END
 
 IDD_CERT_MGR DIALOGEX 0,0,335,270
-CAPTION "Onay Belgeleri"
+CAPTION "Sertifikalar"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -354,7 +354,7 @@ BEGIN
   PUSHBUTTON "&Ver...", IDC_MGR_EXPORT, 76,172,65,14, WS_DISABLED
   PUSHBUTTON "&Sil", IDC_MGR_REMOVE, 145,172,65,14, WS_DISABLED
   PUSHBUTTON "G&elişmiş...", IDC_MGR_ADVANCED, 263,172,65,14
-  GROUPBOX "Onay Belgesi Kullanım Amaçları", -1,7,194,321,47, BS_GROUPBOX
+  GROUPBOX "Sertifika Kullanım Amaçları", -1,7,194,321,47, BS_GROUPBOX
   LTEXT "", IDC_MGR_PURPOSES, 13,206,252,32
   PUSHBUTTON "&Göster", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
   PUSHBUTTON "Kapat", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
@@ -365,10 +365,10 @@ CAPTION "Gelişmiş Seçenekler"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Onay Belgesi Amaçları", -1, 7,7,234,141, BS_GROUPBOX
-  LTEXT """Gelişmiş Amaçlar"" seçilmiş olduğunda dizelgelenen bir ya da daha çok amaç seçiniz.",
+  GROUPBOX "Sertifika Amaçları", -1, 7,7,234,141, BS_GROUPBOX
+  LTEXT """Gelişmiş Amaçlar"" seçilmiş olduğunda listelenen bir ya da daha çok amaç seçiniz.",
     -1, 14,18,220,16
-  LTEXT "&Onay Belgesi Amaçları:", -1, 14,41,90,12, WS_TABSTOP
+  LTEXT "&Sertifika Amaçları:", -1, 14,41,90,12, WS_TABSTOP
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
     14,51,220,90
@@ -377,33 +377,33 @@ BEGIN
 END
 
 IDD_EXPORT_WELCOME DIALOGEX 0,0,317,143
-CAPTION "Onay Belgesi Verme Yardımcısı"
+CAPTION "Sertifika Verme Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Onay Belgesi Verme Yardımcısı'na Hoşgeldiniz", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Bu yardımcı; bir onay belgesi deposundan, onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin bir kütüğe vermenize yardım eder.\n\n\
-Bir onay belgesi, sizi veyâ iletişim kuruyor olduğunuz bilgisayarı tanılamak için kullanılabilir. Bu onay belgesi, kimlik doğrulaması için ve iletileri imzâlamak için de kullanılabilir. Onay belgesi depoları; onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin derlemleridir.\n\n\
-Sürdürmek için İleri'ye tıklayınız.",
+  LTEXT "Sertifika Verme Sihirbazı'na Hoşgeldiniz", IDC_EXPORT_TITLE, 115,7,195,30
+  LTEXT "Bu sihirbaz, bir sertifika deposundan; sertifikaları, sertifika iptal listelerini ve sertifika güven listelerini bir dosyaya vermenize yardım eder.\n\n\
+Bir sertifika, sizi veya iletişim kuruyor olduğunuz bilgisayarı tanımak için kullanılabilir. Bu sertifika, kimlik doğrulaması için ve iletileri imzalamak için de kullanılabilir. Sertifika depoları; sertifikaların, sertifika iptal listelerinin ve sertifika güven listelerinin toplamasıdır.\n\n\
+Devam etmek için İleri'ye tıklayınız.",
     -1, 115,40,195,120
 END
 
 IDD_EXPORT_PRIVATE_KEY DIALOGEX 0,0,317,143
-CAPTION "Onay Belgesi Verme Yardımcısı"
+CAPTION "Sertifika Verme Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Husûsi anahtarı vermeyi seçtiyseniz bir sonraki sayfada husûsî anahtarı korumak için sizden bir şifre istenecektir.", -1, 21,1,195,25
-  LTEXT "Husûsî anahtarı vermeyi istiyor musunuz?", -1, 21,27,195,10
-  AUTORADIOBUTTON "&Evet, husûsî anahtarı ver.",
+  LTEXT "Özel anahtarı vermeyi seçtiyseniz bir sonraki sayfada özel anahtarı korumak için sizden bir şifre istenecektir.", -1, 21,1,195,25
+  LTEXT "Özel anahtarı vermek istiyor musunuz?", -1, 21,27,195,10
+  AUTORADIOBUTTON "&Evet, özel anahtarı ver.",
     IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "&Hayır, husûsî anahtarı verme.",
+  AUTORADIOBUTTON "&Hayır, özel anahtarı verme.",
     IDC_EXPORT_PRIVATE_KEY_NO, 31,48,200,12, BS_AUTORADIOBUTTON
   LTEXT "", IDC_EXPORT_PRIVATE_KEY_UNAVAILABLE, 21,60,200,24
 END
 
 IDD_EXPORT_PASSWORD DIALOGEX 0,0,317,143
-CAPTION "Onay Belgesi Verme Yardımcısı"
+CAPTION "Sertifika Verme Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -414,7 +414,7 @@ BEGIN
 END
 
 IDD_EXPORT_FORMAT DIALOGEX 0,0,317,143
-CAPTION "Onay Belgesi Verme Yardımcısı"
+CAPTION "Sertifika Verme Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -423,38 +423,38 @@ BEGIN
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "&Base64 Şifrelenmiş X.509 (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Kriptografik İleti Söz Dizimi Ölçünü/PKCS #7 İletileri (*.p7b)",
+  AUTORADIOBUTTON "&Kriptografik İleti Söz Dizimi Standardı/PKCS #7 İletileri (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
-  CHECKBOX "&Olasıysa Onay Belgesi Yolunda Tüm Onay Belgelerini Ekle",
+  CHECKBOX "&Olasıysa Sertifika Yolundaki Tüm Sertifikaları Ekle",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "&Şahsî Bilgi Değişimi/PKCS #12 (*.pfx)",
+  AUTORADIOBUTTON "&Kişisel Bilgi Değişimi/PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
-  CHECKBOX "O&lasıysa Onay Belgesi Yolunda Tüm Onay Belgelerini Ekle",
+  CHECKBOX "O&lasıysa Sertifika Yolundaki Tüm Sertifikaları Ekle",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "&Güçlü Şifrelemeyi Etkinleştir",
     IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  CHECKBOX "&Verme Başarılıysa Husûsî Anahtarı Sil",
+  CHECKBOX "&Verme Başarılıysa Özel Anahtarı Sil",
     IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
 IDD_EXPORT_FILE DIALOGEX 0,0,317,143
-CAPTION "Onay Belgesi Verme Yardımcısı"
+CAPTION "Sertifika Verme Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&Kütük Adı:", -1, 21,1,195,10
+  LTEXT "&Dosya Adı:", -1, 21,1,195,10
   EDITTEXT IDC_EXPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   PUSHBUTTON "&Göz At...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
 IDD_EXPORT_FINISH DIALOGEX 0,0,317,178
-CAPTION "Onay Belgesi Verme Yardımcısı"
+CAPTION "Sertifika Verme Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Onay Belgesi Verme Yardımcısı'nın Bitirilmesi", IDC_EXPORT_TITLE,
+  LTEXT "Sertifika Verme Sihirbazı'nın Sonu", IDC_EXPORT_TITLE,
     115,1,195,40
-  LTEXT "Onay Belgesi Verme Yardımcısı'nı başarıyla bitirdiniz.",
+  LTEXT "Sertifika Verme Sihirbazı'nı başarıyla bitirdiniz.",
     -1, 115,33,195,24
   LTEXT "Aşağıdaki ayarları belirlediniz:",
     -1, 115,57,195,12
@@ -464,13 +464,13 @@ BEGIN
 END
 
 IDD_SELECT_CERT DIALOG 0,0,278,157
-CAPTION "Select Certificate"
+CAPTION "Sertifika Seç"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Select a certificate you want to use", IDC_SELECT_DISPLAY_STRING, 7,7,264,26
+  LTEXT "Kullanmak istediğiniz bir sertifikayı seçiniz", IDC_SELECT_DISPLAY_STRING, 7,7,264,26
   CONTROL "", IDC_SELECT_CERTS, "SysListView32",
     LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 7,40,264,89
-  PUSHBUTTON "OK", IDOK, 91,136,51,14, BS_DEFPUSHBUTTON
-  PUSHBUTTON "Cancel", IDCANCEL, 149,136,51,14
-  PUSHBUTTON "&View Certificate", IDC_SELECT_VIEW_CERT, 207,136,65,14, WS_DISABLED
+  PUSHBUTTON "Tamam", IDOK, 91,136,51,14, BS_DEFPUSHBUTTON
+  PUSHBUTTON "İptal", IDCANCEL, 149,136,51,14
+  PUSHBUTTON "&Sertifikayı Göster", IDC_SELECT_VIEW_CERT, 207,136,65,14, WS_DISABLED
 END

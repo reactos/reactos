@@ -224,12 +224,12 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
     NotifyRefreshNeeded();
 }
 
-HBITMAP SelectionModel::GetBitmap()
+HBITMAP SelectionModel::GetBitmap() const
 {
     return m_hBm;
 }
 
-int SelectionModel::PtStackSize()
+int SelectionModel::PtStackSize() const
 {
     return m_iPtSP;
 }
@@ -253,7 +253,7 @@ void SelectionModel::SetSrcRectSizeToZero()
     m_rcSrc.bottom = m_rcSrc.top;
 }
 
-BOOL SelectionModel::IsSrcRectSizeNonzero()
+BOOL SelectionModel::IsSrcRectSizeNonzero() const
 {
     return (RECT_WIDTH(m_rcSrc) != 0) && (RECT_HEIGHT(m_rcSrc) != 0);
 }
@@ -318,22 +318,22 @@ void SelectionModel::ModifyDestRect(POINT& ptDelta, int iAction)
     ptDelta.y -= ptDeltaUsed.y;
 }
 
-LONG SelectionModel::GetDestRectWidth()
+LONG SelectionModel::GetDestRectWidth() const
 {
     return m_rcDest.right - m_rcDest.left;
 }
 
-LONG SelectionModel::GetDestRectHeight()
+LONG SelectionModel::GetDestRectHeight() const
 {
     return m_rcDest.bottom - m_rcDest.top;
 }
 
-LONG SelectionModel::GetDestRectLeft()
+LONG SelectionModel::GetDestRectLeft() const
 {
     return m_rcDest.left;
 }
 
-LONG SelectionModel::GetDestRectTop()
+LONG SelectionModel::GetDestRectTop() const
 {
     return m_rcDest.top;
 }

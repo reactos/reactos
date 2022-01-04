@@ -9,6 +9,8 @@
 #include <shlobj.h>
 #include <undocshell.h>
 
+#include <pseh/pseh2.h>
+
 #define MAX_GETPRINTER_SIZE 4096 - MAX_PATH
 typedef void (WINAPI *PPfpSHChangeNotify)(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2);
 
@@ -160,7 +162,7 @@ IntProtectHandle( HANDLE hSpooler, BOOL Close )
     // 2 : Close and/or shared
     // 1 : Failed Handle
     // 0 : In use.
-    return Ret; 
+    return Ret;
 }
 //
 // This one too.

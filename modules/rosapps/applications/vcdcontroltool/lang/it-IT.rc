@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Virtual CD Control Tool
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Italian resource file
- * COPYRIGHT:   Copyright 2019 Bișoc George (fraizeraust99 at gmail dot com)
+ * COPYRIGHT:   Copyright 2019 George Bișoc (george.bisoc@reactos.org)
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL

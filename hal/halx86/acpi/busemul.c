@@ -16,7 +16,7 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpRegisterKdSupportFunctions(VOID)
@@ -83,20 +83,6 @@ HalpTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     /* Translation is easy */
     TranslatedAddress->QuadPart = BusAddress.QuadPart;
     return TRUE;
-}
-
-ULONG
-NTAPI
-HalpGetSystemInterruptVector_Acpi(IN ULONG BusNumber,
-                                 IN ULONG BusInterruptLevel,
-                                 IN ULONG BusInterruptVector,
-                                 OUT PKIRQL Irql,
-                                 OUT PKAFFINITY Affinity)
-{
-    UCHAR Vector = IRQ2VECTOR((UCHAR)BusInterruptLevel);
-    *Irql = VECTOR2IRQL(Vector);
-    *Affinity = 0xFFFFFFFF;
-    return Vector;
 }
 
 BOOLEAN
@@ -254,11 +240,10 @@ HalGetInterruptVector(IN INTERFACE_TYPE InterfaceType,
                       OUT PKAFFINITY Affinity)
 {
     /* Call the system bus translator */
-    return HalpGetSystemInterruptVector_Acpi(BusNumber,
-                                             BusInterruptLevel,
-                                             BusInterruptVector,
-                                             Irql,
-                                             Affinity);
+    return HalpGetRootInterruptVector(BusInterruptLevel,
+                                      BusInterruptVector,
+                                      Irql,
+                                      Affinity);
 }
 
 /*

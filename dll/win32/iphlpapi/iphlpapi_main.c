@@ -808,9 +808,8 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
             IP_ADDRESS_STRING primaryWINS, secondaryWINS;
 
             memset(pAdapterInfo, 0, size);
-            if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,
-             "Software\\Wine\\Wine\\Config\\Network", 0, KEY_READ,
-             &hKey) == ERROR_SUCCESS) {
+            /* @@ Wine registry key: HKCU\Software\Wine\Network */
+            if (RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Network", &hKey) == ERROR_SUCCESS) {
               DWORD size = sizeof(primaryWINS.String);
               unsigned long addr;
 
@@ -1764,9 +1763,10 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
 
             pIfTable->Adapter[ndx].Index = table->indexes[ndx];
             name = getInterfaceNameByIndex(table->indexes[ndx]);
-            for (walker = name, assigner = pIfTable->Adapter[ndx].Name;
+            wcscpy(pIfTable->Adapter[ndx].Name, L"\\DEVICE\\TCPIP_");
+            for (walker = name, assigner = &pIfTable->Adapter[ndx].Name[14];
              walker && *walker &&
-             assigner - pIfTable->Adapter[ndx].Name < MAX_ADAPTER_NAME - 1;
+             assigner - pIfTable->Adapter[ndx].Name < MAX_ADAPTER_NAME - 1 - 14;
              walker++, assigner++)
               *assigner = *walker;
             *assigner = 0;

@@ -12,7 +12,7 @@
 #include "biditext.h"
 
 /* Prototypes */
-DWORD WINAPI LpkGetCharacterPlacement(HDC hdc, LPCWSTR lpString, INT uCount, INT nMaxExtent, 
+DWORD WINAPI LpkGetCharacterPlacement(HDC hdc, LPCWSTR lpString, INT uCount, INT nMaxExtent,
                                       GCP_RESULTSW *lpResults, DWORD dwFlags, DWORD dwUnused);
 
 BOOL WINAPI LpkExtTextOut(HDC hdc, int x, int y,
@@ -167,7 +167,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       }
       break;
     }
-    
+
     case WM_PAINT:
         {
             PAINTSTRUCT ps;

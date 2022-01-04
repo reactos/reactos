@@ -2357,7 +2357,7 @@ static VOID VidBiosSetCursorShape(WORD CursorStartEnd)
      * https://sites.google.com/site/pcdosretro/biosdata
      *
      * A proof that it is OK is that in the following code samples it is
-     * explicitely mentioned that setting bit 0 disables cursor emulation:
+     * explicitly mentioned that setting bit 0 disables cursor emulation:
      * - Code snippets in PC Magazine vol.5 num.15 of 16/09/1986, p.291-292;
      * - CardFile DOS utility (Jeff Prosise, PC Magazine vol.6 num.17 of 13/10/1987, p.403-416):
      *   https://ia600700.us.archive.org/1/items/srccode-00000020/cardfile.asm.txt

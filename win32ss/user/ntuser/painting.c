@@ -369,14 +369,26 @@ IntSendNCPaint(PWND pWnd, HRGN hRgn)
 VOID FASTCALL
 IntSendChildNCPaint(PWND pWnd)
 {
-    for (pWnd = pWnd->spwndChild; pWnd; pWnd = pWnd->spwndNext)
+    pWnd = pWnd->spwndChild;
+    while (pWnd)
     {
         if ((pWnd->hrgnUpdate == NULL) && (pWnd->state & WNDS_SENDNCPAINT))
         {
+            PWND Next;
             USER_REFERENCE_ENTRY Ref;
+
+            /* Reference, IntSendNCPaint leaves win32k */
             UserRefObjectCo(pWnd, &Ref);
             IntSendNCPaint(pWnd, HRGN_WINDOW);
+
+            /* Make sure to grab next one before dereferencing/freeing */
+            Next = pWnd->spwndNext;
             UserDerefObjectCo(pWnd);
+            pWnd = Next;
+        }
+        else
+        {
+            pWnd = pWnd->spwndNext;
         }
     }
 }
@@ -530,7 +542,7 @@ co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
       Wnd->state &= ~WNDS_UPDATEDIRTY;
 
       Wnd->state2 |= WNDS2_WMPAINTSENT;
-      co_IntSendMessage(hWnd, WM_PAINT, 0, 0); 
+      co_IntSendMessage(hWnd, WM_PAINT, 0, 0);
 
       if (Wnd->state & WNDS_PAINTNOTPROCESSED)
       {
@@ -548,7 +560,7 @@ co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
    * Update child windows.
    */
 
-   if (!(Flags & RDW_NOCHILDREN)  && 
+   if (!(Flags & RDW_NOCHILDREN)  &&
         (Flags & RDW_ALLCHILDREN) &&
         !UserIsDesktopWindow(Wnd))
    {
@@ -814,7 +826,7 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
    if (!(Flags & RDW_NOCHILDREN) &&
        !(Wnd->style & WS_MINIMIZE) &&
          ((Flags & RDW_ALLCHILDREN) || !(Wnd->style & WS_CLIPCHILDREN)))
-   { 
+   {
       PWND Child;
 
       for (Child = Wnd->spwndChild; Child; Child = Child->spwndNext)
@@ -928,7 +940,7 @@ co_UserRedrawWindow(
             if (Window == UserGetDesktopWindow())
             {
                TmpRgn = IntSysCreateRectpRgnIndirect(UpdateRect);
-            }          
+            }
             else
             {
                TmpRgn = IntSysCreateRectpRgn(Window->rcClient.left + UpdateRect->left,
@@ -2164,7 +2176,7 @@ UserDrawCaptionText(
                 (RECTL *)&r,
                  DT_END_ELLIPSIS|DT_SINGLELINE|DT_VCENTER|DT_NOPREFIX|DT_LEFT);
    }
- 
+
    IntGdiSetTextColor(hDc, OldTextColor);
 
    if (hOldFont)

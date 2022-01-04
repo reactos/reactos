@@ -15,7 +15,7 @@ extern "C" {
 #include "env_spec_w32.h"
 #else
 //#include "env_spec.h"
-#endif 
+#endif
 
 #define WCACHE_BOUND_CHECKS
 

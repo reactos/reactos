@@ -164,7 +164,7 @@ Return Value:
     return Status;
 }
 
-
+
 _Function_class_(IRP_MJ_SET_EA)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -245,7 +245,7 @@ Return Value:
     return Status;
 }
 
-
+
 NTSTATUS
 FatCommonQueryEa (
     IN PIRP_CONTEXT IrpContext,
@@ -270,7 +270,7 @@ Return Value:
 --*/
 
 {
-#if 0    
+#if 0
     PIO_STACK_LOCATION IrpSp;
 
     NTSTATUS Status;
@@ -306,7 +306,7 @@ Return Value:
 
     FatCompleteRequest( IrpContext, Irp, STATUS_INVALID_DEVICE_REQUEST);
     return STATUS_INVALID_DEVICE_REQUEST;
-    
+
 #if 0
     //
     //  Get the current Irp stack location
@@ -654,7 +654,7 @@ Return Value:
 #endif
 }
 
-
+
 NTSTATUS
 FatCommonSetEa (
     IN PIRP_CONTEXT IrpContext,
@@ -679,7 +679,7 @@ Return Value:
 --*/
 
 {
-#if 0    
+#if 0
     PIO_STACK_LOCATION IrpSp;
 
     NTSTATUS Status;
@@ -716,9 +716,9 @@ Return Value:
 
     FatCompleteRequest( IrpContext, Irp, STATUS_INVALID_DEVICE_REQUEST);
     return STATUS_INVALID_DEVICE_REQUEST;
-    
+
 #if 0
- 
+
     //
     //  The following booleans are used in the unwind process.
     //
@@ -856,7 +856,7 @@ Return Value:
         //
         //  Now go pick up everything
         //
-        
+
         FatAcquireSharedVcb( IrpContext, Fcb->Vcb );
         AcquiredVcb = TRUE;
         FatAcquireExclusiveFcb( IrpContext, Fcb );
@@ -1601,7 +1601,7 @@ Return Value:
     return Iosb;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -1739,7 +1739,7 @@ Return Value:
 
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -1957,7 +1957,7 @@ Return Value:
 
 }
 
-
+
 //
 //  Local Support Routine
 //

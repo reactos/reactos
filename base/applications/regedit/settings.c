@@ -23,9 +23,9 @@
 #include <strsafe.h>
 
 const WCHAR g_szGeneralRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit";
-DECLSPEC_IMPORT ULONG WINAPIV DbgPrint(PCH Format,...);
+DECLSPEC_IMPORT ULONG WINAPIV DbgPrint(PCCH Format,...);
 
-/* 
+/*
 VV,VV,VV,VV,WA,WA,WA,WA,WB,WB,WB,WB,R1,R1,R1,R1
 R2,R2,R2,R2,R3,R3,R3,R3,R4,R4,R4,r4,LL,LL,LL,LL
 TT,TT,TT,TT,RR,RR,RR,RR,BB,BB,BB,BB,SS,SS,SS,SS

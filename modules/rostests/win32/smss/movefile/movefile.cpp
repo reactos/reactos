@@ -18,11 +18,11 @@
 
 void Usage()
 {
-	printf(" Usage: smssTest.exe -g|c|s|d \n \
-			g - generate test files \n \
-			c - check files after reboot \n \
-			s - show registry entry \n \
-			d - delete registry value \n");
+	printf(" Usage: smssTest.exe -g|c|s|d\n\
+			g - generate test files\n\
+			c - check files after reboot\n\
+			s - show registry entry\n\
+			d - delete registry value\n");
 }
 
 int ShowRegValue()

@@ -11,12 +11,18 @@ BEGIN
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Siguiente imagen"
     IDS_TOOLTIP_PREV_PIC "Imagen anterior"
+    IDS_TOOLTIP_BEST_FIT "Best fit to window (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Actual size (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Start slideshow (F11)"
     IDS_TOOLTIP_ZOOM_IN "Acercar (+)"
     IDS_TOOLTIP_ZOOM_OUT "Alejar (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Rotar en el sentido de las agujas del reloj (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Rotar en el sentido opuesto a las agujas del reloj (Ctrl+L)"
+    IDS_TOOLTIP_DELETE "Delete (DEL)"
     IDS_TOOLTIP_PRINT "Imprimir (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Guardar como... (Ctrl+S)"
+    IDS_TOOLTIP_MODIFY "Modify (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Help topics (F1)"
 END
 
 STRINGTABLE

@@ -21,7 +21,7 @@ GetDwordElement(IN PACPI_METHOD_ARGUMENT Argument,
                 OUT PULONG Value)
 {
     NTSTATUS Status;
-    
+
     /* Must have an integer */
     if (Argument->Type != ACPI_METHOD_ARGUMENT_INTEGER)
     {
@@ -37,7 +37,7 @@ GetDwordElement(IN PACPI_METHOD_ARGUMENT Argument,
         *Value = Argument->Argument;
         Status = STATUS_SUCCESS;
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -48,7 +48,7 @@ GetStringElement(IN PACPI_METHOD_ARGUMENT Argument,
                  OUT PCHAR Value)
 {
     NTSTATUS Status;
-    
+
     /* Must have a string of buffer */
     if ((Argument->Type == ACPI_METHOD_ARGUMENT_STRING) ||
         (Argument->Type == ACPI_METHOD_ARGUMENT_BUFFER))
@@ -75,7 +75,7 @@ GetStringElement(IN PACPI_METHOD_ARGUMENT Argument,
         if (CmBattDebug & 0x4C)
             DbgPrint("GetStringElement: Object contained wrong data type - %d\n", Argument->Type);
     }
-    
+
     /* Return the status */
     return Status;
 }
@@ -97,7 +97,7 @@ CmBattSendDownStreamIrp(IN PDEVICE_OBJECT DeviceObject,
 
     /* Initialize our wait event */
     KeInitializeEvent(&Event, SynchronizationEvent, 0);
-    
+
     /* Allocate the IRP */
     Irp = IoBuildDeviceIoControlRequest(IoControlCode,
                                         DeviceObject,
@@ -115,7 +115,7 @@ CmBattSendDownStreamIrp(IN PDEVICE_OBJECT DeviceObject,
             DbgPrint("CmBattSendDownStreamIrp: Failed to allocate Irp\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
- 
+
     /* Call ACPI */
     if (CmBattDebug & 0x40)
         DbgPrint("CmBattSendDownStreamIrp: Irp %x [Tid] %x\n",
@@ -131,7 +131,7 @@ CmBattSendDownStreamIrp(IN PDEVICE_OBJECT DeviceObject,
                               NULL);
         Status = Irp->IoStatus.Status;
     }
-    
+
     /* Check if caller wanted output */
     if (OutputBuffer)
     {
@@ -143,7 +143,7 @@ CmBattSendDownStreamIrp(IN PDEVICE_OBJECT DeviceObject,
             Status = STATUS_ACPI_INVALID_DATA;
         }
     }
-    
+
     /* Return status */
     if (CmBattDebug & 0x40)
         DbgPrint("CmBattSendDownStreamIrp: Irp %x completed %x! [Tid] %x\n",
@@ -163,11 +163,11 @@ CmBattGetPsrData(IN PDEVICE_OBJECT DeviceObject,
     if (CmBattDebug & 0x40)
         DbgPrint("CmBattGetPsrData: Entered with Pdo %x Tid %x\n",
                  DeviceObject, KeGetCurrentThread());
-    
+
     /* Initialize to zero */
     ASSERT(PsrData != NULL);
     *PsrData = 0;
-      
+
     /* Request the _PSR method */
     *(PULONG)InputBuffer.MethodName = 'RSP_';
     InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE;
@@ -191,7 +191,7 @@ CmBattGetPsrData(IN PDEVICE_OBJECT DeviceObject,
         /* Failure */
         DbgPrint("CmBattGetPsrData: Failed _PSR method - Status (0x%x)\n", Status);
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -208,11 +208,11 @@ CmBattGetStaData(IN PDEVICE_OBJECT DeviceObject,
     if (CmBattDebug & 0x40)
         DbgPrint("CmBattGetStaData: Entered with Pdo %x Tid %x\n",
                  DeviceObject, KeGetCurrentThread());
-    
+
     /* Initialize to zero */
     ASSERT(StaData != NULL);
     *StaData = 0;
-      
+
     /* Request the _PSR method */
     *(PULONG)InputBuffer.MethodName = 'ATS_';
     InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE;
@@ -237,7 +237,7 @@ CmBattGetStaData(IN PDEVICE_OBJECT DeviceObject,
         DbgPrint("CmBattGetStaData: Failed _STA method - Status (0x%x)\n", Status);
         Status = STATUS_NO_SUCH_DEVICE;
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -254,11 +254,11 @@ CmBattGetUniqueId(IN PDEVICE_OBJECT DeviceObject,
     if (CmBattDebug & 0x40)
         DbgPrint("CmBattGetUniqueId: Entered with Pdo %x Tid %x\n",
                  DeviceObject, KeGetCurrentThread());
-    
+
     /* Initialize to zero */
     ASSERT(UniqueId != NULL);
     *UniqueId = 0;
-      
+
     /* Request the _PSR method */
     *(PULONG)InputBuffer.MethodName = 'DIU_';
     InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE;
@@ -283,7 +283,7 @@ CmBattGetUniqueId(IN PDEVICE_OBJECT DeviceObject,
         DbgPrint("CmBattGetUniqueId: Failed _UID method - Status (0x%x)\n", Status);
         Status = STATUS_NO_SUCH_DEVICE;
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -299,7 +299,7 @@ CmBattSetTripPpoint(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     if (CmBattDebug & 0x440)
         DbgPrint("CmBattSetTripPpoint: _BTP Alarm Value %x Device %x Tid %x\n",
                  AlarmValue, DeviceExtension->DeviceId, KeGetCurrentThread);
-    
+
     /* Request the _BTP method */
     *(PULONG)InputBuffer.MethodName = 'PTB_';
     InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER_SIGNATURE;
@@ -315,7 +315,7 @@ CmBattSetTripPpoint(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     if (!(NT_SUCCESS(Status)) && (CmBattDebug & 0x440))
         DbgPrint("CmBattSetTripPpoint: Failed _BTP method on device %x - Status (0x%x)\n",
                  DeviceExtension->DeviceId, Status);
-    
+
     /* Return status */
     return Status;
 }

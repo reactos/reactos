@@ -1,6 +1,4 @@
 
-add_definitions(-D_DEBUG_MEM)
-
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
 

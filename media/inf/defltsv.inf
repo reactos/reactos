@@ -1,0 +1,207 @@
+; defltsv.inf
+; Default security settings for ReactOS Server
+
+[Version]
+Signature = "$Windows NT$"
+
+[System Access]
+; Password Options
+MinimumPasswordAge = 0
+MaximumPasswordAge = 42
+MinimumPasswordLength = 0
+PasswordComplexity = 0
+PasswordHistorySize = 0
+RequireLogonToChangePassword = 0
+ClearTextPassword = 0
+
+; Lockout Options
+LockoutBadCount = 0
+;ResetLockoutCount = 30
+;LockoutDuration = 30
+
+; Account Options
+LSAAnonymousLookup = 0
+;EnableAdminAccount = 0
+EnableGuestAccount = 0
+;NewAdministratorName =
+;NewGuestName =
+
+[Application Log]
+MaximumLogSize = 16384
+AuditLogRetentionPeriod = 0
+;RetentionDays = 7
+RestrictGuestAccess = 1
+
+[Security Log]
+MaximumLogSize = 16384
+AuditLogRetentionPeriod = 0
+;RetentionDays = 7
+RestrictGuestAccess = 1
+
+[System Log]
+MaximumLogSize = 16384
+AuditLogRetentionPeriod = 0
+;RetentionDays = 7
+RestrictGuestAccess = 1
+
+[Event Audit]
+AuditSystemEvents = 0;
+AuditObjectAccess = 0;
+AuditPrivilegeUse = 0;
+AuditPolicyChange = 0;
+AuditAccountManage = 0;
+AuditProcessTracking = 0;
+AuditAccountLogon = 1;
+AuditLogonEvents = 1;
+
+[Privilege Rights]
+SeAssignPrimaryTokenPrivilege = *S-1-5-19, *S-1-5-20
+SeAuditPrivilege = *S-1-5-19, *S-1-5-20
+SeBackupPrivilege = *S-1-5-32-544, *S-1-5-32-551
+SeBatchLogonRight =
+SeChangeNotifyPrivilege = *S-1-1-0, *S-1-5-32-544, *S-1-5-32-545, *S-1-5-32-547, *S-1-5-32-551
+SeCreateGlobalPrivilege = *S-1-5-6, *S-1-5-32-544
+SeCreatePagefilePrivilege = *S-1-5-32-544
+SeCreatePermanentPrivilege =
+SeCreateTokenPrivilege =
+SeDebugPrivilege = *S-1-5-32-544
+SeDenyBatchLogonRight =
+SeDenyInteractiveLogonRight =
+SeDenyNetworkLogonRight =
+SeDenyRemoteInteractiveLogonRight =
+SeDenyServiceLogonRight =
+SeEnableDelegationPrivilege =
+SeImpersonatePrivilege = *S-1-5-6, *S-1-5-32-544
+SeIncreaseBasePriorityPrivilege = *S-1-5-32-544
+SeIncreaseQuotaPrivilege = *S-1-5-19, *S-1-5-20, *S-1-5-32-544
+SeInteractiveLogonRight = *S-1-5-32-544, *S-1-5-32-545, *S-1-5-32-547, *S-1-5-32-551
+SeLoadDriverPrivilege = *S-1-5-32-544
+SeLockMemoryPrivilege =
+SeMachineAccountPrivilege =
+SeManageVolumePrivilege = *S-1-5-32-544
+SeNetworkLogonRight =  *S-1-1-0, *S-1-5-32-544, *S-1-5-32-545, *S-1-5-32-547, *S-1-5-32-551
+SeProfileSingleProcessPrivilege = *S-1-5-32-544, *S-1-5-32-547
+SeRemoteInteractiveLogonRight = *S-1-5-32-544, *S-1-5-32-555
+SeRemoteShutdownPrivilege = *S-1-5-32-544
+SeRestorePrivilege = *S-1-5-32-544, *S-1-5-32-551
+SeSecurityPrivilege = *S-1-5-32-544
+SeServiceLogonRight =
+SeShutdownPrivilege = *S-1-5-32-544, *S-1-5-32-547, *S-1-5-32-551
+SeSyncAgentPrivilege =
+SeSystemEnvironmentPrivilege = *S-1-5-32-544
+SeSystemProfilePrivilege = *S-1-5-32-544
+SeSystemTimePrivilege = *S-1-5-19, *S-1-5-32-544, *S-1-5-32-547
+SeTakeOwnershipPrivilege = *S-1-5-32-544
+SeTcbPrivilege =
+SeUndockPrivilege = *S-1-5-32-544, *S-1-5-32-547
+
+[Group Membership]
+%SceInfUsers%__Memberof =
+%SceInfUsers%__Members = %SceInfAuthUsers%, %SceInfInteractive%
+
+[Registry Values]
+; Full registry path = Type, Value
+;
+; Type:
+;   1: REG_SZ
+;   2: REG_EXPAND_SZ
+;   3: REG_BINARY
+;   4: REG_DWORD
+;   7: REG_MULTI_SZ
+
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\DisableCAD = 4, 0
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\DontDisplayLastUserName = 4, 0
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\LegalNoticeCaption = 1, ""
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\LegalNoticeText = 7, ""
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ShutdownWithoutLogon = 4, 0
+MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\UndockWithoutLogon = 4, 1
+
+[Strings]
+SceInfAuthUsers = "Authenticated Users"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Guest"
+SceInfUsers = "Users"
+
+[Strings.0404]
+SceInfAuthUsers = "經過身份驗證的使用者"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "來賓"
+SceInfUsers = "使用者"
+
+[Strings.0405]
+SceInfAuthUsers = "Autentizovaní uživatelé"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Host"
+SceInfUsers = "Uživatelé"
+
+[Strings.0407]
+SceInfAuthUsers = "Authentifizierte Benutzer"
+SceInfInteractive = "INTERAKTIV"
+SceInfGuest = "Gast"
+SceInfUsers = "Benutzer"
+
+[Strings.0410]
+SceInfAuthUsers = "Utenti autenticati"
+SceInfInteractive = "INTERATTIVO"
+SceInfGuest = "Guest"
+SceInfUsers = "Utenti"
+
+[Strings.0415]
+SceInfAuthUsers = "Użytkownicy uwierzytelnieni"
+SceInfInteractive = "INTERAKTYWNA"
+SceInfGuest = "Gość"
+SceInfUsers = "Użytkownicy"
+
+[Strings.0418]
+SceInfAuthUsers = "Utilizatori autentificați"
+SceInfInteractive = "INTERACTIV"
+SceInfGuest = "Oaspete"
+SceInfUsers = "Utilizatori"
+
+[Strings.0419]
+SceInfAuthUsers = "Авторизованные пользователи"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Гость"
+SceInfUsers = "Пользователи"
+
+[Strings.041b]
+SceInfAuthUsers = "Autentizovaní používatelia"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Hosť"
+SceInfUsers = "Používatelia"
+
+[Strings.041c]
+SceInfAuthUsers = "Përdorues vërtetuar"
+SceInfInteractive = "INTERAKTIVE"
+SceInfGuest = "Vizitorë"
+SceInfUsers = "Përdoruesit"
+
+[Strings.041f]
+SceInfAuthUsers = "Kimliği Doğrulanmış Kullanıcılar"
+SceInfInteractive = "ETKİLEŞİMLİ"
+SceInfGuest = "Konuk"
+SceInfUsers = "Kullanıcılar"
+
+[Strings.048f]
+SceInfAuthUsers = "Aŭtentikigitaj uzantoj"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Gasto"
+SceInfUsers = "Uzantoj"
+
+[Strings.0804]
+SceInfAuthUsers = "经过身份验证的用户"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "来宾"
+SceInfUsers = "用户"
+
+[Strings.0816]
+SceInfAuthUsers = "Utilizadores autenticados"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Convidado"
+SceInfUsers = "Utilizadores"
+
+[Strings.0c04]
+SceInfAuthUsers = "經過身份驗證的使用者"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "來賓"
+SceInfUsers = "使用者"

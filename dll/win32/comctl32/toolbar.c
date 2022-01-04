@@ -6603,6 +6603,10 @@ TOOLBAR_Paint (TOOLBAR_INFO *infoPtr, WPARAM wParam)
 
     TRACE("psrect=(%s)\n", wine_dbgstr_rect(&ps.rcPaint));
 
+#ifdef __REACTOS__
+    TOOLBAR_EraseBackground(infoPtr, (WPARAM)hdc, (LPARAM) 0);
+#endif
+
     TOOLBAR_Refresh (infoPtr, hdc, &ps);
     if (!wParam) EndPaint (infoPtr->hwndSelf, &ps);
 

@@ -986,7 +986,6 @@ if (0)
 }
     ok(info->atomWindowType == GetClassLongA(hwnd, GCW_ATOM), "wrong atomWindowType for %p in hook %s\n",
        hwnd, hook);
-    todo_ros
     ok(info->wCreatorVersion == 0x0400 /* NT4, Win2000, XP, Win2003 */ ||
        info->wCreatorVersion == 0x0500 /* Vista */,
        "wrong wCreatorVersion %04x for %p in hook %s\n", info->wCreatorVersion, hwnd, hook);

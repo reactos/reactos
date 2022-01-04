@@ -11,10 +11,6 @@ list(APPEND HAL_LEGACY_SOURCE
     legacy/halpnpdd.c
     legacy/halpcat.c)
 
-add_object_library(lib_hal_legacy ${HAL_LEGACY_SOURCE})
+add_library(lib_hal_legacy OBJECT ${HAL_LEGACY_SOURCE})
 add_dependencies(lib_hal_legacy bugcodes xdk)
 #add_pch(lib_hal_legacy include/hal.h)
-
-if(MSVC)
-    target_link_libraries(lib_hal_legacy lib_hal_generic)
-endif()

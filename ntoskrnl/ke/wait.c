@@ -470,7 +470,7 @@ KeWaitForSingleObject(IN PVOID Object,
                     (Thread == CurrentObject->OwnerThread))
                 {
                     /* Just unwait this guy and exit */
-                    if (CurrentObject->Header.SignalState != (LONG)MINLONG)
+                    if (CurrentObject->Header.SignalState != MINLONG)
                     {
                         /* It has a normal signal state. Unwait and return */
                         KiSatisfyMutantWait(CurrentObject, Thread);
@@ -605,12 +605,9 @@ KeWaitForMultipleObjects(IN ULONG Count,
 
     if (Thread->WaitNext)
         ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
-    else if (KeGetCurrentIrql() == DISPATCH_LEVEL &&
-             (!Timeout || Timeout->QuadPart != 0))
+    else if (!Timeout || (Timeout->QuadPart != 0))
     {
-        /* HACK: tcpip is broken and waits with spinlocks acquired (CORE-6473) */
-        DPRINT("%s called at DISPATCH_LEVEL with non-zero timeout!\n",
-               __FUNCTION__);
+        ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
     }
     else
         ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);

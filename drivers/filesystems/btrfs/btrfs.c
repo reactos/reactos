@@ -4218,8 +4218,8 @@ static NTSTATUS check_mount_device(_In_ PDEVICE_OBJECT DeviceObject, _Out_ bool*
     NTSTATUS Status;
     ULONG to_read;
     superblock* sb;
-    UNICODE_STRING pnp_name;
-    const GUID* guid;
+    // UNICODE_STRING pnp_name;
+    // const GUID* guid;
 
     to_read = DeviceObject->SectorSize == 0 ? sizeof(superblock) : (ULONG)sector_align(sizeof(superblock), DeviceObject->SectorSize);
 
@@ -4247,18 +4247,19 @@ static NTSTATUS check_mount_device(_In_ PDEVICE_OBJECT DeviceObject, _Out_ bool*
 
     DeviceObject->Flags &= ~DO_VERIFY_VOLUME;
 
-    pnp_name.Buffer = NULL;
+    // pnp_name.Buffer = NULL;
 
-    Status = get_device_pnp_name(DeviceObject, &pnp_name, &guid);
-    if (!NT_SUCCESS(Status)) {
-        WARN("get_device_pnp_name returned %08lx\n", Status);
-        pnp_name.Length = 0;
-    }
+    // Status = get_device_pnp_name(DeviceObject, &pnp_name, &guid);
+    // if (!NT_SUCCESS(Status)) {
+    //     WARN("get_device_pnp_name returned %08lx\n", Status);
+    //     pnp_name.Length = 0;
+    // }
 
-    *pno_pnp = pnp_name.Length == 0;
+    // *pno_pnp = pnp_name.Length == 0;
+    *pno_pnp = true;
 
-    if (pnp_name.Buffer)
-        ExFreePool(pnp_name.Buffer);
+    // if (pnp_name.Buffer)
+    //     ExFreePool(pnp_name.Buffer);
 
     Status = STATUS_SUCCESS;
 
@@ -6406,9 +6407,9 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
     KeInitializeEvent(&mountmgr_thread_event, NotificationEvent, false);
 
-    Status = PsCreateSystemThread(&mountmgr_thread_handle, 0, &system_thread_attributes, NULL, NULL, mountmgr_thread, NULL);
-    if (!NT_SUCCESS(Status))
-        WARN("PsCreateSystemThread returned %08lx\n", Status);
+    // Status = PsCreateSystemThread(&mountmgr_thread_handle, 0, &system_thread_attributes, NULL, NULL, mountmgr_thread, NULL);
+    // if (!NT_SUCCESS(Status))
+    //     WARN("PsCreateSystemThread returned %08lx\n", Status);
 
     IoRegisterFileSystem(DeviceObject);
 

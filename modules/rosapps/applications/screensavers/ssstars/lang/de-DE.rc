@@ -15,12 +15,12 @@ BEGIN
     CTEXT           "Static",IDC_TEXT_NUM_OF_STARS,240,116,24,12,
                     SS_CENTERIMAGE,WS_EX_STATICEDGE
     RTEXT           "Geschwindigkeit:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
-    CONTROL         "Slider1",IDC_SLIDER_SPEED,"msctls_trackbar32",TBS_BOTH | 
+    CONTROL         "Slider1",IDC_SLIDER_SPEED,"msctls_trackbar32",TBS_BOTH |
                     TBS_NOTICKS | WS_TABSTOP,96,137,140,12
     CTEXT           "Static",IDC_TEXT_SPEED,240,137,24,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
     RTEXT           "Rotation:",IDC_STATIC,24,156,68,12,SS_CENTERIMAGE
-    COMBOBOX        IDC_COMBO_ROTATION,100,156,80,60,CBS_DROPDOWNLIST | 
+    COMBOBOX        IDC_COMBO_ROTATION,100,156,80,60,CBS_DROPDOWNLIST |
                     WS_TABSTOP
     CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
                     4,4,284,92
@@ -28,7 +28,7 @@ BEGIN
     CONTROL         "Hintergrund-Blending aktivieren",IDC_CHECK_DOBLENDING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
     CONTROL         "Genaue Perspektivenkorrektur aktivieren",
-                    IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX | 
+                    IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,24,208,160,10
     CONTROL         "Texturfilterung aktivieren",IDC_CHECK_FILTERING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,160,10
@@ -41,7 +41,7 @@ END
 
 // String Tables
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION         "Starfield"
     IDS_ROTATION_NONE       "Keine"

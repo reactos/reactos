@@ -1,7 +1,7 @@
 /*
  *  Elliptic curve J-PAKE
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -42,8 +42,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 /*
@@ -60,10 +58,17 @@
 #if defined(MBEDTLS_ECJPAKE_C)
 
 #include "mbedtls/ecjpake.h"
+#include "mbedtls/platform_util.h"
 
 #include <string.h>
 
 #if !defined(MBEDTLS_ECJPAKE_ALT)
+
+/* Parameter validation macros based on platform_util.h */
+#define ECJPAKE_VALIDATE_RET( cond )    \
+    MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_ECP_BAD_INPUT_DATA )
+#define ECJPAKE_VALIDATE( cond )        \
+    MBEDTLS_INTERNAL_VALIDATE( cond )
 
 /*
  * Convert a mbedtls_ecjpake_role to identifier string
@@ -81,8 +86,7 @@ static const char * const ecjpake_id[] = {
  */
 void mbedtls_ecjpake_init( mbedtls_ecjpake_context *ctx )
 {
-    if( ctx == NULL )
-        return;
+    ECJPAKE_VALIDATE( ctx != NULL );
 
     ctx->md_info = NULL;
     mbedtls_ecp_group_init( &ctx->grp );
@@ -133,6 +137,11 @@ int mbedtls_ecjpake_setup( mbedtls_ecjpake_context *ctx,
 {
     int ret;
 
+    ECJPAKE_VALIDATE_RET( ctx != NULL );
+    ECJPAKE_VALIDATE_RET( role == MBEDTLS_ECJPAKE_CLIENT ||
+                          role == MBEDTLS_ECJPAKE_SERVER );
+    ECJPAKE_VALIDATE_RET( secret != NULL || len == 0 );
+
     ctx->role = role;
 
     if( ( ctx->md_info = mbedtls_md_info_from_type( hash ) ) == NULL )
@@ -154,6 +163,8 @@ cleanup:
  */
 int mbedtls_ecjpake_check( const mbedtls_ecjpake_context *ctx )
 {
+    ECJPAKE_VALIDATE_RET( ctx != NULL );
+
     if( ctx->md_info == NULL ||
         ctx->grp.id == MBEDTLS_ECP_DP_NONE ||
         ctx->s.p == NULL )
@@ -531,6 +542,9 @@ int mbedtls_ecjpake_read_round_one( mbedtls_ecjpake_context *ctx,
                                     const unsigned char *buf,
                                     size_t len )
 {
+    ECJPAKE_VALIDATE_RET( ctx != NULL );
+    ECJPAKE_VALIDATE_RET( buf != NULL );
+
     return( ecjpake_kkpp_read( ctx->md_info, &ctx->grp, ctx->point_format,
                                &ctx->grp.G,
                                &ctx->Xp1, &ctx->Xp2, ID_PEER,
@@ -545,6 +559,11 @@ int mbedtls_ecjpake_write_round_one( mbedtls_ecjpake_context *ctx,
                             int (*f_rng)(void *, unsigned char *, size_t),
                             void *p_rng )
 {
+    ECJPAKE_VALIDATE_RET( ctx   != NULL );
+    ECJPAKE_VALIDATE_RET( buf   != NULL );
+    ECJPAKE_VALIDATE_RET( olen  != NULL );
+    ECJPAKE_VALIDATE_RET( f_rng != NULL );
+
     return( ecjpake_kkpp_write( ctx->md_info, &ctx->grp, ctx->point_format,
                                 &ctx->grp.G,
                                 &ctx->xm1, &ctx->Xm1, &ctx->xm2, &ctx->Xm2,
@@ -586,6 +605,9 @@ int mbedtls_ecjpake_read_round_two( mbedtls_ecjpake_context *ctx,
     const unsigned char *end = buf + len;
     mbedtls_ecp_group grp;
     mbedtls_ecp_point G;    /* C: GB, S: GA */
+
+    ECJPAKE_VALIDATE_RET( ctx != NULL );
+    ECJPAKE_VALIDATE_RET( buf != NULL );
 
     mbedtls_ecp_group_init( &grp );
     mbedtls_ecp_point_init( &G );
@@ -679,6 +701,11 @@ int mbedtls_ecjpake_write_round_two( mbedtls_ecjpake_context *ctx,
     const unsigned char *end = buf + len;
     size_t ec_len;
 
+    ECJPAKE_VALIDATE_RET( ctx   != NULL );
+    ECJPAKE_VALIDATE_RET( buf   != NULL );
+    ECJPAKE_VALIDATE_RET( olen  != NULL );
+    ECJPAKE_VALIDATE_RET( f_rng != NULL );
+
     mbedtls_ecp_point_init( &G );
     mbedtls_ecp_point_init( &Xm );
     mbedtls_mpi_init( &xm );
@@ -754,6 +781,11 @@ int mbedtls_ecjpake_derive_secret( mbedtls_ecjpake_context *ctx,
     unsigned char kx[MBEDTLS_ECP_MAX_BYTES];
     size_t x_bytes;
 
+    ECJPAKE_VALIDATE_RET( ctx   != NULL );
+    ECJPAKE_VALIDATE_RET( buf   != NULL );
+    ECJPAKE_VALIDATE_RET( olen  != NULL );
+    ECJPAKE_VALIDATE_RET( f_rng != NULL );
+
     *olen = mbedtls_md_get_size( ctx->md_info );
     if( len < *olen )
         return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
@@ -817,6 +849,8 @@ static const unsigned char ecjpake_test_password[] = {
     0x74, 0x68, 0x72, 0x65, 0x61, 0x64, 0x6a, 0x70, 0x61, 0x6b, 0x65, 0x74,
     0x65, 0x73, 0x74
 };
+
+#if !defined(MBEDTLS_ECJPAKE_ALT)
 
 static const unsigned char ecjpake_test_x1[] = {
     0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c,
@@ -962,6 +996,8 @@ cleanup:
     return( ret );
 }
 
+#endif /* ! MBEDTLS_ECJPAKE_ALT */
+
 /* For tests we don't need a secure RNG;
  * use the LGC from Numerical Recipes for simplicity */
 static int ecjpake_lgc( void *p, unsigned char *out, size_t len )
@@ -1057,6 +1093,12 @@ int mbedtls_ecjpake_self_test( int verbose )
     if( verbose != 0 )
         mbedtls_printf( "passed\n" );
 
+#if !defined(MBEDTLS_ECJPAKE_ALT)
+    /* 'reference handshake' tests can only be run against implementations
+     * for which we have 100% control over how the random ephemeral keys
+     * are generated. This is only the case for the internal mbed TLS
+     * implementation, so these tests are skipped in case the internal
+     * implementation is swapped out for an alternative one. */
     if( verbose != 0 )
         mbedtls_printf( "  ECJPAKE test #2 (reference handshake): " );
 
@@ -1105,6 +1147,7 @@ int mbedtls_ecjpake_self_test( int verbose )
 
     if( verbose != 0 )
         mbedtls_printf( "passed\n" );
+#endif /* ! MBEDTLS_ECJPAKE_ALT */
 
 cleanup:
     mbedtls_ecjpake_free( &cli );

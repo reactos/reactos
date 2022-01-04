@@ -496,7 +496,7 @@ DebugActiveProcess(IN DWORD dwProcessId)
 
     /* Now debug the process */
     Status = DbgUiDebugActiveProcess(Handle);
-    
+
     /* Close the handle since we're done */
     Status1 = NtClose(Handle);
     ASSERT(NT_SUCCESS(Status1));
@@ -702,7 +702,7 @@ WaitForDebugEvent(IN LPDEBUG_EVENT lpDebugEvent,
             /* Mark the thread data */
             MarkThreadHandle(lpDebugEvent->dwThreadId);
             break;
-    
+
         /* Nothing to do */
         case EXCEPTION_DEBUG_EVENT:
         case LOAD_DLL_DEBUG_EVENT:

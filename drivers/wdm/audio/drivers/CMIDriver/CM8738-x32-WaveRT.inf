@@ -4,7 +4,7 @@ Class=MEDIA
 ClassGUID={4d36e96c-e325-11ce-bfc1-08002be10318}
 provider=%CMMfgName%
 LayoutFile=layout.inf, layout1.inf, layout2.inf
-DriverVer=CMIReleaseDate,CMIVersion.1111
+DriverVer=07/13/2009,1.2.6.1111
 
 [SourceDisksNames]
 200="C-Media 8738/8768 WDM Drivers","",0

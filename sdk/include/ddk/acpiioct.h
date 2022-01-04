@@ -138,7 +138,7 @@ typedef struct _ACPI_ENUM_CHILDREN_OUTPUT_BUFFER {
   ULONG Signature;
   ULONG NumberOfChildren;
   ACPI_ENUM_CHILD Children[ANYSIZE_ARRAY];
-} ACPI_ENUM_CHILDREN_OUTPUT_BUFFER; 
+} ACPI_ENUM_CHILDREN_OUTPUT_BUFFER;
 typedef ACPI_ENUM_CHILDREN_OUTPUT_BUFFER UNALIGNED *PACPI_ENUM_CHILDREN_OUTPUT_BUFFER;
 
 #define ACPI_METHOD_ARGUMENT_LENGTH( DataLength )                           \
@@ -159,7 +159,7 @@ typedef ACPI_ENUM_CHILDREN_OUTPUT_BUFFER UNALIGNED *PACPI_ENUM_CHILDREN_OUTPUT_B
 
 #define ACPI_METHOD_SET_ARGUMENT_STRING( Argument, StrData )                \
   { Argument->Type = ACPI_METHOD_ARGUMENT_STRING;                           \
-    Argument->DataLength = strlen((PCHAR)StrData) + sizeof(UCHAR);          \
+    Argument->DataLength = (USHORT)strlen((PCHAR)StrData) + sizeof(UCHAR);  \
     RtlCopyMemory(&Argument->Data[0],(PUCHAR)StrData,Argument->DataLength); }
 
 #define ACPI_METHOD_SET_ARGUMENT_BUFFER( Argument, BuffData, BuffLength )   \

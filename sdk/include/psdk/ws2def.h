@@ -565,11 +565,11 @@ typedef WSACMSGHDR CMSGHDR, *PCMSGHDR;
 /*
  *  WSA_CMSG_FIRSTHDR
  *
- *  Returns a pointer to the first ancillary data object, 
- *  or a null pointer if there is no ancillary data in the 
+ *  Returns a pointer to the first ancillary data object,
+ *  or a null pointer if there is no ancillary data in the
  *  control buffer of the WSAMSG structure.
  *
- *  LPCMSGHDR 
+ *  LPCMSGHDR
  *  WSA_CMSG_FIRSTHDR (
  *      LPWSAMSG    msg
  *      );
@@ -582,13 +582,13 @@ typedef WSACMSGHDR CMSGHDR, *PCMSGHDR;
 #define CMSG_FIRSTHDR WSA_CMSG_FIRSTHDR
 #endif
 
-/* 
+/*
  *  WSA_CMSG_NXTHDR
  *
  *  Returns a pointer to the next ancillary data object,
  *  or a null if there are no more data objects.
  *
- *  LPCMSGHDR 
+ *  LPCMSGHDR
  *  WSA_CMSG_NEXTHDR (
  *      LPWSAMSG        msg,
  *      LPWSACMSGHDR    cmsg
@@ -610,11 +610,11 @@ typedef WSACMSGHDR CMSGHDR, *PCMSGHDR;
 #define CMSG_NXTHDR WSA_CMSG_NXTHDR
 #endif
 
-/* 
+/*
  *  WSA_CMSG_DATA
  *
- *  Returns a pointer to the first byte of data (what is referred 
- *  to as the cmsg_data member though it is not defined in 
+ *  Returns a pointer to the first byte of data (what is referred
+ *  to as the cmsg_data member though it is not defined in
  *  the structure).
  *
  *  Note that RFC 2292 defines this as CMSG_DATA, but that name
@@ -630,8 +630,8 @@ typedef WSACMSGHDR CMSGHDR, *PCMSGHDR;
 /*
  *  WSA_CMSG_SPACE
  *
- *  Returns total size of an ancillary data object given 
- *  the amount of data. Used to allocate the correct amount 
+ *  Returns total size of an ancillary data object given
+ *  the amount of data. Used to allocate the correct amount
  *  of space.
  *
  *  SIZE_T

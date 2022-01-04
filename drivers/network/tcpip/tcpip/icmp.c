@@ -74,11 +74,9 @@ VOID
 ClearReceiveHandler(
     _In_ PADDRESS_FILE AddrFile)
 {
-    KIRQL OldIrql;
-
-    LockObject(AddrFile, &OldIrql);
+    LockObject(AddrFile);
     AddrFile->RegisteredReceiveDatagramHandler = FALSE;
-    UnlockObject(AddrFile, OldIrql);
+    UnlockObject(AddrFile);
 }
 
 IO_WORKITEM_ROUTINE EndRequestHandler;
@@ -94,6 +92,8 @@ EndRequestHandler(
     PIRP Irp;
     UINT32 nReplies;
     KIRQL OldIrql;
+
+    ClearReceiveHandler((PADDRESS_FILE)Context->TdiRequest.Handle.AddressHandle);
 
     KeWaitForSingleObject(&Context->DatagramProcessedEvent, Executive, KernelMode, FALSE, NULL);
 
@@ -267,8 +267,6 @@ TimeoutHandler(
     _In_opt_ PVOID SystemArgument2)
 {
     PICMP_PACKET_CONTEXT Context = (PICMP_PACKET_CONTEXT)_Context;
-    PADDRESS_FILE AddrFile = (PADDRESS_FILE)Context->TdiRequest.Handle.AddressHandle;
-    ClearReceiveHandler(AddrFile);
 
     IoQueueWorkItem(Context->FinishWorker, &EndRequestHandler, DelayedWorkQueue, _Context);
 }
@@ -290,7 +288,6 @@ DispEchoRequest(
     PUCHAR Buffer;
     UINT16 RequestSize;
     PICMP_PACKET_CONTEXT SendContext;
-    KIRQL OldIrql;
     LARGE_INTEGER RequestTimeout;
     UINT8 SavedTtl;
 
@@ -390,14 +387,14 @@ DispEchoRequest(
 
     RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer, OutputBufferLength);
 
-    LockObject(AddrFile, &OldIrql);
+    LockObject(AddrFile);
 
     AddrFile->TTL = SavedTtl;
     AddrFile->ReceiveDatagramHandlerContext = SendContext;
     AddrFile->ReceiveDatagramHandler = ReceiveDatagram;
     AddrFile->RegisteredReceiveDatagramHandler = TRUE;
 
-    UnlockObject(AddrFile, OldIrql);
+    UnlockObject(AddrFile);
 
     Status = AddrFile->Send(AddrFile, &ConnectionInfo, (PCHAR)Buffer, RequestSize, &DataUsed);
 

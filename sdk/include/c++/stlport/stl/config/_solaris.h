@@ -10,7 +10,7 @@
 #define _STLP_USE_UNIX_IO
 
 #ifdef __GNUC__
-/* 
+/*
  * See comments (and configuration defines) in the host.h
  */
 #  if !(defined(__SunOS_5_5_1) || defined(__SunOS_5_6) || defined(__SunOS_5_7) || \
@@ -59,7 +59,7 @@
 #  endif
 #endif
 
-/* 
+/*
  * Attention! See comments (and configuration defines) in the host.h
  * (you host may has MATH_F and MATH_L functions)
  *

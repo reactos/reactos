@@ -13,12 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FIXME: Local EFLAGS defines not used anywhere else */
-#define EFLAGS_IOPL     0x3000
-#define EFLAGS_NF       0x4000
-#define EFLAGS_RF       0x10000
-#define EFLAGS_ID       0x200000
-
 /* GLOBALS *******************************************************************/
 
 /* The Boot TSS */
@@ -32,10 +26,6 @@ ULONG KeI386NpxPresent = 1;
 ULONG KeLargestCacheLine = 0x40;
 ULONG KiDmaIoCoherency = 0;
 BOOLEAN KiSMTProcessorsPresent;
-
-/* Freeze data */
-KIRQL KiOldIrql;
-ULONG KiFreezeFlag;
 
 /* Flush data */
 volatile LONG KiTbFlushTimeStamp;

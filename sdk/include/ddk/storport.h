@@ -815,7 +815,7 @@ typedef union _CDB
         UCHAR Reserved2;
         UCHAR Control;
     } CDB12, *PCDB12;
-    struct _CDB16 
+    struct _CDB16
     {
         UCHAR OperationCode;
         UCHAR Reserved1:3;

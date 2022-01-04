@@ -35,13 +35,13 @@ typedef struct _HELPER_DATA {
 } HELPER_DATA, *PHELPER_DATA;
 
 int SockLoadHelperDll(
-    PWSTR TransportName, 
-    PWINSOCK_MAPPING Mapping, 
+    PWSTR TransportName,
+    PWINSOCK_MAPPING Mapping,
     PHELPER_DATA *HelperDllData
 );
 
 int SockLoadTransportMapping(
-    PWSTR TransportName, 
+    PWSTR TransportName,
     PWINSOCK_MAPPING *Mapping
 );
 
@@ -50,21 +50,21 @@ int SockLoadTransportList(
 );
 
 BOOL SockIsTripleInMapping(
-    PWINSOCK_MAPPING Mapping, 
-    INT AddressFamily, 
-    INT SocketType, 
+    PWINSOCK_MAPPING Mapping,
+    INT AddressFamily,
+    INT SocketType,
     INT Protocol
 );
 
 int SockGetTdiName(
-    PINT AddressFamily, 
-    PINT SocketType, 
-    PINT Protocol, 
-    GROUP Group, 
-    DWORD Flags, 
-    PUNICODE_STRING TransportName, 
-    PVOID *HelperDllContext, 
-    PHELPER_DATA *HelperDllData, 
+    PINT AddressFamily,
+    PINT SocketType,
+    PINT Protocol,
+    GROUP Group,
+    DWORD Flags,
+    PUNICODE_STRING TransportName,
+    PVOID *HelperDllContext,
+    PHELPER_DATA *HelperDllData,
     PDWORD Events
 );
 

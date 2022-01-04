@@ -132,7 +132,7 @@ SetWelcomeText(HWND hWnd)
     TRACE("SetWelcomeText(%p)\n", hWnd);
 
     /* Open the Winlogon key */
-    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                        0,
                        KEY_QUERY_VALUE,
@@ -294,12 +294,12 @@ StartupWindowThread(LPVOID lpParam)
 
     /* When SetThreadDesktop is called the system closes the desktop handle when needed
        so we have to create a new handle because this handle may still be in use by winlogon  */
-    if (!DuplicateHandle (  GetCurrentProcess(), 
-                            msg->hDesktop, 
-                            GetCurrentProcess(), 
-                            (HANDLE*)&hDesk, 
-                            0, 
-                            FALSE, 
+    if (!DuplicateHandle (  GetCurrentProcess(),
+                            msg->hDesktop,
+                            GetCurrentProcess(),
+                            (HANDLE*)&hDesk,
+                            0,
+                            FALSE,
                             DUPLICATE_SAME_ACCESS))
     {
         ERR("Duplicating handle failed!\n");
@@ -580,7 +580,7 @@ DoChangePassword(
     Ptr = (LPWSTR)((ULONG_PTR)RequestBuffer + sizeof(MSV1_0_CHANGEPASSWORD_REQUEST));
 
     /* Pack the domain name */
-    RequestBuffer->DomainName.Length = wcslen(Domain) * sizeof(WCHAR);
+    RequestBuffer->DomainName.Length = (USHORT)wcslen(Domain) * sizeof(WCHAR);
     RequestBuffer->DomainName.MaximumLength = RequestBuffer->DomainName.Length + sizeof(WCHAR);
     RequestBuffer->DomainName.Buffer = Ptr;
 
@@ -591,7 +591,7 @@ DoChangePassword(
     Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->DomainName.MaximumLength);
 
     /* Pack the user name */
-    RequestBuffer->AccountName.Length = wcslen(UserName) * sizeof(WCHAR);
+    RequestBuffer->AccountName.Length = (USHORT)wcslen(UserName) * sizeof(WCHAR);
     RequestBuffer->AccountName.MaximumLength = RequestBuffer->AccountName.Length + sizeof(WCHAR);
     RequestBuffer->AccountName.Buffer = Ptr;
 
@@ -602,7 +602,7 @@ DoChangePassword(
     Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->AccountName.MaximumLength);
 
     /* Pack the old password */
-    RequestBuffer->OldPassword.Length = wcslen(OldPassword) * sizeof(WCHAR);
+    RequestBuffer->OldPassword.Length = (USHORT)wcslen(OldPassword) * sizeof(WCHAR);
     RequestBuffer->OldPassword.MaximumLength = RequestBuffer->OldPassword.Length + sizeof(WCHAR);
     RequestBuffer->OldPassword.Buffer = Ptr;
 
@@ -613,7 +613,7 @@ DoChangePassword(
     Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->OldPassword.MaximumLength);
 
     /* Pack the new password */
-    RequestBuffer->NewPassword.Length = wcslen(NewPassword1) * sizeof(WCHAR);
+    RequestBuffer->NewPassword.Length = (USHORT)wcslen(NewPassword1) * sizeof(WCHAR);
     RequestBuffer->NewPassword.MaximumLength = RequestBuffer->NewPassword.Length + sizeof(WCHAR);
     RequestBuffer->NewPassword.Buffer = Ptr;
 

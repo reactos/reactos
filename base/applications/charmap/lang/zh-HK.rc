@@ -1,0 +1,64 @@
+/*
+ * PROJECT:     ReactOS Character Map
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+IDD_CHARMAP DIALOGEX 6, 6, 292, 224
+FONT 9, "新細明體", 0, 0
+STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
+BEGIN
+    LTEXT "字型：", IDC_STATIC, 6, 7, 24, 9
+    COMBOBOX IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE |
+             WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+    PUSHBUTTON "説明", IDC_CMHELP, 249, 5, 35, 13
+    CONTROL "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+            WS_VSCROLL, 20, 22, 266, 156
+    LTEXT "待複製字元：", IDC_STATIC, 6, 188, 66, 9
+    CONTROL "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER |
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
+    DEFPUSHBUTTON "選擇", IDC_SELECT, 194, 186, 44, 13
+    PUSHBUTTON "複製", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+    CONTROL "進階檢視", IDC_CHECK_ADVANCED, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 8, 208, 95, 10
+END
+
+IDD_ADVANCED DIALOGEX 0, 0, 292, 64
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "字元集：", IDC_STATIC, 8, 8, 48, 8
+    COMBOBOX IDC_COMBO_CHARSET, 72, 4, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "分組：", IDC_STATIC, 8, 28, 50, 8
+    COMBOBOX IDC_COMBO_GROUPBY, 72, 24, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "搜尋", IDC_BUTTON_SEARCH, 200, 44, 50, 14
+    EDITTEXT IDC_EDIT_SEARCH, 72, 44, 116, 14, ES_AUTOHSCROLL
+    LTEXT "搜尋目標：", IDC_STATIC, 8, 48, 42, 8
+    LTEXT "到 Unicode：", IDC_STATIC, 200, 8, 30, 8
+    EDITTEXT IDC_EDIT_UNICODE, 236, 4, 28, 12, ES_AUTOHSCROLL
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 210, 182
+CAPTION "關於字元對應表"
+FONT 9, "新細明體", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+    LTEXT "字元對應表 v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+    PUSHBUTTON "關閉", IDOK, 75, 162, 44, 15
+    ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+    EDITTEXT IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL |
+             WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_ABOUT "關於(&A)..."
+    IDS_TITLE "字元對應表"
+    IDS_UNICODE "Unicode"
+    IDS_ALL "All"
+END

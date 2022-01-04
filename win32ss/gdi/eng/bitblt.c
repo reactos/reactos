@@ -3,8 +3,13 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI BitBlt Functions
  * FILE:             win32ss/gdi/eng/bitblt.c
- * PROGRAMER:        Jason Filby
+ * PROGRAMERS:       Jason Filby
  *                   Timo Kreuzer
+ *                   Doug Lyons
+ *
+ * WARNING: Modify this file with extreme caution. It is very sensitive to timing changes.
+ *   Adding code can cause the system to show a Fatal Exception Error and fail to boot!.
+ *   This is especially true in CallDibBitBlt, IntEngBitBlt and EngBitBlt (even DPRINT's).
  */
 
 #include <win32k.h>
@@ -255,6 +260,12 @@ CallDibBitBlt(SURFOBJ* OutputObj,
         psoPattern = NULL;
     }
 
+    /* Make WellOrdered with top < bottom and left < right */
+    RECTL_vMakeWellOrdered(&BltInfo.DestRect);
+
+    DPRINT("CallDibBitBlt: BltInfo.DestRect: (%d,%d)-(%d,%d)\n",
+           BltInfo.DestRect.left, BltInfo.DestRect.top, BltInfo.DestRect.right, BltInfo.DestRect.bottom);
+
     Result = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(&BltInfo);
 
     return Result;
@@ -344,9 +355,29 @@ EngBitBlt(
     ULONG              Direction;
     BOOL               UsesSource, UsesMask;
     POINTL             AdjustedBrushOrigin;
+    LONG               lTmp;
+    BOOLEAN            bTopToBottom, bLeftToRight;
 
     UsesSource = ROP4_USES_SOURCE(rop4);
     UsesMask = ROP4_USES_MASK(rop4);
+
+    if (prclTrg->left > prclTrg->right)
+    {
+      bLeftToRight = TRUE;
+    }
+    else
+    {
+      bLeftToRight = FALSE;
+    }
+
+    if (prclTrg->top > prclTrg->bottom)
+    {
+      bTopToBottom = TRUE;
+    }
+    else
+    {
+      bTopToBottom = FALSE;
+    }
 
     if (rop4 == ROP4_NOOP)
     {
@@ -358,6 +389,12 @@ EngBitBlt(
 
     OutputRect = *prclTrg;
     RECTL_vMakeWellOrdered(&OutputRect);
+
+    DPRINT("EngBitBlt: prclTrg: (%d,%d)-(%d,%d)\n",
+           prclTrg->left, prclTrg->top, prclTrg->right, prclTrg->bottom);
+
+    DPRINT("EngBitBlt: OutputRect: (%d,%d)-(%d,%d)\n",
+           OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
 
     if (UsesSource)
     {
@@ -498,6 +535,21 @@ EngBitBlt(
     switch (clippingType)
     {
         case DC_TRIVIAL:
+            /* Fix up OutputRect here */
+            if (bLeftToRight)
+            {
+                lTmp = OutputRect.left;
+                OutputRect.left = OutputRect.right;
+                OutputRect.right = lTmp;
+            }
+
+            if (bTopToBottom)
+            {
+                lTmp = OutputRect.top;
+                OutputRect.top = OutputRect.bottom;
+                OutputRect.bottom = lTmp;
+            }
+
             Ret = (*BltRectFunc)(OutputObj,
                                  InputObj,
                                  psoMask,
@@ -622,12 +674,17 @@ IntEngBitBlt(
     RECTL rclSrcClipped;
     POINTL ptlBrush;
     PFN_DrvBitBlt pfnBitBlt;
+    LONG lTmp;
+    BOOLEAN bTopToBottom, bLeftToRight;
 
     /* Sanity checks */
     ASSERT(IS_VALID_ROP4(Rop4));
     ASSERT(psoTrg);
 
     psurfTrg = CONTAINING_RECORD(psoTrg, SURFACE, SurfObj);
+
+    bLeftToRight = prclTrg->left > prclTrg->right;
+    bTopToBottom = prclTrg->top > prclTrg->bottom;
 
     /* Get the target rect and make it well ordered */
     rclClipped = *prclTrg;
@@ -720,6 +777,24 @@ IntEngBitBlt(
     {
         pfnBitBlt = EngBitBlt;
     }
+
+    /* rclClipped needs to be modified in accordance with flips here */
+    if (bLeftToRight)
+    {
+        lTmp = rclClipped.left;
+        rclClipped.left = rclClipped.right;
+        rclClipped.right = lTmp;
+    }
+
+    if (bTopToBottom)
+    {
+        lTmp = rclClipped.top;
+        rclClipped.top = rclClipped.bottom;
+        rclClipped.bottom = lTmp;
+    }
+
+    DPRINT("About to call EngBitBlt: rclClipped: (%d,%d)-(%d,%d)\n",
+           rclClipped.left, rclClipped.top, rclClipped.right, rclClipped.bottom);
 
     bResult = pfnBitBlt(psoTrg,
                         psoSrc,

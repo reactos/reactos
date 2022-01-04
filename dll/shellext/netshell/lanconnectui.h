@@ -47,7 +47,7 @@ class CNetConnectionPropertyUi:
         VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type);
         VOID InitializeLANPropertiesUIDlg(HWND hwndDlg);
         VOID ShowNetworkComponentProperties(HWND hwndDlg);
-        BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID); 
+        BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID);
         static INT_PTR CALLBACK LANPropertiesUIDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         CComPtr<INetConnection> m_pCon;

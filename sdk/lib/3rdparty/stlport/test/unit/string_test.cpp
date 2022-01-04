@@ -675,18 +675,18 @@ void StringTest::bogus_edge_find()
    * Notes: Uses traits::eq().
    *
    * ===
-   * So, from formal point of view 
+   * So, from formal point of view
    *   string s; string::size_type p = s.find( "", 0, 0 );
-   * should return 0 in p, i.e. position out-of-bound of string, so 
+   * should return 0 in p, i.e. position out-of-bound of string, so
    * code like following is bad:
-   * string s; 
-   *  
-   * string::size_type p = s.find( "", 0, 0 ); 
+   * string s;
    *
-   * ... 
+   * string::size_type p = s.find( "", 0, 0 );
    *
-   * if ( p != string::npos ) { // normal 
-   *   char ch = s[p]; // Arghhhhhhhhhh 
+   * ...
+   *
+   * if ( p != string::npos ) { // normal
+   *   char ch = s[p]; // Arghhhhhhhhhh
    * }
    *
    * People near Standard commete has opinion opposite to my. Even if it looks
@@ -1134,7 +1134,7 @@ class mypath
     const mypath& operator / ( const string& );
     const string& str() const
       { return p; }
- 
+
   private:
     string p;
 };
@@ -1299,7 +1299,7 @@ void StringTest::io()
 
 void StringTest::allocator_with_state()
 {
-#if !(defined (STLPORT) && defined (_STLP_NO_CUSTOM_IO)) 
+#if !(defined (STLPORT) && defined (_STLP_NO_CUSTOM_IO))
 
   char buf1[1024];
   StackAllocator<char> stack1(buf1, buf1 + sizeof(buf1));

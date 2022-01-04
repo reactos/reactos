@@ -177,7 +177,7 @@ typedef struct {
 /**
  *	@public
  *	@brief	FF_IOMAN Object. A developer should not touch these values.
- *	
+ *
  *	In the commercial version these values are encapsulated. In the open-source
  *	version they are left completely open, in case someone really "needs" :P to
  *	do something stupid and access their members themselves. Also to help the

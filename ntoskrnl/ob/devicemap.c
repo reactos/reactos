@@ -536,9 +536,10 @@ ObInheritDeviceMap(IN PEPROCESS Parent,
 
 NTSTATUS
 NTAPI
-ObQueryDeviceMapInformation(IN PEPROCESS Process,
-                            IN PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
-                            IN ULONG Flags)
+ObQueryDeviceMapInformation(
+    _In_opt_ PEPROCESS Process,
+    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
+    _In_ ULONG Flags)
 {
     PDEVICE_MAP DeviceMap = NULL, GlobalDeviceMap;
     BOOLEAN Dereference;

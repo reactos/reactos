@@ -77,6 +77,14 @@
 #define	_FPCLASS_PINF	0x0200	/* Positive Infinity */
 #endif /* __MINGW_FPCLASS_DEFINED */
 
+/* _statusfp bit flags */
+#define _SW_INEXACT    0x00000001  /* inexact (precision) */
+#define _SW_UNDERFLOW  0x00000002  /* underflow */
+#define _SW_OVERFLOW   0x00000004  /* overflow */
+#define _SW_ZERODIVIDE 0x00000008  /* zero divide */
+#define _SW_INVALID    0x00000010  /* invalid */
+#define _SW_DENORMAL   0x00080000  /* denormal status bit */
+
 /* invalid subconditions (_SW_INVALID also set) */
 #define _SW_UNEMULATED		0x0040  /* unemulated instruction */
 #define _SW_SQRTNEG		0x0080  /* square root of a neg number */

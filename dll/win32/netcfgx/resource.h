@@ -122,4 +122,4 @@
 #define IDS_DNS_SUFFIX     8024
 #define IDS_DUP_SUFFIX     8025
 #define IDS_DUP_IPADDR     8026
-#define IDS_DUP_GW         8027 
+#define IDS_DUP_GW         8027

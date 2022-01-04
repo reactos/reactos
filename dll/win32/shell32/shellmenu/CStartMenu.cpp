@@ -517,7 +517,7 @@ RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv)
     pCallback->AddRef(); // CreateInstance returns object with 0 ref count */
     pCallback->Initialize(pShellMenu, pBandSite, pDeskBar);
 
-    pShellMenu->Initialize(pCallback, (UINT) -1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
+    hr = pShellMenu->Initialize(pCallback, (UINT) -1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

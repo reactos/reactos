@@ -346,10 +346,13 @@ IntVideoPortAddDevice(
     Status = IntVideoPortCreateAdapterDeviceObject(DriverObject,
                                                    DriverExtension,
                                                    PhysicalDeviceObject,
+                                                   DriverExtension->InitializationData.StartingDeviceNumber,
+                                                   0,
                                                    &DeviceObject);
-    if (NT_SUCCESS(Status))
-        VideoPortDeviceNumber++;
-
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "IntVideoPortCreateAdapterDeviceObject() failed with status 0x%lx\n", Status);
+    }
     return Status;
 }
 
@@ -402,18 +405,19 @@ IntVideoPortDispatchOpen(
 
     if (DriverExtension->InitializationData.HwInitialize(&DeviceExtension->MiniPortDeviceExtension))
     {
-        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
         InterlockedIncrement((PLONG)&DeviceExtension->DeviceOpened);
     }
     else
     {
-        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
     }
 
+    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = FILE_OPENED;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*
@@ -1025,11 +1029,11 @@ IntVideoPortDispatchFdoPnp(
             break;
 
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
-            Status = IntVideoPortForwardIrpAndWait(DeviceObject, Irp);
-            if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
-                Status = IntVideoPortFilterResourceRequirements(DeviceObject, Irp);
+            /* Call lower drivers, and ignore result (that's probably STATUS_NOT_SUPPORTED) */
+            (VOID)IntVideoPortForwardIrpAndWait(DeviceObject, Irp);
+            /* Now, fill resource requirements list */
+            Status = IntVideoPortFilterResourceRequirements(DeviceObject, IrpSp, Irp);
             Irp->IoStatus.Status = Status;
-            Irp->IoStatus.Information = 0;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             break;
 

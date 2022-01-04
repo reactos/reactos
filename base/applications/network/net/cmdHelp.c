@@ -86,31 +86,10 @@ INT cmdHelp(INT argc, WCHAR **argv)
         return 0;
     }
 
-    if (_wcsicmp(argv[2], L"NAME") == 0)
-    {
-        PrintNetMessage(MSG_NAME_SYNTAX);
-        PrintNetMessage(MSG_NAME_HELP);
-        return 0;
-    }
-
     if (_wcsicmp(argv[2], L"PAUSE") == 0)
     {
         PrintNetMessage(MSG_PAUSE_SYNTAX);
         PrintNetMessage(MSG_PAUSE_HELP);
-        return 0;
-    }
-
-    if (_wcsicmp(argv[2], L"PRINT") == 0)
-    {
-        PrintNetMessage(MSG_PRINT_SYNTAX);
-        PrintNetMessage(MSG_PRINT_HELP);
-        return 0;
-    }
-
-    if (_wcsicmp(argv[2], L"SEND") == 0)
-    {
-        PrintNetMessage(MSG_SEND_SYNTAX);
-        PrintNetMessage(MSG_SEND_HELP);
         return 0;
     }
 

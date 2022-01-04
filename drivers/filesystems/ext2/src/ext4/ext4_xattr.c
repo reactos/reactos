@@ -137,7 +137,7 @@ ext4_xattr_block_checksum(PEXT2_MCB inode_ref,
 		/* Then calculate crc32 checksum block number */
 		checksum = ext4_crc32c(checksum, &le64_blocknr,
 				     sizeof(le64_blocknr));
-		/* Finally calculate crc32 checksum against 
+		/* Finally calculate crc32 checksum against
 		 * the entire xattr block */
 		checksum = ext4_crc32c(checksum, header,
 				   ext4_sb_get_block_size(sb));
@@ -169,7 +169,7 @@ static int ext4_xattr_item_cmp(struct rb_node *_a,
 
 	if (a->is_data && !b->is_data)
 		return -1;
-	
+
 	if (!a->is_data && b->is_data)
 		return 1;
 

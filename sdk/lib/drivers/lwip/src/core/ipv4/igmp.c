@@ -8,29 +8,29 @@
  * Copyright (c) 2002 CITEL Technologies Ltd.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
- * are met: 
- * 1. Redistributions of source code must retain the above copyright 
- *    notice, this list of conditions and the following disclaimer. 
- * 2. Redistributions in binary form must reproduce the above copyright 
- *    notice, this list of conditions and the following disclaimer in the 
- *    documentation and/or other materials provided with the distribution. 
- * 3. Neither the name of CITEL Technologies Ltd nor the names of its contributors 
- *    may be used to endorse or promote products derived from this software 
- *    without specific prior written permission. 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of CITEL Technologies Ltd nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY CITEL TECHNOLOGIES AND CONTRIBUTORS ``AS IS''
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED.  IN NO EVENT SHALL CITEL TECHNOLOGIES OR CONTRIBUTORS BE LIABLE 
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS 
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
- * SUCH DAMAGE. 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL CITEL TECHNOLOGIES OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  *
  * This file is a contribution to the lwIP TCP/IP stack.
  * The Swedish Institute of Computer Science and Adam Dunkels
@@ -70,7 +70,7 @@ Steve Reynolds
  * RFC 2236 - Internet Group Management Protocol, Version 2               - V2  <- this code is based on this RFC (it's the "de facto" standard)
  * RFC 3376 - Internet Group Management Protocol, Version 3               - V3
  * RFC 4604 - Using Internet Group Management Protocol Version 3...       - V3+
- * RFC 2113 - IP Router Alert Option                                      - 
+ * RFC 2113 - IP Router Alert Option                                      -
  *----------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------
@@ -95,7 +95,7 @@ Steve Reynolds
 
 #include "string.h"
 
-/* 
+/*
  * IGMP constants
  */
 #define IGMP_TTL                       1
@@ -167,7 +167,7 @@ igmp_init(void)
  */
 void
 igmp_dump_group_list()
-{ 
+{
   struct igmp_group *group = igmp_group_list;
 
   while (group != NULL) {
@@ -316,7 +316,7 @@ struct igmp_group *
 igmp_lookup_group(struct netif *ifp, ip_addr_t *addr)
 {
   struct igmp_group *group = igmp_group_list;
-  
+
   /* Search if the group already exists */
   group = igmp_lookfor_group(ifp, addr);
   if (group != NULL) {
@@ -334,7 +334,7 @@ igmp_lookup_group(struct netif *ifp, ip_addr_t *addr)
     group->last_reporter_flag = 0;
     group->use                = 0;
     group->next               = igmp_group_list;
-    
+
     igmp_group_list = group;
   }
 
@@ -395,7 +395,7 @@ igmp_input(struct pbuf *p, struct netif *inp, ip_addr_t *dest)
 
   IGMP_STATS_INC(igmp.recv);
 
-  /* Note that the length CAN be greater than 8 but only 8 are used - All are included in the checksum */    
+  /* Note that the length CAN be greater than 8 but only 8 are used - All are included in the checksum */
   iphdr = (struct ip_hdr *)p->payload;
   if (pbuf_header(p, -(s16_t)(IPH_HL(iphdr) * 4)) || (p->len < IGMP_MINLEN)) {
     pbuf_free(p);
@@ -421,7 +421,7 @@ igmp_input(struct pbuf *p, struct netif *inp, ip_addr_t *dest)
 
   /* Packet is ok so find an existing group */
   group = igmp_lookfor_group(inp, dest); /* use the destination IP address of incoming packet */
-  
+
   /* If group can be found or create... */
   if (!group) {
     pbuf_free(p);
@@ -614,7 +614,7 @@ igmp_leavegroup(ip_addr_t *ifaddr, ip_addr_t *groupaddr)
             IGMP_STATS_INC(igmp.tx_leave);
             igmp_send(group, IGMP_LEAVE_GROUP);
           }
-          
+
           /* Disable the group at the MAC level */
           if (netif->igmp_mac_filter != NULL) {
             LWIP_DEBUGF(IGMP_DEBUG, ("igmp_leavegroup: igmp_mac_filter(DEL "));
@@ -622,11 +622,11 @@ igmp_leavegroup(ip_addr_t *ifaddr, ip_addr_t *groupaddr)
             LWIP_DEBUGF(IGMP_DEBUG, (") on if %p\n", netif));
             netif->igmp_mac_filter(netif, groupaddr, IGMP_DEL_MAC_FILTER);
           }
-          
+
           LWIP_DEBUGF(IGMP_DEBUG, ("igmp_leavegroup: remove group: "));
           ip_addr_debug_print(IGMP_DEBUG, groupaddr);
-          LWIP_DEBUGF(IGMP_DEBUG, ("\n"));          
-          
+          LWIP_DEBUGF(IGMP_DEBUG, ("\n"));
+
           /* Free the group */
           igmp_remove_group(group);
         } else {
@@ -768,13 +768,13 @@ igmp_send(struct igmp_group *group, u8_t type)
 
   /* IP header + "router alert" option + IGMP header */
   p = pbuf_alloc(PBUF_TRANSPORT, IGMP_MINLEN, PBUF_RAM);
-  
+
   if (p) {
     igmp = (struct igmp_msg *)p->payload;
     LWIP_ASSERT("igmp_send: check that first pbuf can hold struct igmp_msg",
                (p->len >= sizeof(struct igmp_msg)));
     ip_addr_copy(src, group->netif->ip_addr);
-     
+
     if (type == IGMP_V2_MEMB_REPORT) {
       dest = &(group->group_address);
       ip_addr_copy(igmp->igmp_group_address, group->group_address);

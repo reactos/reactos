@@ -7,13 +7,12 @@ list(APPEND TEXTFILES
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/textfiles)
 foreach(_file ${TEXTFILES})
     get_filename_component(_file_name ${_file} NAME_WE)
-    string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _converted_file "${_file}")
-    string(REPLACE ${_file_name} "${_file_name}_utf16" _converted_file ${_converted_file})
-    set(_file ${CMAKE_CURRENT_SOURCE_DIR}/${_file})
-    set(_converted_file ${CMAKE_CURRENT_BINARY_DIR}/${_converted_file})
+    get_filename_component(_subdir ${_file} DIRECTORY)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${_subdir})
+    set(_converted_file ${CMAKE_CURRENT_BINARY_DIR}/${_subdir}/${_file_name}_utf16.INI)
     add_custom_command(OUTPUT ${_converted_file}
-                       COMMAND native-utf16le ${_file} ${_converted_file}
-                       DEPENDS native-utf16le ${_file})
+                       COMMAND native-utf16le ${CMAKE_CURRENT_SOURCE_DIR}/${_file} ${_converted_file}
+                       DEPENDS native-utf16le ${CMAKE_CURRENT_SOURCE_DIR}/${_file})
     list(APPEND _converted_files ${_converted_file})
 endforeach()
 

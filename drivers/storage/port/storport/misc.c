@@ -244,7 +244,7 @@ TranslateResourceListAddress(
                         IoAddress.QuadPart >= PartialDescriptorA->u.Port.Start.QuadPart &&
                         IoAddress.QuadPart + NumberOfBytes <= PartialDescriptorA->u.Port.Start.QuadPart + PartialDescriptorA->u.Port.Length)
                     {
-                        TranslatedAddress->QuadPart = PartialDescriptorT->u.Port.Start.QuadPart + 
+                        TranslatedAddress->QuadPart = PartialDescriptorT->u.Port.Start.QuadPart +
                                                       (IoAddress.QuadPart - PartialDescriptorA->u.Port.Start.QuadPart);
                         return TRUE;
                     }
@@ -258,7 +258,7 @@ TranslateResourceListAddress(
                         IoAddress.QuadPart >= PartialDescriptorA->u.Memory.Start.QuadPart &&
                         IoAddress.QuadPart + NumberOfBytes <= PartialDescriptorA->u.Memory.Start.QuadPart + PartialDescriptorA->u.Memory.Length)
                     {
-                        TranslatedAddress->QuadPart = PartialDescriptorT->u.Memory.Start.QuadPart + 
+                        TranslatedAddress->QuadPart = PartialDescriptorT->u.Memory.Start.QuadPart +
                                                       (IoAddress.QuadPart - PartialDescriptorA->u.Memory.Start.QuadPart);
                         return TRUE;
                     }
@@ -267,10 +267,10 @@ TranslateResourceListAddress(
         }
 
         /* Advance to next CM_FULL_RESOURCE_DESCRIPTOR block in memory. */
-        FullDescriptorA = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptorA->PartialResourceList.PartialDescriptors + 
+        FullDescriptorA = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptorA->PartialResourceList.PartialDescriptors +
                                                          FullDescriptorA->PartialResourceList.Count);
 
-        FullDescriptorT = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptorT->PartialResourceList.PartialDescriptors + 
+        FullDescriptorT = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptorT->PartialResourceList.PartialDescriptors +
                                                          FullDescriptorT->PartialResourceList.Count);
     }
 
@@ -319,7 +319,7 @@ GetResourceListInterrupt(
         }
 
         /* Advance to next CM_FULL_RESOURCE_DESCRIPTOR block in memory. */
-        FullDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptor->PartialResourceList.PartialDescriptors + 
+        FullDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)(FullDescriptor->PartialResourceList.PartialDescriptors +
                                                         FullDescriptor->PartialResourceList.Count);
     }
 

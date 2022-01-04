@@ -144,7 +144,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nComando de desinstalación: "
     IDS_INFO_MODIFYPATH "\nRuta de modificación: "
     IDS_INFO_INSTALLDATE "\nFecha de instalación: "
-    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
+    IDS_AINFO_PACKAGE_NAME "\nNombre del paquete: "
 END
 
 STRINGTABLE
@@ -214,9 +214,10 @@ BEGIN
     IDS_SELECTEDFORINST "Seleccionados para instalar"
     IDS_MISMATCH_CERT_INFO "El certificado que usa es desconocido:\nSujeto: %s\nEmisor: %s\n¿Quiere continuar a pesar de ello?"
     IDS_UNABLE_PATH "Formato de ruta incorrecto."
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_APP_DISPLAY_DETAILS "Detalles"
+    IDS_APP_DISPLAY_LIST "Lista"
+    IDS_APP_DISPLAY_TILE "Título"
+    IDS_NO_SEARCH_RESULTS "Búsqueda sin resultados."
 END
 
 STRINGTABLE
@@ -258,11 +259,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
-    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_NEED_PACKAGE_NAME "Error: La opción %1 espera uno o más nombres de paquetes.\n"
+    IDS_CMD_NEED_FILE_NAME "Error: La opción %1 espera un nombre de archivo.\n"
+    IDS_CMD_NEED_PARAMS "Error: La opción %1 espera uno o más parámetros.\n"
+    IDS_CMD_INVALID_OPTION "Error: Opción de línea de comando desconocida o no válida.\n"
+    IDS_CMD_FIND_RESULT_FOR "Resultado de la búsqueda para %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "No se pudo encontrar el paquete %1.\n"
+    IDS_CMD_PACKAGE_INFO "Información del paquete %1:\n"
 END

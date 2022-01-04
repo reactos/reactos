@@ -372,7 +372,7 @@ LookupElementSkiplist(PSKIPLIST Skiplist, PVOID Element, PDWORD ElementIndex)
         {
             dwIndex += pNode->Distance[i];
             pNode = pNode->Next[i];
-        }   
+        }
 
         // Reduce the number of comparisons by not comparing the same node on different levels twice.
         pLastComparedNode = pNode->Next[i];

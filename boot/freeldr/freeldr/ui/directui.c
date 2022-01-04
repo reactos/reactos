@@ -356,7 +356,7 @@ UiDrawMenuItem(IN PUI_MENU_INFO MenuInfo,
     if (MenuInfo->MenuItemList[MenuItemNumber] == NULL)
     {
         /* Make it a separator line and use menu colors */
-        memset(MenuLineText, 0, 80);
+        memset(MenuLineText, 0, sizeof(MenuLineText));
         memset(MenuLineText, 0xC4, (MenuInfo->Right - MenuInfo->Left - 1));
         Attribute = ATTR(UiMenuFgColor, UiMenuBgColor);
     }

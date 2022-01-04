@@ -51,6 +51,9 @@ Abstract:
 
 #define FAT_FILL_FREE 0
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 PCCB
 FatAllocateCcb (
@@ -59,6 +62,9 @@ FatAllocateCcb (
     return (PCCB) FsRtlAllocatePoolWithTag( PagedPool, sizeof(CCB), TAG_CCB );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 VOID
 FatFreeCcb (
@@ -72,6 +78,9 @@ FatFreeCcb (
     ExFreePool( Ccb );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 PFCB
 FatAllocateFcb (
@@ -80,6 +89,9 @@ FatAllocateFcb (
     return (PFCB) FsRtlAllocatePoolWithTag( PagedPool, sizeof(FCB), TAG_FCB );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 VOID
 FatFreeFcb (
@@ -207,7 +219,7 @@ FatFreeIrpContext (
 #pragma alloc_text(PAGE, FatScanForDataTrack)
 #endif
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 FatInitializeVcb (
@@ -266,7 +278,7 @@ Return Value:
     PFILE_SYSTEM_STATISTICS UnwindStatistics = NULL;
     BOOLEAN UnwindWeAllocatedBadBlockMap = FALSE;
     BOOLEAN CloseContextAllocated = FALSE;
-    
+
     PAGED_CODE();
     UNREFERENCED_PARAMETER( FsDeviceObject );
 
@@ -621,8 +633,8 @@ Return Value:
             if (UnwindWeAllocatedBadBlockMap) { FsRtlUninitializeLargeMcb(&Vcb->BadBlockMcb ); }
             if (UnwindEntryList != NULL) {
 #ifdef _MSC_VER
-#pragma prefast( suppress: 28137, "prefast wants the wait to be a constant, but that isn't possible for the way fastfat is designed" )          
-#endif      
+#pragma prefast( suppress: 28137, "prefast wants the wait to be a constant, but that isn't possible for the way fastfat is designed" )
+#endif
                 (VOID)FatAcquireExclusiveGlobal( IrpContext );
                 RemoveEntryList( UnwindEntryList );
                 FatReleaseGlobal( IrpContext );
@@ -632,22 +644,22 @@ Return Value:
             //
             // Cleanup the close context we preallocated above.
             //
-            
+
             if (CloseContextAllocated && (Vcb->VirtualVolumeFile == NULL)) {
 
                 //
                 // FatAllocateCloseContext does not allocate memory, it
                 // pulls a close context off the preallocated slist queue.
                 //
-                // Doing this here is necessary to balance out the one we 
-                // preallocated for the Vcb earlier in this function, but 
+                // Doing this here is necessary to balance out the one we
+                // preallocated for the Vcb earlier in this function, but
                 // only if we failed to create the virtual volume file.
                 //
                 // If VirtualVolumeFile is not NULL, then this CloseContext
                 // will get cleaned up when the close comes in for it during
                 // Vcb teardown.
                 //
-                
+
                 PCLOSE_CONTEXT CloseContext = FatAllocateCloseContext(Vcb);
 
                 ExFreePool( CloseContext );
@@ -667,7 +679,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 FatTearDownVcb (
     IN PIRP_CONTEXT IrpContext,
@@ -755,7 +767,7 @@ Return Value:
     FatSetVcbCondition( Vcb, VcbBad );
 }
 
-
+
 VOID
 FatDeleteVcb (
     IN PIRP_CONTEXT IrpContext,
@@ -977,8 +989,8 @@ Return Value:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatCreateRootDcb (
     IN PIRP_CONTEXT IrpContext,
@@ -1029,8 +1041,8 @@ Return Value:
 
             DebugDump("Error trying to create multiple root dcbs\n", 0, Vcb);
 #ifdef _MSC_VER
-#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )          
-#endif  
+#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
+#endif
             FatBugCheck( 0, 0, 0 );
         }
 
@@ -1197,7 +1209,7 @@ Return Value:
         //
         //  Initialize the oplock structure.
         //
-        
+
         FsRtlInitializeOplock( FatGetFcbOplock(Dcb) );
 #endif
 
@@ -1235,7 +1247,7 @@ Return Value:
     return;
 }
 
-
+
 PFCB
 FatCreateFcb (
     IN PIRP_CONTEXT IrpContext,
@@ -1245,7 +1257,7 @@ FatCreateFcb (
     IN ULONG DirentOffsetWithinDirectory,
     IN PDIRENT Dirent,
     IN PUNICODE_STRING Lfn OPTIONAL,
-    IN PUNICODE_STRING OrigLfn OPTIONAL,    
+    IN PUNICODE_STRING OrigLfn OPTIONAL,
     IN BOOLEAN IsPagingFile,
     IN BOOLEAN SingleResource
     )
@@ -1305,7 +1317,7 @@ Return Value:
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER( OrigLfn );
-    
+
     DebugTrace(+1, Dbg, "FatCreateFcb\n", 0);
 
     _SEH2_TRY {
@@ -1397,11 +1409,11 @@ Return Value:
         //  This is important to let us maintain whole-volume lockorder
         //  via BottomUp enumeration.
         //
-            
+
         InsertTailList( &ParentDcb->Specific.Dcb.ParentDcbQueue,
                         &Fcb->ParentDcbLinks );
         UnwindEntryList = &Fcb->ParentDcbLinks;
-        
+
         //
         //  Point back to our parent dcb
         //
@@ -1606,7 +1618,7 @@ Return Value:
     return Fcb;
 }
 
-
+
 PDCB
 FatCreateDcb (
     IN PIRP_CONTEXT IrpContext,
@@ -1935,7 +1947,7 @@ Return Value:
     return Dcb;
 }
 
-
+
 VOID
 FatDeleteFcb (
     IN PIRP_CONTEXT IrpContext,
@@ -1975,7 +1987,7 @@ Return Value:
 
         DebugDump("Error deleting Fcb, Still Open\n", 0, Fcb);
 #ifdef _MSC_VER
-#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )        
+#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
 #endif
         FatBugCheck( 0, 0, 0 );
     }
@@ -2017,7 +2029,7 @@ Return Value:
         //
         //  Uninitialize the oplock.
         //
-        
+
         FsRtlUninitializeOplock( FatGetFcbOplock(Fcb) );
 #endif
 
@@ -2284,7 +2296,7 @@ Return Value:
     UNREFERENCED_PARAMETER( IrpContext );
 }
 
-
+
 PIRP_CONTEXT
 FatCreateIrpContext (
     IN PIRP Irp,
@@ -2443,7 +2455,7 @@ Return Value:
     return IrpContext;
 }
 
-
+
 
 VOID
 FatDeleteIrpContext_Real (
@@ -2508,7 +2520,7 @@ Return Value:
     return;
 }
 
-
+
 PFCB
 FatGetNextFcbBottomUp (
     IN PIRP_CONTEXT IrpContext,
@@ -2713,7 +2725,7 @@ Return Value:
     }
 }
 
-
+
 BOOLEAN
 FatSwapVpb (
     IN PIRP_CONTEXT IrpContext,
@@ -2827,8 +2839,8 @@ Return Value:
     return Result;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
 FatCheckForDismount (
     IN PIRP_CONTEXT IrpContext,
@@ -3005,7 +3017,7 @@ Return Value:
     return VcbDeleted;
 }
 
-
+
 VOID
 FatConstructNamesInFcb (
     IN PIRP_CONTEXT IrpContext,
@@ -3469,8 +3481,8 @@ Return Value:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatCheckFreeDirentBitmap (
     IN PIRP_CONTEXT IrpContext,
@@ -3597,7 +3609,7 @@ Return Value:
     }
 }
 
-
+
 BOOLEAN
 FatIsHandleCountZero (
     IN PIRP_CONTEXT IrpContext,

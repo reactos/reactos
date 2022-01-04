@@ -22,6 +22,11 @@ static PFILE_OBJECT TestFileObject;
 static PDEVICE_OBJECT TestDeviceObject;
 static KMT_IRP_HANDLER TestIrpHandler;
 static FAST_IO_DISPATCH TestFastIoDispatch;
+static BOOLEAN InBehaviourTest;
+
+BOOLEAN ReadCalled;
+LARGE_INTEGER ReadOffset;
+ULONG ReadLength;
 
 static
 BOOLEAN
@@ -169,6 +174,101 @@ MapAndLockUserBuffer(
     return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 }
 
+static
+void
+reset_read(void)
+{
+    ReadCalled = FALSE;
+    ReadOffset.QuadPart = MAXLONGLONG;
+    ReadLength = MAXULONG;
+}
+
+#define ok_read_called(_Offset, _Length) do {                           \
+    ok(ReadCalled, "CcCopyWrite should have triggerred a read.\n");     \
+    ok_eq_longlong(ReadOffset.QuadPart, _Offset);                       \
+    ok_eq_ulong(ReadLength, _Length);                                   \
+}while(0)
+
+#define ok_read_not_called() ok(!ReadCalled, "CcCopyWrite shouldn't have triggered a read.\n")
+
+static
+VOID
+Test_CcCopyWrite(PFILE_OBJECT FileObject)
+{
+
+    BOOLEAN Ret;
+    LARGE_INTEGER Offset;
+    CHAR Buffer[10];
+
+    memset(Buffer, 0xAC, 10);
+
+    /* Test bogus file object & file offset */
+    Ret = 'x';
+    KmtStartSeh()
+        Ret = CcCopyWrite(FileObject, NULL, 0, FALSE, NULL);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
+    ok_eq_char(Ret, 'x');
+
+    Ret = 'x';
+    Offset.QuadPart = 0;
+    KmtStartSeh()
+        Ret = CcCopyWrite(NULL, &Offset, 10, FALSE, Buffer);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
+    ok_eq_char(Ret, 'x');
+
+    /* What happens on invalid buffer */
+    Ret = 'x';
+    Offset.QuadPart = 0;
+    reset_read();
+    KmtStartSeh()
+        Ret = CcCopyWrite(FileObject, &Offset, 0, TRUE, NULL);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok_bool_true(Ret, "CcCopyWrite(0, NULL) should succeed\n");
+    /* When there is nothing to write, there is no reason to read */
+    ok_read_not_called();
+
+    Ret = 'x';
+    Offset.QuadPart = 0;
+    reset_read();
+    KmtStartSeh()
+        Ret = CcCopyWrite(FileObject, &Offset, 10, TRUE, NULL);
+    KmtEndSeh(STATUS_INVALID_USER_BUFFER);
+    ok_eq_char(Ret, 'x');
+    /* This raises an exception, but it actually triggered a read */
+    ok_read_called(0, PAGE_SIZE);
+
+    /* So this one succeeds, as the page is now resident */
+    Ret = 'x';
+    Offset.QuadPart = 0;
+    reset_read();
+    KmtStartSeh()
+        Ret = CcCopyWrite(FileObject, &Offset, 10, FALSE, Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok_bool_true(Ret, "CcCopyWrite should succeed\n");
+    /* But there was no read triggered, as the page is already resident. */
+    ok_read_not_called();
+
+    /* But this one doesn't */
+    Ret = 'x';
+    Offset.QuadPart = PAGE_SIZE;
+    reset_read();
+    KmtStartSeh()
+        Ret = CcCopyWrite(FileObject, &Offset, 10, FALSE, Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok_bool_false(Ret, "CcCopyWrite should fail\n");
+    /* But it triggered a read anyway. */
+    ok_read_called(PAGE_SIZE, PAGE_SIZE);
+
+    /* Of course, waiting for it succeeds and triggers the read */
+    Ret = 'x';
+    Offset.QuadPart = PAGE_SIZE * 2;
+    reset_read();
+    KmtStartSeh()
+        Ret = CcCopyWrite(FileObject, &Offset, 10, TRUE, Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok_bool_true(Ret, "CcCopyWrite should succeed\n");
+    ok_read_called(PAGE_SIZE * 2, PAGE_SIZE);
+}
 
 static
 NTSTATUS
@@ -238,7 +338,7 @@ TestIrpHandler(
         IoStack->FileObject->FsContext = Fcb;
         IoStack->FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
 
-        CcInitializeCacheMap(IoStack->FileObject, 
+        CcInitializeCacheMap(IoStack->FileObject,
                              (PCC_FILE_SIZES)&Fcb->Header.AllocationSize,
                              FALSE, &Callbacks, NULL);
 
@@ -264,6 +364,10 @@ TestIrpHandler(
         ok((Offset.QuadPart == 0 || Offset.QuadPart == 4096 || Offset.QuadPart == 8192), "Unexpected offset: %I64i\n", Offset.QuadPart);
         ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
 
+        ReadCalled = TRUE;
+        ReadOffset = Offset;
+        ReadLength = Length;
+
         ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
         Buffer = MapAndLockUserBuffer(Irp, Length);
         ok(Buffer != NULL, "Null pointer!\n");
@@ -287,10 +391,15 @@ TestIrpHandler(
         ULONG Length;
         PVOID Buffer;
         LARGE_INTEGER Offset;
+        static const UNICODE_STRING BehaviourTestFileName = RTL_CONSTANT_STRING(L"\\BehaviourTestFile");
 
         Offset = IoStack->Parameters.Read.ByteOffset;
         Length = IoStack->Parameters.Read.Length;
         Fcb = IoStack->FileObject->FsContext;
+
+        ok_bool_false(InBehaviourTest, "Shouldn't trigger write from CcCopyWrite\n");
+        /* Check special file name */
+        InBehaviourTest = RtlCompareUnicodeString(&IoStack->FileObject->FileName, &BehaviourTestFileName, TRUE) == 0;
 
         if (!FlagOn(Irp->Flags, IRP_NOCACHE))
         {
@@ -298,29 +407,48 @@ TestIrpHandler(
 
             ok_irql(PASSIVE_LEVEL);
 
-            Buffer = Irp->AssociatedIrp.SystemBuffer;
-            ok(Buffer != NULL, "Null pointer!\n");
-
-            Fcb->WriteLength = Length;
-
-            _SEH2_TRY
+            if (InBehaviourTest)
             {
-                Ret = CcCopyWrite(IoStack->FileObject, &Offset, Length, TRUE, Buffer);
-                ok_bool_true(Ret, "CcCopyWrite");
+                Test_CcCopyWrite(IoStack->FileObject);
+                Status = Irp->IoStatus.Status = STATUS_SUCCESS;
             }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            else
             {
-                Irp->IoStatus.Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
+                Buffer = Irp->AssociatedIrp.SystemBuffer;
+                ok(Buffer != NULL, "Null pointer!\n");
 
-            Status = Irp->IoStatus.Status;
+                Fcb->WriteLength = Length;
+
+                _SEH2_TRY
+                {
+                    Ret = CcCopyWrite(IoStack->FileObject, &Offset, Length, TRUE, Buffer);
+                    ok_bool_true(Ret, "CcCopyWrite");
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Irp->IoStatus.Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
+                Status = Irp->IoStatus.Status;
+            }
         }
         else
         {
             ok_irql(PASSIVE_LEVEL);
-            ok((Offset.QuadPart == 0 || Offset.QuadPart == 4096), "Unexpected offset: %I64i\n", Offset.QuadPart);
-            ok_eq_ulong(Length, ROUND_TO_PAGES(Fcb->WriteLength));
+
+            if (InBehaviourTest)
+            {
+                /* We wrote only to the 1st and 3rd page */
+                ok((Offset.QuadPart == 0) || (Offset.QuadPart == PAGE_SIZE * 2), "Expected a non-cached write on 1st or 3rd page\n");
+                /* We wrote that much with CcCopyWrite */
+                ok_eq_ulong(Length, PAGE_SIZE);
+            }
+            else
+            {
+                ok((Offset.QuadPart == 0 || Offset.QuadPart == 4096), "Unexpected offset: %I64i\n", Offset.QuadPart);
+                ok_eq_ulong(Length, ROUND_TO_PAGES(Fcb->WriteLength));
+            }
 
             ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
             Buffer = MapAndLockUserBuffer(Irp, Length);
@@ -335,6 +463,8 @@ TestIrpHandler(
             ok((Mdl->MdlFlags & MDL_IO_PAGE_READ) == 0, "MDL for read paging IO\n");
             ok((Irp->Flags & IRP_PAGING_IO) != 0, "Non paging IO\n");
         }
+
+        InBehaviourTest = FALSE;
     }
     else if (IoStack->MajorFunction == IRP_MJ_FLUSH_BUFFERS)
     {

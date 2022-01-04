@@ -108,7 +108,7 @@ CdQueryNetworkInfo (
 #pragma alloc_text(PAGE, CdQueryStandardInfo)
 #endif
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonQueryInfo (
@@ -348,7 +348,7 @@ Return Value:
     return Status;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 CdCommonSetInfo (
@@ -463,7 +463,7 @@ Return Value:
 
 
 _Function_class_(FAST_IO_QUERY_BASIC_INFO)
-_IRQL_requires_same_
+_IRQL_requires_same_
 _Success_(return != FALSE)
 BOOLEAN
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
@@ -855,7 +855,7 @@ Return Value:
     return Result;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -918,7 +918,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -993,7 +993,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1043,7 +1043,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1094,7 +1094,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1149,7 +1149,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1193,7 +1193,7 @@ Return Value:
     UNREFERENCED_PARAMETER( IrpContext );
 
     NT_ASSERT(*Length >= sizeof(ULONG));
-    
+
     //
     //  Simply copy the name in the file object to the user's buffer.
     //
@@ -1225,7 +1225,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1317,7 +1317,7 @@ Return Value:
         ParentFcb = Fcb->ParentFcb;
         CdAcquireFileShared( IrpContext, ParentFcb );
         ReleaseParentFcb = TRUE;
-    
+
         CdVerifyOrCreateDirStreamFile( IrpContext, ParentFcb);
 
         if (CdFidIsDirectory( Fcb->FileId)) {
@@ -1359,23 +1359,23 @@ Return Value:
 
             NameToUse = &FileContext.InitialDirent->Dirent.CdCaseFileName.FileName;
             DirentOffset = FileContext.InitialDirent->Dirent.DirentOffset;
-        
+
         } else {
 
             //
             //  Initialize the search dirent structures.
             //
-        
+
             CdInitializeDirContext( IrpContext, &DirContext );
             CdInitializeDirent( IrpContext, &Dirent );
-    
+
             CleanupFileLookup = TRUE;
-        
+
             CdLookupDirent( IrpContext,
                             ParentFcb,
                             CdQueryFidDirentOffset( Fcb->FileId ),
                             &DirContext );
-    
+
             CdUpdateDirentFromRawDirent( IrpContext,
                                          ParentFcb,
                                          &DirContext,
@@ -1384,9 +1384,9 @@ Return Value:
             //
             //  Now update the dirent name.
             //
-    
+
             CdUpdateDirentName( IrpContext, &Dirent, TRUE );
-    
+
             NameToUse = &Dirent.CdCaseFileName.FileName;
             DirentOffset = Dirent.DirentOffset;
         }
@@ -1454,7 +1454,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //

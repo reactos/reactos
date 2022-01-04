@@ -9,7 +9,7 @@ add_importlibs(welcome gdi32 user32 shell32 msvcrt kernel32 ntdll)
 if(ARCH STREQUAL "i386")
     if(MSVC)
         # NOTE: We cannot use the following command:
-        #   add_target_link_flags(welcome "/SUBSYSTEM:WINDOWS,4.00")
+        #   target_link_options(welcome PRIVATE "/SUBSYSTEM:WINDOWS,4.00")
         # because it would act at the level of the LINK.EXE linker flags,
         # which only accepts a subsystem version >= 5.10 (Windows XP+) on
         # latest MSVC versions.
@@ -23,7 +23,7 @@ if(ARCH STREQUAL "i386")
     else()
         # The binutils linker does not set a lower limit on the subsystem.
         # Otherwise we would use: objcopy --subsystem windows:4.00 $<TARGET_FILE:welcome>
-        add_target_link_flags(welcome "-Wl,--subsystem,windows:4.00")
+        target_link_options(welcome PRIVATE "-Wl,--subsystem,windows:4.00")
     endif()
 endif()
 

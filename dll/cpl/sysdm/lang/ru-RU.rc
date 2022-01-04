@@ -6,13 +6,13 @@ CAPTION "Общие"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "Операционная система:", IDC_STATIC, 4, 116, 87, 9
+    LTEXT "Операционная система:", IDC_STATIC, 4, 116, 100, 9
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "Версия", IDC_ROSVERSION, 10, 137, 116, 9
-    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
-    LTEXT "Время работы системы:", IDC_STATIC, 4, 158, 86, 9
-    LTEXT "", IDC_UPTIME, 10, 170, 116, 9
-    LTEXT "Компьютер:", IDC_STATIC, 124, 116, 40, 9
+    LTEXT KERNEL_VERSION_REVISION_RC, IDC_STATIC, 10, 146, 110, 9
+    LTEXT "Время работы системы:", IDC_STATIC, 4, 161, 100, 9
+    LTEXT "", IDC_UPTIME, 10, 173, 116, 9
+    LTEXT "Компьютер:", IDC_STATIC, 124, 116, 100, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
     LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
     LTEXT "", IDC_MACHINELINE3, 130, 146, 118, 9
@@ -258,17 +258,18 @@ BEGIN
 END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Переменные среды"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Пользовательские переменные", IDC_STATIC, 7, 12, 238, 100
+    SCROLLBAR IDC_DIALOG_GRIP, 245, 238, 7, 7, SBS_SIZEGRIP
+    GROUPBOX "Пользовательские переменные", IDC_USER_VARIABLE_GROUP, 7, 12, 238, 100
     CONTROL "", IDC_USER_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Создать...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
     PUSHBUTTON "&Изменить...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
     PUSHBUTTON "&Удалить", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
-    GROUPBOX "Системные переменные", IDC_STATIC, 7, 116, 238, 100
+    GROUPBOX "Системные переменные", IDC_SYSTEM_VARIABLE_GROUP, 7, 116, 238, 100
     CONTROL "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON "С&оздать...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
@@ -278,17 +279,39 @@ BEGIN
     PUSHBUTTON "Отмена", IDCANCEL, 195, 224, 50, 14
 END
 
-IDD_EDIT_VARIABLE DIALOGEX 10, 15, 227, 71
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_EDIT_VARIABLE DIALOGEX 10, 15, 372, 71
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Изменение переменной"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Им&я переменной:", IDC_STATIC, 7, 14, 68, 8
-    EDITTEXT IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT "Значение перемен&ной:", IDC_STATIC, 7, 32, 68, 8
-    EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 116, 50, 50, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 170, 50, 50, 14
+    SCROLLBAR IDC_DIALOG_GRIP, 365, 64, 7, 7, SBS_SIZEGRIP
+    LTEXT "Им&я переменной:", IDC_STATIC, 7, 14, 50, 8
+    EDITTEXT IDC_VARIABLE_NAME, 75, 12, 289, 12, ES_AUTOHSCROLL
+    LTEXT "Значение перемен&ной:", IDC_STATIC, 7, 32, 50, 8
+    EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 260, 50, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 314, 50, 50, 14
+    PUSHBUTTON "Browse Directory...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14
+    PUSHBUTTON "Browse Files...", IDC_BUTTON_BROWSE_FILE, 86, 50, 75, 14
+END
+
+IDD_EDIT_VARIABLE_FANCY DIALOGEX 10, 15, 300, 250
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
+CAPTION "Изменение переменной"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    SCROLLBAR IDC_DIALOG_GRIP, 293, 243, 7, 7, SBS_SIZEGRIP
+    CONTROL "", IDC_LIST_VARIABLE_VALUE, "SysListView32", LVS_NOCOLUMNHEADER | LVS_EDITLABELS | LVS_SHOWSELALWAYS |
+                LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 10, 10, 224, 208, WS_EX_CLIENTEDGE
+    PUSHBUTTON "New", IDC_BUTTON_NEW, 242, 10, 50, 14
+    PUSHBUTTON "Edit", IDC_BUTTON_EDIT, 242, 30, 50, 14
+    PUSHBUTTON "Browse...", IDC_BUTTON_BROWSE_FOLDER, 242, 50, 50, 14
+    PUSHBUTTON "Delete", IDC_BUTTON_DELETE, 242, 70, 50, 14
+    PUSHBUTTON "Move Up", IDC_BUTTON_MOVE_UP, 242, 100, 50, 14
+    PUSHBUTTON "Move Down", IDC_BUTTON_MOVE_DOWN, 242, 120, 50, 14
+    PUSHBUTTON "Edit text...", IDC_BUTTON_EDIT_TEXT, 242, 150, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 188, 228, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 242, 228, 50, 14
 END
 
 IDD_LICENCE DIALOGEX 6, 5, 267, 159
@@ -339,10 +362,11 @@ BEGIN
     IDS_PAGEFILE_NONE "Нет"
     IDS_PAGEFILE_SYSTEM "По выбору системы"
     IDS_INFOREBOOT "Необходимо перезагрузить компьютер для применения изменений."
-    IDS_DEVS "\nКоманда ReactOS\n\nКоординатор проекта\n\nАлексей Брагин\n\nКоллектив разработчиков\n\nАлександр Андреевич\nАлексей Брагин\nАлександр Шапошников\nАмин Халди\nЭндрю Гринвуд\nАндрей Коротаев\nАрт Йеркс\nБенедикт Фрейзен\nКамерон Гутман\nКристоф фон Виттих\nКолин Финк\nДаниэль Раймер\nДэвид Кинтана\nДмитрий Чапышев\nЭрик Коль\nГед Мёрфи\nЯннис Адамопулос\nГрегор Брюнмар\nГермес Белуска-Майто\nЭрве Поссино\nДжеймс Тэбор\nДжеффри Морлан\nЖером Гарду\nЙоханнес Андервальд\nКамиль Хорничек\nКатаяма Хирофуми MZ\nKJK::Гиперион\nМаартен Босма\nМагнус Олсен\nМарк Пиулахс\nМарк Дженсен\nМаттиас Купфер\nМайк Норделл\nПитер Хейтер\nПитер Вард\nПьер Швейцер\nСавелий Третьяков\nСтанислав Мотыльков\nСтефан Гинсберг\nСильвейн Петреоль\nТомас Блюмель\nТомас Фабер\nТимо Кройцер\nВадим Галянт\n\nАлекс Ионеску\nФилип Навара\nГуннар Далснес\nМартин Фукс\nРойс Митчелл III\nБрэндон Тёрнер\nБрайан Палмер\nКаспер Хорнструп\nДэвид Велч\nЭмануэль Алиберти\nГе ван Гельдорп\nГрегор Анич\nДжейсон Филби\nЙенс Коллин\nМихаэль Вирт\nНатан Вудс\nРоберт Дикенсон\nРекс Джоллифф\nVizzini\n\nРелиз-инженеры\n\nАмин Халди\nКолин Финк\nЙоахим Хенце\nТомас Фабер\nЦзылян Гуо\n\nРазработка веб-сайта\n\nКолин Финк\nЯн Блумквист Кинандер\nКлеменс Фридл\nЦзылян Гуо\n\nГрафический дизайн\n\nMindflyer\nWierd_W\n\nБлагодарности\n\nвсем участникам проекта\nКоманде Wine\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Подтверждение удаления профиля"
     IDS_HWPROFILE_CONFIRM_DELETE "Вы уверены что хотите удалить профиль оборудования ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "Профиль с таким названием уже существует."
     IDS_HWPROFILE_PROFILE "Профиль"
     IDS_HWPROFILE_WARNING "Внимание"
+    IDS_ENVIRONMENT_WARNING "Any changes that have been done will be discarded and the variable's value will be edited as text."
+    IDS_ENVIRONMENT_WARNING_TITLE "System Properties"
 END

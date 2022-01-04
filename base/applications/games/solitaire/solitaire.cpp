@@ -12,6 +12,7 @@ DWORD        dwAppStartTime;
 HWND        hwndMain;
 HWND        hwndStatus;
 HINSTANCE    hInstance;
+HMENU        hGameMenu;
 
 TCHAR szAppName[128];
 TCHAR szScore[64];
@@ -178,6 +179,18 @@ void SetPlayTimer(void)
     }
 }
 
+void SetUndoMenuState(bool enable)
+{
+    if (enable)
+    {
+        EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_ENABLED);
+    }
+    else
+    {
+        EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_GRAYED);
+    }
+}
+
 //
 //    Main entry point
 //
@@ -247,6 +260,8 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
         return 1;
 
     hwndMain = hwnd;
+
+    hGameMenu = GetSubMenu(GetMenu(hwndMain), 0);
 
     UpdateStatusBar();
 
@@ -326,7 +341,7 @@ INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             else
                 EnableWindow(hCtrl, FALSE);
             return TRUE;
- 
+
         case IDOK:
             dwOptions &= ~OPTION_THREE_CARDS;
             if (IsDlgButtonChecked(hDlg, IDC_OPT_DRAWTHREE) == BST_CHECKED)
@@ -608,7 +623,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
             // For now, the Help dialog item is disabled because of lacking of HTML Help support
             EnableMenuItem(GetMenu(hwnd), IDM_HELP_CONTENTS, MF_BYCOMMAND | MF_GRAYED);
-            
+
             hwndStatus = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP, _T("Ready"), hwnd, 0);
 
             //SendMessage(hwndStatus, SB_SIMPLE, (WPARAM)TRUE, 0);
@@ -706,6 +721,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 NewGame();
                 return 0;
 
+            case IDM_GAME_UNDO:
+                Undo();
+                return 0;
+
             case IDM_GAME_DECK:
                 ShowDeckOptionsDlg(hwnd);
                 return 0;
@@ -751,6 +770,5 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
     return DefWindowProc (hwnd, iMsg, wParam, lParam);
 }
-
 
 

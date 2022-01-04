@@ -1,6 +1,6 @@
 /*
  * Dwarf pc to source line conversion.
- * 
+ *
  * Maybe should do the reverse here, but what should the interface look like?
  * One possibility is to use the Plan 9 line2addr interface:
  *
@@ -340,10 +340,10 @@ dwarfpctoline(Dwarf *d, ulong pc, char **cdir, char **dir, char **file, char **f
 	if (dwarfenumunit(d, unit, &proc) >= 0) {
 		dwarfnextsymat(d, &proc, 0);
 		while (dwarfnextsymat(d, &proc, 1) == 1) {
-			if (proc.attrs.tag == TagSubprogram && 
+			if (proc.attrs.tag == TagSubprogram &&
 				proc.attrs.have.name &&
-				proc.attrs.declfile == emit.file && 
-				proc.attrs.declline <= *line && 
+				proc.attrs.declfile == emit.file &&
+				proc.attrs.declline <= *line &&
 				proc.attrs.declline > lastline) {
 				lastline = proc.attrs.declline;
 				free(*function);

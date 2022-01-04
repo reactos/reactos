@@ -1,4 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/*
+ * PROJECT:     ReactOS Accessibility Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -7,22 +13,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "鍵盤"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
-    GROUPBOX "粘滯鍵", -1, 6, 11, 234, 62
-    LTEXT "如果希望以一次僅按一鍵的方式來使用 SHIFT、CTRL或 ALT 鍵，請用粘滯鍵。",
+    GROUPBOX "相黏鍵", -1, 6, 11, 234, 62
+    LTEXT "如果您希望以一次僅按一鍵的方式來使用 SHIFT、CTRL 或 ALT 鍵，請使用「相黏鍵」。",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "使用粘滯鍵(&U)", IDC_STICKY_BOX, 12, 49, 126, 14
+    AUTOCHECKBOX "使用相黏鍵(&U)", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "篩選鍵", -1, 6, 79, 234, 67
-    LTEXT "如果希望 ReactOS 忽略短暫或重複的按鍵、或者減緩重複速度，請用“篩選鍵”。",
+    LTEXT "如果您希望 ReactOS 忽略短暫或重複的按鍵、或者減緩重複速度，請使用「篩選鍵」。",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "使用篩選鍵(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "設定(&E)", IDC_FILTER_BUTTON, 144, 121, 90, 14
     GROUPBOX "切換鍵", -1, 6, 148, 234, 62
-    LTEXT "如果希望在按 CAPS、NUM LOCK 和 SCROLL LOCK 鍵時聽到聲音， 請用切換鍵。",
+    LTEXT "如果您希望在按下 CAPS、NUM LOCK 和 SCROLL LOCK 鍵時聽到聲音，請使用「切換鍵」。",
           -1, 12, 161, 222, 20
     AUTOCHECKBOX "使用切換鍵(&T)", IDC_TOGGLE_BOX, 12, 184, 126, 14
     PUSHBUTTON "設定(&N)", IDC_TOGGLE_BUTTON, 144, 184, 90, 14
-    AUTOCHECKBOX "程式中顯示額外的鍵盤幫助(&W)", IDC_KEYBOARD_EXTRA,
+    AUTOCHECKBOX "程式中顯示額外的鍵盤說明(&W)", IDC_KEYBOARD_EXTRA,
                  6, 212, 234, 14
 END
 
@@ -32,16 +38,16 @@ CAPTION "聲音"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "聲音衛士", -1, 6, 11, 234, 98
-    LTEXT "希望 ReactOS 能夠在系統發出聲音時發出可視警告，請用“聲音衛士”。",
+    LTEXT "如果您希望 ReactOS 能在系統發出聲音時發出可視警告，請使用「聲音衛士」。",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "使用“聲音衛士”(&S)", IDC_SENTRY_BOX, 12, 49, 90, 14
+    AUTOCHECKBOX "使用聲音衛士(&S)", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "選擇視覺警告:", IDC_SENTRY_TEXT, 12, 72, 222, 11
     COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "聲音顯示", -1, 6, 115, 234, 67
-    LTEXT "希望程式顯示所發出的語音和聲音的文字，請用“聲音顯示”。",
+    LTEXT "如果您希望程式顯示所發出的語音和聲音的文字，請使用「聲音顯示」。",
           -1, 12, 125, 222, 29
-    AUTOCHECKBOX "使用“聲音顯示”(&H)", IDC_SSHOW_BOX, 12, 148, 222, 14
+    AUTOCHECKBOX "使用聲音顯示(&H)", IDC_SSHOW_BOX, 12, 148, 222, 14
 END
 
 IDD_PROPPAGEDISPLAY DIALOGEX 0, 0, 246, 228
@@ -50,12 +56,12 @@ CAPTION "顯示"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "高對比度", -1, 6, 11, 234, 62
-    LTEXT "希望 ReactOS 使用可讀性好的顏色與字型，請用該選項。",
+    LTEXT "如果您希望 ReactOS 使用可讀性更好的顏色與字型，請使用「高對比度」。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用高對比度(&U)", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
     GROUPBOX "游標選項", -1, 6, 79, 234, 115
-    LTEXT "移動滑桿來改變游標閃爍的速度(游標閃爍速度)和游標的寬度。",
+    LTEXT "移動滑桿來改變游標閃爍的速度（游標閃爍速度）和游標的寬度。",
           -1, 12, 88, 222, 20
     CTEXT "閃爍速度(&R):", -1, 12, 115, 222, 11
     LTEXT "無", -1, 18, 130, 36, 11
@@ -76,7 +82,7 @@ CAPTION "滑鼠"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "滑鼠鍵", -1, 6, 11, 234, 62
-    LTEXT "希望用數字鍵盤來控制滑鼠指針，請用“滑鼠鍵”。",
+    LTEXT "如果您希望用數字鍵盤來控制滑鼠指針，請使用「滑鼠鍵」。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用滑鼠鍵(&M)", IDC_MOUSE_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_MOUSE_BUTTON, 144, 49, 90, 14
@@ -88,45 +94,45 @@ CAPTION "一般"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "自動重置", -1, 6, 11, 234, 47
-    AUTOCHECKBOX "關閉輔助功能特徵，在空閒(&T):",
+    AUTOCHECKBOX "電腦閒置下列時間後關閉輔助功能(&T)：",
                  IDC_RESET_BOX, 12, 18, 222, 14
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "通知", -1, 6, 63, 234, 47
-    AUTOCHECKBOX "開啟某個特性時給出警告", IDC_NOTIFICATION_MESSAGE,
+    AUTOCHECKBOX "開啟某個功能時給出警告", IDC_NOTIFICATION_MESSAGE,
                  12, 72, 222, 14
-    AUTOCHECKBOX "開啟或關閉某個特性時發出聲音(&S)", IDC_NOTIFICATION_SOUND,
+    AUTOCHECKBOX "開啟或關閉某個功能時發出聲音(&S)", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
     GROUPBOX "序列鍵裝置", -1, 6, 115, 234, 47
-    LTEXT "序列鍵裝置允許以其他方式訪問鍵盤和滑鼠特性。",
+    LTEXT "序列鍵裝置允許以其他方式訪問鍵盤和滑鼠功能。",
           -1, 12, 124, 222, 20
     AUTOCHECKBOX "支援序列鍵裝置(&S)", IDC_SERIAL_BOX, 12, 142, 126, 14
     PUSHBUTTON "設定(&E)", IDC_SERIAL_BUTTON, 144, 142, 90, 14
     GROUPBOX "管理選項", -1, 6, 169, 234, 47
-    AUTOCHECKBOX "將所有設定應用到登入桌面(&O)", IDC_ADMIN_LOGON_BOX,
+    AUTOCHECKBOX "將所有設定套用到登入桌面(&O)", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
-    AUTOCHECKBOX "將所有設定應用到新使用者的默認設定(&D)", IDC_ADMIN_USERS_BOX,
+    AUTOCHECKBOX "將所有設定套用到新使用者的預設設定(&D)", IDC_ADMIN_USERS_BOX,
                  12, 196, 222, 14
 END
 
 IDD_STICKYKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "粘滯鍵設定"
+CAPTION "相黏鍵設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "粘滯鍵的快捷鍵是:\n將 SHIFT 鍵按五次後啟用。",
+    LTEXT "相黏鍵的快捷鍵是：\n連續按 SHIFT 鍵五次。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&C)", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "選項", -1, 6, 83, 234, 44
     AUTOCHECKBOX "按兩次修改鍵以鎖定(&P)", IDC_STICKY_LOCK_CHECK,
                  12, 94, 222, 14
-    AUTOCHECKBOX "一旦兩個鍵同時被按，就關閉粘滯鍵(&T)", IDC_STICKY_UNLOCK_CHECK,
+    AUTOCHECKBOX "一旦兩個鍵同時被按下，就關閉相黏鍵(&T)", IDC_STICKY_UNLOCK_CHECK,
                  12, 106, 222, 14
     GROUPBOX "通知", -1, 6, 133, 234, 44
     AUTOCHECKBOX "按下修改鍵時發出聲音(&M)", IDC_STICKY_SOUND_CHECK,
                  12, 148, 222, 14
-    AUTOCHECKBOX "在螢幕上顯示粘滯鍵狀態(&S)", IDC_STICKY_STATUS_CHECK,
+    AUTOCHECKBOX "在螢幕上顯示相黏鍵狀態(&S)", IDC_STICKY_STATUS_CHECK,
                  12, 160, 222, 14
     DEFPUSHBUTTON "確定", IDOK, 135, 207, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 189, 207, 50, 14
@@ -138,17 +144,17 @@ CAPTION "篩選鍵設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "篩選鍵的快捷鍵是:\n將右手的 SHIFT 鍵按住八秒鐘。",
+    LTEXT "篩選鍵的快捷鍵是：\n按住右 SHIFT 鍵八秒鐘。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&U)", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "篩選器選項", -1, 6, 79, 234, 79
-    AUTORADIOBUTTON "忽略重複擊鍵(&O)", IDC_FILTER_BOUNCE_RADIO,
+    AUTORADIOBUTTON "忽略重複按鍵(&O)", IDC_FILTER_BOUNCE_RADIO,
                     12, 91, 120, 11, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "忽略快速擊鍵並減緩重複速度(&N)", IDC_FILTER_REPEAT_RADIO,
                     12, 106, 120, 20, BS_TOP | BS_MULTILINE
     PUSHBUTTON "設定(&S)", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
     PUSHBUTTON "設定(&E)", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
-    LTEXT "在此處單擊並鍵入字元來測試篩選鍵設定(&C):", -1, 12, 129, 222, 11
+    LTEXT "點擊此處並鍵入字元來測試篩選鍵設定(&C)：", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
     GROUPBOX "通知", -1, 6, 161, 234, 41
     AUTOCHECKBOX "當按鍵或鍵被接受時發出聲響(&B)", IDC_FILTER_SOUND_CHECK,
@@ -165,7 +171,7 @@ CAPTION "切換鍵設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "切換鍵的快捷鍵是:\n將 NUM LOCK 鍵按住五秒鐘。",
+    LTEXT "切換鍵的快捷鍵是：\n按住 NUM LOCK 鍵五秒鐘。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&S)", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "確定", IDOK, 135, 207, 50, 14
@@ -178,11 +184,11 @@ CAPTION "高對比度設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "高對比度的快捷鍵是:\n同時按住左 Alt 鍵、左 SHIFT 鍵和 PRINT SCREEN 鍵。",
+    LTEXT "高對比度的快捷鍵是：\n同時按住左 ALT 鍵、左 SHIFT 鍵和 PRINT SCREEN 鍵。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&U)", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "高對比度外觀方案", -1, 6, 83, 234, 44
-    LTEXT "目前的高對比度方案為:", -1, 12, 94, 222, 11
+    LTEXT "目前的高對比度方案：", -1, 12, 94, 222, 11
     COMBOBOX IDC_CONTRAST_COMBO, 12, 103, 222, 56,
              CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "確定", IDOK, 135, 207, 50, 14
@@ -195,7 +201,7 @@ CAPTION "滑鼠鍵設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "滑鼠鍵的快捷鍵是：\n同時按住左 Alt 鍵、左 Shift 鍵和 Num Lock 鍵。",
+    LTEXT "滑鼠鍵的快捷鍵是：\n同時按住左 ALT 鍵、左 SHIFT 鍵和 Num Lock 鍵。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&U)", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
@@ -210,7 +216,7 @@ BEGIN
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
     LTEXT "快", -1, 204, 123, 18, 11
-    AUTOCHECKBOX "按住 Ctrl 鍵來加速，按住 Shift 鍵來減速(&H)", IDC_MOUSEKEYS_SPEED_CHECK,
+    AUTOCHECKBOX "按住 CTRL 鍵來加速，按住 SHIFT 鍵來減速(&H)", IDC_MOUSEKEYS_SPEED_CHECK,
                  12, 142, 222, 14
     LTEXT "使用滑鼠鍵，此時 NumLock 鍵為：", -1, 6, 171, 120, 11
     AUTORADIOBUTTON "開啟(&O)", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
@@ -223,14 +229,14 @@ END
 
 IDD_BOUNCEKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "篩選鍵高階設定"
+CAPTION "篩選鍵進階設定"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "蹦跳鍵", -1, 6, 11, 234, 47
-    LTEXT "忽略重複的擊鍵比快：(&I)", -1, 12, 21, 222, 20
+    GROUPBOX "反彈鍵", -1, 6, 11, 234, 47
+    LTEXT "當快於以下時間時忽略重複的按鍵(&I)：", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "試驗區:(&T)", -1, 6, 68, 48, 11
+    LTEXT "試驗區(&T)：", -1, 6, 68, 48, 11
     EDITTEXT IDC_BOUNCE_TEST_EDIT, 60, 65, 180, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "確定", IDOK, 135, 207, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 189, 207, 50, 14
@@ -238,11 +244,11 @@ END
 
 IDD_REPEATKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "篩選鍵高階設定"
+CAPTION "篩選鍵進階設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "重複鍵", -1, 6, 11, 234, 106
-    LTEXT "替代控制面板“鍵盤”上的設定：",
+    LTEXT "覆寫控制台上的「鍵盤」的設定：",
           -1, 12, 20, 222, 20
     AUTORADIOBUTTON "無鍵盤重複(&N)", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 78, 11, WS_GROUP
     AUTORADIOBUTTON "減緩鍵盤重複速度(&S)", IDC_REPEAT_REPEAT_RADIO, 12, 45, 131, 11
@@ -270,10 +276,10 @@ BEGIN
     GROUPBOX "序列鍵", -1, 6, 11, 234, 92
     LTEXT "選擇用於連線其他輸入裝置的埠。",
           -1, 12, 20, 222, 20
-    LTEXT "序列口(&S):", -1, 12, 34, 222, 20
+    LTEXT "序列埠(&S)：", -1, 12, 34, 222, 20
     COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 45, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "波特率(&B):", -1, 12, 65, 222, 20
+    LTEXT "調變速率(&B)：", -1, 12, 65, 222, 20
     COMBOBOX IDC_SERIAL_BAUD_COMBO, 12, 76, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "確定", IDOK, 135, 207, 50, 14
@@ -284,7 +290,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "輔助功能"
     IDS_CPLSYSTEMDESCRIPTION "為視覺、聽力和行動能力而調整電腦設定。"
-    IDS_SENTRY_NONE "[無]"
+    IDS_SENTRY_NONE "［無］"
     IDS_SENTRY_TITLE "閃爍活動標題欄"
     IDS_SENTRY_WINDOW "閃爍活動視窗"
     IDS_SENTRY_DISPLAY "閃爍桌面"

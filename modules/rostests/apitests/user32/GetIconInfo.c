@@ -150,7 +150,7 @@ START_TEST(GetIconInfo)
 
     dm.dmSize = sizeof(dm);
     dm.dmDriverExtra = 0;
-    
+
     /* Test icons behaviour regarding display settings */
     ok(EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dm), "\n");
     screenbpp = dm.dmBitsPerPel;
@@ -175,7 +175,7 @@ START_TEST(GetIconInfo)
     DeleteObject(iconinfo2.hbmMask);
     /* Delete cursor */
     DestroyCursor(hcursor);
-        
+
     /* To sum it up:
      * There are two criteria when using icons: performance and aesthetics (=alpha channel).
      * Performance asks for bit parity with the screen display.
@@ -184,7 +184,7 @@ START_TEST(GetIconInfo)
      * ie: if the 32bpp bitmap were already loaded because of previous display settings, always use it.
      * Otherwise, use the bitmap matching the screen bit depth.
      */
-    
+
     /* if we use LR_SHARED here, and reverse the loop (32->16), then hbmColor.bmBitsPixel is always 32. */
     for(creationbpp = 16; creationbpp <=32; creationbpp += 8)
     {
@@ -202,7 +202,7 @@ START_TEST(GetIconInfo)
             0,
             LR_DEFAULTCOLOR);
         ok(hcursor != 0, "should not fail\n");
-        
+
         /* If we reverse the loop here (32->16 bpp), then hbmColor.bmBitsPixel is always 32 */
         for(bpp = 16; bpp <=32; bpp += 8)
         {
@@ -237,7 +237,7 @@ START_TEST(GetIconInfo)
             ok(bitmap.bmPlanes == 1, "\n");
             ok(bitmap.bmBitsPixel == (creationbpp == 32 ? 32 : bpp), "creationbpp: %lu, bpp: %lu:\n", creationbpp, bpp);
             ok(bitmap.bmBits == NULL, "\n");
-            
+
             /* Delete objects */
             DeleteObject(iconinfo2.hbmColor);
             DeleteObject(iconinfo2.hbmMask);
@@ -266,7 +266,7 @@ START_TEST(GetIconInfo)
     ok(bitmap.bmPlanes == 1, "\n");
     ok(bitmap.bmBitsPixel == 1, "\n");
     ok(bitmap.bmBits == NULL, "\n");
-    
+
     /* Delete objects */
     DeleteObject(iconinfo2.hbmColor);
     DeleteObject(iconinfo2.hbmMask);

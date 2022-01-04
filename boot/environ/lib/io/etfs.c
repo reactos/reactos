@@ -333,7 +333,7 @@ Quickie:
 
 NTSTATUS
 EtfspSearchForDirent (
-    _In_ PBL_FILE_ENTRY DirectoryEntry, 
+    _In_ PBL_FILE_ENTRY DirectoryEntry,
     _In_ PWCHAR FileName,
     _Out_ PRAW_DIR_REC *DirEntry,
     _Out_ PULONG DirentOffset
@@ -435,7 +435,7 @@ EtfspCachedSearchForDirent (
 NTSTATUS
 EtfsRead (
     _In_ PBL_FILE_ENTRY FileEntry,
-    _In_ PVOID Buffer, 
+    _In_ PVOID Buffer,
     _In_ ULONG Size,
     _Out_opt_ PULONG BytesReturned
     )
@@ -538,7 +538,7 @@ NTSTATUS
 EtfsOpen (
     _In_ PBL_FILE_ENTRY Directory,
     _In_ PWCHAR FileName,
-    _In_ ULONG Flags, 
+    _In_ ULONG Flags,
     _Out_ PBL_FILE_ENTRY *FileEntry
     )
 {

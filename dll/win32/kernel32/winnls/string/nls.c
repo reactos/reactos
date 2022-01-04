@@ -356,9 +356,10 @@ IntGetCodePageEntry(UINT CodePage)
  *
  * Internal version of MultiByteToWideChar for UTF8.
  *
+ * @note We use Win10's behaviour due to security reason.
+ *
  * @see MultiByteToWideChar
  */
-
 static
 INT
 WINAPI
@@ -1633,7 +1634,6 @@ static INT Utf7ToWideChar(const char *src, int srclen, WCHAR *dst, int dstlen)
  *
  * @implemented
  */
-
 INT
 WINAPI
 MultiByteToWideChar(UINT CodePage,
@@ -1828,7 +1828,8 @@ UINT
 GetLocalisedText(
     IN UINT uID,
     IN LPWSTR lpszDest,
-    IN UINT cchDest)
+    IN UINT cchDest,
+    IN LANGID lang)
 {
     HRSRC hrsrc;
     HGLOBAL hmem;
@@ -1841,8 +1842,7 @@ GetLocalisedText(
     if (uID == 37)
         uID = uID * 100;
 
-    lcid = GetUserDefaultLCID();
-    lcid = ConvertDefaultLocale(lcid);
+    lcid = ConvertDefaultLocale(lang);
 
     langId = LANGIDFROMLCID(lcid);
 
@@ -1981,7 +1981,8 @@ GetCPInfoExW(UINT CodePage,
             lpCPInfoEx->UnicodeDefaultChar = 0x3f;
             return GetLocalisedText(lpCPInfoEx->CodePage,
                                     lpCPInfoEx->CodePageName,
-                                    ARRAYSIZE(lpCPInfoEx->CodePageName)) != 0;
+                                    ARRAYSIZE(lpCPInfoEx->CodePageName),
+                                    GetThreadLocale()) != 0;
         }
         break;
 
@@ -1991,7 +1992,8 @@ GetCPInfoExW(UINT CodePage,
             lpCPInfoEx->UnicodeDefaultChar = 0x3f;
             return GetLocalisedText(lpCPInfoEx->CodePage,
                                     lpCPInfoEx->CodePageName,
-                                    ARRAYSIZE(lpCPInfoEx->CodePageName)) != 0;
+                                    ARRAYSIZE(lpCPInfoEx->CodePageName),
+                                    GetThreadLocale()) != 0;
         }
 
         default:
@@ -2010,7 +2012,8 @@ GetCPInfoExW(UINT CodePage,
             lpCPInfoEx->UnicodeDefaultChar = CodePageEntry->CodePageTable.UniDefaultChar;
             return GetLocalisedText(lpCPInfoEx->CodePage,
                                     lpCPInfoEx->CodePageName,
-                                    ARRAYSIZE(lpCPInfoEx->CodePageName)) != 0;
+                                    ARRAYSIZE(lpCPInfoEx->CodePageName),
+                                    GetThreadLocale()) != 0;
         }
         break;
     }

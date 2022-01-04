@@ -2092,6 +2092,28 @@ SHBindToParent(
   _Outptr_opt_ PCUITEMID_CHILD *ppidlLast);
 
 /****************************************************************************
+ * SHCreateFileExtractIcon API
+ */
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+// NOTE: Even if documented on MSDN, the SHCreateFileExtractIconA()
+// ANSI function never existed on Windows!
+
+HRESULT
+WINAPI
+SHCreateFileExtractIconW(
+    _In_ LPCWSTR pszFile,
+    _In_ DWORD dwFileAttributes,
+    _In_ REFIID riid,
+    _Outptr_ void **ppv);
+
+#ifdef UNICODE
+#define SHCreateFileExtractIcon  SHCreateFileExtractIconW
+#endif
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+/****************************************************************************
 * SHDefExtractIcon API
 */
 HRESULT
@@ -2475,6 +2497,18 @@ WINAPI
 SHRunControlPanel(
   _In_ LPCWSTR commandLine,
   _In_opt_ HWND parent);
+
+/****************************************************************************
+ * SHGetAttributesFromDataObject
+ */
+
+HRESULT
+WINAPI
+SHGetAttributesFromDataObject(
+    _In_opt_ IDataObject* pdo,
+    DWORD dwAttributeMask,
+    _Out_opt_ DWORD* pdwAttributes,
+    _Out_opt_ UINT* pcItems);
 
 /****************************************************************************
  * SHOpenWithDialog

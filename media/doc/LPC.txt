@@ -11,7 +11,7 @@ Below are some of Alex's notes on the mysterious LPC Subsystem
 
 There are four imporant LPC Sizes to keep in mind. Try to understand them:
 
-/* 
+/*
  * This determines the absolute maximum message size (0x100 bytes). For
  * larger values, use a section-backed message.
  */
@@ -22,7 +22,7 @@ There are four imporant LPC Sizes to keep in mind. Try to understand them:
  * amount of bytes that an LPC request can take. To calculate this, assume
  * that this is a CONNECTION_REQUEST message, which includes the additionnal
  * LPCP_CONNECTION_MESSAGE structure as well. Therefore, we add the kernel LPC,
- * header, the maximum port size and the size of the connection request 
+ * header, the maximum port size and the size of the connection request
  * structure. This gives a value of 0x15C. However, one must note that NT
  * allocates the Lookaside List using a 16-byte aligned value, making this
  * number 0x160.

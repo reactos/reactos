@@ -342,7 +342,7 @@ CallQueryIPIOCTL(
     IN PVOID InputBuffer,
     IN ULONG InputBufferLength,
     IN PVOID OutputBuffer,
-    IN ULONG OutputBufferLength, 
+    IN ULONG OutputBufferLength,
     IN BOOLEAN PrintMessage,
     OUT PBOOLEAN MessagePrinted
     )

@@ -39,7 +39,7 @@ list(APPEND SOURCE
     Vtable/DirectDrawSurface4_Vtable.c
     Vtable/DirectDrawSurface7_Vtable.c)
 
-add_library(ddraw MODULE 
+add_library(ddraw MODULE
     ${SOURCE}
     ddraw.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def)

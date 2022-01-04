@@ -81,7 +81,7 @@ HalInitializeProcessor(
     _In_ struct _LOADER_PARAMETER_BLOCK *LoaderBlock
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTHALAPI
 BOOLEAN
 NTAPI
@@ -177,7 +177,7 @@ HalGetInterruptSource(
 );
 #endif
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTHALAPI
 VOID
 NTAPI

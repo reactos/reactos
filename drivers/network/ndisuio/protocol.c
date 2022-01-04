@@ -108,9 +108,9 @@ NduSendComplete(NDIS_HANDLE ProtocolBindingContext,
                 NDIS_STATUS Status)
 {
     PNDISUIO_ADAPTER_CONTEXT AdapterContext = ProtocolBindingContext;
-    
+
     DPRINT("Asynchronous adapter send completed\n");
-    
+
     /* Store the final status and signal the event */
     AdapterContext->AsyncStatus = Status;
     KeSetEvent(&AdapterContext->AsyncEvent, IO_NO_INCREMENT, FALSE);
@@ -177,13 +177,13 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
     PNDIS_PACKET Packet;
     NDIS_STATUS Status;
     UINT BytesTransferred;
-    
+
     DPRINT("Received a %d byte packet\n", PacketSize);
 
     /* Discard if nobody is waiting for it */
     if (AdapterContext->OpenCount == 0)
         return NDIS_STATUS_NOT_ACCEPTED;
-    
+
     /* Allocate a buffer to hold the packet data and header */
     PacketBuffer = ExAllocatePool(NonPagedPool, PacketSize + HeaderBufferSize);
     if (!PacketBuffer)
@@ -234,11 +234,11 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
             return NDIS_STATUS_NOT_ACCEPTED;
         }
     }
-    
+
     /* Copy the header data */
     RtlCopyMemory(PacketBuffer, HeaderBuffer, HeaderBufferSize);
-    
-    /* Free the packet descriptor and buffers 
+
+    /* Free the packet descriptor and buffers
        but not the pool because we still need it */
     CleanupAndFreePacket(Packet, FALSE);
 
@@ -253,7 +253,7 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
     /* Initialize the packet entry and copy in packet data */
     PacketEntry->PacketLength = BytesTransferred + HeaderBufferSize;
     RtlCopyMemory(PacketEntry->PacketData, PacketBuffer, PacketEntry->PacketLength);
-    
+
     /* Free the old buffer */
     ExFreePool(PacketBuffer);
 
@@ -261,7 +261,7 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
     ExInterlockedInsertTailList(&AdapterContext->PacketList,
                                 &PacketEntry->ListEntry,
                                 &AdapterContext->Spinlock);
-    
+
     /* Signal the read event */
     KeSetEvent(&AdapterContext->PacketReadEvent,
                IO_NETWORK_INCREMENT,
@@ -303,16 +303,16 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
     PNDISUIO_OPEN_ENTRY OpenEntry;
     PNDISUIO_PACKET_ENTRY PacketEntry;
     NDIS_STATUS Status;
-    
+
     DPRINT("Unbinding adapter %wZ\n", &AdapterContext->DeviceName);
-    
+
     /* FIXME: We don't do anything with outstanding reads */
 
     /* Remove the adapter context from the global list */
     KeAcquireSpinLock(&GlobalAdapterListLock, &OldIrql);
     RemoveEntryList(&AdapterContext->ListEntry);
     KeReleaseSpinLock(&GlobalAdapterListLock, OldIrql);
-    
+
     /* Free the device name string */
     RtlFreeUnicodeString(&AdapterContext->DeviceName);
 
@@ -333,7 +333,7 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
         /* Remove the open entry pointer */
         ASSERT(OpenEntry == OpenEntry->FileObject->FsContext2);
         OpenEntry->FileObject->FsContext2 = NULL;
-        
+
         /* Move to the next entry */
         CurrentEntry = CurrentEntry->Flink;
 
@@ -343,7 +343,7 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
 
     /* If this fails, we have a refcount mismatch somewhere */
     ASSERT(AdapterContext->OpenCount == 0);
-    
+
     /* Free all pending packet entries */
     CurrentEntry = AdapterContext->PacketList.Flink;
     while (CurrentEntry != &AdapterContext->PacketList)
@@ -356,11 +356,11 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
         /* Free the packet entry */
         ExFreePool(PacketEntry);
     }
-    
+
     /* Send the close request */
     NdisCloseAdapter(&Status,
                      AdapterContext->BindingHandle);
-    
+
     /* Wait for a pending close */
     if (Status == NDIS_STATUS_PENDING)
     {
@@ -371,10 +371,10 @@ UnbindAdapterByContext(PNDISUIO_ADAPTER_CONTEXT AdapterContext)
                               NULL);
         Status = AdapterContext->AsyncStatus;
     }
-    
+
     /* Free the context */
     ExFreePool(AdapterContext);
-    
+
     return Status;
 }
 
@@ -416,7 +416,7 @@ BindAdapterByName(PNDIS_STRING DeviceName)
 
     /* Copy the device name into the adapter context */
     RtlCopyMemory(AdapterContext->DeviceName.Buffer, DeviceName->Buffer, DeviceName->Length);
-    
+
     DPRINT("Binding adapter %wZ\n", &AdapterContext->DeviceName);
 
     /* Create the buffer pool */
@@ -457,7 +457,7 @@ BindAdapterByName(PNDIS_STRING DeviceName)
                     DeviceName,
                     0,
                     NULL);
-    
+
     /* Wait for a pending open */
     if (Status == NDIS_STATUS_PENDING)
     {
@@ -468,7 +468,7 @@ BindAdapterByName(PNDIS_STRING DeviceName)
                               NULL);
         Status = AdapterContext->AsyncStatus;
     }
-    
+
     /* Check the final status */
     if (Status != NDIS_STATUS_SUCCESS)
     {
@@ -479,7 +479,7 @@ BindAdapterByName(PNDIS_STRING DeviceName)
         ExFreePool(AdapterContext);
         return Status;
     }
-    
+
     /* Get the MAC options */
     Request.RequestType = NdisRequestQueryInformation;
     Request.DATA.QUERY_INFORMATION.Oid = OID_GEN_MAC_OPTIONS;
@@ -499,7 +499,7 @@ BindAdapterByName(PNDIS_STRING DeviceName)
                               NULL);
         Status = AdapterContext->AsyncStatus;
     }
-    
+
     /* Check the final status */
     if (Status != NDIS_STATUS_SUCCESS)
     {
@@ -524,7 +524,7 @@ BindAdapterByName(PNDIS_STRING DeviceName)
         ExFreePool(AdapterContext);
         return Status;
     }
-    
+
     /* Add the adapter context to the global list */
     ExInterlockedInsertTailList(&GlobalAdapterList,
                                 &AdapterContext->ListEntry,
@@ -551,7 +551,7 @@ NduUnbindAdapter(PNDIS_STATUS Status,
                  NDIS_HANDLE ProtocolBindingContext,
                  NDIS_HANDLE UnbindContext)
 {
-    /* This is forced unbind. UnbindAdapterByContext() will take care of 
+    /* This is forced unbind. UnbindAdapterByContext() will take care of
      * invalidating file handles pointer to this adapter for us */
     *Status = UnbindAdapterByContext(ProtocolBindingContext);
 }

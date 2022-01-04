@@ -453,14 +453,26 @@ typedef struct _PLUGPLAY_EVENT_BLOCK
 // Plug and Play Control Classes
 //
 
-// Class 0x00
+// PlugPlayControlEnumerateDevice (0x00)
 typedef struct _PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA
 {
     UNICODE_STRING DeviceInstance;
     ULONG Flags;
 } PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA, *PPLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA;
 
-// Class 0x06
+// PlugPlayControlRegisterNewDevice (0x1)
+// PlugPlayControlDeregisterDevice (0x2)
+// PlugPlayControlInitializeDevice (0x3)
+// PlugPlayControlStartDevice (0x4)
+// PlugPlayControlUnlockDevice (0x5)
+// PlugPlayControlResetDevice (0x14)
+// PlugPlayControlHaltDevice (0x15)
+typedef struct _PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA
+{
+    UNICODE_STRING DeviceInstance;
+} PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA, *PPLUGPLAY_CONTROL_DEVICE_CONTROL_DATA;
+
+// PlugPlayControlQueryAndRemoveDevice (0x06)
 typedef struct _PLUGPLAY_CONTROL_QUERY_REMOVE_DATA
 {
     UNICODE_STRING DeviceInstance;
@@ -470,7 +482,7 @@ typedef struct _PLUGPLAY_CONTROL_QUERY_REMOVE_DATA
     ULONG NameLength;
 } PLUGPLAY_CONTROL_QUERY_REMOVE_DATA, *PPLUGPLAY_CONTROL_QUERY_REMOVE_DATA;
 
-// Class 0x07
+// PlugPlayControlUserResponse (0x07)
 typedef struct _PLUGPLAY_CONTROL_USER_RESPONSE_DATA
 {
     ULONG Unknown1;
@@ -479,7 +491,7 @@ typedef struct _PLUGPLAY_CONTROL_USER_RESPONSE_DATA
     ULONG Unknown4;
 } PLUGPLAY_CONTROL_USER_RESPONSE_DATA, *PPLUGPLAY_CONTROL_USER_RESPONSE_DATA;
 
-// Class 0x09
+// PlugPlayControlGetInterfaceDeviceList (0x09)
 typedef struct _PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA
 {
     UNICODE_STRING DeviceInstance;
@@ -489,7 +501,7 @@ typedef struct _PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA
     ULONG BufferSize;
 } PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA, *PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA;
 
-//Class 0x0A
+// PlugPlayControlProperty (0x0A)
 typedef struct _PLUGPLAY_CONTROL_PROPERTY_DATA
 {
     UNICODE_STRING DeviceInstance;
@@ -498,7 +510,7 @@ typedef struct _PLUGPLAY_CONTROL_PROPERTY_DATA
     ULONG BufferSize;
 } PLUGPLAY_CONTROL_PROPERTY_DATA, *PPLUGPLAY_CONTROL_PROPERTY_DATA;
 
-// Class 0x0C
+// PlugPlayControlGetRelatedDevice (0x0C)
 typedef struct _PLUGPLAY_CONTROL_RELATED_DEVICE_DATA
 {
     UNICODE_STRING TargetDeviceInstance;
@@ -507,7 +519,7 @@ typedef struct _PLUGPLAY_CONTROL_RELATED_DEVICE_DATA
     ULONG RelatedDeviceInstanceLength;
 } PLUGPLAY_CONTROL_RELATED_DEVICE_DATA, *PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA;
 
-// Class 0x0E
+// PlugPlayControlDeviceStatus (0x0E)
 typedef struct _PLUGPLAY_CONTOL_STATUS_DATA
 {
     UNICODE_STRING DeviceInstance;
@@ -516,14 +528,14 @@ typedef struct _PLUGPLAY_CONTOL_STATUS_DATA
     ULONG DeviceProblem;
 } PLUGPLAY_CONTROL_STATUS_DATA, *PPLUGPLAY_CONTROL_STATUS_DATA;
 
-// Class 0x0F
+// PlugPlayControlGetDeviceDepth (0x0F)
 typedef struct _PLUGPLAY_CONTROL_DEPTH_DATA
 {
     UNICODE_STRING DeviceInstance;
     ULONG Depth;
 } PLUGPLAY_CONTROL_DEPTH_DATA, *PPLUGPLAY_CONTROL_DEPTH_DATA;
 
-// Class 0x10
+// PlugPlayControlQueryDeviceRelations (0x10)
 typedef struct _PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA
 {
     UNICODE_STRING DeviceInstance;
@@ -532,18 +544,12 @@ typedef struct _PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA
     PWCHAR Buffer;
 } PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA, *PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA;
 
-// Class 0x13
+// PlugPlayControlRetrieveDock (0x13)
 typedef struct _PLUGPLAY_CONTROL_RETRIEVE_DOCK_DATA
 {
     ULONG DeviceInstanceLength;
     PWSTR DeviceInstance;
 } PLUGPLAY_CONTROL_RETRIEVE_DOCK_DATA, *PPLUGPLAY_CONTROL_RETRIEVE_DOCK_DATA;
-
-// Class 0x14
-typedef struct _PLUGPLAY_CONTROL_RESET_DEVICE_DATA
-{
-    UNICODE_STRING DeviceInstance;
-} PLUGPLAY_CONTROL_RESET_DEVICE_DATA, *PPLUGPLAY_CONTROL_RESET_DEVICE_DATA;
 
 //
 // Plug and Play Bus Type Definition

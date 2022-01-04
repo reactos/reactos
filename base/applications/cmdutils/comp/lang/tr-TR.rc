@@ -4,22 +4,22 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "İki kütüğün ya da iki kütük öbeğinin içeriklerini karşılaştırır.\n\n\
+    IDS_HELP "İki dosyanın ya da iki dosya yığınının içeriklerini karşılaştırır.\n\n\
 COMP [/L] [/A] [veri1] [veri2]\n\n\
-  veri1      Karşılaştırılacak birinci kütüğün adını ve konumunu belirtir.\n\
-  veri2      Karşılaştırılacak ikinci kütüğün adını ve konumunu belirtir.\n\
-  /A         ASCII damgalarındaki ayrımları görüntüle. (Ön tanımlı: On altılık.)\n\
-  /L         Ayrımlar için yataç numaraları görüntüle.\n"
+  veri1      Karşılaştırılacak birinci dosyanın adını ve konumunu belirtir.\n\
+  veri2      Karşılaştırılacak ikinci dosyanın adını ve konumunu belirtir.\n\
+  /A         ASCII karakterlerindeki ayrımları görüntüle. (Varsayılan: On altılık.)\n\
+  /L         Ayrımlar için satır numaraları görüntüle.\n"
     IDS_INVALIDSWITCH "Geçersiz seçenek - /%c\n"
-    IDS_BADSYNTAX "Geçersiz komut yatacı söz dizimi.\n"
-    IDS_FILEERROR "Kütük açılamıyor ya da aranamıyor: %s\n"
+    IDS_BADSYNTAX "Geçersiz komut satırı söz dizimi.\n"
+    IDS_FILEERROR "Dosya açılamıyor ya da aranamıyor: %s\n"
     IDS_COMPARING "%s ve %s karşılaştırılıyor...\n"
-    IDS_FILESIZEERROR "Kütüğün büyüklüğü saptanamıyor: %s\n"
-    IDS_SIZEDIFFERS "Kütükler ayrı büyüklüklerde.\n"
-    IDS_READERROR "Kütükleri okuma yanlışlığı.\n"
-    IDS_MISMATCHLINE "%d. yataçta karşılaştırma yanlışlığı.\n"
-    IDS_MISMATCHOFFSET "0x%X ofsetinde karşılaştırma yanlışlığı.\n"
-    IDS_ASCIIDIFF "kütük%d = %c\n"
-    IDS_HEXADECIMALDIFF "kütük%d = %X\n"
-    IDS_MATCH "Kütükleri karşılaştırma bitti.\n"
+    IDS_FILESIZEERROR "Dosyanın büyüklüğü saptanamıyor: %s\n"
+    IDS_SIZEDIFFERS "Dosyalar ayrı büyüklüklerde.\n"
+    IDS_READERROR "Dosyaların okunması hata ile sonuçlandı.\n"
+    IDS_MISMATCHLINE "%d. yataçta karşılaştırma hatası.\n"
+    IDS_MISMATCHOFFSET "0x%X ofsetinde karşılaştırma hatası.\n"
+    IDS_ASCIIDIFF "dosya%d = %c\n"
+    IDS_HEXADECIMALDIFF "dosya%d = %X\n"
+    IDS_MATCH "Dosya karşılaştırması bitti.\n"
 END

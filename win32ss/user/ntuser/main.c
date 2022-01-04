@@ -651,6 +651,16 @@ InitThreadCallback(PETHREAD Thread)
     }
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
 
+    /* Create the default input context */
+    if (IS_IMM_MODE())
+    {
+        PIMC pIMC = UserCreateInputContext(0);
+        if (pIMC)
+        {
+            UserDereferenceObject(pIMC);
+        }
+    }
+
     /* Last things to do only if we are not a SYSTEM or CSRSS thread */
     if (!(ptiCurrent->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD)))
     {
@@ -896,10 +906,25 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
     } \
 }
 
+// Lock & return on failure
+#define USERLOCK_AND_ROF(x)         \
+{                                   \
+    UserEnterExclusive();           \
+    Status = (x);                   \
+    UserLeave();                    \
+    if (!NT_SUCCESS(Status))        \
+    { \
+        DPRINT1("Failed '%s' (0x%lx)\n", #x, Status); \
+        return Status; \
+    } \
+}
+
+
+
 /*
  * This definition doesn't work
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 APIENTRY
 DriverEntry(
@@ -968,8 +993,15 @@ DriverEntry(
         return STATUS_UNSUCCESSFUL;
     }
 
+    /* Init the global user lock */
+    ExInitializeResourceLite(&UserLock);
+
+    /* Lock while we use the heap (UserHeapAlloc asserts on this) */
+    UserEnterExclusive();
+
     /* Allocate global server info structure */
     gpsi = UserHeapAlloc(sizeof(*gpsi));
+    UserLeave();
     if (!gpsi)
     {
         DPRINT1("Failed allocate server info structure!\n");
@@ -992,7 +1024,7 @@ DriverEntry(
     NT_ROF(InitLDEVImpl());
     NT_ROF(InitDeviceImpl());
     NT_ROF(InitDcImpl());
-    NT_ROF(InitUserImpl());
+    USERLOCK_AND_ROF(InitUserImpl());
     NT_ROF(InitWindowStationImpl());
     NT_ROF(InitDesktopImpl());
     NT_ROF(InitInputImpl());

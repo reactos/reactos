@@ -1,0 +1,10 @@
+// Chinese Traditional (zh-TW) resources by Chan Chilung <eason066@gmail.com> 2021
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "分形圓筒"
+    IDS_TITLE       "關於"
+    IDS_TEXT        "分形圓筒，製作者: unC0Rr。\n特別為 ReactOS 製作。"
+END

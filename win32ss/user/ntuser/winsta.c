@@ -28,7 +28,7 @@ UNICODE_STRING gustrWindowStationsDir;
 
 /* INITIALIZATION FUNCTIONS ****************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitWindowStationImpl(VOID)
@@ -326,6 +326,22 @@ co_IntInitializeDesktopGraphics(VOID)
     pdesk = IntGetActiveDesktop();
     ASSERT(pdesk);
     co_IntShowDesktop(pdesk, gpsi->aiSysMet[SM_CXSCREEN], gpsi->aiSysMet[SM_CYSCREEN], TRUE);
+
+    /* HACK: display wallpaper on all secondary displays */
+    {
+        PGRAPHICS_DEVICE pGraphicsDevice;
+        UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
+        UNICODE_STRING DisplayName;
+        HDC hdc;
+        ULONG iDevNum;
+
+        for (iDevNum = 1; (pGraphicsDevice = EngpFindGraphicsDevice(NULL, iDevNum, 0)) != NULL; iDevNum++)
+        {
+            RtlInitUnicodeString(&DisplayName, pGraphicsDevice->szWinDeviceName);
+            hdc = IntGdiCreateDC(&DriverName, &DisplayName, NULL, NULL, FALSE);
+            IntPaintDesktop(hdc);
+        }
+    }
 
     return TRUE;
 }

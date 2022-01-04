@@ -21,8 +21,8 @@
 #define MI_PAGED_POOL_START             (PVOID)0xFFFFF8A000000000ULL // 128 GB paged pool [MiVaPagedPool]
 //#define MI_PAGED_POOL_END                    0xFFFFF8BFFFFFFFFFULL
 //#define MI_SESSION_SPACE_START               0xFFFFF90000000000ULL // 512 GB session space [MiVaSessionSpace]
-#define MI_SESSION_VIEW_END                    0xFFFFF97FFF000000ULL
-#define MI_SESSION_SPACE_END                   0xFFFFF97FFFFFFFFFULL
+//#define MI_SESSION_VIEW_END                    0xFFFFF97FFF000000ULL
+#define MI_SESSION_SPACE_END                   0xFFFFF98000000000ULL
 #define MI_SYSTEM_CACHE_START                  0xFFFFF98000000000ULL // 1 TB system cache (on Vista+ this is dynamic VA space) [MiVaSystemCache,MiVaSpecialPoolPaged,MiVaSpecialPoolNonPaged]
 #define MI_SYSTEM_CACHE_END                    0xFFFFFA7FFFFFFFFFULL
 #define MI_PFN_DATABASE                        0xFFFFFA8000000000ULL // up to 5.5 TB PFN database followed by non paged pool [MiVaPfnDatabase/MiVaNonPagedPool]
@@ -58,11 +58,11 @@
 #define MI_MIN_INIT_PAGED_POOLSIZE              (32 * _1MB)
 #define MI_MAX_INIT_NONPAGED_POOL_SIZE          (128ULL * 1024 * 1024 * 1024)
 #define MI_MAX_NONPAGED_POOL_SIZE               (128ULL * 1024 * 1024 * 1024)
-#define MI_SYSTEM_VIEW_SIZE                     (16 * _1MB)
-#define MI_SESSION_VIEW_SIZE                    (20 * _1MB)
-#define MI_SESSION_POOL_SIZE                    (16 * _1MB)
-#define MI_SESSION_IMAGE_SIZE                   (8 * _1MB)
-#define MI_SESSION_WORKING_SET_SIZE             (4 * _1MB)
+#define MI_SYSTEM_VIEW_SIZE                     (104 * _1MB)
+#define MI_SESSION_VIEW_SIZE                    (104 * _1MB)
+#define MI_SESSION_POOL_SIZE                    (64 * _1MB)
+#define MI_SESSION_IMAGE_SIZE                   (16 * _1MB)
+#define MI_SESSION_WORKING_SET_SIZE             (16 * _1MB)
 #define MI_SESSION_SIZE                         (MI_SESSION_VIEW_SIZE + \
                                                  MI_SESSION_POOL_SIZE + \
                                                  MI_SESSION_IMAGE_SIZE + \
@@ -118,9 +118,16 @@
 #endif
 
 /* Macros to identify the page fault reason from the error code */
-#define MI_IS_NOT_PRESENT_FAULT(FaultCode) !BooleanFlagOn(FaultCode, 0x1)
-#define MI_IS_WRITE_ACCESS(FaultCode) BooleanFlagOn(FaultCode, 0x2)
-#define MI_IS_INSTRUCTION_FETCH(FaultCode) BooleanFlagOn(FaultCode, 0x10)
+#define MI_IS_NOT_PRESENT_FAULT(FaultCode)  !BooleanFlagOn(FaultCode, 0x00000001)
+#define MI_IS_WRITE_ACCESS(FaultCode)        BooleanFlagOn(FaultCode, 0x00000002)
+// 0x00000004: user-mode access.
+// 0x00000008: reserved bit violation.
+#define MI_IS_INSTRUCTION_FETCH(FaultCode)   BooleanFlagOn(FaultCode, 0x00000010)
+// 0x00000020: protection-key violation.
+// 0x00000040: shadow-stack access.
+// Bits 7-14: reserved.
+// 0x00008000: violation of SGX-specific access-control requirements.
+// Bits 16-31: reserved.
 
 /* On x64, these are the same */
 #define MI_WRITE_VALID_PPE MI_WRITE_VALID_PTE
@@ -231,10 +238,69 @@ MiPxeToAddress(PMMPTE PointerPxe)
     return (PVOID)(((LONG64)PointerPxe << 52) >> 16);
 }
 
-/* Translate between P*Es */
-#define MiPdeToPte(_Pde) ((PMMPTE)MiPteToAddress(_Pde))
-#define MiPteToPde(_Pte) ((PMMPDE)MiAddressToPte(_Pte))
-#define MiPdeToPpe(_Pde) ((PMMPPE)MiAddressToPte(_Pde))
+/* Convert a PDE into its lowest PTE */
+FORCEINLINE
+PMMPTE
+MiPdeToPte(PMMPDE PointerPde)
+{
+    return (PMMPTE)MiPteToAddress(PointerPde);
+}
+
+/* Convert a PPE into its lowest PTE */
+FORCEINLINE
+PMMPTE
+MiPpeToPte(PMMPPE PointerPpe)
+{
+    return (PMMPTE)MiPdeToAddress(PointerPpe);
+}
+
+/* Convert a PXE into its lowest PTE */
+FORCEINLINE
+PMMPTE
+MiPxeToPte(PMMPXE PointerPxe)
+{
+    return (PMMPTE)MiPpeToAddress(PointerPxe);
+}
+
+/* Convert a PTE to a corresponding PDE */
+FORCEINLINE
+PMMPDE
+MiPteToPde(PMMPTE PointerPte)
+{
+    return (PMMPDE)MiAddressToPte(PointerPte);
+}
+
+/* Convert a PTE to a corresponding PPE */
+FORCEINLINE
+PMMPPE
+MiPteToPpe(PMMPTE PointerPte)
+{
+    return (PMMPPE)MiAddressToPde(PointerPte);
+}
+
+/* Convert a PTE to a corresponding PXE */
+FORCEINLINE
+PMMPXE
+MiPteToPxe(PMMPTE PointerPte)
+{
+    return (PMMPXE)MiAddressToPpe(PointerPte);
+}
+
+/* Convert a PDE to a corresponding PPE */
+FORCEINLINE
+PMMPDE
+MiPdeToPpe(PMMPDE PointerPde)
+{
+    return (PMMPPE)MiAddressToPte(PointerPde);
+}
+
+/* Convert a PDE to a corresponding PXE */
+FORCEINLINE
+PMMPXE
+MiPdeToPxe(PMMPDE PointerPde)
+{
+    return (PMMPXE)MiAddressToPde(PointerPde);
+}
 
 /* Check P*E boundaries */
 #define MiIsPteOnPdeBoundary(PointerPte) \
@@ -289,17 +355,10 @@ FORCEINLINE
 BOOLEAN
 MI_IS_MAPPED_PTE(PMMPTE PointerPte)
 {
-    /// FIXME
-    __debugbreak();
-    return ((PointerPte->u.Long & 0xFFFFFC01) != 0);
-}
-
-INIT_FUNCTION
-FORCEINLINE
-VOID
-MmInitGlobalKernelPageDirectory(VOID)
-{
-    /* Nothing to do */
+    return ((PointerPte->u.Hard.Valid != 0) ||
+            (PointerPte->u.Proto.Prototype != 0) ||
+            (PointerPte->u.Trans.Transition != 0) ||
+            (PointerPte->u.Hard.PageFrameNumber != 0));
 }
 
 FORCEINLINE

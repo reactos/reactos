@@ -1,5 +1,10 @@
-/* Chinese (Traditional) translation by Elton Chung aka MfldElton <elton328@gmail.com> */
-/* Translation improved by Aobi Chan CL <eason066@gmail.com> */
+/*
+ * PROJECT:     ReactOS MSConfig
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -33,7 +38,7 @@ BEGIN
     CONTROL         "載入啟動項目(&O)", IDC_CBX_LOAD_STARTUP_ITEMS, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 122, 316, 10
     CONTROL         "使用原始啟動配置(&U)", IDC_CBX_USE_ORIGINAL_BOOTCFG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 35, 134, 316, 10
     PUSHBUTTON      "啟動系統還原(&C)", IDC_BTN_SYSTEM_RESTORE_START, 146, 156, 124, 14
-    PUSHBUTTON      "展開檔...(&E)", IDC_BTN_FILE_EXTRACTION, 275, 156, 85, 14
+    PUSHBUTTON      "展開檔案(&E)...", IDC_BTN_FILE_EXTRACTION, 275, 156, 85, 14
     GROUPBOX        "啟動選擇", IDC_STATIC, 5, 5, 356, 145
     LTEXT           "載入所有裝置驅動程式和服務", IDC_STATIC, 25, 30, 322, 10
     LTEXT           "僅載入基本裝置驅動程式和服務", IDC_STATIC, 25, 58, 322, 10
@@ -69,18 +74,18 @@ BEGIN
     PUSHBUTTON      "向下移動(&D)", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 224, 68, 66, 14
     GROUPBOX        "啟動選項", IDC_STATIC, 5, 84, 285, 86
     GROUPBOX        "", IDC_STATIC, 10, 97, 143, 68
-    CHECKBOX        "安全啟動 (/SA&FEBOOT)", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
-    CONTROL         "最小 (&MINIMAL)", IDC_RADIO1, "Button", BS_AUTORADIOBUTTON, 15, 110, 133, 10
-    CONTROL         "其他環境\n(M&INIMAL (ALTERNATESHELL))", IDC_RADIO4,
+    CHECKBOX        "安全啟動（/SA&FEBOOT）", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
+    CONTROL         "最基本啟動（&MINIMAL）", IDC_RADIO1, "Button", BS_AUTORADIOBUTTON, 15, 110, 133, 10
+    CONTROL         "其他環境\n（M&INIMAL(ALTERNATESHELL)）", IDC_RADIO4,
                     "Button", BS_AUTORADIOBUTTON | BS_MULTILINE, 15, 121, 133, 17
-    CONTROL         "維修活動目錄 (DSRE&PAIR)", IDC_RADIO3, "Button", BS_AUTORADIOBUTTON, 15, 139, 133, 10
-    CONTROL         "網路 (NET&WORK)", IDC_RADIO2, "Button", BS_AUTORADIOBUTTON, 15, 150, 133, 10
-    CHECKBOX        "無 GUI 啟動\n(/&NOGUIBOOT)", IDC_CBX_NO_GUI_BOOT, 158, 91, 127, 17, BS_MULTILINE
-    CHECKBOX        "開機記錄 (/&BOOTLOG)", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
-    CHECKBOX        "基地視頻 (/BAS&EVIDEO)", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
-    CHECKBOX        "OS 引導資訊 (/S&OS)", IDC_CBX_SOS, 158, 138, 127, 12
-    PUSHBUTTON      "進階選項...(&V)", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
-    LTEXT           "逾時:(&T)", IDC_STATIC, 296, 91, 32, 10
+    CONTROL         "修復 ActiveDirectory（DSRE&PAIR）", IDC_RADIO3, "Button", BS_AUTORADIOBUTTON, 15, 139, 133, 10
+    CONTROL         "網路啟動（NET&WORK）", IDC_RADIO2, "Button", BS_AUTORADIOBUTTON, 15, 150, 133, 10
+    CHECKBOX        "無 GUI 啟動\n（/&NOGUIBOOT）", IDC_CBX_NO_GUI_BOOT, 158, 91, 127, 17, BS_MULTILINE
+    CHECKBOX        "啟用開機記錄（/&BOOTLOG）", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
+    CHECKBOX        "基本視訊（/BAS&EVIDEO）", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
+    CHECKBOX        "OS 引導資訊（/S&OS）", IDC_CBX_SOS, 158, 138, 127, 12
+    PUSHBUTTON      "進階選項(&V)...", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
+    LTEXT           "逾時(&T)：", IDC_STATIC, 296, 91, 32, 10
     EDITTEXT        IDC_TXT_BOOT_TIMEOUT, 295, 102, 33, 12, ES_RIGHT | ES_NUMBER
     LTEXT           "秒", IDC_STATIC, 330, 104, 31, 10
     CONTROL         "使所有引導設定永久有效(&A)", 292,
@@ -120,7 +125,7 @@ BEGIN
     EDITTEXT        IDC_TOOLS_CMDLINE, 5, 139, 356, 14, ES_READONLY
     PUSHBUTTON      "執行(&R)", IDC_BTN_RUN, 311, 156, 50, 14
     CONTROL         "進階選項(&A)", IDC_CBX_TOOLS_ADVOPT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 134, 12
-    LTEXT           "所選的命令:(&C)", IDC_STATIC, 5, 127, 128, 10
+    LTEXT           "所選的命令(&C)：", IDC_STATIC, 5, 127, 128, 10
 END
 
 IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
@@ -129,15 +134,15 @@ CAPTION "從安裝源展開檔案"
 FONT 9, "新細明體"
 BEGIN
     LTEXT           "指定您想要還原的檔案，包含安裝檔案的來源和目標位置。", IDC_STATIC, 7, 7, 339, 17
-    LTEXT           "要還原的檔案:(&I)", IDC_STATIC, 7, 34, 93, 10
+    LTEXT           "要還原的檔案(&I)：", IDC_STATIC, 7, 34, 93, 10
     EDITTEXT        IDC_TXT_FILE_TO_RESTORE, 103, 32, 158, 12, ES_AUTOHSCROLL
-    PUSHBUTTON      "瀏覽檔案...(&B)", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
-    LTEXT           "還原來源:(&R)", IDC_STATIC, 7, 55, 93, 10
+    PUSHBUTTON      "瀏覽檔案(&B)...", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
+    LTEXT           "還原來源(&R)：", IDC_STATIC, 7, 55, 93, 10
     COMBOBOX        IDC_DRP_CAB_FILE, 103, 53, 158, 56, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "從...瀏覽(&F)", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
-    LTEXT           "儲存檔案到:(&S)", IDC_STATIC, 7, 76, 93, 10
+    LTEXT           "儲存檔案到(&S)：", IDC_STATIC, 7, 76, 93, 10
     COMBOBOX        IDC_DRP_DEST_DIR, 103, 74, 158, 42, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "瀏覽到...(&T)", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
+    PUSHBUTTON      "瀏覽到(&T)...", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
     DEFPUSHBUTTON   "展開", IDOK, 179, 96, 82, 14
     PUSHBUTTON      "取消", IDCANCEL, 264, 96, 82, 14
 END
@@ -147,17 +152,17 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "尋找"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT           "查找內容:(&F)", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
+    LTEXT           "尋找內容(&F)：", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
     EDITTEXT        IDC_TXT_FIND_TEXT, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_GROUP
     CONTROL         "必須全字相符(&W)", IDC_CBX_FIND_WHOLE_WORD_ONLY,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 4, 26, 100, 12
-    CONTROL         "區分大小寫&C)", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
+    CONTROL         "區分大小寫(&C)", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
     GROUPBOX        "方向", IDC_STATIC, 107, 26, 68, 28
     CONTROL         "向上(&U)", IDC_RB_FIND_UP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 111, 38, 28, 12
     CONTROL         "向下(&D)", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
     DEFPUSHBUTTON   "查找下一個(&N)", IDOK, 182, 5, 50, 14, WS_GROUP
     PUSHBUTTON      "取消", IDCANCEL, 182, 23, 50, 14, WS_GROUP
-    CONTROL         "從頭 (方向: 向下) 或從結尾 (方向: 向上) 開始搜索(&S)", IDC_CBX_FIND_FROM_BEGINNING,
+    CONTROL         "從開頭（方向：向下）或從結尾（方向：向上）開始搜尋(&S)", IDC_CBX_FIND_FROM_BEGINNING,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 58, 231, 12
 END
 
@@ -193,7 +198,7 @@ FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON   "確定", IDOK, 180, 41, 50, 14
     LTEXT           "不能停用基本服務。這樣做可能會阻止 %s 在您的電腦上運行。", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
-    CONTROL         "在以後不顯示此消息(&D)", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
+    CONTROL         "以後不再顯示此消息(&D)", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 42, 154, 13
 END
 
@@ -222,7 +227,7 @@ BEGIN
     IDS_SERVICES_COLUMN_REQ "基本的"
     IDS_SERVICES_COLUMN_VENDOR "製造商"
     IDS_SERVICES_COLUMN_STATUS "狀態"
-    IDS_SERVICES_COLUMN_DATEDISABLED "日期已停用"
+    IDS_SERVICES_COLUMN_DATEDISABLED "停用日期"
 END
 
 STRINGTABLE

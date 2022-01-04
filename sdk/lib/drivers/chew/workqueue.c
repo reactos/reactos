@@ -65,7 +65,7 @@ VOID NTAPI ChewWorkItem(PDEVICE_OBJECT DeviceObject, PVOID ChewItem)
 BOOLEAN ChewCreate(VOID (*Worker)(PVOID), PVOID WorkerContext)
 {
     PWORK_ITEM Item;
-    Item = ExAllocatePoolWithTag(NonPagedPool, 
+    Item = ExAllocatePoolWithTag(NonPagedPool,
                                  sizeof(WORK_ITEM),
                                  CHEW_TAG);
 

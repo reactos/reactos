@@ -81,6 +81,20 @@ RECTL_bClipRectBySize(
     return !RECTL_bIsEmptyRect(prclDst);
 }
 
+FORCEINLINE
+LONG
+RECTL_lGetHeight(_In_ const RECTL* prcl)
+{
+    return prcl->bottom - prcl->top;
+}
+
+FORCEINLINE
+LONG
+RECTL_lGetWidth(_In_ const RECTL* prcl)
+{
+    return prcl->right - prcl->left;
+}
+
 BOOL
 FASTCALL
 RECTL_bUnionRect(

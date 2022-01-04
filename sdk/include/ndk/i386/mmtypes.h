@@ -183,7 +183,8 @@ typedef struct _HARDWARE_PTE_X86
             ULONGLONG Prototype:1;
             ULONGLONG reserved0:1;
             ULONGLONG PageFrameNumber:26;
-            ULONGLONG reserved1:26;
+            ULONGLONG reserved1:25;
+            ULONGLONG NoExecute:1;
         };
         struct
         {

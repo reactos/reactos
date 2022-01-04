@@ -516,7 +516,7 @@ WdmAudCloseAllMixers(
             DPRINT1("Failed to close mixer for device %lu\n", DeviceIndex);
         }
     }
-    
+
     /* Dereference event */
     if (ClientInfo->hPins[Index].NotifyEvent)
     {

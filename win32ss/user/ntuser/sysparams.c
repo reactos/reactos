@@ -949,7 +949,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
             /* Fixup user's structure size */
             metrics->cbSize = sizeof(NONCLIENTMETRICSW);
-            
+
             if (!SpiSet(&gspv.ncm, metrics, sizeof(NONCLIENTMETRICSW), fl))
                 return 0;
 
@@ -1583,7 +1583,17 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetUserPref(UPM_LISTBOXSMOOTHSCROLLING, pvParam, fl);
 
         case SPI_GETGRADIENTCAPTIONS:
-            return SpiGetUserPref(UPM_GRADIENTCAPTIONS, pvParam, fl);
+        {
+            if (NtGdiGetDeviceCaps(ScreenDeviceContext, BITSPIXEL) <= 8)
+            {
+                INT iValue = 0;
+                return SpiGetInt(pvParam, &iValue, fl);
+            }
+            else
+            {
+                return SpiGetUserPref(UPM_GRADIENTCAPTIONS, pvParam, fl);
+            }
+        }
 
         case SPI_SETGRADIENTCAPTIONS:
             return SpiSetUserPref(UPM_GRADIENTCAPTIONS, pvParam, fl);

@@ -182,8 +182,8 @@ DriverEntry(
     return STATUS_SUCCESS;
 }
 
-
-
+
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassInitialize()
@@ -467,7 +467,7 @@ ClassInitialize(
     status = STATUS_SUCCESS;
     return status;
 } // end ClassInitialize()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassInitializeEx()
@@ -742,7 +742,7 @@ ClassInitializeEx(
     return status;
 
 } // end ClassInitializeEx()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassUnload()
@@ -819,7 +819,7 @@ ClassUnload(
 
     return;
 } // end ClassUnload()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassAddDevice()
@@ -868,7 +868,7 @@ ClassAddDevice(
 
     return status;
 } // end ClassAddDevice()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassDispatchPnp()
@@ -1795,7 +1795,7 @@ ClassDispatchPnp(
     return status;
 } // end ClassDispatchPnp()
 
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassPnpStartDevice()
@@ -3215,7 +3215,7 @@ ClassSendStartUnit(
     return;
 
 } // end StartUnit()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassAsynchronousCompletion() ISSUE-2000/02/18-henrygab - why public?!
@@ -6607,7 +6607,7 @@ __ClassInterpretSenseInfo_ProcessingInvalidSenseBuffer:
 
 } // end ClassInterpretSenseInfo()
 
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassModeSense()
@@ -6977,7 +6977,7 @@ ClasspModeSelect(
 
     return status;
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSendSrbAsynchronous()
@@ -7231,7 +7231,7 @@ ClassSendSrbAsynchronous(
     return STATUS_PENDING;
 
 } // end ClassSendSrbAsynchronous()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassDeviceControlDispatch()
@@ -7285,7 +7285,7 @@ ClassDeviceControlDispatch(
     return commonExtension->DevInfo->ClassDeviceControl(DeviceObject,Irp);
 } // end ClassDeviceControlDispatch()
 
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassDeviceControl()
@@ -8745,7 +8745,7 @@ SetStatusAndReturn:
 
     return status;
 } // end ClassDeviceControl()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassShutdownFlush()
@@ -8812,7 +8812,7 @@ ClassShutdownFlush(
 
     return STATUS_INVALID_DEVICE_REQUEST;
 } // end ClassShutdownFlush()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspIsPortable()
@@ -8899,7 +8899,7 @@ cleanup:
 
     return status;
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassCreateDeviceObject()
@@ -9240,7 +9240,7 @@ ClassCreateDeviceObject(
 
     return status;
 } // end ClassCreateDeviceObject()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassClaimDevice()
@@ -9359,7 +9359,7 @@ ClassClaimDevice(
 
     return status;
 } // end ClassClaimDevice()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassInternalIoControl()
@@ -9442,7 +9442,7 @@ ClassInternalIoControl(
 
     return IoCallDriver(commonExtension->LowerDeviceObject, Irp);
 } // end ClassInternalIoControl()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassQueryTimeOutRegistryValue()
@@ -9549,7 +9549,7 @@ ClassQueryTimeOutRegistryValue(
 
 } // end ClassQueryTimeOutRegistryValue()
 
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassCheckVerifyComplete() ISSUE-2000/02/18-henrygab - why public?!
@@ -9816,7 +9816,7 @@ ClassSignalCompletion(
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 } // end ClassSignalCompletion()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassPnpQueryFdoRelations()
@@ -9872,7 +9872,7 @@ ClassPnpQueryFdoRelations(
 
     return Irp->IoStatus.Status;
 } // end ClassPnpQueryFdoRelations()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassMarkChildrenMissing()
@@ -9920,7 +9920,7 @@ ClassMarkChildrenMissing(
     ClassReleaseChildLock(Fdo);
     return;
 } // end ClassMarkChildrenMissing()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassMarkChildMissing()
@@ -9977,7 +9977,7 @@ ClassMarkChildMissing(
 
     return returnValue;
 } // end ClassMarkChildMissing()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassRetrieveDeviceRelations()
@@ -10123,7 +10123,7 @@ ClassRetrieveDeviceRelations(
     ClassReleaseChildLock(fdoExtension);
     return STATUS_SUCCESS;
 } // end ClassRetrieveDeviceRelations()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassGetPdoId()
@@ -10168,7 +10168,7 @@ ClassGetPdoId(
 
     return driverExtension->InitData.ClassQueryId( Pdo, IdType, IdString);
 } // end ClassGetPdoId()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassQueryPnpCapabilities()
@@ -10218,7 +10218,7 @@ ClassQueryPnpCapabilities(
         return STATUS_NOT_IMPLEMENTED;
     }
 } // end ClassQueryPnpCapabilities()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassInvalidateBusRelations()
@@ -10276,7 +10276,7 @@ ClassInvalidateBusRelations(
 
     return;
 } // end ClassInvalidateBusRelations()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassRemoveDevice() ISSUE-2000/02/18-henrygab - why public?!
@@ -10609,7 +10609,7 @@ ClassRemoveDevice(
 
     return STATUS_SUCCESS;
 } // end ClassRemoveDevice()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassGetDriverExtension()
@@ -10640,7 +10640,7 @@ ClassGetDriverExtension(
 #endif
     return IoGetDriverObjectExtension(DriverObject, CLASS_DRIVER_EXTENSION_KEY);
 } // end ClassGetDriverExtension()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspStartIo()
@@ -10699,7 +10699,7 @@ ClasspStartIo(
 
     return;
 } // ClasspStartIo()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassUpdateInformationInRegistry()
@@ -10897,7 +10897,7 @@ ClassUpdateInformationInRegistry(
     } _SEH2_END;
 
 } // end ClassUpdateInformationInRegistry()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspSendSynchronousCompletion()
@@ -10960,7 +10960,7 @@ ClasspSendSynchronousCompletion(
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 } // end ClasspSendSynchronousCompletion()
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClasspRegisterMountedDeviceInterface
@@ -11023,7 +11023,7 @@ ClasspRegisterMountedDeviceInterface(
     }
     return;
 } // end ClasspRegisterMountedDeviceInterface()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSendDeviceIoControlSynchronous()
@@ -11320,7 +11320,7 @@ ClassSendDeviceIoControlSynchronous(
 
     return;
 } // end ClassSendDeviceIoControlSynchronous()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassForwardIrpSynchronous()
@@ -11348,7 +11348,7 @@ ClassForwardIrpSynchronous(
     IoCopyCurrentIrpStackLocationToNext(Irp);
     return ClassSendIrpSynchronous(CommonExtension->LowerDeviceObject, Irp);
 } // end ClassForwardIrpSynchronous()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSendIrpSynchronous()
@@ -11447,7 +11447,7 @@ ClassSendIrpSynchronous(
 
     return status;
 } // end ClassSendIrpSynchronous()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassGetVpb()
@@ -11479,7 +11479,7 @@ ClassGetVpb(
 #endif
     return DeviceObject->Vpb;
 } // end ClassGetVpb()
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClasspAllocateReleaseRequest
@@ -11515,7 +11515,7 @@ ClasspAllocateReleaseRequest(
 
     return STATUS_SUCCESS;
 } // end ClasspAllocateReleaseRequest()
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClasspFreeReleaseRequest
@@ -11560,7 +11560,7 @@ ClasspFreeReleaseRequest(
 
     return;
 } // end ClasspFreeReleaseRequest()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassReleaseQueue()
@@ -11593,7 +11593,7 @@ ClassReleaseQueue(
     ClasspReleaseQueue(Fdo, NULL);
     return;
 } // end ClassReleaseQueue()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspAllocateReleaseQueueIrp()
@@ -11867,7 +11867,7 @@ ClasspReleaseQueue(
     return;
 
 } // end ClassReleaseQueue()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassReleaseQueueCompletion()
@@ -11949,8 +11949,8 @@ ClassReleaseQueueCompletion(
     return STATUS_MORE_PROCESSING_REQUIRED;
 
 } // ClassAsynchronousCompletion()
-
-
+
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassAcquireChildLock()
@@ -11995,7 +11995,7 @@ ClassAcquireChildLock(
     FdoExtension->ChildLockAcquisitionCount++;
     return;
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassReleaseChildLock() ISSUE-2000/02/18-henrygab - not documented
@@ -12032,7 +12032,7 @@ ClassReleaseChildLock(
 
     return;
 } // end ClassReleaseChildLock(
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassAddChild()
@@ -12089,7 +12089,7 @@ ClassAddChild(
     }
     return;
 } // end ClassAddChild()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassRemoveChild()
@@ -12183,7 +12183,7 @@ ClassRemoveChild(
     return Child;
 } // end ClassRemoveChild()
 
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClasspRetryRequestDpc
@@ -12307,7 +12307,7 @@ ClasspRetryRequestDpc(
     return;
 
 } // end ClasspRetryRequestDpc()
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClassRetryRequest
@@ -12447,7 +12447,7 @@ ClassRetryRequest(
 
 
 } // end ClassRetryRequest()
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClasspRetryDpcTimer
@@ -12502,7 +12502,7 @@ ClasspRetryDpcTimer(
 
     return;
 } // end ClasspRetryDpcTimer()
-
+
 NTSTATUS
 ClasspInitializeHotplugInfo(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
@@ -12628,7 +12628,7 @@ ClasspInitializeHotplugInfo(
 
     return STATUS_SUCCESS;
 }
-
+
 VOID
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspScanForClassHacks(
@@ -12646,7 +12646,7 @@ ClasspScanForClassHacks(
     SET_FLAG(FdoExtension->PrivateFdoData->HackFlags, Data);
     return;
 }
-
+
 VOID
 ClasspScanForSpecialInRegistry(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
@@ -12756,7 +12756,7 @@ cleanupScanForSpecial:
 
     return;
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspUpdateDiskProperties()

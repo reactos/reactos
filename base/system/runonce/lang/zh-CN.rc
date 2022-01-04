@@ -1,6 +1,6 @@
 /* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
 /* Translation has been changed by Luo Yufan(njlyf2011@hotmail.com) in 2018 */
- 
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_RUNONCE_DLG DIALOGEX 0, 0, 239, 170

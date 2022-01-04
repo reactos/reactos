@@ -15,15 +15,15 @@ There are a number of books on NT driver development, I would recommend
 'Windows NT Device Driver Development' (http://www.osr.com/book/) since OSR
 seem to know their stuff. There is only one book on NT filesystem
 development 'Windows NT File System Internals'. Please don't buy any of
-these books unless you need to, and can afford it. 
+these books unless you need to, and can afford it.
 
-These mailing lists and newsgroups are useful for NT internals related 
+These mailing lists and newsgroups are useful for NT internals related
 questions,
-           ntfsd@atria.com, ntdev@atria.com 
+           ntfsd@atria.com, ntdev@atria.com
 	                    (subscribe by email to majordomo@atria.com)
 	   comp.os.????
 	   microsoft.public.????
-	   
+
 * Style
 
 There is a coding style used for ReactOS, it's described in a ReactOS's Wiki
@@ -46,22 +46,22 @@ Debugging kernel-mode code is tricky, these are some snippets
     also prefixes the message with the file and line number to make it
     easier to see where output is coming from. DbgPrint can be used at any
     point including in interrupt handlers.
-    
+
     There are options in ntoskrnl/kd/kdebug.c for copying DbgPrint output
     to a serial device or bochs logging port (parallel support should also
     be added). This can be useful if a lot of output is being generated.
-    
+
     It should be possible to include support for debugging the kernel with
     gdb over a serial line. Bochs (a shareware CPU emulator) is also useful
     for debugging the kernel, I wrote some patches to allow capture of console
     output from within bochs to file and for debugging a kernel running
-    under bochs with gdb. Contact me (welch@cwcom.net) if you're are 
+    under bochs with gdb. Contact me (welch@cwcom.net) if you're are
     interested.
-    
+
     If CPU reports an exception not handled by the kernel (any page fault
-    not part of virtual memory support or any other exception) the kernel 
+    not part of virtual memory support or any other exception) the kernel
     will display output like this and halt
-    
+
             General Protection Fault Exception: 13(0)
 	    CS:EIP  xxxxxxxx:xxxxxxx
 	    DS xxxx ES xxxx FS xxxx GS xxxxx
@@ -73,53 +73,53 @@ Debugging kernel-mode code is tricky, these are some snippets
 	           ....
 	    Frames: xxxx xxxx xxxx ...
 	           ....
-		   
+
     The fault type will usually be either 'General Protection' or
     'Page Fault', see your Intel manual for the more exotic types. The
     'EIP' number is the address of the faulting instruction. If the 'CS'
     number is 0x20 then the exception occured in kernel mode, if it is 0x11
     then the exception occurred in user mode. 'cr2' is the address that the
-    faulting instruction was trying to access, if the exception was a page 
+    faulting instruction was trying to access, if the exception was a page
     fault. The number printed after 'Frames' are any addresses on the stack
-    that look like function addresses. 
-    
-    
+    that look like function addresses.
+
+
     If the kernel detects a serious problem that it will bug check, displaying
     output like this
-    
+
            Bug detected (code x, param x x x x)
 	   Frames: xxx xxxx xxxx
 	           ....
-		   
+
     Again the numbers printed after 'Frames' are any addresses on the stack
     that look like function addresss. Usually the kernel will also print a
     message describing the problem in more detail, the bug check code isn't
-    very useful at the moment. 
-    
+    very useful at the moment.
+
 * Contacts
 
     There is a mailing list for kernel development,
-    
+
             ros-dev@reactos.org
-	    
-    The main developers use a svn account to coordinate changes, ask 
+
+    The main developers use a svn account to coordinate changes, ask
     Aleksey (aleksey@reactos.org) for an account if you are going to be
     adding a lot of code. Smaller patches can go to the mailing list or to the
     relevant developer (usually the comment at the top of a module will have
     an email address). Regular snapshots are made available for download,
     see the mailing list for announcements.
-    
+
 * Legal stuff
 
     The ReactOS project is GPL'ed, please make sure any code submitted is
-    compatible with this. 
-    
+    compatible with this.
+
     The NT4 ddk license agreement allows its usage for developing nt drivers
     only. Legally therefore it can not be used to develop ReactOS, neither the
     documentation or the sample code. I'm not a lawyer, but I doubt the
-    effiacy of 'shrinkwrap licenses' particularly on freely downloadable 
+    effiacy of 'shrinkwrap licenses' particularly on freely downloadable
     software. The only precendent I know of, in a Scottish court, didn't
     upload this type of license.
-    
+
     Also the 'fair use' section of copyright law allows the 'quoting' of small
     sections from copyrighted documents, e.g. Windows API or DDK documentation

@@ -474,8 +474,9 @@ CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread)
     if (LockCount == 0)
     {
         /* Call the generic cleanup code */
-        CsrAcquireProcessLock();
         CsrThreadRefcountZero(CsrThread);
+        /* Acquire the lock again, it was released by CsrThreadRefcountZero */
+        CsrAcquireProcessLock();
     }
 }
 

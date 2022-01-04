@@ -93,10 +93,10 @@ CleanupAndFreePacket(PNDIS_PACKET Packet, BOOLEAN FreePool)
         NdisUnchainBufferAtFront(Packet, &Buffer);
         if (!Buffer)
             break;
-        
+
         /* Get the backing memory */
         NdisQueryBuffer(Buffer, &Data, &Length);
-        
+
         /* Free the buffer */
         NdisFreeBuffer(Buffer);
 
@@ -106,7 +106,7 @@ CleanupAndFreePacket(PNDIS_PACKET Packet, BOOLEAN FreePool)
             ExFreePool(Data);
         }
     }
-    
+
     /* Free the packet descriptor */
     NdisFreePacket(Packet);
 }
@@ -123,18 +123,18 @@ FindAdapterContextByName(PNDIS_STRING DeviceName)
     while (CurrentEntry != &GlobalAdapterList)
     {
         AdapterContext = CONTAINING_RECORD(CurrentEntry, NDISUIO_ADAPTER_CONTEXT, ListEntry);
-        
+
         /* Check if the device name matches */
         if (RtlEqualUnicodeString(&AdapterContext->DeviceName, DeviceName, TRUE))
         {
             KeReleaseSpinLock(&GlobalAdapterListLock, OldIrql);
             return AdapterContext;
         }
-        
+
         CurrentEntry = CurrentEntry->Flink;
     }
     KeReleaseSpinLock(&GlobalAdapterListLock, OldIrql);
-    
+
     return NULL;
 }
 
@@ -153,7 +153,7 @@ DereferenceAdapterContextWithOpenEntry(PNDISUIO_ADAPTER_CONTEXT AdapterContext,
 
     /* Lock the adapter context */
     KeAcquireSpinLock(&AdapterContext->Spinlock, &OldIrql);
-    
+
     /* Decrement the open count */
     AdapterContext->OpenCount--;
 

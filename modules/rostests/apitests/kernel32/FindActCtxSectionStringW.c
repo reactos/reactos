@@ -40,7 +40,7 @@ struct wndclass_redirect_data
     DWORD res;
     ULONG name_len;
     ULONG name_offset;   /* versioned name offset */
-    ULONG module_len;    
+    ULONG module_len;
     ULONG module_offset; /* container name offset to the section base */
 };
 
@@ -87,7 +87,7 @@ HANDLE _CreateActCtxFromFile(LPCWSTR FileName, int line)
     SetLastError(0xdeaddead);
     h = CreateActCtxW(&ActCtx);
     ok_(__FILE__, line)(h != INVALID_HANDLE_VALUE, "CreateActCtx failed for %S\n", FileName);
-    // In win10 last error is unchanged and in win2k3 it is ERROR_BAD_EXE_FORMAT    
+    // In win10 last error is unchanged and in win2k3 it is ERROR_BAD_EXE_FORMAT
     ok_(__FILE__, line)(GetLastError() == ERROR_BAD_EXE_FORMAT || GetLastError() == 0xdeaddead, "Wrong last error %lu\n", GetLastError());
 
     return h;
@@ -131,14 +131,14 @@ void TestClassRedirection(HANDLE h, LPCWSTR ClassToTest, LPCWSTR ExpectedClassPa
                                    &KeyedData);
     ok(res == TRUE, "FindActCtxSectionString failed\n");
     ok(GetLastError() == 0xdeaddead, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(0xdeaddead), GetLastError());
-    
+
     ok(KeyedData.ulDataFormatVersion == 1, "Wrong format version: %lu\n", KeyedData.ulDataFormatVersion);
     ok(KeyedData.hActCtx == h, "Wrong handle\n");
     ok(KeyedData.lpSectionBase != NULL, "Expected non null lpSectionBase\n");
     ok(KeyedData.lpData != NULL, "Expected non null lpData\n");
     header = (struct strsection_header*)KeyedData.lpSectionBase;
     classData = (struct wndclass_redirect_data*)KeyedData.lpData;
-    
+
     if(res == FALSE || KeyedData.ulDataFormatVersion != 1 || header == NULL || classData == NULL)
     {
         skip("Can't read data for class. Skipping\n");
@@ -168,8 +168,8 @@ VOID TestLibDependency(HANDLE h)
     BOOL res;
     struct strsection_header *SectionHeader;
     struct dllredirect_data *redirData;
-    struct assemply_data *assemplyData;   
-    
+    struct assemply_data *assemplyData;
+
     SetLastError(0xdeaddead);
     KeyedData.cbSize = sizeof(KeyedData);
     res = FindActCtxSectionStringW(FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
@@ -179,7 +179,7 @@ VOID TestLibDependency(HANDLE h)
                                    &KeyedData);
     ok(res == TRUE, "FindActCtxSectionString failed\n");
     ok(GetLastError() == 0xdeaddead, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(0xdeaddead), GetLastError());
-    
+
     ok(KeyedData.ulDataFormatVersion == 1, "Wrong format version: %lu", KeyedData.ulDataFormatVersion);
     ok(KeyedData.hActCtx == h, "Wrong handle\n");
     ok(KeyedData.lpSectionBase != NULL, "Expected non null lpSectionBase\n");
@@ -195,10 +195,10 @@ VOID TestLibDependency(HANDLE h)
     {
         ok(SectionHeader->magic == STRSECTION_MAGIC, "%lu\n", SectionHeader->magic );
         ok(SectionHeader->size == sizeof(*SectionHeader), "Got %lu instead of %d\n", SectionHeader->size, sizeof(*SectionHeader));
-        ok(SectionHeader->count == 2, "%lu\n", SectionHeader->count ); /* 2 dlls? */  
+        ok(SectionHeader->count == 2, "%lu\n", SectionHeader->count ); /* 2 dlls? */
         ok(redirData->size == sizeof(*redirData), "Got %lu instead of %d\n", redirData->size, sizeof(*redirData));
     }
-    
+
     SetLastError(0xdeaddead);
     KeyedData.cbSize = sizeof(KeyedData);
     res = FindActCtxSectionStringW(FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
@@ -225,13 +225,13 @@ VOID TestLibDependency(HANDLE h)
         int data_lenght;
         DWORD buffer[256];
         PACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION details = (PACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION)buffer;
-        
+
         ok(SectionHeader->magic == STRSECTION_MAGIC, "%lu\n", SectionHeader->magic );
         ok(SectionHeader->size == sizeof(*SectionHeader), "Got %lu instead of %d\n", SectionHeader->size, sizeof(*SectionHeader));
-        ok(SectionHeader->count == 2, "%lu\n", SectionHeader->count ); /* 2 dlls? */  
+        ok(SectionHeader->count == 2, "%lu\n", SectionHeader->count ); /* 2 dlls? */
 
-        data_lenght = assemplyData->size + 
-                      assemplyData->ulEncodedAssemblyIdentityLength + 
+        data_lenght = assemplyData->size +
+                      assemplyData->ulEncodedAssemblyIdentityLength +
                       assemplyData->ulManifestPathLength +
                       assemplyData->ulAssemblyDirectoryNameLength + 2 * sizeof(WCHAR);
         ok(assemplyData->size == sizeof(*assemplyData), "Got %lu instead of %d\n", assemplyData->size, sizeof(*assemplyData));
@@ -240,10 +240,10 @@ VOID TestLibDependency(HANDLE h)
         AssemblyIdentity = (WCHAR*)((BYTE*)SectionHeader + assemplyData->ulEncodedAssemblyIdentityOffset);
         ManifestPath = (WCHAR*)((BYTE*)SectionHeader + assemplyData->ulManifestPathOffset);
         AssemblyDirectory = (WCHAR*)((BYTE*)SectionHeader + assemplyData->ulAssemblyDirectoryNameOffset);
-        
+
         /* Use AssemblyDetailedInformationInActivationContext so as to infer the contents of assemplyData */
-        res = QueryActCtxW(0, h, &KeyedData.ulAssemblyRosterIndex, 
-                           AssemblyDetailedInformationInActivationContext, 
+        res = QueryActCtxW(0, h, &KeyedData.ulAssemblyRosterIndex,
+                           AssemblyDetailedInformationInActivationContext,
                            &buffer, sizeof(buffer), NULL);
         ok(res == TRUE, "QueryActCtxW failed\n");
         ok(assemplyData->ulFlags == details->ulFlags, "\n");
@@ -258,7 +258,7 @@ VOID TestLibDependency(HANDLE h)
 
         /* It looks like that AssemblyIdentity isn't null terminated */
         ok(memcmp(AssemblyIdentity, details->lpAssemblyEncodedAssemblyIdentity, assemplyData->ulEncodedAssemblyIdentityLength) == 0, "Got wrong AssemblyIdentity\n");
-    }    
+    }
 }
 
 START_TEST(FindActCtxSectionStringW)
@@ -271,7 +271,7 @@ START_TEST(FindActCtxSectionStringW)
     /* Something activates an activation context that mentions comctl32 but comctl32 is not loaded */
     ok( GetModuleHandleW(L"comctl32.dll") == NULL, "Expected comctl32 not to be loaded\n");
     ok( GetModuleHandleW(L"user32.dll") == NULL, "Expected user32 not to be loaded\n");
-    
+
     /* Class redirection tests */
     h = _CreateActCtxFromFile(L"classtest.manifest", __LINE__);
     if (h != INVALID_HANDLE_VALUE)
@@ -287,7 +287,7 @@ START_TEST(FindActCtxSectionStringW)
     {
         skip("Failed to create context for classtest.manifest\n");
     }
-    
+
     /* Class redirection tests with multiple contexts in the activation stack */
     h2 = _CreateActCtxFromFile(L"classtest2.manifest", __LINE__);
     if (h != INVALID_HANDLE_VALUE && h2 != INVALID_HANDLE_VALUE)
@@ -316,8 +316,8 @@ START_TEST(FindActCtxSectionStringW)
     else
     {
         skip("Failed to create context for deptest.manifest\n");
-    }    
-    
+    }
+
     /* Activate a context that depends on comctl32 v6 and run class tests again */
     h = _CreateActCtxFromFile(L"comctl32dep.manifest", __LINE__);
     if (h != INVALID_HANDLE_VALUE)

@@ -46,7 +46,7 @@ static void SetBitmap(HWND hwnd, HBITMAP* hbmp, UINT uImageId)
 
 class CTaskBarSettingsPage : public CPropertyPageImpl<CTaskBarSettingsPage>
 {
-private: 
+private:
     HBITMAP m_hbmpTaskbar;
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
@@ -85,7 +85,7 @@ private:
             uImageId = IDB_TASKBARPROP_NOLOCK_NOGROUP_QL;
         else if (!bLock && bGroup  && bShowQL)
             uImageId = IDB_TASKBARPROP_NOLOCK_GROUP_QL;
-        else 
+        else
             ASSERT(FALSE);
 
         SetBitmap(hwndTaskbarBitmap, &m_hbmpTaskbar, uImageId);
@@ -107,7 +107,7 @@ private:
             uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK;
         else if (!bHideInactive && !bShowClock)
             uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK;
-        else 
+        else
             ASSERT(FALSE);
 
         SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
@@ -129,7 +129,7 @@ public:
         m_hwndTaskbar(hwnd)
     {
     }
-    
+
     ~CTaskBarSettingsPage()
     {
         if (m_hbmpTaskbar)
@@ -188,7 +188,7 @@ public:
 
 class CStartMenuSettingsPage : public CPropertyPageImpl<CStartMenuSettingsPage>
 {
-private: 
+private:
     HBITMAP m_hbmpStartBitmap;
 
     void UpdateDialog()
@@ -253,7 +253,7 @@ public:
         // fix me: start menu style (classic/modern) should be read somewhere from the registry.
         CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED); // HACK: This has to be read from registry!!!!!!!
         UpdateDialog();
-    
+
         return TRUE;
     }
 
@@ -295,9 +295,9 @@ DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
     CTaskBarSettingsPage tbSettingsPage(hwndTaskbar);
     CStartMenuSettingsPage smSettingsPage;
     CStringW caption;
-    
+
     caption.LoadStringW(IDS_TASKBAR_STARTMENU_PROP_CAPTION);
-    
+
     hpsp[0] = tbSettingsPage.Create();
     hpsp[1] = smSettingsPage.Create();
 

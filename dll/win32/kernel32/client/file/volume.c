@@ -1266,7 +1266,7 @@ GetVolumePathNamesForVolumeNameW(IN LPCWSTR lpszVolumeName,
     TargetName->DeviceNameLength = VolumeName.Length - sizeof(WCHAR);
     RtlCopyMemory(TargetName->DeviceName, VolumeName.Buffer, TargetName->DeviceNameLength);
     TargetName->DeviceName[1] = L'?';
-    
+
     /* Open the mount manager */
     MountMgrHandle = CreateFileW(MOUNTMGR_DOS_DEVICE_NAME, 0,
                                  FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
@@ -1387,7 +1387,7 @@ GetVolumePathNamesForVolumeNameW(IN LPCWSTR lpszVolumeName,
     }
 
     /* If we couldn't write as much as we wanted to the output buffer
-     * This handles the case where we could write everything excepted the 
+     * This handles the case where we could write everything excepted the
      * terminating \0 for multi SZ
      */
     if (CharsInOutput >= cchBufferLength)

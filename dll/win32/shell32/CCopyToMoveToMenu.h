@@ -6,7 +6,6 @@
  */
 #pragma once
 
-HRESULT _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida);
 
 class CCopyToMenu :
     public CComCoClass<CCopyToMenu, &CLSID_CopyToMenu>,

@@ -13,6 +13,9 @@ IDR_FONTEXT REGISTRY "res/fontext.rgs"
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
@@ -27,4 +30,7 @@ IDR_FONTEXT REGISTRY "res/fontext.rgs"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

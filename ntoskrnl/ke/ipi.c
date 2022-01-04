@@ -167,7 +167,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
     if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_SYNCH_REQUEST))
     {
-#ifdef _M_ARM
+#if defined(_M_ARM) || defined(_M_AMD64)
         DbgBreakPoint();
 #else
         (void)InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);

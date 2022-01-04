@@ -73,7 +73,7 @@ FatDeferredFlush (
 #pragma alloc_text(PAGE, FatCommonWrite)
 #endif
 
-
+
 _Function_class_(IRP_MJ_WRITE)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -216,8 +216,8 @@ Return Value:
     return Status;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonWrite (
     IN PIRP_CONTEXT IrpContext,
@@ -485,7 +485,7 @@ Return Value:
 
             IrpContext->FatIoContext->Wait.Async.FileObject = FileObject;
         }
-        
+
     }
 
     //
@@ -641,9 +641,9 @@ Return Value:
                 DirtyVbo = (VBO)DirtyLbo;
 
                 DebugTrace(0, Dbg, "Last dirty fat Mcb entry was a hole: corrupt.\n", 0);
-                
+
 #ifdef _MSC_VER
-#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )                
+#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
 #endif
                 FatBugCheck( 0, 0, 0 );
 
@@ -876,7 +876,7 @@ Return Value:
         FatCompleteRequest( IrpContext, Irp, Status );
         return Status;
     }
-
+
     //
     //  This case corresponds to a general opened volume (DASD), ie.
     //  open ("a:").
@@ -947,13 +947,13 @@ Return Value:
         //
         //  If the caller previously sent a format unit command, then we will allow
         //  their read/write requests to ignore the verify flag on the device, since some
-        //  devices send a media change event after format unit, but we don't want to 
+        //  devices send a media change event after format unit, but we don't want to
         //  process it yet since we're probably in the process of formatting the
         //  media.
         //
-        
+
         if (FlagOn( Ccb->Flags, CCB_FLAG_SENT_FORMAT_UNIT )) {
-        
+
             SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_OVERRIDE_VERIFY );
         }
 
@@ -970,7 +970,7 @@ Return Value:
             //  but a repro case for another bug happens to dance into this race
             //  condition pretty easily. Eh.
             //
-            
+
             SetFlag( IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT );
             FatAcquireExclusiveVolume( IrpContext, Vcb );
 
@@ -1132,7 +1132,7 @@ Return Value:
         FatCompleteRequest( IrpContext, Irp, Status );
         return Status;
     }
-
+
     //
     //  At this point we know there is an Fcb/Dcb.
     //
@@ -1263,13 +1263,13 @@ Return Value:
                     //
                     //  Purge failure mode only applies to user files.
                     //
-                    
+
                     NT_ASSERT( TypeOfOpen == UserFileOpen );
 
                     //
                     //  Do not swallow the purge failure if in purge failure
                     //  mode. Someone outside the file system intends to handle
-                    //  the error and prevent any application compatibilty 
+                    //  the error and prevent any application compatibilty
                     //  issue.
                     //
                     //  NOTE: If the file system were not preventing a pagefault
@@ -1279,8 +1279,8 @@ Return Value:
                     //  not a memory mapped read could bring in a stale page before
                     //  the write makes it to disk.
                     //
-                    
-                    try_return( Status = STATUS_PURGE_FAILED );                
+
+                    try_return( Status = STATUS_PURGE_FAILED );
                 }
 
                 //
@@ -1290,7 +1290,7 @@ Return Value:
                 //
                 //  PagingIo must be held all the way through.
                 //
-                
+
                 FcbCanDemoteToShared = TRUE;
             }
 
@@ -1299,7 +1299,7 @@ Return Value:
             //
 
             NT_ASSERT( WriteToEof ? !PagingIo : TRUE );
-            
+
             //
             //  First let's acquire the Fcb shared.  Shared is enough if we
             //  are not writing beyond EOF.
@@ -1336,13 +1336,13 @@ Return Value:
                 //  We may already have the Fcb due to noncached coherency
                 //  work done just above; however, we may still have to extend
                 //  valid data length.  We can't demote this to shared, matching
-                //  what occured before, until we figure that out a bit later. 
+                //  what occured before, until we figure that out a bit later.
                 //
                 //  We kept ahold of it since our lockorder is main->paging,
                 //  and paging must now held across the noncached write from
                 //  the purge on.
                 //
-                
+
                 //
                 //  If this is async I/O, we will wait if there is an exclusive
                 //  waiter.
@@ -1366,7 +1366,7 @@ Return Value:
                     IrpContext->FatIoContext->Wait.Async.Resource = FcbOrDcb->Header.Resource;
 
                     if (FcbCanDemoteToShared) {
-                        
+
                         IrpContext->FatIoContext->Wait.Async.Resource2 = FcbOrDcb->Header.PagingIoResource;
                     }
                 } else {
@@ -1608,9 +1608,9 @@ Return Value:
                     //  The Fcb may already be acquired exclusive due to coherency
                     //  work performed earlier.  If so, obviously no work to do.
                     //
-                    
+
                     if (!FcbAcquiredExclusive) {
-                        
+
                         FatReleaseFcb( IrpContext, FcbOrDcb );
                         FcbOrDcbAcquired = FALSE;
 
@@ -1622,7 +1622,7 @@ Return Value:
                         }
 
                         FcbOrDcbAcquired = TRUE;
-                        
+
 #ifdef _MSC_VER
 #pragma prefast( suppress:28931, "convenient for debugging" )
 #endif
@@ -1705,7 +1705,7 @@ Return Value:
                         Irp->IoStatus.Information = 0;
                         try_return( Status = STATUS_SUCCESS );
                     }
-                    
+
                     ByteCount = IrpSp->Parameters.Write.Length;
 
                     if (ByteCount > FileSize - StartingVbo) {
@@ -1755,9 +1755,9 @@ Return Value:
                 //  this is a WriteToEof operation.
                 //
 
-                
+
                 if (!FatIsIoRangeValid( Vcb, StartingByte, ByteCount)) {
-                    
+
                     Irp->IoStatus.Information = 0;
                     try_return( Status = STATUS_DISK_FULL );
                 }
@@ -1835,7 +1835,7 @@ Return Value:
                 //
 
                 if (FlagOn(Vcb->VcbState, VCB_STATE_FLAG_DEFERRED_FLUSH)) {
-                    
+
                     SetFlag(IrpContext->Flags, IRP_CONTEXT_FLAG_DISABLE_WRITE_THROUGH);
                 }
 
@@ -1871,7 +1871,7 @@ Return Value:
 
                         ULONGLONG ApproximateClusterCount;
                         ULONGLONG TargetAllocation;
-                        ULONGLONG AddedAllocation;                        
+                        ULONGLONG AddedAllocation;
                         ULONGLONG Multiplier;
                         ULONG BytesPerCluster;
                         ULONG ClusterAlignedFileSize;
@@ -1937,56 +1937,56 @@ Return Value:
                             //  so forth - 2^(16 - 5 + 21) == 2^32).  Since this implies a partition
                             //  of 32gb and a number of clusters (and cluster size) we plan to
                             //  disallow in format for FAT32, the odds of this happening are pretty
-                            //  low anyway.    
+                            //  low anyway.
                             Multiplier = ((Vcb->AllocationSupport.NumberOfFreeClusters *
                                            (BytesPerCluster >> 5)) /
                                           (ClusterAlignedFileSize -
                                            FcbOrDcb->Header.AllocationSize.LowPart)) + 1;
-    
+
                             if (Multiplier > 32) { Multiplier = 32; }
 
-                            // These computations will never overflow a ULONGLONG because a file is capped at 4GB, and 
+                            // These computations will never overflow a ULONGLONG because a file is capped at 4GB, and
                             // a single write can be a max of 4GB.
                             AddedAllocation = Multiplier * (ClusterAlignedFileSize - FcbOrDcb->Header.AllocationSize.LowPart);
 
                             TargetAllocation = FcbOrDcb->Header.AllocationSize.LowPart + AddedAllocation;
-    
+
                             //
                             //  We know that TargetAllocation is in whole clusters. Now
                             //  we check if it exceeded the maximum valid FAT file size.
                             //  If it did, we fall back to allocating up to the maximum legal size.
                             //
-    
+
                             if (TargetAllocation > ~BytesPerCluster + 1) {
-    
+
                                 TargetAllocation = ~BytesPerCluster + 1;
                                 AddedAllocation = TargetAllocation - FcbOrDcb->Header.AllocationSize.LowPart;
                             }
-    
+
                             //
                             //  Now do an unsafe check here to see if we should even
                             //  try to allocate this much.  If not, just allocate
                             //  the minimum size we need, if so so try it, but if it
                             //  fails, just allocate the minimum size we need.
                             //
-    
+
                             ApproximateClusterCount = (AddedAllocation / BytesPerCluster);
-    
+
                             if (ApproximateClusterCount <= Vcb->AllocationSupport.NumberOfFreeClusters) {
-    
+
                                 _SEH2_TRY {
-    
+
                                     FatAddFileAllocation( IrpContext,
                                                           FcbOrDcb,
                                                           FileObject,
                                                           (ULONG)TargetAllocation );
-    
+
                                     AllocateMinimumSize = FALSE;
                                     SetFlag( FcbOrDcb->FcbState, FCB_STATE_TRUNCATE_ON_CLOSE );
-    
+
                                 } _SEH2_EXCEPT( _SEH2_GetExceptionCode() == STATUS_DISK_FULL ?
                                           EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH ) {
-    
+
                                       FatResetExceptionState( IrpContext );
                                 } _SEH2_END;
                             }
@@ -2021,7 +2021,7 @@ Return Value:
 
                 NT_ASSERT( FileSize <= FcbOrDcb->Header.AllocationSize.LowPart );
 
-                
+
                 FcbOrDcb->Header.FileSize.LowPart = FileSize;
 
                 //
@@ -2043,7 +2043,7 @@ Return Value:
                  (StartingVbo + ByteCount > ValidDataLength) ) {
 
                 ExtendingValidData = TRUE;
-            
+
             } else {
 
                 //
@@ -2058,7 +2058,7 @@ Return Value:
                 //
                 //  Note that we've still got PagingIo exclusive in these cases.
                 //
-                
+
                 if (FcbCanDemoteToShared) {
 
                     NT_ASSERT( FcbAcquiredExclusive && ExIsResourceAcquiredExclusiveLite( FcbOrDcb->Header.Resource ));
@@ -2066,18 +2066,18 @@ Return Value:
                     FcbAcquiredExclusive = FALSE;
                 }
             }
-            
+
             if (ValidDataToDisk > ValidDataLength) {
-                
+
                 ValidDataToCheck = ValidDataToDisk;
-            
+
             } else {
-                
+
                 ValidDataToCheck = ValidDataLength;
             }
 
 
-
+
             //
             // HANDLE THE NON-CACHED CASE
             //
@@ -2289,7 +2289,7 @@ Return Value:
                     //  IRP, and have thus lost synchronization.  Note that we should
                     //  not hit this case anymore since we will not re-async vdl extension.
                     //
-                    
+
                     NT_ASSERT( !ExtendingValidData );
 
                     try_return( Status = STATUS_PENDING );
@@ -2340,7 +2340,7 @@ Return Value:
 
             } // if No Intermediate Buffering
 
-
+
             //
             // HANDLE CACHED CASE
             //
@@ -2470,7 +2470,7 @@ Return Value:
                 WriteFileSizeToDirent = BooleanFlagOn(IrpContext->Flags,
                                                       IRP_CONTEXT_FLAG_WRITE_THROUGH);
 
-
+
                 //
                 // DO A NORMAL CACHED WRITE, if the MDL bit is not set,
                 //
@@ -2536,7 +2536,7 @@ Return Value:
                 }
             }
         }
-
+
         //
         //  These two cases correspond to a system write directory file and
         //  ea file.
@@ -2549,7 +2549,7 @@ Return Value:
 
 #if FASTFATDBG
             if ( TypeOfOpen == DirectoryFile ) {
-                DebugTrace(0, Dbg, "Type of write is directoryfile\n", 0);                
+                DebugTrace(0, Dbg, "Type of write is directoryfile\n", 0);
             } else if ( TypeOfOpen == EaFile) {
                 DebugTrace(0, Dbg, "Type of write is eafile\n", 0);
             }
@@ -2612,7 +2612,7 @@ Return Value:
             //  For the noncached case, assert that everything is sector
             //  alligned.
             //
-            
+
 #ifdef _MSC_VER
 #pragma prefast( suppress:28931, "needed for debug build" )
 #endif
@@ -2648,7 +2648,7 @@ Return Value:
                     ByteCount = FcbOrDcb->Header.FileSize.LowPart - StartingVbo;
                 }
 
-            
+
             //
             //  Perform the actual IO
             //
@@ -2708,7 +2708,7 @@ Return Value:
         FatBugCheck( TypeOfOpen, (ULONG_PTR) FcbOrDcb, 0 );
 
     try_exit: NOTHING;
-
+
 
         //
         //  If the request was not posted and there is still an Irp,
@@ -2821,9 +2821,9 @@ Return Value:
                             CcSetFileSizes( FileObject, (PCC_FILE_SIZES)&FcbOrDcb->Header.AllocationSize );
                         }
                     }
-                    
+
                 }
-                
+
                 //
                 //  Note that we have to unpin repinned Bcbs here after the above
                 //  work, but if we are going to post the request, we must do this
@@ -2951,7 +2951,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3006,7 +3006,7 @@ Return Value:
     ExQueueWorkItem( &FlushContext->Item, CriticalWorkQueue );
 }
 
-
+
 //
 //  Local support routine
 //
@@ -3046,7 +3046,7 @@ Return Value:
 
     FatDecodeFileObject(File, &Vcb, &FcbOrDcb, &Ccb);
     NT_ASSERT( FcbOrDcb != NULL );
-    
+
     //
     //  Make us appear as a top level FSP request so that we will
     //  receive any errors from the flush.
@@ -3056,7 +3056,7 @@ Return Value:
 
     ExAcquireResourceExclusiveLite( FcbOrDcb->Header.Resource, TRUE );
     ExAcquireResourceSharedLite( FcbOrDcb->Header.PagingIoResource, TRUE );
-    
+
     CcFlushCache( File->SectionObjectPointer, NULL, 0, NULL );
 
     ExReleaseResourceLite( FcbOrDcb->Header.PagingIoResource );

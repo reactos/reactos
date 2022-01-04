@@ -16,7 +16,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
-static void 
+static void
 NotifyConsoleProcessForShutdown(IN PCSR_PROCESS CsrProcess,
                                 IN PCONSOLE_PROCESS_DATA ProcessData,
                                 IN ULONG Flags)
@@ -25,7 +25,7 @@ NotifyConsoleProcessForShutdown(IN PCSR_PROCESS CsrProcess,
              CsrProcess, Flags, CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread);
 
     /* Send a log-off event. In reality this should be way more complex */
-    ConSrvConsoleCtrlEventTimeout(CTRL_LOGOFF_EVENT, ProcessData, 
+    ConSrvConsoleCtrlEventTimeout(CTRL_LOGOFF_EVENT, ProcessData,
                                   ShutdownSettings.WaitToKillAppTimeout);
 }
 

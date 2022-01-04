@@ -1,5 +1,9 @@
 
+#if defined(_M_IX86) || defined(_M_AMD64)
 #include <asm.inc>
+#elif defined(_M_ARM)
+#include <kxarm.h>
+#endif
 
 #ifdef _M_IX86
 .code32
@@ -29,7 +33,8 @@ _call_stubless_func:
     mov ecx, [esp]         /* return address */
     add esp, edx
     jmp ecx
-#else
+
+#elif _M_AMD64
 .code64
 
 EXTERN ndr_client_call:PROC
@@ -140,6 +145,25 @@ FUNC NdrAsyncClientCall
     add rsp, 28h
     ret
 ENDFUNC
+
+#elif _M_ARM
+TEXTAREA
+
+    LEAF_ENTRY call_stubless_func
+
+    /* Unimplemented */
+    __assertfail
+    bx lr
+
+    LEAF_END call_stubless_func
+
+    LEAF_ENTRY call_server_func
+
+    /* Unimplemented */
+    __assertfail
+    bx lr
+
+    LEAF_END call_server_func
 
 #endif
 

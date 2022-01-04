@@ -191,6 +191,43 @@ struct cpu* cpu_find(DWORD machine)
     return NULL;
 }
 
+static WCHAR* make_default_search_path(void)
+{
+    WCHAR*      search_path;
+    WCHAR*      p;
+    unsigned    sym_path_len;
+    unsigned    alt_sym_path_len;
+
+    sym_path_len = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", NULL, 0);
+    alt_sym_path_len = GetEnvironmentVariableW(L"_NT_ALT_SYMBOL_PATH", NULL, 0);
+
+    /* The default symbol path is ".[;%_NT_SYMBOL_PATH%][;%_NT_ALT_SYMBOL_PATH%]".
+     * If the variables exist, the lengths include a null-terminator. We use that
+     * space for the semicolons, and only add the initial dot and the final null. */
+    search_path = HeapAlloc(GetProcessHeap(), 0,
+                            (1 + sym_path_len + alt_sym_path_len + 1) * sizeof(WCHAR));
+    if (!search_path) return NULL;
+
+    p = search_path;
+    *p++ = L'.';
+    if (sym_path_len)
+    {
+        *p++ = L';';
+        GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", p, sym_path_len);
+        p += sym_path_len - 1;
+    }
+
+    if (alt_sym_path_len)
+    {
+        *p++ = L';';
+        GetEnvironmentVariableW(L"_NT_ALT_SYMBOL_PATH", p, alt_sym_path_len);
+        p += alt_sym_path_len - 1;
+    }
+    *p = L'\0';
+
+    return search_path;
+}
+
 /******************************************************************
  *		SymSetSearchPathW (DBGHELP.@)
  *
@@ -198,14 +235,24 @@ struct cpu* cpu_find(DWORD machine)
 BOOL WINAPI SymSetSearchPathW(HANDLE hProcess, PCWSTR searchPath)
 {
     struct process* pcs = process_find_by_handle(hProcess);
+    WCHAR*          search_path_buffer;
 
     if (!pcs) return FALSE;
-    if (!searchPath) return FALSE;
 
+    if (searchPath)
+    {
+        search_path_buffer = HeapAlloc(GetProcessHeap(), 0,
+                                       (lstrlenW(searchPath) + 1) * sizeof(WCHAR));
+        if (!search_path_buffer) return FALSE;
+        lstrcpyW(search_path_buffer, searchPath);
+    }
+    else
+    {
+        search_path_buffer = make_default_search_path();
+        if (!search_path_buffer) return FALSE;
+    }
     HeapFree(GetProcessHeap(), 0, pcs->search_path);
-    pcs->search_path = lstrcpyW(HeapAlloc(GetProcessHeap(), 0,
-                                          (lstrlenW(searchPath) + 1) * sizeof(WCHAR)),
-                                searchPath);
+    pcs->search_path = search_path_buffer;
     return TRUE;
 }
 
@@ -217,16 +264,19 @@ BOOL WINAPI SymSetSearchPath(HANDLE hProcess, PCSTR searchPath)
 {
     BOOL        ret = FALSE;
     unsigned    len;
-    WCHAR*      sp;
+    WCHAR*      sp = NULL;
 
-    len = MultiByteToWideChar(CP_ACP, 0, searchPath, -1, NULL, 0);
-    if ((sp = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
+    if (searchPath)
     {
+        len = MultiByteToWideChar(CP_ACP, 0, searchPath, -1, NULL, 0);
+        sp = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!sp) return FALSE;
         MultiByteToWideChar(CP_ACP, 0, searchPath, -1, sp, len);
-
-        ret = SymSetSearchPathW(hProcess, sp);
-        HeapFree(GetProcessHeap(), 0, sp);
     }
+
+    ret = SymSetSearchPathW(hProcess, sp);
+
+    HeapFree(GetProcessHeap(), 0, sp);
     return ret;
 }
 
@@ -442,37 +492,13 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
 
     if (UserSearchPath)
     {
-        pcs->search_path = lstrcpyW(HeapAlloc(GetProcessHeap(), 0,
+        pcs->search_path = lstrcpyW(HeapAlloc(GetProcessHeap(), 0,      
                                               (lstrlenW(UserSearchPath) + 1) * sizeof(WCHAR)),
                                     UserSearchPath);
     }
     else
     {
-        unsigned        size;
-        unsigned        len;
-        static const WCHAR      sym_path[] = {'_','N','T','_','S','Y','M','B','O','L','_','P','A','T','H',0};
-        static const WCHAR      alt_sym_path[] = {'_','N','T','_','A','L','T','E','R','N','A','T','E','_','S','Y','M','B','O','L','_','P','A','T','H',0};
-
-        pcs->search_path = HeapAlloc(GetProcessHeap(), 0, (len = MAX_PATH) * sizeof(WCHAR));
-        while ((size = GetCurrentDirectoryW(len, pcs->search_path)) >= len)
-            pcs->search_path = HeapReAlloc(GetProcessHeap(), 0, pcs->search_path, (len *= 2) * sizeof(WCHAR));
-        pcs->search_path = HeapReAlloc(GetProcessHeap(), 0, pcs->search_path, (size + 1) * sizeof(WCHAR));
-
-        len = GetEnvironmentVariableW(sym_path, NULL, 0);
-        if (len)
-        {
-            pcs->search_path = HeapReAlloc(GetProcessHeap(), 0, pcs->search_path, (size + 1 + len + 1) * sizeof(WCHAR));
-            pcs->search_path[size] = ';';
-            GetEnvironmentVariableW(sym_path, pcs->search_path + size + 1, len);
-            size += 1 + len;
-        }
-        len = GetEnvironmentVariableW(alt_sym_path, NULL, 0);
-        if (len)
-        {
-            pcs->search_path = HeapReAlloc(GetProcessHeap(), 0, pcs->search_path, (size + 1 + len + 1) * sizeof(WCHAR));
-            pcs->search_path[size] = ';';
-            GetEnvironmentVariableW(alt_sym_path, pcs->search_path + size + 1, len);
-        }
+        pcs->search_path = make_default_search_path();
     }
 
     pcs->lmodules = NULL;

@@ -125,7 +125,7 @@ HRESULT CTravelEntry::GetToolTipText(IUnknown *punk, LPWSTR pwzText) const
 {
     HRESULT                                 hResult;
 
-    hResult = ILGetDisplayNameEx(NULL, fPIDL, pwzText, ILGDN_NORMAL) ? S_OK : S_FALSE;
+    hResult = ILGetDisplayNameEx(NULL, fPIDL, pwzText, ILGDN_NORMAL) ? S_OK : E_FAIL;
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
@@ -279,7 +279,7 @@ HRESULT CTravelLog::FindRelativeEntry(int _offset, CTravelEntry **foundEntry)
     }
     if (curEntry == NULL)
         return E_INVALIDARG;
-    
+
     *foundEntry = curEntry;
 
     TRACE("CTravelLog::FindRelativeEntry for offset %d, returning %p\n", offset, *foundEntry);
@@ -398,7 +398,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetTravelEntry(IUnknown *punk, int iOffset
 {
     CTravelEntry                            *destinationEntry;
     HRESULT                                 hResult;
-    
+
     hResult = FindRelativeEntry(iOffset, &destinationEntry);
     if (FAILED(hResult))
         return hResult;

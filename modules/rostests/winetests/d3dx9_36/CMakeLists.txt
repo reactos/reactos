@@ -13,10 +13,10 @@ add_executable(d3dx9_36_winetest
     xfile.c
     testlist.c
     rsrc.rc)
-target_compile_definitions(d3dx9_36_winetest PRIVATE -DUSE_WINE_TODOS -D__WINESRC__ -Disnan=_isnan)
+target_compile_definitions(d3dx9_36_winetest PRIVATE USE_WINE_TODOS __WINESRC__ isnan=_isnan)
 if(MSVC)
     # Disable warning C4477 (printf format warnings)
-    target_compile_options(d3dx9_36_winetest PRIVATE "/wd4477")
+    remove_target_compile_option(d3dx9_36_winetest "/we4477")
 endif()
 
 target_link_libraries(d3dx9_36_winetest uuid dxguid)

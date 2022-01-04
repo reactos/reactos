@@ -22,20 +22,20 @@ function (add_apiset apiset_name baseaddress)
         ${CMAKE_CURRENT_BINARY_DIR}/${apiset_name}.def)
 
     add_dependencies(${apiset_name} xdk)
-    set_module_type(${apiset_name} win32dll ENTRYPOINT 0 UNICODE IMAGEBASE ${baseaddress})
+    set_module_type(${apiset_name} module UNICODE IMAGEBASE ${baseaddress})
 
     if(NOT MSVC)
         target_compile_options(${apiset_name} PRIVATE -fno-builtin)
     else()
-        target_compile_options(${apiset_name} PRIVATE /wd4026 /wd4273)
+        target_compile_options(${apiset_name} PRIVATE /wd4026 /wd4273 /Oi-)
     endif()
 
     add_importlibs(${apiset_name} ${ARGN} ntdll)
 
-    add_cd_file(TARGET ${apiset_name} DESTINATION reactos/winsxs/x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef FOR all)
+    add_cd_file(TARGET ${apiset_name} DESTINATION reactos/winsxs/${WINARCH}_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef FOR all)
 endfunction()
 
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef.manifest DESTINATION reactos/winsxs/manifests FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/${WINARCH}_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef.manifest DESTINATION reactos/winsxs/manifests FOR all)
 
 # Apisets will be appended
 
@@ -200,7 +200,7 @@ add_apiset(api-ms-win-downlevel-shlwapi-l1-1-0 0x611f0000 shlwapi)
 add_apiset(api-ms-win-downlevel-shlwapi-l2-1-0 0x61200000 shlwapi)
 add_apiset(api-ms-win-downlevel-user32-l1-1-0 0x61210000 user32)
 add_apiset(api-ms-win-downlevel-version-l1-1-0 0x61220000 version)
-add_apiset(api-ms-win-dx-d3dkmt-l1-1-0 0x61230000 gdi32)
+add_apiset(api-ms-win-dx-d3dkmt-l1-1-0 0x61230000 gdi32_vista gdi32)
 add_apiset(api-ms-win-eventing-classicprovider-l1-1-0 0x61290000 advapi32)
 add_apiset(api-ms-win-eventing-consumer-l1-1-0 0x612a0000 advapi32)
 add_apiset(api-ms-win-eventing-controller-l1-1-0 0x612b0000 advapi32)

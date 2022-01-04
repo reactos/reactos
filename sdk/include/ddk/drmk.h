@@ -61,7 +61,7 @@ DrmForwardContentToDeviceObject(
   _In_opt_ PVOID Reserved,
   _In_ PCDRMFORWARD DrmForward);
 
-_IRQL_requires_max_(PASSIVE_LEVEL) 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 DrmForwardContentToFileObject(

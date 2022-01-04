@@ -1,6 +1,9 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
+/* A form that will not confuse apibuild.py */
+/* #undef ATTRIBUTE_DESTRUCTOR */
+
 /* Type cast for the gethostbyname() argument */
 #define GETHOSTBYNAME_ARG_CAST
 
@@ -9,6 +12,9 @@
 
 /* Define to 1 if you have the <arpa/nameser.h> header file. */
 /* #undef HAVE_ARPA_NAMESER_H */
+
+/* Define if __attribute__((destructor)) is accepted */
+/* #undef HAVE_ATTRIBUTE_DESTRUCTOR */
 
 /* Whether struct sockaddr::__ss_family exists */
 /* #undef HAVE_BROKEN_SS_FAMILY */

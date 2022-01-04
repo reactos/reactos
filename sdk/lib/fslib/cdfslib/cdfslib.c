@@ -12,26 +12,37 @@
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS NTAPI
-CdfsChkdsk(IN PUNICODE_STRING DriveRoot,
+BOOLEAN
+NTAPI
+CdfsFormat(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN QuickFormat,
+    IN BOOLEAN BackwardCompatible,
+    IN MEDIA_TYPE MediaType,
+    IN PUNICODE_STRING Label,
+    IN ULONG ClusterSize)
+{
+    // Not possible for CDFS (ISO-9660).
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+CdfsChkdsk(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
     IN BOOLEAN FixErrors,
     IN BOOLEAN Verbose,
     IN BOOLEAN CheckOnlyIfDirty,
     IN BOOLEAN ScanDrive,
-    IN PFMIFSCALLBACK Callback)
+    IN PVOID pUnknown1,
+    IN PVOID pUnknown2,
+    IN PVOID pUnknown3,
+    IN PVOID pUnknown4,
+    IN PULONG ExitStatus)
 {
     UNIMPLEMENTED;
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS NTAPI
-CdfsFormat(IN PUNICODE_STRING DriveRoot,
-    IN FMIFS_MEDIA_FLAG MediaFlag,
-    IN PUNICODE_STRING Label,
-    IN BOOLEAN QuickFormat,
-    IN ULONG ClusterSize,
-    IN PFMIFSCALLBACK Callback)
-{
-    // Not possible for CDFS (ISO-9660).
-    return STATUS_NOT_SUPPORTED;
+    *ExitStatus = (ULONG)STATUS_SUCCESS;
+    return TRUE;
 }

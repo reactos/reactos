@@ -33,7 +33,7 @@ DRIVER_DISPATCH ClassDispatchUnimplemented;
 // Routines start
 //
 
-
+
 VOID
 ClassInitializeDispatchTables(
     PCLASS_DRIVER_EXTENSION DriverExtension
@@ -67,7 +67,7 @@ ClassInitializeDispatchTables(
     return;
 }
 
-
+
 NTSTATUS
 NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassGlobalDispatch(

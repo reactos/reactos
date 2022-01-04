@@ -489,7 +489,7 @@ typedef struct {
 } DNS_DS_DATA;
 
 typedef struct {
-  LPWSTR pNextDomainName;    
+  LPWSTR pNextDomainName;
   WORD wTypeBitMapsLength;
   WORD wPad;
   BYTE TypeBitMaps[1];

@@ -1,15 +1,8 @@
 
-add_definitions(
-    -D_ATL_NO_EXCEPTIONS)
-
 remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_definitions(-D_WIN32_WINNT=0x601 -DWINVER=0x601)
 
-set_cpp(WITH_RUNTIME)
-
 spec2def(fontext.dll fontext.spec)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND SOURCE
     CDataObject.cpp
@@ -32,7 +25,7 @@ add_library(fontext MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/fontext.def)
 
 set_module_type(fontext win32dll UNICODE)
-target_link_libraries(fontext uuid wine)
+target_link_libraries(fontext uuid wine cpprt atl_classes)
 add_delay_importlibs(fontext ole32 oleaut32 shlwapi gdi32)
 add_importlibs(fontext shell32 advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(fontext precomp.h SOURCE)

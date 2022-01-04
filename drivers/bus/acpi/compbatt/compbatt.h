@@ -88,7 +88,7 @@ CompBattQueryInformation(
     IN ULONG BufferLength,
     OUT PULONG ReturnedLength
 );
-                       
+
 NTSTATUS
 NTAPI
 CompBattQueryStatus(
@@ -144,7 +144,7 @@ CompBattGetDeviceObjectPointer(
 NTSTATUS
 NTAPI
 BatteryIoctl(
-    IN ULONG IoControlCode, 
+    IN ULONG IoControlCode,
     IN PDEVICE_OBJECT DeviceObject,
     IN PVOID InputBuffer,
     IN ULONG InputBufferLength,

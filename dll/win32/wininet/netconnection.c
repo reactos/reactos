@@ -1,3 +1,7 @@
+#ifdef __REACTOS__
+#define NONAMELESSUNION
+#include "precomp.h"
+#else
 /*
  * Wininet - networking layer
  *
@@ -32,7 +36,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "wine/library.h"
 #include "windef.h"
 #include "winbase.h"
 #include "wininet.h"
@@ -40,6 +43,7 @@
 
 #include "wine/debug.h"
 #include "internet.h"
+#endif /* defined(__REACTOS__) */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 

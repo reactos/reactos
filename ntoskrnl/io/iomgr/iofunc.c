@@ -30,7 +30,7 @@ IopCleanupAfterException(IN PFILE_OBJECT FileObject,
                          IN PKEVENT LocalEvent OPTIONAL)
 {
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "IRP: %p. FO: %p \n", Irp, FileObject);
+    IOTRACE(IO_API_DEBUG, "IRP: %p. FO: %p\n", Irp, FileObject);
 
     if (Irp)
     {
@@ -76,7 +76,7 @@ IopFinalizeAsynchronousIo(IN NTSTATUS SynchStatus,
 {
     NTSTATUS FinalStatus = SynchStatus;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "IRP: %p. Status: %lx \n", Irp, SynchStatus);
+    IOTRACE(IO_API_DEBUG, "IRP: %p. Status: %lx\n", Irp, SynchStatus);
 
     /* Make sure the IRP was completed, but returned pending */
     if (FinalStatus == STATUS_PENDING)
@@ -129,7 +129,7 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
     PVOID NormalContext = NULL;
     KIRQL OldIrql;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "IRP: %p. DO: %p. FO: %p \n",
+    IOTRACE(IO_API_DEBUG, "IRP: %p. DO: %p. FO: %p\n",
             Irp, DeviceObject, FileObject);
 
     /* Queue the IRP */
@@ -148,6 +148,8 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
         if (Status != STATUS_PENDING)
         {
             /* Complete it ourselves */
+            NormalRoutine = NULL;
+            NormalContext = NULL;
             ASSERT(!Irp->PendingReturned);
             KeRaiseIrql(APC_LEVEL, &OldIrql);
             IopCompleteRequest(&Irp->Tail.Apc,
@@ -220,7 +222,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
 
     PAGED_CODE();
 
-    IOTRACE(IO_CTL_DEBUG, "Handle: %p. CTL: %lx. Type: %lx \n",
+    IOTRACE(IO_CTL_DEBUG, "Handle: %p. CTL: %lx. Type: %lx\n",
             DeviceHandle, IoControlCode, IsDevIoCtl);
 
     /* Get the access type */
@@ -285,7 +287,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                        &HandleInformation);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Can't use an I/O completion port and an APC in the same time */
+    /* Can't use an I/O completion port and an APC at the same time */
     if ((FileObject->CompletionContext) && (UserApcRoutine))
     {
         /* Fail */
@@ -662,7 +664,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     KEVENT Event;
     NTSTATUS Status;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "Handle: %p. CTL: %lx. Type: %lx \n",
+    IOTRACE(IO_API_DEBUG, "Handle: %p. CTL: %lx. Type: %lx\n",
             FileObject, InformationClass, File);
 
     /* Reference the object */
@@ -1150,7 +1152,7 @@ IoSynchronousPageWrite(IN PFILE_OBJECT FileObject,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
-    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p \n",
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p\n",
             FileObject, Mdl, Offset);
 
     /* Is the write originating from Cc? */
@@ -1205,7 +1207,7 @@ IoPageRead(IN PFILE_OBJECT FileObject,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
-    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p \n",
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Mdl: %p. Offset: %p\n",
             FileObject, Mdl, Offset);
 
     /* Get the Device Object */
@@ -1322,7 +1324,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     KEVENT Event;
     NTSTATUS Status;
     PAGED_CODE();
-    IOTRACE(IO_API_DEBUG, "FileObject: %p. Class: %lx. Length: %lx \n",
+    IOTRACE(IO_API_DEBUG, "FileObject: %p. Class: %lx. Length: %lx\n",
             FileObject, FileInformationClass, Length);
 
     /* Reference the object */
@@ -1673,6 +1675,14 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Can't use an I/O completion port and an APC at the same time */
+    if ((FileObject->CompletionContext) && (ApcRoutine))
+    {
+        /* Fail */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Check if we have an event handle */
     if (EventHandle)
     {
@@ -1791,6 +1801,14 @@ NtLockFile(IN HANDLE FileHandle,
     /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Can't use an I/O completion port and an APC at the same time */
+        if ((FileObject->CompletionContext) && (ApcRoutine))
+        {
+            /* Fail */
+            ObDereferenceObject(FileObject);
+            return STATUS_INVALID_PARAMETER;
+        }
+
         /* Must have either FILE_READ_DATA or FILE_WRITE_DATA access */
         if (!(HandleInformation.GrantedAccess &
             (FILE_WRITE_DATA | FILE_READ_DATA)))
@@ -2050,6 +2068,26 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
+    }
+
+    /* Check input parameters */
+
+    switch (FileInformationClass)
+    {
+#define CHECK_LENGTH(class, struct)                      \
+        case class:                                 \
+            if (Length < sizeof(struct))                         \
+                return STATUS_INFO_LENGTH_MISMATCH; \
+            break
+        CHECK_LENGTH(FileDirectoryInformation, FILE_DIRECTORY_INFORMATION);
+        CHECK_LENGTH(FileFullDirectoryInformation, FILE_FULL_DIR_INFORMATION);
+        CHECK_LENGTH(FileIdFullDirectoryInformation, FILE_ID_FULL_DIR_INFORMATION);
+        CHECK_LENGTH(FileNamesInformation, FILE_NAMES_INFORMATION);
+        CHECK_LENGTH(FileBothDirectoryInformation, FILE_BOTH_DIR_INFORMATION);
+        CHECK_LENGTH(FileIdBothDirectoryInformation, FILE_ID_BOTH_DIR_INFORMATION);
+        default:
+            break;
+#undef CHECK_LENGTH
     }
 
     /* Get File Object */
@@ -2620,6 +2658,8 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         Irp->UserIosb = IoStatusBlock;
 
         /* The IRP wasn't completed, complete it ourselves */
+        NormalRoutine = NULL;
+        NormalContext = NULL;
         KeRaiseIrql(APC_LEVEL, &OldIrql);
         IopCompleteRequest(&Irp->Tail.Apc,
                            &NormalRoutine,
@@ -2719,6 +2759,14 @@ NtReadFile(IN HANDLE FileHandle,
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
             }
 
+            /* Can't use an I/O completion port and an APC at the same time */
+            if ((FileObject->CompletionContext) && (ApcRoutine))
+            {
+                /* Fail */
+                ObDereferenceObject(FileObject);
+                return STATUS_INVALID_PARAMETER;
+            }
+
             /* Perform additional checks for non-cached file access */
             if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
             {
@@ -2774,6 +2822,14 @@ NtReadFile(IN HANDLE FileHandle,
         /* Kernel mode: capture directly */
         if (ByteOffset) CapturedByteOffset = *ByteOffset;
         if (Key) CapturedKey = *Key;
+    }
+
+    /* Check for invalid offset */
+    if ((CapturedByteOffset.QuadPart < 0) && (CapturedByteOffset.QuadPart != -2))
+    {
+        /* -2 is FILE_USE_FILE_POINTER_POSITION */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
     }
 
     /* Check for event */
@@ -2986,10 +3042,8 @@ NtReadFile(IN HANDLE FileHandle,
 
     /* Now set the deferred read flags */
     Irp->Flags |= (IRP_READ_OPERATION | IRP_DEFER_IO_COMPLETION);
-#if 0
-    /* FIXME: VFAT SUCKS */
+
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
-#endif
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,
@@ -3454,6 +3508,8 @@ NtSetInformationFile(IN HANDLE FileHandle,
         Irp->UserIosb = IoStatusBlock;
 
         /* The IRP wasn't completed, complete it ourselves */
+        NormalRoutine = NULL;
+        NormalContext = NULL;
         KeRaiseIrql(APC_LEVEL, &OldIrql);
         IopCompleteRequest(&Irp->Tail.Apc,
                            &NormalRoutine,
@@ -3764,6 +3820,14 @@ NtWriteFile(IN HANDLE FileHandle,
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
             }
 
+            /* Can't use an I/O completion port and an APC at the same time */
+            if ((FileObject->CompletionContext) && (ApcRoutine))
+            {
+                /* Fail */
+                ObDereferenceObject(FileObject);
+                return STATUS_INVALID_PARAMETER;
+            }
+
             /* Perform additional checks for non-cached file access */
             if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
             {
@@ -3825,6 +3889,15 @@ NtWriteFile(IN HANDLE FileHandle,
         /* Kernel mode: capture directly */
         if (ByteOffset) CapturedByteOffset = *ByteOffset;
         if (Key) CapturedKey = *Key;
+    }
+
+    /* Check for invalid offset */
+    if (CapturedByteOffset.QuadPart < -2)
+    {
+        /* -1 is FILE_WRITE_TO_END_OF_FILE */
+        /* -2 is FILE_USE_FILE_POINTER_POSITION */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
     }
 
     /* Check if this is an append operation */
@@ -4045,10 +4118,8 @@ NtWriteFile(IN HANDLE FileHandle,
 
     /* Now set the deferred read flags */
     Irp->Flags |= (IRP_WRITE_OPERATION | IRP_DEFER_IO_COMPLETION);
-#if 0
-    /* FIXME: VFAT SUCKS */
+
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
-#endif
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,
@@ -4220,7 +4291,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     /* This is to be handled by the kernel, not by FSD */
     else if (FsInformationClass == FileFsDriverPathInformation)
     {
-        PFILE_FS_DRIVER_PATH_INFORMATION DriverPathInfo;
+        _SEH2_VOLATILE PFILE_FS_DRIVER_PATH_INFORMATION DriverPathInfo = NULL;
 
         _SEH2_TRY
         {
@@ -4231,7 +4302,9 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
             RtlCopyMemory(DriverPathInfo, FsInformation, Length);
 
             /* Is the driver in the IO path? */
-            Status = IopGetDriverPathInformation(FileObject, DriverPathInfo, Length);
+            Status = IopGetDriverPathInformation(FileObject,
+                                                 (PFILE_FS_DRIVER_PATH_INFORMATION)DriverPathInfo,
+                                                 Length);
             /* We failed, don't continue execution */
             if (!NT_SUCCESS(Status))
             {

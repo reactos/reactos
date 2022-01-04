@@ -347,9 +347,7 @@ KeGetPcr(
 #if (NTDDI_VERSION < NTDDI_WIN7) || !defined(NT_PROCESSOR_GROUPS)
 FORCEINLINE
 ULONG
-KeGetCurrentProcessorNumber(
-    VOID)
-
+KeGetCurrentProcessorNumber(VOID)
 {
     return *((PUCHAR)KeGetPcr() + 0x580);
 }

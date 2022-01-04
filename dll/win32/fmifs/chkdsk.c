@@ -28,7 +28,8 @@ Chkdsk(
 {
     PIFS_PROVIDER Provider;
     UNICODE_STRING usDriveRoot;
-    BOOLEAN Argument = FALSE;
+    NTSTATUS Status;
+    BOOLEAN Success = FALSE;
     WCHAR VolumeName[MAX_PATH];
     //CURDIR CurDir;
 
@@ -36,7 +37,7 @@ Chkdsk(
     if (!Provider)
     {
         /* Unknown file system */
-        Callback(DONE, 0, &Argument);
+        Callback(DONE, 0, &Success);
         return;
     }
 
@@ -46,22 +47,33 @@ Chkdsk(
     RtlCreateUnicodeString(&usDriveRoot, VolumeName);
     /* Code disabled as long as our storage stack doesn't understand IOCTL_MOUNTDEV_QUERY_DEVICE_NAME */
 #else
-    if (!GetVolumeNameForVolumeMountPointW(DriveRoot, VolumeName, MAX_PATH) ||
+    if (!GetVolumeNameForVolumeMountPointW(DriveRoot, VolumeName, RTL_NUMBER_OF(VolumeName)) ||
         !RtlDosPathNameToNtPathName_U(VolumeName, &usDriveRoot, NULL, &CurDir))
     {
-        /* Report an error. */
-        Callback(DONE, 0, &Argument);
+        /* Report an error */
+        Callback(DONE, 0, &Success);
         return;
     }
 #endif
 
-    DPRINT("ChkdskEx - %S\n", Format);
-    Provider->ChkdskEx(&usDriveRoot,
-                       CorrectErrors,
-                       Verbose,
-                       CheckOnlyIfDirty,
-                       ScanDrive,
-                       Callback);
+    DPRINT("Chkdsk() - %S\n", Format);
+    Status = STATUS_SUCCESS;
+    Success = Provider->Chkdsk(&usDriveRoot,
+                               Callback,
+                               CorrectErrors,
+                               Verbose,
+                               CheckOnlyIfDirty,
+                               ScanDrive,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               (PULONG)&Status);
+    if (!Success)
+        DPRINT1("Chkdsk() failed with Status 0x%lx\n", Status);
+
+    /* Report success */
+    Callback(DONE, 0, &Success);
 
     RtlFreeUnicodeString(&usDriveRoot);
 }

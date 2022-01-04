@@ -614,8 +614,10 @@ PsImpersonateClient(IN PETHREAD Thread,
                     IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
     PPS_IMPERSONATION_INFORMATION Impersonation, OldData;
-    PTOKEN OldToken = NULL;
+    PTOKEN OldToken = NULL, ProcessToken = NULL;
+    PACCESS_TOKEN NewToken, ImpersonationToken;
     PEJOB Job;
+    NTSTATUS Status;
 
     PAGED_CODE();
     PSTRACE(PS_SECURITY_DEBUG, "Thread: %p, Token: %p\n", Thread, Token);
@@ -670,7 +672,46 @@ PsImpersonateClient(IN PETHREAD Thread,
             }
         }
 
-        /* FIXME: If the process token can't impersonate, we need to make a copy instead */
+        /*
+         * Assign the token we get from the caller first. The reason
+         * we have to do that is because we're unsure if we can impersonate
+         * in the first place. In the scenario where we cannot then the
+         * last resort is to make a copy of the token and assign that newly
+         * token to the impersonation information.
+         */
+        ImpersonationToken = Token;
+
+        /* Obtain a token from the process */
+        ProcessToken = PsReferencePrimaryToken(Thread->ThreadsProcess);
+        if (!ProcessToken)
+        {
+            /* We can't continue this way without having the process' token... */
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        /* Make sure we can impersonate */
+        if (!SeTokenCanImpersonate(ProcessToken,
+                                   Token,
+                                   ImpersonationLevel))
+        {
+            /* We can't, make a copy of the token instead */
+            Status = SeCopyClientToken(Token,
+                                       SecurityIdentification,
+                                       KernelMode,
+                                       &NewToken);
+            if (!NT_SUCCESS(Status))
+            {
+                /* We can't even make a copy of the token? Then bail out... */
+                ObFastDereferenceObject(&Thread->ThreadsProcess->Token, ProcessToken);
+                return Status;
+            }
+
+            /* Since we cannot impersonate, assign the newly copied token */
+            ImpersonationToken = NewToken;
+        }
+
+        /* We no longer need the process' token */
+        ObFastDereferenceObject(&Thread->ThreadsProcess->Token, ProcessToken);
 
         /* Check if this is a job */
         Job = Thread->ThreadsProcess->Job;
@@ -678,14 +719,14 @@ PsImpersonateClient(IN PETHREAD Thread,
         {
             /* No admin allowed in this job */
             if ((Job->SecurityLimitFlags & JOB_OBJECT_SECURITY_NO_ADMIN) &&
-                SeTokenIsAdmin(Token))
+                SeTokenIsAdmin(ImpersonationToken))
             {
                 return STATUS_ACCESS_DENIED;
             }
 
             /* No restricted tokens allowed in this job */
             if ((Job->SecurityLimitFlags & JOB_OBJECT_SECURITY_RESTRICTED_TOKEN) &&
-                SeTokenIsRestricted(Token))
+                SeTokenIsRestricted(ImpersonationToken))
             {
                 return STATUS_ACCESS_DENIED;
             }
@@ -716,8 +757,8 @@ PsImpersonateClient(IN PETHREAD Thread,
         Impersonation->ImpersonationLevel = ImpersonationLevel;
         Impersonation->CopyOnOpen = CopyOnOpen;
         Impersonation->EffectiveOnly = EffectiveOnly;
-        Impersonation->Token = Token;
-        ObReferenceObject(Token);
+        Impersonation->Token = ImpersonationToken;
+        ObReferenceObject(ImpersonationToken);
 
         /* Unlock the thread */
         PspUnlockThreadSecurityExclusive(Thread);

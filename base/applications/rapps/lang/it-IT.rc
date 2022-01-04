@@ -211,9 +211,10 @@ BEGIN
     IDS_SELECTEDFORINST "Selezionate per l'installazione"
     IDS_MISMATCH_CERT_INFO "Il certificato in uso è sconosciuto:\nSoggetto: %s\nEmittente: %s\nVuoi continuare comunque?"
     IDS_UNABLE_PATH "Incorrect path format."
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_APP_DISPLAY_DETAILS "Details"
+    IDS_APP_DISPLAY_LIST "List"
+    IDS_APP_DISPLAY_TILE "Tile"
+    IDS_NO_SEARCH_RESULTS "No search results"
 END
 
 STRINGTABLE

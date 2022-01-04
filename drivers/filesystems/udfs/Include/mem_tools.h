@@ -29,7 +29,7 @@ typedef struct _MEM_ALLOC_DESC {
 #ifdef MY_HEAP_TRACK_REF
 //    PCHAR Ref;
     PCHAR Tag;
-#endif 
+#endif
 } MEM_ALLOC_DESC, *PMEM_ALLOC_DESC;
 
 typedef struct _MEM_FRAME_ALLOC_DESC {
@@ -172,7 +172,7 @@ PVOID inline MyAllocatePool__(ULONG type, ULONG len) {
 #ifdef TRACK_SYS_ALLOC_CALLERS
     newaddr = (PCHAR)DebugAllocatePool(type,len+MY_HEAP_ALIGN+1, 0x202, __LINE__);
 #else //TRACK_SYS_ALLOC_CALLERS
-    newaddr = (PCHAR)MyAllocatePool_(type,len+MY_HEAP_ALIGN+1); 
+    newaddr = (PCHAR)MyAllocatePool_(type,len+MY_HEAP_ALIGN+1);
 #endif //TRACK_SYS_ALLOC_CALLERS
     if(!newaddr)
         return NULL;
@@ -190,7 +190,7 @@ PVOID inline MyAllocatePoolTag__(ULONG type, ULONG len, /*PCHAR*/ULONG tag) {
 #ifdef TRACK_SYS_ALLOC_CALLERS
     newaddr = (PCHAR)DebugAllocatePool(type,len+MY_HEAP_ALIGN+1, 0x202, __LINE__);
 #else //TRACK_SYS_ALLOC_CALLERS
-    newaddr = (PCHAR)MyAllocatePoolTag_(type,len+MY_HEAP_ALIGN+1, tag); 
+    newaddr = (PCHAR)MyAllocatePoolTag_(type,len+MY_HEAP_ALIGN+1, tag);
 #endif //TRACK_SYS_ALLOC_CALLERS
     if(!newaddr)
         return NULL;
@@ -221,6 +221,12 @@ VOID inline MyFreePool__(PVOID addr) {
 
 #endif //MY_MEM_BOUNDS_CHECK
 
+/* This function just scares the hell out of GCC */
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+
 ULONG inline MyReallocPool__(PCHAR addr, ULONG len, PCHAR *pnewaddr, ULONG newlen) {
     ULONG _len, _newlen;
     _newlen = MyAlignSize__(newlen);
@@ -239,16 +245,16 @@ ULONG inline MyReallocPool__(PCHAR addr, ULONG len, PCHAR *pnewaddr, ULONG newle
         }
     }
 #endif //MY_MEM_BOUNDS_CHECK
-    
+
     if ((_newlen != _len)
 #ifdef MY_MEM_BOUNDS_CHECK
         || TRUE
 #endif //MY_MEM_BOUNDS_CHECK
-    ) { 
+    ) {
 #ifdef TRACK_SYS_ALLOC_CALLERS
         newaddr = (PCHAR)DebugAllocatePool(NonPagedPool,_newlen, 0x202, __LINE__);
 #else //TRACK_SYS_ALLOC_CALLERS
-        newaddr = (PCHAR)MyAllocatePool__(NonPagedPool,_newlen); 
+        newaddr = (PCHAR)MyAllocatePool__(NonPagedPool,_newlen);
 #endif //TRACK_SYS_ALLOC_CALLERS
         if (!newaddr) {
             __debugbreak();
@@ -276,7 +282,7 @@ ULONG inline MyReallocPool__(PCHAR addr, ULONG len, PCHAR *pnewaddr, ULONG newle
         }
 #endif //MY_MEM_BOUNDS_CHECK
 
-        MyFreePool__(addr); 
+        MyFreePool__(addr);
     } else {
         *pnewaddr = addr;
     }
@@ -292,6 +298,9 @@ ULONG inline MyReallocPool__(PCHAR addr, ULONG len, PCHAR *pnewaddr, ULONG newle
 */
     return newlen;
 }
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 #ifndef MY_USE_ALIGN
 #undef  MyAlignSize__

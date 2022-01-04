@@ -73,7 +73,7 @@ struct RegPidlEntry
     USHORT magic; // 0x5364 ~~~ "REGK"
 
     REG_ENTRY_TYPE entryType;
-    
+
     USHORT entryNameLength;
 
     union {

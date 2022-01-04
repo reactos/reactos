@@ -1,0 +1,258 @@
+/* This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_CROATIAN, SUBLANG_DEFAULT
+
+IDM_MAINMENU MENU
+BEGIN
+    POPUP "&Datoteka"
+    BEGIN
+        MENUITEM "&Novo...\tCtrl+N",        ID_FILE_NEW
+        MENUITEM "&Otvori...\tCtrl+O",      ID_FILE_OPEN
+        MENUITEM "&Spremi\tCtrl+S",         ID_FILE_SAVE
+        MENUITEM "Spremi &kao...",          ID_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Ispiši...\tCtrl+P",      ID_PRINT
+        MENUITEM "Ispiši &pregled",         ID_PREVIEW
+        MENUITEM "Postavljanje stranic&e",  ID_PRINTSETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Iz&ađi",                  ID_FILE_EXIT
+    END
+    POPUP "&Uredi"
+    BEGIN
+        MENUITEM "&Poništi\tCtrl+Z",        ID_EDIT_UNDO
+        MENUITEM "&Vrati\tCtrl+Y",          ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Izreži\tCtrl+X",         ID_EDIT_CUT
+        MENUITEM "&Kopiraj\tCtrl+C",        ID_EDIT_COPY
+        MENUITEM "&Zalijepi\tCtrl+V",       ID_EDIT_PASTE
+        MENUITEM "Iz&briši\tDel",           ID_EDIT_CLEAR
+        MENUITEM "&Označi sve\tCtrl+A",     ID_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "P&ronađi...\tCtrl+F",     ID_FIND
+        MENUITEM "Pronađi &slijedeće\tF3",  ID_FIND_NEXT
+        MENUITEM "Z&amijeni...\tCtrl+H",    ID_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "Pročitaj-samo &način",    ID_EDIT_READONLY
+        MENUITEM "&Modificirano",           ID_EDIT_MODIFIED
+        MENUITEM SEPARATOR
+        POPUP "&Dodatno"
+        BEGIN
+            MENUITEM "&Informacije označenoga",         ID_EDIT_SELECTIONINFO
+            MENUITEM "&Format znaka",                   ID_EDIT_CHARFORMAT
+            MENUITEM "&Definicija znakovnog formata",   ID_EDIT_DEFCHARFORMAT
+            MENUITEM "&Paragraf formata",               ID_EDIT_PARAFORMAT
+            MENUITEM "Dobij &tekst",                    ID_EDIT_GETTEXT
+        END
+    END
+    POPUP "&Pogled"
+    BEGIN
+        MENUITEM "&Alatna traka",        ID_TOGGLE_TOOLBAR
+        MENUITEM "Traka &formatiranja",  ID_TOGGLE_FORMATBAR
+        MENUITEM "&Ravnalo",             ID_TOGGLE_RULER
+        MENUITEM "&Statusna traka",      ID_TOGGLE_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Opcije...",           ID_VIEWPROPERTIES
+    END
+    POPUP "&Ubaci"
+    BEGIN
+        MENUITEM "&Datum i vrijeme...",  ID_DATETIME
+    END
+    POPUP "&Format"
+    BEGIN
+        MENUITEM "&Font...",                    ID_FONTSETTINGS
+        MENUITEM "&Grafičke oznake",            ID_BULLET
+        MENUITEM "&Paragraf...",                ID_PARAFORMAT
+        MENUITEM "&Kartice...",                 ID_TABSTOPS
+        POPUP "&Pozadina"
+        BEGIN
+            MENUITEM "&Sustav\tCtrl+1",         ID_BACK_1
+            MENUITEM "&Bijelo žuta\tCtrl+2",    ID_BACK_2
+        END
+    END
+    POPUP "P&omoć"
+    BEGIN
+        MENUITEM "&O Wine WordPad-u",      ID_ABOUT
+    END
+END
+
+IDM_POPUP MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Izreži",            ID_EDIT_CUT
+        MENUITEM "&Kopiraj",          ID_EDIT_COPY
+        MENUITEM "&Zalijepi",         ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Grafičke oznake",  ID_BULLET
+        MENUITEM "&Paragraf...",      ID_PARAFORMAT
+    END
+END
+
+IDM_COLOR_POPUP MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Crna",              ID_COLOR_BLACK
+        MENUITEM "Boja kestena",      ID_COLOR_MAROON
+        MENUITEM "Zelena",            ID_COLOR_GREEN
+        MENUITEM "Boja masline",      ID_COLOR_OLIVE
+        MENUITEM "Mornarska boja",    ID_COLOR_NAVY
+        MENUITEM "Ljubičasta",        ID_COLOR_PURPLE
+        MENUITEM "Teal",              ID_COLOR_TEAL
+        MENUITEM "Siva",              ID_COLOR_GRAY
+        MENUITEM "Srebrna",           ID_COLOR_SILVER
+        MENUITEM "Crvena",            ID_COLOR_RED
+        MENUITEM "Lime",              ID_COLOR_LIME
+        MENUITEM "Žuta",              ID_COLOR_YELLOW
+        MENUITEM "Plava",             ID_COLOR_BLUE
+        MENUITEM "Fuchsia",           ID_COLOR_FUCHSIA
+        MENUITEM "Aqua",              ID_COLOR_AQUA
+        MENUITEM "Bijela",            ID_COLOR_WHITE
+        MENUITEM "Automatski",        ID_COLOR_AUTOMATIC
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_ALL_FILES,              "Svi dokumenti (*.*)"
+    STRING_TEXT_FILES_TXT,         "Tekstni dokumenti (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "Unicode tekstni dokumenti (*.txt)"
+    STRING_RICHTEXT_FILES_RTF,     "Obogaćeni tekstni formati (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,       "Obogaćeni tekstni dokument"
+    STRING_NEWFILE_TXT,            "Tekstni dokument"
+    STRING_NEWFILE_TXT_UNICODE,    "Unicode tekstni dokument"
+    STRING_PRINTER_FILES_PRN,      "Datoteke ispisa (*.prn)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_ALIGN_LEFT,            "Lijevo"
+    STRING_ALIGN_RIGHT,           "Desno"
+    STRING_ALIGN_CENTER,          "Sredina"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_VIEWPROPS_TITLE,          "Opcije"
+    STRING_VIEWPROPS_TEXT,           "Tekst"
+    STRING_VIEWPROPS_RICHTEXT,       "Obogaćeni teskt"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PREVIEW_PRINT,            "Ispis"
+    STRING_PREVIEW_NEXTPAGE,         "Sljedeća stranica"
+    STRING_PREVIEW_PREVPAGE,         "Prethodna stranica"
+    STRING_PREVIEW_TWOPAGES,         "Dvije stranice"
+    STRING_PREVIEW_ONEPAGE,          "Jedna stranica"
+    STRING_PREVIEW_ZOOMIN,           "Zumiraj"
+    STRING_PREVIEW_ZOOMOUT,          "Odzumiraj"
+    STRING_PREVIEW_CLOSE,            "Zatvori"
+    STRING_PREVIEW_PAGE,             "Stranica"
+    STRING_PREVIEW_PAGES,            "Stranice"
+    STRING_UNITS_CM,                 "cm"
+    STRING_UNITS_IN,                 "in"
+    STRING_UNITS_INCH,               "inch (inči)"
+    STRING_UNITS_PT,                 "pt"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_DEFAULT_FILENAME,     "Dokument"
+    STRING_PROMPT_SAVE_CHANGES,  "Spremi promjene u '%s'?"
+    STRING_SEARCH_FINISHED,      "Završeno pretraživanje dokumenta."
+    STRING_LOAD_RICHED_FAILED,   "Neuspješno učitavanje RichEdit knjižnice."
+    STRING_SAVE_LOSEFORMATTING,  "Odabrali ste spremanje u formatu običnog teksta, što će uzrokovati gubitak cjelokupnog oblikovanja. Jeste li sigurni da to želite učiniti?"
+    STRING_INVALID_NUMBER,       "Nevažeći format brojeva."
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE dokumenti za pohranu nisu podržani."
+    STRING_WRITE_FAILED,              "Neuspješno spremanje dokumenta."
+    STRING_WRITE_ACCESS_DENIED,       "Nemate dopuštenje za spremanje datoteke."
+    STRING_OPEN_FAILED,               "Neuspješno otvaranje datoteke."
+    STRING_OPEN_ACCESS_DENIED,        "Nemate dopuštenje za otvaranje datoteke."
+    STRING_PRINTING_NOT_IMPLEMENTED,  "Ispis nije implementiran, razvijen."
+    STRING_MAX_TAB_STOPS,             "Ne može se dodati više od 32 tabulatora."
+END
+
+IDD_DATETIME DIALOGEX 30, 20, 130, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Date and time"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "Podražni formati",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    DEFPUSHBUTTON "U redu",IDOK,87,12,40,12
+    PUSHBUTTON   "Odustani",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOGEX 30, 20, 140, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Novo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "Novi tip dokumenta",-1,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    DEFPUSHBUTTON "U redu",IDOK,97,12,40,12
+    PUSHBUTTON   "Odustani",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOGEX 30, 20, 220, 110
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Format paragrafa"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Uvlačenje", -1, 10, 10, 140, 68
+    LTEXT "Lijevo", -1, 15, 22, 60, 13
+    EDITTEXT IDC_PARA_LEFT, 75, 20, 65, 13
+    LTEXT "Desno", -1, 15, 40, 60, 13
+    EDITTEXT IDC_PARA_RIGHT, 75, 38, 65, 13
+    LTEXT "Prva linija", -1, 15, 58, 60, 13
+    EDITTEXT IDC_PARA_FIRST, 75, 56, 65, 13
+    LTEXT "Poravnanje", -1, 15, 87, 60, 13
+    COMBOBOX IDC_PARA_ALIGN, 75, 85, 65, 60, CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "U redu", IDOK, 160, 15, 50, 15
+    PUSHBUTTON "Odustani", IDCANCEL, 160, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOGEX 30, 20, 200, 110
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Tabulatori"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Tabulatori", -1, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
+    DEFPUSHBUTTON "&Dodaj", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "&Ukloni", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "U redu", IDOK, 135, 15, 58, 15
+    PUSHBUTTON "Odustani", IDCANCEL, 135, 33, 58, 15
+    PUSHBUTTON "Ukloni &sve", ID_TAB_EMPTY, 135, 51, 58, 15
+END
+
+IDD_FORMATOPTS DIALOGEX 0, 0, 280, 110
+STYLE DS_SHELLFONT | DS_SYSMODAL
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Omatanje linija", -1, 5, 10, 145, 85
+    RADIOBUTTON "&Nema prelamanja linija", IDC_PAGEFMT_WN, 10, 25, 138, 15
+    RADIOBUTTON "Prelomi tekst uz &okvir prozora", IDC_PAGEFMT_WW, 10, 45, 138, 15
+    RADIOBUTTON "Prelamanje teksta uz &marginu", IDC_PAGEFMT_WM, 10, 65, 138, 15
+    GROUPBOX "Alatne trake", -1, 155, 10, 115, 85
+    CHECKBOX "&Alatna traka", IDC_PAGEFMT_TB, 165, 20, 80, 15
+    CHECKBOX "&Formatna traka", IDC_PAGEFMT_FB, 165, 38, 80, 15
+    CHECKBOX "&Ravnalo", IDC_PAGEFMT_RU, 165, 56, 80, 15
+    CHECKBOX "&Statusna traka", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
+END

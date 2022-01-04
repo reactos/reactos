@@ -66,6 +66,7 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     switch (wParam)
     {
     case CMD_NEW:        DIALOG_FileNew(); break;
+    case CMD_NEW_WINDOW: DIALOG_FileNewWindow(); break;
     case CMD_OPEN:       DIALOG_FileOpen(); break;
     case CMD_SAVE:       DIALOG_FileSave(); break;
     case CMD_SAVE_AS:    DIALOG_FileSaveAs(); break;
@@ -307,7 +308,7 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
 }
 
 LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{ 
+{
     switch (msg)
     {
         case WM_KEYDOWN:

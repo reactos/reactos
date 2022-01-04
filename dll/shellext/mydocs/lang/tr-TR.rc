@@ -1,0 +1,13 @@
+/*
+ * PROJECT:     mydocs
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_NOSRCFILEFOUND "'%ls' kaynak dosyası veya dizini bulunamadı."
+}

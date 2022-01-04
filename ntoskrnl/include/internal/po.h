@@ -264,14 +264,14 @@ typedef struct _POP_SHUTDOWN_WAIT_ENTRY
 //
 // Initialization routines
 //
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 PoInitSystem(
     IN ULONG BootPhase
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 PoInitializePrcb(

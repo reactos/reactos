@@ -37,7 +37,7 @@ _When_(return != FALSE && NoOpCheck != FALSE, _Acquires_exclusive_lock_(Vcb->Res
 FINISHED
 FatAcquireExclusiveVcb_Real (
     IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb,    
+    IN PVCB Vcb,
     IN BOOLEAN NoOpCheck
     )
 
@@ -72,7 +72,7 @@ Return Value:
     if (ExAcquireResourceExclusiveLite( &Vcb->Resource, BooleanFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT))) {
 
         if (!NoOpCheck) {
-            
+
             _SEH2_TRY {
 
                 FatVerifyOperationIsLegal( IrpContext );
@@ -123,7 +123,7 @@ Return Value:
 {
     PAGED_CODE();
 
-    if (ExAcquireResourceSharedLite( &Vcb->Resource, 
+    if (ExAcquireResourceSharedLite( &Vcb->Resource,
                                      BooleanFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT))) {
 
         _SEH2_TRY {
@@ -224,7 +224,7 @@ RetryFcbExclusive:
     return FALSE;
 }
 
-
+
  _Requires_lock_held_(_Global_critical_region_)
 _Acquires_shared_lock_(*Fcb->Header.Resource)
 FINISHED
@@ -305,8 +305,8 @@ RetryFcbShared:
     }
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 _When_(return != 0, _Acquires_shared_lock_(*Fcb->Header.Resource))
 FINISHED
 FatAcquireSharedFcbWaitForEx (
@@ -386,8 +386,8 @@ RetryFcbSharedWaitEx:
     }
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
 NTAPI
 FatAcquireFcbForLazyWrite (
@@ -429,8 +429,8 @@ Return Value:
     //
 
     //
-    //  Note that we do not need to disable APC delivery to guard 
-    //  against a rogue user issuing a suspend APC. That is because 
+    //  Note that we do not need to disable APC delivery to guard
+    //  against a rogue user issuing a suspend APC. That is because
     //  it is guaranteed that the caller is either in the system context,
     //  to which a user cannot deliver a suspend APC, or the caller has
     //  already disabled kernel APC delivery before calling. This is true
@@ -480,8 +480,8 @@ Return Value:
     return TRUE;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 NTAPI
 FatReleaseFcbFromLazyWrite (
@@ -545,7 +545,7 @@ Return Value:
     return;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 BOOLEAN
 NTAPI
@@ -585,10 +585,10 @@ Return Value:
     //  We acquire the normal file resource shared here to synchronize
     //  correctly with purges.
     //
-    
+
     //
-    //  Note that we do not need to disable APC delivery to guard 
-    //  against a rogue user issuing a suspend APC. That is because 
+    //  Note that we do not need to disable APC delivery to guard
+    //  against a rogue user issuing a suspend APC. That is because
     //  it is guaranteed that the caller is either in the system context,
     //  to which a user cannot deliver a suspend APC, or the caller has
     //  already disabled kernel APC delivery before calling. This is true
@@ -615,8 +615,8 @@ Return Value:
     return TRUE;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 NTAPI
 FatReleaseFcbFromReadAhead (
@@ -659,8 +659,8 @@ Return Value:
 }
 
 
-_Function_class_(FAST_IO_ACQUIRE_FOR_CCFLUSH)
-_Requires_lock_held_(_Global_critical_region_)    
+_Function_class_(FAST_IO_ACQUIRE_FOR_CCFLUSH)
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 NTAPI
 FatAcquireForCcFlush (
@@ -676,7 +676,7 @@ FatAcquireForCcFlush (
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     //
     //  Once again, the hack for making this look like
     //  a recursive call if needed. We cannot let ourselves
@@ -687,9 +687,9 @@ FatAcquireForCcFlush (
     //
 
     NT_ASSERT( IoGetTopLevelIrp() != (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP );
-    
+
     if (IoGetTopLevelIrp() == NULL) {
-        
+
         IoSetTopLevelIrp((PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
     }
 
@@ -709,8 +709,8 @@ FatAcquireForCcFlush (
     //
 
     //
-    //  Note that we do not need to disable APC delivery to guard 
-    //  against a rogue user issuing a suspend APC. That is because 
+    //  Note that we do not need to disable APC delivery to guard
+    //  against a rogue user issuing a suspend APC. That is because
     //  it is guaranteed that the caller is either in the system context,
     //  to which a user cannot deliver a suspend APC, or the caller has
     //  already disabled kernel APC delivery before calling. This is true
@@ -721,30 +721,30 @@ FatAcquireForCcFlush (
     Header = (PFSRTL_COMMON_FCB_HEADER) FileObject->FsContext;
 
     if (Type < DirectoryFile) {
-        
+
         if (Header->Resource) {
-            
+
             if (!ExIsResourceAcquiredSharedLite( Header->Resource )) {
-                
+
                 ExAcquireResourceExclusiveLite( Header->Resource, TRUE );
-            
+
             } else {
-                
+
                 ExAcquireResourceSharedLite( Header->Resource, TRUE );
             }
         }
     }
 
     if (Header->PagingIoResource) {
-        
+
         ExAcquireResourceSharedLite( Header->PagingIoResource, TRUE );
     }
-    
+
     return STATUS_SUCCESS;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 NTAPI
 FatReleaseForCcFlush (
@@ -760,11 +760,11 @@ FatReleaseForCcFlush (
 
     PAGED_CODE();
     UNREFERENCED_PARAMETER( DeviceObject );
-    
+
     //
     //  Clear up our hint.
     //
-    
+
     if (IoGetTopLevelIrp() == (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP) {
 
         IoSetTopLevelIrp( NULL );
@@ -774,22 +774,22 @@ FatReleaseForCcFlush (
     Header = (PFSRTL_COMMON_FCB_HEADER) FileObject->FsContext;
 
     if (Type < DirectoryFile) {
-        
+
         if (Header->Resource) {
-            
+
             ExReleaseResourceLite( Header->Resource );
         }
     }
 
     if (Header->PagingIoResource) {
-        
+
         ExReleaseResourceLite( Header->PagingIoResource );
     }
 
     return STATUS_SUCCESS;
 }
 
-
+
 BOOLEAN
 NTAPI
 FatNoOpAcquire (
@@ -836,7 +836,7 @@ Return Value:
     return TRUE;
 }
 
-
+
 VOID
 NTAPI
 FatNoOpRelease (
@@ -876,8 +876,8 @@ Return Value:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 NTAPI
 FatFilterCallbackAcquireForCreateSection (
@@ -915,7 +915,7 @@ Return Value:
     PFCB Fcb;
 
     PAGED_CODE();
-    
+
     NT_ASSERT( CallbackData->Operation == FS_FILTER_ACQUIRE_FOR_SECTION_SYNCHRONIZATION );
     NT_ASSERT( CallbackData->SizeOfFsFilterCallbackData == sizeof(FS_FILTER_CALLBACK_DATA) );
 
@@ -930,8 +930,8 @@ Return Value:
     //
 
     //
-    //  Note that we do not need to disable APC delivery to guard 
-    //  against a rogue user issuing a suspend APC. That is because 
+    //  Note that we do not need to disable APC delivery to guard
+    //  against a rogue user issuing a suspend APC. That is because
     //  it is guaranteed that the caller is either in the system context,
     //  to which a user cannot deliver a suspend APC, or the caller has
     //  already disabled kernel APC delivery before calling. This is true

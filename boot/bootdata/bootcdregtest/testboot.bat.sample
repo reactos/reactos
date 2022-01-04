@@ -1,5 +1,5 @@
 @echo off
-ECHO 
+ECHO
 ECHO Installing Programs...
 ECHO
 
@@ -12,10 +12,10 @@ REM start /WAIT dbgprint.exe SYSREG_CHECKPOINT:ABIWORD_INSTALL_COMPLETE
 REM ECHO
 REM ECHO Installing OpenOffice
 REM ECHO
-REM START /WAIT openoffice.msi /Q 
+REM START /WAIT openoffice.msi /Q
 REM start /WAIT dbgprint.exe SYSREG_CHECKPOINT:OPENOFFICE_INSTALL_COMPLETE
 
-ECHO 
+ECHO
 ECHO Informing Sysreg that we are done
 ECHO
 START dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE

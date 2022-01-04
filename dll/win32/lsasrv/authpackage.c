@@ -541,6 +541,25 @@ LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg,
 }
 
 
+VOID
+LsapTerminateLogon(
+    _In_ PLUID LogonId)
+{
+    PLIST_ENTRY ListEntry;
+    PAUTH_PACKAGE Package;
+
+    ListEntry = PackageListHead.Flink;
+    while (ListEntry != &PackageListHead)
+    {
+        Package = CONTAINING_RECORD(ListEntry, AUTH_PACKAGE, Entry);
+
+        Package->LsaApLogonTerminated(LogonId);
+
+        ListEntry = ListEntry->Flink;
+    }
+}
+
+
 NTSTATUS
 LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
                               PLSAP_LOGON_CONTEXT LogonContext)
@@ -585,15 +604,7 @@ LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
         }
     }
 
-    if (LogonContext->Untrusted)
-        Status = Package->LsaApCallPackageUntrusted((PLSA_CLIENT_REQUEST)LogonContext,
-                                                    LocalBuffer,
-                                                    RequestMsg->CallAuthenticationPackage.Request.ProtocolSubmitBuffer,
-                                                    RequestMsg->CallAuthenticationPackage.Request.SubmitBufferLength,
-                                                    &RequestMsg->CallAuthenticationPackage.Reply.ProtocolReturnBuffer,
-                                                    &RequestMsg->CallAuthenticationPackage.Reply.ReturnBufferLength,
-                                                    &RequestMsg->CallAuthenticationPackage.Reply.ProtocolStatus);
-    else
+    if (LogonContext->TrustedCaller)
         Status = Package->LsaApCallPackage((PLSA_CLIENT_REQUEST)LogonContext,
                                            LocalBuffer,
                                            RequestMsg->CallAuthenticationPackage.Request.ProtocolSubmitBuffer,
@@ -601,6 +612,14 @@ LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
                                            &RequestMsg->CallAuthenticationPackage.Reply.ProtocolReturnBuffer,
                                            &RequestMsg->CallAuthenticationPackage.Reply.ReturnBufferLength,
                                            &RequestMsg->CallAuthenticationPackage.Reply.ProtocolStatus);
+    else
+        Status = Package->LsaApCallPackageUntrusted((PLSA_CLIENT_REQUEST)LogonContext,
+                                                    LocalBuffer,
+                                                    RequestMsg->CallAuthenticationPackage.Request.ProtocolSubmitBuffer,
+                                                    RequestMsg->CallAuthenticationPackage.Request.SubmitBufferLength,
+                                                    &RequestMsg->CallAuthenticationPackage.Reply.ProtocolReturnBuffer,
+                                                    &RequestMsg->CallAuthenticationPackage.Reply.ReturnBufferLength,
+                                                    &RequestMsg->CallAuthenticationPackage.Reply.ProtocolStatus);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Package->LsaApCallPackage() failed (Status 0x%08lx)\n", Status);

@@ -120,7 +120,7 @@ CdCheckForXAExtent (
 #pragma alloc_text(PAGE, CdUpdateDirentName)
 #endif
 
-
+
 VOID
 CdLookupDirent (
     _In_ PIRP_CONTEXT IrpContext,
@@ -203,7 +203,7 @@ Return Value:
     return;
 }
 
-
+
 BOOLEAN
 CdLookupNextDirent (
     _In_ PIRP_CONTEXT IrpContext,
@@ -391,7 +391,7 @@ Return Value:
 }
 
 
-_At_(Dirent->CdTime, _Post_notnull_)
+_At_(Dirent->CdTime, _Post_notnull_)
 VOID
 CdUpdateDirentFromRawDirent (
     _In_ PIRP_CONTEXT IrpContext,
@@ -529,7 +529,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 CdUpdateDirentName (
     _In_ PIRP_CONTEXT IrpContext,
@@ -819,7 +819,7 @@ Return Value:
     return;
 }
 
-
+
 _Success_(return != FALSE) BOOLEAN
 CdFindFile (
     _In_ PIRP_CONTEXT IrpContext,
@@ -992,7 +992,7 @@ Return Value:
     return Found;
 }
 
-
+
 BOOLEAN
 CdFindDirectory (
     _In_ PIRP_CONTEXT IrpContext,
@@ -1102,7 +1102,7 @@ Return Value:
     return Found;
 }
 
-
+
 _At_(FileContext->ShortName.FileName.MaximumLength, _In_range_(>=, BYTE_COUNT_8_DOT_3))
 BOOLEAN
 CdFindFileByShortName (
@@ -1270,7 +1270,7 @@ Return Value:
     return Found;
 }
 
-
+
 BOOLEAN
 CdLookupNextInitialFileDirent (
     _In_ PIRP_CONTEXT IrpContext,
@@ -1421,7 +1421,7 @@ Return Value:
     return FoundDirent;
 }
 
-
+
 VOID
 CdLookupLastFileDirent (
     _In_ PIRP_CONTEXT IrpContext,
@@ -1631,7 +1631,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 CdCleanupFileContext (
     _In_ PIRP_CONTEXT IrpContext,
@@ -1679,7 +1679,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1781,7 +1781,7 @@ Return Value:
     return NextDirentOffset;
 }
 
-
+
 //
 //  Local support routine
 //
@@ -1848,12 +1848,12 @@ Return Value:
 
                 //
                 //  Check for XA data.  Note that a number of discs (video CDs)
-                //  have files marked as type XA Mode 2 Form 1 (2048 bytes of 
-                //  user data),  but actually record these sectors as Mode2 Form 2 
-                //  (2352). We will fail to read these files,  since for M2F1,  
+                //  have files marked as type XA Mode 2 Form 1 (2048 bytes of
+                //  user data),  but actually record these sectors as Mode2 Form 2
+                //  (2352). We will fail to read these files,  since for M2F1,
                 //  a normal read CD command is issued (as per SCSI specs).
                 //
-                
+
                 ExtentType = Mode2Form2Data;
             }
 

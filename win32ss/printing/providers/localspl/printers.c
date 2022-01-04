@@ -1188,7 +1188,7 @@ _LocalOpenPrinterHandle(PWSTR pwszPrinterName, PWSTR pwszJobParameter, PHANDLE p
             goto Failure;
         }
 
-        // Skip the "Job " string. 
+        // Skip the "Job " string.
         pwszJobParameter += 4;
 
         // Skip even more whitespace.

@@ -422,7 +422,7 @@ BlGetApplicationIdentifier (
 
 NTSTATUS
 BlGetApplicationBaseAndSize (
-    _Out_ PVOID* ImageBase, 
+    _Out_ PVOID* ImageBase,
     _Out_ PULONG ImageSize
     )
 {

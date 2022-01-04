@@ -1,5 +1,5 @@
 [
-    implicit_handle(handle_t hBinding)
+    implicit_handle(handle_t srvsvc_hBinding)
 ]
 interface srvsvc
 {

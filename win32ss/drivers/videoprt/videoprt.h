@@ -107,7 +107,10 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    LIST_ENTRY DmaAdapterList, ChildDeviceList;
    LIST_ENTRY HwResetListEntry;
    ULONG SessionId;
-   CHAR MiniPortDeviceExtension[1];
+   USHORT AdapterNumber;
+   USHORT DisplayNumber;
+   ULONG NumberOfSecondaryDisplays;
+   CHAR POINTER_ALIGNMENT MiniPortDeviceExtension[1];
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 
 typedef struct _VIDEO_PORT_CHILD_EXTENSION
@@ -231,6 +234,7 @@ IntVideoPortSetupInterrupt(
 NTSTATUS NTAPI
 IntVideoPortFilterResourceRequirements(
    IN PDEVICE_OBJECT DeviceObject,
+   IN PIO_STACK_LOCATION IrpStack,
    IN PIRP Irp);
 
 NTSTATUS NTAPI
@@ -260,6 +264,8 @@ IntVideoPortCreateAdapterDeviceObject(
    _In_ PDRIVER_OBJECT DriverObject,
    _In_ PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
    _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+   _In_ USHORT AdapterNumber,
+   _In_ USHORT DisplayNumber,
    _Out_opt_ PDEVICE_OBJECT *DeviceObject);
 
 NTSTATUS NTAPI
@@ -342,6 +348,7 @@ NTSTATUS
 NTAPI
 IntCreateRegistryPath(
     IN PCUNICODE_STRING DriverRegistryPath,
+    IN ULONG DeviceNumber,
     OUT PUNICODE_STRING DeviceRegistryPath);
 
 

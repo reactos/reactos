@@ -56,7 +56,7 @@ __mingw_init_ehandler (void)
   size_t e = 0;
   PIMAGE_SECTION_HEADER pSec;
   PBYTE _ImageBase = _GetPEImageBase ();
-  
+
   if (was_here || !_ImageBase)
     return was_here;
   was_here = 1;
@@ -66,7 +66,7 @@ __mingw_init_ehandler (void)
   /* Allocate # of e tables and entries.  */
   memset (emu_pdata, 0, sizeof (RUNTIME_FUNCTION) * MAX_PDATA_ENTRIES);
   memset (emu_xdata, 0, sizeof (UNWIND_INFO) * MAX_PDATA_ENTRIES);
-    
+
   e = 0;
   /* Fill tables and entries.  */
   while (e < MAX_PDATA_ENTRIES && (pSec = _FindPESectionExec (e)) != NULL)

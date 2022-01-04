@@ -1,12 +1,7 @@
 
 PROJECT(SHELL)
 
-set_cpp(WITH_RUNTIME)
-
 add_definitions(-DUNICODE -D_UNICODE)
-add_definitions(-D_ATL_NO_EXCEPTIONS)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND SOURCE
     CBandSite.cpp
@@ -16,10 +11,11 @@ list(APPEND SOURCE
     CSHEnumClassesOfCategories.cpp
     shellbars.h)
 
-add_library(shellbars ${SOURCE})
+add_library(shellbars OBJECT ${SOURCE})
+target_link_libraries(shellbars PRIVATE atl_classes)
 
-if(NOT MSVC)
-    target_compile_options(shellbars PRIVATE "-Wno-unused-but-set-variable")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(shellbars PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 add_pch(shellbars shellbars.h SOURCE)

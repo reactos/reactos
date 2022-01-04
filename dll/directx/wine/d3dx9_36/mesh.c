@@ -1,3 +1,7 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#include <rmxftmpl.h>
+#else
  /*
  * Mesh operations specific to D3DX9.
  *
@@ -24,21 +28,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include <assert.h>
-#ifdef HAVE_FLOAT_H
-# include <float.h>
-#endif
+#include <float.h>
 
 #include "d3dx9_private.h"
 #undef MAKE_DDHRESULT
 #include "dxfile.h"
 #include "rmxfguid.h"
 #include "rmxftmpl.h"
-#include "wine/unicode.h"
 #include "wine/list.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -1212,7 +1212,7 @@ struct vertex_metadata {
   DWORD first_shared_index;
 };
 
-static int compare_vertex_keys(const void *a, const void *b)
+static int __cdecl compare_vertex_keys(const void *a, const void *b)
 {
     const struct vertex_metadata *left = a;
     const struct vertex_metadata *right = b;
@@ -1590,10 +1590,10 @@ static void fill_attribute_table(DWORD *attrib_buffer, DWORD numfaces, void *ind
     attrib_table_size++;
 }
 
-static int attrib_entry_compare(const DWORD **a, const DWORD **b)
+static int __cdecl attrib_entry_compare(const void *a, const void *b)
 {
-    const DWORD *ptr_a = *a;
-    const DWORD *ptr_b = *b;
+    const DWORD *ptr_a = *(const DWORD **)a;
+    const DWORD *ptr_b = *(const DWORD **)b;
     int delta = *ptr_a - *ptr_b;
 
     if (delta)
@@ -1623,8 +1623,7 @@ static HRESULT remap_faces_for_attrsort(struct d3dx9_mesh *This, const DWORD *in
 
     for (i = 0; i < This->numfaces; i++)
         sorted_attrib_ptr_buffer[i] = &attrib_buffer[i];
-    qsort(sorted_attrib_ptr_buffer, This->numfaces, sizeof(*sorted_attrib_ptr_buffer),
-         (int(*)(const void *, const void *))attrib_entry_compare);
+    qsort(sorted_attrib_ptr_buffer, This->numfaces, sizeof(*sorted_attrib_ptr_buffer), attrib_entry_compare);
 
     for (i = 0; i < This->numfaces; i++)
     {
@@ -2411,20 +2410,21 @@ BOOL WINAPI D3DXIntersectTri(const D3DXVECTOR3 *p0, const D3DXVECTOR3 *p1, const
     return FALSE;
 }
 
-BOOL WINAPI D3DXSphereBoundProbe(const D3DXVECTOR3 *pcenter, float radius,
-        const D3DXVECTOR3 *prayposition, const D3DXVECTOR3 *praydirection)
+BOOL WINAPI D3DXSphereBoundProbe(const D3DXVECTOR3 *center, float radius,
+        const D3DXVECTOR3 *ray_position, const D3DXVECTOR3 *ray_direction)
 {
-    D3DXVECTOR3 difference;
-    FLOAT a, b, c, d;
+    D3DXVECTOR3 difference = {0};
+    float a, b, c, d;
 
-    a = D3DXVec3LengthSq(praydirection);
-    if (!D3DXVec3Subtract(&difference, prayposition, pcenter)) return FALSE;
-    b = D3DXVec3Dot(&difference, praydirection);
+    D3DXVec3Subtract(&difference, ray_position, center);
     c = D3DXVec3LengthSq(&difference) - radius * radius;
+    if (c < 0.0f)
+        return TRUE;
+    a = D3DXVec3LengthSq(ray_direction);
+    b = D3DXVec3Dot(&difference, ray_direction);
     d = b * b - a * c;
 
-    if ( ( d <= 0.0f ) || ( sqrt(d) <= b ) ) return FALSE;
-    return TRUE;
+    return d >= 0.0f && (b <= 0.0f || d > b * b);
 }
 
 /*************************************************************************
@@ -3330,8 +3330,8 @@ static HRESULT parse_mesh(ID3DXFileData *filedata, struct mesh_data *mesh_data, 
 
     if ((provide_flags & PROVIDE_SKININFO) && !mesh_data->skin_info)
     {
-        hr = create_dummy_skin(&mesh_data->skin_info);
-        if (FAILED(hr))
+        if (FAILED(hr = D3DXCreateSkinInfoFVF(mesh_data->num_vertices, mesh_data->fvf,
+                mesh_data->nb_bones, &mesh_data->skin_info)))
             goto end;
     }
 
@@ -5842,7 +5842,7 @@ static D3DXVECTOR2 *triangulation_get_next_point(struct triangulation *t, struct
     return &outline->items[i].pos;
 }
 
-static int compare_vertex_indices(const void *a, const void *b)
+static int __cdecl compare_vertex_indices(const void *a, const void *b)
 {
     const struct point2d_index *idx1 = a, *idx2 = b;
     const D3DXVECTOR2 *p1 = &idx1->outline->items[idx1->vertex].pos;
@@ -6153,7 +6153,7 @@ HRESULT WINAPI D3DXCreateTextW(struct IDirect3DDevice9 *device, HDC hdc, const W
     }
     oldfont = SelectObject(hdc, font);
 
-    textlen = strlenW(text);
+    textlen = lstrlenW(text);
     for (i = 0; i < textlen; i++)
     {
         int datasize = GetGlyphOutlineW(hdc, text[i], GGO_NATIVE, &gm, 0, NULL, &identity);

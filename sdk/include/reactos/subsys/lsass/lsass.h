@@ -35,7 +35,7 @@ typedef struct _LSA_CONNECTION_INFO
     ULONG Length;
     CHAR LogonProcessNameBuffer[LSASS_MAX_LOGON_PROCESS_NAME_LENGTH + 1];
     BOOL CreateContext;
-    BOOL Untrusted;
+    BOOL TrustedCaller;
 } LSA_CONNECTION_INFO, *PLSA_CONNECTION_INFO;
 
 

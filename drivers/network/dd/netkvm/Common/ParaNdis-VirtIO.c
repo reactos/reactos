@@ -209,7 +209,7 @@ static ULONGLONG mem_get_physical_address(void *context, void *virt)
         ULONG_PTR uBase = (ULONG_PTR)pContext->SharedMemoryRanges[i].pBase;
         if (uAddr >= uBase && uAddr < (uBase + pContext->SharedMemoryRanges[i].uLength)) {
             ULONGLONG retVal = pContext->SharedMemoryRanges[i].BasePA.QuadPart + (uAddr - uBase);
- 
+
             DPrintf(6, ("[%s] translated %p to %I64X\n", __FUNCTION__, virt, retVal));
             return retVal;
         }

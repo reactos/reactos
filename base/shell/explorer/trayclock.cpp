@@ -195,7 +195,7 @@ LRESULT CTrayClockWnd::OnThemeChanged()
     }
     else
     {
-        /* We don't need to set a font here, our parent will use 
+        /* We don't need to set a font here, our parent will use
             * WM_SETFONT to set the right one when themes are not enabled. */
         textColor = RGB(0, 0, 0);
     }
@@ -428,15 +428,6 @@ UINT CTrayClockWnd::CalculateDueTime()
     uiDueTime = 1000 - (UINT) LocalTime.wMilliseconds;
     if (!g_TaskbarSettings.bShowSeconds)
         uiDueTime += (59 - (UINT) LocalTime.wSecond) * 1000;
-
-    if (uiDueTime < USER_TIMER_MINIMUM || uiDueTime > USER_TIMER_MAXIMUM)
-        uiDueTime = 1000;
-    else
-    {
-        /* Add an artificial delay of 0.05 seconds to make sure the timer
-            doesn't fire too early*/
-        uiDueTime += 50;
-    }
 
     return uiDueTime;
 }

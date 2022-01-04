@@ -70,7 +70,7 @@ NdisWriteConfiguration(
     WCHAR Buff[11];
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-    
+
     NDIS_DbgPrint(MID_TRACE, ("Parameter type: %d\n", ParameterValue->ParameterType));
 
     /* reset parameter type to standard reg types */
@@ -553,7 +553,7 @@ NdisReadConfiguration(
         (*ParameterValue)->ParameterData.IntegerData = NDIS_VERSION;
         *Status = NDIS_STATUS_SUCCESS;
 
-        NDIS_DbgPrint(MAX_TRACE,("ParameterType = %0x%x, ParameterValue = 0x%x\n",
+        NDIS_DbgPrint(MAX_TRACE,("ParameterType = 0x%x, ParameterValue = 0x%x\n",
             (*ParameterValue)->ParameterType, (*ParameterValue)->ParameterData.IntegerData));
         return;
     }
@@ -661,7 +661,7 @@ NdisReadConfiguration(
     {
          UNICODE_STRING str;
          ULONG Base;
-        
+
          if (ParameterType == NdisParameterInteger)
              Base = 10;
          else if (ParameterType == NdisParameterHexInteger)
@@ -802,7 +802,7 @@ NdisReadNetworkAddress(
     }
 
     while (j < str.Length && str.Buffer[j] != '\0') j++;
-    
+
     *NetworkAddressLength = (j+1) >> 1;
 
     if ((*NetworkAddressLength) == 0)

@@ -37,9 +37,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(powrprof);
 
 static const WCHAR szPowerCfgSubKey[] =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg";
-static const WCHAR szUserPowerConfigSubKey[] = 
+static const WCHAR szUserPowerConfigSubKey[] =
     L"Control Panel\\PowerCfg";
-static const WCHAR szCurrentPowerPolicies[] = 
+static const WCHAR szCurrentPowerPolicies[] =
     L"CurrentPowerPolicy";
 static const WCHAR szPolicies[] = L"Policies";
 static const WCHAR szName[] = L"Name";
@@ -201,7 +201,7 @@ POWRPROF_GetMachinePowerPolicy(LPWSTR szNum, PMACHINE_POWER_POLICY pmachinePwrPo
 
     dwSize = sizeof(MACHINE_POWER_POLICY);
     Err = RegQueryValueExW(hKey, L"Policies", NULL, NULL, (LPBYTE)pmachinePwrPolicy, &dwSize);
-    
+
     if (Err != ERROR_SUCCESS)
     {
         ERR("RegQueryValueExW failed: %d\n", Err);
@@ -734,7 +734,7 @@ WriteProcessorPwrScheme(UINT ID,
 {
     WCHAR Buf[MAX_PATH];
     HKEY hKey;
-    
+
     swprintf(Buf, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\PowerCfg\\ProcessorPolicies\\%i", ID);
 
     if (RegCreateKey(HKEY_LOCAL_MACHINE, Buf, &hKey) != ERROR_SUCCESS)
@@ -940,7 +940,7 @@ ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
             SetLastError(ERROR_REVISION_MISMATCH);
             return FALSE;
         }
-        
+
 		//Lohnegrim: unneeded
         //if (pPP->mach.MinSleepAc < PowerSystemWorking)
         //{

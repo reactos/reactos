@@ -6,7 +6,7 @@
 //
 // Driver Initialization
 //
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 InbvDriverInitialize(
@@ -33,14 +33,14 @@ InbvBitBlt(
 //
 // Progress-Bar Functions
 //
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvIndicateProgress(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvSetProgressBarSubset(
@@ -48,7 +48,7 @@ InbvSetProgressBarSubset(
     _In_ ULONG Ceiling
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvUpdateProgressBar(
@@ -58,28 +58,28 @@ InbvUpdateProgressBar(
 //
 // Boot Splash-Screen Functions
 //
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 InbvRotBarInit(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 DisplayBootBitmap(
     IN BOOLEAN TextMode
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 DisplayFilter(
     IN PCHAR *String
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 FinalizeBootLogo(

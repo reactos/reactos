@@ -8,6 +8,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
 
 /* Make the code cleaner with some definitions for size multiples */
@@ -225,11 +229,6 @@ extern const ULONG MmProtectToValue[32];
 #else
 #error Define these please!
 #endif
-
-//
-// Special IRQL value (found in assertions)
-//
-#define MM_NOIRQL (KIRQL)0xFFFFFFFF
 
 //
 // Returns the color of a page
@@ -575,7 +574,6 @@ extern PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
 extern ULONG_PTR MxPfnAllocation;
 extern MM_PAGED_POOL_INFO MmPagedPoolInfo;
-extern RTL_BITMAP MiPfnBitMap;
 extern KGUARDED_MUTEX MmPagedPoolMutex;
 extern KGUARDED_MUTEX MmSectionCommitMutex;
 extern PVOID MmPagedPoolStart;
@@ -627,7 +625,6 @@ extern PFN_NUMBER MmMinimumFreePages;
 extern PFN_NUMBER MmPlentyFreePages;
 extern SIZE_T MmMinimumStackCommitInBytes;
 extern PFN_COUNT MiExpansionPoolPagesInitialCharge;
-extern PFN_NUMBER MmResidentAvailablePages;
 extern PFN_NUMBER MmResidentAvailableAtInit;
 extern ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
 extern PFN_NUMBER MmTotalSystemDriverPages;
@@ -663,6 +660,13 @@ extern LARGE_INTEGER MmCriticalSectionTimeout;
 extern LIST_ENTRY MmWorkingSetExpansionHead;
 extern KSPIN_LOCK MmExpansionLock;
 extern PETHREAD MiExpansionLockOwner;
+
+FORCEINLINE
+BOOLEAN
+MI_IS_PROCESS_WORKING_SET(PMMSUPPORT WorkingSet)
+{
+    return (WorkingSet != &MmSystemCacheWs) && !WorkingSet->Flags.SessionSpace;
+}
 
 FORCEINLINE
 BOOLEAN
@@ -725,7 +729,7 @@ FORCEINLINE
 BOOLEAN
 MiIsUserPte(PVOID Address)
 {
-    return (Address <= (PVOID)MiHighestUserPte);
+    return (Address >= (PVOID)PTE_BASE) && (Address <= (PVOID)MiHighestUserPte);
 }
 #endif
 
@@ -781,12 +785,23 @@ MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
     ASSERT(!MI_IS_SESSION_PTE(MappingPte));
     ASSERT((MappingPte < (PMMPTE)PDE_BASE) || (MappingPte > (PMMPTE)PDE_TOP));
 
+    /* Check that we are not setting valid a page that should not be */
+    ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
+    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+
     /* Start fresh */
-    *NewPte = ValidKernelPte;
+    NewPte->u.Long = 0;
 
     /* Set the protection and page */
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
+
+    /* Make this valid & global */
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    if (KeFeatureBits & KF_GLOBAL_PAGE)
+        NewPte->u.Hard.Global = 1;
+#endif
+    NewPte->u.Hard.Valid = 1;
 }
 
 //
@@ -799,6 +814,10 @@ MI_MAKE_HARDWARE_PTE(IN PMMPTE NewPte,
                      IN ULONG_PTR ProtectionMask,
                      IN PFN_NUMBER PageFrameNumber)
 {
+    /* Check that we are not setting valid a page that should not be */
+    ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
+    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+
     /* Set the protection and page */
     NewPte->u.Long = MiDetermineUserGlobalPteMask(MappingPte);
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
@@ -821,7 +840,10 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     /* Start fresh */
     NewPte->u.Long = 0;
 
-    /* Set the protection and page */
+    /* Check that we are not setting valid a page that should not be */
+    ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
+    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+
     NewPte->u.Hard.Valid = TRUE;
     NewPte->u.Hard.Owner = TRUE;
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
@@ -945,6 +967,10 @@ MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
     /* Write the valid PTE */
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(TempPte.u.Hard.Valid == 1);
+#if _M_AMD64
+    ASSERT(!MI_IS_PAGE_TABLE_ADDRESS(MiPteToAddress(PointerPte)) ||
+           (TempPte.u.Hard.NoExecute == 0));
+#endif
     *PointerPte = TempPte;
 }
 
@@ -999,6 +1025,9 @@ MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
 {
     /* Write the valid PDE */
     ASSERT(PointerPde->u.Hard.Valid == 0);
+#ifdef _M_AMD64
+    ASSERT(PointerPde->u.Hard.NoExecute == 0);
+#endif
     ASSERT(TempPde.u.Hard.Valid == 1);
     *PointerPde = TempPde;
 }
@@ -1014,6 +1043,9 @@ MI_WRITE_INVALID_PDE(IN PMMPDE PointerPde,
     /* Write the invalid PDE */
     ASSERT(InvalidPde.u.Hard.Valid == 0);
     ASSERT(InvalidPde.u.Long != 0);
+#ifdef _M_AMD64
+    ASSERT(InvalidPde.u.Soft.Protection == MM_EXECUTE_READWRITE);
+#endif
     *PointerPde = InvalidPde;
 }
 
@@ -1031,6 +1063,15 @@ MM_ANY_WS_LOCK_HELD(IN PETHREAD Thread)
             (Thread->OwnsSystemWorkingSetShared) ||
             (Thread->OwnsSessionWorkingSetExclusive) ||
             (Thread->OwnsSessionWorkingSetShared));
+}
+
+FORCEINLINE
+BOOLEAN
+MM_ANY_WS_LOCK_HELD_EXCLUSIVE(_In_ PETHREAD Thread)
+{
+    return ((Thread->OwnsProcessWorkingSetExclusive) ||
+            (Thread->OwnsSystemWorkingSetExclusive) ||
+            (Thread->OwnsSessionWorkingSetExclusive));
 }
 
 //
@@ -1059,11 +1100,9 @@ MI_WS_OWNER(IN PEPROCESS Process)
 //
 FORCEINLINE
 BOOLEAN
-MiIsRosSectionObject(IN PVOID Section)
+MiIsRosSectionObject(IN PSECTION Section)
 {
-    PROS_SECTION_OBJECT RosSection = Section;
-    if ((RosSection->Type == 'SC') && (RosSection->Size == 'TN')) return TRUE;
-    return FALSE;
+    return Section->u.Flags.filler;
 }
 
 #define MI_IS_ROS_PFN(x)     ((x)->u4.AweAllocation == TRUE)
@@ -1267,6 +1306,48 @@ MiLockWorkingSet(IN PETHREAD Thread,
     }
 }
 
+FORCEINLINE
+VOID
+MiLockWorkingSetShared(
+    _In_ PETHREAD Thread,
+    _In_ PMMSUPPORT WorkingSet)
+{
+    /* Block APCs */
+    KeEnterGuardedRegion();
+
+    /* Working set should be in global memory */
+    ASSERT(MI_IS_SESSION_ADDRESS((PVOID)WorkingSet) == FALSE);
+
+    /* Thread shouldn't already be owning something */
+    ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
+
+    /* Lock this working set */
+    ExAcquirePushLockShared(&WorkingSet->WorkingSetMutex);
+
+    /* Which working set is this? */
+    if (WorkingSet == &MmSystemCacheWs)
+    {
+        /* Own the system working set */
+        ASSERT((Thread->OwnsSystemWorkingSetExclusive == FALSE) &&
+               (Thread->OwnsSystemWorkingSetShared == FALSE));
+        Thread->OwnsSystemWorkingSetShared = TRUE;
+    }
+    else if (WorkingSet->Flags.SessionSpace)
+    {
+        /* Own the session working set */
+        ASSERT((Thread->OwnsSessionWorkingSetExclusive == FALSE) &&
+               (Thread->OwnsSessionWorkingSetShared == FALSE));
+        Thread->OwnsSessionWorkingSetShared = TRUE;
+    }
+    else
+    {
+        /* Own the process working set */
+        ASSERT((Thread->OwnsProcessWorkingSetExclusive == FALSE) &&
+               (Thread->OwnsProcessWorkingSetShared == FALSE));
+        Thread->OwnsProcessWorkingSetShared = TRUE;
+    }
+}
+
 //
 // Unlocks the working set
 //
@@ -1282,22 +1363,22 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
     if (WorkingSet == &MmSystemCacheWs)
     {
         /* Release the system working set */
-        ASSERT((Thread->OwnsSystemWorkingSetExclusive == TRUE) ||
-               (Thread->OwnsSystemWorkingSetShared == TRUE));
+        ASSERT((Thread->OwnsSystemWorkingSetExclusive == TRUE) &&
+               (Thread->OwnsSystemWorkingSetShared == FALSE));
         Thread->OwnsSystemWorkingSetExclusive = FALSE;
     }
     else if (WorkingSet->Flags.SessionSpace)
     {
         /* Release the session working set */
-        ASSERT((Thread->OwnsSessionWorkingSetExclusive == TRUE) ||
-               (Thread->OwnsSessionWorkingSetShared == TRUE));
-        Thread->OwnsSessionWorkingSetExclusive = 0;
+        ASSERT((Thread->OwnsSessionWorkingSetExclusive == TRUE) &&
+               (Thread->OwnsSessionWorkingSetShared == FALSE));
+        Thread->OwnsSessionWorkingSetExclusive = FALSE;
     }
     else
     {
         /* Release the process working set */
-        ASSERT((Thread->OwnsProcessWorkingSetExclusive) ||
-               (Thread->OwnsProcessWorkingSetShared));
+        ASSERT((Thread->OwnsProcessWorkingSetExclusive == TRUE) &&
+               (Thread->OwnsProcessWorkingSetShared == FALSE));
         Thread->OwnsProcessWorkingSetExclusive = FALSE;
     }
 
@@ -1306,6 +1387,85 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
 
     /* Unblock APCs */
     KeLeaveGuardedRegion();
+}
+
+FORCEINLINE
+VOID
+MiUnlockWorkingSetShared(
+    _In_ PETHREAD Thread,
+    _In_ PMMSUPPORT WorkingSet)
+{
+    /* Working set should be in global memory */
+    ASSERT(MI_IS_SESSION_ADDRESS((PVOID)WorkingSet) == FALSE);
+
+    /* Which working set is this? */
+    if (WorkingSet == &MmSystemCacheWs)
+    {
+        /* Release the system working set */
+        ASSERT((Thread->OwnsSystemWorkingSetExclusive == FALSE) &&
+               (Thread->OwnsSystemWorkingSetShared == TRUE));
+        Thread->OwnsSystemWorkingSetShared = FALSE;
+    }
+    else if (WorkingSet->Flags.SessionSpace)
+    {
+        /* Release the session working set */
+        ASSERT((Thread->OwnsSessionWorkingSetExclusive == FALSE) &&
+               (Thread->OwnsSessionWorkingSetShared == TRUE));
+        Thread->OwnsSessionWorkingSetShared = FALSE;
+    }
+    else
+    {
+        /* Release the process working set */
+        ASSERT((Thread->OwnsProcessWorkingSetExclusive == FALSE) &&
+               (Thread->OwnsProcessWorkingSetShared == TRUE));
+        Thread->OwnsProcessWorkingSetShared = FALSE;
+    }
+
+    /* Release the working set lock */
+    ExReleasePushLockShared(&WorkingSet->WorkingSetMutex);
+
+    /* Unblock APCs */
+    KeLeaveGuardedRegion();
+}
+
+FORCEINLINE
+BOOLEAN
+MiConvertSharedWorkingSetLockToExclusive(
+    _In_ PETHREAD Thread,
+    _In_ PMMSUPPORT Vm)
+{
+    /* Sanity check: No exclusive lock. */
+    ASSERT(!Thread->OwnsProcessWorkingSetExclusive);
+    ASSERT(!Thread->OwnsSessionWorkingSetExclusive);
+    ASSERT(!Thread->OwnsSystemWorkingSetExclusive);
+
+    /* And it should have one and only one shared lock */
+    ASSERT((Thread->OwnsProcessWorkingSetShared + Thread->OwnsSessionWorkingSetShared + Thread->OwnsSystemWorkingSetShared) == 1);
+
+    /* Try. */
+    if (!ExConvertPushLockSharedToExclusive(&Vm->WorkingSetMutex))
+        return FALSE;
+
+    if (Vm == &MmSystemCacheWs)
+    {
+        ASSERT(Thread->OwnsSystemWorkingSetShared);
+        Thread->OwnsSystemWorkingSetShared = FALSE;
+        Thread->OwnsSystemWorkingSetExclusive = TRUE;
+    }
+    else if (Vm->Flags.SessionSpace)
+    {
+        ASSERT(Thread->OwnsSessionWorkingSetShared);
+        Thread->OwnsSessionWorkingSetShared = FALSE;
+        Thread->OwnsSessionWorkingSetExclusive = TRUE;
+    }
+    else
+    {
+        ASSERT(Thread->OwnsProcessWorkingSetShared);
+        Thread->OwnsProcessWorkingSetShared = FALSE;
+        Thread->OwnsProcessWorkingSetExclusive = TRUE;
+    }
+
+    return TRUE;
 }
 
 FORCEINLINE
@@ -1658,42 +1818,9 @@ MiReferenceUnusedPageAndBumpLockCount(IN PMMPFN Pfn1)
     }
 }
 
-FORCEINLINE
-VOID
-MiIncrementPageTableReferences(IN PVOID Address)
-{
-    PUSHORT RefCount;
 
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
 
-    *RefCount += 1;
-    ASSERT(*RefCount <= PTE_PER_PAGE);
-}
-
-FORCEINLINE
-VOID
-MiDecrementPageTableReferences(IN PVOID Address)
-{
-    PUSHORT RefCount;
-
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
-
-    *RefCount -= 1;
-    ASSERT(*RefCount < PTE_PER_PAGE);
-}
-
-FORCEINLINE
-USHORT
-MiQueryPageTableReferences(IN PVOID Address)
-{
-    PUSHORT RefCount;
-
-    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
-
-    return *RefCount;
-}
-
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 MmArmInitSystem(
@@ -1701,40 +1828,40 @@ MmArmInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeSessionSpaceLayout(VOID);
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MiInitMachineDependent(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiComputeColorInformation(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiMapPfnDatabase(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeColorTables(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializePfnDatabase(
@@ -1753,21 +1880,21 @@ MiInitializeSessionIds(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 MiInitializeMemoryEvents(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 PFN_NUMBER
 NTAPI
 MxGetNextPage(
     IN PFN_NUMBER PageCount
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 PPHYSICAL_MEMORY_DESCRIPTOR
 NTAPI
 MmInitializeMemoryLimits(
@@ -1814,28 +1941,21 @@ MiCheckPdeForPagedPool(
     IN PVOID Address
 );
 
-INIT_FUNCTION
-VOID
-NTAPI
-MiInitializeNonPagedPool(
-    VOID
-);
-
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeNonPagedPoolThresholds(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializePoolEvents(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID                      //
 NTAPI                     //
 InitializePool(           //
@@ -1844,7 +1964,7 @@ InitializePool(           //
 );                        //
 
 // FIXFIX: THIS ONE TOO
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExInitializePoolDescriptor(
@@ -1861,7 +1981,7 @@ MiInitializeSessionPool(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeSystemPtes(
@@ -2023,21 +2143,21 @@ MiLookupDataTableEntry(
     IN PVOID Address
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeDriverLargePageList(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeLargePageSupport(
     VOID
 );
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiSyncCachedRanges(
@@ -2275,12 +2395,6 @@ MiRosUnmapViewInSystemSpace(
     IN PVOID MappedBase
 );
 
-POOL_TYPE
-NTAPI
-MmDeterminePoolType(
-    IN PVOID PoolAddress
-);
-
 VOID
 NTAPI
 MiMakePdeExistAndMakeValid(
@@ -2331,5 +2445,118 @@ MiSynchronizeSystemPde(PMMPDE PointerPde)
     return SystemPde.u.Hard.Valid != 0;
 }
 #endif
+
+#if _MI_PAGING_LEVELS == 2
+FORCEINLINE
+USHORT
+MiIncrementPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    *RefCount += 1;
+    ASSERT(*RefCount <= PTE_PER_PAGE);
+    return *RefCount;
+}
+
+FORCEINLINE
+USHORT
+MiDecrementPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    *RefCount -= 1;
+    ASSERT(*RefCount < PTE_PER_PAGE);
+    return *RefCount;
+}
+#else
+FORCEINLINE
+USHORT
+MiIncrementPageTableReferences(IN PVOID Address)
+{
+    PMMPDE PointerPde = MiAddressToPde(Address);
+    PMMPFN Pfn;
+
+    /* We should not tinker with this one. */
+    ASSERT(PointerPde != (PMMPDE)PXE_SELFMAP);
+    DPRINT("Incrementing %p from %p\n", Address, _ReturnAddress());
+
+    /* Make sure we're locked */
+    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
+
+    /* If we're bumping refcount, then it must be valid! */
+    ASSERT(PointerPde->u.Hard.Valid == 1);
+
+    /* This lies on the PFN */
+    Pfn = MiGetPfnEntry(PFN_FROM_PDE(PointerPde));
+    Pfn->OriginalPte.u.Soft.UsedPageTableEntries++;
+
+    ASSERT(Pfn->OriginalPte.u.Soft.UsedPageTableEntries <= PTE_PER_PAGE);
+
+    return Pfn->OriginalPte.u.Soft.UsedPageTableEntries;
+}
+
+FORCEINLINE
+USHORT
+MiDecrementPageTableReferences(IN PVOID Address)
+{
+    PMMPDE PointerPde = MiAddressToPde(Address);
+    PMMPFN Pfn;
+
+    /* We should not tinker with this one. */
+    ASSERT(PointerPde != (PMMPDE)PXE_SELFMAP);
+
+    DPRINT("Decrementing %p from %p\n", PointerPde, _ReturnAddress());
+
+    /* Make sure we're locked */
+    ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
+
+    /* If we're decreasing refcount, then it must be valid! */
+    ASSERT(PointerPde->u.Hard.Valid == 1);
+
+    /* This lies on the PFN */
+    Pfn = MiGetPfnEntry(PFN_FROM_PDE(PointerPde));
+
+    ASSERT(Pfn->OriginalPte.u.Soft.UsedPageTableEntries != 0);
+    Pfn->OriginalPte.u.Soft.UsedPageTableEntries--;
+
+    ASSERT(Pfn->OriginalPte.u.Soft.UsedPageTableEntries < PTE_PER_PAGE);
+
+    return Pfn->OriginalPte.u.Soft.UsedPageTableEntries;
+}
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+FORCEINLINE
+VOID
+MiDeletePde(
+    _In_ PMMPDE PointerPde,
+    _In_ PEPROCESS CurrentProcess)
+{
+    /* Only for user-mode ones */
+    ASSERT(MiIsUserPde(PointerPde));
+
+    /* Kill this one as a PTE */
+    MiDeletePte((PMMPTE)PointerPde, MiPdeToPte(PointerPde), CurrentProcess, NULL);
+#if _MI_PAGING_LEVELS >= 3
+    /* Cascade down */
+    if (MiDecrementPageTableReferences(MiPdeToPte(PointerPde)) == 0)
+    {
+        MiDeletePte(MiPdeToPpe(PointerPde), PointerPde, CurrentProcess, NULL);
+#if _MI_PAGING_LEVELS == 4
+        if (MiDecrementPageTableReferences(PointerPde) == 0)
+        {
+            MiDeletePte(MiPdeToPxe(PointerPde), MiPdeToPpe(PointerPde), CurrentProcess, NULL);
+        }
+#endif
+    }
+#endif
+}
 
 /* EOF */

@@ -4,9 +4,9 @@
 # [MODULE] A short but descriptive summary (#pr-num)
 #
 # A comprehensible description of WHY you did this work. Do not limit
-# yourself here. 
-# The width of the description is arbitary, but it is a good idea to 
-# wrap the text by 72 chars. 
+# yourself here.
+# The width of the description is arbitary, but it is a good idea to
+# wrap the text by 72 chars.
 #
 # CORE-XXXX CIDXXXXX
 # ----------------------
@@ -17,6 +17,6 @@
 # * Description of a commit should explain WHY a change was made.
 # * JIRA, Coverity ID references should be placed at the bottom row.
 # * There must be a newline between summary, description and bug IDs.
-# * GitHub Pull Request ID should be referenced in the summary in 
-#   parens. If the resulting summary is longer than 70 chars it may 
+# * GitHub Pull Request ID should be referenced in the summary in
+#   parens. If the resulting summary is longer than 70 chars it may
 #   be placed last in the ID row to prevent hard wrapping on GitHub.

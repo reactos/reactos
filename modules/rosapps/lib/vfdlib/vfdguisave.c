@@ -422,7 +422,7 @@ void OnBrowse(
 	ofn.lpstrInitialDir = dir;
 	ofn.lpstrTitle	= title ? title : "Save Image";
 	ofn.lpstrFilter	= "*.*\0*.*\0";
-	ofn.Flags		= OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+	ofn.Flags		= OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
 
 	if (GetSaveFileName(&ofn)) {
 		SetDlgItemText(hDlg, IDC_TARGETFILE, file);

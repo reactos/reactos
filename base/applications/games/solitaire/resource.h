@@ -8,11 +8,12 @@
 
 /* Menu */
 #define IDM_GAME_NEW      1001
-#define IDM_GAME_DECK     1002
-#define IDM_GAME_OPTIONS  1003
-#define IDM_GAME_EXIT     1004
-#define IDM_HELP_CONTENTS 1005
-#define IDM_HELP_ABOUT    1006
+#define IDM_GAME_UNDO     1002
+#define IDM_GAME_DECK     1003
+#define IDM_GAME_OPTIONS  1004
+#define IDM_GAME_EXIT     1005
+#define IDM_HELP_CONTENTS 1006
+#define IDM_HELP_ABOUT    1007
 
 /* Dialogs */
 #define IDD_OPTIONS       1200

@@ -77,10 +77,11 @@ KiInitializeContextThread(IN PKTHREAD Thread,
 
         /* Zero out the trap frame */
         RtlZeroMemory(TrapFrame, sizeof(KTRAP_FRAME));
+        RtlZeroMemory(&InitFrame->ExceptionFrame, sizeof(KEXCEPTION_FRAME));
 
         /* Set up a trap frame from the context. */
         KeContextToTrapFrame(Context,
-                             NULL,
+                             &InitFrame->ExceptionFrame,
                              TrapFrame,
                              CONTEXT_AMD64 | ContextFlags,
                              UserMode);
@@ -137,9 +138,9 @@ KiInitializeContextThread(IN PKTHREAD Thread,
 
 BOOLEAN
 KiSwapContextResume(
-    IN PKTHREAD NewThread,
-    IN PKTHREAD OldThread,
-    IN BOOLEAN ApcBypass)
+    _In_ BOOLEAN ApcBypass,
+    _In_ PKTHREAD OldThread,
+    _In_ PKTHREAD NewThread)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     PKPROCESS OldProcess, NewProcess;
@@ -183,18 +184,22 @@ KiSwapContextResume(
                      0);
     }
 
+    /* Old thread os no longer busy */
+    OldThread->SwapBusy = FALSE;
+
     /* Kernel APCs may be pending */
     if (NewThread->ApcState.KernelApcPending)
     {
         /* Are APCs enabled? */
-        if (!NewThread->SpecialApcDisable)
+        if ((NewThread->SpecialApcDisable == 0) &&
+            (ApcBypass == 0))
         {
-            /* Request APC delivery */
-            if (!ApcBypass)
-                HalRequestSoftwareInterrupt(APC_LEVEL);
-            else
-                return TRUE;
+            /* Return TRUE to indicate that we want APCs to be delivered */
+            return TRUE;
         }
+
+        /* Request an APC interrupt to be delivered later */
+        HalRequestSoftwareInterrupt(APC_LEVEL);
     }
 
     /* Return stating that no kernel APCs are pending*/

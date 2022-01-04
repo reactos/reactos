@@ -37,7 +37,7 @@ InstallVBRToPartition(
     IN PUNICODE_STRING SystemRootPath,
     IN PUNICODE_STRING SourceRootPath,
     IN PUNICODE_STRING DestinationArcPath,
-    IN UCHAR PartitionType);
+    IN PCWSTR FileSystemName);
 
 NTSTATUS
 InstallFatBootcodeToFloppy(

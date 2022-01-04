@@ -7,9 +7,9 @@
  * and http://win.tue.nl/~aeb/linux/kbd/scancodes-1.html
  */
 
-/* 
+/*
  * Important Note / TODO:
- * This file is a copy of kbdus.c and needs to adapt to Korean 
+ * This file is a copy of kbdus.c and needs to adapt to Korean
  * keyboard layout!
  */
 

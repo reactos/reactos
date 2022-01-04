@@ -7,13 +7,13 @@
 * The authors hereby grant permission to use, copy, modify, distribute,
 * and license this software and its documentation for any purpose, provided
 * that existing copyright notices are retained in all copies and that this
-* notice and the following disclaimer are included verbatim in any 
+* notice and the following disclaimer are included verbatim in any
 * distributions. No written agreement, license, or royalty fee is required
 * for any of the authorized uses.
 *
 * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS *AS IS* AND ANY EXPRESS OR
 * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
 * IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
 * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
@@ -479,7 +479,7 @@ link_established(int unit)
   if (go->neg_chap) {
     ChapAuthPeer(unit, ppp_settings.our_name, go->chap_mdtype);
     auth |= CHAP_PEER;
-  } 
+  }
 #endif /* CHAP_SUPPORT */
 #if PAP_SUPPORT && CHAP_SUPPORT
   else
@@ -610,7 +610,7 @@ auth_peer_success(int unit, u16_t protocol, char *name, int namelen)
   }
   BCOPY(name, peer_authname, namelen);
   peer_authname[namelen] = 0;
-  
+
   /*
    * If there is no more authentication still to be done,
    * proceed to the network (or callback) phase.
@@ -749,7 +749,7 @@ check_idle(void *arg)
 {
   struct ppp_idle idle;
   u_short itime;
-  
+
   LWIP_UNUSED_ARG(arg);
   if (!get_idle_time(0, &idle)) {
     return;
@@ -802,7 +802,7 @@ auth_check_options(void)
     wo->neg_chap = 1;
     wo->neg_upap = 1;
   }
-  
+
   /*
    * Check whether we have appropriate secrets to use
    * to authenticate the peer.
@@ -876,7 +876,7 @@ check_passwd( int unit, char *auser, int userlen, char *apasswd, int passwdlen, 
   char passwd[256], user[256];
   char secret[MAXWORDLEN];
   static u_short attempts = 0;
-  
+
   /*
    * Make copies of apasswd and auser, then null-terminate them.
    */
@@ -888,7 +888,7 @@ check_passwd( int unit, char *auser, int userlen, char *apasswd, int passwdlen, 
 
   /* XXX Validate user name and password. */
   ret = UPAP_AUTHACK;     /* XXX Assume all entries OK. */
-      
+
   if (ret == UPAP_AUTHNAK) {
     if (*msg == (char *) 0) {
       *msg = "Login incorrect";
@@ -963,7 +963,7 @@ plogin(char *user, char *passwd, char **msg, int *msglen)
   LWIP_UNUSED_ARG(msglen);
 
 
- /* The new lines are here align the file when 
+ /* The new lines are here align the file when
   * compared against the pppd 2.3.11 code */
 
 
@@ -1101,7 +1101,7 @@ get_secret(int unit, char *client, char *server, char *secret, int *secret_len, 
   int ret = 0, len;
   struct wordlist *addrs;
   char secbuf[MAXWORDLEN];
-  
+
   addrs = NULL;
   secbuf[0] = 0;
 
@@ -1152,7 +1152,7 @@ set_allowed_addrs(int unit, struct wordlist *addrs)
     struct ipcp_options *wo = &ipcp_wantoptions[unit];
     u32_t a;
     struct hostent *hp;
-    
+
     if (wo->hisaddr == 0 && *p != '!' && *p != '-' && strchr(p, '/') == NULL) {
       hp = gethostbyname(p);
       if (hp != NULL && hp->h_addrtype == AF_INET) {

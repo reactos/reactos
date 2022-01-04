@@ -509,7 +509,7 @@ const MUI_LANGUAGE MUILanguageList[] =
     {L"00001004", L"936", L"936", L"10008", L"Chinese (Singapore)", L"215", ChineseSimplifiedFonts, zhSGLayouts},
 #endif
 #ifdef LANGUAGE_ZH_MO
-    {L"00001404", L"950", L"950", L"10002", L"Chinese (Macau S.A.R.)", L"151", ChineseSimplifiedFonts, zhMOLayouts},
+    {L"00001404", L"950", L"950", L"10002", L"Chinese (Macau S.A.R.)", L"151", ChineseTraditionalFonts, zhMOLayouts},
 #endif
 #ifdef LANGUAGE_HR_HR
     {L"0000041A", L"1250", L"852", L"10029", L"Croatian", L"108", LatinFonts, hrHRLayouts},

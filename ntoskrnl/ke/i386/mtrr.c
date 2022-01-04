@@ -16,7 +16,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeMTRR(IN BOOLEAN FinalCpu)
@@ -25,7 +25,7 @@ KiInitializeMTRR(IN BOOLEAN FinalCpu)
     DPRINT("MTRR support detected but not yet taken advantage of\n");
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiAmdK6InitializeMTRR(VOID)

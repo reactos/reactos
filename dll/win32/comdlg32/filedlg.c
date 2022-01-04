@@ -79,6 +79,8 @@
 #include "wine/heap.h"
 #ifdef __REACTOS__
 #include "wine/unicode.h"
+EXTERN_C HRESULT DoInitAutoCompleteWithCWD(FileOpenDlgInfos *pInfo, HWND hwndEdit);
+EXTERN_C HRESULT DoReleaseAutoCompleteWithCWD(FileOpenDlgInfos *pInfo);
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
@@ -1558,6 +1560,7 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
               s_hFileDialogHook = NULL;
           }
           LeaveCriticalSection(&COMDLG32_OpenFileLock);
+          DoReleaseAutoCompleteWithCWD(fodInfos);
 #endif
           return FALSE;
       }
@@ -2030,6 +2033,9 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
 
   /* Initialize the filter combo box */
   FILEDLG95_FILETYPE_Init(hwnd);
+#ifdef __REACTOS__
+  DoInitAutoCompleteWithCWD(fodInfos, fodInfos->DlgInfos.hwndFileName);
+#endif
 
   return 0;
 }

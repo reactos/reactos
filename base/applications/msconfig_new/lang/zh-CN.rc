@@ -4,7 +4,7 @@
  *              Li Keqing <auroracloud4096@gmail.com>
  *              Luo Yufan <njlyf2011@hotmail.com>
  */
- 
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 229, 98

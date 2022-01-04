@@ -186,7 +186,7 @@ KiTimerExpiration(IN PKDPC Dpc,
                 if (TimerDpc)
                 {
 #ifdef CONFIG_SMP
-                    /* 
+                    /*
                      * If the DPC is targeted to another processor,
                      * then insert it into that processor's DPC queue
                      * instead of delivering it now.
@@ -350,26 +350,26 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
 
     /* Query system */
     KeQuerySystemTime((PLARGE_INTEGER)&SystemTime);
-    
+
     /* Loop expired list */
     while (ExpiredListHead->Flink != ExpiredListHead)
     {
         /* Get the current timer */
         Timer = CONTAINING_RECORD(ExpiredListHead->Flink, KTIMER, TimerListEntry);
-        
+
         /* Remove it */
         RemoveEntryList(&Timer->TimerListEntry);
-        
+
         /* Not inserted */
         Timer->Header.Inserted = FALSE;
-        
+
         /* Signal it */
         Timer->Header.SignalState = 1;
-        
+
         /* Get the DPC and period */
         TimerDpc = Timer->Dpc;
         Period = Timer->Period;
-        
+
         /* Check if there's any waiters */
         if (!IsListEmpty(&Timer->Header.WaitListHead))
         {
@@ -385,7 +385,7 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
                 KxUnwaitThreadForEvent((PKEVENT)Timer, IO_NO_INCREMENT);
             }
         }
-        
+
         /* Check if we have a period */
         if (Period)
         {
@@ -398,7 +398,7 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
         if (TimerDpc)
         {
 #ifdef CONFIG_SMP
-            /* 
+            /*
              * If the DPC is targeted to another processor,
              * then insert it into that processor's DPC queue
              * instead of delivering it now.
@@ -428,13 +428,13 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
             }
         }
     }
-    
+
     /* Check if we still have DPC entries */
     if (DpcCalls)
     {
         /* Release the dispatcher while doing DPCs */
         KiReleaseDispatcherLock(DISPATCH_LEVEL);
-        
+
         /* Start looping all DPC Entries */
         for (i = 0; DpcCalls; DpcCalls--, i++)
         {
@@ -449,7 +449,7 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
                                 UlongToPtr(SystemTime.LowPart),
                                 UlongToPtr(SystemTime.HighPart));
         }
-        
+
         /* Lower IRQL */
         KeLowerIrql(OldIrql);
     }
@@ -460,6 +460,7 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
     }
 }
 
+_Requires_lock_not_held_(Prcb->PrcbLock)
 VOID
 NTAPI
 KiQuantumEnd(VOID)

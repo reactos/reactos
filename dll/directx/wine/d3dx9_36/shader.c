@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright 2008 Luis Busquets
  * Copyright 2009 Matteo Bruni
@@ -19,13 +22,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 #include <stdio.h>
-
 #include "d3dx9_private.h"
 #include "d3dcommon.h"
 #include "d3dcompiler.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -428,6 +429,9 @@ HRESULT WINAPI D3DXCompileShader(const char *data, UINT length, const D3DXMACRO 
             debugstr_a(data), length, defines, include, debugstr_a(function), debugstr_a(profile),
             flags, shader, error_msgs, constant_table);
 
+    if (D3DX_SDK_VERSION <= 36)
+        flags |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
+
     hr = D3DCompile(data, length, NULL, (D3D_SHADER_MACRO *)defines, (ID3DInclude *)include,
                     function, profile, flags, 0, (ID3DBlob **)shader, (ID3DBlob **)error_msgs);
 
@@ -542,6 +546,9 @@ HRESULT WINAPI D3DXCompileShaderFromFileW(const WCHAR *filename, const D3DXMACRO
         HeapFree(GetProcessHeap(), 0, filename_a);
         return D3DXERR_INVALIDDATA;
     }
+
+    if (D3DX_SDK_VERSION <= 36)
+        flags |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
 
     hr = D3DCompile(buffer, len, filename_a, (const D3D_SHADER_MACRO *)defines,
                     (ID3DInclude *)include, entrypoint, profile, flags, 0,
@@ -2108,25 +2115,218 @@ HRESULT WINAPI D3DXGetShaderConstantTable(const DWORD *byte_code, ID3DXConstantT
     return D3DXGetShaderConstantTableEx(byte_code, 0, constant_table);
 }
 
-HRESULT WINAPI D3DXCreateFragmentLinker(IDirect3DDevice9 *device, UINT size, ID3DXFragmentLinker **linker)
+struct d3dx9_fragment_linker
 {
-    FIXME("device %p, size %u, linker %p: stub.\n", device, size, linker);
+    ID3DXFragmentLinker ID3DXFragmentLinker_iface;
+    LONG ref;
 
-    if (linker)
-        *linker = NULL;
+    struct IDirect3DDevice9 *device;
+    DWORD flags;
+};
 
+static inline struct d3dx9_fragment_linker *impl_from_ID3DXFragmentLinker(ID3DXFragmentLinker *iface)
+{
+    return CONTAINING_RECORD(iface, struct d3dx9_fragment_linker, ID3DXFragmentLinker_iface);
+}
+
+static HRESULT WINAPI d3dx9_fragment_linker_QueryInterface(ID3DXFragmentLinker *iface, REFIID riid, void **out)
+{
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
+
+    if (IsEqualGUID(riid, &IID_IUnknown)
+            || IsEqualGUID(riid, &IID_ID3DXFragmentLinker))
+    {
+        iface->lpVtbl->AddRef(iface);
+        *out = iface;
+        return D3D_OK;
+    }
+
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+    *out = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI d3dx9_fragment_linker_AddRef(ID3DXFragmentLinker *iface)
+{
+    struct d3dx9_fragment_linker *linker = impl_from_ID3DXFragmentLinker(iface);
+    ULONG refcount = InterlockedIncrement(&linker->ref);
+
+    TRACE("%p increasing refcount to %u.\n", linker, refcount);
+
+    return refcount;
+}
+
+static ULONG WINAPI d3dx9_fragment_linker_Release(ID3DXFragmentLinker *iface)
+{
+    struct d3dx9_fragment_linker *linker = impl_from_ID3DXFragmentLinker(iface);
+    ULONG refcount = InterlockedDecrement(&linker->ref);
+
+    TRACE("%p decreasing refcount to %u.\n", linker, refcount);
+
+    if (!refcount)
+    {
+        IDirect3DDevice9_Release(linker->device);
+        heap_free(linker);
+    }
+
+    return refcount;
+}
+
+static HRESULT WINAPI d3dx9_fragment_linker_GetDevice(ID3DXFragmentLinker *iface, struct IDirect3DDevice9 **device)
+{
+    struct d3dx9_fragment_linker *linker = impl_from_ID3DXFragmentLinker(iface);
+
+    TRACE("iface %p, device %p.\n", linker, device);
+
+    if (!device)
+    {
+        WARN("Invalid argument supplied.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    IDirect3DDevice9_AddRef(linker->device);
+    *device = linker->device;
+    TRACE("Returning device %p.\n", *device);
+
+    return S_OK;
+}
+
+static UINT WINAPI d3dx9_fragment_linker_GetNumberOfFragments(ID3DXFragmentLinker *iface)
+{
+    FIXME("iface %p: stub.\n", iface);
 
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI D3DXCreateFragmentLinkerEx(IDirect3DDevice9 *device, UINT size, DWORD flags, ID3DXFragmentLinker **linker)
+static D3DXHANDLE WINAPI d3dx9_fragment_linker_GetFragmentHandleByIndex(ID3DXFragmentLinker *iface, UINT index)
 {
-    FIXME("device %p, size %u, flags %#x, linker %p: stub.\n", device, size, flags, linker);
+    FIXME("iface %p, index %u: stub.\n", iface, index);
 
-    if (linker)
-        *linker = NULL;
+    return NULL;
+}
+
+static D3DXHANDLE WINAPI d3dx9_fragment_linker_GetFragmentHandleByName(ID3DXFragmentLinker *iface,
+        const char *name)
+{
+    FIXME("iface %p, name %s: stub.\n", iface, debugstr_a(name));
+
+    return NULL;
+}
+
+static HRESULT WINAPI d3dx9_fragment_linker_GetFragmentDesc(ID3DXFragmentLinker *iface, D3DXHANDLE name,
+        D3DXFRAGMENT_DESC *desc)
+{
+    FIXME("iface %p, name %p, desc %p: stub.\n", iface, name, desc);
 
     return E_NOTIMPL;
+}
+
+static HRESULT WINAPI d3dx9_fragment_linker_AddFragments(ID3DXFragmentLinker *iface, const DWORD *fragments)
+{
+    FIXME("iface %p, fragments %p: stub.\n", iface, fragments);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI d3dx9_fragment_linker_GetAllFragments(ID3DXFragmentLinker *iface, ID3DXBuffer **buffer)
+{
+    FIXME("iface %p, buffer %p: stub.\n", iface, buffer);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI d3dx9_fragment_linker_GetFragment(ID3DXFragmentLinker *iface, D3DXHANDLE name,
+        ID3DXBuffer **buffer)
+{
+    FIXME("iface %p, name %p, buffer %p: stub.\n", iface, name, buffer);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI d3dx9_fragment_linker_LinkShader(ID3DXFragmentLinker *iface, const char *profile,
+        DWORD flags, const D3DXHANDLE *handles, UINT fragment_count, ID3DXBuffer **buffer,
+        ID3DXBuffer **errors)
+{
+    FIXME("iface %p, profile %s, flags %#x, handles %p, fragment_count %u, buffer %p, errors %p: stub.\n",
+            iface, debugstr_a(profile), flags, handles, fragment_count, buffer, errors);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI d3dx9_fragment_linker_LinkVertexShader(ID3DXFragmentLinker *iface, const char *profile,
+        DWORD flags, const D3DXHANDLE *handles, UINT fragment_count, IDirect3DVertexShader9 **shader,
+        ID3DXBuffer **errors)
+{
+    FIXME("iface %p, profile %s, flags %#x, handles %p, fragment_count %u, shader %p, errors %p: stub.\n",
+            iface, debugstr_a(profile), flags, handles, fragment_count, shader, errors);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI d3dx9_fragment_linker_LinkPixelShader(ID3DXFragmentLinker *iface, const char *profile,
+        DWORD flags, const D3DXHANDLE *handles, UINT fragment_count, IDirect3DPixelShader9 **shader,
+        ID3DXBuffer **errors)
+{
+    FIXME("iface %p, profile %s, flags %#x, handles %p, fragment_count %u, shader %p, errors %p: stub.\n",
+        iface, debugstr_a(profile), flags, handles, fragment_count, shader, errors);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI d3dx9_fragment_linker_ClearCache(ID3DXFragmentLinker *iface)
+{
+    FIXME("iface %p: stub.\n", iface);
+
+    return E_NOTIMPL;
+}
+
+static const struct ID3DXFragmentLinkerVtbl d3dx9_fragment_linker_vtbl =
+{
+    d3dx9_fragment_linker_QueryInterface,
+    d3dx9_fragment_linker_AddRef,
+    d3dx9_fragment_linker_Release,
+    d3dx9_fragment_linker_GetDevice,
+    d3dx9_fragment_linker_GetNumberOfFragments,
+    d3dx9_fragment_linker_GetFragmentHandleByIndex,
+    d3dx9_fragment_linker_GetFragmentHandleByName,
+    d3dx9_fragment_linker_GetFragmentDesc,
+    d3dx9_fragment_linker_AddFragments,
+    d3dx9_fragment_linker_GetAllFragments,
+    d3dx9_fragment_linker_GetFragment,
+    d3dx9_fragment_linker_LinkShader,
+    d3dx9_fragment_linker_LinkVertexShader,
+    d3dx9_fragment_linker_LinkPixelShader,
+    d3dx9_fragment_linker_ClearCache
+};
+
+HRESULT WINAPI D3DXCreateFragmentLinkerEx(IDirect3DDevice9 *device, UINT size, DWORD flags,
+        ID3DXFragmentLinker **linker)
+{
+    struct d3dx9_fragment_linker *object;
+
+    TRACE("device %p, size %u, flags %#x, linker %p.\n", device, size, flags, linker);
+
+    object = heap_alloc(sizeof(*object));
+    if (!object)
+        return E_OUTOFMEMORY;
+
+    object->ID3DXFragmentLinker_iface.lpVtbl = &d3dx9_fragment_linker_vtbl;
+    object->ref = 1;
+
+    IDirect3DDevice9_AddRef(device);
+    object->device = device;
+    object->flags = flags;
+
+    *linker = &object->ID3DXFragmentLinker_iface;
+
+    return S_OK;
+}
+
+HRESULT WINAPI D3DXCreateFragmentLinker(IDirect3DDevice9 *device, UINT size, ID3DXFragmentLinker **linker)
+{
+    TRACE("device %p, size %u, linker %p.\n", device, size, linker);
+
+    return D3DXCreateFragmentLinkerEx(device, size, 0, linker);
 }
 
 HRESULT WINAPI D3DXGetShaderSamplers(const DWORD *byte_code, const char **samplers, UINT *count)

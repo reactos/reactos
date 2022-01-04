@@ -1,6 +1,6 @@
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Možnosti telefónu a modemu"
     IDS_CPLSYSTEMDESCRIPTION "Konfiguruje pravidlá pre telefonické vytáčanie a nastavenia modemu."

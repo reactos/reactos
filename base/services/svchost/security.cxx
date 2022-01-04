@@ -69,7 +69,7 @@ DwInitializeSdFromThreadToken (
     /* Allocate an SD large enough to hold the SIDs for the above */
     dwAlignLength = ALIGN_UP(dwUserLength, ULONG);
     pSd = (PISECURITY_DESCRIPTOR)MemAlloc(0,
-                                          dwAlignLength + 
+                                          dwAlignLength +
                                           dwGroupLength +
                                           sizeof(*pSd));
     if (pSd == NULL) return ERROR_OUTOFMEMORY;

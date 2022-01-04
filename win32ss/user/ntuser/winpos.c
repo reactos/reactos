@@ -1904,23 +1904,31 @@ co_WinPosSetWindowPos(
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
-      if (Window->spwndOwner == NULL ||
-          !(Window->spwndOwner->style & WS_VISIBLE) ||
-          (Window->spwndOwner->ExStyle & WS_EX_TOOLWINDOW))
+      if (Window->style & WS_CHILD)
       {
-         if (UserIsDesktopWindow(Window->spwndParent) &&
-             (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
-              (Window->ExStyle & WS_EX_APPWINDOW)))
+         if ((Window->style & WS_POPUP) && (Window->ExStyle & WS_EX_APPWINDOW))
          {
             co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
             if (!(WinPos.flags & SWP_NOACTIVATE))
                UpdateShellHook(Window);
          }
       }
+      else if ((Window->ExStyle & WS_EX_APPWINDOW) ||
+          (!(Window->ExStyle & WS_EX_TOOLWINDOW) && !Window->spwndOwner &&
+           (!Window->spwndParent || UserIsDesktopWindow(Window->spwndParent))))
+      {
+         co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+         if (!(WinPos.flags & SWP_NOACTIVATE))
+            UpdateShellHook(Window);
+      }
 
       Window->style |= WS_VISIBLE; //IntSetStyle( Window, WS_VISIBLE, 0 );
       Window->head.pti->cVisWindows++;
       IntNotifyWinEvent(EVENT_OBJECT_SHOW, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
+   }
+   else
+   {
+      IntCheckFullscreen(Window);
    }
 
    if (Window->hrgnUpdate != NULL && Window->hrgnUpdate != HRGN_WINDOW)
@@ -2117,13 +2125,25 @@ co_WinPosSetWindowPos(
 
                     if ( !(pwnd->style & WS_CHILD) )
                     {
-                        HRGN DcRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-                        PREGION DcRgnObj = REGION_LockRgn(DcRgn);
-                        TRACE("SWP_FRAMECHANGED win %p hRgn %p\n",pwnd, DcRgn);
-                        IntGdiCombineRgn(DcRgnObj, VisBefore, NULL, RGN_COPY);
-                        REGION_UnlockRgn(DcRgnObj);
-                        ForceNCPaintErase(pwnd, DcRgn, DcRgnObj);
-                        GreDeleteObject(DcRgn);
+                        /*
+                         * Check if we have these specific windows style bits set/reset.
+                         * FIXME: There may be other combinations of styles that need this handling as well.
+                         * This fixes the ReactOS Calculator buttons disappearing in CORE-16827.
+                         */
+                        if ((Window->style & WS_CLIPSIBLINGS) && !(Window->style & (WS_POPUP | WS_CLIPCHILDREN | WS_SIZEBOX)))
+                        {
+                            IntSendNCPaint(pwnd, HRGN_WINDOW); // Paint the whole frame.
+                        }
+                        else  // Use region handling
+                        {
+                            HRGN DcRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+                            PREGION DcRgnObj = REGION_LockRgn(DcRgn);
+                            TRACE("SWP_FRAMECHANGED win %p hRgn %p\n",pwnd, DcRgn);
+                            IntGdiCombineRgn(DcRgnObj, VisBefore, NULL, RGN_COPY);
+                            REGION_UnlockRgn(DcRgnObj);
+                            ForceNCPaintErase(pwnd, DcRgn, DcRgnObj);
+                            GreDeleteObject(DcRgn);
+                        }
                     }
                 }
              }
@@ -2544,9 +2564,8 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          /* Fall through. */
       case SW_SHOWMINIMIZED:
+      case SW_MINIMIZE: /* CORE-15669: SW_MINIMIZE also shows */
          Swp |= SWP_SHOWWINDOW;
-         /* Fall through. */
-      case SW_MINIMIZE:
          {
             Swp |= SWP_NOACTIVATE;
             if (!(style & WS_MINIMIZE))
@@ -2641,7 +2660,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
 
       default:
          //ERR("co_WinPosShowWindow Exit Good 4\n");
-         return WasVisible;
+         return FALSE;
    }
 
    ShowFlag = (Cmd != SW_HIDE);
@@ -3145,12 +3164,12 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
  */
 BOOL APIENTRY
 NtUserEndDeferWindowPosEx(HDWP WinPosInfo,
-                          DWORD Unknown1)
+                          BOOL bAsync)
 {
    BOOL Ret;
    TRACE("Enter NtUserEndDeferWindowPosEx\n");
    UserEnterExclusive();
-   Ret = IntEndDeferWindowPosEx(WinPosInfo, (BOOL)Unknown1);
+   Ret = IntEndDeferWindowPosEx(WinPosInfo, bAsync);
    TRACE("Leave NtUserEndDeferWindowPosEx, ret=%i\n", Ret);
    UserLeave();
    return Ret;

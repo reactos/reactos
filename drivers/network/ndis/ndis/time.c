@@ -80,10 +80,10 @@ NdisInitializeTimer(
  *     FunctionContext: context (param 2) to be passed to the timer function when it runs
  * NOTES:
  *     - TimerFunction will be called at DISPATCH_LEVEL
- *     - call at IRQL = PASSIVE_LEVEL
+ *     - Must be called at IRQL <= DISPATCH_LEVEL
  */
 {
-  PAGED_CODE();
+  ASSERT_IRQL(DISPATCH_LEVEL);
   ASSERT(Timer);
 
   KeInitializeTimer (&Timer->Timer);
@@ -203,10 +203,10 @@ NdisMInitializeTimer(
  *     FunctionContext: argument passed to TimerFunction when it is called
  * NOTES:
  *     - TimerFunction is called at IRQL = DISPATCH_LEVEL
- *     - call at IRQL = PASSIVE_LEVEL
+ *     - Must be called at IRQL <= DISPATCH_LEVEL
  */
 {
-  PAGED_CODE();
+  ASSERT_IRQL(DISPATCH_LEVEL);
   ASSERT(Timer);
 
   KeInitializeTimer (&Timer->Timer);
@@ -350,7 +350,7 @@ NdisSetTimerEx(
     IN UINT  MillisecondsToDelay,
     IN PVOID  FunctionContext)
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called. Timer is: 0x%x, Timeout is: %ld, FunctionContext is: 0x%x\n", 
+    NDIS_DbgPrint(MAX_TRACE, ("Called. Timer is: 0x%x, Timeout is: %ld, FunctionContext is: 0x%x\n",
                                Timer, MillisecondsToDelay, FunctionContext));
 
     Timer->Dpc.DeferredContext = FunctionContext;

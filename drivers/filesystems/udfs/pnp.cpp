@@ -101,7 +101,7 @@ UDFPnp (
         //  We expect there to never be a fileobject, in which case we will always
         //  wait.  Since at the moment we don't have any concept of pending Pnp
         //  operations, this is a bit nitpicky.
-        
+
         // get an IRP context structure and issue the request
         PtrIrpContext = UDFAllocateIrpContext(Irp, DeviceObject);
         if(PtrIrpContext) {
@@ -174,14 +174,14 @@ UDFCommonPnp (
 
         // Force everything to wait.
         PtrIrpContext->IrpContextFlags |= UDF_IRP_CONTEXT_CAN_BLOCK;
-        
+
         // Case on the minor code.
         switch ( IrpSp->MinorFunction ) {
 
             case IRP_MN_QUERY_REMOVE_DEVICE:
                 RC = UDFPnpQueryRemove( PtrIrpContext, Irp, Vcb );
                 break;
-            
+
             case IRP_MN_SURPRISE_REMOVAL:
                 RC = UDFPnpSurpriseRemove( PtrIrpContext, Irp, Vcb );
                 break;
@@ -201,7 +201,7 @@ UDFCommonPnp (
                 IoSkipCurrentIrpStackLocation( Irp );
                 RC = IoCallDriver(Vcb->TargetDeviceObject, Irp);
                 ASSERT(RC != STATUS_PENDING);
-                
+
                 break;
         }
 
@@ -221,7 +221,7 @@ Routine Description:
     is responsible for answering whether there are any reasons it sees
     that the volume can not go away (and the device removed).  Initiation
     of the dismount begins when we answer yes to this question.
-    
+
     Query will be followed by a Cancel or Remove.
 
 Arguments:
@@ -339,7 +339,7 @@ UDFPnpQueryRemove(
         ASSERT( !(NT_SUCCESS( RC ) && !VcbDeleted ));
 
     } _SEH2_FINALLY {
-        
+
         if (!VcbDeleted && VcbAcquired) {
             UDFReleaseResource( &(Vcb->VCBResource) );
         }
@@ -367,7 +367,7 @@ Routine Description:
     that the underlying storage device for the volume we have is gone, and
     an excellent indication that the volume will never reappear. The filesystem
     is responsible for initiation or completion of the dismount.
-    
+
 Arguments:
     Irp - Supplies the Irp to process
     Vcb - Supplies the volume being removed.
@@ -388,7 +388,7 @@ UDFPnpRemove (
     BOOLEAN VcbDeleted;
     BOOLEAN VcbAcquired;
     PPREVENT_MEDIA_REMOVAL_USER_IN Buf = NULL;
-    
+
     //  REMOVE - a storage device is now gone.  We either got
     //  QUERY'd and said yes OR got a SURPRISE OR a storage
     //  stack failed to spin back up from a sleep/stop state
@@ -407,7 +407,7 @@ UDFPnpRemove (
 #ifdef UDF_DELAYED_CLOSE
     UDFCloseAllDelayed(Vcb);
 #endif //UDF_DELAYED_CLOSE
-    
+
     UDFAcquireResourceExclusive(&(Vcb->VCBResource),TRUE);
     VcbAcquired = TRUE;
 
@@ -424,7 +424,7 @@ UDFPnpRemove (
 
     //  We need to pass this down before starting the dismount, which
     //  could disconnect us immediately from the stack.
-    
+
     //  Get the next stack location, and copy over the stack location
     IoCopyCurrentIrpStackLocationToNext( Irp );
 
@@ -452,7 +452,7 @@ UDFPnpRemove (
     }
 
     _SEH2_TRY {
-        
+
         //  Knock as many files down for this volume as we can.
 
         //  Now make our dismount happen.  This may not vaporize the
@@ -499,7 +499,7 @@ try_exit:   NOTHING;
     return RC;
 }
 
-
+
 NTSTATUS
 UDFPnpSurpriseRemove (
     PtrUDFIrpContext PtrIrpContext,
@@ -515,17 +515,17 @@ Routine Description:
     type of notification that the underlying storage device for the volume we
     have is gone, and is excellent indication that the volume will never reappear.
     The filesystem is responsible for initiation or completion the dismount.
-    
+
     For the most part, only "real" drivers care about the distinction of a
     surprise remove, which is a result of our noticing that a user (usually)
     physically reached into the machine and pulled something out.
-    
+
     Surprise will be followed by a Remove when all references have been shut down.
 
 Arguments:
 
     Irp - Supplies the Irp to process
-    
+
     Vcb - Supplies the volume being removed.
 
 Return Value:
@@ -540,10 +540,10 @@ Return Value:
     BOOLEAN VcbDeleted;
     BOOLEAN VcbAcquired;
     PPREVENT_MEDIA_REMOVAL_USER_IN Buf = NULL;
-    
+
     //  SURPRISE - a device was physically yanked away without
     //  any warning.  This means external forces.
-    
+
     UDFAcquireResourceExclusive(&(UDFGlobalData.GlobalDataResource), TRUE);
 
     if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK))
@@ -551,13 +551,13 @@ Return Value:
 #ifdef UDF_DELAYED_CLOSE
     UDFCloseAllDelayed(Vcb);
 #endif //UDF_DELAYED_CLOSE
-    
+
     UDFAcquireResourceExclusive(&(Vcb->VCBResource),TRUE);
     VcbAcquired = TRUE;
-        
+
     //  We need to pass this down before starting the dismount, which
     //  could disconnect us immediately from the stack.
-    
+
     //  Get the next stack location, and copy over the stack location
     IoCopyCurrentIrpStackLocationToNext( Irp );
 
@@ -583,7 +583,7 @@ Return Value:
 
         RC = Irp->IoStatus.Status;
     }
-    
+
     _SEH2_TRY {
         //  Knock as many files down for this volume as we can.
         Vcb->Vpb->RealDevice->Flags |= DO_VERIFY_VOLUME;
@@ -593,7 +593,7 @@ Return Value:
             VcbDeleted = FALSE;
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
-        
+
         UDFDoDismountSequence(Vcb, Buf, FALSE);
         Vcb->VCBFlags &= ~UDF_VCB_FLAGS_VOLUME_MOUNTED;
         Vcb->WriteSecurity = FALSE;
@@ -611,7 +611,7 @@ Return Value:
 try_exit:   NOTHING;
 
     } _SEH2_FINALLY {
-        
+
         //  Release the Vcb if it could still remain.
         if (!VcbDeleted && VcbAcquired) {
             UDFReleaseResource(&(Vcb->VCBResource));
@@ -650,11 +650,11 @@ Routine Description:
     notification that a previously proposed remove (query) was eventually
     vetoed by a component.  The filesystem is responsible for cleaning up
     and getting ready for more IO.
-    
+
 Arguments:
 
     Irp - Supplies the Irp to process
-    
+
     Vcb - Supplies the volume being removed.
 
 Return Value:
@@ -679,9 +679,9 @@ Return Value:
     //  after the disconnect we'd be thoroughly unsynchronized
     //  with respect to the Vcb getting torn apart - merely referencing
     //  the volume device object is insufficient to keep us intact.
-    
+
     UDFAcquireResourceExclusive(&(Vcb->VCBResource),TRUE);
-    
+
     //  Unlock the volume.  This is benign if we never had seen
     //  a QUERY.
     if(Vcb->Vpb->Flags & VPB_LOCKED) {
@@ -694,14 +694,14 @@ Return Value:
     }
 
     try {
-        
+
         //  We must re-enable allocation support if we got through
         //  the first stages of a QUERY_REMOVE; i.e., we decided we
         //  could place a lock on the volume.
         if (NT_SUCCESS( RC )) {
             FatSetupAllocationSupport( PtrIrpContext, Vcb );
         }
-    
+
     } finally {
         UDFReleaseResource(&(Vcb->VCBResource));
     }
@@ -724,7 +724,7 @@ Return Value:
     return RC;
 } */
 
-
+
 //  Local support routine
 NTSTATUS
 NTAPI

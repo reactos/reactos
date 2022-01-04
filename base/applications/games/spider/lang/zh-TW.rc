@@ -1,9 +1,9 @@
 /*
- * PROJECT:    Spider Solitaire
- * LICENSE:    See COPYING in top level directory
- * FILE:       base/applications/games/spider/lang/zh-TW.rc
- * PURPOSE:    Chinese (Traditional) Language File for Spider Solitaire
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:     Spider Solitaire
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -47,10 +47,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME "蜘蛛紙牌"
-    IDS_SPI_ABOUT "蜘蛛紙牌 作者：Gregor Schneider\n\n使用 CardLib 版本 1.0"
+    IDS_SPI_NAME "連環新接龍"
+    IDS_SPI_ABOUT "連環新接龍 作者：Gregor Schneider\n\n使用 CardLib 版本 1.0"
     IDS_SPI_QUIT "退出目前遊戲？"
-    IDS_SPI_WIN "恭喜您嬴了！"
+    IDS_SPI_WIN "恭喜您，您贏了！"
     IDS_SPI_DEAL "再玩一次？"
 END
 
@@ -62,7 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "新遊戲(&N)\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "紙牌... (&D)", IDM_GAME_DECK
+        MENUITEM "牌背圖案(&D)...", IDM_GAME_DECK
         MENUITEM SEPARATOR
         MENUITEM "結束(&E)", IDM_GAME_EXIT
     END

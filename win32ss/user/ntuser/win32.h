@@ -25,6 +25,7 @@
 #define W32PF_OLELOADED               0x00100000
 #define W32PF_SCREENSAVER             0x00200000
 #define W32PF_IDLESCREENSAVER         0x00400000
+#define W32PF_DISABLEIME              0x00800000
 #define W32PF_ICONTITLEREGISTERED     0x10000000
 #define W32PF_DPIAWARE                0x20000000
 // ReactOS
@@ -74,6 +75,8 @@ typedef struct _W32THREAD
     PVOID pSemTable;
     PVOID pUMPDObj;
 } W32THREAD, *PW32THREAD;
+
+struct tagIMC;
 
 #ifdef __cplusplus
 typedef struct _THREADINFO : _W32THREAD
@@ -126,6 +129,10 @@ typedef struct _THREADINFO
     INT                 iCursorLevel;
     /* Last message cursor position */
     POINT               ptLast;
+    /* Input context-related */
+    struct _WND*        spwndDefaultIme;
+    struct tagIMC*      spDefaultImc;
+    HKL                 hklPrev;
 
     INT                 cEnterCount;
     /* Queue of messages posted to the queue. */

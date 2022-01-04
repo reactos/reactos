@@ -354,7 +354,7 @@ UDFCommonSetSecurity(
 //DACL_SECURITY_INFORMATION
         if(IrpSp->Parameters.SetSecurity.SecurityInformation & DACL_SECURITY_INFORMATION)
             DesiredAccess |= WRITE_DAC;
-//SACL_SECURITY_INFORMATION 
+//SACL_SECURITY_INFORMATION
         if(IrpSp->Parameters.SetSecurity.SecurityInformation & SACL_SECURITY_INFORMATION)
             DesiredAccess |= ACCESS_SYSTEM_SECURITY;
 
@@ -963,7 +963,7 @@ UDFCheckAccessRights(
 treat_as_ro:
 #endif //UDF_READ_ONLY_BUILD
         ACCESS_MASK  DesiredAccessMask = 0;
-       
+
         if(Fcb->Vcb->CompatFlags & UDF_VCB_IC_WRITE_IN_RO_DIR) {
             if(Fcb->FCBFlags & UDF_FCB_DIRECTORY) {
                 DesiredAccessMask = (FILE_WRITE_EA |

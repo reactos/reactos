@@ -121,7 +121,7 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
             }
 
             /* Probe the entire parameters now*/
-            Size = (sizeof(EXCEPTION_RECORD) - 
+            Size = (sizeof(EXCEPTION_RECORD) -
                     ((EXCEPTION_MAXIMUM_PARAMETERS - ParameterCount) * sizeof(ULONG)));
             ProbeForRead(ExceptionRecord, Size, sizeof(ULONG));
 
@@ -180,12 +180,12 @@ NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
     Thread = KeGetCurrentThread();
     TrapFrame = Thread->TrapFrame;
     Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
-    
+
     /* Set exception list */
 #ifdef _M_IX86
     KeGetPcr()->NtTib.ExceptionList = TrapFrame->ExceptionList;
 #endif
-    
+
     /* Raise the exception */
     Status = KiRaiseException(ExceptionRecord,
                               Context,
@@ -202,7 +202,7 @@ NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Exit with error */
         KiServiceExit(TrapFrame, Status);
     }
-    
+
     /* We don't actually make it here */
     return Status;
 }
@@ -215,19 +215,19 @@ NtContinue(IN PCONTEXT Context,
     PKTHREAD Thread;
     NTSTATUS Status;
     PKTRAP_FRAME TrapFrame;
-    
+
     /* Get trap frame and link previous one*/
     Thread = KeGetCurrentThread();
     TrapFrame = Thread->TrapFrame;
     Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
-    
+
     /* Continue from this point on */
     Status = KiContinue(Context, NULL, TrapFrame);
     if (NT_SUCCESS(Status))
     {
         /* Check if alert was requested */
         if (TestAlert) KeTestAlertThread(Thread->PreviousMode);
-        
+
         /* Exit to new trap frame */
         KiServiceExit2(TrapFrame);
     }
@@ -236,7 +236,7 @@ NtContinue(IN PCONTEXT Context,
         /* Exit with an error */
         KiServiceExit(TrapFrame, Status);
     }
-    
+
     /* We don't actually make it here */
     return Status;
 }

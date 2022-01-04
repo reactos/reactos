@@ -191,7 +191,6 @@ public:
     HWND Create(HWND hwndParent);
 
     BOOL ShowAvailableAppInfo(CAvailableApplicationInfo *Info);
-
     BOOL ShowInstalledAppInfo(CInstalledApplicationInfo *Info);
 
     VOID SetWelcomeText();
@@ -202,7 +201,7 @@ public:
 };
 
 class CAppsListView :
-    public CUiWindow<CListView>
+    public CUiWindow<CWindowImpl<CAppsListView, CListView>>
 {
     struct SortContext
     {
@@ -211,21 +210,31 @@ class CAppsListView :
     };
 
     BOOL bIsAscending = TRUE;
-    BOOL bHasCheckboxes;
+    BOOL bHasCheckboxes = FALSE;
 
     INT ItemCount = 0;
     INT CheckedItemCount = 0;
     INT ColumnCount = 0;
 
-    INT nLastHeaderID;
+    INT nLastHeaderID = -1;
 
     APPLICATION_VIEW_TYPE ApplicationViewType = AppViewTypeEmpty;
 
-    HIMAGELIST m_hImageListView;
+    HIMAGELIST m_hImageListView = NULL;
+    CStringW m_Watermark;
+
+    BEGIN_MSG_MAP(CAppsListView)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+    END_MSG_MAP()
+
+
+    LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 public:
     CAppsListView();
+    ~CAppsListView();
 
+    VOID SetWatermark(const CStringW& Text);
     VOID SetCheckboxesVisible(BOOL bIsVisible);
 
     VOID ColumnClick(LPNMLISTVIEW pnmv);
@@ -350,42 +359,34 @@ private:
     BOOL ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId);
 
     BOOL CreateToolbar();
-
     BOOL CreateSearchBar();
-
     BOOL CreateComboBox();
-
     BOOL CreateHSplitter();
-
     BOOL CreateListView();
-
     BOOL CreateAppInfoDisplay();
 
     VOID OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam);
-
     VOID OnCommand(WPARAM wParam, LPARAM lParam);
 public:
 
     CApplicationView(CMainWindow *MainWindow);
-
     ~CApplicationView();
 
     static ATL::CWndClassInfo &GetWndClassInfo();
 
     HWND Create(HWND hwndParent);
-
+    void SetRedraw(BOOL bRedraw);
+    void SetFocusOnSearchBar();
     BOOL SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
 
     BOOL AddInstalledApplication(CInstalledApplicationInfo *InstAppInfo, LPVOID param);
-
     BOOL AddAvailableApplication(CAvailableApplicationInfo *AvlbAppInfo, BOOL InitCheckState, LPVOID param);
+    VOID SetWatermark(const CStringW& Text);
+
 
     void CheckAll();
-
     PVOID GetFocusedItemData();
-
     int GetItemCount();
-
     VOID AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList);
 
     // this function is called when a item of listview get focus.

@@ -61,7 +61,7 @@ protected:
 
 };
 
-static GUID InterfaceGuids[3] = 
+static GUID InterfaceGuids[3] =
 {
     {
         /// KS_CATEGORY_AUDIO
@@ -268,12 +268,12 @@ CPortDMus::Init(
     }
 
     // create the subdevice descriptor
-    Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor, 
+    Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor,
                                          3,
-                                         InterfaceGuids, 
-                                         0, 
+                                         InterfaceGuids,
+                                         0,
                                          NULL,
-                                         2, 
+                                         2,
                                          PortDMusPropertySet,
                                          0,
                                          0,
@@ -398,7 +398,7 @@ CPortDMus::NewIrpTarget(
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp, 
+    IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
     NTSTATUS Status;
@@ -499,8 +499,8 @@ CPortDMus::PinCount(
     }
 
     // FIXME
-    // scan filter descriptor 
-    
+    // scan filter descriptor
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -531,7 +531,7 @@ NewPortDMus(
 
 VOID
 GetDMusMiniport(
-    IN IPortDMus * iface, 
+    IN IPortDMus * iface,
     IN PMINIPORTDMUS * Miniport,
     IN PMINIPORTMIDI * MidiMiniport)
 {

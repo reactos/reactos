@@ -24,7 +24,7 @@ LIST_ENTRY usmList;
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MsqInitializeImpl(VOID)
@@ -1524,7 +1524,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, L
     {
         // This is not for us and we should leave so the other thread can check for messages!!!
         *NotForUs = TRUE;
-        *RemoveMessages = TRUE;
+        *RemoveMessages = FALSE;
         return FALSE;
     }
 

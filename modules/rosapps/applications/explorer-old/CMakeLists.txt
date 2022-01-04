@@ -1,8 +1,6 @@
 
 add_subdirectory(notifyhook)
 
-set_cpp(WITH_RTTI WITH_EXCEPTIONS WITH_STL)
-
 add_definitions(
     -DWIN32
     -D__WINDRES__)
@@ -53,7 +51,8 @@ add_executable(explorer_old
     ${PCH_SKIP_SOURCE}
     explorer.rc)
 
-target_link_libraries(explorer_old comsupp wine uuid)
+target_link_libraries(explorer_old comsupp wine uuid cppstl)
+set_target_cpp_properties(explorer_old WITH_EXCEPTIONS WITH_RTTI)
 set_module_type(explorer_old win32gui UNICODE)
 add_importlibs(explorer_old advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 shlwapi notifyhook msvcrt kernel32 ntdll)
 add_pch(explorer_old precomp.h "${PCH_SKIP_SOURCE}")

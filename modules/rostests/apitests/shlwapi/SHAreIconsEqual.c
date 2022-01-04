@@ -9,6 +9,8 @@
 #include <shlwapi.h>
 #include "resource.h"
 
+#include <pseh/pseh2.h>
+
 static BOOL (WINAPI *pSHAreIconsEqual)(HICON hIcon1, HICON hIcon2);
 
 static const char* names[] =

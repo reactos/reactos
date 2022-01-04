@@ -41,7 +41,6 @@ MiInitializeSessionWsSupport(VOID)
 {
     /* Initialize the list heads */
     InitializeListHead(&MiSessionWsList);
-    InitializeListHead(&MmWorkingSetExpansionHead);
 }
 
 BOOLEAN
@@ -365,26 +364,23 @@ MiDereferenceSession(VOID)
     {
         /* No more references left, kill the session completely */
         MiDereferenceSessionFinal();
+        return;
     }
 
-    /* Check if tis is the session leader or the last process in the session */
-    if ((Process->Vm.Flags.SessionLeader) || (ReferenceCount == 0))
+    /* Check if this is the session leader */
+    if (Process->Vm.Flags.SessionLeader)
     {
         /* Get the global session address before we kill the session mapping */
         SessionGlobal = MmSessionSpace->GlobalVirtualAddress;
 
         /* Delete all session PDEs and flush the TB */
-        RtlZeroMemory(MiAddressToPde(MmSessionBase),
-                      BYTES_TO_PAGES(MmSessionSize) * sizeof(MMPDE));
+        //RtlZeroMemory(MiAddressToPde(MmSessionBase),
+        //              BYTES_TO_PAGES(MmSessionSize) * sizeof(MMPDE));
         KeFlushEntireTb(FALSE, FALSE);
 
-        /* Is this the session leader? */
-        if (Process->Vm.Flags.SessionLeader)
-        {
-            /* Clean up the references here. */
-            ASSERT(Process->Session == NULL);
-            MiReleaseProcessReferenceToSessionDataPage(SessionGlobal);
-        }
+        /* Clean up the references here. */
+        ASSERT(Process->Session == NULL);
+        MiReleaseProcessReferenceToSessionDataPage(SessionGlobal);
     }
 
     /* Reset the current process' session flag */
@@ -481,7 +477,7 @@ MiSessionInitializeWorkingSetList(VOID)
 
     /* Fill out the two pointers */
     MmSessionSpace->Vm.VmWorkingSetList = WorkingSetList;
-    MmSessionSpace->Wsle = (PMMWSLE)WorkingSetList->UsedPageTableEntries;
+    MmSessionSpace->Wsle = (PMMWSLE)((&WorkingSetList->VadBitMapHint) + 1);
 
     /* Get the PDE for the working set, and check if it's already allocated */
     PointerPde = MiAddressToPde(WorkingSetList);
@@ -603,10 +599,14 @@ NTAPI
 MiSessionCreateInternal(OUT PULONG SessionId)
 {
     PEPROCESS Process = PsGetCurrentProcess();
-    ULONG NewFlags, Flags, Size, i, Color;
+    ULONG NewFlags, Flags, i, Color;
+#if (_MI_PAGING_LEVELS < 3)
+    ULONG Size;
+#endif // (_MI_PAGING_LEVELS < 3)
+    PMMPDE PageTables = NULL;
     KIRQL OldIrql;
     PMMPTE PointerPte, SessionPte;
-    PMMPDE PointerPde, PageTables;
+    PMMPDE PointerPde;
     PMM_SESSION_SPACE SessionGlobal;
     MMPTE TempPte;
     MMPDE TempPde;
@@ -644,6 +644,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     /* Now we should own the flag */
     ASSERT(Process->Flags & PSF_SESSION_CREATION_UNDERWAY_BIT);
 
+#if (_MI_PAGING_LEVELS < 3)
     /*
      * Session space covers everything from 0xA0000000 to 0xC0000000.
      * Allocate enough page tables to describe the entire region
@@ -652,6 +653,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     PageTables = ExAllocatePoolWithTag(NonPagedPool, Size, 'tHmM');
     ASSERT(PageTables != NULL);
     RtlZeroMemory(PageTables, Size);
+#endif // (_MI_PAGING_LEVELS < 3)
 
     /* Lock the session ID creation mutex */
     KeAcquireGuardedMutex(&MiSessionIdMutex);
@@ -662,7 +664,9 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     {
         /* We ran out of session IDs, we should expand */
         DPRINT1("Too many sessions created. Expansion not yet supported\n");
+#if (_MI_PAGING_LEVELS < 3)
         ExFreePoolWithTag(PageTables, 'tHmM');
+#endif // (_MI_PAGING_LEVELS < 3)
         return STATUS_NO_MEMORY;
     }
 
@@ -786,6 +790,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     MmSessionSpace->PageTables[PointerPde - MiAddressToPde(MmSessionBase)] = *PointerPde;
 #endif
     InitializeListHead(&MmSessionSpace->ImageList);
+
     DPRINT1("Session %lu is ready to go: 0x%p 0x%p, %lx 0x%p\n",
             *SessionId, MmSessionSpace, SessionGlobal, SessionPageDirIndex, PageTables);
 
@@ -899,7 +904,7 @@ MmSessionDelete(IN ULONG SessionId)
 
     /* Remove one reference count */
     KeEnterCriticalRegion();
-    /* FIXME: Do it */
+    MiDereferenceSession();
     KeLeaveCriticalRegion();
 
     /* All done */

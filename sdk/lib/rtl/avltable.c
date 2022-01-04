@@ -248,7 +248,7 @@ RtlEnumerateGenericTableWithoutSplayingAvl(IN PRTL_AVL_TABLE Table,
                                            IN OUT PVOID *RestartKey)
 {
     PRTL_BALANCED_LINKS CurrentNode;
-     
+
     /* Skip an empty tree */
     if (RtlIsGenericTableEmptyAvl(Table)) return NULL;
 
@@ -271,7 +271,7 @@ RtlEnumerateGenericTableWithoutSplayingAvl(IN PRTL_AVL_TABLE Table,
         /* If there was one, update the restart key */
         if (CurrentNode) *RestartKey = CurrentNode;
     }
-    
+
     /* Return the node's data if it was found, otherwise return NULL */
     if (CurrentNode) return &((PTABLE_ENTRY_HEADER)CurrentNode)->UserData;
     return NULL;
@@ -303,15 +303,15 @@ RtlDeleteElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
     /* Find the node */
     SearchResult = RtlpFindAvlTableNodeOrParent(Table, Buffer, &Node);
     if (SearchResult != TableFoundNode) return FALSE;
-    
+
     /* If this node was the key, update it */
     if (Node == Table->RestartKey) Table->RestartKey = RtlRealPredecessorAvl(Node);
-    
+
     /* Do the delete */
     Table->DeleteCount++;
     RtlpDeleteAvlTreeNode(Table, Node);
     Table->NumberGenericTableElements--;
-    
+
     /* Reset accounting */
     Table->WhichOrderedElement = 0;
     Table->OrderedPointer = NULL;

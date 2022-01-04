@@ -11,28 +11,28 @@ EVENTCREATE [/S bilgisayar [/U [etki alanı\\]kullanıcı [/P şifre]]]\n\
             /D tanım\n\
 \n\
 Tanım:\n\
-    Bu araç, bir yöneticiye belirli bir olay kaydı içinde husûsî bir olay\n\
+    Bu araç, bir yöneticiye belirli bir olay kaydı içinde özel bir olay\n\
     oluşturmayı sağlar.\n\
 \n\
 Değişkenler:\n\
     /S  bilgisayar        Bağlanacak uzak bilgisayarı belirtir.\n\
 \n\
-    /U  [etki alanı\\]kullanıcı Altında komutun çalışacağı kullanıcı hesâbını\n\
+    /U  [etki alanı\\]kullanıcı Altında komutun çalışacağı kullanıcı hesabını\n\
                                 belirtir.\n\
 \n\
-    /P  [şifre]           Kullanıcı hesâbının şifresini belirtir.\n\
+    /P  [şifre]           Kullanıcı hesabının şifresini belirtir.\n\
                           Kullanılmazsa girdi için sorar.\n\
 \n\
     /L  kayıt adı         Oluşturulacak olayın kayıt adını belirtir.\n\
                           Geçerli adlar şunlardır:\n\
                           Application, System, Security\n\
-                          (İkincisi yalnızca DİZGE hesâbına ayrılmıştır.)\n\
+                          (İkincisi yalnızca DİZGE hesabına ayrılmıştır.)\n\
 \n\
     /SO kaynak            Olay için kullanılacak kaynak adını belirtir.\n\
-                          (Belirtilmezse ön tanımlı kaynak adı\n\
+                          (Belirtilmezse varsayılan kaynak adı\n\
                           'eventcreate' olacaktır.)\n\
                           Geçerli bir kaynak, rastgele bir dizgi olabilir ve olayı\n\
-                          oluşturan uygulamayı veyâ bileşeni belirtmelidir.\n\
+                          oluşturan uygulamayı veya bileşeni belirtmelidir.\n\
 \n\
     /T  tür               Oluşturulacak olayın türünü belirtir.\n\
                           Geçerli türler: SUCCESS, ERROR, WARNING,\n\
@@ -49,20 +49,20 @@ Değişkenler:\n\
     /?                    Bu yardım görüntülüğünü görüntüler.\n\
 "
     IDS_INVALIDSWITCH "Geçersiz değişken - ""%s"".\n"
-    IDS_BADSYNTAX_0 "Geçersiz komut yatacı yazımı.\n"
-    IDS_BADSYNTAX_1 "Geçersiz komut yatacı yazımı. ""%s"" seçeneği bir değer gerektirir.\n"
-    IDS_BADSYNTAX_2 "Geçersiz komut yatacı yazımı. ""%s"" seçeneği için değer boş olamaz.\n"
-    IDS_BADSYNTAX_3 "Geçersiz komut yatacı yazımı. Değer ""%s"", ""%s"" seçeneği için izin verilmedi.\n"
-    IDS_BADSYNTAX_4 "Geçersiz komut yatacı yazımı. ""%s"" seçeneği için değer belirtilemiyor.\n"
-    IDS_BADSYNTAX_5 "Geçersiz komut yatacı yazımı. ""%s"" seçeneğine %lu kezden çok izin verilmiyor.\n"
-    IDS_BADSYNTAX_6 "Geçersiz komut yatacı yazımı. Zorunlu ""%s"" seçeneği yok.\n"
+    IDS_BADSYNTAX_0 "Geçersiz komut satırı yazımı.\n"
+    IDS_BADSYNTAX_1 "Geçersiz komut satırı yazımı. ""%s"" seçeneği bir değer gerektirir.\n"
+    IDS_BADSYNTAX_2 "Geçersiz komut satırı yazımı. ""%s"" seçeneği için değer boş olamaz.\n"
+    IDS_BADSYNTAX_3 "Geçersiz komut satırı yazımı. Değer ""%s"", ""%s"" seçeneği için izin verilmedi.\n"
+    IDS_BADSYNTAX_4 "Geçersiz komut satırı yazımı. ""%s"" seçeneği için değer belirtilemiyor.\n"
+    IDS_BADSYNTAX_5 "Geçersiz komut satırı yazımı. ""%s"" seçeneğine %lu kezden çok izin verilmiyor.\n"
+    IDS_BADSYNTAX_6 "Geçersiz komut satırı yazımı. Zorunlu ""%s"" seçeneği yok.\n"
     // IDS_BADSYNTAX_7 "Geçersiz komut yatacı yazımı. ""%s"" seçeneği için değer izin verilen aralığın dışında.\n"
-    IDS_BADSYNTAX_7 "Geçersiz komut yatacı yazımı. ""%s"" seçeneği için değer %d ile %d arasında olmalı.\n"
+    IDS_BADSYNTAX_7 "Geçersiz komut satırı yazımı. ""%s"" seçeneği için değer %d ile %d arasında olmalı.\n"
 
     IDS_LOG_NOT_FOUND """%s"" kaydı yok. Olay oluşturulamıyor.\n"
     IDS_SOURCE_NOCREATE "Kayıt adı belirtilmediğinden yeni kaynak oluşturulamıyor.\nKayıt adını belirtmek için lütfen /L seçeneğini kullanınız.\n"
     IDS_SOURCE_EXISTS "Kaynak ""%s"" kaydında önceden var ve çoğaltılamaz.\n"
-    IDS_SOURCE_NOT_CUSTOM "Kaynak değişkeni, husûsî betikleri veyâ husûsî uygulamaları\n(kurulu uygulamaları değil) belirlemek için kullanılıyor.\n"
+    IDS_SOURCE_NOT_CUSTOM "Kaynak değişkeni, özel betikleri veya özel uygulamaları\n(kurulu uygulamaları değil) belirlemek için kullanılıyor.\n"
 
     IDS_SUCCESS_1   "İşlem başarılı: ""%s"" türünde bir olay ""%s"" kaydında oluşturuldu.\n"
     IDS_SUCCESS_2   "İşlem başarılı: ""%s"" türünde bir olay ""%s"" kaynağıyla oluşturuldu.\n"

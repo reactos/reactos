@@ -5,23 +5,23 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Érzékenység"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Character repeat", -1, 5, 5, 236, 135
+    GROUPBOX "Karakter ismétlés", -1, 5, 5, 236, 135
     ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 13, 18, 15, 15
-    LTEXT "Repeat &delay:", -1, 40, 18, 100, 10
-    LTEXT "Long", -1, 40, 33, 20, 10
-    LTEXT "Short", -1, 200, 33, 20, 10
+    LTEXT "Első ismétlés &előtti idő:", -1, 40, 18, 100, 10
+    LTEXT "Hosszú", -1, 40, 33, 24, 10
+    LTEXT "Rövid", -1, 200, 33, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 33, 130, 17
     ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 13, 70, 15, 15
-    LTEXT "&Repeat rate:", -1, 40, 70, 100, 10
-    LTEXT "Slow", -1, 40, 85, 20, 10
-    LTEXT "Fast", -1, 200, 85, 20, 10
+    LTEXT "&Ismétlés sebessége:", -1, 40, 70, 100, 10
+    LTEXT "Lassú", -1, 40, 85, 20, 10
+    LTEXT "Gyors", -1, 200, 85, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-    LTEXT "Click here and hold down a key to &test repeat rate:", -1, 15, 105, 216, 10
+    LTEXT "Kattintson ide és tartson lenyomva egy gombot a &teszteléshez:", -1, 15, 105, 220, 10
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
-    GROUPBOX "Cursor &blink rate:", -1, 5, 145, 236, 50
+    GROUPBOX "Kurzor &villogási sebessége:", -1, 5, 145, 236, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
-    LTEXT "None", -1, 40, 165, 25, 10
-    LTEXT "Fast", -1, 200, 165, 30, 10
+    LTEXT "Nincs", -1, 40, 165, 25, 10
+    LTEXT "Gyors", -1, 200, 165, 30, 10
     CONTROL "", IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END
 
@@ -34,106 +34,106 @@ END
 
 IDD_CLICK_LOCK DIALOGEX 0, 0, 240, 78
 STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
-CAPTION "Click Lock"
+CAPTION "Markoló"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Short", -1, 50, 35, 27, 10
-    LTEXT "Long", -1, 157, 35, 27, 10
+    LTEXT "Rövid", -1, 50, 35, 27, 10
+    LTEXT "Hosszú", -1, 157, 35, 27, 10
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
     PUSHBUTTON "&OK", IDOK, 110, 59, 60, 14
-    PUSHBUTTON "&Cancel", IDCANCEL, 174, 59, 60, 14
-    LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked", -1, 37, 5, 200, 27
+    PUSHBUTTON "&Mégse", IDCANCEL, 174, 59, 60, 14
+    LTEXT "&Beállíthatja milyen hosszan kell lenyomva tartania az egér vagy hanyattegér gombját, mielőtt megmarkolná\naz elemet.", -1, 37, 5, 200, 27
     ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Button"
+CAPTION "Gombok"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Button configuration", -1, 5, 5, 236, 70
-    CHECKBOX "&Switch primary and secondary buttons", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 156, 10
+    GROUPBOX "Gombok beállítása", -1, 5, 5, 236, 70
+    CHECKBOX "&Elsődleges és másodlagos gomb cseréje", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 156, 10
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 171, 14, 65, 57, WS_EX_STATICEDGE
-    LTEXT "Select this checkbox to make the right mouse button the one used for primary functions such as selecting and dragging.", -1, 10, 36, 156, 30
-    GROUPBOX "Double-click speed", -1, 5, 78, 236, 70
-    LTEXT "Double-click the folder to test your settings. If the folder does not open or close, try using a slower setting.", -1, 10, 90, 156, 28
-    LTEXT "Spee&d:   Slow", -1, 10, 123, 50, 10
-    LTEXT "Fast", -1, 136, 123, 24, 10
-    CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
+    LTEXT "Kapcsolja be ezt a jelölőnégyzetet hogy\na jobb egérgomb legyen az elsődlegesen használt gomb az olyan funkciókhoz, mint\na kijelölés és a mozgatás.", -1, 10, 36, 156, 32
+    GROUPBOX "Dupla kattintás sebessége", -1, 5, 78, 236, 70
+    LTEXT "Kattintson duplán a mappa ikonra\na beállítások teszteléséhez. Ha a mappa nem nyílik vagy záródik, probálja meg lassabbra állítani.", -1, 10, 90, 156, 31
+    LTEXT "&Sebesség: Lassú", -1, 10, 123, 60, 10
+    LTEXT "Gyors", -1, 146, 123, 24, 10
+    CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 70, 123, 70, 17
     CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE
-    GROUPBOX "ClickLock", -1, 5, 150, 236, 70
-    CHECKBOX "&Turn on ClickLock", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
-    PUSHBUTTON "&Settings...", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
-    LTEXT "Enables you to highlight or drag without holding down the mouse button. To set, briefly press the mouse button. To release, click the mouse button again.", -1, 10, 180, 224, 30
+    GROUPBOX "Markoló", -1, 5, 150, 236, 70
+    CHECKBOX "&Markoló bekapcsolása", IDC_CHECK_CLICK_LOCK, 10, 160, 82, 20
+    PUSHBUTTON "&Beállítások...", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
+    LTEXT "Lehetővé teszi a kijelölést vagy mozgatást az egérgomb lenyomva tartása nélkül. Bekapcsoláshoz röviden kattintson\naz egérgombbal, kikapcsoláshoz kattintson újra.", -1, 10, 180, 224, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Pointer"
+CAPTION "Mutató"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Scheme", -1, 5, 5, 181, 45
+    GROUPBOX "Séma", -1, 5, 5, 181, 45
     COMBOBOX IDC_COMBO_CURSOR_SCHEME, 12, 15, 167, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Sa&ve As...", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
-    PUSHBUTTON "&Delete", IDC_BUTTON_DELETE_SCHEME, 128, 31, 50, 14
+    PUSHBUTTON "&Mentés másként...", IDC_BUTTON_SAVEAS_SCHEME, 55, 31, 70, 14
+    PUSHBUTTON "Tö&rlés", IDC_BUTTON_DELETE_SCHEME, 128, 31, 50, 14
     CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 196, 9, 45, 41, WS_EX_STATICEDGE
-    LTEXT "&Customize", -1, 5, 57, 60, 10
+    LTEXT "&Testreszabás", -1, 5, 57, 60, 10
     LISTBOX IDC_LISTBOX_CURSOR, 5, 68, 236, 124, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
-    CHECKBOX "&Enable pointer shadow", IDC_CHECK_CURSOR_SHADOW, 5, 198, 105, 10
-    PUSHBUTTON "Use De&fault", IDC_BUTTON_USE_DEFAULT_CURSOR, 117, 196, 65, 14
-    PUSHBUTTON "&Browse...", IDC_BUTTON_BROWSE_CURSOR, 186, 196, 55, 14
+    CHECKBOX "Árnyé&k engedélyezése", IDC_CHECK_CURSOR_SHADOW, 5, 198, 90, 10
+    PUSHBUTTON "&Alapértelmezések", IDC_BUTTON_USE_DEFAULT_CURSOR, 107, 196, 75, 14
+    PUSHBUTTON "Ta&llózás...", IDC_BUTTON_BROWSE_CURSOR, 186, 196, 55, 14
 END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 192, 53
 STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
-CAPTION "Save Scheme"
+CAPTION "Séma mentése"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Save this cursor scheme as:", -1, 5, 5, 181, 10
+    LTEXT "Egérkurzor séma mentése mint:", -1, 5, 5, 181, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "&OK", IDOK, 63, 35, 60, 14
-    PUSHBUTTON "&Cancel", IDCANCEL, 126, 35, 60, 14
+    PUSHBUTTON "&Mégse", IDCANCEL, 126, 35, 60, 14
 END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Pointer Options"
+CAPTION "Mutató beállítások"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Motion", -1, 5, 5, 236, 60
-    LTEXT "Sele&ct a pointer speed:", -1, 52, 15, 110, 10
-    LTEXT "Slow", -1, 60, 30, 20, 10
+    GROUPBOX "Mozgás", -1, 5, 5, 236, 60
+    LTEXT "Válasszon egy mutató &sebességet:", -1, 52, 15, 120, 10
+    LTEXT "Lassú", -1, 60, 30, 20, 10
     CONTROL "", IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
-    LTEXT "Fast", -1, 170, 30, 20, 10
+    LTEXT "Gyors", -1, 170, 30, 20, 10
     ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 18, 20, 32, 32
-    CHECKBOX "&Enhance pointer precision", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
-    GROUPBOX "Snap To", -1, 5, 70, 236, 40
-    CHECKBOX "A&utomatically move pointer to the default button in a dialog box",
+    CHECKBOX "Mutató érzékenységének &javítása", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
+    GROUPBOX "Ugrás", -1, 5, 70, 236, 40
+    CHECKBOX "Az egérmutató a párbeszédablakok alapértelmezett gombjára ugorjon &automatikusan",
              IDC_CHECK_SNAP_TO, 52, 84, 183, 20, BS_MULTILINE | BS_TOP
     ICON IDI_MOUSE_BUTTON, IDC_ICON_SNAP_TO, 18, 83, 15, 15
-    GROUPBOX "Visibility", -1, 5, 115, 236, 95
-    CHECKBOX "&Display pointer trails:", IDC_CHECK_POINTER_TRAIL, 52, 128, 125, 10
-    LTEXT "Short", IDC_TEXT_TRAIL_SHORT, 54, 143, 25, 10
-    LTEXT "Long", IDC_TEXT_TRAIL_LONG, 157, 143, 30, 10
+    GROUPBOX "Láthatóság", -1, 5, 115, 236, 95
+    CHECKBOX "&Mutató nyomvonal megjelenítése:", IDC_CHECK_POINTER_TRAIL, 52, 128, 125, 10
+    LTEXT "Rövid", IDC_TEXT_TRAIL_SHORT, 54, 143, 25, 10
+    LTEXT "Hosszú", IDC_TEXT_TRAIL_LONG, 157, 143, 30, 10
     ICON IDI_MOUSE_TRAILS, IDC_ICON_POINTER_TRAIL, 20, 128, 15, 15
     CONTROL "", IDC_SLIDER_POINTER_TRAIL, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 80, 143, 70, 17
-    CHECKBOX "&Hide pointer while typing", IDC_CHECK_HIDE_POINTER, 52, 163, 130, 10
+    CHECKBOX "Mutató el&rejtése gépelés közben", IDC_CHECK_HIDE_POINTER, 52, 163, 130, 10
     ICON IDI_MOUSE_SPEED, IDC_ICON_HIDE_POINTER, 18, 158, 15, 15
-    CHECKBOX "&Show location of pointer when I press the CTRL key",
+    CHECKBOX "&Mutató helyének megjelenítése a CTRL lenyomásakor",
              IDC_CHECK_SHOW_POINTER, 52, 188, 183, 20, BS_MULTILINE | BS_TOP
     ICON IDI_MOUSE_POINTER, IDC_ICON_SHOW_POINTER, 18, 183, 15, 15
 END
 
 IDD_PAGE_WHEEL DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Wheel"
+CAPTION "Görgő"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Scrolling", -1, 5, 5, 236, 80
+    GROUPBOX "Görgetés", -1, 5, 5, 236, 80
     ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
-    LTEXT "Roll the wheel one notch to scroll", -1, 60, 15, 150, 10
-    RADIOBUTTON "The following &number of lines at a time:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
-    RADIOBUTTON "&One screen at a time", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
+    LTEXT "Az egér görgőjének egy rovátkányi mozgatására:", -1, 60, 15, 170, 10
+    RADIOBUTTON "Gördüljön ennyi &sort:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    RADIOBUTTON "Gördüljön &egy &képernyőnyit", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 100, 10
     EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | ES_NUMBER | WS_VISIBLE | WS_GROUP | WS_TABSTOP
     CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS, 125, 45, 12, 12
 END
@@ -144,28 +144,28 @@ BEGIN
     IDS_CPLDESCRIPTION_1 "Egér beállítások."
     IDS_CPLNAME_2 "Billentyűzet"
     IDS_CPLDESCRIPTION_2 "Billentyűzet beállítások."
-    IDS_ARROW "Normal Select"
-    IDS_HELP "Help Select"
-    IDS_APPSTARTING "Working in Background"
-    IDS_WAIT "Busy"
-    IDS_CROSSHAIR "Precision Select"
-    IDS_IBEAM "Text Select"
-    IDS_NWPEN "Handwriting"
-    IDS_NO "Unavailable"
-    IDS_SIZENS "Vertical Resize"
-    IDS_SIZEWE "Horizontal Resize"
-    IDS_SIZENWSE "Diagonal Resize 1"
-    IDS_SIZENESW "Diagonal Resize 2"
-    IDS_SIZEALL "Move"
-    IDS_UPARROW "Alternative Select"
-    IDS_HAND "Link Select"
-    IDS_NONE "(None)"
-    IDS_SYSTEM_SCHEME "(system scheme)"
-    IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
-    IDS_BROWSE_TITLE "Browse"
-    IDS_REMOVE_TITLE "Confirm Cursor Scheme Removal"
-    IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
-    IDS_OVERWRITE_TITLE "Confirm Cursor Scheme Overwrite"
-    IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
-    IDS_ANIMATE_CURSOR "Animated Cursor"
+    IDS_ARROW "Normál kijelölés"
+    IDS_HELP "Súgó kijelölés"
+    IDS_APPSTARTING "Munka a háttérben"
+    IDS_WAIT "Elfoglalt"
+    IDS_CROSSHAIR "Pontos kijelölés"
+    IDS_IBEAM "Szövegkijelölés"
+    IDS_NWPEN "Kézírás"
+    IDS_NO "Nem elérhető"
+    IDS_SIZENS "Függőleges átméretezés"
+    IDS_SIZEWE "Vízszintes átméretezés"
+    IDS_SIZENWSE "Átlós átméretezés 1"
+    IDS_SIZENESW "Átlós átméretezés 2"
+    IDS_SIZEALL "Mozgatás"
+    IDS_UPARROW "Alternatív kijelölés"
+    IDS_HAND "Hivatkozás kijelölés"
+    IDS_NONE "(Nincs)"
+    IDS_SYSTEM_SCHEME "(rendszer séma)"
+    IDS_BROWSE_FILTER "Kurzorok (*.ani, *.cur)\0*.ani;*.cur\0Animált kurzorok (*.ani)\0*.ani\0Statikus kurzorok (*.cur)\0*.cur\0Minden fájl\0*.*\0\0"
+    IDS_BROWSE_TITLE "Tallózás"
+    IDS_REMOVE_TITLE "Kurzor séma eltávolításának megerősítése"
+    IDS_REMOVE_TEXT "Biztosam törölni szeretné ezt a kurzor sémát: '%s'?"
+    IDS_OVERWRITE_TITLE "Kurzor séma felülírásának megerősítése"
+    IDS_OVERWRITE_TEXT "Ez a kurzor séma név már használatban van. Szeretné felülírni a meglévő kurzor sémát?"
+    IDS_ANIMATE_CURSOR "Animált kurzor"
 END

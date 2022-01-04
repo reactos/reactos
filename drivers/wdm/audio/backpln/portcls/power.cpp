@@ -54,7 +54,7 @@ PcUnregisterAdapterPowerManagement(
     IN PDEVICE_OBJECT DeviceObject)
 {
     PPCLASS_DEVICE_EXTENSION DeviceExt;
-    
+
     DPRINT("PcUnregisterAdapterPowerManagement pUnknown %p pvContext %p\n", DeviceObject);
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 

@@ -199,7 +199,7 @@ BEGIN
     IDS_INFOTITLE "Skicár systému ReactOS"
     IDS_INFOTEXT "Dostupný za podmienok GNU Lesser General Public License (LGPL, viď www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Chcete uložiť vykonané zmeny do %s?"
-    IDS_DEFAULTFILENAME "Bez názvu.bmp"
+    IDS_DEFAULTFILENAME "Bez názvu"
     IDS_MINIATURETITLE "Miniature"
     IDS_TOOLTIP1 "Voľný výber"
     IDS_TOOLTIP2 "Výber"

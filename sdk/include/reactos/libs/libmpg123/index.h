@@ -33,7 +33,7 @@ struct frame_index
 	size_t grow_size; /* if > 0: index allowed to grow on need with these steps, instead of lowering resolution */
 };
 
-/* The condition for a framenum to be appended to the index. 
+/* The condition for a framenum to be appended to the index.
   if(FI_NEXT(fr->index, fr->num)) fi_add(offset); */
 #define FI_NEXT(fi, framenum) ((fi).size && framenum == (fi).next)
 

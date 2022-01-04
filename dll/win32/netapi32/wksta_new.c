@@ -191,7 +191,7 @@ NetpUnbind(
 
     FIXME("NetpUnbind(%p)\n", BindingHandle);
 
-    status = RpcBindingFree(&hBinding);
+    status = RpcBindingFree(&wkssvc_hBinding);
     if (status)
     {
         TRACE("RpcBindingFree returned 0x%x\n", status);
@@ -319,7 +319,7 @@ NetGetJoinInformation(
     _Out_ LPWSTR *lpNameBuffer,
     _Out_ PNETSETUP_JOIN_STATUS BufferType)
 {
-    NET_API_STATUS status;
+    NET_API_STATUS status = NERR_Success;
 
     TRACE("NetGetJoinInformation(%s %p %p)\n",
           debugstr_w(lpServer), lpNameBuffer, BufferType);
@@ -327,6 +327,9 @@ NetGetJoinInformation(
     if (lpNameBuffer == NULL || BufferType == NULL)
         return ERROR_INVALID_PARAMETER;
 
+    /* Disabled because of CORE-17679 */
+#if 0
+    *lpNameBuffer = NULL;
     RpcTryExcept
     {
         status = NetrGetJoinInformation((LPWSTR)lpServer,
@@ -338,6 +341,10 @@ NetGetJoinInformation(
         status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+#endif
+
+    *lpNameBuffer = NULL;
+    *BufferType = NetSetupUnknownStatus;
 
     return status;
 }
@@ -856,7 +863,6 @@ NetValidateName(
 }
 
 
-#if 0
 NET_API_STATUS
 WINAPI
 NetWkstaGetInfo(
@@ -878,7 +884,7 @@ NetWkstaGetInfo(
     {
         status = NetrWkstaGetInfo(servername,
                                   level,
-                                  (LPWKSTA_INFO)bufptr);
+                                  (LPWKSTA_INFO*)bufptr);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -888,7 +894,6 @@ NetWkstaGetInfo(
 
     return status;
 }
-#endif
 
 
 NET_API_STATUS
@@ -1037,6 +1042,7 @@ NetWkstaTransportEnum(
 
     return status;
 }
+#endif
 
 
 NET_API_STATUS
@@ -1110,6 +1116,7 @@ NetWkstaUserEnum(
 }
 
 
+#if 0
 NET_API_STATUS
 WINAPI
 NetWkstaUserGetInfo(

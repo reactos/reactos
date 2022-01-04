@@ -885,7 +885,7 @@ interface winspool {
         [in] WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer,
         [in] DWORD AccessRequired
     );
-    
+
     /* Function 0x02 */
     DWORD _RpcSetJob(
         [in] WINSPOOL_PRINTER_HANDLE hPrinter,

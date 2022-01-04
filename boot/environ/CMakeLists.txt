@@ -83,12 +83,12 @@ set_target_properties(bootmgfw PROPERTIES SUFFIX ".efi")
 
 if(MSVC)
     if(ARCH STREQUAL "arm")
-        add_target_link_flags(bootmgfw "/ignore:4078 /ignore:4254 /DRIVER")
+        target_link_options(bootmgfw PRIVATE /ignore:4078 /ignore:4254 /DRIVER)
     else()
-        add_target_link_flags(bootmgfw "/ignore:4078 /ignore:4254 /DRIVER /FIXED")
+        target_link_options(bootmgfw PRIVATE /ignore:4078 /ignore:4254 /DRIVER /DYNAMICBASE:NO /NXCOMPAT:NO /FIXED)
     endif()
 else()
-    add_target_link_flags(bootmgfw "-Wl,--strip-all,--exclude-all-symbols")
+    target_link_options(bootmgfw PRIVATE "-Wl,--strip-all,--exclude-all-symbols")
 endif()
 
 set_image_base(bootmgfw 0x10000)
@@ -105,7 +105,7 @@ target_link_libraries(bootmgfw bootlib cportlib cmlib rtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_link_libraries(bootmgfw gcc_ssp)
+    target_sources(bootmgfw PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
 if(RUNTIME_CHECKS)
@@ -130,9 +130,9 @@ add_executable(rosload ${ROSLOAD_BASE_SOURCE} ${rosload_asm})
 set_target_properties(rosload PROPERTIES SUFFIX ".efi")
 
 if(MSVC)
-    add_target_link_flags(rosload "/ignore:4078 /ignore:4254 /DRIVER")
+    target_link_options(rosload PRIVATE /ignore:4078 /ignore:4254 /DRIVER)
 else()
-    add_target_link_flags(rosload "-Wl,--strip-all,--exclude-all-symbols,--dynamicbase,--pic-executable")
+    target_link_options(rosload PRIVATE "-Wl,--strip-all,--exclude-all-symbols,--dynamicbase,--pic-executable")
 endif()
 
 set_image_base(rosload 0x10000)
@@ -153,7 +153,7 @@ target_link_libraries(rosload bootlib cportlib cmlib rtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_link_libraries(rosload gcc_ssp)
+    target_sources(rosload PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
 if(RUNTIME_CHECKS)

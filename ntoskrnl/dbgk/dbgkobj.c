@@ -27,9 +27,9 @@ GENERIC_MAPPING DbgkDebugObjectMapping =
 static const INFORMATION_CLASS_INFO DbgkpDebugObjectInfoClass[] =
 {
     /* DebugObjectUnusedInformation */
-    ICI_SQ_SAME(sizeof(ULONG), sizeof(ULONG), 0),
+    IQS_SAME(ULONG, ULONG, 0),
     /* DebugObjectKillProcessOnExitInformation */
-    ICI_SQ_SAME(sizeof(DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION), sizeof(ULONG), ICIF_SET),
+    IQS_SAME(DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION, ULONG, ICIF_SET),
 };
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -59,7 +59,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
         /* Allocate it */
         DebugEvent = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(DEBUG_EVENT),
-                                           'EgbD');
+                                           TAG_DEBUG_EVENT);
         if (!DebugEvent) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Set flags */
@@ -192,7 +192,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
             ObDereferenceObject(Process);
 
             /* Free the debug event */
-            ExFreePoolWithTag(DebugEvent, 'EgbD');
+            ExFreePoolWithTag(DebugEvent, TAG_DEBUG_EVENT);
         }
     }
 
@@ -418,7 +418,7 @@ DbgkpFreeDebugEvent(IN PDEBUG_EVENT DebugEvent)
     /* Dereference process and thread and free the event */
     ObDereferenceObject(DebugEvent->Process);
     ObDereferenceObject(DebugEvent->Thread);
-    ExFreePoolWithTag(DebugEvent, 'EgbD');
+    ExFreePoolWithTag(DebugEvent, TAG_DEBUG_EVENT);
 }
 
 VOID
@@ -1424,7 +1424,7 @@ DbgkClearProcessDebugObject(IN PEPROCESS Process,
     /* Get the Process Debug Object */
     DebugObject = Process->DebugPort;
 
-    /* 
+    /*
      * Check if the process had an object and it matches,
      * or if the process had an object but none was specified
      * (in which we are called from NtTerminateProcess)
@@ -1492,7 +1492,7 @@ DbgkClearProcessDebugObject(IN PEPROCESS Process,
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 DbgkInitialize(VOID)

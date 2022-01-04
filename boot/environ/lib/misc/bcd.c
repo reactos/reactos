@@ -15,7 +15,7 @@
 
 VOID
 BiNotifyEnumerationError (
-    _In_ HANDLE ObjectHandle, 
+    _In_ HANDLE ObjectHandle,
     _In_ PWCHAR ElementName,
     _In_ NTSTATUS Status
     )
@@ -78,7 +78,7 @@ BiConvertRegistryDataToElement (
         case BCD_TYPE_DEVICE:
 
             /* First, make sure it's at least big enough for an empty descriptor */
-            if (DataLength < FIELD_OFFSET(BCD_DEVICE_OPTION, 
+            if (DataLength < FIELD_OFFSET(BCD_DEVICE_OPTION,
                                           DeviceDescriptor.Unknown))
             {
                 return STATUS_OBJECT_TYPE_MISMATCH;
@@ -172,7 +172,7 @@ BiConvertRegistryDataToElement (
                 Status = STATUS_BUFFER_TOO_SMALL;
                 break;
             }
-            
+
             /* Yep, copy the GUID */
             RtlInitUnicodeString(&GuidString, BcdString);
             Status = RtlGUIDFromString(&GuidString, ElementGuid);
@@ -350,7 +350,7 @@ NTSTATUS
 BiConvertBcdElements (
     _In_ PBCD_PACKED_ELEMENT Elements,
     _Out_opt_ PBCD_ELEMENT Buffer,
-    _Inout_ PULONG BufferSize, 
+    _Inout_ PULONG BufferSize,
     _Inout_ PULONG ElementCount
     )
 {
@@ -627,10 +627,10 @@ BiEnumerateSubElements (
     _Out_ PULONG ElementCount
     )
 {
-    NTSTATUS Status; 
+    NTSTATUS Status;
     PBCD_PACKED_ELEMENT Element;
     HANDLE ObjectHandle;
-    ULONG ParsedElements, RequiredSize; 
+    ULONG ParsedElements, RequiredSize;
 
     /* Assume empty */
     *ElementCount = 0;
@@ -698,7 +698,7 @@ BiEnumerateSubObjectElements (
     NTSTATUS Status;
     ULONG SubElementCount, TotalSize, RequiredSize, CurrentSize, i;
     PBCD_PACKED_ELEMENT PreviousElement;
- 
+
     /* Assume empty list */
     *ElementCount = 0;
     Status = STATUS_SUCCESS;
@@ -1199,7 +1199,7 @@ BiGetObjectDescription (
         /* Read the type */
         Length = 0;
         Status = BiGetRegistryValue(DescriptionHandle,
-                                    L"Type", 
+                                    L"Type",
                                     REG_DWORD,
                                     (PVOID*)&Data,
                                     &Length);

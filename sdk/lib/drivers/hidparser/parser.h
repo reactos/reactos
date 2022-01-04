@@ -2,7 +2,6 @@
 #define _HIDPARSER_H_
 
 #include <wdm.h>
-#include <pshpack1.h>
 #define _HIDPI_
 #define _HIDPI_NO_FUNCTION_MACROS_
 #include <hidpddi.h>
@@ -84,6 +83,7 @@ typedef struct
     UCHAR Tag:4;
 }ITEM_PREFIX, *PITEM_PREFIX;
 
+#include <pshpack1.h>
 typedef struct
 {
     ITEM_PREFIX Prefix;
@@ -99,6 +99,7 @@ typedef struct
     }Data;
 
 }SHORT_ITEM, *PSHORT_ITEM;
+#include <poppack.h>
 
 typedef struct
 {
@@ -142,9 +143,9 @@ typedef struct __GLOBAL_ITEM_STATE_
 }GLOBAL_ITEM_STATE, *PGLOBAL_ITEM_STATE;
 
 
-typedef struct usage_value 
+typedef struct usage_value
 {
-    union 
+    union
     {
         struct {
             USHORT UsageId;
@@ -212,7 +213,7 @@ typedef struct __HID_COLLECTION__
 
     struct __HID_COLLECTION__ ** Nodes;
     struct __HID_COLLECTION__ * Root;
-    struct _HID_REPORT ** Reports; 
+    struct _HID_REPORT ** Reports;
 
     ULONG Offsets[1];
 

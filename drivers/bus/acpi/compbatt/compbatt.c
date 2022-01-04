@@ -25,12 +25,12 @@ CompBattOpenClose(IN PDEVICE_OBJECT DeviceObject,
 {
     PAGED_CODE();
     if (CompBattDebug & 0x100) DbgPrint("CompBatt: ENTERING OpenClose\n");
-    
+
     /* Complete the IRP with success */
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    
+
     /* Return success */
     if (CompBattDebug & 0x100) DbgPrint("CompBatt: Exiting OpenClose\n");
     return STATUS_SUCCESS;
@@ -45,7 +45,7 @@ CompBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
     PAGED_CODE();
     if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING System Control\n");
-    
+
     /* Are we attached yet? */
     if (DeviceExtension->AttachedDevice)
     {
@@ -60,7 +60,7 @@ CompBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
         Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -109,13 +109,13 @@ CompBattRecalculateTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
             DeviceExtension->NextTag = Tag + 1;
             break;
        }
-       
+
        /* No tag for this device extension, clear it */
        DeviceExtension->Tag = 0;
        NextEntry = NextEntry->Flink;
     }
-    
-    /* We're done */ 
+
+    /* We're done */
     ExReleaseFastMutex(&DeviceExtension->Lock);
     if (CompBattDebug & 0x100) DbgPrint("CompBatt: EXITING CompBattRecalculateTag\n");
 }
@@ -159,7 +159,7 @@ CompBattQueryTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
         /* Assign one */
         CompBattRecalculateTag(DeviceExtension);
     }
-      
+
     /* Do we have a tag now? */
     if ((DeviceExtension->Flags & COMPBATT_TAG_ASSIGNED) && (DeviceExtension->Tag))
     {
@@ -173,7 +173,7 @@ CompBattQueryTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
         *Tag = 0;
         Status = STATUS_NO_SUCH_DEVICE;
     }
-    
+
     /* Return status */
     if (CompBattDebug & 0x100) DbgPrint("CompBatt: EXITING QueryTag\n");
     return Status;
@@ -236,12 +236,12 @@ CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
     PCOMPBATT_BATTERY_DATA BatteryData;
     PLIST_ENTRY ListHead, NextEntry;
     if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING GetBatteryInformation\n");
-    
+
     /* Set defaults */
     BatteryInfo->DefaultAlert1 = 0;
     BatteryInfo->DefaultAlert2 = 0;
     BatteryInfo->CriticalBias = 0;
-    
+
     /* Loop the battery list */
     ExAcquireFastMutex(&DeviceExtension->Lock);
     ListHead = &DeviceExtension->BatteryList;
@@ -254,12 +254,12 @@ CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
         {
             /* Now release the device lock since the battery can't go away */
             ExReleaseFastMutex(&DeviceExtension->Lock);
-            
+
             /* Build the query */
             InputBuffer.BatteryTag = BatteryData->Tag;
             InputBuffer.InformationLevel = BatteryInformation;
             InputBuffer.AtRate = 0;
-            
+
             /* Make sure the battery has a tag */
             if (BatteryData->Tag)
             {
@@ -284,7 +284,7 @@ CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
                         IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
                         break;
                     }
-                    
+
                     /* Next time we can use the static copy */
                     BatteryData->Flags |= COMPBATT_BATTERY_INFORMATION_PRESENT;
                     if (CompBattDebug & 2)
@@ -307,7 +307,7 @@ CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
 
                 /* Combine capabilities */
                 BatteryInfo->Capabilities |= BatteryData->BatteryInformation.Capabilities;
-                
+
                 /* Add-on capacity */
                 if (BatteryData->BatteryInformation.DesignedCapacity != BATTERY_UNKNOWN_CAPACITY)
                 {
@@ -319,7 +319,7 @@ CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
                 {
                     BatteryInfo->FullChargedCapacity += BatteryData->BatteryInformation.FullChargedCapacity;
                 }
-                
+
                 /* Choose the highest alert */
                 BatteryInfo->DefaultAlert1 = max(BatteryInfo->DefaultAlert1,
                                                  BatteryData->BatteryInformation.DefaultAlert1);
@@ -327,22 +327,22 @@ CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
                 /* Choose the highest alert */
                 BatteryInfo->DefaultAlert2 = max(BatteryInfo->DefaultAlert2,
                                                  BatteryData->BatteryInformation.DefaultAlert2);
-                
+
                 /* Choose the highest critical bias */
                 BatteryInfo->CriticalBias = max(BatteryInfo->CriticalBias,
                                                 BatteryData->BatteryInformation.CriticalBias);
             }
-            
+
             /* Re-acquire the device extension lock and release the remove lock */
             ExAcquireFastMutex(&DeviceExtension->Lock);
             IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
         }
-        
+
         /* Next entry */
         NextEntry = NextEntry->Flink;
     }
-    
-    /* We are done with the list, check if the information was queried okay */ 
+
+    /* We are done with the list, check if the information was queried okay */
     ExReleaseFastMutex(&DeviceExtension->Lock);
     if (NT_SUCCESS(Status))
     {
@@ -351,7 +351,7 @@ CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
         {
             BatteryInfo->FullChargedCapacity = BatteryInfo->DesignedCapacity;
         }
-        
+
         /* Print out final combined data */
         if (CompBattDebug & 2)
             DbgPrint("CompBattGetBatteryInformation: Returning BATTERY_INFORMATION\n"
@@ -369,14 +369,14 @@ CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
                      BatteryInfo->DefaultAlert2,
                      BatteryInfo->CriticalBias,
                      BatteryInfo->CycleCount);
-                     
+
         /* Copy the data into the device extension */
         RtlCopyMemory(&DeviceExtension->BatteryInformation,
                       BatteryInfo,
                       sizeof(DeviceExtension->BatteryInformation));
         DeviceExtension->Flags |= COMPBATT_BATTERY_INFORMATION_PRESENT;
     }
-    
+
     /* We are done */
     if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING GetBatteryInformation\n");
     return Status;
@@ -394,13 +394,13 @@ CompBattGetBatteryGranularity(OUT PBATTERY_REPORTING_SCALE ReportingScale,
     PLIST_ENTRY ListHead, NextEntry;
     ULONG i;
     if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING GetBatteryGranularity\n");
-    
+
     /* Set defaults */
     ReportingScale[0].Granularity = -1;
     ReportingScale[1].Granularity = -1;
     ReportingScale[2].Granularity = -1;
     ReportingScale[3].Granularity = -1;
-    
+
     /* Loop the battery list */
     ExAcquireFastMutex(&DeviceExtension->Lock);
     ListHead = &DeviceExtension->BatteryList;
@@ -413,11 +413,11 @@ CompBattGetBatteryGranularity(OUT PBATTERY_REPORTING_SCALE ReportingScale,
         {
             /* Now release the device lock since the battery can't go away */
             ExReleaseFastMutex(&DeviceExtension->Lock);
-            
+
             /* Build the query */
             InputBuffer.BatteryTag = BatteryData->Tag;
             InputBuffer.InformationLevel = BatteryGranularityInformation;
-            
+
             /* Make sure the battery has a tag */
             if (BatteryData->Tag)
             {
@@ -438,7 +438,7 @@ CompBattGetBatteryGranularity(OUT PBATTERY_REPORTING_SCALE ReportingScale,
                     IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
                     break;
                 }
-                
+
                 /* Loop all 4 scales */
                 for (i = 0; i < 4; i++)
                 {
@@ -449,10 +449,10 @@ CompBattGetBatteryGranularity(OUT PBATTERY_REPORTING_SCALE ReportingScale,
                         ReportingScale[i].Granularity = min(BatteryScale[i].Granularity,
                                                             ReportingScale[i].Granularity);
                     }
-                    
+
                 }
             }
-            
+
             /* Re-acquire the device extension lock and release the remove lock */
             ExAcquireFastMutex(&DeviceExtension->Lock);
             IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
@@ -461,7 +461,7 @@ CompBattGetBatteryGranularity(OUT PBATTERY_REPORTING_SCALE ReportingScale,
         /* Next entry */
         NextEntry = NextEntry->Flink;
     }
-    
+
     /* All done */
     ExReleaseFastMutex(&DeviceExtension->Lock);
     if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING GetBatteryGranularity\n");
@@ -476,7 +476,7 @@ CompBattGetEstimatedTime(OUT PULONG Time,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-    
+
 NTSTATUS
 NTAPI
 CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
@@ -505,12 +505,12 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
         /* Not right, so fail */
         return STATUS_NO_SUCH_DEVICE;
     }
-      
+
     /* Check what caller wants */
     switch (InfoLevel)
     {
         case BatteryInformation:
-        
+
             /* Query combined battery information */
             RtlZeroMemory(&BatteryInfo, sizeof(BatteryInfo));
             Status = CompBattGetBatteryInformation(&BatteryInfo, DeviceExtension);
@@ -521,7 +521,7 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
                 QueryLength = sizeof(BatteryInfo);
             }
             break;
-        
+
         case BatteryGranularityInformation:
 
             /* Query combined granularity information */
@@ -534,9 +534,9 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
                 QueryData = &BatteryGranularity;
             }
             break;
-            
+
         case BatteryEstimatedTime:
-        
+
             /* Query combined time estimate information */
             RtlZeroMemory(&Time, sizeof(Time));
             Status = CompBattGetEstimatedTime(&Time, DeviceExtension);
@@ -544,20 +544,20 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
             {
                 /* Return the data if successful */
                 QueryLength = sizeof(Time);
-                QueryData = &Time; 
+                QueryData = &Time;
             }
             break;
-            
+
         case BatteryManufactureName:
         case BatteryDeviceName:
-        
+
             /* Return the static buffer */
             QueryData = BatteryName;
             QueryLength = sizeof(L"Composite Battery");
             break;
-    
+
         case BatteryManufactureDate:
-        
+
             /* Static data */
             //Date.Day = 26;
             //Date.Month = 06;
@@ -572,7 +572,7 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
             QueryData = &Dummy;
             QueryLength = sizeof(Dummy);
             break;
-            
+
         default:
             /* Everything else is unknown */
             Status = STATUS_INVALID_PARAMETER;
@@ -585,7 +585,7 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
 
     /* Copy the data if there's enough space and it exists */
     if ((NT_SUCCESS(Status)) && (QueryData)) RtlCopyMemory(Buffer, QueryData, QueryLength);
-      
+
     /* Return function result */
     if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING QueryInformation\n");
     return Status;
@@ -598,7 +598,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
     /* Register add device routine */
     DriverObject->DriverExtension->AddDevice = CompBattAddDevice;
-    
+
     /* Register other handlers */
     DriverObject->MajorFunction[IRP_MJ_CREATE] = CompBattOpenClose;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = CompBattOpenClose;

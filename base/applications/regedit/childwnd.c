@@ -262,7 +262,7 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
                 swprintf(fullPath, L"%s%s%s", rootName, keyPath[0]==L'\\'?L"":L"\\", keyPath);
             else
                 fullPath = wcscpy(fullPath, rootName);
-             
+
             SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)fullPath);
             SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
             HeapFree(GetProcessHeap(), 0, fullPath);
@@ -477,14 +477,14 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
     case WM_NOTIFY:
         if (g_pChildWnd == NULL) break;
-                
+
         if (((LPNMHDR)lParam)->idFrom == TREE_WINDOW)
         {
             if (!TreeWndNotifyProc(g_pChildWnd->hListWnd, wParam, lParam, &Result))
             {
                 goto def;
             }
-            
+
             return Result;
         }
         else
@@ -502,7 +502,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             {
                 goto def;
             }
-        }        
+        }
         break;
 
     case WM_CONTEXTMENU:

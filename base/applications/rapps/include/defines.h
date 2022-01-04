@@ -4,7 +4,6 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #define COBJMACROS
-#define _DEBUG
 #include <tchar.h>
 #include <stdarg.h>
 
@@ -30,7 +29,8 @@
 #include "resource.h"
 #include "winmain.h"
 
-#define APPLICATION_DATABASE_URL L"https://rapps.reactos.org/rappmgr.cab"
+#define APPLICATION_DATABASE_URL L"https://rapps.reactos.org/rappmgr2.cab"
+#define APPLICATION_DATABASE_NAME L"rappmgr2.cab"
 #define MAX_STR_LEN              256
 
 enum AppsCategories

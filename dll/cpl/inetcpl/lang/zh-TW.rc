@@ -27,7 +27,7 @@ STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "網際網路選項"
     IDS_CPL_INFO        "配置 Wine 網際網路瀏覽器和相關的設定"
-    IDS_SEC_SETTINGS    "區域的安全設定: "
+    IDS_SEC_SETTINGS    "區域的安全設定︰"
     IDS_SEC_LEVEL0      "自訂"
     IDS_SEC_LEVEL1      "非常低"
     IDS_SEC_LEVEL2      "低"
@@ -44,17 +44,17 @@ CAPTION "一般"
 BEGIN
 
     GROUPBOX    "主頁", IDC_STATIC, 4, 4, 312, 56
-    LTEXT       "您可以選擇將用作您的主頁網址。",
+    LTEXT       "您可以選擇將被做為首頁的位址。",
                 IDC_STATIC, 10, 14, 300, 10
     EDITTEXT    IDC_HOME_EDIT, 10, 26, 300, 12, WS_VISIBLE | ES_AUTOHSCROLL
-    PUSHBUTTON  "當前頁(&C)", IDC_HOME_CURRENT, 58, 42, 80, 14
-    PUSHBUTTON  "默認頁(&D)", IDC_HOME_DEFAULT, 144, 42, 80, 14
-    PUSHBUTTON  "空白頁(&B)", IDC_HOME_BLANK, 230, 42, 80, 14
+    PUSHBUTTON  "目前的頁面(&C)", IDC_HOME_CURRENT, 58, 42, 80, 14
+    PUSHBUTTON  "預設頁面(&D)", IDC_HOME_DEFAULT, 144, 42, 80, 14
+    PUSHBUTTON  "空白頁面(&B)", IDC_HOME_BLANK, 230, 42, 80, 14
     GROUPBOX    "瀏覽歷史記錄", IDC_STATIC, 4, 66, 312, 42
-    LTEXT       "您可以刪除快取的頁面、 小型文字檔案和其他資料。",
+    LTEXT       "您可以刪除網頁快取、Cookie 和其他資料。",
                 IDC_STATIC, 10, 76, 300, 10
-    PUSHBUTTON  "刪除檔案...(&F)", IDC_HISTORY_DELETE, 144, 90, 80, 14
-    PUSHBUTTON  "設定...(&S)", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
+    PUSHBUTTON  "刪除檔案(&F)...", IDC_HISTORY_DELETE, 144, 90, 80, 14
+    PUSHBUTTON  "設定(&S)...", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
 
 END
 
@@ -65,15 +65,15 @@ FONT 9, "新細明體"
 CAPTION "刪除瀏覽歷史記錄"
 BEGIN
 
-    AUTOCHECKBOX   "網際網路臨時檔案\n快取的網站頁面、 影象和證書的副本。",
+    AUTOCHECKBOX   "暫時的網際網路檔案\n已快取的網頁、影像和憑證。",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "Cookie\n通過網站在您的電腦上儲存檔案存儲使用者首選項和登入資訊。",
+    AUTOCHECKBOX   "Cookie\n由網站儲存於您電腦的檔案，其存有諸如使用者偏好設定和登入資訊。",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "歷史記錄\n您進入的網站的列表。",
+    AUTOCHECKBOX   "歷程記錄\n您曾存取過的網站清單。",
                     IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "表單資料\n您已進入形式的使用者名和其他資訊。",
+    AUTOCHECKBOX   "表單資料\n使用者名稱和其他您曾輸入表單的資訊。",
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "密碼\n儲存在窗體中輸入的密碼。",
+    AUTOCHECKBOX   "密碼\n您曾輸入表單的已儲存密碼。",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "取消", IDCANCEL, 185, 230, 60, 15, WS_GROUP
     PUSHBUTTON     "刪除", IDOK, 120, 230, 60, 15, WS_GROUP
@@ -105,11 +105,11 @@ FONT 9, "新細明體"
 CAPTION "內容"
 BEGIN
 
-    GROUPBOX    "證書", IDC_STATIC, 4, 4, 312, 50
-    LTEXT       "為您的個人身份，確定證書頒發機構和出版商使用證書。",
+    GROUPBOX    "憑證", IDC_STATIC, 4, 4, 312, 50
+    LTEXT       "憑證是作為您的個人識別，以及識別憑證授權機構和發行者。",
                 IDC_STATIC, 58, 14, 252, 18
-    PUSHBUTTON  "證書...", IDC_CERT, 146, 34, 80, 14
-    PUSHBUTTON	"出版者...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
+    PUSHBUTTON  "憑證...", IDC_CERT, 146, 34, 80, 14
+    PUSHBUTTON	"發行者...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
 
 END
 
@@ -120,14 +120,14 @@ FONT 9, "新細明體"
 CAPTION "連線"
 BEGIN
     GROUPBOX        "自動組態", IDC_STATIC, 4, 4, 312, 56
-    AUTOCHECKBOX    "使用網路 Proxy 自動偵測 (WPAD)", IDC_USE_WPAD, 10, 14, 200, 14, BS_TOP
-    AUTOCHECKBOX    "使用網路 Proxy 自動偵測 (PAC) 指令碼", IDC_USE_PAC_SCRIPT, 10, 28, 200, 14, BS_TOP
-    LTEXT           "網址:", IDC_STATIC, 10, 42, 40, 14
+    AUTOCHECKBOX    "使用網路 Proxy 自動偵測（WPAD）", IDC_USE_WPAD, 10, 14, 200, 14, BS_TOP
+    AUTOCHECKBOX    "使用網路 Proxy 自動偵測（PAC）指令碼", IDC_USE_PAC_SCRIPT, 10, 28, 200, 14, BS_TOP
+    LTEXT           "網址：", IDC_STATIC, 10, 42, 40, 14
     EDITTEXT        IDC_EDIT_PAC_SCRIPT, 50, 42, 160, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX        "Proxy 伺服器", IDC_STATIC, 4, 66, 312, 42
     AUTOCHECKBOX    "使用 Proxy 伺服器", IDC_USE_PROXY_SERVER, 10, 76, 200, 14, BS_TOP | BS_MULTILINE
-    LTEXT           "網址:", IDC_STATIC, 10, 90, 40, 14
+    LTEXT           "網址：", IDC_STATIC, 10, 90, 40, 14
     EDITTEXT        IDC_EDIT_PROXY_SERVER, 50, 90, 80, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT           "連接埠:", IDC_STATIC, 140, 90, 30, 14
+    LTEXT           "連接埠：", IDC_STATIC, 140, 90, 30, 14
     EDITTEXT        IDC_EDIT_PROXY_PORT, 170, 90, 40, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED | ES_NUMBER
 END

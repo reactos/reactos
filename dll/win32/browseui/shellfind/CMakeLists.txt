@@ -1,22 +1,18 @@
 
 PROJECT(SHELL)
 
-set_cpp(WITH_RUNTIME)
-
 add_definitions(-DUNICODE -D_UNICODE)
-add_definitions(-D_ATL_NO_EXCEPTIONS)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND SOURCE
     CSearchBar.cpp
     CFindFolder.cpp
     shellfind.h)
 
-add_library(shellfind ${SOURCE})
+add_library(shellfind OBJECT ${SOURCE})
+target_link_libraries(shellfind PRIVATE atl_classes)
 
-if(NOT MSVC)
-    target_compile_options(shellfind PRIVATE "-Wno-unused-but-set-variable")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(shellfind PRIVATE -Wno-unused-but-set-variable)
 endif()
 
 add_pch(shellfind shellfind.h SOURCE)

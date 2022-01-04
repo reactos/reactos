@@ -6,50 +6,25 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
+#if defined(_M_IX86)
 VOID
 NTAPI
 Kii386SpinOnSpinLock(PKSPIN_LOCK SpinLock, ULONG Flags);
-
-#ifndef CONFIG_SMP
-
-//
-// Spinlock Acquire at IRQL >= DISPATCH_LEVEL
-//
-FORCEINLINE
-VOID
-KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
-{
-    /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
-    UNREFERENCED_PARAMETER(SpinLock);
-
-    /* Add an explicit memory barrier to prevent the compiler from reordering
-       memory accesses across the borders of spinlocks */
-    KeMemoryBarrierWithoutFence();
-}
-
-//
-// Spinlock Release at IRQL >= DISPATCH_LEVEL
-//
-FORCEINLINE
-VOID
-KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
-{
-    /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
-    UNREFERENCED_PARAMETER(SpinLock);
-
-    /* Add an explicit memory barrier to prevent the compiler from reordering
-       memory accesses across the borders of spinlocks */
-    KeMemoryBarrierWithoutFence();
-}
-
-#else
+#endif
 
 //
 // Spinlock Acquisition at IRQL >= DISPATCH_LEVEL
 //
+_Acquires_nonreentrant_lock_(SpinLock)
 FORCEINLINE
 VOID
-KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
+KxAcquireSpinLock(
+#if defined(CONFIG_SMP) || DBG
+    _Inout_
+#else
+    _Unreferenced_parameter_
+#endif
+    PKSPIN_LOCK SpinLock)
 {
 #if DBG
     /* Make sure that we don't own the lock already */
@@ -60,6 +35,7 @@ KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
     }
 #endif
 
+#ifdef CONFIG_SMP
     /* Try to acquire the lock */
     while (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
     {
@@ -75,6 +51,12 @@ KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
         }
 #endif
     }
+#endif
+
+    /* Add an explicit memory barrier to prevent the compiler from reordering
+       memory accesses across the borders of spinlocks */
+    KeMemoryBarrierWithoutFence();
+
 #if DBG
     /* On debug builds, we OR in the KTHREAD */
     *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
@@ -84,9 +66,16 @@ KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
 //
 // Spinlock Release at IRQL >= DISPATCH_LEVEL
 //
+_Releases_nonreentrant_lock_(SpinLock)
 FORCEINLINE
 VOID
-KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
+KxReleaseSpinLock(
+#if defined(CONFIG_SMP) || DBG
+    _Inout_
+#else
+    _Unreferenced_parameter_
+#endif
+    PKSPIN_LOCK SpinLock)
 {
 #if DBG
     /* Make sure that the threads match */
@@ -96,8 +85,17 @@ KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
         KeBugCheckEx(SPIN_LOCK_NOT_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
     }
 #endif
-    /* Clear the lock */
-    InterlockedAnd((PLONG)SpinLock, 0);
-}
 
+#if defined(CONFIG_SMP) || DBG
+    /* Clear the lock  */
+#ifdef _WIN64
+    InterlockedAnd64((PLONG64)SpinLock, 0);
+#else
+    InterlockedAnd((PLONG)SpinLock, 0);
 #endif
+#endif
+
+    /* Add an explicit memory barrier to prevent the compiler from reordering
+       memory accesses across the borders of spinlocks */
+    KeMemoryBarrierWithoutFence();
+}

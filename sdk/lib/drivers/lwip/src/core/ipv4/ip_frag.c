@@ -6,9 +6,9 @@
 
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
- * All rights reserved. 
- * 
- * Redistribution and use in source and binary forms, with or without modification, 
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
@@ -17,25 +17,25 @@
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission. 
+ *    derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT 
- * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+ * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  *
  * This file is part of the lwIP TCP/IP stack.
- * 
- * Author: Jani Monoses <jani@iv.ro> 
+ *
+ * Author: Jani Monoses <jani@iv.ro>
  *         Simon Goldschmidt
  * original reassembly code by Adam Dunkels <adam@sics.se>
- * 
+ *
  */
 
 #include "lwip/opt.h"
@@ -185,7 +185,7 @@ ip_reass_free_complete_datagram(struct ip_reassdata *ipr, struct ip_reassdata *p
   }
 #endif /* LWIP_ICMP */
 
-  /* First, free all received pbufs.  The individual pbufs need to be released 
+  /* First, free all received pbufs.  The individual pbufs need to be released
      separately as they have not yet been chained */
   p = ipr->p;
   while (p != NULL) {
@@ -303,7 +303,7 @@ ip_reass_enqueue_new_datagram(struct ip_hdr *fraghdr, int clen)
 static void
 ip_reass_dequeue_datagram(struct ip_reassdata *ipr, struct ip_reassdata *prev)
 {
-  
+
   /* dequeue the reass struct  */
   if (reassdatagrams == ipr) {
     /* it was the first in the list */
@@ -337,7 +337,7 @@ ip_reass_chain_frag_into_datagram_and_validate(struct ip_reassdata *ipr, struct 
   int valid = 1;
 
   /* Extract length and fragment offset from current fragment */
-  fraghdr = (struct ip_hdr*)new_p->payload; 
+  fraghdr = (struct ip_hdr*)new_p->payload;
   len = ntohs(IPH_LEN(fraghdr)) - IPH_HL(fraghdr) * 4;
   offset = (ntohs(IPH_OFFSET(fraghdr)) & IP_OFFMASK) * 8;
 
@@ -538,7 +538,7 @@ ip_reass(struct pbuf *p)
       goto nullreturn;
     }
   } else {
-    if (((ntohs(IPH_OFFSET(fraghdr)) & IP_OFFMASK) == 0) && 
+    if (((ntohs(IPH_OFFSET(fraghdr)) & IP_OFFMASK) == 0) &&
       ((ntohs(IPH_OFFSET(&ipr->iphdr)) & IP_OFFMASK) != 0)) {
       /* ipr->iphdr is not the header from the first fragment, but fraghdr is
        * -> copy fraghdr into ipr->iphdr since we want to have the header
@@ -547,11 +547,11 @@ ip_reass(struct pbuf *p)
       SMEMCPY(&ipr->iphdr, fraghdr, IP_HLEN);
     }
   }
-  /* Track the current number of pbufs current 'in-flight', in order to limit 
+  /* Track the current number of pbufs current 'in-flight', in order to limit
   the number of fragments that may be enqueued at any one time */
   ip_reass_pbufcount += clen;
 
-  /* At this point, we have either created a new entry or pointing 
+  /* At this point, we have either created a new entry or pointing
    * to an existing one */
 
   /* check for 'no more fragments', and update queue entry*/
@@ -663,7 +663,7 @@ ipfrag_free_pbuf_custom(struct pbuf *p)
  *
  * @return ERR_OK if sent successfully, err_t otherwise
  */
-err_t 
+err_t
 ip_frag(struct pbuf *p, struct netif *netif, ip_addr_t *dest)
 {
   struct pbuf *rambuf;
@@ -818,8 +818,8 @@ ip_frag(struct pbuf *p, struct netif *netif, ip_addr_t *dest)
       pbuf_realloc(rambuf, left + IP_HLEN);
     }
 
-    /* This part is ugly: we alloc a RAM based pbuf for 
-     * the link level header for each chunk and then 
+    /* This part is ugly: we alloc a RAM based pbuf for
+     * the link level header for each chunk and then
      * free it.A PBUF_ROM style pbuf for which pbuf_header
      * worked would make things simpler.
      */
@@ -848,7 +848,7 @@ ip_frag(struct pbuf *p, struct netif *netif, ip_addr_t *dest)
      * will have already sent the packet, the free will really free, and
      * there will be zero memory penalty.
      */
-    
+
     pbuf_free(rambuf);
 #endif /* IP_FRAG_USES_STATIC_BUF */
     left -= cop;

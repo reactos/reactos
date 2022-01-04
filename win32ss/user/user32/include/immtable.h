@@ -51,3 +51,7 @@ DEFINE_IMM_ENTRY(BOOL, ImmSetCompositionStringA, (HIMC hIMC, DWORD dwIndex, LPCV
 DEFINE_IMM_ENTRY(BOOL, ImmSetCompositionStringW, (HIMC hIMC, DWORD dwIndex, LPCVOID lpComp, DWORD dwCompLen, LPCVOID lpRead, DWORD dwReadLen), 0, NONVOID)
 DEFINE_IMM_ENTRY(BOOL, ImmEnumInputContext, (DWORD dwThreadID, IMCENUMPROC lpfn, LPARAM lParam), 0, NONVOID)
 DEFINE_IMM_ENTRY(LRESULT, ImmSystemHandler, (HIMC hIMC, WPARAM wParam, LPARAM lParam), 0, NONVOID)
+DEFINE_IMM_ENTRY(LRESULT, CtfImmTIMActivate, (HKL hKL), 0, NONVOID)
+DEFINE_IMM_ENTRY(VOID, CtfImmRestoreToolbarWnd, (DWORD dwStatus), 0, VOID)
+DEFINE_IMM_ENTRY(DWORD, CtfImmHideToolbarWnd, (VOID), 0, NONVOID)
+DEFINE_IMM_ENTRY(LRESULT, CtfImmDispatchDefImeMessage, (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam), 0, NONVOID)

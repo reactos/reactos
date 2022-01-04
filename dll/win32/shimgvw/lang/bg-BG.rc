@@ -9,12 +9,18 @@ BEGIN
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Следващо изображение"
     IDS_TOOLTIP_PREV_PIC "Предходно изображение"
+    IDS_TOOLTIP_BEST_FIT "Best fit to window (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Actual size (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Start slideshow (F11)"
     IDS_TOOLTIP_ZOOM_IN "Увеличаване (+)"
     IDS_TOOLTIP_ZOOM_OUT "Намаляване (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Завъртане по часовника (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Завъртане срещу часовника (Ctrl+L)"
+    IDS_TOOLTIP_DELETE "Delete (DEL)"
     IDS_TOOLTIP_PRINT "Разпечатване (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Записване като... (Ctrl+S)"
+    IDS_TOOLTIP_MODIFY "Modify (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Help topics (F1)"
 END
 
 STRINGTABLE

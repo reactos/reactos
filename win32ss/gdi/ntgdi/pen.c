@@ -115,11 +115,54 @@ IntGdiExtCreatePen(
         DPRINT("Can't allocate pen\n");
         return 0;
     }
+
     hPen = pbrushPen->BaseObject.hHmgr;
 
-    // If nWidth is zero, the pen is a single pixel wide, regardless of the current transformation.
-    if ((bOldStylePen) && (!dwWidth) && ((dwPenStyle & PS_STYLE_MASK) != PS_SOLID))
-        dwWidth = 1;
+    if (bOldStylePen)
+    {
+        // If nWidth is zero, the pen is a single pixel wide, regardless of the current transformation.
+        if (!dwWidth && (dwPenStyle & PS_STYLE_MASK) != PS_SOLID)
+            dwWidth = 1;
+    }
+    else
+    {
+        switch (dwPenStyle & PS_ENDCAP_MASK)
+        {
+            case PS_ENDCAP_ROUND:
+            case PS_ENDCAP_SQUARE:
+            case PS_ENDCAP_FLAT:
+                break;
+
+            default:
+                goto ExitCleanup;
+        }
+
+        switch (dwPenStyle & PS_JOIN_MASK)
+        {
+            case PS_JOIN_ROUND:
+            case PS_JOIN_BEVEL:
+            case PS_JOIN_MITER:
+                break;
+
+            default:
+                goto ExitCleanup;
+        }
+
+        switch (dwPenStyle & PS_TYPE_MASK)
+        {
+            case PS_COSMETIC:
+                if (dwWidth != 1 || ulBrushStyle != BS_SOLID)
+                    goto ExitCleanup;
+
+                break;
+
+            case PS_GEOMETRIC:
+                break;
+
+            default:
+                goto ExitCleanup;
+        }
+    }
 
     pbrushPen->lWidth = dwWidth;
     FLOATOBJ_SetLong(&pbrushPen->eWidth, pbrushPen->lWidth);
@@ -131,15 +174,7 @@ IntGdiExtCreatePen(
     pbrushPen->dwStyleCount = 0;
     pbrushPen->pStyle = NULL;
     pbrushPen->ulStyleSize = 0;
-
     pbrushPen->flAttrs = bOldStylePen ? BR_IS_OLDSTYLEPEN : BR_IS_PEN;
-
-    // If dwPenStyle is PS_COSMETIC, the width must be set to 1.
-    if ( !(bOldStylePen) && ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) && ( dwWidth != 1) )
-        goto ExitCleanup;
-    // If dwPenStyle is PS_COSMETIC, the brush style must be BS_SOLID.
-    if ( !(bOldStylePen) && ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) && (ulBrushStyle != BS_SOLID) )
-        goto ExitCleanup;
 
     switch (dwPenStyle & PS_STYLE_MASK)
     {

@@ -262,7 +262,7 @@ LoadIniFile(HWND hTree, LPCWSTR lpszIniFile)
         lpsz1 = szLine;
         while (*lpsz1 == L' ' || *lpsz1 == L'\r' || *lpsz1 == L'\n')
             ++lpsz1;
-        
+
         /* Skip empty lines */
         if (!*lpsz1)
             continue;
@@ -808,7 +808,7 @@ CommonWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         MessageBox(hDlg, _T("Help not implemented yet!"), _T("Help"), MB_ICONINFORMATION | MB_OK);
                         return TRUE;
                     }
-                
+
                     case PSN_KILLACTIVE: // Is going to lose activation.
                     {
                         // Changes are always valid of course.
@@ -868,7 +868,7 @@ INT_PTR CALLBACK
 SystemPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static LPCWSTR lpszIniFile = NULL;
-    
+
     if (message == WM_INITDIALOG)
         lpszIniFile = (LPCWSTR)((LPPROPSHEETPAGE)lParam)->lParam;
 

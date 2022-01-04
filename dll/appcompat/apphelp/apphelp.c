@@ -398,10 +398,10 @@ BOOL WINAPI SdbRegisterDatabase(
 
 /**
  * @name SdbUnregisterDatabase
- * 
+ *
  *
  * @param pguidDB
- * @return 
+ * @return
  */
 BOOL WINAPI SdbUnregisterDatabase(_In_ const GUID *pguidDB)
 {
@@ -453,7 +453,7 @@ BOOL WINAPI BaseFlushAppcompatCache(VOID);
  * @param hInstance     Unused, pass 0
  * @param lpszCmdLine   Unused, pass 0
  * @param nCmdShow      Unused, pass 0
- * @return 
+ * @return
  */
 BOOL WINAPI ShimDumpCache(HWND hwnd, HINSTANCE hInstance, LPCSTR lpszCmdLine, int nCmdShow)
 {
@@ -468,7 +468,7 @@ BOOL WINAPI ShimDumpCache(HWND hwnd, HINSTANCE hInstance, LPCSTR lpszCmdLine, in
 * @param hInstance     Unused, pass 0
 * @param lpszCmdLine   Unused, pass 0
 * @param nCmdShow      Unused, pass 0
-* @return 
+* @return
 */
 BOOL WINAPI ShimFlushCache(HWND hwnd, HINSTANCE hInstance, LPCSTR lpszCmdLine, int nCmdShow)
 {

@@ -951,6 +951,105 @@ DnsFlushResolverCache(VOID)
     return (Status == ERROR_SUCCESS);
 }
 
+
+BOOL
+WINAPI
+DnsFlushResolverCacheEntry_A(
+    _In_ LPCSTR pszEntry)
+{
+    DNS_STATUS Status = ERROR_SUCCESS;
+    LPWSTR pszUnicodeEntry;
+
+    DPRINT1("DnsFlushResolverCacheEntry_A(%s)\n", pszEntry);
+
+    if (pszEntry == NULL)
+        return FALSE;
+
+    pszUnicodeEntry = DnsCToW(pszEntry);
+    if (pszUnicodeEntry == NULL)
+        return FALSE;
+
+    RpcTryExcept
+    {
+        Status = R_ResolverFlushCacheEntry(NULL, pszUnicodeEntry, DNS_TYPE_ANY);
+        DPRINT("R_ResolverFlushCacheEntry() returned %lu\n", Status);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = RpcExceptionCode();
+        DPRINT("Exception returned %lu\n", Status);
+    }
+    RpcEndExcept;
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, pszUnicodeEntry);
+
+    return (Status == ERROR_SUCCESS);
+}
+
+
+BOOL
+WINAPI
+DnsFlushResolverCacheEntry_UTF8(
+    _In_ LPCSTR pszEntry)
+{
+    DNS_STATUS Status = ERROR_SUCCESS;
+    LPWSTR pszUnicodeEntry;
+
+    DPRINT1("DnsFlushResolverCacheEntry_UTF8(%s)\n", pszEntry);
+
+    if (pszEntry == NULL)
+        return FALSE;
+
+    pszUnicodeEntry = DnsCToW(pszEntry);
+    if (pszUnicodeEntry == NULL)
+        return FALSE;
+
+    RpcTryExcept
+    {
+        Status = R_ResolverFlushCacheEntry(NULL, pszUnicodeEntry, DNS_TYPE_ANY);
+        DPRINT("R_ResolverFlushCacheEntry() returned %lu\n", Status);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = RpcExceptionCode();
+        DPRINT("Exception returned %lu\n", Status);
+    }
+    RpcEndExcept;
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, pszUnicodeEntry);
+
+    return (Status == ERROR_SUCCESS);
+}
+
+
+BOOL
+WINAPI
+DnsFlushResolverCacheEntry_W(
+    _In_ LPCWSTR pszEntry)
+{
+    DNS_STATUS Status = ERROR_SUCCESS;
+
+    DPRINT1("DnsFlushResolverCacheEntry_W(%S)\n", pszEntry);
+
+    if (pszEntry == NULL)
+        return FALSE;
+
+    RpcTryExcept
+    {
+        Status = R_ResolverFlushCacheEntry(NULL, pszEntry, DNS_TYPE_ANY);
+        DPRINT("R_ResolverFlushCacheEntry() returned %lu\n", Status);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = RpcExceptionCode();
+        DPRINT("Exception returned %lu\n", Status);
+    }
+    RpcEndExcept;
+
+    return (Status == ERROR_SUCCESS);
+}
+
+
 BOOL
 WINAPI
 DnsGetCacheDataTable(

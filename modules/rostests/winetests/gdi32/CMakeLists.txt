@@ -25,8 +25,13 @@ add_executable(gdi32_winetest
     ${PCH_SKIP_SOURCE}
     resource.rc)
 
+if(MSVC AND ARCH STREQUAL "amd64")
+    # warning C4334: '<<': result of 32-bit shift implicitly converted to 64 bits (was 64-bit shift intended?)
+    target_compile_options(gdi32_winetest PRIVATE /wd4334)
+endif()
+
 set_module_type(gdi32_winetest win32cui)
-add_importlibs(gdi32_winetest gdi32 user32 advapi32 msvcrt kernel32)
+add_importlibs(gdi32_winetest gdi32 gdi32_vista user32 advapi32 msvcrt kernel32)
 
 if(MSVC)
     add_importlibs(gdi32_winetest ntdll)

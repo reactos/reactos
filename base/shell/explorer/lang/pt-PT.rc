@@ -13,10 +13,10 @@ BEGIN
         MENUITEM "&Janelas em Cascata", ID_SHELL_CMD_CASCADE_WND
         MENUITEM "Lado a Lado &Horizontalmente", ID_SHELL_CMD_TILE_WND_H
         MENUITEM "Lado a Lado &Verticalmente", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Exibir Área de Trabalho", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Mostrar a área de trabalho", ID_SHELL_CMD_SHOW_DESKTOP
         MENUITEM "&Retroceder", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
-        MENUITEM "&Gerenciador de Tarefas", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "&Gestor de Tarefas", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Bloquear a barra de tarefas", ID_LOCKTASKBAR
         MENUITEM "P&ropriedades", ID_SHELL_CMD_PROPERTIES

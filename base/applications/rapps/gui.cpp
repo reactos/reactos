@@ -280,7 +280,7 @@ BOOL CMainWindow::RemoveSelectedAppFromRegistry()
         CInstalledApplicationInfo *InstalledApp = (CInstalledApplicationInfo *)m_ApplicationView->GetFocusedItemData();
         if (!InstalledApp)
             return FALSE;
-        
+
         LSTATUS Result = InstalledApp->RemoveFromRegistry();
         if (Result != ERROR_SUCCESS)
         {
@@ -488,7 +488,7 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
         if (wParam == SEARCH_TIMER_ID)
         {
             ::KillTimer(hwnd, SEARCH_TIMER_ID);
-            
+
             UpdateApplicationsList(-1);
         }
         break;
@@ -545,6 +545,10 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
             PostMessageW(WM_CLOSE, 0, 0);
             break;
 
+        case ID_SEARCH:
+            m_ApplicationView->SetFocusOnSearchBar();
+            break;
+
         case ID_INSTALL:
             if (IsAvailableEnum(SelectedEnumType))
             {
@@ -567,7 +571,7 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                     CAvailableApplicationInfo *FocusedApps = (CAvailableApplicationInfo *)m_ApplicationView->GetFocusedItemData();
                     if (FocusedApps)
                     {
-                        if (DownloadApplication(FocusedApps, FALSE))
+                        if (DownloadApplication(FocusedApps))
                         {
                             UpdateApplicationsList(-1);
                         }
@@ -688,7 +692,7 @@ VOID CMainWindow::UpdateApplicationsList(INT EnumType)
         // set the display type of application-view. this will remove all the item in application-view too.
         m_ApplicationView->SetDisplayAppType(AppViewTypeInstalledApps);
 
-        // enum installed softwares 
+        // enum installed softwares
         m_InstalledApps.Enum(EnumType, s_EnumInstalledAppProc, this);
     }
     else if (IsAvailableEnum(EnumType))
@@ -696,12 +700,20 @@ VOID CMainWindow::UpdateApplicationsList(INT EnumType)
         // set the display type of application-view. this will remove all the item in application-view too.
         m_ApplicationView->SetDisplayAppType(AppViewTypeAvailableApps);
 
-        // enum available softwares 
+        // enum available softwares
         m_AvailableApps.Enum(EnumType, s_EnumAvailableAppProc, this);
     }
     m_ApplicationView->SetRedraw(TRUE);
     m_ApplicationView->RedrawWindow(0, 0, RDW_INVALIDATE | RDW_ALLCHILDREN); // force the child window to repaint
     UpdateStatusBarText();
+
+    CStringW text;
+    if (m_ApplicationView->GetItemCount() == 0 && !szSearchPattern.IsEmpty())
+    {
+        text.LoadString(IDS_NO_SEARCH_RESULTS);
+    }
+    m_ApplicationView->SetWatermark(text);
+
     bUpdating = FALSE;
 }
 
@@ -782,7 +794,7 @@ BOOL CMainWindow::InstallApplication(CAvailableApplicationInfo *Info)
 {
     if (Info)
     {
-        if (DownloadApplication(Info, FALSE))
+        if (DownloadApplication(Info))
         {
             UpdateApplicationsList(-1);
             return TRUE;
@@ -832,7 +844,7 @@ void CMainWindow::HandleTabOrder(int direction)
     m_TreeView->AppendTabOrderWindow(direction, TabOrderHwndList);
     m_ApplicationView->AppendTabOrderWindow(direction, TabOrderHwndList);
 
-    
+
     if (TabOrderHwndList.GetSize() == 0)
     {
         // in case the list is empty

@@ -163,7 +163,11 @@ IntUserHeapCreate(IN PVOID SectionObject,
     Parameters.InitialReserve = (SIZE_T)HeapSize;
     Parameters.CommitRoutine = IntUserHeapCommitRoutine;
 
-    pHeap = RtlCreateHeap(HEAP_ZERO_MEMORY | HEAP_NO_SERIALIZE,
+    pHeap = RtlCreateHeap(
+#if DBG /* Enable checks on debug builds */
+                          HEAP_FREE_CHECKING_ENABLED | HEAP_TAIL_CHECKING_ENABLED |
+#endif
+                          HEAP_ZERO_MEMORY | HEAP_NO_SERIALIZE,
                           *SystemMappedBase,
                           (SIZE_T)HeapSize,
                           ViewSize,

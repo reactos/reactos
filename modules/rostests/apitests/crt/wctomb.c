@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS API tests
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Tests for wctomb
- * COPYRIGHT:       Copyright 2020 Bișoc George <george.bisoc@reactos.org>
+ * COPYRIGHT:       Copyright 2020 George Bișoc <george.bisoc@reactos.org>
  */
 
 #include <apitest.h>
@@ -13,8 +13,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <locale.h>
-
-unsigned int cdecl ___lc_codepage_func(void);
 
 START_TEST(wctomb)
 {

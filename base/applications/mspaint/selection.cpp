@@ -65,31 +65,24 @@ ForceRefreshSelectionContents()
 
 int CSelectionWindow::IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeight)
 {
-    if (iYPos < 3)
-    {
-        if (iXPos < 3)
-            return ACTION_RESIZE_TOP_LEFT;
-        if ((iXPos < iWidth / 2 + 2) && (iXPos >= iWidth / 2 - 1))
-            return ACTION_RESIZE_TOP;
-        if (iXPos >= iWidth - 3)
-            return ACTION_RESIZE_TOP_RIGHT;
-    }
-    if ((iYPos < iHeight / 2 + 2) && (iYPos >= iHeight / 2 - 1))
-    {
-        if (iXPos < 3)
-            return ACTION_RESIZE_LEFT;
-        if (iXPos >= iWidth - 3)
-            return ACTION_RESIZE_RIGHT;
-    }
-    if (iYPos >= iHeight - 3)
-    {
-        if (iXPos < 3)
-            return ACTION_RESIZE_BOTTOM_LEFT;
-        if ((iXPos < iWidth / 2 + 2) && (iXPos >= iWidth / 2 - 1))
-            return ACTION_RESIZE_BOTTOM;
-        if (iXPos >= iWidth - 3)
-            return ACTION_RESIZE_BOTTOM_RIGHT;
-    }
+    POINT pt = { iXPos, iYPos };
+    HWND hwndChild = ChildWindowFromPointEx(pt, CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
+    if (hwndChild == sizeboxLeftTop)
+        return ACTION_RESIZE_TOP_LEFT;
+    if (hwndChild == sizeboxCenterTop)
+        return ACTION_RESIZE_TOP;
+    if (hwndChild == sizeboxRightTop)
+        return ACTION_RESIZE_TOP_RIGHT;
+    if (hwndChild == sizeboxRightCenter)
+        return ACTION_RESIZE_RIGHT;
+    if (hwndChild == sizeboxLeftCenter)
+        return ACTION_RESIZE_LEFT;
+    if (hwndChild == sizeboxCenterBottom)
+        return ACTION_RESIZE_BOTTOM;
+    if (hwndChild == sizeboxRightBottom)
+        return ACTION_RESIZE_BOTTOM_RIGHT;
+    if (hwndChild == sizeboxLeftBottom)
+        return ACTION_RESIZE_BOTTOM_LEFT;
     return 0;
 }
 
@@ -99,8 +92,8 @@ LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     {
         HDC hDC = GetDC();
         DefWindowProc(WM_PAINT, wParam, lParam);
-        SelectionFrame(hDC, 1, 1, selectionModel.GetDestRectWidth() * toolsModel.GetZoom() / 1000 + 5,
-                       selectionModel.GetDestRectHeight() * toolsModel.GetZoom() / 1000 + 5,
+        SelectionFrame(hDC, 1, 1, Zoomed(selectionModel.GetDestRectWidth()) + 5,
+                       Zoomed(selectionModel.GetDestRectHeight()) + 5,
                        m_dwSystemSelectionColor);
         ReleaseDC(hDC);
     }
@@ -161,8 +154,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         imageModel.ResetToPrevious();
         m_ptFrac.x += GET_X_LPARAM(lParam) - m_ptPos.x;
         m_ptFrac.y += GET_Y_LPARAM(lParam) - m_ptPos.y;
-        m_ptDelta.x += m_ptFrac.x * 1000 / toolsModel.GetZoom();
-        m_ptDelta.y += m_ptFrac.y * 1000 / toolsModel.GetZoom();
+        m_ptDelta.x += UnZoomed(m_ptFrac.x);
+        m_ptDelta.y += UnZoomed(m_ptFrac.y);
         if (toolsModel.GetZoom() < 1000)
         {
             m_ptFrac.x = 0;
@@ -170,8 +163,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         }
         else
         {
-            m_ptFrac.x -= (m_ptFrac.x * 1000 / toolsModel.GetZoom()) * toolsModel.GetZoom() / 1000;
-            m_ptFrac.y -= (m_ptFrac.y * 1000 / toolsModel.GetZoom()) * toolsModel.GetZoom() / 1000;
+            m_ptFrac.x -= Zoomed(UnZoomed(m_ptFrac.x));
+            m_ptFrac.y -= Zoomed(UnZoomed(m_ptFrac.y));
         }
         selectionModel.ModifyDestRect(m_ptDelta, m_iAction);
 
@@ -197,8 +190,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     }
     else
     {
-        int w = selectionModel.GetDestRectWidth() * toolsModel.GetZoom() / 1000 + 6;
-        int h = selectionModel.GetDestRectHeight() * toolsModel.GetZoom() / 1000 + 6;
+        int w = Zoomed(selectionModel.GetDestRectWidth()) + 2 * GRIP_SIZE;
+        int h = Zoomed(selectionModel.GetDestRectHeight()) + 2 * GRIP_SIZE;
         m_ptPos.x = GET_X_LPARAM(lParam);
         m_ptPos.y = GET_Y_LPARAM(lParam);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);
@@ -286,4 +279,9 @@ LRESULT CSelectionWindow::OnSelectionModelRefreshNeeded(UINT nMsg, WPARAM wParam
 {
     ForceRefreshSelectionContents();
     return 0;
+}
+
+LRESULT CSelectionWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
 }

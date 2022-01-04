@@ -1162,7 +1162,7 @@ LocationsEnumProc(GEOID gId)
     WCHAR loc[MAX_STR_SIZE];
     INT index;
 
-    if (GetGeoInfoW(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, LANG_SYSTEM_DEFAULT) == 0)
+    if (GetGeoInfoW(gId, GEO_FRIENDLYNAME, loc, MAX_STR_SIZE, GetThreadLocale()) == 0)
         return TRUE;
 
     index = (INT)SendMessageW(hGeoList,
@@ -1196,7 +1196,7 @@ CreateLocationsList(HWND hWnd)
                 GEO_FRIENDLYNAME,
                 loc,
                 MAX_STR_SIZE,
-                LANG_SYSTEM_DEFAULT);
+                GetThreadLocale());
 
     SendMessageW(hGeoList,
                  CB_SELECTSTRING,

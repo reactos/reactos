@@ -50,7 +50,7 @@ void CopyTest::copy_volatile()
   {
     int a[] = {0, 1, 2, 3, 4, 5};
     const size_t size = sizeof(a) / sizeof(a[0]);
-    volatile int va[size]; 
+    volatile int va[size];
     copy(a, a + size, va);
     for (size_t i = 0; i != size; ++i) {
       CPPUNIT_ASSERT( a[i] == va[i] );
@@ -60,7 +60,7 @@ void CopyTest::copy_volatile()
   {
     const int a[] = {0, 1, 2, 3, 4, 5};
     const size_t size = sizeof(a) / sizeof(a[0]);
-    volatile int va[size]; 
+    volatile int va[size];
     copy(a, a + size, va);
     for (size_t i = 0; i != size; ++i) {
       CPPUNIT_ASSERT( a[i] == va[i] );
@@ -72,7 +72,7 @@ void CopyTest::copy_volatile()
   {
     int a[] = {0, 1, 2, 3, 4, 5};
     const size_t size = sizeof(a) / sizeof(a[0]);
-    const volatile int va[size] = {5, 4, 3, 2, 1, 0}; 
+    const volatile int va[size] = {5, 4, 3, 2, 1, 0};
     copy(a, a + size, va);
     for (size_t i = 0; i != size; ++i) {
       CPPUNIT_ASSERT( a[i] == va[i] );

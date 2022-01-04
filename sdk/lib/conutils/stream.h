@@ -136,14 +136,27 @@ ConStreamSetMode(
     IN UINT CacheCodePage OPTIONAL);
 
 #ifdef USE_CRT
+
 // FIXME!
 #warning The ConStreamSetCacheCodePage function does not make much sense with the CRT!
+
+#define ConStdStreamsSetCacheCodePage(InputCodePage, OutputCodePage) NOTHING
+
 #else
+
 BOOL
 ConStreamSetCacheCodePage(
     IN PCON_STREAM Stream,
     IN UINT CacheCodePage);
-#endif
+
+#define ConStdStreamsSetCacheCodePage(InputCodePage, OutputCodePage) \
+do { \
+    ConStreamSetCacheCodePage(StdIn , (InputCodePage )); \
+    ConStreamSetCacheCodePage(StdOut, (OutputCodePage)); \
+    ConStreamSetCacheCodePage(StdErr, (OutputCodePage)); \
+} while(0)
+
+#endif /* defined(USE_CRT) */
 
 HANDLE
 ConStreamGetOSHandle(

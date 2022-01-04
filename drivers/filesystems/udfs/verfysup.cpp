@@ -48,7 +48,7 @@ UDFVerifyVcb(
     UDFPrint(("UDFVerifyVCB: Modified=%d\n", Vcb->Modified));
     //  Fail immediately if the volume is in the progress of being dismounted
     //  or has been marked invalid.
-    if (Vcb->VCBFlags & UDF_VCB_FLAGS_BEING_DISMOUNTED) { 
+    if (Vcb->VCBFlags & UDF_VCB_FLAGS_BEING_DISMOUNTED) {
         return STATUS_FILE_INVALID;
     }
 
@@ -65,7 +65,7 @@ UDFVerifyVcb(
                                      NULL,0,
                                      &MediaChangeCount,sizeof(ULONG),
                                      FALSE,&Iosb );
-    
+
         //  Be safe about the count in case the driver didn't fill it in
         if (Iosb.Information != sizeof(ULONG))  MediaChangeCount = 0;
         UDFPrint(("  MediaChangeCount %d -> %d\n", Vcb->MediaChangeCount, MediaChangeCount));
@@ -602,7 +602,7 @@ UDFPerformVerify(
     UDFPrint(("UDFPerformVerify: RC = %x\n", RC));
 
     return RC;
-    
+
 } // end UDFPerformVerify()
 
 /*
@@ -933,11 +933,11 @@ UDFCompareVcb(
         UDFPrint(("  VolCreationTime %I64x != %I64x \n", OldVcb->VolCreationTime, NewVcb->VolCreationTime));
         return STATUS_WRONG_VOLUME;
     }
-    // Compare serial numbers 
+    // Compare serial numbers
     if(OldVcb->SerialNumber != NewVcb->SerialNumber) {
         UDFPrint(("  SerialNumber %x != %x \n", OldVcb->SerialNumber, NewVcb->SerialNumber));
         return STATUS_WRONG_VOLUME;
-    }   
+    }
     // Compare volume idents
     if(!SimpleLogicalCheck &&
        RtlCompareUnicodeString(&(OldVcb->VolIdent),&(NewVcb->VolIdent),FALSE)) {

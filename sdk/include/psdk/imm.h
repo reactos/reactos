@@ -25,10 +25,13 @@
 extern "C" {
 #endif
 
+#ifdef __REACTOS__
+DECLARE_HANDLE(HIMC);
+DECLARE_HANDLE(HIMCC);
+typedef HKL *LPHKL;
+#else
 typedef HANDLE HIMC;
 typedef HANDLE HIMCC;
-#ifdef __REACTOS__
-typedef HKL *LPHKL;
 #endif
 
 typedef struct tagREGISTERWORDA {
@@ -215,6 +218,7 @@ typedef struct tagCANDIDATEINFO {
 #define IME_PROP_IGNORE_UPKEYS          0x0004
 #define IME_PROP_NEED_ALTKEY            0x0008
 #define IME_PROP_NO_KEYS_ON_CLOSE       0x0010
+#define IME_PROP_ACCEPT_WIDE_VKEY       0x0020
 
 /* for NI_CONTEXTUPDATED */
 #define IMC_SETCONVERSIONMODE           0x0002
@@ -232,6 +236,10 @@ typedef struct tagCANDIDATEINFO {
 #define NI_SETCANDIDATE_PAGESTART       0x0016
 #define NI_SETCANDIDATE_PAGESIZE        0x0017
 #define NI_IMEMENUSELECTED              0x0018
+
+/* dwSystemInfoFlags bits */
+#define IME_SYSINFO_WINLOGON            0x0001
+#define IME_SYSINFO_WOW16               0x0002
 
 BOOL  WINAPI ImmUnlockIMC(HIMC);
 DWORD WINAPI ImmGetIMCLockCount(HIMC);
@@ -381,7 +389,6 @@ DWORD WINAPI ImeGetImeMenuItems(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMEN
 #define IMEVER_0310                     0x0003000A
 #define IMEVER_0400                     0x00040000
 
-
 /* IME property bits */
 #define IME_PROP_AT_CARET               0x00010000
 #define IME_PROP_SPECIAL_UI             0x00020000
@@ -389,16 +396,16 @@ DWORD WINAPI ImeGetImeMenuItems(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMEN
 #define IME_PROP_UNICODE                0x00080000
 #define IME_PROP_COMPLETE_ON_UNSELECT	0x00100000
 
-
 /* IME UICapability bits */
 #define UI_CAP_2700                     0x00000001
 #define UI_CAP_ROT90                    0x00000002
 #define UI_CAP_ROTANY                   0x00000004
+#define UI_CAP_SOFTKBD                  0x00010000
+
 /* ImmSetCompositionString Capability bits */
 #define SCS_CAP_COMPSTR                 0x00000001
 #define SCS_CAP_MAKEREAD                0x00000002
 #define SCS_CAP_SETRECONVERTSTRING	0x00000004
-
 
 /* IME WM_IME_SELECT inheritance Capability bits */
 #define SELECT_CAP_CONVERSION           0x00000001
@@ -624,9 +631,12 @@ BOOL WINAPI ImmConfigureIMEW(_In_ HKL, _In_ HWND, _In_ DWORD, _In_ LPVOID);
 #define ImmConfigureIME WINELIB_NAME_AW(ImmConfigureIME)
 
 HIMC WINAPI ImmCreateContext(void);
+BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag);
 BOOL WINAPI ImmDestroyContext(_In_ HIMC hIMC);
 BOOL WINAPI ImmDisableIME(_In_ DWORD idThread);
 BOOL WINAPI ImmEnumInputContext(_In_ DWORD, _In_ IMCENUMPROC, _In_ LPARAM);
+BOOL WINAPI ImmLoadIME(HKL hKL);
+BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID);
 
 UINT
 WINAPI
@@ -853,7 +863,7 @@ BOOL WINAPI ImmIsUIMessageW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
 
 BOOL WINAPI ImmNotifyIME(_In_ HIMC, _In_ DWORD, _In_ DWORD, _In_ DWORD);
 
-BOOL   WINAPI ImmProcessKey(HWND, HKL, UINT, LPARAM, DWORD);
+DWORD WINAPI ImmProcessKey(HWND, HKL, UINT, LPARAM, DWORD);
 
 BOOL
 WINAPI
@@ -881,9 +891,9 @@ WINAPI
 ImmSetCompositionStringA(
   _In_ HIMC,
   _In_ DWORD dwIndex,
-  _In_reads_bytes_opt_(dwCompLen) LPCVOID lpComp,
+  _Inout_updates_bytes_opt_(dwCompLen) LPVOID lpComp,
   _In_ DWORD dwCompLen,
-  _In_reads_bytes_opt_(dwReadLen) LPCVOID lpRead,
+  _Inout_updates_bytes_opt_(dwReadLen) LPVOID lpRead,
   _In_ DWORD dwReadLen);
 
 BOOL
@@ -891,9 +901,9 @@ WINAPI
 ImmSetCompositionStringW(
   _In_ HIMC,
   _In_ DWORD dwIndex,
-  _In_reads_bytes_opt_(dwCompLen) LPCVOID lpComp,
+  _Inout_updates_bytes_opt_(dwCompLen) LPVOID lpComp,
   _In_ DWORD dwCompLen,
-  _In_reads_bytes_opt_(dwReadLen) LPCVOID lpRead,
+  _Inout_updates_bytes_opt_(dwReadLen) LPVOID lpRead,
   _In_ DWORD dwReadLen);
 
 #define ImmSetCompositionString WINELIB_NAME_AW(ImmSetCompositionString)

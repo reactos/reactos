@@ -562,7 +562,7 @@ static const ENTRY s_Entries[] =
 };
 
 static BOOL
-CreateShortcut(LPCWSTR pszLnkFileName, 
+CreateShortcut(LPCWSTR pszLnkFileName,
                LPCWSTR pszTargetPathName)
 {
     IPersistFile *ppf;
@@ -572,7 +572,7 @@ CreateShortcut(LPCWSTR pszLnkFileName,
     hres = CoInitialize(NULL);
     if (SUCCEEDED(hres))
     {
-        hres = CoCreateInstance(CLSID_ShellLink, NULL, 
+        hres = CoCreateInstance(CLSID_ShellLink, NULL,
             CLSCTX_INPROC_SERVER, IID_IShellLinkW, (LPVOID*)&psl);
         if (SUCCEEDED(hres))
         {

@@ -1,7 +1,7 @@
 /*
  *  FreeLoader
  *  Copyright (C) 2006-2008     Aleksey Bragin  <aleksey@reactos.org>
- *  Copyright (C) 2006-2009     Hervé Poussineau  <hpoussin@reactos.org>
+ *  Copyright (C) 2006-2009     HervÃ© Poussineau  <hpoussin@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -438,7 +438,7 @@ PVOID MmFindLocationForPageLookupTable(PFN_NUMBER TotalPageCount)
         if (MemoryDescriptor->BasePage < CandidateBasePage) continue;
 
         // Continue, if the address is too high
-        if (MemoryDescriptor->BasePage + RequiredPages >= MM_MAX_PAGE) continue;
+        if (MemoryDescriptor->BasePage + RequiredPages >= MM_MAX_PAGE_LOADER) continue;
 
         // Memory block is more suitable than the previous one
         CandidateBasePage = MemoryDescriptor->BasePage;
@@ -447,7 +447,7 @@ PVOID MmFindLocationForPageLookupTable(PFN_NUMBER TotalPageCount)
 
     // Calculate the end address for the lookup table
     PageLookupTableEndPage = min(CandidateBasePage + CandidatePageCount,
-                                 MM_MAX_PAGE);
+                                 MM_MAX_PAGE_LOADER);
 
     // Calculate the virtual address
     PageLookupTableMemAddress = (PVOID)((PageLookupTableEndPage * PAGE_SIZE)

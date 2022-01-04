@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        dll/win32/ws2_32_new/src/qshelpr.c
+ * FILE:        dll/win32/ws2_32/src/qshelpr.c
  * PURPOSE:     Query Set Conversion/Packing Helpers
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */

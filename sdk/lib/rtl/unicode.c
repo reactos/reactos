@@ -519,16 +519,24 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
     /* If multi-byte code page present */
     if (NlsMbOemCodePageTag)
     {
-        USHORT Offset = 0;
+        USHORT Offset;
 
         OemChar = NlsUnicodeToMbOemTable[*Char];
 
         /* If character has Lead Byte */
-        if (NlsOemLeadByteInfo[HIBYTE(OemChar)])
-            Offset = NlsOemLeadByteInfo[HIBYTE(OemChar)];
+        Offset = NlsOemLeadByteInfo[HIBYTE(OemChar)];
+        if (Offset)
+        {
+            /* Use DBCS table */
+            UnicodeChar = NlsOemLeadByteInfo[Offset + LOBYTE(OemChar)];
+        }
+        else
+        {
+            UnicodeChar = NlsOemToUnicodeTable[OemChar];
+        }
 
-        /* Receive Unicode character from the table */
-        UnicodeChar = RtlpUpcaseUnicodeChar(NlsOemToUnicodeTable[LOBYTE(OemChar) + Offset]);
+        /* Upcase */
+        UnicodeChar = RtlpUpcaseUnicodeChar(UnicodeChar);
 
         /* Receive OEM character from the table */
         OemChar = NlsUnicodeToMbOemTable[UnicodeChar];
@@ -544,7 +552,10 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
 
     /* Not valid character, failed */
     if (OemChar == NlsOemDefaultChar)
+    {
+        DPRINT1("\\u%04x is not valid for OEM\n", *Char);
         return FALSE;
+    }
 
     *Char = UnicodeChar;
 
@@ -1773,14 +1784,18 @@ RtlHashUnicodeString(
  *
  * NOTES
  *  Same as RtlUnicodeStringToOemString but doesn't write terminating null
- *  Does a partial copy if the dest buffer is too small
  */
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlUnicodeStringToCountedOemString(
-    IN OUT POEM_STRING OemDest,
-    IN PCUNICODE_STRING UniSource,
-    IN BOOLEAN AllocateDestinationString)
+    _When_(AllocateDestinationString, _Out_ _At_(DestinationString->Buffer, __drv_allocatesMem(Mem)))
+    _When_(!AllocateDestinationString, _Inout_)
+        POEM_STRING OemDest,
+    _In_ PCUNICODE_STRING UniSource,
+    _In_ BOOLEAN AllocateDestinationString)
 {
     NTSTATUS Status;
     ULONG Length;

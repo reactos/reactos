@@ -6,6 +6,8 @@
  */
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 typedef ULONG (NTAPI *FN_RtlMultipleAllocateHeap)(IN PVOID, IN ULONG, IN SIZE_T, IN ULONG, OUT PVOID *);
 typedef ULONG (NTAPI *FN_RtlMultipleFreeHeap)(IN PVOID, IN ULONG, IN ULONG, OUT PVOID *);
 

@@ -666,7 +666,7 @@ VOID FreeDeviceInputMdl(PMDL Mdl)
     }
 #endif
 
-
+
 /*++
 
 ClasspDuidGetDeviceIdProperty
@@ -759,7 +759,7 @@ FnExit:
 }
 
 
-
+
 /*++
 
 ClasspDuidGetDeviceProperty
@@ -851,7 +851,7 @@ FnExit:
     return status;
 }
 
-
+
 /*++
 
 ClasspDuidGetDriveLayout
@@ -973,7 +973,7 @@ FnExit:
     return status;
 }
 
-
+
 /*++
 
 ClasspDuidQueryProperty
@@ -1883,7 +1883,7 @@ Exit:
     return status;
 }
 
-__inline
+static
 NTSTATUS
 IncursSeekPenalty (
     _In_ USHORT     MediumRotationRate,
@@ -6147,7 +6147,7 @@ __ClasspQueueLogIOEventWithContextWorker_Exit:
     }
 }
 
-__inline
+static
 BOOLEAN
 ValidPersistentReserveScope(
     UCHAR Scope)
@@ -6166,7 +6166,7 @@ ValidPersistentReserveScope(
     return FALSE;
 }
 
-__inline
+static
 BOOLEAN
 ValidPersistentReserveType(
     UCHAR Type)
@@ -6187,7 +6187,7 @@ ValidPersistentReserveType(
     return FALSE;
 }
 
-
+
 /*++
 
 ClasspPersistentReserve
@@ -8324,6 +8324,7 @@ retry:
 
 #endif // #if (NTDDI_VERSION >= NTDDI_WINTHRESHOLD)
 
+#ifndef __REACTOS__ // the functions is not used
 __inline
 BOOLEAN
 ClassDeviceHwFirmwareIsPortDriverSupported(
@@ -8359,6 +8360,7 @@ Return Value:
 
     return isSupported;
 }
+#endif
 
 NTSTATUS
 ClassDeviceHwFirmwareGetInfoProcess(

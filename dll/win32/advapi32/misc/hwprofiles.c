@@ -42,8 +42,8 @@ GetCurrentHwProfileA(LPHW_PROFILE_INFOA lpHwProfileInfo)
     lpHwProfileInfo->dwDockInfo = ProfileInfo.dwDockInfo;
 
     /* Convert the profile GUID to ANSI */
-    StringU.Buffer = (PWCHAR)ProfileInfo.szHwProfileGuid;
-    StringU.Length = wcslen(ProfileInfo.szHwProfileGuid) * sizeof(WCHAR);
+    StringU.Buffer = ProfileInfo.szHwProfileGuid;
+    StringU.Length = (USHORT)wcslen(ProfileInfo.szHwProfileGuid) * sizeof(WCHAR);
     StringU.MaximumLength = HW_PROFILE_GUIDLEN * sizeof(WCHAR);
     StringA.Buffer = (PCHAR)&lpHwProfileInfo->szHwProfileGuid;
     StringA.Length = 0;
@@ -58,8 +58,8 @@ GetCurrentHwProfileA(LPHW_PROFILE_INFOA lpHwProfileInfo)
     }
 
     /* Convert the profile name to ANSI */
-    StringU.Buffer = (PWCHAR)ProfileInfo.szHwProfileName;
-    StringU.Length = wcslen(ProfileInfo.szHwProfileName) * sizeof(WCHAR);
+    StringU.Buffer = ProfileInfo.szHwProfileName;
+    StringU.Length = (USHORT)wcslen(ProfileInfo.szHwProfileName) * sizeof(WCHAR);
     StringU.MaximumLength = MAX_PROFILE_LEN * sizeof(WCHAR);
     StringA.Buffer = (PCHAR)&lpHwProfileInfo->szHwProfileName;
     StringA.Length = 0;
@@ -161,11 +161,11 @@ GetCurrentHwProfileW(LPHW_PROFILE_INFOW lpHwProfileInfo)
         swprintf(
             lpHwProfileInfo->szHwProfileGuid,
             L"{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-            uuid.Data1, 
-            uuid.Data2, 
+            uuid.Data1,
+            uuid.Data2,
             uuid.Data3,
             uuid.Data4[0], uuid.Data4[1],
-            uuid.Data4[2], uuid.Data4[3], uuid.Data4[4], uuid.Data4[5], 
+            uuid.Data4[2], uuid.Data4[3], uuid.Data4[4], uuid.Data4[5],
             uuid.Data4[6], uuid.Data4[7]);
 
         dwLength = (wcslen(lpHwProfileInfo->szHwProfileGuid) + 1) * sizeof(WCHAR);

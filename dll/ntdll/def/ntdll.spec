@@ -284,7 +284,7 @@
 @ stdcall NtCreateProcessEx(ptr long ptr ptr long ptr ptr ptr long)
 @ stdcall NtCreateProfile(ptr ptr ptr long long ptr long long long) ; CHECKME
 @ stub -version=0x600+ NtCreateResourceManager
-@ stdcall NtCreateSection(ptr long ptr ptr long long long)
+@ stdcall NtCreateSection(ptr long ptr ptr long long ptr)
 @ stdcall NtCreateSemaphore(ptr long ptr long long)
 @ stdcall NtCreateSymbolicLinkObject(ptr long ptr ptr)
 @ stdcall NtCreateThread(ptr long ptr ptr ptr ptr ptr long)
@@ -427,13 +427,13 @@
 @ stdcall NtQueryFullAttributesFile(ptr ptr)
 @ stdcall NtQueryInformationAtom(long long ptr long ptr)
 @ stub -version=0x600+ NtQueryInformationEnlistment
-@ stdcall NtQueryInformationFile(long ptr ptr long long)
-@ stdcall NtQueryInformationJobObject(long long ptr long ptr)
+@ stdcall NtQueryInformationFile(ptr ptr ptr long long)
+@ stdcall NtQueryInformationJobObject(ptr long ptr long ptr)
 @ stdcall NtQueryInformationPort(ptr long ptr long ptr)
-@ stdcall NtQueryInformationProcess(long long ptr long ptr)
+@ stdcall NtQueryInformationProcess(ptr long ptr long ptr)
 @ stub -version=0x600+ NtQueryInformationResourceManager
-@ stdcall NtQueryInformationThread(long long ptr long ptr)
-@ stdcall NtQueryInformationToken(long long ptr long ptr)
+@ stdcall NtQueryInformationThread(ptr long ptr long ptr)
+@ stdcall NtQueryInformationToken(ptr long ptr long ptr)
 @ stub -version=0x600+ NtQueryInformationTransaction
 @ stub -version=0x600+ NtQueryInformationTransactionManager
 @ stub -version=0x600+ NtQueryInformationWorkerFactory
@@ -524,14 +524,14 @@
 @ stdcall NtSetHighWaitLowEventPair(ptr)
 @ stdcall NtSetInformationDebugObject(ptr long ptr long ptr)
 @ stub -version=0x600+ NtSetInformationEnlistment
-@ stdcall NtSetInformationFile(long long long long long)
-@ stdcall NtSetInformationJobObject(long long ptr long)
-@ stdcall NtSetInformationKey(long long ptr long)
-@ stdcall NtSetInformationObject(long long ptr long)
-@ stdcall NtSetInformationProcess(long long long long)
+@ stdcall NtSetInformationFile(ptr ptr ptr long long)
+@ stdcall NtSetInformationJobObject(ptr long ptr long)
+@ stdcall NtSetInformationKey(ptr long ptr long)
+@ stdcall NtSetInformationObject(ptr long ptr long)
+@ stdcall NtSetInformationProcess(ptr long ptr long)
 @ stub -version=0x600+ NtSetInformationResourceManager
-@ stdcall NtSetInformationThread(long long ptr long)
-@ stdcall NtSetInformationToken(long long ptr long)
+@ stdcall NtSetInformationThread(ptr long ptr long)
+@ stdcall NtSetInformationToken(ptr long ptr long)
 @ stub -version=0x600+ NtSetInformationTransaction
 @ stub -version=0x600+ NtSetInformationTransactionManager
 @ stub -version=0x600+ NtSetInformationWorkerFactory
@@ -562,9 +562,9 @@
 @ stdcall NtSuspendProcess(ptr)
 @ stdcall NtSuspendThread(long ptr)
 @ stdcall NtSystemDebugControl(long ptr long ptr long ptr)
-@ stdcall NtTerminateJobObject(long long)
-@ stdcall NtTerminateProcess(long long)
-@ stdcall NtTerminateThread(long long)
+@ stdcall NtTerminateJobObject(ptr long)
+@ stdcall NtTerminateProcess(ptr long)
+@ stdcall NtTerminateThread(ptr long)
 @ stdcall NtTestAlert()
 @ stub -version=0x600+ NtThawRegistry
 @ stub -version=0x600+ NtThawTransactions
@@ -611,7 +611,7 @@
 @ stdcall -stub -version=0x600+ RtlAcquireSRWLockShared(ptr)
 @ stdcall RtlActivateActivationContext(long ptr ptr)
 @ stdcall RtlActivateActivationContextEx(long ptr ptr ptr)
-@ stdcall -arch=x86_64 RtlActivateActivationContextUnsafeFast(ptr ptr)
+@ stdcall -arch=x86_64,arm RtlActivateActivationContextUnsafeFast(ptr ptr)
 @ stdcall RtlAddAccessAllowedAce(ptr long long ptr)
 @ stdcall RtlAddAccessAllowedAceEx(ptr long long long ptr)
 @ stdcall RtlAddAccessAllowedObjectAce(ptr long long long ptr ptr ptr)
@@ -743,7 +743,7 @@
 @ stub -version=0x600+ RtlDeCommitDebugInfo
 @ stdcall RtlDeNormalizeProcessParams(ptr)
 @ stdcall RtlDeactivateActivationContext(long long)
-@ stdcall -arch=x86_64 RtlDeactivateActivationContextUnsafeFast(ptr)
+@ stdcall -arch=x86_64,arm RtlDeactivateActivationContextUnsafeFast(ptr)
 @ stdcall -stub RtlDebugPrintTimes()
 @ stdcall RtlDecodePointer(ptr)
 @ stdcall RtlDecodeSystemPointer(ptr)
@@ -1720,9 +1720,9 @@
 @ stdcall ZwSuspendProcess(ptr)
 @ stdcall ZwSuspendThread(long ptr)
 @ stdcall ZwSystemDebugControl(long ptr long ptr long ptr)
-@ stdcall ZwTerminateJobObject(long long)
-@ stdcall ZwTerminateProcess(long long)
-@ stdcall ZwTerminateThread(long long)
+@ stdcall ZwTerminateJobObject(ptr long)
+@ stdcall ZwTerminateProcess(ptr long)
+@ stdcall ZwTerminateThread(ptr long)
 @ stdcall ZwTestAlert()
 @ stub -version=0x600+ ZwThawRegistry
 @ stub -version=0x600+ ZwThawTransactions
@@ -1757,7 +1757,7 @@
 @ cdecl -arch=i386 _CIsin()
 @ cdecl -arch=i386 _CIsqrt()
 @ cdecl -arch=x86_64,arm __C_specific_handler(ptr long ptr ptr)
-@ cdecl -arch=x86_64 __chkstk()
+@ cdecl -arch=x86_64,arm __chkstk()
 @ cdecl __isascii(long)
 @ cdecl __iscsym(long)
 @ cdecl __iscsymf(long)
@@ -1791,8 +1791,8 @@
 @ cdecl _ltow(long ptr long)
 @ cdecl _memccpy(ptr ptr long long)
 @ cdecl _memicmp(str str long)
-@ cdecl -arch=x86_64 _setjmp(ptr ptr)
-@ cdecl -arch=x86_64 _setjmpex(ptr ptr)
+@ cdecl -arch=x86_64,arm _setjmp(ptr ptr)
+@ cdecl -arch=x86_64,arm _setjmpex(ptr ptr)
 @ varargs _snprintf(ptr long str)
 @ varargs _snwprintf(ptr long wstr)
 @ cdecl _splitpath(str ptr ptr ptr ptr)

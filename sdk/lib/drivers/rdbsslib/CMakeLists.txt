@@ -7,4 +7,5 @@ list(APPEND SOURCE
     rdbss.c)
 
 add_library(rdbsslib ${SOURCE})
+target_link_libraries(rdbsslib PRIVATE pseh)
 add_dependencies(rdbsslib bugcodes xdk)

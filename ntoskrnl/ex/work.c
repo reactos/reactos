@@ -12,10 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeWorkerThreads)
-#endif
-
 /* DATA **********************************************************************/
 
 /* Number of worker threads for each Queue */
@@ -258,6 +254,7 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
     HANDLE hThread;
     ULONG Context;
     KPRIORITY Priority;
+    NTSTATUS Status;
 
     /* Check if this is going to be a dynamic thread */
     Context = WorkQueueType;
@@ -266,13 +263,19 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
     if (Dynamic) Context |= EX_DYNAMIC_WORK_THREAD;
 
     /* Create the System Thread */
-    PsCreateSystemThread(&hThread,
-                         THREAD_ALL_ACCESS,
-                         NULL,
-                         NULL,
-                         NULL,
-                         ExpWorkerThreadEntryPoint,
-                         UlongToPtr(Context));
+    Status = PsCreateSystemThread(&hThread,
+                                  THREAD_ALL_ACCESS,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  ExpWorkerThreadEntryPoint,
+                                  UlongToPtr(Context));
+    if (!NT_SUCCESS(Status))
+    {
+        /* Well... */
+        DPRINT1("Failed to create worker thread: 0x%08x\n", Status);
+        return;
+    }
 
     /* If the thread is dynamic */
     if (Dynamic)
@@ -487,7 +490,6 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
             PsTerminateSystemThread(STATUS_SYSTEM_SHUTDOWN);
         }
 
-// #ifdef _WINKD_
         /*
          * If WinDBG wants to attach or kill a user-mode process, and/or
          * page-in an address region, queue a debugger worker thread.
@@ -498,7 +500,6 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
              ExpDebuggerWork = WinKdWorkerInitialized;
              ExQueueWorkItem(&ExpDebuggerWorkItem, DelayedWorkQueue);
         }
-// #endif /* _WINKD_ */
     }
 }
 
@@ -515,7 +516,7 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
  * @remarks This routine is only called once during system initialization.
  *
  *--*/
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpInitializeWorkerThreads(VOID)
@@ -525,6 +526,7 @@ ExpInitializeWorkerThreads(VOID)
     HANDLE ThreadHandle;
     PETHREAD Thread;
     ULONG i;
+    NTSTATUS Status;
 
     /* Setup the stack swap support */
     ExInitializeFastMutex(&ExpWorkerSwapinMutex);
@@ -582,13 +584,17 @@ ExpInitializeWorkerThreads(VOID)
     ExpCreateWorkerThread(HyperCriticalWorkQueue, FALSE);
 
     /* Create the balance set manager thread */
-    PsCreateSystemThread(&ThreadHandle,
-                         THREAD_ALL_ACCESS,
-                         NULL,
-                         0,
-                         NULL,
-                         ExpWorkerThreadBalanceManager,
-                         NULL);
+    Status = PsCreateSystemThread(&ThreadHandle,
+                                  THREAD_ALL_ACCESS,
+                                  NULL,
+                                  0,
+                                  NULL,
+                                  ExpWorkerThreadBalanceManager,
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
 
     /* Get a pointer to it for the shutdown process */
     ObReferenceObjectByHandle(ThreadHandle,
@@ -615,7 +621,7 @@ ExpSetSwappingKernelApc(IN PKAPC Apc,
     PKEVENT Event = (PKEVENT)*SystemArgument1;
 
     /* Make sure it's an active worker */
-    if (PsGetCurrentThread()->ActiveExWorker) 
+    if (PsGetCurrentThread()->ActiveExWorker)
     {
         /* Read the setting from the context flag */
         AllowSwap = (PBOOLEAN)NormalContext;
@@ -676,7 +682,7 @@ ExSwapinWorkerThreads(IN BOOLEAN AllowSwap)
                 KeClearEvent(&Event);
             }
         }
-        
+
         /* Next thread */
 Next:
         Thread = PsGetNextProcessThread(Process, Thread);

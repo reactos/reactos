@@ -1,0 +1,338 @@
+diff --git a/dll/directx/wine/d3dx9_24/d3dx9_24.spec b/dll/directx/wine/d3dx9_24/d3dx9_24.spec
+index fe8140d..a6eef88 100644
+--- a/dll/directx/wine/d3dx9_24/d3dx9_24.spec
++++ b/dll/directx/wine/d3dx9_24/d3dx9_24.spec
+@@ -226,7 +226,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_25/d3dx9_25.spec b/dll/directx/wine/d3dx9_25/d3dx9_25.spec
+index cb40277..eac8da0 100644
+--- a/dll/directx/wine/d3dx9_25/d3dx9_25.spec
++++ b/dll/directx/wine/d3dx9_25/d3dx9_25.spec
+@@ -226,7 +226,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_26/d3dx9_26.spec b/dll/directx/wine/d3dx9_26/d3dx9_26.spec
+index bfad690..87ecda2 100644
+--- a/dll/directx/wine/d3dx9_26/d3dx9_26.spec
++++ b/dll/directx/wine/d3dx9_26/d3dx9_26.spec
+@@ -230,7 +230,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_27/d3dx9_27.spec b/dll/directx/wine/d3dx9_27/d3dx9_27.spec
+index bfad690..87ecda2 100644
+--- a/dll/directx/wine/d3dx9_27/d3dx9_27.spec
++++ b/dll/directx/wine/d3dx9_27/d3dx9_27.spec
+@@ -230,7 +230,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_28/d3dx9_28.spec b/dll/directx/wine/d3dx9_28/d3dx9_28.spec
+index 6022854..c4ac4e3 100644
+--- a/dll/directx/wine/d3dx9_28/d3dx9_28.spec
++++ b/dll/directx/wine/d3dx9_28/d3dx9_28.spec
+@@ -230,7 +230,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_29/d3dx9_29.spec b/dll/directx/wine/d3dx9_29/d3dx9_29.spec
+index 6022854..c4ac4e3 100644
+--- a/dll/directx/wine/d3dx9_29/d3dx9_29.spec
++++ b/dll/directx/wine/d3dx9_29/d3dx9_29.spec
+@@ -230,7 +230,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_30/d3dx9_30.spec b/dll/directx/wine/d3dx9_30/d3dx9_30.spec
+index 06ced20..72418ac 100644
+--- a/dll/directx/wine/d3dx9_30/d3dx9_30.spec
++++ b/dll/directx/wine/d3dx9_30/d3dx9_30.spec
+@@ -230,7 +230,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_31/d3dx9_31.spec b/dll/directx/wine/d3dx9_31/d3dx9_31.spec
+index c9aca30..12db9be 100644
+--- a/dll/directx/wine/d3dx9_31/d3dx9_31.spec
++++ b/dll/directx/wine/d3dx9_31/d3dx9_31.spec
+@@ -227,7 +227,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_32/d3dx9_32.spec b/dll/directx/wine/d3dx9_32/d3dx9_32.spec
+index f541f6f..4e85b4c 100644
+--- a/dll/directx/wine/d3dx9_32/d3dx9_32.spec
++++ b/dll/directx/wine/d3dx9_32/d3dx9_32.spec
+@@ -227,7 +227,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_33/d3dx9_33.spec b/dll/directx/wine/d3dx9_33/d3dx9_33.spec
+index f541f6f..4e85b4c 100644
+--- a/dll/directx/wine/d3dx9_33/d3dx9_33.spec
++++ b/dll/directx/wine/d3dx9_33/d3dx9_33.spec
+@@ -227,7 +227,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_34/d3dx9_34.spec b/dll/directx/wine/d3dx9_34/d3dx9_34.spec
+index f541f6f..4e85b4c 100644
+--- a/dll/directx/wine/d3dx9_34/d3dx9_34.spec
++++ b/dll/directx/wine/d3dx9_34/d3dx9_34.spec
+@@ -227,7 +227,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_35/d3dx9_35.spec b/dll/directx/wine/d3dx9_35/d3dx9_35.spec
+index f541f6f..4e85b4c 100644
+--- a/dll/directx/wine/d3dx9_35/d3dx9_35.spec
++++ b/dll/directx/wine/d3dx9_35/d3dx9_35.spec
+@@ -227,7 +227,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_36/d3dx9_36.spec b/dll/directx/wine/d3dx9_36/d3dx9_36.spec
+index e1f4426..b07809e 100644
+--- a/dll/directx/wine/d3dx9_36/d3dx9_36.spec
++++ b/dll/directx/wine/d3dx9_36/d3dx9_36.spec
+@@ -229,7 +229,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_36/mesh.c b/dll/directx/wine/d3dx9_36/mesh.c
+index 8f7c926..3aae0f1 100644
+--- a/dll/directx/wine/d3dx9_36/mesh.c
++++ b/dll/directx/wine/d3dx9_36/mesh.c
+@@ -7184,6 +7184,33 @@ cleanup:
+     return hr;
+ }
+ 
++
++/*************************************************************************
++ * D3DXOptimizeVertices    (D3DX9_36.@)
++ */
++HRESULT WINAPI D3DXOptimizeVertices(const void *indices, UINT num_faces,
++        UINT num_vertices, BOOL indices_are_32bit, DWORD *vertex_remap)
++{
++    UINT i;
++
++    FIXME("indices %p, num_faces %u, num_vertices %u, indices_are_32bit %#x, vertex_remap %p semi-stub.\n",
++            indices, num_faces, num_vertices, indices_are_32bit, vertex_remap);
++
++    if (!vertex_remap)
++    {
++        WARN("vertex remap pointer is NULL.\n");
++        return D3DERR_INVALIDCALL;
++    }
++
++    for (i = 0; i < num_vertices; i++)
++    {
++        vertex_remap[i] = i;
++    }
++
++    return D3D_OK;
++}
++
++
+ /*************************************************************************
+  * D3DXOptimizeFaces    (D3DX9_36.@)
+  *
+diff --git a/modules/rostests/winetests/d3dx9_36/mesh.c b/modules/rostests/winetests/d3dx9_36/mesh.c
+index 42deb32..e46e38d 100644
+--- a/modules/rostests/winetests/d3dx9_36/mesh.c
++++ b/modules/rostests/winetests/d3dx9_36/mesh.c
+@@ -10405,6 +10405,27 @@ cleanup:
+     free_test_context(test_context);
+ }
+ 
++static void test_optimize_vertices(void)
++{
++    HRESULT hr;
++    DWORD vertex_remap[3];
++    const DWORD indices[] = {0, 1, 2};
++    const UINT num_faces = 1;
++    const UINT num_vertices = 3;
++
++    hr = D3DXOptimizeVertices(indices, num_faces,
++                              num_vertices, FALSE,
++                              vertex_remap);
++    ok(hr == D3D_OK, "D3DXOptimizeVertices failed. Got %x, expected D3D_OK.\n", hr);
++
++    /* vertex_remap must not be NULL */
++    hr = D3DXOptimizeVertices(indices, num_faces,
++                              num_vertices, FALSE,
++                              NULL);
++    ok(hr == D3DERR_INVALIDCALL, "D3DXOptimizeVertices passed NULL vertex_remap "
++            "pointer. Got %x, expected D3DERR_INVALIDCALL.\n", hr);
++}
++
+ static void test_optimize_faces(void)
+ {
+     HRESULT hr;
+@@ -11493,6 +11514,7 @@ START_TEST(mesh)
+     test_weld_vertices();
+     test_clone_mesh();
+     test_valid_mesh();
++    test_optimize_vertices();
+     test_optimize_faces();
+     test_compute_normals();
+     test_D3DXFrameFind();
+diff --git a/dll/directx/wine/d3dx9_37/d3dx9_37.spec b/dll/directx/wine/d3dx9_37/d3dx9_37.spec
+index e1f4426..b07809e 100644
+--- a/dll/directx/wine/d3dx9_37/d3dx9_37.spec
++++ b/dll/directx/wine/d3dx9_37/d3dx9_37.spec
+@@ -229,7 +229,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_38/d3dx9_38.spec b/dll/directx/wine/d3dx9_38/d3dx9_38.spec
+index e1f4426..b07809e 100644
+--- a/dll/directx/wine/d3dx9_38/d3dx9_38.spec
++++ b/dll/directx/wine/d3dx9_38/d3dx9_38.spec
+@@ -229,7 +229,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_39/d3dx9_39.spec b/dll/directx/wine/d3dx9_39/d3dx9_39.spec
+index e1f4426..b07809e 100644
+--- a/dll/directx/wine/d3dx9_39/d3dx9_39.spec
++++ b/dll/directx/wine/d3dx9_39/d3dx9_39.spec
+@@ -229,7 +229,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_40/d3dx9_40.spec b/dll/directx/wine/d3dx9_40/d3dx9_40.spec
+index e1f4426..b07809e 100644
+--- a/dll/directx/wine/d3dx9_40/d3dx9_40.spec
++++ b/dll/directx/wine/d3dx9_40/d3dx9_40.spec
+@@ -229,7 +229,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_41/d3dx9_41.spec b/dll/directx/wine/d3dx9_41/d3dx9_41.spec
+index e1f4426..b07809e 100644
+--- a/dll/directx/wine/d3dx9_41/d3dx9_41.spec
++++ b/dll/directx/wine/d3dx9_41/d3dx9_41.spec
+@@ -229,7 +229,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_42/d3dx9_42.spec b/dll/directx/wine/d3dx9_42/d3dx9_42.spec
+index 0851945..288ab27 100644
+--- a/dll/directx/wine/d3dx9_42/d3dx9_42.spec
++++ b/dll/directx/wine/d3dx9_42/d3dx9_42.spec
+@@ -222,7 +222,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
+diff --git a/dll/directx/wine/d3dx9_43/d3dx9_43.spec b/dll/directx/wine/d3dx9_43/d3dx9_43.spec
+index 0851945..288ab27 100644
+--- a/dll/directx/wine/d3dx9_43/d3dx9_43.spec
++++ b/dll/directx/wine/d3dx9_43/d3dx9_43.spec
+@@ -222,7 +222,7 @@
+ @ stdcall D3DXMatrixTranslation(ptr float float float)
+ @ stdcall D3DXMatrixTranspose(ptr ptr)
+ @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
+-@ stub D3DXOptimizeVertices(ptr long long long ptr)
++@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
+ @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
+ @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
+ @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)

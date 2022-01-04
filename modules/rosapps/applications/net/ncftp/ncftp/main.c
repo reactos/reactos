@@ -24,7 +24,7 @@
 	WSADATA wsaData;
 	int wsaInit = 0;
 
-	__inline void DisposeWinsock(int aUNUSED) { if (wsaInit > 0) WSACleanup(); wsaInit--; }
+	static __inline void DisposeWinsock(int aUNUSED) { if (wsaInit > 0) WSACleanup(); wsaInit--; }
 #else
 #	define DisposeWinsock(a)
 #endif

@@ -23,6 +23,7 @@ list(APPEND SOURCE
     GetUserObjectInformation.c
     GetWindowPlacement.c
     InitializeLpkHooks.c
+    keybd_event.c
     LoadImage.c
     LookupIconIdFromDirectoryEx.c
     MessageStateAnalyzer.c
@@ -38,10 +39,12 @@ list(APPEND SOURCE
     SendMessageTimeout.c
     SetActiveWindow.c
     SetCursorPos.c
+    SetFocus.c
     SetParent.c
     SetProp.c
     SetScrollInfo.c
     SetScrollRange.c
+    ShowWindow.c
     SwitchToThisWindow.c
     SystemParametersInfo.c
     TrackMouseEvent.c

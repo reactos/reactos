@@ -2,7 +2,7 @@
 
     dxguid.c - DirectX GUIDs
 
-    Base on Filp Navara <xnavara@volny.cz> dxguid for mingw 
+    Base on Filp Navara <xnavara@volny.cz> dxguid for mingw
     updated by Magnus Olsen (magnus@greatlord.com)
 
     This library is distributed in the hope that it will be useful,

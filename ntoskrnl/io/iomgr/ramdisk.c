@@ -18,15 +18,9 @@
 
 extern KEVENT PiEnumerationFinished;
 
-/* DATA ***********************************************************************/
-
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, IopStartRamdisk)
-#endif
-
 /* FUNCTIONS ******************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -268,7 +262,15 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         RtlInitEmptyUnicodeString(&NtSystemRoot,
                                   SharedUserData->NtSystemRoot,
                                   sizeof(SharedUserData->NtSystemRoot));
-        RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
+        Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            KeBugCheckEx(RAMDISK_BOOT_INITIALIZATION_FAILED,
+                         RD_SYSROOT_INIT_FAILED,
+                         Status,
+                         0,
+                         0);
+        }
         IoCreateSymbolicLink(&DriveLetter, &DeviceString);
     }
 

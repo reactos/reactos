@@ -14,14 +14,14 @@ VOID
 USB_BUSIFFN
 USBI_InterfaceReference(IN PVOID BusContext)
 {
-    DPRINT("USBI_InterfaceReference \n");
+    DPRINT("USBI_InterfaceReference\n");
 }
 
 VOID
 USB_BUSIFFN
 USBI_InterfaceDereference(IN PVOID BusContext)
 {
-    DPRINT("USBI_InterfaceDereference \n");
+    DPRINT("USBI_InterfaceDereference\n");
 }
 
 /* USB port driver Interface functions */
@@ -39,7 +39,7 @@ USBHI_CreateUsbDevice(IN PVOID BusContext,
     PUSB_DEVICE_HANDLE deviceHandle = NULL;
     NTSTATUS Status;
 
-    DPRINT("USBHI_CreateUsbDevice: ... \n");
+    DPRINT("USBHI_CreateUsbDevice: ...\n");
 
     PdoDevice = BusContext;
     PdoExtension = PdoDevice->DeviceExtension;
@@ -63,7 +63,7 @@ USBHI_InitializeUsbDevice(IN PVOID BusContext,
     PDEVICE_OBJECT PdoDevice;
     PUSBPORT_RHDEVICE_EXTENSION PdoExtension;
 
-    DPRINT("USBHI_InitializeUsbDevice \n");
+    DPRINT("USBHI_InitializeUsbDevice\n");
 
     PdoDevice = BusContext;
     PdoExtension = PdoDevice->DeviceExtension;
@@ -175,7 +175,7 @@ USBHI_QueryDeviceInformation(IN PVOID BusContext,
     ULONG ActualLength;
     ULONG ix;
 
-    DPRINT("USBHI_QueryDeviceInformation: ... \n");
+    DPRINT("USBHI_QueryDeviceInformation: ...\n");
 
     *LenDataReturned = 0;
 
@@ -211,7 +211,7 @@ USBHI_QueryDeviceInformation(IN PVOID BusContext,
         }
     }
 
-    ActualLength = FIELD_OFFSET(USB_DEVICE_INFORMATION_0, PipeList) + 
+    ActualLength = FIELD_OFFSET(USB_DEVICE_INFORMATION_0, PipeList) +
                    NumberOfOpenPipes * sizeof(USB_PIPE_INFORMATION_0);
 
     if (DeviceInfoBufferLen < ActualLength)
@@ -254,7 +254,7 @@ USBHI_QueryDeviceInformation(IN PVOID BusContext,
         return STATUS_SUCCESS;
     }
 
-    DeviceInfo->CurrentConfigurationValue = 
+    DeviceInfo->CurrentConfigurationValue =
         ConfigHandle->ConfigurationDescriptor->bConfigurationValue;
 
     InterfaceEntry = ConfigHandle->InterfaceHandleList.Flink;
@@ -281,7 +281,7 @@ USBHI_QueryDeviceInformation(IN PVOID BusContext,
                 }
                 else
                 {
-                    PipeInfo->ScheduleOffset = 
+                    PipeInfo->ScheduleOffset =
                         PipeHandle->Endpoint->EndpointProperties.ScheduleOffset;
                 }
 
@@ -346,8 +346,8 @@ USBHI_GetControllerInformation(IN PVOID BusContext,
 
     if (ControllerInfoBufferLen >= sizeof(USB_CONTROLLER_INFORMATION_0))
     {
-        InfoBuffer->SelectiveSuspendEnabled = 
-            (FdoExtension->Flags & USBPORT_FLAG_SELECTIVE_SUSPEND) == 
+        InfoBuffer->SelectiveSuspendEnabled =
+            (FdoExtension->Flags & USBPORT_FLAG_SELECTIVE_SUSPEND) ==
             USBPORT_FLAG_SELECTIVE_SUSPEND;
     }
 
@@ -403,7 +403,7 @@ USBHI_ControllerSelectiveSuspend(IN PVOID BusContext,
 
     if (NT_SUCCESS(Status))
     {
-        if (Enable) 
+        if (Enable)
             FdoExtension->Flags |= USBPORT_FLAG_SELECTIVE_SUSPEND;
         else
             FdoExtension->Flags &= ~USBPORT_FLAG_SELECTIVE_SUSPEND;
@@ -431,7 +431,7 @@ USBHI_GetExtendedHubInformation(IN PVOID BusContext,
     USB_PORT_STATUS_AND_CHANGE PortStatus;
     ULONG PortAttrX;
 
-    DPRINT("USBHI_GetExtendedHubInformation: ... \n");
+    DPRINT("USBHI_GetExtendedHubInformation: ...\n");
 
     PdoDevice = BusContext;
     PdoExtension = PdoDevice->DeviceExtension;
@@ -530,7 +530,7 @@ USBHI_GetRootHubSymbolicName(IN PVOID BusContext,
     PUNICODE_STRING InfoBuffer;
     NTSTATUS Status;
 
-    DPRINT("USBHI_GetRootHubSymbolicName: ... \n");
+    DPRINT("USBHI_GetRootHubSymbolicName: ...\n");
 
     PdoDevice = BusContext;
 
@@ -559,7 +559,7 @@ USB_BUSIFFN
 USBHI_GetDeviceBusContext(IN PVOID BusContext,
                           IN PVOID DeviceHandle)
 {
-    DPRINT1("USBHI_GetDeviceBusContext: UNIMPLEMENTED. FIXME. \n");
+    DPRINT1("USBHI_GetDeviceBusContext: UNIMPLEMENTED. FIXME.\n");
     return NULL;
 }
 
@@ -596,7 +596,7 @@ USBHI_RootHubInitNotification(IN PVOID BusContext,
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
     KIRQL OldIrql;
 
-    DPRINT("USBHI_RootHubInitNotification \n");
+    DPRINT("USBHI_RootHubInitNotification\n");
 
     PdoDevice = BusContext;
     PdoExtension = PdoDevice->DeviceExtension;
@@ -619,7 +619,7 @@ USBHI_FlushTransfers(IN PVOID BusContext,
     PDEVICE_OBJECT PdoDevice;
     PUSBPORT_RHDEVICE_EXTENSION PdoExtension;
 
-    DPRINT("USBHI_FlushTransfers: ... \n");
+    DPRINT("USBHI_FlushTransfers: ...\n");
 
     PdoDevice = BusContext;
     PdoExtension = PdoDevice->DeviceExtension;
@@ -633,7 +633,7 @@ USBHI_SetDeviceHandleData(IN PVOID BusContext,
                           IN PVOID DeviceHandle,
                           IN PDEVICE_OBJECT UsbDevicePdo)
 {
-    DPRINT1("USBHI_SetDeviceHandleData: UNIMPLEMENTED. FIXME. \n");
+    DPRINT1("USBHI_SetDeviceHandleData: UNIMPLEMENTED. FIXME.\n");
 }
 
 /* USB bus driver Interface functions */
@@ -644,7 +644,7 @@ USBDI_GetUSBDIVersion(IN PVOID BusContext,
                       OUT PUSBD_VERSION_INFORMATION VersionInfo,
                       OUT PULONG HcdCapabilities)
 {
-    DPRINT1("USBDI_GetUSBDIVersion: UNIMPLEMENTED. FIXME. \n");
+    DPRINT1("USBDI_GetUSBDIVersion: UNIMPLEMENTED. FIXME.\n");
 }
 
 NTSTATUS
@@ -652,7 +652,7 @@ USB_BUSIFFN
 USBDI_QueryBusTime(IN PVOID BusContext,
                    OUT PULONG CurrentFrame)
 {
-    DPRINT1("USBDI_QueryBusTime: UNIMPLEMENTED. FIXME. \n");
+    DPRINT1("USBDI_QueryBusTime: UNIMPLEMENTED. FIXME.\n");
     return STATUS_SUCCESS;
 }
 
@@ -661,7 +661,7 @@ USB_BUSIFFN
 USBDI_SubmitIsoOutUrb(IN PVOID BusContext,
                       IN PURB Urb)
 {
-    DPRINT1("USBDI_SubmitIsoOutUrb: UNIMPLEMENTED. FIXME. \n");
+    DPRINT1("USBDI_SubmitIsoOutUrb: UNIMPLEMENTED. FIXME.\n");
     return STATUS_SUCCESS;
 }
 
@@ -715,7 +715,7 @@ USBDI_QueryBusInformation(IN PVOID BusContext,
 
     if (Level == 1)
     {
-        Length = sizeof(USB_BUS_INFORMATION_LEVEL_1) + 
+        Length = sizeof(USB_BUS_INFORMATION_LEVEL_1) +
                  FdoExtension->CommonExtension.SymbolicLinkName.Length;
 
         if (BusInfoActualLen)
@@ -754,7 +754,7 @@ USBDI_IsDeviceHighSpeed(IN PVOID BusContext)
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
     PUSBPORT_REGISTRATION_PACKET Packet;
 
-    DPRINT("USBDI_IsDeviceHighSpeed: ... \n");
+    DPRINT("USBDI_IsDeviceHighSpeed: ...\n");
 
     PdoDevice = BusContext;
     PdoExtension = PdoDevice->DeviceExtension;
@@ -773,7 +773,7 @@ USBDI_EnumLogEntry(IN PVOID BusContext,
                    IN ULONG P1,
                    IN ULONG P2)
 {
-    DPRINT1("USBDI_EnumLogEntry: UNIMPLEMENTED. FIXME. \n");
+    DPRINT1("USBDI_EnumLogEntry: UNIMPLEMENTED. FIXME.\n");
     return STATUS_SUCCESS;
 }
 
@@ -789,7 +789,7 @@ USBPORT_PdoQueryInterface(IN PDEVICE_OBJECT FdoDevice,
     UNICODE_STRING GuidBuffer;
     NTSTATUS Status;
 
-    DPRINT("USBPORT_PdoQueryInterface: ... \n");
+    DPRINT("USBPORT_PdoQueryInterface: ...\n");
 
     if (IsEqualGUIDAligned(IoStack->Parameters.QueryInterface.InterfaceType,
                            &USB_BUS_INTERFACE_HUB_GUID))
@@ -899,7 +899,7 @@ USBPORT_PdoQueryInterface(IN PDEVICE_OBJECT FdoDevice,
             DPRINT1("HandleQueryInterface UNKNOWN INTERFACE GUID: %wZ Version %x\n",
                     &GuidBuffer,
                     IoStack->Parameters.QueryInterface.Version);
-            
+
             RtlFreeUnicodeString(&GuidBuffer); // Free GUID buffer
         }
     }

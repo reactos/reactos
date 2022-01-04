@@ -21,8 +21,13 @@
 
 extern char __ImageBase;
 #ifdef __GNUC__
-/* .text/.data/.rdata, .edata and .bss */
-#define FREELDR_SECTION_COUNT 3
+  #ifdef _M_AMD64
+    /* .text/.data/.rdata, and .bss */
+    #define FREELDR_SECTION_COUNT 2
+  #else
+    /* .text/.data/.rdata, .edata and .bss */
+    #define FREELDR_SECTION_COUNT 3
+  #endif
 #else
 #ifdef _M_AMD64
 /* .text, .rdata/.edata, .pdata and .data/.bss */
@@ -46,7 +51,12 @@ typedef struct _FREELDR_MEMORY_DESCRIPTOR
 #define MM_PAGE_SIZE    4096
 #define MM_PAGE_MASK    0xFFF
 #define MM_PAGE_SHIFT    12
-#define MM_MAX_PAGE        0xFFFFF
+#if defined(_X86PAE_)
+#define MM_MAX_PAGE        0x3FFFFFF /* 26 bits for the PFN */
+#else
+#define MM_MAX_PAGE        0xFFFFF /* 20 bits for the PFN */
+#endif
+#define MM_MAX_PAGE_LOADER 0xFFFFF /* 4 GB flat address range */
 
 #define MM_SIZE_TO_PAGES(a)  \
     ( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
@@ -58,7 +68,8 @@ typedef struct _FREELDR_MEMORY_DESCRIPTOR
 #define MM_PAGE_SIZE    4096
 #define MM_PAGE_MASK    0xFFF
 #define MM_PAGE_SHIFT    12
-#define MM_MAX_PAGE     0x3FFFF /* freeldr only maps 1 GB */
+#define MM_MAX_PAGE        0xFFFFFFFFF /* 36 bits for the PFN */
+#define MM_MAX_PAGE_LOADER 0x3FFFF /* on x64 freeldr only maps 1 GB */
 
 #define MM_SIZE_TO_PAGES(a)  \
     ( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )

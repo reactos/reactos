@@ -346,7 +346,7 @@ typedef struct _DFS_INFO_ENUM_STRUCT
 #endif
     endpoint("ncacn_np:[\\pipe\\netdfs]")
 #ifndef __midl
-    ,implicit_handle(handle_t hBinding)
+    ,implicit_handle(handle_t netdfs_hBinding)
 #endif
 ]
 interface netdfs

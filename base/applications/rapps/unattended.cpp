@@ -20,28 +20,36 @@ BOOL MatchCmdOption(LPWSTR argvOption, LPCWSTR szOptToMacth)
     {
         if (argvOption[0] == FirstCharList[i])
         {
-            if (StrCmpIW(argvOption + 1, szOptToMacth) == 0)
-            {
-                return TRUE;
-            }
-            else
-            {
-                return FALSE;
-            }
+            return StrCmpIW(argvOption + 1, szOptToMacth) == 0;
         }
     }
     return FALSE;
 }
 
+void InitRappsConsole()
+{
+    // First, try to attach to our parent's console
+    if (!AttachConsole(ATTACH_PARENT_PROCESS))
+    {
+        // Did we already have a console?
+        if (GetLastError() != ERROR_ACCESS_DENIED)
+        {
+            // No, try to open a new one
+            AllocConsole();
+        }
+    }
+    ConInitStdStreams(); // Initialize the Console Standard Streams
+}
+
+
 BOOL HandleInstallCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 {
     if (argcLeft == 0)
     {
-        ConInitStdStreams(); // Initialize the Console Standard Streams
+        InitRappsConsole();
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PACKAGE_NAME, szCommand);
         return FALSE;
     }
-    FreeConsole();
 
     ATL::CSimpleArray<ATL::CStringW> PkgNameList;
 
@@ -70,11 +78,10 @@ BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 {
     if (argcLeft != 1)
     {
-        ConInitStdStreams(); // Initialize the Console Standard Streams
+        InitRappsConsole();
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_FILE_NAME, szCommand);
         return FALSE;
     }
-    FreeConsole();
 
     ATL::CSimpleArray<ATL::CStringW> PkgNameList;
     HINF InfHandle = SetupOpenInfFileW(argvLeft[0], NULL, INF_STYLE_WIN4, NULL);
@@ -218,20 +225,14 @@ BOOL HandleInfoCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
     return TRUE;
 }
 
-BOOL HandleHelpCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
+VOID PrintHelpCommand()
 {
-    if (argcLeft != 0)
-    {
-        return FALSE;
-    }
-
     ConPrintf(StdOut, L"\n");
     ConResPuts(StdOut, IDS_APPTITLE);
     ConPrintf(StdOut, L"\n\n");
 
     ConResPuts(StdOut, IDS_CMD_USAGE);
     ConPrintf(StdOut, L"%ls\n", UsageString);
-    return TRUE;
 }
 
 BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
@@ -246,10 +247,6 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
     if (argc == 1) // RAPPS is launched without options
     {
-        // Close the console, and open MainWindow
-        FreeConsole();
-
-
         // Check for if rapps MainWindow is already launched in another process
         HANDLE hMutex;
 
@@ -275,7 +272,8 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
         return TRUE;
     }
-    else if (MatchCmdOption(argv[1], CMD_KEY_INSTALL))
+
+    if (MatchCmdOption(argv[1], CMD_KEY_INSTALL))
     {
         return HandleInstallCommand(argv[1], argc - 2, argv + 2);
     }
@@ -283,9 +281,8 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     {
         return HandleSetupCommand(argv[1], argc - 2, argv + 2);
     }
-    
 
-    ConInitStdStreams(); // Initialize the Console Standard Streams
+    InitRappsConsole();
 
     if (MatchCmdOption(argv[1], CMD_KEY_FIND))
     {
@@ -295,14 +292,16 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     {
         return HandleInfoCommand(argv[1], argc - 2, argv + 2);
     }
-    else if (MatchCmdOption(argv[1], CMD_KEY_HELP))
+    else if (MatchCmdOption(argv[1], CMD_KEY_HELP) || MatchCmdOption(argv[1], CMD_KEY_HELP_ALT))
     {
-        return HandleHelpCommand(argv[1], argc - 2, argv + 2);
+        PrintHelpCommand();
+        return TRUE;
     }
     else
     {
         // unrecognized/invalid options
         ConResPuts(StdOut, IDS_CMD_INVALID_OPTION);
+        PrintHelpCommand();
         return FALSE;
     }
 }

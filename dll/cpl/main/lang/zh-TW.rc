@@ -1,7 +1,9 @@
-/*
- * (Traditional Chinese resources)
- * (繁体中文资源)
- * by Henry Tang Ih 2016 (henrytang2@hotmail.com)
+ /*
+ * PROJECT:     ReactOS Main Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -13,16 +15,16 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX "字元重複", -1, 5, 5, 236, 135
     ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 13, 18, 15, 15
-    LTEXT "重複延遲(&D):", -1, 40, 18, 100, 10
+    LTEXT "重複延遲(&D)：", -1, 40, 18, 100, 10
     LTEXT "長", -1, 40, 33, 20, 10
     LTEXT "短", -1, 200, 33, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 33, 130, 17
     ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 13, 70, 15, 15
-    LTEXT "重複率(&R)::", -1, 40, 70, 100, 10
+    LTEXT "重複率(&R)：", -1, 40, 70, 100, 10
     LTEXT "慢", -1, 40, 85, 20, 10
     LTEXT "快", -1, 200, 85, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-    LTEXT "單擊此處並按住一個鍵以便測試重複率(&T):", -1, 15, 105, 216, 10
+    LTEXT "點擊此處並按住一個鍵以測試重複率(&T)：", -1, 15, 105, 216, 10
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
     GROUPBOX "游標閃爍頻率(&B)", -1, 5, 145, 236, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
@@ -48,7 +50,7 @@ BEGIN
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
     PUSHBUTTON "確定(&O)", IDOK, 110, 59, 60, 14
     PUSHBUTTON "取消(&C)", IDCANCEL, 174, 59, 60, 14
-    LTEXT "調整您需要按下滑鼠或軌跡球按鈕多久單擊才能被“鎖定”(&A)。", -1, 37, 5, 200, 27
+    LTEXT "調整您按住滑鼠或軌跡球按鈕時所需要的時間(&A)", -1, 37, 5, 200, 27
     ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
 END
 
@@ -60,32 +62,32 @@ BEGIN
     GROUPBOX "滑鼠鍵配置", -1, 5, 5, 236, 70
     CHECKBOX "切換主要和次要的按鈕(&S)", IDC_SWAP_MOUSE_BUTTONS, 10, 18, 156, 10
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 171, 14, 65, 57, WS_EX_STATICEDGE
-    LTEXT "選擇此覈取方塊來將右按鈕設成用於主要效能如選擇和拖放之用。", -1, 10, 36, 156, 30
+    LTEXT "選擇此核取方塊來將右按鈕設定為用於主要功能，例如選取和拖曳。", -1, 10, 36, 156, 30
     GROUPBOX "雙擊速度", -1, 5, 78, 236, 70
-    LTEXT "雙擊資料夾以檢測您的設定。如果資料夾沒開啟或關閉，請用慢一點的設定再試一次。", -1, 10, 90, 156, 28
-    LTEXT "速度(&D):   Slow", -1, 10, 123, 50, 10
+    LTEXT "按兩下資料夾以測試您的設定。如果資料夾無法開啟或關閉，請嘗試使用較慢的設定。", -1, 10, 90, 156, 28
+    LTEXT "速度(&D)：   慢", -1, 10, 123, 50, 10
     LTEXT "快", -1, 136, 123, 24, 10
     CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
     CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE
     GROUPBOX "單擊鎖定", -1, 5, 150, 236, 70
     CHECKBOX "啟用單擊鎖定(&T)", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
     PUSHBUTTON "設定(&S)...", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
-    LTEXT "使您可以不用一直按著滑鼠按鈕就可以突出顯示或拖拽。要設定，請按下滑鼠按鈕。要放開請再單擊滑鼠按鈕。", -1, 10, 180, 224, 30
+    LTEXT "使您不用一直按著滑鼠按鈕就可以反白或拖曳。如要設定，請按一下滑鼠按鈕。如要放開，請再按一下滑鼠按鈕。", -1, 10, 180, 224, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "指針"
+CAPTION "指標"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "方案", -1, 5, 5, 181, 45
     COMBOBOX IDC_COMBO_CURSOR_SCHEME, 12, 15, 167, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "另存為(&V)...", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
+    PUSHBUTTON "另存新檔(&V)...", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
     PUSHBUTTON "刪除(&D)", IDC_BUTTON_DELETE_SCHEME, 128, 31, 50, 14
     CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 196, 9, 45, 41, WS_EX_STATICEDGE
-    LTEXT "自訂(&C):", -1, 5, 57, 60, 10
+    LTEXT "自訂(&C)", -1, 5, 57, 60, 10
     LISTBOX IDC_LISTBOX_CURSOR, 5, 68, 236, 124, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
-    CHECKBOX "啟用指針陰影(&E)", IDC_CHECK_CURSOR_SHADOW, 5, 198, 105, 10
+    CHECKBOX "啟用指標陰影(&E)", IDC_CHECK_CURSOR_SHADOW, 5, 198, 105, 10
     PUSHBUTTON "使用預設值(&F)", IDC_BUTTON_USE_DEFAULT_CURSOR, 117, 196, 65, 14
     PUSHBUTTON "瀏覽(&B)...", IDC_BUTTON_BROWSE_CURSOR, 186, 196, 55, 14
 END
@@ -95,7 +97,7 @@ STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "儲存方案"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "將該游標方案另存為:", -1, 5, 5, 181, 10
+    LTEXT "將該游標方案另存為：", -1, 5, 5, 181, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
     PUSHBUTTON "確定(&O)", IDOK, 63, 35, 60, 14
     PUSHBUTTON "取消(&C)", IDCANCEL, 126, 35, 60, 14
@@ -103,36 +105,36 @@ END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "指針選項"
+CAPTION "指標選項"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "移動", -1, 5, 5, 236, 60
-    LTEXT "選擇指針移動速度(&C):", -1, 52, 15, 110, 10
+    LTEXT "選擇指標移動速度(&C)：", -1, 52, 15, 110, 10
     LTEXT "慢", -1, 60, 30, 20, 10
     CONTROL "", IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
     LTEXT "快", -1, 170, 30, 20, 10
     ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 18, 20, 32, 32
-    CHECKBOX "提高指針精確度(&E)", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
-    GROUPBOX "取默認按鈕 To", -1, 5, 70, 236, 40
-    CHECKBOX "自動將指針移動到對話方塊中的默認按鈕(&U)",
+    CHECKBOX "提高指標精確度(&E)", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
+    GROUPBOX "指到", -1, 5, 70, 236, 40
+    CHECKBOX "自動將指標指標到對話方塊中的預設按鈕(&U)",
              IDC_CHECK_SNAP_TO, 52, 84, 183, 20, BS_MULTILINE | BS_TOP
     ICON IDI_MOUSE_BUTTON, IDC_ICON_SNAP_TO, 18, 83, 15, 15
-    GROUPBOX "可見性", -1, 5, 115, 236, 95
-    CHECKBOX "顯示指針蹤跡(&D):", IDC_CHECK_POINTER_TRAIL, 52, 128, 125, 10
+    GROUPBOX "能見度", -1, 5, 115, 236, 95
+    CHECKBOX "顯示指標蹤跡(&D)：", IDC_CHECK_POINTER_TRAIL, 52, 128, 125, 10
     LTEXT "短", IDC_TEXT_TRAIL_SHORT, 54, 143, 25, 10
     LTEXT "長", IDC_TEXT_TRAIL_LONG, 157, 143, 30, 10
     ICON IDI_MOUSE_TRAILS, IDC_ICON_POINTER_TRAIL, 20, 128, 15, 15
     CONTROL "", IDC_SLIDER_POINTER_TRAIL, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 80, 143, 70, 17
-    CHECKBOX "在打字時隱藏指針(&H)", IDC_CHECK_HIDE_POINTER, 52, 163, 130, 10
+    CHECKBOX "在打字時隱藏指標(&H)", IDC_CHECK_HIDE_POINTER, 52, 163, 130, 10
     ICON IDI_MOUSE_SPEED, IDC_ICON_HIDE_POINTER, 18, 158, 15, 15
-    CHECKBOX "當按 CTRL 鍵時顯示指針的位置(&S)",
+    CHECKBOX "當按 CTRL 鍵時顯示指標的位置(&S)",
              IDC_CHECK_SHOW_POINTER, 52, 188, 183, 20, BS_MULTILINE | BS_TOP
     ICON IDI_MOUSE_POINTER, IDC_ICON_SHOW_POINTER, 18, 183, 15, 15
 END
 
 IDD_PAGE_WHEEL DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "輪"
+CAPTION "滾輪"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "滾動", -1, 5, 5, 236, 80
@@ -147,17 +149,17 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "滑鼠"
-    IDS_CPLDESCRIPTION_1 "自訂滑鼠設定，例如按鈕設定，雙擊速度，滑鼠指針，和移動速度。"
+    IDS_CPLDESCRIPTION_1 "自訂滑鼠設定，例如按鈕設定、雙擊速度、滑鼠指標，和移動速度。"
     IDS_CPLNAME_2 "鍵盤"
-    IDS_CPLDESCRIPTION_2 "自訂鍵盤設定，例如指針閃爍速率和字元重複速率。"
+    IDS_CPLDESCRIPTION_2 "自訂鍵盤設定，例如指標閃爍速率和字元重複速率。"
     IDS_ARROW "正常選擇"
     IDS_HELP "幫助選擇"
-    IDS_APPSTARTING "後臺運行"
-    IDS_WAIT "忙"
-    IDS_CROSSHAIR "精確定位"
+    IDS_APPSTARTING "後臺執行"
+    IDS_WAIT "繁忙"
+    IDS_CROSSHAIR "選擇精確度"
     IDS_IBEAM "選定文字"
     IDS_NWPEN "手寫"
-    IDS_NO "(無)"
+    IDS_NO "（無）"
     IDS_SIZENS "垂直調整"
     IDS_SIZEWE "水平調整"
     IDS_SIZENWSE "沿對角線調整 1"
@@ -165,13 +167,13 @@ BEGIN
     IDS_SIZEALL "移動"
     IDS_UPARROW "候選"
     IDS_HAND "連結選擇"
-    IDS_NONE "(無)"
-    IDS_SYSTEM_SCHEME "(系統方案)"
+    IDS_NONE "（無）"
+    IDS_SYSTEM_SCHEME "（系統方案）"
     IDS_BROWSE_FILTER "游標 (*.ani, *.cur)\0*.ani;*.cur\0動畫游標 (*.ani)\0*.ani\0靜態游標 (*.cur)\0*.cur\0所有檔案\0*.*\0\0"
     IDS_BROWSE_TITLE "瀏覽"
-    IDS_REMOVE_TITLE "確認方案的刪除"
-    IDS_REMOVE_TEXT "是否確實要將“%s”從系統中完全刪除?"
-    IDS_OVERWRITE_TITLE "是否替換方案?"
-    IDS_OVERWRITE_TEXT "您所選擇的游標方案名已在使用中。是否要替換原方案?"
+    IDS_REMOVE_TITLE "確認刪除方案"
+    IDS_REMOVE_TEXT "是否確定要將「%s」從系統中刪除？"
+    IDS_OVERWRITE_TITLE "是否取代方案？"
+    IDS_OVERWRITE_TEXT "您所選擇的游標方案名已在使用中。是否要取代原方案？"
     IDS_ANIMATE_CURSOR "動畫游標"
 END

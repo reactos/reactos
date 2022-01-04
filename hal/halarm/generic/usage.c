@@ -5,7 +5,7 @@
  * PURPOSE:         Resource Usage Management Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
- 
+
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>

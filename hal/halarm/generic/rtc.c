@@ -25,13 +25,13 @@ HalQueryRealTimeClock(IN PTIME_FIELDS Time)
 {
     LARGE_INTEGER LargeTime;
     ULONG Seconds;
-    
+
     /* Query the RTC value */
     Seconds = READ_REGISTER_ULONG(RTC_DATA);
-    
+
     /* Convert to time */
     RtlSecondsSince1970ToTime(Seconds, &LargeTime);
-    
+
     /* Convert to time-fields */
     RtlTimeToTimeFields(&LargeTime, Time);
     return TRUE;

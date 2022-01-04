@@ -65,7 +65,7 @@ FatNotifyChangeDirectory (
 
 #endif
 
-
+
 _Function_class_(IRP_MJ_DIRECTORY_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS
@@ -146,7 +146,7 @@ Return Value:
     return Status;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
 FatCommonDirectoryControl (
@@ -219,7 +219,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -290,7 +290,7 @@ Return Value:
     PFILE_ID_BOTH_DIR_INFORMATION IdBothDirInfo;
     PFILE_NAMES_INFORMATION NamesInfo;
 
-    
+
     PAGED_CODE();
 
     //
@@ -334,7 +334,7 @@ Return Value:
     //  but UserDirectoryOpens.  Also check that the filename is a valid
     //  UNICODE string.
     //
-    
+
     if (FatDecodeFileObject( IrpSp->FileObject,
                              &Vcb,
                              &Dcb,
@@ -375,8 +375,8 @@ Return Value:
     //  order to update the search string in the Ccb.  We may
     //  discover that we are not the initial query once we grab the Fcb
     //  and downgrade our status.
-    // 
-    //  If restartscan is set, we may be replacing the query template, 
+    //
+    //  If restartscan is set, we may be replacing the query template,
     //  so take the FCB exclusive to protect against multiple people
     //  changing the CCB at once.
     //
@@ -457,19 +457,19 @@ Return Value:
         //  name.
         //
 
-        if (InitialQuery || 
+        if (InitialQuery ||
             (RestartScan && UniArgFileName != NULL && UniArgFileName->Length != 0)) {
 
             //
             //  If we're restarting the scan, clear out the pattern in the Ccb and regenerate it,
             //
-    
+
             if (RestartScan) {
-    
+
                 if (Ccb->UnicodeQueryTemplate.Buffer) {
 
                     if (FlagOn(Ccb->Flags, CCB_FLAG_FREE_UNICODE)) {
-                    
+
                         ExFreePoolWithTag(Ccb->UnicodeQueryTemplate.Buffer, TAG_FILENAME_BUFFER);
                         ClearFlag(Ccb->Flags, CCB_FLAG_FREE_UNICODE);
                     }
@@ -486,7 +486,7 @@ Return Value:
                         RtlFreeOemString( &Ccb->OemQueryTemplate.Wild );
                         ClearFlag(Ccb->Flags, CCB_FLAG_FREE_OEM_BEST_FIT);
                     }
-                    
+
                     Ccb->OemQueryTemplate.Wild.Buffer = NULL;
                     Ccb->OemQueryTemplate.Wild.Length = 0;
                     Ccb->OemQueryTemplate.Wild.MaximumLength = 0;
@@ -833,11 +833,11 @@ Return Value:
                     //  We'll case on the type of information requested and fill up
                     //  the user buffer if everything fits.
                     //
-    
+
                     //
                     //  Determine the UNICODE length of the file name.
                     //
-    
+
                     FileNameLength = RtlOemStringToCountedUnicodeSize(&Fat8Dot3String);
 
                     //
@@ -855,18 +855,18 @@ Return Value:
                     //      STATUS_SUCCESS is returned.  A subsequent query will
                     //      pick up with this record.
                     //
-    
+
                     BytesRemainingInBuffer = UserBufferLength - NextEntry;
-    
+
                     if ( (NextEntry != 0) &&
                          ( (BaseLength + FileNameLength > BytesRemainingInBuffer) ||
                            (UserBufferLength < NextEntry) ) ) {
-    
+
                         DebugTrace(0, Dbg, "Next entry won't fit\n", 0);
-    
+
                         try_return( Status = STATUS_SUCCESS );
                     }
-    
+
                     NT_ASSERT( BytesRemainingInBuffer >= BaseLength );
 
                     //
@@ -876,53 +876,53 @@ Return Value:
                     RtlZeroMemory( &Buffer[NextEntry], BaseLength );
 
                     switch ( FileInformationClass ) {
-    
+
                     //
                     //  Now fill the base parts of the strucure that are applicable.
                     //
-    
+
                     case FileBothDirectoryInformation:
                     case FileFullDirectoryInformation:
                     case FileIdBothDirectoryInformation:
                     case FileIdFullDirectoryInformation:
 
                         DebugTrace(0, Dbg, "FatQueryDirectory -> Getting file full directory information\n", 0);
-    
+
                         //
                         //  Get the Ea file length.
                         //
-    
+
                         FullDirInfo = (PFILE_FULL_DIR_INFORMATION)&Buffer[NextEntry];
-    
+
                         //
                         //  If the EAs are corrupt, ignore the error.  We don't want
                         //  to abort the directory query.
                         //
-    
+
                         _SEH2_TRY {
-    
+
                             FatGetEaLength( IrpContext,
                                             Vcb,
                                             Dirent,
                                             &FullDirInfo->EaSize );
-    
+
                         } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-    
+
                               FatResetExceptionState( IrpContext );
                               FullDirInfo->EaSize = 0;
                         } _SEH2_END;
-                        
+
                     case FileDirectoryInformation:
-    
+
                         DirInfo = (PFILE_DIRECTORY_INFORMATION)&Buffer[NextEntry];
-    
+
                         FatGetDirTimes( IrpContext, Dirent, DirInfo );
-    
+
                         DirInfo->EndOfFile.QuadPart = Dirent->FileSize;
 
                         if (!FlagOn( Dirent->Attributes, FAT_DIRENT_ATTR_DIRECTORY )) {
 
-    
+
                             DirInfo->AllocationSize.QuadPart =
                                (((Dirent->FileSize + DiskAllocSize - 1) / DiskAllocSize) *
                                 DiskAllocSize );
@@ -937,87 +937,87 @@ Return Value:
                             DirInfo->FileAttributes = 0;
 
                                 DirInfo->FileAttributes |= FILE_ATTRIBUTE_NORMAL;
-                        }            
-        
+                        }
+
                         DirInfo->FileIndex = NextVbo;
-    
+
                         DirInfo->FileNameLength = FileNameLength;
-    
+
                         DebugTrace(0, Dbg, "FatQueryDirectory -> Name = \"%Z\"\n", &Fat8Dot3String);
-    
+
                         break;
-    
+
                     case FileNamesInformation:
-    
+
                         DebugTrace(0, Dbg, "FatQueryDirectory -> Getting file names information\n", 0);
-    
+
                         NamesInfo = (PFILE_NAMES_INFORMATION)&Buffer[NextEntry];
-    
+
                         NamesInfo->FileIndex = NextVbo;
-    
+
                         NamesInfo->FileNameLength = FileNameLength;
-    
+
                         DebugTrace(0, Dbg, "FatQueryDirectory -> Name = \"%Z\"\n", &Fat8Dot3String );
-    
+
                         break;
-    
+
                     default:
-                        
+
 #ifdef _MSC_VER
-#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )    
+#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
 #endif
                         FatBugCheck( FileInformationClass, 0, 0 );
                     }
 
                     BytesConverted = 0;
-    
+
                     Status = RtlOemToUnicodeN( (PWCH)&Buffer[NextEntry + BaseLength],
                                                BytesRemainingInBuffer - BaseLength,
                                                &BytesConverted,
                                                Fat8Dot3String.Buffer,
                                                Fat8Dot3String.Length );
-                    
+
                     //
                     //  Check for the case that a single entry doesn't fit.
                     //  This should only get this far on the first entry
                     //
-    
+
                     if (BytesConverted < FileNameLength) {
-    
+
                         NT_ASSERT( NextEntry == 0 );
                         Status = STATUS_BUFFER_OVERFLOW;
                     }
-    
+
                     //
                     //  Set up the previous next entry offset
                     //
-    
+
                     *((PULONG)(&Buffer[LastEntry])) = NextEntry - LastEntry;
-    
+
                     //
                     //  And indicate how much of the user buffer we have currently
                     //  used up.  We must compute this value before we long align
                     //  ourselves for the next entry
                     //
-    
+
                     Irp->IoStatus.Information = QuadAlign( Irp->IoStatus.Information ) +
                                                 BaseLength + BytesConverted;
-    
+
                     //
                     //  If something happened with the conversion, bail here.
                     //
-    
+
                     if ( !NT_SUCCESS( Status ) ) {
-    
+
                         try_return( NOTHING );
                     }
 
                 } else {
 
                     ULONG ShortNameLength;
-    
+
                     FileNameLength = LongFileName.Length;
-    
+
                     //
                     //  Here are the rules concerning filling up the buffer:
                     //
@@ -1033,20 +1033,20 @@ Return Value:
                     //      STATUS_SUCCESS is returned.  A subsequent query will
                     //      pick up with this record.
                     //
-    
+
                     BytesRemainingInBuffer = UserBufferLength - NextEntry;
-    
+
                     if ( (NextEntry != 0) &&
                          ( (BaseLength + FileNameLength > BytesRemainingInBuffer) ||
                            (UserBufferLength < NextEntry) ) ) {
-    
+
                         DebugTrace(0, Dbg, "Next entry won't fit\n", 0);
-    
+
                         try_return( Status = STATUS_SUCCESS );
                     }
-    
+
                     NT_ASSERT( BytesRemainingInBuffer >= BaseLength );
-    
+
                     //
                     //  Zero the base part of the structure.
                     //
@@ -1054,90 +1054,90 @@ Return Value:
                     RtlZeroMemory( &Buffer[NextEntry], BaseLength );
 
                     switch ( FileInformationClass ) {
-    
+
                     //
                     //  Now fill the base parts of the strucure that are applicable.
                     //
-    
+
                     case FileBothDirectoryInformation:
                     case FileIdBothDirectoryInformation:
-    
+
                         BothDirInfo = (PFILE_BOTH_DIR_INFORMATION)&Buffer[NextEntry];
-    
+
                         //
                         //  Now we have an entry to return to our caller.  We'll convert
                         //  the name from the form in the dirent to a <name>.<ext> form.
                         //  We'll case on the type of information requested and fill up
                         //  the user buffer if everything fits.
                         //
-    
+
                         Fat8dot3ToString( IrpContext, Dirent, FALSE, &Fat8Dot3String );
-    
+
                         NT_ASSERT( Fat8Dot3String.Length <= 12 );
-    
+
                         Status = RtlOemToUnicodeN( &BothDirInfo->ShortName[0],
                                                    12*sizeof(WCHAR),
                                                    &ShortNameLength,
                                                    Fat8Dot3String.Buffer,
                                                    Fat8Dot3String.Length );
-    
+
                         NT_ASSERT( Status != STATUS_BUFFER_OVERFLOW );
                         NT_ASSERT( ShortNameLength <= 12*sizeof(WCHAR) );
-    
+
                         //
                         //  Copy the length into the dirinfo structure.  Note
                         //  that the LHS below is a USHORT, so it can not
                         //  be specificed as the OUT parameter above.
                         //
-    
+
                         BothDirInfo->ShortNameLength = (UCHAR)ShortNameLength;
-    
+
                         //
                         //  If something happened with the conversion, bail here.
                         //
-    
+
                         if ( !NT_SUCCESS( Status ) ) {
-    
+
                             try_return( NOTHING );
                         }
-    
+
                     case FileFullDirectoryInformation:
                     case FileIdFullDirectoryInformation:
-    
+
                         DebugTrace(0, Dbg, "FatQueryDirectory -> Getting file full directory information\n", 0);
-    
+
                         //
                         //  Get the Ea file length.
                         //
-    
+
                         FullDirInfo = (PFILE_FULL_DIR_INFORMATION)&Buffer[NextEntry];
-    
+
                         //
                         //  If the EAs are corrupt, ignore the error.  We don't want
                         //  to abort the directory query.
                         //
-    
+
                         _SEH2_TRY {
-    
+
                             FatGetEaLength( IrpContext,
                                             Vcb,
                                             Dirent,
                                             &FullDirInfo->EaSize );
-    
+
                         } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-    
+
                               FatResetExceptionState( IrpContext );
                               FullDirInfo->EaSize = 0;
                         } _SEH2_END;
-    
+
                     case FileDirectoryInformation:
-    
+
                         DirInfo = (PFILE_DIRECTORY_INFORMATION)&Buffer[NextEntry];
-    
+
                         FatGetDirTimes( IrpContext, Dirent, DirInfo );
-    
+
                         DirInfo->EndOfFile.QuadPart = Dirent->FileSize;
-    
+
                         if (!FlagOn( Dirent->Attributes, FAT_DIRENT_ATTR_DIRECTORY )) {
 
 
@@ -1147,7 +1147,7 @@ Return Value:
                                                              / DiskAllocSize )
                                                             * DiskAllocSize );
                         }
-    
+
                         if (Dirent->Attributes != 0) {
                             DirInfo->FileAttributes = Dirent->Attributes;
 
@@ -1162,31 +1162,31 @@ Return Value:
 
 
                         DirInfo->FileIndex = NextVbo;
-    
+
                         DirInfo->FileNameLength = FileNameLength;
-    
+
                         DebugTrace(0, Dbg, "FatQueryDirectory -> Name = \"%Z\"\n", &Fat8Dot3String);
-    
+
                         break;
-    
+
                     case FileNamesInformation:
-    
+
                         DebugTrace(0, Dbg, "FatQueryDirectory -> Getting file names information\n", 0);
-    
+
                         NamesInfo = (PFILE_NAMES_INFORMATION)&Buffer[NextEntry];
-    
+
                         NamesInfo->FileIndex = NextVbo;
-    
+
                         NamesInfo->FileNameLength = FileNameLength;
-    
+
                         DebugTrace(0, Dbg, "FatQueryDirectory -> Name = \"%Z\"\n", &Fat8Dot3String );
-    
+
                         break;
-    
+
                     default:
 
 #ifdef _MSC_VER
-#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )    
+#pragma prefast( suppress:28159, "things are seriously wrong if we get here" )
 #endif
                         FatBugCheck( FileInformationClass, 0, 0 );
                     }
@@ -1194,15 +1194,15 @@ Return Value:
                     BytesConverted = BytesRemainingInBuffer - BaseLength >= FileNameLength ?
                                      FileNameLength :
                                      BytesRemainingInBuffer - BaseLength;
-    
+
                     RtlCopyMemory( &Buffer[NextEntry + BaseLength],
                                    &LongFileName.Buffer[0],
                                    BytesConverted );
-    
+
                     //
                     //  Set up the previous next entry offset
                     //
-    
+
                     *((PULONG)(&Buffer[LastEntry])) = NextEntry - LastEntry;
 
                     //
@@ -1210,7 +1210,7 @@ Return Value:
                     //  used up.  We must compute this value before we long align
                     //  ourselves for the next entry
                     //
-    
+
                     Irp->IoStatus.Information = QuadAlign( Irp->IoStatus.Information ) +
                                                 BaseLength + BytesConverted;
 
@@ -1248,7 +1248,7 @@ Return Value:
                 default:
                     break;
                 }
-            
+
             }  _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
 
                   //
@@ -1256,7 +1256,7 @@ Return Value:
                   //  fail this request.  This is the only reason any exception
                   //  would have occured at this level.
                   //
-                  
+
                   Irp->IoStatus.Information = 0;
                   UpdateCcb = FALSE;
                   try_return( Status = _SEH2_GetExceptionCode());
@@ -1268,7 +1268,7 @@ Return Value:
 
             LastEntry = NextEntry;
             NextEntry += (ULONG)QuadAlign(BaseLength + BytesConverted);
-        
+
             CurrentVbo = NextVbo + sizeof( DIRENT );
         }
 
@@ -1321,7 +1321,7 @@ Return Value:
     return Status;
 }
 
-
+
 //
 //  Local Support Routine
 //
@@ -1442,7 +1442,7 @@ Return Value:
     }
 }
 
-
+
 //
 //  Local Support Routine
 //

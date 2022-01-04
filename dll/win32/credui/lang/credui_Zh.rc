@@ -57,20 +57,20 @@ STRINGTABLE
 {
     IDS_TITLEFORMAT     "連接到 %s"
     IDS_MESSAGEFORMAT   "正在連接到 %s"
-    IDS_INCORRECTPASSWORDTITLE  "登錄失敗"
-    IDS_INCORRECTPASSWORD       "請確認你輸入的用戶名和密碼\n是否正確."
-    IDS_CAPSLOCKONTITLE "大寫鎖定開著"
-    IDS_CAPSLOCKON      "開著大寫鎖定可能導致你輸入錯誤的密碼."
+    IDS_INCORRECTPASSWORDTITLE  "登入失敗"
+    IDS_INCORRECTPASSWORD       "請確認您輸入的使用者名稱和密碼\n是否正確."
+    IDS_CAPSLOCKONTITLE "大寫鎖定已開啟"
+    IDS_CAPSLOCKON      "開啟大寫鎖定可能導致您輸入錯誤的密碼."
 }
 
 IDD_CREDDIALOG DIALOGEX  0, 0, 213, 149
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-FONT 9, "宋体"
+FONT 9, "新細明體"
 BEGIN
     CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
                     0,213,37
     LTEXT           "",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
-    LTEXT           "用戶名(&U):",-1,8,62,72,12,SS_CENTERIMAGE
+    LTEXT           "使用者名稱(&U):",-1,8,62,72,12,SS_CENTERIMAGE
     CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
                     CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
     LTEXT           "密碼(&P):",-1,8,80,72,12,SS_CENTERIMAGE

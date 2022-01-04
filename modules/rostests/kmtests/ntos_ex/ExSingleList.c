@@ -96,7 +96,7 @@ START_TEST(ExSingleList)
     ListHead = (PVOID)&Buffer[1];
     Entries = (PVOID)&ListHead[1];
     KeRaiseIrql(HIGH_LEVEL, &Irql);
-    
+
     RtlFillMemory(Entries, sizeof(*Entries), 0x55);
     ListHead->Next = NULL;
     TestListFunctional(ListHead, Entries, &SpinLock);
@@ -104,11 +104,11 @@ START_TEST(ExSingleList)
     RtlFillMemory(Entries, sizeof(*Entries), 0x55);
     ListHead->Next = NULL;
     TestListFunctionalExports(ListHead, Entries, &SpinLock);
-    
+
     RtlFillMemory(Entries, sizeof(*Entries), 0x55);
     ListHead->Next = NULL;
     TestListFunctionalNoInterlocked(ListHead, Entries, &SpinLock);
-    
+
     KeLowerIrql(Irql);
     ExFreePoolWithTag(Buffer, 'TLiS');
 }

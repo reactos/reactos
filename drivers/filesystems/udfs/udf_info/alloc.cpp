@@ -521,7 +521,7 @@ UDFGetBitmapLen(
     while(i<=Lim) {
 
         while( j < ((i<Lim) ? 32 : lLim) ) {
-            if( ((BOOLEAN)(a&1)) != bit) 
+            if( ((BOOLEAN)(a&1)) != bit)
                 return len;
             len++;
             a>>=1;
@@ -673,7 +673,7 @@ UDFCheckSpaceAllocation_(
         ));
 #endif //UDF_TRACK_ONDISK_ALLOCATION
     while(Map[i].extLength & UDF_EXTENT_LENGTH_MASK) {
-        
+
 #ifdef UDF_TRACK_ONDISK_ALLOCATION
         AdPrint(("ChkAlloc:%x:%s:%x:@:%x:(%x):File:%x:Line:%d\n",
             FE_lba,
@@ -690,7 +690,7 @@ UDFCheckSpaceAllocation_(
         } else {
             UDFCheckFreeBitOwner(Vcb, (Map[i].extLength & UDF_EXTENT_LENGTH_MASK) >> BSh);
         }
-        
+
         if((Map[i].extLength >> 30) == EXTENT_NOT_RECORDED_NOT_ALLOCATED) {
             // skip unallocated frags
 //            ASSERT(!(Map[i].extLength & UDF_EXTENT_LENGTH_MASK));
@@ -814,7 +814,7 @@ UDFMarkSpaceAsXXXNoProtect_(
             continue;
         }
         ASSERT(Map[i].extLocation);
-        
+
 #ifdef UDF_TRACK_ONDISK_ALLOCATION
         AdPrint(("Alloc:%x:%s:%x:@:%x:File:%x:Line:%d\n",
             FE_lba,
@@ -915,7 +915,7 @@ UDFMarkSpaceAsXXXNoProtect_(
             ASSERT(bit_before == UDFGetBit(Vcb->FSBM_Bitmap, lba-1));
         ASSERT(bit_after == UDFGetBit(Vcb->FSBM_Bitmap, lba+len));
 #endif //UDF_TRACK_ONDISK_ALLOCATION
-        
+
         i++;
     }
 } // end UDFMarkSpaceAsXXXNoProtect_()
@@ -1288,7 +1288,7 @@ UDFSetBits__(
         push edx
         push esi
 
-        mov  edx,bc            
+        mov  edx,bc
         or   edx,edx
         jz   short EO_sb_loop
 
@@ -1396,7 +1396,7 @@ UDFClrBits__(
         push edx
         push esi
 
-        mov  edx,bc            
+        mov  edx,bc
         or   edx,edx
         jz   short EO_cp_loop
 

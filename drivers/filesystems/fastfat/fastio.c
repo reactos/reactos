@@ -12,10 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined(ALLOC_PRAGMA)
-#pragma alloc_text(INIT, VfatInitFastIoRoutines)
-#endif
-
 static FAST_IO_CHECK_IF_POSSIBLE VfatFastIoCheckIfPossible;
 
 static
@@ -753,7 +749,7 @@ VfatReleaseFromLazyWrite(
     ExReleaseResourceLite(&(Fcb->MainResource));
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 VfatInitFastIoRoutines(
     PFAST_IO_DISPATCH FastIoDispatch)

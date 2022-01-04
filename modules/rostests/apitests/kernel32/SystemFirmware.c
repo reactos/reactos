@@ -8,6 +8,8 @@
 
 #include "precomp.h"
 
+#include <pseh/pseh2.h>
+
 static UINT (WINAPI * pEnumSystemFirmwareTables)(DWORD, PVOID, DWORD);
 static UINT (WINAPI * pGetSystemFirmwareTable)(DWORD, DWORD, PVOID, DWORD);
 

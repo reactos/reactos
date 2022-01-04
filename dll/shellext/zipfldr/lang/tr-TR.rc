@@ -1,0 +1,97 @@
+/*
+ * PROJECT:     ReactOS Zip Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 260, 156
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Hedef Seçin"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "Hedef dizini seçin",IDC_STATIC,86,12,189,8
+    EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Araştır...",IDC_BROWSE,189,42,54,14
+    PUSHBUTTON      "Parola",IDC_PASSWORD,189,66,54,14
+    LTEXT           "Çıkartmak için 'İleri'ye tıklayınız",IDC_STATUSTEXT,86,114,80,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
+END
+
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 156
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Çıkarma Tamamlandı"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "Dosyalar aşağıdaki dizine çıkartıldı:",IDC_STATIC,86,12,157,18
+    LTEXT           "%s",IDC_DESTDIR,86,36,157,8
+    CONTROL         "Çıkartılan dosyaları göster",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,81,10
+    LTEXT           "Devam etmek için Bitir'e tıklayın.",IDC_STATIC,86,84,89,8
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
+END
+
+IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dosya Değiştirmeyi Onayla"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Evet",IDYES,6,36,62,14
+    PUSHBUTTON      "Tümüne &Evet",IDYESALL,72,36,62,14
+    PUSHBUTTON      "&Hayır",IDNO,138,36,62,14
+    PUSHBUTTON      "İptal",IDCANCEL,204,36,62,14
+    ICON            "",IDC_EXCLAMATION_ICON,6,6,24,22
+    LTEXT           "",IDC_MESSAGE,36,6,228,24
+END
+
+IDD_PASSWORD DIALOGEX 0, 0, 243, 62
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Şifre gerekli"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Tamam",IDOK,186,6,50,14
+    PUSHBUTTON      "Dosyayı Atla",IDSKIP,186,24,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,186,42,50,14
+    LTEXT           "Statik",IDC_MESSAGE,24,6,156,30
+    LTEXT           "Şifre:",IDC_STATIC,24,44,44,8
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME "İsim"
+    IDS_COL_TYPE "Tür"
+    IDS_COL_COMPRSIZE "Sıkıştırılmış boyut"
+    IDS_COL_PASSWORD "Şifre"
+    IDS_COL_SIZE "Boyut"
+    IDS_COL_RATIO "Oran"
+    IDS_COL_DATE_MOD "Değiştirilme Tarihi"
+    IDS_YES "Evet"
+    IDS_NO "Hayır"
+    IDS_ERRORTITLE "Sıkıştırılmış Dizin Hatası"
+    IDS_CANTSTARTTHREAD "Dosyaları sıkıştırmak için iş parçacığı başlatılamıyor."
+    IDS_NOFILES "Belirtilen '%s' dizini boş, bu nedenle Sıkıştırılmış Dizinler onu arşive ekleyemiyor."
+    IDS_CANTCREATEZIP "Sıkıştırılmış bir '%s' dizini oluşturulamadı (Hata Kodu: %d)."
+    IDS_CANTREADFILE "'%s' dosyası okunamadı."
+    IDS_EXTRACTING "Çıkartılıyor..."
+    IDS_CANTEXTRACTFILE "Dosya '%1' çıkartılamadı."
+    IDS_DECOMPRESSERROR "Desteklenmeyen sıkıştırma yöntemi: %d. Devam etmek ister misiniz?"
+    IDS_UNKNOWNERROR "Bilinmeyen hata 0x%08x."
+
+    IDS_WIZ_TITLE "Çıkartma Sihirbazı"
+    IDS_WIZ_DEST_TITLE "Hedef Belirle"
+    IDS_WIZ_DEST_SUBTITLE "Zip arşivindeki dosyalar belirtilen konuma çıkartılacaktır."
+    IDS_WIZ_COMPL_TITLE "Çıkartma Tamamlandı"
+    IDS_WIZ_COMPL_SUBTITLE "Zip arşivindeki dosyalar çıkartıldı."
+    IDS_WIZ_BROWSE_TITLE "Seçili öğeleri çıkartmak istediğiniz yeri seçin."
+
+    IDS_OVERWRITEFILE_TEXT "Bu dizin zaten '%1' adında bir dosya içeriyor.\nBunu değiştirmek istiyor musunuz?"
+    IDS_PASSWORD_FILE_TEXT "'%1' dosyası şifre korumalı. Lütfen şifre giriniz."
+    IDS_PASSWORD_ZIP_TEXT "Lütfen bu zip dosyasını çıkartırken kullanılacak şifreyi belirtin."
+
+    IDS_MENUITEM "&Hepsini Çıkart..."
+    IDS_HELPTEXT "Dizin içeriğini çıkartır"
+    IDS_FRIENDLYNAME "Sıkıştırılmış Dizin"
+END

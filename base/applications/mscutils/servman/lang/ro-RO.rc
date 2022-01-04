@@ -285,7 +285,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "OPȚIUNI DE CREARE:\r\nNOTĂ: Numele opțiunii include semnul de egalitate.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (implicit = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (implicit = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (implicit = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separate de / (simbolul „solidus”))>\r\n obj= <AccountName|ObjectName>\r\n       (implicit = LocalSystem)\r\n password= <password>\r\n"
+    IDS_HELP_OPTIONS "OPȚIUNI DE CREARE:\nNOTĂ: Numele opțiunii include semnul de egalitate.\n type= <own|share|interact|kernel|filesys|rec>\n       (implicit = own)\n start= <boot|system|auto|demand|disabled>\n       (implicit = demand)\n error= <normal|severe|critical|ignore>\n       (implicit = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies(separate de / (simbolul „solidus”))>\n obj= <AccountName|ObjectName>\n       (implicit = LocalSystem)\n password= <password>\n"
 END
 
 /* Hints */

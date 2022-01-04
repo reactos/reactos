@@ -446,20 +446,139 @@ NTAPI
 RtlpApplyLengthFunction(IN ULONG Flags,
                         IN ULONG Type,
                         IN PVOID UnicodeStringOrUnicodeStringBuffer,
-                        IN PVOID LengthFunction)
+                        IN NTSTATUS(NTAPI* LengthFunction)(ULONG, PUNICODE_STRING, PULONG))
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PUNICODE_STRING String;
+    ULONG Length;
+
+    if (Flags || UnicodeStringOrUnicodeStringBuffer == NULL || LengthFunction == NULL)
+    {
+        DPRINT1("ERROR: Flags=0x%x, UnicodeStringOrUnicodeStringBuffer=%p, LengthFunction=%p\n",
+            Flags, UnicodeStringOrUnicodeStringBuffer, LengthFunction);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (Type == sizeof(UNICODE_STRING))
+    {
+        String = (PUNICODE_STRING)UnicodeStringOrUnicodeStringBuffer;
+    }
+    else if (Type == sizeof(RTL_UNICODE_STRING_BUFFER))
+    {
+        String = &((PRTL_UNICODE_STRING_BUFFER)UnicodeStringOrUnicodeStringBuffer)->String;
+    }
+    else
+    {
+        DPRINT1("ERROR: Type = %u\n", Type);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Length = 0;
+    Status = LengthFunction(0, String, &Length);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (Length > UNICODE_STRING_MAX_CHARS)
+        return STATUS_NAME_TOO_LONG;
+
+    String->Length = (USHORT)(Length * sizeof(WCHAR));
+
+    if (Type == sizeof(RTL_UNICODE_STRING_BUFFER))
+    {
+        String->Buffer[Length] = UNICODE_NULL;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 RtlGetLengthWithoutLastFullDosOrNtPathElement(IN ULONG Flags,
-                                              IN PWCHAR Path,
+                                              IN PCUNICODE_STRING Path,
                                               OUT PULONG LengthOut)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    static const UNICODE_STRING PathDividers = RTL_CONSTANT_STRING(L"\\/");
+    USHORT Position;
+    RTL_PATH_TYPE PathType;
+
+    /* All failure paths have this in common, so simplify code */
+    if (LengthOut)
+        *LengthOut = 0;
+
+    if (Flags || !Path || !LengthOut)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if ((Path->Length / sizeof(WCHAR)) == 0)
+    {
+        /* Nothing to do here */
+        return STATUS_SUCCESS;
+    }
+
+
+    PathType = RtlDetermineDosPathNameType_Ustr(Path);
+    switch (PathType)
+    {
+    case RtlPathTypeLocalDevice:
+        // Handle \\\\?\\C:\\ with the last ':' or '\\' missing:
+        if (Path->Length / sizeof(WCHAR) < 7 ||
+            Path->Buffer[5] != ':' ||
+            !IS_PATH_SEPARATOR(Path->Buffer[6]))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+        break;
+    case RtlPathTypeRooted:
+        // "\\??\\"
+        break;
+    case RtlPathTypeUncAbsolute:
+        // "\\\\"
+        break;
+    case RtlPathTypeDriveAbsolute:
+        // "C:\\"
+        break;
+    default:
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Find the last path separator */
+    if (!NT_SUCCESS(RtlFindCharInUnicodeString(RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END, Path, &PathDividers, &Position)))
+        Position = 0;
+
+    /* Is it the last char of the string? */
+    if (Position && Position + sizeof(WCHAR) == Path->Length)
+    {
+        UNICODE_STRING Tmp = *Path;
+        Tmp.Length = Position;
+
+        /* Keep walking path separators to eliminate multiple next to eachother */
+        while (Tmp.Length > sizeof(WCHAR) && IS_PATH_SEPARATOR(Tmp.Buffer[Tmp.Length / sizeof(WCHAR)]))
+            Tmp.Length -= sizeof(WCHAR);
+
+        /* Find the previous occurence */
+        if (!NT_SUCCESS(RtlFindCharInUnicodeString(RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END, &Tmp, &PathDividers, &Position)))
+            Position = 0;
+    }
+
+    /* Simplify code by working in chars instead of bytes */
+    if (Position)
+        Position /= sizeof(WCHAR);
+
+    if (Position)
+    {
+        // Keep walking path separators to eliminate multiple next to eachother, but ensure we leave one in place!
+        while (Position > 1 && IS_PATH_SEPARATOR(Path->Buffer[Position - 1]))
+            Position--;
+    }
+
+    if (Position > 0)
+    {
+        /* Return a length, not an index */
+        *LengthOut = Position + 1;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

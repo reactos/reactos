@@ -20,7 +20,7 @@ extern PDEVICE_NODE IopRootDeviceNode;
 
 /* CmResource */
 
-/* PipDumpCmResourceDescriptor() displays information about a Cm Descriptor 
+/* PipDumpCmResourceDescriptor() displays information about a Cm Descriptor
 
    DebugLevel: 0 - always dump
                1 - dump if not defined NDEBUG
@@ -106,7 +106,7 @@ PipGetNextCmPartialDescriptor(
     return NextDescriptor;
 }
 
-/* PipDumpCmResourceList() displays information about a Cm List 
+/* PipDumpCmResourceList() displays information about a Cm List
 
    DebugLevel: 0 - always dump
                1 - dump if not defined NDEBUG
@@ -173,7 +173,7 @@ PipDumpCmResourceList(
 
 /* IoResource */
 
-/* PipDumpIoResourceDescriptor() displays information about a Io Descriptor 
+/* PipDumpIoResourceDescriptor() displays information about a Io Descriptor
 
    DebugLevel: 0 - always dump
                1 - dump if not defined NDEBUG
@@ -239,7 +239,7 @@ PipDumpIoResourceDescriptor(
     }
 }
 
-/* PipDumpResourceRequirementsList() displays information about a Io List 
+/* PipDumpResourceRequirementsList() displays information about a Io List
 
    DebugLevel: 0 - always dump
                1 - dump if not defined NDEBUG

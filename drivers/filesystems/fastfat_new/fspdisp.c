@@ -35,7 +35,7 @@ FatRemoveOverflowEntry (
 #pragma alloc_text(PAGE, FatFspDispatch)
 #endif
 
-
+
 VOID
 NTAPI
 FatFspDispatch (
@@ -122,7 +122,7 @@ Return Value:
     while ( TRUE ) {
 
         ExceptionCompletedIrp = FALSE;
-                
+
         DebugTrace(0, Dbg, "FatFspDispatch: Irp = %p\n", Irp);
 
         //
@@ -384,12 +384,12 @@ Return Value:
 
 
         if (MajorFunction == IRP_MJ_CREATE && !ExceptionCompletedIrp && Status != STATUS_PENDING) {
-            
+
             //
             // Creates are completed here. IrpContext is also freed here.
             //
 
-            FatCompleteRequest( IrpContext, Irp, Status );            
+            FatCompleteRequest( IrpContext, Irp, Status );
         }
 
         //
@@ -443,7 +443,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal support routine, spinlock wrapper.
 //

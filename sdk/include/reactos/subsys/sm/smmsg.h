@@ -263,4 +263,21 @@ SmSessionComplete(
     IN NTSTATUS SessionStatus
 );
 
+NTSTATUS
+NTAPI
+SmStartCsr(
+    IN HANDLE SmApiPort,
+    OUT PULONG pMuSessionId,
+    IN PUNICODE_STRING CommandLine,
+    OUT PHANDLE pWindowsSubSysProcessId,
+    OUT PHANDLE pInitialCommandProcessId
+);
+
+NTSTATUS
+NTAPI
+SmStopCsr(
+    IN HANDLE SmApiPort,
+    IN ULONG SessionId
+);
+
 #endif

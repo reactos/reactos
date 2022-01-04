@@ -1,0 +1,37 @@
+/*
+ * PROJECT:      ReactOS Win32 User Environment
+ * COPYRIGHT:    GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:      Chinese (Hong Kong) resource file
+ * TRANSLATORS:  Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:   Chinese (Traditional) resource file
+ */
+
+/* ATTENTION: Please DO NOT change English folder names into Chinese
+ *            unless necessary, or it may cause problems in the system.
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+/* See also: dll/win32/shell32/lang */
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
+    IDS_APPDATA "Application Data"
+    IDS_DESKTOP "桌面"
+    IDS_FAVORITES "我的最愛"
+    IDS_MYDOCUMENTS "我的文件"
+    IDS_NETHOOD "NetHood"
+    IDS_PRINTHOOD "PrintHood"
+    IDS_RECENT "Recent"
+    IDS_SENDTO "SendTo"
+    IDS_TEMPLATES "Templates"
+    IDS_STARTMENU "「開始」功能表"
+    IDS_PROGRAMS "「開始」功能表\\程式"
+    IDS_STARTUP "「開始」功能表\\程式\\啟動"
+    IDS_LOCALSETTINGS "Local Settings"
+    IDS_LOCALAPPDATA "Local Settings\\Application Data"
+    IDS_TEMP "Local Settings\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
+    IDS_CACHE "Local Settings\\Temporary Internet Files"
+    IDS_HISTORY "Local Settings\\History"
+    IDS_COOKIES "Cookies"
+END

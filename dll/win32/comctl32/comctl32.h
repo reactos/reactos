@@ -36,6 +36,13 @@
 #include "commctrl.h"
 #include "windowsx.h"
 
+#ifdef __REACTOS__
+// This is really ComCtl32 v5.82, the last one not supporting SxS
+#undef  COMCTL32_VERSION // Undefines what the PSDK gave to us
+#define COMCTL32_VERSION        5
+#define COMCTL32_VERSION_MINOR 82
+#endif
+
 extern HMODULE COMCTL32_hModule DECLSPEC_HIDDEN;
 extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;
 
@@ -188,7 +195,9 @@ INT  Str_GetPtrAtoW (LPCSTR lpSrc, LPWSTR lpDest, INT nMaxLen) DECLSPEC_HIDDEN;
 BOOL Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc) DECLSPEC_HIDDEN;
 BOOL Str_SetPtrWtoA (LPSTR *lppDest, LPCWSTR lpSrc) DECLSPEC_HIDDEN;
 
+#ifndef __REACTOS__
 #define COMCTL32_VERSION_MINOR 81
+#endif
 
 /* Our internal stack structure of the window procedures to subclass */
 typedef struct _SUBCLASSPROCS {

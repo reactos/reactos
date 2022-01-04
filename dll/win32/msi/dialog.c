@@ -3237,6 +3237,13 @@ static void msi_dialog_vcl_add_drives( msi_dialog *dialog, msi_control *control 
     ptr = drives;
     while (*ptr)
     {
+#ifdef __REACTOS__
+        if (GetDriveTypeW(ptr) != DRIVE_FIXED)
+        {
+            ptr += lstrlenW(ptr) + 1;
+            continue;
+        }
+#endif
         lvitem.mask = LVIF_TEXT;
         lvitem.iItem = i;
         lvitem.iSubItem = 0;
@@ -3834,7 +3841,7 @@ static void process_pending_messages( HWND hdlg )
 static UINT dialog_run_message_loop( msi_dialog *dialog )
 {
     DWORD style;
-    HWND hwnd;
+    HWND hwnd, parent;
 
     if( uiThreadId != GetCurrentThreadId() )
         return SendMessageW( hMsiHiddenWindow, WM_MSI_DIALOG_CREATE, 0, (LPARAM) dialog );
@@ -3847,9 +3854,12 @@ static UINT dialog_run_message_loop( msi_dialog *dialog )
     if (dialog->parent == NULL && (dialog->attributes & msidbDialogAttributesMinimize))
         style |= WS_MINIMIZEBOX;
 
+    parent = dialog->parent ? dialog->parent->hwnd : 0;
+
     hwnd = CreateWindowW( szMsiDialogClass, dialog->name, style,
                      CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                     NULL, NULL, NULL, dialog );
+                     parent, NULL, NULL, dialog );
+
     if( !hwnd )
     {
         ERR("Failed to create dialog %s\n", debugstr_w( dialog->name ));

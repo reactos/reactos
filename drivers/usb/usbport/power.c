@@ -519,7 +519,7 @@ USBPORT_FdoPower(IN PDEVICE_OBJECT FdoDevice,
           {
               Status = USBPORT_SystemPowerState(FdoDevice, Irp);
           }
-      
+
           if (Status != STATUS_PENDING)
               break;
 

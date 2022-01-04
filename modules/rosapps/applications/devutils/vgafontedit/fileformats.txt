@@ -7,19 +7,20 @@ We only deal with 8x8 fonts with 256 characters, so different formats aren't des
 ----------------------------
 A binary font file is always 2048 bytes in size.
 These bytes are divided into 256 characters, so every character is 8 bytes large.
-Each byte represents a character row. Consequently, each column is represented by one bit. The most-significant bit contains the pixel of the first column from the left.
+Each byte represents a character row. Consequently, each column is represented by one bit.
+The most-significant bit contains the pixel of the first column from the left.
 
 Example:
   We want to get the pixel in the third column of the second row of the seventh character.
   We assume you loaded the binary font file completely into a byte array called FontBits.
-  
+
   // All indexes need to be zero-based
   UINT uCharacter = 6;
   UINT uRow = 1;
   UINT uColumn = 2;
-  
+
   UCHAR uBit;
-  
+
   // uBit will either contain 0 (0-bit is set) or 128 dec, 0x80 hex (1-bit is set) now
   uBit = FontBits[uCharacter * 8 + uRow] << uColumn & 0x80;
 
@@ -34,7 +35,7 @@ struct PSF1_FILE
     UCHAR uMagic[2];
     UCHAR uMode;
     UCHAR uCharSize;
-    
+
     UCHAR FontBits[2048];
 };
 

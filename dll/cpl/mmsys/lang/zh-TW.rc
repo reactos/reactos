@@ -1,8 +1,9 @@
 /*
- * (Traditional Chinese resources)
- * (繁体中文资源)
- * by Henry Tang Ih 2016 (henrytang2@hotmail.com)
- * by Aobi Chan CL 2020 (eason066@gmail.com)
+ * PROJECT:     ReactOS Multimedia Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -35,14 +36,14 @@ CAPTION "聲音"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "聲音方案是應用於 ReactOS 和程式事件中的一組聲音。請選擇一個現有方案或儲存您已經更改的方案。", -1, 8, 7, 230, 40
-    LTEXT "聲音方案(&C):", -1, 8, 42, 150, 17
+    LTEXT "聲音方案(&C)︰", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "另存為(&E)...", IDC_SAVEAS_BTN, 134, 70, 50, 15
+    PUSHBUTTON "另存新檔(&E)...", IDC_SAVEAS_BTN, 134, 70, 50, 15
     PUSHBUTTON "刪除(&D)", IDC_DELETE_BTN, 188, 70, 50, 15
-    LTEXT "要改變聲音，請單擊下列表中的程式事件然後選擇聲音。您可將更改儲存為新聲音方案。", -1, 8, 90, 230, 40
-    LTEXT "程式事件(&P):", -1, 8, 118, 150, 17
+    LTEXT "要更改聲音，請單擊下列表中的程式事件然後選擇聲音。您可將更改儲存為新聲音方案。", -1, 8, 90, 230, 40
+    LTEXT "程式事件(&P)︰", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
-    LTEXT "聲音(&S):", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
+    LTEXT "聲音(&S)︰", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "", IDC_PLAY_SOUND, 168, 205, 15, 15, WS_DISABLED | BS_ICON
     PUSHBUTTON "瀏覽(&B)...", IDC_BROWSE_SOUND, 188, 205, 50, 15, WS_DISABLED
@@ -55,23 +56,23 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX "聲音播放", -1, 7, 7, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
-    LTEXT "默認裝置(&D):", -1, 50, 20, 80, 17
+    LTEXT "預設裝置(&D)︰", -1, 50, 20, 80, 17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&V)...", IDC_VOLUME1_BTN, 85, 47, 70, 15
     PUSHBUTTON "進階(&D)...", IDC_ADV2_BTN, 160, 47, 70, 15
     GROUPBOX "錄音", -1, 7, 75, 230, 60, WS_GROUP
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
-    LTEXT "默認裝置(&E):", -1, 50, 88, 80, 17
+    LTEXT "預設裝置(&E)︰", -1, 50, 88, 80, 17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&O)...", IDC_VOLUME2_BTN, 85, 115, 70, 15
     PUSHBUTTON "進階(&C)...", IDC_ADV1_BTN, 160, 115, 70, 15
     GROUPBOX "MIDI 音樂播放", -1, 7, 145, 230, 60, WS_GROUP
     ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
-    LTEXT "默認裝置(&F):", -1, 50, 158, 80, 17
+    LTEXT "預設裝置(&F)︰", -1, 50, 158, 80, 17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&M)...", IDC_VOLUME3_BTN, 85, 185, 70, 15
     PUSHBUTTON "關於(&B)...", IDC_ADV3_BTN, 160, 185, 70, 15
-    AUTOCHECKBOX "僅使用默認裝置(&U)", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10, WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX "僅使用預設裝置(&U)", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10, WS_GROUP | WS_TABSTOP
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
@@ -79,20 +80,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "語音"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "這些設定控制聲音播放或您選擇的錄音裝置的音量和高階選項。", -1, 8, 7, 230, 40
+    LTEXT "這些設定控制聲音播放或您選擇的錄音裝置的音量和進階選項。", -1, 8, 7, 230, 40
     GROUPBOX "聲音播放", -1, 7, 37, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
-    LTEXT "預設裝置(&D):", -1, 50, 50, 80, 17
+    LTEXT "預設裝置(&D)︰", -1, 50, 50, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&V)...", IDC_VOLUME4_BTN, 85, 77, 70, 15
     PUSHBUTTON "進階(&N)...", IDC_ADV4_BTN, 160, 77, 70, 15
     GROUPBOX "錄音", -1, 7, 105, 230, 60, WS_GROUP
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
-    LTEXT "預設裝置(&E):", -1, 50, 118, 80, 17
+    LTEXT "預設裝置(&E)︰", -1, 50, 118, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&O)...", IDC_VOLUME5_BTN, 85, 145, 70, 15
     PUSHBUTTON "進階(&C)...", IDC_ADV5_BTN, 160, 145, 70, 15
-    PUSHBUTTON "測試硬體...(&T)", IDC_TEST_HARDWARE, 160, 175, 70, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "測試硬體(&T)...", IDC_TEST_HARDWARE, 160, 175, 70, 15, WS_GROUP | WS_TABSTOP
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
@@ -107,7 +108,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "另存方案為"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "將此聲音方案儲存為(&S):", -1, 7, 7, 212, 9
+    LTEXT "將此聲音方案儲存為(&S)︰", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "確定", IDOK, 93, 36, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 157, 36, 60, 14
@@ -121,7 +122,7 @@ BEGIN
     ICON 4379, -1, 7, 8, 20, 20
     LTEXT "請選擇最接近您的設定電腦的揚聲器設定。", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
-    LTEXT "揚聲器設定(&P):", 8502, 53, 169, 55, 10
+    LTEXT "揚聲器設定(&P)︰", 8502, 53, 169, 55, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
@@ -130,12 +131,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "效能"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "這些設定控制 ReactOS 如何播放音訊。他們能夠幫助您解答有關音訊方面的問題。", 8492, 34, 7, 218, 23
+    LTEXT "這些設定控制 ReactOS 如何播放音訊。它們能夠幫助您解決有關音訊方面的問題。", 8492, 34, 7, 218, 23
     GROUPBOX "音訊播放", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
-    LTEXT "硬體加速(&H):", 8495, 13, 56, 111, 14
+    LTEXT "硬體加速(&H)︰", 8495, 13, 56, 111, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
-    LTEXT "取樣率轉換質量(&S):", 8496, 13, 123, 103, 14
+    LTEXT "取樣率轉換質量(&S)︰", 8496, 13, 123, 103, 14
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
     PUSHBUTTON "還原預設值(&R)", 5400, 7, 191, 110, 14
     LTEXT "無", 8497, 128, 56, 21, 10
@@ -154,9 +155,9 @@ BEGIN
     LTEXT "這些設定控制 ReactOS 如何錄音。可幫助您診斷與音訊有關的問題。", 8492, 34, 7, 217, 20
     GROUPBOX "音訊錄音", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
-    LTEXT "硬體加速(&H):", 8495, 13, 46, 103, 17
+    LTEXT "硬體加速(&H)︰", 8495, 13, 46, 103, 17
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
-    LTEXT "取樣率轉換質量(&S):", 8496, 13, 103, 103, 17
+    LTEXT "取樣率轉換質量(&S)︰", 8496, 13, 103, 103, 17
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 101, 62, 18
     PUSHBUTTON "還原預設值(&R)", 5400, 9, 158, 110, 14
     LTEXT "無", 8497, 125, 46, 24, 10
@@ -231,17 +232,17 @@ BEGIN
     GROUPBOX "ReactOS 音訊", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
     LTEXT "ReactOS 音訊服務已經啟用。您必須重新啟動 ReactOS，新的設定才會生效。請確定在重新啟動之前已經儲存工作並關閉所有程式。", 10261, 60, 25, 150, 50
-    LTEXT "按 [確定] 重新啟動 ReactOS", 10262, 60, 75, 150, 20
+    LTEXT "按［確定］重新啟動 ReactOS", 10262, 60, 75, 150, 20
     LTEXT "如果取消，則需要在稍後重新啟動 ReactOS 使新的設定生效。", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "聲音和音訊裝置"
-    IDS_CPLDESCRIPTION "更改電腦的聲音方案，或者配置揚聲器和錄音裝置的設定"
+    IDS_CPLDESCRIPTION "更改電腦的聲音方案，或配置揚聲器和錄音裝置的設定"
     IDS_NO_SOUND "(無)"
     IDS_NO_DEVICES "沒有裝置"
-    IDS_SPEAKER_VOLUME "Speaker Volume"
+    IDS_SPEAKER_VOLUME "揚聲器音量"
     IDS_SPEAKER_LEFT "&Left:"
     IDS_SPEAKER_RIGHT "&Right:"
     IDS_SPEAKER_CENTER "&Center:"
@@ -267,7 +268,7 @@ BEGIN
     5841 "向下還原"
     5842 "向上還原"
     5843 "星號"
-    5844 "默認聲音"
+    5844 "預設聲音"
     5845 "感歎號"
     5846 "退出 ReactOS"
     5847 "關鍵性停止"
@@ -278,6 +279,6 @@ BEGIN
     IDS_REACTOS_LOGOFF "ReactOS 登出"
     IDS_REACTOS_LOGON "ReactOS 登入"
     5854 "ReactOS 瀏覽器"
-    IDS_BROWSE_FOR_SOUND "Search for new sounds"
-    IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
+    IDS_BROWSE_FOR_SOUND "搜尋新的聲音"
+    IDS_WAVE_FILES_FILTER "Wave 檔案 (*.wav)|*.wav|"
 END

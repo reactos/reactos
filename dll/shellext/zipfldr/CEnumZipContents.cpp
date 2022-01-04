@@ -81,7 +81,7 @@ public:
 public:
     DECLARE_NOT_AGGREGATABLE(CEnumZipContents)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
-    
+
     BEGIN_COM_MAP(CEnumZipContents)
         COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
     END_COM_MAP()

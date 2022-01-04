@@ -7,6 +7,7 @@ include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(comdlg32.dll comdlg32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    autocomp.cpp
     cdlg32.c
     colordlg.c
     filedlg.c

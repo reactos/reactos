@@ -39,8 +39,8 @@
 @ stdcall DnsFindAuthoritativeZone()
 @ stdcall DnsFlushResolverCache()
 @ stdcall DnsFlushResolverCacheEntry_A(str)
-@ stdcall DnsFlushResolverCacheEntry_UTF8()
-@ stdcall DnsFlushResolverCacheEntry_W()
+@ stdcall DnsFlushResolverCacheEntry_UTF8(str)
+@ stdcall DnsFlushResolverCacheEntry_W(wstr)
 @ stdcall DnsFree(ptr long)
 @ stdcall DnsFreeAdapterInformation()
 @ stub DnsFreeConfigStructure

@@ -48,22 +48,27 @@ FORCEINLINE
 VOID
 IopQueueIrpToThread(IN PIRP Irp)
 {
-    KIRQL OldIrql;
+    PETHREAD Thread = Irp->Tail.Overlay.Thread;
 
-    /* Raise to APC Level */
-    KeRaiseIrql(APC_LEVEL, &OldIrql);
+    /* Disable special kernel APCs so we can't race with IopCompleteRequest.
+     * IRP's thread must be the current thread */
+    KeEnterGuardedRegionThread(&Thread->Tcb);
 
     /* Insert it into the list */
-    InsertHeadList(&Irp->Tail.Overlay.Thread->IrpList, &Irp->ThreadListEntry);
+    InsertHeadList(&Thread->IrpList, &Irp->ThreadListEntry);
 
-    /* Lower irql */
-    KeLowerIrql(OldIrql);
+    /* Leave the guarded region */
+    KeLeaveGuardedRegionThread(&Thread->Tcb);
 }
 
 FORCEINLINE
 VOID
 IopUnQueueIrpFromThread(IN PIRP Irp)
 {
+    /* Special kernel APCs must be disabled so we can't race with
+     * IopCompleteRequest (or because we are called from there) */
+    ASSERT(KeAreAllApcsDisabled());
+
     /* Remove it from the list and reset it */
     if (IsListEmpty(&Irp->ThreadListEntry))
         return;

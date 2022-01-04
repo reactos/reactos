@@ -134,8 +134,8 @@ UDFCommonDirControl(
     PFILE_OBJECT            FileObject = NULL;
     PtrUDFFCB               Fcb = NULL;
     PtrUDFCCB               Ccb = NULL;
-    PVCB                    Vcb = NULL;
-    BOOLEAN                 AcquiredVcb = FALSE;
+    _SEH2_VOLATILE PVCB     Vcb = NULL;
+    _SEH2_VOLATILE BOOLEAN  AcquiredVcb = FALSE;
 
     TmPrint(("UDFCommonDirControl: \n"));
 //    BrutePoint();
@@ -144,21 +144,21 @@ UDFCommonDirControl(
         // First, get a pointer to the current I/O stack location
         IrpSp = IoGetCurrentIrpStackLocation(Irp);
         ASSERT(IrpSp);
-    
+
         FileObject = IrpSp->FileObject;
         ASSERT(FileObject);
-    
+
         // Get the FCB and CCB pointers
         Ccb = (PtrUDFCCB)(FileObject->FsContext2);
         ASSERT(Ccb);
         Fcb = Ccb->Fcb;
         ASSERT(Fcb);
-    
+
         Vcb = (PVCB)(PtrIrpContext->TargetDeviceObject->DeviceExtension);
         ASSERT(Vcb);
         ASSERT(Vcb->NodeIdentifier.NodeType == UDF_NODE_TYPE_VCB);
 //        Vcb->VCBFlags |= UDF_VCB_SKIP_EJECT_CHECK;
-    
+
         UDFFlushTryBreak(Vcb);
         UDFAcquireResourceShared(&(Vcb->VCBResource), TRUE);
         AcquiredVcb = TRUE;
@@ -175,10 +175,10 @@ UDFCommonDirControl(
             RC = STATUS_INVALID_DEVICE_REQUEST;
             Irp->IoStatus.Status = RC;
             Irp->IoStatus.Information = 0;
-    
+
             // Free up the Irp Context
             UDFReleaseIrpContext(PtrIrpContext);
-    
+
             // complete the IRP
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             break;
@@ -226,8 +226,8 @@ UDFQueryDirectory(
     BOOLEAN                     PostRequest = FALSE;
     PtrUDFNTRequiredFCB         NtReqFcb = NULL;
     BOOLEAN                     CanWait = FALSE;
-    PVCB                        Vcb = NULL;
-    BOOLEAN                     AcquiredFCB = FALSE;
+    _SEH2_VOLATILE PVCB         Vcb = NULL;
+    _SEH2_VOLATILE BOOLEAN      AcquiredFCB = FALSE;
     unsigned long               BufferLength = 0;
     UNICODE_STRING              SearchPattern;
     PUNICODE_STRING             PtrSearchPattern;
@@ -299,7 +299,7 @@ UDFQueryDirectory(
 
         // Calculate baselength (without name) for each InfoClass
         switch (FileInformationClass) {
-    
+
         case FileDirectoryInformation:
             BaseLength = FIELD_OFFSET( FILE_DIRECTORY_INFORMATION, FileName[0] );
             break;
@@ -307,7 +307,7 @@ UDFQueryDirectory(
             BaseLength = FIELD_OFFSET( FILE_FULL_DIR_INFORMATION,  FileName[0] );
             break;
         case FileNamesInformation:
-            BaseLength = FIELD_OFFSET( FILE_NAMES_INFORMATION,     FileName[0] );  
+            BaseLength = FIELD_OFFSET( FILE_NAMES_INFORMATION,     FileName[0] );
             break;
         case FileBothDirectoryInformation:
             BaseLength = FIELD_OFFSET( FILE_BOTH_DIR_INFORMATION,  FileName[0] );
@@ -315,7 +315,7 @@ UDFQueryDirectory(
         default:
             try_return(RC = STATUS_INVALID_INFO_CLASS);
         }
-    
+
         // Some additional arguments that affect the FSD behavior
         ReturnSingleEntry = (IrpSp->Flags & SL_RETURN_SINGLE_ENTRY) ? TRUE : FALSE;
 
@@ -532,7 +532,7 @@ UDFQueryDirectory(
             case FileBothDirectoryInformation:
             case FileFullDirectoryInformation:
             case FileDirectoryInformation:
-                    
+
                 BothDirInformation = (PFILE_BOTH_DIR_INFORMATION)(Buffer + CurrentOffset);
                 RtlCopyMemory(BothDirInformation,DirInformation,BaseLength);
                 BothDirInformation->FileIndex = NextMatch;
@@ -647,7 +647,7 @@ UDFFindNextMatch(
            (!CanBe8dot3 || ((DirNdx->hashes.hDos != hashes->hLfn) && (DirNdx->hashes.hDos != hashes->hPosix))) )
             continue;
         if(UDFIsNameInExpression(Vcb, &(DirNdx->FName),PtrSearchPattern, NULL,IgnoreCase,
-                                ContainsWC, CanBe8dot3 && !(DirNdx->FI_Flags & UDF_FI_FLAG_DOS), 
+                                ContainsWC, CanBe8dot3 && !(DirNdx->FI_Flags & UDF_FI_FLAG_DOS),
                                 EntryNumber < 2) &&
            !(DirNdx->FI_Flags & UDF_FI_FLAG_FI_INTERNAL))
             break;
@@ -696,8 +696,8 @@ UDFNotifyChangeDirectory(
     BOOLEAN                     CanWait = FALSE;
     ULONG                       CompletionFilter = 0;
     BOOLEAN                     WatchTree = FALSE;
-    PVCB                        Vcb = NULL;
-    BOOLEAN                     AcquiredFCB = FALSE;
+    _SEH2_VOLATILE PVCB         Vcb = NULL;
+    _SEH2_VOLATILE BOOLEAN      AcquiredFCB = FALSE;
     PEXTENDED_IO_STACK_LOCATION pStackLocation = (PEXTENDED_IO_STACK_LOCATION) IrpSp;
 
     UDFPrint(("UDFNotifyChangeDirectory\n"));

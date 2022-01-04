@@ -340,39 +340,45 @@ SetBrushOrgEx(HDC hdc,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
 GetBrushAttributes(HBRUSH hbr)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    if ( GDI_HANDLE_IS_STOCKOBJ(hbr) )
+    {
+        return SC_BB_STOCKOBJ;
+    }
     return 0;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBRUSH
 WINAPI
 SetBrushAttributes(HBRUSH hbm, DWORD dwFlags)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    if ( dwFlags & ~SC_BB_STOCKOBJ )
+    {
+        return NULL;
+    }
+    return NtGdiSetBrushAttributes(hbm, dwFlags);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBRUSH
 WINAPI
 ClearBrushAttributes(HBRUSH hbm, DWORD dwFlags)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    if ( dwFlags & ~SC_BB_STOCKOBJ )
+    {
+        return NULL;
+    }
+    return NtGdiClearBrushAttributes(hbm, dwFlags);
 }
 
 /*

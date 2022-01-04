@@ -77,7 +77,7 @@ START_TEST(RegQueryValueExW)
     ret = RegQueryValueExW(NULL, NULL, &reserved, NULL, NULL, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
-    ok(reserved == 3, "Expected reserved=3, reserved is: %ld \n", reserved);
+    ok(reserved == 3, "Expected reserved=3, reserved is: %ld\n", reserved);
 
     /* NULL handle. NULL value. Reserved not NULL */
     type = 666;
@@ -88,8 +88,8 @@ START_TEST(RegQueryValueExW)
     ok(ret == ERROR_INVALID_PARAMETER, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
     ok(type == 666, "Expected untouched, Type was set with: %ld\n", type);
-    ok(size == 666, "Expected untouched, Size was set with: %ld \n", size);
-    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld \n", reserved);
+    ok(size == 666, "Expected untouched, Size was set with: %ld\n", size);
+    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld\n", reserved);
 
     /* NULL handle. NULL value */
     type = 666;
@@ -99,7 +99,7 @@ START_TEST(RegQueryValueExW)
     ok(ret == ERROR_INVALID_HANDLE, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
     ok(type == 666, "Expected untouched, Type was set with: %ld\n", type);
-    ok(size == 666, "Expected untouched, Size was set with: %ld \n", size);
+    ok(size == 666, "Expected untouched, Size was set with: %ld\n", size);
 
     /* NULL handle . Inexistent value. Reserved not NULL */
     type = 666;
@@ -110,8 +110,8 @@ START_TEST(RegQueryValueExW)
     ok(ret == ERROR_INVALID_PARAMETER, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
     ok(type == 666, "Expected untouched, Type was set with: %ld\n", type);
-    ok(size == 666, "Expected untouched, Size was set with: %ld \n", size);
-    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld \n", reserved);
+    ok(size == 666, "Expected untouched, Size was set with: %ld\n", size);
+    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld\n", reserved);
 
     /* NULL handle . Inexistent value. */
     type = 666;
@@ -121,7 +121,7 @@ START_TEST(RegQueryValueExW)
     ok(ret == ERROR_INVALID_HANDLE, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
     ok(type == 666, "Expected untouched, Type was set with: %ld\n", type);
-    ok(size == 666, "Expected untouched, Size was set with: %ld \n", size);
+    ok(size == 666, "Expected untouched, Size was set with: %ld\n", size);
 
     /* NULL handle */
     type = 666;
@@ -131,7 +131,7 @@ START_TEST(RegQueryValueExW)
     ok(ret == ERROR_INVALID_HANDLE, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
     ok(type == 666, "Expected untouched, Type was set with: %ld\n", type);
-    ok(size == 666, "Expected untouched, Size was set with: %ld \n", size);
+    ok(size == 666, "Expected untouched, Size was set with: %ld\n", size);
 
     /* INVALID handle. NULL value. Reserved not NULL */
     type = 666;
@@ -142,8 +142,8 @@ START_TEST(RegQueryValueExW)
     ok(ret == ERROR_INVALID_PARAMETER, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
     ok(type == 666, "Expected untouched, Type was set with: %ld\n", type);
-    ok(size == 666, "Expected untouched, Size was set with: %ld \n", size);
-    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld \n", reserved);
+    ok(size == 666, "Expected untouched, Size was set with: %ld\n", size);
+    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld\n", reserved);
 
     /* INVALID handle. NULL value.*/
     type = 666;
@@ -154,7 +154,7 @@ START_TEST(RegQueryValueExW)
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
     ok(type == REG_NONE, "Expected REG_NONE, Type is: %ld\n", type);
     ok(size == 0, "Expected size = 0, size is: %ld\n", size);
-    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld \n", reserved);
+    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld\n", reserved);
 
     /* INVALID handle. Non-existent value. Reserved not NULL*/
     type = 666;
@@ -165,8 +165,8 @@ START_TEST(RegQueryValueExW)
     ok(ret == ERROR_INVALID_PARAMETER, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
     ok(type == 666, "Expected untouched, Type was set with: %ld\n", type);
-    ok(size == 666, "Expected untouched, Size was set with: %ld \n", size);
-    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld \n", reserved);
+    ok(size == 666, "Expected untouched, Size was set with: %ld\n", size);
+    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld\n", reserved);
 
     /* INVALID handle. Non-existent value. */
     type = 666;
@@ -187,7 +187,7 @@ START_TEST(RegQueryValueExW)
     ok(ret == ERROR_INVALID_PARAMETER, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
     ok(type == 666, "Expected untouched, Type was set with: %ld\n", type);
-    ok(size == 666, "Expected untouched, Size was set with: %ld \n", size);
+    ok(size == 666, "Expected untouched, Size was set with: %ld\n", size);
     ok(reserved == 3, "Expected reserved = 3, reserved is: %ld\n", reserved);
 
     /* VALID handle, Non-existent value */
@@ -230,8 +230,8 @@ START_TEST(RegQueryValueExW)
     ok(ret == ERROR_INVALID_PARAMETER, "RegQueryValueExW returned: %lx\n", ret);
     ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
     ok(type == 666, "Expected untouched, Type was set with: %ld\n", type);
-    ok(size == 666, "Expected untouched, Size was set with: %ld \n", size);
-    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld \n", reserved);
+    ok(size == 666, "Expected untouched, Size was set with: %ld\n", size);
+    ok(reserved == 3, "Expected reserved = 3, reserved is: %ld\n", reserved);
 
     /* Existent value */
     SetLastError(0xdeadbeef);

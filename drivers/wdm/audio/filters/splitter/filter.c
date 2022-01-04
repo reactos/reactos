@@ -28,7 +28,7 @@ FilterProcess(
 
             if (CurPin->BytesAvailable && CurPin->Pin->DeviceState == KSSTATE_RUN)
             {
-                /* pin has pending frames 
+                /* pin has pending frames
                  * to keep all pins synchronized, every pin has to wait untill each chained pin has send its frames downwards
                  */
                 PendingFrames = TRUE;

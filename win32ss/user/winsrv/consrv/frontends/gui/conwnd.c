@@ -48,14 +48,25 @@ VOID
 SetConWndConsoleLeaderCID(IN PGUI_CONSOLE_DATA GuiData)
 {
     PCONSOLE_PROCESS_DATA ProcessData;
-    CLIENT_ID ConsoleLeaderCID;
 
     ProcessData = ConSrvGetConsoleLeaderProcess(GuiData->Console);
-    ConsoleLeaderCID = ProcessData->Process->ClientId;
-    SetWindowLongPtrW(GuiData->hWindow, GWLP_CONSOLE_LEADER_PID,
-                      (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));
-    SetWindowLongPtrW(GuiData->hWindow, GWLP_CONSOLE_LEADER_TID,
-                      (LONG_PTR)(ConsoleLeaderCID.UniqueThread));
+
+    ASSERT(ProcessData != NULL);
+    DPRINT("ProcessData: %p, ProcessData->Process %p.\n", ProcessData, ProcessData->Process);
+
+    if (ProcessData->Process)
+    {
+        CLIENT_ID ConsoleLeaderCID = ProcessData->Process->ClientId;
+        SetWindowLongPtrW(GuiData->hWindow, GWLP_CONSOLE_LEADER_PID,
+                          (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));
+        SetWindowLongPtrW(GuiData->hWindow, GWLP_CONSOLE_LEADER_TID,
+                          (LONG_PTR)(ConsoleLeaderCID.UniqueThread));
+    }
+    else
+    {
+        SetWindowLongPtrW(GuiData->hWindow, GWLP_CONSOLE_LEADER_PID, 0);
+        SetWindowLongPtrW(GuiData->hWindow, GWLP_CONSOLE_LEADER_TID, 0);
+    }
 }
 /**************************************************************/
 
@@ -1903,7 +1914,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             if (GetKeyState(VK_CAPITAL) & KEY_TOGGLED)
                 dwControlKeyState |= CAPSLOCK_ON;
             /* See WM_CHAR MSDN documentation for instance */
-            if (lParam & 0x01000000)
+            if (HIWORD(lParam) & KF_EXTENDED)
                 dwControlKeyState |= ENHANCED_KEY;
 
             /* Send a mouse event */

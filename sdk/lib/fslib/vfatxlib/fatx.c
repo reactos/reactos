@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS VFATX filesystem library
  * FILE:        fatx.c
  * PURPOSE:     Fatx support
- * PROGRAMMERS: 
+ * PROGRAMMERS:
  * REVISIONS:
  */
 

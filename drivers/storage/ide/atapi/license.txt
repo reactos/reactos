@@ -1,4 +1,4 @@
-Window NT Device Driver Kit
+Windows NT Device Driver Kit
 END-USER LICENSE AGREEMENT FOR MICROSOFT SOFTWARE
 
 IMPORTANT-READ CAREFULLY: This Microsoft End-User License Agreement ("EULA") is a legal agreement between you (either an individual or a single entity) and Microsoft Corporation for the Microsoft software product identified above, which includes computer software and associated media and printed materials, and may include "online" or electronic documentation ("SOFTWARE PRODUCT" or "SOFTWARE").  By installing, copying, or otherwise using the SOFTWARE PRODUCT, you agree to be bound by the terms of this EULA.  If you do not agree to the terms of this EULA, promptly return the unused SOFTWARE PRODUCT to the place from which you obtained it for a full refund, or if you received the SOFTWARE PRODUCT as part of a subscription or other service from Microsoft, you may cancel the subscription and receive a refund of a prorata portion of the subscription price.

@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = SCSIAdapter
 ClassGUID  = {4D36E97B-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 11/2/2007,1.1
+DriverVer  = 11/02/2007,1.1
 
 [ClassInstall32.NT]
 AddReg = SCSIClass.NT.AddReg
@@ -26,6 +26,7 @@ DefaultDestDir = 12
 %GenericMfg% = GenericMfg
 
 [GenericMfg]
+%GEN_SCSIADAPTER.DeviceDesc% = NO_DRV,,GEN_SCSIADAPTER
 %PCI\VEN_104B&CC_0100.DeviceDesc% = BusLogic_Inst,PCI\VEN_104B&CC_0100
 
 ;----------------------------- ScsiPort Driver ----------------------------
@@ -39,6 +40,13 @@ StartType     = 0
 ErrorControl  = 0
 ServiceBinary = %12%\scsiport.sys
 LoadOrderGroup = SCSI Port
+
+;---------------------------- NO DRIVER REQ -----------------------------
+
+[NO_DRV]
+
+[NO_DRV.Services]
+AddService = , 0x00000002
 
 ;----------------------------- BusLogic Driver ----------------------------
 
@@ -66,7 +74,15 @@ ReactOS = "ReactOS Team"
 SCSIClassName = "SCSI and RAID Controllers"
 
 GenericMfg = "(Standard SCSI and RAID controllers)"
+GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID Host Controller"
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI Controller"
+
+[Strings.0404]
+SCSIClassName = "SCSI / RAID 控制器"
+
+GenericMfg = "(標準 SCSI / RAID 控制器)"
+GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID 主機控制器"
+PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI 控制器"
 
 [Strings.0405]
 SCSIClassName = "SCSI a RAID řadiče"
@@ -81,10 +97,11 @@ GenericMfg = "(Standard SCSI und RAID Controller)"
 
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"
-SCSIClassName = "Controladoras SCSI y RAID"
+SCSIClassName = "Controladores SCSI y RAID"
 
-GenericMfg = "(Controladoras estándar SCSI y RAID)"
-PCI\VEN_104B&CC_0100.DeviceDesc = "Controladora SCSI BusLogic"
+GenericMfg = "(Controladores estándar SCSI y RAID)"
+GEN_SCSIADAPTER.DeviceDesc = "Controlador Huésped de SCSI/RAID"
+PCI\VEN_104B&CC_0100.DeviceDesc = "Controlador SCSI BusLogic"
 
 [Strings.040C]
 SCSIClassName = "Contrôleurs SCSI et RAID"
@@ -120,6 +137,7 @@ ReactOS = "Команда ReactOS"
 SCSIClassName = "SCSI и RAID контроллеры"
 
 GenericMfg = "(Стандартные SCSI и RAID контроллеры)"
+GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID хост-контроллер"
 PCI\VEN_104B&CC_0100.DeviceDesc = "Контроллер BusLogic SCSI"
 
 [Strings.041B]
@@ -132,7 +150,8 @@ PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI radič"
 ReactOS = "ReactOS Takımı"
 SCSIClassName = "SCSI ve RAID Denetleyicileri"
 
-GenericMfg = "(Ölçünlü SCSI ve RAID Denetleyicileri)"
+GenericMfg = "(Standart SCSI ve RAID Denetleyicileri)"
+GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID Ana Denetleyicisi"
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI Denetleyicisi"
 
 [Strings.0422]
@@ -149,4 +168,18 @@ PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI valdiklis"
 
 [Strings.0804]
 GenericMfg = "(标准 SCSI / RAID 控制器)"
+PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI 控制器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+SCSIClassName = "Controladores SCSI e RAID"
+
+GenericMfg = "(Controladores SCSI e RAID padrão)"
+PCI\VEN_104B&CC_0100.DeviceDesc = "Controlador SCSI BusLogic"
+
+[Strings.0C04]
+SCSIClassName = "SCSI / RAID 控制器"
+
+GenericMfg = "(標準 SCSI / RAID 控制器)"
+GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID 主機控制器"
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI 控制器"

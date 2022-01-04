@@ -1,6 +1,4 @@
 
-set_cpp(WITH_RUNTIME)
-
 include_directories(BEFORE
     include
     src/include
@@ -118,16 +116,21 @@ add_library(glu32 MODULE
     ${PCH_SKIP_SOURCE}
     glu32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
+target_link_libraries(glu32 cpprt)
 
 set_module_type(glu32 win32dll)
 
 if(NOT MSVC)
-    target_compile_options(glu32 PRIVATE -Wno-write-strings -Wno-unused-but-set-variable)
-    # Prevent a warning when comparing 'this' against 0
-    set_source_files_properties(src/libnurbs/internals/arc.cc PROPERTIES COMPILE_FLAGS "-Wno-nonnull-compare")
+    target_compile_options(glu32 PRIVATE -Wno-write-strings)
 elseif(USE_CLANG_CL)
     target_compile_options(glu32 PRIVATE -Wno-self-assign -Wno-unused-function -Wno-microsoft-include)
     target_compile_options(glu32 PRIVATE -Wno-deprecated-register -Wno-tautological-undefined-compare)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(glu32 PRIVATE -Wno-unused-but-set-variable)
+    # Prevent a warning when comparing 'this' against 0
+    set_source_files_properties(src/libnurbs/internals/arc.cc PROPERTIES COMPILE_FLAGS "-Wno-nonnull-compare")
 endif()
 
 add_importlibs(glu32 opengl32 gdi32 msvcrt kernel32 ntdll)

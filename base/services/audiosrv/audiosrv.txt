@@ -16,23 +16,23 @@ Global\AudioDeviceList
 This file appears to contain a list of devices that WinMM accesses and
 subsequently passes to wdmaud.drv
 
-It is not necessary to duplicate the exact structure of this mapped 
+It is not necessary to duplicate the exact structure of this mapped
 file, since it appears to only be used internally by Windows components.
 
-The ROS Audio Service (AudioSrv) is intended to be able to run 
-alongside the Windows Audio Service on XP/Vista, so it should be 
+The ROS Audio Service (AudioSrv) is intended to be able to run
+alongside the Windows Audio Service on XP/Vista, so it should be
 possible to test in a "known working environment" ;)
 
 It will create a mutex, to:
 1) Allow synchronization when accessing the device list
 2) Provide a simple method of identifying if AudioSrv is running
 
-(It might be worth using an event to notify WinMM when things are 
+(It might be worth using an event to notify WinMM when things are
 happening?)
 
-The intention is to make AudioSrv receive PnP notifications for 
-relevant audio devices, and also let AudioSrv in Windows do this. Then 
-it should be possible to create a small application that imitates 
+The intention is to make AudioSrv receive PnP notifications for
+relevant audio devices, and also let AudioSrv in Windows do this. Then
+it should be possible to create a small application that imitates
 WinMM's actions :)
 
 

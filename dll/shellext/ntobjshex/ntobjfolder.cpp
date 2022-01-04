@@ -171,7 +171,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ResolveSymLink(
     hr = psfDesktop->ParseDisplayName(NULL, NULL, path, NULL, &pidl, NULL);
     if (FAILED(hr))
         return hr;
-    
+
     *fullPidl = pidl;
 
     DumpIdList(pidl);
@@ -193,7 +193,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::InternalBindToObject(
     {
         return ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, (HKEY) NULL, IID_PPV_ARG(IShellFolder, ppsfChild));
     }
-    
+
     return ShellObjectCreatorInit<CNtObjectFolder>(fullPidl, path, IID_PPV_ARG(IShellFolder, ppsfChild));
 }
 

@@ -447,7 +447,7 @@ void VectorTest::assign_check()
 #if !defined (STLPORT) || !defined (_STLP_NO_MEMBER_TEMPLATES)
   vector<int> v(3,1);
   int array[] = { 1, 2, 3, 4, 5 };
-  
+
   v.assign( array, array + 5 );
   CPPUNIT_CHECK( v[4] == 5 );
   CPPUNIT_CHECK( v[0] == 1 );

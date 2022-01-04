@@ -153,7 +153,7 @@ DriverEntry(
             InternalMMInitialized = TRUE;
 
 #ifdef USE_DLD
-            // Initialize Deadlock Detector 
+            // Initialize Deadlock Detector
             DLDInit(1280);
             DLDetectInitialized = TRUE;
 #endif
@@ -162,7 +162,7 @@ DriverEntry(
 
             // Save RegistryPath
             RtlCopyMemory(&(UDFGlobalData.SavedRegPath), RegistryPath, sizeof(UNICODE_STRING));
-    
+
             UDFGlobalData.SavedRegPath.Buffer = (PWSTR)MyAllocatePool__(NonPagedPool, RegistryPath->Length + 2);
             if(!UDFGlobalData.SavedRegPath.Buffer) try_return (RC = STATUS_INSUFFICIENT_RESOURCES);
             RtlCopyMemory(UDFGlobalData.SavedRegPath.Buffer, RegistryPath->Buffer, RegistryPath->Length + 2);
@@ -339,7 +339,7 @@ DriverEntry(
 
                     RC = UDFDismountDevice(&unicodeCdRomDeviceName);
                     RtlFreeUnicodeString(&unicodeCdRomDeviceName);
-                    
+
                     if (!NT_SUCCESS(RC)) break;
 
                 }
@@ -446,24 +446,24 @@ UDFInitializeFunctionPointers(
     )
 {
     PFAST_IO_DISPATCH    PtrFastIoDispatch = NULL;
-    
+
     // initialize the function pointers for the IRP major
     //  functions that this FSD is prepared to  handle ...
     //  NT Version 4.0 has 28 possible functions that a
     //  kernel mode driver can handle.
     //  NT Version 3.51 and before has only 22 such functions,
     //  of which 18 are typically interesting to most FSD's.
-    
+
     //  The only interesting new functions that a FSD might
     //  want to respond to beginning with Version 4.0 are the
     //  IRP_MJ_QUERY_QUOTA and the IRP_MJ_SET_QUOTA requests.
-    
+
     //  The code below does not handle quota manipulation, neither
     //  does the NT Version 4.0 operating system (or I/O Manager).
     //  However, you should be on the lookout for any such new
     //  functionality that the FSD might have to implement in
     //  the near future.
-    
+
     DriverObject->MajorFunction[IRP_MJ_CREATE]              = UDFCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE]               = UDFClose;
     DriverObject->MajorFunction[IRP_MJ_READ]                = UDFRead;
@@ -646,7 +646,7 @@ UDFDismountDevice(
 
         Buffer = (PFILE_FS_ATTRIBUTE_INFORMATION)MyAllocatePool__(NonPagedPool,sizeof(FILE_FS_ATTRIBUTE_INFORMATION)+2*sizeof(UDF_FS_TITLE_DVDRAM));
         if (!Buffer) try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
-        
+
         InitializeObjectAttributes ( &ObjectAttributes,
                                      unicodeCdRomDeviceName,
                                      OBJ_CASE_INSENSITIVE,
@@ -658,17 +658,17 @@ UDFDismountDevice(
                            GENERIC_READ,
                            &ObjectAttributes,
                            &IoStatus,
-                           NULL,                          
+                           NULL,
                            FILE_ATTRIBUTE_NORMAL,
                            FILE_SHARE_READ,
                            FILE_OPEN,
                            FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-                           NULL,  
+                           NULL,
                            0 );
 
 
         if (!NT_SUCCESS(RC)) try_return(RC);
-                  
+
         UDFPrint(("\n*** UDFDismountDevice: QueryVolInfo\n"));
         RC = ZwQueryVolumeInformationFile( NtFileHandle,
                                            &IoStatus,
@@ -679,7 +679,7 @@ UDFDismountDevice(
 #define UDF_CHECK_FS_NAME(name) \
     (Buffer->FileSystemNameLength+sizeof(WCHAR) == sizeof(name) && \
             DbgCompareMemory(&Buffer->FileSystemName[0],name  , sizeof(name)) == sizeof(name))
-                    
+
         if (NT_SUCCESS(RC) &&
            (UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_CDR)    ||
             UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_CDRW)   ||
@@ -688,7 +688,7 @@ UDFDismountDevice(
             UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_DVDpR)  ||
             UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_DVDpRW) ||
             UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_DVDRAM) )) try_return(STATUS_SUCCESS);
-        
+
         UDFPrint(("\n*** UDFDismountDevice: LockVolume\n"));
         RC = ZwFsControlFile(NtFileHandle,
                              NULL,
@@ -730,8 +730,8 @@ UDFDismountDevice(
                                    sizeof(buffer));
 
         if (!NT_SUCCESS(RC)) try_return(RC);
-        
-        
+
+
         UDFPrint(("\n*** UDFDismountDevice: UnlockVolume\n"));
         RC = ZwFsControlFile(NtFileHandle,
                              NULL,
@@ -746,7 +746,7 @@ UDFDismountDevice(
 
         UDFPrint(("\n*** UDFDismountDevice: Close\n"));
         ZwClose( NtFileHandle );
-        
+
         NtFileHandle = (HANDLE)-1;
 
         UDFPrint(("\n*** UDFDismountDevice: Create 2\n"));
@@ -759,7 +759,7 @@ UDFDismountDevice(
                            FILE_SHARE_READ,
                            FILE_OPEN,
                            FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-                           NULL,  
+                           NULL,
                            0 );
 
 try_exit: NOTHING;
@@ -851,7 +851,7 @@ Return Value:
         // Release the global resource.
         UDFReleaseResource( &(UDFGlobalData.GlobalDataResource) );
 
-        
+
     }
 }
 /*VOID
@@ -869,7 +869,7 @@ UDFRemountAll(
 */
 /*    delay.QuadPart = -80*10000000;
     KeDelayExecutionThread(KernelMode, FALSE, &delay);        //10 seconds*/
-    
+
 /*    for(CdRomNumber = 0;true;CdRomNumber++) {
         sprintf(deviceNameBuffer, "\\Device\\CdRom%d", CdRomNumber);
         UDFPrint(( "UDF: UDFRemountAll : dismount %s\n", deviceNameBuffer));
@@ -883,7 +883,7 @@ UDFRemountAll(
 
         RC = UDFDismountDevice(&unicodeCdRomDeviceName);
         RtlFreeUnicodeString(&unicodeCdRomDeviceName);
-        
+
         if (!NT_SUCCESS(RC)) break;
     }
 }*/

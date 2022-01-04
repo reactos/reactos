@@ -15,8 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-extern ULONG ObpAccessProtectCloseBit;
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 BOOLEAN

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        include/ws2_32.h
+ * FILE:        dll/win32/ws2help/dllmain.c
  * PURPOSE:     WinSock 2 DLL header
  */
 
@@ -118,16 +118,16 @@ Ws2helpInitialize(VOID)
     return ERROR_SUCCESS;
 }
 
-BOOL 
-APIENTRY 
-DllMain(HANDLE hModule, 
-        DWORD  dwReason, 
+BOOL
+APIENTRY
+DllMain(HANDLE hModule,
+        DWORD  dwReason,
         LPVOID lpReserved)
 {
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
-        
+
             /* Save our handle */
             LibraryHdl = hModule;
 

@@ -105,9 +105,9 @@ static BOOL get_icon_size( HICON handle, SIZE *size )
         size->cy = bmp.bmHeight;
 #ifdef __REACTOS__
         /*
-            If this structure defines a black and white icon, this bitmask is formatted 
-            so that the upper half is the icon AND bitmask and the lower half is 
-            the icon XOR bitmask. 
+            If this structure defines a black and white icon, this bitmask is formatted
+            so that the upper half is the icon AND bitmask and the lower half is
+            the icon XOR bitmask.
         */
         if (!info.hbmColor)
             size->cy /= 2;

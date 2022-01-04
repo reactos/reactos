@@ -26,11 +26,12 @@ list(APPEND INF_FILES
     unknown.inf
     usb.inf
     usbport.inf
+    volume.inf
     wdmaudio.inf
     wmiacpi.inf)
 
 list(APPEND UTF8_INF_FILES
-    defltws.inf
+    defltwk.inf
     font.inf
     intl.inf
     layout.inf)

@@ -44,7 +44,7 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 0007, 1191, 0x00, ATA_UDMA4, "Acard ATP860R"    , UNIATA_NO80CHK                          ),
     PCI_DEV_HW_SPEC_BM( 0008, 1191, 0x00, ATA_UDMA6, "Acard ATP865A"    , UNIATA_NO80CHK                          ),
     PCI_DEV_HW_SPEC_BM( 0009, 1191, 0x00, ATA_UDMA6, "Acard ATP865R"    , UNIATA_NO80CHK                          ),
-                                          
+
     PCI_DEV_HW_SPEC_BM( 5289, 10b9, 0x00, ATA_SA150, "ALI M5289"        , UNIATA_SATA | UNIATA_NO_SLAVE           ),
     PCI_DEV_HW_SPEC_BM( 5288, 10b9, 0x00, ATA_SA300, "ALI M5288"        , UNIATA_SATA | UNIATA_NO_SLAVE           ),
     PCI_DEV_HW_SPEC_BM( 5287, 10b9, 0x00, ATA_SA150, "ALI M5287"        , UNIATA_SATA | UNIATA_NO_SLAVE           ),
@@ -140,14 +140,18 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 0641, 1103, 0x07, ATA_SA300, "HighPoint RocketRAID 640L" , UNIATA_SATA | UNIATA_AHCI),
     PCI_DEV_HW_SPEC_BM( 0642, 1103, 0x07, ATA_SA300, "HighPoint RocketRAID 642L" , UNIATA_SATA | UNIATA_AHCI),
     PCI_DEV_HW_SPEC_BM( 0645, 1103, 0x07, ATA_SA300, "HighPoint RocketRAID 644L" , UNIATA_SATA | UNIATA_AHCI),
-    
+
     PCI_DEV_HW_SPEC_BM( 1230, 8086, 0x00, ATA_WDMA2, "Intel PIIX"       , UNIATA_CHAN_TIMINGS                     ),
     PCI_DEV_HW_SPEC_BM( 7010, 8086, 0x00, ATA_WDMA2, "Intel PIIX3"      , 0                                       ),
+#ifndef __REACTOS__
     PCI_DEV_HW_SPEC_BM( 7111, 8086, 0x00, ATA_UDMA2, "Intel PIIX3"      , 0                                       ),
+#else
+    PCI_DEV_HW_SPEC_BM( 7111, 8086, 0x00, ATA_UDMA2, "Intel PIIX4"      , 0                                       ),
+#endif
     PCI_DEV_HW_SPEC_BM( 7199, 8086, 0x00, ATA_UDMA2, "Intel PIIX4"      , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 84ca, 8086, 0x00, ATA_UDMA2, "Intel PIIX4"      , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 7601, 8086, 0x00, ATA_UDMA2, "Intel ICH0"       , 0                                       ),
-    
+
     PCI_DEV_HW_SPEC_BM( 2421, 8086, 0x00, ATA_UDMA4, "Intel ICH"        , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 2411, 8086, 0x00, ATA_UDMA4, "Intel ICH"        , 0                                       ),
 
@@ -208,7 +212,7 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 2929, 8086, 0x00, ATA_SA300, "Intel ICH9M"      , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 292a, 8086, 0x00, ATA_SA300, "Intel ICH9M"      , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 292d, 8086, 0x00, ATA_SA300, "Intel ICH9M"      , I6CH2 | UNIATA_SATA                     ),
-    
+
     PCI_DEV_HW_SPEC_BM( 3a20, 8086, 0x00, ATA_SA300, "Intel ICH10"      , I6CH | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 3a26, 8086, 0x00, ATA_SA300, "Intel ICH10"      , I6CH2 | UNIATA_SATA                     ),
     PCI_DEV_HW_SPEC_BM( 3a22, 8086, 0x00, ATA_SA300, "Intel ICH10"      , UNIATA_SATA | UNIATA_AHCI               ),
@@ -306,7 +310,7 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 1f3f, 8086, 0x00, ATA_SA300, "Intel Avoton Point" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
 
     PCI_DEV_HW_SPEC_BM( 23a3, 8086, 0x00, ATA_SA300, "Intel Coleto Creek" , UNIATA_SATA | UNIATA_AHCI               ),
-                        
+
     PCI_DEV_HW_SPEC_BM( 8c00, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , I6CH | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 8c01, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , I6CH | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 8c02, 8086, 0x00, ATA_SA300, "Intel Lynx Point" , UNIATA_SATA | UNIATA_AHCI               ),
@@ -352,7 +356,11 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 9d05, 8086, 0x00, ATA_SA300, "Intel Sunrise Point-LP" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( 9d07, 8086, 0x00, ATA_SA300, "Intel Sunrise Point-LP" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
 
-/*    PCI_DEV_HW_SPEC_BM( a102, 8086, 0x00, ATA_SA300, "Intel Sunrise Point" , UNIATA_SATA | UNIATA_AHCI               ),*/ /* workaround regression CORE-16078 */
+#ifndef __REACTOS__
+    PCI_DEV_HW_SPEC_BM( a102, 8086, 0x00, ATA_SA300, "Intel Sunrise Point" , UNIATA_SATA | UNIATA_AHCI               ),
+#else
+    /* workaround regression CORE-16078 */
+#endif
     PCI_DEV_HW_SPEC_BM( a103, 8086, 0x00, ATA_SA300, "Intel Sunrise Point" , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( a105, 8086, 0x00, ATA_SA300, "Intel Sunrise Point" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( a106, 8086, 0x00, ATA_SA300, "Intel Sunrise Point" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
@@ -371,7 +379,7 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( a282, 8086, 0x00, ATA_SA300, "Intel Union Point" , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( a286, 8086, 0x00, ATA_SA300, "Intel Union Point" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( a28e, 8086, 0x00, ATA_SA300, "Intel Union Point" , UNIATA_SATA | UNIATA_AHCI | UNIATA_RAID_CONTROLLER),
-    
+
 //    PCI_DEV_HW_SPEC_BM( 3200, 8086, 0x00, ATA_SA150, "Intel 31244"      , UNIATA_SATA                             ),
     PCI_DEV_HW_SPEC_BM( 811a, 8086, 0x00, ATA_UDMA5, "Intel SCH"        , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 2323, 8086, 0x00, ATA_SA300, "Intel DH98xxCC"   , UNIATA_SATA | UNIATA_AHCI                  ),
@@ -379,7 +387,7 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 23a3, 8086, 0x00, ATA_SA300, "COLETOCRK" , I6CH2 | UNIATA_SATA                    ),
     PCI_DEV_HW_SPEC_BM( 23a1, 8086, 0x00, ATA_SA300, "COLETOCRK" , I6CH2 | UNIATA_SATA                    ),
     PCI_DEV_HW_SPEC_BM( 23a6, 8086, 0x00, ATA_SA300, "COLETOCRK" , UNIATA_SATA | UNIATA_AHCI              ),
-    
+
     PCI_DEV_HW_SPEC_BM( 2360, 197b, 0x00, ATA_SA300, "JMB360"           , UNIATA_SATA | UNIATA_AHCI       ),
     PCI_DEV_HW_SPEC_BM( 2361, 197b, 0x00, ATA_SA300, "JMB361"           , UNIATA_SATA                     ),
     PCI_DEV_HW_SPEC_BM( 2362, 197b, 0x00, ATA_SA300, "JMB362"           , UNIATA_SATA | UNIATA_AHCI       ),
@@ -387,7 +395,7 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 2365, 197b, 0x00, ATA_SA300, "JMB365"           , UNIATA_SATA                     ),
     PCI_DEV_HW_SPEC_BM( 2366, 197b, 0x00, ATA_SA300, "JMB366"           , UNIATA_SATA                     ),
     PCI_DEV_HW_SPEC_BM( 2368, 197b, 0x00, ATA_SA300, "JMB368"           , UNIATA_SATA                     ),
-/*    
+/*
     PCI_DEV_HW_SPEC_BM( 5040, 11ab, 0x00, ATA_SA150, "Marvell 88SX5040" , UNIATA_SATA                     ),
     PCI_DEV_HW_SPEC_BM( 5041, 11ab, 0x00, ATA_SA150, "Marvell 88SX5041" , UNIATA_SATA                     ),
     PCI_DEV_HW_SPEC_BM( 5080, 11ab, 0x00, ATA_SA150, "Marvell 88SX5080" , UNIATA_SATA                     ),
@@ -554,11 +562,19 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 6620, 105a, 0x00, ATA_UDMA6, "Promise PDC20620" , PRMIO | 0x00    | UNIATA_RAID_CONTROLLER),
 /*    PCI_DEV_HW_SPEC_BM( 6621, 105a, 0x00, ATA_UDMA6, "Promise PDC20621" , PRMIO | PRSX4X  | UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( 6622, 105a, 0x00, ATA_UDMA6, "Promise PDC20622" , PRMIO | PRSX4X  | UNIATA_RAID_CONTROLLER),*/
+#ifndef __REACTOS__
     PCI_DEV_HW_SPEC_BM( 3571, 105a, 0x00, ATA_SA150, "Promise PDC40518" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
     PCI_DEV_HW_SPEC_BM( 3d75, 105a, 0x00, ATA_SA150, "Promise PDC40519" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
     PCI_DEV_HW_SPEC_BM( 3574, 105a, 0x00, ATA_SA150, "Promise PDC40718" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
     PCI_DEV_HW_SPEC_BM( 3570, 105a, 0x00, ATA_SA300, "Promise PDC40719" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
     PCI_DEV_HW_SPEC_BM( 3d73, 105a, 0x00, ATA_SA300, "Promise PDC40779" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+#else
+    PCI_DEV_HW_SPEC_BM( 3d18, 105a, 0x00, ATA_SA150, "Promise PDC40518" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3519, 105a, 0x00, ATA_SA150, "Promise PDC40519" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3d17, 105a, 0x00, ATA_SA150, "Promise PDC40718" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3515, 105a, 0x00, ATA_SA300, "Promise PDC40719" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+    PCI_DEV_HW_SPEC_BM( 3577, 105a, 0x00, ATA_SA300, "Promise PDC40779" , PRMIO | PRSATA2 | UNIATA_RAID_CONTROLLER | UNIATA_SATA),
+#endif
     PCI_DEV_HW_SPEC_BM( 3781, 105a, 0x00, ATA_SA300, "Promise TX8660" , UNIATA_SATA | UNIATA_AHCI),
 
     PCI_DEV_HW_SPEC_BM( 0211, 1166, 0x00, ATA_UDMA2, "ServerWorks ROSB4", SWKS33  | UNIATA_NO_DPC                 ),
@@ -668,7 +684,7 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
 
     PCI_DEV_HW_SPEC_BM( c693, 1080, 0x00, ATA_WDMA2, "Cypress 82C693"   ,0                                        ),
 
-/*                                                                                     
+/*
     PCI_DEV_HW_SPEC_BM( 4d68, 105a, 0, 0, "Promise TX2 ATA-100 controller",          UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( 6268, 105a, 0, 0, "Promise TX2 ATA-100 controller",          UNIATA_RAID_CONTROLLER),
 
@@ -714,4 +730,8 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( ffff, ffff, 0xff, BMLIST_TERMINATOR, NULL       , BMLIST_TERMINATOR )
 };
 
-/* static */ const ULONG _NUM_BUSMASTER_ADAPTERS = (sizeof(BusMasterAdapters) / sizeof(BUSMASTER_CONTROLLER_INFORMATION_BASE));
+#ifndef __REACTOS__
+static const ULONG _NUM_BUSMASTER_ADAPTERS = (sizeof(BusMasterAdapters) / sizeof(BUSMASTER_CONTROLLER_INFORMATION_BASE));
+#else
+const ULONG _NUM_BUSMASTER_ADAPTERS = (sizeof(BusMasterAdapters) / sizeof(BUSMASTER_CONTROLLER_INFORMATION_BASE));
+#endif

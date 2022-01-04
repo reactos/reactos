@@ -141,7 +141,7 @@ Environment:
 #define IOCTL_CDRW_GET_VOLUME        IOCTL_CDROM_GET_VOLUME
 #define IOCTL_CDRW_SET_VOLUME        IOCTL_CDROM_SET_VOLUME
 #define IOCTL_CDRW_READ_Q_CHANNEL    IOCTL_CDROM_READ_Q_CHANNEL
-#define IOCTL_CDRW_GET_LAST_SESSION  IOCTL_CDROM_GET_LAST_SESSION 
+#define IOCTL_CDRW_GET_LAST_SESSION  IOCTL_CDROM_GET_LAST_SESSION
 #define IOCTL_CDRW_RAW_READ          IOCTL_CDROM_RAW_READ
 #define IOCTL_CDRW_DISK_TYPE         IOCTL_CDROM_DISK_TYPE
 
@@ -316,7 +316,7 @@ typedef struct _SET_STREAMING_USER_IN {
     ULONG ReadTime;  // ms
 
     ULONG WriteSize; // KBytes
-    ULONG WriteTime; // ms    
+    ULONG WriteTime; // ms
 } SET_STREAMING_USER_IN, *PSET_STREAMING_USER_IN;
 
 //**********************************************************************************************
@@ -368,7 +368,7 @@ typedef struct _TRACK_INFO_BLOCK_USER_OUT {
             UCHAR TrackMode : 4;
             UCHAR Copy      : 1;
             UCHAR Damage    : 1;
-            UCHAR Reserved1 : 2; 
+            UCHAR Reserved1 : 2;
         } Fields;
     } TrackParam;
 
@@ -625,7 +625,7 @@ typedef struct _DISC_STATUS_INFO_USER_OUT {
 
 #define DiscStatus_Formattable    0x01
 
-typedef struct _DISC_INFO_BLOCK_USER_OUT {        // 
+typedef struct _DISC_INFO_BLOCK_USER_OUT {        //
 
     DISC_STATUS_INFO_USER_OUT Status;
 
@@ -739,7 +739,7 @@ typedef struct _GET_MEDIA_TYPE_EX_USER_OUT {
     UCHAR Layers;                    // Number of layers - 1 (e.g. 0 => 1 layer)
     UCHAR Reserved[8];               // for future implementation
 } GET_MEDIA_TYPE_EX_USER_OUT, *PGET_MEDIA_TYPE_EX_USER_OUT;
- 
+
 #define CdMediaClass_CDROM         0x00
 #define CdMediaClass_CDR           0x01
 #define CdMediaClass_CDRW          0x02
@@ -926,7 +926,7 @@ typedef struct _MODE_WRITE_PARAMS_PAGE_USER {        // 0x05
     } Byte4;
 
     UCHAR LinkSize;
-    UCHAR Reserved3;    
+    UCHAR Reserved3;
 
     union {
         UCHAR Flags;
@@ -1043,8 +1043,8 @@ typedef struct _GET_CAPABILITIES_USER_OUT {
 
 /*
 #ifndef DevCap_read_cd_r
-#define DevCap_read_cd_r          0x01 // reserved in 1.2 
-#define DevCap_read_cd_rw         0x02 // reserved in 1.2 
+#define DevCap_read_cd_r          0x01 // reserved in 1.2
+#define DevCap_read_cd_rw         0x02 // reserved in 1.2
 #define DevCap_method2            0x04
 #define DevCap_read_dvd_rom       0x08
 #define DevCap_read_dvd_r         0x10
@@ -1053,8 +1053,8 @@ typedef struct _GET_CAPABILITIES_USER_OUT {
 */
 
     UCHAR ReadCap;            // DevCap_*_read
-/*    UCHAR cd_r_read         : 1; // reserved in 1.2 
-    UCHAR cd_rw_read        : 1; // reserved in 1.2 
+/*    UCHAR cd_r_read         : 1; // reserved in 1.2
+    UCHAR cd_rw_read        : 1; // reserved in 1.2
     UCHAR method2           : 1;
     UCHAR dvd_rom           : 1;
     UCHAR dvd_r_read        : 1;
@@ -1063,8 +1063,8 @@ typedef struct _GET_CAPABILITIES_USER_OUT {
 
 /*
 #ifndef DevCap_write_cd_r
-#define DevCap_write_cd_r         0x01 // reserved in 1.2 
-#define DevCap_write_cd_rw        0x02 // reserved in 1.2 
+#define DevCap_write_cd_r         0x01 // reserved in 1.2
+#define DevCap_write_cd_rw        0x02 // reserved in 1.2
 #define DevCap_test_write         0x04
 #define DevCap_write_dvd_r        0x10
 #define DevCap_write_dvd_ram      0x20
@@ -1072,8 +1072,8 @@ typedef struct _GET_CAPABILITIES_USER_OUT {
 */
 
     UCHAR WriteCap;            // DevCap_*_write
-/*    UCHAR cd_r_write        : 1; // reserved in 1.2 
-    UCHAR cd_rw_write        : 1; // reserved in 1.2 
+/*    UCHAR cd_r_write        : 1; // reserved in 1.2
+    UCHAR cd_rw_write        : 1; // reserved in 1.2
     UCHAR dvd_ram_write     : 1;
     UCHAR dvd_r_write       : 1;
     UCHAR reserved3a        : 1;
@@ -1152,9 +1152,9 @@ typedef struct _GET_CAPABILITIES_USER_OUT {
 #ifndef DevCap_separate_volume
 #define DevCap_separate_volume    0x01
 #define DevCap_separate_mute      0x02
-#define DevCap_disc_present       0x04          // reserved in 1.2 
-#define DevCap_sw_slot_select     0x08          // reserved in 1.2 
-#define DevCap_change_side_cap    0x10 
+#define DevCap_disc_present       0x04          // reserved in 1.2
+#define DevCap_sw_slot_select     0x08          // reserved in 1.2
+#define DevCap_change_side_cap    0x10
 #define DevCap_rw_leadin_read     0x20
 #endif //DevCap_separate_volume
 */
@@ -1162,8 +1162,8 @@ typedef struct _GET_CAPABILITIES_USER_OUT {
     UCHAR Capabilities3;
 /*    UCHAR separate_volume   : 1;
     UCHAR separate_mute     : 1;
-    UCHAR disc_present      : 1;  // reserved in 1.2 
-    UCHAR sss               : 1;  // reserved in 1.2 
+    UCHAR disc_present      : 1;  // reserved in 1.2
+    UCHAR sss               : 1;  // reserved in 1.2
     UCHAR Reserved7         : 4;*/
 
     USHORT MaximumSpeedSupported;
@@ -1664,7 +1664,7 @@ typedef struct _GET_DISK_LAYOUT_USER_OUT {
     ULONG           NWA;
     // sector type map
     struct _MediaTrackMap*  TrackMap;
-    // 
+    //
     ULONG           BlockSize;
     ULONG           WriteBlockSize;
     // disk state

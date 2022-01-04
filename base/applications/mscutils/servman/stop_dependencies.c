@@ -14,7 +14,7 @@ typedef struct _STOP_DATA
     LPWSTR ServiceName;
     LPWSTR DisplayName;
     LPWSTR ServiceList;
-     
+
 } STOP_DATA, *PSTOP_DATA;
 
 static LPWSTR
@@ -250,7 +250,7 @@ InitDialog(HWND hDlg,
         AddServiceNamesToStop(hServiceListBox,
                               (LPWSTR)StopData->ServiceList);
     }
- 
+
     return bRet;
 }
 
@@ -309,6 +309,6 @@ CreateStopDependsDialog(HWND hParent,
                              (LPARAM)&StopData);
     if (Result == IDOK)
         return TRUE;
-    
+
     return FALSE;
 }

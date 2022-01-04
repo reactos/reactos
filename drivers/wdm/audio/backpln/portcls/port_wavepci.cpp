@@ -66,7 +66,7 @@ protected:
 
 };
 
-static GUID InterfaceGuids[3] = 
+static GUID InterfaceGuids[3] =
 {
     {
         /// KS_CATEGORY_AUDIO
@@ -233,7 +233,7 @@ CPortWavePci::Init(
     PPINCOUNT PinCount;
     PPOWERNOTIFY PowerNotify;
 
-    DPRINT("IPortWavePci_fnInit entered with This %p, DeviceObject %p Irp %p UnknownMiniport %p, UnknownAdapter %p ResourceList %p\n", 
+    DPRINT("IPortWavePci_fnInit entered with This %p, DeviceObject %p Irp %p UnknownMiniport %p, UnknownAdapter %p ResourceList %p\n",
             this, DeviceObject, Irp, UnknownMiniport, UnknownAdapter, ResourceList);
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
@@ -274,12 +274,12 @@ CPortWavePci::Init(
     }
 
    // create the subdevice descriptor
-    Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor, 
+    Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor,
                                          3,
                                          InterfaceGuids,
-                                         0, 
+                                         0,
                                          NULL,
-                                         2, 
+                                         2,
                                          WavePciPropertySet,
                                          0,
                                          0,
@@ -347,7 +347,7 @@ CPortWavePci::NewRegistryKey(
     DPRINT("IPortWavePci_fnNewRegistryKey entered\n");
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    return PcNewRegistryKey(OutRegistryKey, 
+    return PcNewRegistryKey(OutRegistryKey,
                             OuterUnknown,
                             RegistryKeyType,
                             DesiredAccess,
@@ -428,7 +428,7 @@ CPortWavePci::NewIrpTarget(
     IN PUNKNOWN Unknown,
     IN POOL_TYPE PoolType,
     IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp, 
+    IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
     NTSTATUS Status;
@@ -528,8 +528,8 @@ CPortWavePci::PinCount(
     }
 
     // FIXME
-    // scan filter descriptor 
-    
+    // scan filter descriptor
+
     return STATUS_UNSUCCESSFUL;
 }
 

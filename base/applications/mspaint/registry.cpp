@@ -19,10 +19,7 @@ static DWORD ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue, BOOL bCheck
 {
     DWORD dwPrev = dwValue;
 
-    if (key.QueryDWORDValue(lpName, dwValue) != ERROR_SUCCESS)
-        dwValue = dwPrev;
-
-    if (bCheckForDef && dwValue == 0)
+    if (key.QueryDWORDValue(lpName, dwValue) != ERROR_SUCCESS || (bCheckForDef && dwValue == 0))
         dwValue = dwPrev;
 
     return dwPrev;
@@ -53,8 +50,8 @@ void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::Wallpa
 
 void RegistrySettings::LoadPresets()
 {
-    BMPHeight = 300;
-    BMPWidth = 400;
+    BMPHeight = GetSystemMetrics(SM_CYSCREEN) / 2;
+    BMPWidth = GetSystemMetrics(SM_CXSCREEN) / 2;
     GridExtent = 1;
     NoStretching = 0;
     ShowThumbnail = 0;
@@ -65,7 +62,7 @@ void RegistrySettings::LoadPresets()
     ThumbYPos = 200;
     UnitSetting = 0;
     const WINDOWPLACEMENT DefaultWindowPlacement = {
-        sizeof(WINDOWPLACEMENT), 
+        sizeof(WINDOWPLACEMENT),
         0,
         SW_SHOWNORMAL,
         {0, 0},
@@ -106,6 +103,12 @@ void RegistrySettings::Load()
         ReadFileHistory(files, _T("File3"), strFile3);
         ReadFileHistory(files, _T("File4"), strFile4);
     }
+
+    // Fix the bitmap size if too large
+    if (BMPWidth > 5000)
+        BMPWidth = (GetSystemMetrics(SM_CXSCREEN) * 6) / 10;
+    if (BMPHeight > 5000)
+        BMPHeight = (GetSystemMetrics(SM_CYSCREEN) * 6) / 10;
 }
 
 void RegistrySettings::Store()

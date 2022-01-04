@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/file/iocompl.c
  * PURPOSE:         Io Completion functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
+ *                  Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -23,21 +24,37 @@
 #endif
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 SetFileCompletionNotificationModes(IN HANDLE FileHandle,
                                    IN UCHAR Flags)
 {
+    NTSTATUS Status;
+    FILE_IO_COMPLETION_NOTIFICATION_INFORMATION FileInformation;
+    IO_STATUS_BLOCK IoStatusBlock;
+
     if (Flags & ~(FILE_SKIP_COMPLETION_PORT_ON_SUCCESS | FILE_SKIP_SET_EVENT_ON_HANDLE))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    UNIMPLEMENTED;
-    return FALSE;
+    FileInformation.Flags = Flags;
+
+    Status = NtSetInformationFile(FileHandle,
+                                  &IoStatusBlock,
+                                  &FileInformation,
+                                  sizeof(FileInformation),
+                                  FileIoCompletionNotificationInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*

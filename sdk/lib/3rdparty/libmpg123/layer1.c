@@ -5,7 +5,7 @@
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Michael Hipp
 
-	may have a few bugs after last optimization ... 
+	may have a few bugs after last optimization ...
 */
 
 #include "mpg123lib_intern.h"
@@ -15,7 +15,7 @@
 /*
 	Allocation value is not allowed to be 15. Initially, libmad showed me the
 	error that mpg123 used to ignore. Then, I found a quote on that in
-	Shlien, S. (1994): Guide to MPEG-1 Audio Standard. 
+	Shlien, S. (1994): Guide to MPEG-1 Audio Standard.
 	IEEE Transactions on Broadcasting 40, 4
 
 	"To avoid conflicts with the synchronization code, code '1111' is defined
@@ -138,7 +138,7 @@ static int I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT], 
 			if((n=*ba++))
 				needbits += n+1;
 		}
-		for(i=jsbound;i<SBLIMIT;i++) 
+		for(i=jsbound;i<SBLIMIT;i++)
 			if((n = *ba++))
 				needbits += n+1;
 		NEED_BITS(fr, needbits)
@@ -150,7 +150,7 @@ static int I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT], 
 
 			if((n = *ba++)) *sample++ = getbits(fr, n+1);
 		}
-		for(i=jsbound;i<SBLIMIT;i++) 
+		for(i=jsbound;i<SBLIMIT;i++)
 		if((n = *ba++))
 		*sample++ = getbits(fr, n+1);
 

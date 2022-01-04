@@ -586,7 +586,7 @@ static BOOL OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     }
     grid_width = grid_height = size;
     bw = (size > 6 ? 3 : (size - 1) / 2);
-    
+
 #if 0
     /* FIXME Pattern brushes not yet implemented in ReactOS */
     {
@@ -652,7 +652,7 @@ static void ReadSettings(HWND hWnd)
 
     pre_solve_delay = SendDlgItemMessage(hWnd, IDC_SLIDER_PRESD, TBM_GETPOS, 0, 0);
     SetDlgItemInt(hWnd, IDC_TEXT_PRESD, pre_solve_delay, FALSE);
-    
+
     post_solve_delay = SendDlgItemMessage(hWnd, IDC_SLIDER_POSTSD, TBM_GETPOS, 0, 0);
     SetDlgItemInt(hWnd, IDC_TEXT_POSTSD, post_solve_delay, FALSE);
 

@@ -9,6 +9,7 @@
  *    https://sourceforge.net/projects/reactospl
  *    UTF-8 conversion by Caemyr (May, 2011)
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
+ *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (March, 2021)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -40,15 +41,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Dźwięki"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Schemat dźwiękowy to zestaw dźwięków stosowanych dla zdarzeń w systemie ReactOS i programach. Możesz wybrać istniejący schemat lub zapisać schemat zmodyfikowany.", -1, 8, 7, 230, 40
-    LTEXT "S&chemat dźwiękowy:", -1, 8, 42, 150, 17
+    LTEXT "Schemat dźwiękowy to zestaw dźwięków stosowanych dla zdarzeń w systemie ReactOS i programach. Możesz wybrać istniejący schemat lub zapisać schemat zmodyfikowany.", -1, 8, 7, 230, 35
+    LTEXT "S&chemat dźwiękowy:", -1, 8, 42, 150, 8
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Za&pisz jako...", IDC_SAVEAS_BTN, 134, 70, 50, 15
     PUSHBUTTON "U&suń", IDC_DELETE_BTN, 188, 70, 50, 15
-    LTEXT "Aby zmienić dźwięk, kliknij na zdarzenie z listy poniżej a następnie wybierz dźwięk. Zmiany możesz zapisać w nowym lub obecnym schemacie dźwiękowym.", -1, 8, 90, 230, 40
-    LTEXT "&Zdarzenia:", -1, 8, 118, 150, 17
+    LTEXT "Aby zmienić dźwięk, kliknij na zdarzenie z listy poniżej a następnie wybierz dźwięk. Zmiany możesz zapisać w nowym lub obecnym schemacie dźwiękowym.", -1, 8, 90, 230, 28
+    LTEXT "&Zdarzenia programu:", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
-    LTEXT "&Dźwięki:", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
+    LTEXT "&Dźwięki:", IDC_TEXT_SOUND, 8, 194, 80, 8, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "", IDC_PLAY_SOUND, 168, 205, 15, 15, WS_DISABLED | BS_ICON
     PUSHBUTTON "&Przeglądaj...", IDC_BROWSE_SOUND, 188, 205, 50, 15, WS_DISABLED
@@ -77,7 +78,7 @@ BEGIN
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "Głoś&ność...", IDC_VOLUME3_BTN, 85, 185, 70, 15
     PUSHBUTTON "In&formacje...", IDC_ADV3_BTN, 160, 185, 70, 15
-    AUTOCHECKBOX "&Użyj wyłącznie urządzeń domyślnych", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10, WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX "&Użyj tylko domyślnych urządzeń ", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10, WS_GROUP | WS_TABSTOP
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
@@ -125,7 +126,7 @@ CAPTION "Głośniki"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 4379, -1, 7, 8, 20, 20
-    LTEXT "Wybierz takie ustawienie głośników, które najbardziej odpowiada rzeczywistemu.", -1, 36, 8, 215, 27
+    LTEXT "Wybierz ustawienie głośników, które jest najbliższe ich ustawieniu na tym komputerze.", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
     LTEXT "&Ustawienie głośników:", 8502, 53, 169, 73, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
@@ -147,7 +148,7 @@ BEGIN
     LTEXT "Brak", 8497, 128, 56, 21, 10
     LTEXT "Pełne", 8498, 214, 56, 21, 9
     LTEXT "Słaba", 8499, 128, 123, 21, 10
-    LTEXT "Najlepsza", 8500, 214, 123, 30, 9
+    LTEXT "Najlepsza", 8500, 214, 123, 35, 9
     LTEXT "Ten ciąg opisuje ustawienie sprzętu dla urządzenia przechwytującego", 5399, 13, 145, 227, 21
     LTEXT "Ten ciąg opisuje ustawienie sprzętu dla urządzenia renderującego", 5398, 13, 78, 227, 22
 END
@@ -168,7 +169,7 @@ BEGIN
     LTEXT "Brak", 8497, 125, 46, 24, 10
     LTEXT "Pełne", 8498, 217, 46, 19, 9
     LTEXT "Słaba", 8499, 125, 103, 24, 10
-    LTEXT "Najlepsza", 8500, 217, 103, 30, 9
+    LTEXT "Najlepsza", 8500, 217, 103, 35, 9
     LTEXT "Ten ciąg opisuje ustawienie sprzętu dla urządzenia przechwytującego", 5399, 13, 125, 222, 21
     LTEXT "Ten ciąg opisuje ustawienie sprzętu dla urządzenia renderującego", 5398, 13, 68, 218, 24
 END
@@ -180,11 +181,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Usługa ReactOS Audio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Ten komputer nie może odtwarzać dźwięku, ponieważ usługa ReactOS Audio nie została włączona.", 10245, 60, 25, 150, 40
+    LTEXT "Ten komputer nie może odtwarzać dźwięku, ponieważ usługa ReactOS Audio nie jest włączona.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Włącz usługę ReactOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Uwagi", 10246, 58, 87, 150, 11
     LTEXT "1. Musisz mieć uprawnienia administratora, by włączyć tę usługę. Jeśli nie masz uprawnień, konieczne będzie przelogowanie się na konto administratora.", 10247, 60, 100, 150, 40
-    LTEXT "2. Po włączeniu usługi ReactOS Audio konieczne będzie ponowne uruchomienie komputera.", 10248, 60, 140, 150, 40
+    LTEXT "2. Po włączeniu usługi ReactOS Audio należy ponownie uruchomić komputer.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -236,9 +237,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Usługa ReactOS Audio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "Usługa ReactOS Audio została pomyślnie włączona. Jednak audio może nie działać poprawnie, dopóki system ReactOS nie zostanie uruchomiony ponownie. Jeśli chcesz teraz uruchomić system ReactOS, zapisz swoją pracę i zamknij wszystkie programy.", 10261, 60, 25, 150, 50
-    LTEXT "Aby ponownie uruchomić system ReactOS, naciśnij OK.", 10262, 60, 75, 150, 20
-    LTEXT "Jeśli klikniesz Anuluj, musisz pózniej uruchomić ponownie system ReactOS, aby usługa ReactOS Audio działała prawidłowo.", 10263, 60, 100, 150, 40
+    LTEXT "Usługa ReactOS Audio jest teraz włączona. Jednak audio może nie działać poprawnie, dopóki system ReactOS nie zostanie uruchomiony ponownie. Jeśli chcesz teraz uruchomić ponownie system ReactOS, zapisz swoją pracę i zamknij wszystkie programy.", 10261, 60, 25, 150, 50
+    LTEXT "Aby uruchomić ponownie system ReactOS, klknij przycisk OK.", 10262, 60, 75, 150, 20
+    LTEXT "Jeśli klikniesz przycisk Anuluj, musisz pózniej uruchomić ponownie system ReactOS, aby usługa ReactOS Audio działała prawidłowo.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE

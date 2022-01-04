@@ -206,7 +206,7 @@ OslpRemoveInternalApplicationOptions (
     Status = STATUS_SUCCESS;
 
     /* Remove attempts to disable integrity checks or ELAM driver load */
-    BlRemoveBootOption(BlpApplicationEntry.BcdData, 
+    BlRemoveBootOption(BlpApplicationEntry.BcdData,
                        BcdLibraryBoolean_DisableIntegrityChecks);
     BlRemoveBootOption(BlpApplicationEntry.BcdData,
                        BcdOSLoaderBoolean_DisableElamDrivers);

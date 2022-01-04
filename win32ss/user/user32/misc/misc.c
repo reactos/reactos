@@ -80,21 +80,16 @@ GetUserObjectSecurity(
     OUT PDWORD pdwLengthNeeded
 )
 {
-DWORD dwWin32Error;
-NTSTATUS Status;
+    NTSTATUS Status;
 
-
-    Status = NtQuerySecurityObject(
-        hObject,            // Object Handle
-        *pSecurityInfo,     // Security Information
-        pSecurityDescriptor,// Security Descriptor
-        dwLength,           // Buffer Length
-        pdwLengthNeeded     // Actual Length
-    );
-
-    if ( ! NT_SUCCESS( Status ) ) {
-        dwWin32Error = RtlNtStatusToDosError( Status );
-        NtCurrentTeb()->LastErrorValue = dwWin32Error;
+    Status = NtQuerySecurityObject(hObject,
+                                   *pSecurityInfo,
+                                   pSecurityDescriptor,
+                                   dwLength,
+                                   pdwLengthNeeded);
+    if (!NT_SUCCESS(Status))
+    {
+        UserSetLastNTError(Status);
         return FALSE;
     }
 
@@ -128,19 +123,14 @@ SetUserObjectSecurity(
     IN PSECURITY_DESCRIPTOR pSecurityDescriptor
 )
 {
-DWORD dwWin32Error;
-NTSTATUS Status;
+    NTSTATUS Status;
 
-
-    Status = NtSetSecurityObject(
-        hObject,            // Object Handle
-        *pSecurityInfo,     // Security Information
-        pSecurityDescriptor // Security Descriptor
-    );
-
-    if ( ! NT_SUCCESS( Status ) ) {
-        dwWin32Error = RtlNtStatusToDosError( Status );
-        NtCurrentTeb()->LastErrorValue = dwWin32Error;
+    Status = NtSetSecurityObject(hObject,
+                                 *pSecurityInfo,
+                                 pSecurityDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        UserSetLastNTError(Status);
         return FALSE;
     }
 

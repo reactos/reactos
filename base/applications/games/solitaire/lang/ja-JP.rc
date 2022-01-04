@@ -70,6 +70,7 @@ BEGIN
     BEGIN
         MENUITEM "カードを配る(&D)\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "カードの装飾(&C)...", IDM_GAME_DECK
         MENUITEM "オプション(&O)...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

@@ -120,7 +120,7 @@ WINAPI
 PathToRegion(
     HDC	hdc)
 {
-    HANDLE_METADC0P(HRGN, PathToRegion, NULL, hdc);
+    HANDLE_METADC0P(HRGN, AbortPath, NULL, hdc);
     return NtGdiPathToRegion(hdc);
 }
 
@@ -192,6 +192,6 @@ SelectClipPath(
     HDC	hdc,
     int	iMode)
 {
-    HANDLE_METADC(BOOL, SelectClipPath, FALSE, hdc, iMode);
+    HANDLE_EMETAFDC(BOOL, SelectClipPath, FALSE, hdc, iMode);
     return NtGdiSelectClipPath(hdc, iMode);
 }

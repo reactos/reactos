@@ -14,7 +14,7 @@
  * Note: This code does not give the necessary accuracy. Moreover, no
  * overflow test are done.
  *
- * (c) 1998 Fabrice Bellard.  
+ * (c) 1998 Fabrice Bellard.
  */
 
 #include "mpg123lib_intern.h"
@@ -49,7 +49,7 @@
 #define COS_2_3 83981
 #define COS_3_0 17733
 #define COS_3_1 42813
-#define COS_4_0 23170         
+#define COS_4_0 23170
 
 #define SETOUT(out,n,expr) out[FIR_BUFFER_SIZE*(n)]=(expr)
 #define MULL(a,b) (((long long)(a)*(long long)(b)) >> 15)
@@ -115,21 +115,21 @@ void dct64_1_486(int *out0,int *out1,int *b1,int *b2)
   b1[0x10] = MULL((b2[0x0F] - b2[0x10]),COS_0_15);
 
 
-  b2[0x00] = b1[0x00] + b1[0x0F]; 
+  b2[0x00] = b1[0x00] + b1[0x0F];
   b2[0x0F] = MUL((b1[0x00] - b1[0x0F]),COS_1_0);
-  b2[0x01] = b1[0x01] + b1[0x0E]; 
+  b2[0x01] = b1[0x01] + b1[0x0E];
   b2[0x0E] = MUL((b1[0x01] - b1[0x0E]),COS_1_1);
-  b2[0x02] = b1[0x02] + b1[0x0D]; 
+  b2[0x02] = b1[0x02] + b1[0x0D];
   b2[0x0D] = MUL((b1[0x02] - b1[0x0D]),COS_1_2);
-  b2[0x03] = b1[0x03] + b1[0x0C]; 
+  b2[0x03] = b1[0x03] + b1[0x0C];
   b2[0x0C] = MUL((b1[0x03] - b1[0x0C]),COS_1_3);
-  b2[0x04] = b1[0x04] + b1[0x0B]; 
+  b2[0x04] = b1[0x04] + b1[0x0B];
   b2[0x0B] = MUL((b1[0x04] - b1[0x0B]),COS_1_4);
-  b2[0x05] = b1[0x05] + b1[0x0A]; 
+  b2[0x05] = b1[0x05] + b1[0x0A];
   b2[0x0A] = MUL((b1[0x05] - b1[0x0A]),COS_1_5);
-  b2[0x06] = b1[0x06] + b1[0x09]; 
+  b2[0x06] = b1[0x06] + b1[0x09];
   b2[0x09] = MUL((b1[0x06] - b1[0x09]),COS_1_6);
-  b2[0x07] = b1[0x07] + b1[0x08]; 
+  b2[0x07] = b1[0x07] + b1[0x08];
   b2[0x08] = MULL((b1[0x07] - b1[0x08]),COS_1_7);
 
   b2[0x10] = b1[0x10] + b1[0x1F];
@@ -201,7 +201,7 @@ void dct64_1_486(int *out0,int *out1,int *b1,int *b2)
   b2[0x0B] = MUL((b1[0x08] - b1[0x0B]),COS_3_0);
   b2[0x09] = b1[0x09] + b1[0x0A];
   b2[0x0A] = MUL((b1[0x09] - b1[0x0A]),COS_3_1);
-  
+
   b2[0x0C] = b1[0x0C] + b1[0x0F];
   b2[0x0F] = MUL((b1[0x0F] - b1[0x0C]),COS_3_0);
   b2[0x0D] = b1[0x0D] + b1[0x0E];
@@ -322,21 +322,21 @@ void dct64_i486(int *a,int *b,real *samples)
   int bufs[64];
   int i;
 
-#ifdef REAL_IS_FIXED  
+#ifdef REAL_IS_FIXED
 #define TOINT(a) ((a) * 32768 / (int)REAL_FACTOR)
 
   for(i=0;i<32;i++) {
     bufs[i]=TOINT(samples[i]);
   }
-#else      
+#else
   int *p = bufs;
   register double const scale = ((65536.0 * 32) + 1) * 65536.0;
-  
+
   for(i=0;i<32;i++) {
     *((double *) (p++)) = scale + *samples++; /* beware on bufs overrun: 8B store from x87 */
   }
 #endif
-  
+
   dct64_1_486(a,b,bufs+32,bufs);
 }
 

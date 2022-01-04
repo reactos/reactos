@@ -46,8 +46,8 @@ typedef struct _tagIPv6Header {
     USHORT      ip6_payload_len;       // length of following headers and payload
     UCHAR       ip6_next_header;       // next header type
     UCHAR       ip6_hoplimit;          // hop limit
-    IPV6_ADDRESS ip6_src_address;    // 
-    IPV6_ADDRESS ip6_dst_address;    // 
+    IPV6_ADDRESS ip6_src_address;    //
+    IPV6_ADDRESS ip6_dst_address;    //
 } IPv6Header;
 
 typedef union
@@ -60,7 +60,7 @@ typedef union
 typedef struct _tagIPv6ExtHeader {
     UCHAR       ip6ext_next_header;     // next header type
     UCHAR       ip6ext_hdr_len;         // length of this header in 8 bytes unit, not including first 8 bytes
-    USHORT      options;                // 
+    USHORT      options;                //
 } IPv6ExtHeader;
 
 // IP Pseudo Header RFC 768
@@ -164,7 +164,7 @@ QualifyIpPacket(IPHeader *pIpHeader, ULONG len)
     USHORT ipHeaderSize = 0;
     USHORT fullLength = 0;
     res.value = 0;
-    
+
     if (ip_version == 4)
     {
         ipHeaderSize = (ver_len & 0xF) << 2;
@@ -256,7 +256,7 @@ QualifyIpPacket(IPHeader *pIpHeader, ULONG len)
             res.ipStatus = ppresNotIP;
         }
     }
-    
+
     if (res.ipStatus == ppresIPV4)
     {
         res.ipHeaderSize = ipHeaderSize;
@@ -289,7 +289,7 @@ static __inline USHORT GetXxpHeaderAndPayloadLen(IPHeader *pIpHeader, tTcpIpPack
     {
         USHORT headerLength = IP_HEADER_LENGTH(&pIpHeader->v4);
         USHORT len = swap_short(pIpHeader->v4.ip_length);
-        return len - headerLength;          
+        return len - headerLength;
     }
     if (res.ipStatus == ppresIPV6)
     {
@@ -529,8 +529,8 @@ VerifyUdpChecksum( IPHeader *pIpHeader, ULONG len, tTcpIpPacketParsingResult kno
 static LPCSTR __inline GetPacketCase(tTcpIpPacketParsingResult res)
 {
     static const char *const IPCaseName[4] = { "not tested", "Non-IP", "IPv4", "IPv6" };
-    if (res.xxpStatus == ppresXxpKnown) return res.TcpUdp == ppresIsTCP ? 
-        (res.ipStatus == ppresIPV4 ? "TCPv4" : "TCPv6") : 
+    if (res.xxpStatus == ppresXxpKnown) return res.TcpUdp == ppresIsTCP ?
+        (res.ipStatus == ppresIPV4 ? "TCPv4" : "TCPv6") :
         (res.ipStatus == ppresIPV4 ? "UDPv4" : "UDPv6");
     if (res.xxpStatus == ppresXxpIncomplete) return res.TcpUdp == ppresIsTCP ? "Incomplete TCP" : "Incomplete UDP";
     if (res.xxpStatus == ppresXxpOther) return "IP";

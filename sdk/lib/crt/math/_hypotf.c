@@ -1,6 +1,10 @@
 
 #include <math.h>
 
+#if (_MSC_VER >= 1920)
+#pragma function(_hypotf)
+#endif
+
 _Check_return_
 float
 __cdecl

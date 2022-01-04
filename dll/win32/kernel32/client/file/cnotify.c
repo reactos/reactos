@@ -291,7 +291,7 @@ ReadDirectoryChangesW(IN HANDLE hDirectory,
                 BaseSetLastNTError(Status);
                 return FALSE;
             }
-            
+
             /* Retrieve the final status code */
             Status = IoStatusBlock.Status;
         }

@@ -11,12 +11,12 @@ BEGIN
     LTEXT "Longo", -1, 40, 33, 20, 10
     LTEXT "Breve", -1, 200, 33, 20, 10
     CONTROL "", IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 33, 130, 17
-    ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 13, 70, 15, 15
-    LTEXT "Velocidade de repetição:", -1, 40, 70, 100, 10
-    LTEXT "Baixa", -1, 40, 85, 20, 10
-    LTEXT "Alta", -1, 200, 85, 20, 10
-    CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-    LTEXT "Faça clique aqui e mantenha premida uma tecla para testar a velocidade de repetição:", -1, 15, 105, 216, 10
+    ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 13, 60, 15, 15
+    LTEXT "Velocidade de repetição:", -1, 40, 60, 100, 10
+    LTEXT "Baixa", -1, 40, 75, 20, 10
+    LTEXT "Alta", -1, 200, 75, 20, 10
+    CONTROL "", IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 75, 130, 17
+    LTEXT "Faça clique aqui e mantenha premida uma tecla para testar a velocidade de repetição:", -1, 15, 98, 216, 18
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
     GROUPBOX "Velocidade de intermitência do cursor:", -1, 5, 145, 236, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
@@ -101,7 +101,7 @@ CAPTION "Opções do ponteiro"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Movimento", -1, 5, 5, 236, 60
-    LTEXT "Seleccionar a velocidade do ponteiro:", -1, 52, 15, 110, 10
+    LTEXT "Seleccionar a velocidade do ponteiro:", -1, 52, 15, 130, 10
     LTEXT "Baixa", -1, 60, 30, 20, 10
     CONTROL "", IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
     LTEXT "Alta", -1, 170, 30, 20, 10

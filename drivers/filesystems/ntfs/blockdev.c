@@ -189,8 +189,8 @@ NtfsWriteDisk(IN PDEVICE_OBJECT DeviceObject,
     {
         ULONGLONG relativeOffset;
 
-        // We need to do a read-modify-write. We'll start be copying the entire 
-        // contents of every sector that will be overwritten. 
+        // We need to do a read-modify-write. We'll start be copying the entire
+        // contents of every sector that will be overwritten.
         // TODO: Optimize (read no more than necessary)
 
         RealWriteOffset = ROUND_DOWN(StartingOffset, SectorSize);
@@ -257,7 +257,7 @@ NtfsWriteDisk(IN PDEVICE_OBJECT DeviceObject,
     // TODO: Forward the existing IRP instead
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
                                        DeviceObject,
-                                       // if we allocated a temp buffer, use that instead of the Buffer parameter                               
+                                       // if we allocated a temp buffer, use that instead of the Buffer parameter
                                        ((AllocatedBuffer) ? TempBuffer : Buffer),
                                        RealLength,
                                        &Offset,

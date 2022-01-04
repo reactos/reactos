@@ -19,6 +19,10 @@ FILE * CDECL __acrt_iob_func(int index)
     return &__iob_func()[index];
 }
 
+#ifdef WIN64
+const void* __imp___acrt_iob_func = __acrt_iob_func;
+#else
 const void* _imp____acrt_iob_func = __acrt_iob_func;
+#endif
 
 #endif

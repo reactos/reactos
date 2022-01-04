@@ -173,13 +173,8 @@ USBSTOR_HandleInternalDeviceControl(
         {
             DPRINT1("SRB_FUNCTION_FLUSH / SRB_FUNCTION_FLUSH_QUEUE / SRB_FUNCTION_SHUTDOWN\n");
 
-            // HACK: don't flush pending requests
-#if 0       // we really need a proper storage stack
-            //
             // wait for pending requests to finish
-            //
             USBSTOR_QueueWaitForPendingRequests(PDODeviceExtension->LowerDeviceObject);
-#endif
 
             Request->SrbStatus = SRB_STATUS_SUCCESS;
             Status = STATUS_SUCCESS;
@@ -230,7 +225,7 @@ USBSTOR_HandleQueryProperty(
     PIO_STACK_LOCATION IoStack;
     PSTORAGE_PROPERTY_QUERY PropertyQuery;
     PSTORAGE_DESCRIPTOR_HEADER DescriptorHeader;
-    PSTORAGE_ADAPTER_DESCRIPTOR AdapterDescriptor;
+    PSTORAGE_ADAPTER_DESCRIPTOR_WIN8 AdapterDescriptor;
     ULONG FieldLengthVendor, FieldLengthProduct, FieldLengthRevision, TotalLength, FieldLengthSerialNumber;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PINQUIRYDATA InquiryData;
@@ -375,39 +370,40 @@ USBSTOR_HandleQueryProperty(
 
         DPRINT("USBSTOR_HandleQueryProperty StorageAdapterProperty OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
 
-        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(STORAGE_ADAPTER_DESCRIPTOR))
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8))
         {
             // buffer too small
             DescriptorHeader = (PSTORAGE_DESCRIPTOR_HEADER)Irp->AssociatedIrp.SystemBuffer;
             ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(STORAGE_DESCRIPTOR_HEADER));
 
             // return required size
-            DescriptorHeader->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
-            DescriptorHeader->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
+            DescriptorHeader->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8);
+            DescriptorHeader->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8);
 
             Irp->IoStatus.Information = sizeof(STORAGE_DESCRIPTOR_HEADER);
             return STATUS_SUCCESS;
         }
 
         // get adapter descriptor, information is returned in the same buffer
-        AdapterDescriptor = (PSTORAGE_ADAPTER_DESCRIPTOR)Irp->AssociatedIrp.SystemBuffer;
+        AdapterDescriptor = Irp->AssociatedIrp.SystemBuffer;
 
         // fill out descriptor
-        AdapterDescriptor->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
-        AdapterDescriptor->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
-        AdapterDescriptor->MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH;
-        AdapterDescriptor->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1; // See CORE-10515 and CORE-10755
-        AdapterDescriptor->AlignmentMask = 0;
-        AdapterDescriptor->AdapterUsesPio = FALSE;
-        AdapterDescriptor->AdapterScansDown = FALSE;
-        AdapterDescriptor->CommandQueueing = FALSE;
-        AdapterDescriptor->AcceleratedTransfer = FALSE;
-        AdapterDescriptor->BusType = BusTypeUsb;
-        AdapterDescriptor->BusMajorVersion = 0x2; //FIXME verify
-        AdapterDescriptor->BusMinorVersion = 0x00; //FIXME
+        // NOTE: STORAGE_ADAPTER_DESCRIPTOR_WIN8 may vary in size, so it's important to zero out
+        // all unused fields
+        *AdapterDescriptor = (STORAGE_ADAPTER_DESCRIPTOR_WIN8) {
+            .Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8),
+            .Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8),
+            .MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH,
+            .MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1, // See CORE-10515 and CORE-10755
+            .BusType = BusTypeUsb,
+            .BusMajorVersion = 2, //FIXME verify
+            .BusMinorVersion = 0 //FIXME
+        };
+
+        // __debugbreak();
 
         // store returned length
-        Irp->IoStatus.Information = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
+        Irp->IoStatus.Information = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8);
 
         return STATUS_SUCCESS;
     }

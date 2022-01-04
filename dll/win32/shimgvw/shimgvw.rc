@@ -13,18 +13,42 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/manifest_hosted.rc>
 
-IDI_APPICON ICON "res/main.ico"
+IDI_APP_ICON ICON "res/main.ico"
 IDI_BMP_ICON ICON "res/bmp.ico"
 IDI_PNG_ICON ICON "res/png.ico"
 
-IDB_PREVICON BITMAP "res/prev.bmp"
-IDB_NEXTICON BITMAP "res/next.bmp"
-IDB_ZOOMPICON BITMAP "res/zoomp.bmp"
-IDB_ZOOMMICON BITMAP "res/zoomm.bmp"
-IDB_SAVEICON BITMAP "res/save.bmp"
-IDB_PRINTICON BITMAP "res/print.bmp"
-IDB_ROT1ICON BITMAP "res/rot1.bmp"
-IDB_ROT2ICON BITMAP "res/rot2.bmp"
+IDB_PREV_PIC   BITMAP "res/prev.bmp"
+IDB_NEXT_PIC   BITMAP "res/next.bmp"
+IDB_BEST_FIT   BITMAP "res/best_fit.bmp"
+IDB_REAL_SIZE  BITMAP "res/real_size.bmp"
+IDB_SLIDE_SHOW BITMAP "res/slide_show.bmp"
+IDB_ZOOM_IN    BITMAP "res/zoomp.bmp"
+IDB_ZOOM_OUT   BITMAP "res/zoomm.bmp"
+IDB_ROT_CLOCKW BITMAP "res/rot1.bmp"
+IDB_ROT_COUNCW BITMAP "res/rot2.bmp"
+IDB_DELETE     BITMAP "res/delete.bmp"
+IDB_PRINT      BITMAP "res/print.bmp"
+IDB_SAVEAS     BITMAP "res/save.bmp"
+IDB_MODIFY     BITMAP "res/modify.bmp"
+IDB_HELP_TOC   BITMAP "res/help_toc.bmp"
+
+IDR_ACCELERATOR ACCELERATORS
+BEGIN
+    VK_LEFT,     IDC_PREV_PIC,   VIRTKEY
+    VK_RIGHT,    IDC_NEXT_PIC,   VIRTKEY
+    "B",         IDC_BEST_FIT,   VIRTKEY, CONTROL
+    "A",         IDC_REAL_SIZE,  VIRTKEY, CONTROL
+    VK_F11,      IDC_SLIDE_SHOW, VIRTKEY
+    VK_ADD,      IDC_ZOOM_IN,    VIRTKEY
+    VK_SUBTRACT, IDC_ZOOM_OUT,   VIRTKEY
+    "K",         IDC_ROT_CLOCKW, VIRTKEY, CONTROL
+    "L",         IDC_ROT_COUNCW, VIRTKEY, CONTROL
+    VK_DELETE,   IDC_DELETE,     VIRTKEY
+    "P",         IDC_PRINT,      VIRTKEY, CONTROL
+    "S",         IDC_SAVEAS,     VIRTKEY, CONTROL
+    "E",         IDC_MODIFY,     VIRTKEY, CONTROL
+    VK_F1,       IDC_HELP_TOC,   VIRTKEY
+END
 
 /* UTF-8 */
 #pragma code_page(65001)

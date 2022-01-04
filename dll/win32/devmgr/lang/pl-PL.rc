@@ -237,7 +237,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Ustawienia zasobów:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -299,8 +299,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "Menedźer urządzeń ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Wyłączenie tego urządzenia spowoduje, że przestanie ono funkcjonować. Czy na /npewno chcesz je wyłączyć?"
-  IDS_CONFIRM_UNINSTALL     "Ostrzeżenie: Urządzenie to zostanie zaraz odinstalowane z systemu.\r\nCzy chcesz kontynuować?"
+  IDS_CONFIRM_DISABLE       "Wyłączenie tego urządzenia spowoduje, że przestanie ono funkcjonować.\nCzy na pewno chcesz je wyłączyć?"
+  IDS_CONFIRM_UNINSTALL     "Ostrzeżenie: Urządzenie to zostanie zaraz odinstalowane z systemu.\nCzy chcesz kontynuować?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -333,7 +333,7 @@ BEGIN
   IDS_HINT_DISABLE      " Wyłącza wybrane urządzenie."
   IDS_HINT_UPDATE       " Uruchamia Kreatora aktualizacji sprzętu dla wybranego sterownika."
   IDS_HINT_UNINSTALL    " Odinstalowuje sterownik dla wybranego urządzenia."
-  IDS_HINT_ADD          " Dodaje starsze (niezgodne ze standardem Plug and Play) urządzenie do komputera." 
+  IDS_HINT_ADD          " Dodaje starsze (niezgodne ze standardem Plug and Play) urządzenie do komputera."
   IDS_HINT_ABOUT        " O menedżerze urządzeń ReactOS."
   IDS_HINT_EXIT         " Zamyka program."
 

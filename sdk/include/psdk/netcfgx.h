@@ -26,7 +26,7 @@ EXTERN_C const IID IID_INetCfgLock;
 #define INetCfgLock_IsWriteLocked(p,a)         (p)->lpVtbl->IsWriteLocked(p,a)
 #endif
 
-typedef enum 
+typedef enum
 {
     NCRP_QUERY_PROPERTY_UI  = 1,
     NCRP_SHOW_PROPERTY_UI   = 2

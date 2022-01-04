@@ -54,3 +54,6 @@ IDI_ICON  ICON  DISCARDABLE  "res/icon_circles.ico"
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif

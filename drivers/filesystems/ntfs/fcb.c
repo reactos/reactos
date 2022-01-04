@@ -140,7 +140,13 @@ NtfsFCBIsReparsePoint(PNTFS_FCB Fcb)
 BOOLEAN
 NtfsFCBIsCompressed(PNTFS_FCB Fcb)
 {
-    return ((Fcb->Entry.FileAttributes & NTFS_FILE_TYPE_COMPRESSED) == NTFS_FILE_TYPE_COMPRESSED); 
+    return ((Fcb->Entry.FileAttributes & NTFS_FILE_TYPE_COMPRESSED) == NTFS_FILE_TYPE_COMPRESSED);
+}
+
+BOOLEAN
+NtfsFCBIsEncrypted(PNTFS_FCB Fcb)
+{
+    return ((Fcb->Entry.FileAttributes & NTFS_FILE_TYPE_ENCRYPTED) == NTFS_FILE_TYPE_ENCRYPTED);
 }
 
 BOOLEAN
@@ -723,7 +729,7 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
 NTSTATUS
 NtfsReadFCBAttribute(PNTFS_VCB Vcb,
                      PNTFS_FCB pFCB,
-                     ULONG Type, 
+                     ULONG Type,
                      PCWSTR Name,
                      ULONG NameLength,
                      PVOID * Data)
