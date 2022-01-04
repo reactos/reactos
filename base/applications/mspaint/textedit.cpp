@@ -181,7 +181,7 @@ void CTextEditWindow::DrawGrip(HDC hDC, RECT& rc)
 void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
 {
     TCHAR szText[512];
-    INT cchText = GetWindowText(szText, _countof(szText));
+    GetWindowText(szText, _countof(szText));
 
     RECT rcParent;
     ::GetWindowRect(m_hwndParent, &rcParent);
@@ -197,15 +197,14 @@ void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
 #ifdef NO_GROW_WIDTH
         TEXTMETRIC tm;
         GetTextMetrics(hDC, &tm);
-
-        lstrcat(szText, TEXT("\r\n"));
+        lstrcat(szText, TEXT("x")); // This is a trick to enable the last newlines
         UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
                        DT_EXPANDTABS | DT_WORDBREAK;
-        DrawText(hDC, szText, cchText, &rcText, uFormat | DT_CALCRECT);
+        DrawText(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
         if (tm.tmDescent > 0)
             rcText.bottom += tm.tmDescent;
 #else
-        SIZE siz = DoCalcRect(hDC, szText, cchText, &rcParent, pszOldText);
+        SIZE siz = DoCalcRect(hDC, szText, lstrlen(szText), &rcParent, pszOldText);
         rcText.right = rcText.left + siz.cx;
         rcText.bottom = rcText.top + siz.cy;
 #endif
