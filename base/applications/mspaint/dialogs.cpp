@@ -280,8 +280,6 @@ EnumFontFamProc(ENUMLOGFONT *lpelf, NEWTEXTMETRIC *lpntm, INT FontType, LPARAM l
 
 CFontsDialog::CFontsDialog()
 {
-    m_bBold = m_bItalic = m_bUnderline = FALSE;
-    m_nFontSize = 14;
 }
 
 static int CompareFontNames(const void *x, const void *y)
@@ -296,8 +294,8 @@ void CFontsDialog::InitNames()
     // get default gui font
     LOGFONT lf;
     GetObject(GetStockFont(DEFAULT_GUI_FONT), sizeof(lf), &lf);
-    if (!m_strFontName.GetLength())
-        m_strFontName = lf.lfFaceName;
+    if (!registrySettings.strFontName.GetLength())
+        registrySettings.strFontName = lf.lfFaceName;
 
     HDC hDC = CreateCompatibleDC(NULL);
     if (!hDC)
@@ -323,10 +321,10 @@ void CFontsDialog::InitNames()
     }
 
     // set the default font name
-    INT iFont = ComboBox_FindStringExact(hwndNames, -1, m_strFontName);
+    INT iFont = ComboBox_FindStringExact(hwndNames, -1, registrySettings.strFontName);
     if (iFont != CB_ERR)
         ComboBox_SetCurSel(hwndNames, iFont);
-    ::SetWindowText(hwndNames, m_strFontName);
+    ::SetWindowText(hwndNames, registrySettings.strFontName);
 }
 
 void CFontsDialog::InitFontSizes()
@@ -345,11 +343,11 @@ void CFontsDialog::InitFontSizes()
     {
         wsprintf(szText, TEXT("%d"), s_sizes[i]);
         iItem = ComboBox_AddString(hwndSizes, szText);
-        if (s_sizes[i] == m_nFontSize)
+        if (s_sizes[i] == (INT)registrySettings.PointSize)
             ComboBox_SetCurSel(hwndSizes, iItem);
     }
 
-    wsprintf(szText, TEXT("%d"), m_nFontSize);
+    wsprintf(szText, TEXT("%d"), (INT)registrySettings.PointSize);
     ::SetWindowText(hwndSizes, szText);
 }
 
@@ -378,9 +376,9 @@ void CFontsDialog::InitToolbar()
     };
     SendMessage(hwndToolbar, TB_ADDBUTTONS, _countof(buttons), (LPARAM)&buttons);
 
-    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_BOLD, m_bBold);
-    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_ITALIC, m_bItalic);
-    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_UNDERLINE, m_bUnderline);
+    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_BOLD, registrySettings.Bold);
+    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_ITALIC, registrySettings.Italic);
+    SendMessage(hwndToolbar, TB_CHECKBUTTON, IDM_UNDERLINE, registrySettings.Underline);
 }
 
 LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -388,6 +386,18 @@ LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     InitNames();
     InitFontSizes();
     InitToolbar();
+
+    if (registrySettings.FontsPositionX != 0 || registrySettings.FontsPositionY != 0)
+    {
+        SetWindowPos(NULL,
+                     registrySettings.FontsPositionX, registrySettings.FontsPositionY,
+                     0, 0,
+                     SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+        SendMessage(DM_REPOSITION, 0, 0);
+    }
+
+    if (!registrySettings.ShowTextTool)
+        ShowWindow(SW_HIDE);
     return TRUE;
 }
 
@@ -410,9 +420,9 @@ void CFontsDialog::OnFontName(UINT codeNotify)
             {
                 COMBOBOXEXITEM item = { CBEIF_TEXT, iItem, szText, _countof(szText) };
                 SendMessage(hwndNames, CBEM_GETITEM, 0, (LPARAM)&item);
-                if (m_strFontName != szText)
+                if (registrySettings.strFontName != szText)
                 {
-                    m_strFontName = szText;
+                    registrySettings.strFontName = szText;
                     toolsModel.NotifyToolChanged();
                 }
             }
@@ -423,9 +433,9 @@ void CFontsDialog::OnFontName(UINT codeNotify)
             for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
             {
                 CString& name = m_arrFontNames[i];
-                if (name == szText && m_strFontName != szText)
+                if (name == szText && registrySettings.strFontName != szText)
                 {
-                    m_strFontName = szText;
+                    registrySettings.strFontName = szText;
                     toolsModel.NotifyToolChanged();
                 }
             }
@@ -445,14 +455,14 @@ void CFontsDialog::OnFontSize(UINT codeNotify)
             if (iItem != CB_ERR)
             {
                 ComboBox_GetLBText(hwndSizes, iItem, szText);
-                m_nFontSize = _ttoi(szText);
+                registrySettings.PointSize = _ttoi(szText);
                 toolsModel.NotifyToolChanged();
             }
             break;
 
         case CBN_EDITCHANGE:
             GetDlgItemText(IDD_FONTSSIZES, szText, _countof(szText));
-            m_nFontSize = _ttoi(szText);
+            registrySettings.PointSize = _ttoi(szText);
             toolsModel.NotifyToolChanged();
             break;
     }
@@ -468,6 +478,7 @@ LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     {
         case IDCANCEL:
             ShowWindow(SW_HIDE);
+            registrySettings.ShowTextTool = FALSE;
             break;
 
         case IDD_FONTSNAMES:
@@ -479,17 +490,17 @@ LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
             break;
 
         case IDM_BOLD:
-            m_bBold = bChecked;
+            registrySettings.Bold = bChecked;
             toolsModel.NotifyToolChanged();
             break;
 
         case IDM_ITALIC:
-            m_bItalic = bChecked;
+            registrySettings.Italic = bChecked;
             toolsModel.NotifyToolChanged();
             break;
 
         case IDM_UNDERLINE:
-            m_bUnderline = bChecked;
+            registrySettings.Underline = bChecked;
             toolsModel.NotifyToolChanged();
             break;
 
@@ -517,5 +528,12 @@ LRESULT CFontsDialog::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 break;
         }
     }
+    return 0;
+}
+
+LRESULT CFontsDialog::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    registrySettings.FontsPositionX = (SHORT)LOWORD(lParam);
+    registrySettings.FontsPositionY = (SHORT)HIWORD(lParam);
     return 0;
 }

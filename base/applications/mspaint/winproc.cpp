@@ -673,8 +673,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (toolsModel.GetActiveTool() == TOOL_TEXT)
             {
                 if (!fontsDialog.IsWindow())
+                {
                     fontsDialog.Create(mainWindow);
-                fontsDialog.ShowWindow(fontsDialog.IsWindowVisible() ? SW_HIDE : SW_SHOW);
+                }
+                registrySettings.ShowTextTool = !fontsDialog.IsWindowVisible();
+                fontsDialog.ShowWindow(registrySettings.ShowTextTool ? SW_SHOW : SW_HIDE);
                 fontsDialog.SendMessage(DM_REPOSITION, 0, 0);
             }
             break;

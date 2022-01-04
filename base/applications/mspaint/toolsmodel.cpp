@@ -172,7 +172,8 @@ void ToolsModel::NotifyToolChanged()
             textEditWindow.Create(imageArea);
             textEditWindow.UpdateFont();
         }
-        fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
+        if (registrySettings.ShowTextTool)
+            fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
     }
     else
     {

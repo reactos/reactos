@@ -438,16 +438,16 @@ void CTextEditWindow::UpdateFont()
 
     LOGFONT lf;
     ZeroMemory(&lf, sizeof(lf));
-    lf.lfCharSet = DEFAULT_CHARSET;
-    lf.lfWeight = (fontsDialog.IsBold() ? FW_BOLD : FW_NORMAL);
-    lf.lfItalic = fontsDialog.IsItalic();
-    lf.lfUnderline = fontsDialog.IsUnderline();
-    lstrcpyn(lf.lfFaceName, fontsDialog.GetFontName(), _countof(lf.lfFaceName));
+    lf.lfCharSet = registrySettings.CharSet;
+    lf.lfWeight = (registrySettings.Bold ? FW_BOLD : FW_NORMAL);
+    lf.lfItalic = registrySettings.Italic;
+    lf.lfUnderline = registrySettings.Underline;
+    lstrcpyn(lf.lfFaceName, registrySettings.strFontName, _countof(lf.lfFaceName));
 
     HDC hdc = GetDC();
     if (hdc)
     {
-        INT nFontSize = fontsDialog.GetFontSize();
+        INT nFontSize = registrySettings.PointSize;
         lf.lfHeight = -MulDiv(nFontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
         ReleaseDC(hdc);
     }

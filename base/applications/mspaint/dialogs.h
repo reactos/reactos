@@ -91,36 +91,27 @@ class CFontsDialog : public CDialogImpl<CFontsDialog>
 {
 public:
     enum { IDD = IDD_FONTS };
+
     CSimpleArray<CString> m_arrFontNames;
 
     CFontsDialog();
+    void InitNames();
+    void InitFontSizes();
+    void InitToolbar();
 
     BEGIN_MSG_MAP(CFontsDialog)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+        MESSAGE_HANDLER(WM_MOVE, OnMove)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
     END_MSG_MAP()
 
-    void InitNames();
-    void InitFontSizes();
-    void InitToolbar();
-    BOOL IsBold() const                 { return m_bBold; }
-    BOOL IsItalic() const               { return m_bItalic; }
-    BOOL IsUnderline() const            { return m_bUnderline; }
-    const CString& GetFontName() const  { return m_strFontName; }
-    INT GetFontSize() const             { return m_nFontSize; }
-
 protected:
-    BOOL m_bBold;
-    BOOL m_bItalic;
-    BOOL m_bUnderline;
-    INT m_nFontSize;
-    CString m_strFontName;
-
     LRESULT OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     void OnFontSize(UINT codeNotify);
     void OnFontName(UINT codeNotify);
