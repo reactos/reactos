@@ -811,6 +811,12 @@ ExitThreadCallback(PETHREAD Thread)
     if (ptiCurrent->KeyboardLayout)
         UserDereferenceObject(ptiCurrent->KeyboardLayout);
 
+    if (ptiCurrent->spDefaultImc)
+    {
+        UserDereferenceObject(ptiCurrent->spDefaultImc);
+        ptiCurrent->spDefaultImc = NULL;
+    }
+
     if (gptiForeground == ptiCurrent)
     {
 //       IntNotifyWinEvent(EVENT_OBJECT_FOCUS, NULL, OBJID_CLIENT, CHILDID_SELF, 0);
