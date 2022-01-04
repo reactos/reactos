@@ -482,6 +482,9 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
     if (!pIMC)
         return NULL;
 
+    // Release the extra reference (UserCreateObject added 2 references).
+    UserDereferenceObject(pIMC);
+
     if (dwClientImcData) // Non-first time.
     {
         // Insert pIMC to the second position (non-default) of the list.
@@ -506,17 +509,17 @@ NtUserCreateInputContext(ULONG_PTR dwClientImcData)
     PIMC pIMC;
     HIMC ret = NULL;
 
+    if (!dwClientImcData)
+        return NULL;
+
     UserEnterExclusive();
 
-    if (!IS_IMM_MODE() || !dwClientImcData)
+    if (!IS_IMM_MODE())
         goto Quit;
 
     pIMC = UserCreateInputContext(dwClientImcData);
     if (pIMC)
-    {
         ret = UserHMGetHandle(pIMC);
-        UserDereferenceObject(pIMC);
-    }
 
 Quit:
     UserLeave();
