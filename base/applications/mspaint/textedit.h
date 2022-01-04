@@ -15,7 +15,7 @@ public:
 
     HWND Create(HWND hwndParent);
     void DoFillBack(HWND hwnd, HDC hDC);
-    void FixEditSize(LPTSTR pszOldText);
+    void FixEditPos(LPTSTR pszOldText);
     void InvalidateEdit();
     void UpdateFont();
     BOOL GetEditRect(LPRECT prc) const;

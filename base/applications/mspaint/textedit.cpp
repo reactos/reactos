@@ -176,7 +176,7 @@ void CTextEditWindow::DrawGrip(HDC hDC, RECT& rc)
     FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
 }
 
-void CTextEditWindow::FixEditSize(LPTSTR pszOldText)
+void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
 {
     TCHAR szText[512];
     INT cchText = GetWindowText(szText, _countof(szText));
@@ -222,7 +222,7 @@ LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    FixEditSize(szText);
+    FixEditPos(szText);
     return ret;
 }
 
@@ -236,7 +236,7 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    FixEditSize(szText);
+    FixEditPos(szText);
     return ret;
 }
 
@@ -471,7 +471,7 @@ void CTextEditWindow::UpdateFont()
 
     SetWindowFont(m_hWnd, m_hFontZoomed, TRUE);
     DefWindowProc(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
-    FixEditSize(NULL);
+    FixEditPos(NULL);
 }
 
 LRESULT CTextEditWindow::OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
