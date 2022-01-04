@@ -482,6 +482,7 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
     if (!pIMC)
         return NULL;
 
+    // Release the extra reference (UserCreateObject added 2 references).
     UserDereferenceObject(pIMC);
 
     if (dwClientImcData) // Non-first time.
