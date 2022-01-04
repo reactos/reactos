@@ -369,7 +369,7 @@ void CFontsDialog::InitToolbar()
 
     HIMAGELIST himl = ImageList_LoadImage(hProgInstance, MAKEINTRESOURCE(IDB_FONTSTOOLBAR),
                                           16, 8, RGB(255, 0, 255), IMAGE_BITMAP,
-                                          LR_CREATEDIBSECTION);
+                                          LR_VGACOLOR);
     SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
 
     // TODO: Tooltips
