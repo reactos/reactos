@@ -380,6 +380,7 @@ struct TextTool : ToolBase
                 textEditWindow.GetWindowText(szText, _countof(szText));
 
                 RECT rc;
+                textEditWindow.InvalidateEditRect();
                 textEditWindow.GetEditRect(&rc);
 
                 INT style = (toolsModel.IsBackgroundTransparent() ? 0 : 1);
