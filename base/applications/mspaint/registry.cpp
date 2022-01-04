@@ -70,11 +70,9 @@ void RegistrySettings::LoadPresets()
     FontsPositionY = 0;
     ShowTextTool = TRUE;
 
-    {
-        LOGFONT lf;
-        GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
-        strFontName = lf.lfFaceName;
-    }
+    LOGFONT lf;
+    GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
+    strFontName = lf.lfFaceName;
 
     WINDOWPLACEMENT WindowPlacement;
 
