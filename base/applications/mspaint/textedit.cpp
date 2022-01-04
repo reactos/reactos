@@ -19,6 +19,7 @@ CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL)
     SetRectEmpty(&m_rc);
 }
 
+#ifndef NO_GROW_WIDTH
 SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
                                  LPRECT prcParent, LPCTSTR pszOldText)
 {
@@ -88,6 +89,7 @@ SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
     SIZE ret = { xMax - LONG(overhang) + 1, yMax + tm.tmDescent };
     return ret;
 }
+#endif
 
 #define X0 rc.left
 #define X1 ((rc.left + rc.right - CXY_GRIP) / 2)
@@ -191,12 +193,23 @@ void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
     HDC hDC = GetDC();
     if (hDC)
     {
-        SelectObject(hDC, m_hFont);
-        SIZE siz = DoCalcRect(hDC, szText, cchText, &rcParent, pszOldText);
-        ReleaseDC(hDC);
+        SelectObject(hDC, m_hFontZoomed);
+#ifdef NO_GROW_WIDTH
+        TEXTMETRIC tm;
+        GetTextMetrics(hDC, &tm);
 
+        lstrcat(szText, TEXT("\r\n"));
+        UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
+                       DT_EXPANDTABS | DT_WORDBREAK;
+        DrawText(hDC, szText, cchText, &rcText, uFormat | DT_CALCRECT);
+        if (tm.tmDescent > 0)
+            rcText.bottom += tm.tmDescent;
+#else
+        SIZE siz = DoCalcRect(hDC, szText, cchText, &rcParent, pszOldText);
         rcText.right = rcText.left + siz.cx;
         rcText.bottom = rcText.top + siz.cy;
+#endif
+        ReleaseDC(hDC);
     }
 
     UnionRect(&rc, &rcText, &rcWnd);
@@ -237,6 +250,14 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     GetWindowText(szText, _countof(szText));
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
     FixEditPos(szText);
+    return ret;
+}
+
+LRESULT CTextEditWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
+    DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
+    DefWindowProc(WM_VSCROLL, SB_TOP, 0);
     return ret;
 }
 
@@ -315,8 +336,7 @@ LRESULT CTextEditWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CTextEditWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    FixEditPos(NULL);
-    InvalidateEdit();
+    InvalidateEditRect();
     return ret;
 }
 
@@ -328,8 +348,8 @@ LRESULT CTextEditWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     GetClientRect(&rc);
     SendMessage(EM_SETRECTNP, 0, (LPARAM)&rc);
     SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
-    FixEditPos(NULL);
-    InvalidateEdit();
+
+    InvalidateEditRect();
 
     return ret;
 }
@@ -339,8 +359,13 @@ HWND CTextEditWindow::Create(HWND hwndParent)
 {
     m_hwndParent = hwndParent;
 
+#ifdef NO_GROW_WIDTH
+    DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_CHILD |
+                  WS_THICKFRAME;
+#else
     DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL |
                   WS_CHILD | WS_THICKFRAME;
+#endif
     m_hWnd = ::CreateWindowEx(0, WC_EDIT, NULL, style, 0, 0, 0, 0,
                               hwndParent, NULL, hProgInstance, NULL);
     if (m_hWnd)
@@ -392,7 +417,7 @@ LRESULT CTextEditWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     return 0;
 }
 
-void CTextEditWindow::InvalidateEdit()
+void CTextEditWindow::InvalidateEditRect()
 {
     RECT rc;
     GetWindowRect(&rc);
@@ -423,7 +448,7 @@ LRESULT CTextEditWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, L
 LRESULT CTextEditWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     UpdateFont();
-    SetEditRect(NULL);
+    ValidateEditRect(NULL);
     return 0;
 }
 
@@ -451,7 +476,7 @@ void CTextEditWindow::UpdateFont()
 
     LOGFONT lf;
     ZeroMemory(&lf, sizeof(lf));
-    lf.lfCharSet = registrySettings.CharSet;
+    lf.lfCharSet = DEFAULT_CHARSET; // registrySettings.CharSet; // Ignore
     lf.lfWeight = (registrySettings.Bold ? FW_BOLD : FW_NORMAL);
     lf.lfItalic = registrySettings.Italic;
     lf.lfUnderline = registrySettings.Underline;
@@ -473,6 +498,7 @@ void CTextEditWindow::UpdateFont()
     SetWindowFont(m_hWnd, m_hFontZoomed, TRUE);
     DefWindowProc(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
     FixEditPos(NULL);
+    Invalidate();
 }
 
 LRESULT CTextEditWindow::OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -480,6 +506,7 @@ LRESULT CTextEditWindow::OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
     DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
     DefWindowProc(WM_VSCROLL, SB_TOP, 0);
+    InvalidateEditRect();
     return ret;
 }
 
@@ -489,7 +516,7 @@ BOOL CTextEditWindow::GetEditRect(LPRECT prc) const
     return TRUE;
 }
 
-void CTextEditWindow::SetEditRect(LPCRECT prc)
+void CTextEditWindow::ValidateEditRect(LPCRECT prc OPTIONAL)
 {
     if (prc)
         m_rc = *prc;

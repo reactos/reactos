@@ -8,6 +8,8 @@
 
 #pragma once
 
+#define NO_GROW_WIDTH
+
 class CTextEditWindow : public CWindowImpl<CTextEditWindow>
 {
 public:
@@ -16,10 +18,10 @@ public:
     HWND Create(HWND hwndParent);
     void DoFillBack(HWND hwnd, HDC hDC);
     void FixEditPos(LPTSTR pszOldText);
-    void InvalidateEdit();
+    void InvalidateEditRect();
     void UpdateFont();
     BOOL GetEditRect(LPRECT prc) const;
-    void SetEditRect(LPCRECT prc);
+    void ValidateEditRect(LPCRECT prc OPTIONAL);
     HFONT GetFont() const { return m_hFont; }
 
     BEGIN_MSG_MAP(CTextEditWindow)
@@ -39,6 +41,7 @@ public:
         MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor);
         MESSAGE_HANDLER(WM_MOVE, OnMove);
         MESSAGE_HANDLER(WM_SIZE, OnSize);
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown);
         MESSAGE_HANDLER(EM_SETSEL, OnSetSel);
     END_MSG_MAP()
 
@@ -51,6 +54,7 @@ public:
 
     LRESULT OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnNCPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -67,7 +71,9 @@ protected:
     HFONT m_hFontZoomed;
     RECT m_rc;
 
+#ifndef NO_GROW_WIDTH
     SIZE DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText, LPRECT prcParent, LPCTSTR pszOldText);
+#endif
     INT DoHitTest(RECT& rc, POINT pt);
     void DrawGrip(HDC hDC, RECT& rc);
 };

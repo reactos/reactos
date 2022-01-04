@@ -417,7 +417,7 @@ struct TextTool : ToolBase
         if (!selectionModel.IsSrcRectSizeNonzero())
             SetRect(&rc, x, y, x + cxMin, y + cyMin);
 
-        textEditWindow.SetEditRect(&rc);
+        textEditWindow.ValidateEditRect(&rc);
         ForceRefreshSelectionContents();
         textEditWindow.ShowWindow(SW_SHOWNOACTIVATE);
         textEditWindow.SetFocus();

@@ -562,7 +562,6 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
             {
                 textEditWindow.SendMessage(EM_SETSEL, 0, -1);
-                textEditWindow.InvalidateEdit();
                 break;
             }
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
