@@ -15,16 +15,19 @@ public:
 
     HWND Create(HWND hwndParent);
     void DoFillBack(HWND hwnd, HDC hDC);
-    void DoDraw(HWND hwnd, HDC hDC);
     void FixEditSize(LPTSTR pszOldText);
     void InvalidateEdit();
     void UpdateFont();
+    BOOL GetEditRect(LPRECT prc) const;
+    void SetEditRect(LPCRECT prc);
+    HFONT GetFont() const { return m_hFont; }
 
     BEGIN_MSG_MAP(CTextEditWindow)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_TOOLSMODELTOOLCHANGED, OnToolsModelToolChanged)
         MESSAGE_HANDLER(WM_TOOLSMODELSETTINGSCHANGED, OnToolsModelSettingsChanged)
+        MESSAGE_HANDLER(WM_TOOLSMODELZOOMCHANGED, OnToolsModelZoomChanged)
         MESSAGE_HANDLER(WM_PALETTEMODELCOLORCHANGED, OnPaletteModelColorChanged)
         MESSAGE_HANDLER(WM_CHAR, OnChar)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
@@ -43,6 +46,7 @@ public:
     LRESULT OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     LRESULT OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -60,7 +64,8 @@ public:
 protected:
     HWND m_hwndParent;
     HFONT m_hFont;
-    LOGFONT m_lf;
+    HFONT m_hFontZoomed;
+    RECT m_rc;
 
     SIZE DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText, LPRECT prcParent, LPCTSTR pszOldText);
     INT DoHitTest(RECT& rc, POINT pt);

@@ -14,6 +14,11 @@
 
 /* FUNCTIONS ********************************************************/
 
+CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL)
+{
+    SetRectEmpty(&m_rc);
+}
+
 SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
                                  LPRECT prcParent, LPCTSTR pszOldText)
 {
@@ -208,12 +213,6 @@ void CTextEditWindow::FixEditSize(LPTSTR pszOldText)
     ::InvalidateRect(m_hwndParent, &rc, TRUE);
 }
 
-CTextEditWindow::CTextEditWindow() : m_hFont(NULL)
-{
-    ZeroMemory(&m_lf, sizeof(m_lf));
-    m_lf.lfCharSet = DEFAULT_CHARSET;
-}
-
 LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (wParam == VK_TAB)
@@ -344,8 +343,7 @@ HWND CTextEditWindow::Create(HWND hwndParent)
 #undef SubclassWindow // Don't use this macro
         SubclassWindow(m_hWnd);
 
-        if (!m_hFont)
-            m_hFont = ::CreateFontIndirect(&m_lf);
+        UpdateFont();
 
         PostMessage(WM_SIZE, 0, 0);
     }
@@ -367,41 +365,6 @@ void CTextEditWindow::DoFillBack(HWND hwnd, HDC hDC)
     DeleteObject(hbr);
 }
 
-void CTextEditWindow::DoDraw(HWND hwnd, HDC hDC)
-{
-    TCHAR szText[512];
-    INT cchText = GetWindowText(szText, _countof(szText));
-
-    RECT rc;
-    SendMessage(EM_GETRECT, 0, (LPARAM)&rc);
-    MapWindowPoints(hwnd, (LPPOINT)&rc, 2);
-
-    HGDIOBJ hFontOld = SelectObject(hDC, m_hFont);
-    UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX |
-                   DT_NOCLIP | DT_EXPANDTABS;
-
-    if (toolsModel.IsBackgroundTransparent())
-    {
-        SetBkMode(hDC, TRANSPARENT);
-    }
-    else
-    {
-        SetBkMode(hDC, OPAQUE);
-        SetBkColor(hDC, paletteModel.GetBgColor());
-
-        HBRUSH hbr = CreateSolidBrush(paletteModel.GetBgColor());
-        FillRect(hDC, &rc, hbr);
-        DeleteObject(hbr);
-    }
-
-    INT iSaveDC = SaveDC(hDC);
-    IntersectClipRect(hDC, rc.left, rc.top, rc.right, rc.bottom);
-    SetTextColor(hDC, paletteModel.GetFgColor());
-    DrawText(hDC, szText, cchText, &rc, uFormat);
-    RestoreDC(hDC, iSaveDC);
-    SelectObject(hDC, hFontOld);
-}
-
 LRESULT CTextEditWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     UpdateFont();
@@ -415,6 +378,11 @@ LRESULT CTextEditWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     {
         DeleteObject(m_hFont);
         m_hFont = NULL;
+    }
+    if (m_hFontZoomed)
+    {
+        DeleteObject(m_hFontZoomed);
+        m_hFontZoomed = NULL;
     }
     return 0;
 }
@@ -439,6 +407,13 @@ LRESULT CTextEditWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, L
     return 0;
 }
 
+LRESULT CTextEditWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    UpdateFont();
+    SetEditRect(NULL);
+    return 0;
+}
+
 LRESULT CTextEditWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (wParam == TOOL_TEXT)
@@ -455,24 +430,34 @@ void CTextEditWindow::UpdateFont()
         DeleteObject(m_hFont);
         m_hFont = NULL;
     }
+    if (m_hFontZoomed)
+    {
+        DeleteObject(m_hFontZoomed);
+        m_hFontZoomed = NULL;
+    }
 
-    lstrcpyn(m_lf.lfFaceName, fontsDialog.GetFontName(), _countof(m_lf.lfFaceName));
+    LOGFONT lf;
+    ZeroMemory(&lf, sizeof(lf));
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfWeight = (fontsDialog.IsBold() ? FW_BOLD : FW_NORMAL);
+    lf.lfItalic = fontsDialog.IsItalic();
+    lf.lfUnderline = fontsDialog.IsUnderline();
+    lstrcpyn(lf.lfFaceName, fontsDialog.GetFontName(), _countof(lf.lfFaceName));
 
-    INT nFontSize = fontsDialog.GetFontSize();
     HDC hdc = GetDC();
     if (hdc)
     {
-        m_lf.lfHeight = -MulDiv(nFontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+        INT nFontSize = fontsDialog.GetFontSize();
+        lf.lfHeight = -MulDiv(nFontSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
         ReleaseDC(hdc);
     }
 
-    m_lf.lfWeight = (fontsDialog.IsBold() ? FW_BOLD : FW_NORMAL);
-    m_lf.lfItalic = fontsDialog.IsItalic();
-    m_lf.lfUnderline = fontsDialog.IsUnderline();
+    m_hFont = ::CreateFontIndirect(&lf);
 
-    m_hFont = ::CreateFontIndirect(&m_lf);
+    lf.lfHeight = Zoomed(lf.lfHeight);
+    m_hFontZoomed = ::CreateFontIndirect(&lf);
 
-    SetWindowFont(m_hWnd, m_hFont, TRUE);
+    SetWindowFont(m_hWnd, m_hFontZoomed, TRUE);
     DefWindowProc(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
     FixEditSize(NULL);
 }
@@ -483,4 +468,19 @@ LRESULT CTextEditWindow::OnSetSel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
     DefWindowProc(WM_VSCROLL, SB_TOP, 0);
     return ret;
+}
+
+BOOL CTextEditWindow::GetEditRect(LPRECT prc) const
+{
+    *prc = m_rc;
+    return TRUE;
+}
+
+void CTextEditWindow::SetEditRect(LPCRECT prc)
+{
+    if (prc)
+        m_rc = *prc;
+    INT x0 = Zoomed(m_rc.left), y0 = Zoomed(m_rc.top);
+    INT x1 = Zoomed(m_rc.right), y1 = Zoomed(m_rc.bottom);
+    MoveWindow(x0, y0, x1 - x0, y1 - y0, TRUE);
 }

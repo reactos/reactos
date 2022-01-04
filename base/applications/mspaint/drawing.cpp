@@ -276,20 +276,35 @@ SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, DWORD system_selecti
 void
 Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style)
 {
-    HFONT oldFont;
-    RECT rect = {x1, y1, x2, y2};
-    COLORREF oldColor;
-    COLORREF oldBkColor;
-    int oldBkMode;
-    oldFont = (HFONT) SelectObject(hdc, font);
-    oldColor = SetTextColor(hdc, fg);
-    oldBkColor = SetBkColor(hdc, bg);
-    oldBkMode = SetBkMode(hdc, TRANSPARENT);
+    RECT rc;
+    textEditWindow.GetEditRect(&rc);
+
+    HGDIOBJ hFontOld = SelectObject(hdc, font);
+    UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX |
+                   DT_NOCLIP | DT_EXPANDTABS;
+
+    INT iOldBkMode, rgbBkColor;
     if (style == 0)
-        Rect(hdc, x1, y1, x2, y2, bg, bg, 1, 2);
-    DrawText(hdc, lpchText, -1, &rect, DT_EDITCONTROL);
-    SelectObject(hdc, oldFont);
-    SetTextColor(hdc, oldColor);
-    SetBkColor(hdc, oldBkColor);
-    SetBkMode(hdc, oldBkMode);
+    {
+        iOldBkMode = SetBkMode(hdc, TRANSPARENT);
+        rgbBkColor = GetBkColor(hdc);
+    }
+    else
+    {
+        iOldBkMode = SetBkMode(hdc, OPAQUE);
+        rgbBkColor = SetBkColor(hdc, bg);
+
+        HBRUSH hbr = CreateSolidBrush(bg);
+        FillRect(hdc, &rc, hbr);
+        DeleteObject(hbr);
+    }
+
+    INT iSaveDC = SaveDC(hdc);
+    IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
+    SetTextColor(hdc, fg);
+    DrawText(hdc, lpchText, -1, &rc, uFormat);
+    RestoreDC(hdc, iSaveDC);
+    SelectObject(hdc, hFontOld);
+    SetBkMode(hdc, iOldBkMode);
+    SetBkColor(hdc, rgbBkColor);
 }

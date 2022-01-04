@@ -375,7 +375,17 @@ struct TextTool : ToolBase
         if (textEditWindow.IsWindowVisible())
         {
             if (textEditWindow.GetWindowTextLength() > 0)
-                textEditWindow.DoDraw(imageArea, m_hdc);
+            {
+                TCHAR szText[512];
+                textEditWindow.GetWindowText(szText, _countof(szText));
+
+                RECT rc;
+                textEditWindow.GetEditRect(&rc);
+
+                INT style = (toolsModel.IsBackgroundTransparent() ? 0 : 1);
+                Text(m_hdc, rc.left, rc.top, rc.right, rc.bottom, m_fg, m_bg, szText,
+                     textEditWindow.GetFont(), style);
+            }
             textEditWindow.SetWindowText(NULL);
             textEditWindow.ShowWindow(SW_HIDE);
         }
@@ -407,7 +417,7 @@ struct TextTool : ToolBase
         if (!selectionModel.IsSrcRectSizeNonzero())
             SetRect(&rc, x, y, x + cxMin, y + cyMin);
 
-        textEditWindow.MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
+        textEditWindow.SetEditRect(&rc);
         ForceRefreshSelectionContents();
         textEditWindow.ShowWindow(SW_SHOWNOACTIVATE);
         textEditWindow.SetFocus();
