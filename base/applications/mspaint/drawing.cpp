@@ -277,7 +277,7 @@ void
 Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style)
 {
     RECT rc;
-    textEditWindow.GetEditRect(&rc);
+    SetRect(&rc, x1, y1, x2, y2);
 
     HGDIOBJ hFontOld = SelectObject(hdc, font);
     UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX |
