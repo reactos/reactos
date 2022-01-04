@@ -539,7 +539,9 @@ LRESULT CFontsDialog::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
 LRESULT CFontsDialog::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    registrySettings.FontsPositionX = (SHORT)LOWORD(lParam);
-    registrySettings.FontsPositionY = (SHORT)HIWORD(lParam);
+    RECT rc;
+    GetWindowRect(&rc);
+    registrySettings.FontsPositionX = rc.left;
+    registrySettings.FontsPositionY = rc.top;
     return 0;
 }
