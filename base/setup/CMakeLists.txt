@@ -1,3 +1,4 @@
+remove_definitions(-NDEBUG)
 
 add_subdirectory(lib)
 add_subdirectory(reactos)
