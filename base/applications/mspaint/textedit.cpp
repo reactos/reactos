@@ -218,9 +218,9 @@ void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
     ::GetClientRect(m_hwndParent, &rcParent);
     IntersectRect(&rc, &rcParent, &rcWnd);
 
-    InterlockedIncrement(&m_nMoveSizeLock);
+    ++m_nMoveSizeLock;
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
-    InterlockedDecrement(&m_nMoveSizeLock);
+    --m_nMoveSizeLock;
 
     DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
     DefWindowProc(WM_VSCROLL, SB_TOP, 0);
@@ -236,9 +236,9 @@ LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
 
-    InterlockedIncrement(&m_nMoveSizeLock);
+    ++m_nMoveSizeLock;
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    if (InterlockedDecrement(&m_nMoveSizeLock) == 0)
+    if (--m_nMoveSizeLock == 0)
         FixEditPos(szText);
 
     return ret;
@@ -255,9 +255,9 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
 
-    InterlockedIncrement(&m_nMoveSizeLock);
+    ++m_nMoveSizeLock;
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    if (InterlockedDecrement(&m_nMoveSizeLock) == 0)
+    if (--m_nMoveSizeLock == 0)
         FixEditPos(szText);
     return ret;
 }
@@ -514,9 +514,9 @@ void CTextEditWindow::UpdateFont()
     SetWindowFont(m_hWnd, m_hFontZoomed, TRUE);
     DefWindowProc(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
 
-    InterlockedIncrement(&m_nMoveSizeLock);
+    ++m_nMoveSizeLock;
     FixEditPos(NULL);
-    InterlockedDecrement(&m_nMoveSizeLock);
+    --m_nMoveSizeLock;
 
     Invalidate();
 }
