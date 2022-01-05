@@ -467,9 +467,13 @@ LRESULT CTextEditWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARA
 LRESULT CTextEditWindow::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (wParam == TOOL_TEXT)
+    {
         UpdateFont();
+    }
     else
+    {
         ShowWindow(SW_HIDE);
+    }
     return 0;
 }
 

@@ -105,6 +105,7 @@ public:
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_MOVE, OnMove)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+        MESSAGE_HANDLER(WM_TOOLSMODELTOOLCHANGED, OnToolsModelToolChanged)
     END_MSG_MAP()
 
 protected:
@@ -113,6 +114,7 @@ protected:
     LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     void OnFontSize(UINT codeNotify);
     void OnFontName(UINT codeNotify);
 };

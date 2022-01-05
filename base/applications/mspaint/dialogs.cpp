@@ -545,3 +545,12 @@ LRESULT CFontsDialog::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
     registrySettings.FontsPositionY = rc.top;
     return 0;
 }
+
+LRESULT CFontsDialog::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (wParam != TOOL_TEXT)
+    {
+        fontsDialog.ShowWindow(SW_HIDE);
+    }
+    return 0;
+}

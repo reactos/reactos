@@ -162,20 +162,10 @@ void ToolsModel::NotifyToolChanged()
     toolBoxContainer.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
     toolSettingsWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
 
-    if (m_activeTool == TOOL_TEXT)
-    {
-        if (!fontsDialog.IsWindow())
-            fontsDialog.Create(mainWindow);
-        if (!textEditWindow.IsWindow())
-            textEditWindow.Create(imageArea);
-        if (registrySettings.ShowTextTool)
-            fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
-        textEditWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
-    }
-    else
-    {
-        fontsDialog.ShowWindow(SW_HIDE);
-    }
+    if (fontsDialog.IsWindow())
+        fontsDialog.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
+
+    textEditWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
 }
 
 void ToolsModel::NotifyToolSettingsChanged()
