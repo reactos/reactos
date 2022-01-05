@@ -10,7 +10,7 @@
 
 #define NO_GROW_WIDTH
 
-#define CX_MINTEXTEDIT 80
+#define CX_MINTEXTEDIT 100
 #define CY_MINTEXTEDIT 24
 
 class CTextEditWindow : public CWindowImpl<CTextEditWindow>
