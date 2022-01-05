@@ -512,9 +512,7 @@ void CTextEditWindow::UpdateFont()
     SetWindowFont(m_hWnd, m_hFontZoomed, TRUE);
     DefWindowProc(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
 
-    ++m_nMoveSizeLock;
     FixEditPos(NULL);
-    --m_nMoveSizeLock;
 
     Invalidate();
 }
