@@ -2,6 +2,7 @@
 add_subdirectory(kernel32_vista)
 
 add_definitions(-D_KERNEL32_)
+remove_definitions(-DNDEBUG)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
