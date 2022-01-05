@@ -280,7 +280,7 @@ EnumFontFamProc(ENUMLOGFONT *lpelf, NEWTEXTMETRIC *lpntm, INT FontType, LPARAM l
 
 // TODO: AutoComplete font names
 // TODO: Vertical text
-CFontsDialog::CFontsDialog() : m_bInInit(TRUE)
+CFontsDialog::CFontsDialog()
 {
 }
 
@@ -383,7 +383,6 @@ LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     if (!registrySettings.ShowTextTool)
         ShowWindow(SW_HIDE);
 
-    m_bInInit = FALSE;
     return TRUE;
 }
 
@@ -444,7 +443,7 @@ void CFontsDialog::OnFontSize(UINT codeNotify)
             break;
 
         case CBN_EDITCHANGE:
-            GetDlgItemText(IDD_FONTSSIZES, szText, _countof(szText));
+            ::GetWindowText(hwndSizes, szText, _countof(szText));
             PointSize = _ttoi(szText);
             break;
     }
