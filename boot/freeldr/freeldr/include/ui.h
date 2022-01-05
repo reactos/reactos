@@ -54,7 +54,8 @@ extern const CHAR UiMonthNames[12][15];
 // User Interface Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOLEAN    UiInitialize(BOOLEAN ShowGui);                                // Initialize User-Interface
+
+BOOLEAN    UiInitialize(BOOLEAN ShowUi);                                // Initialize User-Interface
 VOID    UiUnInitialize(PCSTR BootText);                        // Un-initialize User-Interface
 VOID    UiDrawBackdrop(VOID);                                    // Fills the entire screen with a backdrop
 VOID    UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);    // Fills the area specified with FillChar and Attr
@@ -229,3 +230,11 @@ extern UIVTBL UiVtbl;
 #define D_HORZ  0xCD    // Double horizontal line
 #define VERT    0xB3    // Single vertical line
 #define D_VERT  0xBA    // Double vertical line
+
+
+/* THEME HEADERS *************************************************************/
+
+// #include <ui/gui.h>
+#include <ui/minitui.h>
+#include <ui/noui.h>
+#include <ui/tui.h>

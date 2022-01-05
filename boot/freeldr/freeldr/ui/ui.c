@@ -81,7 +81,7 @@ UIVTBL UiVtbl =
     NoUiDrawMenu,
 };
 
-BOOLEAN UiInitialize(BOOLEAN ShowGui)
+BOOLEAN UiInitialize(BOOLEAN ShowUi)
 {
     VIDEODISPLAYMODE UiDisplayMode; // Tells us if we are in text or graphics mode
     BOOLEAN UiMinimal = FALSE;      // Tells us if we are using a minimal console-like UI
@@ -89,7 +89,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
     ULONG Depth;
     CHAR  SettingText[260];
 
-    if (!ShowGui)
+    if (!ShowUi)
     {
         if (!UiVtbl.Initialize())
         {
@@ -121,10 +121,18 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
         UiMinimal = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
     }
 
-    if (UiDisplayMode == VideoTextMode)
-        UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
-    else
+    if (UiDisplayMode == VideoGraphicsMode)
+#if 0 // We don't support a GUI mode yet.
         UiVtbl = GuiVtbl;
+#else
+    {
+        // Switch back to text mode.
+        MachVideoSetDisplayMode(NULL, TRUE);
+        UiDisplayMode = VideoTextMode;
+    }
+#endif
+    else // if (UiDisplayMode == VideoTextMode)
+        UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
 
     if (!UiVtbl.Initialize())
     {

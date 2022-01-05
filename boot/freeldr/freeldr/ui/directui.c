@@ -48,12 +48,12 @@ TuiPrintf(const char *Format,
 }
 
 BOOLEAN
-UiInitialize(IN BOOLEAN ShowGui)
+UiInitialize(IN BOOLEAN ShowUi)
 {
     ULONG Depth;
 
     /* Nothing to do */
-    if (!ShowGui) return TRUE;
+    if (!ShowUi) return TRUE;
 
     /* Set mode and query size */
     MachVideoSetDisplayMode(NULL, TRUE);
