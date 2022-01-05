@@ -14,7 +14,7 @@
 
 /* FUNCTIONS ********************************************************/
 
-CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL), m_nMoveSizeLock(0)
+CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL), m_nMovingOrSizing(0)
 {
     SetRectEmpty(&m_rc);
 }
@@ -220,9 +220,9 @@ void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
     ::GetClientRect(m_hwndParent, &rcParent);
     IntersectRect(&rc, &rcParent, &rcWnd);
 
-    ++m_nMoveSizeLock;
+    ++m_nMovingOrSizing;
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
-    --m_nMoveSizeLock;
+    --m_nMovingOrSizing;
 
     DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
     DefWindowProc(WM_VSCROLL, SB_TOP, 0);
@@ -344,7 +344,7 @@ LRESULT CTextEditWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
 
-    if (m_nMoveSizeLock == 0)
+    if (m_nMovingOrSizing == 0)
         InvalidateEditRect();
     return ret;
 }
@@ -358,7 +358,7 @@ LRESULT CTextEditWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     SendMessage(EM_SETRECTNP, 0, (LPARAM)&rc);
     SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
 
-    if (m_nMoveSizeLock == 0)
+    if (m_nMovingOrSizing == 0)
         InvalidateEditRect();
 
     return ret;
@@ -539,7 +539,7 @@ void CTextEditWindow::ValidateEditRect(LPCRECT prc OPTIONAL)
     INT x0 = Zoomed(m_rc.left), y0 = Zoomed(m_rc.top);
     INT x1 = Zoomed(m_rc.right), y1 = Zoomed(m_rc.bottom);
 
-    ++m_nMoveSizeLock;
+    ++m_nMovingOrSizing;
     MoveWindow(x0, y0, x1 - x0, y1 - y0, TRUE);
-    --m_nMoveSizeLock;
+    --m_nMovingOrSizing;
 }

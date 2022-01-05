@@ -72,7 +72,7 @@ protected:
     HWND m_hwndParent;
     HFONT m_hFont;
     HFONT m_hFontZoomed;
-    LONG m_nMoveSizeLock;
+    LONG m_nMovingOrSizing;
     RECT m_rc;
 
 #ifndef NO_GROW_WIDTH
