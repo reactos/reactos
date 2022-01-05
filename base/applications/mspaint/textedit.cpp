@@ -586,3 +586,8 @@ void CTextEditWindow::Reposition()
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
     --m_nAppIsMovingOrSizing;
 }
+
+LRESULT CTextEditWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+}
