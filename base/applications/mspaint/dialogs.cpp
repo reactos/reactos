@@ -413,11 +413,11 @@ void CFontsDialog::OnFontName(UINT codeNotify)
 
         case CBN_EDITCHANGE:
             GetDlgItemText(IDD_FONTSNAMES, szText, _countof(szText));
-            iItem = SendDlgItemMessage(IDD_FONTSNAMES, CB_FINDSTRINGEXACT, -1, (LPARAM)szText);
+            iItem = ComboBox_FindStringExact(hwndNames, -1, szText);
             break;
     }
 
-    if (iItem != CB_ERR && lstrcmpi(registrySettings.strFontName, szText) != 0)
+    if (iItem != CB_ERR && registrySettings.strFontName.CompareNoCase(szText) != 0)
     {
         registrySettings.strFontName = szText;
         toolsModel.NotifyToolChanged();
