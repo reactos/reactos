@@ -10,7 +10,7 @@
 
 #include "precomp.h"
 
-#define CXY_GRIP 4
+#define CXY_GRIP 3
 
 /* FUNCTIONS ********************************************************/
 
@@ -151,7 +151,9 @@ void CTextEditWindow::DrawGrip(HDC hDC, RECT& rc)
     HGDIOBJ hbrOld = SelectObject(hDC, GetStockObject(NULL_BRUSH));
     HPEN hPen = CreatePen(PS_DOT, 1, GetSysColor(COLOR_HIGHLIGHT));
     HGDIOBJ hPenOld = SelectObject(hDC, hPen);
+    InflateRect(&rc, -1, -1);
     Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
+    InflateRect(&rc, 1, 1);
     SelectObject(hDC, hPenOld);
     SelectObject(hDC, hbrOld);
     DeleteObject(hPen);
