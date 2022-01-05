@@ -19,78 +19,6 @@ CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL), m_nAppI
     SetRectEmpty(&m_rc);
 }
 
-#ifndef NO_GROW_WIDTH
-SIZE CTextEditWindow::DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText,
-                                 LPRECT prcParent, LPCTSTR pszOldText)
-{
-    RECT rc;
-    GetClientRect(&rc);
-    MapWindowPoints(NULL, (LPPOINT)&rc, 2);
-
-    TEXTMETRIC tm;
-    GetTextMetrics(hDC, &tm);
-
-    // Calculate width and height of the text
-    INT x = 0, y = tm.tmHeight, xMax = x, yMax = y;
-    INT ich;
-    WCHAR chOverhang = 0;
-    for (ich = 0; ich < cchText; ++ich)
-    {
-        if (pszText[ich] == TEXT('\r'))
-            continue;
-
-        if (pszText[ich] == TEXT('\n'))
-        {
-            if (rc.top + yMax + tm.tmHeight > prcParent->bottom)
-            {
-                pszText[ich] = 0; // Truncate
-                break;
-            }
-            x = 0;
-            y += tm.tmHeight;
-            if (yMax < y)
-                yMax = y;
-            continue;
-        }
-
-        SIZE siz;
-        GetTextExtentPoint32(hDC, &pszText[ich], 1, &siz);
-
-        // TODO: Tabs
-        x += siz.cx;
-        if (xMax < x)
-        {
-            xMax = x;
-            chOverhang = pszText[ich];
-        }
-    }
-
-    if (ich != cchText && pszOldText) // Truncated
-    {
-        DWORD iStart, iEnd;
-        SendMessage(EM_GETSEL, (WPARAM)&iStart, (LPARAM)&iEnd);
-        SetWindowText(pszOldText);
-        SendMessage(EM_SETSEL, iStart, iEnd);
-        MessageBeep(0xFFFFFFFF);
-        cchText = ich;
-    }
-
-    // Consider italic overhang
-    ABCFLOAT WidthsABC;
-    FLOAT overhang = 0;
-    if (cchText > 0 && chOverhang)
-    {
-        GetCharABCWidthsFloat(hDC, chOverhang, chOverhang, &WidthsABC);
-        overhang = WidthsABC.abcfC;
-        if (overhang > 0)
-            overhang = 0;
-    }
-
-    SIZE ret = { xMax - LONG(overhang) + 1, yMax + tm.tmDescent };
-    return ret;
-}
-#endif
-
 #define X0 rc.left
 #define X1 ((rc.left + rc.right - CXY_GRIP) / 2)
 #define X2 (rc.right - CXY_GRIP)
@@ -197,7 +125,6 @@ void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
     if (hDC)
     {
         SelectObject(hDC, m_hFontZoomed);
-#ifdef NO_GROW_WIDTH
         TEXTMETRIC tm;
         GetTextMetrics(hDC, &tm);
         szText += TEXT("x"); // This is a trick to enable the last newlines
@@ -206,11 +133,6 @@ void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
         DrawText(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
         if (tm.tmDescent > 0)
             rcText.bottom += tm.tmDescent;
-#else
-        SIZE siz = DoCalcRect(hDC, szText, lstrlen(szText), &rcParent, pszOldText);
-        rcText.right = rcText.left + siz.cx;
-        rcText.bottom = rcText.top + siz.cy;
-#endif
         ReleaseDC(hDC);
     }
 
@@ -376,13 +298,8 @@ HWND CTextEditWindow::Create(HWND hwndParent)
 {
     m_hwndParent = hwndParent;
 
-#ifdef NO_GROW_WIDTH
     const DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL |
                         WS_CHILD | WS_THICKFRAME;
-#else
-    const DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL |
-                        ES_AUTOVSCROLL | WS_CHILD | WS_THICKFRAME;
-#endif
     m_hWnd = ::CreateWindowEx(0, WC_EDIT, NULL, style, 0, 0, 0, 0,
                               hwndParent, NULL, hProgInstance, NULL);
     if (m_hWnd)

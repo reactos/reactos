@@ -281,16 +281,6 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCT
     RECT rc;
     SetRect(&rc, x1, y1, x2, y2);
 
-#ifdef NO_GROW_WIDTH
-    const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
-                         DT_EXPANDTABS | DT_WORDBREAK;
-#else
-    const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
-                         DT_EXPANDTABS;
-#endif
-
-    SetTextColor(hdc, fg);
-
     if (style == 0) // Transparent
     {
         SetBkMode(hdc, TRANSPARENT);
@@ -309,6 +299,9 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCT
     IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 
     HGDIOBJ hFontOld = SelectObject(hdc, font);
+    SetTextColor(hdc, fg);
+    const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
+                         DT_EXPANDTABS | DT_WORDBREAK;
     DrawText(hdc, lpchText, -1, &rc, uFormat);
     SelectObject(hdc, hFontOld);
 

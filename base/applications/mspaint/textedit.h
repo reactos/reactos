@@ -8,8 +8,6 @@
 
 #pragma once
 
-#define NO_GROW_WIDTH
-
 #define CX_MINTEXTEDIT 100
 #define CY_MINTEXTEDIT 24
 
@@ -76,9 +74,6 @@ protected:
     LONG m_nAppIsMovingOrSizing;
     RECT m_rc;
 
-#ifndef NO_GROW_WIDTH
-    SIZE DoCalcRect(HDC hDC, LPTSTR pszText, INT cchText, LPRECT prcParent, LPCTSTR pszOldText);
-#endif
     INT DoHitTest(RECT& rc, POINT pt);
     void DrawGrip(HDC hDC, RECT& rc);
     void Reposition();
