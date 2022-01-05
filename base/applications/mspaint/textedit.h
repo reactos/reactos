@@ -72,7 +72,7 @@ protected:
     HWND m_hwndParent;
     HFONT m_hFont;
     HFONT m_hFontZoomed;
-    LONG m_nMovingOrSizing;
+    LONG m_nAppIsMovingOrSizing;
     RECT m_rc;
 
 #ifndef NO_GROW_WIDTH
@@ -80,4 +80,5 @@ protected:
 #endif
     INT DoHitTest(RECT& rc, POINT pt);
     void DrawGrip(HDC hDC, RECT& rc);
+    void Reposition();
 };

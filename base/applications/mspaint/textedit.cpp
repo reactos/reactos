@@ -14,7 +14,7 @@
 
 /* FUNCTIONS ********************************************************/
 
-CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL), m_nMovingOrSizing(0)
+CTextEditWindow::CTextEditWindow() : m_hFont(NULL), m_hFontZoomed(NULL), m_nAppIsMovingOrSizing(0)
 {
     SetRectEmpty(&m_rc);
 }
@@ -220,9 +220,9 @@ void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
     ::GetClientRect(m_hwndParent, &rcParent);
     IntersectRect(&rc, &rcParent, &rcWnd);
 
-    ++m_nMovingOrSizing;
+    ++m_nAppIsMovingOrSizing;
     MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, FALSE);
-    --m_nMovingOrSizing;
+    --m_nAppIsMovingOrSizing;
 
     DefWindowProc(WM_HSCROLL, SB_LEFT, 0);
     DefWindowProc(WM_VSCROLL, SB_TOP, 0);
@@ -344,8 +344,11 @@ LRESULT CTextEditWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 {
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
 
-    if (m_nMovingOrSizing == 0)
+    if (m_nAppIsMovingOrSizing == 0)
+    {
+        Reposition();
         InvalidateEditRect();
+    }
     return ret;
 }
 
@@ -358,8 +361,11 @@ LRESULT CTextEditWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     SendMessage(EM_SETRECTNP, 0, (LPARAM)&rc);
     SendMessage(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
 
-    if (m_nMovingOrSizing == 0)
+    if (m_nAppIsMovingOrSizing == 0)
+    {
+        Reposition();
         InvalidateEditRect();
+    }
 
     return ret;
 }
@@ -539,7 +545,44 @@ void CTextEditWindow::ValidateEditRect(LPCRECT prc OPTIONAL)
     INT x0 = Zoomed(m_rc.left), y0 = Zoomed(m_rc.top);
     INT x1 = Zoomed(m_rc.right), y1 = Zoomed(m_rc.bottom);
 
-    ++m_nMovingOrSizing;
+    ++m_nAppIsMovingOrSizing;
     MoveWindow(x0, y0, x1 - x0, y1 - y0, TRUE);
-    --m_nMovingOrSizing;
+    --m_nAppIsMovingOrSizing;
+}
+
+void CTextEditWindow::Reposition()
+{
+    RECT rc, rcImage;
+    GetWindowRect(&rc);
+
+    ::MapWindowPoints(NULL, imageArea, (LPPOINT)&rc, 2);
+    imageArea.GetClientRect(&rcImage);
+
+    if (rc.bottom > rcImage.bottom)
+    {
+        rc.top = rcImage.bottom - (rc.bottom - rc.top);
+        rc.bottom = rcImage.bottom;
+    }
+
+    if (rc.right > rcImage.right)
+    {
+        rc.left = rcImage.right - (rc.right - rc.left);
+        rc.right = rcImage.right;
+    }
+
+    if (rc.left < 0)
+    {
+        rc.right += -rc.left;
+        rc.left = 0;
+    }
+
+    if (rc.top < 0)
+    {
+        rc.bottom += -rc.top;
+        rc.top = 0;
+    }
+
+    ++m_nAppIsMovingOrSizing;
+    MoveWindow(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
+    --m_nAppIsMovingOrSizing;
 }
