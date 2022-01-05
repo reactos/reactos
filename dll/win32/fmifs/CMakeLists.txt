@@ -1,5 +1,6 @@
 
 spec2def(fmifs.dll fmifs.spec ADD_IMPORTLIB)
+remove_definitions(-DNDEBUG)
 
 list(APPEND SOURCE
     chkdsk.c
