@@ -236,10 +236,8 @@ LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
 
-    ++m_nMoveSizeLock;
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    if (--m_nMoveSizeLock == 0)
-        FixEditPos(szText);
+    FixEditPos(szText);
 
     return ret;
 }
@@ -255,10 +253,8 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     TCHAR szText[512];
     GetWindowText(szText, _countof(szText));
 
-    ++m_nMoveSizeLock;
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
-    if (--m_nMoveSizeLock == 0)
-        FixEditPos(szText);
+    FixEditPos(szText);
     return ret;
 }
 
@@ -542,5 +538,8 @@ void CTextEditWindow::ValidateEditRect(LPCRECT prc OPTIONAL)
         m_rc = *prc;
     INT x0 = Zoomed(m_rc.left), y0 = Zoomed(m_rc.top);
     INT x1 = Zoomed(m_rc.right), y1 = Zoomed(m_rc.bottom);
+
+    ++m_nMoveSizeLock;
     MoveWindow(x0, y0, x1 - x0, y1 - y0, TRUE);
+    --m_nMoveSizeLock;
 }
