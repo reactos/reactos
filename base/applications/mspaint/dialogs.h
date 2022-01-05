@@ -92,8 +92,6 @@ class CFontsDialog : public CDialogImpl<CFontsDialog>
 public:
     enum { IDD = IDD_FONTS };
 
-    CSimpleArray<CString> m_arrFontNames;
-
     CFontsDialog();
     void InitFontNames();
     void InitFontSizes();
