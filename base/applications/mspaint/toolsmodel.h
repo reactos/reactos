@@ -85,10 +85,6 @@ private:
 
     ToolBase *GetOrCreateTool(TOOLTYPE nTool);
 
-    void NotifyToolChanged();
-    void NotifyToolSettingsChanged();
-    void NotifyZoomChanged();
-
 public:
     ToolsModel();
     ~ToolsModel();
@@ -117,4 +113,8 @@ public:
 
     void resetTool();
     void selectAll();
+
+    void NotifyToolChanged();
+    void NotifyToolSettingsChanged();
+    void NotifyZoomChanged();
 };
