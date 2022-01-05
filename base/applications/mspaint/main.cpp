@@ -171,7 +171,10 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     hProgInstance = hThisInstance;
 
     /* initialize common controls library */
-    InitCommonControls();
+    INITCOMMONCONTROLSEX iccx;
+    iccx.dwSize = sizeof(iccx);
+    iccx.dwICC = ICC_STANDARD_CLASSES | ICC_USEREX_CLASSES;
+    InitCommonControlsEx(&iccx);
 
     LoadString(hThisInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
     CPath pathFileName(filepathname);
@@ -338,6 +341,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* Run the message loop. It will run until GetMessage() returns 0 */
     while (GetMessage(&messages, NULL, 0, 0))
     {
+        if (fontsDialog.IsWindow() && IsDialogMessage(fontsDialog, &messages))
+            continue;
+
         TranslateAccelerator(hwnd, haccel, &messages);
 
         /* Translate virtual-key messages into character messages */

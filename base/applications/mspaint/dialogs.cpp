@@ -278,7 +278,7 @@ EnumFontFamProc(ENUMLOGFONT *lpelf, NEWTEXTMETRIC *lpntm, INT FontType, LPARAM l
     return TRUE;
 }
 
-CFontsDialog::CFontsDialog()
+CFontsDialog::CFontsDialog() : m_bInInit(TRUE)
 {
 }
 
@@ -290,22 +290,16 @@ static int CompareFontNames(const void *x, const void *y)
     return lstrcmpi(*a, *b);
 }
 
-void CFontsDialog::InitNames()
+void CFontsDialog::InitFontNames()
 {
-    // get default gui font
-    LOGFONT lf;
-    GetObject(GetStockFont(DEFAULT_GUI_FONT), sizeof(lf), &lf);
-    if (!registrySettings.strFontName.GetLength())
-        registrySettings.strFontName = lf.lfFaceName;
-
-    HDC hDC = CreateCompatibleDC(NULL);
-    if (!hDC)
-        return;
-
     // List the fonts
     m_arrFontNames.RemoveAll();
-    EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc, reinterpret_cast<LPARAM>(this));
-    DeleteDC(hDC);
+    HDC hDC = CreateCompatibleDC(NULL);
+    if (hDC)
+    {
+        EnumFontFamilies(hDC, NULL, (FONTENUMPROC)EnumFontFamProc, reinterpret_cast<LPARAM>(this));
+        DeleteDC(hDC);
+    }
 
     // Sort
     qsort(m_arrFontNames.GetData(), m_arrFontNames.GetSize(), sizeof(CString), CompareFontNames);
@@ -316,18 +310,9 @@ void CFontsDialog::InitNames()
     for (INT i = 0; i < m_arrFontNames.GetSize(); ++i)
     {
         CString& name = m_arrFontNames[i];
-        COMBOBOXEXITEM item = { CBEIF_TEXT, -1 };
-        item.pszText = const_cast<LPWSTR>(&name[0]);
-        if (ComboBox_FindStringExact(hwndNames, -1, item.pszText) == CB_ERR)
-        {
-            SendMessage(hwndNames, CBEM_INSERTITEM, 0, (LPARAM)&item);
-        }
+        ComboBox_AddString(hwndNames, name);
     }
 
-    // set the default font name
-    INT iFont = ComboBox_FindStringExact(hwndNames, -1, registrySettings.strFontName);
-    if (iFont != CB_ERR)
-        ComboBox_SetCurSel(hwndNames, iFont);
     ::SetWindowText(hwndNames, registrySettings.strFontName);
 }
 
@@ -351,8 +336,11 @@ void CFontsDialog::InitFontSizes()
             ComboBox_SetCurSel(hwndSizes, iItem);
     }
 
-    wsprintf(szText, TEXT("%d"), (INT)registrySettings.PointSize);
-    ::SetWindowText(hwndSizes, szText);
+    if (ComboBox_GetCurSel(hwndSizes) == CB_ERR)
+    {
+        wsprintf(szText, TEXT("%d"), (INT)registrySettings.PointSize);
+        ::SetWindowText(hwndSizes, szText);
+    }
 }
 
 void CFontsDialog::InitToolbar()
@@ -389,7 +377,7 @@ void CFontsDialog::InitToolbar()
 
 LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    InitNames();
+    InitFontNames();
     InitFontSizes();
     InitToolbar();
 
@@ -404,6 +392,8 @@ LRESULT CFontsDialog::OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     if (!registrySettings.ShowTextTool)
         ShowWindow(SW_HIDE);
+
+    m_bInInit = FALSE;
     return TRUE;
 }
 
@@ -424,8 +414,8 @@ void CFontsDialog::OnFontName(UINT codeNotify)
             iItem = ComboBox_GetCurSel(hwndNames);
             if (iItem != CB_ERR)
             {
-                COMBOBOXEXITEM item = { CBEIF_TEXT, iItem, szText, _countof(szText) };
-                SendMessage(hwndNames, CBEM_GETITEM, 0, (LPARAM)&item);
+                szText[0] = 0;
+                ComboBox_GetLBText(hwndNames, iItem, szText);
                 if (registrySettings.strFontName != szText)
                 {
                     registrySettings.strFontName = szText;
@@ -480,6 +470,7 @@ LRESULT CFontsDialog::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     UINT codeNotify = HIWORD(wParam);
     HWND hwndToolbar = GetDlgItem(IDD_FONTSTOOLBAR);
     BOOL bChecked = ::SendMessage(hwndToolbar, TB_ISBUTTONCHECKED, id, 0);
+
     switch (id)
     {
         case IDCANCEL:
@@ -551,6 +542,56 @@ LRESULT CFontsDialog::OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM l
     if (wParam != TOOL_TEXT)
     {
         fontsDialog.ShowWindow(SW_HIDE);
+    }
+    return 0;
+}
+
+LRESULT CFontsDialog::OnMeasureItem(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (wParam == IDD_FONTSNAMES)
+    {
+        LPMEASUREITEMSTRUCT pMeasureItem = reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
+        RECT rc;
+        ::GetClientRect(GetDlgItem(IDD_FONTSNAMES), &rc);
+        pMeasureItem->itemWidth = rc.right - rc.left;
+        pMeasureItem->itemHeight = GetSystemMetrics(SM_CYVSCROLL);
+        return TRUE;
+    }
+    return 0;
+}
+
+LRESULT CFontsDialog::OnDrawItem(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (wParam == IDD_FONTSNAMES)
+    {
+        LPDRAWITEMSTRUCT pDrawItem = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
+        if (pDrawItem->itemID == (UINT)-1)
+            return TRUE;
+
+        SetBkMode(pDrawItem->hDC, TRANSPARENT);
+
+        RECT rcItem = pDrawItem->rcItem;
+        if (pDrawItem->itemState & ODS_SELECTED)
+        {
+            FillRect(pDrawItem->hDC, &rcItem, (HBRUSH)(COLOR_HIGHLIGHT + 1));
+            SetTextColor(pDrawItem->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
+        }
+        else
+        {
+            FillRect(pDrawItem->hDC, &rcItem, (HBRUSH)(COLOR_WINDOW + 1));
+            SetTextColor(pDrawItem->hDC, GetSysColor(COLOR_WINDOWTEXT));
+        }
+
+        if (pDrawItem->itemID < (UINT)m_arrFontNames.GetSize())
+        {
+            rcItem.left += 24;
+            DrawText(pDrawItem->hDC, m_arrFontNames[pDrawItem->itemID], -1, &rcItem,
+                     DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        }
+
+        if (pDrawItem->itemState & ODS_FOCUS)
+            ::DrawFocusRect(pDrawItem->hDC, &pDrawItem->rcItem);
+        return TRUE;
     }
     return 0;
 }

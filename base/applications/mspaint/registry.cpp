@@ -25,13 +25,18 @@ static DWORD ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue, BOOL bCheck
     return dwPrev;
 }
 
-static void ReadString(CRegKey &key, LPCTSTR lpName, CString &strFile)
+static void ReadString(CRegKey &key, LPCTSTR lpName, CString &strValue, LPCTSTR lpDefault = TEXT(""))
 {
+    CString strTemp;
     ULONG nChars = MAX_PATH;
-    LPTSTR szFile = strFile.GetBuffer(nChars);
-    if (key.QueryStringValue(lpName, szFile, &nChars) != ERROR_SUCCESS)
-        szFile[0] = '\0';
-    strFile.ReleaseBuffer();
+    LPTSTR psz = strTemp.GetBuffer(nChars);
+    LONG error = key.QueryStringValue(lpName, psz, &nChars);
+    strTemp.ReleaseBuffer();
+
+    if (error == ERROR_SUCCESS)
+        strValue = strTemp;
+    else
+        strValue = lpDefault;
 }
 
 void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::WallpaperStyle style)
@@ -130,7 +135,7 @@ void RegistrySettings::Load()
         ReadDWORD(text, _T("PositionX"),    FontsPositionX, FALSE);
         ReadDWORD(text, _T("PositionY"),    FontsPositionY, FALSE);
         ReadDWORD(text, _T("ShowTextTool"), ShowTextTool,   FALSE);
-        ReadString(text, _T("TypeFaceName"), strFontName);
+        ReadString(text, _T("TypeFaceName"), strFontName, strFontName);
     }
 
     // Fix the bitmap size if too large
