@@ -576,10 +576,14 @@ LRESULT CFontsDialog::OnDrawItem(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
         }
 
         TCHAR szText[LF_FACESIZE];
-        szText[0] = 0;
-        ComboBox_GetLBText(hwndItem, pDrawItem->itemID, szText);
-        rcItem.left += 24;
-        DrawText(pDrawItem->hDC, szText, -1, &rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        if ((UINT)ComboBox_GetLBTextLen(hwndItem, pDrawItem->itemID) < _countof(szText))
+        {
+            szText[0] = 0;
+            ComboBox_GetLBText(hwndItem, pDrawItem->itemID, szText);
+
+            rcItem.left += 24;
+            DrawText(pDrawItem->hDC, szText, -1, &rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        }
 
         if (pDrawItem->itemState & ODS_FOCUS)
             ::DrawFocusRect(pDrawItem->hDC, &pDrawItem->rcItem);
