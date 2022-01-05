@@ -79,17 +79,7 @@ void RegistrySettings::LoadPresets()
     GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
     strFontName = lf.lfFaceName;
 
-    WINDOWPLACEMENT WindowPlacement;
-
-    const WINDOWPLACEMENT DefaultWindowPlacement = {
-        sizeof(WINDOWPLACEMENT),
-        0,
-        SW_SHOWNORMAL,
-        {0, 0},
-        {-1, -1},
-        {100, 100, 700, 550}
-    };
-    WindowPlacement = DefaultWindowPlacement;
+    WindowPlacement.length = 0; // set invalid value
 }
 
 void RegistrySettings::Load()
