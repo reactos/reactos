@@ -407,14 +407,13 @@ struct TextTool : ToolBase
             INT style = (toolsModel.IsBackgroundTransparent() ? 0 : 1);
             Text(m_hdc, rc.left, rc.top, rc.right, rc.bottom, m_fg, m_bg, szText,
                  textEditWindow.GetFont(), style);
-
-            textEditWindow.ShowWindow(SW_HIDE);
         }
 
         if (registrySettings.ShowTextTool)
         {
             if (!fontsDialog.IsWindow())
                 fontsDialog.Create(mainWindow);
+
             fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
         }
 
