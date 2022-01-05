@@ -20,7 +20,7 @@ public:
 
     HWND Create(HWND hwndParent);
     void DoFillBack(HWND hwnd, HDC hDC);
-    void FixEditPos(LPTSTR pszOldText);
+    void FixEditPos(LPCTSTR pszOldText);
     void InvalidateEditRect();
     void UpdateFont();
     BOOL GetEditRect(LPRECT prc) const;

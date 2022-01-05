@@ -397,8 +397,8 @@ struct TextTool : ToolBase
         BOOL bTextBoxShown = textEditWindow.IsWindowVisible();
         if (bTextBoxShown && textEditWindow.GetWindowTextLength() > 0)
         {
-            TCHAR szText[512];
-            textEditWindow.GetWindowText(szText, _countof(szText));
+            CString szText;
+            textEditWindow.GetWindowText(szText);
 
             RECT rc;
             textEditWindow.InvalidateEditRect();

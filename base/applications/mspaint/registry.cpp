@@ -79,7 +79,7 @@ void RegistrySettings::LoadPresets()
     GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
     strFontName = lf.lfFaceName;
 
-    WindowPlacement.length = 0; // set invalid value
+    ZeroMemory(&WindowPlacement, sizeof(WindowPlacement));
 }
 
 void RegistrySettings::Load()

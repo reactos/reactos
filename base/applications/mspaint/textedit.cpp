@@ -159,31 +159,32 @@ void CTextEditWindow::DrawGrip(HDC hDC, RECT& rc)
     DeleteObject(hPen);
 
     RECT rcGrip;
+    HBRUSH hbrHighlight = GetSysColorBrush(COLOR_HIGHLIGHT);
 
     SetRect(&rcGrip, RECT0);
-    FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
+    FillRect(hDC, &rcGrip, hbrHighlight);
     SetRect(&rcGrip, RECT1);
-    FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
+    FillRect(hDC, &rcGrip, hbrHighlight);
     SetRect(&rcGrip, RECT2);
-    FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
+    FillRect(hDC, &rcGrip, hbrHighlight);
 
     SetRect(&rcGrip, RECT3);
-    FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
+    FillRect(hDC, &rcGrip, hbrHighlight);
     SetRect(&rcGrip, RECT4);
-    FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
+    FillRect(hDC, &rcGrip, hbrHighlight);
 
     SetRect(&rcGrip, RECT5);
-    FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
+    FillRect(hDC, &rcGrip, hbrHighlight);
     SetRect(&rcGrip, RECT6);
-    FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
+    FillRect(hDC, &rcGrip, hbrHighlight);
     SetRect(&rcGrip, RECT7);
-    FillRect(hDC, &rcGrip, GetSysColorBrush(COLOR_HIGHLIGHT));
+    FillRect(hDC, &rcGrip, hbrHighlight);
 }
 
-void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
+void CTextEditWindow::FixEditPos(LPCTSTR pszOldText)
 {
-    TCHAR szText[512];
-    GetWindowText(szText, _countof(szText));
+    CString szText;
+    GetWindowText(szText);
 
     RECT rcParent;
     ::GetWindowRect(m_hwndParent, &rcParent);
@@ -199,7 +200,7 @@ void CTextEditWindow::FixEditPos(LPTSTR pszOldText)
 #ifdef NO_GROW_WIDTH
         TEXTMETRIC tm;
         GetTextMetrics(hDC, &tm);
-        lstrcat(szText, TEXT("x")); // This is a trick to enable the last newlines
+        szText += TEXT("x"); // This is a trick to enable the last newlines
         const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
                              DT_EXPANDTABS | DT_WORDBREAK;
         DrawText(hDC, szText, -1, &rcText, uFormat | DT_CALCRECT);
@@ -235,8 +236,8 @@ LRESULT CTextEditWindow::OnChar(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     if (wParam == VK_TAB)
         return 0; // FIXME: Tabs
 
-    TCHAR szText[512];
-    GetWindowText(szText, _countof(szText));
+    CString szText;
+    GetWindowText(szText);
 
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
     FixEditPos(szText);
@@ -252,8 +253,8 @@ LRESULT CTextEditWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         return 0;
     }
 
-    TCHAR szText[512];
-    GetWindowText(szText, _countof(szText));
+    CString szText;
+    GetWindowText(szText);
 
     LRESULT ret = DefWindowProc(nMsg, wParam, lParam);
     FixEditPos(szText);
