@@ -229,7 +229,7 @@ RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 {
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
-    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_DOT, 1, 0x00000000));
+    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_DOT, 1, GetSysColor(COLOR_HIGHLIGHT)));
     UINT oldRop = GetROP2(hdc);
 
     SetROP2(hdc, R2_NOTXORPEN);
