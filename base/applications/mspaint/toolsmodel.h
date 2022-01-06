@@ -61,6 +61,10 @@ struct ToolBase
 
     virtual void OnCancelDraw();
 
+    virtual void OnFinishDraw()
+    {
+    }
+
     void beginEvent();
     void endEvent();
     void reset();
@@ -110,6 +114,7 @@ public:
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y);
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y);
     void OnCancelDraw();
+    void OnFinishDraw();
 
     void resetTool();
     void selectAll();

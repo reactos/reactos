@@ -421,6 +421,13 @@ LRESULT CMainWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 
 LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    // Disable commands while dragging mouse
+    if (imageArea.drawing && ::GetCapture())
+    {
+        OutputDebugStringA("CMainWindow::OnCommand: imageArea.drawing\n");
+        return 0;
+    }
+
     switch (LOWORD(wParam))
     {
         case IDM_HELPINFO:
@@ -522,12 +529,21 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITUNDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
                 break;
+            if (ToolBase::pointSP != 0) // drawing something?
+            {
+                imageArea.cancelDrawing();
+                break;
+            }
             imageModel.Undo();
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
                 break;
+            if (ToolBase::pointSP != 0) // drawing something?
+            {
+                imageArea.finishDrawing();
+            }
             imageModel.Redo();
             imageArea.Invalidate(FALSE);
             break;

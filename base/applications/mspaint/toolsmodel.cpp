@@ -85,6 +85,8 @@ TOOLTYPE ToolsModel::GetOldActiveTool() const
 
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
+    OnFinishDraw();
+
     switch (m_activeTool)
     {
         case TOOL_FREESEL:
@@ -92,15 +94,7 @@ void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
         case TOOL_RUBBER:
         case TOOL_COLOR:
         case TOOL_ZOOM:
-            break;
-
         case TOOL_TEXT:
-            if (nActiveTool != TOOL_TEXT)
-            {
-                // Finish the text
-                OnButtonDown(TRUE, -1, -1, TRUE);
-                OnButtonUp(TRUE, -1, -1);
-            }
             break;
 
         default:
@@ -211,6 +205,13 @@ void ToolsModel::OnCancelDraw()
 {
     m_pToolObject->beginEvent();
     m_pToolObject->OnCancelDraw();
+    m_pToolObject->endEvent();
+}
+
+void ToolsModel::OnFinishDraw()
+{
+    m_pToolObject->beginEvent();
+    m_pToolObject->OnFinishDraw();
     m_pToolObject->endEvent();
 }
 

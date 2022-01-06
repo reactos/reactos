@@ -459,6 +459,12 @@ struct TextTool : ToolBase
         textEditWindow.ShowWindow(SW_HIDE);
         ToolBase::OnCancelDraw();
     }
+
+    void OnFinishDraw()
+    {
+        OnButtonDown(TRUE, -1, -1, TRUE);
+        OnButtonUp(TRUE, -1, -1);
+    }
 };
 
 // TOOL_LINE
@@ -481,7 +487,9 @@ struct LineTool : GenericDrawTool
 // TOOL_BEZIER
 struct BezierTool : ToolBase
 {
-    BezierTool() : ToolBase(TOOL_BEZIER)
+    BOOL m_bLeftButton;
+
+    BezierTool() : ToolBase(TOOL_BEZIER), m_bLeftButton(TRUE)
     {
     }
 
@@ -501,6 +509,7 @@ struct BezierTool : ToolBase
                 Bezier(m_hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], rgb, toolsModel.GetLineWidth());
                 break;
         }
+        m_bLeftButton = bLeftButton;
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
@@ -539,6 +548,17 @@ struct BezierTool : ToolBase
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
+
+    void OnFinishDraw()
+    {
+        if (pointSP)
+        {
+            imageModel.ResetToPrevious();
+            --pointSP;
+            draw(m_bLeftButton);
+            pointSP = 0;
+        }
+    }
 };
 
 // TOOL_RECT
@@ -563,7 +583,9 @@ struct RectTool : GenericDrawTool
 // TOOL_SHAPE
 struct ShapeTool : ToolBase
 {
-    ShapeTool() : ToolBase(TOOL_SHAPE)
+    BOOL m_bLeftButton;
+
+    ShapeTool() : ToolBase(TOOL_SHAPE), m_bLeftButton(TRUE)
     {
     }
 
@@ -576,6 +598,7 @@ struct ShapeTool : ToolBase
             else
                 Poly(m_hdc, pointStack, pointSP + 1, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), bClosed, FALSE);
         }
+        m_bLeftButton = bLeftButton;
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
@@ -634,6 +657,17 @@ struct ShapeTool : ToolBase
         imageModel.ResetToPrevious();
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
+    }
+
+    void OnFinishDraw()
+    {
+        if (pointSP)
+        {
+            imageModel.ResetToPrevious();
+            --pointSP;
+            draw(m_bLeftButton, -1, -1, TRUE);
+            pointSP = 0;
+        }
     }
 };
 

@@ -238,6 +238,13 @@ void CImgAreaWindow::cancelDrawing()
     Invalidate(FALSE);
 }
 
+void CImgAreaWindow::finishDrawing()
+{
+    toolsModel.OnFinishDraw();
+    drawing = FALSE;
+    Invalidate(FALSE);
+}
+
 LRESULT CImgAreaWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (drawing)

@@ -41,6 +41,8 @@ public:
     END_MSG_MAP()
 
     BOOL drawing;
+    void cancelDrawing();
+    void finishDrawing();
 
 private:
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -63,5 +65,4 @@ private:
     LRESULT OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     void drawZoomFrame(int mouseX, int mouseY);
-    void cancelDrawing();
 };
