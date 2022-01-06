@@ -22,7 +22,7 @@
 #include <assert.h>
 
 #include <windows.h>
-#include <winternl.h>
+#include <wine/winternl.h>
 #include <winreg.h>
 #include "wine/test.h"
 

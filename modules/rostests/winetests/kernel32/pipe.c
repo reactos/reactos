@@ -25,8 +25,8 @@
 #define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
-#include "winternl.h"
-#include "winioctl.h"
+#include "wine/winternl.h"
+#include "wine/winioctl.h"
 #include "wine/test.h"
 
 #define PIPENAME "\\\\.\\PiPe\\tests_pipe.c"

@@ -22,7 +22,7 @@
 #include <winbase.h>
 #include <windef.h>
 #include <winnt.h>
-#include <winternl.h>
+#include <wine/winternl.h>
 #include <winnls.h>
 #include <stdio.h>
 

@@ -20,7 +20,7 @@
 
 #include "wine/test.h"
 #include "winbase.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 
 static BOOL (WINAPI * pGetProductInfo)(DWORD, DWORD, DWORD, DWORD, DWORD *);
 static NTSTATUS (WINAPI * pRtlGetVersion)(RTL_OSVERSIONINFOEXW *);

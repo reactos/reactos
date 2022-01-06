@@ -22,7 +22,7 @@
 #include "wine/test.h"
 #include "winbase.h"
 #include "winnls.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 
 static BOOL (WINAPI *pTzSpecificLocalTimeToSystemTime)(LPTIME_ZONE_INFORMATION, LPSYSTEMTIME, LPSYSTEMTIME);
 static BOOL (WINAPI *pSystemTimeToTzSpecificLocalTime)(LPTIME_ZONE_INFORMATION, LPSYSTEMTIME, LPSYSTEMTIME);

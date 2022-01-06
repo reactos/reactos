@@ -34,7 +34,7 @@
 #include "wine/test.h"
 #include <windef.h>
 #include <winbase.h>
-#include <winternl.h>
+#include <wine/winternl.h>
 
 static DWORD CALLBACK NotificationThread(LPVOID arg)
 {

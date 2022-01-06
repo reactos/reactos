@@ -32,7 +32,7 @@
 #include <winnt.h>
 #include <winerror.h>
 #include <winnls.h>
-#include <winternl.h>
+#include <wine/winternl.h>
 #include "wine/test.h"
 
 /* THREAD_ALL_ACCESS in Vista+ PSDKs is incompatible with older Windows versions */

@@ -32,7 +32,7 @@
 #include "winuser.h"
 #include "wincon.h"
 #include "winnls.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "tlhelp32.h"
 
 #include "wine/test.h"
