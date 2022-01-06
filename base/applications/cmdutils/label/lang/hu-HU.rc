@@ -4,18 +4,16 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-//    STRING_LABEL_HELP "A kötet címkéjét megjeleníti, vagy megváltoztatja.\n\n\
-//LABEL [meghajtó:] [új_címke]\n"
-    STRING_LABEL_HELP "Creates, changes or deletes the volume label of a disk.\n\n\
-LABEL [drive:][label]\n\n\
-  drive:          Specifies the drive letter of a drive.\n\
-  label           Specifies the label of the drive."
-    STRING_LABEL_TEXT1 "A (%c) meghajtóban lévõ kötet címkéje %s\n"
-    STRING_LABEL_TEXT2 "A (%c) megjajtóban lévõ kötetnek nincs címkéje.\n"
-    STRING_LABEL_TEXT3 "A kötet sorozatszáma %04X-%04X\n"
-    STRING_LABEL_TEXT4 "Új kötetcímke (32 betû, ENTER ha üres)? "
-    STRING_LABEL_PROMPT "Delete current volume label (Y/N)? "
-    STRING_LABEL_OPTIONS "YN"
+    STRING_LABEL_HELP "Létrehozza, megváltoztatja vagy törli a kötet címkéjét.\n\n\
+LABEL [meghajtó:][címke]\n\n\
+  meghajtó:       Megadja a meghajtó betűjelét.\n\
+  címke           Megadja a meghajtó címkéjét."
+    STRING_LABEL_TEXT1 "A(z) %c: meghajtóban lévő kötet címkéje %s\n"
+    STRING_LABEL_TEXT2 "A(z) %c: meghajtóban lévő kötetnek nincs címkéje.\n"
+    STRING_LABEL_TEXT3 "A kötet sorozatszáma: %04X-%04X\n"
+    STRING_LABEL_TEXT4 "Új kötetcímke (32 betű, ENTER ha üres)? "
+    STRING_LABEL_PROMPT "Törli a jelenlegi kötetcímkét? (I/N)? "
+    STRING_LABEL_OPTIONS "IN"
     STRING_ERROR_INVALID_DRIVE "Érvénytelen meghajtó\n"
-    STRING_ERROR_INVALID_LABEL "Invalid volume label\n"
+    STRING_ERROR_INVALID_LABEL "Érvénytelen kötetcímke\n"
 END

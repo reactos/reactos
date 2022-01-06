@@ -347,3 +347,8 @@ void SelectionModel::NotifyRefreshNeeded()
 {
     selectionWindow.SendMessage(WM_SELECTIONMODELREFRESHNEEDED);
 }
+
+void SelectionModel::GetRect(LPRECT prc) const
+{
+    *prc = m_rcDest;
+}

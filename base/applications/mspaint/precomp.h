@@ -50,6 +50,7 @@
 #include "toolsettings.h"
 #include "toolsmodel.h"
 #include "winproc.h"
+#include "dialogs.h"
 #include "common.h"
 
 #endif /* _MSPAINT_H */

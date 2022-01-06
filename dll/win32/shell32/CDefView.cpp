@@ -36,7 +36,7 @@ TODO:
 #include "precomp.h"
 
 #include <atlwin.h>
-#include <rosctrls.h>
+#include <ui/rosctrls.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

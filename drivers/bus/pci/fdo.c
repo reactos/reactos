@@ -14,46 +14,6 @@
 
 /*** PRIVATE *****************************************************************/
 
-static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
-
-static NTSTATUS NTAPI
-ForwardIrpAndWaitCompletion(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
-{
-    UNREFERENCED_PARAMETER(DeviceObject);
-    if (Irp->PendingReturned)
-        KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS NTAPI
-ForwardIrpAndWait(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
-{
-    KEVENT Event;
-    NTSTATUS Status;
-    PDEVICE_OBJECT LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Ldo;
-    ASSERT(LowerDevice);
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-
-    IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(LowerDevice, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-        if (NT_SUCCESS(Status))
-            Status = Irp->IoStatus.Status;
-    }
-
-    return Status;
-}
-
 static NTSTATUS
 FdoLocateChildDevice(
     PPCI_DEVICE *Device,
@@ -524,9 +484,16 @@ FdoPnpControl(
 #endif
         case IRP_MN_START_DEVICE:
             DPRINT("IRP_MN_START_DEVICE received\n");
-            Status = ForwardIrpAndWait(DeviceObject, Irp);
-            if (NT_SUCCESS(Status))
-                Status = FdoStartDevice(DeviceObject, Irp);
+            Status = STATUS_UNSUCCESSFUL;
+
+            if (IoForwardIrpSynchronously(DeviceExtension->Ldo, Irp))
+            {
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                {
+                    Status = FdoStartDevice(DeviceObject, Irp);
+                }
+            }
 
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);

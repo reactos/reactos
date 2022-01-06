@@ -43,8 +43,8 @@
 #include <shlguid_undoc.h>
 #include <undocshell.h>
 
-#include <rosctrls.h>
-#include <rosdlgs.h>
+#include <ui/rosctrls.h>
+#include <ui/rosdlgs.h>
 #include <shellutils.h>
 
 #include "tmschema.h"

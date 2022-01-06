@@ -156,6 +156,10 @@ HDA_PdoPnp(
                 Status = STATUS_INSUFFICIENT_RESOURCES;
             }
         }
+        else
+        {
+            Status = Irp->IoStatus.Status;
+        }
         break;
     case IRP_MN_QUERY_CAPABILITIES:
         /* query capabilities */

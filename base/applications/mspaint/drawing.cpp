@@ -229,7 +229,7 @@ RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 {
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
-    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_DOT, 1, 0x00000000));
+    HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_DOT, 1, GetSysColor(COLOR_HIGHLIGHT)));
     UINT oldRop = GetROP2(hdc);
 
     SetROP2(hdc, R2_NOTXORPEN);
@@ -276,20 +276,34 @@ SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, DWORD system_selecti
 void
 Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style)
 {
-    HFONT oldFont;
-    RECT rect = {x1, y1, x2, y2};
-    COLORREF oldColor;
-    COLORREF oldBkColor;
-    int oldBkMode;
-    oldFont = (HFONT) SelectObject(hdc, font);
-    oldColor = SetTextColor(hdc, fg);
-    oldBkColor = SetBkColor(hdc, bg);
-    oldBkMode = SetBkMode(hdc, TRANSPARENT);
-    if (style == 0)
-        Rect(hdc, x1, y1, x2, y2, bg, bg, 1, 2);
-    DrawText(hdc, lpchText, -1, &rect, DT_EDITCONTROL);
-    SelectObject(hdc, oldFont);
-    SetTextColor(hdc, oldColor);
-    SetBkColor(hdc, oldBkColor);
-    SetBkMode(hdc, oldBkMode);
+    INT iSaveDC = SaveDC(hdc); // We will modify the clipping region. Save now.
+
+    RECT rc;
+    SetRect(&rc, x1, y1, x2, y2);
+
+    if (style == 0) // Transparent
+    {
+        SetBkMode(hdc, TRANSPARENT);
+        GetBkColor(hdc);
+    }
+    else // Opaque
+    {
+        SetBkMode(hdc, OPAQUE);
+        SetBkColor(hdc, bg);
+
+        HBRUSH hbr = CreateSolidBrush(bg);
+        FillRect(hdc, &rc, hbr); // Fill the background
+        DeleteObject(hbr);
+    }
+
+    IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
+
+    HGDIOBJ hFontOld = SelectObject(hdc, font);
+    SetTextColor(hdc, fg);
+    const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
+                         DT_EXPANDTABS | DT_WORDBREAK;
+    DrawText(hdc, lpchText, -1, &rc, uFormat);
+    SelectObject(hdc, hFontOld);
+
+    RestoreDC(hdc, iSaveDC); // Restore
 }

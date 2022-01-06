@@ -163,12 +163,21 @@ ClassDeviceControl(
 			while (Entry != Head)
 			{
 				PPORT_DEVICE_EXTENSION DevExt = CONTAINING_RECORD(Entry, PORT_DEVICE_EXTENSION, ListEntry);
-				NTSTATUS IntermediateStatus;
 
 				IoGetCurrentIrpStackLocation(Irp)->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
-				IntermediateStatus = ForwardIrpAndWait(DevExt->DeviceObject, Irp);
-				if (!NT_SUCCESS(IntermediateStatus))
-					Status = IntermediateStatus;
+
+				if (IoForwardIrpSynchronously(DevExt->LowerDevice, Irp))
+				{
+					if (!NT_SUCCESS(Irp->IoStatus.Status))
+					{
+						Status = Irp->IoStatus.Status;
+					}
+				}
+				else
+				{
+					Status = STATUS_UNSUCCESSFUL;
+				}
+				
 				Entry = Entry->Flink;
 			}
 			break;
@@ -836,7 +845,15 @@ ClassPnp(
 	switch (IrpSp->MinorFunction)
 	{
 		case IRP_MN_START_DEVICE:
-		    Status = ForwardIrpAndWait(DeviceObject, Irp);
+			if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
+			{
+				Status = Irp->IoStatus.Status;
+			}
+			else
+			{
+				Status = STATUS_UNSUCCESSFUL;
+			}
+
 			if (NT_SUCCESS(Status))
 			{
 				InitializeObjectAttributes(&ObjectAttributes,

@@ -228,6 +228,27 @@ void reverse_bgr8(UINT bytesperpixel, LPBYTE bits, UINT width, UINT height, INT 
     }
 }
 
+void convert_rgba_to_bgra(UINT bytesperpixel, LPBYTE bits, UINT width, UINT height, INT stride)
+{
+    UINT x, y;
+    BYTE *pixel, temp;
+
+    for (y=0; y<height; y++)
+    {
+        pixel = bits + stride * y;
+
+        for (x=0; x<width; x++)
+        {
+            temp = pixel[3];
+            pixel[3] = pixel[0];
+            pixel[0] = pixel[1];
+            pixel[1] = pixel[2];
+            pixel[2] = temp;
+            pixel += bytesperpixel;
+        }
+    }
+}
+
 HRESULT get_pixelformat_bpp(const GUID *pixelformat, UINT *bpp)
 {
     HRESULT hr;

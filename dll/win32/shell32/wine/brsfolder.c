@@ -40,7 +40,7 @@
 #include "shresdef.h"
 #ifdef __REACTOS__
     #include <shlwapi.h>
-    #include "layout.h" /* Resizable window */
+    #include "ui/layout.h" /* Resizable window */
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);

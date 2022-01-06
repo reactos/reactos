@@ -15,7 +15,7 @@
 #include <atlwin.h>
 #include <wininet.h>
 #include <shellutils.h>
-#include <rosctrls.h>
+#include <ui/rosctrls.h>
 #include <gdiplus.h>
 #include <math.h>
 

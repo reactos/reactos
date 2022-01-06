@@ -171,7 +171,10 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     hProgInstance = hThisInstance;
 
     /* initialize common controls library */
-    InitCommonControls();
+    INITCOMMONCONTROLSEX iccx;
+    iccx.dwSize = sizeof(iccx);
+    iccx.dwICC = ICC_STANDARD_CLASSES | ICC_USEREX_CLASSES;
+    InitCommonControlsEx(&iccx);
 
     LoadString(hThisInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
     CPath pathFileName(filepathname);
@@ -256,6 +259,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         DoLoadImageFile(mainWindow, __targv[1], TRUE);
     }
 
+    imageModel.ClearHistory();
+
     /* initializing the CHOOSECOLOR structure for use with ChooseColor */
     ZeroMemory(&choosecolor, sizeof(choosecolor));
     choosecolor.lStructSize    = sizeof(CHOOSECOLOR);
@@ -327,10 +332,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* by moving the window, the things in WM_SIZE are done */
     mainWindow.SetWindowPlacement(&(registrySettings.WindowPlacement));
 
-    /* creating the text editor window for the text tool */
-    RECT textEditWindowPos = {300, 0, 300 + 300, 0 + 200};
-    textEditWindow.Create(hwnd, textEditWindowPos, NULL, WS_OVERLAPPEDWINDOW);
-
     /* Make the window visible on the screen */
     ShowWindow (hwnd, nFunsterStil);
 
@@ -340,6 +341,9 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* Run the message loop. It will run until GetMessage() returns 0 */
     while (GetMessage(&messages, NULL, 0, 0))
     {
+        if (fontsDialog.IsWindow() && IsDialogMessage(fontsDialog, &messages))
+            continue;
+
         TranslateAccelerator(hwnd, haccel, &messages);
 
         /* Translate virtual-key messages into character messages */
