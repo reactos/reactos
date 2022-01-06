@@ -360,7 +360,7 @@ AddKbLayoutsToRegistry(
     }
 
     if (uIndex > 1)
-        AddHotkeySettings(L"2", L"2", L"1");
+        AddHotkeySettings(L"1", L"1", L"2");
     else
         AddHotkeySettings(L"3", L"3", L"3");
 
