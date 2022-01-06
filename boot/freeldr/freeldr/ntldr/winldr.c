@@ -382,7 +382,6 @@ WinLdrLoadModule(PCSTR ModuleName,
     //CHAR ProgressString[256];
 
     /* Inform user we are loading files */
-    //UiDrawBackdrop();
     //RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", FileName);
     //UiDrawProgressBarCenter(1, 100, ProgressString);
 
@@ -467,7 +466,6 @@ LoadModule(
     CHAR ProgressString[256];
     PVOID BaseAddress = NULL;
 
-    UiDrawBackdrop();
     RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", File);
     UiDrawProgressBarCenter(Percentage, 100, ProgressString);
 
@@ -918,7 +916,6 @@ LoadAndBootWindows(
     AllocateAndInitLPB(OperatingSystemVersion, &LoaderBlock);
 
     /* Load the system hive */
-    UiDrawBackdrop();
     UiDrawProgressBarCenter(15, 100, "Loading system hive...");
     Success = WinLdrInitSystemHive(LoaderBlock, BootPath, FALSE);
     TRACE("SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
@@ -977,7 +974,6 @@ LoadAndBootWindowsCommon(
     SystemRoot = strstr(BootPath, "\\");
 
     /* Detect hardware */
-    UiDrawBackdrop();
     UiDrawProgressBarCenter(20, 100, "Detecting hardware...");
     LoaderBlock->ConfigurationRoot = MachHwDetect();
 
@@ -994,7 +990,6 @@ LoadAndBootWindowsCommon(
     }
 
     /* Load boot drivers */
-    UiDrawBackdrop();
     UiDrawProgressBarCenter(100, 100, "Loading boot drivers...");
     Success = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
     TRACE("Boot drivers loading %s\n", Success ? "successful" : "failed");

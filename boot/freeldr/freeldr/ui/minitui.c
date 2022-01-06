@@ -80,6 +80,15 @@ MiniTuiDrawProgressBar(
     /* First make sure the progress bar text fits */
     UiTruncateStringEllipsis(ProgressText, ProgressBarWidth);
 
+    /* Clear the text area */
+    TuiFillArea(Left, Top, Right,
+#ifdef NTLDR_PROGRESSBAR
+                Bottom - 1,
+#else // BTMGR_PROGRESSBAR
+                Bottom - 2, // One empty line between text and bar.
+#endif
+                ' ', ATTR(UiTextColor, UiMenuBgColor));
+
     /* Draw the "Loading..." text */
     TuiDrawCenteredText(Left, Top, Right,
 #ifdef NTLDR_PROGRESSBAR
@@ -89,13 +98,15 @@ MiniTuiDrawProgressBar(
 #endif
                         ProgressText, ATTR(UiTextColor, UiMenuBgColor));
 
-    /* Draw the percent complete */
+    /* Draw the percent complete -- Use the fill character */
     for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
     {
-        /* Use the fill character */
         TuiDrawText(Left + i, Bottom,
                     "\xDB", ATTR(UiTextColor, UiMenuBgColor));
     }
+    /* Fill the remaining with blanks */
+    TuiFillArea(Left + i, Bottom, Right, Bottom,
+                ' ', ATTR(UiTextColor, UiMenuBgColor));
 
 #ifndef _M_ARM
     TuiUpdateDateTime();

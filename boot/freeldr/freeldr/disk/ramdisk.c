@@ -117,7 +117,6 @@ RamDiskLoadVirtualFile(
     LARGE_INTEGER Position;
 
     /* Display progress */
-    UiDrawBackdrop();
     UiDrawProgressBarCenter(1, 100, MsgBuffer);
 
     /* Try opening the Ramdisk file */

@@ -744,20 +744,15 @@ TuiDrawProgressBar(
     TuiDrawCenteredText(Left, Top, Right, Bottom - 1,
                         ProgressText, ATTR(UiTextColor, UiMenuBgColor));
 
-    /* Draw the percent complete */
+    /* Draw the percent complete -- Use the fill character */
     for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
     {
-        /* Use the fill character */
         TuiDrawText(Left + i, Bottom,
                     "\xDB", ATTR(UiTextColor, UiMenuBgColor));
     }
-
-    /* Draw the shadow */
-    for (; i < ProgressBarWidth; i++)
-    {
-        TuiDrawText(Left + i, Bottom,
-                    "\xB2", ATTR(UiTextColor, UiMenuBgColor));
-    }
+    /* Fill the remaining with shadow blanks */
+    TuiFillArea(Left + i, Bottom, Right, Bottom,
+                '\xB2', ATTR(UiTextColor, UiMenuBgColor));
 
 #ifndef _M_ARM
     TuiUpdateDateTime();
