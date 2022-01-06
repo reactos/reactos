@@ -107,7 +107,7 @@ typedef unsigned long HANDLE_PTR;
 #define MAXHALF_PTR  ((HALF_PTR)(MAXUHALF_PTR >> 1))
 #define MINHALF_PTR  (~MAXHALF_PTR)
 
-#if _WIN32_WINNT >= 0x0600
+#if _WIN32_WINNT >= _WIN32_WINNT_LONGHORN
 
 #define MAXUINT      ((UINT)~((UINT)0))
 #define MAXULONGLONG ((ULONGLONG)~((ULONGLONG)0))
