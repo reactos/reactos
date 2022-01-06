@@ -17,6 +17,10 @@ public:
     {
     }
 
+    BOOL drawing;
+    void cancelDrawing();
+    void finishDrawing();
+
     DECLARE_WND_CLASS_EX(_T("ImgAreaWindow"), CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CImgAreaWindow)
@@ -39,10 +43,6 @@ public:
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
         MESSAGE_HANDLER(WM_CTLCOLOREDIT, OnCtlColorEdit)
     END_MSG_MAP()
-
-    BOOL drawing;
-    void cancelDrawing();
-    void finishDrawing();
 
 private:
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
