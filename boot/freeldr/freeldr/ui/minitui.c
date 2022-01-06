@@ -9,6 +9,10 @@
 
 #include <freeldr.h>
 
+/* NTLDR or Vista+ BOOTMGR progress-bar style */
+// #define NTLDR_PROGRESSBAR
+// #define BTMGR_PROGRESSBAR /* Default style */
+
 #ifndef _M_ARM
 
 VOID MiniTuiDrawBackdrop(VOID)
@@ -36,12 +40,19 @@ MiniTuiDrawProgressBarCenter(
     ULONG Left, Top, Right, Bottom, Width, Height;
 
     /* Build the coordinates and sizes */
+#ifdef NTLDR_PROGRESSBAR
     Height = 2;
-    Width = UiScreenWidth;
+    Width  = UiScreenWidth;
     Left = 0;
-    Right = (Left + Width) - 1;
-    Top = UiScreenHeight - Height - 4;
-    Bottom = Top + Height + 1;
+    Top  = UiScreenHeight - Height - 2;
+#else // BTMGR_PROGRESSBAR
+    Height = 3;
+    Width  = UiScreenWidth - 4;
+    Left = 2;
+    Top  = UiScreenHeight - Height - 3;
+#endif
+    Right  = Left + Width - 1;
+    Bottom = Top + Height - 1;
 
     /* Draw the progress bar */
     MiniTuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
@@ -60,23 +71,30 @@ MiniTuiDrawProgressBar(
     ULONG ProgressBarWidth, i;
 
     /* Calculate the width of the bar proper */
-    ProgressBarWidth = (Right - Left) - 3;
-
-    /* First make sure the progress bar text fits */
-    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
+    ProgressBarWidth = Right - Left + 1;
 
     /* Clip the position */
     if (Position > Range)
         Position = Range;
 
+    /* First make sure the progress bar text fits */
+    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth);
+
     /* Draw the "Loading..." text */
-    TuiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, ProgressText, ATTR(UiTextColor, UiMenuBgColor));
+    TuiDrawCenteredText(Left, Top, Right,
+#ifdef NTLDR_PROGRESSBAR
+                        Bottom - 1,
+#else // BTMGR_PROGRESSBAR
+                        Bottom - 2, // One empty line between text and bar.
+#endif
+                        ProgressText, ATTR(UiTextColor, UiMenuBgColor));
 
     /* Draw the percent complete */
     for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
     {
         /* Use the fill character */
-        TuiDrawText(Left + 2 + i, Top + 2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
+        TuiDrawText(Left + i, Bottom,
+                    "\xDB", ATTR(UiTextColor, UiMenuBgColor));
     }
 
 #ifndef _M_ARM

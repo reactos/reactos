@@ -689,16 +689,21 @@ TuiDrawProgressBarCenter(
     _In_ ULONG Range,
     _Inout_z_ PSTR ProgressText)
 {
-    ULONG Left, Top, Right, Bottom;
-    ULONG Width = 50; // Allow for 50 "bars"
-    ULONG Height = 2;
+    ULONG Left, Top, Right, Bottom, Width, Height;
 
     /* Build the coordinates and sizes */
-    Left = (UiScreenWidth - Width - 4) / 2;
-    Right = Left + Width + 3;
-    Top = (UiScreenHeight - Height - 2) / 2;
-    Top += 2;
-    Bottom = Top + Height + 1;
+    Height = 2;
+    Width  = 50; // Allow for 50 "bars"
+    Left = (UiScreenWidth - Width) / 2;
+    Top  = (UiScreenHeight - Height + 4) / 2;
+    Right  = Left + Width - 1;
+    Bottom = Top + Height - 1;
+
+    /* Inflate to include the box margins */
+    Left -= 2;
+    Right += 2;
+    Top -= 1;
+    Bottom += 1;
 
     /* Draw the progress bar */
     TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
@@ -716,33 +721,42 @@ TuiDrawProgressBar(
 {
     ULONG ProgressBarWidth, i;
 
-    /* Calculate the width of the bar proper */
-    ProgressBarWidth = (Right - Left) - 3;
+    /* Draw the box */
+    TuiDrawBox(Left, Top, Right, Bottom, VERT, HORZ, TRUE, TRUE, ATTR(UiMenuFgColor, UiMenuBgColor));
 
-    /* First make sure the progress bar text fits */
-    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
+    /* Exclude the box margins */
+    Left += 2;
+    Right -= 2;
+    Top += 1;
+    Bottom -= 1;
+
+    /* Calculate the width of the bar proper */
+    ProgressBarWidth = Right - Left + 1;
 
     /* Clip the position */
     if (Position > Range)
         Position = Range;
 
-    /* Draw the box */
-    TuiDrawBox(Left, Top, Right, Bottom, VERT, HORZ, TRUE, TRUE, ATTR(UiMenuFgColor, UiMenuBgColor));
+    /* First make sure the progress bar text fits */
+    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth);
 
     /* Draw the "Loading..." text */
-    TuiDrawCenteredText(Left + 2, Top + 2, Right - 2, Top + 2, ProgressText, ATTR(UiTextColor, UiMenuBgColor));
+    TuiDrawCenteredText(Left, Top, Right, Bottom - 1,
+                        ProgressText, ATTR(UiTextColor, UiMenuBgColor));
 
     /* Draw the percent complete */
     for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
     {
         /* Use the fill character */
-        TuiDrawText(Left + 2 + i, Top + 2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
+        TuiDrawText(Left + i, Bottom,
+                    "\xDB", ATTR(UiTextColor, UiMenuBgColor));
     }
 
     /* Draw the shadow */
     for (; i < ProgressBarWidth; i++)
     {
-        TuiDrawText(Left + 2 + i, Top + 2, "\xB2", ATTR(UiTextColor, UiMenuBgColor));
+        TuiDrawText(Left + i, Bottom,
+                    "\xB2", ATTR(UiTextColor, UiMenuBgColor));
     }
 
 #ifndef _M_ARM
