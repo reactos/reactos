@@ -88,6 +88,10 @@ TuiDrawText2(
 #endif
     ULONG i, j;
 
+    /* Don't display anything if we are out of the screen */
+    if ((X >= UiScreenWidth) || (Y >= UiScreenHeight))
+        return;
+
     /* Draw the text, not exceeding the width */
     for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
     {
@@ -148,9 +152,13 @@ TuiDrawCenteredText(
     /* Base the box height on the number of lines */
     BoxHeight = LineBreakCount + 1;
 
-    /* Create the centered coordinates */
-    RealLeft = (((Right - Left) - BoxWidth) / 2) + Left;
-    RealTop = (((Bottom - Top) - BoxHeight) / 2) + Top;
+    /*
+     * Create the centered coordinates.
+     * Here, the Left/Top/Right/Bottom rectangle is a hint, around
+     * which we center the "real" text rectangle RealLeft/RealTop.
+     */
+    RealLeft = (Left + Right - BoxWidth + 1) / 2;
+    RealTop  = (Top + Bottom - BoxHeight + 1) / 2;
 
     /* Now go for a second scan */
     LastIndex = 0;
