@@ -1771,6 +1771,8 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     BOOL Ret = TRUE;
     WPARAM wParam = Msg->wParam;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    UINT LanguageHotkey;
+    BOOL bChangeLanguage = FALSE;
 
     if (Msg->message == VK_PACKET)
     {
@@ -1858,7 +1860,6 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
             if (IS_KEY_DOWN(gafAsyncKeyState, gdwLanguageToggleKey == 1 ? VK_LMENU : VK_CONTROL)) // L Alt 1 or Ctrl 2 .
             {
                 if ( wParam == VK_LSHIFT ) gLanguageToggleKeyState = INPUTLANGCHANGE_FORWARD;  // Left Alt - Left Shift, Next
-                //// FIXME : It seems to always be VK_LSHIFT.
                 if ( wParam == VK_RSHIFT ) gLanguageToggleKeyState = INPUTLANGCHANGE_BACKWARD; // Left Alt - Right Shift, Previous
             }
          }
@@ -1871,45 +1872,77 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
         // to switch the keyboard layout and store it to global variable.
         // Using this combination of hotkeys in this function
 
-        if ( gdwLanguageToggleKey < 3 &&
-             IS_KEY_DOWN(gafAsyncKeyState, gdwLanguageToggleKey == 1 ? VK_LMENU : VK_CONTROL) )
+        if (gdwLanguageToggleKey < 3)
         {
-            if ( Msg->wParam == VK_SHIFT && !(IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT)))
+            LanguageHotkey = gdwLanguageToggleKey == 1 ? VK_LMENU : VK_CONTROL;
+            if(IS_KEY_DOWN(gafAsyncKeyState, LanguageHotkey) ||
+               IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
             {
-                WPARAM wParamILR;
-                PKL pkl = pti->KeyboardLayout;
+               if (Msg->wParam == VK_SHIFT && !(IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT)))
+               {
+                  bChangeLanguage = TRUE;
+               }
+               else
+               {
+                  if ( wParam == VK_LMENU && wParam == LanguageHotkey
+                       && !(IS_KEY_DOWN(gafAsyncKeyState, VK_LMENU)) )
+                  {
+                     if ( IS_KEY_DOWN(gafAsyncKeyState, VK_LSHIFT) )
+                        gLanguageToggleKeyState = INPUTLANGCHANGE_FORWARD;  // Left Alt - Left Shift, Next
+                     else if ( IS_KEY_DOWN(gafAsyncKeyState, VK_RSHIFT) )
+                        gLanguageToggleKeyState = INPUTLANGCHANGE_BACKWARD; // Left Alt - Right Shift, Previous
 
-                if (pWnd) UserDerefObjectCo(pWnd);
+                     bChangeLanguage = TRUE;
+                  }
+                  else if ( Msg->wParam == VK_CONTROL && Msg->wParam == LanguageHotkey
+                           && !(IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL)) )
+                  {
+                     if ( IS_KEY_DOWN(gafAsyncKeyState, VK_LSHIFT) )
+                        gLanguageToggleKeyState = INPUTLANGCHANGE_FORWARD;  // Left Alt - Left Shift, Next
+                     else if ( IS_KEY_DOWN(gafAsyncKeyState, VK_RSHIFT) )
+                        gLanguageToggleKeyState = INPUTLANGCHANGE_BACKWARD; // Left Alt - Right Shift, Previous
 
-                //// Seems to override message window.
-                if (!(pWnd = pti->MessageQueue->spwndFocus))
-                {
-                     pWnd = pti->MessageQueue->spwndActive;
-                }
-                if (pWnd) UserRefObjectCo(pWnd, &Ref);
+                     bChangeLanguage = TRUE;
+                  }
+               }
+            }
+        }
 
-                if (pkl != NULL && gLanguageToggleKeyState)
-                {
-                    TRACE("Posting WM_INPUTLANGCHANGEREQUEST KeyState %d\n", gLanguageToggleKeyState );
+        if (bChangeLanguage)
+        {
+            WPARAM wParamILR;
+            PKL pkl = pti->KeyboardLayout;
 
-                    wParamILR = gLanguageToggleKeyState;
-                    // If system character set and font signature send flag.
-                    if ( gSystemFS & pkl->dwFontSigs )
-                    {
-                       wParamILR |= INPUTLANGCHANGE_SYSCHARSET;
-                    }
+            if (pWnd) UserDerefObjectCo(pWnd);
 
-                    UserPostMessage( UserHMGetHandle(pWnd),
-                                     WM_INPUTLANGCHANGEREQUEST,
-                                     wParamILR,
-                                    (LPARAM)pkl->hkl );
+            //// Seems to override message window.
+            if (!(pWnd = pti->MessageQueue->spwndFocus))
+            {
+               pWnd = pti->MessageQueue->spwndActive;
+            }
+            if (pWnd) UserRefObjectCo(pWnd, &Ref);
 
-                    gLanguageToggleKeyState = 0;
-                    //// Keep looping.
-                    Ret = FALSE;
-                    //// Skip the rest.
-                    goto Exit;
-                }
+            if (pkl != NULL && gLanguageToggleKeyState)
+            {
+               TRACE("Posting WM_INPUTLANGCHANGEREQUEST KeyState %d\n", gLanguageToggleKeyState );
+
+               wParamILR = gLanguageToggleKeyState;
+               // If system character set and font signature send flag.
+               if ( gSystemFS & pkl->dwFontSigs )
+               {
+                  wParamILR |= INPUTLANGCHANGE_SYSCHARSET;
+               }
+
+               UserPostMessage( UserHMGetHandle(pWnd),
+                                 WM_INPUTLANGCHANGEREQUEST,
+                                 wParamILR,
+                              (LPARAM)pkl->hkl );
+
+               gLanguageToggleKeyState = 0;
+               //// Keep looping.
+               Ret = FALSE;
+               //// Skip the rest.
+               goto Exit;
             }
         }
     }
