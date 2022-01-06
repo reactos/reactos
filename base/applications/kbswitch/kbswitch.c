@@ -436,6 +436,7 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_LANG_CHANGED:
         {
+            ulCurrentLayoutNum = GetNextLayout();
             return UpdateLanguageDisplay(hwnd, (HKL)lParam);
         }
 
