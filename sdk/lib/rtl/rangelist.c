@@ -905,6 +905,135 @@ Exit:
 
 /**********************************************************************
  * NAME							EXPORTED
+ * 	RtlGetNextRange
+ *
+ * DESCRIPTION
+ *	Retrieves the next (or previous) range of a range list.
+ *
+ * ARGUMENTS
+ *	Iterator	Pointer to a user supplied list state buffer.
+ *	Range		Pointer to the first range.
+ *	MoveForwards	TRUE, get next range
+ *			FALSE, get previous range
+ *
+ * RETURN VALUE
+ *	Status
+ *
+ * @implemented
+ */
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetNextRange(
+    _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _Out_ PRTL_RANGE * OutRange,
+    _In_ BOOLEAN MoveForwards)
+{
+    PRTLP_RANGE_LIST_ENTRY CurrentRtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NextRtlEntry;
+    PRTL_RANGE_LIST RangeList;
+    PLIST_ENTRY ListEntry;
+
+    PAGED_CODE_RTL();
+    //DPRINT("RtlGetNextRange: Iterator %p, RangeListHead %p, Current %p, MergedHead %p, Stamp %X, MoveForwards %X\n", Iterator, Iterator->RangeListHead, Iterator->Current, Iterator->MergedHead, Iterator->Stamp, MoveForwards);
+
+    RangeList = CONTAINING_RECORD((Iterator->RangeListHead), RTL_RANGE_LIST, ListHead);
+
+    if (RangeList->Stamp != Iterator->Stamp)
+    {
+        DPRINT1("RtlGetNextRange: STATUS_INVALID_PARAMETER\n");
+        ASSERT(FALSE);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!Iterator->Current)
+    {
+        DPRINT1("RtlGetNextRange: return STATUS_NO_MORE_ENTRIES\n");
+        *OutRange = NULL;
+        return STATUS_NO_MORE_ENTRIES;
+    }
+
+    CurrentRtlEntry = (PRTLP_RANGE_LIST_ENTRY)Iterator->Current;
+
+    if (MoveForwards)
+    {
+       ListEntry = CurrentRtlEntry->ListEntry.Flink;
+    }
+    else
+    {
+       ListEntry = CurrentRtlEntry->ListEntry.Blink;
+    }
+
+    NextRtlEntry = RtlpEntryFromLink(ListEntry);
+    ASSERT(NextRtlEntry);
+
+    if (Iterator->MergedHead)
+    {
+        PRTLP_RANGE_LIST_ENTRY MergedRtlEntry;
+
+        if (&NextRtlEntry->ListEntry != Iterator->MergedHead)
+        {
+            Iterator->Current = NextRtlEntry;
+            *OutRange = (PRTL_RANGE)NextRtlEntry;
+            DPRINT("RtlGetNextRange: %p, %p, %p, *OutRange %p [%I64X-%I64X]\n", Iterator->RangeListHead, Iterator->Current, Iterator->MergedHead, *OutRange, NextRtlEntry->Start, NextRtlEntry->End);
+            return STATUS_SUCCESS;
+        }
+
+        MergedRtlEntry = CONTAINING_RECORD(Iterator->MergedHead, RTLP_RANGE_LIST_ENTRY, Merged.ListHead);
+
+        if (MoveForwards)
+        {
+            ListEntry = MergedRtlEntry->ListEntry.Flink;
+        }
+        else
+        {
+            ListEntry = MergedRtlEntry->ListEntry.Blink;
+        }
+
+        NextRtlEntry = RtlpEntryFromLink(ListEntry);
+        DPRINT("RtlGetNextRange: %p, %p, %p [%I64X-%I64X]\n", MergedRtlEntry, ListEntry, NextRtlEntry, NextRtlEntry->Start, NextRtlEntry->End);
+
+        Iterator->MergedHead = NULL;
+    }
+
+    if (&NextRtlEntry->ListEntry == Iterator->RangeListHead)
+    {
+        DPRINT("RtlGetNextRange: return STATUS_NO_MORE_ENTRIES\n");
+        Iterator->Current = NULL;
+        *OutRange = NULL;
+        return STATUS_NO_MORE_ENTRIES;
+    }
+
+    if (NextRtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
+    {
+        ASSERT(!Iterator->MergedHead);
+        Iterator->MergedHead = &NextRtlEntry->Merged.ListHead;
+
+        if (MoveForwards)
+        {
+            ListEntry = NextRtlEntry->Merged.ListHead.Flink;
+        }
+        else
+        {
+            ListEntry = NextRtlEntry->Merged.ListHead.Blink;
+        }
+    }
+    else
+    {
+        ListEntry = &NextRtlEntry->ListEntry;
+    }
+
+    NextRtlEntry = RtlpEntryFromLink(ListEntry);
+    DPRINT("RtlGetNextRange: %p, %p, *OutRange %X [%I64X-%I64X]\n", Iterator->Current, Iterator->MergedHead, NextRtlEntry, NextRtlEntry->Start, NextRtlEntry->End);
+
+    Iterator->Current = NextRtlEntry;
+    *OutRange = (PRTL_RANGE)NextRtlEntry;
+
+    return STATUS_SUCCESS;
+}
+
+/**********************************************************************
+ * NAME							EXPORTED
  * 	RtlFindRange
  *
  * DESCRIPTION
@@ -1098,65 +1227,6 @@ RtlGetFirstRange(IN PRTL_RANGE_LIST RangeList,
     return STATUS_SUCCESS;
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlGetNextRange
- *
- * DESCRIPTION
- *	Retrieves the next (or previous) range of a range list.
- *
- * ARGUMENTS
- *	Iterator	Pointer to a user supplied list state buffer.
- *	Range		Pointer to the first range.
- *	MoveForwards	TRUE, get next range
- *			FALSE, get previous range
- *
- * RETURN VALUE
- *	Status
- *
- * @implemented
- */
-NTSTATUS
-NTAPI
-RtlGetNextRange(IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
-                OUT PRTL_RANGE *Range,
-                IN BOOLEAN MoveForwards)
-{
-    PRTL_RANGE_LIST RangeList;
-    PLIST_ENTRY Next;
-
-    RangeList = CONTAINING_RECORD(Iterator->RangeListHead, RTL_RANGE_LIST, ListHead);
-    if (Iterator->Stamp != RangeList->Stamp)
-        return STATUS_INVALID_PARAMETER;
-
-    if (Iterator->Current == NULL)
-    {
-        *Range = NULL;
-        return STATUS_NO_MORE_ENTRIES;
-    }
-
-    if (MoveForwards)
-    {
-        Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Flink;
-    }
-    else
-    {
-        Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Blink;
-    }
-
-    if (Next == Iterator->RangeListHead)
-    {
-        Iterator->Current = NULL;
-        *Range = NULL;
-        return STATUS_NO_MORE_ENTRIES;
-    }
-
-    Iterator->Current = Next;
-    *Range = &((PRTL_RANGE_ENTRY)Next)->Range;
-
-    return STATUS_SUCCESS;
-}
 
 /**********************************************************************
  * NAME							EXPORTED
