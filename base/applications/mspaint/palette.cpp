@@ -15,7 +15,8 @@
 LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     RECT rc = { 0, 0, 31, 32 };
-    HDC hDC = GetDC();
+    PAINTSTRUCT ps;
+    HDC hDC = BeginPaint(&ps);
     HPEN oldPen;
     HBRUSH oldBrush;
     int i, a, b;
@@ -54,7 +55,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         DeleteObject(SelectObject(hDC, oldBrush));
         DeleteObject(SelectObject(hDC, oldPen));
     }
-    ReleaseDC(hDC);
+    EndPaint(&ps);
     return 0;
 }
 

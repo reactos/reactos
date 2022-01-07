@@ -90,12 +90,13 @@ LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 {
     if (!m_bMoving)
     {
-        HDC hDC = GetDC();
+        PAINTSTRUCT ps;
+        HDC hDC = BeginPaint(&ps);
         DefWindowProc(WM_PAINT, wParam, lParam);
         SelectionFrame(hDC, 1, 1, Zoomed(selectionModel.GetDestRectWidth()) + 5,
                        Zoomed(selectionModel.GetDestRectHeight()) + 5,
                        m_dwSystemSelectionColor);
-        ReleaseDC(hDC);
+        EndPaint(&ps);
     }
     return 0;
 }

@@ -33,7 +33,8 @@ LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 
 LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    HDC hdc = GetDC();
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(&ps);
     RECT rect1 = { 0, 0, 42, 66 };
     RECT rect2 = { 0, 70, 42, 136 };
 
@@ -181,7 +182,7 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
         case TOOL_PEN:
             break;
     }
-    ReleaseDC(hdc);
+    EndPaint(&ps);
     return 0;
 }
 
