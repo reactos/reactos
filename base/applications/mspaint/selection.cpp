@@ -130,8 +130,7 @@ LRESULT CSelectionWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
 {
     m_ptPos.x = GET_X_LPARAM(lParam);
     m_ptPos.y = GET_Y_LPARAM(lParam);
-    m_ptDelta.x = 0;
-    m_ptDelta.y = 0;
+    m_ptDelta.x = m_ptDelta.y = 0;
     SetCapture();
     if (m_iAction != ACTION_MOVE)
         SetCursor(LoadCursor(NULL, m_lpszCursorLUT[m_iAction]));
@@ -156,8 +155,7 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         m_ptDelta.y += UnZoomed(m_ptFrac.y);
         if (toolsModel.GetZoom() < 1000)
         {
-            m_ptFrac.x = 0;
-            m_ptFrac.y = 0;
+            m_ptFrac.x = m_ptFrac.y = 0;
         }
         else
         {
@@ -214,8 +212,6 @@ LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, B
             imageModel.CopyPrevious();
         }
         placeSelWin();
-        ShowWindow(SW_HIDE);
-        ShowWindow(SW_SHOW);
     }
     return 0;
 }
