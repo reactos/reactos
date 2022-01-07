@@ -655,6 +655,7 @@ struct ShapeTool : ToolBase
     void OnCancelDraw()
     {
         imageModel.ResetToPrevious();
+        imageModel.Undo();
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
