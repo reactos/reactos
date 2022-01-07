@@ -116,7 +116,11 @@ struct FreeSelTool : ToolBase
     {
         if (selectionModel.PtStackSize() == 1)
             imageModel.CopyPrevious();
-        selectionModel.PushToPtStack(max(0, min(x, imageModel.GetWidth())), max(0, min(y, imageModel.GetHeight())));
+
+        POINT temp;
+        temp.x = max(0, min(x, imageModel.GetWidth()));
+        temp.y = max(0, min(y, imageModel.GetHeight()));
+        selectionModel.PushToPtStack(temp.x, temp.y);
         imageModel.ResetToPrevious();
         selectionModel.DrawFramePoly(m_hdc);
     }
@@ -130,15 +134,29 @@ struct FreeSelTool : ToolBase
             selectionModel.CalculateBoundingBoxAndContents(m_hdc);
 
             placeSelWin();
+            selectionWindow.IsMoved(FALSE);
             selectionWindow.ShowWindow(SW_SHOW);
-            selectionWindow.ForceRefreshSelectionContents();
         }
         selectionModel.ResetPtStack();
     }
 
+    void OnFinishDraw()
+    {
+        if (!selectionWindow.IsMoved())
+            imageModel.Undo();
+        selectionWindow.IsMoved(FALSE);
+        selectionWindow.ForceRefreshSelectionContents();
+        selectionWindow.ShowWindow(SW_HIDE);
+    }
+
     void OnCancelDraw()
     {
-        imageModel.ResetToPrevious();
+        if (selectionWindow.IsMoved())
+        {
+            imageModel.Undo();
+            selectionWindow.IsMoved(FALSE);
+        }
+        selectionWindow.ShowWindow(SW_HIDE);
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
@@ -213,9 +231,9 @@ struct RectSelTool : ToolBase
         {
             imageModel.Undo();
             selectionWindow.IsMoved(FALSE);
-            selectionWindow.ShowWindow(SW_HIDE);
         }
         m_bLeftButton = FALSE;
+        selectionWindow.ShowWindow(SW_HIDE);
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
