@@ -101,58 +101,82 @@ void ToolBase::endEvent()
 // TOOL_FREESEL
 struct FreeSelTool : ToolBase
 {
-    FreeSelTool() : ToolBase(TOOL_FREESEL)
+    BOOL m_bLeftButton;
+
+    FreeSelTool() : ToolBase(TOOL_FREESEL), m_bLeftButton(FALSE)
     {
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
-        selectionWindow.ShowWindow(SW_HIDE);
-        selectionModel.ResetPtStack();
-        selectionModel.PushToPtStack(x, y);
-        imageModel.CopyPrevious();
+        if (bLeftButton)
+        {
+            selectionWindow.ShowWindow(SW_HIDE);
+            selectionModel.ResetPtStack();
+            selectionModel.PushToPtStack(x, y);
+            imageModel.CopyPrevious();
+        }
+        m_bLeftButton = bLeftButton;
     }
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
-        POINT temp;
-        temp.x = max(0, min(x, imageModel.GetWidth()));
-        temp.y = max(0, min(y, imageModel.GetHeight()));
-        selectionModel.PushToPtStack(temp.x, temp.y);
-        imageModel.ResetToPrevious();
-        selectionModel.DrawFramePoly(m_hdc);
+        if (bLeftButton)
+        {
+            POINT temp;
+            temp.x = max(0, min(x, imageModel.GetWidth()));
+            temp.y = max(0, min(y, imageModel.GetHeight()));
+            selectionModel.PushToPtStack(temp.x, temp.y);
+            imageModel.ResetToPrevious();
+            selectionModel.DrawFramePoly(m_hdc);
+        }
     }
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.ResetToPrevious();
-        if (selectionModel.PtStackSize() > 1)
+        if (bLeftButton)
         {
-            imageModel.CopyPrevious();
-            selectionModel.CalculateBoundingBoxAndContents(m_hdc);
+            imageModel.ResetToPrevious();
+            if (selectionModel.PtStackSize() > 2)
+            {
+                imageModel.CopyPrevious();
+                selectionModel.CalculateBoundingBoxAndContents(m_hdc);
 
-            placeSelWin();
-            selectionWindow.IsMoved(FALSE);
-            selectionWindow.ShowWindow(SW_SHOW);
+                placeSelWin();
+                selectionWindow.IsMoved(FALSE);
+                selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
+            }
+            else
+            {
+                selectionWindow.IsMoved(FALSE);
+                selectionModel.ResetPtStack();
+                selectionWindow.ShowWindow(SW_HIDE);
+            }
         }
     }
 
     void OnFinishDraw()
     {
-        selectionWindow.IsMoved(FALSE);
-        selectionWindow.ForceRefreshSelectionContents();
+        if (m_bLeftButton)
+        {
+            selectionWindow.IsMoved(FALSE);
+            selectionWindow.ForceRefreshSelectionContents();
+        }
+        m_bLeftButton = FALSE;
+        selectionModel.ResetPtStack();
         selectionWindow.ShowWindow(SW_HIDE);
     }
 
     void OnCancelDraw()
     {
-        if (selectionWindow.IsMoved())
+        if (m_bLeftButton && selectionWindow.IsMoved())
         {
             imageModel.Undo();
             selectionWindow.IsMoved(FALSE);
         }
-        selectionWindow.ShowWindow(SW_HIDE);
+        m_bLeftButton = FALSE;
         selectionModel.ResetPtStack();
+        selectionWindow.ShowWindow(SW_HIDE);
         ToolBase::OnCancelDraw();
     }
 };
