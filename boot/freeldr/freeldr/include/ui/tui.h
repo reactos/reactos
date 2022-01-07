@@ -75,8 +75,25 @@ VOID    TuiSaveScreen(PUCHAR Buffer);                            // Saves the sc
 VOID    TuiRestoreScreen(PUCHAR Buffer);                        // Restores the screen from a previous save
 VOID    TuiMessageBox(PCSTR MessageText);                        // Displays a message box on the screen with an ok button
 VOID    TuiMessageBoxCritical(PCSTR MessageText);                // Displays a message box on the screen with an ok button using no system resources
-VOID    TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
-VOID    TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
+
+/* Draws the progress bar showing nPos percent filled */
+VOID
+TuiDrawProgressBarCenter(
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText);
+
+/* Draws the progress bar showing nPos percent filled */
+VOID
+TuiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText);
+
 BOOLEAN    TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
 UCHAR    TuiTextToColor(PCSTR ColorText);                        // Converts the text color into it's equivalent color value
 UCHAR    TuiTextToFillStyle(PCSTR FillStyleText);                // Converts the text fill into it's equivalent fill value

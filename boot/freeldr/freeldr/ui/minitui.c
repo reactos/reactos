@@ -7,8 +7,9 @@
  *                  Hervé Poussineau
  */
 
-#ifndef _M_ARM
 #include <freeldr.h>
+
+#ifndef _M_ARM
 
 VOID MiniTuiDrawBackdrop(VOID)
 {
@@ -24,7 +25,13 @@ VOID MiniTuiDrawStatusText(PCSTR StatusText)
     /* Minimal UI doesn't have a status bar */
 }
 
-VOID MiniTuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
+#endif // _M_ARM
+
+VOID
+MiniTuiDrawProgressBarCenter(
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
     ULONG Left, Top, Right, Bottom, Width, Height;
 
@@ -40,18 +47,30 @@ VOID MiniTuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressTex
     MiniTuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
-VOID MiniTuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+MiniTuiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
-    ULONG i;
-    ULONG ProgressBarWidth = (Right - Left) - 3;
+    ULONG ProgressBarWidth, i;
+
+    /* Calculate the width of the bar proper */
+    ProgressBarWidth = (Right - Left) - 3;
 
     /* First make sure the progress bar text fits */
     UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
+
+    /* Clip the position */
     if (Position > Range)
         Position = Range;
 
     /* Draw the "Loading..." text */
-    TuiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, ProgressText, ATTR(COLOR_GRAY, COLOR_BLACK));
+    TuiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, ProgressText, ATTR(UiTextColor, UiMenuBgColor));
 
     /* Draw the percent complete */
     for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
@@ -60,9 +79,13 @@ VOID MiniTuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UL
         TuiDrawText(Left + 2 + i, Top + 2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
     }
 
+#ifndef _M_ARM
     TuiUpdateDateTime();
     VideoCopyOffScreenBufferToVRAM();
+#endif
 }
+
+#ifndef _M_ARM
 
 VOID
 MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)

@@ -109,51 +109,25 @@ UiMessageBoxCritical(IN PCSTR MessageText)
 }
 
 VOID
-UiDrawProgressBarCenter(IN ULONG Position,
-                        IN ULONG Range,
-                        IN PCHAR ProgressText)
+UiDrawProgressBarCenter(
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
-    ULONG Left, Top, Right, Bottom, Width, Height;
-
-    /* Build the coordinates and sizes */
-    Height = 2;
-    Width = UiScreenWidth;
-    Left = 0;
-    Right = (Left + Width) - 1;
-    Top = UiScreenHeight - Height - 4;
-    Bottom = Top + Height + 1;
-
-    /* Draw the progress bar */
-    UiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
+    MiniTuiDrawProgressBarCenter(Position, Range, ProgressText);
 }
 
 VOID
-UiDrawProgressBar(IN ULONG Left,
-                  IN ULONG Top,
-                  IN ULONG Right,
-                  IN ULONG Bottom,
-                  IN ULONG Position,
-                  IN ULONG Range,
-                  IN PCHAR ProgressText)
+UiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
-    ULONG i, ProgressBarWidth;
-
-    /* Calculate the width of the bar proper */
-    ProgressBarWidth = (Right - Left) - 3;
-
-    /* First make sure the progress bar text fits */
-    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
-    if (Position > Range) Position = Range;
-
-    /* Draw the "Loading..." text */
-    UiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, ProgressText, ATTR(7, 0));
-
-    /* Draw the percent complete */
-    for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
-    {
-        /* Use the fill character */
-        UiDrawText(Left + 2 + i, Top + 2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
-    }
+    MiniTuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
 VOID

@@ -683,29 +683,46 @@ VOID TuiMessageBoxCritical(PCSTR MessageText)
     }
 }
 
-VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+TuiDrawProgressBarCenter(
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
     ULONG Left, Top, Right, Bottom;
     ULONG Width = 50; // Allow for 50 "bars"
     ULONG Height = 2;
 
+    /* Build the coordinates and sizes */
     Left = (UiScreenWidth - Width - 4) / 2;
     Right = Left + Width + 3;
     Top = (UiScreenHeight - Height - 2) / 2;
     Top += 2;
     Bottom = Top + Height + 1;
 
+    /* Draw the progress bar */
     TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
-VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+TuiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
-    ULONG i;
-    ULONG ProgressBarWidth = (Right - Left) - 3;
+    ULONG ProgressBarWidth, i;
+
+    /* Calculate the width of the bar proper */
+    ProgressBarWidth = (Right - Left) - 3;
 
     /* First make sure the progress bar text fits */
     UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
 
+    /* Clip the position */
     if (Position > Range)
         Position = Range;
 
@@ -728,8 +745,10 @@ VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG 
         TuiDrawText(Left + 2 + i, Top + 2, "\xB2", ATTR(UiTextColor, UiMenuBgColor));
     }
 
+#ifndef _M_ARM
     TuiUpdateDateTime();
     VideoCopyOffScreenBufferToVRAM();
+#endif
 }
 
 UCHAR TuiTextToColor(PCSTR ColorText)

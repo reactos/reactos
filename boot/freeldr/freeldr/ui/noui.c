@@ -100,11 +100,23 @@ VOID NoUiMessageBoxCritical(PCSTR MessageText)
     MachConsGetCh();
 }
 
-VOID NoUiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+NoUiDrawProgressBarCenter(
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
 }
 
-VOID NoUiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+NoUiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
 }
 
