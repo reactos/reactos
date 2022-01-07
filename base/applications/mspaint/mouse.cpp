@@ -110,13 +110,11 @@ struct FreeSelTool : ToolBase
         selectionWindow.ShowWindow(SW_HIDE);
         selectionModel.ResetPtStack();
         selectionModel.PushToPtStack(x, y);
+        imageModel.CopyPrevious();
     }
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
-        if (selectionModel.PtStackSize() == 1)
-            imageModel.CopyPrevious();
-
         POINT temp;
         temp.x = max(0, min(x, imageModel.GetWidth()));
         temp.y = max(0, min(y, imageModel.GetHeight()));
@@ -142,8 +140,6 @@ struct FreeSelTool : ToolBase
 
     void OnFinishDraw()
     {
-        if (!selectionWindow.IsMoved())
-            imageModel.Undo();
         selectionWindow.IsMoved(FALSE);
         selectionWindow.ForceRefreshSelectionContents();
         selectionWindow.ShowWindow(SW_HIDE);
@@ -216,8 +212,6 @@ struct RectSelTool : ToolBase
     {
         if (m_bLeftButton)
         {
-            if (!selectionWindow.IsMoved())
-                imageModel.Undo();
             selectionWindow.IsMoved(FALSE);
             selectionWindow.ForceRefreshSelectionContents();
             selectionWindow.ShowWindow(SW_HIDE);
