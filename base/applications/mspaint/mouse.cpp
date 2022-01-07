@@ -114,21 +114,18 @@ struct FreeSelTool : ToolBase
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
-        if (selectionModel.PtStackSize() == 1)
-            imageModel.CopyPrevious();
-        selectionModel.PushToPtStack(max(0, min(x, imageModel.GetWidth())), max(0, min(y, imageModel.GetHeight())));
         imageModel.ResetToPrevious();
+        selectionModel.PushToPtStack(max(0, min(x, imageModel.GetWidth())), max(0, min(y, imageModel.GetHeight())));
         selectionModel.DrawFramePoly(m_hdc);
     }
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
+        imageModel.ResetToPrevious();
         selectionModel.CalculateBoundingBoxAndContents(m_hdc);
         if (selectionModel.PtStackSize() > 1)
         {
             selectionModel.DrawBackgroundPoly(m_hdc, m_bg);
-            imageModel.CopyPrevious();
-
             selectionModel.DrawSelection(m_hdc);
 
             placeSelWin();
