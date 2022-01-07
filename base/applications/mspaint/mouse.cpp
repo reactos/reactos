@@ -76,6 +76,7 @@ void updateLast(LONG x, LONG y)
 void ToolBase::reset()
 {
     pointSP = 0;
+    start.x = start.y = last.x = last.y = -1;
 }
 
 void ToolBase::OnCancelDraw()
@@ -181,12 +182,14 @@ struct RectSelTool : ToolBase
         if (bLeftButton)
         {
             imageModel.ResetToPrevious();
+            if (start.x == last.x && start.y == last.y)
+                imageModel.Undo();
+            selectionModel.CalculateContents(m_hdc);
+            placeSelWin();
             if (selectionModel.IsSrcRectSizeNonzero())
-            {
-                selectionModel.CalculateContents(m_hdc);
-                placeSelWin();
-                selectionWindow.ShowWindow(SW_SHOW);
-            }
+                selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
+            else
+                selectionWindow.ShowWindow(SW_HIDE);
         }
     }
 
