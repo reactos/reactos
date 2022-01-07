@@ -92,10 +92,9 @@ LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
     {
         PAINTSTRUCT ps;
         HDC hDC = BeginPaint(&ps);
-        DefWindowProc(WM_PAINT, wParam, lParam);
         SelectionFrame(hDC, 1, 1, Zoomed(selectionModel.GetDestRectWidth()) + 5,
                        Zoomed(selectionModel.GetDestRectHeight()) + 5,
-                       m_dwSystemSelectionColor);
+                       GetSysColor(COLOR_HIGHLIGHT));
         EndPaint(&ps);
     }
     return 0;
@@ -111,16 +110,12 @@ LRESULT CSelectionWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 {
     m_bMoving = FALSE;
     m_iAction = ACTION_MOVE;
-    /* update the system selection color */
-    m_dwSystemSelectionColor = GetSysColor(COLOR_HIGHLIGHT);
     Invalidate();
     return 0;
 }
 
 LRESULT CSelectionWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    /* update the system selection color */
-    m_dwSystemSelectionColor = GetSysColor(COLOR_HIGHLIGHT);
     Invalidate();
     return 0;
 }
