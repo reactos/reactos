@@ -580,9 +580,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             {
                 case TOOL_FREESEL:
                 case TOOL_RECTSEL:
-                    imageModel.CopyPrevious();
-                    imageModel.DrawSelectionBackground();
-                    selectionWindow.ShowWindow(SW_HIDE);
+                    imageModel.DeleteSelection();
                     break;
                 case TOOL_TEXT:
                     imageArea.cancelDrawing();

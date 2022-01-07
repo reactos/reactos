@@ -29,10 +29,12 @@ public:
     ImageModel();
     void CopyPrevious(void);
     void DrawSelectionBackground();
+    void DeleteSelection();
     void Undo(void);
     void Redo(void);
     void ResetToPrevious(void);
     void ClearHistory(void);
+    void ClearRedo(void);
     void Insert(HBITMAP hbm);
     void Crop(int nWidth, int nHeight, int nOffsetX = 0, int nOffsetY = 0);
     void SaveImage(LPTSTR lpFileName);

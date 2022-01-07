@@ -106,6 +106,11 @@ void ImageModel::DrawSelectionBackground()
     selectionModel.DrawBackgroundRect(hDrawingDC, m_rgbBack);
 }
 
+void ImageModel::ClearRedo(void)
+{
+    redoSteps = 0;
+}
+
 void ImageModel::ClearHistory()
 {
     undoSteps = 0;
@@ -251,5 +256,18 @@ void ImageModel::RotateNTimes90Degrees(int iN)
         StretchBlt(hDrawingDC, GetWidth() - 1, GetHeight() - 1, -GetWidth(), -GetHeight(), GetDC(),
                    0, 0, GetWidth(), GetHeight(), SRCCOPY);
     }
+    NotifyImageChanged();
+}
+
+void ImageModel::DeleteSelection()
+{
+    if (selectionWindow.IsWindowVisible())
+        ResetToPrevious();
+    CopyPrevious();
+    if (selectionWindow.IsWindowVisible())
+        Undo();
+    DrawSelectionBackground();
+    ClearRedo();
+    selectionWindow.ShowWindow(SW_HIDE);
     NotifyImageChanged();
 }
