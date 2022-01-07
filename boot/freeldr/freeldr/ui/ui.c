@@ -239,17 +239,35 @@ VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle
     UiVtbl.DrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
 }
 
-VOID UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
+VOID
+UiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr)
 {
     UiVtbl.DrawText(X, Y, Text, Attr);
 }
 
-VOID UiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
+VOID
+UiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr)
 {
     UiVtbl.DrawText2(X, Y, MaxNumChars, Text, Attr);
 }
 
-VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
+VOID
+UiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr)
 {
     UiVtbl.DrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
 }

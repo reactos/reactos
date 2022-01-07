@@ -61,9 +61,34 @@ VOID    UiDrawBackdrop(VOID);                                    // Fills the en
 VOID    UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);    // Fills the area specified with FillChar and Attr
 VOID    UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);    // Draws a shadow on the bottom and right sides of the area specified
 VOID    UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);    // Draws a box around the area specified
-VOID    UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);    // Draws text at coordinates specified
-VOID    UiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr);    // Draws text at coordinates specified
-VOID    UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);    // Draws centered text at the coordinates specified and clips the edges
+
+/* Draws text at coordinates specified */
+VOID
+UiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr);
+
+/* Draws text at coordinates specified */
+VOID
+UiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr);
+
+/* Draws centered text at the coordinates specified and clips the edges */
+VOID
+UiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr);
+
 VOID    UiDrawStatusText(PCSTR StatusText);                    // Draws text at the very bottom line on the screen
 VOID    UiUpdateDateTime(VOID);                                    // Updates the date and time
 VOID    UiInfoBox(PCSTR MessageText);                            // Displays a info box on the screen

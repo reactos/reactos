@@ -19,6 +19,13 @@
 
 #pragma once
 
+/* GENERIC TUI UTILS *********************************************************/
+
+INT
+TuiPrintf(
+    _In_ PCSTR Format, ...);
+
+
 #define TUI_TITLE_BOX_CHAR_HEIGHT    5
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -26,6 +33,7 @@
 // Textual User Interface Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
+
 BOOLEAN    TuiInitialize(VOID);                                    // Initialize User-Interface
 VOID    TuiUnInitialize(VOID);                                    // Un-initialize User-Interface
 
@@ -33,9 +41,34 @@ VOID    TuiDrawBackdrop(VOID);                                    // Fills the e
 VOID    TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);    // Fills the area specified with FillChar and Attr
 VOID    TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);    // Draws a shadow on the bottom and right sides of the area specified
 VOID    TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);    // Draws a box around the area specified
-VOID    TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);    // Draws text at coordinates specified
-VOID    TuiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr);    // Draws text at coordinates specified
-VOID    TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);    // Draws centered text at the coordinates specified and clips the edges
+
+/* Draws text at coordinates specified */
+VOID
+TuiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr);
+
+/* Draws text at coordinates specified */
+VOID
+TuiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr);
+
+/* Draws centered text at the coordinates specified and clips the edges */
+VOID
+TuiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr);
+
 VOID    TuiDrawStatusText(PCSTR StatusText);                    // Draws text at the very bottom line on the screen
 VOID    TuiUpdateDateTime(VOID);                                // Updates the date and time
 VOID    TuiSaveScreen(PUCHAR Buffer);                            // Saves the screen so that it can be restored later
@@ -45,7 +78,6 @@ VOID    TuiMessageBoxCritical(PCSTR MessageText);                // Displays a m
 VOID    TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
 VOID    TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
 BOOLEAN    TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
-int    TuiPrintf(const char *format, ... );
 UCHAR    TuiTextToColor(PCSTR ColorText);                        // Converts the text color into it's equivalent color value
 UCHAR    TuiTextToFillStyle(PCSTR FillStyleText);                // Converts the text fill into it's equivalent fill value
 

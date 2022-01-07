@@ -5,15 +5,12 @@
  * PURPOSE:         FreeLDR UI Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
-#ifdef _M_ARM
 
-/* INCLUDES *******************************************************************/
+#ifdef _M_ARM
 
 #include <freeldr.h>
 
 /* GLOBALS ********************************************************************/
-
-/* FUNCTIONS ******************************************************************/
 
 ULONG UiScreenWidth;
 ULONG UiScreenHeight;
@@ -24,28 +21,7 @@ UCHAR UiSelectedTextColor = COLOR_BLACK;
 UCHAR UiSelectedTextBgColor = COLOR_GRAY;
 CHAR UiTimeText[260] = "Seconds until highlighted choice will be started automatically:   ";
 
-INT
-TuiPrintf(const char *Format,
-          ...)
-{
-    int i;
-    int Length;
-    va_list ap;
-    CHAR Buffer[512];
-
-    va_start(ap, Format);
-    Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
-    va_end(ap);
-
-    if (Length == -1) Length = sizeof(Buffer);
-
-    for (i = 0; i < Length; i++)
-    {
-        MachConsPutChar(Buffer[i]);
-    }
-
-    return Length;
-}
+/* FUNCTIONS ******************************************************************/
 
 BOOLEAN
 UiInitialize(IN BOOLEAN ShowUi)
@@ -76,106 +52,36 @@ UiDrawBackdrop(VOID)
 }
 
 VOID
-UiDrawText(IN ULONG X,
-           IN ULONG Y,
-           IN PCSTR Text,
-           IN UCHAR Attr)
+UiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr)
 {
-    ULONG i, j;
-
-    /* Draw the text character by character, but don't exceed the width */
-    for (i = X, j = 0; Text[j] && i < UiScreenWidth; i++, j++)
-    {
-        /* Write the character */
-        MachVideoPutChar(Text[j], Attr, i, Y);
-    }
+    TuiDrawText2(X, Y, 0 /*(ULONG)strlen(Text)*/, Text, Attr);
 }
 
 VOID
-UiDrawText2(IN ULONG X,
-            IN ULONG Y,
-            IN ULONG MaxNumChars,
-            IN PCSTR Text,
-            IN UCHAR Attr)
+UiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr)
 {
-    ULONG i, j;
-
-    /* Draw the text character by character, but don't exceed the width */
-    for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
-    {
-        /* Write the character */
-        MachVideoPutChar(Text[j], Attr, i, Y);
-    }
+    TuiDrawText2(X, Y, MaxNumChars, Text, Attr);
 }
 
 VOID
-UiDrawCenteredText(IN ULONG Left,
-                   IN ULONG Top,
-                   IN ULONG Right,
-                   IN ULONG Bottom,
-                   IN PCSTR TextString,
-                   IN UCHAR Attr)
+UiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr)
 {
-    ULONG TextLength, BoxWidth, BoxHeight, LineBreakCount, Index, LastIndex;
-    ULONG RealLeft, RealTop, X, Y;
-    CHAR Temp[2];
-
-    /* Query text length */
-    TextLength = strlen(TextString);
-
-    /* Count the new lines and the box width */
-    LineBreakCount = 0;
-    BoxWidth = 0;
-    LastIndex = 0;
-    for (Index=0; Index < TextLength; Index++)
-    {
-        /* Scan for new lines */
-        if (TextString[Index] == '\n')
-        {
-            /* Remember the new line */
-            LastIndex = Index;
-            LineBreakCount++;
-        }
-        else
-        {
-            /* Check for new larger box width */
-            if ((Index - LastIndex) > BoxWidth)
-            {
-                /* Update it */
-                BoxWidth = (Index - LastIndex);
-            }
-        }
-    }
-
-    /* Base the box height on the number of lines */
-    BoxHeight = LineBreakCount + 1;
-
-    /* Create the centered coordinates */
-    RealLeft = (((Right - Left) - BoxWidth) / 2) + Left;
-    RealTop = (((Bottom - Top) - BoxHeight) / 2) + Top;
-
-    /* Now go for a second scan */
-    LastIndex = 0;
-    for (Index=0; Index < TextLength; Index++)
-    {
-        /* Look for new lines again */
-        if (TextString[Index] == '\n')
-        {
-            /* Update where the text should start */
-            RealTop++;
-            LastIndex = 0;
-        }
-        else
-        {
-            /* We've got a line of text to print, do it */
-            X = RealLeft + LastIndex;
-            Y = RealTop;
-            LastIndex++;
-            Temp[0] = TextString[Index];
-            Temp[1] = 0;
-            UiDrawText(X, Y, Temp, Attr);
-        }
-    }
+    TuiDrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
 }
 
 VOID
@@ -659,4 +565,4 @@ UiDisplayMenu(
     return TRUE;
 }
 
-#endif
+#endif // _M_ARM
