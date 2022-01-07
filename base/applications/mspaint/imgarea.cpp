@@ -262,7 +262,7 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         }
         else
         {
-            if (drawing || ToolBase::pointSP != 0)
+            if (drawing || ToolBase::pointSP != 0 || selectionWindow.IsWindowVisible())
                 cancelDrawing();
         }
     }

@@ -398,14 +398,7 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         else
         {
-            switch (toolsModel.GetActiveTool())
-            {
-                case TOOL_SHAPE: case TOOL_BEZIER:
-                    imageArea.SendMessage(nMsg, wParam, lParam);
-                    break;
-                default:
-                    break;
-            }
+            imageArea.SendMessage(nMsg, wParam, lParam);
         }
     }
     return 0;

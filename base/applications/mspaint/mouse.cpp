@@ -204,16 +204,18 @@ struct RectSelTool : ToolBase
             ForceRefreshSelectionContents();
             selectionWindow.ShowWindow(SW_HIDE);
         }
+        m_bLeftButton = FALSE;
     }
 
     void OnCancelDraw()
     {
         if (m_bLeftButton)
         {
-            ForceRefreshSelectionContents();
             imageModel.Undo();
+            selectionWindow.IsMoved(FALSE);
             selectionWindow.ShowWindow(SW_HIDE);
         }
+        m_bLeftButton = FALSE;
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
