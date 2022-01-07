@@ -529,9 +529,16 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITUNDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
                 break;
+            if (toolsModel.GetActiveTool() == TOOL_RECTSEL && selectionWindow.IsWindowVisible())
+            {
+                imageArea.cancelDrawing();
+                imageArea.Invalidate(FALSE);
+                break;
+            }
             if (ToolBase::pointSP != 0) // drawing something?
             {
                 imageArea.cancelDrawing();
+                imageArea.Invalidate(FALSE);
                 break;
             }
             imageModel.Undo();
@@ -573,7 +580,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             {
                 case TOOL_FREESEL:
                 case TOOL_RECTSEL:
-                    toolsModel.OnButtonUp(TRUE, -1, -1);
+                    imageModel.CopyPrevious();
+                    imageModel.DrawSelectionBackground();
+                    selectionWindow.ShowWindow(SW_HIDE);
                     break;
                 case TOOL_TEXT:
                     imageArea.cancelDrawing();

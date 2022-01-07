@@ -28,6 +28,7 @@ ImageModel::ImageModel()
     undoSteps = 0;
     redoSteps = 0;
     imageSaved = TRUE;
+    m_hbmStock = NULL;
 
     // prepare a minimal usable bitmap
     int imgXRes = 1;
@@ -51,6 +52,7 @@ void ImageModel::CopyPrevious()
         undoSteps++;
     redoSteps = 0;
     SelectObject(hDrawingDC, hBms[currInd]);
+    m_rgbBack = paletteModel.GetBgColor();
     imageSaved = FALSE;
 }
 
@@ -97,6 +99,11 @@ void ImageModel::ResetToPrevious()
         (HBITMAP) CopyImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
     SelectObject(hDrawingDC, hBms[currInd]);
     NotifyImageChanged();
+}
+
+void ImageModel::DrawSelectionBackground()
+{
+    selectionModel.DrawBackgroundRect(hDrawingDC, m_rgbBack);
 }
 
 void ImageModel::ClearHistory()

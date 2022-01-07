@@ -19,13 +19,16 @@ private:
     HDC hDrawingDC;
 public:
     HBITMAP hBms[HISTORYSIZE];
+    HBITMAP m_hbmStock;
 private:
     int currInd;
     int undoSteps;
     int redoSteps;
+    COLORREF m_rgbBack;
 public:
     ImageModel();
     void CopyPrevious(void);
+    void DrawSelectionBackground();
     void Undo(void);
     void Redo(void);
     void ResetToPrevious(void);

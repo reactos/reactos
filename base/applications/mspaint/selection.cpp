@@ -152,6 +152,8 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     if (m_bMoving)
     {
         imageModel.ResetToPrevious();
+        imageModel.DrawSelectionBackground();
+
         m_ptFrac.x += GET_X_LPARAM(lParam) - m_ptPos.x;
         m_ptFrac.y += GET_Y_LPARAM(lParam) - m_ptPos.y;
         m_ptDelta.x += UnZoomed(m_ptFrac.x);
@@ -208,16 +210,12 @@ LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     {
         m_bMoving = FALSE;
         ReleaseCapture();
-        if (m_iAction != ACTION_MOVE)
+        if (m_iAction != ACTION_MOVE && toolsModel.GetActiveTool() != TOOL_TEXT)
         {
-            if (toolsModel.GetActiveTool() == TOOL_TEXT)
-            {
-                // FIXME: What to do?
-            }
-            else
-            {
-                selectionModel.ScaleContentsToFit();
-            }
+            imageModel.Undo();
+            imageModel.DrawSelectionBackground();
+            selectionModel.ScaleContentsToFit();
+            imageModel.CopyPrevious();
         }
         placeSelWin();
         ShowWindow(SW_HIDE);
@@ -233,10 +231,7 @@ LRESULT CSelectionWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lPar
         m_bMoving = FALSE;
         if (m_iAction == ACTION_MOVE)
         {
-            // FIXME: dirty hack
             placeSelWin();
-            imageModel.Undo();
-            imageModel.Undo();
         }
         else
         {

@@ -184,13 +184,18 @@ struct RectSelTool : ToolBase
             if (selectionModel.IsSrcRectSizeNonzero())
             {
                 selectionModel.CalculateContents(m_hdc);
-                selectionModel.DrawBackgroundRect(m_hdc, m_bg);
-                selectionModel.DrawSelection(m_hdc);
-
                 placeSelWin();
                 selectionWindow.ShowWindow(SW_SHOW);
-                ForceRefreshSelectionContents();
             }
+        }
+    }
+
+    void OnFinishDraw()
+    {
+        if (m_bLeftButton)
+        {
+            ForceRefreshSelectionContents();
+            selectionWindow.ShowWindow(SW_HIDE);
         }
     }
 
@@ -198,9 +203,11 @@ struct RectSelTool : ToolBase
     {
         if (m_bLeftButton)
         {
+            ForceRefreshSelectionContents();
             imageModel.Undo();
-            selectionModel.ResetPtStack();
+            selectionWindow.ShowWindow(SW_HIDE);
         }
+        selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
 };
