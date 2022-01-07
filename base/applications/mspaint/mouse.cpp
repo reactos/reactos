@@ -406,7 +406,7 @@ struct TextTool : ToolBase
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.ResetToPrevious();
+        imageModel.Undo();
 
         BOOL bTextBoxShown = textEditWindow.IsWindowVisible();
         if (bTextBoxShown && textEditWindow.GetWindowTextLength() > 0)
@@ -419,6 +419,7 @@ struct TextTool : ToolBase
             textEditWindow.GetEditRect(&rc);
 
             INT style = (toolsModel.IsBackgroundTransparent() ? 0 : 1);
+            imageModel.CopyPrevious();
             Text(m_hdc, rc.left, rc.top, rc.right, rc.bottom, m_fg, m_bg, szText,
                  textEditWindow.GetFont(), style);
         }
@@ -467,7 +468,6 @@ struct TextTool : ToolBase
 
     void OnCancelDraw()
     {
-        imageModel.ResetToPrevious();
         selectionModel.ResetPtStack();
         textEditWindow.SetWindowText(NULL);
         textEditWindow.ShowWindow(SW_HIDE);
@@ -476,8 +476,9 @@ struct TextTool : ToolBase
 
     void OnFinishDraw()
     {
-        OnButtonDown(TRUE, -1, -1, TRUE);
-        OnButtonUp(TRUE, -1, -1);
+        toolsModel.OnButtonDown(TRUE, -1, -1, TRUE);
+        toolsModel.OnButtonUp(TRUE, -1, -1);
+        selectionWindow.IsMoved(FALSE);
     }
 };
 
