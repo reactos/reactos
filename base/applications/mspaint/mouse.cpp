@@ -146,7 +146,9 @@ struct FreeSelTool : ToolBase
 // TOOL_RECTSEL
 struct RectSelTool : ToolBase
 {
-    RectSelTool() : ToolBase(TOOL_RECTSEL)
+    BOOL m_bLeftButton;
+
+    RectSelTool() : ToolBase(TOOL_RECTSEL), m_bLeftButton(FALSE)
     {
     }
 
@@ -158,6 +160,7 @@ struct RectSelTool : ToolBase
             selectionWindow.ShowWindow(SW_HIDE);
             selectionModel.SetSrcRectSizeToZero();
         }
+        m_bLeftButton = bLeftButton;
     }
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
@@ -193,8 +196,11 @@ struct RectSelTool : ToolBase
 
     void OnCancelDraw()
     {
-        imageModel.Undo();
-        selectionModel.ResetPtStack();
+        if (m_bLeftButton)
+        {
+            imageModel.Undo();
+            selectionModel.ResetPtStack();
+        }
         ToolBase::OnCancelDraw();
     }
 };
