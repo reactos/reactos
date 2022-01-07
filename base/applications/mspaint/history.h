@@ -19,7 +19,6 @@ private:
     HDC hDrawingDC;
 public:
     HBITMAP hBms[HISTORYSIZE];
-    HBITMAP m_hbmStock;
 private:
     int currInd;
     int undoSteps;

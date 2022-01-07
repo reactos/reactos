@@ -28,7 +28,6 @@ ImageModel::ImageModel()
     undoSteps = 0;
     redoSteps = 0;
     imageSaved = TRUE;
-    m_hbmStock = NULL;
 
     // prepare a minimal usable bitmap
     int imgXRes = 1;
