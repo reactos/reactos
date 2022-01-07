@@ -569,8 +569,18 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_EDITDELETESELECTION:
         {
-            /* remove selection window and already painted content using undo */
-            imageModel.Undo();
+            switch (toolsModel.GetActiveTool())
+            {
+                case TOOL_FREESEL:
+                case TOOL_RECTSEL:
+                    toolsModel.OnButtonUp(TRUE, -1, -1);
+                    break;
+                case TOOL_TEXT:
+                    imageArea.cancelDrawing();
+                    break;
+                default:
+                    break;
+            }
             break;
         }
         case IDM_EDITSELECTALL:

@@ -140,8 +140,10 @@ LRESULT CSelectionWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
     if (m_iAction != ACTION_MOVE)
         SetCursor(LoadCursor(NULL, m_lpszCursorLUT[m_iAction]));
     m_bMoving = TRUE;
-    scrlClientWindow.InvalidateRect(NULL, TRUE);
-    imageArea.InvalidateRect(NULL, FALSE);
+    scrlClientWindow.InvalidateRect(NULL, FALSE);
+    scrlClientWindow.SendMessage(WM_PAINT, 0, 0);
+    imageArea.Invalidate(FALSE);
+    imageArea.SendMessage(WM_PAINT, 0, 0);
     return 0;
 }
 
@@ -182,6 +184,7 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
                 selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
         }
         imageArea.InvalidateRect(NULL, FALSE);
+        imageArea.SendMessage(WM_PAINT, 0, 0);
         m_ptPos.x = GET_X_LPARAM(lParam);
         m_ptPos.y = GET_Y_LPARAM(lParam);
     }
