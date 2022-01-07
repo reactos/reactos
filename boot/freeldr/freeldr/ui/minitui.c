@@ -114,15 +114,16 @@ MiniTuiDrawProgressBar(
 #endif
 }
 
-#ifndef _M_ARM
-
 VOID
-MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
+MiniTuiDrawMenu(
+    _In_ PUI_MENU_INFO MenuInfo)
 {
     ULONG i;
 
+#ifndef _M_ARM
     /* Draw the backdrop */
     UiDrawBackdrop();
+#endif
 
     /* No GUI status bar text, just minimal text. Show the menu header. */
     if (MenuInfo->MenuHeader)
@@ -167,8 +168,12 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
         DisplayBootTimeOptions();
     }
 
+#ifndef _M_ARM
     VideoCopyOffScreenBufferToVRAM();
+#endif
 }
+
+#ifndef _M_ARM
 
 const UIVTBL MiniTuiVtbl =
 {

@@ -28,11 +28,7 @@ TuiPrintf(
 
 #define TUI_TITLE_BOX_CHAR_HEIGHT    5
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Textual User Interface Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
+/* Textual User Interface Functions ******************************************/
 
 BOOLEAN    TuiInitialize(VOID);                                    // Initialize User-Interface
 VOID    TuiUnInitialize(VOID);                                    // Un-initialize User-Interface
@@ -101,17 +97,20 @@ UCHAR    TuiTextToFillStyle(PCSTR FillStyleText);                // Converts the
 VOID    TuiFadeInBackdrop(VOID);                                // Draws the backdrop and fades the screen in
 VOID    TuiFadeOut(VOID);                                        // Fades the screen out
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Menu Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
+/* Menu Functions ************************************************************/
 
-VOID  TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo);
-VOID  TuiDrawMenu(PUI_MENU_INFO MenuInfo);
-VOID  TuiDrawMenuBox(PUI_MENU_INFO MenuInfo);
-VOID  TuiDrawMenuItem(PUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
-ULONG TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
+VOID
+TuiDrawMenu(
+    _In_ PUI_MENU_INFO MenuInfo);
+
+VOID
+TuiDrawMenuBox(
+    _In_ PUI_MENU_INFO MenuInfo);
+
+VOID
+TuiDrawMenuItem(
+    _In_ PUI_MENU_INFO MenuInfo,
+    _In_ ULONG MenuItemNumber);
 
 BOOLEAN
 TuiDisplayMenu(
