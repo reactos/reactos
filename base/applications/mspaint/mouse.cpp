@@ -155,7 +155,6 @@ struct RectSelTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
-        imageModel.CopyPrevious();
         if (bLeftButton)
         {
             imageModel.CopyPrevious();
@@ -186,8 +185,6 @@ struct RectSelTool : ToolBase
             {
                 selectionModel.CalculateContents(m_hdc);
                 selectionModel.DrawBackgroundRect(m_hdc, m_bg);
-                imageModel.CopyPrevious();
-
                 selectionModel.DrawSelection(m_hdc);
 
                 placeSelWin();
@@ -199,7 +196,7 @@ struct RectSelTool : ToolBase
 
     void OnCancelDraw()
     {
-        imageModel.ResetToPrevious();
+        imageModel.Undo();
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
