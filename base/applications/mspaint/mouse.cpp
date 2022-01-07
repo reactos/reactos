@@ -135,7 +135,6 @@ struct FreeSelTool : ToolBase
             selectionWindow.IsMoved(FALSE);
             selectionWindow.ShowWindow(SW_SHOW);
         }
-        selectionModel.ResetPtStack();
     }
 
     void OnFinishDraw()
