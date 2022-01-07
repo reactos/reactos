@@ -550,6 +550,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             if (ToolBase::pointSP != 0) // drawing something?
             {
                 imageArea.finishDrawing();
+                break;
             }
             imageModel.Redo();
             imageArea.Invalidate(FALSE);

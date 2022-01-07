@@ -186,6 +186,7 @@ struct RectSelTool : ToolBase
                 imageModel.Undo();
             selectionModel.CalculateContents(m_hdc);
             placeSelWin();
+            selectionWindow.IsMoved(FALSE);
             if (selectionModel.IsSrcRectSizeNonzero())
                 selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
             else
@@ -197,6 +198,9 @@ struct RectSelTool : ToolBase
     {
         if (m_bLeftButton)
         {
+            if (!selectionWindow.IsMoved())
+                imageModel.Undo();
+            selectionWindow.IsMoved(FALSE);
             ForceRefreshSelectionContents();
             selectionWindow.ShowWindow(SW_HIDE);
         }

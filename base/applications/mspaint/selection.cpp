@@ -57,9 +57,9 @@ ForceRefreshSelectionContents()
 {
     if (selectionWindow.IsWindowVisible())
     {
-        selectionWindow.SendMessage(WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
-        selectionWindow.SendMessage(WM_MOUSEMOVE,   0, MAKELPARAM(0, 0));
-        selectionWindow.SendMessage(WM_LBUTTONUP,   0, MAKELPARAM(0, 0));
+        imageModel.ResetToPrevious();
+        imageModel.DrawSelectionBackground();
+        selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
     }
 }
 
@@ -204,6 +204,12 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     return 0;
 }
 
+LRESULT CSelectionWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    m_bMoved = TRUE;
+    return 0;
+}
+
 LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (m_bMoving)
@@ -263,23 +269,16 @@ LRESULT CSelectionWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CSelectionWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (toolsModel.GetActiveTool() == TOOL_TEXT)
-        ForceRefreshSelectionContents();
     return 0;
 }
 
 LRESULT CSelectionWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (toolsModel.GetActiveTool() == TOOL_FREESEL ||
-        toolsModel.GetActiveTool() == TOOL_RECTSEL ||
-        toolsModel.GetActiveTool() == TOOL_TEXT)
-        ForceRefreshSelectionContents();
     return 0;
 }
 
 LRESULT CSelectionWindow::OnSelectionModelRefreshNeeded(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    ForceRefreshSelectionContents();
     return 0;
 }
 

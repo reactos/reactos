@@ -14,6 +14,19 @@ class CSelectionWindow : public CWindowImpl<CSelectionWindow>
 public:
     DECLARE_WND_CLASS_EX(_T("Selection"), CS_DBLCLKS, COLOR_BTNFACE)
 
+    CSelectionWindow() : m_bMoved(FALSE)
+    {
+    }
+
+    BOOL IsMoved() const
+    {
+        return m_bMoved;
+    }
+    void IsMoved(BOOL bMoved)
+    {
+        m_bMoved = bMoved;
+    }
+
     BEGIN_MSG_MAP(CSelectionWindow)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
@@ -24,6 +37,7 @@ public:
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+        MESSAGE_HANDLER(WM_MOVE, OnMove)
         MESSAGE_HANDLER(WM_PALETTEMODELCOLORCHANGED, OnPaletteModelColorChanged)
         MESSAGE_HANDLER(WM_TOOLSMODELSETTINGSCHANGED, OnToolsModelSettingsChanged)
         MESSAGE_HANDLER(WM_SELECTIONMODELREFRESHNEEDED, OnSelectionModelRefreshNeeded)
@@ -38,6 +52,7 @@ public:
     LRESULT OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -48,6 +63,7 @@ public:
 
 private:
     static const LPCTSTR m_lpszCursorLUT[9];
+    BOOL m_bMoved;
     BOOL m_bMoving;
     int m_iAction;
     POINT m_ptPos;
