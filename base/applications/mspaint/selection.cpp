@@ -231,7 +231,14 @@ LRESULT CSelectionWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lPar
         m_bMoving = FALSE;
         if (m_iAction == ACTION_MOVE)
         {
-            placeSelWin();
+            if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
+            {
+                imageArea.cancelDrawing();
+            }
+            else
+            {
+                placeSelWin();
+            }
         }
         else
         {
