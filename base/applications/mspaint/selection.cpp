@@ -174,17 +174,11 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         strSize.Format(_T("%ld x %ld"), selectionModel.GetDestRectWidth(), selectionModel.GetDestRectHeight());
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
 
-        if (toolsModel.GetActiveTool() == TOOL_TEXT)
-        {
-            selectionModel.DrawTextToolText(imageModel.GetDC(), paletteModel.GetFgColor(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
-        }
+        if (m_iAction != ACTION_MOVE)
+            selectionModel.DrawSelectionStretched(imageModel.GetDC());
         else
-        {
-            if (m_iAction != ACTION_MOVE)
-                selectionModel.DrawSelectionStretched(imageModel.GetDC());
-            else
-                selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
-        }
+            selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
+
         imageArea.InvalidateRect(NULL, FALSE);
         imageArea.SendMessage(WM_PAINT, 0, 0);
         m_ptPos.x = GET_X_LPARAM(lParam);
