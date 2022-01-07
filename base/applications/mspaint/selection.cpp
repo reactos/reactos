@@ -112,7 +112,7 @@ LRESULT CSelectionWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     m_iAction = ACTION_MOVE;
     /* update the system selection color */
     m_dwSystemSelectionColor = GetSysColor(COLOR_HIGHLIGHT);
-    SendMessage(WM_PAINT, 0, MAKELPARAM(0, 0));
+    Invalidate();
     return 0;
 }
 
@@ -120,7 +120,7 @@ LRESULT CSelectionWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lPar
 {
     /* update the system selection color */
     m_dwSystemSelectionColor = GetSysColor(COLOR_HIGHLIGHT);
-    SendMessage(WM_PAINT, 0, MAKELPARAM(0, 0));
+    Invalidate();
     return 0;
 }
 
@@ -141,9 +141,7 @@ LRESULT CSelectionWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
         SetCursor(LoadCursor(NULL, m_lpszCursorLUT[m_iAction]));
     m_bMoving = TRUE;
     scrlClientWindow.InvalidateRect(NULL, TRUE);
-    scrlClientWindow.SendMessage(WM_PAINT, 0, 0);
     imageArea.InvalidateRect(NULL, FALSE);
-    imageArea.SendMessage(WM_PAINT, 0, 0);
     return 0;
 }
 
@@ -184,7 +182,6 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
                 selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
         }
         imageArea.InvalidateRect(NULL, FALSE);
-        imageArea.SendMessage(WM_PAINT, 0, 0);
         m_ptPos.x = GET_X_LPARAM(lParam);
         m_ptPos.y = GET_Y_LPARAM(lParam);
     }
