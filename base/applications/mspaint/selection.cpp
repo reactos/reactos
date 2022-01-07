@@ -87,15 +87,15 @@ int CSelectionWindow::IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeig
 
 LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    PAINTSTRUCT ps;
+    HDC hDC = BeginPaint(&ps);
     if (!m_bMoving)
     {
-        PAINTSTRUCT ps;
-        HDC hDC = BeginPaint(&ps);
         SelectionFrame(hDC, 1, 1, Zoomed(selectionModel.GetDestRectWidth()) + 5,
                        Zoomed(selectionModel.GetDestRectHeight()) + 5,
                        GetSysColor(COLOR_HIGHLIGHT));
-        EndPaint(&ps);
     }
+    EndPaint(&ps);
     return 0;
 }
 
