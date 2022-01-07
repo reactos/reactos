@@ -23,6 +23,11 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(PELOADER);
 
+/* GLOBALS *******************************************************************/
+
+PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback = NULL;
+
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 /* DllName - physical, UnicodeString->Buffer - virtual */
@@ -355,6 +360,9 @@ PeLdrpLoadAndScanReferencedDll(
     RtlStringCbCatA(FullDllName, sizeof(FullDllName), ImportName);
 
     TRACE("Loading referenced DLL: %s\n", FullDllName);
+
+    if (PeLdrImportDllLoadCallback)
+        PeLdrImportDllLoadCallback(FullDllName);
 
     /* Load the image */
     Success = PeLdrLoadImage(FullDllName, LoaderBootDriver, &BasePA);
@@ -722,7 +730,7 @@ PeLdrLoadImage(
     LARGE_INTEGER Position;
     ULONG i, BytesRead;
 
-    TRACE("PeLdrLoadImage(%s, %ld, *)\n", FileName, MemoryType);
+    TRACE("PeLdrLoadImage(%s, %ld)\n", FileName, MemoryType);
 
     /* Open the image file */
     Status = ArcOpen((PSTR)FileName, OpenReadOnly, &FileId);

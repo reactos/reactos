@@ -39,6 +39,38 @@ BOOLEAN NoexecuteEnabled = FALSE;
 // debug stuff
 VOID DumpMemoryAllocMap(VOID);
 
+/* PE loader import-DLL loading callback */
+static VOID
+NTAPI
+NtLdrImportDllLoadCallback(
+    _In_ PCSTR FileName)
+{
+    NtLdrOutputLoadMsg(FileName, NULL);
+}
+
+VOID
+NtLdrOutputLoadMsg(
+    _In_ PCSTR FileName,
+    _In_opt_ PCSTR Description)
+{
+    if (SosEnabled)
+    {
+        printf("  %s\n", FileName);
+        TRACE("Loading: %s\n", FileName);
+    }
+    else
+    {
+        /* Inform the user we load a file */
+        CHAR ProgressString[256];
+
+        RtlStringCbPrintfA(ProgressString, sizeof(ProgressString),
+                           "Loading %s...",
+                           (Description ? Description : FileName));
+        // UiDrawProgressBarCenter(1, 100, ProgressString);
+        UiDrawStatusText(ProgressString);
+    }
+}
+
 // Init "phase 0"
 VOID
 AllocateAndInitLPB(
@@ -288,6 +320,8 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 
     // It's not loaded, we have to load it
     RtlStringCbPrintfA(FullPath, sizeof(FullPath), "%s%wZ", BootPath, FilePath);
+
+    NtLdrOutputLoadMsg(FullPath, NULL);
     Success = PeLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
     if (!Success)
         return FALSE;
@@ -379,16 +413,10 @@ WinLdrLoadModule(PCSTR ModuleName,
     ARC_STATUS Status;
     ULONG BytesRead;
 
-    //CHAR ProgressString[256];
-
-    /* Inform user we are loading files */
-    //RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", FileName);
-    //UiDrawProgressBarCenter(1, 100, ProgressString);
-
-    TRACE("Loading module %s\n", ModuleName);
     *Size = 0;
 
     /* Open the image file */
+    NtLdrOutputLoadMsg(ModuleName, NULL);
     Status = ArcOpen((PSTR)ModuleName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
@@ -467,11 +495,12 @@ LoadModule(
     PVOID BaseAddress = NULL;
 
     RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", File);
-    UiDrawProgressBarCenter(Percentage, 100, ProgressString);
+    if (!SosEnabled) UiDrawProgressBarCenter(Percentage, 100, ProgressString);
 
     RtlStringCbCopyA(FullFileName, sizeof(FullFileName), Path);
     RtlStringCbCatA(FullFileName, sizeof(FullFileName), File);
 
+    NtLdrOutputLoadMsg(FullFileName, NULL);
     Success = PeLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
     if (!Success)
     {
@@ -619,12 +648,6 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         /* We found the 3GB option. */
         FIXME("LoadWindowsCore: 3GB - TRUE (not implemented)\n");
         VirtualBias = TRUE;
-    }
-    if (NtLdrGetOption(BootOptions, "SOS"))
-    {
-        /* We found the SOS option. */
-        FIXME("LoadWindowsCore: SOS - TRUE (not implemented)\n");
-        SosEnabled = TRUE;
     }
 
     if (OperatingSystemVersion > _WIN32_WINNT_NT4)
@@ -813,7 +836,9 @@ LoadAndBootWindows(
         return EINVAL;
     }
 
+    /* Let the user know we started loading */
     UiDrawBackdrop();
+    UiDrawStatusText("Loading...");
     UiDrawProgressBarCenter(1, 100, "Loading NT...");
 
     /* Retrieve the system path */
@@ -909,14 +934,16 @@ LoadAndBootWindows(
         }
     }
 
-    /* Let user know we started loading */
-    //UiDrawStatusText("Loading...");
+    /* Handle the SOS option */
+    SosEnabled = !!NtLdrGetOption(BootOptions, "SOS");
+    if (SosEnabled)
+        UiResetForSOS();
 
     /* Allocate and minimally-initialize the Loader Parameter Block */
     AllocateAndInitLPB(OperatingSystemVersion, &LoaderBlock);
 
     /* Load the system hive */
-    UiDrawProgressBarCenter(15, 100, "Loading system hive...");
+    if (!SosEnabled) UiDrawProgressBarCenter(15, 100, "Loading system hive...");
     Success = WinLdrInitSystemHive(LoaderBlock, BootPath, FALSE);
     TRACE("SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
     /* Bail out if failure */
@@ -974,8 +1001,12 @@ LoadAndBootWindowsCommon(
     SystemRoot = strstr(BootPath, "\\");
 
     /* Detect hardware */
-    UiDrawProgressBarCenter(20, 100, "Detecting hardware...");
+    if (!SosEnabled) UiDrawProgressBarCenter(20, 100, "Detecting hardware...");
     LoaderBlock->ConfigurationRoot = MachHwDetect();
+
+    /* Initialize the PE loader import-DLL callback, so that we can obtain
+     * feedback (for example during SOS) on the PE images that get loaded. */
+    PeLdrImportDllLoadCallback = NtLdrImportDllLoadCallback;
 
     /* Load the operating system core: the Kernel, the HAL and the Kernel Debugger Transport DLL */
     Success = LoadWindowsCore(OperatingSystemVersion,
@@ -985,17 +1016,27 @@ LoadAndBootWindowsCommon(
                               &KernelDTE);
     if (!Success)
     {
+        /* Reset the PE loader import-DLL callback */
+        PeLdrImportDllLoadCallback = NULL;
+
         UiMessageBox("Error loading NTOS core.");
         return ENOEXEC;
     }
 
+    /* Cleanup INI file */
+    IniCleanup();
+
+/****
+ **** WE HAVE NOW REACHED THE POINT OF NO RETURN !!
+ ****/
+
     /* Load boot drivers */
-    UiDrawProgressBarCenter(100, 100, "Loading boot drivers...");
+    if (!SosEnabled) UiDrawProgressBarCenter(100, 100, "Loading boot drivers...");
     Success = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
     TRACE("Boot drivers loading %s\n", Success ? "successful" : "failed");
 
-    /* Cleanup ini file */
-    IniCleanup();
+    /* Reset the PE loader import-DLL callback */
+    PeLdrImportDllLoadCallback = NULL;
 
     /* Initialize Phase 1 - no drivers loading anymore */
     WinLdrInitializePhase1(LoaderBlock,
