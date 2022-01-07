@@ -107,7 +107,6 @@ struct FreeSelTool : ToolBase
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
     {
-        imageModel.CopyPrevious();
         selectionWindow.ShowWindow(SW_HIDE);
         selectionModel.ResetPtStack();
         selectionModel.PushToPtStack(x, y);
@@ -115,23 +114,24 @@ struct FreeSelTool : ToolBase
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
-        imageModel.ResetToPrevious();
+        if (selectionModel.PtStackSize() == 1)
+            imageModel.CopyPrevious();
         selectionModel.PushToPtStack(max(0, min(x, imageModel.GetWidth())), max(0, min(y, imageModel.GetHeight())));
+        imageModel.ResetToPrevious();
         selectionModel.DrawFramePoly(m_hdc);
     }
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
-        selectionModel.CalculateBoundingBoxAndContents(m_hdc);
         if (selectionModel.PtStackSize() > 1)
         {
-            selectionModel.DrawBackgroundPoly(m_hdc, m_bg);
-            selectionModel.DrawSelection(m_hdc);
+            imageModel.CopyPrevious();
+            selectionModel.CalculateBoundingBoxAndContents(m_hdc);
 
             placeSelWin();
             selectionWindow.ShowWindow(SW_SHOW);
-            ForceRefreshSelectionContents();
+            selectionWindow.ForceRefreshSelectionContents();
         }
         selectionModel.ResetPtStack();
     }
@@ -201,7 +201,7 @@ struct RectSelTool : ToolBase
             if (!selectionWindow.IsMoved())
                 imageModel.Undo();
             selectionWindow.IsMoved(FALSE);
-            ForceRefreshSelectionContents();
+            selectionWindow.ForceRefreshSelectionContents();
             selectionWindow.ShowWindow(SW_HIDE);
         }
         m_bLeftButton = FALSE;

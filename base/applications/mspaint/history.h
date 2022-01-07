@@ -23,11 +23,10 @@ private:
     int currInd;
     int undoSteps;
     int redoSteps;
-    COLORREF m_rgbBack;
 public:
     ImageModel();
     void CopyPrevious(void);
-    void DrawSelectionBackground();
+    void DrawSelectionBackground(COLORREF rgbBG);
     void DeleteSelection();
     void Undo(void);
     void Redo(void);

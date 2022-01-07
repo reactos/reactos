@@ -27,6 +27,8 @@ public:
         m_bMoved = bMoved;
     }
 
+    void ForceRefreshSelectionContents();
+
     BEGIN_MSG_MAP(CSelectionWindow)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
@@ -69,8 +71,7 @@ private:
     POINT m_ptPos;
     POINT m_ptFrac;
     POINT m_ptDelta;
+    COLORREF m_rgbBack;
 
     int IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeight);
 };
-
-void ForceRefreshSelectionContents();

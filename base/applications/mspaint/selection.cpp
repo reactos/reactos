@@ -52,13 +52,12 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, 
     return TRUE;
 }
 
-void
-ForceRefreshSelectionContents()
+void CSelectionWindow::ForceRefreshSelectionContents()
 {
     if (selectionWindow.IsWindowVisible())
     {
         imageModel.ResetToPrevious();
-        imageModel.DrawSelectionBackground();
+        imageModel.DrawSelectionBackground(m_rgbBack);
         selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
     }
 }
@@ -139,6 +138,7 @@ LRESULT CSelectionWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
     scrlClientWindow.SendMessage(WM_PAINT, 0, 0);
     imageArea.Invalidate(FALSE);
     imageArea.SendMessage(WM_PAINT, 0, 0);
+    m_rgbBack = paletteModel.GetBgColor();
     return 0;
 }
 
@@ -147,7 +147,7 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     if (m_bMoving)
     {
         imageModel.ResetToPrevious();
-        imageModel.DrawSelectionBackground();
+        imageModel.DrawSelectionBackground(m_rgbBack);
 
         m_ptFrac.x += GET_X_LPARAM(lParam) - m_ptPos.x;
         m_ptFrac.y += GET_Y_LPARAM(lParam) - m_ptPos.y;
@@ -207,7 +207,7 @@ LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         if (m_iAction != ACTION_MOVE && toolsModel.GetActiveTool() != TOOL_TEXT)
         {
             imageModel.Undo();
-            imageModel.DrawSelectionBackground();
+            imageModel.DrawSelectionBackground(m_rgbBack);
             selectionModel.ScaleContentsToFit();
             imageModel.CopyPrevious();
         }

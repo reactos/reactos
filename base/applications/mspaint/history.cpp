@@ -51,7 +51,6 @@ void ImageModel::CopyPrevious()
         undoSteps++;
     redoSteps = 0;
     SelectObject(hDrawingDC, hBms[currInd]);
-    m_rgbBack = paletteModel.GetBgColor();
     imageSaved = FALSE;
 }
 
@@ -100,9 +99,12 @@ void ImageModel::ResetToPrevious()
     NotifyImageChanged();
 }
 
-void ImageModel::DrawSelectionBackground()
+void ImageModel::DrawSelectionBackground(COLORREF rgbBG)
 {
-    selectionModel.DrawBackgroundRect(hDrawingDC, m_rgbBack);
+    if (toolsModel.GetActiveTool() == TOOL_FREESEL)
+        selectionModel.DrawBackgroundPoly(hDrawingDC, rgbBG);
+    else
+        selectionModel.DrawBackgroundRect(hDrawingDC, rgbBG);
 }
 
 void ImageModel::ClearRedo(void)
@@ -265,7 +267,7 @@ void ImageModel::DeleteSelection()
     CopyPrevious();
     if (selectionWindow.IsWindowVisible())
         Undo();
-    DrawSelectionBackground();
+    imageModel.DrawSelectionBackground(paletteModel.GetBgColor());
     ClearRedo();
     selectionWindow.ShowWindow(SW_HIDE);
     NotifyImageChanged();

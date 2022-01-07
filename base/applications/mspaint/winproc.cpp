@@ -152,7 +152,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 
     placeSelWin();
     selectionWindow.ShowWindow(SW_SHOW);
-    ForceRefreshSelectionContents();
+    selectionWindow.ForceRefreshSelectionContents();
 }
 
 LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
