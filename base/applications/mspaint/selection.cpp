@@ -134,7 +134,7 @@ LRESULT CSelectionWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
     if (m_iAction != ACTION_MOVE)
         SetCursor(LoadCursor(NULL, m_lpszCursorLUT[m_iAction]));
     m_bMoving = TRUE;
-    scrlClientWindow.InvalidateRect(NULL, FALSE);
+    scrlClientWindow.Invalidate(FALSE);
     scrlClientWindow.SendMessage(WM_PAINT, 0, 0);
     imageArea.Invalidate(FALSE);
     imageArea.SendMessage(WM_PAINT, 0, 0);
@@ -224,13 +224,9 @@ LRESULT CSelectionWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lPar
         if (m_iAction == ACTION_MOVE)
         {
             if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
-            {
                 imageArea.cancelDrawing();
-            }
             else
-            {
                 placeSelWin();
-            }
         }
         else
         {

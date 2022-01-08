@@ -527,14 +527,12 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                     toolsModel.GetActiveTool() == TOOL_FREESEL)
                 {
                     imageArea.cancelDrawing();
-                    imageArea.Invalidate(FALSE);
                     break;
                 }
             }
             if (ToolBase::pointSP != 0) // drawing something?
             {
                 imageArea.cancelDrawing();
-                imageArea.Invalidate(FALSE);
                 break;
             }
             imageModel.Undo(__LINE__);
@@ -579,6 +577,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 case TOOL_RECTSEL:
                     imageModel.DeleteSelection();
                     break;
+
                 case TOOL_TEXT:
                     imageArea.cancelDrawing();
                     break;
