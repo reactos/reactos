@@ -28,11 +28,10 @@ public:
     void CopyPrevious(INT line);
     void DrawSelectionBackground(COLORREF rgbBG);
     void DeleteSelection();
-    void Undo(INT line);
+    void Undo(INT line, BOOL bClearRedo = FALSE);
     void Redo(INT line);
     void ResetToPrevious(void);
     void ClearHistory(void);
-    void ClearRedo(void);
     void Insert(HBITMAP hbm);
     void Crop(int nWidth, int nHeight, int nOffsetX = 0, int nOffsetY = 0);
     void SaveImage(LPTSTR lpFileName);

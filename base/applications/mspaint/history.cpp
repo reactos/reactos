@@ -55,7 +55,7 @@ void ImageModel::CopyPrevious(INT line)
     imageSaved = FALSE;
 }
 
-void ImageModel::Undo(INT line)
+void ImageModel::Undo(INT line, BOOL bClearRedo)
 {
     DPRINT("ImageModel::Undo: Line %d: %d\n", line, undoSteps);
     if (undoSteps > 0)
@@ -66,7 +66,9 @@ void ImageModel::Undo(INT line)
         currInd = (currInd + HISTORYSIZE - 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         undoSteps--;
-        if (redoSteps < HISTORYSIZE - 1)
+        if (bClearRedo)
+            redoSteps = 0;
+        else if (redoSteps < HISTORYSIZE - 1)
             redoSteps++;
         if (GetWidth() != oldWidth || GetHeight() != oldHeight)
             NotifyDimensionsChanged();
@@ -110,15 +112,9 @@ void ImageModel::DrawSelectionBackground(COLORREF rgbBG)
         selectionModel.DrawBackgroundRect(hDrawingDC, rgbBG);
 }
 
-void ImageModel::ClearRedo(void)
-{
-    redoSteps = 0;
-}
-
 void ImageModel::ClearHistory()
 {
-    undoSteps = 0;
-    redoSteps = 0;
+    undoSteps = redoSteps = 0;
 }
 
 void ImageModel::Insert(HBITMAP hbm)
@@ -269,9 +265,8 @@ void ImageModel::DeleteSelection()
         ResetToPrevious();
     CopyPrevious(__LINE__);
     if (selectionWindow.IsWindowVisible())
-        Undo(__LINE__);
+        Undo(__LINE__, TRUE);
     imageModel.DrawSelectionBackground(paletteModel.GetBgColor());
-    ClearRedo();
     selectionWindow.ShowWindow(SW_HIDE);
     NotifyImageChanged();
 }
