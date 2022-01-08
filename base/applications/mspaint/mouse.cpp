@@ -123,10 +123,10 @@ struct FreeSelTool : ToolBase
     {
         if (bLeftButton)
         {
-            POINT temp;
-            temp.x = max(0, min(x, imageModel.GetWidth()));
-            temp.y = max(0, min(y, imageModel.GetHeight()));
-            selectionModel.PushToPtStack(temp.x, temp.y);
+            POINT pt;
+            pt.x = max(0, min(x, imageModel.GetWidth()));
+            pt.y = max(0, min(y, imageModel.GetHeight()));
+            selectionModel.PushToPtStack(pt.x, pt.y);
             imageModel.ResetToPrevious();
             selectionModel.DrawFramePoly(m_hdc);
         }
@@ -140,7 +140,6 @@ struct FreeSelTool : ToolBase
             if (selectionModel.PtStackSize() > 2)
             {
                 selectionModel.CalculateBoundingBoxAndContents(m_hdc);
-
                 placeSelWin();
                 selectionWindow.IsMoved(FALSE);
                 selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
@@ -170,11 +169,9 @@ struct FreeSelTool : ToolBase
     void OnCancelDraw()
     {
         if (m_bLeftButton)
-        {
             imageModel.Undo(__LINE__, TRUE);
-            selectionWindow.IsMoved(FALSE);
-        }
         m_bLeftButton = FALSE;
+        selectionWindow.IsMoved(FALSE);
         selectionModel.ResetPtStack();
         selectionWindow.ShowWindow(SW_HIDE);
         ToolBase::OnCancelDraw();
@@ -203,14 +200,14 @@ struct RectSelTool : ToolBase
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
-        POINT temp;
+        POINT pt;
         if (bLeftButton)
         {
             imageModel.ResetToPrevious();
-            temp.x = max(0, min(x, imageModel.GetWidth()));
-            temp.y = max(0, min(y, imageModel.GetHeight()));
-            selectionModel.SetSrcAndDestRectFromPoints(start, temp);
-            RectSel(m_hdc, start.x, start.y, temp.x, temp.y);
+            pt.x = max(0, min(x, imageModel.GetWidth()));
+            pt.y = max(0, min(y, imageModel.GetHeight()));
+            selectionModel.SetSrcAndDestRectFromPoints(start, pt);
+            RectSel(m_hdc, start.x, start.y, pt.x, pt.y);
         }
     }
 
@@ -220,9 +217,7 @@ struct RectSelTool : ToolBase
         {
             imageModel.ResetToPrevious();
             if (start.x == x && start.y == y)
-            {
                 imageModel.Undo(__LINE__, TRUE);
-            }
             selectionModel.CalculateContents(m_hdc);
             placeSelWin();
             selectionWindow.IsMoved(FALSE);
@@ -247,11 +242,9 @@ struct RectSelTool : ToolBase
     void OnCancelDraw()
     {
         if (m_bLeftButton)
-        {
             imageModel.Undo(__LINE__, TRUE);
-            selectionWindow.IsMoved(FALSE);
-        }
         m_bLeftButton = FALSE;
+        selectionWindow.IsMoved(FALSE);
         selectionWindow.ShowWindow(SW_HIDE);
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
@@ -330,17 +323,17 @@ struct ColorTool : ToolBase
 
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
-        COLORREF tempColor;
+        COLORREF rgbColor;
 
         if (0 <= x && x < imageModel.GetWidth() && 0 <= y && y < imageModel.GetHeight())
-            tempColor = GetPixel(m_hdc, x, y);
+            rgbColor = GetPixel(m_hdc, x, y);
         else
-            tempColor = RGB(255, 255, 255); // Outside is white
+            rgbColor = RGB(255, 255, 255); // Outside is white
 
         if (bLeftButton)
-            paletteModel.SetFgColor(tempColor);
+            paletteModel.SetFgColor(rgbColor);
         else
-            paletteModel.SetBgColor(tempColor);
+            paletteModel.SetBgColor(rgbColor);
 
         toolsModel.SetActiveTool(toolsModel.GetOldActiveTool());
     }
@@ -725,8 +718,8 @@ struct ShapeTool : ToolBase
         else
         {
             imageModel.Undo(__LINE__, TRUE);
-            selectionModel.ResetPtStack();
         }
+        selectionModel.ResetPtStack();
     }
 };
 

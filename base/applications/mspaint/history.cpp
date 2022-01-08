@@ -42,11 +42,17 @@ ImageModel::ImageModel()
     Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
 }
 
+HBITMAP ImageModel::MyCopyImage(HBITMAP hbm, INT cx, INT cy)
+{
+    return reinterpret_cast<HBITMAP>(::CopyImage(hbm, IMAGE_BITMAP, 0, 0,
+                                                 LR_COPYRETURNORG | LR_CREATEDIBSECTION));
+}
+
 void ImageModel::CopyPrevious(INT line)
 {
     DPRINT("ImageModel::CopyPrevious: Line %d\n", line);
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-    hBms[(currInd + 1) % HISTORYSIZE] = (HBITMAP) CopyImage(hBms[currInd], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
+    hBms[(currInd + 1) % HISTORYSIZE] = MyCopyImage(hBms[currInd]);
     currInd = (currInd + 1) % HISTORYSIZE;
     if (undoSteps < HISTORYSIZE - 1)
         undoSteps++;
@@ -98,8 +104,7 @@ void ImageModel::Redo(INT line)
 void ImageModel::ResetToPrevious()
 {
     DeleteObject(hBms[currInd]);
-    hBms[currInd] =
-        (HBITMAP) CopyImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
+    hBms[currInd] = MyCopyImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE]);
     SelectObject(hDrawingDC, hBms[currInd]);
     NotifyImageChanged();
 }
@@ -195,9 +200,9 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
 {
     int oldWidth = GetWidth();
     int oldHeight = GetHeight();
-    Insert((HBITMAP) CopyImage(hBms[currInd], IMAGE_BITMAP,
-           GetWidth() * nStretchPercentX / 100,
-           GetHeight() * nStretchPercentY / 100, 0));
+    int newWidth = GetWidth() * nStretchPercentX / 100;
+    int newHeight = GetHeight() * nStretchPercentY / 100;
+    Insert(MyCopyImage(hBms[currInd], newWidth, newHeight));
     if (GetWidth() != oldWidth || GetHeight() != oldHeight)
         NotifyDimensionsChanged();
     NotifyImageChanged();
