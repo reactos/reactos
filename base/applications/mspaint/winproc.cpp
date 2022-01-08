@@ -522,11 +522,15 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITUNDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
                 break;
-            if (toolsModel.GetActiveTool() == TOOL_RECTSEL && selectionWindow.IsWindowVisible())
+            if (selectionWindow.IsWindowVisible())
             {
-                imageArea.cancelDrawing();
-                imageArea.Invalidate(FALSE);
-                break;
+                if (toolsModel.GetActiveTool() == TOOL_RECTSEL ||
+                    toolsModel.GetActiveTool() == TOOL_FREESEL)
+                {
+                    imageArea.cancelDrawing();
+                    imageArea.Invalidate(FALSE);
+                    break;
+                }
             }
             if (ToolBase::pointSP != 0) // drawing something?
             {

@@ -139,7 +139,6 @@ struct FreeSelTool : ToolBase
             imageModel.ResetToPrevious();
             if (selectionModel.PtStackSize() > 2)
             {
-                imageModel.CopyPrevious(__LINE__);
                 selectionModel.CalculateBoundingBoxAndContents(m_hdc);
 
                 placeSelWin();
@@ -148,6 +147,8 @@ struct FreeSelTool : ToolBase
             }
             else
             {
+                imageModel.Undo(__LINE__);
+                imageModel.ClearRedo();
                 selectionWindow.IsMoved(FALSE);
                 selectionModel.ResetPtStack();
                 selectionWindow.ShowWindow(SW_HIDE);
@@ -169,9 +170,10 @@ struct FreeSelTool : ToolBase
 
     void OnCancelDraw()
     {
-        if (m_bLeftButton && selectionWindow.IsMoved())
+        if (m_bLeftButton)
         {
             imageModel.Undo(__LINE__);
+            imageModel.ClearRedo();
             selectionWindow.IsMoved(FALSE);
         }
         m_bLeftButton = FALSE;
