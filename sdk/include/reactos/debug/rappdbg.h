@@ -38,7 +38,7 @@
 #ifdef NO_STRSAFE
             wvsprintfA(buf, fmt, va);
 #else
-            StringCchPrintfA(buf, _countof(buf), fmt, va);
+            StringCchVPrintfA(buf, _countof(buf), fmt, va);
 #endif
             OutputDebugStringA(buf);
             va_end(va);
