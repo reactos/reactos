@@ -715,7 +715,6 @@ struct ShapeTool : ToolBase
 
     void OnCancelDraw()
     {
-        imageModel.ResetToPrevious();
         imageModel.Undo(__LINE__);
         imageModel.ClearRedo();
         selectionModel.ResetPtStack();
@@ -730,6 +729,12 @@ struct ShapeTool : ToolBase
             --pointSP;
             draw(m_bLeftButton, -1, -1, TRUE);
             pointSP = 0;
+        }
+        else
+        {
+            imageModel.Undo(__LINE__);
+            imageModel.ClearRedo();
+            selectionModel.ResetPtStack();
         }
     }
 };
