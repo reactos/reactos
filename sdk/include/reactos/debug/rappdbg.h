@@ -51,10 +51,10 @@ rappdbg_printfA(const char *fmt, ...)
 }
 
 #  define DPRINT rappdbg_printfA
-# else // !DBG
+# else /* !DBG */
 #  define DPRINT 1 ? 0 : (void)
-# endif
-#endif // !DBG
+# endif /* !DBG */
+#endif /* DPRINT */
 
 #ifndef DPRINT1
 #define DPRINT1 DPRINT
