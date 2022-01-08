@@ -560,7 +560,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040e","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5033"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout File",0x00000000,"kbdic.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout Text",0x00000000,%ICELANDIC%"Icelandic"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout Text",0x00000000,%ICELANDIC%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040f","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5013"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000410","Layout File",0x00000000,"kbdit.dll"
@@ -687,7 +687,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000425","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000425","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5042"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout File",0x00000000,"kbdlv.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Text",0x00000000,%LATVIAN%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Text",0x00000000,%LATVIAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5043"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010427","Layout File",0x00000000,"kbdlt1.dll"
@@ -711,7 +711,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042c","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5117"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout File",0x00000000,"kbdaze.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout Text",0x00000000,%AZERI_CYRILLIC%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout Text",0x00000000,%AZERI_CYRILLIC%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5115"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042f","Layout File",0x00000000,"kbdmac.dll"
@@ -761,7 +761,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout File",0x00000000,"kbdbur.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Text",0x00000000,%BURMESE%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5140"
-
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000048f","Layout File",0x00000000,"kbdeo.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000048f","Layout Text",0x00000000,"Esperanto"
@@ -1378,7 +1377,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Parallel arbitrator", \
  "Extended Base" \
  "PCI Configuration", \
- "MS Transactions
+ "MS Transactions"
 
 ; Set the timeout for directx/ReactX graphic surface lock see _EDD_DIRECTDRAW_GLOBAL struct for more info
 HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\DCI","Timeout",0x00010001,0x00000007
@@ -2237,7 +2236,7 @@ NORWEGIAN = "Norwegian"
 POLISH_214 = "Polish (214)"
 POLISH_PROGRAMMERS = "Polish (Programmers)"
 PORTUGESE = "Portuguese (Portugal)"
-PORTUGESE_BRAZILIAN% = "Portuguese (Brazilian ABNT2)"
+PORTUGESE_BRAZILIAN = "Portuguese (Brazilian ABNT2)"
 ROMANIAN = "Romanian"
 RUSSIAN = "Russian"
 RUSSIAN_TYPEWRITER = "Russian (Typewriter)"
@@ -2373,7 +2372,7 @@ NORWEGIAN = "Norweski"
 POLISH_214 = "Polski (214)"
 POLISH_PROGRAMMERS = "Polski (Programisty)"
 PORTUGESE = "Portugalski"
-PORTUGESE_BRAZILIAN% = "Portugalski (Brazylijski ABNT2)"
+PORTUGESE_BRAZILIAN = "Portugalski (Brazylijski ABNT2)"
 ROMANIAN = "Rumuński"
 RUSSIAN = "Rosyjski"
 RUSSIAN_TYPEWRITER = "Rosyjski (Maszynisty)"
@@ -2509,7 +2508,7 @@ NORWEGIAN = "Norvegiană"
 POLISH_214 = "Poloneză (214)"
 POLISH_PROGRAMMERS = "Poloneză (programatori)"
 PORTUGESE = "Portugheză (Portugalia)"
-PORTUGESE_BRAZILIAN% = "Portugheză (Braziliană ABNT2)"
+PORTUGESE_BRAZILIAN = "Portugheză (Braziliană ABNT2)"
 ROMANIAN = "Română"
 RUSSIAN = "Rusă"
 RUSSIAN_TYPEWRITER = "Rusă (dactilografiere)"
