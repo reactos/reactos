@@ -25,10 +25,6 @@
 #define ASSERT assert
 #endif
 
-#ifndef STATIC_ASSERT
-#define STATIC_ASSERT C_ASSERT
-#endif
-
 #ifndef DPRINT
 # if DBG
 #  ifndef APPDBG_BUFSIZE
@@ -54,7 +50,3 @@ static inline void rappdbg_printfA(const char *fmt, ...)
 #  define DPRINT 1 ? 0 : (void)
 # endif /* !DBG */
 #endif /* DPRINT */
-
-#ifndef DPRINT1
-#define DPRINT1 DPRINT
-#endif
