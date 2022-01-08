@@ -165,7 +165,8 @@ void ToolsModel::NotifyToolChanged()
 void ToolsModel::NotifyToolSettingsChanged()
 {
     toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
-    selectionWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
+    if (selectionWindow.IsWindow())
+        selectionWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
     if (textEditWindow.IsWindow())
         textEditWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
 }
@@ -173,6 +174,8 @@ void ToolsModel::NotifyToolSettingsChanged()
 void ToolsModel::NotifyZoomChanged()
 {
     toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
+    if (selectionWindow.IsWindow())
+        selectionWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
     if (textEditWindow.IsWindow())
         textEditWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
 }
