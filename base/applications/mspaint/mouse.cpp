@@ -290,6 +290,7 @@ struct GenericDrawTool : ToolBase
     {
         OnButtonUp(FALSE, 0, 0);
         imageModel.Undo(__LINE__);
+        imageModel.ClearRedo();
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
@@ -450,6 +451,7 @@ struct TextTool : ToolBase
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.Undo(__LINE__);
+        imageModel.ClearRedo();
 
         BOOL bTextBoxShown = textEditWindow.IsWindowVisible();
         if (bTextBoxShown && textEditWindow.GetWindowTextLength() > 0)
@@ -603,6 +605,7 @@ struct BezierTool : ToolBase
     {
         OnButtonUp(FALSE, 0, 0);
         imageModel.Undo(__LINE__);
+        imageModel.ClearRedo();
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
@@ -714,6 +717,7 @@ struct ShapeTool : ToolBase
     {
         imageModel.ResetToPrevious();
         imageModel.Undo(__LINE__);
+        imageModel.ClearRedo();
         selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
