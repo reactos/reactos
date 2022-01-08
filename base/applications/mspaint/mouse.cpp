@@ -221,7 +221,7 @@ struct RectSelTool : ToolBase
         if (bLeftButton)
         {
             imageModel.ResetToPrevious();
-            if (start.x == last.x && start.y == last.y)
+            if (start.x == x && start.y == y)
             {
                 imageModel.Undo(__LINE__);
                 imageModel.ClearRedo();
