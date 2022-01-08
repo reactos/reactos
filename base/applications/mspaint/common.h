@@ -44,18 +44,3 @@ static inline int UnZoomed(int xy)
 {
     return xy * 1000 / toolsModel.GetZoom();
 }
-
-#ifdef DBG
-static inline void DPRINT(const char *fmt, ...)
-{
-    char sz[256];
-    va_list va;
-    va_start(va, fmt);
-    wvsprintfA(sz, fmt, va);
-    OutputDebugStringA(sz);
-    va_end(va);
-}
-#else
-    #include <stdio.h>
-    #define DPRINT if (0) printf
-#endif
