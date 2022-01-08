@@ -147,7 +147,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
     toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
 
-    imageModel.CopyPrevious(__LINE__);
+    imageModel.CopyPrevious(__location__);
     selectionModel.InsertFromHBITMAP(bitmap);
 
     placeSelWin();
@@ -522,13 +522,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITUNDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
                 break;
-            imageModel.Undo(__LINE__);
+            imageModel.Undo(__location__);
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
                 break;
-            imageModel.Redo(__LINE__);
+            imageModel.Redo(__location__);
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITCOPY:
@@ -554,7 +554,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITDELETESELECTION:
         {
             /* remove selection window and already painted content using undo */
-            imageModel.Undo(__LINE__);
+            imageModel.Undo(__location__);
             break;
         }
         case IDM_EDITSELECTALL:
@@ -601,7 +601,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_IMAGEDELETEIMAGE:
-            imageModel.CopyPrevious(__LINE__);
+            imageModel.CopyPrevious(__location__);
             Rect(imageModel.GetDC(), 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
             imageArea.Invalidate(FALSE);
             break;

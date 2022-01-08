@@ -97,7 +97,7 @@ void SelectionModel::CalculateBoundingBoxAndContents(HDC hDCImage)
         Poly(m_hDC, m_ptStackCopy, m_iPtSP, 0x00ffffff, 0x00ffffff, 1, 2, TRUE, FALSE);
         HeapFree(GetProcessHeap(), 0, m_ptStackCopy);
         SelectObject(m_hDC, m_hBm = CreateDIBWithProperties(RECT_WIDTH(m_rcSrc), RECT_HEIGHT(m_rcSrc)));
-        imageModel.ResetToPrevious(__LINE__);
+        imageModel.ResetToPrevious(__location__);
         MaskBlt(m_hDC, 0, 0, RECT_WIDTH(m_rcSrc), RECT_HEIGHT(m_rcSrc), hDCImage, m_rcSrc.left,
                 m_rcSrc.top, m_hMask, 0, 0, MAKEROP4(SRCCOPY, WHITENESS));
     }
