@@ -25,8 +25,10 @@
 #include <reactos/debug.h>
 
 #if DBG
+    #define __LOCATION__  LPCSTR file, INT line
     #define __location__  __FILE__, __LINE__
 #else
+    #define __LOCATION__  /*empty*/
     #define __location__  /*empty*/
 #endif
 

@@ -42,7 +42,7 @@ ImageModel::ImageModel()
     Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
 }
 
-void ImageModel::CopyPrevious(LPCSTR file, INT line)
+void ImageModel::CopyPrevious(__LOCATION__)
 {
     DPRINT("%s (%d): CopyPrevious: %d\n", file, line, currInd);
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
@@ -55,7 +55,7 @@ void ImageModel::CopyPrevious(LPCSTR file, INT line)
     imageSaved = FALSE;
 }
 
-void ImageModel::Undo(LPCSTR file, INT line)
+void ImageModel::Undo(__LOCATION__)
 {
     DPRINT("%s (%d): Undo: %d\n", file, line, undoSteps);
     if (undoSteps > 0)
@@ -74,7 +74,7 @@ void ImageModel::Undo(LPCSTR file, INT line)
     }
 }
 
-void ImageModel::Redo(LPCSTR file, INT line)
+void ImageModel::Redo(__LOCATION__)
 {
     DPRINT("%s (%d): Redo: %d\n", file, line, redoSteps);
     if (redoSteps > 0)
@@ -93,7 +93,7 @@ void ImageModel::Redo(LPCSTR file, INT line)
     }
 }
 
-void ImageModel::ResetToPrevious(LPCSTR file, INT line)
+void ImageModel::ResetToPrevious(__LOCATION__)
 {
     DPRINT("%s (%d): ResetToPrevious: %d\n", file, line, currInd);
     DeleteObject(hBms[currInd]);
