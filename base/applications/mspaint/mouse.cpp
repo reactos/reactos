@@ -77,9 +77,17 @@ void ToolBase::reset()
 {
     pointSP = 0;
     start.x = start.y = last.x = last.y = -1;
+    selectionModel.ResetPtStack();
+    selectionWindow.ShowWindow(SW_HIDE);
+    textEditWindow.SetWindowText(NULL);
 }
 
 void ToolBase::OnCancelDraw()
+{
+    reset();
+}
+
+void ToolBase::OnFinishDraw()
 {
     reset();
 }
@@ -161,8 +169,7 @@ struct FreeSelTool : ToolBase
             selectionWindow.ForceRefreshSelectionContents();
         }
         m_bLeftButton = FALSE;
-        selectionModel.ResetPtStack();
-        selectionWindow.ShowWindow(SW_HIDE);
+        ToolBase::OnFinishDraw();
     }
 
     void OnCancelDraw()
@@ -171,8 +178,6 @@ struct FreeSelTool : ToolBase
             imageModel.Undo(__LINE__, TRUE);
         m_bLeftButton = FALSE;
         selectionWindow.IsMoved(FALSE);
-        selectionModel.ResetPtStack();
-        selectionWindow.ShowWindow(SW_HIDE);
         ToolBase::OnCancelDraw();
     }
 };
@@ -232,9 +237,9 @@ struct RectSelTool : ToolBase
         {
             selectionWindow.IsMoved(FALSE);
             selectionWindow.ForceRefreshSelectionContents();
-            selectionWindow.ShowWindow(SW_HIDE);
         }
         m_bLeftButton = FALSE;
+        ToolBase::OnFinishDraw();
     }
 
     void OnCancelDraw()
@@ -243,8 +248,6 @@ struct RectSelTool : ToolBase
             imageModel.Undo(__LINE__, TRUE);
         m_bLeftButton = FALSE;
         selectionWindow.IsMoved(FALSE);
-        selectionWindow.ShowWindow(SW_HIDE);
-        selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
 };
@@ -277,7 +280,6 @@ struct GenericDrawTool : ToolBase
     {
         OnButtonUp(FALSE, 0, 0);
         imageModel.Undo(__LINE__, TRUE);
-        selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
 };
@@ -497,9 +499,6 @@ struct TextTool : ToolBase
 
     void OnCancelDraw()
     {
-        selectionModel.ResetPtStack();
-        textEditWindow.SetWindowText(NULL);
-        textEditWindow.ShowWindow(SW_HIDE);
         ToolBase::OnCancelDraw();
     }
 
@@ -508,6 +507,7 @@ struct TextTool : ToolBase
         toolsModel.OnButtonDown(TRUE, -1, -1, TRUE);
         toolsModel.OnButtonUp(TRUE, -1, -1);
         selectionWindow.IsMoved(FALSE);
+        ToolBase::OnFinishDraw();
     }
 };
 
@@ -589,7 +589,6 @@ struct BezierTool : ToolBase
     {
         OnButtonUp(FALSE, 0, 0);
         imageModel.Undo(__LINE__, TRUE);
-        selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
 
@@ -600,8 +599,8 @@ struct BezierTool : ToolBase
             imageModel.ResetToPrevious();
             --pointSP;
             draw(m_bLeftButton);
-            pointSP = 0;
         }
+        ToolBase::OnFinishDraw();
     }
 };
 
@@ -699,7 +698,6 @@ struct ShapeTool : ToolBase
     void OnCancelDraw()
     {
         imageModel.Undo(__LINE__, TRUE);
-        selectionModel.ResetPtStack();
         ToolBase::OnCancelDraw();
     }
 
@@ -716,7 +714,7 @@ struct ShapeTool : ToolBase
         {
             imageModel.Undo(__LINE__, TRUE);
         }
-        selectionModel.ResetPtStack();
+        ToolBase::OnFinishDraw();
     }
 };
 

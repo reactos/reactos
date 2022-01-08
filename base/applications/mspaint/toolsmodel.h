@@ -60,10 +60,7 @@ struct ToolBase
     }
 
     virtual void OnCancelDraw();
-
-    virtual void OnFinishDraw()
-    {
-    }
+    virtual void OnFinishDraw();
 
     void beginEvent();
     void endEvent();
