@@ -7,6 +7,10 @@
 
 #pragma once
 
+#ifdef NDEBUG
+    #undef DBG
+#endif
+
 #ifndef _INC_WINDOWS
     #include <windows.h>
 #endif
