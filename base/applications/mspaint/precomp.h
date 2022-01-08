@@ -22,7 +22,7 @@
 #include <htmlhelp.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
 #if DBG
     #define __location__  __FILE__, __LINE__
