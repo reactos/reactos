@@ -323,13 +323,35 @@ InputList_AddInputMethodToUserRegistry(DWORD dwIndex, INPUT_LIST_NODE *pNode)
         }
     }
 
+    /*
+     * Adding new language to system, if it is the second language, switching
+     * make sense. Activate hotkeys therefor. Until only one language/layout
+     * is available, switching should be disabled in registry.
+     */
+    if (dwIndex==2)
+    {
+        if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                            L"Keyboard Layout\\Toggle",
+                            0,
+                            KEY_SET_VALUE,
+                            &hKey) == ERROR_SUCCESS)
+        {
+            /* 'Hotkey' and 'Layout Hotkey' have always the same value */
+            RegSetValueExW(hKey, L"Hotkey", 0, REG_SZ, (LPBYTE)L"1", (sizeof(L"1")));
+            RegSetValueExW(hKey, L"Language Hotkey", 0, REG_SZ, (LPBYTE)L"1", (sizeof(L"1")));
+
+            RegSetValueExW(hKey, L"Layout Hotkey", 0, REG_SZ, (LPBYTE)L"2", (sizeof(L"2")));
+
+            RegCloseKey(hKey);
+        }
+    }
+
     if ((pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
         (pNode->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
     {
         pNode->hkl = LoadKeyboardLayoutW(szPreload, KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL);
     }
 }
-
 
 /*
  * Writes any changes in input methods to the registry
