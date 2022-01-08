@@ -250,7 +250,7 @@ struct RectSelTool : ToolBase
         if (m_bLeftButton)
         {
             imageModel.Undo(__LINE__);
-            imageModel.ClearRedo(__LINE__);
+            imageModel.ClearRedo();
             selectionWindow.IsMoved(FALSE);
         }
         m_bLeftButton = FALSE;
