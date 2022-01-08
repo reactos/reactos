@@ -14,7 +14,7 @@
 #ifndef _INC_WINDOWS
     #include <windows.h>
 #endif
-#ifdef NO_STRSAFE
+#if !defined(_STRSAFE_H_INCLUDED_) && !defined(NO_STRSAFE)
     #include <strsafe.h>
 #endif
 
