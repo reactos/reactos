@@ -87,6 +87,9 @@ void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
     OnFinishDraw();
 
+    if (m_activeTool == nActiveTool)
+        return;
+
     switch (m_activeTool)
     {
         case TOOL_FREESEL:
