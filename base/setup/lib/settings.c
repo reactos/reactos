@@ -894,6 +894,17 @@ ProcessDisplayRegistry(
     Status = NtOpenKey(&KeyHandle,
                        KEY_SET_VALUE,
                        &ObjectAttributes);
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        /* Try without Hardware Profile part */
+        RtlStringCchPrintfW(RegPath, ARRAYSIZE(RegPath),
+                            L"System\\CurrentControlSet\\Services\\%s\\Device0",
+                            ServiceName);
+        RtlInitUnicodeString(&KeyName, RegPath);
+        Status = NtOpenKey(&KeyHandle,
+                           KEY_SET_VALUE,
+                           &ObjectAttributes);
+    }
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);

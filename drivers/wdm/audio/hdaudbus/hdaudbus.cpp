@@ -131,7 +131,6 @@ HDA_PdoPnp(
         if (IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
         {
             /* handle target device relations */
-            ASSERT(IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation);
             ASSERT(Irp->IoStatus.Information == 0);
 
             /* allocate device relation */

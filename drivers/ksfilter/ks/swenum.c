@@ -2179,7 +2179,6 @@ KsServiceBusEnumPnpRequest(
         else if (IoStack->MinorFunction == IRP_MN_QUERY_DEVICE_RELATIONS && IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
         {
             /* handle target device relations */
-            ASSERT(IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation);
             ASSERT(Irp->IoStatus.Information == 0);
 
             /* allocate device relation */
