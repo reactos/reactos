@@ -35,8 +35,7 @@
 #   define APPDBG_BUFSIZE 512
 #  endif
 
-static inline void
-rappdbg_printfA(const char *fmt, ...)
+static inline void rappdbg_printfA(const char *fmt, ...)
 {
     char buf[APPDBG_BUFSIZE];
     va_list va;
