@@ -203,6 +203,7 @@ void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
 
 void ToolsModel::OnCancelDraw()
 {
+    DPRINT("ToolsModel::OnCancelDraw\n");
     m_pToolObject->beginEvent();
     m_pToolObject->OnCancelDraw();
     m_pToolObject->endEvent();
@@ -210,6 +211,7 @@ void ToolsModel::OnCancelDraw()
 
 void ToolsModel::OnFinishDraw()
 {
+    DPRINT("ToolsModel::OnFinishDraw\n");
     m_pToolObject->beginEvent();
     m_pToolObject->OnFinishDraw();
     m_pToolObject->endEvent();

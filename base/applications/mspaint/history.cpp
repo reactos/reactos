@@ -42,8 +42,9 @@ ImageModel::ImageModel()
     Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
 }
 
-void ImageModel::CopyPrevious()
+void ImageModel::CopyPrevious(INT line)
 {
+    DPRINT("ImageModel::CopyPrevious: Line %d\n", line);
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
     hBms[(currInd + 1) % HISTORYSIZE] = (HBITMAP) CopyImage(hBms[currInd], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
     currInd = (currInd + 1) % HISTORYSIZE;
@@ -54,8 +55,9 @@ void ImageModel::CopyPrevious()
     imageSaved = FALSE;
 }
 
-void ImageModel::Undo()
+void ImageModel::Undo(INT line)
 {
+    DPRINT("ImageModel::Undo: Line %d: %d\n", line, undoSteps);
     if (undoSteps > 0)
     {
         int oldWidth = GetWidth();
@@ -72,8 +74,9 @@ void ImageModel::Undo()
     }
 }
 
-void ImageModel::Redo()
+void ImageModel::Redo(INT line)
 {
+    DPRINT("ImageModel::Redo: Line %d: %d\n", line, redoSteps);
     if (redoSteps > 0)
     {
         int oldWidth = GetWidth();
@@ -217,7 +220,7 @@ int ImageModel::GetHeight() const
 void ImageModel::InvertColors()
 {
     RECT rect = {0, 0, GetWidth(), GetHeight()};
-    CopyPrevious();
+    CopyPrevious(__LINE__);
     InvertRect(hDrawingDC, &rect);
     NotifyImageChanged();
 }
@@ -235,7 +238,7 @@ HDC ImageModel::GetDC()
 
 void ImageModel::FlipHorizontally()
 {
-    CopyPrevious();
+    CopyPrevious(__LINE__);
     StretchBlt(hDrawingDC, GetWidth() - 1, 0, -GetWidth(), GetHeight(), GetDC(), 0, 0,
                GetWidth(), GetHeight(), SRCCOPY);
     NotifyImageChanged();
@@ -243,7 +246,7 @@ void ImageModel::FlipHorizontally()
 
 void ImageModel::FlipVertically()
 {
-    CopyPrevious();
+    CopyPrevious(__LINE__);
     StretchBlt(hDrawingDC, 0, GetHeight() - 1, GetWidth(), -GetHeight(), GetDC(), 0, 0,
                GetWidth(), GetHeight(), SRCCOPY);
     NotifyImageChanged();
@@ -253,7 +256,7 @@ void ImageModel::RotateNTimes90Degrees(int iN)
 {
     if (iN == 2)
     {
-        CopyPrevious();
+        CopyPrevious(__LINE__);
         StretchBlt(hDrawingDC, GetWidth() - 1, GetHeight() - 1, -GetWidth(), -GetHeight(), GetDC(),
                    0, 0, GetWidth(), GetHeight(), SRCCOPY);
     }
@@ -264,9 +267,9 @@ void ImageModel::DeleteSelection()
 {
     if (selectionWindow.IsWindowVisible())
         ResetToPrevious();
-    CopyPrevious();
+    CopyPrevious(__LINE__);
     if (selectionWindow.IsWindowVisible())
-        Undo();
+        Undo(__LINE__);
     imageModel.DrawSelectionBackground(paletteModel.GetBgColor());
     ClearRedo();
     selectionWindow.ShowWindow(SW_HIDE);

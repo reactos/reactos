@@ -25,11 +25,11 @@ private:
     int redoSteps;
 public:
     ImageModel();
-    void CopyPrevious(void);
+    void CopyPrevious(INT line);
     void DrawSelectionBackground(COLORREF rgbBG);
     void DeleteSelection();
-    void Undo(void);
-    void Redo(void);
+    void Undo(INT line);
+    void Redo(INT line);
     void ResetToPrevious(void);
     void ClearHistory(void);
     void ClearRedo(void);

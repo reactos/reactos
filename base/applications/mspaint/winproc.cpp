@@ -147,7 +147,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
     SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
     toolBoxContainer.SendMessage(WM_COMMAND, ID_RECTSEL);
 
-    imageModel.CopyPrevious();
+    imageModel.CopyPrevious(__LINE__);
     selectionModel.InsertFromHBITMAP(bitmap);
 
     placeSelWin();
@@ -417,7 +417,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     // Disable commands while dragging mouse
     if (imageArea.drawing && ::GetCapture())
     {
-        OutputDebugStringA("CMainWindow::OnCommand: imageArea.drawing\n");
+        DPRINT("CMainWindow::OnCommand: locking!\n");
         return 0;
     }
 
@@ -534,7 +534,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 imageArea.Invalidate(FALSE);
                 break;
             }
-            imageModel.Undo();
+            imageModel.Undo(__LINE__);
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
@@ -545,7 +545,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 imageArea.finishDrawing();
                 break;
             }
-            imageModel.Redo();
+            imageModel.Redo(__LINE__);
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITCOPY:
@@ -628,7 +628,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_IMAGEDELETEIMAGE:
-            imageModel.CopyPrevious();
+            imageModel.CopyPrevious(__LINE__);
             Rect(imageModel.GetDC(), 0, 0, imageModel.GetWidth(), imageModel.GetHeight(), paletteModel.GetBgColor(), paletteModel.GetBgColor(), 0, TRUE);
             imageArea.Invalidate(FALSE);
             break;

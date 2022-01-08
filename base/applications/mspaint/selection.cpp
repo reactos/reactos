@@ -206,10 +206,10 @@ LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         ReleaseCapture();
         if (m_iAction != ACTION_MOVE && toolsModel.GetActiveTool() != TOOL_TEXT)
         {
-            imageModel.Undo();
+            imageModel.Undo(__LINE__);
             imageModel.DrawSelectionBackground(m_rgbBack);
             selectionModel.ScaleContentsToFit();
-            imageModel.CopyPrevious();
+            imageModel.CopyPrevious(__LINE__);
         }
         placeSelWin();
     }
