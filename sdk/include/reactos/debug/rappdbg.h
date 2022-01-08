@@ -8,52 +8,54 @@
 #pragma once
 
 #ifdef NDEBUG
-    #undef DBG
+#undef DBG
 #endif
 
 #ifndef _INC_WINDOWS
-    #include <windows.h>
+#include <windows.h>
 #endif
+
 #if !defined(_STRSAFE_H_INCLUDED_) && !defined(NO_STRSAFE)
-    #include <strsafe.h>
+#include <strsafe.h>
 #endif
 
 #include <assert.h>
 
 #ifndef ASSERT
-    #define ASSERT assert
+#define ASSERT assert
 #endif
+
 #ifndef STATIC_ASSERT
-    #define STATIC_ASSERT C_ASSERT
+#define STATIC_ASSERT C_ASSERT
 #endif
 
 #ifndef DPRINT
-    #if DBG
-        #ifndef APPDBG_BUFSIZE
-            #define APPDBG_BUFSIZE 512
-        #endif
+# if DBG
+#  ifndef APPDBG_BUFSIZE
+#   define APPDBG_BUFSIZE 512
+#  endif
 
-        static inline void
-        rappdbg_printfA(const char *fmt, ...)
-        {
-            char buf[APPDBG_BUFSIZE];
-            va_list va;
-            va_start(va, fmt);
-#ifdef NO_STRSAFE
-            wvsprintfA(buf, fmt, va);
-#else
-            StringCchVPrintfA(buf, _countof(buf), fmt, va);
-#endif
-            OutputDebugStringA(buf);
-            va_end(va);
-        }
+static inline void
+rappdbg_printfA(const char *fmt, ...)
+{
+    char buf[APPDBG_BUFSIZE];
+    va_list va;
+    va_start(va, fmt);
+#  ifdef NO_STRSAFE
+    wvsprintfA(buf, fmt, va);
+#  else
+    StringCchVPrintfA(buf, _countof(buf), fmt, va);
+#  endif
+    OutputDebugStringA(buf);
+    va_end(va);
+}
 
-        #define DPRINT rappdbg_printfA
-    #else
-        #define DPRINT 1 ? 0 : (void)
-    #endif
-#endif
+#  define DPRINT rappdbg_printfA
+# else // !DBG
+#  define DPRINT 1 ? 0 : (void)
+# endif
+#endif // !DBG
 
 #ifndef DPRINT1
-    #define DPRINT1 DPRINT
+#define DPRINT1 DPRINT
 #endif
