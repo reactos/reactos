@@ -97,7 +97,7 @@ void SelectionModel::CalculateBoundingBoxAndContents(HDC hDCImage)
         Poly(m_hDC, m_ptStackCopy, m_iPtSP, 0x00ffffff, 0x00ffffff, 1, 2, TRUE, FALSE);
         HeapFree(GetProcessHeap(), 0, m_ptStackCopy);
         SelectObject(m_hDC, m_hBm = CreateDIBWithProperties(RECT_WIDTH(m_rcSrc), RECT_HEIGHT(m_rcSrc)));
-        imageModel.ResetToPrevious();
+        imageModel.ResetToPrevious(__LINE__);
         MaskBlt(m_hDC, 0, 0, RECT_WIDTH(m_rcSrc), RECT_HEIGHT(m_rcSrc), hDCImage, m_rcSrc.left,
                 m_rcSrc.top, m_hMask, 0, 0, MAKEROP4(SRCCOPY, WHITENESS));
     }
@@ -170,9 +170,8 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hBm)
     HDC hTempDC;
     HBITMAP hTempMask;
 
-    DeleteObject(SelectObject(m_hDC, m_hBm = (HBITMAP) CopyImage(hBm,
-                                                                 IMAGE_BITMAP, 0, 0,
-                                                                 LR_COPYRETURNORG)));
+    m_hBm = CopyDIBImage(hBm);
+    DeleteObject(SelectObject(m_hDC, m_hBm));
 
     SetRectEmpty(&m_rcSrc);
     m_rcDest.left = m_rcDest.top = 0;

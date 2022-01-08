@@ -25,10 +25,10 @@ private:
     int redoSteps;
 public:
     ImageModel();
-    void CopyPrevious(void);
-    void Undo(void);
-    void Redo(void);
-    void ResetToPrevious(void);
+    void CopyPrevious(INT line);
+    void Undo(INT line);
+    void Redo(INT line);
+    void ResetToPrevious(INT line);
     void ClearHistory(void);
     void Insert(HBITMAP hbm);
     void Crop(int nWidth, int nHeight, int nOffsetX = 0, int nOffsetY = 0);
