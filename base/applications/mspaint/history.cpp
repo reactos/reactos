@@ -269,3 +269,9 @@ void ImageModel::DeleteSelection()
     selectionWindow.ShowWindow(SW_HIDE);
     NotifyImageChanged();
 }
+
+void ImageModel::Bound(POINT& pt)
+{
+    pt.x = max(0, min(pt.x, GetWidth()));
+    pt.y = max(0, min(pt.y, GetHeight()));
+}

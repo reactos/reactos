@@ -123,9 +123,8 @@ struct FreeSelTool : ToolBase
     {
         if (bLeftButton)
         {
-            POINT pt;
-            pt.x = max(0, min(x, imageModel.GetWidth()));
-            pt.y = max(0, min(y, imageModel.GetHeight()));
+            POINT pt = { x, y };
+            imageModel.Bound(pt);
             selectionModel.PushToPtStack(pt.x, pt.y);
             imageModel.ResetToPrevious();
             selectionModel.DrawFramePoly(m_hdc);
@@ -200,12 +199,11 @@ struct RectSelTool : ToolBase
 
     void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
     {
-        POINT pt;
         if (bLeftButton)
         {
             imageModel.ResetToPrevious();
-            pt.x = max(0, min(x, imageModel.GetWidth()));
-            pt.y = max(0, min(y, imageModel.GetHeight()));
+            POINT pt = { x, y };
+            imageModel.Bound(pt);
             selectionModel.SetSrcAndDestRectFromPoints(start, pt);
             RectSel(m_hdc, start.x, start.y, pt.x, pt.y);
         }
@@ -414,12 +412,11 @@ struct TextTool : ToolBase
 
     void UpdatePoint(LONG x, LONG y)
     {
-        POINT temp;
         imageModel.ResetToPrevious();
-        temp.x = max(0, min(x, imageModel.GetWidth()));
-        temp.y = max(0, min(y, imageModel.GetHeight()));
-        selectionModel.SetSrcAndDestRectFromPoints(start, temp);
-        RectSel(m_hdc, start.x, start.y, temp.x, temp.y);
+        POINT pt = { x, y };
+        imageModel.Bound(pt);
+        selectionModel.SetSrcAndDestRectFromPoints(start, pt);
+        RectSel(m_hdc, start.x, start.y, pt.x, pt.y);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
