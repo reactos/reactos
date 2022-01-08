@@ -47,5 +47,4 @@ public:
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
-    static HBITMAP MyCopyImage(HBITMAP hbm, INT cx = 0, INT cy = 0);
 };

@@ -33,6 +33,7 @@ BOOL nearlyEqualPoints(INT x0, INT y0, INT x1, INT y1);
 void placeSelWin(void);
 void updateStartAndLast(LONG x, LONG y);
 void updateLast(LONG x, LONG y);
+HBITMAP CopyDIBImage(HBITMAP hbm, INT cx = 0, INT cy = 0);
 
 static inline int Zoomed(int xy)
 {
