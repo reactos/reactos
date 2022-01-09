@@ -42,7 +42,7 @@ LDEVOBJ_pdmiGetModes(
 
 PLDEVOBJ
 APIENTRY
-EngLoadImageEx(
+LDEVOBJ_pLoadDriver(
     _In_z_ LPWSTR pwszDriverName,
     _In_ ULONG ldevtype);
 
