@@ -323,6 +323,44 @@ static UINT ICO_ExtractIconExW(
 	}
 	CloseHandle(fmapping);
 
+#ifdef __REACTOS__
+    /* Check if the resource is an animated icon/cursor */
+    if (!memcmp(peimage, "RIFF", 4))
+    {
+        INT     anihOffset;
+        ULONG   uSize = 0;
+
+        /* Get size of the animation data */
+        uSize = (WORD)peimage[4] +
+                256 * (WORD)peimage[5];
+
+        /* Search for 'anih' indicating animation header */
+        for (anihOffset = 0; anihOffset < uSize; anihOffset++)
+        {
+           if (((WORD)peimage[anihOffset] == 0x61) &&     // a
+               ((WORD)peimage[anihOffset+1] == 0x6e) &&   // n
+               ((WORD)peimage[anihOffset+2] == 0x69) &&   // i
+               ((WORD)peimage[anihOffset+3] == 0x68))     // h
+               break;
+        }
+        /* Get count of images for return value */
+        ret = (WORD)peimage[anihOffset + 12] +
+              256 * (WORD)peimage[anihOffset + 13];
+
+        TRACE("RIFF File with '%d' images at Offset '%d'.\n", ret, anihOffset);
+
+        cx1 = LOWORD(cxDesired);
+        cy1 = LOWORD(cyDesired);
+
+        if (RetPtr)
+        {
+            RetPtr[0] = CreateIconFromResourceEx(peimage, uSize, TRUE,
+                                                 0x00030000, cx1, cy1, flags);
+        }
+        goto end;
+    }
+#endif
+
 	cx1 = LOWORD(cxDesired);
 	cx2 = HIWORD(cxDesired);
 	cy1 = LOWORD(cyDesired);
@@ -439,7 +477,9 @@ static UINT ICO_ExtractIconExW(
                 DWORD dataOffset;
                 LPBYTE imageData;
                 POINT hotSpot;
+#ifndef __REACTOS__
                 LPICONIMAGE entry;
+#endif
 
                 dataOffset = get_best_icon_file_offset(peimage, fsizel, cx[index], cy[index], sig == 1, flags, sig == 1 ? NULL : &hotSpot);
 
@@ -447,14 +487,36 @@ static UINT ICO_ExtractIconExW(
                 {
                     HICON icon;
                     WORD *cursorData = NULL;
+#ifdef __REACTOS__
+                    BITMAPINFOHEADER bmih;
+#endif
 
                     imageData = peimage + dataOffset;
+#ifdef __REACTOS__
+                    memcpy(&bmih, imageData, sizeof(BITMAPINFOHEADER));
+#else
                     entry = (LPICONIMAGE)(imageData);
+#endif
 
                     if(sig == 2)
                     {
+#ifdef __REACTOS__
+                         /* biSizeImage is the size of the raw bitmap data.
+                          * A dummy 0 can be given for BI_RGB bitmaps.
+                          * https://en.wikipedia.org/wiki/BMP_file_format */
+                         if ((bmih.biCompression == BI_RGB) &&
+                             (bmih.biSizeImage == 0))
+                         {
+                             bmih.biSizeImage = bmih.biWidth *
+                                 bmih.biHeight / 2 * bmih.biBitCount / 8;
+                         }
+#endif
                         /* we need to prepend the bitmap data with hot spots for CreateIconFromResourceEx */
+#ifdef __REACTOS__
+                        cursorData = HeapAlloc(GetProcessHeap(), 0, bmih.biSizeImage + 2 * sizeof(WORD));
+#else
                         cursorData = HeapAlloc(GetProcessHeap(), 0, entry->icHeader.biSizeImage + 2 * sizeof(WORD));
+#endif
 
                         if(!cursorData)
                             continue;
@@ -462,12 +524,20 @@ static UINT ICO_ExtractIconExW(
                         cursorData[0] = hotSpot.x;
                         cursorData[1] = hotSpot.y;
 
+#ifdef __REACTOS__
+                        memcpy(cursorData + 2, imageData, bmih.biSizeImage);
+#else
                         memcpy(cursorData + 2, imageData, entry->icHeader.biSizeImage);
+#endif
 
                         imageData = (LPBYTE)cursorData;
                     }
 
+#ifdef __REACTOS__
+                    icon = CreateIconFromResourceEx(imageData, bmih.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
+#else
                     icon = CreateIconFromResourceEx(imageData, entry->icHeader.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
+#endif
 
                     HeapFree(GetProcessHeap(), 0, cursorData);
 
