@@ -130,11 +130,11 @@ EngpPopulateDeviceModeList(
     _In_ PDEVMODEW pdmDefault)
 {
     PWSTR pwsz;
-    PLDEVOBJ pldev;
     PDEVMODEINFO pdminfo;
     PDEVMODEW pdm, pdmEnd;
     ULONG i, cModes = 0;
     BOOLEAN bModeMatch = FALSE;
+    ULONG cbSize, cbFull;
 
     ASSERT(pGraphicsDevice->pdevmodeInfo == NULL);
     ASSERT(pGraphicsDevice->pDevModeList == NULL);
@@ -145,22 +145,29 @@ EngpPopulateDeviceModeList(
      * This is a REG_MULTI_SZ string */
     for (; *pwsz; pwsz += wcslen(pwsz) + 1)
     {
-        /* Try to load the display driver */
+        /* Get the mode list from the driver */
         TRACE("Trying driver: %ls\n", pwsz);
-        pldev = LDEVOBJ_pLoadDriver(pwsz, LDEV_DEVICE_DISPLAY);
-        if (!pldev)
+        cbSize = LDEVOBJ_ulGetDriverModes(pwsz, pGraphicsDevice->DeviceObject, &pdm);
+        if (!cbSize)
         {
-            ERR("Could not load driver: '%ls'\n", pwsz);
+            WARN("Driver %ls returned no valid mode\n", pwsz);
             continue;
         }
 
-        /* Get the mode list from the driver */
-        pdminfo = LDEVOBJ_pdmiGetModes(pldev, pGraphicsDevice->DeviceObject);
+        /* Add space for the header */
+        cbFull = cbSize + FIELD_OFFSET(DEVMODEINFO, adevmode);
+
+        /* Allocate a buffer for the DEVMODE array */
+        pdminfo = ExAllocatePoolWithTag(PagedPool, cbFull, GDITAG_DEVMODE);
         if (!pdminfo)
         {
-            ERR("Could not get mode list for '%ls'\n", pwsz);
+            ERR("Could not allocate devmodeinfo\n");
             continue;
         }
+
+        pdminfo->pldev = LDEVOBJ_pLoadDriver(pwsz, LDEV_DEVICE_DISPLAY);
+        pdminfo->cbdevmode = cbSize;
+        RtlCopyMemory(pdminfo->adevmode, pdm, cbSize);
 
         /* Attach the mode info to the device */
         pdminfo->pdmiNext = pGraphicsDevice->pdevmodeInfo;
