@@ -85,7 +85,7 @@ HRESULT CRecyclerExtractIcon_CreateInstance(
     Context.pFileDetails = pFileDetails;
     Context.bFound = FALSE;
 
-    EnumerateRecycleBinW(NULL, CBSearchRecycleBin, (PVOID)&Context);
+    EnumerateRecycleBinW(NULL, CBSearchRecycleBin, &Context);
     if (Context.bFound)
     {
         // This should be executed any time, if not, there are some error in the implementation
