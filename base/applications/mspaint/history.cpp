@@ -93,7 +93,7 @@ void ImageModel::Redo()
     }
 }
 
-void ImageModel::ResetToPreviousg()
+void ImageModel::ResetToPrevious()
 {
     DPRINT("ResetToPrevious: %d\n", currInd);
     DeleteObject(hBms[currInd]);
