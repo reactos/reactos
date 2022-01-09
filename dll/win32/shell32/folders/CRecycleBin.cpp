@@ -78,7 +78,7 @@ HRESULT CRecyclerExtractIcon_CreateInstance(
 {
     PIDLRecycleStruct *pFileDetails = _ILGetRecycleStruct(pidl);
     if (pFileDetails == NULL)
-        goto error;
+        goto fallback;
 
     // Try to obtain the file
     SEARCH_CONTEXT Context;
@@ -88,7 +88,7 @@ HRESULT CRecyclerExtractIcon_CreateInstance(
     EnumerateRecycleBinW(NULL, CBSearchRecycleBin, &Context);
     if (Context.bFound)
     {
-        // This should be executed any time, if not, there are some error in the implementation
+        // This should be executed any time, if not, there are some errors in the implementation
         IRecycleBinFile* pRecycleFile = (IRecycleBinFile*)Context.hDeletedFile;
 
         // Query the interface from the private interface
@@ -100,9 +100,9 @@ HRESULT CRecyclerExtractIcon_CreateInstance(
         return hr;
     }
 
-error:
+fallback:
     // In case the search fails we use a default icon
-    ERR("Recycler could not retrieve  the icon, this shouldn't happen\n");
+    ERR("Recycler could not retrieve the icon, this shouldn't happen\n");
 
     CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
