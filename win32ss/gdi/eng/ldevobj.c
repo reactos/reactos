@@ -161,37 +161,6 @@ LDEVOBJ_bLoadImage(
 }
 
 static
-VOID
-LDEVOBJ_vUnloadImage(
-    _Inout_ PLDEVOBJ pldev)
-{
-    NTSTATUS Status;
-
-    /* Make sure we have a driver info */
-    ASSERT(pldev && pldev->pGdiDriverInfo != NULL);
-
-    /* Check if we have loaded a driver */
-    if (pldev->pfn.DisableDriver)
-    {
-        /* Call the unload function */
-        pldev->pfn.DisableDriver();
-    }
-
-    /* Unload the driver */
-    Status = ZwSetSystemInformation(SystemUnloadGdiDriverInformation,
-                                    &pldev->pGdiDriverInfo->SectionPointer,
-                                    sizeof(HANDLE));
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Failed to unload the driver, this is bad.\n");
-    }
-
-    /* Free the driver info structure */
-    ExFreePoolWithTag(pldev->pGdiDriverInfo, GDITAG_LDEV);
-    pldev->pGdiDriverInfo = NULL;
-}
-
-static
 BOOL
 LDEVOBJ_bEnableDriver(
     _Inout_ PLDEVOBJ pldev,
@@ -200,7 +169,10 @@ LDEVOBJ_bEnableDriver(
     DRVENABLEDATA ded;
     ULONG i;
 
+    TRACE("LDEVOBJ_bEnableDriver('%wZ')\n", &pldev->pGdiDriverInfo->DriverName);
+
     ASSERT(pldev);
+    ASSERT(pldev->cRefs == 0);
 
     /* Call the drivers DrvEnableDriver function */
     RtlZeroMemory(&ded, sizeof(ded));
@@ -223,58 +195,21 @@ LDEVOBJ_bEnableDriver(
     return TRUE;
 }
 
-ULONG
-LDEVOBJ_ulGetDriverModes(
-    _In_ LPWSTR pwszDriverName,
-    _In_ HANDLE hDriver,
-    _Out_ PDEVMODEW *ppdm)
+static
+VOID
+LDEVOBJ_vDisableDriver(
+    _Inout_ PLDEVOBJ pldev)
 {
-    PLDEVOBJ pldev = NULL;
-    ULONG cbSize = 0;
-    PDEVMODEW pdm = NULL;
+    ASSERT(pldev);
+    ASSERT(pldev->cRefs == 0);
 
-    TRACE("LDEVOBJ_ulGetDriverModes('%ls', %p)\n", pwszDriverName, hDriver);
+    TRACE("LDEVOBJ_vDisableDriver('%wZ')\n", &pldev->pGdiDriverInfo->DriverName);
 
-    pldev = LDEVOBJ_pLoadDriver(pwszDriverName, LDEV_DEVICE_DISPLAY);
-    if (!pldev)
-        goto cleanup;
-
-    /* Mirror drivers may omit this function */
-    if (!pldev->pfn.GetModes)
-        goto cleanup;
-
-    /* Call the driver to get the required size */
-    cbSize = pldev->pfn.GetModes(hDriver, 0, NULL);
-    if (!cbSize)
+    if (pldev->pfn.DisableDriver)
     {
-        ERR("DrvGetModes returned 0\n");
-        goto cleanup;
+        /* Call the unload function */
+        pldev->pfn.DisableDriver();
     }
-
-    /* Allocate a buffer for the DEVMODE array */
-    pdm = ExAllocatePoolWithTag(PagedPool, cbSize, GDITAG_DEVMODE);
-    if (!pdm)
-    {
-        ERR("Could not allocate devmodeinfo\n");
-        goto cleanup;
-    }
-
-    /* Call the driver again to fill the buffer */
-    cbSize = pldev->pfn.GetModes(hDriver, cbSize, pdm);
-    if (!cbSize)
-    {
-        /* Could not get modes */
-        ERR("DrvrGetModes returned 0 on second call\n");
-        ExFreePoolWithTag(pdm, GDITAG_DEVMODE);
-        pdm = NULL;
-    }
-
-cleanup:
-    if (pldev)
-        LDEVOBJ_vUnloadImage(pldev);
-
-    *ppdm = pdm;
-    return cbSize;
 }
 
 static
@@ -321,6 +256,41 @@ LDEVOBJ_pvFindImageProcAddress(
 
     /* Return the address */
     return pvProcAdress;
+}
+
+static
+BOOL
+LDEVOBJ_bUnloadImage(
+    _Inout_ PLDEVOBJ pldev)
+{
+    NTSTATUS Status;
+
+    /* Make sure we have a driver info */
+    ASSERT(pldev && pldev->pGdiDriverInfo != NULL);
+    ASSERT(pldev->cRefs == 0);
+
+    TRACE("LDEVOBJ_bUnloadImage('%wZ')\n", &pldev->pGdiDriverInfo->DriverName);
+
+    /* Unload the driver */
+#if 0
+    Status = ZwSetSystemInformation(SystemUnloadGdiDriverInformation,
+                                    &pldev->pGdiDriverInfo->SectionPointer,
+                                    sizeof(HANDLE));
+#else
+    /* Unfortunately, ntoskrnl allows unloading a driver, but fails loading
+     * it again with STATUS_IMAGE_ALREADY_LOADED. Prevent this problem by
+     * never unloading any driver.
+     */
+    UNIMPLEMENTED;
+    Status = STATUS_NOT_IMPLEMENTED;
+#endif
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    ExFreePoolWithTag(pldev->pGdiDriverInfo, GDITAG_LDEV);
+    pldev->pGdiDriverInfo = NULL;
+
+    return TRUE;
 }
 
 PLDEVOBJ
@@ -469,7 +439,7 @@ LDEVOBJ_pLoadDriver(
                 ERR("LDEVOBJ_bEnableDriver failed\n");
 
                 /* Unload the image. */
-                LDEVOBJ_vUnloadImage(pldev);
+                LDEVOBJ_bUnloadImage(pldev);
                 LDEVOBJ_vFreeLDEV(pldev);
                 pldev = NULL;
                 goto leave;
@@ -489,6 +459,102 @@ leave:
 
     TRACE("LDEVOBJ_pLoadDriver returning %p\n", pldev);
     return pldev;
+}
+
+static
+VOID
+LDEVOBJ_vDereference(
+    _Inout_ PLDEVOBJ pldev)
+{
+    /* Lock loader */
+    EngAcquireSemaphore(ghsemLDEVList);
+
+    /* Decrement reference count */
+    ASSERT(pldev->cRefs > 0);
+    pldev->cRefs--;
+
+    /* More references left? */
+    if (pldev->cRefs > 0)
+    {
+        EngReleaseSemaphore(ghsemLDEVList);
+        return;
+    }
+
+    LDEVOBJ_vDisableDriver(pldev);
+
+    if (LDEVOBJ_bUnloadImage(pldev))
+    {
+        /* Remove ldev from the list */
+        RemoveEntryList(&pldev->leLink);
+
+        /* Free the driver info structure */
+        LDEVOBJ_vFreeLDEV(pldev);
+    }
+    else
+    {
+        WARN("Failed to unload driver '%wZ', trying to re-enable it.\n", &pldev->pGdiDriverInfo->DriverName);
+        LDEVOBJ_bEnableDriver(pldev, pldev->pGdiDriverInfo->EntryPoint);
+
+        /* Increment again reference count */
+        pldev->cRefs++;
+    }
+
+    /* Unlock loader */
+    EngReleaseSemaphore(ghsemLDEVList);
+}
+
+ULONG
+LDEVOBJ_ulGetDriverModes(
+    _In_ LPWSTR pwszDriverName,
+    _In_ HANDLE hDriver,
+    _Out_ PDEVMODEW *ppdm)
+{
+    PLDEVOBJ pldev = NULL;
+    ULONG cbSize = 0;
+    PDEVMODEW pdm = NULL;
+
+    TRACE("LDEVOBJ_ulGetDriverModes('%ls', %p)\n", pwszDriverName, hDriver);
+
+    pldev = LDEVOBJ_pLoadDriver(pwszDriverName, LDEV_DEVICE_DISPLAY);
+    if (!pldev)
+        goto cleanup;
+
+    /* Mirror drivers may omit this function */
+    if (!pldev->pfn.GetModes)
+        goto cleanup;
+
+    /* Call the driver to get the required size */
+    cbSize = pldev->pfn.GetModes(hDriver, 0, NULL);
+    if (!cbSize)
+    {
+        ERR("DrvGetModes returned 0\n");
+        goto cleanup;
+    }
+
+    /* Allocate a buffer for the DEVMODE array */
+    pdm = ExAllocatePoolWithTag(PagedPool, cbSize, GDITAG_DEVMODE);
+    if (!pdm)
+    {
+        ERR("Could not allocate devmodeinfo\n");
+        goto cleanup;
+    }
+
+    /* Call the driver again to fill the buffer */
+    cbSize = pldev->pfn.GetModes(hDriver, cbSize, pdm);
+    if (!cbSize)
+    {
+        /* Could not get modes */
+        ERR("DrvrGetModes returned 0 on second call\n");
+        ExFreePoolWithTag(pdm, GDITAG_DEVMODE);
+        pdm = NULL;
+    }
+
+cleanup:
+    if (pldev)
+        LDEVOBJ_vDereference(pldev);
+
+    *ppdm = pdm;
+    return cbSize;
 }
 
 BOOL
@@ -691,25 +757,7 @@ EngUnloadImage(
     /* Make sure the LDEV is in the list */
     ASSERT((pldev->leLink.Flink != NULL) &&  (pldev->leLink.Blink != NULL));
 
-    /* Lock loader */
-    EngAcquireSemaphore(ghsemLDEVList);
-
-    /* Decrement reference count */
-    pldev->cRefs--;
-
-    /* No more references left? */
-    if (pldev->cRefs == 0)
-    {
-        /* Remove ldev from the list */
-        RemoveEntryList(&pldev->leLink);
-
-        /* Unload the image and free the LDEV */
-        LDEVOBJ_vUnloadImage(pldev);
-        LDEVOBJ_vFreeLDEV(pldev);
-    }
-
-    /* Unlock loader */
-    EngReleaseSemaphore(ghsemLDEVList);
+    LDEVOBJ_vDereference(pldev);
 }
 
 
