@@ -164,8 +164,6 @@ DoLoadIcons(HWND hwndDlg, PPICK_ICON_CONTEXT pIconContext, LPCWSTR pszFile)
     return (pIconContext->nIcons > 0);
 }
 
-static const LPCWSTR s_pszDefaultPath = L"%SystemRoot%\\system32\\shell32.dll";
-
 static void NoIconsInFile(HWND hwndDlg, PPICK_ICON_CONTEXT pIconContext)
 {
     // Show an error message
@@ -174,7 +172,7 @@ static void NoIconsInFile(HWND hwndDlg, PPICK_ICON_CONTEXT pIconContext)
     MessageBoxW(hwndDlg, strText, strTitle, MB_ICONWARNING);
 
     // Load the default icons
-    DoLoadIcons(hwndDlg, pIconContext, s_pszDefaultPath);
+    DoLoadIcons(hwndDlg, pIconContext, g_pszShell32);
 }
 
 // Icon size
@@ -388,7 +386,7 @@ BOOL WINAPI PickIconDlg(
         }
 
         // Set the default value
-        StringCchCopyW(IconContext.szPath, _countof(IconContext.szPath), s_pszDefaultPath);
+        StringCchCopyW(IconContext.szPath, _countof(IconContext.szPath), g_pszShell32);
     }
 
     // Show the dialog
