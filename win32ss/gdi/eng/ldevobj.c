@@ -111,58 +111,6 @@ LDEVOBJ_vFreeLDEV(
     ExFreePoolWithTag(pldev, GDITAG_LDEV);
 }
 
-PDEVMODEINFO
-NTAPI
-LDEVOBJ_pdmiGetModes(
-    _In_ PLDEVOBJ pldev,
-    _In_ HANDLE hDriver)
-{
-    ULONG cbSize, cbFull;
-    PDEVMODEINFO pdminfo;
-
-    TRACE("LDEVOBJ_pdmiGetModes(%p, %p)\n", pldev, hDriver);
-
-    /* Mirror drivers may omit this function */
-    if (!pldev->pfn.GetModes)
-    {
-        return NULL;
-    }
-
-    /* Call the driver to get the required size */
-    cbSize = pldev->pfn.GetModes(hDriver, 0, NULL);
-    if (!cbSize)
-    {
-        ERR("DrvGetModes returned 0\n");
-        return NULL;
-    }
-
-    /* Add space for the header */
-    cbFull = cbSize + FIELD_OFFSET(DEVMODEINFO, adevmode);
-
-    /* Allocate a buffer for the DEVMODE array */
-    pdminfo = ExAllocatePoolWithTag(PagedPool, cbFull, GDITAG_DEVMODE);
-    if (!pdminfo)
-    {
-        ERR("Could not allocate devmodeinfo\n");
-        return NULL;
-    }
-
-    pdminfo->pldev = pldev;
-    pdminfo->cbdevmode = cbSize;
-
-    /* Call the driver again to fill the buffer */
-    cbSize = pldev->pfn.GetModes(hDriver, cbSize, pdminfo->adevmode);
-    if (!cbSize)
-    {
-        /* Could not get modes */
-        ERR("returned size %lu(%lu)\n", cbSize, pdminfo->cbdevmode);
-        ExFreePoolWithTag(pdminfo, GDITAG_DEVMODE);
-        pdminfo = NULL;
-    }
-
-    return pdminfo;
-}
-
 static
 BOOL
 LDEVOBJ_bLoadImage(
@@ -275,6 +223,60 @@ LDEVOBJ_bEnableDriver(
 
     /* Return success. */
     return TRUE;
+}
+
+ULONG
+LDEVOBJ_ulGetDriverModes(
+    _In_ LPWSTR pwszDriverName,
+    _In_ HANDLE hDriver,
+    _Out_ PDEVMODEW *ppdm)
+{
+    PLDEVOBJ pldev = NULL;
+    ULONG cbSize = 0;
+    PDEVMODEW pdm = NULL;
+
+    TRACE("LDEVOBJ_ulGetDriverModes('%ls', %p)\n", pwszDriverName, hDriver);
+
+    pldev = LDEVOBJ_pLoadDriver(pwszDriverName, LDEV_DEVICE_DISPLAY);
+    if (!pldev)
+        goto cleanup;
+
+    /* Mirror drivers may omit this function */
+    if (!pldev->pfn.GetModes)
+        goto cleanup;
+
+    /* Call the driver to get the required size */
+    cbSize = pldev->pfn.GetModes(hDriver, 0, NULL);
+    if (!cbSize)
+    {
+        ERR("DrvGetModes returned 0\n");
+        goto cleanup;
+    }
+
+    /* Allocate a buffer for the DEVMODE array */
+    pdm = ExAllocatePoolWithTag(PagedPool, cbSize, GDITAG_DEVMODE);
+    if (!pdm)
+    {
+        ERR("Could not allocate devmodeinfo\n");
+        goto cleanup;
+    }
+
+    /* Call the driver again to fill the buffer */
+    cbSize = pldev->pfn.GetModes(hDriver, cbSize, pdm);
+    if (!cbSize)
+    {
+        /* Could not get modes */
+        ERR("DrvrGetModes returned 0 on second call\n");
+        ExFreePoolWithTag(pdm, GDITAG_DEVMODE);
+        pdm = NULL;
+    }
+
+cleanup:
+    if (pldev)
+        LDEVOBJ_vUnloadImage(pldev);
+
+    *ppdm = pdm;
+    return cbSize;
 }
 
 static
