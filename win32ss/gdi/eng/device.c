@@ -130,24 +130,17 @@ EngpPopulateDeviceModeList(
     _In_ PDEVMODEW pdmDefault)
 {
     PDEVMODEINFO pdminfo;
-    PDEVMODEW pdm;
+    PDEVMODEW pdm, pdmSelected;
     ULONG i;
-    BOOLEAN bModeMatch = FALSE;
 
     ASSERT(pGraphicsDevice->pdevmodeInfo == NULL);
     ASSERT(pGraphicsDevice->pDevModeList == NULL);
 
-    if (!LDEVOBJ_bBuildDevmodeList(pGraphicsDevice))
+    if (!LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, pdmDefault, &pdmSelected, TRUE))
     {
-        ERR("LDEVOBJ_bBuildDevmodeList() failed\n");
+        ERR("LDEVOBJ_bProbeAndCaptureDevmode() failed\n");
         return FALSE;
     }
-
-    TRACE("Looking for mode %lux%lux%lu(%lu Hz)\n",
-        pdmDefault->dmPelsWidth,
-        pdmDefault->dmPelsHeight,
-        pdmDefault->dmBitsPerPel,
-        pdmDefault->dmDisplayFrequency);
 
     /* Loop through all DEVMODEINFOs */
     for (pdminfo = pGraphicsDevice->pdevmodeInfo, i = 0;
@@ -159,20 +152,14 @@ EngpPopulateDeviceModeList(
         {
             pdm = pGraphicsDevice->pDevModeList[i].pdm;
 
-            /* Compare with the default entry */
-            if (!bModeMatch &&
-                pdm->dmBitsPerPel == pdmDefault->dmBitsPerPel &&
-                pdm->dmPelsWidth == pdmDefault->dmPelsWidth &&
-                pdm->dmPelsHeight == pdmDefault->dmPelsHeight)
+            /* Compare with the selected entry */
+            if (pdm->dmSize == pdmSelected->dmSize &&
+                RtlCompareMemory(pdm, pdmSelected, pdm->dmSize) == pdm->dmSize)
             {
                 pGraphicsDevice->iDefaultMode = i;
                 pGraphicsDevice->iCurrentMode = i;
                 TRACE("Found default entry: %lu '%ls'\n", i, pdm->dmDeviceName);
-                if (pdm->dmDisplayFrequency == pdmDefault->dmDisplayFrequency)
-                {
-                    /* Uh oh, even the display frequency matches. */
-                    bModeMatch = TRUE;
-                }
+                break;
             }
         }
     }

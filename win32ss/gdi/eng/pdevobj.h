@@ -213,10 +213,4 @@ PDEVOBJ_bSwitchMode(
     PPDEVOBJ ppdev,
     PDEVMODEW pdm);
 
-PDEVMODEW
-NTAPI
-PDEVOBJ_pdmMatchDevMode(
-    PPDEVOBJ ppdev,
-    PDEVMODEW pdm);
-
 #endif /* !__WIN32K_PDEVOBJ_H */

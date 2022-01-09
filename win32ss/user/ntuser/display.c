@@ -657,6 +657,7 @@ UserChangeDisplaySettings(
     PPDEVOBJ ppdev;
     WORD OrigBC;
     //PDESKTOP pdesk;
+    PDEVMODEW newDevMode = NULL;
 
     /* If no DEVMODE is given, use registry settings */
     if (!pdm)
@@ -707,8 +708,7 @@ UserChangeDisplaySettings(
         dm.dmDisplayFrequency = ppdev->pdmwDev->dmDisplayFrequency;
 
     /* Look for the requested DEVMODE */
-    pdm = PDEVOBJ_pdmMatchDevMode(ppdev, &dm);
-    if (!pdm)
+    if (!LDEVOBJ_bProbeAndCaptureDevmode(ppdev->pGraphicsDevice, &dm, &newDevMode, FALSE))
     {
         ERR("Could not find a matching DEVMODE\n");
         lResult = DISP_CHANGE_BADMODE;
@@ -729,7 +729,7 @@ UserChangeDisplaySettings(
         if (NT_SUCCESS(Status))
         {
             /* Store the settings */
-            RegWriteDisplaySettings(hkey, pdm);
+            RegWriteDisplaySettings(hkey, newDevMode);
 
             /* Close the registry key */
             ZwClose(hkey);
@@ -742,7 +742,9 @@ UserChangeDisplaySettings(
     }
 
     /* Check if DEVMODE matches the current mode */
-    if (pdm == ppdev->pdmwDev && !(flags & CDS_RESET))
+    if (newDevMode->dmSize == ppdev->pdmwDev->dmSize &&
+        RtlCompareMemory(newDevMode, ppdev->pdmwDev, newDevMode->dmSize) == newDevMode->dmSize &&
+        !(flags & CDS_RESET))
     {
         ERR("DEVMODE matches, nothing to do\n");
         goto leave;
@@ -759,7 +761,7 @@ UserChangeDisplaySettings(
         pvOldCursor = UserSetCursor(NULL, TRUE);
 
         /* Do the mode switch */
-        ulResult = PDEVOBJ_bSwitchMode(ppdev, pdm);
+        ulResult = PDEVOBJ_bSwitchMode(ppdev, newDevMode);
 
         /* Restore mouse pointer, no hooks called */
         pvOldCursor = UserSetCursor(pvOldCursor, TRUE);
@@ -781,6 +783,8 @@ UserChangeDisplaySettings(
         {
             /* Setting mode succeeded */
             lResult = DISP_CHANGE_SUCCESSFUL;
+            ExFreePoolWithTag(ppdev->pdmwDev, GDITAG_DEVMODE);
+            ppdev->pdmwDev = newDevMode;
 
             UserUpdateFullscreen(flags);
 
@@ -847,6 +851,9 @@ UserChangeDisplaySettings(
     }
 
 leave:
+    if (newDevMode && newDevMode != ppdev->pdmwDev)
+        ExFreePoolWithTag(newDevMode, GDITAG_DEVMODE);
+
     /* Release the PDEV */
     PDEVOBJ_vRelease(ppdev);
 
