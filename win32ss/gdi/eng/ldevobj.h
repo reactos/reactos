@@ -64,11 +64,6 @@ LDEVOBJ_bProbeAndCaptureDevmode(
     _Out_ PDEVMODEW *pSelectedMode,
     _In_ BOOL bSearchClosestMode);
 
-PLDEVOBJ
-NTAPI
-EngGetLDEV(
-    PDEVMODEW pdm);
-
 CODE_SEG("INIT")
 NTSTATUS
 APIENTRY
