@@ -147,7 +147,7 @@ EngpPopulateDeviceModeList(
     {
         /* Try to load the display driver */
         TRACE("Trying driver: %ls\n", pwsz);
-        pldev = EngLoadImageEx(pwsz, LDEV_DEVICE_DISPLAY);
+        pldev = LDEVOBJ_pLoadDriver(pwsz, LDEV_DEVICE_DISPLAY);
         if (!pldev)
         {
             ERR("Could not load driver: '%ls'\n", pwsz);

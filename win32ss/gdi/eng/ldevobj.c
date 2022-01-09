@@ -325,7 +325,7 @@ LDEVOBJ_pvFindImageProcAddress(
 
 PLDEVOBJ
 NTAPI
-EngLoadImageEx(
+LDEVOBJ_pLoadDriver(
     _In_z_ LPWSTR pwszDriverName,
     _In_ ULONG ldevtype)
 {
@@ -336,7 +336,7 @@ EngLoadImageEx(
     SIZE_T cwcLength;
     LPWSTR pwsz;
 
-    TRACE("EngLoadImageEx(%ls, %lu)\n", pwszDriverName, ldevtype);
+    TRACE("LDEVOBJ_pLoadDriver(%ls, %lu)\n", pwszDriverName, ldevtype);
     ASSERT(pwszDriverName);
 
     /* Initialize buffer for the the driver name */
@@ -444,7 +444,7 @@ leave:
     /* Unlock loader */
     EngReleaseSemaphore(ghsemLDEVList);
 
-    TRACE("EngLoadImageEx returning %p\n", pldev);
+    TRACE("LDEVOBJ_pLoadDriver returning %p\n", pldev);
     return pldev;
 }
 
@@ -456,7 +456,7 @@ APIENTRY
 EngLoadImage(
     _In_ LPWSTR pwszDriverName)
 {
-    return (HANDLE)EngLoadImageEx(pwszDriverName, LDEV_IMAGE);
+    return (HANDLE)LDEVOBJ_pLoadDriver(pwszDriverName, LDEV_IMAGE);
 }
 
 
