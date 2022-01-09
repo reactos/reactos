@@ -7,7 +7,6 @@
  */
 
 #include "recyclebin_private.h"
-#include <shobjidl.h>
 
 struct RecycleBin5File
 {
