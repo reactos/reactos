@@ -253,7 +253,7 @@ UserEnumDisplayDevices(
     }
 
     /* Ask gdi for the GRAPHICS_DEVICE */
-    pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, iDevNum, 0);
+    pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, iDevNum);
     if (!pGraphicsDevice)
     {
         /* No device found */
@@ -423,7 +423,7 @@ UserEnumDisplaySettings(
           pustrDevice, iModeNum);
 
     /* Ask GDI for the GRAPHICS_DEVICE */
-    pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
+    pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0);
     ppdev = EngpGetPDEV(pustrDevice);
 
     if (!pGraphicsDevice || !ppdev)
