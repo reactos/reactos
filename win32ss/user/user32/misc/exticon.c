@@ -331,21 +331,19 @@ static UINT ICO_ExtractIconExW(
         ULONG   uSize = 0;
 
         /* Get size of the animation data */
-        uSize = (WORD)peimage[4] +
-                256 * (WORD)peimage[5];
+        uSize = peimage[4] + (peimage[5] << 8);
 
         /* Search for 'anih' indicating animation header */
         for (anihOffset = 0; anihOffset < uSize; anihOffset++)
         {
-           if (((WORD)peimage[anihOffset] == 0x61) &&     // a
-               ((WORD)peimage[anihOffset+1] == 0x6e) &&   // n
-               ((WORD)peimage[anihOffset+2] == 0x69) &&   // i
-               ((WORD)peimage[anihOffset+3] == 0x68))     // h
+           if ((peimage[anihOffset] == 0x61) &&     // a
+               (peimage[anihOffset+1] == 0x6e) &&   // n
+               (peimage[anihOffset+2] == 0x69) &&   // i
+               (peimage[anihOffset+3] == 0x68))     // h
                break;
         }
         /* Get count of images for return value */
-        ret = (WORD)peimage[anihOffset + 12] +
-              256 * (WORD)peimage[anihOffset + 13];
+        ret = MAKEWORD(peimage[anihOffset + 12], peimage[anihOffset + 13]);
 
         TRACE("RIFF File with '%d' images at Offset '%d'.\n", ret, anihOffset);
 
@@ -505,7 +503,8 @@ static UINT ICO_ExtractIconExW(
                           * A dummy 0 can be given for BI_RGB bitmaps.
                           * https://en.wikipedia.org/wiki/BMP_file_format */
                          if ((bmih.biCompression == BI_RGB) &&
-                             (bmih.biSizeImage == 0))
+                             (bmih.biSizeImage == 0) &&
+                             (bmih.biClrUsed == 0))
                          {
                              bmih.biSizeImage = bmih.biWidth *
                                  bmih.biHeight / 2 * bmih.biBitCount / 8;
