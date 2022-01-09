@@ -186,8 +186,8 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
 {
     int oldWidth = GetWidth();
     int oldHeight = GetHeight();
-    INT newWidth = GetWidth() * nStretchPercentX / 100;
-    INT newHeight = GetHeight() * nStretchPercentY / 100;
+    INT newWidth = oldWidth * nStretchPercentX / 100;
+    INT newHeight = oldHeight * nStretchPercentY / 100;
     Insert(CopyDIBImage(hBms[currInd], newWidth, newHeight));
     if (GetWidth() != oldWidth || GetHeight() != oldHeight)
         NotifyDimensionsChanged();
