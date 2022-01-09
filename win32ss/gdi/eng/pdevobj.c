@@ -83,6 +83,8 @@ PDEVOBJ_vDeletePDEV(
     PPDEVOBJ ppdev)
 {
     EngDeleteSemaphore(ppdev->hsemDevLock);
+    if (ppdev->pdmwDev)
+        ExFreePoolWithTag(ppdev->pdmwDev, GDITAG_DEVMODE);
     if (ppdev->pEDDgpl)
         ExFreePoolWithTag(ppdev->pEDDgpl, GDITAG_PDEV);
     ExFreePoolWithTag(ppdev, GDITAG_PDEV);
@@ -266,17 +268,12 @@ PDEVOBJ_vRefreshModeList(
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVMODEINFO pdminfo, pdmiNext;
-    DEVMODEW dmDefault;
-    DEVMODEW dmCurrent;
+    PDEVMODEW newDevMode;
 
     /* Lock the PDEV */
     EngAcquireSemaphore(ppdev->hsemDevLock);
 
     pGraphicsDevice = ppdev->pGraphicsDevice;
-
-    /* Remember our default mode */
-    dmDefault = *pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm;
-    dmCurrent = *ppdev->pdmwDev;
 
     /* Clear out the modes */
     for (pdminfo = pGraphicsDevice->pdevmodeInfo;
@@ -290,55 +287,15 @@ PDEVOBJ_vRefreshModeList(
     ExFreePoolWithTag(pGraphicsDevice->pDevModeList, GDITAG_GDEVICE);
     pGraphicsDevice->pDevModeList = NULL;
 
-    /* Now re-populate the list */
-    if (!EngpPopulateDeviceModeList(pGraphicsDevice, &dmDefault))
+    /* Search an available display mode */
+    if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, ppdev->pdmwDev, &newDevMode, TRUE))
     {
-        DPRINT1("FIXME: EngpPopulateDeviceModeList failed, we just destroyed a perfectly good mode list\n");
+        ExFreePoolWithTag(ppdev->pdmwDev, GDITAG_DEVMODE);
+        ppdev->pdmwDev = newDevMode;
     }
-
-    ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, &dmCurrent);
 
     /* Unlock PDEV */
     EngReleaseSemaphore(ppdev->hsemDevLock);
-}
-
-PDEVMODEW
-NTAPI
-PDEVOBJ_pdmMatchDevMode(
-    PPDEVOBJ ppdev,
-    PDEVMODEW pdm)
-{
-    PGRAPHICS_DEVICE pGraphicsDevice;
-    PDEVMODEW pdmCurrent;
-    ULONG i;
-    DWORD dwFields;
-
-    pGraphicsDevice = ppdev->pGraphicsDevice;
-
-    for (i = 0; i < pGraphicsDevice->cDevModes; i++)
-    {
-        pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
-
-        /* Compare asked DEVMODE fields
-         * Only compare those that are valid in both DEVMODE structs */
-        dwFields = pdmCurrent->dmFields & pdm->dmFields;
-
-        /* For now, we only need those */
-        if ((dwFields & DM_BITSPERPEL) &&
-            (pdmCurrent->dmBitsPerPel != pdm->dmBitsPerPel)) continue;
-        if ((dwFields & DM_PELSWIDTH) &&
-            (pdmCurrent->dmPelsWidth != pdm->dmPelsWidth)) continue;
-        if ((dwFields & DM_PELSHEIGHT) &&
-            (pdmCurrent->dmPelsHeight != pdm->dmPelsHeight)) continue;
-        if ((dwFields & DM_DISPLAYFREQUENCY) &&
-            (pdmCurrent->dmDisplayFrequency != pdm->dmDisplayFrequency)) continue;
-
-        /* Match! Return the DEVMODE */
-        return pdmCurrent;
-    }
-
-    /* Nothing found */
-    return NULL;
 }
 
 static
@@ -349,6 +306,7 @@ EngpCreatePDEV(
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PPDEVOBJ ppdev;
+    PDEVMODEW newDevMode;
 
     DPRINT("EngpCreatePDEV(%wZ, %p)\n", pustrDeviceName, pdm);
 
@@ -410,7 +368,13 @@ EngpCreatePDEV(
     ppdev->hSpooler = ppdev->pGraphicsDevice->DeviceObject;
 
     // Should we change the ative mode of pGraphicsDevice ?
-    ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
+    if (!LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, pdm, &newDevMode, TRUE))
+    {
+        DPRINT1("LDEVOBJ_bProbeAndCaptureDevmode() failed\n");
+        PDEVOBJ_vRelease(ppdev);
+        return NULL;
+    }
+    ppdev->pdmwDev = newDevMode;
 
     /* FIXME! */
     ppdev->flFlags = PDEV_DISPLAY;
@@ -525,7 +489,7 @@ PDEVOBJ_bSwitchMode(
     DPRINT1("PDEVOBJ_bSwitchMode, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
 
     // Lookup the GraphicsDevice + select DEVMODE
-    // pdm = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
+    // pdm = LDEVOBJ_bProbeAndCaptureDevmode(ppdev, pdm);
 
     /* 1. Temporarily disable the current PDEV and reset video to its default mode */
     if (!ppdev->pfn.AssertMode(ppdev->dhpdev, FALSE))
