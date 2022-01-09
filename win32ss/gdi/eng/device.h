@@ -23,8 +23,7 @@ PGRAPHICS_DEVICE
 NTAPI
 EngpFindGraphicsDevice(
     _In_opt_ PUNICODE_STRING pustrDevice,
-    _In_ ULONG iDevNum,
-    _In_ DWORD dwFlags);
+    _In_ ULONG iDevNum);
 
 PGRAPHICS_DEVICE
 NTAPI

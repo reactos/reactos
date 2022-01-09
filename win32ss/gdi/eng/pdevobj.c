@@ -313,7 +313,7 @@ EngpCreatePDEV(
     /* Try to find the GRAPHICS_DEVICE */
     if (pustrDeviceName)
     {
-        pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0, 0);
+        pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0);
         if (!pGraphicsDevice)
         {
             DPRINT1("No GRAPHICS_DEVICE found for %ls!\n",

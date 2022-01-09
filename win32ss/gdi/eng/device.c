@@ -80,7 +80,7 @@ EngpUpdateGraphicsDeviceList(VOID)
         RtlInitUnicodeString(&ustrDeviceName, awcWinDeviceName);
 
         /* Check if the device exists already */
-        pGraphicsDevice = EngpFindGraphicsDevice(&ustrDeviceName, iDevNum, 0);
+        pGraphicsDevice = EngpFindGraphicsDevice(&ustrDeviceName, iDevNum);
         if (pGraphicsDevice != NULL)
         {
             continue;
@@ -387,14 +387,13 @@ PGRAPHICS_DEVICE
 NTAPI
 EngpFindGraphicsDevice(
     _In_opt_ PUNICODE_STRING pustrDevice,
-    _In_ ULONG iDevNum,
-    _In_ DWORD dwFlags)
+    _In_ ULONG iDevNum)
 {
     UNICODE_STRING ustrCurrent;
     PGRAPHICS_DEVICE pGraphicsDevice;
     ULONG i;
-    TRACE("EngpFindGraphicsDevice('%wZ', %lu, 0x%lx)\n",
-           pustrDevice, iDevNum, dwFlags);
+    TRACE("EngpFindGraphicsDevice('%wZ', %lu)\n",
+           pustrDevice, iDevNum);
 
     /* Lock list */
     EngAcquireSemaphore(ghsemGraphicsDeviceList);

@@ -335,7 +335,7 @@ co_IntInitializeDesktopGraphics(VOID)
         HDC hdc;
         ULONG iDevNum;
 
-        for (iDevNum = 1; (pGraphicsDevice = EngpFindGraphicsDevice(NULL, iDevNum, 0)) != NULL; iDevNum++)
+        for (iDevNum = 1; (pGraphicsDevice = EngpFindGraphicsDevice(NULL, iDevNum)) != NULL; iDevNum++)
         {
             RtlInitUnicodeString(&DisplayName, pGraphicsDevice->szWinDeviceName);
             hdc = IntGdiCreateDC(&DriverName, &DisplayName, NULL, NULL, FALSE);
