@@ -331,7 +331,7 @@ static UINT ICO_ExtractIconExW(
         ULONG   uSize = 0;
 
         /* Get size of the animation data */
-        uSize = peimage[4] + (peimage[5] << 8);
+        uSize = MAKEWORD(peimage[4], peimage[5]);
 
         /* Search for 'anih' indicating animation header */
         for (anihOffset = 0; anihOffset < uSize; anihOffset++)
