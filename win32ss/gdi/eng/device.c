@@ -129,81 +129,17 @@ EngpPopulateDeviceModeList(
     _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
     _In_ PDEVMODEW pdmDefault)
 {
-    PWSTR pwsz;
     PDEVMODEINFO pdminfo;
-    PDEVMODEW pdm, pdmEnd;
-    ULONG i, cModes = 0;
+    PDEVMODEW pdm;
+    ULONG i;
     BOOLEAN bModeMatch = FALSE;
-    ULONG cbSize, cbFull;
 
     ASSERT(pGraphicsDevice->pdevmodeInfo == NULL);
     ASSERT(pGraphicsDevice->pDevModeList == NULL);
 
-    pwsz = pGraphicsDevice->pDiplayDrivers;
-
-    /* Loop through the driver names
-     * This is a REG_MULTI_SZ string */
-    for (; *pwsz; pwsz += wcslen(pwsz) + 1)
+    if (!LDEVOBJ_bBuildDevmodeList(pGraphicsDevice))
     {
-        /* Get the mode list from the driver */
-        TRACE("Trying driver: %ls\n", pwsz);
-        cbSize = LDEVOBJ_ulGetDriverModes(pwsz, pGraphicsDevice->DeviceObject, &pdm);
-        if (!cbSize)
-        {
-            WARN("Driver %ls returned no valid mode\n", pwsz);
-            continue;
-        }
-
-        /* Add space for the header */
-        cbFull = cbSize + FIELD_OFFSET(DEVMODEINFO, adevmode);
-
-        /* Allocate a buffer for the DEVMODE array */
-        pdminfo = ExAllocatePoolWithTag(PagedPool, cbFull, GDITAG_DEVMODE);
-        if (!pdminfo)
-        {
-            ERR("Could not allocate devmodeinfo\n");
-            continue;
-        }
-
-        pdminfo->pldev = LDEVOBJ_pLoadDriver(pwsz, LDEV_DEVICE_DISPLAY);
-        pdminfo->cbdevmode = cbSize;
-        RtlCopyMemory(pdminfo->adevmode, pdm, cbSize);
-
-        /* Attach the mode info to the device */
-        pdminfo->pdmiNext = pGraphicsDevice->pdevmodeInfo;
-        pGraphicsDevice->pdevmodeInfo = pdminfo;
-
-        /* Loop all DEVMODEs */
-        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
-        for (pdm = pdminfo->adevmode;
-             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
-             pdm = (DEVMODEW*)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
-        {
-            /* Count this DEVMODE */
-            cModes++;
-
-            /* Some drivers like the VBox driver don't fill the dmDeviceName
-               with the name of the display driver. So fix that here. */
-            RtlStringCbCopyW(pdm->dmDeviceName, sizeof(pdm->dmDeviceName), pwsz);
-        }
-
-        // FIXME: release the driver again until it's used?
-    }
-
-    if (!pGraphicsDevice->pdevmodeInfo || cModes == 0)
-    {
-        ERR("No devmodes\n");
-        return FALSE;
-    }
-
-    /* Allocate an index buffer */
-    pGraphicsDevice->cDevModes = cModes;
-    pGraphicsDevice->pDevModeList = ExAllocatePoolWithTag(PagedPool,
-                                                          cModes * sizeof(DEVMODEENTRY),
-                                                          GDITAG_GDEVICE);
-    if (!pGraphicsDevice->pDevModeList)
-    {
-        ERR("No devmode list\n");
+        ERR("LDEVOBJ_bBuildDevmodeList() failed\n");
         return FALSE;
     }
 
@@ -218,20 +154,11 @@ EngpPopulateDeviceModeList(
          pdminfo;
          pdminfo = pdminfo->pdmiNext)
     {
-        /* Calculate End of the DEVMODEs */
-        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
-
         /* Loop through the DEVMODEs */
-        for (pdm = pdminfo->adevmode;
-             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
-             pdm = (PDEVMODEW)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
+        for (i = 0; i < pGraphicsDevice->cDevModes; i++)
         {
-            TRACE("    %S has mode %lux%lux%lu(%lu Hz)\n",
-                  pdm->dmDeviceName,
-                  pdm->dmPelsWidth,
-                  pdm->dmPelsHeight,
-                  pdm->dmBitsPerPel,
-                  pdm->dmDisplayFrequency);
+            pdm = pGraphicsDevice->pDevModeList[i].pdm;
+
             /* Compare with the default entry */
             if (!bModeMatch &&
                 pdm->dmBitsPerPel == pdmDefault->dmBitsPerPel &&
@@ -247,11 +174,6 @@ EngpPopulateDeviceModeList(
                     bModeMatch = TRUE;
                 }
             }
-
-            /* Initialize the entry */
-            pGraphicsDevice->pDevModeList[i].dwFlags = 0;
-            pGraphicsDevice->pDevModeList[i].pdm = pdm;
-            i++;
         }
     }
     return TRUE;
