@@ -435,7 +435,6 @@ static LPWSTR RunDlg_GetParentDir(LPCWSTR cmdline)
 {
     const WCHAR *src;
     WCHAR *dest, *result, *result_end=NULL;
-    static const WCHAR dotexeW[] = L".exe";
 
     result = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*(strlenW(cmdline)+5));
 
@@ -466,7 +465,7 @@ static LPWSTR RunDlg_GetParentDir(LPCWSTR cmdline)
                 *dest = 0;
                 if (INVALID_FILE_ATTRIBUTES != GetFileAttributesW(result))
                     break;
-                strcatW(dest, dotexeW);
+                strcatW(dest, L".exe");
                 if (INVALID_FILE_ATTRIBUTES != GetFileAttributesW(result))
                     break;
             }

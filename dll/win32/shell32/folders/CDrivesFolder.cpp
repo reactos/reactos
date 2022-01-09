@@ -411,8 +411,6 @@ getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
     WCHAR wszPath[MAX_PATH];
     WCHAR wszAutoRunInfPath[MAX_PATH];
     WCHAR wszValue[MAX_PATH], wszTemp[MAX_PATH];
-    static const WCHAR wszAutoRunInf[] = { 'a','u','t','o','r','u','n','.','i','n','f',0 };
-    static const WCHAR wszAutoRun[] = { 'a','u','t','o','r','u','n',0 };
 
     // get path
     if (!ILGetDisplayNameExW(psf, pidl, wszPath, 0))
@@ -422,10 +420,10 @@ getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
 
     // build the full path of autorun.inf
     StringCchCopyW(wszAutoRunInfPath, _countof(wszAutoRunInfPath), wszPath);
-    PathAppendW(wszAutoRunInfPath, wszAutoRunInf);
+    PathAppendW(wszAutoRunInfPath, L"autorun.inf");
 
     // autorun.inf --> wszValue
-    if (GetPrivateProfileStringW(wszAutoRun, L"icon", NULL, wszValue, _countof(wszValue),
+    if (GetPrivateProfileStringW(L"autorun", L"icon", NULL, wszValue, _countof(wszValue),
                                  wszAutoRunInfPath) && wszValue[0] != 0)
     {
         // wszValue --> wszTemp
@@ -977,8 +975,6 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
     {
         WCHAR wszDrive[18] = {0};
         DWORD dwVolumeSerialNumber, dwMaximumComponentLength, dwFileSystemFlags;
-        static const WCHAR wszOpenBracket[] = {' ', '(', 0};
-        static const WCHAR wszCloseBracket[] = {')', 0};
 
         lstrcpynW(wszDrive, pszPath, 4);
         pszPath[0] = L'\0';
@@ -1012,10 +1008,10 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
                     pszPath[MAX_PATH-7] = L'\0';
             }
         }
-        wcscat (pszPath, wszOpenBracket);
+        wcscat (pszPath, L" (");
         wszDrive[2] = L'\0';
         wcscat (pszPath, wszDrive);
-        wcscat (pszPath, wszCloseBracket);
+        wcscat (pszPath, L")");
     }
 
     if (SUCCEEDED(hr))

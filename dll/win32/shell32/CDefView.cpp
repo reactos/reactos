@@ -40,10 +40,6 @@ TODO:
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-#undef SV_CLASS_NAME
-
-static const WCHAR SV_CLASS_NAME[] = {'S', 'H', 'E', 'L', 'L', 'D', 'L', 'L', '_', 'D', 'e', 'f', 'V', 'i', 'e', 'w', 0};
-
 typedef struct
 {
     BOOL    bIsAscending;
@@ -298,7 +294,7 @@ class CDefView :
             {
                 {   sizeof(WNDCLASSEX), CS_PARENTDC, StartWindowProc,
                     0, 0, NULL, NULL,
-                    LoadCursor(NULL, IDC_ARROW), NULL, NULL, SV_CLASS_NAME, NULL
+                    LoadCursor(NULL, IDC_ARROW), NULL, NULL, L"SHELLDLL_DefView", NULL
                 },
                 NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
             };
