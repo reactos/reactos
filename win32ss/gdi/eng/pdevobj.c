@@ -430,9 +430,9 @@ SwitchPointer(
     *ppvPointer2 = pvTemp;
 }
 
-VOID
+BOOL
 NTAPI
-PDEVOBJ_vSwitchPdev(
+PDEVOBJ_bDynamicModeChange(
     PPDEVOBJ ppdev,
     PPDEVOBJ ppdev2)
 {
@@ -481,6 +481,8 @@ PDEVOBJ_vSwitchPdev(
     /* Notify each driver instance of its new HDEV association */
     ppdev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
     ppdev2->pfn.CompletePDEV(ppdev2->dhpdev, (HDEV)ppdev2);
+
+    return TRUE;
 }
 
 
@@ -536,7 +538,12 @@ PDEVOBJ_bSwitchMode(
     /* 6. Copy old PDEV state to new PDEV instance */
 
     /* 7. Switch the PDEVs */
-    PDEVOBJ_vSwitchPdev(ppdev, ppdevTmp);
+    if (!PDEVOBJ_bDynamicModeChange(ppdev, ppdevTmp))
+    {
+        DPRINT1("PDEVOBJ_bDynamicModeChange() failed\n");
+        PDEVOBJ_vRelease(ppdevTmp);
+        goto leave2;
+    }
 
     /* 8. Disable DirectDraw */
 

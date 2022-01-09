@@ -213,4 +213,10 @@ PDEVOBJ_bSwitchMode(
     PPDEVOBJ ppdev,
     PDEVMODEW pdm);
 
+BOOL
+NTAPI
+PDEVOBJ_bDynamicModeChange(
+    _Inout_ PPDEVOBJ ppdev,
+    _Inout_ PPDEVOBJ ppdev2);
+
 #endif /* !__WIN32K_PDEVOBJ_H */
