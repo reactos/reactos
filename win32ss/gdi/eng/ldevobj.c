@@ -194,18 +194,16 @@ LDEVOBJ_vUnloadImage(
 static
 BOOL
 LDEVOBJ_bEnableDriver(
-    _Inout_ PLDEVOBJ pldev)
+    _Inout_ PLDEVOBJ pldev,
+    _In_ PFN_DrvEnableDriver pfnEnableDriver)
 {
-    PFN_DrvEnableDriver pfnEnableDriver;
     DRVENABLEDATA ded;
     ULONG i;
 
-    /* Make sure we have a driver info */
-    ASSERT(pldev && pldev->pGdiDriverInfo != NULL);
+    ASSERT(pldev);
 
     /* Call the drivers DrvEnableDriver function */
     RtlZeroMemory(&ded, sizeof(ded));
-    pfnEnableDriver = pldev->pGdiDriverInfo->EntryPoint;
     if (!pfnEnableDriver(GDI_ENGINE_VERSION, sizeof(ded), &ded))
     {
         ERR("DrvEnableDriver failed\n");
@@ -326,6 +324,49 @@ LDEVOBJ_pvFindImageProcAddress(
 }
 
 PLDEVOBJ
+LDEVOBJ_pLoadInternal(
+    _In_ PFN_DrvEnableDriver pfnEnableDriver,
+    _In_ ULONG ldevtype)
+{
+    PLDEVOBJ pldev;
+
+    TRACE("LDEVOBJ_pLoadInternal(%lu)\n", ldevtype);
+
+    /* Lock loader */
+    EngAcquireSemaphore(ghsemLDEVList);
+
+    /* Allocate a new LDEVOBJ */
+    pldev = LDEVOBJ_AllocLDEV(ldevtype);
+    if (!pldev)
+    {
+        ERR("Could not allocate LDEV\n");
+        goto leave;
+    }
+
+    /* Load the driver */
+    if (!LDEVOBJ_bEnableDriver(pldev, pfnEnableDriver))
+    {
+        ERR("LDEVOBJ_bEnableDriver failed\n");
+        LDEVOBJ_vFreeLDEV(pldev);
+        pldev = NULL;
+        goto leave;
+    }
+
+    /* Insert the LDEV into the global list */
+    InsertHeadList(&gleLdevListHead, &pldev->leLink);
+
+    /* Increase ref count */
+    pldev->cRefs++;
+
+leave:
+    /* Unlock loader */
+    EngReleaseSemaphore(ghsemLDEVList);
+
+    TRACE("LDEVOBJ_pLoadInternal returning %p\n", pldev);
+    return pldev;
+}
+
+PLDEVOBJ
 NTAPI
 LDEVOBJ_pLoadDriver(
     _In_z_ LPWSTR pwszDriverName,
@@ -423,7 +464,7 @@ LDEVOBJ_pLoadDriver(
         if (ldevtype != LDEV_IMAGE)
         {
             /* Load the driver */
-            if (!LDEVOBJ_bEnableDriver(pldev))
+            if (!LDEVOBJ_bEnableDriver(pldev, pldev->pGdiDriverInfo->EntryPoint))
             {
                 ERR("LDEVOBJ_bEnableDriver failed\n");
 
