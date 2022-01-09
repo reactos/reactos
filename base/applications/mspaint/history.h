@@ -25,10 +25,10 @@ private:
     int redoSteps;
 public:
     ImageModel();
-    void CopyPrevious(__LOCATION__);
-    void Undo(__LOCATION__);
-    void Redo(__LOCATION__);
-    void ResetToPrevious(__LOCATION__);
+    void CopyPrevious();
+    void Undo();
+    void Redo();
+    void ResetToPrevious();
     void ClearHistory(void);
     void Insert(HBITMAP hbm);
     void Crop(int nWidth, int nHeight, int nOffsetX = 0, int nOffsetY = 0);

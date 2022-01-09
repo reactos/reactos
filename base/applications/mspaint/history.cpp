@@ -42,9 +42,9 @@ ImageModel::ImageModel()
     Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
 }
 
-void ImageModel::CopyPrevious(__LOCATION__)
+void ImageModel::CopyPrevious()
 {
-    DPRINT("%s (%d): CopyPrevious: %d\n", file, line, currInd);
+    DPRINT("CopyPrevious: %d\n", currInd);
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
     hBms[(currInd + 1) % HISTORYSIZE] = CopyDIBImage(hBms[currInd]);
     currInd = (currInd + 1) % HISTORYSIZE;
@@ -55,9 +55,9 @@ void ImageModel::CopyPrevious(__LOCATION__)
     imageSaved = FALSE;
 }
 
-void ImageModel::Undo(__LOCATION__)
+void ImageModel::Undo()
 {
-    DPRINT("%s (%d): Undo: %d\n", file, line, undoSteps);
+    DPRINT("Undo: %d\n", undoSteps);
     if (undoSteps > 0)
     {
         int oldWidth = GetWidth();
@@ -74,9 +74,9 @@ void ImageModel::Undo(__LOCATION__)
     }
 }
 
-void ImageModel::Redo(__LOCATION__)
+void ImageModel::Redo()
 {
-    DPRINT("%s (%d): Redo: %d\n", file, line, redoSteps);
+    DPRINT("Redo: %d\n", redoSteps);
     if (redoSteps > 0)
     {
         int oldWidth = GetWidth();
@@ -93,9 +93,9 @@ void ImageModel::Redo(__LOCATION__)
     }
 }
 
-void ImageModel::ResetToPrevious(__LOCATION__)
+void ImageModel::ResetToPreviousg()
 {
-    DPRINT("%s (%d): ResetToPrevious: %d\n", file, line, currInd);
+    DPRINT("ResetToPrevious: %d\n", currInd);
     DeleteObject(hBms[currInd]);
     hBms[currInd] = CopyDIBImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE]);
     SelectObject(hDrawingDC, hBms[currInd]);
@@ -207,7 +207,7 @@ int ImageModel::GetHeight() const
 void ImageModel::InvertColors()
 {
     RECT rect = {0, 0, GetWidth(), GetHeight()};
-    CopyPrevious(__location__);
+    CopyPrevious();
     InvertRect(hDrawingDC, &rect);
     NotifyImageChanged();
 }
@@ -225,7 +225,7 @@ HDC ImageModel::GetDC()
 
 void ImageModel::FlipHorizontally()
 {
-    CopyPrevious(__location__);
+    CopyPrevious();
     StretchBlt(hDrawingDC, GetWidth() - 1, 0, -GetWidth(), GetHeight(), GetDC(), 0, 0,
                GetWidth(), GetHeight(), SRCCOPY);
     NotifyImageChanged();
@@ -233,7 +233,7 @@ void ImageModel::FlipHorizontally()
 
 void ImageModel::FlipVertically()
 {
-    CopyPrevious(__location__);
+    CopyPrevious();
     StretchBlt(hDrawingDC, 0, GetHeight() - 1, GetWidth(), -GetHeight(), GetDC(), 0, 0,
                GetWidth(), GetHeight(), SRCCOPY);
     NotifyImageChanged();
@@ -243,7 +243,7 @@ void ImageModel::RotateNTimes90Degrees(int iN)
 {
     if (iN == 2)
     {
-        CopyPrevious(__location__);
+        CopyPrevious();
         StretchBlt(hDrawingDC, GetWidth() - 1, GetHeight() - 1, -GetWidth(), -GetHeight(), GetDC(),
                    0, 0, GetWidth(), GetHeight(), SRCCOPY);
     }

@@ -151,7 +151,7 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     if (m_bMoving)
     {
-        imageModel.ResetToPrevious(__location__);
+        imageModel.ResetToPrevious();
         m_ptFrac.x += GET_X_LPARAM(lParam) - m_ptPos.x;
         m_ptFrac.y += GET_Y_LPARAM(lParam) - m_ptPos.y;
         m_ptDelta.x += UnZoomed(m_ptFrac.x);
@@ -235,8 +235,8 @@ LRESULT CSelectionWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lPar
         {
             // FIXME: dirty hack
             placeSelWin();
-            imageModel.Undo(__location__);
-            imageModel.Undo(__location__);
+            imageModel.Undo();
+            imageModel.Undo();
         }
         else
         {

@@ -24,14 +24,6 @@
 #define NDEBUG
 #include <reactos/debug.h>
 
-#if DBG
-    #define __LOCATION__  LPCSTR file, INT line
-    #define __location__  __FILE__, __LINE__
-#else
-    #define __LOCATION__  /*empty*/
-    #define __location__  /*empty*/
-#endif
-
 #define WM_TOOLSMODELTOOLCHANGED         (WM_APP + 0)
 #define WM_TOOLSMODELSETTINGSCHANGED     (WM_APP + 1)
 #define WM_TOOLSMODELZOOMCHANGED         (WM_APP + 2)
