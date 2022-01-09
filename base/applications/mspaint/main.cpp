@@ -173,7 +173,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* initialize common controls library */
     INITCOMMONCONTROLSEX iccx;
     iccx.dwSize = sizeof(iccx);
-    iccx.dwICC = ICC_STANDARD_CLASSES | ICC_USEREX_CLASSES;
+    iccx.dwICC = ICC_STANDARD_CLASSES | ICC_USEREX_CLASSES | ICC_BAR_CLASSES;
     InitCommonControlsEx(&iccx);
 
     LoadString(hThisInstance, IDS_DEFAULTFILENAME, filepathname, _countof(filepathname));
