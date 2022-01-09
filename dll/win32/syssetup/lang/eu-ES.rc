@@ -117,9 +117,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS-aren Instalazioa"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Osagaiak erregistratzea", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -183,8 +186,8 @@ BEGIN
     IDS_LOCALESUBTITLE "ReactOS pertsonaliza dezakezu eskualde eta hizkuntza desberdinetarako."
     IDS_DATETIMETITLE "Data eta ordua"
     IDS_DATETIMESUBTITLE "Ezarri zure ordenagailurako data eta ordu egokiak."
-    IDS_PROCESSTITLE "Osagaiak erregistratzea"
-    IDS_PROCESSSUBTITLE "Itxaron momentu bat..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Itxura"
     IDS_THEMESELECTIONSUBTITLE "Hautatu gustuko duzun itxura."
 END
@@ -193,7 +196,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS-aren Instalazioa"
     IDS_UNKNOWN_ERROR "Errore ezezaguna"
-    IDS_REGISTERING_COMPONENTS "Osagaiak erregistratzea..."
     IDS_LOADLIBRARY_FAILED "Ezin izan da liburutegia kargatu: "
     IDS_GETPROCADDR_FAILED "Ezin izan da prozesuaren kokapena lortu: "
     IDS_REGSVR_FAILED "Ezin izan da liburutegia erregistratu: "

@@ -111,9 +111,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Registering components", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -179,8 +182,8 @@ BEGIN
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Date and Time"
     IDS_DATETIMESUBTITLE "Set the correct date and time for your computer."
-    IDS_PROCESSTITLE "Registering Components"
-    IDS_PROCESSSUBTITLE "Please wait..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Appearance"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
@@ -189,7 +192,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS Setup"
     IDS_UNKNOWN_ERROR "Unknown error"
-    IDS_REGISTERING_COMPONENTS "Registering components..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary failed: "
     IDS_GETPROCADDR_FAILED "GetProcAddr failed: "
     IDS_REGSVR_FAILED "DllRegisterServer failed: "

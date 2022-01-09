@@ -118,9 +118,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "请稍候，安装程序正在注册组件。", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -186,8 +189,8 @@ BEGIN
     IDS_LAYOUTTEXT "您的默认文本输入语言和方法是：%s 键盘布局"
     IDS_DATETIMETITLE "日期和时间"
     IDS_DATETIMESUBTITLE "为您的计算机配置正确的日期和时间。"
-    IDS_PROCESSTITLE "注册组件"
-    IDS_PROCESSSUBTITLE "正在完成 ReactOS 最后的安装阶段"
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "外观"
     IDS_THEMESELECTIONSUBTITLE "选择您的主题："
 END
@@ -196,7 +199,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS 安装程序"
     IDS_UNKNOWN_ERROR "未知错误"
-    IDS_REGISTERING_COMPONENTS "请稍候，安装程序正在注册组件。"
     IDS_LOADLIBRARY_FAILED "LoadLibrary 失败: "
     IDS_GETPROCADDR_FAILED "GetProcAddr 失败: "
     IDS_REGSVR_FAILED "DllRegisterServer 失败: "
