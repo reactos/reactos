@@ -155,8 +155,8 @@ GatherDataFromListView(HWND hwndListView,
             return 0;
     }
 
-    /* First reinitialize the value buffer then copy the variable values while
-       seperating them with a semi-colon except for the last value */
+    /* First reinitialize the value buffer, then copy the variable values while
+     * separating them with a semi-colon, except for the last value. */
     VarData->lpRawValue[0] = _T('\0');
     for (i = 0; i < NumberOfItems; i++)
     {
