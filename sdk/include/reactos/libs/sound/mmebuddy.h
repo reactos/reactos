@@ -118,6 +118,7 @@ struct _SOUND_DEVICE_INSTANCE;
 typedef struct _SOUND_OVERLAPPED
 {
     OVERLAPPED Standard;
+    PVOID StatusBlock;
     struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
     PWAVEHDR Header;
     BOOL PerformCompletion;

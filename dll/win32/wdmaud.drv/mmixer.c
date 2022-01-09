@@ -791,13 +791,14 @@ CommitWaveBufferApc(PVOID ApcContext,
     KSSTREAM_HEADER* lpHeader;
 
     dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
-    Overlap = (PSOUND_OVERLAPPED)IoStatusBlock;
+    Overlap = (PSOUND_OVERLAPPED)ApcContext;
     lpHeader = Overlap->CompletionContext;
 
     /* Call mmebuddy overlap routine */
     Overlap->OriginalCompletionRoutine(dwErrorCode,
         lpHeader->DataUsed, &Overlap->Standard);
 
+    HeapFree(GetProcessHeap(), 0, Overlap->StatusBlock);
     HeapFree(GetProcessHeap(), 0, lpHeader);
 }
 
@@ -841,6 +842,7 @@ WdmAudCommitWaveBufferByMMixer(
     lpHeader->FrameExtent = Length;
     Overlap->CompletionContext = lpHeader;
     Overlap->OriginalCompletionRoutine = CompletionRoutine;
+    Overlap->StatusBlock = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IO_STATUS_BLOCK));
     IoCtl = (DeviceType == WAVE_OUT_DEVICE_TYPE ? IOCTL_KS_WRITE_STREAM : IOCTL_KS_READ_STREAM);
 
     if (DeviceType == WAVE_OUT_DEVICE_TYPE)
@@ -851,8 +853,8 @@ WdmAudCommitWaveBufferByMMixer(
     Status = NtDeviceIoControlFile(SoundDeviceInstance->Handle,
                                    NULL,
                                    CommitWaveBufferApc,
-                                   NULL,
-                                   (PIO_STATUS_BLOCK)Overlap,
+                                   (PVOID)Overlap,
+                                   Overlap->StatusBlock,
                                    IoCtl,
                                    NULL,
                                    0,
