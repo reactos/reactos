@@ -219,4 +219,12 @@ PDEVOBJ_bDynamicModeChange(
     _Inout_ PPDEVOBJ ppdev,
     _Inout_ PPDEVOBJ ppdev2);
 
+VOID
+PDEVOBJ_vEnableDisplay(
+    _Inout_ PPDEVOBJ ppdev);
+
+BOOL
+PDEVOBJ_bDisableDisplay(
+    _Inout_ PPDEVOBJ ppdev);
+
 #endif /* !__WIN32K_PDEVOBJ_H */
