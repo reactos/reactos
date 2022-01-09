@@ -9,6 +9,7 @@
 #include <win32k.h>
 #define NDEBUG
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(EngPDev);
 
 PPDEVOBJ gppdevPrimary = NULL;
 
@@ -110,6 +111,7 @@ PDEVOBJ_vRelease(
         {
             /* Release the surface and let the driver free it */
             SURFACE_ShareUnlockSurface(ppdev->pSurface);
+            TRACE("DrvDisableSurface(dhpdev %p)\n", ppdev->dhpdev);
             ppdev->pfn.DisableSurface(ppdev->dhpdev);
         }
 
@@ -123,6 +125,7 @@ PDEVOBJ_vRelease(
         if (ppdev->dhpdev != NULL)
         {
             /* Disable the PDEV */
+            TRACE("DrvDisablePDEV(dhpdev %p)\n", ppdev->dhpdev);
             ppdev->pfn.DisablePDEV(ppdev->dhpdev);
         }
 
@@ -150,6 +153,9 @@ PDEVOBJ_vRelease(
         if (ppdev == gppdevPrimary)
             gppdevPrimary = NULL;
 
+        /* Unload display driver */
+        EngUnloadImage(ppdev->pldev);
+
         /* Free it */
         PDEVOBJ_vDeletePDEV(ppdev);
     }
@@ -161,19 +167,25 @@ PDEVOBJ_vRelease(
 BOOL
 NTAPI
 PDEVOBJ_bEnablePDEV(
-    PPDEVOBJ ppdev,
-    PDEVMODEW pdevmode,
-    PWSTR pwszLogAddress)
+    _In_ PPDEVOBJ ppdev,
+    _In_ PDEVMODEW pdevmode,
+    _In_ PWSTR pwszLogAddress)
 {
     PFN_DrvEnablePDEV pfnEnablePDEV;
     ULONG i;
-
-    DPRINT("PDEVOBJ_bEnablePDEV()\n");
 
     /* Get the DrvEnablePDEV function */
     pfnEnablePDEV = ppdev->pldev->pfn.EnablePDEV;
 
     /* Call the drivers DrvEnablePDEV function */
+    TRACE("DrvEnablePDEV(pdevmode %p (%dx%dx%d %d Hz) hdev %p (%S))\n",
+        pdevmode,
+        ppdev->pGraphicsDevice ? pdevmode->dmPelsWidth : 0,
+        ppdev->pGraphicsDevice ? pdevmode->dmPelsHeight : 0,
+        ppdev->pGraphicsDevice ? pdevmode->dmBitsPerPel : 0,
+        ppdev->pGraphicsDevice ? pdevmode->dmDisplayFrequency : 0,
+        ppdev,
+        ppdev->pGraphicsDevice ? ppdev->pGraphicsDevice->szNtDeviceName : L"");
     ppdev->dhpdev = pfnEnablePDEV(pdevmode,
                                   pwszLogAddress,
                                   HS_DDI_MAX,
@@ -183,11 +195,12 @@ PDEVOBJ_bEnablePDEV(
                                   sizeof(DEVINFO),
                                   &ppdev->devinfo,
                                   (HDEV)ppdev,
-                                  ppdev->pGraphicsDevice->pwszDescription,
-                                  ppdev->pGraphicsDevice->DeviceObject);
+                                  ppdev->pGraphicsDevice ? ppdev->pGraphicsDevice->pwszDescription : NULL,
+                                  ppdev->pGraphicsDevice ? ppdev->pGraphicsDevice->DeviceObject : NULL);
+    TRACE("DrvEnablePDEV(pdevmode %p hdev %p) => dhpdev %p\n", pdevmode, ppdev, ppdev->dhpdev);
     if (ppdev->dhpdev == NULL)
     {
-        DPRINT1("Failed to enable PDEV\n");
+        ERR("Failed to enable PDEV\n");
         return FALSE;
     }
 
@@ -217,7 +230,7 @@ PDEVOBJ_bEnablePDEV(
             ppdev->ahsurf[i] = gahsurfHatch[i];
     }
 
-    DPRINT("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
+    TRACE("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
 
     return TRUE;
 }
@@ -228,6 +241,7 @@ PDEVOBJ_vCompletePDEV(
     PPDEVOBJ ppdev)
 {
     /* Call the drivers DrvCompletePDEV function */
+    TRACE("DrvCompletePDEV(dhpdev %p hdev %p)\n", ppdev->dhpdev, ppdev);
     ppdev->pldev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
 }
 
@@ -242,10 +256,12 @@ PDEVOBJ_pSurface(
     if (ppdev->pSurface == NULL)
     {
         /* Call the drivers DrvEnableSurface */
+        TRACE("DrvEnableSurface(dhpdev %p)\n", ppdev->dhpdev);
         hsurf = ppdev->pldev->pfn.EnableSurface(ppdev->dhpdev);
+        TRACE("DrvEnableSurface(dhpdev %p) => hsurf %p\n", ppdev->dhpdev, hsurf);
         if (hsurf== NULL)
         {
-            DPRINT1("Failed to create PDEV surface!\n");
+            ERR("Failed to create PDEV surface!\n");
             return NULL;
         }
 
@@ -257,7 +273,6 @@ PDEVOBJ_pSurface(
     /* Increment reference count */
     GDIOBJ_vReferenceObjectByPointer(&ppdev->pSurface->BaseObject);
 
-    DPRINT("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
     return ppdev->pSurface;
 }
 
