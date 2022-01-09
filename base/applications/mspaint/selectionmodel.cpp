@@ -170,9 +170,8 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hBm)
     HDC hTempDC;
     HBITMAP hTempMask;
 
-    DeleteObject(SelectObject(m_hDC, m_hBm = (HBITMAP) CopyImage(hBm,
-                                                                 IMAGE_BITMAP, 0, 0,
-                                                                 LR_COPYRETURNORG)));
+    m_hBm = CopyDIBImage(hBm);
+    DeleteObject(SelectObject(m_hDC, m_hBm));
 
     SetRectEmpty(&m_rcSrc);
     m_rcDest.left = m_rcDest.top = 0;

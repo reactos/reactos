@@ -44,8 +44,9 @@ ImageModel::ImageModel()
 
 void ImageModel::CopyPrevious()
 {
+    DPRINT("%s: %d\n", __FUNCTION__, currInd);
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-    hBms[(currInd + 1) % HISTORYSIZE] = (HBITMAP) CopyImage(hBms[currInd], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
+    hBms[(currInd + 1) % HISTORYSIZE] = CopyDIBImage(hBms[currInd]);
     currInd = (currInd + 1) % HISTORYSIZE;
     if (undoSteps < HISTORYSIZE - 1)
         undoSteps++;
@@ -56,6 +57,7 @@ void ImageModel::CopyPrevious()
 
 void ImageModel::Undo()
 {
+    DPRINT("%s: %d\n", __FUNCTION__, undoSteps);
     if (undoSteps > 0)
     {
         int oldWidth = GetWidth();
@@ -74,6 +76,7 @@ void ImageModel::Undo()
 
 void ImageModel::Redo()
 {
+    DPRINT("%s: %d\n", __FUNCTION__, redoSteps);
     if (redoSteps > 0)
     {
         int oldWidth = GetWidth();
@@ -92,9 +95,9 @@ void ImageModel::Redo()
 
 void ImageModel::ResetToPrevious()
 {
+    DPRINT("%s: %d\n", __FUNCTION__, currInd);
     DeleteObject(hBms[currInd]);
-    hBms[currInd] =
-        (HBITMAP) CopyImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE], IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG);
+    hBms[currInd] = CopyDIBImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE]);
     SelectObject(hDrawingDC, hBms[currInd]);
     NotifyImageChanged();
 }
@@ -183,9 +186,9 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
 {
     int oldWidth = GetWidth();
     int oldHeight = GetHeight();
-    Insert((HBITMAP) CopyImage(hBms[currInd], IMAGE_BITMAP,
-           GetWidth() * nStretchPercentX / 100,
-           GetHeight() * nStretchPercentY / 100, 0));
+    INT newWidth = oldWidth * nStretchPercentX / 100;
+    INT newHeight = oldHeight * nStretchPercentY / 100;
+    Insert(CopyDIBImage(hBms[currInd], newWidth, newHeight));
     if (GetWidth() != oldWidth || GetHeight() != oldHeight)
         NotifyDimensionsChanged();
     NotifyImageChanged();
