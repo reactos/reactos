@@ -10,7 +10,11 @@
 
 HBITMAP CreateDIBWithProperties(int width, int height);
 HBITMAP CreateColorDIB(int width, int height, COLORREF rgb);
-HBITMAP CopyDIBImage(HBITMAP hbm, INT cx = 0, INT cy = 0);
+
+static inline HBITMAP CopyDIBImage(HBITMAP hbm, INT cx, INT cy)
+{
+    return (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, cx, cy, LR_COPYRETURNORG | LR_CREATEDIBSECTION);
+}
 
 int GetDIBWidth(HBITMAP hbm);
 

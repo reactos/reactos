@@ -208,8 +208,3 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
 
     return hBitmap;
 }
-
-HBITMAP CopyDIBImage(HBITMAP hbm, INT cx, INT cy)
-{
-    return (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, cx, cy, LR_COPYRETURNORG | LR_CREATEDIBSECTION);
-}
