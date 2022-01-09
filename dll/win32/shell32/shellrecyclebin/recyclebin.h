@@ -179,9 +179,7 @@ RestoreFile(
 
 /* COM interface */
 
-#undef INTERFACE
 #define INTERFACE IRecycleBinFile
-
 DECLARE_INTERFACE_(IRecycleBinFile, IUnknown)
 {
     BEGIN_INTERFACE
@@ -203,10 +201,9 @@ DECLARE_INTERFACE_(IRecycleBinFile, IUnknown)
 
     END_INTERFACE
 };
-
 #undef INTERFACE
-#define INTERFACE IRecycleBinEnumList
 
+#define INTERFACE IRecycleBinEnumList
 DECLARE_INTERFACE_(IRecycleBinEnumList, IUnknown)
 {
     BEGIN_INTERFACE
@@ -223,10 +220,9 @@ DECLARE_INTERFACE_(IRecycleBinEnumList, IUnknown)
 
     END_INTERFACE
 };
-
 #undef INTERFACE
-#define INTERFACE IRecycleBin
 
+#define INTERFACE IRecycleBin
 DECLARE_INTERFACE_(IRecycleBin, IUnknown)
 {
     BEGIN_INTERFACE
@@ -243,6 +239,7 @@ DECLARE_INTERFACE_(IRecycleBin, IUnknown)
 
     END_INTERFACE
 };
+#undef INTERFACE
 
 EXTERN_C const IID IID_IRecycleBinFile;
 EXTERN_C const IID IID_IRecycleBinEnumList;
