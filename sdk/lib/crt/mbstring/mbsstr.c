@@ -8,16 +8,17 @@ unsigned char *_mbsstr(const unsigned char *src1,const unsigned char *src2)
 {
   size_t len;
 
-  if (src2 ==NULL || *src2 == 0)
+  if (src2 == NULL || *src2 == 0)
     return (unsigned char *)src1;
 
   len = _mbslen(src2);
 
   while(*src1)
-    {
-      if ((*src1 == *src2) && (_mbsncmp(src1,src2,len) == 0))
-	return (unsigned char *)src1;
-      src1 = (unsigned char *)_mbsinc(src1);
-    }
+  {
+    if ((*src1 == *src2) && (_mbsncmp(src1,src2,len) == 0))
+      return (unsigned char *)src1;
+
+    src1 = (unsigned char *)_mbsinc(src1);
+  }
   return NULL;
 }
