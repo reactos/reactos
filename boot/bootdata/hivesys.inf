@@ -1418,7 +1418,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\GroupOrderList","SCSI Miniport", 0x000000
 
 ; Session Manager stuff
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","BootExecute", 0x00010000, \
- "autocheck autochk *"
+ "autocheck autochk"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","GlobalFlag", 0x00010003, 0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","ObjectDirectories",0x00010000, \
  "\Windows", \

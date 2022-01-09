@@ -341,6 +341,17 @@ _main(int argc,
     NTSTATUS Status;
     WCHAR DrivePath[128];
 
+    /*
+     * Parse the command-line: optional command switches,
+     * then the NT volume name (or drive letter) to be analysed.
+     * If "*" is passed this means that we check all the volumes.
+     */
+    if (argc <= 1)
+    {
+        /* Only one parameter (the program name), bail out */
+        return 1;
+    }
+
     // Win2003 passes the only param - "*". Probably means to check all drives
     /*
     DPRINT("Got %d params\n", argc);
