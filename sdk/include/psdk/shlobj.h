@@ -2664,7 +2664,7 @@ DECLARE_INTERFACE_(IShellFolderBand, IUnknown)
 /*****************************************************************************
  * Control Panel functions
  */
-LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6);
+LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC16 pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6);
 
 #ifdef __cplusplus
 } /* extern "C" */
