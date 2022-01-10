@@ -327,33 +327,31 @@ static UINT ICO_ExtractIconExW(
     /* Check if the resource is an animated icon/cursor */
     if (!memcmp(peimage, "RIFF", 4))
     {
-        INT     anihOffset;
-        ULONG   uSize = 0;
-
+        UINT anihOffset;
         /* Get size of the animation data */
-        uSize = MAKEWORD(peimage[4], peimage[5]);
+        ULONG uSize = MAKEWORD(peimage[4], peimage[5]);
+
+        /* Check if uSize is reasonable with respect to fsizel */
+        if (uSize > fsizel)
+            goto end;
 
         /* Search for 'anih' indicating animation header */
         for (anihOffset = 0; anihOffset < uSize; anihOffset++)
         {
-           if ((peimage[anihOffset] == 0x61) &&     // a
-               (peimage[anihOffset+1] == 0x6e) &&   // n
-               (peimage[anihOffset+2] == 0x69) &&   // i
-               (peimage[anihOffset+3] == 0x68))     // h
-               break;
+            if (memcmp(&peimage[anihOffset], "anih", 4) == 0)
+                break;
         }
         /* Get count of images for return value */
         ret = MAKEWORD(peimage[anihOffset + 12], peimage[anihOffset + 13]);
 
-        TRACE("RIFF File with '%d' images at Offset '%d'.\n", ret, anihOffset);
+        TRACE("RIFF File with '%u' images at Offset '%u'.\n", ret, anihOffset);
 
         cx1 = LOWORD(cxDesired);
         cy1 = LOWORD(cyDesired);
 
         if (RetPtr)
         {
-            RetPtr[0] = CreateIconFromResourceEx(peimage, uSize, TRUE,
-                                                 0x00030000, cx1, cy1, flags);
+            RetPtr[0] = CreateIconFromResourceEx(peimage, uSize, TRUE, 0x00030000, cx1, cy1, flags);
         }
         goto end;
     }
@@ -502,12 +500,10 @@ static UINT ICO_ExtractIconExW(
                          /* biSizeImage is the size of the raw bitmap data.
                           * A dummy 0 can be given for BI_RGB bitmaps.
                           * https://en.wikipedia.org/wiki/BMP_file_format */
-                         if ((bmih.biCompression == BI_RGB) &&
-                             (bmih.biSizeImage == 0) &&
-                             (bmih.biClrUsed == 0))
+                         if ((bmih.biCompression == BI_RGB) && (bmih.biSizeImage == 0))
                          {
-                             bmih.biSizeImage = bmih.biWidth *
-                                 bmih.biHeight / 2 * bmih.biBitCount / 8;
+                             bmih.biSizeImage = ((bmih.biWidth * bmih.biBitCount + 31) / 32) * 4 *
+                                                (bmih.biHeight / 2);
                          }
 #endif
                         /* we need to prepend the bitmap data with hot spots for CreateIconFromResourceEx */

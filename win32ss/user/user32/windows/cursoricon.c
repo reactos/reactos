@@ -2452,7 +2452,7 @@ HICON WINAPI CreateIconFromResourceEx(
         int wResId = LookupIconIdFromDirectoryEx(pbIconBits, fIcon, cxDesired, cyDesired, uFlags);
         HANDLE ResHandle = NULL;
 #ifdef __REACTOS__
-        if ((wResId) && (pbIconBits[4] != sizeof(BITMAPINFOHEADER)))
+        if (wResId && (pbIconBits[4] != sizeof(BITMAPINFOHEADER)))
 #else
         if(wResId)
 #endif
