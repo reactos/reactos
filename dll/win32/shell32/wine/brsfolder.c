@@ -38,6 +38,7 @@
 #include "pidl.h"
 #include "shell32_main.h"
 #include "shresdef.h"
+
 #ifdef __REACTOS__
     #include <shlwapi.h>
     #include "ui/layout.h" /* Resizable window */
