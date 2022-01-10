@@ -246,7 +246,7 @@ RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 }
 
 void
-SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, DWORD system_selection_color)
+SelectionFrame(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF system_selection_color)
 {
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
