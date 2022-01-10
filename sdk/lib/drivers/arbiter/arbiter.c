@@ -1,15 +1,13 @@
 /*
- * PROJECT:         ReactOS Kernel
- * COPYRIGHT:       GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:            lib/drivers/arbiter/arbiter.c
- * PURPOSE:         Hardware Resources Arbiter Library
- * PROGRAMMERS:     Copyright 2020 Vadim Galyant <vgal@rambler.ru>
+ * PROJECT:     ReactOS Kernel&Driver SDK
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hardware Resources Arbiter Library
+ * COPYRIGHT:   Copyright 2020 Vadim Galyant <vgal@rambler.ru>
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <ntifs.h>
-#include <ndk/rtltypes.h>
 #include <ndk/rtlfuncs.h>
 #include "arbiter.h"
 
@@ -22,190 +20,248 @@
 
 /* FUNCTIONS ******************************************************************/
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbTestAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_ PLIST_ENTRY ArbitrationList)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbRetestAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_ PLIST_ENTRY ArbitrationList)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbCommitAllocation(
     _In_ PARBITER_INSTANCE Arbiter)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbRollbackAllocation(
     _In_ PARBITER_INSTANCE Arbiter)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*  Not correct yet, FIXME! */
+/* FIXME: the prototype is not correct yet. */
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbAddReserved(
     _In_ PARBITER_INSTANCE Arbiter)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbPreprocessEntry(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
+    PAGED_CODE();
+
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbAllocateEntry(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
 ArbGetNextAllocationRange(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return FALSE;
 }
 
+CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
 ArbFindSuitableRange(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return FALSE;
 }
 
+CODE_SEG("PAGE")
 VOID
 NTAPI
 ArbAddAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 VOID
 NTAPI
 ArbBacktrackAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
 }
 
-/*  Not correct yet, FIXME! */
+/* FIXME: the prototype is not correct yet. */
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbOverrideConflict(
     _In_ PARBITER_INSTANCE Arbiter)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbBootAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_ PLIST_ENTRY ArbitrationList)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*  Not correct yet, FIXME! */
+/* FIXME: the prototype is not correct yet. */
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbQueryConflict(
     _In_ PARBITER_INSTANCE Arbiter)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*  Not correct yet, FIXME! */
+/* FIXME: the prototype is not correct yet. */
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbStartArbiter(
     _In_ PARBITER_INSTANCE Arbiter)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbAddOrdering(
     _Out_ PARBITER_ORDERING_LIST OrderList,
-    _In_ ULONGLONG MinimumAddress,
-    _In_ ULONGLONG MaximumAddress)
+    _In_ UINT64 MinimumAddress,
+    _In_ UINT64 MaximumAddress)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbPruneOrdering(
     _Out_ PARBITER_ORDERING_LIST OrderingList,
-    _In_ ULONGLONG MinimumAddress,
-    _In_ ULONGLONG MaximumAddress)
+    _In_ UINT64 MinimumAddress,
+    _In_ UINT64 MaximumAddress)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbInitializeOrderingList(
     _Out_ PARBITER_ORDERING_LIST OrderList)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 VOID
 NTAPI
 ArbFreeOrderingList(
     _Out_ PARBITER_ORDERING_LIST OrderList)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbBuildAssignmentOrdering(
@@ -214,10 +270,13 @@ ArbBuildAssignmentOrdering(
     _In_ PCWSTR ReservedOrderName,
     _In_ PARB_TRANSLATE_ORDERING TranslateOrderingFunction)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 ArbInitializeArbiterInstance(
@@ -230,16 +289,17 @@ ArbInitializeArbiterInstance(
 {
     NTSTATUS Status;
 
+    PAGED_CODE();
+
     DPRINT("ArbInitializeArbiterInstance: '%S'\n", ArbiterName);
 
     ASSERT(Arbiter->UnpackRequirement != NULL);
     ASSERT(Arbiter->PackResource != NULL);
     ASSERT(Arbiter->UnpackResource != NULL);
-
-    ASSERT(Arbiter->MutexEvent == NULL &&
-           Arbiter->Allocation == NULL &&
-           Arbiter->PossibleAllocation == NULL &&
-           Arbiter->AllocationStack == NULL);
+    ASSERT(Arbiter->MutexEvent == NULL);
+    ASSERT(Arbiter->Allocation == NULL);
+    ASSERT(Arbiter->PossibleAllocation == NULL);
+    ASSERT(Arbiter->AllocationStack == NULL);
 
     Arbiter->Signature = ARBITER_SIGNATURE;
     Arbiter->BusDeviceObject = BusDeviceObject;
@@ -344,5 +404,3 @@ ArbInitializeArbiterInstance(
 
     return Status;
 }
-
-/* EOF */

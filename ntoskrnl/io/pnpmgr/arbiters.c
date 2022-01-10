@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS Kernel
- * COPYRIGHT:       GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:            ntoskrnl/io/pnpmgr/arbs.c
- * PURPOSE:         Root arbiters of the PnP manager
- * PROGRAMMERS:     Copyright 2020 Vadim Galyant <vgal@rambler.ru>
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Root arbiters of the PnP manager
+ * COPYRIGHT:   Copyright 2020 Vadim Galyant <vgal@rambler.ru>
  */
 
 /* INCLUDES ******************************************************************/
@@ -27,57 +26,72 @@ extern ARBITER_INSTANCE IopRootPortArbiter;
 
 /* BusNumber arbiter */
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopBusNumberUnpackRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
-    _Out_ PULONGLONG OutMinimumAddress,
-    _Out_ PULONGLONG OutMaximumAddress,
-    _Out_ PULONG OutLength,
-    _Out_ PULONG OutAlignment)
+    _Out_ PUINT64 OutMinimumAddress,
+    _Out_ PUINT64 OutMaximumAddress,
+    _Out_ PUINT32 OutLength,
+    _Out_ PUINT32 OutAlignment)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopBusNumberPackResource(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
-    _In_ ULONGLONG Start,
+    _In_ UINT64 Start,
     _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopBusNumberUnpackResource(
     _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
-    _Out_ PULONGLONG Start,
-    _Out_ PULONG Length)
+    _Out_ PUINT64 Start,
+    _Out_ PUINT32 Length)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
-LONG
+CODE_SEG("PAGE")
+INT32
 NTAPI
 IopBusNumberScoreRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return 0;
 }
 
 #define ARB_MAX_BUS_NUMBER 0xFF
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopBusNumberInitialize(VOID)
 {
     NTSTATUS Status;
+
+    PAGED_CODE();
 
     DPRINT("IopRootBusNumberArbiter %p\n", &IopRootBusNumberArbiter);
 
@@ -100,8 +114,8 @@ IopBusNumberInitialize(VOID)
     }
 
     Status = RtlAddRange(IopRootBusNumberArbiter.Allocation,
-                         (ULONGLONG)(ARB_MAX_BUS_NUMBER + 1),
-                         (ULONGLONG)(-1),
+                         (UINT64)(ARB_MAX_BUS_NUMBER + 1),
+                         (UINT64)(-1),
                          0,
                          0,
                          NULL,
@@ -112,65 +126,83 @@ IopBusNumberInitialize(VOID)
 
 /* Irq arbiter */
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopIrqUnpackRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
-    _Out_ PULONGLONG OutMinimumVector,
-    _Out_ PULONGLONG OutMaximumVector,
-    _Out_ PULONG OutParam1,
-    _Out_ PULONG OutParam2)
+    _Out_ PUINT64 OutMinimumVector,
+    _Out_ PUINT64 OutMaximumVector,
+    _Out_ PUINT32 OutParam1,
+    _Out_ PUINT32 OutParam2)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopIrqPackResource(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
-    _In_ ULONGLONG Start,
+    _In_ UINT64 Start,
     _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopIrqUnpackResource(
     _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor,
-    _Out_ PULONGLONG Start,
-    _Out_ PULONG OutLength)
+    _Out_ PUINT64 Start,
+    _Out_ PUINT32 OutLength)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
-LONG
+CODE_SEG("PAGE")
+INT32
 NTAPI
 IopIrqScoreRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return 0;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopIrqTranslateOrdering(
     _Out_ PIO_RESOURCE_DESCRIPTOR OutIoDescriptor,
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopIrqInitialize(VOID)
 {
     NTSTATUS Status;
+
+    PAGED_CODE();
 
     DPRINT("IopRootIrqArbiter %p\n", &IopRootIrqArbiter);
 
@@ -190,64 +222,82 @@ IopIrqInitialize(VOID)
 
 /* Dma arbiter */
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopDmaUnpackRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
-    _Out_ PULONGLONG OutMinimumChannel,
-    _Out_ PULONGLONG OutMaximumChannel,
-    _Out_ PULONG OutParam1,
-    _Out_ PULONG OutParam2)
+    _Out_ PUINT64 OutMinimumChannel,
+    _Out_ PUINT64 OutMaximumChannel,
+    _Out_ PUINT32 OutParam1,
+    _Out_ PUINT32 OutParam2)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopDmaPackResource(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
-    _In_ ULONGLONG Start,
+    _In_ UINT64 Start,
     _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopDmaUnpackResource(
     _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor,
-    _Out_ PULONGLONG Start,
-    _Out_ PULONG OutLength)
+    _Out_ PUINT64 Start,
+    _Out_ PUINT32 OutLength)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
-LONG
+CODE_SEG("PAGE")
+INT32
 NTAPI
 IopDmaScoreRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return 0;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopDmaOverrideConflict(
     _In_ PARBITER_INSTANCE Arbiter)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopDmaInitialize(VOID)
 {
     NTSTATUS Status;
+
+    PAGED_CODE();
 
     DPRINT("IopRootDmaArbiter %p\n", &IopRootDmaArbiter);
 
@@ -269,77 +319,98 @@ IopDmaInitialize(VOID)
 
 /* Common for Memory and Port arbiters */
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopGenericUnpackRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
-    _Out_ PULONGLONG OutMinimumAddress,
-    _Out_ PULONGLONG OutMaximumAddress,
-    _Out_ PULONG OutLength,
-    _Out_ PULONG OutAlignment)
+    _Out_ PUINT64 OutMinimumAddress,
+    _Out_ PUINT64 OutMaximumAddress,
+    _Out_ PUINT32 OutLength,
+    _Out_ PUINT32 OutAlignment)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopGenericPackResource(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
-    _In_ ULONGLONG Start,
+    _In_ UINT64 Start,
     _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopGenericUnpackResource(
     _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor,
-    _Out_ PULONGLONG Start,
-    _Out_ PULONG OutLength)
+    _Out_ PUINT64 Start,
+    _Out_ PUINT32 OutLength)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
-LONG
+CODE_SEG("PAGE")
+INT32
 NTAPI
 IopGenericScoreRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return 0;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopGenericTranslateOrdering(
     _Out_ PIO_RESOURCE_DESCRIPTOR OutIoDescriptor,
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 /* Memory arbiter */
 
+CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
 IopMemFindSuitableRange(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_ PARBITER_ALLOCATION_STATE State)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return FALSE;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopMemInitialize(VOID)
 {
     NTSTATUS Status;
+
+    PAGED_CODE();
 
     DPRINT("IopRootMemArbiter %p\n", &IopRootMemArbiter);
 
@@ -364,8 +435,8 @@ IopMemInitialize(VOID)
     }
 
     Status = RtlAddRange(IopRootMemArbiter.Allocation,
-                         0ull,
-                         (ULONGLONG)(PAGE_SIZE - 1),
+                         0,
+                         (UINT64)(PAGE_SIZE - 1),
                          0,
                          0,
                          NULL,
@@ -376,39 +447,51 @@ IopMemInitialize(VOID)
 
 /* Port arbiter */
 
+CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
 IopPortFindSuitableRange(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_ PARBITER_ALLOCATION_STATE State)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
     return FALSE;
 }
 
+CODE_SEG("PAGE")
 VOID
 NTAPI
 IopPortAddAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_ PARBITER_ALLOCATION_STATE ArbState)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 VOID
 NTAPI
 IopPortBacktrackAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState)
 {
+    PAGED_CODE();
+
     UNIMPLEMENTED;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 IopPortInitialize(VOID)
 {
     NTSTATUS Status;
+
+    PAGED_CODE();
 
     DPRINT("IopRootPortArbiter %p\n", &IopRootPortArbiter);
 
@@ -429,5 +512,3 @@ IopPortInitialize(VOID)
                                           IopGenericTranslateOrdering);
     return Status;
 }
-
-/* EOF */
