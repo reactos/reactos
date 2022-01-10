@@ -131,7 +131,7 @@ BEGIN
     PUSHBUTTON       "高级(&V)", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
     PUSHBUTTON       "排序(&S)", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
-    LTEXT            "要删除最近访问过的文档、程序和网站点记录，单击清除。", IDC_STATIC, 49, 85, 108, 33
+    LTEXT            "要删除最近访问过的文档、程序和网站记录，单击清除。", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "清除(&C)", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
     LTEXT            "开始菜单中的高级的选项：(&T)", IDC_STATIC, 8, 129, 150, 8
     CONTROL          "开始菜单设置(&T)", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
