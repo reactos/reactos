@@ -71,6 +71,21 @@ typedef struct
     DWORD resloader;
 } NE_TYPEINFO;
 
+//  From: James Houghtaling
+//  https://www.moon-soft.com/program/FORMAT/windows/ani.htm
+typedef struct taganiheader
+{
+    DWORD cbsizeof;  // num bytes in aniheader (36 bytes)
+    DWORD cframes;   // number of unique icons in this cursor
+    DWORD csteps;    // number of blits before the animation cycles
+    DWORD cx;        // reserved, must be zero.
+    DWORD cy;        // reserved, must be zero.
+    DWORD cbitcount; // reserved, must be zero.
+    DWORD cplanes;   // reserved, must be zero.
+    DWORD jifrate;   // default jiffies (1/60th sec) if rate chunk not present.
+    DWORD flags;     // animation flag
+} aniheader;
+
 #define NE_RSCTYPE_ICON        0x8003
 #define NE_RSCTYPE_GROUP_ICON  0x800e
 
@@ -338,8 +353,8 @@ static UINT ICO_ExtractIconExW(
         if (uSize > fsizel)
             goto end;
 
-        /* Maximum of 200 chars to search for anih */
-        anihMax = min(uSize, 200); 
+        /* Look though the reported size less search string length */
+        anihMax = uSize - strlen("anih"); 
         /* Search for 'anih' indicating animation header */
         for (anihOffset = 0; anihOffset < anihMax; anihOffset++)
         {
@@ -347,7 +362,7 @@ static UINT ICO_ExtractIconExW(
                 break;
         }
 
-        if (anihOffset >= anihMax)
+        if (anihOffset + sizeof(aniheader) > fsizel)
             goto end;
 
         /* Get count of images for return value */
