@@ -149,7 +149,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "不要在启动时执行此检查(&D)", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "有是一个文件或文件夹在您的计算机被称为 %s 这可能会导致某些应用程序不能够正确执行。重命名为 %s 将解决这个问题。您想现在重命名它？", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "您的计算机有一个称为 %s 的文件或文件夹，这可能会导致某些应用程序不能够正确执行。将其重命名为 %s 则可以解决这个问题。您想现在重命名它？", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
