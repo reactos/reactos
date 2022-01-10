@@ -330,6 +330,7 @@ static UINT ICO_ExtractIconExW(
     if ((fsizel >= 52) && !memcmp(peimage, "RIFF", 4))
     {
         UINT anihOffset;
+        UINT anihMax;
         /* Get size of the animation data */
         ULONG uSize = MAKEWORD(peimage[4], peimage[5]);
 
@@ -337,12 +338,18 @@ static UINT ICO_ExtractIconExW(
         if (uSize > fsizel)
             goto end;
 
+        /* Maximum of 200 chars to search for anih */
+        anihMax = min(uSize, 200); 
         /* Search for 'anih' indicating animation header */
-        for (anihOffset = 0; anihOffset < uSize; anihOffset++)
+        for (anihOffset = 0; anihOffset < anihMax; anihOffset++)
         {
             if (memcmp(&peimage[anihOffset], "anih", 4) == 0)
                 break;
         }
+
+        if (anihOffset >= anihMax)
+            goto end;
+
         /* Get count of images for return value */
         ret = MAKEWORD(peimage[anihOffset + 12], peimage[anihOffset + 13]);
 
