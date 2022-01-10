@@ -1377,10 +1377,10 @@ DWORD WINAPI SHRestricted (RESTRICTIONS policy)
 	if (RegOpenKeyA(HKEY_CURRENT_USER, regstr, &xhkey) == ERROR_SUCCESS)
 #else // FIXME: Actually this *MUST* use shlwapi!SHRestrictionLookup()
       // See http://www.geoffchappell.com/studies/windows/shell/shell32/api/util/shrestricted.htm
-    retval = RegOpenKeyA(HKEY_LOCAL_MACHINE, regstr, &xhkey);
+    retval = RegOpenKeyExA(HKEY_LOCAL_MACHINE, regstr, 0, KEY_READ, &xhkey);
     if (retval != ERROR_SUCCESS)
     {
-        retval = RegOpenKeyA(HKEY_CURRENT_USER, regstr, &xhkey);
+        retval = RegOpenKeyExA(HKEY_CURRENT_USER, regstr, 0, KEY_READ, &xhkey);
         if (retval != ERROR_SUCCESS)
             return 0;
     }
