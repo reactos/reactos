@@ -4118,7 +4118,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                 /* ReactOS Checks */
                 if (!VerifyWnd(mt.OwnerWnd)                            ||
                     !ValidateHwndNoErr(mt.CurrentMenu->hWnd)           ||
-                     pti->MessageQueue->QF_flags & QF_ACTIVATIONCHANGE ||
+                     //pti->MessageQueue->QF_flags & QF_ACTIVATIONCHANGE || // See CORE-17338
                      capture_win != IntGetCapture() ) // Should not happen, but this is ReactOS...
                 {
                    ErrorExit = TRUE; // Do not wait on dead windows, now win test_capture_4 works.
