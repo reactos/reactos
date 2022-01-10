@@ -285,3 +285,9 @@ LRESULT CSelectionWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 {
     return ::SendMessage(GetParent(), nMsg, wParam, lParam);
 }
+
+LRESULT CSelectionWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    placeSelWin();
+    return 0;
+}

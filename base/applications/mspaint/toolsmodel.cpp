@@ -181,6 +181,8 @@ void ToolsModel::NotifyZoomChanged()
     toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
     if (textEditWindow.IsWindow())
         textEditWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
+    if (selectionWindow.IsWindow())
+        selectionWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
 }
 
 void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
