@@ -53,7 +53,6 @@ private:
     POINT m_ptPos;
     POINT m_ptFrac;
     POINT m_ptDelta;
-    DWORD m_dwSystemSelectionColor;
 
     int IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeight);
 };

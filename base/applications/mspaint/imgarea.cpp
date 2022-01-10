@@ -143,8 +143,10 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         DeleteObject(SelectObject(hdc, oldPen));
     }
     EndPaint(&ps);
-    selectionWindow.Invalidate(FALSE);
-    miniature.Invalidate(FALSE);
+    if (selectionWindow.IsWindowVisible())
+        selectionWindow.Invalidate(FALSE);
+    if (miniature.IsWindowVisible())
+        miniature.Invalidate(FALSE);
     if (textEditWindow.IsWindowVisible())
         textEditWindow.Invalidate(FALSE);
     return 0;
