@@ -8,6 +8,9 @@ unsigned char *_mbsstr(const unsigned char *src1,const unsigned char *src2)
 {
   size_t len;
 
+  if (_mbslen(src2) > _mbslen(src1))
+    return NULL;
+
   if (src2 == NULL || *src2 == 0)
     return (unsigned char *)src1;
 
