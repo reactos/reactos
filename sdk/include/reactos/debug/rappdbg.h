@@ -25,11 +25,12 @@
 #define ASSERT assert
 #endif
 
+#ifndef APPDBG_BUFSIZE
+#define APPDBG_BUFSIZE 512
+#endif
+
 #ifndef DPRINT
 # if DBG
-#  ifndef APPDBG_BUFSIZE
-#   define APPDBG_BUFSIZE 512
-#  endif
 
 static inline ULONG rappdbg_printfA(const char *file, int line, const char *fmt, ...)
 {
