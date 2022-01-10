@@ -544,7 +544,7 @@ public:
         case IDHK_EXPLORE:
             //FIXME: We don't support this yet:
             //ShellExecuteW(0, L"explore", NULL, NULL, NULL, 1);
-            ShellExecuteW(0, NULL, L"explorer.exe", L"/e ,", NULL, 1); 
+            ShellExecuteW(0, NULL, L"explorer.exe", L"/e ,", NULL, 1);
             break;
         case IDHK_FIND:
             SHFindFiles(NULL, NULL);
@@ -1311,8 +1311,8 @@ ChangePos:
         FitToRebar(&m_TrayRects[m_Position]);
 
         /* Move the tray window */
-        /* The handler of WM_WINDOWPOSCHANGING will override whatever size 
-           *and position we use here with m_TrayRects */
+        /* The handler of WM_WINDOWPOSCHANGING will override whatever size
+         * and position we use here with m_TrayRects */
         SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE);
         ResizeWorkArea();
         ApplyClipping(TRUE);
@@ -1368,7 +1368,7 @@ ChangePos:
         else
         {
             WndSize.cx = StartBtnSize.cx;
-            WndSize.cy = StartBtnSize.cy - EdgeSize.cx;
+            WndSize.cy = StartBtnSize.cy - EdgeSize.cy;
         }
 
         if (WndSize.cx < g_TaskbarSettings.sr.Size.cx)
@@ -1434,14 +1434,13 @@ ChangePos:
         if (StartSize.cx > rcClient.right)
             StartSize.cx = rcClient.right;
 
-        if (!m_Theme)
+        HWND hwndTaskToolbar = ::GetWindow(m_TaskSwitch, GW_CHILD);
+        if (hwndTaskToolbar)
         {
-            HWND hwndTaskToolbar = ::GetWindow(m_TaskSwitch, GW_CHILD);
-            if (hwndTaskToolbar)
-            {
-                DWORD size = SendMessageW(hwndTaskToolbar, TB_GETBUTTONSIZE, 0, 0);
-                StartSize.cy = HIWORD(size);
-            }
+            DWORD size = SendMessageW(hwndTaskToolbar, TB_GETBUTTONSIZE, 0, 0);
+
+            /* Themed button covers Edge area as well */
+            StartSize.cy = HIWORD(size) + (m_Theme ? GetSystemMetrics(SM_CYEDGE) : 0);
         }
 
         if (m_StartButton.m_hWnd != NULL)
@@ -2012,7 +2011,7 @@ ChangePos:
         if (!m_ContextMenu)
             return E_INVALIDARG;
 
-        return m_ContextMenu->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);        
+        return m_ContextMenu->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);
     }
 
 
@@ -2202,8 +2201,7 @@ ChangePos:
             pt.x = (SHORT) LOWORD(lParam);
             pt.y = (SHORT) HIWORD(lParam);
 
-            if (PtInRect(&rcClient,
-                pt))
+            if (PtInRect(&rcClient, pt))
             {
                 /* The user is trying to drag the tray window */
                 return HTCAPTION;
@@ -2233,7 +2231,6 @@ ChangePos:
             }
         }
         return HTBORDER;
-        return TRUE;
     }
 
     LRESULT OnMoving(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -2395,7 +2392,7 @@ ChangePos:
 
     LRESULT OnNcLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        /* This handler implements the trick that makes  the start button to 
+        /* This handler implements the trick that makes  the start button to
            get pressed when the user clicked left or below the button */
 
         POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
@@ -2704,14 +2701,14 @@ HandleTrayContextMenu:
         RECT rc;
         ::GetWindowRect(m_hWnd, &rc);
 
-        SIZE szWindow = { 
-            rc.right - rc.left, 
+        SIZE szWindow = {
+            rc.right - rc.left,
             rc.bottom - rc.top };
-        SIZE szTarget = { 
-            as->rcTarget.right - as->rcTarget.left, 
+        SIZE szTarget = {
+            as->rcTarget.right - as->rcTarget.left,
             as->rcTarget.bottom - as->rcTarget.top };
-        SIZE szActual = { 
-            as->rcActual.right - as->rcActual.left, 
+        SIZE szActual = {
+            as->rcActual.right - as->rcActual.left,
             as->rcActual.bottom - as->rcActual.top };
 
         SIZE borders = {
@@ -2975,7 +2972,7 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE 
+    virtual HRESULT STDMETHODCALLTYPE
         QueryContextMenu(HMENU hPopup,
                          UINT indexMenu,
                          UINT idCmdFirst,
