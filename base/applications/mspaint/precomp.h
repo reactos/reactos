@@ -21,8 +21,9 @@
 #include <shellapi.h>
 #include <htmlhelp.h>
 
+#define NO_STRSAFE
 #define NDEBUG
-#include <debug.h>
+#include <debug/rappdbg.h>
 
 #define WM_TOOLSMODELTOOLCHANGED         (WM_APP + 0)
 #define WM_TOOLSMODELSETTINGSCHANGED     (WM_APP + 1)
