@@ -324,8 +324,10 @@ static UINT ICO_ExtractIconExW(
 	CloseHandle(fmapping);
 
 #ifdef __REACTOS__
-    /* Check if the resource is an animated icon/cursor */
-    if (!memcmp(peimage, "RIFF", 4))
+    /* Check if we have a min size of 2 headers RIFF & 'icon'
+     * at 8 chars each plus an anih header of 36 byptes.
+     * Also, is this resource an animjated icon/cursor (RIFF) */
+    if ((fsizel >= 52) && !memcmp(peimage, "RIFF", 4))
     {
         UINT anihOffset;
         /* Get size of the animation data */
