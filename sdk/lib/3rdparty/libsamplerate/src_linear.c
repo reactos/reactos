@@ -8,7 +8,9 @@
 
 #include "precomp.h"
 
-//#define NDEBUG
+#define NTOS_MODE_USER
+#include <ntdef.h>
+// #define NDEBUG
 #include <debug.h>
 
 static int linear_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data) ;
