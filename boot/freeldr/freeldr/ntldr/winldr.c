@@ -29,12 +29,12 @@ PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 
 BOOLEAN VirtualBias = FALSE;
 BOOLEAN SosEnabled = FALSE;
-BOOLEAN PaeEnabled = FALSE;
-BOOLEAN PaeDisabled = FALSE;
 BOOLEAN SafeBoot = FALSE;
 BOOLEAN BootLogo = FALSE;
-BOOLEAN NoexecuteDisabled = FALSE;
-BOOLEAN NoexecuteEnabled = FALSE;
+#ifdef _M_IX86
+BOOLEAN PaeModeOn = FALSE;
+#endif
+BOOLEAN NoExecuteEnabled = FALSE;
 
 // debug stuff
 VOID DumpMemoryAllocMap(VOID);
@@ -534,6 +534,61 @@ LoadModule(
     return BaseAddress;
 }
 
+#ifdef _M_IX86
+static
+BOOLEAN
+WinLdrIsPaeSupported(
+    _In_ USHORT OperatingSystemVersion,
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ PCSTR BootOptions,
+    _In_ PCSTR HalFileName,
+    _Inout_updates_bytes_(KernelFileNameSize) _Always_(_Post_z_)
+         PSTR KernelFileName,
+    _In_ SIZE_T KernelFileNameSize)
+{
+    BOOLEAN PaeEnabled = FALSE;
+    BOOLEAN PaeDisabled = FALSE;
+    BOOLEAN Result;
+
+    if ((OperatingSystemVersion > _WIN32_WINNT_NT4) &&
+        NtLdrGetOption(BootOptions, "PAE"))
+    {
+        /* We found the PAE option */
+        PaeEnabled = TRUE;
+    }
+
+    Result = PaeEnabled;
+
+    if ((OperatingSystemVersion > _WIN32_WINNT_WIN2K) &&
+        NtLdrGetOption(BootOptions, "NOPAE"))
+    {
+        PaeDisabled = TRUE;
+    }
+
+    if (SafeBoot)
+        PaeDisabled = TRUE;
+
+    TRACE("PaeEnabled %X, PaeDisabled %X\n", PaeEnabled, PaeDisabled);
+
+    if (PaeDisabled)
+        Result = FALSE;
+
+    /* Enable PAE if DEP is enabled */
+    if (NoExecuteEnabled)
+        Result = TRUE;
+
+    // TODO: checks for CPU support, hotplug memory support ... other tests
+    // TODO: select kernel name ("ntkrnlpa.exe" or "ntoskrnl.exe"), or,
+    // if KernelFileName is a user-specified kernel file, check whether it
+    // has, if PAE needs to be enabled, the IMAGE_FILE_LARGE_ADDRESS_AWARE
+    // Characteristics bit set, and that the HAL image has a similar support.
+
+    if (Result) UNIMPLEMENTED;
+
+    return Result;
+}
+#endif /* _M_IX86 */
+
 static
 BOOLEAN
 LoadWindowsCore(IN USHORT OperatingSystemVersion,
@@ -558,17 +613,86 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     RtlStringCbCopyA(DirPath, sizeof(DirPath), BootPath);
     RtlStringCbCatA(DirPath, sizeof(DirPath), "system32\\");
 
+    /* Parse the boot options */
+    TRACE("LoadWindowsCore: BootOptions '%s'\n", BootOptions);
+
+#ifdef _M_IX86
+    if (NtLdrGetOption(BootOptions, "3GB"))
+    {
+        /* We found the 3GB option. */
+        FIXME("LoadWindowsCore: 3GB - TRUE (not implemented)\n");
+        VirtualBias = TRUE;
+    }
+    // TODO: "USERVA=" for XP/2k3
+#endif
+
+    if ((OperatingSystemVersion > _WIN32_WINNT_NT4) &&
+        (NtLdrGetOption(BootOptions, "SAFEBOOT") ||
+         NtLdrGetOption(BootOptions, "SAFEBOOT:")))
+    {
+        /* We found the SAFEBOOT option. */
+        FIXME("LoadWindowsCore: SAFEBOOT - TRUE (not implemented)\n");
+        SafeBoot = TRUE;
+    }
+
+    if ((OperatingSystemVersion > _WIN32_WINNT_WIN2K) &&
+        NtLdrGetOption(BootOptions, "BOOTLOGO"))
+    {
+        /* We found the BOOTLOGO option. */
+        FIXME("LoadWindowsCore: BOOTLOGO - TRUE (not implemented)\n");
+        BootLogo = TRUE;
+    }
+
+    /* Check the (NO)EXECUTE options */
+    if ((OperatingSystemVersion > _WIN32_WINNT_WIN2K) &&
+        !LoaderBlock->SetupLdrBlock)
+    {
+        /* Disable NX by default on x86, otherwise enable it */
+#ifdef _M_IX86
+        NoExecuteEnabled = FALSE;
+#else
+        NoExecuteEnabled = TRUE;
+#endif
+
+#ifdef _M_IX86
+        /* Check the options in decreasing order of precedence */
+        if (NtLdrGetOption(BootOptions, "NOEXECUTE=OPTIN")  ||
+            NtLdrGetOption(BootOptions, "NOEXECUTE=OPTOUT") ||
+            NtLdrGetOption(BootOptions, "NOEXECUTE=ALWAYSON"))
+        {
+            NoExecuteEnabled = TRUE;
+        }
+        else if (NtLdrGetOption(BootOptions, "NOEXECUTE=ALWAYSOFF"))
+            NoExecuteEnabled = FALSE;
+        else
+#else
+        /* Only the following two options really apply for x64 and other platforms */
+#endif
+        if (NtLdrGetOption(BootOptions, "NOEXECUTE"))
+            NoExecuteEnabled = TRUE;
+        else if (NtLdrGetOption(BootOptions, "EXECUTE"))
+            NoExecuteEnabled = FALSE;
+
+#ifdef _M_IX86
+        /* Disable DEP in SafeBoot mode for x86 only */
+        if (SafeBoot)
+            NoExecuteEnabled = FALSE;
+#endif
+    }
+    TRACE("NoExecuteEnabled %X\n", NoExecuteEnabled);
+
     /*
-     * Default HAL and KERNEL file names.
+     * Select the HAL and KERNEL file names.
+     * Check for any "/HAL=" or "/KERNEL=" override option.
+     *
      * See the following links to know how the file names are actually chosen:
      * https://www.geoffchappell.com/notes/windows/boot/bcd/osloader/detecthal.htm
      * https://www.geoffchappell.com/notes/windows/boot/bcd/osloader/hal.htm
      * https://www.geoffchappell.com/notes/windows/boot/bcd/osloader/kernel.htm
      */
+    /* Default HAL and KERNEL file names */
     RtlStringCbCopyA(HalFileName   , sizeof(HalFileName)   , "hal.dll");
     RtlStringCbCopyA(KernelFileName, sizeof(KernelFileName), "ntoskrnl.exe");
-
-    /* Check for any "/HAL=" or "/KERNEL=" override option */
 
     Option = NtLdrGetOptionEx(BootOptions, "HAL=", &OptionLength);
     if (Option && (OptionLength > 4))
@@ -587,6 +711,17 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         RtlStringCbCopyNA(KernelFileName, sizeof(KernelFileName), Option, OptionLength);
         _strlwr(KernelFileName);
     }
+
+#ifdef _M_IX86
+    /* Check for PAE support and select the adequate kernel image */
+    PaeModeOn = WinLdrIsPaeSupported(OperatingSystemVersion,
+                                     LoaderBlock,
+                                     BootOptions,
+                                     HalFileName,
+                                     KernelFileName,
+                                     sizeof(KernelFileName));
+    if (PaeModeOn) FIXME("WinLdrIsPaeSupported: PaeModeOn\n");
+#endif
 
     TRACE("HAL file = '%s' ; Kernel file = '%s'\n", HalFileName, KernelFileName);
 
@@ -708,76 +843,6 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 ERR("LoadModule('%s') failed\n", KdDllName);
             }
         }
-    }
-
-    /* Parse the boot options */
-    TRACE("LoadWindowsCore: BootOptions '%s'\n", BootOptions);
-
-    if (NtLdrGetOption(BootOptions, "3GB"))
-    {
-        /* We found the 3GB option. */
-        FIXME("LoadWindowsCore: 3GB - TRUE (not implemented)\n");
-        VirtualBias = TRUE;
-    }
-
-    if (OperatingSystemVersion > _WIN32_WINNT_NT4)
-    {
-        if (NtLdrGetOption(BootOptions, "SAFEBOOT"))
-        {
-            /* We found the SAFEBOOT option. */
-            FIXME("LoadWindowsCore: SAFEBOOT - TRUE (not implemented)\n");
-            SafeBoot = TRUE;
-        }
-        if (NtLdrGetOption(BootOptions, "PAE"))
-        {
-            /* We found the PAE option. */
-            FIXME("LoadWindowsCore: PAE - TRUE (not implemented)\n");
-            PaeEnabled = TRUE;
-        }
-    }
-
-    if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
-    {
-        if (NtLdrGetOption(BootOptions, "NOPAE"))
-        {
-            /* We found the NOPAE option. */
-            FIXME("LoadWindowsCore: NOPAE - TRUE (not implemented)\n");
-            PaeDisabled = TRUE;
-        }
-        if (NtLdrGetOption(BootOptions, "BOOTLOGO"))
-        {
-            /* We found the BOOTLOGO option. */
-            FIXME("LoadWindowsCore: BOOTLOGO - TRUE (not implemented)\n");
-            BootLogo = TRUE;
-        }
-
-        if (!LoaderBlock->SetupLdrBlock)
-        {
-            if (NtLdrGetOption(BootOptions, "EXECUTE"))
-            {
-                /* We found the EXECUTE option. */
-                FIXME("LoadWindowsCore: EXECUTE - TRUE (not implemented)\n");
-                NoexecuteDisabled = TRUE;
-            }
-            if (NtLdrGetOption(BootOptions, "NOEXECUTE=ALWAYSOFF"))
-            {
-                /* We found the NOEXECUTE=ALWAYSOFF option. */
-                FIXME("LoadWindowsCore: NOEXECUTE=ALWAYSOFF - TRUE (not implemented)\n");
-                NoexecuteDisabled = TRUE;
-            }
-            if (NtLdrGetOption(BootOptions, "NOEXECUTE"))
-            {
-                /* We found the NOEXECUTE option. */
-                FIXME("LoadWindowsCore: NOEXECUTE - TRUE (not implemented)\n");
-                NoexecuteEnabled = TRUE;
-            }
-        }
-    }
-
-    if (SafeBoot)
-    {
-        PaeDisabled = TRUE;
-        NoexecuteDisabled = TRUE;
     }
 
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
