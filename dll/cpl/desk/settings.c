@@ -300,6 +300,9 @@ OnDisplayDeviceChanged(IN HWND hwndDlg, IN PSETTINGS_DATA pData, IN PDISPLAY_DEV
         }
     }
 
+    /* Fill device description */
+    SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pDeviceEntry->DeviceDescription);
+
     /* Fill resolutions slider */
     SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_CLEARTICS, TRUE, 0);
     SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_SETRANGE, TRUE, MAKELONG(0, pDeviceEntry->ResolutionsCount - 1));
@@ -354,7 +357,6 @@ SettingsOnInitDialog(IN HWND hwndDlg)
         MONSL_MONINFO monitors;
 
         /* Single video adapter */
-        SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pData->DisplayDeviceList->DeviceDescription);
         OnDisplayDeviceChanged(hwndDlg, pData, pData->DisplayDeviceList);
 
         monitors.Position.x = monitors.Position.y = 0;
@@ -372,7 +374,6 @@ SettingsOnInitDialog(IN HWND hwndDlg)
         PMONSL_MONINFO pMonitors;
         DWORD i;
 
-        SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pData->DisplayDeviceList->DeviceDescription);
         OnDisplayDeviceChanged(hwndDlg, pData, pData->DisplayDeviceList);
 
         pMonitors = (PMONSL_MONINFO)HeapAlloc(GetProcessHeap(), 0, sizeof(MONSL_MONINFO) * Result);
