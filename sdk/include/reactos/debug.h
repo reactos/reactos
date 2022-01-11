@@ -93,8 +93,42 @@ W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
 #define DbgPrint(Format, ...) W32DbgPrint(Format, __VA_ARGS__)
 #define DbgPrintEx(ComponentId, Level, Format, ...) W32DbgPrint(Format, __VA_ARGS__)
 
-#include <assert.h>
-#define RtlAssert(FailedAssertion, FileName, LineNumber, Message) _assert(Message, FileName, LineNumber)
+static inline
+VOID
+NTAPI
+W32Assert(
+    _In_ PVOID FailedAssertion,
+    _In_ PVOID FileName,
+    _In_ ULONG LineNumber,
+    _In_opt_z_ PCHAR Message)
+{
+    char szBuff[512];
+    INT id;
+
+#ifdef NO_STRSAFE
+    wsprintfA(szBuff,
+              "File '%s', Line %ld:\n\n%s\n\n%s",
+              (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
+#else
+    StringCchPrintfA(szBuff, _countof(szBuff),
+          "File '%s', Line %ld:\n\n%s\n\n%s",
+          (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
+#endif
+
+    id = MessageBoxA(NULL, szBuff, "Assertion Failure", MB_ICONERROR | MB_ABORTRETRYIGNORE);
+
+    if (id == IDABORT)
+        ExitProcess((UINT)-1);
+
+    if (id == IDRETRY)
+        DebugBreak();
+}
+
+#if DBG
+    #define RtlAssert W32Assert
+#else
+    #define RtlAssert(FailedAssertion, FileName, LineNumber, Message) /* empty */
+#endif
 
 #endif /* def NTOS_MODE_USER */
 
