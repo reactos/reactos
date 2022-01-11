@@ -1,6 +1,7 @@
 #ifndef _KMIXER_PCH_
 #define _KMIXER_PCH_
 
+#define NTOS_MODE_USER
 #include <portcls.h>
 #include <float_cast.h>
 
