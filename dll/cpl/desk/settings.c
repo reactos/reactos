@@ -879,6 +879,15 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                     ApplyDisplaySettings(hwndDlg, pData);
                 }
             }
+            else if (lpnm->code == MSLN_MONITORCHANGED)
+            {
+                PMONSL_MONNMMONITORCHANGING lpnmi = (PMONSL_MONNMMONITORCHANGING)lParam;
+                PDISPLAY_DEVICE_ENTRY Current = pData->DisplayDeviceList;
+                ULONG i;
+                for (i = 0; i < lpnmi->hdr.Index; i++)
+                    Current = Current->Flink;
+                OnDisplayDeviceChanged(hwndDlg, pData, Current);
+            }
             break;
         }
 
