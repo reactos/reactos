@@ -112,7 +112,8 @@ W32Assert(
     _snprintf(szBuff, _countof(szBuff),
 #endif
               "*** Assertion failed: %s%s\n"
-              "***   Source File: %s, line %lu\n",
+              "***   Source File: %s, line %lu\n\n"
+              "(Press Retry to debug the application)\n",
               (Message ? Message : ""), (PCSTR)FailedAssertion, (PCSTR)FileName, LineNumber);
 
     OutputDebugStringA(szBuff);
