@@ -21,10 +21,10 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NTOS_MODE_USER
 #include <windef.h>
 
-// #define NDEBUG
+#define NTOS_MODE_USER
+#define NDEBUG
 #include <debug.h>
 
 #include <fast486.h>

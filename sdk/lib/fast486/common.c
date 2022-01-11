@@ -21,9 +21,9 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NTOS_MODE_USER
 #include <windef.h>
 
+#define NTOS_MODE_USER
 // #define NDEBUG
 #include <debug.h>
 
