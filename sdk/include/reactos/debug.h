@@ -64,6 +64,10 @@ RtlAssert(
 
 typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 
+#ifndef NO_STRSAFE
+#include <strsafe.h>
+#endif
+
 static inline
 ULONG
 __cdecl
