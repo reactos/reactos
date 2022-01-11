@@ -18,6 +18,10 @@
 #define __RELFILE__ __FILE__
 #endif
 
+#ifdef NDEBUG
+#undef DBG
+#endif
+
 /* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
 #if !defined(_RTLFUNCS_H) && !defined(_NTDDK_)
 
@@ -107,11 +111,11 @@ W32Assert(
 
 #ifdef NO_STRSAFE
     wsprintfA(szBuff,
-              "File '%s', Line %ld:\n\n%s\n\n%s",
+              "File '%s',\nLine %ld:\n\n%s\n\n%s",
               (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
 #else
     StringCchPrintfA(szBuff, _countof(szBuff),
-          "File '%s', Line %ld:\n\n%s\n\n%s",
+          "File '%s',\nLine %ld:\n\n%s\n\n%s",
           (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
 #endif
 
@@ -124,11 +128,7 @@ W32Assert(
         DebugBreak();
 }
 
-#if DBG
-    #define RtlAssert W32Assert
-#else
-    #define RtlAssert(FailedAssertion, FileName, LineNumber, Message) /* empty */
-#endif
+#define RtlAssert W32Assert
 
 #endif /* def NTOS_MODE_USER */
 
