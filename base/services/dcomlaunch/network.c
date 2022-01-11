@@ -9,13 +9,13 @@
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
-#define NTOS_MODE_USER
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <winsvc.h>
 #include <ntddndis.h>
 
+#define NTOS_MODE_USER
 #include <ndk/exfuncs.h>
 #include <ntsecapi.h>
 

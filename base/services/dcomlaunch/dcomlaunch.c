@@ -7,7 +7,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_USER
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -17,6 +16,7 @@
 #include <winreg.h>
 #include <winsvc.h>
 
+#define NTOS_MODE_USER
 #define NDEBUG
 #include <debug.h>
 
