@@ -66,8 +66,6 @@ RtlAssert(
 
 #else /* def NTOS_MODE_USER */
 
-typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
-
 #ifndef NO_STRSAFE
 #include <strsafe.h>
 #endif
