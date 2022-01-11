@@ -116,7 +116,8 @@ W32Assert(
               "(Press Retry to debug the application)\n",
               (Message ? Message : ""), (PCSTR)FailedAssertion, (PCSTR)FileName, LineNumber);
 
-    OutputDebugStringA(szBuff);
+    if (IsDebuggerPresent())
+        OutputDebugStringA(szBuff);
 
     id = MessageBoxA(NULL, szBuff, "Assertion Failure",
                      MB_ICONERROR | MB_ABORTRETRYIGNORE | MB_SETFOREGROUND | MB_TASKMODAL);
