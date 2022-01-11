@@ -64,6 +64,9 @@ RtlAssert(
 #elif defined(_WIN32)
 /* Win32 User-Mode */
 
+#include <winuser.h>
+#include <stdio.h>
+
 #ifndef DEBUG_BUFSIZE
 #define DEBUG_BUFSIZE 512
 #endif
