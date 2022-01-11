@@ -21,7 +21,6 @@
 #include <shellapi.h>
 #include <htmlhelp.h>
 
-#define NTOS_MODE_USER
 #define NO_STRSAFE
 #define NDEBUG
 #include <debug.h>

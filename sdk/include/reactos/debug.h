@@ -34,7 +34,8 @@
 extern "C" {
 #endif
 
-#ifndef NTOS_MODE_USER
+#if defined(_NTDDK_) || defined(NTOS_MODE_USER)
+/* Kernel-Mode, or Native User-Mode */
 
 ULONG
 __cdecl
@@ -64,7 +65,8 @@ RtlAssert(
     _In_opt_z_ PCHAR Message
 );
 
-#else /* def NTOS_MODE_USER */
+#elif defined(_WIN32)
+/* Win32 User-Mode */
 
 #ifndef NO_STRSAFE
 #include <strsafe.h>
@@ -128,7 +130,7 @@ W32Assert(
 
 #define RtlAssert W32Assert
 
-#endif /* def NTOS_MODE_USER */
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
