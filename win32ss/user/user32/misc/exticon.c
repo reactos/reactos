@@ -350,7 +350,7 @@ static UINT ICO_ExtractIconExW(
         ULONG uSize = MAKEWORD(peimage[4], peimage[5]);
 
         /* Check if uSize is reasonable with respect to fsizel */
-        if (uSize > fsizel)
+        if ((uSize < strlen("anih")) || (uSize > fsizel))
             goto end;
 
         /* Look though the reported size less search string length */
