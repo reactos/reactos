@@ -11,6 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
+#define NTOS_MODE_USER
 #include <stdio.h>
 
 /* PSDK/NDK Headers */
