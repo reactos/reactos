@@ -111,9 +111,9 @@ W32Assert(
     INT id;
 
 #ifdef NO_STRSAFE
-    wsprintfA(szBuff,
-              "File '%s',\nLine %ld:\n\n%s\n\n%s",
-              (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
+    _vsnprintf(szBuff,
+               "File '%s',\nLine %ld:\n\n%s\n\n%s",
+               (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
 #else
     StringCchPrintfA(szBuff, _countof(szBuff),
           "File '%s',\nLine %ld:\n\n%s\n\n%s",
