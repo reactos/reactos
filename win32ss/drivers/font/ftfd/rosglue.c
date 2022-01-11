@@ -9,6 +9,7 @@
 
 #include "ftfd.h"
 
+#define NTOS_MODE_USER
 #define NDEBUG
 #include <debug.h>
 

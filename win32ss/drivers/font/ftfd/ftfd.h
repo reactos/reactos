@@ -8,7 +8,6 @@
 #ifndef _FTFD_PCH_
 #define _FTFD_PCH_
 
-#define NTOS_MODE_USER
 #include <stdarg.h>
 #include <windef.h>
 #include <wingdi.h>
