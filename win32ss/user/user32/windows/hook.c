@@ -712,7 +712,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       CWPSTRUCT *pCWPT = &pcwps->cwps;
       pCWP = HeapAlloc(GetProcessHeap(), 0, Common->lParamSize + sizeof(CWPSTRUCT));
       RtlCopyMemory(pCWP, pCWPT, sizeof(CWPSTRUCT));
-//      ERR("WH_CALLWNDPROC: Code %d, wParam %d msg %d\n",Common->Code,Common->wParam,pCWP->message);
+      //ERR("WH_CALLWNDPROC: Code %d, wParam %d hwnd %p msg %d\n",Common->Code,Common->wParam,pCWP->hwnd,pCWP->message);
       /* If more memory is reserved, then lParam is a pointer.
        * Size of the buffer is stocked in the lParam member, and its content
        * is at the end of the argument buffer */
@@ -731,7 +731,8 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       PCWPR_Struct pcwprs = (PCWPR_Struct)Common;
       CWPRETSTRUCT *pCWPRT = &pcwprs->cwprs;
       pCWPR = HeapAlloc(GetProcessHeap(), 0, Common->lParamSize + sizeof(CWPRETSTRUCT));
-      RtlCopyMemory(pCWPR, pCWPRT, sizeof(CWPSTRUCT));
+      RtlCopyMemory(pCWPR, pCWPRT, sizeof(CWPRETSTRUCT));
+      //ERR("WH_CALLWNDPROCRET: Code %d, wParam %d hwnd %p msg %d\n",Common->Code,Common->wParam,pCWPRT->hwnd,pCWPRT->message);
       if ( Common->lParamSize )
       {
          pCWPR->lParam = (LPARAM)((PCHAR)pCWPR + sizeof(CWPRETSTRUCT));
