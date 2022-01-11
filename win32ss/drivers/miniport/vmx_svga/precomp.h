@@ -6,7 +6,6 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#define NTOS_MODE_USER
 #include <ntdef.h>
 #include <dderror.h>
 #include <miniport.h>

@@ -23,7 +23,6 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NTOS_MODE_USER
 #include <ntdef.h>
 #include <miniport.h>
 #include <video.h>

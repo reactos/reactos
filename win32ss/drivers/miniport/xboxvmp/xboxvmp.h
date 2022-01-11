@@ -15,7 +15,6 @@
  * FIXME: specify headers properly in the triangle brackets and rearrange them
  * in a way so it would be simpler to add NDK and other headers for debugging.
  */
-#define NTOS_MODE_USER
 #include "ntdef.h"
 #define PAGE_SIZE 4096
 #include "dderror.h"

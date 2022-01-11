@@ -8,7 +8,6 @@
 #ifndef _PC98VID_PCH_
 #define _PC98VID_PCH_
 
-#define NTOS_MODE_USER
 #include <ntdef.h>
 #include <section_attribs.h>
 #include <dderror.h>
