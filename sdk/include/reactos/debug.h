@@ -124,8 +124,7 @@ W32Assert(
 
     if (id == IDABORT)
         ExitProcess((UINT)-1);
-
-    if (id == IDRETRY)
+    else if (id == IDRETRY)
         DebugBreak();
 }
 
