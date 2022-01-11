@@ -15,12 +15,6 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
-// This is needed because headers define wrong one for ReactOS
-#undef KIP0PCRADDRESS
-#define KIP0PCRADDRESS                      0xffdff000
-
-#define SELFMAP_ENTRY       0x300
-
 // This is needed only for SetProcessorContext routine
 #pragma pack(2)
 typedef struct
@@ -168,6 +162,7 @@ DumpGDTEntry(ULONG_PTR Base, ULONG Selector)
 
 PHARDWARE_PTE PDE;
 PHARDWARE_PTE HalPageTable;
+PPAE_TABLES PaeTables;
 
 PUCHAR PhysicalPageTablesBuffer;
 PUCHAR KernelPageTablesBuffer;
@@ -186,33 +181,46 @@ MempAllocatePageTables(VOID)
 {
     ULONG NumPageTables, TotalSize;
     PUCHAR Buffer;
-    // It's better to allocate PDE + PTEs contiguous
+    ULONG ix;
 
-    // Max number of entries = MaxPageNum >> 10
-    // FIXME: This is a number to describe ALL physical memory
-    // and windows doesn't expect ALL memory mapped...
-    NumPageTables = TotalPagesInLookupTable >> 10;
+    TRACE("MempAllocatePageTables: PaeModeOn %d\n", PaeModeOn);
 
-    TRACE("NumPageTables = %d\n", NumPageTables);
+    /* It's better to allocate PDE + PTEs contiguous.
+       Max number of entries = MaxPageNum >> 10(9 if PAE).
+       FIXME: This is a number to describe ALL physical memory
+       and windows doesn't expect ALL memory mapped...
+    */
 
-    // Allocate memory block for all these things:
-    // PDE, HAL mapping page table, physical mapping, kernel mapping
-    TotalSize = (1 + 1 + NumPageTables * 2) * MM_PAGE_SIZE;
+    /* Allocate memory block for all these things:
+       PDE, HAL mapping page table, physical mapping, kernel mapping.
+    */
+    if (!PaeModeOn)
+    {
+        NumPageTables = (TotalPagesInLookupTable / PTE_PER_PAGE);
+        TotalSize = ((1 + 1 + (NumPageTables * 2)) * MM_PAGE_SIZE);
+        TRACE("MempAllocatePageTables: NumPageTables = %X (%d)\n", NumPageTables, NumPageTables);
+    }
+    else
+    {
+       NumPageTables = (TotalPagesInLookupTable / PAE_PTE_PER_PAGE);
+       TotalSize = (sizeof(PAE_TABLES) + ((NumPageTables * 2) * MM_PAGE_SIZE));
+        TRACE("MempAllocatePageTables: NumPageTables = %X (%d)\n", NumPageTables, NumPageTables);
+    }
 
-    // PDE+HAL+KernelPTEs == MemoryData
+    /* Allocate memory for PD, HAL PT, Kernel PTs with MemoryData type */
     Buffer = MmAllocateMemoryWithType(TotalSize, LoaderMemoryData);
 
-    // Physical PTEs = FirmwareTemporary
-    PhysicalPageTablesBuffer = (PUCHAR)Buffer + TotalSize - NumPageTables*MM_PAGE_SIZE;
+    /* Allocate memory for Physical PTs with FirmwareTemporary type */
+    PhysicalPageTablesBuffer = (PUCHAR)Buffer + TotalSize - (NumPageTables * MM_PAGE_SIZE);
+    TRACE("MempAllocatePageTables: PhysicalPageTablesBuffer %X\n", PhysicalPageTablesBuffer);
     MmSetMemoryType(PhysicalPageTablesBuffer,
-                    NumPageTables*MM_PAGE_SIZE,
+                    (NumPageTables * MM_PAGE_SIZE),
                     LoaderFirmwareTemporary);
 
-    // This check is now redundant
-    if (Buffer + (TotalSize - NumPageTables*MM_PAGE_SIZE) !=
-        PhysicalPageTablesBuffer)
+    /* This check is now redundant */
+    if (Buffer + (TotalSize - (NumPageTables * MM_PAGE_SIZE)) != PhysicalPageTablesBuffer)
     {
-        TRACE("There was a problem allocating two adjacent blocks of memory!");
+        WARN("There was a problem allocating two adjacent blocks of memory!");
     }
 
     if (Buffer == NULL || PhysicalPageTablesBuffer == NULL)
@@ -221,29 +229,86 @@ MempAllocatePageTables(VOID)
         return FALSE;
     }
 
-    // Zero all this memory block
+    /* Zero all this memory block */
     RtlZeroMemory(Buffer, TotalSize);
 
-    // Set up pointers correctly now
-    PDE = (PHARDWARE_PTE)Buffer;
+    if (!PaeModeOn)
+    {
+        /* Set up pointers correctly now */
+        PDE = (PHARDWARE_PTE)Buffer;
 
-    // Map the page directory at 0xC0000000 (maps itself)
-    PDE[SELFMAP_ENTRY].PageFrameNumber = (ULONG)PDE >> MM_PAGE_SHIFT;
-    PDE[SELFMAP_ENTRY].Valid = 1;
-    PDE[SELFMAP_ENTRY].Write = 1;
+        /* Map the page directory at 0xC0000000 (maps itself) */
+        PDE[SELFMAP_ENTRY].PageFrameNumber = (ULONG)PDE >> MM_PAGE_SHIFT;
+        PDE[SELFMAP_ENTRY].Valid = 1;
+        PDE[SELFMAP_ENTRY].Write = 1;
 
-    // The last PDE slot is allocated for HAL's memory mapping (Virtual Addresses 0xFFC00000 - 0xFFFFFFFF)
-    HalPageTable = (PHARDWARE_PTE)&Buffer[MM_PAGE_SIZE*1];
+        /* The last PDE slot is allocated for HAL's memory mapping (Virtual Addresses 0xFFC00000 - 0xFFFFFFFF) */
+        HalPageTable = (PHARDWARE_PTE)&Buffer[MM_PAGE_SIZE*1];
 
-    // Map it
-    PDE[1023].PageFrameNumber = (ULONG)HalPageTable >> MM_PAGE_SHIFT;
-    PDE[1023].Valid = 1;
-    PDE[1023].Write = 1;
+        /* Map it */
+        PDE[PDE_PER_PAGE - 1].PageFrameNumber = (ULONG)HalPageTable >> MM_PAGE_SHIFT;
+        PDE[PDE_PER_PAGE - 1].Valid = 1;
+        PDE[PDE_PER_PAGE - 1].Write = 1;
 
-    // Store pointer to the table for easier access
-    KernelPageTablesBuffer = &Buffer[MM_PAGE_SIZE*2];
+        /* Store pointer to the table for easier access */
+        KernelPageTablesBuffer = &Buffer[MM_PAGE_SIZE*2];
+    }
+    else
+    {
+        PPAGE_DIRECTORY_X86_PAE PaePd;
+        PFN_NUMBER PaeHalPages;
+        PHARDWARE_PDPTE_X86_PAE Pdpte;
+        PHARDWARE_PDE_X86_PAE PaePde;
 
-    // Zero counters of page tables used
+        PaeTables = (PPAE_TABLES)Buffer;
+        PaePd = (PPAGE_DIRECTORY_X86_PAE)PaeTables->PaePd;
+        TRACE("MempAllocatePageTables: PaeTables %X, PaePd %X\n", PaeTables, PaePd);
+
+        /* Fill the page-directory-pointer-table */
+        for (ix = 0; ix < PAE_PD_COUNT; ix++)
+        {
+            Pdpte = &PaeTables->Pdpte[ix];
+
+            Pdpte->PageFrameNumber = ((ULONG)Buffer >> MM_PAGE_SHIFT) + (ix + 1);
+            Pdpte->Valid = 1;
+            Pdpte->Write = 1;
+            TRACE("MempAllocatePageTables: [%X] Pdpte->PageFrameNumber %X\n", ix, (ULONG)Pdpte->PageFrameNumber);
+        }
+
+        /* Map the page directories at PAE_TABLES_START (maps itself) */
+        for (ix = 0; ix < PAE_PD_COUNT; ix++)
+        {
+            Pdpte = &PaeTables->Pdpte[ix];
+            PaePde = &PaePd[PAE_TABLES_START >> PDPTE_SHIFT].PaePde[ix];
+
+            PaePde->PageFrameNumber = Pdpte->PageFrameNumber;
+            PaePde->Valid = 1;
+            PaePde->Write = 1;
+        }
+
+        /* The last Pde slots is allocated for HAL's memory mapping (Virtual Addresses 0xFFC00000 - 0xFFFFFFFF) */
+        PaeHalPages = ((ULONG_PTR)PaeTables->HalPt >> MM_PAGE_SHIFT);
+        TRACE("MempAllocatePageTables: PaeHalPages %X\n", PaeHalPages);
+
+        /* Map it at end page directories */
+        ix = (PAE_TABLES_START >> PDPTE_SHIFT);
+
+        PaePde = &PaePd[ix].PaePde[PAE_PDE_PER_PAGE - 2];
+        PaePde->PageFrameNumber = (PaeHalPages + 0);
+        PaePde->Valid = 1;
+        PaePde->Write = 1;
+
+        PaePde = &PaePd[ix].PaePde[PAE_PDE_PER_PAGE - 1];
+        PaePde->PageFrameNumber = (PaeHalPages + 1);
+        PaePde->Valid = 1;
+        PaePde->Write = 1;
+
+        /* Store pointer to the table for easier access */
+        KernelPageTablesBuffer = (PUCHAR)PaeTables->PaePte;
+        TRACE("MempAllocatePageTables: KernelPageTablesBuffer %X\n", KernelPageTablesBuffer);
+    }
+
+    /* Zero counters of page tables used */
     PhysicalPageTables = 0;
     KernelPageTables = 0;
 
@@ -252,12 +317,12 @@ MempAllocatePageTables(VOID)
 
 static
 VOID
-MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
+MempAllocatePde(ULONG Entry, PHARDWARE_PDE_X86 * PhysicalPT, PHARDWARE_PDE_X86 * KernelPT)
 {
     //TRACE("Creating PDE Entry %X\n", Entry);
 
     // Identity mapping
-    *PhysicalPT = (PHARDWARE_PTE)&PhysicalPageTablesBuffer[PhysicalPageTables*MM_PAGE_SIZE];
+    *PhysicalPT = (PHARDWARE_PDE_X86)&PhysicalPageTablesBuffer[PhysicalPageTables*MM_PAGE_SIZE];
     PhysicalPageTables++;
 
     PDE[Entry].PageFrameNumber = (ULONG)*PhysicalPT >> MM_PAGE_SHIFT;
@@ -270,7 +335,7 @@ MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
     }
 
     // Kernel-mode mapping
-    *KernelPT = (PHARDWARE_PTE)&KernelPageTablesBuffer[KernelPageTables*MM_PAGE_SIZE];
+    *KernelPT = (PHARDWARE_PDE_X86)&KernelPageTablesBuffer[KernelPageTables*MM_PAGE_SIZE];
     KernelPageTables++;
 
     PDE[Entry+(KSEG0_BASE >> 22)].PageFrameNumber = ((ULONG)*KernelPT >> MM_PAGE_SHIFT);
@@ -278,56 +343,134 @@ MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
     PDE[Entry+(KSEG0_BASE >> 22)].Write = 1;
 }
 
+static
+VOID
+MempAllocatePaePde(ULONG PdeIdx, PHARDWARE_PDE_X86_PAE * PhysicalPde, PHARDWARE_PDE_X86_PAE * KernelPde)
+{
+    PHARDWARE_PDE_X86_PAE Pde;
+    ULONG PdIdx;
+
+    /* Identity mapping */
+    *PhysicalPde = (PHARDWARE_PDE_X86_PAE)&PhysicalPageTablesBuffer[PhysicalPageTables * MM_PAGE_SIZE];
+    PhysicalPageTables++;
+
+    PdIdx = (PdeIdx / PAE_PDE_PER_PAGE);
+
+    Pde = &PaeTables->PaePd[PdIdx].PaePde[PdeIdx & PAE_PDE_MASK];
+    Pde->PageFrameNumber = (ULONG)*PhysicalPde >> MM_PAGE_SHIFT;
+    Pde->Valid = 1;
+    Pde->Write = 1;
+
+
+    if ((PdeIdx + KERNEL_PDE_IDX) > (MAX_PAE_PDE_COUNT - 1))
+    {
+        ERR("WARNING! PdeIdx %X > %X\n", (PdeIdx + KERNEL_PDE_IDX, (MAX_PAE_PDE_COUNT - 1)));
+    }
+
+    /* Kernel-mode mapping */
+    *KernelPde = (PHARDWARE_PDE_X86_PAE)&KernelPageTablesBuffer[KernelPageTables * MM_PAGE_SIZE];
+    KernelPageTables++;
+
+    PdIdx = ((PdeIdx + KERNEL_PDE_IDX) / PAE_PDE_PER_PAGE);
+
+    Pde = &PaeTables->PaePd[PdIdx].PaePde[PdeIdx & PAE_PDE_MASK];
+    Pde->PageFrameNumber = (ULONG)*PhysicalPde >> MM_PAGE_SHIFT;
+    Pde->Valid = 1;
+    Pde->Write = 1;
+}
+
 BOOLEAN
 MempSetupPaging(IN PFN_NUMBER StartPage,
                 IN PFN_COUNT NumberOfPages,
                 IN BOOLEAN KernelMapping)
 {
-    PHARDWARE_PTE PhysicalPT;
-    PHARDWARE_PTE KernelPT;
-    PFN_COUNT Entry, Page;
+    PFN_COUNT Page;
+    PFN_COUNT PdeIdx;
+    PFN_COUNT PhysicalPdIdx;
+    PFN_COUNT KernelPdIdx;
 
-    TRACE("MempSetupPaging: SP 0x%X, Number: 0x%X, Kernel: %s\n",
-       StartPage, NumberOfPages, KernelMapping ? "yes" : "no");
-
-    // HACK
-    if (StartPage+NumberOfPages >= 0x80000)
+    /* HACK */
+    if ((StartPage + NumberOfPages) >= 0x80000)
     {
-        //
-        // We cannot map this as it requires more than 1 PDE
-        // and in fact it's not possible at all ;)
-        //
-        //TRACE("skipping...\n");
+        /* We cannot map this as it requires more than 1 PDE
+         * and in fact it's not possible at all ;)
+         */
+        ERR("MempSetupPaging: skipping... StartPage %X, Pages %X, Kernel: %s\n",
+            StartPage, NumberOfPages, KernelMapping ? "yes" : "no");
         return TRUE;
     }
 
-    //
-    // Now actually set up the page tables for identity mapping
-    //
-    for (Page = StartPage; Page < StartPage + NumberOfPages; Page++)
-    {
-        Entry = Page >> 10;
+    TRACE("MempSetupPaging: StartPage %X, Pages %X, Kernel: %s\n", StartPage, NumberOfPages, KernelMapping ? "yes" : "no");
 
-        if (((PULONG)PDE)[Entry] == 0)
+    /* Now actually set up the page tables for identity mapping */
+    for (Page = StartPage; Page < (StartPage + NumberOfPages); Page++)
+    {
+        if (!PaeModeOn)
         {
-            MempAllocatePTE(Entry, &PhysicalPT, &KernelPT);
+            PHARDWARE_PDE_X86 PhysicalPde;
+            PHARDWARE_PDE_X86 KernelPde;
+
+            PdeIdx = (Page >> 10);
+
+            if (((PULONG)PDE)[PdeIdx] == 0)
+            {
+                MempAllocatePde(PdeIdx, &PhysicalPde, &KernelPde);
+            }
+            else
+            {
+                PhysicalPde = (PHARDWARE_PTE)(PDE[PdeIdx].PageFrameNumber << MM_PAGE_SHIFT);
+                KernelPde = (PHARDWARE_PTE)(PDE[PdeIdx+(KSEG0_BASE >> 22)].PageFrameNumber << MM_PAGE_SHIFT);
+            }
+
+            PhysicalPde[Page & 0x3ff].PageFrameNumber = Page;
+            PhysicalPde[Page & 0x3ff].Valid = (Page != 0);
+            PhysicalPde[Page & 0x3ff].Write = (Page != 0);
+
+            if (KernelMapping)
+            {
+                if (KernelPde[Page & 0x3ff].Valid) WARN("KernelPde already mapped\n");
+
+                KernelPde[Page & 0x3ff].PageFrameNumber = Page;
+                KernelPde[Page & 0x3ff].Valid = (Page != 0);
+                KernelPde[Page & 0x3ff].Write = (Page != 0);
+            }
         }
         else
         {
-            PhysicalPT = (PHARDWARE_PTE)(PDE[Entry].PageFrameNumber << MM_PAGE_SHIFT);
-            KernelPT = (PHARDWARE_PTE)(PDE[Entry+(KSEG0_BASE >> 22)].PageFrameNumber << MM_PAGE_SHIFT);
-        }
+            PHARDWARE_PDE_X86_PAE PhysicalPde;
+            PHARDWARE_PDE_X86_PAE KernelPde;
 
-        PhysicalPT[Page & 0x3ff].PageFrameNumber = Page;
-        PhysicalPT[Page & 0x3ff].Valid = (Page != 0);
-        PhysicalPT[Page & 0x3ff].Write = (Page != 0);
+            PdeIdx = (Page / PAE_PTE_PER_PAGE);
 
-        if (KernelMapping)
-        {
-            if (KernelPT[Page & 0x3ff].Valid) WARN("KernelPT already mapped\n");
-            KernelPT[Page & 0x3ff].PageFrameNumber = Page;
-            KernelPT[Page & 0x3ff].Valid = (Page != 0);
-            KernelPT[Page & 0x3ff].Write = (Page != 0);
+            PhysicalPdIdx = (PdeIdx / PAE_PDE_PER_PAGE);
+            KernelPdIdx = ((PdeIdx + KERNEL_PDE_IDX) / PAE_PDE_PER_PAGE);
+
+            //TRACE("MempSetupPaging: Page %X, PdeIdx %X, PhysicalPdIdx %X, KernelPdIdx %X\n", Page, PdeIdx, PhysicalPdIdx, KernelPdIdx);
+
+            if (PaeTables->PaePd[PhysicalPdIdx].PaePde[PdeIdx].LowPart == 0)
+            {
+                MempAllocatePaePde(PdeIdx, &PhysicalPde, &KernelPde);
+            }
+            else
+            {
+                PhysicalPde = (PHARDWARE_PDE_X86_PAE)(PaeTables->PaePd[PhysicalPdIdx].PaePde[PdeIdx & PAE_PDE_MASK].PageFrameNumber << MM_PAGE_SHIFT);
+                KernelPde   = (PHARDWARE_PDE_X86_PAE)(PaeTables->PaePd[KernelPdIdx].PaePde[PdeIdx & PAE_PDE_MASK].PageFrameNumber << MM_PAGE_SHIFT);
+            }
+
+            //TRACE("MempSetupPaging: PhysicalPde %X, KernelPde %X\n", PhysicalPde, KernelPde);
+
+            PhysicalPde[Page & PAE_PDE_MASK].PageFrameNumber = Page;
+            PhysicalPde[Page & PAE_PDE_MASK].Valid = (Page != 0);
+            PhysicalPde[Page & PAE_PDE_MASK].Write = (Page != 0);
+
+            if (KernelMapping)
+            {
+                if (KernelPde[Page & PAE_PDE_MASK].Valid) WARN("KernelPde already mapped\n");
+
+                KernelPde[Page & PAE_PDE_MASK].PageFrameNumber = Page;
+                KernelPde[Page & PAE_PDE_MASK].Valid = (Page != 0);
+                KernelPde[Page & PAE_PDE_MASK].Write = (Page != 0);
+            }
         }
     }
 
@@ -339,6 +482,12 @@ MempUnmapPage(PFN_NUMBER Page)
 {
     PHARDWARE_PTE KernelPT;
     PFN_NUMBER Entry = (Page >> 10) + (KSEG0_BASE >> 22);
+
+    if (PaeModeOn)
+    {
+        UNIMPLEMENTED;
+        return;
+    }
 
     /* Don't unmap page directory or HAL entries */
     if (Entry == SELFMAP_ENTRY || Entry == 1023)
@@ -381,12 +530,22 @@ WinLdrpMapApic(VOID)
         APICAddress);
 
     /* Map it */
-    HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber
-        = APICAddress >> MM_PAGE_SHIFT;
-    HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-    HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
-    HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].WriteThrough = 1;
-    HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].CacheDisable = 1;
+    if (!PaeModeOn)
+    {
+        HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = APICAddress >> MM_PAGE_SHIFT;
+        HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
+        HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+        HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].WriteThrough = 1;
+        HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].CacheDisable = 1;
+    }
+    else
+    {
+        PaeTables->HalPt[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = APICAddress >> MM_PAGE_SHIFT;
+        PaeTables->HalPt[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
+        PaeTables->HalPt[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+        PaeTables->HalPt[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].WriteThrough = 1;
+        PaeTables->HalPt[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].CacheDisable = 1;
+    }
 }
 
 static
@@ -399,13 +558,26 @@ WinLdrMapSpecialPages(void)
      * The Page Tables have been setup, make special handling
      * for the boot processor PCR and KI_USER_SHARED_DATA.
      */
-    HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage+1;
-    HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-    HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+    if (!PaeModeOn)
+    {
+        HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage+1;
+        HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
+        HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
 
-    HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage;
-    HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-    HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+        HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage;
+        HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
+        HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+    }
+    else
+    {
+        PaeTables->HalPt[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage+1;
+        PaeTables->HalPt[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
+        PaeTables->HalPt[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+
+        PaeTables->HalPt[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage;
+        PaeTables->HalPt[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
+        PaeTables->HalPt[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+    }
 
     /* Map APIC */
     WinLdrpMapApic();
@@ -501,7 +673,6 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
     WinLdrSetupSpecialDataPointers();
 }
 
-
 VOID
 WinLdrSetProcessorContext(void)
 {
@@ -528,11 +699,32 @@ WinLdrSetProcessorContext(void)
     /* Re-initialize EFLAGS */
     __writeeflags(0);
 
-    /* Set the PDBR */
-    __writecr3((ULONG_PTR)PDE);
+    if (!PaeModeOn)
+    {
+        /* Set the PDBR */
+        __writecr3((ULONG_PTR)PDE);
 
-    /* Enable paging by modifying CR0 */
-    __writecr0(__readcr0() | CR0_PG);
+        /* Enable paging by modifying CR0 */
+        __writecr0(__readcr0() | CR0_PG);
+    }
+    else
+    {
+        TRACE("WinLdrSetProcessorContext: PaeTables %X, cr0 %X, cr3 %X, cr4 %X\n", PaeTables, __readcr0(), __readcr3(), __readcr4());
+
+        /* Flush TLB */
+        __writecr3(__readcr3());
+
+        /* Set the PDPTR */
+        __writecr3((ULONG_PTR)PaeTables);
+
+        /* Enable PAE */
+        __writecr4(__readcr4() | 0x20);
+
+        /* Enable paging */
+        __writecr0(__readcr0() | CR0_PG);
+    }
+
+    TRACE("WinLdrSetProcessorContext: cr0 %X, cr3 %X, cr4 %X\n", __readcr0(), __readcr3(), __readcr4());
 
     /* The Kernel expects the boot processor PCR to be zero-filled on startup */
     RtlZeroMemory((PVOID)Pcr, MM_PAGE_SIZE);
