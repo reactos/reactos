@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <shellapi.h>
 #include <htmlhelp.h>
-#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
