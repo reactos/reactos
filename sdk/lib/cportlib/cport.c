@@ -30,15 +30,11 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NTOS_MODE_USER
-#include <cportlib/cportlib.h>
-#include <drivers/serial/ns16550.h>
 #include <intrin.h>
 #include <ioaccess.h>
 #include <ntstatus.h>
-
-#define NDEBUG
-#include <debug.h>
+#include <cportlib/cportlib.h>
+#include <drivers/serial/ns16550.h>
 
 /* GLOBALS ********************************************************************/
 
