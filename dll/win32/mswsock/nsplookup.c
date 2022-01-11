@@ -14,8 +14,8 @@
 
 #include "mswhelper.h"
 
-#define NDEBUG
-#include <debug.h>
+#include <assert.h>
+#define ASSERT assert
 
 #define NSP_CALLID_DNS 0x0001
 #define NSP_CALLID_HOSTNAME 0x0002
