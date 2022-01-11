@@ -210,11 +210,11 @@ NtQueryInformationProcess(
                 {
                     /* Get limits from non-default quota block */
                     QuotaLimits->PagedPoolLimit =
-                        Process->QuotaBlock->QuotaEntry[PagedPool].Limit;
+                        Process->QuotaBlock->QuotaEntry[PsPagedPool].Limit;
                     QuotaLimits->NonPagedPoolLimit =
-                        Process->QuotaBlock->QuotaEntry[NonPagedPool].Limit;
+                        Process->QuotaBlock->QuotaEntry[PsNonPagedPool].Limit;
                     QuotaLimits->PagefileLimit =
-                        Process->QuotaBlock->QuotaEntry[2].Limit;
+                        Process->QuotaBlock->QuotaEntry[PsPageFile].Limit;
                 }
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
