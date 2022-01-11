@@ -12,12 +12,12 @@
 #include <winreg.h>
 #include <setupapi.h>
 #include <mmixer.h>
+
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 #include <ndk/iofuncs.h>
 
-#define NDEBUG
-#include <debug.h>
+// #define NDEBUG
 #include <mmebuddy_debug.h>
 
 
@@ -268,7 +268,7 @@ Enum(
 
     if (!Result)
     {
-        DPRINT("SetupDiGetDeviceInterfaceDetailW failed with %lu\n", GetLastError());
+        SND_ERR(L"SetupDiGetDeviceInterfaceDetailW failed with %lu\n", GetLastError());
         return MM_STATUS_UNSUCCESSFUL;
     }
 
@@ -367,7 +367,7 @@ WdmAudInitUserModeMixer()
     if (Status != MM_STATUS_SUCCESS)
     {
         /* failed to initialize mixer library */
-        DPRINT1("Failed to initialize mixer library with %x\n", Status);
+        SND_ERR(L"Failed to initialize mixer library with %x\n", Status);
         return FALSE;
     }
 
@@ -649,7 +649,7 @@ WdmAudQueryMixerInfoByMMixer(
        case MXDM_GETCONTROLDETAILS:
             return WdmAudGetControlDetails(hMixer, MixerId, MixDetails, Flags);
        default:
-           DPRINT1("MixerId %lu, uMsg %lu, Parameter %p, Flags %lu\n", MixerId, uMsg, Parameter, Flags);
+           SND_ERR(L"MixerId %lu, uMsg %lu, Parameter %p, Flags %lu\n", MixerId, uMsg, Parameter, Flags);
            SND_ASSERT(0);
            return MMSYSERR_NOTSUPPORTED;
     }
@@ -861,7 +861,7 @@ WdmAudCommitWaveBufferByMMixer(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtDeviceIoControlFile() failed with status %08lx\n", Status);
+        SND_ERR(L"NtDeviceIoControlFile() failed with status %08lx\n", Status);
         return MMSYSERR_ERROR;
     }
 

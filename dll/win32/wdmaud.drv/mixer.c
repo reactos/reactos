@@ -12,8 +12,7 @@
 #include <samplerate.h>
 #include <float_cast.h>
 
-#define NDEBUG
-#include <debug.h>
+// #define NDEBUG
 #include <mmebuddy_debug.h>
 
 extern HANDLE KernelHandle;
@@ -40,7 +39,7 @@ PerformSampleRateConversion(
 
     //SND_TRACE(L"PerformSampleRateConversion OldRate %u NewRate %u BytesPerSample %u NumChannels %u\n", OldRate, NewRate, BytesPerSample, NumChannels);
 
-    ASSERT(BytesPerSample == 1 || BytesPerSample == 2 || BytesPerSample == 4);
+    SND_ASSERT(BytesPerSample == 1 || BytesPerSample == 2 || BytesPerSample == 4);
 
     NumSamples = BufferLength / (BytesPerSample * NumChannels);
 
@@ -100,7 +99,7 @@ PerformSampleRateConversion(
     error = src_process(State, &Data);
     if (error)
     {
-        DPRINT1("src_process failed with %x\n", error);
+        SND_ERR(L"src_process failed with %x\n", error);
         HeapFree(GetProcessHeap(), 0,FloatIn);
         HeapFree(GetProcessHeap(), 0,FloatOut);
         HeapFree(GetProcessHeap(), 0,ResultOut);
@@ -271,10 +270,10 @@ PerformQualityConversion(
     ULONG Samples;
     ULONG Index;
 
-    ASSERT(OldWidth != NewWidth);
+    SND_ASSERT(OldWidth != NewWidth);
 
     Samples = BufferLength / (OldWidth / 8);
-    //DPRINT("Samples %u BufferLength %u\n", Samples, BufferLength);
+    //SND_TRACE("Samples %u BufferLength %u\n", Samples, BufferLength);
 
     //SND_TRACE(L"PerformQualityConversion OldWidth %u NewWidth %u\n", OldWidth, NewWidth);
 
@@ -399,7 +398,7 @@ PerformQualityConversion(
     }
     else
     {
-        DPRINT1("Not implemented conversion OldWidth %u NewWidth %u\n", OldWidth, NewWidth);
+        SND_ERR(L"Not implemented conversion OldWidth %u NewWidth %u\n", OldWidth, NewWidth);
         return ERROR_NOT_SUPPORTED;
     }
 

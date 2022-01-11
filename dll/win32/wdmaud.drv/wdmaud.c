@@ -14,8 +14,7 @@
 
 #include "wdmaud.h"
 
-#define NDEBUG
-#include <debug.h>
+// #define NDEBUG
 #include <mmebuddy_debug.h>
 
 #define USE_MMIXER_LIB
