@@ -113,7 +113,7 @@ W32Assert(
 #endif
               "*** Assertion failed: %s%s\n"
               "***   Source File: %s, line %lu",
-              (Message ? Message : ""), (PSTR)FailedAssertion, (PSTR)FileName, LineNumber);
+              (Message ? Message : ""), (PCSTR)FailedAssertion, (PCSTR)FileName, LineNumber);
 
     id = MessageBoxA(NULL, szBuff, "Assertion Failure", MB_ICONERROR | MB_ABORTRETRYIGNORE);
 
