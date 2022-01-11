@@ -99,8 +99,13 @@ W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
     return ERROR_SUCCESS; /* Return STATUS_SUCCESS, since we are supposed to mimic DbgPrint */
 }
 
-#define DbgPrint(...) W32DbgPrint(__VA_ARGS__)
-#define DbgPrintEx(ComponentId, Level, ...) W32DbgPrint(__VA_ARGS__)
+#ifdef __clang__
+    #define DbgPrint(Format, ...) W32DbgPrint(Format, __VA_ARGS__)
+    #define DbgPrintEx(ComponentId, Level, Format, ...) W32DbgPrint(Format, __VA_ARGS__)
+#else
+    #define DbgPrint(...) W32DbgPrint(__VA_ARGS__)
+    #define DbgPrintEx(ComponentId, Level, ...) W32DbgPrint(__VA_ARGS__)
+#endif
 
 static
 inline

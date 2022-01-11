@@ -1,3 +1,4 @@
+#define NTOS_MODE_USER
 #include <windef.h>
 #define NDEBUG
 #include <reactos/debug.h>
