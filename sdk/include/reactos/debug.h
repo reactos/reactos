@@ -18,9 +18,6 @@
 #define __RELFILE__ __FILE__
 #endif
 
-/* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
-#if !defined(_RTLFUNCS_H) && !defined(_NTDDK_)
-
 /* Make sure we have basic types (some people include us *before* SDK)... */
 #if !defined(_NTDEF_) && !defined(_NTDEF_H) && !defined(_WINDEF_) && !defined(_WINDEF_H)
 #error Please include SDK first.
@@ -30,8 +27,13 @@
 extern "C" {
 #endif
 
-#if defined(_NTDDK_) || defined(NTOS_MODE_USER)
-/* Kernel-Mode, or Native User-Mode */
+#if defined(_NTDEF_) || defined(_NTDEF_H) || defined(_NTDDK_) || defined(_WDMDDK_) || defined(NTOS_MODE_USER)
+/*
+ * Kernel-Mode, or Native User-Mode
+ */
+
+/* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
+#if !defined(_RTLFUNCS_H) && !defined(_NTDDK_)
 
 ULONG
 __cdecl
@@ -61,13 +63,17 @@ RtlAssert(
     _In_opt_z_ PCHAR Message
 );
 
-#elif defined(_WIN32)
-/* Win32 User-Mode */
+#endif /* !defined(_RTLFUNCS_H) && !defined(_NTDDK_) */
 
-#include <winbase.h>
+#elif defined(_WIN32)
+/*
+ * Win32 User-Mode
+ */
+
+// #include <winbase.h>
 #include <winuser.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <stdio.h>  // For _(v)snprintf
+#include <stdlib.h> // For _countof
 
 #ifndef DEBUG_BUFSIZE
 #define DEBUG_BUFSIZE 512
@@ -148,7 +154,6 @@ W32Assert(
 } /* extern "C" */
 #endif
 
-#endif /* !defined(_RTLFUNCS_H) && !defined(_NTDDK_) */
 
 #ifndef assert
 #if DBG && !defined(NASSERT)
