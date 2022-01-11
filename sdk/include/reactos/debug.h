@@ -64,10 +64,6 @@ RtlAssert(
 #elif defined(_WIN32)
 /* Win32 User-Mode */
 
-#ifndef NO_STRSAFE
-#include <strsafe.h>
-#endif
-
 #ifndef DEBUG_BUFSIZE
 #define DEBUG_BUFSIZE 512
 #endif
@@ -82,10 +78,10 @@ W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
 
     va_start(va, Format);
 
-#ifdef NO_STRSAFE
-    _vsnprintf(szBuff, _countof(szBuff), Format, va);
-#else
+#ifdef _STRSAFE_H_INCLUDED_
     StringCchVPrintfA(szBuff, _countof(szBuff), Format, va);
+#else
+    _vsnprintf(szBuff, _countof(szBuff), Format, va);
 #endif
 
     OutputDebugStringA(szBuff);
@@ -110,13 +106,13 @@ W32Assert(
     INT id;
     char szBuff[DEBUG_BUFSIZE];
 
-#ifdef NO_STRSAFE
-    _snprintf(szBuff, _countof(szBuff),
-#else
+#ifdef _STRSAFE_H_INCLUDED_
     StringCchPrintfA(szBuff, _countof(szBuff),
+#else
+    _snprintf(szBuff, _countof(szBuff),
 #endif
-                     "File '%s',\nLine %ld:\n\n%s\n\n%s",
-                     (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
+              "File '%s',\nLine %ld:\n\n%s\n\n%s",
+              (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
 
     id = MessageBoxA(NULL, szBuff, "Assertion Failure", MB_ICONERROR | MB_ABORTRETRYIGNORE);
 
