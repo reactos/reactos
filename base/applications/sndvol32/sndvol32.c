@@ -27,6 +27,9 @@
 
 #include <shellapi.h>
 
+//#define NDEBUG
+#include <debug.h>
+
 HINSTANCE hAppInstance;
 ATOM MainWindowClass;
 HWND hMainWnd;

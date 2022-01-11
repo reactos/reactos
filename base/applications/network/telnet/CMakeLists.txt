@@ -40,6 +40,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 endif()
 
 set_module_type(telnet win32cui)
-add_importlibs(telnet ws2_32 user32 msvcrt kernel32 ntdll)
+add_importlibs(telnet ws2_32 user32 msvcrt kernel32)
 add_pch(telnet precomp.h SOURCE)
 add_cd_file(TARGET telnet DESTINATION reactos/system32 FOR all)

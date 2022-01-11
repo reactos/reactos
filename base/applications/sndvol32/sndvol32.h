@@ -67,10 +67,6 @@ extern HANDLE hAppHeap;
 #define SZ_APP_CLASS TEXT("Volume Control")
 #define _countof(array) (sizeof(array) / sizeof(array[0]))
 
-ULONG DbgPrint(PCH , ...);
-#define DPRINT DbgPrint("SNDVOL32: %s:%i: ", __FILE__, __LINE__); DbgPrint
-
-
 /*
  * MIXER
  */

@@ -25,6 +25,9 @@
 
 #include "sndvol32.h"
 
+//#define NDEBUG
+#include <debug.h>
+
 #define NO_MIXER_SELECTED ((UINT)(~0))
 
 static VOID
