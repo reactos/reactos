@@ -87,7 +87,7 @@ W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
     OutputDebugStringA(szBuff);
     va_end(va);
 
-    return 0; /* Return STATUS_SUCCESS, since we are supposed to mimic DbgPrint */
+    return ERROR_SUCCESS; /* Return STATUS_SUCCESS, since we are supposed to mimic DbgPrint */
 }
 
 #define DbgPrint(Format, ...) W32DbgPrint(Format, __VA_ARGS__)
