@@ -1,6 +1,5 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
-#include <wine/debug.h>
 
 #ifndef PRIx64
 #define PRIx64 "I64x"

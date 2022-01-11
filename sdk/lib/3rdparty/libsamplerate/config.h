@@ -193,7 +193,6 @@
 **	Microsoft's compiler still does not support the 1999 ISO C Standard
 **	which includes 'inline'.
 */
-
 #define inline __inline
 
 /* ReactOS hacks */

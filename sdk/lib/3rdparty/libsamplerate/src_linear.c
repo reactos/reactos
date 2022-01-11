@@ -8,6 +8,9 @@
 
 #include "precomp.h"
 
+//#define NDEBUG
+#include <debug.h>
+
 static int linear_vari_process (SRC_PRIVATE *psrc, SRC_DATA *data) ;
 static void linear_reset (SRC_PRIVATE *psrc) ;
 
