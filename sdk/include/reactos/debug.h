@@ -68,13 +68,17 @@ RtlAssert(
 #include <strsafe.h>
 #endif
 
+#ifndef DEBUG_BUFSIZE
+#define DEBUG_BUFSIZE 512
+#endif
+
 static inline
 ULONG
 __cdecl
 W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
 {
     va_list va;
-    char szBuff[512];
+    char szBuff[DEBUG_BUFSIZE];
 
     va_start(va, Format);
 
@@ -103,8 +107,8 @@ W32Assert(
     _In_ ULONG LineNumber,
     _In_opt_z_ PCHAR Message)
 {
-    char szBuff[512];
     INT id;
+    char szBuff[DEBUG_BUFSIZE];
 
 #ifdef NO_STRSAFE
     _snprintf(szBuff, _countof(szBuff),
