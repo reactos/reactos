@@ -76,6 +76,9 @@ W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
     va_list va;
     char szBuff[DEBUG_BUFSIZE];
 
+    if (!IsDebuggerPresent())
+        return ERROR_SUCCESS;
+
     va_start(va, Format);
 
 #ifdef _STRSAFE_H_INCLUDED_
