@@ -166,17 +166,18 @@ BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLA
 
     pkl = pklHead = gspklBaseLayout;
 
+    /* Find the matching entry from the list and get info */
     if (SearchType == ImeInfoExKeyboardLayout)
     {
         do
         {
-            if (pInfoEx->hkl == pkl->hkl)
+            if (pInfoEx->hkl == pkl->hkl) /* Matched */
             {
                 if (!pkl->piiex)
                     break;
 
-                *pInfoEx = *pkl->piiex;
-                return TRUE;
+                *pInfoEx = *pkl->piiex; /* Get */
+                return TRUE; /* Found */
             }
 
             pkl = pkl->pklNext;
@@ -186,14 +187,12 @@ BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLA
     {
         do
         {
-            if (pkl->piiex)
+            if (pkl->piiex &&
+                _wcsnicmp(pkl->piiex->wszImeFile, pInfoEx->wszImeFile,
+                          RTL_NUMBER_OF(pkl->piiex->wszImeFile)) == 0) /* Matched */
             {
-                if (!_wcsnicmp(pkl->piiex->wszImeFile, pInfoEx->wszImeFile,
-                               RTL_NUMBER_OF(pkl->piiex->wszImeFile)))
-                {
-                    *pInfoEx = *pkl->piiex;
-                    return TRUE;
-                }
+                *pInfoEx = *pkl->piiex; /* Get */
+                return TRUE; /* Found */
             }
 
             pkl = pkl->pklNext;
@@ -204,7 +203,7 @@ BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLA
         /* Do nothing */
     }
 
-    return FALSE;
+    return FALSE; /* Not found */
 }
 
 BOOL
