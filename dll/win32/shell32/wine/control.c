@@ -25,7 +25,6 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <shlobj.h>
 #define NO_SHLWAPI_REG
 #include <shlwapi.h>
 #include <shellapi.h>
@@ -945,6 +944,7 @@ void WINAPI RunDll_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
 #ifndef __REACTOS__
 DWORD WINAPI CallCPLEntry16(HMODULE hMod, FARPROC pFunc, DWORD dw3, DWORD dw4, DWORD dw5, DWORD dw6)
 #else
+DECLARE_HANDLE(FARPROC16);
 LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC16 pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6)
 #endif
 {
