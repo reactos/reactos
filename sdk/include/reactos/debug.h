@@ -111,8 +111,9 @@ W32Assert(
 #else
     _snprintf(szBuff, _countof(szBuff),
 #endif
-              "File '%s',\nLine %ld:\n\n%s\n\n%s",
-              (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
+              "*** Assertion failed: %s%s\n"
+              "***   Source File: %s, line %lu\n\n",
+              (Message ? Message : ""), (PSTR)FailedAssertion, (PSTR)FileName, LineNumber);
 
     id = MessageBoxA(NULL, szBuff, "Assertion Failure", MB_ICONERROR | MB_ABORTRETRYIGNORE);
 
