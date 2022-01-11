@@ -78,11 +78,11 @@ W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
 
     va_start(va, Format);
 
-#  ifdef NO_STRSAFE
+#ifdef NO_STRSAFE
     wvsprintfA(szBuff, Format, va);
-#  else
+#else
     StringCchVPrintfA(szBuff, _countof(szBuff), Format, va);
-#  endif
+#endif
 
     OutputDebugStringA(szBuff);
     va_end(va);
