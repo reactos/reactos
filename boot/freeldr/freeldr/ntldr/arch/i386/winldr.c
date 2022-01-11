@@ -706,9 +706,6 @@ WinLdrSetProcessorContext(void)
     {
         /* Set the PDBR */
         __writecr3((ULONG_PTR)PDE);
-
-        /* Enable paging by modifying CR0 */
-        __writecr0(__readcr0() | CR0_PG);
     }
     else
     {
@@ -723,9 +720,10 @@ WinLdrSetProcessorContext(void)
         /* Enable PAE */
         __writecr4(__readcr4() | 0x20);
 
-        /* Enable paging */
-        __writecr0(__readcr0() | CR0_PG);
     }
+
+    /* Enable paging */
+    __writecr0(__readcr0() | CR0_PG);
 
     TRACE("WinLdrSetProcessorContext: cr0 %X, cr3 %X, cr4 %X\n", __readcr0(), __readcr3(), __readcr4());
 
