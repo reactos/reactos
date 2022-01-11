@@ -4,7 +4,7 @@
 #include <windef.h>
 
 #define NDEBUG
-#include <reactos/debug.h>
+#include <debug.h>
 
 void
 WINAPI

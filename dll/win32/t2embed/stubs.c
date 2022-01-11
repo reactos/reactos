@@ -8,7 +8,7 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <t2embapi.h>
-#include <debug.h>
+#include <wine/debug.h>
 
 LONG
 WINAPI

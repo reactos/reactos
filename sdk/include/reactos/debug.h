@@ -64,7 +64,10 @@ RtlAssert(
 #elif defined(_WIN32)
 /* Win32 User-Mode */
 
+#include <windef.h>
+#include <winbase.h>
 #include <winuser.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #ifndef DEBUG_BUFSIZE
@@ -96,8 +99,8 @@ W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
     return ERROR_SUCCESS; /* Return STATUS_SUCCESS, since we are supposed to mimic DbgPrint */
 }
 
-#define DbgPrint(Format, ...) W32DbgPrint(Format, __VA_ARGS__)
-#define DbgPrintEx(ComponentId, Level, Format, ...) W32DbgPrint(Format, __VA_ARGS__)
+#define DbgPrint(...) W32DbgPrint(__VA_ARGS__)
+#define DbgPrintEx(ComponentId, Level, ...) W32DbgPrint(__VA_ARGS__)
 
 static inline
 __analysis_noreturn
@@ -261,6 +264,9 @@ W32Assert(
         #endif
     #else   /* Native */
         #ifndef _PSFUNCS_H
+            #ifndef _NTDEF_ /* Guard agains redefinition from ntstatus.h */
+                typedef _Return_type_success_(return >= 0) long NTSTATUS;
+            #endif
             NTSYSCALLAPI
             NTSTATUS
             NTAPI
