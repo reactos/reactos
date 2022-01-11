@@ -115,7 +115,8 @@ W32Assert(
               "***   Source File: %s, line %lu",
               (Message ? Message : ""), (PCSTR)FailedAssertion, (PCSTR)FileName, LineNumber);
 
-    id = MessageBoxA(NULL, szBuff, "Assertion Failure", MB_ICONERROR | MB_ABORTRETRYIGNORE);
+    id = MessageBoxA(NULL, szBuff, "Assertion Failure",
+                     MB_ICONERROR | MB_ABORTRETRYIGNORE | MB_SETFOREGROUND | MB_TASKMODAL);
 
     if (id == IDABORT)
         ExitProcess(ERROR_ASSERTION_FAILURE);
