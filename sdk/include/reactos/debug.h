@@ -98,6 +98,7 @@ W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
 #define DbgPrintEx(ComponentId, Level, Format, ...) W32DbgPrint(Format, __VA_ARGS__)
 
 static inline
+__analysis_noreturn
 VOID
 NTAPI
 W32Assert(
