@@ -3183,7 +3183,7 @@ NtUserSetImeHotKey(
     DWORD Unknown3,
     DWORD Unknown4);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetImeInfoEx(
     PIMEINFOEX pImeInfoEx);
