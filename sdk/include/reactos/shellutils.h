@@ -56,6 +56,7 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
     return 0;
 }
 
+#undef DbgPrint
 #define DbgPrint(fmt, ...) \
     Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 

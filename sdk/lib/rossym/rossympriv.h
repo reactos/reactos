@@ -9,6 +9,8 @@
 
 #pragma once
 
+#define NTOS_MODE_USER
+
 extern ROSSYM_CALLBACKS RosSymCallbacks;
 
 #define RosSymAllocMem(Size) (*RosSymCallbacks.AllocMemProc)(Size)
