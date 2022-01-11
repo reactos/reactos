@@ -1,7 +1,7 @@
-#define NTOS_MODE_USER
 #include <windef.h>
-#define NDEBUG
-#include <reactos/debug.h>
+
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(loadperf);
 
 #define LOADPERF_FUNCTION DWORD WINAPI
 
