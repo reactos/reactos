@@ -10,6 +10,7 @@
 #ifndef _VGA_NEW_PCH_
 #define _VGA_NEW_PCH_
 
+#define NTOS_MODE_USER
 #include <ntdef.h>
 #include <dderror.h>
 #include <miniport.h>
