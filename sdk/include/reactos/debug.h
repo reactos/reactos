@@ -112,8 +112,10 @@ W32Assert(
     _snprintf(szBuff, _countof(szBuff),
 #endif
               "*** Assertion failed: %s%s\n"
-              "***   Source File: %s, line %lu",
+              "***   Source File: %s, line %lu\n",
               (Message ? Message : ""), (PCSTR)FailedAssertion, (PCSTR)FileName, LineNumber);
+
+    OutputDebugStringA(szBuff);
 
     id = MessageBoxA(NULL, szBuff, "Assertion Failure",
                      MB_ICONERROR | MB_ABORTRETRYIGNORE | MB_SETFOREGROUND | MB_TASKMODAL);
