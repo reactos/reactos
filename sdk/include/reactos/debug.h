@@ -83,7 +83,7 @@ W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
     va_start(va, Format);
 
 #ifdef NO_STRSAFE
-    wvsprintfA(szBuff, Format, va);
+    _vsnprintf(szBuff, _countof(szBuff), Format, va);
 #else
     StringCchVPrintfA(szBuff, _countof(szBuff), Format, va);
 #endif
@@ -111,14 +111,12 @@ W32Assert(
     INT id;
 
 #ifdef NO_STRSAFE
-    _vsnprintf(szBuff,
-               "File '%s',\nLine %ld:\n\n%s\n\n%s",
-               (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
+    _snprintf(szBuff, _countof(szBuff),
 #else
     StringCchPrintfA(szBuff, _countof(szBuff),
-          "File '%s',\nLine %ld:\n\n%s\n\n%s",
-          (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
 #endif
+                     "File '%s',\nLine %ld:\n\n%s\n\n%s",
+                     (LPCSTR)FileName, LineNumber, (LPCSTR)FailedAssertion, Message);
 
     id = MessageBoxA(NULL, szBuff, "Assertion Failure", MB_ICONERROR | MB_ABORTRETRYIGNORE);
 
@@ -130,6 +128,8 @@ W32Assert(
 
 #define RtlAssert W32Assert
 
+#else
+    #error "Unsupported target."
 #endif
 
 #ifdef __cplusplus
