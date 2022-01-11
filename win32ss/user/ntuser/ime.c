@@ -157,16 +157,97 @@ NtUserGetAppImeLevel(HWND hWnd)
     return 0;
 }
 
+BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLASS SearchType)
+{
+    PKL pkl, pklHead;
+
+    if (!gspklBaseLayout)
+        return FALSE;
+
+    pkl = pklHead = gspklBaseLayout;
+
+    if (SearchType == ImeInfoExKeyboardLayout)
+    {
+        do
+        {
+            if (pInfoEx->hkl == pkl->hkl)
+            {
+                if (!pkl->piiex)
+                    break;
+
+                *pInfoEx = *pkl->piiex;
+                return TRUE;
+            }
+
+            pkl = pkl->pklNext;
+        } while (pkl != pklHead);
+    }
+    else if (SearchType == ImeInfoExImeFileName)
+    {
+        do
+        {
+            if (pkl->piiex)
+            {
+                if (!_wcsnicmp(pkl->piiex->wszImeFile, pInfoEx->wszImeFile,
+                               RTL_NUMBER_OF(pkl->piiex->wszImeFile)))
+                {
+                    *pInfoEx = *pkl->piiex;
+                    return TRUE;
+                }
+            }
+
+            pkl = pkl->pklNext;
+        } while (pkl != pklHead);
+    }
+    else
+    {
+        /* Do nothing */
+    }
+
+    return FALSE;
+}
+
 BOOL
 APIENTRY
 NtUserGetImeInfoEx(
     PIMEINFOEX pImeInfoEx,
     IMEINFOEXCLASS SearchType)
 {
-    STUB;
-    return FALSE;
-}
+    IMEINFOEX ImeInfoEx;
+    BOOL ret = FALSE;
 
+    UserEnterShared();
+
+    if (!IS_IMM_MODE())
+        goto Quit;
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(pImeInfoEx, sizeof(*pImeInfoEx), 1);
+        ImeInfoEx = *pImeInfoEx;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        goto Quit;
+    }
+    _SEH2_END;
+
+    ret = UserGetImeInfoEx(NULL, &ImeInfoEx, SearchType);
+
+    _SEH2_TRY
+    {
+        *pImeInfoEx = ImeInfoEx;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = FALSE;
+    }
+    _SEH2_END;
+
+Quit:
+    UserLeave();
+    return ret;
+}
 
 DWORD
 APIENTRY
