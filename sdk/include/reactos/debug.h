@@ -118,7 +118,7 @@ W32Assert(
     id = MessageBoxA(NULL, szBuff, "Assertion Failure", MB_ICONERROR | MB_ABORTRETRYIGNORE);
 
     if (id == IDABORT)
-        ExitProcess((UINT)-1);
+        ExitProcess(ERROR_ASSERTION_FAILURE);
     else if (id == IDRETRY)
         DebugBreak();
 }
