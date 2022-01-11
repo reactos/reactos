@@ -1,5 +1,7 @@
 #include <windef.h>
-#include <reactos/debug.h>
+
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(comctl32);
 
 typedef PVOID PREADERMODEINFO;
 

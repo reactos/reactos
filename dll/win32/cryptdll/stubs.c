@@ -1,6 +1,7 @@
 #include <windef.h>
-#define NDEBUG
-#include <reactos/debug.h>
+
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(cryptdll);
 
 void WINAPI
 CDBuildIntegrityVect(DWORD Unknown1, DWORD Unknown2)

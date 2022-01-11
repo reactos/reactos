@@ -3,8 +3,8 @@
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 
-#define NDEBUG
-#include <debug.h>
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(msdmo);
 
 void
 WINAPI
