@@ -30,6 +30,8 @@
 extern "C" {
 #endif
 
+#ifndef NTOS_MODE_USER
+
 ULONG
 __cdecl
 DbgPrint(
@@ -57,6 +59,40 @@ RtlAssert(
     _In_ ULONG LineNumber,
     _In_opt_z_ PCHAR Message
 );
+
+#else /* def NTOS_MODE_USER */
+
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
+
+static inline
+ULONG
+__cdecl
+W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
+{
+    va_list va;
+    char szBuff[512];
+
+    va_start(va, Format);
+
+#  ifdef NO_STRSAFE
+    wvsprintfA(szBuff, Format, va);
+#  else
+    StringCchVPrintfA(szBuff, _countof(szBuff), Format, va);
+#  endif
+
+    OutputDebugStringA(szBuff);
+    va_end(va);
+
+    return 0; /* Return STATUS_SUCCESS, since we are supposed to mimic DbgPrint */
+}
+
+#define DbgPrint(Format, ...) W32DbgPrint(Format, __VA_ARGS__)
+#define DbgPrintEx(ComponentId, Level, Format, ...) W32DbgPrint(Format, __VA_ARGS__)
+
+#include <assert.h>
+#define RtlAssert(FailedAssertion, FileName, LineNumber, Message) _assert(Message, FileName, LineNumber)
+
+#endif /* def NTOS_MODE_USER */
 
 #ifdef __cplusplus
 } /* extern "C" */

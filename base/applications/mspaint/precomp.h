@@ -21,9 +21,10 @@
 #include <shellapi.h>
 #include <htmlhelp.h>
 
+#define NTOS_MODE_USER
 #define NO_STRSAFE
 #define NDEBUG
-#include <debug/rappdbg.h>
+#include <debug.h>
 
 #define WM_TOOLSMODELTOOLCHANGED         (WM_APP + 0)
 #define WM_TOOLSMODELSETTINGSCHANGED     (WM_APP + 1)
