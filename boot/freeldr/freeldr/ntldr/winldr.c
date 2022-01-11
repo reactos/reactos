@@ -35,6 +35,7 @@ BOOLEAN SafeBoot = FALSE;
 BOOLEAN BootLogo = FALSE;
 BOOLEAN NoexecuteDisabled = FALSE;
 BOOLEAN NoexecuteEnabled = FALSE;
+BOOLEAN PaeModeOn = FALSE;
 
 // debug stuff
 VOID DumpMemoryAllocMap(VOID);
@@ -498,6 +499,22 @@ LoadModule(
 
 static
 BOOLEAN
+NTAPI
+WinLdrIsPaeSupported(IN PCHAR KernelFileName,
+                     IN PCHAR HalFileName)
+{
+    BOOLEAN Result = PaeEnabled;
+
+    UNIMPLEMENTED;
+
+    // FIXME checks for CPU support, hotplug memory support .. other tests
+    // FIXME select kernel name ("ntkrnlpa.exe" or ntoskrnl.exe")
+
+    return Result;
+}
+
+static
+BOOLEAN
 LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                 IN PCSTR BootOptions,
@@ -688,6 +705,9 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         PaeDisabled = TRUE;
         NoexecuteDisabled = TRUE;
     }
+
+    PaeModeOn = WinLdrIsPaeSupported(KernelFileName, HalFileName);
+    FIXME("WinLdrIsPaeSupported: PaeModeOn %X\n", PaeModeOn);
 
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
     Success  = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
@@ -1031,8 +1051,17 @@ LoadAndBootWindowsCommon(
     /* Save final value of LoaderPagesSpanned */
     LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
 
-    TRACE("Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
-          KiSystemStartup, LoaderBlockVA);
+    if (PaeModeOn)
+    {
+        /*"No PAE support for kernel (no ntkrnlpa.exe) */
+        FIXME("Hello from PAE paged mode! KiSystemStartup %p, LoaderBlockVA %p\n", KiSystemStartup, LoaderBlockVA);
+        BugCheck("No PAE support for kernel!\n");
+    }
+    else
+    {
+        TRACE("Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
+              KiSystemStartup, LoaderBlockVA);
+    }
 
     /* Zero KI_USER_SHARED_DATA page */
     RtlZeroMemory((PVOID)KI_USER_SHARED_DATA, MM_PAGE_SIZE);

@@ -65,8 +65,6 @@ C_ASSERT(MM_ALLOCATION_GRANULARITY >= PAGE_SIZE);
 //
 // Page Table Entry Definitions
 //
-#if !defined(_X86PAE_)
-
 typedef struct _HARDWARE_PTE_X86
 {
     ULONG Valid:1;
@@ -82,7 +80,42 @@ typedef struct _HARDWARE_PTE_X86
     ULONG Prototype: 1;
     ULONG reserved: 1;
     ULONG PageFrameNumber:20;
-} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
+} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86,
+  HARDWARE_PDE_X86, *PHARDWARE_PDE_X86;
+
+typedef struct _HARDWARE_PTE_X86_PAE
+{
+    union
+    {
+        struct
+        {
+            ULONGLONG Valid:1;
+            ULONGLONG Write:1;
+            ULONGLONG Owner:1;
+            ULONGLONG WriteThrough:1;
+            ULONGLONG CacheDisable:1;
+            ULONGLONG Accessed:1;
+            ULONGLONG Dirty:1;
+            ULONGLONG LargePage:1;
+            ULONGLONG Global:1;
+            ULONGLONG CopyOnWrite:1;
+            ULONGLONG Prototype:1;
+            ULONGLONG reserved0:1;
+            ULONGLONG PageFrameNumber:26;
+            ULONGLONG reserved1:25;
+            ULONGLONG NoExecute:1;
+        };
+        struct
+        {
+            ULONG LowPart;
+            ULONG HighPart;
+        };
+    };
+} HARDWARE_PTE_X86_PAE, *PHARDWARE_PTE_X86_PAE,
+  HARDWARE_PDE_X86_PAE, *PHARDWARE_PDE_X86_PAE,
+  HARDWARE_PDPTE_X86_PAE, *PHARDWARE_PDPTE_X86_PAE;
+
+#if !defined(_X86PAE_)
 
 typedef struct _MMPTE_SOFTWARE
 {
@@ -163,36 +196,6 @@ typedef struct _MMPTE_HARDWARE
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
 
 #else
-
-typedef struct _HARDWARE_PTE_X86
-{
-    union
-    {
-        struct
-        {
-            ULONGLONG Valid:1;
-            ULONGLONG Write:1;
-            ULONGLONG Owner:1;
-            ULONGLONG WriteThrough:1;
-            ULONGLONG CacheDisable:1;
-            ULONGLONG Accessed:1;
-            ULONGLONG Dirty:1;
-            ULONGLONG LargePage:1;
-            ULONGLONG Global:1;
-            ULONGLONG CopyOnWrite:1;
-            ULONGLONG Prototype:1;
-            ULONGLONG reserved0:1;
-            ULONGLONG PageFrameNumber:26;
-            ULONGLONG reserved1:25;
-            ULONGLONG NoExecute:1;
-        };
-        struct
-        {
-            ULONG LowPart;
-            ULONG HighPart;
-        };
-    };
-} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
 
 typedef struct _MMPTE_SOFTWARE
 {
@@ -282,8 +285,13 @@ typedef struct _MMPTE_HARDWARE
 //
 // Use the right PTE structure
 //
+#if !defined(_X86PAE_)
 #define HARDWARE_PTE        HARDWARE_PTE_X86
 #define PHARDWARE_PTE       PHARDWARE_PTE_X86
+#else
+#define HARDWARE_PTE        HARDWARE_PTE_X86_PAE
+#define PHARDWARE_PTE       PHARDWARE_PTE_X86_PAE
+#endif
 
 typedef struct _MMPTE
 {
