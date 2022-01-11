@@ -64,7 +64,6 @@ RtlAssert(
 #elif defined(_WIN32)
 /* Win32 User-Mode */
 
-#include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
 #include <stdlib.h>
@@ -74,7 +73,8 @@ RtlAssert(
 #define DEBUG_BUFSIZE 512
 #endif
 
-static inline
+static
+inline
 ULONG
 __cdecl
 W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
@@ -102,7 +102,8 @@ W32DbgPrint(_In_z_ _Printf_format_string_ PCSTR Format, ...)
 #define DbgPrint(...) W32DbgPrint(__VA_ARGS__)
 #define DbgPrintEx(ComponentId, Level, ...) W32DbgPrint(__VA_ARGS__)
 
-static inline
+static
+inline
 __analysis_noreturn
 VOID
 NTAPI

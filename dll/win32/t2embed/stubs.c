@@ -10,6 +10,8 @@
 #include <t2embapi.h>
 #include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(t2embed);
+
 LONG
 WINAPI
 TTCharToUnicode(HDC hDC,
