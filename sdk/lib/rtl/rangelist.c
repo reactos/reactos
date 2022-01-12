@@ -30,7 +30,6 @@
 /* RTLP_RANGE_LIST_ENTRY.PrivateFlags */
 #define RTLP_ENTRY_IS_MERGED  1
 
-
 /* FUNCTIONS ***************************************************************/
 
 static
@@ -487,163 +486,6 @@ RtlpAddRange(
     return STATUS_SUCCESS;
 }
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlAddRange
- *
- * DESCRIPTION
- *	Adds a range to a range list.
- *
- * ARGUMENTS
- *	RangeList		Range list.
- *	Start
- *	End
- *	Attributes
- *	Flags
- *	UserData
- *	Owner
- *
- * RETURN VALUE
- *	Status
- *
- * TODO:
- *   - Support shared ranges.
- *
- * @implemented
- */
-CODE_SEG("PAGE")
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlAddRange(
-    _Inout_ PRTL_RANGE_LIST RangeList,
-    _In_ ULONGLONG Start,
-    _In_ ULONGLONG End,
-    _In_ UCHAR Attributes,
-    _In_ ULONG Flags,
-    _In_opt_ PVOID UserData,
-    _In_opt_ PVOID Owner)
-{
-    PRTLP_RANGE_LIST_ENTRY AddRtlEntry;
-    NTSTATUS Status;
-
-    PAGED_CODE_RTL();
-    DPRINT("RtlAddRange: [%X] %p [%I64X-%I64X], %X, %X, %p, %p\n", Flags, RangeList, Start, End, RangeList->Count, Attributes, UserData, Owner);
-
-    if (End < Start)
-    {
-        DPRINT1("RtlAddRange: STATUS_INVALID_PARAMETER\n");
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    AddRtlEntry = RtlpCreateRangeListEntry(Start, End, Attributes, UserData, Owner);
-    if (!AddRtlEntry)
-    {
-        DPRINT1("RtlAddRange: STATUS_INSUFFICIENT_RESOURCES\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    if (Flags & RTL_RANGE_LIST_ADD_SHARED)
-    {
-        AddRtlEntry->PublicFlags |= RTL_RANGE_SHARED;
-    }
-
-    Status = RtlpAddRange(&RangeList->ListHead, AddRtlEntry, Flags);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("RtlAddRange: Status %X\n", Status);
-        ASSERT(FALSE);
-        //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, AddRtlEntry);
-        RtlpFreeMemory(AddRtlEntry, 'elRR');
-        return Status;
-    }
-
-    RangeList->Count++;
-    RangeList->Stamp++;
-
-    return Status;
-}
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlCopyRangeList
- *
- * DESCRIPTION
- *	Copy a range list.
- *
- * ARGUMENTS
- *	CopyRangeList	Pointer to the destination range list.
- *	RangeList	Pointer to the source range list.
- *
- * RETURN VALUE
- *	Status
- *
- * @implemented
- */
-CODE_SEG("PAGE")
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCopyRangeList(
-    _Out_ PRTL_RANGE_LIST CopyRangeList,
-    _In_ PRTL_RANGE_LIST RangeList)
-{
-    PRTLP_RANGE_LIST_ENTRY RtlEntry;
-    PRTLP_RANGE_LIST_ENTRY NewRtlEntry;
-
-    PAGED_CODE_RTL();
-    ASSERT(RangeList);
-    ASSERT(CopyRangeList);
-
-    DPRINT("RtlCopyRangeList: (%p) ==> (%p) [%X]\n", RangeList, CopyRangeList, RangeList->Count);
-
-    if (CopyRangeList->Count)
-    {
-        DPRINT1("RtlCopyRangeList: STATUS_INVALID_PARAMETER. Count %X\n", CopyRangeList->Count);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    CopyRangeList->Flags = RangeList->Flags;
-    CopyRangeList->Count = RangeList->Count;
-    CopyRangeList->Stamp = RangeList->Stamp;
-
-    for (RtlEntry = RtlpEntryFromLink(RangeList->ListHead.Flink);
-         &RtlEntry->ListEntry!= &RangeList->ListHead;
-         RtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink))
-    {
-        DPRINT("RtlCopyRangeList: %p [%I64X-%I64X], %X, %X, %X\n", RtlEntry, RtlEntry->Start, RtlEntry->End, RtlEntry->Attributes, RtlEntry->PublicFlags, RtlEntry->PrivateFlags);
-
-        NewRtlEntry = RtlpCopyRangeListEntry(RtlEntry);
-        if (!NewRtlEntry)
-        {
-            DPRINT1("RtlCopyRangeList: STATUS_INSUFFICIENT_RESOURCES\n");
-            RtlFreeRangeList(CopyRangeList);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        InsertTailList(&CopyRangeList->ListHead, &NewRtlEntry->ListEntry);
-    }
-
-    return STATUS_SUCCESS;
-}
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlDeleteOwnersRanges
- *
- * DESCRIPTION
- *	Delete all ranges that belong to the given owner.
- *
- * ARGUMENTS
- *	RangeList	Pointer to the range list.
- *	Owner		User supplied value that identifies the owner
- *			of the ranges to be deleted.
- *
- * RETURN VALUE
- *	Status
- *
- * @implemented
- */
 CODE_SEG("PAGE")
 static
 NTSTATUS
@@ -738,6 +580,262 @@ RtlpDeleteFromMergedRange(
 }
 
 CODE_SEG("PAGE")
+static
+BOOLEAN
+RtlpIsRangeAvailable(
+    _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_ UCHAR AttributeAvailableMask,
+    _In_ BOOLEAN SharedFlag,
+    _In_ BOOLEAN NullConflictFlag,
+    _In_ BOOLEAN MoveForwards,
+    _In_ PVOID Context,
+    _In_ PRTL_CONFLICT_RANGE_CALLBACK Callback)
+{
+    PRTL_RANGE RtlRange;
+    RTLP_RANGE_LIST_ENTRY Entry;
+
+    PAGED_CODE_RTL();
+    DPRINT("RtlpIsRangeAvailable: %p [%I64X-%I64X], %X, %X, Forwards %X, %p\n", Iterator, Start, End, SharedFlag, NullConflictFlag, MoveForwards, Callback);
+
+    ASSERT(Iterator);
+
+    for (RtlRange = Iterator->Current;
+         RtlRange;
+         RtlGetNextRange(Iterator, &RtlRange, MoveForwards))
+    {
+        if (MoveForwards)
+        {
+            if (!Iterator->MergedHead && End < RtlRange->Start)
+            {
+                return TRUE;
+            }
+        }
+        else if (!Iterator->MergedHead && Start > RtlRange->End)
+        {
+            return TRUE;
+        }
+
+        Entry.Start = Start;
+        Entry.End = End;
+
+        if (!IsRangesIntersection((PRTLP_RANGE_LIST_ENTRY)RtlRange, &Entry))
+        {
+            continue;
+        }
+
+        DPRINT("RtlpIsRangeAvailable: Intersection [%I64X-%I64X] and [%I64X-%I64X]\n", Start, End, RtlRange->Start, RtlRange->End);
+
+        if (SharedFlag && (RtlRange->Flags & 1)) // FIXME
+        {
+            continue;
+        }
+
+        if ((AttributeAvailableMask & RtlRange->Attributes))
+        {
+            continue;
+        }
+
+        if (!NullConflictFlag)
+        {
+            if (!Callback)
+            {
+                return FALSE;
+            }
+
+            if (Callback(Context, NULL) == FALSE)
+            {
+                return FALSE;
+            }
+
+            DPRINT("RtlpIsRangeAvailable: conflict [%I64X-%I64X] and [%I64X-%I64X]\n", Start, End, RtlRange->Start, RtlRange->End);
+        }
+        else if (RtlRange->Owner)
+        {
+            if (!Callback)
+            {
+                return FALSE;
+            }
+
+            if (Callback(Context, RtlRange) == FALSE)
+            {
+                return FALSE;
+            }
+
+            DPRINT("RtlpIsRangeAvailable: conflict [%I64X-%I64X] and [%I64X-%I64X]\n", Start, End, RtlRange->Start, RtlRange->End);
+        }
+        else
+        {
+            continue;
+        }
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/**
+ * @name RtlAddRange
+ *
+ * Adds a range to a range list.
+ *
+ * @param RangeList
+ * Pointer to the source range list.
+ *
+ * @param Start
+ * Start of the range to be added.
+ *
+ * @param End
+ * End of the range to be added.
+ *
+ * @param Attributes
+ * Attributes to be copied to "Attributes" field in the new Entry.
+ *
+ * @param Flags
+ * Flags describing the control the behavior of lists.
+ *
+ * @param UserData
+ * Pointer to the user data of the ranges to be added.
+ *
+ * @param Owner
+ * Pointer to the owner of the ranges to be added.
+ *
+ * @return
+ * Returns NTSTATUS.
+ */
+CODE_SEG("PAGE")
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddRange(
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_ UCHAR Attributes,
+    _In_ ULONG Flags,
+    _In_opt_ PVOID UserData,
+    _In_opt_ PVOID Owner)
+{
+    PRTLP_RANGE_LIST_ENTRY AddRtlEntry;
+    NTSTATUS Status;
+
+    PAGED_CODE_RTL();
+    DPRINT("RtlAddRange: [%X] %p [%I64X-%I64X], %X, %X, %p, %p\n", Flags, RangeList, Start, End, RangeList->Count, Attributes, UserData, Owner);
+
+    if (End < Start)
+    {
+        DPRINT1("RtlAddRange: STATUS_INVALID_PARAMETER\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    AddRtlEntry = RtlpCreateRangeListEntry(Start, End, Attributes, UserData, Owner);
+    if (!AddRtlEntry)
+    {
+        DPRINT1("RtlAddRange: STATUS_INSUFFICIENT_RESOURCES\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if (Flags & RTL_RANGE_LIST_ADD_SHARED)
+    {
+        AddRtlEntry->PublicFlags |= RTL_RANGE_SHARED;
+    }
+
+    Status = RtlpAddRange(&RangeList->ListHead, AddRtlEntry, Flags);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAddRange: Status %X\n", Status);
+        ASSERT(FALSE);
+        //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, AddRtlEntry);
+        RtlpFreeMemory(AddRtlEntry, 'elRR');
+        return Status;
+    }
+
+    RangeList->Count++;
+    RangeList->Stamp++;
+
+    return Status;
+}
+
+/**
+ * @name RtlCopyRangeList
+ *
+ * Copy a range list.
+ *
+ * @param CopyRangeList
+ * Pointer to the destination range list.
+ *
+ * @param RangeList
+ * Pointer to the source range list.
+ *
+ * @return
+ * Returns NTSTATUS.
+ */
+CODE_SEG("PAGE")
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCopyRangeList(
+    _Out_ PRTL_RANGE_LIST CopyRangeList,
+    _In_ PRTL_RANGE_LIST RangeList)
+{
+    PRTLP_RANGE_LIST_ENTRY RtlEntry;
+    PRTLP_RANGE_LIST_ENTRY NewRtlEntry;
+
+    PAGED_CODE_RTL();
+    ASSERT(RangeList);
+    ASSERT(CopyRangeList);
+
+    DPRINT("RtlCopyRangeList: (%p) ==> (%p) [%X]\n", RangeList, CopyRangeList, RangeList->Count);
+
+    if (CopyRangeList->Count)
+    {
+        DPRINT1("RtlCopyRangeList: STATUS_INVALID_PARAMETER. Count %X\n", CopyRangeList->Count);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    CopyRangeList->Flags = RangeList->Flags;
+    CopyRangeList->Count = RangeList->Count;
+    CopyRangeList->Stamp = RangeList->Stamp;
+
+    for (RtlEntry = RtlpEntryFromLink(RangeList->ListHead.Flink);
+         &RtlEntry->ListEntry!= &RangeList->ListHead;
+         RtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink))
+    {
+        DPRINT("RtlCopyRangeList: %p [%I64X-%I64X], %X, %X, %X\n", RtlEntry, RtlEntry->Start, RtlEntry->End, RtlEntry->Attributes, RtlEntry->PublicFlags, RtlEntry->PrivateFlags);
+
+        NewRtlEntry = RtlpCopyRangeListEntry(RtlEntry);
+        if (!NewRtlEntry)
+        {
+            DPRINT1("RtlCopyRangeList: STATUS_INSUFFICIENT_RESOURCES\n");
+            RtlFreeRangeList(CopyRangeList);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        InsertTailList(&CopyRangeList->ListHead, &NewRtlEntry->ListEntry);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @name RtlDeleteOwnersRanges
+ *
+ * Delete all ranges that belong to the given owner.
+ *
+ * @param RangeList
+ * Pointer to the range list.
+ *
+ * @param Owner
+ * User supplied value that identifies the owner of the ranges to be deleted.
+ *
+ * @return
+ * Returns NTSTATUS.
+ */
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 RtlDeleteOwnersRanges(
@@ -813,23 +911,25 @@ START:
     return Status;
 }
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlDeleteRange
+/**
+ * @name RtlDeleteRange
  *
- * DESCRIPTION
- *	Deletes a given range.
+ * Adds a range to a range list.
  *
- * ARGUMENTS
- *	RangeList	Pointer to the range list.
- *	Start		Start of the range to be deleted.
- *	End		End of the range to be deleted.
- *	Owner		Owner of the ranges to be deleted.
+ * @param RangeList
+ * Pointer to the range list.
  *
- * RETURN VALUE
- *	Status
+ * @param Start
+ * Start of the range to be deleted.
  *
- * @implemented
+ * @param End
+ * End of the range to be deleted.
+ *
+ * @param Owner
+ * Owner of the ranges to be deleted.
+ *
+ * @return
+ * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
 NTSYSAPI
@@ -910,23 +1010,22 @@ Exit:
     return Status;
 }
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlGetNextRange
+/**
+ * @name RtlGetNextRange
  *
- * DESCRIPTION
- *	Retrieves the next (or previous) range of a range list.
+ * Retrieves the next (or previous) range of a range list.
  *
- * ARGUMENTS
- *	Iterator	Pointer to a user supplied list state buffer.
- *	Range		Pointer to the first range.
- *	MoveForwards	TRUE, get next range
- *			FALSE, get previous range
+ * @param Iterator
+ * Pointer to a user supplied list state buffer.
  *
- * RETURN VALUE
- *	Status
+ * @param OutRange
+ * Address of pointer to the first range.
  *
- * @implemented
+ * @param MoveForwards
+ * TRUE - get next range, FALSE - get previous range.
+ *
+ * @return
+ * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
 NTSYSAPI
@@ -1040,103 +1139,23 @@ RtlGetNextRange(
     return STATUS_SUCCESS;
 }
 
-CODE_SEG("PAGE")
-static
-BOOLEAN
-RtlpIsRangeAvailable(
-    _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
-    _In_ ULONGLONG Start,
-    _In_ ULONGLONG End,
-    _In_ UCHAR AttributeAvailableMask,
-    _In_ BOOLEAN SharedFlag,
-    _In_ BOOLEAN NullConflictFlag,
-    _In_ BOOLEAN MoveForwards,
-    _In_ PVOID Context,
-    _In_ PRTL_CONFLICT_RANGE_CALLBACK Callback)
-{
-    PRTL_RANGE RtlRange;
-    RTLP_RANGE_LIST_ENTRY Entry;
-
-    PAGED_CODE_RTL();
-    DPRINT("RtlpIsRangeAvailable: %p [%I64X-%I64X], %X, %X, Forwards %X, %p\n", Iterator, Start, End, SharedFlag, NullConflictFlag, MoveForwards, Callback);
-
-    ASSERT(Iterator);
-
-    for (RtlRange = Iterator->Current;
-         RtlRange;
-         RtlGetNextRange(Iterator, &RtlRange, MoveForwards))
-    {
-        if (MoveForwards)
-        {
-            if (!Iterator->MergedHead && End < RtlRange->Start)
-            {
-                return TRUE;
-            }
-        }
-        else if (!Iterator->MergedHead && Start > RtlRange->End)
-        {
-            return TRUE;
-        }
-
-        Entry.Start = Start;
-        Entry.End = End;
-
-        if (!IsRangesIntersection((PRTLP_RANGE_LIST_ENTRY)RtlRange, &Entry))
-        {
-            continue;
-        }
-
-        DPRINT("RtlpIsRangeAvailable: Intersection [%I64X-%I64X] and [%I64X-%I64X]\n", Start, End, RtlRange->Start, RtlRange->End);
-
-        if (SharedFlag && (RtlRange->Flags & 1)) // FIXME
-        {
-            continue;
-        }
-
-        if ((AttributeAvailableMask & RtlRange->Attributes))
-        {
-            continue;
-        }
-
-        if (!NullConflictFlag)
-        {
-            if (!Callback)
-            {
-                return FALSE;
-            }
-
-            if (Callback(Context, NULL) == FALSE)
-            {
-                return FALSE;
-            }
-
-            DPRINT("RtlpIsRangeAvailable: conflict [%I64X-%I64X] and [%I64X-%I64X]\n", Start, End, RtlRange->Start, RtlRange->End);
-        }
-        else if (RtlRange->Owner)
-        {
-            if (!Callback)
-            {
-                return FALSE;
-            }
-
-            if (Callback(Context, RtlRange) == FALSE)
-            {
-                return FALSE;
-            }
-
-            DPRINT("RtlpIsRangeAvailable: conflict [%I64X-%I64X] and [%I64X-%I64X]\n", Start, End, RtlRange->Start, RtlRange->End);
-        }
-        else
-        {
-            continue;
-        }
-
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
+/**
+ * @name RtlGetLastRange
+ *
+ * Retrieves the last range of a range list.
+ *
+ * @param RangeList
+ * Pointer to the range list.
+ *
+ * @param Iterator
+ * Pointer to a user supplied list state buffer.
+ *
+ * @param OutRange
+ * Address of pointer to the last range.
+ *
+ * @return
+ * Returns NTSTATUS.
+ */
 CODE_SEG("PAGE")
 NTSYSAPI
 NTSTATUS
@@ -1191,32 +1210,43 @@ RtlGetLastRange(
     return STATUS_SUCCESS;
 }
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlFindRange
+/**
+ * @name RtlFindRange
  *
- * DESCRIPTION
- *	Searches for an unused range.
+ * Searches for an unused range.
  *
- * ARGUMENTS
- *	RangeList		Pointer to the range list.
- *	Minimum
- *	Maximum
- *	Length
- *	Alignment
- *	Flags
- *	AttributeAvailableMask
- *	Context
- *	Callback
- *	Start
+ * @param RangeList
+ * Pointer to the range list.
  *
- * RETURN VALUE
- *	Status
+ * @param Minimum
+ * Minimal value for search.
  *
- * TODO
- *	Support shared ranges and callback.
+ * @param Maximum
+ * Maximumal value for search.
  *
- * @implemented
+ * @param Length
+ * Length of the range.
+ *
+ * @param Alignment
+ * Alignment value.
+ *
+ * @param Flags
+ * Flags describing the control the behavior of lists.
+ *
+ * @param AttributeAvailableMask
+ * Mask for Attributes from range entry.
+ *
+ * @param Context
+ * Context for Callback.
+ *
+ * @param Callback
+ * Pointer to a callback to call in case of a conflict.
+ *
+ * @param OutStart
+ * Pointer where the found value for the start of the range will be stored.
+ *
+ * @return
+ * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
 NTSYSAPI
@@ -1307,20 +1337,16 @@ RtlFindRange(
     return STATUS_UNSUCCESSFUL;
 }
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlFreeRangeList
+/**
+ * @name RtlFreeRangeList
  *
- * DESCRIPTION
- *	Deletes all ranges in a range list.
+ * Deletes all ranges in a range list.
  *
- * ARGUMENTS
- *	RangeList	Pointer to the range list.
+ * @param RangeList
+ * Pointer to the range list.
  *
- * RETURN VALUE
- *	None
- *
- * @implemented
+ * @return
+ * None.
  */
 CODE_SEG("PAGE")
 NTSYSAPI
@@ -1353,22 +1379,22 @@ RtlFreeRangeList(
     }
 }
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlGetFirstRange
+/**
+ * @name RtlGetFirstRange
  *
- * DESCRIPTION
- *	Retrieves the first range of a range list.
+ * Retrieves the first range of a range list.
  *
- * ARGUMENTS
- *	RangeList	Pointer to the range list.
- *	Iterator	Pointer to a user supplied list state buffer.
- *	Range		Pointer to the first range.
+ * @param RangeList
+ * Pointer to the range list.
  *
- * RETURN VALUE
- *	Status
+ * @param Iterator
+ * Pointer to a user supplied list state buffer.
  *
- * @implemented
+ * @param OutRange
+ * Pointer to the first range.
+ *
+ * @return
+ * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
 NTSYSAPI
@@ -1419,30 +1445,37 @@ RtlGetFirstRange(
     return STATUS_SUCCESS;
 }
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlIsRangeAvailable
+/**
+ * @name RtlIsRangeAvailable
  *
- * DESCRIPTION
- *	Checks whether a range is available or not.
+ * Checks whether a range is available or not.
  *
- * ARGUMENTS
- *	RangeList		Pointer to the range list.
- *	Start
- *	End
- *	Flags
- *	AttributeAvailableMask
- *	Context
- *	Callback
- *	Available
+ * @param RangeList
+ * Pointer to the range list.
  *
- * RETURN VALUE
- *	Status
+ * @param Start
+ * Start of the range to be tested.
  *
- * TODO:
- *   - honor Flags and AttributeAvailableMask.
+ * @param End
+ * Start of the range to be tested.
  *
- * @implemented
+ * @param Flags
+ * Flags describing the control the behavior of lists.
+ *
+ * @param AttributeAvailableMask
+ * Mask for Attributes from range entry.
+ *
+ * @param Context
+ * Context for Callback.
+ *
+ * @param Callback
+ * Pointer to a callback to call in case of a conflict.
+ *
+ * @param Available
+ * Pointer to the variable for returned value.
+ *
+ * @return
+ * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
 NTSYSAPI
@@ -1494,20 +1527,16 @@ RtlIsRangeAvailable(
     return STATUS_SUCCESS;
 }
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlInitializeRangeList
+/**
+ * @name RtlInitializeRangeList
  *
- * DESCRIPTION
- *	Initializes a range list.
+ * Initializes a range list.
  *
- * ARGUMENTS
- *	RangeList	Pointer to a user supplied range list.
+ * @param RangeList
+ * Pointer to a user supplied range list.
  *
- * RETURN VALUE
- *	None
- *
- * @implemented
+ * @return
+ * None.
  */
 CODE_SEG("PAGE")
 NTSYSAPI
