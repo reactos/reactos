@@ -64,6 +64,7 @@ IsRangesIntersection(
     }
 }
 
+CODE_SEG("PAGE")
 static
 VOID
 RtlpDeleteRangeListEntry(
@@ -102,6 +103,7 @@ Finish:
     RtlpFreeMemory(DelEntry, 'elRR');
 }
 
+CODE_SEG("PAGE")
 static
 PRTLP_RANGE_LIST_ENTRY
 RtlpCopyRangeListEntry(
@@ -160,6 +162,7 @@ RtlpCopyRangeListEntry(
     return NewRtlEntry;
 }
 
+CODE_SEG("PAGE")
 static
 PRTLP_RANGE_LIST_ENTRY
 RtlpCreateRangeListEntry(
@@ -201,6 +204,7 @@ RtlpCreateRangeListEntry(
     return RtlEntry;
 }
 
+CODE_SEG("PAGE")
 static
 NTSTATUS
 RtlpAddToMergedRange(
@@ -281,6 +285,7 @@ RtlpAddToMergedRange(
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("PAGE")
 static
 NTSTATUS
 RtlpConvertToMergedRange(
@@ -312,6 +317,7 @@ RtlpConvertToMergedRange(
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("PAGE")
 static
 NTSTATUS
 RtlpAddIntersectingRanges(
@@ -443,6 +449,7 @@ RtlpAddIntersectingRanges(
     return Status;
 }
 
+CODE_SEG("PAGE")
 static
 NTSTATUS
 RtlpAddRange(
@@ -507,6 +514,7 @@ RtlpAddRange(
  *
  * @implemented
  */
+CODE_SEG("PAGE")
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -575,6 +583,7 @@ RtlAddRange(
  *
  * @implemented
  */
+CODE_SEG("PAGE")
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -638,6 +647,7 @@ RtlCopyRangeList(
  *
  * @implemented
  */
+CODE_SEG("PAGE")
 static
 NTSTATUS
 RtlpDeleteFromMergedRange(
@@ -730,6 +740,7 @@ RtlpDeleteFromMergedRange(
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 RtlDeleteOwnersRanges(
@@ -823,6 +834,7 @@ START:
  *
  * @implemented
  */
+CODE_SEG("PAGE")
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -919,6 +931,7 @@ Exit:
  *
  * @implemented
  */
+CODE_SEG("PAGE")
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1030,6 +1043,7 @@ RtlGetNextRange(
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("PAGE")
 static
 BOOLEAN
 RtlpIsRangeAvailable(
@@ -1123,6 +1137,7 @@ RtlpIsRangeAvailable(
     return TRUE;
 }
 
+CODE_SEG("PAGE")
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1203,6 +1218,7 @@ RtlGetLastRange(
  *
  * @implemented
  */
+CODE_SEG("PAGE")
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1306,6 +1322,7 @@ RtlFindRange(
  *
  * @implemented
  */
+CODE_SEG("PAGE")
 NTSYSAPI
 VOID
 NTAPI
@@ -1353,6 +1370,7 @@ RtlFreeRangeList(
  *
  * @implemented
  */
+CODE_SEG("PAGE")
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1426,6 +1444,7 @@ RtlGetFirstRange(
  *
  * @implemented
  */
+CODE_SEG("PAGE")
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1490,6 +1509,7 @@ RtlIsRangeAvailable(
  *
  * @implemented
  */
+CODE_SEG("PAGE")
 NTSYSAPI
 VOID
 NTAPI
