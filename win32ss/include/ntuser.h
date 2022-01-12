@@ -1183,9 +1183,12 @@ typedef struct tagIMEINFOEX
     };
 } IMEINFOEX, *PIMEINFOEX;
 
-typedef enum IMEINFOEXCLASS /* unconfirmed: buggy */
+typedef enum IMEINFOEXCLASS
 {
     ImeInfoExKeyboardLayout,
+#if 1
+    ImeInfoExKeyboardLayoutTFS,
+#endif
     ImeInfoExImeWindow,
     ImeInfoExImeFileName
 } IMEINFOEXCLASS;
