@@ -232,16 +232,18 @@ NtUserGetImeInfoEx(
     _SEH2_END;
 
     ret = UserGetImeInfoEx(NULL, &ImeInfoEx, SearchType);
-
-    _SEH2_TRY
+    if (ret)
     {
-        *pImeInfoEx = ImeInfoEx;
+        _SEH2_TRY
+        {
+            *pImeInfoEx = ImeInfoEx;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ret = FALSE;
+        }
+        _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        ret = FALSE;
-    }
-    _SEH2_END;
 
 Quit:
     UserLeave();
