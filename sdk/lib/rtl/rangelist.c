@@ -35,7 +35,6 @@
 
 static
 PRTLP_RANGE_LIST_ENTRY
-FASTCALL
 RtlpEntryFromLink(PVOID Link)
 {
     return CONTAINING_RECORD(Link, RTLP_RANGE_LIST_ENTRY, ListEntry);
@@ -43,7 +42,6 @@ RtlpEntryFromLink(PVOID Link)
 
 static
 BOOLEAN
-FASTCALL
 IsRangesIntersection(
     _In_ PRTLP_RANGE_LIST_ENTRY Entry1,
     _In_ PRTLP_RANGE_LIST_ENTRY Entry2)
@@ -66,8 +64,8 @@ IsRangesIntersection(
     }
 }
 
+static
 VOID
-NTAPI
 RtlpDeleteRangeListEntry(
     _In_ PRTLP_RANGE_LIST_ENTRY DelEntry)
 {
@@ -104,8 +102,8 @@ Finish:
     RtlpFreeMemory(DelEntry, 'elRR');
 }
 
+static
 PRTLP_RANGE_LIST_ENTRY
-NTAPI
 RtlpCopyRangeListEntry(
     _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry)
 {
@@ -162,8 +160,8 @@ RtlpCopyRangeListEntry(
     return NewRtlEntry;
 }
 
+static
 PRTLP_RANGE_LIST_ENTRY
-NTAPI
 RtlpCreateRangeListEntry(
     _In_ ULONGLONG Start,
     _In_ ULONGLONG End,
@@ -203,8 +201,8 @@ RtlpCreateRangeListEntry(
     return RtlEntry;
 }
 
+static
 NTSTATUS
-NTAPI
 RtlpAddToMergedRange(
     _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry,
     _In_ PRTLP_RANGE_LIST_ENTRY AddRtlEntry,
@@ -283,8 +281,8 @@ RtlpAddToMergedRange(
     return STATUS_SUCCESS;
 }
 
+static
 NTSTATUS
-NTAPI
 RtlpConvertToMergedRange(
     _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry)
 {
@@ -314,8 +312,8 @@ RtlpConvertToMergedRange(
     return STATUS_SUCCESS;
 }
 
+static
 NTSTATUS
-NTAPI 
 RtlpAddIntersectingRanges(
     _In_ PLIST_ENTRY ListHead,
     _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry,
@@ -445,8 +443,8 @@ RtlpAddIntersectingRanges(
     return Status;
 }
 
+static
 NTSTATUS
-NTAPI 
 RtlpAddRange(
     _In_ PLIST_ENTRY ListHead,
     _In_ PRTLP_RANGE_LIST_ENTRY AddRtlEntry,
@@ -640,8 +638,8 @@ RtlCopyRangeList(
  *
  * @implemented
  */
+static
 NTSTATUS
-NTAPI
 RtlpDeleteFromMergedRange(
     _In_ PRTLP_RANGE_LIST_ENTRY RtlEntry,
     _In_ PRTLP_RANGE_LIST_ENTRY MergedRtlEntry)
@@ -1032,8 +1030,8 @@ RtlGetNextRange(
     return STATUS_SUCCESS;
 }
 
+static
 BOOLEAN
-NTAPI
 RtlpIsRangeAvailable(
     _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
     _In_ ULONGLONG Start,
