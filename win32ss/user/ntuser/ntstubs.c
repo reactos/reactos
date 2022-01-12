@@ -1023,12 +1023,31 @@ Quit:
     return Status;
 }
 
-DWORD
+VOID
 APIENTRY
 NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
 {
-    STUB;
-    return 0;
+    PTHREADINFO pti;
+    PKL pNewKL;
+
+    UserEnterExclusive();
+
+    pti = GetW32ThreadInfo();
+
+    if (pti->KeyboardLayout && pti->KeyboardLayout->hkl != hOldKL)
+        goto Quit;
+
+    pNewKL = UserHklToKbl(hNewKL);
+    if (!pNewKL)
+        goto Quit;
+
+    if (IS_IME_HKL(hNewKL) != IS_IME_HKL(hOldKL))
+        pti->hklPrev = hOldKL;
+
+    pti->KeyboardLayout = pNewKL;
+
+Quit:
+    UserLeave();
 }
 
 BOOL
