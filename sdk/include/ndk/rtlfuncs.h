@@ -3702,6 +3702,15 @@ RtlGetNextRange(
     _In_ BOOLEAN MoveForwards
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetLastRange(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _Out_ PRTL_RANGE * OutRange
+);
+
 //
 // Debug Functions
 //
