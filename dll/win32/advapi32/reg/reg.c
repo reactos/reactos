@@ -39,29 +39,40 @@ static BOOLEAN DllInitialized = FALSE; /* HACK */
 
 /* PROTOTYPES ***************************************************************/
 
-static NTSTATUS MapDefaultKey (PHANDLE ParentKey, HKEY Key);
+static NTSTATUS MapDefaultKey(PHANDLE ParentKey, HKEY Key);
 static VOID CloseDefaultKeys(VOID);
-#define ClosePredefKey(Handle)                                                 \
-    if ((ULONG_PTR)Handle & 0x1) {                                             \
-        NtClose(Handle);                                                       \
-    }
-#define IsPredefKey(HKey)                                                      \
-    (((ULONG_PTR)(HKey) & 0xF0000000) == 0x80000000)
-#define GetPredefKeyIndex(HKey)                                                \
-    ((ULONG_PTR)(HKey) & 0x0FFFFFFF)
-
 static NTSTATUS OpenClassesRootKey(PHANDLE KeyHandle);
-static NTSTATUS OpenLocalMachineKey (PHANDLE KeyHandle);
-static NTSTATUS OpenUsersKey (PHANDLE KeyHandle);
+static NTSTATUS OpenLocalMachineKey(PHANDLE KeyHandle);
+static NTSTATUS OpenUsersKey(PHANDLE KeyHandle);
 static NTSTATUS OpenCurrentConfigKey(PHANDLE KeyHandle);
 
+/* INLINE FUNCTIONS *********************************************************/
 
-/* FUNCTIONS ****************************************************************/
-/* check if value type needs string conversion (Ansi<->Unicode) */
-__inline static int is_string( DWORD type )
+static inline void ClosePredefKey(HANDLE Handle)
+{
+    if ((ULONG_PTR)Handle & 0x1)
+    {
+        NtClose(Handle);
+    }
+}
+
+static inline BOOL IsPredefKey(HKEY HKey)
+{
+    return (((ULONG_PTR)(HKey) & 0xF0000000) == 0x80000000);
+}
+
+static inline ULONG GetPredefKeyIndex(HKEY HKey)
+{
+    return ((ULONG_PTR)(HKey) & 0x0FFFFFFF);
+}
+
+/* Check if value type needs string conversion (ANSI <-> Unicode) */
+static inline BOOL is_string(DWORD type)
 {
     return (type == REG_SZ) || (type == REG_EXPAND_SZ) || (type == REG_MULTI_SZ);
 }
+
+/* FUNCTIONS ****************************************************************/
 
 /************************************************************************
  *  RegInitDefaultHandles
