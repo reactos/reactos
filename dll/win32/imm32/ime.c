@@ -622,7 +622,7 @@ BOOL WINAPI ImmIsIME(HKL hKL)
 {
     IMEINFOEX info;
     TRACE("(%p)\n", hKL);
-    return !!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL);
+    return !!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayoutTFS, &hKL);
 }
 
 /***********************************************************************
@@ -680,13 +680,29 @@ BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey)
 {
     HKL hKL;
-    if (SearchType == ImeInfoExKeyboardLayout)
+    if (SearchType == ImeInfoExKeyboardLayout || SearchType == ImeInfoExKeyboardLayoutTFS)
     {
         hKL = *(HKL*)pvSearchKey;
-        if (!IS_IME_HKL(hKL))
-            return FALSE;
-
         pImeInfoEx->hkl = hKL;
+
+        if (SearchType == ImeInfoExKeyboardLayoutTFS)
+        {
+            if (!IS_IME_HKL(hKL))
+            {
+                if (!CtfImmIsTextFrameServiceDisabled() ||
+                    !Imm32IsCiceroMode() || Imm32Is16BitMode())
+                {
+                    return FALSE;
+                }
+            }
+
+            SearchType = ImeInfoExKeyboardLayout;
+        }
+        else
+        {
+            if (!IS_IME_HKL(hKL))
+                return FALSE;
+        }
     }
     else if (SearchType == ImeInfoExImeFileName)
     {
