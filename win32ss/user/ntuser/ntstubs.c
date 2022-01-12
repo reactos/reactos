@@ -1028,13 +1028,13 @@ APIENTRY
 NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
 {
     PTHREADINFO pti;
-    PKL pNewKL;
+    PKL pKL, pNewKL;
 
     UserEnterExclusive();
 
     pti = GetW32ThreadInfo();
-
-    if (pti->KeyboardLayout && pti->KeyboardLayout->hkl != hOldKL)
+    pKL = pti->KeyboardLayout;
+    if (pKL && pKL->hkl != hOldKL)
         goto Quit;
 
     pNewKL = UserHklToKbl(hNewKL);
