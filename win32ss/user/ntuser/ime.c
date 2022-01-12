@@ -171,13 +171,13 @@ BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLA
     {
         do
         {
-            if (pInfoEx->hkl == pkl->hkl) /* Matched */
+            if (pInfoEx->hkl == pkl->hkl)
             {
                 if (!pkl->piiex)
                     break;
 
-                *pInfoEx = *pkl->piiex; /* Get */
-                return TRUE; /* Found */
+                *pInfoEx = *pkl->piiex;
+                return TRUE;
             }
 
             pkl = pkl->pklNext;
@@ -189,10 +189,10 @@ BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLA
         {
             if (pkl->piiex &&
                 _wcsnicmp(pkl->piiex->wszImeFile, pInfoEx->wszImeFile,
-                          RTL_NUMBER_OF(pkl->piiex->wszImeFile)) == 0) /* Matched */
+                          RTL_NUMBER_OF(pkl->piiex->wszImeFile)) == 0)
             {
-                *pInfoEx = *pkl->piiex; /* Get */
-                return TRUE; /* Found */
+                *pInfoEx = *pkl->piiex;
+                return TRUE;
             }
 
             pkl = pkl->pklNext;
@@ -203,7 +203,7 @@ BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLA
         /* Do nothing */
     }
 
-    return FALSE; /* Not found */
+    return FALSE;
 }
 
 BOOL

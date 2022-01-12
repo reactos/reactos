@@ -1186,9 +1186,7 @@ typedef struct tagIMEINFOEX
 typedef enum IMEINFOEXCLASS
 {
     ImeInfoExKeyboardLayout,
-#if 1
     ImeInfoExKeyboardLayoutTFS,
-#endif
     ImeInfoExImeWindow,
     ImeInfoExImeFileName
 } IMEINFOEXCLASS;
