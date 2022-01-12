@@ -254,10 +254,7 @@ RtlpAddToMergedRange(
 
     if (ListEntry)
     {
-        AddRtlEntry->ListEntry.Flink = ListEntry->Flink;
-        AddRtlEntry->ListEntry.Blink = ListEntry;
-        ListEntry->Flink->Blink = &AddRtlEntry->ListEntry;
-        ListEntry->Flink = &AddRtlEntry->ListEntry;
+        InsertHeadList(ListEntry, &AddRtlEntry->ListEntry);
     }
     else
     {
