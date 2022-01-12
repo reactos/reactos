@@ -574,8 +574,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     }
 
     /* If the IME for the specified filename is valid, then unload it now */
-    /* FIXME: ImmGetImeInfoEx is broken */
-    if (ImmGetImeInfoEx(&InfoEx, 3, pchFilePart) &&
+    if (ImmGetImeInfoEx(&InfoEx, ImeInfoExImeFileName, pchFilePart) &&
         !UnloadKeyboardLayout(InfoEx.hkl))
     {
         hNewKL = NULL;
@@ -623,8 +622,7 @@ BOOL WINAPI ImmIsIME(HKL hKL)
 {
     IMEINFOEX info;
     TRACE("(%p)\n", hKL);
-    /* FIXME: ImmGetImeInfoEx is broken */
-    return !!ImmGetImeInfoEx(&info, 1, &hKL);
+    return !!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL);
 }
 
 /***********************************************************************
