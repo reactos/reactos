@@ -679,42 +679,25 @@ BOOL WINAPI ImmDisableLegacyIME(void)
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey)
 {
-    BOOL bDisabled = FALSE;
     HKL hKL;
-
-    /* FIXME: broken */
-    switch (SearchType)
+    if (SearchType == ImeInfoExKeyboardLayout)
     {
-        case ImeInfoExKeyboardLayout:
-            break;
+        hKL = *(HKL*)pvSearchKey;
+        if (!IS_IME_HKL(hKL))
+            return FALSE;
 
-        case ImeInfoExImeWindow:
-            bDisabled = CtfImmIsTextFrameServiceDisabled();
-            SearchType = ImeInfoExKeyboardLayout;
-            break;
-
-        case ImeInfoExImeFileName:
-            StringCchCopyW(pImeInfoEx->wszImeFile, _countof(pImeInfoEx->wszImeFile),
-                           pvSearchKey);
-            goto Quit;
+        pImeInfoEx->hkl = hKL;
     }
-
-    hKL = *(HKL*)pvSearchKey;
-    pImeInfoEx->hkl = hKL;
-
-    if (!IS_IME_HKL(hKL))
+    else if (SearchType == ImeInfoExImeFileName)
     {
-        if (Imm32IsCiceroMode())
-        {
-            if (Imm32Is16BitMode())
-                return FALSE;
-            if (!bDisabled)
-                goto Quit;
-        }
+        StringCchCopyW(pImeInfoEx->wszImeFile, _countof(pImeInfoEx->wszImeFile),
+                       pvSearchKey);
+    }
+    else
+    {
         return FALSE;
     }
 
-Quit:
     return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
 }
 
