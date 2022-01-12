@@ -260,13 +260,60 @@ NtUserSetAppImeLevel(
     return 0;
 }
 
-DWORD
-APIENTRY
-NtUserSetImeInfoEx(
-    PIMEINFOEX pImeInfoEx)
+BOOL FASTCALL UserSetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pImeInfoEx)
 {
-    STUB;
-    return 0;
+    PKL pklHead, pkl;
+
+    pkl = pklHead = gspklBaseLayout;
+
+    do
+    {
+        if (pkl->hkl != pImeInfoEx->hkl)
+        {
+            pkl = pkl->pklNext;
+            continue;
+        }
+
+        if (!pkl->piiex)
+            return FALSE;
+
+        if (!pkl->piiex->fLoadFlag)
+            *pkl->piiex = *pImeInfoEx;
+
+        return TRUE;
+    } while (pkl != pklHead);
+
+    return FALSE;
+}
+
+BOOL
+APIENTRY
+NtUserSetImeInfoEx(PIMEINFOEX pImeInfoEx)
+{
+    BOOL ret = FALSE;
+    IMEINFOEX ImeInfoEx;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+        goto Quit;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(pImeInfoEx, sizeof(*pImeInfoEx), 1);
+        ImeInfoEx = *pImeInfoEx;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        goto Quit;
+    }
+    _SEH2_END;
+
+    ret = UserSetImeInfoEx(NULL, &ImeInfoEx);
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 DWORD APIENTRY
