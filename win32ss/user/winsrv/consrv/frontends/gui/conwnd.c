@@ -546,7 +546,8 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
     }
 
     /* ReactOS extension: Remember whether that the Asian font was not found */
-    SetPropW(GuiData->hWindow, L"ReactOSCJKFontFallback", (HANDLE)(ULONG_PTR)bCJKFontCallBack);
+    if (bCJKFontCallBack)
+        SetPropW(GuiData->hWindow, L"ReactOSCJKFontFallback", (HANDLE)(ULONG_PTR)TRUE);
 
     hDC = GetDC(GuiData->hWindow);
     if (!GetFontCellSize(hDC, hFont, &GuiData->CharHeight, &GuiData->CharWidth))

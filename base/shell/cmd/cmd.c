@@ -2322,8 +2322,9 @@ Initialize(VOID)
 #define ENGLISH_LANGID MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
         SetThreadLocale(MAKELCID(ENGLISH_LANGID, SORT_DEFAULT));
 #undef ENGLISH_LANGID
+
+        RemovePropW(hwndConsole, L"ReactOSCJKFontFallback");
     }
-    RemovePropW(hwndConsole, L"ReactOSCJKFontFallback");
 
     if (AutoRun)
     {
