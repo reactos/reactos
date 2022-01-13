@@ -570,7 +570,7 @@ AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
 {
     INT xOld, yOld, cxOld, cyOld;
     INT xNew, yNew, cxNew, cyNew;
-    INT dy, xLabel, yLabel;
+    INT xLabel, yLabel, cxLabel, cyLabel, dyLabel;
     RECT rc, rcWnd;
     BITMAP bmLogo, bmBar;
     DWORD style, exstyle;
@@ -578,7 +578,7 @@ AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
     HWND hwndBar = GetDlgItem(hwndDlg, IDC_BAR);
     HWND hwndLabel = GetDlgItem(hwndDlg, IDC_STATUSLABEL);
 
-    /* Adjustment is for Chinese, Japanese and Korean only */
+    /* This adjustment is for CJK only */
     switch (PRIMARYLANGID(GetUserDefaultLangID()))
     {
         case LANG_CHINESE:
@@ -592,16 +592,20 @@ AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
 
     if (!GetObject(pDlgData->hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
         !GetObject(pDlgData->hBarBitmap, sizeof(BITMAP), &bmBar))
+    {
         return;
+    }
 
     GetWindowRect(hwndBar, &rc);
     MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rc, 2);
-    dy = bmLogo.bmHeight - rc.top;
+    dyLabel = bmLogo.bmHeight - rc.top;
 
     GetWindowRect(hwndLabel, &rc);
     MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rc, 2);
     xLabel = rc.left;
-    yLabel = rc.top;
+    yLabel = rc.top + dyLabel;
+    cxLabel = rc.right - rc.left;
+    cyLabel = rc.bottom - rc.top;
 
     GetWindowRect(hwndDlg, &rcWnd);
     xOld = rcWnd.left;
@@ -618,11 +622,10 @@ AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
 
     MoveWindow(hwndLogo, 0, 0, bmLogo.bmWidth, bmLogo.bmHeight, TRUE);
     MoveWindow(hwndBar, 0, bmLogo.bmHeight, bmLogo.bmWidth, bmBar.bmHeight, TRUE);
-    SetWindowPos(hwndLabel, NULL, xLabel, yLabel + dy, 0, 0,
-                 SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+    MoveWindow(hwndLabel, xLabel, yLabel, cxLabel, cyLabel, TRUE);
 
     cxNew = rc.right - rc.left;
-    cyNew = (rc.bottom - rc.top) + dy;
+    cyNew = (rc.bottom - rc.top) + dyLabel;
     xNew = xOld - (cxNew - cxOld) / 2;
     yNew = yOld - (cyNew - cyOld) / 2;
     MoveWindow(hwndDlg, xNew, yNew, cxNew, cyNew, TRUE);
