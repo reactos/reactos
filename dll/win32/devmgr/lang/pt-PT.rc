@@ -10,7 +10,7 @@ BEGIN
     IDS_LOCATION "Localização: %1"
     IDS_STATUS "Estado do\ndispositivo: %1"
     IDS_UNKNOWN "Desconhecido"
-    IDS_LOCATIONSTR "Local %1!u! (%2)"
+    IDS_LOCATIONSTR "Localização %1!u! (%2)"
     IDS_DEVCODE " (Código %1!u!)"
     IDS_DEVCODE2 " (Código %2!u!)"
     IDS_ENABLEDEVICE "Usar este dispositivo (activar)"
