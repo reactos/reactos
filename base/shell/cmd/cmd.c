@@ -2313,10 +2313,7 @@ Initialize(VOID)
     hwndConsole = GetConsoleWindow();
     if (GetPropW(hwndConsole, L"ReactOSCJKFontFallback"))
     {
-        if (!*ptr)
-        {
-            ConOutPuts(_T("WARNING: The Asian fixed-pitch font not found. Falling back to English.\n"));
-        }
+        ConOutPuts(_T("WARNING: The Asian fixed-pitch font not found. Falling back to English.\n"));
 
         /* Set the thread locale to English */
 #define ENGLISH_LANGID MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
