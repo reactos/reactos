@@ -532,13 +532,13 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
      * Initialize a new NORMAL font and get its character cell size.
      */
     /* NOTE: FontSize is always in cell height/width units (pixels) */
-    hFont = CreateConsoleFontExEx((LONG)(ULONG)FontSize.Y,
-                                  (LONG)(ULONG)FontSize.X,
-                                  FaceName,
-                                  FontFamily,
-                                  FontWeight,
-                                  GuiData->Console->OutputCodePage,
-                                  &bCJKFontCallBack);
+    hFont = CreateConsoleFontInternal((USHORT)FontSize.Y,
+                                      (USHORT)FontSize.X,
+                                      FaceName,
+                                      FontFamily,
+                                      FontWeight,
+                                      GuiData->Console->OutputCodePage,
+                                      &bCJKFontCallBack);
     if (hFont == NULL)
     {
         DPRINT1("InitFonts: CreateConsoleFontEx failed\n");

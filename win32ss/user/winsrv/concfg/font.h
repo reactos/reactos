@@ -62,7 +62,7 @@ CodePageToCharSet(
     IN UINT CodePage);
 
 HFONT
-CreateConsoleFontExEx(
+CreateConsoleFontInternal(
     IN LONG Height,
     IN LONG Width OPTIONAL,
     IN OUT LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements
