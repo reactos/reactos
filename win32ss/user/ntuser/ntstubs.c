@@ -1023,7 +1023,7 @@ Quit:
     return Status;
 }
 
-VOID
+DWORD
 APIENTRY
 NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
 {
@@ -1048,6 +1048,7 @@ NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
 
 Quit:
     UserLeave();
+    return 0;
 }
 
 BOOL

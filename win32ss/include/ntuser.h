@@ -3313,7 +3313,7 @@ NtUserSetSystemTimer(
     UINT uElapse,
     TIMERPROC lpTimerFunc);
 
-VOID
+DWORD
 NTAPI
 NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL);
 
