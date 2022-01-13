@@ -590,8 +590,8 @@ AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
             return;
     }
 
-    if (!GetObject(pDlgData->hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
-        !GetObject(pDlgData->hBarBitmap, sizeof(BITMAP), &bmBar))
+    if (!GetObjectW(pDlgData->hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
+        !GetObjectW(pDlgData->hBarBitmap, sizeof(BITMAP), &bmBar))
     {
         return;
     }
@@ -618,8 +618,8 @@ AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
     GetClientRect(hwndDlg, &rc);
     SetRect(&rc, 0, 0, bmLogo.bmWidth, rc.bottom - rc.top); /* new client size */
 
-    style = (DWORD)GetWindowLongPtr(hwndDlg, GWL_STYLE);
-    exstyle = (DWORD)GetWindowLongPtr(hwndDlg, GWL_EXSTYLE);
+    style = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_STYLE);
+    exstyle = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_EXSTYLE);
     AdjustWindowRectEx(&rc, style, FALSE, exstyle);
 
     cxNew = rc.right - rc.left;
