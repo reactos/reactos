@@ -2311,7 +2311,7 @@ Initialize(VOID)
 
     /* ReactOS extension: Inform if the Asian font is not found */
     hwndConsole = GetConsoleWindow();
-    if (GetPropW(hwndConsole, L"ReactOSCJKFontFallback"))
+    if (GetPropW(hwndConsole, L"ReactOSFontFallback"))
     {
         ConOutPuts(_T("WARNING: The Asian fixed-pitch font not found. Falling back to English.\n"));
 
@@ -2320,7 +2320,7 @@ Initialize(VOID)
         SetThreadLocale(MAKELCID(ENGLISH_LANGID, SORT_DEFAULT));
 #undef ENGLISH_LANGID
 
-        RemovePropW(hwndConsole, L"ReactOSCJKFontFallback");
+        RemovePropW(hwndConsole, L"ReactOSFontFallback");
     }
 
     if (AutoRun)
