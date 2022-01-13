@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Utility Manager (Accessibility)
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Chinese (Simplified) translation resource
- * TRANSLATOR:      Copyright 2022 Luo Yufan <njlyf2011@hotmail.com>
+ * PROJECT:     ReactOS Utility Manager (Accessibility)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATOR:  Copyright 2022 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
