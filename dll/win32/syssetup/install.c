@@ -565,6 +565,69 @@ cleanup:
     return bRet;
 }
 
+static VOID
+AdjustStatusMessageWindowPos(HWND hwndDlg, PDLG_DATA pDlgData)
+{
+    INT xOld, yOld, cxOld, cyOld;
+    INT xNew, yNew, cxNew, cyNew;
+    INT dy, xLabel, yLabel;
+    RECT rc, rcWnd;
+    BITMAP bmLogo, bmBar;
+    DWORD style, exstyle;
+    HWND hwndLogo = GetDlgItem(hwndDlg, IDC_ROSLOGO);
+    HWND hwndBar = GetDlgItem(hwndDlg, IDC_BAR);
+    HWND hwndLabel = GetDlgItem(hwndDlg, IDC_STATUSLABEL);
+
+    /* Adjustment is for Chinese, Japanese and Korean only */
+    switch (PRIMARYLANGID(GetUserDefaultLangID()))
+    {
+        case LANG_CHINESE:
+        case LANG_JAPANESE:
+        case LANG_KOREAN:
+            break;
+
+        default:
+            return;
+    }
+
+    if (!GetObject(pDlgData->hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
+        !GetObject(pDlgData->hBarBitmap, sizeof(BITMAP), &bmBar))
+        return;
+
+    GetWindowRect(hwndBar, &rc);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rc, 2);
+    dy = bmLogo.bmHeight - rc.top;
+
+    GetWindowRect(hwndLabel, &rc);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rc, 2);
+    xLabel = rc.left;
+    yLabel = rc.top;
+
+    GetWindowRect(hwndDlg, &rcWnd);
+    xOld = rcWnd.left;
+    yOld = rcWnd.top;
+    cxOld = rcWnd.right - rcWnd.left;
+    cyOld = rcWnd.bottom - rcWnd.top;
+
+    GetClientRect(hwndDlg, &rc);
+    SetRect(&rc, 0, 0, bmLogo.bmWidth, rc.bottom - rc.top); /* new client size */
+
+    style = (DWORD)GetWindowLongPtr(hwndDlg, GWL_STYLE);
+    exstyle = (DWORD)GetWindowLongPtr(hwndDlg, GWL_EXSTYLE);
+    AdjustWindowRectEx(&rc, style, FALSE, exstyle);
+
+    MoveWindow(hwndLogo, 0, 0, bmLogo.bmWidth, bmLogo.bmHeight, TRUE);
+    MoveWindow(hwndBar, 0, bmLogo.bmHeight, bmLogo.bmWidth, bmBar.bmHeight, TRUE);
+    SetWindowPos(hwndLabel, NULL, xLabel, yLabel + dy, 0, 0,
+                 SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+
+    cxNew = rc.right - rc.left;
+    cyNew = (rc.bottom - rc.top) + dy;
+    xNew = xOld - (cxNew - cxOld) / 2;
+    yNew = yOld - (cyNew - cyOld) / 2;
+    MoveWindow(hwndDlg, xNew, yNew, cxNew, cyNew, TRUE);
+}
+
 static INT_PTR CALLBACK
 StatusMessageWindowProc(
     IN HWND hwndDlg,
@@ -622,6 +685,7 @@ StatusMessageWindowProc(
                 return FALSE;
             SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, szMsg);
 
+            AdjustStatusMessageWindowPos(hwndDlg, pDlgData);
             return TRUE;
         }
 
