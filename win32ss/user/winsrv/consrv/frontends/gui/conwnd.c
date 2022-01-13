@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontends/gui/conwnd.c
  * PURPOSE:         GUI Console Window Class
- * PROGRAMMERS:     Gé van Geldorp
+ * PROGRAMMERS:     GÃ© van Geldorp
  *                  Johannes Anderwald
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -545,7 +545,7 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
         return FALSE;
     }
 
-    /* ReactOS extension: Remember whether that the Asian font was not found */
+    /* ReactOS extension: Remember whether the Asian font was not found */
     if (bCJKFontCallBack)
         SetPropW(GuiData->hWindow, L"ReactOSCJKFontFallback", (HANDLE)(ULONG_PTR)TRUE);
 
