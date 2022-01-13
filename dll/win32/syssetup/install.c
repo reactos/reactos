@@ -570,8 +570,8 @@ AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
 {
     INT xOld, yOld, cxOld, cyOld;
     INT xNew, yNew, cxNew, cyNew;
-    INT xLabel, yLabel, cxLabel, cyLabel, dyLabel;
-    RECT rc, rcWnd;
+    INT cxLabel, cyLabel, dyLabel;
+    RECT rc, rcBar, rcLabel, rcWnd;
     BITMAP bmLogo, bmBar;
     DWORD style, exstyle;
     HWND hwndLogo = GetDlgItem(hwndDlg, IDC_ROSLOGO);
@@ -596,16 +596,18 @@ AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
         return;
     }
 
-    GetWindowRect(hwndBar, &rc);
-    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rc, 2);
-    dyLabel = bmLogo.bmHeight - rc.top;
+    GetWindowRect(hwndBar, &rcBar);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcBar, 2);
+    dyLabel = bmLogo.bmHeight - rcBar.top;
 
-    GetWindowRect(hwndLabel, &rc);
-    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rc, 2);
-    xLabel = rc.left;
-    yLabel = rc.top + dyLabel;
-    cxLabel = rc.right - rc.left;
-    cyLabel = rc.bottom - rc.top;
+    GetWindowRect(hwndLabel, &rcLabel);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcLabel, 2);
+    cxLabel = rcLabel.right - rcLabel.left;
+    cyLabel = rcLabel.bottom - rcLabel.top;
+
+    MoveWindow(hwndLogo, 0, 0, bmLogo.bmWidth, bmLogo.bmHeight, TRUE);
+    MoveWindow(hwndBar, 0, bmLogo.bmHeight, bmLogo.bmWidth, bmBar.bmHeight, TRUE);
+    MoveWindow(hwndLabel, rcLabel.left, rcLabel.top + dyLabel, cxLabel, cyLabel, TRUE);
 
     GetWindowRect(hwndDlg, &rcWnd);
     xOld = rcWnd.left;
@@ -619,10 +621,6 @@ AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
     style = (DWORD)GetWindowLongPtr(hwndDlg, GWL_STYLE);
     exstyle = (DWORD)GetWindowLongPtr(hwndDlg, GWL_EXSTYLE);
     AdjustWindowRectEx(&rc, style, FALSE, exstyle);
-
-    MoveWindow(hwndLogo, 0, 0, bmLogo.bmWidth, bmLogo.bmHeight, TRUE);
-    MoveWindow(hwndBar, 0, bmLogo.bmHeight, bmLogo.bmWidth, bmBar.bmHeight, TRUE);
-    MoveWindow(hwndLabel, xLabel, yLabel, cxLabel, cyLabel, TRUE);
 
     cxNew = rc.right - rc.left;
     cyNew = (rc.bottom - rc.top) + dyLabel;
