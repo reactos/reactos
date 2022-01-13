@@ -2140,6 +2140,7 @@ Initialize(VOID)
     TCHAR option = 0;
     BOOL AutoRun = TRUE;
     TCHAR ModuleName[MAX_PATH + 1];
+    HWND hwndConsole;
 
     /* Get version information */
     InitOSVersion();
@@ -2306,6 +2307,21 @@ Initialize(VOID)
                         _T(KERNEL_VERSION_STR),
                         _T(KERNEL_VERSION_BUILD_STR));
         ConOutPuts(_T("(C) Copyright 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team.\n"));
+    }
+
+    /* ReactOS extension: Inform if the Asian font is not found */
+    hwndConsole = GetConsoleWindow();
+    if (GetPropW(hwndConsole, L"ReactOSCJKFontFallback"))
+    {
+        if (!*ptr)
+        {
+            ConOutPuts(_T("WARNING: The Asian fixed-pitch font was not found. It goes English.\n"));
+        }
+
+        /* Set the thread locale to English */
+#define ENGLISH_LANGID MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+        SetThreadLocale(MAKELCID(ENGLISH_LANGID, SORT_DEFAULT));
+#undef ENGLISH_LANGID
     }
 
     if (AutoRun)

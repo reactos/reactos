@@ -40,15 +40,19 @@ CodePageToCharSet(
 }
 
 HFONT
-CreateConsoleFontEx(
+CreateConsoleFontExEx(
     IN LONG Height,
     IN LONG Width OPTIONAL,
     IN OUT LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements
     IN ULONG FontFamily,
     IN ULONG FontWeight,
-    IN UINT  CodePage)
+    IN UINT  CodePage,
+    OUT LPBOOL pbCJKFontFallback OPTIONAL)
 {
     LOGFONTW lf;
+
+    if (pbCJKFontFallback)
+        *pbCJKFontFallback = FALSE;
 
     RtlZeroMemory(&lf, sizeof(lf));
 
@@ -70,9 +74,10 @@ CreateConsoleFontEx(
 
     if (!IsValidConsoleFont(FaceName, CodePage))
     {
-        StringCchCopyW(FaceName, LF_FACESIZE, L"Terminal");
         if (IsCJKCodePage(CodePage))
         {
+            if (pbCJKFontFallback)
+                *pbCJKFontFallback = TRUE;
             lf.lfCharSet = ANSI_CHARSET;
         }
     }
@@ -81,6 +86,19 @@ CreateConsoleFontEx(
                     FaceName, LF_FACESIZE);
 
     return CreateFontIndirectW(&lf);
+}
+
+HFONT
+CreateConsoleFontEx(
+    IN LONG Height,
+    IN LONG Width OPTIONAL,
+    IN OUT LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements
+    IN ULONG FontFamily,
+    IN ULONG FontWeight,
+    IN UINT  CodePage)
+{
+    return CreateConsoleFontExEx(Height, Width, FaceName, FontFamily, FontWeight,
+                                 CodePage, NULL);
 }
 
 HFONT
