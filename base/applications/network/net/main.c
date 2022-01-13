@@ -75,6 +75,20 @@ PrintPadding(
 }
 
 
+DWORD
+TranslateAppMessage(
+    DWORD dwMessage)
+{
+    switch (dwMessage)
+    {
+        case NERR_Success:
+            return 3500; // APPERR_3500
+        case ERROR_MORE_DATA:
+            return 3513; // APPERR_3513
+    }
+    return dwMessage;
+}
+
 VOID
 PrintMessageStringV(
     DWORD dwMessage,
