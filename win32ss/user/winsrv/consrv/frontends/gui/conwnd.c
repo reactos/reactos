@@ -526,7 +526,7 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
 {
     HDC hDC;
     HFONT hFont;
-    BOOL bCJKFontCallBack = FALSE;
+    BOOL bCJKFontCallBack;
 
     /*
      * Initialize a new NORMAL font and get its character cell size.
