@@ -566,7 +566,7 @@ cleanup:
 }
 
 static VOID
-AdjustStatusMessageWindowPos(HWND hwndDlg, PDLG_DATA pDlgData)
+AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
 {
     INT xOld, yOld, cxOld, cyOld;
     INT xNew, yNew, cxNew, cyNew;
@@ -685,7 +685,7 @@ StatusMessageWindowProc(
                 return FALSE;
             SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, szMsg);
 
-            AdjustStatusMessageWindowPos(hwndDlg, pDlgData);
+            AdjustStatusMessageWindow(hwndDlg, pDlgData);
             return TRUE;
         }
 
