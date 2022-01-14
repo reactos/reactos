@@ -75,6 +75,7 @@ private:
     VOID RetrieveInstalledVersion();
     VOID RetrieveLanguages();
     VOID RetrieveLicenseType();
+    VOID RetrieveSize();
     inline BOOL FindInLanguages(LCID what) const;
 };
 
@@ -86,6 +87,8 @@ struct AvailableStrings
     ATL::CStringW szCabPath;
     ATL::CStringW szAppsPath;
     ATL::CStringW szSearchPath;
+    ATL::CStringW szCabName;
+    ATL::CStringW szCabDir;
 
     AvailableStrings();
 };

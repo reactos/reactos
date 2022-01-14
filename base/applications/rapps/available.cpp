@@ -38,7 +38,7 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
 {
     m_Parser = new CConfigParser(m_sFileName);
 
-    m_Category = m_Parser->GetInt(L"Category");
+    m_Parser->GetInt(L"Category", m_Category);
 
     if (!GetString(L"Name", m_szName)
         || !GetString(L"URLDownload", m_szUrlDownload))
@@ -51,15 +51,16 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
     GetString(L"Version", m_szVersion);
     GetString(L"License", m_szLicense);
     GetString(L"Description", m_szDesc);
-    GetString(L"Size", m_szSize);
     GetString(L"URLSite", m_szUrlSite);
     GetString(L"CDPath", m_szCDPath);
     GetString(L"Language", m_szRegName);
     GetString(L"SHA1", m_szSHA1);
 
+    RetrieveSize();
     RetrieveLicenseType();
     RetrieveLanguages();
     RetrieveInstalledStatus();
+
     if (m_IsInstalled)
     {
         RetrieveInstalledVersion();
@@ -128,7 +129,9 @@ VOID CAvailableApplicationInfo::RetrieveLanguages()
 
 VOID CAvailableApplicationInfo::RetrieveLicenseType()
 {
-    INT IntBuffer = m_Parser->GetInt(L"LicenseType");
+    INT IntBuffer;
+
+    m_Parser->GetInt(L"LicenseType", IntBuffer);
 
     if (IsLicenseType(IntBuffer))
     {
@@ -138,6 +141,17 @@ VOID CAvailableApplicationInfo::RetrieveLicenseType()
     {
         m_LicenseType = LICENSE_NONE;
     }
+}
+
+VOID CAvailableApplicationInfo::RetrieveSize()
+{
+    INT iSizeBytes;
+
+    if (!m_Parser->GetInt(L"SizeBytes", iSizeBytes))
+        return;
+
+    StrFormatByteSizeW(iSizeBytes, m_szSize.GetBuffer(MAX_PATH), MAX_PATH);
+    m_szSize.ReleaseBuffer();
 }
 
 BOOL CAvailableApplicationInfo::FindInLanguages(LCID what) const
@@ -213,7 +227,9 @@ AvailableStrings::AvailableStrings()
     if (GetStorageDirectory(szPath))
     {
         szAppsPath = szPath + L"\\rapps\\";
-        szCabPath = szPath + L"\\rappmgr.cab";
+        szCabName = L"rappmgr.cab";
+        szCabDir = szPath;
+        szCabPath = (szCabDir + L"\\") + szCabName;
         szSearchPath = szAppsPath + L"*.txt";
     }
 }
@@ -282,7 +298,9 @@ BOOL CAvailableApps::UpdateAppsDB()
 
     CDownloadManager::DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
-    if (!ExtractFilesFromCab(m_Strings.szCabPath, m_Strings.szAppsPath))
+    if (!ExtractFilesFromCab(m_Strings.szCabName,
+                             m_Strings.szCabDir,
+                             m_Strings.szAppsPath))
     {
         return FALSE;
     }
