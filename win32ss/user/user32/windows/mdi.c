@@ -2149,7 +2149,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         if (IsZoomed(hwnd))
         {
             if (!SendMessageTimeoutW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0,
-                                     SMTO_ABORTIFHUNG, 100, NULL))
+                                     SMTO_ABORTIFHUNG, 300, NULL))
             {
                 continue;
             }
@@ -2338,7 +2338,7 @@ TileWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         if (IsZoomed(hwnd))
         {
             if (!SendMessageTimeoutW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0,
-                                     SMTO_ABORTIFHUNG, 100, NULL))
+                                     SMTO_ABORTIFHUNG, 300, NULL))
             {
                 continue;
             }
