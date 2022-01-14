@@ -2147,7 +2147,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
             continue;
 
         if (IsZoomed(hwnd))
-            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
+            ShowWindowAsync(hwnd, SW_RESTORE | SW_SHOWNA);
 
         GetWindowRect(hwnd, &rcWnd);
         cxNew = cx = rcWnd.right - rcWnd.left;
@@ -2330,7 +2330,7 @@ TileWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         hwnd = info.ahwnd[i];
 
         if (IsZoomed(hwnd))
-            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
+            ShowWindowAsync(hwnd, SW_RESTORE | SW_SHOWNA);
 
         GetWindowRect(hwnd, &rcWnd);
         cx = rcWnd.right - rcWnd.left;
