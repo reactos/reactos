@@ -43,8 +43,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SHELL_FAIL "Userinit 無法啟動外殼！"
-    IDS_INSTALLER_FAIL "Userinit 啟動安裝程式失敗！"
+    IDS_SHELL_FAIL "Userinit 無法啟動殼層！"
+    IDS_INSTALLER_FAIL "Userinit 無法啟動安裝程式！"
     IDS_CANCEL_CONFIRM "您確定要結束 ReactOS LiveCD 嗎？\n如果您選擇結束，您的電腦將會重新啟動。"
 END
 
