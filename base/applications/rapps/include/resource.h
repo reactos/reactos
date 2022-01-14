@@ -154,6 +154,9 @@
 #define IDS_AINFO_URLDOWNLOAD        355
 #define IDS_AINFO_AVAILABLEVERSION   356
 #define IDS_AINFO_LANGUAGES          357
+#define IDS_AINFO_KILOBYTE_EXT       358
+#define IDS_AINFO_MEGABYTE_EXT       359
+#define IDS_AINFO_GIGABYTE_EXT       360
 
 
 /* Names of categories */
