@@ -345,6 +345,26 @@ InputList_AddInputMethodToUserRegistry(DWORD dwIndex, INPUT_LIST_NODE *pNode)
             RegCloseKey(hKey);
         }
     }
+    /*
+     * Deactivate switching language hotkeys, when only one language is registered
+     */
+    else if (dwIndex==1)
+    {
+        if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                            L"Keyboard Layout\\Toggle",
+                            0,
+                            KEY_SET_VALUE,
+                            &hKey) == ERROR_SUCCESS)
+        {
+            /* 'Hotkey' and 'Layout Hotkey' have always the same value */
+            RegSetValueExW(hKey, L"Hotkey", 0, REG_SZ, (LPBYTE)L"3", (sizeof(L"3")));
+            RegSetValueExW(hKey, L"Language Hotkey", 0, REG_SZ, (LPBYTE)L"3", (sizeof(L"3")));
+
+            RegSetValueExW(hKey, L"Layout Hotkey", 0, REG_SZ, (LPBYTE)L"3", (sizeof(L"3")));
+
+            RegCloseKey(hKey);
+        }
+    }
 
     if ((pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
         (pNode->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
