@@ -1,11 +1,22 @@
 /*
- * PROJECT:     ReactOS crypt32.dll
- * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Chinese resource file
- * COPYRIGHT:   Copyright 2008 Juan Lang
+ * crypt32 dll Chinese resources
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
  * TRANSLATORS: Copyright 2015 Henry Tang <henrytang2@hotmail.com>
  *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
- * REFERENCES:  Wine's Chinese resource translation
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -413,7 +424,7 @@ STRINGTABLE
     IDS_CRL_DIST_POINT_ISSUER "CRL 簽發者"
     IDS_REASON_KEY_COMPROMISE "金鑰洩露"
     IDS_REASON_CA_COMPROMISE "CA 洩露"
-    IDS_REASON_AFFILIATION_CHANGED "簽"
+    IDS_REASON_AFFILIATION_CHANGED "聯盟已變更"
     IDS_REASON_SUPERSEDED "已取代"
     IDS_REASON_CESSATION_OF_OPERATION "作業已停止"
     IDS_REASON_CERTIFICATE_HOLD "持有的憑證"
