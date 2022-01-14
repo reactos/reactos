@@ -8,7 +8,7 @@ BEGIN
     IDS_TYPE "Tipo"
     IDS_MANUFACTURER "Fabricante: %1"
     IDS_LOCATION "Localização: %1"
-    IDS_STATUS "Estado disp: %1"
+    IDS_STATUS "Estado do dispositivo: %1"
     IDS_UNKNOWN "Desconhecido"
     IDS_LOCATIONSTR "Localização %1!u! (%2)"
     IDS_DEVCODE " (Código %1!u!)"
