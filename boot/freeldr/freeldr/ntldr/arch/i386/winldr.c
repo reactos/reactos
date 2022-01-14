@@ -11,6 +11,7 @@
 #include <freeldr.h>
 #include <ndk/asm.h>
 #include "../../winldr.h"
+#include "pae.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
