@@ -378,4 +378,5 @@ BEGIN
     IDS_HWPROFILE_WARNING "警告"
     IDS_ENVIRONMENT_WARNING "您所做的任何更改都將被丟棄，變數的值將編輯為文字。"
     IDS_ENVIRONMENT_WARNING_TITLE "系統內容"
+    IDS_FILE_BROWSE_FILTER "All Files (*.*)\0*.*\0"
 END

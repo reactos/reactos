@@ -371,4 +371,5 @@ BEGIN
     IDS_HWPROFILE_WARNING "Advertencia"
     IDS_ENVIRONMENT_WARNING "Cualquier cambio será descartado y el valor de la variable será editado como texto."
     IDS_ENVIRONMENT_WARNING_TITLE "Propiedades del Sistema"
+    IDS_FILE_BROWSE_FILTER "All Files (*.*)\0*.*\0"
 END

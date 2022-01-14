@@ -65,6 +65,7 @@
 
 #define IDS_ENVIRONMENT_WARNING            150
 #define IDS_ENVIRONMENT_WARNING_TITLE      151
+#define IDS_FILE_BROWSE_FILTER             152
 
 /* Propsheet - general */
 #define IDD_PROPPAGEGENERAL  100
