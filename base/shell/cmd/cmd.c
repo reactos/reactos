@@ -2152,7 +2152,6 @@ Initialize(VOID)
     TCHAR option = 0;
     BOOL AutoRun = TRUE;
     TCHAR ModuleName[MAX_PATH + 1];
-    HWND hwndConsole;
 
     /* Get version information */
     InitOSVersion();
@@ -2324,7 +2323,7 @@ Initialize(VOID)
     /* ReactOS extension: Inform if the Asian font is not found */
     if (IsUserCJK())
     {
-        hwndConsole = GetConsoleWindow();
+        HWND hwndConsole = GetConsoleWindow();
         if (GetPropW(hwndConsole, L"ReactOSFontFallback"))
         {
             ConOutPuts(_T("WARNING: The Asian fixed-pitch font not found. Falling back to English.\n"));
