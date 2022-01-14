@@ -712,15 +712,11 @@ WinLdrSetProcessorContext(void)
     {
         TRACE("WinLdrSetProcessorContext: PaeTables %X, cr0 %X, cr3 %X, cr4 %X\n", PaeTables, __readcr0(), __readcr3(), __readcr4());
 
-        /* Flush TLB */
-        __writecr3(__readcr3());
-
         /* Set the PDPTR */
         __writecr3((ULONG_PTR)PaeTables);
 
         /* Enable PAE */
         __writecr4(__readcr4() | 0x20);
-
     }
 
     /* Enable paging */
