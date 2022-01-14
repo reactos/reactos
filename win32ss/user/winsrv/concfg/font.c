@@ -40,7 +40,7 @@ CodePageToCharSet(
 }
 
 HFONT
-CreateConsoleFontInternal(
+CreateConsoleFontEx(
     IN LONG Height,
     IN LONG Width OPTIONAL,
     IN OUT LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements
@@ -89,19 +89,6 @@ CreateConsoleFontInternal(
 }
 
 HFONT
-CreateConsoleFontEx(
-    IN LONG Height,
-    IN LONG Width OPTIONAL,
-    IN OUT LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements
-    IN ULONG FontFamily,
-    IN ULONG FontWeight,
-    IN UINT  CodePage)
-{
-    return CreateConsoleFontInternal(Height, Width, FaceName, FontFamily, FontWeight,
-                                     CodePage, NULL);
-}
-
-HFONT
 CreateConsoleFont2(
     IN LONG Height,
     IN LONG Width OPTIONAL,
@@ -112,7 +99,8 @@ CreateConsoleFont2(
                                ConsoleInfo->FaceName,
                                ConsoleInfo->FontFamily,
                                ConsoleInfo->FontWeight,
-                               ConsoleInfo->CodePage);
+                               ConsoleInfo->CodePage,
+                               NULL);
 }
 
 HFONT
@@ -130,7 +118,8 @@ CreateConsoleFont(
                                ConsoleInfo->FaceName,
                                ConsoleInfo->FontFamily,
                                ConsoleInfo->FontWeight,
-                               ConsoleInfo->CodePage);
+                               ConsoleInfo->CodePage,
+                               NULL);
 }
 
 BOOL
