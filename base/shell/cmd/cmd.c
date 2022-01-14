@@ -2127,7 +2127,7 @@ GetCmdLineCommand(
 }
 
 /* Is the user Chinese, Japanese or Korean? */
-static BOOL IsUserCJK(VOID)
+static inline BOOL IsUserCJK(VOID)
 {
     switch (PRIMARYLANGID(GetUserDefaultLangID()))
     {
@@ -2322,17 +2322,20 @@ Initialize(VOID)
     }
 
     /* ReactOS extension: Inform if the Asian font is not found */
-    hwndConsole = GetConsoleWindow();
-    if (IsUserCJK() && GetPropW(hwndConsole, L"ReactOSFontFallback"))
+    if (IsUserCJK())
     {
-        ConOutPuts(_T("WARNING: The Asian fixed-pitch font not found. Falling back to English.\n"));
+        hwndConsole = GetConsoleWindow();
+        if (GetPropW(hwndConsole, L"ReactOSFontFallback"))
+        {
+            ConOutPuts(_T("WARNING: The Asian fixed-pitch font not found. Falling back to English.\n"));
 
-        /* Set the thread locale to English */
+            /* Set the thread locale to English */
 #define ENGLISH_LANGID MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
-        SetThreadLocale(MAKELCID(ENGLISH_LANGID, SORT_DEFAULT));
+            SetThreadLocale(MAKELCID(ENGLISH_LANGID, SORT_DEFAULT));
 #undef ENGLISH_LANGID
 
-        RemovePropW(hwndConsole, L"ReactOSFontFallback");
+            RemovePropW(hwndConsole, L"ReactOSFontFallback");
+        }
     }
 
     if (AutoRun)
