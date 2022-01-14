@@ -19,6 +19,15 @@
 #define CP_GB2312   936  // Chinese Simplified (GB2312)
 #define CP_BIG5     950  // Chinese Traditional (Big5)
 
+/*
+ * "Human-understandable" names for the previous standard code pages.
+ * Taken from https://github.com/microsoft/terminal/blob/main/src/inc/unicode.hpp
+ */
+#define CP_JAPANESE             CP_SHIFTJIS
+#define CP_KOREAN               CP_HANGUL
+#define CP_CHINESE_SIMPLIFIED   CP_GB2312
+#define CP_CHINESE_TRADITIONAL  CP_BIG5
+
 /* IsFarEastCP(CodePage) */
 #define IsCJKCodePage(CodePage) \
     ((CodePage) == CP_SHIFTJIS || (CodePage) == CP_HANGUL || \
