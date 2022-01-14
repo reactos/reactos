@@ -25,8 +25,32 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 
-
 HANDLE hThread;
+
+static VOID
+CenterWindow(
+    IN HWND hWnd)
+{
+    HWND hWndParent;
+    RECT rcParent;
+    RECT rcWindow;
+
+    hWndParent = GetParent(hWnd);
+    if (hWndParent == NULL)
+        hWndParent = GetDesktopWindow();
+
+    GetWindowRect(hWndParent, &rcParent);
+    GetWindowRect(hWnd, &rcWindow);
+
+    SetWindowPos(
+        hWnd,
+        HWND_TOP,
+        ((rcParent.right - rcParent.left) - (rcWindow.right - rcWindow.left)) / 2,
+        ((rcParent.bottom - rcParent.top) - (rcWindow.bottom - rcWindow.top)) / 2,
+        0,
+        0,
+        SWP_NOSIZE);
+}
 
 static BOOL
 SetFailedInstall(
@@ -458,6 +482,9 @@ WelcomeDlgProc(
 
             hwndControl = GetParent(hwndDlg);
 
+            /* Center the wizard window */
+            CenterWindow(hwndControl);
+
             /* Hide the system menu */
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
             SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
@@ -565,6 +592,9 @@ CHSourceDlgProc(
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
             hwndControl = GetParent(hwndDlg);
+
+            /* Center the wizard window */
+            CenterWindow(hwndControl);
 
             /* Hide the system menu */
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
@@ -717,6 +747,9 @@ SearchDrvDlgProc(
             DevInstData->hDialog = hwndDlg;
             hwndControl = GetParent(hwndDlg);
 
+            /* Center the wizard window */
+            CenterWindow(hwndControl);
+
             SendDlgItemMessage(
                 hwndDlg,
                 IDC_DEVICE,
@@ -808,6 +841,9 @@ InstallDrvDlgProc(
 
             DevInstData->hDialog = hwndDlg;
             hwndControl = GetParent(hwndDlg);
+
+            /* Center the wizard window */
+            CenterWindow(hwndControl);
 
             SendDlgItemMessage(
                 hwndDlg,
@@ -914,6 +950,9 @@ NoDriverDlgProc(
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
+
+            /* Center the wizard window */
+            CenterWindow(GetParent(hwndDlg));
 
             hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
             ShowWindow(hwndControl, SW_HIDE);
@@ -1031,6 +1070,9 @@ InstallFailedDlgProc(
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
+            /* Center the wizard window */
+            CenterWindow(GetParent(hwndDlg));
+
             hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
             ShowWindow(hwndControl, SW_HIDE);
             EnableWindow(hwndControl, FALSE);
@@ -1107,6 +1149,9 @@ NeedRebootDlgProc(
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
 
+            /* Center the wizard window */
+            CenterWindow(GetParent(hwndDlg));
+
             hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
             ShowWindow(hwndControl, SW_HIDE);
             EnableWindow(hwndControl, FALSE);
@@ -1182,6 +1227,9 @@ FinishDlgProc(
             /* Get pointer to the global setup data */
             DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)DevInstData);
+
+            /* Center the wizard window */
+            CenterWindow(GetParent(hwndDlg));
 
             hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
             ShowWindow(hwndControl, SW_HIDE);
