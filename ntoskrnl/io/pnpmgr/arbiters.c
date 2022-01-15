@@ -136,10 +136,23 @@ IopIrqUnpackRequirement(
     _Out_ PUINT32 OutParam1,
     _Out_ PUINT32 OutParam2)
 {
+    ASSERT(IoDescriptor);
+    ASSERT(IoDescriptor->Type == CmResourceTypeInterrupt);
+
     PAGED_CODE();
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT("IrqUnpackIo: [%p] Min %X Max %X\n",
+            IoDescriptor,
+            IoDescriptor->u.Interrupt.MinimumVector,
+            IoDescriptor->u.Interrupt.MaximumVector);
+
+    *OutMinimumVector = IoDescriptor->u.Interrupt.MinimumVector;
+    *OutMaximumVector = IoDescriptor->u.Interrupt.MaximumVector;
+
+    *OutParam1 = 1;
+    *OutParam2 = 1;
+
+    return STATUS_SUCCESS;
 }
 
 CODE_SEG("PAGE")
@@ -232,10 +245,23 @@ IopDmaUnpackRequirement(
     _Out_ PUINT32 OutParam1,
     _Out_ PUINT32 OutParam2)
 {
+    ASSERT(IoDescriptor);
+    ASSERT(IoDescriptor->Type == CmResourceTypeDma);
+
     PAGED_CODE();
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT("DmaUnpackIo: [%p] Min %X Max %X\n",
+            IoDescriptor,
+            IoDescriptor->u.Dma.MinimumChannel,
+            IoDescriptor->u.Dma.MaximumChannel);
+
+    *OutMinimumChannel = IoDescriptor->u.Dma.MinimumChannel;
+    *OutMaximumChannel = IoDescriptor->u.Dma.MaximumChannel;
+
+    *OutParam1 = 1;
+    *OutParam2 = 1;
+
+    return STATUS_SUCCESS;
 }
 
 CODE_SEG("PAGE")
@@ -331,8 +357,34 @@ IopGenericUnpackRequirement(
 {
     PAGED_CODE();
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT("[%p] Min %I64X Max %I64X Len %X\n",
+            IoDescriptor,
+            IoDescriptor->u.Generic.MinimumAddress.QuadPart,
+            IoDescriptor->u.Generic.MaximumAddress.QuadPart,
+            IoDescriptor->u.Generic.Length);
+
+    ASSERT(IoDescriptor);
+    ASSERT(IoDescriptor->Type == CmResourceTypePort ||
+           IoDescriptor->Type == CmResourceTypeMemory);
+
+    *OutLength = IoDescriptor->u.Generic.Length;
+    *OutAlignment = IoDescriptor->u.Generic.Alignment;
+
+    *OutMinimumAddress = IoDescriptor->u.Generic.MinimumAddress.QuadPart;
+    *OutMaximumAddress = IoDescriptor->u.Generic.MaximumAddress.QuadPart;
+
+    if (IoDescriptor->u.Generic.Alignment == 0)
+        *OutAlignment = 1;
+
+    if (IoDescriptor->Type == CmResourceTypeMemory &&
+        IoDescriptor->Flags & CM_RESOURCE_MEMORY_24 &&
+        IoDescriptor->u.Generic.MaximumAddress.QuadPart > 0xFFFFFF) // 16 Mb
+    {
+        DPRINT1("IopGenericUnpackRequirement: Too high value (%I64X) for CM_RESOURCE_MEMORY_24\n", IoDescriptor->u.Generic.MaximumAddress.QuadPart);
+        *OutMaximumAddress = 0xFFFFFF;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 CODE_SEG("PAGE")
