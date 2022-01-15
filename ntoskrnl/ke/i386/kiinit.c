@@ -85,58 +85,6 @@ KiInitMachineDependent(VOID)
     /* Check for PAT support and enable it */
     if (KeFeatureBits & KF_PAT) KiInitializePAT();
 
-    /* Assume no errata for now */
-    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = 0;
-
-    /* Check if we have an NPX */
-    if (KeI386NpxPresent)
-    {
-        /* Loop every CPU */
-        i = KeActiveProcessors;
-        for (Affinity = 1; i; Affinity <<= 1)
-        {
-            /* Check if this is part of the set */
-            if (i & Affinity)
-            {
-                /* Run on this CPU */
-                i &= ~Affinity;
-                KeSetSystemAffinityThread(Affinity);
-
-                /* Detect FPU errata */
-                if (KiIsNpxErrataPresent())
-                {
-                    /* Disable NPX support */
-                    KeI386NpxPresent = FALSE;
-                    SharedUserData->
-                        ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] =
-                        TRUE;
-                    break;
-                }
-            }
-        }
-    }
-
-    /* If there's no NPX, then we're emulating the FPU */
-    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] =
-        !KeI386NpxPresent;
-
-    /* Check if there's no NPX, so that we can disable associated features */
-    if (!KeI386NpxPresent)
-    {
-        /* Remove NPX-related bits */
-        KeFeatureBits &= ~(KF_XMMI64 | KF_XMMI | KF_FXSR | KF_MMX);
-
-        /* Disable kernel flags */
-        KeI386FxsrPresent = KeI386XMMIPresent = FALSE;
-
-        /* Disable processor features that might've been set until now */
-        SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] =
-        SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE]   =
-        SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE]     =
-        SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE]    =
-        SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] = 0;
-    }
-
     /* Check for CR4 support */
     if (KeFeatureBits & KF_CR4)
     {
@@ -459,6 +407,21 @@ KiVerifyCpuFeatures(PKPRCB Prcb)
         KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000001, 0, 0);
     }
 
+    // Set up FPU-related CR0 flags.
+    ULONG Cr0 = __readcr0();
+    // Disable emulation and monitoring.
+    Cr0 &= ~(CR0_EM | CR0_MP);
+    // Enable FPU exceptions.
+    Cr0 |= CR0_NE;
+    
+    __writecr0(Cr0);
+
+    // Check for Pentium FPU bug.
+    if (KiIsNpxErrataPresent())
+    {
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000001, 0, 0);
+    }
+
     // 5. Save feature bits.
     Prcb->FeatureBits = FeatureBits;
 }
@@ -590,6 +553,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
     /* Set basic CPU Features that user mode can read */
+    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
     SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
         (KeFeatureBits & KF_MMX) ? TRUE: FALSE;
     SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
