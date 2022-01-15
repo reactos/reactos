@@ -99,6 +99,6 @@ BEGIN
     IDS_SEARCHDRV_TITLE "A procurar..."
     IDS_INSTALLDRV_TITLE "A instalar..."
 
-    /* For  IDD_BROWSE_FOR_FOLDER */
+    /* For IDD_BROWSE_FOR_FOLDER */
     IDS_BROWSE_FOR_FOLDER_TITLE "Seleccione a pasta que contém controladores para o hardware."
 END
