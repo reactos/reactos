@@ -12,6 +12,9 @@
 #define TAG_ARB_ALLOCATION 'AbrA'
 #define TAG_ARB_RANGE      'RbrA'
 
+#define ARB_ORDERING_LIST_DEFAULT_COUNT  16
+#define ARB_ORDERING_LIST_ADD_COUNT      8
+
 typedef struct _ARBITER_ORDERING
 {
     UINT64 Start;
