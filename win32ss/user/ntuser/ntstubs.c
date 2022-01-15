@@ -120,12 +120,10 @@ NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCo
     {
         ProbeForWrite(phList, dwCount * sizeof(HIMC), 1);
         ProbeForWrite(pdwCount, sizeof(DWORD), 1);
-
         *pdwCount = dwRealCount = UserBuildHimcList(pti, dwCount, phList);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ret = STATUS_UNSUCCESSFUL;
         goto Quit;
     }
     _SEH2_END;
