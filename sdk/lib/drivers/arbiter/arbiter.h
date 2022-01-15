@@ -11,6 +11,7 @@
 #define TAG_ARBITER        'MbrA'
 #define TAG_ARB_ALLOCATION 'AbrA'
 #define TAG_ARB_RANGE      'RbrA'
+#define TAG_ARB_ORDERING   'LbrA'
 
 #define ARB_ORDERING_LIST_DEFAULT_COUNT  16
 #define ARB_ORDERING_LIST_ADD_COUNT      8

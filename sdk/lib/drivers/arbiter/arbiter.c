@@ -218,10 +218,54 @@ ArbAddOrdering(
     _In_ UINT64 MinimumAddress,
     _In_ UINT64 MaximumAddress)
 {
+    PARBITER_ORDERING NewOrderings;
+    UINT32 NewCountSize;
+
     PAGED_CODE();
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT("ArbAddOrdering: OrderList %p, MinimumAddress - %I64X, MaximumAddress - %I64X\n",
+           OrderList, MinimumAddress, MaximumAddress);
+
+    if (MaximumAddress < MinimumAddress)
+    {
+        DPRINT1("ArbAddOrdering: STATUS_INVALID_PARAMETER. [%p] %I64X : %I64X\n", OrderList, MinimumAddress, MaximumAddress);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (OrderList->Count < OrderList->Maximum)
+    {
+        /* There is no need to add Orderings. */
+        goto Exit;
+    }
+
+    /* Add Orderings. */
+    NewCountSize = ((OrderList->Count + ARB_ORDERING_LIST_ADD_COUNT) * sizeof(ARBITER_ORDERING));
+
+    NewOrderings = ExAllocatePoolWithTag(PagedPool, NewCountSize, TAG_ARB_ORDERING);
+    if (!NewOrderings)
+    {
+        DPRINT1("ArbAddOrdering: STATUS_INSUFFICIENT_RESOURCES\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if (OrderList->Orderings)
+    {
+        RtlCopyMemory(NewOrderings, OrderList->Orderings, (OrderList->Count * sizeof(ARBITER_ORDERING)));
+        ExFreePoolWithTag(OrderList->Orderings, TAG_ARB_ORDERING);
+    }
+
+    OrderList->Orderings = NewOrderings;
+    OrderList->Maximum += ARB_ORDERING_LIST_ADD_COUNT;
+
+Exit:
+
+    OrderList->Orderings[OrderList->Count].Start = MinimumAddress;
+    OrderList->Orderings[OrderList->Count].End = MaximumAddress;
+
+    OrderList->Count++;
+    ASSERT(OrderList->Count <= OrderList->Maximum);
+
+    return STATUS_SUCCESS;
 }
 
 CODE_SEG("PAGE")
@@ -232,10 +276,115 @@ ArbPruneOrdering(
     _In_ UINT64 MinimumAddress,
     _In_ UINT64 MaximumAddress)
 {
+    PARBITER_ORDERING Current;
+    PARBITER_ORDERING Orderings;
+    PARBITER_ORDERING NewOrderings;
+    PARBITER_ORDERING TmpOrderings;
+    UINT32 TmpOrderingsSize;
+    UINT32 ix;
+    USHORT Count;
+
     PAGED_CODE();
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT("ArbPruneOrdering: %X, %I64X, %I64X\n", OrderList->Count, MinimumAddress, MaximumAddress);
+
+    ASSERT(OrderList);
+    ASSERT(OrderList->Orderings);
+
+    if (MaximumAddress < MinimumAddress)
+    {
+        DPRINT1("ArbPruneOrdering: STATUS_INVALID_PARAMETER. [%p] %I64X : %I64X\n", OrderList, MinimumAddress, MaximumAddress);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    TmpOrderingsSize = (OrderList->Count * (2 * sizeof(ARBITER_ORDERING)) + sizeof(ARBITER_ORDERING));
+
+    TmpOrderings = ExAllocatePoolWithTag(PagedPool, TmpOrderingsSize, TAG_ARB_ORDERING);
+    if (!TmpOrderings)
+    {
+        DPRINT1("ArbPruneOrdering: STATUS_INSUFFICIENT_RESOURCES\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Current = TmpOrderings;
+    Orderings = OrderList->Orderings;
+
+    for (ix = 0; ix < OrderList->Count; ix++)
+    {
+        if (MaximumAddress < Orderings[0].Start ||
+            MinimumAddress > Orderings[0].End)
+        {
+            Current->Start = Orderings[0].Start;
+            Current->End = Orderings[0].End;
+        }
+        else if (MinimumAddress <= Orderings[0].Start)
+        {
+            if (MaximumAddress >= Orderings[0].End)
+            {
+                continue;
+            }
+            else
+            {
+                Current->Start = (MaximumAddress + 1);
+                Current->End = Orderings[0].End;
+            }
+        }
+        else
+        {
+            if (MaximumAddress >= Orderings[0].End)
+            {
+                Current->Start = Orderings[0].Start;
+                Current->End = (MinimumAddress - 1);
+            }
+            else
+            {
+                Current->Start = (MaximumAddress + 1);
+                Current->End = Orderings[0].End;
+
+                Current++;
+
+                Current->Start = Orderings[0].Start;
+                Current->End = (MinimumAddress - 1);
+            }
+        }
+
+        Current++;
+    }
+
+    Count = (Current - TmpOrderings);
+    ASSERT(Count >= 0);
+    if (!Count)
+    {
+        ExFreePoolWithTag(TmpOrderings, TAG_ARB_ORDERING);
+        OrderList->Count = Count;
+        return STATUS_SUCCESS;
+    }
+
+    if (Count > OrderList->Maximum)
+    {
+        NewOrderings = ExAllocatePoolWithTag(PagedPool, (Count * sizeof(ARBITER_ORDERING)), TAG_ARB_ORDERING);
+        if (!NewOrderings)
+        {
+            if (TmpOrderings)
+                ExFreePoolWithTag(TmpOrderings, TAG_ARB_ORDERING);
+
+            DPRINT1("ArbPruneOrdering: STATUS_INSUFFICIENT_RESOURCES\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        if (OrderList->Orderings)
+            ExFreePoolWithTag(OrderList->Orderings, TAG_ARB_ORDERING);
+
+        OrderList->Orderings = NewOrderings;
+        OrderList->Maximum = Count;
+    }
+
+    RtlCopyMemory(OrderList->Orderings, TmpOrderings, (Count * sizeof(ARBITER_ORDERING)));
+
+    ExFreePoolWithTag(TmpOrderings, TAG_ARB_ORDERING);
+    OrderList->Count = Count;
+
+    return STATUS_SUCCESS;
 }
 
 CODE_SEG("PAGE")
