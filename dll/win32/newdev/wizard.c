@@ -641,9 +641,8 @@ CHSourceDlgProc(
                 {
                     BROWSEINFO bi = { 0 };
                     LPITEMIDLIST pidl;
-                    HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hwndDlg, GWLP_HINSTANCE);
                     WCHAR Title[MAX_PATH];
-                    LoadStringW(hInst, IDS_BROWSE_FOR_FOLDER_TITLE, Title, MAX_PATH);
+                    LoadStringW(hDllInstance, IDS_BROWSE_FOR_FOLDER_TITLE, Title, _countof(Title));
 
                     bi.hwndOwner = hwndDlg;
                     bi.ulFlags = BIF_USENEWUI | BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT | BIF_NONEWFOLDERBUTTON;
