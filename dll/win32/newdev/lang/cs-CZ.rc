@@ -98,4 +98,7 @@ BEGIN
     IDS_CHSOURCE_TITLE "Zvolte možnosti vyhledávání a instalace"
     IDS_SEARCHDRV_TITLE "Hledání..."
     IDS_INSTALLDRV_TITLE "Instalace..."
+
+    /* For  IDD_BROWSE_FOR_FOLDER */
+    IDS_BROWSE_FOR_FOLDER_TITLE "Select the folder containing the drivers for the hardware."
 END
