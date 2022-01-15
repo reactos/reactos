@@ -9,6 +9,40 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
+#define INVALID_THREAD_ID  ((ULONG)-1)
+
+DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
+{
+    PIMC pIMC;
+    DWORD dwRealCount = 0;
+
+    if (pti)
+    {
+        for (pIMC = pti->spDefaultImc; pIMC; pIMC = pIMC->pImcNext)
+        {
+            if (dwRealCount < dwCount)
+                phList[dwRealCount] = (HIMC)UserHMGetHandle(pIMC);
+
+            ++dwRealCount;
+        }
+    }
+    else
+    {
+        for (pti = GetW32ThreadInfo()->ppi->ptiList; pti; pti = pti->ptiSibling)
+        {
+            for (pIMC = pti->spDefaultImc; pIMC; pIMC = pIMC->pImcNext)
+            {
+                if (dwRealCount < dwCount)
+                    phList[dwRealCount] = (HIMC)UserHMGetHandle(pIMC);
+
+                ++dwRealCount;
+            }
+        }
+    }
+
+    return dwRealCount;
+}
+
 DWORD
 APIENTRY
 NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
@@ -55,8 +89,55 @@ NTSTATUS
 APIENTRY
 NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
 {
-    STUB;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS ret = STATUS_UNSUCCESSFUL;
+    DWORD dwRealCount;
+    PTHREADINFO pti;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+    {
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        goto Quit;
+    }
+
+    if (dwThreadId == 0)
+    {
+        pti = GetW32ThreadInfo();
+    }
+    else if (dwThreadId == INVALID_THREAD_ID)
+    {
+        pti = NULL;
+    }
+    else
+    {
+        pti = IntTID2PTI(UlongToHandle(dwThreadId));
+        if (!pti || !pti->rpdesk)
+            goto Quit;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(phList, dwCount * sizeof(HIMC), 1);
+        ProbeForWrite(pdwCount, sizeof(DWORD), 1);
+
+        *pdwCount = dwRealCount = UserBuildHimcList(pti, dwCount, phList);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = STATUS_UNSUCCESSFUL;
+        goto Quit;
+    }
+    _SEH2_END;
+
+    if (dwCount < dwRealCount)
+        ret = STATUS_BUFFER_TOO_SMALL;
+    else
+        ret = STATUS_SUCCESS;
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 DWORD
