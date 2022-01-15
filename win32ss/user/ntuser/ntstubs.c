@@ -21,7 +21,7 @@ DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
         for (pIMC = pti->spDefaultImc; pIMC; pIMC = pIMC->pImcNext)
         {
             if (dwRealCount < dwCount)
-                phList[dwRealCount] = (HIMC)UserHMGetHandle(pIMC);
+                phList[dwRealCount] = UserHMGetHandle(pIMC);
 
             ++dwRealCount;
         }
@@ -33,7 +33,7 @@ DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
             for (pIMC = pti->spDefaultImc; pIMC; pIMC = pIMC->pImcNext)
             {
                 if (dwRealCount < dwCount)
-                    phList[dwRealCount] = (HIMC)UserHMGetHandle(pIMC);
+                    phList[dwRealCount] = UserHMGetHandle(pIMC);
 
                 ++dwRealCount;
             }
