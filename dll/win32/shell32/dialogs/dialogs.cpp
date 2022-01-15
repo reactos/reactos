@@ -170,7 +170,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
 
                 DestroyIconList(pIconContext->hDlgCtrl);
 
-                hLibrary = LoadLibraryExW(szText, NULL, LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+                hLibrary = LoadLibraryExW(szText, NULL, LOAD_LIBRARY_AS_DATAFILE);
                 if (hLibrary == NULL)
                     break;
                 FreeLibrary(pIconContext->hLibrary);
@@ -230,7 +230,7 @@ BOOL WINAPI PickIconDlg(
     int res;
     PICK_ICON_CONTEXT IconContext;
 
-    hLibrary = LoadLibraryExW(lpstrFile, NULL, LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE);
+    hLibrary = LoadLibraryExW(lpstrFile, NULL, LOAD_LIBRARY_AS_DATAFILE);
     IconContext.hLibrary = hLibrary;
     IconContext.Index = *lpdwIconIndex;
     StringCchCopyNW(IconContext.szName, _countof(IconContext.szName), lpstrFile, nMaxFile);
