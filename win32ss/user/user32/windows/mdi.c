@@ -2147,13 +2147,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
             continue;
 
         if (IsZoomed(hwnd))
-        {
-            if (!SendMessageTimeoutW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0,
-                                     SMTO_ABORTIFHUNG, 300, NULL))
-            {
-                continue;
-            }
-        }
+            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
 
         GetWindowRect(hwnd, &rcWnd);
         cxNew = cx = rcWnd.right - rcWnd.left;
@@ -2338,13 +2332,7 @@ TileWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         hwnd = info.ahwnd[i];
 
         if (IsZoomed(hwnd))
-        {
-            if (!SendMessageTimeoutW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0,
-                                     SMTO_ABORTIFHUNG, 300, NULL))
-            {
-                continue;
-            }
-        }
+            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
 
         GetWindowRect(hwnd, &rcWnd);
         cx = rcWnd.right - rcWnd.left;
