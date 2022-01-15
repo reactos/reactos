@@ -392,6 +392,46 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->PrcbData.MultiThreadProcessorSet = Pcr->PrcbData.SetMember;
 }
 
+static
+CODE_SEG("INIT")
+VOID
+KiVerifyCpuFeatures(PKPRCB Prcb)
+{
+    ULONG FeatureBits;
+
+    /* Detect and set the CPU Type */
+    KiSetProcessorType();
+
+    /* Check if an FPU is present */
+    KeI386NpxPresent = KiIsNpxPresent();
+
+    /* Bugcheck if this is a 386 CPU */
+    if (Prcb->CpuType == 3)
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x386, 0, 0, 0);
+
+    /* Get the processor features for the CPU */
+    FeatureBits = KiGetFeatureBits();
+
+    /* Detect 8-byte compare exchange support */
+    if (!(FeatureBits & KF_CMPXCHG8B))
+    {
+        ULONG Vendor[3];
+
+        /* Copy the vendor string */
+        RtlCopyMemory(Vendor, Prcb->VendorString, sizeof(Vendor));
+
+        /* Bugcheck the system. Windows *requires* this */
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR,
+                     (1 << 24 ) | (Prcb->CpuType << 16) | Prcb->CpuStep,
+                     Vendor[0],
+                     Vendor[1],
+                     Vendor[2]);
+    }
+
+    /* Save feature bits */
+    Prcb->FeatureBits = FeatureBits;
+}
+
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -402,27 +442,16 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN CCHAR Number,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    BOOLEAN NpxPresent;
-    ULONG FeatureBits;
     ULONG PageDirectory[2];
     PVOID DpcStack;
-    ULONG Vendor[3];
     KIRQL DummyIrql;
-
-    /* Detect and set the CPU Type */
-    KiSetProcessorType();
-
-    /* Check if an FPU is present */
-    NpxPresent = KiIsNpxPresent();
 
     /* Initialize the Power Management Support for this PRCB */
     PoInitializePrcb(Prcb);
 
-    /* Bugcheck if this is a 386 CPU */
-    if (Prcb->CpuType == 3) KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x386, 0, 0, 0);
-
-    /* Get the processor features for the CPU */
-    FeatureBits = KiGetFeatureBits();
+    /* Set boot-level flags */
+    if (Number == 0)
+        KeFeatureBits = Prcb->FeatureBits;
 
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
@@ -432,30 +461,27 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     {
         /* Set it always on */
         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSON;
-        FeatureBits |= KF_NX_ENABLED;
+        KeFeatureBits |= KF_NX_ENABLED;
     }
     else if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTOUT"))
     {
         /* Set it in opt-out mode */
         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTOUT;
-        FeatureBits |= KF_NX_ENABLED;
+        KeFeatureBits |= KF_NX_ENABLED;
     }
     else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTIN")) ||
              (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE")))
     {
         /* Set the feature bits */
-        FeatureBits |= KF_NX_ENABLED;
+        KeFeatureBits |= KF_NX_ENABLED;
     }
     else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSOFF")) ||
              (strstr(KeLoaderBlock->LoadOptions, "EXECUTE")))
     {
         /* Set disabled mode */
         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSOFF;
-        FeatureBits |= KF_NX_DISABLED;
+        KeFeatureBits |= KF_NX_DISABLED;
     }
-
-    /* Save feature bits */
-    Prcb->FeatureBits = FeatureBits;
 
     /* Save CPU state */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
@@ -475,29 +501,13 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         KeNodeBlock[0]->ProcessorMask = Prcb->SetMember;
 
         /* Set boot-level flags */
-        KeI386NpxPresent = NpxPresent;
         KeI386CpuType = Prcb->CpuType;
         KeI386CpuStep = Prcb->CpuStep;
         KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL;
         KeProcessorLevel = (USHORT)Prcb->CpuType;
         if (Prcb->CpuID) KeProcessorRevision = Prcb->CpuStep;
-        KeFeatureBits = FeatureBits;
         KeI386FxsrPresent = (KeFeatureBits & KF_FXSR) ? TRUE : FALSE;
         KeI386XMMIPresent = (KeFeatureBits & KF_XMMI) ? TRUE : FALSE;
-
-        /* Detect 8-byte compare exchange support */
-        if (!(KeFeatureBits & KF_CMPXCHG8B))
-        {
-            /* Copy the vendor string */
-            RtlCopyMemory(Vendor, Prcb->VendorString, sizeof(Vendor));
-
-            /* Bugcheck the system. Windows *requires* this */
-            KeBugCheckEx(UNSUPPORTED_PROCESSOR,
-                         (1 << 24 ) | (Prcb->CpuType << 16) | Prcb->CpuStep,
-                         Vendor[0],
-                         Vendor[1],
-                         Vendor[2]);
-        }
 
         /* Set the current MP Master KPRCB to the Boot PRCB */
         Prcb->MultiThreadSetMaster = Prcb;
@@ -812,6 +822,8 @@ AppCpuInit:
     __writefsdword(KPCR_SET_MEMBER, 1 << Cpu);
     __writefsdword(KPCR_SET_MEMBER_COPY, 1 << Cpu);
     __writefsdword(KPCR_PRCB_SET_MEMBER, 1 << Cpu);
+
+    KiVerifyCpuFeatures(Pcr->Prcb);
 
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);
