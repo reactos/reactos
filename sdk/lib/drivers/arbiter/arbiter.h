@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Kernel&Driver SDK
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Hardware Resources Arbiter Library
- * COPYRIGHT:   Copyright 2020 Vadim Galyant <vgal@rambler.ru>
+ * COPYRIGHT:   Copyright 2020-2022 Vadim Galyant <vgal@rambler.ru>
  */
 
 #pragma once
@@ -12,6 +12,8 @@
 #define TAG_ARB_ALLOCATION 'AbrA'
 #define TAG_ARB_RANGE      'RbrA'
 #define TAG_ARB_ORDERING   'LbrA'
+
+#define IO_REG_KEY_ARBITERS L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET\\CONTROL\\ARBITERS"
 
 #define ARB_ORDERING_LIST_DEFAULT_COUNT  16
 #define ARB_ORDERING_LIST_ADD_COUNT      8
