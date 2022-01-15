@@ -397,38 +397,69 @@ CODE_SEG("INIT")
 VOID
 KiVerifyCpuFeatures(PKPRCB Prcb)
 {
-    ULONG FeatureBits;
+    CPU_INFO CpuInfo;
 
-    /* Detect and set the CPU Type */
+    // 1. Check CPUID support
+    ULONG EFlags = __readeflags();
+
+    /* XOR out the ID bit and update EFlags */
+    ULONG NewEFlags = EFlags ^ EFLAGS_ID;
+    __writeeflags(NewEFlags);
+
+    /* Get them back and see if they were modified */
+    NewEFlags = __readeflags();
+
+    if (NewEFlags == EFlags)
+    {
+        /* The modification did not work, so CPUID is not supported. */
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x1, 0, 0, 0);
+    }
+    else
+    {
+        /* CPUID is supported. Set the ID Bit again. */
+        EFlags |= EFLAGS_ID;
+        __writeeflags(EFlags);
+    }
+
+    /* Peform CPUID 0 to see if CPUID 1 is supported */
+    KiCpuId(&CpuInfo, 0);
+    if (CpuInfo.Eax == 0)
+    {
+        // 0x1 - missing CPUID instruction
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x1, 0, 0, 0);
+    }
+
+    // 2. Detect and set the CPU Type
     KiSetProcessorType();
 
-    /* Check if an FPU is present */
-    KeI386NpxPresent = KiIsNpxPresent();
-
-    /* Bugcheck if this is a 386 CPU */
     if (Prcb->CpuType == 3)
         KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x386, 0, 0, 0);
 
-    /* Get the processor features for the CPU */
-    FeatureBits = KiGetFeatureBits();
+    // 3. Finally, obtain CPU features.
+    ULONG FeatureBits = KiGetFeatureBits();
 
-    /* Detect 8-byte compare exchange support */
-    if (!(FeatureBits & KF_CMPXCHG8B))
+    // 4. Verify it supports everything we need.
+    if (!(FeatureBits & KF_RDTSC))
     {
-        ULONG Vendor[3];
-
-        /* Copy the vendor string */
-        RtlCopyMemory(Vendor, Prcb->VendorString, sizeof(Vendor));
-
-        /* Bugcheck the system. Windows *requires* this */
-        KeBugCheckEx(UNSUPPORTED_PROCESSOR,
-                     (1 << 24 ) | (Prcb->CpuType << 16) | Prcb->CpuStep,
-                     Vendor[0],
-                     Vendor[1],
-                     Vendor[2]);
+        // 0x2 - missing CPUID features
+        // second paramenter - edx flag which is missing
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000010, 0, 0);
     }
 
-    /* Save feature bits */
+    if (!(FeatureBits & KF_CMPXCHG8B))
+    {
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000100, 0, 0);
+    }
+
+    // Check x87 FPU is present. FIXME: put this into FeatureBits?
+    KiCpuId(&CpuInfo, 1);
+
+    if (!(CpuInfo.Edx & 0x00000001))
+    {
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000001, 0, 0);
+    }
+
+    // 5. Save feature bits.
     Prcb->FeatureBits = FeatureBits;
 }
 
