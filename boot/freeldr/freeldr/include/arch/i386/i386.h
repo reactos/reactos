@@ -48,6 +48,10 @@
 #define StartupPageTableIndex       (STARTUP_BASE >> 22)
 #define HalPageTableIndex           (HAL_BASE >> 22)
 
+#define APIC_BASE_PTE_IDX   ((APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT)
+#define USER_SHARED_PTE_IDX ((KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT)
+#define PCR0_PTE_IDX        ((KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT)
+
 typedef struct _PAGE_DIRECTORY_X86
 {
     HARDWARE_PTE Pde[1024];
