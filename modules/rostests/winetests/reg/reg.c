@@ -4511,7 +4511,7 @@ static void test_export(void)
     add_value(hkey, "DWORD", REG_DWORD, &dword, sizeof(dword));
     add_value(hkey, "String", REG_SZ, "Your text here...", 18);
 
-    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", simple_test, 0), "compare_export() failed\n");
 
@@ -4549,7 +4549,7 @@ static void test_export(void)
 
     RegCloseKey(hkey);
 
-    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", complex_test, 0), "compare_export() failed\n");
 
@@ -4563,7 +4563,7 @@ static void test_export(void)
     add_key(hkey, "Subkey1", &subkey);
     RegCloseKey(subkey);
 
-    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", key_order_test, 0), "compare_export() failed\n");
 
@@ -4578,7 +4578,7 @@ static void test_export(void)
 
     RegCloseKey(hkey);
 
-    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", value_order_test, TODO_REG_COMPARE), "compare_export() failed\n");
 
@@ -4596,7 +4596,7 @@ static void test_export(void)
     add_value(hkey, "Wine1h", 0xabcd, NULL, 0);
     RegCloseKey(hkey);
 
-    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_hex_test, 0), "compare_export() failed\n");
 
@@ -4614,7 +4614,7 @@ static void test_export(void)
     verify_reg(hkey, "Wine2c", REG_DWORD, NULL, 0, 0);
     RegCloseKey(hkey);
 
-    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_hex_test2, 0), "compare_export() failed\n");
 
@@ -4633,7 +4633,7 @@ static void test_export(void)
     verify_reg(hkey, "Wine3c", REG_DWORD, &dword, sizeof(dword), 0);
     RegCloseKey(hkey);
 
-    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", hex_types_test, 0), "compare_export() failed\n");
 
@@ -4671,7 +4671,7 @@ static void test_export(void)
     verify_reg(hkey, "Wine4h", REG_SZ, "abc\0def", 8, 0);
     RegCloseKey(hkey);
 
-    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", embedded_null_test, 0), "compare_export() failed\n");
 
