@@ -92,7 +92,7 @@ STRINGTABLE
     STRING_INVALID_KEY, "reg: Invalid registry key\n"
     STRING_INVALID_CMDLINE, "reg: Invalid command line parameters\n"
     STRING_NO_REMOTE, "reg: Unable to access remote machine\n"
-    STRING_CANNOT_FIND, "reg: The system was unable to find the specified registry key or value\n"
+    STRING_VALUE_NONEXIST, "reg: Unable to find the specified registry value\n"
     STRING_UNSUPPORTED_TYPE, "reg: Unsupported registry data type [%1]\n"
     STRING_MISSING_INTEGER, "reg: The option [/d] must be followed by a valid integer\n"
     STRING_MISSING_HEXDATA, "reg: The option [/d] must be followed by a valid hexadecimal value\n"

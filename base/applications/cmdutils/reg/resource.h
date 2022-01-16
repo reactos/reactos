@@ -31,7 +31,7 @@
 #define STRING_INVALID_KEY            106
 #define STRING_INVALID_CMDLINE        107
 #define STRING_NO_REMOTE              108
-#define STRING_CANNOT_FIND            109
+#define STRING_VALUE_NONEXIST         109
 #define STRING_UNSUPPORTED_TYPE       110
 #define STRING_MISSING_INTEGER        111
 #define STRING_MISSING_HEXDATA        112

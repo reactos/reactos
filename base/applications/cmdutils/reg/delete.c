@@ -96,7 +96,7 @@ static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name
         if (RegDeleteValueW(key, value_empty ? NULL : value_name) != ERROR_SUCCESS)
         {
             RegCloseKey(key);
-            output_message(STRING_CANNOT_FIND);
+            output_message(STRING_VALUE_NONEXIST);
             return 1;
         }
     }

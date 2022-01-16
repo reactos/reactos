@@ -174,7 +174,7 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
         {
             if (value_name && *value_name)
             {
-                output_message(STRING_CANNOT_FIND);
+                output_message(STRING_VALUE_NONEXIST);
                 return 1;
             }
             output_string(fmt, path);
