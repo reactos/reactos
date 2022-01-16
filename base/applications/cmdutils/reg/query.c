@@ -48,12 +48,11 @@ static WCHAR *reg_data_to_wchar(DWORD type, const BYTE *src, DWORD size_bytes)
         case REG_BINARY:
         {
             WCHAR *ptr;
-            static const WCHAR fmt[] = {'%','0','2','X',0};
 
             buffer = malloc((size_bytes * 2 + 1) * sizeof(WCHAR));
             ptr = buffer;
             for (i = 0; i < size_bytes; i++)
-                ptr += swprintf(ptr, 3, fmt, src[i]);
+                ptr += swprintf(ptr, 3, L"%02X", src[i]);
             break;
         }
         case REG_DWORD:
@@ -61,10 +60,9 @@ static WCHAR *reg_data_to_wchar(DWORD type, const BYTE *src, DWORD size_bytes)
         case REG_DWORD_BIG_ENDIAN:
         {
             const int zero_x_dword = 10;
-            static const WCHAR fmt[] = {'0','x','%','x',0};
 
             buffer = malloc((zero_x_dword + 1) * sizeof(WCHAR));
-            swprintf(buffer, zero_x_dword + 1, fmt, *(DWORD *)src);
+            swprintf(buffer, zero_x_dword + 1, L"0x%x", *(DWORD *)src);
             break;
         }
         case REG_MULTI_SZ:
@@ -102,11 +100,11 @@ static WCHAR *reg_data_to_wchar(DWORD type, const BYTE *src, DWORD size_bytes)
     return buffer;
 }
 
-static const WCHAR newlineW[] = {'\n',0};
+static const WCHAR *newlineW = L"\n";
 
 static void output_value(const WCHAR *value_name, DWORD type, BYTE *data, DWORD data_size)
 {
-    static const WCHAR fmt[] = {' ',' ',' ',' ','%','1',0};
+    static const WCHAR *fmt = L"    %1";
     WCHAR defval[32];
     WCHAR *reg_data;
 
@@ -142,7 +140,7 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
     DWORD subkey_len;
     DWORD type, path_len, i;
     BYTE *data;
-    WCHAR fmt[] = {'%','1','\n',0};
+    static const WCHAR *fmt = L"%1\n";
     WCHAR *subkey_name, *subkey_path;
     HKEY subkey;
 
@@ -219,13 +217,11 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
     DWORD max_data_bytes = 2048, data_size;
     DWORD subkey_len;
     DWORD i, type, path_len;
-    WCHAR fmt[] = {'%','1','\n',0};
-    WCHAR fmt_path[] = {'%','1','\\','%','2','\n',0};
     WCHAR *value_name, *subkey_name, *subkey_path;
     BYTE *data;
     HKEY subkey;
 
-    output_string(fmt, path);
+    output_string(L"%1\n", path);
 
     value_name = malloc(max_value_len * sizeof(WCHAR));
     data = malloc(max_data_bytes);
@@ -284,7 +280,7 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
                 }
                 free(subkey_path);
             }
-            else output_string(fmt_path, path, subkey_name);
+            else output_string(L"%1\\%2\n", path, subkey_name);
             i++;
         }
         else break;
