@@ -335,6 +335,7 @@ static void test_export(void)
                      "\"Wine2a\"=hex(1):\n"
                      "\"Wine2b\"=hex(3):\n"
                      "\"Wine2c\"=hex(4):\n\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     open_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
     verify_reg(hkey, "Wine2a", REG_SZ, NULL, 0, 0);
     verify_reg(hkey, "Wine2b", REG_BINARY, NULL, 0, 0);
@@ -351,6 +352,7 @@ static void test_export(void)
                      "\"Wine3a\"=hex(1):56,00,61,00,6c,00,75,00,65,00,00,00\n"
                      "\"Wine3b\"=hex(3):12,34,56,78\n"
                      "\"Wine3c\"=hex(4):40,30,20,10\n\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     open_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
     verify_reg(hkey, "Wine3a", REG_SZ, "Value", 6, 0);
     memcpy(hex, "\x12\x34\x56\x78", 4);
