@@ -148,9 +148,31 @@ STRINGTABLE
     STRING_OVERWRITE_FILE, "The file '%1' already exists. Do you want to overwrite it?"
     STRING_KEY_NONEXIST, "reg: Unable to find the specified registry key\n"
     STRING_KEY_IMPORT_FAILED, "reg: Unable to import the registry key '%1'\n"
+
     STRING_REG_VIEW_USAGE, "  /reg:32\n\
 \     Access the registry using the 32-bit view.\n\n\
 \  /reg:64\n\
 \     Access the registry using the 64-bit view.\n\n"
     STRING_ACCESS_DENIED, "reg: Unable to access or create the specified registry key\n"
+
+    STRING_COPY_USAGE, "REG COPY <key1> <key2> [/s] [/f]\n\n\
+\  Copies the contents of a specified registry key to another location.\n\
+\  By default, this operation only copies registry values. Use [/s] to\n\
+\  recursively copy all subkeys and values.\n\n\
+\  <key1>, <key2>\n\
+\     Registry keys specifying the source (<key1>) and destination (<key2>)\n\
+\     of the data. If <key2> does not exist, it is created.\n\n\
+\     Format: ROOT\\Subkey\n\n\
+\     ROOT: A predefined registry key. This must be one of the following:\n\n\
+\         HKEY_LOCAL_MACHINE  | HKLM\n\
+\         HKEY_CURRENT_USER   | HKCU\n\
+\         HKEY_CLASSES_ROOT   | HKCR\n\
+\         HKEY_USERS          | HKU\n\
+\         HKEY_CURRENT_CONFIG | HKCC\n\n\
+\     Subkey: The full path to a registry key under a given ROOT key.\n\n\
+\  /s\n\
+\     Copy all subkeys and values from <key1> to <key2>.\n\n\
+\  /f\n\
+\     Overwrite all registry data in <key2> without prompting for confirmation.\n\
+\     This option does not modify subkeys and values that only exist in <key2>.\n\n"
 }

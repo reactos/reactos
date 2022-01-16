@@ -65,3 +65,4 @@
 #define STRING_KEY_IMPORT_FAILED      140
 #define STRING_REG_VIEW_USAGE         141
 #define STRING_ACCESS_DENIED          142
+#define STRING_COPY_USAGE             143
