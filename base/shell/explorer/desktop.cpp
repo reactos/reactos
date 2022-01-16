@@ -23,7 +23,6 @@
 class CDesktopThread
 {
 private:
-    
     CComPtr<ITrayWindow> m_Tray;
     HANDLE m_hEvent;
     HANDLE m_hThread;
@@ -32,7 +31,6 @@ private:
     static DWORD WINAPI s_DesktopThreadProc(LPVOID lpParameter);
     
 public:
-    
     CDesktopThread();
     virtual ~CDesktopThread();
 
