@@ -574,12 +574,26 @@ static void test_add(void)
     RegCloseKey(hkey);
 
     /* Test duplicate switches */
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v Wine /t REG_DWORD /d 0x1 /v Test /f", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v dup1 /t REG_DWORD /d 123 /f /t REG_SZ", &r);
     ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */),
        "got exit code %u, expected 1\n", r);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v dup2 /t REG_DWORD /d 123 /f /d 456", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
+
+    /* Multiple /v* switches */
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v Wine /ve", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    /* No /v argument */
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /d Test /f /v", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
     /* Test invalid switches */
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v invalid1 /a", &r);
@@ -618,6 +632,27 @@ static void test_delete(void)
     run_reg_exe("reg delete -H", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
 
+    /* Multiple /v* switches */
+    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v Wine /ve", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v Wine /va", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg delete HKCU\\" KEY_BASE " /ve /va", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v Wine /v Test /f", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    /* No /v argument */
+    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg delete HKCU\\" KEY_BASE " /f /v", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    /* Create a test key */
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
     add_value(hkey, "foo", REG_DWORD, &deadbeef, sizeof(deadbeef));
     add_value(hkey, "bar", REG_DWORD, &deadbeef, sizeof(deadbeef));
@@ -754,43 +789,6 @@ static void test_query(void)
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 
     run_reg_exe("reg query HKCU\\" KEY_BASE, &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-}
-
-static void test_v_flags(void)
-{
-    DWORD r;
-
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /v Wine /ve", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v Wine /ve", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v Wine /va", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /ve /va", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    /* No /v argument */
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /v", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /d Test /f /v", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /f /v", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    /* Multiple /v switches */
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /v Wine /t REG_DWORD /d 0x1 /v Test /f", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v Wine /v Test /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 }
 
@@ -4772,7 +4770,6 @@ START_TEST(reg)
     test_add();
     test_delete();
     test_query();
-    test_v_flags();
     test_import();
     test_unicode_import();
     test_import_with_whitespace();
