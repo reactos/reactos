@@ -496,6 +496,8 @@ RtlpDeleteFromMergedRange(
     PRTLP_RANGE_LIST_ENTRY CurrentRtlEntry;
     PRTLP_RANGE_LIST_ENTRY NextRtlEntry;
     LIST_ENTRY TmpList;
+    PLIST_ENTRY Flink;
+    PLIST_ENTRY Blink;
     NTSTATUS Status;
 
     PAGED_CODE_RTL();
@@ -556,9 +558,6 @@ RtlpDeleteFromMergedRange(
     }
     else
     {
-        PLIST_ENTRY Flink;
-        PLIST_ENTRY Blink;
-
         DPRINT("RtlpDeleteFromMergedRange: Add entry from TmpList\n");
 
         Blink = RtlEntry->ListEntry.Blink;
