@@ -18,8 +18,6 @@
 
 #include <errno.h>
 #include <stdlib.h>
-#include <windows.h>
-#include <wine/heap.h>
 #include "reg.h"
 
 static DWORD wchar_get_type(const WCHAR *type_name)

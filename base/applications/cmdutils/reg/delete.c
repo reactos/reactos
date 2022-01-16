@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
-#include <wine/heap.h>
 #include "reg.h"
 
 int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,

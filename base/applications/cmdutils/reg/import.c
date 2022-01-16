@@ -16,15 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <wine/debug.h>
-#include <wine/heap.h>
-
 #include "reg.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(reg);
 

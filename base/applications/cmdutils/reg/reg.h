@@ -19,6 +19,8 @@
 #ifndef __REG_H__
 #define __REG_H__
 
+#include <windows.h>
+#include <wine/heap.h>
 #include "resource.h"
 
 #define MAX_SUBKEY_LEN   257

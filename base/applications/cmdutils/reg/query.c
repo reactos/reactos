@@ -17,8 +17,6 @@
  */
 
 #include <stdio.h>
-#include <windows.h>
-#include <wine/heap.h>
 #include "reg.h"
 
 static const WCHAR *reg_type_to_wchar(DWORD type)
