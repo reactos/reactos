@@ -133,7 +133,7 @@ static void output_value(const WCHAR *value_name, DWORD type, BYTE *data, DWORD 
 
 static unsigned int num_values_found = 0;
 
-static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
+static int query_value(HKEY hkey, WCHAR *value_name, WCHAR *path, BOOL recurse)
 {
     LONG rc;
     DWORD max_data_bytes = 2048, data_size;
@@ -149,7 +149,7 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
     for (;;)
     {
         data_size = max_data_bytes;
-        rc = RegQueryValueExW(key, value_name, NULL, &type, data, &data_size);
+        rc = RegQueryValueExW(hkey, value_name, NULL, &type, data, &data_size);
         if (rc == ERROR_MORE_DATA)
         {
             max_data_bytes = data_size;
@@ -191,11 +191,11 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
     for (;;)
     {
         subkey_len = MAX_SUBKEY_LEN;
-        rc = RegEnumKeyExW(key, i, subkey_name, &subkey_len, NULL, NULL, NULL, NULL);
+        rc = RegEnumKeyExW(hkey, i, subkey_name, &subkey_len, NULL, NULL, NULL, NULL);
         if (rc == ERROR_SUCCESS)
         {
             subkey_path = build_subkey_path(path, path_len, subkey_name, subkey_len);
-            if (!RegOpenKeyExW(key, subkey_name, 0, KEY_READ, &subkey))
+            if (!RegOpenKeyExW(hkey, subkey_name, 0, KEY_READ, &subkey))
             {
                 query_value(subkey, value_name, subkey_path, recurse);
                 RegCloseKey(subkey);
@@ -210,7 +210,7 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
     return 0;
 }
 
-static int query_all(HKEY key, WCHAR *path, BOOL recurse)
+static int query_all(HKEY hkey, WCHAR *path, BOOL recurse)
 {
     LONG rc;
     DWORD max_value_len = 256, value_len;
@@ -231,7 +231,7 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
     {
         value_len = max_value_len;
         data_size = max_data_bytes;
-        rc = RegEnumValueW(key, i, value_name, &value_len, NULL, &type, data, &data_size);
+        rc = RegEnumValueW(hkey, i, value_name, &value_len, NULL, &type, data, &data_size);
         if (rc == ERROR_SUCCESS)
         {
             output_value(value_name, type, data, data_size);
@@ -267,13 +267,13 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
     for (;;)
     {
         subkey_len = MAX_SUBKEY_LEN;
-        rc = RegEnumKeyExW(key, i, subkey_name, &subkey_len, NULL, NULL, NULL, NULL);
+        rc = RegEnumKeyExW(hkey, i, subkey_name, &subkey_len, NULL, NULL, NULL, NULL);
         if (rc == ERROR_SUCCESS)
         {
             if (recurse)
             {
                 subkey_path = build_subkey_path(path, path_len, subkey_name, subkey_len);
-                if (!RegOpenKeyExW(key, subkey_name, 0, KEY_READ, &subkey))
+                if (!RegOpenKeyExW(hkey, subkey_name, 0, KEY_READ, &subkey))
                 {
                     query_all(subkey, subkey_path, recurse);
                     RegCloseKey(subkey);
@@ -297,10 +297,10 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
 static int run_query(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
               BOOL value_empty, BOOL recurse)
 {
-    HKEY key;
+    HKEY hkey;
     int ret;
 
-    if (RegOpenKeyExW(root, path, 0, KEY_READ, &key) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(root, path, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
     {
         output_message(STRING_KEY_NONEXIST);
         return 1;
@@ -310,14 +310,14 @@ static int run_query(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
 
     if (value_name || value_empty)
     {
-        ret = query_value(key, value_name, key_name, recurse);
+        ret = query_value(hkey, value_name, key_name, recurse);
         if (recurse)
             output_message(STRING_MATCHES_FOUND, num_values_found);
     }
     else
-        ret = query_all(key, key_name, recurse);
+        ret = query_all(hkey, key_name, recurse);
 
-    RegCloseKey(key);
+    RegCloseKey(hkey);
 
     return ret;
 }

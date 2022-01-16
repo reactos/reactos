@@ -152,10 +152,10 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
 static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
                    WCHAR *type, WCHAR separator, WCHAR *data, BOOL force)
 {
-    HKEY key;
+    HKEY hkey;
 
     if (RegCreateKeyExW(root, path, 0, NULL, REG_OPTION_NON_VOLATILE,
-                        KEY_READ|KEY_WRITE, NULL, &key, NULL))
+                        KEY_READ|KEY_WRITE, NULL, &hkey, NULL))
     {
         output_message(STRING_INVALID_KEY);
         return 1;
@@ -169,11 +169,11 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
 
         if (!force)
         {
-            if (RegQueryValueExW(key, value_name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+            if (RegQueryValueExW(hkey, value_name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
             {
                 if (!ask_confirm(STRING_OVERWRITE_VALUE, value_name))
                 {
-                    RegCloseKey(key);
+                    RegCloseKey(hkey);
                     output_message(STRING_CANCELLED);
                     return 0;
                 }
@@ -183,28 +183,28 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
         reg_type = wchar_get_type(type);
         if (reg_type == ~0u)
         {
-            RegCloseKey(key);
+            RegCloseKey(hkey);
             output_message(STRING_UNSUPPORTED_TYPE, type);
             return 1;
         }
         if ((reg_type == REG_DWORD || reg_type == REG_DWORD_BIG_ENDIAN) && !data)
         {
-             RegCloseKey(key);
+             RegCloseKey(hkey);
              output_message(STRING_INVALID_CMDLINE);
              return 1;
         }
 
         if (!(reg_data = get_regdata(data, reg_type, separator, &reg_count)))
         {
-            RegCloseKey(key);
+            RegCloseKey(hkey);
             return 1;
         }
 
-        RegSetValueExW(key, value_name, 0, reg_type, reg_data, reg_count);
+        RegSetValueExW(hkey, value_name, 0, reg_type, reg_data, reg_count);
         free(reg_data);
     }
 
-    RegCloseKey(key);
+    RegCloseKey(hkey);
     output_message(STRING_SUCCESS);
 
     return 0;

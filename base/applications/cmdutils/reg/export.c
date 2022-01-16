@@ -225,7 +225,7 @@ static void export_key_name(HANDLE hFile, WCHAR *name)
     free(buf);
 }
 
-static int export_registry_data(HANDLE hFile, HKEY key, WCHAR *path)
+static int export_registry_data(HANDLE hFile, HKEY hkey, WCHAR *path)
 {
     LONG rc;
     DWORD max_value_len = 256, value_len;
@@ -246,7 +246,7 @@ static int export_registry_data(HANDLE hFile, HKEY key, WCHAR *path)
     {
         value_len = max_value_len;
         data_size = max_data_bytes;
-        rc = RegEnumValueW(key, i, value_name, &value_len, NULL, &type, data, &data_size);
+        rc = RegEnumValueW(hkey, i, value_name, &value_len, NULL, &type, data, &data_size);
 
         if (rc == ERROR_SUCCESS)
         {
@@ -280,11 +280,11 @@ static int export_registry_data(HANDLE hFile, HKEY key, WCHAR *path)
     for (;;)
     {
         subkey_len = MAX_SUBKEY_LEN;
-        rc = RegEnumKeyExW(key, i, subkey_name, &subkey_len, NULL, NULL, NULL, NULL);
+        rc = RegEnumKeyExW(hkey, i, subkey_name, &subkey_len, NULL, NULL, NULL, NULL);
         if (rc == ERROR_SUCCESS)
         {
             subkey_path = build_subkey_path(path, path_len, subkey_name, subkey_len);
-            if (!RegOpenKeyExW(key, subkey_name, 0, KEY_READ, &subkey))
+            if (!RegOpenKeyExW(hkey, subkey_name, 0, KEY_READ, &subkey))
             {
                 export_registry_data(hFile, subkey, subkey_path);
                 RegCloseKey(subkey);
