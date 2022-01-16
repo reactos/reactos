@@ -301,7 +301,7 @@ static int export_registry_data(HANDLE hFile, HKEY key, WCHAR *path)
 
 static void export_file_header(HANDLE hFile)
 {
-    static const WCHAR *header = L"\uFEFFWindows Registry Editor Version 5.00\r\n";
+    static const WCHAR header[] = L"\xFEFFWindows Registry Editor Version 5.00\r\n";
 
     write_file(hFile, header);
 }
