@@ -50,7 +50,15 @@ static WCHAR *reg_data_to_wchar(DWORD type, const BYTE *src, DWORD size_bytes)
             WCHAR *ptr;
 
             buffer = malloc((size_bytes * 2 + 1) * sizeof(WCHAR));
+
+            if (!size_bytes)
+            {
+                *buffer = 0;
+                break;
+            }
+
             ptr = buffer;
+
             for (i = 0; i < size_bytes; i++)
                 ptr += swprintf(ptr, 3, L"%02X", src[i]);
             break;
