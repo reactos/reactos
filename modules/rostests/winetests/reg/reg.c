@@ -222,6 +222,9 @@ static void test_add(void)
     DWORD r, dword, type, size;
     char buffer[22];
 
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
+
     run_reg_exe("reg add", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
@@ -233,11 +236,6 @@ static void test_add(void)
 
     run_reg_exe("reg add -H", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
-    ok(err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND, "got %d\n", err);
-
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
@@ -602,12 +600,11 @@ static void test_add(void)
 static void test_delete(void)
 {
     HKEY hkey, hsubkey;
-    LONG err;
     DWORD r;
     const DWORD deadbeef = 0xdeadbeef;
 
-    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
-    ok(err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND, "got %d\n", err);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
     run_reg_exe("reg delete", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -664,8 +661,8 @@ static void test_query(void)
     const DWORD dword1 = 0x123;
     const DWORD dword2 = 0xabc;
 
-    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
-    ok(err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND, "got %d\n", err);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
     run_reg_exe("reg query", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -858,8 +855,8 @@ static void test_import(void)
     LONG err;
     BYTE hex[8];
 
-    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
-    ok(err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND, "got %d\n", err);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
     run_reg_exe("reg import", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -2387,8 +2384,8 @@ static void test_unicode_import(void)
     char buffer[24];
     BYTE hex[8];
 
-    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
-    ok(err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND, "got %d\n", err);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
     test_import_wstr("REGEDIT\n", &r);
     ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS) /* WinXP */,
@@ -3910,8 +3907,8 @@ static void test_import_with_whitespace(void)
     DWORD r, dword;
     LONG err;
 
-    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
-    ok(err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND, "got %d\n", err);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
     test_import_str("  REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "]\n\n", &r);
@@ -4058,8 +4055,8 @@ static void test_unicode_import_with_whitespace(void)
     DWORD r, dword;
     LONG err;
 
-    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
-    ok(err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND, "got %d\n", err);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
     test_import_wstr("\xef\xbb\xbf  Windows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "]\n\n", &r);
@@ -4453,8 +4450,8 @@ static void test_export(void)
         "\"Wine4g\"=\"Value2\"\r\n"
         "\"Wine4h\"=\"abc\"\r\n\r\n";
 
-    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
-    ok(err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND, "got %d\n", err);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
     run_reg_exe("reg export", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -4690,6 +4687,9 @@ static void test_export(void)
 static void test_copy(void)
 {
     DWORD r;
+
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
     run_reg_exe("reg copy", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
