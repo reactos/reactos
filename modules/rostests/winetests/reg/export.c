@@ -247,6 +247,11 @@ static void test_export(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", simple_test, 0), "compare_export() failed\n");
 
+    /* Test whether a .reg file extension is required when exporting */
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " foo /y", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("foo", simple_test, 0), "compare_export() failed\n");
+
     /* Test registry export with a complex data structure */
     add_key(hkey, "Subkey1", &subkey);
     add_value(subkey, "Binary", REG_BINARY, "\x11\x22\x33\x44", 4);
