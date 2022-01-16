@@ -43,8 +43,7 @@ BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path, WCHAR **long
 BOOL is_switch(const WCHAR *s, const WCHAR c);
 
 /* add.c */
-int reg_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
-            WCHAR *type, WCHAR separator, WCHAR *data, BOOL force);
+int reg_add(int arc, WCHAR *argvW[]);
 
 /* delete.c */
 int reg_delete(int argc, WCHAR *argvW[]);

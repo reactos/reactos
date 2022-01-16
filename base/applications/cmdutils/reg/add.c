@@ -149,8 +149,8 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
     return out_data;
 }
 
-int reg_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
-            WCHAR *type, WCHAR separator, WCHAR *data, BOOL force)
+static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
+                   WCHAR *type, WCHAR separator, WCHAR *data, BOOL force)
 {
     HKEY key;
 
@@ -207,4 +207,67 @@ int reg_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
     output_message(STRING_SUCCESS);
 
     return 0;
+}
+
+int reg_add(int argc, WCHAR *argvW[])
+{
+    HKEY root;
+    WCHAR *path, *key_name, *value_name = NULL, *type = NULL, *data = NULL, separator = '\0';
+    BOOL value_empty = FALSE, force = FALSE;
+    int i;
+
+    if (!parse_registry_key(argvW[2], &root, &path, &key_name))
+        return 1;
+
+    for (i = 3; i < argc; i++)
+    {
+        if (argvW[i][0] == '/' || argvW[i][0] == '-')
+        {
+            WCHAR *str = &argvW[i][1];
+
+            if (!lstrcmpiW(str, L"ve"))
+            {
+                value_empty = TRUE;
+                continue;
+            }
+            else if (!str[0] || str[1])
+                goto invalid;
+
+            switch (towlower(*str))
+            {
+            case 'v':
+                if (value_name || !(value_name = argvW[++i]))
+                    goto invalid;
+                break;
+            case 't':
+                if (type || !(type = argvW[++i]))
+                    goto invalid;
+                break;
+            case 'd':
+                if (data || !(data = argvW[++i]))
+                    goto invalid;
+                break;
+            case 's':
+                str = argvW[++i];
+                if (!str || lstrlenW(str) != 1)
+                    goto invalid;
+                separator = str[0];
+                break;
+            case 'f':
+                force = TRUE;
+                break;
+            default:
+                goto invalid;
+            }
+        }
+    }
+
+    if (value_name && value_empty)
+        goto invalid;
+
+    return run_add(root, path, value_name, value_empty, type, separator, data, force);
+
+invalid:
+    output_message(STRING_INVALID_CMDLINE);
+    return 1;
 }

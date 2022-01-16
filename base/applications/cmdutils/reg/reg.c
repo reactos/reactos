@@ -333,11 +333,7 @@ static enum operations get_operation(const WCHAR *str, int *op_help)
 
 int __cdecl wmain(int argc, WCHAR *argvW[])
 {
-    int i, op, op_help;
-    static const WCHAR switchVEW[] = {'v','e',0};
-    WCHAR *key_name, *path, *value_name = NULL, *type = NULL, *data = NULL, separator = '\0';
-    BOOL value_empty = FALSE, force = FALSE;
-    HKEY root;
+    int op, op_help;
 
     if (argc == 1)
     {
@@ -373,6 +369,9 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
         return 0;
     }
 
+    if (op == REG_ADD)
+        return reg_add(argc, argvW);
+
     if (op == REG_DELETE)
         return reg_delete(argc, argvW);
 
@@ -382,76 +381,5 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
     if (op == REG_IMPORT)
         return reg_import(argc, argvW);
 
-    if (op == REG_QUERY)
-        return reg_query(argc, argvW);
-
-    if (!parse_registry_key(argvW[2], &root, &path, &key_name))
-        return 1;
-
-    for (i = 3; i < argc; i++)
-    {
-        if (argvW[i][0] == '/' || argvW[i][0] == '-')
-        {
-            WCHAR *ptr = &argvW[i][1];
-
-            if (!lstrcmpiW(ptr, switchVEW))
-            {
-                value_empty = TRUE;
-                continue;
-            }
-            else if (!ptr[0] || ptr[1])
-            {
-                output_message(STRING_INVALID_CMDLINE);
-                return 1;
-            }
-
-            switch(towlower(argvW[i][1]))
-            {
-            case 'v':
-                if (value_name || !(value_name = argvW[++i]))
-                {
-                    output_message(STRING_INVALID_CMDLINE);
-                    return 1;
-                }
-                break;
-            case 't':
-                if (type || !(type = argvW[++i]))
-                {
-                    output_message(STRING_INVALID_CMDLINE);
-                    return 1;
-                }
-                break;
-            case 'd':
-                if (data || !(data = argvW[++i]))
-                {
-                    output_message(STRING_INVALID_CMDLINE);
-                    return 1;
-                }
-                break;
-            case 's':
-                ptr = argvW[++i];
-                if (!ptr || lstrlenW(ptr) != 1)
-                {
-                    output_message(STRING_INVALID_CMDLINE);
-                    return 1;
-                }
-                separator = ptr[0];
-                break;
-            case 'f':
-                force = TRUE;
-                break;
-            default:
-                output_message(STRING_INVALID_CMDLINE);
-                return 1;
-            }
-        }
-    }
-
-    if (value_name && value_empty)
-    {
-        output_message(STRING_INVALID_CMDLINE);
-        return 1;
-    }
-
-    return reg_add(root, path, value_name, value_empty, type, separator, data, force);
+    return reg_query(argc, argvW);
 }
