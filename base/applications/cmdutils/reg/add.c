@@ -17,7 +17,6 @@
  */
 
 #include <errno.h>
-#include <stdlib.h>
 #include "reg.h"
 
 static DWORD wchar_get_type(const WCHAR *type_name)
@@ -64,7 +63,7 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
         case REG_EXPAND_SZ:
         {
             *reg_count = (lstrlenW(data) + 1) * sizeof(WCHAR);
-            out_data = heap_xalloc(*reg_count);
+            out_data = malloc(*reg_count);
             lstrcpyW((LPWSTR)out_data,data);
             break;
         }
@@ -80,7 +79,7 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
                 break;
             }
             *reg_count = sizeof(DWORD);
-            out_data = heap_xalloc(*reg_count);
+            out_data = malloc(*reg_count);
             ((LPDWORD)out_data)[0] = val;
             break;
         }
@@ -89,7 +88,7 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
             BYTE hex0, hex1;
             int i = 0, destByteIndex = 0, datalen = lstrlenW(data);
             *reg_count = ((datalen + datalen % 2) / 2) * sizeof(BYTE);
-            out_data = heap_xalloc(*reg_count);
+            out_data = malloc(*reg_count);
             if(datalen % 2)
             {
                 hex1 = hexchar_to_byte(data[i++]);
@@ -108,7 +107,7 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
             break;
             no_hex_data:
             /* cleanup, print error */
-            heap_free(out_data);
+            free(out_data);
             output_message(STRING_MISSING_HEXDATA);
             out_data = NULL;
             break;
@@ -116,7 +115,7 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
         case REG_MULTI_SZ:
         {
             int i, destindex, len = lstrlenW(data);
-            WCHAR *buffer = heap_xalloc((len + 2) * sizeof(WCHAR));
+            WCHAR *buffer = malloc((len + 2) * sizeof(WCHAR));
 
             for (i = 0, destindex = 0; i < len; i++, destindex++)
             {
@@ -132,7 +131,7 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
 
                 if (destindex && !buffer[destindex - 1] && (!buffer[destindex] || destindex == 1))
                 {
-                    heap_free(buffer);
+                    free(buffer);
                     output_message(STRING_INVALID_STRING);
                     return NULL;
                 }
@@ -201,7 +200,7 @@ int reg_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
         }
 
         RegSetValueExW(key, value_name, 0, reg_type, reg_data, reg_count);
-        heap_free(reg_data);
+        free(reg_data);
     }
 
     RegCloseKey(key);

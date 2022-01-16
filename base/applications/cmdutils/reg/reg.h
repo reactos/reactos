@@ -19,8 +19,8 @@
 #ifndef __REG_H__
 #define __REG_H__
 
+#include <stdlib.h>
 #include <windows.h>
-#include <wine/heap.h>
 #include "resource.h"
 
 #define MAX_SUBKEY_LEN   257
@@ -33,8 +33,6 @@ struct reg_type_rels {
 
 extern const struct reg_type_rels type_rels[8];
 
-void *heap_xalloc(size_t size);
-void *heap_xrealloc(void *buf, size_t size);
 void output_writeconsole(const WCHAR *str, DWORD wlen);
 void WINAPIV output_message(unsigned int id, ...);
 void WINAPIV output_string(const WCHAR *fmt, ...);

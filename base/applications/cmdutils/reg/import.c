@@ -18,7 +18,6 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include "reg.h"
 #include <wine/debug.h>
 
@@ -31,7 +30,7 @@ static WCHAR *GetWideString(const char *strA)
         WCHAR *strW;
         int len = MultiByteToWideChar(CP_ACP, 0, strA, -1, NULL, 0);
 
-        strW = heap_xalloc(len * sizeof(WCHAR));
+        strW = malloc(len * sizeof(WCHAR));
         MultiByteToWideChar(CP_ACP, 0, strA, -1, strW, len);
         return strW;
     }
@@ -45,7 +44,7 @@ static WCHAR *GetWideStringN(const char *strA, int size, DWORD *len)
         WCHAR *strW;
         *len = MultiByteToWideChar(CP_ACP, 0, strA, size, NULL, 0);
 
-        strW = heap_xalloc(*len * sizeof(WCHAR));
+        strW = malloc(*len * sizeof(WCHAR));
         MultiByteToWideChar(CP_ACP, 0, strA, size, strW, *len);
         return strW;
     }
@@ -192,7 +191,7 @@ static BOOL convert_hex_csv_to_hex(struct parser *parser, WCHAR **str)
 
     /* The worst case is 1 digit + 1 comma per byte */
     size = ((lstrlenW(*str) + 1) / 2) + parser->data_size;
-    parser->data = heap_xrealloc(parser->data, size);
+    parser->data = realloc(parser->data, size);
 
     s = *str;
     d = (BYTE *)parser->data + parser->data_size;
@@ -358,7 +357,7 @@ static void close_key(struct parser *parser)
 {
     if (parser->hkey)
     {
-        heap_free(parser->key_name);
+        free(parser->key_name);
         parser->key_name = NULL;
 
         RegCloseKey(parser->hkey);
@@ -383,7 +382,7 @@ static LONG open_key(struct parser *parser, WCHAR *path)
 
     if (res == ERROR_SUCCESS)
     {
-        parser->key_name = heap_xalloc((lstrlenW(path) + 1) * sizeof(WCHAR));
+        parser->key_name = malloc((lstrlenW(path) + 1) * sizeof(WCHAR));
         lstrcpyW(parser->key_name, path);
     }
     else
@@ -395,7 +394,7 @@ static LONG open_key(struct parser *parser, WCHAR *path)
 static void free_parser_data(struct parser *parser)
 {
     if (parser->parse_type == REG_DWORD || parser->parse_type == REG_BINARY)
-        heap_free(parser->data);
+        free(parser->data);
 
     parser->data = NULL;
     parser->data_size = 0;
@@ -429,7 +428,7 @@ static void prepare_hex_string_data(struct parser *parser)
 
             parser->data = GetWideStringN(parser->data, parser->data_size, &parser->data_size);
             parser->data_size *= sizeof(WCHAR);
-            heap_free(data);
+            free(data);
         }
     }
 }
@@ -482,12 +481,12 @@ static WCHAR *header_state(struct parser *parser, WCHAR *pos)
 
     if (!parser->is_unicode)
     {
-        header = heap_xalloc((lstrlenW(line) + 3) * sizeof(WCHAR));
+        header = malloc((lstrlenW(line) + 3) * sizeof(WCHAR));
         header[0] = parser->two_wchars[0];
         header[1] = parser->two_wchars[1];
         lstrcpyW(header + 2, line);
         parser->reg_version = parse_file_header(header);
-        heap_free(header);
+        free(header);
     }
     else parser->reg_version = parse_file_header(line);
 
@@ -627,7 +626,7 @@ static WCHAR *delete_key_state(struct parser *parser, WCHAR *pos)
 /* handler for parser DEFAULT_VALUE_NAME state */
 static WCHAR *default_value_name_state(struct parser *parser, WCHAR *pos)
 {
-    heap_free(parser->value_name);
+    free(parser->value_name);
     parser->value_name = NULL;
 
     set_state(parser, DATA_START);
@@ -639,14 +638,14 @@ static WCHAR *quoted_value_name_state(struct parser *parser, WCHAR *pos)
 {
     WCHAR *val_name = pos, *p;
 
-    heap_free(parser->value_name);
+    free(parser->value_name);
     parser->value_name = NULL;
 
     if (!unescape_string(val_name, &p))
         goto invalid;
 
     /* copy the value name in case we need to parse multiple lines and the buffer is overwritten */
-    parser->value_name = heap_xalloc((lstrlenW(val_name) + 1) * sizeof(WCHAR));
+    parser->value_name = malloc((lstrlenW(val_name) + 1) * sizeof(WCHAR));
     lstrcpyW(parser->value_name, val_name);
 
     set_state(parser, DATA_START);
@@ -757,7 +756,7 @@ static WCHAR *dword_data_state(struct parser *parser, WCHAR *pos)
 {
     WCHAR *line = pos;
 
-    parser->data = heap_xalloc(sizeof(DWORD));
+    parser->data = malloc(sizeof(DWORD));
 
     if (!convert_hex_to_dword(line, parser->data))
         goto invalid;
@@ -879,14 +878,14 @@ static WCHAR *get_lineA(FILE *fp)
     static char *buf, *next;
     char *line;
 
-    heap_free(lineW);
+    free(lineW);
 
     if (!fp) goto cleanup;
 
     if (!size)
     {
         size = REG_VAL_BUF_SIZE;
-        buf = heap_xalloc(size);
+        buf = malloc(size);
         *buf = 0;
         next = buf;
     }
@@ -903,7 +902,7 @@ static WCHAR *get_lineA(FILE *fp)
             if (size - len < 3)
             {
                 size *= 2;
-                buf = heap_xrealloc(buf, size);
+                buf = realloc(buf, size);
             }
             if (!(count = fread(buf + len, 1, size - len - 1, fp)))
             {
@@ -925,7 +924,7 @@ static WCHAR *get_lineA(FILE *fp)
 
 cleanup:
     lineW = NULL;
-    if (size) heap_free(buf);
+    free(buf);
     size = 0;
     return NULL;
 }
@@ -941,7 +940,7 @@ static WCHAR *get_lineW(FILE *fp)
     if (!size)
     {
         size = REG_VAL_BUF_SIZE;
-        buf = heap_xalloc(size * sizeof(WCHAR));
+        buf = malloc(size * sizeof(WCHAR));
         *buf = 0;
         next = buf;
     }
@@ -959,7 +958,7 @@ static WCHAR *get_lineW(FILE *fp)
             if (size - len < 3)
             {
                 size *= 2;
-                buf = heap_xrealloc(buf, size * sizeof(WCHAR));
+                buf = realloc(buf, size * sizeof(WCHAR));
             }
             if (!(count = fread(buf + len, sizeof(WCHAR), size - len - 1, fp)))
             {
@@ -978,7 +977,7 @@ static WCHAR *get_lineW(FILE *fp)
     }
 
 cleanup:
-    if (size) heap_free(buf);
+    free(buf);
     size = 0;
     return NULL;
 }
@@ -1036,7 +1035,7 @@ int reg_import(int argc, WCHAR *argvW[])
     if (parser.reg_version == REG_VERSION_INVALID)
         goto error;
 
-    heap_free(parser.value_name);
+    free(parser.value_name);
     close_key(&parser);
 
     fclose(fp);

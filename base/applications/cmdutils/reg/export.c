@@ -17,7 +17,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include "reg.h"
 
 static void write_file(HANDLE hFile, const WCHAR *str)
@@ -42,7 +41,7 @@ static WCHAR *escape_string(WCHAR *str, size_t str_len, size_t *line_len)
             escape_count++;
     }
 
-    buf = heap_xalloc((str_len + escape_count + 1) * sizeof(WCHAR));
+    buf = malloc((str_len + escape_count + 1) * sizeof(WCHAR));
 
     for (i = 0, pos = 0; i < str_len; i++, pos++)
     {
@@ -87,11 +86,11 @@ static size_t export_value_name(HANDLE hFile, WCHAR *name, size_t len)
     if (name && *name)
     {
         WCHAR *str = escape_string(name, len, &line_len);
-        WCHAR *buf = heap_xalloc((line_len + 4) * sizeof(WCHAR));
+        WCHAR *buf = malloc((line_len + 4) * sizeof(WCHAR));
         line_len = swprintf(buf, quoted_fmt, str);
         write_file(hFile, buf);
-        heap_free(buf);
-        heap_free(str);
+        free(buf);
+        free(str);
     }
     else
     {
@@ -111,16 +110,16 @@ static void export_string_data(WCHAR **buf, WCHAR *data, size_t size)
     if (size)
         len = size / sizeof(WCHAR) - 1;
     str = escape_string(data, len, &line_len);
-    *buf = heap_xalloc((line_len + 3) * sizeof(WCHAR));
+    *buf = malloc((line_len + 3) * sizeof(WCHAR));
     swprintf(*buf, fmt, str);
-    heap_free(str);
+    free(str);
 }
 
 static void export_dword_data(WCHAR **buf, DWORD *data)
 {
     static const WCHAR fmt[] = {'d','w','o','r','d',':','%','0','8','x',0};
 
-    *buf = heap_xalloc(15 * sizeof(WCHAR));
+    *buf = malloc(15 * sizeof(WCHAR));
     swprintf(*buf, fmt, *data);
 }
 
@@ -137,10 +136,10 @@ static size_t export_hex_data_type(HANDLE hFile, DWORD type)
     }
     else
     {
-        WCHAR *buf = heap_xalloc(15 * sizeof(WCHAR));
+        WCHAR *buf = malloc(15 * sizeof(WCHAR));
         line_len = swprintf(buf, hexp_fmt, type);
         write_file(hFile, buf);
-        heap_free(buf);
+        free(buf);
     }
 
     return line_len;
@@ -160,7 +159,7 @@ static void export_hex_data(HANDLE hFile, WCHAR **buf, DWORD type,
     if (!size) return;
 
     num_commas = size - 1;
-    *buf = heap_xalloc(size * 3 * sizeof(WCHAR));
+    *buf = malloc(size * 3 * sizeof(WCHAR));
 
     for (i = 0, pos = 0; i < size; i++)
     {
@@ -217,7 +216,7 @@ static void export_data(HANDLE hFile, WCHAR *value_name, DWORD value_len,
     if (size || type == REG_SZ)
     {
         write_file(hFile, buf);
-        heap_free(buf);
+        free(buf);
     }
 
     export_newline(hFile);
@@ -228,10 +227,10 @@ static void export_key_name(HANDLE hFile, WCHAR *name)
     static const WCHAR fmt[] = {'\r','\n','[','%','s',']','\r','\n',0};
     WCHAR *buf;
 
-    buf = heap_xalloc((lstrlenW(name) + 7) * sizeof(WCHAR));
+    buf = malloc((lstrlenW(name) + 7) * sizeof(WCHAR));
     swprintf(buf, fmt, name);
     write_file(hFile, buf);
-    heap_free(buf);
+    free(buf);
 }
 
 static int export_registry_data(HANDLE hFile, HKEY key, WCHAR *path)
@@ -247,8 +246,8 @@ static int export_registry_data(HANDLE hFile, HKEY key, WCHAR *path)
 
     export_key_name(hFile, path);
 
-    value_name = heap_xalloc(max_value_len * sizeof(WCHAR));
-    data = heap_xalloc(max_data_bytes);
+    value_name = malloc(max_value_len * sizeof(WCHAR));
+    data = malloc(max_data_bytes);
 
     i = 0;
     for (;;)
@@ -267,21 +266,21 @@ static int export_registry_data(HANDLE hFile, HKEY key, WCHAR *path)
             if (data_size > max_data_bytes)
             {
                 max_data_bytes = data_size;
-                data = heap_xrealloc(data, max_data_bytes);
+                data = realloc(data, max_data_bytes);
             }
             else
             {
                 max_value_len *= 2;
-                value_name = heap_xrealloc(value_name, max_value_len * sizeof(WCHAR));
+                value_name = realloc(value_name, max_value_len * sizeof(WCHAR));
             }
         }
         else break;
     }
 
-    heap_free(data);
-    heap_free(value_name);
+    free(data);
+    free(value_name);
 
-    subkey_name = heap_xalloc(MAX_SUBKEY_LEN * sizeof(WCHAR));
+    subkey_name = malloc(MAX_SUBKEY_LEN * sizeof(WCHAR));
 
     path_len = lstrlenW(path);
 
@@ -298,13 +297,13 @@ static int export_registry_data(HANDLE hFile, HKEY key, WCHAR *path)
                 export_registry_data(hFile, subkey, subkey_path);
                 RegCloseKey(subkey);
             }
-            heap_free(subkey_path);
+            free(subkey_path);
             i++;
         }
         else break;
     }
 
-    heap_free(subkey_name);
+    free(subkey_name);
     return 0;
 }
 

@@ -65,7 +65,7 @@ int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
         WCHAR *value_name;
         LONG rc;
 
-        value_name = heap_xalloc(max_value_len * sizeof(WCHAR));
+        value_name = malloc(max_value_len * sizeof(WCHAR));
 
         while (1)
         {
@@ -76,7 +76,7 @@ int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
                 rc = RegDeleteValueW(key, value_name);
                 if (rc != ERROR_SUCCESS)
                 {
-                    heap_free(value_name);
+                    free(value_name);
                     RegCloseKey(key);
                     output_message(STRING_VALUEALL_FAILED, key_name);
                     return 1;
@@ -85,11 +85,11 @@ int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
             else if (rc == ERROR_MORE_DATA)
             {
                 max_value_len *= 2;
-                value_name = heap_xrealloc(value_name, max_value_len * sizeof(WCHAR));
+                value_name = realloc(value_name, max_value_len * sizeof(WCHAR));
             }
             else break;
         }
-        heap_free(value_name);
+        free(value_name);
     }
     else if (value_name || value_empty)
     {

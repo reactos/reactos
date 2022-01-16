@@ -41,7 +41,7 @@ static WCHAR *reg_data_to_wchar(DWORD type, const BYTE *src, DWORD size_bytes)
     {
         case REG_SZ:
         case REG_EXPAND_SZ:
-            buffer = heap_xalloc(size_bytes);
+            buffer = malloc(size_bytes);
             lstrcpyW(buffer, (WCHAR *)src);
             break;
         case REG_NONE:
@@ -50,7 +50,7 @@ static WCHAR *reg_data_to_wchar(DWORD type, const BYTE *src, DWORD size_bytes)
             WCHAR *ptr;
             static const WCHAR fmt[] = {'%','0','2','X',0};
 
-            buffer = heap_xalloc((size_bytes * 2 + 1) * sizeof(WCHAR));
+            buffer = malloc((size_bytes * 2 + 1) * sizeof(WCHAR));
             ptr = buffer;
             for (i = 0; i < size_bytes; i++)
                 ptr += swprintf(ptr, 3, fmt, src[i]);
@@ -63,7 +63,7 @@ static WCHAR *reg_data_to_wchar(DWORD type, const BYTE *src, DWORD size_bytes)
             const int zero_x_dword = 10;
             static const WCHAR fmt[] = {'0','x','%','x',0};
 
-            buffer = heap_xalloc((zero_x_dword + 1) * sizeof(WCHAR));
+            buffer = malloc((zero_x_dword + 1) * sizeof(WCHAR));
             swprintf(buffer, zero_x_dword + 1, fmt, *(DWORD *)src);
             break;
         }
@@ -76,13 +76,13 @@ static WCHAR *reg_data_to_wchar(DWORD type, const BYTE *src, DWORD size_bytes)
 
             if (size_bytes <= two_wchars)
             {
-                buffer = heap_xalloc(sizeof(WCHAR));
+                buffer = malloc(sizeof(WCHAR));
                 *buffer = 0;
                 return buffer;
             }
 
             tmp_size = size_bytes - two_wchars; /* exclude both null terminators */
-            buffer = heap_xalloc(tmp_size * 2 + sizeof(WCHAR));
+            buffer = malloc(tmp_size * 2 + sizeof(WCHAR));
             len = tmp_size / sizeof(WCHAR);
 
             for (i = 0, destindex = 0; i < len; i++, destindex++)
@@ -123,7 +123,7 @@ static void output_value(const WCHAR *value_name, DWORD type, BYTE *data, DWORD 
     {
         reg_data = reg_data_to_wchar(type, data, data_size);
         output_string(fmt, reg_data);
-        heap_free(reg_data);
+        free(reg_data);
     }
     else
     {
@@ -146,7 +146,7 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
     WCHAR *subkey_name, *subkey_path;
     HKEY subkey;
 
-    data = heap_xalloc(max_data_bytes);
+    data = malloc(max_data_bytes);
 
     for (;;)
     {
@@ -155,7 +155,7 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
         if (rc == ERROR_MORE_DATA)
         {
             max_data_bytes = data_size;
-            data = heap_xrealloc(data, max_data_bytes);
+            data = realloc(data, max_data_bytes);
         }
         else break;
     }
@@ -168,7 +168,7 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
         num_values_found++;
     }
 
-    heap_free(data);
+    free(data);
 
     if (!recurse)
     {
@@ -185,7 +185,7 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
         return 0;
     }
 
-    subkey_name = heap_xalloc(MAX_SUBKEY_LEN * sizeof(WCHAR));
+    subkey_name = malloc(MAX_SUBKEY_LEN * sizeof(WCHAR));
 
     path_len = lstrlenW(path);
 
@@ -202,13 +202,13 @@ static int query_value(HKEY key, WCHAR *value_name, WCHAR *path, BOOL recurse)
                 query_value(subkey, value_name, subkey_path, recurse);
                 RegCloseKey(subkey);
             }
-            heap_free(subkey_path);
+            free(subkey_path);
             i++;
         }
         else break;
     }
 
-    heap_free(subkey_name);
+    free(subkey_name);
     return 0;
 }
 
@@ -227,8 +227,8 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
 
     output_string(fmt, path);
 
-    value_name = heap_xalloc(max_value_len * sizeof(WCHAR));
-    data = heap_xalloc(max_data_bytes);
+    value_name = malloc(max_value_len * sizeof(WCHAR));
+    data = malloc(max_data_bytes);
 
     i = 0;
     for (;;)
@@ -246,24 +246,24 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
             if (data_size > max_data_bytes)
             {
                 max_data_bytes = data_size;
-                data = heap_xrealloc(data, max_data_bytes);
+                data = realloc(data, max_data_bytes);
             }
             else
             {
                 max_value_len *= 2;
-                value_name = heap_xrealloc(value_name, max_value_len * sizeof(WCHAR));
+                value_name = realloc(value_name, max_value_len * sizeof(WCHAR));
             }
         }
         else break;
     }
 
-    heap_free(data);
-    heap_free(value_name);
+    free(data);
+    free(value_name);
 
     if (i || recurse)
         output_string(newlineW);
 
-    subkey_name = heap_xalloc(MAX_SUBKEY_LEN * sizeof(WCHAR));
+    subkey_name = malloc(MAX_SUBKEY_LEN * sizeof(WCHAR));
 
     path_len = lstrlenW(path);
 
@@ -282,7 +282,7 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
                     query_all(subkey, subkey_path, recurse);
                     RegCloseKey(subkey);
                 }
-                heap_free(subkey_path);
+                free(subkey_path);
             }
             else output_string(fmt_path, path, subkey_name);
             i++;
@@ -290,7 +290,7 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
         else break;
     }
 
-    heap_free(subkey_name);
+    free(subkey_name);
 
     if (i && !recurse)
         output_string(newlineW);
