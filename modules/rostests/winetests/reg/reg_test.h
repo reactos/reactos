@@ -48,6 +48,9 @@ void verify_key_nonexist_(unsigned line, HKEY key_base, const char *subkey);
 #define add_key(k,p,s) add_key_(__LINE__,k,p,s)
 void add_key_(unsigned line, const HKEY hkey, const char *path, HKEY *subkey);
 
+#define delete_key(k,p) delete_key_(__LINE__,k,p)
+void delete_key_(unsigned line, const HKEY hkey, const char *path);
+
 LONG delete_tree(const HKEY key, const char *subkey);
 
 #define add_value(k,n,t,d,s) add_value_(__LINE__,k,n,t,d,s)

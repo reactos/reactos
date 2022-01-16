@@ -139,8 +139,7 @@ void add_key_(unsigned line, const HKEY hkey, const char *path, HKEY *subkey)
     lok(err == ERROR_SUCCESS, "RegCreateKeyExA failed: %d\n", err);
 }
 
-#define delete_key(k,p) delete_key_(__LINE__,k,p)
-static void delete_key_(unsigned line, const HKEY hkey, const char *path)
+void delete_key_(unsigned line, const HKEY hkey, const char *path)
 {
     if (path && *path)
     {
@@ -615,110 +614,6 @@ static void test_add(void)
     ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
-}
-
-static void test_query(void)
-{
-    DWORD r;
-    HKEY key, subkey;
-    const char hello[] = "Hello";
-    const char world[] = "World";
-    const char empty1[] = "Empty1";
-    const char empty2[] = "Empty2";
-    const DWORD dword1 = 0x123;
-    const DWORD dword2 = 0xabc;
-
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
-
-    run_reg_exe("reg query", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg query /?", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query /h", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query -H", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    /* Create a test key */
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &key);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /ve", &r);
-    ok(r == REG_EXIT_SUCCESS || broken(r == REG_EXIT_FAILURE /* WinXP */),
-       "got exit code %d, expected 0\n", r);
-
-    add_value(key, "Test", REG_SZ, hello, sizeof(hello));
-    add_value(key, "Wine", REG_DWORD, &dword1, sizeof(dword1));
-    add_value(key, NULL, REG_SZ, empty1, sizeof(empty1));
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE, &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Missing", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Test", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Wine", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /ve", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    /* Create a test subkey */
-    add_key(key, "Subkey", &subkey);
-    add_value(subkey, "Test", REG_SZ, world, sizeof(world));
-    add_value(subkey, "Wine", REG_DWORD, &dword2, sizeof(dword2));
-    add_value(subkey, NULL, REG_SZ, empty2, sizeof(empty2));
-
-    close_key(subkey);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE "\\subkey", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE "\\subkey /v Test", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE "\\subkey /v Wine", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE "\\subkey /ve", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    /* Test recursion */
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /s", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Test /s", &r);
-    ok(r == REG_EXIT_SUCCESS || r == REG_EXIT_FAILURE /* WinXP */,
-       "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Wine /s", &r);
-    ok(r == REG_EXIT_SUCCESS || r == REG_EXIT_FAILURE /* WinXP */,
-       "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /ve /s", &r);
-    ok(r == REG_EXIT_SUCCESS || r == REG_EXIT_FAILURE /* WinXP */,
-       "got exit code %d, expected 0\n", r);
-
-    /* Clean-up, then query */
-    delete_key(key, "subkey");
-    close_key(key);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE "\\subkey", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE, &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 }
 
 static BOOL write_file(const void *str, DWORD size)
@@ -4753,7 +4648,6 @@ START_TEST(reg)
     }
 
     test_add();
-    test_query();
     test_import();
     test_unicode_import();
     test_import_with_whitespace();
