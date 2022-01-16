@@ -306,8 +306,8 @@ static BOOL is_help_switch(const WCHAR *s)
 enum operations {
     REG_ADD,
     REG_DELETE,
-    REG_IMPORT,
     REG_EXPORT,
+    REG_IMPORT,
     REG_QUERY,
     REG_INVALID
 };
@@ -318,16 +318,16 @@ static enum operations get_operation(const WCHAR *str, int *op_help)
 
     static const WCHAR add[] = {'a','d','d',0};
     static const WCHAR delete[] = {'d','e','l','e','t','e',0};
-    static const WCHAR import[] = {'i','m','p','o','r','t',0};
     static const WCHAR export[] = {'e','x','p','o','r','t',0};
+    static const WCHAR import[] = {'i','m','p','o','r','t',0};
     static const WCHAR query[] = {'q','u','e','r','y',0};
 
     static const struct op_info op_array[] =
     {
         { add,     REG_ADD,     STRING_ADD_USAGE },
         { delete,  REG_DELETE,  STRING_DELETE_USAGE },
-        { import,  REG_IMPORT,  STRING_IMPORT_USAGE },
         { export,  REG_EXPORT,  STRING_EXPORT_USAGE },
+        { import,  REG_IMPORT,  STRING_IMPORT_USAGE },
         { query,   REG_QUERY,   STRING_QUERY_USAGE },
         { NULL,    -1,          0 }
     };
@@ -390,11 +390,11 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
         return 0;
     }
 
-    if (op == REG_IMPORT)
-        return reg_import(argc, argvW);
-
     if (op == REG_EXPORT)
         return reg_export(argc, argvW);
+
+    if (op == REG_IMPORT)
+        return reg_import(argc, argvW);
 
     if (!parse_registry_key(argvW[2], &root, &path, &key_name))
         return 1;
