@@ -240,8 +240,7 @@ BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path)
     *root = path_get_rootkey(key);
     if (!*root)
     {
-        if (*path) *(*path - 1) = 0;
-        output_message(STRING_INVALID_SYSTEM_KEY, key);
+        output_message(STRING_INVALID_SYSTEM_KEY);
         return FALSE;
     }
 
