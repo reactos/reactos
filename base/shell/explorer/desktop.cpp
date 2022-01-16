@@ -105,7 +105,12 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
             TrayProcessMessages(m_Tray);
         }
 
-        else if (WaitResult == WAIT_FAILED || WaitResult == WAIT_OBJECT_0)
+        else if (WaitResult != WAIT_FAILED && WaitResult != WAIT_OBJECT_0)
+        {
+            break;
+        }
+
+        else
         {
             CloseHandle(m_hThread);
             CloseHandle(m_hEvent);
@@ -114,11 +119,6 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
             m_hEvent = NULL;
 
             return E_FAIL;
-        }
-
-        else
-        {
-            break;
         }
     }
     
