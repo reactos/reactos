@@ -233,6 +233,9 @@ static void test_add(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
 
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /f /f", &r);
+    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
     open_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
 
     /* Test empty type */
@@ -290,6 +293,9 @@ static void test_add(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
     verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /f /ve", &r);
+    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
     run_reg_exe("reg add HKEY_CURRENT_USER\\" KEY_BASE " /ve /d WineTEST /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
