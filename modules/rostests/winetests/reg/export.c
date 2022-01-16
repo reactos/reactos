@@ -168,6 +168,16 @@ static void test_export(void)
         "\"\\\\foo\\\\bar\"=\"\"\r\n\r\n"
         "[HKEY_CURRENT_USER\\" KEY_BASE "\\https://winehq.org]\r\n\r\n";
 
+    const char *escaped_null_test =
+        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+        "\"Wine5a\"=\"\\\\0\"\r\n"
+        "\"Wine5b\"=\"\\\\0\\\\0\"\r\n"
+        "\"Wine5c\"=\"Value1\\\\0\"\r\n"
+        "\"Wine5d\"=\"Value2\\\\0\\\\0\\\\0\\\\0\"\r\n"
+        "\"Wine5e\"=\"Value3\\\\0Value4\"\r\n"
+        "\"Wine5f\"=\"\\\\0Value5\"\r\n\r\n";
+
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
@@ -401,6 +411,21 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", slashes_test, TODO_REG_COMPARE), "compare_export() failed\n");
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+
+    /* Test escaped null characters */
+    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_value(hkey, "Wine5a", REG_SZ, "\\0", 3);
+    add_value(hkey, "Wine5b", REG_SZ, "\\0\\0", 5);
+    add_value(hkey, "Wine5c", REG_SZ, "Value1\\0", 9);
+    add_value(hkey, "Wine5d", REG_SZ, "Value2\\0\\0\\0\\0", 15);
+    add_value(hkey, "Wine5e", REG_SZ, "Value3\\0Value4", 15);
+    add_value(hkey, "Wine5f", REG_SZ, "\\0Value5", 9);
+    close_key(hkey);
+
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("file.reg", escaped_null_test, 0), "compare_export() failed\n");
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 }
 
