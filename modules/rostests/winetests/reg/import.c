@@ -3584,7 +3584,7 @@ START_TEST(import)
     DWORD r;
 
     if (!run_reg_exe("reg.exe /?", &r)) {
-        win_skip("reg.exe not available, skipping 'query' tests\n");
+        win_skip("reg.exe not available, skipping 'import' tests\n");
         return;
     }
 

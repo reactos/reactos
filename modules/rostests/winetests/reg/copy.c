@@ -102,7 +102,7 @@ START_TEST(copy)
     DWORD r;
 
     if (!run_reg_exe("reg.exe /?", &r)) {
-        win_skip("reg.exe not available, skipping reg.exe tests\n");
+        win_skip("reg.exe not available, skipping 'copy' tests\n");
         return;
     }
 
