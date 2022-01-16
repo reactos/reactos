@@ -2057,8 +2057,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Schedule\Parameters","ServiceMain",0x000
 
 ; Secondary Logon service
 HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","DependOnService",0x00010000,"RPCSS"
-HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Description",0x00000000,"Secondary Logon service"
-HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","DisplayName",0x00000000,"Secondary Logon"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Description",0x00000000,%SECLOGON_SERVICE_DESCRIPTION%
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","DisplayName",0x00000000,%SECLOGON_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Group",0x00000000,"SchedulerGroup"
 HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
@@ -2303,6 +2303,9 @@ SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services th
 SCHEDULE_SERVICE="Scheduler service"
 SCHEDULE_SERVICE_DESCRIPTION="Allows starting of programs at specific times."
 
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
+
 SERVER_SERVICE="Server"
 SERVER_SERVICE_DESCRIPTION="Supports sharing for file, printers and resources on the network."
 
@@ -2455,6 +2458,9 @@ SAMSS_SERVICE_DESCRIPTION="El arranque de este servicio señala a otros servicio
 
 SCHEDULE_SERVICE="Programador de tareas"
 SCHEDULE_SERVICE_DESCRIPTION="Permite iniciar programas automáticamente en unas horas o instantes específicos."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
 
 SERVER_SERVICE="Servidor"
 SERVER_SERVICE_DESCRIPTION="Ofrece compatibilidad para archivos, impresoras y recursos en la red."
@@ -2609,6 +2615,9 @@ SAMSS_SERVICE_DESCRIPTION="Uruchomienie tej usługi informuje inne usługi, że 
 SCHEDULE_SERVICE="Usługa Harmonogram"
 SCHEDULE_SERVICE_DESCRIPTION="Umożliwia uruchamianie programów w określonym czasie."
 
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
+
 SERVER_SERVICE="Serwer"
 SERVER_SERVICE_DESCRIPTION="Oferuje udostępnianie w sieci plików, drukarek i potoków dla tego komputera."
 
@@ -2758,6 +2767,9 @@ SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services th
 
 SCHEDULE_SERVICE="Serviciu de planificare"
 SCHEDULE_SERVICE_DESCRIPTION="Permite pornirea de programe la o anumită oră."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
 
 SERVER_SERVICE="Server"
 SERVER_SERVICE_DESCRIPTION="Permite partajarea în rețea a fișierelor, imprimantelor și a altor resurse."
@@ -2912,6 +2924,9 @@ SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services th
 SCHEDULE_SERVICE="Планировщик заданий"
 SCHEDULE_SERVICE_DESCRIPTION="Позволяет запускать программы в определенное время."
 
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
+
 SERVER_SERVICE="Сервер"
 SERVER_SERVICE_DESCRIPTION="Поддержка совместного использования файлов, принтеров и ресурсов в сети."
 
@@ -3064,6 +3079,9 @@ SAMSS_SERVICE_DESCRIPTION="Bu hizmetin başlaması, diğer hizmetlere Güvenlik 
 
 SCHEDULE_SERVICE="Zamanlayıcı hizmeti"
 SCHEDULE_SERVICE_DESCRIPTION="Programların belirli zamanlarda başlatılmasını sağlar."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
 
 SERVER_SERVICE="Sunucu"
 SERVER_SERVICE_DESCRIPTION="Ağda dosya, yazıcı ve kaynakların paylaşımını destekler."
