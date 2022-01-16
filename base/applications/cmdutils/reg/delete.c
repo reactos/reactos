@@ -53,7 +53,7 @@ int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
         return 0;
     }
 
-    if (RegOpenKeyW(root, path, &key) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(root, path, 0, KEY_READ|KEY_SET_VALUE, &key))
     {
         output_message(STRING_CANNOT_FIND);
         return 1;
