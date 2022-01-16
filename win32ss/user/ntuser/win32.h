@@ -105,6 +105,7 @@ typedef struct _THREADINFO
     ULONG_PTR           idLast;
     /* True if a WM_QUIT message is pending. */
     BOOLEAN             QuitPosted;
+    UCHAR _pad[3];
     /* The quit exit code. */
     INT                 exitCode;
     HDESK               hdesk;

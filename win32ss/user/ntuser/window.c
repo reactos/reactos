@@ -13,6 +13,62 @@ INT gNestedWindowLimit = 50;
 
 /* HELPER FUNCTIONS ***********************************************************/
 
+/* Detect window list corruption early -- CORE-18002 */
+static void ValidateWindowList(PTHREADINFO pti, PWND WindowToFind, BOOLEAN ExpectToFind)
+{
+#if DBG
+    PLIST_ENTRY Entry;
+    PWND Window;
+    BOOLEAN Found = FALSE;
+    ULONG i;
+
+    Entry = &pti->WindowListHead;
+    i = 0;
+    do
+    {
+        if ((LONG_PTR)Entry >= 0 ||
+            ((ULONG_PTR)Entry & (sizeof(PVOID) - 1)) != 0)
+        {
+            ERR("pti %p window list entry %lu corrupt (%p)\n", pti, i, Entry);
+            ASSERTMSG("Window list corrupt\n", FALSE);
+        }
+        if ((LONG_PTR)Entry->Flink >= 0 ||
+            ((ULONG_PTR)Entry->Flink & (sizeof(PVOID) - 1)) != 0 ||
+            (LONG_PTR)Entry->Blink >= 0 ||
+            ((ULONG_PTR)Entry->Blink & (sizeof(PVOID) - 1)) != 0)
+        {
+            ERR("pti %p window list entry %lu (%p) corrupt (%p, %p)\n", pti, i, Entry, Entry->Flink, Entry->Blink);
+            ASSERTMSG("Window list corrupt\n", FALSE);
+        }
+        if (Entry->Flink->Blink != Entry)
+        {
+            ERR("pti %p window list entry %lu (%p) corrupt (%p, %p), expected (x, %p)\n", pti, i + 1, Entry->Flink, Entry->Flink->Flink, Entry->Flink->Blink, Entry);
+            ASSERTMSG("Window list corrupt\n", FALSE);
+        }
+
+        Window = CONTAINING_RECORD(Entry->Flink, WND, ThreadListEntry);
+        if (Window == WindowToFind)
+        {
+            ASSERTMSG("Window found twice in window list\n", !Found);
+            Found = TRUE;
+        }
+        Entry = Entry->Flink;
+        i++;
+    } while (Entry != &pti->WindowListHead);
+
+    if (ExpectToFind && !Found)
+    {
+        ERR("pti %p window list does not contain expected window %p\n", pti, WindowToFind);
+        ASSERTMSG("Window not found in thread window list\n", FALSE);
+    }
+    else if (!ExpectToFind && Found)
+    {
+        ERR("pti %p window list contains unexpected window %p\n", pti, WindowToFind);
+        ASSERTMSG("Window unexpectedly found in thread window list\n", FALSE);
+    }
+#endif /* DBG */
+}
+
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam)
 {
     WORD Action = LOWORD(wParam);
@@ -569,7 +625,11 @@ LRESULT co_UserFreeWindow(PWND Window,
    /* remove the window already at this point from the thread window list so we
       don't get into trouble when destroying the thread windows while we're still
       in co_UserFreeWindow() */
+   ValidateWindowList(Window->head.pti, Window, TRUE);
    RemoveEntryList(&Window->ThreadListEntry);
+   Window->ThreadListEntry.Flink = UlongToPtr(0x0deadff1);
+   Window->ThreadListEntry.Blink = UlongToPtr(0x0deadbb1);
+   ValidateWindowList(Window->head.pti, Window, FALSE);
 
    BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
 
@@ -1949,7 +2009,11 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    }
 
    /* Insert the window into the thread's window list. */
-   InsertTailList (&pti->WindowListHead, &pWnd->ThreadListEntry);
+   pWnd->ThreadListEntry.Flink = UlongToPtr(0x0deadff1);
+   pWnd->ThreadListEntry.Blink = UlongToPtr(0x0deadbb1);
+   ValidateWindowList(pti, pWnd, FALSE);
+   InsertTailList(&pti->WindowListHead, &pWnd->ThreadListEntry);
+   ValidateWindowList(pti, pWnd, TRUE);
 
    /* Handle "CS_CLASSDC", it is tested first. */
    if ( (pWnd->pcls->style & CS_CLASSDC) && !(pWnd->pcls->pdce) )
