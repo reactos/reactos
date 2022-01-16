@@ -311,12 +311,12 @@ static void test_key_formats(void)
 
     /* Test validity of trailing backslash after system key */
     run_reg_exe("reg add HKCU\\ /v Value1 /t REG_SZ /d foo /f", &r);
-    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-    todo_wine verify_reg_nonexist(HKEY_CURRENT_USER, "Value1");
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+    verify_reg_nonexist(HKEY_CURRENT_USER, "Value1");
 
     run_reg_exe("reg add HKEY_CURRENT_USER\\ /v Value2 /t REG_SZ /d bar /f", &r);
-    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-    todo_wine verify_reg_nonexist(HKEY_CURRENT_USER, "Value2");
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+    verify_reg_nonexist(HKEY_CURRENT_USER, "Value2");
 }
 
 static void test_add(void)

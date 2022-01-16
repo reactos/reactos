@@ -234,11 +234,21 @@ BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path)
     if (!sane_path(key))
         return FALSE;
 
-    *path = wcschr(key, '\\');
-    if (*path) (*path)++;
-
     *root = path_get_rootkey(key);
     if (!*root)
+    {
+        output_message(STRING_INVALID_SYSTEM_KEY);
+        return FALSE;
+    }
+
+    *path = wcschr(key, '\\');
+
+    if (!*path)
+        return TRUE;
+
+    (*path)++;
+
+    if (!**path)
     {
         output_message(STRING_INVALID_SYSTEM_KEY);
         return FALSE;
