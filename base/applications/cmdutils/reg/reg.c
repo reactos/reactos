@@ -109,17 +109,27 @@ static void output_formatstring(const WCHAR *fmt, __ms_va_list va_args)
 
 void WINAPIV output_message(unsigned int id, ...)
 {
-    WCHAR fmt[1024];
+    WCHAR *fmt = NULL;
+    int len;
     __ms_va_list va_args;
 
-    if (!LoadStringW(GetModuleHandleW(NULL), id, fmt, ARRAY_SIZE(fmt)))
+    if (!(len = LoadStringW(GetModuleHandleW(NULL), id, (WCHAR *)&fmt, 0)))
     {
         WINE_FIXME("LoadString failed with %d\n", GetLastError());
         return;
     }
+
+    len++;
+    fmt = malloc(len * sizeof(WCHAR));
+    if (!fmt) return;
+
+    LoadStringW(GetModuleHandleW(NULL), id, fmt, len);
+
     __ms_va_start(va_args, id);
     output_formatstring(fmt, va_args);
     __ms_va_end(va_args);
+
+    free(fmt);
 }
 
 void WINAPIV output_string(const WCHAR *fmt, ...)
