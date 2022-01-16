@@ -99,6 +99,18 @@ const char *complex_data_test =
     "@=dword:12345678\r\n"
     "\"43981\"=hex(abcd):56,61,6c,75,65,00\r\n\r\n";
 
+const char *key_order_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1]\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2]\r\n\r\n";
+
+const char *value_order_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+    "\"Value 2\"=\"I was added first!\"\r\n"
+    "\"Value 1\"=\"I was added second!\"\r\n\r\n";
+
 const char *empty_hex_test =
     "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
     "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
@@ -163,18 +175,6 @@ static void test_export(void)
     DWORD r, dword, type, size;
     HKEY hkey, subkey;
     BYTE hex[4], buffer[8];
-
-    const char *key_order_test =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1]\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2]\r\n\r\n";
-
-    const char *value_order_test =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
-        "\"Value 2\"=\"I was added first!\"\r\n"
-        "\"Value 1\"=\"I was added second!\"\r\n\r\n";
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);

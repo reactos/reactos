@@ -81,6 +81,8 @@ BOOL compare_export_(const char *file, unsigned line, const char *filename,
 extern const char *empty_key_test;
 extern const char *simple_data_test;
 extern const char *complex_data_test;
+extern const char *key_order_test;
+extern const char *value_order_test;
 extern const char *empty_hex_test;
 extern const char *empty_hex_test2;
 extern const char *hex_types_test;

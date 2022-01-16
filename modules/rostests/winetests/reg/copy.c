@@ -325,6 +325,56 @@ static void test_copy_complex_data(void)
     todo_wine ok(compare_export("file.reg", complex_data_test, 0), "compare_export() failed\n");
 }
 
+static void test_copy_key_order(void)
+{
+    HKEY hkey;
+    DWORD r;
+
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC);
+
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
+
+    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_key(hkey, "Subkey2", NULL);
+    add_key(hkey, "Subkey1", NULL);
+    close_key(hkey);
+
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /s /f", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine verify_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    run_reg_exe("reg export HKCU\\" KEY_BASE " file.reg /y", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine ok(compare_export("file.reg", key_order_test, 0), "compare_export() failed\n");
+}
+
+static void test_copy_value_order(void)
+{
+    HKEY hkey;
+    DWORD r;
+
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC);
+
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
+
+    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_value(hkey, "Value 2", REG_SZ, "I was added first!", 19);
+    add_value(hkey, "Value 1", REG_SZ, "I was added second!", 20);
+    close_key(hkey);
+
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /f", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine verify_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    run_reg_exe("reg export HKCU\\" KEY_BASE " file.reg /y", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine ok(compare_export("file.reg", value_order_test, 0), "compare_export() failed\n");
+}
+
 static void test_copy_hex_data(void)
 {
     HKEY hkey;
@@ -498,6 +548,8 @@ START_TEST(copy)
     test_copy_empty_key();
     test_copy_simple_data();
     test_copy_complex_data();
+    test_copy_key_order();
+    test_copy_value_order();
     test_copy_hex_data();
     test_copy_embedded_null_values();
     test_copy_slashes();
