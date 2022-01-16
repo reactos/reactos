@@ -251,7 +251,7 @@ static void test_query(void)
 
     read_reg_output("reg query HKCU\\" KEY_BASE "\\ /s", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    compare_query(buf, test6, FALSE, TODO_REG_COMPARE);
+    compare_query(buf, test6, FALSE, 0);
 
     read_reg_output("reg query HKCU\\" KEY_BASE " /v Wine /s", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS || r == REG_EXIT_FAILURE /* WinXP */,

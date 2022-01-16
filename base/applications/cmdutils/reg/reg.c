@@ -205,10 +205,10 @@ WCHAR *build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name, DWORD 
 
 WCHAR *get_long_key(HKEY root, WCHAR *path)
 {
-    DWORD i, array_size = ARRAY_SIZE(root_rels), len;
+    int i, len, path_len;
     WCHAR *long_key;
 
-    for (i = 0; i < array_size; i++)
+    for (i = 0; i < ARRAY_SIZE(root_rels); i++)
     {
         if (root == root_rels[i].key)
             break;
@@ -223,7 +223,15 @@ WCHAR *get_long_key(HKEY root, WCHAR *path)
         return long_key;
     }
 
-    len += lstrlenW(path) + 1; /* add one for the backslash */
+    path_len = lstrlenW(path);
+
+    if (path[path_len - 1] == '\\')
+    {
+        path[path_len - 1] = 0;
+        path_len--;
+    }
+
+    len += path_len + 1; /* add one for the concatenating backslash */
     long_key = malloc((len + 1) * sizeof(WCHAR));
     swprintf(long_key, L"%s\\%s", root_rels[i].long_name, path);
     return long_key;
