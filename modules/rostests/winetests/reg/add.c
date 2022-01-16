@@ -210,7 +210,7 @@ void delete_value_(const char *file, unsigned line, const HKEY hkey, const char 
 
 static void test_add(void)
 {
-    HKEY hkey;
+    HKEY hkey, hsubkey;
     LONG err;
     DWORD r, dword, type, size;
     char buffer[22];
@@ -606,6 +606,7 @@ static void test_add(void)
     verify_reg(hkey, "\\foo\\bar", REG_SZ, "", 1, 0);
 
     close_key(hkey);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 
     /* Test duplicate switches */
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v Wine /t REG_DWORD /d 0x1 /v Test /f", &r);
@@ -641,6 +642,22 @@ static void test_add(void)
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v invalid4 -", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
+
+    /* Test whether overwriting a registry key modifies existing keys and values */
+    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(hkey, "Subkey", &hsubkey);
+    close_key(hsubkey);
+    add_value(hkey, "Test1", REG_SZ, "Value1", 7);
+    dword = 0x123;
+    add_value(hkey, "Test2", REG_DWORD, &dword, sizeof(dword));
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    verify_key(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key(hkey, "Subkey");
+    verify_reg(hkey, "Test1", REG_SZ, "Value1", 7, 0);
+    verify_reg(hkey, "Test2", REG_DWORD, &dword, sizeof(dword), 0);
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 }
