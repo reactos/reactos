@@ -100,29 +100,25 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
     {
         DWORD WaitResult = MsgWaitForMultipleObjects(_countof(Handles), Handles, FALSE, INFINITE, QS_ALLEVENTS);
 
-        switch (WaitResult)
+        if (WaitResult == WAIT_OBJECT_0 + _countof(Handles))
         {
-            case WAIT_OBJECT_0 + _countof(Handles):
-            {
-                TrayProcessMessages(m_Tray);
-            }
-            
-            case WAIT_FAILED:
-            case WAIT_OBJECT_0:
-            {
-                CloseHandle(m_hThread);
-                CloseHandle(m_hEvent);
+            TrayProcessMessages(m_Tray);
+        }
 
-                m_hThread = NULL;
-                m_hEvent = NULL;
+        else if (WaitResult == WAIT_FAILED || WaitResult == WAIT_OBJECT_0)
+        {
+            CloseHandle(m_hThread);
+            CloseHandle(m_hEvent);
 
-                return E_FAIL;
-            }
-            
-            default:
-            {
-                break;
-            }
+            m_hThread = NULL;
+            m_hEvent = NULL;
+
+            return E_FAIL;
+        }
+
+        else
+        {
+            break;
         }
     }
     
