@@ -262,7 +262,7 @@ static int query_all(HKEY hkey, WCHAR *path, BOOL recurse, BOOL recursing)
     free(data);
     free(value_name);
 
-    if (i || recurse)
+    if (i || recursing)
         output_string(newlineW);
 
     subkey_name = malloc(MAX_SUBKEY_LEN * sizeof(WCHAR));

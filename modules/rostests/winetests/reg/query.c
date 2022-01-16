@@ -286,7 +286,7 @@ static void test_query(void)
 
     read_reg_output("reg query HKCU\\" KEY_BASE " /s", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    compare_query(buf, test8b, FALSE, TODO_REG_COMPARE);
+    compare_query(buf, test8b, FALSE, 0);
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 }
