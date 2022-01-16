@@ -30,7 +30,7 @@
 #define REG_EXIT_SUCCESS 0
 #define REG_EXIT_FAILURE 1
 
-/* Helper functions */
+/* add.c */
 #define run_reg_exe(c,r) run_reg_exe_(__LINE__,c,r)
 BOOL run_reg_exe_(unsigned line, const char *cmd, DWORD *rc);
 
