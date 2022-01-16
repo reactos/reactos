@@ -344,27 +344,33 @@ static HANDLE get_file_handle(WCHAR *filename, BOOL overwrite_file)
     return hFile;
 }
 
-static BOOL is_overwrite_switch(const WCHAR *s)
-{
-    return is_switch(s, 'y');
-}
-
 int reg_export(int argc, WCHAR *argvW[])
 {
     HKEY root, hkey;
     WCHAR *path, *long_key;
     BOOL overwrite_file = FALSE;
     HANDLE hFile;
-    int ret;
+    int i, ret;
 
-    if (argc == 3 || argc > 5)
-        goto error;
+    if (argc < 4) goto invalid;
 
     if (!parse_registry_key(argvW[2], &root, &path, &long_key))
         return 1;
 
-    if (argc == 5 && !(overwrite_file = is_overwrite_switch(argvW[4])))
-        goto error;
+    for (i = 4; i < argc; i++)
+    {
+        WCHAR *str;
+
+        if (argvW[i][0] != '/' && argvW[i][0] != '-')
+            goto invalid;
+
+        str = &argvW[i][1];
+
+        if (is_char(*str, 'y') && !str[1])
+            overwrite_file = TRUE;
+        else
+            goto invalid;
+    }
 
     if (RegOpenKeyExW(root, path, 0, KEY_READ, &hkey))
     {
@@ -382,7 +388,7 @@ int reg_export(int argc, WCHAR *argvW[])
 
     return ret;
 
-error:
+invalid:
     output_message(STRING_INVALID_SYNTAX);
     output_message(STRING_FUNC_HELP, _wcsupr(argvW[1]));
     return 1;
