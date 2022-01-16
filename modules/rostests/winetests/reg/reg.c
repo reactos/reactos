@@ -249,13 +249,11 @@ static void test_add(void)
     /* Test input key formats */
     run_reg_exe("reg add \\HKCU\\" KEY_BASE "\\keytest0 /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %u\n", r);
-    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE "\\keytest0");
-    ok(err == ERROR_FILE_NOT_FOUND, "got exit code %d\n", err);
+    verify_key_nonexist(hkey, "keytest0");
 
     run_reg_exe("reg add \\\\HKCU\\" KEY_BASE "\\keytest1 /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %u\n", r);
-    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE "\\keytest1");
-    ok(err == ERROR_FILE_NOT_FOUND, "got exit code %d\n", err);
+    verify_key_nonexist(hkey, "keytest1");
 
     run_reg_exe("reg add HKCU\\" KEY_BASE "\\keytest2\\\\ /f", &r);
     ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */),
