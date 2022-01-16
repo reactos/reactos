@@ -148,6 +148,18 @@ static void test_query(void)
         "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey\r\n"
         "    Wine    REG_SZ    Second instance\r\n\r\n";
 
+    const char *test8a = "\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey1\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey2\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey3\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey4\r\n";
+
+    const char *test8b = "\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey1\r\n\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey2\r\n\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey3\r\n\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey4\r\n\r\n";
+
     DWORD r, dword = 0x123;
     HKEY hkey, subkey;
     BYTE buf[512];
@@ -257,6 +269,24 @@ static void test_query(void)
     run_reg_exe("reg query HKCU\\" KEY_BASE " /ve /s", &r);
     ok(r == REG_EXIT_SUCCESS || r == REG_EXIT_FAILURE /* WinXP */,
        "got exit code %d, expected 0\n", r);
+
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+
+    /* Subkeys only */
+    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(hkey, "subkey1", NULL);
+    add_key(hkey, "subkey2", NULL);
+    add_key(hkey, "subkey3", NULL);
+    add_key(hkey, "subkey4", NULL);
+    close_key(hkey);
+
+    read_reg_output("reg query HKCU\\" KEY_BASE, buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test8a, FALSE, TODO_REG_COMPARE);
+
+    read_reg_output("reg query HKCU\\" KEY_BASE " /s", buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test8b, FALSE, TODO_REG_COMPARE);
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 }
