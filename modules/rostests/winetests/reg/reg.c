@@ -578,6 +578,19 @@ static void test_add(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
     verify_reg(hkey, NULL, REG_MULTI_SZ, buffer, 1, 0);
 
+    /* Test forward and back slashes */
+    run_reg_exe("reg add HKCU\\" KEY_BASE "\\https://winehq.org /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_key(hkey, "https://winehq.org");
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v count/up /d one/two/three /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "count/up", REG_SZ, "one/two/three", 14, 0);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v \\foo\\bar /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "\\foo\\bar", REG_SZ, "", 1, 0);
+
     close_key(hkey);
 
     /* Test duplicate switches */
@@ -615,7 +628,7 @@ static void test_add(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v invalid4 -", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 }
 
 static void test_delete(void)
@@ -680,6 +693,24 @@ static void test_delete(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg_nonexist(hkey, "foo");
     verify_key(hkey, "subkey");
+
+    /* Test forward and back slashes */
+    add_key(hkey, "https://winehq.org", &hsubkey);
+    close_key(hsubkey);
+    add_value(hkey, "count/up", REG_SZ, "one/two/three", 14);
+    add_value(hkey, "\\foo\\bar", REG_SZ, "", 1);
+
+    run_reg_exe("reg delete HKCU\\" KEY_BASE "\\https://winehq.org /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_key_nonexist(hkey, "https://winehq.org");
+
+    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v count/up /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "count/up");
+
+    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v \\foo\\bar /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "\\foo\\bar");
 
     close_key(hkey);
 
@@ -2385,9 +2416,20 @@ static void test_import(void)
     todo_wine verify_reg_nonexist(hkey, "Wine70e");
     todo_wine verify_reg_nonexist(hkey, "Wine70f");
 
+    /* Test forward and back slashes */
+    test_import_str("REGEDIT4\n\n"
+                    "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
+                    "\"count/up\"=\"one/two/three\"\n"
+                    "\"\\\\foo\\\\bar\"=\"\"\n\n"
+                    "[HKEY_CURRENT_USER\\" KEY_BASE "\\https://winehq.org]\n\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "count/up", REG_SZ, "one/two/three", 14, 0);
+    verify_reg(hkey, "\\foo\\bar", REG_SZ, "", 1, 0);
+    verify_key(hkey, "https://winehq.org");
+
     close_key(hkey);
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 }
 
 static void test_unicode_import(void)
@@ -3923,9 +3965,20 @@ static void test_unicode_import(void)
     todo_wine verify_reg_nonexist(hkey, "Wine70e");
     todo_wine verify_reg_nonexist(hkey, "Wine70f");
 
+    /* Test forward and back slashes */
+    test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
+                    "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
+                    "\"count/up\"=\"one/two/three\"\n"
+                    "\"\\\\foo\\\\bar\"=\"\"\n\n"
+                    "[HKEY_CURRENT_USER\\" KEY_BASE "\\https://winehq.org]\n\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "count/up", REG_SZ, "one/two/three", 14, 0);
+    verify_reg(hkey, "\\foo\\bar", REG_SZ, "", 1, 0);
+    verify_key(hkey, "https://winehq.org");
+
     close_key(hkey);
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 }
 
 static void test_import_with_whitespace(void)
@@ -4473,6 +4526,13 @@ static void test_export(void)
         "\"Wine4g\"=\"Value2\"\r\n"
         "\"Wine4h\"=\"abc\"\r\n\r\n";
 
+    const char *slashes_test =
+        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+        "\"count/up\"=\"one/two/three\"\r\n"
+        "\"\\\\foo\\\\bar\"=\"\"\r\n\r\n"
+        "[HKEY_CURRENT_USER\\" KEY_BASE "\\https://winehq.org]\r\n\r\n";
+
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
@@ -4579,9 +4639,7 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", complex_test, 0), "compare_export() failed\n");
-
-    err = delete_tree(HKEY_CURRENT_USER, KEY_BASE);
-    ok(err == ERROR_SUCCESS, "delete_tree() failed: %d\n", err);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 
     /* Test the export order of registry keys */
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
@@ -4593,7 +4651,6 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", key_order_test, 0), "compare_export() failed\n");
-
     delete_key(hkey, "Subkey1");
     delete_key(hkey, "Subkey2");
 
@@ -4607,7 +4664,6 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", value_order_test, TODO_REG_COMPARE), "compare_export() failed\n");
-
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 
     /* Test registry export with empty hex data */
@@ -4625,7 +4681,6 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_hex_test, 0), "compare_export() failed\n");
-
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 
     /* Test registry export after importing alternative registry data types */
@@ -4643,7 +4698,6 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_hex_test2, 0), "compare_export() failed\n");
-
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
@@ -4662,7 +4716,6 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", hex_types_test, 0), "compare_export() failed\n");
-
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 
     /* Test registry export with embedded null characters */
@@ -4700,8 +4753,20 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", embedded_null_test, 0), "compare_export() failed\n");
-
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    /* Test registry export with forward and back slashes */
+    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(hkey, "https://winehq.org", &subkey);
+    close_key(subkey);
+    add_value(hkey, "count/up", REG_SZ, "one/two/three", 14);
+    add_value(hkey, "\\foo\\bar", REG_SZ, "", 1);
+    close_key(hkey);
+
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("file.reg", slashes_test, TODO_REG_COMPARE), "compare_export() failed\n");
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 }
 
 #define COPY_DEST  KEY_WINE "\\reg_copy"
