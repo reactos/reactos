@@ -125,6 +125,35 @@ const char *hex_types_test =
     "\"Wine3b\"=hex:12,34,56,78\r\n"
     "\"Wine3c\"=dword:10203040\r\n\r\n";
 
+const char *embedded_null_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+    "\"Wine4a\"=dword:00000005\r\n"
+    "\"Wine4b\"=\"\"\r\n"
+    "\"Wine4c\"=\"Value\"\r\n"
+    "\"Wine4d\"=\"\"\r\n"
+    "\"Wine4e\"=dword:00000100\r\n"
+    "\"Wine4f\"=\"\"\r\n"
+    "\"Wine4g\"=\"Value2\"\r\n"
+    "\"Wine4h\"=\"abc\"\r\n\r\n";
+
+const char *slashes_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+    "\"count/up\"=\"one/two/three\"\r\n"
+    "\"\\\\foo\\\\bar\"=\"\"\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "\\https://winehq.org]\r\n\r\n";
+
+const char *escaped_null_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+    "\"Wine5a\"=\"\\\\0\"\r\n"
+    "\"Wine5b\"=\"\\\\0\\\\0\"\r\n"
+    "\"Wine5c\"=\"Value1\\\\0\"\r\n"
+    "\"Wine5d\"=\"Value2\\\\0\\\\0\\\\0\\\\0\"\r\n"
+    "\"Wine5e\"=\"Value3\\\\0Value4\"\r\n"
+    "\"Wine5f\"=\"\\\\0Value5\"\r\n\r\n";
+
 
 /* Unit tests */
 
@@ -146,35 +175,6 @@ static void test_export(void)
         "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
         "\"Value 2\"=\"I was added first!\"\r\n"
         "\"Value 1\"=\"I was added second!\"\r\n\r\n";
-
-    const char *embedded_null_test =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
-        "\"Wine4a\"=dword:00000005\r\n"
-        "\"Wine4b\"=\"\"\r\n"
-        "\"Wine4c\"=\"Value\"\r\n"
-        "\"Wine4d\"=\"\"\r\n"
-        "\"Wine4e\"=dword:00000100\r\n"
-        "\"Wine4f\"=\"\"\r\n"
-        "\"Wine4g\"=\"Value2\"\r\n"
-        "\"Wine4h\"=\"abc\"\r\n\r\n";
-
-    const char *slashes_test =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
-        "\"count/up\"=\"one/two/three\"\r\n"
-        "\"\\\\foo\\\\bar\"=\"\"\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "\\https://winehq.org]\r\n\r\n";
-
-    const char *escaped_null_test =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
-        "\"Wine5a\"=\"\\\\0\"\r\n"
-        "\"Wine5b\"=\"\\\\0\\\\0\"\r\n"
-        "\"Wine5c\"=\"Value1\\\\0\"\r\n"
-        "\"Wine5d\"=\"Value2\\\\0\\\\0\\\\0\\\\0\"\r\n"
-        "\"Wine5e\"=\"Value3\\\\0Value4\"\r\n"
-        "\"Wine5f\"=\"\\\\0Value5\"\r\n\r\n";
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);

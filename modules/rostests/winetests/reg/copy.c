@@ -395,6 +395,96 @@ static void test_copy_hex_data(void)
     todo_wine ok(compare_export("file.reg", hex_types_test, 0), "compare_export() failed\n");
 }
 
+static void test_copy_embedded_null_values(void)
+{
+    DWORD r;
+
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC);
+
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
+
+    test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
+                     "[HKEY_CURRENT_USER\\" COPY_SRC "]\n"
+                     "\"Wine4a\"=dword:00000005\n"
+                     "\"Wine4b\"=hex(1):00,00,00,00,00,00,00,00\n"
+                     "\"Wine4c\"=\"Value\"\n"
+                     "\"Wine4d\"=hex(1):00,00,61,00,62,00,63,00\n"
+                     "\"Wine4e\"=dword:00000100\n"
+                     "\"Wine4f\"=hex(1):00,00,56,00,61,00,6c,00,75,00,65,00,00,00\n"
+                     "\"Wine4g\"=\"Value2\"\n"
+                     "\"Wine4h\"=hex(1):61,00,62,00,63,00,00,00, \\\n"
+                     "  64,00,65,00,66,00,00,00\n\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /f", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine verify_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine ok(compare_export("file.reg", embedded_null_test, 0), "compare_export() failed\n");
+}
+
+static void test_copy_slashes(void)
+{
+    HKEY hkey;
+    DWORD r;
+
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC);
+
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
+
+    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_key(hkey, "https://winehq.org", NULL);
+    add_value(hkey, "count/up", REG_SZ, "one/two/three", 14);
+    add_value(hkey, "\\foo\\bar", REG_SZ, "", 1);
+    close_key(hkey);
+
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /s /f", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine verify_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    run_reg_exe("reg export HKCU\\" KEY_BASE " file.reg /y", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine ok(compare_export("file.reg", slashes_test, 0), "compare_export() failed\n");
+}
+
+static void test_copy_escaped_null_values(void)
+{
+    HKEY hkey;
+    DWORD r;
+
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC);
+
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
+
+    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_value(hkey, "Wine5a", REG_SZ, "\\0", 3);
+    add_value(hkey, "Wine5b", REG_SZ, "\\0\\0", 5);
+    add_value(hkey, "Wine5c", REG_SZ, "Value1\\0", 9);
+    add_value(hkey, "Wine5d", REG_SZ, "Value2\\0\\0\\0\\0", 15);
+    add_value(hkey, "Wine5e", REG_SZ, "Value3\\0Value4", 15);
+    add_value(hkey, "Wine5f", REG_SZ, "\\0Value5", 9);
+    close_key(hkey);
+
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /f", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine verify_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    run_reg_exe("reg export HKCU\\" KEY_BASE " file.reg /y", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine ok(compare_export("file.reg", escaped_null_test, 0), "compare_export() failed\n");
+
+    delete_key(HKEY_CURRENT_USER, COPY_SRC);
+    todo_wine delete_key(HKEY_CURRENT_USER, KEY_BASE);
+}
+
 START_TEST(copy)
 {
     DWORD r;
@@ -409,4 +499,7 @@ START_TEST(copy)
     test_copy_simple_data();
     test_copy_complex_data();
     test_copy_hex_data();
+    test_copy_embedded_null_values();
+    test_copy_slashes();
+    test_copy_escaped_null_values();
 }

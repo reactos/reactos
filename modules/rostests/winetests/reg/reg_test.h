@@ -84,6 +84,9 @@ extern const char *complex_data_test;
 extern const char *empty_hex_test;
 extern const char *empty_hex_test2;
 extern const char *hex_types_test;
+extern const char *slashes_test;
+extern const char *embedded_null_test;
+extern const char *escaped_null_test;
 
 /* import.c */
 #define test_import_str(c,r) import_reg(__FILE__,__LINE__,c,FALSE,r)
