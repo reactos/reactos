@@ -404,6 +404,16 @@ static void test_reg_none(void)
 
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
 
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_NONE /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine verify_reg(hkey, NULL, REG_NONE, "\0", 2, 0);
+
+    todo_wine delete_value(hkey, NULL);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_NONE /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    verify_reg(hkey, NULL, REG_NONE, "\0", 2, 0);
+
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v none0 /d deadbeef /t REG_NONE /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg(hkey, "none0", REG_NONE, "d\0e\0a\0d\0b\0e\0e\0f\0\0", 18, 0);
@@ -411,10 +421,6 @@ static void test_reg_none(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v none1 /t REG_NONE /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
     verify_reg(hkey, "none1", REG_NONE, "\0", 2, 0);
-
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_NONE /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, NULL, REG_NONE, "\0", 2, 0);
 
     close_key(hkey);
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
@@ -426,6 +432,10 @@ static void test_reg_sz(void)
     DWORD r;
 
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_SZ /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    todo_wine verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /d WineTest /f", &r);
     ok(r == REG_EXIT_SUCCESS || broken(r == REG_EXIT_FAILURE /* WinXP */),
@@ -501,6 +511,16 @@ static void test_reg_expand_sz(void)
 
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
 
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_EXPAND_SZ /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    todo_wine verify_reg(hkey, NULL, REG_EXPAND_SZ, "", 1, 0);
+
+    todo_wine delete_value(hkey, NULL);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_EXPAND_SZ /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    verify_reg(hkey, NULL, REG_EXPAND_SZ, "", 1, 0);
+
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v expand0 /t REG_EXpand_sz /d \"dead%PATH%beef\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
     verify_reg(hkey, "expand0", REG_EXPAND_SZ, "dead%PATH%beef", 15, 0);
@@ -521,10 +541,6 @@ static void test_reg_expand_sz(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
     verify_reg(hkey, "expand3", REG_EXPAND_SZ, "", 1, 0);
 
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_EXPAND_SZ /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, NULL, REG_EXPAND_SZ, "", 1, 0);
-
     close_key(hkey);
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 }
@@ -538,14 +554,24 @@ static void test_reg_binary(void)
 
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
 
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_BINARY /v bin0 /f", &r);
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_BINARY /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, "bin0", REG_BINARY, buffer, 0, 0);
+    todo_wine verify_reg(hkey, NULL, REG_BINARY, buffer, 0, 0);
+
+    todo_wine delete_value(hkey, NULL);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_BINARY /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    verify_reg(hkey, NULL, REG_BINARY, buffer, 0, 0);
 
     run_reg_exe("reg add HKEY_CURRENT_USER\\" KEY_BASE " /ve /t REG_BINARY /d deadbeef /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
     dword = 0xefbeadde;
     verify_reg(hkey, "", REG_BINARY, &dword, sizeof(DWORD), 0);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_BINARY /v bin0 /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    verify_reg(hkey, "bin0", REG_BINARY, buffer, 0, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_BINARY /v bin1 /f /d 0xDeAdBeEf", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
@@ -579,10 +605,6 @@ static void test_reg_binary(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v bin6 /t REG_BINARY /f /d", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_BINARY /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, NULL, REG_BINARY, buffer, 0, 0);
-
     close_key(hkey);
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 }
@@ -603,6 +625,9 @@ static void test_reg_dword(void)
         verify_reg(hkey, "", REG_DWORD, &dword, sizeof(dword), 0);
     else
         win_skip("broken reg.exe detected\n");
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_DWORD /f", &r);
+    ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */), "got exit code %u, expected 1\n", r);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v dword0 /t REG_DWORD /f /d", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -667,9 +692,6 @@ static void test_reg_dword(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v dword15 /t REG_DWORD /d 4294967296 /f", &r);
     ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */), "got exit code %u, expected 1\n", r);
 
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_DWORD /f", &r);
-    ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */), "got exit code %u, expected 1\n", r);
-
     /* REG_DWORD_LITTLE_ENDIAN */
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v DWORD_LE /t REG_DWORD_LITTLE_ENDIAN /d 456 /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
@@ -704,6 +726,17 @@ static void test_reg_multi_sz(void)
     char buffer[22];
 
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_MULTI_SZ /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    buffer[0] = 0;
+    todo_wine verify_reg(hkey, NULL, REG_MULTI_SZ, buffer, 1, 0);
+
+    todo_wine delete_value(hkey, NULL);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_MULTI_SZ /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    verify_reg(hkey, NULL, REG_MULTI_SZ, buffer, 1, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v multi0 /t REG_MULTI_SZ /d \"three\\0little\\0strings\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
@@ -785,10 +818,6 @@ static void test_reg_multi_sz(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v multi21 /t REG_MULTI_SZ /s \"#\" /d \"two\\0\\0strings\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
     verify_reg(hkey, "multi21", REG_MULTI_SZ, "two\\0\\0strings\0", 16, 0);
-
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_MULTI_SZ /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, NULL, REG_MULTI_SZ, buffer, 1, 0);
 
     close_key(hkey);
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
