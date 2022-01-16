@@ -210,9 +210,10 @@ static int query_value(HKEY hkey, WCHAR *value_name, WCHAR *path, BOOL recurse)
     return 0;
 }
 
-static int query_all(HKEY hkey, WCHAR *path, BOOL recurse)
+static int query_all(HKEY hkey, WCHAR *path, BOOL recurse, BOOL recursing)
 {
     LONG rc;
+    DWORD num_values;
     DWORD max_value_len = 256, value_len;
     DWORD max_data_bytes = 2048, data_size;
     DWORD subkey_len;
@@ -221,7 +222,12 @@ static int query_all(HKEY hkey, WCHAR *path, BOOL recurse)
     BYTE *data;
     HKEY subkey;
 
-    output_string(L"%1\n", path);
+    rc = RegQueryInfoKeyW(hkey, NULL, NULL, NULL, NULL, NULL, NULL,
+                          &num_values, NULL, NULL, NULL, NULL);
+    if (rc) return 1;
+
+    if (num_values || recursing)
+        output_string(L"%1\n", path);
 
     value_name = malloc(max_value_len * sizeof(WCHAR));
     data = malloc(max_data_bytes);
@@ -275,7 +281,7 @@ static int query_all(HKEY hkey, WCHAR *path, BOOL recurse)
                 subkey_path = build_subkey_path(path, path_len, subkey_name, subkey_len);
                 if (!RegOpenKeyExW(hkey, subkey_name, 0, KEY_READ, &subkey))
                 {
-                    query_all(subkey, subkey_path, recurse);
+                    query_all(subkey, subkey_path, recurse, TRUE);
                     RegCloseKey(subkey);
                 }
                 free(subkey_path);
@@ -311,7 +317,7 @@ static int run_query(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
             output_message(STRING_MATCHES_FOUND, num_values_found);
     }
     else
-        ret = query_all(hkey, key_name, recurse);
+        ret = query_all(hkey, key_name, recurse, FALSE);
 
     RegCloseKey(hkey);
 
