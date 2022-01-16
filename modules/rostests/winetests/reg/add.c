@@ -22,7 +22,7 @@
 #define TODO_REG_SIZE    (0x0002u)
 #define TODO_REG_DATA    (0x0004u)
 
-BOOL run_reg_exe_(unsigned line, const char *cmd, DWORD *rc)
+BOOL run_reg_exe_(const char *file, unsigned line, const char *cmd, DWORD *rc)
 {
     STARTUPINFOA si = {sizeof(STARTUPINFOA)};
     PROCESS_INFORMATION pi;
@@ -51,8 +51,8 @@ BOOL run_reg_exe_(unsigned line, const char *cmd, DWORD *rc)
     return bret;
 }
 
-void verify_reg_(unsigned line, HKEY hkey, const char* value, DWORD exp_type,
-                 const void *exp_data, DWORD exp_size, DWORD todo)
+void verify_reg_(const char *file, unsigned line, HKEY hkey, const char *value,
+                 DWORD exp_type, const void *exp_data, DWORD exp_size, DWORD todo)
 {
     DWORD type, size;
     BYTE data[256];
@@ -76,7 +76,7 @@ void verify_reg_(unsigned line, HKEY hkey, const char* value, DWORD exp_type,
     }
 }
 
-void verify_reg_nonexist_(unsigned line, HKEY hkey, const char *value)
+void verify_reg_nonexist_(const char *file, unsigned line, HKEY hkey, const char *value)
 {
     LONG err;
 
@@ -85,7 +85,8 @@ void verify_reg_nonexist_(unsigned line, HKEY hkey, const char *value)
         (value && *value) ? value : "(Default)", err);
 }
 
-void open_key_(unsigned line, const HKEY base, const char *path, const DWORD sam, HKEY *hkey)
+void open_key_(const char *file, unsigned line, const HKEY base, const char *path,
+               const DWORD sam, HKEY *hkey)
 {
     LONG err;
 
@@ -93,7 +94,7 @@ void open_key_(unsigned line, const HKEY base, const char *path, const DWORD sam
     lok(err == ERROR_SUCCESS, "RegOpenKeyExA failed: %d\n", err);
 }
 
-void close_key_(unsigned line, HKEY hkey)
+void close_key_(const char *file, unsigned line, HKEY hkey)
 {
     LONG err;
 
@@ -101,7 +102,7 @@ void close_key_(unsigned line, HKEY hkey)
     lok(err == ERROR_SUCCESS, "RegCloseKey failed: %d\n", err);
 }
 
-void verify_key_(unsigned line, HKEY key_base, const char *subkey)
+void verify_key_(const char *file, unsigned line, HKEY key_base, const char *subkey)
 {
     HKEY hkey;
     LONG err;
@@ -113,7 +114,7 @@ void verify_key_(unsigned line, HKEY key_base, const char *subkey)
         RegCloseKey(hkey);
 }
 
-void verify_key_nonexist_(unsigned line, HKEY key_base, const char *subkey)
+void verify_key_nonexist_(const char *file, unsigned line, HKEY key_base, const char *subkey)
 {
     HKEY hkey;
     LONG err;
@@ -126,7 +127,7 @@ void verify_key_nonexist_(unsigned line, HKEY key_base, const char *subkey)
         RegCloseKey(hkey);
 }
 
-void add_key_(unsigned line, const HKEY hkey, const char *path, HKEY *subkey)
+void add_key_(const char *file, unsigned line, const HKEY hkey, const char *path, HKEY *subkey)
 {
     LONG err;
 
@@ -135,7 +136,7 @@ void add_key_(unsigned line, const HKEY hkey, const char *path, HKEY *subkey)
     lok(err == ERROR_SUCCESS, "RegCreateKeyExA failed: %d\n", err);
 }
 
-void delete_key_(unsigned line, const HKEY hkey, const char *path)
+void delete_key_(const char *file, unsigned line, const HKEY hkey, const char *path)
 {
     if (path && *path)
     {
@@ -188,7 +189,8 @@ cleanup:
     return ret;
 }
 
-void add_value_(unsigned line, HKEY hkey, const char *name, DWORD type, const void *data, size_t size)
+void add_value_(const char *file, unsigned line, HKEY hkey, const char *name,
+                DWORD type, const void *data, size_t size)
 {
     LONG err;
 
@@ -196,7 +198,7 @@ void add_value_(unsigned line, HKEY hkey, const char *name, DWORD type, const vo
     lok(err == ERROR_SUCCESS, "RegSetValueExA failed: %d\n", err);
 }
 
-void delete_value_(unsigned line, const HKEY hkey, const char *name)
+void delete_value_(const char *file, unsigned line, const HKEY hkey, const char *name)
 {
     LONG err;
 

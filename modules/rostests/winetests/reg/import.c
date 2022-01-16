@@ -37,7 +37,7 @@ static BOOL write_file(const void *str, DWORD size)
     return ret;
 }
 
-BOOL import_reg(unsigned line, const char *contents, BOOL unicode, DWORD *rc)
+BOOL import_reg(const char *file, unsigned line, const char *contents, BOOL unicode, DWORD *rc)
 {
     int lenA;
     BOOL ret;
