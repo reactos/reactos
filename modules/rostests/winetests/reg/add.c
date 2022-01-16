@@ -287,6 +287,18 @@ static void test_add(void)
     else
         win_skip("broken reg.exe detected\n");
 
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
+
+    run_reg_exe("reg add HKEY_CURRENT_USER\\" KEY_BASE " /ve /d WineTEST /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "", REG_SZ, "WineTEST", 9, 0);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_SZ /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
+
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v test /d deadbeef /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg(hkey, "test", REG_SZ, "deadbeef", 9, 0);
@@ -298,10 +310,6 @@ static void test_add(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v test1 /t REG_SZ /f /d", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg add HKEY_CURRENT_USER\\" KEY_BASE " /ve /d WineTEST /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_reg(hkey, "", REG_SZ, "WineTEST", 9, 0);
-
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_SZ /v test2 /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg(hkey, "test2", REG_SZ, "", 1, 0);
@@ -309,14 +317,6 @@ static void test_add(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_SZ /v test3 /f /d \"\"", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg(hkey, "test3", REG_SZ, "", 1, 0);
-
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
-
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_SZ /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
 
     /* REG_EXPAND_SZ */
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v expand0 /t REG_EXpand_sz /d \"dead%PATH%beef\" /f", &r);
