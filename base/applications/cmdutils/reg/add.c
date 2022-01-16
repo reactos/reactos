@@ -227,6 +227,7 @@ int reg_add(int argc, WCHAR *argvW[])
 
             if (!lstrcmpiW(str, L"ve"))
             {
+                if (value_empty) goto invalid;
                 value_empty = TRUE;
                 continue;
             }
@@ -249,11 +250,12 @@ int reg_add(int argc, WCHAR *argvW[])
                 break;
             case 's':
                 str = argvW[++i];
-                if (!str || lstrlenW(str) != 1)
+                if (separator || !str || lstrlenW(str) != 1)
                     goto invalid;
                 separator = str[0];
                 break;
             case 'f':
+                if (force) goto invalid;
                 force = TRUE;
                 break;
             default:
