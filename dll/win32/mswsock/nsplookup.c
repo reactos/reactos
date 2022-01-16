@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <ws2spi.h>
 #include <nspapi.h>
-#include <windef.h>
 #include <winuser.h>
 #include <windns.h>
 #include <guiddef.h>

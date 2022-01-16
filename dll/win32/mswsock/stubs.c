@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-#include <windef.h>
 #include <ws2spi.h>
 #include <nspapi.h>
 #include <svc.h>
