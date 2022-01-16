@@ -349,14 +349,12 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
         return 1;
     }
     else if (argc == 2) /* Valid operation, no arguments supplied */
-    {
-        output_message(STRING_INVALID_SYNTAX);
-        output_message(STRING_FUNC_HELP, _wcsupr(argvW[1]));
-        return 1;
-    }
+        goto invalid;
 
     if (is_help_switch(argvW[2]))
     {
+        if (argc > 3) goto invalid;
+
         output_message(op_help);
         output_message(STRING_REG_VIEW_USAGE);
         return 0;
@@ -378,4 +376,9 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
         return reg_import(argc, argvW);
 
     return reg_query(argc, argvW);
+
+invalid:
+    output_message(STRING_INVALID_SYNTAX);
+    output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
+    return 1;
 }
