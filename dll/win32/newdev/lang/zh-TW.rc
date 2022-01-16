@@ -101,4 +101,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "選擇搜尋和安裝選項"
     IDS_SEARCHDRV_TITLE "正在搜尋..."
     IDS_INSTALLDRV_TITLE "正在安裝..."
+    IDS_BROWSE_FOR_FOLDER_TITLE "Select the folder containing proper drivers for this hardware."
 END

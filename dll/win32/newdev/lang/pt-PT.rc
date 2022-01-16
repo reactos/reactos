@@ -98,4 +98,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "Escolha as opções de pesquisa e instalação"
     IDS_SEARCHDRV_TITLE "A procurar..."
     IDS_INSTALLDRV_TITLE "A instalar..."
+    IDS_BROWSE_FOR_FOLDER_TITLE "Seleccione a pasta que contém controladores adequados para este hardware."
 END
