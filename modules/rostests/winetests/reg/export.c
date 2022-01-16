@@ -73,6 +73,58 @@ const char *simple_data_test =
     "\"DWORD\"=dword:00000100\r\n"
     "\"String\"=\"Your text here...\"\r\n\r\n";
 
+const char *complex_data_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+    "\"DWORD\"=dword:00000100\r\n"
+    "\"String\"=\"Your text here...\"\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1]\r\n"
+    "\"Binary\"=hex:11,22,33,44\r\n"
+    "\"Undefined hex\"=hex(100):25,50,41,54,48,25,00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a]\r\n"
+    "\"double\\\"quote\"=\"\\\"Hello, World!\\\"\"\r\n"
+    "\"single'quote\"=dword:00000008\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a\\Subkey2b]\r\n"
+    "@=\"Default value name\"\r\n"
+    "\"Multiple strings\"=hex(7):4c,00,69,00,6e,00,65,00,31,00,00,00,4c,00,69,00,6e,\\\r\n"
+    "  00,65,00,32,00,00,00,4c,00,69,00,6e,00,65,00,33,00,00,00,00,00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey3a]\r\n"
+    "\"Backslash\"=\"Use \\\\\\\\ to escape a backslash\"\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey3a\\Subkey3b]\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey3a\\Subkey3b\\Subkey3c]\r\n"
+    "\"String expansion\"=hex(2):25,00,48,00,4f,00,4d,00,45,00,25,00,5c,00,25,00,50,\\\r\n"
+    "  00,41,00,54,00,48,00,25,00,00,00\r\n"
+    "\"Zero data type\"=hex(0):56,61,6c,75,65,00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey4]\r\n"
+    "@=dword:12345678\r\n"
+    "\"43981\"=hex(abcd):56,61,6c,75,65,00\r\n\r\n";
+
+const char *empty_hex_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+    "\"Wine1a\"=hex(0):\r\n"
+    "\"Wine1b\"=\"\"\r\n"
+    "\"Wine1c\"=hex(2):\r\n"
+    "\"Wine1d\"=hex:\r\n"
+    "\"Wine1e\"=hex(4):\r\n"
+    "\"Wine1f\"=hex(7):\r\n"
+    "\"Wine1g\"=hex(100):\r\n"
+    "\"Wine1h\"=hex(abcd):\r\n\r\n";
+
+const char *empty_hex_test2 =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+    "\"Wine2a\"=\"\"\r\n"
+    "\"Wine2b\"=hex:\r\n"
+    "\"Wine2c\"=hex(4):\r\n\r\n";
+
+const char *hex_types_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+    "\"Wine3a\"=\"Value\"\r\n"
+    "\"Wine3b\"=hex:12,34,56,78\r\n"
+    "\"Wine3c\"=dword:10203040\r\n\r\n";
+
 
 /* Unit tests */
 
@@ -82,32 +134,6 @@ static void test_export(void)
     DWORD r, dword, type, size;
     HKEY hkey, subkey;
     BYTE hex[4], buffer[8];
-
-    const char *complex_test =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
-        "\"DWORD\"=dword:00000100\r\n"
-        "\"String\"=\"Your text here...\"\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1]\r\n"
-        "\"Binary\"=hex:11,22,33,44\r\n"
-        "\"Undefined hex\"=hex(100):25,50,41,54,48,25,00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a]\r\n"
-        "\"double\\\"quote\"=\"\\\"Hello, World!\\\"\"\r\n"
-        "\"single'quote\"=dword:00000008\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a\\Subkey2b]\r\n"
-        "@=\"Default value name\"\r\n"
-        "\"Multiple strings\"=hex(7):4c,00,69,00,6e,00,65,00,31,00,00,00,4c,00,69,00,6e,\\\r\n"
-        "  00,65,00,32,00,00,00,4c,00,69,00,6e,00,65,00,33,00,00,00,00,00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey3a]\r\n"
-        "\"Backslash\"=\"Use \\\\\\\\ to escape a backslash\"\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey3a\\Subkey3b]\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey3a\\Subkey3b\\Subkey3c]\r\n"
-        "\"String expansion\"=hex(2):25,00,48,00,4f,00,4d,00,45,00,25,00,5c,00,25,00,50,\\\r\n"
-        "  00,41,00,54,00,48,00,25,00,00,00\r\n"
-        "\"Zero data type\"=hex(0):56,61,6c,75,65,00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey4]\r\n"
-        "@=dword:12345678\r\n"
-        "\"43981\"=hex(abcd):56,61,6c,75,65,00\r\n\r\n";
 
     const char *key_order_test =
         "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
@@ -120,32 +146,6 @@ static void test_export(void)
         "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
         "\"Value 2\"=\"I was added first!\"\r\n"
         "\"Value 1\"=\"I was added second!\"\r\n\r\n";
-
-    const char *empty_hex_test =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
-        "\"Wine1a\"=hex(0):\r\n"
-        "\"Wine1b\"=\"\"\r\n"
-        "\"Wine1c\"=hex(2):\r\n"
-        "\"Wine1d\"=hex:\r\n"
-        "\"Wine1e\"=hex(4):\r\n"
-        "\"Wine1f\"=hex(7):\r\n"
-        "\"Wine1g\"=hex(100):\r\n"
-        "\"Wine1h\"=hex(abcd):\r\n\r\n";
-
-    const char *empty_hex_test2 =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
-        "\"Wine2a\"=\"\"\r\n"
-        "\"Wine2b\"=hex:\r\n"
-        "\"Wine2c\"=hex(4):\r\n\r\n";
-
-    const char *hex_types_test =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
-        "\"Wine3a\"=\"Value\"\r\n"
-        "\"Wine3b\"=hex:12,34,56,78\r\n"
-        "\"Wine3c\"=dword:10203040\r\n\r\n";
 
     const char *embedded_null_test =
         "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
@@ -286,7 +286,7 @@ static void test_export(void)
 
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    ok(compare_export("file.reg", complex_test, 0), "compare_export() failed\n");
+    ok(compare_export("file.reg", complex_data_test, 0), "compare_export() failed\n");
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 
     /* Test the export order of registry keys */
