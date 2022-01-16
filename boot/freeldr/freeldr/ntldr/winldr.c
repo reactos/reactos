@@ -499,7 +499,6 @@ LoadModule(
 
 static
 BOOLEAN
-NTAPI
 WinLdrIsPaeSupported(IN PCHAR KernelFileName,
                      IN PCHAR HalFileName)
 {
