@@ -287,10 +287,6 @@ static int query_all(HKEY hkey, WCHAR *path, BOOL recurse)
     }
 
     free(subkey_name);
-
-    if (i && !recurse)
-        output_string(newlineW);
-
     return 0;
 }
 
