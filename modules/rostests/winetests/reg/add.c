@@ -299,13 +299,13 @@ static void test_add(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
     verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
 
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /v test /d deadbeef /f", &r);
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v test0 /d deadbeef /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_reg(hkey, "test", REG_SZ, "deadbeef", 9, 0);
+    verify_reg(hkey, "test0", REG_SZ, "deadbeef", 9, 0);
 
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /v test /f", &r);
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v test0 /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_reg(hkey, "test", REG_SZ, "", 1, 0);
+    verify_reg(hkey, "test0", REG_SZ, "", 1, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v test1 /t REG_SZ /f /d", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
