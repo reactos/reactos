@@ -318,6 +318,18 @@ static void test_add(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg(hkey, "test3", REG_SZ, "", 1, 0);
 
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v string\\04 /t REG_SZ /d \"Value\" /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    verify_reg(hkey, "string\\04", REG_SZ, "Value", 6, 0);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v string5 /t REG_SZ /d \"foo\\0bar\" /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    verify_reg(hkey, "string5", REG_SZ, "foo\\0bar", 9, 0);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v \\0 /t REG_SZ /d \"Value\" /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
+    verify_reg(hkey, "\\0", REG_SZ, "Value", 6, 0);
+
     /* REG_EXPAND_SZ */
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v expand0 /t REG_EXpand_sz /d \"dead%PATH%beef\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u\n", r);
