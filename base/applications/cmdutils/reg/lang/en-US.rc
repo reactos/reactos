@@ -152,4 +152,5 @@ STRINGTABLE
 \     Access the registry using the 32-bit view.\n\n\
 \  /reg:64\n\
 \     Access the registry using the 64-bit view.\n\n"
+    STRING_ACCESS_DENIED, "reg: Unable to access or create the specified registry key\n"
 }

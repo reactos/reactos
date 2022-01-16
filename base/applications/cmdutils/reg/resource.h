@@ -64,3 +64,4 @@
 #define STRING_KEY_NONEXIST           139
 #define STRING_KEY_IMPORT_FAILED      140
 #define STRING_REG_VIEW_USAGE         141
+#define STRING_ACCESS_DENIED          142

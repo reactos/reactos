@@ -157,7 +157,7 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
     if (RegCreateKeyExW(root, path, 0, NULL, REG_OPTION_NON_VOLATILE,
                         KEY_READ|KEY_WRITE, NULL, &hkey, NULL))
     {
-        output_message(STRING_INVALID_KEY);
+        output_message(STRING_ACCESS_DENIED);
         return 1;
     }
 
