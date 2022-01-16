@@ -360,7 +360,7 @@ static BOOL is_overwrite_switch(const WCHAR *s)
     return is_switch(s, 'y');
 }
 
-int reg_export(int argc, WCHAR *argv[])
+int reg_export(int argc, WCHAR *argvW[])
 {
     HKEY root, hkey;
     WCHAR *path, *long_key;
@@ -371,10 +371,10 @@ int reg_export(int argc, WCHAR *argv[])
     if (argc == 3 || argc > 5)
         goto error;
 
-    if (!parse_registry_key(argv[2], &root, &path, &long_key))
+    if (!parse_registry_key(argvW[2], &root, &path, &long_key))
         return 1;
 
-    if (argc == 5 && !(overwrite_file = is_overwrite_switch(argv[4])))
+    if (argc == 5 && !(overwrite_file = is_overwrite_switch(argvW[4])))
         goto error;
 
     if (RegOpenKeyExW(root, path, 0, KEY_READ, &hkey))
@@ -383,7 +383,7 @@ int reg_export(int argc, WCHAR *argv[])
         return 1;
     }
 
-    hFile = get_file_handle(argv[3], overwrite_file);
+    hFile = get_file_handle(argvW[3], overwrite_file);
     export_file_header(hFile);
     ret = export_registry_data(hFile, hkey, long_key);
     export_newline(hFile);
@@ -395,6 +395,6 @@ int reg_export(int argc, WCHAR *argv[])
 
 error:
     output_message(STRING_INVALID_SYNTAX);
-    output_message(STRING_FUNC_HELP, _wcsupr(argv[1]));
+    output_message(STRING_FUNC_HELP, _wcsupr(argvW[1]));
     return 1;
 }

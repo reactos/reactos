@@ -53,7 +53,7 @@ int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
                BOOL value_empty, BOOL value_all, BOOL force);
 
 /* export.c */
-int reg_export(int argc, WCHAR *argv[]);
+int reg_export(int argc, WCHAR *argvW[]);
 
 /* import.c */
 int reg_import(int argc, WCHAR *argvW[]);
