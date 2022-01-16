@@ -18,6 +18,11 @@ struct RecycleBin5File
 };
 
 static HRESULT STDMETHODCALLTYPE
+RecycleBin5File_RecycleBinFile_GetAttributes(
+    IN IRecycleBinFile *This,
+    OUT DWORD *pAttributes);
+
+static HRESULT STDMETHODCALLTYPE
 RecycleBin5File_RecycleBinFile_QueryInterface(
     IN IRecycleBinFile *This,
     IN REFIID riid,
@@ -34,6 +39,14 @@ RecycleBin5File_RecycleBinFile_QueryInterface(
         *ppvObject = &s->recycleBinFileImpl;
     else if (IsEqualIID(riid, &IID_IRecycleBinFile))
         *ppvObject = &s->recycleBinFileImpl;
+    else if (IsEqualIID(riid, &IID_IExtractIconA) || IsEqualIID(riid, &IID_IExtractIconW))
+    {
+        DWORD dwAttributes;
+        if (RecycleBin5File_RecycleBinFile_GetAttributes(This, &dwAttributes) == S_OK)
+            return SHCreateFileExtractIconW(s->FullName, dwAttributes, riid, ppvObject);
+        else
+            return S_FALSE;
+    }
     else
     {
         *ppvObject = NULL;

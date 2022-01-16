@@ -62,14 +62,53 @@ static const columninfo RecycleBinColumns[] =
  * Recycle Bin folder
  */
 
-HRESULT CRecyclerExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
+BOOL WINAPI CBSearchRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile);
+
+static PIDLRecycleStruct * _ILGetRecycleStruct(LPCITEMIDLIST pidl);
+
+typedef struct _SEARCH_CONTEXT
 {
+    PIDLRecycleStruct *pFileDetails;
+    HANDLE hDeletedFile;
+    BOOL bFound;
+} SEARCH_CONTEXT, *PSEARCH_CONTEXT;
+
+HRESULT CRecyclerExtractIcon_CreateInstance(
+    LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
+{
+    PIDLRecycleStruct *pFileDetails = _ILGetRecycleStruct(pidl);
+    if (pFileDetails == NULL)
+        goto fallback;
+
+    // Try to obtain the file
+    SEARCH_CONTEXT Context;
+    Context.pFileDetails = pFileDetails;
+    Context.bFound = FALSE;
+
+    EnumerateRecycleBinW(NULL, CBSearchRecycleBin, &Context);
+    if (Context.bFound)
+    {
+        // This should be executed any time, if not, there are some errors in the implementation
+        IRecycleBinFile* pRecycleFile = (IRecycleBinFile*)Context.hDeletedFile;
+
+        // Query the interface from the private interface
+        HRESULT hr = pRecycleFile->QueryInterface(riid, ppvOut);
+
+        // Close the file handle as we don't need it anymore
+        CloseRecycleBinHandle(Context.hDeletedFile);
+
+        return hr;
+    }
+
+fallback:
+    // In case the search fails we use a default icon
+    ERR("Recycler could not retrieve the icon, this shouldn't happen\n");
+
     CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    /* FIXME: This is completely unimplemented */
     initIcon->SetNormalIcon(swShell32Name, 0);
 
     return initIcon->QueryInterface(riid, ppvOut);
@@ -115,13 +154,6 @@ class CRecycleBinItemContextMenu :
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
         END_COM_MAP()
 };
-
-typedef struct
-{
-    PIDLRecycleStruct *pFileDetails;
-    HANDLE hDeletedFile;
-    BOOL bFound;
-} SEARCH_CONTEXT, *PSEARCH_CONTEXT;
 
 BOOL WINAPI CBSearchRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile)
 {
