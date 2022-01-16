@@ -101,7 +101,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "Wybierz opcje wyszukiwania i instalacji"
     IDS_SEARCHDRV_TITLE "Szukanie..."
     IDS_INSTALLDRV_TITLE "Instalowanie..."
-
-    /* For IDD_BROWSE_FOR_FOLDER */
     IDS_BROWSE_FOR_FOLDER_TITLE "Wybierz folder zawierający odpowiednie sterowniki dla tego sprzętu."
 END

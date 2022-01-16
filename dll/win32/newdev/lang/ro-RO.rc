@@ -102,7 +102,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "Alegere opțiuni de căutare și instalare"
     IDS_SEARCHDRV_TITLE "Căutare…"
     IDS_INSTALLDRV_TITLE "Instalare…"
-
-    /* For IDD_BROWSE_FOR_FOLDER */
     IDS_BROWSE_FOR_FOLDER_TITLE "Select the folder containing proper drivers for this hardware."
 END

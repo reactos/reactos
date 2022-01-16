@@ -101,7 +101,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "Виберіть налаштування пошуку"
     IDS_SEARCHDRV_TITLE "Пошук драйверів..."
     IDS_INSTALLDRV_TITLE "Встановлення драйверу..."
-
-    /* For IDD_BROWSE_FOR_FOLDER */
     IDS_BROWSE_FOR_FOLDER_TITLE "Select the folder containing proper drivers for this hardware."
 END
