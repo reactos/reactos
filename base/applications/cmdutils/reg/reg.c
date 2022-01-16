@@ -349,7 +349,6 @@ static enum operations get_operation(const WCHAR *str, int *op_help)
 int __cdecl wmain(int argc, WCHAR *argvW[])
 {
     int i, op, op_help, ret;
-    BOOL show_op_help = FALSE;
     static const WCHAR switchVAW[] = {'v','a',0};
     static const WCHAR switchVEW[] = {'v','e',0};
     WCHAR *key_name, *path, *value_name = NULL, *type = NULL, *data = NULL, separator = '\0';
@@ -378,19 +377,24 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
         return 1;
     }
 
-    if (argc > 2)
-        show_op_help = is_help_switch(argvW[2]);
-
-    if (argc == 2 || ((show_op_help || op == REG_IMPORT) && argc > 3))
+    else if (argc == 2) /* Valid operation, no arguments supplied */
     {
         output_message(STRING_INVALID_SYNTAX);
         output_message(STRING_FUNC_HELP, _wcsupr(argvW[1]));
         return 1;
     }
-    else if (show_op_help)
+
+    if (is_help_switch(argvW[2]))
     {
         output_message(op_help);
         return 0;
+    }
+
+    if (op == REG_IMPORT && argc > 3)
+    {
+        output_message(STRING_INVALID_SYNTAX);
+        output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
+        return 1;
     }
 
     if (op == REG_IMPORT)
