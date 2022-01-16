@@ -18,9 +18,27 @@
 
 #include "reg.h"
 
+static BOOL op_delete_key = TRUE;
+
+static void output_error(LONG rc)
+{
+    if (rc == ERROR_FILE_NOT_FOUND)
+    {
+        if (op_delete_key)
+            output_message(STRING_KEY_NONEXIST);
+        else
+            output_message(STRING_VALUE_NONEXIST);
+    }
+    else
+    {
+        output_message(STRING_ACCESS_DENIED);
+    }
+}
+
 static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
                       BOOL value_empty, BOOL value_all, BOOL force)
 {
+    LONG rc;
     HKEY hkey;
 
     if (!force)
@@ -44,26 +62,28 @@ static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name
     /* Delete registry key if no /v* option is given */
     if (!value_name && !value_empty && !value_all)
     {
-        if (RegDeleteTreeW(root, path) != ERROR_SUCCESS)
+        if ((rc = RegDeleteTreeW(root, path)))
         {
-            output_message(STRING_KEY_NONEXIST);
+            output_error(rc);
             return 1;
         }
+
         output_message(STRING_SUCCESS);
         return 0;
     }
 
-    if (RegOpenKeyExW(root, path, 0, KEY_READ|KEY_SET_VALUE, &hkey))
+    if ((rc = RegOpenKeyExW(root, path, 0, KEY_READ|KEY_SET_VALUE, &hkey)))
     {
-        output_message(STRING_KEY_NONEXIST);
+        output_error(rc);
         return 1;
     }
+
+    op_delete_key = FALSE;
 
     if (value_all)
     {
         DWORD max_value_len = 256, value_len;
         WCHAR *value_name;
-        LONG rc;
 
         value_name = malloc(max_value_len * sizeof(WCHAR));
 
@@ -79,6 +99,7 @@ static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name
                     free(value_name);
                     RegCloseKey(hkey);
                     output_message(STRING_VALUEALL_FAILED, key_name);
+                    output_error(rc);
                     return 1;
                 }
             }
@@ -93,10 +114,10 @@ static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name
     }
     else if (value_name || value_empty)
     {
-        if (RegDeleteValueW(hkey, value_name))
+        if ((rc = RegDeleteValueW(hkey, value_name)))
         {
             RegCloseKey(hkey);
-            output_message(STRING_VALUE_NONEXIST);
+            output_error(rc);
             return 1;
         }
     }
