@@ -14,27 +14,11 @@
 
 #include <debug.h>
 
-class CPortPinDMus : public IPortPinDMus
+class CPortPinDMus : public CUnknownImpl<IPortPinDMus>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortPinDMus;
     IMP_IServiceSink;
     IMP_IMasterClock;
@@ -76,8 +60,6 @@ protected:
     ULONG m_PostCompleted;
 
     ULONG m_LastTag;
-
-    LONG m_Ref;
 };
 
 typedef struct

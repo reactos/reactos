@@ -39,27 +39,11 @@ RemoveHeadList_IRP(
     /* no non canceled irp has been found */
     return NULL;
 }
-class CIrpQueue : public IIrpQueue
+class CIrpQueue : public CUnknownImpl<IIrpQueue>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IIrpQueue;
     CIrpQueue(IUnknown *OuterUnknown){}
     virtual ~CIrpQueue(){}
@@ -83,7 +67,6 @@ protected:
 
     ULONG m_CurrentOffset;
     PIRP m_Irp;
-    volatile LONG m_Ref;
 };
 
 typedef struct

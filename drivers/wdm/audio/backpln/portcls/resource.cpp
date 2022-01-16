@@ -17,31 +17,14 @@
 
 #include <debug.h>
 
-class CResourceList : public IResourceList
+class CResourceList : public CUnknownImpl<IResourceList>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
-
     IMP_IResourceList;
 
-    CResourceList(IUnknown * OuterUnknown) : m_OuterUnknown(OuterUnknown), m_PoolType(NonPagedPool), m_TranslatedResourceList(0), m_UntranslatedResourceList(0), m_NumberOfEntries(0), m_MaxEntries(0), m_Ref(0) {}
+    CResourceList(IUnknown * OuterUnknown) : m_OuterUnknown(OuterUnknown), m_PoolType(NonPagedPool), m_TranslatedResourceList(0), m_UntranslatedResourceList(0), m_NumberOfEntries(0), m_MaxEntries(0) {}
     virtual ~CResourceList();
 
 public:
@@ -51,7 +34,6 @@ public:
     PCM_RESOURCE_LIST m_UntranslatedResourceList;
     ULONG m_NumberOfEntries;
     ULONG m_MaxEntries;
-    LONG m_Ref;
 };
 
 CResourceList::~CResourceList()
@@ -461,7 +443,7 @@ PcNewResourceSublist(
     /* Store members */
     NewList->m_OuterUnknown = OuterUnknown;
     NewList->m_PoolType = PoolType;
-    NewList->m_Ref = 1;
+    NewList->AddRef();
     NewList->m_NumberOfEntries = 0;
     NewList->m_MaxEntries = MaximumEntries;
 

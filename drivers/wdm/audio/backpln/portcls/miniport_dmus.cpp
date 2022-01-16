@@ -67,12 +67,11 @@ const ULONG      kMPUInputBufferSize = 128;
  * reference counting and aggregation support.
  */
 class CMiniportDMusUART
-:   public IMiniportDMus,
-    public IMusicTechnology,
-    public IPowerNotify
+:   public CUnknownImpl3<IMiniportDMus,
+                         IMusicTechnology,
+                         IPowerNotify>
 {
 private:
-    LONG            m_Ref;                  // Reference count
     KSSTATE         m_KSStateInput;         // Miniport state (RUN/PAUSE/ACQUIRE/STOP)
     PPORTDMUS       m_pPort;                // Callback interface.
     PUCHAR          m_pPortBase;            // Base port address.
@@ -104,23 +103,6 @@ private:
 
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
-
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
 
     CMiniportDMusUART(IUnknown * Unknown){}
     virtual ~CMiniportDMusUART();
@@ -204,10 +186,9 @@ public:
  * so it can expose this interface and CUnknown so it automatically gets
  * reference counting and aggregation support.
  */
-class CMiniportDMusUARTStream :   public IMXF
+class CMiniportDMusUARTStream :   public CUnknownImpl<IMXF>
 {
 private:
-    LONG                m_Ref;                  // Reference Count
     CMiniportDMusUART * m_pMiniport;            // Parent.
     REFERENCE_TIME      m_SnapshotTimeStamp;    // Current snapshot of miniport's input timestamp.
     PUCHAR              m_pPortBase;            // Base port address.
@@ -229,23 +210,6 @@ private:
 
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
-
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
 
     virtual ~CMiniportDMusUARTStream();
 

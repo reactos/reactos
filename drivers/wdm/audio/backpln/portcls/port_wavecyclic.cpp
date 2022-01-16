@@ -25,23 +25,29 @@ public:
 
     STDMETHODIMP_(ULONG) AddRef()
     {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
+        ULONG Ref = InterlockedIncrement(&m_Ref);
+        ASSERT(Ref < 0x10000);
+        return Ref;
     }
+
     STDMETHODIMP_(ULONG) Release()
     {
-        InterlockedDecrement(&m_Ref);
-        if (!m_Ref)
+        ULONG Ref = InterlockedDecrement(&m_Ref);
+        ASSERT(Ref < 0x10000);
+        if (!Ref)
         {
+            // FIXME Switch to CUnknownImpl3 whenever this is fixed
+            DPRINT1("Leaking CPortWaveCyclic...\n");
             //delete this;
             return 0;
         }
-        return m_Ref;
+        return Ref;
     }
+
     IMP_IPortWaveCyclic;
     IMP_ISubdevice;
     IMP_IPortEvents;
-    CPortWaveCyclic(IUnknown *OuterUnknown){}
+    CPortWaveCyclic(IUnknown *OuterUnknown) : m_Ref(0) {}
     virtual ~CPortWaveCyclic(){}
 
 protected:

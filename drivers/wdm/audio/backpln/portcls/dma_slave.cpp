@@ -14,7 +14,7 @@
 
 #include <debug.h>
 
-class CDmaChannelInit : public IDmaChannelInit
+class CDmaChannelInit : public CUnknownImpl<IDmaChannelInit>
 {
 public:
     inline
@@ -32,22 +32,6 @@ public:
 
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IDmaChannelInit;
     CDmaChannelInit(IUnknown * OuterUnknown){}
     virtual ~CDmaChannelInit(){}
@@ -75,8 +59,6 @@ protected:
     BOOLEAN m_WriteToDevice;
 
     friend IO_ALLOCATION_ACTION NTAPI AdapterControl(IN PDEVICE_OBJECT  DeviceObject, IN PIRP  Irp, IN PVOID  MapRegisterBase, IN PVOID  Context);
-
-    LONG m_Ref;
 };
 
 

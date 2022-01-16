@@ -439,4 +439,60 @@ typedef struct
     PKSOBJECT_CREATE_ITEM CreateItem;
 }DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
 
+#define IMPLEMENT_CUNKNOWNIMPL(Class)               \
+private:                                            \
+    volatile LONG m_Ref;                            \
+protected:                                          \
+    Class() :                                       \
+        m_Ref(0)                                    \
+    {                                               \
+    }                                               \
+    virtual ~Class()                                \
+    {                                               \
+    }                                               \
+public:                                             \
+    STDMETHODIMP_(ULONG) AddRef()                   \
+    {                                               \
+        ULONG Ref = InterlockedIncrement(&m_Ref);   \
+        ASSERT(Ref < 0x10000);                      \
+        return Ref;                                 \
+    }                                               \
+    STDMETHODIMP_(ULONG) Release()                  \
+    {                                               \
+        ULONG Ref = InterlockedDecrement(&m_Ref);   \
+        ASSERT(Ref < 0x10000);                      \
+        if (!Ref)                                   \
+        {                                           \
+            delete this;                            \
+            return 0;                               \
+        }                                           \
+        return Ref;                                 \
+    }
+
+template<typename Interface>
+class CUnknownImpl : public Interface
+{
+    IMPLEMENT_CUNKNOWNIMPL(CUnknownImpl)
+};
+
+template<typename Interface1, typename Interface2>
+class CUnknownImpl2 : public Interface1, public Interface2
+{
+    IMPLEMENT_CUNKNOWNIMPL(CUnknownImpl2)
+};
+
+template<typename Interface1, typename Interface2, typename Interface3>
+class CUnknownImpl3 : public Interface1, public Interface2, public Interface3
+{
+    IMPLEMENT_CUNKNOWNIMPL(CUnknownImpl3)
+};
+
+template<typename Interface1, typename Interface2, typename Interface3, typename Interface4>
+class CUnknownImpl4 : public Interface1, public Interface2, public Interface3, public Interface4
+{
+    IMPLEMENT_CUNKNOWNIMPL(CUnknownImpl4)
+};
+
+#undef IMPLEMENT_CUNKNOWNIMPL
+
 #endif /* PORTCLS_PRIVATE_H */
