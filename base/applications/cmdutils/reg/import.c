@@ -983,13 +983,22 @@ cleanup:
     return NULL;
 }
 
-int reg_import(const WCHAR *filename)
+int reg_import(int argc, WCHAR *argvW[])
 {
+    WCHAR *filename, *pos;
     FILE *fp;
     static const WCHAR rb_mode[] = {'r','b',0};
     BYTE s[2];
     struct parser parser;
-    WCHAR *pos;
+
+    if (argc > 3)
+    {
+        output_message(STRING_INVALID_SYNTAX);
+        output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
+        return 1;
+    }
+
+    filename = argvW[2];
 
     fp = _wfopen(filename, rb_mode);
     if (!fp)

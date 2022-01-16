@@ -390,15 +390,8 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
         return 0;
     }
 
-    if (op == REG_IMPORT && argc > 3)
-    {
-        output_message(STRING_INVALID_SYNTAX);
-        output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
-        return 1;
-    }
-
     if (op == REG_IMPORT)
-        return reg_import(argvW[2]);
+        return reg_import(argc, argvW);
 
     if (op == REG_EXPORT)
         return reg_export(argc, argvW);
