@@ -373,6 +373,7 @@ int reg_query(int argc, WCHAR *argvW[])
     return run_query(root, path, key_name, value_name, value_empty, recurse);
 
 invalid:
-    output_message(STRING_INVALID_CMDLINE);
+    output_message(STRING_INVALID_SYNTAX);
+    output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
     return 1;
 }

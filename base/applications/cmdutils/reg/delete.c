@@ -163,6 +163,7 @@ int reg_delete(int argc, WCHAR *argvW[])
     return run_delete(root, path, key_name, value_name, value_empty, value_all, force);
 
 invalid:
-    output_message(STRING_INVALID_CMDLINE);
+    output_message(STRING_INVALID_SYNTAX);
+    output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
     return 1;
 }
