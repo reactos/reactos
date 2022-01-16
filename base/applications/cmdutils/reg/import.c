@@ -978,11 +978,19 @@ int reg_import(int argc, WCHAR *argvW[])
     BYTE s[2];
     struct parser parser;
 
-    if (argc > 3)
+    if (argc > 4) goto invalid;
+
+    if (argc == 4)
     {
-        output_message(STRING_INVALID_SYNTAX);
-        output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
-        return 1;
+        WCHAR *str = argvW[3];
+
+        if (*str != '/' && *str != '-')
+            goto invalid;
+
+        str++;
+
+        if (lstrcmpiW(str, L"reg:32") && lstrcmpiW(str, L"reg:64"))
+            goto invalid;
     }
 
     filename = argvW[2];
@@ -1031,5 +1039,10 @@ int reg_import(int argc, WCHAR *argvW[])
 
 error:
     fclose(fp);
+    return 1;
+
+invalid:
+    output_message(STRING_INVALID_SYNTAX);
+    output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
     return 1;
 }

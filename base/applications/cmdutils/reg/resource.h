@@ -63,3 +63,4 @@
 #define STRING_OVERWRITE_FILE         138
 #define STRING_KEY_NONEXIST           139
 #define STRING_KEY_IMPORT_FAILED      140
+#define STRING_REG_VIEW_USAGE         141

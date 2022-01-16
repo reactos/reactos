@@ -235,6 +235,8 @@ int reg_add(int argc, WCHAR *argvW[])
             value_empty = TRUE;
             continue;
         }
+        else if (!lstrcmpiW(str, L"reg:32") || !lstrcmpiW(str, L"reg:64"))
+            continue;
         else if (!str[0] || str[1])
             goto invalid;
 

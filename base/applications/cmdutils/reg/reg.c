@@ -338,6 +338,7 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
     if (is_help_switch(argvW[2]))
     {
         output_message(op_help);
+        output_message(STRING_REG_VIEW_USAGE);
         return 0;
     }
 

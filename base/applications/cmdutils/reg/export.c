@@ -368,6 +368,8 @@ int reg_export(int argc, WCHAR *argvW[])
 
         if (is_char(*str, 'y') && !str[1])
             overwrite_file = TRUE;
+        else if (!lstrcmpiW(str, L"reg:32") || !lstrcmpiW(str, L"reg:64"))
+            continue;
         else
             goto invalid;
     }
