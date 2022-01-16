@@ -344,6 +344,7 @@ int reg_query(int argc, WCHAR *argvW[])
 
             if (!lstrcmpiW(str, L"ve"))
             {
+                if (value_empty) goto invalid;
                 value_empty = TRUE;
                 continue;
             }
@@ -357,6 +358,7 @@ int reg_query(int argc, WCHAR *argvW[])
                     goto invalid;
                 break;
             case 's':
+                if (recurse) goto invalid;
                 recurse = TRUE;
                 break;
             default:
