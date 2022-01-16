@@ -18,14 +18,11 @@
 
 #include "reg_test.h"
 
-#define COPY_DEST  KEY_WINE "\\reg_copy"
+#define COPY_SRC  KEY_WINE "\\reg_copy"
 
-static void test_copy(void)
+static void test_command_syntax(void)
 {
     DWORD r;
-
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
 
     run_reg_exe("reg copy", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -63,37 +60,38 @@ static void test_copy(void)
     run_reg_exe("reg copy /f /s", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy HKEY_CURRENT_USER\\" KEY_BASE " /f", &r);
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy HKEY_CURRENT_USER\\" KEY_BASE " foo /f", &r);
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " foo /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy /f HKEY_CURRENT_USER\\" KEY_BASE " HKEY_CURRENT_USER\\" KEY_BASE, &r);
+    run_reg_exe("reg copy /f HKCU\\" COPY_SRC " HKCU\\" KEY_BASE, &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy /f HKEY_CURRENT_USER\\" KEY_BASE " HKEY_CURRENT_USER\\" COPY_DEST, &r);
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " /f HKCU\\" KEY_BASE, &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy HKEY_CURRENT_USER\\" KEY_BASE " /f HKEY_CURRENT_USER\\" COPY_DEST, &r);
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " /s HKCU\\" KEY_BASE, &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy HKEY_CURRENT_USER\\" KEY_BASE " /s HKEY_CURRENT_USER\\" COPY_DEST, &r);
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /a", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy HKEY_CURRENT_USER\\" KEY_BASE " HKEY_CURRENT_USER\\" COPY_DEST " /a", &r);
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /f /a", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy HKEY_CURRENT_USER\\" KEY_BASE " HKEY_CURRENT_USER\\" COPY_DEST " /f /a", &r);
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy HKEY_CURRENT_USER\\" KEY_BASE " HKEY_CURRENT_USER\\" KEY_BASE, &r);
+    /* Source and destination keys are the same */
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" COPY_SRC, &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy HKEY_CURRENT_USER\\" KEY_BASE " HKEY_CURRENT_USER\\" KEY_BASE " /f", &r);
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" COPY_SRC " /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg copy HKEY_CURRENT_USER\\" KEY_BASE " HKEY_CURRENT_USER\\" KEY_BASE " /s /f", &r);
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" COPY_SRC " /s /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 }
 
@@ -106,5 +104,5 @@ START_TEST(copy)
         return;
     }
 
-    test_copy();
+    test_command_syntax();
 }
