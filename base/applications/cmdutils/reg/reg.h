@@ -47,8 +47,7 @@ int reg_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
             WCHAR *type, WCHAR separator, WCHAR *data, BOOL force);
 
 /* delete.c */
-int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
-               BOOL value_empty, BOOL value_all, BOOL force);
+int reg_delete(int argc, WCHAR *argvW[]);
 
 /* export.c */
 int reg_export(int argc, WCHAR *argvW[]);

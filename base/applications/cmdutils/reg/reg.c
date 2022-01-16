@@ -333,11 +333,10 @@ static enum operations get_operation(const WCHAR *str, int *op_help)
 
 int __cdecl wmain(int argc, WCHAR *argvW[])
 {
-    int i, op, op_help, ret;
-    static const WCHAR switchVAW[] = {'v','a',0};
+    int i, op, op_help;
     static const WCHAR switchVEW[] = {'v','e',0};
     WCHAR *key_name, *path, *value_name = NULL, *type = NULL, *data = NULL, separator = '\0';
-    BOOL value_empty = FALSE, value_all = FALSE, force = FALSE;
+    BOOL value_empty = FALSE, force = FALSE;
     HKEY root;
 
     if (argc == 1)
@@ -374,6 +373,9 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
         return 0;
     }
 
+    if (op == REG_DELETE)
+        return reg_delete(argc, argvW);
+
     if (op == REG_EXPORT)
         return reg_export(argc, argvW);
 
@@ -395,11 +397,6 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
             if (!lstrcmpiW(ptr, switchVEW))
             {
                 value_empty = TRUE;
-                continue;
-            }
-            else if (!lstrcmpiW(ptr, switchVAW))
-            {
-                value_all = TRUE;
                 continue;
             }
             else if (!ptr[0] || ptr[1])
@@ -450,16 +447,11 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
         }
     }
 
-    if ((value_name && value_empty) || (value_name && value_all) || (value_empty && value_all))
+    if (value_name && value_empty)
     {
         output_message(STRING_INVALID_CMDLINE);
         return 1;
     }
 
-    if (op == REG_ADD)
-        ret = reg_add(root, path, value_name, value_empty, type, separator, data, force);
-    else
-        ret = reg_delete(root, path, key_name, value_name, value_empty, value_all, force);
-
-    return ret;
+    return reg_add(root, path, value_name, value_empty, type, separator, data, force);
 }

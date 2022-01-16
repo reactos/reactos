@@ -18,8 +18,8 @@
 
 #include "reg.h"
 
-int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
-               BOOL value_empty, BOOL value_all, BOOL force)
+static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
+                      BOOL value_empty, BOOL value_all, BOOL force)
 {
     HKEY key;
 
@@ -104,4 +104,61 @@ int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
     RegCloseKey(key);
     output_message(STRING_SUCCESS);
     return 0;
+}
+
+int reg_delete(int argc, WCHAR *argvW[])
+{
+    HKEY root;
+    WCHAR *path, *key_name, *value_name = NULL;
+    BOOL value_all = FALSE, value_empty = FALSE, force = FALSE;
+    int i;
+
+    if (!parse_registry_key(argvW[2], &root, &path, &key_name))
+        return 1;
+
+    for (i = 3; i < argc; i++)
+    {
+        if (argvW[i][0] == '/' || argvW[i][0] == '-')
+        {
+            WCHAR *str = &argvW[i][1];
+
+            if (!lstrcmpiW(str, L"va"))
+            {
+                if (value_all) goto invalid;
+                value_all = TRUE;
+                continue;
+            }
+            else if (!lstrcmpiW(str, L"ve"))
+            {
+                if (value_empty) goto invalid;
+                value_empty = TRUE;
+                continue;
+            }
+            else if (!str[0] || str[1])
+                goto invalid;
+
+            switch (towlower(*str))
+            {
+            case 'v':
+                if (value_name || !(value_name = argvW[++i]))
+                    goto invalid;
+                break;
+            case 'f':
+                if (force) goto invalid;
+                force = TRUE;
+                break;
+            default:
+                goto invalid;
+            }
+        }
+    }
+
+    if ((value_name && value_empty) || (value_name && value_all) || (value_empty && value_all))
+        goto invalid;
+
+    return run_delete(root, path, key_name, value_name, value_empty, value_all, force);
+
+invalid:
+    output_message(STRING_INVALID_CMDLINE);
+    return 1;
 }
