@@ -84,12 +84,23 @@ static BOOL read_reg_output_(const char *file, unsigned line, const char *cmd,
     return bret;
 }
 
-#define compare_query(b,e,todo) compare_query_(__FILE__,__LINE__,b,e,todo)
+#define compare_query(b,e,c,todo) compare_query_(__FILE__,__LINE__,b,e,c,todo)
 static void compare_query_(const char *file, unsigned line, const BYTE *buf,
-                           const char *expected, DWORD todo)
+                           const char *expected, BOOL cmp_len, DWORD todo)
 {
-    todo_wine_if (todo & TODO_REG_COMPARE)
-        lok(!strcmp((char *)buf, expected), "query output does not match expected output\n");
+    const char *str = (const char *)buf;
+    const char *err = "query output does not match expected output";
+
+    if (!cmp_len)
+    {
+        todo_wine_if (todo & TODO_REG_COMPARE)
+            lok(!strcmp(str, expected), "%s\n", err);
+    }
+    else
+    {
+        todo_wine_if (todo & TODO_REG_COMPARE)
+            lok(!strncmp(str, expected, strlen(expected)), "%s\n", err);
+    }
 }
 
 /* Unit tests */
@@ -120,6 +131,22 @@ static void test_query(void)
     const char *test5 = "\r\n"
         "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey\r\n"
         "    Test4    REG_DWORD    0xabc\r\n\r\n";
+
+    const char *test6 = "\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\r\n"
+        "    Test1    REG_SZ    Hello, World\r\n"
+        "    Test2    REG_DWORD    0x123\r\n"
+        "    Wine    REG_SZ    First instance\r\n\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey\r\n"
+        "    Test3    REG_SZ    Some string data\r\n"
+        "    Test4    REG_DWORD    0xabc\r\n"
+        "    Wine    REG_SZ    Second instance\r\n\r\n";
+
+    const char *test7 = "\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\r\n"
+        "    Wine    REG_SZ    First instance\r\n\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey\r\n"
+        "    Wine    REG_SZ    Second instance\r\n\r\n";
 
     DWORD r, dword = 0x123;
     HKEY key, subkey;
@@ -162,7 +189,7 @@ static void test_query(void)
 
     read_reg_output("reg query HKCU\\" KEY_BASE, buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    compare_query(buf, test1, 0);
+    compare_query(buf, test1, FALSE, 0);
 
     run_reg_exe("reg query HKCU\\" KEY_BASE " /ve", &r);
     ok(r == REG_EXIT_SUCCESS || broken(r == REG_EXIT_FAILURE /* WinXP */),
@@ -170,7 +197,7 @@ static void test_query(void)
 
     read_reg_output("reg query HKCU\\" KEY_BASE " /v Test1", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    compare_query(buf, test2, 0);
+    compare_query(buf, test2, FALSE, 0);
 
     run_reg_exe("reg query HKCU\\" KEY_BASE " /v Test2", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
@@ -182,7 +209,7 @@ static void test_query(void)
 
     read_reg_output("reg query HKCU\\" KEY_BASE, buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    compare_query(buf, test3, TODO_REG_COMPARE);
+    compare_query(buf, test3, FALSE, TODO_REG_COMPARE);
 
     add_value(subkey, "Test3", REG_SZ, "Some string data", 16);
     dword = 0xabc;
@@ -190,24 +217,26 @@ static void test_query(void)
 
     read_reg_output("reg query HKCU\\" KEY_BASE "\\subkey", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    compare_query(buf, test4, 0);
+    compare_query(buf, test4, FALSE, 0);
 
     run_reg_exe("reg query HKCU\\" KEY_BASE "\\subkey /v Test3", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
 
     read_reg_output("reg query HKCU\\" KEY_BASE "\\subkey /v Test4", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    compare_query(buf, test5, 0);
+    compare_query(buf, test5, FALSE, 0);
 
     add_value(subkey, "Wine", REG_SZ, "Second instance", 16);
 
     /* Test recursion */
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /s", &r);
+    read_reg_output("reg query HKCU\\" KEY_BASE " /s", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test6, FALSE, 0);
 
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Wine /s", &r);
+    read_reg_output("reg query HKCU\\" KEY_BASE " /v Wine /s", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS || r == REG_EXIT_FAILURE /* WinXP */,
        "got exit code %d, expected 0\n", r);
+    compare_query(buf, test7, TRUE, 0);
 
     add_value(key, NULL, REG_SZ, "Empty", 6);
     add_value(subkey, NULL, REG_SZ, "Empty", 6);
