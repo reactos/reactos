@@ -16,22 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <windows.h>
-#include "wine/test.h"
+#include "reg_test.h"
 
 #define lok ok_(__FILE__,line)
-#define KEY_WINE "Software\\Wine"
-#define KEY_BASE KEY_WINE "\\reg_test"
-#define REG_EXIT_SUCCESS 0
-#define REG_EXIT_FAILURE 1
 #define TODO_REG_TYPE    (0x0001u)
 #define TODO_REG_SIZE    (0x0002u)
 #define TODO_REG_DATA    (0x0004u)
 #define TODO_REG_COMPARE (0x0008u)
 
-#define run_reg_exe(c,r) run_reg_exe_(__LINE__,c,r)
-static BOOL run_reg_exe_(unsigned line, const char *cmd, DWORD *rc)
+BOOL run_reg_exe_(unsigned line, const char *cmd, DWORD *rc)
 {
     STARTUPINFOA si = {sizeof(STARTUPINFOA)};
     PROCESS_INFORMATION pi;
@@ -86,8 +79,7 @@ static void verify_reg_(unsigned line, HKEY hkey, const char* value,
     }
 }
 
-#define verify_reg_nonexist(k,v) verify_reg_nonexist_(__LINE__,k,v)
-static void verify_reg_nonexist_(unsigned line, HKEY hkey, const char *value)
+void verify_reg_nonexist_(unsigned line, HKEY hkey, const char *value)
 {
     LONG err;
 
@@ -105,8 +97,7 @@ static void open_key_(unsigned line, const HKEY base, const char *path, const DW
     lok(err == ERROR_SUCCESS, "RegOpenKeyExA failed: %d\n", err);
 }
 
-#define close_key(k) close_key_(__LINE__,k)
-static void close_key_(unsigned line, HKEY hkey)
+void close_key_(unsigned line, HKEY hkey)
 {
     LONG err;
 
@@ -114,8 +105,7 @@ static void close_key_(unsigned line, HKEY hkey)
     lok(err == ERROR_SUCCESS, "RegCloseKey failed: %d\n", err);
 }
 
-#define verify_key(k,s) verify_key_(__LINE__,k,s)
-static void verify_key_(unsigned line, HKEY key_base, const char *subkey)
+void verify_key_(unsigned line, HKEY key_base, const char *subkey)
 {
     HKEY hkey;
     LONG err;
@@ -127,8 +117,7 @@ static void verify_key_(unsigned line, HKEY key_base, const char *subkey)
         RegCloseKey(hkey);
 }
 
-#define verify_key_nonexist(k,s) verify_key_nonexist_(__LINE__,k,s)
-static void verify_key_nonexist_(unsigned line, HKEY key_base, const char *subkey)
+void verify_key_nonexist_(unsigned line, HKEY key_base, const char *subkey)
 {
     HKEY hkey;
     LONG err;
@@ -141,8 +130,7 @@ static void verify_key_nonexist_(unsigned line, HKEY key_base, const char *subke
         RegCloseKey(hkey);
 }
 
-#define add_key(k,p,s) add_key_(__LINE__,k,p,s)
-static void add_key_(unsigned line, const HKEY hkey, const char *path, HKEY *subkey)
+void add_key_(unsigned line, const HKEY hkey, const char *path, HKEY *subkey)
 {
     LONG err;
 
@@ -163,7 +151,7 @@ static void delete_key_(unsigned line, const HKEY hkey, const char *path)
     }
 }
 
-static LONG delete_tree(const HKEY key, const char *subkey)
+LONG delete_tree(const HKEY key, const char *subkey)
 {
     HKEY hkey;
     LONG ret;
@@ -205,9 +193,7 @@ cleanup:
     return ret;
 }
 
-#define add_value(k,n,t,d,s) add_value_(__LINE__,k,n,t,d,s)
-static void add_value_(unsigned line, HKEY hkey, const char *name, DWORD type,
-                       const void *data, size_t size)
+void add_value_(unsigned line, HKEY hkey, const char *name, DWORD type, const void *data, size_t size)
 {
     LONG err;
 
@@ -629,97 +615,6 @@ static void test_add(void)
     ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
-}
-
-static void test_delete(void)
-{
-    HKEY hkey, hsubkey;
-    DWORD r;
-    const DWORD deadbeef = 0xdeadbeef;
-
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
-
-    run_reg_exe("reg delete", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete /?", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg delete /h", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg delete -H", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    /* Multiple /v* switches */
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v Wine /ve", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v Wine /va", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /ve /va", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v Wine /v Test /f", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    /* No /v argument */
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /f /v", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    /* Create a test key */
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
-    add_value(hkey, "foo", REG_DWORD, &deadbeef, sizeof(deadbeef));
-    add_value(hkey, "bar", REG_DWORD, &deadbeef, sizeof(deadbeef));
-    add_value(hkey, NULL, REG_DWORD, &deadbeef, sizeof(deadbeef));
-
-    add_key(hkey, "subkey", &hsubkey);
-    close_key(hsubkey);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v bar /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_reg_nonexist(hkey, "bar");
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /ve /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_reg_nonexist(hkey, "");
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /va /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_reg_nonexist(hkey, "foo");
-    verify_key(hkey, "subkey");
-
-    /* Test forward and back slashes */
-    add_key(hkey, "https://winehq.org", &hsubkey);
-    close_key(hsubkey);
-    add_value(hkey, "count/up", REG_SZ, "one/two/three", 14);
-    add_value(hkey, "\\foo\\bar", REG_SZ, "", 1);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE "\\https://winehq.org /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key_nonexist(hkey, "https://winehq.org");
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v count/up /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_reg_nonexist(hkey, "count/up");
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /v \\foo\\bar /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_reg_nonexist(hkey, "\\foo\\bar");
-
-    close_key(hkey);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
-
-    run_reg_exe("reg delete HKCU\\" KEY_BASE " /f", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %u\n", r);
 }
 
 static void test_query(void)
@@ -4851,13 +4746,13 @@ static void test_copy(void)
 START_TEST(reg)
 {
     DWORD r;
+
     if (!run_reg_exe("reg.exe /?", &r)) {
         win_skip("reg.exe not available, skipping reg.exe tests\n");
         return;
     }
 
     test_add();
-    test_delete();
     test_query();
     test_import();
     test_unicode_import();
