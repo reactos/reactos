@@ -154,6 +154,8 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
                    WCHAR *type, WCHAR separator, WCHAR *data, BOOL force)
 {
     HKEY hkey;
+    DWORD data_type, data_size;
+    BYTE *reg_data = NULL;
 
     if (RegCreateKeyExW(root, path, 0, NULL, REG_OPTION_NON_VOLATILE,
                         KEY_READ|KEY_WRITE, NULL, &hkey, NULL))
@@ -162,48 +164,43 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
         return 1;
     }
 
-    if (value_name || value_empty || data)
+    if (!force)
     {
-        DWORD reg_type;
-        DWORD data_size = 0;
-        BYTE* reg_data = NULL;
-
-        if (!force)
+        if (RegQueryValueExW(hkey, value_name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
-            if (RegQueryValueExW(hkey, value_name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+            if (!ask_confirm(STRING_OVERWRITE_VALUE, value_name))
             {
-                if (!ask_confirm(STRING_OVERWRITE_VALUE, value_name))
-                {
-                    RegCloseKey(hkey);
-                    output_message(STRING_CANCELLED);
-                    return 0;
-                }
+                RegCloseKey(hkey);
+                output_message(STRING_CANCELLED);
+                return 0;
             }
         }
-
-        reg_type = wchar_get_type(type);
-        if (reg_type == ~0u)
-        {
-            RegCloseKey(hkey);
-            output_message(STRING_UNSUPPORTED_TYPE, type);
-            return 1;
-        }
-        if ((reg_type == REG_DWORD || reg_type == REG_DWORD_BIG_ENDIAN) && !data)
-        {
-             RegCloseKey(hkey);
-             output_message(STRING_INVALID_CMDLINE);
-             return 1;
-        }
-
-        if (!(reg_data = get_regdata(data, reg_type, separator, &data_size)))
-        {
-            RegCloseKey(hkey);
-            return 1;
-        }
-
-        RegSetValueExW(hkey, value_name, 0, reg_type, reg_data, data_size);
-        free(reg_data);
     }
+
+    data_type = wchar_get_type(type);
+
+    if (data_type == ~0u)
+    {
+        RegCloseKey(hkey);
+        output_message(STRING_UNSUPPORTED_TYPE, type);
+        return 1;
+    }
+
+    if ((data_type == REG_DWORD || data_type == REG_DWORD_BIG_ENDIAN) && !data)
+    {
+         RegCloseKey(hkey);
+         output_message(STRING_INVALID_CMDLINE);
+         return 1;
+    }
+
+    if (!(reg_data = get_regdata(data, data_type, separator, &data_size)))
+    {
+        RegCloseKey(hkey);
+        return 1;
+    }
+
+    RegSetValueExW(hkey, value_name, 0, data_type, reg_data, data_size);
+    free(reg_data);
 
     RegCloseKey(hkey);
     output_message(STRING_SUCCESS);

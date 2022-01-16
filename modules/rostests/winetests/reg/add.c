@@ -330,8 +330,8 @@ static void test_add(void)
     open_key(HKEY_CURRENT_USER, KEY_BASE, KEY_WRITE, &hkey);
 
     /* The Default value is initialized if no parameters are specified */
-    todo_wine verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
-    todo_wine delete_value(hkey, NULL);
+    verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
+    delete_value(hkey, NULL);
 
     /* This also occurs when specifying a registry type and passing data */
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_DWORD /d 0x5 /f", &r);
@@ -342,7 +342,7 @@ static void test_add(void)
     /* The Default value can also be overwritten as an empty string */
     run_reg_exe("reg add HKCU\\" KEY_BASE " /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_reg(hkey, NULL, REG_SZ, "", 1, TODO_REG_TYPE|TODO_REG_SIZE|TODO_REG_DATA);
+    verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
 
     close_key(hkey);
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
@@ -366,8 +366,8 @@ static void test_add(void)
     /* ... but we can add it without passing [/f] to reg.exe */
     run_reg_exe("reg add HKCU\\" KEY_BASE, &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
-    todo_wine delete_value(hkey, NULL);
+    verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
+    delete_value(hkey, NULL);
 
     /* Test whether overwriting a registry key modifies existing keys and values */
     add_key(hkey, "Subkey", NULL);
@@ -382,7 +382,7 @@ static void test_add(void)
     verify_key(hkey, "Subkey");
     verify_reg(hkey, "Test1", REG_SZ, "Value1", 7, 0);
     verify_reg(hkey, "Test2", REG_DWORD, &dword, sizeof(dword), 0);
-    todo_wine verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
+    verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_NONE /d Test /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
@@ -406,9 +406,9 @@ static void test_reg_none(void)
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_NONE /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_reg(hkey, NULL, REG_NONE, "\0", 2, 0);
+    verify_reg(hkey, NULL, REG_NONE, "\0", 2, 0);
 
-    todo_wine delete_value(hkey, NULL);
+    delete_value(hkey, NULL);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_NONE /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
@@ -435,7 +435,7 @@ static void test_reg_sz(void)
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_SZ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    todo_wine verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
+    verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /d WineTest /f", &r);
     ok(r == REG_EXIT_SUCCESS || broken(r == REG_EXIT_FAILURE /* WinXP */),
@@ -513,9 +513,9 @@ static void test_reg_expand_sz(void)
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_EXPAND_SZ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    todo_wine verify_reg(hkey, NULL, REG_EXPAND_SZ, "", 1, 0);
+    verify_reg(hkey, NULL, REG_EXPAND_SZ, "", 1, 0);
 
-    todo_wine delete_value(hkey, NULL);
+    delete_value(hkey, NULL);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_EXPAND_SZ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
@@ -556,9 +556,9 @@ static void test_reg_binary(void)
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_BINARY /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    todo_wine verify_reg(hkey, NULL, REG_BINARY, buffer, 0, 0);
+    verify_reg(hkey, NULL, REG_BINARY, buffer, 0, 0);
 
-    todo_wine delete_value(hkey, NULL);
+    delete_value(hkey, NULL);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_BINARY /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
@@ -754,9 +754,9 @@ static void test_reg_multi_sz(void)
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_MULTI_SZ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    todo_wine verify_reg(hkey, NULL, REG_MULTI_SZ, "", 1, 0);
+    verify_reg(hkey, NULL, REG_MULTI_SZ, "", 1, 0);
 
-    todo_wine delete_value(hkey, NULL);
+    delete_value(hkey, NULL);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_MULTI_SZ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
