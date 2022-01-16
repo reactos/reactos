@@ -57,7 +57,6 @@ int reg_export(int argc, WCHAR *argvW[]);
 int reg_import(int argc, WCHAR *argvW[]);
 
 /* query.c */
-int reg_query(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
-              BOOL value_empty, BOOL recurse);
+int reg_query(int argc, WCHAR *argvW[]);
 
 #endif /* __REG_H__ */

@@ -337,7 +337,7 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
     static const WCHAR switchVAW[] = {'v','a',0};
     static const WCHAR switchVEW[] = {'v','e',0};
     WCHAR *key_name, *path, *value_name = NULL, *type = NULL, *data = NULL, separator = '\0';
-    BOOL value_empty = FALSE, value_all = FALSE, recurse = FALSE, force = FALSE;
+    BOOL value_empty = FALSE, value_all = FALSE, force = FALSE;
     HKEY root;
 
     if (argc == 1)
@@ -379,6 +379,9 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
 
     if (op == REG_IMPORT)
         return reg_import(argc, argvW);
+
+    if (op == REG_QUERY)
+        return reg_query(argc, argvW);
 
     if (!parse_registry_key(argvW[2], &root, &path, &key_name))
         return 1;
@@ -429,12 +432,6 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
                 }
                 break;
             case 's':
-                if (op == REG_QUERY)
-                {
-                    recurse = TRUE;
-                    break;
-                }
-
                 ptr = argvW[++i];
                 if (!ptr || lstrlenW(ptr) != 1)
                 {
@@ -461,9 +458,8 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
 
     if (op == REG_ADD)
         ret = reg_add(root, path, value_name, value_empty, type, separator, data, force);
-    else if (op == REG_DELETE)
-        ret = reg_delete(root, path, key_name, value_name, value_empty, value_all, force);
     else
-        ret = reg_query(root, path, key_name, value_name, value_empty, recurse);
+        ret = reg_delete(root, path, key_name, value_name, value_empty, value_all, force);
+
     return ret;
 }

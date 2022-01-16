@@ -298,7 +298,7 @@ static int query_all(HKEY key, WCHAR *path, BOOL recurse)
     return 0;
 }
 
-int reg_query(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
+static int run_query(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
               BOOL value_empty, BOOL recurse)
 {
     HKEY key;
@@ -324,4 +324,53 @@ int reg_query(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
     RegCloseKey(key);
 
     return ret;
+}
+
+int reg_query(int argc, WCHAR *argvW[])
+{
+    HKEY root;
+    WCHAR *path, *key_name, *value_name = NULL;
+    BOOL value_empty = FALSE, recurse = FALSE;
+    int i;
+
+    if (!parse_registry_key(argvW[2], &root, &path, &key_name))
+        return 1;
+
+    for (i = 3; i < argc; i++)
+    {
+        if (argvW[i][0] == '/' || argvW[i][0] == '-')
+        {
+            WCHAR *str = &argvW[i][1];
+
+            if (!lstrcmpiW(str, L"ve"))
+            {
+                value_empty = TRUE;
+                continue;
+            }
+            else if (!str[0] || str[1])
+                goto invalid;
+
+            switch (towlower(*str))
+            {
+            case 'v':
+                if (value_name || !(value_name = argvW[++i]))
+                    goto invalid;
+                break;
+            case 's':
+                recurse = TRUE;
+                break;
+            default:
+                goto invalid;
+            }
+        }
+    }
+
+    if (value_name && value_empty)
+        goto invalid;
+
+    return run_query(root, path, key_name, value_name, value_empty, recurse);
+
+invalid:
+    output_message(STRING_INVALID_CMDLINE);
+    return 1;
 }
