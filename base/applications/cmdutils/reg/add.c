@@ -48,11 +48,12 @@ static inline BYTE hexchar_to_byte(WCHAR ch)
         return -1;
 }
 
-static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DWORD *reg_count)
+static BYTE *get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DWORD *size_bytes)
 {
     static const WCHAR empty;
     LPBYTE out_data = NULL;
-    *reg_count = 0;
+
+    *size_bytes = 0;
 
     if (!data) data = &empty;
 
@@ -62,8 +63,8 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
         case REG_SZ:
         case REG_EXPAND_SZ:
         {
-            *reg_count = (lstrlenW(data) + 1) * sizeof(WCHAR);
-            out_data = malloc(*reg_count);
+            *size_bytes = (lstrlenW(data) + 1) * sizeof(WCHAR);
+            out_data = malloc(*size_bytes);
             lstrcpyW((LPWSTR)out_data,data);
             break;
         }
@@ -78,8 +79,8 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
                 output_message(STRING_MISSING_INTEGER);
                 break;
             }
-            *reg_count = sizeof(DWORD);
-            out_data = malloc(*reg_count);
+            *size_bytes = sizeof(DWORD);
+            out_data = malloc(*size_bytes);
             ((LPDWORD)out_data)[0] = val;
             break;
         }
@@ -87,8 +88,8 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
         {
             BYTE hex0, hex1;
             int i = 0, destByteIndex = 0, datalen = lstrlenW(data);
-            *reg_count = ((datalen + datalen % 2) / 2) * sizeof(BYTE);
-            out_data = malloc(*reg_count);
+            *size_bytes = ((datalen + datalen % 2) / 2) * sizeof(BYTE);
+            out_data = malloc(*size_bytes);
             if(datalen % 2)
             {
                 hex1 = hexchar_to_byte(data[i++]);
@@ -139,7 +140,7 @@ static LPBYTE get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DW
             buffer[destindex] = 0;
             if (destindex && buffer[destindex - 1])
                 buffer[++destindex] = 0;
-            *reg_count = (destindex + 1) * sizeof(WCHAR);
+            *size_bytes = (destindex + 1) * sizeof(WCHAR);
             return (BYTE *)buffer;
         }
         default:
@@ -164,7 +165,7 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
     if (value_name || value_empty || data)
     {
         DWORD reg_type;
-        DWORD reg_count = 0;
+        DWORD data_size = 0;
         BYTE* reg_data = NULL;
 
         if (!force)
@@ -194,13 +195,13 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
              return 1;
         }
 
-        if (!(reg_data = get_regdata(data, reg_type, separator, &reg_count)))
+        if (!(reg_data = get_regdata(data, reg_type, separator, &data_size)))
         {
             RegCloseKey(hkey);
             return 1;
         }
 
-        RegSetValueExW(hkey, value_name, 0, reg_type, reg_data, reg_count);
+        RegSetValueExW(hkey, value_name, 0, reg_type, reg_data, data_size);
         free(reg_data);
     }
 
