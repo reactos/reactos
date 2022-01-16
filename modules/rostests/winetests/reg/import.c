@@ -3464,6 +3464,121 @@ static void test_unicode_import_with_whitespace(void)
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 }
 
+static void test_import_win31(void)
+{
+    LONG err;
+    HKEY hkey;
+    DWORD dispos, r;
+
+    /* Check if reg.exe is running with elevated privileges */
+    err = RegCreateKeyExA(HKEY_CLASSES_ROOT, KEY_BASE, 0, NULL, REG_OPTION_NON_VOLATILE,
+                          KEY_READ|KEY_SET_VALUE, NULL, &hkey, &dispos);
+    if (err == ERROR_ACCESS_DENIED)
+    {
+        win_skip("reg.exe is not running with elevated privileges; "
+                 "skipping Windows 3.1 import tests\n");
+        return;
+    }
+
+    if (dispos == REG_OPENED_EXISTING_KEY)
+        delete_value(hkey, NULL);
+
+    /* Test simple value */
+    test_import_str("REGEDIT\r\n"
+                    "HKEY_CLASSES_ROOT\\" KEY_BASE " = Value0\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "", REG_SZ, "Value0", 7, 0);
+
+    /* Test proper handling of spaces and equals signs */
+    test_import_str("REGEDIT\r\n"
+                    "HKEY_CLASSES_ROOT\\" KEY_BASE " =Value1\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "", REG_SZ, "Value1", 7, 0);
+
+    test_import_str("REGEDIT\r\n"
+                    "HKEY_CLASSES_ROOT\\" KEY_BASE " =  Value2\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "", REG_SZ, " Value2", 8, 0);
+
+    test_import_str("REGEDIT\r\n"
+                    "HKEY_CLASSES_ROOT\\" KEY_BASE " = Value3 \r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "", REG_SZ, "Value3 ", 8, 0);
+
+    test_import_str("REGEDIT\r\n"
+                    "HKEY_CLASSES_ROOT\\" KEY_BASE " Value4\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "", REG_SZ, "Value4", 7, 0);
+
+    test_import_str("REGEDIT\r\n"
+                    "HKEY_CLASSES_ROOT\\" KEY_BASE "  Value5\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "", REG_SZ, "Value5", 7, 0);
+
+    test_import_str("REGEDIT\r\n"
+                    "HKEY_CLASSES_ROOT\\" KEY_BASE "\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "", REG_SZ, "", 1, 0);
+
+    test_import_str("REGEDIT\r\n"
+                    "HKEY_CLASSES_ROOT\\" KEY_BASE "  \r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "", REG_SZ, "", 1, 0);
+
+    test_import_str("REGEDIT\r\n"
+                    "HKEY_CLASSES_ROOT\\" KEY_BASE " = No newline", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, "", REG_SZ, "No newline", 11, 0);
+
+    delete_value(hkey, NULL);
+
+    /* Test character validity at the start of the line */
+    test_import_str("REGEDIT\r\n"
+                    " HKEY_CLASSES_ROOT\\" KEY_BASE " = Value1a\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "");
+
+    test_import_str("REGEDIT\r\n"
+                    "  HKEY_CLASSES_ROOT\\" KEY_BASE " = Value1b\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "");
+
+    test_import_str("REGEDIT\r\n"
+                    "\tHKEY_CLASSES_ROOT\\" KEY_BASE " = Value1c\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "");
+
+    test_import_str("REGEDIT\r\n"
+                    ";HKEY_CLASSES_ROOT\\" KEY_BASE " = Value2a\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "");
+
+    test_import_str("REGEDIT\r\n"
+                    "#HKEY_CLASSES_ROOT\\" KEY_BASE " = Value2b\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "");
+
+    /* Test case sensitivity */
+    test_import_str("REGEDIT\r\n"
+                    "hkey_classes_root\\" KEY_BASE " = Value3a\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "");
+
+    test_import_str("REGEDIT\r\n"
+                    "hKEY_CLASSES_ROOT\\" KEY_BASE " = Value3b\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "");
+
+    test_import_str("REGEDIT\r\n"
+                    "Hkey_Classes_Root\\" KEY_BASE " = Value3c\r\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "");
+
+    close_key(hkey);
+
+    delete_key(HKEY_CLASSES_ROOT, KEY_BASE);
+}
+
 START_TEST(import)
 {
     DWORD r;
@@ -3477,4 +3592,5 @@ START_TEST(import)
     test_unicode_import();
     test_import_with_whitespace();
     test_unicode_import_with_whitespace();
+    test_import_win31();
 }
