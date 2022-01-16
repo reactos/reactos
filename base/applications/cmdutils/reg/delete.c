@@ -93,7 +93,7 @@ static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name
     }
     else if (value_name || value_empty)
     {
-        if (RegDeleteValueW(key, value_empty ? NULL : value_name) != ERROR_SUCCESS)
+        if (RegDeleteValueW(key, value_name))
         {
             RegCloseKey(key);
             output_message(STRING_VALUE_NONEXIST);
