@@ -723,37 +723,34 @@ static void test_reg_multi_sz(void)
 {
     HKEY hkey;
     DWORD r;
-    char buffer[22];
 
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_MULTI_SZ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    buffer[0] = 0;
-    todo_wine verify_reg(hkey, NULL, REG_MULTI_SZ, buffer, 1, 0);
+    todo_wine verify_reg(hkey, NULL, REG_MULTI_SZ, "", 1, 0);
 
     todo_wine delete_value(hkey, NULL);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_MULTI_SZ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, NULL, REG_MULTI_SZ, buffer, 1, 0);
+    verify_reg(hkey, NULL, REG_MULTI_SZ, "", 1, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v multi0 /t REG_MULTI_SZ /d \"three\\0little\\0strings\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    memcpy(buffer, "three\0little\0strings\0", 22);
-    verify_reg(hkey, "multi0", REG_MULTI_SZ, buffer, 22, 0);
+    verify_reg(hkey, "multi0", REG_MULTI_SZ, "three\0little\0strings\0", 22, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_MULTI_SZ /v multi1 /s \"#\" /d \"three#little#strings\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, "multi1", REG_MULTI_SZ, buffer, 22, 0);
+    verify_reg(hkey, "multi1", REG_MULTI_SZ, "three\0little\0strings\0", 22, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_MULTI_SZ /v multi2 /d \"\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, "multi2", REG_MULTI_SZ, &buffer[21], 1, 0);
+    verify_reg(hkey, "multi2", REG_MULTI_SZ, "", 1, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_MULTI_SZ /v multi3 /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, "multi3", REG_MULTI_SZ, &buffer[21], 1, 0);
+    verify_reg(hkey, "multi3", REG_MULTI_SZ, "", 1, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_MULTI_SZ /v multi4 /s \"#\" /d \"threelittlestrings\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
@@ -779,8 +776,7 @@ static void test_reg_multi_sz(void)
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_MULTI_SZ /v multi11 /s \"#\" /d \"a#\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    buffer[0]='a'; buffer[1]=0; buffer[2]=0;
-    verify_reg(hkey, "multi11", REG_MULTI_SZ, buffer, 3, 0);
+    verify_reg(hkey, "multi11", REG_MULTI_SZ, "a\0", 3, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v multi12 /t REG_MULTI_SZ /f /d", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -793,19 +789,18 @@ static void test_reg_multi_sz(void)
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v multi15 /t REG_MULTI_SZ /d \"a\\0\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, "multi15", REG_MULTI_SZ, buffer, 3, 0);
+    verify_reg(hkey, "multi15", REG_MULTI_SZ, "a\0", 3, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_MULTI_SZ /v multi16 /d \"two\\0\\0strings\" /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v multi17 /t REG_MULTI_SZ /s \"#\" /d \"#\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    buffer[0] = 0; buffer[1] = 0;
-    verify_reg(hkey, "multi17", REG_MULTI_SZ, buffer, 2, 0);
+    verify_reg(hkey, "multi17", REG_MULTI_SZ, "\0", 2, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v multi18 /t REG_MULTI_SZ /d \"\\0\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_reg(hkey, "multi18", REG_MULTI_SZ, buffer, 2, 0);
+    verify_reg(hkey, "multi18", REG_MULTI_SZ, "\0", 2, 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v multi19 /t REG_MULTI_SZ /s \"#\" /d \"two\\0#strings\" /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
