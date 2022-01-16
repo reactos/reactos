@@ -156,7 +156,7 @@ CAPTION "Perfis de utilizador"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Os perfis de utilizador contêm definições para o ambiente de trabalho e outras informações relacionadas ao inicio de sessão. Pode criar um perfil diferente em cada computador que utilizar, ou pode seleccionar o mesmo perfil guardado no servidor, em cada um dos computadores que utiliza.", IDC_STATIC, 40, 5, 211, 43
+    LTEXT "Os perfis de utilizador contêm definições para o ambiente de trabalho e outras informações relacionadas ao início de sessão. Crie um perfil novo, ou restaure um perfil do servidor por cada computador.", IDC_STATIC, 40, 5, 211, 43
     LTEXT "Perfis armazenados neste computador:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
