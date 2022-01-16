@@ -113,7 +113,7 @@ int reg_delete(int argc, WCHAR *argvW[])
     BOOL value_all = FALSE, value_empty = FALSE, force = FALSE;
     int i;
 
-    if (!parse_registry_key(argvW[2], &root, &path, &key_name))
+    if (!parse_registry_key(argvW[2], &root, &path))
         return 1;
 
     for (i = 3; i < argc; i++)
@@ -157,6 +157,8 @@ int reg_delete(int argc, WCHAR *argvW[])
 
     if ((value_name && value_empty) || (value_name && value_all) || (value_empty && value_all))
         goto invalid;
+
+    key_name = get_long_key(root, path);
 
     return run_delete(root, path, key_name, value_name, value_empty, value_all, force);
 

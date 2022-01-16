@@ -203,7 +203,7 @@ WCHAR *build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name, DWORD 
     return subkey_path;
 }
 
-static WCHAR *get_long_key(HKEY root, WCHAR *path)
+WCHAR *get_long_key(HKEY root, WCHAR *path)
 {
     DWORD i, array_size = ARRAY_SIZE(root_rels), len;
     WCHAR *long_key;
@@ -229,7 +229,7 @@ static WCHAR *get_long_key(HKEY root, WCHAR *path)
     return long_key;
 }
 
-BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path, WCHAR **long_key)
+BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path)
 {
     if (!sane_path(key))
         return FALSE;
@@ -244,8 +244,6 @@ BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path, WCHAR **long
         output_message(STRING_INVALID_SYSTEM_KEY, key);
         return FALSE;
     }
-
-    *long_key = get_long_key(*root, *path);
 
     return TRUE;
 }

@@ -329,7 +329,7 @@ int reg_query(int argc, WCHAR *argvW[])
     BOOL value_empty = FALSE, recurse = FALSE;
     int i;
 
-    if (!parse_registry_key(argvW[2], &root, &path, &key_name))
+    if (!parse_registry_key(argvW[2], &root, &path))
         return 1;
 
     for (i = 3; i < argc; i++)
@@ -367,6 +367,8 @@ int reg_query(int argc, WCHAR *argvW[])
 
     if (value_name && value_empty)
         goto invalid;
+
+    key_name = get_long_key(root, path);
 
     return run_query(root, path, key_name, value_name, value_empty, recurse);
 

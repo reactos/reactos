@@ -213,11 +213,11 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
 int reg_add(int argc, WCHAR *argvW[])
 {
     HKEY root;
-    WCHAR *path, *key_name, *value_name = NULL, *type = NULL, *data = NULL, separator = '\0';
+    WCHAR *path, *value_name = NULL, *type = NULL, *data = NULL, separator = '\0';
     BOOL value_empty = FALSE, force = FALSE;
     int i;
 
-    if (!parse_registry_key(argvW[2], &root, &path, &key_name))
+    if (!parse_registry_key(argvW[2], &root, &path))
         return 1;
 
     for (i = 3; i < argc; i++)
