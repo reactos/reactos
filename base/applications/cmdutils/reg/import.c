@@ -324,8 +324,7 @@ static BOOL unescape_string(WCHAR *str, WCHAR **unparsed)
                 str[val_idx] = '\r';
                 break;
             case '0':
-                str[val_idx] = '\0';
-                break;
+                return FALSE;
             case '\\':
             case '"':
                 str[val_idx] = str[str_idx];
