@@ -108,7 +108,6 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
             }
             
             case WAIT_FAILED:
-            case WAIT_OBJECT_0:
             {
                 CloseHandle(m_hThread);
                 CloseHandle(m_hEvent);
