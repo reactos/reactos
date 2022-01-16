@@ -523,7 +523,7 @@ static WCHAR *parse_win31_line_state(struct parser *parser, WCHAR *pos)
 
     if (open_key(parser, line) != ERROR_SUCCESS)
     {
-        output_message(STRING_OPEN_KEY_FAILED, line);
+        output_message(STRING_KEY_IMPORT_FAILED, line);
         return line;
     }
 
@@ -584,7 +584,7 @@ static WCHAR *key_name_state(struct parser *parser, WCHAR *pos)
         return p + 1;
     }
     else if (open_key(parser, p) != ERROR_SUCCESS)
-        output_message(STRING_OPEN_KEY_FAILED, p);
+        output_message(STRING_KEY_IMPORT_FAILED, p);
 
 done:
     set_state(parser, LINE_START);
