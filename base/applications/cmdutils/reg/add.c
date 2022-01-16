@@ -48,10 +48,10 @@ static inline BYTE hexchar_to_byte(WCHAR ch)
         return -1;
 }
 
-static BYTE *get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DWORD *size_bytes)
+static BOOL get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator,
+                        BYTE **data_bytes, DWORD *size_bytes)
 {
     static const WCHAR empty;
-    LPBYTE out_data = NULL;
 
     *size_bytes = 0;
 
@@ -64,8 +64,8 @@ static BYTE *get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DWO
         case REG_EXPAND_SZ:
         {
             *size_bytes = (lstrlenW(data) + 1) * sizeof(WCHAR);
-            out_data = malloc(*size_bytes);
-            lstrcpyW((LPWSTR)out_data,data);
+            *data_bytes = malloc(*size_bytes);
+            lstrcpyW((WCHAR *)*data_bytes, data);
             break;
         }
         case REG_DWORD:
@@ -77,41 +77,46 @@ static BYTE *get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DWO
             val = wcstoul(data, &rest, (towlower(data[1]) == 'x') ? 16 : 10);
             if (*rest || data[0] == '-' || (val == ~0u && errno == ERANGE)) {
                 output_message(STRING_MISSING_INTEGER);
-                break;
+                return FALSE;
             }
             *size_bytes = sizeof(DWORD);
-            out_data = malloc(*size_bytes);
-            ((LPDWORD)out_data)[0] = val;
+            *data_bytes = malloc(*size_bytes);
+            *(DWORD *)*data_bytes = val;
             break;
         }
         case REG_BINARY:
         {
-            BYTE hex0, hex1;
+            BYTE hex0, hex1, *ptr;
             int i = 0, destByteIndex = 0, datalen = lstrlenW(data);
+
             *size_bytes = ((datalen + datalen % 2) / 2) * sizeof(BYTE);
-            out_data = malloc(*size_bytes);
-            if(datalen % 2)
+            *data_bytes = malloc(*size_bytes);
+
+            if (datalen % 2)
             {
                 hex1 = hexchar_to_byte(data[i++]);
-                if(hex1 == 0xFF)
+                if (hex1 == 0xFF)
                     goto no_hex_data;
-                out_data[destByteIndex++] = hex1;
+                *data_bytes[destByteIndex++] = hex1;
             }
-            for(;i + 1 < datalen;i += 2)
+
+            ptr = *data_bytes;
+
+            for (; i + 1 < datalen; i += 2)
             {
                 hex0 = hexchar_to_byte(data[i]);
                 hex1 = hexchar_to_byte(data[i + 1]);
-                if(hex0 == 0xFF || hex1 == 0xFF)
+                if (hex0 == 0xFF || hex1 == 0xFF)
                     goto no_hex_data;
-                out_data[destByteIndex++] = (hex0 << 4) | hex1;
+                ptr[destByteIndex++] = (hex0 << 4) | hex1;
             }
             break;
+
             no_hex_data:
-            /* cleanup, print error */
-            free(out_data);
+            free(*data_bytes);
+            *data_bytes = NULL;
             output_message(STRING_MISSING_HEXDATA);
-            out_data = NULL;
-            break;
+            return FALSE;
         }
         case REG_MULTI_SZ:
         {
@@ -134,20 +139,21 @@ static BYTE *get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator, DWO
                 {
                     free(buffer);
                     output_message(STRING_INVALID_STRING);
-                    return NULL;
+                    return FALSE;
                 }
             }
             buffer[destindex] = 0;
             if (destindex && buffer[destindex - 1])
                 buffer[++destindex] = 0;
             *size_bytes = (destindex + 1) * sizeof(WCHAR);
-            return (BYTE *)buffer;
+            *data_bytes = (BYTE *)buffer;
+            break;
         }
         default:
             output_message(STRING_UNHANDLED_TYPE, reg_type, data);
     }
 
-    return out_data;
+    return TRUE;
 }
 
 static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
@@ -194,7 +200,7 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
          return 1;
     }
 
-    if (!(reg_data = get_regdata(data, data_type, separator, &data_size)))
+    if (!get_regdata(data, data_type, separator, &reg_data, &data_size))
     {
         RegCloseKey(hkey);
         return 1;
