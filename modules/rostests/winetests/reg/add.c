@@ -57,18 +57,18 @@ void verify_reg_(const char *file, unsigned line, HKEY hkey, const char *value,
     size = sizeof(data);
     memset(data, 0xdd, size);
     err = RegQueryValueExA(hkey, value, NULL, &type, data, &size);
-    lok(err == ERROR_SUCCESS, "RegQueryValueEx failed: got %d\n", err);
+    lok(err == ERROR_SUCCESS, "RegQueryValueEx failed: got error %d\n", err);
     if (err != ERROR_SUCCESS)
         return;
 
     todo_wine_if (todo & TODO_REG_TYPE)
-        lok(type == exp_type, "got wrong type %d, expected %d\n", type, exp_type);
+        lok(type == exp_type, "got registry type %d, expected %d\n", type, exp_type);
     todo_wine_if (todo & TODO_REG_SIZE)
-        lok(size == exp_size, "got wrong size %d, expected %d\n", size, exp_size);
+        lok(size == exp_size, "got data size %d, expected %d\n", size, exp_size);
     if (exp_data)
     {
         todo_wine_if (todo & TODO_REG_DATA)
-            lok(memcmp(data, exp_data, size) == 0, "got wrong data\n");
+            lok(memcmp(data, exp_data, size) == 0, "registry data does not match\n");
     }
 }
 
@@ -87,7 +87,7 @@ void open_key_(const char *file, unsigned line, const HKEY base, const char *pat
     LONG err;
 
     err = RegOpenKeyExA(base, path, 0, KEY_READ|sam, hkey);
-    lok(err == ERROR_SUCCESS, "RegOpenKeyExA failed: %d\n", err);
+    lok(err == ERROR_SUCCESS, "RegOpenKeyExA failed: got error %d\n", err);
 }
 
 void close_key_(const char *file, unsigned line, HKEY hkey)
@@ -95,7 +95,7 @@ void close_key_(const char *file, unsigned line, HKEY hkey)
     LONG err;
 
     err = RegCloseKey(hkey);
-    lok(err == ERROR_SUCCESS, "RegCloseKey failed: %d\n", err);
+    lok(err == ERROR_SUCCESS, "RegCloseKey failed: got error %d\n", err);
 }
 
 void verify_key_(const char *file, unsigned line, HKEY key_base, const char *subkey)
@@ -104,7 +104,7 @@ void verify_key_(const char *file, unsigned line, HKEY key_base, const char *sub
     LONG err;
 
     err = RegOpenKeyExA(key_base, subkey, 0, KEY_READ, &hkey);
-    lok(err == ERROR_SUCCESS, "RegOpenKeyExA failed: got %d\n", err);
+    lok(err == ERROR_SUCCESS, "RegOpenKeyExA failed: got error %d\n", err);
 
     if (hkey)
         RegCloseKey(hkey);
@@ -130,7 +130,7 @@ void add_key_(const char *file, unsigned line, const HKEY hkey, const char *path
 
     err = RegCreateKeyExA(hkey, path, 0, NULL, REG_OPTION_NON_VOLATILE,
                           KEY_READ|KEY_WRITE, NULL, &new_key, NULL);
-    lok(err == ERROR_SUCCESS, "RegCreateKeyExA failed: %d\n", err);
+    lok(err == ERROR_SUCCESS, "RegCreateKeyExA failed: got error %d\n", err);
 
     if (subkey)
         *subkey = new_key;
@@ -145,7 +145,7 @@ void delete_key_(const char *file, unsigned line, const HKEY hkey, const char *p
         LONG err;
 
         err = RegDeleteKeyA(hkey, path);
-        lok(err == ERROR_SUCCESS, "RegDeleteKeyA failed: %d\n", err);
+        lok(err == ERROR_SUCCESS, "RegDeleteKeyA failed: got error %d\n", err);
     }
 }
 
@@ -197,7 +197,7 @@ void add_value_(const char *file, unsigned line, HKEY hkey, const char *name,
     LONG err;
 
     err = RegSetValueExA(hkey, name, 0, type, (const BYTE *)data, size);
-    lok(err == ERROR_SUCCESS, "RegSetValueExA failed: %d\n", err);
+    lok(err == ERROR_SUCCESS, "RegSetValueExA failed: got error %d\n", err);
 }
 
 void delete_value_(const char *file, unsigned line, const HKEY hkey, const char *name)
@@ -205,7 +205,7 @@ void delete_value_(const char *file, unsigned line, const HKEY hkey, const char 
     LONG err;
 
     err = RegDeleteValueA(hkey, name);
-    lok(err == ERROR_SUCCESS, "RegDeleteValueA failed: %d\n", err);
+    lok(err == ERROR_SUCCESS, "RegDeleteValueA failed: got error %d\n", err);
 }
 
 /* Unit tests */
