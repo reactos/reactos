@@ -384,6 +384,15 @@ static void test_add(void)
     verify_reg(hkey, "Test2", REG_DWORD, &dword, sizeof(dword), 0);
     todo_wine verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
 
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_NONE /d Test /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    verify_key(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key(hkey, "Subkey");
+    verify_reg(hkey, "Test1", REG_SZ, "Value1", 7, 0);
+    verify_reg(hkey, "Test2", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, NULL, REG_NONE, "T\0e\0s\0t\0\0", 10, 0);
+
     close_key(hkey);
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
 }
