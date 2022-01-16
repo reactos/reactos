@@ -698,22 +698,38 @@ static void test_reg_dword(void)
     dword = 456;
     verify_reg(hkey, "DWORD_LE", REG_DWORD_LITTLE_ENDIAN, &dword, sizeof(dword), 0);
 
-    /* REG_DWORD_BIG_ENDIAN */
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /v DWORD_BE /t REG_DWORD_BIG_ENDIAN /d 456 /f", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    dword = 456;
-    verify_reg(hkey, "DWORD_BE", REG_DWORD_BIG_ENDIAN, &dword, sizeof(dword), 0);
-    /* REG_DWORD_BIG_ENDIAN is broken in every version of windows. It behaves like
-     * an ordinary REG_DWORD - that is little endian. GG */
+    close_key(hkey);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+}
 
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /v DWORD_BE2 /t REG_DWORD_BIG_ENDIAN /f /d", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
-
-    run_reg_exe("reg add HKCU\\" KEY_BASE " /v DWORD_BE3 /t REG_DWORD_BIG_ENDIAN /f", &r);
-    ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */), "got exit code %u, expected 1\n", r);
+/* REG_DWORD_BIG_ENDIAN is broken in every version of Windows. It behaves
+ * like an ordinary REG_DWORD, which is little endian.
+ */
+static void test_reg_dword_big_endian(void)
+{
+    HKEY hkey;
+    DWORD r, dword;
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /ve /t REG_DWORD_BIG_ENDIAN /f", &r);
-    ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */), "got exit code %u, expected 1\n", r);
+    ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */), "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v Test1 /t REG_DWORD_BIG_ENDIAN /f /d", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v Test2 /t REG_DWORD_BIG_ENDIAN /f", &r);
+    ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */), "got exit code %d, expected 1\n", r);
+
+    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v Test3 /t REG_DWORD_BIG_ENDIAN /d 456 /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    dword = 456;
+    verify_reg(hkey, "Test3", REG_DWORD_BIG_ENDIAN, &dword, sizeof(dword), 0);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v Test4 /t REG_DWORD_BIG_ENDIAN /d 0x456 /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    dword = 0x456;
+    verify_reg(hkey, "Test4", REG_DWORD_BIG_ENDIAN, &dword, sizeof(dword), 0);
 
     close_key(hkey);
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
@@ -835,5 +851,6 @@ START_TEST(add)
     test_reg_expand_sz();
     test_reg_binary();
     test_reg_dword();
+    test_reg_dword_big_endian();
     test_reg_multi_sz();
 }
