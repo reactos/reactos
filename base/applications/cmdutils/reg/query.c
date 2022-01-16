@@ -334,32 +334,34 @@ int reg_query(int argc, WCHAR *argvW[])
 
     for (i = 3; i < argc; i++)
     {
-        if (argvW[i][0] == '/' || argvW[i][0] == '-')
+        WCHAR *str;
+
+        if (argvW[i][0] != '/' && argvW[i][0] != '-')
+            goto invalid;
+
+        str = &argvW[i][1];
+
+        if (!lstrcmpiW(str, L"ve"))
         {
-            WCHAR *str = &argvW[i][1];
+            if (value_empty) goto invalid;
+            value_empty = TRUE;
+            continue;
+        }
+        else if (!str[0] || str[1])
+            goto invalid;
 
-            if (!lstrcmpiW(str, L"ve"))
-            {
-                if (value_empty) goto invalid;
-                value_empty = TRUE;
-                continue;
-            }
-            else if (!str[0] || str[1])
+        switch (towlower(*str))
+        {
+        case 'v':
+            if (value_name || !(value_name = argvW[++i]))
                 goto invalid;
-
-            switch (towlower(*str))
-            {
-            case 'v':
-                if (value_name || !(value_name = argvW[++i]))
-                    goto invalid;
-                break;
-            case 's':
-                if (recurse) goto invalid;
-                recurse = TRUE;
-                break;
-            default:
-                goto invalid;
-            }
+            break;
+        case 's':
+            if (recurse) goto invalid;
+            recurse = TRUE;
+            break;
+        default:
+            goto invalid;
         }
     }
 
