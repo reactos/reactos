@@ -289,7 +289,7 @@ BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path, WCHAR **long
     return TRUE;
 }
 
-static BOOL is_switch(const WCHAR *s, const WCHAR c)
+BOOL is_switch(const WCHAR *s, const WCHAR c)
 {
     if (lstrlenW(s) > 2)
         return FALSE;
@@ -302,10 +302,7 @@ static BOOL is_switch(const WCHAR *s, const WCHAR c)
 
 static BOOL is_help_switch(const WCHAR *s)
 {
-    if (is_switch(s, '?') || is_switch(s, 'h'))
-        return TRUE;
-
-    return FALSE;
+    return (is_switch(s, '?') || is_switch(s, 'h'));
 }
 
 enum operations {

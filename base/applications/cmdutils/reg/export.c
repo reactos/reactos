@@ -361,13 +361,7 @@ static HANDLE get_file_handle(WCHAR *filename, BOOL overwrite_file)
 
 static BOOL is_overwrite_switch(const WCHAR *s)
 {
-    if (lstrlenW(s) > 2)
-        return FALSE;
-
-    if ((s[0] == '/' || s[0] == '-') && (s[1] == 'y' || s[1] == 'Y'))
-        return TRUE;
-
-    return FALSE;
+    return is_switch(s, 'y');
 }
 
 int reg_export(int argc, WCHAR *argv[])

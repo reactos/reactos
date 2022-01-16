@@ -40,6 +40,7 @@ BOOL ask_confirm(unsigned int msgid, WCHAR *reg_info);
 HKEY path_get_rootkey(const WCHAR *path);
 WCHAR *build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name, DWORD subkey_len);
 BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path, WCHAR **long_key);
+BOOL is_switch(const WCHAR *s, const WCHAR c);
 
 /* add.c */
 int reg_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
