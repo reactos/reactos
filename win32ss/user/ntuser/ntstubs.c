@@ -51,14 +51,6 @@ NtUserBitBltSysBmp(
    return Ret;
 }
 
-NTSTATUS
-APIENTRY
-NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
-{
-    STUB;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 DWORD
 APIENTRY
 NtUserDragObject(
