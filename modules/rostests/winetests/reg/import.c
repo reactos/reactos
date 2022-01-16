@@ -3468,25 +3468,34 @@ static void test_import_win31(void)
 {
     LONG err;
     HKEY hkey;
-    DWORD dispos, r;
+    DWORD r;
 
     /* Check if reg.exe is running with elevated privileges */
-    err = RegCreateKeyExA(HKEY_CLASSES_ROOT, KEY_BASE, 0, NULL, REG_OPTION_NON_VOLATILE,
-                          KEY_READ|KEY_SET_VALUE, NULL, &hkey, &dispos);
+    err = RegDeleteKeyA(HKEY_CLASSES_ROOT, KEY_BASE);
     if (err == ERROR_ACCESS_DENIED)
     {
         win_skip("reg.exe is not running with elevated privileges; "
                  "skipping Windows 3.1 import tests\n");
         return;
     }
-
-    if (dispos == REG_OPENED_EXISTING_KEY)
-        delete_value(hkey, NULL);
+    if (err == ERROR_FILE_NOT_FOUND)
+    {
+        if (RegCreateKeyExA(HKEY_CLASSES_ROOT, KEY_BASE, 0, NULL, REG_OPTION_NON_VOLATILE,
+                          KEY_READ, NULL, &hkey, NULL))
+        {
+            win_skip("reg.exe is not running with elevated privileges; "
+                     "skipping Windows 3.1 import tests\n");
+            return;
+        }
+        RegCloseKey(hkey);
+        RegDeleteKeyA(HKEY_CLASSES_ROOT, KEY_BASE);
+    }
 
     /* Test simple value */
     test_import_str("REGEDIT\r\n"
                     "HKEY_CLASSES_ROOT\\" KEY_BASE " = Value0\r\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    open_key(HKEY_CLASSES_ROOT, KEY_BASE, KEY_SET_VALUE, &hkey);
     verify_reg(hkey, "", REG_SZ, "Value0", 7, 0);
 
     /* Test proper handling of spaces and equals signs */
