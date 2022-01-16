@@ -213,7 +213,7 @@ static int query_value(HKEY hkey, WCHAR *value_name, WCHAR *path, BOOL recurse)
 static int query_all(HKEY hkey, WCHAR *path, BOOL recurse, BOOL recursing)
 {
     LONG rc;
-    DWORD num_values;
+    DWORD num_subkeys, num_values;
     DWORD max_value_len = 256, value_len;
     DWORD max_data_bytes = 2048, data_size;
     DWORD subkey_len;
@@ -222,8 +222,8 @@ static int query_all(HKEY hkey, WCHAR *path, BOOL recurse, BOOL recursing)
     BYTE *data;
     HKEY subkey;
 
-    rc = RegQueryInfoKeyW(hkey, NULL, NULL, NULL, NULL, NULL, NULL,
-                          &num_values, NULL, NULL, NULL, NULL);
+    rc = RegQueryInfoKeyW(hkey, NULL, NULL, NULL, &num_subkeys, NULL,
+                          NULL, &num_values, NULL, NULL, NULL, NULL);
     if (rc) return 1;
 
     if (num_values || recursing)
@@ -264,6 +264,9 @@ static int query_all(HKEY hkey, WCHAR *path, BOOL recurse, BOOL recursing)
 
     if (i || recursing)
         output_string(newlineW);
+
+    if (!num_subkeys)
+        return 0;
 
     subkey_name = malloc(MAX_SUBKEY_LEN * sizeof(WCHAR));
 
