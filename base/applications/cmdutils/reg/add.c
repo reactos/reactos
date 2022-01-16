@@ -89,6 +89,8 @@ static BOOL get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator,
             BYTE hex0, hex1, *ptr;
             int i = 0, destByteIndex = 0, datalen = lstrlenW(data);
 
+            if (!datalen) return TRUE;
+
             *size_bytes = ((datalen + datalen % 2) / 2) * sizeof(BYTE);
             *data_bytes = malloc(*size_bytes);
 
