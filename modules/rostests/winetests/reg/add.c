@@ -126,10 +126,16 @@ void verify_key_nonexist_(const char *file, unsigned line, HKEY key_base, const 
 void add_key_(const char *file, unsigned line, const HKEY hkey, const char *path, HKEY *subkey)
 {
     LONG err;
+    HKEY new_key;
 
     err = RegCreateKeyExA(hkey, path, 0, NULL, REG_OPTION_NON_VOLATILE,
-                          KEY_READ|KEY_WRITE, NULL, subkey, NULL);
+                          KEY_READ|KEY_WRITE, NULL, &new_key, NULL);
     lok(err == ERROR_SUCCESS, "RegCreateKeyExA failed: %d\n", err);
+
+    if (subkey)
+        *subkey = new_key;
+    else
+        RegCloseKey(new_key);
 }
 
 void delete_key_(const char *file, unsigned line, const HKEY hkey, const char *path)
@@ -315,7 +321,7 @@ static void test_key_formats(void)
 
 static void test_add(void)
 {
-    HKEY hkey, hsubkey;
+    HKEY hkey;
     DWORD r, dword;
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /f", &r);
@@ -324,8 +330,7 @@ static void test_add(void)
     open_key(HKEY_CURRENT_USER, KEY_BASE, KEY_WRITE, &hkey);
 
     /* Test whether overwriting a registry key modifies existing keys and values */
-    add_key(hkey, "Subkey", &hsubkey);
-    close_key(hsubkey);
+    add_key(hkey, "Subkey", NULL);
     add_value(hkey, "Test1", REG_SZ, "Value1", 7);
     dword = 0x123;
     add_value(hkey, "Test2", REG_DWORD, &dword, sizeof(dword));
