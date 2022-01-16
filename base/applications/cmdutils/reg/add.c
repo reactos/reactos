@@ -154,18 +154,18 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
                    WCHAR *type, WCHAR separator, WCHAR *data, BOOL force)
 {
     HKEY hkey;
-    DWORD data_type, data_size;
+    DWORD dispos, data_type, data_size;
     BYTE *reg_data = NULL;
     LONG rc;
 
     if (RegCreateKeyExW(root, path, 0, NULL, REG_OPTION_NON_VOLATILE,
-                        KEY_READ|KEY_WRITE, NULL, &hkey, NULL))
+                        KEY_READ|KEY_WRITE, NULL, &hkey, &dispos))
     {
         output_message(STRING_ACCESS_DENIED);
         return 1;
     }
 
-    if (!force)
+    if (!force && dispos == REG_OPENED_EXISTING_KEY)
     {
         if (RegQueryValueExW(hkey, value_name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
         {
