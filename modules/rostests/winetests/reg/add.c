@@ -329,6 +329,46 @@ static void test_add(void)
 
     open_key(HKEY_CURRENT_USER, KEY_BASE, KEY_WRITE, &hkey);
 
+    /* The Default value is initialized if no parameters are specified */
+    todo_wine verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
+    todo_wine delete_value(hkey, NULL);
+
+    /* This also occurs when specifying a registry type and passing data */
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_DWORD /d 0x5 /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    dword = 0x5;
+    verify_reg(hkey, NULL, REG_DWORD, &dword, sizeof(dword), 0);
+
+    /* The Default value can also be overwritten as an empty string */
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg(hkey, NULL, REG_SZ, "", 1, TODO_REG_TYPE|TODO_REG_SIZE|TODO_REG_DATA);
+
+    close_key(hkey);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    /* Specifying a value name doesn't initialize the Default value in a new key */
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v Test /t REG_SZ /d \"Just me here\" /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    open_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
+
+    verify_reg(hkey, "Test", REG_SZ, "Just me here", 13, 0);
+    verify_reg_nonexist(hkey, NULL);
+
+    close_key(hkey);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    /* Adding a registry key via WinAPI doesn't initialize the Default value... */
+    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    verify_reg_nonexist(hkey, NULL);
+
+    /* ... but we can add it without passing [/f] to reg.exe */
+    run_reg_exe("reg add HKCU\\" KEY_BASE, &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
+    todo_wine delete_value(hkey, NULL);
+
     /* Test whether overwriting a registry key modifies existing keys and values */
     add_key(hkey, "Subkey", NULL);
     add_value(hkey, "Test1", REG_SZ, "Value1", 7);
@@ -342,6 +382,7 @@ static void test_add(void)
     verify_key(hkey, "Subkey");
     verify_reg(hkey, "Test1", REG_SZ, "Value1", 7, 0);
     verify_reg(hkey, "Test2", REG_DWORD, &dword, sizeof(dword), 0);
+    todo_wine verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
 
     close_key(hkey);
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
