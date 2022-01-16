@@ -18,10 +18,6 @@
 
 #include "reg_test.h"
 
-#define TODO_REG_TYPE    (0x0001u)
-#define TODO_REG_SIZE    (0x0002u)
-#define TODO_REG_DATA    (0x0004u)
-
 BOOL run_reg_exe_(const char *file, unsigned line, const char *cmd, DWORD *rc)
 {
     STARTUPINFOA si = {sizeof(STARTUPINFOA)};

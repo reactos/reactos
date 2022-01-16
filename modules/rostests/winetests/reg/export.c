@@ -18,8 +18,6 @@
 
 #include "reg_test.h"
 
-#define TODO_REG_COMPARE (0x0008u)
-
 #define compare_export(f,e,todo) compare_export_(__FILE__,__LINE__,f,e,todo)
 static BOOL compare_export_(const char *file, unsigned line, const char *filename,
                             const char *expected, DWORD todo)

@@ -30,6 +30,11 @@
 #define REG_EXIT_SUCCESS 0
 #define REG_EXIT_FAILURE 1
 
+#define TODO_REG_TYPE    (0x0001u)
+#define TODO_REG_SIZE    (0x0002u)
+#define TODO_REG_DATA    (0x0004u)
+#define TODO_REG_COMPARE (0x0008u)
+
 /* add.c */
 #define run_reg_exe(c,r) run_reg_exe_(__FILE__,__LINE__,c,r)
 BOOL run_reg_exe_(const char *file, unsigned line, const char *cmd, DWORD *rc);

@@ -19,10 +19,111 @@
 
 #include "reg_test.h"
 
+static void read_from_pipe(HANDLE child_proc_stdout, BYTE *buf, DWORD buf_size)
+{
+    DWORD read, len = 0;
+    BOOL ret;
+
+    while (1)
+    {
+        ret = ReadFile(child_proc_stdout, buf + len, buf_size - len, &read, NULL);
+        if (!ret || !read) break;
+
+        len += read;
+    }
+
+    buf[len] = 0;
+}
+
+#define read_reg_output(c,b,s,r) read_reg_output_(__FILE__,__LINE__,c,b,s,r)
+static BOOL read_reg_output_(const char *file, unsigned line, const char *cmd,
+                             BYTE *buf, DWORD buf_size, DWORD *rc)
+{
+    SECURITY_ATTRIBUTES sa;
+    HANDLE pipe_stdout_rd, pipe_stdout_wr;
+    STARTUPINFOA si = {0};
+    PROCESS_INFORMATION pi;
+    char cmdline[256];
+    BOOL bret;
+    DWORD ret;
+
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE;
+    sa.lpSecurityDescriptor = NULL;
+
+    if (!CreatePipe(&pipe_stdout_rd, &pipe_stdout_wr, &sa, 0))
+        return FALSE;
+
+    if (!SetHandleInformation(pipe_stdout_rd, HANDLE_FLAG_INHERIT, 0))
+        return FALSE;
+
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdInput = INVALID_HANDLE_VALUE;
+    si.hStdOutput = pipe_stdout_wr;
+    si.hStdError = INVALID_HANDLE_VALUE;
+
+    strcpy(cmdline, cmd);
+    if (!CreateProcessA(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
+        return FALSE;
+
+    CloseHandle(pipe_stdout_wr);
+
+    read_from_pipe(pipe_stdout_rd, buf, buf_size);
+
+    ret = WaitForSingleObject(pi.hProcess, 10000);
+    if (ret == WAIT_TIMEOUT)
+        TerminateProcess(pi.hProcess, 1);
+
+    bret = GetExitCodeProcess(pi.hProcess, rc);
+    lok(bret, "GetExitCodeProcess failed: %d\n", GetLastError());
+
+    CloseHandle(pipe_stdout_rd);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    return bret;
+}
+
+#define compare_query(b,e,todo) compare_query_(__FILE__,__LINE__,b,e,todo)
+static void compare_query_(const char *file, unsigned line, const BYTE *buf,
+                           const char *expected, DWORD todo)
+{
+    todo_wine_if (todo & TODO_REG_COMPARE)
+        lok(!strcmp((char *)buf, expected), "query output does not match expected output\n");
+}
+
+/* Unit tests */
+
 static void test_query(void)
 {
+    const char *test1 = "\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\r\n"
+        "    Test1    REG_SZ    Hello, World\r\n"
+        "    Test2    REG_DWORD    0x123\r\n\r\n";
+
+    const char *test2 = "\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\r\n"
+        "    Test1    REG_SZ    Hello, World\r\n\r\n";
+
+    const char *test3 = "\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\r\n"
+        "    Test1    REG_SZ    Hello, World\r\n"
+        "    Test2    REG_DWORD    0x123\r\n"
+        "    Wine    REG_SZ    First instance\r\n\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey\r\n";
+
+    const char *test4 = "\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey\r\n"
+        "    Test3    REG_SZ    Some string data\r\n"
+        "    Test4    REG_DWORD    0xabc\r\n\r\n";
+
+    const char *test5 = "\r\n"
+        "HKEY_CURRENT_USER\\" KEY_BASE "\\subkey\r\n"
+        "    Test4    REG_DWORD    0xabc\r\n\r\n";
+
     DWORD r, dword = 0x123;
     HKEY key, subkey;
+    BYTE buf[512];
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
@@ -59,15 +160,17 @@ static void test_query(void)
     run_reg_exe("reg query HKCU\\" KEY_BASE " /s /s", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
-    run_reg_exe("reg query HKCU\\" KEY_BASE, &r);
+    read_reg_output("reg query HKCU\\" KEY_BASE, buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test1, 0);
 
     run_reg_exe("reg query HKCU\\" KEY_BASE " /ve", &r);
     ok(r == REG_EXIT_SUCCESS || broken(r == REG_EXIT_FAILURE /* WinXP */),
        "got exit code %d, expected 0\n", r);
 
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Test1", &r);
+    read_reg_output("reg query HKCU\\" KEY_BASE " /v Test1", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test2, 0);
 
     run_reg_exe("reg query HKCU\\" KEY_BASE " /v Test2", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
@@ -75,19 +178,26 @@ static void test_query(void)
     add_value(key, "Wine", REG_SZ, "First instance", 15);
 
     /* Create a test subkey */
-    add_key(key, "Subkey", &subkey);
+    add_key(key, "subkey", &subkey);
+
+    read_reg_output("reg query HKCU\\" KEY_BASE, buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test3, TODO_REG_COMPARE);
+
     add_value(subkey, "Test3", REG_SZ, "Some string data", 16);
     dword = 0xabc;
     add_value(subkey, "Test4", REG_DWORD, &dword, sizeof(dword));
 
-    run_reg_exe("reg query HKCU\\" KEY_BASE "\\subkey", &r);
+    read_reg_output("reg query HKCU\\" KEY_BASE "\\subkey", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test4, 0);
 
     run_reg_exe("reg query HKCU\\" KEY_BASE "\\subkey /v Test3", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
 
-    run_reg_exe("reg query HKCU\\" KEY_BASE "\\subkey /v Test4", &r);
+    read_reg_output("reg query HKCU\\" KEY_BASE "\\subkey /v Test4", buf, sizeof(buf), &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test5, 0);
 
     add_value(subkey, "Wine", REG_SZ, "Second instance", 16);
 
