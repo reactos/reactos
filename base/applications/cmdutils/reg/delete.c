@@ -46,7 +46,7 @@ static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name
     {
         if (RegDeleteTreeW(root, path) != ERROR_SUCCESS)
         {
-            output_message(STRING_CANNOT_FIND);
+            output_message(STRING_KEY_NONEXIST);
             return 1;
         }
         output_message(STRING_SUCCESS);
@@ -55,7 +55,7 @@ static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name
 
     if (RegOpenKeyExW(root, path, 0, KEY_READ|KEY_SET_VALUE, &key))
     {
-        output_message(STRING_CANNOT_FIND);
+        output_message(STRING_KEY_NONEXIST);
         return 1;
     }
 

@@ -61,3 +61,4 @@
 #define STRING_EXPORT_USAGE           136
 #define STRING_INVALID_SYSTEM_KEY     137
 #define STRING_OVERWRITE_FILE         138
+#define STRING_KEY_NONEXIST           139

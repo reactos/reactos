@@ -302,7 +302,7 @@ static int run_query(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
 
     if (RegOpenKeyExW(root, path, 0, KEY_READ, &key) != ERROR_SUCCESS)
     {
-        output_message(STRING_CANNOT_FIND);
+        output_message(STRING_KEY_NONEXIST);
         return 1;
     }
 

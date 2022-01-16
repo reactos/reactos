@@ -374,7 +374,7 @@ int reg_export(int argc, WCHAR *argvW[])
 
     if (RegOpenKeyExW(root, path, 0, KEY_READ, &hkey))
     {
-        output_message(STRING_INVALID_KEY);
+        output_message(STRING_KEY_NONEXIST);
         return 1;
     }
 
