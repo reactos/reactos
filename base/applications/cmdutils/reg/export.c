@@ -79,15 +79,14 @@ static WCHAR *escape_string(WCHAR *str, size_t str_len, size_t *line_len)
 
 static size_t export_value_name(HANDLE hFile, WCHAR *name, size_t len)
 {
-    static const WCHAR quoted_fmt[] = {'"','%','s','"','=',0};
-    static const WCHAR default_name[] = {'@','=',0};
+    static const WCHAR *default_name = L"@=";
     size_t line_len;
 
     if (name && *name)
     {
         WCHAR *str = escape_string(name, len, &line_len);
         WCHAR *buf = malloc((line_len + 4) * sizeof(WCHAR));
-        line_len = swprintf(buf, quoted_fmt, str);
+        line_len = swprintf(buf, L"\"%s\"=", str);
         write_file(hFile, buf);
         free(buf);
         free(str);
@@ -105,28 +104,24 @@ static void export_string_data(WCHAR **buf, WCHAR *data, size_t size)
 {
     size_t len = 0, line_len;
     WCHAR *str;
-    static const WCHAR fmt[] = {'"','%','s','"',0};
 
     if (size)
         len = size / sizeof(WCHAR) - 1;
     str = escape_string(data, len, &line_len);
     *buf = malloc((line_len + 3) * sizeof(WCHAR));
-    swprintf(*buf, fmt, str);
+    swprintf(*buf, L"\"%s\"", str);
     free(str);
 }
 
 static void export_dword_data(WCHAR **buf, DWORD *data)
 {
-    static const WCHAR fmt[] = {'d','w','o','r','d',':','%','0','8','x',0};
-
     *buf = malloc(15 * sizeof(WCHAR));
-    swprintf(*buf, fmt, *data);
+    swprintf(*buf, L"dword:%08x", *data);
 }
 
 static size_t export_hex_data_type(HANDLE hFile, DWORD type)
 {
-    static const WCHAR hex[] = {'h','e','x',':',0};
-    static const WCHAR hexp_fmt[] = {'h','e','x','(','%','x',')',':',0};
+    static const WCHAR *hex = L"hex:";
     size_t line_len;
 
     if (type == REG_BINARY)
@@ -137,7 +132,7 @@ static size_t export_hex_data_type(HANDLE hFile, DWORD type)
     else
     {
         WCHAR *buf = malloc(15 * sizeof(WCHAR));
-        line_len = swprintf(buf, hexp_fmt, type);
+        line_len = swprintf(buf, L"hex(%x):", type);
         write_file(hFile, buf);
         free(buf);
     }
@@ -150,8 +145,6 @@ static size_t export_hex_data_type(HANDLE hFile, DWORD type)
 static void export_hex_data(HANDLE hFile, WCHAR **buf, DWORD type,
                             DWORD line_len, void *data, DWORD size)
 {
-    static const WCHAR fmt[] = {'%','0','2','x',0};
-    static const WCHAR hex_concat[] = {'\\','\r','\n',' ',' ',0};
     size_t num_commas, i, pos;
 
     line_len += export_hex_data_type(hFile, type);
@@ -163,7 +156,7 @@ static void export_hex_data(HANDLE hFile, WCHAR **buf, DWORD type,
 
     for (i = 0, pos = 0; i < size; i++)
     {
-        pos += swprintf(*buf + pos, fmt, ((BYTE *)data)[i]);
+        pos += swprintf(*buf + pos, L"%02x", ((BYTE *)data)[i]);
         if (i == num_commas) break;
         (*buf)[pos++] = ',';
         (*buf)[pos] = 0;
@@ -172,7 +165,7 @@ static void export_hex_data(HANDLE hFile, WCHAR **buf, DWORD type,
         if (line_len >= MAX_HEX_CHARS)
         {
             write_file(hFile, *buf);
-            write_file(hFile, hex_concat);
+            write_file(hFile, L"\\\r\n  ");
             line_len = 2;
             pos = 0;
         }
@@ -181,7 +174,7 @@ static void export_hex_data(HANDLE hFile, WCHAR **buf, DWORD type,
 
 static void export_newline(HANDLE hFile)
 {
-    static const WCHAR newline[] = {'\r','\n',0};
+    static const WCHAR *newline = L"\r\n";
 
     write_file(hFile, newline);
 }
@@ -224,11 +217,10 @@ static void export_data(HANDLE hFile, WCHAR *value_name, DWORD value_len,
 
 static void export_key_name(HANDLE hFile, WCHAR *name)
 {
-    static const WCHAR fmt[] = {'\r','\n','[','%','s',']','\r','\n',0};
     WCHAR *buf;
 
     buf = malloc((lstrlenW(name) + 7) * sizeof(WCHAR));
-    swprintf(buf, fmt, name);
+    swprintf(buf, L"\r\n[%s]\r\n", name);
     write_file(hFile, buf);
     free(buf);
 }
@@ -309,9 +301,7 @@ static int export_registry_data(HANDLE hFile, HKEY key, WCHAR *path)
 
 static void export_file_header(HANDLE hFile)
 {
-    static const WCHAR header[] = { 0xfeff,'W','i','n','d','o','w','s',' ',
-                                   'R','e','g','i','s','t','r','y',' ','E','d','i','t','o','r',' ',
-                                   'V','e','r','s','i','o','n',' ','5','.','0','0','\r','\n',0};
+    static const WCHAR *header = L"\uFEFFWindows Registry Editor Version 5.00\r\n";
 
     write_file(hFile, header);
 }
