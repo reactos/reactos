@@ -1,6 +1,6 @@
 /*
  * PROJECT:     FreeLoader
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Physical Address Extension (PAE) paging mode definitions.
  * COPYRIGHT:   Copyright 2022 Vadim Galyant <vgal@rambler.ru>
  */
@@ -21,10 +21,8 @@ typedef struct _PAGE_DIRECTORY_X86_PAE
 } PAGE_DIRECTORY_X86_PAE, *PPAGE_DIRECTORY_X86_PAE;
 C_ASSERT(sizeof(PAGE_DIRECTORY_X86_PAE) == PAGE_SIZE);
 
-/* Number of Page Directories for PAE mode (4)
-   (two most significant bits in the VA)
-*/
-#define PAE_PD_COUNT   (1 << 2)
+/* Number of Page Directories for PAE mode (two most significant bits in the VA) */
+#define PAE_PD_COUNT   4
 #define PAE_PD_PADDING (PAGE_SIZE - (PAE_PD_COUNT * sizeof(HARDWARE_PDPTE_X86_PAE)))
 #define PDPTE_SHIFT    30
 
