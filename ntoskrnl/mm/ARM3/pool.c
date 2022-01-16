@@ -26,7 +26,7 @@ MM_PAGED_POOL_INFO MmPagedPoolInfo;
 SIZE_T MmAllocatedNonPagedPool;
 SIZE_T MmTotalNonPagedPoolQuota;
 SIZE_T MmTotalPagedPoolQuota;
-ULONG MmSpecialPoolTag;
+ULONG MmSpecialPoolTag = 1;
 ULONG MmConsumedPoolPercentage;
 BOOLEAN MmProtectFreedNonPagedPool;
 SLIST_HEADER MiNonPagedPoolSListHead;

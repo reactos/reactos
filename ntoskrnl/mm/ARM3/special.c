@@ -76,18 +76,19 @@ BOOLEAN
 NTAPI
 MmUseSpecialPool(SIZE_T NumberOfBytes, ULONG Tag)
 {
+    static ULONG Seed = 0x5eed1234;
     /* Special pool is not suitable for allocations bigger than 1 page */
     if (NumberOfBytes > (PAGE_SIZE - sizeof(POOL_HEADER)))
     {
         return FALSE;
     }
 
-    if (MmSpecialPoolTag == '*')
+    if (Tag == 'enoN')
     {
         return TRUE;
     }
-
-    return Tag == MmSpecialPoolTag;
+    Seed = Seed * 16807 % 0x7fffffff;
+    return Seed % 11 == 2;
 }
 
 BOOLEAN
