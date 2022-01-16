@@ -14,29 +14,13 @@
 
 #include <debug.h>
 
-class CPortTopology : public IPortTopology,
-                      public ISubdevice,
-                      public IPortEvents
+class CPortTopology : public CUnknownImpl<IPortTopology,
+                                          ISubdevice,
+                                          IPortEvents>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortTopology;
     IMP_ISubdevice;
     IMP_IPortEvents;
@@ -54,8 +38,6 @@ protected:
     PPCFILTER_DESCRIPTOR m_pDescriptor;
     PSUBDEVICE_DESCRIPTOR m_SubDeviceDescriptor;
     IPortFilterTopology * m_Filter;
-
-    LONG m_Ref;
 
     friend PMINIPORTTOPOLOGY GetTopologyMiniport(PPORTTOPOLOGY Port);
 

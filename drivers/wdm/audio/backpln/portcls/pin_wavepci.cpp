@@ -14,29 +14,13 @@
 
 #include <debug.h>
 
-class CPortPinWavePci : public IPortPinWavePci,
-                        public IServiceSink,
-                        public IPortWavePciStream
+class CPortPinWavePci : public CUnknownImpl<IPortPinWavePci,
+                                            IServiceSink,
+                                            IPortWavePciStream>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortPinWavePci;
     IMP_IServiceSink;
     IMP_IPortWavePciStream;
@@ -73,8 +57,6 @@ protected:
     SUBDEVICE_DESCRIPTOR m_Descriptor;
 
     KSALLOCATOR_FRAMING m_AllocatorFraming;
-
-    LONG m_Ref;
 
     NTSTATUS NTAPI HandleKsProperty(IN PIRP Irp);
     NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);
