@@ -4493,6 +4493,7 @@ static void test_export(void)
 
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("file.reg", empty_key_test, 0), "compare_export() failed\n");
 
     run_reg_exe("reg export /y HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -4503,7 +4504,6 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS || broken(r == REG_EXIT_FAILURE), /* winxp */
        "got exit code %d, expected 0\n", r);
-
     ok(compare_export("file.reg", empty_key_test, 0), "compare_export() failed\n");
 
     /* Test registry export with a simple data structure */
