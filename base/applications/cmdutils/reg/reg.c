@@ -132,10 +132,9 @@ static void output_formatstring(const WCHAR *fmt, __ms_va_list va_args)
     WCHAR *str;
     DWORD len;
 
-    SetLastError(NO_ERROR);
     len = FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ALLOCATE_BUFFER,
                          fmt, 0, 0, (WCHAR *)&str, 0, &va_args);
-    if (len == 0 && GetLastError() != NO_ERROR)
+    if (len == 0 && GetLastError() != ERROR_NO_WORK_DONE)
     {
         WINE_FIXME("Could not format string: le=%u, fmt=%s\n", GetLastError(), wine_dbgstr_w(fmt));
         return;
