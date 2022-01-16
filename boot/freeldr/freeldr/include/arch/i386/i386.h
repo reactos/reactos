@@ -54,7 +54,7 @@
 
 typedef struct _PAGE_DIRECTORY_X86
 {
-    HARDWARE_PTE Pde[1024];
+    HARDWARE_PTE_X86 Pde[1024];
 } PAGE_DIRECTORY_X86, *PPAGE_DIRECTORY_X86;
 
 void __cdecl i386DivideByZero(void);
