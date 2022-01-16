@@ -156,6 +156,7 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
     HKEY hkey;
     DWORD data_type, data_size;
     BYTE *reg_data = NULL;
+    LONG rc;
 
     if (RegCreateKeyExW(root, path, 0, NULL, REG_OPTION_NON_VOLATILE,
                         KEY_READ|KEY_WRITE, NULL, &hkey, NULL))
@@ -199,10 +200,17 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
         return 1;
     }
 
-    RegSetValueExW(hkey, value_name, 0, data_type, reg_data, data_size);
-    free(reg_data);
+    rc = RegSetValueExW(hkey, value_name, 0, data_type, reg_data, data_size);
 
+    free(reg_data);
     RegCloseKey(hkey);
+
+    if (rc)
+    {
+        output_message(STRING_ACCESS_DENIED);
+        return 1;
+    }
+
     output_message(STRING_SUCCESS);
 
     return 0;
