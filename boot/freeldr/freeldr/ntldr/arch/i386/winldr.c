@@ -515,6 +515,7 @@ WinLdrpMapApic(VOID)
     BOOLEAN LocalAPIC;
     LARGE_INTEGER MsrValue;
     ULONG APICAddress, CpuInfo[4];
+    PFN_NUMBER Pfn;
 
     /* Check if we have a local APIC */
     __cpuid((int*)CpuInfo, 1);
@@ -532,21 +533,23 @@ WinLdrpMapApic(VOID)
         APICAddress);
 
     /* Map it */
+    Pfn = (APICAddress >> MM_PAGE_SHIFT);
+
     if (!PaeModeOn)
     {
-        HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = APICAddress >> MM_PAGE_SHIFT;
-        HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-        HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
-        HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].WriteThrough = 1;
-        HalPageTable[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].CacheDisable = 1;
+        HalPageTable[APIC_BASE_PTE_IDX].PageFrameNumber = Pfn;
+        HalPageTable[APIC_BASE_PTE_IDX].Valid = 1;
+        HalPageTable[APIC_BASE_PTE_IDX].Write = 1;
+        HalPageTable[APIC_BASE_PTE_IDX].WriteThrough = 1;
+        HalPageTable[APIC_BASE_PTE_IDX].CacheDisable = 1;
     }
     else
     {
-        PaeTables->HalPt[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = APICAddress >> MM_PAGE_SHIFT;
-        PaeTables->HalPt[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-        PaeTables->HalPt[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
-        PaeTables->HalPt[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].WriteThrough = 1;
-        PaeTables->HalPt[(APIC_BASE - 0xFFC00000) >> MM_PAGE_SHIFT].CacheDisable = 1;
+        PaeTables->HalPt[APIC_BASE_PTE_IDX].PageFrameNumber = Pfn;
+        PaeTables->HalPt[APIC_BASE_PTE_IDX].Valid = 1;
+        PaeTables->HalPt[APIC_BASE_PTE_IDX].Write = 1;
+        PaeTables->HalPt[APIC_BASE_PTE_IDX].WriteThrough = 1;
+        PaeTables->HalPt[APIC_BASE_PTE_IDX].CacheDisable = 1;
     }
 }
 
@@ -554,31 +557,35 @@ static
 BOOLEAN
 WinLdrMapSpecialPages(void)
 {
+    PFN_NUMBER Pfn;
+
     TRACE("HalPageTable: 0x%X\n", HalPageTable);
 
     /*
      * The Page Tables have been setup, make special handling
      * for the boot processor PCR and KI_USER_SHARED_DATA.
      */
+    Pfn = (PcrBasePage + 1);
+
     if (!PaeModeOn)
     {
-        HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage+1;
-        HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-        HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+        HalPageTable[USER_SHARED_PTE_IDX].PageFrameNumber = Pfn;
+        HalPageTable[USER_SHARED_PTE_IDX].Valid = 1;
+        HalPageTable[USER_SHARED_PTE_IDX].Write = 1;
 
-        HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage;
-        HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-        HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+        HalPageTable[PCR0_PTE_IDX].PageFrameNumber = PcrBasePage;
+        HalPageTable[PCR0_PTE_IDX].Valid = 1;
+        HalPageTable[PCR0_PTE_IDX].Write = 1;
     }
     else
     {
-        PaeTables->HalPt[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage+1;
-        PaeTables->HalPt[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-        PaeTables->HalPt[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+        PaeTables->HalPt[USER_SHARED_PTE_IDX].PageFrameNumber = Pfn;
+        PaeTables->HalPt[USER_SHARED_PTE_IDX].Valid = 1;
+        PaeTables->HalPt[USER_SHARED_PTE_IDX].Write = 1;
 
-        PaeTables->HalPt[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage;
-        PaeTables->HalPt[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-        PaeTables->HalPt[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+        PaeTables->HalPt[PCR0_PTE_IDX].PageFrameNumber = PcrBasePage;
+        PaeTables->HalPt[PCR0_PTE_IDX].Valid = 1;
+        PaeTables->HalPt[PCR0_PTE_IDX].Write = 1;
     }
 
     /* Map APIC */
