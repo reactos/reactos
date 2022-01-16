@@ -18,9 +18,8 @@
 
 #include "reg_test.h"
 
-#define compare_export(f,e,todo) compare_export_(__FILE__,__LINE__,f,e,todo)
-static BOOL compare_export_(const char *file, unsigned line, const char *filename,
-                            const char *expected, DWORD todo)
+BOOL compare_export_(const char *file, unsigned line, const char *filename,
+                     const char *expected, DWORD todo)
 {
     FILE *fp;
     long file_size;
@@ -64,6 +63,17 @@ error:
     return FALSE;
 }
 
+const char *empty_key_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n\r\n";
+
+const char *simple_data_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+    "\"DWORD\"=dword:00000100\r\n"
+    "\"String\"=\"Your text here...\"\r\n\r\n";
+
+
 /* Unit tests */
 
 static void test_export(void)
@@ -72,16 +82,6 @@ static void test_export(void)
     DWORD r, dword, type, size;
     HKEY hkey, subkey;
     BYTE hex[4], buffer[8];
-
-    const char *empty_key_test =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n\r\n";
-
-    const char *simple_test =
-        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
-        "\"DWORD\"=dword:00000100\r\n"
-        "\"String\"=\"Your text here...\"\r\n\r\n";
 
     const char *complex_test =
         "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
@@ -243,12 +243,12 @@ static void test_export(void)
 
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    ok(compare_export("file.reg", simple_test, 0), "compare_export() failed\n");
+    ok(compare_export("file.reg", simple_data_test, 0), "compare_export() failed\n");
 
     /* Test whether a .reg file extension is required when exporting */
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " foo /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    ok(compare_export("foo", simple_test, 0), "compare_export() failed\n");
+    ok(compare_export("foo", simple_data_test, 0), "compare_export() failed\n");
 
     /* Test registry export with a complex data structure */
     add_key(hkey, "Subkey1", &subkey);

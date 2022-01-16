@@ -74,6 +74,13 @@ void add_value_(const char *file, unsigned line, HKEY hkey, const char *name,
 #define delete_value(k,n) delete_value_(__FILE__,__LINE__,k,n)
 void delete_value_(const char *file, unsigned line, const HKEY hkey, const char *name);
 
+/* export.c */
+#define compare_export(f,e,todo) compare_export_(__FILE__,__LINE__,f,e,todo)
+BOOL compare_export_(const char *file, unsigned line, const char *filename,
+                     const char *expected, DWORD todo);
+extern const char *empty_key_test;
+extern const char *simple_data_test;
+
 /* import.c */
 #define test_import_str(c,r) import_reg(__FILE__,__LINE__,c,FALSE,r)
 #define test_import_wstr(c,r) import_reg(__FILE__,__LINE__,c,TRUE,r)
