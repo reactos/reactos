@@ -76,7 +76,7 @@ static BOOL get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator,
             unsigned long val;
             val = wcstoul(data, &rest, (towlower(data[1]) == 'x') ? 16 : 10);
             if (*rest || data[0] == '-' || (val == ~0u && errno == ERANGE)) {
-                output_message(STRING_MISSING_INTEGER);
+                output_message(STRING_MISSING_NUMBER);
                 return FALSE;
             }
             *size_bytes = sizeof(DWORD);
