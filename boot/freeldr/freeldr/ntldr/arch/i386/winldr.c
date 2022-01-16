@@ -161,8 +161,8 @@ DumpGDTEntry(ULONG_PTR Base, ULONG Selector)
 
 /* GLOBALS *******************************************************************/
 
-PHARDWARE_PTE PDE;
-PHARDWARE_PTE HalPageTable;
+PHARDWARE_PTE_X86 PDE;
+PHARDWARE_PTE_X86 HalPageTable;
 PPAE_TABLES PaeTables;
 
 PUCHAR PhysicalPageTablesBuffer;
@@ -238,7 +238,7 @@ MempAllocatePageTables(VOID)
     if (!PaeModeOn)
     {
         /* Set up pointers correctly now */
-        PDE = (PHARDWARE_PTE)Buffer;
+        PDE = (PHARDWARE_PTE_X86)Buffer;
 
         /* Map the page directory at 0xC0000000 (maps itself) */
         PDE[SELFMAP_ENTRY].PageFrameNumber = (ULONG)PDE >> MM_PAGE_SHIFT;
@@ -246,7 +246,7 @@ MempAllocatePageTables(VOID)
         PDE[SELFMAP_ENTRY].Write = 1;
 
         /* The last PDE slot is allocated for HAL's memory mapping (Virtual Addresses 0xFFC00000 - 0xFFFFFFFF) */
-        HalPageTable = (PHARDWARE_PTE)&Buffer[MM_PAGE_SIZE*1];
+        HalPageTable = (PHARDWARE_PTE_X86)&Buffer[MM_PAGE_SIZE*1];
 
         /* Map it */
         PDE[PDE_PER_PAGE - 1].PageFrameNumber = (ULONG)HalPageTable >> MM_PAGE_SHIFT;
@@ -422,8 +422,8 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
             }
             else
             {
-                PhysicalPde = (PHARDWARE_PTE)(PDE[PdeIdx].PageFrameNumber << MM_PAGE_SHIFT);
-                KernelPde = (PHARDWARE_PTE)(PDE[PdeIdx+(KSEG0_BASE >> 22)].PageFrameNumber << MM_PAGE_SHIFT);
+                PhysicalPde = (PHARDWARE_PTE_X86)(PDE[PdeIdx].PageFrameNumber << MM_PAGE_SHIFT);
+                KernelPde = (PHARDWARE_PTE_X86)(PDE[PdeIdx+(KSEG0_BASE >> 22)].PageFrameNumber << MM_PAGE_SHIFT);
             }
 
             PhysicalPde[Page & 0x3ff].PageFrameNumber = Page;
@@ -485,7 +485,7 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
 VOID
 MempUnmapPage(PFN_NUMBER Page)
 {
-    PHARDWARE_PTE KernelPT;
+    PHARDWARE_PTE_X86 KernelPT;
     PFN_NUMBER Entry = (Page >> 10) + (KSEG0_BASE >> 22);
 
     if (PaeModeOn)
@@ -500,7 +500,7 @@ MempUnmapPage(PFN_NUMBER Page)
 
     if (PDE[Entry].Valid)
     {
-        KernelPT = (PHARDWARE_PTE)(PDE[Entry].PageFrameNumber << MM_PAGE_SHIFT);
+        KernelPT = (PHARDWARE_PTE_X86)(PDE[Entry].PageFrameNumber << MM_PAGE_SHIFT);
 
         if (KernelPT)
         {
