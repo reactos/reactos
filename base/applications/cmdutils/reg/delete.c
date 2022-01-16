@@ -41,7 +41,7 @@ int reg_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
         }
     }
 
-    /* Delete subtree only if no /v* option is given */
+    /* Delete registry key if no /v* option is given */
     if (!value_name && !value_empty && !value_all)
     {
         if (RegDeleteTreeW(root, path) != ERROR_SUCCESS)
