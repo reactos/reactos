@@ -113,6 +113,9 @@ AllocConsole(VOID)
         return FALSE;
     }
 
+    /* Default to en-US output codepage */
+    SetConsoleOutputCP(437);
+
     /* Open the keyboard */
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyboardName,
