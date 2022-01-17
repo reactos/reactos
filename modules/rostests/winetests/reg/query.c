@@ -132,6 +132,16 @@ static void test_command_syntax(void)
 
     run_reg_exe("reg query HKCU\\" KEY_BASE " /s /s", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    /* Test registry view */
+    run_reg_exe("reg query HKCU\\" KEY_BASE " /reg:32 /reg:32", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg query HKCU\\" KEY_BASE " /reg:32 /reg:64", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg query HKCU\\" KEY_BASE " /reg:64 /reg:64", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 }
 
 static void test_query(void)
@@ -296,6 +306,165 @@ static void test_query(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
+static const char *test9a = "\r\n"
+    "HKEY_LOCAL_MACHINE\\" KEY_BASE "\r\n"
+    "    Test1    REG_SZ    Hello, World\r\n"
+    "    Test2    REG_DWORD    0x123\r\n"
+    "    Wine    REG_SZ    First instance\r\n\r\n"
+    "HKEY_LOCAL_MACHINE\\" KEY_BASE "\\subkey\r\n";
+
+static const char *test9b = "\r\n"
+    "HKEY_LOCAL_MACHINE\\" KEY_BASE "\r\n"
+    "    Test1    REG_SZ    Hello, World\r\n"
+    "    Test2    REG_DWORD    0x123\r\n"
+    "    Wine    REG_SZ    First instance\r\n\r\n"
+    "HKEY_LOCAL_MACHINE\\" KEY_BASE "\\subkey\r\n"
+    "    Test3    REG_SZ    Some string data\r\n"
+    "    Test4    REG_DWORD    0xabc\r\n"
+    "    Wine    REG_SZ    Second instance\r\n\r\n";
+
+static void create_test_key(REGSAM sam)
+{
+    HKEY hkey, subkey;
+    DWORD dword;
+
+    add_key(HKEY_LOCAL_MACHINE, KEY_BASE, sam, &hkey);
+    add_value(hkey, "Test1", REG_SZ, "Hello, World", 13);
+    dword = 0x123;
+    add_value(hkey, "Test2", REG_DWORD, &dword, sizeof(dword));
+    add_value(hkey, "Wine", REG_SZ, "First instance", 15);
+
+    add_key(hkey, "subkey", sam, &subkey);
+    add_value(subkey, "Test3", REG_SZ, "Some string data", 16);
+    dword = 0xabc;
+    add_value(subkey, "Test4", REG_DWORD, &dword, sizeof(dword));
+    add_value(subkey, "Wine", REG_SZ, "Second instance", 16);
+
+    close_key(subkey);
+    close_key(hkey);
+}
+
+static void test_registry_view_win32(void)
+{
+    BOOL is_wow64, is_win32;
+    DWORD r;
+    BYTE buf[512];
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+    is_win32 = !is_wow64 && (sizeof(void *) == sizeof(int));
+
+    if (!is_win32) return;
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try querying the 32-bit registry view (32-bit Windows) */
+    create_test_key(KEY_WOW64_32KEY);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /reg:32", buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9a, FALSE, 0);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /s /reg:32", buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9b, FALSE, 0);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try querying the 64-bit registry view, which doesn't exist on 32-bit Windows */
+    create_test_key(KEY_WOW64_64KEY);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /reg:64", buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9a, FALSE, 0);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /s /reg:64", buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9b, FALSE, 0);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+}
+
+static void test_registry_view_win64(void)
+{
+    BOOL is_wow64, is_win64;
+    DWORD r;
+    BYTE buf[512];
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+    is_win64 = !is_wow64 && (sizeof(void *) > sizeof(int));
+
+    if (!is_win64) return;
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try querying the 32-bit registry view (64-bit Windows) */
+    create_test_key(KEY_WOW64_32KEY);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /reg:32", buf, sizeof(buf), &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9a, FALSE, TODO_REG_COMPARE);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /s /reg:32", buf, sizeof(buf), &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9b, FALSE, TODO_REG_COMPARE);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    /* Try querying the 64-bit registry view (64-bit Windows) */
+    create_test_key(KEY_WOW64_64KEY);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /reg:64", buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9a, FALSE, 0);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /s /reg:64", buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9b, FALSE, 0);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+}
+
+static void test_registry_view_wow64(void)
+{
+    BOOL is_wow64;
+    DWORD r;
+    BYTE buf[512];
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+
+    if (!is_wow64) return;
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try querying the 32-bit registry view (WOW64) */
+    create_test_key(KEY_WOW64_32KEY);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /reg:32", buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9a, FALSE, 0);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /s /reg:32", buf, sizeof(buf), &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9b, FALSE, 0);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    /* Try querying the 64-bit registry view (WOW64) */
+    create_test_key(KEY_WOW64_64KEY);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /reg:64", buf, sizeof(buf), &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9a, FALSE, TODO_REG_COMPARE);
+
+    read_reg_output("reg query HKLM\\" KEY_BASE " /s /reg:64", buf, sizeof(buf), &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    compare_query(buf, test9b, FALSE, TODO_REG_COMPARE);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+}
+
 START_TEST(query)
 {
     DWORD r;
@@ -307,4 +476,16 @@ START_TEST(query)
 
     test_command_syntax();
     test_query();
+
+    /* Check if reg.exe is running with elevated privileges */
+    if (!is_elevated_process())
+    {
+        win_skip("reg.exe is not running with elevated privileges; "
+                 "skipping registry view tests\n");
+        return;
+    }
+
+    test_registry_view_win32();
+    test_registry_view_win64();
+    test_registry_view_wow64();
 }
