@@ -270,17 +270,17 @@ static void test_registry_view_win64(void)
     open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY, &hkey);
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE " /v DWORD /f /reg:32", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_reg_nonexist(hkey, "DWORD");
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "DWORD");
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE " /ve /f /reg:32", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_reg_nonexist(hkey, NULL);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, NULL);
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE " /va /f /reg:32", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_reg_nonexist(hkey, "String");
-    todo_wine verify_reg_nonexist(hkey, "Multiple Strings");
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "String");
+    verify_reg_nonexist(hkey, "Multiple Strings");
     verify_key(hkey, "Subkey", KEY_WOW64_32KEY);
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE "\\Subkey /f /reg:32", &r);
@@ -380,17 +380,17 @@ static void test_registry_view_wow64(void)
     open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE " /v DWORD /f /reg:64", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_reg_nonexist(hkey, "DWORD");
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "DWORD");
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE " /ve /f /reg:64", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_reg_nonexist(hkey, NULL);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, NULL);
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE " /va /f /reg:64", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_reg_nonexist(hkey, "String");
-    todo_wine verify_reg_nonexist(hkey, "Multiple Strings");
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "String");
+    verify_reg_nonexist(hkey, "Multiple Strings");
     verify_key(hkey, "Subkey", KEY_WOW64_64KEY);
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE "\\Subkey /f /reg:64", &r);

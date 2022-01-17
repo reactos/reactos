@@ -35,7 +35,7 @@ static void output_error(LONG rc)
     }
 }
 
-static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
+static int run_delete(HKEY root, WCHAR *path, REGSAM sam, WCHAR *key_name, WCHAR *value_name,
                       BOOL value_empty, BOOL value_all, BOOL force)
 {
     LONG rc;
@@ -72,7 +72,7 @@ static int run_delete(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name
         return 0;
     }
 
-    if ((rc = RegOpenKeyExW(root, path, 0, KEY_READ|KEY_SET_VALUE, &hkey)))
+    if ((rc = RegOpenKeyExW(root, path, 0, KEY_READ|KEY_SET_VALUE|sam, &hkey)))
     {
         output_error(rc);
         return 1;
@@ -132,6 +132,7 @@ int reg_delete(int argc, WCHAR *argvW[])
     HKEY root;
     WCHAR *path, *key_name, *value_name = NULL;
     BOOL value_all = FALSE, value_empty = FALSE, force = FALSE;
+    REGSAM sam = 0;
     int i;
 
     if (!parse_registry_key(argvW[2], &root, &path))
@@ -158,8 +159,18 @@ int reg_delete(int argc, WCHAR *argvW[])
             value_empty = TRUE;
             continue;
         }
-        else if (!lstrcmpiW(str, L"reg:32") || !lstrcmpiW(str, L"reg:64"))
+        else if (!lstrcmpiW(str, L"reg:32"))
+        {
+            if (sam & KEY_WOW64_32KEY) goto invalid;
+            sam |= KEY_WOW64_32KEY;
             continue;
+        }
+        else if (!lstrcmpiW(str, L"reg:64"))
+        {
+            if (sam & KEY_WOW64_64KEY) goto invalid;
+            sam |= KEY_WOW64_64KEY;
+            continue;
+        }
         else if (!str[0] || str[1])
             goto invalid;
 
@@ -181,9 +192,12 @@ int reg_delete(int argc, WCHAR *argvW[])
     if ((value_name && value_empty) || (value_name && value_all) || (value_empty && value_all))
         goto invalid;
 
+    if (sam == (KEY_WOW64_32KEY|KEY_WOW64_64KEY))
+        goto invalid;
+
     key_name = get_long_key(root, path);
 
-    return run_delete(root, path, key_name, value_name, value_empty, value_all, force);
+    return run_delete(root, path, sam, key_name, value_name, value_empty, value_all, force);
 
 invalid:
     output_message(STRING_INVALID_SYNTAX);
