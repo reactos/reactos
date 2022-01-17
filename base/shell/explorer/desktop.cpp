@@ -158,12 +158,7 @@ DWORD CDesktopThread::DesktopThreadProc()
     HANDLE hDesktop;
     HRESULT hRet;
 
-    hRet = OleInitialize(NULL);
-    
-    if (!SUCCEEDED(hRet))
-    {
-        return 1;
-    }
+    OleInitialize(NULL);
 
     hRet = m_Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
 
