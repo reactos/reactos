@@ -305,6 +305,7 @@ static void test_query(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
+#if 0
 static const char *test9a = "\r\n"
     "HKEY_LOCAL_MACHINE\\" KEY_BASE "\r\n"
     "    Test1    REG_SZ    Hello, World\r\n"
@@ -493,6 +494,7 @@ static void test_registry_view_wow64(void)
 
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
 }
+#endif
 
 START_TEST(query)
 {
@@ -514,7 +516,10 @@ START_TEST(query)
         return;
     }
 
+#if 0
     test_registry_view_win32();
     test_registry_view_win64();
     test_registry_view_wow64();
+#endif
+
 }

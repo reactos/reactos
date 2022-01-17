@@ -60,7 +60,7 @@ static WCHAR *reg_data_to_wchar(DWORD type, const BYTE *src, DWORD size_bytes)
             ptr = buffer;
 
             for (i = 0; i < size_bytes; i++)
-                ptr += swprintf(ptr, 3, L"%02X", src[i]);
+                ptr += swprintf(ptr, L"%02X", src[i]);
             break;
         }
         case REG_DWORD:
@@ -70,7 +70,7 @@ static WCHAR *reg_data_to_wchar(DWORD type, const BYTE *src, DWORD size_bytes)
             const int zero_x_dword = 10;
 
             buffer = malloc((zero_x_dword + 1) * sizeof(WCHAR));
-            swprintf(buffer, zero_x_dword + 1, L"0x%x", *(DWORD *)src);
+            swprintf(buffer, L"0x%x", *(DWORD *)src);
             break;
         }
         case REG_MULTI_SZ:
@@ -403,6 +403,6 @@ int reg_query(int argc, WCHAR *argvW[])
 
 invalid:
     output_message(STRING_INVALID_SYNTAX);
-    output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
+    output_message(STRING_FUNC_HELP, _wcsupr(argvW[1]));
     return 1;
 }

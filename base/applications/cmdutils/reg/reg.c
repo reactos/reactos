@@ -17,6 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdio.h>
 #include "reg.h"
 #include <wine/debug.h>
 
@@ -79,7 +80,7 @@ static void output_formatstring(const WCHAR *fmt, va_list va_args)
 
     len = FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ALLOCATE_BUFFER,
                          fmt, 0, 0, (WCHAR *)&str, 0, &va_args);
-    if (len == 0 && GetLastError() != ERROR_NO_WORK_DONE)
+    if (len == 0 && GetLastError() != NO_ERROR)
     {
         WINE_FIXME("Could not format string: le=%u, fmt=%s\n", GetLastError(), wine_dbgstr_w(fmt));
         return;
@@ -376,6 +377,6 @@ int __cdecl wmain(int argc, WCHAR *argvW[])
 
 invalid:
     output_message(STRING_INVALID_SYNTAX);
-    output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
+    output_message(STRING_FUNC_HELP, _wcsupr(argvW[1]));
     return 1;
 }

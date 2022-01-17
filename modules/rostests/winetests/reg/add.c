@@ -863,6 +863,7 @@ static void test_reg_multi_sz(void)
     delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
+#if 0
 static void test_registry_view_win32(void)
 {
     HKEY hkey;
@@ -969,6 +970,7 @@ static void test_registry_view_wow64(void)
 
     verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
 }
+#endif
 
 START_TEST(add)
 {
@@ -998,7 +1000,10 @@ START_TEST(add)
         return;
     }
 
+#if 0
     test_registry_view_win32();
     test_registry_view_win64();
     test_registry_view_wow64();
+#endif
+
 }

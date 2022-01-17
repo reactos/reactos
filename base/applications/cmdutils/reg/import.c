@@ -1050,6 +1050,6 @@ error:
 
 invalid:
     output_message(STRING_INVALID_SYNTAX);
-    output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
+    output_message(STRING_FUNC_HELP, _wcsupr(argvW[1]));
     return 1;
 }

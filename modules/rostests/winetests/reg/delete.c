@@ -149,6 +149,7 @@ static void test_delete(void)
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 }
 
+#if 0
 static void create_test_key(REGSAM sam)
 {
     HKEY hkey, subkey;
@@ -394,6 +395,7 @@ static void test_registry_view_wow64(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
 }
+#endif
 
 START_TEST(delete)
 {
@@ -415,7 +417,10 @@ START_TEST(delete)
         return;
     }
 
+#if 0
     test_registry_view_win32();
     test_registry_view_win64();
     test_registry_view_wow64();
+#endif
+
 }

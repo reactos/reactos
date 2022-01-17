@@ -171,7 +171,7 @@ static int run_copy(struct key *src, struct key *dest, REGSAM sam, BOOL recurse,
             goto cleanup;
         }
 
-        swprintf(subkey_src.path, path_len, L"%s\\%s", src->path, name);
+        swprintf(subkey_src.path, L"%s\\%s", src->path, name);
 
         rc = run_copy(&subkey_src, &subkey_dest, sam, TRUE, force);
 
@@ -260,6 +260,6 @@ int reg_copy(int argc, WCHAR *argvW[])
 
 invalid:
     output_message(STRING_INVALID_SYNTAX);
-    output_message(STRING_FUNC_HELP, wcsupr(argvW[1]));
+    output_message(STRING_FUNC_HELP, _wcsupr(argvW[1]));
     return 1;
 }

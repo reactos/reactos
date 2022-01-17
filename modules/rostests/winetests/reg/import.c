@@ -3623,6 +3623,7 @@ static void test_import_win31(void)
     delete_key(HKEY_CLASSES_ROOT, KEY_BASE, 0);
 }
 
+#if 0
 static BOOL write_test_files(void)
 {
     const char *test1, *test2;
@@ -3848,6 +3849,7 @@ static void test_registry_view_wow64(void)
     delete_file("reg4.reg");
     delete_file("reg5.reg");
 }
+#endif
 
 START_TEST(import)
 {
@@ -3873,7 +3875,10 @@ START_TEST(import)
         return;
     }
 
+#if 0
     test_registry_view_win32();
     test_registry_view_win64();
     test_registry_view_wow64();
+#endif
+
 }

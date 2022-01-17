@@ -455,6 +455,7 @@ static void test_export(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
+#if 0
 static void create_test_key(REGSAM sam)
 {
     HKEY hkey, subkey;
@@ -589,6 +590,7 @@ static void test_registry_view_wow64(void)
 
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
 }
+#endif
 
 START_TEST(export)
 {
@@ -610,7 +612,10 @@ START_TEST(export)
         return;
     }
 
+#if 0
     test_registry_view_win32();
     test_registry_view_win64();
     test_registry_view_wow64();
+#endif
+
 }
