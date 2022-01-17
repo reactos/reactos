@@ -577,6 +577,44 @@ static void test_copy_key_class(void)
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 }
 
+static void test_copy_overwrite(void)
+{
+    HKEY hkey;
+    DWORD r, dword;
+
+    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_value(hkey, "Wine1", REG_SZ, "def", 4);
+    dword = 0x5;
+    add_value(hkey, "Wine2", REG_DWORD, &dword, sizeof(dword));
+    add_value(hkey, "Wine3", REG_BINARY, "\x11\x22\x33\x44", 4);
+    add_value(hkey, "Wine4", REG_MULTI_SZ, "Line1\0Line2\0Line3\0", 19);
+    close_key(hkey);
+
+    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_value(hkey, "Wine1", REG_SZ, "abc", 4);
+    verify_reg_nonexist(hkey, "Wine2");
+    add_value(hkey, "Wine3", REG_EXPAND_SZ, "%HOME%\\%PATH%", 14);
+    dword = 0x1;
+    add_value(hkey, "Wine4", REG_DWORD, &dword, sizeof(dword));
+    add_value(hkey, NULL, REG_SZ, "Constant value", 15);
+    close_key(hkey);
+
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    open_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
+    verify_reg(hkey, "Wine1", REG_SZ, "def", 4, 0);
+    dword = 0x5;
+    verify_reg(hkey, "Wine2", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine3", REG_BINARY, "\x11\x22\x33\x44", 4, 0);
+    verify_reg(hkey, "Wine4", REG_MULTI_SZ, "Line1\0Line2\0Line3\0", 19, 0);
+    verify_reg(hkey, NULL, REG_SZ, "Constant value", 15, 0);
+    close_key(hkey);
+
+    delete_key(HKEY_CURRENT_USER, COPY_SRC);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+}
+
 START_TEST(copy)
 {
     DWORD r;
@@ -597,4 +635,5 @@ START_TEST(copy)
     test_copy_slashes();
     test_copy_escaped_null_values();
     test_copy_key_class();
+    test_copy_overwrite();
 }
