@@ -413,6 +413,7 @@ IopGenericUnpackRequirement(
     if (IoDescriptor->u.Generic.Alignment == 0)
         *OutAlignment = 1;
 
+    /* Fixup memory requirements for devices which support only 24bit addresses. */
     if (IoDescriptor->Type == CmResourceTypeMemory &&
         IoDescriptor->Flags & CM_RESOURCE_MEMORY_24 &&
         IoDescriptor->u.Generic.MaximumAddress.QuadPart > 0xFFFFFF) // 16 Mb
