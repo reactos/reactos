@@ -199,14 +199,14 @@ MempAllocatePageTables(VOID)
     {
         NumPageTables = (TotalPagesInLookupTable / PTE_PER_PAGE);
         TotalSize = ((1 + 1 + (NumPageTables * 2)) * MM_PAGE_SIZE);
-        TRACE("MempAllocatePageTables: NumPageTables = %X (%d)\n", NumPageTables, NumPageTables);
     }
     else
     {
-       NumPageTables = (TotalPagesInLookupTable / PAE_PTE_PER_PAGE);
-       TotalSize = (sizeof(PAE_TABLES) + ((NumPageTables * 2) * MM_PAGE_SIZE));
-        TRACE("MempAllocatePageTables: NumPageTables = %X (%d)\n", NumPageTables, NumPageTables);
+        NumPageTables = (TotalPagesInLookupTable / PAE_PTE_PER_PAGE);
+        TotalSize = (sizeof(PAE_TABLES) + ((NumPageTables * 2) * MM_PAGE_SIZE));
     }
+
+    TRACE("MempAllocatePageTables: NumPageTables = %X (%d)\n", NumPageTables, NumPageTables);
 
     /* Allocate memory for PD, HAL PT, Kernel PTs with MemoryData type */
     Buffer = MmAllocateMemoryWithType(TotalSize, LoaderMemoryData);
@@ -318,7 +318,7 @@ MempAllocatePageTables(VOID)
 
 static
 VOID
-MempAllocatePde(ULONG Entry, PHARDWARE_PDE_X86 * PhysicalPT, PHARDWARE_PDE_X86 * KernelPT)
+MempAllocatePde(ULONG Entry, PHARDWARE_PDE_X86* PhysicalPT, PHARDWARE_PDE_X86* KernelPT)
 {
     //TRACE("Creating PDE Entry %X\n", Entry);
 
@@ -346,7 +346,7 @@ MempAllocatePde(ULONG Entry, PHARDWARE_PDE_X86 * PhysicalPT, PHARDWARE_PDE_X86 *
 
 static
 VOID
-MempAllocatePaePde(ULONG PdeIdx, PHARDWARE_PDE_X86_PAE * PhysicalPde, PHARDWARE_PDE_X86_PAE * KernelPde)
+MempAllocatePaePde(ULONG PdeIdx, PHARDWARE_PDE_X86_PAE* PhysicalPde, PHARDWARE_PDE_X86_PAE* KernelPde)
 {
     PHARDWARE_PDE_X86_PAE Pde;
     ULONG PdIdx;
@@ -361,7 +361,6 @@ MempAllocatePaePde(ULONG PdeIdx, PHARDWARE_PDE_X86_PAE * PhysicalPde, PHARDWARE_
     Pde->PageFrameNumber = (ULONG)*PhysicalPde >> MM_PAGE_SHIFT;
     Pde->Valid = 1;
     Pde->Write = 1;
-
 
     if ((PdeIdx + KERNEL_PDE_IDX) > (MAX_PAE_PDE_COUNT - 1))
     {
