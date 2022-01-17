@@ -127,10 +127,7 @@ static void test_copy_empty_key(void)
     DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
-
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, NULL);
 
@@ -192,10 +189,7 @@ static void test_copy_simple_data(void)
     DWORD r, dword;
 
     delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
-
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
 
@@ -262,10 +256,7 @@ static void test_copy_complex_data(void)
     DWORD r, dword;
 
     delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
-
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
 
@@ -331,10 +322,7 @@ static void test_copy_key_order(void)
     DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
-
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
     add_key(hkey, "Subkey2", 0, NULL);
@@ -356,10 +344,7 @@ static void test_copy_value_order(void)
     DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
-
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
     add_value(hkey, "Value 2", REG_SZ, "I was added first!", 19);
@@ -381,10 +366,7 @@ static void test_copy_hex_data(void)
     DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
-
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Try copying empty hex values */
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
@@ -450,10 +432,7 @@ static void test_copy_embedded_null_values(void)
     DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
-
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" COPY_SRC "]\n"
@@ -483,10 +462,7 @@ static void test_copy_slashes(void)
     DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
-
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
     add_key(hkey, "https://winehq.org", 0, NULL);
@@ -509,10 +485,7 @@ static void test_copy_escaped_null_values(void)
     DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
-
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
     add_value(hkey, "Wine5a", REG_SZ, "\\0", 3);

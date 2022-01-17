@@ -24,7 +24,6 @@ static void test_command_syntax(void)
     DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     run_reg_exe("reg delete", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -85,7 +84,6 @@ static void test_delete(void)
     const DWORD deadbeef = 0xdeadbeef;
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Create a test key */
     add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
@@ -184,7 +182,6 @@ static void test_registry_view_win32(void)
     if (!is_win32) return;
 
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
-    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
 
     /* Test deletion from the 32-bit registry view (32-bit Windows) */
     create_test_key(KEY_WOW64_32KEY);
@@ -257,10 +254,7 @@ static void test_registry_view_win64(void)
     if (!is_win64) return;
 
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
-    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
-
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
-    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
 
     /* Test deletion from the 32-bit registry view (64-bit Windows) */
     create_test_key(KEY_WOW64_32KEY);
@@ -336,10 +330,7 @@ static void test_registry_view_wow64(void)
     if (!is_wow64) return;
 
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
-    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
-
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
-    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
 
     /* Test deletion from the 32-bit registry view (WOW64) */
     create_test_key(KEY_WOW64_32KEY);

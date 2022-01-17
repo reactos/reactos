@@ -204,7 +204,6 @@ static void test_query(void)
     BYTE buf[512];
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Key not present */
     run_reg_exe("reg query HKCU\\" KEY_BASE, &r);

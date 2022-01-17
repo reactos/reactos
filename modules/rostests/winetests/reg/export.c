@@ -177,7 +177,6 @@ static void test_export(void)
     BYTE hex[4], buffer[8];
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     run_reg_exe("reg export", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);

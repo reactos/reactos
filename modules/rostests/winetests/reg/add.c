@@ -226,7 +226,6 @@ static void test_command_syntax(void)
     DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     run_reg_exe("reg add", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
