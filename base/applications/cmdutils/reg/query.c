@@ -140,6 +140,7 @@ static void output_value(const WCHAR *value_name, DWORD type, BYTE *data, DWORD 
 }
 
 static unsigned int num_values_found = 0;
+static REGSAM sam = 0;
 
 static int query_value(HKEY hkey, WCHAR *value_name, WCHAR *path, BOOL recurse)
 {
@@ -203,7 +204,7 @@ static int query_value(HKEY hkey, WCHAR *value_name, WCHAR *path, BOOL recurse)
         if (rc == ERROR_SUCCESS)
         {
             subkey_path = build_subkey_path(path, path_len, subkey_name, subkey_len);
-            if (!RegOpenKeyExW(hkey, subkey_name, 0, KEY_READ, &subkey))
+            if (!RegOpenKeyExW(hkey, subkey_name, 0, KEY_READ|sam, &subkey))
             {
                 query_value(subkey, value_name, subkey_path, recurse);
                 RegCloseKey(subkey);
@@ -290,7 +291,7 @@ static int query_all(HKEY hkey, WCHAR *path, BOOL recurse, BOOL recursing)
             if (recurse)
             {
                 subkey_path = build_subkey_path(path, path_len, subkey_name, subkey_len);
-                if (!RegOpenKeyExW(hkey, subkey_name, 0, KEY_READ, &subkey))
+                if (!RegOpenKeyExW(hkey, subkey_name, 0, KEY_READ|sam, &subkey))
                 {
                     query_all(subkey, subkey_path, recurse, TRUE);
                     RegCloseKey(subkey);
@@ -308,12 +309,12 @@ static int query_all(HKEY hkey, WCHAR *path, BOOL recurse, BOOL recursing)
 }
 
 static int run_query(HKEY root, WCHAR *path, WCHAR *key_name, WCHAR *value_name,
-              BOOL value_empty, BOOL recurse)
+                     BOOL value_empty, BOOL recurse)
 {
     HKEY hkey;
     int ret;
 
-    if (RegOpenKeyExW(root, path, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(root, path, 0, KEY_READ|sam, &hkey))
     {
         output_message(STRING_KEY_NONEXIST);
         return 1;
@@ -360,8 +361,18 @@ int reg_query(int argc, WCHAR *argvW[])
             value_empty = TRUE;
             continue;
         }
-        else if (!lstrcmpiW(str, L"reg:32") || !lstrcmpiW(str, L"reg:64"))
+        else if (!lstrcmpiW(str, L"reg:32"))
+        {
+            if (sam & KEY_WOW64_32KEY) goto invalid;
+            sam |= KEY_WOW64_32KEY;
             continue;
+        }
+        else if (!lstrcmpiW(str, L"reg:64"))
+        {
+            if (sam & KEY_WOW64_64KEY) goto invalid;
+            sam |= KEY_WOW64_64KEY;
+            continue;
+        }
         else if (!str[0] || str[1])
             goto invalid;
 
@@ -381,6 +392,9 @@ int reg_query(int argc, WCHAR *argvW[])
     }
 
     if (value_name && value_empty)
+        goto invalid;
+
+    if (sam == (KEY_WOW64_32KEY|KEY_WOW64_64KEY))
         goto invalid;
 
     key_name = get_long_key(root, path);
