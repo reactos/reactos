@@ -71,7 +71,7 @@ void add_value_(const char *file, unsigned line, HKEY hkey, const char *name,
                 DWORD type, const void *data, size_t size);
 
 #define delete_value(k,n) delete_value_(__FILE__,__LINE__,k,n)
-void delete_value_(const char *file, unsigned line, const HKEY hkey, const char *name);
+void delete_value_(const char *file, unsigned line, HKEY hkey, const char *name);
 
 /* export.c */
 #define compare_export(f,e,todo) compare_export_(__FILE__,__LINE__,f,e,todo)

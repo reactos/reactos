@@ -205,7 +205,7 @@ void add_value_(const char *file, unsigned line, HKEY hkey, const char *name,
     lok(err == ERROR_SUCCESS, "RegSetValueExA failed: got error %d\n", err);
 }
 
-void delete_value_(const char *file, unsigned line, const HKEY hkey, const char *name)
+void delete_value_(const char *file, unsigned line, HKEY hkey, const char *name)
 {
     LONG err;
 
