@@ -860,7 +860,7 @@ static void test_import(void)
     open_key(hkey, "Subkey\"1", 0, &subkey);
     verify_reg(subkey, "Wine\\31", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE "\\Subkey\"1");
+    delete_key(HKEY_CURRENT_USER, KEY_BASE "\\Subkey\"1", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey/2]\n"
@@ -869,7 +869,7 @@ static void test_import(void)
     open_key(hkey, "Subkey/2", 0, &subkey);
     verify_reg(subkey, "123/\"4;'5", REG_SZ, "Random value name", 18, 0);
     close_key(subkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE "\\Subkey/2");
+    delete_key(HKEY_CURRENT_USER, KEY_BASE "\\Subkey/2", 0);
 
     /* Test key creation */
     test_import_str("REGEDIT4\n\n"
@@ -896,13 +896,13 @@ static void test_import(void)
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1c ]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_key(hkey, "Subkey1c ");
-    delete_key(hkey, "Subkey1c ");
+    delete_key(hkey, "Subkey1c ", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1d\t]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_key(hkey, "Subkey1d\t");
-    delete_key(hkey, "Subkey1d\t");
+    delete_key(hkey, "Subkey1d\t", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1e\\]\n"
@@ -913,7 +913,7 @@ static void test_import(void)
     open_key(hkey, "Subkey1e", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
-    delete_key(hkey, "Subkey1e");
+    delete_key(hkey, "Subkey1e", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1f\\\\]\n"
@@ -925,7 +925,7 @@ static void test_import(void)
     open_key(hkey, "Subkey1f\\\\", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
-    delete_key(hkey, "Subkey1f\\\\");
+    delete_key(hkey, "Subkey1f\\\\", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1g\\\\\\\\]\n"
@@ -938,7 +938,7 @@ static void test_import(void)
     open_key(hkey, "Subkey1g\\\\", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
-    delete_key(hkey, "Subkey1g\\\\");
+    delete_key(hkey, "Subkey1g\\\\", 0);
 
     /* Test key deletion. We start by creating some registry keys. */
     test_import_str("REGEDIT4\n\n"
@@ -1183,7 +1183,7 @@ static void test_import(void)
     verify_reg_nonexist(hkey, "Wine54b");
     verify_key(hkey, "Subkey2");
 
-    delete_key(hkey, "Subkey2");
+    delete_key(hkey, "Subkey2", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
@@ -2399,7 +2399,7 @@ static void test_unicode_import(void)
     open_key(hkey, "Subkey\"1", 0, &subkey);
     verify_reg(subkey, "Wine\\31", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE "\\Subkey\"1");
+    delete_key(HKEY_CURRENT_USER, KEY_BASE "\\Subkey\"1", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey/2]\n"
@@ -2408,7 +2408,7 @@ static void test_unicode_import(void)
     open_key(hkey, "Subkey/2", 0, &subkey);
     verify_reg(subkey, "123/\"4;'5", REG_SZ, "Random value name", 18, 0);
     close_key(subkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE "\\Subkey/2");
+    delete_key(HKEY_CURRENT_USER, KEY_BASE "\\Subkey/2", 0);
 
     /* Test key creation */
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
@@ -2435,13 +2435,13 @@ static void test_unicode_import(void)
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1c ]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_key(hkey, "Subkey1c ");
-    delete_key(hkey, "Subkey1c ");
+    delete_key(hkey, "Subkey1c ", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1d\t]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_key(hkey, "Subkey1d\t");
-    delete_key(hkey, "Subkey1d\t");
+    delete_key(hkey, "Subkey1d\t", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1e\\]\n"
@@ -2452,7 +2452,7 @@ static void test_unicode_import(void)
     open_key(hkey, "Subkey1e", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
-    delete_key(hkey, "Subkey1e");
+    delete_key(hkey, "Subkey1e", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1f\\\\]\n"
@@ -2464,7 +2464,7 @@ static void test_unicode_import(void)
     open_key(hkey, "Subkey1f\\\\", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
-    delete_key(hkey, "Subkey1f\\\\");
+    delete_key(hkey, "Subkey1f\\\\", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1g\\\\\\\\]\n"
@@ -2477,7 +2477,7 @@ static void test_unicode_import(void)
     open_key(hkey, "Subkey1g\\\\", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
-    delete_key(hkey, "Subkey1g\\\\");
+    delete_key(hkey, "Subkey1g\\\\", 0);
 
     /* Test key deletion. We start by creating some registry keys. */
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
@@ -2725,7 +2725,7 @@ static void test_unicode_import(void)
     verify_reg_nonexist(hkey, "Wine54b");
     verify_key(hkey, "Subkey2");
 
-    delete_key(hkey, "Subkey2");
+    delete_key(hkey, "Subkey2", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
@@ -3315,7 +3315,7 @@ static void test_import_with_whitespace(void)
 
     close_key(hkey);
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 static void test_unicode_import_with_whitespace(void)
@@ -3461,7 +3461,7 @@ static void test_unicode_import_with_whitespace(void)
 
     close_key(hkey);
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 static void test_import_win31(void)
@@ -3585,7 +3585,7 @@ static void test_import_win31(void)
 
     close_key(hkey);
 
-    delete_key(HKEY_CLASSES_ROOT, KEY_BASE);
+    delete_key(HKEY_CLASSES_ROOT, KEY_BASE, 0);
 }
 
 START_TEST(import)

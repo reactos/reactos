@@ -138,14 +138,21 @@ void add_key_(const char *file, unsigned line, const HKEY hkey, const char *path
         RegCloseKey(new_key);
 }
 
-void delete_key_(const char *file, unsigned line, const HKEY hkey, const char *path)
+void delete_key_(const char *file, unsigned line, HKEY root, const char *path, REGSAM sam)
 {
-    if (path && *path)
-    {
-        LONG err;
+    LONG err;
 
-        err = RegDeleteKeyA(hkey, path);
+    if (!path) return;
+
+    if (!sam)
+    {
+        err = RegDeleteKeyA(root, path);
         lok(err == ERROR_SUCCESS, "RegDeleteKeyA failed: got error %d\n", err);
+    }
+    else
+    {
+        err = RegDeleteKeyExA(root, path, sam, 0);
+        lok(err == ERROR_SUCCESS, "RegDeleteKeyExA failed: got error %d\n", err);
     }
 }
 
@@ -345,7 +352,7 @@ static void test_add(void)
     verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
 
     close_key(hkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Specifying a value name doesn't initialize the Default value in a new key */
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v Test /t REG_SZ /d \"Just me here\" /f", &r);
@@ -357,7 +364,7 @@ static void test_add(void)
     verify_reg_nonexist(hkey, NULL);
 
     close_key(hkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Adding a registry key via WinAPI doesn't initialize the Default value... */
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
@@ -423,7 +430,7 @@ static void test_reg_none(void)
     verify_reg(hkey, "none1", REG_NONE, "\0", 2, 0);
 
     close_key(hkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 static void test_reg_sz(void)
@@ -501,7 +508,7 @@ static void test_reg_sz(void)
     verify_reg(hkey, "\\foo\\bar", REG_SZ, "", 1, 0);
 
     close_key(hkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 static void test_reg_expand_sz(void)
@@ -542,7 +549,7 @@ static void test_reg_expand_sz(void)
     verify_reg(hkey, "expand3", REG_EXPAND_SZ, "", 1, 0);
 
     close_key(hkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 static void test_reg_binary(void)
@@ -606,7 +613,7 @@ static void test_reg_binary(void)
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
     close_key(hkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 static void test_reg_dword(void)
@@ -709,7 +716,7 @@ static void test_reg_dword(void)
     verify_reg(hkey, "DWORD_LE", REG_DWORD_LITTLE_ENDIAN, &dword, sizeof(dword), 0);
 
     close_key(hkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 /* REG_DWORD_BIG_ENDIAN is broken in every version of Windows. It behaves
@@ -742,7 +749,7 @@ static void test_reg_dword_big_endian(void)
     verify_reg(hkey, "Test4", REG_DWORD_BIG_ENDIAN, &dword, sizeof(dword), 0);
 
     close_key(hkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 static void test_reg_multi_sz(void)
@@ -841,7 +848,7 @@ static void test_reg_multi_sz(void)
     verify_reg(hkey, "multi21", REG_MULTI_SZ, "two\\0\\0strings\0", 16, 0);
 
     close_key(hkey);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 START_TEST(add)

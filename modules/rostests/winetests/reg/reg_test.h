@@ -62,8 +62,8 @@ void verify_key_nonexist_(const char *file, unsigned line, HKEY key_base, const 
 #define add_key(k,p,s) add_key_(__FILE__,__LINE__,k,p,s)
 void add_key_(const char *file, unsigned line, const HKEY hkey, const char *path, HKEY *subkey);
 
-#define delete_key(k,p) delete_key_(__FILE__,__LINE__,k,p)
-void delete_key_(const char *file, unsigned line, const HKEY hkey, const char *path);
+#define delete_key(r,p,s) delete_key_(__FILE__,__LINE__,r,p,s)
+void delete_key_(const char *file, unsigned line, HKEY root, const char *path, REGSAM sam);
 
 LONG delete_tree(const HKEY key, const char *subkey);
 

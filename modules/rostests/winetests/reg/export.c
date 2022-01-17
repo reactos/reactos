@@ -297,8 +297,8 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", key_order_test, 0), "compare_export() failed\n");
-    delete_key(hkey, "Subkey1");
-    delete_key(hkey, "Subkey2");
+    delete_key(hkey, "Subkey1", 0);
+    delete_key(hkey, "Subkey2", 0);
 
     /* Test the export order of registry values. Windows exports registry values
      * in order of creation; Wine uses alphabetical order.
@@ -310,7 +310,7 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", value_order_test, TODO_REG_COMPARE), "compare_export() failed\n");
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Test registry export with empty hex data */
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
@@ -327,7 +327,7 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_hex_test, 0), "compare_export() failed\n");
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Test registry export after importing alternative registry data types */
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
@@ -345,7 +345,7 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_hex_test2, 0), "compare_export() failed\n");
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
@@ -364,7 +364,7 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", hex_types_test, 0), "compare_export() failed\n");
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Test registry export with embedded null characters */
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
@@ -401,7 +401,7 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", embedded_null_test, 0), "compare_export() failed\n");
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Test registry export with forward and back slashes */
     add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);

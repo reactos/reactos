@@ -143,7 +143,7 @@ static void test_copy_empty_key(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_key_test, 0), "compare_export() failed\n");
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
 
     run_reg_exe("reg copy HKCU\\" COPY_SRC "\\ HKCU\\" KEY_BASE " /f", &r);
@@ -154,7 +154,7 @@ static void test_copy_empty_key(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_key_test, 0), "compare_export() failed\n");
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
 
     run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE "\\ /f", &r);
@@ -165,7 +165,7 @@ static void test_copy_empty_key(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_key_test, 0), "compare_export() failed\n");
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
 
     run_reg_exe("reg copy HKCU\\" COPY_SRC "\\ HKCU\\" KEY_BASE "\\ /f", &r);
@@ -213,7 +213,7 @@ static void test_copy_simple_data(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", simple_data_test, 0), "compare_export() failed\n");
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
 
     run_reg_exe("reg copy HKCU\\" COPY_SRC "\\ HKCU\\" KEY_BASE " /f", &r);
@@ -224,7 +224,7 @@ static void test_copy_simple_data(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", simple_data_test, 0), "compare_export() failed\n");
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
 
     run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE "\\ /f", &r);
@@ -235,7 +235,7 @@ static void test_copy_simple_data(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", simple_data_test, 0), "compare_export() failed\n");
 
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
 
     run_reg_exe("reg copy HKCU\\" COPY_SRC "\\ HKCU\\" KEY_BASE "\\ /f", &r);
@@ -406,8 +406,8 @@ static void test_copy_hex_data(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_hex_test, 0), "compare_export() failed\n");
 
-    delete_key(HKEY_CURRENT_USER, COPY_SRC);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, COPY_SRC, 0);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Try copying after importing alternative registry data types */
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
@@ -425,8 +425,8 @@ static void test_copy_hex_data(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", empty_hex_test2, 0), "compare_export() failed\n");
 
-    delete_key(HKEY_CURRENT_USER, COPY_SRC);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, COPY_SRC, 0);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Try copying more complex hex data */
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
@@ -531,8 +531,8 @@ static void test_copy_escaped_null_values(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", escaped_null_test, 0), "compare_export() failed\n");
 
-    delete_key(HKEY_CURRENT_USER, COPY_SRC);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, COPY_SRC, 0);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 static void test_copy_key_class(void)
@@ -573,8 +573,8 @@ static void test_copy_key_class(void)
 
     RegCloseKey(hkey);
 
-    delete_key(HKEY_CURRENT_USER, COPY_SRC);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, COPY_SRC, 0);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 static void test_copy_overwrite(void)
@@ -611,8 +611,8 @@ static void test_copy_overwrite(void)
     verify_reg(hkey, NULL, REG_SZ, "Constant value", 15, 0);
     close_key(hkey);
 
-    delete_key(HKEY_CURRENT_USER, COPY_SRC);
-    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+    delete_key(HKEY_CURRENT_USER, COPY_SRC, 0);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 START_TEST(copy)
