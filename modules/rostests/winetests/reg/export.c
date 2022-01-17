@@ -50,7 +50,7 @@ BOOL compare_export_(const char *file, unsigned line, const char *filename,
     todo_wine_if (todo & TODO_REG_COMPARE)
         lok(!lstrcmpW(fbuf, wstr), "export data does not match expected data\n");
 
-    ret = delete_file(filename);
+    ret = delete_file_(file, line, filename);
 
 exit:
     HeapFree(GetProcessHeap(), 0, fbuf);
