@@ -322,7 +322,7 @@ static void test_copy_complex_data(void)
 
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    ok(compare_export("file.reg", complex_data_test, TODO_REG_COMPARE), "compare_export() failed\n");
+    ok(compare_export("file.reg", complex_data_test, 0), "compare_export() failed\n");
 }
 
 static void test_copy_key_order(void)
@@ -347,7 +347,7 @@ static void test_copy_key_order(void)
 
     run_reg_exe("reg export HKCU\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    ok(compare_export("file.reg", key_order_test, TODO_REG_COMPARE), "compare_export() failed\n");
+    ok(compare_export("file.reg", key_order_test, 0), "compare_export() failed\n");
 }
 
 static void test_copy_value_order(void)

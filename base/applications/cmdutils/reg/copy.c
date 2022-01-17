@@ -90,6 +90,25 @@ static int run_copy(struct key *src, struct key *dest, BOOL recurse, BOOL force)
         }
     }
 
+    for (i = 0; recurse; i++)
+    {
+        struct key subkey_src, subkey_dest;
+
+        name_len = max_name_len;
+
+        rc = RegEnumKeyExW(src->hkey, i, name, &name_len, NULL, NULL, NULL, NULL);
+        if (rc) break;
+
+        subkey_src.root = src->hkey;
+        subkey_src.subkey = name;
+
+        subkey_dest.root = dest->hkey;
+        subkey_dest.subkey = name;
+
+        rc = run_copy(&subkey_src, &subkey_dest, TRUE, force);
+        if (rc) goto cleanup;
+    }
+
 cleanup:
     free(name);
     free(data);
