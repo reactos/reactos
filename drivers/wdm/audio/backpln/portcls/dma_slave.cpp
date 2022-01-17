@@ -24,16 +24,29 @@ public:
         POOL_TYPE PoolType,
         ULONG Tag)
     {
-        PVOID P = ExAllocatePoolWithTag(PoolType, Size, Tag);
-        if (P)
-            RtlZeroMemory(P, Size);
-        return P;
+        return ExAllocatePoolWithTag(PoolType, Size, Tag);
     }
 
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
     IMP_IDmaChannelInit;
-    CDmaChannelInit(IUnknown * OuterUnknown){}
+    CDmaChannelInit(IUnknown * OuterUnknown) :
+        m_pDeviceObject(nullptr),
+        m_pAdapter(nullptr),
+        m_DmaStarted(FALSE),
+        m_MapSize(0),
+        m_MapRegisterBase(nullptr),
+        m_LastTransferCount(0),
+        m_MaximumBufferSize(0),
+        m_MaxMapRegisters(0),
+        m_AllocatedBufferSize(0),
+        m_BufferSize(0),
+        m_Address({0}),
+        m_Buffer(nullptr),
+        m_Mdl(nullptr),
+        m_WriteToDevice(FALSE)
+    {
+    }
     virtual ~CDmaChannelInit(){}
 
 protected:
