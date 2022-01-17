@@ -165,7 +165,7 @@ static void test_query(void)
     BYTE buf[512];
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     run_reg_exe("reg query", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);

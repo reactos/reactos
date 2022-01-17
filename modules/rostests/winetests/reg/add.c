@@ -109,14 +109,13 @@ void verify_key_(const char *file, unsigned line, HKEY root, const char *path, R
         RegCloseKey(hkey);
 }
 
-void verify_key_nonexist_(const char *file, unsigned line, HKEY key_base, const char *subkey)
+void verify_key_nonexist_(const char *file, unsigned line, HKEY root, const char *path, REGSAM sam)
 {
     HKEY hkey;
     LONG err;
 
-    err = RegOpenKeyExA(key_base, subkey, 0, KEY_READ, &hkey);
-    lok(err == ERROR_FILE_NOT_FOUND, "registry key '%s' shouldn't exist; got %d, expected 2\n",
-        subkey, err);
+    err = RegOpenKeyExA(root, path, 0, KEY_READ|sam, &hkey);
+    lok(err == ERROR_FILE_NOT_FOUND, "registry key '%s' shouldn't exist; got %d, expected 2\n", path, err);
 
     if (hkey)
         RegCloseKey(hkey);
@@ -221,7 +220,7 @@ static void test_command_syntax(void)
     DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
-    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     run_reg_exe("reg add", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -287,11 +286,11 @@ static void test_key_formats(void)
 
     run_reg_exe("reg add \\HKCU\\" KEY_BASE "\\keytest0 /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
-    verify_key_nonexist(hkey, "keytest0");
+    verify_key_nonexist(hkey, "keytest0", 0);
 
     run_reg_exe("reg add \\\\HKCU\\" KEY_BASE "\\keytest1 /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
-    verify_key_nonexist(hkey, "keytest1");
+    verify_key_nonexist(hkey, "keytest1", 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE "\\keytest2\\\\ /f", &r);
     ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */),
