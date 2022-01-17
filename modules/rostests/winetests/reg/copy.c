@@ -535,6 +535,48 @@ static void test_copy_escaped_null_values(void)
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 }
 
+static void test_copy_key_class(void)
+{
+    HKEY hkey;
+    LONG rc;
+    char class[] = "class";
+    char buf[16];
+    DWORD buf_size, r;
+
+    rc = RegCreateKeyExA(HKEY_CURRENT_USER, COPY_SRC, 0, class, REG_OPTION_NON_VOLATILE,
+                         KEY_READ|KEY_WRITE, NULL, &hkey, NULL);
+    ok(rc == ERROR_SUCCESS, "RegCreateKeyExA failed: got %d, expected 0\n", rc);
+
+    add_value(hkey, "String", REG_SZ, "Data", 5);
+
+    buf_size = sizeof(buf);
+
+    rc = RegQueryInfoKeyA(hkey, buf, &buf_size, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(rc == ERROR_SUCCESS, "RegQueryInfoKeyA failed: got %d, expected 0\n", rc);
+    ok(!strcmp(buf, "class"), "Incorrect key class set; got '%s', expected '%s'\n", buf, class);
+
+    RegCloseKey(hkey);
+
+    run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /f", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    open_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
+    verify_reg(hkey, "String", REG_SZ, "Data", 5, 0);
+
+    memset(buf, 0, sizeof(buf));
+    buf_size = sizeof(buf);
+
+    rc = RegQueryInfoKeyA(hkey, buf, &buf_size, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(rc == ERROR_SUCCESS, "RegQueryInfoKeyA failed: got %d, expected 0\n", rc);
+    ok(strlen(buf) == 0, "Key class should not exist\n");
+
+    RegCloseKey(hkey);
+
+    delete_key(HKEY_CURRENT_USER, COPY_SRC);
+    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+}
+
 START_TEST(copy)
 {
     DWORD r;
@@ -554,4 +596,5 @@ START_TEST(copy)
     test_copy_embedded_null_values();
     test_copy_slashes();
     test_copy_escaped_null_values();
+    test_copy_key_class();
 }
