@@ -90,6 +90,8 @@ extern const char *embedded_null_test;
 extern const char *escaped_null_test;
 
 /* import.c */
+BOOL is_elevated_process(void);
+
 #define test_import_str(c,r) import_reg(__FILE__,__LINE__,c,FALSE,r)
 #define test_import_wstr(c,r) import_reg(__FILE__,__LINE__,c,TRUE,r)
 BOOL import_reg(const char *file, unsigned line, const char *contents, BOOL unicode, DWORD *rc);

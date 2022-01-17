@@ -274,6 +274,16 @@ static void test_command_syntax(void)
     /* Test empty type */
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v emptyType /t \"\" /d WineTest /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    /* Test registry view */
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v abc /d 123 /f /reg:32 /reg:32", &r);
+    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v abc /d 123 /f /reg:32 /reg:64", &r);
+    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v abc /d 123 /f /reg:64 /reg:64", &r);
+    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 }
 
 static void test_key_formats(void)
@@ -849,6 +859,117 @@ static void test_reg_multi_sz(void)
     delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
+static void test_registry_view_win32(void)
+{
+    HKEY hkey;
+    DWORD r;
+    BOOL is_wow64, is_win32;
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+    is_win32 = !is_wow64 && (sizeof(void *) == sizeof(int));
+
+    if (!is_win32) return;
+
+    /* Try adding to the 32-bit registry view (32-bit Windows) */
+    run_reg_exe("reg add HKLM\\" KEY_BASE " /v Wine32 /d Test /f /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY, &hkey);
+    verify_reg(hkey, "Wine32", REG_SZ, "Test", 5, 0);
+    close_key(hkey);
+
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
+    verify_reg(hkey, "Wine32", REG_SZ, "Test", 5, 0);
+    close_key(hkey);
+
+    delete_key(HKEY_LOCAL_MACHINE, KEY_BASE, 0);
+
+    /* Try adding to the 64-bit registry view, which doesn't exist on 32-bit Windows */
+    run_reg_exe("reg add HKLM\\" KEY_BASE " /v Wine64 /d Test /f /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
+    verify_reg(hkey, "Wine64", REG_SZ, "Test", 5, 0);
+    close_key(hkey);
+
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY, &hkey);
+    verify_reg(hkey, "Wine64", REG_SZ, "Test", 5, 0);
+    close_key(hkey);
+
+    delete_key(HKEY_LOCAL_MACHINE, KEY_BASE, 0);
+}
+
+static void test_registry_view_win64(void)
+{
+    HKEY hkey;
+    DWORD r;
+    BOOL is_wow64, is_win64;
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+    is_win64 = !is_wow64 && (sizeof(void *) > sizeof(int));
+
+    if (!is_win64) return;
+
+    /* Try adding to the 32-bit registry view (64-bit Windows) */
+    run_reg_exe("reg add HKLM\\" KEY_BASE " /v Wine32 /d Test /f /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    todo_wine open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY, &hkey);
+    todo_wine verify_reg(hkey, "Wine32", REG_SZ, "Test", 5, 0);
+    todo_wine close_key(hkey);
+    todo_wine delete_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    todo_wine verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    /* Try adding to the 64-bit registry view (64-bit Windows) */
+    run_reg_exe("reg add HKLM\\" KEY_BASE " /v Wine64 /d Test /f /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
+    verify_reg(hkey, "Wine64", REG_SZ, "Test", 5, 0);
+    close_key(hkey);
+    delete_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+}
+
+static void test_registry_view_wow64(void)
+{
+    HKEY hkey;
+    DWORD r;
+    BOOL is_wow64;
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+
+    if (!is_wow64) return;
+
+    /* Try adding to the 32-bit registry view (WOW64) */
+    run_reg_exe("reg add HKLM\\" KEY_BASE " /v Wine32 /d Test /f /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY, &hkey);
+    verify_reg(hkey, "Wine32", REG_SZ, "Test", 5, 0);
+    close_key(hkey);
+    delete_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    /* Try adding to the 64-bit registry view (WOW64) */
+    run_reg_exe("reg add HKLM\\" KEY_BASE " /v Wine64 /d Test /f /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    todo_wine open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
+    todo_wine verify_reg(hkey, "Wine64", REG_SZ, "Test", 5, 0);
+    todo_wine close_key(hkey);
+
+    todo_wine open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
+    todo_wine verify_reg(hkey, "Wine64", REG_SZ, "Test", 5, 0);
+    todo_wine close_key(hkey);
+    todo_wine delete_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    todo_wine verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+}
+
 START_TEST(add)
 {
     DWORD r;
@@ -868,4 +989,16 @@ START_TEST(add)
     test_reg_dword();
     test_reg_dword_big_endian();
     test_reg_multi_sz();
+
+    /* Check if reg.exe is running with elevated privileges */
+    if (!is_elevated_process())
+    {
+        win_skip("reg.exe is not running with elevated privileges; "
+                 "skipping registry view tests\n");
+        return;
+    }
+
+    test_registry_view_win32();
+    test_registry_view_win64();
+    test_registry_view_wow64();
 }

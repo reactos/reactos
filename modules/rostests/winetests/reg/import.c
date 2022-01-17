@@ -18,6 +18,29 @@
 
 #include "reg_test.h"
 
+BOOL is_elevated_process(void)
+{
+    LONG err;
+    HKEY hkey;
+
+    err = RegDeleteKeyA(HKEY_CLASSES_ROOT, KEY_BASE);
+
+    if (err == ERROR_ACCESS_DENIED)
+        return FALSE;
+
+    if (err == ERROR_FILE_NOT_FOUND)
+    {
+        if (RegCreateKeyExA(HKEY_CLASSES_ROOT, KEY_BASE, 0, NULL, REG_OPTION_NON_VOLATILE,
+                            KEY_READ, NULL, &hkey, NULL))
+            return FALSE;
+
+        RegCloseKey(hkey);
+        RegDeleteKeyA(HKEY_CLASSES_ROOT, KEY_BASE);
+    }
+
+    return TRUE;
+}
+
 static BOOL write_file(const void *str, DWORD size)
 {
     HANDLE file;
@@ -3466,29 +3489,15 @@ static void test_unicode_import_with_whitespace(void)
 
 static void test_import_win31(void)
 {
-    LONG err;
     HKEY hkey;
     DWORD r;
 
     /* Check if reg.exe is running with elevated privileges */
-    err = RegDeleteKeyA(HKEY_CLASSES_ROOT, KEY_BASE);
-    if (err == ERROR_ACCESS_DENIED)
+    if (!is_elevated_process())
     {
         win_skip("reg.exe is not running with elevated privileges; "
                  "skipping Windows 3.1 import tests\n");
         return;
-    }
-    if (err == ERROR_FILE_NOT_FOUND)
-    {
-        if (RegCreateKeyExA(HKEY_CLASSES_ROOT, KEY_BASE, 0, NULL, REG_OPTION_NON_VOLATILE,
-                          KEY_READ, NULL, &hkey, NULL))
-        {
-            win_skip("reg.exe is not running with elevated privileges; "
-                     "skipping Windows 3.1 import tests\n");
-            return;
-        }
-        RegCloseKey(hkey);
-        RegDeleteKeyA(HKEY_CLASSES_ROOT, KEY_BASE);
     }
 
     /* Test simple value */
