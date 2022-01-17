@@ -284,19 +284,19 @@ static void test_registry_view_win64(void)
     verify_key(hkey, "Subkey", KEY_WOW64_32KEY);
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE "\\Subkey /f /reg:32", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_key_nonexist(hkey, "Subkey", KEY_WOW64_32KEY);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_key_nonexist(hkey, "Subkey", KEY_WOW64_32KEY);
 
     close_key(hkey);
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE " /f /reg:32", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
 
     /* Test deletion from the 64-bit registry view (64-bit Windows) */
     create_test_key(KEY_WOW64_64KEY);
 
-    todo_wine verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
 
     open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
 
@@ -394,14 +394,14 @@ static void test_registry_view_wow64(void)
     verify_key(hkey, "Subkey", KEY_WOW64_64KEY);
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE "\\Subkey /f /reg:64", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_key_nonexist(hkey, "Subkey", KEY_WOW64_64KEY);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_key_nonexist(hkey, "Subkey", KEY_WOW64_64KEY);
 
     close_key(hkey);
 
     run_reg_exe("reg delete HKLM\\" KEY_BASE " /f /reg:64", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
 }
 
 START_TEST(delete)

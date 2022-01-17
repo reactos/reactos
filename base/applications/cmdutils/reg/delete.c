@@ -59,23 +59,27 @@ static int run_delete(HKEY root, WCHAR *path, REGSAM sam, WCHAR *key_name, WCHAR
         }
     }
 
-    /* Delete registry key if no /v* option is given */
-    if (!value_name && !value_empty && !value_all)
-    {
-        if ((rc = RegDeleteTreeW(root, path)))
-        {
-            output_error(rc);
-            return 1;
-        }
-
-        output_message(STRING_SUCCESS);
-        return 0;
-    }
-
     if ((rc = RegOpenKeyExW(root, path, 0, KEY_READ|KEY_SET_VALUE|sam, &hkey)))
     {
         output_error(rc);
         return 1;
+    }
+
+    /* Delete registry key if no /v* option is given */
+    if (!value_name && !value_empty && !value_all)
+    {
+        if ((rc = RegDeleteTreeW(hkey, NULL)))
+        {
+            RegCloseKey(hkey);
+            output_error(rc);
+            return 1;
+        }
+
+        RegDeleteKeyW(hkey, L"");
+        RegCloseKey(hkey);
+
+        output_message(STRING_SUCCESS);
+        return 0;
     }
 
     op_delete_key = FALSE;
