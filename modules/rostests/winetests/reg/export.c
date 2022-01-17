@@ -168,12 +168,9 @@ const char *escaped_null_test =
 
 /* Unit tests */
 
-static void test_export(void)
+static void test_command_syntax(void)
 {
-    LONG err;
-    DWORD r, dword, type, size;
-    HKEY hkey, subkey;
-    BYTE hex[4], buffer[8];
+    DWORD r;
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 
@@ -210,6 +207,7 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE, &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
+    /* This test fails because the registry key doesn't exist */
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
@@ -224,6 +222,16 @@ static void test_export(void)
 
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /reg:64 /reg:64", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+}
+
+static void test_export(void)
+{
+    LONG err;
+    DWORD r, dword, type, size;
+    HKEY hkey, subkey;
+    BYTE hex[4], buffer[8];
+
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Test registry export with an empty key */
     add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
@@ -591,6 +599,7 @@ START_TEST(export)
         return;
     }
 
+    test_command_syntax();
     test_export();
 
     /* Check if reg.exe is running with elevated privileges */
