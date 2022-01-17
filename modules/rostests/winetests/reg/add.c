@@ -964,10 +964,6 @@ static void test_registry_view_wow64(void)
     open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
     verify_reg(hkey, "Wine64", REG_SZ, "Test", 5, 0);
     close_key(hkey);
-
-    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
-    verify_reg(hkey, "Wine64", REG_SZ, "Test", 5, 0);
-    close_key(hkey);
     delete_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
 
     verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
