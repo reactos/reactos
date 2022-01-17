@@ -1,4 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
  * DATE OF TR:  29-11-2013
 */
 
@@ -8,17 +8,6 @@ IDC_REACTOS_SNDREC32 ACCELERATORS
 BEGIN
     "?", IDM_ABOUT, ASCII, ALT
     "/", IDM_ABOUT, ASCII, ALT
-END
-
-IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Informacione rreth ReactOS rregjistruesi i zerit"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
-BEGIN
-    ICON IDI_SNDREC32, -1, 19, 14, 21, 20
-    LTEXT "ReactOS Rregjistruesi i Zerit, versioni 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
-    LTEXT "T'drejtat (C) 2009", IDC_STATIC, 56, 25, 114, 8
-    DEFPUSHBUTTON "OK", IDOK, 139, 54, 50, 14, WS_GROUP
 END
 
 IDR_MENU1 MENU
