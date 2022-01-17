@@ -3728,20 +3728,20 @@ static void test_registry_view_win64(void)
     run_reg_exe("reg import reg5.reg /reg:32", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
 
-    todo_wine open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY, &hkey);
-    todo_wine verify_reg(hkey, "Wine1", REG_DWORD, &dword, sizeof(dword), 0);
-    todo_wine verify_reg(hkey, "Wine2", REG_SZ, "Test Value", 11, 0);
-    todo_wine verify_reg(hkey, "Wine3", REG_MULTI_SZ, "Line concatenation\0", 20, 0);
-    todo_wine verify_reg(hkey, "", REG_SZ, "Test", 5, 0);
-    todo_wine verify_reg(hkey, "Wine4", REG_EXPAND_SZ, "%PATH%", 7, 0);
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY, &hkey);
+    verify_reg(hkey, "Wine1", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine2", REG_SZ, "Test Value", 11, 0);
+    verify_reg(hkey, "Wine3", REG_MULTI_SZ, "Line concatenation\0", 20, 0);
+    verify_reg(hkey, "", REG_SZ, "Test", 5, 0);
+    verify_reg(hkey, "Wine4", REG_EXPAND_SZ, "%PATH%", 7, 0);
 
-    todo_wine open_key(hkey, "subkey", KEY_WOW64_32KEY, &subkey);
-    todo_wine verify_reg(subkey, "Empty string", REG_SZ, "", 1, 0);
-    todo_wine verify_reg(subkey, NULL, REG_SZ, "Default registry value", 23, 0);
-    todo_wine close_key(subkey);
-    todo_wine close_key(hkey);
+    open_key(hkey, "subkey", KEY_WOW64_32KEY, &subkey);
+    verify_reg(subkey, "Empty string", REG_SZ, "", 1, 0);
+    verify_reg(subkey, NULL, REG_SZ, "Default registry value", 23, 0);
+    close_key(subkey);
+    close_key(hkey);
 
-    todo_wine verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
 
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
 
@@ -3819,20 +3819,20 @@ static void test_registry_view_wow64(void)
     run_reg_exe("reg import reg5.reg /reg:64", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
 
-    todo_wine open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
-    todo_wine verify_reg(hkey, "Wine1", REG_DWORD, &dword, sizeof(dword), 0);
-    todo_wine verify_reg(hkey, "Wine2", REG_SZ, "Test Value", 11, 0);
-    todo_wine verify_reg(hkey, "Wine3", REG_MULTI_SZ, "Line concatenation\0", 20, 0);
-    todo_wine verify_reg(hkey, "", REG_SZ, "Test", 5, 0);
-    todo_wine verify_reg(hkey, "Wine4", REG_EXPAND_SZ, "%PATH%", 7, 0);
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
+    verify_reg(hkey, "Wine1", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine2", REG_SZ, "Test Value", 11, 0);
+    verify_reg(hkey, "Wine3", REG_MULTI_SZ, "Line concatenation\0", 20, 0);
+    verify_reg(hkey, "", REG_SZ, "Test", 5, 0);
+    verify_reg(hkey, "Wine4", REG_EXPAND_SZ, "%PATH%", 7, 0);
 
-    todo_wine open_key(hkey, "subkey", KEY_WOW64_64KEY, &subkey);
-    todo_wine verify_reg(subkey, "Empty string", REG_SZ, "", 1, 0);
-    todo_wine verify_reg(subkey, NULL, REG_SZ, "Default registry value", 23, 0);
-    todo_wine close_key(subkey);
-    todo_wine close_key(hkey);
+    open_key(hkey, "subkey", KEY_WOW64_64KEY, &subkey);
+    verify_reg(subkey, "Empty string", REG_SZ, "", 1, 0);
+    verify_reg(subkey, NULL, REG_SZ, "Default registry value", 23, 0);
+    close_key(subkey);
+    close_key(hkey);
 
-    todo_wine verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
 
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
 

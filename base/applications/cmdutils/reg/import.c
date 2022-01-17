@@ -83,6 +83,7 @@ struct parser
     WCHAR              two_wchars[2];  /* first two characters from the encoding check */
     BOOL               is_unicode;     /* parsing Unicode or ASCII data */
     short int          reg_version;    /* registry file version */
+    REGSAM             sam;            /* 32-bit or 64-bit registry view (if set) */
     HKEY               hkey;           /* current registry key */
     WCHAR             *key_name;       /* current key name */
     WCHAR             *value_name;     /* value name */
@@ -373,7 +374,7 @@ static LONG open_key(struct parser *parser, WCHAR *path)
         return ERROR_INVALID_PARAMETER;
 
     res = RegCreateKeyExW(key_class, key_path, 0, NULL, REG_OPTION_NON_VOLATILE,
-                          KEY_ALL_ACCESS, NULL, &parser->hkey, NULL);
+                          KEY_ALL_ACCESS|parser->sam, NULL, &parser->hkey, NULL);
 
     if (res == ERROR_SUCCESS)
     {
@@ -980,6 +981,8 @@ int reg_import(int argc, WCHAR *argvW[])
 
     if (argc > 4) goto invalid;
 
+    parser.sam = 0;
+
     if (argc == 4)
     {
         WCHAR *str = argvW[3];
@@ -989,7 +992,11 @@ int reg_import(int argc, WCHAR *argvW[])
 
         str++;
 
-        if (lstrcmpiW(str, L"reg:32") && lstrcmpiW(str, L"reg:64"))
+        if (!lstrcmpiW(str, L"reg:32"))
+            parser.sam = KEY_WOW64_32KEY;
+        else if (!lstrcmpiW(str, L"reg:64"))
+            parser.sam = KEY_WOW64_64KEY;
+        else
             goto invalid;
     }
 
