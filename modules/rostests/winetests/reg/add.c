@@ -194,9 +194,8 @@ LONG delete_tree_(const char *file, unsigned line, HKEY root, const char *path, 
     else
         ret = RegDeleteKeyExA(hkey, empty, sam, 0);
 
-    lok(!ret, "Failed to delete registry key, got error %d\n", ret);
-
 cleanup:
+    lok(!ret, "Failed to delete registry key, got error %d\n", ret);
     HeapFree(GetProcessHeap(), 0, subkey_name);
     RegCloseKey(hkey);
     return ret;
