@@ -158,7 +158,7 @@ static BOOL get_regdata(const WCHAR *data, DWORD reg_type, WCHAR separator,
     return TRUE;
 }
 
-static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
+static int run_add(HKEY root, WCHAR *path, REGSAM sam, WCHAR *value_name, BOOL value_empty,
                    WCHAR *type, WCHAR separator, WCHAR *data, BOOL force)
 {
     HKEY hkey;
@@ -167,7 +167,7 @@ static int run_add(HKEY root, WCHAR *path, WCHAR *value_name, BOOL value_empty,
     LONG rc;
 
     if (RegCreateKeyExW(root, path, 0, NULL, REG_OPTION_NON_VOLATILE,
-                        KEY_READ|KEY_WRITE, NULL, &hkey, &dispos))
+                        KEY_READ|KEY_WRITE|sam, NULL, &hkey, &dispos))
     {
         output_message(STRING_ACCESS_DENIED);
         return 1;
@@ -229,6 +229,7 @@ int reg_add(int argc, WCHAR *argvW[])
     HKEY root;
     WCHAR *path, *value_name = NULL, *type = NULL, *data = NULL, separator = '\0';
     BOOL value_empty = FALSE, force = FALSE;
+    REGSAM sam = 0;
     int i;
 
     if (!parse_registry_key(argvW[2], &root, &path))
@@ -249,8 +250,18 @@ int reg_add(int argc, WCHAR *argvW[])
             value_empty = TRUE;
             continue;
         }
-        else if (!lstrcmpiW(str, L"reg:32") || !lstrcmpiW(str, L"reg:64"))
+        else if (!lstrcmpiW(str, L"reg:32"))
+        {
+            if (sam & KEY_WOW64_32KEY) goto invalid;
+            sam |= KEY_WOW64_32KEY;
             continue;
+        }
+        else if (!lstrcmpiW(str, L"reg:64"))
+        {
+            if (sam & KEY_WOW64_64KEY) goto invalid;
+            sam |= KEY_WOW64_64KEY;
+            continue;
+        }
         else if (!str[0] || str[1])
             goto invalid;
 
@@ -286,7 +297,10 @@ int reg_add(int argc, WCHAR *argvW[])
     if (value_name && value_empty)
         goto invalid;
 
-    return run_add(root, path, value_name, value_empty, type, separator, data, force);
+    if (sam == (KEY_WOW64_32KEY|KEY_WOW64_64KEY))
+        goto invalid;
+
+    return run_add(root, path, sam, value_name, value_empty, type, separator, data, force);
 
 invalid:
     output_message(STRING_INVALID_SYNTAX);
