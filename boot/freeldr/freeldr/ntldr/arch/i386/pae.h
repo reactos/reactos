@@ -7,7 +7,7 @@
 
 #pragma once
 
-#define PAE_TABLES_START (ULONG_PTR)0xC0000000
+#define PAE_TABLES_START ((ULONG_PTR)0xC0000000)
 
 #define PAE_PTE_PER_PAGE (PAGE_SIZE / sizeof(HARDWARE_PTE_X86_PAE)) // 0x200 (512)
 #define PAE_PDE_PER_PAGE (PAGE_SIZE / sizeof(HARDWARE_PDE_X86_PAE)) // 0x200 (512)
@@ -45,7 +45,6 @@ typedef struct _PAE_TABLES
     PAGE_DIRECTORY_X86_PAE PaePd[PAE_PD_COUNT];  // PAE Page Directories
     HARDWARE_PTE_X86_PAE HalPt[HAL_PTE_COUNT];   // PAE Page Tables for HAL
     HARDWARE_PTE_X86_PAE PaePte[0];              // Start PAE Page Tables
-
 } PAE_TABLES, *PPAE_TABLES;
 C_ASSERT(sizeof(PAE_TABLES) == ((1 + PAE_PD_COUNT + 2) * PAGE_SIZE));
 

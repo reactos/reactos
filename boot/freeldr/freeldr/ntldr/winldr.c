@@ -1052,7 +1052,7 @@ LoadAndBootWindowsCommon(
 
     if (PaeModeOn)
     {
-        /*"No PAE support for kernel (no ntkrnlpa.exe) */
+        /* No PAE support for kernel (no ntkrnlpa.exe) */
         FIXME("Hello from PAE paged mode! KiSystemStartup %p, LoaderBlockVA %p\n", KiSystemStartup, LoaderBlockVA);
         BugCheck("No PAE support for kernel!\n");
     }
