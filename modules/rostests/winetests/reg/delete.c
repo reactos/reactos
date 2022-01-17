@@ -23,7 +23,7 @@ static void test_command_syntax(void)
 {
     DWORD r;
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     run_reg_exe("reg delete", &r);
@@ -74,7 +74,7 @@ static void test_delete(void)
     DWORD r;
     const DWORD deadbeef = 0xdeadbeef;
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Create a test key */

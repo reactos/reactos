@@ -176,7 +176,7 @@ static void test_export(void)
     HKEY hkey, subkey;
     BYTE hex[4], buffer[8];
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     run_reg_exe("reg export", &r);
@@ -287,7 +287,7 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", complex_data_test, 0), "compare_export() failed\n");
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Test the export order of registry keys */
     add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
@@ -413,7 +413,7 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", slashes_test, TODO_REG_COMPARE), "compare_export() failed\n");
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Test escaped null characters */
     add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
@@ -428,7 +428,7 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg /y", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", escaped_null_test, 0), "compare_export() failed\n");
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 START_TEST(export)

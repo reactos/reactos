@@ -126,10 +126,10 @@ static void test_copy_empty_key(void)
 {
     DWORD r;
 
-    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, NULL);
@@ -191,10 +191,10 @@ static void test_copy_simple_data(void)
     HKEY hkey;
     DWORD r, dword;
 
-    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
@@ -261,10 +261,10 @@ static void test_copy_complex_data(void)
     HKEY hkey, subkey;
     DWORD r, dword;
 
-    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
@@ -330,10 +330,10 @@ static void test_copy_key_order(void)
     HKEY hkey;
     DWORD r;
 
-    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
@@ -355,10 +355,10 @@ static void test_copy_value_order(void)
     HKEY hkey;
     DWORD r;
 
-    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
@@ -380,10 +380,10 @@ static void test_copy_hex_data(void)
     HKEY hkey;
     DWORD r;
 
-    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Try copying empty hex values */
@@ -449,10 +449,10 @@ static void test_copy_embedded_null_values(void)
 {
     DWORD r;
 
-    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
@@ -482,10 +482,10 @@ static void test_copy_slashes(void)
     HKEY hkey;
     DWORD r;
 
-    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
@@ -508,10 +508,10 @@ static void test_copy_escaped_null_values(void)
     HKEY hkey;
     DWORD r;
 
-    delete_tree(HKEY_CURRENT_USER, COPY_SRC);
+    delete_tree(HKEY_CURRENT_USER, COPY_SRC, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, COPY_SRC, 0);
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);

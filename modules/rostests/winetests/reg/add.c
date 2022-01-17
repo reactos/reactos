@@ -154,7 +154,7 @@ void delete_key_(const char *file, unsigned line, HKEY root, const char *path, R
     }
 }
 
-LONG delete_tree(const HKEY key, const char *subkey)
+LONG delete_tree(HKEY root, const char *path, REGSAM sam)
 {
     HKEY hkey;
     LONG ret;
@@ -162,7 +162,7 @@ LONG delete_tree(const HKEY key, const char *subkey)
     DWORD max_subkey_len, subkey_len;
     static const char empty[1];
 
-    ret = RegOpenKeyExA(key, subkey, 0, KEY_READ, &hkey);
+    ret = RegOpenKeyExA(root, path, 0, KEY_READ|sam, &hkey);
     if (ret) return ret;
 
     ret = RegQueryInfoKeyA(hkey, NULL, NULL, NULL, NULL, &max_subkey_len,
@@ -184,11 +184,14 @@ LONG delete_tree(const HKEY key, const char *subkey)
         ret = RegEnumKeyExA(hkey, 0, subkey_name, &subkey_len, NULL, NULL, NULL, NULL);
         if (ret == ERROR_NO_MORE_ITEMS) break;
         if (ret) goto cleanup;
-        ret = delete_tree(hkey, subkey_name);
+        ret = delete_tree(hkey, subkey_name, sam);
         if (ret) goto cleanup;
     }
 
-    ret = RegDeleteKeyA(hkey, empty);
+    if (!sam)
+        ret = RegDeleteKeyA(hkey, empty);
+    else
+        ret = RegDeleteKeyExA(hkey, empty, sam, 0);
 
 cleanup:
     HeapFree(GetProcessHeap(), 0, subkey_name);
@@ -219,7 +222,7 @@ static void test_command_syntax(void)
 {
     DWORD r;
 
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     run_reg_exe("reg add", &r);
@@ -322,7 +325,7 @@ static void test_key_formats(void)
     verify_key(hkey, "https://winehq.org", 0);
 
     close_key(hkey);
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Test validity of trailing backslash after system key */
     run_reg_exe("reg add HKCU\\ /v Value1 /t REG_SZ /d foo /f", &r);
@@ -409,7 +412,7 @@ static void test_add(void)
     verify_reg(hkey, NULL, REG_NONE, "T\0e\0s\0t\0\0", 10, 0);
 
     close_key(hkey);
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
 static void test_reg_none(void)
