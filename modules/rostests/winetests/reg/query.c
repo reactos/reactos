@@ -105,6 +105,35 @@ static void compare_query_(const char *file, unsigned line, const BYTE *buf,
 
 /* Unit tests */
 
+static void test_command_syntax(void)
+{
+    DWORD r;
+
+    run_reg_exe("reg query", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg query /?", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg query /h", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg query -H", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg query HKCU\\" KEY_BASE " /v", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Test1 /v Test2", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Test1 /ve", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg query HKCU\\" KEY_BASE " /s /s", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+}
+
 static void test_query(void)
 {
     const char *test1 = "\r\n"
@@ -167,18 +196,6 @@ static void test_query(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
-    run_reg_exe("reg query", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg query /?", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query /h", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
-    run_reg_exe("reg query -H", &r);
-    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-
     /* Key not present */
     run_reg_exe("reg query HKCU\\" KEY_BASE, &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -188,19 +205,7 @@ static void test_query(void)
     add_value(hkey, "Test1", REG_SZ, "Hello, World", 13);
     add_value(hkey, "Test2", REG_DWORD, &dword, sizeof(dword));
 
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
     run_reg_exe("reg query HKCU\\" KEY_BASE " /v Missing", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Test1 /v Test2", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /v Test1 /ve", &r);
-    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
-
-    run_reg_exe("reg query HKCU\\" KEY_BASE " /s /s", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
     read_reg_output("reg query HKCU\\" KEY_BASE, buf, sizeof(buf), &r);
@@ -300,5 +305,6 @@ START_TEST(query)
         return;
     }
 
+    test_command_syntax();
     test_query();
 }
