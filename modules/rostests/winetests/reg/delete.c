@@ -19,11 +19,9 @@
 
 #include "reg_test.h"
 
-static void test_delete(void)
+static void test_command_syntax(void)
 {
-    HKEY hkey;
     DWORD r;
-    const DWORD deadbeef = 0xdeadbeef;
 
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
@@ -68,6 +66,16 @@ static void test_delete(void)
 
     run_reg_exe("reg delete HKCU\\" KEY_BASE " /f /v", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+}
+
+static void test_delete(void)
+{
+    HKEY hkey;
+    DWORD r;
+    const DWORD deadbeef = 0xdeadbeef;
+
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE);
+    verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Create a test key */
     add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
@@ -142,5 +150,6 @@ START_TEST(delete)
         return;
     }
 
+    test_command_syntax();
     test_delete();
 }
