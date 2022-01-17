@@ -225,7 +225,7 @@ static void export_key_name(HANDLE hFile, WCHAR *name)
     free(buf);
 }
 
-static int export_registry_data(HANDLE hFile, HKEY hkey, WCHAR *path)
+static int export_registry_data(HANDLE hFile, HKEY hkey, WCHAR *path, REGSAM sam)
 {
     LONG rc;
     DWORD max_value_len = 256, value_len;
@@ -284,9 +284,9 @@ static int export_registry_data(HANDLE hFile, HKEY hkey, WCHAR *path)
         if (rc == ERROR_SUCCESS)
         {
             subkey_path = build_subkey_path(path, path_len, subkey_name, subkey_len);
-            if (!RegOpenKeyExW(hkey, subkey_name, 0, KEY_READ, &subkey))
+            if (!RegOpenKeyExW(hkey, subkey_name, 0, KEY_READ|sam, &subkey))
             {
-                export_registry_data(hFile, subkey, subkey_path);
+                export_registry_data(hFile, subkey, subkey_path, sam);
                 RegCloseKey(subkey);
             }
             free(subkey_path);
@@ -349,6 +349,7 @@ int reg_export(int argc, WCHAR *argvW[])
     HKEY root, hkey;
     WCHAR *path, *key_name;
     BOOL overwrite_file = FALSE;
+    REGSAM sam = 0;
     HANDLE hFile;
     int i, ret;
 
@@ -368,13 +369,26 @@ int reg_export(int argc, WCHAR *argvW[])
 
         if (is_char(*str, 'y') && !str[1])
             overwrite_file = TRUE;
-        else if (!lstrcmpiW(str, L"reg:32") || !lstrcmpiW(str, L"reg:64"))
+        else if (!lstrcmpiW(str, L"reg:32"))
+        {
+            if (sam & KEY_WOW64_32KEY) goto invalid;
+            sam |= KEY_WOW64_32KEY;
             continue;
+        }
+        else if (!lstrcmpiW(str, L"reg:64"))
+        {
+            if (sam & KEY_WOW64_64KEY) goto invalid;
+            sam |= KEY_WOW64_64KEY;
+            continue;
+        }
         else
             goto invalid;
     }
 
-    if (RegOpenKeyExW(root, path, 0, KEY_READ, &hkey))
+    if (sam == (KEY_WOW64_32KEY|KEY_WOW64_64KEY))
+        goto invalid;
+
+    if (RegOpenKeyExW(root, path, 0, KEY_READ|sam, &hkey))
     {
         output_message(STRING_KEY_NONEXIST);
         return 1;
@@ -384,7 +398,7 @@ int reg_export(int argc, WCHAR *argvW[])
 
     hFile = get_file_handle(argvW[3], overwrite_file);
     export_file_header(hFile);
-    ret = export_registry_data(hFile, hkey, key_name);
+    ret = export_registry_data(hFile, hkey, key_name, sam);
     export_newline(hFile);
     CloseHandle(hFile);
 
