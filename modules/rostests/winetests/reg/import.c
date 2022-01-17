@@ -130,6 +130,15 @@ static void test_command_syntax(void)
 
     run_reg_exe("reg import a.reg b.reg", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg import foo.reg /reg:32 /reg:32", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg import foo.reg /reg:32 /reg:64", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg import foo.reg /reg:64 /reg:64", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 }
 
 static void test_import(void)
