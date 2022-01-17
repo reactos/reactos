@@ -64,7 +64,8 @@ void add_key_(const char *file, unsigned line, const HKEY root, const char *path
 #define delete_key(r,p,s) delete_key_(__FILE__,__LINE__,r,p,s)
 void delete_key_(const char *file, unsigned line, HKEY root, const char *path, REGSAM sam);
 
-LONG delete_tree(HKEY root, const char *path, REGSAM sam);
+#define delete_tree(r,p,s) delete_tree_(__FILE__,__LINE__,r,p,s)
+LONG delete_tree_(const char *file, unsigned line, HKEY root, const char *path, REGSAM sam);
 
 #define add_value(k,n,t,d,s) add_value_(__FILE__,__LINE__,k,n,t,d,s)
 void add_value_(const char *file, unsigned line, HKEY hkey, const char *name,
