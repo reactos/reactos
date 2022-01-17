@@ -165,6 +165,15 @@ const char *escaped_null_test =
     "\"Wine5e\"=\"Value3\\\\0Value4\"\r\n"
     "\"Wine5f\"=\"\\\\0Value5\"\r\n\r\n";
 
+const char *registry_view_test =
+    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+    "[HKEY_LOCAL_MACHINE\\" KEY_BASE "]\r\n"
+    "\"DWORD\"=dword:00000100\r\n"
+    "\"String\"=\"Your text here...\"\r\n\r\n"
+    "[HKEY_LOCAL_MACHINE\\" KEY_BASE "\\Subkey1]\r\n"
+    "\"Binary\"=hex:11,22,33,44\r\n"
+    "\"Undefined hex\"=hex(100):25,50,41,54,48,25,00\r\n\r\n";
+
 
 /* Unit tests */
 
@@ -462,15 +471,6 @@ static void create_test_key(REGSAM sam)
 
     close_key(hkey);
 }
-
-static const char *registry_view_test =
-    "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
-    "[HKEY_LOCAL_MACHINE\\" KEY_BASE "]\r\n"
-    "\"DWORD\"=dword:00000100\r\n"
-    "\"String\"=\"Your text here...\"\r\n\r\n"
-    "[HKEY_LOCAL_MACHINE\\" KEY_BASE "\\Subkey1]\r\n"
-    "\"Binary\"=hex:11,22,33,44\r\n"
-    "\"Undefined hex\"=hex(100):25,50,41,54,48,25,00\r\n\r\n";
 
 static void test_registry_view_win32(void)
 {

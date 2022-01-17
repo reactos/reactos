@@ -588,6 +588,166 @@ static void test_copy_overwrite(void)
     delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 }
 
+static void create_test_key(REGSAM sam)
+{
+    HKEY hkey, subkey;
+    DWORD dword = 0x100;
+
+    add_key(HKEY_LOCAL_MACHINE, COPY_SRC, sam, &hkey);
+    add_value(hkey, "DWORD", REG_DWORD, &dword, sizeof(dword));
+    add_value(hkey, "String", REG_SZ, "Your text here...", 18);
+
+    add_key(hkey, "Subkey1", sam, &subkey);
+    add_value(subkey, "Binary", REG_BINARY, "\x11\x22\x33\x44", 4);
+    add_value(subkey, "Undefined hex", 0x100, "%PATH%", 7);
+    close_key(subkey);
+
+    close_key(hkey);
+}
+
+static void test_registry_view_win32(void)
+{
+    DWORD r;
+    BOOL is_wow64, is_win32;
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+    is_win32 = !is_wow64 && (sizeof(void *) == sizeof(int));
+
+    if (!is_win32) return;
+
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try copying registry data in the 32-bit registry view (32-bit Windows) */
+    create_test_key(KEY_WOW64_32KEY);
+
+    run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg export HKLM\\" KEY_BASE " file.reg /y /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
+
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try copying registry data in the 64-bit registry view, which doesn't exist on 32-bit Windows */
+    create_test_key(KEY_WOW64_64KEY);
+
+    run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg export HKLM\\" KEY_BASE " file.reg /y /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
+
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_64KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+}
+
+static void test_registry_view_win64(void)
+{
+    DWORD r;
+    BOOL is_wow64, is_win64;
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+    is_win64 = !is_wow64 && (sizeof(void *) > sizeof(int));
+
+    if (!is_win64) return;
+
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_64KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    /* Try copying registry data in the 32-bit registry view (64-bit Windows) */
+    create_test_key(KEY_WOW64_32KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_64KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:32", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg export HKLM\\" KEY_BASE " file.reg /y /reg:32", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
+
+    run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:64", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try copying registry data in the 64-bit registry view (64-bit Windows) */
+    create_test_key(KEY_WOW64_64KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_32KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg export HKLM\\" KEY_BASE " file.reg /y /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
+
+    run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:32", &r);
+    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_64KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+}
+
+static void test_registry_view_wow64(void)
+{
+    DWORD r;
+    BOOL is_wow64;
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+
+    if (!is_wow64) return;
+
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_64KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    /* Try copying registry data in the 32-bit registry view (WOW64) */
+    create_test_key(KEY_WOW64_32KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_64KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg export HKLM\\" KEY_BASE " file.reg /y /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
+
+    run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:64", &r);
+    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try copying registry data in the 64-bit registry view (WOW64) */
+    create_test_key(KEY_WOW64_64KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_32KEY);
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:64", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg export HKLM\\" KEY_BASE " file.reg /y /reg:64", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    todo_wine ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
+
+    run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:32", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_64KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+}
+
 START_TEST(copy)
 {
     DWORD r;
@@ -609,4 +769,16 @@ START_TEST(copy)
     test_copy_escaped_null_values();
     test_copy_key_class();
     test_copy_overwrite();
+
+    /* Check if reg.exe is running with elevated privileges */
+    if (!is_elevated_process())
+    {
+        win_skip("reg.exe is not running with elevated privileges; "
+                 "skipping registry view tests\n");
+        return;
+    }
+
+    test_registry_view_win32();
+    test_registry_view_win64();
+    test_registry_view_wow64();
 }

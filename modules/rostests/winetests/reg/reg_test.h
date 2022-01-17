@@ -89,6 +89,7 @@ extern const char *hex_types_test;
 extern const char *slashes_test;
 extern const char *embedded_null_test;
 extern const char *escaped_null_test;
+extern const char *registry_view_test;
 
 /* import.c */
 BOOL is_elevated_process(void);
