@@ -516,8 +516,8 @@ SvchostStopCallback (
 DWORD
 WINAPI
 SvcRegisterStopCallback (
-    _In_ PHANDLE phNewWaitObject,
-    _In_ LPCWSTR ServiceName,
+    _Out_ PHANDLE phNewWaitObject,
+    _In_ PCWSTR ServiceName,
     _In_ HANDLE hObject,
     _In_ PSVCHOST_STOP_CALLBACK pfnStopCallback,
     _In_ PVOID pContext,

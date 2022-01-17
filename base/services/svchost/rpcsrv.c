@@ -81,7 +81,7 @@ RpcpStopRpcServerEx (
 NTSTATUS
 NTAPI
 RpcpAddInterface (
-    _In_ LPCWSTR IfName,
+    _In_ PCWSTR IfName,
     _In_ RPC_IF_HANDLE IfSpec
     )
 {
@@ -129,7 +129,7 @@ RpcpAddInterface (
 NTSTATUS
 NTAPI
 RpcpStartRpcServer (
-    _In_ LPCWSTR IfName,
+    _In_ PCWSTR IfName,
     _In_ RPC_IF_HANDLE IfSpec
     )
 {
