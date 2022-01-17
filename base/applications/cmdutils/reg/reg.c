@@ -206,7 +206,7 @@ WCHAR *build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name, DWORD 
 
 WCHAR *get_long_key(HKEY root, WCHAR *path)
 {
-    int i, len, path_len;
+    int i, len;
     WCHAR *long_key;
 
     for (i = 0; i < ARRAY_SIZE(root_rels); i++)
@@ -224,15 +224,7 @@ WCHAR *get_long_key(HKEY root, WCHAR *path)
         return long_key;
     }
 
-    path_len = lstrlenW(path);
-
-    if (path[path_len - 1] == '\\')
-    {
-        path[path_len - 1] = 0;
-        path_len--;
-    }
-
-    len += path_len + 1; /* add one for the concatenating backslash */
+    len += lstrlenW(path) + 1; /* add one for the concatenating backslash */
     long_key = malloc((len + 1) * sizeof(WCHAR));
     swprintf(long_key, L"%s\\%s", root_rels[i].long_name, path);
     return long_key;
@@ -240,6 +232,8 @@ WCHAR *get_long_key(HKEY root, WCHAR *path)
 
 BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path)
 {
+    WCHAR *p;
+
     if (!sane_path(key))
         return FALSE;
 
@@ -262,6 +256,9 @@ BOOL parse_registry_key(const WCHAR *key, HKEY *root, WCHAR **path)
         output_message(STRING_INVALID_SYSTEM_KEY);
         return FALSE;
     }
+
+    p = *path + lstrlenW(*path) - 1;
+    if (*p == '\\') *p = 0;
 
     return TRUE;
 }

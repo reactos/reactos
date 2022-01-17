@@ -163,6 +163,12 @@ int reg_copy(int argc, WCHAR *argvW[])
         }
     }
 
+    if (src.root == dest.root && !lstrcmpiW(src.subkey, dest.subkey))
+    {
+        output_message(STRING_COPY_SRC_DEST_SAME);
+        return 1;
+    }
+
     return run_copy(&src, &dest, recurse, force);
 
 invalid:

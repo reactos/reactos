@@ -61,6 +61,9 @@
 #define STRING_OVERWRITE_VALUE        205
 #define STRING_INVALID_CMDLINE        206
 
+/* copy.c */
+#define STRING_COPY_SRC_DEST_SAME     250
+
 /* delete.c */
 #define STRING_DELETE_VALUE           300
 #define STRING_DELETE_VALUEALL        301
