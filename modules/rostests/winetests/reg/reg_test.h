@@ -93,6 +93,9 @@ extern const char *escaped_null_test;
 /* import.c */
 BOOL is_elevated_process(void);
 
+#define delete_file(f) delete_file_(__FILE__,__LINE__,f)
+BOOL delete_file_(const char *file, unsigned line, const char *fname);
+
 #define test_import_str(c,r) import_reg(__FILE__,__LINE__,c,FALSE,r)
 #define test_import_wstr(c,r) import_reg(__FILE__,__LINE__,c,TRUE,r)
 BOOL import_reg(const char *file, unsigned line, const char *contents, BOOL unicode, DWORD *rc);

@@ -41,14 +41,23 @@ BOOL is_elevated_process(void)
     return TRUE;
 }
 
-static BOOL write_file(const void *str, DWORD size)
+BOOL delete_file_(const char *file, unsigned line, const char *fname)
+{
+    BOOL ret;
+
+    ret = DeleteFileA(fname);
+    lok(ret, "DeleteFile failed: %u\n", GetLastError());
+
+    return ret;
+}
+
+static BOOL write_file(const char *fname, const void *str, DWORD size)
 {
     HANDLE file;
     BOOL ret;
     DWORD written;
 
-    file = CreateFileA("test.reg", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-                       FILE_ATTRIBUTE_NORMAL, NULL);
+    file = CreateFileA(fname, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %u\n", GetLastError());
     if (file == INVALID_HANDLE_VALUE)
         return FALSE;
@@ -60,7 +69,7 @@ static BOOL write_file(const void *str, DWORD size)
     return ret;
 }
 
-BOOL import_reg(const char *file, unsigned line, const char *contents, BOOL unicode, DWORD *rc)
+static BOOL write_reg_file(const char *fname, const char *contents, BOOL unicode)
 {
     int lenA;
     BOOL ret;
@@ -70,23 +79,30 @@ BOOL import_reg(const char *file, unsigned line, const char *contents, BOOL unic
     if (unicode)
     {
         int len = MultiByteToWideChar(CP_UTF8, 0, contents, lenA, NULL, 0);
-        int size = len * sizeof(WCHAR);
+        DWORD size = len * sizeof(WCHAR);
         WCHAR *wstr = HeapAlloc(GetProcessHeap(), 0, size);
         if (!wstr) return FALSE;
         MultiByteToWideChar(CP_UTF8, 0, contents, lenA, wstr, len);
 
-        ret = write_file(wstr, size);
+        ret = write_file(fname, wstr, size);
         HeapFree(GetProcessHeap(), 0, wstr);
     }
     else
-        ret = write_file(contents, lenA);
+        ret = write_file(fname, contents, lenA);
 
+    return ret;
+}
+
+BOOL import_reg(const char *file, unsigned line, const char *contents, BOOL unicode, DWORD *rc)
+{
+    BOOL ret;
+
+    ret = write_reg_file("test.reg", contents, unicode);
     if (!ret) return FALSE;
 
     run_reg_exe("reg import test.reg", rc);
 
-    ret = DeleteFileA("test.reg");
-    lok(ret, "DeleteFile failed: %u\n", GetLastError());
+    delete_file("test.reg");
 
     return ret;
 }
@@ -3598,6 +3614,232 @@ static void test_import_win31(void)
     delete_key(HKEY_CLASSES_ROOT, KEY_BASE, 0);
 }
 
+static BOOL write_test_files(void)
+{
+    const char *test1, *test2;
+    BOOL ret;
+
+    test1 = "REGEDIT4\n\n"
+            "[HKEY_LOCAL_MACHINE\\" KEY_BASE "]\n"
+            "\"Wine1\"=dword:00000123\n\n"
+            "\"Wine2\"=\"Test Value\"\n"
+            "\"Wine3\"=hex(7):4c,69,6e,65,20,\\\n"
+            "  63,6f,6e,63,61,74,65,6e,61,74,69,6f,6e,00,00\n"
+            "#comment\n"
+            "@=\"Test\"\n"
+            ";comment\n\n"
+            "\"Wine4\"=hex(2):25,50,41,54,48,25,00\n\n";
+
+    test2 = "\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
+            "[HKEY_LOCAL_MACHINE\\" KEY_BASE "\\subkey]\n"
+            "\"Empty string\"=\"\"\n"
+            "\"\"=\"Default registry value\"\n\n";
+
+    ret = write_reg_file("reg4.reg", test1, FALSE);
+    ret = write_reg_file("reg5.reg", test2, TRUE);
+
+    return ret;
+}
+
+static void test_registry_view_win32(void)
+{
+    DWORD r, dword = 0x123;
+    BOOL is_wow64, is_win32;
+    HKEY hkey, subkey;
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+    is_win32 = !is_wow64 && (sizeof(void *) == sizeof(int));
+
+    if (!is_win32) return;
+
+    if (!write_test_files()) return;
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try adding to the 32-bit registry view (32-bit Windows) */
+    run_reg_exe("reg import reg4.reg /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg import reg5.reg /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY, &hkey);
+    verify_reg(hkey, "Wine1", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine2", REG_SZ, "Test Value", 11, 0);
+    verify_reg(hkey, "Wine3", REG_MULTI_SZ, "Line concatenation\0", 20, 0);
+    verify_reg(hkey, "", REG_SZ, "Test", 5, 0);
+    verify_reg(hkey, "Wine4", REG_EXPAND_SZ, "%PATH%", 7, 0);
+
+    open_key(hkey, "subkey", KEY_WOW64_32KEY, &subkey);
+    verify_reg(subkey, "Empty string", REG_SZ, "", 1, 0);
+    verify_reg(subkey, NULL, REG_SZ, "Default registry value", 23, 0);
+    close_key(subkey);
+    close_key(hkey);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    /* Try adding to the 64-bit registry view, which doesn't exist on 32-bit Windows */
+    run_reg_exe("reg import reg4.reg /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg import reg5.reg /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
+    verify_reg(hkey, "Wine1", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine2", REG_SZ, "Test Value", 11, 0);
+    verify_reg(hkey, "Wine3", REG_MULTI_SZ, "Line concatenation\0", 20, 0);
+    verify_reg(hkey, "", REG_SZ, "Test", 5, 0);
+    verify_reg(hkey, "Wine4", REG_EXPAND_SZ, "%PATH%", 7, 0);
+
+    open_key(hkey, "subkey", KEY_WOW64_64KEY, &subkey);
+    verify_reg(subkey, "Empty string", REG_SZ, "", 1, 0);
+    verify_reg(subkey, NULL, REG_SZ, "Default registry value", 23, 0);
+    close_key(subkey);
+    close_key(hkey);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    delete_file("reg4.reg");
+    delete_file("reg5.reg");
+}
+
+static void test_registry_view_win64(void)
+{
+    DWORD r, dword = 0x123;
+    BOOL is_wow64, is_win64;
+    HKEY hkey, subkey;
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+    is_win64 = !is_wow64 && (sizeof(void *) > sizeof(int));
+
+    if (!is_win64) return;
+
+    if (!write_test_files()) return;
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    /* Try adding to the 32-bit registry view (64-bit Windows) */
+    run_reg_exe("reg import reg4.reg /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg import reg5.reg /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    todo_wine open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY, &hkey);
+    todo_wine verify_reg(hkey, "Wine1", REG_DWORD, &dword, sizeof(dword), 0);
+    todo_wine verify_reg(hkey, "Wine2", REG_SZ, "Test Value", 11, 0);
+    todo_wine verify_reg(hkey, "Wine3", REG_MULTI_SZ, "Line concatenation\0", 20, 0);
+    todo_wine verify_reg(hkey, "", REG_SZ, "Test", 5, 0);
+    todo_wine verify_reg(hkey, "Wine4", REG_EXPAND_SZ, "%PATH%", 7, 0);
+
+    todo_wine open_key(hkey, "subkey", KEY_WOW64_32KEY, &subkey);
+    todo_wine verify_reg(subkey, "Empty string", REG_SZ, "", 1, 0);
+    todo_wine verify_reg(subkey, NULL, REG_SZ, "Default registry value", 23, 0);
+    todo_wine close_key(subkey);
+    todo_wine close_key(hkey);
+
+    todo_wine verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try adding to the 64-bit registry view (64-bit Windows) */
+    run_reg_exe("reg import reg4.reg /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg import reg5.reg /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
+    verify_reg(hkey, "Wine1", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine2", REG_SZ, "Test Value", 11, 0);
+    verify_reg(hkey, "Wine3", REG_MULTI_SZ, "Line concatenation\0", 20, 0);
+    verify_reg(hkey, "", REG_SZ, "Test", 5, 0);
+    verify_reg(hkey, "Wine4", REG_EXPAND_SZ, "%PATH%", 7, 0);
+
+    open_key(hkey, "subkey", KEY_WOW64_64KEY, &subkey);
+    verify_reg(subkey, "Empty string", REG_SZ, "", 1, 0);
+    verify_reg(subkey, NULL, REG_SZ, "Default registry value", 23, 0);
+    close_key(subkey);
+    close_key(hkey);
+
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    delete_file("reg4.reg");
+    delete_file("reg5.reg");
+}
+
+static void test_registry_view_wow64(void)
+{
+    DWORD r, dword = 0x123;
+    BOOL is_wow64;
+    HKEY hkey, subkey;
+
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
+
+    if (!is_wow64) return;
+
+    if (!write_test_files()) return;
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    /* Try adding to the 32-bit registry view (WOW64) */
+    run_reg_exe("reg import reg4.reg /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg import reg5.reg /reg:32", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY, &hkey);
+    verify_reg(hkey, "Wine1", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine2", REG_SZ, "Test Value", 11, 0);
+    verify_reg(hkey, "Wine3", REG_MULTI_SZ, "Line concatenation\0", 20, 0);
+    verify_reg(hkey, "", REG_SZ, "Test", 5, 0);
+    verify_reg(hkey, "Wine4", REG_EXPAND_SZ, "%PATH%", 7, 0);
+
+    open_key(hkey, "subkey", KEY_WOW64_32KEY, &subkey);
+    verify_reg(subkey, "Empty string", REG_SZ, "", 1, 0);
+    verify_reg(subkey, NULL, REG_SZ, "Default registry value", 23, 0);
+    close_key(subkey);
+    close_key(hkey);
+
+    verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    /* Try adding to the 64-bit registry view (WOW64) */
+    run_reg_exe("reg import reg4.reg /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg import reg5.reg /reg:64", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    todo_wine open_key(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY, &hkey);
+    todo_wine verify_reg(hkey, "Wine1", REG_DWORD, &dword, sizeof(dword), 0);
+    todo_wine verify_reg(hkey, "Wine2", REG_SZ, "Test Value", 11, 0);
+    todo_wine verify_reg(hkey, "Wine3", REG_MULTI_SZ, "Line concatenation\0", 20, 0);
+    todo_wine verify_reg(hkey, "", REG_SZ, "Test", 5, 0);
+    todo_wine verify_reg(hkey, "Wine4", REG_EXPAND_SZ, "%PATH%", 7, 0);
+
+    todo_wine open_key(hkey, "subkey", KEY_WOW64_64KEY, &subkey);
+    todo_wine verify_reg(subkey, "Empty string", REG_SZ, "", 1, 0);
+    todo_wine verify_reg(subkey, NULL, REG_SZ, "Default registry value", 23, 0);
+    todo_wine close_key(subkey);
+    todo_wine close_key(hkey);
+
+    todo_wine verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
+
+    delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
+
+    delete_file("reg4.reg");
+    delete_file("reg5.reg");
+}
+
 START_TEST(import)
 {
     DWORD r;
@@ -3613,4 +3855,16 @@ START_TEST(import)
     test_import_with_whitespace();
     test_unicode_import_with_whitespace();
     test_import_win31();
+
+    /* Check if reg.exe is running with elevated privileges */
+    if (!is_elevated_process())
+    {
+        win_skip("reg.exe is not running with elevated privileges; "
+                 "skipping registry view tests\n");
+        return;
+    }
+
+    test_registry_view_win32();
+    test_registry_view_win64();
+    test_registry_view_wow64();
 }
