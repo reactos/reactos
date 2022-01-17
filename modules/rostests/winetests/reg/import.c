@@ -895,21 +895,21 @@ static void test_import(void)
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1c ]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey1c ");
+    verify_key(hkey, "Subkey1c ", 0);
     delete_key(hkey, "Subkey1c ", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1d\t]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey1d\t");
+    verify_key(hkey, "Subkey1d\t", 0);
     delete_key(hkey, "Subkey1d\t", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1e\\]\n"
                     "\"Wine\"=\"Test value\"\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey1e\\");
-    verify_key(hkey, "Subkey1e");
+    verify_key(hkey, "Subkey1e\\", 0);
+    verify_key(hkey, "Subkey1e", 0);
     open_key(hkey, "Subkey1e", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
@@ -919,9 +919,9 @@ static void test_import(void)
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1f\\\\]\n"
                     "\"Wine\"=\"Test value\"\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey1f\\\\");
-    verify_key(hkey, "Subkey1f\\");
-    verify_key(hkey, "Subkey1f");
+    verify_key(hkey, "Subkey1f\\\\", 0);
+    verify_key(hkey, "Subkey1f\\", 0);
+    verify_key(hkey, "Subkey1f", 0);
     open_key(hkey, "Subkey1f\\\\", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
@@ -931,10 +931,10 @@ static void test_import(void)
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1g\\\\\\\\]\n"
                     "\"Wine\"=\"Test value\"\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey1g\\\\\\\\");
-    verify_key(hkey, "Subkey1g\\\\");
-    verify_key(hkey, "Subkey1g\\");
-    verify_key(hkey, "Subkey1g");
+    verify_key(hkey, "Subkey1g\\\\\\\\", 0);
+    verify_key(hkey, "Subkey1g\\\\", 0);
+    verify_key(hkey, "Subkey1g\\", 0);
+    verify_key(hkey, "Subkey1g", 0);
     open_key(hkey, "Subkey1g\\\\", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
@@ -945,28 +945,28 @@ static void test_import(void)
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a]\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2b]\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey2a");
-    verify_key(hkey, "Subkey2b");
+    verify_key(hkey, "Subkey2a", 0);
+    verify_key(hkey, "Subkey2b", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[ -HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey2a");
+    verify_key(hkey, "Subkey2a", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[\t-HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2b]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey2b");
+    verify_key(hkey, "Subkey2b", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[- HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey2a");
+    verify_key(hkey, "Subkey2a", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[-\tHKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2b]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey2b");
+    verify_key(hkey, "Subkey2b", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[-HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a]\n\n"
@@ -980,8 +980,8 @@ static void test_import(void)
                     "[hkey_CURRENT_user\\" KEY_BASE "\\Subkey3a]\n\n"
                     "[HkEy_CuRrEnT_uSeR\\" KEY_BASE "\\SuBkEy3b]\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey3a");
-    verify_key(hkey, "Subkey3b");
+    verify_key(hkey, "Subkey3a", 0);
+    verify_key(hkey, "Subkey3b", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[-HKEY_current_USER\\" KEY_BASE "\\sUBKEY3A]\n\n"
@@ -994,7 +994,7 @@ static void test_import(void)
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey4a]\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey4a");
+    verify_key(hkey, "Subkey4a", 0);
 
     test_import_str("REGEDIT4\n\n"
                     "[HKEY_CURRENT_USER\\" KEY_BASE "]\n\n"
@@ -1181,7 +1181,7 @@ static void test_import(void)
                     "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg_nonexist(hkey, "Wine54b");
-    verify_key(hkey, "Subkey2");
+    verify_key(hkey, "Subkey2", 0);
 
     delete_key(hkey, "Subkey2", 0);
 
@@ -1616,7 +1616,7 @@ static void test_import(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg(hkey, "count/up", REG_SZ, "one/two/three", 14, 0);
     verify_reg(hkey, "\\foo\\bar", REG_SZ, "", 1, 0);
-    verify_key(hkey, "https://winehq.org");
+    verify_key(hkey, "https://winehq.org", 0);
 
     close_key(hkey);
 
@@ -2434,21 +2434,21 @@ static void test_unicode_import(void)
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1c ]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey1c ");
+    verify_key(hkey, "Subkey1c ", 0);
     delete_key(hkey, "Subkey1c ", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1d\t]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey1d\t");
+    verify_key(hkey, "Subkey1d\t", 0);
     delete_key(hkey, "Subkey1d\t", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1e\\]\n"
                      "\"Wine\"=\"Test value\"\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey1e\\");
-    verify_key(hkey, "Subkey1e");
+    verify_key(hkey, "Subkey1e\\", 0);
+    verify_key(hkey, "Subkey1e", 0);
     open_key(hkey, "Subkey1e", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
@@ -2458,9 +2458,9 @@ static void test_unicode_import(void)
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1f\\\\]\n"
                      "\"Wine\"=\"Test value\"\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey1f\\\\");
-    verify_key(hkey, "Subkey1f\\");
-    verify_key(hkey, "Subkey1f");
+    verify_key(hkey, "Subkey1f\\\\", 0);
+    verify_key(hkey, "Subkey1f\\", 0);
+    verify_key(hkey, "Subkey1f", 0);
     open_key(hkey, "Subkey1f\\\\", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
@@ -2470,10 +2470,10 @@ static void test_unicode_import(void)
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey1g\\\\\\\\]\n"
                      "\"Wine\"=\"Test value\"\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey1g\\\\\\\\");
-    verify_key(hkey, "Subkey1g\\\\");
-    verify_key(hkey, "Subkey1g\\");
-    verify_key(hkey, "Subkey1g");
+    verify_key(hkey, "Subkey1g\\\\\\\\", 0);
+    verify_key(hkey, "Subkey1g\\\\", 0);
+    verify_key(hkey, "Subkey1g\\", 0);
+    verify_key(hkey, "Subkey1g", 0);
     open_key(hkey, "Subkey1g\\\\", 0, &subkey);
     verify_reg(subkey, "Wine", REG_SZ, "Test value", 11, 0);
     close_key(subkey);
@@ -2484,28 +2484,28 @@ static void test_unicode_import(void)
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a]\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2b]\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey2a");
-    verify_key(hkey, "Subkey2b");
+    verify_key(hkey, "Subkey2a", 0);
+    verify_key(hkey, "Subkey2b", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[ -HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey2a");
+    verify_key(hkey, "Subkey2a", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[\t-HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2b]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey2b");
+    verify_key(hkey, "Subkey2b", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[- HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey2a");
+    verify_key(hkey, "Subkey2a", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[-\tHKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2b]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey2b");
+    verify_key(hkey, "Subkey2b", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[-HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2a]\n\n"
@@ -2519,8 +2519,8 @@ static void test_unicode_import(void)
                      "[hkey_CURRENT_user\\" KEY_BASE "\\Subkey3a]\n\n"
                      "[HkEy_CuRrEnT_uSeR\\" KEY_BASE "\\SuBkEy3b]\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey3a");
-    verify_key(hkey, "Subkey3b");
+    verify_key(hkey, "Subkey3a", 0);
+    verify_key(hkey, "Subkey3b", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[-HKEY_current_USER\\" KEY_BASE "\\sUBKEY3A]\n\n"
@@ -2533,7 +2533,7 @@ static void test_unicode_import(void)
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey4a]\n\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "Subkey4a");
+    verify_key(hkey, "Subkey4a", 0);
 
     test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "]\n\n"
@@ -2723,7 +2723,7 @@ static void test_unicode_import(void)
                      "[HKEY_CURRENT_USER\\" KEY_BASE "\\Subkey2]\n", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg_nonexist(hkey, "Wine54b");
-    verify_key(hkey, "Subkey2");
+    verify_key(hkey, "Subkey2", 0);
 
     delete_key(hkey, "Subkey2", 0);
 
@@ -3165,7 +3165,7 @@ static void test_unicode_import(void)
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg(hkey, "count/up", REG_SZ, "one/two/three", 14, 0);
     verify_reg(hkey, "\\foo\\bar", REG_SZ, "", 1, 0);
-    verify_key(hkey, "https://winehq.org");
+    verify_key(hkey, "https://winehq.org", 0);
 
     close_key(hkey);
 

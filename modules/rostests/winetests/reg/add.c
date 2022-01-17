@@ -97,12 +97,12 @@ void close_key_(const char *file, unsigned line, HKEY hkey)
     lok(err == ERROR_SUCCESS, "RegCloseKey failed: got error %d\n", err);
 }
 
-void verify_key_(const char *file, unsigned line, HKEY key_base, const char *subkey)
+void verify_key_(const char *file, unsigned line, HKEY root, const char *path, REGSAM sam)
 {
     HKEY hkey;
     LONG err;
 
-    err = RegOpenKeyExA(key_base, subkey, 0, KEY_READ, &hkey);
+    err = RegOpenKeyExA(root, path, 0, KEY_READ|sam, &hkey);
     lok(err == ERROR_SUCCESS, "RegOpenKeyExA failed: got error %d\n", err);
 
     if (hkey)
@@ -302,15 +302,15 @@ static void test_key_formats(void)
 
     run_reg_exe("reg add HKCU\\" KEY_BASE "\\keytest3\\ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_key(hkey, "keytest3");
+    verify_key(hkey, "keytest3", 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE "\\keytest4 /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
-    verify_key(hkey, "keytest4");
+    verify_key(hkey, "keytest4", 0);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE "\\https://winehq.org /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    verify_key(hkey, "https://winehq.org");
+    verify_key(hkey, "https://winehq.org", 0);
 
     close_key(hkey);
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
@@ -384,8 +384,8 @@ static void test_add(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
 
-    verify_key(HKEY_CURRENT_USER, KEY_BASE);
-    verify_key(hkey, "Subkey");
+    verify_key(HKEY_CURRENT_USER, KEY_BASE, 0);
+    verify_key(hkey, "Subkey", 0);
     verify_reg(hkey, "Test1", REG_SZ, "Value1", 7, 0);
     verify_reg(hkey, "Test2", REG_DWORD, &dword, sizeof(dword), 0);
     verify_reg(hkey, NULL, REG_SZ, "", 1, 0);
@@ -393,8 +393,8 @@ static void test_add(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_NONE /d Test /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
 
-    verify_key(HKEY_CURRENT_USER, KEY_BASE);
-    verify_key(hkey, "Subkey");
+    verify_key(HKEY_CURRENT_USER, KEY_BASE, 0);
+    verify_key(hkey, "Subkey", 0);
     verify_reg(hkey, "Test1", REG_SZ, "Value1", 7, 0);
     verify_reg(hkey, "Test2", REG_DWORD, &dword, sizeof(dword), 0);
     verify_reg(hkey, NULL, REG_NONE, "T\0e\0s\0t\0\0", 10, 0);

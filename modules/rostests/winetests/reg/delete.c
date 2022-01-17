@@ -88,7 +88,7 @@ static void test_delete(void)
     run_reg_exe("reg delete HKCU\\" KEY_BASE " /va /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     verify_reg_nonexist(hkey, "foo");
-    verify_key(hkey, "subkey");
+    verify_key(hkey, "subkey", 0);
 
     /* Test forward and back slashes */
     add_key(hkey, "https://winehq.org", NULL);

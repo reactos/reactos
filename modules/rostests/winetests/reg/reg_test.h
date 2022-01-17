@@ -52,8 +52,8 @@ void open_key_(const char *file, unsigned line, HKEY root, const char *path, REG
 #define close_key(k) close_key_(__FILE__,__LINE__,k)
 void close_key_(const char *file, unsigned line, HKEY hkey);
 
-#define verify_key(k,s) verify_key_(__FILE__,__LINE__,k,s)
-void verify_key_(const char *file, unsigned line, HKEY key_base, const char *subkey);
+#define verify_key(r,p,s) verify_key_(__FILE__,__LINE__,r,p,s)
+void verify_key_(const char *file, unsigned line, HKEY root, const char *path, REGSAM sam);
 
 #define verify_key_nonexist(k,s) verify_key_nonexist_(__FILE__,__LINE__,k,s)
 void verify_key_nonexist_(const char *file, unsigned line, HKEY key_base, const char *subkey);
