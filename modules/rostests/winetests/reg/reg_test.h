@@ -46,9 +46,8 @@ void verify_reg_(const char *file, unsigned line, HKEY hkey, const char *value,
 #define verify_reg_nonexist(k,v) verify_reg_nonexist_(__FILE__,__LINE__,k,v)
 void verify_reg_nonexist_(const char *file, unsigned line, HKEY hkey, const char *value);
 
-#define open_key(b,p,s,k) open_key_(__FILE__,__LINE__,b,p,s,k)
-void open_key_(const char *file, unsigned line, const HKEY base, const char *path,
-               const DWORD sam, HKEY *hkey);
+#define open_key(r,p,s,k) open_key_(__FILE__,__LINE__,r,p,s,k)
+void open_key_(const char *file, unsigned line, HKEY root, const char *path, REGSAM sam, HKEY *hkey);
 
 #define close_key(k) close_key_(__FILE__,__LINE__,k)
 void close_key_(const char *file, unsigned line, HKEY hkey);

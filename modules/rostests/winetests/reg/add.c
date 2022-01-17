@@ -81,12 +81,11 @@ void verify_reg_nonexist_(const char *file, unsigned line, HKEY hkey, const char
         (value && *value) ? value : "(Default)", err);
 }
 
-void open_key_(const char *file, unsigned line, const HKEY base, const char *path,
-               const DWORD sam, HKEY *hkey)
+void open_key_(const char *file, unsigned line, HKEY root, const char *path, REGSAM sam, HKEY *hkey)
 {
     LONG err;
 
-    err = RegOpenKeyExA(base, path, 0, KEY_READ|sam, hkey);
+    err = RegOpenKeyExA(root, path, 0, KEY_READ|sam, hkey);
     lok(err == ERROR_SUCCESS, "RegOpenKeyExA failed: got error %d\n", err);
 }
 
