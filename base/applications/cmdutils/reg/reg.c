@@ -72,7 +72,7 @@ void output_writeconsole(const WCHAR *str, DWORD wlen)
     }
 }
 
-static void output_formatstring(const WCHAR *fmt, __ms_va_list va_args)
+static void output_formatstring(const WCHAR *fmt, va_list va_args)
 {
     WCHAR *str;
     DWORD len;
@@ -92,7 +92,7 @@ void WINAPIV output_message(unsigned int id, ...)
 {
     WCHAR *fmt = NULL;
     int len;
-    __ms_va_list va_args;
+    va_list va_args;
 
     if (!(len = LoadStringW(GetModuleHandleW(NULL), id, (WCHAR *)&fmt, 0)))
     {
@@ -106,20 +106,20 @@ void WINAPIV output_message(unsigned int id, ...)
 
     LoadStringW(GetModuleHandleW(NULL), id, fmt, len);
 
-    __ms_va_start(va_args, id);
+    va_start(va_args, id);
     output_formatstring(fmt, va_args);
-    __ms_va_end(va_args);
+    va_end(va_args);
 
     free(fmt);
 }
 
 void WINAPIV output_string(const WCHAR *fmt, ...)
 {
-    __ms_va_list va_args;
+    va_list va_args;
 
-    __ms_va_start(va_args, fmt);
+    va_start(va_args, fmt);
     output_formatstring(fmt, va_args);
-    __ms_va_end(va_args);
+    va_end(va_args);
 }
 
 /* ask_confirm() adapted from programs/cmd/builtins.c */
