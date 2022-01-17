@@ -123,7 +123,7 @@ class audio_wavein
                 return;
 
             /* Set seconds length for each buffer */
-            buf_secs = bsecs; 
+            buf_secs = bsecs;
         }
 
         unsigned int total_buffers(void) const
@@ -181,7 +181,7 @@ class audio_wavein
                 svalue = (unsigned int)abs(*((short *)(main_buffer + aud_info.bytes_in_samples(nsamp))));
             else if (aud_info.bits() == 8)
                svalue = (unsigned int)((ptrdiff_t) *(main_buffer + aud_info.bytes_in_samples(nsamp)));
-            else 
+            else
                 svalue = 0;
 
             return svalue;
