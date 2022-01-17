@@ -25,7 +25,10 @@ public:
     IMP_IAllocatorMXF;
 
      CPortPinDMus(IUnknown * OuterUnknown){}
-     virtual ~CPortPinDMus(){}
+     virtual ~CPortPinDMus()
+     {
+         RtlFillMemory(this, sizeof(*this), 0xCC);
+     }
 
 protected:
     VOID TransferMidiDataToDMus();

@@ -23,7 +23,10 @@ public:
     IMP_IPortDMus;
     IMP_ISubdevice;
     CPortDMus(IUnknown *OuterUnknown){}
-    virtual ~CPortDMus(){}
+    virtual ~CPortDMus()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
 

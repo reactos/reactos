@@ -34,7 +34,10 @@ public:
 
     CUnregisterPhysicalConnection(IUnknown *OuterUnknown){}
 
-    virtual ~CUnregisterPhysicalConnection(){}
+    virtual ~CUnregisterPhysicalConnection()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 };
 
 NTSTATUS

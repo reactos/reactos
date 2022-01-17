@@ -49,6 +49,7 @@ CResourceList::~CResourceList()
         /* Free resource list */
         FreeItem(m_UntranslatedResourceList, TAG_PORTCLASS);
     }
+    RtlFillMemory(this, sizeof(*this), 0xCC);
 }
 
 NTSTATUS

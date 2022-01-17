@@ -46,7 +46,10 @@ public:
 
     IMP_IIrpQueue;
     CIrpQueue(IUnknown *OuterUnknown){}
-    virtual ~CIrpQueue(){}
+    virtual ~CIrpQueue()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
 

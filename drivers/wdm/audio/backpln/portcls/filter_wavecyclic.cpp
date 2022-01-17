@@ -21,7 +21,10 @@ public:
 
     IMP_IPortFilterWaveCyclic;
     CPortFilterWaveCyclic(IUnknown *OuterUnknown){}
-    virtual ~CPortFilterWaveCyclic(){}
+    virtual ~CPortFilterWaveCyclic()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
     IPortWaveCyclic* m_Port;

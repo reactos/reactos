@@ -56,6 +56,9 @@ add_library(portcls MODULE
     portcls.rc
     ${CMAKE_CURRENT_BINARY_DIR}/portcls.def)
 
+if(NOT MSVC)
+    target_compile_options(portcls PRIVATE "-Wno-class-memaccess")
+endif()
 if(USE_CLANG_CL)
     target_compile_options(portcls PRIVATE "-Wno-missing-braces")
 endif()

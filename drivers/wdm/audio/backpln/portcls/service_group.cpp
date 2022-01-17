@@ -36,7 +36,10 @@ public:
 
     IMP_IServiceGroup;
     CServiceGroup(IUnknown * OuterUnknown);
-    virtual ~CServiceGroup() {}
+    virtual ~CServiceGroup()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
 

@@ -21,7 +21,10 @@ public:
 
     IMP_IPortFilterWaveRT;
     CPortFilterWaveRT(IUnknown *OuterUnknown){}
-    virtual ~CPortFilterWaveRT(){}
+    virtual ~CPortFilterWaveRT()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
 

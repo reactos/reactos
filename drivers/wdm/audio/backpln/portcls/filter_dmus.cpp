@@ -21,7 +21,10 @@ public:
 
     IMP_IPortFilterDMus;
     CPortFilterDMus(IUnknown *OuterUnknown){}
-    virtual ~CPortFilterDMus(){}
+    virtual ~CPortFilterDMus()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
     IPortDMus* m_Port;

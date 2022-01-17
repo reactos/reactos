@@ -27,7 +27,10 @@ public:
     IMP_IPortEvents;
     IMP_IServiceSink;
     CPortWavePci(IUnknown *OuterUnknown){}
-    virtual ~CPortWavePci() {}
+    virtual ~CPortWavePci()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
 

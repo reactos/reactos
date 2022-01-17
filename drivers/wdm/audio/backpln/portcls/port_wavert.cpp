@@ -25,7 +25,10 @@ public:
     IMP_ISubdevice;
     IMP_IPortEvents;
     CPortWaveRT(IUnknown *OuterUnknown) {}
-    virtual ~CPortWaveRT() {}
+    virtual ~CPortWaveRT()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
 

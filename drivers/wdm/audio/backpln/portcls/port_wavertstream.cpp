@@ -21,7 +21,10 @@ public:
 
     IMP_IPortWaveRTStreamInit;
     CPortWaveRTStreamInit(IUnknown *OuterUnknown) {}
-    virtual ~CPortWaveRTStreamInit() {}
+    virtual ~CPortWaveRTStreamInit()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 };
 

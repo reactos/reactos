@@ -21,7 +21,10 @@ public:
 
     IMP_IPortPinWaveRT;
     CPortPinWaveRT(IUnknown *OuterUnknown){}
-    virtual ~CPortPinWaveRT(){}
+    virtual ~CPortPinWaveRT()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
 

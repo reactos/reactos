@@ -36,7 +36,10 @@ public:
     IMP_IPortPinWaveCyclic;
     IMP_IServiceSink;
     CPortPinWaveCyclic(IUnknown *OuterUnknown){}
-    virtual ~CPortPinWaveCyclic(){}
+    virtual ~CPortPinWaveCyclic()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
 

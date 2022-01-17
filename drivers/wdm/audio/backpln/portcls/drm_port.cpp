@@ -21,7 +21,10 @@ public:
 
     IMP_IDrmPort2;
     CDrmPort2(IUnknown *OuterUnknown){}
-    virtual ~CDrmPort2(){}
+    virtual ~CDrmPort2()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 };
 
 NTSTATUS

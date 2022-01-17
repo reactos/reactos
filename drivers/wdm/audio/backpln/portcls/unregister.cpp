@@ -22,7 +22,10 @@ public:
     IMP_IUnregisterSubdevice;
 
     CUnregisterSubdevice(IUnknown * OuterUnknown) {}
-    virtual ~CUnregisterSubdevice(){}
+    virtual ~CUnregisterSubdevice()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 };
 

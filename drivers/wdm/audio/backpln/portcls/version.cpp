@@ -26,7 +26,7 @@ public:
     }
     virtual ~CPortClsVersion()
     {
-
+        RtlFillMemory(this, sizeof(*this), 0xCC);
     }
 };
 

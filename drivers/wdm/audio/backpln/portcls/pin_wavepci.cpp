@@ -25,7 +25,10 @@ public:
     IMP_IServiceSink;
     IMP_IPortWavePciStream;
     CPortPinWavePci(IUnknown *OuterUnknown) {}
-    virtual ~CPortPinWavePci(){}
+    virtual ~CPortPinWavePci()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 protected:
 
     friend NTSTATUS NTAPI PinWavePciState(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);

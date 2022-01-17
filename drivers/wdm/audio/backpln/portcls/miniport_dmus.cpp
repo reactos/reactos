@@ -1418,6 +1418,7 @@ CMiniportDMusUART::~CMiniportDMusUART(void)
         m_pPort->Release();
         m_pPort = NULL;
     }
+    RtlFillMemory(this, sizeof(*this), 0xCC);
 }
 
 #ifdef _MSC_VER
@@ -1891,6 +1892,7 @@ CMiniportDMusUARTStream::~CMiniportDMusUARTStream(void)
 
         m_pMiniport->Release();
     }
+    RtlFillMemory(this, sizeof(*this), 0xCC);
 }
 
 #ifdef _MSC_VER

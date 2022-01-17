@@ -37,6 +37,7 @@ CRegistryKey::~CRegistryKey()
          // close key only when has not been deleted yet
          ZwClose(m_hKey);
     }
+    RtlFillMemory(this, sizeof(*this), 0xCC);
 }
 
 

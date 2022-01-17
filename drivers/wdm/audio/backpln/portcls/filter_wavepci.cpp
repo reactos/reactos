@@ -21,7 +21,10 @@ public:
 
     IMP_IPortFilterPci;
     CPortFilterWavePci(IUnknown *OuterUnknown){}
-    virtual ~CPortFilterWavePci(){}
+    virtual ~CPortFilterWavePci()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
     IPortWavePci* m_Port;

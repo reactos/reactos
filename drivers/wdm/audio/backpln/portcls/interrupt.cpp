@@ -28,7 +28,10 @@ public:
 
     IMP_IInterruptSync;
     CInterruptSync(IUnknown *OuterUnknown){}
-    virtual ~CInterruptSync(){}
+    virtual ~CInterruptSync()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 public:
 

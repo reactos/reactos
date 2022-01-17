@@ -27,7 +27,10 @@ public:
     IMP_ISubdevice;
     IMP_IPortEvents;
     CPortWaveCyclic(IUnknown *OuterUnknown){}
-    virtual ~CPortWaveCyclic(){}
+    virtual ~CPortWaveCyclic()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
     PDEVICE_OBJECT m_pDeviceObject;

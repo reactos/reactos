@@ -25,7 +25,10 @@ public:
     IMP_ISubdevice;
     IMP_IPortEvents;
     CPortTopology(IUnknown *OuterUnknown){}
-    virtual ~CPortTopology(){}
+    virtual ~CPortTopology()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
     BOOL m_bInitialized;

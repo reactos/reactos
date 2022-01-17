@@ -21,7 +21,10 @@ public:
 
     IMP_IPortFilterTopology;
     CPortFilterTopology(IUnknown *OuterUnknown){}
-    virtual ~CPortFilterTopology(){}
+    virtual ~CPortFilterTopology()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
     IPortTopology * m_Port;

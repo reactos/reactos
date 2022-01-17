@@ -34,7 +34,10 @@ public:
 
     IMP_IDmaChannelInit;
     CDmaChannelInit(IUnknown * OuterUnknown){}
-    virtual ~CDmaChannelInit(){}
+    virtual ~CDmaChannelInit()
+    {
+        RtlFillMemory(this, sizeof(*this), 0xCC);
+    }
 
 protected:
 
