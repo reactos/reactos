@@ -16,12 +16,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdio.h>
 #include "reg.h"
 
 struct key {
     HKEY root;      /* system key */
-    WCHAR *subkey;  /* path to subkey */
+    WCHAR *subkey;  /* relative path to subkey */
     HKEY hkey;      /* handle to opened or created key */
+    WCHAR *path;    /* full path to subkey */
+};
+
+enum operation {
+    COPY_NO,
+    COPY_YES,
+    COPY_ALL
 };
 
 static void output_error(LONG rc)
@@ -32,13 +40,50 @@ static void output_error(LONG rc)
         output_message(STRING_ACCESS_DENIED);
 }
 
+static enum operation ask_overwrite_value(WCHAR *path, WCHAR *value)
+{
+    HMODULE hmod;
+    static WCHAR Ybuffer[4];
+    static WCHAR Nbuffer[4];
+    static WCHAR Abuffer[4];
+    static WCHAR defval[32];
+    WCHAR answer[MAX_PATH];
+    WCHAR *str;
+    DWORD count;
+
+    hmod = GetModuleHandleW(NULL);
+    LoadStringW(hmod, STRING_YES, Ybuffer, ARRAY_SIZE(Ybuffer));
+    LoadStringW(hmod, STRING_NO,  Nbuffer, ARRAY_SIZE(Nbuffer));
+    LoadStringW(hmod, STRING_ALL, Abuffer, ARRAY_SIZE(Abuffer));
+    LoadStringW(hmod, STRING_DEFAULT_VALUE, defval, ARRAY_SIZE(defval));
+
+    str = (value && *value) ? value : defval;
+
+    while (1)
+    {
+        output_message(STRING_COPY_CONFIRM, path, str);
+        output_message(STRING_YESNOALL);
+
+        ReadConsoleW(GetStdHandle(STD_INPUT_HANDLE), answer, ARRAY_SIZE(answer), &count, NULL);
+
+        *answer = towupper(*answer);
+
+        if (*answer == *Ybuffer)
+            return COPY_YES;
+        if (*answer == *Nbuffer)
+            return COPY_NO;
+        if (*answer == *Abuffer)
+            return COPY_ALL;
+    }
+}
+
 static int run_copy(struct key *src, struct key *dest, BOOL recurse, BOOL force)
 {
     LONG rc;
     DWORD max_subkey_len;
     DWORD max_name_len, name_len;
     DWORD max_data_size, data_size;
-    DWORD type, i;
+    DWORD type, dispos, i;
     WCHAR *name = NULL;
     BYTE *data = NULL;
 
@@ -49,7 +94,7 @@ static int run_copy(struct key *src, struct key *dest, BOOL recurse, BOOL force)
     }
 
     if ((rc = RegCreateKeyExW(dest->root, dest->subkey, 0, NULL, REG_OPTION_NON_VOLATILE,
-                              KEY_WRITE, NULL, &dest->hkey, NULL)))
+                              KEY_READ|KEY_WRITE, NULL, &dest->hkey, &dispos)))
     {
         RegCloseKey(src->hkey);
         output_error(rc);
@@ -83,6 +128,18 @@ static int run_copy(struct key *src, struct key *dest, BOOL recurse, BOOL force)
         if (rc == ERROR_NO_MORE_ITEMS) break;
         if (rc) goto cleanup;
 
+        if (!force && dispos == REG_OPENED_EXISTING_KEY)
+        {
+            if (!RegQueryValueExW(dest->hkey, name, NULL, NULL, NULL, NULL))
+            {
+                enum operation op;
+
+                op = ask_overwrite_value(src->path, name);
+                if (op == COPY_NO) continue;
+                if (op == COPY_ALL) force = TRUE;
+            }
+        }
+
         if ((rc = RegSetValueExW(dest->hkey, name, 0, type, data, data_size)))
         {
             output_error(rc);
@@ -93,6 +150,7 @@ static int run_copy(struct key *src, struct key *dest, BOOL recurse, BOOL force)
     for (i = 0; recurse; i++)
     {
         struct key subkey_src, subkey_dest;
+        size_t path_len;
 
         name_len = max_name_len;
 
@@ -105,7 +163,20 @@ static int run_copy(struct key *src, struct key *dest, BOOL recurse, BOOL force)
         subkey_dest.root = dest->hkey;
         subkey_dest.subkey = name;
 
+        path_len = lstrlenW(src->path) + name_len + 2;
+
+        if (!(subkey_src.path = malloc(path_len * sizeof(WCHAR))))
+        {
+            rc = ERROR_NOT_ENOUGH_MEMORY;
+            goto cleanup;
+        }
+
+        swprintf(subkey_src.path, path_len, L"%s\\%s", src->path, name);
+
         rc = run_copy(&subkey_src, &subkey_dest, TRUE, force);
+
+        free(subkey_src.path);
+
         if (rc) goto cleanup;
     }
 
@@ -168,6 +239,8 @@ int reg_copy(int argc, WCHAR *argvW[])
         output_message(STRING_COPY_SRC_DEST_SAME);
         return 1;
     }
+
+    src.path = src.subkey;
 
     return run_copy(&src, &dest, recurse, force);
 

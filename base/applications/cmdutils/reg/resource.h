@@ -27,7 +27,9 @@
 /* Shared */
 #define STRING_YES                    100
 #define STRING_NO                     101
+#define STRING_ALL                    102
 #define STRING_YESNO                  103
+#define STRING_YESNOALL               104
 #define STRING_INVALID_SYNTAX         105
 #define STRING_FUNC_HELP              106
 #define STRING_ACCESS_DENIED          107
@@ -63,6 +65,7 @@
 
 /* copy.c */
 #define STRING_COPY_SRC_DEST_SAME     250
+#define STRING_COPY_CONFIRM           251
 
 /* delete.c */
 #define STRING_DELETE_VALUE           300
