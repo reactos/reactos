@@ -308,43 +308,36 @@ ArbPruneOrdering(
     Current = TmpOrderings;
     Orderings = OrderList->Orderings;
 
-    for (ix = 0; ix < OrderList->Count; ix++)
+    for (ix = 0; ix < OrderList->Count; ix++, Orderings++)
     {
-        if (MaximumAddress < Orderings[0].Start ||
-            MinimumAddress > Orderings[0].End)
+        if (MaximumAddress < Orderings->Start ||
+            MinimumAddress > Orderings->End)
         {
-            Current->Start = Orderings[0].Start;
-            Current->End = Orderings[0].End;
+            Current->Start = Orderings->Start;
+            Current->End = Orderings->End;
         }
-        else if (MinimumAddress <= Orderings[0].Start)
+        else if (MinimumAddress <= Orderings->Start)
         {
-            if (MaximumAddress >= Orderings[0].End)
-            {
+            if (MaximumAddress >= Orderings->End)
                 continue;
-            }
-            else
-            {
-                Current->Start = (MaximumAddress + 1);
-                Current->End = Orderings[0].End;
-            }
+
+            Current->Start = (MaximumAddress + 1);
+            Current->End = Orderings->End;
+        }
+        else if (MaximumAddress >= Orderings->End)
+        {
+            Current->Start = Orderings->Start;
+            Current->End = (MinimumAddress - 1);
         }
         else
         {
-            if (MaximumAddress >= Orderings[0].End)
-            {
-                Current->Start = Orderings[0].Start;
-                Current->End = (MinimumAddress - 1);
-            }
-            else
-            {
-                Current->Start = (MaximumAddress + 1);
-                Current->End = Orderings[0].End;
+            Current->Start = (MaximumAddress + 1);
+            Current->End = Orderings->End;
 
-                Current++;
+            Current++;
 
-                Current->Start = Orderings[0].Start;
-                Current->End = (MinimumAddress - 1);
-            }
+            Current->Start = Orderings->Start;
+            Current->End = (MinimumAddress - 1);
         }
 
         Current++;
