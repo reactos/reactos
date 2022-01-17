@@ -223,12 +223,11 @@ ArbAddOrdering(
 
     PAGED_CODE();
 
-    DPRINT("ArbAddOrdering: OrderList %p, MinimumAddress - %I64X, MaximumAddress - %I64X\n",
-           OrderList, MinimumAddress, MaximumAddress);
+    DPRINT("ArbAddOrdering: [%p] %I64X-%I64X\n", OrderList, MinimumAddress, MaximumAddress);
 
     if (MaximumAddress < MinimumAddress)
     {
-        DPRINT1("ArbAddOrdering: STATUS_INVALID_PARAMETER. [%p] %I64X : %I64X\n", OrderList, MinimumAddress, MaximumAddress);
+        DPRINT1("ArbAddOrdering: STATUS_INVALID_PARAMETER. [%p] %I64X-%I64X\n", OrderList, MinimumAddress, MaximumAddress);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -286,14 +285,14 @@ ArbPruneOrdering(
 
     PAGED_CODE();
 
-    DPRINT("ArbPruneOrdering: %X, %I64X, %I64X\n", OrderList->Count, MinimumAddress, MaximumAddress);
+    DPRINT("ArbPruneOrdering: %X, %I64X-%I64X\n", OrderList->Count, MinimumAddress, MaximumAddress);
 
     ASSERT(OrderList);
     ASSERT(OrderList->Orderings);
 
     if (MaximumAddress < MinimumAddress)
     {
-        DPRINT1("ArbPruneOrdering: STATUS_INVALID_PARAMETER. [%p] %I64X : %I64X\n", OrderList, MinimumAddress, MaximumAddress);
+        DPRINT1("ArbPruneOrdering: STATUS_INVALID_PARAMETER. [%p] %I64X-%I64X\n", OrderList, MinimumAddress, MaximumAddress);
         return STATUS_INVALID_PARAMETER;
     }
 
