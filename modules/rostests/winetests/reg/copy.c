@@ -666,11 +666,11 @@ static void test_registry_view_win64(void)
     verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
 
     run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:32", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
 
     run_reg_exe("reg export HKLM\\" KEY_BASE " file.reg /y /reg:32", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
 
     run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:64", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -691,7 +691,7 @@ static void test_registry_view_win64(void)
     ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
 
     run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:32", &r);
-    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
     delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_64KEY);
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_64KEY);
@@ -724,7 +724,7 @@ static void test_registry_view_wow64(void)
     ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
 
     run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:64", &r);
-    todo_wine ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
     delete_tree(HKEY_LOCAL_MACHINE, COPY_SRC, KEY_WOW64_32KEY);
     delete_tree(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
@@ -735,11 +735,11 @@ static void test_registry_view_wow64(void)
     verify_key_nonexist(HKEY_LOCAL_MACHINE, KEY_BASE, KEY_WOW64_32KEY);
 
     run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:64", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
 
     run_reg_exe("reg export HKLM\\" KEY_BASE " file.reg /y /reg:64", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
-    todo_wine ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("file.reg", registry_view_test, 0), "compare_export() failed\n");
 
     run_reg_exe("reg copy HKLM\\" COPY_SRC " HKLM\\" KEY_BASE " /s /f /reg:32", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);

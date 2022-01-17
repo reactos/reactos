@@ -77,7 +77,7 @@ static enum operation ask_overwrite_value(WCHAR *path, WCHAR *value)
     }
 }
 
-static int run_copy(struct key *src, struct key *dest, BOOL recurse, BOOL force)
+static int run_copy(struct key *src, struct key *dest, REGSAM sam, BOOL recurse, BOOL force)
 {
     LONG rc;
     DWORD max_subkey_len;
@@ -87,14 +87,14 @@ static int run_copy(struct key *src, struct key *dest, BOOL recurse, BOOL force)
     WCHAR *name = NULL;
     BYTE *data = NULL;
 
-    if ((rc = RegOpenKeyExW(src->root, src->subkey, 0, KEY_READ, &src->hkey)))
+    if ((rc = RegOpenKeyExW(src->root, src->subkey, 0, KEY_READ|sam, &src->hkey)))
     {
         output_error(rc);
         return 1;
     }
 
     if ((rc = RegCreateKeyExW(dest->root, dest->subkey, 0, NULL, REG_OPTION_NON_VOLATILE,
-                              KEY_READ|KEY_WRITE, NULL, &dest->hkey, &dispos)))
+                              KEY_READ|KEY_WRITE|sam, NULL, &dest->hkey, &dispos)))
     {
         RegCloseKey(src->hkey);
         output_error(rc);
@@ -173,7 +173,7 @@ static int run_copy(struct key *src, struct key *dest, BOOL recurse, BOOL force)
 
         swprintf(subkey_src.path, path_len, L"%s\\%s", src->path, name);
 
-        rc = run_copy(&subkey_src, &subkey_dest, TRUE, force);
+        rc = run_copy(&subkey_src, &subkey_dest, sam, TRUE, force);
 
         free(subkey_src.path);
 
@@ -194,6 +194,7 @@ int reg_copy(int argc, WCHAR *argvW[])
 {
     struct key src, dest;
     BOOL recurse = FALSE, force = FALSE;
+    REGSAM sam = 0;
     int i;
 
     if (argc == 3)
@@ -214,8 +215,18 @@ int reg_copy(int argc, WCHAR *argvW[])
 
         str = &argvW[i][1];
 
-        if (!lstrcmpiW(str, L"reg:32") || !lstrcmpiW(str, L"reg:64"))
+        if (!lstrcmpiW(str, L"reg:32"))
+        {
+            if (sam & KEY_WOW64_32KEY) goto invalid;
+            sam |= KEY_WOW64_32KEY;
             continue;
+        }
+        else if (!lstrcmpiW(str, L"reg:64"))
+        {
+            if (sam & KEY_WOW64_64KEY) goto invalid;
+            sam |= KEY_WOW64_64KEY;
+            continue;
+        }
         else if (!str[0] || str[1])
             goto invalid;
 
@@ -234,6 +245,9 @@ int reg_copy(int argc, WCHAR *argvW[])
         }
     }
 
+    if (sam == (KEY_WOW64_32KEY|KEY_WOW64_64KEY))
+        goto invalid;
+
     if (src.root == dest.root && !lstrcmpiW(src.subkey, dest.subkey))
     {
         output_message(STRING_COPY_SRC_DEST_SAME);
@@ -242,7 +256,7 @@ int reg_copy(int argc, WCHAR *argvW[])
 
     src.path = src.subkey;
 
-    return run_copy(&src, &dest, recurse, force);
+    return run_copy(&src, &dest, sam, recurse, force);
 
 invalid:
     output_message(STRING_INVALID_SYNTAX);
