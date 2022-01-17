@@ -93,15 +93,9 @@ BOOL import_reg(const char *file, unsigned line, const char *contents, BOOL unic
 
 /* Unit tests */
 
-static void test_import(void)
+static void test_command_syntax(void)
 {
-    DWORD r, dword = 0x123, type, size;
-    char buffer[24];
-    HKEY hkey, subkey = NULL;
-    LONG err;
-    BYTE hex[8];
-
-    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
+    DWORD r;
 
     run_reg_exe("reg import", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
@@ -120,6 +114,17 @@ static void test_import(void)
 
     run_reg_exe("reg import a.reg b.reg", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+}
+
+static void test_import(void)
+{
+    DWORD r, dword = 0x123, type, size;
+    char buffer[24];
+    HKEY hkey, subkey = NULL;
+    LONG err;
+    BYTE hex[8];
+
+    delete_tree(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Test file contents */
     test_import_str("regedit\n", &r);
@@ -3602,6 +3607,7 @@ START_TEST(import)
         return;
     }
 
+    test_command_syntax();
     test_import();
     test_unicode_import();
     test_import_with_whitespace();
