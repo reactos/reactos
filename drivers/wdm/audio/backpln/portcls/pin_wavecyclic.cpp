@@ -27,7 +27,7 @@ public:
     {
         PVOID P = ExAllocatePoolWithTag(PoolType, Size, Tag);
         if (P)
-            RtlZeroMemory(P, Size);
+            RtlSecureZeroMemory(P, Size);
         return P;
     }
 
