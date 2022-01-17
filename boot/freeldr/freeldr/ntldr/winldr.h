@@ -73,6 +73,8 @@ VOID ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start);
 
 
 // winldr.c
+extern BOOLEAN PaeModeOn;
+
 PVOID WinLdrLoadModule(PCSTR ModuleName, PULONG Size,
                        TYPE_OF_MEMORY MemoryType);
 

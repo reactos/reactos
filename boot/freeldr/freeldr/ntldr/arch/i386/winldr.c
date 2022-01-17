@@ -174,8 +174,6 @@ ULONG PcrBasePage;
 ULONG TssBasePage;
 PVOID GdtIdt;
 
-extern BOOLEAN PaeModeOn;
-
 /* FUNCTIONS *****************************************************************/
 
 static
