@@ -132,7 +132,7 @@ static void test_copy_empty_key(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
-    add_key(HKEY_CURRENT_USER, COPY_SRC, NULL);
+    add_key(HKEY_CURRENT_USER, COPY_SRC, 0, NULL);
 
 
     run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /f", &r);
@@ -197,7 +197,7 @@ static void test_copy_simple_data(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
-    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
 
     dword = 0x100;
     add_value(hkey, "DWORD", REG_DWORD, &dword, sizeof(dword));
@@ -267,38 +267,38 @@ static void test_copy_complex_data(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
-    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
 
     dword = 0x100;
     add_value(hkey, "DWORD", REG_DWORD, &dword, sizeof(dword));
     add_value(hkey, "String", REG_SZ, "Your text here...", 18);
 
-    add_key(hkey, "Subkey1", &subkey);
+    add_key(hkey, "Subkey1", 0, &subkey);
     add_value(subkey, "Binary", REG_BINARY, "\x11\x22\x33\x44", 4);
     add_value(subkey, "Undefined hex", 0x100, "%PATH%", 7);
     close_key(subkey);
 
-    add_key(hkey, "Subkey2a", &subkey);
+    add_key(hkey, "Subkey2a", 0, &subkey);
     add_value(subkey, "double\"quote", REG_SZ, "\"Hello, World!\"", 16);
     dword = 0x8;
     add_value(subkey, "single'quote", REG_DWORD, &dword, sizeof(dword));
     close_key(subkey);
 
-    add_key(hkey, "Subkey2a\\Subkey2b", &subkey);
+    add_key(hkey, "Subkey2a\\Subkey2b", 0, &subkey);
     add_value(subkey, NULL, REG_SZ, "Default value name", 19);
     add_value(subkey, "Multiple strings", REG_MULTI_SZ, "Line1\0Line2\0Line3\0", 19);
     close_key(subkey);
 
-    add_key(hkey, "Subkey3a", &subkey);
+    add_key(hkey, "Subkey3a", 0, &subkey);
     add_value(subkey, "Backslash", REG_SZ, "Use \\\\ to escape a backslash", 29);
     close_key(subkey);
 
-    add_key(hkey, "Subkey3a\\Subkey3b\\Subkey3c", &subkey);
+    add_key(hkey, "Subkey3a\\Subkey3b\\Subkey3c", 0, &subkey);
     add_value(subkey, "String expansion", REG_EXPAND_SZ, "%HOME%\\%PATH%", 14);
     add_value(subkey, "Zero data type", REG_NONE, "Value", 6);
     close_key(subkey);
 
-    add_key(hkey, "Subkey4", &subkey);
+    add_key(hkey, "Subkey4", 0, &subkey);
     dword = 0x12345678;
     add_value(subkey, NULL, REG_DWORD, &dword, sizeof(dword));
     add_value(subkey, "43981", 0xabcd, "Value", 6);
@@ -336,9 +336,9 @@ static void test_copy_key_order(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
-    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
-    add_key(hkey, "Subkey2", NULL);
-    add_key(hkey, "Subkey1", NULL);
+    add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
+    add_key(hkey, "Subkey2", 0, NULL);
+    add_key(hkey, "Subkey1", 0, NULL);
     close_key(hkey);
 
     run_reg_exe("reg copy HKCU\\" COPY_SRC " HKCU\\" KEY_BASE " /s /f", &r);
@@ -361,7 +361,7 @@ static void test_copy_value_order(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
-    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
     add_value(hkey, "Value 2", REG_SZ, "I was added first!", 19);
     add_value(hkey, "Value 1", REG_SZ, "I was added second!", 20);
     close_key(hkey);
@@ -387,7 +387,7 @@ static void test_copy_hex_data(void)
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Try copying empty hex values */
-    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
     add_value(hkey, "Wine1a", REG_NONE, NULL, 0);
     add_value(hkey, "Wine1b", REG_SZ, NULL, 0);
     add_value(hkey, "Wine1c", REG_EXPAND_SZ, NULL, 0);
@@ -488,8 +488,8 @@ static void test_copy_slashes(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
-    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
-    add_key(hkey, "https://winehq.org", NULL);
+    add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
+    add_key(hkey, "https://winehq.org", 0, NULL);
     add_value(hkey, "count/up", REG_SZ, "one/two/three", 14);
     add_value(hkey, "\\foo\\bar", REG_SZ, "", 1);
     close_key(hkey);
@@ -514,7 +514,7 @@ static void test_copy_escaped_null_values(void)
     delete_tree(HKEY_CURRENT_USER, KEY_BASE);
     verify_key_nonexist(HKEY_CURRENT_USER, KEY_BASE, 0);
 
-    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
     add_value(hkey, "Wine5a", REG_SZ, "\\0", 3);
     add_value(hkey, "Wine5b", REG_SZ, "\\0\\0", 5);
     add_value(hkey, "Wine5c", REG_SZ, "Value1\\0", 9);
@@ -582,7 +582,7 @@ static void test_copy_overwrite(void)
     HKEY hkey;
     DWORD r, dword;
 
-    add_key(HKEY_CURRENT_USER, COPY_SRC, &hkey);
+    add_key(HKEY_CURRENT_USER, COPY_SRC, 0, &hkey);
     add_value(hkey, "Wine1", REG_SZ, "def", 4);
     dword = 0x5;
     add_value(hkey, "Wine2", REG_DWORD, &dword, sizeof(dword));
@@ -590,7 +590,7 @@ static void test_copy_overwrite(void)
     add_value(hkey, "Wine4", REG_MULTI_SZ, "Line1\0Line2\0Line3\0", 19);
     close_key(hkey);
 
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
     add_value(hkey, "Wine1", REG_SZ, "abc", 4);
     verify_reg_nonexist(hkey, "Wine2");
     add_value(hkey, "Wine3", REG_EXPAND_SZ, "%HOME%\\%PATH%", 14);

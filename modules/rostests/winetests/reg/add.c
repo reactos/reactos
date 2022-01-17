@@ -121,17 +121,17 @@ void verify_key_nonexist_(const char *file, unsigned line, HKEY root, const char
         RegCloseKey(hkey);
 }
 
-void add_key_(const char *file, unsigned line, const HKEY hkey, const char *path, HKEY *subkey)
+void add_key_(const char *file, unsigned line, const HKEY root, const char *path, REGSAM sam, HKEY *hkey)
 {
     LONG err;
     HKEY new_key;
 
-    err = RegCreateKeyExA(hkey, path, 0, NULL, REG_OPTION_NON_VOLATILE,
-                          KEY_READ|KEY_WRITE, NULL, &new_key, NULL);
+    err = RegCreateKeyExA(root, path, 0, NULL, REG_OPTION_NON_VOLATILE,
+                          KEY_READ|KEY_WRITE|sam, NULL, &new_key, NULL);
     lok(err == ERROR_SUCCESS, "RegCreateKeyExA failed: got error %d\n", err);
 
-    if (subkey)
-        *subkey = new_key;
+    if (hkey)
+        *hkey = new_key;
     else
         RegCloseKey(new_key);
 }
@@ -282,7 +282,7 @@ static void test_key_formats(void)
     DWORD r;
     LONG err;
 
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
 
     run_reg_exe("reg add \\HKCU\\" KEY_BASE "\\keytest0 /f", &r);
     ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
@@ -365,7 +365,7 @@ static void test_add(void)
     delete_key(HKEY_CURRENT_USER, KEY_BASE, 0);
 
     /* Adding a registry key via WinAPI doesn't initialize the Default value... */
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
     verify_reg_nonexist(hkey, NULL);
 
     /* ... but we can add it without passing [/f] to reg.exe */
@@ -375,7 +375,7 @@ static void test_add(void)
     delete_value(hkey, NULL);
 
     /* Test whether overwriting a registry key modifies existing keys and values */
-    add_key(hkey, "Subkey", NULL);
+    add_key(hkey, "Subkey", 0, NULL);
     add_value(hkey, "Test1", REG_SZ, "Value1", 7);
     dword = 0x123;
     add_value(hkey, "Test2", REG_DWORD, &dword, sizeof(dword));
@@ -407,7 +407,7 @@ static void test_reg_none(void)
     HKEY hkey;
     DWORD r;
 
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_NONE /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
@@ -436,7 +436,7 @@ static void test_reg_sz(void)
     HKEY hkey;
     DWORD r;
 
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_SZ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
@@ -514,7 +514,7 @@ static void test_reg_expand_sz(void)
     HKEY hkey;
     DWORD r;
 
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_EXPAND_SZ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
@@ -557,7 +557,7 @@ static void test_reg_binary(void)
     char buffer[22];
     LONG err;
 
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_BINARY /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);
@@ -620,7 +620,7 @@ static void test_reg_dword(void)
     DWORD r, dword, type, size;
     LONG err;
 
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_DWORD /f /d 12345678", &r);
     ok(r == REG_EXIT_SUCCESS || broken(r == REG_EXIT_FAILURE /* WinXP */),
@@ -734,7 +734,7 @@ static void test_reg_dword_big_endian(void)
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v Test2 /t REG_DWORD_BIG_ENDIAN /f", &r);
     ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */), "got exit code %d, expected 1\n", r);
 
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /v Test3 /t REG_DWORD_BIG_ENDIAN /d 456 /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
@@ -755,7 +755,7 @@ static void test_reg_multi_sz(void)
     HKEY hkey;
     DWORD r;
 
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
 
     run_reg_exe("reg add HKCU\\" KEY_BASE " /t REG_MULTI_SZ /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %u, expected 0\n", r);

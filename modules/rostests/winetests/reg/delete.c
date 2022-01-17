@@ -70,12 +70,12 @@ static void test_delete(void)
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 
     /* Create a test key */
-    add_key(HKEY_CURRENT_USER, KEY_BASE, &hkey);
+    add_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
     add_value(hkey, "foo", REG_DWORD, &deadbeef, sizeof(deadbeef));
     add_value(hkey, "bar", REG_DWORD, &deadbeef, sizeof(deadbeef));
     add_value(hkey, NULL, REG_DWORD, &deadbeef, sizeof(deadbeef));
 
-    add_key(hkey, "subkey", NULL);
+    add_key(hkey, "subkey", 0, NULL);
 
     run_reg_exe("reg delete HKCU\\" KEY_BASE " /v bar /f", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
@@ -91,7 +91,7 @@ static void test_delete(void)
     verify_key(hkey, "subkey", 0);
 
     /* Test forward and back slashes */
-    add_key(hkey, "https://winehq.org", NULL);
+    add_key(hkey, "https://winehq.org", 0, NULL);
     add_value(hkey, "count/up", REG_SZ, "one/two/three", 14);
     add_value(hkey, "\\foo\\bar", REG_SZ, "", 1);
 
