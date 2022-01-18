@@ -78,11 +78,14 @@ extern "C" {
 //
 // Range and Range List Flags
 //
-#define RTL_RANGE_LIST_ADD_IF_CONFLICT                      0x00000001
-#define RTL_RANGE_LIST_ADD_SHARED                           0x00000002
+#define RTL_RANGE_LIST_ADD_IF_CONFLICT  1
+#define RTL_RANGE_LIST_ADD_SHARED       2
 
-#define RTL_RANGE_SHARED                                    0x01
-#define RTL_RANGE_CONFLICT                                  0x02
+#define RTL_RANGE_SHARED                1
+#define RTL_RANGE_CONFLICT              2
+
+#define RTL_RANGE_LIST_SHARED_OK        1
+#define RTL_RANGE_LIST_NULL_CONFLICT_OK 2
 
 //
 // Flags in RTL_ACTIVATION_CONTEXT_STACK_FRAME (from Checked NTDLL)

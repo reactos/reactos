@@ -21,12 +21,6 @@
 
 /* RTLP_RANGE_LIST_ENTRY == RTL_RANGE + ListEntry */
 
-/*  FIXME ? ntddk.h */
-/* Flags for public functions: RtlFindRange(), RtlIsRangeAvailable() */
-#define RTL_RANGE_LIST_SHARED_OK           1
-#define RTL_RANGE_LIST_NULL_CONFLICT_OK    2
-/* ? ntddk.h */
-
 /* RTLP_RANGE_LIST_ENTRY.PrivateFlags */
 #define RTLP_ENTRY_IS_MERGED  1
 
