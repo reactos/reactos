@@ -26,14 +26,14 @@
 
 /* FUNCTIONS ***************************************************************/
 
-static
+static inline
 PRTLP_RANGE_LIST_ENTRY
 RtlpEntryFromLink(PVOID Link)
 {
     return CONTAINING_RECORD(Link, RTLP_RANGE_LIST_ENTRY, ListEntry);
 }
 
-static
+static inline
 BOOLEAN
 IsRangesIntersection(
     _In_ PRTLP_RANGE_LIST_ENTRY Entry1,
