@@ -777,6 +777,7 @@ RtlCopyRangeList(
 
     DPRINT("RtlCopyRangeList: (%p) ==> (%p) [%X]\n", RangeList, CopyRangeList, RangeList->Count);
 
+    /* Ensure that the destination range list is initially empty */
     if (CopyRangeList->Count)
     {
         DPRINT1("RtlCopyRangeList: STATUS_INVALID_PARAMETER. Count %X\n", CopyRangeList->Count);
@@ -1030,6 +1031,7 @@ RtlGetNextRange(
 
     RangeList = CONTAINING_RECORD((Iterator->RangeListHead), RTL_RANGE_LIST, ListHead);
 
+    /* Bail out if the iterator is desynchronized with the list */
     if (RangeList->Stamp != Iterator->Stamp)
     {
         DPRINT1("RtlGetNextRange: STATUS_INVALID_PARAMETER\n");
