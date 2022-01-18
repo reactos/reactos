@@ -67,9 +67,7 @@ RtlpDeleteRangeListEntry(
     DPRINT("RtlpDeleteRangeListEntry: DelEntry %p\n", DelEntry);
 
     if (!(DelEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED))
-    {
         goto Finish;
-    }
 
     RtlEntry = RtlpEntryFromLink(DelEntry->Merged.ListHead.Flink);
     NextRtlEntry = RtlpEntryFromLink(RtlEntry->ListEntry.Flink);
@@ -121,10 +119,7 @@ RtlpCopyRangeListEntry(
     NewRtlEntry->ListEntry.Blink = NULL;
 
     if (!(RtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED))
-    {
-        //DPRINT("RtlpCopyRangeListEntry: !RTLP_ENTRY_IS_MERGED. return %p, \n", NewRtlEntry);
         return NewRtlEntry;
-    }
 
     InitializeListHead(&NewRtlEntry->Merged.ListHead);
 
@@ -243,23 +238,15 @@ RtlpAddToMergedRange(
     }
 
     if (ListEntry)
-    {
         InsertHeadList(ListEntry, &AddRtlEntry->ListEntry);
-    }
     else
-    {
         InsertTailList(&RtlEntry->Merged.ListHead, &AddRtlEntry->ListEntry);
-    }
 
     if (AddRtlEntry->Start < RtlEntry->Start)
-    {
         RtlEntry->Start = AddRtlEntry->Start;
-    }
 
     if (AddRtlEntry->End > RtlEntry->End)
-    {
         RtlEntry->End = AddRtlEntry->End;
-    }
 
     RtlEntryIsShared = (RtlEntry->PublicFlags & RTL_RANGE_SHARED);
 
@@ -381,9 +368,7 @@ RtlpAddIntersectingRanges(
     while (&CurrentRtlEntry->ListEntry != ListHead)
     {
         if (AddRtlEntry->End < CurrentRtlEntry->Start)
-        {
             break;
-        }
 
         if (CurrentRtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
         {
@@ -596,9 +581,7 @@ RtlpIsRangeAvailable(
         if (MoveForwards)
         {
             if (!Iterator->MergedHead && End < RtlRange->Start)
-            {
                 return TRUE;
-            }
         }
         else if (!Iterator->MergedHead && Start > RtlRange->End)
         {
@@ -609,47 +592,33 @@ RtlpIsRangeAvailable(
         Entry.End = End;
 
         if (!IsRangesIntersection((PRTLP_RANGE_LIST_ENTRY)RtlRange, &Entry))
-        {
             continue;
-        }
 
         DPRINT("RtlpIsRangeAvailable: Intersection [%I64X-%I64X] and [%I64X-%I64X]\n", Start, End, RtlRange->Start, RtlRange->End);
 
         if (SharedFlag && (RtlRange->Flags & RTL_RANGE_SHARED))
-        {
             continue;
-        }
 
         if ((AttributeAvailableMask & RtlRange->Attributes))
-        {
             continue;
-        }
 
         if (!NullConflictFlag)
         {
             if (!Callback)
-            {
                 return FALSE;
-            }
 
             if (Callback(Context, NULL) == FALSE)
-            {
                 return FALSE;
-            }
 
             DPRINT("RtlpIsRangeAvailable: conflict [%I64X-%I64X] and [%I64X-%I64X]\n", Start, End, RtlRange->Start, RtlRange->End);
         }
         else if (RtlRange->Owner)
         {
             if (!Callback)
-            {
                 return FALSE;
-            }
 
             if (Callback(Context, RtlRange) == FALSE)
-            {
                 return FALSE;
-            }
 
             DPRINT("RtlpIsRangeAvailable: conflict [%I64X-%I64X] and [%I64X-%I64X]\n", Start, End, RtlRange->Start, RtlRange->End);
         }
@@ -826,8 +795,8 @@ CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 RtlDeleteOwnersRanges(
-    _In_ PRTL_RANGE_LIST RangeList,
-    _In_ PVOID Owner)
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _In_ _Maybenull_ PVOID Owner)
 {
     PRTLP_RANGE_LIST_ENTRY RtlEntry;
     PRTLP_RANGE_LIST_ENTRY NextRtlEntry;
@@ -1049,13 +1018,9 @@ RtlGetNextRange(
     CurrentRtlEntry = (PRTLP_RANGE_LIST_ENTRY)Iterator->Current;
 
     if (MoveForwards)
-    {
         ListEntry = CurrentRtlEntry->ListEntry.Flink;
-    }
     else
-    {
         ListEntry = CurrentRtlEntry->ListEntry.Blink;
-    }
 
     NextRtlEntry = RtlpEntryFromLink(ListEntry);
     ASSERT(NextRtlEntry);
@@ -1075,13 +1040,9 @@ RtlGetNextRange(
         MergedRtlEntry = CONTAINING_RECORD(Iterator->MergedHead, RTLP_RANGE_LIST_ENTRY, Merged.ListHead);
 
         if (MoveForwards)
-        {
             ListEntry = MergedRtlEntry->ListEntry.Flink;
-        }
         else
-        {
             ListEntry = MergedRtlEntry->ListEntry.Blink;
-        }
 
         NextRtlEntry = RtlpEntryFromLink(ListEntry);
         DPRINT("RtlGetNextRange: %p, %p, %p [%I64X-%I64X]\n", MergedRtlEntry, ListEntry, NextRtlEntry, NextRtlEntry->Start, NextRtlEntry->End);
@@ -1103,13 +1064,9 @@ RtlGetNextRange(
         Iterator->MergedHead = &NextRtlEntry->Merged.ListHead;
 
         if (MoveForwards)
-        {
             ListEntry = NextRtlEntry->Merged.ListHead.Flink;
-        }
         else
-        {
             ListEntry = NextRtlEntry->Merged.ListHead.Blink;
-        }
     }
     else
     {
@@ -1147,7 +1104,7 @@ NTSTATUS
 NTAPI
 RtlGetLastRange(
     _In_ PRTL_RANGE_LIST RangeList,
-    _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _Out_ PRTL_RANGE_LIST_ITERATOR Iterator,
     _Outptr_ PRTL_RANGE *Range)
 {
     PRTLP_RANGE_LIST_ENTRY RtlEntry;
@@ -1304,7 +1261,8 @@ RtlFindRange(
         start = ((PRTLP_RANGE_LIST_ENTRY)(Iterator.Current))->Start;
         DPRINT("RtlFindRange: Iterator start %I64X\n", start);
 
-        if (start - Length > start) {
+        if (start - Length > start)
+        {
             DPRINT("RtlFindRange: break\n");
             break;
         }
