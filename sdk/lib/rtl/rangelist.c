@@ -1267,7 +1267,7 @@ RtlFindRange(
             break;
         }
 
-        start = start - Length - (start % Alignment);
+        start = start - Length - ((start - Length) % Alignment);
         end = start + Length - 1;
 
         DPRINT("RtlFindRange: [%I64X-%I64X], Minimum %I64X\n", start, end, Minimum);
