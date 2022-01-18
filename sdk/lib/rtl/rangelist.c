@@ -331,13 +331,12 @@ RtlpAddIntersectingRanges(
 
     if ((Flags & RTL_RANGE_LIST_ADD_IF_CONFLICT) == 0)
     {
-        for(CurrentRtlEntry = RtlEntry;
-            &CurrentRtlEntry->ListEntry != ListHead;
-            CurrentRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->ListEntry.Flink))
+        for (CurrentRtlEntry = RtlEntry;
+             &CurrentRtlEntry->ListEntry != ListHead;
+             CurrentRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->ListEntry.Flink))
         {
-            if (AddRtlEntry->End < CurrentRtlEntry->Start) {
+            if (AddRtlEntry->End < CurrentRtlEntry->Start)
                 break;
-            }
 
             if (CurrentRtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
             {
@@ -388,8 +387,7 @@ RtlpAddIntersectingRanges(
 
         if (CurrentRtlEntry->PrivateFlags & RTLP_ENTRY_IS_MERGED)
         {
-            DPRINT("RtlpAddIntersectingRanges: PrivateFlags & RTLP_ENTRY_IS_MERGED\n");
-            DbgBreakPoint();
+            DPRINT1("RtlpAddIntersectingRanges: PrivateFlags & RTLP_ENTRY_IS_MERGED\n");
 
             MergedRtlEntry = RtlpEntryFromLink(CurrentRtlEntry->Merged.ListHead.Flink);
             NextMergedRtlEntry = RtlpEntryFromLink(MergedRtlEntry->ListEntry.Flink);
@@ -698,7 +696,6 @@ RtlpIsRangeAvailable(
  * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAddRange(
@@ -765,7 +762,6 @@ RtlAddRange(
  * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCopyRangeList(
@@ -922,7 +918,6 @@ START:
  * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlDeleteRange(
@@ -1008,7 +1003,7 @@ Exit:
  * @param Iterator
  * Pointer to a user supplied list state buffer.
  *
- * @param OutRange
+ * @param Range
  * Address of pointer to the first range.
  *
  * @param MoveForwards
@@ -1018,12 +1013,11 @@ Exit:
  * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetNextRange(
     _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
-    _Out_ PRTL_RANGE * OutRange,
+    _Outptr_ PRTL_RANGE *Range,
     _In_ BOOLEAN MoveForwards)
 {
     PRTLP_RANGE_LIST_ENTRY CurrentRtlEntry;
@@ -1046,7 +1040,7 @@ RtlGetNextRange(
     if (!Iterator->Current)
     {
         DPRINT1("RtlGetNextRange: return STATUS_NO_MORE_ENTRIES\n");
-        *OutRange = NULL;
+        *Range = NULL;
         return STATUS_NO_MORE_ENTRIES;
     }
 
@@ -1054,11 +1048,11 @@ RtlGetNextRange(
 
     if (MoveForwards)
     {
-       ListEntry = CurrentRtlEntry->ListEntry.Flink;
+        ListEntry = CurrentRtlEntry->ListEntry.Flink;
     }
     else
     {
-       ListEntry = CurrentRtlEntry->ListEntry.Blink;
+        ListEntry = CurrentRtlEntry->ListEntry.Blink;
     }
 
     NextRtlEntry = RtlpEntryFromLink(ListEntry);
@@ -1071,8 +1065,8 @@ RtlGetNextRange(
         if (&NextRtlEntry->ListEntry != Iterator->MergedHead)
         {
             Iterator->Current = NextRtlEntry;
-            *OutRange = (PRTL_RANGE)NextRtlEntry;
-            DPRINT("RtlGetNextRange: %p, %p, %p, *OutRange %p [%I64X-%I64X]\n", Iterator->RangeListHead, Iterator->Current, Iterator->MergedHead, *OutRange, NextRtlEntry->Start, NextRtlEntry->End);
+            *Range = (PRTL_RANGE)NextRtlEntry;
+            DPRINT("RtlGetNextRange: %p, %p, %p, *Range %p [%I64X-%I64X]\n", Iterator->RangeListHead, Iterator->Current, Iterator->MergedHead, *Range, NextRtlEntry->Start, NextRtlEntry->End);
             return STATUS_SUCCESS;
         }
 
@@ -1097,7 +1091,7 @@ RtlGetNextRange(
     {
         DPRINT("RtlGetNextRange: return STATUS_NO_MORE_ENTRIES\n");
         Iterator->Current = NULL;
-        *OutRange = NULL;
+        *Range = NULL;
         return STATUS_NO_MORE_ENTRIES;
     }
 
@@ -1121,10 +1115,10 @@ RtlGetNextRange(
     }
 
     NextRtlEntry = RtlpEntryFromLink(ListEntry);
-    DPRINT("RtlGetNextRange: %p, %p, *OutRange %X [%I64X-%I64X]\n", Iterator->Current, Iterator->MergedHead, NextRtlEntry, NextRtlEntry->Start, NextRtlEntry->End);
+    DPRINT("RtlGetNextRange: %p, %p, *Range %X [%I64X-%I64X]\n", Iterator->Current, Iterator->MergedHead, NextRtlEntry, NextRtlEntry->Start, NextRtlEntry->End);
 
     Iterator->Current = NextRtlEntry;
-    *OutRange = (PRTL_RANGE)NextRtlEntry;
+    *Range = (PRTL_RANGE)NextRtlEntry;
 
     return STATUS_SUCCESS;
 }
@@ -1140,20 +1134,19 @@ RtlGetNextRange(
  * @param Iterator
  * Pointer to a user supplied list state buffer.
  *
- * @param OutRange
+ * @param Range
  * Address of pointer to the last range.
  *
  * @return
  * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetLastRange(
     _In_ PRTL_RANGE_LIST RangeList,
     _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
-    _Out_ PRTL_RANGE * OutRange)
+    _Outptr_ PRTL_RANGE *Range)
 {
     PRTLP_RANGE_LIST_ENTRY RtlEntry;
 
@@ -1169,7 +1162,7 @@ RtlGetLastRange(
 
         Iterator->Current = NULL;
         Iterator->MergedHead = NULL;
-        *OutRange = NULL;
+        *Range = NULL;
 
         return STATUS_NO_MORE_ENTRIES;
     }
@@ -1193,9 +1186,9 @@ RtlGetLastRange(
         //DPRINT("RtlGetLastRange: Iterator->MergedHead %p, Iterator->Current %p\n", Iterator->MergedHead, Iterator->Current);
     }
 
-    *OutRange = (PRTL_RANGE)Iterator->Current;
+    *Range = (PRTL_RANGE)Iterator->Current;
 
-    DPRINT("RtlGetLastRange: *OutRange %p, [%I64X-%I64X]\n", Iterator->Current, (*OutRange)->Start, (*OutRange)->End);
+    DPRINT("RtlGetLastRange: *Range %p, [%I64X-%I64X]\n", Iterator->Current, (*Range)->Start, (*Range)->End);
 
     return STATUS_SUCCESS;
 }
@@ -1232,14 +1225,13 @@ RtlGetLastRange(
  * @param Callback
  * Pointer to a callback to call in case of a conflict.
  *
- * @param OutStart
+ * @param Start
  * Pointer where the found value for the start of the range will be stored.
  *
  * @return
  * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlFindRange(
@@ -1250,29 +1242,29 @@ RtlFindRange(
     _In_ ULONG Alignment,
     _In_ ULONG Flags,
     _In_ UCHAR AttributeAvailableMask,
-    _In_ PVOID Context OPTIONAL,
-    _In_ PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
-    _Out_ PULONGLONG OutStart)
+    _In_opt_ PVOID Context,
+    _In_opt_ PRTL_CONFLICT_RANGE_CALLBACK Callback,
+    _Out_ PULONGLONG Start)
 {
     RTL_RANGE_LIST_ITERATOR Iterator;
     PRTL_RANGE TmpRange;
-    ULONGLONG Start;
-    ULONGLONG End;
+    ULONGLONG start;
+    ULONGLONG end;
 
     PAGED_CODE_RTL();
     DPRINT("RtlFindRange: [%X] %p, %X, [%I64X-%I64X], %X, %X\n", Flags, RangeList, RangeList->Count, Minimum, Maximum, Length, Alignment);
 
     ASSERT(RangeList);
-    ASSERT(OutStart);
+    ASSERT(Start);
     ASSERT(Alignment > 0);
     ASSERT(Length > 0);
 
-    Start = Maximum - (Length - 1) - ((Maximum - (Length - 1)) % Alignment);
+    start = Maximum - (Length - 1) - ((Maximum - (Length - 1)) % Alignment);
 
     if ((Minimum > Maximum) ||
         ((Maximum - Minimum) < (Length - 1)) ||
         ((Minimum + Alignment) < Minimum) ||
-        (Start < Minimum) ||
+        (start < Minimum) ||
         Length == 0 ||
         Alignment == 0)
     {
@@ -1284,16 +1276,16 @@ RtlFindRange(
         return STATUS_INVALID_PARAMETER;
     }
 
-    End = Start + Length - 1;
+    end = start + Length - 1;
     RtlGetLastRange(RangeList, &Iterator, &TmpRange);
 
     do
     {
-        DPRINT("RtlFindRange: Testing [%I64X-%I64X]\n", Start, End);
+        DPRINT("RtlFindRange: Testing [%I64X-%I64X]\n", start, end);
 
         if (RtlpIsRangeAvailable(&Iterator,
-                                 Start,
-                                 End,
+                                 start,
+                                 end,
                                  AttributeAvailableMask,
                                  ((Flags & RTL_RANGE_LIST_SHARED_OK) != 0),
                                  ((Flags & RTL_RANGE_LIST_NULL_CONFLICT_OK) != 0),
@@ -1301,26 +1293,26 @@ RtlFindRange(
                                  Context,
                                  Callback))
         {
-            *OutStart = Start;
-            ASSERT((*OutStart >= Minimum) && (*OutStart + Length - 1 <= Maximum));
+            *Start = start;
+            ASSERT((*Start >= Minimum) && (*Start + Length - 1 <= Maximum));
             DPRINT("RtlFindRange: return STATUS_SUCCESS\n");
             return STATUS_SUCCESS;
         }
 
-        Start = ((PRTLP_RANGE_LIST_ENTRY)(Iterator.Current))->Start;
-        DPRINT("RtlFindRange: Iterator Start %I64X\n", Start);
+        start = ((PRTLP_RANGE_LIST_ENTRY)(Iterator.Current))->start;
+        DPRINT("RtlFindRange: Iterator start %I64X\n", start);
 
-        if (Start - Length > Start) {
+        if (start - Length > start) {
             DPRINT("RtlFindRange: break\n");
             break;
         }
 
-        Start = Start - Length - (Start % Alignment);
-        End = Start + Length - 1;
+        start = start - Length - (start % Alignment);
+        end = start + Length - 1;
 
-        DPRINT("RtlFindRange: [%I64X-%I64X], Minimum %I64X\n", Start, End, Minimum);
+        DPRINT("RtlFindRange: [%I64X-%I64X], Minimum %I64X\n", start, end, Minimum);
     }
-    while (Start >= Minimum);
+    while (start >= Minimum);
 
     DPRINT("RtlFindRange: return STATUS_UNSUCCESSFUL\n");
 
@@ -1339,7 +1331,6 @@ RtlFindRange(
  * None.
  */
 CODE_SEG("PAGE")
-NTSYSAPI
 VOID
 NTAPI
 RtlFreeRangeList(
@@ -1380,20 +1371,19 @@ RtlFreeRangeList(
  * @param Iterator
  * Pointer to a user supplied list state buffer.
  *
- * @param OutRange
+ * @param Range
  * Pointer to the first range.
  *
  * @return
  * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetFirstRange(
     _In_ PRTL_RANGE_LIST RangeList,
-    _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
-    _Out_ PRTL_RANGE * OutRange)
+    _Out_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _Outptr_ PRTL_RANGE *Range)
 {
     PRTLP_RANGE_LIST_ENTRY FirstRtlEntry;
 
@@ -1408,7 +1398,7 @@ RtlGetFirstRange(
         Iterator->Current = NULL;
         Iterator->MergedHead = NULL;
 
-        *OutRange = NULL;
+        *Range = NULL;
 
         return STATUS_NO_MORE_ENTRIES;
     }
@@ -1428,9 +1418,9 @@ RtlGetFirstRange(
         Iterator->Current = FirstRtlEntry;
     }
 
-    *OutRange = Iterator->Current;
+    *Range = Iterator->Current;
 
-    DPRINT("RtlGetFirstRange: *OutRange %p\n", *OutRange);
+    DPRINT("RtlGetFirstRange: *Range %p\n", *Range);
 
     return STATUS_SUCCESS;
 }
@@ -1468,7 +1458,6 @@ RtlGetFirstRange(
  * Returns NTSTATUS.
  */
 CODE_SEG("PAGE")
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlIsRangeAvailable(
@@ -1477,8 +1466,8 @@ RtlIsRangeAvailable(
     _In_ ULONGLONG End,
     _In_ ULONG Flags,
     _In_ UCHAR AttributeAvailableMask,
-    _In_ PVOID Context OPTIONAL,
-    _In_ PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
+    _In_opt_ PVOID Context,
+    _In_opt_ PRTL_CONFLICT_RANGE_CALLBACK Callback,
     _Out_ PBOOLEAN Available)
 {
     RTL_RANGE_LIST_ITERATOR Iterator;
@@ -1529,7 +1518,6 @@ RtlIsRangeAvailable(
  * None.
  */
 CODE_SEG("PAGE")
-NTSYSAPI
 VOID
 NTAPI
 RtlInitializeRangeList(
