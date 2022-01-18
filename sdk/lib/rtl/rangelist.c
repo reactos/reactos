@@ -1301,7 +1301,7 @@ RtlFindRange(
             return STATUS_SUCCESS;
         }
 
-        start = ((PRTLP_RANGE_LIST_ENTRY)(Iterator.Current))->start;
+        start = ((PRTLP_RANGE_LIST_ENTRY)(Iterator.Current))->Start;
         DPRINT("RtlFindRange: Iterator start %I64X\n", start);
 
         if (start - Length > start) {
