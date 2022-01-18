@@ -615,7 +615,7 @@ RtlpIsRangeAvailable(
 
         DPRINT("RtlpIsRangeAvailable: Intersection [%I64X-%I64X] and [%I64X-%I64X]\n", Start, End, RtlRange->Start, RtlRange->End);
 
-        if (SharedFlag && (RtlRange->Flags & 1)) // FIXME
+        if (SharedFlag && (RtlRange->Flags & RTL_RANGE_SHARED))
         {
             continue;
         }
