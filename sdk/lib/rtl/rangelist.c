@@ -40,21 +40,18 @@ IsRangesIntersection(
     _In_ PRTLP_RANGE_LIST_ENTRY Entry2)
 {
     /* Not intersection when:
-       (Entry1->Start - Entry1->End) ... (Entry2->Start -
-       (Entry2->Start - Entry2->End) ... (Entry1->Start -
+       (Entry1->Start - Entry1->End) .. (Entry2->Start - Entry2->End) or
+       (Entry2->Start - Entry2->End) .. (Entry1->Start - Entry1->End)
     */
-
     if (((Entry2->Start > Entry1->Start && Entry2->Start > Entry1->End) ||
          (Entry1->Start > Entry2->Start && Entry1->Start > Entry2->End)))
     {
         /* No intersection */
         return FALSE;
     }
-    else
-    {
-        /* Entry1 and Entry2 overlap */
-        return TRUE;
-    }
+
+    /* Entry1 and Entry2 overlap */
+    return TRUE;
 }
 
 CODE_SEG("PAGE")
