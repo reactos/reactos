@@ -4,45 +4,45 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_HELP "Használat: %s kötet: [-FS:állományrendszer] [-V:címke] [-Q] [-A:méret] [-C]\n\n\
-  [kötet:]         A meghajtóbetûjelet adja meg (kettõsponttal a végén).\n\
-  -FS:állományrendszer Az állományrendszer típusát adja meg (%s).\n\
-  -V:címke         A Kötetcímke neve.\n\
+    STRING_HELP "Használat: %s kötet: [-FS:fájlrendszer] [-V:címke] [-Q] [-A:méret] [-C]\n\n\
+  [kötet:]         A formázandó meghajtó betűjelet adja meg.\n\
+  -FS:fájlrendszer A fájlrendszer típusát adja meg (%s).\n\
+  -V:címke         A kötetcímkét adja meg.\n\
   -Q               Gyorsformázást hajt végre.\n\
-  -A:méret         Felülbírálja az alapértelmezett szektorcsoport-\n\
-                   méretet. Általános használathoz az alapértelmezett\n\
+  -A:méret         Felülbírálja az alapértelmezett szektorcsoport méretet.\n\
+                   Általános használathoz az alapértelmezett\n\
                    értékek ajánlottak.\n\
-                   Az NTFS a következõ értékeket támogatja: 512, 1024, 2048,\n\
+                   Az NTFS a következő értékeket támogatja: 512, 1024, 2048,\n\
                    4096, 8192, 16K, 32K, 64K.\n\
-                   A FAT a következõ értékeket támogatja: 8192, 16K, 32K, 64K,\n\
+                   A FAT a következő értékeket támogatja: 8192, 16K, 32K, 64K,\n\
                    128K, 256K.\n\
                    NTFS-tömörítés nem lehetséges 4096 bájtnál nagyobb\n\
                    szektorcsoportoknál.\n\
-  -C               Az új köteten létrehozott állományok alapból tömörítve jönnek\n\
-                   létre.\n\n"
+  -C               Az új köteten létrehozott állományok alapból tömörítve\n\
+                   jönnek létre.\n\n"
     STRING_COMPLETE "%lu százalék befejezve.\r"
-    STRING_FORMAT_FAIL "A FormatEx végrehajtása sikertelenül fejezõdött be.\n\n"
-    STRING_NO_SUPPORT "A Mûvelet Nem Támogatott"
-    STRING_FMIFS_FAIL "Nem találtam meg az FMIFS kezdõpontját.\n\n"
+    STRING_FORMAT_FAIL "A FormatEx végrehajtása sikertelenül fejeződött be.\n\n"
+    STRING_NO_SUPPORT "A művelet nem támogatott"
+    STRING_FMIFS_FAIL "Az FMIFS belépési pontok nem találhatók.\n\n"
     STRING_UNKNOW_ARG "Érvénytelen paraméter: %s\n"
     STRING_DRIVE_PARM "Hiányzik a meghajtó meghatározás.\n\n"
     STRING_ERROR_DRIVE_TYPE "Nem sikerült lekérdezni a meghajtó típusát"
-    STRING_INSERT_DISK "Helyezzen be új lemezt a következõ meghajtóba: %C:\\ Ha készen áll, nyomja meg az ENTER billenytût..."
+    STRING_INSERT_DISK "Helyezzen be új lemezt a következő meghajtóba: %C:\nHa készen áll, nyomja meg az ENTER billentyűt..."
     STRING_NO_VOLUME "Nem sikerült megállapítani címkét"
     STRING_NO_VOLUME_SIZE "Nem sikerült megállapítani a kötet méretét"
-    STRING_FILESYSTEM "A állományrendszer típusa %s.\n"
+    STRING_FILESYSTEM "A fájlrendszer típusa %s.\n"
     STRING_LABEL_NAME_EDIT "Adja meg a címkét az alábbi meghajtóhoz: %C: "
     STRING_ERROR_LABEL "Érvénytelen címkét adott meg a meghajtóhoz.\n"
-    STRING_YN_FORMAT "\nFIGYELMEZTETÉS: A NEM CSERÉLHETÕ LEMEZMEGHAJTÓN (%C:) MINDEN ADAT EL FOG VESZNI.\n\
+    STRING_YN_FORMAT "\nFIGYELMEZTETÉS: A NEM CSERÉLHETŐ LEMEZMEGHAJTÓN (%C:) MINDEN ADAT EL FOG VESZNI.\n\
 \nFolytatja a formázást (I/N)? "
     STRING_YES_NO_FAQ "IN"
-    STRING_VERIFYING "Ellenõrzés"
+    STRING_VERIFYING "Ellenőrzés"
     STRING_FAST_FMT "Gyorsformázás"
-    STRING_CREATE_FSYS "Állományrendszer létrehozása.\n"
+    STRING_CREATE_FSYS "Fájlrendszer létrehozása.\n"
     STRING_FMT_COMPLETE "Formázás befejezve.\n"
-    STRING_VOL_COMPRESS "A Kötet nem támogatja a tömörítést.\n"
+    STRING_VOL_COMPRESS "A kötet nem támogatja a tömörítést.\n"
     STRING_ENTER_LABEL "Kötetcímke (legfeljebb 11 karakter, ENTER ha nincs)? "
-    STRING_NO_LABEL "A kötet nem kapott címkét"
-    STRING_FREE_SPACE "\n%I64d bájt teljes lemezterület.\n%I64d bájt elérhetõ a köteten.\n"
-    STRING_SERIAL_NUMBER "\nA Kötet sorozatszáma: %04X-%04X\n"
+    STRING_NO_LABEL "Nem sikerült elnevezni a kötetet"
+    STRING_FREE_SPACE "\n%I64d bájt teljes lemezterület.\n%I64d bájt elérhető a köteten.\n"
+    STRING_SERIAL_NUMBER "\nA kötet sorozatszáma: %04X-%04X\n"
 END

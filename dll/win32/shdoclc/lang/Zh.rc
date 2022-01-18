@@ -12,11 +12,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-/* Translator:
- * 2008 Hongbo Ni <hongbo.at.njstar.com>
- * 2018, 2019 Luo Yufan <njlyf2011.at.hotmail.com>
- * Sync with Wine: Traditional Chinese on 2021
+ *
+ * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
+ *              Copyright 2018-2019 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -250,7 +249,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_PRINT_HEADER_TEMPLATE "&w&bPage &p" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_HEADER_TEMPLATE "&w&b第 &p 頁" /* FIXME: should be "&w&bPage &p of &P" */
     IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
 }
 
@@ -258,39 +257,39 @@ IDR_BROWSE_CONTEXT_MENU MENU
 {
     POPUP "" /* Default */
     {
-        MENUITEM "返回(&B)", IDM_GOBACKWARD
-        MENUITEM "向前(&O)", IDM_GOFORWARD
+        MENUITEM "下一頁(&B)", IDM_GOBACKWARD
+        MENUITEM "上一頁(&O)", IDM_GOFORWARD
         MENUITEM SEPARATOR
-        MENUITEM "將背景存為(&S)...", IDM_SAVEBACKGROUND
+        MENUITEM "另存背景為(&S)...", IDM_SAVEBACKGROUND
         MENUITEM "設為背景(&G)", IDM_SETWALLPAPER
         MENUITEM "複製背景(&C)", IDM_COPYBACKGROUND
-        MENUITEM "設定到桌面(&D)", IDM_SETDESKTOPITEM
+        MENUITEM "設定為桌面項目(&D)", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "全選(&A)", IDM_SELECTALL
         MENUITEM "貼上(&P)", IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "建立捷徑(&T)", IDM_CREATESHORTCUT
         MENUITEM "新增至我的最愛(&F)", IDM_ADDFAVORITES
-        MENUITEM "查看源代碼(&V)", IDM_VIEWSOURCE
+        MENUITEM "檢視原始碼(&V)", IDM_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "語言編碼(&E)", IDM_LANGUAGE
+        MENUITEM "編碼(&E)", IDM_LANGUAGE
         MENUITEM SEPARATOR
         MENUITEM "列印(&I)", IDM_PRINT
         MENUITEM "重新整理(&R)", _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "屬性(&P)", IDM_PROPERTIES
+        MENUITEM "內容(&P)", IDM_PROPERTIES
     }
 
     POPUP "" /* Image */
     {
         MENUITEM "開啟連結(&O)", IDM_FOLLOWLINKC
         MENUITEM "在新視窗開啟連結(&N)", IDM_FOLLOWLINKN
-        MENUITEM "將目標存為(&A)", IDM_SAVETARGET
+        MENUITEM "另存目標(&A)", IDM_SAVETARGET
         MENUITEM "列印目標(&P)", IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "顯示圖片(&S)", IDM_SHOWPICTURE
-        MENUITEM "將圖片存為(&A)", IDM_SAVEPICTURE
-        MENUITEM "電郵圖片(&E)", IDM_MP_EMAILPICTURE
+        MENUITEM "另存圖片(&A)", IDM_SAVEPICTURE
+        MENUITEM "電子郵件圖片(&E)", IDM_MP_EMAILPICTURE
         MENUITEM "列印圖片(&I)...", IDM_MP_PRINTPICTURE
         MENUITEM "到我的圖片(&G)", IDM_MP_MYPICS
         MENUITEM "設為背景(&G)", IDM_SETWALLPAPER
@@ -301,9 +300,9 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "複製捷徑(&T)", IDM_COPYSHORTCUT
         MENUITEM "貼上(&P)", IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
+        MENUITEM "新增至我的最愛(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "屬性(&R)", IDM_PROPERTIES
+        MENUITEM "內容(&R)", IDM_PROPERTIES
     }
 
     POPUP "" /* Control */
@@ -322,14 +321,14 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         POPUP "選擇(&S)"
         {
-            MENUITEM "格(&C)", IDM_CELLSELECT
+            MENUITEM "儲存格(&C)", IDM_CELLSELECT
             MENUITEM "列(&R)", IDM_ROWSELECT
             MENUITEM "行(&O)", IDM_COLUMNSELECT
             MENUITEM "表格(&T)", IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM "格屬性(&C)", IDM_CELLPROPERTIES
-        MENUITEM "表格屬性(&T)", IDM_TABLEPROPERTIES
+        MENUITEM "儲存格內容(&C)", IDM_CELLPROPERTIES
+        MENUITEM "表格內容(&T)", IDM_TABLEPROPERTIES
     }
 
     POPUP "" /* 1DSite Select */
@@ -345,7 +344,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
     POPUP "" /* Anchor */
     {
         MENUITEM "開啟(&O)", IDM_FOLLOWLINKC
-        MENUITEM "開啟新視窗(&N)", IDM_FOLLOWLINKN
+        MENUITEM "在新視窗中開啟(&N)", IDM_FOLLOWLINKN
         MENUITEM "另存目標(&A)...", IDM_SAVETARGET
         MENUITEM "列印目標(&P)", IDM_PRINTTARGET
         MENUITEM SEPARATOR
@@ -356,7 +355,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "新增至我的最愛(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "屬性(&R)", IDM_PROPERTIES
+        MENUITEM "內容(&R)", IDM_PROPERTIES
     }
 
     POPUP "" /* Context Unknown */
@@ -367,12 +366,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
     POPUP "" /* DYNSRC Image */
     {
         MENUITEM "開啟連結(&O)", IDM_FOLLOWLINKC
-        MENUITEM "在新視窗開啟連結(&N)", IDM_FOLLOWLINKN
+        MENUITEM "在新視窗中開啟(&N)", IDM_FOLLOWLINKN
         MENUITEM "另存目標(&A)...", IDM_SAVETARGET
         MENUITEM "列印目標(&P)", IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "顯示圖片(&S)", IDM_SHOWPICTURE
-        MENUITEM "將視訊另存為(&V)...", IDM_SAVEPICTURE
+        MENUITEM "另存視訊為(&V)...", IDM_SAVEPICTURE
         MENUITEM "設為背景(&G)", IDM_SETWALLPAPER
         MENUITEM "設為桌面項目(&D)...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
@@ -385,13 +384,13 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "播放", IDM_DYNSRCPLAY
         MENUITEM "停止", IDM_DYNSRCSTOP
-        MENUITEM "屬性(&R)", IDM_PROPERTIES
+        MENUITEM "內容(&R)", IDM_PROPERTIES
     }
 
     POPUP "" /* ART Image */
     {
         MENUITEM "開啟連結(&O)", IDM_FOLLOWLINKC
-        MENUITEM "在新窗口開啟連結(&N)", IDM_FOLLOWLINKN
+        MENUITEM "在新視窗中開啟(&N)", IDM_FOLLOWLINKN
         MENUITEM "另存目標(&A)", IDM_SAVETARGET
         MENUITEM "列印目標(&P)", IDM_PRINTTARGET
         MENUITEM SEPARATOR
@@ -405,13 +404,13 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "複製捷徑(&T)", IDM_COPYSHORTCUT
         MENUITEM "貼上(&P)", IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
+        MENUITEM "新增至我的最愛(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "播放", IDM_IMGARTPLAY
         MENUITEM "停止", IDM_IMGARTSTOP
         MENUITEM "倒回", IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM "屬性(&R)", IDM_PROPERTIES
+        MENUITEM "內容(&R)", IDM_PROPERTIES
     }
 
     POPUP "" /* Debug */
@@ -436,7 +435,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Vertical Scrollbar */
     {
-        MENUITEM "滾動這裡", IDM_SCROLL_HERE
+        MENUITEM "捲動到這裡", IDM_SCROLL_HERE
         MENUITEM SEPARATOR
         MENUITEM "頂端", IDM_SCROLL_TOP
         MENUITEM "底端", IDM_SCROLL_BOTTOM
@@ -450,7 +449,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Horizontal Scrollbar */
     {
-        MENUITEM "滾動這裡", IDM_SCROLL_HERE
+        MENUITEM "捲動到這裡", IDM_SCROLL_HERE
         MENUITEM SEPARATOR
         MENUITEM "左邊緣", IDM_SCROLL_LEFTEDGE
         MENUITEM "右邊緣", IDM_SCROLL_RIGHTEDGE

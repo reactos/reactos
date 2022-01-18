@@ -2660,11 +2660,13 @@ DECLARE_INTERFACE_(IShellFolderBand, IUnknown)
 };
 #undef INTERFACE
 
-
+#if (NTDDI_VERSION >= NTDDI_WIN2K) && (NTDDI_VERSION <= NTDDI_WINXPSP2)
 /*****************************************************************************
  * Control Panel functions
  */
-LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6);
+DECLARE_HANDLE(FARPROC16);
+LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC16 pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6);
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

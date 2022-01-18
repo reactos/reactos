@@ -26,6 +26,7 @@ public:
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
         MESSAGE_HANDLER(WM_PALETTEMODELCOLORCHANGED, OnPaletteModelColorChanged)
         MESSAGE_HANDLER(WM_TOOLSMODELSETTINGSCHANGED, OnToolsModelSettingsChanged)
+        MESSAGE_HANDLER(WM_TOOLSMODELZOOMCHANGED, OnToolsModelZoomChanged)
         MESSAGE_HANDLER(WM_SELECTIONMODELREFRESHNEEDED, OnSelectionModelRefreshNeeded)
         MESSAGE_HANDLER(WM_CAPTURECHANGED, OnCaptureChanged)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
@@ -42,6 +43,7 @@ public:
     LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSelectionModelRefreshNeeded(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -53,7 +55,6 @@ private:
     POINT m_ptPos;
     POINT m_ptFrac;
     POINT m_ptDelta;
-    DWORD m_dwSystemSelectionColor;
 
     int IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeight);
 };

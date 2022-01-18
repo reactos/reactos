@@ -22,7 +22,9 @@ const LPCTSTR CSelectionWindow::m_lpszCursorLUT[9] = { /* action to mouse cursor
 };
 
 BOOL
-ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask, DWORD dwRop, COLORREF keyColor)
+ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
+                  HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask,
+                  DWORD dwRop, COLORREF keyColor)
 {
     HDC hTempDC;
     HDC hTempDC2;
@@ -88,13 +90,14 @@ int CSelectionWindow::IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeig
 
 LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    DefWindowProc(WM_PAINT, wParam, lParam);
     if (!m_bMoving)
     {
         HDC hDC = GetDC();
-        DefWindowProc(WM_PAINT, wParam, lParam);
-        SelectionFrame(hDC, 1, 1, Zoomed(selectionModel.GetDestRectWidth()) + 5,
-                       Zoomed(selectionModel.GetDestRectHeight()) + 5,
-                       m_dwSystemSelectionColor);
+        SelectionFrame(hDC, 1, 1,
+                       Zoomed(selectionModel.GetDestRectWidth()) + (GRIP_SIZE * 2) - 1,
+                       Zoomed(selectionModel.GetDestRectHeight()) + (GRIP_SIZE * 2) - 1,
+                       GetSysColor(COLOR_HIGHLIGHT));
         ReleaseDC(hDC);
     }
     return 0;
@@ -103,7 +106,7 @@ LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
 LRESULT CSelectionWindow::OnEraseBkgnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     // do nothing => transparent background
-    return 0;
+    return TRUE;
 }
 
 LRESULT CSelectionWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -111,16 +114,14 @@ LRESULT CSelectionWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
     m_bMoving = FALSE;
     m_iAction = ACTION_MOVE;
     /* update the system selection color */
-    m_dwSystemSelectionColor = GetSysColor(COLOR_HIGHLIGHT);
-    SendMessage(WM_PAINT, 0, MAKELPARAM(0, 0));
+    Invalidate();
     return 0;
 }
 
 LRESULT CSelectionWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     /* update the system selection color */
-    m_dwSystemSelectionColor = GetSysColor(COLOR_HIGHLIGHT);
-    SendMessage(WM_PAINT, 0, MAKELPARAM(0, 0));
+    Invalidate();
     return 0;
 }
 
@@ -284,4 +285,10 @@ LRESULT CSelectionWindow::OnSelectionModelRefreshNeeded(UINT nMsg, WPARAM wParam
 LRESULT CSelectionWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     return ::SendMessage(GetParent(), nMsg, wParam, lParam);
+}
+
+LRESULT CSelectionWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    placeSelWin();
+    return 0;
 }

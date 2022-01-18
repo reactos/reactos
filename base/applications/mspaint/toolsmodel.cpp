@@ -92,8 +92,17 @@ void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
         case TOOL_RUBBER:
         case TOOL_COLOR:
         case TOOL_ZOOM:
-        case TOOL_TEXT:
             break;
+
+        case TOOL_TEXT:
+            if (nActiveTool != TOOL_TEXT)
+            {
+                // Finish the text
+                OnButtonDown(TRUE, -1, -1, TRUE);
+                OnButtonUp(TRUE, -1, -1);
+            }
+            break;
+
         default:
             m_oldActiveTool = m_activeTool;
             break;
@@ -152,6 +161,10 @@ void ToolsModel::NotifyToolChanged()
 {
     toolBoxContainer.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
     toolSettingsWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
+
+    if (fontsDialog.IsWindow())
+        fontsDialog.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
+
     textEditWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
 }
 
@@ -159,11 +172,17 @@ void ToolsModel::NotifyToolSettingsChanged()
 {
     toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
     selectionWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
+    if (textEditWindow.IsWindow())
+        textEditWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
 }
 
 void ToolsModel::NotifyZoomChanged()
 {
     toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
+    if (textEditWindow.IsWindow())
+        textEditWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
+    if (selectionWindow.IsWindow())
+        selectionWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
 }
 
 void ToolsModel::OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)

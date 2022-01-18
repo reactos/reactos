@@ -25,13 +25,18 @@ static DWORD ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue, BOOL bCheck
     return dwPrev;
 }
 
-static void ReadFileHistory(CRegKey &key, LPCTSTR lpName, CString &strFile)
+static void ReadString(CRegKey &key, LPCTSTR lpName, CString &strValue, LPCTSTR lpDefault = TEXT(""))
 {
+    CString strTemp;
     ULONG nChars = MAX_PATH;
-    LPTSTR szFile = strFile.GetBuffer(nChars);
-    if (key.QueryStringValue(lpName, szFile, &nChars) != ERROR_SUCCESS)
-        szFile[0] = '\0';
-    strFile.ReleaseBuffer();
+    LPTSTR psz = strTemp.GetBuffer(nChars);
+    LONG error = key.QueryStringValue(lpName, psz, &nChars);
+    strTemp.ReleaseBuffer();
+
+    if (error == ERROR_SUCCESS)
+        strValue = strTemp;
+    else
+        strValue = lpDefault;
 }
 
 void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::WallpaperStyle style)
@@ -61,15 +66,20 @@ void RegistrySettings::LoadPresets()
     ThumbXPos = 180;
     ThumbYPos = 200;
     UnitSetting = 0;
-    const WINDOWPLACEMENT DefaultWindowPlacement = {
-        sizeof(WINDOWPLACEMENT),
-        0,
-        SW_SHOWNORMAL,
-        {0, 0},
-        {-1, -1},
-        {100, 100, 700, 550}
-    };
-    WindowPlacement = DefaultWindowPlacement;
+    Bold = FALSE;
+    Italic = FALSE;
+    Underline = FALSE;
+    CharSet = DEFAULT_CHARSET;
+    PointSize = 14;
+    FontsPositionX = 0;
+    FontsPositionY = 0;
+    ShowTextTool = TRUE;
+
+    LOGFONT lf;
+    GetObject(GetStockObject(DEFAULT_GUI_FONT), sizeof(lf), &lf);
+    strFontName = lf.lfFaceName;
+
+    ZeroMemory(&WindowPlacement, sizeof(WindowPlacement));
 }
 
 void RegistrySettings::Load()
@@ -98,10 +108,24 @@ void RegistrySettings::Load()
     CRegKey files;
     if (files.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List"), KEY_READ) == ERROR_SUCCESS)
     {
-        ReadFileHistory(files, _T("File1"), strFile1);
-        ReadFileHistory(files, _T("File2"), strFile2);
-        ReadFileHistory(files, _T("File3"), strFile3);
-        ReadFileHistory(files, _T("File4"), strFile4);
+        ReadString(files, _T("File1"), strFile1);
+        ReadString(files, _T("File2"), strFile2);
+        ReadString(files, _T("File3"), strFile3);
+        ReadString(files, _T("File4"), strFile4);
+    }
+
+    CRegKey text;
+    if (text.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Text"), KEY_READ) == ERROR_SUCCESS)
+    {
+        ReadDWORD(text, _T("Bold"),         Bold,           FALSE);
+        ReadDWORD(text, _T("Italic"),       Italic,         FALSE);
+        ReadDWORD(text, _T("Underline"),    Underline,      FALSE);
+        ReadDWORD(text, _T("CharSet"),      CharSet,        FALSE);
+        ReadDWORD(text, _T("PointSize"),    PointSize,      FALSE);
+        ReadDWORD(text, _T("PositionX"),    FontsPositionX, FALSE);
+        ReadDWORD(text, _T("PositionY"),    FontsPositionY, FALSE);
+        ReadDWORD(text, _T("ShowTextTool"), ShowTextTool,   FALSE);
+        ReadString(text, _T("TypeFaceName"), strFontName, strFontName);
     }
 
     // Fix the bitmap size if too large
@@ -143,6 +167,20 @@ void RegistrySettings::Store()
             files.SetStringValue(_T("File3"), strFile3);
         if (!strFile4.IsEmpty())
             files.SetStringValue(_T("File4"), strFile4);
+    }
+
+    CRegKey text;
+    if (text.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Text")) == ERROR_SUCCESS)
+    {
+        text.SetDWORDValue(_T("Bold"),          Bold);
+        text.SetDWORDValue(_T("Italic"),        Italic);
+        text.SetDWORDValue(_T("Underline"),     Underline);
+        text.SetDWORDValue(_T("CharSet"),       CharSet);
+        text.SetDWORDValue(_T("PointSize"),     PointSize);
+        text.SetDWORDValue(_T("PositionX"),     FontsPositionX);
+        text.SetDWORDValue(_T("PositionY"),     FontsPositionY);
+        text.SetDWORDValue(_T("ShowTextTool"),  ShowTextTool);
+        text.SetStringValue(_T("TypeFaceName"), strFontName);
     }
 }
 

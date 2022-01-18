@@ -21,8 +21,8 @@
  */
 #pragma once
 
-#include "atltypes.h"
-#include "rosctrls.h"
+#include <atltypes.h>
+#include <ui/rosctrls.h>
 
 class CACListView;
 class CACScrollBar;

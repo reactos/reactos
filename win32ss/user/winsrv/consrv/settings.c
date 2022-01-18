@@ -64,11 +64,13 @@ ConSrvApplyUserSettings(
     if ((Console->OutputCodePage != ConsoleInfo->CodePage) &&
         IsValidCodePage(ConsoleInfo->CodePage))
     {
-        Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
         // ConDrvSetConsoleCP(Console, ConsoleInfo->CodePage, TRUE);    // Output
         // ConDrvSetConsoleCP(Console, ConsoleInfo->CodePage, FALSE);   // Input
-
-        Console->IsCJK = IsCJKCodePage(Console->OutputCodePage);
+        if (TermSetCodePage(Console, ConsoleInfo->CodePage))
+        {
+            Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
+            Console->IsCJK = IsCJKCodePage(Console->OutputCodePage);
+        }
     }
 
     // FIXME: Check ConsoleInfo->WindowSize with respect to

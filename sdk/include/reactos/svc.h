@@ -10,6 +10,20 @@
 #ifndef __SVC_H
 #define __SVC_H
 
+#ifndef __RPC_H__
+#include <rpc.h>
+#endif
+
+
+typedef RPC_STATUS
+(CALLBACK *LPSTART_RPC_SERVER) (
+    _In_ RPC_WSTR PipeName,
+    _In_ RPC_IF_HANDLE IfSpec);
+
+typedef RPC_STATUS
+(CALLBACK *LPSTOP_RPC_SERVER) (
+    _In_ RPC_IF_HANDLE IfSpec);
+
 //
 // This is the callback that a hosted service can register for stop notification
 //

@@ -697,20 +697,17 @@ static void Control_RegisterRegistryApplets(HWND hWnd, CPanel *panel, HKEY hkey_
 
 static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 {
+    static const WCHAR wszRegPath[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls";
     HANDLE		h;
     WIN32_FIND_DATAW	fd;
     WCHAR		buffer[MAX_PATH];
-    static const WCHAR wszAllCpl[] = {'*','.','c','p','l',0};
-    static const WCHAR wszRegPath[] = {'S','O','F','T','W','A','R','E','\\','M','i','c','r','o','s','o','f','t',
-            '\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n',
-            '\\','C','o','n','t','r','o','l',' ','P','a','n','e','l','\\','C','p','l','s',0};
     WCHAR *p;
 
     /* first add .cpl files in the system directory */
     GetSystemDirectoryW( buffer, MAX_PATH );
     p = buffer + strlenW(buffer);
     *p++ = '\\';
-    lstrcpyW(p, wszAllCpl);
+    lstrcpyW(p, L"*.cpl");
 
     if ((h = FindFirstFileW(buffer, &fd)) != INVALID_HANDLE_VALUE) {
         do {
@@ -944,7 +941,12 @@ void WINAPI RunDll_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
  * hMod("DeskCp16.Dll"), pFunc("CplApplet"), 0, 1, 0xc, 0
  *
  */
+#ifndef __REACTOS__
 DWORD WINAPI CallCPLEntry16(HMODULE hMod, FARPROC pFunc, DWORD dw3, DWORD dw4, DWORD dw5, DWORD dw6)
+#else
+DECLARE_HANDLE(FARPROC16);
+LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC16 pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6)
+#endif
 {
     FIXME("(%p, %p, %08x, %08x, %08x, %08x): stub.\n", hMod, pFunc, dw3, dw4, dw5, dw6);
     return 0x0deadbee;

@@ -22,14 +22,14 @@ END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_CAPTION | WS_POPUP
-CAPTION "System Shutdown"
-FONT 8, "MS Shell Dlg"
+CAPTION "システムのシャットダウン"
+FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down.", -1, 38, 7, 135, 40
-    LTEXT "The system shuts down in:", -1, 38, 50, 90, 8
+    LTEXT "システムのシャットダウンが開始されました。あなたの作業をすべて保存し、セッションを終了して下さい。シャットダウン時に保存していない作業は失われます。", -1, 38, 7, 135, 40
+    LTEXT "シャットダウンまで:", -1, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Message:", -1, 38, 65, 135, 8
+    LTEXT "メッセージ:", -1, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -44,14 +44,14 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "ログオン スクリプトを実行しています..."
     IDS_LOADINGYOURPERSONALSETTINGS "個人の設定を読み込んでいます..."
     IDS_CLOSINGNETWORKCONNECTIONS "ネットワーク接続を切断しています..."
-    IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
+    IDS_REACTOSISRESTARTING "再起動中..."
+    IDS_REACTOSISSHUTTINGDOWN "シャットダウン中..."
     IDS_PREPARETOSTANDBY "スタンバイの準備をしています..."
     IDS_PREPARETOHIBERNATE "休止状態の準備をしています..."
     IDS_SAVEYOURSETTINGS "設定を保存しています..."
     IDS_REACTOSISSTARTINGUP "ReactOS を起動しています..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
-    IDS_TIMEOUTLONGFORMAT "%d days"
+    IDS_TIMEOUTLONGFORMAT "%d 日"
 END
 
 STRINGTABLE

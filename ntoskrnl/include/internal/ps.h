@@ -71,6 +71,12 @@
 #define PSP_JOB_SCHEDULING_CLASSES              10
 
 //
+// Process Quota Threshold Values
+//
+#define PSP_NON_PAGED_POOL_QUOTA_THRESHOLD              0x10000
+#define PSP_PAGED_POOL_QUOTA_THRESHOLD                  0x80000
+
+//
 // Thread "Set/Get Context" Context Structure
 //
 typedef struct _GET_SET_CTX_CONTEXT
@@ -292,14 +298,45 @@ PsIdleThreadMain(
 VOID
 NTAPI
 PspInheritQuota(
-    IN PEPROCESS Process,
-    IN PEPROCESS ParentProcess
+    _In_ PEPROCESS Process,
+    _In_ PEPROCESS ParentProcess
 );
 
 VOID
 NTAPI
-PspDestroyQuotaBlock(
-    IN PEPROCESS Process
+PspDereferenceQuotaBlock(
+    _In_opt_ PEPROCESS Process,
+    _In_ PEPROCESS_QUOTA_BLOCK QuotaBlock
+);
+
+NTSTATUS
+NTAPI
+PsReturnProcessPageFileQuota(
+    _In_ PEPROCESS Process,
+    _In_ SIZE_T Amount
+);
+
+NTSTATUS
+NTAPI
+PsChargeProcessPageFileQuota(
+    _In_ PEPROCESS Process,
+    _In_ SIZE_T Amount
+);
+
+VOID
+NTAPI
+PsReturnSharedPoolQuota(
+    _In_ PEPROCESS_QUOTA_BLOCK QuotaBlock,
+    _In_ SIZE_T AmountToReturnPaged,
+    _In_ SIZE_T AmountToReturnNonPaged
+);
+
+PEPROCESS_QUOTA_BLOCK
+NTAPI
+PsChargeSharedPoolQuota(
+    _In_ PEPROCESS Process,
+    _In_ SIZE_T AmountToChargePaged,
+    _In_ SIZE_T AmountToChargeNonPaged
 );
 
 NTSTATUS
@@ -392,23 +429,6 @@ PspGetOrSetContextKernelRoutine(
     IN OUT PVOID* NormalContext,
     IN OUT PVOID* SystemArgument1,
     IN OUT PVOID* SystemArgument2
-);
-
-//
-// Process Quotas
-//
-NTSTATUS
-NTAPI
-PsReturnProcessPageFileQuota(
-    IN PEPROCESS Process,
-    IN SIZE_T Amount
-);
-
-NTSTATUS
-NTAPI
-PsChargeProcessPageFileQuota(
-    IN PEPROCESS Process,
-    IN SIZE_T Amount
 );
 
 BOOLEAN

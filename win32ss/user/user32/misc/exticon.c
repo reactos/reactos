@@ -71,6 +71,21 @@ typedef struct
     DWORD resloader;
 } NE_TYPEINFO;
 
+//  From: James Houghtaling
+//  https://www.moon-soft.com/program/FORMAT/windows/ani.htm
+typedef struct taganiheader
+{
+    DWORD cbsizeof;  // num bytes in aniheader (36 bytes)
+    DWORD cframes;   // number of unique icons in this cursor
+    DWORD csteps;    // number of blits before the animation cycles
+    DWORD cx;        // reserved, must be zero.
+    DWORD cy;        // reserved, must be zero.
+    DWORD cbitcount; // reserved, must be zero.
+    DWORD cplanes;   // reserved, must be zero.
+    DWORD jifrate;   // default jiffies (1/60th sec) if rate chunk not present.
+    DWORD flags;     // animation flag
+} aniheader;
+
 #define NE_RSCTYPE_ICON        0x8003
 #define NE_RSCTYPE_GROUP_ICON  0x800e
 
@@ -323,6 +338,49 @@ static UINT ICO_ExtractIconExW(
 	}
 	CloseHandle(fmapping);
 
+#ifdef __REACTOS__
+    /* Check if we have a min size of 2 headers RIFF & 'icon'
+     * at 8 chars each plus an anih header of 36 byptes.
+     * Also, is this resource an animjated icon/cursor (RIFF) */
+    if ((fsizel >= 52) && !memcmp(peimage, "RIFF", 4))
+    {
+        UINT anihOffset;
+        UINT anihMax;
+        /* Get size of the animation data */
+        ULONG uSize = MAKEWORD(peimage[4], peimage[5]);
+
+        /* Check if uSize is reasonable with respect to fsizel */
+        if ((uSize < strlen("anih")) || (uSize > fsizel))
+            goto end;
+
+        /* Look though the reported size less search string length */
+        anihMax = uSize - strlen("anih"); 
+        /* Search for 'anih' indicating animation header */
+        for (anihOffset = 0; anihOffset < anihMax; anihOffset++)
+        {
+            if (memcmp(&peimage[anihOffset], "anih", 4) == 0)
+                break;
+        }
+
+        if (anihOffset + sizeof(aniheader) > fsizel)
+            goto end;
+
+        /* Get count of images for return value */
+        ret = MAKEWORD(peimage[anihOffset + 12], peimage[anihOffset + 13]);
+
+        TRACE("RIFF File with '%u' images at Offset '%u'.\n", ret, anihOffset);
+
+        cx1 = LOWORD(cxDesired);
+        cy1 = LOWORD(cyDesired);
+
+        if (RetPtr)
+        {
+            RetPtr[0] = CreateIconFromResourceEx(peimage, uSize, TRUE, 0x00030000, cx1, cy1, flags);
+        }
+        goto end;
+    }
+#endif
+
 	cx1 = LOWORD(cxDesired);
 	cx2 = HIWORD(cxDesired);
 	cy1 = LOWORD(cyDesired);
@@ -439,7 +497,9 @@ static UINT ICO_ExtractIconExW(
                 DWORD dataOffset;
                 LPBYTE imageData;
                 POINT hotSpot;
+#ifndef __REACTOS__
                 LPICONIMAGE entry;
+#endif
 
                 dataOffset = get_best_icon_file_offset(peimage, fsizel, cx[index], cy[index], sig == 1, flags, sig == 1 ? NULL : &hotSpot);
 
@@ -447,14 +507,35 @@ static UINT ICO_ExtractIconExW(
                 {
                     HICON icon;
                     WORD *cursorData = NULL;
+#ifdef __REACTOS__
+                    BITMAPINFOHEADER bmih;
+#endif
 
                     imageData = peimage + dataOffset;
+#ifdef __REACTOS__
+                    memcpy(&bmih, imageData, sizeof(BITMAPINFOHEADER));
+#else
                     entry = (LPICONIMAGE)(imageData);
+#endif
 
                     if(sig == 2)
                     {
+#ifdef __REACTOS__
+                         /* biSizeImage is the size of the raw bitmap data.
+                          * A dummy 0 can be given for BI_RGB bitmaps.
+                          * https://en.wikipedia.org/wiki/BMP_file_format */
+                         if ((bmih.biCompression == BI_RGB) && (bmih.biSizeImage == 0))
+                         {
+                             bmih.biSizeImage = ((bmih.biWidth * bmih.biBitCount + 31) / 32) * 4 *
+                                                (bmih.biHeight / 2);
+                         }
+#endif
                         /* we need to prepend the bitmap data with hot spots for CreateIconFromResourceEx */
+#ifdef __REACTOS__
+                        cursorData = HeapAlloc(GetProcessHeap(), 0, bmih.biSizeImage + 2 * sizeof(WORD));
+#else
                         cursorData = HeapAlloc(GetProcessHeap(), 0, entry->icHeader.biSizeImage + 2 * sizeof(WORD));
+#endif
 
                         if(!cursorData)
                             continue;
@@ -462,12 +543,20 @@ static UINT ICO_ExtractIconExW(
                         cursorData[0] = hotSpot.x;
                         cursorData[1] = hotSpot.y;
 
+#ifdef __REACTOS__
+                        memcpy(cursorData + 2, imageData, bmih.biSizeImage);
+#else
                         memcpy(cursorData + 2, imageData, entry->icHeader.biSizeImage);
+#endif
 
                         imageData = (LPBYTE)cursorData;
                     }
 
+#ifdef __REACTOS__
+                    icon = CreateIconFromResourceEx(imageData, bmih.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
+#else
                     icon = CreateIconFromResourceEx(imageData, entry->icHeader.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
+#endif
 
                     HeapFree(GetProcessHeap(), 0, cursorData);
 

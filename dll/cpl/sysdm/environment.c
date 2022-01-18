@@ -155,7 +155,9 @@ GatherDataFromListView(HWND hwndListView,
             return 0;
     }
 
-    /* Copy the variable values while seperating them with a semi-colon except for the last value */
+    /* First reinitialize the value buffer, then copy the variable values while
+     * separating them with a semi-colon, except for the last value. */
+    VarData->lpRawValue[0] = _T('\0');
     for (i = 0; i < NumberOfItems; i++)
     {
         if (i > 0)
@@ -302,13 +304,16 @@ static VOID
 BrowseRequiredFile(HWND hwndDlg)
 {
     OPENFILENAME ofn;
+    TCHAR szFilter[MAX_STR_LENGTH] = _T("");
     TCHAR szFile[MAX_PATH] = _T("");
+
+    LoadString(hApplet, IDS_FILE_BROWSE_FILTER, szFilter, _countof(szFilter));
 
     ZeroMemory(&ofn, sizeof(ofn));
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwndDlg;
-    ofn.lpstrFilter = _T("All Files (*.*)\0*.*\0");
+    ofn.lpstrFilter = szFilter;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = _countof(szFile);
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;

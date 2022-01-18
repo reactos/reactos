@@ -366,12 +366,7 @@ struct TextTool : ToolBase
     {
     }
 
-    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
-    {
-        imageModel.CopyPrevious();
-    }
-
-    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+    void UpdatePoint(LONG x, LONG y)
     {
         POINT temp;
         imageModel.ResetToPrevious();
@@ -381,16 +376,78 @@ struct TextTool : ToolBase
         RectSel(m_hdc, start.x, start.y, temp.x, temp.y);
     }
 
+    void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick)
+    {
+        if (!textEditWindow.IsWindow())
+            textEditWindow.Create(imageArea);
+
+        imageModel.CopyPrevious();
+        UpdatePoint(x, y);
+    }
+
+    void OnMouseMove(BOOL bLeftButton, LONG x, LONG y)
+    {
+        UpdatePoint(x, y);
+    }
+
     void OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
     {
         imageModel.ResetToPrevious();
-        if (selectionModel.IsSrcRectSizeNonzero())
-        {
-            imageModel.CopyPrevious();
 
-            placeSelWin();
-            selectionWindow.ShowWindow(SW_SHOW);
-            ForceRefreshSelectionContents();
+        BOOL bTextBoxShown = textEditWindow.IsWindowVisible();
+        if (bTextBoxShown && textEditWindow.GetWindowTextLength() > 0)
+        {
+            CString szText;
+            textEditWindow.GetWindowText(szText);
+
+            RECT rc;
+            textEditWindow.InvalidateEditRect();
+            textEditWindow.GetEditRect(&rc);
+
+            INT style = (toolsModel.IsBackgroundTransparent() ? 0 : 1);
+            Text(m_hdc, rc.left, rc.top, rc.right, rc.bottom, m_fg, m_bg, szText,
+                 textEditWindow.GetFont(), style);
+        }
+
+        if (registrySettings.ShowTextTool)
+        {
+            if (!fontsDialog.IsWindow())
+                fontsDialog.Create(mainWindow);
+
+            fontsDialog.ShowWindow(SW_SHOWNOACTIVATE);
+        }
+
+        if (!bTextBoxShown || selectionModel.IsSrcRectSizeNonzero())
+        {
+            RECT rc;
+            selectionModel.GetRect(&rc);
+
+            // Enlarge if tool small
+            INT cxMin = CX_MINTEXTEDIT, cyMin = CY_MINTEXTEDIT;
+            if (selectionModel.IsSrcRectSizeNonzero())
+            {
+                if (rc.right - rc.left < cxMin)
+                    rc.right = rc.left + cxMin;
+                if (rc.bottom - rc.top < cyMin)
+                    rc.bottom = rc.top + cyMin;
+            }
+            else
+            {
+                SetRect(&rc, x, y, x + cxMin, y + cyMin);
+            }
+
+            if (!textEditWindow.IsWindow())
+                textEditWindow.Create(imageArea);
+
+            textEditWindow.SetWindowText(NULL);
+            textEditWindow.ValidateEditRect(&rc);
+            textEditWindow.ShowWindow(SW_SHOWNOACTIVATE);
+            textEditWindow.SetFocus();
+        }
+        else
+        {
+            textEditWindow.ShowWindow(SW_HIDE);
+            textEditWindow.SetWindowText(NULL);
         }
     }
 
@@ -398,6 +455,8 @@ struct TextTool : ToolBase
     {
         imageModel.ResetToPrevious();
         selectionModel.ResetPtStack();
+        textEditWindow.SetWindowText(NULL);
+        textEditWindow.ShowWindow(SW_HIDE);
         ToolBase::OnCancelDraw();
     }
 };

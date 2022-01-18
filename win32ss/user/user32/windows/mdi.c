@@ -2157,10 +2157,12 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         if (info.chwnd != 1 && (GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_THICKFRAME))
         {
             /* check the size */
-#define THRESHOLD(xy) (((xy) * 5) / 7)      /* in the rate 5/7 */
-            cxNew = min(cxNew, THRESHOLD(cxWork));
-            cyNew = min(cyNew, THRESHOLD(cyWork));
-#undef THRESHOLD
+#define MIN_THRESHOLD(xy) (((xy) * 4) / 7)      /* in the rate 4/7 */
+#define MAX_THRESHOLD(xy) (((xy) * 5) / 7)      /* in the rate 5/7 */
+            cxNew = max(min(cxNew, MAX_THRESHOLD(cxWork)), MIN_THRESHOLD(cxWork));
+            cyNew = max(min(cyNew, MAX_THRESHOLD(cyWork)), MIN_THRESHOLD(cyWork));
+#undef MIN_THRESHOLD
+#undef MAX_THRESHOLD
             if (cx != cxNew || cy != cyNew)
             {
                 /* too large. shrink if we can */

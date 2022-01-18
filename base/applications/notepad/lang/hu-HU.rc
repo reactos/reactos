@@ -44,7 +44,7 @@ BEGIN
         MENUITEM "Tör&lés\tDel", CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Keresés...", CMD_SEARCH
-        MENUITEM "Köve&tkezõ keresése\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Köve&tkező keresése\tF3", CMD_SEARCH_NEXT
         MENUITEM "Csere...\tCtrl+H", CMD_REPLACE
         MENUITEM "Ugrás...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR

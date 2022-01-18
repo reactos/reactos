@@ -174,6 +174,6 @@ BEGIN
     IDS_REMOVE_TITLE "確認刪除方案"
     IDS_REMOVE_TEXT "是否確定要將「%s」從系統中刪除？"
     IDS_OVERWRITE_TITLE "是否取代方案？"
-    IDS_OVERWRITE_TEXT "您所選擇的游標方案名已在使用中。是否要取代原方案？"
+    IDS_OVERWRITE_TEXT "您所選擇的游標方案名稱已在使用中。是否要取代原方案？"
     IDS_ANIMATE_CURSOR "動畫游標"
 END

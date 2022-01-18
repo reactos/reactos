@@ -35,9 +35,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define NEW_FILENAME_ON_COPY_TRIES 100
 
-static const WCHAR wWildcardFile[] = {'*',0};
-static const WCHAR wWildcardChars[] = {'*','?',0};
-
 typedef struct
 {
     SHFILEOPSTRUCTW *req;
@@ -87,8 +84,6 @@ static BOOL _FileOpCount(FILE_OPERATION *op, LPWSTR pwszBuf, BOOL bFolder, DWORD
 
 /* Confirm dialogs with an optional "Yes To All" as used in file operations confirmations
  */
-static const WCHAR CONFIRM_MSG_PROP[] = {'W','I','N','E','_','C','O','N','F','I','R','M',0};
-
 struct confirm_msg_info
 {
     LPWSTR lpszText;
@@ -139,7 +134,7 @@ static INT_PTR ConfirmMsgBox_Paint(HWND hDlg)
     /* this will remap the rect to dialog coords */
     MapWindowPoints(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), hDlg, (LPPOINT)&r, 2);
     hOldFont = (HFONT)SelectObject(hdc, (HFONT)SendDlgItemMessageW(hDlg, IDC_YESTOALL_MESSAGE, WM_GETFONT, 0, 0));
-    DrawTextW(hdc, (LPWSTR)GetPropW(hDlg, CONFIRM_MSG_PROP), -1, &r, DT_NOPREFIX | DT_PATH_ELLIPSIS | DT_WORDBREAK);
+    DrawTextW(hdc, (LPWSTR)GetPropW(hDlg, L"WINE_CONFIRM"), -1, &r, DT_NOPREFIX | DT_PATH_ELLIPSIS | DT_WORDBREAK);
     SelectObject(hdc, hOldFont);
     EndPaint(hDlg, &ps);
 
@@ -157,7 +152,7 @@ static INT_PTR ConfirmMsgBox_Init(HWND hDlg, LPARAM lParam)
 
     SetWindowTextW(hDlg, info->lpszCaption);
     ShowWindow(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), SW_HIDE);
-    SetPropW(hDlg, CONFIRM_MSG_PROP, info->lpszText);
+    SetPropW(hDlg, L"WINE_CONFIRM", info->lpszText);
     SendDlgItemMessageW(hDlg, IDC_YESTOALL_ICON, STM_SETICON, (WPARAM)info->hIcon, 0);
 
     /* compute the text height and resize the dialog */
@@ -379,7 +374,7 @@ BOOL SHELL_DeleteDirectoryW(FILE_OPERATION *op, LPCWSTR pszDir, BOOL bShowUI)
     WCHAR   szTemp[MAX_PATH];
 
     /* Make sure the directory exists before eventually prompting the user */
-    PathCombineW(szTemp, pszDir, wWildcardFile);
+    PathCombineW(szTemp, pszDir, L"*");
     hFind = FindFirstFileW(szTemp, &wfd);
     if (hFind == INVALID_HANDLE_VALUE)
       return FALSE;
@@ -960,7 +955,7 @@ int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES s
 static DWORD SHFindAttrW(LPCWSTR pName, BOOL fileOnly)
 {
     WIN32_FIND_DATAW wfd;
-    BOOL b_FileMask = fileOnly && (NULL != StrPBrkW(pName, wWildcardChars));
+    BOOL b_FileMask = fileOnly && (NULL != StrPBrkW(pName, L"*?"));
     DWORD dwAttr = INVALID_FILE_ATTRIBUTES;
     HANDLE hFind = FindFirstFileW(pName, &wfd);
 
@@ -1238,7 +1233,7 @@ static HRESULT parse_file_list(FILE_LIST *flList, LPCWSTR szFiles)
         }
 
         /* parse wildcard files if they are in the filename */
-        if (StrPBrkW(szCurFile, wWildcardChars))
+        if (StrPBrkW(szCurFile, L"*?"))
         {
             parse_wildcard_files(flList, szCurFile, &i);
             flList->bAnyFromWildcard = TRUE;
@@ -1318,8 +1313,6 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
     FILE_LIST flFromNew, flToNew;
 
-    static const WCHAR wildCardFiles[] = {'*','.','*',0};
-
     if (IsDotDir(feFrom->szFilename))
         return;
 
@@ -1364,7 +1357,7 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     szTo[lstrlenW(szTo) + 1] = '\0';
     SHNotifyCreateDirectoryW(szTo, NULL);
 
-    PathCombineW(szFrom, feFrom->szFullPath, wildCardFiles);
+    PathCombineW(szFrom, feFrom->szFullPath, L"*.*");
     szFrom[lstrlenW(szFrom) + 1] = '\0';
 
     ZeroMemory(&flFromNew, sizeof(FILE_LIST));
@@ -1582,9 +1575,8 @@ static BOOL confirm_delete_list(HWND hWnd, DWORD fFlags, BOOL fTrash, const FILE
     if (flFrom->dwNumFiles > 1)
     {
         WCHAR tmp[8];
-        const WCHAR format[] = {'%','d',0};
 
-        wnsprintfW(tmp, sizeof(tmp)/sizeof(tmp[0]), format, flFrom->dwNumFiles);
+        wnsprintfW(tmp, sizeof(tmp)/sizeof(tmp[0]), L"%d", flFrom->dwNumFiles);
         return SHELL_ConfirmDialogW(hWnd, (fTrash?ASK_TRASH_MULTIPLE_ITEM:ASK_DELETE_MULTIPLE_ITEM), tmp, NULL);
     }
     else
@@ -1704,14 +1696,12 @@ static void move_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
     FILE_LIST flFromNew, flToNew;
 
-    static const WCHAR wildCardFiles[] = {'*','.','*',0};
-
     if (IsDotDir(feFrom->szFilename))
         return;
 
     SHNotifyCreateDirectoryW(szDestPath, NULL);
 
-    PathCombineW(szFrom, feFrom->szFullPath, wildCardFiles);
+    PathCombineW(szFrom, feFrom->szFullPath, L"*.*");
     szFrom[lstrlenW(szFrom) + 1] = '\0';
 
     lstrcpyW(szTo, szDestPath);

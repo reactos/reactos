@@ -86,3 +86,37 @@ public:
     POINT percentage;
     POINT angle;
 };
+
+class CFontsDialog : public CDialogImpl<CFontsDialog>
+{
+public:
+    enum { IDD = IDD_FONTS };
+
+    CFontsDialog();
+    void InitFontNames();
+    void InitFontSizes();
+    void InitToolbar();
+
+    BEGIN_MSG_MAP(CFontsDialog)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_CLOSE, OnClose)
+        MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+        MESSAGE_HANDLER(WM_MOVE, OnMove)
+        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+        MESSAGE_HANDLER(WM_TOOLSMODELTOOLCHANGED, OnToolsModelToolChanged)
+        MESSAGE_HANDLER(WM_MEASUREITEM, OnMeasureItem)
+        MESSAGE_HANDLER(WM_DRAWITEM, OnDrawItem)
+    END_MSG_MAP()
+
+protected:
+    LRESULT OnInitDialog(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMeasureItem(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnDrawItem(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    void OnFontSize(UINT codeNotify);
+    void OnFontName(UINT codeNotify);
+};

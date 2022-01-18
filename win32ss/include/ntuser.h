@@ -1183,9 +1183,10 @@ typedef struct tagIMEINFOEX
     };
 } IMEINFOEX, *PIMEINFOEX;
 
-typedef enum IMEINFOEXCLASS /* unconfirmed: buggy */
+typedef enum IMEINFOEXCLASS
 {
     ImeInfoExKeyboardLayout,
+    ImeInfoExKeyboardLayoutTFS,
     ImeInfoExImeWindow,
     ImeInfoExImeFileName
 } IMEINFOEXCLASS;
@@ -3183,7 +3184,7 @@ NtUserSetImeHotKey(
     DWORD Unknown3,
     DWORD Unknown4);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetImeInfoEx(
     PIMEINFOEX pImeInfoEx);

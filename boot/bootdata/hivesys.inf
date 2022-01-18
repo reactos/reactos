@@ -83,16 +83,16 @@ HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\HID_DEVICE_SYSTEM_
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\HID_DEVICE_SYSTEM_MOUSE","Service",0x00000000,"mouhid"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\HID_DEVICE_SYSTEM_MOUSE","ClassGUID",0x00000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0000","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0000","Service",0x00000000,"vga"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0000","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0001","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0001","Service",0x00000000,"vga"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0001","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0300","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0300","Service",0x00000000,"vga"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0300","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0301","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0301","Service",0x00000000,"vga"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0301","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0303","Service",0x00000000,"i8042prt"
@@ -252,12 +252,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\{745A17A0-74D3-11D0-B6FE
 
 ; ReactOS specific - required to load in Safe Mode and for debugging in Safe Mode (until vga.sys and vgasave.sys are implemented)
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Debug","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\vgamp.sys","",0x00000000,"Driver"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\vbemp.sys","",0x00000000,"Driver"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Debug","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\vgamp.sys","",0x00000000,"Driver"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\vbemp.sys","",0x00000000,"Driver"
 
 ; Other
 HKLM,"SYSTEM\CurrentControlSet\Control\Arbiters",,0x00000012
@@ -1480,7 +1476,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
 
 ; Set the timeout for directx/ReactX graphic surface lock see _EDD_DIRECTDRAW_GLOBAL struct for more info
 HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\DCI","Timeout",0x00010001,0x00000007
-HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\UseNewKey",,0x00000012
 
 ; Group order, the first DWORD is the count of entries,
 ; the following dwords are the tag entries for the load order.
@@ -2060,6 +2055,19 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\Schedule\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\schedsvc.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\Schedule\Parameters","ServiceMain",0x00000000,"SchedServiceMain"
 
+; Secondary Logon service
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","DependOnService",0x00010000,"RPCSS"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Description",0x00000000,%SECLOGON_SERVICE_DESCRIPTION%
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","DisplayName",0x00000000,%SECLOGON_SERVICE%
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Group",0x00000000,"SchedulerGroup"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\seclogon.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\Seclogon\Parameters","ServiceMain",0x00000000,"SvcEntry_Seclogon"
+
 ; Spooler service
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DependOnService",0x00010000,"RPCSS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Description",0x00000000,%SPOOLER_SERVICE_DESCRIPTION%
@@ -2295,6 +2303,9 @@ SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services th
 SCHEDULE_SERVICE="Scheduler service"
 SCHEDULE_SERVICE_DESCRIPTION="Allows starting of programs at specific times."
 
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
+
 SERVER_SERVICE="Server"
 SERVER_SERVICE_DESCRIPTION="Supports sharing for file, printers and resources on the network."
 
@@ -2447,6 +2458,9 @@ SAMSS_SERVICE_DESCRIPTION="El arranque de este servicio señala a otros servicio
 
 SCHEDULE_SERVICE="Programador de tareas"
 SCHEDULE_SERVICE_DESCRIPTION="Permite iniciar programas automáticamente en unas horas o instantes específicos."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
 
 SERVER_SERVICE="Servidor"
 SERVER_SERVICE_DESCRIPTION="Ofrece compatibilidad para archivos, impresoras y recursos en la red."
@@ -2601,6 +2615,9 @@ SAMSS_SERVICE_DESCRIPTION="Uruchomienie tej usługi informuje inne usługi, że 
 SCHEDULE_SERVICE="Usługa Harmonogram"
 SCHEDULE_SERVICE_DESCRIPTION="Umożliwia uruchamianie programów w określonym czasie."
 
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
+
 SERVER_SERVICE="Serwer"
 SERVER_SERVICE_DESCRIPTION="Oferuje udostępnianie w sieci plików, drukarek i potoków dla tego komputera."
 
@@ -2750,6 +2767,9 @@ SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services th
 
 SCHEDULE_SERVICE="Serviciu de planificare"
 SCHEDULE_SERVICE_DESCRIPTION="Permite pornirea de programe la o anumită oră."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
 
 SERVER_SERVICE="Server"
 SERVER_SERVICE_DESCRIPTION="Permite partajarea în rețea a fișierelor, imprimantelor și a altor resurse."
@@ -2904,6 +2924,9 @@ SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services th
 SCHEDULE_SERVICE="Планировщик заданий"
 SCHEDULE_SERVICE_DESCRIPTION="Позволяет запускать программы в определенное время."
 
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
+
 SERVER_SERVICE="Сервер"
 SERVER_SERVICE_DESCRIPTION="Поддержка совместного использования файлов, принтеров и ресурсов в сети."
 
@@ -3056,6 +3079,9 @@ SAMSS_SERVICE_DESCRIPTION="Bu hizmetin başlaması, diğer hizmetlere Güvenlik 
 
 SCHEDULE_SERVICE="Zamanlayıcı hizmeti"
 SCHEDULE_SERVICE_DESCRIPTION="Programların belirli zamanlarda başlatılmasını sağlar."
+
+SECLOGON_SERVICE="Secondary Logon"
+SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
 
 SERVER_SERVICE="Sunucu"
 SERVER_SERVICE_DESCRIPTION="Ağda dosya, yazıcı ve kaynakların paylaşımını destekler."

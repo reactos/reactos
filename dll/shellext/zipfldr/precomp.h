@@ -12,7 +12,7 @@
 #include <atlcom.h>
 #include <atlcoll.h>
 #include <atlstr.h>
-#include <rosdlgs.h>
+#include <ui/rosdlgs.h>
 #include <shlwapi.h>
 #include <shellapi.h>
 #include <strsafe.h>

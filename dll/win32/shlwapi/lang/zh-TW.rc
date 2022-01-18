@@ -1,8 +1,7 @@
 /*
  * Chinese (Traditional) resources for shlwapi
  *
- * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
- * Resource seperated by Chan Chilung 2020 <eason066.at.gmail.com>
+ * Copyright 2004 Jon Griffiths
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,6 +16,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com> 
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -47,7 +49,7 @@ FONT 9, "新細明體"
 {
  LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
  LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
- CHECKBOX "不要再顯示這個訊息", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "不再顯示這個訊息", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "確定(&O)", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "取消(&C)", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "是(&Y)", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP

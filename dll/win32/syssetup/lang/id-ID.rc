@@ -111,9 +111,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Meregister komponen", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -179,8 +182,8 @@ BEGIN
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Tanggal dan Jam"
     IDS_DATETIMESUBTITLE "Setel tanggal dan jam yang benar untuk komputer anda."
-    IDS_PROCESSTITLE "Judul halaman proses"
-    IDS_PROCESSSUBTITLE "Subjudul halaman proses"
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Tampilan"
     IDS_THEMESELECTIONSUBTITLE "Pilih tampilan yang anda suka."
 END
@@ -189,7 +192,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "Penyetelan ReactOS"
     IDS_UNKNOWN_ERROR "Kesalahan tidak dikenal"
-    IDS_REGISTERING_COMPONENTS "Meregister komponen..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary gagal: "
     IDS_GETPROCADDR_FAILED "GetProcAddr gagal: "
     IDS_REGSVR_FAILED "DllRegisterServer gagal: "

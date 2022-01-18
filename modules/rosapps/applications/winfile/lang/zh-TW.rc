@@ -2,10 +2,7 @@
  * WineFile
  * Traditional Chinese Language Support
  *
- * Copyright 2002 liuspider <liuspider@yahoo.com>
- * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
- * Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
- * Translation imported from Wine by 2021 Aobi Chan CL <eason066@gmail.com>
+ * Copyright 2000 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +17,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * TRANSLATORS: Copyright 2002 liuspider <liuspider@yahoo.com>
+ *              Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 #include "resource.h"
@@ -40,7 +42,7 @@ IDM_WINEFILE MENU
         MENUITEM "位於剪貼簿(&I)...\tF9",     118
         MENUITEM "刪除(&D)\tDel",             ID_FILE_DELETE
         MENUITEM "重新命名(&N)...",               109
-        MENUITEM "屬性(&I)...\tAlt+Enter",    ID_EDIT_PROPERTIES
+        MENUITEM "內容(&I)...\tAlt+Enter",    ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "壓縮(&O)...",               119
         MENUITEM "解壓縮(&O)...",             120
@@ -103,7 +105,7 @@ IDM_WINEFILE MENU
         MENUITEM "按大小排列(&Z)",            ID_VIEW_SORT_SIZE
         MENUITEM "按日期排列(&D)",            ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "篩選依據...(&.)",                 ID_VIEW_FILTER
+        MENUITEM "篩選依據(&.)...",                 ID_VIEW_FILTER
     }
 
     POPUP "選項(&O)"  {
@@ -141,7 +143,7 @@ IDM_WINEFILE MENU
         MENUITEM "重新整理(&R)\tF5",              ID_REFRESH
     }
 
-    POPUP "&?"  {
+    POPUP "說明(&H)"  {
         MENUITEM "說明主題(&H)\tF1",          ID_HELP
         MENUITEM "搜尋說明(&S)...\tF1",       ID_HELP
         MENUITEM "使用說明(&U)\tF1",          ID_HELP_USING
@@ -156,7 +158,7 @@ CAPTION "選擇目的地"
 FONT 9, "新細明體"
 {
     CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "路徑(&P):", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    CONTROL         "路徑(&P)：", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
     EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON   "確定", 1, 158, 6, 47, 14
     PUSHBUTTON      "取消", 2, 158, 23, 47, 14
@@ -168,7 +170,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "依類型"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT           "名稱(&N):",-1,7,8,22,10
+    LTEXT           "名稱(&N)：",-1,7,8,22,10
     EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
     GROUPBOX        "檔案類型",-1,7,23,87,56
     CONTROL         "目錄(&D)",IDC_VIEW_TYPE_DIRECTORIES,"Button",
@@ -187,30 +189,30 @@ END
 
 IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "屬性 %s"
+CAPTION "%s 的內容"
 FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON   "確定",IDOK,191,7,50,14
     PUSHBUTTON      "取消",IDCANCEL,191,29,50,14
-    LTEXT           "檔案名稱(&F):",-1,7,7,59,9
+    LTEXT           "檔案名稱(&F)：",-1,7,7,59,9
     EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "完整路徑(&P):",-1,7,18,59,9
+    LTEXT           "完整路徑(&P)：",-1,7,18,59,9
     EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "最後修改:",-1,7,29,59,9
+    LTEXT           "最後修改：",-1,7,29,59,9
     EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "版本:",-1,7,40,59,9
+    LTEXT           "版本：",-1,7,40,59,9
     EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "著作權(&Y):",-1,7,51,59,9
+    LTEXT           "著作權(&Y)：",-1,7,51,59,9
     EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "大小:",-1,7,62,59,9
+    LTEXT           "大小：",-1,7,62,59,9
     EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     GROUPBOX        "屬性",-1,7,79,158,46
     CONTROL         "唯讀(&R)",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
     CONTROL         "隱藏(&I)",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
-    CONTROL         "保存(&A)",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "封存(&A)",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
     CONTROL         "系統(&S)",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
     CONTROL         "壓縮(&C)",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
-    GROUPBOX        "版本(&V) Information",-1,7,129,234,79
+    GROUPBOX        "版本資訊(&V)",-1,7,129,234,79
     LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
@@ -218,7 +220,7 @@ END
 
 STRINGTABLE
 {
-    IDS_FONT_SEL_DLG_NAME   "字型設定套用中"
+    IDS_FONT_SEL_DLG_NAME   "正在套用字型設定"
     IDS_FONT_SEL_ERROR      "選取新字型時發生錯誤。"
 }
 
@@ -242,7 +244,7 @@ STRINGTABLE
     IDS_COL_CDATE           "建立日期"
     IDS_COL_ADATE           "Date Added"
     IDS_COL_MDATE           "變更日期"
-    IDS_COL_IDX             "索引/Inode"
+    IDS_COL_IDX             "索引／Inode"
     IDS_COL_LINKS           "連結"
     IDS_COL_ATTR            "屬性"
     IDS_COL_SEC             "安全性"

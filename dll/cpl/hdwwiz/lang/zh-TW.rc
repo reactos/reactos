@@ -90,7 +90,7 @@ CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "可能需要幾分鐘的時間來搜尋硬體。", -1, 21, 8, 275, 15
-    LTEXT "整個進度︰", IDC_TPROGRESSTEXT, 21, 25, 275, 8
+    LTEXT "整體進度︰", IDC_TPROGRESSTEXT, 21, 25, 275, 8
     CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
     LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
     CONTROL "", IDC_PROGRESSBAR, "msctls_progress32", 0, 58, 70, 200, 8

@@ -235,80 +235,38 @@ VBEGetVideoChildDescriptor(
    OUT PULONG UId,
    OUT PULONG pUnused)
 {
-   PVBE_DEVICE_EXTENSION VBEDeviceExtension =
-     (PVBE_DEVICE_EXTENSION)HwDeviceExtension;
-   ULONG ChildIndex;
+    if (ChildEnumInfo->Size != sizeof(VIDEO_CHILD_ENUM_INFO) ||
+        ChildEnumInfo->ChildDescriptorSize < MAX_SIZE_OF_EDID)
+    {
+        return ERROR_INVALID_FUNCTION;
+    }
 
-   /*
-    * We are called very early in device initialization, even before
-    * VBEInitialize is called. So, our Int10 interface is not set.
-    * Ignore this call, we will trigger another one later.
-    */
-   if (VBEDeviceExtension->Int10Interface.Size == 0)
-      return VIDEO_ENUM_NO_MORE_DEVICES;
+    if (ChildEnumInfo->ChildIndex == 0)
+    {
+        /* We don't support enumeration of ACPI children */
+        return ERROR_NO_MORE_DEVICES;
+    }
+    else if (ChildEnumInfo->ChildIndex == 1)
+    {
+        /* Our screen */
+        *VideoChildType = Monitor;
+        *UId = 1;
 
-   if (ChildEnumInfo->Size != sizeof(VIDEO_CHILD_ENUM_INFO))
-   {
-      VideoPortDebugPrint(Error, "VBEMP: Wrong VIDEO_CHILD_ENUM_INFO structure size\n");
-      return VIDEO_ENUM_NO_MORE_DEVICES;
-   }
-   else if (ChildEnumInfo->ChildDescriptorSize < MAX_SIZE_OF_EDID)
-   {
-      VideoPortDebugPrint(Warn, "VBEMP: Too small buffer for EDID\n");
-      return VIDEO_ENUM_NO_MORE_DEVICES;
-   }
-   else if (ChildEnumInfo->ChildIndex == DISPLAY_ADAPTER_HW_ID)
-   {
-      *VideoChildType = VideoChip;
-      *UId = 0;
-      return VIDEO_ENUM_MORE_DEVICES; /* FIXME: not sure... */
-   }
+        /* Try to read EDID information using 2 different methods. */
+        if (VBEReadEdid(HwDeviceExtension, 0, pChildDescriptor))
+        {
+            VideoPortDebugPrint(Info, "VBEMP: EDID information read directly\n");
+        }
+        else if (VBEReadEdidUsingSCI(HwDeviceExtension, 0, pChildDescriptor))
+        {
+            VideoPortDebugPrint(Info, "VBEMP: EDID information read using I2C\n");
+        }
 
-   /*
-    * Get Child ID
-    */
-   if (ChildEnumInfo->ChildIndex != 0)
-      ChildIndex = ChildEnumInfo->ChildIndex;
-   else
-      ChildIndex = ChildEnumInfo->ACPIHwId;
-   VideoPortDebugPrint(Info, "VBEMP: ChildEnumInfo->ChildIndex %lu, ChildEnumInfo->ACPIHwId %lu => %lu\n",
-      ChildEnumInfo->ChildIndex, ChildEnumInfo->ACPIHwId, ChildIndex);
-
-   /*
-    * Try to read EDID information using 2 different methods.
-    */
-   if (VBEReadEdid(HwDeviceExtension, ChildIndex, pChildDescriptor))
-   {
-      VideoPortDebugPrint(Info, "VBEMP: EDID information read directly\n");
-   }
-   else if (VBEReadEdidUsingSCI(HwDeviceExtension, ChildIndex, pChildDescriptor))
-   {
-      VideoPortDebugPrint(Info, "VBEMP: EDID information read using I²C\n");
-   }
-   else if (ChildEnumInfo->ChildIndex == 1)
-   {
-       /* We must have 1 monitor, so just report it with no EDID information */
-       VideoPortDebugPrint(Info, "VBEMP: Reporting monitor with no EDID information\n");
-   }
-   else
-   {
-      VideoPortDebugPrint(Warn, "VBEMP: Unable to read EDID information\n");
-      return VIDEO_ENUM_NO_MORE_DEVICES;
-   }
-
-   /*
-    * Fill return data
-    */
-   *VideoChildType = Monitor;
-   if (ChildIndex == 0)
-   {
-      /*
-       * This is the actual display adapter
-       */
-      *UId = DISPLAY_ADAPTER_HW_ID;
-   }
-   else
-      *UId = ChildIndex;
-   *pUnused = 0;
-   return VIDEO_ENUM_MORE_DEVICES;
+        return VIDEO_ENUM_MORE_DEVICES;
+    }
+    else
+    {
+        /* Unknown hardware id */
+        return ERROR_NO_MORE_DEVICES;
+    }
 }

@@ -279,6 +279,11 @@ IntVideoPortGetProcAddress(
    IN PVOID HwDeviceExtension,
    IN PUCHAR FunctionName);
 
+NTSTATUS NTAPI
+IntVideoPortEnumerateChildren(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
 /* int10.c */
 
 NTSTATUS

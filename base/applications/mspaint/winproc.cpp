@@ -13,8 +13,6 @@
 
 #include "precomp.h"
 
-#include "dialogs.h"
-
 /* FUNCTIONS ********************************************************/
 
 BOOL
@@ -38,7 +36,6 @@ zoomTo(int newZoom, int mouseX, int mouseY)
 
     toolsModel.SetZoom(newZoom);
 
-    selectionWindow.ShowWindow(SW_HIDE);
     imageArea.MoveWindow(GRIP_SIZE, GRIP_SIZE, Zoomed(imageModel.GetWidth()), Zoomed(imageModel.GetHeight()), FALSE);
     scrollboxWindow.Invalidate(TRUE);
     imageArea.Invalidate(FALSE);
@@ -326,7 +323,7 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
                 CheckMenuItem(menu, IDM_VIEWTOOLBOX,      CHECKED_IF(toolBoxContainer.IsWindowVisible()));
                 CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(paletteWindow.IsWindowVisible()));
                 CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(hStatusBar)));
-                CheckMenuItem(menu, IDM_FORMATICONBAR,    CHECKED_IF(textEditWindow.IsWindowVisible()));
+                CheckMenuItem(menu, IDM_FORMATICONBAR,    CHECKED_IF(fontsDialog.IsWindowVisible()));
                 EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
 
                 CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
@@ -522,17 +519,21 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_EDITUNDO:
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
+                break;
             imageModel.Undo();
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
+                break;
             imageModel.Redo();
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITCOPY:
             OpenClipboard();
             EmptyClipboard();
-            SetClipboardData(CF_BITMAP, CopyImage(selectionModel.GetBitmap(), IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
+            SetClipboardData(CF_BITMAP, CopyDIBImage(selectionModel.GetBitmap()));
             CloseClipboard();
             break;
         case IDM_EDITCUT:
@@ -557,6 +558,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITSELECTALL:
         {
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
+            {
+                textEditWindow.SendMessage(EM_SETSEL, 0, -1);
+                break;
+            }
             HWND hToolbar = FindWindowEx(toolBoxContainer.m_hWnd, NULL, TOOLBARCLASSNAME, NULL);
             SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELPARAM(TRUE, 0));
             toolsModel.selectAll();
@@ -646,7 +652,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             toolsModel.SetBackgroundTransparent(!toolsModel.IsBackgroundTransparent());
             break;
         case IDM_IMAGECROP:
-            imageModel.Insert((HBITMAP) CopyImage(selectionModel.GetBitmap(), IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
+            imageModel.Insert(CopyDIBImage(selectionModel.GetBitmap()));
             break;
 
         case IDM_VIEWTOOLBOX:
@@ -662,7 +668,16 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             alignChildrenToMainWindow();
             break;
         case IDM_FORMATICONBAR:
-            textEditWindow.ShowWindow(textEditWindow.IsWindowVisible() ? SW_HIDE : SW_SHOW);
+            if (toolsModel.GetActiveTool() == TOOL_TEXT)
+            {
+                if (!fontsDialog.IsWindow())
+                {
+                    fontsDialog.Create(mainWindow);
+                }
+                registrySettings.ShowTextTool = !fontsDialog.IsWindowVisible();
+                fontsDialog.ShowWindow(registrySettings.ShowTextTool ? SW_SHOW : SW_HIDE);
+                fontsDialog.SendMessage(DM_REPOSITION, 0, 0);
+            }
             break;
         case IDM_VIEWSHOWGRID:
             showGrid = !showGrid;

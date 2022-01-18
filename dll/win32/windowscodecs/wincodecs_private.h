@@ -184,6 +184,7 @@ extern HRESULT write_source(IWICBitmapFrameEncode *iface,
     INT width, INT height) DECLSPEC_HIDDEN;
 
 extern void reverse_bgr8(UINT bytesperpixel, LPBYTE bits, UINT width, UINT height, INT stride) DECLSPEC_HIDDEN;
+extern void convert_rgba_to_bgra(UINT bytesperpixel, LPBYTE bits, UINT width, UINT height, INT stride) DECLSPEC_HIDDEN;
 
 extern HRESULT get_pixelformat_bpp(const GUID *pixelformat, UINT *bpp) DECLSPEC_HIDDEN;
 
