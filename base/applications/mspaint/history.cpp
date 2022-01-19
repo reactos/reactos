@@ -44,7 +44,7 @@ ImageModel::ImageModel()
 
 void ImageModel::CopyPrevious()
 {
-    DPRINT("%s: %d\n", __FUNCTION__, currInd);
+    ATLTRACE("%s: %d\n", __FUNCTION__, currInd);
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
     hBms[(currInd + 1) % HISTORYSIZE] = CopyDIBImage(hBms[currInd]);
     currInd = (currInd + 1) % HISTORYSIZE;
@@ -57,7 +57,7 @@ void ImageModel::CopyPrevious()
 
 void ImageModel::Undo()
 {
-    DPRINT("%s: %d\n", __FUNCTION__, undoSteps);
+    ATLTRACE("%s: %d\n", __FUNCTION__, undoSteps);
     if (undoSteps > 0)
     {
         int oldWidth = GetWidth();
@@ -76,7 +76,7 @@ void ImageModel::Undo()
 
 void ImageModel::Redo()
 {
-    DPRINT("%s: %d\n", __FUNCTION__, redoSteps);
+    ATLTRACE("%s: %d\n", __FUNCTION__, redoSteps);
     if (redoSteps > 0)
     {
         int oldWidth = GetWidth();
@@ -95,7 +95,7 @@ void ImageModel::Redo()
 
 void ImageModel::ResetToPrevious()
 {
-    DPRINT("%s: %d\n", __FUNCTION__, currInd);
+    ATLTRACE("%s: %d\n", __FUNCTION__, currInd);
     DeleteObject(hBms[currInd]);
     hBms[currInd] = CopyDIBImage(hBms[(currInd + HISTORYSIZE - 1) % HISTORYSIZE]);
     SelectObject(hDrawingDC, hBms[currInd]);
