@@ -1909,7 +1909,7 @@ inline VOID __cdecl AtlTrace(_In_z_ _Printf_format_string_ PCSTR format, ...)
 
 #ifndef ATLTRACE
     #if DBG
-        #define ATLTRACE(format, ...) AtlTraceEx(__FILE__, __LINE__, format, ##__VA_ARGS__)
+        #define ATLTRACE(format, ...) ATL::AtlTraceEx(__FILE__, __LINE__, format, ##__VA_ARGS__)
     #else
         #define ATLTRACE(format, ...)
     #endif
