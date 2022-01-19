@@ -513,39 +513,25 @@ WinLdrIsPaeSupported(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         NtLdrGetOption(BootOptions, "PAE"))
     {
         /* We found the PAE option. */
-        FIXME("LoadWindowsCore: PAE - TRUE (not implemented)\n");
         PaeEnabled = TRUE;
     }
+
+    Result = PaeEnabled;
 
     if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
     {
         if (NtLdrGetOption(BootOptions, "NOPAE"))
-        {
-            /* We found the NOPAE option. */
-            FIXME("LoadWindowsCore: NOPAE - TRUE (not implemented)\n");
             PaeDisabled = TRUE;
-        }
 
         if (!LoaderBlock->SetupLdrBlock)
         {
-            if (NtLdrGetOption(BootOptions, "EXECUTE"))
-            {
-                /* We found the EXECUTE option. */
-                FIXME("LoadWindowsCore: EXECUTE - TRUE (not implemented)\n");
-                NoexecuteDisabled = TRUE;
-            }
             if (NtLdrGetOption(BootOptions, "NOEXECUTE=ALWAYSOFF"))
-            {
-                /* We found the NOEXECUTE=ALWAYSOFF option. */
-                FIXME("LoadWindowsCore: NOEXECUTE=ALWAYSOFF - TRUE (not implemented)\n");
                 NoexecuteDisabled = TRUE;
-            }
-            if (NtLdrGetOption(BootOptions, "NOEXECUTE"))
-            {
-                /* We found the NOEXECUTE option. */
-                FIXME("LoadWindowsCore: NOEXECUTE - TRUE (not implemented)\n");
+            else if (NtLdrGetOption(BootOptions, "NOEXECUTE"))
                 NoexecuteEnabled = TRUE;
-            }
+
+            if (NtLdrGetOption(BootOptions, "EXECUTE") && !NoexecuteEnabled)
+                NoexecuteDisabled = TRUE;
         }
     }
 
@@ -555,13 +541,18 @@ WinLdrIsPaeSupported(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         NoexecuteDisabled = TRUE;
     }
 
-    TRACE("NoexecuteDisabled %X, NoexecuteEnabled %X\n", NoexecuteDisabled, NoexecuteEnabled);
+    TRACE("NoexecuteDisabled %X\n", NoexecuteDisabled);
     TRACE("PaeEnabled %X, PaeDisabled %X\n", PaeEnabled, PaeDisabled);
+
+    if (PaeDisabled)
+        Result = FALSE;
+
+    if (NoexecuteDisabled == FALSE)
+        Result = TRUE;
 
     // FIXME checks for CPU support, hotplug memory support .. other tests
     // FIXME select kernel name ("ntkrnlpa.exe" or ntoskrnl.exe")
 
-    Result = PaeEnabled;
     return Result;
 }
 
