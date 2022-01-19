@@ -10,6 +10,7 @@
 
 #include <windef.h>
 #include <winuser.h>
+#include <commctrl.h>
 
 #include "resource.h"
 

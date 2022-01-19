@@ -181,6 +181,69 @@ done:
     RegCloseKey(hKey);
 }
 
+static VOID
+AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
+{
+    INT xOld, yOld, cxOld, cyOld;
+    INT xNew, yNew, cxNew, cyNew;
+    INT cxLabel, cyLabel, dyLabel;
+    RECT rc, rcBar, rcLabel, rcWnd;
+    BITMAP bmLogo, bmBar;
+    DWORD style, exstyle;
+    HWND hwndLogo = GetDlgItem(hwndDlg, IDC_ROSLOGO);
+    HWND hwndBar = GetDlgItem(hwndDlg, IDC_BAR);
+    HWND hwndLabel = GetDlgItem(hwndDlg, IDC_STATUS_MESSAGE);
+
+    /* This adjustment is for CJK only */
+    switch (PRIMARYLANGID(GetUserDefaultLangID()))
+    {
+        case LANG_CHINESE:
+        case LANG_JAPANESE:
+        case LANG_KOREAN:
+            break;
+
+        default:
+            return;
+    }
+
+    if (!GetObjectW(pDlgData->hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
+        !GetObjectW(pDlgData->hBarBitmap, sizeof(BITMAP), &bmBar))
+    {
+        return;
+    }
+
+    GetWindowRect(hwndBar, &rcBar);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcBar, 2);
+    dyLabel = bmLogo.bmHeight - rcBar.top;
+
+    GetWindowRect(hwndLabel, &rcLabel);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcLabel, 2);
+    cxLabel = rcLabel.right - rcLabel.left;
+    cyLabel = rcLabel.bottom - rcLabel.top;
+
+    MoveWindow(hwndLogo, 0, 0, bmLogo.bmWidth, bmLogo.bmHeight, TRUE);
+    MoveWindow(hwndBar, 0, bmLogo.bmHeight, bmLogo.bmWidth, bmBar.bmHeight, TRUE);
+    MoveWindow(hwndLabel, rcLabel.left, rcLabel.top + dyLabel, cxLabel, cyLabel, TRUE);
+
+    GetWindowRect(hwndDlg, &rcWnd);
+    xOld = rcWnd.left;
+    yOld = rcWnd.top;
+    cxOld = rcWnd.right - rcWnd.left;
+    cyOld = rcWnd.bottom - rcWnd.top;
+
+    GetClientRect(hwndDlg, &rc);
+    SetRect(&rc, 0, 0, bmLogo.bmWidth, rc.bottom - rc.top); /* new client size */
+
+    style = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_STYLE);
+    exstyle = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_EXSTYLE);
+    AdjustWindowRectEx(&rc, style, FALSE, exstyle);
+
+    cxNew = rc.right - rc.left;
+    cyNew = (rc.bottom - rc.top) + dyLabel;
+    xNew = xOld - (cxNew - cxOld) / 2;
+    yNew = yOld - (cyNew - cyOld) / 2;
+    MoveWindow(hwndDlg, xNew, yNew, cxNew, cyNew, TRUE);
+}
 
 static INT_PTR CALLBACK
 StatusDialogProc(
@@ -226,6 +289,8 @@ StatusDialogProc(
                     pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
                 }
             }
+
+            AdjustStatusMessageWindow(hwndDlg, pDlgData);
             return TRUE;
         }
 

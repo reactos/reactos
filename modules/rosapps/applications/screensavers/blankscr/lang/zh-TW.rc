@@ -1,9 +1,14 @@
-// Chinese Traditional (zh-TW) resources by Chan Chilung <eason066@gmail.com> 2021
+/*
+ * PROJECT:     ReactOS Default ScreenSaver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung (eason066@gmail.com)
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "空白螢幕"
-    IDS_TEXT        "沒有可設置的選項。"
+    IDS_TEXT        "沒有可設定的選項。"
 END

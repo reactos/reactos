@@ -51,14 +51,6 @@ NtUserBitBltSysBmp(
    return Ret;
 }
 
-NTSTATUS
-APIENTRY
-NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
-{
-    STUB;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 DWORD
 APIENTRY
 NtUserDragObject(
@@ -482,6 +474,9 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
     if (!pIMC)
         return NULL;
 
+    // Release the extra reference (UserCreateObject added 2 references).
+    UserDereferenceObject(pIMC);
+
     if (dwClientImcData) // Non-first time.
     {
         // Insert pIMC to the second position (non-default) of the list.
@@ -506,9 +501,12 @@ NtUserCreateInputContext(ULONG_PTR dwClientImcData)
     PIMC pIMC;
     HIMC ret = NULL;
 
+    if (!dwClientImcData)
+        return NULL;
+
     UserEnterExclusive();
 
-    if (!IS_IMM_MODE() || !dwClientImcData)
+    if (!IS_IMM_MODE())
         goto Quit;
 
     pIMC = UserCreateInputContext(dwClientImcData);
@@ -1021,7 +1019,27 @@ DWORD
 APIENTRY
 NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
 {
-    STUB;
+    PTHREADINFO pti;
+    PKL pOldKL, pNewKL;
+
+    UserEnterExclusive();
+
+    pti = GetW32ThreadInfo();
+    pOldKL = pti->KeyboardLayout;
+    if (pOldKL && pOldKL->hkl != hOldKL)
+        goto Quit;
+
+    pNewKL = UserHklToKbl(hNewKL);
+    if (!pNewKL)
+        goto Quit;
+
+    if (IS_IME_HKL(hNewKL) != IS_IME_HKL(hOldKL))
+        pti->hklPrev = hOldKL;
+
+    pti->KeyboardLayout = pNewKL;
+
+Quit:
+    UserLeave();
     return 0;
 }
 

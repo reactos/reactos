@@ -18,7 +18,7 @@ BEGIN
     GROUPBOX "發牌", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "發一張牌(&O)", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "發三張牌(&T)", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "得分", -1, 100, 7, 75, 53
+    GROUPBOX "記分", -1, 100, 7, 75, 53
     AUTORADIOBUTTON "標準(&S)", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "維加斯(&V)", IDC_OPT_VEGAS, 107, 32, 60, 10
     AUTORADIOBUTTON "無(&N)", IDC_OPT_NOSCORE, 107, 45, 60, 10
@@ -59,8 +59,8 @@ BEGIN
     IDS_SOL_QUIT "退出目前遊戲？"
     IDS_SOL_WIN "恭喜您，您贏了！！"
     IDS_SOL_DEAL "再玩一次？"
-    IDS_SOL_SCORE "分數: %d"
-    IDS_SOL_TIME "時間: %d"
+    IDS_SOL_SCORE "分數：%d"
+    IDS_SOL_TIME "時間：%d"
 END
 
 /* Menus */

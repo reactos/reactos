@@ -654,7 +654,7 @@ InitThreadCallback(PETHREAD Thread)
     /* Create the default input context */
     if (IS_IMM_MODE())
     {
-        UserCreateInputContext(0);
+        (VOID)UserCreateInputContext(0);
     }
 
     /* Last things to do only if we are not a SYSTEM or CSRSS thread */

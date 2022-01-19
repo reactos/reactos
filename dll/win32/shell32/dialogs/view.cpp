@@ -441,9 +441,6 @@ ViewTree_LoadTree(HKEY hKey, LPCWSTR pszKeyName, DWORD dwParentID)
 
 static BOOL ViewTree_LoadAll(VOID)
 {
-    static const WCHAR s_szAdvanced[] =
-        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced";
-
     // free if already existed
     if (s_ViewTreeEntries)
     {
@@ -453,8 +450,9 @@ static BOOL ViewTree_LoadAll(VOID)
     s_ViewTreeEntryCount = 0;
 
     HKEY hKey;
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szAdvanced, 0,
-                      KEY_READ, &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                      0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         return FALSE;   // failure
     }

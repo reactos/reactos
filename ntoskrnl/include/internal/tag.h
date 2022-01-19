@@ -131,6 +131,7 @@
 #define TAG_KAPC                'papk' /* kpap - kernel ps apc */
 #define TAG_PS_APC              'pasP' /* Psap - Ps APC */
 #define TAG_SHIM                'MIHS'
+#define TAG_QUOTA_BLOCK         'bQsP'
 
 /* Run-Time Library Tags */
 #define TAG_HDTB  'BTDH'

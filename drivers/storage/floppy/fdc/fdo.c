@@ -16,51 +16,6 @@
 
 /* FUNCTIONS ******************************************************************/
 
-static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
-
-static
-NTSTATUS
-NTAPI
-ForwardIrpAndWaitCompletion(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
-{
-    if (Irp->PendingReturned)
-        KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-
-NTSTATUS
-ForwardIrpAndWait(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
-{
-    PDEVICE_OBJECT LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
-    KEVENT Event;
-    NTSTATUS Status;
-
-    ASSERT(LowerDevice);
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-
-    DPRINT("Calling lower device %p\n", LowerDevice);
-    IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(LowerDevice, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-        if (NT_SUCCESS(Status))
-            Status = Irp->IoStatus.Status;
-    }
-
-    return Status;
-}
-
-
 NTSTATUS
 NTAPI
 ForwardIrpAndForget(
@@ -492,6 +447,7 @@ FdcFdoPnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    PFDO_DEVICE_EXTENSION FdoExtension;
     PIO_STACK_LOCATION IrpSp;
     PDEVICE_RELATIONS DeviceRelations = NULL;
     ULONG_PTR Information = 0;
@@ -505,14 +461,22 @@ FdcFdoPnp(
     {
         case IRP_MN_START_DEVICE:
             DPRINT("  IRP_MN_START_DEVICE received\n");
+            
             /* Call lower driver */
-            Status = ForwardIrpAndWait(DeviceObject, Irp);
-            if (NT_SUCCESS(Status))
+            Status = STATUS_UNSUCCESSFUL;
+            FdoExtension = DeviceObject->DeviceExtension;
+
+            if (IoForwardIrpSynchronously(FdoExtension->LowerDevice, Irp))
             {
-                Status = FdcFdoStartDevice(DeviceObject,
-                                           IrpSp->Parameters.StartDevice.AllocatedResources,
-                                           IrpSp->Parameters.StartDevice.AllocatedResourcesTranslated);
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                {
+                    Status = FdcFdoStartDevice(DeviceObject,
+                        IrpSp->Parameters.StartDevice.AllocatedResources,
+                        IrpSp->Parameters.StartDevice.AllocatedResourcesTranslated);
+                }
             }
+
             break;
 
         case IRP_MN_QUERY_REMOVE_DEVICE:

@@ -73,8 +73,6 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
     HKEY hkeyProgid,
     HWND hWnd)
 {
-    static const WCHAR szProgID[] = L"ProgID";
-
     TRACE("(%p)->(%d,%s,%p,%p)\n", this,
                                     cfFlags,
                                     debugstr_w(pszAssoc),
@@ -128,11 +126,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
         {
             HKEY progIdKey;
             /* for a clsid, the progid is the default value of the ProgID subkey */
-            ret = RegOpenKeyExW(this->hkeySource,
-                                szProgID,
-                                0,
-                                KEY_READ,
-                                &progIdKey);
+            ret = RegOpenKeyExW(this->hkeySource, L"ProgID", 0, KEY_READ, &progIdKey);
             if (ret != ERROR_SUCCESS)
                 return S_OK;
             hr = this->GetValue(progIdKey, NULL, (void**)&progId, NULL);
@@ -274,8 +268,6 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
             DWORD size, retval = 0;
             UINT flen;
             WCHAR *bufW;
-            static const WCHAR translationW[] = L"\\VarFileInfo\\Translation";
-            static const WCHAR fileDescFmtW[] = L"\\StringFileInfo\\%04x%04x\\FileDescription";
             WCHAR fileDescW[41];
 
             hr = this->GetExecutable(pszExtra, path, MAX_PATH, &len);
@@ -297,13 +289,14 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
             {
                 goto get_friendly_name_fail;
             }
-            if (VerQueryValueW(verinfoW, translationW, (LPVOID *)&bufW, &flen))
+            if (VerQueryValueW(verinfoW, L"\\VarFileInfo\\Translation", (LPVOID *)&bufW, &flen))
             {
                 UINT i;
                 DWORD *langCodeDesc = (DWORD *)bufW;
                 for (i = 0; i < flen / sizeof(DWORD); i++)
                 {
-                    sprintfW(fileDescW, fileDescFmtW, LOWORD(langCodeDesc[i]), HIWORD(langCodeDesc[i]));
+                    sprintfW(fileDescW, L"\\StringFileInfo\\%04x%04x\\FileDescription",
+                             LOWORD(langCodeDesc[i]), HIWORD(langCodeDesc[i]));
                     if (VerQueryValueW(verinfoW, fileDescW, (LPVOID *)&bufW, &flen))
                     {
                         /* Does strlenW(bufW) == 0 mean we use the filename? */
@@ -325,10 +318,8 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
         }
         case ASSOCSTR_CONTENTTYPE:
         {
-            static const WCHAR Content_TypeW[] = L"Content Type";
-
             DWORD size = 0;
-            DWORD ret = RegGetValueW(this->hkeySource, NULL, Content_TypeW, RRF_RT_REG_SZ, NULL, NULL, &size);
+            DWORD ret = RegGetValueW(this->hkeySource, NULL, L"Content Type", RRF_RT_REG_SZ, NULL, NULL, &size);
             if (ret != ERROR_SUCCESS)
             {
                 return HRESULT_FROM_WIN32(ret);
@@ -336,7 +327,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
             WCHAR *contentType = static_cast<WCHAR *>(HeapAlloc(GetProcessHeap(), 0, size));
             if (contentType != NULL)
             {
-                ret = RegGetValueW(this->hkeySource, NULL, Content_TypeW, RRF_RT_REG_SZ, NULL, contentType, &size);
+                ret = RegGetValueW(this->hkeySource, NULL, L"Content Type", RRF_RT_REG_SZ, NULL, contentType, &size);
                 if (ret == ERROR_SUCCESS)
                 {
                     hr = this->ReturnString(flags, pszOut, pcchOut, contentType, strlenW(contentType) + 1);
@@ -355,16 +346,15 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
         }
         case ASSOCSTR_DEFAULTICON:
         {
-            static const WCHAR DefaultIconW[] = L"DefaultIcon";
             DWORD ret;
             DWORD size = 0;
-            ret = RegGetValueW(this->hkeyProgID, DefaultIconW, NULL, RRF_RT_REG_SZ, NULL, NULL, &size);
+            ret = RegGetValueW(this->hkeyProgID, L"DefaultIcon", NULL, RRF_RT_REG_SZ, NULL, NULL, &size);
             if (ret == ERROR_SUCCESS)
             {
                 WCHAR *icon = static_cast<WCHAR *>(HeapAlloc(GetProcessHeap(), 0, size));
                 if (icon)
                 {
-                    ret = RegGetValueW(this->hkeyProgID, DefaultIconW, NULL, RRF_RT_REG_SZ, NULL, icon, &size);
+                    ret = RegGetValueW(this->hkeyProgID, L"DefaultIcon", NULL, RRF_RT_REG_SZ, NULL, icon, &size);
                     if (ret == ERROR_SUCCESS)
                     {
                         hr = this->ReturnString(flags, pszOut, pcchOut, icon, strlenW(icon) + 1);
@@ -388,8 +378,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
         }
         case ASSOCSTR_SHELLEXTENSION:
         {
-            static const WCHAR shellexW[] = L"ShellEx\\";
-            WCHAR keypath[sizeof(shellexW) / sizeof(shellexW[0]) + 39], guid[39];
+            WCHAR keypath[ARRAY_SIZE(L"ShellEx\\") + 39], guid[39];
             CLSID clsid;
             HKEY hkey;
 
@@ -398,7 +387,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
             {
                 return hr;
             }
-            strcpyW(keypath, shellexW);
+            strcpyW(keypath, L"ShellEx\\");
             strcatW(keypath, pszExtra);
             LONG ret = RegOpenKeyExW(this->hkeySource, keypath, 0, KEY_READ, &hkey);
             if (ret)
@@ -467,8 +456,6 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetKey(
  */
 HRESULT STDMETHODCALLTYPE CQueryAssociations::GetData(ASSOCF cfFlags, ASSOCDATA assocdata, LPCWSTR pszExtra, LPVOID pvOut, DWORD *pcbOut)
 {
-    static const WCHAR edit_flags[] = L"EditFlags";
-
     TRACE("(%p,0x%8x,0x%8x,%s,%p,%p)\n", this, cfFlags, assocdata,
             debugstr_w(pszExtra), pvOut, pcbOut);
 
@@ -488,7 +475,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetData(ASSOCF cfFlags, ASSOCDATA 
 
             void *data;
             DWORD size;
-            HRESULT hres = this->GetValue(this->hkeyProgID, edit_flags, &data, &size);
+            HRESULT hres = this->GetValue(this->hkeyProgID, L"EditFlags", &data, &size);
             if(FAILED(hres))
             {
                 return hres;
@@ -582,8 +569,6 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
     LONG ret;
     WCHAR *extra_from_reg = NULL;
     WCHAR *filetype;
-    static const WCHAR commandW[] = L"command";
-    static const WCHAR shellW[] = L"shell";
 
     /* When looking for file extension it's possible to have a default value
      that points to another key that contains 'shell/<verb>/command' subtree. */
@@ -597,17 +582,17 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
 
         if (ret == ERROR_SUCCESS)
         {
-            ret = RegOpenKeyExW(hkeyFile, shellW, 0, KEY_READ, &hkeyShell);
+            ret = RegOpenKeyExW(hkeyFile, L"shell", 0, KEY_READ, &hkeyShell);
             RegCloseKey(hkeyFile);
         }
         else
         {
-            ret = RegOpenKeyExW(this->hkeySource, shellW, 0, KEY_READ, &hkeyShell);
+            ret = RegOpenKeyExW(this->hkeySource, L"shell", 0, KEY_READ, &hkeyShell);
         }
     }
     else
     {
-        ret = RegOpenKeyExW(this->hkeySource, shellW, 0, KEY_READ, &hkeyShell);
+        ret = RegOpenKeyExW(this->hkeySource, L"shell", 0, KEY_READ, &hkeyShell);
     }
 
     if (ret)
@@ -659,7 +644,7 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
         return HRESULT_FROM_WIN32(ret);
     }
     /* open command subkey */
-    ret = RegOpenKeyExW(hkeyVerb, commandW, 0, KEY_READ, &hkeyCommand);
+    ret = RegOpenKeyExW(hkeyVerb, L"command", 0, KEY_READ, &hkeyCommand);
     RegCloseKey(hkeyVerb);
     if (ret)
     {

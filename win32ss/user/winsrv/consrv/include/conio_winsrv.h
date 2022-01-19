@@ -79,6 +79,8 @@ typedef struct _FRONTEND_VTBL
     BOOL (NTAPI *SetPalette)(IN OUT PFRONTEND This,
                              HPALETTE PaletteHandle,
                              UINT PaletteUsage);
+    BOOL (NTAPI *SetCodePage)(IN OUT PFRONTEND This,
+                              UINT CodePage);
     ULONG (NTAPI *GetDisplayMode)(IN OUT PFRONTEND This);
     BOOL  (NTAPI *SetDisplayMode)(IN OUT PFRONTEND This,
                                   ULONG NewMode);

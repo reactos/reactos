@@ -118,9 +118,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "रिऐक्ट ओएस सेटअप"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "कॉम्पोनेन्ट का दर्ज होना", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -186,8 +189,8 @@ BEGIN
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "दिनांक और समय"
     IDS_DATETIMESUBTITLE "अपने कंप्यूटर के लिए सही तारीख और समय निर्धारित करें।"
-    IDS_PROCESSTITLE "कम्पोनन्ट का दर्ज"
-    IDS_PROCESSSUBTITLE "कृपया प्रतीक्षा करें..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "दिखावट"
     IDS_THEMESELECTIONSUBTITLE "अपनी पसंद का थीम चुनें।"
 
@@ -197,7 +200,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "रिऐक्ट ओएस सेटअप"
     IDS_UNKNOWN_ERROR "अज्ञात त्रुटि"
-    IDS_REGISTERING_COMPONENTS "कॉम्पोनेन्ट का दर्ज होना..."
     IDS_LOADLIBRARY_FAILED "लोडलाइब्रेरी विफल रहा: "
     IDS_GETPROCADDR_FAILED "गैटप्रौकऐड्र विफल रहा: "
     IDS_REGSVR_FAILED "डीललरजिस्टरसर्वर विफल रहा: "

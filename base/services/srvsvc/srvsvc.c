@@ -45,7 +45,7 @@ DWORD dwServiceBits = 0;
 static VOID
 UpdateServiceStatus(DWORD dwState)
 {
-    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwServiceType = SERVICE_WIN32_SHARE_PROCESS;
     ServiceStatus.dwCurrentState = dwState;
     ServiceStatus.dwControlsAccepted = 0;
     ServiceStatus.dwWin32ExitCode = 0;

@@ -14,8 +14,7 @@
 
 /* GLOBALS *******************************************************************/
 
-PCHAR CmpID1 = "80%u86-%c%x";
-PCHAR CmpID2 = "x86 Family %u Model %u Stepping %u";
+PCHAR CmpFullCpuID = "%s Family %u Model %u Stepping %u";
 PCHAR CmpBiosStrings[] =
 {
     "Ver",
@@ -346,6 +345,9 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         /* Loop all CPUs */
         for (i = 0; i < KeNumberProcessors; i++)
         {
+#ifdef _M_AMD64
+            PCHAR FamilyId;
+#endif
             /* Get the PRCB */
             Prcb = KiProcessorBlock[i];
 
@@ -357,25 +359,54 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
             ConfigData.ComponentEntry.AffinityMask = AFFINITY_MASK(i);
             ConfigData.ComponentEntry.Identifier = Buffer;
 
+#if defined(_M_IX86)
             /* Check if the CPU doesn't support CPUID */
             if (!Prcb->CpuID)
             {
-                /* Build ID1-style string for older CPUs */
+                /* Build 80x86-style string for older CPUs */
                 sprintf(Buffer,
-                        CmpID1,
+                        "80%u86-%c%x",
                         Prcb->CpuType,
                         (Prcb->CpuStep >> 8) + 'A',
                         Prcb->CpuStep & 0xff);
             }
             else
             {
-                /* Build ID2-style string for newer CPUs */
+                /* Build full ID string for newer CPUs */
                 sprintf(Buffer,
-                        CmpID2,
+                        CmpFullCpuID,
+                        "x86",
                         Prcb->CpuType,
                         (Prcb->CpuStep >> 8),
                         Prcb->CpuStep & 0xff);
             }
+#elif defined(_M_AMD64)
+            if (Prcb->CpuVendor == CPU_VIA)
+            {
+                /* This is VIA64 family */
+                FamilyId = "VIA64";
+            }
+            else if (Prcb->CpuVendor == CPU_AMD)
+            {
+                /* This is AMD64 family */
+                FamilyId = "AMD64";
+            }
+            else
+            {
+                /* This is generic EM64T family */
+                FamilyId = "EM64T";
+            }
+
+            /* ID string has the same style for all 64-bit CPUs */
+            sprintf(Buffer,
+                    CmpFullCpuID,
+                    FamilyId,
+                    Prcb->CpuType,
+                    (Prcb->CpuStep >> 8),
+                    Prcb->CpuStep & 0xff);
+#else
+#error Unknown architecture
+#endif
 
             /* Save the ID string length now that we've created it */
             ConfigData.ComponentEntry.IdentifierLength = (ULONG)strlen(Buffer) + 1;

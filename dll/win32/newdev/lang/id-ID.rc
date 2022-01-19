@@ -93,4 +93,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "Pilih cari dan pilihan pemasangan"
     IDS_SEARCHDRV_TITLE "Mencari..."
     IDS_INSTALLDRV_TITLE "Memasang..."
+    IDS_BROWSE_FOR_FOLDER_TITLE "Select the folder containing proper drivers for this hardware."
 END

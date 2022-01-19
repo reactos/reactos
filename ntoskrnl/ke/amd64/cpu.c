@@ -33,10 +33,7 @@ volatile LONG KiTbFlushTimeStamp;
 /* CPU Signatures */
 static const CHAR CmpIntelID[]       = "GenuineIntel";
 static const CHAR CmpAmdID[]         = "AuthenticAMD";
-static const CHAR CmpCyrixID[]       = "CyrixInstead";
-static const CHAR CmpTransmetaID[]   = "GenuineTMx86";
 static const CHAR CmpCentaurID[]     = "CentaurHauls";
-static const CHAR CmpRiseID[]        = "RiseRiseRise";
 
 /* FUNCTIONS *****************************************************************/
 
@@ -89,25 +86,25 @@ KiGetCpuVendor(VOID)
     /* Now check the CPU Type */
     if (!strcmp((PCHAR)Prcb->VendorString, CmpIntelID))
     {
-        return CPU_INTEL;
+        Prcb->CpuVendor = CPU_INTEL;
     }
     else if (!strcmp((PCHAR)Prcb->VendorString, CmpAmdID))
     {
-        return CPU_AMD;
+        Prcb->CpuVendor = CPU_AMD;
     }
     else if (!strcmp((PCHAR)Prcb->VendorString, CmpCentaurID))
     {
         DPRINT1("VIA CPUs not fully supported\n");
-        return CPU_VIA;
+        Prcb->CpuVendor = CPU_VIA;
     }
-    else if (!strcmp((PCHAR)Prcb->VendorString, CmpRiseID))
+    else
     {
-        DPRINT1("Rise CPUs not fully supported\n");
-        return 0;
+        /* Invalid CPU */
+        DPRINT1("%s CPU support not fully tested!\n", Prcb->VendorString);
+        Prcb->CpuVendor = CPU_UNKNOWN;
     }
 
-    /* Invalid CPU */
-    return CPU_UNKNOWN;
+    return Prcb->CpuVendor;
 }
 
 ULONG

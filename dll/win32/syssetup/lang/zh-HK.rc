@@ -118,9 +118,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "正在登錄元件", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -182,12 +185,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "您必須提供電腦名稱和管理員密碼。"
     IDS_LOCALETITLE "地區設定"
     IDS_LOCALESUBTITLE "您可以為不同的地區和語言自訂 ReactOS。"
-	IDS_LOCALETEXT "目前的標準和格式設定是 %s，而目前的地區設定是 %s。"
+    IDS_LOCALETEXT "目前的標準和格式設定是 %s，而目前的地區設定是 %s。"
     IDS_LAYOUTTEXT "您的預設文字輸入語言和方法是：%s 鍵盤配置。"
     IDS_DATETIMETITLE "日期和時間"
     IDS_DATETIMESUBTITLE "為您的電腦設定正確的日期及時間。"
-    IDS_PROCESSTITLE "正在登錄元件"
-    IDS_PROCESSSUBTITLE "請稍候..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "外觀"
     IDS_THEMESELECTIONSUBTITLE "選擇您的主題。"
 
@@ -197,7 +200,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS 安裝程式"
     IDS_UNKNOWN_ERROR "不明的錯誤"
-    IDS_REGISTERING_COMPONENTS "正在登錄元件..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary 失敗： "
     IDS_GETPROCADDR_FAILED "GetProcAddr 失敗： "
     IDS_REGSVR_FAILED "DllRegisterServer 失敗： "

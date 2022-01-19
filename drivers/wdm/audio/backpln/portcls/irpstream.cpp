@@ -14,6 +14,31 @@
 
 #include <debug.h>
 
+static
+PIRP
+RemoveHeadList_IRP(
+    IN OUT PLIST_ENTRY QueueHead)
+{
+    PIRP Irp;
+    PLIST_ENTRY CurEntry;
+
+    for (CurEntry = QueueHead->Flink; CurEntry != QueueHead; CurEntry = CurEntry->Flink)
+    {
+        /* Get the IRP offset */
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+
+        /* Remove the cancel routine */
+        if (IoSetCancelRoutine(Irp, NULL))
+        {
+            /* Remove the IRP from the list and return it */
+            RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+            return Irp;
+        }
+    }
+
+    /* no non canceled irp has been found */
+    return NULL;
+}
 class CIrpQueue : public IIrpQueue
 {
 public:
@@ -48,13 +73,16 @@ protected:
     LIST_ENTRY m_IrpList;
     LIST_ENTRY m_FreeIrpList;
 
-    BOOLEAN m_OutOfMapping;
     ULONG m_MaxFrameSize;
     ULONG m_Alignment;
     ULONG m_TagSupportEnabled;
-    volatile ULONG m_NumDataAvailable;
-    volatile ULONG m_CurrentOffset;
-    volatile PIRP m_Irp;
+
+    ULONG m_StreamHeaderIndex;
+    ULONG m_TagIndex;
+    PKSSTREAM_HEADER m_CurStreamHeader;
+
+    ULONG m_CurrentOffset;
+    PIRP m_Irp;
     volatile LONG m_Ref;
 };
 
@@ -67,10 +95,8 @@ typedef struct
 typedef struct
 {
     ULONG StreamHeaderCount;
-    ULONG StreamHeaderIndex;
-    ULONG TotalStreamData;
+    ULONG nTags;
 
-    PKSSTREAM_HEADER CurStreamHeader;
     PVOID * Data;
     PKSSTREAM_TAG Tags;
 }KSSTREAM_DATA, *PKSSTREAM_DATA;
@@ -128,6 +154,9 @@ CIrpQueue::AddMapping(
     ULONG Index, Length;
     PMDL Mdl;
     PKSSTREAM_DATA StreamData;
+    LONG TotalStreamData;
+    LONG StreamPageCount;
+    LONG HeaderLength;
 
     PC_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
@@ -165,14 +194,15 @@ CIrpQueue::AddMapping(
     // get first stream header
     Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
 
-    // store header
-    StreamData->CurStreamHeader = Header;
-
     // sanity check
     PC_ASSERT(Header);
 
     // first calculate the numbers of stream headers
     Length = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+    Mdl = Irp->MdlAddress;
+
+    TotalStreamData = 0;
+    StreamPageCount = 0;
 
     do
     {
@@ -185,15 +215,23 @@ CIrpQueue::AddMapping(
         if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
         {
             // irp sink
-            StreamData->TotalStreamData += Header->DataUsed;
+            HeaderLength = Header->DataUsed;
         }
         else
         {
             // irp source
-            StreamData->TotalStreamData += Header->FrameExtent;
+            HeaderLength = Header->FrameExtent;
         }
 
-        /* move to next header */
+        // increment available data
+        TotalStreamData += HeaderLength;
+
+        // append page count
+        StreamPageCount += ADDRESS_AND_SIZE_TO_SPAN_PAGES(
+                               MmGetMdlByteOffset(Mdl), HeaderLength);
+
+        // move to next header / mdl
+        Mdl = Mdl->Next;
         Header = (PKSSTREAM_HEADER)((ULONG_PTR)Header + Header->Size);
 
     }while(Length);
@@ -215,7 +253,7 @@ CIrpQueue::AddMapping(
     if (m_TagSupportEnabled)
     {
         // allocate array for storing the pointers of the data */
-        StreamData->Tags = (PKSSTREAM_TAG)AllocateItem(NonPagedPool, sizeof(KSSTREAM_TAG) * StreamData->StreamHeaderCount, TAG_PORTCLASS);
+        StreamData->Tags = (PKSSTREAM_TAG)AllocateItem(NonPagedPool, sizeof(KSSTREAM_TAG) * StreamPageCount, TAG_PORTCLASS);
         if (!StreamData->Data)
         {
             // out of memory
@@ -254,17 +292,6 @@ CIrpQueue::AddMapping(
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
-        {
-            // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, Header->DataUsed);
-        }
-        else if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
-        {
-            // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, Header->FrameExtent);
-        }
-
         // move to next header / mdl
         Mdl = Mdl->Next;
         Header = (PKSSTREAM_HEADER)((ULONG_PTR)Header + Header->Size);
@@ -274,16 +301,13 @@ CIrpQueue::AddMapping(
     // store stream data
     Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET] = (PVOID)StreamData;
 
-    *Data = StreamData->TotalStreamData;
+    *Data = TotalStreamData;
 
     // mark irp as pending
     IoMarkIrpPending(Irp);
 
     // add irp to cancelable queue
     KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, Irp, KsListEntryTail, NULL);
-
-    // disable mapping failed status
-    m_OutOfMapping = FALSE;
 
     // done
     return STATUS_SUCCESS;
@@ -322,6 +346,15 @@ CIrpQueue::GetMapping(
         // get a fresh new irp from the queue
         m_Irp = Irp = KsRemoveIrpFromCancelableQueue(&m_IrpList, &m_IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
         m_CurrentOffset = Offset = 0;
+
+        if (m_Irp)
+        {
+            // reset stream header index
+            m_StreamHeaderIndex = 0;
+
+            // reset stream header
+            m_CurStreamHeader = (PKSSTREAM_HEADER)m_Irp->AssociatedIrp.SystemBuffer;
+        }
     }
 
     if (!Irp)
@@ -340,22 +373,19 @@ CIrpQueue::GetMapping(
     if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
     {
         // sink pin
-        *BufferSize = StreamData->CurStreamHeader->DataUsed - Offset;
+        *BufferSize = m_CurStreamHeader->DataUsed - Offset;
     }
     else
     {
         // source pin
-        *BufferSize = StreamData->CurStreamHeader->FrameExtent - Offset;
+        *BufferSize = m_CurStreamHeader->FrameExtent - Offset;
     }
 
     // sanity check
     PC_ASSERT(*BufferSize);
 
     // store buffer
-    *Buffer = &((PUCHAR)StreamData->Data[StreamData->StreamHeaderIndex])[Offset];
-
-    // unset flag that no irps are available
-    m_OutOfMapping = FALSE;
+    *Buffer = &((PUCHAR)StreamData->Data[m_StreamHeaderIndex])[Offset];
 
     return STATUS_SUCCESS;
 }
@@ -381,22 +411,19 @@ CIrpQueue::UpdateMapping(
     ASSERT(StreamData);
 
     // add to current offset
-    InterlockedExchangeAdd((PLONG)&m_CurrentOffset, (LONG)BytesWritten);
+    m_CurrentOffset += BytesWritten;
 
     if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
     {
         // store written bytes (source pin)
-        StreamData->CurStreamHeader->DataUsed += BytesWritten;
+        m_CurStreamHeader->DataUsed += BytesWritten;
     }
-
-    // decrement available data counter
-    m_NumDataAvailable -= BytesWritten;
 
     // get audio buffer size
     if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
-        Size = StreamData->CurStreamHeader->FrameExtent;
+        Size = m_CurStreamHeader->FrameExtent;
     else
-        Size = StreamData->CurStreamHeader->DataUsed;
+        Size = m_CurStreamHeader->DataUsed;
 
     // sanity check
     PC_ASSERT(Size);
@@ -406,13 +433,13 @@ CIrpQueue::UpdateMapping(
         // sanity check
         PC_ASSERT(Size == m_CurrentOffset);
 
-        if (StreamData->StreamHeaderIndex + 1 < StreamData->StreamHeaderCount)
+        if (m_StreamHeaderIndex + 1 < StreamData->StreamHeaderCount)
         {
             // move to next stream header
-            StreamData->CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)StreamData->CurStreamHeader + StreamData->CurStreamHeader->Size);
+            m_CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)m_CurStreamHeader + m_CurStreamHeader->Size);
 
             // increment stream header index
-            StreamData->StreamHeaderIndex++;
+            m_StreamHeaderIndex++;
 
             // reset offset
             m_CurrentOffset = 0;
@@ -429,15 +456,6 @@ CIrpQueue::UpdateMapping(
         {
             // looped streaming repeat the buffers untill
             // the caller decides to stop the streams
-
-            // reset stream header index
-            StreamData->StreamHeaderIndex = 0;
-
-            // reset stream header
-            StreamData->CurStreamHeader = (PKSSTREAM_HEADER)m_Irp->AssociatedIrp.SystemBuffer;
-
-            // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, StreamData->TotalStreamData);
 
             // re-insert irp
             KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, m_Irp, KsListEntryTail, NULL);
@@ -495,8 +513,70 @@ ULONG
 NTAPI
 CIrpQueue::NumData()
 {
-    // returns the amount of audio stream data available
-    return m_NumDataAvailable;
+    KIRQL OldLevel;
+    ULONG NumDataAvailable;
+    PLIST_ENTRY CurEntry;
+    PIRP Irp;
+    ULONG CurrentOffset;
+    ULONG StreamHeaderIndex;
+    PKSSTREAM_HEADER CurStreamHeader;
+    PKSSTREAM_DATA StreamData;
+    ULONG Size;
+
+    KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
+
+    NumDataAvailable = 0;
+    CurEntry = &m_IrpList;
+
+    // current IRP state
+    Irp = m_Irp;
+    CurrentOffset = m_CurrentOffset;
+    StreamHeaderIndex = m_StreamHeaderIndex;
+    CurStreamHeader = m_CurStreamHeader;
+
+    while (TRUE)
+    {
+        if (Irp != NULL)
+        {
+            // get stream data
+            StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
+
+            // loop over stream headers
+            for (; StreamHeaderIndex < StreamData->StreamHeaderCount; StreamHeaderIndex++)
+            {
+                // get audio buffer size
+                if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
+                    Size = CurStreamHeader->FrameExtent;
+                else
+                    Size = CurStreamHeader->DataUsed;
+
+                // increment available data
+                NumDataAvailable += Size - CurrentOffset;
+                CurrentOffset = 0;
+
+                // move to next stream header
+                CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)CurStreamHeader + CurStreamHeader->Size);
+            }
+        }
+
+        /* iterate to next entry */
+        CurEntry = CurEntry->Flink;
+
+        /* is the end of list reached */
+        if (CurEntry == &m_IrpList)
+            break;
+
+        /* get irp offset */
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+
+        // next IRP state
+        CurrentOffset = 0;
+        StreamHeaderIndex = 0;
+        CurStreamHeader = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+    }
+
+    KeReleaseSpinLock(&m_IrpListLock, OldLevel);
+    return NumDataAvailable;
 }
 
 BOOL
@@ -517,9 +597,6 @@ CIrpQueue::CancelBuffers()
     // cancel all irps
     KsCancelIo(&m_IrpList, &m_IrpListLock);
 
-    // reset number of data available
-    m_NumDataAvailable = 0;
-
     // done
     return TRUE;
 }
@@ -534,6 +611,9 @@ CIrpQueue::GetMappingWithTag(
     OUT PULONG  Flags)
 {
     PKSSTREAM_DATA StreamData;
+    KIRQL OldLevel;
+    ULONG Size;
+    LPBYTE Data;
 
     /* sanity checks */
     PC_ASSERT(PhysicalAddress);
@@ -541,76 +621,103 @@ CIrpQueue::GetMappingWithTag(
     PC_ASSERT(ByteCount);
     PC_ASSERT(Flags);
 
+    KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
+
     if (!m_Irp)
     {
         // get an irp from the queue
-        m_Irp = KsRemoveIrpFromCancelableQueue(&m_IrpList, &m_IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
-    }
+        m_Irp = RemoveHeadList_IRP(&m_IrpList);
 
-    // check if there is an irp
-    if (!m_Irp)
-    {
-        // no irp available
-        m_OutOfMapping = TRUE;
-        DPRINT("GetMappingWithTag no mapping available\n");
-        return STATUS_NOT_FOUND;
+        // check if there is an irp
+        if (!m_Irp)
+        {
+            // no irp available
+            KeReleaseSpinLock(&m_IrpListLock, OldLevel);
+
+            DPRINT("GetMappingWithTag no mapping available\n");
+            return STATUS_NOT_FOUND;
+        }
+
+        // reset offset
+        m_CurrentOffset = 0;
+
+        // reset tag index
+        m_TagIndex = 0;
+
+        // reset stream header index
+        m_StreamHeaderIndex = 0;
+
+        // reset stream header
+        m_CurStreamHeader = (PKSSTREAM_HEADER)m_Irp->AssociatedIrp.SystemBuffer;
     }
 
     // get stream data
     StreamData = (PKSSTREAM_DATA)m_Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
 
     // sanity check
-    PC_ASSERT(StreamData->StreamHeaderIndex < StreamData->StreamHeaderCount);
-
-    // setup mapping
-    *PhysicalAddress = MmGetPhysicalAddress(StreamData->Data[StreamData->StreamHeaderIndex]);
-    *VirtualAddress = StreamData->Data[StreamData->StreamHeaderIndex];
+    PC_ASSERT(m_StreamHeaderIndex < StreamData->StreamHeaderCount);
 
     // store tag in irp
-    StreamData->Tags[StreamData->StreamHeaderIndex].Tag = Tag;
-    StreamData->Tags[StreamData->StreamHeaderIndex].Used = TRUE;
+    StreamData->Tags[m_TagIndex].Tag = Tag;
+    StreamData->Tags[m_TagIndex].Used = TRUE;
+    m_TagIndex++;
 
-    // increment header index
-    StreamData->StreamHeaderIndex++;
-
-    // mapping size
-    if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
-    {
-        // sink pin
-        *ByteCount = StreamData->CurStreamHeader->DataUsed;
-
-        // decrement num data available
-        m_NumDataAvailable -= StreamData->CurStreamHeader->DataUsed;
-    }
+    // get audio buffer size
+    if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
+        Size = m_CurStreamHeader->FrameExtent;
     else
-    {
-        // source pin
-        *ByteCount = StreamData->CurStreamHeader->FrameExtent;
+        Size = m_CurStreamHeader->DataUsed;
 
-        // decrement num data available
-        m_NumDataAvailable -= StreamData->CurStreamHeader->FrameExtent;
+    // sanity check
+    PC_ASSERT(Size);
+
+    // setup mapping
+    Data = (LPBYTE)StreamData->Data[m_StreamHeaderIndex] + m_CurrentOffset;
+    *VirtualAddress = Data;
+
+    // get byte count
+    *ByteCount = (LPBYTE)ROUND_TO_PAGES(Data+1)-Data;
+    if (*ByteCount > (Size - m_CurrentOffset))
+        *ByteCount = (Size - m_CurrentOffset);
+    m_CurrentOffset += *ByteCount;
+
+    if (m_CurrentOffset >= Size)
+    {
+        // sanity check
+        PC_ASSERT(Size == m_CurrentOffset);
+
+        // increment header index
+        m_StreamHeaderIndex++;
+
+        if (m_StreamHeaderIndex == StreamData->StreamHeaderCount)
+        {
+            // last mapping
+            *Flags = 1;
+
+            //
+            StreamData->nTags = m_TagIndex;
+
+            // insert mapping into free list
+            InsertTailList(&m_FreeIrpList, &m_Irp->Tail.Overlay.ListEntry);
+
+            // clear irp
+            m_Irp = NULL;
+
+        }
+        else
+        {
+            // one more mapping in the irp
+            *Flags = 0;
+
+            // move to next header
+            m_CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)m_CurStreamHeader + m_CurStreamHeader->Size);
+        }
     }
 
-    if (StreamData->StreamHeaderIndex == StreamData->StreamHeaderCount)
-    {
-        // last mapping
-        *Flags = 1;
+    // get physical address
+    *PhysicalAddress = MmGetPhysicalAddress(*VirtualAddress);
 
-        // insert mapping into free list
-        ExInterlockedInsertTailList(&m_FreeIrpList, &m_Irp->Tail.Overlay.ListEntry, &m_IrpListLock);
-
-        // clear irp
-        m_Irp = NULL;
-
-    }
-    else
-    {
-        // one more mapping in the irp
-        *Flags = 0;
-
-        // move to next header
-        StreamData->CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)StreamData->CurStreamHeader + StreamData->CurStreamHeader->Size);
-    }
+    KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
     DPRINT("GetMappingWithTag Tag %p Buffer %p Flags %lu ByteCount %lx\n", Tag, VirtualAddress, *Flags, *ByteCount);
     // done
@@ -627,82 +734,63 @@ CIrpQueue::ReleaseMappingWithTag(
     PKSSTREAM_DATA StreamData;
     PIO_STACK_LOCATION IoStack;
     ULONG Index;
+    KIRQL OldLevel;
 
-    // first check if there is an active irp
-    if (m_Irp)
+    KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
+
+    // check if used list empty
+    if (IsListEmpty(&m_FreeIrpList))
     {
-        // now check if there are already used mappings
-        StreamData = (PKSSTREAM_DATA)m_Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
-
-        if (StreamData->StreamHeaderIndex)
+        // get current irp
+        if (!m_Irp)
         {
-            // check if the released mapping is one current processed irps
-            for(Index = 0; Index < StreamData->StreamHeaderIndex; Index++)
-            {
-                // check if it is the same tag
-                if ((StreamData->Tags[Index].Tag == Tag) &&
-                    (StreamData->Tags[Index].Used != FALSE))
-                {
-                    // mark mapping as released
-                    StreamData->Tags[Index].Tag = NULL;
-                    StreamData->Tags[Index].Used = FALSE;
+            KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
-                    // done
-                    return STATUS_SUCCESS;
-                }
-
-            }
+            // this should not happen
+            DPRINT("ReleaseMappingWithTag Tag %p not found\n", Tag);
+            return STATUS_NOT_FOUND;
         }
-    }
 
-    // remove irp from used list
-    CurEntry = ExInterlockedRemoveHeadList(&m_FreeIrpList, &m_IrpListLock);
-    if (CurEntry == NULL)
+        Irp = m_Irp;
+    }
+    else
     {
-        // this should not happen
-        DPRINT("ReleaseMappingWithTag Tag %p not found\n", Tag);
-        return STATUS_NOT_FOUND;
+        // remove irp from used list
+        CurEntry = RemoveHeadList(&m_FreeIrpList);
+
+        // get irp from list entry
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
     }
-
-    // sanity check
-    PC_ASSERT(CurEntry);
-
-    // get irp from list entry
-    Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
 
     // get stream data
     StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
 
-    // sanity check
-    PC_ASSERT(StreamData->StreamHeaderIndex == StreamData->StreamHeaderCount);
-
-    // check if the released mapping is one of these
-    for(Index = 0; Index < StreamData->StreamHeaderCount; Index++)
+    // release oldest in use mapping
+    for (Index = 0; Index < StreamData->nTags; Index++)
     {
-        if ((StreamData->Tags[Index].Tag == Tag) &&
-            (StreamData->Tags[Index].Used != FALSE))
+        if (StreamData->Tags[Index].Used != FALSE)
         {
-            // mark mapping as released
-            StreamData->Tags[Index].Tag = NULL;
             StreamData->Tags[Index].Used = FALSE;
 
-            // done
+            // Warn if wrong mapping released
+            if (StreamData->Tags[Index].Tag != Tag)
+            {
+                DPRINT1("Mapping released out of order\n");
+            }
+
             break;
-        }
-        else
-        {
-            //
-            // we assume that mappings are released in the same order as they have been acquired
-            // therefore if the current mapping is not the searched one, it must have been already
-            // released
-            //
-            ASSERT(StreamData->Tags[Index].Tag == NULL);
-            ASSERT(StreamData->Tags[Index].Used == FALSE);
         }
     }
 
+    // If this is the current IRP, do not complete
+    if (Irp == m_Irp)
+    {
+        KeReleaseSpinLock(&m_IrpListLock, OldLevel);
+        return STATUS_SUCCESS;
+    }
+
     // check if this is the last one released mapping
-    if (Index + 1 == StreamData->StreamHeaderCount)
+    if (Index + 1 == StreamData->nTags)
     {
         // last mapping released
         // now check if this is a looped buffer
@@ -711,14 +799,7 @@ CIrpQueue::ReleaseMappingWithTag(
             // looped buffers are not completed when they have been played
             // they are completed when the stream is set to stop
 
-            // reset stream header index
-            StreamData->StreamHeaderIndex = 0;
-
-            // reset stream header
-            StreamData->CurStreamHeader = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
-
-            // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, StreamData->TotalStreamData);
+            KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
             // re-insert irp
             KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, Irp, KsListEntryTail, NULL);
@@ -730,6 +811,8 @@ CIrpQueue::ReleaseMappingWithTag(
         //
         // time to complete non looped buffer
         //
+
+        KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
         // free stream data array
         FreeItem(StreamData->Data, TAG_PORTCLASS);
@@ -755,17 +838,12 @@ CIrpQueue::ReleaseMappingWithTag(
     else
     {
         // there are still some headers not consumed
-        ExInterlockedInsertHeadList(&m_FreeIrpList, &Irp->Tail.Overlay.ListEntry, &m_IrpListLock);
+        InsertHeadList(&m_FreeIrpList, &Irp->Tail.Overlay.ListEntry);
+
+        KeReleaseSpinLock(&m_IrpListLock, OldLevel);
     }
 
     return STATUS_SUCCESS;
-}
-
-BOOLEAN
-NTAPI
-CIrpQueue::HasLastMappingFailed()
-{
-    return m_OutOfMapping;
 }
 
 ULONG
@@ -817,4 +895,3 @@ NewIrpQueue(
     *Queue = (IIrpQueue*)This;
     return STATUS_SUCCESS;
 }
-

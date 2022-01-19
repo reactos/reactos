@@ -1,7 +1,7 @@
 /*
- * Simplified and Traditional Chinese Resources file for MS-RLE
+ * Chinese Resources file for MS-RLE
  *
- * Copyright (C) 2016 Henry Tang Ih
+ * Copyright 2002 Michael Günnewig
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 #include "msrle_private.h"
@@ -37,6 +40,6 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE
 {
 	IDS_NAME	"WINE-MS-RLE"
-	IDS_DESCRIPTION	"Wine MS-RLE 視頻編解碼器"
-	IDS_ABOUT       "Wine MS-RLE 視頻編解碼器\n版權所有 2002 by Michael Günnewig"
+	IDS_DESCRIPTION	"Wine MS-RLE 視訊編碼解碼器"
+	IDS_ABOUT       "Wine MS-RLE 視訊編碼解碼器\n著作權 2002 by Michael Günnewig"
 }

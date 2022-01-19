@@ -1,8 +1,10 @@
 /*
- * Traditional Chinese resource for appwiz (dll/cpl/appwiz/lang/zh-TW.rc)
- * TRANSLATOR:  2016 Henry Tang Ih (henrytang2 [at] hotmail [dot] com)
- *              2018 Luo Yufan (njlyf2011 [at] hotmail [dot] com)
- *              2020 - 2021 Chan Chilung (eason066 [at] gmail [dot] com)
+ * PROJECT:     ReactOS Software Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -86,11 +88,11 @@ BEGIN
     IDS_INSTALLING "安裝中..."
     IDS_INVALID_SHA "下載的檔案總和檢查碼錯誤。正在終止安裝已損毀的檔案。"
     IDS_NEW_INTERNET_SHORTCUT "新增網際網路捷徑"
-    IDS_DWL_FAILED "無法下載 Gecko 套件。請確保在您有網際網路連線的情況下才進行下載。安裝程式將在不安裝 Gecko 的情況下繼續。"
+    IDS_DWL_FAILED "無法下載 Gecko 套件。請確保在連線至網際網路後才進行下載。安裝程式將在不安裝 Gecko 的情況下繼續。"
     IDS_CANTMAKEINETSHORTCUT "無法建立網際網路捷徑。"
     IDS_CANTMAKESHORTCUT "無法建立捷徑。"
     IDS_NO_MEMORY "沒有可以分配的記憶體空間。"
     IDS_NO_DIRECTORY "沒有指定路徑。"
     IDS_INVALID_PATH "指定的路徑無效。"
-    IDS_INVALID_NAME "輸入的捷徑名稱包含無效的字元，或者檔案名稱太長。"
+    IDS_INVALID_NAME "您輸入的捷徑名稱過長，或包含不能在檔案名稱中使用的字元。"
 END

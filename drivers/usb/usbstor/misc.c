@@ -31,29 +31,6 @@ USBSTOR_SyncForwardIrpCompletionRoutine(
 
 NTSTATUS
 NTAPI
-USBSTOR_SyncForwardIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-{
-    KEVENT Event;
-    NTSTATUS Status;
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-    IoSetCompletionRoutine(Irp, USBSTOR_SyncForwardIrpCompletionRoutine, &Event, TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(DeviceObject, Irp);
-
-    if (Status == STATUS_PENDING)
-    {
-        // wait for the request to finish
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = Irp->IoStatus.Status;
-    }
-
-    return Status;
-}
-
-NTSTATUS
-NTAPI
 USBSTOR_GetBusInterface(
     IN PDEVICE_OBJECT DeviceObject,
     OUT PUSB_BUS_INTERFACE_USBDI_V2 BusInterface)

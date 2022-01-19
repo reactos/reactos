@@ -15,13 +15,13 @@
 LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     RECT rc = { 0, 0, 31, 32 };
-    HDC hDC = GetDC();
     HPEN oldPen;
     HBRUSH oldBrush;
     int i, a, b;
 
     DefWindowProc(WM_PAINT, wParam, lParam);
 
+    HDC hDC = GetDC();
     for(b = 2; b < 30; b++)
         for(a = 2; a < 29; a++)
             if ((a + b) % 2 == 1)

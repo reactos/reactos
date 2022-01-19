@@ -19,7 +19,7 @@ BEGIN
     AUTOCHECKBOX "使用相黏鍵(&U)", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "篩選鍵", -1, 6, 79, 234, 67
-    LTEXT "如果您希望 ReactOS 忽略短暫或重複的按鍵、或者減緩重複速度，請使用「篩選鍵」。",
+    LTEXT "如果您希望 ReactOS 略過短暫或重複的按鍵、或者減緩重複速度，請使用「篩選鍵」。",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "使用篩選鍵(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "設定(&E)", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -104,7 +104,7 @@ BEGIN
     AUTOCHECKBOX "開啟或關閉某個功能時發出聲音(&S)", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
     GROUPBOX "序列鍵裝置", -1, 6, 115, 234, 47
-    LTEXT "序列鍵裝置允許以其他方式訪問鍵盤和滑鼠功能。",
+    LTEXT "序列鍵裝置允許以其他方式存取鍵盤和滑鼠功能。",
           -1, 12, 124, 222, 20
     AUTOCHECKBOX "支援序列鍵裝置(&S)", IDC_SERIAL_BOX, 12, 142, 126, 14
     PUSHBUTTON "設定(&E)", IDC_SERIAL_BUTTON, 144, 142, 90, 14
@@ -148,9 +148,9 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&U)", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "篩選器選項", -1, 6, 79, 234, 79
-    AUTORADIOBUTTON "忽略重複按鍵(&O)", IDC_FILTER_BOUNCE_RADIO,
+    AUTORADIOBUTTON "略過重複按鍵(&O)", IDC_FILTER_BOUNCE_RADIO,
                     12, 91, 120, 11, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "忽略快速擊鍵並減緩重複速度(&N)", IDC_FILTER_REPEAT_RADIO,
+    AUTORADIOBUTTON "略過快速擊鍵並減緩重複速度(&N)", IDC_FILTER_REPEAT_RADIO,
                     12, 106, 120, 20, BS_TOP | BS_MULTILINE
     PUSHBUTTON "設定(&S)", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
     PUSHBUTTON "設定(&E)", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
@@ -233,7 +233,7 @@ CAPTION "篩選鍵進階設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "反彈鍵", -1, 6, 11, 234, 47
-    LTEXT "當快於以下時間時忽略重複的按鍵(&I)：", -1, 12, 21, 222, 20
+    LTEXT "當快於以下時間時略過重複的按鍵(&I)：", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     LTEXT "試驗區(&T)：", -1, 6, 68, 48, 11

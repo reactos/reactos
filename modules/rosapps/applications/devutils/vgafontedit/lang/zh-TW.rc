@@ -1,9 +1,8 @@
 /*
  * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Traditional Chinese resource file
- * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
- * TRANSLATOR:  2021 Chan Chilung (eason066@gmail.com)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -74,13 +73,13 @@ STRINGTABLE
 BEGIN
     IDS_OPENFILTER, "所有支援的格式 (*.bin,*.psf)|*.bin;*.psf|Binary Font Files (*.bin)|*.bin|PC Screen Fonts Version 1 (*.psf)|*.psf|"
     IDS_SAVEFILTER, "二進制字體檔案 (*.bin)|*.bin|"
-    IDS_OPENERROR, "開啟檔案時發生錯誤! (錯誤碼 %1!u!)"
-    IDS_READERROR, "讀取檔案時發生錯誤! (錯誤碼 %1!u!)"
-    IDS_WRITEERROR, "寫入檔案時發生錯誤! (錯誤碼 %1!u!)"
-    IDS_UNSUPPORTEDFORMAT, "不支援的檔案格式!"
-    IDS_UNSUPPORTEDPSF, "不支援的 PSF 字體格式! 編輯器僅支援非特殊模式的 8x8 字體。"
+    IDS_OPENERROR, "開啟檔案時發生錯誤！（錯誤碼 %1!u!）"
+    IDS_READERROR, "讀取檔案時發生錯誤！（錯誤碼 %1!u!）"
+    IDS_WRITEERROR, "寫入檔案時發生錯誤！（錯誤碼 %1!u!）"
+    IDS_UNSUPPORTEDFORMAT, "不支援的檔案格式！"
+    IDS_UNSUPPORTEDPSF, "不支援的 PSF 字體格式！編輯器僅支援非特殊模式的 8x8 字體。"
     IDS_DOCNAME, "字體 %1!u!"
-    IDS_SAVEPROMPT, "文件 ""%1"" 已被更改但尚未儲存。\n\n您是否要儲存檔案?"
+    IDS_SAVEPROMPT, "檔案「%1」已變更但尚未儲存。\n\n您是否要儲存檔案？"
     IDS_APPTITLE, "ReactOS VGA 字體編輯器"
     IDS_CLOSEEDIT, "請先關閉所有正在開啟的編輯視窗。"
 

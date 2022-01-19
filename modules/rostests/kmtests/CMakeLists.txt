@@ -94,6 +94,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ob/ObTypes.c
     ntos_ob/ObWait.c
     ntos_ps/PsNotify.c
+    ntos_ps/PsQuota.c
     ntos_se/SeHelpers.c
     ntos_se/SeInheritance.c
     ntos_se/SeLogonSession.c

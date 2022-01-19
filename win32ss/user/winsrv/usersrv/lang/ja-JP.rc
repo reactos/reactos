@@ -26,16 +26,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEVERITY_SUCCESS        "Success"
-    IDS_SEVERITY_INFORMATIONAL  "System Information"
-    IDS_SEVERITY_WARNING        "System Warning"
-    IDS_SEVERITY_ERROR          "System Error"
+    IDS_SEVERITY_SUCCESS        "成功"
+    IDS_SEVERITY_INFORMATIONAL  "システムの情報"
+    IDS_SEVERITY_WARNING        "システムの警告"
+    IDS_SEVERITY_ERROR          "システムのエラー"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYSTEM_PROCESS          "System Process"
-    IDS_UNKNOWN_SOFTWARE_EXCEPT "unknown software exception"
-    IDS_OK_TERMINATE_PROGRAM    "Click on OK to terminate the program."
-    IDS_CANCEL_DEBUG_PROGRAM    "Click on CANCEL to debug the program."
+    IDS_SYSTEM_PROCESS          "システムのプロセス"
+    IDS_UNKNOWN_SOFTWARE_EXCEPT "未知のソフトウェア例外"
+    IDS_OK_TERMINATE_PROGRAM    "プログラムを終了するには OK をクリックしてください。"
+    IDS_CANCEL_DEBUG_PROGRAM    "プログラムをデバッグするにはキャンセルをクリックしてください。"
 END

@@ -65,6 +65,7 @@ public:
     LONG GetDestRectHeight() const;
     LONG GetDestRectLeft() const;
     LONG GetDestRectTop() const;
+    void GetRect(LPRECT prc) const;
     void DrawTextToolText(HDC hDCImage, COLORREF crFg, COLORREF crBg, BOOL bBgTransparent = FALSE);
 
 private:

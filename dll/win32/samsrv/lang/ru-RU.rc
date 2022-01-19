@@ -15,27 +15,27 @@ BEGIN
     IDS_ALIAS_POWER_USERS_COMMENT "Категория опытных пользователей обладает ограниченными административными правами."
     IDS_ALIAS_USERS_NAME "Пользователи"
     IDS_ALIAS_USERS_COMMENT "Пользователи не имеют прав на изменение параметров системы и могут запускать большинство приложений."
-    IDS_ALIAS_PRINT_OPS_NAME "Print Operators"
-    IDS_ALIAS_PRINT_OPS_COMMENT "Members can administer domain printers"
-    IDS_ALIAS_BACKUP_OPS_NAME "Backup Operators"
-    IDS_ALIAS_BACKUP_OPS_COMMENT "Backup Operators can override security restrictions for the sole purpose of backing up or resoring files"
-    IDS_ALIAS_REPLICATOR_NAME "Replicator"
-    IDS_ALIAS_REPLICATOR_COMMENT "Supports file replication in a domain"
-    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Remote Desktop Users"
-    IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Members in this group are granted the right to logon remotely"
-    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Network Configuration Operators"
-    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Members in this group can have some administrative privileges to manage configuration of networking features"
-    IDS_ALIAS_MONITORING_USERS_NAME "Performance Monitor Users"
-    IDS_ALIAS_MONITORING_USERS_COMMENT "Members of this group have remote access to monitor this computer"
-    IDS_ALIAS_LOGGING_USERS_NAME "Performance Log Users"
-    IDS_ALIAS_LOGGING_USERS_COMMENT "Members of this group have remote access to schedule logging of performance counters on this computer"
+    IDS_ALIAS_PRINT_OPS_NAME "Операторы печати"
+    IDS_ALIAS_PRINT_OPS_COMMENT "Члены группы имеют право администрировать принтеры домена."
+    IDS_ALIAS_BACKUP_OPS_NAME "Операторы архива"
+    IDS_ALIAS_BACKUP_OPS_COMMENT "Операторы архива могут перекрывать ограничения доступа только в целях копирования и восстановления файлов."
+    IDS_ALIAS_REPLICATOR_NAME "Репликатор"
+    IDS_ALIAS_REPLICATOR_COMMENT "Поддержка репликации файлов в домене."
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Пользователи удаленного рабочего стола"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Члены этой группы имеют право на выполнение удалённого входа."
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Операторы настройки сети"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Члены этой группы могут иметь некоторые административные права для управления сетевыми параметрами."
+    IDS_ALIAS_MONITORING_USERS_NAME "Пользователи системного монитора"
+    IDS_ALIAS_MONITORING_USERS_COMMENT "Члены данной группы имеют удалённый доступ к системному монитору этого компьютера."
+    IDS_ALIAS_LOGGING_USERS_NAME "Пользователи журналов производительности"
+    IDS_ALIAS_LOGGING_USERS_COMMENT "Члены этой группы могут планировать ведение журнала счётчиков производительности через удалённый доступ."
     /*
      * ATTENTION:
      *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
      *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
      */
-    IDS_USER_ADMINISTRATOR_NAME "Administrator"// Не изменять, иначе будут глюки с нерусскими программами
+    IDS_USER_ADMINISTRATOR_NAME "Администратор"
     IDS_USER_ADMINISTRATOR_COMMENT "Встроенная учетная запись администратора компьютера/домена."
-    IDS_USER_GUEST_NAME "Guest"// Не изменять, иначе будут глюки с нерусскими программами
+    IDS_USER_GUEST_NAME "Гость"
     IDS_USER_GUEST_COMMENT "Встроенная учетная запись для доступа гостей к компьютеру или домену."
 END
