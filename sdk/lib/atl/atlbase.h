@@ -1862,7 +1862,7 @@ inline HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE *module)
 #if DBG
 
 inline VOID __stdcall
-AtlVTraceEx(LPCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, va_list va)
+AtlVTraceEx(PCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, va_list va)
 {
     char szBuff[512];
     size_t cch;
@@ -1884,7 +1884,7 @@ AtlVTraceEx(LPCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, v
 }
 
 inline VOID __cdecl
-AtlTraceEx(LPCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, ...)
+AtlTraceEx(PCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, ...)
 {
     va_list va;
     va_start(va, format);
@@ -1892,7 +1892,7 @@ AtlTraceEx(LPCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, ..
     va_end(va);
 }
 
-inline VOID __cdecl AtlTraceEx(LPCSTR file, INT line, HRESULT hr)
+inline VOID __stdcall AtlTraceEx(PCSTR file, INT line, HRESULT hr)
 {
     AtlTraceEx(file, line, "%ld (0x%lX)\n", hr, hr);
 }
