@@ -330,9 +330,9 @@ NtUserGetThreadState(
       case THREADSTATE_OLDKEYBOARDLAYOUT:
          ret = (ULONG_PTR)pti->hklPrev;
          break;
-      case THREADSTATE_UNKNOWN15:
-      case THREADSTATE_UNKNOWN16:
-         /* FIXME */
+      case THREADSTATE_ISWINLOGON:
+      case THREADSTATE_ISWINLOGON2:
+         ret = (gpidLogon == PsGetCurrentProcessId());
          break;
       case THREADSTATE_UNKNOWN17:
          /* FIXME */
