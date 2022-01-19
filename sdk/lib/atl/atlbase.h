@@ -1861,15 +1861,11 @@ inline HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE *module)
 
 #if DBG
 
-#ifndef ATLDEBUG_BUFSIZE
-    #define ATLDEBUG_BUFSIZE 512
-#endif
-
 inline VOID __stdcall
 AtlVTraceEx(LPCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, va_list va)
 {
-    char szBuff[ATLDEBUG_BUFSIZE];
-    size_t cch = 0;
+    char szBuff[512];
+    size_t cch;
 
     if (!IsDebuggerPresent())
         return;
@@ -1896,14 +1892,12 @@ AtlTraceEx(LPCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, ..
     va_end(va);
 }
 
-inline VOID __cdecl
-AtlTraceEx(LPCSTR file, INT line, HRESULT hr)
+inline VOID __cdecl AtlTraceEx(LPCSTR file, INT line, HRESULT hr)
 {
     AtlTraceEx(file, line, "%ld (0x%lX)\n", hr, hr);
 }
 
-inline VOID __cdecl
-AtlTrace(_In_z_ _Printf_format_string_ PCSTR format, ...)
+inline VOID __cdecl AtlTrace(_In_z_ _Printf_format_string_ PCSTR format, ...)
 {
     va_list va;
     va_start(va, format);
