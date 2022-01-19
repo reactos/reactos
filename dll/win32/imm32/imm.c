@@ -606,7 +606,7 @@ HIMC WINAPI ImmCreateContext(void)
 
     RtlInitializeCriticalSection(&pClientImc->cs);
 
-    pClientImc->unknown = NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
+    pClientImc->dwCompatFlags = (DWORD)NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
 
     return hIMC;
 }
@@ -924,7 +924,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 
         RtlInitializeCriticalSection(&pClientImc->cs);
 
-        pClientImc->unknown = NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
+        pClientImc->dwCompatFlags = (DWORD)NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
 
         if (!NtUserUpdateInputContext(hImc, UIC_CLIENTIMCDATA, (DWORD_PTR)pClientImc))
         {

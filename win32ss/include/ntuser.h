@@ -1294,7 +1294,7 @@ typedef struct tagCLIENTIMC
     HANDLE hInputContext;   /* LocalAlloc'ed LHND */
     LONG cLockObj;
     DWORD dwFlags;
-    DWORD unknown;
+    DWORD dwCompatFlags;
     RTL_CRITICAL_SECTION cs;
     UINT uCodePage;
     HKL hKL;
@@ -1305,6 +1305,7 @@ typedef struct tagCLIENTIMC
 C_ASSERT(offsetof(CLIENTIMC, hInputContext) == 0x0);
 C_ASSERT(offsetof(CLIENTIMC, cLockObj) == 0x4);
 C_ASSERT(offsetof(CLIENTIMC, dwFlags) == 0x8);
+C_ASSERT(offsetof(CLIENTIMC, dwCompatFlags) == 0xc);
 C_ASSERT(offsetof(CLIENTIMC, cs) == 0x10);
 C_ASSERT(offsetof(CLIENTIMC, uCodePage) == 0x28);
 C_ASSERT(offsetof(CLIENTIMC, hKL) == 0x2c);
