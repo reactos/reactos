@@ -49,7 +49,7 @@ CDesktopThread::CDesktopThread() :
 
 CDesktopThread::~CDesktopThread()
 {
-    if (m_hEvent || m_hThread)
+    if (m_Tray || m_hEvent || m_hThread)
     {
         Destroy();
     }
@@ -66,7 +66,7 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
         return E_FAIL;
     }
     
-    if (m_hEvent || m_hThread)
+    if (m_Tray || m_hEvent || m_hThread)
     {
         return E_FAIL;
     }
@@ -117,6 +117,7 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
 
             m_hThread = NULL;
             m_hEvent = NULL;
+            m_Tray = NULL;
 
             return E_FAIL;
         }
@@ -149,6 +150,11 @@ void CDesktopThread::Destroy()
         CloseHandle(m_hEvent);
         
         m_hEvent = NULL;
+    }
+
+    if (m_Tray)
+    {
+        m_Tray = NULL;
     }
 }
 
