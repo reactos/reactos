@@ -232,6 +232,7 @@ NtUserGetThreadState(
    DWORD Routine)
 {
    DWORD_PTR ret = 0;
+   PTHREADINFO pti;
 
    TRACE("Enter NtUserGetThreadState\n");
    if (Routine != THREADSTATE_GETTHREADINFO)
@@ -243,9 +244,11 @@ NtUserGetThreadState(
        UserEnterExclusive();
    }
 
+   pti = PsGetCurrentThreadWin32Thread();
+
    switch (Routine)
    {
-      case THREADSTATE_GETTHREADINFO:
+      case THREADSTATE_GETTHREADINFO: /* FIXME: Delete this HACK */
          GetW32ThreadInfo();
          break;
       case THREADSTATE_FOCUSWINDOW:
@@ -255,10 +258,10 @@ NtUserGetThreadState(
          /* FIXME: Should use UserEnterShared */
          ret = (DWORD_PTR)IntGetCapture();
          break;
-      case THREADSTATE_PROGMANWINDOW:
+      case THREADSTATE_PROGMANWINDOW: /* FIXME: Delete this HACK */
          ret = (DWORD_PTR)GetW32ThreadInfo()->pDeskInfo->hProgmanWindow;
          break;
-      case THREADSTATE_TASKMANWINDOW:
+      case THREADSTATE_TASKMANWINDOW: /* FIXME: Delete this HACK */
          ret = (DWORD_PTR)GetW32ThreadInfo()->pDeskInfo->hTaskManWindow;
          break;
       case THREADSTATE_ACTIVEWINDOW:
@@ -293,12 +296,8 @@ NtUserGetThreadState(
          break;
 
       case THREADSTATE_UPTIMELASTREAD:
-         {
-           PTHREADINFO pti;
-           pti = PsGetCurrentThreadWin32Thread();
-           pti->pcti->timeLastRead = EngGetTickCount32();
-           break;
-         }
+         pti->pcti->timeLastRead = EngGetTickCount32();
+         break;
 
       case THREADSTATE_GETINPUTSTATE:
          ret = LOWORD(IntGetQueueStatus(QS_POSTMESSAGE|QS_TIMER|QS_PAINT|QS_SENDMESSAGE|QS_INPUT)) & (QS_KEY | QS_MOUSEBUTTON);
@@ -313,9 +312,33 @@ NtUserGetThreadState(
          break;
       case THREADSTATE_GETMESSAGEEXTRAINFO:
          ret = (DWORD_PTR)MsqGetMessageExtraInfo();
-        break;
-      case THREADSTATE_UNKNOWN13:
-         ret = FALSE; /* FIXME: See imm32 */
+         break;
+      case THREADSTATE_DEFAULTIMEWINDOW:
+         if (pti->spwndDefaultIme)
+            ret = (ULONG_PTR)UserHMGetHandle(pti->spwndDefaultIme);
+         break;
+      case THREADSTATE_DEFAULTINPUTCONTEXT:
+         if (pti->spDefaultImc)
+             ret = (ULONG_PTR)UserHMGetHandle(pti->spDefaultImc);
+         break;
+      case THREADSTATE_CHANGEBITS:
+         ret = pti->pcti->fsChangeBits;
+         break;
+      case THREADSTATE_IMECOMPATFLAGS:
+         ret = pti->ppi->dwImeCompatFlags;
+         break;
+      case THREADSTATE_OLDKEYBOARDLAYOUT:
+         ret = (ULONG_PTR)pti->hklPrev;
+         break;
+      case THREADSTATE_UNKNOWN15:
+      case THREADSTATE_UNKNOWN16:
+         /* FIXME */
+         break;
+      case THREADSTATE_UNKNOWN17:
+         /* FIXME */
+         break;
+      case THREADSTATE_UNKNOWN18:
+         ret = TRUE;
          break;
    }
 
