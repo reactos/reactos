@@ -304,13 +304,16 @@ static VOID
 BrowseRequiredFile(HWND hwndDlg)
 {
     OPENFILENAME ofn;
+    TCHAR szFilter[MAX_STR_LENGTH] = _T("");
     TCHAR szFile[MAX_PATH] = _T("");
+
+    LoadString(hApplet, IDS_FILE_BROWSE_FILTER, szFilter, _countof(szFilter));
 
     ZeroMemory(&ofn, sizeof(ofn));
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwndDlg;
-    ofn.lpstrFilter = _T("All Files (*.*)\0*.*\0");
+    ofn.lpstrFilter = szFilter;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = _countof(szFile);
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;

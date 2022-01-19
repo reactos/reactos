@@ -1034,6 +1034,17 @@ GuiSetPalette(IN OUT PFRONTEND This,
     return TRUE;
 }
 
+static BOOL NTAPI
+GuiSetCodePage(IN OUT PFRONTEND This,
+               UINT CodePage)
+{
+    // TODO: Find a suitable console font for the given code page,
+    // and set it if found; otherwise fail the call, or fall back
+    // to some default font...
+
+    return TRUE;
+}
+
 static ULONG NTAPI
 GuiGetDisplayMode(IN OUT PFRONTEND This)
 {
@@ -1164,6 +1175,7 @@ static FRONTEND_VTBL GuiVtbl =
     GuiGetLargestConsoleWindowSize,
     GuiGetSelectionInfo,
     GuiSetPalette,
+    GuiSetCodePage,
     GuiGetDisplayMode,
     GuiSetDisplayMode,
     GuiShowMouseCursor,

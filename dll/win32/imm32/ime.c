@@ -574,8 +574,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     }
 
     /* If the IME for the specified filename is valid, then unload it now */
-    /* FIXME: ImmGetImeInfoEx is broken */
-    if (ImmGetImeInfoEx(&InfoEx, 3, pchFilePart) &&
+    if (ImmGetImeInfoEx(&InfoEx, ImeInfoExImeFileName, pchFilePart) &&
         !UnloadKeyboardLayout(InfoEx.hkl))
     {
         hNewKL = NULL;
@@ -623,8 +622,7 @@ BOOL WINAPI ImmIsIME(HKL hKL)
 {
     IMEINFOEX info;
     TRACE("(%p)\n", hKL);
-    /* FIXME: ImmGetImeInfoEx is broken */
-    return !!ImmGetImeInfoEx(&info, 1, &hKL);
+    return !!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayoutTFS, &hKL);
 }
 
 /***********************************************************************
@@ -681,42 +679,41 @@ BOOL WINAPI ImmDisableLegacyIME(void)
 BOOL WINAPI
 ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx, IMEINFOEXCLASS SearchType, PVOID pvSearchKey)
 {
-    BOOL bDisabled = FALSE;
     HKL hKL;
-
-    /* FIXME: broken */
-    switch (SearchType)
+    if (SearchType == ImeInfoExKeyboardLayout || SearchType == ImeInfoExKeyboardLayoutTFS)
     {
-        case ImeInfoExKeyboardLayout:
-            break;
+        hKL = *(HKL*)pvSearchKey;
+        pImeInfoEx->hkl = hKL;
 
-        case ImeInfoExImeWindow:
-            bDisabled = CtfImmIsTextFrameServiceDisabled();
-            SearchType = ImeInfoExKeyboardLayout;
-            break;
-
-        case ImeInfoExImeFileName:
-            StringCchCopyW(pImeInfoEx->wszImeFile, _countof(pImeInfoEx->wszImeFile),
-                           pvSearchKey);
-            goto Quit;
-    }
-
-    hKL = *(HKL*)pvSearchKey;
-    pImeInfoEx->hkl = hKL;
-
-    if (!IS_IME_HKL(hKL))
-    {
-        if (Imm32IsCiceroMode())
+        if (SearchType == ImeInfoExKeyboardLayoutTFS)
         {
-            if (Imm32Is16BitMode())
-                return FALSE;
-            if (!bDisabled)
-                goto Quit;
+            if (!IS_IME_HKL(hKL))
+            {
+                if (!CtfImmIsTextFrameServiceDisabled() ||
+                    !Imm32IsCiceroMode() || Imm32Is16BitMode())
+                {
+                    return FALSE;
+                }
+            }
+
+            SearchType = ImeInfoExKeyboardLayout;
         }
+        else
+        {
+            if (!IS_IME_HKL(hKL))
+                return FALSE;
+        }
+    }
+    else if (SearchType == ImeInfoExImeFileName)
+    {
+        StringCchCopyW(pImeInfoEx->wszImeFile, _countof(pImeInfoEx->wszImeFile),
+                       pvSearchKey);
+    }
+    else
+    {
         return FALSE;
     }
 
-Quit:
     return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
 }
 

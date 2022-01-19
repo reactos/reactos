@@ -1,5 +1,5 @@
 /*
- * oledlg (Simplified and Traditional Chinese Resources)
+ * oledlg (Chinese Resources)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,10 +14,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- * 
- * Translator:
- * 2008 Hongbo Ni <hongbo.at.njstar.com>
- * Sync with Wine: Traditional Chinese on 2021
+ *
+ * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -109,11 +108,11 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-  IDS_RESULTOBJDESC	"在你的檔案中插入一個新的 %s 物件"
-  IDS_RESULTFILEOBJDESC	"將檔案的內容以物件的方式插入到您的文件以便您可以用程式來啟動它。"
+  IDS_RESULTOBJDESC	"在您的文件中插入一個新的 %s 物件"
+  IDS_RESULTFILEOBJDESC	"將這個檔案的內容以物件的方式插入到您的文件中，以便您使用建立該檔案的程式來啟動它。"
   IDS_BROWSE            "瀏覽"
   IDS_NOTOLEMOD         "該檔案不像是一個有效的 OLE 模組。無法註冊 OLE 元件。"
-  IDS_NOTOLEMODCAPTION  "加入控制項"
+  IDS_NOTOLEMODCAPTION  "新增控制項"
   IDS_VERBMENU_OBJECT   "物件(&O)"
   IDS_VERBMENU_OBJECT_WITH_NAME "%1 物件(&O)"
   IDS_VERBMENU_CONVERT  "轉換(&C)..."
@@ -123,11 +122,11 @@ STRINGTABLE
 STRINGTABLE
 {
     IDS_PS_PASTE_DATA                     "將剪貼簿的內容以 %s 插入至您的檔案。"
-    IDS_PS_PASTE_OBJECT                   "將剪貼簿的內容插入到您的檔案以便您可以使用 %s。"
-    IDS_PS_PASTE_OBJECT_AS_ICON           "將剪貼簿的內容插入到您的文件以便您可以用 %s 啟動它, 一般顯示為圖示。"
-    IDS_PS_PASTE_LINK_DATA                "將剪貼簿的內容以 %s 插入到您的文件。資料是連結到來源檔案的, 對來源檔案的任何變更都會影響到您的文件。"
-    IDS_PS_PASTE_LINK_OBJECT              "將剪貼簿的圖片插入到您的文件。圖片是連結到來源檔案的, 對來源檔案的任何變更都會影響到您的文件。"
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "將剪貼簿的捷徑插入到您的檔案。捷徑是連結到來源檔案的, 對來源檔案的任何變更都會影響到您的文件。"
+    IDS_PS_PASTE_OBJECT                   "將剪貼簿的內容插入至您的檔案，以便您可以使用 %s 啟動它。"
+    IDS_PS_PASTE_OBJECT_AS_ICON           "將剪貼簿的內容插入至您的檔案，以便您可以使用 %s 啟動它。它將顯示為圖示。"
+    IDS_PS_PASTE_LINK_DATA                "將剪貼簿的內容以 %s 插入至您的檔案。資料會連結到來源檔案，以便將所做的變更反應到您的文件。"
+    IDS_PS_PASTE_LINK_OBJECT              "將剪貼簿的圖片插入到您的文件。圖片會連結到來源檔案，以便將所做的變更反應到您的文件。"
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "將指向剪貼簿內容所在位置的捷徑插入到您的檔案。捷徑會連結到來源檔案，以便將所做的變更反應到您的文件。"
     IDS_PS_NON_OLE                        "將剪貼簿的內容插入到您的文件。"
     IDS_PS_UNKNOWN_TYPE                   "不明類型"
     IDS_PS_UNKNOWN_SRC                    "不明來源"
@@ -142,22 +141,22 @@ BEGIN
     LISTBOX         IDC_OBJTYPELIST,92,19,131,66,LBS_SORT |
                     LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
                     WS_TABSTOP
-    LTEXT           "物件類型:",IDC_OBJTYPELBL,92,7,53,8,WS_VISIBLE
+    LTEXT           "物件類型：",IDC_OBJTYPELBL,92,7,53,8,WS_VISIBLE
     DEFPUSHBUTTON   "確定",IDOK,231,7,66,14
     PUSHBUTTON      "取消",IDCANCEL,231,24,66,14
     GROUPBOX        "結果",IDC_RESULT,7,103,218,41
-    CONTROL         "新增",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
+    CONTROL         "新建",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
                     WS_GROUP,7,20,84,10
     CONTROL         "建立控制項",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,84,10
-    CONTROL         "建立於檔案",IDC_CREATEFROMFILE,"Button",
+    CONTROL         "從檔案建立",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,84,10
     LTEXT           "",IDC_RESULTDESC,49,112,169,26
     PUSHBUTTON      "新增控制項(&A)...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
     CONTROL         "顯示為圖示",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
     PUSHBUTTON      "瀏覽...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
-    LTEXT           "檔案:",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
+    LTEXT           "檔案：",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
     EDITTEXT        IDC_FILE,92,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END
 
@@ -166,12 +165,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "特殊貼上"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT         "原始檔案:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
+    LTEXT         "原始檔案：", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
     CONTROL       "貼上(&P)", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
                   6, 38, 73, 10
     CONTROL       "貼上連結(&L)", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
                   6, 63, 73, 10
-    LTEXT         "為(&A):", -1, 75, 25, 150, 8, WS_VISIBLE | WS_GROUP
+    LTEXT         "為(&A)：", -1, 75, 25, 150, 8, WS_VISIBLE | WS_GROUP
     LISTBOX       IDC_PS_PASTELIST,     80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
     LISTBOX       IDC_PS_PASTELINKLIST, 80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
     LISTBOX       IDC_PS_DISPLAYLIST,   80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE

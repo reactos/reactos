@@ -86,6 +86,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS Shell Dl
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS Shell Dlg 2",0x00000000,"Droid Sans Fallback"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS UI Gothic",0x00000000,"Droid Sans Fallback"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS UI Gothic 2",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Source Sans Pro",0x00000000,"Droid Sans Fallback"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Tahoma",0x00000000,"Droid Sans Fallback"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Terminal",0x00000000,"DejaVu Sans Mono"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Times",0x00000000,"Times New Roman"

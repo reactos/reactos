@@ -51,14 +51,6 @@ NtUserBitBltSysBmp(
    return Ret;
 }
 
-NTSTATUS
-APIENTRY
-NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
-{
-    STUB;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 DWORD
 APIENTRY
 NtUserDragObject(
@@ -1027,7 +1019,27 @@ DWORD
 APIENTRY
 NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
 {
-    STUB;
+    PTHREADINFO pti;
+    PKL pOldKL, pNewKL;
+
+    UserEnterExclusive();
+
+    pti = GetW32ThreadInfo();
+    pOldKL = pti->KeyboardLayout;
+    if (pOldKL && pOldKL->hkl != hOldKL)
+        goto Quit;
+
+    pNewKL = UserHklToKbl(hNewKL);
+    if (!pNewKL)
+        goto Quit;
+
+    if (IS_IME_HKL(hNewKL) != IS_IME_HKL(hOldKL))
+        pti->hklPrev = hOldKL;
+
+    pti->KeyboardLayout = pNewKL;
+
+Quit:
+    UserLeave();
     return 0;
 }
 

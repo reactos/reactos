@@ -209,7 +209,7 @@ typedef struct _FIBER                                    /* Field offsets:    */
 #define DISPATCH_LENGTH                 106
 #endif
 
-#else
+#else // NTOS_MODE_USER
 
 //
 // KPROCESSOR_MODE Type
@@ -401,7 +401,17 @@ typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
     EndAlternatives
 } ALTERNATIVE_ARCHITECTURE_TYPE;
 
+//
+// Flags for NXSupportPolicy
+//
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+#define NX_SUPPORT_POLICY_ALWAYSOFF 0
+#define NX_SUPPORT_POLICY_ALWAYSON  1
+#define NX_SUPPORT_POLICY_OPTIN     2
+#define NX_SUPPORT_POLICY_OPTOUT    3
 #endif
+
+#endif // NTOS_MODE_USER
 
 //
 // Thread States

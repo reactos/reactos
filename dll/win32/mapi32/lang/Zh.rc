@@ -1,8 +1,7 @@
 /*
-* MAPI32 Simplified and Traditional Chinese Resources
+* MAPI32 Chinese Resources
 *
 * Copyright (C) 2009 Owen Rudge for CodeWeavers
-* Copyright (C) 2016 Henry Tang Ih
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public
@@ -18,6 +17,8 @@
 * License along with this library; if not, write to the Free Software
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 *
+* TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+*              Copyright 2021 Chan Chilung <eason066@gmail.com>
 */
 
 /* Chinese text is encoded in UTF-8 */
@@ -35,6 +36,6 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-   IDS_NO_MAPI_CLIENT, "郵件發送失敗，因為您沒有安裝一個 MAPI 郵件用戶端。"
-   IDS_SEND_MAIL, "發送郵件"
+   IDS_NO_MAPI_CLIENT, "由於您沒有安裝一個 MAPI 郵件用戶端，郵件發送已失敗。"
+   IDS_SEND_MAIL, "傳送郵件"
 }

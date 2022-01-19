@@ -424,20 +424,27 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
                    IN UINT CodePage,
                    IN BOOLEAN OutputCP)
 {
+    BOOL Success = TRUE;
+
     if (Console == NULL || !IsValidCodePage(CodePage))
         return STATUS_INVALID_PARAMETER;
 
     if (OutputCP)
     {
-        Console->OutputCodePage = CodePage;
-        Console->IsCJK = IsCJKCodePage(CodePage);
+        /* Request the terminal to change its code page support */
+        Success = TermSetCodePage(Console, CodePage);
+        if (Success)
+        {
+            Console->OutputCodePage = CodePage;
+            Console->IsCJK = IsCJKCodePage(CodePage);
+        }
     }
     else
     {
         Console->InputCodePage = CodePage;
     }
 
-    return STATUS_SUCCESS;
+    return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 /* EOF */

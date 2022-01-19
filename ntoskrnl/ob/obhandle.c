@@ -457,14 +457,19 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
             NonPagedPoolCharge = ObjectType->TypeInfo.DefaultNonPagedPoolCharge;
         }
 
-        /* Charge the quota */
-        ObjectHeader->QuotaBlockCharged = (PVOID)1;
-        DPRINT("FIXME: Should charge: %lx %lx\n", PagedPoolCharge, NonPagedPoolCharge);
-#if 0
-            PsChargeSharedPoolQuota(PsGetCurrentProcess(),
-                                    PagedPoolCharge,
-                                    NonPagedPoolCharge);
-#endif
+        /* Is this the system process? */
+        if (PsGetCurrentProcess() == PsInitialSystemProcess)
+        {
+            /* It is, don't do anything */
+            ObjectHeader->QuotaBlockCharged = OBP_SYSTEM_PROCESS_QUOTA;
+        }
+        else
+        {
+            /* Charge the quota */
+            ObjectHeader->QuotaBlockCharged = PsChargeSharedPoolQuota(PsGetCurrentProcess(),
+                                                                      PagedPoolCharge,
+                                                                      NonPagedPoolCharge);
+        }
 
         /* Check if we don't have a quota block */
         if (!ObjectHeader->QuotaBlockCharged) return STATUS_QUOTA_EXCEEDED;

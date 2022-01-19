@@ -941,7 +941,12 @@ void WINAPI RunDll_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
  * hMod("DeskCp16.Dll"), pFunc("CplApplet"), 0, 1, 0xc, 0
  *
  */
+#ifndef __REACTOS__
 DWORD WINAPI CallCPLEntry16(HMODULE hMod, FARPROC pFunc, DWORD dw3, DWORD dw4, DWORD dw5, DWORD dw6)
+#else
+DECLARE_HANDLE(FARPROC16);
+LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC16 pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6)
+#endif
 {
     FIXME("(%p, %p, %08x, %08x, %08x, %08x): stub.\n", hMod, pFunc, dw3, dw4, dw5, dw6);
     return 0x0deadbee;

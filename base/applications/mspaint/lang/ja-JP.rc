@@ -71,7 +71,7 @@ BEGIN
             END
             MENUITEM SEPARATOR
             MENUITEM "グリッドを表示(&G)\tCtrl+G", IDM_VIEWSHOWGRID
-            MENUITEM "実寸表示(&H)", IDM_VIEWSHOWMINIATURE
+            MENUITEM "縮小表示(&H)", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "全画面表示(&F)\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -212,7 +212,7 @@ BEGIN
     IDS_INFOTEXT "GNU Lesser General Public License (LGPL, 詳細は www.gnu.org) の下で利用可能です。"
     IDS_SAVEPROMPTTEXT "%s の変更内容を保存しますか？"
     IDS_DEFAULTFILENAME "無題"
-    IDS_MINIATURETITLE "縮小図"
+    IDS_MINIATURETITLE "縮小表示"
     IDS_TOOLTIP1 "自由選択"
     IDS_TOOLTIP2 "選択"
     IDS_TOOLTIP3 "消しゴム"

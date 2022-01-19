@@ -188,7 +188,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS 程式管理員"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "搜尋…"
+    IDS_SEARCH_TEXT "搜尋..."
     IDS_INSTALL "安裝"
     IDS_UNINSTALL "解除安裝"
     IDS_MODIFY "修改"
@@ -219,10 +219,10 @@ BEGIN
     IDS_SELECTEDFORINST "選中以安裝"
     IDS_MISMATCH_CERT_INFO "使用了不明的證書：\n主體：%s\n簽發者：%s\n您是否仍然要繼續？"
     IDS_UNABLE_PATH "不正確的 URL 格式。"
-    IDS_APP_DISPLAY_DETAILS "詳情"
+    IDS_APP_DISPLAY_DETAILS "詳細資料"
     IDS_APP_DISPLAY_LIST "列表"
-    IDS_APP_DISPLAY_TILE "卡片"
-    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_APP_DISPLAY_TILE "並排"
+    IDS_NO_SEARCH_RESULTS "沒有搜尋結果"
 END
 
 STRINGTABLE

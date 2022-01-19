@@ -202,9 +202,9 @@ _Check_return_ float __cdecl tanhf(_In_ float x);
 
 #if defined(_MSC_VER)
 /* Make sure intrinsics don't get in our way */
-#if defined(_M_AMD64) || defined(_M_ARM)
+#if defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64)
 #pragma function(acosf,asinf,atanf,atan2f,ceilf,cosf,coshf,expf,floorf,fmodf,logf,log10f,powf,sinf,sinhf,sqrtf,tanf,tanhf)
-#endif /* defined(_M_AMD64) || defined(_M_ARM) */
+#endif /* defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64) */
 #if (_MSC_VER >= 1920)
 #pragma function(_hypotf)
 #endif

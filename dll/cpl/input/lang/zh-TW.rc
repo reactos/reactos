@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Input Control Panel
+ * PROJECT:     ReactOS Language Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
@@ -109,8 +109,8 @@ BEGIN
     IDS_LAYOUT "鍵盤布局"
     IDS_REM_QUESTION "確定要刪除選擇的鍵盤布局嗎？"
     IDS_CONFIRMATION "確認"
-    IDS_LAYOUT_EXISTS "此布局已經存在。"
-    IDS_LAYOUT_EXISTS2 "此布局已經存在且無法新增"
+    IDS_LAYOUT_EXISTS "這個布局已經存在。"
+    IDS_LAYOUT_EXISTS2 "這個布局已經存在且無法新增"
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "左 Alt+Shift"
     IDS_SWITCH_BET_INLANG "在輸入語言間切換"
@@ -254,7 +254,7 @@ BEGIN
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "美國 - Dvorak（慣用左手）"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "美國 - Dvorak（慣用右手）"
     IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "美國 - 國際"
-    IDS_URDU_LAYOUT "烏都文"
+    IDS_URDU_LAYOUT "烏爾都文"
     IDS_US_LAYOUT "美國"
     IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT "IBM 阿拉伯文 238_L 美國英語表格"
     IDS_UZBEK_CYRILLIC_LAYOUT "烏茲別克西里爾文"

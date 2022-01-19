@@ -12,11 +12,12 @@
 #define WIN32_NO_STATUS
 #define WIN32_LEAN_AND_MEAN
 
-#include <rpc.h>
+#define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 #include <ndk/kdtypes.h>
 #include <dpfilter.h>
 
+#include <rpc.h>
 #include <svc.h>
 
 //

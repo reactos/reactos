@@ -1,4 +1,11 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* 
+ * PROJECT:     ReactOS ieframe.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Wine's Chinese (Traditional) resource translation
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -52,7 +59,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_ADDRESS             "地址"
+    IDS_ADDRESS             "位址"
 }
 
 STRINGTABLE
@@ -70,7 +77,7 @@ CAPTION "開啟 URL"
 FONT 9, "新細明體"
 {
     LTEXT "指定您要在 Internet Explorer 中開啟的 URL",-1, 35,5,160,25
-    LTEXT "開啟:", -1, 5, 32, 30, 15
+    LTEXT "開啟：", -1, 5, 32, 30, 15
 #ifdef __REACTOS__
     ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
 #endif

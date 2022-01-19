@@ -1218,13 +1218,13 @@ cmdUser(
     if (lpUserName == NULL && lpPassword == NULL)
     {
         Status = EnumerateUsers();
-        ConPrintf(StdOut, L"Status: %lu\n", Status);
+        PrintMessageString(TranslateAppMessage(Status));
         return 0;
     }
     else if (lpUserName != NULL && lpPassword == NULL && argc == 3)
     {
         Status = DisplayUser(lpUserName);
-        ConPrintf(StdOut, L"Status: %lu\n", Status);
+        PrintMessageString(TranslateAppMessage(Status));
         return 0;
     }
 
@@ -1250,12 +1250,12 @@ cmdUser(
                                 (LPBYTE*)&pUserInfo);
         if (Status != NERR_Success)
         {
-            ConPrintf(StdOut, L"Status: %lu\n", Status);
+            PrintMessageString(TranslateAppMessage(Status));
             result = 1;
             goto done;
         }
     }
-    else if (bAdd && !bDelete)
+    else if (bAdd)
     {
         /* Add the user */
         ZeroMemory(&UserInfo, sizeof(USER_INFO_4));
@@ -1410,7 +1410,7 @@ cmdUser(
                 }
                 else
                 {
-                    ConPrintf(StdOut, L"Status %lu\n\n", Status);
+                    PrintMessageString(TranslateAppMessage(Status));
                     result = 1;
                     goto done;
                 }
@@ -1426,24 +1426,23 @@ cmdUser(
                                 4,
                                 (LPBYTE)pUserInfo,
                                 NULL);
-        ConPrintf(StdOut, L"Status: %lu\n", Status);
     }
-    else if (bAdd && !bDelete)
+    else if (bAdd)
     {
         /* Add the user */
         Status = NetUserAdd(NULL,
                             4,
                             (LPBYTE)pUserInfo,
                             NULL);
-        ConPrintf(StdOut, L"Status: %lu\n", Status);
     }
-    else if (!bAdd && bDelete)
+    else if (bDelete)
     {
         /* Delete the user */
         Status = NetUserDel(NULL,
                             lpUserName);
-        ConPrintf(StdOut, L"Status: %lu\n", Status);
     }
+
+    PrintMessageString(TranslateAppMessage(Status));
 
     if (Status == NERR_Success &&
         lpPassword != NULL &&

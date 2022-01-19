@@ -2409,7 +2409,7 @@ Language=Romanian
 The user name could not be found.
 .
 Language=Russian
-The user name could not be found.
+Не найдено имя пользователя.
 .
 Language=Spanish
 The user name could not be found.
@@ -2467,7 +2467,7 @@ Language=Romanian
 The group already exists.
 .
 Language=Russian
-The group already exists.
+Указанная группа уже существует.
 .
 Language=Spanish
 The group already exists.
@@ -2496,7 +2496,7 @@ Language=Romanian
 The account already exists.
 .
 Language=Russian
-The account already exists.
+Учётная запись уже существует.
 .
 Language=Spanish
 The account already exists.

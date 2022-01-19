@@ -24,14 +24,13 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <devguid.h>
 
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-static const GUID GUID_DEVCLASS_DISKDRIVE = {0x4d36e967L, 0xe325, 0x11ce, {0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18}};
 
 typedef enum
 {
@@ -653,10 +652,12 @@ CDrvDefExt::HardwarePageProc(
     {
         case WM_INITDIALOG:
         {
-            GUID Guid = GUID_DEVCLASS_DISKDRIVE;
+            GUID Guids[2];
+            Guids[0] = GUID_DEVCLASS_DISKDRIVE;
+            Guids[1] = GUID_DEVCLASS_CDROM;
 
             /* create the hardware page */
-            DeviceCreateHardwarePageEx(hwndDlg, &Guid, 1, HWPD_STANDARDLIST);
+            DeviceCreateHardwarePageEx(hwndDlg, Guids, _countof(Guids), HWPD_STANDARDLIST);
             break;
         }
     }
