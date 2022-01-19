@@ -49,7 +49,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     DWORD dwSysInfoFlags = 0;
     LPIMEINFO pImeInfo = &pImeDpi->ImeInfo;
 
-    if (NtUserGetThreadState(THREADSTATE_ISWINLOGON))
+    if (NtUserGetThreadState(THREADSTATE_ISWINLOGON2))
         dwSysInfoFlags |= IME_SYSINFO_WINLOGON;
 
     if (IS_IME_HKL(pImeDpi->hKL))
