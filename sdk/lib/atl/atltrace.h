@@ -19,32 +19,27 @@
 #endif
 
 #ifdef _DEBUG
-    #include <stdio.h>
-#endif
 
-#ifdef _DEBUG
+#include <stdio.h>
 
 namespace ATL
 {
 
-template <UINT t_cat, UINT t_level>
+template <UINT t_cat>
 class CTraceCategoryEx
 {
 public:
-    CTraceCategoryEx(LPCSTR name) : m_name(name)
-    {
-    }
+    CTraceCategoryEx(LPCSTR name) : m_name(name) { }
 
     UINT GetCategory() const    { return t_cat; }
     operator UINT() const       { return GetCategory(); }
-    UINT GetLevel() const       { return t_level; }
 
 protected:
     LPCSTR m_name;
 };
-typedef CTraceCategoryEx<1 << 19, 0> CTraceCategory;
+typedef CTraceCategoryEx<1 << 19> CTraceCategory;
 
-#define DEFINE_TRACE_CATEGORY(name, cat) DECLSPEC_SELECTANY CTraceCategoryEx<cat, 0> name(#name)
+#define DEFINE_TRACE_CATEGORY(name, cat) DECLSPEC_SELECTANY CTraceCategoryEx<cat> name(#name)
 DEFINE_TRACE_CATEGORY(atlTraceGeneral,    (1 << 0));
 DEFINE_TRACE_CATEGORY(atlTraceCOM,        (1 << 1));
 DEFINE_TRACE_CATEGORY(atlTraceQI,         (1 << 2));
@@ -60,9 +55,8 @@ DEFINE_TRACE_CATEGORY(atlTraceNotImpl,    (1 << 11));
 DEFINE_TRACE_CATEGORY(atlTraceAllocation, (1 << 12));
 #undef DEFINE_TRACE_CATEGORY
 
-class CTrace
+struct CTrace
 {
-public:
     enum
     {
         DefaultTraceLevel = 0,
@@ -106,12 +100,12 @@ DECLSPEC_SELECTANY UINT CTrace::s_categories    = CTrace::EnableAllCategories;
 DECLSPEC_SELECTANY UINT CTrace::s_level         = CTrace::DefaultTraceLevel;
 
 inline VOID __stdcall
-AtlTraceV(_In_z_                  PCSTR    file,
-          _In_                    INT      line,
-          _In_                    UINT     cat,
-          _In_                    UINT     level,
-          _Printf_format_string_  PCSTR    format,
-          _In_                    va_list  va)
+AtlTraceV(_In_z_                         PCSTR    file,
+          _In_                           INT      line,
+          _In_                           UINT     cat,
+          _In_                           UINT     level,
+          _In_z_ _Printf_format_string_  PCSTR    format,
+          _In_                           va_list  va)
 {
     char szBuff[1024];
     size_t cch;
@@ -120,11 +114,11 @@ AtlTraceV(_In_z_                  PCSTR    file,
         return;
 
 #ifdef _STRSAFE_H_INCLUDED_
-    StringCchPrintfA(szBuff, _countof(szBuff), "%s (%d): ", file, line);
+    StringCchPrintfA(szBuff, _countof(szBuff), "%s(%d) : ", file, line);
     StringCchLengthA(szBuff, _countof(szBuff), &cch);
     StringCchVPrintfA(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #else
-    cch = _snprintf(szBuff, _countof(szBuff), "%s (%d): ", file, line);
+    cch = _snprintf(szBuff, _countof(szBuff), "%s(%d) : ", file, line);
     _vsnprintf(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #endif
 
@@ -132,12 +126,39 @@ AtlTraceV(_In_z_                  PCSTR    file,
     va_end(va);
 }
 
+inline VOID __stdcall
+AtlTraceV(_In_z_                         PCSTR    file,
+          _In_                           INT      line,
+          _In_                           UINT     cat,
+          _In_                           UINT     level,
+          _In_z_ _Printf_format_string_  PCWSTR   format,
+          _In_                           va_list  va)
+{
+    WCHAR szBuff[1024];
+    size_t cch;
+
+    if (!CTrace::IsTracingEnabled(cat, level))
+        return;
+
+#ifdef _STRSAFE_H_INCLUDED_
+    StringCchPrintfW(szBuff, _countof(szBuff), L"%hs(%d) : ", file, line);
+    StringCchLengthW(szBuff, _countof(szBuff), &cch);
+    StringCchVPrintfW(&szBuff[cch], _countof(szBuff) - cch, format, va);
+#else
+    cch = _snwprintf(szBuff, _countof(szBuff), L"%hs(%d) : ", file, line);
+    _vsnwprintf(&szBuff[cch], _countof(szBuff) - cch, format, va);
+#endif
+
+    OutputDebugStringW(szBuff);
+    va_end(va);
+}
+
 inline VOID __cdecl
-AtlTraceEx(_In_z_                  PCSTR  file,
-           _In_                    INT    line,
-           _In_                    UINT   cat,
-           _In_                    UINT   level,
-           _Printf_format_string_  PCSTR  format,
+AtlTraceEx(_In_z_                         PCSTR  file,
+           _In_                           INT    line,
+           _In_                           UINT   cat,
+           _In_                           UINT   level,
+           _In_z_ _Printf_format_string_  PCSTR  format,
            ...)
 {
     va_list va;
@@ -147,9 +168,35 @@ AtlTraceEx(_In_z_                  PCSTR  file,
 }
 
 inline VOID __cdecl
-AtlTraceEx(_In_z_                 PCSTR     file,
-           _In_                   INT       line,
-           _Printf_format_string_ PCSTR     format,
+AtlTraceEx(_In_z_                         PCSTR   file,
+           _In_                           INT     line,
+           _In_                           UINT    cat,
+           _In_                           UINT    level,
+           _In_z_ _Printf_format_string_  PCWSTR  format,
+           ...)
+{
+    va_list va;
+    va_start(va, format);
+    AtlTraceV(file, line, cat, level, format, va);
+    va_end(va);
+}
+
+inline VOID __cdecl
+AtlTraceEx(_In_z_                        PCSTR  file,
+           _In_                          INT    line,
+           _In_z_ _Printf_format_string_ PCSTR  format,
+           ...)
+{
+    va_list va;
+    va_start(va, format);
+    AtlTraceV(file, line, atlTraceGeneral, 0, format, va);
+    va_end(va);
+}
+
+inline VOID __cdecl
+AtlTraceEx(_In_z_                        PCSTR   file,
+           _In_                          INT     line,
+           _In_z_ _Printf_format_string_ PCWSTR  format,
            ...)
 {
     va_list va;
@@ -167,8 +214,16 @@ AtlTraceEx(_In_z_ PCSTR file,
 }
 
 inline VOID __cdecl
-AtlTrace(_Printf_format_string_ PCSTR format,
-         ...)
+AtlTrace(_In_z_ _Printf_format_string_ PCSTR format, ...)
+{
+    va_list va;
+    va_start(va, format);
+    AtlTraceV("(null)", -1, atlTraceGeneral, 0, format, va);
+    va_end(va);
+}
+
+inline VOID __cdecl
+AtlTrace(_In_z_ _Printf_format_string_ PCWSTR format, ...)
 {
     va_list va;
     va_start(va, format);
