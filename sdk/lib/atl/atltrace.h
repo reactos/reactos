@@ -8,25 +8,115 @@
 #pragma once
 
 #include "atldef.h"
-#if DBG
+
+#ifdef NDEBUG
+    #undef DBG
+    #undef _DEBUG
+#endif
+
+#if DBG && !defined(_DEBUG)
+    #define _DEBUG
+#endif
+
+#ifdef _DEBUG
     #include <stdio.h>
 #endif
 
-#if DBG
+#ifdef _DEBUG
 
 namespace ATL
 {
 
-inline VOID __stdcall
-AtlVTraceEx(_In_z_                 PCSTR   file,
-            _In_                   INT     line,
-            _Printf_format_string_ PCSTR   format,
-            _In_                   va_list va)
+template <UINT t_cat, UINT t_level>
+class CTraceCategoryEx
 {
-    char szBuff[512];
+public:
+    CTraceCategoryEx(LPCSTR name) : m_name(name)
+    {
+    }
+
+    UINT GetCategory() const    { return t_cat; }
+    operator UINT() const       { return GetCategory(); }
+    UINT GetLevel() const       { return t_level; }
+
+protected:
+    LPCSTR m_name;
+};
+typedef CTraceCategoryEx<1 << 19, 0> CTraceCategory;
+
+#define DEFINE_TRACE_CATEGORY(name, cat) DECLSPEC_SELECTANY CTraceCategoryEx<cat, 0> name(#name)
+DEFINE_TRACE_CATEGORY(atlTraceGeneral,    (1 << 0));
+DEFINE_TRACE_CATEGORY(atlTraceCOM,        (1 << 1));
+DEFINE_TRACE_CATEGORY(atlTraceQI,         (1 << 2));
+DEFINE_TRACE_CATEGORY(atlTraceRegistrar,  (1 << 3));
+DEFINE_TRACE_CATEGORY(atlTraceRefcount,   (1 << 4));
+DEFINE_TRACE_CATEGORY(atlTraceWindowing,  (1 << 5));
+DEFINE_TRACE_CATEGORY(atlTraceControls,   (1 << 6));
+DEFINE_TRACE_CATEGORY(atlTraceHosting,    (1 << 7));
+DEFINE_TRACE_CATEGORY(atlTraceDBClient,   (1 << 8));
+DEFINE_TRACE_CATEGORY(atlTraceDBProvider, (1 << 9));
+DEFINE_TRACE_CATEGORY(atlTraceSnapin,     (1 << 10));
+DEFINE_TRACE_CATEGORY(atlTraceNotImpl,    (1 << 11));
+DEFINE_TRACE_CATEGORY(atlTraceAllocation, (1 << 12));
+#undef DEFINE_TRACE_CATEGORY
+
+class CTrace
+{
+public:
+    enum
+    {
+        DefaultTraceLevel = 0,
+        DisableTracing = 0xFFFFFFFF,
+        EnableAllCategories = 0xFFFFFFFF
+    };
+
+    static UINT GetLevel()
+    {
+        return s_level;
+    }
+
+    static void SetLevel(UINT level)
+    {
+        s_level = level;
+    }
+
+    static UINT GetCategories()
+    {
+        return s_categories;
+    }
+
+    static void SetCategories(UINT categories)
+    {
+        s_categories = categories;
+    }
+
+    static bool IsTracingEnabled(UINT category, UINT level)
+    {
+        if (s_level == DisableTracing || s_level < level || !(s_categories & category))
+            return false;
+        return ::IsDebuggerPresent();
+    }
+
+protected:
+    static UINT s_categories;
+    static UINT s_level;
+};
+
+DECLSPEC_SELECTANY UINT CTrace::s_categories    = CTrace::EnableAllCategories;
+DECLSPEC_SELECTANY UINT CTrace::s_level         = CTrace::DefaultTraceLevel;
+
+inline VOID __stdcall
+AtlTraceV(_In_z_                  PCSTR    file,
+          _In_                    INT      line,
+          _In_                    UINT     cat,
+          _In_                    UINT     level,
+          _Printf_format_string_  PCSTR    format,
+          _In_                    va_list  va)
+{
+    char szBuff[1024];
     size_t cch;
 
-    if (!IsDebuggerPresent())
+    if (!CTrace::IsTracingEnabled(cat, level))
         return;
 
 #ifdef _STRSAFE_H_INCLUDED_
@@ -43,22 +133,28 @@ AtlVTraceEx(_In_z_                 PCSTR   file,
 }
 
 inline VOID __cdecl
-AtlTraceEx(_In_z_                 PCSTR file,
-           _In_                   INT line,
-           _Printf_format_string_ PCSTR format,
+AtlTraceEx(_In_z_                  PCSTR  file,
+           _In_                    INT    line,
+           _In_                    UINT   cat,
+           _In_                    UINT   level,
+           _Printf_format_string_  PCSTR  format,
            ...)
 {
     va_list va;
     va_start(va, format);
-    AtlVTraceEx(file, line, format, va);
+    AtlTraceV(file, line, cat, level, format, va);
     va_end(va);
 }
 
-inline VOID __cdecl AtlTrace(_Printf_format_string_ PCSTR format, ...)
+inline VOID __cdecl
+AtlTraceEx(_In_z_                 PCSTR     file,
+           _In_                   INT       line,
+           _Printf_format_string_ PCSTR     format,
+           ...)
 {
     va_list va;
     va_start(va, format);
-    AtlVTraceEx("(null)", -1, format, va);
+    AtlTraceV(file, line, atlTraceGeneral, 0, format, va);
     va_end(va);
 }
 
@@ -70,19 +166,38 @@ AtlTraceEx(_In_z_ PCSTR file,
     AtlTraceEx(file, line, "%ld (0x%lX)\n", value, value);
 }
 
+inline VOID __cdecl
+AtlTrace(_Printf_format_string_ PCSTR format,
+         ...)
+{
+    va_list va;
+    va_start(va, format);
+    AtlTraceV("(null)", -1, atlTraceGeneral, 0, format, va);
+    va_end(va);
+}
+
 } // namespace ATL
 
-#endif // DBG
+#endif // def _DEBUG
 
-#if DBG
-    #define ATLTRACE(format, ...)      ATL::AtlTraceEx(__FILE__, __LINE__, format, ##__VA_ARGS__)
-    #define ATLTRACENOTIMPL(funcname)  (ATLTRACE(#funcname " is not implemented.\n"), E_NOTIMPL)
-#else
-    #define ATLTRACE(format, ...)      ((void)0)
-    #define ATLTRACENOTIMPL(funcname)  E_NOTIMPL
+#ifndef ATLTRACE
+    #ifdef _DEBUG
+        #define ATLTRACE(format, ...)  ATL::AtlTraceEx(__FILE__, __LINE__, format, ##__VA_ARGS__)
+    #else
+        #define ATLTRACE(format, ...)  ((void)0)
+    #endif
 #endif
 
 #define ATLTRACE2 ATLTRACE
+
+#ifdef _DEBUG
+    #define ATLTRACENOTIMPL(funcname) do { \
+        ATLTRACE(atlTraceNotImpl, 0, #funcname " is not implemented.\n"); \
+        return E_NOTIMPL; \
+    } while (0)
+#else
+    #define ATLTRACENOTIMPL(funcname) return E_NOTIMPL
+#endif
 
 #ifndef _ATL_NO_AUTOMATIC_NAMESPACE
 using namespace ATL;
