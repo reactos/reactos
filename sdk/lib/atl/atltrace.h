@@ -18,7 +18,10 @@ namespace ATL
 {
 
 inline VOID __stdcall
-AtlVTraceEx(PCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, va_list va)
+AtlVTraceEx(_In_z_                 PCSTR   file,
+            _In_                   INT     line,
+            _Printf_format_string_ PCSTR   format,
+            _In_                   va_list va)
 {
     char szBuff[512];
     size_t cch;
@@ -40,7 +43,10 @@ AtlVTraceEx(PCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, va
 }
 
 inline VOID __cdecl
-AtlTraceEx(PCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, ...)
+AtlTraceEx(_In_z_                 PCSTR file,
+           _In_                   INT line,
+           _Printf_format_string_ PCSTR format,
+           ...)
 {
     va_list va;
     va_start(va, format);
@@ -48,12 +54,7 @@ AtlTraceEx(PCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, ...
     va_end(va);
 }
 
-inline VOID __stdcall AtlTraceEx(PCSTR file, INT line, DWORD value)
-{
-    AtlTraceEx(file, line, "%ld (0x%lX)\n", value, value);
-}
-
-inline VOID __cdecl AtlTrace(_In_z_ _Printf_format_string_ PCSTR format, ...)
+inline VOID __cdecl AtlTrace(_Printf_format_string_ PCSTR format, ...)
 {
     va_list va;
     va_start(va, format);
@@ -61,17 +62,27 @@ inline VOID __cdecl AtlTrace(_In_z_ _Printf_format_string_ PCSTR format, ...)
     va_end(va);
 }
 
+inline VOID __stdcall
+AtlTraceEx(_In_z_ PCSTR file,
+           _In_   INT   line,
+           _In_   DWORD value)
+{
+    AtlTraceEx(file, line, "%ld (0x%lX)\n", value, value);
+}
+
 } // namespace ATL
 
 #endif // DBG
 
-#ifndef ATLTRACE
-    #if DBG
-        #define ATLTRACE(format, ...) ATL::AtlTraceEx(__FILE__, __LINE__, format, ##__VA_ARGS__)
-    #else
-        #define ATLTRACE(format, ...)
-    #endif
+#if DBG
+    #define ATLTRACE(format, ...) ATL::AtlTraceEx(__FILE__, __LINE__, format, ##__VA_ARGS__)
+#else
+    #define ATLTRACE(format, ...) ((void)0)
 #endif
+
+#define ATLTRACE2 ATLTRACE
+
+#define ATLTRACENOTIMPL(funcname) ATLTRACE(#funcname " is not implemented.\n")
 
 #ifndef _ATL_NO_AUTOMATIC_NAMESPACE
 using namespace ATL;
