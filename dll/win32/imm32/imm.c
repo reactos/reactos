@@ -606,8 +606,7 @@ HIMC WINAPI ImmCreateContext(void)
 
     RtlInitializeCriticalSection(&pClientImc->cs);
 
-    // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
-    pClientImc->unknown = NtUserGetThreadState(13);
+    pClientImc->dwCompatFlags = (DWORD)NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
 
     return hIMC;
 }
@@ -925,8 +924,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 
         RtlInitializeCriticalSection(&pClientImc->cs);
 
-        // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
-        pClientImc->unknown = NtUserGetThreadState(13);
+        pClientImc->dwCompatFlags = (DWORD)NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
 
         if (!NtUserUpdateInputContext(hImc, UIC_CLIENTIMCDATA, (DWORD_PTR)pClientImc))
         {
@@ -979,8 +977,7 @@ static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
 
     if (!hWnd)
     {
-        // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
-        hIMC = (HIMC)NtUserGetThreadState(4);
+        hIMC = (HIMC)NtUserGetThreadState(THREADSTATE_DEFAULTINPUTCONTEXT);
         goto Quit;
     }
 
@@ -1275,8 +1272,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
                 return TRUE;
 
             hKL = GetKeyboardLayout(0);
-            // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
-            hIMC = (HIMC)NtUserGetThreadState(4);
+            hIMC = (HIMC)NtUserGetThreadState(THREADSTATE_DEFAULTINPUTCONTEXT);
             Imm32CleanupContext(hIMC, hKL, TRUE);
             break;
 
