@@ -4,6 +4,7 @@
  * PURPOSE:     Providing ATLTRACE macro
  * COPYRIGHT:   Copyright 2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
+ 
 #pragma once
 
 #include "atldef.h"
@@ -11,10 +12,10 @@
     #include <stdio.h>
 #endif
 
+#if DBG
+
 namespace ATL
 {
-
-#if DBG
 
 inline VOID __stdcall
 AtlVTraceEx(PCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, va_list va)
@@ -60,9 +61,9 @@ inline VOID __cdecl AtlTrace(_In_z_ _Printf_format_string_ PCSTR format, ...)
     va_end(va);
 }
 
-#endif // DBG
-
 } // namespace ATL
+
+#endif // DBG
 
 #ifndef ATLTRACE
     #if DBG
