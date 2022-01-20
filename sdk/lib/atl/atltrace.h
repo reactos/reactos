@@ -48,9 +48,9 @@ AtlTraceEx(PCSTR file, INT line, _In_z_ _Printf_format_string_ PCSTR format, ...
     va_end(va);
 }
 
-inline VOID __stdcall AtlTraceEx(PCSTR file, INT line, HRESULT hr)
+inline VOID __stdcall AtlTraceEx(PCSTR file, INT line, DWORD value)
 {
-    AtlTraceEx(file, line, "%ld (0x%lX)\n", hr, hr);
+    AtlTraceEx(file, line, "%ld (0x%lX)\n", value, value);
 }
 
 inline VOID __cdecl AtlTrace(_In_z_ _Printf_format_string_ PCSTR format, ...)
