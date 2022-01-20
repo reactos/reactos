@@ -75,14 +75,14 @@ AtlTraceEx(_In_z_ PCSTR file,
 #endif // DBG
 
 #if DBG
-    #define ATLTRACE(format, ...) ATL::AtlTraceEx(__FILE__, __LINE__, format, ##__VA_ARGS__)
+    #define ATLTRACE(format, ...)      ATL::AtlTraceEx(__FILE__, __LINE__, format, ##__VA_ARGS__)
+    #define ATLTRACENOTIMPL(funcname)  (ATLTRACE(#funcname " is not implemented.\n"), E_NOTIMPL)
 #else
-    #define ATLTRACE(format, ...) ((void)0)
+    #define ATLTRACE(format, ...)      ((void)0)
+    #define ATLTRACENOTIMPL(funcname)  E_NOTIMPL
 #endif
 
 #define ATLTRACE2 ATLTRACE
-
-#define ATLTRACENOTIMPL(funcname) ATLTRACE(#funcname " is not implemented.\n")
 
 #ifndef _ATL_NO_AUTOMATIC_NAMESPACE
 using namespace ATL;
