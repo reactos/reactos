@@ -25,6 +25,13 @@
 namespace ATL
 {
 
+struct CTraceCategory
+{
+    explicit CTraceCategory(LPCSTR name, UINT level = 0) { }
+
+    operator UINT() const { return (1 << 15); }
+};
+
 #define DEFINE_TRACE_CATEGORY(name, cat) DECLSPEC_SELECTANY UINT name = cat
 DEFINE_TRACE_CATEGORY(atlTraceGeneral,    (1 << 0));
 DEFINE_TRACE_CATEGORY(atlTraceCOM,        (1 << 1));
