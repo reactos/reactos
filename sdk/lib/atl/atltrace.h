@@ -78,7 +78,7 @@ DECLSPEC_SELECTANY UINT CTrace::s_categories = CTrace::EnableAllCategories;
 DECLSPEC_SELECTANY UINT CTrace::s_level      = CTrace::DefaultTraceLevel;
 
 inline VOID __stdcall
-AtlTraceV(_In_z_                         PCSTR   file,
+AtlTraceV(_In_opt_z_                     PCSTR   file,
           _In_                           INT     line,
           _In_                           UINT    cat,
           _In_                           UINT    level,
@@ -104,7 +104,7 @@ AtlTraceV(_In_z_                         PCSTR   file,
 }
 
 inline VOID __stdcall
-AtlTraceV(_In_z_                         PCSTR   file,
+AtlTraceV(_In_opt_z_                     PCSTR   file,
           _In_                           INT     line,
           _In_                           UINT    cat,
           _In_                           UINT    level,
@@ -131,7 +131,7 @@ AtlTraceV(_In_z_                         PCSTR   file,
 
 template <typename T_CHAR>
 inline VOID __cdecl
-AtlTraceEx(_In_z_                        PCSTR         file,
+AtlTraceEx(_In_opt_z_                    PCSTR         file,
            _In_                          INT           line,
            _In_                          UINT          cat,
            _In_                          UINT          level,
@@ -146,7 +146,7 @@ AtlTraceEx(_In_z_                        PCSTR         file,
 
 template <typename T_CHAR>
 inline VOID __cdecl
-AtlTraceEx(_In_z_                        PCSTR         file,
+AtlTraceEx(_In_opt_z_                    PCSTR         file,
            _In_                          INT           line,
            _In_z_ _Printf_format_string_ const T_CHAR *format,
            ...)
@@ -158,9 +158,9 @@ AtlTraceEx(_In_z_                        PCSTR         file,
 }
 
 inline VOID __stdcall
-AtlTraceEx(_In_z_ PCSTR file,
-           _In_   INT   line,
-           _In_   DWORD value)
+AtlTraceEx(_In_opt_z_ PCSTR file,
+           _In_       INT   line,
+           _In_       DWORD value)
 {
     AtlTraceEx(file, line, "%ld (0x%lX)\n", value, value);
 }
