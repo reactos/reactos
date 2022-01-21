@@ -101,7 +101,6 @@ AtlTraceV(_In_z_                         PCSTR   file,
 #endif
 
     OutputDebugStringA(szBuff);
-    va_end(va);
 }
 
 inline VOID __stdcall
@@ -128,7 +127,6 @@ AtlTraceV(_In_z_                         PCSTR   file,
 #endif
 
     OutputDebugStringW(szBuff);
-    va_end(va);
 }
 
 template <typename T_CHAR>
