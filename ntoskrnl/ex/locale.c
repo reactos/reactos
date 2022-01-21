@@ -172,7 +172,7 @@ NtQueryDefaultLocale(IN BOOLEAN UserProfile,
         if (KeGetPreviousMode() != KernelMode)
         {
             /* Probe the language ID */
-            ProbeForWriteLangid(DefaultLocaleId);
+            ProbeForWriteLangId(DefaultLocaleId);
         }
 
         /* Check if we have a user profile */
@@ -377,7 +377,7 @@ NtQueryInstallUILanguage(OUT LANGID* LanguageId)
         if (KeGetPreviousMode() != KernelMode)
         {
             /* Probe the Language ID */
-            ProbeForWriteLangid(LanguageId);
+            ProbeForWriteLangId(LanguageId);
         }
 
         /* Return it */
@@ -415,7 +415,7 @@ NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
         if (KeGetPreviousMode() != KernelMode)
         {
             /* Probe the Language ID */
-            ProbeForWriteLangid(LanguageId);
+            ProbeForWriteLangId(LanguageId);
         }
 
         if (NT_SUCCESS(Status))
