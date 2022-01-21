@@ -3567,7 +3567,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
 
     ASSERT(Process);
 
-    AddressSpace = Process ? &Process->Vm : MmGetKernelAddressSpace();
+    AddressSpace = &Process->Vm;
 
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
                  BaseAddress);
@@ -3634,6 +3634,14 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     }
     else
     {
+        PMM_SECTION_SEGMENT Segment = MemoryArea->SectionData.Segment;
+        PMMVAD Vad = &MemoryArea->VadNode;
+        SIZE_T ViewSize = PAGE_SIZE + ((Vad->EndingVpn - Vad->StartingVpn) << PAGE_SHIFT);
+        LARGE_INTEGER ViewOffset;
+        ViewOffset.QuadPart = MemoryArea->SectionData.ViewOffset;
+        
+        InterlockedIncrement64(Segment->ReferenceCount);
+
         Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
         if (!NT_SUCCESS(Status))
         {
@@ -3641,8 +3649,43 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
                     BaseAddress, Process, Status);
             ASSERT(NT_SUCCESS(Status));
         }
-    }
 
+        if (FlagOn(*Segment->Flags, MM_PHYSICALMEMORY_SEGMENT))
+        {
+            /* Don't bother */
+            MmDereferenceSegment(Segment);
+            return STATUS_SUCCESS;
+        }
+        ASSERT(FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT));
+
+        PFILE_OBJECT FileObject = Segment->FileObject;
+        FsRtlAcquireFileExclusive(FileObject);
+
+        /* Don't bother for auto-delete closed file. */
+        if (FlagOn(FileObject->Flags, FO_DELETE_ON_CLOSE) && FlagOn(FileObject->Flags, FO_CLEANUP_COMPLETE))
+        {
+            FsRtlReleaseFile(FileObject);
+            MmDereferenceSegment(Segment);
+            return STATUS_SUCCESS;
+        }
+
+        /* FIXME: We should likely flush only when last mapping is deleted */
+        while (ViewSize > 0)
+        {
+            ULONG FlushSize = ViewSize > (PAGE_ROUND_DOWN(MAXULONG)) ? 
+                                PAGE_ROUND_DOWN(MAXULONG) :
+                                ViewSize;
+            MmFlushSegment(FileObject->SectionObjectPointer,
+                           &ViewOffset,
+                           FlushSize,
+                           NULL);
+            ViewSize -= FlushSize;
+            ViewOffset.QuadPart += FlushSize;
+        }
+
+        FsRtlReleaseFile(FileObject);
+        MmDereferenceSegment(Segment);
+    }
     /* Notify debugger */
     if (ImageBaseAddress && !SkipDebuggerNotify) DbgkUnMapViewOfSection(ImageBaseAddress);
 
