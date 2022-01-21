@@ -287,186 +287,281 @@ IopSeparateSymbolicLink(
     return Status;
 }
 
+/**
+ * @brief
+ * Retrieves a handles to the device and instance registry keys
+ * for the previously opened registry key handle of the specified symbolic link.
+ **/
 static
 NTSTATUS
-OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
-                                    IN ACCESS_MASK DesiredAccess,
-                                    IN OPTIONAL PHANDLE GuidKey,
-                                    IN OPTIONAL PHANDLE DeviceKey,
-                                    IN OPTIONAL PHANDLE InstanceKey)
+IopOpenOrCreateSymbolicLinkSubKeys(
+    _Out_opt_ PHANDLE DeviceHandle,
+    _Out_opt_ PULONG DeviceDisposition,
+    _Out_opt_ PHANDLE InstanceHandle,
+    _Out_opt_ PULONG InstanceDisposition,
+    _In_ HANDLE ClassHandle,
+    _In_ PCUNICODE_STRING SymbolicLinkName,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN Create)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING BaseKeyU;
-    UNICODE_STRING GuidString, SubKeyName, ReferenceString;
-    PWCHAR StartPosition, EndPosition;
-    HANDLE ClassesKey;
-    PHANDLE GuidKeyRealP, DeviceKeyRealP, InstanceKeyRealP;
-    HANDLE GuidKeyReal, DeviceKeyReal, InstanceKeyReal;
+    UNICODE_STRING ReferenceString = {0};
+    UNICODE_STRING SymbolicLink = {0};
+    HANDLE DeviceKeyHandle, InstanceKeyHandle;
+    ULONG DeviceKeyDisposition, InstanceKeyDisposition;
+    BOOLEAN ReferenceStringPresent = FALSE; /* Assuming no ref string by default */
     NTSTATUS Status;
+    USHORT i;
 
-    SubKeyName.Buffer = NULL;
+    DeviceKeyHandle = InstanceKeyHandle = NULL;
 
-    if (GuidKey != NULL)
-        GuidKeyRealP = GuidKey;
-    else
-        GuidKeyRealP = &GuidKeyReal;
-
-    if (DeviceKey != NULL)
-        DeviceKeyRealP = DeviceKey;
-    else
-        DeviceKeyRealP = &DeviceKeyReal;
-
-    if (InstanceKey != NULL)
-        InstanceKeyRealP = InstanceKey;
-    else
-        InstanceKeyRealP = &InstanceKeyReal;
-
-    *GuidKeyRealP = NULL;
-    *DeviceKeyRealP = NULL;
-    *InstanceKeyRealP = NULL;
-
-    RtlInitUnicodeString(&BaseKeyU, BaseKeyString);
-
-    /* Open the DeviceClasses key */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &BaseKeyU,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               NULL,
-                               NULL);
-    Status = ZwOpenKey(&ClassesKey,
-                       DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
-                       &ObjectAttributes);
+    /* Duplicate the symbolic link (we'll modify it later) */
+    Status = RtlDuplicateUnicodeString(0, SymbolicLinkName, &SymbolicLink);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open %wZ\n", &BaseKeyU);
-        goto cleanup;
+        DPRINT1("RtlDuplicateUnicodeString() failed, Status 0x%08lx\n", Status);
+        goto Quit;
     }
 
-    StartPosition = wcschr(SymbolicLinkName->Buffer, L'{');
-    EndPosition = wcschr(SymbolicLinkName->Buffer, L'}');
-    if (!StartPosition || !EndPosition || StartPosition > EndPosition)
-    {
-        DPRINT1("Bad symbolic link: %wZ\n", SymbolicLinkName);
-        return STATUS_INVALID_PARAMETER_1;
-    }
-    GuidString.Buffer = StartPosition;
-    GuidString.MaximumLength = GuidString.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &GuidString,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               ClassesKey,
-                               NULL);
-    Status = ZwCreateKey(GuidKeyRealP,
-                         DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         NULL);
-    ZwClose(ClassesKey);
+    /* Separate it into its constituents */
+    Status = IopSeparateSymbolicLink(&SymbolicLink,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &ReferenceString,
+                                     &ReferenceStringPresent,
+                                     NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open %wZ%wZ (%x)\n", &BaseKeyU, &GuidString, Status);
-        goto cleanup;
+        DPRINT1("Failed to separate symbolic link %wZ, Status 0x%08lx\n", &SymbolicLink, Status);
+        goto Quit;
     }
 
-    SubKeyName.MaximumLength = SymbolicLinkName->Length + sizeof(WCHAR);
-    SubKeyName.Length = 0;
-    SubKeyName.Buffer = ExAllocatePool(PagedPool, SubKeyName.MaximumLength);
-    if (!SubKeyName.Buffer)
+    /* Did we got a ref string? */
+    if (ReferenceStringPresent)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
-    }
+        /* Remove it from our symbolic link */
+        SymbolicLink.MaximumLength = SymbolicLink.Length -= ReferenceString.Length;
 
-    RtlAppendUnicodeStringToString(&SubKeyName,
-                                   SymbolicLinkName);
-
-    SubKeyName.Buffer[SubKeyName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-
-    SubKeyName.Buffer[0] = L'#';
-    SubKeyName.Buffer[1] = L'#';
-    SubKeyName.Buffer[2] = L'?';
-    SubKeyName.Buffer[3] = L'#';
-
-    ReferenceString.Buffer = wcsrchr(SubKeyName.Buffer, '\\');
-    if (ReferenceString.Buffer != NULL)
-    {
+        /* Replace the 1st backslash `\` character by '#' pound */
         ReferenceString.Buffer[0] = L'#';
-
-        SubKeyName.Length = (USHORT)((ULONG_PTR)(ReferenceString.Buffer) - (ULONG_PTR)SubKeyName.Buffer);
-        ReferenceString.Length = SymbolicLinkName->Length - SubKeyName.Length;
     }
     else
     {
+        /* No ref string, initialize it with a single pound character '#' */
         RtlInitUnicodeString(&ReferenceString, L"#");
     }
 
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &SubKeyName,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               *GuidKeyRealP,
-                               NULL);
-    Status = ZwCreateKey(DeviceKeyRealP,
-                         DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         NULL);
-    if (!NT_SUCCESS(Status))
+    /* Replace all '\' by '#' in symbolic link */
+    for (i = 0; i < SymbolicLink.Length / sizeof(WCHAR); i++)
     {
-        DPRINT1("Failed to open %wZ%wZ\\%wZ Status %x\n", &BaseKeyU, &GuidString, &SubKeyName, Status);
-        goto cleanup;
+        if (SymbolicLink.Buffer[i] == L'\\')
+            SymbolicLink.Buffer[i] = L'#';
     }
 
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &ReferenceString,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               *DeviceKeyRealP,
-                               NULL);
-    Status = ZwCreateKey(InstanceKeyRealP,
-                         DesiredAccess,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         NULL);
+    /* Fix prefix: '#??#' -> '##?#' */
+    SymbolicLink.Buffer[1] = L'#';
+
+    DPRINT("Munged symbolic link is %wZ\n", &SymbolicLink);
+
+    /* Try to open or create device interface keys */
+    if (Create)
+    {
+        Status = IopCreateRegistryKeyEx(&DeviceKeyHandle,
+                                        ClassHandle,
+                                        &SymbolicLink,
+                                        DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
+                                        REG_OPTION_NON_VOLATILE,
+                                        &DeviceKeyDisposition);
+    }
+    else
+    {
+        Status = IopOpenRegistryKeyEx(&DeviceKeyHandle,
+                                      ClassHandle,
+                                      &SymbolicLink,
+                                      DesiredAccess | KEY_ENUMERATE_SUB_KEYS);
+    }
+
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open %wZ%wZ\\%wZ%\\%wZ (%x)\n", &BaseKeyU, &GuidString, &SubKeyName, &ReferenceString, Status);
-        goto cleanup;
+        DPRINT1("Failed to create or open %wZ, Status 0x%08lx\n", &SymbolicLink, Status);
+        goto Quit;
+    }
+
+    DPRINT("Munged reference string is %wZ\n", &ReferenceString);
+
+    /* Try to open or create instance subkeys */
+    if (Create)
+    {
+        Status = IopCreateRegistryKeyEx(&InstanceKeyHandle,
+                                        DeviceKeyHandle,
+                                        &ReferenceString,
+                                        DesiredAccess,
+                                        REG_OPTION_NON_VOLATILE,
+                                        &InstanceKeyDisposition);
+    }
+    else
+    {
+        Status = IopOpenRegistryKeyEx(&InstanceKeyHandle,
+                                      DeviceKeyHandle,
+                                      &ReferenceString,
+                                      DesiredAccess);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create or open %wZ, Status 0x%08lx\n", &ReferenceString, Status);
+        goto Quit;
     }
 
     Status = STATUS_SUCCESS;
 
-cleanup:
-    if (SubKeyName.Buffer != NULL)
-        ExFreePool(SubKeyName.Buffer);
-
+Quit:
     if (NT_SUCCESS(Status))
     {
-        if (!GuidKey)
-            ZwClose(*GuidKeyRealP);
+        if (DeviceHandle)
+            *DeviceHandle = DeviceKeyHandle;
+        else
+            ZwClose(DeviceKeyHandle);
 
-        if (!DeviceKey)
-            ZwClose(*DeviceKeyRealP);
+        if (DeviceDisposition)
+            *DeviceDisposition = DeviceKeyDisposition;
 
-        if (!InstanceKey)
-            ZwClose(*InstanceKeyRealP);
+        if (InstanceHandle)
+            *InstanceHandle = InstanceKeyHandle;
+        else
+            ZwClose(InstanceKeyHandle);
+
+        if (InstanceDisposition)
+            *InstanceDisposition = InstanceKeyDisposition;
     }
     else
     {
-        if (*GuidKeyRealP != NULL)
-            ZwClose(*GuidKeyRealP);
+        if (InstanceKeyHandle)
+            ZwClose(InstanceKeyHandle);
 
-        if (*DeviceKeyRealP != NULL)
-            ZwClose(*DeviceKeyRealP);
+        if (Create)
+            ZwDeleteKey(DeviceKeyHandle);
 
-        if (*InstanceKeyRealP != NULL)
-            ZwClose(*InstanceKeyRealP);
+        if (DeviceKeyHandle)
+            ZwClose(DeviceKeyHandle);
     }
+
+    if (SymbolicLink.Buffer)
+        RtlFreeUnicodeString(&SymbolicLink);
+
+    return Status;
+}
+
+/**
+ * @brief
+ * Retrieves a handles to the GUID, device and instance registry keys
+ * for the specified symbolic link.
+ **/
+static
+NTSTATUS
+OpenRegistryHandlesFromSymbolicLink(
+    _In_ PCUNICODE_STRING SymbolicLinkName,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Out_opt_ PHANDLE GuidKey,
+    _Out_opt_ PHANDLE DeviceKey,
+    _Out_opt_ PHANDLE InstanceKey)
+{
+    UNICODE_STRING BaseKeyU;
+    UNICODE_STRING GuidString;
+    HANDLE ClassesKey;
+    HANDLE GuidKeyReal, DeviceKeyReal, InstanceKeyReal;
+    NTSTATUS Status;
+
+    ClassesKey = GuidKeyReal = DeviceKeyReal = InstanceKeyReal = NULL;
+
+    RtlInitUnicodeString(&BaseKeyU, BaseKeyString);
+
+    /* Separate symbolic link onto the parts */
+    Status = IopSeparateSymbolicLink(SymbolicLinkName,
+                                     NULL,
+                                     NULL,
+                                     &GuidString,
+                                     NULL,
+                                     NULL,
+                                     NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to parse symbolic link %wZ, Status 0x%08lx\n",
+                SymbolicLinkName, Status);
+        goto Quit;
+    }
+
+    /* Open the DeviceClasses key */
+    Status = IopOpenRegistryKeyEx(&ClassesKey,
+                                  NULL,
+                                  &BaseKeyU,
+                                  DesiredAccess | KEY_ENUMERATE_SUB_KEYS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open %wZ, Status 0x%08lx\n", &BaseKeyU, Status);
+        goto Quit;
+    }
+
+    /* Open the GUID subkey */
+    Status = IopOpenRegistryKeyEx(&GuidKeyReal,
+                                  ClassesKey,
+                                  &GuidString,
+                                  DesiredAccess | KEY_ENUMERATE_SUB_KEYS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open %wZ%wZ, Status 0x%08lx\n", &BaseKeyU, &GuidString, Status);
+        goto Quit;
+    }
+
+    /* Open the device and instance subkeys */
+    Status = IopOpenOrCreateSymbolicLinkSubKeys(&DeviceKeyReal,
+                                                NULL,
+                                                &InstanceKeyReal,
+                                                NULL,
+                                                GuidKeyReal,
+                                                SymbolicLinkName,
+                                                DesiredAccess,
+                                                FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open %wZ%wZ, Status 0x%08lx\n", &BaseKeyU, &GuidString, Status);
+        goto Quit;
+    }
+
+    Status = STATUS_SUCCESS;
+
+Quit:
+    if (NT_SUCCESS(Status))
+    {
+        if (GuidKey)
+            *GuidKey = GuidKeyReal;
+        else
+            ZwClose(GuidKeyReal);
+
+        if (DeviceKey)
+            *DeviceKey = DeviceKeyReal;
+        else
+            ZwClose(DeviceKeyReal);
+
+        if (InstanceKey)
+            *InstanceKey = InstanceKeyReal;
+        else
+            ZwClose(InstanceKeyReal);
+    }
+    else
+    {
+        if (GuidKeyReal)
+            ZwClose(GuidKeyReal);
+
+        if (DeviceKeyReal)
+            ZwClose(DeviceKeyReal);
+
+        if (InstanceKeyReal)
+            ZwClose(InstanceKeyReal);
+    }
+
+    if (ClassesKey)
+        ZwClose(ClassesKey);
 
     return Status;
 }
