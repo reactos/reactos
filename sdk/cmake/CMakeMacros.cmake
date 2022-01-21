@@ -830,6 +830,7 @@ function(create_registry_hives)
     list(APPEND _livecd_inf_files
         ${_registry_inf}
         ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.inf
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/caroots.inf
         ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst.inf)
 
     add_custom_command(
