@@ -634,7 +634,7 @@ const char *wine_dbgstr_an( const CHAR *str, intptr_t n )
     return res;
 }
 
-const char *wine_dbgstr_wn( const WCHAR *str, int n )
+const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n )
 {
     char *res;
     static const char hex[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
