@@ -9,14 +9,14 @@
 
 #include "atldef.h"
 
-#if DBG
+#if DBG // FIXME: We should use _DEBUG instead of DBG. CORE-17505
 
 #include <stdio.h>
 #include <crtdbg.h>
 
 extern "C"
 {
-// FIXME: Enabling _DEBUG at top level causes assertion failures...
+// FIXME: Enabling _DEBUG at top level causes assertion failures... CORE-17505
 int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...);
 int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumber, const wchar_t *moduleName, const wchar_t *format, ...);
 }
@@ -270,7 +270,7 @@ AtlTrace(_In_z_ _Printf_format_string_ const X_CHAR *format, ...)
 #endif // DBG
 
 #ifndef ATLTRACE
-    #if DBG
+    #if DBG  // FIXME: We should use _DEBUG instead of DBG. CORE-17505
         #define ATLTRACE(format, ...) ATL::AtlTraceEx(__FILE__, __LINE__, format, ##__VA_ARGS__)
     #else
         #define ATLTRACE(format, ...) ((void)0)
@@ -279,7 +279,7 @@ AtlTrace(_In_z_ _Printf_format_string_ const X_CHAR *format, ...)
 
 #define ATLTRACE2 ATLTRACE
 
-#if DBG
+#if DBG // FIXME: We should use _DEBUG instead of DBG. CORE-17505
     #define ATLTRACENOTIMPL(funcname) do { \
         ATLTRACE(atlTraceNotImpl, 0, #funcname " is not implemented.\n"); \
         return E_NOTIMPL; \
