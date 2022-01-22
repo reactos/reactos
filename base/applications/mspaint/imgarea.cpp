@@ -107,7 +107,7 @@ LRESULT CImgAreaWindow::OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     HDC hdc = (HDC)wParam;
 
     if (toolsModel.GetActiveTool() == TOOL_TEXT && !toolsModel.IsBackgroundTransparent() &&
-        textEditWindow.IsWindowVisible())
+        ::IsWindowVisible(textEditWindow))
     {
         // Do clipping
         HWND hChild = textEditWindow;

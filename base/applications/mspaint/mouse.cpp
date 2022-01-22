@@ -394,7 +394,7 @@ struct TextTool : ToolBase
     {
         imageModel.ResetToPrevious();
 
-        BOOL bTextBoxShown = textEditWindow.IsWindowVisible();
+        BOOL bTextBoxShown = ::IsWindowVisible(textEditWindow);
         if (bTextBoxShown && textEditWindow.GetWindowTextLength() > 0)
         {
             CString szText;
