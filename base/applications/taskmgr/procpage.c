@@ -25,6 +25,8 @@
 
 #include "proclist.h"
 
+#include <shlobj.h>
+
 #define CMP(x1, x2)\
     (x1 < x2 ? -1 : (x1 > x2 ? 1 : 0))
 
@@ -930,4 +932,45 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
         ret = CMP(ull1, ull2);
     }
     return ret;
+}
+
+void ProcessPage_OnOpenFileLocation(void)
+{
+    DWORD dwProcessId, dwPathLen;
+    HANDLE hProcess;
+    WCHAR szExePath[MAX_PATH];
+    ITEMIDLIST *pidl;
+
+    dwProcessId = GetSelectedProcessId();
+
+    if (dwProcessId == 0)
+    {
+        return;
+    }
+    
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwProcessId);
+
+    if (!hProcess)
+    {
+        return;
+    }
+
+    if (GetModuleFileNameExW(hProcess, NULL, szExePath, _countof(szExePath)) == 0)
+    {
+        return;
+    }
+
+    pidl = ILCreateFromPath(szExePath);
+    
+    if (pidl)
+    {
+        CoInitialize(NULL);
+
+        /* Open file explorer and select the exe file. */
+        SHOpenFolderAndSelectItems(pidl, 0, NULL, 0);
+
+        CoUninitialize();
+
+        ILFree(pidl);
+    }
 }

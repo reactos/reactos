@@ -31,3 +31,4 @@ extern	HWND		hProcessPageShowAllProcessesButton;	/* Process Show All Processes c
 INT_PTR CALLBACK	ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 void				RefreshProcessPage(void);
 DWORD               GetSelectedProcessId(void);
+void                ProcessPage_OnOpenFileLocation(void);
