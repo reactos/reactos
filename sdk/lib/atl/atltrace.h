@@ -117,6 +117,11 @@ struct CTraceCategoryEasy
     }
 
     operator UINT() const { return m_category; }
+
+    BOOL IsGeneral() const
+    {
+        return lstrcmp(m_name, TEXT("atlTraceGeneral")) == 0;
+    }
 };
 
 struct CTrace
@@ -164,12 +169,22 @@ AtlTraceV(_In_opt_z_                     const X_CHAR *            file,
 
 #ifdef _STRSAFE_H_INCLUDED_
     StringCchPrintfA(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? "%ls" : "%hs"), file);
-    StringCchPrintfA(szBuff, _countof(szBuff), (bUnicode ? "%ls - " : "%hs - "), cat.m_name);
-    StringCchLengthA(szBuff, _countof(szBuff), &cch);
+    if (cat.IsGeneral())
+    {
+        cch = 0;
+    }
+    else
+    {
+        StringCchPrintfA(szBuff, _countof(szBuff), (bUnicode ? "%ls - " : "%hs - "), cat.m_name);
+        StringCchLengthA(szBuff, _countof(szBuff), &cch);
+    }
     StringCchVPrintfA(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #else
     _snprintf(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? "%ls" : "%hs"), file);
-    cch = _snprintf(szBuff, _countof(szBuff), (bUnicode ? "%ls - " : "%hs - "), cat.m_name);
+    if (cat.IsGeneral())
+        cch = 0;
+    else
+        cch = _snprintf(szBuff, _countof(szBuff), (bUnicode ? "%ls - " : "%hs - "), cat.m_name);
     _vsnprintf(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #endif
 
@@ -194,12 +209,22 @@ AtlTraceV(_In_opt_z_                     const X_CHAR *            file,
 
 #ifdef _STRSAFE_H_INCLUDED_
     StringCchPrintfW(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? L"%ls" : L"%hs"), file);
-    StringCchPrintfW(szBuff, _countof(szBuff), (bUnicode ? L"%ls - " : L"%hs - "), cat.m_name);
-    StringCchLengthW(szBuff, _countof(szBuff), &cch);
+    if (cat.IsGeneral())
+    {
+        cch = 0;
+    }
+    else
+    {
+        StringCchPrintfW(szBuff, _countof(szBuff), (bUnicode ? L"%ls - " : L"%hs - "), cat.m_name);
+        StringCchLengthW(szBuff, _countof(szBuff), &cch);
+    }
     StringCchVPrintfW(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #else
     _snwprintf(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? L"%ls" : L"%hs"), file);
-    cch = _snwprintf(szBuff, _countof(szBuff), (bUnicode ? L"%ls - " : L"%hs - "), cat.m_name);
+    if (cat.IsGeneral())
+        cch = 0;
+    else
+        cch = _snwprintf(szBuff, _countof(szBuff), (bUnicode ? L"%ls - " : L"%hs - "), cat.m_name);
     _vsnwprintf(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #endif
 
