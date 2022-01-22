@@ -14,12 +14,14 @@
 
 void ImageModel::NotifyDimensionsChanged()
 {
-    imageArea.SendMessage(WM_IMAGEMODELDIMENSIONSCHANGED);
+    if (imageArea.IsWindow())
+        imageArea.SendMessage(WM_IMAGEMODELDIMENSIONSCHANGED);
 }
 
 void ImageModel::NotifyImageChanged()
 {
-    imageArea.SendMessage(WM_IMAGEMODELIMAGECHANGED);
+    if (imageArea.IsWindow())
+        imageArea.SendMessage(WM_IMAGEMODELIMAGECHANGED);
 }
 
 ImageModel::ImageModel()

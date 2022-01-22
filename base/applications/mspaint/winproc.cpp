@@ -51,7 +51,7 @@ void CMainWindow::alignChildrenToMainWindow()
     RECT clientRect;
     GetClientRect(&clientRect);
 
-    if (toolBoxContainer.IsWindowVisible())
+    if (toolBoxContainer.IsWindow() && toolBoxContainer.IsWindowVisible())
     {
         x = 56;
         w = clientRect.right - 56;
@@ -61,7 +61,7 @@ void CMainWindow::alignChildrenToMainWindow()
         x = 0;
         w = clientRect.right;
     }
-    if (paletteWindow.IsWindowVisible())
+    if (paletteWindow.IsWindow() && paletteWindow.IsWindowVisible())
     {
         y = 49;
         h = clientRect.bottom - 49;
@@ -73,13 +73,18 @@ void CMainWindow::alignChildrenToMainWindow()
     }
 
     RECT statusBarRect0;
-    SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&statusBarRect0);
     int statusBarBorders[3];
-    SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&statusBarBorders);
+    if (::IsWindow(hStatusBar))
+    {
+        ::SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&statusBarRect0);
+        ::SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&statusBarBorders);
+    }
     int statusBarHeight = statusBarRect0.bottom - statusBarRect0.top + statusBarBorders[1];
 
-    scrollboxWindow.MoveWindow(x, y, w, ::IsWindowVisible(hStatusBar) ? h - statusBarHeight : h, TRUE);
-    paletteWindow.MoveWindow(x, 9, 255, 32, TRUE);
+    if (scrollboxWindow.IsWindow())
+        scrollboxWindow.MoveWindow(x, y, w, ::IsWindowVisible(hStatusBar) ? h - statusBarHeight : h, TRUE);
+    if (paletteWindow.IsWindow())
+        paletteWindow.MoveWindow(x, 9, 255, 32, TRUE);
 }
 
 void CMainWindow::saveImage(BOOL overwrite)
@@ -351,8 +356,11 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CMainWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     int test[] = { LOWORD(lParam) - 260, LOWORD(lParam) - 140, LOWORD(lParam) - 20 };
-    SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
-    SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
+    if (::IsWindow(hStatusBar))
+    {
+        ::SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
+        ::SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
+    }
     alignChildrenToMainWindow();
     Invalidate(TRUE);
     return 0;

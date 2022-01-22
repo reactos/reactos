@@ -95,7 +95,9 @@ void PaletteModel::SetBgColor(COLORREF newColor)
 
 void PaletteModel::NotifyColorChanged()
 {
-    paletteWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
+    if (paletteWindow.IsWindow())
+        paletteWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
+    if (selectionWindow.IsWindow())
     selectionWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
     if (textEditWindow.IsWindow())
         textEditWindow.SendMessage(WM_PALETTEMODELCOLORCHANGED);
@@ -103,5 +105,6 @@ void PaletteModel::NotifyColorChanged()
 
 void PaletteModel::NotifyPaletteChanged()
 {
-    paletteWindow.SendMessage(WM_PALETTEMODELPALETTECHANGED);
+    if (paletteWindow.IsWindow())
+        paletteWindow.SendMessage(WM_PALETTEMODELPALETTECHANGED);
 }
