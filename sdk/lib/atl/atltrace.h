@@ -64,9 +64,7 @@ struct CTrace
 
     static bool IsTracingEnabled(UINT category, UINT level)
     {
-        if (s_level == DisableTracing || s_level < level || !(s_categories & category))
-            return false;
-        return ::IsDebuggerPresent();
+        return (s_level != DisableTracing && s_level >= level && (s_categories & category));
     }
 
 protected:
