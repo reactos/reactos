@@ -30,39 +30,39 @@ class CTraceCategoryEx
 public:
     enum
     {
-        TraceGeneral = (1 << 0),
-        TraceCom = (1 << 1),
-        TraceQI = (1 << 2),
-        TraceRegistrar = (1 << 3),
-        TraceRefcount = (1 << 4),
-        TraceWindowing = (1 << 5),
-        TraceControls = (1 << 6),
-        TraceHosting = (1 << 7),
-        TraceDBClient = (1 << 8),
+        TraceGeneral    = (1 << 0),
+        TraceCom        = (1 << 1),
+        TraceQI         = (1 << 2),
+        TraceRegistrar  = (1 << 3),
+        TraceRefcount   = (1 << 4),
+        TraceWindowing  = (1 << 5),
+        TraceControls   = (1 << 6),
+        TraceHosting    = (1 << 7),
+        TraceDBClient   = (1 << 8),
         TraceDBProvider = (1 << 9),
-        TraceSnapin = (1 << 10),
-        TraceNotImpl = (1 << 11),
+        TraceSnapin     = (1 << 10),
+        TraceNotImpl    = (1 << 11),
         TraceAllocation = (1 << 12),
-        TraceException = (1 << 13),
-        TraceTime = (1 << 14),
-        TraceCache = (1 << 15),
-        TraceStencil = (1 << 16),
-        TraceString = (1 << 17),
-        TraceMap = (1 << 18),
-        TraceUtil = (1 << 19),
-        TraceSecurity = (1 << 20),
-        TraceSync = (1 << 21),
-        TraceISAPI = (1 << 22),
-        TraceUser = TraceUtil
+        TraceException  = (1 << 13),
+        TraceTime       = (1 << 14),
+        TraceCache      = (1 << 15),
+        TraceStencil    = (1 << 16),
+        TraceString     = (1 << 17),
+        TraceMap        = (1 << 18),
+        TraceUtil       = (1 << 19),
+        TraceSecurity   = (1 << 20),
+        TraceSync       = (1 << 21),
+        TraceISAPI      = (1 << 22),
+        TraceUser       = TraceUtil
     };
 
     CTraceCategoryEx(LPCTSTR name = NULL) : m_name(name)
     {
     }
 
-    static UINT GetLevel()      { return t_level; }
-    static UINT GetCategory()   { return t_category; }
-    operator UINT() const       { return GetCategory(); }
+    static UINT GetLevel()          { return t_level; }
+    static UINT GetCategory()       { return t_category; }
+    operator UINT() const           { return GetCategory(); }
     LPCTSTR GetCategoryName() const { return m_name; }
 
 protected:
