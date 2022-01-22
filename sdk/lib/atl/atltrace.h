@@ -161,7 +161,7 @@ AtlTraceV(_In_opt_z_                     const X_CHAR *            file,
           _In_                           va_list                   va)
 {
     char szBuff[1024], szFile[MAX_PATH];
-    size_t cch;
+    size_t cch = 0;
     const BOOL bUnicode = (sizeof(TCHAR) == 2);
 
     if (!CTrace::IsTracingEnabled(cat, level))
@@ -169,11 +169,7 @@ AtlTraceV(_In_opt_z_                     const X_CHAR *            file,
 
 #ifdef _STRSAFE_H_INCLUDED_
     StringCchPrintfA(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? "%ls" : "%hs"), file);
-    if (cat.IsGeneral())
-    {
-        cch = 0;
-    }
-    else
+    if (!cat.IsGeneral())
     {
         StringCchPrintfA(szBuff, _countof(szBuff), (bUnicode ? "%ls - " : "%hs - "), cat.m_name);
         StringCchLengthA(szBuff, _countof(szBuff), &cch);
@@ -181,9 +177,7 @@ AtlTraceV(_In_opt_z_                     const X_CHAR *            file,
     StringCchVPrintfA(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #else
     _snprintf(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? "%ls" : "%hs"), file);
-    if (cat.IsGeneral())
-        cch = 0;
-    else
+    if (!cat.IsGeneral())
         cch = _snprintf(szBuff, _countof(szBuff), (bUnicode ? "%ls - " : "%hs - "), cat.m_name);
     _vsnprintf(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #endif
@@ -201,7 +195,7 @@ AtlTraceV(_In_opt_z_                     const X_CHAR *            file,
           _In_                           va_list                   va)
 {
     WCHAR szBuff[1024], szFile[MAX_PATH];
-    size_t cch;
+    size_t cch = 0;
     const BOOL bUnicode = (sizeof(TCHAR) == 2);
 
     if (!CTrace::IsTracingEnabled(cat, level))
@@ -209,11 +203,7 @@ AtlTraceV(_In_opt_z_                     const X_CHAR *            file,
 
 #ifdef _STRSAFE_H_INCLUDED_
     StringCchPrintfW(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? L"%ls" : L"%hs"), file);
-    if (cat.IsGeneral())
-    {
-        cch = 0;
-    }
-    else
+    if (!cat.IsGeneral())
     {
         StringCchPrintfW(szBuff, _countof(szBuff), (bUnicode ? L"%ls - " : L"%hs - "), cat.m_name);
         StringCchLengthW(szBuff, _countof(szBuff), &cch);
@@ -221,9 +211,7 @@ AtlTraceV(_In_opt_z_                     const X_CHAR *            file,
     StringCchVPrintfW(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #else
     _snwprintf(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? L"%ls" : L"%hs"), file);
-    if (cat.IsGeneral())
-        cch = 0;
-    else
+    if (!cat.IsGeneral())
         cch = _snwprintf(szBuff, _countof(szBuff), (bUnicode ? L"%ls - " : L"%hs - "), cat.m_name);
     _vsnwprintf(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #endif
