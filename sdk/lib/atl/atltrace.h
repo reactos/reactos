@@ -9,18 +9,17 @@
 
 #include "atldef.h"
 
-#ifdef NDEBUG
-    #undef DBG
-    #undef _DEBUG
-#endif
-
-#if DBG && !defined(_DEBUG)
-    #define _DEBUG
-#endif
-
-#ifdef _DEBUG
+#if DBG
 
 #include <stdio.h>
+#include <crtdbg.h>
+
+extern "C"
+{
+// FIXME: Enabling _DEBUG at top level causes assertion failures...
+int __cdecl _CrtDbgReport(int reportType, const char *filename, int linenumber, const char *moduleName, const char *format, ...);
+int __cdecl _CrtDbgReportW(int reportType, const wchar_t *filename, int linenumber, const wchar_t *moduleName, const wchar_t *format, ...);
+}
 
 namespace ATL
 {
@@ -147,81 +146,73 @@ protected:
 DECLSPEC_SELECTANY UINT CTrace::s_categories = CTrace::EnableAllCategories;
 DECLSPEC_SELECTANY UINT CTrace::s_level      = CTrace::DefaultTraceLevel;
 
+template <typename X_CHAR>
 inline VOID __stdcall
-AtlTraceV(_In_opt_z_                     PCSTR                     file,
+AtlTraceV(_In_opt_z_                     const X_CHAR *            file,
           _In_                           INT                       line,
           _In_                           const CTraceCategoryEasy& cat,
           _In_                           UINT                      level,
           _In_z_ _Printf_format_string_  PCSTR                     format,
           _In_                           va_list                   va)
 {
-    char szBuff[1024];
+    char szBuff[1024], szFile[MAX_PATH];
     size_t cch;
+    const BOOL bUnicode = (sizeof(TCHAR) == 2);
 
     if (!CTrace::IsTracingEnabled(cat, level))
         return;
 
 #ifdef _STRSAFE_H_INCLUDED_
-    #ifdef UNICODE
-        StringCchPrintfA(szBuff, _countof(szBuff), "%s(%d) : %ls - ", file, line, cat.m_name);
-    #else
-        StringCchPrintfA(szBuff, _countof(szBuff), "%s(%d) : %hs - ", file, line, cat.m_name);
-    #endif
+    StringCchPrintfA(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? "%ls" : "%hs"), file);
+    StringCchPrintfA(szBuff, _countof(szBuff), (bUnicode ? "%ls - " : "%hs - "), cat.m_name);
     StringCchLengthA(szBuff, _countof(szBuff), &cch);
     StringCchVPrintfA(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #else
-    #ifdef UNICODE
-        cch = _snprintf(szBuff, _countof(szBuff), "%s(%d) : %ls - ", file, line, cat.m_name);
-    #else
-        cch = _snprintf(szBuff, _countof(szBuff), "%s(%d) : %hs - ", file, line, cat.m_name);
-    #endif
+    _snprintf(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? "%ls" : "%hs"), file);
+    cch = _snprintf(szBuff, _countof(szBuff), (bUnicode ? "%ls - " : "%hs - "), cat.m_name);
     _vsnprintf(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #endif
 
-    OutputDebugStringA(szBuff);
+    _CrtDbgReport(_CRT_WARN, szFile, line, NULL, "%hs", szBuff);
 }
 
+template <typename X_CHAR>
 inline VOID __stdcall
-AtlTraceV(_In_opt_z_                     PCSTR                     file,
+AtlTraceV(_In_opt_z_                     const X_CHAR *            file,
           _In_                           INT                       line,
           _In_                           const CTraceCategoryEasy& cat,
           _In_                           UINT                      level,
           _In_z_ _Printf_format_string_  PCWSTR                    format,
           _In_                           va_list                   va)
 {
-    WCHAR szBuff[1024];
+    WCHAR szBuff[1024], szFile[MAX_PATH];
     size_t cch;
+    const BOOL bUnicode = (sizeof(TCHAR) == 2);
 
     if (!CTrace::IsTracingEnabled(cat, level))
         return;
 
 #ifdef _STRSAFE_H_INCLUDED_
-    #ifdef UNICODE
-        StringCchPrintfW(szBuff, _countof(szBuff), L"%hs(%d) : %ls - ", file, line, cat.m_name);
-    #else
-        StringCchPrintfW(szBuff, _countof(szBuff), L"%hs(%d) : %hs - ", file, line, cat.m_name);
-    #endif
+    StringCchPrintfW(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? L"%ls" : L"%hs"), file);
+    StringCchPrintfW(szBuff, _countof(szBuff), (bUnicode ? L"%ls - " : L"%hs - "), cat.m_name);
     StringCchLengthW(szBuff, _countof(szBuff), &cch);
     StringCchVPrintfW(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #else
-    #ifdef UNICODE
-        cch = _snwprintf(szBuff, _countof(szBuff), L"%hs(%d) : %ls - ", file, line, cat.m_name);
-    #else
-        cch = _snwprintf(szBuff, _countof(szBuff), L"%hs(%d) : %hs - ", file, line, cat.m_name);
-    #endif
+    _snwprintf(szFile, _countof(szFile), ((sizeof(X_CHAR) == 2) ? L"%ls" : L"%hs"), file);
+    cch = _snwprintf(szBuff, _countof(szBuff), (bUnicode ? L"%ls - " : L"%hs - "), cat.m_name);
     _vsnwprintf(&szBuff[cch], _countof(szBuff) - cch, format, va);
 #endif
 
-    OutputDebugStringW(szBuff);
+    _CrtDbgReportW(_CRT_WARN, szFile, line, NULL, L"%ls", szBuff);
 }
 
-template <typename T_CHAR>
+template <typename X_CHAR, typename Y_CHAR>
 inline VOID __cdecl
-AtlTraceEx(_In_opt_z_                    PCSTR                     file,
+AtlTraceEx(_In_opt_z_                    const X_CHAR *            file,
            _In_                          INT                       line,
            _In_                          const CTraceCategoryEasy& cat,
            _In_                          UINT                      level,
-           _In_z_ _Printf_format_string_ const T_CHAR *            format,
+           _In_z_ _Printf_format_string_ const Y_CHAR *            format,
            ...)
 {
     va_list va;
@@ -230,11 +221,11 @@ AtlTraceEx(_In_opt_z_                    PCSTR                     file,
     va_end(va);
 }
 
-template <typename T_CHAR>
+template <typename X_CHAR, typename Y_CHAR>
 inline VOID __cdecl
-AtlTraceEx(_In_opt_z_                    PCSTR         file,
+AtlTraceEx(_In_opt_z_                    const X_CHAR *file,
            _In_                          INT           line,
-           _In_z_ _Printf_format_string_ const T_CHAR *format,
+           _In_z_ _Printf_format_string_ const Y_CHAR *format,
            ...)
 {
     va_list va;
@@ -244,16 +235,16 @@ AtlTraceEx(_In_opt_z_                    PCSTR         file,
 }
 
 inline VOID __stdcall
-AtlTraceEx(_In_opt_z_ PCSTR file,
-           _In_       INT   line,
-           _In_       DWORD value)
+AtlTraceEx(_In_opt_z_ PCTSTR file,
+           _In_       INT    line,
+           _In_       DWORD  value)
 {
-    AtlTraceEx(file, line, "%ld (0x%lX)\n", value, value);
+    AtlTraceEx(file, line, TEXT("%ld (0x%lX)\n"), value, value);
 }
 
-template <typename T_CHAR>
+template <typename X_CHAR>
 inline VOID __cdecl
-AtlTrace(_In_z_ _Printf_format_string_ const T_CHAR *format, ...)
+AtlTrace(_In_z_ _Printf_format_string_ const X_CHAR *format, ...)
 {
     va_list va;
     va_start(va, format);
@@ -263,10 +254,10 @@ AtlTrace(_In_z_ _Printf_format_string_ const T_CHAR *format, ...)
 
 } // namespace ATL
 
-#endif // def _DEBUG
+#endif // DBG
 
 #ifndef ATLTRACE
-    #ifdef _DEBUG
+    #if DBG
         #define ATLTRACE(format, ...) ATL::AtlTraceEx(__FILE__, __LINE__, format, ##__VA_ARGS__)
     #else
         #define ATLTRACE(format, ...) ((void)0)
@@ -275,7 +266,7 @@ AtlTrace(_In_z_ _Printf_format_string_ const T_CHAR *format, ...)
 
 #define ATLTRACE2 ATLTRACE
 
-#ifdef _DEBUG
+#if DBG
     #define ATLTRACENOTIMPL(funcname) do { \
         ATLTRACE(atlTraceNotImpl, 0, #funcname " is not implemented.\n"); \
         return E_NOTIMPL; \
