@@ -57,7 +57,7 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
 void
 ForceRefreshSelectionContents()
 {
-    if (selectionWindow.IsWindowVisible())
+    if (::IsWindowVisible(selectionWindow))
     {
         selectionWindow.SendMessage(WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
         selectionWindow.SendMessage(WM_MOUSEMOVE,   0, MAKELPARAM(0, 0));

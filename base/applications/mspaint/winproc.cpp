@@ -51,7 +51,7 @@ void CMainWindow::alignChildrenToMainWindow()
     RECT clientRect;
     GetClientRect(&clientRect);
 
-    if (toolBoxContainer.IsWindowVisible())
+    if (::IsWindowVisible(toolBoxContainer))
     {
         x = 56;
         w = clientRect.right - 56;
@@ -61,7 +61,7 @@ void CMainWindow::alignChildrenToMainWindow()
         x = 0;
         w = clientRect.right;
     }
-    if (paletteWindow.IsWindowVisible())
+    if (::IsWindowVisible(paletteWindow))
     {
         y = 49;
         h = clientRect.bottom - 49;
@@ -73,13 +73,18 @@ void CMainWindow::alignChildrenToMainWindow()
     }
 
     RECT statusBarRect0;
-    SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&statusBarRect0);
     int statusBarBorders[3];
-    SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&statusBarBorders);
+    if (::IsWindow(hStatusBar))
+    {
+        ::SendMessage(hStatusBar, SB_GETRECT, 0, (LPARAM)&statusBarRect0);
+        ::SendMessage(hStatusBar, SB_GETBORDERS, 0, (LPARAM)&statusBarBorders);
+    }
     int statusBarHeight = statusBarRect0.bottom - statusBarRect0.top + statusBarBorders[1];
 
-    scrollboxWindow.MoveWindow(x, y, w, ::IsWindowVisible(hStatusBar) ? h - statusBarHeight : h, TRUE);
-    paletteWindow.MoveWindow(x, 9, 255, 32, TRUE);
+    if (scrollboxWindow.IsWindow())
+        scrollboxWindow.MoveWindow(x, y, w, ::IsWindowVisible(hStatusBar) ? h - statusBarHeight : h, TRUE);
+    if (paletteWindow.IsWindow())
+        paletteWindow.MoveWindow(x, 9, 255, 32, TRUE);
 }
 
 void CMainWindow::saveImage(BOOL overwrite)
@@ -268,7 +273,9 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     HMENU menu = GetMenu();
-    BOOL trueSelection = (selectionWindow.IsWindowVisible() && ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
+    BOOL trueSelection =
+        (::IsWindowVisible(selectionWindow) &&
+         ((toolsModel.GetActiveTool() == TOOL_FREESEL) || (toolsModel.GetActiveTool() == TOOL_RECTSEL)));
     switch (lParam)
     {
         case 0: /* File menu */
@@ -320,17 +327,17 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             CloseClipboard();
             break;
         case 2: /* View menu */
-                CheckMenuItem(menu, IDM_VIEWTOOLBOX,      CHECKED_IF(toolBoxContainer.IsWindowVisible()));
-                CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(paletteWindow.IsWindowVisible()));
-                CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(hStatusBar)));
-                CheckMenuItem(menu, IDM_FORMATICONBAR,    CHECKED_IF(fontsDialog.IsWindowVisible()));
-                EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
+            CheckMenuItem(menu, IDM_VIEWTOOLBOX, CHECKED_IF(::IsWindowVisible(toolBoxContainer)));
+            CheckMenuItem(menu, IDM_VIEWCOLORPALETTE, CHECKED_IF(::IsWindowVisible(paletteWindow)));
+            CheckMenuItem(menu, IDM_VIEWSTATUSBAR,    CHECKED_IF(::IsWindowVisible(hStatusBar)));
+            CheckMenuItem(menu, IDM_FORMATICONBAR, CHECKED_IF(::IsWindowVisible(fontsDialog)));
+            EnableMenuItem(menu, IDM_FORMATICONBAR, ENABLED_IF(toolsModel.GetActiveTool() == TOOL_TEXT));
 
-                CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
-                CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(showMiniature));
+            CheckMenuItem(menu, IDM_VIEWSHOWGRID,      CHECKED_IF(showGrid));
+            CheckMenuItem(menu, IDM_VIEWSHOWMINIATURE, CHECKED_IF(showMiniature));
             break;
         case 3: /* Image menu */
-            EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(selectionWindow.IsWindowVisible()));
+            EnableMenuItem(menu, IDM_IMAGECROP, ENABLED_IF(::IsWindowVisible(selectionWindow)));
             CheckMenuItem(menu, IDM_IMAGEDRAWOPAQUE, CHECKED_IF(!toolsModel.IsBackgroundTransparent()));
             break;
     }
@@ -351,8 +358,11 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CMainWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     int test[] = { LOWORD(lParam) - 260, LOWORD(lParam) - 140, LOWORD(lParam) - 20 };
-    SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
-    SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
+    if (::IsWindow(hStatusBar))
+    {
+        ::SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
+        ::SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
+    }
     alignChildrenToMainWindow();
     Invalidate(TRUE);
     return 0;
@@ -519,13 +529,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         }
         case IDM_EDITUNDO:
-            if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
                 break;
             imageModel.Undo();
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
-            if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
                 break;
             imageModel.Redo();
             imageArea.Invalidate(FALSE);
@@ -558,7 +568,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         case IDM_EDITSELECTALL:
         {
-            if (toolsModel.GetActiveTool() == TOOL_TEXT && textEditWindow.IsWindowVisible())
+            if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
             {
                 textEditWindow.SendMessage(EM_SETSEL, 0, -1);
                 break;
@@ -608,13 +618,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             switch (mirrorRotateDialog.DoModal(mainWindow.m_hWnd))
             {
                 case 1: /* flip horizontally */
-                    if (selectionWindow.IsWindowVisible())
+                    if (::IsWindowVisible(selectionWindow))
                         selectionModel.FlipHorizontally();
                     else
                         imageModel.FlipHorizontally();
                     break;
                 case 2: /* flip vertically */
-                    if (selectionWindow.IsWindowVisible())
+                    if (::IsWindowVisible(selectionWindow))
                         selectionModel.FlipVertically();
                     else
                         imageModel.FlipVertically();
@@ -622,7 +632,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 case 3: /* rotate 90 degrees */
                     break;
                 case 4: /* rotate 180 degrees */
-                    if (selectionWindow.IsWindowVisible())
+                    if (::IsWindowVisible(selectionWindow))
                         selectionModel.RotateNTimes90Degrees(2);
                     else
                         imageModel.RotateNTimes90Degrees(2);
@@ -656,11 +666,11 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
 
         case IDM_VIEWTOOLBOX:
-            toolBoxContainer.ShowWindow(toolBoxContainer.IsWindowVisible() ? SW_HIDE : SW_SHOW);
+            toolBoxContainer.ShowWindow(::IsWindowVisible(toolBoxContainer) ? SW_HIDE : SW_SHOW);
             alignChildrenToMainWindow();
             break;
         case IDM_VIEWCOLORPALETTE:
-            paletteWindow.ShowWindow(paletteWindow.IsWindowVisible() ? SW_HIDE : SW_SHOW);
+            paletteWindow.ShowWindow(::IsWindowVisible(paletteWindow) ? SW_HIDE : SW_SHOW);
             alignChildrenToMainWindow();
             break;
         case IDM_VIEWSTATUSBAR:
@@ -674,7 +684,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 {
                     fontsDialog.Create(mainWindow);
                 }
-                registrySettings.ShowTextTool = !fontsDialog.IsWindowVisible();
+                registrySettings.ShowTextTool = !::IsWindowVisible(fontsDialog);
                 fontsDialog.ShowWindow(registrySettings.ShowTextTool ? SW_SHOW : SW_HIDE);
                 fontsDialog.SendMessage(DM_REPOSITION, 0, 0);
             }
