@@ -934,9 +934,37 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     return ret;
 }
 
+void ProcessPage_OnProperties(void)
+{
+    DWORD dwProcessId;
+    HANDLE hProcess;
+    WCHAR szExePath[MAX_PATH];
+
+    dwProcessId = GetSelectedProcessId();
+
+    if (dwProcessId == 0)
+    {
+        return;
+    }
+    
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwProcessId);
+
+    if (!hProcess)
+    {
+        return;
+    }
+
+    if (GetModuleFileNameExW(hProcess, NULL, szExePath, _countof(szExePath)) == 0)
+    {
+        return;
+    }
+
+    SHObjectProperties(NULL, SHOP_FILEPATH, szExePath, NULL);
+}
+
 void ProcessPage_OnOpenFileLocation(void)
 {
-    DWORD dwProcessId, dwPathLen;
+    DWORD dwProcessId;
     HANDLE hProcess;
     WCHAR szExePath[MAX_PATH];
     ITEMIDLIST *pidl;
