@@ -285,7 +285,7 @@ public:
             TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_LIST | TBSTYLE_TRANSPARENT |
             CCS_TOP | CCS_NORESIZE | CCS_NODIVIDER;
 
-        // HACK & FIXME
+        // HACK & FIXME: CORE-18016
         HWND toolbar = CToolbar::Create(hWndParent, styles);
         SetDrawTextFlags(DT_NOPREFIX, DT_NOPREFIX);
         m_hWnd = NULL;

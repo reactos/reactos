@@ -1231,7 +1231,7 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
         TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT |
         CCS_TOP | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER;
 
-    // HACK & FIXME
+    // HACK & FIXME: CORE-18016
     HWND hwnd = CToolbar::Create(hWndParent, styles);
     m_hWnd = NULL;
     SubclassWindow(hwnd);

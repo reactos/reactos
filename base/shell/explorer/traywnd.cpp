@@ -200,7 +200,7 @@ public:
 
     VOID Initialize()
     {
-        // HACK & FIXME
+        // HACK & FIXME: CORE-18016
         HWND hWnd = m_hWnd;
         m_hWnd = NULL;
         SubclassWindow(hWnd);
@@ -231,7 +231,7 @@ public:
 
         DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_LEFT | BS_VCENTER;
 
-        // Hack
+        // HACK & FIXME: CORE-18016
         m_hWnd = CreateWindowEx(
             0,
             WC_BUTTON,
