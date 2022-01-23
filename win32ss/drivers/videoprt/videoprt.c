@@ -38,6 +38,7 @@ BOOLEAN VpNoVesa = FALSE;
 
 PKPROCESS CsrProcess = NULL;
 static ULONG VideoPortMaxObjectNumber = -1;
+BOOLEAN VideoPortUseNewKey = FALSE;
 KMUTEX VideoPortInt10Mutex;
 KSPIN_LOCK HwResetAdaptersLock;
 RTL_STATIC_LIST_HEAD(HwResetAdaptersList);
@@ -58,6 +59,7 @@ NTSTATUS
 IntVideoPortAddDeviceMapLink(
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension)
 {
+    PUNICODE_STRING RegistryPath;
     WCHAR DeviceBuffer[20];
     UNICODE_STRING DeviceName;
     WCHAR SymlinkBuffer[20];
@@ -69,13 +71,18 @@ IntVideoPortAddDeviceMapLink(
     DeviceNumber = DeviceExtension->DeviceNumber;
     swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
 
+    if (VideoPortUseNewKey)
+        RegistryPath = &DeviceExtension->NewRegistryPath;
+    else
+        RegistryPath = &DeviceExtension->RegistryPath;
+
     /* Add entry to DEVICEMAP\VIDEO key in registry. */
     Status = RtlWriteRegistryValue(RTL_REGISTRY_DEVICEMAP,
                                    L"VIDEO",
                                    DeviceBuffer,
                                    REG_SZ,
-                                   DeviceExtension->NewRegistryPath.Buffer,
-                                   DeviceExtension->NewRegistryPath.Length + sizeof(UNICODE_NULL));
+                                   RegistryPath->Buffer,
+                                   RegistryPath->Length + sizeof(UNICODE_NULL));
     if (!NT_SUCCESS(Status))
     {
         ERR_(VIDEOPRT, "Failed to create DEViCEMAP registry entry: 0x%X\n", Status);
@@ -516,11 +523,27 @@ IntLoadRegistryParameters(VOID)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
+    UNICODE_STRING UseNewKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\UseNewKey");
     UNICODE_STRING Path = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control");
     UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SystemStartOptions");
     OBJECT_ATTRIBUTES ObjectAttributes;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
     ULONG Length, NewLength;
+
+    /* Check if we need to use new registry */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &UseNewKeyPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&KeyHandle,
+                       GENERIC_READ | GENERIC_WRITE,
+                       &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        VideoPortUseNewKey = TRUE;
+        ZwClose(KeyHandle);
+    }
 
     /* Initialize object attributes with the path we want */
     InitializeObjectAttributes(&ObjectAttributes,
