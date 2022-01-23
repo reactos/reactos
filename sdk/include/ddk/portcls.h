@@ -704,6 +704,16 @@ typedef IUnregisterPhysicalConnection *PUNREGISTERPHYSICALCONNECTION;
     IDmaChannel Interface
 */
 
+/* C++ ABI HACK: IDmaChannel::PhysicalAddress */
+#if defined(__cplusplus) && !defined(_MSC_VER)
+#define DEFINE_ABSTRACT_DMACHANNEL_PhysicalAddress \
+    STDMETHOD_(PHYSICAL_ADDRESS*, PhysicalAddress)( THIS_ PHYSICAL_ADDRESS* pRet ) PURE; \
+    PHYSICAL_ADDRESS PhysicalAddress() { PHYSICAL_ADDRESS tmp; PhysicalAddress(&tmp); return tmp; }
+#else
+#define DEFINE_ABSTRACT_DMACHANNEL_PhysicalAddress \
+    STDMETHOD_(PHYSICAL_ADDRESS, PhysicalAddress)( THIS ) PURE
+#endif
+
 #define DEFINE_ABSTRACT_DMACHANNEL() \
     STDMETHOD_(NTSTATUS, AllocateBuffer)( THIS_ \
         IN  ULONG BufferSize, \
