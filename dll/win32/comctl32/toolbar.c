@@ -1453,6 +1453,11 @@ TOOLBAR_WrapToolbar(TOOLBAR_INFO *infoPtr)
     if( !(infoPtr->dwStyle & TBSTYLE_WRAPABLE) &&
 	!(infoPtr->dwExStyle & TBSTYLE_EX_VERTICAL) )  return;
 
+#ifdef __REACTOS__ /* workaround CORE-16169 part 1 of 2 */
+    /* if width is zero then return */
+    if (infoPtr->client_rect.right == 0) return;
+#endif
+
     btnPtr = infoPtr->buttons;
     x  = infoPtr->nIndent;
     width = infoPtr->client_rect.right - infoPtr->client_rect.left;
@@ -3202,6 +3207,14 @@ TOOLBAR_AutoSize (TOOLBAR_INFO *infoPtr)
 {
     TRACE("auto sizing, style=%#x\n", infoPtr->dwStyle);
     TRACE("nRows: %d, infoPtr->nButtonHeight: %d\n", infoPtr->nRows, infoPtr->nButtonHeight);
+
+#ifdef __REACTOS__ /* workaround CORE-16169 part 2 of 2 */
+    if ((infoPtr->dwStyle & TBSTYLE_WRAPABLE) || (infoPtr->dwExStyle & TBSTYLE_EX_VERTICAL))
+    {
+        TOOLBAR_LayoutToolbar(infoPtr);
+        InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
+    }
+#endif
 
     if (!(infoPtr->dwStyle & CCS_NORESIZE))
     {
