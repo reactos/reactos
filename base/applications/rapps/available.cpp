@@ -217,6 +217,7 @@ VOID CAvailableApplicationInfo::RetrieveSize()
     if (!m_Parser->GetInt(L"SizeBytes", iSizeBytes))
         return;
 
+    m_SizeBytes = iSizeBytes;
     StrFormatByteSizeW(iSizeBytes, m_szSize.GetBuffer(MAX_PATH), MAX_PATH);
     m_szSize.ReleaseBuffer();
 }
