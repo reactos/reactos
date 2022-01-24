@@ -107,53 +107,46 @@ typedef struct _NCM_TESTENRY
 {
     INT line;
     BOOL ret;
+    BOOL bAnsi;
     UINT cbSize;
     UINT uiParam;
     UINT cbSizeNew;
 } NCM_TESTENRY;
 
-static const NCM_TESTENRY s_entriesAA[] =
+static const NCM_TESTENRY s_entriesA[] =
 {
-    { __LINE__, 0, 0, 0, 0 },
-    { __LINE__, 1, sizeof(NONCLIENTMETRICSA), 0, sizeof(NONCLIENTMETRICSA) },
-    { __LINE__, 1, sizeof(NONCLIENTMETRICSA), 1, sizeof(NONCLIENTMETRICSA) },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSA) + 1, 1, sizeof(NONCLIENTMETRICSA) + 1 },
-    { __LINE__, 0, 0, sizeof(NONCLIENTMETRICSA), 0 },
-    { __LINE__, 1, sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA) },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSA) + 100, sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA) + 100 },
+    { __LINE__, 0, TRUE, 0, 0, 0 },
+    { __LINE__, 1, TRUE, sizeof(NONCLIENTMETRICSA), 0, sizeof(NONCLIENTMETRICSA) },
+    { __LINE__, 1, TRUE, sizeof(NONCLIENTMETRICSA), 1, sizeof(NONCLIENTMETRICSA) },
+    { __LINE__, 0, TRUE, sizeof(NONCLIENTMETRICSA) + 1, 1, sizeof(NONCLIENTMETRICSA) + 1 },
+    { __LINE__, 0, TRUE, 0, sizeof(NONCLIENTMETRICSA), 0 },
+    { __LINE__, 1, TRUE, sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA) },
+    { __LINE__, 0, TRUE, sizeof(NONCLIENTMETRICSA) + 100, sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA) + 100 },
+    { __LINE__, 0, FALSE, 0, 0, 0 },
+    { __LINE__, 0, FALSE, sizeof(NONCLIENTMETRICSA), 0, sizeof(NONCLIENTMETRICSA) },
+    { __LINE__, 0, FALSE, sizeof(NONCLIENTMETRICSA), 1, sizeof(NONCLIENTMETRICSA) },
+    { __LINE__, 0, FALSE, sizeof(NONCLIENTMETRICSA) + 1, 1, sizeof(NONCLIENTMETRICSA) + 1 },
+    { __LINE__, 0, FALSE, 0, sizeof(NONCLIENTMETRICSA), 0 },
+    { __LINE__, 0, FALSE, sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA)  },
+    { __LINE__, 0, FALSE, sizeof(NONCLIENTMETRICSA) + 100, sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA) + 100 },
 };
 
-static const NCM_TESTENRY s_entriesAW[] =
+static const NCM_TESTENRY s_entriesW[] =
 {
-    { __LINE__, 0, 0, 0, 0 },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSA), 0, sizeof(NONCLIENTMETRICSA) },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSA), 1, sizeof(NONCLIENTMETRICSA) },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSA) + 1, 1, sizeof(NONCLIENTMETRICSA) + 1 },
-    { __LINE__, 0, 0, sizeof(NONCLIENTMETRICSA), 0 },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA)  },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSA) + 100, sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA) + 100 },
-};
-
-static const NCM_TESTENRY s_entriesWA[] =
-{
-    { __LINE__, 0, 0, 0, 0 },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSW), 0, sizeof(NONCLIENTMETRICSW) },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSW), 1, sizeof(NONCLIENTMETRICSW) },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSW) + 1, 1, sizeof(NONCLIENTMETRICSW) + 1 },
-    { __LINE__, 0, 0, sizeof(NONCLIENTMETRICSW), 0 },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW) },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSW) + 100, sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW) + 100 },
-};
-
-static const NCM_TESTENRY s_entriesWW[] =
-{
-    { __LINE__, 0, 0, 0, 0 },
-    { __LINE__, 1, sizeof(NONCLIENTMETRICSW), 0, sizeof(NONCLIENTMETRICSW) },
-    { __LINE__, 1, sizeof(NONCLIENTMETRICSW), 1, sizeof(NONCLIENTMETRICSW) },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSW) + 1, 1, sizeof(NONCLIENTMETRICSW) + 1 },
-    { __LINE__, 0, 0, sizeof(NONCLIENTMETRICSW), 0 },
-    { __LINE__, 1, sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW) },
-    { __LINE__, 0, sizeof(NONCLIENTMETRICSW) + 100, sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW) + 100 },
+    { __LINE__, 0, TRUE, 0, 0, 0 },
+    { __LINE__, 0, TRUE, sizeof(NONCLIENTMETRICSW), 0, sizeof(NONCLIENTMETRICSW) },
+    { __LINE__, 0, TRUE, sizeof(NONCLIENTMETRICSW), 1, sizeof(NONCLIENTMETRICSW) },
+    { __LINE__, 0, TRUE, sizeof(NONCLIENTMETRICSW) + 1, 1, sizeof(NONCLIENTMETRICSW) + 1 },
+    { __LINE__, 0, TRUE, 0, sizeof(NONCLIENTMETRICSW), 0 },
+    { __LINE__, 0, TRUE, sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW) },
+    { __LINE__, 0, TRUE, sizeof(NONCLIENTMETRICSW) + 100, sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW) + 100 },
+    { __LINE__, 0, FALSE, 0, 0, 0 },
+    { __LINE__, 1, FALSE, sizeof(NONCLIENTMETRICSW), 0, sizeof(NONCLIENTMETRICSW) },
+    { __LINE__, 1, FALSE, sizeof(NONCLIENTMETRICSW), 1, sizeof(NONCLIENTMETRICSW) },
+    { __LINE__, 0, FALSE, sizeof(NONCLIENTMETRICSW) + 1, 1, sizeof(NONCLIENTMETRICSW) + 1 },
+    { __LINE__, 0, FALSE, 0, sizeof(NONCLIENTMETRICSW), 0 },
+    { __LINE__, 1, FALSE, sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW) },
+    { __LINE__, 0, FALSE, sizeof(NONCLIENTMETRICSW) + 100, sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW) + 100 },
 };
 
 static void Test_NonClientMetrics()
@@ -168,21 +161,14 @@ static void Test_NonClientMetrics()
     SetCursorPos(0,0);
 
     /* ncmA */
-    for (i = 0; i < _countof(s_entriesAA); ++i)
+    for (i = 0; i < _countof(s_entriesA); ++i)
     {
-        const NCM_TESTENRY *pEntry = &s_entriesAA[i];
+        const NCM_TESTENRY *pEntry = &s_entriesA[i];
         ncmA.cbSize = pEntry->cbSize;
-        ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmA, 0);
-        ok(ret == pEntry->ret, "Line %d: ret %d vs. %d\n", pEntry->line, ret, pEntry->ret);
-        ok(ncmA.cbSize == pEntry->cbSizeNew, "Line %d: cbSize %d vs. %d\n", pEntry->line, ncmA.cbSize, pEntry->cbSizeNew);
-        FlushMessages();
-        COMPARE_CACHE(empty_chain);
-    }
-    for (i = 0; i < _countof(s_entriesAW); ++i)
-    {
-        const NCM_TESTENRY *pEntry = &s_entriesAW[i];
-        ncmA.cbSize = pEntry->cbSize;
-        ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmA, 0);
+        if (pEntry->bAnsi)
+            ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmA, 0);
+        else
+            ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmA, 0);
         ok(ret == pEntry->ret, "Line %d: ret %d vs. %d\n", pEntry->line, ret, pEntry->ret);
         ok(ncmA.cbSize == pEntry->cbSizeNew, "Line %d: cbSize %d vs. %d\n", pEntry->line, ncmA.cbSize, pEntry->cbSizeNew);
         FlushMessages();
@@ -190,21 +176,14 @@ static void Test_NonClientMetrics()
     }
 
     /* ncmW */
-    for (i = 0; i < _countof(s_entriesWA); ++i)
+    for (i = 0; i < _countof(s_entriesW); ++i)
     {
-        const NCM_TESTENRY *pEntry = &s_entriesWA[i];
+        const NCM_TESTENRY *pEntry = &s_entriesW[i];
         ncmW.cbSize = pEntry->cbSize;
-        ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmW, 0);
-        ok(ret == pEntry->ret, "Line %d: ret %d vs. %d\n", pEntry->line, ret, pEntry->ret);
-        ok(ncmW.cbSize == pEntry->cbSizeNew, "Line %d: cbSize %d vs. %d\n", pEntry->line, ncmW.cbSize, pEntry->cbSizeNew);
-        FlushMessages();
-        COMPARE_CACHE(empty_chain);
-    }
-    for (i = 0; i < _countof(s_entriesWW); ++i)
-    {
-        const NCM_TESTENRY *pEntry = &s_entriesWW[i];
-        ncmW.cbSize = pEntry->cbSize;
-        ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmW, 0);
+        if (pEntry->bAnsi)
+            ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmW, 0);
+        else
+            ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmW, 0);
         ok(ret == pEntry->ret, "Line %d: ret %d vs. %d\n", pEntry->line, ret, pEntry->ret);
         ok(ncmW.cbSize == pEntry->cbSizeNew, "Line %d: cbSize %d vs. %d\n", pEntry->line, ncmW.cbSize, pEntry->cbSizeNew);
         FlushMessages();
