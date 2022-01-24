@@ -30,7 +30,7 @@ LIST_ENTRY TTFontCache = {&TTFontCache, &TTFontCache};
 /* Retrieves the character set associated with a given code page */
 BYTE
 CodePageToCharSet(
-    IN UINT CodePage)
+    _In_ UINT CodePage)
 {
     CHARSETINFO CharInfo;
     if (TranslateCharsetInfo(UlongToPtr(CodePage), &CharInfo, TCI_SRCCODEPAGE))
@@ -41,12 +41,13 @@ CodePageToCharSet(
 
 HFONT
 CreateConsoleFontEx(
-    IN LONG Height,
-    IN LONG Width OPTIONAL,
-    IN OUT LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements
-    IN ULONG FontFamily,
-    IN ULONG FontWeight,
-    IN UINT  CodePage)
+    _In_     LONG Height,
+    _In_opt_ LONG Width,
+    _Inout_updates_z_(LF_FACESIZE)
+         PWSTR FaceName,
+    _In_ ULONG FontFamily,
+    _In_ ULONG FontWeight,
+    _In_ UINT  CodePage)
 {
     LOGFONTW lf;
 
@@ -85,9 +86,9 @@ CreateConsoleFontEx(
 
 HFONT
 CreateConsoleFont2(
-    IN LONG Height,
-    IN LONG Width OPTIONAL,
-    IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
+    _In_     LONG Height,
+    _In_opt_ LONG Width,
+    _Inout_  PCONSOLE_STATE_INFO ConsoleInfo)
 {
     return CreateConsoleFontEx(Height,
                                Width,
@@ -99,7 +100,7 @@ CreateConsoleFont2(
 
 HFONT
 CreateConsoleFont(
-    IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
+    _Inout_ PCONSOLE_STATE_INFO ConsoleInfo)
 {
     /*
      * Format:
@@ -115,12 +116,13 @@ CreateConsoleFont(
                                ConsoleInfo->CodePage);
 }
 
+_Success_(return)
 BOOL
 GetFontCellSize(
-    IN HDC hDC OPTIONAL,
-    IN HFONT hFont,
-    OUT PUINT Height,
-    OUT PUINT Width)
+    _In_opt_ HDC hDC,
+    _In_  HFONT hFont,
+    _Out_ PUINT Height,
+    _Out_ PUINT Width)
 {
     BOOL Success = FALSE;
     HDC hOrgDC = hDC;
@@ -186,10 +188,10 @@ Quit:
 
 BOOL
 IsValidConsoleFont2(
-    IN PLOGFONTW lplf,
-    IN PNEWTEXTMETRICW lpntm,
-    IN DWORD FontType,
-    IN UINT CodePage)
+    _In_ PLOGFONTW lplf,
+    _In_ PNEWTEXTMETRICW lpntm,
+    _In_ DWORD FontType,
+    _In_ UINT  CodePage)
 {
     LPCWSTR FaceName = lplf->lfFaceName;
 
@@ -348,10 +350,10 @@ typedef struct _IS_VALID_CONSOLE_FONT_PARAM
 
 static BOOL CALLBACK
 IsValidConsoleFontProc(
-    IN PLOGFONTW lplf,
-    IN PNEWTEXTMETRICW lpntm,
-    IN DWORD  FontType,
-    IN LPARAM lParam)
+    _In_ PLOGFONTW lplf,
+    _In_ PNEWTEXTMETRICW lpntm,
+    _In_ DWORD  FontType,
+    _In_ LPARAM lParam)
 {
     PIS_VALID_CONSOLE_FONT_PARAM Param = (PIS_VALID_CONSOLE_FONT_PARAM)lParam;
     Param->IsValidFont = IsValidConsoleFont2(lplf, lpntm, FontType, Param->CodePage);
@@ -362,8 +364,9 @@ IsValidConsoleFontProc(
 
 BOOL
 IsValidConsoleFont(
-    IN LPCWSTR FaceName,
-    IN UINT CodePage)
+    // _In_reads_or_z_(LF_FACESIZE)
+    _In_ PCWSTR FaceName,
+    _In_ UINT CodePage)
 {
     IS_VALID_CONSOLE_FONT_PARAM Param;
     HDC hDC;
@@ -526,8 +529,9 @@ RefreshTTFontCache(VOID)
 
 PTT_FONT_ENTRY
 FindCachedTTFont(
-    IN LPCWSTR FaceName,
-    IN UINT CodePage)
+    // _In_reads_or_z_(LF_FACESIZE)
+    _In_ PCWSTR FaceName,
+    _In_ UINT CodePage)
 {
     PLIST_ENTRY Entry;
     PTT_FONT_ENTRY FontEntry;
