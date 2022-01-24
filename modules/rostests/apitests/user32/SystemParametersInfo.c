@@ -106,10 +106,129 @@ MSG_ENTRY CaptionHeight_chain[]={
 static void Test_NonClientMetrics()
 {
     NONCLIENTMETRICS NonClientMetrics;
+    NONCLIENTMETRICSA ncmA;
+    NONCLIENTMETRICSW ncmW;
+    BOOL ret;
 
     /* WARNING: this test requires themes and dwm to be disabled */
 
     SetCursorPos(0,0);
+
+    ncmA.cbSize = 0;
+    ret = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncmA, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmA.cbSize = sizeof(ncmA);
+    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncmA, 0);
+    ok_int(ret, 1);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmA.cbSize = sizeof(ncmA);
+    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 1, &ncmA, 0);
+    ok_int(ret, 1);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    /* ncmA */
+    ncmA.cbSize = 0;
+    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(ncmA), &ncmA, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmA.cbSize = sizeof(ncmA);
+    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(ncmA), &ncmA, 0);
+    ok_int(ret, 1);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmA.cbSize = sizeof(ncmA);
+    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &ncmA, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmA.cbSize = sizeof(ncmA);
+    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 1, &ncmA, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmA.cbSize = 0;
+    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncmA), &ncmA, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmA.cbSize = sizeof(ncmA);
+    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncmA), &ncmA, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    /* ncmW */
+    ncmW.cbSize = 0;
+    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncmW, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmW.cbSize = sizeof(ncmW);
+    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncmW, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmW.cbSize = sizeof(ncmW);
+    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 1, &ncmW, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmW.cbSize = 0;
+    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmW.cbSize = sizeof(ncmW);
+    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmW.cbSize = 0;
+    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &ncmW, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmW.cbSize = sizeof(ncmW);
+    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &ncmW, 0);
+    ok_int(ret, 1);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmW.cbSize = sizeof(ncmW);
+    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 1, &ncmW, 0);
+    ok_int(ret, 1);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmW.cbSize = 0;
+    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
+    ok_int(ret, 0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ncmW.cbSize = sizeof(ncmW);
+    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
+    ok_int(ret, 1);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
 
     /* Retrieve th non client metrics */
     NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
