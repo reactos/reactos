@@ -816,41 +816,57 @@ SpiLogFontWideToAnsi(const LOGFONTW *pLFW, LPLOGFONTA pLFA)
 static void
 SpiNonClientMetricsAnsiToWide(const NONCLIENTMETRICSA *pNCMA, LPNONCLIENTMETRICSW pNCMW)
 {
-    pNCMW->cbSize = sizeof(NONCLIENTMETRICSW);
-    pNCMW->iBorderWidth = pNCMA->iBorderWidth;
-    pNCMW->iScrollWidth = pNCMA->iScrollWidth;
-    pNCMW->iScrollHeight = pNCMA->iScrollHeight;
-    pNCMW->iCaptionWidth = pNCMA->iCaptionWidth;
-    pNCMW->iCaptionHeight = pNCMA->iCaptionHeight;
-    SpiLogFontAnsiToWide(&pNCMA->lfCaptionFont, &pNCMW->lfCaptionFont);
-    pNCMW->iSmCaptionWidth = pNCMA->iSmCaptionWidth;
-    pNCMW->iSmCaptionHeight = pNCMA->iSmCaptionHeight;
-    SpiLogFontAnsiToWide(&pNCMA->lfSmCaptionFont, &pNCMW->lfSmCaptionFont);
-    pNCMW->iMenuWidth = pNCMA->iMenuWidth;
-    pNCMW->iMenuHeight = pNCMA->iMenuHeight;
-    SpiLogFontAnsiToWide(&pNCMA->lfMenuFont, &pNCMW->lfMenuFont);
-    SpiLogFontAnsiToWide(&pNCMA->lfStatusFont, &pNCMW->lfStatusFont);
-    SpiLogFontAnsiToWide(&pNCMA->lfMessageFont, &pNCMW->lfMessageFont);
+    _SEH2_TRY
+    {
+        pNCMW->cbSize = sizeof(NONCLIENTMETRICSW);
+        pNCMW->iBorderWidth = pNCMA->iBorderWidth;
+        pNCMW->iScrollWidth = pNCMA->iScrollWidth;
+        pNCMW->iScrollHeight = pNCMA->iScrollHeight;
+        pNCMW->iCaptionWidth = pNCMA->iCaptionWidth;
+        pNCMW->iCaptionHeight = pNCMA->iCaptionHeight;
+        SpiLogFontAnsiToWide(&pNCMA->lfCaptionFont, &pNCMW->lfCaptionFont);
+        pNCMW->iSmCaptionWidth = pNCMA->iSmCaptionWidth;
+        pNCMW->iSmCaptionHeight = pNCMA->iSmCaptionHeight;
+        SpiLogFontAnsiToWide(&pNCMA->lfSmCaptionFont, &pNCMW->lfSmCaptionFont);
+        pNCMW->iMenuWidth = pNCMA->iMenuWidth;
+        pNCMW->iMenuHeight = pNCMA->iMenuHeight;
+        SpiLogFontAnsiToWide(&pNCMA->lfMenuFont, &pNCMW->lfMenuFont);
+        SpiLogFontAnsiToWide(&pNCMA->lfStatusFont, &pNCMW->lfStatusFont);
+        SpiLogFontAnsiToWide(&pNCMA->lfMessageFont, &pNCMW->lfMessageFont);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ;
+    }
+    _SEH2_END;
 }
 
 static void
 SpiNonClientMetricsWideToAnsi(const NONCLIENTMETRICSW *pNCMW, LPNONCLIENTMETRICSA pNCMA)
 {
-    pNCMA->cbSize = sizeof(NONCLIENTMETRICSA);
-    pNCMA->iBorderWidth = pNCMW->iBorderWidth;
-    pNCMA->iScrollWidth = pNCMW->iScrollWidth;
-    pNCMA->iScrollHeight = pNCMW->iScrollHeight;
-    pNCMA->iCaptionWidth = pNCMW->iCaptionWidth;
-    pNCMA->iCaptionHeight = pNCMW->iCaptionHeight;
-    SpiLogFontWideToAnsi(&pNCMW->lfCaptionFont, &pNCMA->lfCaptionFont);
-    pNCMA->iSmCaptionWidth = pNCMW->iSmCaptionWidth;
-    pNCMA->iSmCaptionHeight = pNCMW->iSmCaptionHeight;
-    SpiLogFontWideToAnsi(&pNCMW->lfSmCaptionFont, &pNCMA->lfSmCaptionFont);
-    pNCMA->iMenuWidth = pNCMW->iMenuWidth;
-    pNCMA->iMenuHeight = pNCMW->iMenuHeight;
-    SpiLogFontWideToAnsi(&pNCMW->lfMenuFont, &pNCMA->lfMenuFont);
-    SpiLogFontWideToAnsi(&pNCMW->lfStatusFont, &pNCMA->lfStatusFont);
-    SpiLogFontWideToAnsi(&pNCMW->lfMessageFont, &pNCMA->lfMessageFont);
+    _SEH2_TRY
+    {
+        pNCMA->cbSize = sizeof(NONCLIENTMETRICSA);
+        pNCMA->iBorderWidth = pNCMW->iBorderWidth;
+        pNCMA->iScrollWidth = pNCMW->iScrollWidth;
+        pNCMA->iScrollHeight = pNCMW->iScrollHeight;
+        pNCMA->iCaptionWidth = pNCMW->iCaptionWidth;
+        pNCMA->iCaptionHeight = pNCMW->iCaptionHeight;
+        SpiLogFontWideToAnsi(&pNCMW->lfCaptionFont, &pNCMA->lfCaptionFont);
+        pNCMA->iSmCaptionWidth = pNCMW->iSmCaptionWidth;
+        pNCMA->iSmCaptionHeight = pNCMW->iSmCaptionHeight;
+        SpiLogFontWideToAnsi(&pNCMW->lfSmCaptionFont, &pNCMA->lfSmCaptionFont);
+        pNCMA->iMenuWidth = pNCMW->iMenuWidth;
+        pNCMA->iMenuHeight = pNCMW->iMenuHeight;
+        SpiLogFontWideToAnsi(&pNCMW->lfMenuFont, &pNCMA->lfMenuFont);
+        SpiLogFontWideToAnsi(&pNCMW->lfStatusFont, &pNCMA->lfStatusFont);
+        SpiLogFontWideToAnsi(&pNCMW->lfMessageFont, &pNCMA->lfMessageFont);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ;
+    }
+    _SEH2_END;
 }
 
 static
@@ -998,6 +1014,9 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETNONCLIENTMETRICS:
         {
+            if (uiParam == 0)
+                SpiGetInt(pvParam, &uiParam, fl);
+
             if (uiParam == sizeof(NONCLIENTMETRICSA))
             {
                 NONCLIENTMETRICSA ncmA;
@@ -1010,7 +1029,6 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             }
             else
             {
-                EngSetLastError(ERROR_INVALID_PARAMETER);
                 return 0;
             }
         }
@@ -1018,6 +1036,10 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         case SPI_SETNONCLIENTMETRICS:
         {
             NONCLIENTMETRICSW ncmW;
+
+            if (uiParam == 0)
+                SpiGetInt(pvParam, &uiParam, fl);
+
             if (uiParam == sizeof(NONCLIENTMETRICSA))
             {
                 SpiNonClientMetricsAnsiToWide(pvParam, &ncmW);
@@ -1037,7 +1059,6 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             }
             else
             {
-                EngSetLastError(ERROR_INVALID_PARAMETER);
                 return 0;
             }
 
@@ -2003,6 +2024,8 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
         case SPI_GETNONCLIENTMETRICS:
             if (uiParam == sizeof(NONCLIENTMETRICSA) || uiParam == sizeof(NONCLIENTMETRICSW))
                 cbSize = uiParam;
+            else if (uiParam == 0)
+                SpiGetInt(pvParam, &cbSize, 0);
             break;
 
         case SPI_GETMINIMIZEDMETRICS:
@@ -2076,6 +2099,8 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
         case SPI_SETNONCLIENTMETRICS:
             if (uiParam == sizeof(NONCLIENTMETRICSA) || uiParam == sizeof(NONCLIENTMETRICSW))
                 cbSize = uiParam;
+            else if (uiParam == 0)
+                SpiGetInt(pvParam, &cbSize, 0);
             bToUser = FALSE;
             break;
 
