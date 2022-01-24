@@ -89,3 +89,36 @@ typedef struct HANDBAG
 #define HANDBAG_MAGIC 0xFACEB00C
 
 HRESULT CChangeNotifyServer_CreateInstance(REFIID riid, void **ppv);
+
+typedef CWinTraits <
+    WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+    WS_EX_TOOLWINDOW
+> CWorkerTraits;
+
+DECLSPEC_SELECTANY ATL::CWndClassInfo g_wcWorker =
+{
+    { sizeof(WNDCLASSEX), 0, CWindowImplBaseT<CWindow, CWorkerTraits>::StartWindowProc,
+      0, 0, NULL, NULL, NULL, (HBRUSH)(COLOR_3DFACE + 1), NULL, L"WorkerW", NULL },
+    NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
+};
+
+template <typename T_BASE>
+class CWorker :
+    public CWindowImpl<T_BASE, CWindow, CWorkerTraits>
+{
+public:
+    CWorker()
+    {
+    }
+
+    virtual ~CWorker()
+    {
+    }
+
+    virtual BOOL ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult, DWORD dwMsgMapID) = 0;
+
+    static ATL::CWndClassInfo& GetWndClassInfo()
+    {
+        return g_wcWorker;
+    }
+};

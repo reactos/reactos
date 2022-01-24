@@ -213,7 +213,9 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
 
     if (m_hWnd == NULL)
     {
+        ERR("CMenuDeskBar<\n");
         Create(NULL);
+        ERR("CMenuDeskBar>\n");
     }
 
     hr = punkClient->QueryInterface(IID_PPV_ARG(IUnknown, &m_Client));

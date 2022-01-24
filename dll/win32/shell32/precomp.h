@@ -1,6 +1,10 @@
 #ifndef _PRECOMP_H__
 #define _PRECOMP_H__
 
+#if DBG && !defined(_DEBUG)
+    #define _DEBUG
+#endif
+
 #include <stdarg.h>
 #include <assert.h>
 

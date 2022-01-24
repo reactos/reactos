@@ -66,14 +66,9 @@ EXTERN_C void FreeChangeNotifications(void)
 // The new delivery method is enabled by SHCNRF_NewDelivery flag.
 // With the new delivery method the server directly sends the delivery message.
 
-typedef CWinTraits <
-    WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-    WS_EX_TOOLWINDOW
-> CBrokerTraits;
-
 // This class brokers all notifications that don't have the SHCNRF_NewDelivery flag
 class CChangeNotifyBroker :
-    public CWindowImpl<CChangeNotifyBroker, CWindow, CBrokerTraits>
+    public CWorker<CChangeNotifyBroker>
 {
 public:
     CChangeNotifyBroker(HWND hwndClient, UINT uMsg) :
@@ -93,8 +88,6 @@ public:
         // After the window gets destroyed we can delete this broker here.
         delete this;
     }
-
-    DECLARE_WND_CLASS_EX(L"WorkerW", 0, 0)
 
     BEGIN_MSG_MAP(CChangeNotifyBroker)
         MESSAGE_HANDLER(WM_BROKER_NOTIFICATION, OnBrokerNotification)
@@ -139,7 +132,9 @@ CreateNotificationBroker(HWND hwnd, UINT wMsg)
         return NULL;
     }
 
+    ERR("pBroker<\n");
     HWND hwndBroker = pBroker->Create(0);
+    ERR("pBroker>\n");
     if (hwndBroker == NULL)
     {
         ERR("hwndBroker == NULL\n");
