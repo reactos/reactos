@@ -797,6 +797,62 @@ SpiNotifyNCMetricsChanged(VOID)
     return TRUE;
 }
 
+static void
+SpiLogFontAnsiToWide(const LOGFONTA *pLFA, LPLOGFONTW pLFW)
+{
+    RtlCopyMemory(pLFW, pLFA, offsetof(LOGFONTA, lfFaceName));
+    RtlMultiByteToUnicodeN(pLFW->lfFaceName, sizeof(pLFW->lfFaceName), NULL,
+                           pLFA->lfFaceName, sizeof(pLFA->lfFaceName));
+}
+
+static void
+SpiLogFontWideToAnsi(const LOGFONTW *pLFW, LPLOGFONTA pLFA)
+{
+    RtlCopyMemory(pLFA, pLFW, offsetof(LOGFONTA, lfFaceName));
+    RtlUnicodeToMultiByteN(pLFA->lfFaceName, sizeof(pLFA->lfFaceName), NULL,
+                           pLFW->lfFaceName, sizeof(pLFW->lfFaceName));
+}
+
+static void
+SpiNonClientMetricsAnsiToWide(const NONCLIENTMETRICSA *pNCMA, LPNONCLIENTMETRICSW pNCMW)
+{
+    pNCMW->cbSize = sizeof(NONCLIENTMETRICSW);
+    pNCMW->iBorderWidth = pNCMA->iBorderWidth;
+    pNCMW->iScrollWidth = pNCMA->iScrollWidth;
+    pNCMW->iScrollHeight = pNCMA->iScrollHeight;
+    pNCMW->iCaptionWidth = pNCMA->iCaptionWidth;
+    pNCMW->iCaptionHeight = pNCMA->iCaptionHeight;
+    SpiLogFontAnsiToWide(&pNCMA->lfCaptionFont, &pNCMW->lfCaptionFont);
+    pNCMW->iSmCaptionWidth = pNCMA->iSmCaptionWidth;
+    pNCMW->iSmCaptionHeight = pNCMA->iSmCaptionHeight;
+    SpiLogFontAnsiToWide(&pNCMA->lfSmCaptionFont, &pNCMW->lfSmCaptionFont);
+    pNCMW->iMenuWidth = pNCMA->iMenuWidth;
+    pNCMW->iMenuHeight = pNCMA->iMenuHeight;
+    SpiLogFontAnsiToWide(&pNCMA->lfMenuFont, &pNCMW->lfMenuFont);
+    SpiLogFontAnsiToWide(&pNCMA->lfStatusFont, &pNCMW->lfStatusFont);
+    SpiLogFontAnsiToWide(&pNCMA->lfMessageFont, &pNCMW->lfMessageFont);
+}
+
+static void
+SpiNonClientMetricsWideToAnsi(const NONCLIENTMETRICSW *pNCMW, LPNONCLIENTMETRICSA pNCMA)
+{
+    pNCMA->cbSize = sizeof(NONCLIENTMETRICSA);
+    pNCMA->iBorderWidth = pNCMW->iBorderWidth;
+    pNCMA->iScrollWidth = pNCMW->iScrollWidth;
+    pNCMA->iScrollHeight = pNCMW->iScrollHeight;
+    pNCMA->iCaptionWidth = pNCMW->iCaptionWidth;
+    pNCMA->iCaptionHeight = pNCMW->iCaptionHeight;
+    SpiLogFontWideToAnsi(&pNCMW->lfCaptionFont, &pNCMA->lfCaptionFont);
+    pNCMA->iSmCaptionWidth = pNCMW->iSmCaptionWidth;
+    pNCMA->iSmCaptionHeight = pNCMW->iSmCaptionHeight;
+    SpiLogFontWideToAnsi(&pNCMW->lfSmCaptionFont, &pNCMA->lfSmCaptionFont);
+    pNCMA->iMenuWidth = pNCMW->iMenuWidth;
+    pNCMA->iMenuHeight = pNCMW->iMenuHeight;
+    SpiLogFontWideToAnsi(&pNCMW->lfMenuFont, &pNCMA->lfMenuFont);
+    SpiLogFontWideToAnsi(&pNCMW->lfStatusFont, &pNCMA->lfStatusFont);
+    SpiLogFontWideToAnsi(&pNCMW->lfMessageFont, &pNCMA->lfMessageFont);
+}
+
 static
 UINT_PTR
 SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
@@ -942,18 +998,46 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETNONCLIENTMETRICS:
         {
-            return SpiGet(pvParam, &gspv.ncm, sizeof(NONCLIENTMETRICSW), fl);
+            if (uiParam == sizeof(NONCLIENTMETRICSA))
+            {
+                NONCLIENTMETRICSA ncmA;
+                SpiNonClientMetricsWideToAnsi(&gspv.ncm, &ncmA);
+                return SpiGet(pvParam, &ncmA, sizeof(NONCLIENTMETRICSA), fl);
+            }
+            else if (uiParam == sizeof(NONCLIENTMETRICSW))
+            {
+                return SpiGet(pvParam, &gspv.ncm, sizeof(NONCLIENTMETRICSW), fl);
+            }
+
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
         }
 
         case SPI_SETNONCLIENTMETRICS:
         {
-            LPNONCLIENTMETRICSW metrics = (LPNONCLIENTMETRICSW)pvParam;
+            NONCLIENTMETRICSW ncmW;
+            if (uiParam == sizeof(NONCLIENTMETRICSA))
+            {
+                SpiNonClientMetricsAnsiToWide(pvParam, &ncmW);
 
-            /* Fixup user's structure size */
-            metrics->cbSize = sizeof(NONCLIENTMETRICSW);
+                if (!SpiSet(&gspv.ncm, &ncmW, sizeof(NONCLIENTMETRICSA), fl))
+                    return 0;
+            }
+            else if (uiParam == sizeof(NONCLIENTMETRICSW))
+            {
+                RtlCopyMemory(&ncmW, pvParam, sizeof(ncmW));
 
-            if (!SpiSet(&gspv.ncm, metrics, sizeof(NONCLIENTMETRICSW), fl))
+                /* Fixup user's structure size */
+                ncmW.cbSize = sizeof(NONCLIENTMETRICSW);
+
+                if (!SpiSet(&gspv.ncm, &ncmW, sizeof(NONCLIENTMETRICSW), fl))
+                    return 0;
+            }
+            else
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
                 return 0;
+            }
 
             if (fl & SPIF_UPDATEINIFILE)
             {
@@ -1915,7 +1999,7 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             break;
 
         case SPI_GETNONCLIENTMETRICS:
-            cbSize = sizeof(NONCLIENTMETRICSW);
+            cbSize = sizeof(NONCLIENTMETRICSA);
             break;
 
         case SPI_GETMINIMIZEDMETRICS:
@@ -1987,7 +2071,7 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             break;
 
         case SPI_SETNONCLIENTMETRICS:
-            cbSize = sizeof(NONCLIENTMETRICSW);
+            cbSize = sizeof(NONCLIENTMETRICSA);
             bToUser = FALSE;
             break;
 
