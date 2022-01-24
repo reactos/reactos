@@ -2034,10 +2034,12 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             break;
 
         case SPI_GETNONCLIENTMETRICS:
+            if (uiParam == 0)
+                SpiGetInt(pvParam, &uiParam, 0);
             if (uiParam == sizeof(NONCLIENTMETRICSA) || uiParam == sizeof(NONCLIENTMETRICSW))
                 cbSize = uiParam;
-            else if (uiParam == 0)
-                SpiGetInt(pvParam, &cbSize, 0);
+            else
+                cbSize = 0;
             break;
 
         case SPI_GETMINIMIZEDMETRICS:
@@ -2109,10 +2111,12 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             break;
 
         case SPI_SETNONCLIENTMETRICS:
+            if (uiParam == 0)
+                SpiGetInt(pvParam, &uiParam, 0);
             if (uiParam == sizeof(NONCLIENTMETRICSA) || uiParam == sizeof(NONCLIENTMETRICSW))
                 cbSize = uiParam;
-            else if (uiParam == 0)
-                SpiGetInt(pvParam, &cbSize, 0);
+            else
+                cbSize = 0;
             bToUser = FALSE;
             break;
 
