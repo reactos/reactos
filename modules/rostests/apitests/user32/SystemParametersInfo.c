@@ -114,8 +114,9 @@ static void Test_NonClientMetrics()
 
     SetCursorPos(0,0);
 
+    /* ncmA */
     ncmA.cbSize = 0;
-    ret = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncmA, 0);
+    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncmA, 0);
     ok_int(ret, 0);
     FlushMessages();
     COMPARE_CACHE(empty_chain);
@@ -132,7 +133,6 @@ static void Test_NonClientMetrics()
     FlushMessages();
     COMPARE_CACHE(empty_chain);
 
-    /* ncmA */
     ncmA.cbSize = 0;
     ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(ncmA), &ncmA, 0);
     ok_int(ret, 0);
