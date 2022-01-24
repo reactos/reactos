@@ -1049,7 +1049,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             }
             else if (uiParam == sizeof(NONCLIENTMETRICSW))
             {
-                RtlCopyMemory(&ncmW, pvParam, sizeof(ncmW));
+                SpiGet(&ncmW, pvParam, uiParam, fl);
 
                 /* Fixup user's structure size */
                 ncmW.cbSize = sizeof(NONCLIENTMETRICSW);
