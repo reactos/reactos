@@ -1374,6 +1374,19 @@ private:
         }
     }
 
+    VOID ShowAboutDlg()
+    {
+        ATL::CStringW szApp;
+        ATL::CStringW szAuthors;
+        HICON hIcon;
+
+        szApp.LoadStringW(IDS_APPTITLE);
+        szAuthors.LoadStringW(IDS_APP_AUTHORS);
+        hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        ShellAboutW(m_hWnd, szApp, szAuthors, hIcon);
+        DestroyIcon(hIcon);
+    }
+
     VOID OnCommand(WPARAM wParam, LPARAM lParam)
     {
         WORD wCommand = LOWORD(wParam);
@@ -1510,7 +1523,7 @@ private:
             break;
 
         case ID_ABOUT:
-            ShowAboutDialog();
+            ShowAboutDlg();
             break;
 
         case ID_CHECK_ALL:
