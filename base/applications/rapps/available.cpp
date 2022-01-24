@@ -52,7 +52,6 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
     GetString(L"License", m_szLicense);
     GetString(L"Description", m_szDesc);
     GetString(L"URLSite", m_szUrlSite);
-    GetString(L"CDPath", m_szCDPath);
     GetString(L"Language", m_szRegName);
     GetString(L"SHA1", m_szSHA1);
 
@@ -435,20 +434,5 @@ ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::GetSelected() const
         }
     }
     return result;
-}
-
-const ATL::CStringW& CAvailableApps::GetFolderPath() const
-{
-    return m_Strings.szPath;
-}
-
-const ATL::CStringW& CAvailableApps::GetAppPath() const
-{
-    return m_Strings.szAppsPath;
-}
-
-const ATL::CStringW& CAvailableApps::GetCabPath() const
-{
-    return m_Strings.szCabPath;
 }
 // CAvailableApps
