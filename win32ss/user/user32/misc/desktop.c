@@ -189,16 +189,19 @@ RealSystemParametersInfoA(UINT uiAction,
         {
            LPNONCLIENTMETRICSA pnclma = (LPNONCLIENTMETRICSA)pvParam;
            NONCLIENTMETRICSW nclmw;
-           if (pnclma->cbSize != sizeof(NONCLIENTMETRICSA))
+           if (
+#if (WINVER >= 0x0600)
+               pnclma->cbSize != offsetof(NONCLIENTMETRICSW, iPaddedBorderWidth) &&
+#endif
+               pnclma->cbSize != sizeof(NONCLIENTMETRICSA))
            {
                SetLastError(ERROR_INVALID_PARAMETER);
                return FALSE;
            }
-           nclmw.cbSize = sizeof(NONCLIENTMETRICSW);
 
-           if (!SystemParametersInfoW(uiAction, sizeof(NONCLIENTMETRICSW),
-                                      &nclmw, fWinIni))
-             return FALSE;
+           nclmw.cbSize = sizeof(NONCLIENTMETRICSW);
+           if (!SystemParametersInfoW(uiAction, sizeof(NONCLIENTMETRICSW), &nclmw, fWinIni))
+               return FALSE;
 
            pnclma->cbSize = sizeof(NONCLIENTMETRICSA);
            pnclma->iBorderWidth = nclmw.iBorderWidth;
@@ -215,17 +218,26 @@ RealSystemParametersInfoA(UINT uiAction,
            LogFontW2A(&(pnclma->lfMenuFont), &(nclmw.lfMenuFont));
            LogFontW2A(&(pnclma->lfStatusFont), &(nclmw.lfStatusFont));
            LogFontW2A(&(pnclma->lfMessageFont), &(nclmw.lfMessageFont));
+#if (WINVER >= 0x0600)
+           if (pnclma->cbSize == sizeof(NONCLIENTMETRICSA))
+               pnclma->iPaddedBorderWidth = nclmw.iPaddedBorderWidth;
+#endif
            return TRUE;
         }
       case SPI_SETNONCLIENTMETRICS:
         {
            LPNONCLIENTMETRICSA pnclma = (LPNONCLIENTMETRICSA)pvParam;
            NONCLIENTMETRICSW nclmw;
-           if (pnclma->cbSize != sizeof(NONCLIENTMETRICSA))
+           if (
+#if (WINVER >= 0x0600)
+               pnclma->cbSize != offsetof(NONCLIENTMETRICSW, iPaddedBorderWidth) &&
+#endif
+               pnclma->cbSize != sizeof(NONCLIENTMETRICSA))
            {
                SetLastError(ERROR_INVALID_PARAMETER);
                return FALSE;
            }
+
            nclmw.cbSize = sizeof(NONCLIENTMETRICSW);
            nclmw.iBorderWidth = pnclma->iBorderWidth;
            nclmw.iScrollWidth = pnclma->iScrollWidth;
@@ -241,9 +253,11 @@ RealSystemParametersInfoA(UINT uiAction,
            LogFontA2W(&(nclmw.lfMenuFont), &(pnclma->lfMenuFont));
            LogFontA2W(&(nclmw.lfStatusFont), &(pnclma->lfStatusFont));
            LogFontA2W(&(nclmw.lfMessageFont), &(pnclma->lfMessageFont));
-
-           return SystemParametersInfoW(uiAction, sizeof(NONCLIENTMETRICSW),
-                                        &nclmw, fWinIni);
+#if (WINVER >= 0x0600)
+           if (pnclma->cbSize == sizeof(NONCLIENTMETRICSA))
+               nclmw.iPaddedBorderWidth = pnclma->iPaddedBorderWidth;
+#endif
+           return SystemParametersInfoW(uiAction, sizeof(NONCLIENTMETRICSW), &nclmw, fWinIni);
         }
       case SPI_GETICONMETRICS:
           {
