@@ -2,7 +2,7 @@
 #define _PRECOMP_H__
 
 #if DBG && !defined(_DEBUG)
-    #define _DEBUG
+    #define _DEBUG  // CORE-17505
 #endif
 
 #include <stdarg.h>

@@ -107,13 +107,8 @@ class CWorker :
     public CWindowImpl<T_BASE, CWindow, CWorkerTraits>
 {
 public:
-    CWorker()
-    {
-    }
-
-    virtual ~CWorker()
-    {
-    }
+    CWorker() { }
+    virtual ~CWorker() { }
 
     virtual BOOL ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult, DWORD dwMsgMapID) = 0;
 
