@@ -524,7 +524,7 @@ IntLoadRegistryParameters(VOID)
     NTSTATUS Status;
     HANDLE KeyHandle;
     UNICODE_STRING UseNewKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\UseNewKey");
-    UNICODE_STRING Path = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control");
+    UNICODE_STRING Path = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control");
     UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SystemStartOptions");
     OBJECT_ATTRIBUTES ObjectAttributes;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
@@ -792,6 +792,14 @@ VideoPortInitialize(
             }
 
             RtlCopyUnicodeString(&DriverExtension->RegistryPath, RegistryPath);
+
+            /* There is a bug in Spice guest agent, which searches 'System' case-sensitively.
+             * Replace 'SYSTEM' by 'System' to fix that.
+             * Probably for similar reason, Windows also replaces 'MACHINE' by 'Machine'.
+             */
+            wcsncpy(wcsstr(DriverExtension->RegistryPath.Buffer, L"\\SYSTEM\\"), L"\\System\\", ARRAYSIZE(L"\\SYSTEM\\") - 1);
+            wcsncpy(wcsstr(DriverExtension->RegistryPath.Buffer, L"\\MACHINE\\"), L"\\Machine\\", ARRAYSIZE(L"\\MACHINE\\") - 1);
+
             INFO_(VIDEOPRT, "RegistryPath: %wZ\n", &DriverExtension->RegistryPath);
         }
         else
