@@ -207,7 +207,6 @@ RealSystemParametersInfoA(UINT uiAction,
            if (!SystemParametersInfoW(uiAction, sizeof(NONCLIENTMETRICSW), &nclmw, fWinIni))
                return FALSE;
 
-           pnclma->cbSize = sizeof(NONCLIENTMETRICSA);
            pnclma->iBorderWidth = nclmw.iBorderWidth;
            pnclma->iScrollWidth = nclmw.iScrollWidth;
            pnclma->iScrollHeight = nclmw.iScrollHeight;
