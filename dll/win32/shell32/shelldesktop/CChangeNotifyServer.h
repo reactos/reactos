@@ -110,8 +110,6 @@ public:
     CWorker() { }
     virtual ~CWorker() { }
 
-    virtual BOOL ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult, DWORD dwMsgMapID) = 0;
-
     static ATL::CWndClassInfo& GetWndClassInfo()
     {
         return g_wcWorker;
