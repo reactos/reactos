@@ -942,19 +942,11 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETNONCLIENTMETRICS:
         {
-            INT cbSize = 0;
-            if (!SpiGetInt(pvParam, &cbSize, fl) || cbSize != sizeof(NONCLIENTMETRICSW))
-                return 0;
-
-            return SpiGet(pvParam, &gspv.ncm, cbSize, fl);
+            return SpiGet(pvParam, &gspv.ncm, sizeof(NONCLIENTMETRICSW), fl);
         }
 
         case SPI_SETNONCLIENTMETRICS:
         {
-            INT cbSize = 0;
-            if (!SpiGetInt(pvParam, &cbSize, fl) || cbSize != sizeof(NONCLIENTMETRICSW))
-                return 0;
-
             if (!SpiSet(&gspv.ncm, pvParam, sizeof(NONCLIENTMETRICSW), fl))
                 return 0;
 
