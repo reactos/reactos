@@ -466,9 +466,9 @@ HRESULT CChangeNotifyServer::Initialize()
 {
     // This is called by CChangeNotifyServer_CreateInstance right after instantiation.
     HWND hwnd = SHCreateDefaultWorkerWindow();
-    SubclassWindow(hwnd);
-    if (!m_hWnd)
+    if (!hwnd)
         return E_FAIL;
+    SubclassWindow(hwnd);
     return S_OK;
 }
 
