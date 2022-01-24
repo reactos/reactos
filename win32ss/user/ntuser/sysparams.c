@@ -1002,11 +1002,11 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             {
                 NONCLIENTMETRICSA ncmA;
                 SpiNonClientMetricsWideToAnsi(&gspv.ncm, &ncmA);
-                return SpiGet(pvParam, &ncmA, sizeof(NONCLIENTMETRICSA), fl);
+                return SpiGet(pvParam, &ncmA, uiParam, fl);
             }
             else if (uiParam == sizeof(NONCLIENTMETRICSW))
             {
-                return SpiGet(pvParam, &gspv.ncm, sizeof(NONCLIENTMETRICSW), fl);
+                return SpiGet(pvParam, &gspv.ncm, uiParam, fl);
             }
             else
             {
@@ -1022,7 +1022,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             {
                 SpiNonClientMetricsAnsiToWide(pvParam, &ncmW);
 
-                if (!SpiSet(&gspv.ncm, &ncmW, sizeof(NONCLIENTMETRICSA), fl))
+                if (!SpiSet(&gspv.ncm, &ncmW, sizeof(NONCLIENTMETRICSW), fl))
                     return 0;
             }
             else if (uiParam == sizeof(NONCLIENTMETRICSW))
