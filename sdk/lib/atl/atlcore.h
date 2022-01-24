@@ -20,8 +20,6 @@
 
 #pragma once
 
-#include <malloc.h>
-
 #ifdef __REACTOS__
     #define WIN32_NO_STATUS
     #define _INC_WINDOWS
@@ -34,9 +32,10 @@
 #else
     #include <windows.h>
 #endif
+#include <atldef.h>
 #include <ole2.h>
 #include <olectl.h>
-#include <crtdbg.h>
+#include <malloc.h>
 
 #ifndef ATLASSERT
 #define ATLASSERT(expr) _ASSERTE(expr)

@@ -7,6 +7,10 @@
 
 #pragma once
 
+#ifdef _INC_CRTDBG
+    #error Please don't #include <crtdbg.h> before #include <atl***.h>.
+#endif
+
 #ifdef NDEBUG
     #undef DBG
     #undef _DEBUG
@@ -15,6 +19,8 @@
 #if DBG && !defined(_DEBUG)
     #define _DEBUG
 #endif
+
+#include <crtdbg.h> // for _CrtDbgReport
 
 #ifndef __REACTOS__
     #include <cstddef>
