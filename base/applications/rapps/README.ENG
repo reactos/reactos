@@ -49,11 +49,10 @@ File format overview:
   Version = 1.1.1
   License = GPL
   Description = Shortish description giving some additional background information about what it does.
-  Size = 10 MB
+  SizeBytes = 1594881
   Category = 5
   URLSite = https://example.org/
   URLDownload = https://ftp.example.org/pub/installer.exe
-  CDPath = ; Path in the local filesystem
 
   [Section.0419] ; 0419 - for Russian language
   Description = Description in Russian language
