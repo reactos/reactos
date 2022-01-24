@@ -49,7 +49,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     DWORD dwSysInfoFlags = 0;
     LPIMEINFO pImeInfo = &pImeDpi->ImeInfo;
 
-    if (NtUserGetThreadState(16))
+    if (NtUserGetThreadState(THREADSTATE_ISWINLOGON2))
         dwSysInfoFlags |= IME_SYSINFO_WINLOGON;
 
     if (IS_IME_HKL(pImeDpi->hKL))
@@ -633,9 +633,8 @@ HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
     if (!Imm32IsImmMode())
         return NULL;
 
-    // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
     if (hWnd == NULL)
-        return (HWND)NtUserGetThreadState(3);
+        return (HWND)NtUserGetThreadState(THREADSTATE_DEFAULTIMEWINDOW);
 
     return (HWND)NtUserQueryWindow(hWnd, QUERY_WINDOW_DEFAULT_IME);
 }
