@@ -8,9 +8,6 @@
 // Settings dialog (settingsdlg.cpp)
 VOID CreateSettingsDlg(HWND hwnd);
 
-// About dialog (aboutdlg.cpp)
-VOID ShowAboutDialog();
-
 //Main window
 VOID ShowMainWindow(INT nShowCmd);
 

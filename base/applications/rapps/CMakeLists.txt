@@ -7,7 +7,6 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/cryptlib)
 include_directories(include)
 
 list(APPEND SOURCE
-    aboutdlg.cpp
     available.cpp
     cabinet.cpp
     gui.cpp

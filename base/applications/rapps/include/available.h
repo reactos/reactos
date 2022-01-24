@@ -35,7 +35,6 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szSize;
     ATL::CStringW m_szUrlSite;
     ATL::CStringW m_szUrlDownload;
-    ATL::CStringW m_szCDPath;
     ATL::CSimpleArray<LCID> m_LanguageLCIDs;
 
     // Caching mechanism related entries
@@ -111,8 +110,4 @@ public:
     CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName) const;
     ATL::CSimpleArray<CAvailableApplicationInfo> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
     ATL::CSimpleArray<CAvailableApplicationInfo> GetSelected() const;
-
-    const ATL::CStringW& GetFolderPath() const;
-    const ATL::CStringW& GetAppPath() const;
-    const ATL::CStringW& GetCabPath() const;
 };

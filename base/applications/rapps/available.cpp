@@ -52,7 +52,6 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
     GetString(L"License", m_szLicense);
     GetString(L"Description", m_szDesc);
     GetString(L"URLSite", m_szUrlSite);
-    GetString(L"CDPath", m_szCDPath);
     GetString(L"Language", m_szRegName);
     GetString(L"SHA1", m_szSHA1);
 
@@ -148,12 +147,8 @@ VOID CAvailableApplicationInfo::RetrieveSize()
     INT iSizeBytes;
 
     if (!m_Parser->GetInt(L"SizeBytes", iSizeBytes))
-    {
-        // fall back to "Size" string
-        GetString(L"Size", m_szSize);
         return;
-    }
- 
+
     StrFormatByteSizeW(iSizeBytes, m_szSize.GetBuffer(MAX_PATH), MAX_PATH);
     m_szSize.ReleaseBuffer();
 }
@@ -302,7 +297,7 @@ BOOL CAvailableApps::UpdateAppsDB()
 
     DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
-    if (!ExtractFilesFromCab(m_Strings.szCabName, 
+    if (!ExtractFilesFromCab(m_Strings.szCabName,
                              m_Strings.szCabDir,
                              m_Strings.szAppsPath))
     {
@@ -439,20 +434,5 @@ ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::GetSelected() const
         }
     }
     return result;
-}
-
-const ATL::CStringW& CAvailableApps::GetFolderPath() const
-{
-    return m_Strings.szPath;
-}
-
-const ATL::CStringW& CAvailableApps::GetAppPath() const
-{
-    return m_Strings.szAppsPath;
-}
-
-const ATL::CStringW& CAvailableApps::GetCabPath() const
-{
-    return m_Strings.szCabPath;
 }
 // CAvailableApps
