@@ -203,9 +203,7 @@ HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
 
     m_Tray = ShellDesk;
 
-    ERR("CDesktopBrowser<\n");
     Create(NULL, NULL, szProgmanWindowName, WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_TOOLWINDOW);
-    ERR("CDesktopBrowser>\n");
     if (!m_hWnd)
         return E_FAIL;
 

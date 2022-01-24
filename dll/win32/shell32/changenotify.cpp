@@ -132,9 +132,7 @@ CreateNotificationBroker(HWND hwnd, UINT wMsg)
         return NULL;
     }
 
-    ERR("pBroker<\n");
     HWND hwndBroker = pBroker->Create(0);
-    ERR("pBroker>\n");
     if (hwndBroker == NULL)
     {
         ERR("hwndBroker == NULL\n");

@@ -598,9 +598,7 @@ BOOL CDefView::CreateList()
         dwExStyle &= ~WS_EX_CLIENTEDGE;
 
     RECT rcListView = {0,0,0,0};
-    ERR("m_ListView<\n");
     m_ListView.Create(m_hWnd, rcListView, L"FolderView", dwStyle, dwExStyle, ID_LISTVIEW);
-    ERR("m_ListView>\n");
 
     if (!m_ListView)
         return FALSE;
@@ -2937,9 +2935,7 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
         TRACE("-- CommDlgBrowser\n");
     }
 
-    ERR("CDefView<\n");
     Create(m_hWndParent, prcView, NULL, WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP, 0, 0U);
-    ERR("CDefView>\n");
     if (m_hWnd == NULL)
         return E_FAIL;
 
