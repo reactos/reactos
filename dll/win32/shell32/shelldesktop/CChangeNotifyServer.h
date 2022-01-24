@@ -95,7 +95,7 @@ HRESULT CChangeNotifyServer_CreateInstance(REFIID riid, void **ppv);
 #define WORKER_STYLE (WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN)
 #define WORKER_EXSTYLE WS_EX_TOOLWINDOW
 
-typedef CWinTraits <WORKER_STYLE, WORKER_EXSTYLE> CWorkerTraits;
+typedef CWinTraits<WORKER_STYLE, WORKER_EXSTYLE> CWorkerTraits;
 
 inline HWND SHCreateDefaultWorkerWindow(VOID)
 {
