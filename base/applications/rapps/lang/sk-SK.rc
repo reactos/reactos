@@ -105,16 +105,6 @@ BEGIN
     PUSHBUTTON "Zrušiť", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
-IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "Čo je Manažér aplikácií systému ReactOS"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "Manažér aplikácií systému ReactOS\nAutorské práva (C) 2009\nod Dmitry Chapyshev (dmitry@reactos.org)\nPreklad: Mário Kačmár (kario@szm.sk)", IDC_STATIC, 48, 7, 130, 39
-    DEFPUSHBUTTON "Zavrieť", IDOK, 133, 46, 50, 14
-END
-
 STRINGTABLE
 BEGIN
     IDS_TOOLTIP_INSTALL "Inštalovať"
@@ -188,6 +178,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Manažér aplikácií systému ReactOS"
+    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Hľadať…"
     IDS_INSTALL "Inštalovať"
     IDS_UNINSTALL "Odinštalovať"
