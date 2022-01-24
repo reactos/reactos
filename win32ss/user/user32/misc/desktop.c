@@ -189,7 +189,7 @@ RealSystemParametersInfoA(UINT uiAction,
         {
            LPNONCLIENTMETRICSA pnclma = (LPNONCLIENTMETRICSA)pvParam;
            NONCLIENTMETRICSW nclmw;
-           if(pnclma->cbSize != sizeof(NONCLIENTMETRICSA))
+           if (pnclma->cbSize < sizeof(NONCLIENTMETRICSA))
            {
                SetLastError(ERROR_INVALID_PARAMETER);
                return FALSE;
@@ -200,6 +200,7 @@ RealSystemParametersInfoA(UINT uiAction,
                                       &nclmw, fWinIni))
              return FALSE;
 
+           pnclma->cbSize = sizeof(NONCLIENTMETRICSA);
            pnclma->iBorderWidth = nclmw.iBorderWidth;
            pnclma->iScrollWidth = nclmw.iScrollWidth;
            pnclma->iScrollHeight = nclmw.iScrollHeight;
@@ -220,7 +221,7 @@ RealSystemParametersInfoA(UINT uiAction,
         {
            LPNONCLIENTMETRICSA pnclma = (LPNONCLIENTMETRICSA)pvParam;
            NONCLIENTMETRICSW nclmw;
-           if(pnclma->cbSize != sizeof(NONCLIENTMETRICSA))
+           if (pnclma->cbSize < sizeof(NONCLIENTMETRICSA))
            {
                SetLastError(ERROR_INVALID_PARAMETER);
                return FALSE;
