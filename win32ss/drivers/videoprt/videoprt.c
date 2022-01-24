@@ -85,7 +85,7 @@ IntVideoPortAddDeviceMapLink(
                                    RegistryPath->Length + sizeof(UNICODE_NULL));
     if (!NT_SUCCESS(Status))
     {
-        ERR_(VIDEOPRT, "Failed to create DEViCEMAP registry entry: 0x%X\n", Status);
+        ERR_(VIDEOPRT, "Failed to create DEVICEMAP registry entry: 0x%X\n", Status);
         return Status;
     }
 
