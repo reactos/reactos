@@ -46,7 +46,7 @@ static NTSTATUS OpenLocalMachineKey(PHANDLE KeyHandle);
 static NTSTATUS OpenUsersKey(PHANDLE KeyHandle);
 static NTSTATUS OpenCurrentConfigKey(PHANDLE KeyHandle);
 
-/* INLINE FUNCTIONS *********************************************************/
+/* FUNCTIONS ****************************************************************/
 
 static inline void ClosePredefKey(HANDLE Handle)
 {
@@ -71,8 +71,6 @@ static inline BOOL is_string(DWORD type)
 {
     return (type == REG_SZ) || (type == REG_EXPAND_SZ) || (type == REG_MULTI_SZ);
 }
-
-/* FUNCTIONS ****************************************************************/
 
 /************************************************************************
  *  RegInitDefaultHandles
