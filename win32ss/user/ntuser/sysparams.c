@@ -813,9 +813,11 @@ SpiLogFontWideToAnsi(const LOGFONTW *pLFW, LPLOGFONTA pLFA)
                            pLFW->lfFaceName, sizeof(pLFW->lfFaceName));
 }
 
-static void
+static UINT_PTR
 SpiNonClientMetricsAnsiToWide(const NONCLIENTMETRICSA *pNCMA, LPNONCLIENTMETRICSW pNCMW)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
+
     _SEH2_TRY
     {
         pNCMW->cbSize = sizeof(NONCLIENTMETRICSW);
@@ -836,14 +838,18 @@ SpiNonClientMetricsAnsiToWide(const NONCLIENTMETRICSA *pNCMA, LPNONCLIENTMETRICS
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ;
+        Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
+
+    return NT_SUCCESS(Status);
 }
 
-static void
+static UINT_PTR
 SpiNonClientMetricsWideToAnsi(const NONCLIENTMETRICSW *pNCMW, LPNONCLIENTMETRICSA pNCMA)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
+
     _SEH2_TRY
     {
         pNCMA->cbSize = sizeof(NONCLIENTMETRICSA);
@@ -864,9 +870,11 @@ SpiNonClientMetricsWideToAnsi(const NONCLIENTMETRICSW *pNCMW, LPNONCLIENTMETRICS
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ;
+        Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
+
+    return NT_SUCCESS(Status);
 }
 
 static
@@ -1014,13 +1022,15 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETNONCLIENTMETRICS:
         {
-            if (uiParam == 0)
-                SpiGetInt(pvParam, &uiParam, fl);
+            if (uiParam == 0 && !SpiGetInt(pvParam, &uiParam, fl))
+                return 0;
 
             if (uiParam == sizeof(NONCLIENTMETRICSA))
             {
                 NONCLIENTMETRICSA ncmA;
-                SpiNonClientMetricsWideToAnsi(&gspv.ncm, &ncmA);
+                if (!SpiNonClientMetricsWideToAnsi(&gspv.ncm, &ncmA))
+                    return 0;
+
                 return SpiGet(pvParam, &ncmA, uiParam, fl);
             }
             else if (uiParam == sizeof(NONCLIENTMETRICSW))
@@ -1037,19 +1047,21 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         {
             NONCLIENTMETRICSW ncmW;
 
-            if (uiParam == 0)
-                SpiGetInt(pvParam, &uiParam, fl);
+            if (uiParam == 0 && !SpiGetInt(pvParam, &uiParam, fl))
+                return 0;
 
             if (uiParam == sizeof(NONCLIENTMETRICSA))
             {
-                SpiNonClientMetricsAnsiToWide(pvParam, &ncmW);
+                if (!SpiNonClientMetricsAnsiToWide(pvParam, &ncmW))
+                    return 0;
 
                 if (!SpiSet(&gspv.ncm, &ncmW, sizeof(NONCLIENTMETRICSW), fl))
                     return 0;
             }
             else if (uiParam == sizeof(NONCLIENTMETRICSW))
             {
-                SpiGet(&ncmW, pvParam, uiParam, fl);
+                if (!SpiGet(&ncmW, pvParam, uiParam, fl))
+                    return 0;
 
                 /* Fixup user's structure size */
                 ncmW.cbSize = sizeof(NONCLIENTMETRICSW);
