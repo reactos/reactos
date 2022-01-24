@@ -103,158 +103,126 @@ MSG_ENTRY CaptionHeight_chain[]={
     {1,WM_MOVE},
     {0,0}};
 
+typedef struct _NCM_TESTENRY
+{
+    INT line;
+    BOOL ret;
+    UINT cbSize;
+    UINT uiParam;
+} NCM_TESTENRY;
+
+static const NCM_TESTENRY s_entriesAA[] =
+{
+    { __LINE__, 0, 0, 0 },
+    { __LINE__, 1, sizeof(NONCLIENTMETRICSA), 0 },
+    { __LINE__, 1, sizeof(NONCLIENTMETRICSA), 1 },
+    { __LINE__, 0, 0, sizeof(NONCLIENTMETRICSA) },
+    { __LINE__, 1, sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA) },
+};
+
+static const NCM_TESTENRY s_entriesAW[] =
+{
+    { __LINE__, 0, 0, 0 },
+    { __LINE__, 0, sizeof(NONCLIENTMETRICSA), 0 },
+    { __LINE__, 0, sizeof(NONCLIENTMETRICSA), 1 },
+    { __LINE__, 0, 0, sizeof(NONCLIENTMETRICSA) },
+    { __LINE__, 0, sizeof(NONCLIENTMETRICSA), sizeof(NONCLIENTMETRICSA) },
+};
+
+static const NCM_TESTENRY s_entriesWA[] =
+{
+    { __LINE__, 0, 0, 0 },
+    { __LINE__, 0, sizeof(NONCLIENTMETRICSW), 0 },
+    { __LINE__, 0, sizeof(NONCLIENTMETRICSW), 1 },
+    { __LINE__, 0, 0, sizeof(NONCLIENTMETRICSW) },
+    { __LINE__, 0, sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW) },
+};
+
+static const NCM_TESTENRY s_entriesWW[] =
+{
+    { __LINE__, 0, 0, 0 },
+    { __LINE__, 1, sizeof(NONCLIENTMETRICSW), 0 },
+    { __LINE__, 1, sizeof(NONCLIENTMETRICSW), 1 },
+    { __LINE__, 0, 0, sizeof(NONCLIENTMETRICSW) },
+    { __LINE__, 1, sizeof(NONCLIENTMETRICSW), sizeof(NONCLIENTMETRICSW) },
+};
+
 static void Test_NonClientMetrics()
 {
-    NONCLIENTMETRICS NonClientMetrics;
     NONCLIENTMETRICSA ncmA;
     NONCLIENTMETRICSW ncmW;
     BOOL ret;
+    SIZE_T i;
 
     /* WARNING: this test requires themes and dwm to be disabled */
 
     SetCursorPos(0,0);
 
     /* ncmA */
-    ncmA.cbSize = 0;
-    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncmA, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmA.cbSize = sizeof(ncmA);
-    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncmA, 0);
-    ok_int(ret, 1);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmA.cbSize = sizeof(ncmA);
-    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 1, &ncmA, 0);
-    ok_int(ret, 1);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmA.cbSize = 0;
-    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(ncmA), &ncmA, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmA.cbSize = sizeof(ncmA);
-    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(ncmA), &ncmA, 0);
-    ok_int(ret, 1);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmA.cbSize = sizeof(ncmA);
-    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &ncmA, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmA.cbSize = sizeof(ncmA);
-    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 1, &ncmA, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmA.cbSize = 0;
-    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncmA), &ncmA, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmA.cbSize = sizeof(ncmA);
-    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncmA), &ncmA, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
+    for (i = 0; i < _countof(s_entriesAA); ++i)
+    {
+        const NCM_TESTENRY *pEntry = &s_entriesAA[i];
+        ncmA.cbSize = pEntry->cbSize;
+        ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmA, 0);
+        ok(ret == pEntry->ret, "Line %d: ret %d vs. %d\n", pEntry->line, ret, pEntry->ret);
+        FlushMessages();
+        COMPARE_CACHE(empty_chain);
+    }
+    for (i = 0; i < _countof(s_entriesAW); ++i)
+    {
+        const NCM_TESTENRY *pEntry = &s_entriesAW[i];
+        ncmA.cbSize = pEntry->cbSize;
+        ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmA, 0);
+        ok(ret == pEntry->ret, "Line %d: ret %d vs. %d\n", pEntry->line, ret, pEntry->ret);
+        FlushMessages();
+        COMPARE_CACHE(empty_chain);
+    }
 
     /* ncmW */
-    ncmW.cbSize = 0;
-    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncmW, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmW.cbSize = sizeof(ncmW);
-    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &ncmW, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmW.cbSize = sizeof(ncmW);
-    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 1, &ncmW, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmW.cbSize = 0;
-    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmW.cbSize = sizeof(ncmW);
-    ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmW.cbSize = 0;
-    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &ncmW, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmW.cbSize = sizeof(ncmW);
-    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &ncmW, 0);
-    ok_int(ret, 1);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmW.cbSize = sizeof(ncmW);
-    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 1, &ncmW, 0);
-    ok_int(ret, 1);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmW.cbSize = 0;
-    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
-    ok_int(ret, 0);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
-
-    ncmW.cbSize = sizeof(ncmW);
-    ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
-    ok_int(ret, 1);
-    FlushMessages();
-    COMPARE_CACHE(empty_chain);
+    for (i = 0; i < _countof(s_entriesWA); ++i)
+    {
+        const NCM_TESTENRY *pEntry = &s_entriesWA[i];
+        ncmW.cbSize = pEntry->cbSize;
+        ret = SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmW, 0);
+        ok(ret == pEntry->ret, "Line %d: ret %d vs. %d\n", pEntry->line, ret, pEntry->ret);
+        FlushMessages();
+        COMPARE_CACHE(empty_chain);
+    }
+    for (i = 0; i < _countof(s_entriesWW); ++i)
+    {
+        const NCM_TESTENRY *pEntry = &s_entriesWW[i];
+        ncmW.cbSize = pEntry->cbSize;
+        ret = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, pEntry->uiParam, &ncmW, 0);
+        ok(ret == pEntry->ret, "Line %d: ret %d vs. %d\n", pEntry->line, ret, pEntry->ret);
+        FlushMessages();
+        COMPARE_CACHE(empty_chain);
+    }
 
     /* Retrieve th non client metrics */
-    NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
+    ncmW.cbSize = sizeof(ncmW);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
     FlushMessages();
     COMPARE_CACHE(empty_chain);
 
     /* Set the non client metric without making any change */
-    SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
+    SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
     FlushMessages();
     COMPARE_CACHE(NcMetricsChange_chain);
 
     /* Set the same metrics again with the SPIF_SENDCHANGE param */
-    SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, SPIF_SENDCHANGE|SPIF_UPDATEINIFILE );
+    SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, SPIF_SENDCHANGE|SPIF_UPDATEINIFILE );
     FlushMessages();
     COMPARE_CACHE(NcMetricsChange1_chain);
 
     /* Slightly change the caption height */
-    NonClientMetrics.iCaptionHeight += 1;
-    SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
+    ncmW.iCaptionHeight += 1;
+    SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
     FlushMessages();
     COMPARE_CACHE(CaptionHeight_chain);
 
     /* Restore the original caption height */
-    NonClientMetrics.iCaptionHeight -= 1;
-    SystemParametersInfo(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
+    ncmW.iCaptionHeight -= 1;
+    SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, sizeof(ncmW), &ncmW, 0);
     FlushMessages();
     COMPARE_CACHE(CaptionHeight_chain);
 }
