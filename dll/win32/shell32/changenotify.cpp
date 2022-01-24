@@ -68,7 +68,7 @@ EXTERN_C void FreeChangeNotifications(void)
 
 // This class brokers all notifications that don't have the SHCNRF_NewDelivery flag
 class CChangeNotifyBroker :
-    public CWorker<CChangeNotifyBroker>
+    public CWindowImpl<CChangeNotifyBroker, CWindow, CWorkerTraits>
 {
 public:
     CChangeNotifyBroker(HWND hwndClient, UINT uMsg) :
@@ -88,6 +88,8 @@ public:
         // After the window gets destroyed we can delete this broker here.
         delete this;
     }
+
+    DECLARE_WND_CLASS_EX(L"WorkerW", 0, 0)
 
     BEGIN_MSG_MAP(CChangeNotifyBroker)
         MESSAGE_HANDLER(WM_BROKER_NOTIFICATION, OnBrokerNotification)
@@ -132,13 +134,15 @@ CreateNotificationBroker(HWND hwnd, UINT wMsg)
         return NULL;
     }
 
-    HWND hwndBroker = pBroker->Create(0);
+    HWND hwndBroker = SHCreateDefaultWorkerWindow();
     if (hwndBroker == NULL)
     {
         ERR("hwndBroker == NULL\n");
         delete pBroker;
+        return NULL;
     }
 
+    pBroker->SubclassWindow(hwndBroker);
     return hwndBroker;
 }
 

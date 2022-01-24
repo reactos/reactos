@@ -32,7 +32,7 @@ struct ITEM
 // to this window where all processing takes place.
 
 class CChangeNotifyServer :
-    public CWorker<CChangeNotifyServer>,
+    public CWindowImpl<CChangeNotifyServer, CWindow, CWorkerTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IOleWindow
 {
@@ -59,6 +59,8 @@ public:
     BEGIN_COM_MAP(CChangeNotifyServer)
         COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
     END_COM_MAP()
+
+    DECLARE_WND_CLASS_EX(L"WorkerW", 0, 0)
 
     BEGIN_MSG_MAP(CChangeNotifyServer)
         MESSAGE_HANDLER(CN_REGISTER, OnRegister)
@@ -463,8 +465,8 @@ HRESULT WINAPI CChangeNotifyServer::ContextSensitiveHelp(BOOL fEnterMode)
 HRESULT CChangeNotifyServer::Initialize()
 {
     // This is called by CChangeNotifyServer_CreateInstance right after instantiation.
-    // Create the window of the server here.
-    Create(0);
+    HWND hwnd = SHCreateDefaultWorkerWindow();
+    SubclassWindow(hwnd);
     if (!m_hWnd)
         return E_FAIL;
     return S_OK;

@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include <shlwapi_undoc.h> // for SHCreateWorkerWindowW
+
 /////////////////////////////////////////////////////////////////////////////
 // CChangeNotifyServer is a delivery worker window that is managed by CDesktopBrowser.
 // The process of CChangeNotifyServer is same as the process of CDesktopBrowser.
@@ -90,28 +92,12 @@ typedef struct HANDBAG
 
 HRESULT CChangeNotifyServer_CreateInstance(REFIID riid, void **ppv);
 
-typedef CWinTraits <
-    WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-    WS_EX_TOOLWINDOW
-> CWorkerTraits;
+#define WORKER_STYLE (WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN)
+#define WORKER_EXSTYLE WS_EX_TOOLWINDOW
 
-DECLSPEC_SELECTANY ATL::CWndClassInfo g_wcWorker =
+typedef CWinTraits <WORKER_STYLE, WORKER_EXSTYLE> CWorkerTraits;
+
+inline HWND SHCreateDefaultWorkerWindow(VOID)
 {
-    { sizeof(WNDCLASSEX), 0, CWindowImplBaseT<CWindow, CWorkerTraits>::StartWindowProc,
-      0, 0, NULL, NULL, NULL, (HBRUSH)(COLOR_3DFACE + 1), NULL, _T("WorkerW"), NULL },
-    NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
-};
-
-template <typename T_BASE>
-class CWorker :
-    public CWindowImpl<T_BASE, CWindow, CWorkerTraits>
-{
-public:
-    CWorker() { }
-    virtual ~CWorker() { }
-
-    static ATL::CWndClassInfo& GetWndClassInfo()
-    {
-        return g_wcWorker;
-    }
-};
+    return SHCreateWorkerWindowW(NULL, NULL, WORKER_EXSTYLE, WORKER_STYLE, NULL, 0);
+}
