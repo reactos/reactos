@@ -946,6 +946,9 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             if (!SpiGetInt(&cbSize, pvParam, fl))
                 return 0;
 
+            if (cbSize > sizeof(NONCLIENTMETRICSW))
+                cbSize = sizeof(NONCLIENTMETRICSW);
+
             if (
 #if (WINVER >= 0x0600)
                 cbSize != offsetof(NONCLIENTMETRICSW, iPaddedBorderWidth) &&
@@ -956,7 +959,10 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             }
 
             if (SpiGet(pvParam, &gspv.ncm, cbSize, fl))
+            {
+                SpiGetInt(pvParam, &cbSize, fl);
                 return 1;
+            }
         }
 
         case SPI_SETNONCLIENTMETRICS:
@@ -964,6 +970,9 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             UINT cbSize;
             if (!SpiGetInt(&cbSize, pvParam, fl))
                 return 0;
+
+            if (cbSize > sizeof(NONCLIENTMETRICSW))
+                cbSize = sizeof(NONCLIENTMETRICSW);
 
             if (
 #if (WINVER >= 0x0600)
