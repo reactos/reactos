@@ -7,6 +7,15 @@
 
 #pragma once
 
+#ifdef NDEBUG
+    #undef DBG
+    #undef _DEBUG
+#endif
+
+#if DBG && !defined(_DEBUG)
+    #define _DEBUG
+#endif
+
 #ifndef __REACTOS__
     #include <cstddef>
     #include <pseh/pseh2.h>
