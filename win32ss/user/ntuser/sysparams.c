@@ -942,8 +942,8 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETNONCLIENTMETRICS:
         {
-            UINT cbSize = 0;
-            if (!SpiGetInt(pvParam, &cbSize, fl))
+            UINT cbSize;
+            if (!SpiGetInt(&cbSize, pvParam, fl))
                 return 0;
 
             if (
@@ -961,8 +961,8 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETNONCLIENTMETRICS:
         {
-            UINT cbSize = 0;
-            if (!SpiGetInt(pvParam, &cbSize, fl))
+            UINT cbSize;
+            if (!SpiGetInt(&cbSize, pvParam, fl))
                 return 0;
 
             if (
