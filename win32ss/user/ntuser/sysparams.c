@@ -942,13 +942,42 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETNONCLIENTMETRICS:
         {
-            return SpiGet(pvParam, &gspv.ncm, sizeof(NONCLIENTMETRICSW), fl);
+            UINT cbSize = 0;
+            if (!SpiGetInt(pvParam, &cbSize, fl))
+                return 0;
+
+            if (
+#if (WINVER >= 0x0600)
+                cbSize != offsetof(NONCLIENTMETRICSW, iPaddedBorderWidth) &&
+#endif
+                cbSize != sizeof(NONCLIENTMETRICSW))
+            {
+                return 0;
+            }
+
+            if (SpiGet(pvParam, &gspv.ncm, cbSize, fl))
+                return 1;
         }
 
         case SPI_SETNONCLIENTMETRICS:
         {
-            if (!SpiSet(&gspv.ncm, pvParam, sizeof(NONCLIENTMETRICSW), fl))
+            UINT cbSize = 0;
+            if (!SpiGetInt(pvParam, &cbSize, fl))
                 return 0;
+
+            if (
+#if (WINVER >= 0x0600)
+                cbSize != offsetof(NONCLIENTMETRICSW, iPaddedBorderWidth) &&
+#endif
+                cbSize != sizeof(NONCLIENTMETRICSW))
+            {
+                return 0;
+            }
+
+            if (!SpiSet(&gspv.ncm, pvParam, cbSize, fl))
+                return 0;
+
+            gspv.ncm.cbSize = sizeof(NONCLIENTMETRICSW);
 
             if (fl & SPIF_UPDATEINIFILE)
             {
@@ -1910,7 +1939,11 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             break;
 
         case SPI_GETNONCLIENTMETRICS:
+#if (WINVER >= 0x0600)
+            cbSize = offsetof(NONCLIENTMETRICSW, iPaddedBorderWidth);
+#else
             cbSize = sizeof(NONCLIENTMETRICSW);
+#endif
             break;
 
         case SPI_GETMINIMIZEDMETRICS:
@@ -1982,7 +2015,11 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             break;
 
         case SPI_SETNONCLIENTMETRICS:
+#if (WINVER >= 0x0600)
+            cbSize = offsetof(NONCLIENTMETRICSW, iPaddedBorderWidth);
+#else
             cbSize = sizeof(NONCLIENTMETRICSW);
+#endif
             bToUser = FALSE;
             break;
 
