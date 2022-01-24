@@ -98,7 +98,7 @@ typedef CWinTraits <
 DECLSPEC_SELECTANY ATL::CWndClassInfo g_wcWorker =
 {
     { sizeof(WNDCLASSEX), 0, CWindowImplBaseT<CWindow, CWorkerTraits>::StartWindowProc,
-      0, 0, NULL, NULL, NULL, (HBRUSH)(COLOR_3DFACE + 1), NULL, L"WorkerW", NULL },
+      0, 0, NULL, NULL, NULL, (HBRUSH)(COLOR_3DFACE + 1), NULL, _T("WorkerW"), NULL },
     NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
 };
 
