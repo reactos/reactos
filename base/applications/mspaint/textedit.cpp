@@ -300,12 +300,12 @@ HWND CTextEditWindow::Create(HWND hwndParent)
 
     const DWORD style = ES_LEFT | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL |
                         WS_CHILD | WS_THICKFRAME;
-    m_hWnd = ::CreateWindowEx(0, WC_EDIT, NULL, style, 0, 0, 0, 0,
-                              hwndParent, NULL, hProgInstance, NULL);
-    if (m_hWnd)
+    HWND hwnd = ::CreateWindowEx(0, WC_EDIT, NULL, style, 0, 0, 0, 0,
+                                 hwndParent, NULL, hProgInstance, NULL);
+    if (hwnd)
     {
 #undef SubclassWindow // Don't use this macro
-        SubclassWindow(m_hWnd);
+        SubclassWindow(hwnd);
 
         UpdateFont();
 

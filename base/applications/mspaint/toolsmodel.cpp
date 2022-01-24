@@ -159,13 +159,14 @@ void ToolsModel::SetZoom(int nZoom)
 
 void ToolsModel::NotifyToolChanged()
 {
-    toolBoxContainer.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
-    toolSettingsWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
-
+    if (toolBoxContainer.IsWindow())
+        toolBoxContainer.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
+    if (toolSettingsWindow.IsWindow())
+        toolSettingsWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
     if (fontsDialog.IsWindow())
         fontsDialog.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
-
-    textEditWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
+    if (textEditWindow.IsWindow())
+        textEditWindow.SendMessage(WM_TOOLSMODELTOOLCHANGED, m_activeTool);
 }
 
 void ToolsModel::NotifyToolSettingsChanged()

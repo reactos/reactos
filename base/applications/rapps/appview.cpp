@@ -2047,8 +2047,6 @@ BOOL CApplicationView::AddAvailableApplication(CAvailableApplicationInfo *AvlbAp
 
 VOID CApplicationView::SetWatermark(const CStringW& Text)
 {
-    ATLASSERT(GetItemCount() == 0);
-
     m_ListView->SetWatermark(Text);
 }
 
