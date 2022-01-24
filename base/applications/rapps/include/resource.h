@@ -58,7 +58,6 @@
 #define IDD_SETTINGS_DIALOG      300
 #define IDD_INSTALL_DIALOG       301
 #define IDD_DOWNLOAD_DIALOG      302
-#define IDD_ABOUT_DIALOG         303
 
 /* Menus */
 #define IDR_MAINMENU             500
@@ -112,6 +111,7 @@
 #define IDS_UNABLE_TO_INSTALL    128
 #define IDS_SELECTEDFORINST      129
 #define IDS_MISMATCH_CERT_INFO   130
+#define IDS_APP_AUTHORS          132
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200

@@ -103,16 +103,6 @@ BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
-IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "Acerca de"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "Administrador de aplicaciones de ReactOS\nCopyright (C) 2009\nCreado por Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    DEFPUSHBUTTON "Cerrar", IDOK, 133, 46, 50, 14
-END
-
 STRINGTABLE
 BEGIN
     IDS_TOOLTIP_INSTALL "Instalar"
@@ -186,6 +176,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Administrador de aplicaciones de ReactOS"
+    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Buscar…"
     IDS_INSTALL "Instalar"
     IDS_UNINSTALL "Desinstalar"
