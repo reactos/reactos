@@ -1008,9 +1008,11 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             {
                 return SpiGet(pvParam, &gspv.ncm, sizeof(NONCLIENTMETRICSW), fl);
             }
-
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return 0;
+            else
+            {
+                EngSetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+            }
         }
 
         case SPI_SETNONCLIENTMETRICS:
@@ -1035,7 +1037,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             }
             else
             {
-                SetLastError(ERROR_INVALID_PARAMETER);
+                EngSetLastError(ERROR_INVALID_PARAMETER);
                 return 0;
             }
 
