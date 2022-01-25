@@ -512,7 +512,6 @@ static UINT ICO_ExtractIconExW(
                     DWORD cbColorTable = 0, cbImageData;
 #endif
 
-                    ERR("%08lX\n", dataOffset);
                     imageData = peimage + dataOffset;
 #ifdef __REACTOS__
                     memcpy(&bi, imageData, sizeof(BITMAPINFOHEADER));
@@ -535,10 +534,10 @@ static UINT ICO_ExtractIconExW(
                           * https://en.wikipedia.org/wiki/BMP_file_format */
                          if (bi.biCompression == BI_RGB && bi.biSizeImage == 0)
                          {
-                             bi.biSizeImage = ((bi.biWidth * bi.biBitCount + 31) / 32) * 4 *
-                                               (bi.biHeight / 2);
-                             bi.biSizeImage += ((bi.biWidth * 1 + 31) / 32) * 4 * (bi.biHeight / 2);
-                             ERR("%08lX\n", bi.biSizeImage);
+#define WIDTHBYTES(width, bits) ((width) * (bits) + 31) / 32 * 4
+                             bi.biSizeImage = WIDTHBYTES(bi.biWidth, bi.biBitCount) * (bi.biHeight / 2);
+                             bi.biSizeImage += WIDTHBYTES(bi.biWidth, 1) * (bi.biHeight / 2);
+#undef WIDTHBYTES
                          }
 #endif
                         /* we need to prepend the bitmap data with hot spots for CreateIconFromResourceEx */
