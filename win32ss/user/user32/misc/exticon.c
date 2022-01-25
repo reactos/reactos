@@ -515,6 +515,7 @@ static UINT ICO_ExtractIconExW(
                     imageData = peimage + dataOffset;
 #ifdef __REACTOS__
                     /* Calculate the size of color table */
+                    ZeroMemory(&bi, sizeof(bi));
                     CopyMemory(&bi, imageData, sizeof(BITMAPCOREHEADER));
                     if (bi.biBitCount <= 8)
                     {
