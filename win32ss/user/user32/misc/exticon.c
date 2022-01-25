@@ -509,12 +509,14 @@ static UINT ICO_ExtractIconExW(
                     WORD *cursorData = NULL;
 #ifdef __REACTOS__
                     BITMAPINFOHEADER bi;
-                    DWORD cbColorTable = 0, cbImageData;
+                    DWORD cbColorTable = 0, cbTotal;
 #endif
 
                     imageData = peimage + dataOffset;
 #ifdef __REACTOS__
                     memcpy(&bi, imageData, sizeof(BITMAPINFOHEADER));
+
+                    /* Calculate the size of color table */
                     if (bi.biBitCount <= 8)
                     {
                         if (bi.biSize >= sizeof(BITMAPINFOHEADER))
@@ -536,21 +538,23 @@ static UINT ICO_ExtractIconExW(
                     if(sig == 2)
                     {
 #ifdef __REACTOS__
-                         /* biSizeImage is the size of the raw bitmap data.
-                          * A dummy 0 can be given for BI_RGB bitmaps.
-                          * https://en.wikipedia.org/wiki/BMP_file_format */
-                         if (bi.biSizeImage == 0 || bi.biSize == sizeof(BITMAPCOREHEADER))
-                         {
+                        /* biSizeImage is the size of the raw bitmap data.
+                         * A dummy 0 can be given for BI_RGB bitmaps.
+                         * https://en.wikipedia.org/wiki/BMP_file_format */
+                        if (bi.biSizeImage == 0 || bi.biSize == sizeof(BITMAPCOREHEADER))
+                        {
+                             /* Calculate image size */
 #define WIDTHBYTES(width, bits) (((width) * (bits) + 31) / 32 * 4)
-                             bi.biSizeImage = WIDTHBYTES(bi.biWidth, bi.biBitCount) * (bi.biHeight / 2);
-                             bi.biSizeImage += WIDTHBYTES(bi.biWidth, 1) * (bi.biHeight / 2);
+                            bi.biSizeImage = WIDTHBYTES(bi.biWidth, bi.biBitCount) * (bi.biHeight / 2);
+                            bi.biSizeImage += WIDTHBYTES(bi.biWidth, 1) * (bi.biHeight / 2);
 #undef WIDTHBYTES
-                         }
+                        }
+                        /* Calculate total size */
+                        cbTotal = bi.biSize + cbColorTable + bi.biSizeImage;
 #endif
                         /* we need to prepend the bitmap data with hot spots for CreateIconFromResourceEx */
 #ifdef __REACTOS__
-                        cbImageData = bi.biSize + cbColorTable + bi.biSizeImage;
-                        cursorData = HeapAlloc(GetProcessHeap(), 0, 2 * sizeof(WORD) + cbImageData);
+                        cursorData = HeapAlloc(GetProcessHeap(), 0, 2 * sizeof(WORD) + cbTotal);
 #else
                         cursorData = HeapAlloc(GetProcessHeap(), 0, entry->icHeader.biSizeImage + 2 * sizeof(WORD));
 #endif
@@ -562,7 +566,7 @@ static UINT ICO_ExtractIconExW(
                         cursorData[1] = hotSpot.y;
 
 #ifdef __REACTOS__
-                        memcpy(cursorData + 2, imageData, cbImageData);
+                        memcpy(cursorData + 2, imageData, cbTotal);
 #else
                         memcpy(cursorData + 2, imageData, entry->icHeader.biSizeImage);
 #endif
@@ -571,7 +575,7 @@ static UINT ICO_ExtractIconExW(
                     }
 
 #ifdef __REACTOS__
-                    icon = CreateIconFromResourceEx(imageData, cbImageData, sig == 1, 0x00030000, cx[index], cy[index], flags);
+                    icon = CreateIconFromResourceEx(imageData, cbTotal, sig == 1, 0x00030000, cx[index], cy[index], flags);
 #else
                     icon = CreateIconFromResourceEx(imageData, entry->icHeader.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
 #endif
