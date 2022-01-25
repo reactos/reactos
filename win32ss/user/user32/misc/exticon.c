@@ -542,7 +542,7 @@ static UINT ICO_ExtractIconExW(
 #endif
                         /* we need to prepend the bitmap data with hot spots for CreateIconFromResourceEx */
 #ifdef __REACTOS__
-                        cbImageData = sizeof(BITMAPINFOHEADER) + cbColorTable + bi.biSizeImage;
+                        cbImageData = bi.biSize + cbColorTable + bi.biSizeImage;
                         cursorData = HeapAlloc(GetProcessHeap(), 0, 2 * sizeof(WORD) + cbImageData);
 #else
                         cursorData = HeapAlloc(GetProcessHeap(), 0, entry->icHeader.biSizeImage + 2 * sizeof(WORD));
