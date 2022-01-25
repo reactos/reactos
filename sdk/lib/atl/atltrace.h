@@ -12,7 +12,6 @@
 #ifdef _DEBUG
 
 #include <stdio.h>
-#include <crtdbg.h>
 
 namespace ATL
 {

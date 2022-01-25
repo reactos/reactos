@@ -12,9 +12,6 @@ list(APPEND SOURCE
     CComQIPtr.cpp
     CComVariant.cpp
     CHeapPtrList.cpp
-    CImage.cpp
-    CPath.cpp
-    CPath.inl
     CRegKey.cpp
     CSimpleArray.cpp
     CSimpleMap.cpp
@@ -23,6 +20,8 @@ list(APPEND SOURCE
     SubclassWindow.cpp)
 
 list(APPEND PCH_SKIP_SOURCE
+    CImage.cpp
+    CPath.cpp
     testlist.c)
 
 add_executable(atl_apitest

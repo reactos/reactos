@@ -208,7 +208,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
 
     if(DBG)
-        add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
+        add_definitions(-DDBG=1 -D_DEBUG=1 -D_SEH_ENABLE_TRACE)
     else()
         add_definitions(-DDBG=0)
     endif()

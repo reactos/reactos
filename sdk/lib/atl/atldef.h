@@ -7,20 +7,12 @@
 
 #pragma once
 
-#ifdef _INC_CRTDBG
-    #error Please don't #include <crtdbg.h> before #include <atl***.h>.
-#endif
-
-#if DBG && !defined(_DEBUG)
-    #define _DEBUG
-#endif
-
-#include <crtdbg.h> // for _CrtDbgReport
-
 #ifndef __REACTOS__
     #include <cstddef>
     #include <pseh/pseh2.h>
 #endif
+
+#include <crtdbg.h>
 
 #define _ATL_PACKING 8
 
