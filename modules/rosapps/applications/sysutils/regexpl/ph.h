@@ -13,10 +13,6 @@
 //#define UNICODE
 //#define _UNICODE
 
-#if DBG
-#define _DEBUG
-#endif
-
 #include <stdarg.h>
 
 #include <windef.h>

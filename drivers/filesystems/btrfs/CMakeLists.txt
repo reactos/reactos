@@ -70,7 +70,7 @@ if(MSVC)
     target_compile_options(btrfs PRIVATE /wd4267)
 endif()
 
-add_definitions(-D__KERNEL__ -U_DEBUG)
+add_definitions(-D__KERNEL__)
 set_module_type(btrfs kernelmodedriver)
 target_link_libraries(btrfs rtlver zlib_solo chkstk wdmguid ${PSEH_LIB})
 add_importlibs(btrfs ntoskrnl hal)
