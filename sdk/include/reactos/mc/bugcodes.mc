@@ -1598,6 +1598,14 @@ Language=English
 POWER_FAILURE_SIMULATE
 .
 
+MessageId=0xE7
+Severity=Success
+Facility=System
+SymbolicName=INVALID_FLOATING_POINT_STATE
+Language=English
+INVALID_FLOATING_POINT_STATE
+.
+
 MessageId=0xE8
 Severity=Success
 Facility=System
