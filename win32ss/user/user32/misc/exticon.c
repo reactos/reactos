@@ -517,10 +517,17 @@ static UINT ICO_ExtractIconExW(
                     memcpy(&bi, imageData, sizeof(BITMAPINFOHEADER));
                     if (bi.biBitCount <= 8)
                     {
-                        if (bi.biClrUsed)
-                            cbColorTable = bi.biClrUsed * sizeof(RGBQUAD);
-                        else
-                            cbColorTable = (1 << bi.biBitCount) * sizeof(RGBQUAD);
+                        if (bi.biSize >= sizeof(BITMAPINFOHEADER))
+                        {
+                            if (bi.biClrUsed)
+                                cbColorTable = bi.biClrUsed * sizeof(RGBQUAD);
+                            else
+                                cbColorTable = (1 << bi.biBitCount) * sizeof(RGBQUAD);
+                        }
+                        else if (bi.biSize == sizeof(BITMAPCOREHEADER))
+                        {
+                            cbColorTable = (1 << bi.biBitCount) * sizeof(RGBTRIPLE);
+                        }
                     }
 #else
                     entry = (LPICONIMAGE)(imageData);
