@@ -434,30 +434,25 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         /* Get the FX Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
 
-        /* Check if NPX is present */
-        if (KeI386NpxPresent)
+        /* Flush the NPX State */
+        KiFlushNPXState(NULL);
+
+        /* Copy the FX State */
+        RtlCopyMemory(&FxSaveArea->U.FxArea,
+                      &Context->ExtendedRegisters[0],
+                      MAXIMUM_SUPPORTED_EXTENSION);
+
+        /* Remove reserved bits from MXCSR */
+        FxSaveArea->U.FxArea.MXCsr &= KiMXCsrMask;
+
+        /* Mask out any invalid flags */
+        FxSaveArea->Cr0NpxState &= ~(CR0_EM | CR0_MP | CR0_TS);
+
+        /* Check if this is a VDM app */
+        if (PsGetCurrentProcess()->VdmObjects)
         {
-            /* Flush the NPX State */
-            KiFlushNPXState(NULL);
-
-            /* Copy the FX State */
-            RtlCopyMemory(&FxSaveArea->U.FxArea,
-                          &Context->ExtendedRegisters[0],
-                          MAXIMUM_SUPPORTED_EXTENSION);
-
-            /* Remove reserved bits from MXCSR */
-            FxSaveArea->U.FxArea.MXCsr &= KiMXCsrMask;
-
-            /* Mask out any invalid flags */
-            FxSaveArea->Cr0NpxState &= ~(CR0_EM | CR0_MP | CR0_TS);
-
-            /* Check if this is a VDM app */
-            if (PsGetCurrentProcess()->VdmObjects)
-            {
-                /* Allow the EM flag */
-                FxSaveArea->Cr0NpxState |= Context->FloatSave.Cr0NpxState &
-                                           (CR0_EM | CR0_MP);
-            }
+            /* Allow the EM flag */
+            FxSaveArea->Cr0NpxState |= Context->FloatSave.Cr0NpxState & (CR0_EM | CR0_MP);
         }
     }
 
@@ -468,88 +463,63 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         /* Get the FX Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
 
-        /* Check if NPX is present */
-        if (KeI386NpxPresent)
+        /* Flush the NPX State */
+        KiFlushNPXState(NULL);
+
+        /* Check if we have Fxsr support */
+        if (KeI386FxsrPresent)
         {
-            /* Flush the NPX State */
-            KiFlushNPXState(NULL);
+            /* Convert the Fn Floating Point state to Fx */
+            FxSaveArea->U.FxArea.ControlWord = (USHORT)Context->FloatSave.ControlWord;
+            FxSaveArea->U.FxArea.StatusWord = (USHORT)Context->FloatSave.StatusWord;
+            FxSaveArea->U.FxArea.TagWord =
+                KiTagWordFnsaveToFxsave((USHORT)Context->FloatSave.TagWord);
+            FxSaveArea->U.FxArea.ErrorOpcode =
+                (USHORT)((Context->FloatSave.ErrorSelector >> 16) & 0xFFFF);
+            FxSaveArea->U.FxArea.ErrorOffset = Context->FloatSave.ErrorOffset;
+            FxSaveArea->U.FxArea.ErrorSelector = Context->FloatSave.ErrorSelector & 0xFFFF;
+            FxSaveArea->U.FxArea.DataOffset = Context->FloatSave.DataOffset;
+            FxSaveArea->U.FxArea.DataSelector = Context->FloatSave.DataSelector;
 
-            /* Check if we have Fxsr support */
-            if (KeI386FxsrPresent)
+            /* Clear out the Register Area */
+            RtlZeroMemory(&FxSaveArea->U.FxArea.RegisterArea[0], SIZE_OF_FX_REGISTERS);
+
+            /* Loop the 8 floating point registers */
+            for (i = 0; i < 8; i++)
             {
-                /* Convert the Fn Floating Point state to Fx */
-                FxSaveArea->U.FxArea.ControlWord =
-                    (USHORT)Context->FloatSave.ControlWord;
-                FxSaveArea->U.FxArea.StatusWord =
-                    (USHORT)Context->FloatSave.StatusWord;
-                FxSaveArea->U.FxArea.TagWord =
-                    KiTagWordFnsaveToFxsave((USHORT)Context->FloatSave.TagWord);
-                FxSaveArea->U.FxArea.ErrorOpcode =
-                    (USHORT)((Context->FloatSave.ErrorSelector >> 16) & 0xFFFF);
-                FxSaveArea->U.FxArea.ErrorOffset =
-                    Context->FloatSave.ErrorOffset;
-                FxSaveArea->U.FxArea.ErrorSelector =
-                    Context->FloatSave.ErrorSelector & 0xFFFF;
-                FxSaveArea->U.FxArea.DataOffset =
-                    Context->FloatSave.DataOffset;
-                FxSaveArea->U.FxArea.DataSelector =
-                    Context->FloatSave.DataSelector;
-
-                /* Clear out the Register Area */
-                RtlZeroMemory(&FxSaveArea->U.FxArea.RegisterArea[0],
-                              SIZE_OF_FX_REGISTERS);
-
-                /* Loop the 8 floating point registers */
-                for (i = 0; i < 8; i++)
-                {
-                    /* Copy from Fn to Fx */
-                    RtlCopyMemory(FxSaveArea->U.FxArea.RegisterArea + (i * 16),
-                                  Context->FloatSave.RegisterArea + (i * 10),
-                                  10);
-                }
-            }
-            else
-            {
-                /* Copy the structure */
-                FxSaveArea->U.FnArea.ControlWord = Context->FloatSave.
-                                                   ControlWord;
-                FxSaveArea->U.FnArea.StatusWord = Context->FloatSave.
-                                                  StatusWord;
-                FxSaveArea->U.FnArea.TagWord = Context->FloatSave.TagWord;
-                FxSaveArea->U.FnArea.ErrorOffset = Context->FloatSave.
-                                                   ErrorOffset;
-                FxSaveArea->U.FnArea.ErrorSelector = Context->FloatSave.
-                                                     ErrorSelector;
-                FxSaveArea->U.FnArea.DataOffset = Context->FloatSave.
-                                                  DataOffset;
-                FxSaveArea->U.FnArea.DataSelector = Context->FloatSave.
-                                                    DataSelector;
-
-                /* Loop registers */
-                for (i = 0; i < SIZE_OF_80387_REGISTERS; i++)
-                {
-                    /* Copy registers */
-                    FxSaveArea->U.FnArea.RegisterArea[i] =
-                        Context->FloatSave.RegisterArea[i];
-                }
-            }
-
-            /* Mask out any invalid flags */
-            FxSaveArea->Cr0NpxState &= ~(CR0_EM | CR0_MP | CR0_TS);
-
-            /* Check if this is a VDM app */
-            if (PsGetCurrentProcess()->VdmObjects)
-            {
-                /* Allow the EM flag */
-                FxSaveArea->Cr0NpxState |= Context->FloatSave.Cr0NpxState &
-                    (CR0_EM | CR0_MP);
+                /* Copy from Fn to Fx */
+                RtlCopyMemory(FxSaveArea->U.FxArea.RegisterArea + (i * 16),
+                              Context->FloatSave.RegisterArea + (i * 10),
+                              10);
             }
         }
         else
         {
-            /* FIXME: Handle FPU Emulation */
-            //ASSERT(FALSE);
-            UNIMPLEMENTED;
+            /* Copy the structure */
+            FxSaveArea->U.FnArea.ControlWord = Context->FloatSave.ControlWord;
+            FxSaveArea->U.FnArea.StatusWord = Context->FloatSave.StatusWord;
+            FxSaveArea->U.FnArea.TagWord = Context->FloatSave.TagWord;
+            FxSaveArea->U.FnArea.ErrorOffset = Context->FloatSave.ErrorOffset;
+            FxSaveArea->U.FnArea.ErrorSelector = Context->FloatSave.ErrorSelector;
+            FxSaveArea->U.FnArea.DataOffset = Context->FloatSave.DataOffset;
+            FxSaveArea->U.FnArea.DataSelector = Context->FloatSave.DataSelector;
+
+            /* Loop registers */
+            for (i = 0; i < SIZE_OF_80387_REGISTERS; i++)
+            {
+                /* Copy registers */
+                FxSaveArea->U.FnArea.RegisterArea[i] = Context->FloatSave.RegisterArea[i];
+            }
+        }
+
+        /* Mask out any invalid flags */
+        FxSaveArea->Cr0NpxState &= ~(CR0_EM | CR0_MP | CR0_TS);
+
+        /* Check if this is a VDM app */
+        if (PsGetCurrentProcess()->VdmObjects)
+        {
+            /* Allow the EM flag */
+            FxSaveArea->Cr0NpxState |= Context->FloatSave.Cr0NpxState & (CR0_EM | CR0_MP);
         }
     }
 
@@ -698,17 +668,13 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         /* Get the FX Save Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
 
-        /* Make sure NPX is present */
-        if (KeI386NpxPresent)
-        {
-            /* Flush the NPX State */
-            KiFlushNPXState(NULL);
+        /* Flush the NPX State */
+        KiFlushNPXState(NULL);
 
-            /* Copy the registers */
-            RtlCopyMemory(&Context->ExtendedRegisters[0],
-                          &FxSaveArea->U.FxArea,
-                          MAXIMUM_SUPPORTED_EXTENSION);
-        }
+        /* Copy the registers */
+        RtlCopyMemory(&Context->ExtendedRegisters[0],
+                      &FxSaveArea->U.FxArea,
+                      MAXIMUM_SUPPORTED_EXTENSION);
     }
 
     /* Handle Floating Point */
@@ -718,49 +684,38 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         /* Get the FX Save Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
 
-        /* Make sure we have an NPX */
-        if (KeI386NpxPresent)
-         {
-            /* Check if we have Fxsr support */
-            if (KeI386FxsrPresent)
-            {
-                /* Align the floating area to 16-bytes */
-                FloatSaveArea = (FLOATING_SAVE_AREA*)
-                                ((ULONG_PTR)&FloatSaveBuffer.UnalignedArea &~ 0xF);
+        /* Check if we have Fxsr support */
+        if (KeI386FxsrPresent)
+        {
+            /* Align the floating area to 16-bytes */
+            FloatSaveArea = (FLOATING_SAVE_AREA*)((ULONG_PTR)&FloatSaveBuffer.UnalignedArea &~ 0xF);
 
-                /* Get the State */
-                KiFlushNPXState(FloatSaveArea);
-            }
-            else
-            {
-                /* We don't, use the FN area and flush the NPX State */
-                FloatSaveArea = (FLOATING_SAVE_AREA*)&FxSaveArea->U.FnArea;
-                KiFlushNPXState(NULL);
-            }
+            /* Get the State */
+            KiFlushNPXState(FloatSaveArea);
+        }
+        else
+        {
+            /* We don't, use the FN area and flush the NPX State */
+            FloatSaveArea = (FLOATING_SAVE_AREA*)&FxSaveArea->U.FnArea;
+            KiFlushNPXState(NULL);
+        }
 
-            /* Copy structure */
-            Context->FloatSave.ControlWord = FloatSaveArea->ControlWord;
-            Context->FloatSave.StatusWord = FloatSaveArea->StatusWord;
-            Context->FloatSave.TagWord = FloatSaveArea->TagWord;
-            Context->FloatSave.ErrorOffset = FloatSaveArea->ErrorOffset;
-            Context->FloatSave.ErrorSelector = FloatSaveArea->ErrorSelector;
-            Context->FloatSave.DataOffset = FloatSaveArea->DataOffset;
-            Context->FloatSave.DataSelector = FloatSaveArea->DataSelector;
-            Context->FloatSave.Cr0NpxState = FxSaveArea->Cr0NpxState;
+        /* Copy structure */
+        Context->FloatSave.ControlWord = FloatSaveArea->ControlWord;
+        Context->FloatSave.StatusWord = FloatSaveArea->StatusWord;
+        Context->FloatSave.TagWord = FloatSaveArea->TagWord;
+        Context->FloatSave.ErrorOffset = FloatSaveArea->ErrorOffset;
+        Context->FloatSave.ErrorSelector = FloatSaveArea->ErrorSelector;
+        Context->FloatSave.DataOffset = FloatSaveArea->DataOffset;
+        Context->FloatSave.DataSelector = FloatSaveArea->DataSelector;
+        Context->FloatSave.Cr0NpxState = FxSaveArea->Cr0NpxState;
 
-            /* Loop registers */
-            for (i = 0; i < SIZE_OF_80387_REGISTERS; i++)
-            {
-                /* Copy them */
-                Context->FloatSave.RegisterArea[i] =
-                    FloatSaveArea->RegisterArea[i];
-            }
-         }
-         else
-         {
-            /* FIXME: Handle Emulation */
-            ASSERT(FALSE);
-         }
+        /* Loop registers */
+        for (i = 0; i < SIZE_OF_80387_REGISTERS; i++)
+        {
+            /* Copy them */
+            Context->FloatSave.RegisterArea[i] = FloatSaveArea->RegisterArea[i];
+        }
     }
 
     /* Handle debug registers */

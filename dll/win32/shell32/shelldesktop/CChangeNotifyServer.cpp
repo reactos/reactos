@@ -23,11 +23,6 @@ struct ITEM
     CDirectoryWatcher *pDirWatch; // for filesystem notification
 };
 
-typedef CWinTraits <
-    WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-    WS_EX_TOOLWINDOW
-> CChangeNotifyServerTraits;
-
 //////////////////////////////////////////////////////////////////////////////
 // CChangeNotifyServer
 //
@@ -37,7 +32,7 @@ typedef CWinTraits <
 // to this window where all processing takes place.
 
 class CChangeNotifyServer :
-    public CWindowImpl<CChangeNotifyServer, CWindow, CChangeNotifyServerTraits>,
+    public CWindowImpl<CChangeNotifyServer, CWindow, CWorkerTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IOleWindow
 {
@@ -470,10 +465,10 @@ HRESULT WINAPI CChangeNotifyServer::ContextSensitiveHelp(BOOL fEnterMode)
 HRESULT CChangeNotifyServer::Initialize()
 {
     // This is called by CChangeNotifyServer_CreateInstance right after instantiation.
-    // Create the window of the server here.
-    Create(0);
-    if (!m_hWnd)
+    HWND hwnd = SHCreateDefaultWorkerWindow();
+    if (!hwnd)
         return E_FAIL;
+    SubclassWindow(hwnd);
     return S_OK;
 }
 

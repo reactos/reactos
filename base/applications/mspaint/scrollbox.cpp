@@ -61,7 +61,8 @@ UpdateScrollbox()
     scrollboxWindow.GetWindowRect(&tempRect);
     sizeScrollBox = CSize(tempRect.Width(), tempRect.Height());
 
-    imageArea.GetClientRect(&tempRect);
+    if (imageArea.IsWindow())
+        imageArea.GetClientRect(&tempRect);
     sizeImageArea = CSize(tempRect.Width(), tempRect.Height());
     sizeImageArea += CSize(GRIP_SIZE * 2, GRIP_SIZE * 2);
 
@@ -87,14 +88,17 @@ UpdateScrollbox()
     si.nPage  = sizeScrollBox.cy;
     scrollboxWindow.SetScrollInfo(SB_VERT, &si);
 
-    scrlClientWindow.MoveWindow(-scrollboxWindow.GetScrollPos(SB_HORZ),
-                                -scrollboxWindow.GetScrollPos(SB_VERT),
-                                sizeImageArea.cx, sizeImageArea.cy, TRUE);
+    if (scrlClientWindow.IsWindow())
+    {
+        scrlClientWindow.MoveWindow(
+            -scrollboxWindow.GetScrollPos(SB_HORZ), -scrollboxWindow.GetScrollPos(SB_VERT),
+            sizeImageArea.cx, sizeImageArea.cy, TRUE);
+    }
 }
 
 LRESULT CScrollboxWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (m_hWnd == scrollboxWindow.m_hWnd)
+    if (m_hWnd && m_hWnd == scrollboxWindow.m_hWnd)
     {
         UpdateScrollbox();
     }
