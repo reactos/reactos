@@ -1,6 +1,8 @@
 
 PROJECT(Drivers)
 
+add_definitions(-U_DEBUG)
+
 add_subdirectory(base)
 add_subdirectory(battery)
 add_subdirectory(bluetooth)
