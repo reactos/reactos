@@ -508,12 +508,21 @@ static UINT ICO_ExtractIconExW(
                     HICON icon;
                     WORD *cursorData = NULL;
 #ifdef __REACTOS__
-                    BITMAPINFOHEADER bmih;
+                    BITMAPINFOHEADER bi;
+                    DWORD cbColorTable = 0, cbImageData;
 #endif
 
+                    ERR("%08lX\n", dataOffset);
                     imageData = peimage + dataOffset;
 #ifdef __REACTOS__
-                    memcpy(&bmih, imageData, sizeof(BITMAPINFOHEADER));
+                    memcpy(&bi, imageData, sizeof(BITMAPINFOHEADER));
+                    if (bi.biBitCount <= 8)
+                    {
+                        if (bi.biClrUsed)
+                            cbColorTable = bi.biClrUsed * sizeof(RGBQUAD);
+                        else
+                            cbColorTable = (1 << bi.biBitCount) * sizeof(RGBQUAD);
+                    }
 #else
                     entry = (LPICONIMAGE)(imageData);
 #endif
@@ -524,15 +533,18 @@ static UINT ICO_ExtractIconExW(
                          /* biSizeImage is the size of the raw bitmap data.
                           * A dummy 0 can be given for BI_RGB bitmaps.
                           * https://en.wikipedia.org/wiki/BMP_file_format */
-                         if ((bmih.biCompression == BI_RGB) && (bmih.biSizeImage == 0))
+                         if (bi.biCompression == BI_RGB && bi.biSizeImage == 0)
                          {
-                             bmih.biSizeImage = ((bmih.biWidth * bmih.biBitCount + 31) / 32) * 4 *
-                                                (bmih.biHeight / 2);
+                             bi.biSizeImage = ((bi.biWidth * bi.biBitCount + 31) / 32) * 4 *
+                                               (bi.biHeight / 2);
+                             bi.biSizeImage += ((bi.biWidth * 1 + 31) / 32) * 4 * (bi.biHeight / 2);
+                             ERR("%08lX\n", bi.biSizeImage);
                          }
 #endif
                         /* we need to prepend the bitmap data with hot spots for CreateIconFromResourceEx */
 #ifdef __REACTOS__
-                        cursorData = HeapAlloc(GetProcessHeap(), 0, bmih.biSizeImage + 2 * sizeof(WORD));
+                        cbImageData = sizeof(BITMAPINFOHEADER) + cbColorTable + bi.biSizeImage;
+                        cursorData = HeapAlloc(GetProcessHeap(), 0, 2 * sizeof(WORD) + cbImageData);
 #else
                         cursorData = HeapAlloc(GetProcessHeap(), 0, entry->icHeader.biSizeImage + 2 * sizeof(WORD));
 #endif
@@ -544,7 +556,7 @@ static UINT ICO_ExtractIconExW(
                         cursorData[1] = hotSpot.y;
 
 #ifdef __REACTOS__
-                        memcpy(cursorData + 2, imageData, bmih.biSizeImage);
+                        memcpy(cursorData + 2, imageData, cbImageData);
 #else
                         memcpy(cursorData + 2, imageData, entry->icHeader.biSizeImage);
 #endif
@@ -553,7 +565,7 @@ static UINT ICO_ExtractIconExW(
                     }
 
 #ifdef __REACTOS__
-                    icon = CreateIconFromResourceEx(imageData, bmih.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
+                    icon = CreateIconFromResourceEx(imageData, cbImageData, sig == 1, 0x00030000, cx[index], cy[index], flags);
 #else
                     icon = CreateIconFromResourceEx(imageData, entry->icHeader.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
 #endif
