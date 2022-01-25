@@ -539,8 +539,7 @@ static UINT ICO_ExtractIconExW(
                          /* biSizeImage is the size of the raw bitmap data.
                           * A dummy 0 can be given for BI_RGB bitmaps.
                           * https://en.wikipedia.org/wiki/BMP_file_format */
-                         if (bi.biSizeImage == 0 &&
-                             (bi.biCompression == BI_RGB || bi.biSize == sizeof(BITMAPCOREHEADER)))
+                         if (bi.biSizeImage == 0 || bi.biSize == sizeof(BITMAPCOREHEADER))
                          {
 #define WIDTHBYTES(width, bits) (((width) * (bits) + 31) / 32 * 4)
                              bi.biSizeImage = WIDTHBYTES(bi.biWidth, bi.biBitCount) * (bi.biHeight / 2);
