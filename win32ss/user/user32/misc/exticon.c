@@ -532,27 +532,26 @@ static UINT ICO_ExtractIconExW(
                             cbColorTable = (1 << bi.biBitCount) * sizeof(RGBTRIPLE);
                         }
                     }
+
+                    /* biSizeImage is the size of the raw bitmap data.
+                     * https://en.wikipedia.org/wiki/BMP_file_format */
+                    if (bi.biSizeImage == 0)
+                    {
+                         /* Calculate image size */
+#define WIDTHBYTES(width, bits) (((width) * (bits) + 31) / 32 * 4)
+                        bi.biSizeImage = WIDTHBYTES(bi.biWidth, bi.biBitCount) * (bi.biHeight / 2);
+                        bi.biSizeImage += WIDTHBYTES(bi.biWidth, 1) * (bi.biHeight / 2);
+#undef WIDTHBYTES
+                    }
+
+                    /* Calculate total size */
+                    cbTotal = bi.biSize + cbColorTable + bi.biSizeImage;
 #else
                     entry = (LPICONIMAGE)(imageData);
 #endif
 
                     if(sig == 2)
                     {
-#ifdef __REACTOS__
-                        /* biSizeImage is the size of the raw bitmap data.
-                         * A dummy 0 can be given for BI_RGB bitmaps.
-                         * https://en.wikipedia.org/wiki/BMP_file_format */
-                        if (bi.biSizeImage == 0 || bi.biSize == sizeof(BITMAPCOREHEADER))
-                        {
-                             /* Calculate image size */
-#define WIDTHBYTES(width, bits) (((width) * (bits) + 31) / 32 * 4)
-                            bi.biSizeImage = WIDTHBYTES(bi.biWidth, bi.biBitCount) * (bi.biHeight / 2);
-                            bi.biSizeImage += WIDTHBYTES(bi.biWidth, 1) * (bi.biHeight / 2);
-#undef WIDTHBYTES
-                        }
-                        /* Calculate total size */
-                        cbTotal = bi.biSize + cbColorTable + bi.biSizeImage;
-#endif
                         /* we need to prepend the bitmap data with hot spots for CreateIconFromResourceEx */
 #ifdef __REACTOS__
                         cursorData = HeapAlloc(GetProcessHeap(), 0, 2 * sizeof(WORD) + cbTotal);
