@@ -934,27 +934,60 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     return ret;
 }
 
-void ProcessPage_OnProperties(void)
+static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
 {
-    DWORD dwProcessId;
-    HANDLE hProcess;
-    WCHAR szExePath[MAX_PATH];
+    typedef BOOL (WINAPI *PFN_QUERYFULLPROCESSIMAGENAMEW)(HANDLE, DWORD, LPWSTR, PDWORD);
 
-    dwProcessId = GetSelectedProcessId();
+    HANDLE hProcess;
+    HMODULE hLibrary;
+    PFN_QUERYFULLPROCESSIMAGENAMEW _QueryFullProcessImageNameW;
+    DWORD dwPathLen;
+    BOOL bRet = FALSE;
 
     if (dwProcessId == 0)
     {
-        return;
+        return FALSE;
     }
-    
+
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwProcessId);
 
     if (!hProcess)
     {
-        return;
+        return FALSE;
     }
 
-    if (GetModuleFileNameExW(hProcess, NULL, szExePath, _countof(szExePath)) == 0)
+    hLibrary = LoadLibraryW(L"kernel32_vista.dll");
+
+    if (hLibrary)
+    {
+        _QueryFullProcessImageNameW = (PFN_QUERYFULLPROCESSIMAGENAMEW)GetProcAddress(hLibrary, "QueryFullProcessImageNameW");
+
+        if (_QueryFullProcessImageNameW)
+        {
+            dwPathLen = dwLength;
+
+            if (_QueryFullProcessImageNameW(hProcess, 0, lpExePath, &dwPathLen))
+            {
+                bRet = TRUE;
+            }
+        }
+
+        FreeLibrary(hLibrary);
+    }
+
+    CloseHandle(hProcess);
+
+    return bRet;
+}
+
+void ProcessPage_OnProperties(void)
+{
+    DWORD dwProcessId;
+    WCHAR szExePath[MAX_PATH];
+
+    dwProcessId = GetSelectedProcessId();
+
+    if (!GetProcessExecutablePath(dwProcessId, szExePath, _countof(szExePath)))
     {
         return;
     }
@@ -965,25 +998,12 @@ void ProcessPage_OnProperties(void)
 void ProcessPage_OnOpenFileLocation(void)
 {
     DWORD dwProcessId;
-    HANDLE hProcess;
     WCHAR szExePath[MAX_PATH];
     ITEMIDLIST *pidl;
 
     dwProcessId = GetSelectedProcessId();
 
-    if (dwProcessId == 0)
-    {
-        return;
-    }
-    
-    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwProcessId);
-
-    if (!hProcess)
-    {
-        return;
-    }
-
-    if (GetModuleFileNameExW(hProcess, NULL, szExePath, _countof(szExePath)) == 0)
+    if (!GetProcessExecutablePath(dwProcessId, szExePath, _countof(szExePath)))
     {
         return;
     }
