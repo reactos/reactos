@@ -534,7 +534,7 @@ static UINT ICO_ExtractIconExW(
                           * https://en.wikipedia.org/wiki/BMP_file_format */
                          if (bi.biCompression == BI_RGB && bi.biSizeImage == 0)
                          {
-#define WIDTHBYTES(width, bits) ((width) * (bits) + 31) / 32 * 4
+#define WIDTHBYTES(width, bits) (((width) * (bits) + 31) / 32 * 4)
                              bi.biSizeImage = WIDTHBYTES(bi.biWidth, bi.biBitCount) * (bi.biHeight / 2);
                              bi.biSizeImage += WIDTHBYTES(bi.biWidth, 1) * (bi.biHeight / 2);
 #undef WIDTHBYTES
