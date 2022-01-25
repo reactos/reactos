@@ -2,6 +2,7 @@
 add_subdirectory(notifyhook)
 
 add_definitions(
+    -U_DEBUG
     -DWIN32
     -D__WINDRES__)
 

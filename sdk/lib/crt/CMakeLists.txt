@@ -2,7 +2,7 @@
 include_directories(include)
 #include_directories(.)
 
-add_definitions(-D_CRTBLD)
+add_definitions(-D_CRTBLD -U_DEBUG)
 
 include(conio/conio.cmake)
 include(direct/direct.cmake)

@@ -11,9 +11,6 @@
 
 #ifdef _DEBUG
 
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-
 void _DebugBreak(void)
 {
     DebugBreak();
@@ -33,14 +30,14 @@ void Trace(TCHAR* lpszFormat, ...)
     va_end(args);
 }
 
-void Assert(void* assert, TCHAR* file, int line, void* msg)
+void Assert(void* assert_, TCHAR* file, int line, void* msg)
 {
     if (msg == NULL) {
         printf("ASSERT -- %s occured on line %u of file %s.\n",
-               assert, line, file);
+               (char *)assert_, line, file);
     } else {
         printf("ASSERT -- %s occured on line %u of file %s: Message = %s.\n",
-               assert, line, file, msg);
+               (char *)assert_, line, file, (char *)msg);
     }
 }
 

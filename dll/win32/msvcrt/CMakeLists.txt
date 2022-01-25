@@ -14,6 +14,7 @@ if (STACK_PROTECTOR)
 endif()
 
 add_definitions(
+    -U_DEBUG
     -DUSE_MSVCRT_PREFIX
     -D_MSVCRT_
     -D_MSVCRT_LIB_
