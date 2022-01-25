@@ -514,13 +514,13 @@ static UINT ICO_ExtractIconExW(
 
                     imageData = peimage + dataOffset;
 #ifdef __REACTOS__
-                    memcpy(&bi, imageData, sizeof(BITMAPINFOHEADER));
-
                     /* Calculate the size of color table */
+                    CopyMemory(&bi, imageData, sizeof(BITMAPCOREHEADER));
                     if (bi.biBitCount <= 8)
                     {
                         if (bi.biSize >= sizeof(BITMAPINFOHEADER))
                         {
+                            CopyMemory(&bi, imageData, sizeof(BITMAPINFOHEADER));
                             if (bi.biClrUsed)
                                 cbColorTable = bi.biClrUsed * sizeof(RGBQUAD);
                             else
@@ -566,7 +566,7 @@ static UINT ICO_ExtractIconExW(
                         cursorData[1] = hotSpot.y;
 
 #ifdef __REACTOS__
-                        memcpy(cursorData + 2, imageData, cbTotal);
+                        CopyMemory(cursorData + 2, imageData, cbTotal);
 #else
                         memcpy(cursorData + 2, imageData, entry->icHeader.biSizeImage);
 #endif
