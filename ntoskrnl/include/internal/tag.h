@@ -38,8 +38,10 @@
 #define TAG_KDBG 'GBDK'
 
 /* Kernel Tags */
-#define TAG_KNMI    'IMNK'
-#define TAG_KERNEL  '  eK'
+#define TAG_KNMI                    'IMNK'
+#define TAG_KERNEL                  '  eK'
+#define TAG_FLOATING_POINT_FX       'xFpF'
+#define TAG_FLOATING_POINT_CONTEXT  'oCpF'
 
 /* File-System Run-Time Library Tags */
 #define TAG_UNC    'nuSF'
