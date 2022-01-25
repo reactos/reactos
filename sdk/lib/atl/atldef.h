@@ -11,11 +11,6 @@
     #error Please don't #include <crtdbg.h> before #include <atl***.h>.
 #endif
 
-#ifdef NDEBUG
-    #undef DBG
-    #undef _DEBUG
-#endif
-
 #if DBG && !defined(_DEBUG)
     #define _DEBUG
 #endif
