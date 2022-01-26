@@ -136,7 +136,7 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
 static BOOL CheckIMCForWindow(HIMC hIMC, HWND hWnd)
 {
     PIMC pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
-    return pIMC && (!pIMC->hImeWnd || pIMC->hImeWnd == hWnd || ValidateHwnd(pIMC->hImeWnd));
+    return pIMC && (!pIMC->hImeWnd || pIMC->hImeWnd == hWnd || !ValidateHwnd(pIMC->hImeWnd));
 }
 
 static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
