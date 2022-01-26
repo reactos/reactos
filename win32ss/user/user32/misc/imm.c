@@ -182,6 +182,33 @@ static void ImeWnd_OnDestroy(PIMEUI pimeui)
     pimeui->hwndUI = NULL;
 }
 
+static LRESULT
+SendImeUIMessage(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode)
+{
+    LRESULT ret = 0;
+    HWND hwndUI = pimeui->hwndUI;
+    PWND pwnd, pwndUI;
+
+    pwnd = pimeui->spwnd;
+    pwndUI = ValidateHwnd(hwndUI);
+    if (!pwnd || (pwnd->state & WNDS_DESTROYED) || (pwnd->state2 & WNDS2_INDESTROY) ||
+        !pwndUI || (pwndUI->state & WNDS_DESTROYED) || (pwndUI->state2 & WNDS2_INDESTROY))
+    {
+        return 0;
+    }
+
+    InterlockedIncrement(&pimeui->nCntInIMEProc);
+
+    if (unicode)
+        ret = SendMessageW(hwndUI, uMsg, wParam, lParam);
+    else
+        ret = SendMessageA(hwndUI, uMsg, wParam, lParam);
+
+    InterlockedDecrement(&pimeui->nCntInIMEProc);
+
+    return ret;
+}
+
 LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
 {
     PWND pWnd;
@@ -279,8 +306,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         case WM_IME_STARTCOMPOSITION:
         case WM_IME_COMPOSITION:
         case WM_IME_ENDCOMPOSITION:
-            // TODO:
-            break;
+            return SendImeUIMessage(pimeui, msg, wParam, lParam, unicode);
 
         case WM_IME_CONTROL:
             // TODO:
