@@ -3084,11 +3084,11 @@ NTAPI
 NtUserSetActiveWindow(
     HWND Wnd);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetAppImeLevel(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2);
+    HWND hWnd,
+    DWORD dwLevel);
 
 HWND
 NTAPI
