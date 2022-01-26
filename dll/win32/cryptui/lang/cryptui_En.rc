@@ -286,9 +286,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welcome to the Certificate Import Wizard", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "This wizard helps you import certificates, certificate revocation lists, and certificate trust lists from a file to a certificate store.\n\n\
-A certificate can be used to identify you or the computer with which you are communicating. It can also be used for authentication, and to sign messages. Certificate stores are collections of certificates, certificate revocation lists, and certificate trust lists.\n\n\
-To continue, click Next.",
+  LTEXT "This wizard helps you import certificates, certificate revocation lists, and certificate trust lists from a file to a certificate store.\n\nComputers can use certificates for identification and signing.",
     -1, 115,40,195,120
 END
 
@@ -382,9 +380,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welcome to the Certificate Export Wizard", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "This wizard helps you export certificates, certificate revocation lists, and certificate trust lists from a certificate store to a file.\n\n\
-A certificate can be used to identify you or the computer with which you are communicating. It can also be used for authentication, and to sign messages. Certificate stores are collections of certificates, certificate revocation lists, and certificate trust lists.\n\n\
-To continue, click Next.",
+  LTEXT "This wizard helps you export certificates, certificate revocation lists, and certificate trust lists from a certificate store to a file.\n\n\Computers can use certificates for identification and signing.",
     -1, 115,40,195,120
 END
 

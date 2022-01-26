@@ -286,9 +286,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Sertifika Alma Sihirbazı'na Hoşgeldiniz", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Bu sihirbaz, bir dosyadan; sertifikaları, sertifika iptal listelerini ve sertifika güven listelerini bir sertifika deposuna almanıza yardım eder.\n\n\
-Bir sertifika, sizi veya iletişim kuruyor olduğunuz bilgisayarı tanımak için kullanılabilir. Bu sertifika, kimlik doğrulaması için ve iletileri imzalamak için de kullanılabilir. Sertifika depoları; sertifikaların, sertifika iptal listelerinin ve sertifika güven listelerinin toplamasıdır.\n\n\
-Devam için İleri'ye tıklayınız.",
+  LTEXT "Bu sihirbaz, bir dosyadan; sertifikaları, sertifika iptal listelerini ve sertifika güven listelerini bir sertifika deposuna almanıza yardım eder.\n\nBilgisayarlar, tanımlama ve imzalama için sertifikaları kullanabilir.",
     -1, 115,40,195,120
 END
 
@@ -382,9 +380,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Sertifika Verme Sihirbazı'na Hoşgeldiniz", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Bu sihirbaz, bir sertifika deposundan; sertifikaları, sertifika iptal listelerini ve sertifika güven listelerini bir dosyaya vermenize yardım eder.\n\n\
-Bir sertifika, sizi veya iletişim kuruyor olduğunuz bilgisayarı tanımak için kullanılabilir. Bu sertifika, kimlik doğrulaması için ve iletileri imzalamak için de kullanılabilir. Sertifika depoları; sertifikaların, sertifika iptal listelerinin ve sertifika güven listelerinin toplamasıdır.\n\n\
-Devam etmek için İleri'ye tıklayınız.",
+  LTEXT "Bu sihirbaz, bir sertifika deposundan; sertifikaları, sertifika iptal listelerini ve sertifika güven listelerini bir dosyaya vermenize yardım eder.\n\nBilgisayarlar, tanımlama ve imzalama için sertifikaları kullanabilir.",
     -1, 115,40,195,120
 END
 
