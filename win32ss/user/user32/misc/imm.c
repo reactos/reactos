@@ -183,7 +183,7 @@ static void ImeWnd_OnDestroy(PIMEUI pimeui)
 }
 
 static LRESULT
-SendImeUIMessage(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode)
+User32SendImeUIMessage(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode)
 {
     LRESULT ret = 0;
     HWND hwndUI = pimeui->hwndUI;
@@ -306,7 +306,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         case WM_IME_STARTCOMPOSITION:
         case WM_IME_COMPOSITION:
         case WM_IME_ENDCOMPOSITION:
-            return SendImeUIMessage(pimeui, msg, wParam, lParam, unicode);
+            return User32SendImeUIMessage(pimeui, msg, wParam, lParam, unicode);
 
         case WM_IME_CONTROL:
             // TODO:
