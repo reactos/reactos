@@ -197,6 +197,9 @@ UserGetSystemMetrics(ULONG Index)
     ASSERT(Setup);
     TRACE("UserGetSystemMetrics(%lu)\n", Index);
 
+    if (Index == SM_DBCSENABLED)
+        return UserIsDBCSEnabled();
+
     /* Get metrics from array */
     if (Index < SM_CMETRICS)
     {
@@ -219,6 +222,5 @@ UserGetSystemMetrics(ULONG Index)
     ERR("UserGetSystemMetrics() called with invalid index %lu\n", Index);
     return 0;
 }
-
 
 /* EOF */
