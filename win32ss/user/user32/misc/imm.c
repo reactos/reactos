@@ -133,28 +133,141 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     return IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
 }
 
-static BOOL CheckIMCForWindow(HIMC hIMC, HWND hWnd)
+static BOOL User32CanSetImeWindowToImc(HIMC hIMC, HWND hImeWnd)
 {
     PIMC pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
-    return pIMC && (!pIMC->hImeWnd || pIMC->hImeWnd == hWnd || !ValidateHwnd(pIMC->hImeWnd));
+    return pIMC && (!pIMC->hImeWnd || pIMC->hImeWnd == hImeWnd || !ValidateHwnd(pIMC->hImeWnd));
+}
+
+static BOOL User32GetImeShowStatus(VOID)
+{
+    return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_GETIMESHOWSTATUS);
+}
+
+static LRESULT
+User32SendImeUIMessage(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode)
+{
+    LRESULT ret = 0;
+    HWND hwndUI = pimeui->hwndUI;
+    PWND pwnd, pwndUI;
+
+    pwnd = pimeui->spwnd;
+    pwndUI = ValidateHwnd(hwndUI);
+    if (!pwnd || (pwnd->state & WNDS_DESTROYED) || (pwnd->state2 & WNDS2_INDESTROY) ||
+        !pwndUI || (pwndUI->state & WNDS_DESTROYED) || (pwndUI->state2 & WNDS2_INDESTROY))
+    {
+        return 0;
+    }
+
+    InterlockedIncrement(&pimeui->nCntInIMEProc);
+
+    if (unicode)
+        ret = SendMessageW(hwndUI, uMsg, wParam, lParam);
+    else
+        ret = SendMessageA(hwndUI, uMsg, wParam, lParam);
+
+    InterlockedDecrement(&pimeui->nCntInIMEProc);
+
+    return ret;
+}
+
+static VOID User32NotifyOpenStatus(PIMEUI pimeui, HWND hwndIMC, BOOL bOpen)
+{
+    WPARAM wParam = (bOpen ? IMN_OPENSTATUSWINDOW : IMN_CLOSESTATUSWINDOW);
+
+    pimeui->fShowStatus = bOpen;
+
+    if (LOWORD(GetWin32ClientInfo()->dwExpWinVer) >= 0x400)
+        SendMessageW(hwndIMC, WM_IME_NOTIFY, wParam, 0);
+    else
+        User32SendImeUIMessage(pimeui, WM_IME_NOTIFY, wParam, 0, TRUE);
+}
+
+static VOID User32SetImeWindowOfImc(HIMC hIMC, HWND hImeWnd)
+{
+    PIMC pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
+    if (!pIMC || pIMC->hImeWnd == hImeWnd)
+        return;
+
+    NtUserUpdateInputContext(hIMC, UIC_IMEWINDOW, (ULONG_PTR)hImeWnd);
+}
+
+static VOID User32UpdateImcOfImeUI(PIMEUI pimeui, HIMC hNewIMC)
+{
+    HWND hImeWnd = UserHMGetHandle(pimeui->spwnd);
+    HIMC hOldIMC = pimeui->hIMC;
+
+    if (hNewIMC == hOldIMC)
+        return;
+
+    if (hOldIMC)
+        User32SetImeWindowOfImc(hOldIMC, NULL);
+
+    pimeui->hIMC = hNewIMC;
+
+    if (hNewIMC)
+        User32SetImeWindowOfImc(hNewIMC, hImeWnd);
+}
+
+static HWND User32CreateImeUIWindow(PIMEUI pimeui, HKL hKL)
+{
+    IMEINFOEX ImeInfoEx;
+    PIMEDPI pImeDpi;
+    WNDCLASSW wc;
+    HWND hwndUI = NULL;
+    CHAR szUIClass[32];
+    PWND pwnd = pimeui->spwnd;
+
+    if (!pwnd || !IMM_FN(ImmGetImeInfoEx)(&ImeInfoEx, ImeInfoExKeyboardLayout, &hKL))
+        return NULL;
+
+    pImeDpi = IMM_FN(ImmLockImeDpi)(hKL);
+    if (!pImeDpi)
+        return NULL;
+
+    if (!GetClassInfoW(pImeDpi->hInst, ImeInfoEx.wszUIClass, &wc))
+        goto Quit;
+
+    if (ImeInfoEx.ImeInfo.fdwProperty & IME_PROP_UNICODE)
+    {
+        hwndUI = CreateWindowW(ImeInfoEx.wszUIClass, ImeInfoEx.wszUIClass, WS_POPUP | WS_DISABLED,
+                               0, 0, 0, 0, UserHMGetHandle(pwnd), 0, wc.hInstance, NULL);
+    }
+    else
+    {
+        WideCharToMultiByte(CP_ACP, 0, ImeInfoEx.wszUIClass, -1,
+                            szUIClass, _countof(szUIClass), NULL, NULL);
+        szUIClass[_countof(szUIClass) - 1] = 0;
+
+        hwndUI = CreateWindowA(szUIClass, szUIClass, WS_POPUP | WS_DISABLED,
+                               0, 0, 0, 0, UserHMGetHandle(pwnd), 0, wc.hInstance, NULL);
+    }
+
+    if (hwndUI)
+        NtUserSetWindowLong(hwndUI, IMMGWL_IMC, (LONG_PTR)pimeui->hIMC, FALSE);
+
+Quit:
+    IMM_FN(ImmUnlockImeDpi)(pImeDpi);
+    return hwndUI;
 }
 
 static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
 {
     PWND pParentWnd, pWnd = pimeui->spwnd;
-    HIMC hIMC;
+    HIMC hIMC = NULL;
 
     if (!pWnd || (pWnd->style & (WS_DISABLED | WS_POPUP)) != (WS_DISABLED | WS_POPUP))
         return FALSE;
 
-    pimeui->hIMC = NULL;
     pParentWnd = ValidateHwnd(lpCS->hwndParent);
     if (pParentWnd)
     {
         hIMC = pParentWnd->hImc;
-        if (hIMC && CheckIMCForWindow(hIMC, UserHMGetHandle(pWnd)))
-            pimeui->hIMC = hIMC;
+        if (hIMC && !User32CanSetImeWindowToImc(hIMC, UserHMGetHandle(pWnd)))
+            hIMC = NULL;
     }
+
+    User32UpdateImcOfImeUI(pimeui, hIMC);
 
     pimeui->fShowStatus = FALSE;
     pimeui->nCntInIMEProc = 0;
@@ -165,10 +278,13 @@ static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
     pimeui->fCtrlShowStatus = TRUE;
 
     IMM_FN(ImmLoadIME)(pimeui->hKL);
+
+    pimeui->hwndUI = NULL;
+
     return TRUE;
 }
 
-static void ImeWnd_OnDestroy(PIMEUI pimeui)
+static VOID User32DestroyImeUIWindow(PIMEUI pimeui)
 {
     HWND hwndUI = pimeui->hwndUI;
 
@@ -180,6 +296,35 @@ static void ImeWnd_OnDestroy(PIMEUI pimeui)
 
     pimeui->fShowStatus = pimeui->fDestroy = FALSE;
     pimeui->hwndUI = NULL;
+}
+
+VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
+{
+    HKL hKL;
+    HWND hwndUI, hwndIMC = pimeui->hwndIMC;
+
+    if (wParam)
+    {
+        pimeui->hKL = hKL = (HKL)lParam;
+        pimeui->hwndUI = hwndUI = User32CreateImeUIWindow(pimeui, hKL);
+        if (hwndUI)
+            User32SendImeUIMessage(pimeui, WM_IME_SELECT, wParam, lParam, TRUE);
+
+        if (User32GetImeShowStatus() && pimeui->fCtrlShowStatus)
+        {
+            if (!pimeui->fShowStatus && pimeui->fActivate && IsWindow(hwndIMC))
+                User32NotifyOpenStatus(pimeui, hwndIMC, TRUE);
+        }
+    }
+    else
+    {
+        if (pimeui->fShowStatus && pimeui->fActivate && IsWindow(hwndIMC))
+            User32NotifyOpenStatus(pimeui, hwndIMC, FALSE);
+
+        User32SendImeUIMessage(pimeui, WM_IME_SELECT, wParam, lParam, TRUE);
+        User32DestroyImeUIWindow(pimeui);
+        pimeui->hKL = NULL;
+    }
 }
 
 LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
@@ -226,16 +371,13 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             case WM_IME_CHAR:
             case WM_IME_COMPOSITIONFULL:
             case WM_IME_CONTROL:
+            case WM_IME_NOTIFY:
             case WM_IME_REQUEST:
             case WM_IME_SELECT:
             case WM_IME_SETCONTEXT:
             case WM_IME_STARTCOMPOSITION:
             case WM_IME_COMPOSITION:
             case WM_IME_ENDCOMPOSITION:
-                return 0;
-
-            case WM_IME_NOTIFY:
-                // TODO:
                 return 0;
 
             case WM_IME_SYSTEM:
@@ -257,7 +399,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             return (ImeWnd_OnCreate(pimeui, (LPCREATESTRUCT)lParam) ? 0 : -1);
 
         case WM_DESTROY:
-            ImeWnd_OnDestroy(pimeui);
+            User32DestroyImeUIWindow(pimeui);
             break;
 
         case WM_NCDESTROY:
@@ -279,8 +421,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         case WM_IME_STARTCOMPOSITION:
         case WM_IME_COMPOSITION:
         case WM_IME_ENDCOMPOSITION:
-            // TODO:
-            break;
+            return User32SendImeUIMessage(pimeui, msg, wParam, lParam, unicode);
 
         case WM_IME_CONTROL:
             // TODO:
@@ -294,7 +435,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_IME_SELECT:
-            // TODO:
+            ImeWnd_OnImeSelect(pimeui, wParam, lParam);
             break;
 
         case WM_IME_SETCONTEXT:
