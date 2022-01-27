@@ -24,7 +24,7 @@ UCHAR KiNMITSS[KTSS_IO_MAPS];
 ULONG KeI386CpuType;
 ULONG KeI386CpuStep;
 ULONG KiFastSystemCallDisable = 0;
-ULONG KeI386NpxPresent = 0;
+ULONG KeI386NpxPresent = TRUE;
 ULONG KiMXCsrMask = 0;
 ULONG MxcsrFeatureMask = 0;
 ULONG KeI386XMMIPresent = 0;
@@ -90,66 +90,30 @@ VOID
 NTAPI
 KiSetProcessorType(VOID)
 {
-    ULONG EFlags, NewEFlags;
     CPU_INFO CpuInfo;
     ULONG Stepping, Type;
 
-    /* Start by assuming no CPUID data */
-    KeGetCurrentPrcb()->CpuID = 0;
+    /* Do CPUID 1 now */
+    KiCpuId(&CpuInfo, 1);
 
-    /* Save EFlags */
-    EFlags = __readeflags();
+    /*
+     * Get the Stepping and Type. The stepping contains both the
+     * Model and the Step, while the Type contains the returned Type.
+     * We ignore the family.
+     *
+     * For the stepping, we convert this: zzzzzzxy into this: x0y
+     */
+    Stepping = CpuInfo.Eax & 0xF0;
+    Stepping <<= 4;
+    Stepping += (CpuInfo.Eax & 0xFF);
+    Stepping &= 0xF0F;
+    Type = CpuInfo.Eax & 0xF00;
+    Type >>= 8;
 
-    /* XOR out the ID bit and update EFlags */
-    NewEFlags = EFlags ^ EFLAGS_ID;
-    __writeeflags(NewEFlags);
-
-    /* Get them back and see if they were modified */
-    NewEFlags = __readeflags();
-    if (NewEFlags != EFlags)
-    {
-        /* The modification worked, so CPUID exists. Set the ID Bit again. */
-        EFlags |= EFLAGS_ID;
-        __writeeflags(EFlags);
-
-        /* Peform CPUID 0 to see if CPUID 1 is supported */
-        KiCpuId(&CpuInfo, 0);
-        if (CpuInfo.Eax > 0)
-        {
-            /* Do CPUID 1 now */
-            KiCpuId(&CpuInfo, 1);
-
-            /*
-             * Get the Stepping and Type. The stepping contains both the
-             * Model and the Step, while the Type contains the returned Type.
-             * We ignore the family.
-             *
-             * For the stepping, we convert this: zzzzzzxy into this: x0y
-             */
-            Stepping = CpuInfo.Eax & 0xF0;
-            Stepping <<= 4;
-            Stepping += (CpuInfo.Eax & 0xFF);
-            Stepping &= 0xF0F;
-            Type = CpuInfo.Eax & 0xF00;
-            Type >>= 8;
-
-            /* Save them in the PRCB */
-            KeGetCurrentPrcb()->CpuID = TRUE;
-            KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
-            KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
-        }
-        else
-        {
-            DPRINT1("CPUID Support lacking\n");
-        }
-    }
-    else
-    {
-        DPRINT1("CPUID Support lacking\n");
-    }
-
-    /* Restore EFLAGS */
-    __writeeflags(EFlags);
+    /* Save them in the PRCB */
+    KeGetCurrentPrcb()->CpuID = TRUE;
+    KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
+    KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
 }
 
 CODE_SEG("INIT")
@@ -159,10 +123,6 @@ KiGetCpuVendor(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     CPU_INFO CpuInfo;
-
-    /* Assume no Vendor ID and fail if no CPUID Support. */
-    Prcb->VendorString[0] = 0;
-    if (!Prcb->CpuID) return 0;
 
     /* Get the Vendor ID */
     KiCpuId(&CpuInfo, 0);
@@ -465,7 +425,6 @@ NTAPI
 KiGetCacheInformation(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
-    ULONG Vendor;
     CPU_INFO CpuInfo;
     ULONG CacheRequests = 0, i;
     ULONG CurrentRegister;
@@ -476,12 +435,8 @@ KiGetCacheInformation(VOID)
     /* Set default L2 size */
     Pcr->SecondLevelCacheSize = 0;
 
-    /* Get the Vendor ID and make sure we support CPUID */
-    Vendor = KiGetCpuVendor();
-    if (!Vendor) return;
-
     /* Check the Vendor ID */
-    switch (Vendor)
+    switch (KiGetCpuVendor())
     {
         /* Handle Intel case */
         case CPU_INTEL:
@@ -1161,55 +1116,14 @@ KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
-KiIsNpxPresent(VOID)
-{
-    ULONG Cr0;
-    USHORT Magic;
-
-    /* Set magic */
-    Magic = 0xFFFF;
-
-    /* Read CR0 and mask out FPU flags */
-    Cr0 = __readcr0() & ~(CR0_MP | CR0_TS | CR0_EM | CR0_ET);
-
-    /* Store on FPU stack */
-#ifdef _MSC_VER
-    __asm fninit;
-    __asm fnstsw Magic;
-#else
-    asm volatile ("fninit;" "fnstsw %0" : "+m"(Magic));
-#endif
-
-    /* Magic should now be cleared */
-    if (Magic & 0xFF)
-    {
-        /* You don't have an FPU -- enable emulation for now */
-        __writecr0(Cr0 | CR0_EM | CR0_TS);
-        return FALSE;
-    }
-
-    /* You have an FPU, enable it */
-    Cr0 |= CR0_ET;
-
-    /* Enable INT 16 on 486 and higher */
-    if (KeGetCurrentPrcb()->CpuType >= 3) Cr0 |= CR0_NE;
-
-    /* Set FPU state */
-    __writecr0(Cr0 | CR0_EM | CR0_TS);
-    return TRUE;
-}
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
 KiIsNpxErrataPresent(VOID)
 {
     static double Value1 = 4195835.0, Value2 = 3145727.0;
     INT ErrataPresent;
     ULONG Cr0;
 
-    /* Disable interrupts */
-    _disable();
+    /* Interrupts have to be disabled here. */
+    ASSERT(!(__readeflags() & EFLAGS_INTERRUPT_MASK));
 
     /* Read CR0 and remove FPU flags */
     Cr0 = __readcr0();
@@ -1246,9 +1160,6 @@ KiIsNpxErrataPresent(VOID)
 
     /* Restore CR0 */
     __writecr0(Cr0);
-
-    /* Enable interrupts */
-    _enable();
 
     /* Return if there's an errata */
     return ErrataPresent != 0;
@@ -1369,9 +1280,6 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
     PFNSAVE_FORMAT FpState;
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
     UNIMPLEMENTED_ONCE;
-
-    /* check if we are doing software emulation */
-    if (!KeI386NpxPresent) return STATUS_ILLEGAL_FLOAT_CONTEXT;
 
     FpState = ExAllocatePool(NonPagedPool, sizeof (FNSAVE_FORMAT));
     if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;

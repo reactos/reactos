@@ -286,9 +286,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Bienvenue dans l'assistant d'importation de certificats", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Cet assistant vous aide à importer des certificats, des listes de révocation de certificats et des listes de certificats de confiance dans un magasin de certificats à partir d'un fichier.\n\n\
-Un certificat peut être utilisé pour vous identifier, ou pour identifier l'ordinateur avec lequel vous communiquez. Il peut également être utilisé à des fins d'authentification ou de signature de messages. Les magasins de certificats sont des collections de certificats, de listes de révocation de certificats et de listes de certificats de confiance.\n\n\
-Pour continuer, cliquez sur Suivant.",
+  LTEXT "Cet assistant vous aide à importer des certificats, des listes de révocation de certificats et des listes de certificats de confiance dans un magasin de certificats à partir d'un fichier.\n\nUn certificat peut être utilisé pour identifier ou signer.",
     -1, 115,40,195,120
 END
 
@@ -382,9 +380,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Bienvenue dans l'assistant d'exportation de certificats", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Cet assistant vous aide à exporter des certificats, des listes de révocation de certificats et des listes de certificats de confiance dans un fichier à partir d'un magasin de certificats.\n\n\
-Un certificat peut être utilisé pour vous identifier, ou pour identifier l'ordinateur avec lequel vous communiquez. Il peut également être utilisé à des fins d'authentification ou de signature de messages. Les magasins de certificats sont des collections de certificats, de listes de révocation de certificats et de listes de certificats de confiance.\n\n\
-Pour continuer, cliquez sur Suivant.",
+  LTEXT "Cet assistant vous aide à exporter des certificats, des listes de révocation de certificats et des listes de certificats de confiance dans un fichier à partir d'un magasin de certificats.\n\nUn certificat peut être utilisé pour identifier ou signer.",
     -1, 115,40,195,120
 END
 

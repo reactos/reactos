@@ -85,58 +85,6 @@ KiInitMachineDependent(VOID)
     /* Check for PAT support and enable it */
     if (KeFeatureBits & KF_PAT) KiInitializePAT();
 
-    /* Assume no errata for now */
-    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = 0;
-
-    /* Check if we have an NPX */
-    if (KeI386NpxPresent)
-    {
-        /* Loop every CPU */
-        i = KeActiveProcessors;
-        for (Affinity = 1; i; Affinity <<= 1)
-        {
-            /* Check if this is part of the set */
-            if (i & Affinity)
-            {
-                /* Run on this CPU */
-                i &= ~Affinity;
-                KeSetSystemAffinityThread(Affinity);
-
-                /* Detect FPU errata */
-                if (KiIsNpxErrataPresent())
-                {
-                    /* Disable NPX support */
-                    KeI386NpxPresent = FALSE;
-                    SharedUserData->
-                        ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] =
-                        TRUE;
-                    break;
-                }
-            }
-        }
-    }
-
-    /* If there's no NPX, then we're emulating the FPU */
-    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] =
-        !KeI386NpxPresent;
-
-    /* Check if there's no NPX, so that we can disable associated features */
-    if (!KeI386NpxPresent)
-    {
-        /* Remove NPX-related bits */
-        KeFeatureBits &= ~(KF_XMMI64 | KF_XMMI | KF_FXSR | KF_MMX);
-
-        /* Disable kernel flags */
-        KeI386FxsrPresent = KeI386XMMIPresent = FALSE;
-
-        /* Disable processor features that might've been set until now */
-        SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] =
-        SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE]   =
-        SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE]     =
-        SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE]    =
-        SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] = 0;
-    }
-
     /* Check for CR4 support */
     if (KeFeatureBits & KF_CR4)
     {
@@ -392,6 +340,92 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->PrcbData.MultiThreadProcessorSet = Pcr->PrcbData.SetMember;
 }
 
+static
+CODE_SEG("INIT")
+VOID
+KiVerifyCpuFeatures(PKPRCB Prcb)
+{
+    CPU_INFO CpuInfo;
+
+    // 1. Check CPUID support
+    ULONG EFlags = __readeflags();
+
+    /* XOR out the ID bit and update EFlags */
+    ULONG NewEFlags = EFlags ^ EFLAGS_ID;
+    __writeeflags(NewEFlags);
+
+    /* Get them back and see if they were modified */
+    NewEFlags = __readeflags();
+
+    if (NewEFlags == EFlags)
+    {
+        /* The modification did not work, so CPUID is not supported. */
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x1, 0, 0, 0);
+    }
+    else
+    {
+        /* CPUID is supported. Set the ID Bit again. */
+        EFlags |= EFLAGS_ID;
+        __writeeflags(EFlags);
+    }
+
+    /* Peform CPUID 0 to see if CPUID 1 is supported */
+    KiCpuId(&CpuInfo, 0);
+    if (CpuInfo.Eax == 0)
+    {
+        // 0x1 - missing CPUID instruction
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x1, 0, 0, 0);
+    }
+
+    // 2. Detect and set the CPU Type
+    KiSetProcessorType();
+
+    if (Prcb->CpuType == 3)
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x386, 0, 0, 0);
+
+    // 3. Finally, obtain CPU features.
+    ULONG FeatureBits = KiGetFeatureBits();
+
+    // 4. Verify it supports everything we need.
+    if (!(FeatureBits & KF_RDTSC))
+    {
+        // 0x2 - missing CPUID features
+        // second paramenter - edx flag which is missing
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000010, 0, 0);
+    }
+
+    if (!(FeatureBits & KF_CMPXCHG8B))
+    {
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000100, 0, 0);
+    }
+
+    // Check x87 FPU is present. FIXME: put this into FeatureBits?
+    KiCpuId(&CpuInfo, 1);
+
+    if (!(CpuInfo.Edx & 0x00000001))
+    {
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000001, 0, 0);
+    }
+
+    // Set up FPU-related CR0 flags.
+    ULONG Cr0 = __readcr0();
+    // Disable emulation and monitoring.
+    Cr0 &= ~(CR0_EM | CR0_MP);
+    // Enable FPU exceptions.
+    Cr0 |= CR0_NE;
+    
+    __writecr0(Cr0);
+
+    // Check for Pentium FPU bug.
+    if (KiIsNpxErrataPresent())
+    {
+        KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x2, 0x00000001, 0, 0);
+    }
+
+    // 5. Save feature bits.
+    Prcb->FeatureBits = FeatureBits;
+}
+
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -402,27 +436,16 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN CCHAR Number,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    BOOLEAN NpxPresent;
-    ULONG FeatureBits;
     ULONG PageDirectory[2];
     PVOID DpcStack;
-    ULONG Vendor[3];
     KIRQL DummyIrql;
-
-    /* Detect and set the CPU Type */
-    KiSetProcessorType();
-
-    /* Check if an FPU is present */
-    NpxPresent = KiIsNpxPresent();
 
     /* Initialize the Power Management Support for this PRCB */
     PoInitializePrcb(Prcb);
 
-    /* Bugcheck if this is a 386 CPU */
-    if (Prcb->CpuType == 3) KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x386, 0, 0, 0);
-
-    /* Get the processor features for the CPU */
-    FeatureBits = KiGetFeatureBits();
+    /* Set boot-level flags */
+    if (Number == 0)
+        KeFeatureBits = Prcb->FeatureBits;
 
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
@@ -432,30 +455,27 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     {
         /* Set it always on */
         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSON;
-        FeatureBits |= KF_NX_ENABLED;
+        KeFeatureBits |= KF_NX_ENABLED;
     }
     else if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTOUT"))
     {
         /* Set it in opt-out mode */
         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTOUT;
-        FeatureBits |= KF_NX_ENABLED;
+        KeFeatureBits |= KF_NX_ENABLED;
     }
     else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTIN")) ||
              (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE")))
     {
         /* Set the feature bits */
-        FeatureBits |= KF_NX_ENABLED;
+        KeFeatureBits |= KF_NX_ENABLED;
     }
     else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSOFF")) ||
              (strstr(KeLoaderBlock->LoadOptions, "EXECUTE")))
     {
         /* Set disabled mode */
         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSOFF;
-        FeatureBits |= KF_NX_DISABLED;
+        KeFeatureBits |= KF_NX_DISABLED;
     }
-
-    /* Save feature bits */
-    Prcb->FeatureBits = FeatureBits;
 
     /* Save CPU state */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
@@ -475,29 +495,13 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         KeNodeBlock[0]->ProcessorMask = Prcb->SetMember;
 
         /* Set boot-level flags */
-        KeI386NpxPresent = NpxPresent;
         KeI386CpuType = Prcb->CpuType;
         KeI386CpuStep = Prcb->CpuStep;
         KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL;
         KeProcessorLevel = (USHORT)Prcb->CpuType;
         if (Prcb->CpuID) KeProcessorRevision = Prcb->CpuStep;
-        KeFeatureBits = FeatureBits;
         KeI386FxsrPresent = (KeFeatureBits & KF_FXSR) ? TRUE : FALSE;
         KeI386XMMIPresent = (KeFeatureBits & KF_XMMI) ? TRUE : FALSE;
-
-        /* Detect 8-byte compare exchange support */
-        if (!(KeFeatureBits & KF_CMPXCHG8B))
-        {
-            /* Copy the vendor string */
-            RtlCopyMemory(Vendor, Prcb->VendorString, sizeof(Vendor));
-
-            /* Bugcheck the system. Windows *requires* this */
-            KeBugCheckEx(UNSUPPORTED_PROCESSOR,
-                         (1 << 24 ) | (Prcb->CpuType << 16) | Prcb->CpuStep,
-                         Vendor[0],
-                         Vendor[1],
-                         Vendor[2]);
-        }
 
         /* Set the current MP Master KPRCB to the Boot PRCB */
         Prcb->MultiThreadSetMaster = Prcb;
@@ -549,6 +553,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
     /* Set basic CPU Features that user mode can read */
+    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
     SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
         (KeFeatureBits & KF_MMX) ? TRUE: FALSE;
     SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
@@ -812,6 +817,8 @@ AppCpuInit:
     __writefsdword(KPCR_SET_MEMBER, 1 << Cpu);
     __writefsdword(KPCR_SET_MEMBER_COPY, 1 << Cpu);
     __writefsdword(KPCR_PRCB_SET_MEMBER, 1 << Cpu);
+
+    KiVerifyCpuFeatures(Pcr->Prcb);
 
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);

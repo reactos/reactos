@@ -249,6 +249,7 @@ IntVideoPortMapPhysicalMemory(
 
 extern PKPROCESS CsrProcess;
 extern ULONG VideoPortDeviceNumber;
+extern BOOLEAN VideoPortUseNewKey;
 extern KMUTEX VideoPortInt10Mutex;
 extern KSPIN_LOCK HwResetAdaptersLock;
 extern LIST_ENTRY HwResetAdaptersList;
