@@ -287,9 +287,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Mirë se vini në Magjistarin Importues te Certifikatave", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Ky magjistar ju ndihmon ne importimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\n\
-Certifikata mund të përdoret për të identifikuar ju ose kompjuterin me të cilën ju komunikoni. Ajo gjithashtu mund të përdoret për të legalizuara, dhe për të nënshkruar mesazhe. Dyqanet e Certifikatave janë koleksionet e certifikatave, listat certifikatë revokimit, dhe listat e besimit te certifikatave.\n\n\
-Për të vazhduar, klikoni Tjetër.",
+  LTEXT "Ky magjistar ju ndihmon ne importimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\nKompjuterët mund të përdorin certifikata për identifikim dhe nënshkrim.",
     -1, 115,40,195,120
 END
 
@@ -383,9 +381,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Mirë se vini në Magjistarin Eksportues te Certifikatave", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Ky magjistar ju ndihmon ne eksmportimin e certifikatave, listen e revokimit te certifikatave, dhe listen e besuar te certifikatave nga nje dokument ne certifikate dyqani.\n\n\
-Certifikata mund të përdoret për të identifikuar ju ose kompjuterin me të cilën ju komunikoni. Ajo gjithashtu mund të përdoret për të legalizuara, dhe për të nënshkruar mesazhe. Dyqanet e Certifikatave janë koleksionet e certifikatave, listat certifikatë revokimit, dhe listat e besimit te certifikatave.\n\n\
-Për të vazhduar, klikoni Tjetër.",
+  LTEXT "Ky magjistar ju ndihmon të eksportoni certifikatat, listat e revokimit të certifikatave dhe listat e certifikatave të besuara nga një dokument.\n\nKompjuterët mund të përdorin certifikata për identifikim dhe nënshkrim.",
     -1, 115,40,195,120
 END
 

@@ -238,8 +238,29 @@ DWORD
 APIENTRY
 NtUserGetAppImeLevel(HWND hWnd)
 {
-    STUB;
-    return 0;
+    DWORD ret = 0;
+    PWND pWnd;
+    PTHREADINFO pti;
+
+    UserEnterShared();
+
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd)
+        goto Quit;
+
+    if (!IS_IMM_MODE())
+    {
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        goto Quit;
+    }
+
+    pti = PsGetCurrentThreadWin32Thread();
+    if (pWnd->head.pti->ppi == pti->ppi)
+        ret = (DWORD)(ULONG_PTR)UserGetProp(pWnd, AtomImeLevel, TRUE);
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLASS SearchType)
@@ -335,14 +356,33 @@ Quit:
     return ret;
 }
 
-DWORD
+BOOL
 APIENTRY
-NtUserSetAppImeLevel(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+NtUserSetAppImeLevel(HWND hWnd, DWORD dwLevel)
 {
-    STUB;
-    return 0;
+    BOOL ret = FALSE;
+    PWND pWnd;
+    PTHREADINFO pti;
+
+    UserEnterExclusive();
+
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd)
+        goto Quit;
+
+    if (!IS_IMM_MODE())
+    {
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        goto Quit;
+    }
+
+    pti = PsGetCurrentThreadWin32Thread();
+    if (pWnd->head.pti->ppi == pti->ppi)
+        ret = UserSetProp(pWnd, AtomImeLevel, (HANDLE)(ULONG_PTR)dwLevel, TRUE);
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 BOOL FASTCALL UserSetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pImeInfoEx)

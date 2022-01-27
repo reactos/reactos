@@ -508,31 +508,53 @@ static UINT ICO_ExtractIconExW(
                     HICON icon;
                     WORD *cursorData = NULL;
 #ifdef __REACTOS__
-                    BITMAPINFOHEADER bmih;
+                    BITMAPINFOHEADER bi;
+                    DWORD cbColorTable = 0, cbTotal;
 #endif
 
                     imageData = peimage + dataOffset;
 #ifdef __REACTOS__
-                    memcpy(&bmih, imageData, sizeof(BITMAPINFOHEADER));
+                    /* Calculate the size of color table */
+                    ZeroMemory(&bi, sizeof(bi));
+                    CopyMemory(&bi, imageData, sizeof(BITMAPCOREHEADER));
+                    if (bi.biBitCount <= 8)
+                    {
+                        if (bi.biSize >= sizeof(BITMAPINFOHEADER))
+                        {
+                            CopyMemory(&bi, imageData, sizeof(BITMAPINFOHEADER));
+                            if (bi.biClrUsed)
+                                cbColorTable = bi.biClrUsed * sizeof(RGBQUAD);
+                            else
+                                cbColorTable = (1 << bi.biBitCount) * sizeof(RGBQUAD);
+                        }
+                        else if (bi.biSize == sizeof(BITMAPCOREHEADER))
+                        {
+                            cbColorTable = (1 << bi.biBitCount) * sizeof(RGBTRIPLE);
+                        }
+                    }
+
+                    /* biSizeImage is the size of the raw bitmap data.
+                     * https://en.wikipedia.org/wiki/BMP_file_format */
+                    if (bi.biSizeImage == 0)
+                    {
+                         /* Calculate image size */
+#define WIDTHBYTES(width, bits) (((width) * (bits) + 31) / 32 * 4)
+                        bi.biSizeImage = WIDTHBYTES(bi.biWidth, bi.biBitCount) * (bi.biHeight / 2);
+                        bi.biSizeImage += WIDTHBYTES(bi.biWidth, 1) * (bi.biHeight / 2);
+#undef WIDTHBYTES
+                    }
+
+                    /* Calculate total size */
+                    cbTotal = bi.biSize + cbColorTable + bi.biSizeImage;
 #else
                     entry = (LPICONIMAGE)(imageData);
 #endif
 
                     if(sig == 2)
                     {
-#ifdef __REACTOS__
-                         /* biSizeImage is the size of the raw bitmap data.
-                          * A dummy 0 can be given for BI_RGB bitmaps.
-                          * https://en.wikipedia.org/wiki/BMP_file_format */
-                         if ((bmih.biCompression == BI_RGB) && (bmih.biSizeImage == 0))
-                         {
-                             bmih.biSizeImage = ((bmih.biWidth * bmih.biBitCount + 31) / 32) * 4 *
-                                                (bmih.biHeight / 2);
-                         }
-#endif
                         /* we need to prepend the bitmap data with hot spots for CreateIconFromResourceEx */
 #ifdef __REACTOS__
-                        cursorData = HeapAlloc(GetProcessHeap(), 0, bmih.biSizeImage + 2 * sizeof(WORD));
+                        cursorData = HeapAlloc(GetProcessHeap(), 0, 2 * sizeof(WORD) + cbTotal);
 #else
                         cursorData = HeapAlloc(GetProcessHeap(), 0, entry->icHeader.biSizeImage + 2 * sizeof(WORD));
 #endif
@@ -544,7 +566,7 @@ static UINT ICO_ExtractIconExW(
                         cursorData[1] = hotSpot.y;
 
 #ifdef __REACTOS__
-                        memcpy(cursorData + 2, imageData, bmih.biSizeImage);
+                        CopyMemory(cursorData + 2, imageData, cbTotal);
 #else
                         memcpy(cursorData + 2, imageData, entry->icHeader.biSizeImage);
 #endif
@@ -553,7 +575,7 @@ static UINT ICO_ExtractIconExW(
                     }
 
 #ifdef __REACTOS__
-                    icon = CreateIconFromResourceEx(imageData, bmih.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
+                    icon = CreateIconFromResourceEx(imageData, cbTotal, sig == 1, 0x00030000, cx[index], cy[index], flags);
 #else
                     icon = CreateIconFromResourceEx(imageData, entry->icHeader.biSizeImage, sig == 1, 0x00030000, cx[index], cy[index], flags);
 #endif

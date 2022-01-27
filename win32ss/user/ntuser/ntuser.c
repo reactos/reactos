@@ -25,6 +25,7 @@ ATOM AtomQOS;           // Window DDE Quality of Service atom.
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
 ATOM gaGuiConsoleWndClass;
+ATOM AtomImeLevel;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -55,6 +56,7 @@ InitUserAtoms(VOID)
 
     AtomDDETrack = IntAddGlobalAtom(L"SysDT", TRUE);
     AtomQOS      = IntAddGlobalAtom(L"SysQOS", TRUE);
+    AtomImeLevel = IntAddGlobalAtom(L"SysIMEL", TRUE);
 
     /*
      * FIXME: AddPropW uses the global kernel atom table, thus leading to conflicts if we use

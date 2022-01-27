@@ -133,6 +133,55 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     return IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
 }
 
+static BOOL CheckIMCForWindow(HIMC hIMC, HWND hWnd)
+{
+    PIMC pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
+    return pIMC && (!pIMC->hImeWnd || pIMC->hImeWnd == hWnd || !ValidateHwnd(pIMC->hImeWnd));
+}
+
+static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
+{
+    PWND pParentWnd, pWnd = pimeui->spwnd;
+    HIMC hIMC;
+
+    if (!pWnd || (pWnd->style & (WS_DISABLED | WS_POPUP)) != (WS_DISABLED | WS_POPUP))
+        return FALSE;
+
+    pimeui->hIMC = NULL;
+    pParentWnd = ValidateHwnd(lpCS->hwndParent);
+    if (pParentWnd)
+    {
+        hIMC = pParentWnd->hImc;
+        if (hIMC && CheckIMCForWindow(hIMC, UserHMGetHandle(pWnd)))
+            pimeui->hIMC = hIMC;
+    }
+
+    pimeui->fShowStatus = FALSE;
+    pimeui->nCntInIMEProc = 0;
+    pimeui->fActivate = FALSE;
+    pimeui->fDestroy = FALSE;
+    pimeui->hwndIMC = NULL;
+    pimeui->hKL = GetWin32ClientInfo()->hKL;
+    pimeui->fCtrlShowStatus = TRUE;
+
+    IMM_FN(ImmLoadIME)(pimeui->hKL);
+    return TRUE;
+}
+
+static void ImeWnd_OnDestroy(PIMEUI pimeui)
+{
+    HWND hwndUI = pimeui->hwndUI;
+
+    if (IsWindow(hwndUI))
+    {
+        pimeui->fDestroy = TRUE;
+        NtUserDestroyWindow(hwndUI);
+    }
+
+    pimeui->fShowStatus = pimeui->fDestroy = FALSE;
+    pimeui->hwndUI = NULL;
+}
+
 LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
 {
     PWND pWnd;
@@ -151,6 +200,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           }
           NtUserSetWindowFNID(hwnd, FNID_IME);
           pimeui = HeapAlloc( GetProcessHeap(), 0, sizeof(IMEUI) );
+          pimeui->spwnd = pWnd;
           SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pimeui);
        }
        else
@@ -169,19 +219,101 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
        }
     }
 
-    if (msg==WM_CREATE || msg==WM_NCCREATE)
-        return TRUE;
-
-    if (msg==WM_NCDESTROY)
+    if (pimeui->nCntInIMEProc > 0)
     {
-        HeapFree( GetProcessHeap(), 0, pimeui );
-        SetWindowLongPtrW(hwnd, 0, 0);
-        NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+        switch (msg)
+        {
+            case WM_IME_CHAR:
+            case WM_IME_COMPOSITIONFULL:
+            case WM_IME_CONTROL:
+            case WM_IME_REQUEST:
+            case WM_IME_SELECT:
+            case WM_IME_SETCONTEXT:
+            case WM_IME_STARTCOMPOSITION:
+            case WM_IME_COMPOSITION:
+            case WM_IME_ENDCOMPOSITION:
+                return 0;
+
+            case WM_IME_NOTIFY:
+                // TODO:
+                return 0;
+
+            case WM_IME_SYSTEM:
+                // TODO:
+                return 0;
+
+            default:
+            {
+                if (unicode)
+                    return DefWindowProcW(hwnd, msg, wParam, lParam);
+                return DefWindowProcA(hwnd, msg, wParam, lParam);
+            }
+        }
     }
 
-    if (unicode)
-       return DefWindowProcW(hwnd, msg, wParam, lParam);
-    return DefWindowProcA(hwnd, msg, wParam, lParam);
+    switch (msg)
+    {
+        case WM_CREATE:
+            return (ImeWnd_OnCreate(pimeui, (LPCREATESTRUCT)lParam) ? 0 : -1);
+
+        case WM_DESTROY:
+            ImeWnd_OnDestroy(pimeui);
+            break;
+
+        case WM_NCDESTROY:
+            HeapFree(GetProcessHeap(), 0, pimeui);
+            SetWindowLongPtrW(hwnd, 0, 0);
+            NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+            break;
+
+        case WM_ERASEBKGND:
+            return TRUE;
+
+        case WM_PAINT:
+            break;
+
+        case WM_COPYDATA:
+            // TODO:
+            break;
+
+        case WM_IME_STARTCOMPOSITION:
+        case WM_IME_COMPOSITION:
+        case WM_IME_ENDCOMPOSITION:
+            // TODO:
+            break;
+
+        case WM_IME_CONTROL:
+            // TODO:
+            break;
+
+        case WM_IME_NOTIFY:
+            // TODO:
+            break;
+
+        case WM_IME_REQUEST:
+            break;
+
+        case WM_IME_SELECT:
+            // TODO:
+            break;
+
+        case WM_IME_SETCONTEXT:
+            // TODO:
+            break;
+
+        case WM_IME_SYSTEM:
+            // TODO:
+            break;
+
+        default:
+        {
+            if (unicode)
+                return DefWindowProcW(hwnd, msg, wParam, lParam);
+            return DefWindowProcA(hwnd, msg, wParam, lParam);
+        }
+    }
+
+    return 0;
 }
 
 LRESULT WINAPI ImeWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
