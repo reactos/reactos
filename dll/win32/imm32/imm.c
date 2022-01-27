@@ -235,7 +235,7 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 
     if (CtfImmIsTextFrameServiceDisabled())
     {
-        if (Imm32IsImmMode() && !Imm32IsCiceroMode())
+        if (IS_IMM_MODE() && !Imm32IsCiceroMode())
         {
             bIsNewHKLIme = IS_IME_HKL(hNewKL);
             bIsOldHKLIme = IS_IME_HKL(hOldKL);
@@ -503,7 +503,7 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
 
     TRACE("(%p, %p)\n", hWnd, hIMC);
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return NULL;
 
     pWnd = ValidateHwndNoErr(hWnd);
@@ -545,7 +545,7 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 
     TRACE("(%p, %p, 0x%lX)\n", hWnd, hIMC, dwFlags);
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return FALSE;
 
     if (hIMC && !(dwFlags & IACE_DEFAULT) && Imm32IsCrossThreadAccess(hIMC))
@@ -590,7 +590,7 @@ HIMC WINAPI ImmCreateContext(void)
 
     TRACE("()\n");
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return NULL;
 
     pClientImc = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
@@ -637,7 +637,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     PCLIENTIMC pClientImc;
     PIMC pIMC;
 
-    if (!Imm32IsImmMode() || hIMC == NULL)
+    if (!IS_IMM_MODE() || hIMC == NULL)
         return FALSE;
 
     pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
@@ -888,7 +888,7 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
 
     TRACE("(%p)\n", hIMC);
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return FALSE;
 
     if (Imm32IsCrossThreadAccess(hIMC))
@@ -972,7 +972,7 @@ static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
     PCLIENTIMC pClientImc;
     PWND pWnd;
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return NULL;
 
     if (!hWnd)
@@ -1141,7 +1141,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
 
     TRACE("(%p, %p, %d)\n", hWnd, hIMC, fActive);
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return FALSE;
 
     pClientImc = ImmLockClientImc(hIMC);
@@ -1264,7 +1264,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             break;
 
         case DLL_THREAD_DETACH:
-            if (!Imm32IsImmMode())
+            if (!IS_IMM_MODE())
                 return TRUE;
 
             pTeb = NtCurrentTeb();

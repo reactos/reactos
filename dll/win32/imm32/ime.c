@@ -630,7 +630,7 @@ BOOL WINAPI ImmIsIME(HKL hKL)
  */
 HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 {
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return NULL;
 
     if (hWnd == NULL)
