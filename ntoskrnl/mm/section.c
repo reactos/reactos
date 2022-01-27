@@ -4825,10 +4825,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 #endif
 
         if (SectionObjectPointer->ImageSectionObject)
-        {
-            DPRINT1("SectionObject has ImageSection\n");
             return FALSE;
-        }
 
 #ifdef NEWCC
         CcpLock();
