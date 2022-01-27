@@ -1230,6 +1230,13 @@ IopDoNameTransmogrify(
     IN PREPARSE_DATA_BUFFER DataBuffer
 );
 
+NTSTATUS
+NTAPI
+IoComputeDesiredAccessFileObject(
+    IN PFILE_OBJECT FileObject,
+    IN PACCESS_MASK DesiredAccess
+);
+
 //
 // I/O Timer Routines
 //

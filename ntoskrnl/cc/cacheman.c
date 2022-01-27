@@ -160,6 +160,4 @@ CcSetReadAheadGranularity (
 {
     CCTRACE(CC_API_DEBUG, "FileObject=%p Granularity=%lu\n",
         FileObject, Granularity);
-
-	UNIMPLEMENTED;
 }

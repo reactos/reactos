@@ -49,7 +49,6 @@ FsRtlCheckOplock(IN POPLOCK Oplock,
                  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL)
 {
     /* Unimplemented */
-    UNIMPLEMENTED;
     return STATUS_SUCCESS;
 }
 
@@ -72,7 +71,6 @@ NTAPI
 FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
 {
     /* Unimplemented */
-    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -124,7 +122,6 @@ FsRtlOplockFsctrl(IN POPLOCK Oplock,
                   IN ULONG OpenCount)
 {
     /* Unimplemented */
-    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -146,7 +143,6 @@ BOOLEAN
 NTAPI
 FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
 {
-    UNIMPLEMENTED;
     return TRUE;
 }
 
@@ -168,6 +164,5 @@ VOID
 NTAPI
 FsRtlUninitializeOplock(IN POPLOCK Oplock)
 {
-    UNIMPLEMENTED;
 }
 
