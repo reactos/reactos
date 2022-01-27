@@ -68,8 +68,8 @@ ConSrvApplyUserSettings(
         // ConDrvSetConsoleCP(Console, ConsoleInfo->CodePage, FALSE);   // Input
         if (TermSetCodePage(Console, ConsoleInfo->CodePage))
         {
-            Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
-            Console->IsCJK = IsCJKCodePage(Console->OutputCodePage);
+            CON_SET_OUTPUT_CP(Console, ConsoleInfo->CodePage);
+            Console->InputCodePage = ConsoleInfo->CodePage;
         }
     }
 
