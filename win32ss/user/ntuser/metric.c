@@ -14,6 +14,20 @@ static BOOL Setup = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
+BOOL APIENTRY UserIsDBCSEnabled(VOID)
+{
+    switch (PRIMARYLANGID(gusLanguageID))
+    {
+        case LANG_CHINESE:
+        case LANG_JAPANESE:
+        case LANG_KOREAN:
+            return TRUE;
+
+        default:
+            return FALSE;
+    }
+}
+
 BOOL
 NTAPI
 InitMetrics(VOID)
@@ -150,7 +164,7 @@ InitMetrics(VOID)
     piSysMet[SM_NETWORK] = 3;
     piSysMet[SM_SLOWMACHINE] = 0;
     piSysMet[SM_SECURE] = 0;
-    piSysMet[SM_DBCSENABLED] = 0;
+    piSysMet[SM_DBCSENABLED] = UserIsDBCSEnabled();
     piSysMet[SM_SHOWSOUNDS] = gspv.bShowSounds;
     piSysMet[SM_MIDEASTENABLED] = 0;
     piSysMet[SM_CMONITORS] = 1;
