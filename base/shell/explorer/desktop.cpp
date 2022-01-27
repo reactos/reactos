@@ -104,12 +104,10 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
         {
             TrayProcessMessages(m_Tray);
         }
-
         else if (WaitResult != WAIT_FAILED && WaitResult != WAIT_OBJECT_0)
         {
             break;
         }
-
         else
         {
             CloseHandle(m_hThread);
