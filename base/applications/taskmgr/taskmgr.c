@@ -863,7 +863,7 @@ void LoadSettings(void)
     TaskManagerSettings.ActiveTabPage = 0;
 
     /* Options menu settings */
-    TaskManagerSettings.AlwaysOnTop = TRUE;
+    TaskManagerSettings.AlwaysOnTop = FALSE;
     TaskManagerSettings.MinimizeOnUse = TRUE;
     TaskManagerSettings.HideWhenMinimized = FALSE;
     TaskManagerSettings.Show16BitTasks = TRUE;
