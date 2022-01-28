@@ -341,7 +341,7 @@ static VOID User32DestroyImeUIWindow(PIMEUI pimeui)
     pimeui->hwndUI = NULL;
 }
 
-VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
+static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     HKL hKL;
     HWND hwndUI, hwndIMC = pimeui->hwndIMC;
@@ -368,6 +368,129 @@ VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
         User32DestroyImeUIWindow(pimeui);
         pimeui->hKL = NULL;
     }
+}
+
+static LRESULT
+ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
+{
+    HIMC hIMC = pimeui->hIMC;
+    DWORD dwConversion, dwSentence;
+    POINT pt;
+
+    if (!hIMC)
+        return 0;
+
+    switch (wParam)
+    {
+        case IMC_GETCONVERSIONMODE:
+            if (!IMM_FN(ImmGetConversionStatus)(hIMC, &dwConversion, &dwSentence))
+                return 1;
+            else
+                return dwConversion;
+
+        case IMC_GETSENTENCEMODE:
+            if (!IMM_FN(ImmGetConversionStatus)(hIMC, &dwConversion, &dwSentence))
+                return 1;
+            else
+                return dwSentence;
+
+        case IMC_GETOPENSTATUS:
+            return IMM_FN(ImmGetOpenStatus)(hIMC);
+
+        case IMC_SETCONVERSIONMODE:
+            if (!IMM_FN(ImmGetConversionStatus)(hIMC, &dwConversion, &dwSentence) ||
+                !IMM_FN(ImmSetConversionStatus)(hIMC, (DWORD)lParam, dwSentence))
+            {
+                return 1;
+            }
+            break;
+
+        case IMC_SETSENTENCEMODE:
+            if (!IMM_FN(ImmGetConversionStatus)(hIMC, &dwConversion, &dwSentence) ||
+                !IMM_FN(ImmSetConversionStatus)(hIMC, dwConversion, (DWORD)lParam))
+            {
+                return 1;
+            }
+            break;
+
+        case IMC_SETOPENSTATUS:
+            if (!IMM_FN(ImmSetOpenStatus)(hIMC, (BOOL)lParam))
+                return 1;
+            break;
+
+        case IMC_GETCANDIDATEPOS:
+        case IMC_GETCOMPOSITIONWINDOW:
+        case IMC_GETSOFTKBDPOS:
+        case IMC_SETSOFTKBDPOS:
+        case IMC_GETSTATUSWINDOWPOS:
+            return User32SendImeUIMessage(pimeui, WM_IME_CONTROL, wParam, lParam, unicode);
+
+        case IMC_SETCANDIDATEPOS:
+            if (!IMM_FN(ImmSetCandidateWindow)(hIMC, (LPCANDIDATEFORM)lParam))
+                return 1;
+            break;
+
+        case IMC_GETCOMPOSITIONFONT:
+            if (unicode)
+            {
+                if (!IMM_FN(ImmGetCompositionFontW)(hIMC, (LPLOGFONTW)lParam))
+                    return 1;
+            }
+            else
+            {
+                if (!IMM_FN(ImmGetCompositionFontA)(hIMC, (LPLOGFONTA)lParam))
+                    return 1;
+            }
+            break;
+
+        case IMC_SETCOMPOSITIONFONT:
+            if (unicode)
+            {
+                if (!IMM_FN(ImmSetCompositionFontW)(hIMC, (LPLOGFONTW)lParam))
+                    return 1;
+            }
+            else
+            {
+                if (!IMM_FN(ImmSetCompositionFontA)(hIMC, (LPLOGFONTA)lParam))
+                    return 1;
+            }
+            break;
+
+        case IMC_SETCOMPOSITIONWINDOW:
+            if (!IMM_FN(ImmSetCompositionWindow)(hIMC, (LPCOMPOSITIONFORM)lParam))
+                return 1;
+            break;
+
+        case IMC_SETSTATUSWINDOWPOS:
+            pt.x = GET_X_LPARAM(lParam);
+            pt.y = GET_Y_LPARAM(lParam);
+            if (!IMM_FN(ImmSetStatusWindowPos)(hIMC, &pt))
+                return 1;
+            break;
+
+        case IMC_CLOSESTATUSWINDOW:
+            if (pimeui->fShowStatus && User32GetImeShowStatus())
+            {
+                pimeui->fShowStatus = FALSE;
+                User32SendImeUIMessage(pimeui, WM_IME_NOTIFY, IMN_CLOSESTATUSWINDOW, 0, TRUE);
+            }
+            pimeui->fCtrlShowStatus = FALSE;
+            break;
+
+        case IMC_OPENSTATUSWINDOW:
+            if (!pimeui->fShowStatus && User32GetImeShowStatus())
+            {
+                pimeui->fShowStatus = TRUE;
+                User32SendImeUIMessage(pimeui, WM_IME_NOTIFY, IMN_OPENSTATUSWINDOW, 0, TRUE);
+            }
+            pimeui->fCtrlShowStatus = TRUE;
+            break;
+
+        default:
+            break;
+    }
+
+    return 0;
 }
 
 LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
@@ -458,8 +581,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_COPYDATA:
-            // TODO:
-            break;
+            return ImeWnd_OnImeControl(pimeui, wParam, lParam, unicode);
 
         case WM_IME_STARTCOMPOSITION:
         case WM_IME_COMPOSITION:
