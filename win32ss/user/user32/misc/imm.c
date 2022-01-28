@@ -581,7 +581,8 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_COPYDATA:
-            return ImeWnd_OnImeControl(pimeui, wParam, lParam, unicode);
+            // TODO:
+            break;
 
         case WM_IME_STARTCOMPOSITION:
         case WM_IME_COMPOSITION:
@@ -589,8 +590,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             return User32SendImeUIMessage(pimeui, msg, wParam, lParam, unicode);
 
         case WM_IME_CONTROL:
-            // TODO:
-            break;
+            return ImeWnd_OnImeControl(pimeui, wParam, lParam, unicode);
 
         case WM_IME_NOTIFY:
             return ImeWnd_OnImeNotify(pimeui, wParam, lParam);
