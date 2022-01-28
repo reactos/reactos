@@ -24,6 +24,13 @@
 
 #include <psdk/imm.h>
 
+/* wParam for WM_IME_CONTROL */
+#define IMC_GETCONVERSIONMODE           0x0001
+#define IMC_GETSENTENCEMODE             0x0003
+#define IMC_GETOPENSTATUS               0x0005
+#define IMC_GETSOFTKBDPOS               0x0013
+#define IMC_SETSOFTKBDPOS               0x0014
+
 typedef struct _tagINPUTCONTEXT {
     HWND                hWnd;
     BOOL                fOpen;
