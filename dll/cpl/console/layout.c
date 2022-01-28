@@ -497,6 +497,9 @@ PaintText(
     /* Refresh the font preview, getting a new font if necessary */
     if (FontPreview.hFont == NULL)
         RefreshFontPreview(&FontPreview, pConInfo);
+    /* Recheck hFont since RefreshFontPreview() may not have updated it */
+    if (FontPreview.hFont == NULL)
+        return;
 
     /* Draw the preview text using the current font */
     hOldFont = SelectObject(drawItem->hDC, FontPreview.hFont);

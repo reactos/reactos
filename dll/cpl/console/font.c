@@ -53,11 +53,16 @@ RefreshFontPreview(
     IN FONT_PREVIEW* Preview,
     IN PCONSOLE_STATE_INFO pConInfo)
 {
-    if (Preview->hFont) DeleteObject(Preview->hFont);
-    Preview->hFont = CreateConsoleFont(pConInfo);
-    if (Preview->hFont == NULL)
+    HFONT hFont = CreateConsoleFont(pConInfo);
+    if (!hFont)
+    {
         DPRINT1("RefreshFontPreview: CreateConsoleFont() failed\n");
-    GetFontCellSize(NULL, Preview->hFont, &Preview->CharHeight, &Preview->CharWidth);
+        return;
+    }
+
+    if (Preview->hFont) DeleteObject(Preview->hFont);
+    Preview->hFont = hFont;
+    GetFontCellSize(NULL, hFont, &Preview->CharHeight, &Preview->CharWidth);
 }
 
 VOID
@@ -223,8 +228,17 @@ FontSizeList_GetSelectedFontSize(
              * See: https://support.microsoft.com/en-us/help/66365/how-to-process-a-cbn-selchange-notification-message
              * for more details.
              */
+            INT Length;
+
             nSel = (INT)SendMessageW(SizeList->hWndTTSizeList, CB_GETCURSEL, 0, 0);
-            SendMessageW(SizeList->hWndTTSizeList, CB_GETLBTEXT, nSel, (LPARAM)szFontSize);
+            if (nSel == CB_ERR) return 0;
+
+            Length = (INT)SendMessageW(SizeList->hWndTTSizeList, CB_GETLBTEXTLEN, nSel, 0);
+            ASSERT((Length != LB_ERR) && (Length < ARRAYSIZE(szFontSize)));
+
+            Length = (INT)SendMessageW(SizeList->hWndTTSizeList, CB_GETLBTEXT, nSel, (LPARAM)szFontSize);
+            ASSERT((Length != LB_ERR) && (Length < ARRAYSIZE(szFontSize)));
+            szFontSize[Length] = L'\0';
 
             /* Validate the font size */
             FontSize = wcstoul(szFontSize, &pszNext, 10);
@@ -558,6 +572,7 @@ FontTypeChange(
     if (FaceName == NULL) return FALSE;
 
     Length = (INT)SendMessageW(hFontList, LB_GETTEXT, nSel, (LPARAM)FaceName);
+    ASSERT(Length != LB_ERR);
     FaceName[Length] = L'\0';
 
     StringCchCopyW(pConInfo->FaceName, ARRAYSIZE(pConInfo->FaceName), FaceName);
@@ -664,8 +679,11 @@ FontSizeChange(
     CharWidth  = (UINT)(SizeList->UseRasterOrTTList ? LOWORD(FontSize) : 0);
 
     hFont = CreateConsoleFont2((LONG)CharHeight, (LONG)CharWidth, pConInfo);
-    if (hFont == NULL)
+    if (!hFont)
+    {
         DPRINT1("FontSizeChange: CreateConsoleFont2() failed\n");
+        return FALSE;
+    }
 
     /* Retrieve the real character size in pixels */
     GetFontCellSize(NULL, hFont, &CharHeight, &CharWidth);

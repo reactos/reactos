@@ -126,14 +126,16 @@ ColorsProc(HWND hDlg,
         case WM_COMMAND:
         {
             /* NOTE: both BN_CLICKED and STN_CLICKED == 0 */
-            if (HIWORD(wParam) == BN_CLICKED || HIWORD(wParam) == STN_CLICKED)
+            if (HIWORD(wParam) == BN_CLICKED /* || HIWORD(wParam) == STN_CLICKED */)
             {
-                if (LOWORD(wParam) == IDC_RADIO_SCREEN_TEXT       ||
-                    LOWORD(wParam) == IDC_RADIO_SCREEN_BACKGROUND ||
-                    LOWORD(wParam) == IDC_RADIO_POPUP_TEXT        ||
-                    LOWORD(wParam) == IDC_RADIO_POPUP_BACKGROUND)
+                WORD ctrlIndex = LOWORD(wParam);
+
+                if (ctrlIndex == IDC_RADIO_SCREEN_TEXT       ||
+                    ctrlIndex == IDC_RADIO_SCREEN_BACKGROUND ||
+                    ctrlIndex == IDC_RADIO_POPUP_TEXT        ||
+                    ctrlIndex == IDC_RADIO_POPUP_BACKGROUND)
                 {
-                    switch (LOWORD(wParam))
+                    switch (ctrlIndex)
                     {
                     case IDC_RADIO_SCREEN_TEXT:
                         /* Get the colour of the screen foreground */
@@ -169,9 +171,9 @@ ColorsProc(HWND hDlg,
                     break;
                 }
                 else
-                if (IDC_STATIC_COLOR1 <= LOWORD(wParam) && LOWORD(wParam) <= IDC_STATIC_COLOR16)
+                if (IDC_STATIC_COLOR1 <= ctrlIndex && ctrlIndex <= IDC_STATIC_COLOR16)
                 {
-                    colorIndex = LOWORD(wParam) - IDC_STATIC_COLOR1;
+                    colorIndex = ctrlIndex - IDC_STATIC_COLOR1;
 
                     /* If the same static control was re-clicked, don't take it into account */
                     if (colorIndex == ActiveStaticControl)
@@ -213,9 +215,11 @@ ColorsProc(HWND hDlg,
             }
             else if (HIWORD(wParam) == EN_KILLFOCUS)
             {
-                if (LOWORD(wParam) == IDC_EDIT_COLOR_RED   ||
-                    LOWORD(wParam) == IDC_EDIT_COLOR_GREEN ||
-                    LOWORD(wParam) == IDC_EDIT_COLOR_BLUE)
+                WORD ctrlIndex = LOWORD(wParam);
+
+                if (ctrlIndex == IDC_EDIT_COLOR_RED   ||
+                    ctrlIndex == IDC_EDIT_COLOR_GREEN ||
+                    ctrlIndex == IDC_EDIT_COLOR_BLUE)
                 {
                     DWORD value;
 
@@ -224,7 +228,7 @@ ColorsProc(HWND hDlg,
                     color = ConInfo->ColorTable[colorIndex];
 
                     /* Modify the colour component */
-                    switch (LOWORD(wParam))
+                    switch (ctrlIndex)
                     {
                     case IDC_EDIT_COLOR_RED:
                         value = GetDlgItemInt(hDlg, IDC_EDIT_COLOR_RED, NULL, FALSE);
