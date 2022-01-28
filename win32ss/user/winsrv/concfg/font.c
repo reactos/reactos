@@ -376,7 +376,7 @@ IsValidConsoleFont(
     Param.CodePage = CodePage;
 
     RtlZeroMemory(&lf, sizeof(lf));
-    lf.lfCharSet = DEFAULT_CHARSET; // CodePageToCharSet(CodePage);
+    lf.lfCharSet = CodePageToCharSet(CodePage);
     // lf.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
     StringCchCopyW(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName), FaceName);
 
