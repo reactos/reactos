@@ -380,7 +380,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welcome to the Certificate Export Wizard", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "This wizard helps you export certificates, certificate revocation lists, and certificate trust lists from a certificate store to a file.\n\n\Computers can use certificates for identification and signing.",
+  LTEXT "This wizard helps you export certificates, certificate revocation lists, and certificate trust lists from a certificate store to a file.\n\nComputers can use certificates for identification and signing.",
     -1, 115,40,195,120
 END
 
