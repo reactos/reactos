@@ -11,6 +11,7 @@
 
 #include <user32.h>
 #include <strsafe.h>
+#include <ddk/imm.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
@@ -207,6 +208,48 @@ static VOID User32UpdateImcOfImeUI(PIMEUI pimeui, HIMC hNewIMC)
 
     if (hNewIMC)
         User32SetImeWindowOfImc(hNewIMC, hImeWnd);
+}
+
+static LRESULT ImeWnd_OnImeNotify(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT ret = 0;
+    HIMC hIMC;
+    LPINPUTCONTEXT pIC;
+    HWND hwndUI, hwndIMC;
+
+    switch (wParam)
+    {
+        case IMN_SETCONVERSIONMODE:
+        case IMN_SETOPENSTATUS:
+            hIMC = pimeui->hIMC;
+            pIC = IMM_FN(ImmLockIMC)(hIMC);
+            if (pIC)
+            {
+                hwndIMC = pimeui->hwndIMC;
+                if (IsWindow(hwndIMC))
+                {
+                    NtUserNotifyIMEStatus(hwndIMC, pIC->fOpen, pIC->fdwConversion);
+                }
+                else
+                {
+                    // TODO:
+                }
+
+                IMM_FN(ImmUnlockIMC)(hIMC);
+            }
+            /* FALL THROUGH */
+        default:
+            ret = User32SendImeUIMessage(pimeui, WM_IME_NOTIFY, wParam, lParam, TRUE);
+            break;
+
+        case IMN_PRIVATE:
+            hwndUI = pimeui->hwndUI;
+            if (IsWindow(hwndUI))
+                ret = SendMessageW(hwndUI, WM_IME_NOTIFY, wParam, lParam);
+            break;
+    }
+
+    return ret;
 }
 
 static HWND User32CreateImeUIWindow(PIMEUI pimeui, HKL hKL)
@@ -428,8 +471,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_IME_NOTIFY:
-            // TODO:
-            break;
+            return ImeWnd_OnImeNotify(pimeui, wParam, lParam);
 
         case WM_IME_REQUEST:
             break;
