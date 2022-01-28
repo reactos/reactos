@@ -385,14 +385,12 @@ ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
         case IMC_GETCONVERSIONMODE:
             if (!IMM_FN(ImmGetConversionStatus)(hIMC, &dwConversion, &dwSentence))
                 return 1;
-            else
-                return dwConversion;
+            return dwConversion;
 
         case IMC_GETSENTENCEMODE:
             if (!IMM_FN(ImmGetConversionStatus)(hIMC, &dwConversion, &dwSentence))
                 return 1;
-            else
-                return dwSentence;
+            return dwSentence;
 
         case IMC_GETOPENSTATUS:
             return IMM_FN(ImmGetOpenStatus)(hIMC);
