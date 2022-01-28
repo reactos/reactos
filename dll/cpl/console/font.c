@@ -44,6 +44,9 @@ typedef struct _FONTSIZE_LIST_CTL
 static INT   CurrentSelFont  = LB_ERR;
 static DWORD CurrentFontType = (DWORD)-1;   // Invalid font type
 
+/* Detect whether the current code page has changed */
+static UINT CurrentCodePage = INVALID_CP;
+
 
 VOID
 RefreshFontPreview(
@@ -311,11 +314,11 @@ EnumFaceNamesProc(
 
     if (IsValidConsoleFont2(lplf, lpntm, FontType, Param->CodePage))
     {
-        /* Add the font to the list */
+        /* Add the face name to the list */
         AddFontToList(Param->hWndList, lplf->lfFaceName, FontType);
     }
 
-    /* Continue the font enumeration */
+    /* Continue enumerating the faces */
     return TRUE;
 }
 
@@ -387,6 +390,9 @@ FaceNameList_Initialize(
     LOGFONTW lf;
     INT idx;
 
+    /* Reset the face names list */
+    SendMessageW(hWndList, LB_RESETCONTENT, 0, 0);
+
     Param.hWndList = hWndList;
     Param.CodePage = CodePage;
 
@@ -401,7 +407,7 @@ FaceNameList_Initialize(
     idx = (INT)SendMessageW(hWndList, LB_GETCOUNT, 0, 0);
     if (idx != LB_ERR && idx != 0)
     {
-        /* We have found some fonts and filled the list, we are fine! */
+        /* We have found some faces and filled the list, we are fine! */
         return;
     }
 
@@ -522,14 +528,14 @@ FontTypeChange(
     IN PFONTSIZE_LIST_CTL SizeList,
     IN OUT PCONSOLE_STATE_INFO pConInfo)
 {
-    HWND hListBox = GetDlgItem(hDlg, IDC_LBOX_FONTTYPE);
+    HWND hFontList = GetDlgItem(hDlg, IDC_LBOX_FONTTYPE);
     INT Length, nSel;
     LPWSTR FaceName;
     DWORD FontType;
     LPCWSTR FontGrpBoxLabelTpl = NULL;
     WCHAR FontGrpBoxLabel[260];
 
-    nSel = (INT)SendMessageW(hListBox, LB_GETCURSEL, 0, 0);
+    nSel = (INT)SendMessageW(hFontList, LB_GETCURSEL, 0, 0);
     if (nSel == LB_ERR) return FALSE;
 
     /*
@@ -543,7 +549,7 @@ FontTypeChange(
         return FALSE;
 #endif
 
-    Length = (INT)SendMessageW(hListBox, LB_GETTEXTLEN, nSel, 0);
+    Length = (INT)SendMessageW(hFontList, LB_GETTEXTLEN, nSel, 0);
     if (Length == LB_ERR) return FALSE;
 
     FaceName = HeapAlloc(GetProcessHeap(),
@@ -551,7 +557,7 @@ FontTypeChange(
                          (Length + 1) * sizeof(WCHAR));
     if (FaceName == NULL) return FALSE;
 
-    Length = (INT)SendMessageW(hListBox, LB_GETTEXT, nSel, (LPARAM)FaceName);
+    Length = (INT)SendMessageW(hFontList, LB_GETTEXT, nSel, (LPARAM)FaceName);
     FaceName[Length] = L'\0';
 
     StringCchCopyW(pConInfo->FaceName, ARRAYSIZE(pConInfo->FaceName), FaceName);
@@ -579,7 +585,7 @@ FontTypeChange(
      * we always display the TrueType default sizes and we don't need to
      * recreate the list when we change between different TrueType fonts.
      */
-    FontType = SendMessageW(hListBox, LB_GETITEMDATA, nSel, 0);
+    FontType = (DWORD)SendMessageW(hFontList, LB_GETITEMDATA, nSel, 0);
     if (FontType != LB_ERR)
     {
         SizeList->UseRasterOrTTList = (FontType == RASTER_FONTTYPE);
@@ -709,8 +715,6 @@ FontProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-            HWND hFontList = GetDlgItem(hDlg, IDC_LBOX_FONTTYPE);
-
             SizeList = (PFONTSIZE_LIST_CTL)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*SizeList));
             if (!SizeList)
             {
@@ -733,20 +737,10 @@ FontProc(HWND hDlg,
 
             UpdateFontSizeList(hDlg, SizeList);
 
-            /* Initialize the font list */
-            FaceNameList_Initialize(hFontList, ConInfo->CodePage);
-
-            /* Select the current font */
             DPRINT1("ConInfo->FaceName = '%S'\n", ConInfo->FaceName);
-            FaceNameList_SelectFont(hDlg, hFontList,
-                                    SizeList,
-                                    ConInfo->FaceName,
-                                    ConInfo->FontFamily,
-                                    ConInfo->FontWeight,
-                                    ConInfo->FontSize);
 
-            /* Refresh everything */
-            FontTypeChange(hDlg, SizeList, ConInfo);
+            /* Face names list and current font selection will be done during PSN_SETACTIVE notification */
+            // CurrentCodePage = INVALID_CP;
 
             return TRUE;
         }
@@ -775,21 +769,6 @@ FontProc(HWND hDlg,
                                 WM_DISPLAYCHANGE, wParam, lParam);
             break;
         }
-
-#if 0
-        case PSM_QUERYSIBLINGS:
-        {
-            /*
-             * If this is a notification from the "Options" dialog because we
-             * changed the code page, treat it using the WM_FONTCHANGE case,
-             * otherwise ignore it.
-             */
-            if (wParam != IDL_CODEPAGE)
-                return FALSE;
-
-            /* Fall through */
-        }
-#endif
 
         case WM_FONTCHANGE:
         {
@@ -820,6 +799,38 @@ FontProc(HWND hDlg,
                 {
                     ApplyConsoleInfo(hDlg);
                     return TRUE;
+                }
+
+                case PSN_SETACTIVE:
+                {
+                    /* Check whether the current code page has changed.
+                     * If so, re-enumerate the fonts. */
+                    if (CurrentCodePage != ConInfo->CodePage)
+                    {
+                        HWND hFontList;
+
+                        /* Save the new code page */
+                        CurrentCodePage = ConInfo->CodePage;
+
+                        hFontList = GetDlgItem(hDlg, IDC_LBOX_FONTTYPE);
+
+                        /* Initialize the font list */
+                        FaceNameList_Initialize(hFontList, ConInfo->CodePage);
+
+                        /* Select the current font */
+                        FaceNameList_SelectFont(hDlg, hFontList,
+                                                SizeList,
+                                                ConInfo->FaceName,
+                                                ConInfo->FontFamily,
+                                                ConInfo->FontWeight,
+                                                ConInfo->FontSize);
+
+                        /* Refresh everything */
+                        FontTypeChange(hDlg, SizeList, ConInfo);
+                    }
+
+                    /* Fall back to default behaviour */
+                    break;
                 }
             }
 

@@ -349,12 +349,11 @@ OptionsProc(HWND hDlg,
                 if (CodePage == CB_ERR)
                     break;
 
-                /* If the user validated a different code page... */
+                /* If the user has selected a different code page... */
                 if ((HIWORD(wParam) == CBN_SELENDOK) && (CodePage != ConInfo->CodePage))
                 {
-                    /* ... update the code page, notify the siblings and change the property sheet state */
+                    /* ... update the code page and change the property sheet state */
                     ConInfo->CodePage = CodePage;
-                    // PropSheet_QuerySiblings(GetParent(hDlg), IDL_CODEPAGE, 0);
                     ResetFontPreview(&FontPreview);
                     PropSheet_Changed(GetParent(hDlg), hDlg);
                 }
