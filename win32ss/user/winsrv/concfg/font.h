@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/concfg/font.h
- * PURPOSE:         Console Fonts Management
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
- *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PROJECT:     ReactOS Console Server DLL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Console GDI Fonts Management.
+ * COPYRIGHT:   Copyright 2017-2022 Hermès Bélusca-Maïto
+ *              Copyright 2017 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #pragma once
@@ -12,6 +11,12 @@
 /* DEFINES ********************************************************************/
 
 #define INVALID_CP  ((UINT)-1)
+
+#ifndef CP_UTF8
+#define CP_UTF8 65001
+#endif
+
+#define CP_USA      437  // United States (OEM)
 
 #define CP_SHIFTJIS 932  // Japanese Shift-JIS
 #define CP_HANGUL   949  // Korean Hangul/Wansung
@@ -70,15 +75,27 @@ BYTE
 CodePageToCharSet(
     _In_ UINT CodePage);
 
+// FIXME: Will be redefined once we support a font cache.
+typedef struct _FONT_DATA
+{
+    _Inout_updates_z_(LF_FACESIZE) PWSTR FaceName;
+    ULONG Weight;
+    ULONG Family;
+    COORD Size;
+    BYTE  CharSet;
+} FONT_DATA, *PFONT_DATA;
+
 HFONT
 CreateConsoleFontEx(
     _In_     LONG Height,
     _In_opt_ LONG Width,
     _Inout_updates_z_(LF_FACESIZE)
          PWSTR FaceName,
-    _In_ ULONG FontFamily,
     _In_ ULONG FontWeight,
-    _In_ UINT  CodePage);
+    _In_ ULONG FontFamily,
+    _In_ UINT  CodePage,
+    _In_ BOOL  UseDefaultFallback,
+    _Out_ PFONT_DATA FontData);
 
 HFONT
 CreateConsoleFont2(

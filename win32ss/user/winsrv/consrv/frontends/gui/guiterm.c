@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontends/gui/guiterm.c
  * PURPOSE:         GUI Terminal Front-End
- * PROGRAMMERS:     Gé van Geldorp
+ * PROGRAMMERS:     GÃ© van Geldorp
  *                  Johannes Anderwald
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -1038,9 +1038,28 @@ static BOOL NTAPI
 GuiSetCodePage(IN OUT PFRONTEND This,
                UINT CodePage)
 {
-    // TODO: Find a suitable console font for the given code page,
-    // and set it if found; otherwise fail the call, or fall back
-    // to some default font...
+    PGUI_CONSOLE_DATA GuiData = This->Context;
+
+    /*
+     * Attempt to reinitialize the current font for the new code page,
+     * trying to keep the current font with the same characteristics.
+     * If the current font does not support the new code page, switch
+     * to a different font supporting the code page but having similar
+     * characteristics.
+     * If no font can be found for this code page, stay using the
+     * original font and refuse changing the code page.
+     */
+    if (!InitFonts(GuiData,
+                   GuiData->GuiInfo.FaceName,
+                   GuiData->GuiInfo.FontWeight,
+                   GuiData->GuiInfo.FontFamily,
+                   GuiData->GuiInfo.FontSize,
+                   CodePage, FALSE))
+    {
+        DPRINT1("Failed to initialize font '%S' for code page %d - Refuse CP change\n",
+                GuiData->GuiInfo.FaceName, CodePage);
+        return FALSE;
+    }
 
     return TRUE;
 }

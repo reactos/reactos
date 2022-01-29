@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontends/gui/conwnd.c
  * PURPOSE:         GUI Console Window Class
- * PROGRAMMERS:     Gé van Geldorp
+ * PROGRAMMERS:     GÃ© van Geldorp
  *                  Johannes Anderwald
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -518,31 +518,54 @@ CreateDerivedFont(HFONT OrgFont,
 }
 
 BOOL
-InitFonts(PGUI_CONSOLE_DATA GuiData,
-          LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements.
-          ULONG  FontFamily,
-          COORD  FontSize,
-          ULONG  FontWeight)
+InitFonts(
+    _Inout_ PGUI_CONSOLE_DATA GuiData,
+    _In_reads_or_z_(LF_FACESIZE)
+         PCWSTR FaceName,
+    _In_ ULONG FontWeight,
+    _In_ ULONG FontFamily,
+    _In_ COORD FontSize,
+    _In_opt_ UINT CodePage,
+    _In_ BOOL UseDefaultFallback)
 {
     HDC hDC;
     HFONT hFont;
+    FONT_DATA FontData;
+    UINT OldCharWidth  = GuiData->CharWidth;
+    UINT OldCharHeight = GuiData->CharHeight;
+    COORD OldFontSize  = GuiData->GuiInfo.FontSize;
+    WCHAR NewFaceName[LF_FACESIZE];
+
+    /* Default to current code page if none has been provided */
+    if (!CodePage)
+        CodePage = GuiData->Console->OutputCodePage;
 
     /*
-     * Initialize a new NORMAL font and get its character cell size.
+     * Initialize a new NORMAL font.
      */
+
+    /* Copy the requested face name into the local buffer.
+     * It will be modified in output by CreateConsoleFontEx()
+     * to hold a possible fallback font face name. */
+    StringCchCopyNW(NewFaceName, ARRAYSIZE(NewFaceName),
+                    FaceName, LF_FACESIZE);
+
     /* NOTE: FontSize is always in cell height/width units (pixels) */
     hFont = CreateConsoleFontEx((LONG)(ULONG)FontSize.Y,
                                 (LONG)(ULONG)FontSize.X,
-                                FaceName,
-                                FontFamily,
+                                NewFaceName,
                                 FontWeight,
-                                GuiData->Console->OutputCodePage);
-    if (hFont == NULL)
+                                FontFamily,
+                                CodePage,
+                                UseDefaultFallback,
+                                &FontData);
+    if (!hFont)
     {
-        DPRINT1("InitFonts: CreateConsoleFontEx failed\n");
+        DPRINT1("InitFonts: CreateConsoleFontEx('%S') failed\n", NewFaceName);
         return FALSE;
     }
 
+    /* Retrieve its character cell size */
     hDC = GetDC(GuiData->hWindow);
     if (!GetFontCellSize(hDC, hFont, &GuiData->CharHeight, &GuiData->CharWidth))
     {
@@ -561,35 +584,43 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
     GuiData->Font[FONT_NORMAL] = hFont;
 
     /*
-     * Now build the other fonts (bold, underlined, mixed).
+     * Now build the optional fonts (bold, underlined, mixed).
+     * Do not error in case they fail to be created.
      */
     GuiData->Font[FONT_BOLD] =
         CreateDerivedFont(GuiData->Font[FONT_NORMAL],
-                          FontWeight < FW_BOLD ? FW_BOLD : FontWeight,
+                          max(FW_BOLD, FontData.Weight),
                           FALSE,
                           FALSE);
     GuiData->Font[FONT_UNDERLINE] =
         CreateDerivedFont(GuiData->Font[FONT_NORMAL],
-                          FontWeight,
+                          FontData.Weight,
                           TRUE,
                           FALSE);
     GuiData->Font[FONT_BOLD | FONT_UNDERLINE] =
         CreateDerivedFont(GuiData->Font[FONT_NORMAL],
-                          FontWeight < FW_BOLD ? FW_BOLD : FontWeight,
+                          max(FW_BOLD, FontData.Weight),
                           TRUE,
                           FALSE);
 
     /*
-     * Save the settings.
+     * Save the new font characteristics.
      */
-    if (FaceName != GuiData->GuiInfo.FaceName)
+    StringCchCopyNW(GuiData->GuiInfo.FaceName,
+                    ARRAYSIZE(GuiData->GuiInfo.FaceName),
+                    NewFaceName, ARRAYSIZE(NewFaceName));
+    GuiData->GuiInfo.FontWeight = FontData.Weight;
+    GuiData->GuiInfo.FontFamily = FontData.Family;
+    GuiData->GuiInfo.FontSize   = FontData.Size;
+
+    /* Resize the terminal, in case the new font has a different size */
+    if ((OldCharWidth  != GuiData->CharWidth)  ||
+        (OldCharHeight != GuiData->CharHeight) ||
+        (OldFontSize.X != FontData.Size.X ||
+         OldFontSize.Y != FontData.Size.Y))
     {
-        StringCchCopyNW(GuiData->GuiInfo.FaceName, ARRAYSIZE(GuiData->GuiInfo.FaceName),
-                        FaceName, LF_FACESIZE);
+        TermResizeTerminal(GuiData->Console);
     }
-    GuiData->GuiInfo.FontFamily = FontFamily;
-    GuiData->GuiInfo.FontSize   = FontSize;
-    GuiData->GuiInfo.FontWeight = FontWeight;
 
     return TRUE;
 }
@@ -615,14 +646,40 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     /* Initialize the fonts */
     if (!InitFonts(GuiData,
                    GuiData->GuiInfo.FaceName,
+                   GuiData->GuiInfo.FontWeight,
                    GuiData->GuiInfo.FontFamily,
                    GuiData->GuiInfo.FontSize,
-                   GuiData->GuiInfo.FontWeight))
+                   0, FALSE))
     {
-        DPRINT1("GuiConsoleNcCreate: InitFonts failed\n");
-        GuiData->hWindow = NULL;
-        NtSetEvent(GuiData->hGuiInitEvent, NULL);
-        return FALSE;
+        /* Reset only the output code page if we don't have a suitable
+         * font for it, possibly falling back to "United States (OEM)". */
+        UINT AltCodePage = GetOEMCP();
+
+        if (AltCodePage == Console->OutputCodePage)
+            AltCodePage = CP_USA;
+
+        DPRINT1("Could not initialize font '%S' for code page %d - Resetting CP to %d\n",
+                GuiData->GuiInfo.FaceName, Console->OutputCodePage, AltCodePage);
+
+        CON_SET_OUTPUT_CP(Console, AltCodePage);
+
+        /* We will use a fallback font if we cannot find
+         * anything for this replacement code page. */
+        if (!InitFonts(GuiData,
+                       GuiData->GuiInfo.FaceName,
+                       GuiData->GuiInfo.FontWeight,
+                       GuiData->GuiInfo.FontFamily,
+                       GuiData->GuiInfo.FontSize,
+                       0, TRUE))
+        {
+            DPRINT1("Failed to initialize font '%S' for code page %d\n",
+                    GuiData->GuiInfo.FaceName, Console->OutputCodePage);
+
+            DPRINT1("GuiConsoleNcCreate: InitFonts failed\n");
+            GuiData->hWindow = NULL;
+            NtSetEvent(GuiData->hGuiInitEvent, NULL);
+            return FALSE;
+        }
     }
 
     /* Initialize the terminal framebuffer */

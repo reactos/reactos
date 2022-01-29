@@ -429,9 +429,11 @@ FaceNameList_Initialize(
     DPRINT1("The ideal console fonts were not found; manually add default ones.\n");
 
     AddFontToList(hWndList, L"Terminal", RASTER_FONTTYPE);
+#if 0
+    // TODO: insert only the *single* default TT font, that should
+    // be found in the TT font cache with the codepage number 0.
     AddFontToList(hWndList, L"Lucida Console", TRUETYPE_FONTTYPE);
-    if (CodePageToCharSet(CodePage) != DEFAULT_CHARSET)
-        AddFontToList(hWndList, L"Droid Sans Fallback", TRUETYPE_FONTTYPE);
+#endif
 }
 
 static VOID
