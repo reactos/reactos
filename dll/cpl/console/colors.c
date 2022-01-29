@@ -26,10 +26,8 @@ PaintStaticControls(
                 ARRAYSIZE(pConInfo->ColorTable) - 1);
 
     hBrush = CreateSolidBrush(pConInfo->ColorTable[index]);
-    if (!hBrush) return;
-
-    FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
-    DeleteObject(hBrush);
+    FillRect(drawItem->hDC, &drawItem->rcItem, hBrush ? hBrush : GetStockObject(BLACK_BRUSH));
+    if (hBrush) DeleteObject(hBrush);
 
     if (ActiveStaticControl == index)
         DrawFocusRect(drawItem->hDC, &drawItem->rcItem);
