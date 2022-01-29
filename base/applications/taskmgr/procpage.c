@@ -934,117 +934,113 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     return ret;
 }
 
-/* FIXME: Use this code to get process executable path if CORE-16145 was fixed. */
-#if 0
-static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
+static DWORD _GetModuleFileNameExW(HANDLE hProcess, HMODULE hModule, LPWSTR lpFilename, DWORD nSize)
 {
-    typedef BOOL (WINAPI *PFN_QUERYFULLPROCESSIMAGENAMEW)(HANDLE, DWORD, LPWSTR, PDWORD);
+    typedef DWORD (WINAPI *PFN_GETMODULEFILENAMEEXW)(HANDLE, HMODULE, LPWSTR, DWORD);
 
-    HANDLE hProcess;
     HMODULE hLibrary;
-    PFN_QUERYFULLPROCESSIMAGENAMEW _QueryFullProcessImageNameW;
-    DWORD dwPathLen;
-    BOOL bRet = FALSE;
+    PFN_GETMODULEFILENAMEEXW func;
+    DWORD dwRet = 0;
 
-    if (dwProcessId == 0)
-    {
-        return FALSE;
-    }
-
-    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwProcessId);
-
-    if (!hProcess)
-    {
-        return FALSE;
-    }
-
-    hLibrary = LoadLibraryW(L"kernel32_vista.dll");
+    hLibrary = LoadLibraryW(L"psapi.dll");
 
     if (hLibrary)
     {
-        _QueryFullProcessImageNameW = (PFN_QUERYFULLPROCESSIMAGENAMEW)GetProcAddress(hLibrary, "QueryFullProcessImageNameW");
+        func = (PFN_GETMODULEFILENAMEEXW)GetProcAddress(hLibrary, "GetModuleFileNameExW");
 
-        if (_QueryFullProcessImageNameW)
+        if (func)
         {
-            dwPathLen = dwLength;
-            bRet = _QueryFullProcessImageNameW(hProcess, 0, lpExePath, &dwPathLen);
+            dwRet = func(hProcess, hModule, lpFilename, nSize);
         }
 
         FreeLibrary(hLibrary);
     }
 
-    CloseHandle(hProcess);
-
-    return bRet;
+    return dwRet;
 }
-#endif
 
 static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
 {
-    typedef BOOL (WINAPI *PFN_GETMODULEFILENAMEEXW)(HANDLE, HMODULE, LPWSTR, DWORD);
-
+    WCHAR *pszExePath;
     HANDLE hProcess;
-    HMODULE hLibrary;
-    PFN_GETMODULEFILENAMEEXW _GetModuleFileNameExW;
     BOOL bSuccess = FALSE;
 
     if (dwProcessId == 0)
     {
         return FALSE;
     }
+    
+    pszExePath = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
 
-    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwProcessId);
-
-    if (!hProcess)
+    if (!pszExePath)
     {
         return FALSE;
     }
-
-    hLibrary = LoadLibraryW(L"psapi.dll");
-
-    if (hLibrary)
+    
+    /* PID = 4 or "System" */
+    if (dwProcessId == 4)
     {
-        _GetModuleFileNameExW = (PFN_GETMODULEFILENAMEEXW)GetProcAddress(hLibrary, "GetModuleFileNameExW");
+        static const WCHAR szKernelPath[] = L"\\SystemRoot\\System32\\ntoskrnl.exe";
 
-        if (_GetModuleFileNameExW)
+        if (dwLength >= _countof(szKernelPath))
         {
-            bSuccess = (_GetModuleFileNameExW(hProcess, NULL, lpExePath, dwLength) != 0);
+            memcpy(pszExePath, szKernelPath, sizeof(szKernelPath));
+
+            bSuccess = TRUE;
         }
-
-        FreeLibrary(hLibrary);
     }
+    else
+    {
+        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwProcessId);
 
-    CloseHandle(hProcess);
+        if (hProcess)
+        {
+            bSuccess = (_GetModuleFileNameExW(hProcess, NULL, pszExePath, dwLength) != 0);
+
+            CloseHandle(hProcess);
+        }
+    }
 
     if (bSuccess)
     {
         /* Remove or replace path prefix if present */
-        if (wcsncmp(lpExePath, L"\\??\\", 4) == 0)
+        if (wcsncmp(pszExePath, L"\\??\\", 4) == 0)
         {
-            size_t NewLen = wcslen(lpExePath) - 4;
-            memmove(lpExePath, lpExePath + 4, (NewLen + 1) * sizeof(WCHAR));
+            /* Remove "\??\" prefix */
+            size_t NewLen = wcslen(pszExePath) - 4;
+            memmove(pszExePath, pszExePath + 4, (NewLen + 1) * sizeof(WCHAR));
         }
-        else if (_wcsnicmp(lpExePath, L"\\SystemRoot", 11) == 0)
+        else if (_wcsnicmp(pszExePath, L"\\SystemRoot", 11) == 0)
         {
             WCHAR szWinDir[MAX_PATH];
             HRESULT hr;
 
+            bSuccess = FALSE;
             hr = SHGetFolderPathW(NULL, CSIDL_WINDOWS, NULL, 0, szWinDir);
 
             if (SUCCEEDED(hr))
             {
                 size_t WinDirLen = wcslen(szWinDir);
-                size_t PathLen = wcslen(lpExePath) - 11;
+                size_t PathLen = wcslen(pszExePath) - 11;
 
                 if (dwLength >= WinDirLen + PathLen + 1)
                 {
-                    /* Replace \SystemRoot prefix */
-                    memmove(lpExePath + WinDirLen, lpExePath + 11, (PathLen + 1) * sizeof(WCHAR));
-                    memcpy(lpExePath, szWinDir, WinDirLen * sizeof(WCHAR));
+                    /* Replace "\SystemRoot" prefix */
+                    memmove(pszExePath + WinDirLen, pszExePath + 11, (PathLen + 1) * sizeof(WCHAR));
+                    memcpy(pszExePath, szWinDir, WinDirLen * sizeof(WCHAR));
+
+                    bSuccess = TRUE;
                 }
             }
         }
+
+        if (bSuccess)
+        {
+            memcpy(lpExePath, pszExePath, dwLength * sizeof(WCHAR));
+        }
     }
+
+    HeapFree(GetProcessHeap(), 0, pszExePath);
 
     return bSuccess;
 }
