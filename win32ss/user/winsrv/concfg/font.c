@@ -399,51 +399,54 @@ IsValidConsoleFont(
 VOID
 InitTTFontCache(VOID)
 {
-    BOOLEAN Success;
-    HKEY  hKeyTTFonts; // hKey;
-    DWORD dwNumValues = 0;
-    DWORD dwIndex;
-    DWORD dwType;
+    LRESULT lResult;
+    HKEY hKey;
+    DWORD dwIndex, dwType;
     WCHAR szValueName[MAX_PATH];
-    DWORD dwValueName;
+    DWORD cchValueName;
     WCHAR szValue[LF_FACESIZE] = L"";
-    DWORD dwValue;
-    PTT_FONT_ENTRY FontEntry;
-    PWCHAR pszNext = NULL;
+    DWORD cbValue;
     UINT CodePage;
+    PTT_FONT_ENTRY FontEntry;
+    PWCHAR pszNext;
 
     if (!IsListEmpty(&TTFontCache))
         return;
     // InitializeListHead(&TTFontCache);
 
-    /* Open the key */
+    /* Open the Console\TrueTypeFont key */
     // "\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console\\TrueTypeFont"
-    Success = (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                             L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Console\\TrueTypeFont",
-                             0,
-                             KEY_READ,
-                             &hKeyTTFonts) == ERROR_SUCCESS);
-    if (!Success)
-        return;
-
-    /* Enumerate each value */
-    if (RegQueryInfoKeyW(hKeyTTFonts, NULL, NULL, NULL, NULL, NULL, NULL,
-                         &dwNumValues, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Console\\TrueTypeFont",
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKey) != ERROR_SUCCESS)
     {
-        DPRINT("ConCfgReadUserSettings: RegQueryInfoKeyW failed\n");
-        RegCloseKey(hKeyTTFonts);
         return;
     }
 
-    for (dwIndex = 0; dwIndex < dwNumValues; dwIndex++)
+    /* Enumerate all the available TrueType console fonts */
+    for (dwIndex = 0, cchValueName = ARRAYSIZE(szValueName),
+                      cbValue = sizeof(szValue);
+         (lResult = RegEnumValueW(hKey, dwIndex,
+                                  szValueName, &cchValueName,
+                                  NULL, &dwType,
+                                  (PBYTE)szValue, &cbValue)) != ERROR_NO_MORE_ITEMS;
+         ++dwIndex, cchValueName = ARRAYSIZE(szValueName),
+                    cbValue = sizeof(szValue))
     {
-        dwValue = sizeof(szValue);
-        dwValueName = ARRAYSIZE(szValueName);
-        if (RegEnumValueW(hKeyTTFonts, dwIndex, szValueName, &dwValueName, NULL, &dwType, (BYTE*)szValue, &dwValue) != ERROR_SUCCESS)
-        {
-            DPRINT1("InitTTFontCache: RegEnumValueW failed, continuing...\n");
+        /* Ignore if we failed for another reason, e.g. because
+         * the value name is too long (and thus, invalid). */
+        if (lResult != ERROR_SUCCESS)
             continue;
-        }
+
+        /* Validate the value name (exclude the unnamed value) */
+        if (!cchValueName || (*szValueName == UNICODE_NULL))
+            continue;
+        /* Too large value names have already been handled with ERROR_MORE_DATA */
+        ASSERT((cchValueName < ARRAYSIZE(szValueName)) &&
+               (szValueName[cchValueName] == UNICODE_NULL));
+
         /* Only (multi-)string values are supported */
         if ((dwType != REG_SZ) && (dwType != REG_MULTI_SZ))
             continue;
@@ -502,7 +505,7 @@ InitTTFontCache(VOID)
     }
 
     /* Close the key and quit */
-    RegCloseKey(hKeyTTFonts);
+    RegCloseKey(hKey);
 }
 
 VOID
