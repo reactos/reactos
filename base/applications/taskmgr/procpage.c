@@ -1029,7 +1029,6 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
             WCHAR szWinDir[MAX_PATH];
             HRESULT hr;
 
-            bSuccess = FALSE;
             hr = SHGetFolderPathW(NULL, CSIDL_WINDOWS, NULL, 0, szWinDir);
 
             if (SUCCEEDED(hr))
@@ -1042,8 +1041,6 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
                     /* Replace \SystemRoot prefix */
                     memmove(lpExePath + WinDirLen, lpExePath + 11, (PathLen + 1) * sizeof(WCHAR));
                     memcpy(lpExePath, szWinDir, WinDirLen * sizeof(WCHAR));
-
-                    bSuccess = TRUE;
                 }
             }
         }
