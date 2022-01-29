@@ -11,7 +11,7 @@
 #pragma once
 
 #include <wingdi.h>
-#include <psdk/imm.h>
+#include <imm.h>
 
 #ifdef __cplusplus
 extern "C" {
