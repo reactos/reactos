@@ -165,7 +165,7 @@ FontSizeList_SelectFontSize(
              * We got an index beyond the end of the list (as per Bisect* functionality),
              * so instead, select the last element of the list.
              */
-            nSel = idx-1;
+            nSel = idx - 1;
         }
         SendMessageW(SizeList->RasterSizeList.hWndList, LB_SETCURSEL, (WPARAM)nSel, 0);
     }
@@ -178,10 +178,10 @@ FontSizeList_SelectFontSize(
         StringCchPrintfW(szFontSize, ARRAYSIZE(szFontSize), L"%d", FontSize);
 
         /* Find the font size in the list, or add it both in the ComboBox list, sorted by size value (string), and its edit box */
-        nSel = SendMessageW(SizeList->hWndTTSizeList, CB_FINDSTRINGEXACT, 0, (LPARAM)szFontSize);
+        nSel = (INT)SendMessageW(SizeList->hWndTTSizeList, CB_FINDSTRINGEXACT, 0, (LPARAM)szFontSize);
         if (nSel == CB_ERR)
         {
-            nSel = (UINT)SendMessageW(SizeList->hWndTTSizeList, CB_ADDSTRING, -1, (LPARAM)szFontSize);
+            nSel = (INT)SendMessageW(SizeList->hWndTTSizeList, CB_ADDSTRING, -1, (LPARAM)szFontSize);
             // ComboBox_SetText(...)
             SetWindowTextW(SizeList->hWndTTSizeList, szFontSize);
             SizeList->bIsTTSizeDirty = TRUE;
@@ -223,7 +223,7 @@ FontSizeList_GetSelectedFontSize(
              * See: https://support.microsoft.com/en-us/help/66365/how-to-process-a-cbn-selchange-notification-message
              * for more details.
              */
-            nSel = SendMessageW(SizeList->hWndTTSizeList, CB_GETCURSEL, 0, 0);
+            nSel = (INT)SendMessageW(SizeList->hWndTTSizeList, CB_GETCURSEL, 0, 0);
             SendMessageW(SizeList->hWndTTSizeList, CB_GETLBTEXT, nSel, (LPARAM)szFontSize);
 
             /* Validate the font size */
@@ -243,10 +243,10 @@ FontSizeList_GetSelectedFontSize(
                 return 0;
 
             /* Find if the font size already exists in the list; if not, add it */
-            nSel = SendMessageW(SizeList->hWndTTSizeList, CB_FINDSTRINGEXACT, 0, (LPARAM)szFontSize);
+            nSel = (INT)SendMessageW(SizeList->hWndTTSizeList, CB_FINDSTRINGEXACT, 0, (LPARAM)szFontSize);
             if (nSel == CB_ERR)
             {
-                nSel = (UINT)SendMessageW(SizeList->hWndTTSizeList, CB_ADDSTRING, -1, (LPARAM)szFontSize);
+                nSel = (INT)SendMessageW(SizeList->hWndTTSizeList, CB_ADDSTRING, -1, (LPARAM)szFontSize);
                 //// ComboBox_SetText(...)
                 //SetWindowTextW(SizeList->hWndTTSizeList, szFontSize);
                 //SizeList->bIsTTSizeDirty = TRUE;
