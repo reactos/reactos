@@ -87,8 +87,6 @@ C_ASSERT(offsetof(INPUTCONTEXT, dwReserve) == 0x134);
 C_ASSERT(sizeof(INPUTCONTEXT) == 0x140);
 #endif
 
-LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
-
 struct IME_STATE;
 
 typedef struct INPUTCONTEXTDX /* unconfirmed */
@@ -163,6 +161,8 @@ typedef struct tagUNDETERMINESTRUCT
     UINT  uYomiTextPos;
     UINT  uYomiDelimPos;
 } UNDETERMINESTRUCT, *PUNDETERMINESTRUCT, *LPUNDETERMINESTRUCT;
+
+LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
 
 typedef struct IME_SUBSTATE
 {
