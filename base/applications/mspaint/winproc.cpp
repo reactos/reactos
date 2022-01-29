@@ -156,7 +156,7 @@ void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
 
     placeSelWin();
     selectionWindow.ShowWindow(SW_SHOW);
-    ForceRefreshSelectionContents();
+    selectionWindow.ForceRefreshSelectionContents();
 }
 
 LRESULT CMainWindow::OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -407,14 +407,7 @@ LRESULT CMainWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         }
         else
         {
-            switch (toolsModel.GetActiveTool())
-            {
-                case TOOL_SHAPE: case TOOL_BEZIER:
-                    imageArea.SendMessage(nMsg, wParam, lParam);
-                    break;
-                default:
-                    break;
-            }
+            imageArea.SendMessage(nMsg, wParam, lParam);
         }
     }
     return 0;
@@ -430,6 +423,13 @@ LRESULT CMainWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 
 LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    // Disable commands while dragging mouse
+    if (imageArea.drawing && ::GetCapture())
+    {
+        ATLTRACE("locking!\n");
+        return 0;
+    }
+
     switch (LOWORD(wParam))
     {
         case IDM_HELPINFO:
@@ -531,12 +531,31 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_EDITUNDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
                 break;
+            if (selectionWindow.IsWindowVisible())
+            {
+                if (toolsModel.GetActiveTool() == TOOL_RECTSEL ||
+                    toolsModel.GetActiveTool() == TOOL_FREESEL)
+                {
+                    imageArea.cancelDrawing();
+                    break;
+                }
+            }
+            if (ToolBase::pointSP != 0) // drawing something?
+            {
+                imageArea.cancelDrawing();
+                break;
+            }
             imageModel.Undo();
             imageArea.Invalidate(FALSE);
             break;
         case IDM_EDITREDO:
             if (toolsModel.GetActiveTool() == TOOL_TEXT && ::IsWindowVisible(textEditWindow))
                 break;
+            if (ToolBase::pointSP != 0) // drawing something?
+            {
+                imageArea.finishDrawing();
+                break;
+            }
             imageModel.Redo();
             imageArea.Invalidate(FALSE);
             break;
@@ -562,8 +581,19 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_EDITDELETESELECTION:
         {
-            /* remove selection window and already painted content using undo */
-            imageModel.Undo();
+            switch (toolsModel.GetActiveTool())
+            {
+                case TOOL_FREESEL:
+                case TOOL_RECTSEL:
+                    imageModel.DeleteSelection();
+                    break;
+
+                case TOOL_TEXT:
+                    imageArea.cancelDrawing();
+                    break;
+                default:
+                    break;
+            }
             break;
         }
         case IDM_EDITSELECTALL:

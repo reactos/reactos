@@ -57,7 +57,7 @@ void ImageModel::CopyPrevious()
     imageSaved = FALSE;
 }
 
-void ImageModel::Undo()
+void ImageModel::Undo(BOOL bClearRedo)
 {
     ATLTRACE("%s: %d\n", __FUNCTION__, undoSteps);
     if (undoSteps > 0)
@@ -68,7 +68,9 @@ void ImageModel::Undo()
         currInd = (currInd + HISTORYSIZE - 1) % HISTORYSIZE;
         SelectObject(hDrawingDC, hBms[currInd]);
         undoSteps--;
-        if (redoSteps < HISTORYSIZE - 1)
+        if (bClearRedo)
+            redoSteps = 0;
+        else if (redoSteps < HISTORYSIZE - 1)
             redoSteps++;
         if (GetWidth() != oldWidth || GetHeight() != oldHeight)
             NotifyDimensionsChanged();
@@ -250,4 +252,30 @@ void ImageModel::RotateNTimes90Degrees(int iN)
                    0, 0, GetWidth(), GetHeight(), SRCCOPY);
     }
     NotifyImageChanged();
+}
+
+void ImageModel::DrawSelectionBackground(COLORREF rgbBG)
+{
+    if (toolsModel.GetActiveTool() == TOOL_FREESEL)
+        selectionModel.DrawBackgroundPoly(hDrawingDC, rgbBG);
+    else
+        selectionModel.DrawBackgroundRect(hDrawingDC, rgbBG);
+}
+
+void ImageModel::DeleteSelection()
+{
+    if (selectionWindow.IsWindowVisible())
+        ResetToPrevious();
+    CopyPrevious();
+    if (selectionWindow.IsWindowVisible())
+        Undo(TRUE);
+    DrawSelectionBackground(paletteModel.GetBgColor());
+    selectionWindow.ShowWindow(SW_HIDE);
+    NotifyImageChanged();
+}
+
+void ImageModel::Bound(POINT& pt)
+{
+    pt.x = max(0, min(pt.x, GetWidth()));
+    pt.y = max(0, min(pt.y, GetHeight()));
 }
