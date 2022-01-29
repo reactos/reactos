@@ -76,17 +76,23 @@ BuildCodePageList(
     IN UINT CurrentCodePage)
 {
     LIST_CTL ListCtl;
+    LRESULT lResult;
     HKEY hKey;
-    DWORD dwIndex, dwSize, dwType;
+    DWORD dwIndex, dwType;
+    DWORD cchValueName;
     UINT CodePage;
-    WCHAR szValueName[MAX_VALUE_NAME];
 
-    // #define REGSTR_PATH_CODEPAGE    TEXT("System\\CurrentControlSet\\Control\\Nls\\CodePage")
+    /* Valid code page value names are string representations
+     * of their corresponding decimal values, that are not larger
+     * than MAXUSHORT == 65535. */
+    WCHAR szValueName[sizeof("65535")];
+
     /* Open the Nls\CodePage key */
+    // #define REGSTR_PATH_CODEPAGE    TEXT("System\\CurrentControlSet\\Control\\Nls\\CodePage")
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       L"System\\CurrentControlSet\\Control\\Nls\\CodePage",
                       0,
-                      KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                      KEY_QUERY_VALUE,
                       &hKey) != ERROR_SUCCESS)
     {
         return;
@@ -97,16 +103,26 @@ BuildCodePageList(
     ListCtl.GetData  = List_GetData;
 
     /* Enumerate all the available code pages on the system */
-    dwSize  = ARRAYSIZE(szValueName);
-    dwIndex = 0;
-    while (RegEnumValueW(hKey, dwIndex, szValueName, &dwSize,
-                         NULL, &dwType, NULL, NULL) == ERROR_SUCCESS) // != ERROR_NO_MORE_ITEMS
+    for (dwIndex = 0, cchValueName = ARRAYSIZE(szValueName);
+         (lResult = RegEnumValueW(hKey, dwIndex,
+                                  szValueName, &cchValueName,
+                                  NULL, &dwType,
+                                  NULL, NULL)) != ERROR_NO_MORE_ITEMS;
+         ++dwIndex, cchValueName = ARRAYSIZE(szValueName))
     {
-        /* Ignore these parameters, prepare for next iteration */
-        dwSize = ARRAYSIZE(szValueName);
-        ++dwIndex;
+        /* Ignore if we failed for another reason, e.g. because
+         * the value name is too long (and thus, invalid). */
+        if (lResult != ERROR_SUCCESS)
+            continue;
 
-        /* Check the value type validity */
+        /* Validate the value name (exclude the unnamed value) */
+        if (!cchValueName || (*szValueName == UNICODE_NULL))
+            continue;
+        /* Too large value names have already been handled with ERROR_MORE_DATA */
+        ASSERT((cchValueName < ARRAYSIZE(szValueName)) &&
+               (szValueName[cchValueName] == UNICODE_NULL));
+
+        /* Validate the value type */
         if (dwType != REG_SZ)
             continue;
 
