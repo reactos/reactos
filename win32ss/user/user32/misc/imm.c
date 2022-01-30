@@ -653,37 +653,29 @@ UpdatePerUserImmEnabling(VOID)
   return Ret;
 }
 
-static const WCHAR imeW[] = {'I','M','E',0};
-
 BOOL
 WINAPI
 RegisterIMEClass(VOID)
 {
-    WNDCLASSEXW WndClass;
     ATOM atom;
+    WNDCLASSEXW WndClass = { sizeof(WndClass) };
 
-    ZeroMemory(&WndClass, sizeof(WndClass));
+    WndClass.lpszClassName  = L"IME";
+    WndClass.style          = CS_GLOBALCLASS;
+    WndClass.lpfnWndProc    = ImeWndProcW;
+    WndClass.cbWndExtra     = sizeof(LONG_PTR);
+    WndClass.hCursor        = LoadCursorW(NULL, IDC_ARROW);
 
-    WndClass.cbSize = sizeof(WndClass);
-    WndClass.lpszClassName = imeW;
-    WndClass.style = CS_GLOBALCLASS;
-    WndClass.lpfnWndProc = ImeWndProcW;
-    WndClass.cbWndExtra = sizeof(LONG_PTR);
-    WndClass.hCursor = LoadCursorW(NULL, IDC_ARROW);
-
-    atom = RegisterClassExWOWW( &WndClass,
-                                 0,
-                                 FNID_IME,
-                                 0,
-                                 FALSE);
-    if (atom)
+    atom = RegisterClassExWOWW(&WndClass, 0, FNID_IME, 0, FALSE);
+    if (!atom)
     {
-       RegisterDefaultClasses |= ICLASS_TO_MASK(ICLS_IME);
-       TRACE("Register IME Class!\n");
-       return TRUE;
+        ERR("Failed to register IME Class!\n");
+        return FALSE;
     }
-    ERR("Failed to register IME Class!\n");
-    return FALSE;
+
+    RegisterDefaultClasses |= ICLASS_TO_MASK(ICLS_IME);
+    TRACE("RegisterIMEClass atom = %u\n", atom);
+    return TRUE;
 }
 
 /*
