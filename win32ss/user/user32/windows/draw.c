@@ -781,7 +781,7 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
 /* Ported from WINE20020904 */
 static BOOL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
 {
-    switch(uState & 0xff)
+    switch(uState & 0x1f)
     {
         case DFCS_BUTTONPUSH:
             return UITOOLS95_DFC_ButtonPush(hdc, rc, uState);
@@ -812,7 +812,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
     RECT myr;
     INT bkmode;
     TCHAR Symbol;
-    switch(uFlags & 0xff)
+    switch(uFlags & 0xf)
     {
         case DFCS_CAPTIONCLOSE:
 		Symbol = 'r';
@@ -879,7 +879,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
     RECT myr;
     INT bkmode;
     TCHAR Symbol;
-    switch(uFlags & 0xff)
+    switch(uFlags & 0x1f)
     {
         case DFCS_SCROLLCOMBOBOX:
         case DFCS_SCROLLDOWN:
@@ -983,7 +983,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     RECT myr;
     INT cxy;
     cxy = UITOOLS_MakeSquareRect(r, &myr);
-    switch(uFlags & 0xff)
+    switch(uFlags & 0x1f)
     {
         case DFCS_MENUARROWUP:
             Symbol = '5';
@@ -1024,8 +1024,8 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     /* save font */
     hOldFont = SelectObject(dc, hFont);
 
-    if ((uFlags & 0xff) == DFCS_MENUARROWUP ||  
-        (uFlags & 0xff) == DFCS_MENUARROWDOWN ) 
+    if ((uFlags & 0x1f) == DFCS_MENUARROWUP ||  
+        (uFlags & 0x1f) == DFCS_MENUARROWDOWN ) 
     {
 #if 0
        if (uFlags & DFCS_INACTIVE)
