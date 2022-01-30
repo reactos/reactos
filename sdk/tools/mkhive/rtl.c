@@ -131,28 +131,28 @@ DbgPrint(
 
 VOID
 NTAPI
-RtlAssert(PVOID FailedAssertion,
-          PVOID FileName,
-          ULONG LineNumber,
-          PCHAR Message)
+RtlAssert(IN PVOID FailedAssertion,
+          IN PVOID FileName,
+          IN ULONG LineNumber,
+          IN PCHAR Message OPTIONAL)
 {
-   if (NULL != Message)
-   {
-      DbgPrint("Assertion \'%s\' failed at %s line %d: %s\n",
-               (PCHAR)FailedAssertion,
-               (PCHAR)FileName,
-               LineNumber,
-               Message);
-   }
-   else
-   {
-      DbgPrint("Assertion \'%s\' failed at %s line %d\n",
-               (PCHAR)FailedAssertion,
-               (PCHAR)FileName,
-               LineNumber);
-   }
+    if (Message != NULL)
+    {
+        DbgPrint("Assertion \'%s\' failed at %s line %u: %s\n",
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber,
+                 Message);
+    }
+    else
+    {
+        DbgPrint("Assertion \'%s\' failed at %s line %u\n",
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber);
+    }
 
-   //DbgBreakPoint();
+    //DbgBreakPoint();
 }
 
 // DECLSPEC_NORETURN
@@ -165,10 +165,12 @@ KeBugCheckEx(
     IN ULONG_PTR BugCheckParameter3,
     IN ULONG_PTR BugCheckParameter4)
 {
-    char Buffer[70];
-    printf("*** STOP: 0x%08X (0x%08lX, 0x%08lX, 0x%08lX, 0x%08lX)",
-           BugCheckCode, BugCheckParameter1, BugCheckParameter2,
-           BugCheckParameter3, BugCheckParameter4);
+    printf("*** STOP: 0x%08X (0x%p,0x%p,0x%p,0x%p)",
+           BugCheckCode,
+           (PVOID)BugCheckParameter1,
+           (PVOID)BugCheckParameter2,
+           (PVOID)BugCheckParameter3,
+           (PVOID)BugCheckParameter4);
     ASSERT(FALSE);
 }
 
