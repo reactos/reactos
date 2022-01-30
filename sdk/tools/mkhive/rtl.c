@@ -165,7 +165,6 @@ KeBugCheckEx(
     IN ULONG_PTR BugCheckParameter3,
     IN ULONG_PTR BugCheckParameter4)
 {
-    char Buffer[70];
     printf("*** STOP: 0x%08X (0x%p,0x%p,0x%p,0x%p)",
            BugCheckCode,
            (PVOID)BugCheckParameter1,
