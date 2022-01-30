@@ -14,6 +14,21 @@ static BOOL Setup = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
+BOOL APIENTRY UserIsDBCSEnabled(VOID)
+{
+    switch (PRIMARYLANGID(gusLanguageID))
+    {
+        case LANG_CHINESE:
+        case LANG_JAPANESE:
+        case LANG_KOREAN:
+        //case LANG_VIETNAMESE: // Are you using double-byte character strings?
+            return TRUE;
+
+        default:
+            return FALSE;
+    }
+}
+
 BOOL
 NTAPI
 InitMetrics(VOID)
@@ -150,7 +165,7 @@ InitMetrics(VOID)
     piSysMet[SM_NETWORK] = 3;
     piSysMet[SM_SLOWMACHINE] = 0;
     piSysMet[SM_SECURE] = 0;
-    piSysMet[SM_DBCSENABLED] = 0;
+    piSysMet[SM_DBCSENABLED] = UserIsDBCSEnabled();
     piSysMet[SM_SHOWSOUNDS] = gspv.bShowSounds;
     piSysMet[SM_MIDEASTENABLED] = 0;
     piSysMet[SM_CMONITORS] = 1;
@@ -183,6 +198,9 @@ UserGetSystemMetrics(ULONG Index)
     ASSERT(Setup);
     TRACE("UserGetSystemMetrics(%lu)\n", Index);
 
+    if (Index == SM_DBCSENABLED)
+        return UserIsDBCSEnabled();
+
     /* Get metrics from array */
     if (Index < SM_CMETRICS)
     {
@@ -205,6 +223,5 @@ UserGetSystemMetrics(ULONG Index)
     ERR("UserGetSystemMetrics() called with invalid index %lu\n", Index);
     return 0;
 }
-
 
 /* EOF */
