@@ -33,12 +33,11 @@ LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 
 LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    PAINTSTRUCT ps;
     RECT rect1 = { 0, 0, 42, 66 };
     RECT rect2 = { 0, 70, 42, 136 };
 
-    DefWindowProc(WM_PAINT, wParam, lParam);
-
-    HDC hdc = GetDC();
+    HDC hdc = BeginPaint(&ps);
     DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, (toolsModel.GetActiveTool() == TOOL_ZOOM) ? BF_RECT : BF_RECT | BF_MIDDLE);
     DrawEdge(hdc, &rect2, (toolsModel.GetActiveTool() >= TOOL_RECT) ? BDR_SUNKENOUTER : 0, BF_RECT | BF_MIDDLE);
     switch (toolsModel.GetActiveTool())
@@ -181,7 +180,7 @@ LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
         case TOOL_PEN:
             break;
     }
-    ReleaseDC(hdc);
+    EndPaint(&ps);
     return 0;
 }
 

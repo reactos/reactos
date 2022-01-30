@@ -259,7 +259,7 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         }
         else
         {
-            if (drawing || ToolBase::pointSP != 0)
+            if (drawing || ToolBase::pointSP != 0 || selectionWindow.IsWindowVisible())
                 cancelDrawing();
         }
     }
@@ -410,4 +410,11 @@ LRESULT CImgAreaWindow::OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, 
     HDC hdc = (HDC)wParam;
     SetBkMode(hdc, TRANSPARENT);
     return (LRESULT)GetStockObject(NULL_BRUSH);
+}
+
+void CImgAreaWindow::finishDrawing()
+{
+    toolsModel.OnFinishDraw();
+    drawing = FALSE;
+    Invalidate(FALSE);
 }

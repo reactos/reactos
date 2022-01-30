@@ -17,6 +17,10 @@ public:
     {
     }
 
+    BOOL drawing;
+    void cancelDrawing();
+    void finishDrawing();
+
     DECLARE_WND_CLASS_EX(_T("ImgAreaWindow"), CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CImgAreaWindow)
@@ -40,8 +44,6 @@ public:
         MESSAGE_HANDLER(WM_CTLCOLOREDIT, OnCtlColorEdit)
     END_MSG_MAP()
 
-    BOOL drawing;
-
 private:
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -63,5 +65,4 @@ private:
     LRESULT OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     void drawZoomFrame(int mouseX, int mouseY);
-    void cancelDrawing();
 };
