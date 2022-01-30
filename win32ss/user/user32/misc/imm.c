@@ -491,7 +491,7 @@ ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
     return 0;
 }
 
-static VOID FASTCALL User32UpdateActiveContextOfWindow(HWND hWnd, BOOL bActive)
+static VOID FASTCALL User32SetImeActivenessOfWindow(HWND hWnd, BOOL bActive)
 {
     HIMC hIMC;
 
@@ -582,11 +582,11 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             break;
 
         case 0x17:
-            User32UpdateActiveContextOfWindow((HWND)lParam, TRUE);
+            User32SetImeActivenessOfWindow((HWND)lParam, TRUE);
             break;
 
         case 0x18:
-            User32UpdateActiveContextOfWindow((HWND)lParam, FALSE);
+            User32SetImeActivenessOfWindow((HWND)lParam, FALSE);
             break;
 
         case 0x19:
