@@ -491,6 +491,21 @@ ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
     return 0;
 }
 
+static VOID FASTCALL User32UpdateActiveContextOfWindow(HWND hWnd, BOOL bActive)
+{
+    HIMC hIMC;
+
+    if (!hWnd || !IsWindow(hWnd))
+    {
+        IMM_FN(ImmSetActiveContext)(NULL, NULL, bActive);
+        return;
+    }
+
+    hIMC = IMM_FN(ImmGetContext)(hWnd);
+    IMM_FN(ImmSetActiveContext)(hWnd, hIMC, bActive);
+    IMM_FN(ImmReleaseContext)(hWnd, hIMC);
+}
+
 static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret = 0;
@@ -567,11 +582,11 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             break;
 
         case 0x17:
-            // TODO:
+            User32UpdateActiveContextOfWindow((HWND)lParam, TRUE);
             break;
 
         case 0x18:
-            // TODO:
+            User32UpdateActiveContextOfWindow((HWND)lParam, FALSE);
             break;
 
         case 0x19:
