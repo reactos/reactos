@@ -89,6 +89,8 @@ void CMainWindow::alignChildrenToMainWindow()
 
 void CMainWindow::saveImage(BOOL overwrite)
 {
+    imageArea.finishDrawing();
+
     if (isAFile && overwrite)
     {
         imageModel.SaveImage(filepathname);
