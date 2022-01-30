@@ -135,6 +135,9 @@ BEGIN
             MENUITEM "&Низький", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "У&становити відповідність...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "&Open File Location", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END
 

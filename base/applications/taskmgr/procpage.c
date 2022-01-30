@@ -25,7 +25,7 @@
 
 #include "proclist.h"
 
-#include <shlobj.h>
+#include <strsafe.h>
 
 #define CMP(x1, x2)\
     (x1 < x2 ? -1 : (x1 > x2 ? 1 : 0))
@@ -984,7 +984,7 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
 
         if (dwLength >= _countof(szKernelPath))
         {
-            memcpy(pszExePath, szKernelPath, sizeof(szKernelPath));
+            StringCchCopyW(pszExePath, dwLength, szKernelPath);
 
             bSuccess = TRUE;
         }
@@ -1007,36 +1007,31 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
         if (wcsncmp(pszExePath, L"\\??\\", 4) == 0)
         {
             /* Remove "\??\" prefix */
-            size_t NewLen = wcslen(pszExePath) - 4;
-            memmove(pszExePath, pszExePath + 4, (NewLen + 1) * sizeof(WCHAR));
+            StringCchCopyW(pszExePath, dwLength, pszExePath + 4);
         }
         else if (_wcsnicmp(pszExePath, L"\\SystemRoot", 11) == 0)
         {
             WCHAR szWinDir[MAX_PATH];
-            HRESULT hr;
 
-            bSuccess = FALSE;
-            hr = SHGetFolderPathW(NULL, CSIDL_WINDOWS, NULL, 0, szWinDir);
+            bSuccess = (GetWindowsDirectoryW(szWinDir, _countof(szWinDir)) != 0);
 
-            if (SUCCEEDED(hr))
+            if (bSuccess)
             {
-                size_t WinDirLen = wcslen(szWinDir);
-                size_t PathLen = wcslen(pszExePath) - 11;
-
-                if (dwLength >= WinDirLen + PathLen + 1)
+                if (dwLength >= wcslen(szWinDir) + (wcslen(pszExePath) - 11) + 1)
                 {
                     /* Replace "\SystemRoot" prefix */
-                    memmove(pszExePath + WinDirLen, pszExePath + 11, (PathLen + 1) * sizeof(WCHAR));
-                    memcpy(pszExePath, szWinDir, WinDirLen * sizeof(WCHAR));
-
-                    bSuccess = TRUE;
+                    StringCchPrintfW(pszExePath, dwLength, L"%s%s", szWinDir, pszExePath + 11);
+                }
+                else
+                {
+                    bSuccess = FALSE;
                 }
             }
         }
 
         if (bSuccess)
         {
-            memcpy(lpExePath, pszExePath, dwLength * sizeof(WCHAR));
+            StringCchCopyW(lpExePath, dwLength, pszExePath);
         }
     }
 
@@ -1052,37 +1047,26 @@ void ProcessPage_OnProperties(void)
 
     dwProcessId = GetSelectedProcessId();
 
-    if (!GetProcessExecutablePath(dwProcessId, szExePath, _countof(szExePath)))
+    if (GetProcessExecutablePath(dwProcessId, szExePath, _countof(szExePath)))
     {
         return;
     }
-
-    SHObjectProperties(NULL, SHOP_FILEPATH, szExePath, NULL);
 }
 
 void ProcessPage_OnOpenFileLocation(void)
 {
     DWORD dwProcessId;
     WCHAR szExePath[MAX_PATH];
-    ITEMIDLIST *pidl;
 
     dwProcessId = GetSelectedProcessId();
 
-    if (!GetProcessExecutablePath(dwProcessId, szExePath, _countof(szExePath)))
+    if (GetProcessExecutablePath(dwProcessId, szExePath, _countof(szExePath)))
     {
-        return;
-    }
+        WCHAR szCmdLine[10 + _countof(szExePath)];
 
-    pidl = ILCreateFromPath(szExePath);
-    
-    if (pidl)
-    {
-        CoInitialize(NULL);
+        StringCchPrintfW(szCmdLine, _countof(szCmdLine), L"/select,\"%s\"", szExePath);
 
-        /* Open file explorer and select the exe file. */
-        SHOpenFolderAndSelectItems(pidl, 0, NULL, 0);
-
-        CoUninitialize();
-        ILFree(pidl);
+        /* Open file explorer and select the exe file */
+        ShellExecuteW(NULL, L"open", L"explorer.exe", szCmdLine, NULL, SW_SHOWNORMAL);
     }
 }
