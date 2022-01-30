@@ -560,6 +560,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
         case 0x14:
             IMM_FN(ImmGetConversionStatus)(hIMC, &dwConversion, &dwSentence);
             ret = dwConversion;
+            break;
 
         case 0x15:
             // TODO:
