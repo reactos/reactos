@@ -491,6 +491,116 @@ ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
     return 0;
 }
 
+static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT ret = 0;
+    LPINPUTCONTEXTDX pIC;
+    HIMC hIMC = pimeui->hIMC;
+    LPCANDIDATEFORM pCandForm;
+    LPCOMPOSITIONFORM pCompForm;
+    DWORD dwConversion, dwSentence;
+
+    switch (wParam)
+    {
+        case 0x05:
+            // TODO:
+            break;
+
+        case 0x06:
+            // TODO:
+            break;
+
+        case 0x09:
+            pIC = IMM_FN(ImmLockIMC)(hIMC);
+            if (!pIC)
+                break;
+
+            pCandForm = &pIC->cfCandForm[lParam];
+            IMM_FN(ImmSetCandidateWindow)(hIMC, pCandForm);
+            IMM_FN(ImmUnlockIMC)(hIMC);
+            break;
+
+        case 0x0A:
+            pIC = IMM_FN(ImmLockIMC)(hIMC);
+            if (!pIC)
+                break;
+
+            IMM_FN(ImmSetCompositionFontW)(hIMC, &pIC->lfFont.W);
+            IMM_FN(ImmUnlockIMC)(hIMC);
+            break;
+
+        case 0x0B:
+            pIC = IMM_FN(ImmLockIMC)(hIMC);
+            if (!pIC)
+                break;
+
+            pCompForm = &pIC->cfCompForm;
+            pIC->dwUIFlags |= 0x8;
+            IMM_FN(ImmSetCompositionWindow)(hIMC, pCompForm);
+            IMM_FN(ImmUnlockIMC)(hIMC);
+            break;
+
+        case 0x0D:
+            IMM_FN(ImmConfigureIMEW)((HKL)lParam, pimeui->hwndIMC, IME_CONFIG_GENERAL, NULL);
+            break;
+
+        case 0x0F:
+            if (hIMC)
+                IMM_FN(ImmSetOpenStatus)(hIMC, (BOOL)lParam);
+            break;
+
+        case 0x11:
+            ret = IMM_FN(ImmFreeLayout)((DWORD)lParam);
+            break;
+
+        case 0x13:
+            // TODO:
+            break;
+
+        case 0x14:
+            IMM_FN(ImmGetConversionStatus)(hIMC, &dwConversion, &dwSentence);
+            ret = dwConversion;
+
+        case 0x15:
+            // TODO:
+            break;
+
+        case 0x17:
+            // TODO:
+            break;
+
+        case 0x18:
+            // TODO:
+            break;
+
+        case 0x19:
+            ret = IMM_FN(ImmActivateLayout)((HKL)lParam);
+            break;
+
+        case 0x1C:
+            ret = IMM_FN(ImmPutImeMenuItemsIntoMappedFile)((HIMC)lParam);
+            break;
+
+        case 0x1D:
+            // TODO:
+            break;
+
+        case 0x1E:
+            ret = (ULONG_PTR)IMM_FN(ImmGetContext)((HWND)lParam);
+            break;
+
+        case 0x1F:
+        case 0x20:
+            ret = IMM_FN(ImmSystemHandler)(hIMC, wParam, lParam);
+            break;
+
+        default:
+            break;
+    }
+
+    return ret;
+}
+
 LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
 {
     PWND pWnd;
@@ -545,8 +655,17 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 return 0;
 
             case WM_IME_SYSTEM:
-                // TODO:
-                return 0;
+                switch (wParam)
+                {
+                    case 0x03:
+                    case 0x10:
+                    case 0x13:
+                        break;
+
+                    default:
+                        return 0;
+                }
+                break;
 
             default:
             {
@@ -605,8 +724,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_IME_SYSTEM:
-            // TODO:
-            break;
+            return ImeWnd_OnImeSystem(pimeui, wParam, lParam);
 
         default:
         {
