@@ -4,7 +4,7 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <imm.h>
-#include <ddk/imm.h>
+#include <ddk/immdev.h>
 #include <pseh/pseh2.h>
 #include <ndk/umtypes.h>
 #include <ndk/pstypes.h>

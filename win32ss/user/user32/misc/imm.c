@@ -11,7 +11,7 @@
 
 #include <user32.h>
 #include <strsafe.h>
-#include <ddk/imm.h>
+#include <ddk/immdev.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
