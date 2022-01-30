@@ -240,6 +240,8 @@ LRESULT CMainWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
 BOOL CMainWindow::ConfirmSave()
 {
+    imageArea.finishDrawing();
+
     if (imageModel.IsImageSaved())
         return TRUE;
 
