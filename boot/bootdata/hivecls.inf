@@ -126,8 +126,8 @@ HKCR,"cplfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll
 HKCR,"cplfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 HKCR,"cplfile\shell\cplopen","",0x00000000,%CPLFILE_OPENWITH%
 ;;HKCR,"cplfile\shell\cplopen","MUIVerb",0x00020000,"@%SystemRoot%\system32\shell32.dll,-154"
-HKCR,"cplfile\shell\cplopen\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %1,%*"
-HKCR,"cplfile\shell\runas\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLLAsUser %1,%*"
+HKCR,"cplfile\shell\cplopen\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL ""%1"",%*"
+HKCR,"cplfile\shell\runas\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLLAsUser ""%1"",%*"
 
 ; Cursors
 HKCR,".cur","",0x00000000,"curfile"
