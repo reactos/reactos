@@ -61,6 +61,7 @@ VOID NTAPI
 RtlInitUnicodeString(
     IN OUT PUNICODE_STRING DestinationString,
     IN PCWSTR SourceString);
+
 WCHAR NTAPI
 RtlUpcaseUnicodeChar(
     IN WCHAR Source);
@@ -82,6 +83,10 @@ RegSetValueExW(
     IN ULONG dwType,
     IN const UCHAR* lpData,
     IN ULONG cbData);
+
+LONG WINAPI
+RegCloseKey(
+    IN HKEY hKey);
 
 LONG WINAPI
 RegDeleteKeyW(

@@ -26,7 +26,7 @@
 
 /*
  * TODO:
- *   - Implement RegDeleteKeyW() and RegDeleteValueW()
+ *   - Implement RegDeleteValueW()
  */
 
 #include <stdlib.h>
@@ -465,31 +465,24 @@ RegpOpenOrCreateKey(
 }
 
 LONG WINAPI
+RegCloseKey(
+    IN HKEY hKey)
+{
+    PMEMKEY Key = HKEY_TO_MEMKEY(hKey); // ParentKey
+
+    /* Free the object */
+    free(Key);
+
+    return ERROR_SUCCESS;
+}
+
+LONG WINAPI
 RegCreateKeyW(
     IN HKEY hKey,
     IN LPCWSTR lpSubKey,
     OUT PHKEY phkResult)
 {
     return RegpOpenOrCreateKey(hKey, lpSubKey, TRUE, FALSE, phkResult);
-}
-
-LONG WINAPI
-RegDeleteKeyW(
-    IN HKEY hKey,
-    IN LPCWSTR lpSubKey)
-{
-    DPRINT1("RegDeleteKeyW(0x%p, '%S') is UNIMPLEMENTED!\n",
-            hKey, (lpSubKey ? lpSubKey : L""));
-    return ERROR_SUCCESS;
-}
-
-LONG WINAPI
-RegOpenKeyW(
-    IN HKEY hKey,
-    IN LPCWSTR lpSubKey,
-    OUT PHKEY phkResult)
-{
-    return RegpOpenOrCreateKey(hKey, lpSubKey, FALSE, FALSE, phkResult);
 }
 
 LONG WINAPI
@@ -509,6 +502,110 @@ RegCreateKeyExW(
                                TRUE,
                                (dwOptions & REG_OPTION_VOLATILE) != 0,
                                phkResult);
+}
+
+LONG WINAPI
+RegDeleteKeyW(
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey)
+{
+    LONG rc;
+    NTSTATUS Status;
+    HKEY hTargetKey;
+    PMEMKEY Key; // ParentKey
+    PHHIVE Hive;
+    PCM_KEY_NODE KeyNode; // ParentNode
+    PCM_KEY_NODE Parent;
+    HCELL_INDEX ParentCell;
+
+    if (lpSubKey)
+    {
+        rc = RegOpenKeyW(hKey, lpSubKey, &hTargetKey);
+        if (rc != ERROR_SUCCESS)
+            return rc;
+    }
+    else
+    {
+        hTargetKey = hKey;
+        rc = ERROR_SUCCESS;
+    }
+
+    /* Don't allow deleting the root */
+    if (hTargetKey == RootKey)
+    {
+        /* Fail */
+        rc = ERROR_ACCESS_DENIED; // STATUS_CANNOT_DELETE;
+        goto Quit;
+    }
+
+    /* Get the hive and node */
+    Key = HKEY_TO_MEMKEY(hTargetKey);
+    Hive = &Key->RegistryHive->Hive;
+
+    /* Get the key node */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Key->KeyCellOffset);
+    if (!KeyNode)
+    {
+        rc = ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
+        goto Quit;
+    }
+
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+
+    /* Check if we don't have any children */
+    if (!(KeyNode->SubKeyCounts[Stable] + KeyNode->SubKeyCounts[Volatile]) &&
+        !(KeyNode->Flags & KEY_NO_DELETE))
+    {
+        /* Get the parent and free the cell */
+        ParentCell = KeyNode->Parent;
+        Status = CmpFreeKeyByCell(Hive, Key->KeyCellOffset, TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            /* Get the parent node */
+            Parent = (PCM_KEY_NODE)HvGetCell(Hive, ParentCell);
+            if (Parent)
+            {
+                /* Make sure we're dirty */
+                ASSERT(HvIsCellDirty(Hive, ParentCell));
+
+                /* Update the write time */
+                KeQuerySystemTime(&Parent->LastWriteTime);
+
+                /* Release the cell */
+                HvReleaseCell(Hive, ParentCell);
+            }
+
+            rc = ERROR_SUCCESS;
+        }
+        else
+        {
+            /* Fail */
+            rc = ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
+        }
+    }
+    else
+    {
+        /* Fail */
+        rc = ERROR_ACCESS_DENIED; // STATUS_CANNOT_DELETE;
+    }
+
+    /* Release the cell */
+    HvReleaseCell(Hive, Key->KeyCellOffset);
+
+Quit:
+    if (lpSubKey)
+        RegCloseKey(hTargetKey);
+
+    return rc;
+}
+
+LONG WINAPI
+RegOpenKeyW(
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey,
+    OUT PHKEY phkResult)
+{
+    return RegpOpenOrCreateKey(hKey, lpSubKey, FALSE, FALSE, phkResult);
 }
 
 LONG WINAPI
