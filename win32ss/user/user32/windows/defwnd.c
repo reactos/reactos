@@ -951,16 +951,16 @@ RealDefWindowProcA(HWND hWnd,
             LONG size, i;
             unsigned char lead = 0;
             char *buf = NULL;
-            HIMC himc = ImmGetContext( hWnd );
+            HIMC himc = IMM_FN(ImmGetContext)( hWnd );
 
             if (himc)
             {
-                if ((size = ImmGetCompositionStringA( himc, GCS_RESULTSTR, NULL, 0 )))
+                if ((size = IMM_FN(ImmGetCompositionStringA)( himc, GCS_RESULTSTR, NULL, 0 )))
                 {
                     if (!(buf = HeapAlloc( GetProcessHeap(), 0, size ))) size = 0;
-                    else size = ImmGetCompositionStringA( himc, GCS_RESULTSTR, buf, size );
+                    else size = IMM_FN(ImmGetCompositionStringA)( himc, GCS_RESULTSTR, buf, size );
                 }
-                ImmReleaseContext( hWnd, himc );
+                IMM_FN(ImmReleaseContext)( hWnd, himc );
 
                 for (i = 0; i < size; i++)
                 {
@@ -990,7 +990,7 @@ RealDefWindowProcA(HWND hWnd,
         {
             HWND hwndIME;
 
-            hwndIME = ImmGetDefaultIMEWnd(hWnd);
+            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (hwndIME)
                 Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             break;
@@ -1000,9 +1000,9 @@ RealDefWindowProcA(HWND hWnd,
         {
             HWND hwndIME;
 
-            hwndIME = ImmGetDefaultIMEWnd(hWnd);
+            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (hwndIME)
-                Result = ImmIsUIMessageA(hwndIME, Msg, wParam, lParam);
+                Result = SendMessageA(hwndIME, Msg, wParam, lParam);
             break;
         }
 
@@ -1150,16 +1150,16 @@ RealDefWindowProcW(HWND hWnd,
         {
             LONG size, i;
             WCHAR *buf = NULL;
-            HIMC himc = ImmGetContext( hWnd );
+            HIMC himc = IMM_FN(ImmGetContext)( hWnd );
 
             if (himc)
             {
-                if ((size = ImmGetCompositionStringW( himc, GCS_RESULTSTR, NULL, 0 )))
+                if ((size = IMM_FN(ImmGetCompositionStringW)( himc, GCS_RESULTSTR, NULL, 0 )))
                 {
                     if (!(buf = HeapAlloc( GetProcessHeap(), 0, size * sizeof(WCHAR) ))) size = 0;
-                    else size = ImmGetCompositionStringW( himc, GCS_RESULTSTR, buf, size * sizeof(WCHAR) );
+                    else size = IMM_FN(ImmGetCompositionStringW)( himc, GCS_RESULTSTR, buf, size * sizeof(WCHAR) );
                 }
-                ImmReleaseContext( hWnd, himc );
+                IMM_FN(ImmReleaseContext)( hWnd, himc );
 
                 for (i = 0; i < size / sizeof(WCHAR); i++)
                     SendMessageW( hWnd, WM_IME_CHAR, buf[i], 1 );
@@ -1175,7 +1175,7 @@ RealDefWindowProcW(HWND hWnd,
         {
             HWND hwndIME;
 
-            hwndIME = ImmGetDefaultIMEWnd(hWnd);
+            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (hwndIME)
                 Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
@@ -1185,9 +1185,9 @@ RealDefWindowProcW(HWND hWnd,
         {
             HWND hwndIME;
 
-            hwndIME = ImmGetDefaultIMEWnd(hWnd);
+            hwndIME = IMM_FN(ImmGetDefaultIMEWnd)(hWnd);
             if (hwndIME)
-                Result = ImmIsUIMessageW(hwndIME, Msg, wParam, lParam);
+                Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 
