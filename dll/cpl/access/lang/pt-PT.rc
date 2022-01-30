@@ -142,8 +142,8 @@ BEGIN
     GROUPBOX "Opções de filtro", -1, 6, 79, 234, 79
     AUTORADIOBUTTON "&Ignorar os batimentos de tecla repetidos", IDC_FILTER_BOUNCE_RADIO,
                     12, 91, 162, 11, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Ig&norar teclas pressionadas rapidamente e diminuir a velocidade de repetição", IDC_FILTER_REPEAT_RADIO,
-                    12, 106, 162, 20, BS_TOP | BS_MULTILINE
+    AUTORADIOBUTTON "Ig&norar batimentos de teclas rápidos e diminuir a velocidade de repetição", IDC_FILTER_REPEAT_RADIO,
+                    12, 106, 152, 20, BS_TOP | BS_MULTILINE
     PUSHBUTTON "&Definições", IDC_FILTER_BOUNCE_BUTTON, 168, 88, 66, 14, WS_GROUP
     PUSHBUTTON "De&finições", IDC_FILTER_REPEAT_BUTTON, 168, 106, 66, 14, WS_GROUP
     LTEXT "C&lique e digite para testar as definições de ""Teclas lentas"":", -1, 12, 129, 222, 11
@@ -210,11 +210,11 @@ BEGIN
     LTEXT "Rápida", -1, 204, 123, 24, 11
     AUTOCHECKBOX "&Premir Ctrl para aumentar a velocidade e Shift para diminuír", IDC_MOUSEKEYS_SPEED_CHECK,
                  12, 142, 222, 14
-    LTEXT "Utilizar ""Rato por teclado"" quando a tecla Num Lock estiver:", -1, 6, 168, 120, 20
-    AUTORADIOBUTTON "Ac&tivada", IDC_MOUSEKEYS_ON_RADIO, 126, 171, 48, 11
-    AUTORADIOBUTTON "&Desactivada", IDC_MOUSEKEYS_OFF_RADIO, 180, 171, 50, 11
+    LTEXT "Utilizar ""Rato por teclado"" quando a tecla Num Lock estiver:", -1, 6, 168, 220, 10
+    AUTORADIOBUTTON "Ac&tivada", IDC_MOUSEKEYS_ON_RADIO, 126, 180, 48, 11
+    AUTORADIOBUTTON "&Desactivada", IDC_MOUSEKEYS_OFF_RADIO, 180, 180, 50, 11
     AUTOCHECKBOX "M&ostrar no ecrã o estado de ""Rato por teclado""", IDC_MOUSEKEYS_STATUS_CHECK,
-                 6, 184, 222, 14
+                 6, 190, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 189, 207, 50, 14
 END
