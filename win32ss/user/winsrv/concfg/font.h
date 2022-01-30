@@ -150,9 +150,20 @@ RefreshTTFontCache(VOID);
 
 PTT_FONT_ENTRY
 FindCachedTTFont(
-    // _In_reads_or_z_(LF_FACESIZE)
-    _In_ PCWSTR FaceName,
+    _In_reads_or_z_opt_(LF_FACESIZE)
+         PCWSTR FaceName,
     _In_ UINT CodePage);
+
+/**
+ * @brief
+ * Verifies whether the given font is an additional console TrueType font.
+ * Wrapper macros around FindCachedTTFont().
+ *
+ * @remark
+ * These macros are equivalents of the functions
+ * IsAvailableTTFont() and IsAvailableTTFontCP() in
+ * https://github.com/microsoft/terminal/blob/main/src/propsheet/dbcs.cpp
+ **/
 
 #define IsAdditionalTTFont(FaceName) \
     (FindCachedTTFont((FaceName), INVALID_CP) != NULL)

@@ -24,7 +24,9 @@
 
 /* GLOBALS ********************************************************************/
 
-#define TERMINAL_FACENAME   L"Terminal"
+#define TERMINAL_FACENAME           L"Terminal"
+#define DEFAULT_NON_DBCS_FONTFACE   L"Lucida Console" // L"Consolas"
+#define DEFAULT_TT_FONT_FACENAME    L"__DefaultTTFont__"
 
 /* TrueType font list cache */
 SINGLE_LIST_ENTRY TTFontCache = { NULL };
@@ -322,6 +324,35 @@ FindSuitableFont(
     Param.SearchFont.CharSet = CodePageToCharSet(CodePage);
     Param.CodePage = CodePage;
 
+    if (/* !FaceName || */ !*FaceName)
+    {
+        /* Find and use a default Raster font */
+
+        /* Use "Terminal" as the fallback */
+        StringCchCopyW(FaceName, LF_FACESIZE, TERMINAL_FACENAME);
+#if 0
+        // FIXME: CJK font choose workaround: Don't choose Asian
+        // charset font if there is no preferred font for CJK.
+        if (IsCJKCodePage(CodePage))
+            FontData->CharSet = ANSI_CHARSET;
+#endif
+        FontData->Family &= ~TMPF_TRUETYPE;
+    }
+    else if (wcscmp(FaceName, DEFAULT_TT_FONT_FACENAME) == 0)
+    {
+        /* Find and use a default TrueType font */
+        FontEntry = FindCachedTTFont(NULL, CodePage);
+        if (FontEntry)
+        {
+            StringCchCopyW(FaceName, LF_FACESIZE, FontEntry->FaceName);
+        }
+        else
+        {
+            StringCchCopyW(FaceName, LF_FACESIZE, DEFAULT_NON_DBCS_FONTFACE);
+        }
+        FontData->Family |= TMPF_TRUETYPE;
+    }
+
     /* Search for a TrueType alternative face name */
     FontEntry = FindCachedTTFont(FaceName, CodePage);
     if (FontEntry)
@@ -492,12 +523,20 @@ CreateConsoleFontEx(
     FontData->Size.Y = Height;
     FontData->CharSet = 0; // CodePageToCharSet(CodePage);
 
-    hFont = CreateConsoleFontWorker(FontData, CodePage);
-    if (hFont)
-        return hFont;
+    if (/* !FaceName || */ !*FaceName || wcscmp(FaceName, DEFAULT_TT_FONT_FACENAME) == 0)
+    {
+        /* We do not have an actual font face name yet and should find one.
+         * Call FindSuitableFont() to determine the default font to use. */
+    }
+    else
+    {
+        hFont = CreateConsoleFontWorker(FontData, CodePage);
+        if (hFont)
+            return hFont;
 
-    DBGFNT1("CreateConsoleFont('%S') failed - Try to find a suitable font...\n",
-            FaceName);
+        DBGFNT1("CreateConsoleFont('%S') failed - Try to find a suitable font...\n",
+                FaceName);
+    }
 
     /*
      * We could not create a font with the default settings.
@@ -515,6 +554,9 @@ CreateConsoleFontEx(
         if (!UseDefaultFallback)
             return NULL;
 
+        //
+        // FIXME: See also !*FaceName case in FindSuitableFont().
+        //
         /* Use "Terminal" as the fallback */
         StringCchCopyW(FaceName, LF_FACESIZE, TERMINAL_FACENAME);
 #if 0
@@ -523,6 +565,7 @@ CreateConsoleFontEx(
         if (IsCJKCodePage(CodePage))
             FontData->CharSet = ANSI_CHARSET;
 #endif
+        FontData->Family &= ~TMPF_TRUETYPE;
     }
     else
     {
@@ -1113,33 +1156,74 @@ RefreshTTFontCache(VOID)
     InitTTFontCache();
 }
 
+/**
+ * @brief
+ * Searches for a font in the console TrueType font cache,
+ * with the specified code page.
+ *
+ * @param[in,opt]   FaceName
+ * An optional pointer to a maximally @b LF_FACESIZE-sized buffer.
+ * The buffer contains the face name of the font to search for.
+ *
+ * - If FaceName != NULL, search for the named font that should
+ *   match the provided code page (when CodePage != INVALID_CP).
+ *
+ * - If FaceName == NULL, search for a font with the provided
+ *   code page. In this case, CodePage cannot be == INVALID_CP,
+ *   otherwise the search fails.
+ *
+ * @param[in]   CodePage
+ * The code page the font has to support, or @b INVALID_CP when
+ * searching a font by face name only.
+ *
+ * @return
+ * A pointer to the cache entry for the font, or @b NULL if not found.
+ **/
 PTT_FONT_ENTRY
 FindCachedTTFont(
-    // _In_reads_or_z_(LF_FACESIZE)
-    _In_ PCWSTR FaceName,
+    _In_reads_or_z_opt_(LF_FACESIZE)
+         PCWSTR FaceName,
     _In_ UINT CodePage)
 {
     PSINGLE_LIST_ENTRY Entry;
     PTT_FONT_ENTRY FontEntry;
 
-    /* Search for the font in the cache */
-    for (Entry = TTFontCache.Next;
-         Entry != NULL;
-         Entry = Entry->Next)
+    if (FaceName)
     {
-        FontEntry = CONTAINING_RECORD(Entry, TT_FONT_ENTRY, Entry);
-
-        /* NOTE: The font face names are case-sensitive */
-        if ((wcscmp(FontEntry->FaceName   , FaceName) == 0) ||
-            (wcscmp(FontEntry->FaceNameAlt, FaceName) == 0))
+        /* Search for the named font */
+        for (Entry = TTFontCache.Next;
+             Entry != NULL;
+             Entry = Entry->Next)
         {
-            /* Return a match if we don't look at the code pages, or when they match */
-            if ((CodePage == INVALID_CP) || (CodePage == FontEntry->CodePage))
+            FontEntry = CONTAINING_RECORD(Entry, TT_FONT_ENTRY, Entry);
+
+            /* NOTE: The font face names are case-sensitive */
+            if ((wcscmp(FontEntry->FaceName   , FaceName) == 0) ||
+                (wcscmp(FontEntry->FaceNameAlt, FaceName) == 0))
             {
-                return FontEntry;
+                /* Return the font if we don't search by code page, or when they match */
+                if ((CodePage == INVALID_CP) || (CodePage == FontEntry->CodePage))
+                {
+                    return FontEntry;
+                }
             }
         }
     }
+    else if (CodePage != INVALID_CP)
+    {
+        /* Search for a font with the specified code page */
+        for (Entry = TTFontCache.Next;
+             Entry != NULL;
+             Entry = Entry->Next)
+        {
+            FontEntry = CONTAINING_RECORD(Entry, TT_FONT_ENTRY, Entry);
+
+            /* Return the font if the code pages match */
+            if (CodePage == FontEntry->CodePage)
+                return FontEntry;
+        }
+    }
+
     return NULL;
 }
 
