@@ -101,7 +101,7 @@ BEGIN
     AUTOCHECKBOX "&Utilizar as ""Teclas série""", IDC_SERIAL_BOX, 12, 142, 126, 14
     PUSHBUTTON "&Definições", IDC_SERIAL_BUTTON, 144, 142, 90, 14
     GROUPBOX "Opções administrativas", -1, 6, 169, 234, 47
-    AUTOCHECKBOX "&Aplicar todas as definições à área de trabalho de início de sessão", IDC_ADMIN_LOGON_BOX,
+    AUTOCHECKBOX "&Aplicar todas as definições ao ambiente de trabalho do início de sessão", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
     AUTOCHECKBOX "Aplicar &todas as predefinições para novos utilizadores", IDC_ADMIN_USERS_BOX,
                  12, 196, 222, 14
@@ -117,7 +117,7 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar atalho", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Opções", -1, 6, 83, 234, 44
-    AUTOCHECKBOX "&Pressionar a tecla modificadora duas vezes para fixar", IDC_STICKY_LOCK_CHECK,
+    AUTOCHECKBOX "&Premir a tecla modificadora duas vezes para fixar", IDC_STICKY_LOCK_CHECK,
                  12, 92, 222, 14
     AUTOCHECKBOX "Desac&tivar ""Teclas presas"" ao premir duas teclas em simultâneo", IDC_STICKY_UNLOCK_CHECK,
                  12, 105, 222, 18, BS_MULTILINE
@@ -136,13 +136,13 @@ CAPTION "Definições para ""Teclas lentas"""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Atalho do teclado", -1, 6, 11, 234, 62
-    LTEXT "O atalho para ""Teclas lentas"" é:\nmanter a tecla SHIFT direita pressionada por oito segundos.",
+    LTEXT "O atalho para ""Teclas lentas"" é:\nManter premida a tecla SHIFT da direita  durante oito segundos.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar atalho", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Opções de filtro", -1, 6, 79, 234, 79
     AUTORADIOBUTTON "&Ignorar os batimentos de tecla repetidos", IDC_FILTER_BOUNCE_RADIO,
                     12, 91, 162, 11, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Ig&norar teclas pressionadas rapidamente e diminuir a taxa de repetição", IDC_FILTER_REPEAT_RADIO,
+    AUTORADIOBUTTON "Ig&norar teclas pressionadas rapidamente e diminuir a velocidade de repetição", IDC_FILTER_REPEAT_RADIO,
                     12, 106, 162, 20, BS_TOP | BS_MULTILINE
     PUSHBUTTON "&Definições", IDC_FILTER_BOUNCE_BUTTON, 168, 88, 66, 14, WS_GROUP
     PUSHBUTTON "De&finições", IDC_FILTER_REPEAT_BUTTON, 168, 106, 66, 14, WS_GROUP
@@ -163,7 +163,7 @@ CAPTION "Definições para ""Teclas sonoras"""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Atalho do teclado", -1, 6, 11, 234, 62
-    LTEXT "O atalho para ""Teclas de sonoras"" é:\nManter a tecla NUM LOCK pressionada por cinco segundos.",
+    LTEXT "O atalho para ""Teclas de sonoras"" é:\nManter premida a tecla NUM LOCK durante cinco segundos.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar atalho", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
@@ -176,7 +176,7 @@ CAPTION "Definições para ""Alto contraste"""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Atalho do teclado", -1, 6, 11, 234, 62
-    LTEXT "O atalho para ""Alto contraste"" é:\nPremir ALT esquerda + SHIFT esquerda + PRINT SCREEN.",
+    LTEXT "O atalho para ""Alto contraste"" é:\nPremir as teclas ALT + SHIFT da esquerda + PRINT SCREEN.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar atalho", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Esquema de visualização de alto contraste", -1, 6, 83, 234, 44
@@ -193,7 +193,7 @@ CAPTION "Definições para ""Rato por teclado"""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Atalho do teclado", -1, 6, 11, 234, 62
-    LTEXT "O atalho para ""Rato por teclado"" é:\nPremir ALT esquerda + SHIFT esquerda + NUM LOCK.",
+    LTEXT "O atalho para ""Rato por teclado"" é:\nPremir as teclas ALT + SHIFT da esquerda + NUM LOCK.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar atalho", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
@@ -247,11 +247,11 @@ BEGIN
     LTEXT "&Intervalo de repetição:", -1, 24, 60, 96, 11
     COMBOBOX IDC_REPEAT_DELAY_COMBO, 24, 71, 210, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Taxa de repetição:", -1, 24, 89, 96, 11
+    LTEXT "&Velocidade de repetição:", -1, 24, 89, 96, 11
     COMBOBOX IDC_REPEAT_REPEAT_COMBO, 24, 100, 210, 65,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "Teclas lentas", -1, 6, 124, 234, 42
-    LTEXT "&As teclas premidas durante:", -1, 12, 133, 222, 11
+    LTEXT "&Manter as teclas premidas durante:", -1, 12, 133, 222, 11
     COMBOBOX IDC_REPEAT_WAIT_COMBO, 12, 150, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     LTEXT "Á&rea de teste:", -1, 6, 178, 48, 11
