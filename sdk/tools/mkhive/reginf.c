@@ -463,8 +463,11 @@ registry_callback(HINF hInf, PWCHAR Section, BOOL Delete)
         /* and now do it */
         if (!do_reg_operation(KeyHandle, ValuePtr, Context, Flags))
         {
+            RegCloseKey(KeyHandle);
             return FALSE;
         }
+
+        RegCloseKey(KeyHandle);
     }
 
     InfHostFreeContext(Context);

@@ -36,10 +36,12 @@ extern CMHIVE BcdHive;      /* \Registry\Machine\BCD00000000 */
 #define ERROR_SUCCESS                    0L
 #define ERROR_UNSUCCESSFUL               1L
 #define ERROR_FILE_NOT_FOUND             2L
+#define ERROR_ACCESS_DENIED              5L
 #define ERROR_OUTOFMEMORY                14L
+#define ERROR_GEN_FAILURE                31L
 #define ERROR_INVALID_PARAMETER          87L
-#define ERROR_MORE_DATA                  234L
-#define ERROR_NO_MORE_ITEMS              259L
+// #define ERROR_MORE_DATA                  234L
+// #define ERROR_NO_MORE_ITEMS              259L
 
 #define REG_NONE                           0
 #define REG_SZ                             1
