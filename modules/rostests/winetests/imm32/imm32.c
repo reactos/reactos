@@ -24,7 +24,11 @@
 #include "winuser.h"
 #include "wingdi.h"
 #include "imm.h"
+#ifdef __REACTOS__
+#include "ddk/immdev.h"
+#else
 #include "ddk/imm.h"
+#endif
 
 static BOOL (WINAPI *pImmAssociateContextEx)(HWND,HIMC,DWORD);
 static BOOL (WINAPI *pImmIsUIMessageA)(HWND,UINT,WPARAM,LPARAM);
