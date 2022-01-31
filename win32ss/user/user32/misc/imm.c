@@ -516,7 +516,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     LPCOMPOSITIONFORM pCompForm;
     DWORD dwConversion, dwSentence;
     HWND hImeWnd;
-    BOOL bCompForm = FALSE;
+    BOOL bCompForm;
     CANDIDATEFORM CandForm;
     COMPOSITIONFORM CompForm;
     UINT iCandForm;
