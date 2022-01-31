@@ -16,6 +16,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define IMM_INIT_MAGIC 0x19650412
+#define MAX_CANDIDATEFORM 4
 
 /* Is != NULL when we have loaded the IMM ourselves */
 HINSTANCE ghImm32 = NULL;
@@ -515,6 +516,10 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     LPCOMPOSITIONFORM pCompForm;
     DWORD dwConversion, dwSentence;
     HWND hImeWnd;
+    BOOL bCompForm = FALSE;
+    CANDIDATEFORM CandForm;
+    COMPOSITIONFORM CompForm;
+    UINT iCandForm;
 
     switch (wParam)
     {
@@ -527,7 +532,34 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             break;
 
         case 0x06:
-            // TODO:
+            if (!hIMC)
+                break;
+
+            bCompForm = TRUE;
+            pIC = IMM_FN(ImmLockIMC)(hIMC);
+            if (pIC)
+            {
+                bCompForm = !(pIC->dwUIFlags & 0x2);
+                IMM_FN(ImmUnlockIMC)(hIMC);
+            }
+
+            if (!IsWindow(pimeui->hwndIMC))
+                break;
+
+            if (bCompForm && IMM_FN(ImmGetCompositionWindow)(hIMC, &CompForm))
+            {
+                if (CompForm.dwStyle)
+                    IMM_FN(ImmSetCompositionWindow)(hIMC, &CompForm);
+            }
+
+            for (iCandForm = 0; iCandForm < MAX_CANDIDATEFORM; iCandForm++)
+            {
+                if (IMM_FN(ImmGetCandidateWindow)(hIMC, iCandForm, &CandForm))
+                {
+                    if (CandForm.dwStyle)
+                        IMM_FN(ImmSetCandidateWindow)(hIMC, &CandForm);
+                }
+            }
             break;
 
         case 0x09:
