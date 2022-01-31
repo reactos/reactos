@@ -69,7 +69,7 @@ CMD [/[C|K] コマンド][/P][/Q][/T:bf]\n\n\
   /K コマンド  指定されたコマンドを実行しますが、終了しません。\n\
   /P           CMD は永続的に動作をし、autoexec.bat を実行します\n\
                (終了させることはできません)。\n\
-  /T:bf        前景色および背景色を設定します \n\
+  /T:bf        前景色および背景色を設定します\n\
                (詳細は COLOR /? を参照してください)。\n"
     STRING_COLOR_HELP1 "コンソールのデフォルトの前景色および背景色を設定します。\n\n\
 COLOR [属性 [/-F]]\n\n\
@@ -427,7 +427,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 ON、OFF、/S のいずれも指定しなかった場合には、ストップウォッチの\n\
 状態を切り替えます。\n\n"
-    STRING_TYPE_HELP1 "テキスト ファイルまたはファイルの内容を表示します。\n\nTYPE [ドライブ:][パス]ファイル名 \n\
+    STRING_TYPE_HELP1 "テキスト ファイルまたはファイルの内容を表示します。\n\nTYPE [ドライブ:][パス]ファイル名\n\
   /P          1 度に 1 画面ずつ表示します。\n"
     STRING_VERIFY_HELP1 "このコマンドはダミーです!!\n\
 ファイルがディスクに正しく書き込まれたことを照合するかどうかを指示します。\n\n\
@@ -539,7 +539,7 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_REPLACE_ERROR6 "No files found - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Command Line Interpreter\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Running on: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

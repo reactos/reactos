@@ -37,7 +37,7 @@ Pour effacer un alias de la liste des alias :\n\
     STRING_BEEP_HELP "Émet un bip par le haut-parleur système.\n\nBEEP"
     STRING_CALL_HELP "Appelle un programme batch depuis un autre.\n\n\
 CALL [lecteur:][chemin]fichier [paramètre-batch]\n\n\
-  paramètre-batch  Spécifie les paramètres nécessaires au \n\
+  paramètre-batch  Spécifie les paramètres nécessaires au\n\
                    programme batch."
     STRING_CD_HELP "Change ou affiche le répertoire courant\n\n\
   CHDIR [lecteur:][chemin]\n\
@@ -80,7 +80,7 @@ COLOR [attr [/-F]]\n\n\
   attr        Spécifie l'attribut de couleur de la console.\n\
   /-F         Ne remplit pas les espaces blancs avec l'attribut de couleur.\n\n\
 Il y a trois façons de spécifier les couleurs :\n\
-1) [bright] nom on [bright] nom (seules les trois premières lettres \n\
+1) [bright] nom on [bright] nom (seules les trois premières lettres\n\
 sont nécessaires)\n\
 2) décimal on décimal\n\
 3) deux chiffres hexadécimaux\n\n\
@@ -165,12 +165,12 @@ DELAY [/m]n\n\n\
                S  Fichiers systèmes     -  Préfixe signifiant non\n\
   /B          Utilise le format court (pas d'informations ni de résumé).\n\
   /C          Affiche le séparateur de milliers dans les tailles de fichier.\n\
-              C'est l'option par défaut. Utiliser /-C pour désactiver \n\
+              C'est l'option par défaut. Utiliser /-C pour désactiver\n\
               l'affichage du séparateur.\n\
   /D          Identique au format large mais les fichiers sont triés\n\
               par colonne.\n\
   /L          Utilise les minuscules.\n\
-  /N          Nouveau format de liste longue où les noms de fichiers sont \n\
+  /N          Nouveau format de liste longue où les noms de fichiers sont\n\
               sur la droite.\n\
   /O          Lister les fichiers de façon triée.\n\
   ordre de     N  Par nom (alphabétique) S  Par taille (plus petit d'abord)\n\
@@ -187,7 +187,7 @@ DELAY [/m]n\n\n\
               A  Dernier accès\n\
               W  Dernière modification\n\
   /W          Utilise le format de liste large.\n\
-  /X          Ceci affiche les noms de fichiers courts pour les noms \n\
+  /X          Ceci affiche les noms de fichiers courts pour les noms\n\
               de fichiers longs. Le format est comme pour /N avec\n\
               le nom de fichier court inséré avant le nom de fichier long.\n\
               S'il n'y a pas de nom court, des espaces seront affichés.\n\
@@ -223,7 +223,7 @@ ni passage à la ligne.\n\n\
 Taper ECHO sans paramètre pour afficher le réglage ECHO courant."
     STRING_ECHO_HELP5 "ECHO est %s\n"
     STRING_EXIT_HELP "Sort de l'interpréteur de commandes.\n\nEXIT [/b] [CodeDeFin]\n\n\
-  /B            Quitte seulement un fichier batch.  \n\
+  /B            Quitte seulement un fichier batch.\n\
                 En cas de lancement en dehors d'un fichier batch, cmd.exe sera quittée\n\
   CodeDeFin     ERRORLEVEL prendra cette valeur à la sortie\n"
     STRING_FOR_HELP1 "Exécute une commande donnée pour chaque fichier d'un ensemble de fichiers.\n\
@@ -297,7 +297,7 @@ type          boutons affichés\n\
               les valeurs possibles sont: OK, OKCANCEL,\n\
               YESNO, YESNOCANCEL\n\
 titre         titre de la boite de message\n\
-prompt        texte affiché par la boite de dialogue \n\n\n\
+prompt        texte affiché par la boite de dialogue\n\n\n\
 ERRORLEVEL est modifié suivant le bouton pressé:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
@@ -433,7 +433,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 En l'absence d'une option ON, OFF ou /S la commande\n\
 changera l'état du chronomètre sélectionné\n\n"
-    STRING_TYPE_HELP1 "Affiche le contenu de fichiers textes.\n\nTYPE [lecteur:][chemin]nomfich \n\
+    STRING_TYPE_HELP1 "Affiche le contenu de fichiers textes.\n\nTYPE [lecteur:][chemin]nomfich\n\
   /P          Ne montre qu'un écran de contenu à la fois.\n"
     STRING_VERIFY_HELP1 "Cette commande ne fait rien !!\n\
 Spécifie s'il faut verifier que vos fichiers sont écrits correctement.\
@@ -547,7 +547,7 @@ titre         titre de la fenêtre"
     STRING_REPLACE_ERROR6 "Aucun fichier trouvé - %s\n"
     STRING_REPLACE_ERROR7 "Erreur étendue 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpréteur de ligne de commandes ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Fonctionnant sous: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
