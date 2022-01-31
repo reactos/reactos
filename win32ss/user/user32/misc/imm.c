@@ -514,11 +514,16 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     LPCANDIDATEFORM pCandForm;
     LPCOMPOSITIONFORM pCompForm;
     DWORD dwConversion, dwSentence;
+    HWND hImeWnd;
 
     switch (wParam)
     {
         case 0x05:
-            // TODO:
+            if (User32GetImeShowStatus() == !lParam)
+            {
+                hImeWnd = UserHMGetHandle(pimeui->spwnd);
+                NtUserCallHwndParamLock(hImeWnd, lParam, X_ROUTINE_IMESHOWSTATUSCHANGE);
+            }
             break;
 
         case 0x06:

@@ -891,6 +891,11 @@ NtUserCallHwndParamLock(
 
     switch (Routine)
     {
+        case X_ROUTINE_IMESHOWSTATUSCHANGE:
+        {
+            // TODO:
+            break;
+        }
         case TWOPARAM_ROUTINE_VALIDATERGN:
         {
             PREGION Rgn = REGION_LockRgn((HRGN)Param);
