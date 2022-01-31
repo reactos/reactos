@@ -21,7 +21,6 @@ BOOL APIENTRY UserIsDBCSEnabled(VOID)
         case LANG_CHINESE:
         case LANG_JAPANESE:
         case LANG_KOREAN:
-        //case LANG_VIETNAMESE: // Are you using double-byte character strings?
             return TRUE;
 
         default:
