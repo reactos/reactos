@@ -229,7 +229,7 @@ comenzilor în ecou.\n\n\
 Tastați ECHO fără argumente pentru afișarea stării curente a ecoului.\n"
     STRING_ECHO_HELP5 "ECHO: %s\n"
     STRING_EXIT_HELP "Închide interpretorul de comenzi.\n\nEXIT [/b] [cod_de_ieșire]\n\n\
-  /B              Doar pentru ieșirea dintr-un fișier de comenzi.  \n\
+  /B              Doar pentru ieșirea dintr-un fișier de comenzi.\n\
                   Dacă este executat în afara unui fișier de comenzi, va\n\
                   cauza ieșirea din cmd.exe\n\
   cod_de_ieșire   Valoare atribuită variabilei ERRORLEVEL la ieșirea din\n\
@@ -463,7 +463,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
            1    hh%cmm%css%czz\n\n\
 Dacă nu sunt specificate nici unul din argumentele ON, OFF sau /S\n\
 atunci comanda va schimba starea curentă de activare a cronometrului.\n"
-    STRING_TYPE_HELP1 "Afișează conținutul de fișiere text.\n\nTYPE [unitate:][cale]fișier \n\n\
+    STRING_TYPE_HELP1 "Afișează conținutul de fișiere text.\n\nTYPE [unitate:][cale]fișier\n\n\
   /P     Afișare paginată, câte un ecran de informație odată.\n"
     STRING_VERIFY_HELP1 "Această comandă e doar o machetă!!\n\
 Stabilește dacă fișierele vă sunt stocate corect pe disc.\n\n\

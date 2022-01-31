@@ -35,7 +35,7 @@ För att ta bort ett alias från listan:\n\
     STRING_BEEP_HELP "Skickar en ljudsignal genom högtalaren.\n\nPIP\n"
     STRING_CALL_HELP "Anropa ett batchprogram från ett annat.\n\n\
 CALL [enhet:][mapp]filnamn [batch-parameter]\n\n\
-  batch-parameter  Specificerar en kommandoradsinformation som batchprogrammet \n\
+  batch-parameter  Specificerar en kommandoradsinformation som batchprogrammet\n\
                    behöver."
     STRING_CD_HELP "Visar namnet på, eller ändrar aktuell mapp\n\n\
 CHDIR [/D][enhet:][mapp]\n\
@@ -169,7 +169,7 @@ DELAY [/m]n\n\n\
   /R          Displays alternate data streams of the files.\n\
   /S          Viser alla filer i angiven mapp och alla undermappar.\n\
   /T          Kontrollerar vilket tidsfält som visas eller blir använt för sortering\n\
-  timefelt    C  Skapelse \n\
+  timefelt    C  Skapelse\n\
               A  Senast läst\n\
               W  Senast skriven\n\
   /W          Använd brett listformat.\n\
@@ -208,7 +208,7 @@ PUSHD [mapp | ..]\n\n\
 Skriv ECHO utan parametar för att visa aktuell ECHO inställning."
     STRING_ECHO_HELP5 "ECHO är %s\n"
     STRING_EXIT_HELP "Avsluta kommandotolken (cmd.exe).\n\nEXIT [/b] [ExitCode]\n\n\
-  /B            Avslutt bara en batchfil.  \n\
+  /B            Avslutt bara en batchfil.\n\
                 Om det körs utan en batch filkommer det avslutta cmd.exe\n\
   ExitCode      Detta värdet kommer att skickas till ERRORLEVEL vid avslutning\n"
     STRING_FOR_HELP1 "Kör ett angivet kommando för varje fil i en grupp med filer.\n\n\
@@ -430,10 +430,10 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 hvis hverken ON, OFF eller /S är spesifisert\n\
 vil status for stoppeklokken växla.\n\n"
-    STRING_TYPE_HELP1 "Visa innehållet av textfiler.\n\nSkriv [enhet:][mapp]filnamn \n\
+    STRING_TYPE_HELP1 "Visa innehållet av textfiler.\n\nSkriv [enhet:][mapp]filnamn\n\
   /P          Vis en full skjerm om gangen.\n"
     STRING_VERIFY_HELP1 "Denne kommandoen är bare en etterlikning!!\n\
-Anger om det skal bekreftes at dine filer är skrevet korrekt till disk \n\n\
+Anger om det skal bekreftes at dine filer är skrevet korrekt till disk\n\n\
 VERIFY [ON | OFF]\n\n\
 Skriv VERIFY uten parametre för att visa aktuell VERIFY inställninar.\n"
     STRING_VERIFY_HELP2 "VERIFY är %s.\n"
@@ -448,12 +448,12 @@ Skriv: `ver /w'. Dette är gratis programvare, och du är velkommen till videref
 det under gitte betingelser; Skriv `ver /r' for detaljer. Skriv `ver /c' for en\n\
 liste av anerkjennelser."
     STRING_VERSION_HELP3 "\n Dette programet är fordelt i håpet som det vil bli brukbar,\n\
- men UTEN NOEN GARANTI; uten engang antydet garantid for \n\
- SALGBARHET eller BRUKBARHET FOR NOE MÅL.  Se \n\
+ men UTEN NOEN GARANTI; uten engang antydet garantid for\n\
+ SALGBARHET eller BRUKBARHET FOR NOE MÅL.  Se\n\
  GNU Generell Publikum Lisens for flere detaljer."
     STRING_VERSION_HELP4 "\n Dette programmet är gratis programvare; du kan videre-\n\
- formidle det och/eller modifisere det under betingelser av Generell Publikum \n\
-  Lisens som utgivelses av Free Software Foundation; enten version 2 av \n\
+ formidle det och/eller modifisere det under betingelser av Generell Publikum\n\
+  Lisens som utgivelses av Free Software Foundation; enten version 2 av\n\
   Lisens, eller (ved din mulighet) andre nyere version.\n"
     STRING_VERSION_HELP5 "\nSend bug rapporter till <ros-dev@reactos.org>.\n\
 oppdateringer är tilgjengelig her: http://www.reactos.org"
@@ -543,7 +543,7 @@ tittel        ny tittel\n"
     STRING_REPLACE_ERROR6 "Ingna filer hittades - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operativsystem [Version %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Kommandotolk\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Körs på: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
