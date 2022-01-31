@@ -52,7 +52,7 @@ ERRORLEVEL wird auf den Offset der Taste, welche der Benutzer gedrückt hat, ges
     STRING_CMD_HELP5 "  [Bash Dateinamen-Vervollständigung]"
     STRING_CMD_HELP6 "  [Verzeichnis-Stack]"
     STRING_CMD_HELP7 "  [Weiterleitung und Piping]"
-    STRING_CMD_HELP8 "Startet eine neue Instanz der ReactOS-Eingabeaufforderung.\n\n\
+    STRING_CMD_HELP8 "Startet eine neue Instanz der ReactOS Eingabeaufforderung.\n\n\
 CMD [/[C|K] Befehl][/P][/Q][/T:bf]\n\n\
   /C Befehl     Führt den Befehl in der Zeichenfolge aus. Anschließend\n\
                 wird diese Instanz beendet.\n\
@@ -68,8 +68,8 @@ Es gibt 2 Möglichkeiten, die Farben festzulegen:\n\
 2) Zwei Dezimalzahlen\n\
 3) Zwei Hexadezimalziffern\n\n\
 Die jeweils erste Angabe bezieht sich auf den Hintergrund, die zweite\n\
-auf den Vordergrund. \n\
-Es müssen jeweils zwei Werte angegeben werden. \n\
+auf den Vordergrund.\n\
+Es müssen jeweils zwei Werte angegeben werden.\n\
 Farben:\n\
 Dez  Hex  Name              dec  hex  name\n\
 0    0    Schwarz           8    8    Dunkelgrau\n\
@@ -84,7 +84,7 @@ Beispiel: ""COLOR fc"" legt Rot als Text- und Weiß als Hintergrund-\n\
 farbe fest"
     STRING_COPY_HELP1 " %s überschreiben (Ja/Nein/Alle)? "
     STRING_COPY_HELP2 "Kopiert eine oder mehrere Dateien an eine andere Position.\n\n\
-COPY [/V][/Y|/-Y][/A|/B] \n\
+COPY [/V][/Y|/-Y][/A|/B]\n\
      [+ Quelle [/A|/B] [+ ...]] [Ziel [/A|/B]]\n\n\
   Quelle       Bezeichnet die zu kopierende(n) Datei(en).\n\
   /A           Weist auf eine ASCII-Textdatei hin.\n\
@@ -348,7 +348,7 @@ REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U
   /W                           Wartet vor dem Start, bis ein Datenträger\n\
                                eingelegt wurde.\n\
   /U                           Ersetzt (aktualisiert) nur Dateien, die älter\n\
-                               sind als die Quelldaten. Kann nicht mit Paramater\n\
+                               sind als die Quelldaten. Kann nicht mit Parameter\n\
                                /A genutzt werden\n"
     STRING_REPLACE_HELP2 "Quellpfad benötigt\n"
     STRING_REPLACE_HELP3 "Keine Dateien ersetzt\n"
@@ -430,8 +430,8 @@ VER [/C][/R][/W]\n\n\
  vertreiben; tippen Sie `ver /R' für nähere Informationen darüber.\n\
  Tippen Sie `ver /C' um die Mitwirkenden (Credits) aufzulisten."
     STRING_VERSION_HELP3 "\n Dieses Programm wir in der Hoffnung, dass es nützlich ist,\n\
- jedoch OHNE JEGLICHE GARANTIE, auch die der implizierten Garantie der \n\
- MARKTFÄHIGKEIT und der EIGNUNG FÜR EINEN BESTIMMTEN ZWECK, verteilt. \n\
+ jedoch OHNE JEGLICHE GARANTIE, auch die der implizierten Garantie der\n\
+ MARKTFÄHIGKEIT und der EIGNUNG FÜR EINEN BESTIMMTEN ZWECK, verteilt.\n\
  Siehe GNU General Public License für weitere Details.\n"
     STRING_VERSION_HELP4 "\n Dieses Programm ist freie Software; Sie können es verteilen\n\
  und/oder unter den Bedingungnen der GNU General Public License, von der\n\
@@ -472,7 +472,7 @@ Titel         neuer Titel"
     STRING_CHOICE_ERROR_OPTION "Ungültige Option: %s"
     STRING_CMD_ERROR1 "Die Eingaben konnten nicht umgeleitet werden (von der Datei) %s\n"
     STRING_CMD_ERROR2 "Ein Fehler ist beim Erstellen der temporären Datei für Pipedaten aufgetreten\n"
-    STRING_CMD_ERROR3 "%s kann nicht in die Datei umgeleitet werden \n"
+    STRING_CMD_ERROR3 "%s kann nicht in die Datei umgeleitet werden\n"
     STRING_CMD_ERROR4 "Ausführend %s...\n"
     STRING_CMD_ERROR5 "Ausführend cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Fehler: Hinter- und Vordergrund können nicht die selben Farben haben!"
@@ -526,7 +526,7 @@ Titel         neuer Titel"
     STRING_REPLACE_ERROR6 "Keine Dateien gefunden - %s\n"
     STRING_REPLACE_ERROR7 "Erweiterter Fehler 32\n"
     STRING_CMD_INFOLINE "  ReactOS Eingabeaufforderung                            HELP eingeben = Hilfe  "
-    STRING_REACTOS_VERSION "ReactOS Betriebssystem [Version %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Eingabeaufforderung\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Läuft in: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

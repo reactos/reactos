@@ -197,7 +197,7 @@ PUSHD [path | ..]\n\n\
 Ketik ECHO tanpa parameter untuk menampilkan setelan ECHO saat ini."
     STRING_ECHO_HELP5 "ECHO adalah %s\n"
     STRING_EXIT_HELP "Keluar dari interpreter baris perintah.\n\nEXIT [/b] [ExitCode]\n\n\
-  /B            Keluar dari hanya file batch.  \n\
+  /B            Keluar dari hanya file batch.\n\
                 Jika dijalankan di luar file batch ia akan keluar dari cmd.exe\n\
   ExitCode      Nilai ini akan ditempatkan ke ERRORLEVEL saat keluar\n"
     STRING_FOR_HELP1 "Menjalankan perintah yang ditetapkan untuk setiap file dalam set file.\n\n\
@@ -414,7 +414,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 jika tidak ada yang ON, OFF atau /S ditetapkan dalam perintah\n\
 akan menghidupkan/mematikan keadaan stopwatch\n\n"
-    STRING_TYPE_HELP1 "Menampilkan isi dari file teks.\n\nTYPE [drive:][path]filename \n\
+    STRING_TYPE_HELP1 "Menampilkan isi dari file teks.\n\nTYPE [drive:][path]filename\n\
   /P          Menampilkan satu layar output sekali waktu.\n"
     STRING_VERIFY_HELP1 "Perintah ini hanya dummy!!\n\
 Menyetel apakah memverifikasi bawa file anda ditulis dengan benar ke\n\
@@ -434,7 +434,7 @@ di bawah kondisi tertentu; ketik 'ver /r' untuk lengkapnya. Ketik 'ver /c'\n\
 untuk daftar penghargaan."
     STRING_VERSION_HELP3 "\n Program ini didistribusikan dengan harapan berguna,\n\
  tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari\n\
- MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat \n\
+ MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat\n\
  GNU General Public License untuk lebih jelasnya."
     STRING_VERSION_HELP4 "\n Program ini adalah software bebas; anda dapat mendistribusikan dan/atau\n\
  mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\n"
@@ -526,7 +526,7 @@ title         judul baru\n"
     STRING_REPLACE_ERROR6 "No files found - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpreter Baris Perintah ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Berjalan pada: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

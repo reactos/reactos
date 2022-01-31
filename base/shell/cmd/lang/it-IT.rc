@@ -222,7 +222,7 @@ f,d,p,n,x,s,a,t,z.\n\n\
 Per usare FOR in un batch usare %%variable invece di %variable.\n"
     STRING_FREE_HELP1 "\nIl Volume del disco %s è %-11s\n\
  Il numero di serie è %s\n\
-  %16s bytes totali su disco \n\
+  %16s bytes totali su disco\n\
   %16s bytes usati\n\
   %16s bytes liberi\n"
     STRING_FREE_HELP2 "Visualizza le informazioni sul disco.\n\nFREE [disco: ...]\n"
@@ -236,7 +236,7 @@ Nel batch questa deve trovarsi da sola in una linea con davanti due punti :.\n"
   IF [NOT] stringa1==stringa2 comando\n\
   IF [NOT] EXIST nomefile comando\n\
   IF [NOT] DEFINED variabile comando\n\n\
-NOT               Indica che il comando deve essere eseguito solo se \n\
+NOT               Indica che il comando deve essere eseguito solo se\n\
                   la condizione è falsa\n\
 ERRORLEVEL number La condizione è verificata se l'ultimo programma eseguito\n\
                   ha lasciato un codice d'uscita maggiore o uguale a quello\n\
@@ -414,14 +414,14 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   /n          Indica quale cronometro.\n\
               Sono validi i numeri da 0 a 9\n\
               Se non indicato è predefinito 1\n\
-  /Fn         tipo di formato \n\
+  /Fn         tipo di formato\n\
               n può essere:\n\
                     0    millisecondi\n\
                     1    hh%cmm%css%cdd\n\n\
 se non sono indicati ON, OFF o /S verrà commutato lo stato\n\
 del cronometro da attivo a fermo o viceversa\n\n"
     STRING_TYPE_HELP1 "Visualizza il contenuto di un file di testo.\n\n\
-TYPE [disco:][percorso]nomefile \n\
+TYPE [disco:][percorso]nomefile\n\
   /P          Mostra una schermata alla volta.\n"
     STRING_VERIFY_HELP1 "Questo comando non è implementato!!\n\
 Attiva o disattiva la verifica automatica della scrittura dei file\n\
@@ -444,7 +444,7 @@ elenco dei crediti."
  VENDIBILITA o ADEGUATEZZA PER UN PARTICOLARE SCOPO.  Vedere\n\
  la 'GNU General Public License' per ulteriori dettagli."
     STRING_VERSION_HELP4 "\n Questo è software libero; potete distribuirlo e/o modificarlo\n\
- nell'ambito della licenza 'GNU General Public License' così come pubblicata da \n\
+ nell'ambito della licenza 'GNU General Public License' così come pubblicata da\n\
  Free Software Foundation; a scelta la versione 2 della licenza o una\n\
  qualunque successiva.\n"
     STRING_VERSION_HELP5 "\nInviare le segnalazioni di anomalie a <ros-dev@reactos.org>.\n\
@@ -536,7 +536,7 @@ titolo        il nuovo titolo\n"
     STRING_REPLACE_ERROR6 "Nessun file trovato - %s\n"
     STRING_REPLACE_ERROR7 "Errore esteso 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterprete di linea di comando di ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "In esecuzione su: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

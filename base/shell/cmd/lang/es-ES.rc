@@ -42,7 +42,7 @@ CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
   /N            No muestra las posibles elecciones y ? al final del prompt.\n\
   /S            Hace que la elección sea sensible a las mayúsculas y minúsculas.\n\
   /T[:]c,nn     La elección por defecto será c después de nn segundos.\n\
-  text          Prompt a mostrar. \n\n\
+  text          Prompt a mostrar.\n\n\
 ERRORLEVEL se configura al offset de la tecla que presione el usuario.\n"
     STRING_CLS_HELP "Limpia la pantalla.\n\nCLS\n"
     STRING_CMD_HELP1 "\nComandos internos disponibles:\n"
@@ -148,7 +148,7 @@ DELAY [/m]n\n\n\
               por defecto.  Usa /-C para desactivar el mostrar el separador.\n\
   /D          Lo mismo que el formato a lo ancho, pero ordenados en columna.\n\
   /L          Usa minúsculas.\n\
-  /N          Nuevo formato de lista larga donde los nombres de archivo están a la \n\
+  /N          Nuevo formato de lista larga donde los nombres de archivo están a la\n\
   derecha.\n\
   /O          Muestra los archivos ordenados según el orden especificado.\n\
   ordenación   N  Por nombre (alfabético)       S  Por tamaño (los menores primero)\n\
@@ -177,14 +177,14 @@ ajustes previos anteponiendo a cualquier modificador - (hyphen)--por ejemplo, /-
     STRING_DIR_HELP6 "%16i Directorio(s)% 15s bytes libres\n"
     STRING_DIR_HELP7 "\n Directorio %s\n\n"
     STRING_DIR_HELP8 "%16i archivo(s)% 14s bytes\n"
-    STRING_DIRSTACK_HELP1 "Almacena el directorio actual para usarlo por el comando, \n\
+    STRING_DIRSTACK_HELP1 "Almacena el directorio actual para usarlo por el comando,\n\
 entonces cambia al directorio especificado.\n\n\
 PUSHD [ruta | ..]\n\n\
   ruta        Especifica el directorio para hacerlo el directorio actual\n"
     STRING_DIRSTACK_HELP2 "Cambia al directorio guardado por el comando PUSHD.\n\nPOPD"
     STRING_DIRSTACK_HELP3 "Muestra el contenido de la pila de directorios.\n\nDIRS"
     STRING_DIRSTACK_HELP4 "Vacia la pila de directorios"
-    STRING_ECHO_HELP1 "Muestra un mensaje sin necesidad de pulsar intro y \n\
+    STRING_ECHO_HELP1 "Muestra un mensaje sin necesidad de pulsar intro y\n\
 salta a la siguiente linea.\n\n\
   ECHOS mensaje"
     STRING_ECHO_HELP2 "Muestra los mensajes de error por defecto.\n\n\
@@ -238,7 +238,7 @@ Escriba la etiqueta en la linea misma, empezando con dos puntos."
   IF [NOT] string1==string2 comando\n\
   IF [NOT] EXIST archivo comando\n\
   IF [NOT] DEFINED variable comando\n\n\
-NOT               Especifica que CMD solo llevará a cabo el comando si la \n\
+NOT               Especifica que CMD solo llevará a cabo el comando si la\n\
                   condición es falsa.\n\
 ERRORLEVEL número Especifica una condición verdadera si el último programa devuelve\n\
                   un código de salida igual o superior al número especificado.\n\
@@ -293,7 +293,7 @@ Escribe PATH sin parámetros para mostrar la ruta actual.\n"
     STRING_PROMPT_HELP1 "Cambia el símbolo de comandos.\n\n\
 PROMPT [texto]\n\n\
   texto   Epecifica un nuevo símbolo de comandos.\n\n\
-El símbolo de comandos puede hacerce con carácteres normales y los siguientes \n\
+El símbolo de comandos puede hacerce con carácteres normales y los siguientes\n\
 códigos especiales:\n\n\
   $A   & (Signo y)\n\
   $B   | (Linea horizontal)\n\
@@ -318,7 +318,7 @@ siguiente mensaje:\n\
 'Pulsa cualquier tecla para continuar...' o un mensaje definido por el usuario.\n\n\
 PAUSE [mensaje]"
     STRING_PROMPT_HELP2 "  $+   Muestra la profundidad actual de la pila de directorios"
-    STRING_PROMPT_HELP3 "\nEscribe PROMPT sin parámetros para resetear el símbolo de \n\
+    STRING_PROMPT_HELP3 "\nEscribe PROMPT sin parámetros para resetear el símbolo de\n\
 comandos a su configuración por defecto."
     STRING_REM_HELP "Comienza una liena de comentarios en un archivo por lotes\n\nREM [Comentario]"
     STRING_RMDIR_HELP "Elimina un directorio.\n\n\
@@ -366,7 +366,7 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP9 "Añadir %s (S/N)? "
     STRING_REPLACE_HELP10 "Reemplazar %s (S/N)? "
     STRING_REPLACE_HELP11 "Añadiendo %s\n"
-    STRING_SHIFT_HELP "Cambia la posición de los parámetros remplazables en un \n\
+    STRING_SHIFT_HELP "Cambia la posición de los parámetros remplazables en un\n\
 archivo por lotes.\n\n\
 SHIFT [ABAJO]"
     STRING_SCREEN_HELP "Mueve el cursor y escribe un texto de forma opcional.\n\n\
@@ -417,7 +417,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 Si ni ON, OFF o /S se especifican, el comando\n\
 cambiara el estado de parada del reloj\n\n"
-    STRING_TYPE_HELP1 "Muestra los contenidos de un archivo de texto.\n\nTYPE [unidad:][ruta]archivo \n\
+    STRING_TYPE_HELP1 "Muestra los contenidos de un archivo de texto.\n\nTYPE [unidad:][ruta]archivo\n\
   /P        Muestra sólo una pantalla de salida cada vez.\n"
     STRING_VERIFY_HELP1 "¡Este comando es solo de relleno!\n\
 Configura si hay que verificar que los archivos se and escrito correctamente\n\
@@ -531,7 +531,7 @@ title         Nuevo título\n"
     STRING_REPLACE_ERROR6 "No se han encontrado archivos - %s\n"
     STRING_REPLACE_ERROR7 "Error extendido 32\n"
     STRING_CMD_INFOLINE "  Consola de comandos de ReactOS                Escribe HELP para ver la ayuda  "
-    STRING_REACTOS_VERSION "Sistema operativo ReactOS [Versión %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Versión %s %s]\n"
     STRING_CMD_SHELLINFO "\nIntérprete de comandos de ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Funcionando en: "
     STRING_VERSION_RUNVER "%s [Versión %d.%d.%d] %s"
