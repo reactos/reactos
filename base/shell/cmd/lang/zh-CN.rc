@@ -401,7 +401,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     0    毫秒\n\
                     1    hh%cmm%css%cdd\n\n\
 如果没有 ON，OFF 或者 /S 在调用该命令时被指定，将会切换停表状态。\n\n"
-    STRING_TYPE_HELP1 "显示文本文件的内容。\n\nTYPE [驱动器:][路径]文件名 \n\
+    STRING_TYPE_HELP1 "显示文本文件的内容。\n\nTYPE [驱动器:][路径]文件名\n\
   /P          每次只显示一屏内容。\n"
     STRING_VERIFY_HELP1 "这条命令只是个摆设！！\n\
 设置是否检查您的文件已被正确地写入磁盘。\n\n\
@@ -514,7 +514,7 @@ RESTORE       恢复窗口\n\
     STRING_REPLACE_ERROR6 "没有文件被发现 - %s\n"
     STRING_REPLACE_ERROR7 "扩展错误 32\n"
     STRING_CMD_INFOLINE "  ReactOS 命令行解释器                                       输入 HELP = 帮助  "
-    STRING_REACTOS_VERSION "ReactOS 操作系统 [版本 %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令行解释器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上运行"
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
