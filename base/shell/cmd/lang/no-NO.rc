@@ -35,7 +35,7 @@ For å fjerne et alias fra alias-liste:\n\
     STRING_BEEP_HELP "Gir lydsignal til høyttaleren.\n\nPIP\n"
     STRING_CALL_HELP "Kaller et satsvis program fra et annet.\n\n\
 CALL [stasjon:][mappe]filnavn [satsvis-parameter]\n\n\
-  satsvis-parameter  Spesifisere noen kommando-linje informasjon trengs av \n\
+  satsvis-parameter  Spesifisere noen kommando-linje informasjon trengs av\n\
                    satsvis program."
     STRING_CD_HELP "Viser navnet på, eller endrer gjeldende mappe\n\n\
 CHDIR [/D][stasjon:][mappe]\n\
@@ -169,7 +169,7 @@ DELAY [/m]n\n\n\
   /R          Displays alternate data streams of the files.\n\
   /S          Viser alle filer i angitt mappe og alle undermapper.\n\
   /T          Styrer hvilket tidsfelt som vises eller blir brukt for sortering\n\
-  timefelt    C  Opprettet \n\
+  timefelt    C  Opprettet\n\
               A  Sist lest\n\
               W  Sist skrevet\n\
   /W          Bruk fullt listeformat.\n\
@@ -208,7 +208,7 @@ PUSHD [mappe | ..]\n\n\
 Skriv ECHO uten parameter for å vise gjeldende ECHO innstillinger."
     STRING_ECHO_HELP5 "ECHO er %s\n"
     STRING_EXIT_HELP "Avslutt kommando linje interpreter.\n\nAVSLUTT [/b] [ExitCode]\n\n\
-  /B            Avslutt bare en batch fil.  \n\
+  /B            Avslutt bare en batch fil.\n\
                 Hvis det kjøres en batch fil på utsiden vil den avslutte cmd.exe\n\
   ExitCode      Denne verdien vil bli utpekt til ERRORLEVEL ved avslutting\n"
     STRING_FOR_HELP1 "Kjør en spesifisert kommando for hver fil i en gruppe med filer.\n\n\
@@ -402,7 +402,7 @@ START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
   MIN         Starts with a minimized window.\n\
   MAX         Starts with a maximized window.\n\
   WAIT        Starts the command or program and waits for its termination.\n\
-  kommando     Spesifisere kommando for å kjøre.\n\
+  kommando    Spesifisere kommando for å kjøre.\n\
   parameters  Specifies the parameters to be given to the command or program.\n"
     STRING_TITLE_HELP "Velg vindustittel for kommandotolkvindu.\n\n\
 TITLE [streng]\n\n\
@@ -430,10 +430,10 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 hvis hverken ON, OFF eller /S er spesifisert\n\
 vil status for stoppeklokken veksles.\n\n"
-    STRING_TYPE_HELP1 "Vis innholdet av tekstfiler.\n\nSkriv [stasjon:][mappe]filnavn \n\
+    STRING_TYPE_HELP1 "Vis innholdet av tekstfiler.\n\nSkriv [stasjon:][mappe]filnavn\n\
   /P          Vis en full skjerm om gangen.\n"
     STRING_VERIFY_HELP1 "Denne kommandoen er bare en etterlikning!!\n\
-Angir om det skal bekreftes at dine filer er skrevet korrekt til disk \n\n\
+Angir om det skal bekreftes at dine filer er skrevet korrekt til disk\n\n\
 VERIFY [ON | OFF]\n\n\
 Skriv VERIFY uten parametre for å vise gjeldende VERIFY innstillinger.\n"
     STRING_VERIFY_HELP2 "VERIFY er %s.\n"
@@ -448,12 +448,12 @@ Skriv: `ver /w'. Dette er gratis programvare, og du er velkommen til videreformi
 det under gitte betingelser; Skriv `ver /r' for detaljer. Skriv `ver /c' for en\n\
 liste av anerkjennelser."
     STRING_VERSION_HELP3 "\n Dette programet er fordelt i håpet som det vil bli brukbar,\n\
- men UTEN NOEN GARANTI; uten engang antydet garantid for \n\
- SALGBARHET eller BRUKBARHET FOR NOE MÅL.  Se \n\
+ men UTEN NOEN GARANTI; uten engang antydet garantid for\n\
+ SALGBARHET eller BRUKBARHET FOR NOE MÅL.  Se\n\
  GNU Generell Publikum Lisens for flere detaljer."
     STRING_VERSION_HELP4 "\n Dette programmet er gratis programvare; du kan videre-\n\
- formidle det og/eller modifisere det under betingelser av Generell Publikum \n\
-  Lisens som utgivelses av Free Software Foundation; enten versjon 2 av \n\
+ formidle det og/eller modifisere det under betingelser av Generell Publikum\n\
+  Lisens som utgivelses av Free Software Foundation; enten versjon 2 av\n\
   Lisens, eller (ved din mulighet) andre nyere versjon.\n"
     STRING_VERSION_HELP5 "\nSend bug rapporter til <ros-dev@reactos.org>.\n\
 oppdateringer er tilgjengelig her: http://www.reactos.org"
@@ -543,7 +543,7 @@ tittel        ny tittel\n"
     STRING_REPLACE_ERROR6 "Ingen filer ble funnet - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operativsystem [Versjon %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Versjon %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Kommandotolk\nVersjon %s %s"
     STRING_VERSION_RUNNING_ON "Kjører på: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
