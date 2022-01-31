@@ -552,7 +552,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
                     IMM_FN(ImmSetCompositionWindow)(hIMC, &CompForm);
             }
 
-            for (iCandForm = 0; iCandForm < MAX_CANDIDATEFORM; iCandForm++)
+            for (iCandForm = 0; iCandForm < MAX_CANDIDATEFORM; ++iCandForm)
             {
                 if (IMM_FN(ImmGetCandidateWindow)(hIMC, iCandForm, &CandForm))
                 {
