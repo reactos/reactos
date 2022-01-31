@@ -1049,7 +1049,19 @@ void ProcessPage_OnProperties(void)
 
     if (GetProcessExecutablePath(dwProcessId, szExePath, _countof(szExePath)))
     {
-        return;
+        SHELLEXECUTEINFOW info = { 0 };
+
+        info.cbSize = sizeof(SHELLEXECUTEINFOW);
+        info.fMask = SEE_MASK_INVOKEIDLIST;
+        info.hwnd = NULL;
+        info.lpVerb = L"properties";
+        info.lpFile = szExePath;
+        info.lpParameters = L"";
+        info.lpDirectory = NULL;
+        info.nShow = SW_SHOW;
+        info.hInstApp = NULL;
+
+        ShellExecuteExW(&info);
     }
 }
 
