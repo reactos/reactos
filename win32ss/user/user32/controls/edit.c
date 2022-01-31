@@ -45,6 +45,11 @@
 #include <user32.h>
 #define WIN32_LEAN_AND_MEAN
 #include <usp10.h>
+#ifdef __REACTOS__
+#define ImmGetContext               IMM_FN(ImmGetContext)
+#define ImmGetCompositionStringW    IMM_FN(ImmGetCompositionStringW)
+#define ImmReleaseContext           IMM_FN(ImmReleaseContext)
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(edit);
 WINE_DECLARE_DEBUG_CHANNEL(combo);

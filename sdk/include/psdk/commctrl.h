@@ -222,8 +222,8 @@ extern "C" {
 #define TBN_FIRST (0U-700U)
 #define TBN_LAST (0U-720U)
 
-#define UDN_FIRST (0U-721)
-#define UDN_LAST (0U-740)
+#define UDN_FIRST (0U-721U)
+#define UDN_LAST (0U-740U)
 
 #define MCN_FIRST (0U-750U)
 #define MCN_LAST (0U-759U)

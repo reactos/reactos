@@ -85,6 +85,11 @@ TOOLTYPE ToolsModel::GetOldActiveTool() const
 
 void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
 {
+    OnFinishDraw();
+
+    if (m_activeTool == nActiveTool)
+        return;
+
     switch (m_activeTool)
     {
         case TOOL_FREESEL:
@@ -92,15 +97,7 @@ void ToolsModel::SetActiveTool(TOOLTYPE nActiveTool)
         case TOOL_RUBBER:
         case TOOL_COLOR:
         case TOOL_ZOOM:
-            break;
-
         case TOOL_TEXT:
-            if (nActiveTool != TOOL_TEXT)
-            {
-                // Finish the text
-                OnButtonDown(TRUE, -1, -1, TRUE);
-                OnButtonUp(TRUE, -1, -1);
-            }
             break;
 
         default:
@@ -171,15 +168,18 @@ void ToolsModel::NotifyToolChanged()
 
 void ToolsModel::NotifyToolSettingsChanged()
 {
-    toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
-    selectionWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
+    if (toolSettingsWindow.IsWindow())
+        toolSettingsWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
+    if (selectionWindow.IsWindow())
+        selectionWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
     if (textEditWindow.IsWindow())
         textEditWindow.SendMessage(WM_TOOLSMODELSETTINGSCHANGED);
 }
 
 void ToolsModel::NotifyZoomChanged()
 {
-    toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
+    if (toolSettingsWindow.IsWindow())
+        toolSettingsWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
     if (textEditWindow.IsWindow())
         textEditWindow.SendMessage(WM_TOOLSMODELZOOMCHANGED);
     if (selectionWindow.IsWindow())
@@ -212,8 +212,17 @@ void ToolsModel::OnButtonUp(BOOL bLeftButton, LONG x, LONG y)
 
 void ToolsModel::OnCancelDraw()
 {
+    ATLTRACE("ToolsModel::OnCancelDraw()\n");
     m_pToolObject->beginEvent();
     m_pToolObject->OnCancelDraw();
+    m_pToolObject->endEvent();
+}
+
+void ToolsModel::OnFinishDraw()
+{
+    ATLTRACE("ToolsModel::OnFinishDraw()\n");
+    m_pToolObject->beginEvent();
+    m_pToolObject->OnFinishDraw();
     m_pToolObject->endEvent();
 }
 
