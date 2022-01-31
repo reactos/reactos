@@ -1200,7 +1200,7 @@ typedef struct tagIMEUI
     HWND hwndIMC;
     HKL hKL;
     HWND hwndUI;
-    INT nCntInIMEProc;
+    LONG nCntInIMEProc;
     struct {
         UINT fShowStatus:1;
         UINT fActivate:1;

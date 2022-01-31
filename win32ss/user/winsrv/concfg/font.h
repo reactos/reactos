@@ -59,45 +59,48 @@ typedef struct _TT_FONT_ENTRY
 
 BYTE
 CodePageToCharSet(
-    IN UINT CodePage);
+    _In_ UINT CodePage);
 
 HFONT
 CreateConsoleFontEx(
-    IN LONG Height,
-    IN LONG Width OPTIONAL,
-    IN OUT LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements
-    IN ULONG FontFamily,
-    IN ULONG FontWeight,
-    IN UINT  CodePage);
+    _In_     LONG Height,
+    _In_opt_ LONG Width,
+    _Inout_updates_z_(LF_FACESIZE)
+         PWSTR FaceName,
+    _In_ ULONG FontFamily,
+    _In_ ULONG FontWeight,
+    _In_ UINT  CodePage);
 
 HFONT
 CreateConsoleFont2(
-    IN LONG Height,
-    IN LONG Width OPTIONAL,
-    IN OUT PCONSOLE_STATE_INFO ConsoleInfo);
+    _In_     LONG Height,
+    _In_opt_ LONG Width,
+    _Inout_  PCONSOLE_STATE_INFO ConsoleInfo);
 
 HFONT
 CreateConsoleFont(
-    IN OUT PCONSOLE_STATE_INFO ConsoleInfo);
+    _Inout_ PCONSOLE_STATE_INFO ConsoleInfo);
 
+_Success_(return)
 BOOL
 GetFontCellSize(
-    IN HDC hDC OPTIONAL,
-    IN HFONT hFont,
-    OUT PUINT Height,
-    OUT PUINT Width);
+    _In_opt_ HDC hDC,
+    _In_  HFONT hFont,
+    _Out_ PUINT Height,
+    _Out_ PUINT Width);
 
 BOOL
 IsValidConsoleFont2(
-    IN PLOGFONTW lplf,
-    IN PNEWTEXTMETRICW lpntm,
-    IN DWORD FontType,
-    IN UINT CodePage);
+    _In_ PLOGFONTW lplf,
+    _In_ PNEWTEXTMETRICW lpntm,
+    _In_ DWORD FontType,
+    _In_ UINT  CodePage);
 
 BOOL
 IsValidConsoleFont(
-    IN LPCWSTR FaceName,
-    IN UINT CodePage);
+    // _In_reads_or_z_(LF_FACESIZE)
+    _In_ PCWSTR FaceName,
+    _In_ UINT CodePage);
 
 /*
  * To install additional TrueType fonts to be available for the console,
@@ -119,8 +122,9 @@ RefreshTTFontCache(VOID);
 
 PTT_FONT_ENTRY
 FindCachedTTFont(
-    IN LPCWSTR FaceName,
-    IN UINT CodePage);
+    // _In_reads_or_z_(LF_FACESIZE)
+    _In_ PCWSTR FaceName,
+    _In_ UINT CodePage);
 
 #define IsAdditionalTTFont(FaceName) \
     (FindCachedTTFont((FaceName), INVALID_CP) != NULL)

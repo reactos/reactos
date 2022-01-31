@@ -12,6 +12,15 @@
 class CSelectionWindow : public CWindowImpl<CSelectionWindow>
 {
 public:
+    CSelectionWindow() : m_bMoved(FALSE)
+    {
+    }
+
+    BOOL IsMoved() const        { return m_bMoved; }
+    void IsMoved(BOOL bMoved)   { m_bMoved = bMoved; }
+
+    void ForceRefreshSelectionContents();
+
     DECLARE_WND_CLASS_EX(_T("Selection"), CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CSelectionWindow)
@@ -24,6 +33,7 @@ public:
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+        MESSAGE_HANDLER(WM_MOVE, OnMove)
         MESSAGE_HANDLER(WM_PALETTEMODELCOLORCHANGED, OnPaletteModelColorChanged)
         MESSAGE_HANDLER(WM_TOOLSMODELSETTINGSCHANGED, OnToolsModelSettingsChanged)
         MESSAGE_HANDLER(WM_TOOLSMODELZOOMCHANGED, OnToolsModelZoomChanged)
@@ -47,14 +57,17 @@ public:
     LRESULT OnSelectionModelRefreshNeeded(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 private:
     static const LPCTSTR m_lpszCursorLUT[9];
+    BOOL m_bMoved;
     BOOL m_bMoving;
     int m_iAction;
     POINT m_ptPos;
     POINT m_ptFrac;
     POINT m_ptDelta;
+    COLORREF m_rgbBack;
 
     int IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeight);
 };

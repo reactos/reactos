@@ -27,7 +27,7 @@
 #include <winver.h>
 
 #include <imm.h>
-#include <ddk/imm.h>
+#include <ddk/immdev.h>
 
 #define NTOS_MODE_USER
 #include <ndk/umtypes.h>

@@ -337,11 +337,6 @@ LONG SelectionModel::GetDestRectTop() const
     return m_rcDest.top;
 }
 
-void SelectionModel::DrawTextToolText(HDC hDCImage, COLORREF crFg, COLORREF crBg, BOOL bBgTransparent)
-{
-    Text(hDCImage, m_rcDest.left, m_rcDest.top, m_rcDest.right, m_rcDest.bottom, crFg, crBg, textToolText, hfontTextFont, bBgTransparent);
-}
-
 void SelectionModel::NotifyRefreshNeeded()
 {
     selectionWindow.SendMessage(WM_SELECTIONMODELREFRESHNEEDED);

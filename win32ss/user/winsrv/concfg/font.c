@@ -30,7 +30,7 @@ LIST_ENTRY TTFontCache = {&TTFontCache, &TTFontCache};
 /* Retrieves the character set associated with a given code page */
 BYTE
 CodePageToCharSet(
-    IN UINT CodePage)
+    _In_ UINT CodePage)
 {
     CHARSETINFO CharInfo;
     if (TranslateCharsetInfo(UlongToPtr(CodePage), &CharInfo, TCI_SRCCODEPAGE))
@@ -41,12 +41,13 @@ CodePageToCharSet(
 
 HFONT
 CreateConsoleFontEx(
-    IN LONG Height,
-    IN LONG Width OPTIONAL,
-    IN OUT LPWSTR FaceName, // Points to a WCHAR array of LF_FACESIZE elements
-    IN ULONG FontFamily,
-    IN ULONG FontWeight,
-    IN UINT  CodePage)
+    _In_     LONG Height,
+    _In_opt_ LONG Width,
+    _Inout_updates_z_(LF_FACESIZE)
+         PWSTR FaceName,
+    _In_ ULONG FontFamily,
+    _In_ ULONG FontWeight,
+    _In_ UINT  CodePage)
 {
     LOGFONTW lf;
 
@@ -85,9 +86,9 @@ CreateConsoleFontEx(
 
 HFONT
 CreateConsoleFont2(
-    IN LONG Height,
-    IN LONG Width OPTIONAL,
-    IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
+    _In_     LONG Height,
+    _In_opt_ LONG Width,
+    _Inout_  PCONSOLE_STATE_INFO ConsoleInfo)
 {
     return CreateConsoleFontEx(Height,
                                Width,
@@ -99,7 +100,7 @@ CreateConsoleFont2(
 
 HFONT
 CreateConsoleFont(
-    IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
+    _Inout_ PCONSOLE_STATE_INFO ConsoleInfo)
 {
     /*
      * Format:
@@ -115,12 +116,13 @@ CreateConsoleFont(
                                ConsoleInfo->CodePage);
 }
 
+_Success_(return)
 BOOL
 GetFontCellSize(
-    IN HDC hDC OPTIONAL,
-    IN HFONT hFont,
-    OUT PUINT Height,
-    OUT PUINT Width)
+    _In_opt_ HDC hDC,
+    _In_  HFONT hFont,
+    _Out_ PUINT Height,
+    _Out_ PUINT Width)
 {
     BOOL Success = FALSE;
     HDC hOrgDC = hDC;
@@ -186,10 +188,10 @@ Quit:
 
 BOOL
 IsValidConsoleFont2(
-    IN PLOGFONTW lplf,
-    IN PNEWTEXTMETRICW lpntm,
-    IN DWORD FontType,
-    IN UINT CodePage)
+    _In_ PLOGFONTW lplf,
+    _In_ PNEWTEXTMETRICW lpntm,
+    _In_ DWORD FontType,
+    _In_ UINT  CodePage)
 {
     LPCWSTR FaceName = lplf->lfFaceName;
 
@@ -348,10 +350,10 @@ typedef struct _IS_VALID_CONSOLE_FONT_PARAM
 
 static BOOL CALLBACK
 IsValidConsoleFontProc(
-    IN PLOGFONTW lplf,
-    IN PNEWTEXTMETRICW lpntm,
-    IN DWORD  FontType,
-    IN LPARAM lParam)
+    _In_ PLOGFONTW lplf,
+    _In_ PNEWTEXTMETRICW lpntm,
+    _In_ DWORD  FontType,
+    _In_ LPARAM lParam)
 {
     PIS_VALID_CONSOLE_FONT_PARAM Param = (PIS_VALID_CONSOLE_FONT_PARAM)lParam;
     Param->IsValidFont = IsValidConsoleFont2(lplf, lpntm, FontType, Param->CodePage);
@@ -362,8 +364,9 @@ IsValidConsoleFontProc(
 
 BOOL
 IsValidConsoleFont(
-    IN LPCWSTR FaceName,
-    IN UINT CodePage)
+    // _In_reads_or_z_(LF_FACESIZE)
+    _In_ PCWSTR FaceName,
+    _In_ UINT CodePage)
 {
     IS_VALID_CONSOLE_FONT_PARAM Param;
     HDC hDC;
@@ -373,7 +376,7 @@ IsValidConsoleFont(
     Param.CodePage = CodePage;
 
     RtlZeroMemory(&lf, sizeof(lf));
-    lf.lfCharSet = DEFAULT_CHARSET; // CodePageToCharSet(CodePage);
+    lf.lfCharSet = CodePageToCharSet(CodePage);
     // lf.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
     StringCchCopyW(lf.lfFaceName, ARRAYSIZE(lf.lfFaceName), FaceName);
 
@@ -396,51 +399,54 @@ IsValidConsoleFont(
 VOID
 InitTTFontCache(VOID)
 {
-    BOOLEAN Success;
-    HKEY  hKeyTTFonts; // hKey;
-    DWORD dwNumValues = 0;
-    DWORD dwIndex;
-    DWORD dwType;
+    LRESULT lResult;
+    HKEY hKey;
+    DWORD dwIndex, dwType;
     WCHAR szValueName[MAX_PATH];
-    DWORD dwValueName;
+    DWORD cchValueName;
     WCHAR szValue[LF_FACESIZE] = L"";
-    DWORD dwValue;
-    PTT_FONT_ENTRY FontEntry;
-    PWCHAR pszNext = NULL;
+    DWORD cbValue;
     UINT CodePage;
+    PTT_FONT_ENTRY FontEntry;
+    PWCHAR pszNext;
 
     if (!IsListEmpty(&TTFontCache))
         return;
     // InitializeListHead(&TTFontCache);
 
-    /* Open the key */
+    /* Open the Console\TrueTypeFont key */
     // "\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Console\\TrueTypeFont"
-    Success = (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                             L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Console\\TrueTypeFont",
-                             0,
-                             KEY_READ,
-                             &hKeyTTFonts) == ERROR_SUCCESS);
-    if (!Success)
-        return;
-
-    /* Enumerate each value */
-    if (RegQueryInfoKeyW(hKeyTTFonts, NULL, NULL, NULL, NULL, NULL, NULL,
-                         &dwNumValues, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Console\\TrueTypeFont",
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKey) != ERROR_SUCCESS)
     {
-        DPRINT("ConCfgReadUserSettings: RegQueryInfoKeyW failed\n");
-        RegCloseKey(hKeyTTFonts);
         return;
     }
 
-    for (dwIndex = 0; dwIndex < dwNumValues; dwIndex++)
+    /* Enumerate all the available TrueType console fonts */
+    for (dwIndex = 0, cchValueName = ARRAYSIZE(szValueName),
+                      cbValue = sizeof(szValue);
+         (lResult = RegEnumValueW(hKey, dwIndex,
+                                  szValueName, &cchValueName,
+                                  NULL, &dwType,
+                                  (PBYTE)szValue, &cbValue)) != ERROR_NO_MORE_ITEMS;
+         ++dwIndex, cchValueName = ARRAYSIZE(szValueName),
+                    cbValue = sizeof(szValue))
     {
-        dwValue = sizeof(szValue);
-        dwValueName = ARRAYSIZE(szValueName);
-        if (RegEnumValueW(hKeyTTFonts, dwIndex, szValueName, &dwValueName, NULL, &dwType, (BYTE*)szValue, &dwValue) != ERROR_SUCCESS)
-        {
-            DPRINT1("InitTTFontCache: RegEnumValueW failed, continuing...\n");
+        /* Ignore if we failed for another reason, e.g. because
+         * the value name is too long (and thus, invalid). */
+        if (lResult != ERROR_SUCCESS)
             continue;
-        }
+
+        /* Validate the value name (exclude the unnamed value) */
+        if (!cchValueName || (*szValueName == UNICODE_NULL))
+            continue;
+        /* Too large value names have already been handled with ERROR_MORE_DATA */
+        ASSERT((cchValueName < ARRAYSIZE(szValueName)) &&
+               (szValueName[cchValueName] == UNICODE_NULL));
+
         /* Only (multi-)string values are supported */
         if ((dwType != REG_SZ) && (dwType != REG_MULTI_SZ))
             continue;
@@ -499,7 +505,7 @@ InitTTFontCache(VOID)
     }
 
     /* Close the key and quit */
-    RegCloseKey(hKeyTTFonts);
+    RegCloseKey(hKey);
 }
 
 VOID
@@ -526,8 +532,9 @@ RefreshTTFontCache(VOID)
 
 PTT_FONT_ENTRY
 FindCachedTTFont(
-    IN LPCWSTR FaceName,
-    IN UINT CodePage)
+    // _In_reads_or_z_(LF_FACESIZE)
+    _In_ PCWSTR FaceName,
+    _In_ UINT CodePage)
 {
     PLIST_ENTRY Entry;
     PTT_FONT_ENTRY FontEntry;
