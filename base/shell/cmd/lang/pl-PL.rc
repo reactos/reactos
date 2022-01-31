@@ -46,7 +46,7 @@ Aby usunąć istniejący alias:\n\
 CALL [napęd:][ścieżka]nazwa_pliku [parametry]\n\n\
   parametry   Wszelkie dane, wymagane przez program wsadowy,\n\
                który ma zostać wywołany."
-    STRING_CD_HELP "Zmienia obecny katalog albo wyświetla jego pełną nazwę. \n\n\
+    STRING_CD_HELP "Zmienia obecny katalog albo wyświetla jego pełną nazwę.\n\n\
 CHDIR [/D][napęd:][ścieżka]\n\
 CHDIR[..|.]\n\
 CD [/D][napęd:][ścieżka]\n\
@@ -176,7 +176,7 @@ DELAY [/m]n\n\n\
   /Q          Wyświetla właściciela plików\n\
   /R          Displays alternate data streams of the files.\n\
   /S          Wyświetla pliki w danym katalogu i wszystkich podkatalogach.\n\
-  /T          Pole czasu, odpowiedzialne za wyświetlanie/sortowanie \n\
+  /T          Pole czasu, odpowiedzialne za wyświetlanie/sortowanie\n\
   czas        C  Utworzenia\n\
               A  Ostatniego otwarcia\n\
               W  Ostatniej modyfikacji\n\
@@ -216,7 +216,7 @@ PUSHD [ścieżka | ..]\n\n\
 Wpisz ECHO bez żadnych parametrów, by wyświetlić obecne ustawienie."
     STRING_ECHO_HELP5 "ECHO jest %s\n"
     STRING_EXIT_HELP "Zamyka okno konsoli.\n\nEXIT [/b] [kod]\n\n\
-  /B            Zamyka jedynie plik wsadowy.  \n\
+  /B            Zamyka jedynie plik wsadowy.\n\
                 Jeśli użyty będzie poza plikiem wsadowym, zamknie cmd.exe\n\
   kod           Ta wartość zostanie przypisana do ERRORLEVEL przy wyjściu.\n"
     STRING_FOR_HELP1 "Uruchamia wyznaczoną komendę dla każdego pliku w zestawie.\n\n\
@@ -292,7 +292,7 @@ Aby przenieść jeden lub więcej plików:\n\
 MOVE [/N][napęd:][ścieżka]nazwa_pliku1[,...] cel\n\n\
 Aby zmienić nazwę katalogu:\n\
 MOVE [/N][napęd:][ścieżka]nazwa1 nazwa2\n\n\
-  [napęd:][ścieżka]nazwa  Wyznacza scieżkę dostępu do pliku lub \n\
+  [napęd:][ścieżka]nazwa  Wyznacza scieżkę dostępu do pliku lub\n\
                           plików, które chcesz przenieść.\n\
   /N                      Nic. Zrób wszystko, oprócz przenoszenia plików/katalogów.\n\n\
 Obecne ograniczenia:\n\
@@ -317,7 +317,7 @@ PROMPT [tekst]\n\n\
   tekst   Definiuje nowy znak zachęty.\n\n\
 Znak zachęty może składać się z normalnych znaków, a także poniższych symboli:\n\n\
   $A   & (Et)\n\
-  $B   | \n\
+  $B   |\n\
   $C   ( (lewy nawias)\n\
   $D   Bieżąca data\n\
   $E   Znak ucieczki (kod ASCII 27)\n\
@@ -363,22 +363,22 @@ do tego komendy MOVE.\n"
 REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/A] [/P] [/R] [/W]\n\
 REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] [/U]\n\n\
   [napęd1:][ścieżka1]nazwa_pliku Wyznacza źródło pliku bądź plików.\n\
-  [napęd2:][ścieżka2]         Wyznacza lokalizacje gdzie pliki mają być \n\
+  [napęd2:][ścieżka2]         Wyznacza lokalizacje gdzie pliki mają być\n\
                            zamienione.\n\
-  /A                       Dodaje nowe pliki do lokalizacji docelowej. Nie można \n\
+  /A                       Dodaje nowe pliki do lokalizacji docelowej. Nie można\n\
                            łączyć z opcjami /S lub /U.\n\
-  /P                       Żąda potwierdzenia przed zamianą istniejącego lub \n\
+  /P                       Żąda potwierdzenia przed zamianą istniejącego lub\n\
                            dodaniem nowego pliku.\n\
   /R                       Zamienia pliki tylko do odczytu na równi z niezabez-\n\
                            pieczonymi.\n\
-  /S                       Zamienia pliki we wszystkich podkatalogach w lokazlizacji \n\
+  /S                       Zamienia pliki we wszystkich podkatalogach w lokazlizacji\n\
                            docelowej. Nie można łączyć z opcją /A.\n\
   /W                      Czeka na włożenie dyskietki przed rozpoczęciem zamiany.\n\
-  /U                       Zamienia (aktualizuje) wyłącznie pliki starsze od \n\
+  /U                       Zamienia (aktualizuje) wyłącznie pliki starsze od\n\
                            źródłowych. Nie można łączyć z opcją /A.\n"
     STRING_REPLACE_HELP2 "Brak ścieżki do źródła\n"
     STRING_REPLACE_HELP3 "Nie zamieniono żadnego pliku\n"
-    STRING_REPLACE_HELP4 "Zamieniono %lu plik(i/ów) \n"
+    STRING_REPLACE_HELP4 "Zamieniono %lu plik(i/ów)\n"
     STRING_REPLACE_HELP5 "Zamiana %s\n"
     STRING_REPLACE_HELP6 "Zamieniony %s\n"
     STRING_REPLACE_HELP7 "Nie dodano nowych plików\n"
@@ -434,9 +434,9 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
               n możliwości:\n\
                     0    millisekundy\n\
                     1    hh%cmm%css%cdd\n\n\
-jeśli nie podano w składni parametrów: ON, OFF or /S, \n\
+jeśli nie podano w składni parametrów: ON, OFF or /S,\n\
 komenda zmieni obecny stan stopera\n\n"
-    STRING_TYPE_HELP1 "Wyświetla zawartość plików tekstowych.\n\nTYPE [napęd:][ścieżka]nazwa_pliku \n\
+    STRING_TYPE_HELP1 "Wyświetla zawartość plików tekstowych.\n\nTYPE [napęd:][ścieżka]nazwa_pliku\n\
   /P          Pauzuje po każdym pełnym ekranie.\n"
     STRING_VERIFY_HELP1 "Ta komenda jest tylko na podpuchę\
 Odpowiada za to, czy po zapisaniu plików ma nastąpić sprawdzenie\n\
@@ -549,10 +549,10 @@ title         nowy tytuł okna\n"
     STRING_REPLACE_ERROR6 "Nie znaleziono plików - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32 -  Błąd współdzielenia\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
-    STRING_CMD_SHELLINFO "\nInterpreter linii poleceń ReactOS\nVersion %s %s"
+    STRING_REACTOS_VERSION "ReactOS [Wersja %s %s]\n"
+    STRING_CMD_SHELLINFO "\nInterpreter linii poleceń ReactOS\nWersja %s %s"
     STRING_VERSION_RUNNING_ON "Działający na: "
-    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
+    STRING_VERSION_RUNVER "%s [Wersja %d.%d.%d] %s"
     STRING_COPY_FILE "        %d plik(ów) skopiowano\n"
     STRING_DELETE_WIPE "skasowano"
     STRING_FOR_ERROR "złe określenie zmiennej."
