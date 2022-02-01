@@ -777,7 +777,7 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             {
                 pwndNewImc = ValidateHwnd(hwndNewImc);
                 pwndOldImc = ValidateHwnd(hwndOldImc);
-                if (pwndNewImc && pwndOldImc &&
+                if (pwndNewImc && pwndOldImc && pwndNewImc != pwndOldImc &&
                     User32GetTopLevelWindow(pwndNewImc) != User32GetTopLevelWindow(pwndOldImc))
                 {
                     User32NotifyOpenStatus(pimeui, hwndOldImc, FALSE);
