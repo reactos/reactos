@@ -660,6 +660,10 @@ NtUserCallHwndLock(
             co_IntUpdateWindows(Window, RDW_ALLCHILDREN, FALSE);
             Ret = TRUE;
             break;
+
+        case HWNDLOCK_ROUTINE_CHECKIMESHOWSTATUSINTHRD:
+            // TODO:
+            break;
     }
 
     UserDerefObjectCo(Window);
