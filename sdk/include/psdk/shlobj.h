@@ -222,11 +222,11 @@ HRESULT      WINAPI SHLoadOLE(LPARAM);
 HRESULT
 WINAPI
 SHParseDisplayName(
-  _In_ PCWSTR,
-  _In_opt_ IBindCtx*,
-  _Outptr_ PIDLIST_ABSOLUTE*,
-  _In_ SFGAOF,
-  _Out_opt_ SFGAOF*);
+  _In_ PCWSTR pszName,
+  _In_opt_ IBindCtx* pbc,
+  _Outptr_ PIDLIST_ABSOLUTE* ppidl,
+  _In_ SFGAOF sfgaoIn,
+  _Out_opt_ SFGAOF* psfgaoOut);
 
 HRESULT
 WINAPI
