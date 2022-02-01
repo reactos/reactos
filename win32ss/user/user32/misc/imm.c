@@ -707,6 +707,7 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 
         hImeWnd = UserHMGetHandle(pimeui->spwnd);
         hwndFocus = (HWND)NtUserQueryWindow(hImeWnd, QUERY_WINDOW_FOCUS);
+
         hIMC = IMM_FN(ImmGetContext)(hwndFocus);
 
         if (hIMC && !User32CanSetImeWindowToImc(hIMC, hImeWnd))
@@ -790,7 +791,7 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             }
         }
 
-        hImeWnd = UserHMGetHandle(pimeui->spwnd);
+        hImeWnd = (pimeui->spwnd ? UserHMGetHandle(pimeui->spwnd) : NULL);
         if (hImeWnd)
             NtUserCallHwndLock(hImeWnd, HWNDLOCK_ROUTINE_CHECKIMESHOWSTATUSINTHRD);
     }
