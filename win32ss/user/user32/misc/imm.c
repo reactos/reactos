@@ -673,7 +673,7 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     HIMC hIMC;
     LPINPUTCONTEXTDX pIC;
     HWND hwndFocus, hwndOldImc, hwndNewImc, hImeWnd, hwndActive;
-    PWND pwndFocus, pwndOldImc, pwndNewImc, pwndOwner;
+    PWND pwndFocus, pwndOldImc, pwndNewImc, pImeWnd, pwndOwner;
     COMPOSITIONFORM CompForm;
 
     pimeui->fActivate = !!wParam;
@@ -791,15 +791,17 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             }
         }
 
-        hImeWnd = (pimeui->spwnd ? UserHMGetHandle(pimeui->spwnd) : NULL);
+        pImeWnd = pimeui->spwnd;
+        hImeWnd = (pImeWnd ? UserHMGetHandle(pImeWnd) : NULL);
         if (hImeWnd)
             NtUserCallHwndLock(hImeWnd, HWNDLOCK_ROUTINE_CHECKIMESHOWSTATUSINTHRD);
     }
     else
     {
-        hImeWnd = UserHMGetHandle(pimeui->spwnd);
+        pImeWnd = pimeui->spwnd;
+        hImeWnd = UserHMGetHandle(pImeWnd);
         hwndActive = (HWND)NtUserQueryWindow(hImeWnd, QUERY_WINDOW_ACTIVE);
-        if (!pwndFocus || !hwndActive || pimeui->spwnd->head.pti != pwndFocus->head.pti)
+        if (!pwndFocus || !hwndActive || pImeWnd->head.pti != pwndFocus->head.pti)
         {
             if (IsWindow(hwndOldImc))
             {
