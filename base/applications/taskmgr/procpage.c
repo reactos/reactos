@@ -1029,7 +1029,7 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
         if (hProcess)
         {
             BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
-            PUNICODE_STRING DynamicBuffer = NULL;
+            PVOID DynamicBuffer = NULL;
             PUNICODE_STRING ImagePath = NULL;
             ULONG SizeNeeded;
             NTSTATUS Status;
@@ -1048,11 +1048,11 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
                 {
                     Status = NtQueryInformationProcess(hProcess,
                                                        ProcessImageFileName,
-                                                       (LPBYTE)DynamicBuffer,
+                                                       DynamicBuffer,
                                                        SizeNeeded,
                                                        &SizeNeeded);
 
-                    ImagePath = DynamicBuffer;
+                    ImagePath = (PUNICODE_STRING)DynamicBuffer;
                 }
             }
             else
