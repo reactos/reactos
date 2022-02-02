@@ -27,6 +27,8 @@
 
 #include <strsafe.h>
 
+#include <ndk/psfuncs.h>
+
 #define CMP(x1, x2)\
     (x1 < x2 ? -1 : (x1 > x2 ? 1 : 0))
 
@@ -934,35 +936,59 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     return ret;
 }
 
-static DWORD _GetModuleFileNameExW(HANDLE hProcess, HMODULE hModule, LPWSTR lpFilename, DWORD nSize)
+static BOOL NormalizeDevicePath(LPWSTR lpPath, DWORD dwLength)
 {
-    typedef DWORD (WINAPI *PFN_GETMODULEFILENAMEEXW)(HANDLE, HMODULE, LPWSTR, DWORD);
+    WCHAR *pszPath;
+    BOOL bSuccess = FALSE;
 
-    HMODULE hLibrary;
-    PFN_GETMODULEFILENAMEEXW func;
-    DWORD dwRet = 0;
-
-    hLibrary = LoadLibraryW(L"psapi.dll");
-
-    if (hLibrary)
+    /* Check if lpPath is a device path */
+    if (_wcsnicmp(lpPath, L"\\Device\\", 8) != 0)
     {
-        func = (PFN_GETMODULEFILENAMEEXW)GetProcAddress(hLibrary, "GetModuleFileNameExW");
-
-        if (func)
-        {
-            dwRet = func(hProcess, hModule, lpFilename, nSize);
-        }
-
-        FreeLibrary(hLibrary);
+        return FALSE;
     }
 
-    return dwRet;
+    pszPath = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
+
+    if (!pszPath)
+    {
+        return FALSE;
+    }
+
+    for (WCHAR cDrive = L'A'; cDrive <= L'Z'; cDrive++)
+    {
+        WCHAR szDrive[3];
+        WCHAR szDevPath[MAX_PATH];
+
+        szDrive[0] = cDrive;
+        szDrive[1] = L':';
+        szDrive[2] = L'\0';
+
+        if (QueryDosDeviceW(szDrive, szDevPath, _countof(szDevPath)) != 0)
+        {
+            size_t len = wcslen(szDevPath);
+            bSuccess = (_wcsnicmp(lpPath, szDevPath, len) == 0);
+
+            if (bSuccess)
+            {
+                StringCchPrintfW(pszPath, dwLength, L"%s%s", szDrive, lpPath + len);
+                break;
+            }
+        }
+    }
+
+    if (bSuccess)
+    {
+        StringCchCopyW(lpPath, dwLength, pszPath);
+    }
+
+    HeapFree(GetProcessHeap(), 0, pszPath);
+
+    return bSuccess;
 }
 
 static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
 {
     WCHAR *pszExePath;
-    HANDLE hProcess;
     BOOL bSuccess = FALSE;
 
     if (dwProcessId == 0)
@@ -980,59 +1006,68 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
     /* PID = 4 or "System" */
     if (dwProcessId == 4)
     {
-        static const WCHAR szKernelPath[] = L"\\SystemRoot\\System32\\ntoskrnl.exe";
+        static const WCHAR szKernelPath[] = L"\\System32\\ntoskrnl.exe";
+        WCHAR szWinDir[MAX_PATH];
 
-        if (dwLength >= _countof(szKernelPath))
+        bSuccess = (GetWindowsDirectoryW(szWinDir, _countof(szWinDir)) != 0);
+
+        if (bSuccess && dwLength >= wcslen(szWinDir) + _countof(szKernelPath))
         {
-            StringCchCopyW(pszExePath, dwLength, szKernelPath);
-
-            bSuccess = TRUE;
+            StringCchPrintfW(pszExePath, dwLength, L"%s%s", szWinDir, szKernelPath);
+        }
+        else
+        {
+            bSuccess = FALSE;
         }
     }
     else
     {
-        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwProcessId);
+        HANDLE hProcess;
+
+        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwProcessId);
 
         if (hProcess)
         {
-            bSuccess = (_GetModuleFileNameExW(hProcess, NULL, pszExePath, dwLength) != 0);
+            PVOID Buffer;
+            SIZE_T BufferSize;
+            NTSTATUS Status;
+
+            BufferSize = ((dwLength - 1) * sizeof(WCHAR)) + sizeof(UNICODE_STRING);
+            Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize);
+
+            if (Buffer)
+            {
+                Status = NtQueryInformationProcess(hProcess,
+                                                   ProcessImageFileName,
+                                                   Buffer,
+                                                   BufferSize,
+                                                   NULL);
+
+                if (NT_SUCCESS(Status))
+                {
+                    PUNICODE_STRING ImagePath = (PUNICODE_STRING)Buffer;
+
+                    memcpy(pszExePath, ImagePath->Buffer, ImagePath->Length);
+                    pszExePath[ImagePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                    bSuccess = TRUE;
+                }
+
+                HeapFree(GetProcessHeap(), 0, Buffer);
+            }
 
             CloseHandle(hProcess);
         }
     }
 
+    if (bSuccess && dwProcessId != 4)
+    {
+        bSuccess = NormalizeDevicePath(pszExePath, dwLength);
+    }
+
     if (bSuccess)
     {
-        /* Remove or replace path prefix if present */
-        if (wcsncmp(pszExePath, L"\\??\\", 4) == 0)
-        {
-            /* Remove "\??\" prefix */
-            StringCchCopyW(pszExePath, dwLength, pszExePath + 4);
-        }
-        else if (_wcsnicmp(pszExePath, L"\\SystemRoot", 11) == 0)
-        {
-            WCHAR szWinDir[MAX_PATH];
-
-            bSuccess = (GetWindowsDirectoryW(szWinDir, _countof(szWinDir)) != 0);
-
-            if (bSuccess)
-            {
-                if (dwLength >= wcslen(szWinDir) + (wcslen(pszExePath) - 11) + 1)
-                {
-                    /* Replace "\SystemRoot" prefix */
-                    StringCchPrintfW(pszExePath, dwLength, L"%s%s", szWinDir, pszExePath + 11);
-                }
-                else
-                {
-                    bSuccess = FALSE;
-                }
-            }
-        }
-
-        if (bSuccess)
-        {
-            StringCchCopyW(lpExePath, dwLength, pszExePath);
-        }
+        StringCchCopyW(lpExePath, dwLength, pszExePath);
     }
 
     HeapFree(GetProcessHeap(), 0, pszExePath);
