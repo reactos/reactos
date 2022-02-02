@@ -939,6 +939,7 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 static BOOL NormalizeDevicePath(LPWSTR lpPath, DWORD dwLength)
 {
     WCHAR *pszPath;
+    WCHAR cDrive;
     BOOL bSuccess = FALSE;
 
     /* Check if lpPath is a device path */
@@ -954,7 +955,7 @@ static BOOL NormalizeDevicePath(LPWSTR lpPath, DWORD dwLength)
         return FALSE;
     }
 
-    for (WCHAR cDrive = L'A'; cDrive <= L'Z'; cDrive++)
+    for (cDrive = L'A'; cDrive <= L'Z'; cDrive++)
     {
         WCHAR szDrive[3];
         WCHAR szDevPath[MAX_PATH];
