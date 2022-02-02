@@ -1012,13 +1012,16 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
 
         bSuccess = (GetWindowsDirectoryW(szWinDir, _countof(szWinDir)) != 0);
 
-        if (bSuccess && dwLength >= wcslen(szWinDir) + _countof(szKernelPath))
+        if (bSuccess)
         {
-            StringCchPrintfW(pszExePath, dwLength, L"%s%s", szWinDir, szKernelPath);
-        }
-        else
-        {
-            bSuccess = FALSE;
+            if (dwLength >= wcslen(szWinDir) + _countof(szKernelPath))
+            {
+                StringCchPrintfW(pszExePath, dwLength, L"%s%s", szWinDir, szKernelPath);
+            }
+            else
+            {
+                bSuccess = FALSE;
+            }
         }
     }
     else
@@ -1061,12 +1064,15 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
                 ImagePath = (PUNICODE_STRING)StaticBuffer;
             }
 
-            if (NT_SUCCESS(Status) && dwLength >= (ImagePath->Length / sizeof(WCHAR)) + 1)
+            if (NT_SUCCESS(Status))
             {
-                memcpy(pszExePath, ImagePath->Buffer, ImagePath->Length);
-                pszExePath[ImagePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
+                if (dwLength >= (ImagePath->Length / sizeof(WCHAR)) + 1)
+                {
+                    memcpy(pszExePath, ImagePath->Buffer, ImagePath->Length);
+                    pszExePath[ImagePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-                bSuccess = TRUE;
+                    bSuccess = TRUE;
+                }
             }
 
             if (DynamicBuffer)
