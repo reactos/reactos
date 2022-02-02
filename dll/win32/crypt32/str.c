@@ -15,8 +15,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <stdarg.h>
 
-#include "crypt32_private.h"
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winuser.h"
+#include "wincrypt.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 

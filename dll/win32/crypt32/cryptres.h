@@ -15,9 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
 #ifndef __WINE_CRYPTRES_H__
 #define __WINE_CRYPTRES_H__
+
+#include <windef.h>
 
 #define IDS_AUTHORITY_KEY_ID 1000
 #define IDS_KEY_ATTRIBUTES 1001

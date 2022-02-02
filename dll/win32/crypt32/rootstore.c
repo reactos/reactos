@@ -15,9 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-#include "crypt32_private.h"
-
+#include "config.h"
+#include <stdarg.h>
+#include <stdio.h>
 #include <sys/types.h>
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -34,6 +34,15 @@
 #ifdef HAVE_SECURITY_SECURITY_H
 #include <Security/Security.h>
 #endif
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "wincrypt.h"
+#include "wine/winternl.h"
+#include "wine/debug.h"
+#include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
