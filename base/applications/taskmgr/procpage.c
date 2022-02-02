@@ -1028,32 +1028,49 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
 
         if (hProcess)
         {
-            PVOID Buffer;
-            SIZE_T BufferSize;
+            BYTE StaticBuffer[(MAX_PATH * sizeof(WCHAR)) + sizeof(UNICODE_STRING)];
+            PUNICODE_STRING DynamicBuffer = NULL;
+            PUNICODE_STRING ImagePath = NULL;
+            ULONG SizeNeeded;
             NTSTATUS Status;
 
-            BufferSize = ((dwLength - 1) * sizeof(WCHAR)) + sizeof(UNICODE_STRING);
-            Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize);
+            Status = NtQueryInformationProcess(hProcess,
+                                               ProcessImageFileName,
+                                               StaticBuffer,
+                                               sizeof(StaticBuffer) - sizeof(WCHAR),
+                                               &SizeNeeded);
 
-            if (Buffer)
+            if (Status == STATUS_INFO_LENGTH_MISMATCH)
             {
-                Status = NtQueryInformationProcess(hProcess,
-                                                   ProcessImageFileName,
-                                                   Buffer,
-                                                   BufferSize,
-                                                   NULL);
+                DynamicBuffer = HeapAlloc(GetProcessHeap(), 0, SizeNeeded + sizeof(WCHAR));
 
-                if (NT_SUCCESS(Status))
+                if (DynamicBuffer)
                 {
-                    PUNICODE_STRING ImagePath = (PUNICODE_STRING)Buffer;
+                    Status = NtQueryInformationProcess(hProcess,
+                                                       ProcessImageFileName,
+                                                       (LPBYTE)DynamicBuffer,
+                                                       SizeNeeded,
+                                                       &SizeNeeded);
 
-                    memcpy(pszExePath, ImagePath->Buffer, ImagePath->Length);
-                    pszExePath[ImagePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
-
-                    bSuccess = TRUE;
+                    ImagePath = DynamicBuffer;
                 }
+            }
+            else
+            {
+                ImagePath = (PUNICODE_STRING)StaticBuffer;
+            }
 
-                HeapFree(GetProcessHeap(), 0, Buffer);
+            if (NT_SUCCESS(Status) && dwLength >= (ImagePath->Length / sizeof(WCHAR)) + 1)
+            {
+                memcpy(pszExePath, ImagePath->Buffer, ImagePath->Length);
+                pszExePath[ImagePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                bSuccess = TRUE;
+            }
+
+            if (DynamicBuffer)
+            {
+                HeapFree(GetProcessHeap(), 0, DynamicBuffer);
             }
 
             CloseHandle(hProcess);
