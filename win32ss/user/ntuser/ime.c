@@ -12,6 +12,21 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 
 #define INVALID_THREAD_ID  ((ULONG)-1)
 
+#define IS_WND_IMELIKE(pwnd) \
+    (((pwnd)->pcls->style & CS_IME) || \
+     ((pwnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
+
+PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
+{
+    if (!pwnd)
+        return NULL;
+
+    while (pwnd->style & WS_CHILD)
+        pwnd = pwnd->spwndParent;
+
+    return pwnd;
+}
+
 DWORD
 APIENTRY
 NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
@@ -472,8 +487,61 @@ Quit:
 BOOL APIENTRY
 NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
 {
-   STUB
-   return 0;
+    BOOL ret = FALSE;
+    PWND pImeWnd, pwndFocus, pwndTopLevel, pwnd, pwndActive;
+    PTHREADINFO ptiIme;
+
+    UserEnterExclusive();
+
+    pImeWnd = ValidateHwndNoErr(hImeWnd);
+    if (!IS_IMM_MODE() || !pImeWnd || pImeWnd->fnid != FNID_IME)
+        goto Quit;
+
+    pwndFocus = ValidateHwndNoErr(hwndFocus);
+    if (pwndFocus)
+    {
+        if (IS_WND_IMELIKE(pwndFocus))
+            goto Quit;
+
+        pwndTopLevel = IntGetTopLevelWindow(pwndFocus);
+
+        for (pwnd = pwndTopLevel; pwnd; pwnd = pwnd->spwndOwner)
+        {
+            if (pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME])
+            {
+                pwndTopLevel = NULL;
+                break;
+            }
+        }
+
+        pImeWnd->spwndOwner = pwndTopLevel;
+        // TODO:
+    }
+    else
+    {
+        ptiIme = pImeWnd->head.pti;
+        pwndActive = ptiIme->MessageQueue->spwndActive;
+
+        if (!pwndActive || pwndActive != pImeWnd->spwndOwner)
+        {
+            if (pwndActive && ptiIme == pwndActive->head.pti && !IS_WND_IMELIKE(pwndActive))
+            {
+                pImeWnd->spwndOwner = pwndActive;
+            }
+            else
+            {
+                // TODO:
+            }
+
+            // TODO:
+        }
+    }
+
+    ret = TRUE;
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 PVOID
