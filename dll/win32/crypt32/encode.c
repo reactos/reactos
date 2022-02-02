@@ -30,6 +30,23 @@
  * MSDN, especially "Constants for CryptEncodeObject and CryptDecodeObject"
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "wincrypt.h"
+#include "snmp.h"
+#include "wine/debug.h"
+#include "wine/exception.h"
+#include "wine/unicode.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptasn);

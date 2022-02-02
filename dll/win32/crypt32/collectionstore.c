@@ -15,7 +15,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wincrypt.h"
+#include "wine/debug.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
@@ -160,7 +164,6 @@ static context_t *CRYPT_CollectionAdvanceEnum(WINE_COLLECTIONSTORE *store,
         Context_AddRef(child);
         child = contextFuncs->enumContext(storeEntry->store, child);
         Context_Release(prev);
-        prev = NULL;
     }
     else
     {

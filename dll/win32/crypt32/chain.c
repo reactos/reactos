@@ -16,10 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-
+#include <stdarg.h>
+#define NONAMELESSUNION
+#include "windef.h"
+#include "winbase.h"
+#define CERT_CHAIN_PARA_HAS_EXTRA_FIELDS
+#define CERT_REVOCATION_PARA_HAS_EXTRA_FIELDS
+#include "wincrypt.h"
+#include "wininet.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
 #include "crypt32_private.h"
-
-#include <wininet.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 WINE_DECLARE_DEBUG_CHANNEL(chain);
@@ -258,7 +265,7 @@ typedef struct _CertificateChain
     LONG ref;
 } CertificateChain;
 
-BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert)
+BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert, DWORD *type)
 {
     PCERT_EXTENSION ext;
     DWORD size;
@@ -293,6 +300,7 @@ BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert)
                      &directoryName->u.DirectoryName, &cert->pCertInfo->Issuer)
                      && CertCompareIntegerBlob(&info->AuthorityCertSerialNumber,
                      &cert->pCertInfo->SerialNumber);
+                     if (type) *type = CERT_TRUST_HAS_NAME_MATCH_ISSUER;
                 }
                 else
                 {
@@ -314,6 +322,7 @@ BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert)
                          CERT_KEY_IDENTIFIER_PROP_ID, buf, &size);
                         ret = !memcmp(buf, info->KeyId.pbData, size);
                         CryptMemFree(buf);
+                        if (type) *type = CERT_TRUST_HAS_KEY_MATCH_ISSUER;
                     }
                     else
                         ret = FALSE;
@@ -341,6 +350,7 @@ BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert)
                  &info->CertIssuer, &cert->pCertInfo->Issuer) &&
                  CertCompareIntegerBlob(&info->CertSerialNumber,
                  &cert->pCertInfo->SerialNumber);
+                if (type) *type = CERT_TRUST_HAS_NAME_MATCH_ISSUER;
             }
             else if (info->KeyId.cbData)
             {
@@ -356,6 +366,7 @@ BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert)
                          CERT_KEY_IDENTIFIER_PROP_ID, buf, &size);
                         ret = !memcmp(buf, info->KeyId.pbData, size);
                         CryptMemFree(buf);
+                        if (type) *type = CERT_TRUST_HAS_KEY_MATCH_ISSUER;
                     }
                     else
                         ret = FALSE;
@@ -369,8 +380,11 @@ BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert)
         }
     }
     else
+    {
         ret = CertCompareCertificateName(cert->dwCertEncodingType,
          &cert->pCertInfo->Subject, &cert->pCertInfo->Issuer);
+        if (type) *type = CERT_TRUST_HAS_NAME_MATCH_ISSUER;
+    }
     return ret;
 }
 
@@ -1313,7 +1327,7 @@ static void CRYPT_CheckChainNameConstraints(PCERT_SIMPLE_CHAIN chain)
                      * constraints checked unless they're the end cert.
                      */
                     if (j == 0 || !CRYPT_IsCertificateSelfSigned(
-                     chain->rgpElement[j]->pCertContext))
+                     chain->rgpElement[j]->pCertContext, NULL))
                     {
                         CRYPT_CheckNameConstraints(nameConstraints,
                          chain->rgpElement[j]->pCertContext->pCertInfo,
@@ -1886,6 +1900,7 @@ static void CRYPT_CheckSimpleChain(CertificateChainEngine *engine,
     int i;
     BOOL pathLengthConstraintViolated = FALSE;
     CERT_BASIC_CONSTRAINTS2_INFO constraints = { FALSE, FALSE, 0 };
+    DWORD type;
 
     TRACE_(chain)("checking chain with %d elements for time %s\n",
      chain->cElement, filetime_to_str(time));
@@ -1897,7 +1912,7 @@ static void CRYPT_CheckSimpleChain(CertificateChainEngine *engine,
             dump_element(chain->rgpElement[i]->pCertContext);
         if (i == chain->cElement - 1)
             isRoot = CRYPT_IsCertificateSelfSigned(
-             chain->rgpElement[i]->pCertContext);
+             chain->rgpElement[i]->pCertContext, NULL);
         else
             isRoot = FALSE;
         if (!CRYPT_IsCertVersionValid(chain->rgpElement[i]->pCertContext))
@@ -1973,10 +1988,10 @@ static void CRYPT_CheckSimpleChain(CertificateChainEngine *engine,
     }
     CRYPT_CheckChainNameConstraints(chain);
     CRYPT_CheckChainPolicies(chain);
-    if (CRYPT_IsCertificateSelfSigned(rootElement->pCertContext))
+    if (CRYPT_IsCertificateSelfSigned(rootElement->pCertContext, &type))
     {
         rootElement->TrustStatus.dwInfoStatus |=
-         CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER;
+         CERT_TRUST_IS_SELF_SIGNED | type;
         CRYPT_CheckRootCert(engine->hRoot, rootElement);
     }
     CRYPT_CombineTrustStatus(&chain->TrustStatus, &rootElement->TrustStatus);
@@ -2188,7 +2203,7 @@ static BOOL CRYPT_BuildSimpleChain(const CertificateChainEngine *engine,
     PCCERT_CONTEXT cert = chain->rgpElement[chain->cElement - 1]->pCertContext;
 
     while (ret && !CRYPT_IsSimpleChainCyclic(chain) &&
-     !CRYPT_IsCertificateSelfSigned(cert))
+     !CRYPT_IsCertificateSelfSigned(cert, NULL))
     {
         PCCERT_CONTEXT issuer = CRYPT_GetIssuer(engine, world, cert, NULL, flags,
          &chain->rgpElement[chain->cElement - 1]->TrustStatus.dwInfoStatus);

@@ -9,7 +9,7 @@
 @ stub BCryptDeleteContext
 @ stub BCryptDeriveKey
 @ stdcall BCryptDestroyHash(ptr)
-@ stub BCryptDestroyKey
+@ stdcall -stub BCryptDestroyKey(ptr)
 @ stub BCryptDestroySecret
 @ stub BCryptDuplicateHash
 @ stub BCryptDuplicateKey
@@ -32,7 +32,7 @@
 @ stdcall BCryptHash(ptr ptr long ptr long ptr long)
 @ stdcall BCryptHashData(ptr ptr long long)
 @ stub BCryptImportKey
-@ stub BCryptImportKeyPair
+@ stdcall -stub BCryptImportKeyPair(ptr ptr wstr ptr ptr long long)
 @ stdcall BCryptOpenAlgorithmProvider(ptr wstr wstr long)
 @ stub BCryptQueryContextConfiguration
 @ stub BCryptQueryContextFunctionConfiguration
@@ -50,7 +50,7 @@
 @ stub BCryptSignHash
 @ stub BCryptUnregisterConfigChangeNotify
 @ stub BCryptUnregisterProvider
-@ stub BCryptVerifySignature
+@ stdcall -stub BCryptVerifySignature(ptr ptr ptr long ptr long long)
 @ stub GetAsymmetricEncryptionInterface
 @ stub GetCipherInterface
 @ stub GetHashInterface
