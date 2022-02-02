@@ -469,8 +469,8 @@ Quit:
     return ret;
 }
 
-DWORD APIENTRY
-NtUserSetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag)
+BOOL APIENTRY
+NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
 {
    STUB
    return 0;
