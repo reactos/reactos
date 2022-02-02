@@ -1028,7 +1028,7 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
 
         if (hProcess)
         {
-            BYTE StaticBuffer[(MAX_PATH * sizeof(WCHAR)) + sizeof(UNICODE_STRING)];
+            BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
             PUNICODE_STRING DynamicBuffer = NULL;
             PUNICODE_STRING ImagePath = NULL;
             ULONG SizeNeeded;
