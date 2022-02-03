@@ -988,21 +988,98 @@ static BOOL NormalizeDevicePath(LPWSTR lpPath, DWORD dwLength)
     return bSuccess;
 }
 
-static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
+static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dwLength)
 {
-    WCHAR *pszExePath;
-    BOOL bSuccess = FALSE;
+    BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
+    PVOID DynamicBuffer = NULL;
+    PUNICODE_STRING ImagePath = NULL;
+    ULONG SizeNeeded;
+    NTSTATUS Status;
+    WCHAR *pszExePath = NULL;
+    DWORD dwRet = 0;
 
-    if (dwProcessId == 0)
+    if (!hProcess)
     {
-        return FALSE;
+        return 0;
     }
-    
-    pszExePath = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
+
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessImageFileName,
+                                       StaticBuffer,
+                                       sizeof(StaticBuffer) - sizeof(WCHAR),
+                                       &SizeNeeded);
+
+    if (Status == STATUS_INFO_LENGTH_MISMATCH)
+    {
+        DynamicBuffer = HeapAlloc(GetProcessHeap(), 0, SizeNeeded + sizeof(WCHAR));
+
+        if (!DynamicBuffer)
+        {
+            return 0;
+        }
+
+        Status = NtQueryInformationProcess(hProcess,
+                                           ProcessImageFileName,
+                                           DynamicBuffer,
+                                           SizeNeeded,
+                                           &SizeNeeded);
+
+        ImagePath = (PUNICODE_STRING)DynamicBuffer;
+    }
+    else
+    {
+        ImagePath = (PUNICODE_STRING)StaticBuffer;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    pszExePath = HeapAlloc(GetProcessHeap(), 0, ImagePath->Length + sizeof(WCHAR));
 
     if (!pszExePath)
     {
-        return FALSE;
+        goto Cleanup;
+    }
+
+    memcpy(pszExePath, ImagePath->Buffer, ImagePath->Length);
+    pszExePath[ImagePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    if (!NormalizeDevicePath(pszExePath, (ImagePath->Length / sizeof(WCHAR)) + 1))
+    {
+        goto Cleanup;
+    }
+
+    dwRet = wcslen(pszExePath);
+
+    if (dwLength >= dwRet + 1)
+    {
+        StringCchCopyW(lpExePath, dwLength, pszExePath);
+    }
+
+Cleanup:
+
+    if (pszExePath)
+    {
+        HeapFree(GetProcessHeap(), 0, pszExePath);
+    }
+
+    if (DynamicBuffer)
+    {
+        HeapFree(GetProcessHeap(), 0, DynamicBuffer);
+    }
+
+    return dwRet;
+}
+
+static DWORD GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
+{
+    DWORD dwRet = 0;
+
+    if (dwProcessId == 0)
+    {
+        return 0;
     }
     
     /* PID = 4 or "System" */
@@ -1010,19 +1087,18 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
     {
         static const WCHAR szKernelPath[] = L"\\System32\\ntoskrnl.exe";
         WCHAR szWinDir[MAX_PATH];
+        UINT uLength;
 
-        bSuccess = (GetWindowsDirectoryW(szWinDir, _countof(szWinDir)) != 0);
+        uLength = GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
 
-        if (bSuccess)
+        if (uLength != 0)
         {
-            if (dwLength >= wcslen(szWinDir) + _countof(szKernelPath))
+            if (dwLength >= uLength + _countof(szKernelPath))
             {
-                StringCchPrintfW(pszExePath, dwLength, L"%s%s", szWinDir, szKernelPath);
+                StringCchPrintfW(lpExePath, dwLength, L"%s%s", szWinDir, szKernelPath);
             }
-            else
-            {
-                bSuccess = FALSE;
-            }
+
+            dwRet = uLength + _countof(szKernelPath) - 1;
         }
     }
     else
@@ -1033,66 +1109,13 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
 
         if (hProcess)
         {
-            BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
-            PVOID DynamicBuffer = NULL;
-            PUNICODE_STRING ImagePath = NULL;
-            ULONG SizeNeeded;
-            NTSTATUS Status;
-
-            Status = NtQueryInformationProcess(hProcess,
-                                               ProcessImageFileName,
-                                               StaticBuffer,
-                                               sizeof(StaticBuffer) - sizeof(WCHAR),
-                                               &SizeNeeded);
-
-            if (Status == STATUS_INFO_LENGTH_MISMATCH)
-            {
-                DynamicBuffer = HeapAlloc(GetProcessHeap(), 0, SizeNeeded + sizeof(WCHAR));
-
-                if (DynamicBuffer)
-                {
-                    Status = NtQueryInformationProcess(hProcess,
-                                                       ProcessImageFileName,
-                                                       DynamicBuffer,
-                                                       SizeNeeded,
-                                                       &SizeNeeded);
-
-                    ImagePath = (PUNICODE_STRING)DynamicBuffer;
-                }
-            }
-            else
-            {
-                ImagePath = (PUNICODE_STRING)StaticBuffer;
-            }
-
-            if (NT_SUCCESS(Status))
-            {
-                if (dwLength >= (ImagePath->Length / sizeof(WCHAR)) + 1)
-                {
-                    memcpy(pszExePath, ImagePath->Buffer, ImagePath->Length);
-                    pszExePath[ImagePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
-
-                    bSuccess = NormalizeDevicePath(pszExePath, dwLength);
-                }
-            }
-
-            if (DynamicBuffer)
-            {
-                HeapFree(GetProcessHeap(), 0, DynamicBuffer);
-            }
+            dwRet = GetProcessExecutablePath(hProcess, lpExePath, dwLength);
 
             CloseHandle(hProcess);
         }
     }
 
-    if (bSuccess)
-    {
-        StringCchCopyW(lpExePath, dwLength, pszExePath);
-    }
-
-    HeapFree(GetProcessHeap(), 0, pszExePath);
-
-    return bSuccess;
+    return dwRet;
 }
 
 void ProcessPage_OnProperties(void)
@@ -1102,7 +1125,7 @@ void ProcessPage_OnProperties(void)
 
     dwProcessId = GetSelectedProcessId();
 
-    if (GetProcessExecutablePath(dwProcessId, szExePath, _countof(szExePath)))
+    if (GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath)) != 0)
     {
         SHELLEXECUTEINFOW info = { 0 };
 
@@ -1127,7 +1150,7 @@ void ProcessPage_OnOpenFileLocation(void)
 
     dwProcessId = GetSelectedProcessId();
 
-    if (GetProcessExecutablePath(dwProcessId, szExePath, _countof(szExePath)))
+    if (GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath)) != 0)
     {
         WCHAR szCmdLine[10 + _countof(szExePath)];
 
