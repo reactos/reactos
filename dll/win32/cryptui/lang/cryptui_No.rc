@@ -286,7 +286,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Velkommen til veiviseren for import av sertifikater", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Et sertifikat kan brukes til å identifisere deg eller datamaskinen du kommuniserer med. Det kan også brukes til signering av meldinger eller andre former for godkjenning. Sertifikatlagre er samlinger av sertifikater og lister over tiltrodde eller tilbakekalte sertifikater.",
+  LTEXT "Denne veiviseren hjelper deg med å importere sertifikater, sertifikatopphevelseslister og sertifikatklareringslister fra en fil til et sertifikatlager.\n\nDatamaskiner kan bruke sertifikater for identifikasjon og signering.",
     -1, 115,40,195,120
 END
 
@@ -380,7 +380,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Velkommen til veiviseren for eksport av sertifikater", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Et sertifikat kan brukes til å identifisere deg eller datamaskinen du kommuniserer med. Det kan også brukes til signering av meldinger eller andre former for godkjenning. Sertifikatlagre er samlinger av sertifikater og lister over tiltrodde eller tilbakekalte sertifikater.",
+  LTEXT "Denne veiviseren hjelper deg med å eksportere sertifikater, sertifikatopphevelseslister og sertifikatklareringslister fra en fil til et sertifikatlager.\n\nDatamaskiner kan bruke sertifikater for identifikasjon og signering.",
     -1, 115,40,195,120
 END
 

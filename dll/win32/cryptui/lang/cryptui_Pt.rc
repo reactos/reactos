@@ -286,7 +286,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Benvindo ao Assistente de Importação de Certificados", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Um certificado pode ser usado para identificá-lo ou ao computador do qual está a comunicar. Também pode ser usado para autenticação e para assinar mensagens. Conjuntos de certificados são colecções de certificados, listas de revogação de certificados e listas de certificados confiáveis.",
+  LTEXT "Este assistente ajuda a importar certificados, listas de revogação de certificados e listas confiáveis ​​de certificados de um arquivo para um repositório de certificados.\n\nOs computadores podem usar certificados para identificação e assinatura.",
     -1, 115,40,195,120
 END
 
@@ -380,7 +380,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Benvindo ao Assistente de Exportação de Certificados", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Um certificado pode ser usado para identificá-lo ou ao computador do qual está a comunicar. Também pode ser usado para autenticação e para assinar mensagens. Conjuntos de certificados são colecções de certificados, listas de revogação de certificados e listas de certificados confiáveis.",
+  LTEXT "Este assistente ajuda a exportar certificados, listas de revogação de certificados e listas confiáveis ​​de certificados de um arquivo para um repositório de certificados.\n\nOs computadores podem usar certificados para identificação e assinatura.",
     -1, 115,40,195,120
 END
 
