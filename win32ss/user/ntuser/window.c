@@ -1347,6 +1347,8 @@ BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
 
 PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFlags)
 {
+    ASSERT(!WL_IS_BAD(pwl));
+
     for (; pwnd; pwnd = pwnd->spwndNext)
     {
         if (!pwl->pti || pwl->pti == pwnd->head.pti)
