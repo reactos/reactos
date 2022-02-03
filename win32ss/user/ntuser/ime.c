@@ -8,7 +8,6 @@
  */
 
 #include <win32k.h>
-#include <ddk/immdev.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 #define INVALID_THREAD_ID  ((ULONG)-1)
