@@ -1071,7 +1071,7 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
                     memcpy(pszExePath, ImagePath->Buffer, ImagePath->Length);
                     pszExePath[ImagePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-                    bSuccess = TRUE;
+                    bSuccess = NormalizeDevicePath(pszExePath, dwLength);
                 }
             }
 
@@ -1082,11 +1082,6 @@ static BOOL GetProcessExecutablePath(DWORD dwProcessId, LPWSTR lpExePath, DWORD 
 
             CloseHandle(hProcess);
         }
-    }
-
-    if (bSuccess && dwProcessId != 4)
-    {
-        bSuccess = NormalizeDevicePath(pszExePath, dwLength);
     }
 
     if (bSuccess)
