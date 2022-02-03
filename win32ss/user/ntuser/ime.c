@@ -712,7 +712,7 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
     HWND *phwnd;
     HIMC hIMC;
 
-    if (dwFlags & IACE_USEDEFAULTIMC)
+    if (dwFlags & IACE_DEFAULT)
     {
         pIMC = pti->spDefaultImc;
     }

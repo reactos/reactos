@@ -18,10 +18,9 @@ extern "C" {
 #endif
 
 /* Undocumented dwFlags for ImmAssociateContextEx */
-#define IACE_LIST           0x02
-#define IACE_USEDEFAULTIMC  0x10
+#define IACE_LIST  0x0002
 
-/* wParam for WM_IME_CONTROL */
+/* Undocumented wParam for WM_IME_CONTROL */
 #define IMC_GETCONVERSIONMODE           0x0001
 #define IMC_GETSENTENCEMODE             0x0003
 #define IMC_GETOPENSTATUS               0x0005
