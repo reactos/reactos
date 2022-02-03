@@ -1486,7 +1486,18 @@ static HRESULT shellex_get_contextmenu(LPSHELLEXECUTEINFOW sei, CComPtr<IContext
         SFGAOF sfga = 0;
         HRESULT hr = SHParseDisplayName(sei->lpFile, NULL, &allocatedPidl, SFGAO_STORAGECAPMASK, &sfga);
         if (FAILED(hr))
-            return hr;
+        {
+            WCHAR Buffer[MAX_PATH] = {};
+            // FIXME: MAX_PATH.....
+            UINT retval = SHELL_FindExecutable(sei->lpDirectory, sei->lpFile, sei->lpVerb, Buffer, _countof(Buffer), NULL, NULL, NULL, sei->lpParameters);
+            if (retval <= 32)
+                return HRESULT_FROM_WIN32(retval);
+
+            hr = SHParseDisplayName(Buffer, NULL, &allocatedPidl, SFGAO_STORAGECAPMASK, &sfga);
+            // This should not happen, we found it...
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
 
         pidl = allocatedPidl;
     }
