@@ -1354,11 +1354,8 @@ PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFla
             *(pwl->phwndLast) = UserHMGetHandle(pwnd);
             ++(pwl->phwndLast);
 
-            if (pwl->phwndLast == pwl->phwndEnd)
-            {
-                if (!IntGrowHwndList(&pwl))
-                    break;
-            }
+            if (pwl->phwndLast == pwl->phwndEnd && !IntGrowHwndList(&pwl))
+                break;
         }
 
         if ((dwFlags & 0x1) && pwnd->spwndChild)
@@ -1378,7 +1375,7 @@ PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFla
 PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
 {
     PWINDOWLIST pwl;
-    DWORD cbWindowList;
+    DWORD cbWL;
 
     if (gpwlCache)
     {
@@ -1388,12 +1385,12 @@ PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
     else
     {
 #define INITIAL_COUNT 32
-        cbWindowList = sizeof(WINDOWLIST) + sizeof(HWND) * INITIAL_COUNT;
-        pwl = ExAllocatePoolWithTag(PagedPool, cbWindowList, USERTAG_WINDOWLIST);
+        cbWL = sizeof(WINDOWLIST) + INITIAL_COUNT * sizeof(HWND);
+        pwl = ExAllocatePoolWithTag(PagedPool, cbWL, USERTAG_WINDOWLIST);
         if (!pwl)
             return NULL;
 
-        pwl->phwndEnd = &pwl->ahwnd[INITIAL_COUNT - 1];
+        pwl->phwndEnd = &pwl->ahwnd[INITIAL_COUNT];
 #undef INITIAL_COUNT
     }
 
