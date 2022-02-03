@@ -1081,9 +1081,8 @@ static DWORD GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, D
     {
         return 0;
     }
-    
     /* PID = 4 or "System" */
-    if (dwProcessId == 4)
+    else if (dwProcessId == 4)
     {
         static const WCHAR szKernelPath[] = L"\\System32\\ntoskrnl.exe";
         WCHAR szWinDir[MAX_PATH];
