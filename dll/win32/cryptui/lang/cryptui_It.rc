@@ -286,9 +286,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Benvenuto alla Guida all'Importazione di Certificati", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Questa guida ti aiuta a importare certificate, liste di revoca di certificati e liste di fiducia di certificati da un file in un deposito di certificati.\n\n\
-Un certificato può essere usato per identificare te o il computer da cui stai comunicando. Può essere anche usato per l'autenticazione e per firmare messaggi. I depositi di certificati sono collezioni di certificati, liste di revoca di certificati e liste di fiducia di certificati.\n\n\
-Per continuare, premere Avanti.",
+  LTEXT "Questa guida ti aiuta a importare certificate, liste di revoca di certificati e liste di fiducia di certificati da un file in un deposito di certificati.\n\nI computer possono utilizzare i certificati per l'identificazione e la firma.",
     -1, 115,40,195,120
 END
 
@@ -382,9 +380,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Benvenuto alla Guida all'Esportazione del Certificato", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Questa guida ti aiuta a esportare certificate, liste di revoca di certificati e liste di fiducia di certificati da un deposito di certificati in un file.\n\n\
-Un certificato può essere usato per identificare te o il computer da cui stai comunicando. Può essere anche usato per l'autenticazione e per firmare messaggi. I depositi di certificati sono collezioni di certificati, liste di revoca di certificati e liste di fiducia di certificati.\n\n\
-Per continuare, premere Avanti.",
+  LTEXT "Questa guida ti aiuta a esportare certificate, liste di revoca di certificati e liste di fiducia di certificati da un deposito di certificati in un file.\n\nI computer possono utilizzare i certificati per l'identificazione e la firma.",
     -1, 115,40,195,120
 END
 
