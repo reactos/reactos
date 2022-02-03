@@ -28,7 +28,7 @@ IntReAllocatePoolWithTag(
     if (!pNew)
         return NULL;
 
-    RtlCopyMemory(pNew, pOld, ((cbOld < cbNew) ? cbOld : cbNew));
+    RtlCopyMemory(pNew, pOld, min(cbOld, cbNew));
     ExFreePoolWithTag(pOld, Tag);
     return pNew;
 }
