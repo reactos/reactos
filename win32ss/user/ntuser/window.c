@@ -1334,9 +1334,7 @@ BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
     ibOld = (LPBYTE)pwlOld->phwndLast - (LPBYTE)pwlOld;
     ibNew = ibOld + GROW_COUNT * sizeof(HWND);
 #undef GROW_COUNT
-    pwlNew = ExReAllocatePoolWithTag(PagedPool, pwlOld,
-                                     ibOld + sizeof(HWND), ibNew + sizeof(HWND),
-                                     USERTAG_WINDOWLIST);
+    pwlNew = ExReAllocatePoolWithTag(PagedPool, pwlOld, ibOld, ibNew, USERTAG_WINDOWLIST);
     if (!pwlNew)
         return FALSE;
 
