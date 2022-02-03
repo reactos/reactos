@@ -706,13 +706,13 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
 {
     DWORD ret = 0;
     PWINDOWLIST pwl;
-    BOOL bWndImcMustBeNonNull = (dwFlags & 0x20);
+    BOOL bIgnoreNonNullImc = (dwFlags & IACE_IGNORENOCONTEXT);
     PTHREADINFO pti = pWnd->head.pti;
     PWND pwndTarget, pwndFocus = pti->MessageQueue->spwndFocus;
     HWND *phwnd;
     HIMC hIMC;
 
-    if (dwFlags & 0x10)
+    if (dwFlags & IACE_USEDEFAULTIMC)
     {
         pIMC = pti->spDefaultImc;
     }
@@ -728,9 +728,9 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
         return 2;
     }
 
-    if ((dwFlags & 0x1) && pWnd->spwndChild)
+    if ((dwFlags & IACE_CHILDREN) && pWnd->spwndChild)
     {
-        pwl = IntBuildHwndList(pWnd->spwndChild, 0x3, pti);
+        pwl = IntBuildHwndList(pWnd->spwndChild, IACE_CHILDREN | IACE_LIST, pti);
         if (pwl)
         {
             for (phwnd = pwl->ahwnd; *phwnd != HWND_TERMINATOR; ++phwnd)
@@ -740,7 +740,7 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
                     continue;
 
                 hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
-                if (pwndTarget->hImc == hIMC || (bWndImcMustBeNonNull && !pwndTarget->hImc))
+                if (pwndTarget->hImc == hIMC || (bIgnoreNonNullImc && !pwndTarget->hImc))
                     continue;
 
                 IntAssociateInputContext(pwndTarget, pIMC);
@@ -752,7 +752,7 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
         }
     }
 
-    if (!bWndImcMustBeNonNull || pWnd->hImc)
+    if (!bIgnoreNonNullImc || pWnd->hImc)
     {
         hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
         if (pWnd->hImc != hIMC)

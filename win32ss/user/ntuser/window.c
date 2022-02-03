@@ -1358,14 +1358,14 @@ PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFla
                 break;
         }
 
-        if ((dwFlags & 0x1) && pwnd->spwndChild)
+        if ((dwFlags & IACE_CHILDREN) && pwnd->spwndChild)
         {
-            pwl = IntPopulateHwndList(pwl, pwnd->spwndChild, 0x3);
+            pwl = IntPopulateHwndList(pwl, pwnd->spwndChild, IACE_CHILDREN | IACE_LIST);
             if (WL_IS_BAD(pwl))
                 break;
         }
 
-        if (!(dwFlags & 0x2))
+        if (!(dwFlags & IACE_LIST))
             break;
     }
 
