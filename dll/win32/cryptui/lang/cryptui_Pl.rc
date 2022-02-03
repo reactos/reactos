@@ -281,9 +281,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Witamy w kreatorze importu certyfikatów", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Asystent ten pomaga tobie importować certyfikaty, listy odwołania certyfikatów, i listy zaufania certyfikatów z pliku do magazynu certyfikatów.\n\n\
-Certyfikat może zostać użyty do identyfikacji ciebie lub komputer, z którym się komunikujesz. Może on również zostać wykorzystany do uwierzytelnienia i do podpisywania wiadomości. Magazyny certyfikatów są zbiorem certyfikatów, list odwołań certyfikatów oraz list zaufań certyfikatów.\n\n\
-Aby kontynuować, naciśnij Dalej.",
+  LTEXT "Ten kreator pomaga importować certyfikaty, listy odwołanych certyfikatów i listy zaufanych certyfikatów z pliku do magazynu certyfikatów.\n\nKomputery mogą używać certyfikatów do identyfikacji i podpisywania.",
     -1, 115,40,195,120
 END
 
@@ -377,9 +375,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Witamy w kreatorze eksportu certyfikatów", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Asystent ten pomaga tobie eksportować certyfikaty, listy odwołania certyfikatów, i listy zaufania certyfikatów z magazynu certyfikatów do pliku.\n\n\
-Certyfikat może zostać użyty do identyfikacji ciebie lub komputer, z którym się komunikujesz. Może on również zostać wykorzystany do uwierzytelnienia i do podpisywania wiadomości. Magazyny certyfikatów są zbiorem certyfikatów, list odwołań certyfikatów oraz list zaufań certyfikatów.\n\n\
-Aby kontynuować, naciśnij Dalej.",
+  LTEXT "Ten kreator pomaga eksportować certyfikaty, listy odwołanych certyfikatów i listy zaufanych certyfikatów z pliku do magazynu certyfikatów.\n\nKomputery mogą używać certyfikatów do identyfikacji i podpisywania.",
     -1, 115,40,195,120
 END
 
