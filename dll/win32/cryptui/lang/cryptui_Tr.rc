@@ -281,9 +281,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Onay Belgesi Alma Yardımcısı'na Hoşgeldiniz", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Bu yardımcı; bir kütükten, onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin bir onay belgesi deposuna vermenize yardım eder.\n\n\
-Bir onay belgesi, sizi veyâ iletişim kuruyor olduğunuz bilgisayarı tanılamak için kullanılabilir. Bu onay belgesi, kimlik doğrulaması için ve iletileri imzâlamak için de kullanılabilir. Onay belgesi depoları; onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin derlemleridir.\n\n\
-Sürdürmek için İleri'ye tıklayınız.",
+  LTEXT "Bu sihirbaz, bir dosyadan; sertifikaları, sertifika iptal listelerini ve sertifika güven listelerini bir sertifika deposuna almanıza yardım eder.\n\nBilgisayarlar, tanımlama ve imzalama için sertifikaları kullanabilir.",
     -1, 115,40,195,120
 END
 
@@ -377,9 +375,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Onay Belgesi Verme Yardımcısı'na Hoşgeldiniz", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Bu yardımcı; bir onay belgesi deposundan, onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin bir kütüğe vermenize yardım eder.\n\n\
-Bir onay belgesi, sizi veyâ iletişim kuruyor olduğunuz bilgisayarı tanılamak için kullanılabilir. Bu onay belgesi, kimlik doğrulaması için ve iletileri imzâlamak için de kullanılabilir. Onay belgesi depoları; onay belgelerinin, onay belgesi iptal dizelgelerinin ve onay belgesi güven dizelgelerinin derlemleridir.\n\n\
-Sürdürmek için İleri'ye tıklayınız.",
+  LTEXT "Bu sihirbaz, bir sertifika deposundan; sertifikaları, sertifika iptal listelerini ve sertifika güven listelerini bir dosyaya vermenize yardım eder.\n\nBilgisayarlar, tanımlama ve imzalama için sertifikaları kullanabilir.",
     -1, 115,40,195,120
 END
 
