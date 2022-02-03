@@ -785,24 +785,6 @@ ExFreePoolWithTag(
   _Pre_notnull_ __drv_freesMem(Mem) PVOID P,
   _In_ ULONG Tag);
 
-static inline
-PVOID NTAPI
-ExReAllocatePoolWithTag(
-    POOL_TYPE PoolType,
-    PVOID pOld,
-    SIZE_T cbOld,
-    SIZE_T cbNew,
-    ULONG Tag)
-{
-    PVOID pNew = ExAllocatePoolWithTag(PoolType, cbNew, Tag);
-    if (!pNew)
-        return NULL;
-
-    RtlCopyMemory(pNew, pOld, ((cbOld < cbNew) ? cbOld : cbNew));
-    ExFreePoolWithTag(pOld, Tag);
-    return pNew;
-}
-
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 ULONG

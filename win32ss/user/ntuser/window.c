@@ -16,6 +16,23 @@ PWINDOWLIST gpwlCache = NULL;
 
 /* HELPER FUNCTIONS ***********************************************************/
 
+PVOID FASTCALL
+IntReAllocatePoolWithTag(
+    POOL_TYPE PoolType,
+    PVOID pOld,
+    SIZE_T cbOld,
+    SIZE_T cbNew,
+    ULONG Tag)
+{
+    PVOID pNew = ExAllocatePoolWithTag(PoolType, cbNew, Tag);
+    if (!pNew)
+        return NULL;
+
+    RtlCopyMemory(pNew, pOld, ((cbOld < cbNew) ? cbOld : cbNew));
+    ExFreePoolWithTag(pOld, Tag);
+    return pNew;
+}
+
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam)
 {
     WORD Action = LOWORD(wParam);
@@ -1333,7 +1350,7 @@ BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
     ibOld = (LPBYTE)pwlOld->phwndLast - (LPBYTE)pwlOld;
     ibNew = ibOld + GROW_COUNT * sizeof(HWND);
 #undef GROW_COUNT
-    pwlNew = ExReAllocatePoolWithTag(PagedPool, pwlOld, ibOld, ibNew, USERTAG_WINDOWLIST);
+    pwlNew = IntReAllocatePoolWithTag(PagedPool, pwlOld, ibOld, ibNew, USERTAG_WINDOWLIST);
     if (!pwlNew)
         return FALSE;
 
