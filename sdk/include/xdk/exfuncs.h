@@ -798,10 +798,7 @@ ExReAllocatePoolWithTag(
     if (!pNew)
         return NULL;
 
-    if (cbOld > cbNew)
-        cbOld = cbNew;
-
-    RtlCopyMemory(pNew, pOld, cbOld);
+    RtlCopyMemory(pNew, pOld, ((cbOld < cbNew) ? cbOld : cbNew));
     ExFreePoolWithTag(pOld, Tag);
     return pNew;
 }
