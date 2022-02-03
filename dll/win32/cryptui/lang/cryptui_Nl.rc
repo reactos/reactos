@@ -281,8 +281,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welkom bij de certificaat importeerhulp", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Deze wizard helpt u certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten uit een bestand in een certificaatkluis te importeren.\n\n\
-Een certificaat kan gebruikt worden om u of de computer waarmee u communiceert te identificeren. Het kan ook gebruikt worden voor authenticatie en om berichten te ondertekenen. Een certificaatkluis bevat een verzameling van certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten.\nKlik Volgende om verder te gaan.",
+  LTEXT "Deze wizard helpt u certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten uit een bestand in een certificaatkluis te importeren.\n\nComputers kunnen certificaten gebruiken voor identificatie en ondertekening.",
     -1, 115,40,195,120
 END
 
@@ -376,8 +375,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welkom bij de Certificaat exporteerhulp", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Deze wizard helpt u certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten van een certificaatkluis naar een bestand te exporteren.\n\n\
-Een certificaat kan gebruikt worden om u of de computer waarmee u communiceert te identificeren. Het kan ook gebruikt worden voor authenticatie en om berichten te ondertekenen. Een certificaatkluis bevat een verzameling van certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten.",
+  LTEXT "Deze wizard helpt u certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten van een certificaatkluis naar een bestand te exporteren.\n\nComputers kunnen certificaten gebruiken voor identificatie en ondertekening.",
     -1, 115,40,195,120
 END
 
