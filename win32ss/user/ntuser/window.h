@@ -96,4 +96,7 @@ typedef struct tagWINDOWLIST
 PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti);
 VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget);
 
+/* Undocumented dwFlags for IntBuildHwndList */
+#define IACE_LIST  0x0002
+
 /* EOF */
