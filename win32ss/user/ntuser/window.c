@@ -1402,6 +1402,7 @@ PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
         ExFreePoolWithTag(pwl, USERTAG_WINDOWLIST);
         return NULL;
     }
+
     *(pwl->phwndLast) = HWND_TERMINATOR;
 
     if (dwFlags & 0x8)

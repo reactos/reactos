@@ -722,11 +722,11 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
             return 2;
     }
 
-    if (pWnd->head.pti->ppi != GetW32ThreadInfo()->ppi)
+    if (pWnd->head.pti->ppi != GetW32ThreadInfo()->ppi ||
+        (pIMC && pIMC->head.rpdesk != pWnd->head.rpdesk))
+    {
         return 2;
-
-    if (pIMC && pIMC->head.rpdesk != pWnd->head.rpdesk)
-        return 2;
+    }
 
     if ((dwFlags & 0x1) && pWnd->spwndChild)
     {
@@ -740,14 +740,10 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
                     continue;
 
                 hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
-                if (pwndTarget->hImc == hIMC)
-                    continue;
-
-                if (bFlag && !pwndTarget->hImc)
+                if (pwndTarget->hImc == hIMC || (bFlag && !pwndTarget->hImc))
                     continue;
 
                 IntAssociateInputContext(pwndTarget, pIMC);
-
                 if (pwndTarget == pwndFocus)
                     ret = 1;
             }
@@ -776,7 +772,7 @@ NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 {
     DWORD ret = 2;
     PWND pWnd;
-    PIMC pIMC = NULL;
+    PIMC pIMC;
 
     UserEnterExclusive();
 
@@ -784,8 +780,7 @@ NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
     if (!pWnd || !IS_IMM_MODE())
         goto Quit;
 
-    if (hIMC)
-        pIMC = UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    pIMC = (hIMC ? UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT) : NULL);
     ret = IntAssociateInputContextEx(pWnd, pIMC, dwFlags);
 
 Quit:
