@@ -697,9 +697,9 @@ Quit:
 
 HIMC FASTCALL IntAssociateInputContext(PWND pWnd, PIMC pImc)
 {
-    HIMC ret = pWnd->hImc;
+    HIMC hOldImc = pWnd->hImc;
     pWnd->hImc = (pImc ? UserHMGetHandle(pImc) : NULL);
-    return ret;
+    return hOldImc;
 }
 
 DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
