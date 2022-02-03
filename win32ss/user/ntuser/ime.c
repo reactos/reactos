@@ -706,7 +706,7 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
 {
     DWORD ret = 0;
     PWINDOWLIST pwl;
-    BOOL bIgnoreNonNullImc = (dwFlags & IACE_IGNORENOCONTEXT);
+    BOOL bIgnoreNullImc = (dwFlags & IACE_IGNORENOCONTEXT);
     PTHREADINFO pti = pWnd->head.pti;
     PWND pwndTarget, pwndFocus = pti->MessageQueue->spwndFocus;
     HWND *phwnd;
@@ -740,7 +740,7 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
                     continue;
 
                 hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
-                if (pwndTarget->hImc == hIMC || (bIgnoreNonNullImc && !pwndTarget->hImc))
+                if (pwndTarget->hImc == hIMC || (bIgnoreNullImc && !pwndTarget->hImc))
                     continue;
 
                 IntAssociateInputContext(pwndTarget, pIMC);
@@ -752,7 +752,7 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
         }
     }
 
-    if (!bIgnoreNonNullImc || pWnd->hImc)
+    if (!bIgnoreNullImc || pWnd->hImc)
     {
         hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
         if (pWnd->hImc != hIMC)
