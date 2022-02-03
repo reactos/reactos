@@ -695,12 +695,102 @@ Quit:
     return ret;
 }
 
+HIMC FASTCALL IntAssociateInputContext(PWND pWnd, PIMC pImc)
+{
+    HIMC ret = pWnd->hImc;
+    pWnd->hImc = (pImc ? UserHMGetHandle(pImc) : NULL);
+    return ret;
+}
+
+DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
+{
+    DWORD ret = 0;
+    PWINDOWLIST pwl;
+    BOOL bFlag = (dwFlags & 0x20);
+    PTHREADINFO pti = pWnd->head.pti;
+    PWND pwndTarget, pwndFocus = pti->MessageQueue->spwndFocus;
+    HWND *phwnd;
+    HIMC hIMC;
+
+    if (dwFlags & 0x10)
+    {
+        pIMC = pti->spDefaultImc;
+    }
+    else
+    {
+        if (pIMC && pti != pIMC->head.pti)
+            return 2;
+    }
+
+    if (pWnd->head.pti->ppi != GetW32ThreadInfo()->ppi)
+        return 2;
+
+    if (pIMC && pIMC->head.rpdesk != pWnd->head.rpdesk)
+        return 2;
+
+    if ((dwFlags & 0x1) && pWnd->spwndChild)
+    {
+        pwl = IntBuildHwndList(pWnd->spwndChild, 0x3, pti);
+        if (pwl)
+        {
+            for (phwnd = pwl->ahwnd; *phwnd != HWND_TERMINATOR; ++phwnd)
+            {
+                pwndTarget = ValidateHwndNoErr(*phwnd);
+                if (!pwndTarget)
+                    continue;
+
+                hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
+                if (pwndTarget->hImc == hIMC)
+                    continue;
+
+                if (bFlag && !pwndTarget->hImc)
+                    continue;
+
+                IntAssociateInputContext(pwndTarget, pIMC);
+
+                if (pwndTarget == pwndFocus)
+                    ret = 1;
+            }
+
+            IntFreeHwndList(pwl);
+        }
+    }
+
+    if (!bFlag || pWnd->hImc)
+    {
+        hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
+        if (pWnd->hImc != hIMC)
+        {
+            IntAssociateInputContext(pWnd, pIMC);
+            if (pWnd == pwndFocus)
+                ret = 1;
+        }
+    }
+
+    return ret;
+}
+
 DWORD
 APIENTRY
 NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 {
-    STUB
-    return 0;
+    DWORD ret = 2;
+    PWND pWnd;
+    PIMC pIMC = NULL;
+
+    UserEnterExclusive();
+
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd || !IS_IMM_MODE())
+        goto Quit;
+
+    if (hIMC)
+        pIMC = UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    ret = IntAssociateInputContextEx(pWnd, pIMC, dwFlags);
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 BOOL FASTCALL UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)

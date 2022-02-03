@@ -11,6 +11,9 @@ DBG_DEFAULT_CHANNEL(UserWnd);
 
 INT gNestedWindowLimit = 50;
 
+PWINDOWLIST gpwlList = NULL;
+PWINDOWLIST gpwlCache = NULL;
+
 /* HELPER FUNCTIONS ***********************************************************/
 
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam)
@@ -1318,6 +1321,135 @@ IntUnlinkWindow(PWND Wnd)
         Wnd->spwndParent->spwndChild = Wnd->spwndNext;
 
     Wnd->spwndPrev = Wnd->spwndNext = NULL;
+}
+
+BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
+{
+    PWINDOWLIST pwlOld, pwlNew;
+    SIZE_T ibOld, ibNew;
+
+#define GROW_COUNT 8
+    pwlOld = *ppwl;
+    ibOld = (LPBYTE)pwlOld->phwndLast - (LPBYTE)pwlOld;
+    ibNew = ibOld + GROW_COUNT * sizeof(HWND);
+#undef GROW_COUNT
+    pwlNew = ExReAllocatePoolWithTag(PagedPool, pwlOld,
+                                     ibOld + sizeof(HWND), ibNew + sizeof(HWND),
+                                     USERTAG_WINDOWLIST);
+    if (!pwlNew)
+        return FALSE;
+
+    pwlNew->phwndLast = (HWND *)((LPBYTE)pwlNew + ibOld);
+    pwlNew->phwndEnd = (HWND *)((LPBYTE)pwlNew + ibNew);
+    *ppwl = pwlNew;
+    return TRUE;
+}
+
+PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFlags)
+{
+    for (; pwnd; pwnd = pwnd->spwndNext)
+    {
+        if (!pwl->pti || pwl->pti == pwnd->head.pti)
+        {
+            *(pwl->phwndLast) = UserHMGetHandle(pwnd);
+            ++(pwl->phwndLast);
+
+            if (pwl->phwndLast == pwl->phwndEnd)
+            {
+                if (!IntGrowHwndList(&pwl))
+                    break;
+            }
+        }
+
+        if ((dwFlags & 0x1) && pwnd->spwndChild)
+        {
+            pwl = IntPopulateHwndList(pwl, pwnd->spwndChild, 0x3);
+            if (WL_IS_BAD(pwl))
+                break;
+        }
+
+        if (!(dwFlags & 0x2))
+            break;
+    }
+
+    return pwl;
+}
+
+PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
+{
+    PWINDOWLIST pwl;
+    DWORD cbWindowList;
+
+    if (gpwlCache)
+    {
+        pwl = gpwlCache;
+        gpwlCache = NULL;
+    }
+    else
+    {
+#define INITIAL_COUNT 32
+        cbWindowList = sizeof(WINDOWLIST) + sizeof(HWND) * INITIAL_COUNT;
+        pwl = ExAllocatePoolWithTag(PagedPool, cbWindowList, USERTAG_WINDOWLIST);
+        if (!pwl)
+            return NULL;
+
+        pwl->phwndEnd = &pwl->ahwnd[INITIAL_COUNT - 1];
+#undef INITIAL_COUNT
+    }
+
+    pwl->pti = pti;
+    pwl->phwndLast = pwl->ahwnd;
+    pwl = IntPopulateHwndList(pwl, pwnd, dwFlags);
+    if (WL_IS_BAD(pwl))
+    {
+        ExFreePoolWithTag(pwl, USERTAG_WINDOWLIST);
+        return NULL;
+    }
+    *(pwl->phwndLast) = HWND_TERMINATOR;
+
+    if (dwFlags & 0x8)
+    {
+        // TODO:
+    }
+
+    pwl->pti = GetW32ThreadInfo();
+    pwl->pNextList = gpwlList;
+    gpwlList = pwl;
+
+    return pwl;
+}
+
+VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget)
+{
+    PWINDOWLIST pwl, *ppwl;
+
+    for (ppwl = &gpwlList; *ppwl; ppwl = &(*ppwl)->pNextList)
+    {
+        if (*ppwl != pwlTarget)
+            continue;
+
+        *ppwl = pwlTarget->pNextList;
+
+        if (gpwlCache)
+        {
+            if (WL_CAPACITY(pwlTarget) > WL_CAPACITY(gpwlCache))
+            {
+                pwl = gpwlCache;
+                gpwlCache = pwlTarget;
+                ExFreePoolWithTag(pwl, USERTAG_WINDOWLIST);
+            }
+            else
+            {
+                ExFreePoolWithTag(pwlTarget, USERTAG_WINDOWLIST);
+            }
+        }
+        else
+        {
+            gpwlCache = pwlTarget;
+        }
+
+        break;
+    }
 }
 
 /* FUNCTIONS *****************************************************************/
