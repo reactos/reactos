@@ -284,9 +284,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT  "Bun venit la Asistentul de importare a certificatelor", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT  "Acest asistent vă ajută să importați certificate, liste de certificate revocate și liste de certificate acreditate dintr-un fișier într-un depozit de certificate.\n\n\
-Un certificat poate fi utilizat pentru identificarea proprie sau a calculatorului cu care comunicați.  Poate fi utilizat și pentru autentificare sau pentru a semna mesaje.  Depozitele de certificate sunt colecții de certificate, liste de certificate revocate și liste de certificate acreditate.\n\n\
-Pentru a continua, apăsați pe „Înainte”.",
+  LTEXT  "Acest expert vă ajută să importați certificate, liste de revocare a certificatelor și liste de încredere de certificate dintr-un fișier într-un depozit de certificate.\n\nComputerele pot folosi certificate pentru identificare și semnare.",
     -1, 115,40,195,120
 END
 
@@ -380,9 +378,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT  "Bun venit la Asistentul de exportare a certificatelor", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT  "Acest asistent vă va ajuta să exportați certificate, liste de certificate revocate și liste de certificate acreditate dintr-un depozit de certificate într-un fișier.\n\n\
-Un certificat poate fi utilizat pentru identificarea proprie sau a calculatorului cu care comunicați.  Poate fi utilizat și pentru autentificare sau pentru a semna mesaje.  Depozitele de certificate sunt colecții de certificate, liste de certificate revocate și liste de certificate acreditate.\n\n\
-Pentru a continua, apăsați pe „Înainte”.",
+  LTEXT  "Acest expert vă ajută să exportați certificate, liste de revocare a certificatelor și liste de încredere de certificate dintr-un fișier într-un depozit de certificate.\n\nComputerele pot folosi certificate pentru identificare și semnare.",
     -1, 115,40,195,120
 END
 
