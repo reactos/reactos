@@ -1385,7 +1385,7 @@ PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
     else
     {
 #define INITIAL_COUNT 32
-        cbWL = sizeof(WINDOWLIST) + INITIAL_COUNT * sizeof(HWND);
+        cbWL = sizeof(WINDOWLIST) + (INITIAL_COUNT - 1) * sizeof(HWND);
         pwl = ExAllocatePoolWithTag(PagedPool, cbWL, USERTAG_WINDOWLIST);
         if (!pwl)
             return NULL;
