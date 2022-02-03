@@ -5,6 +5,7 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *  Copyright (C) 2009         Maxime Vernier <maxime.vernier@gmail.com>
+ *  Copyright (C) 2022         Thamatip Chitpong <tangaming123456@outlook.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
