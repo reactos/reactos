@@ -24,6 +24,12 @@ extern "C" {
 #define IMC_GETSOFTKBDPOS               0x0013
 #define IMC_SETSOFTKBDPOS               0x0014
 
+#define IMMGWL_IMC       0
+#define IMMGWL_PRIVATE   (sizeof(LONG))
+
+#define IMMGWLP_IMC      0
+#define IMMGWLP_PRIVATE  (sizeof(LONG_PTR))
+
 typedef struct _tagINPUTCONTEXT {
     HWND                hWnd;
     BOOL                fOpen;

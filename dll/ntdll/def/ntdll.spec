@@ -728,7 +728,7 @@
 @ stdcall RtlCreateSecurityDescriptor(ptr long)
 @ stdcall RtlCreateServiceSid(ptr ptr ptr) # Exists in Windows 2003 SP 2
 @ stdcall RtlCreateSystemVolumeInformationFolder(ptr)
-@ stdcall RtlCreateTagHeap(ptr long str str)
+@ stdcall RtlCreateTagHeap(ptr long wstr wstr)
 @ stdcall RtlCreateTimer(ptr ptr ptr ptr long long long)
 @ stdcall RtlCreateTimerQueue(ptr)
 @ stdcall RtlCreateUnicodeString(ptr wstr)
