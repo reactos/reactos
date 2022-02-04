@@ -993,9 +993,9 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
     BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
     PVOID DynamicBuffer = NULL;
     PUNICODE_STRING ImagePath = NULL;
+    WCHAR *pszExePath = NULL;
     ULONG SizeNeeded;
     NTSTATUS Status;
-    WCHAR *pszExePath = NULL;
     DWORD dwRet = 0;
 
     if (!hProcess)
