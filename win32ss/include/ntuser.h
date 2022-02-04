@@ -3198,9 +3198,9 @@ NTAPI
 NtUserSetImeInfoEx(
     PIMEINFOEX pImeInfoEx);
 
-DWORD
+BOOL
 NTAPI
-NtUserSetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag);
+NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus);
 
 DWORD
 NTAPI

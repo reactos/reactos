@@ -861,7 +861,7 @@ NTAPI
 RtlCreateTagHeap(
     _In_ HANDLE HeapHandle,
     _In_ ULONG Flags,
-    _In_ PWSTR TagName,
+    _In_opt_ PWSTR TagName,
     _In_ PWSTR TagSubName
 );
 

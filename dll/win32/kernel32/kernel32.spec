@@ -688,7 +688,7 @@
 @ stdcall HeapAlloc(long long long) ntdll.RtlAllocateHeap
 @ stdcall HeapCompact(long long)
 @ stdcall HeapCreate(long long long)
-@ stdcall -version=0x351-0x502 HeapCreateTagsW(long long wstr wstr)
+@ stdcall -version=0x351-0x502 HeapCreateTagsW(ptr long wstr wstr)
 @ stdcall HeapDestroy(long)
 @ stdcall -version=0x351-0x502 HeapExtend(long long ptr long)
 @ stdcall HeapFree(long long long) ntdll.RtlFreeHeap

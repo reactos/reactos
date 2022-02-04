@@ -660,6 +660,10 @@ NtUserCallHwndLock(
             co_IntUpdateWindows(Window, RDW_ALLCHILDREN, FALSE);
             Ret = TRUE;
             break;
+
+        case HWNDLOCK_ROUTINE_CHECKIMESHOWSTATUSINTHRD:
+            // TODO:
+            break;
     }
 
     UserDerefObjectCo(Window);
@@ -891,6 +895,11 @@ NtUserCallHwndParamLock(
 
     switch (Routine)
     {
+        case X_ROUTINE_IMESHOWSTATUSCHANGE:
+        {
+            // TODO:
+            break;
+        }
         case TWOPARAM_ROUTINE_VALIDATERGN:
         {
             PREGION Rgn = REGION_LockRgn((HRGN)Param);
