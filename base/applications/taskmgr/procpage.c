@@ -998,11 +998,6 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
     NTSTATUS Status;
     DWORD dwRet = 0;
 
-    if (!hProcess)
-    {
-        return 0;
-    }
-
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessImageFileName,
                                        StaticBuffer,
