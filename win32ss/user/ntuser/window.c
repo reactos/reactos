@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Windows
  * FILE:             win32ss/user/ntuser/window.c
- * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
