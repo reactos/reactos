@@ -136,7 +136,7 @@ CAPTION "Definições para ""Teclas lentas"""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Atalho do teclado", -1, 6, 11, 234, 62
-    LTEXT "O atalho para ""Teclas lentas"" é:\nManter premida a tecla SHIFT da direita  durante oito segundos.",
+    LTEXT "O atalho para ""Teclas lentas"" é:\nManter premida a tecla SHIFT da direita durante oito segundos.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar atalho", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Opções de filtro", -1, 6, 79, 234, 79
