@@ -209,9 +209,6 @@ typedef struct tagCANDIDATEINFO {
     DWORD               dwPrivateOffset;
 } CANDIDATEINFO, *LPCANDIDATEINFO;
 
-#define IMMGWL_IMC                      0
-#define IMMGWL_PRIVATE                  (sizeof(LONG))
-
 /* IME Property bits */
 #define IME_PROP_END_UNLOAD             0x0001
 #define IME_PROP_KBD_CHAR_FIRST         0x0002
