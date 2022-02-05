@@ -676,7 +676,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
             if (_strnicmp(Options, "SOS", 3) == 0)
             {
                 /* We found the SOS option. */
-                FIXME("LoadWindowsCore: SOS - TRUE (not implemented)\n");
+                TRACE("LoadWindowsCore: SOS - TRUE (not implemented)\n");
                 SosEnabled = TRUE;
             }
             if (OperatingSystemVersion > _WIN32_WINNT_NT4)
