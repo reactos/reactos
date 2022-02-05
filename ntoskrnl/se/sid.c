@@ -414,6 +414,77 @@ SepReleaseSid(
 
 /**
  * @brief
+ * Captures a security identifier from a
+ * given access control entry. This identifier
+ * is valid for the whole of its lifetime.
+ *
+ * @param[in] AceType
+ * The type of an access control entry. This
+ * type that is given by the calling thread
+ * must coincide with the actual ACE that is
+ * given in the second parameter otherwise this
+ * can potentially lead to UNDEFINED behavior!
+ *
+ * @param[in] Ace
+ * A pointer to an access control entry, which
+ * can be obtained from a DACL.
+ *
+ * @return
+ * Returns a pointer to a security identifier (SID),
+ * otherwise NULL is returned if an unsupported ACE
+ * type was given to the function.
+ */
+PSID
+NTAPI
+SepGetSidFromAce(
+    _In_ UCHAR AceType,
+    _In_ PACE Ace)
+{
+    PSID Sid;
+    PAGED_CODE();
+
+    /* Sanity check */
+    ASSERT(Ace);
+
+    /* Initialize the SID */
+    Sid = NULL;
+
+    /* Obtain the SID based upon ACE type */
+    switch (AceType)
+    {
+        case ACCESS_DENIED_ACE_TYPE:
+        {
+            Sid = (PSID)&((PACCESS_DENIED_ACE)Ace)->SidStart;
+            break;
+        }
+
+        case ACCESS_ALLOWED_ACE_TYPE:
+        {
+            Sid = (PSID)&((PACCESS_ALLOWED_ACE)Ace)->SidStart;
+            break;
+        }
+
+        case ACCESS_DENIED_OBJECT_ACE_TYPE:
+        {
+            Sid = (PSID)&((PACCESS_DENIED_OBJECT_ACE)Ace)->SidStart;
+            break;
+        }
+
+        case ACCESS_ALLOWED_OBJECT_ACE_TYPE:
+        {
+            Sid = (PSID)&((PACCESS_ALLOWED_OBJECT_ACE)Ace)->SidStart;
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    return Sid;
+}
+
+/**
+ * @brief
  * Captures a SID with attributes.
  *
  * @param[in] SrcSidAndAttributes
