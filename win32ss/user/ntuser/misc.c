@@ -419,7 +419,7 @@ NtUserGetGUIThreadInfo(
         EngSetLastError(ERROR_ACCESS_DENIED);
         RETURN( FALSE);
       }
-      
+
       if ( W32Thread->MessageQueue )
         MsgQueue = W32Thread->MessageQueue;
       else
@@ -727,8 +727,6 @@ void UserDbgAssertThreadInfo(BOOL showCaller)
     ASSERT(pci->ulClientDelta == DesktopHeapGetUserDelta());
     if (pti->pcti && pci->pDeskInfo)
         ASSERT(pci->pClientThreadInfo == (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta));
-    if (pti->pcti && IsListEmpty(&pti->SentMessagesListHead))
-        ASSERT((pti->pcti->fsChangeBits & QS_SENDMESSAGE) == 0);
     if (pti->KeyboardLayout)
         ASSERT(pci->hKL == pti->KeyboardLayout->hkl);
     if(pti->rpdesk != NULL)
