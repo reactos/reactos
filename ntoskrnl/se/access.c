@@ -37,7 +37,7 @@ ERESOURCE SepSubjectContextLock;
  *
  * @param[in] Restricted
  * If set to TRUE, the caller expects that a SID in a token is
- * restricted.
+ * restricted (by the general definition, a token is restricted).
  *
  * @return
  * Returns TRUE if the specified SID in the call is present in the token,
@@ -52,17 +52,13 @@ SepSidInTokenEx(
     _In_ BOOLEAN Deny,
     _In_ BOOLEAN Restricted)
 {
-    ULONG i;
+    ULONG SidIndex;
     PTOKEN Token = (PTOKEN)_Token;
     PISID TokenSid, Sid = (PISID)_Sid;
     PSID_AND_ATTRIBUTES SidAndAttributes;
     ULONG SidCount, SidLength;
     USHORT SidMetadata;
     PAGED_CODE();
-
-    /* Not yet supported */
-    ASSERT(PrincipalSelfSid == NULL);
-    ASSERT(Restricted == FALSE);
 
     /* Check if a principal SID was given, and this is our current SID already */
     if ((PrincipalSelfSid) && (RtlEqualSid(SePrincipalSelfSid, Sid)))
@@ -91,7 +87,7 @@ SepSidInTokenEx(
     SidMetadata = *(PUSHORT)&Sid->Revision;
 
     /* Loop every SID */
-    for (i = 0; i < SidCount; i++)
+    for (SidIndex = 0; SidIndex < SidCount; SidIndex++)
     {
         TokenSid = (PISID)SidAndAttributes->Sid;
 #if SE_SID_DEBUG
@@ -106,8 +102,15 @@ SepSidInTokenEx(
             /* Check if the SID data matches */
             if (RtlEqualMemory(Sid, TokenSid, SidLength))
             {
-                /* Check if the group is enabled, or used for deny only */
-                if ((!(i) && !(SidAndAttributes->Attributes & SE_GROUP_USE_FOR_DENY_ONLY)) ||
+                /*
+                 * Check if the group is enabled, or used for deny only.
+                 * Otherwise we have to check if this is the first user.
+                 * We understand that by looking if this SID is not
+                 * restricted, this is the first element we are iterating
+                 * and that it doesn't have SE_GROUP_USE_FOR_DENY_ONLY
+                 * attribute.
+                 */
+                if ((!Restricted && (SidIndex == 0) && !(SidAndAttributes->Attributes & SE_GROUP_USE_FOR_DENY_ONLY)) ||
                     (SidAndAttributes->Attributes & SE_GROUP_ENABLED) ||
                     ((Deny) && (SidAndAttributes->Attributes & SE_GROUP_USE_FOR_DENY_ONLY)))
                 {
