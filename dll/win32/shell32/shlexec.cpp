@@ -1511,7 +1511,7 @@ static HRESULT shellex_get_contextmenu(LPSHELLEXECUTEINFOW sei, CComPtr<IContext
     return shf->GetUIObjectOf(NULL, 1, &pidllast, IID_NULL_PPV_ARG(IContextMenu, &cm));
 }
 
-static HRESULT IContextMenu_exec(LPSHELLEXECUTEINFOW sei)
+static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
 {
     TRACE("%p\n", sei);
 
@@ -1564,7 +1564,7 @@ static HRESULT IContextMenu_exec(LPSHELLEXECUTEINFOW sei)
 /*************************************************************************
  *    ShellExecute_FromContextMenu [Internal]
  */
-static LONG ShellExecute_FromContextMenu( LPSHELLEXECUTEINFOW sei )
+static LONG ShellExecute_FromContextMenuHandlers( LPSHELLEXECUTEINFOW sei )
 {
     HKEY hkey, hkeycm = 0;
     WCHAR szguid[39];
@@ -1983,7 +1983,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 
     if ((sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) == SEE_MASK_INVOKEIDLIST)
     {
-        HRESULT hr = IContextMenu_exec(&sei_tmp);
+        HRESULT hr = ShellExecute_ContextMenuVerb(&sei_tmp);
         if (SUCCEEDED(hr))
         {
             sei->hInstApp = (HINSTANCE)42;
@@ -1997,7 +1997,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     }
 
 
-    if (ERROR_SUCCESS == ShellExecute_FromContextMenu(&sei_tmp))
+    if (ERROR_SUCCESS == ShellExecute_FromContextMenuHandlers(&sei_tmp))
     {
         sei->hInstApp = (HINSTANCE) 33;
         HeapFree(GetProcessHeap(), 0, wszApplicationName);
