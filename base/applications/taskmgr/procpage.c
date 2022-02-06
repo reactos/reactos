@@ -937,7 +937,7 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     return ret;
 }
 
-static BOOL NormalizeDevicePath(LPWSTR lpPath, DWORD dwLength)
+static BOOL DevicePathToDosPath(LPWSTR lpPath, DWORD dwLength)
 {
     WCHAR *pszPath;
     WCHAR cDrive;
@@ -988,7 +988,7 @@ static BOOL NormalizeDevicePath(LPWSTR lpPath, DWORD dwLength)
     return bSuccess;
 }
 
-static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dwLength)
+static BOOL GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dwLength)
 {
     BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
     PVOID DynamicBuffer = NULL;
@@ -996,7 +996,7 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
     WCHAR *pszExePath = NULL;
     ULONG SizeNeeded;
     NTSTATUS Status;
-    DWORD dwRet = 0;
+    BOOL bRet = FALSE;
 
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessImageFileName,
@@ -1010,7 +1010,7 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
 
         if (!DynamicBuffer)
         {
-            return 0;
+            return FALSE;
         }
 
         Status = NtQueryInformationProcess(hProcess,
@@ -1041,16 +1041,16 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
     memcpy(pszExePath, ImagePath->Buffer, ImagePath->Length);
     pszExePath[ImagePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-    if (!NormalizeDevicePath(pszExePath, (ImagePath->Length / sizeof(WCHAR)) + 1))
+    if (!DevicePathToDosPath(pszExePath, (ImagePath->Length / sizeof(WCHAR)) + 1))
     {
         goto Cleanup;
     }
 
-    dwRet = wcslen(pszExePath);
-
-    if (dwLength >= dwRet + 1)
+    if (dwLength >= wcslen(pszExePath) + 1)
     {
         StringCchCopyW(lpExePath, dwLength, pszExePath);
+
+        bRet = TRUE;
     }
 
 Cleanup:
@@ -1065,16 +1065,16 @@ Cleanup:
         HeapFree(GetProcessHeap(), 0, DynamicBuffer);
     }
 
-    return dwRet;
+    return bRet;
 }
 
-static DWORD GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
+static BOOL GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
 {
-    DWORD dwRet = 0;
+    BOOL bRet = FALSE;
 
     if (dwProcessId == 0)
     {
-        return 0;
+        return FALSE;
     }
     
     /* PID = 4 or "System" */
@@ -1091,9 +1091,9 @@ static DWORD GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, D
             if (dwLength >= uLength + _countof(szKernelPath))
             {
                 StringCchPrintfW(lpExePath, dwLength, L"%s%s", szWinDir, szKernelPath);
-            }
 
-            dwRet = uLength + _countof(szKernelPath) - 1;
+                bRet = TRUE;
+            }
         }
     }
     else
@@ -1104,13 +1104,13 @@ static DWORD GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, D
 
         if (hProcess)
         {
-            dwRet = GetProcessExecutablePath(hProcess, lpExePath, dwLength);
+            bRet = GetProcessExecutablePath(hProcess, lpExePath, dwLength);
 
             CloseHandle(hProcess);
         }
     }
 
-    return dwRet;
+    return bRet;
 }
 
 void ProcessPage_OnProperties(void)
@@ -1120,7 +1120,7 @@ void ProcessPage_OnProperties(void)
 
     dwProcessId = GetSelectedProcessId();
 
-    if (GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath)) != 0)
+    if (GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath)))
     {
         SHELLEXECUTEINFOW info = { 0 };
 
@@ -1145,7 +1145,7 @@ void ProcessPage_OnOpenFileLocation(void)
 
     dwProcessId = GetSelectedProcessId();
 
-    if (GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath)) != 0)
+    if (GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath)))
     {
         WCHAR szCmdLine[10 + _countof(szExePath)];
 
