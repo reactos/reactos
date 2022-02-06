@@ -210,6 +210,10 @@ BOOLEAN TuiInitialize(VOID)
 
 VOID TuiUnInitialize(VOID)
 {
+    /* Do nothing if already uninitialized */
+    if (!TextVideoBuffer)
+        return;
+
     if (UiUseSpecialEffects)
     {
         TuiFadeOut();
@@ -218,6 +222,9 @@ VOID TuiUnInitialize(VOID)
     {
         MachVideoSetDisplayMode(NULL, FALSE);
     }
+
+    VideoFreeOffScreenBuffer();
+    TextVideoBuffer = NULL;
 
     MachVideoClearScreen(ATTR(COLOR_GRAY, COLOR_BLACK));
     MachVideoSetTextCursorPosition(0, 0);

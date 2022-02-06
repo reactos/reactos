@@ -34,6 +34,9 @@ UiInitialize(IN BOOLEAN ShowUi)
     /* Set mode and query size */
     MachVideoSetDisplayMode(NULL, TRUE);
     MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
+
+    /* Clear the screen */
+    UiDrawBackdrop();
     return TRUE;
 }
 
