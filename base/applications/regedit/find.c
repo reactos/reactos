@@ -143,6 +143,7 @@ BOOL RegFindRecurse(
     LONG lResult;
     WCHAR szSubKey[MAX_PATH];
     DWORD i, c, cb, type;
+    BOOL fPast = FALSE;
     LPWSTR *ppszNames = NULL;
     LPBYTE pb = NULL;
 
@@ -198,6 +199,14 @@ BOOL RegFindRecurse(
     {
         if (DoEvents())
             goto err;
+
+        if (!fPast && _wcsicmp(ppszNames[i], pszValueName) == 0)
+        {
+            fPast = TRUE;
+            continue;
+        }
+        if (!fPast)
+            continue;
 
         if ((s_dwFlags & RSF_LOOKATVALUES) &&
                 CompareName(ppszNames[i], s_szFindWhat))
@@ -357,6 +366,7 @@ BOOL RegFindWalk(
     WCHAR szKeyName[MAX_PATH];
     WCHAR szSubKey[MAX_PATH];
     LPWSTR pch;
+    BOOL fPast;
     LPWSTR *ppszNames = NULL;
 
     hBaseKey = *phKey;
@@ -420,10 +430,19 @@ BOOL RegFindWalk(
 
         qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
+        fPast = FALSE;
         for(i = 0; i < c; i++)
         {
             if (DoEvents())
                 goto err;
+
+            if (!fPast && _wcsicmp(ppszNames[i], szKeyName) == 0)
+            {
+                fPast = TRUE;
+                continue;
+            }
+            if (!fPast)
+                continue;
 
             if ((s_dwFlags & RSF_LOOKATKEYS) &&
                     CompareName(ppszNames[i], s_szFindWhat))
