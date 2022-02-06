@@ -659,7 +659,6 @@ BOOL APIENTRY NtUserDestroyInputContext(HIMC hIMC)
         IntFreeHwndList(pwl);
     }
 
-    UserDereferenceObject(pIMC);
     UserDeleteObject(hIMC, TYPE_INPUTCONTEXT);
     ret = TRUE;
 
