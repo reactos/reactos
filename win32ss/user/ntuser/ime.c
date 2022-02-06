@@ -617,8 +617,8 @@ BOOLEAN UserDestroyInputContext(PVOID Object)
 
 BOOL APIENTRY NtUserDestroyInputContext(HIMC hIMC)
 {
-    BOOL ret = FALSE;
     PIMC pIMC;
+    BOOL ret = FALSE;
     HWND *phwnd;
     PWND pWnd;
     PWINDOWLIST pwl;
