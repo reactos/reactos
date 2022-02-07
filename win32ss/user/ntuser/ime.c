@@ -225,13 +225,10 @@ static VOID FASTCALL UserSetImeConversionKeyState(PTHREADINFO pti, DWORD dwConve
             bAlphaNumeric = !(dwConversion & IME_CMODE_NATIVE);
             bKatakana = !bAlphaNumeric && (dwConversion & IME_CMODE_KATAKANA);
             bHiragana = !bAlphaNumeric && !(dwConversion & IME_CMODE_KATAKANA);
-
             SET_KEY_DOWN(KeyState, VK_DBE_ALPHANUMERIC, bAlphaNumeric);
             SET_KEY_LOCKED(KeyState, VK_DBE_ALPHANUMERIC, bAlphaNumeric);
-
             SET_KEY_DOWN(KeyState, VK_DBE_HIRAGANA, bHiragana);
             SET_KEY_LOCKED(KeyState, VK_DBE_HIRAGANA, bHiragana);
-
             SET_KEY_DOWN(KeyState, VK_DBE_KATAKANA, bKatakana);
             SET_KEY_LOCKED(KeyState, VK_DBE_KATAKANA, bKatakana);
 
