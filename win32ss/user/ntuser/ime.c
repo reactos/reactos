@@ -268,6 +268,7 @@ NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion)
 {
     PWND pwnd;
     PTHREADINFO pti;
+    HKL hKL;
 
     UserEnterExclusive();
 
@@ -289,6 +290,12 @@ NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion)
         gfImeOpen = !!fOpen;
         gdwImeConversion = dwConversion;
         UserSetImeConversionKeyState(pti, (fOpen ? dwConversion : IME_CMODE_ALPHANUMERIC));
+    }
+
+    if (ISITHOOKED(WH_SHELL))
+    {
+        hKL = ((pti->KeyboardLayout) ? pti->KeyboardLayout->hkl : NULL);
+        co_HOOK_CallHooks(WH_SHELL, HSHELL_LANGUAGE, (WPARAM)hwnd, (LPARAM)hKL);
     }
 
     // TODO:
