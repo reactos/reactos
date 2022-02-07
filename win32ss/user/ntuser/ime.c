@@ -210,6 +210,7 @@ static VOID FASTCALL UserSetImeConversionKeyState(PTHREADINFO pti, DWORD dwConve
     HKL hKL;
     LANGID LangID;
     LPBYTE KeyState;
+    BOOL bAlphaNumeric, bKatakana, bHiragana;
 
     if (!pti->KeyboardLayout)
         return;
@@ -221,34 +222,18 @@ static VOID FASTCALL UserSetImeConversionKeyState(PTHREADINFO pti, DWORD dwConve
     switch (PRIMARYLANGID(LangID))
     {
         case LANG_JAPANESE:
-            if (dwConversion & IME_CMODE_NATIVE)
-            {
-                SET_KEY_DOWN(KeyState, VK_DBE_ALPHANUMERIC, FALSE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_ALPHANUMERIC, FALSE);
-                if (dwConversion & IME_CMODE_KATAKANA)
-                {
-                    SET_KEY_DOWN(KeyState, VK_DBE_HIRAGANA, FALSE);
-                    SET_KEY_LOCKED(KeyState, VK_DBE_HIRAGANA, FALSE);
-                    SET_KEY_DOWN(KeyState, VK_DBE_KATAKANA, TRUE);
-                    SET_KEY_LOCKED(KeyState, VK_DBE_KATAKANA, TRUE);
-                }
-                else
-                {
-                    SET_KEY_DOWN(KeyState, VK_DBE_KATAKANA, FALSE);
-                    SET_KEY_LOCKED(KeyState, VK_DBE_KATAKANA, FALSE);
-                    SET_KEY_DOWN(KeyState, VK_DBE_HIRAGANA, TRUE);
-                    SET_KEY_LOCKED(KeyState, VK_DBE_HIRAGANA, TRUE);
-                }
-            }
-            else
-            {
-                SET_KEY_DOWN(KeyState, VK_DBE_KATAKANA, FALSE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_KATAKANA, FALSE);
-                SET_KEY_DOWN(KeyState, VK_DBE_HIRAGANA, FALSE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_HIRAGANA, FALSE);
-                SET_KEY_DOWN(KeyState, VK_DBE_ALPHANUMERIC, TRUE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_ALPHANUMERIC, TRUE);
-            }
+            bAlphaNumeric = !(dwConversion & IME_CMODE_NATIVE);
+            bKatakana = !bAlphaNumeric && (dwConversion & IME_CMODE_KATAKANA);
+            bHiragana = !bAlphaNumeric && !(dwConversion & IME_CMODE_KATAKANA);
+
+            SET_KEY_DOWN(KeyState, VK_DBE_ALPHANUMERIC, bAlphaNumeric);
+            SET_KEY_LOCKED(KeyState, VK_DBE_ALPHANUMERIC, bAlphaNumeric);
+
+            SET_KEY_DOWN(KeyState, VK_DBE_HIRAGANA, bHiragana);
+            SET_KEY_LOCKED(KeyState, VK_DBE_HIRAGANA, bHiragana);
+
+            SET_KEY_DOWN(KeyState, VK_DBE_KATAKANA, bKatakana);
+            SET_KEY_LOCKED(KeyState, VK_DBE_KATAKANA, bKatakana);
 
             if (dwConversion & IME_CMODE_FULLSHAPE)
             {
