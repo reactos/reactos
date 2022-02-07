@@ -180,6 +180,12 @@ UserProcessDestroy(PEPROCESS Process)
     if (ppiScrnSaver == ppiCurrent)
         ppiScrnSaver = NULL;
 
+    if (gpwlCache)
+    {
+        ExFreePoolWithTag(gpwlCache, USERTAG_WINDOWLIST);
+        gpwlCache = NULL;
+    }
+
     /* Destroy user objects */
     UserDestroyObjectsForOwner(gHandleTable, ppiCurrent);
 
@@ -697,6 +703,7 @@ ExitThreadCallback(PETHREAD Thread)
     PPROCESSINFO ppiCurrent;
     PEPROCESS Process;
     PTHREADINFO ptiCurrent;
+    PWINDOWLIST pwl, pwlNext;
 
     Process = Thread->ThreadsProcess;
 
@@ -713,6 +720,16 @@ ExitThreadCallback(PETHREAD Thread)
     ASSERT(ppiCurrent);
 
     IsRemoveAttachThread(ptiCurrent);
+
+    if (gpwlList)
+    {
+        for (pwl = gpwlList; pwl; pwl = pwlNext)
+        {
+            pwlNext = pwl->pNextList;
+            if (pwl->pti == ptiCurrent)
+                IntFreeHwndList(pwl);
+        }
+    }
 
     ptiCurrent->TIF_flags |= TIF_DONTATTACHQUEUE;
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;

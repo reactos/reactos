@@ -90,6 +90,9 @@ typedef struct tagWINDOWLIST
     HWND ahwnd[ANYSIZE_ARRAY]; /* Terminated by HWND_TERMINATOR */
 } WINDOWLIST, *PWINDOWLIST;
 
+extern PWINDOWLIST gpwlList;
+extern PWINDOWLIST gpwlCache;
+
 #define WL_IS_BAD(pwl)   ((pwl)->phwndEnd <= (pwl)->phwndLast)
 #define WL_CAPACITY(pwl) ((pwl)->phwndEnd - &((pwl)->ahwnd[0]))
 
