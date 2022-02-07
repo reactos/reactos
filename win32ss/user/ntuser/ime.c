@@ -294,7 +294,7 @@ NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion)
 
     if (ISITHOOKED(WH_SHELL))
     {
-        hKL = ((pti->KeyboardLayout) ? pti->KeyboardLayout->hkl : NULL);
+        hKL = (pti->KeyboardLayout ? pti->KeyboardLayout->hkl : NULL);
         co_HOOK_CallHooks(WH_SHELL, HSHELL_LANGUAGE, (WPARAM)hwnd, (LPARAM)hKL);
     }
 
