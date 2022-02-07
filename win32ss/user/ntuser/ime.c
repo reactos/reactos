@@ -27,6 +27,13 @@ PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
     return pwnd;
 }
 
+HIMC FASTCALL IntAssociateInputContext(PWND pWnd, PIMC pImc)
+{
+    HIMC hOldImc = pWnd->hImc;
+    pWnd->hImc = (pImc ? UserHMGetHandle(pImc) : NULL);
+    return hOldImc;
+}
+
 DWORD
 APIENTRY
 NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
@@ -612,20 +619,49 @@ BOOL APIENTRY NtUserDestroyInputContext(HIMC hIMC)
 {
     PIMC pIMC;
     BOOL ret = FALSE;
+    HWND *phwnd;
+    PWND pWnd;
+    PWINDOWLIST pwl;
+    PTHREADINFO pti;
 
     UserEnterExclusive();
 
-    if (!(gpsi->dwSRVIFlags & SRVINFO_IMM32))
+    if (!IS_IMM_MODE())
     {
         EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        UserLeave();
-        return FALSE;
+        goto Quit;
     }
 
-    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
-    if (pIMC)
-        ret = UserDereferenceObject(pIMC);
+    pIMC = UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (!pIMC)
+        goto Quit;
 
+    pti = pIMC->head.pti;
+    if (pti != GetW32ThreadInfo() || pIMC == pti->spDefaultImc)
+        goto Quit;
+
+    UserMarkObjectDestroy(pIMC);
+
+    pwl = IntBuildHwndList(pti->rpdesk->pDeskInfo->spwnd->spwndChild,
+                           IACE_CHILDREN | IACE_LIST, pti);
+    if (pwl)
+    {
+        for (phwnd = pwl->ahwnd; *phwnd != HWND_TERMINATOR; ++phwnd)
+        {
+            pWnd = ValidateHwndNoErr(*phwnd);
+            if (!pWnd)
+                continue;
+
+            if (pWnd->hImc == hIMC)
+                IntAssociateInputContext(pWnd, pti->spDefaultImc);
+        }
+
+        IntFreeHwndList(pwl);
+    }
+
+    ret = UserDeleteObject(hIMC, TYPE_INPUTCONTEXT);
+
+Quit:
     UserLeave();
     return ret;
 }
@@ -693,13 +729,6 @@ NtUserCreateInputContext(ULONG_PTR dwClientImcData)
 Quit:
     UserLeave();
     return ret;
-}
-
-HIMC FASTCALL IntAssociateInputContext(PWND pWnd, PIMC pImc)
-{
-    HIMC hOldImc = pWnd->hImc;
-    pWnd->hImc = (pImc ? UserHMGetHandle(pImc) : NULL);
-    return hOldImc;
 }
 
 DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
