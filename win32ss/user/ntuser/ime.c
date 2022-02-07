@@ -288,7 +288,7 @@ NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion)
     {
         gfImeOpen = !!fOpen;
         gdwImeConversion = dwConversion;
-        UserSetImeConversionKeyState(pti, (fOpen ? dwConversion : 0));
+        UserSetImeConversionKeyState(pti, (fOpen ? dwConversion : IME_CMODE_ALPHANUMERIC));
     }
 
     // TODO:
