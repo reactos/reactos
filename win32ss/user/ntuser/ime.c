@@ -210,7 +210,7 @@ static VOID FASTCALL UserSetImeConversionKeyState(PTHREADINFO pti, DWORD dwConve
     HKL hKL;
     LANGID LangID;
     LPBYTE KeyState;
-    BOOL bAlphaNumeric, bKatakana, bHiragana;
+    BOOL bAlphaNumeric, bKatakana, bHiragana, bFullShape, bRoman, bCharCode;
 
     if (!pti->KeyboardLayout)
         return;
@@ -235,50 +235,23 @@ static VOID FASTCALL UserSetImeConversionKeyState(PTHREADINFO pti, DWORD dwConve
             SET_KEY_DOWN(KeyState, VK_DBE_KATAKANA, bKatakana);
             SET_KEY_LOCKED(KeyState, VK_DBE_KATAKANA, bKatakana);
 
-            if (dwConversion & IME_CMODE_FULLSHAPE)
-            {
-                SET_KEY_DOWN(KeyState, VK_DBE_DBCSCHAR, TRUE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_DBCSCHAR, TRUE);
-                SET_KEY_DOWN(KeyState, VK_DBE_SBCSCHAR, FALSE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_SBCSCHAR, FALSE);
-            }
-            else
-            {
-                SET_KEY_DOWN(KeyState, VK_DBE_SBCSCHAR, TRUE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_SBCSCHAR, TRUE);
-                SET_KEY_DOWN(KeyState, VK_DBE_DBCSCHAR, FALSE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_DBCSCHAR, FALSE);
-            }
+            bFullShape = (dwConversion & IME_CMODE_FULLSHAPE);
+            SET_KEY_DOWN(KeyState, VK_DBE_DBCSCHAR, bFullShape);
+            SET_KEY_LOCKED(KeyState, VK_DBE_DBCSCHAR, bFullShape);
+            SET_KEY_DOWN(KeyState, VK_DBE_SBCSCHAR, !bFullShape);
+            SET_KEY_LOCKED(KeyState, VK_DBE_SBCSCHAR, !bFullShape);
 
-            if (dwConversion & IME_CMODE_ROMAN)
-            {
-                SET_KEY_DOWN(KeyState, VK_DBE_ROMAN, TRUE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_ROMAN, TRUE);
-                SET_KEY_DOWN(KeyState, VK_DBE_NOROMAN, FALSE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_NOROMAN, FALSE);
-            }
-            else
-            {
-                SET_KEY_DOWN(KeyState, VK_DBE_NOROMAN, TRUE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_NOROMAN, TRUE);
-                SET_KEY_DOWN(KeyState, VK_DBE_ROMAN, FALSE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_ROMAN, FALSE);
-            }
+            bRoman = (dwConversion & IME_CMODE_ROMAN);
+            SET_KEY_DOWN(KeyState, VK_DBE_ROMAN, bRoman);
+            SET_KEY_LOCKED(KeyState, VK_DBE_ROMAN, bRoman);
+            SET_KEY_DOWN(KeyState, VK_DBE_NOROMAN, !bRoman);
+            SET_KEY_LOCKED(KeyState, VK_DBE_NOROMAN, !bRoman);
 
-            if (dwConversion & IME_CMODE_CHARCODE)
-            {
-                SET_KEY_DOWN(KeyState, VK_DBE_CODEINPUT, TRUE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_CODEINPUT, TRUE);
-                SET_KEY_DOWN(KeyState, VK_DBE_NOCODEINPUT, FALSE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_NOCODEINPUT, FALSE);
-            }
-            else
-            {
-                SET_KEY_DOWN(KeyState, VK_DBE_NOCODEINPUT, TRUE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_NOCODEINPUT, TRUE);
-                SET_KEY_DOWN(KeyState, VK_DBE_CODEINPUT, FALSE);
-                SET_KEY_LOCKED(KeyState, VK_DBE_CODEINPUT, FALSE);
-            }
+            bCharCode = (dwConversion & IME_CMODE_CHARCODE);
+            SET_KEY_DOWN(KeyState, VK_DBE_CODEINPUT, bCharCode);
+            SET_KEY_LOCKED(KeyState, VK_DBE_CODEINPUT, bCharCode);
+            SET_KEY_DOWN(KeyState, VK_DBE_NOCODEINPUT, !bCharCode);
+            SET_KEY_LOCKED(KeyState, VK_DBE_NOCODEINPUT, !bCharCode);
             break;
 
         case LANG_KOREAN:
