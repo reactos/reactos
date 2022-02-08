@@ -26,6 +26,24 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+static
+HRESULT WINAPI _SHBindToFolder(LPCITEMIDLIST path, IShellFolder** newFolder)
+{
+    CComPtr<IShellFolder>                   desktop;
+
+    HRESULT hr = ::SHGetDesktopFolder(&desktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return E_FAIL;
+    if (path == NULL || path->mkid.cb == 0)
+    {
+        *newFolder = desktop;
+        desktop.p->AddRef();
+        return S_OK;
+    }
+    return desktop->BindToObject(path, NULL, IID_PPV_ARG(IShellFolder, newFolder));
+}
+
+
 /***************************************************************************
  *  GetNextElement (internal function)
  *
@@ -422,33 +440,39 @@ SHOpenFolderAndSelectItems(PCIDLIST_ABSOLUTE pidlFolder,
         return E_FAIL;
 }
 
-/*
- * for internal use
- */
-HRESULT WINAPI
-Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj)
-{
-    PIDLIST_ABSOLUTE pidlFolder;
-    PUITEMID_CHILD *apidl;
-    UINT cidl;
-    HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
 
-    if (cidl > 1)
+
+static
+DWORD WINAPI
+_ShowPropertiesDialogThread(LPVOID lpParameter)
+{
+    CComPtr<IDataObject> pDataObject;
+    pDataObject.Attach((IDataObject*)lpParameter);
+
+    CDataObjectHIDA cida(pDataObject);
+
+    if (FAILED_UNEXPECTEDLY(cida.hr()))
+        return cida.hr();
+
+    if (cida->cidl > 1)
     {
         ERR("SHMultiFileProperties is not yet implemented\n");
-        SHFree(pidlFolder);
-        _ILFreeaPidl(apidl, cidl);
         return E_FAIL;
     }
 
+    PCUIDLIST_ABSOLUTE pidlFolder = HIDA_GetPIDLFolder(cida);
+    CComPtr<IShellFolder> psfParent;
+    HRESULT hr = _SHBindToFolder(pidlFolder, &psfParent);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
     STRRET strFile;
-    hr = psf->GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strFile);
-    if (SUCCEEDED(hr))
+    PCUIDLIST_RELATIVE apidl = HIDA_GetPIDLItem(cida, 0);
+    hr = psfParent->GetDisplayNameOf(apidl, SHGDN_FORPARSING, &strFile);
+    if (!FAILED_UNEXPECTEDLY(hr))
     {
-        hr = SH_ShowPropertiesDialog(strFile.pOleStr, pidlFolder, apidl);
-        if (FAILED(hr))
+        BOOL bSuccess = SH_ShowPropertiesDialog(strFile.pOleStr, pidlFolder, &apidl);
+        if (!bSuccess)
             ERR("SH_ShowPropertiesDialog failed\n");
     }
     else
@@ -456,8 +480,23 @@ Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj)
         ERR("Failed to get display name\n");
     }
 
-    SHFree(pidlFolder);
-    _ILFreeaPidl(apidl, cidl);
+    return 0;
+}
 
-    return hr;
+/*
+ * for internal use
+ */
+HRESULT WINAPI
+Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj)
+{
+    pdtobj->AddRef();
+    if (!SHCreateThread(_ShowPropertiesDialogThread, pdtobj, CTF_INSIST | CTF_COINIT, NULL))
+    {
+        pdtobj->Release();
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+    else
+    {
+        return S_OK;
+    }
 }

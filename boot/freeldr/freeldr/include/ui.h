@@ -19,57 +19,99 @@
 
 #pragma once
 
-extern    ULONG    UiScreenWidth;                                    // Screen Width
-extern    ULONG    UiScreenHeight;                                    // Screen Height
+extern ULONG    UiScreenWidth;              // Screen Width
+extern ULONG    UiScreenHeight;             // Screen Height
 
-extern    UCHAR    UiStatusBarFgColor;                                // Status bar foreground color
-extern    UCHAR    UiStatusBarBgColor;                                // Status bar background color
-extern    UCHAR    UiBackdropFgColor;                                // Backdrop foreground color
-extern    UCHAR    UiBackdropBgColor;                                // Backdrop background color
-extern    UCHAR    UiBackdropFillStyle;                            // Backdrop fill style
-extern    UCHAR    UiTitleBoxFgColor;                                // Title box foreground color
-extern    UCHAR    UiTitleBoxBgColor;                                // Title box background color
-extern    UCHAR    UiMessageBoxFgColor;                            // Message box foreground color
-extern    UCHAR    UiMessageBoxBgColor;                            // Message box background color
-extern    UCHAR    UiMenuFgColor;                                    // Menu foreground color
-extern    UCHAR    UiMenuBgColor;                                    // Menu background color
-extern    UCHAR    UiTextColor;                                    // Normal text color
-extern    UCHAR    UiSelectedTextColor;                            // Selected text color
-extern    UCHAR    UiSelectedTextBgColor;                            // Selected text background color
-extern    UCHAR    UiEditBoxTextColor;                                // Edit box text color
-extern    UCHAR    UiEditBoxBgColor;                                // Edit box text background color
+extern UCHAR    UiStatusBarFgColor;         // Status bar foreground color
+extern UCHAR    UiStatusBarBgColor;         // Status bar background color
+extern UCHAR    UiBackdropFgColor;          // Backdrop foreground color
+extern UCHAR    UiBackdropBgColor;          // Backdrop background color
+extern UCHAR    UiBackdropFillStyle;        // Backdrop fill style
+extern UCHAR    UiTitleBoxFgColor;          // Title box foreground color
+extern UCHAR    UiTitleBoxBgColor;          // Title box background color
+extern UCHAR    UiMessageBoxFgColor;        // Message box foreground color
+extern UCHAR    UiMessageBoxBgColor;        // Message box background color
+extern UCHAR    UiMenuFgColor;              // Menu foreground color
+extern UCHAR    UiMenuBgColor;              // Menu background color
+extern UCHAR    UiTextColor;                // Normal text color
+extern UCHAR    UiSelectedTextColor;        // Selected text color
+extern UCHAR    UiSelectedTextBgColor;      // Selected text background color
+extern UCHAR    UiEditBoxTextColor;         // Edit box text color
+extern UCHAR    UiEditBoxBgColor;           // Edit box text background color
 
-extern    CHAR    UiTitleBoxTitleText[260];                        // Title box's title text
+extern CHAR     UiTitleBoxTitleText[260];   // Title box's title text
 
-extern    BOOLEAN    UiUseSpecialEffects;                            // Tells us if we should use fade effects
-extern    BOOLEAN    UiCenterMenu;
-extern    BOOLEAN    UiMenuBox;
-extern    CHAR    UiTimeText[];
-extern    BOOLEAN    UiDrawTime;
+extern BOOLEAN  UiUseSpecialEffects;        // Tells us if we should use fade effects
+extern BOOLEAN  UiCenterMenu;
+extern BOOLEAN  UiMenuBox;
+extern CHAR     UiTimeText[];
+extern BOOLEAN  UiDrawTime;
 
-extern    const CHAR    UiMonthNames[12][15];
+extern const CHAR UiMonthNames[12][15];
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // User Interface Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOLEAN    UiInitialize(BOOLEAN ShowGui);                                // Initialize User-Interface
+
+BOOLEAN    UiInitialize(BOOLEAN ShowUi);                                // Initialize User-Interface
 VOID    UiUnInitialize(PCSTR BootText);                        // Un-initialize User-Interface
 VOID    UiDrawBackdrop(VOID);                                    // Fills the entire screen with a backdrop
 VOID    UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);    // Fills the area specified with FillChar and Attr
 VOID    UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);    // Draws a shadow on the bottom and right sides of the area specified
 VOID    UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);    // Draws a box around the area specified
-VOID    UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);    // Draws text at coordinates specified
-VOID    UiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr);    // Draws text at coordinates specified
-VOID    UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);    // Draws centered text at the coordinates specified and clips the edges
+
+/* Draws text at coordinates specified */
+VOID
+UiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr);
+
+/* Draws text at coordinates specified */
+VOID
+UiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr);
+
+/* Draws centered text at the coordinates specified and clips the edges */
+VOID
+UiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr);
+
 VOID    UiDrawStatusText(PCSTR StatusText);                    // Draws text at the very bottom line on the screen
 VOID    UiUpdateDateTime(VOID);                                    // Updates the date and time
 VOID    UiInfoBox(PCSTR MessageText);                            // Displays a info box on the screen
 VOID    UiMessageBox(PCSTR Format, ...);                        // Displays a message box on the screen with an ok button
 VOID    UiMessageBoxCritical(PCSTR MessageText);                // Displays a message box on the screen with an ok button using no system resources
-VOID    UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
-VOID    UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
+
+/* Draws the progress bar showing nPos percent filled */
+VOID
+UiDrawProgressBarCenter(
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText);
+
+/* Draws the progress bar showing nPos percent filled */
+VOID
+UiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText);
 
 // Displays all the message boxes in a given section.
 VOID
@@ -187,45 +229,53 @@ VOID UiInit(const char *CmdLine);
 extern UIVTBL UiVtbl;
 
 /*
- * Combines the foreground and background colors into a single attribute byte
- */
-#define    ATTR(cFore, cBack)    ((cBack << 4)|cFore)
-
-/*
  * Fill styles for DrawBackdrop()
  */
-#define LIGHT_FILL            0xB0
-#define MEDIUM_FILL            0xB1
-#define DARK_FILL            0xB2
+#define LIGHT_FILL      0xB0
+#define MEDIUM_FILL     0xB1
+#define DARK_FILL       0xB2
+
+/*
+ * Combines the foreground and background colors into a single attribute byte
+ */
+#define ATTR(cFore, cBack)  ((cBack << 4) | cFore)
 
 /*
  * Screen colors
  */
-#define COLOR_BLACK            0
-#define COLOR_BLUE            1
-#define COLOR_GREEN            2
-#define COLOR_CYAN            3
-#define COLOR_RED            4
-#define COLOR_MAGENTA        5
-#define COLOR_BROWN            6
-#define COLOR_GRAY            7
+#define COLOR_BLACK         0
+#define COLOR_BLUE          1
+#define COLOR_GREEN         2
+#define COLOR_CYAN          3
+#define COLOR_RED           4
+#define COLOR_MAGENTA       5
+#define COLOR_BROWN         6
+#define COLOR_GRAY          7
 
-#define COLOR_DARKGRAY        8
-#define COLOR_LIGHTBLUE        9
+#define COLOR_DARKGRAY      8
+#define COLOR_LIGHTBLUE     9
 #define COLOR_LIGHTGREEN    10
-#define COLOR_LIGHTCYAN        11
-#define COLOR_LIGHTRED        12
-#define COLOR_LIGHTMAGENTA    13
+#define COLOR_LIGHTCYAN     11
+#define COLOR_LIGHTRED      12
+#define COLOR_LIGHTMAGENTA  13
 #define COLOR_YELLOW        14
-#define COLOR_WHITE            15
+#define COLOR_WHITE         15
 
 /* Add COLOR_BLINK to a background to cause blinking */
-//#define COLOR_BLINK            8
+// #define COLOR_BLINK         8
 
 /*
  * Defines for IBM box drawing characters
  */
-#define HORZ    (0xc4)  /* Single horizontal line */
-#define D_HORZ    (0xcd)  /* Double horizontal line.*/
-#define VERT    (0xb3)  /* Single vertical line   */
-#define D_VERT  (0xba)  /* Double vertical line.  */
+#define HORZ    0xC4    // Single horizontal line
+#define D_HORZ  0xCD    // Double horizontal line
+#define VERT    0xB3    // Single vertical line
+#define D_VERT  0xBA    // Double vertical line
+
+
+/* THEME HEADERS *************************************************************/
+
+// #include <ui/gui.h>
+#include <ui/minitui.h>
+#include <ui/noui.h>
+#include <ui/tui.h>

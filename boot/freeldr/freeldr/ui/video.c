@@ -18,17 +18,22 @@ PVOID VideoAllocateOffScreenBuffer(VOID)
 {
     ULONG BufferSize;
 
-    if (VideoOffScreenBuffer != NULL)
-    {
-        MmFreeMemory(VideoOffScreenBuffer);
-        VideoOffScreenBuffer = NULL;
-    }
+    VideoFreeOffScreenBuffer();
 
     BufferSize = MachVideoGetBufferSize();
 
     VideoOffScreenBuffer = MmAllocateMemoryWithType(BufferSize, LoaderFirmwareTemporary);
 
     return VideoOffScreenBuffer;
+}
+
+VOID VideoFreeOffScreenBuffer(VOID)
+{
+    if (!VideoOffScreenBuffer)
+        return;
+
+    MmFreeMemory(VideoOffScreenBuffer);
+    VideoOffScreenBuffer = NULL;
 }
 
 VOID VideoCopyOffScreenBufferToVRAM(VOID)

@@ -27,6 +27,13 @@ PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
     return pwnd;
 }
 
+HIMC FASTCALL IntAssociateInputContext(PWND pWnd, PIMC pImc)
+{
+    HIMC hOldImc = pWnd->hImc;
+    pWnd->hImc = (pImc ? UserHMGetHandle(pImc) : NULL);
+    return hOldImc;
+}
+
 DWORD
 APIENTRY
 NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
@@ -612,20 +619,49 @@ BOOL APIENTRY NtUserDestroyInputContext(HIMC hIMC)
 {
     PIMC pIMC;
     BOOL ret = FALSE;
+    HWND *phwnd;
+    PWND pWnd;
+    PWINDOWLIST pwl;
+    PTHREADINFO pti;
 
     UserEnterExclusive();
 
-    if (!(gpsi->dwSRVIFlags & SRVINFO_IMM32))
+    if (!IS_IMM_MODE())
     {
         EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        UserLeave();
-        return FALSE;
+        goto Quit;
     }
 
-    pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
-    if (pIMC)
-        ret = UserDereferenceObject(pIMC);
+    pIMC = UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (!pIMC)
+        goto Quit;
 
+    pti = pIMC->head.pti;
+    if (pti != GetW32ThreadInfo() || pIMC == pti->spDefaultImc)
+        goto Quit;
+
+    UserMarkObjectDestroy(pIMC);
+
+    pwl = IntBuildHwndList(pti->rpdesk->pDeskInfo->spwnd->spwndChild,
+                           IACE_CHILDREN | IACE_LIST, pti);
+    if (pwl)
+    {
+        for (phwnd = pwl->ahwnd; *phwnd != HWND_TERMINATOR; ++phwnd)
+        {
+            pWnd = ValidateHwndNoErr(*phwnd);
+            if (!pWnd)
+                continue;
+
+            if (pWnd->hImc == hIMC)
+                IntAssociateInputContext(pWnd, pti->spDefaultImc);
+        }
+
+        IntFreeHwndList(pwl);
+    }
+
+    ret = UserDeleteObject(hIMC, TYPE_INPUTCONTEXT);
+
+Quit:
     UserLeave();
     return ret;
 }
@@ -695,12 +731,90 @@ Quit:
     return ret;
 }
 
+DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
+{
+    DWORD ret = 0;
+    PWINDOWLIST pwl;
+    BOOL bIgnoreNullImc = (dwFlags & IACE_IGNORENOCONTEXT);
+    PTHREADINFO pti = pWnd->head.pti;
+    PWND pwndTarget, pwndFocus = pti->MessageQueue->spwndFocus;
+    HWND *phwnd;
+    HIMC hIMC;
+
+    if (dwFlags & IACE_DEFAULT)
+    {
+        pIMC = pti->spDefaultImc;
+    }
+    else
+    {
+        if (pIMC && pti != pIMC->head.pti)
+            return 2;
+    }
+
+    if (pWnd->head.pti->ppi != GetW32ThreadInfo()->ppi ||
+        (pIMC && pIMC->head.rpdesk != pWnd->head.rpdesk))
+    {
+        return 2;
+    }
+
+    if ((dwFlags & IACE_CHILDREN) && pWnd->spwndChild)
+    {
+        pwl = IntBuildHwndList(pWnd->spwndChild, IACE_CHILDREN | IACE_LIST, pti);
+        if (pwl)
+        {
+            for (phwnd = pwl->ahwnd; *phwnd != HWND_TERMINATOR; ++phwnd)
+            {
+                pwndTarget = ValidateHwndNoErr(*phwnd);
+                if (!pwndTarget)
+                    continue;
+
+                hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
+                if (pwndTarget->hImc == hIMC || (bIgnoreNullImc && !pwndTarget->hImc))
+                    continue;
+
+                IntAssociateInputContext(pwndTarget, pIMC);
+                if (pwndTarget == pwndFocus)
+                    ret = 1;
+            }
+
+            IntFreeHwndList(pwl);
+        }
+    }
+
+    if (!bIgnoreNullImc || pWnd->hImc)
+    {
+        hIMC = (pIMC ? UserHMGetHandle(pIMC) : NULL);
+        if (pWnd->hImc != hIMC)
+        {
+            IntAssociateInputContext(pWnd, pIMC);
+            if (pWnd == pwndFocus)
+                ret = 1;
+        }
+    }
+
+    return ret;
+}
+
 DWORD
 APIENTRY
 NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 {
-    STUB
-    return 0;
+    DWORD ret = 2;
+    PWND pWnd;
+    PIMC pIMC;
+
+    UserEnterExclusive();
+
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd || !IS_IMM_MODE())
+        goto Quit;
+
+    pIMC = (hIMC ? UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT) : NULL);
+    ret = IntAssociateInputContextEx(pWnd, pIMC, dwFlags);
+
+Quit:
+    UserLeave();
+    return ret;
 }
 
 BOOL FASTCALL UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)

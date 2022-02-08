@@ -1327,16 +1327,15 @@ static HKEY ShellExecute_GetClassKey(const SHELLEXECUTEINFOW *sei)
     return hkey;
 }
 
-static IDataObject *shellex_get_dataobj( LPSHELLEXECUTEINFOW sei )
+static HRESULT shellex_get_dataobj( LPSHELLEXECUTEINFOW sei, CComPtr<IDataObject>& dataObj)
 {
-    LPCITEMIDLIST pidllast = NULL;
-    CComPtr<IDataObject> dataobj;
-    CComPtr<IShellFolder> shf;
+    CComHeapPtr<ITEMIDLIST> allocatedPidl;
     LPITEMIDLIST pidl = NULL;
-    HRESULT r;
 
     if (sei->fMask & SEE_MASK_CLASSALL)
+    {
         pidl = (LPITEMIDLIST)sei->lpIDList;
+    }
     else
     {
         WCHAR fullpath[MAX_PATH];
@@ -1345,21 +1344,19 @@ static IDataObject *shellex_get_dataobj( LPSHELLEXECUTEINFOW sei )
         fullpath[0] = 0;
         ret = GetFullPathNameW(sei->lpFile, MAX_PATH, fullpath, NULL);
         if (!ret)
-            goto end;
+            return HRESULT_FROM_WIN32(GetLastError());
 
         pidl = ILCreateFromPathW(fullpath);
+        allocatedPidl.Attach(pidl);
     }
 
-    r = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &shf), &pidllast);
-    if (FAILED(r))
-        goto end;
+    CComPtr<IShellFolder> shf;
+    LPCITEMIDLIST pidllast = NULL;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &shf), &pidllast);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    shf->GetUIObjectOf(NULL, 1, &pidllast, IID_NULL_PPV_ARG(IDataObject, &dataobj));
-
-end:
-    if (pidl != sei->lpIDList)
-        ILFree(pidl);
-    return dataobj.Detach();
+    return shf->GetUIObjectOf(NULL, 1, &pidllast, IID_NULL_PPV_ARG(IDataObject, &dataObj));
 }
 
 static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
@@ -1431,64 +1428,143 @@ end:
     return r;
 }
 
+namespace
+{
+    struct CCoInit
+    {
+        CCoInit() { hres = CoInitialize(NULL); }
+        ~CCoInit() { if (SUCCEEDED(hres)) { CoUninitialize(); } }
+        HRESULT hres;
+    };
+}
+
 static HRESULT shellex_load_object_and_run(HKEY hkey, LPCGUID guid, LPSHELLEXECUTEINFOW sei)
 {
-    // Can not use CComPtr here because of CoUninitialize at the end, before the destructors would run.
-    IDataObject *dataobj = NULL;
-    IObjectWithSite *ows = NULL;
-    IShellExtInit *obj = NULL;
-    HRESULT r;
-
     TRACE("%p %s %p\n", hkey, debugstr_guid(guid), sei);
 
-    r = CoInitialize(NULL);
-    if (FAILED(r))
-        goto end;
+    CCoInit coInit;
 
-    r = CoCreateInstance(*guid, NULL, CLSCTX_INPROC_SERVER,
+    if (FAILED_UNEXPECTEDLY(coInit.hres))
+        return coInit.hres;
+
+    CComPtr<IShellExtInit> obj;
+    HRESULT hr = CoCreateInstance(*guid, NULL, CLSCTX_INPROC_SERVER,
                          IID_PPV_ARG(IShellExtInit, &obj));
-    if (FAILED(r))
-    {
-        ERR("failed %08x\n", r);
-        goto end;
-    }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    dataobj = shellex_get_dataobj(sei);
-    if (!dataobj)
-    {
-        ERR("failed to get data object\n");
-        r = E_FAIL;
-        goto end;
-    }
+    CComPtr<IDataObject> dataobj;
+    hr = shellex_get_dataobj(sei, dataobj);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    r = obj->Initialize(NULL, dataobj, hkey);
-    if (FAILED(r))
-        goto end;
+    hr = obj->Initialize(NULL, dataobj, hkey);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    r = obj->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ows));
-    if (FAILED(r))
-        goto end;
+    CComPtr<IObjectWithSite> ows;
+    hr = obj->QueryInterface(IID_PPV_ARG(IObjectWithSite, &ows));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     ows->SetSite(NULL);
 
-    r = shellex_run_context_menu_default(obj, sei);
-
-end:
-    if (ows)
-        ows->Release();
-    if (dataobj)
-        dataobj->Release();
-    if (obj)
-        obj->Release();
-    CoUninitialize();
-    return r;
+    return shellex_run_context_menu_default(obj, sei);
 }
+
+static HRESULT shellex_get_contextmenu(LPSHELLEXECUTEINFOW sei, CComPtr<IContextMenu>& cm)
+{
+    CComHeapPtr<ITEMIDLIST> allocatedPidl;
+    LPITEMIDLIST pidl = NULL;
+
+    if (sei->lpIDList)
+    {
+        pidl = (LPITEMIDLIST)sei->lpIDList;
+    }
+    else
+    {
+        SFGAOF sfga = 0;
+        HRESULT hr = SHParseDisplayName(sei->lpFile, NULL, &allocatedPidl, SFGAO_STORAGECAPMASK, &sfga);
+        if (FAILED(hr))
+        {
+            WCHAR Buffer[MAX_PATH] = {};
+            // FIXME: MAX_PATH.....
+            UINT retval = SHELL_FindExecutable(sei->lpDirectory, sei->lpFile, sei->lpVerb, Buffer, _countof(Buffer), NULL, NULL, NULL, sei->lpParameters);
+            if (retval <= 32)
+                return HRESULT_FROM_WIN32(retval);
+
+            hr = SHParseDisplayName(Buffer, NULL, &allocatedPidl, SFGAO_STORAGECAPMASK, &sfga);
+            // This should not happen, we found it...
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
+
+        pidl = allocatedPidl;
+    }
+
+    CComPtr<IShellFolder> shf;
+    LPCITEMIDLIST pidllast = NULL;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &shf), &pidllast);
+    if (FAILED(hr))
+        return hr;
+
+    return shf->GetUIObjectOf(NULL, 1, &pidllast, IID_NULL_PPV_ARG(IContextMenu, &cm));
+}
+
+static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
+{
+    TRACE("%p\n", sei);
+
+    CCoInit coInit;
+
+    if (FAILED_UNEXPECTEDLY(coInit.hres))
+        return coInit.hres;
+
+    CComPtr<IContextMenu> cm;
+    HRESULT hr = shellex_get_contextmenu(sei, cm);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComHeapPtr<char> verb, parameters;
+    __SHCloneStrWtoA(&verb, sei->lpVerb);
+    __SHCloneStrWtoA(&parameters, sei->lpParameters);
+
+    CMINVOKECOMMANDINFOEX ici = {};
+    ici.cbSize = sizeof ici;
+    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    ici.nShow = sei->nShow;
+    ici.lpVerb = verb;
+    ici.hwnd = sei->hwnd;
+    ici.lpParameters = parameters;
+
+    HMENU hMenu = CreatePopupMenu();
+    BOOL fDefault = !ici.lpVerb || !ici.lpVerb[0];
+    hr = cm->QueryContextMenu(hMenu, 0, 1, 0x7fff, fDefault ? CMF_DEFAULTONLY : 0);
+    if (!FAILED_UNEXPECTEDLY(hr))
+    {
+        if (fDefault)
+        {
+            INT uDefault = GetMenuDefaultItem(hMenu, FALSE, 0);
+            uDefault = (uDefault != -1) ? uDefault - 1 : 0;
+            ici.lpVerb = MAKEINTRESOURCEA(uDefault);
+        }
+
+        hr = cm->InvokeCommand((LPCMINVOKECOMMANDINFO)&ici);
+        if (!FAILED_UNEXPECTEDLY(hr))
+            hr = S_OK;
+    }
+
+    DestroyMenu(hMenu);
+
+    return hr;
+}
+
 
 
 /*************************************************************************
  *    ShellExecute_FromContextMenu [Internal]
  */
-static LONG ShellExecute_FromContextMenu( LPSHELLEXECUTEINFOW sei )
+static LONG ShellExecute_FromContextMenuHandlers( LPSHELLEXECUTEINFOW sei )
 {
     HKEY hkey, hkeycm = 0;
     WCHAR szguid[39];
@@ -1751,7 +1827,7 @@ static WCHAR *expand_environment( const WCHAR *str )
 static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 {
     static const DWORD unsupportedFlags =
-        SEE_MASK_INVOKEIDLIST  | SEE_MASK_ICON         | SEE_MASK_HOTKEY |
+        SEE_MASK_ICON         | SEE_MASK_HOTKEY |
         SEE_MASK_CONNECTNETDRV | SEE_MASK_FLAG_DDEWAIT |
         SEE_MASK_UNICODE       | SEE_MASK_ASYNCOK      | SEE_MASK_HMONITOR;
 
@@ -1853,15 +1929,12 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 
     if (sei_tmp.fMask & unsupportedFlags)
     {
-        // SEE_MASK_IDLIST is not in unsupportedFlags, but the check above passes because SEE_MASK_INVOKEIDLIST is in it
-        if ((sei_tmp.fMask & unsupportedFlags) != SEE_MASK_IDLIST)
-        {
-            FIXME("flags ignored: 0x%08x\n", sei_tmp.fMask & unsupportedFlags);
-        }
+        FIXME("flags ignored: 0x%08x\n", sei_tmp.fMask & unsupportedFlags);
     }
 
     /* process the IDList */
-    if (sei_tmp.fMask & SEE_MASK_IDLIST)
+    if (sei_tmp.fMask & SEE_MASK_IDLIST &&
+        (sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) != SEE_MASK_INVOKEIDLIST)
     {
         CComPtr<IShellExecuteHookW> pSEH;
 
@@ -1908,7 +1981,23 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         sei_tmp.lpDirectory = wszDir = tmp;
     }
 
-    if (ERROR_SUCCESS == ShellExecute_FromContextMenu(&sei_tmp))
+    if ((sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) == SEE_MASK_INVOKEIDLIST)
+    {
+        HRESULT hr = ShellExecute_ContextMenuVerb(&sei_tmp);
+        if (SUCCEEDED(hr))
+        {
+            sei->hInstApp = (HINSTANCE)42;
+            HeapFree(GetProcessHeap(), 0, wszApplicationName);
+            if (wszParameters != parametersBuffer)
+                HeapFree(GetProcessHeap(), 0, wszParameters);
+            if (wszDir != dirBuffer)
+                HeapFree(GetProcessHeap(), 0, wszDir);
+            return TRUE;
+        }
+    }
+
+
+    if (ERROR_SUCCESS == ShellExecute_FromContextMenuHandlers(&sei_tmp))
     {
         sei->hInstApp = (HINSTANCE) 33;
         HeapFree(GetProcessHeap(), 0, wszApplicationName);

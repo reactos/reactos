@@ -6,86 +6,125 @@
  * PROGRAMMERS:     Brian Palmer <brianp@sginet.com>
  *                  Hervé Poussineau
  */
-#ifndef _M_ARM
+
 #include <freeldr.h>
+
+/* NTLDR or Vista+ BOOTMGR progress-bar style */
+// #define NTLDR_PROGRESSBAR
+// #define BTMGR_PROGRESSBAR /* Default style */
+
+#ifndef _M_ARM
 
 VOID MiniTuiDrawBackdrop(VOID)
 {
-    //
-    // Fill in a black background
-    //
+    /* Fill in a black background */
     TuiFillArea(0, 0, UiScreenWidth - 1, UiScreenHeight - 1, 0, 0);
 
-    //
-    // Update the screen buffer
-    //
+    /* Update the screen buffer */
     VideoCopyOffScreenBufferToVRAM();
 }
 
 VOID MiniTuiDrawStatusText(PCSTR StatusText)
 {
-    //
-    // Minimal UI doesn't have a status bar
-    //
+    /* Minimal UI doesn't have a status bar */
 }
 
-VOID MiniTuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
+#endif // _M_ARM
+
+VOID
+MiniTuiDrawProgressBarCenter(
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
     ULONG Left, Top, Right, Bottom, Width, Height;
 
     /* Build the coordinates and sizes */
+#ifdef NTLDR_PROGRESSBAR
     Height = 2;
-    Width = UiScreenWidth;
+    Width  = UiScreenWidth;
     Left = 0;
-    Right = (Left + Width) - 1;
-    Top = UiScreenHeight - Height - 4;
-    Bottom = Top + Height + 1;
+    Top  = UiScreenHeight - Height - 2;
+#else // BTMGR_PROGRESSBAR
+    Height = 3;
+    Width  = UiScreenWidth - 4;
+    Left = 2;
+    Top  = UiScreenHeight - Height - 3;
+#endif
+    Right  = Left + Width - 1;
+    Bottom = Top + Height - 1;
 
     /* Draw the progress bar */
     MiniTuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
-VOID MiniTuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+MiniTuiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
-    ULONG        i;
-    ULONG        ProgressBarWidth = (Right - Left) - 3;
+    ULONG ProgressBarWidth, i;
 
-    // First make sure the progress bar text fits
-    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
+    /* Calculate the width of the bar proper */
+    ProgressBarWidth = Right - Left + 1;
 
+    /* Clip the position */
     if (Position > Range)
-    {
         Position = Range;
-    }
 
-    //
-    //  Draw the "Loading..." text
-    //
-    TuiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, ProgressText, ATTR(7, 0));
+    /* First make sure the progress bar text fits */
+    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth);
 
-    // Draw the percent complete
-    for (i=0; i<(Position*ProgressBarWidth)/Range; i++)
+    /* Clear the text area */
+    TuiFillArea(Left, Top, Right,
+#ifdef NTLDR_PROGRESSBAR
+                Bottom - 1,
+#else // BTMGR_PROGRESSBAR
+                Bottom - 2, // One empty line between text and bar.
+#endif
+                ' ', ATTR(UiTextColor, UiMenuBgColor));
+
+    /* Draw the "Loading..." text */
+    TuiDrawCenteredText(Left, Top, Right,
+#ifdef NTLDR_PROGRESSBAR
+                        Bottom - 1,
+#else // BTMGR_PROGRESSBAR
+                        Bottom - 2, // One empty line between text and bar.
+#endif
+                        ProgressText, ATTR(UiTextColor, UiMenuBgColor));
+
+    /* Draw the percent complete -- Use the fill character */
+    for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
     {
-        TuiDrawText(Left+2+i, Top+2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
+        TuiDrawText(Left + i, Bottom,
+                    "\xDB", ATTR(UiTextColor, UiMenuBgColor));
     }
+    /* Fill the remaining with blanks */
+    TuiFillArea(Left + i, Bottom, Right, Bottom,
+                ' ', ATTR(UiTextColor, UiMenuBgColor));
 
+#ifndef _M_ARM
     TuiUpdateDateTime();
     VideoCopyOffScreenBufferToVRAM();
+#endif
 }
+
+#ifndef _M_ARM
 
 VOID
 MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
 {
     ULONG i;
 
-    //
-    // Draw the backdrop
-    //
+    /* Draw the backdrop */
     UiDrawBackdrop();
 
-    //
-    // No GUI status bar text, just minimal text. Show the menu header.
-    //
+    /* No GUI status bar text, just minimal text. Show the menu header. */
     if (MenuInfo->MenuHeader)
     {
         UiVtbl.DrawText(0,
@@ -94,9 +133,7 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
                         ATTR(UiMenuFgColor, UiMenuBgColor));
     }
 
-    //
-    // Now tell the user how to choose
-    //
+    /* Now tell the user how to choose */
     UiVtbl.DrawText(0,
                     MenuInfo->Bottom + 1,
                     "Use \x18 and \x19 to move the highlight to your choice.",
@@ -106,9 +143,7 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
                     "Press ENTER to choose.",
                     ATTR(UiMenuFgColor, UiMenuBgColor));
 
-    //
-    // And show the menu footer
-    //
+    /* And show the menu footer */
     if (MenuInfo->MenuFooter)
     {
         UiVtbl.DrawText(0,
@@ -117,22 +152,16 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
                         ATTR(UiMenuFgColor, UiMenuBgColor));
     }
 
-    //
-    // Draw the menu box
-    //
+    /* Draw the menu box */
     TuiDrawMenuBox(MenuInfo);
 
-    //
-    // Draw each line of the menu
-    //
+    /* Draw each line of the menu */
     for (i = 0; i < MenuInfo->MenuItemCount; i++)
     {
         TuiDrawMenuItem(MenuInfo, i);
     }
 
-    //
-    // Display the boot options if needed
-    //
+    /* Display the boot options if needed */
     if (MenuInfo->ShowBootOptions)
     {
         DisplayBootTimeOptions();
@@ -166,4 +195,5 @@ const UIVTBL MiniTuiVtbl =
     TuiDisplayMenu,
     MiniTuiDrawMenu,
 };
-#endif
+
+#endif // _M_ARM

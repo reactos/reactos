@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Windows
  * FILE:             win32ss/user/ntuser/window.c
- * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
@@ -11,7 +12,27 @@ DBG_DEFAULT_CHANNEL(UserWnd);
 
 INT gNestedWindowLimit = 50;
 
+PWINDOWLIST gpwlList = NULL;
+PWINDOWLIST gpwlCache = NULL;
+
 /* HELPER FUNCTIONS ***********************************************************/
+
+PVOID FASTCALL
+IntReAllocatePoolWithTag(
+    POOL_TYPE PoolType,
+    PVOID pOld,
+    SIZE_T cbOld,
+    SIZE_T cbNew,
+    ULONG Tag)
+{
+    PVOID pNew = ExAllocatePoolWithTag(PoolType, cbNew, Tag);
+    if (!pNew)
+        return NULL;
+
+    RtlCopyMemory(pNew, pOld, min(cbOld, cbNew));
+    ExFreePoolWithTag(pOld, Tag);
+    return pNew;
+}
 
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam)
 {
@@ -1318,6 +1339,133 @@ IntUnlinkWindow(PWND Wnd)
         Wnd->spwndParent->spwndChild = Wnd->spwndNext;
 
     Wnd->spwndPrev = Wnd->spwndNext = NULL;
+}
+
+BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
+{
+    PWINDOWLIST pwlOld, pwlNew;
+    SIZE_T ibOld, ibNew;
+
+#define GROW_COUNT 8
+    pwlOld = *ppwl;
+    ibOld = (LPBYTE)pwlOld->phwndLast - (LPBYTE)pwlOld;
+    ibNew = ibOld + GROW_COUNT * sizeof(HWND);
+#undef GROW_COUNT
+    pwlNew = IntReAllocatePoolWithTag(PagedPool, pwlOld, ibOld, ibNew, USERTAG_WINDOWLIST);
+    if (!pwlNew)
+        return FALSE;
+
+    pwlNew->phwndLast = (HWND *)((LPBYTE)pwlNew + ibOld);
+    pwlNew->phwndEnd = (HWND *)((LPBYTE)pwlNew + ibNew);
+    *ppwl = pwlNew;
+    return TRUE;
+}
+
+PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFlags)
+{
+    ASSERT(!WL_IS_BAD(pwl));
+
+    for (; pwnd; pwnd = pwnd->spwndNext)
+    {
+        if (!pwl->pti || pwl->pti == pwnd->head.pti)
+        {
+            *(pwl->phwndLast) = UserHMGetHandle(pwnd);
+            ++(pwl->phwndLast);
+
+            if (pwl->phwndLast == pwl->phwndEnd && !IntGrowHwndList(&pwl))
+                break;
+        }
+
+        if ((dwFlags & IACE_CHILDREN) && pwnd->spwndChild)
+        {
+            pwl = IntPopulateHwndList(pwl, pwnd->spwndChild, IACE_CHILDREN | IACE_LIST);
+            if (WL_IS_BAD(pwl))
+                break;
+        }
+
+        if (!(dwFlags & IACE_LIST))
+            break;
+    }
+
+    return pwl;
+}
+
+PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
+{
+    PWINDOWLIST pwl;
+    DWORD cbWL;
+
+    if (gpwlCache)
+    {
+        pwl = gpwlCache;
+        gpwlCache = NULL;
+    }
+    else
+    {
+#define INITIAL_COUNT 32
+        cbWL = sizeof(WINDOWLIST) + (INITIAL_COUNT - 1) * sizeof(HWND);
+        pwl = ExAllocatePoolWithTag(PagedPool, cbWL, USERTAG_WINDOWLIST);
+        if (!pwl)
+            return NULL;
+
+        pwl->phwndEnd = &pwl->ahwnd[INITIAL_COUNT];
+#undef INITIAL_COUNT
+    }
+
+    pwl->pti = pti;
+    pwl->phwndLast = pwl->ahwnd;
+    pwl = IntPopulateHwndList(pwl, pwnd, dwFlags);
+    if (WL_IS_BAD(pwl))
+    {
+        ExFreePoolWithTag(pwl, USERTAG_WINDOWLIST);
+        return NULL;
+    }
+
+    *(pwl->phwndLast) = HWND_TERMINATOR;
+
+    if (dwFlags & 0x8)
+    {
+        // TODO:
+    }
+
+    pwl->pti = GetW32ThreadInfo();
+    pwl->pNextList = gpwlList;
+    gpwlList = pwl;
+
+    return pwl;
+}
+
+VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget)
+{
+    PWINDOWLIST pwl, *ppwl;
+
+    for (ppwl = &gpwlList; *ppwl; ppwl = &(*ppwl)->pNextList)
+    {
+        if (*ppwl != pwlTarget)
+            continue;
+
+        *ppwl = pwlTarget->pNextList;
+
+        if (gpwlCache)
+        {
+            if (WL_CAPACITY(pwlTarget) > WL_CAPACITY(gpwlCache))
+            {
+                pwl = gpwlCache;
+                gpwlCache = pwlTarget;
+                ExFreePoolWithTag(pwl, USERTAG_WINDOWLIST);
+            }
+            else
+            {
+                ExFreePoolWithTag(pwlTarget, USERTAG_WINDOWLIST);
+            }
+        }
+        else
+        {
+            gpwlCache = pwlTarget;
+        }
+
+        break;
+    }
 }
 
 /* FUNCTIONS *****************************************************************/
