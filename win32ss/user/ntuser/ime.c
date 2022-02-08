@@ -56,7 +56,7 @@ typedef struct tagIMEHOTKEY
 
 PIMEHOTKEY gpImeHotKeyList = NULL;
 
-static LANGID FASTCALL IntGetHotKeyLangId(DWORD dwHotKeyId)
+static LANGID FASTCALL IntGetImeHotKeyLangId(DWORD dwHotKeyId)
 {
 #define IME_CHOTKEY 0x10
 #define IME_JHOTKEY 0x30
@@ -125,7 +125,7 @@ IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight,
         if (pNode->uVirtualKey != uVirtualKey)
             continue;
 
-        LangID = IntGetHotKeyLangId(pNode->dwHotKeyId);
+        LangID = IntGetImeHotKeyLangId(pNode->dwHotKeyId);
         if (LangID != TargetLangId)
             continue;
 
@@ -185,7 +185,7 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
             if (uVirtualKey == VK_PACKET)
                 return FALSE;
 
-            LangId = IntGetHotKeyLangId(dwHotKeyId);
+            LangId = IntGetImeHotKeyLangId(dwHotKeyId);
             if (LangId == LANGID_KOREAN)
                 return FALSE;
 
