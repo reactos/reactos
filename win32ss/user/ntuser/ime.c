@@ -271,21 +271,21 @@ NtUserGetImeHotKey(DWORD  dwHotKeyId,
     _SEH2_END;
 
     ret = IntGetImeHotKey(dwHotKeyId, &uModifiers, &uVirtualKey, &hKL);
-    if (ret)
+    if (!ret)
+        goto Quit;
+
+    _SEH2_TRY
     {
-        _SEH2_TRY
-        {
-            *lpuModifiers = uModifiers;
-            *lpuVirtualKey = uVirtualKey;
-            if (lphKL)
-                *lphKL = hKL;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            ret = FALSE;
-        }
-        _SEH2_END;
+        *lpuModifiers = uModifiers;
+        *lpuVirtualKey = uVirtualKey;
+        if (lphKL)
+            *lphKL = hKL;
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = FALSE;
+    }
+    _SEH2_END;
 
 Quit:
     UserLeave();
