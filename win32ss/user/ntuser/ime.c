@@ -70,7 +70,7 @@ static LANGID FASTCALL IntGetHotKeyLangId(DWORD dwHotKeyId)
     return MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
 }
 
-static BOOL FASTCALL IntAddHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
+static BOOL FASTCALL IntAddImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
 {
     PIMEHOTKEY pNode;
 
@@ -218,7 +218,7 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
             pNode->uVirtualKey = uVirtualKey;
             pNode->hKL = hKL;
             pNode->pNext = NULL;
-            return IntAddHotKey(&gpImeHotKeyList, pNode);
+            return IntAddImeHotKey(&gpImeHotKeyList, pNode);
 
         case 3:
             for (pNode = gpImeHotKeyList; pNode; pNode = pNext)
