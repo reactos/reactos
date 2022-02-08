@@ -48,23 +48,23 @@ DWORD gdwImeConversion = (DWORD)-1;
 typedef struct tagIMEHOTKEY
 {
     struct tagIMEHOTKEY *pNext;
-    DWORD dwHotKeyId;
-    UINT uVirtualKey;
-    UINT uModifiers;
-    HKL hKL;
+    DWORD  dwHotKeyId;
+    UINT   uVirtualKey;
+    UINT   uModifiers;
+    HKL    hKL;
 } IMEHOTKEY, *PIMEHOTKEY;
 
 PIMEHOTKEY gpImeHotKeyList = NULL;
 
 static LANGID FASTCALL IntGetHotKeyLangId(DWORD dwHotKeyId)
 {
-    static const LANGID s_array[] =
-    {
 #define IME_CHOTKEY 0x10
 #define IME_JHOTKEY 0x30
 #define IME_KHOTKEY 0x50
 #define IME_THOTKEY 0x70
 #define IME_XHOTKEY 0x90
+    static const LANGID s_array[] =
+    {
         /* 0x00 */ (WORD)-1,
         /* 0x10 */ LANGID_CHINESE_SIMPLIFIED,
         /* 0x20 */ LANGID_CHINESE_SIMPLIFIED,
@@ -155,8 +155,7 @@ IntGetImeHotKey(DWORD dwHotKeyId, LPUINT puModifiers, LPUINT puVirtualKey, LPHKL
 
     *puModifiers = pNode->uModifiers;
     *puVirtualKey = pNode->uVirtualKey;
-    if (phKL)
-        *phKL = pNode->hKL;
+    *phKL = pNode->hKL;
     return TRUE;
 }
 
@@ -194,18 +193,20 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
     {
         case 1:
             pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
-            return (pNode ? IntDeleteImeHotKey(&gpImeHotKeyList, pNode) : FALSE);
+            if (!pNode)
+                break;
+
+            return IntDeleteImeHotKey(&gpImeHotKeyList, pNode);
 
         case 2:
             LangId = IntGetHotKeyLangId(dwHotKeyId);
             if (LangId == LANGID_KOREAN || uVirtualKey == VK_PACKET)
-                return FALSE;
+                break;
 
             pNode = IntGetImeHotKeyByKeyAndLang(gpImeHotKeyList,
                                                 (uModifiers & MOD_KEYS),
                                                 (uModifiers & MOD_LEFT_RIGHT),
-                                                uVirtualKey,
-                                                LangId);
+                                                uVirtualKey, LangId);
             if (!pNode)
                 pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
 
@@ -219,7 +220,7 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
 
             pNode = ExAllocatePoolWithTag(PagedPool, sizeof(IMEHOTKEY), USERTAG_IMEHOTKEY);
             if (!pNode)
-                return FALSE;
+                break;
 
             pNode->pNext = NULL;
             pNode->dwHotKeyId = dwHotKeyId;
@@ -238,8 +239,10 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
             return TRUE;
 
         default:
-            return FALSE;
+            break;
     }
+
+    return FALSE;
 }
 
 BOOL NTAPI
