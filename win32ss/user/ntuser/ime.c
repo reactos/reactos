@@ -201,7 +201,7 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
 
         case 2:
             LangId = IntGetHotKeyLangId(dwHotKeyId);
-            if (PRIMARYLANGID(LangId) == LANG_KOREAN || uVirtualKey == VK_PACKET)
+            if (LangId == LANGID_KOREAN || uVirtualKey == VK_PACKET)
                 return FALSE;
 
             pNode = IntGetImeHotKeyByKeyAndLang(gpImeHotKeyList,
