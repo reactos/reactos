@@ -224,11 +224,11 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
             if (!pNode)
                 return FALSE;
 
+            pNode->pNext = NULL;
             pNode->dwHotKeyId = dwHotKeyId;
             pNode->uModifiers = uModifiers;
             pNode->uVirtualKey = uVirtualKey;
             pNode->hKL = hKL;
-            pNode->pNext = NULL;
             return IntAddImeHotKey(&gpImeHotKeyList, pNode);
 
         case 3:
