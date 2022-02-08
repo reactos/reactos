@@ -81,7 +81,7 @@ UIVTBL UiVtbl =
     NoUiDrawMenu,
 };
 
-BOOLEAN UiInitialize(BOOLEAN ShowGui)
+BOOLEAN UiInitialize(BOOLEAN ShowUi)
 {
     VIDEODISPLAYMODE UiDisplayMode; // Tells us if we are in text or graphics mode
     BOOLEAN UiMinimal = FALSE;      // Tells us if we are using a minimal console-like UI
@@ -89,7 +89,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
     ULONG Depth;
     CHAR  SettingText[260];
 
-    if (!ShowGui)
+    if (!ShowUi)
     {
         if (!UiVtbl.Initialize())
         {
@@ -121,10 +121,18 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
         UiMinimal = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
     }
 
-    if (UiDisplayMode == VideoTextMode)
-        UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
-    else
+    if (UiDisplayMode == VideoGraphicsMode)
+#if 0 // We don't support a GUI mode yet.
         UiVtbl = GuiVtbl;
+#else
+    {
+        // Switch back to text mode.
+        MachVideoSetDisplayMode(NULL, TRUE);
+        UiDisplayMode = VideoTextMode;
+    }
+#endif
+    else // if (UiDisplayMode == VideoTextMode)
+        UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
 
     if (!UiVtbl.Initialize())
     {
@@ -231,17 +239,35 @@ VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle
     UiVtbl.DrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
 }
 
-VOID UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
+VOID
+UiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr)
 {
     UiVtbl.DrawText(X, Y, Text, Attr);
 }
 
-VOID UiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
+VOID
+UiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr)
 {
     UiVtbl.DrawText2(X, Y, MaxNumChars, Text, Attr);
 }
 
-VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
+VOID
+UiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr)
 {
     UiVtbl.DrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
 }
@@ -343,12 +369,24 @@ UCHAR UiTextToFillStyle(PCSTR FillStyleText)
     return UiVtbl.TextToFillStyle(FillStyleText);
 }
 
-VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+UiDrawProgressBarCenter(
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
     UiVtbl.DrawProgressBarCenter(Position, Range, ProgressText);
 }
 
-VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+UiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
     UiVtbl.DrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }

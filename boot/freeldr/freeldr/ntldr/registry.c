@@ -110,7 +110,7 @@ RegInitCurrentControlSet(
                        &SelectKey);
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegOpenKey() failed (Error %u)\n", (int)Error);
+        ERR("RegOpenKey('SYSTEM\\Select') failed (Error %lu)\n", Error);
         return Error;
     }
 
@@ -122,7 +122,7 @@ RegInitCurrentControlSet(
                           &DataSize);
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegQueryValue('Default') failed (Error %u)\n", (int)Error);
+        ERR("RegQueryValue('Default') failed (Error %lu)\n", Error);
         RegCloseKey(SelectKey);
         return Error;
     }
@@ -135,7 +135,7 @@ RegInitCurrentControlSet(
                           &DataSize);
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegQueryValue('LastKnownGood') failed (Error %u)\n", (int)Error);
+        ERR("RegQueryValue('LastKnownGood') failed (Error %lu)\n", Error);
         RegCloseKey(SelectKey);
         return Error;
     }
@@ -168,7 +168,7 @@ RegInitCurrentControlSet(
                        &SystemKey);
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegOpenKey(SystemKey) failed (Error %lu)\n", Error);
+        ERR("RegOpenKey('SYSTEM') failed (Error %lu)\n", Error);
         return Error;
     }
 
@@ -180,7 +180,7 @@ RegInitCurrentControlSet(
 
     if (Error != ERROR_SUCCESS)
     {
-        ERR("RegOpenKey(CurrentControlSetKey) failed (Error %lu)\n", Error);
+        ERR("RegOpenKey('%S') failed (Error %lu)\n", ControlSetKeyName, Error);
         return Error;
     }
 
@@ -391,7 +391,7 @@ RegOpenKey(
         CellIndex = CmpFindSubKeyByName(Hive, KeyNode, &SubKeyName);
         if (CellIndex == HCELL_NIL)
         {
-            ERR("Did not find sub key '%wZ' (full %S)\n", &SubKeyName, KeyName);
+            WARN("Did not find sub key '%wZ' (full: %S)\n", &SubKeyName, KeyName);
             return ERROR_PATH_NOT_FOUND;
         }
 

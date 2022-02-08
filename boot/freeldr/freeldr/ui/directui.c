@@ -5,15 +5,12 @@
  * PURPOSE:         FreeLDR UI Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
-#ifdef _M_ARM
 
-/* INCLUDES *******************************************************************/
+#ifdef _M_ARM
 
 #include <freeldr.h>
 
 /* GLOBALS ********************************************************************/
-
-/* FUNCTIONS ******************************************************************/
 
 ULONG UiScreenWidth;
 ULONG UiScreenHeight;
@@ -24,40 +21,22 @@ UCHAR UiSelectedTextColor = COLOR_BLACK;
 UCHAR UiSelectedTextBgColor = COLOR_GRAY;
 CHAR UiTimeText[260] = "Seconds until highlighted choice will be started automatically:   ";
 
-INT
-TuiPrintf(const char *Format,
-          ...)
-{
-    int i;
-    int Length;
-    va_list ap;
-    CHAR Buffer[512];
-
-    va_start(ap, Format);
-    Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
-    va_end(ap);
-
-    if (Length == -1) Length = sizeof(Buffer);
-
-    for (i = 0; i < Length; i++)
-    {
-        MachConsPutChar(Buffer[i]);
-    }
-
-    return Length;
-}
+/* FUNCTIONS ******************************************************************/
 
 BOOLEAN
-UiInitialize(IN BOOLEAN ShowGui)
+UiInitialize(IN BOOLEAN ShowUi)
 {
     ULONG Depth;
 
     /* Nothing to do */
-    if (!ShowGui) return TRUE;
+    if (!ShowUi) return TRUE;
 
     /* Set mode and query size */
     MachVideoSetDisplayMode(NULL, TRUE);
     MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
+
+    /* Clear the screen */
+    UiDrawBackdrop();
     return TRUE;
 }
 
@@ -76,106 +55,36 @@ UiDrawBackdrop(VOID)
 }
 
 VOID
-UiDrawText(IN ULONG X,
-           IN ULONG Y,
-           IN PCSTR Text,
-           IN UCHAR Attr)
+UiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr)
 {
-    ULONG i, j;
-
-    /* Draw the text character by character, but don't exceed the width */
-    for (i = X, j = 0; Text[j] && i < UiScreenWidth; i++, j++)
-    {
-        /* Write the character */
-        MachVideoPutChar(Text[j], Attr, i, Y);
-    }
+    TuiDrawText2(X, Y, 0 /*(ULONG)strlen(Text)*/, Text, Attr);
 }
 
 VOID
-UiDrawText2(IN ULONG X,
-            IN ULONG Y,
-            IN ULONG MaxNumChars,
-            IN PCSTR Text,
-            IN UCHAR Attr)
+UiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr)
 {
-    ULONG i, j;
-
-    /* Draw the text character by character, but don't exceed the width */
-    for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
-    {
-        /* Write the character */
-        MachVideoPutChar(Text[j], Attr, i, Y);
-    }
+    TuiDrawText2(X, Y, MaxNumChars, Text, Attr);
 }
 
 VOID
-UiDrawCenteredText(IN ULONG Left,
-                   IN ULONG Top,
-                   IN ULONG Right,
-                   IN ULONG Bottom,
-                   IN PCSTR TextString,
-                   IN UCHAR Attr)
+UiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr)
 {
-    ULONG TextLength, BoxWidth, BoxHeight, LineBreakCount, Index, LastIndex;
-    ULONG RealLeft, RealTop, X, Y;
-    CHAR Temp[2];
-
-    /* Query text length */
-    TextLength = strlen(TextString);
-
-    /* Count the new lines and the box width */
-    LineBreakCount = 0;
-    BoxWidth = 0;
-    LastIndex = 0;
-    for (Index=0; Index < TextLength; Index++)
-    {
-        /* Scan for new lines */
-        if (TextString[Index] == '\n')
-        {
-            /* Remember the new line */
-            LastIndex = Index;
-            LineBreakCount++;
-        }
-        else
-        {
-            /* Check for new larger box width */
-            if ((Index - LastIndex) > BoxWidth)
-            {
-                /* Update it */
-                BoxWidth = (Index - LastIndex);
-            }
-        }
-    }
-
-    /* Base the box height on the number of lines */
-    BoxHeight = LineBreakCount + 1;
-
-    /* Create the centered coordinates */
-    RealLeft = (((Right - Left) - BoxWidth) / 2) + Left;
-    RealTop = (((Bottom - Top) - BoxHeight) / 2) + Top;
-
-    /* Now go for a second scan */
-    LastIndex = 0;
-    for (Index=0; Index < TextLength; Index++)
-    {
-        /* Look for new lines again */
-        if (TextString[Index] == '\n')
-        {
-            /* Update where the text should start */
-            RealTop++;
-            LastIndex = 0;
-        }
-        else
-        {
-            /* We've got a line of text to print, do it */
-            X = RealLeft + LastIndex;
-            Y = RealTop;
-            LastIndex++;
-            Temp[0] = TextString[Index];
-            Temp[1] = 0;
-            UiDrawText(X, Y, Temp, Attr);
-        }
-    }
+    TuiDrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
 }
 
 VOID
@@ -203,51 +112,25 @@ UiMessageBoxCritical(IN PCSTR MessageText)
 }
 
 VOID
-UiDrawProgressBarCenter(IN ULONG Position,
-                        IN ULONG Range,
-                        IN PCHAR ProgressText)
+UiDrawProgressBarCenter(
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
-    ULONG Left, Top, Right, Bottom, Width, Height;
-
-    /* Build the coordinates and sizes */
-    Height = 2;
-    Width = UiScreenWidth;
-    Left = 0;
-    Right = (Left + Width) - 1;
-    Top = UiScreenHeight - Height - 4;
-    Bottom = Top + Height + 1;
-
-    /* Draw the progress bar */
-    UiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
+    MiniTuiDrawProgressBarCenter(Position, Range, ProgressText);
 }
 
 VOID
-UiDrawProgressBar(IN ULONG Left,
-                  IN ULONG Top,
-                  IN ULONG Right,
-                  IN ULONG Bottom,
-                  IN ULONG Position,
-                  IN ULONG Range,
-                  IN PCHAR ProgressText)
+UiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
-    ULONG i, ProgressBarWidth;
-
-    /* Calculate the width of the bar proper */
-    ProgressBarWidth = (Right - Left) - 3;
-
-    /* First make sure the progress bar text fits */
-    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
-    if (Position > Range) Position = Range;
-
-    /* Draw the "Loading..." text */
-    UiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, ProgressText, ATTR(7, 0));
-
-    /* Draw the percent complete */
-    for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
-    {
-        /* Use the fill character */
-        UiDrawText(Left + 2 + i, Top + 2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
-    }
+    MiniTuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
 VOID
@@ -659,4 +542,4 @@ UiDisplayMenu(
     return TRUE;
 }
 
-#endif
+#endif // _M_ARM

@@ -16,23 +16,25 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef _M_ARM
+
 #include <freeldr.h>
 
-#define TAG_TUI_SCREENBUFFER 'SiuT'
-#define TAG_TAG_TUI_PALETTE 'PiuT'
-
+#ifndef _M_ARM
 PVOID TextVideoBuffer = NULL;
-extern UCHAR MachDefaultTextColor;
+#endif
+
+/* GENERIC TUI UTILS *********************************************************/
 
 /*
  * TuiPrintf()
- * Prints formatted text to the screen
+ * Prints formatted text to the screen.
  */
-int TuiPrintf(const char *Format, ...)
+INT
+TuiPrintf(
+    _In_ PCSTR Format, ...)
 {
-    int i;
-    int Length;
+    INT i;
+    INT Length;
     va_list ap;
     CHAR Buffer[512];
 
@@ -40,7 +42,8 @@ int TuiPrintf(const char *Format, ...)
     Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
     va_end(ap);
 
-    if (Length == -1) Length = sizeof(Buffer);
+    if (Length == -1)
+        Length = (INT)sizeof(Buffer);
 
     for (i = 0; i < Length; i++)
     {
@@ -49,6 +52,146 @@ int TuiPrintf(const char *Format, ...)
 
     return Length;
 }
+
+/*
+ * DrawText()
+ * Displays a string on a single screen line.
+ * This function assumes coordinates are zero-based.
+ */
+VOID
+TuiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr)
+{
+    TuiDrawText2(X, Y, 0 /*(ULONG)strlen(Text)*/, Text, Attr);
+}
+
+/*
+ * DrawText2()
+ * Displays a string on a single screen line.
+ * This function assumes coordinates are zero-based.
+ * MaxNumChars is the maximum number of characters to display.
+ * If MaxNumChars == 0, then display the whole string.
+ */
+VOID
+TuiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr)
+{
+#ifndef _M_ARM
+    PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
+#endif
+    ULONG i, j;
+
+    /* Don't display anything if we are out of the screen */
+    if ((X >= UiScreenWidth) || (Y >= UiScreenHeight))
+        return;
+
+    /* Draw the text, not exceeding the width */
+    for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
+    {
+#ifndef _M_ARM
+        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)]   = (UCHAR)Text[j];
+        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)+1] = Attr;
+#else
+        /* Write the character */
+        MachVideoPutChar(Text[j], Attr, i, Y);
+#endif
+    }
+}
+
+VOID
+TuiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr)
+{
+    SIZE_T TextLength;
+    SIZE_T Index, LastIndex;
+    ULONG  LineBreakCount;
+    ULONG  BoxWidth, BoxHeight;
+    ULONG  RealLeft, RealTop;
+    ULONG  X, Y;
+    CHAR   Temp[2];
+
+    /* Query text length */
+    TextLength = strlen(TextString);
+
+    /* Count the new lines and the box width */
+    LineBreakCount = 0;
+    BoxWidth = 0;
+    LastIndex = 0;
+    for (Index = 0; Index < TextLength; Index++)
+    {
+        /* Scan for new lines */
+        if (TextString[Index] == '\n')
+        {
+            /* Remember the new line */
+            LastIndex = Index;
+            LineBreakCount++;
+        }
+        else
+        {
+            /* Check for new larger box width */
+            if ((Index - LastIndex) > BoxWidth)
+            {
+                /* Update it */
+                BoxWidth = (ULONG)(Index - LastIndex);
+            }
+        }
+    }
+
+    /* Base the box height on the number of lines */
+    BoxHeight = LineBreakCount + 1;
+
+    /*
+     * Create the centered coordinates.
+     * Here, the Left/Top/Right/Bottom rectangle is a hint, around
+     * which we center the "real" text rectangle RealLeft/RealTop.
+     */
+    RealLeft = (Left + Right - BoxWidth + 1) / 2;
+    RealTop  = (Top + Bottom - BoxHeight + 1) / 2;
+
+    /* Now go for a second scan */
+    LastIndex = 0;
+    for (Index = 0; Index < TextLength; Index++)
+    {
+        /* Look for new lines again */
+        if (TextString[Index] == '\n')
+        {
+            /* Update where the text should start */
+            RealTop++;
+            LastIndex = 0;
+        }
+        else
+        {
+            /* We've got a line of text to print, do it */
+            X = (ULONG)(RealLeft + LastIndex);
+            Y = RealTop;
+            LastIndex++;
+            Temp[0] = TextString[Index];
+            Temp[1] = 0;
+            TuiDrawText(X, Y, Temp, Attr);
+        }
+    }
+}
+
+/* FULL TUI THEME ************************************************************/
+
+#ifndef _M_ARM
+
+#define TAG_TUI_SCREENBUFFER 'SiuT'
+#define TAG_TUI_PALETTE      'PiuT'
+
+extern UCHAR MachDefaultTextColor;
 
 BOOLEAN TuiInitialize(VOID)
 {
@@ -67,6 +210,10 @@ BOOLEAN TuiInitialize(VOID)
 
 VOID TuiUnInitialize(VOID)
 {
+    /* Do nothing if already uninitialized */
+    if (!TextVideoBuffer)
+        return;
+
     if (UiUseSpecialEffects)
     {
         TuiFadeOut();
@@ -75,6 +222,9 @@ VOID TuiUnInitialize(VOID)
     {
         MachVideoSetDisplayMode(NULL, FALSE);
     }
+
+    VideoFreeOffScreenBuffer();
+    TextVideoBuffer = NULL;
 
     MachVideoClearScreen(ATTR(COLOR_GRAY, COLOR_BLACK));
     MachVideoSetTextCursorPosition(0, 0);
@@ -153,28 +303,23 @@ VOID TuiDrawBackdrop(VOID)
  */
 VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    i, j;
+    PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
+    ULONG  i, j;
 
-    // Clip the area to the screen
+    /* Clip the area to the screen */
     if ((Left >= UiScreenWidth) || (Top >= UiScreenHeight))
     {
         return;
     }
     if (Right >= UiScreenWidth)
-    {
         Right = UiScreenWidth - 1;
-    }
     if (Bottom >= UiScreenHeight)
-    {
         Bottom = UiScreenHeight - 1;
-    }
 
-    // Loop through each line and fill it in
-    for (i=Top; i<=Bottom; i++)
+    /* Loop through each line and column and fill it in */
+    for (i = Top; i <= Bottom; ++i)
     {
-        // Loop through each character (column) in the line and fill it in
-        for (j=Left; j<=Right; j++)
+        for (j = Left; j <= Right; ++j)
         {
             ScreenMemory[((i*2)*UiScreenWidth)+(j*2)] = (UCHAR)FillChar;
             ScreenMemory[((i*2)*UiScreenWidth)+(j*2)+1] = Attr;
@@ -188,28 +333,24 @@ VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar
  */
 VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 {
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    Idx;
+    PUCHAR ScreenMemory = (PUCHAR)TextVideoBuffer;
+    ULONG  Idx;
 
-    // Shade the bottom of the area
+    /* Shade the bottom of the area */
     if (Bottom < (UiScreenHeight - 1))
     {
         if (UiScreenHeight < 34)
-        {
-            Idx=Left + 2;
-        }
+            Idx = Left + 2;
         else
-        {
-            Idx=Left + 1;
-        }
+            Idx = Left + 1;
 
-        for (; Idx<=Right; Idx++)
+        for (; Idx <= Right; ++Idx)
         {
             ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+(Idx*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
         }
     }
 
-    // Shade the right of the area
+    /* Shade the right of the area */
     if (Right < (UiScreenWidth - 1))
     {
         for (Idx=Top+1; Idx<=Bottom; Idx++)
@@ -228,7 +369,7 @@ VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
         }
     }
 
-    // Shade the bottom right corner
+    /* Shade the bottom right corner */
     if ((Right < (UiScreenWidth - 1)) && (Bottom < (UiScreenHeight - 1)))
     {
         ScreenMemory[(((Bottom+1)*2)*UiScreenWidth)+((Right+1)*2)+1] = ATTR(COLOR_GRAY, COLOR_BLACK);
@@ -311,103 +452,6 @@ VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyl
     if (Shadow)
     {
         TuiDrawShadow(Left, Top, Right, Bottom);
-    }
-}
-
-/*
- * DrawText()
- * This function assumes coordinates are zero-based
- */
-VOID TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
-{
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    i, j;
-
-    // Draw the text
-    for (i = X, j = 0; Text[j] && i < UiScreenWidth; i++, j++)
-    {
-        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)] = (UCHAR)Text[j];
-        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)+1] = Attr;
-    }
-}
-
-/*
- * DrawText2()
- * This function assumes coordinates are zero-based.
- * MaxNumChars is the maximum number of characters to display.
- * If MaxNumChars == 0, then display the whole string.
- */
-VOID TuiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
-{
-    PUCHAR    ScreenMemory = (PUCHAR)TextVideoBuffer;
-    ULONG    i, j;
-
-    // Draw the text
-    for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
-    {
-        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)] = (UCHAR)Text[j];
-        ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)+1] = Attr;
-    }
-}
-
-VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
-{
-    SIZE_T    TextLength;
-    ULONG    BoxWidth;
-    ULONG    BoxHeight;
-    ULONG    LineBreakCount;
-    SIZE_T    Index;
-    SIZE_T    LastIndex;
-    ULONG    RealLeft;
-    ULONG    RealTop;
-    ULONG    X;
-    ULONG    Y;
-    CHAR    Temp[2];
-
-    TextLength = strlen(TextString);
-
-    // Count the new lines and the box width
-    LineBreakCount = 0;
-    BoxWidth = 0;
-    LastIndex = 0;
-    for (Index=0; Index<TextLength; Index++)
-    {
-        if (TextString[Index] == '\n')
-        {
-            LastIndex = Index;
-            LineBreakCount++;
-        }
-        else
-        {
-            if ((Index - LastIndex) > BoxWidth)
-            {
-                BoxWidth = (ULONG)(Index - LastIndex);
-            }
-        }
-    }
-
-    BoxHeight = LineBreakCount + 1;
-
-    RealLeft = (((Right - Left) - BoxWidth) / 2) + Left;
-    RealTop = (((Bottom - Top) - BoxHeight) / 2) + Top;
-
-    LastIndex = 0;
-    for (Index=0; Index<TextLength; Index++)
-    {
-        if (TextString[Index] == '\n')
-        {
-            RealTop++;
-            LastIndex = 0;
-        }
-        else
-        {
-            X = (ULONG)(RealLeft + LastIndex);
-            Y = RealTop;
-            LastIndex++;
-            Temp[0] = TextString[Index];
-            Temp[1] = 0;
-            TuiDrawText(X, Y, Temp, Attr);
-        }
     }
 }
 
@@ -646,56 +690,81 @@ VOID TuiMessageBoxCritical(PCSTR MessageText)
     }
 }
 
-VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+TuiDrawProgressBarCenter(
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
-    ULONG    Left, Top, Right, Bottom;
-    ULONG    Width = 50; // Allow for 50 "bars"
-    ULONG    Height = 2;
+    ULONG Left, Top, Right, Bottom, Width, Height;
 
-    Left = (UiScreenWidth - Width - 4) / 2;
-    Right = Left + Width + 3;
-    Top = (UiScreenHeight - Height - 2) / 2;
-    Top += 2;
-    Bottom = Top + Height + 1;
+    /* Build the coordinates and sizes */
+    Height = 2;
+    Width  = 50; // Allow for 50 "bars"
+    Left = (UiScreenWidth - Width) / 2;
+    Top  = (UiScreenHeight - Height + 4) / 2;
+    Right  = Left + Width - 1;
+    Bottom = Top + Height - 1;
 
+    /* Inflate to include the box margins */
+    Left -= 2;
+    Right += 2;
+    Top -= 1;
+    Bottom += 1;
+
+    /* Draw the progress bar */
     TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
-VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+TuiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ ULONG Position,
+    _In_ ULONG Range,
+    _Inout_z_ PSTR ProgressText)
 {
-    ULONG    i;
-    ULONG    ProgressBarWidth = (Right - Left) - 3;
+    ULONG ProgressBarWidth, i;
 
-    // First make sure the progress bar text fits
-    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
-
-    if (Position > Range)
-    {
-        Position = Range;
-    }
-
-    // Draw the box
+    /* Draw the box */
     TuiDrawBox(Left, Top, Right, Bottom, VERT, HORZ, TRUE, TRUE, ATTR(UiMenuFgColor, UiMenuBgColor));
 
-    //
-    //  Draw the "Loading..." text
-    //
-    TuiDrawCenteredText(Left + 2, Top + 2, Right - 2, Top + 2, ProgressText, ATTR(UiTextColor, UiMenuBgColor));
+    /* Exclude the box margins */
+    Left += 2;
+    Right -= 2;
+    Top += 1;
+    Bottom -= 1;
 
-    // Draw the percent complete
-    for (i=0; i<(Position*ProgressBarWidth)/Range; i++)
+    /* Calculate the width of the bar proper */
+    ProgressBarWidth = Right - Left + 1;
+
+    /* Clip the position */
+    if (Position > Range)
+        Position = Range;
+
+    /* First make sure the progress bar text fits */
+    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth);
+
+    /* Draw the "Loading..." text */
+    TuiDrawCenteredText(Left, Top, Right, Bottom - 1,
+                        ProgressText, ATTR(UiTextColor, UiMenuBgColor));
+
+    /* Draw the percent complete -- Use the fill character */
+    for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
     {
-        TuiDrawText(Left+2+i, Top+2, "\xDB", ATTR(UiTextColor, UiMenuBgColor));
+        TuiDrawText(Left + i, Bottom,
+                    "\xDB", ATTR(UiTextColor, UiMenuBgColor));
     }
+    /* Fill the remaining with shadow blanks */
+    TuiFillArea(Left + i, Bottom, Right, Bottom,
+                '\xB2', ATTR(UiTextColor, UiMenuBgColor));
 
-    // Draw the shadow
-    for (; i<ProgressBarWidth; i++)
-    {
-        TuiDrawText(Left+2+i, Top+2, "\xB2", ATTR(UiTextColor, UiMenuBgColor));
-    }
-
+#ifndef _M_ARM
     TuiUpdateDateTime();
     VideoCopyOffScreenBufferToVRAM();
+#endif
 }
 
 UCHAR TuiTextToColor(PCSTR ColorText)
@@ -767,7 +836,7 @@ VOID TuiFadeInBackdrop(VOID)
     if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed())
     {
         TuiFadePalette = (PPALETTE_ENTRY)FrLdrTempAlloc(sizeof(PALETTE_ENTRY) * 64,
-                                                        TAG_TAG_TUI_PALETTE);
+                                                        TAG_TUI_PALETTE);
 
         if (TuiFadePalette != NULL)
         {
@@ -782,7 +851,7 @@ VOID TuiFadeInBackdrop(VOID)
     if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed() && TuiFadePalette != NULL)
     {
         VideoFadeIn(TuiFadePalette, 64);
-        FrLdrTempFree(TuiFadePalette, TAG_TAG_TUI_PALETTE);
+        FrLdrTempFree(TuiFadePalette, TAG_TUI_PALETTE);
     }
 }
 
@@ -793,7 +862,7 @@ VOID TuiFadeOut(VOID)
     if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed())
     {
         TuiFadePalette = (PPALETTE_ENTRY)FrLdrTempAlloc(sizeof(PALETTE_ENTRY) * 64,
-                                                        TAG_TAG_TUI_PALETTE);
+                                                        TAG_TUI_PALETTE);
 
         if (TuiFadePalette != NULL)
         {
@@ -811,7 +880,7 @@ VOID TuiFadeOut(VOID)
     if (UiUseSpecialEffects && ! MachVideoIsPaletteFixed() && TuiFadePalette != NULL)
     {
         VideoRestorePaletteState(TuiFadePalette, 64);
-        FrLdrTempFree(TuiFadePalette, TAG_TAG_TUI_PALETTE);
+        FrLdrTempFree(TuiFadePalette, TAG_TUI_PALETTE);
     }
 
 }
@@ -1074,4 +1143,5 @@ const UIVTBL TuiVtbl =
     TuiDisplayMenu,
     TuiDrawMenu,
 };
-#endif
+
+#endif // _M_ARM

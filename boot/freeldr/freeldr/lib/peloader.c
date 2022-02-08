@@ -23,6 +23,11 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(PELOADER);
 
+/* GLOBALS *******************************************************************/
+
+PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback = NULL;
+
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 /* DllName - physical, UnicodeString->Buffer - virtual */
@@ -245,9 +250,9 @@ PeLdrpBindImportName(
         ((ULONG_PTR)ForwarderName < ((ULONG_PTR)ExportDirectory + ExportSize)))
     {
         PLDR_DATA_TABLE_ENTRY DataTableEntry;
-        CHAR ForwardDllName[255];
         PIMAGE_EXPORT_DIRECTORY RefExportDirectory;
         ULONG RefExportSize;
+        CHAR ForwardDllName[256];
 
         TRACE("PeLdrpBindImportName(): ForwarderName %s\n", ForwarderName);
 
@@ -255,7 +260,7 @@ PeLdrpBindImportName(
         RtlCopyMemory(ForwardDllName, ForwarderName, sizeof(ForwardDllName));
 
         /* Strip out the symbol name */
-        *strrchr(ForwardDllName,'.') = '\0';
+        *strrchr(ForwardDllName, '.') = ANSI_NULL;
 
         /* Check if the target image is already loaded */
         if (!PeLdrCheckForLoadedDll(ModuleListHead, ForwardDllName, &DataTableEntry))
@@ -264,7 +269,7 @@ PeLdrpBindImportName(
             if (strchr(ForwardDllName, '.') == NULL)
             {
                 /* Name does not have an extension, append '.dll' */
-                strcat(ForwardDllName, ".dll");
+                RtlStringCbCatA(ForwardDllName, sizeof(ForwardDllName), ".dll");
             }
 
             /* Now let's try to load it! */
@@ -351,10 +356,13 @@ PeLdrpLoadAndScanReferencedDll(
     PVOID BasePA = NULL;
 
     /* Prepare the full path to the file to be loaded */
-    strcpy(FullDllName, DirectoryPath);
-    strcat(FullDllName, ImportName);
+    RtlStringCbCopyA(FullDllName, sizeof(FullDllName), DirectoryPath);
+    RtlStringCbCatA(FullDllName, sizeof(FullDllName), ImportName);
 
     TRACE("Loading referenced DLL: %s\n", FullDllName);
+
+    if (PeLdrImportDllLoadCallback)
+        PeLdrImportDllLoadCallback(FullDllName);
 
     /* Load the image */
     Success = PeLdrLoadImage(FullDllName, LoaderBootDriver, &BasePA);
@@ -722,7 +730,7 @@ PeLdrLoadImage(
     LARGE_INTEGER Position;
     ULONG i, BytesRead;
 
-    TRACE("PeLdrLoadImage(%s, %ld, *)\n", FileName, MemoryType);
+    TRACE("PeLdrLoadImage(%s, %ld)\n", FileName, MemoryType);
 
     /* Open the image file */
     Status = ArcOpen((PSTR)FileName, OpenReadOnly, &FileId);

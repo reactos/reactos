@@ -2371,14 +2371,14 @@ ProcessPageDlgProc(HWND hwndDlg,
             break;
 
         case PM_ITEM_START:
-            DPRINT1("PM_ITEM_START %lu\n", (ULONG)lParam);
+            DPRINT("PM_ITEM_START %lu\n", (ULONG)lParam);
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, (ULONG)lParam));
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, 0, 0);
             SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
             break;
 
         case PM_ITEM_END:
-            DPRINT1("PM_ITEM_END\n");
+            DPRINT("PM_ITEM_END\n");
             if (lParam == ERROR_SUCCESS)
             {
             }
@@ -2389,14 +2389,14 @@ ProcessPageDlgProc(HWND hwndDlg,
             break;
 
         case PM_STEP_START:
-            DPRINT1("PM_STEP_START\n");
+            DPRINT("PM_STEP_START\n");
             RegistrationNotify = (PREGISTRATIONNOTIFY)lParam;
             SendDlgItemMessage(hwndDlg, IDC_ITEM, WM_SETTEXT, 0,
                                (LPARAM)((RegistrationNotify->CurrentItem != NULL)? RegistrationNotify->CurrentItem : L""));
             break;
 
         case PM_STEP_END:
-            DPRINT1("PM_STEP_END\n");
+            DPRINT("PM_STEP_END\n");
             RegistrationNotify = (PREGISTRATIONNOTIFY)lParam;
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, RegistrationNotify->Progress, 0);
             if (RegistrationNotify->LastError != ERROR_SUCCESS)
@@ -2406,7 +2406,7 @@ ProcessPageDlgProc(HWND hwndDlg,
             break;
 
         case PM_ITEMS_DONE:
-            DPRINT1("PM_ITEMS_DONE\n");
+            DPRINT("PM_ITEMS_DONE\n");
             /* Enable the Back and Next buttons */
             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
             PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);

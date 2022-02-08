@@ -1812,8 +1812,8 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
             PUITEMID_CHILD pidlChild = ILClone(ILFindLastID(m_pidlRoot));
             LPITEMIDLIST pidlParent = ILClone(m_pidlRoot);
             ILRemoveLastID(pidlParent);
-            HRESULT hr = SH_ShowPropertiesDialog(m_sPathTarget, pidlParent, &pidlChild);
-            if (FAILED(hr))
+            BOOL bSuccess = SH_ShowPropertiesDialog(m_sPathTarget, pidlParent, &pidlChild);
+            if (!bSuccess)
                 ERR("SH_ShowPropertiesDialog failed\n");
             ILFree(pidlChild);
             ILFree(pidlParent);

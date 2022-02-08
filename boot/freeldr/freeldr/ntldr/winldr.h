@@ -73,6 +73,28 @@ VOID ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start);
 
 
 // winldr.c
+extern BOOLEAN SosEnabled;
+
+FORCEINLINE
+VOID
+UiResetForSOS(VOID)
+{
+#ifdef _M_ARM
+    /* Re-initialize the UI */
+    UiInitialize(TRUE);
+#else
+    /* Reset the UI and switch to MiniTui */
+    UiVtbl.UnInitialize();
+    UiVtbl = MiniTuiVtbl;
+    UiVtbl.Initialize();
+#endif
+}
+
+VOID
+NtLdrOutputLoadMsg(
+    _In_ PCSTR FileName,
+    _In_opt_ PCSTR Description);
+
 PVOID WinLdrLoadModule(PCSTR ModuleName, PULONG Size,
                        TYPE_OF_MEMORY MemoryType);
 

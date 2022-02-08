@@ -254,7 +254,7 @@ static
 VOID
 MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
 {
-    //Print(L"Creating PDE Entry %X\n", Entry);
+    //TRACE("Creating PDE Entry %X\n", Entry);
 
     // Identity mapping
     *PhysicalPT = (PHARDWARE_PTE)&PhysicalPageTablesBuffer[PhysicalPageTables*MM_PAGE_SIZE];
@@ -297,7 +297,7 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
         // We cannot map this as it requires more than 1 PDE
         // and in fact it's not possible at all ;)
         //
-        //Print(L"skipping...\n");
+        //TRACE("skipping...\n");
         return TRUE;
     }
 

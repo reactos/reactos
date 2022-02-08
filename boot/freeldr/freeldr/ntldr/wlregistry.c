@@ -50,6 +50,7 @@ WinLdrLoadSystemHive(
     RtlStringCbCopyA(FullHiveName, sizeof(FullHiveName), DirectoryPath);
     RtlStringCbCatA(FullHiveName, sizeof(FullHiveName), HiveName);
 
+    NtLdrOutputLoadMsg(FullHiveName, NULL);
     Status = ArcOpen(FullHiveName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
@@ -330,6 +331,8 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Open file with ANSI and store its size */
     RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
     RtlStringCbCatA(FileName, sizeof(FileName), AnsiFileName);
+
+    NtLdrOutputLoadMsg(FileName, NULL);
     Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
@@ -351,9 +354,10 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
     else
     {
-        //Print(L"Loading %s...\n", Filename);
         RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
         RtlStringCbCatA(FileName, sizeof(FileName), OemFileName);
+
+        NtLdrOutputLoadMsg(FileName, NULL);
         Status = ArcOpen(FileName, OpenReadOnly, &FileId);
         if (Status != ESUCCESS)
         {
@@ -370,9 +374,10 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     TRACE("OemFileSize: %d\n", OemFileSize);
 
     /* And finally open the language codepage file and store its length */
-    //Print(L"Loading %s...\n", Filename);
     RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
     RtlStringCbCatA(FileName, sizeof(FileName), LanguageFileName);
+
+    NtLdrOutputLoadMsg(FileName, NULL);
     Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
@@ -415,6 +420,8 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Now actually read the data into memory, starting with Ansi file */
     RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
     RtlStringCbCatA(FileName, sizeof(FileName), AnsiFileName);
+
+    NtLdrOutputLoadMsg(FileName, NULL);
     Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
@@ -435,6 +442,8 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     {
         RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
         RtlStringCbCatA(FileName, sizeof(FileName), OemFileName);
+
+        NtLdrOutputLoadMsg(FileName, NULL);
         Status = ArcOpen(FileName, OpenReadOnly, &FileId);
         if (Status != ESUCCESS)
         {
@@ -454,6 +463,8 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Finally the language file */
     RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
     RtlStringCbCatA(FileName, sizeof(FileName), LanguageFileName);
+
+    NtLdrOutputLoadMsg(FileName, NULL);
     Status = ArcOpen(FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
