@@ -16,6 +16,27 @@ DBG_DEFAULT_CHANNEL(UserMisc);
     (((pwnd)->pcls->style & CS_IME) || \
      ((pwnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
 
+// The special virtual keys for Japanese: Used for key states.
+// https://www.kthree.co.jp/kihelp/index.html?page=app/vkey&type=html
+#define VK_DBE_ALPHANUMERIC 0xF0
+#define VK_DBE_KATAKANA 0xF1
+#define VK_DBE_HIRAGANA 0xF2
+#define VK_DBE_SBCSCHAR 0xF3
+#define VK_DBE_DBCSCHAR 0xF4
+#define VK_DBE_ROMAN 0xF5
+#define VK_DBE_NOROMAN 0xF6
+#define VK_DBE_ENTERWORDREGISTERMODE 0xF7
+#define VK_DBE_ENTERCONFIGMODE 0xF8
+#define VK_DBE_FLUSHSTRING 0xF9
+#define VK_DBE_CODEINPUT 0xFA
+#define VK_DBE_NOCODEINPUT 0xFB
+#define VK_DBE_DETERINESTRING 0xFC
+#define VK_DBE_ENTERDLGCONVERSIONMODE 0xFD
+
+HIMC ghIMC = NULL;
+BOOL gfImeOpen = (BOOL)-1;
+DWORD gdwImeConversion = (DWORD)-1;
+
 PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
 {
     if (!pwnd)
@@ -184,11 +205,103 @@ NtUserGetImeHotKey(IN DWORD dwHotKey,
    return FALSE;
 }
 
+static VOID FASTCALL UserSetImeConversionKeyState(PTHREADINFO pti, DWORD dwConversion)
+{
+    HKL hKL;
+    LANGID LangID;
+    LPBYTE KeyState;
+    BOOL bAlphaNumeric, bKatakana, bHiragana, bFullShape, bRoman, bCharCode;
+
+    if (!pti->KeyboardLayout)
+        return;
+
+    hKL = pti->KeyboardLayout->hkl;
+    LangID = LOWORD(hKL);
+    KeyState = pti->MessageQueue->afKeyState;
+
+    switch (PRIMARYLANGID(LangID))
+    {
+        case LANG_JAPANESE:
+            bAlphaNumeric = !(dwConversion & IME_CMODE_NATIVE);
+            bKatakana = !bAlphaNumeric && (dwConversion & IME_CMODE_KATAKANA);
+            bHiragana = !bAlphaNumeric && !(dwConversion & IME_CMODE_KATAKANA);
+            SET_KEY_DOWN(KeyState, VK_DBE_ALPHANUMERIC, bAlphaNumeric);
+            SET_KEY_LOCKED(KeyState, VK_DBE_ALPHANUMERIC, bAlphaNumeric);
+            SET_KEY_DOWN(KeyState, VK_DBE_HIRAGANA, bHiragana);
+            SET_KEY_LOCKED(KeyState, VK_DBE_HIRAGANA, bHiragana);
+            SET_KEY_DOWN(KeyState, VK_DBE_KATAKANA, bKatakana);
+            SET_KEY_LOCKED(KeyState, VK_DBE_KATAKANA, bKatakana);
+
+            bFullShape = (dwConversion & IME_CMODE_FULLSHAPE);
+            SET_KEY_DOWN(KeyState, VK_DBE_DBCSCHAR, bFullShape);
+            SET_KEY_LOCKED(KeyState, VK_DBE_DBCSCHAR, bFullShape);
+            SET_KEY_DOWN(KeyState, VK_DBE_SBCSCHAR, !bFullShape);
+            SET_KEY_LOCKED(KeyState, VK_DBE_SBCSCHAR, !bFullShape);
+
+            bRoman = (dwConversion & IME_CMODE_ROMAN);
+            SET_KEY_DOWN(KeyState, VK_DBE_ROMAN, bRoman);
+            SET_KEY_LOCKED(KeyState, VK_DBE_ROMAN, bRoman);
+            SET_KEY_DOWN(KeyState, VK_DBE_NOROMAN, !bRoman);
+            SET_KEY_LOCKED(KeyState, VK_DBE_NOROMAN, !bRoman);
+
+            bCharCode = (dwConversion & IME_CMODE_CHARCODE);
+            SET_KEY_DOWN(KeyState, VK_DBE_CODEINPUT, bCharCode);
+            SET_KEY_LOCKED(KeyState, VK_DBE_CODEINPUT, bCharCode);
+            SET_KEY_DOWN(KeyState, VK_DBE_NOCODEINPUT, !bCharCode);
+            SET_KEY_LOCKED(KeyState, VK_DBE_NOCODEINPUT, !bCharCode);
+            break;
+
+        case LANG_KOREAN:
+            SET_KEY_LOCKED(KeyState, VK_HANGUL, (dwConversion & IME_CMODE_NATIVE));
+            SET_KEY_LOCKED(KeyState, VK_JUNJA, (dwConversion & IME_CMODE_FULLSHAPE));
+            SET_KEY_LOCKED(KeyState, VK_HANJA, (dwConversion & IME_CMODE_HANJACONVERT));
+            break;
+
+        default:
+            break;
+    }
+}
+
 DWORD
 APIENTRY
 NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion)
 {
-    TRACE("NtUserNotifyIMEStatus(%p, %d, 0x%lX)\n", hwnd, fOpen, dwConversion);
+    PWND pwnd;
+    PTHREADINFO pti;
+    HKL hKL;
+
+    UserEnterExclusive();
+
+    pwnd = ValidateHwndNoErr(hwnd);
+    if (!pwnd || !IS_IMM_MODE())
+        goto Quit;
+
+    pti = pwnd->head.pti;
+    if (!pti || !gptiForeground)
+        goto Quit;
+    if (pti != gptiForeground && pti->MessageQueue != gptiForeground->MessageQueue)
+        goto Quit;
+    if (ghIMC == pwnd->hImc && gfImeOpen == !!fOpen && gdwImeConversion == dwConversion)
+        goto Quit;
+
+    ghIMC = pwnd->hImc;
+    if (ghIMC)
+    {
+        gfImeOpen = !!fOpen;
+        gdwImeConversion = dwConversion;
+        UserSetImeConversionKeyState(pti, (fOpen ? dwConversion : IME_CMODE_ALPHANUMERIC));
+    }
+
+    if (ISITHOOKED(WH_SHELL))
+    {
+        hKL = (pti->KeyboardLayout ? pti->KeyboardLayout->hkl : NULL);
+        co_HOOK_CallHooks(WH_SHELL, HSHELL_LANGUAGE, (WPARAM)hwnd, (LPARAM)hKL);
+    }
+
+    // TODO:
+
+Quit:
+    UserLeave();
     return 0;
 }
 
