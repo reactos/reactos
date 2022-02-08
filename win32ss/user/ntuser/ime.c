@@ -12,6 +12,7 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 
 #define INVALID_THREAD_ID  ((ULONG)-1)
 #define MOD_KEYS           (MOD_CONTROL | MOD_SHIFT | MOD_ALT | MOD_WIN)
+#define MOD_LEFT_RIGHT     (MOD_LEFT | MOD_RIGHT)
 
 #define LANGID_CHINESE_SIMPLIFIED   MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_SIMPLIFIED)
 #define LANGID_JAPANESE             MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)
@@ -115,11 +116,12 @@ static PIMEHOTKEY FASTCALL IntGetImeHotKeyById(PIMEHOTKEY pList, DWORD dwHotKeyI
 }
 
 static PIMEHOTKEY APIENTRY
-IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uKeys, UINT uLeftAndRight,
+IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uKeys, UINT uLeftRight,
                             UINT uVirtualKey, LANGID TargetLangId)
 {
     PIMEHOTKEY pNode;
     LANGID LangID;
+    UINT uModifiers;
 
     for (pNode = pList; pNode; pNode = pNode->pNext)
     {
@@ -130,17 +132,15 @@ IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uKeys, UINT uLeftAndRight,
         if (LangID != TargetLangId)
             continue;
 
-        if (pNode->uModifiers & MOD_IGNORE_ALL_MODIFIER)
+        uModifiers = pNode->uModifiers;
+        if (uModifiers & MOD_IGNORE_ALL_MODIFIER)
             return pNode;
 
-        if ((pNode->uModifiers & MOD_KEYS) != uKeys)
+        if ((uModifiers & MOD_KEYS) != uKeys)
             continue;
 
-        if ((pNode->uModifiers & (MOD_LEFT | MOD_RIGHT)) == uLeftAndRight ||
-            ((pNode->uModifiers & (MOD_LEFT | MOD_RIGHT)) & uLeftAndRight))
-        {
+        if ((uModifiers & MOD_LEFT_RIGHT) == uLeftRight || (pNode->uModifiers & uLeftRight))
             return pNode;
-        }
     }
 
     return NULL;
@@ -206,7 +206,7 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
 
             pNode = IntGetImeHotKeyByKeyAndLang(gpImeHotKeyList,
                                                 (uModifiers & MOD_KEYS),
-                                                (uModifiers & (MOD_LEFT | MOD_RIGHT)),
+                                                (uModifiers & MOD_LEFT_RIGHT),
                                                 uVirtualKey,
                                                 LangId);
             if (!pNode)
