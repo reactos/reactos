@@ -56,17 +56,22 @@ static LANGID FASTCALL IntGetHotKeyLangId(DWORD dwHotKeyId)
 #define IME_KHOTKEY 0x50
 #define IME_THOTKEY 0x70
 #define IME_XHOTKEY 0x90
-    if (IME_CHOTKEY <= dwHotKeyId && dwHotKeyId < IME_XHOTKEY)
+    static const LANGID s_array[] =
     {
-        if (dwHotKeyId < IME_JHOTKEY)
-            return MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
-        else if (dwHotKeyId < IME_KHOTKEY)
-            return MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT);
-        else if (dwHotKeyId < IME_THOTKEY)
-            return MAKELANGID(LANG_KOREAN, SUBLANG_KOREAN);
-        else
-            return MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL);
-    }
+        /* 0x00 */ (WORD)-1,
+        /* 0x10 */ MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
+        /* 0x20 */ MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
+        /* 0x30 */ MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT),
+        /* 0x40 */ MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT),
+        /* 0x50 */ MAKELANGID(LANG_KOREAN, SUBLANG_KOREAN),
+        /* 0x60 */ MAKELANGID(LANG_KOREAN, SUBLANG_KOREAN),
+        /* 0x70 */ MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL),
+        /* 0x80 */ MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)
+    };
+
+    if (IME_CHOTKEY <= dwHotKeyId && dwHotKeyId < IME_XHOTKEY)
+        return s_array[(dwHotKeyId & 0xF0) >> 4];
+
     return MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
 }
 
