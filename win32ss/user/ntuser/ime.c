@@ -81,26 +81,24 @@ static LANGID FASTCALL IntGetHotKeyLangId(DWORD dwHotKeyId)
     return LANGID_NEUTRAL;
 }
 
-static BOOL FASTCALL IntAddImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
+static VOID FASTCALL IntAddImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
 {
     PIMEHOTKEY pNode;
 
     if (!*ppList)
     {
         *ppList = pHotKey;
-        return TRUE;
+        return;
     }
 
     for (pNode = *ppList; pNode; pNode = pNode->pNext)
     {
-        if (pNode->pNext)
-            continue;
-
-        pNode->pNext = pHotKey;
-        return TRUE;
+        if (!pNode->pNext)
+        {
+            pNode->pNext = pHotKey;
+            return;
+        }
     }
-
-    return FALSE;
 }
 
 static PIMEHOTKEY FASTCALL IntGetImeHotKeyById(PIMEHOTKEY pList, DWORD dwHotKeyId)
@@ -158,7 +156,7 @@ IntGetImeHotKey(DWORD dwHotKeyId, LPUINT puModifiers, LPUINT puVirtualKey, LPHKL
     return TRUE;
 }
 
-static BOOL FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
+static VOID FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
 {
     PIMEHOTKEY pNode;
 
@@ -166,20 +164,18 @@ static BOOL FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
     {
         *ppList = pHotKey->pNext;
         ExFreePoolWithTag(pHotKey, USERTAG_IMEHOTKEY);
-        return TRUE;
+        return;
     }
 
     for (pNode = *ppList; pNode; pNode = pNode->pNext)
     {
-        if (pNode->pNext != pHotKey)
-            continue;
-
-        pNode->pNext = pHotKey->pNext;
-        ExFreePoolWithTag(pHotKey, USERTAG_IMEHOTKEY);
-        return TRUE;
+        if (pNode->pNext == pHotKey)
+        {
+            pNode->pNext = pHotKey->pNext;
+            ExFreePoolWithTag(pHotKey, USERTAG_IMEHOTKEY);
+            return;
+        }
     }
-
-    return FALSE;
 }
 
 static BOOL APIENTRY
@@ -194,7 +190,9 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
             pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
             if (!pNode)
                 return FALSE;
-            return IntDeleteImeHotKey(&gpImeHotKeyList, pNode);
+
+            IntDeleteImeHotKey(&gpImeHotKeyList, pNode);
+            return TRUE;
 
         case 2:
             if (uVirtualKey == VK_PACKET)
@@ -228,7 +226,8 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
             pNode->uModifiers = uModifiers;
             pNode->uVirtualKey = uVirtualKey;
             pNode->hKL = hKL;
-            return IntAddImeHotKey(&gpImeHotKeyList, pNode);
+            IntAddImeHotKey(&gpImeHotKeyList, pNode);
+            return TRUE;
 
         case 3:
             for (pNode = gpImeHotKeyList; pNode; pNode = pNext)
