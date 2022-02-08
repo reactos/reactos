@@ -143,19 +143,6 @@ IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight,
     return NULL;
 }
 
-static BOOL APIENTRY
-IntGetImeHotKey(DWORD dwHotKeyId, LPUINT puModifiers, LPUINT puVirtualKey, LPHKL phKL)
-{
-    PIMEHOTKEY pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
-    if (!pNode)
-        return FALSE;
-
-    *puModifiers = pNode->uModifiers;
-    *puVirtualKey = pNode->uVirtualKey;
-    *phKL = pNode->hKL;
-    return TRUE;
-}
-
 static VOID FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
 {
     PIMEHOTKEY pNode;
@@ -244,14 +231,9 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
 }
 
 BOOL NTAPI
-NtUserGetImeHotKey(DWORD  dwHotKeyId,
-                   LPUINT lpuModifiers,
-                   LPUINT lpuVirtualKey,
-                   LPHKL  lphKL)
+NtUserGetImeHotKey(DWORD dwHotKeyId, LPUINT lpuModifiers, LPUINT lpuVirtualKey, LPHKL lphKL)
 {
-    BOOL ret = FALSE;
-    UINT uModifiers, uVirtualKey;
-    HKL hKL;
+    PIMEHOTKEY pNode = NULL;
 
     UserEnterExclusive();
 
@@ -268,26 +250,26 @@ NtUserGetImeHotKey(DWORD  dwHotKeyId,
     }
     _SEH2_END;
 
-    ret = IntGetImeHotKey(dwHotKeyId, &uModifiers, &uVirtualKey, &hKL);
-    if (!ret)
+    pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
+    if (!pNode)
         goto Quit;
 
     _SEH2_TRY
     {
-        *lpuModifiers = uModifiers;
-        *lpuVirtualKey = uVirtualKey;
+        *lpuModifiers = pNode->uModifiers;
+        *lpuVirtualKey = pNode->uVirtualKey;
         if (lphKL)
-            *lphKL = hKL;
+            *lphKL = pNode->hKL;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ret = FALSE;
+        pNode = NULL;
     }
     _SEH2_END;
 
 Quit:
     UserLeave();
-    return ret;
+    return !!pNode;
 }
 
 BOOL
