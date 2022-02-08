@@ -139,7 +139,7 @@ IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight,
         if ((uModifiers & MOD_KEYS) != uModKeys)
             continue;
 
-        if ((uModifiers & MOD_LEFT_RIGHT) == uLeftRight || (pNode->uModifiers & uLeftRight))
+        if ((uModifiers & MOD_LEFT_RIGHT) == uLeftRight || (uModifiers & uLeftRight))
             return pNode;
     }
 
