@@ -76,7 +76,7 @@ static BOOL FASTCALL IntAddImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
 
     if (!*ppList)
     {
-        *ppList = pNode;
+        *ppList = pHotKey;
         return TRUE;
     }
 
