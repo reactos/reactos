@@ -11,6 +11,7 @@
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 #define INVALID_THREAD_ID  ((ULONG)-1)
+#define MOD_KEYS           (MOD_CONTROL | MOD_SHIFT | MOD_ALT | MOD_WIN)
 
 #define IS_WND_IMELIKE(pwnd) \
     (((pwnd)->pcls->style & CS_IME) || \
@@ -36,6 +37,265 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 HIMC ghIMC = NULL;
 BOOL gfImeOpen = (BOOL)-1;
 DWORD gdwImeConversion = (DWORD)-1;
+
+typedef struct tagIMEHOTKEY
+{
+    struct tagIMEHOTKEY *pNext;
+    DWORD dwHotKeyId;
+    UINT uVirtualKey;
+    UINT uModifiers;
+    HKL hKL;
+} IMEHOTKEY, *PIMEHOTKEY;
+
+PIMEHOTKEY gpImeHotKeyList = NULL;
+
+static LANGID FASTCALL IntGetHotKeyLangId(DWORD dwHotKeyId)
+{
+#define IME_CHOTKEY 0x10
+#define IME_JHOTKEY 0x30
+#define IME_KHOTKEY 0x50
+#define IME_THOTKEY 0x70
+#define IME_XHOTKEY 0x90
+    if (IME_CHOTKEY <= dwHotKeyId && dwHotKeyId < IME_XHOTKEY)
+    {
+        if (dwHotKeyId < IME_JHOTKEY)
+            return MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
+        else if (dwHotKeyId < IME_KHOTKEY)
+            return MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT);
+        else if (dwHotKeyId < IME_THOTKEY)
+            return MAKELANGID(LANG_KOREAN, SUBLANG_KOREAN);
+        else
+            return MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL);
+    }
+    return MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
+}
+
+static BOOL FASTCALL IntAddHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
+{
+    PIMEHOTKEY pNode;
+
+    if (!*ppList)
+    {
+        *ppList = pNode;
+        return TRUE;
+    }
+
+    for (pNode = *ppList; pNode; pNode = pNode->pNext)
+    {
+        if (pNode->pNext)
+            continue;
+
+        pNode->pNext = pHotKey;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static PIMEHOTKEY FASTCALL IntGetImeHotKeyById(PIMEHOTKEY pList, DWORD dwHotKeyId)
+{
+    PIMEHOTKEY pNode;
+    for (pNode = pList; pNode; pNode = pNode->pNext)
+    {
+        if (pNode->dwHotKeyId == dwHotKeyId)
+            return pNode;
+    }
+    return NULL;
+}
+
+static PIMEHOTKEY APIENTRY
+IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uKeys, UINT uLeftAndRight,
+                            UINT uVirtualKey, LANGID TargetLangId)
+{
+    PIMEHOTKEY pNode;
+    LANGID LangID;
+
+    for (pNode = pList; pNode; pNode = pNode->pNext)
+    {
+        if (pNode->uVirtualKey != uVirtualKey)
+            continue;
+
+        LangID = IntGetHotKeyLangId(pNode->dwHotKeyId);
+        if (LangID != TargetLangId)
+            continue;
+
+        if (pNode->uModifiers & MOD_IGNORE_ALL_MODIFIER)
+            return pNode;
+
+        if ((pNode->uModifiers & MOD_KEYS) != uKeys)
+            continue;
+
+        if ((pNode->uModifiers & (MOD_LEFT | MOD_RIGHT)) == uLeftAndRight ||
+            ((pNode->uModifiers & (MOD_LEFT | MOD_RIGHT)) & uLeftAndRight))
+        {
+            return pNode;
+        }
+    }
+
+    return NULL;
+}
+
+static BOOL APIENTRY
+IntGetImeHotKey(DWORD dwHotKeyId, LPUINT puModifiers, LPUINT puVirtualKey, LPHKL phKL)
+{
+    PIMEHOTKEY pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
+    if (!pNode)
+        return FALSE;
+
+    if (phKL)
+        *phKL = pNode->hKL;
+    else if (pNode->hKL)
+        return FALSE;
+
+    *puModifiers = pNode->uModifiers;
+    *puVirtualKey = pNode->uVirtualKey;
+    return TRUE;
+}
+
+static BOOL FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
+{
+    PIMEHOTKEY pNode;
+
+    if (*ppList == pHotKey)
+    {
+        *ppList = pHotKey->pNext;
+        ExFreePoolWithTag(pHotKey, USERTAG_IMEHOTKEY);
+        return TRUE;
+    }
+
+    for (pNode = *ppList; pNode; pNode = pNode->pNext)
+    {
+        if (pNode->pNext != pHotKey)
+            continue;
+
+        pNode->pNext = pHotKey->pNext;
+        ExFreePoolWithTag(pHotKey, USERTAG_IMEHOTKEY);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static BOOL APIENTRY
+IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DWORD dwAction)
+{
+    PIMEHOTKEY pNode, pNext;
+    LANGID LangId;
+
+    switch (dwAction)
+    {
+        case 1:
+            pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
+            return (pNode ? IntDeleteImeHotKey(&gpImeHotKeyList, pNode) : FALSE);
+
+        case 2:
+            LangId = IntGetHotKeyLangId(dwHotKeyId);
+            if (PRIMARYLANGID(LangId) == LANG_KOREAN || uVirtualKey == VK_PACKET)
+                return FALSE;
+
+            pNode = IntGetImeHotKeyByKeyAndLang(gpImeHotKeyList,
+                                                (uModifiers & MOD_KEYS),
+                                                (uModifiers & (MOD_LEFT | MOD_RIGHT)),
+                                                uVirtualKey,
+                                                LangId);
+            if (!pNode)
+                pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
+
+            if (pNode)
+            {
+                pNode->uModifiers = uModifiers;
+                pNode->uVirtualKey = uVirtualKey;
+                pNode->hKL = hKL;
+                return TRUE;
+            }
+
+            pNode = ExAllocatePoolWithTag(PagedPool, sizeof(IMEHOTKEY), USERTAG_IMEHOTKEY);
+            if (!pNode)
+                return FALSE;
+
+            pNode->dwHotKeyId = dwHotKeyId;
+            pNode->uModifiers = uModifiers;
+            pNode->uVirtualKey = uVirtualKey;
+            pNode->hKL = hKL;
+            pNode->pNext = NULL;
+            return IntAddHotKey(&gpImeHotKeyList, pNode);
+
+        case 3:
+            for (pNode = gpImeHotKeyList; pNode; pNode = pNext)
+            {
+                pNext = pNode->pNext;
+                ExFreePoolWithTag(pNode, USERTAG_IMEHOTKEY);
+            }
+            gpImeHotKeyList = NULL;
+            return TRUE;
+
+        default:
+            return FALSE;
+    }
+}
+
+BOOL NTAPI
+NtUserGetImeHotKey(DWORD  dwHotKeyId,
+                   LPUINT lpuModifiers,
+                   LPUINT lpuVirtualKey,
+                   LPHKL  lphKL)
+{
+    BOOL ret = FALSE;
+    UINT uModifiers, uVirtualKey;
+    HKL hKL;
+
+    UserEnterExclusive();
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(lpuModifiers, sizeof(UINT), 1);
+        ProbeForWrite(lpuVirtualKey, sizeof(UINT), 1);
+        if (lphKL)
+            ProbeForWrite(lphKL, sizeof(HKL), 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        goto Quit;
+    }
+    _SEH2_END;
+
+    ret = IntGetImeHotKey(dwHotKeyId, &uModifiers, &uVirtualKey, &hKL);
+    if (ret)
+    {
+        _SEH2_TRY
+        {
+            *lpuModifiers = uModifiers;
+            *lpuVirtualKey = uVirtualKey;
+            if (lphKL)
+                *lphKL = hKL;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ret = FALSE;
+        }
+        _SEH2_END;
+    }
+
+Quit:
+    UserLeave();
+    return ret;
+}
+
+BOOL
+NTAPI
+NtUserSetImeHotKey(
+    DWORD  dwHotKeyId,
+    UINT   uModifiers,
+    UINT   uVirtualKey,
+    HKL    hKL,
+    DWORD  dwAction)
+{
+    BOOL ret;
+    UserEnterExclusive();
+    ret = IntSetImeHotKey(dwHotKeyId, uModifiers, uVirtualKey, hKL, dwAction);
+    UserLeave();
+    return ret;
+}
 
 PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
 {
@@ -194,17 +454,6 @@ Quit:
     return ret;
 }
 
-BOOL WINAPI
-NtUserGetImeHotKey(IN DWORD dwHotKey,
-                   OUT LPUINT lpuModifiers,
-                   OUT LPUINT lpuVKey,
-                   OUT LPHKL lphKL)
-{
-   STUB
-
-   return FALSE;
-}
-
 static VOID FASTCALL UserSetImeConversionKeyState(PTHREADINFO pti, DWORD dwConversion)
 {
     HKL hKL;
@@ -303,20 +552,6 @@ NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion)
 Quit:
     UserLeave();
     return 0;
-}
-
-DWORD
-APIENTRY
-NtUserSetImeHotKey(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3,
-   DWORD Unknown4)
-{
-   STUB
-
-   return 0;
 }
 
 DWORD

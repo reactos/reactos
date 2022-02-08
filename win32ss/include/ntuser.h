@@ -2388,11 +2388,12 @@ NtUserGetIconSize(
     LONG *plcx,
     LONG *plcy);
 
-BOOL NTAPI
-NtUserGetImeHotKey(IN DWORD dwHotKey,
-                   OUT LPUINT lpuModifiers,
-                   OUT LPUINT lpuVKey,
-                   OUT LPHKL lphKL);
+BOOL
+NTAPI
+NtUserGetImeHotKey(DWORD dwHotKeyId,
+                   LPUINT lpuModifiers,
+                   LPUINT lpuVirtualKey,
+                   LPHKL lphKL);
 
 BOOL
 NTAPI
@@ -3184,14 +3185,14 @@ NTAPI
 NtUserSetFocus(
     HWND hWnd);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetImeHotKey(
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3,
-    DWORD Unknown4);
+    DWORD dwHotKeyId,
+    UINT uModifiers,
+    UINT uVirtualKey,
+    HKL hKL,
+    DWORD dwAction);
 
 BOOL
 NTAPI
