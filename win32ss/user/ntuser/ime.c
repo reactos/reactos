@@ -116,7 +116,7 @@ static PIMEHOTKEY FASTCALL IntGetImeHotKeyById(PIMEHOTKEY pList, DWORD dwHotKeyI
 }
 
 static PIMEHOTKEY APIENTRY
-IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uKeys, UINT uLeftRight,
+IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight,
                             UINT uVirtualKey, LANGID TargetLangId)
 {
     PIMEHOTKEY pNode;
@@ -136,7 +136,7 @@ IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uKeys, UINT uLeftRight,
         if (uModifiers & MOD_IGNORE_ALL_MODIFIER)
             return pNode;
 
-        if ((uModifiers & MOD_KEYS) != uKeys)
+        if ((uModifiers & MOD_KEYS) != uModKeys)
             continue;
 
         if ((uModifiers & MOD_LEFT_RIGHT) == uLeftRight || (pNode->uModifiers & uLeftRight))
