@@ -153,13 +153,10 @@ IntGetImeHotKey(DWORD dwHotKeyId, LPUINT puModifiers, LPUINT puVirtualKey, LPHKL
     if (!pNode)
         return FALSE;
 
-    if (phKL)
-        *phKL = pNode->hKL;
-    else if (pNode->hKL)
-        return FALSE;
-
     *puModifiers = pNode->uModifiers;
     *puVirtualKey = pNode->uVirtualKey;
+    if (phKL)
+        *phKL = pNode->hKL;
     return TRUE;
 }
 
