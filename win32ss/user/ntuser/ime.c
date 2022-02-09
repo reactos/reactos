@@ -179,7 +179,7 @@ VOID FASTCALL IntFreeImeHotKeys(VOID)
 static BOOL APIENTRY
 IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DWORD dwAction)
 {
-    PIMEHOTKEY pNode, pNext;
+    PIMEHOTKEY pNode;
     LANGID LangId;
 
     switch (dwAction)
@@ -228,12 +228,7 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
             return TRUE;
 
         case 3:
-            for (pNode = gpImeHotKeyList; pNode; pNode = pNext)
-            {
-                pNext = pNode->pNext;
-                ExFreePoolWithTag(pNode, USERTAG_IMEHOTKEY);
-            }
-            gpImeHotKeyList = NULL;
+            IntFreeImeHotKeys();
             return TRUE;
 
         default:
