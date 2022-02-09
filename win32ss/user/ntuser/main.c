@@ -180,6 +180,8 @@ UserProcessDestroy(PEPROCESS Process)
     if (ppiScrnSaver == ppiCurrent)
         ppiScrnSaver = NULL;
 
+    IntFreeImeHotKeys();
+
     if (gpwlCache)
     {
         ExFreePoolWithTag(gpwlCache, USERTAG_WINDOWLIST);

@@ -165,6 +165,17 @@ static VOID FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
     }
 }
 
+VOID FASTCALL IntFreeImeHotKeys(VOID)
+{
+    PIMEHOTKEY pNode, pNext;
+    for (pNode = gpImeHotKeyList; pNode; pNode = pNext)
+    {
+        pNext = pNode->pNext;
+        ExFreePoolWithTag(pNode, USERTAG_IMEHOTKEY);
+    }
+    gpImeHotKeyList = NULL;
+}
+
 static BOOL APIENTRY
 IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DWORD dwAction)
 {
