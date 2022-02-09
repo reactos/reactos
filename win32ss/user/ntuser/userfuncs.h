@@ -169,6 +169,5 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData);
 VOID UserFreeInputContext(PVOID Object);
 BOOLEAN UserDestroyInputContext(PVOID Object);
 PVOID AllocInputContextObject(PDESKTOP pDesk, PTHREADINFO pti, SIZE_T Size, PVOID* HandleOwner);
-VOID FASTCALL IntFreeImeHotKeys(VOID);
 
 /* EOF */
