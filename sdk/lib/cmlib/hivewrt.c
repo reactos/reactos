@@ -23,7 +23,6 @@ HvpWriteLog(
     PVOID BlockPtr;
     BOOLEAN Success;
 
-    
     ASSERT(RegistryHive->ReadOnly == FALSE);
     ASSERT(RegistryHive->BaseBlock->Length ==
            RegistryHive->Storage[Stable].Length * HBLOCK_SIZE);
