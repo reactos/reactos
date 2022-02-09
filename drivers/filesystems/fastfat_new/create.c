@@ -629,7 +629,7 @@ Return Value:
 
     ULONG MatchFlags = 0;
 
-    CCB LocalCcb = {0};
+    CCB LocalCcb;
     UNICODE_STRING Lfn;
     UNICODE_STRING OrigLfn = {0};
 
