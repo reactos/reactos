@@ -196,14 +196,6 @@ typedef struct IME_STATE
 C_ASSERT(sizeof(IME_STATE) == 0x18);
 #endif
 
-/* NtUserSetImeHotKey actions */
-typedef enum tagSETIMEHOTKEY_ACTION
-{
-    SETIMEHOTKEY_DELETE = 1,
-    SETIMEHOTKEY_ADD,
-    SETIMEHOTKEY_DELETEALL
-} SETIMEHOTKEY_ACTION;
-
 #ifdef __cplusplus
 } // extern "C"
 #endif
