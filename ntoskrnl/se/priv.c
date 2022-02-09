@@ -562,6 +562,7 @@ SeReleaseLuidAndAttributesArray(
         (PreviousMode != KernelMode || CaptureIfKernel))
     {
         ExFreePoolWithTag(Privilege, TAG_LUID);
+        Privilege = NULL;
     }
 }
 

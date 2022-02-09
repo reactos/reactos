@@ -776,6 +776,7 @@ SeReleaseSidAndAttributesArray(
         ((AccessMode != KernelMode) || CaptureIfKernel))
     {
         ExFreePoolWithTag(CapturedSidAndAttributes, TAG_SID_AND_ATTRIBUTES);
+        CapturedSidAndAttributes = NULL;
     }
 }
 

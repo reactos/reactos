@@ -3,7 +3,7 @@
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Security token implementation support
  * COPYRIGHT:       Copyright David Welch <welch@cwcom.net>
- *                  Copyright 2021 George Bișoc <george.bisoc@reactos.org>
+ *                  Copyright 2021-2022 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -6819,8 +6819,6 @@ Quit:
         SeReleaseSidAndAttributesArray(CapturedSids,
                                        PreviousMode,
                                        TRUE);
-
-        CapturedSids = NULL;
     }
 
     if (CapturedPrivileges != NULL)
@@ -6828,8 +6826,6 @@ Quit:
         SeReleaseLuidAndAttributesArray(CapturedPrivileges,
                                         PreviousMode,
                                         TRUE);
-
-        CapturedPrivileges = NULL;
     }
 
     if (CapturedRestrictedSids != NULL)
@@ -6837,8 +6833,6 @@ Quit:
         SeReleaseSidAndAttributesArray(CapturedRestrictedSids,
                                        PreviousMode,
                                        TRUE);
-
-        CapturedRestrictedSids = NULL;
     }
 
     return Status;
