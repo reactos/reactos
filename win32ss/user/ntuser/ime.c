@@ -313,7 +313,7 @@ HIMC FASTCALL IntAssociateInputContext(PWND pWnd, PIMC pImc)
 }
 
 DWORD
-APIENTRY
+NTAPI
 NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
 {
     PTHREADINFO pti;
@@ -399,7 +399,7 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT Msg, WPARAM w
 }
 
 NTSTATUS
-APIENTRY
+NTAPI
 NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCount)
 {
     NTSTATUS ret = STATUS_UNSUCCESSFUL;
@@ -509,7 +509,7 @@ static VOID FASTCALL UserSetImeConversionKeyState(PTHREADINFO pti, DWORD dwConve
 }
 
 DWORD
-APIENTRY
+NTAPI
 NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion)
 {
     PWND pwnd;
@@ -552,7 +552,7 @@ Quit:
 }
 
 DWORD
-APIENTRY
+NTAPI
 NtUserCheckImeHotKey(
     DWORD  VirtualKey,
     LPARAM lParam)
@@ -562,7 +562,7 @@ NtUserCheckImeHotKey(
 }
 
 BOOL
-APIENTRY
+NTAPI
 NtUserDisableThreadIme(
     DWORD dwThreadID)
 {
@@ -630,7 +630,7 @@ Quit:
 }
 
 DWORD
-APIENTRY
+NTAPI
 NtUserGetAppImeLevel(HWND hWnd)
 {
     DWORD ret = 0;
@@ -708,7 +708,7 @@ BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLA
 }
 
 BOOL
-APIENTRY
+NTAPI
 NtUserGetImeInfoEx(
     PIMEINFOEX pImeInfoEx,
     IMEINFOEXCLASS SearchType)
@@ -733,18 +733,18 @@ NtUserGetImeInfoEx(
     _SEH2_END;
 
     ret = UserGetImeInfoEx(NULL, &ImeInfoEx, SearchType);
-    if (ret)
+    if (!ret)
+        goto Quit;
+
+    _SEH2_TRY
     {
-        _SEH2_TRY
-        {
-            *pImeInfoEx = ImeInfoEx;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            ret = FALSE;
-        }
-        _SEH2_END;
+        *pImeInfoEx = ImeInfoEx;
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = FALSE;
+    }
+    _SEH2_END;
 
 Quit:
     UserLeave();
@@ -752,7 +752,7 @@ Quit:
 }
 
 BOOL
-APIENTRY
+NTAPI
 NtUserSetAppImeLevel(HWND hWnd, DWORD dwLevel)
 {
     BOOL ret = FALSE;
@@ -807,7 +807,7 @@ BOOL FASTCALL UserSetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pImeInfoEx)
 }
 
 BOOL
-APIENTRY
+NTAPI
 NtUserSetImeInfoEx(PIMEINFOEX pImeInfoEx)
 {
     BOOL ret = FALSE;
@@ -836,7 +836,7 @@ Quit:
     return ret;
 }
 
-BOOL APIENTRY
+BOOL NTAPI
 NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
 {
     BOOL ret = FALSE;
@@ -960,7 +960,7 @@ BOOLEAN UserDestroyInputContext(PVOID Object)
     return TRUE;
 }
 
-BOOL APIENTRY NtUserDestroyInputContext(HIMC hIMC)
+BOOL NTAPI NtUserDestroyInputContext(HIMC hIMC)
 {
     PIMC pIMC;
     BOOL ret = FALSE;
@@ -1053,7 +1053,7 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
 }
 
 HIMC
-APIENTRY
+NTAPI
 NtUserCreateInputContext(ULONG_PTR dwClientImcData)
 {
     PIMC pIMC;
@@ -1141,7 +1141,7 @@ DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
 }
 
 DWORD
-APIENTRY
+NTAPI
 NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 {
     DWORD ret = 2;
@@ -1194,7 +1194,7 @@ BOOL FASTCALL UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
 }
 
 BOOL
-APIENTRY
+NTAPI
 NtUserUpdateInputContext(
     HIMC hIMC,
     DWORD dwType,
@@ -1220,7 +1220,7 @@ Quit:
 }
 
 DWORD_PTR
-APIENTRY
+NTAPI
 NtUserQueryInputContext(HIMC hIMC, DWORD dwType)
 {
     PIMC pIMC;
