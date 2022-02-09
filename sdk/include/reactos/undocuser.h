@@ -394,6 +394,14 @@ typedef enum _QUERY_INPUT_CONTEXT
     QIC_DEFAULTIMC
 } QUERY_INPUT_CONTEXT;
 
+/* NtUserSetImeHotKey actions */
+typedef enum tagSETIMEHOTKEY_ACTION
+{
+    SETIMEHOTKEY_DELETE = 1,
+    SETIMEHOTKEY_ADD,
+    SETIMEHOTKEY_DELETEALL
+} SETIMEHOTKEY_ACTION;
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
