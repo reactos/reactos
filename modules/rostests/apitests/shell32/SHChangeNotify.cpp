@@ -930,11 +930,12 @@ static unsigned __stdcall TestThreadProc(void *)
 
 START_TEST(SHChangeNotify)
 {
-#ifdef DISABLE_THIS_TESTCASE
-    skip("This testcase is disabled by DISABLE_THIS_TESTCASE macro.\n");
-#endif
 #ifdef TOTAL_TICK
     DWORD dwOldTick = GetTickCount();
+#endif
+#ifdef DISABLE_THIS_TESTCASE
+    skip("This testcase is disabled by DISABLE_THIS_TESTCASE macro.\n");
+    return;
 #endif
 
     trace("Please don't operate your PC while testing...\n");
@@ -961,4 +962,7 @@ START_TEST(SHChangeNotify)
     DWORD dwTick = dwNewTick - dwOldTick;
     trace("SHChangeNotify: Total %lu.%lu sec\n", (dwTick / 1000), (dwTick / 100 % 10));
 #endif
+
+    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
+    Sleep(500);
 }
