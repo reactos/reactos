@@ -8,6 +8,7 @@
  */
 
 #include <win32k.h>
+#include <ddk/immdev.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 #define INVALID_THREAD_ID  ((ULONG)-1)
@@ -184,7 +185,7 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
 
     switch (dwAction)
     {
-        case 1:
+        case SETIMEHOTKEY_DELETE:
             pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
             if (!pNode)
                 return FALSE;
@@ -192,7 +193,7 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
             IntDeleteImeHotKey(&gpImeHotKeyList, pNode);
             return TRUE;
 
-        case 2:
+        case SETIMEHOTKEY_ADD:
             if (uVirtualKey == VK_PACKET)
                 return FALSE;
 
@@ -227,7 +228,7 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
             IntAddImeHotKey(&gpImeHotKeyList, pNode);
             return TRUE;
 
-        case 3:
+        case SETIMEHOTKEY_DELETEALL:
             IntFreeImeHotKeys();
             return TRUE;
 
