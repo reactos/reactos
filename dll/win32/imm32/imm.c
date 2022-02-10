@@ -1176,7 +1176,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     }
     else
     {
-        hIMC = Imm32GetContextEx(hWnd, TRUE);
+        hIMC = Imm32GetContextEx(hWnd, 1);
         pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
         if (pIC)
         {
@@ -1219,6 +1219,21 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
         ImmUnlockClientImc(pClientImc);
 
     return TRUE;
+}
+
+/***********************************************************************
+ *              ImmWINNLSGetEnableStatus (IMM32.@)
+ */
+
+BOOL WINAPI ImmWINNLSGetEnableStatus(HWND hWnd)
+{
+    if (!Imm32IsSystemJapaneseOrKorean())
+    {
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+    }
+
+    return !!Imm32GetContextEx(hWnd, 2);
 }
 
 /***********************************************************************

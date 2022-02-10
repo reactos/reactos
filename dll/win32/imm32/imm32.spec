@@ -115,5 +115,5 @@
 @ stdcall ImmUnregisterWordA(long str long str)
 @ stdcall ImmUnregisterWordW(long wstr long wstr)
 @ stdcall -stub ImmWINNLSEnableIME(ptr long)
-@ stdcall -stub ImmWINNLSGetEnableStatus(ptr)
+@ stdcall ImmWINNLSGetEnableStatus(ptr)
 @ stdcall ImmWINNLSGetIMEHotkey(ptr)

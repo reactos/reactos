@@ -94,6 +94,7 @@ LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
 PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL);
 LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
+BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID);
 
 static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
 {
