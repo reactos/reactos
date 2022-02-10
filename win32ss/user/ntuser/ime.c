@@ -58,7 +58,7 @@ typedef struct tagIMEHOTKEY
 PIMEHOTKEY gpImeHotKeyList = NULL;
 LCID glcid = 0;
 
-INT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
+UINT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
 {
     LCID lcid;
 
@@ -218,7 +218,7 @@ IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVir
     LANGID LangId;
     HKL hKL = IntGetActiveKeyboardLayout();
     BOOL fKorean = (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN);
-    INT nScore, nMaxScore = 0;
+    UINT nScore, nMaxScore = 0;
 
     for (pNode = pList; pNode; pNode = pNode->pNext)
     {
@@ -245,7 +245,7 @@ IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVir
 
         LangId = IntGetImeHotKeyLangId(pNode->dwHotKeyId);
         nScore = IntGetImeHotKeyLanguageScore(hKL, LangId);
-        if (nScore == 3)
+        if (nScore >= 3)
             return pNode;
 
         if (fKorean)
@@ -261,7 +261,7 @@ IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVir
             }
         }
 
-        if (nScore > nMaxScore)
+        if (nMaxScore < nScore)
         {
             nMaxScore = nScore;
             ret = pNode;
