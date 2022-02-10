@@ -91,7 +91,7 @@
 @ stdcall ImmRequestMessageW(ptr ptr ptr)
 @ stdcall ImmSendIMEMessageExA(ptr ptr)
 @ stdcall ImmSendIMEMessageExW(ptr ptr)
-@ stub ImmSendMessageToActiveDefImeWndW
+@ stdcall ImmSendMessageToActiveDefImeWndW(long ptr ptr)
 @ stdcall ImmSetActiveContext(ptr ptr long)
 @ stdcall ImmSetActiveContextConsoleIME(ptr long)
 @ stdcall ImmSetCandidateWindow(ptr ptr)
