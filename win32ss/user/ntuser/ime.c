@@ -58,7 +58,7 @@ typedef struct tagIMEHOTKEY
 PIMEHOTKEY gpImeHotKeyList = NULL;
 LCID glcid = 0;
 
-INT FASTCALL IntGetImeHotKeyScore(HKL hKL, LANGID HotKeyLangId)
+INT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
 {
     LCID lcid;
 
@@ -75,13 +75,13 @@ INT FASTCALL IntGetImeHotKeyScore(HKL hKL, LANGID HotKeyLangId)
     }
     _SEH2_END;
 
-    if (LANGIDFROMLCID(lcid) == HotKeyLangId)
+    if (HotKeyLangId == LANGIDFROMLCID(lcid))
         return 2;
 
     if (glcid == 0)
         ZwQueryDefaultLocale(FALSE, &glcid);
 
-    if (LANGIDFROMLCID(glcid) == HotKeyLangId)
+    if (HotKeyLangId == LANGIDFROMLCID(glcid))
         return 1;
 
     return 0;
@@ -244,7 +244,7 @@ IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVir
         }
 
         LangId = IntGetImeHotKeyLangId(pNode->dwHotKeyId);
-        nScore = IntGetImeHotKeyScore(hKL, LangId);
+        nScore = IntGetImeHotKeyLanguageScore(hKL, LangId);
         if (nScore == 3)
             return pNode;
 
