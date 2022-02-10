@@ -6819,6 +6819,7 @@ Quit:
         SeReleaseSidAndAttributesArray(CapturedSids,
                                        PreviousMode,
                                        TRUE);
+        CapturedSids = NULL;
     }
 
     if (CapturedPrivileges != NULL)
@@ -6826,6 +6827,7 @@ Quit:
         SeReleaseLuidAndAttributesArray(CapturedPrivileges,
                                         PreviousMode,
                                         TRUE);
+        CapturedPrivileges = NULL;
     }
 
     if (CapturedRestrictedSids != NULL)
@@ -6833,6 +6835,7 @@ Quit:
         SeReleaseSidAndAttributesArray(CapturedRestrictedSids,
                                        PreviousMode,
                                        TRUE);
+        CapturedRestrictedSids = NULL;
     }
 
     return Status;
