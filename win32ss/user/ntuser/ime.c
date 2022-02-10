@@ -58,11 +58,11 @@ typedef struct tagIMEHOTKEY
 PIMEHOTKEY gpImeHotKeyList = NULL;
 LCID glcid = 0;
 
-INT FASTCALL IntGetKeyboardLayoutScore(HKL hkl, LANGID LangId)
+INT FASTCALL IntGetImeHotKeyScore(HKL hKL, LANGID HotKeyLangId)
 {
     LCID lcid;
 
-    if (LangId == LANGID_NEUTRAL || LOWORD(hkl) == LangId)
+    if (HotKeyLangId == LANGID_NEUTRAL || HotKeyLangId == LOWORD(hKL))
         return 3;
 
     _SEH2_TRY
@@ -75,13 +75,13 @@ INT FASTCALL IntGetKeyboardLayoutScore(HKL hkl, LANGID LangId)
     }
     _SEH2_END;
 
-    if (LANGIDFROMLCID(lcid) == LangId)
+    if (LANGIDFROMLCID(lcid) == HotKeyLangId)
         return 2;
 
     if (glcid == 0)
         ZwQueryDefaultLocale(FALSE, &glcid);
 
-    if (LANGIDFROMLCID(glcid) == LangId)
+    if (LANGIDFROMLCID(glcid) == HotKeyLangId)
         return 1;
 
     return 0;
@@ -220,7 +220,7 @@ IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVir
     BOOL fKorean = (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN);
     INT nScore, nMaxScore = 0;
 
-    for (pNode = pList; pNode != NULL; pNode = pNode->pNext)
+    for (pNode = pList; pNode; pNode = pNode->pNext)
     {
         if (pNode->uVirtualKey != uVirtualKey)
             continue;
@@ -244,7 +244,7 @@ IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVir
         }
 
         LangId = IntGetImeHotKeyLangId(pNode->dwHotKeyId);
-        nScore = IntGetKeyboardLayoutScore(hKL, LangId);
+        nScore = IntGetImeHotKeyScore(hKL, LangId);
         if (nScore == 3)
             return pNode;
 
