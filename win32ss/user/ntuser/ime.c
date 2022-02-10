@@ -11,6 +11,7 @@
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 #define INVALID_THREAD_ID  ((ULONG)-1)
+#define INVALID_HOTKEY     ((UINT)-1)
 #define MOD_KEYS           (MOD_CONTROL | MOD_SHIFT | MOD_ALT | MOD_WIN)
 #define MOD_LEFT_RIGHT     (MOD_LEFT | MOD_RIGHT)
 
@@ -55,6 +56,50 @@ typedef struct tagIMEHOTKEY
 } IMEHOTKEY, *PIMEHOTKEY;
 
 PIMEHOTKEY gpImeHotKeyList = NULL;
+LCID glcid = 0;
+
+UINT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
+{
+    LCID lcid;
+
+    if (HotKeyLangId == LANGID_NEUTRAL || HotKeyLangId == LOWORD(hKL))
+        return 3;
+
+    _SEH2_TRY
+    {
+        lcid = NtCurrentTeb()->CurrentLocale;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        lcid = MAKELCID(LANGID_NEUTRAL, SORT_DEFAULT);
+    }
+    _SEH2_END;
+
+    if (HotKeyLangId == LANGIDFROMLCID(lcid))
+        return 2;
+
+    if (glcid == 0)
+        ZwQueryDefaultLocale(FALSE, &glcid);
+
+    if (HotKeyLangId == LANGIDFROMLCID(glcid))
+        return 1;
+
+    return 0;
+}
+
+HKL FASTCALL IntGetActiveKeyboardLayout(VOID)
+{
+    PTHREADINFO pti;
+
+    if (gpqForeground && gpqForeground->spwndActive)
+    {
+        pti = gpqForeground->spwndActive->head.pti;
+        if (pti && pti->KeyboardLayout)
+            return pti->KeyboardLayout->hkl;
+    }
+
+    return UserGetKeyboardLayout(0);
+}
 
 static LANGID FASTCALL IntGetImeHotKeyLangId(DWORD dwHotKeyId)
 {
@@ -163,6 +208,117 @@ static VOID FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
             return;
         }
     }
+}
+
+PIMEHOTKEY
+IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVirtualKey)
+{
+    PIMEHOTKEY pNode, ret = NULL;
+    PTHREADINFO pti = GetW32ThreadInfo();
+    LANGID LangId;
+    HKL hKL = IntGetActiveKeyboardLayout();
+    BOOL fKorean = (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN);
+    UINT nScore, nMaxScore = 0;
+
+    for (pNode = pList; pNode; pNode = pNode->pNext)
+    {
+        if (pNode->uVirtualKey != uVirtualKey)
+            continue;
+
+        if ((pNode->uModifiers & MOD_IGNORE_ALL_MODIFIER))
+        {
+            ;
+        }
+        else if ((pNode->uModifiers & MOD_KEYS) != uModKeys)
+        {
+            continue;
+        }
+        else if ((pNode->uModifiers & uLeftRight) ||
+                 (pNode->uModifiers & MOD_LEFT_RIGHT) == uLeftRight)
+        {
+            ;
+        }
+        else
+        {
+            continue;
+        }
+
+        LangId = IntGetImeHotKeyLangId(pNode->dwHotKeyId);
+        nScore = IntGetImeHotKeyLanguageScore(hKL, LangId);
+        if (nScore >= 3)
+            return pNode;
+
+        if (fKorean)
+            continue;
+
+        if (nScore == 0)
+        {
+            if (pNode->dwHotKeyId == IME_CHOTKEY_IME_NONIME_TOGGLE ||
+                pNode->dwHotKeyId == IME_THOTKEY_IME_NONIME_TOGGLE)
+            {
+                if (LOWORD(pti->hklPrev) == LangId)
+                    return pNode;
+            }
+        }
+
+        if (nMaxScore < nScore)
+        {
+            nMaxScore = nScore;
+            ret = pNode;
+        }
+    }
+
+    return ret;
+}
+
+PIMEHOTKEY IntCheckImeHotKey(PUSER_MESSAGE_QUEUE MessageQueue, UINT uVirtualKey, LPARAM lParam)
+{
+    PIMEHOTKEY pHotKey;
+    UINT uModifiers;
+    BOOL bKeyUp = (lParam & 0x80000000);
+    const BYTE *KeyState = MessageQueue->afKeyState;
+    static UINT s_uKeyUpVKey = 0;
+
+    if (bKeyUp)
+    {
+        if (s_uKeyUpVKey != uVirtualKey)
+        {
+            s_uKeyUpVKey = 0;
+            return NULL;
+        }
+
+        s_uKeyUpVKey = 0;
+    }
+
+    uModifiers = 0;
+    if (IS_KEY_DOWN(KeyState, VK_LSHIFT))   uModifiers |= (MOD_SHIFT | MOD_LEFT);
+    if (IS_KEY_DOWN(KeyState, VK_RSHIFT))   uModifiers |= (MOD_SHIFT | MOD_RIGHT);
+    if (IS_KEY_DOWN(KeyState, VK_LCONTROL)) uModifiers |= (MOD_CONTROL | MOD_LEFT);
+    if (IS_KEY_DOWN(KeyState, VK_RCONTROL)) uModifiers |= (MOD_CONTROL | MOD_RIGHT);
+    if (IS_KEY_DOWN(KeyState, VK_LMENU))    uModifiers |= (MOD_ALT | MOD_LEFT);
+    if (IS_KEY_DOWN(KeyState, VK_RMENU))    uModifiers |= (MOD_ALT | MOD_RIGHT);
+
+    pHotKey = IntGetImeHotKeyByKey(gpImeHotKeyList,
+                                   (uModifiers & MOD_KEYS),
+                                   (uModifiers & MOD_LEFT_RIGHT),
+                                   uVirtualKey);
+    if (pHotKey)
+    {
+        if (bKeyUp)
+        {
+            if (pHotKey->uModifiers & MOD_ON_KEYUP)
+                return pHotKey;
+        }
+        else
+        {
+            if (pHotKey->uModifiers & MOD_ON_KEYUP)
+                s_uKeyUpVKey = uVirtualKey;
+            else
+                return pHotKey;
+        }
+    }
+
+    return NULL;
 }
 
 VOID FASTCALL IntFreeImeHotKeys(VOID)
@@ -290,6 +446,27 @@ NtUserSetImeHotKey(
     BOOL ret;
     UserEnterExclusive();
     ret = IntSetImeHotKey(dwHotKeyId, uModifiers, uVirtualKey, hKL, dwAction);
+    UserLeave();
+    return ret;
+}
+
+DWORD
+NTAPI
+NtUserCheckImeHotKey(UINT uVirtualKey, LPARAM lParam)
+{
+    PIMEHOTKEY pNode;
+    DWORD ret = INVALID_HOTKEY;
+
+    UserEnterExclusive();
+
+    if (!gpqForeground || !IS_IMM_MODE())
+        goto Quit;
+
+    pNode = IntCheckImeHotKey(gpqForeground, uVirtualKey, lParam);
+    if (pNode)
+        ret = pNode->dwHotKeyId;
+
+Quit:
     UserLeave();
     return ret;
 }
@@ -548,16 +725,6 @@ NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion)
 
 Quit:
     UserLeave();
-    return 0;
-}
-
-DWORD
-NTAPI
-NtUserCheckImeHotKey(
-    DWORD  VirtualKey,
-    LPARAM lParam)
-{
-    STUB;
     return 0;
 }
 
