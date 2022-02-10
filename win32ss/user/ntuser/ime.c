@@ -276,15 +276,18 @@ PIMEHOTKEY IntCheckImeHotKey(PUSER_MESSAGE_QUEUE MessageQueue, UINT uVirtualKey,
     PIMEHOTKEY pHotKey;
     UINT uModifiers;
     BOOL bKeyUp = (lParam & 0x80000000);
-    LPBYTE KeyState = MessageQueue->afKeyState;
-    static UINT s_uOldVirtualKey = 0;
+    const BYTE *KeyState = MessageQueue->afKeyState;
+    static UINT s_uKeyUpVKey = 0;
 
     if (bKeyUp)
     {
-        if (s_uOldVirtualKey != uVirtualKey)
+        if (s_uKeyUpVKey != uVirtualKey)
+        {
+            s_uKeyUpVKey = 0;
             return NULL;
+        }
 
-        s_uOldVirtualKey = 0;
+        s_uKeyUpVKey = 0;
     }
 
     uModifiers = 0;
@@ -309,7 +312,7 @@ PIMEHOTKEY IntCheckImeHotKey(PUSER_MESSAGE_QUEUE MessageQueue, UINT uVirtualKey,
         else
         {
             if (pHotKey->uModifiers & MOD_ON_KEYUP)
-                s_uOldVirtualKey = uVirtualKey;
+                s_uKeyUpVKey = uVirtualKey;
             else
                 return pHotKey;
         }
