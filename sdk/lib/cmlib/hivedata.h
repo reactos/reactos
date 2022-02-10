@@ -55,8 +55,7 @@
 // Log identifiers
 //
 #define DIRTY_BLOCK 0xFF
-#define DIRTY_ID 0x54524944  // DIRT
-#define DIRTY_ID_SIZE 4
+#define HV_LOG_DIRTY_SIGNATURE 0x54524944  // DIRT
 
 //
 // Hive versions

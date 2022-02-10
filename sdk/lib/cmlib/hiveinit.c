@@ -442,6 +442,7 @@ HvpRecoverDataFromLog(
 {
     ULONG Offset = 0;
     ULONG IndexInLog;
+    ULONG blockIndex;
     BOOLEAN IsSuccess;
     UCHAR DirtyVectBuffer[HSECTOR_SIZE];
     UCHAR Buffer[HBLOCK_SIZE];
@@ -460,17 +461,18 @@ HvpRecoverDataFromLog(
         return FALSE;
     }
 
-    if (*((PULONG)DirtyVectBuffer) != DIRTY_ID)
+    if (*((PULONG)DirtyVectBuffer) != HV_LOG_DIRTY_SIGNATURE)
     {
         DPRINT1("Wrong header in dirty block\n");
         return FALSE;
     }
 
     IndexInLog = 0;
+    blockIndex = 0;
     /* Write birty blocks */
-    for (ULONG blockIndex = 0; blockIndex < BaseBlock->Length / HBLOCK_SIZE; ++blockIndex)
+    for (; blockIndex < BaseBlock->Length / HBLOCK_SIZE; ++blockIndex)
     {
-        if (DirtyVectBuffer[blockIndex + DIRTY_ID_SIZE] != DIRTY_BLOCK)
+        if (DirtyVectBuffer[blockIndex + sizeof(HV_LOG_DIRTY_SIGNATURE)] != DIRTY_BLOCK)
         {
             continue;
         }

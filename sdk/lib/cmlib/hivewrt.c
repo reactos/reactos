@@ -54,8 +54,8 @@ HvpWriteLog(
     /* Copy hive header */
     RtlCopyMemory(Buffer, RegistryHive->BaseBlock, HV_LOG_HEADER_SIZE);
     Ptr = Buffer + HV_LOG_HEADER_SIZE;
-    *((PULONG)Ptr) = DIRTY_ID;
-    Ptr += DIRTY_ID_SIZE;
+    *((PULONG)Ptr) = HV_LOG_DIRTY_SIGNATURE;
+    Ptr += sizeof(HV_LOG_DIRTY_SIGNATURE);
 
     /* Mark dirty blocks as "FF" - 1 bit per sector */
     BlockIndex = 0;
