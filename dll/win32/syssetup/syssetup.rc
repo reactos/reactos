@@ -74,6 +74,9 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_ET_EE
     #include "lang/et-EE.rc"
 #endif
+#ifdef LANGUAGE_EU_ES
+    #include "lang/eu-ES.rc"
+#endif
 #ifdef LANGUAGE_FI_FI
     #include "lang/fi-FI.rc"
 #endif
@@ -85,6 +88,9 @@ IDR_GPL RT_TEXT "COPYING"
 #endif
 #ifdef LANGUAGE_HI_IN
     #include "lang/hi-IN.rc"
+#endif
+#ifdef LANGUAGE_HR_HR
+    #include "lang/hr-HR.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"
@@ -142,6 +148,9 @@ IDR_GPL RT_TEXT "COPYING"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
