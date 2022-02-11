@@ -659,7 +659,7 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
 
         if (uMsg == WM_SYSKEYDOWN || uMsg == WM_SYSKEYUP)
         {
-            if (uVirtualKey != VK_MENU && uVirtualKey != VK_F10 && !bDBE)
+            if (!bDBE && uVirtualKey != VK_MENU && uVirtualKey != VK_F10)
                 return 0;
         }
 
