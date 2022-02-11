@@ -58,6 +58,14 @@ typedef struct tagIMEHOTKEY
 PIMEHOTKEY gpImeHotKeyList = NULL;
 LCID glcid = 0;
 
+DWORD FASTCALL IntGetImeCompatFlags(PTHREADINFO pti)
+{
+    if (!pti)
+        pti = PsGetCurrentThreadWin32Thread();
+
+    return pti->ppi->dwImeCompatFlags;
+}
+
 UINT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
 {
     LCID lcid;
@@ -343,7 +351,10 @@ IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DW
         case SETIMEHOTKEY_DELETE:
             pNode = IntGetImeHotKeyById(gpImeHotKeyList, dwHotKeyId);
             if (!pNode)
+            {
+                ERR("dwHotKeyId: 0x%lX\n", dwHotKeyId);
                 return FALSE;
+            }
 
             IntDeleteImeHotKey(&gpImeHotKeyList, pNode);
             return TRUE;
@@ -550,29 +561,125 @@ DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
 }
 
 UINT FASTCALL
-IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
+                 WPARAM wParam, LPARAM lParam)
 {
-    PKL pKbdLayout;
+    DWORD dwHotKeyId, ret = 0;
+    PKL pKL;
+    UINT uVirtualKey;
+    PIMC pIMC = NULL;
+    BOOL bDBE = FALSE;
+    PIMEHOTKEY pImeHotKey;
+    HKL hKL;
+    HWND hWnd;
 
     ASSERT_REFS_CO(pWnd);
 
-    if ( Msg == WM_KEYDOWN ||
-         Msg == WM_SYSKEYDOWN ||
-         Msg == WM_KEYUP ||
-         Msg == WM_SYSKEYUP )
+    switch (uMsg)
     {
-       //Vk = wParam & 0xff;
-       pKbdLayout = pWnd->head.pti->KeyboardLayout;
-       if (pKbdLayout == NULL) return 0;
-       //
-       if (!(gpsi->dwSRVIFlags & SRVINFO_IMM32)) return 0;
-       // need ime.h!
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+            break;
+
+        default:
+            return 0;
     }
-    // Call User32:
-    // Anything but BOOL!
-    //ImmRet = co_IntImmProcessKey(UserHMGetHandle(pWnd), pKbdLayout->hkl, Vk, lParam, HotKey);
-    FIXME(" is UNIMPLEMENTED.\n");
-    return 0;
+
+    hWnd = UserHMGetHandle(pWnd);
+    pKL = pWnd->head.pti->KeyboardLayout;
+    if (!pKL)
+        return 0;
+
+    uVirtualKey = LOBYTE(wParam);
+
+    pImeHotKey = IntCheckImeHotKey(MessageQueue, uVirtualKey, lParam);
+    if (pImeHotKey)
+    {
+        dwHotKeyId = pImeHotKey->dwHotKeyId;
+        hKL = pImeHotKey->hKL;
+    }
+    else
+    {
+        dwHotKeyId = INVALID_HOTKEY;
+        hKL = NULL;
+    }
+
+    if (IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId && dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST)
+    {
+        if (pKL->hkl != hKL) {
+            UserPostMessage(hWnd, WM_INPUTLANGCHANGEREQUEST,
+                            ((pKL->dwFontSigs & gSystemFS) ? INPUTLANGCHANGE_SYSCHARSET : 0),
+                            (LPARAM)hKL);
+        }
+
+        if (IntGetImeCompatFlags(pWnd->head.pti) & 0x800000)
+            return 0;
+
+        return IPHK_HOTKEY;
+    }
+
+    if (!IS_IMM_MODE())
+        return 0;
+
+    if (dwHotKeyId == INVALID_HOTKEY)
+    {
+        if (!pKL->piiex)
+            return 0;
+
+        pIMC = NULL;
+        if (pWnd->hImc)
+            pIMC = UserGetObject(gHandleTable, pWnd->hImc, TYPE_INPUTCONTEXT);
+        if (!pIMC)
+            return 0;
+
+        if ((lParam & 0x80000000) &&
+            (pKL->piiex->ImeInfo.fdwProperty & IME_PROP_IGNORE_UPKEYS))
+        {
+            return 0;
+        }
+
+        switch (uVirtualKey)
+        {
+            case VK_DBE_CODEINPUT:
+            case VK_DBE_HIRAGANA:
+            case VK_DBE_ENTERCONFIGMODE:
+            case VK_DBE_ENTERWORDREGISTERMODE:
+            case VK_DBE_KATAKANA:
+            case VK_DBE_NOCODEINPUT:
+            case VK_DBE_NOROMAN:
+            case VK_DBE_ROMAN:
+                bDBE = TRUE;
+                break;
+
+            default:
+                bDBE = FALSE;
+                break;
+        }
+
+        if (uMsg == WM_SYSKEYDOWN || uMsg == WM_SYSKEYUP)
+        {
+            if (uVirtualKey != VK_MENU && uVirtualKey != VK_F10 && !bDBE)
+                return 0;
+        }
+
+        if (!(pKL->piiex->ImeInfo.fdwProperty & IME_PROP_NEED_ALTKEY))
+        {
+            if (!bDBE && (uVirtualKey == VK_MENU || (lParam & 0x20000000)))
+                return 0;
+        }
+    }
+
+    if (LOBYTE(uVirtualKey) == VK_PACKET)
+        uVirtualKey = MAKELONG(wParam, GetW32ThreadInfo()->wchInjected);
+
+    ret = co_IntImmProcessKey(hWnd, pKL->hkl, uVirtualKey, lParam, dwHotKeyId);
+
+    if (IntGetImeCompatFlags(pWnd->head.pti) & 0x800000)
+        ret &= ~IPHK_HOTKEY;
+
+    return ret;
 }
 
 NTSTATUS
@@ -587,6 +694,7 @@ NtUserBuildHimcList(DWORD dwThreadId, DWORD dwCount, HIMC *phList, LPDWORD pdwCo
 
     if (!IS_IMM_MODE())
     {
+        ERR("!IS_IMM_MODE()\n");
         EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         goto Quit;
     }
@@ -695,8 +803,14 @@ NtUserNotifyIMEStatus(HWND hwnd, BOOL fOpen, DWORD dwConversion)
 
     UserEnterExclusive();
 
+    if (!IS_IMM_MODE())
+    {
+        ERR("!IS_IMM_MODE()\n");
+        goto Quit;
+    }
+
     pwnd = ValidateHwndNoErr(hwnd);
-    if (!pwnd || !IS_IMM_MODE())
+    if (!pwnd)
         goto Quit;
 
     pti = pwnd->head.pti;
@@ -741,6 +855,7 @@ NtUserDisableThreadIme(
 
     if (!IS_IMM_MODE())
     {
+        ERR("!IS_IMM_MODE()\n");
         EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         goto Quit;
     }
@@ -812,6 +927,7 @@ NtUserGetAppImeLevel(HWND hWnd)
 
     if (!IS_IMM_MODE())
     {
+        ERR("!IS_IMM_MODE()\n");
         EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         goto Quit;
     }
@@ -886,7 +1002,10 @@ NtUserGetImeInfoEx(
     UserEnterShared();
 
     if (!IS_IMM_MODE())
+    {
+        ERR("!IS_IMM_MODE()\n");
         goto Quit;
+    }
 
     _SEH2_TRY
     {
@@ -928,15 +1047,16 @@ NtUserSetAppImeLevel(HWND hWnd, DWORD dwLevel)
 
     UserEnterExclusive();
 
-    pWnd = ValidateHwndNoErr(hWnd);
-    if (!pWnd)
-        goto Quit;
-
     if (!IS_IMM_MODE())
     {
+        ERR("!IS_IMM_MODE()\n");
         EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         goto Quit;
     }
+
+    pWnd = ValidateHwndNoErr(hWnd);
+    if (!pWnd)
+        goto Quit;
 
     pti = PsGetCurrentThreadWin32Thread();
     if (pWnd->head.pti->ppi == pti->ppi)
@@ -983,7 +1103,10 @@ NtUserSetImeInfoEx(PIMEINFOEX pImeInfoEx)
     UserEnterExclusive();
 
     if (!IS_IMM_MODE())
+    {
+        ERR("!IS_IMM_MODE()\n");
         goto Quit;
+    }
 
     _SEH2_TRY
     {
@@ -1012,8 +1135,14 @@ NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
 
     UserEnterExclusive();
 
+    if (!IS_IMM_MODE())
+    {
+        ERR("!IS_IMM_MODE()\n");
+        goto Quit;
+    }
+
     pImeWnd = ValidateHwndNoErr(hImeWnd);
-    if (!IS_IMM_MODE() || !pImeWnd || pImeWnd->fnid != FNID_IME)
+    if (!pImeWnd || pImeWnd->fnid != FNID_IME)
         goto Quit;
 
     pwndFocus = ValidateHwndNoErr(hwndFocus);
@@ -1140,6 +1269,7 @@ BOOL NTAPI NtUserDestroyInputContext(HIMC hIMC)
 
     if (!IS_IMM_MODE())
     {
+        ERR("!IS_IMM_MODE()\n");
         EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         goto Quit;
     }
@@ -1185,7 +1315,10 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
     PDESKTOP pdesk = pti->rpdesk;
 
     if (!IS_IMM_MODE() || (pti->TIF_flags & TIF_DISABLEIME)) // Disabled?
+    {
+        ERR("IME is disabled\n");
         return NULL;
+    }
 
     if (!pdesk) // No desktop?
         return NULL;
@@ -1232,7 +1365,10 @@ NtUserCreateInputContext(ULONG_PTR dwClientImcData)
     UserEnterExclusive();
 
     if (!IS_IMM_MODE())
+    {
+        ERR("!IS_IMM_MODE()\n");
         goto Quit;
+    }
 
     pIMC = UserCreateInputContext(dwClientImcData);
     if (pIMC)
@@ -1317,8 +1453,14 @@ NtUserAssociateInputContext(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 
     UserEnterExclusive();
 
+    if (!IS_IMM_MODE())
+    {
+        ERR("!IS_IMM_MODE()\n");
+        goto Quit;
+    }
+
     pWnd = ValidateHwndNoErr(hWnd);
-    if (!pWnd || !IS_IMM_MODE())
+    if (!pWnd)
         goto Quit;
 
     pIMC = (hIMC ? UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT) : NULL);
@@ -1373,7 +1515,10 @@ NtUserUpdateInputContext(
     UserEnterExclusive();
 
     if (!IS_IMM_MODE())
+    {
+        ERR("!IS_IMM_MODE()\n");
         goto Quit;
+    }
 
     pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
     if (!pIMC)
@@ -1397,7 +1542,10 @@ NtUserQueryInputContext(HIMC hIMC, DWORD dwType)
     UserEnterExclusive();
 
     if (!IS_IMM_MODE())
+    {
+        ERR("!IS_IMM_MODE()\n");
         goto Quit;
+    }
 
     pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
     if (!pIMC)
