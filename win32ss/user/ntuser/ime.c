@@ -568,7 +568,6 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
     DWORD dwHotKeyId;
     PKL pKL;
     PIMC pIMC = NULL;
-    BOOL bDBE = FALSE;
     PIMEHOTKEY pImeHotKey;
     HKL hKL;
     HWND hWnd;
@@ -649,24 +648,23 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
             case VK_DBE_NOCODEINPUT:
             case VK_DBE_NOROMAN:
             case VK_DBE_ROMAN:
-                bDBE = TRUE;
                 break;
 
             default:
-                bDBE = FALSE;
+            {
+                if (uMsg == WM_SYSKEYDOWN || uMsg == WM_SYSKEYUP)
+                {
+                    if (uVirtualKey != VK_MENU && uVirtualKey != VK_F10)
+                        return 0;
+                }
+
+                if (!(pKL->piiex->ImeInfo.fdwProperty & IME_PROP_NEED_ALTKEY))
+                {
+                    if (uVirtualKey == VK_MENU || (lParam & 0x20000000))
+                        return 0;
+                }
                 break;
-        }
-
-        if (uMsg == WM_SYSKEYDOWN || uMsg == WM_SYSKEYUP)
-        {
-            if (!bDBE && uVirtualKey != VK_MENU && uVirtualKey != VK_F10)
-                return 0;
-        }
-
-        if (!(pKL->piiex->ImeInfo.fdwProperty & IME_PROP_NEED_ALTKEY))
-        {
-            if (!bDBE && (uVirtualKey == VK_MENU || (lParam & 0x20000000)))
-                return 0;
+            }
         }
     }
 
