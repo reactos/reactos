@@ -324,13 +324,16 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     NtLdrOutputLoadMsg(FullPath, NULL);
     Success = PeLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
     if (!Success)
+    {
+        ERR("PeLdrLoadImage('%s') failed\n", DllName);
         return FALSE;
+    }
 
     // Allocate a DTE for it
     Success = PeLdrAllocateDataTableEntry(LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
     if (!Success)
     {
-        ERR("PeLdrAllocateDataTableEntry() failed\n");
+        ERR("PeLdrAllocateDataTableEntry('%s') failed\n", DllName);
         return FALSE;
     }
 
@@ -342,7 +345,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     Success = PeLdrScanImportDescriptorTable(LoadOrderListHead, FullPath, *DriverDTE);
     if (!Success)
     {
-        ERR("PeLdrScanImportDescriptorTable() failed for %s\n", FullPath);
+        ERR("PeLdrScanImportDescriptorTable('%s') failed\n", FullPath);
         return FALSE;
     }
 
@@ -504,7 +507,7 @@ LoadModule(
     Success = PeLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
     if (!Success)
     {
-        TRACE("Loading %s failed\n", File);
+        ERR("PeLdrLoadImage('%s') failed\n", File);
         return FALSE;
     }
     TRACE("%s loaded successfully at %p\n", File, BaseAddress);
@@ -519,6 +522,10 @@ LoadModule(
                                           FullFileName,
                                           BaseAddress,
                                           Dte);
+    if (!Success)
+    {
+        ERR("PeLdrAllocateDataTableEntry('%s') failed\n", FullFileName);
+    }
 
     return Success;
 }
@@ -579,10 +586,18 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     TRACE("HAL file = '%s' ; Kernel file = '%s'\n", HalFileName, KernelFileName);
 
     /* Load the Kernel */
-    LoadModule(LoaderBlock, DirPath, KernelFileName, "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
+    if (!LoadModule(LoaderBlock, DirPath, KernelFileName, "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30))
+    {
+        ERR("LoadModule() failed for %s\n", KernelFileName);
+        return FALSE;
+    }
 
     /* Load the HAL */
-    LoadModule(LoaderBlock, DirPath, HalFileName, "hal.dll", LoaderHalCode, &HalDTE, 45);
+    if (!LoadModule(LoaderBlock, DirPath, HalFileName, "hal.dll", LoaderHalCode, &HalDTE, 45))
+    {
+        ERR("LoadModule() failed for %s\n", HalFileName);
+        return FALSE;
+    }
 
     /* Load the Kernel Debugger Transport DLL */
     if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
@@ -636,7 +651,11 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
              * Load the transport DLL. Override the base DLL name of the
              * loaded transport DLL to the default "KDCOM.DLL" name.
              */
-            LoadModule(LoaderBlock, DirPath, KdDllName, "kdcom.dll", LoaderSystemCode, &KdComDTE, 60);
+            if (!LoadModule(LoaderBlock, DirPath, KdDllName, "kdcom.dll", LoaderSystemCode, &KdComDTE, 60))
+            {
+                /* The transport DLL being optional, just ignore the failure */
+                WARN("LoadModule() failed for %s\n", KdDllName);
+            }
         }
     }
 
