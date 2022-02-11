@@ -564,9 +564,9 @@ UINT FASTCALL
 IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
                  WPARAM wParam, LPARAM lParam)
 {
-    DWORD dwHotKeyId, ret = 0;
+    UINT uVirtualKey, ret = 0;
+    DWORD dwHotKeyId;
     PKL pKL;
-    UINT uVirtualKey;
     PIMC pIMC = NULL;
     BOOL bDBE = FALSE;
     PIMEHOTKEY pImeHotKey;
@@ -593,7 +593,6 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
         return 0;
 
     uVirtualKey = LOBYTE(wParam);
-
     pImeHotKey = IntCheckImeHotKey(MessageQueue, uVirtualKey, lParam);
     if (pImeHotKey)
     {
@@ -628,7 +627,6 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
         if (!pKL->piiex)
             return 0;
 
-        pIMC = NULL;
         if (pWnd->hImc)
             pIMC = UserGetObject(gHandleTable, pWnd->hImc, TYPE_INPUTCONTEXT);
         if (!pIMC)
