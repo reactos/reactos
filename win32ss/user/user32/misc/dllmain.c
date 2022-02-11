@@ -716,7 +716,7 @@ NTSTATUS WINAPI User32CallUMPDFromKernel(PVOID Arguments, ULONG ArgumentLength)
 NTSTATUS WINAPI
 User32CallImmProcessKeyFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
-    PIMMPROCESSKEY_CALLBACK_ARGUMENTS Common = (PIMMPROCESSKEY_CALLBACK_ARGUMENTS)Arguments;
+    PIMMPROCESSKEY_CALLBACK_ARGUMENTS Common = Arguments;
     DWORD Result = IMM_FN(ImmProcessKey)(Common->hWnd,
                                          Common->hKL,
                                          Common->vKey,

@@ -641,9 +641,9 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
         switch (uVirtualKey)
         {
             case VK_DBE_CODEINPUT:
-            case VK_DBE_HIRAGANA:
             case VK_DBE_ENTERCONFIGMODE:
             case VK_DBE_ENTERWORDREGISTERMODE:
+            case VK_DBE_HIRAGANA:
             case VK_DBE_KATAKANA:
             case VK_DBE_NOCODEINPUT:
             case VK_DBE_NOROMAN:

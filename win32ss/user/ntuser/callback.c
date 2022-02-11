@@ -1266,7 +1266,7 @@ co_IntImmProcessKey(HWND hWnd, HKL hKL, UINT vKey, LPARAM lParam, DWORD dwHotKey
     UserEnterCo();
 
     if (NT_SUCCESS(Status))
-        ret = *(DWORD*)ResultPointer;
+        ret = *(LPDWORD)ResultPointer;
 
     return ret;
 }
