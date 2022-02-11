@@ -607,7 +607,8 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
 
     if (IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId && dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST)
     {
-        if (pKL->hkl != hKL) {
+        if (pKL->hkl != hKL)
+        {
             UserPostMessage(hWnd, WM_INPUTLANGCHANGEREQUEST,
                             ((pKL->dwFontSigs & gSystemFS) ? INPUTLANGCHANGE_SYSCHARSET : 0),
                             (LPARAM)hKL);
