@@ -1,6 +1,11 @@
-// fathelp.S
-// FAT12/16 Boot Sector Helper Code
-// Copyright (c) 1998, 2001, 2002, 2003 Brian Palmer
+/*
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     FAT12/16 Boot Sector Helper Code
+ * COPYRIGHT:   Copyright 1998-2003 Brian Palmer (brianp@reactos.org)
+ *              Copyright 2019 Dmitry Borisov (di.sean@protonmail.com)
+ *              Copyright 2022 Hermès Bélusca-Maïto
+ */
 
 //#include <asm.inc>
 
@@ -67,12 +72,10 @@ FatHelperEntryPoint:
     mov si, offset msgLoading
     call word ptr [bp-PutCharsOffset]
 
-    call ReadFatIntoMemory
-
     /* Restore AX (start cluster) */
     pop ax
+    xor dx, dx
 
-    // AX has start cluster of freeldr.sys
     mov  bx, FREELDR_BASE / 16
     mov  es, bx
 
@@ -94,8 +97,7 @@ LoadFile3:
     call word ptr [bp-ReadClusterOffset]
     pop  es
 
-    xor  bx, bx
-    mov  bl, [bp+SectsPerCluster]
+    movzx bx, byte ptr [bp+SectsPerCluster]
     shl  bx, 5                          // BX = BX * 512 / 16
     mov  ax, es                         // Increment the load address by
     add  ax, bx                         // The size of a cluster
@@ -122,33 +124,37 @@ LoadFile_Done:
     jmp start
 
 
-// Reads the entire FAT into memory at 7000:0000
-ReadFatIntoMemory:
-    mov ax, [bp+HiddenSectors]
-    mov dx, [bp+HiddenSectors+2]
-    add ax, [bp+ReservedSectors]
-    adc dx, 0
-    mov cx, [bp+SectorsPerFat]
-    mov bx, HEX(7000)
-    mov es,bx
-    xor bx,bx
-    call word ptr [bp-ReadSectorsOffset]
-    ret
-
-
 // Returns the FAT entry for a given cluster number for 16-bit FAT
-// On entry AX has cluster number
+// On entry DX:AX has cluster number
 // On return AX has FAT entry for that cluster
 GetFatEntry16:
-    mov cx,2                        // AX = AX * 2 (since FAT16 entries are 2 bytes)
-    mul cx
-    shl dx,12
+    // NOTE: Do the DX:AX arithmetics via EAX instead.
+    xchg ax, dx
+    shl eax, 16                     // HIWORD(EAX) = old DX
+    mov ax, dx                      // LOWORD(EAX) = DX == old AX.
+    shl ax, 1                       // AX = AX * 2 (since FAT16 entries are 2 bytes)
+    mov cx, ax                      // Save this for later in CX
 
-    mov bx, HEX(7000)
-    add bx,dx
-    mov es,bx
-    mov bx,ax                       // Restore FAT entry offset
-    mov ax, es:[bx]                 // Get FAT entry
+    xor edx, edx // Dividend
+    movzx ebx, word ptr [bp+BytesPerSector] // FAT Sector Number = original AX / BytesPerSector
+    div ebx
+
+    // Now reconstruct DX:AX from EAX
+    mov dx, ax
+    shr eax, 16
+    xchg dx, ax
+
+    add ax, word ptr [bp+HiddenSectors]     // FAT Sector Number += HiddenSectors
+    adc dx, word ptr [bp+HiddenSectors+2]
+    add ax, word ptr [bp+ReservedSectors]   // FAT Sector Number += ReservedSectors
+    adc dx, 0
+
+    dec  bx
+    and  cx, bx                     // FAT Offset Within Sector = CX % BytesPerSector
+                                    // DX:AX holds logical FAT sector number
+                                    // CX holds FAT entry offset
+
+    call LoadFatSector              // Get FAT entry in AX
 
     ret
 
@@ -161,11 +167,25 @@ GetFatEntry12:
     mov   cx, ax
     shr   ax, 1
     add   ax, cx                    // AX = AX * 1.5 (AX = AX + (AX / 2)) , since FAT12 entries are 12 bits
+    mov cx, ax                      // Save this for later in CX
 
-    mov   bx, HEX(7000)
-    mov   es,bx
-    mov   bx,ax                     // Put FAT entry offset into BX
-    mov   ax, es:[bx]               // Get FAT entry
+    xor dx, dx // Dividend
+    mov bx, word ptr [bp+BytesPerSector]    // FAT Sector Number = original AX / BytesPerSector
+    div bx
+
+    xor dx, dx
+    add ax, word ptr [bp+HiddenSectors]     // FAT Sector Number += HiddenSectors
+    adc dx, word ptr [bp+HiddenSectors+2]
+    add ax, word ptr [bp+ReservedSectors]   // FAT Sector Number += ReservedSectors
+    adc dx, 0
+
+    dec  bx
+    and  cx, bx                     // FAT Offset Within Sector = CX % BytesPerSector
+                                    // DX:AX holds logical FAT sector number
+                                    // CX holds FAT entry offset
+
+    call LoadFatSector              // Get FAT entry in AX
+
     pop   cx                        // Get cluster number from stack
     and   cx, 1
     jz    UseLow12Bits
@@ -177,8 +197,53 @@ UseLow12Bits:
     and   ax, HEX(0fff)
 
 GetFatEntry12_Done:
-
     ret
+
+
+/*
+ * This code is directly adapted from fat32.S
+ * BUT: Use DX:AX instead of EAX for the FAT logical sector number.
+ * CX: FAT entry offset.
+ */
+LoadFatSector:
+    push  cx                        // Save FAT entry offset
+
+//
+// FIXME: Why loading the sectors at 7000h do fail?
+// In the meantime, do as with FAT32 and load the sectors
+// at 9000h instead; this seems to work fine...
+//
+    mov   bx, HEX(9000)             // We will load it to [9000:0000h]
+    mov   es, bx
+
+    // DX:AX holds logical FAT sector number
+    // Check if we have already loaded it
+    cmp   ax, word ptr [bp+FatSectorInCache]
+    jne   DoLoad
+    cmp   dx, word ptr [bp+FatSectorInCache+2]
+    je    LoadFatSectorAlreadyLoaded
+
+DoLoad:
+    mov word ptr [bp+FatSectorInCache], ax
+    mov word ptr [bp+FatSectorInCache+2], dx
+    xor bx, bx
+    // Read 2 consecutive sectors, so that, in FAT12, entry data
+    // that may cross sector boundaries, can be correctly read.
+    // This is not needed in FAT16 and FAT32 where entry data is
+    // aligned on word boundaries.
+    mov cx, 2       // mov cx, word ptr [bp+SectorsPerFat]
+
+    push es // The FAT12/16 bootsector ReadSectors destroys ES.
+    call word ptr [bp-ReadSectorsOffset]
+    pop es
+
+LoadFatSectorAlreadyLoaded:
+    pop   bx                        // Put FAT entry offset (originally in CX) into BX
+    mov   ax, word ptr es:[bx]      // Get FAT entry
+    ret
+
+FatSectorInCache:                   // This variable tells us which sector we currently have in memory
+    .long   HEX(0ffffffff)          // There is no need to re-read the same sector if we don't have to
 
 
 // Returns CF = 1 if this is a FAT12 file system
@@ -189,8 +254,7 @@ IsFat12:
     // starting from the beginning of the disk, so subtract hidden sectors
     sub   ebx, dword ptr [bp+HiddenSectors]
 
-    xor   eax,eax
-    mov   ax, word ptr [bp+TotalSectors]
+    movzx eax, word ptr [bp+TotalSectors]
     cmp   ax, 0
     jnz   IsFat12_2
     mov   eax, dword ptr [bp+TotalSectorsBig]
