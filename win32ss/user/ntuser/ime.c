@@ -1579,7 +1579,7 @@ Quit:
     return ret;
 }
 
-BOOL FASTCALL UserNeedImeWindow(PWND pwndParent, PWND pwnd)
+BOOL FASTCALL IntNeedImeWindow(PWND pwndParent, PWND pwnd)
 {
     PDESKTOP pdesk;
     PWND pwndNode;

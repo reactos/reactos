@@ -2072,7 +2072,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 
    if (IS_IMM_MODE() && !pti->spwndDefaultIme)
    {
-      if (UserNeedImeWindow(pWnd->spwndParent, pWnd))
+      if (IntNeedImeWindow(pWnd->spwndParent, pWnd))
       {
          pti->spwndDefaultIme =
             co_IntCreateDefaultImeWindow(pWnd, Class->atomClassName, pWnd->hModule);

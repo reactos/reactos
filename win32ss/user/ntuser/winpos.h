@@ -71,5 +71,5 @@ BOOL FASTCALL IntClientToScreen(PWND,LPPOINT);
 BOOL FASTCALL IntGetWindowRect(PWND,RECTL*);
 BOOL UserHasWindowEdge(DWORD,DWORD);
 VOID UserGetWindowBorders(DWORD,DWORD,SIZE*,BOOL);
-BOOL FASTCALL UserNeedImeWindow(PWND pwndParent, PWND pwnd);
+BOOL FASTCALL IntNeedImeWindow(PWND pwndParent, PWND pwnd);
 PWND APIENTRY co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance);
