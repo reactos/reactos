@@ -145,11 +145,9 @@ relocated:
     mov ds, ax
 
     test byte ptr ds:[HEX(501)], HEX(08)        // High-resolution mode check
-    jz VideoTestNormalMode
-    mov ax, HEX(0E000)
-    jmp short VideoTestDone
-VideoTestNormalMode:
-    mov ax, HEX(0A000)
+    mov ax, HEX(0A000)                          // Suppose normal mode
+    jz short VideoTestDone
+    mov ah, HEX(E0)                             // Change 0xA000 to 0xE000, use hi-res mode
 VideoTestDone:
     mov word ptr BP_REL(VramSegment), ax
 
@@ -360,14 +358,11 @@ PutChar:
     push di
     push es
 
-    push word ptr BP_REL(VramSegment)
-    pop es
-    mov di, word ptr BP_REL(VramOffset)         // ES:DI = VramSegment:VramOffset
+    les di, dword ptr BP_REL(VramSegOff)        // Load the VRAM segment and offset (ES:DI)
     .PutCharWrite:
-        xor ah, ah
-        stosw                                   // Write ASCII directly to the VRAM
-
-        mov word ptr BP_REL(VramOffset), di
+        xor ah, ah                              // Write ASCII directly to the VRAM
+        stosw                                   //   (two bytes per character)
+        mov word ptr BP_REL(VramOffset), di     // Update the start position
     pop es
     pop di
 
@@ -470,10 +465,12 @@ Reboot:
 Halt:
     jmp short Halt                              // Spin
 
-VramSegment:
-    .word 0
+VramSegOff:
 VramOffset:
     .word 0
+VramSegment:
+    .word 0
+
 msgDiskError:
     .ascii "ERR", CR, LF, NUL
 msgNotFoundError:
