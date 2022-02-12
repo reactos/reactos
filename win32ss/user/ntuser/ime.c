@@ -1654,9 +1654,9 @@ co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance)
     pwndDefaultIme = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL, WINVER);
     if (pwndDefaultIme)
     {
-        pimeui = ((PIMEWND)pwndDefaultIme)->pimeui;
         _SEH2_TRY
         {
+            pimeui = ((PIMEWND)pwndDefaultIme)->pimeui;
             ProbeForWrite(pimeui, sizeof(*pimeui), 1);
             pimeui->fDefault = TRUE;
             if ((pwnd->style & WS_CHILD) && pwnd->spwndParent->head.pti != pti)
@@ -1664,7 +1664,7 @@ co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ;
+            ERR("Exception!\n");
         }
         _SEH2_END;
     }
