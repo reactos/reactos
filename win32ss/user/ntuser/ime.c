@@ -1639,9 +1639,7 @@ co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance)
     if (pti->rpdesk->pheapDesktop == NULL)
         return NULL;
 
-    WindowName.Buffer = L"Default IME";
-    WindowName.Length = 0;
-    WindowName.MaximumLength = 0;
+    RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&WindowName, L"Default IME", 0);
 
     ClassName.Buffer = (LPWSTR)(ULONG_PTR)gpsi->atomSysClass[ICLS_IME];
     ClassName.Length = 0;
