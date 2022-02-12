@@ -76,7 +76,7 @@ NTAPI
 NICConfigureAdapter(_In_ PB57XX_ADAPTER Adapter)
 {
     UINT i;
-    ULONG AdditionalFrameSize = sizeof(ETH_HEADER) + 4;
+    ULONG AdditionalFrameSize = sizeof(ETH_HEADER);
     ULONG Alignment = Adapter->PciState.CacheLineSize;
     
     ASSERT(Adapter->PciState.DeviceID != 0);
@@ -601,8 +601,8 @@ NICSoftReset(_In_ PB57XX_ADAPTER Adapter)
     B57XXWriteRegister(Adapter, B57XX_REG_ETH_TX_RND_BACKOFF, Value);
     
     /* Initialization Procedure step 54: Configure the Message Transfer Unit MTU size */
-    // We need to include VLAN tags for the MTU
-    B57XXWriteRegister(Adapter, B57XX_REG_ETH_RX_MTU_SIZE, Adapter->MaxFrameSize + 4);
+    // We need to include VLAN tag (4 bytes) & frame check sequence (4 bytes) for the MTU
+    B57XXWriteRegister(Adapter, B57XX_REG_ETH_RX_MTU_SIZE, Adapter->MaxFrameSize + 8);
     
     /* Initialization Procedure step 55: Configure IPG for transmit */
     B57XXWriteRegister(Adapter, B57XX_REG_ETH_TX_LENGTH, 0x2620);
@@ -1236,15 +1236,11 @@ NICTransmitPacket(_In_ PB57XX_ADAPTER Adapter,
     Index = (Index + 1) % Adapter->SendProducer[0].Count;
     Adapter->SendProducer[0].ProducerIndex = Index;
     B57XXWriteMailbox(Adapter, B57XX_MBOX_TXP_HOST_RING_INDEX1, Index);
-    
-    if (Index == Adapter->SendProducer[0].ConsumerIndex)
-    {
-        NDIS_MinDbgPrint("Send ring is full\n");
-        Adapter->SendProducer[0].RingFull = TRUE;
-    }
 
     return NDIS_STATUS_SUCCESS;
 }
+
+
 
 VOID
 NTAPI
@@ -1323,8 +1319,8 @@ NICQueryStatisticCounter(_In_  PB57XX_ADAPTER Adapter,
         case OID_GEN_RCV_OK:
             *pValue64 = Adapter->Statistics.ReceiveSuccesses;
             break;
-        case OID_GEN_XMIT_ERROR:
-            *pValue64 = Adapter->Statistics.TransmitErrors;
+        case OID_GEN_XMIT_ERROR:            // dot3StatsInternalMacTransmitErrors
+            B57XXReadStatistic(Adapter, 0x330, 0x0818, FALSE, pValue64);
             break;
         case OID_GEN_RCV_ERROR:
             *pValue64 = Adapter->Statistics.ReceiveErrors;
@@ -1561,7 +1557,6 @@ ULONG
 B57XXComputeInverseCrc32(_In_ PUCHAR pBuffer,
                          _In_ ULONG BufferSize)
 {
-    ULONG Tmp;
     ULONG Reg = 0xFFFFFFFF;
     
     for(ULONG i = 0; i < BufferSize; i++)
@@ -1570,12 +1565,7 @@ B57XXComputeInverseCrc32(_In_ PUCHAR pBuffer,
         
         for(ULONG j = 0; j < 8; j++)
         {
-            Tmp = Reg & 0x01;
-            Reg >>= 1;
-            if(Tmp)
-            {
-                Reg ^= 0xEDB88320;
-            }
+            Reg = (Reg >> 1) ^ (-(LONG)(Reg & 0x01) & 0xEDB88320);
         }
     }
     return Reg;

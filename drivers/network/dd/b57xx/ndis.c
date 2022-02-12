@@ -142,7 +142,6 @@ MiniportInitialize(_Out_ PNDIS_STATUS OpenErrorStatus,
     Adapter->HardwareStatus = NdisHardwareStatusNotReady;
     NdisAllocateSpinLock(&Adapter->Interrupt.Lock);
     NdisAllocateSpinLock(&Adapter->SendLock);
-    NdisAllocateSpinLock(&Adapter->InfoLock);
     
     /* Notify NDIS of some characteristics of our NIC */
     NdisMSetAttributesEx(Adapter->MiniportAdapterHandle,
@@ -481,15 +480,30 @@ MiniportSend(_In_ NDIS_HANDLE MiniportAdapterContext,
              _In_ PNDIS_PACKET Packet,
              _In_ UINT Flags)
 {
-    NDIS_STATUS Status;
     PB57XX_ADAPTER Adapter = (PB57XX_ADAPTER)MiniportAdapterContext;
+    NDIS_STATUS Status = NDIS_STATUS_PENDING;
     PSCATTER_GATHER_LIST SGList = NDIS_PER_PACKET_INFO_FROM_PACKET(Packet,
                                                                    ScatterGatherListPacketInfo);
-
-    
-    NdisAcquireSpinLock(&Adapter->SendLock);
+    LONG BusyDescriptors = Adapter->SendProducer[0].ProducerIndex -
+                           Adapter->SendProducer[0].ConsumerIndex;
     
     ASSERT(SGList != NULL);
+    ASSERT(SGList->NumberOfElements >= 1);
+    
+    NdisDprAcquireSpinLock(&Adapter->SendLock);
+    
+    if (BusyDescriptors < 0)
+    {
+        BusyDescriptors += Adapter->SendProducer[0].Count;
+    }
+    
+    if (Adapter->SendProducer[0].RingFull == TRUE ||
+        BusyDescriptors + SGList->NumberOfElements > Adapter->SendProducer[0].Count)
+    {
+        /* Force NDIS to resubmit the send */
+        Status = NDIS_STATUS_RESOURCES;
+        goto Exit;
+    }
     
     for (UINT i = 0; i < SGList->NumberOfElements; i++)
     {
@@ -497,19 +511,22 @@ MiniportSend(_In_ NDIS_HANDLE MiniportAdapterContext,
         
         Adapter->SendProducer[0].pPacketList[Adapter->SendProducer[0].ProducerIndex] = Packet;
 
-        Status = NICTransmitPacket(Adapter,
-                                   SGList->Elements[i].Address,
-                                   SGList->Elements[i].Length,
-                                   i == SGList->NumberOfElements - 1 ? B57XX_SBD_PACKET_END : 0);
-        if (Status != NDIS_STATUS_SUCCESS)
-        {
-            Adapter->Statistics.TransmitErrors++;
-        }
+        NICTransmitPacket(Adapter,
+                          SGList->Elements[i].Address,
+                          SGList->Elements[i].Length,
+                          i == SGList->NumberOfElements - 1 ? B57XX_SBD_PACKET_END : 0);
     }
     
-    NdisReleaseSpinLock(&Adapter->SendLock);
+    if (Adapter->SendProducer[0].ProducerIndex == Adapter->SendProducer[0].ConsumerIndex)
+    {
+        NDIS_MinDbgPrint("Send ring is full\n");
+        Adapter->SendProducer[0].RingFull = TRUE;
+    }
+
+Exit:
+    NdisDprReleaseSpinLock(&Adapter->SendLock);
     
-    return NDIS_STATUS_PENDING;
+    return Status;
 }
 
 NTSTATUS
@@ -536,9 +553,9 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     Characteristics.SendHandler = MiniportSend;
     Characteristics.SetInformationHandler = MiniportSetInformation;
     Characteristics.TransferDataHandler = NULL;
-    /*Characteristics.ReturnPacketHandler = NULL;
+    Characteristics.ReturnPacketHandler = NULL;
     Characteristics.SendPacketsHandler = NULL;
-    Characteristics.AllocateCompleteHandler = NULL;*/
+    Characteristics.AllocateCompleteHandler = NULL;
 
     NdisMInitializeWrapper(&WrapperHandle, DriverObject, RegistryPath, NULL);
     if (!WrapperHandle)

@@ -79,7 +79,6 @@ typedef struct _B57XX_ADAPTER
         NDIS_PHYSICAL_ADDRESS HostAddress;
         ULONG64 TransmitSuccesses;
         ULONG64 ReceiveSuccesses;
-        ULONG64 TransmitErrors;
         ULONG64 ReceiveErrors;
         ULONG64 ReceiveBufferErrors;
     } Statistics;
@@ -90,7 +89,6 @@ typedef struct _B57XX_ADAPTER
     MAC_ADDRESS MulticastList[MAXIMUM_MULTICAST_ADDRESSES];
     ULONG MulticastListSize;
     
-    NDIS_SPIN_LOCK InfoLock;
     ULONG PacketFilter;
     USHORT LinkStatus;
 } B57XX_ADAPTER, *PB57XX_ADAPTER;

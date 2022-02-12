@@ -15,6 +15,9 @@ DefaultDestDir = 12
 [Manufacturer]
 %BroadcomMfg% = BroadcomMfg
 
+[ControlFlags]
+ExcludeFromSelect = *
+
 [BroadcomMfg]
 %Broadcom5700.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1644
 %Broadcom5701.DeviceDesc%  = B57XX.Inst.ndi,PCI\VEN_14E4&DEV_1645

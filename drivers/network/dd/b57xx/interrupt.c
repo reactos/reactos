@@ -91,11 +91,13 @@ MiniportHandleInterrupt(_In_ NDIS_HANDLE MiniportAdapterContext)
             LinkStateChange = TRUE;
             NDIS_MinDbgPrint("Link state change\n");
             
+            NdisDprReleaseSpinLock(&Adapter->Interrupt.Lock);
             NdisMIndicateStatus(Adapter->MiniportAdapterHandle,
                                 NICUpdateLinkStatus(Adapter),
                                 NULL,
                                 0);
             NdisMIndicateStatusComplete(Adapter->MiniportAdapterHandle);
+            NdisDprAcquireSpinLock(&Adapter->Interrupt.Lock);
         }
         
         /* Process any received frames (receive interrupts) */
@@ -116,6 +118,7 @@ MiniportHandleInterrupt(_In_ NDIS_HANDLE MiniportAdapterContext)
             BufferBase = (PCHAR)Adapter->StandardProducer.HostBuffer +
                          Adapter->StandardProducer.FrameBufferLength * pReceiveDescriptor->Index;
             
+            NdisDprReleaseSpinLock(&Adapter->Interrupt.Lock);
             NdisMEthIndicateReceive(Adapter->MiniportAdapterHandle,
                                     NULL,
                                     BufferBase,
@@ -123,6 +126,7 @@ MiniportHandleInterrupt(_In_ NDIS_HANDLE MiniportAdapterContext)
                                     BufferBase + sizeof(ETH_HEADER),
                                     pReceiveDescriptor->Length - sizeof(ETH_HEADER),
                                     pReceiveDescriptor->Length - sizeof(ETH_HEADER));
+            NdisDprAcquireSpinLock(&Adapter->Interrupt.Lock);
             GotAny = TRUE;
             
             Adapter->Statistics.ReceiveSuccesses++;
@@ -138,7 +142,9 @@ ContinueReceive:
         if (GotAny)
         {
             NICReceiveSignalComplete(Adapter);
+            NdisDprReleaseSpinLock(&Adapter->Interrupt.Lock);
             NdisMEthIndicateReceiveComplete(Adapter->MiniportAdapterHandle);
+            NdisDprAcquireSpinLock(&Adapter->Interrupt.Lock);
         }
         
         /* Process any completed frames (transmit interrupts) */
@@ -147,9 +153,11 @@ ContinueReceive:
         {
             ConsumerIndex = Adapter->SendProducer[0].ConsumerIndex;
             
+            NdisDprReleaseSpinLock(&Adapter->Interrupt.Lock);
             NdisMSendComplete(Adapter->MiniportAdapterHandle,
                              Adapter->SendProducer[0].pPacketList[ConsumerIndex],
                              NDIS_STATUS_SUCCESS);
+            NdisDprAcquireSpinLock(&Adapter->Interrupt.Lock);
             Adapter->SendProducer[0].RingFull = FALSE;
             
             Adapter->Statistics.TransmitSuccesses++;

@@ -82,8 +82,6 @@ MiniportQueryInformation(_In_ NDIS_HANDLE MiniportAdapterContext,
     } GenericInfo;
     PVOID CopySource = &GenericInfo;
     ULONG CopyLength = sizeof(ULONG);
-    
-    NdisAcquireSpinLock(&Adapter->InfoLock);
 
     switch (Oid)
     {
@@ -290,8 +288,6 @@ MiniportQueryInformation(_In_ NDIS_HANDLE MiniportAdapterContext,
     
 
 Exit:
-    NdisReleaseSpinLock(&Adapter->InfoLock);
-
     return Status;
 }
 
@@ -307,8 +303,6 @@ MiniportSetInformation(_In_ NDIS_HANDLE MiniportAdapterContext,
     NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
     PB57XX_ADAPTER Adapter = (PB57XX_ADAPTER)MiniportAdapterContext;
     ULONG GenericULong;
-    
-    NdisAcquireSpinLock(&Adapter->InfoLock);
 
     switch (Oid)
     {
@@ -408,8 +402,6 @@ MiniportSetInformation(_In_ NDIS_HANDLE MiniportAdapterContext,
         *BytesRead = InformationBufferLength;
         *BytesNeeded = 0;
     }
-    
-    NdisReleaseSpinLock(&Adapter->InfoLock);
     
     NDIS_MinDbgPrint("Set Info on OID 0x%x: %s(0x%x) (%d, %d)\n",
                      Oid,

@@ -1,8 +1,7 @@
 
 add_definitions(
-    -DNDIS50_MINIPORT
     -DNDIS_MINIPORT_DRIVER
-    -DNDIS_LEGACY_MINIPORT)
+    -DNDIS51_MINIPORT)
 
 list(APPEND SOURCE
     ndis.c
