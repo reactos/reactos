@@ -1218,23 +1218,13 @@ AllocInputContextObject(PDESKTOP pDesk,
 
 VOID UserFreeInputContext(PVOID Object)
 {
-    PIMC pIMC = Object, pImc0;
+    PIMC pIMC = Object;
     PTHREADINFO pti;
 
     if (!pIMC)
         return;
 
     pti = pIMC->head.pti;
-
-    /* Find the IMC in the list and remove it */
-    for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
-    {
-        if (pImc0->pImcNext == pIMC)
-        {
-            pImc0->pImcNext = pIMC->pImcNext;
-            break;
-        }
-    }
 
     UserHeapFree(pIMC);
 
@@ -1244,13 +1234,25 @@ VOID UserFreeInputContext(PVOID Object)
 
 BOOLEAN UserDestroyInputContext(PVOID Object)
 {
-    PIMC pIMC = Object;
-    if (pIMC)
+    PIMC pIMC = Object, pImc0;
+    PTHREADINFO pti;
+
+    if (!pIMC)
+        return TRUE;
+
+    /* Find the IMC in the list and remove it */
+    pti = pIMC->head.pti;
+    for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
     {
-        UserMarkObjectDestroy(pIMC);
-        UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
+        if (pImc0->pImcNext == pIMC)
+        {
+            pImc0->pImcNext = pIMC->pImcNext;
+            break;
+        }
     }
-    return TRUE;
+
+    UserMarkObjectDestroy(pIMC);
+    return UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
 }
 
 BOOL NTAPI NtUserDestroyInputContext(HIMC hIMC)
