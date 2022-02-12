@@ -1591,10 +1591,7 @@ BOOL FASTCALL IntNeedImeWindow(PWND pwndParent, PWND pwnd)
         return FALSE;
 
     pdesk = pwnd->head.rpdesk;
-    if (!pdesk || !pdesk->rpwinstaParent)
-        return FALSE;
-
-    if (pdesk->rpwinstaParent->Flags & WSS_NOIO)
+    if (!pdesk || !pdesk->rpwinstaParent || (pdesk->rpwinstaParent->Flags & WSS_NOIO))
         return FALSE;
 
     if (pwndParent)
