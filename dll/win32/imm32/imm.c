@@ -646,7 +646,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
     if (!pIMC || pIMC->head.pti != Imm32CurrentPti())
     {
-        ERR("invalid pIMC: %p, %p, %p\n", pIMC, pIMC->head.pti, NtCurrentTeb()->Win32ThreadInfo);
+        ERR("invalid pIMC: %p\n", pIMC);
         return FALSE;
     }
 
