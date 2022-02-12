@@ -837,7 +837,6 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           NtUserSetWindowFNID(hwnd, FNID_IME);
           pimeui = HeapAlloc( GetProcessHeap(), 0, sizeof(IMEUI) );
           pimeui->spwnd = pWnd;
-          ((PIMEWND)pWnd)->pimeui = pimeui;
           SetWindowLongPtrW(hwnd, IMMGWLP_IMC, (LONG_PTR)pimeui);
        }
        else
