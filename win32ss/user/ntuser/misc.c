@@ -248,8 +248,9 @@ NtUserGetThreadState(
 
    switch (Routine)
    {
-      case THREADSTATE_GETTHREADINFO: /* FIXME: Delete this HACK */
+      case THREADSTATE_GETTHREADINFO:
          GetW32ThreadInfo();
+         ret = TRUE;
          break;
       case THREADSTATE_FOCUSWINDOW:
          ret = (DWORD_PTR)IntGetThreadFocusWindow();
@@ -336,9 +337,6 @@ NtUserGetThreadState(
          break;
       case THREADSTATE_UNKNOWN17:
          /* FIXME */
-         break;
-      case THREADSTATE_UNKNOWN18:
-         ret = TRUE;
          break;
    }
 
