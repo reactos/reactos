@@ -1642,7 +1642,7 @@ co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance)
     WindowName.Buffer = L"Default IME";
     WindowName.Length = 0;
 
-    ClassName.Buffer = L"IME";
+    ClassName.Buffer = (LPWSTR)(ULONG_PTR)gpsi->atomSysClass[ICLS_IME];
     ClassName.Length = 0;
 
     RtlZeroMemory(&Cs, sizeof(Cs));
