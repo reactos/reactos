@@ -837,6 +837,7 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           NtUserSetWindowFNID(hwnd, FNID_IME);
           pimeui = HeapAlloc( GetProcessHeap(), 0, sizeof(IMEUI) );
           pimeui->spwnd = pWnd;
+          ((PIMEWND)pWnd)->pimeui = pimeui;
           SetWindowLongPtrW(hwnd, IMMGWLP_IMC, (LONG_PTR)pimeui);
        }
        else
@@ -997,7 +998,7 @@ RegisterIMEClass(VOID)
     WndClass.lpszClassName  = L"IME";
     WndClass.style          = CS_GLOBALCLASS;
     WndClass.lpfnWndProc    = ImeWndProcW;
-    WndClass.cbWndExtra     = sizeof(LONG_PTR);
+    WndClass.cbWndExtra     = sizeof(IMEWND) - sizeof(WND);
     WndClass.hCursor        = LoadCursorW(NULL, IDC_ARROW);
 
     atom = RegisterClassExWOWW(&WndClass, 0, FNID_IME, 0, FALSE);

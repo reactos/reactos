@@ -1579,4 +1579,100 @@ Quit:
     return ret;
 }
 
+BOOL FASTCALL UserNeedImeWindow(PWND pwndParent, PWND pwnd)
+{
+    PDESKTOP pdesk;
+    PWND pwndNode;
+
+    if (GetW32ThreadInfo()->TIF_flags & TIF_DISABLEIME)
+        return FALSE;
+
+    if (pwnd->state & WNDS_SERVERSIDEWINDOWPROC)
+        return FALSE;
+
+    pdesk = pwnd->head.rpdesk;
+    if (!pdesk || !pdesk->rpwinstaParent)
+        return FALSE;
+
+    if (pdesk->rpwinstaParent->Flags & WSS_NOIO)
+        return FALSE;
+
+    if (pwndParent)
+    {
+        for (pwndNode = pwndParent;
+             pwndNode && pdesk == pwndNode->head.rpdesk;
+             pwndNode = pwndNode->spwndParent)
+        {
+            if (pwndNode == pdesk->spwndMessage)
+                return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+PWND APIENTRY
+co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance)
+{
+    LARGE_STRING WindowName;
+    UNICODE_STRING ClassName;
+    PWND pwndDefaultIme;
+    PIMEUI pimeui;
+    CREATESTRUCTW Cs;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+
+    if (!pti->spDefaultImc)
+    {
+        if (PsGetThreadProcessId(pti->pEThread) == gpidLogon)
+            UserCreateInputContext(0);
+
+        if (!pti->spDefaultImc)
+            return NULL;
+    }
+
+    if (atom == gpsi->atomSysClass[ICLS_IME] || (pwnd->pcls->style & CS_IME))
+        return NULL;
+
+    if ((pwnd->style & (WS_CHILD | WS_VISIBLE)) == WS_CHILD &&
+        pwnd->spwndParent->head.pti->ppi != pti->ppi)
+    {
+        return NULL;
+    }
+
+    if (pti->rpdesk->pheapDesktop == NULL)
+        return NULL;
+
+    WindowName.Buffer = L"Default IME";
+    WindowName.Length = 0;
+
+    ClassName.Buffer = L"IME";
+    ClassName.Length = 0;
+
+    RtlZeroMemory(&Cs, sizeof(Cs));
+    Cs.style = WS_POPUP | WS_DISABLED;
+    Cs.hInstance = hInstance;
+    Cs.lpszName = (LPCWSTR)&WindowName;
+    Cs.lpszClass = (LPCWSTR)&ClassName;
+    Cs.hwndParent = UserHMGetHandle(pwnd);
+    pwndDefaultIme = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL, WINVER);
+    if (pwndDefaultIme)
+    {
+        pimeui = ((PIMEWND)pwndDefaultIme)->pimeui;
+        _SEH2_TRY
+        {
+            ProbeForWrite(pimeui, sizeof(*pimeui), 1);
+            pimeui->fDefault = TRUE;
+            if ((pwnd->style & WS_CHILD) && pwnd->spwndParent->head.pti != pti)
+                pimeui->fChildThreadDef = TRUE;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ;
+        }
+        _SEH2_END;
+    }
+
+    return pwndDefaultIme;
+}
+
 /* EOF */
