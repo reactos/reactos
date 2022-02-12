@@ -159,12 +159,7 @@ BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
 
 static inline PTHREADINFO FASTCALL Imm32CurrentPti(VOID)
 {
-<<<<<<< HEAD
     if (NtCurrentTeb()->Win32ThreadInfo == NULL)
         NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
-=======
-    if (!NtUserGetThreadState(THREADSTATE_UNKNOWN18))
-        return NULL;
->>>>>>> 4c8902feca5 (improve 3)
     return NtCurrentTeb()->Win32ThreadInfo;
 }
