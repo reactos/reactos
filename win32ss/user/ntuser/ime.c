@@ -1200,7 +1200,7 @@ AllocInputContextObject(PDESKTOP pDesk,
     ASSERT(Size > sizeof(*ObjHead));
     ASSERT(pti != NULL);
 
-    ObjHead = UserHeapAlloc(Size);
+    ObjHead = ExAllocatePoolWithTag(PagedPool, Size, USERTAG_IME);
     if (!ObjHead)
         return NULL;
 
@@ -1226,7 +1226,7 @@ VOID UserFreeInputContext(PVOID Object)
 
     pti = pIMC->head.pti;
 
-    UserHeapFree(pIMC);
+    ExFreePoolWithTag(pIMC, USERTAG_IME);
 
     pti->ppi->UserHandleCount--;
     IntDereferenceThreadInfo(pti);
@@ -1240,6 +1240,8 @@ BOOLEAN UserDestroyInputContext(PVOID Object)
     if (!pIMC)
         return TRUE;
 
+    UserMarkObjectDestroy(pIMC);
+
     /* Find the IMC in the list and remove it */
     pti = pIMC->head.pti;
     for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
@@ -1251,7 +1253,6 @@ BOOLEAN UserDestroyInputContext(PVOID Object)
         }
     }
 
-    UserMarkObjectDestroy(pIMC);
     return UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
 }
 
