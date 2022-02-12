@@ -1215,7 +1215,7 @@ typedef struct tagIMEUI
 /* Window Extra data container. */
 typedef struct _IMEWND
 {
-    WND wnd;
+    WND;
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
 
@@ -2570,7 +2570,8 @@ enum ThreadStateRoutines
     THREADSTATE_ISWINLOGON,
     THREADSTATE_ISWINLOGON2,
     THREADSTATE_UNKNOWN17,
-    THREADSTATE_GETTHREADINFO,
+    THREADSTATE_UNKNOWN18,
+    THREADSTATE_GETTHREADINFO = 100, /* FIXME: Delete this HACK */
     THREADSTATE_PROGMANWINDOW, /* FIXME: Delete this HACK */
     THREADSTATE_TASKMANWINDOW, /* FIXME: Delete this HACK */
 };
