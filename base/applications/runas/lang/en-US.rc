@@ -1,0 +1,12 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE01 "RUNAS USAGE\n\n"
+    IDS_USAGE02 "RUNAS [ [/noprofile | /profile] [/env] [/savecred | /netonly] ]\n"
+    IDS_USAGE03 "      /user:<UserName> program\n\n"
+    IDS_USAGE04 "RUNAS [ [/noprofile | /profile] [/env] [/savecred | /netonly] ]\n"
+    IDS_USAGE05 "      /smartcard [/user:<UserName>] program\n\n"
+    IDS_USAGE06 "/noprofile"
+    IDS_USAGE07 "/profile"
+END
