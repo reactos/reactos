@@ -248,7 +248,6 @@ void ImageModel::RotateNTimes90Degrees(int iN)
     switch (iN)
     {
     case 1:
-        CopyPrevious();
         DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
         hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), TRUE);
         currInd = (currInd + 1) % HISTORYSIZE;
@@ -265,7 +264,6 @@ void ImageModel::RotateNTimes90Degrees(int iN)
                    0, 0, GetWidth(), GetHeight(), SRCCOPY);
         break;
     case 3:
-        CopyPrevious();
         DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
         hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), FALSE);
         currInd = (currInd + 1) % HISTORYSIZE;
