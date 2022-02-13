@@ -8,6 +8,7 @@
 #include <shlwapi.h>
 #include <strsafe.h>
 #include <versionhelpers.h>
+#include "shell32_apitest_sub.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -738,4 +739,7 @@ START_TEST(ShellExecCmdLine)
     ok(DeleteFileA("Test File 1.txt"), "failed to delete the test file\n");
     ok(DeleteFileA("Test File 2.bat"), "failed to delete the test file\n");
     free(s_wi0.phwnd);
+
+    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
+    Sleep(100);
 }

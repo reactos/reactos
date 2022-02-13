@@ -59,7 +59,7 @@ inline LPITEMIDLIST DoGetPidl(DIRTYPE iDir)
     return ret;
 }
 
-inline LPWSTR DoGetDir(DIRTYPE iDir)
+static inline LPWSTR DoGetDir(DIRTYPE iDir)
 {
     static size_t s_index = 0;
     static WCHAR s_pathes[3][MAX_PATH];
@@ -70,4 +70,29 @@ inline LPWSTR DoGetDir(DIRTYPE iDir)
     CoTaskMemFree(pidl);
     s_index = (s_index + 1) % _countof(s_pathes);
     return psz;
+}
+
+static inline HWND DoWaitForWindow(LPCWSTR clsname, LPCWSTR text, BOOL bClosing, BOOL bForce)
+{
+    HWND hwnd = NULL;
+    for (INT i = 0; i < 50; ++i)
+    {
+        hwnd = FindWindowW(clsname, text);
+        if (bClosing)
+        {
+            if (!hwnd)
+                break;
+
+            if (bForce)
+                PostMessage(hwnd, WM_CLOSE, 0, 0);
+        }
+        else
+        {
+            if (hwnd)
+                break;
+        }
+
+        Sleep(1);
+    }
+    return hwnd;
 }
