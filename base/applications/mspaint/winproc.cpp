@@ -664,6 +664,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                         imageModel.FlipVertically();
                     break;
                 case 3: /* rotate 90 degrees */
+                    if (::IsWindowVisible(selectionWindow))
+                        selectionModel.RotateNTimes90Degrees(1);
+                    else
+                        imageModel.RotateNTimes90Degrees(1);
                     break;
                 case 4: /* rotate 180 degrees */
                     if (::IsWindowVisible(selectionWindow))
@@ -672,6 +676,10 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                         imageModel.RotateNTimes90Degrees(2);
                     break;
                 case 5: /* rotate 270 degrees */
+                    if (::IsWindowVisible(selectionWindow))
+                        selectionModel.RotateNTimes90Degrees(3);
+                    else
+                        imageModel.RotateNTimes90Degrees(3);
                     break;
             }
             break;

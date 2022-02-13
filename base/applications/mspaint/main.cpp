@@ -344,7 +344,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         if (fontsDialog.IsWindow() && IsDialogMessage(fontsDialog, &messages))
             continue;
 
-        TranslateAccelerator(hwnd, haccel, &messages);
+        if (TranslateAccelerator(hwnd, haccel, &messages))
+            continue;
 
         /* Translate virtual-key messages into character messages */
         TranslateMessage(&messages);
