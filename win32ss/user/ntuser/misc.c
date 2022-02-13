@@ -337,9 +337,6 @@ NtUserGetThreadState(
       case THREADSTATE_UNKNOWN17:
          /* FIXME */
          break;
-      case THREADSTATE_UNKNOWN18:
-         ret = TRUE;
-         break;
    }
 
    TRACE("Leave NtUserGetThreadState, ret=%lu\n", ret);
