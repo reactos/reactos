@@ -638,50 +638,49 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     PIMC pIMC;
 
     if (!IS_IMM_MODE() || hIMC == NULL)
+    {
+        ERR("invalid HIMC\n");
         return FALSE;
+    }
 
     pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
-    if (!pIMC || pIMC->head.pti != NtCurrentTeb()->Win32ThreadInfo)
+    if (!pIMC || pIMC->head.pti != Imm32CurrentPti())
+    {
+        ERR("invalid pIMC: %p\n", pIMC);
         return FALSE;
+    }
 
     pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
     if (!pClientImc)
-        return FALSE;
+        goto Finish;
 
-    if (pClientImc->hInputContext == NULL)
+    if ((pClientImc->dwFlags & CLIENTIMC_UNKNOWN2) && !bKeep)
     {
-        pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
-        ImmUnlockClientImc(pClientImc);
-        if (!bKeep)
-            return NtUserDestroyInputContext(hIMC);
-        return TRUE;
+        ERR("CLIENTIMC_UNKNOWN2\n");
+        return FALSE;
     }
+
+    if (pClientImc->dwFlags & CLIENTIMC_UNKNOWN1)
+        return TRUE;
+
+    InterlockedIncrement(&pClientImc->cLockObj);
+
+    if (!pClientImc->hInputContext)
+        goto Quit;
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (!pIC)
     {
         ImmUnlockClientImc(pClientImc);
+        ERR("!pIC\n");
         return FALSE;
     }
 
-    FIXME("We have do something to do here\n");
-
-    if (pClientImc->hKL == hKL)
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (pImeDpi)
     {
-        pImeDpi = ImmLockImeDpi(hKL);
-        if (pImeDpi != NULL)
-        {
-            if (IS_IME_HKL(hKL))
-            {
-                pImeDpi->ImeSelect(hIMC, FALSE);
-            }
-            else if (Imm32IsCiceroMode() && pImeDpi->CtfImeSelectEx)
-            {
-                pImeDpi->CtfImeSelectEx(hIMC, FALSE, hKL);
-            }
-            ImmUnlockImeDpi(pImeDpi);
-        }
-        pClientImc->hKL = NULL;
+        pImeDpi->ImeSelect(hIMC, FALSE);
+        ImmUnlockImeDpi(pImeDpi);
     }
 
     pIC->hPrivate = ImmDestroyIMCC(pIC->hPrivate);
@@ -689,18 +688,17 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     pIC->hGuideLine = ImmDestroyIMCC(pIC->hGuideLine);
     pIC->hCandInfo = ImmDestroyIMCC(pIC->hCandInfo);
     pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
-
     Imm32FreeImeStates(pIC);
-
     ImmUnlockIMC(hIMC);
 
+Quit:
     pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
     ImmUnlockClientImc(pClientImc);
 
-    if (!bKeep)
-        return NtUserDestroyInputContext(hIMC);
-
-    return TRUE;
+Finish:
+    if (bKeep)
+        return TRUE;
+    return NtUserDestroyInputContext(hIMC);
 }
 
 BOOL APIENTRY
@@ -1256,7 +1254,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
     HKL hKL;
     HIMC hIMC;
-    PTEB pTeb;
 
     TRACE("(%p, 0x%X, %p)\n", hinstDLL, fdwReason, lpReserved);
 
@@ -1279,11 +1276,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             break;
 
         case DLL_THREAD_DETACH:
-            if (!IS_IMM_MODE())
-                return TRUE;
-
-            pTeb = NtCurrentTeb();
-            if (pTeb->Win32ThreadInfo == NULL)
+            if (!IS_IMM_MODE() || NtCurrentTeb()->Win32ThreadInfo == NULL)
                 return TRUE;
 
             hKL = GetKeyboardLayout(0);

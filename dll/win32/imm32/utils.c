@@ -190,7 +190,7 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 {
     HIMC hIMC;
     DWORD dwProcessID;
-    if (pIMC->head.pti == NtCurrentTeb()->Win32ThreadInfo)
+    if (pIMC->head.pti == Imm32CurrentPti())
         return TRUE;
 
     hIMC = pIMC->head.h;
