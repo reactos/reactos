@@ -249,7 +249,6 @@ NtUserGetThreadState(
    switch (Routine)
    {
       case THREADSTATE_GETTHREADINFO:
-         GetW32ThreadInfo();
          ret = TRUE;
          break;
       case THREADSTATE_FOCUSWINDOW:
