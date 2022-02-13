@@ -574,7 +574,7 @@ LRESULT APIENTRY Imm32RequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, 
     if (hWnd)
         pWnd = ValidateHwndNoErr(hWnd);
 
-    if (pWnd && pWnd->head.pti == NtCurrentTeb()->Win32ThreadInfo)
+    if (pWnd && pWnd->head.pti == Imm32CurrentPti())
         ret = Imm32ProcessRequest(hIMC, pWnd, (DWORD)wParam, (LPVOID)lParam, bAnsi);
 
     ImmUnlockIMC(hIMC);
