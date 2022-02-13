@@ -20,8 +20,6 @@
 
 /*
  * ReactOS uses the same boot screen for all the products.
- * Also it doesn't use a parallel system thread for the
- * rotating "progress" bar.
  */
 
 /*
@@ -752,12 +750,23 @@ InbvSolidColorFill(IN ULONG Left,
     }
 }
 
+/**
+ * @brief
+ * Updates the progress bar percentage, relative to the current
+ * percentage sub-range previously set by InbvSetProgressBarSubset().
+ *
+ * @param[in]   Percentage
+ * The progress percentage, relative to the current sub-range.
+ *
+ * @return None.
+ **/
 CODE_SEG("INIT")
 VOID
 NTAPI
-InbvUpdateProgressBar(IN ULONG Progress)
+InbvUpdateProgressBar(
+    _In_ ULONG Percentage)
 {
-    ULONG FillCount, BoundedProgress;
+    ULONG TotalProgress, FillCount;
 
     /* Make sure the progress bar is enabled, that we own and are installed */
     if (ShowProgressBar &&
@@ -765,8 +774,8 @@ InbvUpdateProgressBar(IN ULONG Progress)
         (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
     {
         /* Compute fill count */
-        BoundedProgress = (InbvProgressState.Floor / 100) + Progress;
-        FillCount = ProgressBarWidth * (InbvProgressState.Bias * BoundedProgress) / 1000000;
+        TotalProgress = InbvProgressState.Floor + (Percentage * InbvProgressState.Bias);
+        FillCount = ProgressBarWidth * TotalProgress / (100 * 100);
 
         /* Acquire the lock */
         InbvAcquireLock();
@@ -840,13 +849,29 @@ InbvScreenToBufferBlt(OUT PUCHAR Buffer,
     }
 }
 
+/**
+ * @brief
+ * Sets the screen coordinates of the loading progress bar and enable it.
+ *
+ * @param[in]   Left
+ * @param[in]   Top
+ * The left/top coordinates.
+ *
+ * (ReactOS-specific)
+ * @param[in]   Width
+ * @param[in]   Height
+ * The width/height of the progress bar.
+ *
+ * @return None.
+ **/
 CODE_SEG("INIT")
 VOID
 NTAPI
-InbvSetProgressBarCoordinates(IN ULONG Left,
-                              IN ULONG Top,
-                              IN ULONG Width,
-                              IN ULONG Height)
+InbvSetProgressBarCoordinates(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height)
 {
     /* Update the coordinates */
     ProgressBarLeft   = Left;
@@ -858,11 +883,28 @@ InbvSetProgressBarCoordinates(IN ULONG Left,
     ShowProgressBar = TRUE;
 }
 
+/**
+ * @brief
+ * Specifies a progress percentage sub-range.
+ * Further calls to InbvIndicateProgress() or InbvUpdateProgressBar()
+ * will update the progress percentage relative to this sub-range.
+ * In particular, the percentage provided to InbvUpdateProgressBar()
+ * is relative to this sub-range.
+ *
+ * @param[in]   Floor
+ * The lower bound percentage of the sub-range (default: 0).
+ *
+ * @param[in]   Ceiling
+ * The upper bound percentage of the sub-range (default: 100).
+ *
+ * @return None.
+ **/
 CODE_SEG("INIT")
 VOID
 NTAPI
-InbvSetProgressBarSubset(IN ULONG Floor,
-                         IN ULONG Ceiling)
+InbvSetProgressBarSubset(
+    _In_ ULONG Floor,
+    _In_ ULONG Ceiling)
 {
     /* Sanity checks */
     ASSERT(Floor < Ceiling);
@@ -871,9 +913,19 @@ InbvSetProgressBarSubset(IN ULONG Floor,
     /* Update the progress bar state */
     InbvProgressState.Floor = Floor * 100;
     InbvProgressState.Ceiling = Ceiling * 100;
-    InbvProgressState.Bias = (Ceiling * 100) - Floor;
+    InbvProgressState.Bias = Ceiling - Floor;
 }
 
+/**
+ * @brief
+ * Gives some progress feedback, without specifying any explicit number
+ * of progress steps or percentage.
+ * The corresponding percentage is derived from the progress indicator's
+ * current count, capped to the number of expected calls to be made to
+ * this function (default: 25, see @b InbvProgressIndicator.Expected).
+ *
+ * @return None.
+ **/
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -884,13 +936,14 @@ InbvIndicateProgress(VOID)
     /* Increase progress */
     InbvProgressIndicator.Count++;
 
-    /* Compute new percentage */
-    Percentage = min(100 * InbvProgressIndicator.Count /
-                           InbvProgressIndicator.Expected,
-                     99);
+    /* Compute the new percentage - Don't go over 100% */
+    Percentage = 100 * InbvProgressIndicator.Count /
+                       InbvProgressIndicator.Expected;
+    Percentage = min(Percentage, 99);
+
     if (Percentage != InbvProgressIndicator.Percentage)
     {
-        /* Percentage has moved, update the progress bar */
+        /* Percentage has changed, update the progress bar */
         InbvProgressIndicator.Percentage = Percentage;
         InbvUpdateProgressBar(Percentage);
     }

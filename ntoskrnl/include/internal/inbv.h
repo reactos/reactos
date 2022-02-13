@@ -36,9 +36,7 @@ InbvBitBlt(
 CODE_SEG("INIT")
 VOID
 NTAPI
-InbvIndicateProgress(
-    VOID
-);
+InbvIndicateProgress(VOID);
 
 CODE_SEG("INIT")
 VOID
@@ -52,7 +50,7 @@ CODE_SEG("INIT")
 VOID
 NTAPI
 InbvUpdateProgressBar(
-    IN ULONG Progress
+    _In_ ULONG Percentage
 );
 
 //
