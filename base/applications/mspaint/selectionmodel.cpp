@@ -268,9 +268,9 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
     if (nSkewDegY)
     {
         SelectObject(m_hDC, m_hBm);
-        HBITMAP hbm1 = SkewDIB(m_hDC, m_hBm, nSkewDegY, TRUE);
-        InsertFromHBITMAP(hbm1, m_rcDest.left, m_rcDest.top);
-        DeleteObject(hbm1);
+        HBITMAP hbm2 = SkewDIB(m_hDC, m_hBm, nSkewDegY, TRUE);
+        InsertFromHBITMAP(hbm2, m_rcDest.left, m_rcDest.top);
+        DeleteObject(hbm2);
     }
 
     selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
