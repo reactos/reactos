@@ -349,24 +349,6 @@ TuiDrawMenuBox(
                        ATTR(UiMenuFgColor, UiMenuBgColor));
         }
     }
-
-    /* Loop each item */
-    for (i = 0; i < MenuInfo->MenuItemCount; i++)
-    {
-        /* Check if it's a separator */
-        if (MenuInfo->MenuItemList[i] == NULL)
-        {
-            /* Draw the separator line */
-            UiDrawText(MenuInfo->Left,
-                       MenuInfo->Top + i + 1,
-                       "\xC7",
-                       ATTR(UiMenuFgColor, UiMenuBgColor));
-            UiDrawText(MenuInfo->Right,
-                       MenuInfo->Top + i + 1,
-                       "\xB6",
-                       ATTR(UiMenuFgColor, UiMenuBgColor));
-        }
-    }
 }
 
 VOID
@@ -374,14 +356,54 @@ TuiDrawMenuItem(
     _In_ PUI_MENU_INFO MenuInfo,
     _In_ ULONG MenuItemNumber)
 {
-#ifndef _M_ARM
-    ULONG i;
-    ULONG SpaceTotal;
     ULONG SpaceLeft;
-    ULONG SpaceRight = 0;
-#endif
-    UCHAR Attribute = ATTR(UiTextColor, UiMenuBgColor);
+    ULONG SpaceRight;
+    UCHAR Attribute;
     CHAR MenuLineText[80];
+
+    /* If this is a separator */
+    if (MenuInfo->MenuItemList[MenuItemNumber] == NULL)
+    {
+#ifndef _M_ARM // FIXME: Theme-specific
+        /* Draw its left box corner */
+        if (UiMenuBox)
+        {
+            UiDrawText(MenuInfo->Left,
+                       MenuInfo->Top + 1 + MenuItemNumber,
+                       "\xC7",
+                       ATTR(UiMenuFgColor, UiMenuBgColor));
+        }
+#endif
+
+        /* Make it a separator line and use menu colors */
+        RtlZeroMemory(MenuLineText, sizeof(MenuLineText));
+        RtlFillMemory(MenuLineText,
+                      min(sizeof(MenuLineText), (MenuInfo->Right - MenuInfo->Left - 1)),
+                      0xC4);
+
+        /* Draw the item */
+        UiDrawText(MenuInfo->Left + 1,
+                   MenuInfo->Top + 1 + MenuItemNumber,
+                   MenuLineText,
+                   ATTR(UiMenuFgColor, UiMenuBgColor));
+
+#ifndef _M_ARM // FIXME: Theme-specific
+        /* Draw its right box corner */
+        if (UiMenuBox)
+        {
+            UiDrawText(MenuInfo->Right,
+                       MenuInfo->Top + 1 + MenuItemNumber,
+                       "\xB6",
+                       ATTR(UiMenuFgColor, UiMenuBgColor));
+        }
+#endif
+
+        /* We are done */
+        return;
+    }
+
+    /* This is not a separator */
+    ASSERT(MenuInfo->MenuItemList[MenuItemNumber]);
 
 #ifndef _M_ARM
     /* Check if using centered menu */
@@ -391,50 +413,36 @@ TuiDrawMenuItem(
          * We will want the string centered so calculate
          * how many spaces will be to the left and right.
          */
-        SpaceTotal = (MenuInfo->Right - MenuInfo->Left - 2) -
-                     (ULONG)(MenuInfo->MenuItemList[MenuItemNumber] ?
-                             strlen(MenuInfo->MenuItemList[MenuItemNumber]) : 0);
-        SpaceLeft = (SpaceTotal / 2) + 1;
+        ULONG SpaceTotal =
+            (MenuInfo->Right - MenuInfo->Left - 2) -
+            (ULONG)strlen(MenuInfo->MenuItemList[MenuItemNumber]);
+        SpaceLeft  = (SpaceTotal / 2) + 1;
         SpaceRight = (SpaceTotal - SpaceLeft) + 1;
-
-        /* Insert the spaces on the left */
-        for (i = 0; i < SpaceLeft; i++)
-            MenuLineText[i] = ' ';
-        MenuLineText[i] = '\0';
     }
     else
 #endif
     {
         /* Simply left-align it */
-        MenuLineText[0] = '\0';
-        strcat(MenuLineText, "    ");
+        SpaceLeft  = 4;
+        SpaceRight = 0;
     }
 
-    /* Now append the text string */
-    if (MenuInfo->MenuItemList[MenuItemNumber])
-        strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
+    /* Format the item text string */
+    RtlStringCbPrintfA(MenuLineText, sizeof(MenuLineText),
+                       "%*s%s%*s",
+                       SpaceLeft, "",   // Left padding
+                       MenuInfo->MenuItemList[MenuItemNumber],
+                       SpaceRight, ""); // Right padding
 
-#ifndef _M_ARM
-    /* Check if using centered menu, and add spaces on the right if so */
-    if (UiCenterMenu)
-    {
-        for (i = 0; i < SpaceRight; i++)
-            strcat(MenuLineText, " ");
-    }
-#endif
-
-    /* If it is a separator */
-    if (MenuInfo->MenuItemList[MenuItemNumber] == NULL)
-    {
-        /* Make it a separator line and use menu colors */
-        memset(MenuLineText, 0, sizeof(MenuLineText));
-        memset(MenuLineText, 0xC4, (MenuInfo->Right - MenuInfo->Left - 1));
-        Attribute = ATTR(UiMenuFgColor, UiMenuBgColor);
-    }
-    else if (MenuItemNumber == MenuInfo->SelectedMenuItem)
+    if (MenuItemNumber == MenuInfo->SelectedMenuItem)
     {
         /* If this is the selected item, use the selected colors */
         Attribute = ATTR(UiSelectedTextColor, UiSelectedTextBgColor);
+    }
+    else
+    {
+        /* Normal item colors */
+        Attribute = ATTR(UiTextColor, UiMenuBgColor);
     }
 
     /* Draw the item */
