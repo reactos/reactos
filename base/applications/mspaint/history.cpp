@@ -197,8 +197,8 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
     if (nSkewDegX && nSkewDegY)
     {
         HBITMAP hbm1 = SkewDIB(hDrawingDC, hBms[currInd], nSkewDegX, FALSE);
-        HBITMAP hbm2 = SkewDIB(hDrawingDC, hbm1, nSkewDegY, TRUE);
         Insert(hbm1);
+        HBITMAP hbm2 = SkewDIB(hDrawingDC, hBms[currInd], nSkewDegY, TRUE);
         Insert(hbm2);
     }
     else if (nSkewDegX)
