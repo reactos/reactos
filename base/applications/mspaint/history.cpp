@@ -248,8 +248,9 @@ void ImageModel::RotateNTimes90Degrees(int iN)
     switch (iN)
     {
     case 1:
+    case 3:
         DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-        hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), TRUE);
+        hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), iN == 1);
         currInd = (currInd + 1) % HISTORYSIZE;
         if (undoSteps < HISTORYSIZE - 1)
             undoSteps++;
@@ -262,17 +263,6 @@ void ImageModel::RotateNTimes90Degrees(int iN)
         CopyPrevious();
         StretchBlt(hDrawingDC, GetWidth() - 1, GetHeight() - 1, -GetWidth(), -GetHeight(), GetDC(),
                    0, 0, GetWidth(), GetHeight(), SRCCOPY);
-        break;
-    case 3:
-        DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
-        hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), FALSE);
-        currInd = (currInd + 1) % HISTORYSIZE;
-        if (undoSteps < HISTORYSIZE - 1)
-            undoSteps++;
-        redoSteps = 0;
-        SelectObject(hDrawingDC, hBms[currInd]);
-        imageSaved = FALSE;
-        NotifyDimensionsChanged();
         break;
     }
     NotifyImageChanged();

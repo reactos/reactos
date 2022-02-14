@@ -165,7 +165,7 @@ void SelectionModel::ScaleContentsToFit()
     DeleteDC(hTempDC);
 }
 
-void SelectionModel::InsertFromHBITMAP(HBITMAP hBm)
+void SelectionModel::InsertFromHBITMAP(HBITMAP hBm, INT x, INT y)
 {
     HDC hTempDC;
     HBITMAP hTempMask;
@@ -174,14 +174,15 @@ void SelectionModel::InsertFromHBITMAP(HBITMAP hBm)
     DeleteObject(SelectObject(m_hDC, m_hBm));
 
     SetRectEmpty(&m_rcSrc);
-    m_rcDest.left = m_rcDest.top = 0;
+    m_rcDest.left = x;
+    m_rcDest.top = y;
     m_rcDest.right = m_rcDest.left + GetDIBWidth(m_hBm);
     m_rcDest.bottom = m_rcDest.top + GetDIBHeight(m_hBm);
 
     hTempDC = CreateCompatibleDC(m_hDC);
     hTempMask = CreateBitmap(RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), 1, 1, NULL);
     SelectObject(hTempDC, hTempMask);
-    Rect(hTempDC, m_rcDest.left, m_rcDest.top, m_rcDest.right, m_rcDest.bottom, 0x00ffffff, 0x00ffffff, 1, 1);
+    Rect(hTempDC, 0, 0, RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), 0x00ffffff, 0x00ffffff, 1, 1);
     DeleteObject(m_hMask);
     m_hMask = hTempMask;
     DeleteDC(hTempDC);
@@ -211,14 +212,29 @@ void SelectionModel::FlipVertically()
 
 void SelectionModel::RotateNTimes90Degrees(int iN)
 {
-    if (iN == 2)
+    HBITMAP hbm;
+    switch (iN)
     {
+    case 1:
+    case 3:
+        imageModel.DeleteSelection();
+        imageModel.CopyPrevious();
+        SelectObject(m_hDC, m_hBm);
+        hbm = Rotate90DegreeBlt(m_hDC, RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), iN == 1);
+        InsertFromHBITMAP(hbm, m_rcDest.left, m_rcDest.top);
+        DeleteObject(hbm);
+        selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
+        selectionWindow.ForceRefreshSelectionContents();
+        placeSelWin();
+        break;
+    case 2:
         SelectObject(m_hDC, m_hMask);
         StretchBlt(m_hDC, RECT_WIDTH(m_rcDest) - 1, RECT_HEIGHT(m_rcDest) - 1, -RECT_WIDTH(m_rcDest), -RECT_HEIGHT(m_rcDest), m_hDC,
                    0, 0, RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), SRCCOPY);
         SelectObject(m_hDC, m_hBm);
         StretchBlt(m_hDC, RECT_WIDTH(m_rcDest) - 1, RECT_HEIGHT(m_rcDest) - 1, -RECT_WIDTH(m_rcDest), -RECT_HEIGHT(m_rcDest), m_hDC,
                    0, 0, RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), SRCCOPY);
+        break;
     }
     NotifyRefreshNeeded();
 }

@@ -266,6 +266,7 @@ LRESULT CSelectionWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, 
 
 LRESULT CSelectionWindow::OnSelectionModelRefreshNeeded(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    ForceRefreshSelectionContents();
     return 0;
 }
 
