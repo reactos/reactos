@@ -278,14 +278,10 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
         for (INT x = 0; x < cx; ++x)
         {
             INT delta = INT(x * eTan);
-            for (INT y = 0; y < cy; ++y)
-            {
-                COLORREF rgb = GetPixel(hDC1, x, y);
-                if (nDegree > 0)
-                    SetPixelV(hDC2, x, y + (dy - delta), rgb);
-                else
-                    SetPixelV(hDC2, x, y + delta, rgb);
-            }
+            if (nDegree > 0)
+                BitBlt(hDC2, x, (dy - delta), 1, cy, hDC1, x, 0, SRCCOPY);
+            else
+                BitBlt(hDC2, x, delta, 1, cy, hDC1, x, 0, SRCCOPY);
         }
     }
     else
@@ -293,14 +289,10 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
         for (INT y = 0; y < cy; ++y)
         {
             INT delta = INT(y * eTan);
-            for (INT x = 0; x < cx; ++x)
-            {
-                COLORREF rgb = GetPixel(hDC1, x, y);
-                if (nDegree > 0)
-                    SetPixelV(hDC2, x + (dx - delta), y, rgb);
-                else
-                    SetPixelV(hDC2, x + delta, y, rgb);
-            }
+            if (nDegree > 0)
+                BitBlt(hDC2, (dx - delta), y, cx, 1, hDC1, 0, y, SRCCOPY);
+            else
+                BitBlt(hDC2, delta, y, cx, 1, hDC1, 0, y, SRCCOPY);
         }
     }
     SelectObject(hDC2, hbm2Old);
