@@ -697,9 +697,8 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             {
                 if (::IsWindowVisible(selectionWindow))
                 {
-                    selectionModel.Stretch(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y);
-                    selectionModel.Skew(stretchSkewDialog.angle.x, FALSE);
-                    selectionModel.Skew(stretchSkewDialog.angle.y, TRUE);
+                    selectionModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,
+                                               stretchSkewDialog.angle.x, stretchSkewDialog.angle.y);
                 }
                 else
                 {

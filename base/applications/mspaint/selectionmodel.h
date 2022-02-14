@@ -54,8 +54,7 @@ public:
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
-    void Stretch(int nStretchPercentX, int nStretchPercentY);
-    void Skew(int nSkewDegX = 0, int nSkewDegY = 0);
+    void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);
     HBITMAP GetBitmap() const;
     int PtStackSize() const;
     void DrawFramePoly(HDC hDCImage);
