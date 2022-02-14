@@ -25,6 +25,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(exec);
 
+EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
+
 #define SEE_MASK_CLASSALL (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)
 
 typedef UINT_PTR (*SHELL_ExecuteW32)(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
@@ -2139,32 +2141,37 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         lpFile = sei_tmp.lpFile;
 
     wcmd = wcmdBuffer;
-    len = lstrlenW(wszApplicationName) + 3;
-    if (sei_tmp.lpParameters[0])
-        len += 1 + lstrlenW(wszParameters);
-    if (len > wcmdLen)
-    {
-        wcmd = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        wcmdLen = len;
-    }
-    swprintf(wcmd, L"\"%s\"", wszApplicationName);
-    if (sei_tmp.lpParameters[0])
-    {
-        strcatW(wcmd, L" ");
-        strcatW(wcmd, wszParameters);
-    }
 
-    retval = execfunc(wcmd, NULL, FALSE, &sei_tmp, sei);
-    if (retval > 32)
+    /* Only execute if it has an executable extension */
+    if (PathIsExeW(lpFile))
     {
-        HeapFree(GetProcessHeap(), 0, wszApplicationName);
-        if (wszParameters != parametersBuffer)
-            HeapFree(GetProcessHeap(), 0, wszParameters);
-        if (wszDir != dirBuffer)
-            HeapFree(GetProcessHeap(), 0, wszDir);
-        if (wcmd != wcmdBuffer)
-            HeapFree(GetProcessHeap(), 0, wcmd);
-        return TRUE;
+        len = lstrlenW(wszApplicationName) + 3;
+        if (sei_tmp.lpParameters[0])
+            len += 1 + lstrlenW(wszParameters);
+        if (len > wcmdLen)
+        {
+            wcmd = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+            wcmdLen = len;
+        }
+        swprintf(wcmd, L"\"%s\"", wszApplicationName);
+        if (sei_tmp.lpParameters[0])
+        {
+            strcatW(wcmd, L" ");
+            strcatW(wcmd, wszParameters);
+        }
+
+        retval = execfunc(wcmd, NULL, FALSE, &sei_tmp, sei);
+        if (retval > 32)
+        {
+            HeapFree(GetProcessHeap(), 0, wszApplicationName);
+            if (wszParameters != parametersBuffer)
+                HeapFree(GetProcessHeap(), 0, wszParameters);
+            if (wszDir != dirBuffer)
+                HeapFree(GetProcessHeap(), 0, wszDir);
+            if (wcmd != wcmdBuffer)
+                HeapFree(GetProcessHeap(), 0, wcmd);
+            return TRUE;
+        }
     }
 
     /* Else, try to find the executable */
