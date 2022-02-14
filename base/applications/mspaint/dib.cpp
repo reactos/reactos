@@ -260,8 +260,8 @@ HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
     GetObjectW(hbm, sizeof(bm), &bm);
     INT cx = bm.bmWidth, cy = bm.bmHeight, dx = 0, dy = 0;
     if (bVertical)
-    dy = INT(cx * eTan);
-        else
+        dy = INT(cx * eTan);
+    else
         dx = INT(cy * eTan);
 
     if (dx == 0 && dy == 0)
