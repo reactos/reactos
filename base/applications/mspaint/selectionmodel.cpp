@@ -236,6 +236,52 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
     NotifyRefreshNeeded();
 }
 
+void SelectionModel::Stretch(int nStretchPercentX, int nStretchPercentY)
+{
+    INT oldWidth = RECT_WIDTH(m_rcDest);
+    INT oldHeight = RECT_HEIGHT(m_rcDest);
+    INT newWidth = oldWidth * nStretchPercentX / 100;
+    INT newHeight = oldHeight * nStretchPercentY / 100;
+    if (oldWidth == newWidth && oldHeight == newHeight)
+        return;
+
+    imageModel.DeleteSelection();
+    imageModel.CopyPrevious();
+    HBITMAP hbm0 = CopyDIBImage(m_hBm, newWidth, newHeight);
+    InsertFromHBITMAP(hbm0);
+    DeleteObject(hbm0);
+    selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
+    selectionWindow.ForceRefreshSelectionContents();
+    placeSelWin();
+    NotifyRefreshNeeded();
+}
+
+void SelectionModel::Skew(int nDegee, BOOL bVertical)
+{
+    if (nDegee == 0)
+        return;
+
+    imageModel.DeleteSelection();
+    imageModel.CopyPrevious();
+    SelectObject(m_hDC, m_hBm);
+    if (bVertical)
+    {
+        HBITMAP hbm2 = SkewDIB(m_hDC, m_hBm, nDegee, TRUE);
+        InsertFromHBITMAP(hbm2, m_rcDest.left, m_rcDest.top);
+        DeleteObject(hbm2);
+    }
+    else
+    {
+        HBITMAP hbm1 = SkewDIB(m_hDC, m_hBm, nDegee, FALSE);
+        InsertFromHBITMAP(hbm1, m_rcDest.left, m_rcDest.top);
+        DeleteObject(hbm1);
+    }
+    selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
+    selectionWindow.ForceRefreshSelectionContents();
+    placeSelWin();
+    NotifyRefreshNeeded();
+}
+
 HBITMAP SelectionModel::GetBitmap() const
 {
     return m_hBm;
