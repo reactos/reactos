@@ -16,12 +16,13 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef _M_ARM
 
 #include <freeldr.h>
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(UI);
+
+#ifndef _M_ARM
 
 #define TAG_UI_TEXT 'xTiU'
 
@@ -55,6 +56,17 @@ CHAR    UiTimeText[260] = "[Time Remaining: ] ";
 
 const CHAR UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
 
+#endif // _M_ARM
+
+/*
+ * Loading progress bar, based on the NTOS Inbv one.
+ * Supports progress within sub-ranges, used when loading
+ * with an unknown number of steps.
+ */
+UI_PROGRESS_BAR UiProgressBar = {{0}};
+
+#ifndef _M_ARM
+
 UIVTBL UiVtbl =
 {
     NoUiInitialize,
@@ -72,6 +84,8 @@ UIVTBL UiVtbl =
     NoUiMessageBoxCritical,
     NoUiDrawProgressBarCenter,
     NoUiDrawProgressBar,
+    NoUiSetProgressBarText,
+    NoUiTickProgressBar,
     NoUiEditBox,
     NoUiTextToColor,
     NoUiTextToFillStyle,
@@ -369,13 +383,128 @@ UCHAR UiTextToFillStyle(PCSTR FillStyleText)
     return UiVtbl.TextToFillStyle(FillStyleText);
 }
 
+#endif // _M_ARM
+
+VOID
+UiInitProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR ProgressText)
+{
+    /* Progress bar area */
+    UiProgressBar.Left = Left;
+    UiProgressBar.Top  = Top;
+    UiProgressBar.Right  = Right;
+    UiProgressBar.Bottom = Bottom;
+    // UiProgressBar.Width = Right - Left + 1;
+
+    /* Set the progress bar ranges */
+    UiSetProgressBarSubset(0, 100);
+    UiProgressBar.Indicator.Count = 0;
+    UiProgressBar.Indicator.Expected = 25;
+    UiProgressBar.Indicator.Percentage = 0;
+
+    /* Enable the progress bar */
+    UiProgressBar.Show = TRUE;
+
+    /* Initial drawing: set the "Loading..." text and the original position */
+#ifndef _M_ARM
+    UiVtbl.SetProgressBarText(ProgressText);
+    UiVtbl.TickProgressBar(0);
+#else
+    MiniTuiSetProgressBarText(ProgressText);
+    MiniTuiTickProgressBar(0);
+#endif
+}
+
+VOID
+UiIndicateProgress(VOID)
+{
+    ULONG Percentage;
+
+    /* Increase progress */
+    UiProgressBar.Indicator.Count++;
+
+    /* Compute the new percentage - Don't go over 100% */
+    Percentage = 100 * UiProgressBar.Indicator.Count /
+                       UiProgressBar.Indicator.Expected;
+    Percentage = min(Percentage, 99);
+
+    if (Percentage != UiProgressBar.Indicator.Percentage)
+    {
+        /* Percentage has changed, update the progress bar */
+        UiProgressBar.Indicator.Percentage = Percentage;
+        UiUpdateProgressBar(Percentage, NULL);
+    }
+}
+
+VOID
+UiSetProgressBarSubset(
+    _In_ ULONG Floor,
+    _In_ ULONG Ceiling)
+{
+    /* Sanity checks */
+    ASSERT(Floor < Ceiling);
+    ASSERT(Ceiling <= 100);
+
+    /* Update the progress bar state */
+    UiProgressBar.State.Floor = Floor * 100;
+    // UiProgressBar.State.Ceiling = Ceiling * 100;
+    UiProgressBar.State.Bias = Ceiling - Floor;
+}
+
+VOID
+UiUpdateProgressBar(
+    _In_ ULONG Percentage,
+    _In_opt_ PCSTR ProgressText)
+{
+    ULONG TotalProgress;
+
+    /* Make sure the progress bar is enabled */
+    if (!UiProgressBar.Show)
+        return;
+
+    /* Set the progress text if specified */
+    if (ProgressText)
+        UiSetProgressBarText(ProgressText);
+
+    /* Compute the total progress and tick the progress bar */
+    TotalProgress = UiProgressBar.State.Floor + (Percentage * UiProgressBar.State.Bias);
+    // TotalProgress /= (100 * 100);
+
+#ifndef _M_ARM
+    UiVtbl.TickProgressBar(TotalProgress);
+#else
+    MiniTuiTickProgressBar(TotalProgress);
+#endif
+}
+
+VOID
+UiSetProgressBarText(
+    _In_ PCSTR ProgressText)
+{
+    /* Make sure the progress bar is enabled */
+    if (!UiProgressBar.Show)
+        return;
+
+#ifndef _M_ARM
+    UiVtbl.SetProgressBarText(ProgressText);
+#else
+    MiniTuiSetProgressBarText(ProgressText);
+#endif
+}
+
 VOID
 UiDrawProgressBarCenter(
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText)
+    _In_ PCSTR ProgressText)
 {
-    UiVtbl.DrawProgressBarCenter(Position, Range, ProgressText);
+#ifndef _M_ARM
+    UiVtbl.DrawProgressBarCenter(ProgressText);
+#else
+    MiniTuiDrawProgressBarCenter(ProgressText);
+#endif
 }
 
 VOID
@@ -384,11 +513,34 @@ UiDrawProgressBar(
     _In_ ULONG Top,
     _In_ ULONG Right,
     _In_ ULONG Bottom,
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText)
+    _In_ PCSTR ProgressText)
 {
-    UiVtbl.DrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
+#ifndef _M_ARM
+    UiVtbl.DrawProgressBar(Left, Top, Right, Bottom, ProgressText);
+#else
+    MiniTuiDrawProgressBar(Left, Top, Right, Bottom, ProgressText);
+#endif
+}
+
+#ifndef _M_ARM
+
+static VOID
+UiEscapeString(PCHAR String)
+{
+    ULONG    Idx;
+
+    for (Idx=0; Idx<strlen(String); Idx++)
+    {
+        // Escape the new line characters
+        if (String[Idx] == '\\' && String[Idx+1] == 'n')
+        {
+            // Escape the character
+            String[Idx] = '\n';
+
+            // Move the rest of the string up
+            strcpy(&String[Idx+1], &String[Idx+2]);
+        }
+    }
 }
 
 VOID
@@ -470,31 +622,6 @@ UiShowMessageBoxesInArgv(
         /* Free the memory */
         FrLdrTempFree(MessageBoxText, TAG_UI_TEXT);
     }
-}
-
-VOID UiEscapeString(PCHAR String)
-{
-    ULONG    Idx;
-
-    for (Idx=0; Idx<strlen(String); Idx++)
-    {
-        // Escape the new line characters
-        if (String[Idx] == '\\' && String[Idx+1] == 'n')
-        {
-            // Escape the character
-            String[Idx] = '\n';
-
-            // Move the rest of the string up
-            strcpy(&String[Idx+1], &String[Idx+2]);
-        }
-    }
-}
-
-VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
-{
-    /* If it's too large, just add some ellipsis past the maximum */
-    if (strlen(StringText) > MaxChars)
-        strcpy(&StringText[MaxChars - 3], "...");
 }
 
 BOOLEAN

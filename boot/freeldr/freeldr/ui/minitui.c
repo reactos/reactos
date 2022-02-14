@@ -31,11 +31,85 @@ VOID MiniTuiDrawStatusText(PCSTR StatusText)
 
 #endif // _M_ARM
 
+/*static*/ VOID
+MiniTuiSetProgressBarText(
+    _In_ PCSTR ProgressText)
+{
+    ULONG ProgressBarWidth;
+    CHAR ProgressString[256];
+
+    /* Make sure the progress bar is enabled */
+    ASSERT(UiProgressBar.Show);
+
+    /* Calculate the width of the bar proper */
+    ProgressBarWidth = UiProgressBar.Right - UiProgressBar.Left + 1;
+
+    /* First make sure the progress bar text fits */
+    RtlStringCbCopyA(ProgressString, sizeof(ProgressString), ProgressText);
+    TuiTruncateStringEllipsis(ProgressString, ProgressBarWidth);
+
+    /* Clear the text area */
+    TuiFillArea(UiProgressBar.Left, UiProgressBar.Top,
+                UiProgressBar.Right,
+#ifdef NTLDR_PROGRESSBAR
+                UiProgressBar.Bottom - 1,
+#else // BTMGR_PROGRESSBAR
+                UiProgressBar.Bottom - 2, // One empty line between text and bar.
+#endif
+                ' ', ATTR(UiTextColor, UiMenuBgColor));
+
+    /* Draw the "Loading..." text */
+    TuiDrawCenteredText(UiProgressBar.Left, UiProgressBar.Top,
+                        UiProgressBar.Right,
+#ifdef NTLDR_PROGRESSBAR
+                        UiProgressBar.Bottom - 1,
+#else // BTMGR_PROGRESSBAR
+                        UiProgressBar.Bottom - 2, // One empty line between text and bar.
+#endif
+                        ProgressString, ATTR(UiTextColor, UiMenuBgColor));
+}
+
+/*static*/ VOID
+MiniTuiTickProgressBar(
+    _In_ ULONG SubPercentTimes100)
+{
+    ULONG ProgressBarWidth;
+    ULONG FillCount;
+
+    /* Make sure the progress bar is enabled */
+    ASSERT(UiProgressBar.Show);
+
+    ASSERT(SubPercentTimes100 <= (100 * 100));
+
+    /* Calculate the width of the bar proper */
+    ProgressBarWidth = UiProgressBar.Right - UiProgressBar.Left + 1;
+
+    /* Compute fill count */
+    // FillCount = (ProgressBarWidth * Position) / Range;
+    FillCount = ProgressBarWidth * SubPercentTimes100 / (100 * 100);
+
+    /* Fill the progress bar */
+    /* Draw the percent complete -- Use the fill character */
+    if (FillCount > 0)
+    {
+        TuiFillArea(UiProgressBar.Left, UiProgressBar.Bottom,
+                    UiProgressBar.Left + FillCount - 1, UiProgressBar.Bottom,
+                    '\xDB', ATTR(UiTextColor, UiMenuBgColor));
+    }
+    /* Fill the remaining with blanks */
+    TuiFillArea(UiProgressBar.Left + FillCount, UiProgressBar.Bottom,
+                UiProgressBar.Right, UiProgressBar.Bottom,
+                ' ', ATTR(UiTextColor, UiMenuBgColor));
+
+#ifndef _M_ARM
+    TuiUpdateDateTime();
+    VideoCopyOffScreenBufferToVRAM();
+#endif
+}
+
 VOID
 MiniTuiDrawProgressBarCenter(
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText)
+    _In_ PCSTR ProgressText)
 {
     ULONG Left, Top, Right, Bottom, Width, Height;
 
@@ -55,7 +129,7 @@ MiniTuiDrawProgressBarCenter(
     Bottom = Top + Height - 1;
 
     /* Draw the progress bar */
-    MiniTuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
+    MiniTuiDrawProgressBar(Left, Top, Right, Bottom, ProgressText);
 }
 
 VOID
@@ -64,54 +138,9 @@ MiniTuiDrawProgressBar(
     _In_ ULONG Top,
     _In_ ULONG Right,
     _In_ ULONG Bottom,
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText)
+    _In_ PCSTR ProgressText)
 {
-    ULONG ProgressBarWidth, i;
-
-    /* Calculate the width of the bar proper */
-    ProgressBarWidth = Right - Left + 1;
-
-    /* Clip the position */
-    if (Position > Range)
-        Position = Range;
-
-    /* First make sure the progress bar text fits */
-    UiTruncateStringEllipsis(ProgressText, ProgressBarWidth);
-
-    /* Clear the text area */
-    TuiFillArea(Left, Top, Right,
-#ifdef NTLDR_PROGRESSBAR
-                Bottom - 1,
-#else // BTMGR_PROGRESSBAR
-                Bottom - 2, // One empty line between text and bar.
-#endif
-                ' ', ATTR(UiTextColor, UiMenuBgColor));
-
-    /* Draw the "Loading..." text */
-    TuiDrawCenteredText(Left, Top, Right,
-#ifdef NTLDR_PROGRESSBAR
-                        Bottom - 1,
-#else // BTMGR_PROGRESSBAR
-                        Bottom - 2, // One empty line between text and bar.
-#endif
-                        ProgressText, ATTR(UiTextColor, UiMenuBgColor));
-
-    /* Draw the percent complete -- Use the fill character */
-    for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
-    {
-        TuiDrawText(Left + i, Bottom,
-                    "\xDB", ATTR(UiTextColor, UiMenuBgColor));
-    }
-    /* Fill the remaining with blanks */
-    TuiFillArea(Left + i, Bottom, Right, Bottom,
-                ' ', ATTR(UiTextColor, UiMenuBgColor));
-
-#ifndef _M_ARM
-    TuiUpdateDateTime();
-    VideoCopyOffScreenBufferToVRAM();
-#endif
+    UiInitProgressBar(Left, Top, Right, Bottom, ProgressText);
 }
 
 VOID
@@ -192,6 +221,8 @@ const UIVTBL MiniTuiVtbl =
     TuiMessageBoxCritical,
     MiniTuiDrawProgressBarCenter,
     MiniTuiDrawProgressBar,
+    MiniTuiSetProgressBarText,
+    MiniTuiTickProgressBar,
     TuiEditBox,
     TuiTextToColor,
     TuiTextToFillStyle,

@@ -100,11 +100,23 @@ VOID NoUiMessageBoxCritical(PCSTR MessageText)
     MachConsGetCh();
 }
 
+/* Loading Progress-Bar Functions ********************************************/
+
+VOID
+NoUiSetProgressBarText(
+    _In_ PCSTR ProgressText)
+{
+}
+
+VOID
+NoUiTickProgressBar(
+    _In_ ULONG SubPercentTimes100)
+{
+}
+
 VOID
 NoUiDrawProgressBarCenter(
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText)
+    _In_ PCSTR ProgressText)
 {
 }
 
@@ -114,11 +126,10 @@ NoUiDrawProgressBar(
     _In_ ULONG Top,
     _In_ ULONG Right,
     _In_ ULONG Bottom,
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText)
+    _In_ PCSTR ProgressText)
 {
 }
+
 
 BOOLEAN NoUiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {

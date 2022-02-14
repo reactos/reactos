@@ -50,12 +50,20 @@ VOID NoUiUpdateDateTime(VOID);
 VOID NoUiMessageBox(PCSTR MessageText);
 VOID NoUiMessageBoxCritical(PCSTR MessageText);
 
+/* Loading Progress-Bar Functions ********************************************/
+
+VOID
+NoUiSetProgressBarText(
+    _In_ PCSTR ProgressText);
+
+VOID
+NoUiTickProgressBar(
+    _In_ ULONG SubPercentTimes100);
+
 /* Draws the progress bar showing nPos percent filled */
 VOID
 NoUiDrawProgressBarCenter(
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText);
+    _In_ PCSTR ProgressText);
 
 /* Draws the progress bar showing nPos percent filled */
 VOID
@@ -64,9 +72,8 @@ NoUiDrawProgressBar(
     _In_ ULONG Top,
     _In_ ULONG Right,
     _In_ ULONG Bottom,
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText);
+    _In_ PCSTR ProgressText);
+
 
 BOOLEAN NoUiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
 UCHAR NoUiTextToColor(PCSTR ColorText);

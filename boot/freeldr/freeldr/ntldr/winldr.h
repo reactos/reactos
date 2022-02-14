@@ -88,6 +88,8 @@ UiResetForSOS(VOID)
     UiVtbl = MiniTuiVtbl;
     UiVtbl.Initialize();
 #endif
+    /* Disable the progress bar */
+    UiProgressBar.Show = FALSE;
 }
 
 VOID

@@ -493,7 +493,7 @@ LoadReactOSSetup(
     /* Let the user know we started loading */
     UiDrawBackdrop();
     UiDrawStatusText("Setup is loading...");
-    UiDrawProgressBarCenter(1, 100, "Loading ReactOS Setup...");
+    UiDrawProgressBarCenter("Loading ReactOS Setup...");
 
     /* Retrieve the system path */
     *BootPath = ANSI_NULL;
@@ -743,7 +743,7 @@ LoadReactOSSetup(
     SetupBlock->Flags = SETUPLDR_TEXT_MODE;
 
     /* Load the "setupreg.hiv" setup system hive */
-    if (!SosEnabled) UiDrawProgressBarCenter(15, 100, "Loading setup system hive...");
+    UiUpdateProgressBar(15, "Loading setup system hive...");
     Success = WinLdrInitSystemHive(LoaderBlock, BootPath, TRUE);
     TRACE("Setup SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
     /* Bail out if failure */

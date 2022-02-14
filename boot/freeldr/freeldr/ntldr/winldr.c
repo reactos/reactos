@@ -66,7 +66,8 @@ NtLdrOutputLoadMsg(
         RtlStringCbPrintfA(ProgressString, sizeof(ProgressString),
                            "Loading %s...",
                            (Description ? Description : FileName));
-        // UiDrawProgressBarCenter(1, 100, ProgressString);
+        // UiSetProgressBarText(ProgressString);
+        // UiIndicateProgress();
         UiDrawStatusText(ProgressString);
     }
 }
@@ -379,12 +380,12 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
         // Paths are relative (FIXME: Are they always relative?)
 
         // Load it
+        UiIndicateProgress();
         Success = WinLdrLoadDeviceDriver(&LoaderBlock->LoadOrderListHead,
                                          BootPath,
                                          &BootDriver->FilePath,
                                          0,
                                          &BootDriver->LdrEntry);
-
         if (Success)
         {
             // Convert the RegistryPath and DTE addresses to VA since we are not going to use it anymore
@@ -503,7 +504,7 @@ LoadModule(
     PVOID BaseAddress;
 
     RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", File);
-    if (!SosEnabled) UiDrawProgressBarCenter(Percentage, 100, ProgressString);
+    UiUpdateProgressBar(Percentage, ProgressString);
 
     RtlStringCbCopyA(FullFileName, sizeof(FullFileName), Path);
     RtlStringCbCatA(FullFileName, sizeof(FullFileName), File);
@@ -609,7 +610,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
 
     /* Load the HAL */
     HalBase = LoadModule(LoaderBlock, DirPath, HalFileName,
-                         "hal.dll", LoaderHalCode, &HalDTE, 45);
+                         "hal.dll", LoaderHalCode, &HalDTE, 35);
     if (!HalBase)
     {
         ERR("LoadModule('%s') failed\n", HalFileName);
@@ -684,7 +685,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
 
         /* Load the KD DLL. Override its base DLL name to the default "KDCOM.DLL". */
         KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
-                               "kdcom.dll", LoaderSystemCode, &KdDllDTE, 60);
+                               "kdcom.dll", LoaderSystemCode, &KdDllDTE, 40);
         if (!KdDllBase)
         {
             /* If we failed to load a custom KD DLL, fall back to the standard one */
@@ -697,7 +698,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 RtlStringCbCopyA(KdDllName, sizeof(KdDllName), "kdcom.dll");
 
                 KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
-                                       "kdcom.dll", LoaderSystemCode, &KdDllDTE, 60);
+                                       "kdcom.dll", LoaderSystemCode, &KdDllDTE, 40);
             }
 
             if (!KdDllBase)
@@ -939,7 +940,7 @@ LoadAndBootWindows(
     /* Let the user know we started loading */
     UiDrawBackdrop();
     UiDrawStatusText("Loading...");
-    UiDrawProgressBarCenter(1, 100, "Loading NT...");
+    UiDrawProgressBarCenter("Loading NT...");
 
     /* Retrieve the system path */
     *BootPath = ANSI_NULL;
@@ -1043,7 +1044,7 @@ LoadAndBootWindows(
     AllocateAndInitLPB(OperatingSystemVersion, &LoaderBlock);
 
     /* Load the system hive */
-    if (!SosEnabled) UiDrawProgressBarCenter(15, 100, "Loading system hive...");
+    UiUpdateProgressBar(15, "Loading system hive...");
     Success = WinLdrInitSystemHive(LoaderBlock, BootPath, FALSE);
     TRACE("SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
     /* Bail out if failure */
@@ -1101,7 +1102,7 @@ LoadAndBootWindowsCommon(
     SystemRoot = strstr(BootPath, "\\");
 
     /* Detect hardware */
-    if (!SosEnabled) UiDrawProgressBarCenter(20, 100, "Detecting hardware...");
+    UiUpdateProgressBar(20, "Detecting hardware...");
     LoaderBlock->ConfigurationRoot = MachHwDetect();
 
     /* Initialize the PE loader import-DLL callback, so that we can obtain
@@ -1130,10 +1131,14 @@ LoadAndBootWindowsCommon(
  **** WE HAVE NOW REACHED THE POINT OF NO RETURN !!
  ****/
 
+    UiSetProgressBarSubset(40, 90); // NTOS goes from 25 to 75%
+
     /* Load boot drivers */
-    if (!SosEnabled) UiDrawProgressBarCenter(100, 100, "Loading boot drivers...");
+    UiSetProgressBarText("Loading boot drivers...");
     Success = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
     TRACE("Boot drivers loading %s\n", Success ? "successful" : "failed");
+
+    UiSetProgressBarSubset(0, 100);
 
     /* Reset the PE loader import-DLL callback */
     PeLdrImportDllLoadCallback = NULL;
@@ -1144,6 +1149,8 @@ LoadAndBootWindowsCommon(
                            SystemRoot,
                            BootPath,
                            OperatingSystemVersion);
+
+    UiUpdateProgressBar(100, NULL);
 
     /* Save entry-point pointer and Loader block VAs */
     KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
