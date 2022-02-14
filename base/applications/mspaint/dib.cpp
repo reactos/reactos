@@ -249,7 +249,7 @@ HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight)
     #define M_PI 3.14159265
 #endif
 
-HBITMAP SkewDIB(HBITMAP hbm, INT nDegree, BOOL bVertical)
+HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical)
 {
     if (nDegree == 0)
         return CopyDIBImage(hbm);
@@ -275,9 +275,7 @@ HBITMAP SkewDIB(HBITMAP hbm, INT nDegree, BOOL bVertical)
     if (!hbmNew)
         return NULL;
 
-    HDC hDC1 = CreateCompatibleDC(NULL);
     HDC hDC2 = CreateCompatibleDC(NULL);
-    HGDIOBJ hbm1Old = SelectObject(hDC1, hbm);
     HGDIOBJ hbm2Old = SelectObject(hDC2, hbmNew);
     if (bVertical)
     {
@@ -333,9 +331,7 @@ HBITMAP SkewDIB(HBITMAP hbm, INT nDegree, BOOL bVertical)
             }
         }
     }
-    SelectObject(hDC1, hbm1Old);
     SelectObject(hDC2, hbm2Old);
-    DeleteDC(hDC1);
     DeleteDC(hDC2);
     return hbmNew;
 }

@@ -30,4 +30,4 @@ HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL i
 
 HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight);
 
-HBITMAP SkewDIB(HBITMAP hbm, INT nDegree, BOOL bVertical);
+HBITMAP SkewDIB(HDC hDC1, HBITMAP hbm, INT nDegree, BOOL bVertical);
