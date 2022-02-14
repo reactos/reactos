@@ -193,21 +193,19 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
     INT newWidth = oldWidth * nStretchPercentX / 100;
     INT newHeight = oldHeight * nStretchPercentY / 100;
     if (oldWidth != newWidth || oldHeight != newHeight)
-        Insert(CopyDIBImage(hBms[currInd], newWidth, newHeight));
-    if (nSkewDegX && nSkewDegY)
+    {
+        HBITMAP hbm0 = CopyDIBImage(hBms[currInd], newWidth, newHeight);
+        Insert(hbm0);
+    }
+    if (nSkewDegX)
     {
         HBITMAP hbm1 = SkewDIB(hDrawingDC, hBms[currInd], nSkewDegX, FALSE);
         Insert(hbm1);
+    }
+    if (nSkewDegY)
+    {
         HBITMAP hbm2 = SkewDIB(hDrawingDC, hBms[currInd], nSkewDegY, TRUE);
         Insert(hbm2);
-    }
-    else if (nSkewDegX)
-    {
-        Insert(SkewDIB(hDrawingDC, hBms[currInd], nSkewDegX, FALSE));
-    }
-    else if (nSkewDegY)
-    {
-        Insert(SkewDIB(hDrawingDC, hBms[currInd], nSkewDegY, TRUE));
     }
     if (GetWidth() != oldWidth || GetHeight() != oldHeight)
         NotifyDimensionsChanged();
