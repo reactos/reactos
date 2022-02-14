@@ -9,6 +9,7 @@
 /* INCLUDES *********************************************************/
 
 #include "precomp.h"
+#include <math.h>
 
 /* FUNCTIONS ********************************************************/
 
@@ -242,4 +243,99 @@ HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight)
     SelectObject(hDC2, hbm2Old);
     DeleteDC(hDC2);
     return hbm2;
+}
+
+#ifndef M_PI
+    #define M_PI 3.14159265
+#endif
+
+HBITMAP SkewDIB(HBITMAP hbm, INT nDegree, BOOL bVertical)
+{
+    if (nDegree == 0)
+        return CopyDIBImage(hbm);
+
+    BITMAP bm;
+    GetObjectW(hbm, sizeof(bm), &bm);
+
+    INT cx = bm.bmWidth, cy = bm.bmHeight;
+    INT dx = 0, dy = 0;
+    if (bVertical)
+    {
+        dy = cx * tan(abs(nDegree) * M_PI / 180);
+    }
+    else
+    {
+        dx = cy * tan(abs(nDegree) * M_PI / 180);
+    }
+
+    if (dx == 0 && dy == 0)
+        return CopyDIBImage(hbm);
+
+    HBITMAP hbmNew = CreateColorDIB(cx + dx, cy + dy, RGB(255, 255, 255));
+    if (!hbmNew)
+        return NULL;
+
+    HDC hDC1 = CreateCompatibleDC(NULL);
+    HDC hDC2 = CreateCompatibleDC(NULL);
+    HGDIOBJ hbm1Old = SelectObject(hDC1, hbm);
+    HGDIOBJ hbm2Old = SelectObject(hDC2, hbmNew);
+    if (bVertical)
+    {
+        if (nDegree > 0)
+        {
+            for (INT x = 0; x < cx; ++x)
+            {
+                INT delta = x * tan(nDegree * M_PI / 180);
+                for (INT y = 0; y < cy; ++y)
+                {
+                    COLORREF rgb = GetPixel(hDC1, x, y);
+                    SetPixelV(hDC2, x, y + (dy - delta), rgb);
+                }
+            }
+        }
+        else
+        {
+            for (INT x = 0; x < cx; ++x)
+            {
+                INT delta = x * tan(abs(nDegree) * M_PI / 180);
+                for (INT y = 0; y < cy; ++y)
+                {
+                    COLORREF rgb = GetPixel(hDC1, x, y);
+                    SetPixelV(hDC2, x, y + delta, rgb);
+                }
+            }
+        }
+    }
+    else
+    {
+        if (nDegree > 0)
+        {
+            for (INT y = 0; y < cy; ++y)
+            {
+                INT delta = y * tan(nDegree * M_PI / 180);
+                for (INT x = 0; x < cx; ++x)
+                {
+                    COLORREF rgb = GetPixel(hDC1, x, y);
+                    SetPixelV(hDC2, x + (dx - delta), y, rgb);
+                }
+            }
+        }
+        else
+        {
+            for (INT y = 0; y < cy; ++y)
+            {
+                INT delta = y * tan(abs(nDegree) * M_PI / 180);
+                for (INT x = 0; x < cx; ++x)
+                {
+                    COLORREF rgb = GetPixel(hDC1, x, y);
+                    SetPixelV(hDC2, x + delta, y, rgb);
+                }
+            }
+        }
+    }
+    SelectObject(hDC1, hbm1Old);
+    SelectObject(hDC2, hbm2Old);
+    DeleteDC(hDC1);
+    DeleteDC(hDC2);
+    return hbmNew;
 }

@@ -124,9 +124,6 @@ void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
     Rect(hDCImage, m_rcSrc.left, m_rcSrc.top, m_rcSrc.right, m_rcSrc.bottom, crBg, crBg, 0, 1);
 }
 
-extern BOOL
-ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask, DWORD dwRop, COLORREF keyColor);
-
 void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent)
 {
     if (!bBgTransparent)
