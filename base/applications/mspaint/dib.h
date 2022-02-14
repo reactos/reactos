@@ -27,3 +27,5 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile);
 void ShowFileLoadError(LPCTSTR name);
 
 HBITMAP SetBitmapAndInfo(HBITMAP hBitmap, LPCTSTR name, DWORD dwFileSize, BOOL isFile);
+
+HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight);

@@ -208,3 +208,38 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCTSTR name, BOOL fIsMainFile)
 
     return hBitmap;
 }
+
+HBITMAP Rotate90DegreeBlt(HDC hDC1, INT cx, INT cy, BOOL bRight)
+{
+    HBITMAP hbm2 = CreateDIBWithProperties(cy, cx);
+    if (!hbm2)
+        return NULL;
+
+    HDC hDC2 = CreateCompatibleDC(NULL);
+    HGDIOBJ hbm2Old = SelectObject(hDC2, hbm2);
+    if (bRight)
+    {
+        for (INT y = 0; y < cy; ++y)
+        {
+            for (INT x = 0; x < cx; ++x)
+            {
+                COLORREF rgb = GetPixel(hDC1, x, y);
+                SetPixelV(hDC2, cy - (y + 1), x, rgb);
+            }
+        }
+    }
+    else
+    {
+        for (INT y = 0; y < cy; ++y)
+        {
+            for (INT x = 0; x < cx; ++x)
+            {
+                COLORREF rgb = GetPixel(hDC1, x, y);
+                SetPixelV(hDC2, y, cx - (x + 1), rgb);
+            }
+        }
+    }
+    SelectObject(hDC2, hbm2Old);
+    DeleteDC(hDC2);
+    return hbm2;
+}
