@@ -124,9 +124,6 @@ void SelectionModel::DrawBackgroundRect(HDC hDCImage, COLORREF crBg)
     Rect(hDCImage, m_rcSrc.left, m_rcSrc.top, m_rcSrc.right, m_rcSrc.bottom, crBg, crBg, 0, 1);
 }
 
-extern BOOL
-ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask, DWORD dwRop, COLORREF keyColor);
-
 void SelectionModel::DrawSelection(HDC hDCImage, COLORREF crBg, BOOL bBgTransparent)
 {
     if (!bBgTransparent)
@@ -236,6 +233,49 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
                    0, 0, RECT_WIDTH(m_rcDest), RECT_HEIGHT(m_rcDest), SRCCOPY);
         break;
     }
+    NotifyRefreshNeeded();
+}
+
+void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX, int nSkewDegY)
+{
+    if (nStretchPercentX == 100 && nStretchPercentY == 100 && nSkewDegX == 0 && nSkewDegY == 0)
+        return;
+
+    imageModel.DeleteSelection();
+    imageModel.CopyPrevious();
+
+    INT oldWidth = RECT_WIDTH(m_rcDest);
+    INT oldHeight = RECT_HEIGHT(m_rcDest);
+    INT newWidth = oldWidth * nStretchPercentX / 100;
+    INT newHeight = oldHeight * nStretchPercentY / 100;
+
+    if (oldWidth != newWidth || oldHeight != newHeight)
+    {
+        SelectObject(m_hDC, m_hBm);
+        HBITMAP hbm0 = CopyDIBImage(m_hBm, newWidth, newHeight);
+        InsertFromHBITMAP(hbm0, m_rcDest.left, m_rcDest.top);
+        DeleteObject(hbm0);
+    }
+
+    if (nSkewDegX)
+    {
+        SelectObject(m_hDC, m_hBm);
+        HBITMAP hbm1 = SkewDIB(m_hDC, m_hBm, nSkewDegX, FALSE);
+        InsertFromHBITMAP(hbm1, m_rcDest.left, m_rcDest.top);
+        DeleteObject(hbm1);
+    }
+
+    if (nSkewDegY)
+    {
+        SelectObject(m_hDC, m_hBm);
+        HBITMAP hbm2 = SkewDIB(m_hDC, m_hBm, nSkewDegY, TRUE);
+        InsertFromHBITMAP(hbm2, m_rcDest.left, m_rcDest.top);
+        DeleteObject(hbm2);
+    }
+
+    selectionWindow.ShowWindow(SW_SHOWNOACTIVATE);
+    selectionWindow.ForceRefreshSelectionContents();
+    placeSelWin();
     NotifyRefreshNeeded();
 }
 

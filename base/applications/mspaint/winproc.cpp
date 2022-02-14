@@ -695,8 +695,16 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         {
             if (stretchSkewDialog.DoModal(mainWindow.m_hWnd))
             {
-                imageModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,
-                                       stretchSkewDialog.angle.x, stretchSkewDialog.angle.y);
+                if (::IsWindowVisible(selectionWindow))
+                {
+                    selectionModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,
+                                               stretchSkewDialog.angle.x, stretchSkewDialog.angle.y);
+                }
+                else
+                {
+                    imageModel.StretchSkew(stretchSkewDialog.percentage.x, stretchSkewDialog.percentage.y,
+                                           stretchSkewDialog.angle.x, stretchSkewDialog.angle.y);
+                }
             }
             break;
         }
