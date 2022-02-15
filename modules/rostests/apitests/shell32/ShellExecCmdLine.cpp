@@ -594,6 +594,33 @@ static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+static void CleanupNewlyCreatedWindows(void)
+{
+    EnumWindows(EnumWindowsProc, (LPARAM)&s_wi1);
+    for (UINT i1 = 0; i1 < s_wi1.count; ++i1)
+    {
+        BOOL bFound = FALSE;
+        for (UINT i0 = 0; i0 < s_wi0.count; ++i0)
+        {
+            if (s_wi1.phwnd[i1] == s_wi0.phwnd[i0])
+            {
+                bFound = TRUE;
+                break;
+            }
+        }
+        if (!bFound)
+        {
+            DWORD dwPID;
+            GetWindowThreadProcessId(s_wi1.phwnd[i1], &dwPID);
+            HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, TRUE, dwPID);
+            TerminateProcess(hProcess, -1);
+            CloseHandle(hProcess);
+        }
+    }
+    free(s_wi1.phwnd);
+    ZeroMemory(&s_wi1, sizeof(s_wi1));
+}
+
 static void DoEntry(const TEST_ENTRY *pEntry)
 {
     HRESULT hr;
@@ -632,24 +659,7 @@ static void DoEntry(const TEST_ENTRY *pEntry)
     ok(result == pEntry->result, "Line %d: result expected %d, was %d\n",
        pEntry->lineno, pEntry->result, result);
 
-    // close newly opened windows
-    EnumWindows(EnumWindowsProc, (LPARAM)&s_wi1);
-    for (UINT i1 = 0; i1 < s_wi1.count; ++i1)
-    {
-        BOOL bFound = FALSE;
-        for (UINT i0 = 0; i0 < s_wi0.count; ++i0)
-        {
-            if (s_wi1.phwnd[i1] == s_wi0.phwnd[i0])
-            {
-                bFound = TRUE;
-                break;
-            }
-        }
-        if (!bFound)
-            PostMessageW(s_wi1.phwnd[i1], WM_CLOSE, 0, 0);
-    }
-    free(s_wi1.phwnd);
-    ZeroMemory(&s_wi1, sizeof(s_wi1));
+    CleanupNewlyCreatedWindows();
 }
 
 START_TEST(ShellExecCmdLine)
@@ -732,6 +742,9 @@ START_TEST(ShellExecCmdLine)
     {
         DoEntry(&s_entries_2[i]);
     }
+
+    Sleep(2000);
+    CleanupNewlyCreatedWindows();
 
     // clean up
     ok(DeleteFileW(s_win_test_exe), "failed to delete the test file\n");
