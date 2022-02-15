@@ -498,6 +498,7 @@ NtQueryInformationJobObject (
     KPROCESSOR_MODE PreviousMode;
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimit;
     JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION BasicAndIo;
+    PJOBOBJECT_BASIC_PROCESS_ID_LIST BasicProcessIdList;
     ULONG RequiredLength, RequiredAlign, SizeToCopy, NeededSize;
 
     PAGED_CODE();
@@ -705,6 +706,60 @@ NtQueryInformationJobObject (
             GenericCopy = &ExtendedLimit;
             Status = STATUS_SUCCESS;
 
+            break;
+
+        case JobObjectBasicProcessIdList:
+
+            /* Lock */
+            KeEnterGuardedRegionThread(CurrentThread);
+            ExAcquireResourceSharedLite(&Job->JobLock, TRUE);
+
+            NeededSize = sizeof(JOBOBJECT_BASIC_PROCESS_ID_LIST) - RTL_FIELD_SIZE(JOBOBJECT_BASIC_PROCESS_ID_LIST, ProcessIdList) +
+                Job->ActiveProcesses * RTL_FIELD_SIZE(JOBOBJECT_BASIC_PROCESS_ID_LIST, ProcessIdList);
+
+            /* We'll handle this */
+            NoOutput = TRUE;
+
+            if (JobInformationLength >= NeededSize)
+            {
+                ULONG Total = 0;
+
+                _SEH2_TRY
+                {
+                    BasicProcessIdList = JobInformation;
+                    BasicProcessIdList->NumberOfProcessIdsInList = Job->ActiveProcesses;
+
+                    Status = STATUS_SUCCESS;
+
+                    for (NextEntry = Job->ProcessListHead.Flink;
+                        NextEntry != &Job->ProcessListHead;
+                        NextEntry = NextEntry->Flink)
+                    {
+                        if (Total == Job->ActiveProcesses)
+                        {
+                            DPRINT1("ERROR: Job->ActiveProcesses did not match Job->ProcessListHead!");
+                            Status = STATUS_PROCESS_IN_JOB;
+                            break;
+                        }
+
+                        PEPROCESS Process;
+                        Process = CONTAINING_RECORD(NextEntry, EPROCESS, JobLinks);
+                        BasicProcessIdList->ProcessIdList[Total] = (ULONG_PTR)Process->UniqueProcessId;
+
+                        Total++;
+                    }
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                    DPRINT1("ERROR writing back BasicProcessIdList: %lx\n", Status);
+                }
+                _SEH2_END;
+            }
+
+            /* And done */
+            ExReleaseResourceLite(&Job->JobLock);
+            KeLeaveGuardedRegionThread(CurrentThread);
             break;
 
         default:
