@@ -102,4 +102,12 @@ VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget);
 /* Undocumented dwFlags for IntBuildHwndList */
 #define IACE_LIST  0x0002
 
+BOOL FASTCALL IntNeedImeWindow(PWND pwndParent, PWND pwnd);
+PWND APIENTRY co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance);
+BOOL FASTCALL IntCanDestroyDefaultImeWindow(PWND pImeWnd, PWND pwndTarget);
+
+#define IS_WND_IMELIKE(pwnd) \
+    (((pwnd)->pcls->style & CS_IME) || \
+     ((pwnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
+
 /* EOF */
