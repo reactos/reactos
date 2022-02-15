@@ -228,93 +228,20 @@ CreateCommonFreeLdrSections(
 
     BootStore->OptionsIniSection = IniSection;
 
-    /* Timeout=0 */
+    /* TimeOut */
     IniCacheInsertKey(BootStore->OptionsIniSection, NULL, INSERT_LAST,
                       L"TimeOut", L"0");
 
     /* Create "Display" section */
     IniSection = IniCacheAppendSection(BootStore->IniCache, L"Display");
 
-    /* TitleText=ReactOS Boot Manager */
+    /* TitleText */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                       L"TitleText", L"ReactOS Boot Manager");
 
-    /* StatusBarColor=Cyan */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"StatusBarColor", L"Cyan");
-
-    /* StatusBarTextColor=Black */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"StatusBarTextColor", L"Black");
-
-    /* BackdropTextColor=White */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"BackdropTextColor", L"White");
-
-    /* BackdropColor=Blue */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"BackdropColor", L"Blue");
-
-    /* BackdropFillStyle=Medium */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"BackdropFillStyle", L"Medium");
-
-    /* TitleBoxTextColor=White */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"TitleBoxTextColor", L"White");
-
-    /* TitleBoxColor=Red */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"TitleBoxColor", L"Red");
-
-    /* MessageBoxTextColor=White */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"MessageBoxTextColor", L"White");
-
-    /* MessageBoxColor=Blue */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"MessageBoxColor", L"Blue");
-
-    /* MenuTextColor=White */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"MenuTextColor", L"Default");
-
-    /* MenuColor=Blue */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"MenuColor", L"Black");
-
-    /* TextColor=Yellow */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"TextColor", L"Default");
-
-    /* SelectedTextColor=Black */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"SelectedTextColor", L"Black");
-
-    /* SelectedColor=Default */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"SelectedColor", L"Default");
-
-    /* ShowTime=Yes */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"ShowTime", L"No");
-
-    /* MenuBox=Yes */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"MenuBox", L"No");
-
-    /* CenterMenu=Yes */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"CenterMenu", L"No");
-
-    /* MinimalUI=No */
+    /* MinimalUI */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                       L"MinimalUI", L"Yes");
-
-    /* TimeText=Your text goes here... */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"TimeText",
-                      L"Seconds until highlighted choice will be started automatically:   ");
 
     /*
      * Cache the "Operating Systems" section for our future usage.
@@ -876,15 +803,15 @@ CreateNTOSEntry(
     {
         PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
-        /* BootType= */
+        /* BootType */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                           L"BootType", L"Windows2003");
 
-        /* SystemPath= */
+        /* SystemPath */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                           L"SystemPath", (PWSTR)Options->OsLoadPath);
 
-        /* Options= */
+        /* Options */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                           L"Options", (PWSTR)Options->OsLoadOptions);
     }
@@ -897,19 +824,19 @@ CreateNTOSEntry(
     {
         PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
 
-        /* BootType= */
+        /* BootType */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                           L"BootType", L"BootSector");
 
-        /* BootDrive= */
+        /* BootDrive */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                           L"BootDrive", (PWSTR)Options->Drive);
 
-        /* BootPartition= */
+        /* BootPartition */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                           L"BootPartition", (PWSTR)Options->Partition);
 
-        /* BootSector= */
+        /* BootSector */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                           L"BootSectorFile", (PWSTR)Options->BootSectorFileName);
     }
