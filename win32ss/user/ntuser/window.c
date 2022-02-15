@@ -2752,7 +2752,7 @@ cleanup:
 BOOLEAN co_UserDestroyWindow(PVOID Object)
 {
    HWND hWnd;
-   PWND pwndTemp;
+   PWND pwndTemp, pwndDefaultIme = NULL;
    PTHREADINFO ti;
    MSG msg;
    PWND Window = Object;
@@ -2773,6 +2773,21 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
            EngSetLastError(ERROR_ACCESS_DENIED);
            return FALSE;
        }
+   }
+
+   /* Destroy the Default IME window */
+   if (IS_IMM_MODE())
+   {
+       pwndDefaultIme = Window->head.pti->spwndDefaultIme;
+       if (Window == pwndDefaultIme)
+           pwndDefaultIme = NULL;
+   }
+   if (pwndDefaultIme &&
+       !(Window->head.pti->TIF_flags & TIF_INCLEANUP) &&
+       IntCanDestroyDefaultImeWindow(pwndDefaultIme, Window))
+   {
+       pwndDefaultIme->head.pti->spwndDefaultIme = NULL;
+       co_UserDestroyWindow(pwndDefaultIme);
    }
 
    /* If window was created successfully and it is hooked */
@@ -2920,14 +2935,6 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
 
    /* Send destroy messages */
    IntSendDestroyMsg(UserHMGetHandle(Window));
-
-   /* Destroy the Default IME window */
-   if (IS_IMM_MODE() && !(ti->TIF_flags & TIF_INCLEANUP) &&
-       IntCanDestroyDefaultImeWindow(ti->spwndDefaultIme, Window))
-   {
-      co_UserDestroyWindow(ti->spwndDefaultIme);
-      ti->spwndDefaultIme = NULL;
-   }
 
    if (!IntIsWindow(UserHMGetHandle(Window)))
    {

@@ -1642,13 +1642,22 @@ BOOL FASTCALL IntCanDestroyDefaultImeWindow(PWND pImeWnd, PWND pwndTarget)
 {
     PWND pwnd;
     PIMEUI pimeui;
+    HWND hwndTarget;
+    BOOL bIsWindow = FALSE;
 
-    if (!pImeWnd || (pwndTarget->style & WS_CHILD) || IS_WND_IMELIKE(pwndTarget))
+    if (!pImeWnd)
+        return FALSE;
+
+    hwndTarget = UserHMGetHandle(pwndTarget);
+    bIsWindow = IntIsWindow(hwndTarget);
+    if (bIsWindow && ((pwndTarget->style & WS_CHILD) || IS_WND_IMELIKE(pwndTarget)))
         return FALSE;
 
     _SEH2_TRY
     {
+        ProbeForRead(pImeWnd, sizeof(IMEWND), 1);
         pimeui = ((PIMEWND)pImeWnd)->pimeui;
+        ProbeForRead(pimeui, sizeof(IMEUI), 1);
         if (!pimeui || pimeui->fDestroy)
             return FALSE;
     }
@@ -1658,13 +1667,16 @@ BOOL FASTCALL IntCanDestroyDefaultImeWindow(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_END;
 
-    for (pwnd = pwndTarget; pwnd; pwnd = pwnd->spwndOwner)
+    if (bIsWindow)
     {
-        if (IS_WND_IMELIKE(pwnd))
-            return FALSE;
+        for (pwnd = pwndTarget; pwnd; pwnd = pwnd->spwndOwner)
+        {
+            if (IS_WND_IMELIKE(pwnd))
+                return FALSE;
+        }
     }
 
-    if (pImeWnd->spwndOwner && pwndTarget != pImeWnd->spwndOwner)
+    if (pImeWnd->spwndOwner && pImeWnd->spwndOwner != pwndTarget)
         return FALSE;
 
     pImeWnd->spwndOwner = NULL;
