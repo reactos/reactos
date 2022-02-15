@@ -33,7 +33,7 @@ public:
         InterlockedDecrement(&m_Ref);
         if (!m_Ref)
         {
-            //delete this;
+            delete this;
             return 0;
         }
         return m_Ref;
@@ -41,7 +41,7 @@ public:
     IMP_IPortWaveCyclic;
     IMP_ISubdevice;
     IMP_IPortEvents;
-    CPortWaveCyclic(IUnknown *OuterUnknown){}
+    CPortWaveCyclic(IUnknown *OuterUnknown) : m_Ref(0) {}
     virtual ~CPortWaveCyclic(){}
 
 protected:
