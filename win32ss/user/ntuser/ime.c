@@ -1218,13 +1218,22 @@ AllocInputContextObject(PDESKTOP pDesk,
 
 VOID UserFreeInputContext(PVOID Object)
 {
-    PIMC pIMC = Object;
+    PIMC pIMC = Object, *ppIMC;
     PTHREADINFO pti;
 
     if (!pIMC)
         return;
 
+    /* Find the IMC in the list and remove it */
     pti = pIMC->head.pti;
+    for (ppIMC = &pti->spDefaultImc; *ppIMC; ppIMC = &(*ppIMC)->pImcNext)
+    {
+        if (*ppIMC == pIMC)
+        {
+            *ppIMC = pIMC->pImcNext;
+            break;
+        }
+    }
 
     ExFreePoolWithTag(pIMC, USERTAG_IME);
 
@@ -1234,24 +1243,12 @@ VOID UserFreeInputContext(PVOID Object)
 
 BOOLEAN UserDestroyInputContext(PVOID Object)
 {
-    PIMC pIMC = Object, pImc0;
-    PTHREADINFO pti;
+    PIMC pIMC = Object;
 
     if (!pIMC)
         return TRUE;
 
     UserMarkObjectDestroy(pIMC);
-
-    /* Find the IMC in the list and remove it */
-    pti = pIMC->head.pti;
-    for (pImc0 = pti->spDefaultImc; pImc0; pImc0 = pImc0->pImcNext)
-    {
-        if (pImc0->pImcNext == pIMC)
-        {
-            pImc0->pImcNext = pIMC->pImcNext;
-            break;
-        }
-    }
 
     return UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
 }
