@@ -1564,31 +1564,20 @@ Quit:
     return ret;
 }
 
-BOOL FASTCALL IntNeedImeWindow(PWND pwndParent, PWND pwnd)
+BOOL FASTCALL IntNeedImeWindow(PWND pwnd)
 {
     PDESKTOP pdesk;
-    PWND pwndNode;
 
-    if (GetW32ThreadInfo()->TIF_flags & TIF_DISABLEIME)
+    if ((pwnd->style & WS_CHILD) ||
+        (GetW32ThreadInfo()->TIF_flags & TIF_DISABLEIME) ||
+        (pwnd->state & WNDS_SERVERSIDEWINDOWPROC))
+    {
         return FALSE;
-
-    if (pwnd->state & WNDS_SERVERSIDEWINDOWPROC)
-        return FALSE;
+    }
 
     pdesk = pwnd->head.rpdesk;
     if (!pdesk || !pdesk->rpwinstaParent || (pdesk->rpwinstaParent->Flags & WSS_NOIO))
         return FALSE;
-
-    if (pwndParent)
-    {
-        for (pwndNode = pwndParent;
-             pwndNode && pdesk == pwndNode->head.rpdesk;
-             pwndNode = pwndNode->spwndParent)
-        {
-            if (pwndNode == pdesk->spwndMessage)
-                return FALSE;
-        }
-    }
 
     return TRUE;
 }
@@ -1612,14 +1601,11 @@ co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance)
             return NULL;
     }
 
-    if (atom == gpsi->atomSysClass[ICLS_IME] || (pwnd->pcls->style & CS_IME))
+    if (IS_WND_IMELIKE(pwnd))
         return NULL;
 
-    if ((pwnd->style & (WS_CHILD | WS_VISIBLE)) == WS_CHILD &&
-        pwnd->spwndParent->head.pti->ppi != pti->ppi)
-    {
+    if ((pwnd->style & WS_CHILD) || pwnd->spwndParent->head.pti->ppi != pti->ppi)
         return NULL;
-    }
 
     if (pti->rpdesk->pheapDesktop == NULL)
         return NULL;

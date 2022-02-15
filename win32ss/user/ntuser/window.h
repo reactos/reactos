@@ -102,7 +102,7 @@ VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget);
 /* Undocumented dwFlags for IntBuildHwndList */
 #define IACE_LIST  0x0002
 
-BOOL FASTCALL IntNeedImeWindow(PWND pwndParent, PWND pwnd);
+BOOL FASTCALL IntNeedImeWindow(PWND pwnd);
 PWND APIENTRY co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance);
 BOOL FASTCALL IntCanDestroyDefaultImeWindow(PWND pImeWnd, PWND pwndTarget);
 
