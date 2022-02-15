@@ -1569,8 +1569,8 @@ BOOL FASTCALL IntNeedDefaultImeWindow(PWND pwnd)
     PDESKTOP pdesk;
 
     if ((pwnd->style & WS_CHILD) ||
-        (GetW32ThreadInfo()->TIF_flags & TIF_DISABLEIME) ||
         (pwnd->state & WNDS_SERVERSIDEWINDOWPROC) ||
+        (GetW32ThreadInfo()->TIF_flags & TIF_DISABLEIME) ||
         IS_WND_IMELIKE(pwnd))
     {
         return FALSE;
@@ -1602,13 +1602,7 @@ co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance)
             return NULL;
     }
 
-    if (IS_WND_IMELIKE(pwnd))
-        return NULL;
-
-    if ((pwnd->style & WS_CHILD) || pwnd->spwndParent->head.pti->ppi != pti->ppi)
-        return NULL;
-
-    if (pti->rpdesk->pheapDesktop == NULL)
+    if ((pwnd->style & WS_CHILD) || IS_WND_IMELIKE(pwnd) || !(pti->rpdesk->pheapDesktop))
         return NULL;
 
     RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&WindowName, L"Default IME", 0);
