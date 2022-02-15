@@ -14,8 +14,7 @@
 
 #include <debug.h>
 
-class CPortPinWaveCyclic : public IPortPinWaveCyclic,
-                           public IServiceSink
+class CPortPinWaveCyclic : public CUnknownImpl<IPortPinWaveCyclic, IServiceSink>
 {
 public:
     inline
@@ -30,22 +29,6 @@ public:
 
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortPinWaveCyclic;
     IMP_IServiceSink;
     CPortPinWaveCyclic(IUnknown *OuterUnknown) :
@@ -73,8 +56,7 @@ public:
         m_EventListLock(0),
         m_EventList({nullptr}),
         m_ResetState(KSRESET_BEGIN),
-        m_Delay(0),
-        m_Ref(0)
+        m_Delay(0)
     {
     }
     virtual ~CPortPinWaveCyclic(){}
@@ -125,8 +107,6 @@ protected:
     KSRESET m_ResetState;
 
     ULONG m_Delay;
-
-    LONG m_Ref;
 };
 
 

@@ -21,27 +21,11 @@ typedef struct
     PVOID DynamicContext;
 }SYNC_ENTRY, *PSYNC_ENTRY;
 
-class CInterruptSync : public IInterruptSync
+class CInterruptSync : public CUnknownImpl<IInterruptSync>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IInterruptSync;
     CInterruptSync(IUnknown *OuterUnknown){}
     virtual ~CInterruptSync(){}
@@ -58,8 +42,6 @@ public:
     PINTERRUPTSYNCROUTINE m_SyncRoutine;
     PVOID m_DynamicContext;
     NTSTATUS m_Status;
-
-    LONG m_Ref;
 
     friend BOOLEAN NTAPI CInterruptSynchronizedRoutine(IN PVOID  ServiceContext);
     friend BOOLEAN NTAPI IInterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);

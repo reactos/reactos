@@ -14,36 +14,15 @@
 
 #include <debug.h>
 
-class CUnregisterSubdevice : public IUnregisterSubdevice
+class CUnregisterSubdevice : public CUnknownImpl<IUnregisterSubdevice>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
-
-
     IMP_IUnregisterSubdevice;
 
-    CUnregisterSubdevice(IUnknown * OuterUnknown) : m_Ref(0) {}
+    CUnregisterSubdevice(IUnknown * OuterUnknown) {}
     virtual ~CUnregisterSubdevice(){}
-
-protected:
-    LONG m_Ref;
 
 };
 

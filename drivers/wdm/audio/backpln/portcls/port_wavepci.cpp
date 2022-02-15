@@ -14,30 +14,11 @@
 
 #include <debug.h>
 
-class CPortWavePci : public IPortWavePci,
-                     public IPortEvents,
-                     public ISubdevice,
-                     public IServiceSink
+class CPortWavePci : public CUnknownImpl<IPortWavePci, IPortEvents, ISubdevice, IServiceSink>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortWavePci;
     IMP_ISubdevice;
     IMP_IPortEvents;
@@ -58,8 +39,6 @@ protected:
 
     LIST_ENTRY m_EventList;
     KSPIN_LOCK m_EventListLock;
-
-    LONG m_Ref;
 
     friend PDEVICE_OBJECT GetDeviceObjectFromPortWavePci(IPortWavePci* iface);
     friend PMINIPORTWAVEPCI GetWavePciMiniport(PPORTWAVEPCI iface);
