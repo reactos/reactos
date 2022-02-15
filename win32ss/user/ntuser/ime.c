@@ -1564,13 +1564,14 @@ Quit:
     return ret;
 }
 
-BOOL FASTCALL IntNeedImeWindow(PWND pwnd)
+BOOL FASTCALL IntNeedDefaultImeWindow(PWND pwnd)
 {
     PDESKTOP pdesk;
 
     if ((pwnd->style & WS_CHILD) ||
         (GetW32ThreadInfo()->TIF_flags & TIF_DISABLEIME) ||
-        (pwnd->state & WNDS_SERVERSIDEWINDOWPROC))
+        (pwnd->state & WNDS_SERVERSIDEWINDOWPROC) ||
+        IS_WND_IMELIKE(pwnd))
     {
         return FALSE;
     }

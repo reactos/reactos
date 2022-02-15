@@ -2070,7 +2070,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    else // Not a child
       pWnd->IDMenu = (UINT_PTR)Cs->hMenu;
 
-   if (IS_IMM_MODE() && !pti->spwndDefaultIme && IntNeedImeWindow(pWnd))
+   if (IS_IMM_MODE() && !pti->spwndDefaultIme && IntNeedDefaultImeWindow(pWnd))
    {
       pti->spwndDefaultIme =
          co_IntCreateDefaultImeWindow(pWnd, Class->atomClassName, pWnd->hModule);
@@ -2922,13 +2922,11 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    IntSendDestroyMsg(UserHMGetHandle(Window));
 
    /* Destroy the Default IME window */
-   if (IS_IMM_MODE() && !(ti->TIF_flags & TIF_INCLEANUP))
+   if (IS_IMM_MODE() && !(ti->TIF_flags & TIF_INCLEANUP) &&
+       IntCanDestroyDefaultImeWindow(ti->spwndDefaultIme, Window))
    {
-      if (IntCanDestroyDefaultImeWindow(ti->spwndDefaultIme, Window))
-      {
-         co_UserDestroyWindow(ti->spwndDefaultIme);
-         ti->spwndDefaultIme = NULL;
-      }
+      co_UserDestroyWindow(ti->spwndDefaultIme);
+      ti->spwndDefaultIme = NULL;
    }
 
    if (!IntIsWindow(UserHMGetHandle(Window)))
