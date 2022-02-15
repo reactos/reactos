@@ -73,3 +73,8 @@ BOOL UserHasWindowEdge(DWORD,DWORD);
 VOID UserGetWindowBorders(DWORD,DWORD,SIZE*,BOOL);
 BOOL FASTCALL IntNeedImeWindow(PWND pwndParent, PWND pwnd);
 PWND APIENTRY co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance);
+BOOL FASTCALL IntCanDestroyDefaultImeWindow(PWND pImeWnd, PWND pwndTarget);
+
+#define IS_WND_IMELIKE(pwnd) \
+    (((pwnd)->pcls->style & CS_IME) || \
+     ((pwnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))

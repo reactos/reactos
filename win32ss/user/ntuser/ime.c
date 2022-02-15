@@ -21,10 +21,6 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 #define LANGID_CHINESE_TRADITIONAL  MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_TRADITIONAL)
 #define LANGID_NEUTRAL              MAKELANGID(LANG_NEUTRAL,  SUBLANG_NEUTRAL)
 
-#define IS_WND_IMELIKE(pwnd) \
-    (((pwnd)->pcls->style & CS_IME) || \
-     ((pwnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
-
 // The special virtual keys for Japanese: Used for key states.
 // https://www.kthree.co.jp/kihelp/index.html?page=app/vkey&type=html
 #define VK_DBE_ALPHANUMERIC 0xF0
@@ -1127,7 +1123,7 @@ BOOL NTAPI
 NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
 {
     BOOL ret = FALSE;
-    PWND pImeWnd, pwndFocus, pwndTopLevel, pwnd, pwndActive;
+    PWND pImeWnd, pwndFocus, pwndTopLevel, pwnd, pwndTarget;
     PTHREADINFO ptiIme;
 
     UserEnterExclusive();
@@ -1145,44 +1141,33 @@ NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
     pwndFocus = ValidateHwndNoErr(hwndFocus);
     if (pwndFocus)
     {
-        if (IS_WND_IMELIKE(pwndFocus))
-            goto Quit;
-
-        pwndTopLevel = IntGetTopLevelWindow(pwndFocus);
-
-        for (pwnd = pwndTopLevel; pwnd; pwnd = pwnd->spwndOwner)
-        {
-            if (pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME])
-            {
-                pwndTopLevel = NULL;
-                break;
-            }
-        }
-
-        pImeWnd->spwndOwner = pwndTopLevel;
-        // TODO:
+        pwndTarget = pwndFocus;
     }
     else
     {
         ptiIme = pImeWnd->head.pti;
-        pwndActive = ptiIme->MessageQueue->spwndActive;
+        pwndTarget = ptiIme->MessageQueue->spwndActive;
+    }
 
-        if (!pwndActive || pwndActive != pImeWnd->spwndOwner)
+    if (!pwndTarget || IS_WND_IMELIKE(pwndTarget))
+        goto Quit;
+
+    pwndTopLevel = IntGetTopLevelWindow(pwndTarget);
+
+    for (pwnd = pwndTopLevel; pwnd; pwnd = pwnd->spwndOwner)
+    {
+        if (IS_WND_IMELIKE(pwnd))
         {
-            if (pwndActive && ptiIme == pwndActive->head.pti && !IS_WND_IMELIKE(pwndActive))
-            {
-                pImeWnd->spwndOwner = pwndActive;
-            }
-            else
-            {
-                // TODO:
-            }
-
-            // TODO:
+            pwndTopLevel = NULL;
+            break;
         }
     }
 
-    ret = TRUE;
+    if (pwndTopLevel)
+    {
+        pImeWnd->spwndOwner = pwndTopLevel;
+        ret = TRUE;
+    }
 
 Quit:
     UserLeave();
@@ -1670,6 +1655,39 @@ co_IntCreateDefaultImeWindow(PWND pwnd, ATOM atom, HINSTANCE hInstance)
     }
 
     return pwndDefaultIme;
+}
+
+BOOL FASTCALL IntCanDestroyDefaultImeWindow(PWND pImeWnd, PWND pwndTarget)
+{
+    PWND pwnd;
+    PIMEUI pimeui;
+
+    if (!pImeWnd || (pwndTarget->style & WS_CHILD) || IS_WND_IMELIKE(pwndTarget))
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        pimeui = ((PIMEWND)pImeWnd)->pimeui;
+        if (!pimeui || pimeui->fDestroy)
+            return FALSE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        return FALSE;
+    }
+    _SEH2_END;
+
+    for (pwnd = pwndTarget; pwnd; pwnd = pwnd->spwndOwner)
+    {
+        if (IS_WND_IMELIKE(pwnd))
+            return FALSE;
+    }
+
+    if (pImeWnd->spwndOwner && pwndTarget != pImeWnd->spwndOwner)
+        return FALSE;
+
+    pImeWnd->spwndOwner = NULL;
+    return TRUE;
 }
 
 /* EOF */
