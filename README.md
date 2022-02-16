@@ -32,7 +32,7 @@
 [Official chat](https://chat.reactos.org/) &bull;
 [Wiki](https://reactos.org/wiki/) &bull;
 [Forum](https://reactos.org/forum/) &bull;
-[Unofficial Community Discord](https://discord.gg/7knjvhT) &bull;
+Community Discord](https://discord.gg/7knjvhT) &bull;
 [JIRA Bug Tracker](https://jira.reactos.org/issues/) &bull;
 [ReactOS Git mirror](https://git.reactos.org/) &bull;
 [Testman](https://reactos.org/testman/)
