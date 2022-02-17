@@ -94,6 +94,7 @@ LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
 PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL);
 LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
+BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID);
 
 static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
 {
@@ -155,3 +156,10 @@ UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts);
 BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
 HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
 BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
+
+static inline PTHREADINFO FASTCALL Imm32CurrentPti(VOID)
+{
+    if (NtCurrentTeb()->Win32ThreadInfo == NULL)
+        NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
+    return NtCurrentTeb()->Win32ThreadInfo;
+}

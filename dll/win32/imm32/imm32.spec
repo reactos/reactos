@@ -91,7 +91,7 @@
 @ stdcall ImmRequestMessageW(ptr ptr ptr)
 @ stdcall ImmSendIMEMessageExA(ptr ptr)
 @ stdcall ImmSendIMEMessageExW(ptr ptr)
-@ stub ImmSendMessageToActiveDefImeWndW
+@ stdcall ImmSendMessageToActiveDefImeWndW(long ptr ptr)
 @ stdcall ImmSetActiveContext(ptr ptr long)
 @ stdcall ImmSetActiveContextConsoleIME(ptr long)
 @ stdcall ImmSetCandidateWindow(ptr ptr)
@@ -115,5 +115,5 @@
 @ stdcall ImmUnregisterWordA(long str long str)
 @ stdcall ImmUnregisterWordW(long wstr long wstr)
 @ stdcall -stub ImmWINNLSEnableIME(ptr long)
-@ stdcall -stub ImmWINNLSGetEnableStatus(ptr)
+@ stdcall ImmWINNLSGetEnableStatus(ptr)
 @ stdcall ImmWINNLSGetIMEHotkey(ptr)

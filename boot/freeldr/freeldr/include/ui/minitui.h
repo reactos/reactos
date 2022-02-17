@@ -8,11 +8,7 @@
 
 #pragma once
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Textual User Interface Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
+/* Textual User Interface Functions ******************************************/
 
 VOID MiniTuiDrawBackdrop(VOID);
 VOID MiniTuiDrawStatusText(PCSTR StatusText);
@@ -35,12 +31,10 @@ MiniTuiDrawProgressBar(
     _In_ ULONG Range,
     _Inout_z_ PSTR ProgressText);
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Menu Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
+/* Menu Functions ************************************************************/
 
-VOID MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo);
+VOID
+MiniTuiDrawMenu(
+    _In_ PUI_MENU_INFO MenuInfo);
 
 extern const UIVTBL MiniTuiVtbl;

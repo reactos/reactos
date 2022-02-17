@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS api tests
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for i18n console.
  * COPYRIGHT:   Copyright 2017-2020 Katayama Hirofumi MZ
- *              Copyright 2020 Hermes Belusca-Maito
+ *              Copyright 2020-2022 Hermès Bélusca-Maïto
  */
 
 #include "precomp.h"
@@ -24,30 +24,189 @@ static const WCHAR u9580[] = {0x9580, 0}; /* 門 */
 static const WCHAR space[] = {L' ', 0};
 static const WCHAR ideograph_space = (WCHAR)0x3000; /* fullwidth space */
 static const WCHAR s_str[] = {L'A', 0x9580, 'B', 0};
-static LCID lcidJapanese = MAKELCID(MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT), SORT_DEFAULT);
-static LCID lcidRussian  = MAKELCID(MAKELANGID(LANG_RUSSIAN , SUBLANG_DEFAULT), SORT_DEFAULT);
+static const LCID lcidJapanese = MAKELCID(MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT), SORT_DEFAULT);
+static const LCID lcidRussian  = MAKELCID(MAKELANGID(LANG_RUSSIAN , SUBLANG_DEFAULT), SORT_DEFAULT);
+
+static UINT s_uOEMCP;
 static BOOL s_bIs8Plus;
 
-static BOOL IsCJKCodePage(void)
+static BOOL IsCJKCodePage(_In_ UINT CodePage)
 {
-    switch (GetOEMCP())
+    switch (CodePage)
     {
-    case 936:   // Chinese PRC
     case 932:   // Japanese
     case 949:   // Korean
     case 1361:  // Korean (Johab)
+    case 936:   // Chinese PRC
     case 950:   // Taiwan
         return TRUE;
     }
     return FALSE;
 }
 
+static __inline
+LANGID MapCJKCPToLangId(_In_ UINT CodePage)
+{
+    switch (CodePage)
+    {
+    case 932:   // Japanese (Shift-JIS)
+        return MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT);
+    case 949:   // Korean (Hangul/Wansung)
+    // case 1361:  // Korean (Johab)
+        return MAKELANGID(LANG_KOREAN, SUBLANG_KOREAN);
+    case 936:   // Chinese PRC (Chinese Simplified)
+        return MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED);
+    case 950:   // Taiwan (Chinese Traditional)
+        return MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL);
+    default:
+        return MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+    }
+}
+
+static BOOL ChangeOutputCP_(
+    _In_ const char* file,
+    _In_ int line,
+    _In_ UINT CodePage)
+{
+    BOOL bSuccess;
+
+    /* Validate the code page */
+    bSuccess = IsValidCodePage(CodePage);
+    if (!bSuccess)
+    {
+        skip_(file, line)("Code page %d not available\n", CodePage);
+        return FALSE;
+    }
+
+    /* Set the new code page */
+    SetLastError(0xdeadbeef);
+    bSuccess = SetConsoleOutputCP(CodePage);
+    if (!bSuccess)
+        skip_(file, line)("SetConsoleOutputCP(%d) failed with last error %lu\n", CodePage, GetLastError());
+    return bSuccess;
+}
+
+#define ChangeOutputCP(CodePage) \
+    ChangeOutputCP_(__FILE__, __LINE__, CodePage)
+
+
+#define cmpThreadLangId(file, line, ExpectedLangId) \
+do { \
+    LANGID ThreadLangId; \
+    ThreadLangId = LANGIDFROMLCID(NtCurrentTeb()->CurrentLocale); \
+    trace_((file), (line))("Thread LangId %d, expecting %d...\n", \
+                           ThreadLangId, (ExpectedLangId)); \
+    ok_((file), (line))(ThreadLangId == (ExpectedLangId),   \
+                        "Thread LangId %d, expected %d\n",  \
+                        ThreadLangId, (ExpectedLangId));    \
+} while (0)
+
+static BOOL
+doTest_CP_ThreadLang_(
+    _In_ const char* file,
+    _In_ int line,
+    _In_ UINT CodePage,
+    _In_ LANGID ExpectedLangId)
+{
+    UINT newcp;
+
+    /* Verify and set the new code page */
+    if (!ChangeOutputCP_(file, line, CodePage))
+    {
+        skip_(file, line)("Code page %d expected to be valid!\n", CodePage);
+        return FALSE;
+    }
+
+    newcp = GetConsoleOutputCP();
+    ok_(file, line)(newcp == CodePage, "Console output CP is %d, expected %d\n", newcp, CodePage);
+
+    /* Verify that the thread lang ID is the expected one */
+    cmpThreadLangId(file, line, ExpectedLangId);
+    return TRUE;
+}
+
+#define doTest_CP_ThreadLang(...) \
+    doTest_CP_ThreadLang_(__FILE__, __LINE__, ##__VA_ARGS__)
+
+static VOID test_CP_ThreadLang(VOID)
+{
+    /* Save the initial current thread locale. It is (re)initialized after
+     * attaching to a console. Don't use GetThreadLocale() as the latter
+     * can return a replacement value in case CurrentLocale is 0. */
+    LANGID ThreadLangId = LANGIDFROMLCID(NtCurrentTeb()->CurrentLocale);
+    UINT oldcp = GetConsoleOutputCP();
+
+    if (IsCJKCodePage(s_uOEMCP))
+    {
+        /* We are on a CJK system */
+
+        /* Is the console in CJK? If so, current thread should be in CJK language */
+        if (!IsCJKCodePage(oldcp))
+        {
+            skip("CJK system but console CP not in CJK\n");
+        }
+        else
+        {
+            /* Check that the thread lang ID matches what the console set */
+            LANGID LangId = MapCJKCPToLangId(oldcp);
+            cmpThreadLangId(__FILE__, __LINE__, LangId);
+        }
+
+        /* Set the code page to OEM USA (non-CJK codepage that is supported).
+         * Verify that the thread lang ID has changed to non-CJK language. */
+        doTest_CP_ThreadLang(437, MapCJKCPToLangId(437));
+
+        /* Set the code page to the default system CJK codepage.
+         * Check that the thread lang ID matches what the console set. */
+        doTest_CP_ThreadLang(s_uOEMCP, MapCJKCPToLangId(s_uOEMCP));
+    }
+    else
+    {
+        /* We are on a non-CJK system */
+
+        /* Code pages: Japanese, Korean, Chinese Simplified/Traditional */
+        UINT CJKCodePages[] = {932, 949, 936, 950};
+        UINT newcp;
+        USHORT i;
+
+        /* Switch to a different code page (OEM USA) than the current one.
+         * In such setup, the current thread lang ID should not change. */
+        newcp = (s_uOEMCP == 437 ? 850 : 437);
+        doTest_CP_ThreadLang(newcp, ThreadLangId);
+
+        /* Try switching to a CJK codepage, if possible, but
+         * the thread lang ID should not change either... */
+
+        /* Retry as long as no valid CJK codepage has been found */
+        for (i = 0; i < ARRAYSIZE(CJKCodePages); ++i)
+        {
+            newcp = CJKCodePages[i];
+            if (IsValidCodePage(newcp))
+                break; // Found a valid one.
+        }
+        if (i >= ARRAYSIZE(CJKCodePages))
+        {
+            /* No valid CJK code pages on the system */
+            skip("CJK system but console CP not in CJK\n");
+        }
+        else
+        {
+            /* Verify that the thread lang ID remains the same */
+            doTest_CP_ThreadLang(newcp, ThreadLangId);
+        }
+    }
+
+    /* Restore code page */
+    SetConsoleOutputCP(oldcp);
+}
+
+
 /* Russian Code Page 855 */
 // NOTE that CP 866 can also be used
 static void test_cp855(HANDLE hConOut)
 {
     BOOL ret;
-    DWORD oldcp;
+    UINT oldcp;
     int n;
     DWORD len;
     COORD c;
@@ -56,19 +215,11 @@ static void test_cp855(HANDLE hConOut)
     WCHAR str[32];
     WORD attrs[16];
 
-    if (!IsValidCodePage(855))
-    {
-        skip("Codepage 855 not available\n");
-        return;
-    }
-
     /* Set code page */
     oldcp = GetConsoleOutputCP();
-    SetLastError(0xdeadbeef);
-    ret = SetConsoleOutputCP(855);
-    if (!ret)
+    if (!ChangeOutputCP(855))
     {
-        skip("SetConsoleOutputCP failed with last error %lu\n", GetLastError());
+        skip("Codepage 855 not available\n");
         return;
     }
 
@@ -269,7 +420,7 @@ static void test_cp855(HANDLE hConOut)
 static void test_cp932(HANDLE hConOut)
 {
     BOOL ret;
-    DWORD oldcp;
+    UINT oldcp;
     int n;
     DWORD len;
     COORD c, buffSize;
@@ -280,19 +431,11 @@ static void test_cp932(HANDLE hConOut)
     CHAR_INFO buff[16];
     SMALL_RECT sr;
 
-    if (!IsValidCodePage(932))
-    {
-        skip("Codepage 932 not available\n");
-        return;
-    }
-
     /* Set code page */
     oldcp = GetConsoleOutputCP();
-    SetLastError(0xdeadbeef);
-    ret = SetConsoleOutputCP(932);
-    if (!ret)
+    if (!ChangeOutputCP(932))
     {
-        skip("SetConsoleOutputCP failed with last error %lu\n", GetLastError());
+        skip("Codepage 932 not available\n");
         return;
     }
 
@@ -1364,6 +1507,7 @@ static void test_cp932(HANDLE hConOut)
     SetConsoleOutputCP(oldcp);
 }
 
+
 START_TEST(ConsoleCP)
 {
     HANDLE hConIn, hConOut;
@@ -1382,9 +1526,18 @@ START_TEST(ConsoleCP)
     ok(hConIn != INVALID_HANDLE_VALUE, "Opening ConIn\n");
     ok(hConOut != INVALID_HANDLE_VALUE, "Opening ConOut\n");
 
+    /* Retrieve the system OEM code page */
+    s_uOEMCP = GetOEMCP();
+    trace("Running on %s system (codepage %d)\n",
+          IsCJKCodePage(s_uOEMCP) ? "CJK" : "Non-CJK",
+          s_uOEMCP);
+
+    /* Test thread lang ID syncing with console code page */
+    test_CP_ThreadLang();
+
     if (IsValidLocale(lcidRussian, LCID_INSTALLED))
     {
-        if (!IsCJKCodePage())
+        if (!IsCJKCodePage(s_uOEMCP))
             test_cp855(hConOut);
         else
             skip("Russian testcase is skipped because of CJK\n");
@@ -1396,7 +1549,7 @@ START_TEST(ConsoleCP)
 
     if (IsValidLocale(lcidJapanese, LCID_INSTALLED))
     {
-        if (IsCJKCodePage())
+        if (IsCJKCodePage(s_uOEMCP))
             test_cp932(hConOut);
         else
             skip("Japanese testcase is skipped because of not CJK\n");

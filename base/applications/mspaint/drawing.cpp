@@ -307,3 +307,36 @@ Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCT
 
     RestoreDC(hdc, iSaveDC); // Restore
 }
+
+BOOL
+ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
+                  HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask,
+                  DWORD dwRop, COLORREF keyColor)
+{
+    HDC hTempDC;
+    HDC hTempDC2;
+    HBITMAP hTempBm;
+    HBRUSH hTempBrush;
+    HBITMAP hTempMask;
+
+    hTempDC = CreateCompatibleDC(hdcSrc);
+    hTempDC2 = CreateCompatibleDC(hdcSrc);
+    hTempBm = CreateCompatibleBitmap(hTempDC, nWidth, nHeight);
+    SelectObject(hTempDC, hTempBm);
+    hTempBrush = CreateSolidBrush(keyColor);
+    SelectObject(hTempDC, hTempBrush);
+    BitBlt(hTempDC, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, SRCCOPY);
+    PatBlt(hTempDC, 0, 0, nWidth, nHeight, PATINVERT);
+    hTempMask = CreateBitmap(nWidth, nHeight, 1, 1, NULL);
+    SelectObject(hTempDC2, hTempMask);
+    BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC, 0, 0, SRCCOPY);
+    SelectObject(hTempDC, hbmMask);
+    BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC, xMask, yMask, SRCAND);
+    MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, hTempMask, xMask, yMask, dwRop);
+    DeleteDC(hTempDC);
+    DeleteDC(hTempDC2);
+    DeleteObject(hTempBm);
+    DeleteObject(hTempBrush);
+    DeleteObject(hTempMask);
+    return TRUE;
+}

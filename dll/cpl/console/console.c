@@ -227,7 +227,7 @@ InitApplet(HANDLE hSectionOrWnd)
         InitDefaultConsoleInfo(ConInfo);
     }
 
-    /* Initialize the font support -- additional TrueType fonts cache and current preview font */
+    /* Initialize the font support -- additional TrueType font cache and current preview font */
     InitTTFontCache();
     RefreshFontPreview(&FontPreview, ConInfo);
 

@@ -192,7 +192,21 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
     int oldHeight = GetHeight();
     INT newWidth = oldWidth * nStretchPercentX / 100;
     INT newHeight = oldHeight * nStretchPercentY / 100;
-    Insert(CopyDIBImage(hBms[currInd], newWidth, newHeight));
+    if (oldWidth != newWidth || oldHeight != newHeight)
+    {
+        HBITMAP hbm0 = CopyDIBImage(hBms[currInd], newWidth, newHeight);
+        Insert(hbm0);
+    }
+    if (nSkewDegX)
+    {
+        HBITMAP hbm1 = SkewDIB(hDrawingDC, hBms[currInd], nSkewDegX, FALSE);
+        Insert(hbm1);
+    }
+    if (nSkewDegY)
+    {
+        HBITMAP hbm2 = SkewDIB(hDrawingDC, hBms[currInd], nSkewDegY, TRUE);
+        Insert(hbm2);
+    }
     if (GetWidth() != oldWidth || GetHeight() != oldHeight)
         NotifyDimensionsChanged();
     NotifyImageChanged();
@@ -245,11 +259,25 @@ void ImageModel::FlipVertically()
 
 void ImageModel::RotateNTimes90Degrees(int iN)
 {
-    if (iN == 2)
+    switch (iN)
     {
+    case 1:
+    case 3:
+        DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
+        hBms[(currInd + 1) % HISTORYSIZE] = Rotate90DegreeBlt(hDrawingDC, GetWidth(), GetHeight(), iN == 1);
+        currInd = (currInd + 1) % HISTORYSIZE;
+        if (undoSteps < HISTORYSIZE - 1)
+            undoSteps++;
+        redoSteps = 0;
+        SelectObject(hDrawingDC, hBms[currInd]);
+        imageSaved = FALSE;
+        NotifyDimensionsChanged();
+        break;
+    case 2:
         CopyPrevious();
         StretchBlt(hDrawingDC, GetWidth() - 1, GetHeight() - 1, -GetWidth(), -GetHeight(), GetDC(),
                    0, 0, GetWidth(), GetHeight(), SRCCOPY);
+        break;
     }
     NotifyImageChanged();
 }

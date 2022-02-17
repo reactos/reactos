@@ -11,6 +11,8 @@
 
 #include <ntoskrnl.h>
 #include <reactos/buildno.h>
+#include "inbv/logo.h"
+
 #define NDEBUG
 #include <debug.h>
 

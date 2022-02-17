@@ -8,11 +8,7 @@
 
 #pragma once
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// No User Interface Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
+/* No User Interface Functions ***********************************************/
 
 BOOLEAN NoUiInitialize(VOID);
 VOID NoUiUnInitialize(VOID);
@@ -78,11 +74,7 @@ UCHAR NoUiTextToFillStyle(PCSTR FillStyleText);
 VOID NoUiFadeInBackdrop(VOID);
 VOID NoUiFadeOut(VOID);
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Menu Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
+/* Menu Functions ************************************************************/
 
 BOOLEAN
 NoUiDisplayMenu(
@@ -98,4 +90,6 @@ NoUiDisplayMenu(
     IN UiMenuKeyPressFilterCallback KeyPressFilter OPTIONAL,
     IN PVOID Context OPTIONAL);
 
-VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo);
+VOID
+NoUiDrawMenu(
+    _In_ PUI_MENU_INFO MenuInfo);

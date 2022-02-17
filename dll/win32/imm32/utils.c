@@ -41,6 +41,14 @@ Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff)
     return S_OK;
 }
 
+BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
+{
+    LCID lcid = GetSystemDefaultLCID();
+    LANGID LangID = LANGIDFROMLCID(lcid);
+    WORD wPrimary = PRIMARYLANGID(LangID);
+    return (wPrimary == LANG_JAPANESE || wPrimary == LANG_KOREAN);
+}
+
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 {
     BOOL ret;
@@ -182,7 +190,7 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 {
     HIMC hIMC;
     DWORD dwProcessID;
-    if (pIMC->head.pti == NtCurrentTeb()->Win32ThreadInfo)
+    if (pIMC->head.pti == Imm32CurrentPti())
         return TRUE;
 
     hIMC = pIMC->head.h;

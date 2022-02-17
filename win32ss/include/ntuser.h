@@ -1215,7 +1215,7 @@ typedef struct tagIMEUI
 /* Window Extra data container. */
 typedef struct _IMEWND
 {
-    WND;
+    WND wnd;
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
 
@@ -1846,8 +1846,8 @@ NtUserCheckWindowThreadDesktop(
 DWORD
 NTAPI
 NtUserCheckImeHotKey(
-    DWORD dwUnknown1,
-    LPARAM dwUnknown2);
+    UINT uVirtualKey,
+    LPARAM lParam);
 
 HWND NTAPI
 NtUserChildWindowFromPointEx(
@@ -2388,11 +2388,12 @@ NtUserGetIconSize(
     LONG *plcx,
     LONG *plcy);
 
-BOOL NTAPI
-NtUserGetImeHotKey(IN DWORD dwHotKey,
-                   OUT LPUINT lpuModifiers,
-                   OUT LPUINT lpuVKey,
-                   OUT LPHKL lphKL);
+BOOL
+NTAPI
+NtUserGetImeHotKey(DWORD dwHotKeyId,
+                   LPUINT lpuModifiers,
+                   LPUINT lpuVirtualKey,
+                   LPHKL lphKL);
 
 BOOL
 NTAPI
@@ -2569,8 +2570,7 @@ enum ThreadStateRoutines
     THREADSTATE_ISWINLOGON,
     THREADSTATE_ISWINLOGON2,
     THREADSTATE_UNKNOWN17,
-    THREADSTATE_UNKNOWN18,
-    THREADSTATE_GETTHREADINFO = 100, /* FIXME: Delete this HACK */
+    THREADSTATE_GETTHREADINFO,
     THREADSTATE_PROGMANWINDOW, /* FIXME: Delete this HACK */
     THREADSTATE_TASKMANWINDOW, /* FIXME: Delete this HACK */
 };
@@ -3184,14 +3184,14 @@ NTAPI
 NtUserSetFocus(
     HWND hWnd);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetImeHotKey(
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3,
-    DWORD Unknown4);
+    DWORD dwHotKeyId,
+    UINT uModifiers,
+    UINT uVirtualKey,
+    HKL hKL,
+    DWORD dwAction);
 
 BOOL
 NTAPI

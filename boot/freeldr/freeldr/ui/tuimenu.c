@@ -9,10 +9,18 @@
 
 /* INCLUDES ******************************************************************/
 
-#ifndef _M_ARM
 #include <freeldr.h>
 
 /* FUNCTIONS *****************************************************************/
+
+static VOID
+TuiCalcMenuBoxSize(
+    _In_ PUI_MENU_INFO MenuInfo);
+
+static ULONG
+TuiProcessMenuKeyboardEvent(
+    _In_ PUI_MENU_INFO MenuInfo,
+    _In_ UiMenuKeyPressFilterCallback KeyPressFilter);
 
 BOOLEAN
 TuiDisplayMenu(
@@ -79,7 +87,11 @@ TuiDisplayMenu(
     TuiCalcMenuBoxSize(&MenuInformation);
 
     /* Draw the menu */
+#ifdef _M_ARM
+    UiDrawMenu(&MenuInformation);
+#else
     UiVtbl.DrawMenu(&MenuInformation);
+#endif
 
     /* Get the current second of time */
     LastClockSecond = ArcGetTime()->Second;
@@ -94,9 +106,11 @@ TuiDisplayMenu(
         if (KeyPress == KEY_ENTER) break;
         if (CanEscape && KeyPress == KEY_ESC) return FALSE;
 
+#ifndef _M_ARM // FIXME: Theme-specific
         /* Update the date & time */
         TuiUpdateDateTime();
         VideoCopyOffScreenBufferToVRAM();
+#endif
 
         /* Check if there is a countdown */
         if (MenuInformation.MenuTimeRemaining > 0)
@@ -113,7 +127,9 @@ TuiDisplayMenu(
 
                 /* Update the menu */
                 TuiDrawMenuBox(&MenuInformation);
+#ifndef _M_ARM
                 VideoCopyOffScreenBufferToVRAM();
+#endif
             }
         }
         else if (MenuInformation.MenuTimeRemaining == 0)
@@ -122,7 +138,9 @@ TuiDisplayMenu(
             break;
         }
 
+#ifndef _M_ARM
         MachHwIdle();
+#endif
     }
 
     /* Return the selected item */
@@ -130,8 +148,9 @@ TuiDisplayMenu(
     return TRUE;
 }
 
-VOID
-TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo)
+static VOID
+TuiCalcMenuBoxSize(
+    _In_ PUI_MENU_INFO MenuInfo)
 {
     ULONG i;
     ULONG Width = 0;
@@ -156,6 +175,7 @@ TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo)
     /* Allow room for left & right borders, plus 8 spaces on each side */
     Width += 18;
 
+#ifndef _M_ARM
     /* Check if we're drawing a centered menu */
     if (UiCenterMenu)
     {
@@ -165,6 +185,7 @@ TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo)
                           Height) / 2) + TUI_TITLE_BOX_CHAR_HEIGHT;
     }
     else
+#endif
     {
         /* Put the menu in the default left-corner position */
         MenuInfo->Left = -1;
@@ -172,20 +193,55 @@ TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo)
     }
 
     /* The other margins are the same */
-    MenuInfo->Right = (MenuInfo->Left) + Width;
-    MenuInfo->Bottom = (MenuInfo->Top) + Height;
+    MenuInfo->Right = MenuInfo->Left + Width;
+    MenuInfo->Bottom = MenuInfo->Top + Height;
 }
 
 VOID
-TuiDrawMenu(PUI_MENU_INFO MenuInfo)
+TuiDrawMenu(
+    _In_ PUI_MENU_INFO MenuInfo)
 {
     ULONG i;
+
+#ifdef _M_ARM // FIXME: Theme-specific
+
+    /* No GUI status bar text, just minimal text. Show the menu header. */
+    if (MenuInfo->MenuHeader)
+    {
+        UiDrawText(0,
+                   MenuInfo->Top - 2,
+                   MenuInfo->MenuHeader,
+                   ATTR(UiMenuFgColor, UiMenuBgColor));
+    }
+
+    /* Now tell the user how to choose */
+    UiDrawText(0,
+               MenuInfo->Bottom + 1,
+               "Use \x18 and \x19 to move the highlight to your choice.",
+               ATTR(UiMenuFgColor, UiMenuBgColor));
+    UiDrawText(0,
+               MenuInfo->Bottom + 2,
+               "Press ENTER to choose.",
+               ATTR(UiMenuFgColor, UiMenuBgColor));
+
+    /* And show the menu footer */
+    if (MenuInfo->MenuFooter)
+    {
+        UiDrawText(0,
+                   UiScreenHeight - 4,
+                   MenuInfo->MenuFooter,
+                   ATTR(UiMenuFgColor, UiMenuBgColor));
+    }
+
+#else
 
     /* Draw the backdrop */
     UiDrawBackdrop();
 
     /* Update the status bar */
     UiVtbl.DrawStatusText("Use \x18 and \x19 to select, then press ENTER.");
+
+#endif
 
     /* Draw the menu box */
     TuiDrawMenuBox(MenuInfo);
@@ -202,15 +258,19 @@ TuiDrawMenu(PUI_MENU_INFO MenuInfo)
         DisplayBootTimeOptions();
     }
 
+#ifndef _M_ARM
     VideoCopyOffScreenBufferToVRAM();
+#endif
 }
 
 VOID
-TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
+TuiDrawMenuBox(
+    _In_ PUI_MENU_INFO MenuInfo)
 {
     CHAR MenuLineText[80], TempString[80];
     ULONG i;
 
+#ifndef _M_ARM // FIXME: Theme-specific
     /* Draw the menu box if requested */
     if (UiMenuBox)
     {
@@ -224,6 +284,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
                   TRUE,     // Shadow
                   ATTR(UiMenuFgColor, UiMenuBgColor));
     }
+#endif
 
     /* If there is a timeout draw the time remaining */
     if (MenuInfo->MenuTimeRemaining >= 0)
@@ -241,6 +302,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
         /* Add the last 2 chars */
         strcat(MenuLineText, &UiTimeText[i - 2]);
 
+#ifndef _M_ARM
         /* Check if this is a centered menu */
         if (UiCenterMenu)
         {
@@ -251,6 +313,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
                        ATTR(UiMenuFgColor, UiMenuBgColor));
         }
         else
+#endif
         {
             /* Display under the menu directly */
             UiDrawText(0,
@@ -269,6 +332,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
         MenuLineText[sizeof(MenuLineText)-1] = 0;
 
         /* Draw this "empty" string to erase */
+#ifndef _M_ARM
         if (UiCenterMenu)
         {
             UiDrawText(MenuInfo->Right - (ULONG)strlen(MenuLineText) - 1,
@@ -277,6 +341,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
                        ATTR(UiMenuFgColor, UiMenuBgColor));
         }
         else
+#endif
         {
             UiDrawText(0,
                        MenuInfo->Bottom + 4,
@@ -305,16 +370,20 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
 }
 
 VOID
-TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
-                ULONG MenuItemNumber)
+TuiDrawMenuItem(
+    _In_ PUI_MENU_INFO MenuInfo,
+    _In_ ULONG MenuItemNumber)
 {
+#ifndef _M_ARM
     ULONG i;
-    CHAR  MenuLineText[80];
     ULONG SpaceTotal;
     ULONG SpaceLeft;
     ULONG SpaceRight = 0;
+#endif
     UCHAR Attribute = ATTR(UiTextColor, UiMenuBgColor);
+    CHAR MenuLineText[80];
 
+#ifndef _M_ARM
     /* Check if using centered menu */
     if (UiCenterMenu)
     {
@@ -329,10 +398,12 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
         SpaceRight = (SpaceTotal - SpaceLeft) + 1;
 
         /* Insert the spaces on the left */
-        for (i = 0; i < SpaceLeft; i++) MenuLineText[i] = ' ';
+        for (i = 0; i < SpaceLeft; i++)
+            MenuLineText[i] = ' ';
         MenuLineText[i] = '\0';
     }
     else
+#endif
     {
         /* Simply left-align it */
         MenuLineText[0] = '\0';
@@ -343,12 +414,14 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
     if (MenuInfo->MenuItemList[MenuItemNumber])
         strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
 
+#ifndef _M_ARM
     /* Check if using centered menu, and add spaces on the right if so */
     if (UiCenterMenu)
     {
         for (i = 0; i < SpaceRight; i++)
             strcat(MenuLineText, " ");
     }
+#endif
 
     /* If it is a separator */
     if (MenuInfo->MenuItemList[MenuItemNumber] == NULL)
@@ -371,9 +444,10 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
                Attribute);
 }
 
-ULONG
-TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
-                            UiMenuKeyPressFilterCallback KeyPressFilter)
+static ULONG
+TuiProcessMenuKeyboardEvent(
+    _In_ PUI_MENU_INFO MenuInfo,
+    _In_ UiMenuKeyPressFilterCallback KeyPressFilter)
 {
     ULONG KeyEvent = 0;
     ULONG Selected, Count;
@@ -403,7 +477,11 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
         KeyPressFilter(KeyEvent, MenuInfo->SelectedMenuItem, MenuInfo->Context))
     {
         /* It processed the key character, so redraw and exit */
+#ifdef _M_ARM
+        UiDrawMenu(MenuInfo);
+#else
         UiVtbl.DrawMenu(MenuInfo);
+#endif
         return 0;
     }
 
@@ -461,11 +539,11 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
 
         /* Select new item and update video buffer */
         TuiDrawMenuItem(MenuInfo, MenuInfo->SelectedMenuItem);
+#ifndef _M_ARM
         VideoCopyOffScreenBufferToVRAM();
+#endif
     }
 
     /* Return the pressed key */
     return KeyEvent;
 }
-
-#endif

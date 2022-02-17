@@ -8,6 +8,7 @@
 #include "shelltest.h"
 #include <stdio.h>
 #include <shlwapi.h>
+#include "shell32_apitest_sub.h"
 
 static char s_sub_program[MAX_PATH];
 
@@ -268,4 +269,6 @@ START_TEST(FindExecutable)
     DeleteFileA(s_sys_bat_file);
     DeleteFileA(s_win_txt_file);
     DeleteFileA(s_sys_txt_file);
+
+    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
 }

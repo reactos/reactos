@@ -141,6 +141,8 @@ void ToolsModel::SetBackgroundTransparent(BOOL bTransparent)
 {
     m_transpBg = bTransparent;
     NotifyToolSettingsChanged();
+    if (selectionWindow.IsWindow())
+        selectionWindow.ForceRefreshSelectionContents();
 }
 
 int ToolsModel::GetZoom() const

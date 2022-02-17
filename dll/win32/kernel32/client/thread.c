@@ -935,8 +935,19 @@ LANGID
 WINAPI
 SetThreadUILanguage(IN LANGID LangId)
 {
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    /* We only support LangId == 0, for selecting a language
+     * identifier that best supports the NT Console. */
+    if (LangId != 0)
+    {
+        BaseSetLastNTError(STATUS_NOT_SUPPORTED);
+        return 0;
+    }
+#endif
+
     UNIMPLEMENTED;
-    return (LANGID)NtCurrentTeb()->CurrentLocale;
+
+    return LANGIDFROMLCID(NtCurrentTeb()->CurrentLocale);
 }
 
 /*

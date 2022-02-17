@@ -6,7 +6,7 @@
  */
 
 #include "shelltest.h"
-#include "SHChangeNotify.h"
+#include "shell32_apitest_sub.h"
 
 static HWND s_hwnd = NULL;
 static UINT s_uRegID = 0;
