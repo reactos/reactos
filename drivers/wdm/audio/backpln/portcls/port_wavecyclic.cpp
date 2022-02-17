@@ -16,32 +16,15 @@
 
 GUID IID_IDmaChannelSlave;
 
-class CPortWaveCyclic : public IPortWaveCyclic,
-                        public IPortEvents,
-                        public ISubdevice
+class CPortWaveCyclic : public CUnknownImpl<IPortWaveCyclic, IPortEvents, ISubdevice>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-        if (!m_Ref)
-        {
-            //delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortWaveCyclic;
     IMP_ISubdevice;
     IMP_IPortEvents;
-    CPortWaveCyclic(IUnknown *OuterUnknown){}
+    CPortWaveCyclic(IUnknown *OuterUnknown) {}
     virtual ~CPortWaveCyclic(){}
 
 protected:
@@ -52,8 +35,6 @@ protected:
     PPCFILTER_DESCRIPTOR m_pDescriptor;
     PSUBDEVICE_DESCRIPTOR m_SubDeviceDescriptor;
     IPortFilterWaveCyclic * m_Filter;
-
-    LONG m_Ref;
 
     friend PMINIPORTWAVECYCLIC GetWaveCyclicMiniport(IN IPortWaveCyclic* iface);
     friend PDEVICE_OBJECT GetDeviceObject(PPORTWAVECYCLIC iface);

@@ -9,6 +9,7 @@
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <stdio.h>
+#include "shell32_apitest_sub.h"
 
 #define ok_ShellExecuteEx (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : TestShellExecuteEx
 
@@ -465,4 +466,7 @@ START_TEST(ShellExecuteEx)
     DoAppPathTest();
     DoTestEntries();
     test_properties();
+
+    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
+    Sleep(100);
 }

@@ -859,6 +859,12 @@ typedef struct _CONSOLE_SETINPUTOUTPUTCP
     HANDLE EventHandle;
 } CONSOLE_SETINPUTOUTPUTCP, *PCONSOLE_SETINPUTOUTPUTCP;
 
+typedef struct _CONSOLE_GETLANGID
+{
+    HANDLE ConsoleHandle;
+    LANGID LangId;
+} CONSOLE_GETLANGID, *PCONSOLE_GETLANGID;
+
 typedef struct _CONSOLE_GETKBDLAYOUTNAME
 {
     HANDLE ConsoleHandle;
@@ -991,6 +997,7 @@ typedef struct _CONSOLE_API_MESSAGE
         /* Input and Output Code Pages; keyboard */
         CONSOLE_GETINPUTOUTPUTCP GetConsoleCPRequest;
         CONSOLE_SETINPUTOUTPUTCP SetConsoleCPRequest;
+        CONSOLE_GETLANGID LangIdRequest;
         CONSOLE_GETKBDLAYOUTNAME GetKbdLayoutNameRequest;
 
         /* Virtual DOS Machine */

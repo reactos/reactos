@@ -574,7 +574,7 @@ LRESULT APIENTRY Imm32RequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, 
     if (hWnd)
         pWnd = ValidateHwndNoErr(hWnd);
 
-    if (pWnd && pWnd->head.pti == NtCurrentTeb()->Win32ThreadInfo)
+    if (pWnd && pWnd->head.pti == Imm32CurrentPti())
         ret = Imm32ProcessRequest(hIMC, pWnd, (DWORD)wParam, (LPVOID)lParam, bAnsi);
 
     ImmUnlockIMC(hIMC);
@@ -1047,4 +1047,22 @@ LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 {
     TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
     return Imm32RequestMessageAW(hIMC, wParam, lParam, FALSE);
+}
+
+/***********************************************************************
+ *              ImmSendMessageToActiveDefImeWndW (IMM32.@)
+ */
+LRESULT WINAPI
+ImmSendMessageToActiveDefImeWndW(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HWND hwndIME;
+
+    if (uMsg != WM_COPYDATA)
+        return 0;
+
+    hwndIME = (HWND)NtUserQueryWindow((HWND)wParam, QUERY_WINDOW_DEFAULT_IME);
+    if (!hwndIME)
+        return 0;
+
+    return SendMessageW(hwndIME, uMsg, wParam, lParam);
 }

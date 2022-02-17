@@ -14,7 +14,7 @@
 
 #include <debug.h>
 
-class CDmaChannelInit : public IDmaChannelInit
+class CDmaChannelInit : public CUnknownImpl<IDmaChannelInit>
 {
 public:
     inline
@@ -24,32 +24,29 @@ public:
         POOL_TYPE PoolType,
         ULONG Tag)
     {
-        PVOID P = ExAllocatePoolWithTag(PoolType, Size, Tag);
-        if (P)
-            RtlZeroMemory(P, Size);
-        return P;
+        return ExAllocatePoolWithTag(PoolType, Size, Tag);
     }
 
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IDmaChannelInit;
-    CDmaChannelInit(IUnknown * OuterUnknown){}
+    CDmaChannelInit(IUnknown * OuterUnknown) :
+        m_pDeviceObject(nullptr),
+        m_pAdapter(nullptr),
+        m_DmaStarted(FALSE),
+        m_MapSize(0),
+        m_MapRegisterBase(nullptr),
+        m_LastTransferCount(0),
+        m_MaximumBufferSize(0),
+        m_MaxMapRegisters(0),
+        m_AllocatedBufferSize(0),
+        m_BufferSize(0),
+        m_Address({0}),
+        m_Buffer(nullptr),
+        m_Mdl(nullptr),
+        m_WriteToDevice(FALSE)
+    {
+    }
     virtual ~CDmaChannelInit(){}
 
 protected:
@@ -75,8 +72,6 @@ protected:
     BOOLEAN m_WriteToDevice;
 
     friend IO_ALLOCATION_ACTION NTAPI AdapterControl(IN PDEVICE_OBJECT  DeviceObject, IN PIRP  Irp, IN PVOID  MapRegisterBase, IN PVOID  Context);
-
-    LONG m_Ref;
 };
 
 

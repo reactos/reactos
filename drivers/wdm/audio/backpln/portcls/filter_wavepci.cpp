@@ -14,27 +14,11 @@
 
 #include <debug.h>
 
-class CPortFilterWavePci : public IPortFilterWavePci
+class CPortFilterWavePci : public CUnknownImpl<IPortFilterWavePci>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortFilterPci;
     CPortFilterWavePci(IUnknown *OuterUnknown){}
     virtual ~CPortFilterWavePci(){}
@@ -43,8 +27,6 @@ protected:
     IPortWavePci* m_Port;
     IPortPinWavePci ** m_Pins;
     SUBDEVICE_DESCRIPTOR * m_Descriptor;
-
-    LONG m_Ref;
 };
 
 NTSTATUS

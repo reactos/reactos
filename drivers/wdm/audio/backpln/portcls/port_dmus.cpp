@@ -14,28 +14,11 @@
 
 #include <debug.h>
 
-class CPortDMus : public IPortDMus,
-                  public ISubdevice
+class CPortDMus : public CUnknownImpl<IPortDMus, ISubdevice>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortDMus;
     IMP_ISubdevice;
     CPortDMus(IUnknown *OuterUnknown){}
@@ -54,8 +37,6 @@ protected:
 
     PPCFILTER_DESCRIPTOR m_pDescriptor;
     PSUBDEVICE_DESCRIPTOR m_SubDeviceDescriptor;
-
-    LONG m_Ref;
 
     friend VOID GetDMusMiniport(IN IPortDMus * iface, IN PMINIPORTDMUS * Miniport, IN PMINIPORTMIDI * MidiMiniport);
 

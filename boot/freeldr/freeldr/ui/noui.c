@@ -167,7 +167,9 @@ NoUiDisplayMenu(
     return TRUE;
 }
 
-VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo)
+VOID
+NoUiDrawMenu(
+    _In_ PUI_MENU_INFO MenuInfo)
 {
 }
 

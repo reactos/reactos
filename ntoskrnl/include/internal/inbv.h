@@ -1,6 +1,14 @@
+/*
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * PURPOSE:     Boot Video Driver support header
+ * COPYRIGHT:   Copyright 2007 Alex Ionescu (alex.ionescu@reactos.org)
+ *              Copyright 2019-2022 Hermès Bélusca-Maïto
+ */
+
 #pragma once
 
-// Native definitions from BOOTVID (Boot Video Driver).
+/* Native definitions from BOOTVID (Boot Video Driver) */
 #include "bootvid/bootvid.h"
 
 //
@@ -10,37 +18,78 @@ CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 InbvDriverInitialize(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN ULONG Count
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ ULONG Count
 );
 
 extern BOOLEAN InbvBootDriverInstalled;
 
+INBV_DISPLAY_STATE
+NTAPI
+InbvGetDisplayState(VOID);
+
+VOID
+NTAPI
+InbvAcquireLock(VOID);
+
+VOID
+NTAPI
+InbvReleaseLock(VOID);
+
 PUCHAR
 NTAPI
 InbvGetResourceAddress(
-    IN ULONG ResourceNumber
+    _In_ ULONG ResourceNumber
+);
+
+//
+// Display Functions
+//
+VOID
+NTAPI
+InbvBitBlt(
+    _In_ PUCHAR Buffer,
+    _In_ ULONG X,
+    _In_ ULONG Y
 );
 
 VOID
 NTAPI
-InbvBitBlt(
-    IN PUCHAR Buffer,
-    IN ULONG X,
-    IN ULONG Y
+InbvBufferToScreenBlt(
+    _In_ PUCHAR Buffer,
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ ULONG Width,
+    _In_ ULONG Height,
+    _In_ ULONG Delta
+);
+
+VOID
+NTAPI
+InbvScreenToBufferBlt(
+    _Out_ PUCHAR Buffer,
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ ULONG Width,
+    _In_ ULONG Height,
+    _In_ ULONG Delta
 );
 
 //
 // Progress-Bar Functions
 //
-CODE_SEG("INIT")
 VOID
 NTAPI
-InbvIndicateProgress(
-    VOID
+InbvSetProgressBarCoordinates(
+    _In_ ULONG Left,
+    _In_ ULONG Top
 );
 
 CODE_SEG("INIT")
+VOID
+NTAPI
+InbvIndicateProgress(VOID);
+
 VOID
 NTAPI
 InbvSetProgressBarSubset(
@@ -48,42 +97,10 @@ InbvSetProgressBarSubset(
     _In_ ULONG Ceiling
 );
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 InbvUpdateProgressBar(
-    IN ULONG Progress
-);
-
-//
-// Boot Splash-Screen Functions
-//
-CODE_SEG("INIT")
-VOID
-NTAPI
-InbvRotBarInit(
-    VOID
-);
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-DisplayBootBitmap(
-    IN BOOLEAN TextMode
-);
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-DisplayFilter(
-    IN PCHAR *String
-);
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-FinalizeBootLogo(
-    VOID
+    _In_ ULONG Percentage
 );
 
 //

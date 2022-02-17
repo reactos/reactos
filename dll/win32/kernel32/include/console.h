@@ -60,7 +60,8 @@ GetConsoleInputWaitHandle(VOID);
 HANDLE
 TranslateStdHandle(HANDLE hHandle);
 
-#define SetTEBLangID(p) (p)
+VOID
+SetTEBLangID(VOID);
 
 VOID
 SetUpConsoleInfo(IN BOOLEAN CaptureTitle,

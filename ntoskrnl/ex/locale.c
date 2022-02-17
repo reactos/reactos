@@ -21,14 +21,14 @@ LCID PsDefaultSystemLocaleId = 0x00000409;
 LANGID PsInstallUILanguageId = LANGIDFROMLCID(0x00000409);
 
 /* UI/Thread IDs: Same as system */
-LANGID PsDefaultUILanguageId = 0x00000409;
-LCID PsDefaultThreadLocaleId = LANGIDFROMLCID(0x00000409);
+LCID PsDefaultThreadLocaleId = 0x00000409;
+LANGID PsDefaultUILanguageId = LANGIDFROMLCID(0x00000409);
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
 NTAPI
-ExpGetCurrentUserUILanguage(IN PWSTR MuiName,
+ExpGetCurrentUserUILanguage(IN PCWSTR MuiName,
                             OUT LANGID* LanguageId)
 {
     UCHAR ValueBuffer[256];
@@ -101,7 +101,7 @@ ExpGetCurrentUserUILanguage(IN PWSTR MuiName,
 
 NTSTATUS
 NTAPI
-ExpSetCurrentUserUILanguage(IN PWSTR MuiName,
+ExpSetCurrentUserUILanguage(IN PCWSTR MuiName,
                             IN LANGID LanguageId)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -172,7 +172,7 @@ NtQueryDefaultLocale(IN BOOLEAN UserProfile,
         if (KeGetPreviousMode() != KernelMode)
         {
             /* Probe the language ID */
-            ProbeForWriteLangid(DefaultLocaleId);
+            ProbeForWriteLangId(DefaultLocaleId);
         }
 
         /* Check if we have a user profile */
@@ -377,7 +377,7 @@ NtQueryInstallUILanguage(OUT LANGID* LanguageId)
         if (KeGetPreviousMode() != KernelMode)
         {
             /* Probe the Language ID */
-            ProbeForWriteLangid(LanguageId);
+            ProbeForWriteLangId(LanguageId);
         }
 
         /* Return it */
@@ -415,7 +415,7 @@ NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
         if (KeGetPreviousMode() != KernelMode)
         {
             /* Probe the Language ID */
-            ProbeForWriteLangid(LanguageId);
+            ProbeForWriteLangId(LanguageId);
         }
 
         if (NT_SUCCESS(Status))
@@ -426,6 +426,7 @@ NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
         else
         {
             /* Failed, use fallback value */
+            // NOTE: Windows doesn't use PsDefaultUILanguageId.
             *LanguageId = PsInstallUILanguageId;
         }
     }
