@@ -1064,7 +1064,6 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
 {
     HDC hDC;
     UNIMPLEMENTED;
-    ASSERT(FALSE);
 
     if (DcType == DC_TYPE_MEMORY)
         hDC = NtGdiCreateCompatibleDC(NULL); // OH~ Yuck! I think I taste vomit in my mouth!
