@@ -40,6 +40,11 @@ PeLdrAllocateDataTableEntry(
     IN PVOID BasePA,
     OUT PLDR_DATA_TABLE_ENTRY *NewEntry);
 
+VOID
+PeLdrFreeDataTableEntry(
+    // _In_ PLIST_ENTRY ModuleListHead,
+    _In_ PLDR_DATA_TABLE_ENTRY Entry);
+
 BOOLEAN
 PeLdrScanImportDescriptorTable(
     IN OUT PLIST_ENTRY ModuleListHead,

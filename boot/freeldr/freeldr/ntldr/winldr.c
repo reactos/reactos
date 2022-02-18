@@ -333,7 +333,9 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     Success = PeLdrAllocateDataTableEntry(LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
     if (!Success)
     {
+        /* Cleanup and bail out */
         ERR("PeLdrAllocateDataTableEntry('%s') failed\n", DllName);
+        MmFreeMemory(DriverBase);
         return FALSE;
     }
 
@@ -345,7 +347,10 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     Success = PeLdrScanImportDescriptorTable(LoadOrderListHead, FullPath, *DriverDTE);
     if (!Success)
     {
+        /* Cleanup and bail out */
         ERR("PeLdrScanImportDescriptorTable('%s') failed\n", FullPath);
+        PeLdrFreeDataTableEntry(*DriverDTE);
+        MmFreeMemory(DriverBase);
         return FALSE;
     }
 
@@ -482,7 +487,7 @@ WinLdrDetectVersion(VOID)
 }
 
 static
-BOOLEAN
+PVOID
 LoadModule(
     IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     IN PCCH Path,
@@ -495,7 +500,7 @@ LoadModule(
     BOOLEAN Success;
     CHAR FullFileName[MAX_PATH];
     CHAR ProgressString[256];
-    PVOID BaseAddress = NULL;
+    PVOID BaseAddress;
 
     RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", File);
     if (!SosEnabled) UiDrawProgressBarCenter(Percentage, 100, ProgressString);
@@ -508,15 +513,10 @@ LoadModule(
     if (!Success)
     {
         ERR("PeLdrLoadImage('%s') failed\n", File);
-        return FALSE;
+        return NULL;
     }
     TRACE("%s loaded successfully at %p\n", File, BaseAddress);
 
-    /*
-     * Cheat about the base DLL name if we are loading
-     * the Kernel Debugger Transport DLL, to make the
-     * PE loader happy.
-     */
     Success = PeLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
                                           ImportName,
                                           FullFileName,
@@ -524,10 +524,13 @@ LoadModule(
                                           Dte);
     if (!Success)
     {
+        /* Cleanup and bail out */
         ERR("PeLdrAllocateDataTableEntry('%s') failed\n", FullFileName);
+        MmFreeMemory(BaseAddress);
+        BaseAddress = NULL;
     }
 
-    return Success;
+    return BaseAddress;
 }
 
 static
@@ -541,7 +544,8 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     BOOLEAN Success;
     PCSTR Option;
     ULONG OptionLength;
-    PLDR_DATA_TABLE_ENTRY HalDTE, KdComDTE = NULL;
+    PVOID KernelBase, HalBase, KdDllBase = NULL;
+    PLDR_DATA_TABLE_ENTRY HalDTE, KdDllDTE = NULL;
     CHAR DirPath[MAX_PATH];
     CHAR HalFileName[MAX_PATH];
     CHAR KernelFileName[MAX_PATH];
@@ -585,17 +589,33 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
 
     TRACE("HAL file = '%s' ; Kernel file = '%s'\n", HalFileName, KernelFileName);
 
+    /*
+     * Load the core NT files: Kernel, HAL and KD transport DLL.
+     * Cheat about their base DLL name so as to satisfy the imports/exports,
+     * even if the corresponding underlying files do not have the same names
+     * -- this happens e.g. with UP vs. MP kernel, standard vs. ACPI hal, or
+     * different KD transport DLLs.
+     */
+
     /* Load the Kernel */
-    if (!LoadModule(LoaderBlock, DirPath, KernelFileName, "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30))
+    KernelBase = LoadModule(LoaderBlock, DirPath, KernelFileName,
+                            "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
+    if (!KernelBase)
     {
-        ERR("LoadModule() failed for %s\n", KernelFileName);
+        ERR("LoadModule('%s') failed\n", KernelFileName);
+        UiMessageBox("Could not load %s", KernelFileName);
         return FALSE;
     }
 
     /* Load the HAL */
-    if (!LoadModule(LoaderBlock, DirPath, HalFileName, "hal.dll", LoaderHalCode, &HalDTE, 45))
+    HalBase = LoadModule(LoaderBlock, DirPath, HalFileName,
+                         "hal.dll", LoaderHalCode, &HalDTE, 45);
+    if (!HalBase)
     {
-        ERR("LoadModule() failed for %s\n", HalFileName);
+        ERR("LoadModule('%s') failed\n", HalFileName);
+        UiMessageBox("Could not load %s", HalFileName);
+        PeLdrFreeDataTableEntry(*KernelDTE);
+        MmFreeMemory(KernelBase);
         return FALSE;
     }
 
@@ -651,10 +671,12 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
              * Load the transport DLL. Override the base DLL name of the
              * loaded transport DLL to the default "KDCOM.DLL" name.
              */
-            if (!LoadModule(LoaderBlock, DirPath, KdDllName, "kdcom.dll", LoaderSystemCode, &KdComDTE, 60))
+            KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
+                                   "kdcom.dll", LoaderSystemCode, &KdDllDTE, 60);
+            if (!KdDllBase)
             {
                 /* The transport DLL being optional, just ignore the failure */
-                WARN("LoadModule() failed for %s\n", KdDllName);
+                WARN("LoadModule('%s') failed\n", KdDllName);
             }
         }
     }
@@ -730,11 +752,42 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     }
 
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
-    Success  = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
-    Success &= PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
-    if (KdComDTE)
+    Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
+    if (!Success)
     {
-        Success &= PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdComDTE);
+        UiMessageBox("Could not load %s", KernelFileName);
+        goto Quit;
+    }
+    Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
+    if (!Success)
+    {
+        UiMessageBox("Could not load %s", HalFileName);
+        goto Quit;
+    }
+    if (KdDllDTE)
+    {
+        Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdDllDTE);
+        if (!Success)
+        {
+            UiMessageBox("Could not load %s", KdDllName);
+            goto Quit;
+        }
+    }
+
+Quit:
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        if (KdDllDTE)
+            PeLdrFreeDataTableEntry(KdDllDTE);
+        if (KdDllBase) // Optional
+            MmFreeMemory(KdDllBase);
+
+        PeLdrFreeDataTableEntry(HalDTE);
+        MmFreeMemory(HalBase);
+
+        PeLdrFreeDataTableEntry(*KernelDTE);
+        MmFreeMemory(KernelBase);
     }
 
     return Success;
