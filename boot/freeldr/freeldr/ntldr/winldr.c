@@ -538,7 +538,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     CHAR DirPath[MAX_PATH];
     CHAR HalFileName[MAX_PATH];
     CHAR KernelFileName[MAX_PATH];
-    CHAR KdTransportDllName[MAX_PATH];
+    CHAR KdDllName[MAX_PATH];
 
     if (!KernelDTE) return FALSE;
 
@@ -614,10 +614,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
              * If we only have /DEBUGPORT= (i.e. without any port name),
              * defaults it to "COM".
              */
-            RtlStringCbCopyA(KdTransportDllName, sizeof(KdTransportDllName), "KD");
+            RtlStringCbCopyA(KdDllName, sizeof(KdDllName), "KD");
             if (_strnicmp(Option, "COM", 3) == 0 && '0' <= Option[3] && Option[3] <= '9')
             {
-                RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Option, 3);
+                RtlStringCbCatNA(KdDllName, sizeof(KdDllName), Option, 3);
             }
             else
             {
@@ -625,18 +625,18 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                  * until the next whitespace or colon. */
                 OptionLength = (ULONG)strcspn(Option, " \t:");
                 if (OptionLength == 0)
-                    RtlStringCbCatA(KdTransportDllName, sizeof(KdTransportDllName), "COM");
+                    RtlStringCbCatA(KdDllName, sizeof(KdDllName), "COM");
                 else
-                    RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Option, OptionLength);
+                    RtlStringCbCatNA(KdDllName, sizeof(KdDllName), Option, OptionLength);
             }
-            RtlStringCbCatA(KdTransportDllName, sizeof(KdTransportDllName), ".DLL");
-            _strupr(KdTransportDllName);
+            RtlStringCbCatA(KdDllName, sizeof(KdDllName), ".DLL");
+            _strupr(KdDllName);
 
             /*
              * Load the transport DLL. Override the base DLL name of the
              * loaded transport DLL to the default "KDCOM.DLL" name.
              */
-            LoadModule(LoaderBlock, DirPath, KdTransportDllName, "kdcom.dll", LoaderSystemCode, &KdComDTE, 60);
+            LoadModule(LoaderBlock, DirPath, KdDllName, "kdcom.dll", LoaderSystemCode, &KdComDTE, 60);
         }
     }
 
