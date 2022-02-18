@@ -575,7 +575,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         /* Retrieve the HAL file name */
         Option += 4; OptionLength -= 4;
         RtlStringCbCopyNA(HalFileName, sizeof(HalFileName), Option, OptionLength);
-        _strupr(HalFileName);
+        _strlwr(HalFileName);
     }
 
     Option = NtLdrGetOptionEx(BootOptions, "KERNEL=", &OptionLength);
@@ -584,7 +584,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         /* Retrieve the KERNEL file name */
         Option += 7; OptionLength -= 7;
         RtlStringCbCopyNA(KernelFileName, sizeof(KernelFileName), Option, OptionLength);
-        _strupr(KernelFileName);
+        _strlwr(KernelFileName);
     }
 
     TRACE("HAL file = '%s' ; Kernel file = '%s'\n", HalFileName, KernelFileName);
@@ -633,50 +633,78 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
          * the name "kdcom.dll". [...]"
          */
 
+        /*
+         * A Kernel Debugger Transport DLL is always loaded for Windows XP+ :
+         * either the standard KDCOM.DLL (by default): IsCustomKdDll == FALSE
+         * or an alternative user-provided one via the /DEBUGPORT= option:
+         * IsCustomKdDll == TRUE if it does not specify the default KDCOM.
+         */
+        BOOLEAN IsCustomKdDll = FALSE;
+
         /* Check whether there is a DEBUGPORT option */
         Option = NtLdrGetOptionEx(BootOptions, "DEBUGPORT=", &OptionLength);
         if (Option && (OptionLength > 10))
         {
             /* Move to the debug port name */
             Option += 10; OptionLength -= 10;
-            ASSERT(OptionLength > 0);
 
             /*
              * Parse the port name.
-             * Format: /DEBUGPORT=COM[1-9]
+             * Format: /DEBUGPORT=COM[0-9]
              * or: /DEBUGPORT=FILE:\Device\HarddiskX\PartitionY\debug.log
              * or: /DEBUGPORT=FOO
              * If we only have /DEBUGPORT= (i.e. without any port name),
-             * defaults it to "COM".
+             * default to "COM".
              */
-            RtlStringCbCopyA(KdDllName, sizeof(KdDllName), "KD");
-            if (_strnicmp(Option, "COM", 3) == 0 && '0' <= Option[3] && Option[3] <= '9')
+
+            /* Get the actual length of the debug port
+             * until the next whitespace or colon. */
+            OptionLength = (ULONG)strcspn(Option, " \t:");
+
+            if ((OptionLength == 0) ||
+                ( (OptionLength >= 3) && (_strnicmp(Option, "COM", 3) == 0) &&
+                 ((OptionLength == 3) || ('0' <= Option[3] && Option[3] <= '9')) ))
             {
-                RtlStringCbCatNA(KdDllName, sizeof(KdDllName), Option, 3);
+                /* The standard KDCOM.DLL is used */
             }
             else
             {
-                /* Get the actual length of the debug port
-                 * until the next whitespace or colon. */
-                OptionLength = (ULONG)strcspn(Option, " \t:");
-                if (OptionLength == 0)
-                    RtlStringCbCatA(KdDllName, sizeof(KdDllName), "COM");
-                else
-                    RtlStringCbCatNA(KdDllName, sizeof(KdDllName), Option, OptionLength);
+                /* A custom KD DLL is used */
+                IsCustomKdDll = TRUE;
             }
-            RtlStringCbCatA(KdDllName, sizeof(KdDllName), ".DLL");
-            _strupr(KdDllName);
+        }
+        if (!IsCustomKdDll)
+        {
+            Option = "COM"; OptionLength = 3;
+        }
 
-            /*
-             * Load the transport DLL. Override the base DLL name of the
-             * loaded transport DLL to the default "KDCOM.DLL" name.
-             */
-            KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
-                                   "kdcom.dll", LoaderSystemCode, &KdDllDTE, 60);
+        RtlStringCbPrintfA(KdDllName, sizeof(KdDllName), "kd%.*s.dll",
+                           OptionLength, Option);
+        _strlwr(KdDllName);
+
+        /* Load the KD DLL. Override its base DLL name to the default "KDCOM.DLL". */
+        KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
+                               "kdcom.dll", LoaderSystemCode, &KdDllDTE, 60);
+        if (!KdDllBase)
+        {
+            /* If we failed to load a custom KD DLL, fall back to the standard one */
+            if (IsCustomKdDll)
+            {
+                /* The custom KD DLL being optional, just ignore the failure */
+                WARN("LoadModule('%s') failed\n", KdDllName);
+
+                IsCustomKdDll = FALSE;
+                RtlStringCbCopyA(KdDllName, sizeof(KdDllName), "kdcom.dll");
+
+                KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
+                                       "kdcom.dll", LoaderSystemCode, &KdDllDTE, 60);
+            }
+
             if (!KdDllBase)
             {
-                /* The transport DLL being optional, just ignore the failure */
-                WARN("LoadModule('%s') failed\n", KdDllName);
+                /* Ignore the failure; we will fail later when scanning the
+                 * kernel import tables, if it really needs the KD DLL. */
+                ERR("LoadModule('%s') failed\n", KdDllName);
             }
         }
     }
