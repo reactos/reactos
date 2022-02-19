@@ -23,17 +23,52 @@
 #define NDEBUG
 #include <debug.h>
 
+#define MAX_PASSWORD_LENGTH 64
+
 static
-void
-Usage(void)
+VOID
+Usage(VOID)
 {
-    ConResPuts(StdOut, IDS_USAGE01);
-    ConResPuts(StdOut, IDS_USAGE02);
-    ConResPuts(StdOut, IDS_USAGE03);
-    ConResPuts(StdOut, IDS_USAGE04);
-    ConResPuts(StdOut, IDS_USAGE05);
-    ConResPuts(StdOut, IDS_USAGE06);
-    ConResPuts(StdOut, IDS_USAGE07);
+    int i;
+    for (i = IDS_USAGE01; i <= IDS_USAGE_MAX; i++)
+        ConResPuts(StdOut, i);
+}
+
+
+static
+VOID
+ConInString(
+    _In_ PWSTR pInput,
+    _In_ DWORD dwLength)
+{
+    DWORD dwOldMode;
+    DWORD dwRead = 0;
+    HANDLE hFile;
+    PWSTR p;
+    PCHAR pBuf;
+
+    pBuf = (PCHAR)HeapAlloc(GetProcessHeap(), 0, dwLength - 1);
+    ZeroMemory(pInput, dwLength * sizeof(WCHAR));
+    hFile = GetStdHandle(STD_INPUT_HANDLE);
+    GetConsoleMode(hFile, &dwOldMode);
+
+    SetConsoleMode(hFile, ENABLE_LINE_INPUT /*| ENABLE_ECHO_INPUT*/);
+
+    ReadFile(hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
+
+    MultiByteToWideChar(GetConsoleCP(), 0, pBuf, dwRead, pInput, dwLength - 1);
+    HeapFree(GetProcessHeap(), 0, pBuf);
+
+    for (p = pInput; *p; p++)
+    {
+        if (*p == L'\x0d')
+        {
+            *p = UNICODE_NULL;
+            break;
+        }
+    }
+
+    SetConsoleMode(hFile, dwOldMode);
 }
 
 
@@ -169,7 +204,22 @@ wmain(
     DPRINT("Domain: %S\n", pszDomain);
     DPRINT("CommandLine: %S\n", pszCommandLine);
 
-    /* FIXME: Query the password: */
+    if (pszDomain == NULL)
+    {
+        DWORD dwLength = MAX_COMPUTERNAME_LENGTH + 1;
+        pszDomain = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));
+        if (pszDomain)
+            GetComputerNameW(pszDomain, &dwLength);
+    }
+
+    pszPassword = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MAX_PASSWORD_LENGTH + 1) * sizeof(WCHAR));
+
+    /* Query the password */
+    ConResPrintf(StdOut, IDS_PASSWORD, pszDomain, pszUserName);
+    ConInString(pszPassword, MAX_PASSWORD_LENGTH + 1);
+    ConPuts(StdOut, L"\n");
+
+    ConResPrintf(StdOut, IDS_START, pszCommandLine, pszDomain, pszUserName);
 
     rc = CreateProcessWithLogonW(pszUserName,
                                  pszDomain,
@@ -184,7 +234,8 @@ wmain(
                                  &ProcessInfo);
     if (rc == FALSE)
     {
-        DPRINT("Error: %lu\n", GetLastError());
+        ConResPrintf(StdOut, IDS_RUN_ERROR, pszCommandLine);
+        ConPrintf(StdOut, L"Error: %lu\n", GetLastError());
     }
 
 done:

@@ -7,6 +7,17 @@ BEGIN
     IDS_USAGE03 "      /user:<Benutzername> Programm\n\n"
     IDS_USAGE04 "RUNAS [ [/noprofile | /profile] [/env] [/savecred | /netonly] ]\n"
     IDS_USAGE05 "      /smartcard [/user:<Benutzername>] Programm\n\n"
-    IDS_USAGE06 "/noprofile"
-    IDS_USAGE07 "/profile"
+    IDS_USAGE06 "   /noprofile      Legt fest, dass das Benutzerprofil nicht geladen werden\n"
+    IDS_USAGE07 "                   soll. Führt dazu, dass die Anwendung schneller geladen\n"
+    IDS_USAGE08 "                   wird. Dies kann bei einigen Anwendungen zu Fehlern führen.\n"
+    IDS_USAGE09 "   /profile        Legt fest, dass das Benutzerprofil geladen werden soll.\n"
+    IDS_USAGE10 "                   Dies ist die Standardeinstellung.\n" 
+    IDS_USAGE11 "   /env            Verwendet die aktuelle Umgebung statt der des Benutzers.\n"
+    IDS_USAGE12 "   /user           <Benutzername> muss in der Form Benutzer@Domäne oder\n                   Domäne\\Benutzer angegeben werden\n"
+    IDS_USAGE13 "   Programm        Befehlszeile einer ausführbaren Datei. Siehe unten\n                   aufgeführte Beispiele.\n\n"
+
+    IDS_START     "Es wird versucht, %s als Benutzer ""%s\\%s"" zu starten...\n"
+    IDS_RUN_ERROR "RUNAS-FEHLER: %s kann nicht ausgeführt werden\n"
+
+    IDS_PASSWORD "Geben Sie das Kennwort für ""%s\\%s"" ein: "
 END
