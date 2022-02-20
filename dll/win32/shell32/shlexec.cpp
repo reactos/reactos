@@ -1042,6 +1042,22 @@ static unsigned dde_connect(const WCHAR* key, const WCHAR* start, WCHAR* ddeexec
             TRACE("Couldn't launch\n");
             goto error;
         }
+        /* if ddeexec is NULL, then we just need to exit here */
+        if (ddeexec == NULL)
+        {
+            TRACE("Exiting because ddeexec is NULL. ret=42.\n");
+            /* See https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew */
+            /* for reason why we use 42 here and also "Shell32_apitest ShellExecuteW" regression test */
+            return 42;
+        }
+        /* if ddeexec is 'empty string', then we just need to exit here */
+        if (wcscmp(ddeexec, L"") == 0)
+        {
+            TRACE("Exiting because ddeexec is 'empty string'. ret=42.\n");
+            /* See https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew */
+            /* for reason why we use 42 here and also "Shell32_apitest ShellExecuteW" regression test */
+            return 42;
+        }
         hConv = DdeConnect(ddeInst, hszApp, hszTopic, NULL);
         if (!hConv)
         {
