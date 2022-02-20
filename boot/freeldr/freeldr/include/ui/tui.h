@@ -40,7 +40,37 @@ VOID    TuiUnInitialize(VOID);                                    // Un-initiali
 VOID    TuiDrawBackdrop(VOID);                                    // Fills the entire screen with a backdrop
 VOID    TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);    // Fills the area specified with FillChar and Attr
 VOID    TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);    // Draws a shadow on the bottom and right sides of the area specified
-VOID    TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);    // Draws a box around the area specified
+
+/* Draws a box around the area specified */
+VOID
+TuiDrawBox(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ BOOLEAN Fill,
+    _In_ BOOLEAN Shadow,
+    _In_ UCHAR Attr);
+
+VOID
+TuiDrawBoxTopLine(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ UCHAR Attr);
+
+VOID
+TuiDrawBoxBottomLine(
+    _In_ ULONG Left,
+    _In_ ULONG Bottom,
+    _In_ ULONG Right,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ UCHAR Attr);
 
 /* Draws text at coordinates specified */
 VOID

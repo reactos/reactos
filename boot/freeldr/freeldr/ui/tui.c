@@ -397,26 +397,29 @@ VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
  * DrawBox()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr)
+VOID
+TuiDrawBoxTopLine(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ UCHAR Attr)
 {
-    UCHAR    ULCorner, URCorner, LLCorner, LRCorner;
+    UCHAR ULCorner, URCorner;
 
-    // Calculate the corner values
+    /* Calculate the corner values */
     if (HorzStyle == HORZ)
     {
         if (VertStyle == VERT)
         {
             ULCorner = UL;
             URCorner = UR;
-            LLCorner = LL;
-            LRCorner = LR;
         }
         else // VertStyle == D_VERT
         {
             ULCorner = VD_UL;
             URCorner = VD_UR;
-            LLCorner = VD_LL;
-            LRCorner = VD_LR;
         }
     }
     else // HorzStyle == D_HORZ
@@ -425,44 +428,92 @@ VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyl
         {
             ULCorner = HD_UL;
             URCorner = HD_UR;
-            LLCorner = HD_LL;
-            LRCorner = HD_LR;
         }
         else // VertStyle == D_VERT
         {
             ULCorner = D_UL;
             URCorner = D_UR;
+        }
+    }
+
+    TuiFillArea(Left, Top, Left, Top, ULCorner, Attr);
+    TuiFillArea(Left+1, Top, Right-1, Top, HorzStyle, Attr);
+    TuiFillArea(Right, Top, Right, Top, URCorner, Attr);
+}
+
+VOID
+TuiDrawBoxBottomLine(
+    _In_ ULONG Left,
+    _In_ ULONG Bottom,
+    _In_ ULONG Right,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ UCHAR Attr)
+{
+    UCHAR LLCorner, LRCorner;
+
+    /* Calculate the corner values */
+    if (HorzStyle == HORZ)
+    {
+        if (VertStyle == VERT)
+        {
+            LLCorner = LL;
+            LRCorner = LR;
+        }
+        else // VertStyle == D_VERT
+        {
+            LLCorner = VD_LL;
+            LRCorner = VD_LR;
+        }
+    }
+    else // HorzStyle == D_HORZ
+    {
+        if (VertStyle == VERT)
+        {
+            LLCorner = HD_LL;
+            LRCorner = HD_LR;
+        }
+        else // VertStyle == D_VERT
+        {
             LLCorner = D_LL;
             LRCorner = D_LR;
         }
     }
 
-    // Fill in box background
-    if (Fill)
-    {
-        TuiFillArea(Left, Top, Right, Bottom, ' ', Attr);
-    }
-
-    // Fill in corners
-    TuiFillArea(Left, Top, Left, Top, ULCorner, Attr);
-    TuiFillArea(Right, Top, Right, Top, URCorner, Attr);
     TuiFillArea(Left, Bottom, Left, Bottom, LLCorner, Attr);
-    TuiFillArea(Right, Bottom, Right, Bottom, LRCorner, Attr);
-
-    // Fill in left line
-    TuiFillArea(Left, Top+1, Left, Bottom-1, VertStyle, Attr);
-    // Fill in top line
-    TuiFillArea(Left+1, Top, Right-1, Top, HorzStyle, Attr);
-    // Fill in right line
-    TuiFillArea(Right, Top+1, Right, Bottom-1, VertStyle, Attr);
-    // Fill in bottom line
     TuiFillArea(Left+1, Bottom, Right-1, Bottom, HorzStyle, Attr);
+    TuiFillArea(Right, Bottom, Right, Bottom, LRCorner, Attr);
+}
 
-    // Draw the shadow
+VOID
+TuiDrawBox(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ BOOLEAN Fill,
+    _In_ BOOLEAN Shadow,
+    _In_ UCHAR Attr)
+{
+    /* Fill in the box background */
+    if (Fill)
+        TuiFillArea(Left, Top, Right, Bottom, ' ', Attr);
+
+    /* Fill in the top horizontal line */
+    TuiDrawBoxTopLine(Left, Top, Right, VertStyle, HorzStyle, Attr);
+
+    /* Fill in the vertical left and right lines */
+    TuiFillArea(Left, Top+1, Left, Bottom-1, VertStyle, Attr);
+    TuiFillArea(Right, Top+1, Right, Bottom-1, VertStyle, Attr);
+
+    /* Fill in the bottom horizontal line */
+    TuiDrawBoxBottomLine(Left, Bottom, Right, VertStyle, HorzStyle, Attr);
+
+    /* Draw the shadow */
     if (Shadow)
-    {
         TuiDrawShadow(Left, Top, Right, Bottom);
-    }
 }
 
 VOID TuiDrawStatusText(PCSTR StatusText)
