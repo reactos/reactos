@@ -162,7 +162,7 @@ TuiCalcMenuBoxSize(
     Height -= 1; // Height is zero-based
 
     /* Loop every item */
-    for (i = 0; i < MenuInfo->MenuItemCount; i++)
+    for (i = 0; i < MenuInfo->MenuItemCount; ++i)
     {
         /* Get the string length and make it become the new width if necessary */
         if (MenuInfo->MenuItemList[i])
@@ -203,7 +203,10 @@ TuiDrawMenu(
 {
     ULONG i;
 
-#ifdef _M_ARM // FIXME: Theme-specific
+#ifndef _M_ARM // FIXME: Theme-specific
+    /* Draw the backdrop */
+    UiDrawBackdrop();
+#else
 
     /* No GUI status bar text, just minimal text. Show the menu header. */
     if (MenuInfo->MenuHeader)
@@ -213,6 +216,24 @@ TuiDrawMenu(
                    MenuInfo->MenuHeader,
                    ATTR(UiMenuFgColor, UiMenuBgColor));
     }
+
+#endif
+
+    /* Draw the menu box */
+    TuiDrawMenuBox(MenuInfo);
+
+    /* Draw each line of the menu */
+    for (i = 0; i < MenuInfo->MenuItemCount; ++i)
+    {
+        TuiDrawMenuItem(MenuInfo, i);
+    }
+
+#ifndef _M_ARM // FIXME: Theme-specific
+
+    /* Update the status bar */
+    UiVtbl.DrawStatusText("Use \x18 and \x19 to select, then press ENTER.");
+
+#else
 
     /* Now tell the user how to choose */
     UiDrawText(0,
@@ -233,24 +254,7 @@ TuiDrawMenu(
                    ATTR(UiMenuFgColor, UiMenuBgColor));
     }
 
-#else
-
-    /* Draw the backdrop */
-    UiDrawBackdrop();
-
-    /* Update the status bar */
-    UiVtbl.DrawStatusText("Use \x18 and \x19 to select, then press ENTER.");
-
 #endif
-
-    /* Draw the menu box */
-    TuiDrawMenuBox(MenuInfo);
-
-    /* Draw each line of the menu */
-    for (i = 0; i < MenuInfo->MenuItemCount; i++)
-    {
-        TuiDrawMenuItem(MenuInfo, i);
-    }
 
     /* Display the boot options if needed */
     if (MenuInfo->ShowBootOptions)

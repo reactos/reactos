@@ -163,6 +163,15 @@ MiniTuiDrawMenu(
                         ATTR(UiMenuFgColor, UiMenuBgColor));
     }
 
+    /* Draw the menu box */
+    TuiDrawMenuBox(MenuInfo);
+
+    /* Draw each line of the menu */
+    for (i = 0; i < MenuInfo->MenuItemCount; ++i)
+    {
+        TuiDrawMenuItem(MenuInfo, i);
+    }
+
     /* Now tell the user how to choose */
     UiVtbl.DrawText(0,
                     MenuInfo->Bottom + 1,
@@ -180,15 +189,6 @@ MiniTuiDrawMenu(
                         UiScreenHeight - 4,
                         MenuInfo->MenuFooter,
                         ATTR(UiMenuFgColor, UiMenuBgColor));
-    }
-
-    /* Draw the menu box */
-    TuiDrawMenuBox(MenuInfo);
-
-    /* Draw each line of the menu */
-    for (i = 0; i < MenuInfo->MenuItemCount; i++)
-    {
-        TuiDrawMenuItem(MenuInfo, i);
     }
 
     /* Display the boot options if needed */
