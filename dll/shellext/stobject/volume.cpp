@@ -216,7 +216,12 @@ HRESULT Volume_OnDeviceChange(_In_ CSysTray * pSysTray, WPARAM wParam, LPARAM lP
 
 static void _RunVolume(BOOL bTray)
 {
-    ShellExecuteW(NULL, NULL, bTray ? L"sndvol32.exe /t" : L"sndvol32.exe", NULL, NULL, SW_SHOWNORMAL);
+    ShellExecuteW(NULL,
+                  NULL,
+                  L"sndvol32.exe",
+                  bTray ? L"/t" : NULL,
+                  NULL,
+                  SW_SHOWNORMAL);
 }
 
 static void _RunMMCpl()
