@@ -19,33 +19,33 @@
 
 #pragma once
 
-extern ULONG    UiScreenWidth;              // Screen Width
-extern ULONG    UiScreenHeight;             // Screen Height
+extern ULONG UiScreenWidth;             // Screen Width
+extern ULONG UiScreenHeight;            // Screen Height
 
-extern UCHAR    UiStatusBarFgColor;         // Status bar foreground color
-extern UCHAR    UiStatusBarBgColor;         // Status bar background color
-extern UCHAR    UiBackdropFgColor;          // Backdrop foreground color
-extern UCHAR    UiBackdropBgColor;          // Backdrop background color
-extern UCHAR    UiBackdropFillStyle;        // Backdrop fill style
-extern UCHAR    UiTitleBoxFgColor;          // Title box foreground color
-extern UCHAR    UiTitleBoxBgColor;          // Title box background color
-extern UCHAR    UiMessageBoxFgColor;        // Message box foreground color
-extern UCHAR    UiMessageBoxBgColor;        // Message box background color
-extern UCHAR    UiMenuFgColor;              // Menu foreground color
-extern UCHAR    UiMenuBgColor;              // Menu background color
-extern UCHAR    UiTextColor;                // Normal text color
-extern UCHAR    UiSelectedTextColor;        // Selected text color
-extern UCHAR    UiSelectedTextBgColor;      // Selected text background color
-extern UCHAR    UiEditBoxTextColor;         // Edit box text color
-extern UCHAR    UiEditBoxBgColor;           // Edit box text background color
+extern UCHAR UiStatusBarFgColor;        // Status bar foreground color
+extern UCHAR UiStatusBarBgColor;        // Status bar background color
+extern UCHAR UiBackdropFgColor;         // Backdrop foreground color
+extern UCHAR UiBackdropBgColor;         // Backdrop background color
+extern UCHAR UiBackdropFillStyle;       // Backdrop fill style
+extern UCHAR UiTitleBoxFgColor;         // Title box foreground color
+extern UCHAR UiTitleBoxBgColor;         // Title box background color
+extern UCHAR UiMessageBoxFgColor;       // Message box foreground color
+extern UCHAR UiMessageBoxBgColor;       // Message box background color
+extern UCHAR UiMenuFgColor;             // Menu foreground color
+extern UCHAR UiMenuBgColor;             // Menu background color
+extern UCHAR UiTextColor;               // Normal text color
+extern UCHAR UiSelectedTextColor;       // Selected text color
+extern UCHAR UiSelectedTextBgColor;     // Selected text background color
+extern UCHAR UiEditBoxTextColor;        // Edit box text color
+extern UCHAR UiEditBoxBgColor;          // Edit box text background color
 
-extern CHAR     UiTitleBoxTitleText[260];   // Title box's title text
+extern BOOLEAN UiShowTime;              // Whether to draw the time
+extern BOOLEAN UiMenuBox;               // Whether to draw a box around the menu
+extern BOOLEAN UiCenterMenu;            // Whether to use a centered or left-aligned menu
+extern BOOLEAN UiUseSpecialEffects;     // Whether to use fade effects
 
-extern BOOLEAN  UiUseSpecialEffects;        // Tells us if we should use fade effects
-extern BOOLEAN  UiCenterMenu;
-extern BOOLEAN  UiMenuBox;
-extern CHAR     UiTimeText[];
-extern BOOLEAN  UiDrawTime;
+extern CHAR UiTitleBoxTitleText[260];   // Title box's title text
+extern CHAR UiTimeText[260];
 
 extern const PCSTR UiMonthNames[12];
 

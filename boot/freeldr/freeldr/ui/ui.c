@@ -24,37 +24,37 @@ DBG_DEFAULT_CHANNEL(UI);
 
 #ifndef _M_ARM
 
+UCHAR UiStatusBarFgColor;       // Status bar foreground color
+UCHAR UiStatusBarBgColor;       // Status bar background color
+UCHAR UiBackdropFgColor;        // Backdrop foreground color
+UCHAR UiBackdropBgColor;        // Backdrop background color
+UCHAR UiBackdropFillStyle;      // Backdrop fill style
+UCHAR UiTitleBoxFgColor;        // Title box foreground color
+UCHAR UiTitleBoxBgColor;        // Title box background color
+UCHAR UiMessageBoxFgColor;      // Message box foreground color
+UCHAR UiMessageBoxBgColor;      // Message box background color
+UCHAR UiMenuFgColor;            // Menu foreground color
+UCHAR UiMenuBgColor;            // Menu background color
+UCHAR UiTextColor;              // Normal text color
+UCHAR UiSelectedTextColor;      // Selected text color
+UCHAR UiSelectedTextBgColor;    // Selected text background color
+UCHAR UiEditBoxTextColor;       // Edit box text color
+UCHAR UiEditBoxBgColor;         // Edit box text background color
+
+BOOLEAN UiShowTime;             // Whether to draw the time
+BOOLEAN UiMenuBox;              // Whether to draw a box around the menu
+BOOLEAN UiCenterMenu;           // Whether to use a centered or left-aligned menu
+BOOLEAN UiUseSpecialEffects;    // Whether to use fade effects
+
+CHAR UiTitleBoxTitleText[260] = "Boot Menu";    // Title box's title text
+CHAR UiTimeText[260] = "[Time Remaining: %d]";
+
+const PCSTR UiMonthNames[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+
 #define TAG_UI_TEXT 'xTiU'
 
 ULONG UiScreenWidth;    // Screen Width
 ULONG UiScreenHeight;   // Screen Height
-
-UCHAR UiStatusBarFgColor    = COLOR_BLACK;  // Status bar foreground color
-UCHAR UiStatusBarBgColor    = COLOR_CYAN;   // Status bar background color
-UCHAR UiBackdropFgColor     = COLOR_WHITE;  // Backdrop foreground color
-UCHAR UiBackdropBgColor     = COLOR_BLUE;   // Backdrop background color
-UCHAR UiBackdropFillStyle   = MEDIUM_FILL;  // Backdrop fill style
-UCHAR UiTitleBoxFgColor     = COLOR_WHITE;  // Title box foreground color
-UCHAR UiTitleBoxBgColor     = COLOR_RED;    // Title box background color
-UCHAR UiMessageBoxFgColor   = COLOR_WHITE;  // Message box foreground color
-UCHAR UiMessageBoxBgColor   = COLOR_BLUE;   // Message box background color
-UCHAR UiMenuFgColor         = COLOR_WHITE;  // Menu foreground color
-UCHAR UiMenuBgColor         = COLOR_BLUE;   // Menu background color
-UCHAR UiTextColor           = COLOR_YELLOW; // Normal text color
-UCHAR UiSelectedTextColor   = COLOR_BLACK;  // Selected text color
-UCHAR UiSelectedTextBgColor = COLOR_GRAY;   // Selected text background color
-UCHAR UiEditBoxTextColor    = COLOR_WHITE;  // Edit box text color
-UCHAR UiEditBoxBgColor      = COLOR_BLACK;  // Edit box text background color
-
-CHAR UiTitleBoxTitleText[260] = "Boot Menu";    // Title box's title text
-
-BOOLEAN UiUseSpecialEffects = FALSE;    // Tells us if we should use fade effects
-BOOLEAN UiDrawTime          = TRUE;     // Tells us if we should draw the time
-BOOLEAN UiCenterMenu        = TRUE;     // Tells us if we should use a centered or left-aligned menu
-BOOLEAN UiMenuBox           = TRUE;     // Tells us if we should draw a box around the menu
-CHAR    UiTimeText[260] = "[Time Remaining: %d]";
-
-const PCSTR UiMonthNames[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
 #endif // _M_ARM
 
@@ -132,7 +132,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowUi)
     /* Select the UI */
     if ((SectionId != 0) && IniReadSettingByName(SectionId, "MinimalUI", SettingText, sizeof(SettingText)))
     {
-        UiMinimal = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
+        UiMinimal = (_stricmp(SettingText, "Yes") == 0);
     }
 
     if (UiDisplayMode == VideoGraphicsMode)
@@ -148,51 +148,53 @@ BOOLEAN UiInitialize(BOOLEAN ShowUi)
     else // if (UiDisplayMode == VideoTextMode)
         UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
 
+    /* Load the UI and initialize its default settings */
     if (!UiVtbl.Initialize())
     {
         MachVideoSetDisplayMode(NULL, FALSE);
         return FALSE;
     }
 
-    /* Load the settings */
+    /* Load the user UI settings */
     if (SectionId != 0)
     {
         static const struct
         {
             PCSTR SettingName;
             PVOID SettingVar;
+            SIZE_T SettingSize OPTIONAL; // Must be non-zero only for text buffers.
             UCHAR SettingType; // 0: Text, 1: Yes/No, 2: Color, 3: Fill style
         } Settings[] =
         {
-            {"TitleText", &UiTitleBoxTitleText, 0},
-            {"TimeText" , &UiTimeText         , 0},
+            {"TitleText", &UiTitleBoxTitleText, sizeof(UiTitleBoxTitleText), 0},
+            {"TimeText" , &UiTimeText, sizeof(UiTimeText), 0},
 
-            {"SpecialEffects", &UiUseSpecialEffects, 1},
-            {"ShowTime"      , &UiDrawTime         , 1},
-            {"MenuBox"       , &UiMenuBox          , 1},
-            {"CenterMenu"    , &UiCenterMenu       , 1},
+            {"ShowTime"      , &UiShowTime         , 0, 1},
+            {"MenuBox"       , &UiMenuBox          , 0, 1},
+            {"CenterMenu"    , &UiCenterMenu       , 0, 1},
+            {"SpecialEffects", &UiUseSpecialEffects, 0, 1},
 
-            {"BackdropColor"      , &UiBackdropBgColor    , 2},
-            {"BackdropTextColor"  , &UiBackdropFgColor    , 2},
-            {"StatusBarColor"     , &UiStatusBarBgColor   , 2},
-            {"StatusBarTextColor" , &UiStatusBarFgColor   , 2},
-            {"TitleBoxColor"      , &UiTitleBoxBgColor    , 2},
-            {"TitleBoxTextColor"  , &UiTitleBoxFgColor    , 2},
-            {"MessageBoxColor"    , &UiMessageBoxBgColor  , 2},
-            {"MessageBoxTextColor", &UiMessageBoxFgColor  , 2},
-            {"MenuColor"          , &UiMenuBgColor        , 2},
-            {"MenuTextColor"      , &UiMenuFgColor        , 2},
-            {"TextColor"          , &UiTextColor          , 2},
-            {"SelectedColor"      , &UiSelectedTextBgColor, 2},
-            {"SelectedTextColor"  , &UiSelectedTextColor  , 2},
-            {"EditBoxColor"       , &UiEditBoxBgColor     , 2},
-            {"EditBoxTextColor"   , &UiEditBoxTextColor   , 2},
+            {"BackdropColor"      , &UiBackdropBgColor    , 0, 2},
+            {"BackdropTextColor"  , &UiBackdropFgColor    , 0, 2},
+            {"StatusBarColor"     , &UiStatusBarBgColor   , 0, 2},
+            {"StatusBarTextColor" , &UiStatusBarFgColor   , 0, 2},
+            {"TitleBoxColor"      , &UiTitleBoxBgColor    , 0, 2},
+            {"TitleBoxTextColor"  , &UiTitleBoxFgColor    , 0, 2},
+            {"MessageBoxColor"    , &UiMessageBoxBgColor  , 0, 2},
+            {"MessageBoxTextColor", &UiMessageBoxFgColor  , 0, 2},
+            {"MenuColor"          , &UiMenuBgColor        , 0, 2},
+            {"MenuTextColor"      , &UiMenuFgColor        , 0, 2},
+            {"TextColor"          , &UiTextColor          , 0, 2},
+            {"SelectedColor"      , &UiSelectedTextBgColor, 0, 2},
+            {"SelectedTextColor"  , &UiSelectedTextColor  , 0, 2},
+            {"EditBoxColor"       , &UiEditBoxBgColor     , 0, 2},
+            {"EditBoxTextColor"   , &UiEditBoxTextColor   , 0, 2},
 
-            {"BackdropFillStyle", &UiBackdropFillStyle, 3},
+            {"BackdropFillStyle", &UiBackdropFillStyle, 0, 3},
         };
         ULONG i;
 
-        for (i = 0; i < sizeof(Settings)/sizeof(Settings[0]); ++i)
+        for (i = 0; i < RTL_NUMBER_OF(Settings); ++i)
         {
             if (!IniReadSettingByName(SectionId, Settings[i].SettingName, SettingText, sizeof(SettingText)))
                 continue;
@@ -200,10 +202,11 @@ BOOLEAN UiInitialize(BOOLEAN ShowUi)
             switch (Settings[i].SettingType)
             {
             case 0: // Text
-                strcpy((PCHAR)Settings[i].SettingVar, SettingText);
+                RtlStringCbCopyA((PCHAR)Settings[i].SettingVar,
+                                 Settings[i].SettingSize, SettingText);
                 break;
             case 1: // Yes/No
-                *(PBOOLEAN)Settings[i].SettingVar = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
+                *(PBOOLEAN)Settings[i].SettingVar = (_stricmp(SettingText, "Yes") == 0);
                 break;
             case 2: // Color
                 *(PUCHAR)Settings[i].SettingVar = UiTextToColor(SettingText);

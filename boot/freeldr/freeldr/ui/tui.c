@@ -215,6 +215,37 @@ BOOLEAN TuiInitialize(VOID)
         return FALSE;
     }
 
+    /* Load default settings with "Full" TUI Theme */
+
+    UiStatusBarFgColor    = COLOR_BLACK;
+    UiStatusBarBgColor    = COLOR_CYAN;
+    UiBackdropFgColor     = COLOR_WHITE;
+    UiBackdropBgColor     = COLOR_BLUE;
+    UiBackdropFillStyle   = MEDIUM_FILL;
+    UiTitleBoxFgColor     = COLOR_WHITE;
+    UiTitleBoxBgColor     = COLOR_RED;
+    UiMessageBoxFgColor   = COLOR_WHITE;
+    UiMessageBoxBgColor   = COLOR_BLUE;
+    UiMenuFgColor         = COLOR_WHITE;
+    UiMenuBgColor         = COLOR_BLUE;
+    UiTextColor           = COLOR_YELLOW;
+    UiSelectedTextColor   = COLOR_BLACK;
+    UiSelectedTextBgColor = COLOR_GRAY;
+    UiEditBoxTextColor    = COLOR_WHITE;
+    UiEditBoxBgColor      = COLOR_BLACK;
+
+    UiShowTime          = TRUE;
+    UiMenuBox           = TRUE;
+    UiCenterMenu        = TRUE;
+    UiUseSpecialEffects = FALSE;
+
+    // TODO: Have a boolean to show/hide title box?
+    RtlStringCbCopyA(UiTitleBoxTitleText, sizeof(UiTitleBoxTitleText),
+                     "Boot Menu");
+
+    RtlStringCbCopyA(UiTimeText, sizeof(UiTimeText),
+                     "[Time Remaining: %d]");
+
     return TRUE;
 }
 
@@ -243,67 +274,54 @@ VOID TuiUnInitialize(VOID)
 
 VOID TuiDrawBackdrop(VOID)
 {
-    //
-    // Fill in the background (excluding title box & status bar)
-    //
+    /* Fill in the background (excluding title box & status bar) */
     TuiFillArea(0,
-            TUI_TITLE_BOX_CHAR_HEIGHT,
-            UiScreenWidth - 1,
-            UiScreenHeight - 2,
-            UiBackdropFillStyle,
-            ATTR(UiBackdropFgColor, UiBackdropBgColor));
+                TUI_TITLE_BOX_CHAR_HEIGHT,
+                UiScreenWidth - 1,
+                UiScreenHeight - 2,
+                UiBackdropFillStyle,
+                ATTR(UiBackdropFgColor, UiBackdropBgColor));
 
-    //
-    // Draw the title box
-    //
+    /* Draw the title box */
     TuiDrawBox(0,
-            0,
-            UiScreenWidth - 1,
-            TUI_TITLE_BOX_CHAR_HEIGHT - 1,
-            D_VERT,
-            D_HORZ,
-            TRUE,
-            FALSE,
-            ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+               0,
+               UiScreenWidth - 1,
+               TUI_TITLE_BOX_CHAR_HEIGHT - 1,
+               D_VERT,
+               D_HORZ,
+               TRUE,
+               FALSE,
+               ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    //
-    // Draw version text
-    //
+    /* Draw version text */
     TuiDrawText(2,
-            1,
-            FrLdrVersionString,
-            ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+                1,
+                FrLdrVersionString,
+                ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    //
-    // Draw copyright
-    //
+    /* Draw copyright */
     TuiDrawText(2,
-            2,
-            BY_AUTHOR,
-            ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+                2,
+                BY_AUTHOR,
+                ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
     TuiDrawText(2,
-            3,
-            AUTHOR_EMAIL,
-            ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+                3,
+                AUTHOR_EMAIL,
+                ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    //
-    // Draw help text
-    //
-    TuiDrawText(UiScreenWidth - 16, 3, /*"F1 for Help"*/"F8 for Options", ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+    /* Draw help text */
+    TuiDrawText(UiScreenWidth - 16, 3,
+                /*"F1 for Help"*/ "F8 for Options",
+                ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    //
-    // Draw title text
-    //
+    /* Draw title text */
     TuiDrawText((UiScreenWidth - (ULONG)strlen(UiTitleBoxTitleText)) / 2,
-            2,
-            UiTitleBoxTitleText,
-            ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+                2,
+                UiTitleBoxTitleText,
+                ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    //
-    // Update the date & time
-    //
+    /* Update the date & time */
     TuiUpdateDateTime();
-
     VideoCopyOffScreenBufferToVRAM();
 }
 
@@ -539,7 +557,7 @@ VOID TuiUpdateDateTime(VOID)
     CHAR Buffer[40];
 
     /* Don't draw the time if this has been disabled */
-    if (!UiDrawTime) return;
+    if (!UiShowTime) return;
 
     TimeInfo = ArcGetTime();
     if (TimeInfo->Year < 1 || 9999 < TimeInfo->Year ||
@@ -874,7 +892,7 @@ UCHAR TuiTextToColor(PCSTR ColorText)
     if (_stricmp(ColorText, "Default") == 0)
         return MachDefaultTextColor;
 
-    for (i = 0; i < sizeof(Colors)/sizeof(Colors[0]); ++i)
+    for (i = 0; i < RTL_NUMBER_OF(Colors); ++i)
     {
         if (_stricmp(ColorText, Colors[i].ColorName) == 0)
             return Colors[i].ColorValue;
@@ -891,13 +909,14 @@ UCHAR TuiTextToFillStyle(PCSTR FillStyleText)
         UCHAR FillStyleValue;
     } FillStyles[] =
     {
+        {"None"  , ' '},
         {"Light" , LIGHT_FILL },
         {"Medium", MEDIUM_FILL},
         {"Dark"  , DARK_FILL  },
     };
     ULONG i;
 
-    for (i = 0; i < sizeof(FillStyles)/sizeof(FillStyles[0]); ++i)
+    for (i = 0; i < RTL_NUMBER_OF(FillStyles); ++i)
     {
         if (_stricmp(FillStyleText, FillStyles[i].FillStyleName) == 0)
             return FillStyles[i].FillStyleValue;

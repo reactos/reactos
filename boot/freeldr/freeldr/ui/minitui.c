@@ -15,10 +15,52 @@
 
 #ifndef _M_ARM
 
+BOOLEAN MiniTuiInitialize(VOID)
+{
+    /* Initialize main TUI */
+    if (!TuiInitialize())
+        return FALSE;
+
+    /* Override default settings with "Mini" TUI Theme */
+
+    UiTextColor = TuiTextToColor("Default");
+
+    UiStatusBarFgColor    = UiTextColor;
+    UiStatusBarBgColor    = COLOR_BLACK;
+    UiBackdropFgColor     = UiTextColor;
+    UiBackdropBgColor     = COLOR_BLACK;
+    UiBackdropFillStyle   = ' '; // TuiTextToFillStyle("None");
+    UiTitleBoxFgColor     = COLOR_WHITE;
+    UiTitleBoxBgColor     = COLOR_BLACK;
+    // UiMessageBoxFgColor   = COLOR_WHITE;
+    // UiMessageBoxBgColor   = COLOR_BLUE;
+    UiMenuFgColor         = UiTextColor;
+    UiMenuBgColor         = COLOR_BLACK;
+    UiSelectedTextColor   = COLOR_BLACK;
+    UiSelectedTextBgColor = UiTextColor;
+    // UiEditBoxTextColor    = COLOR_WHITE;
+    // UiEditBoxBgColor      = COLOR_BLACK;
+
+    UiShowTime          = FALSE;
+    UiMenuBox           = FALSE;
+    UiCenterMenu        = FALSE;
+    UiUseSpecialEffects = FALSE;
+
+    // TODO: Have a boolean to show/hide title box?
+    UiTitleBoxTitleText[0] = ANSI_NULL;
+
+    RtlStringCbCopyA(UiTimeText, sizeof(UiTimeText),
+                     "Seconds until highlighted choice will be started automatically:");
+
+    return TRUE;
+}
+
 VOID MiniTuiDrawBackdrop(VOID)
 {
     /* Fill in a black background */
-    TuiFillArea(0, 0, UiScreenWidth - 1, UiScreenHeight - 1, 0, 0);
+    TuiFillArea(0, 0, UiScreenWidth - 1, UiScreenHeight - 1,
+                UiBackdropFillStyle,
+                ATTR(UiBackdropFgColor, UiBackdropBgColor));
 
     /* Update the screen buffer */
     VideoCopyOffScreenBufferToVRAM();
@@ -206,7 +248,7 @@ MiniTuiDrawMenu(
 
 const UIVTBL MiniTuiVtbl =
 {
-    TuiInitialize,
+    MiniTuiInitialize,
     TuiUnInitialize,
     MiniTuiDrawBackdrop,
     TuiFillArea,
