@@ -908,4 +908,5 @@ BEGIN
     IDS_NEWEXT_EXT_IN_USE "Extension is in use"
 
     IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
+    IDS_FILE_NOT_FOUND "The file '%s' was not found."
 END

@@ -901,4 +901,5 @@ BEGIN
     IDS_NEWEXT_EXT_IN_USE "Erweiterung wird bereits verwendet"
 
     IDS_REMOVE_EXT "Nach dem Entfernen einer registrierten Dateinamenerweiterung können Dateien mit dieser Erweiterung nicht mehr durch Doppelklicken auf das Dateisymbol geöffnet werden.\n\nSoll die Erweiterung trotzdem entfernt werden?"
+    IDS_FILE_NOT_FOUND "Die Datei '%s' wurde nicht gefunden."
 END

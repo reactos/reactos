@@ -267,6 +267,7 @@
 #define IDS_NEWEXT_EXT_IN_USE                       30521
 
 #define IDS_REMOVE_EXT                              30522
+#define IDS_FILE_NOT_FOUND                          30530
 
 /* Dialogs */
 

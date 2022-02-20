@@ -159,7 +159,12 @@ HRESULT STDMETHODCALLTYPE Hotplug_Shutdown(_In_ CSysTray * pSysTray)
 
 static void _RunHotplug(CSysTray * pSysTray)
 {
-    ShellExecuteW(pSysTray->GetHWnd(), L"open", L"rundll32.exe shell32.dll,Control_RunDLL hotplug.dll", NULL, NULL, SW_SHOWNORMAL);
+    ShellExecuteW(pSysTray->GetHWnd(),
+                  L"open",
+                  L"rundll32.exe",
+                  L"shell32.dll,Control_RunDLL hotplug.dll",
+                  NULL,
+                  SW_SHOWNORMAL);
 }
 
 static void _ShowContextMenu(CSysTray * pSysTray)

@@ -543,6 +543,21 @@ WORD WINAPI ArrangeWindows(
     WORD cKids,
     CONST HWND * lpKids);
 
+/* Flags for ShellExecCmdLine */
+#define SECL_NO_UI          0x2
+#define SECL_LOG_USAGE      0x8
+#define SECL_USE_IDLIST     0x10
+#define SECL_ALLOW_NONEXE   0x20
+#define SECL_RUNAS          0x40
+
+HRESULT WINAPI ShellExecCmdLine(
+    HWND hwnd,
+    LPCWSTR pwszCommand,
+    LPCWSTR pwszStartDir,
+    int nShow,
+    LPVOID pUnused,
+    DWORD dwSeclFlags);
+
 /* RegisterShellHook types */
 #define RSH_DEREGISTER        0
 #define RSH_REGISTER          1

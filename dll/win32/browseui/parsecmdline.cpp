@@ -382,6 +382,9 @@ SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pInfo)
             {
                 // Or just a plain old string.
 
+                if (PathIsDirectoryW(strField))
+                    PathAddBackslash(strField);
+
                 WCHAR szPath[MAX_PATH];
                 DWORD result = GetFullPathNameW(strField, _countof(szPath), szPath, NULL);
 
