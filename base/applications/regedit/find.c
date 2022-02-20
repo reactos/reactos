@@ -373,12 +373,12 @@ BOOL RegFindWalk(
     LPWSTR *ppszNames = NULL;
 
     hBaseKey = *phKey;
+    if (wcslen(pszSubKey) >= MAX_PATH)
+        return FALSE;
+
     if (RegFindRecurse(hBaseKey, pszSubKey, pszValueName, ppszFoundSubKey,
                        ppszFoundValueName))
         return TRUE;
-
-    if (wcslen(pszSubKey) >= MAX_PATH)
-        return FALSE;
 
     wcscpy(szSubKey, pszSubKey);
     while(szSubKey[0] != 0)
