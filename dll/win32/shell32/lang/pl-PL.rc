@@ -863,4 +863,5 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Pokaż Panel sterowania w oknie Mój komputer"
     IDS_ADVANCED_SHOW_COMP_COLOR "Pokaż zaszyfrowane lub skompresowane pliki NTFS w kolorze"
     IDS_ADVANCED_SHOW_INFO_TIP "Pokaż podręczny opis elementów folderów i pulpitu"
+    IDS_FILE_NOT_FOUND "Nie odnaleziono pliku '%s'."
 END

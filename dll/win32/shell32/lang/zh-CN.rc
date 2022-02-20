@@ -868,4 +868,5 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "在我的电脑中显示控制面板"
     IDS_ADVANCED_SHOW_COMP_COLOR "用彩色显示加密或压缩的 NTFS 文件"
     IDS_ADVANCED_SHOW_INFO_TIP "鼠标指向文件夹和桌面项时显示提示信息"
+    IDS_FILE_NOT_FOUND "The file '%s' was not found."
 END

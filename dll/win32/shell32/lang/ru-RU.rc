@@ -860,4 +860,5 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Показать ""Панель управления"" в ""Мой компьютер"""
     IDS_ADVANCED_SHOW_COMP_COLOR "Отображать сжатые или зашифрованные файлы NTFS другим цветом"
     IDS_ADVANCED_SHOW_INFO_TIP "Отображать описание для папок и элементов рабочего стола"
+    IDS_FILE_NOT_FOUND "Файл '%s' не найден."
 END

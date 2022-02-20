@@ -860,4 +860,5 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Afișează Panoul de control în Calculatorul meu"
     IDS_ADVANCED_SHOW_COMP_COLOR "Afișează în culori fișierele NTFS criptate sau comprimate"
     IDS_ADVANCED_SHOW_INFO_TIP "Permite descriere prin indicii pentru dosare și elemente de birou"
+    IDS_FILE_NOT_FOUND "The file '%s' was not found."
 END

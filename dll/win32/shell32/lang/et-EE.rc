@@ -866,4 +866,5 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Näita juhtpaneeli kaustas Minu aruvti"
     IDS_ADVANCED_SHOW_COMP_COLOR "Näita krüptitud või tihendatud NTFS-faile värvilisena"
     IDS_ADVANCED_SHOW_INFO_TIP "Näita kausta- ja töölauaüksuste hüpikkirjeldusi"
+    IDS_FILE_NOT_FOUND "The file '%s' was not found."
 END

@@ -855,4 +855,5 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "マイ コンピュータでコントロール パネルを表示する"
     IDS_ADVANCED_SHOW_COMP_COLOR "暗号化または圧縮されたNTFSファイルを色付きで表示する"
     IDS_ADVANCED_SHOW_INFO_TIP "フォルダとデスクトップの項目にポップアップ式の説明を表示する"
+    IDS_FILE_NOT_FOUND "The file '%s' was not found."
 END

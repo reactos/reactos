@@ -353,7 +353,13 @@ public:
 
         m_RunFileDlgOwner = hwnd;
 
-        RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
+        // build the default directory from two environment variables
+        CStringW strDefaultDir, strHomePath;
+        strDefaultDir.GetEnvironmentVariable(L"HOMEDRIVE");
+        strHomePath.GetEnvironmentVariable(L"HOMEPATH");
+        strDefaultDir += strHomePath;
+
+        RunFileDlg(hwnd, NULL, (LPCWSTR)strDefaultDir, NULL, NULL, RFF_CALCDIRECTORY);
 
         m_RunFileDlgOwner = NULL;
         ::DestroyWindow(hwnd);

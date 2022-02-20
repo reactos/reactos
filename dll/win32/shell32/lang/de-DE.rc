@@ -860,4 +860,5 @@ BEGIN
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Systemsteuerung unter Arbeitsplatz einblenden"
     IDS_ADVANCED_SHOW_COMP_COLOR "Verschlüsselte oder komprimierte NTFS-Dateien farbig anzeigen"
     IDS_ADVANCED_SHOW_INFO_TIP "Popupinformationen für Ordner- und Desktop-Elemente anzeigen"
+    IDS_FILE_NOT_FOUND "Die Datei '%s' wurde nicht gefunden."
 END
