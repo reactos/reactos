@@ -19,7 +19,7 @@ UCHAR UiMenuBgColor = COLOR_BLACK;
 UCHAR UiTextColor = COLOR_GRAY;
 UCHAR UiSelectedTextColor = COLOR_BLACK;
 UCHAR UiSelectedTextBgColor = COLOR_GRAY;
-CHAR UiTimeText[260] = "Seconds until highlighted choice will be started automatically:   ";
+CHAR  UiTimeText[260] = "Seconds until highlighted choice will be started automatically:";
 
 /* FUNCTIONS ******************************************************************/
 

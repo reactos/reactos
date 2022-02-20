@@ -52,7 +52,7 @@ BOOLEAN UiUseSpecialEffects = FALSE;    // Tells us if we should use fade effect
 BOOLEAN UiDrawTime          = TRUE;     // Tells us if we should draw the time
 BOOLEAN UiCenterMenu        = TRUE;     // Tells us if we should use a centered or left-aligned menu
 BOOLEAN UiMenuBox           = TRUE;     // Tells us if we should draw a box around the menu
-CHAR    UiTimeText[260] = "[Time Remaining: ] ";
+CHAR    UiTimeText[260] = "[Time Remaining: %d]";
 
 const CHAR UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
 
