@@ -533,11 +533,10 @@ VOID TuiDrawStatusText(PCSTR StatusText)
 
 VOID TuiUpdateDateTime(VOID)
 {
-    TIMEINFO*    TimeInfo;
-    char    DateString[40];
-    CHAR    TimeString[40];
-    CHAR    TempString[20];
-    BOOLEAN    PMHour = FALSE;
+    TIMEINFO* TimeInfo;
+    PCSTR   DayPostfix;
+    BOOLEAN PMHour = FALSE;
+    CHAR Buffer[40];
 
     /* Don't draw the time if this has been disabled */
     if (!UiDrawTime) return;
@@ -550,43 +549,33 @@ VOID TuiUpdateDateTime(VOID)
         59 < TimeInfo->Minute ||
         59 < TimeInfo->Second)
     {
-        /* This happens on QEmu sometimes. We just skip updating */
+        /* This happens on QEmu sometimes. We just skip updating. */
         return;
     }
-    // Get the month name
-    strcpy(DateString, UiMonthNames[TimeInfo->Month - 1]);
-    // Get the day
-    _itoa(TimeInfo->Day, TempString, 10);
-    // Get the day postfix
+
+    /* Get the day postfix */
     if (1 == TimeInfo->Day || 21 == TimeInfo->Day || 31 == TimeInfo->Day)
-    {
-        strcat(TempString, "st");
-    }
+        DayPostfix = "st";
     else if (2 == TimeInfo->Day || 22 == TimeInfo->Day)
-    {
-        strcat(TempString, "nd");
-    }
+        DayPostfix = "nd";
     else if (3 == TimeInfo->Day || 23 == TimeInfo->Day)
-    {
-        strcat(TempString, "rd");
-    }
+        DayPostfix = "rd";
     else
-    {
-        strcat(TempString, "th");
-    }
+        DayPostfix = "th";
 
-    // Add the day to the date
-    strcat(DateString, TempString);
-    strcat(DateString, " ");
+    /* Build the date string in format: "MMMM dx yyyy" */
+    RtlStringCbPrintfA(Buffer, sizeof(Buffer),
+                       "%s %d%s %d",
+                       UiMonthNames[TimeInfo->Month - 1],
+                       TimeInfo->Day,
+                       DayPostfix,
+                       TimeInfo->Year);
 
-    // Get the year and add it to the date
-    _itoa(TimeInfo->Year, TempString, 10);
-    strcat(DateString, TempString);
+    /* Draw the date */
+    TuiDrawText(UiScreenWidth - (ULONG)strlen(Buffer) - 2, 1,
+                Buffer, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
-    // Draw the date
-    TuiDrawText(UiScreenWidth-(ULONG)strlen(DateString)-2, 1, DateString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
-
-    // Get the hour and change from 24-hour mode to 12-hour
+    /* Get the hour and change from 24-hour mode to 12-hour */
     if (TimeInfo->Hour > 12)
     {
         TimeInfo->Hour -= 12;
@@ -596,34 +585,18 @@ VOID TuiUpdateDateTime(VOID)
     {
         TimeInfo->Hour = 12;
     }
-    _itoa(TimeInfo->Hour, TempString, 10);
-    strcpy(TimeString, "    ");
-    strcat(TimeString, TempString);
-    strcat(TimeString, ":");
-    _itoa(TimeInfo->Minute, TempString, 10);
-    if (TimeInfo->Minute < 10)
-    {
-        strcat(TimeString, "0");
-    }
-    strcat(TimeString, TempString);
-    strcat(TimeString, ":");
-    _itoa(TimeInfo->Second, TempString, 10);
-    if (TimeInfo->Second < 10)
-    {
-        strcat(TimeString, "0");
-    }
-    strcat(TimeString, TempString);
-    if (PMHour)
-    {
-        strcat(TimeString, " PM");
-    }
-    else
-    {
-        strcat(TimeString, " AM");
-    }
 
-    // Draw the time
-    TuiDrawText(UiScreenWidth-(ULONG)strlen(TimeString)-2, 2, TimeString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+    /* Build the time string in format: "h:mm:ss tt" */
+    RtlStringCbPrintfA(Buffer, sizeof(Buffer),
+                       "    %d:%02d:%02d %s",
+                       TimeInfo->Hour,
+                       TimeInfo->Minute,
+                       TimeInfo->Second,
+                       PMHour ? "PM" : "AM");
+
+    /* Draw the time */
+    TuiDrawText(UiScreenWidth - (ULONG)strlen(Buffer) - 2, 2,
+                Buffer, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 }
 
 VOID TuiSaveScreen(PUCHAR Buffer)

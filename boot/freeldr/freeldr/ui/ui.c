@@ -54,7 +54,7 @@ BOOLEAN UiCenterMenu        = TRUE;     // Tells us if we should use a centered 
 BOOLEAN UiMenuBox           = TRUE;     // Tells us if we should draw a box around the menu
 CHAR    UiTimeText[260] = "[Time Remaining: %d]";
 
-const CHAR UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
+const PCSTR UiMonthNames[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
 #endif // _M_ARM
 

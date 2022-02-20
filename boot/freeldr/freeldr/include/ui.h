@@ -47,7 +47,7 @@ extern BOOLEAN  UiMenuBox;
 extern CHAR     UiTimeText[];
 extern BOOLEAN  UiDrawTime;
 
-extern const CHAR UiMonthNames[12][15];
+extern const PCSTR UiMonthNames[12];
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
