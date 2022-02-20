@@ -22,104 +22,176 @@
 
 class CDesktopThread
 {
-    HANDLE m_hEvent;
+private:
     CComPtr<ITrayWindow> m_Tray;
+    HANDLE m_hInitEvent;
+    HANDLE m_hThread;
 
-    DWORD DesktopThreadProc()
-    {
-        CComPtr<IShellDesktopTray> pSdt;
-        HANDLE hDesktop;
-        HRESULT hRet;
-
-        OleInitialize(NULL);
-
-        hRet = m_Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
-        if (!SUCCEEDED(hRet))
-            return 1;
-
-        hDesktop = _SHCreateDesktop(pSdt);
-        if (hDesktop == NULL)
-            return 1;
-
-        if (!SetEvent(m_hEvent))
-        {
-            /* Failed to notify that we initialized successfully, kill ourselves
-            to make the main thread wake up! */
-            return 1;
-        }
-
-        _SHDesktopMessageLoop(hDesktop);
-
-        /* FIXME: Properly rundown the main thread! */
-        ExitProcess(0);
-
-        return 0;
-    }
-
-    static DWORD CALLBACK s_DesktopThreadProc(IN OUT LPVOID lpParameter)
-    {
-        return reinterpret_cast<CDesktopThread*>(lpParameter)->DesktopThreadProc();
-    }
+    DWORD DesktopThreadProc();
+    static DWORD WINAPI s_DesktopThreadProc(LPVOID lpParameter);
 
 public:
-    CDesktopThread() :
-        m_hEvent(NULL),
-        m_Tray(NULL)
-    {
-    }
+    CDesktopThread();
+    virtual ~CDesktopThread();
 
-    HRESULT Initialize(IN OUT ITrayWindow *pTray)
-    {
-        HANDLE hThread;
-        HANDLE Handles[2];
-
-        m_Tray = pTray;
-
-        m_hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
-        if (!m_hEvent)
-            return E_FAIL;
-
-        hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (PVOID)this, 0, NULL);
-        if (!hThread)
-        {
-            CloseHandle(m_hEvent);
-            return E_FAIL;
-        }
-
-        Handles[0] = hThread;
-        Handles[1] = m_hEvent;
-
-        for (;;)
-        {
-            DWORD WaitResult = MsgWaitForMultipleObjects(_countof(Handles), Handles, FALSE, INFINITE, QS_ALLEVENTS);
-            if (WaitResult == WAIT_OBJECT_0 + _countof(Handles))
-            {
-                TrayProcessMessages(m_Tray);
-            }
-            else if (WaitResult != WAIT_FAILED && WaitResult != WAIT_OBJECT_0)
-            {
-                break;
-            }
-        }
-
-        CloseHandle(hThread);
-        CloseHandle(m_hEvent);
-
-        return S_OK;
-    }
-
-    void Destroy()
-    {
-        return;
-    }
+    HRESULT Initialize(ITrayWindow *pTray);
+    void Destroy();
 };
+
+/*******************************************************************/
+
+CDesktopThread::CDesktopThread() :
+    m_Tray(NULL),
+    m_hInitEvent(NULL),
+    m_hThread(NULL)
+{
+}
+
+CDesktopThread::~CDesktopThread()
+{
+    Destroy();
+}
+
+HRESULT CDesktopThread::Initialize(ITrayWindow *pTray)
+{
+    HANDLE Handles[2];
+
+    if (!pTray || m_Tray)
+    {
+        return E_FAIL;
+    }
+
+    m_hInitEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+
+    if (!m_hInitEvent)
+    {
+        return E_FAIL;
+    }
+
+    m_Tray = pTray;
+    m_hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (LPVOID)this, 0, NULL);
+
+    if (!m_hThread)
+    {   
+        CloseHandle(m_hInitEvent);
+
+        m_hInitEvent = NULL;
+        m_Tray = NULL;
+
+        return E_FAIL;
+    }
+
+    Handles[0] = m_hThread;
+    Handles[1] = m_hInitEvent;
+
+    for (;;)
+    {
+        DWORD WaitResult = MsgWaitForMultipleObjects(_countof(Handles), Handles, FALSE, INFINITE, QS_ALLEVENTS);
+
+        if (WaitResult == WAIT_OBJECT_0 + _countof(Handles))
+        {
+            TrayProcessMessages(m_Tray);
+        }
+        else if (WaitResult != WAIT_FAILED && WaitResult != WAIT_OBJECT_0)
+        {
+            break;
+        }
+        else
+        {
+            CloseHandle(m_hThread);
+            CloseHandle(m_hInitEvent);
+
+            m_hThread = NULL;
+            m_hInitEvent = NULL;
+            m_Tray = NULL;
+
+            return E_FAIL;
+        }
+    }
+    
+    return S_OK;
+}
+
+void CDesktopThread::Destroy()
+{
+    if (m_hThread)
+    {
+        DWORD WaitResult = WaitForSingleObject(m_hThread, 0);
+        
+        if (WaitResult == WAIT_TIMEOUT)
+        {
+            /* Send WM_CLOSE message to the thread. */
+            PostThreadMessageW(GetThreadId(m_hThread), WM_CLOSE, 0, 0);
+            
+            WaitForSingleObject(m_hThread, INFINITE);
+        }
+
+        CloseHandle(m_hThread);
+        m_hThread = NULL;
+    }
+
+    if (m_hInitEvent)
+    {
+        CloseHandle(m_hInitEvent);
+        m_hInitEvent = NULL;
+    }
+
+    if (m_Tray)
+    {
+        m_Tray = NULL;
+    }
+}
+
+DWORD CDesktopThread::DesktopThreadProc()
+{
+    CComPtr<IShellDesktopTray> pSdt;
+    HANDLE hDesktop;
+    HRESULT hRet;
+
+    OleInitialize(NULL);
+
+    hRet = m_Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
+
+    if (!SUCCEEDED(hRet))
+    {
+        return 1;
+    }
+
+    hDesktop = _SHCreateDesktop(pSdt);
+
+    if (!hDesktop)
+    {
+        return 1;
+    }
+
+    if (!SetEvent(m_hInitEvent))
+    {
+        /* Failed to notify that we initialized successfully, kill ourselves
+           to make the main thread wake up! */
+        return 1;
+    }
+
+    _SHDesktopMessageLoop(hDesktop);
+
+    OleUninitialize();
+
+    return 0;
+}
+
+DWORD WINAPI CDesktopThread::s_DesktopThreadProc(LPVOID lpParameter)
+{
+    CDesktopThread *pDesktopThread = static_cast<CDesktopThread*>(lpParameter);
+    return pDesktopThread->DesktopThreadProc();
+}
+
+/*******************************************************************/
 
 HANDLE
 DesktopCreateWindow(IN OUT ITrayWindow *Tray)
 {
-    CDesktopThread* pDesktopThread = new CDesktopThread();
-
+    CDesktopThread *pDesktopThread = new CDesktopThread();
     HRESULT hres = pDesktopThread->Initialize(Tray);
+
     if (FAILED_UNEXPECTEDLY(hres))
     {
         delete pDesktopThread;
@@ -132,6 +204,6 @@ DesktopCreateWindow(IN OUT ITrayWindow *Tray)
 VOID
 DesktopDestroyShellWindow(IN HANDLE hDesktop)
 {
-    CDesktopThread* pDesktopThread = reinterpret_cast<CDesktopThread*>(hDesktop);
-    pDesktopThread->Destroy();
+    CDesktopThread *pDesktopThread = reinterpret_cast<CDesktopThread*>(hDesktop);
+    delete pDesktopThread;
 }
