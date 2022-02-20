@@ -1087,7 +1087,12 @@ HRESULT WINAPI CDrivesFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataO
         if (uMsg == DFM_INVOKECOMMAND && wParam == 1)   // #1
         {
             // "System" properties
-            ShellExecuteW(hwndOwner, NULL, L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
+            ShellExecuteW(hwndOwner,
+                          NULL,
+                          L"rundll32.exe",
+                          L"shell32.dll,Control_RunDLL sysdm.cpl",
+                          NULL,
+                          SW_SHOWNORMAL);
         }
         else if (uMsg == DFM_MERGECONTEXTMENU)
         {
