@@ -836,4 +836,5 @@ BEGIN
     IDS_MENU_EMPTY "(Prázdné)"
     IDS_OBJECTS "Položek: %d"
     IDS_OBJECTS_SELECTED "Položek vybráno: %d"
+    IDS_FILE_NOT_FOUND "The file '%s' was not found."
 END

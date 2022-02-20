@@ -98,8 +98,8 @@ BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 
 
 /****************************************************************************
-* SHChangeNotifyRegister API
-*/
+ * SHChangeNotifyRegister API
+ */
 #define SHCNRF_InterruptLevel       0x0001
 #define SHCNRF_ShellLevel           0x0002
 #define SHCNRF_RecursiveInterrupt   0x1000  /* Must be combined with SHCNRF_InterruptLevel */
@@ -543,6 +543,21 @@ WORD WINAPI ArrangeWindows(
     WORD cKids,
     CONST HWND * lpKids);
 
+/* Flags for ShellExecCmdLine */
+#define SECL_NO_UI          0x2
+#define SECL_LOG_USAGE      0x8
+#define SECL_USE_IDLIST     0x10
+#define SECL_ALLOW_NONEXE   0x20
+#define SECL_RUNAS          0x40
+
+HRESULT WINAPI ShellExecCmdLine(
+    HWND hwnd,
+    LPCWSTR pwszCommand,
+    LPCWSTR pwszStartDir,
+    int nShow,
+    LPVOID pUnused,
+    DWORD dwSeclFlags);
+
 /* RegisterShellHook types */
 #define RSH_DEREGISTER        0
 #define RSH_REGISTER          1
@@ -599,7 +614,7 @@ BOOL WINAPI GUIDFromStringW(
     _In_   PCWSTR psz,
     _Out_  LPGUID pguid
     );
-    
+
 static inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 {
@@ -857,7 +872,7 @@ typedef struct tagSHELL_LINK_INFOW
 
 /*****************************************************************************
  * SHELL_LINK_INFO_VOLUME_IDA/W
- * If cbVolumeLabelOffset != 0x00000014 (should be 0x00000010) then use 
+ * If cbVolumeLabelOffset != 0x00000014 (should be 0x00000010) then use
  * SHELL_LINK_INFO_VOLUME_IDA
  * If cbVolumeLabelOffset == 0x00000014 then use SHELL_LINK_INFO_VOLUME_IDW
  */
@@ -977,7 +992,7 @@ typedef struct tagEXP_VISTA_ID_LIST
 {
     /* .cbSize >= 0x0000000a, .dwSignature = 0xa000000c */
     DATABLOCK_HEADER dbh;
-    /* Specifies an alternate IDList that can be used instead 
+    /* Specifies an alternate IDList that can be used instead
        of the "normal" IDList (SLDF_HAS_ID_LIST) */
     /* LPITEMIDLIST pIDList; (variable) */
 } EXP_VISTA_ID_LIST, *LPEXP_VISTA_ID_LIST;

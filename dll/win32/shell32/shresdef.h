@@ -245,6 +245,8 @@
 #define IDS_ADVANCED_SHOW_COMP_COLOR                30512
 #define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
+#define IDS_FILE_NOT_FOUND                          30530
+
 /* Dialogs */
 
 /* Run dialog */
