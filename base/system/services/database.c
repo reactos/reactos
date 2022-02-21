@@ -370,7 +370,7 @@ ScmLogonService(
     DPRINT("ScmLogonService(%p %p)\n", pService, pImage);
     DPRINT("Service %S\n", pService->lpServiceName);
 
-    if (ScmIsLocalSystemAccount(pImage->pszAccountName) || ScmLiveSetup)
+    if (ScmIsLocalSystemAccount(pImage->pszAccountName) || ScmLiveSetup || ScmSetupInProgress)
         return ERROR_SUCCESS;
 
     /* Get the user and domain names */

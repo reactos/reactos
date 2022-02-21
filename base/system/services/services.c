@@ -28,6 +28,7 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 BOOL ScmInitialize = FALSE;
 BOOL ScmShutdown = FALSE;
 BOOL ScmLiveSetup = FALSE;
+BOOL ScmSetupInProgress = FALSE;
 static HANDLE hScmShutdownEvent = NULL;
 static HANDLE hScmSecurityServicesEvent = NULL;
 
@@ -55,6 +56,7 @@ CheckForLiveCD(VOID)
     WCHAR CommandLine[MAX_PATH];
     HKEY hSetupKey;
     DWORD dwSetupType;
+    DWORD dwSetupInProgress;
     DWORD dwType;
     DWORD dwSize;
     DWORD dwError;
@@ -105,6 +107,28 @@ CheckForLiveCD(VOID)
     {
         DPRINT1("Running on LiveCD\n");
         ScmLiveSetup = TRUE;
+    }
+
+    /* Read the SystemSetupInProgress value */
+    dwSize = sizeof(DWORD);
+    dwError = RegQueryValueExW(hSetupKey,
+                               L"SystemSetupInProgress",
+                               NULL,
+                               &dwType,
+                               (LPBYTE)&dwSetupInProgress,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS ||
+        dwType != REG_DWORD ||
+        dwSize != sizeof(DWORD) ||
+        dwSetupType == 0)
+    {
+        goto done;
+    }
+
+    if (dwSetupInProgress == 1)
+    {
+        DPRINT1("ReactOS Setup currently in progress!\n");
+        ScmSetupInProgress = TRUE;
     }
 
 done:
