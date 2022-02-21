@@ -13,11 +13,15 @@ BEGIN
     IDS_USAGE09 "   /profile        specifies that the user's profile should be loaded.\n"
     IDS_USAGE10 "                   This is the default.\n" 
     IDS_USAGE11 "   /env            to use current environment instead of user's.\n"
-    IDS_USAGE12 "   /user           <UserName> should be in form USER@DOMAIN or DOMAIN\\USER\n"
-    IDS_USAGE13 "   program         command line for EXE.  See below for examples\n\n"
+    IDS_USAGE12 "   /netonly        Not implemented yet.\n"
+    IDS_USAGE13 "   /savecred       Not implemented yet.\n"
+    IDS_USAGE14 "   /smartcard      Not implemented yet.\n"
+    IDS_USAGE15 "   /user           <UserName> should be in form USER@DOMAIN or DOMAIN\\USER\n"
+    IDS_USAGE16 "   program         command line for EXE.  See below for examples\n\n"
 
     IDS_START     "Attempting to start %s as user ""%s\\%s""...\n"
     IDS_RUN_ERROR "RUNAS ERROR: Unable to run %s\n"
+    IDS_INTERNAL_ERROR "RUNAS ERROR: Internal error %ld\n"
 
     IDS_PASSWORD  "Enter the password for ""%s\\%s"": "
 END

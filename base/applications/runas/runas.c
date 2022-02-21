@@ -85,10 +85,13 @@ wmain(
     PWSTR pszDomain = NULL;
     PWSTR pszCommandLine = NULL;
     PWSTR pszPassword = NULL;
+    PWSTR pszCurrentDirectory = NULL;
+    PWSTR pszEnvironment = NULL;
     PWSTR ptr;
     STARTUPINFOW StartupInfo;
     PROCESS_INFORMATION ProcessInfo;
     DWORD dwLogonFlags = 0;
+    DWORD dwCreateFlags = 0;
     BOOL rc;
 
     /* Initialize the Console Standard Streams */
@@ -112,6 +115,8 @@ wmain(
             if (wcscmp(pszArg, L"?") == 0)
             {
                 Usage();
+                result = 0;
+                goto done;
             }
             else if (wcsicmp(pszArg, L"profile") == 0)
             {
@@ -133,13 +138,25 @@ wmain(
                 {
                     /* User@Domain */
                     pszUserName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ((ptr - pszArg) + 1) * sizeof(WCHAR));
-                    if (pszUserName)
-                        wcsncpy(pszUserName, pszArg, (ptr - pszArg));
+                    if (pszUserName == NULL)
+                    {
+                        ConResPrintf(StdOut, IDS_INTERNAL_ERROR, ERROR_OUTOFMEMORY);
+                        result = -1;
+                        goto done;
+                    }
+
+                    wcsncpy(pszUserName, pszArg, (ptr - pszArg));
 
                     ptr++;
                     pszDomain = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (wcslen(ptr) + 1) * sizeof(WCHAR));
-                    if (pszDomain)
-                        wcscpy(pszDomain, ptr);
+                    if (pszDomain == NULL)
+                    {
+                        ConResPrintf(StdOut, IDS_INTERNAL_ERROR, ERROR_OUTOFMEMORY);
+                        result = -1;
+                        goto done;
+                    }
+
+                    wcscpy(pszDomain, ptr);
                 }
                 else
                 {
@@ -148,19 +165,37 @@ wmain(
                     {
                         /* Domain\User */
                         pszUserName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (wcslen(ptr + 1) + 1)* sizeof(WCHAR));
-                        if (pszUserName)
-                            wcscpy(pszUserName, (ptr + 1));
+                        if (pszUserName == NULL)
+                        {
+                            ConResPrintf(StdOut, IDS_INTERNAL_ERROR, ERROR_OUTOFMEMORY);
+                            result = -1;
+                            goto done;
+                        }
+
+                        wcscpy(pszUserName, (ptr + 1));
 
                         pszDomain = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ((ptr - pszArg) + 1) * sizeof(WCHAR));
-                        if (pszDomain)
-                            wcsncpy(pszDomain, pszArg, (ptr - pszArg));
+                        if (pszDomain == NULL)
+                        {
+                            ConResPrintf(StdOut, IDS_INTERNAL_ERROR, ERROR_OUTOFMEMORY);
+                            result = -1;
+                            goto done;
+                        }
+
+                        wcsncpy(pszDomain, pszArg, (ptr - pszArg));
                     }
                     else
                     {
                         /* User */
                         pszUserName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (wcslen(pszArg) + 1) * sizeof(WCHAR));
-                        if (pszUserName)
-                            wcscpy(pszUserName, pszArg);
+                        if (pszUserName == NULL)
+                        {
+                            ConResPrintf(StdOut, IDS_INTERNAL_ERROR, ERROR_OUTOFMEMORY);
+                            result = -1;
+                            goto done;
+                        }
+
+                        wcscpy(pszUserName, pszArg);
                     }
                 }
             }
@@ -168,6 +203,7 @@ wmain(
             {
                 Usage();
                 result = -1;
+                goto done;
             }
         }
         else
@@ -175,8 +211,14 @@ wmain(
             if (pszCommandLine == NULL)
             {
                 pszCommandLine = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (wcslen(pszArg) + 1) * sizeof(WCHAR));
-                if (pszCommandLine != NULL)
-                    wcscpy(pszCommandLine, pszArg);
+                if (pszCommandLine == NULL)
+                {
+                    ConResPrintf(StdOut, IDS_INTERNAL_ERROR, ERROR_OUTOFMEMORY);
+                    result = -1;
+                    goto done;
+                }
+
+                wcscpy(pszCommandLine, pszArg);
                 break;
             }
         }
@@ -195,11 +237,6 @@ wmain(
     if (bNoProfile)
         dwLogonFlags &= ~LOGON_WITH_PROFILE;
 
-    if (bEnv)
-    {
-        DPRINT("env\n");
-    }
-
     DPRINT("User: %S\n", pszUserName);
     DPRINT("Domain: %S\n", pszDomain);
     DPRINT("CommandLine: %S\n", pszCommandLine);
@@ -208,11 +245,38 @@ wmain(
     {
         DWORD dwLength = MAX_COMPUTERNAME_LENGTH + 1;
         pszDomain = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));
-        if (pszDomain)
-            GetComputerNameW(pszDomain, &dwLength);
+        if (pszDomain == NULL)
+        {
+            ConResPrintf(StdOut, IDS_INTERNAL_ERROR, ERROR_OUTOFMEMORY);
+            result = -1;
+            goto done;
+        }
+
+        GetComputerNameW(pszDomain, &dwLength);
+    }
+
+    if (bEnv)
+    {
+        pszEnvironment = GetEnvironmentStringsW();
+        pszCurrentDirectory = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MAX_PATH + 1) * sizeof(WCHAR));
+        if (pszCurrentDirectory == NULL)
+        {
+            ConResPrintf(StdOut, IDS_INTERNAL_ERROR, ERROR_OUTOFMEMORY);
+            result = -1;
+            goto done;
+        }
+
+        GetCurrentDirectory(MAX_PATH + 1, pszCurrentDirectory);
+        dwCreateFlags |= CREATE_UNICODE_ENVIRONMENT;
     }
 
     pszPassword = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MAX_PASSWORD_LENGTH + 1) * sizeof(WCHAR));
+    if (pszPassword == NULL)
+    {
+        ConResPrintf(StdOut, IDS_INTERNAL_ERROR, ERROR_OUTOFMEMORY);
+        result = -1;
+        goto done;
+    }
 
     /* Query the password */
     ConResPrintf(StdOut, IDS_PASSWORD, pszDomain, pszUserName);
@@ -225,17 +289,17 @@ wmain(
                                  pszDomain,
                                  pszPassword,
                                  dwLogonFlags,
-                                 NULL,      //[in, optional]      LPCWSTR               lpApplicationName,
+                                 NULL,
                                  pszCommandLine,
-                                 0,         //[in]                DWORD                 dwCreationFlags,
-                                 bEnv ? GetEnvironmentStringsW() : NULL,
-                                 NULL,      //[in, optional]      LPCWSTR               lpCurrentDirectory,
+                                 dwCreateFlags,
+                                 pszEnvironment,
+                                 pszCurrentDirectory,
                                  &StartupInfo,
                                  &ProcessInfo);
     if (rc == FALSE)
     {
         ConResPrintf(StdOut, IDS_RUN_ERROR, pszCommandLine);
-        ConPrintf(StdOut, L"Error: %lu\n", GetLastError());
+        ConPrintf(StdOut, L"%lu\n", GetLastError());
     }
 
 done:
@@ -247,6 +311,11 @@ done:
 
     if (pszPassword)
         HeapFree(GetProcessHeap(), 0, pszPassword);
+
+    /* NOTE: Do NOT free pszEnvironment */
+
+    if (pszCurrentDirectory)
+        HeapFree(GetProcessHeap(), 0, pszCurrentDirectory);
 
     if (pszCommandLine)
         HeapFree(GetProcessHeap(), 0, pszCommandLine);

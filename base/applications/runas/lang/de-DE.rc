@@ -13,11 +13,15 @@ BEGIN
     IDS_USAGE09 "   /profile        Legt fest, dass das Benutzerprofil geladen werden soll.\n"
     IDS_USAGE10 "                   Dies ist die Standardeinstellung.\n" 
     IDS_USAGE11 "   /env            Verwendet die aktuelle Umgebung statt der des Benutzers.\n"
-    IDS_USAGE12 "   /user           <Benutzername> muss in der Form Benutzer@Domäne oder\n                   Domäne\\Benutzer angegeben werden\n"
-    IDS_USAGE13 "   Programm        Befehlszeile einer ausführbaren Datei. Siehe unten\n                   aufgeführte Beispiele.\n\n"
+    IDS_USAGE12 "   /netonly        Noch nicht implementiert.\n"
+    IDS_USAGE13 "   /savecred       Noch nicht implementiert.\n"
+    IDS_USAGE14 "   /smartcard      Noch nicht implementiert.\n"
+    IDS_USAGE15 "   /user           <Benutzername> muss in der Form Benutzer@Domäne oder\n                   Domäne\\Benutzer angegeben werden\n"
+    IDS_USAGE16 "   Programm        Befehlszeile einer ausführbaren Datei. Siehe unten\n                   aufgeführte Beispiele.\n\n"
 
     IDS_START     "Es wird versucht, %s als Benutzer ""%s\\%s"" zu starten...\n"
     IDS_RUN_ERROR "RUNAS-FEHLER: %s kann nicht ausgeführt werden\n"
+    IDS_INTERNAL_ERROR "RUNAS-FEHLER: Interner Fehler %ld\n"
 
     IDS_PASSWORD "Geben Sie das Kennwort für ""%s\\%s"" ein: "
 END
