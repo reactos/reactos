@@ -71,14 +71,6 @@ RPC_STATUS EvtUnbindLocalHandle(void);
 DWORD
 ScmRpcStatusToWinError(RPC_STATUS Status);
 
-/* sysfunc.h */
-NTSTATUS
-WINAPI
-SystemFunction034(
-    _In_ RPC_BINDING_HANDLE BindingHandle,
-    INT b,
-    _Out_ LPBYTE SessionKey);
-
 /* Interface to ntmarta.dll **************************************************/
 
 typedef struct _NTMARTA
