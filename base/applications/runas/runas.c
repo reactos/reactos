@@ -90,7 +90,7 @@ wmain(
     PWSTR ptr;
     STARTUPINFOW StartupInfo;
     PROCESS_INFORMATION ProcessInfo;
-    DWORD dwLogonFlags = 0;
+    DWORD dwLogonFlags = LOGON_WITH_PROFILE;
     DWORD dwCreateFlags = 0;
     BOOL rc;
 
