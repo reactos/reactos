@@ -36,6 +36,7 @@
 #include <ntsecapi.h>
 
 #include <services/services.h>
+#include <seclogon_c.h>
 #include <svcctl_c.h>
 #include <winreg_c.h>
 
@@ -69,6 +70,14 @@ RPC_STATUS EvtUnbindLocalHandle(void);
 /* scm.c */
 DWORD
 ScmRpcStatusToWinError(RPC_STATUS Status);
+
+/* sysfunc.h */
+NTSTATUS
+WINAPI
+SystemFunction034(
+    _In_ RPC_BINDING_HANDLE BindingHandle,
+    INT b,
+    _Out_ LPBYTE SessionKey);
 
 /* Interface to ntmarta.dll **************************************************/
 
