@@ -1410,7 +1410,8 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     FileStructW* pDataW = _ILGetFileStructW(pidl);
     if (!pDataW)
     {
-        ERR("Got garbage pidl\n");
+        ERR("Got garbage pidl:\n");
+        pdump_always(pidl);
         return E_INVALIDARG;
     }
 
@@ -1778,6 +1779,7 @@ HRESULT CFSFolder::_CreateShellExtInstance(const CLSID *pclsid, LPCITEMIDLIST pi
     if (!pDataW)
     {
         ERR("Got garbage pidl\n");
+        pdump_always(pidl);
         return E_INVALIDARG;
     }
 
