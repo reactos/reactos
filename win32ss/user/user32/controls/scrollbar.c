@@ -1723,7 +1723,7 @@ SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
   ScrollInfo.fMask = SIF_POS|SIF_PREVIOUSPOS;
   ScrollInfo.nPos = nPos;
 
-  return RealSetScrollInfo(hWnd, nBar, &ScrollInfo, bRedraw);
+  return SetScrollInfo(hWnd, nBar, &ScrollInfo, bRedraw);
 }
 
 /*
