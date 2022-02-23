@@ -626,7 +626,12 @@ FdoStartAdapter(
     }
 
     // start building a device map
-    RegistryInitAdapterKey(PortExtension);
+    status = RegistryInitAdapterKey(PortExtension);
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT1("RegistryInitAdapterKey failed with status 0x%x\n", status);
+        return status;
+    }
 
     // increase the port count
     PCONFIGURATION_INFORMATION sysConfig = IoGetConfigurationInformation();
@@ -646,8 +651,86 @@ FdoStartAdapter(
     }
 
     PortExtension->DeviceStarted = TRUE;
+    PortExtension->Common.PnpState = SppsStarted;
 
     return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+FdoForwardAndWaitCompletion(
+    _In_ PDEVICE_OBJECT PortDevice,
+    _In_ PIRP Irp,
+    _Out_ PKEVENT Event)
+{
+    if (Irp->PendingReturned)
+        KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+static
+NTSTATUS
+FdoForwardAndWait(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION PortExtension,
+    _Inout_ PIRP Irp)
+{
+    NTSTATUS Status;
+    KEVENT Event;
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+    IoSetCompletionRoutine(Irp,
+                           (PIO_COMPLETION_ROUTINE)&FdoForwardAndWaitCompletion,
+                           &Event,
+                           TRUE, TRUE, TRUE);
+
+    Status = IoCallDriver(PortExtension->Common.LowerDevice, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event,
+                              Executive, KernelMode,
+                              FALSE, NULL);
+        Status = Irp->IoStatus.Status;
+    }
+
+    return Status;
+}
+
+static
+inline
+NTSTATUS
+FdoCompletePnpIrp(_Inout_ PIRP Irp, _In_ NTSTATUS Status)
+{
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+static
+NTSTATUS
+FdoHandleStart(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION PortExtension,
+    _Inout_ PIRP Irp)
+{
+    PIO_STACK_LOCATION StackPos;
+    NTSTATUS Status;
+
+    DPRINT1("Starting device %wZ\n", &PortExtension->DeviceName);
+
+    /* Forward the START_DEVICE IRP down the stack and wait */
+    Status = FdoForwardAndWait(PortExtension, Irp);
+    if (!NT_SUCCESS(Status))
+        return FdoCompletePnpIrp(Irp, Status);
+
+    /* Get resource configuration */
+    StackPos = IoGetCurrentIrpStackLocation(Irp);
+    SpiResourceToConfig(PortExtension->PortConfig->NumberOfAccessRanges,
+                        &StackPos->Parameters.StartDevice.AllocatedResourcesTranslated->List[0],
+                        PortExtension->PortConfig);
+
+    /* Start the device and complete the request */
+    Status = FdoStartAdapter(PortExtension);
+    return FdoCompletePnpIrp(Irp, Status);
 }
 
 static
@@ -765,17 +848,13 @@ FdoDispatchPnp(
 
     ASSERT(portExt->Common.IsFDO);
 
-    DPRINT("FDO PnP request %s\n", GetIRPMinorFunctionString(ioStack->MinorFunction));
+    DPRINT1("FDO PnP request %s\n", GetIRPMinorFunctionString(ioStack->MinorFunction));
 
     switch (ioStack->MinorFunction)
     {
         case IRP_MN_START_DEVICE:
         {
-            // as we don't support PnP yet, this is a no-op for us
-            // (FdoStartAdapter is being called during initialization for legacy miniports)
-            status = STATUS_SUCCESS;
-            // status = FdoStartAdapter(DeviceExtension);
-            break;
+            return FdoHandleStart(portExt, Irp);
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {

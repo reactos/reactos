@@ -349,6 +349,22 @@ typedef struct _SCSIPORT_DRIVER_EXTENSION
     BOOLEAN IsLegacyDriver;
 } SCSI_PORT_DRIVER_EXTENSION, *PSCSI_PORT_DRIVER_EXTENSION;
 
+/* SCSI_PORT_DRIVER_INIT_EXTENSION and SCSI_PORT_INIT_DATA
+ * provide a per-miniport list of port initialization data. */
+typedef struct _SCSIPORT_INIT_DATA
+{
+    SINGLE_LIST_ENTRY ListEntry;
+    HW_INITIALIZATION_DATA HwInitData;
+    CONFIGURATION_INFO ConfigInfo;
+    PVOID HwContext;
+} SCSI_PORT_INIT_DATA, *PSCSI_PORT_INIT_DATA;
+
+typedef struct _SCSIPORT_DRIVER_INIT_EXTENSION
+{
+    KSPIN_LOCK Lock;
+    SINGLE_LIST_ENTRY ListHead;
+} SCSI_PORT_DRIVER_INIT_EXTENSION, *PSCSI_PORT_DRIVER_INIT_EXTENSION;
+
 FORCEINLINE
 BOOLEAN
 VerifyIrpOutBufferSize(
@@ -486,3 +502,8 @@ ScsiPortAllocateAdapterChannel(
     _In_ PIRP Irp,
     _In_ PVOID MapRegisterBase,
     _In_ PVOID Context);
+
+VOID
+SpiResourceToConfig(IN ULONG NumberOfAccessRanges,
+                    IN PCM_FULL_RESOURCE_DESCRIPTOR ResourceDescriptor,
+                    IN PPORT_CONFIGURATION_INFORMATION PortConfig);
