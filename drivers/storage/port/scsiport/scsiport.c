@@ -857,7 +857,7 @@ SpiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
     RtlZeroMemory(DeviceExtension, DeviceExtensionSize);
     DeviceExtension->Common.DeviceObject = PortDeviceObject;
     DeviceExtension->Common.IsFDO = TRUE;
-    DeviceExtension->Common.PnpState = SpcsNeverStarted;
+    DeviceExtension->Common.PnpState = SppsNeverStarted;
     DeviceExtension->Length = DeviceExtensionSize;
     DeviceExtension->PortNumber = SystemConfig->ScsiPortCount;
     DeviceExtension->DeviceName = DeviceName;

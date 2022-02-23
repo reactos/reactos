@@ -78,13 +78,13 @@ typedef enum _SCSI_PORT_TIMER_STATES
 
 typedef enum _SCSI_PORT_PNP_STATES
 {
-    SpcsNeverStarted = 0,
-    SpcsStarted,
-    SpcsPendingRemoval,
-    SpcsPendingStop,
-    SpcsSurpriseRemoved,
-    SpcsRemoved,
-    SpcsStopped
+    SppsNeverStarted = 0,
+    SppsStarted,
+    SppsPendingRemoval,
+    SppsPendingStop,
+    SppsSurpriseRemoved,
+    SppsRemoved,
+    SppsStopped
 } SCSI_PORT_PNP_STATES;
 
 typedef struct _CONFIGURATION_INFO
