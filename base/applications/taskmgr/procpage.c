@@ -988,7 +988,7 @@ static BOOL DevicePathToDosPath(LPWSTR lpPath, DWORD dwLength)
     return bSuccess;
 }
 
-static BOOL GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dwLength)
+static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dwLength)
 {
     BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
     PVOID DynamicBuffer = NULL;
@@ -996,7 +996,7 @@ static BOOL GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dw
     WCHAR *pszExePath = NULL;
     ULONG SizeNeeded;
     NTSTATUS Status;
-    BOOL bRet = FALSE;
+    DWORD dwRet = 0;
 
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessImageFileName,
@@ -1010,7 +1010,7 @@ static BOOL GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dw
 
         if (!DynamicBuffer)
         {
-            return FALSE;
+            return 0;
         }
 
         Status = NtQueryInformationProcess(hProcess,
@@ -1046,11 +1046,13 @@ static BOOL GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dw
         goto Cleanup;
     }
 
-    if (dwLength >= wcslen(pszExePath) + 1)
+    dwRet = wcslen(pszExePath) + 1;
+
+    if (dwLength >= dwRet)
     {
         StringCchCopyW(lpExePath, dwLength, pszExePath);
 
-        bRet = TRUE;
+        dwRet -= 1;
     }
 
 Cleanup:
@@ -1065,34 +1067,36 @@ Cleanup:
         HeapFree(GetProcessHeap(), 0, DynamicBuffer);
     }
 
-    return bRet;
+    return dwRet;
 }
 
-static BOOL GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
+static DWORD GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, DWORD dwLength)
 {
-    BOOL bRet = FALSE;
+    DWORD dwRet = 0;
 
     if (dwProcessId == 0)
     {
-        return FALSE;
+        return 0;
     }
     
     /* PID = 4 or "System" */
     if (dwProcessId == 4)
     {
-        static const WCHAR szKernelPath[] = L"\\System32\\ntoskrnl.exe";
-        WCHAR szWinDir[MAX_PATH];
+        static const WCHAR szKernelExe[] = L"\\ntoskrnl.exe";
+        WCHAR szSystemDir[MAX_PATH];
         UINT uLength;
 
-        uLength = GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
+        uLength = GetSystemDirectoryW(szSystemDir, _countof(szSystemDir));
 
         if (uLength != 0)
         {
-            if (dwLength >= uLength + _countof(szKernelPath))
-            {
-                StringCchPrintfW(lpExePath, dwLength, L"%s%s", szWinDir, szKernelPath);
+            dwRet = uLength + _countof(szKernelExe);
 
-                bRet = TRUE;
+            if (dwLength >= dwRet)
+            {
+                StringCchPrintfW(lpExePath, dwLength, L"%s%s", szSystemDir, szKernelExe);
+
+                dwRet -= 1;
             }
         }
     }
@@ -1104,13 +1108,13 @@ static BOOL GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, DW
 
         if (hProcess)
         {
-            bRet = GetProcessExecutablePath(hProcess, lpExePath, dwLength);
+            dwRet = GetProcessExecutablePath(hProcess, lpExePath, dwLength);
 
             CloseHandle(hProcess);
         }
     }
 
-    return bRet;
+    return dwRet;
 }
 
 void ProcessPage_OnProperties(void)
@@ -1120,7 +1124,7 @@ void ProcessPage_OnProperties(void)
 
     dwProcessId = GetSelectedProcessId();
 
-    if (GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath)))
+    if (GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath)) != 0)
     {
         SHELLEXECUTEINFOW info = { 0 };
 
@@ -1145,7 +1149,7 @@ void ProcessPage_OnOpenFileLocation(void)
 
     dwProcessId = GetSelectedProcessId();
 
-    if (GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath)))
+    if (GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath)) != 0)
     {
         WCHAR szCmdLine[10 + _countof(szExePath)];
 
