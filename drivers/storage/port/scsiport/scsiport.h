@@ -76,6 +76,17 @@ typedef enum _SCSI_PORT_TIMER_STATES
     IDETimerResetWaitForDrdyAssert
 } SCSI_PORT_TIMER_STATES;
 
+typedef enum _SCSI_PORT_PNP_STATES
+{
+    SpcsNeverStarted = 0,
+    SpcsStarted,
+    SpcsPendingRemoval,
+    SpcsPendingStop,
+    SpcsSurpriseRemoved,
+    SpcsRemoved,
+    SpcsStopped
+} SCSI_PORT_PNP_STATES;
+
 typedef struct _CONFIGURATION_INFO
 {
     /* Identify info */
@@ -138,6 +149,8 @@ typedef struct _SCSI_PORT_COMMON_EXTENSION
     PDEVICE_OBJECT DeviceObject;
     PDEVICE_OBJECT LowerDevice;
     BOOLEAN IsFDO;
+    SCSI_PORT_PNP_STATES PnpState;
+    IO_REMOVE_LOCK RemoveLock;
 } SCSI_PORT_COMMON_EXTENSION, *PSCSI_PORT_COMMON_EXTENSION;
 
 // PDO device
