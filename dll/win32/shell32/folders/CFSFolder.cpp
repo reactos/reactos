@@ -1778,7 +1778,7 @@ HRESULT CFSFolder::_CreateShellExtInstance(const CLSID *pclsid, LPCITEMIDLIST pi
     FileStructW* pDataW = _ILGetFileStructW(pidl);
     if (!pDataW)
     {
-        ERR("Got garbage pidl\n");
+        ERR("Got garbage pidl:\n");
         pdump_always(pidl);
         return E_INVALIDARG;
     }

@@ -245,10 +245,9 @@ void _dbg_ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
 
 
 
-static void pdump_impl (LPCITEMIDLIST pidl)
+static void pdump_impl(LPCITEMIDLIST pidl)
 {
     LPCITEMIDLIST pidltemp = pidl;
-
 
     if (! pidltemp)
     {
@@ -310,11 +309,11 @@ static void pdump_impl (LPCITEMIDLIST pidl)
 
 void pdump(LPCITEMIDLIST pidl)
 {
-    if (!TRACE_ON(pidl)) return;
+    if (!TRACE_ON(pidl))
+        return;
 
-    return pdump_impl(pidl);
+    pdump_impl(pidl);
 }
-
 
 void pdump_always(LPCITEMIDLIST pidl)
 {
