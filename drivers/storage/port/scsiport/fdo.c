@@ -657,46 +657,6 @@ FdoStartAdapter(
 }
 
 static
-NTSTATUS
-FdoForwardAndWaitCompletion(
-    _In_ PDEVICE_OBJECT PortDevice,
-    _In_ PIRP Irp,
-    _Out_ PKEVENT Event)
-{
-    if (Irp->PendingReturned)
-        KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-static
-NTSTATUS
-FdoForwardAndWait(
-    _In_ PSCSI_PORT_DEVICE_EXTENSION PortExtension,
-    _Inout_ PIRP Irp)
-{
-    NTSTATUS Status;
-    KEVENT Event;
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-    IoSetCompletionRoutine(Irp,
-                           (PIO_COMPLETION_ROUTINE)&FdoForwardAndWaitCompletion,
-                           &Event,
-                           TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(PortExtension->Common.LowerDevice, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event,
-                              Executive, KernelMode,
-                              FALSE, NULL);
-        Status = Irp->IoStatus.Status;
-    }
-
-    return Status;
-}
-
-static
 inline
 NTSTATUS
 FdoCompletePnpIrp(_Inout_ PIRP Irp, _In_ NTSTATUS Status)
@@ -718,9 +678,11 @@ FdoHandleStart(
     DPRINT1("Starting device %wZ\n", &PortExtension->DeviceName);
 
     /* Forward the START_DEVICE IRP down the stack and wait */
-    Status = FdoForwardAndWait(PortExtension, Irp);
-    if (!NT_SUCCESS(Status))
-        return FdoCompletePnpIrp(Irp, Status);
+    if (!IoForwardIrpSynchronously(PortExtension->Common.LowerDevice, Irp))
+    {
+        DPRINT1("IoForwardIrpSynchronously failed\n");
+        return FdoCompletePnpIrp(Irp, STATUS_DRIVER_INTERNAL_ERROR);
+    }
 
     /* Get resource configuration */
     StackPos = IoGetCurrentIrpStackLocation(Irp);
