@@ -690,10 +690,17 @@ BOOL FindNext(HWND hWnd)
     {
         GetKeyName(szFullKey, COUNT_OF(szFullKey), hKeyRoot, pszFoundSubKey);
         SelectNode(g_pChildWnd->hTreeWnd, szFullKey);
-        SetValueName(g_pChildWnd->hListWnd, pszFoundValueName);
+
+        if (pszFoundValueName != NULL)
+        {
+            SetValueName(g_pChildWnd->hListWnd, pszFoundValueName);
+            free(pszFoundValueName);
+            SetFocus(g_pChildWnd->hListWnd);
+        }
+        else
+            SetFocus(g_pChildWnd->hTreeWnd);
+
         free(pszFoundSubKey);
-        free(pszFoundValueName);
-        SetFocus(g_pChildWnd->hListWnd);
     }
     return fSuccess || s_bAbort;
 }
