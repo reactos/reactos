@@ -121,7 +121,7 @@ target_link_libraries(glu32 cpprt)
 set_module_type(glu32 win32dll)
 
 if(NOT MSVC)
-    target_compile_options(glu32 PRIVATE -Wno-write-strings)
+    target_compile_options(glu32 PRIVATE -Wno-write-strings -Wno-uninitialized)
 elseif(USE_CLANG_CL)
     target_compile_options(glu32 PRIVATE -Wno-self-assign -Wno-unused-function -Wno-microsoft-include)
     target_compile_options(glu32 PRIVATE -Wno-deprecated-register -Wno-tautological-undefined-compare)

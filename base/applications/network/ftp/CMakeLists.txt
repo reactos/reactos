@@ -17,6 +17,10 @@ add_importlibs(ftp ws2_32 iphlpapi msvcrt kernel32)
 target_link_libraries(ftp oldnames)
 add_pch(ftp precomp.h SOURCE)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 9))
+   target_compile_options(ftp PRIVATE -Wno-free-nonheap-object)
+endif()
+
 if(MSVC)
     add_importlibs(ftp ntdll)
 endif()

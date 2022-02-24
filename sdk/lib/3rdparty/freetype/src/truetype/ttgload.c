@@ -1512,17 +1512,17 @@
                        FT_UInt    recurse_count,
                        FT_Bool    header_only )
   {
-    FT_Error        error        = FT_Err_Ok;
-    FT_Fixed        x_scale, y_scale;
-    FT_ULong        offset;
-    TT_Face         face         = loader->face;
-    FT_GlyphLoader  gloader      = loader->gloader;
-    FT_Bool         opened_frame = 0;
+    FT_Error             error        = FT_Err_Ok;
+    FT_Fixed             x_scale, y_scale;
+    FT_ULong             offset;
+    TT_Face              face         = loader->face;
+    FT_GlyphLoader       gloader      = loader->gloader;
+    FT_Bool              opened_frame = 0;
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
-    FT_StreamRec    inc_stream;
-    FT_Data         glyph_data;
-    FT_Bool         glyph_data_loaded = 0;
+    static FT_StreamRec  inc_stream;
+    FT_Data              glyph_data;
+    FT_Bool              glyph_data_loaded = 0;
 #endif
 
 

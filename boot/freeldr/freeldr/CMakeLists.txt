@@ -214,6 +214,9 @@ if(USE_CLANG_CL)
     # We need to reduce the binary size
     target_compile_options(freeldr_common PRIVATE "/Os")
 endif()
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 9))
+    target_compile_options(freeldr_common PRIVATE -Wno-format)
+endif()
 if(NOT MSVC AND ARCH STREQUAL "i386" AND SARCH STREQUAL "xbox")
   # Prevent a warning when doing a memcmp with address 0
   set_source_files_properties(arch/i386/xbox/xboxmem.c PROPERTIES COMPILE_FLAGS "-Wno-nonnull")

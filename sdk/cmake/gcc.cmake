@@ -45,8 +45,34 @@ add_compile_options(-pipe -fms-extensions -fno-strict-aliasing)
 # The case for C++ is handled through the reactos_c++ INTERFACE library
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
+# GCC/CLang and above defaults to fno-common from version 10/11 onward. We are not ready for this now
+add_compile_options(-fcommon)
+
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fno-aggressive-loop-optimizations)
+
+    if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 9)
+        add_compile_options(-fno-builtin-floor)
+        add_compile_options(-fno-builtin-floorf)
+        add_compile_options(-fno-builtin-ceil)
+        add_compile_options(-fno-builtin-ceilf)
+        add_compile_options(-fno-builtin-sqrt)
+        add_compile_options(-fno-builtin-sqrtf)
+
+        add_compile_options(-fno-builtin-sin)
+        add_compile_options(-fno-builtin-cos)
+        add_compile_options(-fno-builtin-sinf)
+        add_compile_options(-fno-builtin-cosf)
+        add_compile_options(-fno-builtin-sincos)
+        add_compile_options(-fno-builtin-sincosf)
+
+        add_compile_options(-Wno-stringop-overread)
+        add_compile_options(-Wno-stringop-overflow)
+        add_compile_options(-Wno-array-bounds)
+        add_compile_options(-Wno-array-parameter)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-class-memaccess>)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-class-conversion>)
+    endif()
     if (DBG)
         add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
     endif()
@@ -54,7 +80,6 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-microsoft>")
     add_compile_options(-Wno-pragma-pack)
     add_compile_options(-fno-associative-math)
-    add_compile_options(-fcommon)
 
     if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0)
         # disable "libcall optimization"

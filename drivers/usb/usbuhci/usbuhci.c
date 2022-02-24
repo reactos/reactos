@@ -39,19 +39,19 @@ UhciDumpHcdTD(PUHCI_HCD_TD TD)
     DPRINT("NextElement     - %p\n", TD->HwTD.NextElement);
     DPRINT("ControlStatus   - %08X\n", TD->HwTD.ControlStatus.AsULONG);
     DPRINT("Token           - %p\n", TD->HwTD.Token.AsULONG);
-if (TD->HwTD.Buffer)
-    DPRINT("Buffer          - %p\n", TD->HwTD.Buffer);
+if (TD->HwTD.Buffer) {
+    DPRINT("Buffer          - %p\n", TD->HwTD.Buffer); }
 
-if (TD->SetupPacket.bmRequestType.B)
-    DPRINT("bmRequestType   - %02X\n", TD->SetupPacket.bmRequestType.B);
-if (TD->SetupPacket.bRequest)
-    DPRINT("bRequest        - %02X\n", TD->SetupPacket.bRequest);
-if (TD->SetupPacket.wValue.W)
-    DPRINT("wValue          - %04X\n", TD->SetupPacket.wValue.W);
-if (TD->SetupPacket.wIndex.W)
-    DPRINT("wIndex          - %04X\n", TD->SetupPacket.wIndex.W);
-if (TD->SetupPacket.wLength)
-    DPRINT("wLength         - %04X\n", TD->SetupPacket.wLength);
+if (TD->SetupPacket.bmRequestType.B) {
+    DPRINT("bmRequestType   - %02X\n", TD->SetupPacket.bmRequestType.B); }
+if (TD->SetupPacket.bRequest) {
+    DPRINT("bRequest        - %02X\n", TD->SetupPacket.bRequest); }
+if (TD->SetupPacket.wValue.W) {
+    DPRINT("wValue          - %04X\n", TD->SetupPacket.wValue.W); }
+if (TD->SetupPacket.wIndex.W) {
+    DPRINT("wIndex          - %04X\n", TD->SetupPacket.wIndex.W); }
+if (TD->SetupPacket.wLength) {
+    DPRINT("wLength         - %04X\n", TD->SetupPacket.wLength); }
 
     DPRINT("PhysicalAddress - %p\n", TD->PhysicalAddress);
     DPRINT("Flags           - %X\n", TD->Flags);

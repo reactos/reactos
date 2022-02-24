@@ -1269,7 +1269,7 @@ static LONG CRYPT_OpenParentStore(DWORD dwFlags,
     void *pvSystemStoreLocationPara, HKEY *key)
 {
     HKEY root;
-    LPCWSTR base;
+    static LPCWSTR base;
 
     TRACE("(%08x, %p)\n", dwFlags, pvSystemStoreLocationPara);
 

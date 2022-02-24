@@ -4,11 +4,11 @@
 
 size_t __cdecl _tcsnlen(const _TCHAR * str, size_t count)
 {
- const _TCHAR * s;
+ const _TCHAR * s = str;
 
- if(str == 0) return 0;
+ if(s == 0) return 0;
 
- for(s = str; *s && count; ++ s, -- count);
+ while ( *s && count ) { ++ s, -- count; };
 
  return s - str;
 }

@@ -17,6 +17,17 @@ extern "C" {
 /* So that we can link */
 DEFINE_GUID(CLSID_WICImagingFactory, 0xcacaf262,0x9370,0x4615,0xa1,0x3b,0x9f,0x55,0x39,0xda,0x4c,0x0a);
 
+#if __GNUC__ >= 9
+// Evil hack to bypass compile, temporary until further notice
+// TODO: import rand_s into msvcex? Even more evil, but also more consistent
+int CDECL hack_rand_s(unsigned int *pval)
+{
+    return rand();
+}
+
+const void* _imp__rand_s = (const void*)&hack_rand_s;
+#endif
+
 /* Copied from ntoskrnl_vista */
 NTSTATUS WINAPI RtlUTF8ToUnicodeN(PWSTR uni_dest, ULONG uni_bytes_max,
                                   PULONG uni_bytes_written,
