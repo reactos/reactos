@@ -42,10 +42,12 @@ CenterWindow(
     GetWindowRect(hWndParent, &rcParent);
     GetWindowRect(hWnd, &rcWindow);
 
-    /// Check if the child window fits inside the parent window
+    /* Check if the child window fits inside the parent window */
     if (rcWindow.left < rcParent.left || rcWindow.top < rcParent.top ||
         rcWindow.right > rcParent.right || rcWindow.bottom > rcParent.bottom)
+    {
         return;
+    }
 
     SetWindowPos(
         hWnd,
