@@ -1,23 +1,11 @@
 /*
- * file system folder
- *
- * Copyright 1997             Marcus Meissner
- * Copyright 1998, 1999, 2002 Juergen Schmied
- * Copyright 2009             Andrew Hill
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     file system folder
+ * COPYRIGHT:   Copyright 1997 Marcus Meissner
+ *              Copyright 1998, 1999, 2002 Juergen Schmied
+ *              Copyright 2009 Andrew Hill
+ *              Copyright 2020 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #ifndef _CFSFOLDER_H_
@@ -88,12 +76,12 @@ class CFSFolder :
         // IShellFolderViewCB
         virtual HRESULT WINAPI MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-        DECLARE_REGISTRY_RESOURCEID(IDR_SHELLFSFOLDER)
-        DECLARE_NOT_AGGREGATABLE(CFSFolder)
+    DECLARE_REGISTRY_RESOURCEID(IDR_SHELLFSFOLDER)
+    DECLARE_NOT_AGGREGATABLE(CFSFolder)
 
-        DECLARE_PROTECT_FINAL_CONSTRUCT()
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-        BEGIN_COM_MAP(CFSFolder)
+    BEGIN_COM_MAP(CFSFolder)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolder2, IShellFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolder, IShellFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
@@ -101,7 +89,7 @@ class CFSFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder3, IPersistFolder3)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
-        END_COM_MAP()
+    END_COM_MAP()
 
     protected:
         HRESULT WINAPI GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_DATA *data);
