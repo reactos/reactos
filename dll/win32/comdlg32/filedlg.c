@@ -2526,12 +2526,12 @@ int FILEDLG95_ValidatePathAction(LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
             PathAddBackslashW(lpwstrTemp);
         }
 
-        dwAttributes = SFGAO_FOLDER;
+        dwAttributes = SFGAO_FOLDER | SFGAO_FILESYSANCESTOR;
         if(SUCCEEDED(IShellFolder_ParseDisplayName(*ppsf, hwnd, NULL, lpwstrTemp, &dwEaten, &pidl, &dwAttributes)))
         {
             /* the path component is valid, we have a pidl of the next path component */
             TRACE("parse OK attr=0x%08x pidl=%p\n", dwAttributes, pidl);
-            if(dwAttributes & SFGAO_FOLDER)
+            if((dwAttributes & (SFGAO_FOLDER | SFGAO_FILESYSANCESTOR)) == (SFGAO_FOLDER | SFGAO_FILESYSANCESTOR))
             {
                 if(FAILED(IShellFolder_BindToObject(*ppsf, pidl, 0, &IID_IShellFolder, (LPVOID*)&lpsfChild)))
                 {
@@ -4112,7 +4112,7 @@ static LPITEMIDLIST GetPidlFromName(IShellFolder *lpsf,LPWSTR lpcstrFileName)
 */
 static BOOL IsPidlFolder (LPSHELLFOLDER psf, LPCITEMIDLIST pidl)
 {
-	ULONG uAttr  = SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
+	ULONG uAttr  = SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR;
 	HRESULT ret;
 
 	TRACE("%p, %p\n", psf, pidl);
@@ -4121,7 +4121,7 @@ static BOOL IsPidlFolder (LPSHELLFOLDER psf, LPCITEMIDLIST pidl)
 
 	TRACE("-- 0x%08x 0x%08x\n", uAttr, ret);
 	/* see documentation shell 4.1*/
-        return uAttr & (SFGAO_FOLDER | SFGAO_HASSUBFOLDER);
+        return (uAttr & (SFGAO_FOLDER | SFGAO_HASSUBFOLDER)) && (uAttr & SFGAO_FILESYSANCESTOR);
 }
 
 /***********************************************************************
