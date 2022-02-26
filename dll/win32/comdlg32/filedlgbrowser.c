@@ -769,9 +769,9 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnDefaultCommand(ICommDl
     {
         HRESULT hRes;
 
-        ULONG  ulAttr = SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
+        ULONG  ulAttr = SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR;
         IShellFolder_GetAttributesOf(fodInfos->Shell.FOIShellFolder, 1, (LPCITEMIDLIST *)&pidl, &ulAttr);
-	if (ulAttr & (SFGAO_FOLDER | SFGAO_HASSUBFOLDER) )
+	if ((ulAttr & (SFGAO_FOLDER | SFGAO_HASSUBFOLDER)) && (ulAttr & SFGAO_FILESYSANCESTOR))
 	{
             hRes = IShellBrowser_BrowseObject(&This->IShellBrowser_iface,pidl,SBSP_RELATIVE);
             if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
