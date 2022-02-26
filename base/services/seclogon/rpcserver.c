@@ -59,6 +59,9 @@ SeclCreateProcessWithLogonW(
     _In_ SECL_REQUEST *pRequest,
     _Out_ SECL_RESPONSE *pResponse)
 {
+    STARTUPINFOW StartupInfo;
+    PROCESS_INFORMATION ProcessInfo;
+
     PROFILEINFOW ProfileInfo;
     HANDLE hToken = NULL;
 
@@ -111,9 +114,41 @@ SeclCreateProcessWithLogonW(
         }
     }
 
-    /* FIXME: Create Process */
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+
+    /* FIXME: Get startup info from the caller */
+
+    ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
+
+    /* Create Process */
+    rc = CreateProcessAsUserW(hToken,
+                              pRequest->ApplicationName,
+                              pRequest->CommandLine,
+                              NULL,  // lpProcessAttributes,
+                              NULL,  // lpThreadAttributes,
+                              FALSE, // bInheritHandles,
+                              pRequest->dwCreationFlags,
+                              NULL,  // lpEnvironment,
+                              pRequest->CurrentDirectory,
+                              &StartupInfo,
+                              &ProcessInfo);
+    if (rc == FALSE)
+    {
+        dwError = GetLastError();
+        WARN("CreateProcessAsUser() failed with Error %lu\n", dwError);
+        goto done;
+    }
+
+    /* FIXME: Pass process info to the caller */
 
 done:
+    if (ProcessInfo.hThread)
+        CloseHandle(ProcessInfo.hThread);
+
+    if (ProcessInfo.hProcess)
+        CloseHandle(ProcessInfo.hProcess);
+
     if (ProfileInfo.hProfile != NULL)
         UnloadUserProfile(hToken, ProfileInfo.hProfile);
 
