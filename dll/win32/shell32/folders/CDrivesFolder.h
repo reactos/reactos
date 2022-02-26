@@ -27,7 +27,8 @@ class CDrivesFolder :
     public CComCoClass<CDrivesFolder, &CLSID_MyComputer>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2
+    public IPersistFolder2,
+    public IContextMenuCB
 {
     private:
         /* both paths are parsible from the desktop */
@@ -69,6 +70,9 @@ class CDrivesFolder :
         // IPersistFolder2
         virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
 
+        // IContextMenuCB
+        virtual HRESULT WINAPI CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
         DECLARE_REGISTRY_RESOURCEID(IDR_MYCOMPUTER)
         DECLARE_CENTRAL_INSTANCE_NOT_AGGREGATABLE(CDrivesFolder)
 
@@ -80,6 +84,7 @@ class CDrivesFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenuCB, IContextMenuCB)
         END_COM_MAP()
 };
 

@@ -618,8 +618,21 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
     }
     else if (IsEqualIID(riid, IID_IContextMenu))
     {
-        WARN("IContextMenu not implemented\n");
-        hr = E_NOTIMPL;
+        HKEY hKeys[16];
+        UINT cKeys = 0;
+        AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
+
+        DEFCONTEXTMENU dcm;
+        dcm.hwnd = hwndOwner;
+        dcm.pcmcb = this;
+        dcm.pidlFolder = pidlRoot;
+        dcm.psf = this;
+        dcm.cidl = 0;
+        dcm.apidl = NULL;
+        dcm.cKeys = cKeys;
+        dcm.aKeys = hKeys;
+        dcm.punkAssociationInfo = NULL;
+        hr = SHCreateDefaultContextMenu(&dcm, riid, ppvOut);
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {
@@ -1007,4 +1020,44 @@ HRESULT WINAPI CDrivesFolder::GetCurFolder(LPITEMIDLIST *pidl)
 
     *pidl = ILClone(pidlRoot);
     return S_OK;
+}
+
+/************************************************************************/
+/* IContextMenuCB interface */
+
+HRESULT WINAPI CDrivesFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
+        return S_OK;
+
+    /* no data object means no selection */
+    if (!pdtobj)
+    {
+        if (uMsg == DFM_INVOKECOMMAND && wParam == 1)   // #1
+        {
+            // "System" properties
+            ShellExecuteW(hwndOwner,
+                          NULL,
+                          L"rundll32.exe",
+                          L"shell32.dll,Control_RunDLL sysdm.cpl",
+                          NULL,
+                          SW_SHOWNORMAL);
+        }
+        else if (uMsg == DFM_MERGECONTEXTMENU)
+        {
+            QCMINFO *pqcminfo = (QCMINFO *)lParam;
+            HMENU hpopup = CreatePopupMenu();
+            _InsertMenuItemW(hpopup, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED); // #0
+            _InsertMenuItemW(hpopup, 1, TRUE, 1, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED); // #1
+            Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu++, pqcminfo->idCmdFirst, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
+            DestroyMenu(hpopup);
+        }
+
+        return S_OK;
+    }
+
+    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
+        return S_OK;
+
+    return Shell_DefaultContextMenuCallBack(this, pdtobj);
 }
