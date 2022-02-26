@@ -98,4 +98,7 @@ extern const GUID CLSID_UnixDosFolder;
 extern const GUID SHELL32_AdvtShortcutProduct;
 extern const GUID SHELL32_AdvtShortcutComponent;
 
+HRESULT WINAPI
+Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj);
+
 #endif /* _PRECOMP_H__ */
