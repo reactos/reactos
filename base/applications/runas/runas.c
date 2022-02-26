@@ -80,7 +80,7 @@ wmain(
     LPCWSTR pszArg;
     int i, result = 0;
     BOOL bProfile = FALSE, bNoProfile = FALSE;
-    BOOL bEnv = FALSE;
+    BOOL bEnv = FALSE, bNetOnly = FALSE;
     PWSTR pszUserName = NULL;
     PWSTR pszDomain = NULL;
     PWSTR pszCommandLine = NULL;
@@ -121,6 +121,10 @@ wmain(
             else if (wcsicmp(pszArg, L"profile") == 0)
             {
                 bProfile = TRUE;
+            }
+            else if (wcsicmp(pszArg, L"netonly") == 0)
+            {
+                bNetOnly = TRUE;
             }
             else if (wcsicmp(pszArg, L"noprofile") == 0)
             {
@@ -224,7 +228,17 @@ wmain(
         }
     }
 
-    if (bProfile && bNoProfile)
+    /* Check for incompatible options */
+    if ((bProfile && bNoProfile) ||
+        (bProfile && bNetOnly))
+    {
+        Usage();
+        result = -1;
+        goto done;
+    }
+
+    /* Check for existing command line and user name */
+    if (pszCommandLine == NULL || pszUserName == NULL)
     {
         Usage();
         result = -1;
@@ -236,6 +250,12 @@ wmain(
 
     if (bNoProfile)
         dwLogonFlags &= ~LOGON_WITH_PROFILE;
+
+    if (bNetOnly)
+    {
+        dwLogonFlags  |= LOGON_NETCREDENTIALS_ONLY;
+        dwLogonFlags  &= ~LOGON_WITH_PROFILE;
+    }
 
     DPRINT("User: %S\n", pszUserName);
     DPRINT("Domain: %S\n", pszDomain);
