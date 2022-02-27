@@ -137,7 +137,6 @@ BEGIN
             MENUITEM "&Низкий", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Задать &соответствие...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Редактировать отладку &потоков...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

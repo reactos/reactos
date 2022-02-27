@@ -135,7 +135,6 @@ BEGIN
             MENUITEM "Ní&zká", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Nastavit &afinitu...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Upravit &kanály ladění...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

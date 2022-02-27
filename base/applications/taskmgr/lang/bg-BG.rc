@@ -135,7 +135,6 @@ BEGIN
             MENUITEM "&Ниско", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Установяване на с&родство...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Обработка на обезбубяващите &канали...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
