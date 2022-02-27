@@ -1,4 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
  * DATE OF TR:  29-11-2013
 */
 
@@ -139,7 +139,6 @@ BEGIN
             MENUITEM "Poshte", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Vendos prirje...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Modifiko Debug &Channels...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
