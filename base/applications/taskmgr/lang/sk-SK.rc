@@ -137,7 +137,6 @@ BEGIN
             MENUITEM "Níz&ka", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Nastaviť &afinitu...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Upraviť &kanály ladenia...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

@@ -137,7 +137,6 @@ BEGIN
             MENUITEM "&Basse", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Définir l'&affinité...", ID_PROCESS_PAGE_SETAFFINITY
-    MENUITEM "Éditer les &canaux de débogage...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

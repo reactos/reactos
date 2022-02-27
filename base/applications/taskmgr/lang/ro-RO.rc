@@ -141,7 +141,6 @@ BEGIN
             MENUITEM "Prioritate &minimă", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "A&finitate…", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "&Canale de depanare…", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
