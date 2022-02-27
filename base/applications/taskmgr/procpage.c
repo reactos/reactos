@@ -364,9 +364,6 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
     if (si.dwNumberOfProcessors < 2)
         RemoveMenu(hSubMenu, ID_PROCESS_PAGE_SETAFFINITY, MF_BYCOMMAND);
 
-    if (!DebugChannelsAreSupported())
-        RemoveMenu(hSubMenu, ID_PROCESS_PAGE_DEBUGCHANNELS, MF_BYCOMMAND);
-
     switch (dwProcessPriorityClass)    {
     case REALTIME_PRIORITY_CLASS:
         CheckMenuRadioItem(hPriorityMenu, ID_PROCESS_PAGE_SETPRIORITY_REALTIME, ID_PROCESS_PAGE_SETPRIORITY_LOW, ID_PROCESS_PAGE_SETPRIORITY_REALTIME, MF_BYCOMMAND);
@@ -481,7 +478,7 @@ void UpdateProcesses()
     SendMessage(hProcessPageListCtrl, WM_SETREDRAW, TRUE, 0);
 
     /* Select first item if any */
-    if ((ListView_GetNextItem(hProcessPageListCtrl, -1, LVNI_FOCUSED | LVNI_SELECTED) == -1) && 
+    if ((ListView_GetNextItem(hProcessPageListCtrl, -1, LVNI_FOCUSED | LVNI_SELECTED) == -1) &&
         (ListView_GetItemCount(hProcessPageListCtrl) > 0) && !bProcessPageSelectionMade)
     {
         ListView_SetItemState(hProcessPageListCtrl, 0, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
@@ -495,7 +492,7 @@ void UpdateProcesses()
     */
 }
 
-BOOL ProcessRunning(ULONG ProcessId) 
+BOOL ProcessRunning(ULONG ProcessId)
 {
     HANDLE hProcess;
     DWORD exitCode;
