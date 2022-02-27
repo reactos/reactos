@@ -137,7 +137,6 @@ BEGIN
             MENUITEM "Dü&şük", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "İ&lişkiyi Ayarla...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Y&anlışlık Ayıklama Yollarını Düzenle...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
