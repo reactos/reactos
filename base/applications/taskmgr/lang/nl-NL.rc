@@ -135,7 +135,6 @@ BEGIN
             MENUITEM "&Laag", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "&Affiniteit instellen...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Bewerk debug kanalen...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

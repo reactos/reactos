@@ -137,7 +137,6 @@ BEGIN
             MENUITEM "&Låg", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Välj &källa (FIXME)...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Ändra felsökningskanaler...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
