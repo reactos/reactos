@@ -1627,8 +1627,17 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     else if (TokenInformationType == LsaTokenInformationV1)
     {
         TOKEN_PRIVILEGES NoPrivileges = {0};
+        PSECURITY_DESCRIPTOR TokenSd;
+        ULONG TokenSdSize;
 
         TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        /* Set up a security descriptor for token object itself */
+        Status = LsapCreateTokenSd(&TokenInfo1->User, &TokenSd, &TokenSdSize);
+        if (!NT_SUCCESS(Status))
+        {
+            TokenSd = NULL;
+        }
 
         Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
         Qos.ImpersonationLevel = SecurityImpersonation;
@@ -1639,7 +1648,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
         ObjectAttributes.RootDirectory = NULL;
         ObjectAttributes.ObjectName = NULL;
         ObjectAttributes.Attributes = 0;
-        ObjectAttributes.SecurityDescriptor = NULL;
+        ObjectAttributes.SecurityDescriptor = TokenSd;
         ObjectAttributes.SecurityQualityOfService = &Qos;
 
         /* Create the logon token */
@@ -1656,6 +1665,10 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                &TokenInfo1->PrimaryGroup,
                                &TokenInfo1->DefaultDacl,
                                &RequestMsg->LogonUser.Request.SourceContext);
+
+        /* Free the allocated security descriptor */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TokenSd);
+
         if (!NT_SUCCESS(Status))
         {
             ERR("NtCreateToken failed (Status 0x%08lx)\n", Status);
