@@ -937,21 +937,12 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     return ret;
 }
 
-static BOOL DevicePathToDosPath(LPWSTR lpPath, DWORD dwLength)
+static BOOL DevicePathToDosPath(LPWSTR lpPath, DWORD dwSize)
 {
-    WCHAR *pszPath;
     WCHAR cDrive;
-    BOOL bSuccess = FALSE;
 
     /* Check if lpPath is a device path */
     if (_wcsnicmp(lpPath, L"\\Device\\", 8) != 0)
-    {
-        return FALSE;
-    }
-
-    pszPath = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
-
-    if (!pszPath)
     {
         return FALSE;
     }
@@ -963,29 +954,22 @@ static BOOL DevicePathToDosPath(LPWSTR lpPath, DWORD dwLength)
 
         szDrive[0] = cDrive;
         szDrive[1] = L':';
-        szDrive[2] = L'\0';
+        szDrive[2] = UNICODE_NULL;
 
         if (QueryDosDeviceW(szDrive, szDevPath, _countof(szDevPath)) != 0)
         {
             size_t len = wcslen(szDevPath);
-            bSuccess = (_wcsnicmp(lpPath, szDevPath, len) == 0);
 
-            if (bSuccess)
+            if (_wcsnicmp(lpPath, szDevPath, len) == 0)
             {
-                StringCchPrintfW(pszPath, dwLength, L"%s%s", szDrive, lpPath + len);
-                break;
+                StringCbPrintfW(lpPath, dwSize, L"%s%s", szDrive, lpPath + len);
+                
+                return TRUE;
             }
         }
     }
 
-    if (bSuccess)
-    {
-        StringCchCopyW(lpPath, dwLength, pszPath);
-    }
-
-    HeapFree(GetProcessHeap(), 0, pszPath);
-
-    return bSuccess;
+    return FALSE;
 }
 
 static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dwLength)
@@ -993,7 +977,7 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
     BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
     PVOID DynamicBuffer = NULL;
     PUNICODE_STRING ImagePath = NULL;
-    WCHAR *pszExePath = NULL;
+    LPWSTR pszExePath = NULL;
     ULONG SizeNeeded;
     NTSTATUS Status;
     DWORD dwRet = 0;
@@ -1038,10 +1022,9 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
         goto Cleanup;
     }
 
-    memcpy(pszExePath, ImagePath->Buffer, ImagePath->Length);
-    pszExePath[ImagePath->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    StringCbCopyNW(pszExePath, ImagePath->Length + sizeof(WCHAR), ImagePath->Buffer, ImagePath->Length);
 
-    if (!DevicePathToDosPath(pszExePath, (ImagePath->Length / sizeof(WCHAR)) + 1))
+    if (!DevicePathToDosPath(pszExePath, ImagePath->Length + sizeof(WCHAR)))
     {
         goto Cleanup;
     }
@@ -1121,8 +1104,8 @@ void ProcessPage_OnProperties(void)
 {
     DWORD dwProcessId;
     WCHAR szPath[MAX_PATH];
-    WCHAR *pszPath = NULL;
-    WCHAR *pszExePath = NULL;
+    LPWSTR pszPath = NULL;
+    LPWSTR pszExePath = NULL;
     DWORD dwLength;
     SHELLEXECUTEINFOW info = { 0 };
 
@@ -1178,9 +1161,9 @@ void ProcessPage_OnOpenFileLocation(void)
 {
     DWORD dwProcessId;
     WCHAR szPath[MAX_PATH];
-    WCHAR *pszPath = NULL;
-    WCHAR *pszExePath = NULL;
-    WCHAR *pszCmdLine = NULL;
+    LPWSTR pszPath = NULL;
+    LPWSTR pszExePath = NULL;
+    LPWSTR pszCmdLine = NULL;
     DWORD dwLength;
 
     dwProcessId = GetSelectedProcessId();
