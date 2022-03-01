@@ -44,7 +44,7 @@ BEGIN
     AUTOCHECKBOX "&Fehlgeschlagene Leitungen zukünftig nicht verwenden.", 1030, 38, 226, 222, 10
     DEFPUSHBUTTON "&Annehmen", 1, 135, 242, 60, 14
     PUSHBUTTON "A&uflegen", 2, 201, 242, 60, 14
-    LTEXT "Wenn nur eine nur einzige Leitung verbunden ist, ist der Server nicht zum Multi-Link-Anrufe annehmen ausgelegt. Aktivieren Sie das Kontrollkästchen 'Fehlgeschlagene Leitungen zukünftig nicht verwenden', um unnötige Verbindungskosten zu vermeiden.", -1, 37, 36, 224, 44
+    LTEXT "Wenn nur eine einzige Leitung verbunden ist, ist der Server nicht zum Multi-Link-Anrufe annehmen ausgelegt. Aktivieren Sie das Kontrollkästchen 'Fehlgeschlagene Leitungen zukünftig nicht verwenden', um unnötige Verbindungskosten zu vermeiden.", -1, 37, 36, 224, 44
 END
 
 105 DIALOGEX 0, 0, 261, 253
@@ -404,8 +404,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, 1278, 7, 7, 21, 20, WS_GROUP
     LTEXT "Es bestehen Verbindungen zu einem NetWare kompatiblen Netzwerk. Diese Verbindungen werden beendet, sobald die PPP-IPX-Verbindung hergestellt wurde.", 1279, 42, 7, 215, 37
-    LTEXT "Schließen Sie vor dem wählen zu Verhinderung von Datenverlust entweder alle Dateien, dies diese Verbindung nutzen, oder deaktivieren Sie das IPX-Protokoll für diesen Eintrag.", 1280, 42, 46, 215, 38, NOT WS_GROUP
-    AUTOCHECKBOX "&Diese Nachricht in der Zukunft nicht mehr anzeigen", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    LTEXT "Schließen Sie vor dem Wählen zu Vermeidung von Datenverlust entweder alle Dateien, die diese Verbindung nutzen, oder deaktivieren Sie das IPX-Protokoll für diesen Eintrag.", 1280, 42, 46, 215, 38, NOT WS_GROUP
+    AUTOCHECKBOX "&Diese Nachricht künftig nicht mehr anzeigen", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     DEFPUSHBUTTON "OK", 1, 65, 112, 60, 14, WS_GROUP
     PUSHBUTTON "Abbrechen", 2, 134, 112, 60, 14
 END
@@ -439,7 +439,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "X.25-Anmeldeeinstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wählen Sie Ihren X.25 Netzwerkanbieter and und geben Sie Ihre X.121 Adresse des Remoteservers ein:", 1408, 7, 4, 220, 27
+    LTEXT "Wählen Sie Ihren X.25 Netzwerkanbieter aus und geben Sie die X.121 Adresse des Remoteservers ein:", 1408, 7, 4, 220, 27
     LTEXT "&Netzwerk:", 1410, 9, 35, 213, 8, NOT WS_GROUP
     COMBOBOX 1406, 9, 46, 215, 125, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "X.121 &Adresse:", 1407, 9, 66, 213, 8, NOT WS_GROUP
@@ -528,7 +528,7 @@ BEGIN
     LTEXT "Geben Sie einen Namen für diese Verbindung ein:", -1, 8, 4, 190, 8
     EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
     LTEXT "Klicken Sie auf Fertig stellen, um die Verbindung in Netzwerkverbindungen zu speichern", -1, 8, 38, 193, 16
-    LTEXT "Um diese Verbindung später zu beareiten, markieren Sie diese Verbindung, und klicken Sie auf Datei und anschließend auf Eigenschaften.", -1, 8, 58, 193, 24
+    LTEXT "Um diese Verbindung später zu bearbeiten, markieren Sie die Verbindung, und klicken Sie auf Datei und anschließend auf Eigenschaften.", -1, 8, 58, 193, 24
 END
 
 155 DIALOGEX 0, 0, 231, 215
@@ -789,7 +789,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Fertigstellen des Assistenten", 1352, 122, 5, 192, 32
     LTEXT "Um diese Schnittstelle zu erstellen und aktivieren, klicken Sie auf Fertig.", 1354, 122, 41, 192, 26, NOT WS_GROUP
-    LTEXT "Öffnen Sie das RAS-Snap-In, klicken Sie auf Netzwerkschnittstellen, markieren Sie die Schnittstelle und klicken Sie anschließend Sie auf Eigenschaften, um die Schnittstelle zu bearbeiten.", 1355, 122, 68, 190, 39, NOT WS_GROUP
+    LTEXT "Öffnen Sie das RAS-Snap-In, klicken Sie auf Netzwerkschnittstellen, markieren Sie die Schnittstelle und klicken Sie anschließend auf Eigenschaften, um die Schnittstelle zu bearbeiten.", 1355, 122, 68, 190, 39, NOT WS_GROUP
 END
 
 179 DIALOGEX 6, 18, 317, 143
@@ -834,7 +834,7 @@ CAPTION "Sicherheit"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Richtlinien für die Authentifizierung und Verschlüsselung", 1367, 7, 8, 200, 98, WS_GROUP
-    AUTORADIOBUTTON "&Beliebige Authentifizierung incl. Klartext akzeptieren", 1370, 14, 24, 185, 10
+    AUTORADIOBUTTON "&Beliebige Authentifizierung inkl. Klartext akzeptieren", 1370, 14, 24, 185, 10
     AUTORADIOBUTTON "Nur &verschlüsselte Authentifizierung akzeptieren", 1373, 14, 39, 183, 10
     AUTORADIOBUTTON "Nur &MS-verschlüsselte Authentifizierung akzeptieren", 1374, 14, 53, 184, 10
     AUTOCHECKBOX "&Datenverschlüsselung benötigt", 1363, 33, 67, 165, 10, WS_GROUP
@@ -1204,7 +1204,7 @@ BEGIN
     EDITTEXT 1566, 7, 47, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
     AUTORADIOBUTTON "&TCP", 1548, 128, 49, 30, 10, NOT WS_TABSTOP
     AUTORADIOBUTTON "&UDP", 1567, 166, 49, 31, 10, NOT WS_TABSTOP
-    LTEXT "&Internetserverantworten auf folgenden Ports bzw. Portbereichen abhören: (z. B.: 1024-1209, 1300-1310, 1450)", -1, 7, 70, 207, 22
+    LTEXT "&Internetserverantworten auf folgenden Ports bzw. Portbereichen abhören: (z.B.: 1024-1209, 1300-1310, 1450)", -1, 7, 70, 207, 22
     LTEXT "T&CP:", -1, 7, 100, 28, 8
     EDITTEXT 1569, 50, 97, 162, 14, ES_AUTOHSCROLL
     LTEXT "UD&P:", -1, 7, 121, 30, 8
@@ -1220,7 +1220,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Beschreibung des Dienstes", -1, 7, 5, 203, 8
     EDITTEXT 1552, 7, 18, 205, 14, ES_AUTOHSCROLL
-    LTEXT "&Name oder IP-Adresse (z. B. 192.168.0.12) des Hostcomputers für diesen Dienst im Netzwerk:", -1, 7, 37, 208, 16
+    LTEXT "&Name oder IP-Adresse (z.B. 192.168.0.12) des Hostcomputers für diesen Dienst im Netzwerk:", -1, 7, 37, 208, 16
     EDITTEXT 1556, 7, 57, 203, 14, ES_AUTOHSCROLL
     LTEXT "&Portnummer des Dienstes:", -1, 7, 85, 203, 8
     EDITTEXT 1553, 7, 97, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1456,7 +1456,7 @@ BEGIN
     LTEXT "&Hostname oder IP-Adresse des Ziels (wie z.B. reactos.org oder 145.52.0.1):", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "Erste Verbindung", 1431, 9, 48, 213, 78
-    LTEXT "ReactOS kann zuerst Verbindungen zu öffentlichen Netzwerken, wie dem Internet, herstellen, bevor versucht wird, virtuelle Verbindungen aufzubauen.", 1432, 17, 63, 199, 24
+    LTEXT "ReactOS kann zuerst Verbindungen zu öffentlichen Netzwerken wie dem Internet herstellen, bevor versucht wird, virtuelle Verbindungen aufzubauen.", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "&Andere Verbindung zuerst wählen:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "&Symbol bei Verbindung im Infobereich der Taskleiste anzeigen", 1120, 10, 192, 213, 13
@@ -1749,8 +1749,8 @@ BEGIN
     PUSHBUTTON "&Löschen", 7045, 80, 107, 67, 14, WS_GROUP
     PUSHBUTTON "&Eigenschaften", 7046, 153, 107, 67, 14, WS_GROUP
     AUTOCHECKBOX "Von al&len Benutzern sichere Passwörter und Daten verlangen.", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Direkt angeschlossenen Geräten, wie z. B. Palmtop-Computern die Verbindung ohne Passworteingabe gestatten", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
-    LTEXT "Bedenken Sie, dass andere Faktoren, wie z. B. deaktivierte Benutzerkonten, das Herstellen von Verbindungen beeinflussen können.", -1, 9, 126, 212, 23
+    AUTOCHECKBOX "&Direkt angeschlossenen Geräten, wie z.B. Palmtop-Computern die Verbindung ohne Passworteingabe gestatten", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
+    LTEXT "Bedenken Sie, dass andere Faktoren, wie z.B. deaktivierte Benutzerkonten, das Herstellen von Verbindungen beeinflussen können.", -1, 9, 126, 212, 23
 END
 
 7049 DIALOGEX 0, 0, 317, 143
@@ -1797,7 +1797,7 @@ BEGIN
     AUTORADIOBUTTON "&VPN-Verbindungen zulassen", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "VPN-Verbindungen &nicht zulassen", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     LTEXT "Sollen VPN-Verbindungen mit diesem Computer zugelassen werden?", -1, 17, 49, 275, 8
-    LTEXT "Wenn Sie VPN-Verbindungen zulassen, wird der Internetverbindungsfirewall so modifiziert, dass der Computer VPN-Pakete senden und empfangen kann.", -1, 10, 25, 293, 25
+    LTEXT "Wenn Sie VPN-Verbindungen zulassen, wird die Internetverbindungsfirewall so modifiziert, dass der Computer VPN-Pakete senden und empfangen kann.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -2252,7 +2252,7 @@ BEGIN
     1658 "Durchsuchen"
     1663 "Private Netzwerkverbindung auswählen"
     1664 "Eine Verbindung muss für das private Netzwerk ausgewählt werden, um die Internetverbindungsfregabe zu aktivieren. Wählen Sie eine Verbindung aus der Liste der verfügbaren Verbindungen aus."
-    1665 "Nachrichten, die an diesen Computer gesendet werden, werden an den Absender zurückgesendet. Dies wird im Allgemeinen zur Problembehandlung verwendet, z. B. durch Ping eines anderen Computers."
+    1665 "Nachrichten, die an diesen Computer gesendet werden, werden an den Absender zurückgesendet. Dies wird im Allgemeinen zur Problembehandlung verwendet, z.B. durch Ping eines anderen Computers."
     1666 "An diesen Computer gesendete Daten können mit einer Meldung, die das Empfangsdatum enthält, bestätigt werden."
     1667 "Dieser Computer antwortet auf Anfragen bezüglich Informationen über das öffentliche Netzwerk, an das er angeschlossen ist."
     1668 "Dieser Computer antwortet auf Anfragen bezüglich Informationen erkannter Routen."
@@ -2297,7 +2297,7 @@ BEGIN
     7330 "Die Benutzerdatenbank des Systems kann aufgrund eines internen Fehlers nicht wieder geladen werden."
     7331 "Ein interner Fehler ist aufgetreten. Das Handle für die lokale Benutzerdatenbank ist beschädigt."
     7332 "Die für die Anzeige der Registerkarte Benutzer notwendigen Ressourcen konnten nicht geladen werden."
-    7333 "Beim rückgängigmachen der Änderungen, die Sie an der lokalen Benutzerdatenbank durchgeführt haben, ist ein interner Fehler aufgetreten."
+    7333 "Beim Rückgängigmachen der Änderungen, die Sie an der lokalen Benutzerdatenbank durchgeführt haben, ist ein interner Fehler aufgetreten."
     7334 "Das Handle für die Gerätedatenbank ist beschädigt."
     7335 "Die für die Anzeige der Registerkarte Allgemein notwendigen Ressourcen konnten nicht geladen werden."
     7336 "Beim Übertragen der VPN-/gerätespezifischen Änderungen, die Sie durchgeführt haben, ist ein Fehler aufgetreten."
