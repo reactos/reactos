@@ -168,7 +168,7 @@ PVOID DesktopPtrToUser(PVOID ptr)
 
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 {
-    INT index;
+    UINT index;
     PUSER_HANDLE_TABLE ht;
     PUSER_HANDLE_ENTRY he;
     WORD generation;
@@ -184,7 +184,10 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
     he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - g_SharedInfo.ulSharedDelta);
 
     index = (LOWORD(hObject) - FIRST_USER_HANDLE) >> 1;
-    if (index < 0 || ht->nb_handles <= index || he[index].type != uType)
+    if ((INT)index < 0 || ht->nb_handles <= index || he[index].type != uType)
+        return NULL;
+
+    if (he[index].flags & HANDLEENTRY_DESTROY)
         return NULL;
 
     generation = HIWORD(hObject);
