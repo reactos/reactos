@@ -149,12 +149,30 @@ VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
     plfA->lfFaceName[cch] = 0;
 }
 
+PVOID DesktopPtrToUser(PVOID ptr)
+{
+    PCLIENTINFO pci = GetWin32ClientInfo();
+    PDESKTOPINFO pdi = pci->pDeskInfo;
+
+    ASSERT(ptr != NULL);
+    ASSERT(pdi != NULL);
+    if (pdi->pvDesktopBase <= ptr && ptr < pdi->pvDesktopLimit)
+    {
+        return (PVOID)((ULONG_PTR)ptr - pci->ulClientDelta);
+    }
+    else
+    {
+        return (PVOID)NtUserCallOneParam((DWORD_PTR)ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING);
+    }
+}
+
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 {
     INT index;
     PUSER_HANDLE_TABLE ht;
     PUSER_HANDLE_ENTRY he;
     WORD generation;
+    LPVOID ptr;
 
     if (!NtUserValidateHandleSecure(hObject))
         return NULL;
@@ -173,7 +191,11 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
     if (generation != he[index].generation && generation && generation != 0xFFFF)
         return NULL;
 
-    return &he[index];
+    ptr = he[index].ptr;
+    if (ptr)
+        ptr = DesktopPtrToUser(ptr);
+
+    return ptr;
 }
 
 PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
