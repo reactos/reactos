@@ -81,11 +81,11 @@ START_TEST(ImmGetImeInfoEx)
     ok(InfoEx.wszImeFile[0] != 0, "wszImeFile was empty\n");
     hKL = hOldKL;
 
-    // ImeInfoExImeWindow
+    // ImeInfoExKeyboardLayoutTFS
     hOldKL = hKL;
     FillMemory(&InfoEx, sizeof(InfoEx), 0xCC);
     InfoEx.wszUIClass[0] = InfoEx.wszImeFile[0] = 0;
-    ret = fnImmGetImeInfoEx(&InfoEx, ImeInfoExImeWindow, &hKL);
+    ret = fnImmGetImeInfoEx(&InfoEx, ImeInfoExKeyboardLayoutTFS, &hKL);
     PrintInfoEx(&InfoEx);
     ok_int(ret, TRUE);
     if (IS_IME_HKL(InfoEx.hkl))
@@ -103,7 +103,34 @@ START_TEST(ImmGetImeInfoEx)
     ok(InfoEx.wszImeFile[0] != 0, "wszImeFile was empty\n");
     hKL = hOldKL;
 
-    // TODO: ImeInfoExImeFileName
+    // ImeInfoExImeWindow
+    hOldKL = hKL;
+    FillMemory(&InfoEx, sizeof(InfoEx), 0xCC);
+    ret = fnImmGetImeInfoEx(&InfoEx, ImeInfoExImeWindow, &hKL);
+    ok_int(ret, FALSE);
+    bMatch = TRUE;
+    for (ib = 0; ib < sizeof(InfoEx); ++ib)
+    {
+        if (((LPBYTE)&InfoEx)[ib] != 0xCC)
+        {
+            bMatch = FALSE;
+            break;
+        }
+    }
+    ok_int(bMatch, TRUE);
+
+    // ImeInfoExImeFileName
+    hOldKL = hKL;
+    FillMemory(&InfoEx, sizeof(InfoEx), 0xCC);
+    InfoEx.wszUIClass[0] = InfoEx.wszImeFile[0] = 0;
+    ret = fnImmGetImeInfoEx(&InfoEx, ImeInfoExImeFileName, L"THISISTEST");
+    PrintInfoEx(&InfoEx);
+    ok_int(ret, FALSE);
+    ok(InfoEx.ImeInfo.dwPrivateDataSize >= 4, "\n");
+    ok_wstr(InfoEx.wszUIClass, L"");
+    ok_long(InfoEx.dwImeWinVersion, 0xCCCCCCCC);
+    ok_wstr(InfoEx.wszImeFile, L"THISISTEST");
+    hKL = hOldKL;
 
     // 4
     hOldKL = hKL;
