@@ -21,7 +21,7 @@ BEGIN
     IDS_USAGE17 "   Programm        Befehlszeile einer ausführbaren Datei. Siehe unten\n                   aufgeführte Beispiele.\n\n"
     IDS_USAGE18 "Beispiel:\n"
     IDS_USAGE19 "> runas /noprofile /user:mymachine\\administrator cmd\n\n"
-    IDS_USAGE20 "HINWEIS:  /profile is nicht kompatibel mit /netonly.\n"
+    IDS_USAGE20 "HINWEIS:  /profile ist nicht kompatibel mit /netonly.\n"
 
     IDS_START     "Es wird versucht, %s als Benutzer ""%s\\%s"" zu starten...\n"
     IDS_RUN_ERROR "RUNAS-FEHLER: %s kann nicht ausgeführt werden\n"
