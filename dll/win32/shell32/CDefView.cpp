@@ -1027,7 +1027,8 @@ HRESULT CDefView::FillList()
 
 LRESULT CDefView::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    m_ListView.UpdateWindow();
+    if (m_ListView.IsWindow())
+        m_ListView.UpdateWindow();
     bHandled = FALSE;
     return 0;
 }

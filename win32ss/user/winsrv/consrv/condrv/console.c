@@ -116,9 +116,10 @@ ConDrvInitConsole(
 
     /* Set-up the code page */
     if (IsValidCodePage(ConsoleInfo->CodePage))
-        Console->InputCodePage = Console->OutputCodePage = ConsoleInfo->CodePage;
-
-    Console->IsCJK = IsCJKCodePage(Console->OutputCodePage);
+    {
+        CON_SET_OUTPUT_CP(Console, ConsoleInfo->CodePage);
+        Console->InputCodePage = ConsoleInfo->CodePage;
+    }
 
     /* Initialize a new text-mode screen buffer with default settings */
     ScreenBufferInfo.ScreenBufferSize = ConsoleInfo->ScreenBufferSize;
@@ -424,27 +425,24 @@ ConDrvSetConsoleCP(IN PCONSOLE Console,
                    IN UINT CodePage,
                    IN BOOLEAN OutputCP)
 {
-    BOOL Success = TRUE;
-
     if (Console == NULL || !IsValidCodePage(CodePage))
         return STATUS_INVALID_PARAMETER;
 
     if (OutputCP)
     {
         /* Request the terminal to change its code page support */
-        Success = TermSetCodePage(Console, CodePage);
-        if (Success)
-        {
-            Console->OutputCodePage = CodePage;
-            Console->IsCJK = IsCJKCodePage(CodePage);
-        }
+        if (!TermSetCodePage(Console, CodePage))
+            return STATUS_UNSUCCESSFUL;
+
+        /* All is fine, actually set the output code page */
+        CON_SET_OUTPUT_CP(Console, CodePage);
+        return STATUS_SUCCESS;
     }
     else
     {
         Console->InputCodePage = CodePage;
+        return STATUS_SUCCESS;
     }
-
-    return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 /* EOF */

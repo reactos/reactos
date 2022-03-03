@@ -1410,7 +1410,8 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     FileStructW* pDataW = _ILGetFileStructW(pidl);
     if (!pDataW)
     {
-        ERR("Got garbage pidl\n");
+        ERR("Got garbage pidl:\n");
+        pdump_always(pidl);
         return E_INVALIDARG;
     }
 
@@ -1778,6 +1779,7 @@ HRESULT CFSFolder::_CreateShellExtInstance(const CLSID *pclsid, LPCITEMIDLIST pi
     if (!pDataW)
     {
         ERR("Got garbage pidl\n");
+        pdump_always(pidl);
         return E_INVALIDARG;
     }
 
@@ -1812,8 +1814,8 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
             PUITEMID_CHILD pidlChild = ILClone(ILFindLastID(m_pidlRoot));
             LPITEMIDLIST pidlParent = ILClone(m_pidlRoot);
             ILRemoveLastID(pidlParent);
-            HRESULT hr = SH_ShowPropertiesDialog(m_sPathTarget, pidlParent, &pidlChild);
-            if (FAILED(hr))
+            BOOL bSuccess = SH_ShowPropertiesDialog(m_sPathTarget, pidlParent, &pidlChild);
+            if (!bSuccess)
                 ERR("SH_ShowPropertiesDialog failed\n");
             ILFree(pidlChild);
             ILFree(pidlParent);

@@ -27,7 +27,7 @@
 #include <winver.h>
 
 #include <imm.h>
-#include <ddk/imm.h>
+#include <ddk/immdev.h>
 
 #define NTOS_MODE_USER
 #include <ndk/umtypes.h>
@@ -94,6 +94,7 @@ LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
 PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL);
 LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
+BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID);
 
 static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
 {
@@ -111,7 +112,7 @@ static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 
 #define ImeDpi_IsUnicode(pImeDpi)   ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
-#define Imm32IsImmMode()            (g_psi && (g_psi->dwSRVIFlags & SRVINFO_IMM32))
+#define IS_IMM_MODE()               (g_psi && (g_psi->dwSRVIFlags & SRVINFO_IMM32))
 #define Imm32IsCiceroMode()         (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
 #define Imm32Is16BitMode()          (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
 
@@ -155,3 +156,10 @@ UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts);
 BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
 HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
 BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
+
+static inline PTHREADINFO FASTCALL Imm32CurrentPti(VOID)
+{
+    if (NtCurrentTeb()->Win32ThreadInfo == NULL)
+        NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
+    return NtCurrentTeb()->Win32ThreadInfo;
+}

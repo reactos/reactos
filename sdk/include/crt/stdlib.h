@@ -1432,7 +1432,7 @@ extern "C" {
   _Check_return_ long long __cdecl llabs(_In_ long long _j);
   #pragma function(llabs)
 #endif
-  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llabs(_In_ long long _j) { return (_j >= 0 ? _j : -_j); }
+  __MINGW_EXTENSION _Check_return_ __CRT_INLINE long long __cdecl llabs(_In_ long long _j) { return (_j >= 0 ? _j : -_j); }
 
   __MINGW_EXTENSION long long  __cdecl strtoll(const char* __restrict__, char** __restrict, int);
   __MINGW_EXTENSION unsigned long long  __cdecl strtoull(const char* __restrict__, char** __restrict__, int);

@@ -68,6 +68,8 @@ void CImgAreaWindow::drawZoomFrame(int mouseX, int mouseY)
 
 LRESULT CImgAreaWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (!IsWindow() || !sizeboxLeftTop.IsWindow())
+        return 0;
     int imgXRes = imageModel.GetWidth();
     int imgYRes = imageModel.GetHeight();
     sizeboxLeftTop.MoveWindow(
@@ -105,7 +107,7 @@ LRESULT CImgAreaWindow::OnEraseBkGnd(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
     HDC hdc = (HDC)wParam;
 
     if (toolsModel.GetActiveTool() == TOOL_TEXT && !toolsModel.IsBackgroundTransparent() &&
-        textEditWindow.IsWindowVisible())
+        ::IsWindowVisible(textEditWindow))
     {
         // Do clipping
         HWND hChild = textEditWindow;
@@ -143,11 +145,11 @@ LRESULT CImgAreaWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         DeleteObject(SelectObject(hdc, oldPen));
     }
     EndPaint(&ps);
-    if (selectionWindow.IsWindowVisible())
+    if (selectionWindow.IsWindow())
         selectionWindow.Invalidate(FALSE);
-    if (miniature.IsWindowVisible())
+    if (miniature.IsWindow())
         miniature.Invalidate(FALSE);
-    if (textEditWindow.IsWindowVisible())
+    if (textEditWindow.IsWindow())
         textEditWindow.Invalidate(FALSE);
     return 0;
 }
@@ -257,7 +259,7 @@ LRESULT CImgAreaWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL&
         }
         else
         {
-            if (drawing || ToolBase::pointSP != 0)
+            if (drawing || ToolBase::pointSP != 0 || selectionWindow.IsWindowVisible())
                 cancelDrawing();
         }
     }
@@ -408,4 +410,11 @@ LRESULT CImgAreaWindow::OnCtlColorEdit(UINT nMsg, WPARAM wParam, LPARAM lParam, 
     HDC hdc = (HDC)wParam;
     SetBkMode(hdc, TRANSPARENT);
     return (LRESULT)GetStockObject(NULL_BRUSH);
+}
+
+void CImgAreaWindow::finishDrawing()
+{
+    toolsModel.OnFinishDraw();
+    drawing = FALSE;
+    Invalidate(FALSE);
 }

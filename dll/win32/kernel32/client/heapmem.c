@@ -166,10 +166,10 @@ HeapValidate(HANDLE hHeap,
  */
 DWORD
 WINAPI
-HeapCreateTagsW(HANDLE hHeap,
-                DWORD dwFlags,
-                PWSTR lpTagName,
-                PWSTR lpTagSubName)
+HeapCreateTagsW(_In_ HANDLE hHeap,
+                _In_ DWORD dwFlags,
+                _In_opt_ PWSTR lpTagName,
+                _In_ PWSTR lpTagSubName)
 {
     /* Call the RTL API */
     return RtlCreateTagHeap(hHeap,

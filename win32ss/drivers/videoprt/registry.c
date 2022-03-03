@@ -668,7 +668,12 @@ IntCreateRegistryPath(
         }
     }
 
-    if (Valid)
+    if (!VideoPortUseNewKey)
+    {
+        INFO_(VIDEOPRT, "Using old registry key as 'UseNewKey' is FALSE\n");
+        Valid = FALSE;
+    }
+    else if (Valid)
     {
         DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert1) + sizeof(Insert2)
                                           + DeviceNumberString.Length;

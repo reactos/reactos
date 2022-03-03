@@ -320,6 +320,12 @@ ConDrvUnpause(PCONSOLE Console);
 #define GetConsoleInputBufferMode(Console)  \
     (Console)->InputBuffer.Mode
 
+#define CON_SET_OUTPUT_CP(Console, CodePage)\
+do { \
+    (Console)->OutputCodePage = (CodePage); \
+    (Console)->IsCJK = IsCJKCodePage((Console)->OutputCodePage); \
+} while (0)
+
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);

@@ -167,29 +167,29 @@ END
 
 IDD_USERPROFILE_TYPE DIALOGEX 6, 18, 225, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Change Profile Type"
+CAPTION "Изменение типа профиля"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
-    AUTORADIOBUTTON "&Roaming profile", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
-    AUTORADIOBUTTON "&Local profile", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
+    AUTORADIOBUTTON "&Перемещаемый профиль", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
+    AUTORADIOBUTTON "&Локальный профиль", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
     DEFPUSHBUTTON "OK", IDOK, 60, 82, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 122, 82, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 122, 82, 50, 14
 END
 
 IDD_USERPROFILE_COPY DIALOGEX 6, 18, 261, 133
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Copy To"
+CAPTION "Копирование профиля"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Copy &profile to", -1, 8, 9, 185, 52
+    GROUPBOX "&Копировать профиль в", -1, 8, 9, 185, 52
     EDITTEXT IDC_USERPROFILE_COPY_PATH, 15, 23, 167, 12, ES_AUTOHSCROLL
-    PUSHBUTTON "&Browse", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
-    GROUPBOX "Permitted to use", -1, 8, 77, 185, 48
+    PUSHBUTTON "&Обзор", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
+    GROUPBOX "Разрешить использование", -1, 8, 77, 185, 48
     LTEXT "", IDC_USERPROFILE_COPY_USER, 15, 91, 167, 8
-    PUSHBUTTON "&Change", IDC_USERPROFILE_COPY_CHANGE, 15, 105, 50, 14
+    PUSHBUTTON "&Изменить", IDC_USERPROFILE_COPY_CHANGE, 15, 105, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 204, 13, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 204, 30, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 204, 30, 50, 14
 END
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
@@ -291,11 +291,11 @@ BEGIN
     EDITTEXT IDC_VARIABLE_VALUE, 75, 30, 289, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 260, 50, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 314, 50, 50, 14
-    PUSHBUTTON "Browse &Directory...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14
-    PUSHBUTTON "Browse &Files...", IDC_BUTTON_BROWSE_FILE, 86, 50, 75, 14
+    PUSHBUTTON "Обзор &каталога...", IDC_BUTTON_BROWSE_FOLDER, 6, 50, 75, 14
+    PUSHBUTTON "Обзор ф&айлов...", IDC_BUTTON_BROWSE_FILE, 86, 50, 75, 14
 END
 
-IDD_EDIT_VARIABLE_FANCY DIALOGEX 10, 15, 300, 250
+IDD_EDIT_VARIABLE_FANCY DIALOGEX 10, 15, 324, 250
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
 CAPTION "Изменение переменной"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -303,15 +303,15 @@ BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 293, 243, 7, 7, SBS_SIZEGRIP
     CONTROL "", IDC_LIST_VARIABLE_VALUE, "SysListView32", LVS_NOCOLUMNHEADER | LVS_EDITLABELS | LVS_SHOWSELALWAYS |
                 LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 10, 10, 224, 208, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&New", IDC_BUTTON_NEW, 242, 10, 50, 14
-    PUSHBUTTON "&Edit", IDC_BUTTON_EDIT, 242, 30, 50, 14
-    PUSHBUTTON "&Browse...", IDC_BUTTON_BROWSE_FOLDER, 242, 50, 50, 14
-    PUSHBUTTON "&Delete", IDC_BUTTON_DELETE, 242, 70, 50, 14
-    PUSHBUTTON "Move &Up", IDC_BUTTON_MOVE_UP, 242, 100, 50, 14
-    PUSHBUTTON "Move D&own", IDC_BUTTON_MOVE_DOWN, 242, 120, 50, 14
-    PUSHBUTTON "Edit &text...", IDC_BUTTON_EDIT_TEXT, 242, 150, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 188, 228, 50, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 242, 228, 50, 14
+    PUSHBUTTON "Соз&дать", IDC_BUTTON_NEW, 242, 10, 74, 14
+    PUSHBUTTON "&Изменить", IDC_BUTTON_EDIT, 242, 30, 74, 14
+    PUSHBUTTON "Об&зор...", IDC_BUTTON_BROWSE_FOLDER, 242, 50, 74, 14
+    PUSHBUTTON "&Удалить", IDC_BUTTON_DELETE, 242, 70, 74, 14
+    PUSHBUTTON "Вве&рх", IDC_BUTTON_MOVE_UP, 242, 100, 74, 14
+    PUSHBUTTON "&Вниз", IDC_BUTTON_MOVE_DOWN, 242, 120, 74, 14
+    PUSHBUTTON "Из&менить текст...", IDC_BUTTON_EDIT_TEXT, 242, 150, 74, 14
+    DEFPUSHBUTTON "OK", IDOK, 212, 228, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 266, 228, 50, 14
 END
 
 IDD_LICENCE DIALOGEX 6, 5, 267, 159
@@ -352,7 +352,7 @@ BEGIN
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Подтверждение удаления"
     IDS_USERPROFILE_ACCOUNT_UNKNOWN "Неизвестный профиль"
     IDS_USERPROFILE_ACCOUNT_DELETED "Удалённый профиль"
-    IDS_USERPROFILE_TYPE_TEXT "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile."
+    IDS_USERPROFILE_TYPE_TEXT "Когда %s выполняет вход на этом компьютере, операционная система должна использовать перемещаемый профиль, или только его закешированную копию."
     IDS_MESSAGEBOXTITLE "Панель управления системы"
     IDS_WARNINITIALSIZE "Введите числовое значение исходного размера файла подкачки."
     IDS_WARNMAXIMUMSIZE "Введите числовое значение для параметра максимальный размер файла подкачки."
@@ -367,7 +367,7 @@ BEGIN
     IDS_HWPROFILE_ALREADY_IN_USE "Профиль с таким названием уже существует."
     IDS_HWPROFILE_PROFILE "Профиль"
     IDS_HWPROFILE_WARNING "Внимание"
-    IDS_ENVIRONMENT_WARNING "Any changes that have been done will be discarded and the variable's value will be edited as text."
-    IDS_ENVIRONMENT_WARNING_TITLE "System Properties"
-    IDS_FILE_BROWSE_FILTER "All Files (*.*)\0*.*\0"
+    IDS_ENVIRONMENT_WARNING "Все изменения, внесённые здесь, будут отменены, а это значение будет отредактировано в виде текста."
+    IDS_ENVIRONMENT_WARNING_TITLE "Свойства системы"
+    IDS_FILE_BROWSE_FILTER "Все файлы (*.*)\0*.*\0"
 END

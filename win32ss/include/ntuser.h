@@ -1200,7 +1200,7 @@ typedef struct tagIMEUI
     HWND hwndIMC;
     HKL hKL;
     HWND hwndUI;
-    INT nCntInIMEProc;
+    LONG nCntInIMEProc;
     struct {
         UINT fShowStatus:1;
         UINT fActivate:1;
@@ -1215,7 +1215,7 @@ typedef struct tagIMEUI
 /* Window Extra data container. */
 typedef struct _IMEWND
 {
-    WND;
+    WND wnd;
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
 
@@ -1294,7 +1294,7 @@ typedef struct tagCLIENTIMC
     HANDLE hInputContext;   /* LocalAlloc'ed LHND */
     LONG cLockObj;
     DWORD dwFlags;
-    DWORD unknown;
+    DWORD dwCompatFlags;
     RTL_CRITICAL_SECTION cs;
     UINT uCodePage;
     HKL hKL;
@@ -1305,6 +1305,7 @@ typedef struct tagCLIENTIMC
 C_ASSERT(offsetof(CLIENTIMC, hInputContext) == 0x0);
 C_ASSERT(offsetof(CLIENTIMC, cLockObj) == 0x4);
 C_ASSERT(offsetof(CLIENTIMC, dwFlags) == 0x8);
+C_ASSERT(offsetof(CLIENTIMC, dwCompatFlags) == 0xc);
 C_ASSERT(offsetof(CLIENTIMC, cs) == 0x10);
 C_ASSERT(offsetof(CLIENTIMC, uCodePage) == 0x28);
 C_ASSERT(offsetof(CLIENTIMC, hKL) == 0x2c);
@@ -1845,8 +1846,8 @@ NtUserCheckWindowThreadDesktop(
 DWORD
 NTAPI
 NtUserCheckImeHotKey(
-    DWORD dwUnknown1,
-    LPARAM dwUnknown2);
+    UINT uVirtualKey,
+    LPARAM lParam);
 
 HWND NTAPI
 NtUserChildWindowFromPointEx(
@@ -2387,11 +2388,12 @@ NtUserGetIconSize(
     LONG *plcx,
     LONG *plcy);
 
-BOOL NTAPI
-NtUserGetImeHotKey(IN DWORD dwHotKey,
-                   OUT LPUINT lpuModifiers,
-                   OUT LPUINT lpuVKey,
-                   OUT LPHKL lphKL);
+BOOL
+NTAPI
+NtUserGetImeHotKey(DWORD dwHotKeyId,
+                   LPUINT lpuModifiers,
+                   LPUINT lpuVirtualKey,
+                   LPHKL lphKL);
 
 BOOL
 NTAPI
@@ -2550,20 +2552,27 @@ NtUserGetThreadDesktop(
 
 enum ThreadStateRoutines
 {
-    THREADSTATE_GETTHREADINFO,
-    THREADSTATE_INSENDMESSAGE,
-    THREADSTATE_FOCUSWINDOW,
+    THREADSTATE_FOCUSWINDOW = 0,
     THREADSTATE_ACTIVEWINDOW,
     THREADSTATE_CAPTUREWINDOW,
-    THREADSTATE_PROGMANWINDOW,
-    THREADSTATE_TASKMANWINDOW,
-    THREADSTATE_GETMESSAGETIME,
+    THREADSTATE_DEFAULTIMEWINDOW,
+    THREADSTATE_DEFAULTINPUTCONTEXT,
     THREADSTATE_GETINPUTSTATE,
-    THREADSTATE_UPTIMELASTREAD,
-    THREADSTATE_FOREGROUNDTHREAD,
     THREADSTATE_GETCURSOR,
+    THREADSTATE_CHANGEBITS,
+    THREADSTATE_UPTIMELASTREAD,
     THREADSTATE_GETMESSAGEEXTRAINFO,
-    THREADSTATE_UNKNOWN13
+    THREADSTATE_INSENDMESSAGE,
+    THREADSTATE_GETMESSAGETIME,
+    THREADSTATE_FOREGROUNDTHREAD,
+    THREADSTATE_IMECOMPATFLAGS,
+    THREADSTATE_OLDKEYBOARDLAYOUT,
+    THREADSTATE_ISWINLOGON,
+    THREADSTATE_ISWINLOGON2,
+    THREADSTATE_UNKNOWN17,
+    THREADSTATE_GETTHREADINFO,
+    THREADSTATE_PROGMANWINDOW, /* FIXME: Delete this HACK */
+    THREADSTATE_TASKMANWINDOW, /* FIXME: Delete this HACK */
 };
 
 DWORD_PTR
@@ -3075,11 +3084,11 @@ NTAPI
 NtUserSetActiveWindow(
     HWND Wnd);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetAppImeLevel(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2);
+    HWND hWnd,
+    DWORD dwLevel);
 
 HWND
 NTAPI
@@ -3175,23 +3184,23 @@ NTAPI
 NtUserSetFocus(
     HWND hWnd);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetImeHotKey(
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3,
-    DWORD Unknown4);
+    DWORD dwHotKeyId,
+    UINT uModifiers,
+    UINT uVirtualKey,
+    HKL hKL,
+    DWORD dwAction);
 
 BOOL
 NTAPI
 NtUserSetImeInfoEx(
     PIMEINFOEX pImeInfoEx);
 
-DWORD
+BOOL
 NTAPI
-NtUserSetImeOwnerWindow(PIMEINFOEX pImeInfoEx, BOOL fFlag);
+NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus);
 
 DWORD
 NTAPI

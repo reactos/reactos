@@ -18,6 +18,14 @@
 
 #pragma once
 
+/* Optional user-provided callback used by the PE loader
+ * when it loads DLLs imported by a main image. */
+typedef VOID
+(NTAPI *PELDR_IMPORTDLL_LOAD_CALLBACK)(
+    _In_ PCSTR FileName);
+
+extern PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback;
+
 BOOLEAN
 PeLdrLoadImage(
     IN PCHAR FileName,
@@ -31,6 +39,11 @@ PeLdrAllocateDataTableEntry(
     IN PCCH FullDllName,
     IN PVOID BasePA,
     OUT PLDR_DATA_TABLE_ENTRY *NewEntry);
+
+VOID
+PeLdrFreeDataTableEntry(
+    // _In_ PLIST_ENTRY ModuleListHead,
+    _In_ PLDR_DATA_TABLE_ENTRY Entry);
 
 BOOLEAN
 PeLdrScanImportDescriptorTable(

@@ -41,6 +41,14 @@ Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff)
     return S_OK;
 }
 
+BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
+{
+    LCID lcid = GetSystemDefaultLCID();
+    LANGID LangID = LANGIDFROMLCID(lcid);
+    WORD wPrimary = PRIMARYLANGID(LangID);
+    return (wPrimary == LANG_JAPANESE || wPrimary == LANG_KOREAN);
+}
+
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 {
     BOOL ret;
@@ -141,12 +149,26 @@ VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
     plfA->lfFaceName[cch] = 0;
 }
 
+static PVOID FASTCALL DesktopPtrToUser(PVOID ptr)
+{
+    PCLIENTINFO pci = GetWin32ClientInfo();
+    PDESKTOPINFO pdi = pci->pDeskInfo;
+
+    ASSERT(ptr != NULL);
+    ASSERT(pdi != NULL);
+    if (pdi->pvDesktopBase <= ptr && ptr < pdi->pvDesktopLimit)
+        return (PVOID)((ULONG_PTR)ptr - pci->ulClientDelta);
+    else
+        return (PVOID)NtUserCallOneParam((DWORD_PTR)ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING);
+}
+
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 {
-    INT index;
+    UINT index;
     PUSER_HANDLE_TABLE ht;
     PUSER_HANDLE_ENTRY he;
     WORD generation;
+    LPVOID ptr;
 
     if (!NtUserValidateHandleSecure(hObject))
         return NULL;
@@ -158,14 +180,21 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
     he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - g_SharedInfo.ulSharedDelta);
 
     index = (LOWORD(hObject) - FIRST_USER_HANDLE) >> 1;
-    if (index < 0 || ht->nb_handles <= index || he[index].type != uType)
+    if ((INT)index < 0 || ht->nb_handles <= index || he[index].type != uType)
+        return NULL;
+
+    if (he[index].flags & HANDLEENTRY_DESTROY)
         return NULL;
 
     generation = HIWORD(hObject);
     if (generation != he[index].generation && generation && generation != 0xFFFF)
         return NULL;
 
-    return &he[index];
+    ptr = he[index].ptr;
+    if (ptr)
+        ptr = DesktopPtrToUser(ptr);
+
+    return ptr;
 }
 
 PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
@@ -182,7 +211,7 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 {
     HIMC hIMC;
     DWORD dwProcessID;
-    if (pIMC->head.pti == NtCurrentTeb()->Win32ThreadInfo)
+    if (pIMC->head.pti == Imm32CurrentPti())
         return TRUE;
 
     hIMC = pIMC->head.h;

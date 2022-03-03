@@ -93,7 +93,7 @@ static HRESULT CALLBACK FontFolderMenuCallback(IShellFolder *psf, HWND hwnd, IDa
         }
         else if (wParam == DFM_CMD_PROPERTIES)
         {
-            ERR("Default properties handling!\n");
+            TRACE("Default properties handling!\n");
             return S_FALSE;
         }
         else

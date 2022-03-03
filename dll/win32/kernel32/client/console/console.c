@@ -1375,8 +1375,6 @@ AllocConsole(VOID)
     ULONG AppNameLength = 128 * sizeof(WCHAR);
     ULONG CurDirLength  = (MAX_PATH + 1) * sizeof(WCHAR);
 
-    LCID lcid;
-
     RtlEnterCriticalSection(&ConsoleLock);
 
     if (NtCurrentPeb()->ProcessParameters->ConsoleHandle)
@@ -1427,8 +1425,8 @@ AllocConsole(VOID)
         /* Initialize Console Ctrl Handling */
         InitializeCtrlHandling();
 
-        /* Sets the current console locale for this thread */
-        SetTEBLangID(lcid);
+        /* Sync the current thread's LangId with the console's one */
+        SetTEBLangID();
     }
 
 Quit:
@@ -2500,6 +2498,9 @@ SetConsoleOutputCP(UINT wCodePageID)
         return FALSE;
     }
 
+    /* Sync the current thread's LangId with the console's one */
+    SetTEBLangID();
+
     return TRUE;
 }
 
@@ -2676,9 +2677,7 @@ AttachConsole(DWORD dwProcessId)
 {
     BOOL Success;
     CONSOLE_START_INFO ConsoleStartInfo;
-
     DWORD dummy;
-    LCID lcid;
 
     RtlEnterCriticalSection(&ConsoleLock);
 
@@ -2711,8 +2710,8 @@ AttachConsole(DWORD dwProcessId)
         /* Initialize Console Ctrl Handling */
         InitializeCtrlHandling();
 
-        /* Sets the current console locale for this thread */
-        SetTEBLangID(lcid);
+        /* Sync the current thread's LangId with the console's one */
+        SetTEBLangID();
     }
 
 Quit:
@@ -3067,6 +3066,48 @@ UnregisterConsoleIME(VOID)
     return FALSE;
 }
 
+/**
+ * @brief
+ * Internal helper function used to synchronize the current
+ * thread's language ID with the one from the console.
+ **/
+VOID
+SetTEBLangID(VOID)
+{
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETLANGID LangIdRequest = &ApiMessage.Data.LangIdRequest;
+
+    /* Retrieve the "best-suited" language ID corresponding
+     * to the active console output code page. */
+    LangIdRequest->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetLangId),
+                        sizeof(*LangIdRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        /*
+         * No best console language ID: keep the current thread's one.
+         * Since this internal function only modifies an optional setting,
+         * don't set any last error, as it could otherwise mess with the
+         * main last error set by the caller.
+         */
+        return;
+    }
+
+    /*
+     * We succeeded, set the current thread's language ID by
+     * modifying its locale -- Windows <= 2003 does not have
+     * the concept of a separate thread UI language.
+     * Ignore the returned value.
+     */
+    if (!SetThreadLocale(MAKELCID(LangIdRequest->LangId, SORT_DEFAULT)))
+    {
+        DPRINT1("SetTEBLangID: Could not set thread locale to console lang ID %lu\n",
+                LangIdRequest->LangId);
+    }
+}
 
 static
 BOOL

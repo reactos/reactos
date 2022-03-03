@@ -1,28 +1,34 @@
+/*
+ * PROJECT:     ReactOS headers
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Providing DDK-compatible <immdev.h> and IME/IMM development helper
+ * COPYRIGHT:   Copyright 2021-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
 
-#ifndef _WINE_IMM_H_
-#define _WINE_IMM_H_
+#ifndef _IMMDEV_
+#define _IMMDEV_
+
+#pragma once
 
 #include <wingdi.h>
+#include <imm.h>
 
-#ifdef WINE_NO_UNICODE_MACROS
-# define WINELIB_NAME_AW(func) \
-    func##_must_be_suffixed_with_W_or_A_in_this_context \
-    func##_must_be_suffixed_with_W_or_A_in_this_context
-#else  /* WINE_NO_UNICODE_MACROS */
-# ifdef UNICODE
-#  define WINELIB_NAME_AW(func) func##W
-# else
-#  define WINELIB_NAME_AW(func) func##A
-# endif
-#endif  /* WINE_NO_UNICODE_MACROS */
-
-#ifdef WINE_NO_UNICODE_MACROS
-# define DECL_WINELIB_TYPE_AW(type)  /* nothing */
-#else
-# define DECL_WINELIB_TYPE_AW(type)  typedef WINELIB_NAME_AW(type) type;
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include <psdk/imm.h>
+/* wParam for WM_IME_CONTROL */
+#define IMC_GETCONVERSIONMODE           0x0001
+#define IMC_GETSENTENCEMODE             0x0003
+#define IMC_GETOPENSTATUS               0x0005
+#define IMC_GETSOFTKBDPOS               0x0013
+#define IMC_SETSOFTKBDPOS               0x0014
+
+#define IMMGWL_IMC       0
+#define IMMGWL_PRIVATE   (sizeof(LONG))
+
+#define IMMGWLP_IMC      0
+#define IMMGWLP_PRIVATE  (sizeof(LONG_PTR))
 
 typedef struct _tagINPUTCONTEXT {
     HWND                hWnd;
@@ -45,7 +51,7 @@ typedef struct _tagINPUTCONTEXT {
     HIMCC               hMsgBuf;
     DWORD               fdwInit;
     DWORD               dwReserve[3];
-} INPUTCONTEXT, *LPINPUTCONTEXT;
+} INPUTCONTEXT, *PINPUTCONTEXT, *LPINPUTCONTEXT;
 
 #ifdef _WIN64
 C_ASSERT(offsetof(INPUTCONTEXT, hWnd) == 0x0);
@@ -190,4 +196,8 @@ typedef struct IME_STATE
 C_ASSERT(sizeof(IME_STATE) == 0x18);
 #endif
 
-#endif /* _WINE_IMM_H_ */
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif  /* ndef _IMMDEV_ */

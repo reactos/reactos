@@ -12,6 +12,8 @@ typedef struct _SECL_REQUEST
     [string] WCHAR *ApplicationName;
     [string] WCHAR *CommandLine;
     [string] WCHAR *CurrentDirectory;
+    DWORD dwLogonFlags;
+    DWORD dwCreationFlags;
 } SECL_REQUEST, *PSECL_REQUEST;
 
 typedef struct _SECL_RESPONSE

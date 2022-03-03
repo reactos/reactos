@@ -39,6 +39,39 @@ BOOLEAN NoexecuteEnabled = FALSE;
 // debug stuff
 VOID DumpMemoryAllocMap(VOID);
 
+/* PE loader import-DLL loading callback */
+static VOID
+NTAPI
+NtLdrImportDllLoadCallback(
+    _In_ PCSTR FileName)
+{
+    NtLdrOutputLoadMsg(FileName, NULL);
+}
+
+VOID
+NtLdrOutputLoadMsg(
+    _In_ PCSTR FileName,
+    _In_opt_ PCSTR Description)
+{
+    if (SosEnabled)
+    {
+        printf("  %s\n", FileName);
+        TRACE("Loading: %s\n", FileName);
+    }
+    else
+    {
+        /* Inform the user we load a file */
+        CHAR ProgressString[256];
+
+        RtlStringCbPrintfA(ProgressString, sizeof(ProgressString),
+                           "Loading %s...",
+                           (Description ? Description : FileName));
+        // UiSetProgressBarText(ProgressString);
+        // UiIndicateProgress();
+        UiDrawStatusText(ProgressString);
+    }
+}
+
 // Init "phase 0"
 VOID
 AllocateAndInitLPB(
@@ -288,15 +321,22 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 
     // It's not loaded, we have to load it
     RtlStringCbPrintfA(FullPath, sizeof(FullPath), "%s%wZ", BootPath, FilePath);
+
+    NtLdrOutputLoadMsg(FullPath, NULL);
     Success = PeLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
     if (!Success)
+    {
+        ERR("PeLdrLoadImage('%s') failed\n", DllName);
         return FALSE;
+    }
 
     // Allocate a DTE for it
     Success = PeLdrAllocateDataTableEntry(LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
     if (!Success)
     {
-        ERR("PeLdrAllocateDataTableEntry() failed\n");
+        /* Cleanup and bail out */
+        ERR("PeLdrAllocateDataTableEntry('%s') failed\n", DllName);
+        MmFreeMemory(DriverBase);
         return FALSE;
     }
 
@@ -308,7 +348,10 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     Success = PeLdrScanImportDescriptorTable(LoadOrderListHead, FullPath, *DriverDTE);
     if (!Success)
     {
-        ERR("PeLdrScanImportDescriptorTable() failed for %s\n", FullPath);
+        /* Cleanup and bail out */
+        ERR("PeLdrScanImportDescriptorTable('%s') failed\n", FullPath);
+        PeLdrFreeDataTableEntry(*DriverDTE);
+        MmFreeMemory(DriverBase);
         return FALSE;
     }
 
@@ -337,12 +380,12 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
         // Paths are relative (FIXME: Are they always relative?)
 
         // Load it
+        UiIndicateProgress();
         Success = WinLdrLoadDeviceDriver(&LoaderBlock->LoadOrderListHead,
                                          BootPath,
                                          &BootDriver->FilePath,
                                          0,
                                          &BootDriver->LdrEntry);
-
         if (Success)
         {
             // Convert the RegistryPath and DTE addresses to VA since we are not going to use it anymore
@@ -379,17 +422,10 @@ WinLdrLoadModule(PCSTR ModuleName,
     ARC_STATUS Status;
     ULONG BytesRead;
 
-    //CHAR ProgressString[256];
-
-    /* Inform user we are loading files */
-    //UiDrawBackdrop();
-    //RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", FileName);
-    //UiDrawProgressBarCenter(1, 100, ProgressString);
-
-    TRACE("Loading module %s\n", ModuleName);
     *Size = 0;
 
     /* Open the image file */
+    NtLdrOutputLoadMsg(ModuleName, NULL);
     Status = ArcOpen((PSTR)ModuleName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
@@ -452,7 +488,7 @@ WinLdrDetectVersion(VOID)
 }
 
 static
-BOOLEAN
+PVOID
 LoadModule(
     IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     IN PCCH Path,
@@ -465,35 +501,37 @@ LoadModule(
     BOOLEAN Success;
     CHAR FullFileName[MAX_PATH];
     CHAR ProgressString[256];
-    PVOID BaseAddress = NULL;
+    PVOID BaseAddress;
 
-    UiDrawBackdrop();
     RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", File);
-    UiDrawProgressBarCenter(Percentage, 100, ProgressString);
+    UiUpdateProgressBar(Percentage, ProgressString);
 
     RtlStringCbCopyA(FullFileName, sizeof(FullFileName), Path);
     RtlStringCbCatA(FullFileName, sizeof(FullFileName), File);
 
+    NtLdrOutputLoadMsg(FullFileName, NULL);
     Success = PeLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
     if (!Success)
     {
-        TRACE("Loading %s failed\n", File);
-        return FALSE;
+        ERR("PeLdrLoadImage('%s') failed\n", File);
+        return NULL;
     }
     TRACE("%s loaded successfully at %p\n", File, BaseAddress);
 
-    /*
-     * Cheat about the base DLL name if we are loading
-     * the Kernel Debugger Transport DLL, to make the
-     * PE loader happy.
-     */
     Success = PeLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
                                           ImportName,
                                           FullFileName,
                                           BaseAddress,
                                           Dte);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("PeLdrAllocateDataTableEntry('%s') failed\n", FullFileName);
+        MmFreeMemory(BaseAddress);
+        BaseAddress = NULL;
+    }
 
-    return Success;
+    return BaseAddress;
 }
 
 static
@@ -507,11 +545,12 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     BOOLEAN Success;
     PCSTR Option;
     ULONG OptionLength;
-    PLDR_DATA_TABLE_ENTRY HalDTE, KdComDTE = NULL;
+    PVOID KernelBase, HalBase, KdDllBase = NULL;
+    PLDR_DATA_TABLE_ENTRY HalDTE, KdDllDTE = NULL;
     CHAR DirPath[MAX_PATH];
     CHAR HalFileName[MAX_PATH];
     CHAR KernelFileName[MAX_PATH];
-    CHAR KdTransportDllName[MAX_PATH];
+    CHAR KdDllName[MAX_PATH];
 
     if (!KernelDTE) return FALSE;
 
@@ -537,7 +576,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         /* Retrieve the HAL file name */
         Option += 4; OptionLength -= 4;
         RtlStringCbCopyNA(HalFileName, sizeof(HalFileName), Option, OptionLength);
-        _strupr(HalFileName);
+        _strlwr(HalFileName);
     }
 
     Option = NtLdrGetOptionEx(BootOptions, "KERNEL=", &OptionLength);
@@ -546,16 +585,40 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         /* Retrieve the KERNEL file name */
         Option += 7; OptionLength -= 7;
         RtlStringCbCopyNA(KernelFileName, sizeof(KernelFileName), Option, OptionLength);
-        _strupr(KernelFileName);
+        _strlwr(KernelFileName);
     }
 
     TRACE("HAL file = '%s' ; Kernel file = '%s'\n", HalFileName, KernelFileName);
 
+    /*
+     * Load the core NT files: Kernel, HAL and KD transport DLL.
+     * Cheat about their base DLL name so as to satisfy the imports/exports,
+     * even if the corresponding underlying files do not have the same names
+     * -- this happens e.g. with UP vs. MP kernel, standard vs. ACPI hal, or
+     * different KD transport DLLs.
+     */
+
     /* Load the Kernel */
-    LoadModule(LoaderBlock, DirPath, KernelFileName, "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
+    KernelBase = LoadModule(LoaderBlock, DirPath, KernelFileName,
+                            "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
+    if (!KernelBase)
+    {
+        ERR("LoadModule('%s') failed\n", KernelFileName);
+        UiMessageBox("Could not load %s", KernelFileName);
+        return FALSE;
+    }
 
     /* Load the HAL */
-    LoadModule(LoaderBlock, DirPath, HalFileName, "hal.dll", LoaderHalCode, &HalDTE, 45);
+    HalBase = LoadModule(LoaderBlock, DirPath, HalFileName,
+                         "hal.dll", LoaderHalCode, &HalDTE, 35);
+    if (!HalBase)
+    {
+        ERR("LoadModule('%s') failed\n", HalFileName);
+        UiMessageBox("Could not load %s", HalFileName);
+        PeLdrFreeDataTableEntry(*KernelDTE);
+        MmFreeMemory(KernelBase);
+        return FALSE;
+    }
 
     /* Load the Kernel Debugger Transport DLL */
     if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
@@ -571,45 +634,79 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
          * the name "kdcom.dll". [...]"
          */
 
+        /*
+         * A Kernel Debugger Transport DLL is always loaded for Windows XP+ :
+         * either the standard KDCOM.DLL (by default): IsCustomKdDll == FALSE
+         * or an alternative user-provided one via the /DEBUGPORT= option:
+         * IsCustomKdDll == TRUE if it does not specify the default KDCOM.
+         */
+        BOOLEAN IsCustomKdDll = FALSE;
+
         /* Check whether there is a DEBUGPORT option */
         Option = NtLdrGetOptionEx(BootOptions, "DEBUGPORT=", &OptionLength);
         if (Option && (OptionLength > 10))
         {
             /* Move to the debug port name */
             Option += 10; OptionLength -= 10;
-            ASSERT(OptionLength > 0);
 
             /*
              * Parse the port name.
-             * Format: /DEBUGPORT=COM[1-9]
+             * Format: /DEBUGPORT=COM[0-9]
              * or: /DEBUGPORT=FILE:\Device\HarddiskX\PartitionY\debug.log
              * or: /DEBUGPORT=FOO
              * If we only have /DEBUGPORT= (i.e. without any port name),
-             * defaults it to "COM".
+             * default to "COM".
              */
-            RtlStringCbCopyA(KdTransportDllName, sizeof(KdTransportDllName), "KD");
-            if (_strnicmp(Option, "COM", 3) == 0 && '0' <= Option[3] && Option[3] <= '9')
+
+            /* Get the actual length of the debug port
+             * until the next whitespace or colon. */
+            OptionLength = (ULONG)strcspn(Option, " \t:");
+
+            if ((OptionLength == 0) ||
+                ( (OptionLength >= 3) && (_strnicmp(Option, "COM", 3) == 0) &&
+                 ((OptionLength == 3) || ('0' <= Option[3] && Option[3] <= '9')) ))
             {
-                RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Option, 3);
+                /* The standard KDCOM.DLL is used */
             }
             else
             {
-                /* Get the actual length of the debug port
-                 * until the next whitespace or colon. */
-                OptionLength = (ULONG)strcspn(Option, " \t:");
-                if (OptionLength == 0)
-                    RtlStringCbCatA(KdTransportDllName, sizeof(KdTransportDllName), "COM");
-                else
-                    RtlStringCbCatNA(KdTransportDllName, sizeof(KdTransportDllName), Option, OptionLength);
+                /* A custom KD DLL is used */
+                IsCustomKdDll = TRUE;
             }
-            RtlStringCbCatA(KdTransportDllName, sizeof(KdTransportDllName), ".DLL");
-            _strupr(KdTransportDllName);
+        }
+        if (!IsCustomKdDll)
+        {
+            Option = "COM"; OptionLength = 3;
+        }
 
-            /*
-             * Load the transport DLL. Override the base DLL name of the
-             * loaded transport DLL to the default "KDCOM.DLL" name.
-             */
-            LoadModule(LoaderBlock, DirPath, KdTransportDllName, "kdcom.dll", LoaderSystemCode, &KdComDTE, 60);
+        RtlStringCbPrintfA(KdDllName, sizeof(KdDllName), "kd%.*s.dll",
+                           OptionLength, Option);
+        _strlwr(KdDllName);
+
+        /* Load the KD DLL. Override its base DLL name to the default "KDCOM.DLL". */
+        KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
+                               "kdcom.dll", LoaderSystemCode, &KdDllDTE, 40);
+        if (!KdDllBase)
+        {
+            /* If we failed to load a custom KD DLL, fall back to the standard one */
+            if (IsCustomKdDll)
+            {
+                /* The custom KD DLL being optional, just ignore the failure */
+                WARN("LoadModule('%s') failed\n", KdDllName);
+
+                IsCustomKdDll = FALSE;
+                RtlStringCbCopyA(KdDllName, sizeof(KdDllName), "kdcom.dll");
+
+                KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
+                                       "kdcom.dll", LoaderSystemCode, &KdDllDTE, 40);
+            }
+
+            if (!KdDllBase)
+            {
+                /* Ignore the failure; we will fail later when scanning the
+                 * kernel import tables, if it really needs the KD DLL. */
+                ERR("LoadModule('%s') failed\n", KdDllName);
+            }
         }
     }
 
@@ -621,12 +718,6 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         /* We found the 3GB option. */
         FIXME("LoadWindowsCore: 3GB - TRUE (not implemented)\n");
         VirtualBias = TRUE;
-    }
-    if (NtLdrGetOption(BootOptions, "SOS"))
-    {
-        /* We found the SOS option. */
-        FIXME("LoadWindowsCore: SOS - TRUE (not implemented)\n");
-        SosEnabled = TRUE;
     }
 
     if (OperatingSystemVersion > _WIN32_WINNT_NT4)
@@ -690,11 +781,42 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     }
 
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
-    Success  = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
-    Success &= PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
-    if (KdComDTE)
+    Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
+    if (!Success)
     {
-        Success &= PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdComDTE);
+        UiMessageBox("Could not load %s", KernelFileName);
+        goto Quit;
+    }
+    Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
+    if (!Success)
+    {
+        UiMessageBox("Could not load %s", HalFileName);
+        goto Quit;
+    }
+    if (KdDllDTE)
+    {
+        Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdDllDTE);
+        if (!Success)
+        {
+            UiMessageBox("Could not load %s", KdDllName);
+            goto Quit;
+        }
+    }
+
+Quit:
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        if (KdDllDTE)
+            PeLdrFreeDataTableEntry(KdDllDTE);
+        if (KdDllBase) // Optional
+            MmFreeMemory(KdDllBase);
+
+        PeLdrFreeDataTableEntry(HalDTE);
+        MmFreeMemory(HalBase);
+
+        PeLdrFreeDataTableEntry(*KernelDTE);
+        MmFreeMemory(KernelBase);
     }
 
     return Success;
@@ -815,8 +937,10 @@ LoadAndBootWindows(
         return EINVAL;
     }
 
+    /* Let the user know we started loading */
     UiDrawBackdrop();
-    UiDrawProgressBarCenter(1, 100, "Loading NT...");
+    UiDrawStatusText("Loading...");
+    UiDrawProgressBarCenter("Loading NT...");
 
     /* Retrieve the system path */
     *BootPath = ANSI_NULL;
@@ -911,15 +1035,16 @@ LoadAndBootWindows(
         }
     }
 
-    /* Let user know we started loading */
-    //UiDrawStatusText("Loading...");
+    /* Handle the SOS option */
+    SosEnabled = !!NtLdrGetOption(BootOptions, "SOS");
+    if (SosEnabled)
+        UiResetForSOS();
 
     /* Allocate and minimally-initialize the Loader Parameter Block */
     AllocateAndInitLPB(OperatingSystemVersion, &LoaderBlock);
 
     /* Load the system hive */
-    UiDrawBackdrop();
-    UiDrawProgressBarCenter(15, 100, "Loading system hive...");
+    UiUpdateProgressBar(15, "Loading system hive...");
     Success = WinLdrInitSystemHive(LoaderBlock, BootPath, FALSE);
     TRACE("SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
     /* Bail out if failure */
@@ -977,9 +1102,12 @@ LoadAndBootWindowsCommon(
     SystemRoot = strstr(BootPath, "\\");
 
     /* Detect hardware */
-    UiDrawBackdrop();
-    UiDrawProgressBarCenter(20, 100, "Detecting hardware...");
+    UiUpdateProgressBar(20, "Detecting hardware...");
     LoaderBlock->ConfigurationRoot = MachHwDetect();
+
+    /* Initialize the PE loader import-DLL callback, so that we can obtain
+     * feedback (for example during SOS) on the PE images that get loaded. */
+    PeLdrImportDllLoadCallback = NtLdrImportDllLoadCallback;
 
     /* Load the operating system core: the Kernel, the HAL and the Kernel Debugger Transport DLL */
     Success = LoadWindowsCore(OperatingSystemVersion,
@@ -989,18 +1117,31 @@ LoadAndBootWindowsCommon(
                               &KernelDTE);
     if (!Success)
     {
+        /* Reset the PE loader import-DLL callback */
+        PeLdrImportDllLoadCallback = NULL;
+
         UiMessageBox("Error loading NTOS core.");
         return ENOEXEC;
     }
 
+    /* Cleanup INI file */
+    IniCleanup();
+
+/****
+ **** WE HAVE NOW REACHED THE POINT OF NO RETURN !!
+ ****/
+
+    UiSetProgressBarSubset(40, 90); // NTOS goes from 25 to 75%
+
     /* Load boot drivers */
-    UiDrawBackdrop();
-    UiDrawProgressBarCenter(100, 100, "Loading boot drivers...");
+    UiSetProgressBarText("Loading boot drivers...");
     Success = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
     TRACE("Boot drivers loading %s\n", Success ? "successful" : "failed");
 
-    /* Cleanup ini file */
-    IniCleanup();
+    UiSetProgressBarSubset(0, 100);
+
+    /* Reset the PE loader import-DLL callback */
+    PeLdrImportDllLoadCallback = NULL;
 
     /* Initialize Phase 1 - no drivers loading anymore */
     WinLdrInitializePhase1(LoaderBlock,
@@ -1008,6 +1149,8 @@ LoadAndBootWindowsCommon(
                            SystemRoot,
                            BootPath,
                            OperatingSystemVersion);
+
+    UiUpdateProgressBar(100, NULL);
 
     /* Save entry-point pointer and Loader block VAs */
     KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;

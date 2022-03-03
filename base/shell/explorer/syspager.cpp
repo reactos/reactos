@@ -1231,8 +1231,10 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
         TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT |
         CCS_TOP | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER;
 
-    // HACK & FIXME: CORE-17505
-    SubclassWindow(CToolbar::Create(hWndParent, styles));
+    // HACK & FIXME: CORE-18016
+    HWND hwnd = CToolbar::Create(hWndParent, styles);
+    m_hWnd = NULL;
+    SubclassWindow(hwnd);
 
     // Force the toolbar tooltips window to always show tooltips even if not foreground
     HWND tooltipsWnd = (HWND)SendMessageW(TB_GETTOOLTIPS);

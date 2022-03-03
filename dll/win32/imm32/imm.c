@@ -235,7 +235,7 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 
     if (CtfImmIsTextFrameServiceDisabled())
     {
-        if (Imm32IsImmMode() && !Imm32IsCiceroMode())
+        if (IS_IMM_MODE() && !Imm32IsCiceroMode())
         {
             bIsNewHKLIme = IS_IME_HKL(hNewKL);
             bIsOldHKLIme = IS_IME_HKL(hOldKL);
@@ -503,7 +503,7 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
 
     TRACE("(%p, %p)\n", hWnd, hIMC);
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return NULL;
 
     pWnd = ValidateHwndNoErr(hWnd);
@@ -545,7 +545,7 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 
     TRACE("(%p, %p, 0x%lX)\n", hWnd, hIMC, dwFlags);
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return FALSE;
 
     if (hIMC && !(dwFlags & IACE_DEFAULT) && Imm32IsCrossThreadAccess(hIMC))
@@ -590,7 +590,7 @@ HIMC WINAPI ImmCreateContext(void)
 
     TRACE("()\n");
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return NULL;
 
     pClientImc = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
@@ -606,8 +606,7 @@ HIMC WINAPI ImmCreateContext(void)
 
     RtlInitializeCriticalSection(&pClientImc->cs);
 
-    // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
-    pClientImc->unknown = NtUserGetThreadState(13);
+    pClientImc->dwCompatFlags = (DWORD)NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
 
     return hIMC;
 }
@@ -638,51 +637,47 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     PCLIENTIMC pClientImc;
     PIMC pIMC;
 
-    if (!Imm32IsImmMode() || hIMC == NULL)
+    if (!IS_IMM_MODE() || hIMC == NULL)
         return FALSE;
 
     pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
-    if (!pIMC || pIMC->head.pti != NtCurrentTeb()->Win32ThreadInfo)
+    if (!pIMC || pIMC->head.pti != Imm32CurrentPti())
+    {
+        ERR("invalid pIMC: %p\n", pIMC);
         return FALSE;
+    }
 
     pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
     if (!pClientImc)
-        return FALSE;
+        goto Finish;
 
-    if (pClientImc->hInputContext == NULL)
+    if ((pClientImc->dwFlags & CLIENTIMC_UNKNOWN2) && !bKeep)
     {
-        pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
-        ImmUnlockClientImc(pClientImc);
-        if (!bKeep)
-            return NtUserDestroyInputContext(hIMC);
-        return TRUE;
+        ERR("CLIENTIMC_UNKNOWN2\n");
+        return FALSE;
     }
+
+    if (pClientImc->dwFlags & CLIENTIMC_UNKNOWN1)
+        return TRUE;
+
+    InterlockedIncrement(&pClientImc->cLockObj);
+
+    if (!pClientImc->hInputContext)
+        goto Quit;
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-    if (pIC == NULL)
+    if (!pIC)
     {
         ImmUnlockClientImc(pClientImc);
+        ERR("!pIC\n");
         return FALSE;
     }
 
-    FIXME("We have do something to do here\n");
-
-    if (pClientImc->hKL == hKL)
+    pImeDpi = ImmLockImeDpi(hKL);
+    if (pImeDpi)
     {
-        pImeDpi = ImmLockImeDpi(hKL);
-        if (pImeDpi != NULL)
-        {
-            if (IS_IME_HKL(hKL))
-            {
-                pImeDpi->ImeSelect(hIMC, FALSE);
-            }
-            else if (Imm32IsCiceroMode() && pImeDpi->CtfImeSelectEx)
-            {
-                pImeDpi->CtfImeSelectEx(hIMC, FALSE, hKL);
-            }
-            ImmUnlockImeDpi(pImeDpi);
-        }
-        pClientImc->hKL = NULL;
+        pImeDpi->ImeSelect(hIMC, FALSE);
+        ImmUnlockImeDpi(pImeDpi);
     }
 
     pIC->hPrivate = ImmDestroyIMCC(pIC->hPrivate);
@@ -690,18 +685,17 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     pIC->hGuideLine = ImmDestroyIMCC(pIC->hGuideLine);
     pIC->hCandInfo = ImmDestroyIMCC(pIC->hCandInfo);
     pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
-
     Imm32FreeImeStates(pIC);
-
     ImmUnlockIMC(hIMC);
 
+Quit:
     pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
     ImmUnlockClientImc(pClientImc);
 
-    if (!bKeep)
-        return NtUserDestroyInputContext(hIMC);
-
-    return TRUE;
+Finish:
+    if (bKeep)
+        return TRUE;
+    return NtUserDestroyInputContext(hIMC);
 }
 
 BOOL APIENTRY
@@ -889,7 +883,7 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
 
     TRACE("(%p)\n", hIMC);
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return FALSE;
 
     if (Imm32IsCrossThreadAccess(hIMC))
@@ -925,8 +919,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 
         RtlInitializeCriticalSection(&pClientImc->cs);
 
-        // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
-        pClientImc->unknown = NtUserGetThreadState(13);
+        pClientImc->dwCompatFlags = (DWORD)NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
 
         if (!NtUserUpdateInputContext(hImc, UIC_CLIENTIMCDATA, (DWORD_PTR)pClientImc))
         {
@@ -974,13 +967,12 @@ static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
     PCLIENTIMC pClientImc;
     PWND pWnd;
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return NULL;
 
     if (!hWnd)
     {
-        // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
-        hIMC = (HIMC)NtUserGetThreadState(4);
+        hIMC = (HIMC)NtUserGetThreadState(THREADSTATE_DEFAULTINPUTCONTEXT);
         goto Quit;
     }
 
@@ -1144,7 +1136,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
 
     TRACE("(%p, %p, %d)\n", hWnd, hIMC, fActive);
 
-    if (!Imm32IsImmMode())
+    if (!IS_IMM_MODE())
         return FALSE;
 
     pClientImc = ImmLockClientImc(hIMC);
@@ -1179,7 +1171,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     }
     else
     {
-        hIMC = Imm32GetContextEx(hWnd, TRUE);
+        hIMC = Imm32GetContextEx(hWnd, 1);
         pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
         if (pIC)
         {
@@ -1225,6 +1217,21 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
 }
 
 /***********************************************************************
+ *              ImmWINNLSGetEnableStatus (IMM32.@)
+ */
+
+BOOL WINAPI ImmWINNLSGetEnableStatus(HWND hWnd)
+{
+    if (!Imm32IsSystemJapaneseOrKorean())
+    {
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+    }
+
+    return !!Imm32GetContextEx(hWnd, 2);
+}
+
+/***********************************************************************
  *              ImmSetActiveContextConsoleIME(IMM32.@)
  */
 BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
@@ -1244,7 +1251,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
     HKL hKL;
     HIMC hIMC;
-    PTEB pTeb;
 
     TRACE("(%p, 0x%X, %p)\n", hinstDLL, fdwReason, lpReserved);
 
@@ -1267,16 +1273,11 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             break;
 
         case DLL_THREAD_DETACH:
-            if (!Imm32IsImmMode())
-                return TRUE;
-
-            pTeb = NtCurrentTeb();
-            if (pTeb->Win32ThreadInfo == NULL)
+            if (!IS_IMM_MODE() || NtCurrentTeb()->Win32ThreadInfo == NULL)
                 return TRUE;
 
             hKL = GetKeyboardLayout(0);
-            // FIXME: NtUserGetThreadState and enum ThreadStateRoutines are broken.
-            hIMC = (HIMC)NtUserGetThreadState(4);
+            hIMC = (HIMC)NtUserGetThreadState(THREADSTATE_DEFAULTINPUTCONTEXT);
             Imm32CleanupContext(hIMC, hKL, TRUE);
             break;
 

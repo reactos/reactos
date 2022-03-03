@@ -2924,8 +2924,8 @@ SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services th
 SCHEDULE_SERVICE="Планировщик заданий"
 SCHEDULE_SERVICE_DESCRIPTION="Позволяет запускать программы в определенное время."
 
-SECLOGON_SERVICE="Secondary Logon"
-SECLOGON_SERVICE_DESCRIPTION="Allows to start processes under alternative credentials."
+SECLOGON_SERVICE="Вторичный вход в систему"
+SECLOGON_SERVICE_DESCRIPTION="Позволяет запускать процессы под другими учётными данными."
 
 SERVER_SERVICE="Сервер"
 SERVER_SERVICE_DESCRIPTION="Поддержка совместного использования файлов, принтеров и ресурсов в сети."

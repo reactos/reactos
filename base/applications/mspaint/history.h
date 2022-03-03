@@ -26,7 +26,7 @@ private:
 public:
     ImageModel();
     void CopyPrevious(void);
-    void Undo(void);
+    void Undo(BOOL bClearRedo = FALSE);
     void Redo(void);
     void ResetToPrevious(void);
     void ClearHistory(void);
@@ -45,4 +45,7 @@ public:
     void FlipHorizontally();
     void FlipVertically();
     void RotateNTimes90Degrees(int iN);
+    void DrawSelectionBackground(COLORREF rgbBG);
+    void DeleteSelection();
+    void Bound(POINT& pt);
 };

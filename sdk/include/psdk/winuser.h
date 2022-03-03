@@ -4505,13 +4505,13 @@ BOOL WINAPI EnumDisplayDevicesW(_In_opt_ LPCWSTR, _In_ DWORD, _Inout_ PDISPLAY_D
 #endif
 int WINAPI EnumPropsA(_In_ HWND, _In_ PROPENUMPROCA);
 int WINAPI EnumPropsW(_In_ HWND, _In_ PROPENUMPROCW);
-int WINAPI EnumPropsExA(_In_ HWND, _In_ PROPENUMPROCEXA, _In_ LPARAM);
-int WINAPI EnumPropsExW(_In_ HWND, _In_ PROPENUMPROCEXW, _In_ LPARAM);
+int WINAPI EnumPropsExA(_In_ HWND, _In_ PROPENUMPROCEXA, _In_ LPARAM lParam);
+int WINAPI EnumPropsExW(_In_ HWND, _In_ PROPENUMPROCEXW, _In_ LPARAM lParam);
 #define EnumTaskWindows(h,f,p) EnumThreadWindows((DWORD)h,f,p)
 BOOL WINAPI EnumThreadWindows(_In_ DWORD, _In_ WNDENUMPROC, _In_ LPARAM);
-BOOL WINAPI EnumWindows(_In_ WNDENUMPROC, _In_ LPARAM);
-BOOL WINAPI EnumWindowStationsA(_In_ WINSTAENUMPROCA, _In_ LPARAM);
-BOOL WINAPI EnumWindowStationsW(_In_ WINSTAENUMPROCW, _In_ LPARAM);
+BOOL WINAPI EnumWindows(_In_ WNDENUMPROC lpEnumFunc, _In_ LPARAM lParam);
+BOOL WINAPI EnumWindowStationsA(_In_ WINSTAENUMPROCA, _In_ LPARAM lParam);
+BOOL WINAPI EnumWindowStationsW(_In_ WINSTAENUMPROCW, _In_ LPARAM lParam);
 BOOL WINAPI EqualRect(_In_ LPCRECT, _In_ LPCRECT);
 #define ExitWindows(r,c) ExitWindowsEx(EWX_LOGOFF,0)
 BOOL WINAPI ExitWindowsEx(_In_ UINT, _In_ DWORD);
@@ -4658,7 +4658,7 @@ HWND WINAPI GetLastActivePopup(_In_ HWND);
 HMENU WINAPI GetMenu(_In_ HWND);
 LONG WINAPI GetMenuCheckMarkDimensions(void);
 DWORD WINAPI GetMenuContextHelpId(_In_ HMENU);
-UINT WINAPI GetMenuDefaultItem(_In_ HMENU, _In_ UINT, _In_ UINT);
+UINT WINAPI GetMenuDefaultItem(_In_ HMENU hMenu, _In_ UINT fByPos, _In_ UINT gmdiFlags);
 int WINAPI GetMenuItemCount(_In_opt_ HMENU);
 UINT WINAPI GetMenuItemID(_In_ HMENU, _In_ int);
 BOOL WINAPI GetMenuItemInfoA(_In_ HMENU, _In_ UINT, _In_ BOOL, _Inout_ LPMENUITEMINFOA);

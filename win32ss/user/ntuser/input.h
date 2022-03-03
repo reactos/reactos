@@ -85,6 +85,7 @@ BOOL NTAPI UserSendMouseInput(MOUSEINPUT *pMouseInput, BOOL bInjected);
 
 /* IMM */
 UINT FASTCALL IntImmProcessKey(PUSER_MESSAGE_QUEUE, PWND, UINT, WPARAM, LPARAM);
+VOID FASTCALL IntFreeImeHotKeys(VOID);
 
 extern DWORD gSystemFS;
 extern UINT gSystemCPCharSet; 

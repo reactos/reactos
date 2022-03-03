@@ -19,7 +19,8 @@
 #define USER32_CALLBACK_SETOBM                (15)
 #define USER32_CALLBACK_LPK                   (16)
 #define USER32_CALLBACK_UMPD                  (17)
-#define USER32_CALLBACK_MAXIMUM               (17)
+#define USER32_CALLBACK_IMMPROCESSKEY         (18)
+#define USER32_CALLBACK_MAXIMUM               (18)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -168,6 +169,15 @@ typedef struct _LPK_CALLBACK_ARGUMENTS
     BOOL bRect;
 } LPK_CALLBACK_ARGUMENTS, *PLPK_CALLBACK_ARGUMENTS;
 
+typedef struct _IMMPROCESSKEY_CALLBACK_ARGUMENTS
+{
+    HWND    hWnd;
+    HKL     hKL;
+    UINT    vKey;
+    LPARAM  lParam;
+    DWORD   dwHotKeyID;
+} IMMPROCESSKEY_CALLBACK_ARGUMENTS, *PIMMPROCESSKEY_CALLBACK_ARGUMENTS;
+
 NTSTATUS WINAPI
 User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
@@ -204,4 +214,6 @@ NTSTATUS WINAPI
 User32CallLPKFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallUMPDFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallImmProcessKeyFromKernel(PVOID Arguments, ULONG ArgumentLength);
 #endif /* __INCLUDE_USER32_CALLBACK_H */

@@ -21,47 +21,13 @@ const LPCTSTR CSelectionWindow::m_lpszCursorLUT[9] = { /* action to mouse cursor
     IDC_SIZENESW, IDC_SIZENS, IDC_SIZENWSE
 };
 
-BOOL
-ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight,
-                  HDC hdcSrc, int nXSrc, int nYSrc, HBITMAP hbmMask, int xMask, int yMask,
-                  DWORD dwRop, COLORREF keyColor)
+void CSelectionWindow::ForceRefreshSelectionContents()
 {
-    HDC hTempDC;
-    HDC hTempDC2;
-    HBITMAP hTempBm;
-    HBRUSH hTempBrush;
-    HBITMAP hTempMask;
-
-    hTempDC = CreateCompatibleDC(hdcSrc);
-    hTempDC2 = CreateCompatibleDC(hdcSrc);
-    hTempBm = CreateCompatibleBitmap(hTempDC, nWidth, nHeight);
-    SelectObject(hTempDC, hTempBm);
-    hTempBrush = CreateSolidBrush(keyColor);
-    SelectObject(hTempDC, hTempBrush);
-    BitBlt(hTempDC, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, SRCCOPY);
-    PatBlt(hTempDC, 0, 0, nWidth, nHeight, PATINVERT);
-    hTempMask = CreateBitmap(nWidth, nHeight, 1, 1, NULL);
-    SelectObject(hTempDC2, hTempMask);
-    BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC, 0, 0, SRCCOPY);
-    SelectObject(hTempDC, hbmMask);
-    BitBlt(hTempDC2, 0, 0, nWidth, nHeight, hTempDC, xMask, yMask, SRCAND);
-    MaskBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, hTempMask, xMask, yMask, dwRop);
-    DeleteDC(hTempDC);
-    DeleteDC(hTempDC2);
-    DeleteObject(hTempBm);
-    DeleteObject(hTempBrush);
-    DeleteObject(hTempMask);
-    return TRUE;
-}
-
-void
-ForceRefreshSelectionContents()
-{
-    if (selectionWindow.IsWindowVisible())
+    if (::IsWindowVisible(selectionWindow))
     {
-        selectionWindow.SendMessage(WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
-        selectionWindow.SendMessage(WM_MOUSEMOVE,   0, MAKELPARAM(0, 0));
-        selectionWindow.SendMessage(WM_LBUTTONUP,   0, MAKELPARAM(0, 0));
+        imageModel.ResetToPrevious();
+        imageModel.DrawSelectionBackground(m_rgbBack);
+        selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
     }
 }
 
@@ -90,16 +56,16 @@ int CSelectionWindow::IdentifyCorner(int iXPos, int iYPos, int iWidth, int iHeig
 
 LRESULT CSelectionWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    DefWindowProc(WM_PAINT, wParam, lParam);
+    PAINTSTRUCT ps;
+    HDC hDC = BeginPaint(&ps);
     if (!m_bMoving)
     {
-        HDC hDC = GetDC();
         SelectionFrame(hDC, 1, 1,
                        Zoomed(selectionModel.GetDestRectWidth()) + (GRIP_SIZE * 2) - 1,
                        Zoomed(selectionModel.GetDestRectHeight()) + (GRIP_SIZE * 2) - 1,
                        GetSysColor(COLOR_HIGHLIGHT));
-        ReleaseDC(hDC);
     }
+    EndPaint(&ps);
     return 0;
 }
 
@@ -145,6 +111,7 @@ LRESULT CSelectionWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
     scrlClientWindow.SendMessage(WM_PAINT, 0, 0);
     imageArea.InvalidateRect(NULL, FALSE);
     imageArea.SendMessage(WM_PAINT, 0, 0);
+    m_rgbBack = paletteModel.GetBgColor();
     return 0;
 }
 
@@ -153,6 +120,7 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     if (m_bMoving)
     {
         imageModel.ResetToPrevious();
+        imageModel.DrawSelectionBackground(m_rgbBack);
         m_ptFrac.x += GET_X_LPARAM(lParam) - m_ptPos.x;
         m_ptFrac.y += GET_Y_LPARAM(lParam) - m_ptPos.y;
         m_ptDelta.x += UnZoomed(m_ptFrac.x);
@@ -173,17 +141,10 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         strSize.Format(_T("%ld x %ld"), selectionModel.GetDestRectWidth(), selectionModel.GetDestRectHeight());
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
 
-        if (toolsModel.GetActiveTool() == TOOL_TEXT)
-        {
-            selectionModel.DrawTextToolText(imageModel.GetDC(), paletteModel.GetFgColor(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
-        }
+        if (m_iAction != ACTION_MOVE)
+            selectionModel.DrawSelectionStretched(imageModel.GetDC());
         else
-        {
-            if (m_iAction != ACTION_MOVE)
-                selectionModel.DrawSelectionStretched(imageModel.GetDC());
-            else
-                selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
-        }
+            selectionModel.DrawSelection(imageModel.GetDC(), paletteModel.GetBgColor(), toolsModel.IsBackgroundTransparent());
         imageArea.InvalidateRect(NULL, FALSE);
         imageArea.SendMessage(WM_PAINT, 0, 0);
         m_ptPos.x = GET_X_LPARAM(lParam);
@@ -203,26 +164,26 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     return 0;
 }
 
+LRESULT CSelectionWindow::OnMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    m_bMoved = TRUE;
+    return 0;
+}
+
 LRESULT CSelectionWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (m_bMoving)
     {
         m_bMoving = FALSE;
         ReleaseCapture();
-        if (m_iAction != ACTION_MOVE)
+        if (m_iAction != ACTION_MOVE && toolsModel.GetActiveTool() != TOOL_TEXT)
         {
-            if (toolsModel.GetActiveTool() == TOOL_TEXT)
-            {
-                // FIXME: What to do?
-            }
-            else
-            {
-                selectionModel.ScaleContentsToFit();
-            }
+            imageModel.Undo();
+            imageModel.DrawSelectionBackground(m_rgbBack);
+            selectionModel.ScaleContentsToFit();
+            imageModel.CopyPrevious();
         }
         placeSelWin();
-        ShowWindow(SW_HIDE);
-        ShowWindow(SW_SHOW);
     }
     return 0;
 }
@@ -234,10 +195,10 @@ LRESULT CSelectionWindow::OnCaptureChanged(UINT nMsg, WPARAM wParam, LPARAM lPar
         m_bMoving = FALSE;
         if (m_iAction == ACTION_MOVE)
         {
-            // FIXME: dirty hack
-            placeSelWin();
-            imageModel.Undo();
-            imageModel.Undo();
+            if (toolsModel.GetActiveTool() == TOOL_RECTSEL)
+                imageArea.cancelDrawing();
+            else
+                placeSelWin();
         }
         else
         {
@@ -262,17 +223,11 @@ LRESULT CSelectionWindow::OnKeyDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CSelectionWindow::OnPaletteModelColorChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (toolsModel.GetActiveTool() == TOOL_TEXT)
-        ForceRefreshSelectionContents();
     return 0;
 }
 
 LRESULT CSelectionWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (toolsModel.GetActiveTool() == TOOL_FREESEL ||
-        toolsModel.GetActiveTool() == TOOL_RECTSEL ||
-        toolsModel.GetActiveTool() == TOOL_TEXT)
-        ForceRefreshSelectionContents();
     return 0;
 }
 

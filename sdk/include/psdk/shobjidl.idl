@@ -216,6 +216,8 @@ interface IShellFolder : IUnknown
     cpp_quote("#define SFGAO_NEWCONTENT        0x00200000L")
     cpp_quote("#define SFGAO_STREAM            0x00400000L")
     cpp_quote("#define SFGAO_STORAGEANCESTOR   0x00800000L")
+    cpp_quote("#define SFGAO_STORAGECAPMASK    0x70C50008L")
+    cpp_quote("#define SFGAO_PKEYSFGAOMASK     0x81044000L")
 
     typedef ULONG SFGAOF;
 

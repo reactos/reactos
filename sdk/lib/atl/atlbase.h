@@ -26,6 +26,7 @@
 #include "atlcomcli.h"
 #include "atlalloc.h"
 #include "atlexcept.h"
+#include "atltrace.h"
 #include "comcat.h"
 #include "tchar.h"
 
@@ -1855,7 +1856,6 @@ inline HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE *module)
 
     return S_OK;
 }
-
 
 }; // namespace ATL
 
