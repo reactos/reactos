@@ -657,7 +657,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         return FALSE;
     }
 
-    if (pClientImc->dwFlags & CLIENTIMC_UNKNOWN1)
+    if (pClientImc->dwFlags & CLIENTIMC_DESTROY)
         return TRUE;
 
     InterlockedIncrement(&pClientImc->cLockObj);
@@ -689,7 +689,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     ImmUnlockIMC(hIMC);
 
 Quit:
-    pClientImc->dwFlags |= CLIENTIMC_UNKNOWN1;
+    pClientImc->dwFlags |= CLIENTIMC_DESTROY;
     ImmUnlockClientImc(pClientImc);
 
 Finish:
@@ -931,7 +931,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
     }
     else
     {
-        if (pClientImc->dwFlags & CLIENTIMC_UNKNOWN1)
+        if (pClientImc->dwFlags & CLIENTIMC_DESTROY)
             return NULL;
     }
 
@@ -950,7 +950,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     TRACE("(%p)\n", pClientImc);
 
     cLocks = InterlockedDecrement(&pClientImc->cLockObj);
-    if (cLocks != 0 || !(pClientImc->dwFlags & CLIENTIMC_UNKNOWN1))
+    if (cLocks != 0 || !(pClientImc->dwFlags & CLIENTIMC_DESTROY))
         return;
 
     hInputContext = pClientImc->hInputContext;
