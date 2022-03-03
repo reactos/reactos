@@ -638,10 +638,7 @@ BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     PIMC pIMC;
 
     if (!IS_IMM_MODE() || hIMC == NULL)
-    {
-        ERR("invalid HIMC\n");
         return FALSE;
-    }
 
     pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
     if (!pIMC || pIMC->head.pti != Imm32CurrentPti())
