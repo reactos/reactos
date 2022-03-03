@@ -2106,13 +2106,13 @@ co_WinPosSetWindowPos(
                     * This might not have sense here, but fixes CORE-12342, CORE-15349, CORE-15917 and
                     * very likely many others.
                     */
-                   IntInvalidateWindows( Parent, DirtyRgn, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+                   IntInvalidateWindows(Parent, DirtyRgn, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
                    /* This call is kinda redundant, because the window already has QS_PAINT set by IntInvalidateWindows() */
                    //co_IntPaintWindows(Parent, RDW_NOCHILDREN, FALSE);
                 }
                 else
                 {
-                   IntInvalidateWindows( Window, DirtyRgn, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+                   IntInvalidateWindows(Window, DirtyRgn, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
                 }
              }
              else if ( RgnType != ERROR && RgnType == NULLREGION ) // Must be the same. See CORE-7166 & CORE-15934, NC HACK fix.
