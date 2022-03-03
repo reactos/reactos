@@ -2105,6 +2105,7 @@ co_WinPosSetWindowPos(
                     * Toolbars, these are not re-painted due to a missing RDW_ALLCHILDREN flag.
                     * This might not have sense here, but fixes CORE-12342, CORE-15349, CORE-15917 and
                     * very likely many others.
+                    * However it reduces the amount of executed tests performed in user32:msg_messages and user32:msg_winpos.
                     */
                    IntInvalidateWindows(Parent, DirtyRgn, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
                    /* This call is kinda redundant, because the window already has QS_PAINT set by IntInvalidateWindows() */
