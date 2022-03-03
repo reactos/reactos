@@ -2100,8 +2100,15 @@ co_WinPosSetWindowPos(
 
                 if ( (Window->style & WS_CHILD) && (Parent) && !(Parent->style & WS_CLIPCHILDREN))
                 {
-                   IntInvalidateWindows( Parent, DirtyRgn, RDW_ERASE | RDW_INVALIDATE);
-                   co_IntPaintWindows(Parent, RDW_NOCHILDREN, FALSE);
+                   /* HACK: For some reason, Rebar windows matches this condition after being altered
+                    * by ShowWindow() or UpdateWindow(), and as Rebar windows usually have children
+                    * Toolbars, these are not re-painted due to a missing RDW_ALLCHILDREN flag.
+                    * This might not have sense here, but fixes CORE-12342, CORE-15349, CORE-15917 and
+                    * very likely many others.
+                    */
+                   IntInvalidateWindows( Parent, DirtyRgn, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+                   /* This call is kinda redundant, because the window already has QS_PAINT set by IntInvalidateWindows() */
+                   //co_IntPaintWindows(Parent, RDW_NOCHILDREN, FALSE);
                 }
                 else
                 {
