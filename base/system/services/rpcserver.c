@@ -1234,36 +1234,36 @@ DWORD RControlService(
 
     if (dwError == ERROR_SUCCESS)
     {
-            if (dwControl == SERVICE_CONTROL_STOP ||
-                dwControl == SERVICE_CONTROL_PAUSE ||
-                dwControl == SERVICE_CONTROL_CONTINUE)
+        if (dwControl == SERVICE_CONTROL_STOP ||
+            dwControl == SERVICE_CONTROL_PAUSE ||
+            dwControl == SERVICE_CONTROL_CONTINUE)
+        {
+            /* Log a successful send control */
+
+            switch (dwControl)
             {
-                /* Log a successful send control */
+                case SERVICE_CONTROL_STOP:
+                    uID = IDS_SERVICE_STOP;
+                    break;
 
-                switch (dwControl)
-                {
-                    case SERVICE_CONTROL_STOP:
-                        uID = IDS_SERVICE_STOP;
-                        break;
+                case SERVICE_CONTROL_PAUSE:
+                    uID = IDS_SERVICE_PAUSE;
+                    break;
 
-                    case SERVICE_CONTROL_PAUSE:
-                        uID = IDS_SERVICE_PAUSE;
-                        break;
-
-                    case SERVICE_CONTROL_CONTINUE:
-                        uID = IDS_SERVICE_RESUME;
-                        break;
-                }
-                LoadStringW(GetModuleHandle(NULL), uID, szLogBuffer, 80);
-
-                lpLogStrings[0] = lpService->lpDisplayName;
-                lpLogStrings[1] = szLogBuffer;
-
-                ScmLogEvent(EVENT_SERVICE_CONTROL_SUCCESS,
-                            EVENTLOG_INFORMATION_TYPE,
-                            2,
-                            lpLogStrings);
+                case SERVICE_CONTROL_CONTINUE:
+                    uID = IDS_SERVICE_RESUME;
+                    break;
             }
+            LoadStringW(GetModuleHandle(NULL), uID, szLogBuffer, 80);
+
+            lpLogStrings[0] = lpService->lpDisplayName;
+            lpLogStrings[1] = szLogBuffer;
+
+            ScmLogEvent(EVENT_SERVICE_CONTROL_SUCCESS,
+                        EVENTLOG_INFORMATION_TYPE,
+                        2,
+                        lpLogStrings);
+        }
     }
 
     return dwError;
@@ -2436,7 +2436,6 @@ DWORD RCreateServiceW(
                 goto done;
         }
 
-DPRINT1("\n");
         /* Write the security descriptor */
         dwError = ScmWriteSecurityDescriptor(hServiceKey,
                                              lpService->pSecurityDescriptor);
@@ -4936,7 +4935,7 @@ DWORD RChangeServiceConfig2A(
     SC_RPC_HANDLE hService,
     SC_RPC_CONFIG_INFOA Info)
 {
-    SC_RPC_CONFIG_INFOW InfoW;
+    SC_RPC_CONFIG_INFOW InfoW = { 0 };
     DWORD dwRet, dwLength;
     PVOID ptr = NULL;
 
