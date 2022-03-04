@@ -120,7 +120,9 @@ static const WELLKNOWNRID WellKnownRids[] = {
     { {'R','S'}, WinAccountRasAndIasServersSid, DOMAIN_ALIAS_RID_RAS_SERVERS },
 };
 
+#ifndef __REACTOS__
 static const SID sidWorld = { SID_REVISION, 1, { SECURITY_WORLD_SID_AUTHORITY} , { SECURITY_WORLD_RID } };
+#endif
 
 static const WCHAR SDDL_NO_READ_UP[]       = {'N','R',0};
 static const WCHAR SDDL_NO_WRITE_UP[]      = {'N','W',0};
@@ -131,13 +133,17 @@ static const WCHAR SDDL_NO_EXECUTE_UP[]    = {'N','X',0};
  */
 static const WCHAR SDDL_ACCESS_ALLOWED[]        = {'A',0};
 static const WCHAR SDDL_ACCESS_DENIED[]         = {'D',0};
+#ifndef __REACTOS__
 static const WCHAR SDDL_OBJECT_ACCESS_ALLOWED[] = {'O','A',0};
 static const WCHAR SDDL_OBJECT_ACCESS_DENIED[]  = {'O','D',0};
+#endif
 static const WCHAR SDDL_AUDIT[]                 = {'A','U',0};
 static const WCHAR SDDL_ALARM[]                 = {'A','L',0};
 static const WCHAR SDDL_MANDATORY_LABEL[]       = {'M','L',0};
+#ifndef __REACTOS__
 static const WCHAR SDDL_OBJECT_AUDIT[]          = {'O','U',0};
 static const WCHAR SDDL_OBJECT_ALARM[]          = {'O','L',0};
+#endif
 
 /*
  * SDDL ADS Rights
@@ -753,6 +759,7 @@ PSID_IDENTIFIER_AUTHORITY
 WINAPI
 GetSidIdentifierAuthority(PSID pSid)
 {
+    SetLastError(ERROR_SUCCESS);
     return RtlIdentifierAuthoritySid(pSid);
 }
 
@@ -2221,7 +2228,7 @@ static DWORD ParseAclStringFlags(LPCWSTR* StringAcl)
     DWORD flags = 0;
     LPCWSTR szAcl = *StringAcl;
 
-    while (*szAcl != '(')
+    while (*szAcl && *szAcl != '(')
     {
         if (*szAcl == 'P')
         {
@@ -2532,7 +2539,7 @@ static BOOL ParseStringAclToAcl(LPCWSTR StringAcl, LPDWORD lpdwFlags,
         pAcl->AclRevision = ACL_REVISION;
         pAcl->Sbz1 = 0;
         pAcl->AclSize = length;
-        pAcl->AceCount = acecount++;
+        pAcl->AceCount = acecount;
         pAcl->Sbz2 = 0;
     }
     return TRUE;
@@ -2542,7 +2549,6 @@ lerr:
     WARN("Invalid ACE string format\n");
     return FALSE;
 }
-
 
 /******************************************************************************
  * ParseStringSecurityDescriptorToSecurityDescriptor
@@ -2559,7 +2565,7 @@ static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
     LPBYTE lpNext = NULL;
     DWORD len;
 
-    *cBytes = sizeof(SECURITY_DESCRIPTOR);
+    *cBytes = sizeof(SECURITY_DESCRIPTOR_RELATIVE);
 
     tok = heap_alloc( (lstrlenW(StringSecurityDescriptor) + 1) * sizeof(WCHAR));
 

@@ -10,8 +10,6 @@
 
 #include <advapi32.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(advapi);
-
 /**************************************************************************
  *  IsTextUnicode (ADVAPI32.@)
  *
