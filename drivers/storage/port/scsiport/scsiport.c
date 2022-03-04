@@ -70,27 +70,17 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                    IN PCONFIGURATION_INFO InternalConfigInfo,
                    IN PUCHAR Buffer);
 
+static VOID
+SpiResourceToConfig(IN PHW_INITIALIZATION_DATA HwInitializationData,
+                    IN PCM_FULL_RESOURCE_DESCRIPTOR ResourceDescriptor,
+                    IN PPORT_CONFIGURATION_INFORMATION PortConfig);
+
 static PCM_RESOURCE_LIST
 SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                     PPORT_CONFIGURATION_INFORMATION PortConfig);
 
 static NTSTATUS
 SpiAllocateCommonBuffer(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, ULONG NonCachedSize);
-
-static NTSTATUS
-SpiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
-                    IN PHW_INITIALIZATION_DATA HwInitializationData,
-                    OUT PDEVICE_OBJECT* PortDeviceObjectPtr);
-
-static NTSTATUS
-SpiAllocatePortConfig(IN OUT PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-                      IN PHW_INITIALIZATION_DATA HwInitializationData);
-
-NTSTATUS
-SpiDeferInitialization(PDRIVER_OBJECT DriverObject,
-                       PHW_INITIALIZATION_DATA HwInitializationData,
-                       PVOID HwContext,
-                       PCONFIGURATION_INFO ConfigInfo);
 
 NTHALAPI ULONG NTAPI HalGetBusData(BUS_DATA_TYPE, ULONG, ULONG, PVOID, ULONG);
 NTHALAPI ULONG NTAPI HalGetInterruptVector(INTERFACE_TYPE, ULONG, ULONG, ULONG, PKIRQL, PKAFFINITY);
@@ -156,85 +146,8 @@ ScsiPortAddDevice(
     _In_ PDRIVER_OBJECT DriverObject,
     _In_ PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    PSCSI_PORT_DRIVER_INIT_EXTENSION InitExtension = NULL;
-    SINGLE_LIST_ENTRY* InitList = NULL;
-    INTERFACE_TYPE PDOInterfaceType;
-    ULONG PropertyLength;
-    NTSTATUS Status;
 
-    /* Try to get the driver's initialization list extension */
-    InitExtension = IoGetDriverObjectExtension(DriverObject, SpiDeferInitialization);
-
-    /* Make sure it exists */
-    if (!InitExtension)
-    {
-        DPRINT1("ScsiPortAddDevice called with driver that was never initialized!\n");
-        return STATUS_INTERNAL_ERROR;
-    }
-
-    /* Figure out what kind of bus this PDO is on */
-    IoGetDeviceProperty(PhysicalDeviceObject,
-                        DevicePropertyLegacyBusType,
-                        sizeof(INTERFACE_TYPE),
-                        &PDOInterfaceType,
-                        &PropertyLength);
-
-    InitList = InitExtension->ListHead.Next;
-    while (InitList != NULL)
-    {
-        PSCSI_PORT_INIT_DATA InitData;
-
-        /* Get the pointer to our actual data */
-        InitData = CONTAINING_RECORD(InitList, SCSI_PORT_INIT_DATA, ListEntry);
-
-        /* Only initialize if the interfaces match up */
-        if (InitData->HwInitData.AdapterInterfaceType == PDOInterfaceType)
-        {
-            PDEVICE_OBJECT PortDeviceObject;
-            PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-
-            /* Create the FDO for our device */
-            Status = SpiCreatePortDevice(DriverObject, &InitData->HwInitData, &PortDeviceObject);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("SpiCreatePortDevice failed with status 0x%x\n", Status);
-                return Status;
-            }
-
-            DeviceExtension = PortDeviceObject->DeviceExtension;
-
-            /* Allocate port config */
-            Status = SpiAllocatePortConfig(DeviceExtension, &InitData->HwInitData);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("SpiAllocatePortConfig() failed with Status 0x%08X\n", Status);
-                break;
-            }
-
-            /* Populate port config */
-            Status = SpiCreatePortConfig(DeviceExtension,
-                                         &InitData->HwInitData,
-                                         &InitData->ConfigInfo,
-                                         DeviceExtension->PortConfig,
-                                         TRUE);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT("SpiCreatePortConfig() failed with Status 0x%08X\n", Status);
-                break;
-            }
-
-            /* Initialize the remove lock */
-            IoInitializeRemoveLock(&DeviceExtension->Common.RemoveLock, TAG_SCSIPORT, 0, 0);
-
-            /* Attach it to the device stack */
-            DeviceExtension->Common.LowerDevice = IoAttachDeviceToDeviceStack(PortDeviceObject, PhysicalDeviceObject);
-
-            /* Tell the I/O Manager that we're done initializing */
-            PortDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-        }
-
-        InitList = InitList->Next;
-    }
+    DPRINT("AddDevice no-op DriverObj: %p, PDO: %p\n", DriverObject, PhysicalDeviceObject);
 
     return STATUS_SUCCESS;
 }
@@ -993,232 +906,6 @@ SpiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-SpiAllocatePortConfig(IN OUT PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-                      IN PHW_INITIALIZATION_DATA HwInitializationData)
-{
-    /* Allocate and initialize port configuration info */
-    ULONG PortConfigSize = sizeof(PORT_CONFIGURATION_INFORMATION) +
-                           HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE);
-    PortConfigSize = ALIGN_UP(PortConfigSize, INT64);
-    DeviceExtension->PortConfig = ExAllocatePoolWithTag(NonPagedPool, PortConfigSize, TAG_SCSIPORT);
-
-    /* Fail if failed */
-    if (DeviceExtension->PortConfig == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    return STATUS_SUCCESS;
-}
-
-static
-NTSTATUS
-SpiAllocatePortData(IN OUT PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-                    IN PPORT_CONFIGURATION_INFORMATION PortConfig,
-                    IN PCONFIGURATION_INFO ConfigInfo)
-{
-    PIO_SCSI_CAPABILITIES PortCapabilities;
-    NTSTATUS Status;
-
-    /* Copy all stuff which we ever need from PortConfig to the DeviceExtension */
-    if (PortConfig->MaximumNumberOfTargets > SCSI_MAXIMUM_TARGETS_PER_BUS)
-        DeviceExtension->MaxTargedIds = SCSI_MAXIMUM_TARGETS_PER_BUS;
-    else
-        DeviceExtension->MaxTargedIds = PortConfig->MaximumNumberOfTargets;
-
-    DeviceExtension->NumberOfBuses = PortConfig->NumberOfBuses;
-    DeviceExtension->CachesData = PortConfig->CachesData;
-    DeviceExtension->ReceiveEvent = PortConfig->ReceiveEvent;
-    DeviceExtension->SupportsTaggedQueuing = PortConfig->TaggedQueuing;
-    DeviceExtension->MultipleReqsPerLun = PortConfig->MultipleRequestPerLu;
-
-    /* Initialize bus scanning information */
-    size_t BusConfigSize = DeviceExtension->NumberOfBuses * sizeof(*DeviceExtension->Buses);
-    DeviceExtension->Buses = ExAllocatePoolZero(NonPagedPool, BusConfigSize, TAG_SCSIPORT);
-    if (!DeviceExtension->Buses)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    // initialize bus data
-    for (UINT8 pathId = 0; pathId < DeviceExtension->NumberOfBuses; pathId++)
-    {
-        DeviceExtension->Buses[pathId].BusIdentifier =
-            DeviceExtension->PortConfig->InitiatorBusId[pathId];
-        InitializeListHead(&DeviceExtension->Buses[pathId].LunsListHead);
-    }
-
-    /* If something was disabled via registry - apply it */
-    if (ConfigInfo->DisableMultipleLun)
-        DeviceExtension->MultipleReqsPerLun = PortConfig->MultipleRequestPerLu = FALSE;
-
-    if (ConfigInfo->DisableTaggedQueueing)
-        DeviceExtension->SupportsTaggedQueuing = PortConfig->MultipleRequestPerLu = FALSE;
-
-    /* Check if we need to alloc SRB data */
-    if (DeviceExtension->SupportsTaggedQueuing || DeviceExtension->MultipleReqsPerLun)
-        DeviceExtension->NeedSrbDataAlloc = TRUE;
-    else
-        DeviceExtension->NeedSrbDataAlloc = FALSE;
-
-    /* Get a pointer to the port capabilities */
-    PortCapabilities = &DeviceExtension->PortCapabilities;
-
-    /* Copy one field there */
-    DeviceExtension->MapBuffers = PortConfig->MapBuffers;
-    PortCapabilities->AdapterUsesPio = PortConfig->MapBuffers;
-
-    if (DeviceExtension->AdapterObject == NULL &&
-        (PortConfig->DmaChannel != SP_UNINITIALIZED_VALUE || PortConfig->Master))
-    {
-        DPRINT1("DMA is not supported yet\n");
-        ASSERT(FALSE);
-    }
-
-    if (DeviceExtension->SrbExtensionBuffer == NULL &&
-        (DeviceExtension->SrbExtensionSize != 0 || PortConfig->AutoRequestSense))
-    {
-        DeviceExtension->SupportsAutoSense = PortConfig->AutoRequestSense;
-        DeviceExtension->NeedSrbExtensionAlloc = TRUE;
-
-        /* Allocate common buffer */
-        Status = SpiAllocateCommonBuffer(DeviceExtension, 0);
-
-        /* Check for failure */
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("SpiAllocateCommonBuffer failed with status 0x%x\n", Status);
-            return Status;
-        }
-    }
-
-    /* Allocate SrbData, if needed */
-    if (DeviceExtension->NeedSrbDataAlloc)
-    {
-        ULONG Count;
-        PSCSI_REQUEST_BLOCK_INFO SrbData;
-
-        if (DeviceExtension->SrbDataCount != 0)
-            Count = DeviceExtension->SrbDataCount;
-        else
-            Count = DeviceExtension->RequestsNumber * 2;
-
-        /* Allocate the data */
-        SrbData = ExAllocatePoolWithTag(
-            NonPagedPool, Count * sizeof(SCSI_REQUEST_BLOCK_INFO), TAG_SCSIPORT);
-        if (SrbData == NULL)
-            return STATUS_INSUFFICIENT_RESOURCES;
-
-        RtlZeroMemory(SrbData, Count * sizeof(SCSI_REQUEST_BLOCK_INFO));
-
-        DeviceExtension->SrbInfo = SrbData;
-        DeviceExtension->FreeSrbInfo = SrbData;
-        DeviceExtension->SrbDataCount = Count;
-
-        /* Link it to the list */
-        while (Count > 0)
-        {
-            SrbData->Requests.Flink = (PLIST_ENTRY)(SrbData + 1);
-            SrbData++;
-            Count--;
-        }
-
-        /* Mark the last entry of the list */
-        SrbData--;
-        SrbData->Requests.Flink = NULL;
-    }
-
-    return STATUS_SUCCESS;
-}
-
-static
-inline
-VOID
-SpiInitPortCapabilities(IN PPORT_CONFIGURATION_INFORMATION PortConfig,
-                        OUT PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
-{
-    PIO_SCSI_CAPABILITIES PortCapabilities;
-    PDEVICE_OBJECT PortDeviceObject = DeviceExtension->Common.DeviceObject;
-
-    /* Initialize port capabilities */
-    PortCapabilities = &DeviceExtension->PortCapabilities;
-    PortCapabilities->Length = sizeof(IO_SCSI_CAPABILITIES);
-    PortCapabilities->MaximumTransferLength = PortConfig->MaximumTransferLength;
-
-    if (PortConfig->ReceiveEvent)
-        PortCapabilities->SupportedAsynchronousEvents |= SRBEV_SCSI_ASYNC_NOTIFICATION;
-
-    PortCapabilities->TaggedQueuing = DeviceExtension->SupportsTaggedQueuing;
-    PortCapabilities->AdapterScansDown = PortConfig->AdapterScansDown;
-
-    if (PortConfig->AlignmentMask > PortDeviceObject->AlignmentRequirement)
-        PortDeviceObject->AlignmentRequirement = PortConfig->AlignmentMask;
-
-    PortCapabilities->AlignmentMask = PortDeviceObject->AlignmentRequirement;
-
-    if (PortCapabilities->MaximumPhysicalPages == 0)
-    {
-        PortCapabilities->MaximumPhysicalPages =
-            BYTES_TO_PAGES(PortCapabilities->MaximumTransferLength);
-
-        /* Apply miniport's limits */
-        if (PortConfig->NumberOfPhysicalBreaks < PortCapabilities->MaximumPhysicalPages)
-        {
-            PortCapabilities->MaximumPhysicalPages = PortConfig->NumberOfPhysicalBreaks;
-        }
-    }
-}
-
-NTSTATUS
-SpiDeferInitialization(PDRIVER_OBJECT DriverObject,
-                       PHW_INITIALIZATION_DATA HwInitializationData,
-                       PVOID HwContext,
-                       PCONFIGURATION_INFO ConfigInfo)
-{
-    PSCSI_PORT_DRIVER_INIT_EXTENSION InitExtension = NULL;
-    PSCSI_PORT_INIT_DATA InitData = NULL;
-    NTSTATUS Status;
-
-    /* Try to get the driver's initialization list extension */
-    InitExtension = IoGetDriverObjectExtension(DriverObject, SpiDeferInitialization);
-
-    /* If it doesn't exist, create it */
-    if (!InitExtension)
-    {
-        Status = IoAllocateDriverObjectExtension(DriverObject,
-                                                 SpiDeferInitialization,
-                                                 sizeof(SCSI_PORT_DRIVER_INIT_EXTENSION),
-                                                 (PVOID*)&InitExtension);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("SpiDeferInitialization failed to allocate init extension! Status 0x%x\n", Status);
-            return Status;
-        }
-
-        /* Initialize the lock and list head */
-        KeInitializeSpinLock(&InitExtension->Lock);
-    }
-
-    /* Allocate our initialization data entry */
-    InitData = ExAllocatePoolWithTag(NonPagedPool,
-                                     sizeof(SCSI_PORT_INIT_DATA),
-                                     TAG_SCSIPORT);
-    if (!InitData)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Copy in all of the data */
-    RtlCopyMemory(&InitData->HwInitData,
-                  HwInitializationData,
-                  sizeof(HW_INITIALIZATION_DATA));
-    RtlCopyMemory(&InitData->ConfigInfo,
-                  ConfigInfo,
-                  sizeof(CONFIGURATION_INFO));
-    InitData->HwContext = HwContext;
-
-    /* Add our initialization data entry to the list */
-    ExInterlockedPushEntryList(&InitExtension->ListHead,
-                               &InitData->ListEntry,
-                               &InitExtension->Lock);
-    return STATUS_SUCCESS;
-}
-
 /**********************************************************************
  * NAME                         EXPORTED
  *  ScsiPortInitialize
@@ -1260,6 +947,7 @@ ScsiPortInitialize(
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension = NULL;
     PPORT_CONFIGURATION_INFORMATION PortConfig;
     CONFIGURATION_INFO ConfigInfo;
+    ULONG PortConfigSize;
     BOOLEAN Again;
     BOOLEAN DeviceFound = FALSE;
     BOOLEAN FirstConfigCall = TRUE;
@@ -1269,6 +957,7 @@ ScsiPortInitialize(
     PCI_SLOT_NUMBER SlotNumber;
 
     PDEVICE_OBJECT PortDeviceObject;
+    PIO_SCSI_CAPABILITIES PortCapabilities;
 
     PCM_RESOURCE_LIST ResourceList;
 
@@ -1343,14 +1032,8 @@ ScsiPortInitialize(
     /* Open registry keys and fill the driverExtension */
     SpiInitOpenKeys(&ConfigInfo, driverExtension);
 
-    /* In the case of PnP drivers, we don't create the device until AddDevice */
-    if (!driverExtension->IsLegacyDriver)
-    {
-        return SpiDeferInitialization(DriverObject,
-                                      HwInitializationData,
-                                      HwContext,
-                                      &ConfigInfo);
-    }
+    // FIXME: PnP miniports are not supported
+    ASSERT(driverExtension->IsLegacyDriver);
 
     /* Last adapter number = not known */
     ConfigInfo.LastAdapterNumber = SP_UNINITIALIZED_VALUE;
@@ -1372,16 +1055,19 @@ ScsiPortInitialize(
 
 CreatePortConfig:
 
-        /* Allocate port config */
-        Status = SpiAllocatePortConfig(DeviceExtension, HwInitializationData);
+        /* Allocate and initialize port configuration info */
+        PortConfigSize = sizeof(PORT_CONFIGURATION_INFORMATION) +
+                         HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE);
+        PortConfigSize = ALIGN_UP(PortConfigSize, INT64);
+        DeviceExtension->PortConfig = ExAllocatePoolWithTag(NonPagedPool, PortConfigSize, TAG_SCSIPORT);
 
-        if (!NT_SUCCESS(Status))
+        /* Fail if failed */
+        if (DeviceExtension->PortConfig == NULL)
         {
-            DPRINT1("SpiAllocatePortConfig() failed with Status 0x%08X\n", Status);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
             break;
         }
 
-        /* Populate port config */
         Status = SpiCreatePortConfig(DeviceExtension,
                                      HwInitializationData,
                                      &ConfigInfo,
@@ -1390,11 +1076,26 @@ CreatePortConfig:
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("SpiCreatePortConfig() failed with Status 0x%08X\n", Status);
+            DPRINT("SpiCreatePortConfig() failed with Status 0x%08X\n", Status);
             break;
         }
 
         PortConfig = DeviceExtension->PortConfig;
+
+        /* Copy extension sizes into the PortConfig */
+        PortConfig->SpecificLuExtensionSize = DeviceExtension->LunExtensionSize;
+        PortConfig->SrbExtensionSize = DeviceExtension->SrbExtensionSize;
+
+        /* Initialize Access ranges */
+        if (HwInitializationData->NumberOfAccessRanges != 0)
+        {
+            PortConfig->AccessRanges = ALIGN_UP_POINTER(PortConfig + 1, INT64);
+
+            /* Copy the data */
+            RtlCopyMemory(PortConfig->AccessRanges,
+                          ConfigInfo.AccessRanges,
+                          HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE));
+        }
 
         /* Search for matching PCI device */
         if ((HwInitializationData->AdapterInterfaceType == PCIBus) &&
@@ -1521,18 +1222,144 @@ CreatePortConfig:
             ExFreePoolWithTag(ResourceList, TAG_SCSIPORT);
         }
 
-        /* Allocate common buffer, bus data, and SRB data */
-        Status = SpiAllocatePortData(DeviceExtension,
-                                     PortConfig,
-                                     &ConfigInfo);
+        /* Copy all stuff which we ever need from PortConfig to the DeviceExtension */
+        if (PortConfig->MaximumNumberOfTargets > SCSI_MAXIMUM_TARGETS_PER_BUS)
+            DeviceExtension->MaxTargedIds = SCSI_MAXIMUM_TARGETS_PER_BUS;
+        else
+            DeviceExtension->MaxTargedIds = PortConfig->MaximumNumberOfTargets;
 
-        if (!NT_SUCCESS(Status))
+        DeviceExtension->NumberOfBuses = PortConfig->NumberOfBuses;
+        DeviceExtension->CachesData = PortConfig->CachesData;
+        DeviceExtension->ReceiveEvent = PortConfig->ReceiveEvent;
+        DeviceExtension->SupportsTaggedQueuing = PortConfig->TaggedQueuing;
+        DeviceExtension->MultipleReqsPerLun = PortConfig->MultipleRequestPerLu;
+
+        /* Initialize bus scanning information */
+        size_t BusConfigSize = DeviceExtension->NumberOfBuses * sizeof(*DeviceExtension->Buses);
+        DeviceExtension->Buses = ExAllocatePoolZero(NonPagedPool, BusConfigSize, TAG_SCSIPORT);
+        if (!DeviceExtension->Buses)
         {
-            DPRINT1("SpiAllocatePortData failed with status 0x%x\n", Status);
+            DPRINT1("Out of resources!\n");
+            Status = STATUS_INSUFFICIENT_RESOURCES;
             break;
         }
 
-        SpiInitPortCapabilities(PortConfig, DeviceExtension);
+        // initialize bus data
+        for (UINT8 pathId = 0; pathId < DeviceExtension->NumberOfBuses; pathId++)
+        {
+            DeviceExtension->Buses[pathId].BusIdentifier =
+                DeviceExtension->PortConfig->InitiatorBusId[pathId];
+            InitializeListHead(&DeviceExtension->Buses[pathId].LunsListHead);
+        }
+
+        /* If something was disabled via registry - apply it */
+        if (ConfigInfo.DisableMultipleLun)
+            DeviceExtension->MultipleReqsPerLun = PortConfig->MultipleRequestPerLu = FALSE;
+
+        if (ConfigInfo.DisableTaggedQueueing)
+            DeviceExtension->SupportsTaggedQueuing = PortConfig->MultipleRequestPerLu = FALSE;
+
+        /* Check if we need to alloc SRB data */
+        if (DeviceExtension->SupportsTaggedQueuing || DeviceExtension->MultipleReqsPerLun)
+        {
+            DeviceExtension->NeedSrbDataAlloc = TRUE;
+        }
+        else
+        {
+            DeviceExtension->NeedSrbDataAlloc = FALSE;
+        }
+
+        /* Get a pointer to the port capabilities */
+        PortCapabilities = &DeviceExtension->PortCapabilities;
+
+        /* Copy one field there */
+        DeviceExtension->MapBuffers = PortConfig->MapBuffers;
+        PortCapabilities->AdapterUsesPio = PortConfig->MapBuffers;
+
+        if (DeviceExtension->AdapterObject == NULL &&
+            (PortConfig->DmaChannel != SP_UNINITIALIZED_VALUE || PortConfig->Master))
+        {
+            DPRINT1("DMA is not supported yet\n");
+            ASSERT(FALSE);
+        }
+
+        if (DeviceExtension->SrbExtensionBuffer == NULL &&
+            (DeviceExtension->SrbExtensionSize != 0 || PortConfig->AutoRequestSense))
+        {
+            DeviceExtension->SupportsAutoSense = PortConfig->AutoRequestSense;
+            DeviceExtension->NeedSrbExtensionAlloc = TRUE;
+
+            /* Allocate common buffer */
+            Status = SpiAllocateCommonBuffer(DeviceExtension, 0);
+
+            /* Check for failure */
+            if (!NT_SUCCESS(Status))
+                break;
+        }
+
+        /* Allocate SrbData, if needed */
+        if (DeviceExtension->NeedSrbDataAlloc)
+        {
+            ULONG Count;
+            PSCSI_REQUEST_BLOCK_INFO SrbData;
+
+            if (DeviceExtension->SrbDataCount != 0)
+                Count = DeviceExtension->SrbDataCount;
+            else
+                Count = DeviceExtension->RequestsNumber * 2;
+
+            /* Allocate the data */
+            SrbData = ExAllocatePoolWithTag(
+                NonPagedPool, Count * sizeof(SCSI_REQUEST_BLOCK_INFO), TAG_SCSIPORT);
+            if (SrbData == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            RtlZeroMemory(SrbData, Count * sizeof(SCSI_REQUEST_BLOCK_INFO));
+
+            DeviceExtension->SrbInfo = SrbData;
+            DeviceExtension->FreeSrbInfo = SrbData;
+            DeviceExtension->SrbDataCount = Count;
+
+            /* Link it to the list */
+            while (Count > 0)
+            {
+                SrbData->Requests.Flink = (PLIST_ENTRY)(SrbData + 1);
+                SrbData++;
+                Count--;
+            }
+
+            /* Mark the last entry of the list */
+            SrbData--;
+            SrbData->Requests.Flink = NULL;
+        }
+
+        /* Initialize port capabilities */
+        PortCapabilities = &DeviceExtension->PortCapabilities;
+        PortCapabilities->Length = sizeof(IO_SCSI_CAPABILITIES);
+        PortCapabilities->MaximumTransferLength = PortConfig->MaximumTransferLength;
+
+        if (PortConfig->ReceiveEvent)
+            PortCapabilities->SupportedAsynchronousEvents |= SRBEV_SCSI_ASYNC_NOTIFICATION;
+
+        PortCapabilities->TaggedQueuing = DeviceExtension->SupportsTaggedQueuing;
+        PortCapabilities->AdapterScansDown = PortConfig->AdapterScansDown;
+
+        if (PortConfig->AlignmentMask > PortDeviceObject->AlignmentRequirement)
+            PortDeviceObject->AlignmentRequirement = PortConfig->AlignmentMask;
+
+        PortCapabilities->AlignmentMask = PortDeviceObject->AlignmentRequirement;
+
+        if (PortCapabilities->MaximumPhysicalPages == 0)
+        {
+            PortCapabilities->MaximumPhysicalPages =
+                BYTES_TO_PAGES(PortCapabilities->MaximumTransferLength);
+
+            /* Apply miniport's limits */
+            if (PortConfig->NumberOfPhysicalBreaks < PortCapabilities->MaximumPhysicalPages)
+            {
+                PortCapabilities->MaximumPhysicalPages = PortConfig->NumberOfPhysicalBreaks;
+            }
+        }
 
         FdoCallHWInitialize(DeviceExtension);
 
@@ -1809,8 +1636,8 @@ ScsiPortValidateRange(IN PVOID HwDeviceExtension,
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
-VOID
-SpiResourceToConfig(IN ULONG NumberOfAccessRanges,
+static VOID
+SpiResourceToConfig(IN PHW_INITIALIZATION_DATA HwInitializationData,
                     IN PCM_FULL_RESOURCE_DESCRIPTOR ResourceDescriptor,
                     IN PPORT_CONFIGURATION_INFORMATION PortConfig)
 {
@@ -1832,7 +1659,7 @@ SpiResourceToConfig(IN ULONG NumberOfAccessRanges,
         {
         case CmResourceTypePort:
             /* Copy access ranges */
-            if (RangeNumber < NumberOfAccessRanges)
+            if (RangeNumber < HwInitializationData->NumberOfAccessRanges)
             {
                 AccessRange = &((*(PortConfig->AccessRanges))[RangeNumber]);
 
@@ -1846,7 +1673,7 @@ SpiResourceToConfig(IN ULONG NumberOfAccessRanges,
 
         case CmResourceTypeMemory:
             /* Copy access ranges */
-            if (RangeNumber < NumberOfAccessRanges)
+            if (RangeNumber < HwInitializationData->NumberOfAccessRanges)
             {
                 AccessRange = &((*(PortConfig->AccessRanges))[RangeNumber]);
 
@@ -2166,7 +1993,7 @@ SpiGetPciConfigData(IN PDRIVER_OBJECT DriverObject,
                 break;
 
             /* Create configuration information */
-            SpiResourceToConfig(HwInitializationData->NumberOfAccessRanges,
+            SpiResourceToConfig(HwInitializationData,
                                 ResourceList->List,
                                 PortConfig);
 
@@ -2582,16 +2409,9 @@ SpiCreatePortConfig(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         /* First zero the portconfig */
         RtlZeroMemory(ConfigInfo, sizeof(PORT_CONFIGURATION_INFORMATION));
 
-        /* Copy over the access ranges */
-        if (HwInitData->NumberOfAccessRanges != 0)
-        {
-            /* SpiAllocatePortConfig puts aside extra space at the
-             * end of the port config for storing access ranges. */
-            ConfigInfo->AccessRanges = ALIGN_UP_POINTER(ConfigInfo + 1, INT64);
-            RtlCopyMemory(ConfigInfo->AccessRanges,
-                          InternalConfigInfo->AccessRanges,
-                          HwInitData->NumberOfAccessRanges * sizeof(ACCESS_RANGE));
-        }
+        /* Then access ranges */
+        RtlZeroMemory(InternalConfigInfo->AccessRanges,
+                      HwInitData->NumberOfAccessRanges * sizeof(ACCESS_RANGE));
 
         /* Initialize the struct */
         ConfigInfo->Length = sizeof(PORT_CONFIGURATION_INFORMATION);
@@ -2604,8 +2424,6 @@ SpiCreatePortConfig(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         ConfigInfo->MaximumTransferLength = SP_UNINITIALIZED_VALUE;
         ConfigInfo->NumberOfAccessRanges = HwInitData->NumberOfAccessRanges;
         ConfigInfo->MaximumNumberOfTargets = 8;
-        ConfigInfo->SpecificLuExtensionSize = DeviceExtension->LunExtensionSize;
-        ConfigInfo->SrbExtensionSize = DeviceExtension->SrbExtensionSize;
 
         /* Store parameters */
         ConfigInfo->NeedPhysicalAddresses = HwInitData->NeedPhysicalAddresses;

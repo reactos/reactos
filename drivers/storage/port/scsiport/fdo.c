@@ -626,12 +626,7 @@ FdoStartAdapter(
     }
 
     // start building a device map
-    status = RegistryInitAdapterKey(PortExtension);
-    if (!NT_SUCCESS(status))
-    {
-        DPRINT1("RegistryInitAdapterKey failed with status 0x%x\n", status);
-        return status;
-    }
+    RegistryInitAdapterKey(PortExtension);
 
     // increase the port count
     PCONFIGURATION_INFORMATION sysConfig = IoGetConfigurationInformation();
@@ -651,48 +646,8 @@ FdoStartAdapter(
     }
 
     PortExtension->DeviceStarted = TRUE;
-    PortExtension->Common.PnpState = SppsStarted;
 
     return STATUS_SUCCESS;
-}
-
-static
-inline
-NTSTATUS
-FdoCompletePnpIrp(_Inout_ PIRP Irp, _In_ NTSTATUS Status)
-{
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
-}
-
-static
-NTSTATUS
-FdoHandleStart(
-    _In_ PSCSI_PORT_DEVICE_EXTENSION PortExtension,
-    _Inout_ PIRP Irp)
-{
-    PIO_STACK_LOCATION StackPos;
-    NTSTATUS Status;
-
-    DPRINT1("Starting device %wZ\n", &PortExtension->DeviceName);
-
-    /* Forward the START_DEVICE IRP down the stack and wait */
-    if (!IoForwardIrpSynchronously(PortExtension->Common.LowerDevice, Irp))
-    {
-        DPRINT1("IoForwardIrpSynchronously failed\n");
-        return FdoCompletePnpIrp(Irp, STATUS_DRIVER_INTERNAL_ERROR);
-    }
-
-    /* Get resource configuration */
-    StackPos = IoGetCurrentIrpStackLocation(Irp);
-    SpiResourceToConfig(PortExtension->PortConfig->NumberOfAccessRanges,
-                        &StackPos->Parameters.StartDevice.AllocatedResourcesTranslated->List[0],
-                        PortExtension->PortConfig);
-
-    /* Start the device and complete the request */
-    Status = FdoStartAdapter(PortExtension);
-    return FdoCompletePnpIrp(Irp, Status);
 }
 
 static
@@ -810,13 +765,17 @@ FdoDispatchPnp(
 
     ASSERT(portExt->Common.IsFDO);
 
-    DPRINT1("FDO PnP request %s\n", GetIRPMinorFunctionString(ioStack->MinorFunction));
+    DPRINT("FDO PnP request %s\n", GetIRPMinorFunctionString(ioStack->MinorFunction));
 
     switch (ioStack->MinorFunction)
     {
         case IRP_MN_START_DEVICE:
         {
-            return FdoHandleStart(portExt, Irp);
+            // as we don't support PnP yet, this is a no-op for us
+            // (FdoStartAdapter is being called during initialization for legacy miniports)
+            status = STATUS_SUCCESS;
+            // status = FdoStartAdapter(DeviceExtension);
+            break;
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
