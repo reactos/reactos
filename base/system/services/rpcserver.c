@@ -2540,7 +2540,6 @@ RCreateServiceW(
                 goto done;
         }
 
-DPRINT1("\n");
         /* Write the security descriptor */
         dwError = ScmWriteSecurityDescriptor(hServiceKey,
                                              lpService->pSecurityDescriptor);
@@ -5097,7 +5096,7 @@ RChangeServiceConfig2A(
     SC_RPC_HANDLE hService,
     SC_RPC_CONFIG_INFOA Info)
 {
-    SC_RPC_CONFIG_INFOW InfoW;
+    SC_RPC_CONFIG_INFOW InfoW = { 0 };
     DWORD dwRet, dwLength;
     PVOID ptr = NULL;
 
