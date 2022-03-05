@@ -14,19 +14,19 @@ static MUI_ENTRY deDESetupInitPageEntries[] =
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        "Bitte warten Sie w\204hrend das ReactOS Setup startet",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         21,
-        "and discovers your devices...",
+        "und Ihre Ger\204te detektiert...",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         0,
-        "Please wait...",
+        "Bitte warten...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -60,7 +60,7 @@ static MUI_ENTRY deDELanguagePageEntries[] =
     {
         11,
         11,
-        "verwenden wollen.  Best\204tigen Sie die Auswahl mit der EINGABETASTE.",
+        "verwenden wollen. Best\204tigen Sie die Auswahl mit ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -72,7 +72,7 @@ static MUI_ENTRY deDELanguagePageEntries[] =
     {
         0,
         0,
-        "EINGABETASTE = Fortsetzen  F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -112,19 +112,19 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  Dr\201cken Sie ENTER, um ReactOS zu installieren / aktualisieren.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Dr\201cken Sie R, um ReactOS zu reparieren.",
+        "\x07  Dr\201cken Sie R, um ReactOS zu reparieren. (Wiederherstellungskonsole)",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Dr\201cken Sie L, um die Lizenzabkommen von ReactOS zu lesen.",
+        "\x07  Dr\201cken Sie L, um das Lizenzabkommen von ReactOS zu lesen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -142,13 +142,13 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         6,
         24,
-        "http://www.reactos.org",
+        "https://reactos.org/",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         0,
         0,
-        "EINGABETASTE = Fortsetzen  R = Reparieren  L = Lizenz  F3 = Beenden",
+        "ENTER = Fortsetzen   R = Reparieren   L = Lizenz   F3 = Beenden",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -176,49 +176,49 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "ReactOS befindet sich noch im Alpha Stadium. Noch sind nicht alle",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "wichtigen Funktionen implementiert und Sie m\201ssen mit dem Auftreten",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        "schwerwiegender Fehler rechnen. Verwenden Sie es daher nur",
         TEXT_STYLE_NORMAL
     },
     {
         6,
-        15,
-        "Backup your data or test on a secondary computer if you attempt",
+        14,
+        "zu Testzwecken auf einem Zweitcomputer, nicht als Produktivsystem!",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        "Sichern Sie unbedingt vorher ihre bestehenden Daten!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "\x07  Dr\201cken Sie ENTER, um das ReactOS Setup fortzusetzen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Dr\201cken Sie F3, um abzubrechen ohne ReactOS zu installieren.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = Fortsetzen   F3 = Abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -264,7 +264,7 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         8,
         11,
-        "S\204mtliche Software in ReactOS daher unter der",
+        "Alle Softwarebestandteile in ReactOS sind daher unter der",
         TEXT_STYLE_NORMAL
     },
     {
@@ -342,7 +342,7 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         0,
         0,
-        "EINGABETASTE = Zur\201ck",
+        "ENTER = Zur\201ck",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -411,7 +411,7 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         6,
         20,
-        "Dr\201cken Sie die EINGABETASTE, um eine Einstellung zu \204ndern.",
+        "Dr\201cken Sie ENTER, um eine Einstellung zu \204ndern.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -429,13 +429,13 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         6,
         24,
-        "einstellungen akzeptieren\" und best\204tigen mit der EINGABETASTE.",
+        "einstellungen akzeptieren\" und best\204tigen mit ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "EINGABETASTE = Fortsetzen   F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -499,13 +499,13 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         8,
         22,
-        "\x07  Dr\201cken Sie die EINGABETASTE, um den Computer neu zu starten.",
+        "\x07  Dr\201cken Sie ENTER, um den Computer neu zu starten.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Zur\201ck  U = Aktualisieren  R = Wiederherst.  EINGABETASTE = Neustart",
+        "ESC = Zur\201ck   U = Aktualisieren   R = Wiederherst.   ENTER = Neustart",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -527,55 +527,55 @@ static MUI_ENTRY deDEUpgradePageEntries[] =
     {
         6,
         8,
-        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        "Das ReactOS Setup kann eine der unten aufgef\201hrten Installationen",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        "aktualisieren, oder versuchen,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "can attempt to repair it.",
+        "eine bestehende ReactOS Installation zu reparieren.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not all implemented yet.",
+        "Die Reparaturfunktionen sind noch nicht alle implementiert.",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Press UP or DOWN to select an OS installation.",
+        "\x07  W\204hlen Sie mit den PFEILTASTEN die gew\201nschte Installation aus.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press U for upgrading the selected OS installation.",
+        "\x07  Dr\201cken Sie U, um die gew\204hlte Installation zu aktualisieren.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to continue with a new installation.",
+        "\x07  Dr\201cken Sie ESC, um eine Neuinstallation vorzunehmen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Dr\201cken Sie F3, um abzubrechen ohne ReactOS zu installieren.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        "U = Aktualisieren   ESC = Neuinstallation   F3 = Abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -609,7 +609,7 @@ static MUI_ENTRY deDEComputerPageEntries[] =
     {
         8,
         11,
-        "   Typ zu w\204hlen. Best\204tigen Sie mit der EINGABETASTE.",
+        "   Typ zu w\204hlen. Best\204tigen Sie mit ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -627,7 +627,7 @@ static MUI_ENTRY deDEComputerPageEntries[] =
     {
         0,
         0,
-        "EINGABETASTE = Fortsetzen   ESC = Zur\201ck  F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   ESC = Zur\201ck   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -661,7 +661,7 @@ static MUI_ENTRY deDEFlushPageEntries[] =
     {
         10,
         9,
-        "Der PC wird automatisch neu gestartet, sobald der Vorgang beendet ist.",
+        "Der PC startet automatisch neu, sobald der Vorgang beendet ist.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -701,7 +701,7 @@ static MUI_ENTRY deDEQuitPageEntries[] =
     {
         10,
         11,
-        "Dr\201cken Sie die EINGABETASTE, um den Computer neu zu starten.",
+        "Dr\201cken Sie ENTER, um den Computer neu zu starten.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -741,7 +741,7 @@ static MUI_ENTRY deDEDisplayPageEntries[] =
     {
         8,
         11,
-        "   Typ zu w\204hlen. Best\204tigen Sie mit der EINGABETASTE.",
+        "   Typ zu w\204hlen. Best\204tigen Sie mit ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -759,7 +759,7 @@ static MUI_ENTRY deDEDisplayPageEntries[] =
     {
         0,
         0,
-        "EEINGABETASTE = Fortsetzen   ESC = Zur\201ck  F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   ESC = Zur\201ck   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -793,13 +793,13 @@ static MUI_ENTRY deDESuccessPageEntries[] =
     {
         10,
         11,
-        "Dr\201cken Sie die EINGABETASTE, um den Computer neu zu starten.",
+        "Dr\201cken Sie ENTER, um den Computer neu zu starten.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "EINGABETASTE = Computer neu starten",
+        "ENTER = Computer neu starten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -839,13 +839,13 @@ static MUI_ENTRY deDEBootPageEntries[] =
     {
         6,
         14,
-        "dr\201cken Sie die EINGABETASTE.",
+        "dr\201cken Sie ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "EINGABETASTE = Fortsetzen   F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -886,7 +886,7 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  Best\204tigen Sie Ihre Auswahl mit der EINGABETASTE.",
+        "\x07  ENTER best\204tigt Ihre Auswahl.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -938,91 +938,91 @@ static MUI_ENTRY deDEChangeSystemPartition[] =
     {
         6,
         8,
-        "The current system partition of your computer",
+        "Die derzeitige aktive Partition",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "on the system disk",
+        "auf dem Systemlaufwerk",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "verwendet eine von ReactOS nicht unterst\201tzte Formatierung.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         18,
-        "In order to successfully install ReactOS, the Setup program must change",
+        "Um ReactOS installieren zu k\224nnen, muss das Setup Programm",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "the current system partition to a new one.",
+        "die Partition \204ndern, die derzeit als aktiv markiert ist.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "The new candidate system partition is:",
+        "Folgende Partition wird k\201nftig die aktive Systempartition sein:",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07  To accept this choice, press ENTER.",
+        "\x07  Dr\201cken Sie ENTER, um diesen Vorschlag zu akzeptieren.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         27,
-        "\x07  To manually change the system partition, press ESC to go back to",
+        "\x07  Dr\201cken Sie ESC, um manuell eine andere Systempartition festzulegen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         28,
-        "   the partition selection list, then select or create a new system",
+        "   Erstellen Sie dazu eine neue Partition oder w\204hlen eine existierende in der folgenden Liste",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         29,
-        "   partition on the system disk.",
+        "   der Partitionen auf dem Systemlaufwerk.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         32,
-        "In case there are other operating systems that depend on the original",
+        "Falls sich noch weitere Betriebssysteme auf die alte Systempartition beziehen,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         33,
-        "system partition, you may need to either reconfigure them for the new",
+        "k\224nnen Sie entweder manuell versuchen, diese nachtr\204glich anzupassen",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         34,
-        "system partition, or you may need to change the system partition back",
+        "oder Sie markieren die alte aktive Partition wieder als aktiv",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         35,
-        "to the original one after finishing the installation of ReactOS.",
+        "nachdem das ReactOS Setup abgeschlossen wurde.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel",
+        "ENTER = Fortsetzen   ESC = Abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1044,79 +1044,79 @@ static MUI_ENTRY deDEConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         8,
-        "You have chosen to delete the system partition.",
+        "Sind Sie sicher, dass Sie die aktive Systempartition l\224schen wollen?",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnostic programs, hardware configuration",
+        "Systempartitionen enthalten oft wichtige Diagnose-Programme oder",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        "Ger\204tetreiber, die ben\224tigt werden, um den Computer starten",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        "oder einen fr\201heren Zustand wiederherstellen zu k\224nnen.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "L\224schen Sie die aktive Systempartition nur falls Sie sicher sind,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programs on the partition, or when you are sure you want to delete them.",
+        "dass sich keine derartigen Programme auf dieser Partition befinden oder",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "dass Sie keinerlei Daten von dieser Partition l\204nger ben\224tigen.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        "Erst nach Abschluss des Setup wird der Computer wieder startf\204hig sein.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  Dr\201cken Sie ENTER, um die aktive Systempartition zu l\224schen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "   Das L\224schen der Partition muss ein weiteres Mal best\204tigt werden.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
+        "\x07  Dr\201cken Sie ESC, um zur vorherigen Seite zur\201ckzukehren.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   not be deleted.",
+        "   Die Partition wird nicht gel\224scht.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER=Continue  ESC=Cancel",
+        "ENTER = Fortsetzen   ESC = Abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1149,14 +1149,14 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     },
     {
         6,
-        11,
-        "Dr\201cken Sie die EINGABETASTE, um fortzufahren.",
+        12,
+        "Dr\201cken Sie ENTER, um fortzusetzen.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "EINGABETASTE = Fortfahren   F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1202,13 +1202,13 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         6,
         17,
-        "Best\204tigen Sie die Eingabe mit der EINGABETASTE.",
+        "Best\204tigen Sie die Eingabe mit ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "EINGABETASTE = Fortfahren   F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1300,7 +1300,7 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
     {
         0,
         0,
-        "EINGABETASTE = Fortfahren   F3 = Abbrechen",
+        "ENTER = Fortsetzen   F3 = Abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1334,7 +1334,7 @@ static MUI_ENTRY deDEKeyboardSettingsEntries[] =
     {
         8,
         11,
-        "    zu w\204hlen. Best\204tigen Sie Ihre Auswahl mit der EINGABETASTE.",
+        "   zu w\204hlen. Best\204tigen Sie Ihre Auswahl mit ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1352,7 +1352,7 @@ static MUI_ENTRY deDEKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "EINGABETASTE = Fortfahren   ESC = Abbrechen   F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   ESC = Abbrechen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1386,7 +1386,7 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         8,
         11,
-        "   zu w\204hlen. Best\204tigen Sie Ihre Auswahl mit der EINGABETASTE.",
+        "   zu w\204hlen. Best\204tigen Sie Ihre Auswahl mit ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1404,7 +1404,7 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         0,
         0,
-        "EINGABETASTE = Fortfahren   ESC = Abbrechen   F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   ESC = Abbrechen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1468,7 +1468,7 @@ static MUI_ENTRY deDESelectFSEntries[] =
     {
         8,
         21,
-        "\x07  Dr\201cken Sie die EINGABETASTE, um die Partition zu formatieren.",
+        "\x07  Dr\201cken Sie ENTER, um die Partition zu formatieren.",
         0
     },
     {
@@ -1480,7 +1480,7 @@ static MUI_ENTRY deDESelectFSEntries[] =
     {
         0,
         0,
-        "EINGABETASTE = Fortfahren   ESC = Zur\201ck   F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   ESC = Zur\201ck   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1578,79 +1578,79 @@ MUI_ERROR deDEErrorEntries[] =
         "Wenn Sie die Installation jetzt beenden, m\201ssen Sie diese\n"
         "erneut starten, um ReactOS zu installieren.\n"
         "\n"
-        "  \x07  Dr\201cken Sie die EINGABETASTE, um die Installation fortzusetzen.\n"
+        "  \x07  Dr\201cken Sie ENTER, um die Installation fortzusetzen.\n"
         "  \x07  Dr\201cken Sie F3, um die Installation zu beenden.",
-        "F3 = Beenden  EINGABETASTE = Fortsetzen"
+        "F3 = Beenden   ENTER = Fortsetzen"
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Failed to build the installation paths for the ReactOS installation directory!\n"
-        "ENTER = Reboot computer"
+        "Die Installationspfade f\201r das ReactOS Installationsverzeichnis konnten nicht erstellt werden!\n"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_SOURCE_PATH
-        "You cannot delete the partition containing the installation source!\n"
-        "ENTER = Reboot computer"
+        "Die Partition kann nicht gel\224scht werden, weil sie die Installationsquellen beherbergt!\n"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_SOURCE_DIR
-        "You cannot install ReactOS within the installation source directory!\n"
-        "ENTER = Reboot computer"
+        "ReactOS kann nicht in dasselbe Verzeichnis installiert werden, in dem die Installationsquellen liegen!\n"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_NO_HDD
         "Es konnte keine Festplatte gefunden werden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_NO_SOURCE_DRIVE
         "Es konnte kein Installationsmedium gefunden werden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_LOAD_TXTSETUPSIF
         "TXTSETUP.SIF konnte nicht gefunden werden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_CORRUPT_TXTSETUPSIF
         "TXTSETUP.SIF scheint besch\204digt zu sein.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
         "Es wurde eine ung\201ltige Signatur in TXTSETUP.SIF gefunden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_DRIVE_INFORMATION
         "Es konnten keine Laufwerksinformationen abgefragt werden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_WRITE_BOOT,
         "Der %S-Bootcode konnte nicht auf der Partition installiert werden.",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_LOAD_COMPUTER,
         "Computertypenliste konnte nicht geladen werden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_LOAD_DISPLAY,
         "Displayeinstellungsliste konnte nicht geladen werden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_LOAD_KEYBOARD,
         "Tastaturtypenliste konnte nicht geladen werden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_LOAD_KBLAYOUT,
         "Die Liste der Tastaturlayouts konnte nicht geladen werden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_WARN_PARTITION,
@@ -1660,8 +1660,8 @@ MUI_ERROR deDEErrorEntries[] =
         "\216nderungen an den Partitionen k\224nnen die Partitionstabelle zerst\224ren!\n"
         "\n"
         "  \x07  Dr\201cken Sie F3, um die Installation zu beenden.\n"
-        "  \x07  Dr\201cken Sie die EINGABETASTE, um die Installation fortzusetzen.",
-        "F3 = Beenden  ENTER = EINGABETASTE"
+        "  \x07  Dr\201cken Sie ENTER, um die Installation fortzusetzen.",
+        "F3 = Beenden   ENTER = Fortsetzen"
     },
     {
         // ERROR_NEW_PARTITION,
@@ -1681,112 +1681,112 @@ MUI_ERROR deDEErrorEntries[] =
     {
         // ERROR_INSTALL_BOOTCODE,
         "Der %S-Bootcode konnte nicht auf der Partition installiert werden.",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_NO_FLOPPY,
         "Keine Diskette in Laufwerk A: gefunden.",
-        "EINGABETASTE = Fortsetzen"
+        "ENTER = Fortsetzen"
     },
     {
         // ERROR_UPDATE_KBSETTINGS,
         "Das Tastaturlayout konnte nicht aktualisiert werden.",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Die Registrierungseintr\204ge der Anzeigeeinstellungen\n"
         "konnten nicht aktualisiert werden.",
-        "EINGABETASTER = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_IMPORT_HIVE,
         "Es konnte keine Hive-Datei importiert werden.",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_FIND_REGISTRY
         "Die Registrierungsdateien konnten nicht gefunden werden.",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_CREATE_HIVE,
         "Die Zweige in der Registrierung konnten nicht erstellt werden.",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_INITIALIZE_REGISTRY,
         "Die Registrierung konnte nicht initialisiert werden.",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_INVALID_CABINET_INF,
         "Das CAB-Archiv besitzt keine g\201ltige INF-Datei.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_CABINET_MISSING,
         "Das CAB-Archiv wurde nicht gefunden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_CABINET_SCRIPT,
         "Das CAB-Archiv enth\204lt kein Setup-Skript.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_COPY_QUEUE,
         "Die Liste mit den zu kopierenden Dateien\n"
         "konnte nicht gefunden werden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_CREATE_DIR,
         "Die Installationspfade konnten nicht erstellt werden.",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_TXTSETUP_SECTION,
         "Setup konnte die '%S'-Sektion in\n"
         "TXTSETUP.SIF nicht finden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_CABINET_SECTION,
         "Setup konnte die '%S'-Sektion im\n"
         "CAB-Archiv nicht finden.\n",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_CREATE_INSTALL_DIR
         "Setup konnte den Installationspfad nicht erstellen.",
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_WRITE_PTABLE,
         "Die Partitionstabellen konnten nicht geschrieben werden.\n"
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_ADDING_CODEPAGE,
         "Es konnte kein Codepage-Eintrag hinzugef\201gt werden.\n"
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_UPDATE_LOCALESETTINGS,
         "Die Systemsprache konnte nicht eingestellt werden.\n"
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_ADDING_KBLAYOUTS,
         "Die Tastaturlayouts konnten nicht in die Registrierung\n"
         "eingetragen werden.\n"
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_UPDATE_GEOID,
         "Der geografische Standort konnte nicht eingestellt werden.\n"
-        "EINGABETASTE = Computer neu starten"
+        "ENTER = Computer neu starten"
     },
     {
         // ERROR_DIRECTORY_NAME,
@@ -1796,7 +1796,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Die gew\204hlten Partition ist nicht gro\341 genug, um ReactOS zu installieren.\n"
+        "Die gew\204hlte Partition ist nicht gro\341 genug, um ReactOS zu installieren.\n"
         "Die Installationspartition muss mindestens %lu MB gro\341 sein.\n"
         "\n"
         "  * Eine beliebige Taste zum Fortsetzen dr\201cken.",
@@ -1817,10 +1817,10 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         // ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        "Setup konnte die Partition nicht formatieren:\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "ENTER = Computer neu starten"
     },
     {
         NULL,
@@ -1949,13 +1949,13 @@ MUI_STRING deDEStrings[] =
     {STRING_PLEASEWAIT,
      "   Bitte warten..."},
     {STRING_INSTALLCREATEPARTITION,
-     "  EINGABETASTE = Installieren  P = Prim\204re  E = Erweiterte  F3 = Installation abbr."},
+     "  ENTER = Installieren   P = Prim\204re   E = Erweiterte   F3 = Installation abbr."},
     {STRING_INSTALLCREATELOGICAL,
-     "  EINGABETASTE = Installieren  L = Logisches Laufwerk  F3 = Installation abbr."},
+     "  ENTER = Installieren   L = Logisches Laufwerk   F3 = Installation abbrechen"},
     {STRING_INSTALLDELETEPARTITION,
-     "  EINGABETASTE = Installieren  D = Partition l\224schen  F3 = Installation abbr."},
+     "  ENTER = Installieren   D = Partition l\224schen   F3 = Installation abbrechen"},
     {STRING_DELETEPARTITION,
-     "   D = Partition l\224schen  F3 = Installation abbrechen"},
+     "   D = Partition l\224schen   F3 = Installation abbrechen"},
     {STRING_PARTITIONSIZE,
      "Gr\224\341e der neuen Partition:"},
     {STRING_CHOOSENEWPARTITION,
@@ -1967,7 +1967,7 @@ MUI_STRING deDEStrings[] =
     {STRING_HDDSIZE,
     "Bitte geben Sie die Gr\224\341e der neuen Partition in Megabyte ein."},
     {STRING_CREATEPARTITION,
-     "  EINGABETASTE = Partition erstellen  ESC = Abbrechen  F3 = Installation abbr."},
+     "  ENTER = Partition erstellen   ESC = Abbrechen   F3 = Installation abbrechen"},
     {STRING_PARTFORMAT,
     "Diese Partition wird als n\204chstes formatiert."},
     {STRING_NONFORMATTEDPART,
@@ -1981,11 +1981,11 @@ MUI_STRING deDEStrings[] =
     {STRING_CHECKINGPART,
     "Die ausgew\204hlte Partition wird \201berpr\201ft."},
     {STRING_CONTINUE,
-    "EINGABETASTE = Fortsetzen"},
+    "ENTER = Fortsetzen"},
     {STRING_QUITCONTINUE,
-    "F3 = Beenden  EINGABETASTE = Fortsetzen"},
+    "F3 = Beenden   ENTER = Fortsetzen"},
     {STRING_REBOOTCOMPUTER,
-    "EINGABETASTE = Computer neu starten"},
+    "ENTER = Computer neu starten"},
     {STRING_DELETING,
      "   Deleting file: %S"},
     {STRING_MOVING,
@@ -2011,9 +2011,9 @@ MUI_STRING deDEStrings[] =
     {STRING_DONE,
     "   Fertig..."},
     {STRING_REBOOTCOMPUTER2,
-    "   EINGABETASTE = Computer neu starten"},
+    "   ENTER = Computer neu starten"},
     {STRING_REBOOTPROGRESSBAR,
-    " Your computer will reboot in %li second(s)... "},
+    " Der Computer wird in %li Sekunde(n) neugestartet... "},
     {STRING_CONSOLEFAIL1,
     "Konsole konnte nicht ge\224ffnet werden\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
