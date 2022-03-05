@@ -588,6 +588,10 @@ FdoRemoveAdapter(
     if (DeviceExtension->SrbInfo != NULL)
         ExFreePoolWithTag(DeviceExtension->SrbInfo, TAG_SCSIPORT);
 
+    /* To-do:
+    * - Free device InitData
+    */
+
     /* Unmap mapped addresses */
     while (DeviceExtension->MappedAddressList != NULL)
     {

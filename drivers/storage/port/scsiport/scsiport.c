@@ -121,7 +121,9 @@ NTAPI
 ScsiPortUnload(
     _In_ PDRIVER_OBJECT DriverObject)
 {
-    // no-op
+    /* To-do:
+    * - Loop through InitData list and free everything
+    */
 }
 
 NTSTATUS
@@ -146,7 +148,14 @@ ScsiPortAddDevice(
     _In_ PDRIVER_OBJECT DriverObject,
     _In_ PDEVICE_OBJECT PhysicalDeviceObject)
 {
-
+    /* To-do:
+    * - Figure out what type of bus the PDO is on
+    * - Loop through InitData list to find potential
+    *   devices on the same bus.
+    * - Create each device with SpiCreatePortDevice
+    * - Create port config with SpiCreatePortConfig
+    * - Attach device to the stack
+    */
     DPRINT("AddDevice no-op DriverObj: %p, PDO: %p\n", DriverObject, PhysicalDeviceObject);
 
     return STATUS_SUCCESS;
@@ -805,9 +814,10 @@ ScsiPortGetVirtualAddress(IN PVOID HwDeviceExtension,
 
 static NTSTATUS
 SpiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
-                    IN PHW_INITIALIZATION_DATA HwInitializationData,
+                    IN PSCSI_PORT_INIT_DATA InitData,
                     OUT PDEVICE_OBJECT* PortDeviceObjectPtr)
 {
+    PHW_INITIALIZATION_DATA HwInitializationData = &InitData->HwInitializationData;
     ULONG DeviceExtensionSize = sizeof(SCSI_PORT_DEVICE_EXTENSION) +
         HwInitializationData->DeviceExtensionSize;
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension = NULL;
@@ -861,6 +871,7 @@ SpiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
     DeviceExtension->Length = DeviceExtensionSize;
     DeviceExtension->PortNumber = SystemConfig->ScsiPortCount;
     DeviceExtension->DeviceName = DeviceName;
+    DeviceExtension->InitData = InitData;
 
     /* Driver's routines... */
     DeviceExtension->HwInitialize = HwInitializationData->HwInitialize;
@@ -906,6 +917,41 @@ SpiCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
     return STATUS_SUCCESS;
 }
 
+static PSCSI_PORT_INIT_DATA
+SpiCreateInitData(IN PHW_INITIALIZATION_DATA HwInitializationData,
+                  IN PVOID HwContext)
+{
+    /* Allocate initialization data */
+    PSCSI_PORT_INIT_DATA InitData =
+        ExAllocatePoolWithTag(NonPagedPool,
+                              sizeof(SCSI_PORT_INIT_DATA),
+                              TAG_SCSIPORT);
+    if (InitData == NULL)
+        return NULL;
+
+    /* Populate initialization data */
+    RtlZeroMemory(InitData, sizeof(SCSI_PORT_INIT_DATA));
+    InitData->HwInitializationData = *HwInitializationData;
+    if (HwInitializationData->VendorIdLength > 0 &&
+        HwInitializationData->VendorIdLength < sizeof(InitData->HwVendorId))
+    {
+        RtlCopyMemory(InitData->HwVendorId,
+                      HwInitializationData->VendorId,
+                      HwInitializationData->VendorIdLength);
+    }
+    if (HwInitializationData->DeviceIdLength > 0 &&
+        HwInitializationData->DeviceIdLength < sizeof(InitData->HwDeviceId))
+    {
+        RtlCopyMemory(InitData->HwDeviceId,
+                      HwInitializationData->DeviceId,
+                      HwInitializationData->DeviceIdLength);
+    }
+    InitData->HwInitializationData.VendorId = InitData->HwVendorId;
+    InitData->HwInitializationData.DeviceId = InitData->HwDeviceId;
+    InitData->HwContext = HwContext;
+    return InitData;
+}
+
 /**********************************************************************
  * NAME                         EXPORTED
  *  ScsiPortInitialize
@@ -945,8 +991,10 @@ ScsiPortInitialize(
     PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)Argument1;
     PUNICODE_STRING RegistryPath = (PUNICODE_STRING)Argument2;
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension = NULL;
+    PSCSI_PORT_DRIVER_EXTENSION DriverExtension = NULL;
+    PSCSI_PORT_INIT_DATA InitData;
+    PCONFIGURATION_INFO ConfigInfo;
     PPORT_CONFIGURATION_INFORMATION PortConfig;
-    CONFIGURATION_INFO ConfigInfo;
     ULONG PortConfigSize;
     BOOLEAN Again;
     BOOLEAN DeviceFound = FALSE;
@@ -973,17 +1021,16 @@ ScsiPortInitialize(
         return STATUS_REVISION_MISMATCH;
     }
 
-    PSCSI_PORT_DRIVER_EXTENSION driverExtension;
+    // ScsiPortInitialize may be called multiple times by the same driver,
+    // so we'll keep information for each call in a linked list if necessary.
+    DriverExtension = IoGetDriverObjectExtension(DriverObject, ScsiPortInitialize);
 
-    // ScsiPortInitialize may be called multiple times by the same driver
-    driverExtension = IoGetDriverObjectExtension(DriverObject, HwInitializationData->HwInitialize);
-
-    if (!driverExtension)
+    if (!DriverExtension)
     {
         Status = IoAllocateDriverObjectExtension(DriverObject,
-                                                 HwInitializationData->HwInitialize,
+                                                 ScsiPortInitialize,
                                                  sizeof(SCSI_PORT_DRIVER_EXTENSION),
-                                                 (PVOID *)&driverExtension);
+                                                 (PVOID *)&DriverExtension);
 
         if (!NT_SUCCESS(Status))
         {
@@ -993,12 +1040,14 @@ ScsiPortInitialize(
     }
 
     // set up the driver extension
-    driverExtension->RegistryPath.Buffer =
+    DriverExtension->RegistryPath.Buffer =
         ExAllocatePoolWithTag(PagedPool, RegistryPath->MaximumLength, TAG_SCSIPORT);
-    driverExtension->RegistryPath.MaximumLength = RegistryPath->MaximumLength;
-    RtlCopyUnicodeString(&driverExtension->RegistryPath, RegistryPath);
+    DriverExtension->RegistryPath.MaximumLength = RegistryPath->MaximumLength;
+    RtlCopyUnicodeString(&DriverExtension->RegistryPath, RegistryPath);
 
-    driverExtension->DriverObject = DriverObject;
+    DriverExtension->DriverObject = DriverObject;
+    KeInitializeSpinLock(&DriverExtension->InitDataLock);
+    InitializeListHead(&DriverExtension->InitDataHead);
 
     /* Set handlers */
     DriverObject->DriverUnload = ScsiPortUnload;
@@ -1011,8 +1060,14 @@ ScsiPortInitialize(
     DriverObject->MajorFunction[IRP_MJ_PNP] = ScsiPortDispatchPnp;
     DriverObject->MajorFunction[IRP_MJ_POWER] = ScsiPortDispatchPower;
 
-    /* Zero the internal configuration info structure */
-    RtlZeroMemory(&ConfigInfo, sizeof(CONFIGURATION_INFO));
+    InitData = SpiCreateInitData(HwInitializationData, HwContext);
+    if (InitData == NULL)
+    {
+        DPRINT1("Failed to allocate initialization data\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    ConfigInfo = &InitData->ConfigInfo;
+    HwInitializationData = &InitData->HwInitializationData;
 
     /* Zero starting slot number */
     SlotNumber.u.AsULONG = 0;
@@ -1020,30 +1075,34 @@ ScsiPortInitialize(
     /* Allocate space for access ranges */
     if (HwInitializationData->NumberOfAccessRanges)
     {
-        ConfigInfo.AccessRanges =
+        ConfigInfo->AccessRanges =
             ExAllocatePoolWithTag(PagedPool,
             HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE), TAG_SCSIPORT);
 
         /* Fail if failed */
-        if (ConfigInfo.AccessRanges == NULL)
+        if (ConfigInfo->AccessRanges == NULL)
+        {
+            ExFreePool(InitData);
+            DPRINT1("Failed to allocate access ranges\n");
             return STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
 
-    /* Open registry keys and fill the driverExtension */
-    SpiInitOpenKeys(&ConfigInfo, driverExtension);
+    /* Open registry keys and fill the DriverExtension */
+    SpiInitOpenKeys(ConfigInfo, DriverExtension);
 
     // FIXME: PnP miniports are not supported
-    ASSERT(driverExtension->IsLegacyDriver);
+    ASSERT(DriverExtension->IsLegacyDriver);
 
     /* Last adapter number = not known */
-    ConfigInfo.LastAdapterNumber = SP_UNINITIALIZED_VALUE;
+    ConfigInfo->LastAdapterNumber = SP_UNINITIALIZED_VALUE;
 
     MaxBus = (HwInitializationData->AdapterInterfaceType == PCIBus) ? 8 : 1;
     DPRINT("MaxBus: %lu\n", MaxBus);
 
     while (TRUE)
     {
-        Status = SpiCreatePortDevice(DriverObject, HwInitializationData, &PortDeviceObject);
+        Status = SpiCreatePortDevice(DriverObject, InitData, &PortDeviceObject);
 
         if (!NT_SUCCESS(Status))
         {
@@ -1070,7 +1129,7 @@ CreatePortConfig:
 
         Status = SpiCreatePortConfig(DeviceExtension,
                                      HwInitializationData,
-                                     &ConfigInfo,
+                                     ConfigInfo,
                                      DeviceExtension->PortConfig,
                                      FirstConfigCall);
 
@@ -1093,7 +1152,7 @@ CreatePortConfig:
 
             /* Copy the data */
             RtlCopyMemory(PortConfig->AccessRanges,
-                          ConfigInfo.AccessRanges,
+                          ConfigInfo->AccessRanges,
                           HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE));
         }
 
@@ -1113,10 +1172,10 @@ CreatePortConfig:
 
             if (!SpiGetPciConfigData(
                     DriverObject, PortDeviceObject, HwInitializationData, PortConfig, RegistryPath,
-                    ConfigInfo.BusNumber, &SlotNumber))
+                    ConfigInfo->BusNumber, &SlotNumber))
             {
                 /* Continue to the next bus, nothing here */
-                ConfigInfo.BusNumber++;
+                ConfigInfo->BusNumber++;
                 DeviceExtension->PortConfig = NULL;
                 ExFreePool(PortConfig);
                 Again = FALSE;
@@ -1141,7 +1200,7 @@ CreatePortConfig:
         DPRINT("Calling HwFindAdapter() for Bus %lu\n", PortConfig->SystemIoBusNumber);
         Result = (HwInitializationData->HwFindAdapter)(
             &DeviceExtension->MiniPortDeviceExtension, HwContext, 0, /* BusInformation */
-            ConfigInfo.Parameter,                                    /* ArgumentString */
+            ConfigInfo->Parameter,                                   /* ArgumentString */
             PortConfig, &Again);
 
         DPRINT("HwFindAdapter() Result: %lu  Again: %s\n", Result, (Again) ? "True" : "False");
@@ -1161,7 +1220,7 @@ CreatePortConfig:
             if (Result == SP_RETURN_NOT_FOUND)
             {
                 /* We can continue on the next bus */
-                ConfigInfo.BusNumber++;
+                ConfigInfo->BusNumber++;
                 Again = FALSE;
 
                 DeviceExtension->PortConfig = NULL;
@@ -1197,7 +1256,7 @@ CreatePortConfig:
 
         Status = IoReportDetectedDevice(DriverObject,
                                         HwInitializationData->AdapterInterfaceType,
-                                        ConfigInfo.BusNumber,
+                                        ConfigInfo->BusNumber,
                                         PortConfig->SlotNumber,
                                         ResourceList,
                                         NULL,
@@ -1253,10 +1312,10 @@ CreatePortConfig:
         }
 
         /* If something was disabled via registry - apply it */
-        if (ConfigInfo.DisableMultipleLun)
+        if (ConfigInfo->DisableMultipleLun)
             DeviceExtension->MultipleReqsPerLun = PortConfig->MultipleRequestPerLu = FALSE;
 
-        if (ConfigInfo.DisableTaggedQueueing)
+        if (ConfigInfo->DisableTaggedQueueing)
             DeviceExtension->SupportsTaggedQueuing = PortConfig->MultipleRequestPerLu = FALSE;
 
         /* Check if we need to alloc SRB data */
@@ -1376,12 +1435,12 @@ CreatePortConfig:
         FirstConfigCall = FALSE;
 
         /* Increase adapter number and bus number respectively */
-        ConfigInfo.AdapterNumber++;
+        ConfigInfo->AdapterNumber++;
 
         if (!Again)
-            ConfigInfo.BusNumber++;
+            ConfigInfo->BusNumber++;
 
-        DPRINT("Bus: %lu  MaxBus: %lu\n", ConfigInfo.BusNumber, MaxBus);
+        DPRINT("Bus: %lu  MaxBus: %lu\n", ConfigInfo->BusNumber, MaxBus);
 
         DeviceFound = TRUE;
     }
@@ -1393,20 +1452,20 @@ CreatePortConfig:
     }
 
     /* Close registry keys */
-    if (ConfigInfo.ServiceKey != NULL)
-        ZwClose(ConfigInfo.ServiceKey);
+    if (ConfigInfo->ServiceKey != NULL)
+        ZwClose(ConfigInfo->ServiceKey);
 
-    if (ConfigInfo.DeviceKey != NULL)
-        ZwClose(ConfigInfo.DeviceKey);
+    if (ConfigInfo->DeviceKey != NULL)
+        ZwClose(ConfigInfo->DeviceKey);
 
-    if (ConfigInfo.BusKey != NULL)
-        ZwClose(ConfigInfo.BusKey);
+    if (ConfigInfo->BusKey != NULL)
+        ZwClose(ConfigInfo->BusKey);
 
-    if (ConfigInfo.AccessRanges != NULL)
-        ExFreePool(ConfigInfo.AccessRanges);
+    if (ConfigInfo->AccessRanges != NULL)
+        ExFreePool(ConfigInfo->AccessRanges);
 
-    if (ConfigInfo.Parameter != NULL)
-        ExFreePool(ConfigInfo.Parameter);
+    if (ConfigInfo->Parameter != NULL)
+        ExFreePool(ConfigInfo->Parameter);
 
     DPRINT("ScsiPortInitialize() done, Status = 0x%08X, DeviceFound = %d!\n",
         Status, DeviceFound);

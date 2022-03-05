@@ -222,6 +222,17 @@ typedef struct _SCSI_PORT_SAVE_INTERRUPT
     struct _SCSI_PORT_DEVICE_EXTENSION *DeviceExtension;
 } SCSI_PORT_SAVE_INTERRUPT, *PSCSI_PORT_SAVE_INTERRUPT;
 
+/* Stores information for a ScsiPortInitialize call */
+typedef struct _SCSI_PORT_INIT_DATA
+{
+    LIST_ENTRY ListEntry;
+    CONFIGURATION_INFO ConfigInfo;
+    HW_INITIALIZATION_DATA HwInitializationData;
+    PVOID HwContext;
+    UCHAR HwVendorId[8];
+    UCHAR HwDeviceId[8];
+} SCSI_PORT_INIT_DATA, *PSCSI_PORT_INIT_DATA;
+
 /*
  * SCSI_PORT_DEVICE_EXTENSION
  *
@@ -331,6 +342,8 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
     BOOLEAN DeviceStarted;
     UINT8 TotalLUCount;
 
+    PSCSI_PORT_INIT_DATA InitData;
+
     // use the pointer alignment here, some miniport drivers rely on this
     // moreover, it has to be the last member
     ALIGNAS_PTR UCHAR MiniPortDeviceExtension[];
@@ -347,6 +360,8 @@ typedef struct _SCSIPORT_DRIVER_EXTENSION
     PDRIVER_OBJECT DriverObject;
     UNICODE_STRING RegistryPath;
     BOOLEAN IsLegacyDriver;
+    KSPIN_LOCK InitDataLock;
+    LIST_ENTRY InitDataHead;
 } SCSI_PORT_DRIVER_EXTENSION, *PSCSI_PORT_DRIVER_EXTENSION;
 
 FORCEINLINE
