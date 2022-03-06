@@ -79,6 +79,7 @@ private:
     BOOL RemoveItemsByRegID(UINT nRegID);
     BOOL RemoveItemsByProcess(DWORD dwUserPID);
     void DestroyItem(CWatchItem *pItem, HWND *phwndBroker);
+    void DestroyAllItems();
 
     UINT GetNextRegID();
     BOOL DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID);
@@ -134,6 +135,20 @@ void CChangeNotifyServer::DestroyItem(CWatchItem *pItem, HWND *phwndBroker)
     // free
     SHFree(pItem->pRegEntry);
     delete pItem;
+}
+
+void CChangeNotifyServer::DestroyAllItems()
+{
+    for (INT i = 0; i < m_items.GetSize(); ++i)
+    {
+        if (m_items[i])
+        {
+            HWND hwndBroker = NULL;
+            DestroyItem(m_items[i], &hwndBroker);
+            m_items[i] = NULL;
+        }
+    }
+    m_items.RemoveAll();
 }
 
 BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID)
@@ -319,6 +334,7 @@ LRESULT CChangeNotifyServer::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lPar
 
 LRESULT CChangeNotifyServer::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    DestroyAllItems();
     CDirectoryWatcher::RequestAllWatchersTermination();
     return 0;
 }
