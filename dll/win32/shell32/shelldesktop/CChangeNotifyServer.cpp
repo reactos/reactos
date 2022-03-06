@@ -14,11 +14,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 //////////////////////////////////////////////////////////////////////////////
 
 // notification target item
-struct ITEM
+struct CWatchItem
 {
     UINT nRegID;        // The registration ID.
     DWORD dwUserPID;    // The user PID; that is the process ID of the target window.
-    HANDLE hRegEntry;   // The registration entry.
+    LPREGENTRY pRegEntry;   // The registration entry.
     HWND hwndBroker;    // Client broker window (if any).
     CDirectoryWatcher *pDirWatch; // for filesystem notification
 };
@@ -73,13 +73,12 @@ public:
 
 private:
     UINT m_nNextRegID;
-    CSimpleArray<ITEM> m_items;
+    CSimpleArray<CWatchItem*> m_items;
 
-    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndBroker,
-                 CDirectoryWatcher *pDirWatch);
-    BOOL RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID);
-    void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
-    void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndBroker);
+    BOOL AddItem(CWatchItem *pItem);
+    BOOL RemoveItemsByRegID(UINT nRegID);
+    BOOL RemoveItemsByProcess(DWORD dwUserPID);
+    void DestroyItem(CWatchItem *pItem, HWND *phwndBroker);
 
     UINT GetNextRegID();
     BOOL DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID);
@@ -95,35 +94,31 @@ CChangeNotifyServer::~CChangeNotifyServer()
 {
 }
 
-BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry,
-                                  HWND hwndBroker, CDirectoryWatcher *pDirWatch)
+BOOL CChangeNotifyServer::AddItem(CWatchItem *pItem)
 {
     // find the empty room
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        if (m_items[i].nRegID == INVALID_REG_ID)
+        if (m_items[i] == NULL)
         {
             // found the room, populate it
-            m_items[i].nRegID = nRegID;
-            m_items[i].dwUserPID = dwUserPID;
-            m_items[i].hRegEntry = hRegEntry;
-            m_items[i].hwndBroker = hwndBroker;
-            m_items[i].pDirWatch = pDirWatch;
+            m_items[i] = pItem;
             return TRUE;
         }
     }
 
     // no empty room found
-    ITEM item = { nRegID, dwUserPID, hRegEntry, hwndBroker, pDirWatch };
-    m_items.Add(item);
+    m_items.Add(pItem);
     return TRUE;
 }
 
-void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndBroker)
+void CChangeNotifyServer::DestroyItem(CWatchItem *pItem, HWND *phwndBroker)
 {
+    assert(pItem);
+
     // destroy broker if any and if first time
-    HWND hwndBroker = item.hwndBroker;
-    item.hwndBroker = NULL;
+    HWND hwndBroker = pItem->hwndBroker;
+    pItem->hwndBroker = NULL;
     if (hwndBroker && hwndBroker != *phwndBroker)
     {
         ::DestroyWindow(hwndBroker);
@@ -131,47 +126,48 @@ void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndB
     }
 
     // request termination of pDirWatch if any
-    CDirectoryWatcher *pDirWatch = item.pDirWatch;
-    item.pDirWatch = NULL;
+    CDirectoryWatcher *pDirWatch = pItem->pDirWatch;
+    pItem->pDirWatch = NULL;
     if (pDirWatch)
         pDirWatch->RequestTermination();
 
     // free
-    SHFreeShared(item.hRegEntry, dwOwnerPID);
-    item.nRegID = INVALID_REG_ID;
-    item.dwUserPID = 0;
-    item.hRegEntry = NULL;
-    item.hwndBroker = NULL;
-    item.pDirWatch = NULL;
+    SHFree(pItem->pRegEntry);
+    delete pItem;
 }
 
-BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
+BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID)
 {
     BOOL bFound = FALSE;
     HWND hwndBroker = NULL;
     assert(nRegID != INVALID_REG_ID);
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        if (m_items[i].nRegID == nRegID)
+        if (m_items[i] && m_items[i]->nRegID == nRegID)
         {
             bFound = TRUE;
-            DestroyItem(m_items[i], dwOwnerPID, &hwndBroker);
+            DestroyItem(m_items[i], &hwndBroker);
+            m_items[i] = NULL;
         }
     }
     return bFound;
 }
 
-void CChangeNotifyServer::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID)
+BOOL CChangeNotifyServer::RemoveItemsByProcess(DWORD dwUserPID)
 {
+    BOOL bFound = FALSE;
     HWND hwndBroker = NULL;
     assert(dwUserPID != 0);
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        if (m_items[i].dwUserPID == dwUserPID)
+        if (m_items[i] && m_items[i]->dwUserPID == dwUserPID)
         {
-            DestroyItem(m_items[i], dwOwnerPID, &hwndBroker);
+            bFound = TRUE;
+            DestroyItem(m_items[i], &hwndBroker);
+            m_items[i] = NULL;
         }
     }
+    return bFound;
 }
 
 // create a CDirectoryWatcher from a REGENTRY
@@ -228,14 +224,15 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     HWND hwndBroker = pRegEntry->hwndBroker;
 
     // clone the registration entry
-    HANDLE hNewEntry = SHAllocShared(pRegEntry, pRegEntry->cbSize, dwOwnerPID);
-    if (hNewEntry == NULL)
+    LPREGENTRY pNewEntry = (LPREGENTRY)SHAlloc(pRegEntry->cbSize);
+    if (pNewEntry == NULL)
     {
         ERR("Out of memory\n");
         pRegEntry->nRegID = INVALID_REG_ID;
         SHUnlockShared(pRegEntry);
         return FALSE;
     }
+    CopyMemory(pNewEntry, pRegEntry, pRegEntry->cbSize);
 
     // create a directory watch if necessary
     CDirectoryWatcher *pDirWatch = NULL;
@@ -255,8 +252,9 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     // unlock the registry entry
     SHUnlockShared(pRegEntry);
 
-    // add an ITEM
-    return AddItem(m_nNextRegID, dwUserPID, hNewEntry, hwndBroker, pDirWatch);
+    // add an item
+    CWatchItem *pItem = new CWatchItem { m_nNextRegID, dwUserPID, pNewEntry, hwndBroker, pDirWatch };
+    return AddItem(pItem);
 }
 
 // Message CN_UNREGISTER: Unregister registration entries.
@@ -276,9 +274,7 @@ LRESULT CChangeNotifyServer::OnUnRegister(UINT uMsg, WPARAM wParam, LPARAM lPara
     }
 
     // remove it
-    DWORD dwOwnerPID;
-    GetWindowThreadProcessId(m_hWnd, &dwOwnerPID);
-    return RemoveItemsByRegID(nRegID, dwOwnerPID);
+    return RemoveItemsByRegID(nRegID);
 }
 
 // Message CN_DELIVER_NOTIFICATION: Perform a delivery.
@@ -316,9 +312,8 @@ LRESULT CChangeNotifyServer::OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lP
 //   return: Zero.
 LRESULT CChangeNotifyServer::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    DWORD dwOwnerPID, dwUserPID = (DWORD)wParam;
-    GetWindowThreadProcessId(m_hWnd, &dwOwnerPID);
-    RemoveItemsByProcess(dwOwnerPID, dwUserPID);
+    DWORD dwUserPID = (DWORD)wParam;
+    RemoveItemsByProcess(dwUserPID);
     return 0;
 }
 
@@ -355,20 +350,13 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
     // for all items
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        // validate the item
-        if (m_items[i].nRegID == INVALID_REG_ID)
+        if (m_items[i] == NULL)
             continue;
 
-        HANDLE hRegEntry = m_items[i].hRegEntry;
-        if (hRegEntry == NULL)
-            continue;
-
-        // lock the registration entry
-        LPREGENTRY pRegEntry = (LPREGENTRY)SHLockSharedEx(hRegEntry, dwOwnerPID, FALSE);
+        LPREGENTRY pRegEntry = m_items[i]->pRegEntry;
         if (pRegEntry == NULL || pRegEntry->dwMagic != REGENTRY_MAGIC)
         {
             ERR("pRegEntry is invalid\n");
-            SHUnlockShared(pRegEntry);
             continue;
         }
 
@@ -382,9 +370,6 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
             SendMessageW(pRegEntry->hwnd, pRegEntry->uMsg, (WPARAM)hTicket, dwOwnerPID);
             TRACE("GetLastError(): %ld\n", ::GetLastError());
         }
-
-        // unlock the registration entry
-        SHUnlockShared(pRegEntry);
     }
 
     // unlock the ticket
