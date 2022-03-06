@@ -2888,6 +2888,9 @@ HRESULT WINAPI SHGetFolderLocation(
 	LPITEMIDLIST *ppidl)
 {
     HRESULT hr = E_INVALIDARG;
+#ifdef __REACTOS__
+    WCHAR szPath[MAX_PATH];
+#endif
 
     TRACE("%p 0x%08x %p 0x%08x %p\n",
      hwndOwner, nFolder, hToken, dwReserved, ppidl);
@@ -2897,6 +2900,15 @@ HRESULT WINAPI SHGetFolderLocation(
     if (dwReserved)
         return E_INVALIDARG;
 
+#ifdef __REACTOS__
+    if ((nFolder & CSIDL_FLAG_NO_ALIAS) &&
+        SHGetSpecialFolderPathW(hwndOwner, szPath, (nFolder & CSIDL_FOLDER_MASK), FALSE))
+    {
+        *ppidl = ILCreateFromPathW(szPath);
+        if (*ppidl)
+            return S_OK;
+    }
+#endif
     /* The virtual folders' locations are not user-dependent */
     *ppidl = NULL;
     switch (nFolder & CSIDL_FOLDER_MASK)
