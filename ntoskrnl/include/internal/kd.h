@@ -28,7 +28,8 @@ KdPortPutByteEx(
 );
 
 /* SYMBOL ROUTINES **********************************************************/
-#ifdef __NTOSKRNL__
+
+#ifdef _NTOSKRNL_
 
 #ifdef KDBG
 # define KdbInit()                                  KdbpCliInit()

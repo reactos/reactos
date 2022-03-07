@@ -9,7 +9,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 add_definitions(
-    -D__NTOSKRNL__
     -D_NTOSKRNL_
     -D_NTSYSTEM_
     -D_IN_KERNEL_
