@@ -32,14 +32,14 @@ class CCriticalSection : public CRITICAL_SECTION
         ::EnterCriticalSection(this);
     }
 
-    BOOL TryEnter()
-    {
-        return ::TryEnterCriticalSection(this);
-    }
-
     void Leave()
     {
         ::LeaveCriticalSection(this);
+    }
+
+    BOOL TryEnter()
+    {
+        return ::TryEnterCriticalSection(this);
     }
 };
 
