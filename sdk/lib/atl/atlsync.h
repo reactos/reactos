@@ -83,16 +83,16 @@ class CEvent : public CHandle
         return hEvent != NULL;
     }
 
-    BOOL Reset()
-    {
-        ATLASSERT(*this);
-        return ::ResetEvent(*this);
-    }
-
     BOOL Set()
     {
         ATLASSERT(*this);
         return ::SetEvent(*this);
+    }
+
+    BOOL Reset()
+    {
+        ATLASSERT(*this);
+        return ::ResetEvent(*this);
     }
 
     BOOL Pulse()
