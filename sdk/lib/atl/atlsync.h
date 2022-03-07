@@ -32,6 +32,11 @@ class CCriticalSection : public CRITICAL_SECTION
         ::EnterCriticalSection(this);
     }
 
+    BOOL TryEnter()
+    {
+        return ::TryEnterCriticalSection(this);
+    }
+
     void Leave()
     {
         ::LeaveCriticalSection(this);
@@ -88,6 +93,12 @@ class CEvent : public CHandle
     {
         ATLASSERT(*this);
         return ::SetEvent(*this);
+    }
+
+    BOOL Pulse()
+    {
+        ATLASSERT(*this);
+        return ::PulseEvent(*this);
     }
 };
 
