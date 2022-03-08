@@ -195,8 +195,8 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->MinorVersion = PCR_MINOR_VERSION;
 
     /* Set the PCRB Version */
-    Pcr->Prcb.MajorVersion = 1;
-    Pcr->Prcb.MinorVersion = 1;
+    Pcr->Prcb.MajorVersion = PRCB_MAJOR_VERSION;
+    Pcr->Prcb.MinorVersion = PRCB_MINOR_VERSION;
 
     /* Set the Build Type */
     Pcr->Prcb.BuildType = 0;

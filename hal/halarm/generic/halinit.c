@@ -56,7 +56,7 @@ HalInitSystem(IN ULONG BootPhase,
         if (!(Prcb->BuildType & PRCB_BUILD_DEBUG))
         {
             /* No match, bugcheck */
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 1, 0);
+            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, PRCB_BUILD_DEBUG, 0);
         }
 #else
         /* Release build requires release HAL */
@@ -80,7 +80,7 @@ HalInitSystem(IN ULONG BootPhase,
         if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)
         {
             /* Validation failed, bugcheck */
-            KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, 1, 0);
+            KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, PRCB_MAJOR_VERSION, 0);
         }
 
         /* Initialize interrupts */
