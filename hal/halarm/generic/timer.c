@@ -53,7 +53,7 @@ HalpStallInterrupt(VOID)
 VOID
 HalpInitializeClock(VOID)
 {
-    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKPCR Pcr = KeGetPcr();
     ULONG ClockInterval;
     SP804_CONTROL_REGISTER ControlRegister;
 
