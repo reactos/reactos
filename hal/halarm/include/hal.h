@@ -15,9 +15,6 @@
 /* WDK HAL Compilation hack */
 #include <excpt.h>
 #include <ntdef.h>
-#undef _NTHAL_
-#undef DECLSPEC_IMPORT
-#define DECLSPEC_IMPORT
 #undef NTSYSAPI
 #define NTSYSAPI __declspec(dllimport)
 
