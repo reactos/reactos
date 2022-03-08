@@ -10,8 +10,6 @@
 
 #include <ntoskrnl.h>
 
-#include <debug.h>
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
