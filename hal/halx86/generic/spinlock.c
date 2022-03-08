@@ -28,6 +28,19 @@ KSPIN_LOCK HalpSystemHardwareLock;
 
 #ifdef _M_IX86
 
+#ifdef _MINIHAL_
+VOID
+FASTCALL
+KefAcquireSpinLockAtDpcLevel(
+    IN PKSPIN_LOCK SpinLock)
+{
+#if DBG
+    /* To be on par with HAL/NTOSKRNL */
+    *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
+#endif
+}
+#endif /* defined(_MINIHAL_) */
+
 /*
  * @implemented
  */
@@ -205,6 +218,7 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
     return KeTryToAcquireSpinLockAtDpcLevel(Lock);
 }
 #endif /* !defined(_MINIHAL_) */
+
 #endif /* defined(_M_IX86) */
 
 VOID
