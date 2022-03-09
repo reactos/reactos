@@ -553,7 +553,7 @@ static void test_QueryCapability(void)
     IWICBitmapDecoder_Release(decoder);
 
     hr = IWICImagingFactory_CreateDecoderFromStream(factory, stream, NULL, 0, &decoder);
-todo_wine
+    todo_wine
     ok(hr == WINCODEC_ERR_COMPONENTNOTFOUND, "expected WINCODEC_ERR_COMPONENTNOTFOUND, got %#x\n", hr);
 
     if (SUCCEEDED(hr))

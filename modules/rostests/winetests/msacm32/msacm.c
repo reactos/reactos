@@ -952,7 +952,7 @@ static void test_prepareheader(void)
     ok(mr == MMSYSERR_NOERROR, "convert failed: 0x%x\n", mr);
     ok(hdr.fdwStatus & ACMSTREAMHEADER_STATUSF_DONE, "conversion was not done: 0x%x\n", hdr.fdwStatus);
     ok(hdr.cbSrcLengthUsed == hdr.cbSrcLength, "expected %d, got %d\n", hdr.cbSrcLength, hdr.cbSrcLengthUsed);
-todo_wine
+    todo_wine
     ok(hdr.cbDstLengthUsed == 1010, "expected 1010, got %d\n", hdr.cbDstLengthUsed);
 
     mr = acmStreamUnprepareHeader(has, &hdr, 0);
@@ -980,7 +980,7 @@ todo_wine
         ok(mr == MMSYSERR_NOERROR, "convert failed: 0x%x\n", mr);
         ok(hdr.fdwStatus & ACMSTREAMHEADER_STATUSF_DONE, "conversion was not done: 0x%x\n", hdr.fdwStatus);
         ok(hdr.cbSrcLengthUsed == hdr.cbSrcLength, "expected %d, got %d\n", hdr.cbSrcLength, hdr.cbSrcLengthUsed);
-todo_wine
+        todo_wine
         ok(hdr.cbDstLengthUsed == 1010, "expected 1010, got %d\n", hdr.cbDstLengthUsed);
 
         mr = acmStreamUnprepareHeader(has, &hdr, 0);
@@ -988,7 +988,7 @@ todo_wine
         ok(hdr.fdwStatus == ACMSTREAMHEADER_STATUSF_DONE, "header wasn't unprepared: 0x%x\n", hdr.fdwStatus);
     }
     else
-todo_wine
+        todo_wine
         ok(mr == MMSYSERR_INVALPARAM, "expected 0x0b, got 0x%x\n", mr);
 
     memset(&hdr, 0, sizeof(hdr));
@@ -1029,9 +1029,9 @@ todo_wine
     mr = acmStreamConvert(has, &hdr, ACM_STREAMCONVERTF_BLOCKALIGN);
     ok(mr == MMSYSERR_NOERROR, "convert failed: 0x%x\n", mr);
     ok(hdr.fdwStatus & ACMSTREAMHEADER_STATUSF_DONE, "conversion was not done: 0x%x\n", hdr.fdwStatus);
-todo_wine
+    todo_wine
     ok(hdr.cbSrcLengthUsed == hdr.cbSrcLength, "expected %d, got %d\n", hdr.cbSrcLength, hdr.cbSrcLengthUsed);
-todo_wine
+    todo_wine
     ok(hdr.cbDstLengthUsed == hdr.cbDstLength, "expected %d, got %d\n", hdr.cbDstLength, hdr.cbDstLengthUsed);
 
     mr = acmStreamUnprepareHeader(has, &hdr, 0);
@@ -1128,7 +1128,7 @@ static void test_convert(void)
         ok(hdr.fdwStatus & ACMSTREAMHEADER_STATUSF_DONE, "#%d: conversion was not done: 0x%x\n", i, hdr.fdwStatus);
         ok(hdr.cbSrcLengthUsed == hdr.cbSrcLength, "#%d: expected %d, got %d\n", i, hdr.cbSrcLength, hdr.cbSrcLengthUsed);
         ok(hdr.cbDstLengthUsed == expected_output[i].dst_used, "#%d: expected %d, got %d\n", i, expected_output[i].dst_used, hdr.cbDstLengthUsed);
-todo_wine_if(expected_output[i].todo)
+        todo_wine_if(expected_output[i].todo)
         ok(!memcmp(expected_output[i].output, output, hdr.cbDstLengthUsed), "#%d: output does not match\n", i);
 
         mmr = acmStreamUnprepareHeader(has, &hdr, 0);
@@ -1502,7 +1502,7 @@ static void test_acmDriverAdd(void)
 
     res = acmDriverAddA(&drvid, GetModuleHandleA(NULL), (LPARAM)acm_driver_func, 0, ACM_DRIVERADDF_FUNCTION);
     ok(res == MMSYSERR_NOERROR, "Expected 0, got %d\n", res);
-todo_wine
+    todo_wine
     ok(driver_calls.driver.open == 1, "Expected 1, got %d\n", driver_calls.driver.open);
     ok(driver_calls.driver.details == 1, "Expected 1, got %d\n", driver_calls.driver.details);
 
@@ -1513,10 +1513,10 @@ todo_wine
     acm.drv_details.cbStruct = sizeof(acm.drv_details);
     res = acmDriverDetailsA(drvid, &acm.drv_details, 0);
     ok(res == MMSYSERR_NOERROR, "Expected 0, got %d\n", res);
-todo_wine
+    todo_wine
     ok(driver_calls.driver.open == 1, "Expected 1, got %d\n", driver_calls.driver.open);
     ok(driver_calls.driver.details == 2, "Expected 2, got %d\n", driver_calls.driver.details);
-todo_wine
+    todo_wine
     ok(driver_calls.driver.close == 0, "Expected 0, got %d\n", driver_calls.driver.close);
 }
 

@@ -336,7 +336,7 @@ static void test_ddeml_client(void)
     ret = DdeGetLastError(client_pid);
     ok(res == DDE_FNOTPROCESSED || broken(res == 0xdeadbeef), /* win9x */
        "Expected DDE_FNOTPROCESSED, got %x\n", res);
-todo_wine
+    todo_wine
     ok(ret == DMLERR_MEMORY_ERROR || broken(ret == 0), /* win9x */
        "Expected DMLERR_MEMORY_ERROR, got %d\n", ret);
     ok( hdata != NULL, "hdata is NULL\n" );
@@ -1771,7 +1771,7 @@ static void test_initialisation(void)
     hdata = DdeClientTransaction(NULL, 0, conversation, item, CF_TEXT, XTYP_REQUEST, default_timeout, &res);
     ok(hdata == NULL, "Expected NULL, got %p\n", hdata);
     ret = DdeGetLastError(client_pid);
-todo_wine
+    todo_wine
     ok(ret == DMLERR_INVALIDPARAMETER, "Expected DMLERR_INVALIDPARAMETER, got %d\n", ret);
     ok(res == 0xdeadbeef, "Expected 0xdeadbeef, got %08x\n", res);
 

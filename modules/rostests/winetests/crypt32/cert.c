@@ -2829,7 +2829,7 @@ static void testGetValidUsages(void)
     ret = pCertGetValidUsages(0, NULL, NULL, NULL, &size);
      */
     contexts[0] = NULL;
-    numOIDs = size = 0xdeadbeef;
+    size = numOIDs = 0xdeadbeef;
     SetLastError(0xdeadbeef);
     ret = pCertGetValidUsages(1, &contexts[0], &numOIDs, NULL, &size);
     ok(ret, "CertGetValidUsages failed: %d\n", GetLastError());
@@ -2841,12 +2841,12 @@ static void testGetValidUsages(void)
      sizeof(certWithUsage));
     contexts[2] = CertCreateCertificateContext(X509_ASN_ENCODING,
      cert2WithUsage, sizeof(cert2WithUsage));
-    numOIDs = size = 0xdeadbeef;
+    size = numOIDs = 0xdeadbeef;
     ret = pCertGetValidUsages(0, NULL, &numOIDs, NULL, &size);
     ok(ret, "CertGetValidUsages failed: %08x\n", GetLastError());
     ok(numOIDs == -1, "Expected -1, got %d\n", numOIDs);
     ok(size == 0, "Expected size 0, got %d\n", size);
-    numOIDs = size = 0xdeadbeef;
+    size = numOIDs = 0xdeadbeef;
     ret = pCertGetValidUsages(1, contexts, &numOIDs, NULL, &size);
     ok(ret, "CertGetValidUsages failed: %08x\n", GetLastError());
     ok(numOIDs == -1, "Expected -1, got %d\n", numOIDs);

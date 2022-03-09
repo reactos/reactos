@@ -7053,8 +7053,8 @@ static void test_autoradio_kbd_move(void)
     ret = IsDialogMessageA(parent, &msg);
     ok(ret, "IsDialogMessage should return TRUE\n");
     while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
-if (0) /* actual message sequence is different on every run in some Windows setups */
-    ok_sequence(auto_radio_button_VK_UP_dialog, "IsDialogMessage(VK_UP) #1", FALSE);
+    if (0) /* actual message sequence is different on every run in some Windows setups */
+        ok_sequence(auto_radio_button_VK_UP_dialog, "IsDialogMessage(VK_UP) #1", FALSE);
     /* what really matters is that nothing has changed */
     test_radio(radio1, 1, radio2, 1, radio3, 1);
 
@@ -7067,8 +7067,8 @@ if (0) /* actual message sequence is different on every run in some Windows setu
     ret = IsDialogMessageA(parent, &msg);
     ok(ret, "IsDialogMessage should return TRUE\n");
     while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
-if (0) /* actual message sequence is different on every run in some Windows setups */
-    ok_sequence(auto_radio_button_VK_UP_dialog, "IsDialogMessage(VK_UP) #2", FALSE);
+    if (0) /* actual message sequence is different on every run in some Windows setups */
+        ok_sequence(auto_radio_button_VK_UP_dialog, "IsDialogMessage(VK_UP) #2", FALSE);
     /* what really matters is that nothing has changed */
     test_radio(radio1, 0, radio2, 1, radio3, 1);
 
@@ -7143,8 +7143,8 @@ if (0) /* actual message sequence is different on every run in some Windows setu
     ret = IsDialogMessageA(parent, &msg);
     ok(ret, "IsDialogMessage should return TRUE\n");
     while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
-if (0) /* actual message sequence is different on every run in some Windows setups */
-    ok_sequence(auto_radio_button_VK_UP_dialog, "IsDialogMessage(VK_UP) #3", FALSE);
+    if (0) /* actual message sequence is different on every run in some Windows setups */
+        ok_sequence(auto_radio_button_VK_UP_dialog, "IsDialogMessage(VK_UP) #3", FALSE);
     /* what really matters is that nothing has changed */
     test_radio(radio1, 1, radio2, 0, radio3, 0);
 
@@ -10284,8 +10284,8 @@ static void test_timers(void)
     start = GetTickCount();
     while (GetTickCount()-start < 1001 && GetMessageA(&msg, info.hWnd, 0, 0))
         DispatchMessageA(&msg);
-ros_skip_flaky
-todo_wine
+    ros_skip_flaky
+    todo_wine
     ok(abs(count-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE /* xp */
        || broken(abs(count-64) < TIMER_COUNT_TOLERANCE) /* most common */
        || broken(abs(count-43) < TIMER_COUNT_TOLERANCE) /* w2k3, win8 */,
@@ -10356,7 +10356,7 @@ static void test_timers_no_wnd(void)
     start = GetTickCount();
     while (GetTickCount()-start < 1001 && GetMessageA(&msg, NULL, 0, 0))
         DispatchMessageA(&msg);
-todo_wine
+    todo_wine
     ok(abs(count-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE /* xp */
        || broken(abs(count-64) < TIMER_COUNT_TOLERANCE) /* most common */,
        "did not get expected count for minimum timeout (%d != ~%d).\n",
@@ -17038,7 +17038,7 @@ static void test_SetFocus(void)
 
     SetLastError(0xdeadbeef);
     old_active = SetActiveWindow(GetDesktopWindow());
-todo_wine
+    todo_wine
     ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     ok_sequence(WmEmptySeq, "SetActiveWindow on a desktop window", TRUE);
@@ -17048,7 +17048,7 @@ todo_wine
 
     SetLastError(0xdeadbeef);
     old_active = SetActiveWindow(wnd_event.hwnd);
-todo_wine
+    todo_wine
     ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     ok_sequence(WmEmptySeq, "SetActiveWindow on another thread window", TRUE);
@@ -17111,7 +17111,7 @@ todo_wine
 
     SetLastError(0xdeadbeef);
     old_focus = SetFocus(child);
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_INVALID_PARAMETER /* Vista+ */ ||
        broken(GetLastError() == 0) /* XP */ ||
        broken(GetLastError() == 0xdeadbeef), "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
@@ -17561,7 +17561,7 @@ static void test_SendMessage_other_thread(int thread_n)
 
     ret = GetQueueStatus(QS_SENDMESSAGE|QS_POSTMESSAGE);
     /* FIXME: remove once Wine is fixed */
-todo_wine_if (thread_n == 2)
+    todo_wine_if (thread_n == 2)
     ok(ret == 0, "wrong status %08x\n", ret);
 
     trace("main: call PeekMessage\n");

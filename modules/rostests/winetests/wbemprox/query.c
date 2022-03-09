@@ -1061,7 +1061,7 @@ static void test_query_semisync( IWbemServices *services )
     count = 1;
     obj = (void *)0xdeadbeef;
     hr = IEnumWbemClassObject_Next( result, -1, 1, &obj, &count );
-todo_wine
+    todo_wine
     ok( hr == WBEM_E_INVALID_CLASS, "Unexpected hr %#x.\n", hr );
     ok( count == 0, "Unexpected count %u.\n", count );
     ok( obj == (void *)0xdeadbeef, "Got object %p\n", obj );

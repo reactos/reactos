@@ -1213,7 +1213,7 @@ static void test_set_frame_palette(IWICBitmapFrameEncode *frameencode)
     ok(hr == S_OK, "CreatePalette failed, hr=%x\n", hr);
 
     hr = IWICBitmapFrameEncode_SetPalette(frameencode, palette);
-todo_wine
+    todo_wine
     ok(hr == WINCODEC_ERR_NOTINITIALIZED, "Unexpected hr=%x\n", hr);
 
     hr = IWICPalette_InitializePredefined(palette, WICBitmapPaletteTypeFixedHalftone256, FALSE);

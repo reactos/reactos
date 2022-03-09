@@ -478,7 +478,7 @@ static void test_ICInfo(void)
         ok(!lstrcmpW(info.szDriver, bogusW), "Got unexpected driver %s.\n", wine_dbgstr_w(info.szDriver));
 
         /* Drivers installed after msvfw32 is loaded are not enumerated. */
-todo_wine
+        todo_wine
         ok(!ICInfo(test_type, 0, &info), "Expected failure.\n");
 
         ret = ICRemove(test_type, test_handler, 0);
@@ -506,7 +506,7 @@ todo_wine
         ok(!lstrcmpW(info.szDriver, bogusW), "Got unexpected driver %s.\n", wine_dbgstr_w(info.szDriver));
 
         /* Drivers installed after msvfw32 is loaded are not enumerated. */
-todo_wine
+        todo_wine
         ok(!ICInfo(test_type, 0, &info), "Expected failure.\n");
 
         ret = WritePrivateProfileStringA("drivers32", "wine.test", NULL, "system.ini");

@@ -228,7 +228,7 @@ AsciiToUnicode(const char* AsciiString)
     UnicodeString = new WCHAR[Length];
     MultiByteToWideChar(CP_ACP, 0, AsciiString, -1, UnicodeString, Length);
     ReturnString = UnicodeString;
-    delete UnicodeString;
+    delete[] UnicodeString;
 
     return ReturnString;
 }
@@ -269,7 +269,7 @@ UnicodeToAscii(PCWSTR UnicodeString)
     AsciiString = new char[Length];
     WideCharToMultiByte(CP_ACP, 0, UnicodeString, -1, AsciiString, Length, NULL, NULL);
     ReturnString = AsciiString;
-    delete AsciiString;
+    delete[] AsciiString;
 
     return ReturnString;
 }

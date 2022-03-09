@@ -809,7 +809,7 @@ START_TEST(cred)
     else
         test_generic();
 
-        trace("domain password:\n");
+    trace("domain password:\n");
     if (persists[CRED_TYPE_DOMAIN_PASSWORD] == CRED_PERSIST_NONE)
         skip("CRED_TYPE_DOMAIN_PASSWORD credentials are not supported or are disabled. Skipping\n");
     else

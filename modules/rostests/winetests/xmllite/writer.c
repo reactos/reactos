@@ -439,7 +439,7 @@ static void test_writeroutput(void)
     unk = NULL;
     hr = IUnknown_QueryInterface(output, &IID_IXmlWriterOutput, (void**)&unk);
     ok(hr == S_OK, "got %08x\n", hr);
-todo_wine
+    todo_wine
     ok(unk != NULL && unk != output, "got %p, output %p\n", unk, output);
     EXPECT_REF(output, 2);
     /* releasing 'unk' crashes on native */
@@ -1699,8 +1699,8 @@ static void test_WriteAttributeString(void)
 
         hr = write_attribute_string(writer, attribute_tests[i].prefix, attribute_tests[i].local,
                 attribute_tests[i].uri, attribute_tests[i].value);
-    todo_wine_if(attribute_tests[i].todo_hr)
-        ok(hr == attribute_tests[i].hr, "%u: unexpected hr %#x, expected %#x.\n", i, hr, attribute_tests[i].hr);
+        todo_wine_if(attribute_tests[i].todo_hr)
+            ok(hr == attribute_tests[i].hr, "%u: unexpected hr %#x, expected %#x.\n", i, hr, attribute_tests[i].hr);
 
         hr = IXmlWriter_Flush(writer);
         ok(hr == S_OK, "Failed to flush, hr %#x.\n", hr);
@@ -1739,7 +1739,7 @@ static void test_WriteAttributeString(void)
     ok(hr == S_OK, "Failed to write attribute string, hr %#x.\n", hr);
 
     hr = write_attribute_string(writer, "prefix", "local", NULL, "b");
-todo_wine
+    todo_wine
     ok(hr == WR_E_DUPLICATEATTRIBUTE, "got 0x%08x\n", hr);
 
     hr = write_start_element(writer, NULL, "b", NULL);

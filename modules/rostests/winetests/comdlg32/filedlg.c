@@ -471,7 +471,7 @@ static UINT_PTR WINAPI resize_template_hook(HWND dlg, UINT msg, WPARAM wParam, L
                                 break;
                             /* todo_wine: non moving non sizing controls */
                             case lst1:
-todo_wine
+                                todo_wine
                                 ok( TESTRECTS( rc, ctrlrcs[i], 0, 0, 0, 0),
                                     "control id %03x was moved/resized, before %s after %s\n",
                                     ctrlids[i], wine_dbgstr_rect( &ctrlrcs[i] ),

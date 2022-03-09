@@ -1403,11 +1403,11 @@ static void set_xhr_site(IXMLHttpRequest *xhr)
     EXPECT_HR(hr, S_OK);
 
     CHECK_CALLED(site_qi_IServiceProvider);
-todo_wine
+    todo_wine
     CHECK_CALLED(sp_queryservice_SID_SBindHost);
     CHECK_CALLED(sp_queryservice_SID_SContainerDispatch_htmldoc2);
     CHECK_CALLED(sp_queryservice_SID_secmgr_htmldoc2);
-todo_wine
+    todo_wine
     CHECK_CALLED(sp_queryservice_SID_secmgr_xmldomdoc);
     /* this one isn't very reliable
     CHECK_CALLED(sp_queryservice_SID_secmgr_secmgr); */

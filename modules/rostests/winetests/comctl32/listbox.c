@@ -2551,7 +2551,7 @@ static void test_LBS_NODATA(void)
         ret = SendMessageA(listbox, LB_SETITEMDATA, valid_idx[i], 42);
         ok(ret == TRUE, "Unexpected return value %d.\n", ret);
         ret = SendMessageA(listbox, LB_GETTEXTLEN, valid_idx[i], 0);
-    todo_wine_if(is_wow64)
+        todo_wine_if(is_wow64)
         ok(ret == text_len, "Unexpected return value %d.\n", ret);
 
         memset(&data, 0xee, sizeof(data));

@@ -3733,7 +3733,7 @@ static void test_process_info(void)
         case ProcessDebugPort:
         case ProcessDebugFlags:
         case ProcessCookie:
-todo_wine
+            todo_wine
             ok(status == STATUS_ACCESS_DENIED, "for info %u expected STATUS_ACCESS_DENIED, got %08x (ret_len %u)\n", i, status, ret_len);
             break;
 

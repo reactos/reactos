@@ -1843,7 +1843,7 @@ static void test_server_init(void)
     ok(stubMsg.Buffer == buffer, "stubMsg.Buffer should have been %p instead of %p\n", buffer, stubMsg.Buffer);
     ok(stubMsg.BufferStart == buffer, "stubMsg.BufferStart should have been %p instead of %p\n", buffer, stubMsg.BufferStart);
     ok(stubMsg.BufferEnd == buffer + sizeof(buffer), "stubMsg.BufferEnd should have been %p instead of %p\n", buffer + sizeof(buffer), stubMsg.BufferEnd);
-todo_wine
+    todo_wine
     ok(stubMsg.BufferLength == 0, "stubMsg.BufferLength should have been 0 instead of %u\n", stubMsg.BufferLength);
     ok(stubMsg.IsClient == 0, "stubMsg.IsClient should have been 0 instead of %u\n", stubMsg.IsClient);
     ok(stubMsg.ReuseBuffer == 0 ||
@@ -2649,7 +2649,7 @@ static void test_ndr_buffer(void)
     ok(StubMsg.Buffer != NULL, "Buffer should not have been NULL\n");
     ok(!StubMsg.BufferStart, "BufferStart should have been NULL instead of %p\n", StubMsg.BufferStart);
     ok(!StubMsg.BufferEnd, "BufferEnd should have been NULL instead of %p\n", StubMsg.BufferEnd);
-todo_wine
+    todo_wine
     ok(StubMsg.BufferLength == 0, "BufferLength should have left as 0 instead of being set to %d\n", StubMsg.BufferLength);
     old_buffer_valid_location = !StubMsg.fBufferValid;
     if (old_buffer_valid_location)
@@ -2942,7 +2942,7 @@ static void test_MesEncodeFixedBufferHandleCreate(void)
     ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
 
     status = MesEncodeFixedBufferHandleCreate(buffer, 0, &encoded_size, &handle);
-todo_wine
+    todo_wine
     ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
 if (status == RPC_S_OK) {
     MesHandleFree(handle);

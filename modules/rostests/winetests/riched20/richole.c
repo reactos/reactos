@@ -422,7 +422,7 @@ todo_wine {
   touch_file(filename);
   create_interfaces(&w, &reOle, &txtDoc, &txtSel);
   hres = ITextDocument_Open(txtDoc, &testfile, tomShareDenyRead, CP_ACP);
-todo_wine
+  todo_wine
   ok(hres == S_OK, "got 0x%08x\n", hres);
   SetLastError(0xdeadbeef);
   hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
@@ -435,7 +435,7 @@ todo_wine
   touch_file(filename);
   create_interfaces(&w, &reOle, &txtDoc, &txtSel);
   hres = ITextDocument_Open(txtDoc, &testfile, tomShareDenyWrite, CP_ACP);
-todo_wine
+  todo_wine
   ok(hres == S_OK, "got 0x%08x\n", hres);
   SetLastError(0xdeadbeef);
   hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
@@ -449,7 +449,7 @@ todo_wine
   create_interfaces(&w, &reOle, &txtDoc, &txtSel);
   SetLastError(0xdeadbeef);
   hres = ITextDocument_Open(txtDoc, &testfile, tomShareDenyWrite|tomShareDenyRead, CP_ACP);
-todo_wine
+  todo_wine
   ok(hres == S_OK, "got 0x%08x\n", hres);
   hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
                           FILE_ATTRIBUTE_NORMAL, NULL);
@@ -465,7 +465,7 @@ todo_wine
   CloseHandle(hFile);
   create_interfaces(&w, &reOle, &txtDoc, &txtSel);
   hres = ITextDocument_Open(txtDoc, &testfile, tomReadOnly, CP_ACP);
-todo_wine
+  todo_wine
   ok(hres == S_OK, "got 0x%08x\n", hres);
   result = SendMessageA(w, WM_GETTEXT, 1024, (LPARAM)bufACP);
   todo_wine ok(result == 12, "ITextDocument_Open: Test ASCII returned %d, expected 12\n", result);
@@ -480,7 +480,7 @@ todo_wine
   CloseHandle(hFile);
   create_interfaces(&w, &reOle, &txtDoc, &txtSel);
   hres = ITextDocument_Open(txtDoc, &testfile, tomReadOnly, CP_UTF8);
-todo_wine
+  todo_wine
   ok(hres == S_OK, "got 0x%08x\n", hres);
   result = SendMessageA(w, WM_GETTEXT, 1024, (LPARAM)bufACP);
   todo_wine ok(result == 15, "ITextDocument_Open: Test UTF-8 returned %d, expected 15\n", result);
@@ -495,7 +495,7 @@ todo_wine
   CloseHandle(hFile);
   create_interfaces(&w, &reOle, &txtDoc, &txtSel);
   hres = ITextDocument_Open(txtDoc, &testfile, tomReadOnly, 1200);
-todo_wine
+  todo_wine
   ok(hres == S_OK, "got 0x%08x\n", hres);
   result = SendMessageW(w, WM_GETTEXT, 1024, (LPARAM)bufUnicode);
   todo_wine ok(result == 12, "ITextDocument_Open: Test UTF-16 returned %d, expected 12\n", result);
@@ -671,13 +671,13 @@ static void test_GetText(void)
     bstr = (void*)0xdeadbeef;
     hres = ITextSelection_GetText(txtSel, &bstr);
     ok(hres == CO_E_RELEASED, "got 0x%08x\n", hres);
-todo_wine
+    todo_wine
     ok(bstr == NULL, "got %p\n", bstr);
 
     bstr = (void*)0xdeadbeef;
     hres = ITextRange_GetText(range, &bstr);
     ok(hres == CO_E_RELEASED, "got 0x%08x\n", hres);
-todo_wine
+    todo_wine
     ok(bstr == NULL, "got %p\n", bstr);
   }
   else {
@@ -2670,7 +2670,7 @@ todo_wine {
 }
   hr = ITextRange_GetEnd(range, &value);
   ok(hr == S_OK, "got 0x%08x\n", hr);
-todo_wine
+  todo_wine
   ok(value == 3, "got %d\n", value);
 
   hr = ITextRange_GetStart(range2, &value);
@@ -2679,7 +2679,7 @@ todo_wine
 
   hr = ITextRange_GetEnd(range2, &value);
   ok(hr == S_OK, "got 0x%08x\n", hr);
-todo_wine
+  todo_wine
   ok(value == 1, "got %d\n", value);
 
   ITextRange_Release(range);

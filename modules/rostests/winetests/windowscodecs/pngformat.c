@@ -815,7 +815,7 @@ static void test_color_formats(void)
         if (!is_valid_png_type_depth(td[i].color_type, td[i].bit_depth, TRUE))
             ok(hr == WINCODEC_ERR_UNKNOWNIMAGEFORMAT, "%d: wrong error %#x\n", i, hr);
         else
-todo_wine_if(td[i].todo_load)
+            todo_wine_if(td[i].todo_load)
             ok(hr == S_OK, "%d: Failed to load PNG image data (type %d, bpp %d) %#x\n", i, td[i].color_type, td[i].bit_depth, hr);
         if (hr != S_OK) goto next_1;
 
@@ -824,7 +824,7 @@ todo_wine_if(td[i].todo_load)
 
         hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
         ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
-todo_wine_if(td[i].todo)
+        todo_wine_if(td[i].todo)
         ok(IsEqualGUID(&format, td[i].format_PLTE_tRNS),
            "PLTE+tRNS: expected %s, got %s (type %d, bpp %d)\n",
             wine_dbgstr_guid(td[i].format_PLTE_tRNS), wine_dbgstr_guid(&format), td[i].color_type, td[i].bit_depth);
@@ -843,7 +843,7 @@ next_1:
         if (!is_valid_png_type_depth(td[i].color_type, td[i].bit_depth, TRUE))
             ok(hr == WINCODEC_ERR_UNKNOWNIMAGEFORMAT, "%d: wrong error %#x\n", i, hr);
         else
-todo_wine_if(td[i].todo_load)
+            todo_wine_if(td[i].todo_load)
             ok(hr == S_OK, "%d: Failed to load PNG image data (type %d, bpp %d) %#x\n", i, td[i].color_type, td[i].bit_depth, hr);
         if (hr != S_OK) goto next_2;
 
@@ -871,7 +871,7 @@ next_2:
         if (!is_valid_png_type_depth(td[i].color_type, td[i].bit_depth, FALSE))
             ok(hr == WINCODEC_ERR_UNKNOWNIMAGEFORMAT, "%d: wrong error %#x\n", i, hr);
         else
-todo_wine_if(td[i].todo_load)
+            todo_wine_if(td[i].todo_load)
             ok(hr == S_OK, "%d: Failed to load PNG image data (type %d, bpp %d) %#x\n", i, td[i].color_type, td[i].bit_depth, hr);
         if (hr != S_OK) goto next_3;
 
@@ -898,7 +898,7 @@ next_3:
         if (!is_valid_png_type_depth(td[i].color_type, td[i].bit_depth, FALSE))
             ok(hr == WINCODEC_ERR_UNKNOWNIMAGEFORMAT, "%d: wrong error %#x\n", i, hr);
         else
-todo_wine_if(td[i].todo_load)
+            todo_wine_if(td[i].todo_load)
             ok(hr == S_OK, "%d: Failed to load PNG image data (type %d, bpp %d) %#x\n", i, td[i].color_type, td[i].bit_depth, hr);
         if (hr != S_OK) continue;
 
@@ -907,7 +907,7 @@ todo_wine_if(td[i].todo_load)
 
         hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
         ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
-todo_wine_if(td[i].todo)
+        todo_wine_if(td[i].todo)
         ok(IsEqualGUID(&format, td[i].format_PLTE_tRNS),
            "tRNS: expected %s, got %s (type %d, bpp %d)\n",
             wine_dbgstr_guid(td[i].format_PLTE_tRNS), wine_dbgstr_guid(&format), td[i].color_type, td[i].bit_depth);

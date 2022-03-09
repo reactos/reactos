@@ -3622,25 +3622,25 @@ static void test_RegQueryValueExPerformanceData(void)
 
         cbData = 0xdeadbeef;
         dwret = RegQueryValueExA(HKEY_PERFORMANCE_TEXT, names[i], NULL, NULL, NULL, &cbData);
-todo_wine
+        todo_wine
         ok(dwret == ERROR_MORE_DATA, "%u/%s: got %u\n", i, names[i], dwret);
         ok(cbData == 0, "got %u\n", cbData);
 
         cbData = 0;
         dwret = RegQueryValueExA(HKEY_PERFORMANCE_TEXT, names[i], NULL, NULL, NULL, &cbData);
-todo_wine
+        todo_wine
         ok(dwret == ERROR_MORE_DATA, "%u/%s: got %u\n", i, names[i], dwret);
         ok(cbData == 0, "got %u\n", cbData);
 
         cbData = 0xdeadbeef;
         dwret = RegQueryValueExA(HKEY_PERFORMANCE_NLSTEXT, names[i], NULL, NULL, NULL, &cbData);
-todo_wine
+        todo_wine
         ok(dwret == ERROR_MORE_DATA, "%u/%s: got %u\n", i, names[i], dwret);
         ok(cbData == 0, "got %u\n", cbData);
 
         cbData = 0;
         dwret = RegQueryValueExA(HKEY_PERFORMANCE_NLSTEXT, names[i], NULL, NULL, NULL, &cbData);
-todo_wine
+        todo_wine
         ok(dwret == ERROR_MORE_DATA, "%u/%s: got %u\n", i, names[i], dwret);
         ok(cbData == 0, "got %u\n", cbData);
     }
@@ -3679,7 +3679,7 @@ todo_wine
         ok(pdb->TotalByteLength == len, "got %u vs %u\n", pdb->TotalByteLength, len);
         ok(pdb->HeaderLength == pdb->TotalByteLength, "got %u\n", pdb->HeaderLength);
         ok(pdb->NumObjectTypes == 0, "got %u\n", pdb->NumObjectTypes);
-todo_wine
+        todo_wine
         ok(pdb->DefaultObject != 0, "got %u\n", pdb->DefaultObject);
         ok(pdb->SystemTime.wYear == st.wYear, "got %u\n", pdb->SystemTime.wYear);
         ok(pdb->SystemTime.wMonth == st.wMonth, "got %u\n", pdb->SystemTime.wMonth);
@@ -3708,39 +3708,39 @@ todo_wine
     }
 
     dwret = RegOpenKeyA(HKEY_PERFORMANCE_DATA, NULL, &hkey);
-todo_wine
+    todo_wine
     ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
 
     dwret = RegOpenKeyA(HKEY_PERFORMANCE_DATA, "Global", &hkey);
-todo_wine
+    todo_wine
     ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
 
     dwret = RegOpenKeyExA(HKEY_PERFORMANCE_DATA, "Global", 0, KEY_READ, &hkey);
-todo_wine
+    todo_wine
     ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
 
     dwret = RegQueryValueA(HKEY_PERFORMANCE_DATA, "Global", NULL, (LONG *)&cbData);
-todo_wine
+    todo_wine
     ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
 
     dwret = RegSetValueA(HKEY_PERFORMANCE_DATA, "Global", REG_SZ, "dummy", 4);
-todo_wine
+    todo_wine
     ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
 
     dwret = RegSetValueExA(HKEY_PERFORMANCE_DATA, "Global", 0, REG_SZ, (const BYTE *)"dummy", 40);
-todo_wine
+    todo_wine
     ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
 
     cbData = sizeof(buf);
     dwret = RegEnumKeyA(HKEY_PERFORMANCE_DATA, 0, (LPSTR)buf, cbData);
-todo_wine
+    todo_wine
     ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
 
     cbData = sizeof(buf);
     dwret = RegEnumValueA(HKEY_PERFORMANCE_DATA, 0, (LPSTR)buf, &cbData, NULL, NULL, NULL, NULL);
-todo_wine
+    todo_wine
     ok(dwret == ERROR_MORE_DATA, "got %u\n", dwret);
-todo_wine
+    todo_wine
     ok(cbData == sizeof(buf), "got %u\n", cbData);
 
     dwret = RegEnumValueA(HKEY_PERFORMANCE_DATA, 0, NULL, &cbData, NULL, NULL, NULL, NULL);
@@ -3749,7 +3749,7 @@ todo_wine
     if (pRegSetKeyValueW)
     {
         dwret = pRegSetKeyValueW(HKEY_PERFORMANCE_DATA, NULL, globalW, REG_SZ, dummyW, sizeof(dummyW));
-todo_wine
+        todo_wine
         ok(dwret == ERROR_INVALID_HANDLE, "got %u\n", dwret);
     }
 

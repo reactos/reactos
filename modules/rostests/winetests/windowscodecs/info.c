@@ -171,7 +171,7 @@ static void test_decoder_info(void)
         len = 0;
         hr = IWICBitmapDecoderInfo_GetMimeTypes(decoder_info, 1, NULL, &len);
         ok(hr == E_INVALIDARG, "GetMimeType failed, hr=%x\n", hr);
-    todo_wine_if(test->todo)
+        todo_wine_if(test->todo)
         ok(len == lstrlenW(mimetypeW) + 1, "GetMimeType returned wrong len %i\n", len);
 
         hr = IWICBitmapDecoderInfo_GetMimeTypes(decoder_info, len, value, NULL);
@@ -180,27 +180,27 @@ static void test_decoder_info(void)
         len = 0;
         hr = IWICBitmapDecoderInfo_GetMimeTypes(decoder_info, 0, NULL, &len);
         ok(hr == S_OK, "GetMimeType failed, hr=%x\n", hr);
-    todo_wine_if(test->todo)
+        todo_wine_if(test->todo)
         ok(len == lstrlenW(mimetypeW) + 1, "GetMimeType returned wrong len %i\n", len);
 
         value[0] = 0;
         hr = IWICBitmapDecoderInfo_GetMimeTypes(decoder_info, len, value, &len);
         ok(hr == S_OK, "GetMimeType failed, hr=%x\n", hr);
-    todo_wine_if(test->todo) {
+        todo_wine_if(test->todo) {
         ok(lstrcmpW(value, mimetypeW) == 0, "GetMimeType returned wrong value %s\n", wine_dbgstr_w(value));
         ok(len == lstrlenW(mimetypeW) + 1, "GetMimeType returned wrong len %i\n", len);
-    }
+        }
         hr = IWICBitmapDecoderInfo_GetMimeTypes(decoder_info, 1, value, &len);
         ok(hr == WINCODEC_ERR_INSUFFICIENTBUFFER, "GetMimeType failed, hr=%x\n", hr);
-    todo_wine_if(test->todo)
+        todo_wine_if(test->todo)
         ok(len == lstrlenW(mimetypeW) + 1, "GetMimeType returned wrong len %i\n", len);
 
         hr = IWICBitmapDecoderInfo_GetMimeTypes(decoder_info, 256, value, &len);
         ok(hr == S_OK, "GetMimeType failed, hr=%x\n", hr);
-    todo_wine_if(test->todo) {
+        todo_wine_if(test->todo) {
         ok(lstrcmpW(value, mimetypeW) == 0, "GetMimeType returned wrong value %s\n", wine_dbgstr_w(value));
         ok(len == lstrlenW(mimetypeW) + 1, "GetMimeType returned wrong len %i\n", len);
-    }
+        }
         num_formats = 0xdeadbeef;
         hr = IWICBitmapDecoderInfo_GetPixelFormats(decoder_info, 0, NULL, &num_formats);
         ok(hr == S_OK, "GetPixelFormats failed, hr=%x\n", hr);
@@ -244,7 +244,7 @@ static void test_decoder_info(void)
 
         hr = IWICBitmapDecoderInfo_GetFileExtensions(decoder_info, 1, NULL, &len);
         ok(hr == E_INVALIDARG, "GetFileExtensions failed, hr=%x\n", hr);
-    todo_wine_if(test->todo && !IsEqualCLSID(test->clsid, &CLSID_WICTiffDecoder))
+        todo_wine_if(test->todo && !IsEqualCLSID(test->clsid, &CLSID_WICTiffDecoder))
         ok(len == lstrlenW(extensionsW) + 1, "%u: GetFileExtensions returned wrong len %i\n", i, len);
 
         hr = IWICBitmapDecoderInfo_GetFileExtensions(decoder_info, len, value, NULL);
@@ -252,27 +252,27 @@ static void test_decoder_info(void)
 
         hr = IWICBitmapDecoderInfo_GetFileExtensions(decoder_info, 0, NULL, &len);
         ok(hr == S_OK, "GetFileExtensions failed, hr=%x\n", hr);
-    todo_wine_if(test->todo && !IsEqualCLSID(test->clsid, &CLSID_WICTiffDecoder))
+        todo_wine_if(test->todo && !IsEqualCLSID(test->clsid, &CLSID_WICTiffDecoder))
         ok(len == lstrlenW(extensionsW) + 1, "GetFileExtensions returned wrong len %i\n", len);
 
         value[0] = 0;
         hr = IWICBitmapDecoderInfo_GetFileExtensions(decoder_info, len, value, &len);
         ok(hr == S_OK, "GetFileExtensions failed, hr=%x\n", hr);
-    todo_wine_if(test->todo)
+        todo_wine_if(test->todo)
         ok(lstrcmpW(value, extensionsW) == 0, "GetFileExtensions returned wrong value %s\n", wine_dbgstr_w(value));
-    todo_wine_if(test->todo && !IsEqualCLSID(test->clsid, &CLSID_WICTiffDecoder))
+        todo_wine_if(test->todo && !IsEqualCLSID(test->clsid, &CLSID_WICTiffDecoder))
         ok(len == lstrlenW(extensionsW) + 1, "GetFileExtensions returned wrong len %i\n", len);
 
         hr = IWICBitmapDecoderInfo_GetFileExtensions(decoder_info, 1, value, &len);
         ok(hr == WINCODEC_ERR_INSUFFICIENTBUFFER, "GetFileExtensions failed, hr=%x\n", hr);
-    todo_wine_if(test->todo && !IsEqualCLSID(test->clsid, &CLSID_WICTiffDecoder))
+        todo_wine_if(test->todo && !IsEqualCLSID(test->clsid, &CLSID_WICTiffDecoder))
         ok(len == lstrlenW(extensionsW) + 1, "GetFileExtensions returned wrong len %i\n", len);
 
         hr = IWICBitmapDecoderInfo_GetFileExtensions(decoder_info, 256, value, &len);
         ok(hr == S_OK, "GetFileExtensions failed, hr=%x\n", hr);
-    todo_wine_if(test->todo)
+        todo_wine_if(test->todo)
         ok(lstrcmpW(value, extensionsW) == 0, "GetFileExtensions returned wrong value %s\n", wine_dbgstr_w(value));
-    todo_wine_if(test->todo && !IsEqualCLSID(test->clsid, &CLSID_WICTiffDecoder))
+        todo_wine_if(test->todo && !IsEqualCLSID(test->clsid, &CLSID_WICTiffDecoder))
         ok(len == lstrlenW(extensionsW) + 1, "GetFileExtensions returned wrong len %i\n", len);
 
         IWICBitmapDecoderInfo_Release(decoder_info);
@@ -553,7 +553,7 @@ static void test_reader_info(void)
     IWICComponentInfo_Release(info);
 
     hr = IWICImagingFactory_CreateComponentInfo(factory, &CLSID_WICXMPStructMetadataReader, &info);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "CreateComponentInfo failed, hr=%x\n", hr);
 
     if (FAILED(hr))

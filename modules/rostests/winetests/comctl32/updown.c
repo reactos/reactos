@@ -670,7 +670,7 @@ static void test_updown_buddy(void)
     buddyReturn = (HWND)SendMessageA(updown, UDM_SETBUDDY, 0, 0);
     ok(buddyReturn == g_edit, "Unexpected buddy window.\n");
     GetClientRect(updown, &rect2);
-todo_wine
+    todo_wine
     ok(EqualRect(&rect, &rect2), "Unexpected window rect.\n");
 
     DestroyWindow(updown);

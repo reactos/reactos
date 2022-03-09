@@ -366,9 +366,9 @@ static void test_NtOpenKey(void)
     attr.Length = sizeof(attr);
     key = (HANDLE)0xdeadbeef;
     status = pNtOpenKey(&key, 0, &attr);
-todo_wine
+    todo_wine
     ok(status == STATUS_ACCESS_DENIED, "Expected STATUS_ACCESS_DENIED, got: 0x%08x\n", status);
-todo_wine
+    todo_wine
     ok(!key, "key = %p\n", key);
     if (status == STATUS_SUCCESS) NtClose(key);
 
@@ -378,7 +378,7 @@ todo_wine
     key = (HANDLE)0xdeadbeef;
     status = pNtOpenKey(&key, KEY_READ, &attr);
     todo_wine ok(status == STATUS_OBJECT_PATH_SYNTAX_BAD, "NtOpenKey Failed: 0x%08x\n", status);
-todo_wine
+    todo_wine
     ok(!key, "key = %p\n", key);
     pRtlFreeUnicodeString( &str );
 

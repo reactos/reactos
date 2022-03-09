@@ -3524,7 +3524,7 @@ static void test_NtCreateFile(void)
             /* FIXME: leave only 'else' case below once Wine is fixed */
             if (ret != td[i].attrib_out)
             {
-            todo_wine
+                todo_wine
                 ok(ret == td[i].attrib_out, "%d: expected %#x got %#x\n", i, td[i].attrib_out, ret);
                 SetFileAttributesW(path, td[i].attrib_out);
             }

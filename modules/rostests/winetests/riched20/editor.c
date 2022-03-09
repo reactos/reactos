@@ -8979,11 +8979,11 @@ static void test_window_classes(void)
     {
         SetLastError(0xdeadbeef);
         hwnd = CreateWindowExA(0, test[i].class, NULL, WS_POPUP, 0, 0, 0, 0, 0, 0, 0, NULL);
-todo_wine_if(!strcmp(test[i].class, "RichEdit50A") || !strcmp(test[i].class, "RichEdit50W"))
+        todo_wine_if(!strcmp(test[i].class, "RichEdit50A") || !strcmp(test[i].class, "RichEdit50W"))
         ok(!hwnd == !test[i].success, "CreateWindow(%s) should %s\n",
            test[i].class, test[i].success ? "succeed" : "fail");
         if (!hwnd)
-todo_wine
+            todo_wine
             ok(GetLastError() == ERROR_CANNOT_FIND_WND_CLASS, "got %d\n", GetLastError());
         else
             DestroyWindow(hwnd);

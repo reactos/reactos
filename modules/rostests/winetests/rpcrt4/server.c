@@ -1051,7 +1051,7 @@ void __cdecl s_stop_autolisten(void)
 {
     RPC_STATUS status;
     status = RpcServerUnregisterIf(NULL, NULL, FALSE);
-todo_wine
+    todo_wine
     ok(status == RPC_S_UNKNOWN_MGR_TYPE, "got %u\n", status);
 }
 
@@ -1954,7 +1954,7 @@ client(const char *test)
 
     run_tests();
     authinfo_test(RPC_PROTSEQ_LRPC, 0);
-todo_wine
+    todo_wine
     test_is_server_listening(IMixedServer_IfHandle, RPC_S_NOT_LISTENING);
 
     stop_autolisten();

@@ -1743,7 +1743,7 @@ todo_wine {
     str = NULL;
     hr = ITextStream_ReadAll(stream, &str);
     ok(hr == S_FALSE || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
-todo_wine
+    todo_wine
     ok(!lstrcmpW(buffW, str), "got %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
     ITextStream_Release(stream);
@@ -1891,7 +1891,7 @@ todo_wine {
     str = NULL;
     hr = ITextStream_Read(stream, 100, &str);
     ok(hr == S_FALSE || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
-todo_wine
+    todo_wine
     ok(!lstrcmpW(buffW, str), "got %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
     ITextStream_Release(stream);

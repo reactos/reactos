@@ -168,12 +168,12 @@ test_GetNetworkParams(VOID)
         HeapFree(GetProcessHeap(), 0, FixedInfo);
         skip("GetNetworkParams failed. Can't proceed\n");
     }
-    ok(FixedInfo->HostName != NULL, "FixedInfo->HostName is NULL\n");
-    if (FixedInfo->HostName == NULL)
-    {
-        HeapFree(GetProcessHeap(), 0, FixedInfo);
-        skip("FixedInfo->HostName is NULL. Can't proceed\n");
-    }
+    //ok(FixedInfo->HostName != NULL, "FixedInfo->HostName is NULL\n");
+    //if (FixedInfo->HostName == NULL)
+    //{
+    //    HeapFree(GetProcessHeap(), 0, FixedInfo);
+    //    skip("FixedInfo->HostName is NULL. Can't proceed\n");
+    //}
     if (OrigDhcpHostnameExists)
     {
         /* Windows doesn't honor DHCP option 12 even if RFC requires it if it is returned by DHCP server! */
@@ -181,12 +181,12 @@ test_GetNetworkParams(VOID)
     }
     else
         ok(strcmp(FixedInfo->HostName, OrigHostname) == 0, "FixedInfo->HostName is wrong '%s' != '%s'\n", FixedInfo->HostName, OrigHostname);
-    ok(FixedInfo->DomainName != NULL, "FixedInfo->DomainName is NULL\n");
-    if (FixedInfo->DomainName == NULL)
-    {
-        HeapFree(GetProcessHeap(), 0, FixedInfo);
-        skip("FixedInfo->DomainName is NULL. Can't proceed\n");
-    }
+    //ok(FixedInfo->DomainName != NULL, "FixedInfo->DomainName is NULL\n");
+    //if (FixedInfo->DomainName == NULL)
+    //{
+    //    HeapFree(GetProcessHeap(), 0, FixedInfo);
+    //    skip("FixedInfo->DomainName is NULL. Can't proceed\n");
+    //}
     if(OrigDhcpDomainNameExists)
         ok(strcmp(FixedInfo->DomainName, OrigDhcpDomainName) == 0, "FixedInfo->DomainName is wrong '%s' != '%s'\n", FixedInfo->DomainName, OrigDhcpDomainName);
     else
@@ -248,9 +248,9 @@ test_GetNetworkParams(VOID)
     ok(ApiReturn == NO_ERROR,
         "GetNetworkParams(buf, &dwSize) returned %ld, expected NO_ERROR\n",
         ApiReturn);
-    ok(FixedInfo->HostName != NULL, "FixedInfo->HostName is NULL\n");
-    if (FixedInfo->HostName == NULL)
-        skip("FixedInfo->HostName is NULL. Can't proceed\n");
+    //ok(FixedInfo->HostName != NULL, "FixedInfo->HostName is NULL\n");
+    //if (FixedInfo->HostName == NULL)
+    //    skip("FixedInfo->HostName is NULL. Can't proceed\n");
     if (!OrigDhcpHostnameExists)
     {
         /* Windows doesn't honor DHCP option 12 even if RFC requires it if it is returned by DHCP server! */
@@ -258,9 +258,9 @@ test_GetNetworkParams(VOID)
     }
     else
         ok(strcmp(FixedInfo->HostName, OrigHostname) == 0, "FixedInfo->HostName is wrong '%s' != '%s'\n", FixedInfo->HostName, OrigHostname);
-    ok(FixedInfo->DomainName != NULL, "FixedInfo->DomainName is NULL\n");
-    if (FixedInfo->DomainName == NULL)
-        skip("FixedInfo->DomainName is NULL. Can't proceed\n");
+    //ok(FixedInfo->DomainName != NULL, "FixedInfo->DomainName is NULL\n");
+    //if (FixedInfo->DomainName == NULL)
+    //    skip("FixedInfo->DomainName is NULL. Can't proceed\n");
     if (!OrigDhcpDomainNameExists)
         ok(strcmp(FixedInfo->DomainName, ROSTESTDHCPDOMAIN) == 0, "FixedInfo->DomainName is wrong '%s' != '%s'\n", FixedInfo->DomainName, ROSTESTDHCPDOMAIN);
     else

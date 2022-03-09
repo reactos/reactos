@@ -2284,7 +2284,7 @@ static void test_marshal_iface(IWidget *widget, IDispatch *disp)
     V_VT(&arg[0]) = VT_UNKNOWN|VT_BYREF;  V_UNKNOWNREF(&arg[0]) = &proxy_unk2;
     hr = IDispatch_Invoke(disp, DISPID_TM_IFACE_OUT, &IID_NULL, LOCALE_NEUTRAL,
             DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "Got hr %#x.\n", hr);
 if (hr == S_OK) {
     hr = IUnknown_QueryInterface(proxy_unk2, &IID_ISomethingFromDispatch, (void **)&proxy_sfd);
@@ -2301,7 +2301,7 @@ if (hr == S_OK) {
     proxy_disp = NULL;
     hr = IDispatch_Invoke(disp, DISPID_TM_IFACE_OUT, &IID_NULL, LOCALE_NEUTRAL,
             DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "Got hr %#x.\n", hr);
     ok(!proxy_unk, "Got unexpected proxy %p.\n", proxy_unk);
     ok(!proxy_disp, "Got unexpected proxy %p.\n", proxy_disp);
@@ -2318,7 +2318,7 @@ todo_wine
     V_VT(&arg[0]) = VT_UNKNOWN|VT_BYREF; V_UNKNOWNREF(&arg[0]) = &unk_in_out;
     hr = IDispatch_Invoke(disp, DISPID_TM_IFACE_PTR, &IID_NULL, LOCALE_NEUTRAL,
             DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "Got hr %#x.\n", hr);
     ok(unk_in == (IUnknown *)sfd1, "[in] parameter should not have changed.\n");
     ok(!unk_out, "[out] parameter should have been cleared.\n");
@@ -2335,7 +2335,7 @@ todo_wine
     IUnknown_AddRef(unk_in_out);
     hr = IDispatch_Invoke(disp, DISPID_TM_IFACE_PTR, &IID_NULL, LOCALE_NEUTRAL,
             DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "Got hr %#x.\n", hr);
 
 if (hr == S_OK) {
@@ -2356,14 +2356,14 @@ if (hr == S_OK) {
     release_iface(unk_in_out);
 }
     release_iface(sfd1);
-todo_wine
+    todo_wine
     release_iface(sfd3);
 
     testmode = 2;
     unk_in = unk_out = unk_in_out = NULL;
     hr = IDispatch_Invoke(disp, DISPID_TM_IFACE_PTR, &IID_NULL, LOCALE_NEUTRAL,
             DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "Got hr %#x.\n", hr);
 
     ok(!unk_out, "[out] parameter should not have been set.\n");
@@ -2750,7 +2750,7 @@ static void test_marshal_coclass(IWidget *widget, IDispatch *disp)
     V_VT(&arg[0]) = VT_UNKNOWN|VT_BYREF;    V_UNKNOWNREF(&arg[0]) = &unk_in_out;
     hr = IDispatch_Invoke(disp, DISPID_TM_COCLASS_PTR, &IID_NULL, LOCALE_NEUTRAL,
             DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "Got hr %#x.\n", hr);
     ok(unk_in == (IUnknown *)&class1->ICoclass1_iface, "[in] parameter should not have changed.\n");
     ok(!unk_out, "[out] parameter should have been cleared.\n");
@@ -2767,7 +2767,7 @@ todo_wine
     IUnknown_AddRef(unk_in_out);
     hr = IDispatch_Invoke(disp, DISPID_TM_COCLASS_PTR, &IID_NULL, LOCALE_NEUTRAL,
             DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "Got hr %#x.\n", hr);
 
 if (hr == S_OK) {
@@ -2788,14 +2788,14 @@ if (hr == S_OK) {
     release_iface(unk_in_out);
 }
     release_iface(&class1->ICoclass1_iface);
-todo_wine
+    todo_wine
     release_iface(&class3->ICoclass1_iface);
 
     testmode = 2;
     unk_in = unk_out = unk_in_out = NULL;
     hr = IDispatch_Invoke(disp, DISPID_TM_COCLASS_PTR, &IID_NULL, LOCALE_NEUTRAL,
             DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "Got hr %#x.\n", hr);
 
     ok(!unk_out, "[out] parameter should not have been set.\n");
@@ -2816,12 +2816,12 @@ if (hr == S_OK) {
     IUnknown_AddRef(unk_in_out);
     hr = IDispatch_Invoke(disp, DISPID_TM_COCLASS_PTR, &IID_NULL, LOCALE_NEUTRAL,
             DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "Got hr %#x.\n", hr);
-todo_wine
+    todo_wine
     ok(!unk_in_out, "[in, out] parameter should have been cleared.\n");
 
-todo_wine
+    todo_wine
     release_iface(&class3->ICoclass1_iface);
 }
 

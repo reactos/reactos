@@ -473,7 +473,7 @@ static void test_media_event(IFilterGraph2 *graph)
 
     hr = IMediaSeeking_GetCurrentPosition(seeking, &current);
     ok(hr == S_OK, "GetCurrentPosition() failed: %#x\n", hr);
-todo_wine
+    todo_wine
     ok(current == stop, "expected %s, got %s\n", wine_dbgstr_longlong(stop), wine_dbgstr_longlong(current));
 
     hr = IMediaControl_Stop(control);
@@ -569,7 +569,7 @@ static void test_render_run(const WCHAR *file)
         ok(!refs, "Graph has %u references\n", refs);
 
         hr = test_graph_builder_connect(filename);
-todo_wine
+        todo_wine
         ok(hr == VFW_E_CANNOT_CONNECT, "got %#x\n", hr);
     }
     else
@@ -599,7 +599,7 @@ static DWORD WINAPI call_RenderFile_multithread(LPVOID lParam)
     HRESULT hr;
 
     hr = IFilterGraph2_RenderFile(graph, filename, NULL);
-todo_wine
+    todo_wine
     ok(SUCCEEDED(hr), "RenderFile failed: %x\n", hr);
 
     if (SUCCEEDED(hr))

@@ -623,7 +623,7 @@ static void test_inputdesktop(void)
         win_skip("Skip tests on NT4\n");
         return;
     }
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_ACCESS_DENIED, "unexpected last error %08x\n", GetLastError());
     ok(ret == 1 || broken(ret == 0) /* Win64 */, "unexpected return count %d\n", ret);
 
@@ -664,14 +664,14 @@ todo_wine
     memset(name, 0, sizeof(name));
     ret = GetUserObjectInformationA(input_desk, UOI_NAME, name, 1024, NULL);
     ok(ret, "GetUserObjectInformation failed!\n");
-todo_wine
+    todo_wine
     ok(!strcmp(name, "new_desk"), "unexpected desktop %s\n", name);
     ret = CloseDesktop(input_desk);
     ok(ret, "CloseDesktop failed!\n");
 
     SetLastError(0xdeadbeef);
     ret = SendInput(1, inputs, sizeof(INPUT));
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_ACCESS_DENIED, "unexpected last error %08x\n", GetLastError());
     ok(ret == 1 || broken(ret == 0) /* Win64 */, "unexpected return count %d\n", ret);
 
@@ -769,16 +769,16 @@ static void test_inputdesktop2(void)
     ok(hdesk != NULL, "OpenDesktop failed!\n");
     SetLastError(0xdeadbeef);
     ret = SwitchDesktop(hdesk);
-todo_wine
+    todo_wine
     ok(!ret, "Switch to desktop belong to non default winstation should fail!\n");
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_ACCESS_DENIED || broken(GetLastError() == 0xdeadbeef), "last error %08x\n", GetLastError());
     ret = SetThreadDesktop(hdesk);
     ok(ret, "SetThreadDesktop failed!\n");
 
     /* clean side effect */
     ret = SetThreadDesktop(thread_desk);
-todo_wine
+    todo_wine
     ok(ret, "SetThreadDesktop should success even desktop is not belong to process winstation!\n");
     ret = SetProcessWindowStation(w1);
     ok(ret, "SetProcessWindowStation failed!\n");

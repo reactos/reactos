@@ -1952,7 +1952,7 @@ static void test_GetListBoxInfo(void)
     lb_getlistboxinfo = 0;
     ret = pGetListBoxInfo(listbox);
     ok(ret > 0, "got %d\n", ret);
-todo_wine
+    todo_wine
     ok(lb_getlistboxinfo == 0, "got %d\n", lb_getlistboxinfo);
 
     DestroyWindow(listbox);

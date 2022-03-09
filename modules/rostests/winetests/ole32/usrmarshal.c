@@ -720,7 +720,7 @@ static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx, BOOL client,
     IStream_Seek(stm, zero, STREAM_SEEK_CUR, &pos);
     marshal_size = pos.u.LowPart;
     marshal_data = GlobalLock(h);
-todo_wine
+    todo_wine
     ok(Test_Unknown.refs == 2, "got %d\n", Test_Unknown.refs);
 
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, umcb_ctx);
@@ -729,7 +729,7 @@ todo_wine
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, umcb_ctx);
     buffer_end = WdtpInterfacePointer_UserMarshal(&umcb.Flags, ctx, buffer, unk, &IID_IUnknown);
-todo_wine
+    todo_wine
     ok(Test_Unknown.refs == 2, "got %d\n", Test_Unknown.refs);
     wireip = buffer;
 

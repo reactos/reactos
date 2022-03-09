@@ -7417,7 +7417,7 @@ static void test_XSLPattern(void)
         if (len) {
             if (ptr->todo) {
                 char *str = list_to_string(list);
-            todo_wine
+                todo_wine
                 ok(!strcmp(str, ptr->list), "Invalid node list: %s, expected %s\n", str, ptr->list);
                 IXMLDOMNodeList_Release(list);
             }
@@ -10497,7 +10497,7 @@ static void test_mxnamespacemanager(void)
     EXPECT_REF(mgr2, 2);
     prefixes = NULL;
     hr = IVBMXNamespaceManager_getDeclaredPrefixes(mgr2, &prefixes);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "got 0x%08x\n", hr);
     if (hr == S_OK)
     {
@@ -11068,7 +11068,7 @@ static void test_dispex(void)
     hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
     ok(hr == DISP_E_BADPARAMCOUNT, "got 0x%08x\n", hr);
     ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
-todo_wine
+    todo_wine
     ok(broken(V_DISPATCH(&ret) == (void*)0x1) || (V_DISPATCH(&ret) == NULL), "got %p\n", V_DISPATCH(&ret));
 
     V_VT(&arg) = VT_I4;
@@ -11083,7 +11083,7 @@ todo_wine
     hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
     ok(hr == DISP_E_BADPARAMCOUNT, "got 0x%08x\n", hr);
     ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
-todo_wine
+    todo_wine
     ok(broken(V_DISPATCH(&ret) == (void*)0x1) || (V_DISPATCH(&ret) == NULL), "got %p\n", V_DISPATCH(&ret));
 
     V_VT(&arg) = VT_I4;
@@ -11136,7 +11136,7 @@ todo_wine
     hr = IDispatchEx_Invoke(dispex, DISPID_DOM_NODELIST_LENGTH, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
     ok(hr == DISP_E_MEMBERNOTFOUND, "got 0x%08x\n", hr);
     ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
-todo_wine
+    todo_wine
     ok(broken(V_I4(&ret) == 1) || (V_I4(&ret) == 0), "got %d\n", V_I4(&ret));
 
     IXMLDOMNodeList_Release(node_list);
@@ -11162,7 +11162,7 @@ todo_wine
     hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
     ok(hr == DISP_E_MEMBERNOTFOUND, "got 0x%08x\n", hr);
     ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
-todo_wine
+    todo_wine
     ok(broken(V_DISPATCH(&ret) == (void*)0x1) || (V_DISPATCH(&ret) == NULL), "got %p\n", V_DISPATCH(&ret));
 
     IDispatchEx_Release(dispex);
@@ -11267,7 +11267,7 @@ todo_wine {
     V_VT(&ret) = VT_EMPTY;
     V_DISPATCH(&ret) = (void*)0x1;
     hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(V_VT(&ret) == VT_DISPATCH, "got %d\n", V_VT(&ret));
     ok(V_DISPATCH(&ret) == NULL, "got %p\n", V_DISPATCH(&ret));
@@ -11307,7 +11307,7 @@ todo_wine
     V_I4(&ret) = 1;
     hr = IDispatchEx_Invoke(dispex, DISPID_DOM_NODELIST_LENGTH, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
     ok(hr == DISP_E_MEMBERNOTFOUND, "got 0x%08x\n", hr);
-todo_wine
+    todo_wine
     ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
     ok(broken(V_I4(&ret) == 1) || (V_I4(&ret) == 0), "got %d\n", V_I4(&ret));
 
@@ -12303,7 +12303,7 @@ static void test_newline_normalization(void)
         if (IsEqualGUID(table->clsid, &CLSID_DOMDocument60))
         {
             /* DOMDocument60 does the newline normalization but does not insert line breaks around the root node */
-todo_wine
+            todo_wine
             ok(!lstrcmpW(s, _bstr_("<?xml version=\"1.0\"?><root>foo\r\n\r\n\r\n\r\nbar</root>")),
                "got %s\n", wine_dbgstr_w(s));
         }
@@ -12761,8 +12761,8 @@ static HRESULT WINAPI transformdest_QueryInterface(IUnknown *iface, REFIID riid,
         IsEqualIID(riid, &IID_ISequentialStream) ||
         IsEqualIID(riid, &IID_IRequestDictionary);
 
-todo_wine_if(IsEqualIID(riid, &IID_IXMLDOMDocument))
-    ok(known_iid, "Unexpected riid %s\n", wine_dbgstr_guid(riid));
+    todo_wine_if(IsEqualIID(riid, &IID_IXMLDOMDocument))
+        ok(known_iid, "Unexpected riid %s\n", wine_dbgstr_guid(riid));
 
     return E_NOINTERFACE;
 }

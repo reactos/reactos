@@ -2796,7 +2796,7 @@ static void test_CreateBitmap(void)
        "0: %p, 1: %p, 4: %p, 5: %p, curObj1 %p, old1 %p\n",
        bm, bm1, bm4, bm5, curObj1, old1);
     ok(bm != bm2 && bm != bm3, "0: %p, 2: %p, 3: %p\n", bm, bm2, bm3);
-todo_wine
+    todo_wine
     ok(bm != curObj2, "0: %p, curObj2 %p\n", bm, curObj2);
     ok(old2 == 0, "old2 %p\n", old2);
 

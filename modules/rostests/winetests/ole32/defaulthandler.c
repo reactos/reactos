@@ -286,7 +286,7 @@ static void test_default_handler_run(void)
     SET_EXPECT(CF_QueryInterface_ClassFactory);
     SET_EXPECT(CF_CreateInstance);
     hres = IRunnableObject_Run(ro, NULL);
-todo_wine
+    todo_wine
     ok(hres == S_OK, "Run failed: %x\n", hres);
     CHECK_CALLED(CF_QueryInterface_ClassFactory);
     CHECK_CALLED(CF_CreateInstance);
@@ -296,11 +296,11 @@ todo_wine
     SET_EXPECT(CF_CreateInstance);
     hres = CoCreateInstance(&test_server_clsid, NULL, CLSCTX_LOCAL_SERVER,
                             &IID_IOleObject, (void**)&oleobj);
-todo_wine
+    todo_wine
     ok(hres == REGDB_E_CLASSNOTREG, "expected REGDB_E_CLASSNOTREG, got %x\n", hres);
-todo_wine
+    todo_wine
     CHECK_NOT_CALLED(CF_QueryInterface_ClassFactory);
-todo_wine
+    todo_wine
     CHECK_NOT_CALLED(CF_CreateInstance);
 
     SET_EXPECT(CF_QueryInterface_IMarshal);

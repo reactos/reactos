@@ -648,18 +648,18 @@ static void test_curfocus(void)
     ret = SendMessageA(hTab, TCM_SETCURFOCUS, -10, 0);
     ok(ret == 0, "Unexpected ret value %d.\n", ret);
     ret = SendMessageA(hTab, TCM_GETCURFOCUS, 0, 0);
-todo_wine
+    todo_wine
     ok(ret == nTabs - 1, "Unexpected focus index %d.\n", ret);
 
     /* Testing CurFocus with value larger than number of tabs */
     ret = SendMessageA(hTab, TCM_SETCURSEL, 1, 0);
-todo_wine
+    todo_wine
     ok(ret == 0, "Unexpected focus index %d.\n", ret);
 
     ret = SendMessageA(hTab, TCM_SETCURFOCUS, nTabs + 1, 0);
     ok(ret == 0, "Unexpected ret value %d.\n", ret);
     ret = SendMessageA(hTab, TCM_GETCURFOCUS, 0, 0);
-todo_wine
+    todo_wine
     ok(ret == nTabs - 1, "Unexpected focus index %d.\n", ret);
 
     ok_sequence(sequences, TAB_SEQ_INDEX, getset_cur_focus_seq, "TCS_BUTTONS: set focused tab sequence", FALSE);
@@ -1437,10 +1437,10 @@ static void test_TCN_SELCHANGING(void)
     ok_sequence(sequences, PARENT_SEQ_INDEX, selchanging_parent_seq, "Focus change disallowed sequence", FALSE);
 
     ret = SendMessageA(hTab, TCM_GETCURFOCUS, 0, 0);
-todo_wine
+    todo_wine
     ok(ret == nTabs - 1, "Unexpected focused tab %d.\n", ret);
     ret = SendMessageA(hTab, TCM_GETCURSEL, 0, 0);
-todo_wine
+    todo_wine
     ok(ret == nTabs - 1, "Unexpected selected tab %d.\n", ret);
 
     /* Removing focus sends only TCN_SELCHANGE */

@@ -427,14 +427,14 @@ CheckSACLArgument:
 
 AbortDumpSACL:
   ASSERT(pSecurityDescriptor);
-  delete pSecurityDescriptor;
+  delete[] pSecurityDescriptor;
 
   VERIFY(CloseHandle(hThreadToken));
 
 	return 0;
 Error:
   if (pSecurityDescriptor)
-    delete pSecurityDescriptor;
+    delete[] pSecurityDescriptor;
 
   if (hThreadToken != INVALID_HANDLE_VALUE)
     VERIFY(CloseHandle(hThreadToken));

@@ -1146,12 +1146,12 @@ static void test_hfont_lifetime(void)
     EXPECT_HR(hr, S_OK);
     hr = IFont_get_hFont(font2, &first_hfont);
     EXPECT_HR(hr, S_OK);
-todo_wine
+    todo_wine
     ok(hfont == first_hfont, "fonts differ\n");
     hr = IFont_ReleaseHfont(font, hfont);
     EXPECT_HR(hr, S_OK);
     hr = IFont_ReleaseHfont(font, hfont);
-todo_wine
+    todo_wine
     EXPECT_HR(hr, S_OK);
     hr = IFont_ReleaseHfont(font, hfont);
     EXPECT_HR(hr, S_FALSE);

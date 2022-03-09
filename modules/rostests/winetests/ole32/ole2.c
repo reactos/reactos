@@ -1353,7 +1353,7 @@ static void test_OleLoad(IStorage *pStorage)
             if (fmt == CF_METAFILEPICT)
                 ok(hr == S_OK, "OleDraw error %#x: cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
             else if (fmt == CF_ENHMETAFILE)
-todo_wine
+                todo_wine
                 ok(hr == S_OK, "OleDraw error %#x: cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
             else
                 ok(hr == OLE_E_BLANK || hr == OLE_E_NOTRUNNING || hr == E_FAIL, "OleDraw should fail: %#x, cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
@@ -3349,7 +3349,7 @@ static HRESULT WINAPI Storage_CreateStream(IStorage *iface, LPCOLESTR pwcsName, 
     }
     else
     {
-todo_wine
+        todo_wine
         ok(0, "unexpected stream name %s\n", wine_dbgstr_w(pwcsName));
 #if 0   /* FIXME: return NULL once Wine is fixed */
         *ppstm = NULL;
@@ -3818,11 +3818,11 @@ static void test_data_cache_save(void)
     hr = IPersistStorage_Save(stg, &Storage, FALSE);
     ok(hr == S_OK, "unexpected %#x\n", hr);
     CHECK_CALLED(Storage_CreateStream_OlePres);
-todo_wine
+    todo_wine
     CHECK_CALLED(Storage_OpenStream_OlePres);
-todo_wine
+    todo_wine
     CHECK_CALLED(Storage_OpenStream_Ole);
-todo_wine
+    todo_wine
     CHECK_CALLED(Storage_DestroyElement);
 
     IStream_Release(olepres_stream);
@@ -4599,10 +4599,10 @@ static void test_data_cache_contents(void)
 
         enumerated_streams = matched_streams = -1;
         check_storage_contents(doc2, test_data[i].out, &enumerated_streams, &matched_streams);
-todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_1 || test_data[i].in == &stg_def_2))
+        todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_1 || test_data[i].in == &stg_def_2))
         ok(enumerated_streams == matched_streams, "%d out: enumerated %d != matched %d\n", i,
            enumerated_streams, matched_streams);
-todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_4 || test_data[i].in == &stg_def_5
+        todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_4 || test_data[i].in == &stg_def_5
                  || test_data[i].in == &stg_def_6))
         ok(enumerated_streams == test_data[i].out->stream_count, "%d: saved streams %d != def streams %d\n", i,
             enumerated_streams, test_data[i].out->stream_count);

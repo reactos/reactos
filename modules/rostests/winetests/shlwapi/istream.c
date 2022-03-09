@@ -270,7 +270,7 @@ static void test_stream_qi(IStream *stream)
 
     unk = NULL;
     hr = IStream_QueryInterface(stream, &IID_ISequentialStream, (void **)&unk);
-todo_wine
+    todo_wine
     ok(SUCCEEDED(hr) || broken(hr == E_NOINTERFACE) /* XP */, "Failed to get ISequentialStream interface, hr %#x.\n", hr);
     if (unk)
         IUnknown_Release(unk);
@@ -753,17 +753,17 @@ static void test_SHCreateMemStream(void)
     ok(stream != NULL, "Failed to create a stream.\n");
 
     hr = IStream_QueryInterface(stream, &IID_ISequentialStream, (void **)&unk);
-todo_wine
+    todo_wine
     ok(hr == S_OK || broken(hr == E_NOINTERFACE) /* WinXP */, "Failed to QI, hr %#x.\n", hr);
     if (unk)
         IUnknown_Release(unk);
 
     hr = IStream_Read(stream, buff, sizeof(buff), NULL);
-todo_wine
+    todo_wine
     ok(hr == S_FALSE || broken(hr == S_OK) /* WinXP */, "Unexpected hr %#x.\n", hr);
 
     hr = IStream_Clone(stream, &stream2);
-todo_wine
+    todo_wine
     ok(hr == S_OK || broken(hr == E_NOTIMPL) /* < Win8 */, "Failed to clone a stream, hr %#x.\n", hr);
     if (hr == S_OK)
         IStream_Release(stream2);

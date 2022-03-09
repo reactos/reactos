@@ -1819,15 +1819,15 @@ static void test_GetKerningPairs(void)
            kd[i].otmMacDescent, otm.otmMacDescent);
         ok(near_match(kd[i].otmMacAscent, otm.otmMacAscent), "expected %d, got %d\n",
            kd[i].otmMacAscent, otm.otmMacAscent);
-todo_wine
+        todo_wine
         ok(kd[i].otmsCapEmHeight == otm.otmsCapEmHeight, "expected %u, got %u\n",
            kd[i].otmsCapEmHeight, otm.otmsCapEmHeight);
-todo_wine
+        todo_wine
         ok(kd[i].otmsXHeight == otm.otmsXHeight, "expected %u, got %u\n",
            kd[i].otmsXHeight, otm.otmsXHeight);
         ok(kd[i].otmMacLineGap == otm.otmMacLineGap, "expected %u, got %u\n",
            kd[i].otmMacLineGap, otm.otmMacLineGap);
-todo_wine
+        todo_wine
         ok(kd[i].otmusMinimumPPEM == otm.otmusMinimumPPEM, "expected %u, got %u\n",
            kd[i].otmusMinimumPPEM, otm.otmusMinimumPPEM);
 
@@ -4167,7 +4167,7 @@ static void test_nonexistent_font(void)
     hfont = CreateFontIndirectA(&lf);
     hfont = SelectObject(hdc, hfont);
     GetTextFaceA(hdc, sizeof(buf), buf);
-todo_wine /* Wine uses Arial for all substitutions */
+    todo_wine /* Wine uses Arial for all substitutions */
     ok(!lstrcmpiA(buf, "Nonexistent font") /* XP, Vista */ ||
        !lstrcmpiA(buf, "MS Serif") || /* Win9x */
        !lstrcmpiA(buf, "MS Sans Serif"), /* win2k3 */
@@ -4204,11 +4204,11 @@ todo_wine /* Wine uses Arial for all substitutions */
     for (i = 0; i < sizeof(font_subst)/sizeof(font_subst[0]); i++)
     {
         ret = is_font_installed(font_subst[i].name);
-todo_wine
+        todo_wine
         ok(ret || broken(!ret && !i) /* win2000 doesn't have Times New Roman Baltic substitution */,
            "%s should be enumerated\n", font_subst[i].name);
         ret = is_truetype_font_installed(font_subst[i].name);
-todo_wine
+        todo_wine
         ok(ret || broken(!ret && !i) /* win2000 doesn't have Times New Roman Baltic substitution */,
            "%s should be enumerated\n", font_subst[i].name);
 
@@ -4559,7 +4559,7 @@ static void test_oemcharset(void)
     hfont = CreateFontIndirectA(&lf);
     old_hfont = SelectObject(hdc, hfont);
     charset = GetTextCharset(hdc);
-todo_wine
+    todo_wine
     ok(charset == OEM_CHARSET, "expected %d charset, got %d\n", OEM_CHARSET, charset);
     hfont = SelectObject(hdc, old_hfont);
     GetObjectA(hfont, sizeof(clf), &clf);
@@ -5295,9 +5295,9 @@ static INT CALLBACK enum_ms_shell_dlg_proc(const LOGFONTA *lf, const TEXTMETRICA
 {
     struct enum_fullname_data *efnd = (struct enum_fullname_data *)lParam;
 
-if (0) /* Disabled to limit console spam */
-    trace("enumed font \"%s\", charset %d, height %d, weight %d, italic %d\n",
-          lf->lfFaceName, lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
+    if (0) /* Disabled to limit console spam */
+        trace("enumed font \"%s\", charset %d, height %d, weight %d, italic %d\n",
+              lf->lfFaceName, lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
 
     if (type != TRUETYPE_FONTTYPE) return 1;
     if (strcmp(lf->lfFaceName, "MS Shell Dlg") != 0) return 1;
@@ -5316,9 +5316,9 @@ static INT CALLBACK enum_ms_shell_dlg2_proc(const LOGFONTA *lf, const TEXTMETRIC
 {
     struct enum_fullname_data *efnd = (struct enum_fullname_data *)lParam;
 
-if (0) /* Disabled to limit console spam */
-    trace("enumed font \"%s\", charset %d, height %d, weight %d, italic %d\n",
-          lf->lfFaceName, lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
+    if (0) /* Disabled to limit console spam */
+        trace("enumed font \"%s\", charset %d, height %d, weight %d, italic %d\n",
+              lf->lfFaceName, lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
 
     if (type != TRUETYPE_FONTTYPE) return 1;
     if (strcmp(lf->lfFaceName, "MS Shell Dlg 2") != 0) return 1;
@@ -5706,7 +5706,7 @@ static void test_GetGlyphOutline_metric_clipping(void)
 
     /* Test tmLastChar - wine_test has code points fffb-fffe mapped to glyph 0 */
     GetTextMetricsW(hdc, &tmW);
-todo_wine
+    todo_wine
     ok( tmW.tmLastChar == 0xfffe, "got %04x\n", tmW.tmLastChar);
 
     SelectObject(hdc, hfont_prev);

@@ -1313,7 +1313,7 @@ static void test_load_save_icon(void)
     size = -1;
     hr = IPicture_SaveAsFile(pic, dst_stream, TRUE, &size);
     ok(hr == S_OK, "IPicture_SaveasFile error %#x\n", hr);
-todo_wine
+    todo_wine
     ok(size == 766, "expected 766, got %d\n", size);
     mem = GlobalLock(hmem);
     ok(mem[0] == 0x00010000, "got wrong icon header %04x\n", mem[0]);
@@ -1339,7 +1339,7 @@ todo_wine
 
     mem = GlobalLock(hmem);
     ok(!memcmp(mem, "lt\0\0", 4), "got wrong stream header %04x\n", mem[0]);
-todo_wine
+    todo_wine
     ok(mem[1] == 766, "expected stream size 766, got %u\n", mem[1]);
     ok(mem[2] == 0x00010000, "got wrong icon header %04x\n", mem[2]);
 

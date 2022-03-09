@@ -2065,7 +2065,7 @@ static void test_get_set_style(void)
 
     style = SendMessageA(hToolbar, TB_GETSTYLE, 0, 0);
     style2 = GetWindowLongA(hToolbar, GWL_STYLE);
-todo_wine
+    todo_wine
     ok(style == style2, "got 0x%08x, expected 0x%08x\n", style, style2);
 
     /* try to alter common window bits */
@@ -2295,7 +2295,7 @@ static void test_TB_GET_SET_EXTENDEDSTYLE(void)
     style = SendMessageA(hwnd, TB_GETEXTENDEDSTYLE, 0, 0);
     ok(style == TBSTYLE_EX_VERTICAL, "got style 0x%08x, expected 0x%08x\n", style, TBSTYLE_EX_VERTICAL);
     style = SendMessageA(hwnd, TB_GETSTYLE, 0, 0);
- todo_wine
+    todo_wine
     ok(style == CCS_VERT, "got style 0x%08x, expected CCS_VERT\n", style);
 
     DestroyWindow(hwnd);
@@ -2460,33 +2460,33 @@ static void test_drawtext_flags(void)
     rebuild_toolbar(&hwnd);
 
     flags = SendMessageA(hwnd, TB_SETDRAWTEXTFLAGS, 0, 0);
-todo_wine
+    todo_wine
     ok(flags == 0, "Unexpected draw text flags %#x\n", flags);
 
     /* zero mask, flags are retained */
     flags = SendMessageA(hwnd, TB_SETDRAWTEXTFLAGS, 0, DT_BOTTOM);
-todo_wine
+    todo_wine
     ok(flags == 0, "Unexpected draw text flags %#x\n", flags);
     ok(!(flags & DT_BOTTOM), "Unexpected DT_BOTTOM style\n");
 
     flags = SendMessageA(hwnd, TB_SETDRAWTEXTFLAGS, 0, 0);
-todo_wine
+    todo_wine
     ok(flags == 0, "Unexpected draw text flags %#x\n", flags);
     ok(!(flags & DT_BOTTOM), "Unexpected DT_BOTTOM style\n");
 
     /* set/remove */
     flags = SendMessageA(hwnd, TB_SETDRAWTEXTFLAGS, DT_BOTTOM, DT_BOTTOM);
-todo_wine
+    todo_wine
     ok(flags == 0, "Unexpected draw text flags %#x\n", flags);
     ok(!(flags & DT_BOTTOM), "Unexpected DT_BOTTOM style\n");
 
     flags = SendMessageA(hwnd, TB_SETDRAWTEXTFLAGS, DT_BOTTOM, 0);
-todo_wine
+    todo_wine
     ok(flags == DT_BOTTOM, "Unexpected draw text flags %#x\n", flags);
     ok(flags & DT_BOTTOM, "Expected DT_BOTTOM style, %#x\n", flags);
 
     flags = SendMessageA(hwnd, TB_SETDRAWTEXTFLAGS, DT_BOTTOM, 0);
-todo_wine
+    todo_wine
     ok(flags == 0, "Unexpected draw text flags %#x\n", flags);
     ok(!(flags & DT_BOTTOM), "Unexpected DT_BOTTOM style\n");
 

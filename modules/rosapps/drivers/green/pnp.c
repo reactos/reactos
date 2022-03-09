@@ -206,13 +206,19 @@ GreenAddDevice(
 
 		GreenDeviceExtension = (PGREEN_DEVICE_EXTENSION)DriverExtension->GreenMainDO->DeviceExtension;
 		if (Pdo == GreenDeviceExtension->KeyboardPdo)
+		{
 			return KeyboardAddDevice(DriverObject, Pdo);
+		}
 		else if (Pdo == GreenDeviceExtension->ScreenPdo)
+		{
 			return ScreenAddDevice(DriverObject, Pdo);
+		}
 		else
+		{
 			/* Strange PDO. We don't know it */
 			ASSERT(FALSE);
 			return STATUS_UNSUCCESSFUL;
+		}
 	}
 }
 

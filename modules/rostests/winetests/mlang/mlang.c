@@ -2272,7 +2272,7 @@ static void test_IMLangConvertCharset(IMultiLanguage *ml)
     HRESULT hr;
 
     hr = IMultiLanguage_CreateConvertCharset(ml, CP_ACP, CP_UTF8, 0, &convert);
-todo_wine
+    todo_wine
     ok(hr == S_FALSE, "expected S_FALSE got 0x%08x\n", hr);
 
     hr = IMLangConvertCharset_GetSourceCodePage(convert, NULL);

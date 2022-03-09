@@ -58,7 +58,7 @@ void Test___badioinfo(void)
 {
     typedef struct _ioinfo ioinfo;
     _CRTIMP extern ioinfo* __badioinfo[];
-    ok(__badioinfo != NULL, "__badioinfo is NULL\n");
+    //ok(__badioinfo != NULL, "__badioinfo is NULL\n");
     ok(__badioinfo[0] != NULL, "__badioinfo is NULL\n");
 }
 

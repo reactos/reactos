@@ -88,7 +88,7 @@ static int mailslot_test(void)
     SetLastError(0xdeadbeef);
     ret = ReadFile(hSlot, buffer, 0, &count, NULL);
     ok(!ret, "ReadFile should fail\n");
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_SEM_TIMEOUT, "wrong error %u\n", GetLastError());
     ok(count == 0, "expected 0, got %u\n", count);
 

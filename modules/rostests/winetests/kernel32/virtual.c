@@ -4012,7 +4012,7 @@ static void test_NtQuerySection(void)
     ok(info.image.ImageCharacteristics == nt->FileHeader.Characteristics, "expected %#x, got %#x\n", nt->FileHeader.Characteristics, info.image.ImageCharacteristics);
     ok(info.image.DllCharacteristics == nt->OptionalHeader.DllCharacteristics, "expected %#x, got %#x\n", nt->OptionalHeader.DllCharacteristics, info.image.DllCharacteristics);
     ok(info.image.Machine == nt->FileHeader.Machine, "expected %#x, got %#x\n", nt->FileHeader.Machine, info.image.Machine);
-todo_wine
+    todo_wine
     ok(info.image.ImageContainsCode == TRUE, "expected 1, got %#x\n", info.image.ImageContainsCode);
 
     memset(&info, 0x55, sizeof(info));
@@ -4037,7 +4037,7 @@ todo_wine
     ok(status == STATUS_SUCCESS, "NtQuerySection error %#x\n", status);
     ok(ret == sizeof(info.basic), "wrong returned size %u\n", ret);
     ok(info.basic.BaseAddress == NULL, "expected NULL, got %p\n", info.basic.BaseAddress);
-todo_wine
+    todo_wine
     ok(info.basic.Attributes == SEC_FILE, "expected SEC_FILE, got %#x\n", info.basic.Attributes);
     ok(info.basic.Size.QuadPart == fsize, "expected %#lx, got %#x/%08x\n", fsize, info.basic.Size.HighPart, info.basic.Size.LowPart);
 

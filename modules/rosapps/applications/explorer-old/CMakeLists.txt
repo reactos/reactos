@@ -57,5 +57,10 @@ set_module_type(explorer_old win32gui UNICODE)
 add_importlibs(explorer_old advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 shlwapi notifyhook msvcrt kernel32 ntdll)
 add_pch(explorer_old precomp.h "${PCH_SKIP_SOURCE}")
 add_dependencies(explorer_old psdk)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 9))
+    target_compile_options(explorer_old PRIVATE -Wno-dangling-pointer -Wno-free-nonheap-object)
+endif()
+
 add_cd_file(TARGET explorer_old DESTINATION reactos FOR all)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/explorer-cfg-template.xml DESTINATION reactos FOR all)

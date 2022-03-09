@@ -164,7 +164,7 @@ static void test_ico_data_(void *data, DWORD data_size, HRESULT init_hr, int tod
         {
             hr = IWICBitmapDecoder_Initialize(decoder, (IStream*)icostream,
                 WICDecodeMetadataCacheOnDemand);
-        todo_wine_if(todo)
+            todo_wine_if(todo)
             ok_(__FILE__, line)(hr == init_hr, "Initialize failed, hr=%x\n", hr);
 
             if (SUCCEEDED(hr))

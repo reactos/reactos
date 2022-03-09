@@ -1353,7 +1353,7 @@ static void test_marshal_channel_buffer(void)
 
     SET_EXPECT(Disconnect);
     IUnknown_Release(proxy);
-todo_wine
+    todo_wine
     CHECK_CALLED(Disconnect);
 
     hr = CoRevokeClassObject(registration_key);

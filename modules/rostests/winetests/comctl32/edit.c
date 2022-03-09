@@ -1400,7 +1400,7 @@ static void test_edit_control_6(void)
 
     buf[0] = 0;
     ret = SendMessageA(hWnd, WM_DESTROY, 0, 0);
-todo_wine
+    todo_wine
     ok(ret == 1, "Unexpected return value %d\n", ret);
     ret = SendMessageA(hWnd, WM_GETTEXT, MAXLEN, (LPARAM)buf);
     ok(ret == strlen(str), "Expected %s, got len %d\n", str, ret);

@@ -817,7 +817,7 @@ static void test_PropVariantCompare(void)
 
     /* VT_R4/VT_R8 */
     res = PropVariantCompareEx(&r4_0, &r8_0, 0, 0);
-todo_wine
+    todo_wine
     ok(res == 0, "res=%i\n", res);
 
     res = PropVariantCompareEx(&r4_0, &r4_0, 0, 0);

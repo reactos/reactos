@@ -869,7 +869,7 @@ static void test_CreateBitmapFromHBITMAP(void)
     ok(hr == S_OK, "CreateBitmapFromHBITMAP error %#x\n", hr);
 
     IWICBitmap_GetPixelFormat(bitmap, &format);
-todo_wine
+    todo_wine
     ok(IsEqualGUID(&format, &GUID_WICPixelFormat4bppIndexed),
        "unexpected pixel format %s\n", wine_dbgstr_guid(&format));
 
@@ -889,7 +889,7 @@ todo_wine
 
     hr = IWICPalette_GetColorCount(palette, &count);
     ok(hr == S_OK, "GetColorCount error %#x\n", hr);
-todo_wine
+    todo_wine
     ok(count == 16, "expected 16, got %u\n", count);
 
     IWICPalette_Release(palette);

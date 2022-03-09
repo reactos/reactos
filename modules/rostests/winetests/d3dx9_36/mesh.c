@@ -3621,7 +3621,7 @@ static inline BOOL is_direction_similar(D3DXVECTOR2 *dir1, D3DXVECTOR2 *dir2, fl
 
 static inline D3DXVECTOR2 *unit_vec2(D3DXVECTOR2 *dir, const D3DXVECTOR2 *pt1, const D3DXVECTOR2 *pt2)
 {
-    return D3DXVec2Normalize(D3DXVec2Subtract(dir, pt2, pt1), dir);
+    return D3DXVec2Normalize(dir, D3DXVec2Subtract(dir, pt2, pt1));
 }
 
 static BOOL attempt_line_merge(struct outline *outline,
@@ -4749,11 +4749,9 @@ static void test_update_semantics(void)
     D3DVERTEXELEMENT9 *decl_ptr;
     DWORD exp_vertex_size = sizeof(*vertices);
     DWORD vertex_size = 0;
+    BYTE *decl_mem;
     int equal;
     int i = 0;
-    int *decl_mem;
-    int filler_a = 0xaaaaaaaa;
-    int filler_b = 0xbbbbbbbb;
 
     test_context = new_test_context();
     if (!test_context)
@@ -4825,22 +4823,20 @@ static void test_update_semantics(void)
     /* Check that GetDeclaration only writes up to the D3DDECL_END() marker and
      * not the full MAX_FVF_DECL_SIZE elements.
      */
-    memset(declaration, filler_a, sizeof(declaration));
+    memset(declaration, 0xaa, sizeof(declaration));
     memcpy(declaration, declaration0, sizeof(declaration0));
     hr = mesh->lpVtbl->UpdateSemantics(mesh, declaration);
     ok(hr == D3D_OK, "Test UpdateSemantics, "
        "got %#x expected D3D_OK\n", hr);
-    memset(declaration, filler_b, sizeof(declaration));
+    memset(declaration, 0xbb, sizeof(declaration));
     hr = mesh->lpVtbl->GetDeclaration(mesh, declaration);
     ok(hr == D3D_OK, "Couldn't get vertex declaration. Got %#x, expected D3D_OK\n", hr);
-    decl_mem = (int*)declaration;
-    for (i = sizeof(declaration0)/sizeof(*decl_mem); i < sizeof(declaration)/sizeof(*decl_mem); i++)
+    decl_mem = (BYTE *)declaration;
+    for (i = sizeof(declaration0); i < sizeof(declaration); ++i)
     {
-        equal = memcmp(&decl_mem[i], &filler_b, sizeof(filler_b));
-        ok(equal == 0,
-           "GetDeclaration wrote past the D3DDECL_END() marker. "
-           "Got %#x, expected  %#x\n", decl_mem[i], filler_b);
-        if (equal != 0) break;
+        ok(decl_mem[i] == 0xbb, "Unexpected %#x.\n", decl_mem[i]);
+        if (equal != 0)
+            break;
     }
 
     /* UpdateSemantics does not check for overlapping fields */

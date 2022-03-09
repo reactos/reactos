@@ -2364,9 +2364,9 @@ if (0) {    /* these currently open a browser window on wine */
     CHECK_CALLED(IsSystemMoniker);
     CHECK_CALLED(GetDisplayName);
     CHECK_CALLED(HBC_GetObject);
-todo_wine
+    todo_wine
     CHECK_CALLED(BindStatusCallback_GetBindInfo);
-todo_wine
+    todo_wine
     CHECK_CALLED(Reduce);
     CHECK_CALLED(BindToObject);
 todo_wine {
@@ -2374,15 +2374,15 @@ todo_wine {
     CHECK_CALLED(BindStatusCallback_OnObjectAvailable);
 }
     CHECK_CALLED(HT_QueryInterface_IHlinkTarget);
-todo_wine
+    todo_wine
     CHECK_CALLED(HT_GetBrowseContext);
     CHECK_CALLED(HT_SetBrowseContext);
-todo_wine
+    todo_wine
     CHECK_CALLED(HBC_QueryInterface_IHlinkHistory);
     CHECK_CALLED(HT_Navigate);
-todo_wine
+    todo_wine
     CHECK_CALLED(HT_GetFriendlyName);
-todo_wine
+    todo_wine
     CHECK_CALLED(BindStatusCallback_OnStopBinding);
 
     ok(bind_callback_refs == 1, "Got unexpected refcount %d.\n", bind_callback_refs);
@@ -2400,7 +2400,7 @@ todo_wine
     CHECK_CALLED(IsSystemMoniker);
     CHECK_CALLED(GetDisplayName);
     CHECK_CALLED(HBC_GetObject);
-todo_wine
+    todo_wine
     CHECK_CALLED(Reduce);
     CHECK_CALLED(BindToObject);
 
@@ -2425,13 +2425,13 @@ todo_wine
             (IUnknown *)&HlinkTarget);
     ok(hres == S_OK, "Got hr %#x.\n", hres);
     CHECK_CALLED(HT_QueryInterface_IHlinkTarget);
-todo_wine
+    todo_wine
     CHECK_CALLED(HT_GetBrowseContext);
     CHECK_CALLED(HT_SetBrowseContext);
-todo_wine
+    todo_wine
     CHECK_CALLED(HBC_QueryInterface_IHlinkHistory);
     CHECK_CALLED(HT_Navigate);
-todo_wine
+    todo_wine
     CHECK_CALLED(HT_GetFriendlyName);
 
     hres = IHlink_Navigate(hlink, 0, pbc, NULL, &HlinkBrowseContext);
@@ -2456,10 +2456,10 @@ todo_wine
     ok(hres == MK_S_ASYNCHRONOUS, "Navigate failed: %#x\n", hres);
     CHECK_CALLED(IsSystemMoniker);
     CHECK_CALLED(GetDisplayName);
-todo_wine
+    todo_wine
     CHECK_CALLED(BindStatusCallback_GetBindInfo);
     CHECK_CALLED(HBC_GetObject);
-todo_wine
+    todo_wine
     CHECK_CALLED(Reduce);
     CHECK_CALLED(BindToObject);
 
@@ -2491,13 +2491,13 @@ todo_wine
     ok(hres == S_OK, "Got hr %#x.\n", hres);
     CHECK_CALLED(BindStatusCallback_OnObjectAvailable);
     CHECK_CALLED(HT_QueryInterface_IHlinkTarget);
-todo_wine
+    todo_wine
     CHECK_CALLED(HT_GetBrowseContext);
     CHECK_CALLED(HT_SetBrowseContext);
-todo_wine
+    todo_wine
     CHECK_CALLED(HBC_QueryInterface_IHlinkHistory);
     CHECK_CALLED(HT_Navigate);
-todo_wine
+    todo_wine
     CHECK_CALLED(HT_GetFriendlyName);
 
     hres = IHlink_Navigate(hlink, 0, pbc, NULL, &HlinkBrowseContext);

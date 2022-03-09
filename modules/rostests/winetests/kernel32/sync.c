@@ -203,9 +203,9 @@ static void test_mutex(void)
 
     SetLastError(0xdeadbeef);
     hOpened = OpenMutexA(0, FALSE, "WineTestMutex");
-todo_wine
+    todo_wine
     ok(hOpened == NULL, "OpenMutex succeeded\n");
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -250,7 +250,7 @@ todo_wine
         }
     }
 
-todo_wine
+    todo_wine
     ok( failed == 0x0de0fffe, "open succeeded when it shouldn't: %x\n", failed);
 
     SetLastError(0xdeadbeef);

@@ -134,7 +134,7 @@ static void encodeAndCompareBase64_A(const BYTE *toEncode, DWORD toEncodeLen,
     strLen2 = strLen - 1;
     str[0] = 0x12;
     ret = CryptBinaryToStringA(toEncode, toEncodeLen, format, str, &strLen2);
-todo_wine
+    todo_wine
     ok((!ret && GetLastError() == ERROR_MORE_DATA) || broken(ret) /* XP */, "CryptBinaryToStringA failed %d, error %d.\n",
         ret, GetLastError());
     ok(strLen2 == strLen || broken(strLen2 == strLen - 1), "Expected length %d, got %d\n", strLen - 1, strLen);
@@ -207,7 +207,7 @@ static void encode_compare_base64_W(const BYTE *toEncode, DWORD toEncodeLen, DWO
     strLen2 = strLen - 1;
     strW[0] = 0x1234;
     ret = CryptBinaryToStringW(toEncode, toEncodeLen, format, strW, &strLen2);
-todo_wine
+    todo_wine
     ok((!ret && GetLastError() == ERROR_MORE_DATA) || broken(ret) /* XP */, "CryptBinaryToStringW failed, %d, error %d\n",
         ret, GetLastError());
     if (headerW)

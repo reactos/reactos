@@ -818,16 +818,16 @@ if (0)
 
     nodetype = XmlNodeType_Element;
     hr = IXmlReader_Read(reader, &nodetype);
-todo_wine
+    todo_wine
     ok(FAILED(hr), "got %08x\n", hr);
     ok(nodetype == XmlNodeType_None, "Unexpected node type %d\n", nodetype);
 
-todo_wine
+    todo_wine
     TEST_READER_STATE(reader, XmlReadState_Error);
 
     nodetype = XmlNodeType_Element;
     hr = IXmlReader_Read(reader, &nodetype);
-todo_wine
+    todo_wine
     ok(FAILED(hr), "got %08x\n", hr);
     ok(nodetype == XmlNodeType_None, "Unexpected node type %d\n", nodetype);
 
@@ -1027,11 +1027,11 @@ todo_wine {
 
     type = -1;
     hr = IXmlReader_Read(reader, &type);
-todo_wine
+    todo_wine
     ok(hr == WC_E_SYNTAX || hr == WC_E_XMLCHARACTER /* XP */, "expected WC_E_SYNTAX, got %08x\n", hr);
     ok(type == XmlNodeType_None, "expected XmlNodeType_None, got %s\n", type_to_str(type));
     TEST_READER_POSITION(reader, 1, 41);
-todo_wine
+    todo_wine
     TEST_READER_STATE(reader, XmlReadState_Error);
 
     IStream_Release(stream);
@@ -1579,7 +1579,7 @@ static void test_read_pending(void)
     ok(hr == S_OK || broken(hr == E_PENDING), "got 0x%08x\n", hr);
     /* newer versions are happy when it's enough data to detect node type,
        older versions keep reading until it fails to read more */
-todo_wine
+    todo_wine
     ok(stream_readcall == 1 || broken(stream_readcall > 1), "got %d\n", stream_readcall);
     ok(type == XmlNodeType_Comment || broken(type == XmlNodeType_None), "got %d\n", type);
 

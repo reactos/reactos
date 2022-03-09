@@ -168,7 +168,7 @@ static void test_namespace(void)
         folder = (void*)0xdeadbeef;
         r = IShellDispatch_NameSpace(sd, var, &folder);
         if (special_folders[i] == ssfALTSTARTUP || special_folders[i] == ssfCOMMONALTSTARTUP)
-        todo_wine
+            todo_wine
             ok(r == S_OK || broken(r == S_FALSE) /* winxp */, "Failed to get folder for index %#x, got %08x\n", special_folders[i], r);
         else
             ok(r == S_OK, "Failed to get folder for index %#x, got %08x\n", special_folders[i], r);
@@ -702,10 +702,10 @@ static void test_items(void)
             variant_set_string(&str_index2, cstr);
             item2 = (FolderItem*)0xdeadbeef;
             r = FolderItems_Item(items, str_index2, &item2);
-       todo_wine {
-            ok(r == S_FALSE, "file_defs[%d]: expected S_FALSE, got %08x\n", i, r);
-            ok(!item2, "file_defs[%d]: item is not null\n", i);
-       }
+            todo_wine {
+                 ok(r == S_FALSE, "file_defs[%d]: expected S_FALSE, got %08x\n", i, r);
+                 ok(!item2, "file_defs[%d]: item is not null\n", i);
+            }
             if (item2) FolderItem_Release(item2);
             VariantClear(&str_index2);
 
@@ -784,16 +784,16 @@ static void test_items(void)
     }
 
     r = FolderItems__NewEnum(items, &unk);
-todo_wine
+    todo_wine
     ok(r == S_OK, "FolderItems::_NewEnum failed: %08x\n", r);
-todo_wine
+    todo_wine
     ok(!!unk, "unk is null\n");
     if (unk) IUnknown_Release(unk);
 
     if (items3)
     {
         r = FolderItems3_Filter(items3, 0, NULL);
-todo_wine
+        todo_wine
         ok(r == S_OK, "expected S_OK, got %08x\n", r);
 
         if (0) /* crashes on xp */
@@ -803,7 +803,7 @@ todo_wine
         }
 
         r = FolderItems3_get_Verbs(items3, &verbs);
-todo_wine
+        todo_wine
         ok(r == S_FALSE, "expected S_FALSE, got %08x\n", r);
         ok(!verbs, "verbs is not null\n");
     }
@@ -1034,15 +1034,15 @@ static void test_ShellWindows(void)
     ok(hr == HRESULT_FROM_WIN32(RPC_X_NULL_REF_POINTER), "got 0x%08x\n", hr);
 
     hr = IShellWindows_Register(shellwindows, NULL, 0, SWC_EXPLORER, &cookie);
-todo_wine
+    todo_wine
     ok(hr == E_POINTER, "got 0x%08x\n", hr);
 
     hr = IShellWindows_Register(shellwindows, (IDispatch*)shellwindows, 0, SWC_EXPLORER, &cookie);
-todo_wine
+    todo_wine
     ok(hr == E_POINTER, "got 0x%08x\n", hr);
 
     hr = IShellWindows_Register(shellwindows, (IDispatch*)shellwindows, 0, SWC_EXPLORER, &cookie);
-todo_wine
+    todo_wine
     ok(hr == E_POINTER, "got 0x%08x\n", hr);
 
     hwnd = CreateWindowExA(0, "button", "test", BS_CHECKBOX | WS_VISIBLE | WS_POPUP,
@@ -1062,14 +1062,14 @@ todo_wine {
     ok(cookie2 != 0 && cookie2 != cookie, "got %d\n", cookie2);
 }
     hr = IShellWindows_Revoke(shellwindows, cookie);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "got 0x%08x\n", hr);
     hr = IShellWindows_Revoke(shellwindows, cookie2);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
     hr = IShellWindows_Revoke(shellwindows, 0);
-todo_wine
+    todo_wine
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
 
     /* we can register ourselves as desktop, but FindWindowSW still returns real desktop window */
@@ -1120,7 +1120,7 @@ todo_wine {
         ok(hr == S_OK, "got 0x%08x\n", hr);
 
         hr = IWebBrowser2_Refresh(wb);
-todo_wine
+        todo_wine
         ok(hr == S_OK, "got 0x%08x\n", hr);
 
         hr = IWebBrowser2_get_Application(wb, &app);
@@ -1129,7 +1129,7 @@ todo_wine
         IDispatch_Release(app);
 
         hr = IWebBrowser2_get_Document(wb, &doc);
-todo_wine
+        todo_wine
         ok(hr == S_OK, "got 0x%08x\n", hr);
 if (hr == S_OK) {
         test_dispatch_typeinfo(doc, viewdual_riids);
@@ -1202,13 +1202,13 @@ if (hr == S_OK) {
     V_I4(&v) = cookie;
     VariantInit(&v2);
     hr = IShellWindows_FindWindowSW(shellwindows, &v, &v2, SWC_BROWSER, &ret, SWFO_COOKIEPASSED, &disp);
-todo_wine
+    todo_wine
     ok(hr == S_FALSE, "got 0x%08x\n", hr);
     ok(disp == NULL, "got %p\n", disp);
     ok(ret == 0, "got %d\n", ret);
 
     hr = IShellWindows_Revoke(shellwindows, cookie);
-todo_wine
+    todo_wine
     ok(hr == S_OK, "got 0x%08x\n", hr);
     DestroyWindow(hwnd);
     IShellWindows_Release(shellwindows);

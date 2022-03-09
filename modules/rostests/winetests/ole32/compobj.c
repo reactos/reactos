@@ -1534,7 +1534,7 @@ static void test_CoRegisterClassObject(void)
     if ((handle = activate_context(actctx_manifest, &ctxcookie)))
     {
         hr = CoGetClassObject(&CLSID_WineOOPTest, CLSCTX_INPROC_SERVER, NULL, &IID_IClassFactory, (void**)&pcf);
-todo_wine
+        todo_wine
         ok(hr == HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND), "got 0x%08x\n", hr);
 
         pDeactivateActCtx(0, ctxcookie);
@@ -3649,7 +3649,7 @@ static void test_CoGetInstanceFromFile(void)
     mqi[0].pItf = NULL;
     mqi[0].hr = E_NOTIMPL;
     hr = CoGetInstanceFromFile(NULL, NULL, NULL, CLSCTX_INPROC_SERVER, STGM_READ, (OLECHAR*)filenameW, 1, mqi);
-todo_wine
+    todo_wine
     ok(hr == MK_E_CANTOPENFILE, "got 0x%08x\n", hr);
     ok(mqi[0].pItf == NULL, "got %p\n", mqi[0].pItf);
     ok(mqi[0].hr == E_NOINTERFACE, "got 0x%08x\n", mqi[0].hr);

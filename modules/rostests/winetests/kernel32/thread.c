@@ -2040,14 +2040,14 @@ static void test_thread_info(void)
 #endif
 
         case ThreadTimes:
-todo_wine
+            todo_wine
             ok(status == STATUS_SUCCESS, "for info %u expected STATUS_SUCCESS, got %08x (ret_len %u)\n", i, status, ret_len);
             break;
 
         case ThreadAffinityMask:
         case ThreadQuerySetWin32StartAddress:
         case ThreadIsIoPending:
-todo_wine
+            todo_wine
             ok(status == STATUS_ACCESS_DENIED, "for info %u expected STATUS_ACCESS_DENIED, got %08x (ret_len %u)\n", i, status, ret_len);
             break;
 

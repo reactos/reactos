@@ -2490,7 +2490,7 @@ static BOOL WINAPI dll_entry_point(HINSTANCE hinst, DWORD reason, LPVOID param)
         SetLastError(0xdeadbeef);
         ret = WaitForDebugEvent(&de, 0);
         ok(!ret, "WaitForDebugEvent should fail\n");
-todo_wine
+        todo_wine
         ok(GetLastError() == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
 
         SetLastError(0xdeadbeef);

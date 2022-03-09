@@ -1114,7 +1114,7 @@ cleanup:
 
     rc = GetFileAttributesA(file);
     rc &= ~(FILE_ATTRIBUTE_NOT_CONTENT_INDEXED|FILE_ATTRIBUTE_COMPRESSED);
-todo_wine
+    todo_wine
     ok(rc == (FILE_ATTRIBUTE_ARCHIVE|FILE_ATTRIBUTE_READONLY),
        "expected FILE_ATTRIBUTE_ARCHIVE|FILE_ATTRIBUTE_READONLY got %#x\n", rc);
 
@@ -1561,10 +1561,10 @@ static void test_AccessCheck(void)
     ret = AccessCheck(SecurityDescriptor, Token, KEY_READ, &Mapping,
                       PrivSet, &PrivSetLen, &Access, &AccessStatus);
     err = GetLastError();
-todo_wine
+    todo_wine
     ok(!ret && err == ERROR_INSUFFICIENT_BUFFER, "AccessCheck should have "
        "failed with ERROR_INSUFFICIENT_BUFFER, instead of %d\n", err);
-todo_wine
+    todo_wine
     ok(PrivSetLen == sizeof(PRIVILEGE_SET), "PrivSetLen returns %d\n", PrivSetLen);
     ok(Access == 0x1abe11ed && AccessStatus == 0x1abe11ed,
        "Access and/or AccessStatus were changed!\n");
@@ -1576,12 +1576,12 @@ todo_wine
     ret = AccessCheck(SecurityDescriptor, Token, KEY_READ, &Mapping,
                       PrivSet, &PrivSetLen, &Access, &AccessStatus);
     err = GetLastError();
-todo_wine
+    todo_wine
     ok(!ret && err == ERROR_INSUFFICIENT_BUFFER, "AccessCheck should have "
        "failed with ERROR_INSUFFICIENT_BUFFER, instead of %d\n", err);
-todo_wine
+    todo_wine
     ok(PrivSetLen == sizeof(PRIVILEGE_SET), "PrivSetLen returns %d\n", PrivSetLen);
-todo_wine
+    todo_wine
     ok(Access == 0x1abe11ed && AccessStatus == 0x1abe11ed,
        "Access and/or AccessStatus were changed!\n");
 
@@ -1594,7 +1594,7 @@ todo_wine
                       PrivSet, &PrivSetLen, &Access, &AccessStatus);
     err = GetLastError();
     ok(ret, "AccessCheck failed with error %d\n", GetLastError());
-todo_wine
+    todo_wine
     ok(PrivSetLen == sizeof(PRIVILEGE_SET), "PrivSetLen returns %d\n", PrivSetLen);
     ok(AccessStatus && (Access == KEY_READ),
         "AccessCheck failed to grant access with error %d\n", GetLastError());
@@ -1610,7 +1610,7 @@ todo_wine
                       PrivSet, &PrivSetLen, &Access, &AccessStatus);
     err = GetLastError();
     ok(ret, "AccessCheck failed with error %d\n", GetLastError());
-todo_wine
+    todo_wine
     ok(PrivSetLen == sizeof(PRIVILEGE_SET) + 1, "PrivSetLen returns %d\n", PrivSetLen);
     ok(AccessStatus && (Access == KEY_READ),
         "AccessCheck failed to grant access with error %d\n", GetLastError());
@@ -1674,12 +1674,12 @@ todo_wine
         ret = AccessCheck(SecurityDescriptor, Token, KEY_READ, &Mapping,
                           PrivSet, &PrivSetLen, &Access, &AccessStatus);
         err = GetLastError();
-    todo_wine
+        todo_wine
         ok(!ret && err == ERROR_INSUFFICIENT_BUFFER, "AccessCheck should have "
            "failed with ERROR_INSUFFICIENT_BUFFER, instead of %d\n", err);
-    todo_wine
+        todo_wine
         ok(PrivSetLen == sizeof(PRIVILEGE_SET), "PrivSetLen returns %d\n", PrivSetLen);
-    todo_wine
+        todo_wine
         ok(Access == 0x1abe11ed && AccessStatus == 0x1abe11ed,
            "Access and/or AccessStatus were changed!\n");
 
@@ -5589,9 +5589,9 @@ static void validate_default_security_descriptor(SECURITY_DESCRIPTOR *sd)
     SetLastError(0xdeadbeef);
     ret = GetSecurityDescriptorDacl(sd, &present, &acl, &defaulted);
     ok(ret, "GetSecurityDescriptorDacl error %d\n", GetLastError());
-todo_wine
+    todo_wine
     ok(present == 1, "acl is not present\n");
-todo_wine
+    todo_wine
     ok(acl != (void *)0xdeadbeef && acl != NULL, "acl pointer is not set\n");
     ok(defaulted == 0, "defaulted is set to TRUE\n");
 
@@ -5600,7 +5600,7 @@ todo_wine
     SetLastError(0xdeadbeef);
     ret = GetSecurityDescriptorOwner(sd, &sid, &defaulted);
     ok(ret, "GetSecurityDescriptorOwner error %d\n", GetLastError());
-todo_wine
+    todo_wine
     ok(sid != (void *)0xdeadbeef && sid != NULL, "sid pointer is not set\n");
     ok(defaulted == 0, "defaulted is set to TRUE\n");
 
@@ -5609,7 +5609,7 @@ todo_wine
     SetLastError(0xdeadbeef);
     ret = GetSecurityDescriptorGroup(sd, &sid, &defaulted);
     ok(ret, "GetSecurityDescriptorGroup error %d\n", GetLastError());
-todo_wine
+    todo_wine
     ok(sid != (void *)0xdeadbeef && sid != NULL, "sid pointer is not set\n");
     ok(defaulted == 0, "defaulted is set to TRUE\n");
 }
@@ -5746,9 +5746,9 @@ static void test_mutex_security(HANDLE token)
 
         SetLastError(0xdeadbeef);
         dup = OpenMutexA(0, FALSE, "WineTestMutex");
-todo_wine
+        todo_wine
         ok(!dup, "OpenMutex should fail\n");
-todo_wine
+        todo_wine
         ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u\n", GetLastError());
     }
 
@@ -5803,9 +5803,9 @@ static void test_event_security(HANDLE token)
 
         SetLastError(0xdeadbeef);
         dup = OpenEventA(0, FALSE, "WineTestEvent");
-todo_wine
+        todo_wine
         ok(!dup, "OpenEvent should fail\n");
-todo_wine
+        todo_wine
         ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u\n", GetLastError());
     }
 
@@ -6022,7 +6022,7 @@ static void test_file_security(HANDLE token)
     ok(file != INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
 
     access = get_obj_access(file);
-todo_wine
+    todo_wine
     ok(access == (FILE_READ_ATTRIBUTES | SYNCHRONIZE), "expected FILE_READ_ATTRIBUTES | SYNCHRONIZE, got %#x\n", access);
 
     bytes = 0xdeadbeef;
@@ -6039,7 +6039,7 @@ todo_wine
     ok(file != INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
 
     access = get_obj_access(file);
-todo_wine
+    todo_wine
     ok(access == (FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES), "expected FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES, got %#x\n", access);
 
     bytes = 0xdeadbeef;
@@ -6080,7 +6080,7 @@ todo_wine
     ok(file != INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
 
     access = get_obj_access(file);
-todo_wine
+    todo_wine
     ok(access == (FILE_READ_ATTRIBUTES | SYNCHRONIZE), "expected FILE_READ_ATTRIBUTES | SYNCHRONIZE, got %#x\n", access);
 
     CloseHandle(file);
@@ -6090,7 +6090,7 @@ todo_wine
     ok(file != INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
 
     access = get_obj_access(file);
-todo_wine
+    todo_wine
     ok(access == (FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES), "expected FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES, got %#x\n", access);
 
     CloseHandle(file);
@@ -6271,7 +6271,7 @@ static void test_thread_security(void)
                "%d: expected %#x, got %#x\n", i, map[i].mapped, access);
             break;
         case GENERIC_WRITE:
-todo_wine
+            todo_wine
             ok(access == map[i].mapped ||
                access == (map[i].mapped | THREAD_SET_LIMITED_INFORMATION) /* Vista+ */ ||
                access == (map[i].mapped | THREAD_SET_LIMITED_INFORMATION | THREAD_RESUME) /* win8 */,

@@ -2248,7 +2248,7 @@ static void test_mdi(void)
         if (style[i] & (WS_HSCROLL | WS_VSCROLL))
         {
             ok(ret, "style %#x: GetScrollInfo(SB_HORZ) failed\n", style[i]);
-todo_wine
+            todo_wine
             ok(si.nPage != 0, "expected !0\n");
             ok(si.nPos == 0, "expected 0\n");
             ok(si.nTrackPos == 0, "expected 0\n");
@@ -2262,7 +2262,7 @@ todo_wine
         if (style[i] & (WS_HSCROLL | WS_VSCROLL))
         {
             ok(ret, "style %#x: GetScrollInfo(SB_VERT) failed\n", style[i]);
-todo_wine
+            todo_wine
             ok(si.nPage != 0, "expected !0\n");
             ok(si.nPos == 0, "expected 0\n");
             ok(si.nTrackPos == 0, "expected 0\n");
@@ -3031,7 +3031,7 @@ static void test_SetFocus(HWND hwnd)
     ok( GetActiveWindow() == hwnd, "parent window %p should be active\n", hwnd);
     ShowWindow(hwnd, SW_SHOWMINIMIZED);
     ok( GetActiveWindow() == hwnd, "parent window %p should be active\n", hwnd);
-todo_wine
+    todo_wine
     ok( GetFocus() != child, "Focus should not be on child %p\n", child );
     ok( GetFocus() != hwnd, "Focus should not be on parent %p\n", hwnd );
     ShowWindow(hwnd, SW_RESTORE);
@@ -3040,12 +3040,12 @@ todo_wine
     ShowWindow(hwnd, SW_SHOWMINIMIZED);
     ok( GetActiveWindow() == hwnd, "parent window %p should be active\n", hwnd);
     ok( GetFocus() != child, "Focus should not be on child %p\n", child );
-todo_wine
+    todo_wine
     ok( GetFocus() != hwnd, "Focus should not be on parent %p\n", hwnd );
     old_wnd_proc = (WNDPROC)SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)set_focus_on_activate_proc);
     ShowWindow(hwnd, SW_RESTORE);
     ok( GetActiveWindow() == hwnd, "parent window %p should be active\n", hwnd);
-todo_wine
+    todo_wine
     ok( GetFocus() == child, "Focus should be on child %p, not %p\n", child, GetFocus() );
     SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)old_wnd_proc);
 
@@ -8290,10 +8290,10 @@ static void test_child_window_from_point(void)
 
     ok(!found_invisible, "found %d invisible windows\n", found_invisible);
     ok(found_disabled, "found %d disabled windows\n", found_disabled);
-todo_wine
+    todo_wine
     ok(found_groupbox == 4, "found %d groupbox windows\n", found_groupbox);
     ok(found_httransparent, "found %d httransparent windows\n", found_httransparent);
-todo_wine
+    todo_wine
     ok(found_extransparent, "found %d extransparent windows\n", found_extransparent);
 
     ret = UnregisterClassA("my_button", cls.hInstance);
@@ -8734,7 +8734,7 @@ static void test_update_region(void)
             rc.right + wnd_orig.x, rc.bottom + wnd_orig.y);
     CombineRgn(rgn1, rgn1, rgn2, RGN_OR);
     GetUpdateRgn(parent, rgn2, FALSE);
-todo_wine
+    todo_wine
     ok(EqualRgn(rgn1, rgn2), "wrong update region\n");
 
     /* hwnd has the same invalid region as before moving */
@@ -8746,7 +8746,7 @@ todo_wine
     SetRectRgn(rgn1, rc.left - child_orig.x , rc.top - child_orig.y,
             rc.right - child_orig.x, rc.bottom - child_orig.y);
     GetUpdateRgn(child, rgn2, FALSE);
-todo_wine
+    todo_wine
     ok(EqualRgn(rgn1, rgn2), "wrong update region\n");
 
     DeleteObject(rgn1);
@@ -9380,12 +9380,12 @@ static void test_deferwindowpos(void)
     ok(!ret, "got %d\n", ret);
 
     hdwp2 = DeferWindowPos(NULL, NULL, NULL, 0, 0, 10, 10, 0);
-todo_wine
+    todo_wine
     ok(hdwp2 == NULL && ((GetLastError() == ERROR_INVALID_DWP_HANDLE) ||
         broken(GetLastError() == ERROR_INVALID_WINDOW_HANDLE) /* before win8 */), "got %p, error %d\n", hdwp2, GetLastError());
 
     hdwp2 = DeferWindowPos((HDWP)0xdead, GetDesktopWindow(), NULL, 0, 0, 10, 10, 0);
-todo_wine
+    todo_wine
     ok(hdwp2 == NULL && ((GetLastError() == ERROR_INVALID_DWP_HANDLE) ||
         broken(GetLastError() == ERROR_INVALID_WINDOW_HANDLE) /* before win8 */), "got %p, error %d\n", hdwp2, GetLastError());
 

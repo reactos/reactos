@@ -357,7 +357,7 @@ static void test_getDefaultCryptProv(void)
         prov = pI_CryptGetDefaultCryptProv(test_prov[i].algid);
         if (!prov)
         {
-todo_wine_if(test_prov[i].algid == CALG_DSS_SIGN || test_prov[i].algid == CALG_NO_SIGN)
+            todo_wine_if(test_prov[i].algid == CALG_DSS_SIGN || test_prov[i].algid == CALG_NO_SIGN)
             ok(test_prov[i].optional, "%u: I_CryptGetDefaultCryptProv(%#x) failed\n", i, test_prov[i].algid);
             continue;
         }

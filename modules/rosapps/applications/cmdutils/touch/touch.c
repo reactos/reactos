@@ -194,7 +194,7 @@ main(int argc, char *argv[])
 	return rval;
 }
 
-#define	ATOI2(ar)	((ar)[0] - '0') * 10 + ((ar)[1] - '0'); (ar) += 2;
+#define	ATOI2(ar)	((ar)[0] - '0') * 10 + ((ar)[1] - '0'), (ar) += 2;
 
 void
 stime_arg1(char *arg, time_t *tvp)

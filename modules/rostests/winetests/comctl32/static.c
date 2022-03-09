@@ -100,7 +100,7 @@ static void test_updates(int style, int flags)
     {
         HDC hdc = GetDC(hStatic);
         COLORREF colour = GetPixel(hdc, 10, 10);
-    todo_wine
+        todo_wine
         ok(colour == 0, "Unexpected pixel color.\n");
         ReleaseDC(hStatic, hdc);
     }
@@ -111,7 +111,7 @@ static void test_updates(int style, int flags)
         exp = 1; /* SS_ETCHED* seems to send WM_CTLCOLORSTATIC only sometimes */
 
     if (flags & TODO_COUNT)
-    todo_wine
+        todo_wine
         ok(g_nReceivedColorStatic == exp, "Unexpected WM_CTLCOLORSTATIC value %d\n", g_nReceivedColorStatic);
     else if ((style & SS_TYPEMASK) == SS_ICON || (style & SS_TYPEMASK) == SS_BITMAP)
         ok(g_nReceivedColorStatic == exp, "Unexpected %u got %u\n", exp, g_nReceivedColorStatic);

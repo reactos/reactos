@@ -472,11 +472,11 @@ START_TEST(ole_server)
     trace("call OleRun\n");
     hr = OleRun(unknown);
     trace("ret OleRun\n");
-todo_wine
+    todo_wine
     ok(hr == S_OK, "OleRun error %#x\n", hr);
 
     ret = IRunnableObject_IsRunning(runobj);
-todo_wine
+    todo_wine
     ok(ret == 1, "expected 1, got %d\n", ret);
 
     trace("call IRunnableObject_Release\n");

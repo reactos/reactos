@@ -1544,7 +1544,7 @@ static void test_set_getsockopt(void)
     SetLastError(0xdeadbeef);
     i = 1234;
     err = setsockopt(s, SOL_SOCKET, SO_ERROR, (char *) &i, size);
-todo_wine
+    todo_wine
     ok( !err && !WSAGetLastError(),
         "got %d with %d (expected 0 with 0)\n",
         err, WSAGetLastError());
@@ -1552,18 +1552,18 @@ todo_wine
     SetLastError(0xdeadbeef);
     i = 4321;
     err = getsockopt(s, SOL_SOCKET, SO_ERROR, (char *) &i, &size);
-todo_wine
+    todo_wine
     ok( !err && !WSAGetLastError(),
         "got %d with %d (expected 0 with 0)\n",
         err, WSAGetLastError());
-todo_wine
+    todo_wine
     ok (i == 1234, "got %d (expected 1234)\n", i);
 
     /* Test invalid optlen */
     SetLastError(0xdeadbeef);
     size = 1;
     err = getsockopt(s, SOL_SOCKET, SO_ERROR, (char *) &i, &size);
-todo_wine
+    todo_wine
     ok( (err == SOCKET_ERROR) && (WSAGetLastError() == WSAEFAULT),
         "got %d with %d (expected SOCKET_ERROR with WSAEFAULT)\n",
         err, WSAGetLastError());
@@ -1574,7 +1574,7 @@ todo_wine
     size = sizeof(i);
     i = 1234;
     err = getsockopt(s, SOL_SOCKET, SO_ERROR, (char *) &i, &size);
-todo_wine
+    todo_wine
     ok( (err == SOCKET_ERROR) && (WSAGetLastError() == WSAENOTSOCK),
         "got %d with %d (expected SOCKET_ERROR with WSAENOTSOCK)\n",
         err, WSAGetLastError());
@@ -4105,7 +4105,7 @@ static void test_select(void)
     SetLastError(0xdeadbeef);
     ret = select(0, &readfds, NULL, &exceptfds, &select_timeout);
     ok(ret == SOCKET_ERROR, "expected -1, got %d\n", ret);
-todo_wine
+    todo_wine
     ok(GetLastError() == WSAENOTSOCK, "expected 10038, got %d\n", GetLastError());
     /* descriptor sets are unchanged */
     ok(readfds.fd_count == 2, "expected 2, got %d\n", readfds.fd_count);
@@ -4133,9 +4133,9 @@ todo_wine
     FD_SET(fdWrite, &exceptfds);
     SetLastError(0xdeadbeef);
     ret = select(0, NULL, NULL, &exceptfds, &select_timeout);
-todo_wine
+    todo_wine
     ok(ret == SOCKET_ERROR, "expected -1, got %d\n", ret);
-todo_wine
+    todo_wine
     ok(GetLastError() == WSAENOTSOCK, "expected 10038, got %d\n", GetLastError());
     WaitForSingleObject (thread_handle, 1000);
     closesocket(fdRead);
@@ -6674,7 +6674,7 @@ todo_wine {
     ret = pWSASendMsg(sock, &msg, 0, &bytesSent, NULL, NULL);
     ok(ret == SOCKET_ERROR, "WSASendMsg should have failed\n");
     err = WSAGetLastError();
-todo_wine
+    todo_wine
     ok(err == WSAEINVAL, "expected 10014, got %d instead\n", err);
     closesocket(sock);
 }
@@ -7276,7 +7276,7 @@ static void test_WSAPoll(void)
     POLL_SET(fdWrite, POLLIN | POLLOUT);
     poll_timeout = 2000;
     ret = pWSAPoll(fds, ix, poll_timeout);
-todo_wine
+    todo_wine
     ok(ret == 0, "expected 0, got %d\n", ret);
     len = sizeof(id);
     id = 0xdeadbeef;
@@ -7298,7 +7298,7 @@ todo_wine
     POLL_SET(fdWrite, POLLIN | POLLOUT);
     ret = pWSAPoll(fds, ix, poll_timeout);
     ok(ret == 1, "expected 1, got %d\n", ret);
-todo_wine
+    todo_wine
     ok(POLL_ISSET(fdWrite, POLLWRNORM | POLLHUP) || broken(POLL_ISSET(fdWrite, POLLWRNORM)) /* <= 2008 */,
        "fdWrite socket events incorrect\n");
     closesocket(fdWrite);
@@ -8307,7 +8307,7 @@ static void test_AcceptEx(void)
     bret = pAcceptEx(listener, acceptor, buffer, sizeof(buffer) - 2*(sizeof(struct sockaddr_in) + 16),
         sizeof(struct sockaddr_in) + 16, sizeof(struct sockaddr_in) + 16,
         &bytesReturned, &overlapped);
-todo_wine
+    todo_wine
     ok(bret == FALSE && WSAGetLastError() == WSAEINVAL, "AcceptEx on a non-listening socket "
         "returned %d + errno %d\n", bret, WSAGetLastError());
 
@@ -9443,7 +9443,7 @@ static void test_sioAddressListChange(void)
     ok(ret == WAIT_OBJECT_0, "failed to get overlapped event %u\n", ret);
 
     ret = WaitForSingleObject(event2, 500);
-todo_wine
+    todo_wine
     ok(ret == WAIT_OBJECT_0, "failed to get change event %u\n", ret);
 
     ret = WaitForSingleObject(event3, 500);
@@ -10606,19 +10606,19 @@ static void test_WSALookupService(void)
     ret = pWSALookupServiceBeginW(NULL, 0, &hnd);
     error = WSAGetLastError();
     ok(ret == SOCKET_ERROR, "WSALookupServiceBeginW should have failed\n");
-todo_wine
+    todo_wine
     ok(error == WSAEFAULT, "expected 10014, got %d\n", error);
 
     ret = pWSALookupServiceBeginW(qs, 0, NULL);
     error = WSAGetLastError();
     ok(ret == SOCKET_ERROR, "WSALookupServiceBeginW should have failed\n");
-todo_wine
+    todo_wine
     ok(error == WSAEFAULT, "expected 10014, got %d\n", error);
 
     ret = pWSALookupServiceBeginW(qs, 0, &hnd);
     error = WSAGetLastError();
     ok(ret == SOCKET_ERROR, "WSALookupServiceBeginW should have failed\n");
-todo_wine
+    todo_wine
     ok(error == WSAEINVAL
        || broken(error == ERROR_INVALID_PARAMETER) /* == XP */
        || broken(error == WSAEFAULT) /* == NT */
@@ -10627,9 +10627,9 @@ todo_wine
 
     ret = pWSALookupServiceEnd(NULL);
     error = WSAGetLastError();
-todo_wine
+    todo_wine
     ok(ret == SOCKET_ERROR, "WSALookupServiceEnd should have failed\n");
-todo_wine
+    todo_wine
     ok(error == ERROR_INVALID_HANDLE, "expected 6, got %d\n", error);
 
     /* standard network list query */
@@ -10643,9 +10643,9 @@ todo_wine
         return;
     }
 
-todo_wine
+    todo_wine
     ok(!ret, "WSALookupServiceBeginW failed unexpectedly with error %d\n", error);
-todo_wine
+    todo_wine
     ok(hnd != (HANDLE)0xdeadbeef, "Handle was not filled\n");
 
     offset = 0;
@@ -10758,34 +10758,34 @@ static void test_WSAEnumNameSpaceProvidersA(void)
     SetLastError(0xdeadbeef);
     ret = pWSAEnumNameSpaceProvidersA(&blen, name);
     error = WSAGetLastError();
-todo_wine
+    todo_wine
     ok(ret == SOCKET_ERROR, "Expected failure, got %u\n", ret);
-todo_wine
+    todo_wine
     ok(error == WSAEFAULT, "Expected 10014, got %u\n", error);
 
     /* Invalid parameter tests */
     SetLastError(0xdeadbeef);
     ret = pWSAEnumNameSpaceProvidersA(NULL, name);
     error = WSAGetLastError();
-todo_wine
+    todo_wine
     ok(ret == SOCKET_ERROR, "Expected failure, got %u\n", ret);
-todo_wine
+    todo_wine
     ok(error == WSAEFAULT, "Expected 10014, got %u\n", error);
 
     SetLastError(0xdeadbeef);
     ret = pWSAEnumNameSpaceProvidersA(NULL, NULL);
     error = WSAGetLastError();
-todo_wine
+    todo_wine
     ok(ret == SOCKET_ERROR, "Expected failure, got %u\n", ret);
-todo_wine
+    todo_wine
     ok(error == WSAEFAULT, "Expected 10014, got %u\n", error);
 
     SetLastError(0xdeadbeef);
     ret = pWSAEnumNameSpaceProvidersA(&blen, NULL);
     error = WSAGetLastError();
-todo_wine
+    todo_wine
     ok(ret == SOCKET_ERROR, "Expected failure, got %u\n", ret);
-todo_wine
+    todo_wine
     ok(error == WSAEFAULT, "Expected 10014, got %u\n", error);
 
 #ifdef __REACTOS__ /* ROSTESTS-233 */
@@ -10804,7 +10804,7 @@ todo_wine
     }
 
     ret = pWSAEnumNameSpaceProvidersA(&blen, name);
-todo_wine
+    todo_wine
     ok(ret > 0, "Expected more than zero name space providers\n");
 
     for (i = 0;i < ret; i++)
@@ -10843,34 +10843,34 @@ static void test_WSAEnumNameSpaceProvidersW(void)
     SetLastError(0xdeadbeef);
     ret = pWSAEnumNameSpaceProvidersW(&blen, name);
     error = WSAGetLastError();
-todo_wine
+    todo_wine
     ok(ret == SOCKET_ERROR, "Expected failure, got %u\n", ret);
-todo_wine
+    todo_wine
     ok(error == WSAEFAULT, "Expected 10014, got %u\n", error);
 
     /* Invalid parameter tests */
     SetLastError(0xdeadbeef);
     ret = pWSAEnumNameSpaceProvidersW(NULL, name);
     error = WSAGetLastError();
-todo_wine
+    todo_wine
     ok(ret == SOCKET_ERROR, "Expected failure, got %u\n", ret);
-todo_wine
+    todo_wine
     ok(error == WSAEFAULT, "Expected 10014, got %u\n", error);
 
     SetLastError(0xdeadbeef);
     ret = pWSAEnumNameSpaceProvidersW(NULL, NULL);
     error = WSAGetLastError();
-todo_wine
+    todo_wine
     ok(ret == SOCKET_ERROR, "Expected failure, got %u\n", ret);
-todo_wine
+    todo_wine
     ok(error == WSAEFAULT, "Expected 10014, got %u\n", error);
 
     SetLastError(0xdeadbeef);
     ret = pWSAEnumNameSpaceProvidersW(&blen, NULL);
     error = WSAGetLastError();
-todo_wine
+    todo_wine
     ok(ret == SOCKET_ERROR, "Expected failure, got %u\n", ret);
-todo_wine
+    todo_wine
     ok(error == WSAEFAULT, "Expected 10014, got %u\n", error);
 
 #ifdef __REACTOS__ /* ROSTESTS-233 */
@@ -10889,7 +10889,7 @@ todo_wine
     }
 
     ret = pWSAEnumNameSpaceProvidersW(&blen, name);
-todo_wine
+    todo_wine
     ok(ret > 0, "Expected more than zero name space providers\n");
 
     for (i = 0;i < ret; i++)
@@ -11112,7 +11112,7 @@ todo_wine
     SetLastError(0xdeadbeef);
     ret = GetQueuedCompletionStatus(port, &bytes, &key, &ovl_iocp, 100);
     ok(!ret, "got %d\n", ret);
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_CONNECTION_ABORTED || GetLastError() == ERROR_NETNAME_DELETED /* XP */, "got %u\n", GetLastError());
     ok(!bytes, "got bytes %u\n", bytes);
     ok(key == 0x12345678, "got key %#lx\n", key);
@@ -11120,7 +11120,7 @@ todo_wine
     if (ovl_iocp)
     {
         ok(!ovl_iocp->InternalHigh, "got %#lx\n", ovl_iocp->InternalHigh);
-todo_wine
+        todo_wine
         ok(ovl_iocp->Internal == (ULONG)STATUS_CONNECTION_ABORTED || ovl_iocp->Internal == (ULONG)STATUS_LOCAL_DISCONNECT /* XP */, "got %#lx\n", ovl_iocp->Internal);
     }
 
@@ -11351,7 +11351,7 @@ static void iocp_async_read_thread_closesocket(SOCKET src)
     SetLastError(0xdeadbeef);
     ret = GetQueuedCompletionStatus(port, &bytes, &key, &ovl_iocp, 100);
     ok(!ret, "got %d\n", ret);
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_CONNECTION_ABORTED || GetLastError() == ERROR_NETNAME_DELETED /* XP */, "got %u\n", GetLastError());
     ok(!bytes, "got bytes %u\n", bytes);
     ok(key == 0x12345678, "got key %#lx\n", key);
@@ -11359,7 +11359,7 @@ todo_wine
     if (ovl_iocp)
     {
         ok(!ovl_iocp->InternalHigh, "got %#lx\n", ovl_iocp->InternalHigh);
-todo_wine
+        todo_wine
         ok(ovl_iocp->Internal == (ULONG)STATUS_CONNECTION_ABORTED || ovl_iocp->Internal == (ULONG)STATUS_LOCAL_DISCONNECT /* XP */, "got %#lx\n", ovl_iocp->Internal);
     }
 

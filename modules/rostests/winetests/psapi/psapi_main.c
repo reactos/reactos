@@ -159,7 +159,7 @@ static void test_EnumProcessModules(void)
 
         ret = GetModuleFileNameExA(pi.hProcess, hMod, name, sizeof(name));
         ok(ret, "got error %u\n", GetLastError());
-todo_wine
+        todo_wine
         ok(!strcmp(name, buffer), "got %s\n", name);
 
         ret = GetModuleInformation(pi.hProcess, hMod, &info, sizeof(info));
@@ -183,7 +183,7 @@ todo_wine
         SetLastError(0xdeadbeef);
         ret = EnumProcessModules(pi.hProcess, &hMod, sizeof(HMODULE), &cbNeeded);
         ok(!ret, "got %d\n", ret);
-todo_wine
+        todo_wine
         ok(GetLastError() == ERROR_PARTIAL_COPY, "got error %u\n", GetLastError());
 
         TerminateProcess(pi.hProcess, 0);
@@ -527,7 +527,7 @@ todo_wine {
     SetLastError(0xdeadbeef);
     ret = GetMappedFileNameA(GetCurrentProcess(), NULL, map_name, sizeof(map_name));
     ok(!ret, "GetMappedFileName should fail\n");
-todo_wine
+    todo_wine
     ok(GetLastError() == ERROR_UNEXP_NET_ERR, "expected ERROR_UNEXP_NET_ERR, got %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);

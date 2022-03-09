@@ -774,8 +774,8 @@ static void test_Exists(void)
             &IID_IDictionary, (void**)&dict);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
-if (0) /* crashes on native */
-    hr = IDictionary_Exists(dict, NULL, NULL);
+    if (0) /* crashes on native */
+        hr = IDictionary_Exists(dict, NULL, NULL);
 
     V_VT(&key) = VT_I2;
     V_I2(&key) = 0;
@@ -880,8 +880,8 @@ static void test_Remove(void)
             &IID_IDictionary, (void**)&dict);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
-if (0)
-    hr = IDictionary_Remove(dict, NULL);
+    if (0)
+        hr = IDictionary_Remove(dict, NULL);
 
     /* nothing added yet */
     V_VT(&key) = VT_R4;
