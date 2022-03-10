@@ -106,9 +106,29 @@ list(APPEND FONT_FILES
     palab.ttf
     palabi.ttf
     palai.ttf
+    SourceSansPro-Regular.ttf
+    SourceSansPro-Bold.ttf
+    SourceSansPro-BoldIt.ttf
+    SourceSansPro-It.ttf
+    #ssee874.fon
+    #ssee1255.fon
+    #ssee1256.fon
+    #ssee1257.fon
+    #sserife.fon
+    #sserifeg.fon
+    #sserifer.fon
+    #sserifet.fon
     symbol.ttf
     tahoma.ttf
     tahomabd.ttf
+    times.ttf
+    timesbd.ttf
+    timesbi.ttf
+    timesi.ttf
+    trebuc.ttf
+    trebucbd.ttf
+    trebucbi.ttf
+    trebucit.ttf
     Ubuntu-B.ttf
     Ubuntu-BI.ttf
     Ubuntu-C.ttf
@@ -122,48 +142,6 @@ list(APPEND FONT_FILES
     UbuntuMono-RI.ttf
     Ubuntu-R.ttf
     Ubuntu-RI.ttf
-    SourceSansPro-Black.ttf
-    SourceSansPro-BlackIt.ttf
-    SourceSansPro-Bold.ttf
-    SourceSansPro-BoldIt.ttf
-    SourceSansPro-ExtraLight.ttf
-    SourceSansPro-ExtraLightIt.ttf
-    SourceSansPro-It.ttf
-    SourceSansPro-Light.ttf
-    SourceSansPro-LightIt.ttf
-    SourceSansPro-Regular.ttf
-    SourceSansPro-Semibold.ttf
-    SourceSansPro-SemiboldIt.ttf
-    SourceCodePro-Black.ttf
-    SourceCodePro-BlackIt.ttf
-    SourceCodePro-Bold.ttf
-    SourceCodePro-BoldIt.ttf
-    SourceCodePro-ExtraLight.ttf
-    SourceCodePro-ExtraLightIt.ttf
-    SourceCodePro-It.ttf
-    SourceCodePro-Light.ttf
-    SourceCodePro-LightIt.ttf
-    SourceCodePro-Medium.ttf
-    SourceCodePro-MediumIt.ttf
-    SourceCodePro-Regular.ttf
-    SourceCodePro-Semibold.ttf
-    SourceCodePro-SemiboldIt.ttf
-    #ssee874.fon
-    #ssee1255.fon
-    #ssee1256.fon
-    #ssee1257.fon
-    #sserife.fon
-    #sserifeg.fon
-    #sserifer.fon
-    #sserifet.fon
-    times.ttf
-    timesbd.ttf
-    timesbi.ttf
-    timesi.ttf
-    trebuc.ttf
-    trebucbd.ttf
-    trebucbi.ttf
-    trebucit.ttf
     UniVGA16.ttf
     verdanab.ttf
     verdanaz.ttf
