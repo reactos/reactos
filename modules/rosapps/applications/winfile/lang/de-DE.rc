@@ -32,7 +32,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 IDM_WINEFILE MENU
 {
     POPUP "&Datei"  {
-        MENUITEM "Ö&ffnen\tENTER",       ID_ACTIVATE
+        MENUITEM "Ö&ffnen\tENTER",              ID_ACTIVATE
         MENUITEM "&Verschieben...\tF7",         ID_FILE_MOVE
         MENUITEM "&Kopieren...\tF8",            ID_FILE_COPY
         MENUITEM "&In Zwischenablage...\tF9",   118
