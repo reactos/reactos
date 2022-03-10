@@ -479,6 +479,11 @@ GLuint gl_viewclip_polygon( GLcontext* ctx, GLuint n, GLuint vlist[] )
  *              from v[in] to v[out] with the clipping plane and store
  *              the result in v[new]
  */
+#ifdef __REACTOS__
+#define OUTLIST_IS_VLIST2 (&OUTLIST[0]==&vlist2[0])
+#else
+#define OUTLIST_IS_VLIST2 (OUTLIST==vlist2)
+#endif
 
 #define GENERAL_CLIP                                                    \
    if (INCOUNT<3)  return 0;						\
@@ -538,7 +543,7 @@ GLuint gl_viewclip_polygon( GLcontext* ctx, GLuint n, GLuint vlist[] )
       /* check for overflowing vertex buffer */				\
       if (OUTCOUNT>=VB_SIZE-1) {					\
 	 /* Too many vertices */					\
-         if (&OUTLIST[0]==&vlist2[0]) {						\
+         if (OUTLIST_IS_VLIST2) {					\
 	    /* copy OUTLIST[] to vlist[] */				\
 	    int i;							\
 	    for (i=0;i<VB_SIZE;i++) {					\

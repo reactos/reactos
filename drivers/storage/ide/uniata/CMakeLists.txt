@@ -35,6 +35,9 @@ if(MSVC)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 9)
+        target_compile_options(uniata PRIVATE -Wno-misleading-indentation)
+    endif()
     target_compile_options(uniata PRIVATE -Wno-unused-but-set-variable)
 endif()
 

@@ -2026,7 +2026,10 @@ void gl_EvalCoord1f(GLcontext* ctx, GLfloat u)
      colorptr = icolor;
   }
   else {
-     static GLubyte col[4];
+#ifdef __REACTOS__ // fix -Wdangling-pointer
+     static
+#endif
+     GLubyte col[4];
      COPY_4V(col, ctx->Current.ByteColor );
      colorptr = col;
   }
@@ -2164,7 +2167,10 @@ void gl_EvalCoord2f( GLcontext* ctx, GLfloat u, GLfloat v )
       colorptr = icolor;
    }
    else {
-     static GLubyte col[4];
+#ifdef __REACTOS__ // fix -Wdangling-pointer
+     static
+#endif
+     GLubyte col[4];
      COPY_4V(col, ctx->Current.ByteColor );
      colorptr = col;
    }
