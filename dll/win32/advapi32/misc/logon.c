@@ -89,24 +89,221 @@ CloseLogonLsaHandle(VOID)
 }
 
 
+/**
+ * @brief
+ * Sets a primary token to the newly created process.
+ * The primary token that gets assigned to is a token
+ * whose security context is associated with the logged
+ * in user. For futher documentation information, see
+ * Remarks.
+ *
+ * @param[in] ImpersonateAsSelf
+ * If set to TRUE, the function will act on behalf of
+ * the calling process by impersonating its security context.
+ * Generally the caller will disable impersonation and attempt
+ * to act on behalf of the said main process as a first tentative
+ * to acquire the needed privilege in order to assign a token
+ * to the process. If set to FALSE, the function won't act on behalf
+ * of the calling process.
+ *
+ * @param[in] ProcessHandle
+ * A handle to the newly created process. The function will use it
+ * as a mean to assign the primary token to this process.
+ *
+ * @param[in] ThreadHandle
+ * A handle to the newly and primary created thread associated with
+ * the process.
+ *
+ * @param[in] DuplicatedTokenHandle
+ * A handle to a duplicated access token. This token represents as a primary
+ * one, initially duplicated in form as a primary type from an impersonation
+ * type.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if token assignment to process succeeded, otherwise
+ * a failure NTSTATUS code is returned. A potential failure status code is
+ * STATUS_ACCESS_DENIED which means the caller doesn't have enough rights
+ * to grant access for primary token assignment to process.
+ *
+ * @remarks
+ * This function acts like an internal helper for CreateProcessAsUserCommon (and as
+ * such for CreateProcessAsUserW/A as well) as once a process is created, the
+ * function is tasked to assign the security context of the logged in user to
+ * that process. However, the rate of success of inserting the token into the
+ * process ultimately depends on the caller.
+ *
+ * The caller will either succeed or fail at acquiring SE_ASSIGNPRIMARYTOKEN_PRIVILEGE
+ * privilege depending on the security context of the user. If it's allowed, the caller
+ * would generally acquire such privilege immediately but if not, the caller will attempt
+ * to do a second try.
+ */
+static
+NTSTATUS
+InsertTokenToProcessCommon(
+    _In_ BOOL ImpersonateAsSelf,
+    _In_ HANDLE ProcessHandle,
+    _In_ HANDLE ThreadHandle,
+    _In_ HANDLE DuplicatedTokenHandle)
+{
+    NTSTATUS Status;
+    PROCESS_ACCESS_TOKEN AccessToken;
+    BOOLEAN PrivilegeSet;
+    BOOLEAN HavePrivilege;
+
+    /*
+     * Assume the SE_ASSIGNPRIMARYTOKEN_PRIVILEGE
+     * privilege hasn't been set.
+     */
+    PrivilegeSet = FALSE;
+
+    /*
+     * The caller asked that we must impersonate as
+     * ourselves, that is, we'll be going to impersonate
+     * the security context of the calling process. If
+     * self impersonation fails then the caller has
+     * to do a "rinse and repeat" approach.
+     */
+    if (ImpersonateAsSelf)
+    {
+        Status = RtlImpersonateSelf(SecurityImpersonation);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("RtlImpersonateSelf(SecurityImpersonation) failed, Status 0x%08x\n", Status);
+            return Status;
+        }
+    }
+
+    /*
+     * Attempt to acquire the process primary token assignment privilege
+     * in case we actually need it.
+     * The call will either succeed or fail when the caller has (or has not)
+     * enough rights.
+     * The last situation may not be dramatic for us. Indeed it may happen
+     * that the user-provided token is a restricted version of the caller's
+     * primary token (aka. a "child" token), or both tokens inherit (i.e. are
+     * children, and are together "siblings") from a common parent token.
+     * In this case the NT kernel allows us to assign the token to the child
+     * process without the need for the assignment privilege, which is fine.
+     * On the contrary, if the user-provided token is completely arbitrary,
+     * then the NT kernel will enforce the presence of the assignment privilege:
+     * because we failed (by assumption) to assign the privilege, the process
+     * token assignment will fail as required. It is then the job of the
+     * caller to manually acquire the necessary privileges.
+     */
+    Status = RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE,
+                                TRUE, TRUE, &PrivilegeSet);
+    HavePrivilege = NT_SUCCESS(Status);
+    if (!HavePrivilege)
+    {
+        ERR("RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE) failed, Status 0x%08lx, "
+            "attempting to continue without it...\n", Status);
+    }
+
+    /*
+     * Assign the duplicated token and thread
+     * handle to the structure so that we'll
+     * use it to assign the primary token
+     * to process.
+     */
+    AccessToken.Token = DuplicatedTokenHandle;
+    AccessToken.Thread = ThreadHandle;
+
+    /* Set the new process token */
+    Status = NtSetInformationProcess(ProcessHandle,
+                                     ProcessAccessToken,
+                                     (PVOID)&AccessToken,
+                                     sizeof(AccessToken));
+
+    /* Restore the privilege */
+    if (HavePrivilege)
+    {
+        RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE,
+                           PrivilegeSet, TRUE, &PrivilegeSet);
+    }
+
+    /*
+     * Check again if the caller wanted to impersonate
+     * as self. If that is the case we must revert this
+     * impersonation back.
+     */
+    if (ImpersonateAsSelf)
+    {
+        RevertToSelf();
+    }
+
+    /*
+     * Finally, check if we actually succeeded on assigning
+     * a primary token to the process. If we failed, oh well,
+     * asta la vista baby e arrivederci. The caller has to do
+     * a rinse and repeat approach.
+     */
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to assign primary token to the process (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Internal function that serves as a helper for
+ * CreateProcessAsUserW/A routines on creating
+ * a process within the context of the logged in
+ * user.
+ *
+ * @param[in] hToken
+ * A handle to an access token that is associated
+ * with the logged in user. If the caller does not
+ * submit a token, the helper will immediately quit
+ * and return success, and the newly created process
+ * will be created upon using the default security
+ * context.
+ *
+ * @param[in] dwCreationFlags
+ * Bit masks containing the creation process flags.
+ * The function uses this parameter to determine
+ * if the process wasn't created in a suspended way
+ * and if not the function will resume the main thread.
+ *
+ * @param[in,out] lpProcessInformation
+ * A pointer to a structure that contains process creation
+ * information data. Such pointer contains the process
+ * and thread handles and whatnot.
+ *
+ * @return
+ * Returns TRUE if the helper has successfully assigned
+ * the newly created process the user's security context
+ * to that process, otherwise FALSE is returned.
+ *
+ * @remarks
+ * In order for the helper function to assign the primary
+ * token to the process, it has to do a "rinse and repeat"
+ * approach. That is, the helper will stop the impersonation
+ * and attempt to assign the token to process by acting
+ * on behalf of the main process' security context. If that
+ * fails, the function will do a second attempt by doing this
+ * but with impersonation enabled instead.
+ */
 static
 BOOL
 CreateProcessAsUserCommon(
     _In_opt_ HANDLE hToken,
     _In_ DWORD dwCreationFlags,
-    _Out_ LPPROCESS_INFORMATION lpProcessInformation)
+    _Inout_ LPPROCESS_INFORMATION lpProcessInformation)
 {
-    NTSTATUS Status;
-    PROCESS_ACCESS_TOKEN AccessToken;
+    NTSTATUS Status = STATUS_SUCCESS, StatusOnExit;
+    BOOL Success;
+    TOKEN_TYPE Type;
+    ULONG ReturnLength;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hTokenDup = NULL;
+    HANDLE OriginalImpersonationToken = NULL;
+    HANDLE NullToken = NULL;
 
     if (hToken != NULL)
     {
-        TOKEN_TYPE Type;
-        ULONG ReturnLength;
-        OBJECT_ATTRIBUTES ObjectAttributes;
-        HANDLE hTokenDup;
-        BOOLEAN PrivilegeSet = FALSE, HavePrivilege;
-
         /* Check whether the user-provided token is a primary token */
         // GetTokenInformation();
         Status = NtQueryInformationToken(hToken,
@@ -117,13 +314,57 @@ CreateProcessAsUserCommon(
         if (!NT_SUCCESS(Status))
         {
             ERR("NtQueryInformationToken() failed, Status 0x%08x\n", Status);
+            Success = FALSE;
             goto Quit;
         }
+
         if (Type != TokenPrimary)
         {
             ERR("Wrong token type for token 0x%p, expected TokenPrimary, got %ld\n", hToken, Type);
             Status = STATUS_BAD_TOKEN_TYPE;
+            Success = FALSE;
             goto Quit;
+        }
+
+        /*
+         * Open the original token of the calling thread
+         * and halt the impersonation for the moment
+         * being. The opened thread token will be cached
+         * so that we will restore it back when we're done.
+         */
+        Status = NtOpenThreadToken(NtCurrentThread(),
+                                   TOKEN_QUERY | TOKEN_IMPERSONATE,
+                                   TRUE,
+                                   &OriginalImpersonationToken);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed? Does this thread have a token at least? */
+            OriginalImpersonationToken = NULL;
+            if (Status != STATUS_NO_TOKEN)
+            {
+                /*
+                 * OK so this thread has a token but we
+                 * could not open it for whatever reason.
+                 * Bail out then.
+                 */
+                ERR("Failed to open thread token with 0x%08lx\n", Status);
+                Success = FALSE;
+                goto Quit;
+            }
+        }
+        else
+        {
+            /* We succeeded, stop the impersonation for now */
+            Status = NtSetInformationThread(NtCurrentThread(),
+                                            ThreadImpersonationToken,
+                                            &NullToken,
+                                            sizeof(NullToken));
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("Failed to stop impersonation with 0x%08lx\n", Status);
+                Success = FALSE;
+                goto Quit;
+            }
         }
 
         /* Duplicate the token for this new process */
@@ -141,79 +382,123 @@ CreateProcessAsUserCommon(
         if (!NT_SUCCESS(Status))
         {
             ERR("NtDuplicateToken() failed, Status 0x%08x\n", Status);
-            goto Quit;
-        }
-
-        // FIXME: Do we always need SecurityImpersonation?
-        Status = RtlImpersonateSelf(SecurityImpersonation);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("RtlImpersonateSelf(SecurityImpersonation) failed, Status 0x%08x\n", Status);
-            NtClose(hTokenDup);
+            Success = FALSE;
             goto Quit;
         }
 
         /*
-         * Attempt to acquire the process primary token assignment privilege
-         * in case we actually need it.
-         * The call will either succeed or fail when the caller has (or has not)
-         * enough rights.
-         * The last situation may not be dramatic for us. Indeed it may happen
-         * that the user-provided token is a restricted version of the caller's
-         * primary token (aka. a "child" token), or both tokens inherit (i.e. are
-         * children, and are together "siblings") from a common parent token.
-         * In this case the NT kernel allows us to assign the token to the child
-         * process without the need for the assignment privilege, which is fine.
-         * On the contrary, if the user-provided token is completely arbitrary,
-         * then the NT kernel will enforce the presence of the assignment privilege:
-         * because we failed (by assumption) to assign the privilege, the process
-         * token assignment will fail as required. It is then the job of the
-         * caller to manually acquire the necessary privileges.
+         * Now it's time to set the primary token into
+         * the process. On the first try, do it by
+         * impersonating the security context of the
+         * calling process (impersonate as self).
          */
-        Status = RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE,
-                                    TRUE, TRUE, &PrivilegeSet);
-        HavePrivilege = NT_SUCCESS(Status);
-        if (!HavePrivilege)
+        Status = InsertTokenToProcessCommon(TRUE,
+                                            lpProcessInformation->hProcess,
+                                            lpProcessInformation->hThread,
+                                            hTokenDup);
+        if (!NT_SUCCESS(Status))
         {
-            ERR("RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE) failed, Status 0x%08lx, "
-                "attempting to continue without it...\n", Status);
+            /*
+             * OK, we failed. Our second (and last try) is to not
+             * impersonate as self but instead we will try by setting
+             * the original impersonation (thread) token and set the
+             * primary token to the process through this way. This is
+             * what we call -- the "rinse and repeat" approach.
+             */
+            Status = NtSetInformationThread(NtCurrentThread(),
+                                            ThreadImpersonationToken,
+                                            &OriginalImpersonationToken,
+                                            sizeof(OriginalImpersonationToken));
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("Failed to restore impersonation token for setting process token, Status 0x%08lx\n", Status);
+                NtClose(hTokenDup);
+                Success = FALSE;
+                goto Quit;
+            }
+
+            /* Retry again */
+            Status = InsertTokenToProcessCommon(FALSE,
+                                                lpProcessInformation->hProcess,
+                                                lpProcessInformation->hThread,
+                                                hTokenDup);
+            if (!NT_SUCCESS(Status))
+            {
+                /* Even the second try failed, bail out... */
+                ERR("Failed to insert the primary token into process, Status 0x%08lx\n", Status);
+                NtClose(hTokenDup);
+                Success = FALSE;
+                goto Quit;
+            }
+
+            /* All good, now stop impersonation */
+            Status = NtSetInformationThread(NtCurrentThread(),
+                                            ThreadImpersonationToken,
+                                            &NullToken,
+                                            sizeof(NullToken));
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("Failed to unset impersonationg token after setting process token, Status 0x%08lx\n", Status);
+                NtClose(hTokenDup);
+                Success = FALSE;
+                goto Quit;
+            }
         }
 
-        AccessToken.Token  = hTokenDup;
-        AccessToken.Thread = lpProcessInformation->hThread;
-
-        /* Set the new process token */
-        Status = NtSetInformationProcess(lpProcessInformation->hProcess,
-                                         ProcessAccessToken,
-                                         (PVOID)&AccessToken,
-                                         sizeof(AccessToken));
-
-        /* Restore the privilege */
-        if (HavePrivilege)
-        {
-            RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE,
-                               PrivilegeSet, TRUE, &PrivilegeSet);
-        }
-
-        RevertToSelf();
+        /*
+         * FIXME: As we have successfully set up a primary token to
+         * the newly created process, we must set up as well a definite
+         * limit of quota charges for this process on the context of
+         * this user.
+         */
 
         /* Close the duplicated token */
         NtClose(hTokenDup);
+        Success = TRUE;
+    }
 
-        /* Check whether NtSetInformationProcess() failed */
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("NtSetInformationProcess() failed, Status 0x%08x\n", Status);
-            goto Quit;
-        }
+    /*
+     * If the caller did not supply a token then just declare
+     * ourselves as job done. The newly created process will use
+     * the default security context at this point anyway.
+     */
+    TRACE("No token supplied, the process will use default security context!\n");
+    Success = TRUE;
 
-        if (!NT_SUCCESS(Status))
-        {
 Quit:
-            TerminateProcess(lpProcessInformation->hProcess, Status);
-            SetLastError(RtlNtStatusToDosError(Status));
-            return FALSE;
-        }
+    /*
+     * If we successfully opened the thread token before
+     * and stopped the impersonation then we have to assign
+     * its original token back and close that token we have
+     * referenced it.
+     */
+    if (OriginalImpersonationToken != NULL)
+    {
+        StatusOnExit = NtSetInformationThread(NtCurrentThread(),
+                                              ThreadImpersonationToken,
+                                              &OriginalImpersonationToken,
+                                              sizeof(OriginalImpersonationToken));
+
+        /*
+         * We really must assert ourselves that we successfully
+         * set the original token back, otherwise if we fail
+         * then something is seriously going wrong....
+         * The status code is cached in a separate status
+         * variable because we would not want to tamper
+         * with the original status code that could have been
+         * returned by someone else above in this function code.
+         */
+        ASSERT(NT_SUCCESS(StatusOnExit));
+
+        /* De-reference it */
+        NtClose(OriginalImpersonationToken);
+    }
+
+    /* Terminate the process and set the last error status */
+    if (!NT_SUCCESS(Status))
+    {
+        TerminateProcess(lpProcessInformation->hProcess, Status);
+        SetLastError(RtlNtStatusToDosError(Status));
     }
 
     /* Resume the main thread */
@@ -222,7 +507,7 @@ Quit:
         ResumeThread(lpProcessInformation->hThread);
     }
 
-    return TRUE;
+    return Success;
 }
 
 
