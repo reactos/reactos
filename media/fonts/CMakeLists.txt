@@ -84,6 +84,10 @@ list(APPEND FONT_FILES
     OpenSans-Regular.ttf
     OpenSans-Semibold.ttf
     OpenSans-SemiboldItalic.ttf
+    SourceSansPro-Regular.ttf
+    SourceSansPro-Bold.ttf
+    SourceSansPro-BoldIt.ttf
+    SourceSansPro-It.ttf
     symbol.ttf
     tahoma.ttf
     tahomabd.ttf
@@ -100,32 +104,6 @@ list(APPEND FONT_FILES
     UbuntuMono-RI.ttf
     Ubuntu-R.ttf
     Ubuntu-RI.ttf
-    SourceSansPro-Black.ttf
-    SourceSansPro-BlackIt.ttf
-    SourceSansPro-Bold.ttf
-    SourceSansPro-BoldIt.ttf
-    SourceSansPro-ExtraLight.ttf
-    SourceSansPro-ExtraLightIt.ttf
-    SourceSansPro-It.ttf
-    SourceSansPro-Light.ttf
-    SourceSansPro-LightIt.ttf
-    SourceSansPro-Regular.ttf
-    SourceSansPro-Semibold.ttf
-    SourceSansPro-SemiboldIt.ttf
-    SourceCodePro-Black.ttf
-    SourceCodePro-BlackIt.ttf
-    SourceCodePro-Bold.ttf
-    SourceCodePro-BoldIt.ttf
-    SourceCodePro-ExtraLight.ttf
-    SourceCodePro-ExtraLightIt.ttf
-    SourceCodePro-It.ttf
-    SourceCodePro-Light.ttf
-    SourceCodePro-LightIt.ttf
-    SourceCodePro-Medium.ttf
-    SourceCodePro-MediumIt.ttf
-    SourceCodePro-Regular.ttf
-    SourceCodePro-Semibold.ttf
-    SourceCodePro-SemiboldIt.ttf
     UniVGA16.ttf)
 
 foreach(item ${FONT_FILES})
