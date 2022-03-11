@@ -2113,13 +2113,25 @@ co_WinPosSetWindowPos(
 
                     if ( !(pwnd->style & WS_CHILD) )
                     {
-                        HRGN DcRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-                        PREGION DcRgnObj = REGION_LockRgn(DcRgn);
-                        TRACE("SWP_FRAMECHANGED win %p hRgn %p\n",pwnd, DcRgn);
-                        IntGdiCombineRgn(DcRgnObj, VisBefore, NULL, RGN_COPY);
-                        REGION_UnlockRgn(DcRgnObj);
-                        ForceNCPaintErase(pwnd, DcRgn, DcRgnObj);
-                        GreDeleteObject(DcRgn);
+                        /*
+                         * Check if we have these specific windows style bits set/reset.
+                         * FIXME: There may be other combinations of styles that need this handling as well.
+                         * This fixes the ReactOS Calculator buttons disappearing in CORE-16827.
+                         */
+                        if ((Window->style & WS_CLIPSIBLINGS) && !(Window->style & (WS_POPUP | WS_CLIPCHILDREN | WS_SIZEBOX)))
+                        {
+                            IntSendNCPaint(pwnd, HRGN_WINDOW); // Paint the whole frame.
+                        }
+                        else  // Use region handling
+                        {
+                            HRGN DcRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+                            PREGION DcRgnObj = REGION_LockRgn(DcRgn);
+                            TRACE("SWP_FRAMECHANGED win %p hRgn %p\n",pwnd, DcRgn);
+                            IntGdiCombineRgn(DcRgnObj, VisBefore, NULL, RGN_COPY);
+                            REGION_UnlockRgn(DcRgnObj);
+                            ForceNCPaintErase(pwnd, DcRgn, DcRgnObj);
+                            GreDeleteObject(DcRgn);
+                        }
                     }
                 }
              }
