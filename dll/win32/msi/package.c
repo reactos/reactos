@@ -2476,10 +2476,9 @@ UINT __cdecl remote_DoAction(MSIHANDLE hinst, LPCWSTR action)
     return MsiDoActionW(hinst, action);
 }
 
-HRESULT __cdecl remote_Sequence(MSIHANDLE hinst, BSTR table, int sequence)
+UINT __cdecl remote_Sequence(MSIHANDLE hinst, LPCWSTR table, int sequence)
 {
-    UINT r = MsiSequenceW(hinst, table, sequence);
-    return HRESULT_FROM_WIN32(r);
+    return MsiSequenceW(hinst, table, sequence);
 }
 
 HRESULT __cdecl remote_GetTargetPath(MSIHANDLE hinst, BSTR folder, BSTR value, DWORD *size)

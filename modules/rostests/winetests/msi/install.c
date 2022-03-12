@@ -708,6 +708,12 @@ static const CHAR ca1_custom_action_dat[] = "Action\tType\tSource\tTarget\n"
                                              "maintest\t1\tcustom.dll\tmain_test\n"
                                              "testretval\t1\tcustom.dll\ttest_retval\n";
 
+static const CHAR ca1_test_seq_dat[] = "Action\tCondition\tSequence\n"
+                                       "s72\tS255\tI2\n"
+                                       "TestSequence\tAction\n"
+                                       "nested1\t\t1\n"
+                                       "nested51\t\t2\n";
+
 static const CHAR ca51_component_dat[] = "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
                                          "s72\tS38\ts72\ti2\tS255\tS72\n"
                                          "Component\tComponent\n"
@@ -1706,6 +1712,7 @@ static const msi_table ca1_tables[] =
     ADD_TABLE(property),
     ADD_TABLE(ca1_install_exec_seq),
     ADD_TABLE(ca1_custom_action),
+    ADD_TABLE(ca1_test_seq),
 };
 
 static const msi_table ca51_tables[] =

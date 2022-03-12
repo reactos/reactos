@@ -117,33 +117,18 @@ UINT WINAPI MsiSequenceW( MSIHANDLE hInstall, LPCWSTR szTable, INT iSequenceMode
 
     TRACE("%s, %d\n", debugstr_w(szTable), iSequenceMode);
 
+    if (!szTable)
+        return ERROR_INVALID_PARAMETER;
+
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if (!package)
     {
         MSIHANDLE remote;
-        HRESULT hr;
-        BSTR table;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        table = SysAllocString( szTable );
-        if (!table)
-            return ERROR_OUTOFMEMORY;
-
-        hr = remote_Sequence(remote, table, iSequenceMode);
-
-        SysFreeString( table );
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_Sequence(remote, szTable, iSequenceMode);
     }
     ret = MSI_Sequence( package, szTable );
     msiobj_release( &package->hdr );

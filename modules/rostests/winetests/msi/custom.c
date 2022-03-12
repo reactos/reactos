@@ -437,6 +437,13 @@ static void test_doaction(MSIHANDLE hinst)
     r = MsiDoActionA(hinst, "nested1");
     ok(hinst, !r, "got %u\n", r);
     check_prop(hinst, "nested", "2");
+
+    r = MsiSequenceA(hinst, NULL, 0);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    r = MsiSequenceA(hinst, "TestSequence", 0);
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, "nested", "1");
 }
 
 UINT WINAPI nested(MSIHANDLE hinst)
