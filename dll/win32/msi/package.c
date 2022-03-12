@@ -2060,39 +2060,27 @@ INT WINAPI MsiProcessMessage( MSIHANDLE hInstall, INSTALLMESSAGE eMessageType,
         MsiRecordGetInteger(hRecord, 1) != 2)
         return -1;
 
+    record = msihandle2msiinfo(hRecord, MSIHANDLETYPE_RECORD);
+    if (!record)
+        return ERROR_INVALID_HANDLE;
+
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if( !package )
     {
         MSIHANDLE remote;
-        HRESULT hr;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        hr = remote_ProcessMessage(remote, eMessageType, hRecord);
+        ret = remote_ProcessMessage(remote, eMessageType, (struct wire_record *)&record->count);
 
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        msiobj_release(&record->hdr);
+        return ret;
     }
-
-    record = msihandle2msiinfo( hRecord, MSIHANDLETYPE_RECORD );
-    if( !record )
-        goto out;
 
     ret = MSI_ProcessMessage( package, eMessageType, record );
 
-out:
     msiobj_release( &package->hdr );
-    if( record )
-        msiobj_release( &record->hdr );
-
     return ret;
 }
 
@@ -2488,10 +2476,19 @@ UINT __cdecl remote_SetProperty(MSIHANDLE hinst, LPCWSTR property, LPCWSTR value
     return MsiSetPropertyW(hinst, property, value);
 }
 
-HRESULT __cdecl remote_ProcessMessage(MSIHANDLE hinst, INSTALLMESSAGE message, MSIHANDLE record)
+int __cdecl remote_ProcessMessage(MSIHANDLE hinst, INSTALLMESSAGE message, struct wire_record *remote_rec)
 {
-    UINT r = MsiProcessMessage(hinst, message, record);
-    return HRESULT_FROM_WIN32(r);
+    MSIHANDLE rec;
+    int ret;
+    UINT r;
+
+    if ((r = unmarshal_record(remote_rec, &rec)))
+        return r;
+
+    ret = MsiProcessMessage(hinst, message, rec);
+
+    MsiCloseHandle(rec);
+    return ret;
 }
 
 HRESULT __cdecl remote_DoAction(MSIHANDLE hinst, BSTR action)

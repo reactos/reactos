@@ -1054,3 +1054,46 @@ void dump_record(MSIRECORD *rec)
     }
     TRACE("]\n");
 }
+
+UINT unmarshal_record(const struct wire_record *in, MSIHANDLE *out)
+{
+    MSIRECORD *rec;
+    unsigned int i;
+    UINT r;
+
+    rec = MSI_CreateRecord(in->count);
+    if (!rec) return ERROR_OUTOFMEMORY;
+
+    for (i = 0; i <= in->count; i++)
+    {
+        switch (in->fields[i].type)
+        {
+        case MSIFIELD_NULL:
+            break;
+        case MSIFIELD_INT:
+            r = MSI_RecordSetInteger(rec, i, in->fields[i].u.iVal);
+            break;
+        case MSIFIELD_WSTR:
+            r = MSI_RecordSetStringW(rec, i, in->fields[i].u.szwVal);
+            break;
+        case MSIFIELD_STREAM:
+            r = MSI_RecordSetIStream(rec, i, in->fields[i].u.stream);
+            break;
+        default:
+            ERR("invalid field type %d\n", in->fields[i].type);
+            break;
+        }
+
+        if (r)
+        {
+            msiobj_release(&rec->hdr);
+            return r;
+        }
+    }
+
+    *out = alloc_msihandle(&rec->hdr);
+    if (!*out) return ERROR_OUTOFMEMORY;
+
+    msiobj_release(&rec->hdr);
+    return ERROR_SUCCESS;
+}
