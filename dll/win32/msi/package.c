@@ -342,6 +342,8 @@ static void MSI_FreePackage( MSIOBJECTHDR *arg)
     msiobj_release( &package->db->hdr );
     free_package_structures(package);
     CloseHandle( package->log_file );
+    if (package->rpc_server_started)
+        RpcServerUnregisterIf(s_IWineMsiRemote_v0_0_s_ifspec, NULL, FALSE);
 
     if (package->delete_on_close) DeleteFileW( package->localfile );
     msi_free( package->localfile );

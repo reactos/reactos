@@ -573,16 +573,15 @@ UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
     return r;
 }
 
-static DWORD WINAPI DllThread( LPVOID arg )
+static DWORD WINAPI custom_client_thread(void *arg)
 {
     static const WCHAR msiexecW[] = {'\\','m','s','i','e','x','e','c','.','e','x','e',0};
     static const WCHAR argsW[] = {' ','-','E','m','b','e','d','d','i','n','g',' ',0};
-    msi_custom_action_info *info;
+    msi_custom_action_info *info = arg;
     PROCESS_INFORMATION pi = {0};
     STARTUPINFOW si = {0};
     WCHAR buffer[MAX_PATH], cmdline[MAX_PATH + 60];
     RPC_STATUS status;
-    GUID *guid = arg;
     void *cookie;
     BOOL wow64;
     DWORD arch;
@@ -593,24 +592,28 @@ static DWORD WINAPI DllThread( LPVOID arg )
 
     CoInitializeEx(NULL, COINIT_MULTITHREADED); /* needed to marshal streams */
 
-    status = RpcServerUseProtseqEpW(ncalrpcW, RPC_C_PROTSEQ_MAX_REQS_DEFAULT, endpoint_lrpcW, NULL);
-    if (status != RPC_S_OK)
+    if (!info->package->rpc_server_started)
     {
-        ERR("RpcServerUseProtseqEp failed: %#x\n", status);
-        return status;
+        status = RpcServerUseProtseqEpW(ncalrpcW, RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
+            endpoint_lrpcW, NULL);
+        if (status != RPC_S_OK)
+        {
+            ERR("RpcServerUseProtseqEp failed: %#x\n", status);
+            return status;
+        }
+
+        status = RpcServerRegisterIfEx((RPC_IF_HANDLE)s_IWineMsiRemote_v0_0_s_ifspec, NULL, NULL,
+            RPC_IF_AUTOLISTEN, RPC_C_LISTEN_MAX_CALLS_DEFAULT, NULL);
+        if (status != RPC_S_OK)
+        {
+            ERR("RpcServerRegisterIfEx failed: %#x\n", status);
+            return status;
+        }
+
+        info->package->rpc_server_started = 1;
     }
 
-    status = RpcServerRegisterIfEx((RPC_IF_HANDLE)s_IWineMsiRemote_v0_0_s_ifspec, NULL, NULL,
-        RPC_IF_AUTOLISTEN, RPC_C_LISTEN_MAX_CALLS_DEFAULT, NULL);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcServerRegisterIfEx failed: %#x\n", status);
-        return status;
-    }
-
-    info = find_action_by_guid(guid);
     ret = GetBinaryTypeW(info->source, &arch);
-    release_custom_action_data(info);
 
     if (sizeof(void *) == 8 && ret && arch == SCS_32BIT_BINARY)
         GetSystemWow64DirectoryW(buffer, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
@@ -619,7 +622,7 @@ static DWORD WINAPI DllThread( LPVOID arg )
     strcatW(buffer, msiexecW);
     strcpyW(cmdline, buffer);
     strcatW(cmdline, argsW);
-    StringFromGUID2(guid, cmdline + strlenW(cmdline), 39);
+    StringFromGUID2(&info->guid, cmdline + strlenW(cmdline), 39);
 
     if (IsWow64Process(GetCurrentProcess(), &wow64) && wow64 && arch == SCS_64BIT_BINARY)
     {
@@ -634,13 +637,6 @@ static DWORD WINAPI DllThread( LPVOID arg )
     GetExitCodeProcess(pi.hProcess, &rc);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-
-    status = RpcServerUnregisterIf((RPC_IF_HANDLE)s_IWineMsiRemote_v0_0_s_ifspec, NULL, FALSE);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcServerUnregisterIf failed: %#x\n", status);
-        return status;
-    }
 
     CoUninitialize();
 
@@ -672,7 +668,7 @@ static msi_custom_action_info *do_msidbCustomActionTypeDll(
     list_add_tail( &msi_pending_custom_actions, &info->entry );
     LeaveCriticalSection( &msi_custom_action_cs );
 
-    info->handle = CreateThread( NULL, 0, DllThread, &info->guid, 0, NULL );
+    info->handle = CreateThread(NULL, 0, custom_client_thread, info, 0, NULL);
     if (!info->handle)
     {
         /* release both references */
