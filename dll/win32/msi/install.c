@@ -561,18 +561,11 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
     if (!package)
     {
         MSIHANDLE remote;
-        BOOL ret;
-        HRESULT hr;
 
         if (!(remote = msi_get_remote(hInstall)))
             return FALSE;
 
-        hr = remote_GetMode(remote, iRunMode, &ret);
-
-        if (hr == S_OK)
-            return ret;
-
-        return FALSE;
+        return remote_GetMode(remote, iRunMode);
     }
 
     switch (iRunMode)

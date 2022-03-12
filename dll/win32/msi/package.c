@@ -2520,10 +2520,9 @@ UINT __cdecl remote_GetSourcePath(MSIHANDLE hinst, LPCWSTR folder, LPWSTR *value
     return r;
 }
 
-HRESULT __cdecl remote_GetMode(MSIHANDLE hinst, MSIRUNMODE mode, BOOL *ret)
+BOOL __cdecl remote_GetMode(MSIHANDLE hinst, MSIRUNMODE mode)
 {
-    *ret = MsiGetMode(hinst, mode);
-    return S_OK;
+    return MsiGetMode(hinst, mode);
 }
 
 HRESULT __cdecl remote_SetMode(MSIHANDLE hinst, MSIRUNMODE mode, BOOL state)
