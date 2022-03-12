@@ -2831,6 +2831,53 @@ ProcessUnattendSection(
     }
 
     RegCloseKey(hKey);
+
+    if (SetupFindFirstLineW(pSetupData->hSetupInf,
+        L"Env",
+        NULL,
+        &InfContext))
+    {
+        if (RegCreateKeyExW(
+                HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", 0, NULL,
+                REG_OPTION_NON_VOLATILE, KEY_WRITE | KEY_READ, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        {
+            DPRINT1("Error: failed to open HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\n");
+            return;
+        }
+        do
+        {
+            if (!SetupGetStringFieldW(&InfContext,
+                0,
+                szName,
+                ARRAYSIZE(szName),
+                &LineLength))
+            {
+                DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
+                return;
+            }
+
+            if (!SetupGetStringFieldW(&InfContext,
+                1,
+                szValue,
+                ARRAYSIZE(szValue),
+                &LineLength))
+            {
+                DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
+                return;
+            }
+            DPRINT1("[ENV] %S=%S\n", szName, szValue);
+
+            DWORD dwType = wcschr(szValue, '%') != NULL ? REG_EXPAND_SZ : REG_SZ;
+
+            if (RegSetValueExW(hKey, szName, 0, dwType, (const BYTE*)szValue, (DWORD)(wcslen(szValue) + 1) * sizeof(TCHAR)) != ERROR_SUCCESS)
+            {
+                DPRINT1(" - Error %d\n", GetLastError());
+            }
+
+        } while (SetupFindNextLine(&InfContext, &InfContext));
+
+        RegCloseKey(hKey);
+    }
 }
 
 VOID

@@ -74,3 +74,8 @@ ProductOption = 0
 ; XResolution = 1440
 ; YResolution = 900
 ; VRefresh = 0
+
+; enable this section to add environment variables
+;[Env]
+;WINETEST_PLATFORM=reactos
+
