@@ -233,14 +233,10 @@ static UINT SELECT_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *na
 static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
-    UINT r, i, num_columns, col, type, val;
+    UINT r, i, col, type, val;
     LPCWSTR str;
 
-    r = SELECT_get_dimensions(view, NULL, &num_columns);
-    if (r != ERROR_SUCCESS)
-        return r;
-
-    for (i = 0; i < num_columns; i++)
+    for (i = 0; i < sv->num_cols; i++)
     {
         col = sv->cols[i];
 
