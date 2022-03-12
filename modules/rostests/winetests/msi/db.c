@@ -5176,12 +5176,7 @@ static void test_viewmodify_assign(void)
     ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
     r = MsiViewFetch(hview, &hrec);
     ok(r == ERROR_SUCCESS, "MsiViewFetch failed\n");
-
-    r = MsiRecordGetInteger(hrec, 1);
-    ok(r == 1, "Expected 1, got %d\n", r);
-    r = MsiRecordGetInteger(hrec, 2);
-    ok(r == 2, "Expected 2, got %d\n", r);
-
+    check_record(hrec, 2, "1", "2");
     r = MsiCloseHandle(hrec);
     ok(r == ERROR_SUCCESS, "failed to close record\n");
 
@@ -5226,12 +5221,7 @@ static void test_viewmodify_assign(void)
     ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
     r = MsiViewFetch(hview, &hrec);
     ok(r == ERROR_SUCCESS, "MsiViewFetch failed\n");
-
-    r = MsiRecordGetInteger(hrec, 1);
-    ok(r == 1, "Expected 1, got %d\n", r);
-    r = MsiRecordGetInteger(hrec, 2);
-    ok(r == 4, "Expected 4, got %d\n", r);
-
+    check_record(hrec, 2, "1", "4");
     r = MsiCloseHandle(hrec);
     ok(r == ERROR_SUCCESS, "failed to close record\n");
 
@@ -5242,6 +5232,164 @@ static void test_viewmodify_assign(void)
     ok(r == ERROR_SUCCESS, "MsiViewClose failed\n");
     r = MsiCloseHandle(hview);
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
+
+    r = run_query(hdb, 0, "CREATE TABLE `table2` (`A` INT, `B` INT, `C` INT, `D` INT PRIMARY KEY `A`,`B`)");
+    ok(!r, "got %u\n", r);
+
+    r = MsiDatabaseOpenViewA(hdb, "SELECT * FROM `table2`", &hview);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(!r, "got %u\n", r);
+
+    hrec = MsiCreateRecord(4);
+    MsiRecordSetInteger(hrec, 1, 1);
+    MsiRecordSetInteger(hrec, 2, 2);
+    MsiRecordSetInteger(hrec, 3, 3);
+    MsiRecordSetInteger(hrec, 4, 4);
+    r = MsiViewModify(hview, MSIMODIFY_ASSIGN, hrec);
+    ok(!r, "got %u\n", r);
+    MsiCloseHandle(hrec);
+
+    MsiCloseHandle(hview);
+
+    r = MsiDatabaseOpenViewA(hdb, "SELECT * FROM `table2`", &hview);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "1", "2", "3", "4");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
+    MsiCloseHandle(hview);
+
+    r = MsiDatabaseOpenViewA(hdb, "SELECT * FROM `table2`", &hview);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(!r, "got %u\n", r);
+
+    hrec = MsiCreateRecord(4);
+    MsiRecordSetInteger(hrec, 1, 1);
+    MsiRecordSetInteger(hrec, 2, 4);
+    MsiRecordSetInteger(hrec, 3, 3);
+    MsiRecordSetInteger(hrec, 4, 3);
+    r = MsiViewModify(hview, MSIMODIFY_ASSIGN, hrec);
+    ok(!r, "got %u\n", r);
+    MsiCloseHandle(hrec);
+
+    MsiCloseHandle(hview);
+
+    r = MsiDatabaseOpenViewA(hdb, "SELECT * FROM `table2`", &hview);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "1", "2", "3", "4");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "1", "4", "3", "3");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
+    MsiCloseHandle(hview);
+
+    r = MsiDatabaseOpenViewA(hdb, "SELECT `B`, `C` FROM `table2`", &hview);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(!r, "got %u\n", r);
+
+    hrec = MsiCreateRecord(2);
+    MsiRecordSetInteger(hrec, 1, 2);
+    MsiRecordSetInteger(hrec, 2, 4);
+    r = MsiViewModify(hview, MSIMODIFY_ASSIGN, hrec);
+    ok(!r, "got %u\n", r);
+    MsiRecordSetInteger(hrec, 1, 3);
+    r = MsiViewModify(hview, MSIMODIFY_ASSIGN, hrec);
+    ok(!r, "got %u\n", r);
+    MsiCloseHandle(hrec);
+
+    MsiCloseHandle(hview);
+
+    r = MsiDatabaseOpenViewA(hdb, "SELECT * FROM `table2` ORDER BY `A`", &hview);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "", "2", "4", "");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "", "3", "4", "");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "1", "2", "3", "4");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "1", "4", "3", "3");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
+    MsiCloseHandle(hview);
+
+    r = MsiDatabaseOpenViewA(hdb, "SELECT `A`, `B`, `C` FROM `table2`", &hview);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(!r, "got %u\n", r);
+
+    hrec = MsiCreateRecord(3);
+    MsiRecordSetInteger(hrec, 1, 1);
+    MsiRecordSetInteger(hrec, 2, 2);
+    MsiRecordSetInteger(hrec, 3, 5);
+    r = MsiViewModify(hview, MSIMODIFY_ASSIGN, hrec);
+    ok(!r, "got %u\n", r);
+    MsiCloseHandle(hrec);
+
+    MsiCloseHandle(hview);
+
+    r = MsiDatabaseOpenViewA(hdb, "SELECT * FROM `table2` ORDER BY `A`", &hview);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "", "2", "4", "");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "", "3", "4", "");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "1", "2", "5", "");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 4, "1", "4", "3", "3");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
+    MsiCloseHandle(hview);
 
     /* close database */
     r = MsiCloseHandle( hdb );
