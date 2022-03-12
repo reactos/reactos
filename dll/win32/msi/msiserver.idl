@@ -56,7 +56,6 @@ interface IWineMsiRemoteDatabase : IUnknown
 ]
 interface IWineMsiRemotePackage : IUnknown
 {
-    HRESULT SetMsiHandle( [in] MSIHANDLE handle );
     HRESULT GetActiveDatabase( [out] MSIHANDLE *handle );
     HRESULT GetProperty( [in] BSTR property, [out, size_is(*size)] BSTR value, [in, out] DWORD *size );
     HRESULT SetProperty( [in] BSTR property, [in] BSTR value );
@@ -88,7 +87,7 @@ interface IWineMsiRemotePackage : IUnknown
 ]
 interface IWineMsiRemoteCustomAction : IUnknown
 {
-    HRESULT GetActionInfo( [in] LPCGUID guid, [out] INT *type, [out] MSIHANDLE *handle, [out] BSTR *dllname,
+    HRESULT GetActionInfo( [in] LPCGUID guid, [out] INT *type, [out] BSTR *dllname,
                            [out] BSTR *function, [out] IWineMsiRemotePackage **package );
 }
 

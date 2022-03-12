@@ -495,7 +495,7 @@ static void handle_msi_break( LPCWSTR target )
     DebugBreak();
 }
 
-static UINT get_action_info( const GUID *guid, INT *type, MSIHANDLE *handle,
+static UINT get_action_info( const GUID *guid, INT *type,
                              BSTR *dll, BSTR *funcname,
                              IWineMsiRemotePackage **package )
 {
@@ -518,7 +518,7 @@ static UINT get_action_info( const GUID *guid, INT *type, MSIHANDLE *handle,
         return ERROR_FUNCTION_FAILED;
     }
 
-    r = IWineMsiRemoteCustomAction_GetActionInfo( rca, guid, type, handle, dll, funcname, package );
+    r = IWineMsiRemoteCustomAction_GetActionInfo( rca, guid, type, dll, funcname, package );
     IWineMsiRemoteCustomAction_Release( rca );
     if (FAILED(r))
     {
@@ -555,7 +555,7 @@ static inline UINT CUSTOMPROC_wrapper( MsiCustomActionEntryPoint proc, MSIHANDLE
 static DWORD ACTION_CallDllFunction( const GUID *guid )
 {
     MsiCustomActionEntryPoint fn;
-    MSIHANDLE hPackage, handle;
+    MSIHANDLE hPackage;
     HANDLE hModule;
     LPSTR proc;
     UINT r = ERROR_FUNCTION_FAILED;
@@ -565,7 +565,7 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
 
     TRACE("%s\n", debugstr_guid( guid ));
 
-    r = get_action_info( guid, &type, &handle, &dll, &function, &remote_package );
+    r = get_action_info( guid, &type, &dll, &function, &remote_package );
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -584,7 +584,6 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
         hPackage = alloc_msi_remote_handle( (IUnknown *)remote_package );
         if (hPackage)
         {
-            IWineMsiRemotePackage_SetMsiHandle( remote_package, handle );
             TRACE("calling %s\n", debugstr_w( function ) );
             handle_msi_break( function );
 
@@ -613,7 +612,6 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
     IWineMsiRemotePackage_Release( remote_package );
     SysFreeString( dll );
     SysFreeString( function );
-    MsiCloseHandle( handle );
 
     return r;
 }
@@ -1433,21 +1431,22 @@ static ULONG WINAPI mcr_Release( IWineMsiRemoteCustomAction *iface )
 }
 
 static HRESULT WINAPI mcr_GetActionInfo( IWineMsiRemoteCustomAction *iface, LPCGUID custom_action_guid,
-         INT *type, MSIHANDLE *handle, BSTR *dll, BSTR *func, IWineMsiRemotePackage **remote_package )
+         INT *type, BSTR *dll, BSTR *func, IWineMsiRemotePackage **remote_package )
 {
     msi_custom_action_info *info;
+    MSIHANDLE handle;
 
     info = find_action_by_guid( custom_action_guid );
     if (!info)
         return E_FAIL;
 
     *type = info->type;
-    *handle = alloc_msihandle( &info->package->hdr );
+    handle = alloc_msihandle( &info->package->hdr );
     *dll = SysAllocString( info->source );
     *func = SysAllocString( info->target );
 
     release_custom_action_data( info );
-    return create_msi_remote_package( NULL, (LPVOID *)remote_package );
+    return create_msi_remote_package( handle, remote_package );
 }
 
 static const IWineMsiRemoteCustomActionVtbl msi_custom_remote_vtbl =

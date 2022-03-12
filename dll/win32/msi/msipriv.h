@@ -38,6 +38,8 @@
 #include "wine/list.h"
 #include "wine/debug.h"
 
+#include "msiserver.h"
+
 static const BOOL is_64bit = sizeof(void *) > sizeof(int);
 BOOL is_wow64 DECLSPEC_HIDDEN;
 
@@ -733,7 +735,7 @@ UINT msi_strcpy_to_awstring(const WCHAR *, int, awstring *, DWORD *) DECLSPEC_HI
 
 /* msi server interface */
 extern HRESULT create_msi_custom_remote( IUnknown *pOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT create_msi_remote_package( IUnknown *pOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
+extern HRESULT create_msi_remote_package( MSIHANDLE handle, IWineMsiRemotePackage **package ) DECLSPEC_HIDDEN;
 extern HRESULT create_msi_remote_database( IUnknown *pOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
 extern IUnknown *msi_get_remote(MSIHANDLE handle) DECLSPEC_HIDDEN;
 

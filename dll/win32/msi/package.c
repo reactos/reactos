@@ -2568,13 +2568,6 @@ static ULONG WINAPI mrp_Release( IWineMsiRemotePackage *iface )
     return r;
 }
 
-static HRESULT WINAPI mrp_SetMsiHandle( IWineMsiRemotePackage *iface, MSIHANDLE handle )
-{
-    msi_remote_package_impl* This = impl_from_IWineMsiRemotePackage( iface );
-    This->package = handle;
-    return S_OK;
-}
-
 static HRESULT WINAPI mrp_GetActiveDatabase( IWineMsiRemotePackage *iface, MSIHANDLE *handle )
 {
     msi_remote_package_impl* This = impl_from_IWineMsiRemotePackage( iface );
@@ -2763,7 +2756,6 @@ static const IWineMsiRemotePackageVtbl msi_remote_package_vtbl =
     mrp_QueryInterface,
     mrp_AddRef,
     mrp_Release,
-    mrp_SetMsiHandle,
     mrp_GetActiveDatabase,
     mrp_GetProperty,
     mrp_SetProperty,
@@ -2787,7 +2779,7 @@ static const IWineMsiRemotePackageVtbl msi_remote_package_vtbl =
     mrp_EnumComponentCosts
 };
 
-HRESULT create_msi_remote_package( IUnknown *pOuter, LPVOID *ppObj )
+HRESULT create_msi_remote_package( MSIHANDLE handle, IWineMsiRemotePackage **ppObj )
 {
     msi_remote_package_impl* This;
 
@@ -2796,7 +2788,7 @@ HRESULT create_msi_remote_package( IUnknown *pOuter, LPVOID *ppObj )
         return E_OUTOFMEMORY;
 
     This->IWineMsiRemotePackage_iface.lpVtbl = &msi_remote_package_vtbl;
-    This->package = 0;
+    This->package = handle;
     This->refs = 1;
 
     *ppObj = &This->IWineMsiRemotePackage_iface;
