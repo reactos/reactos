@@ -77,6 +77,11 @@ void __RPC_USER MIDL_user_free(void __RPC_FAR * ptr)
     heap_free(ptr);
 }
 
+LONG WINAPI rpc_filter(EXCEPTION_POINTERS *eptr)
+{
+    return I_RpcExceptionFilter(eptr->ExceptionRecord->ExceptionCode);
+}
+
 UINT msi_schedule_action( MSIPACKAGE *package, UINT script, const WCHAR *action )
 {
     UINT count;

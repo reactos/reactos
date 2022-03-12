@@ -30,6 +30,7 @@
 #include "winnls.h"
 #include "shlwapi.h"
 #include "wine/debug.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
@@ -543,7 +544,16 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
             if (!(remote = msi_get_remote(hDatabase)))
                 return ERROR_INVALID_HANDLE;
 
-            ret = remote_DatabaseGetSummaryInformation(remote, uiUpdateCount, &remote_suminfo);
+            __TRY
+            {
+                ret = remote_DatabaseGetSummaryInformation(remote, uiUpdateCount, &remote_suminfo);
+            }
+            __EXCEPT(rpc_filter)
+            {
+                ret = GetExceptionCode();
+            }
+            __ENDTRY
+
             if (!ret)
                 *pHandle = alloc_msi_remote_handle(remote_suminfo);
 

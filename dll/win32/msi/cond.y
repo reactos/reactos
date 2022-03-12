@@ -39,6 +39,7 @@
 #include "msipriv.h"
 #include "winemsi_s.h"
 #include "wine/debug.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 #include "wine/list.h"
 
@@ -858,7 +859,17 @@ MSICONDITION WINAPI MsiEvaluateConditionW( MSIHANDLE hInstall, LPCWSTR szConditi
         if (!szCondition)
             return MSICONDITION_NONE;
 
-        return remote_EvaluateCondition(remote, szCondition);
+        __TRY
+        {
+            ret = remote_EvaluateCondition(remote, szCondition);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            ret = GetExceptionCode();
+        }
+        __ENDTRY
+
+        return ret;
     }
 
     ret = MSI_EvaluateConditionW( package, szCondition );

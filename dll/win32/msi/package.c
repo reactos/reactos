@@ -44,6 +44,7 @@
 
 #include "wine/heap.h"
 #include "wine/debug.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 
 #include "msipriv.h"
@@ -1746,8 +1747,16 @@ MSIHANDLE WINAPI MsiGetActiveDatabase(MSIHANDLE hInstall)
     }
     else if ((remote = msi_get_remote(hInstall)))
     {
-        handle = remote_GetActiveDatabase(remote);
-        handle = alloc_msi_remote_handle(handle);
+        __TRY
+        {
+            handle = remote_GetActiveDatabase(hInstall);
+            handle = alloc_msi_remote_handle(handle);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            handle = 0;
+        }
+        __ENDTRY
     }
 
     return handle;
@@ -2107,7 +2116,15 @@ INT WINAPI MsiProcessMessage( MSIHANDLE hInstall, INSTALLMESSAGE eMessageType,
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        ret = remote_ProcessMessage(remote, eMessageType, (struct wire_record *)&record->count);
+        __TRY
+        {
+            ret = remote_ProcessMessage(remote, eMessageType, (struct wire_record *)&record->count);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            ret = GetExceptionCode();
+        }
+        __ENDTRY
 
         msiobj_release(&record->hdr);
         return ret;
@@ -2237,7 +2254,17 @@ UINT WINAPI MsiSetPropertyW( MSIHANDLE hInstall, LPCWSTR szName, LPCWSTR szValue
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        return remote_SetProperty(remote, szName, szValue);
+        __TRY
+        {
+            ret = remote_SetProperty(remote, szName, szValue);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            ret = GetExceptionCode();
+        }
+        __ENDTRY
+
+        return ret;
     }
 
     ret = msi_set_property( package->db, szName, szValue, -1 );
@@ -2414,7 +2441,16 @@ UINT WINAPI MsiGetPropertyA(MSIHANDLE hinst, const char *name, char *buf, DWORD 
             return ERROR_INVALID_HANDLE;
         }
 
-        r = remote_GetProperty(remote, nameW, &value, &len);
+        __TRY
+        {
+            r = remote_GetProperty(remote, nameW, &value, &len);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
+
         heap_free(nameW);
 
         if (!r)
@@ -2470,7 +2506,16 @@ UINT WINAPI MsiGetPropertyW(MSIHANDLE hinst, const WCHAR *name, WCHAR *buf, DWOR
         if (!(remote = msi_get_remote(hinst)))
             return ERROR_INVALID_HANDLE;
 
-        r = remote_GetProperty(remote, name, &value, &len);
+        __TRY
+        {
+            r = remote_GetProperty(remote, name, &value, &len);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
+
         if (!r)
         {
             /* String might contain embedded nulls.

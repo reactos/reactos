@@ -26,6 +26,7 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
@@ -258,7 +259,16 @@ UINT WINAPI MsiDatabaseOpenViewW(MSIHANDLE hdb,
         if (!(remote = msi_get_remote(hdb)))
             return ERROR_INVALID_HANDLE;
 
-        ret = remote_DatabaseOpenView(remote, szQuery, &remote_view);
+        __TRY
+        {
+            ret = remote_DatabaseOpenView(remote, szQuery, &remote_view);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            ret = GetExceptionCode();
+        }
+        __ENDTRY
+
         if (!ret)
             *phView = alloc_msi_remote_handle(remote_view);
         return ret;
@@ -397,7 +407,16 @@ UINT WINAPI MsiViewFetch(MSIHANDLE hView, MSIHANDLE *record)
         if (!(remote = msi_get_remote(hView)))
             return ERROR_INVALID_HANDLE;
 
-        ret = remote_ViewFetch(remote, &wire_rec);
+        __TRY
+        {
+            ret = remote_ViewFetch(remote, &wire_rec);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            ret = GetExceptionCode();
+        }
+        __ENDTRY
+
         if (!ret)
         {
             ret = unmarshal_record(wire_rec, record);
@@ -447,7 +466,17 @@ UINT WINAPI MsiViewClose(MSIHANDLE hView)
         if (!(remote = msi_get_remote(hView)))
             return ERROR_INVALID_HANDLE;
 
-        return remote_ViewClose(remote);
+        __TRY
+        {
+            ret = remote_ViewClose(remote);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            ret = GetExceptionCode();
+        }
+        __ENDTRY
+
+        return ret;
     }
 
     ret = MSI_ViewClose( query );
@@ -494,7 +523,15 @@ UINT WINAPI MsiViewExecute(MSIHANDLE hView, MSIHANDLE hRec)
         if (!(remote = msi_get_remote(hView)))
             return ERROR_INVALID_HANDLE;
 
-        ret = remote_ViewExecute(remote, rec ? (struct wire_record *)&rec->count : NULL);
+        __TRY
+        {
+            ret = remote_ViewExecute(remote, rec ? (struct wire_record *)&rec->count : NULL);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            ret = GetExceptionCode();
+        }
+        __ENDTRY
 
         if (rec)
             msiobj_release(&rec->hdr);
@@ -611,7 +648,16 @@ UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hR
         if (!(remote = msi_get_remote(hView)))
             return ERROR_INVALID_HANDLE;
 
-        r = remote_ViewGetColumnInfo(remote, info, &wire_rec);
+        __TRY
+        {
+            r = remote_ViewGetColumnInfo(remote, info, &wire_rec);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
+
         if (!r)
         {
             r = unmarshal_record(wire_rec, hRec);
@@ -680,8 +726,17 @@ UINT WINAPI MsiViewModify( MSIHANDLE hView, MSIMODIFY eModifyMode,
         if (!(remote = msi_get_remote(hView)))
             return ERROR_INVALID_HANDLE;
 
-        r = remote_ViewModify(remote, eModifyMode,
-            (struct wire_record *)&rec->count, &wire_refreshed);
+        __TRY
+        {
+            r = remote_ViewModify(remote, eModifyMode,
+                (struct wire_record *)&rec->count, &wire_refreshed);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
+
         if (!r && (eModifyMode == MSIMODIFY_REFRESH || eModifyMode == MSIMODIFY_SEEK))
         {
             r = copy_remote_record(wire_refreshed, hRecord);
@@ -1004,7 +1059,16 @@ UINT WINAPI MsiDatabaseGetPrimaryKeysW( MSIHANDLE hdb,
         if (!(remote = msi_get_remote(hdb)))
             return ERROR_INVALID_HANDLE;
 
-        r = remote_DatabaseGetPrimaryKeys(remote, table, &wire_rec);
+        __TRY
+        {
+            r = remote_DatabaseGetPrimaryKeys(remote, table, &wire_rec);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
+
         if (!r)
         {
             r = unmarshal_record(wire_rec, phRec);
@@ -1083,7 +1147,17 @@ MSICONDITION WINAPI MsiDatabaseIsTablePersistentW(
         if (!(remote = msi_get_remote(hDatabase)))
             return MSICONDITION_ERROR;
 
-        return remote_DatabaseIsTablePersistent(remote, szTableName);
+        __TRY
+        {
+            r = remote_DatabaseIsTablePersistent(remote, szTableName);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = MSICONDITION_ERROR;
+        }
+        __ENDTRY
+
+        return r;
     }
 
     r = MSI_DatabaseIsTablePersistent( db, szTableName );

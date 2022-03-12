@@ -741,6 +741,7 @@ UINT msi_strcpy_to_awstring(const WCHAR *, int, awstring *, DWORD *) DECLSPEC_HI
 
 /* msi server interface */
 extern MSIHANDLE msi_get_remote(MSIHANDLE handle) DECLSPEC_HIDDEN;
+extern LONG WINAPI rpc_filter(EXCEPTION_POINTERS *eptr) DECLSPEC_HIDDEN;
 
 /* handle functions */
 extern void *msihandle2msiinfo(MSIHANDLE handle, UINT type) DECLSPEC_HIDDEN;

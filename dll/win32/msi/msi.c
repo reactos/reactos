@@ -47,6 +47,7 @@
 #include "msxml2.h"
 
 #include "wine/debug.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -2026,7 +2027,16 @@ UINT WINAPI MsiEnumComponentCostsW( MSIHANDLE handle, LPCWSTR component, DWORD i
         if (!(remote = msi_get_remote(handle)))
             return ERROR_INVALID_HANDLE;
 
-        r = remote_EnumComponentCosts(remote, component, index, state, buffer, cost, temp);
+        __TRY
+        {
+            r = remote_EnumComponentCosts(remote, component, index, state, buffer, cost, temp);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
+
         if (r == ERROR_SUCCESS)
         {
             lstrcpynW(drive, buffer, *buflen);

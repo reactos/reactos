@@ -35,6 +35,7 @@
 
 #include "msipriv.h"
 #include "winemsi_s.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -919,7 +920,15 @@ UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
 
         if ((remote = msi_get_remote(hInstall)))
         {
-            r = remote_FormatRecord(remote, (struct wire_record *)&record->count, &value);
+            __TRY
+            {
+                r = remote_FormatRecord(remote, (struct wire_record *)&record->count, &value);
+            }
+            __EXCEPT(rpc_filter)
+            {
+                r = GetExceptionCode();
+            }
+            __ENDTRY
 
             if (!r)
                 r = msi_strncpyW(value, -1, szResult, sz);
@@ -968,7 +977,15 @@ UINT WINAPI MsiFormatRecordA(MSIHANDLE hinst, MSIHANDLE hrec, char *buf, DWORD *
 
         if ((remote = msi_get_remote(hinst)))
         {
-            r = remote_FormatRecord(remote, (struct wire_record *)&rec->count, &value);
+            __TRY
+            {
+                r = remote_FormatRecord(remote, (struct wire_record *)&rec->count, &value);
+            }
+            __EXCEPT(rpc_filter)
+            {
+                r = GetExceptionCode();
+            }
+            __ENDTRY
 
             if (!r)
                 r = msi_strncpyWtoA(value, -1, buf, sz, TRUE);
