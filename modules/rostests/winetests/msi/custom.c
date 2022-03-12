@@ -1424,9 +1424,10 @@ UINT WINAPI odbc_present(MSIHANDLE hinst)
     WORD len;
     BOOL r;
 
+    buffer[0] = 0;
+    len = sizeof(buffer);
     r = SQLGetInstalledDrivers(buffer, sizeof(buffer), &len);
-    ok(hinst, len < sizeof(buffer), "buffer too small\n");
-    ok(hinst, r, "SQLGetInstalledDrivers failed\n");
+    if (r) ok(hinst, len < sizeof(buffer), "buffer too small\n");
     for (p = buffer; *p; p += strlen(p) + 1)
     {
         if (!strcmp(p, "ODBC test driver"))
@@ -1446,9 +1447,10 @@ UINT WINAPI odbc_absent(MSIHANDLE hinst)
     WORD len;
     BOOL r;
 
+    buffer[0] = 0;
+    len = sizeof(buffer);
     r = SQLGetInstalledDrivers(buffer, sizeof(buffer), &len);
-    ok(hinst, len < sizeof(buffer), "buffer too small\n");
-    ok(hinst, r, "SQLGetInstalledDrivers failed\n");
+    if (r) ok(hinst, len < sizeof(buffer), "buffer too small\n");
     for (p = buffer; *p; p += strlen(p) + 1)
     {
         if (!strcmp(p, "ODBC test driver"))
