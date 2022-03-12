@@ -815,6 +815,17 @@ static void test_format_record(MSIHANDLE hinst)
     ok(hinst, !strcmp(buffer, "foo 123"), "got \"%s\"\n", buffer);
     ok(hinst, sz == 7, "got size %u\n", sz);
 
+    r = MsiFormatRecordW(hinst, rec, NULL, NULL);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiFormatRecordW(hinst, rec, bufferW, NULL);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    sz = 0;
+    r = MsiFormatRecordW(hinst, rec, NULL, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == 7, "got size %u\n", sz);
+
     sz = 0;
     bufferW[0] = 'q';
     r = MsiFormatRecordW(hinst, rec, bufferW, &sz);

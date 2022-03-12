@@ -191,6 +191,25 @@ UINT msi_strncpyWtoA(const WCHAR *str, int lenW, char *buf, DWORD *sz, BOOL remo
     return r;
 }
 
+UINT msi_strncpyW(const WCHAR *str, int len, WCHAR *buf, DWORD *sz)
+{
+    UINT r = ERROR_SUCCESS;
+
+    if (!sz)
+        return buf ? ERROR_INVALID_PARAMETER : ERROR_SUCCESS;
+
+    if (len < 0) len = strlenW(str);
+    if (buf)
+        memcpy(buf, str, min(len + 1, *sz) * sizeof(WCHAR));
+    if (buf && len >= *sz)
+    {
+        if (*sz) buf[*sz - 1] = 0;
+        r = ERROR_MORE_DATA;
+    }
+    *sz = len;
+    return r;
+}
+
 const WCHAR *msi_get_target_folder( MSIPACKAGE *package, const WCHAR *name )
 {
     MSIFOLDER *folder = msi_get_loaded_folder( package, name );

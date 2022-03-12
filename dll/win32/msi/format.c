@@ -916,22 +916,16 @@ UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
     {
         LPWSTR value = NULL;
         MSIHANDLE remote;
-        awstring wstr;
 
         if ((remote = msi_get_remote(hInstall)))
         {
             r = remote_FormatRecord(remote, (struct wire_record *)&record->count, &value);
-            if (r)
-            {
-                midl_user_free(value);
-                return r;
-            }
 
-            wstr.unicode = TRUE;
-            wstr.str.w = szResult;
-            r = msi_strcpy_to_awstring(value, -1, &wstr, sz);
+            if (!r)
+                r = msi_strncpyW(value, -1, szResult, sz);
 
             midl_user_free(value);
+            msiobj_release(&record->hdr);
             return r;
         }
     }
