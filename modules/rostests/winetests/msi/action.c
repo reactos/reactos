@@ -282,6 +282,8 @@ static const char sds_install_exec_seq_dat[] =
     "InstallInitialize\t\t1500\n"
     "StopServices\t\t5000\n"
     "DeleteServices\t\t5050\n"
+    "sds_immediate\tNOT REMOVE\t5051\n"
+    "sds_deferred\tNOT REMOVE\t5052\n"
     "MoveFiles\t\t5100\n"
     "InstallFiles\t\t5200\n"
     "DuplicateFiles\t\t5300\n"
@@ -291,6 +293,13 @@ static const char sds_install_exec_seq_dat[] =
     "PublishFeatures\t\t5600\n"
     "PublishProduct\t\t5700\n"
     "InstallFinalize\t\t6000\n";
+
+static const char sds_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "sds_immediate\t1\tcustom.dll\tsds_present\n"
+    "sds_deferred\t1025\tcustom.dll\tsds_absent\n";
 
 static const char rof_component_dat[] =
     "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
@@ -1823,6 +1832,7 @@ static const msi_table sds_tables[] =
     ADD_TABLE(feature_comp),
     ADD_TABLE(file),
     ADD_TABLE(sds_install_exec_seq),
+    ADD_TABLE(sds_custom_action),
     ADD_TABLE(service_control),
     ADD_TABLE(service_install),
     ADD_TABLE(media),

@@ -7,3 +7,5 @@
 @ stdcall cf_absent(long)
 @ stdcall crs_present(long)
 @ stdcall crs_absent(long)
+@ stdcall sds_present(long)
+@ stdcall sds_absent(long)

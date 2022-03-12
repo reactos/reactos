@@ -23,6 +23,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winsvc.h>
 #define COBJMACROS
 #include <shlobj.h>
 #include <msxml.h>
@@ -1190,5 +1191,28 @@ UINT WINAPI crs_absent(MSIHANDLE hinst)
 {
 todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
     ok(hinst, !pf_exists("msitest\\shortcut.lnk"), "shortcut present\n");
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI sds_present(MSIHANDLE hinst)
+{
+    SC_HANDLE manager, service;
+    manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    service = OpenServiceA(manager, "TestService3", GENERIC_ALL);
+todo_wine
+    ok(hinst, !!service, "service absent: %u\n", GetLastError());
+    CloseServiceHandle(service);
+    CloseServiceHandle(manager);
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI sds_absent(MSIHANDLE hinst)
+{
+    SC_HANDLE manager, service;
+    manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    service = OpenServiceA(manager, "TestService3", GENERIC_ALL);
+    ok(hinst, !service, "service present\n");
+    if (service) CloseServiceHandle(service);
+    CloseServiceHandle(manager);
     return ERROR_SUCCESS;
 }
