@@ -381,7 +381,6 @@ static UINT wait_process_handle(MSIPACKAGE* package, UINT type,
 
 typedef struct _msi_custom_action_info {
     struct list entry;
-    LONG refs;
     MSIPACKAGE *package;
     LPWSTR source;
     LPWSTR target;
@@ -392,30 +391,21 @@ typedef struct _msi_custom_action_info {
     DWORD arch;
 } msi_custom_action_info;
 
-static void release_custom_action_data( msi_custom_action_info *info )
+static void free_custom_action_data( msi_custom_action_info *info )
 {
     EnterCriticalSection( &msi_custom_action_cs );
 
-    if (!--info->refs)
-    {
-        list_remove( &info->entry );
-        if (info->handle)
-            CloseHandle( info->handle );
-        msi_free( info->action );
-        msi_free( info->source );
-        msi_free( info->target );
-        msiobj_release( &info->package->hdr );
-        msi_free( info );
-    }
+    list_remove( &info->entry );
+    if (info->handle)
+        CloseHandle( info->handle );
+    msi_free( info->action );
+    msi_free( info->source );
+    msi_free( info->target );
+    msiobj_release( &info->package->hdr );
+    msi_free( info );
 
     LeaveCriticalSection( &msi_custom_action_cs );
 }
-
-/* must be called inside msi_custom_action_cs if info is in the pending custom actions list */
-static void addref_custom_action_data( msi_custom_action_info *info )
-{
-    info->refs++;
- }
 
 static UINT wait_thread_handle( msi_custom_action_info *info )
 {
@@ -430,7 +420,7 @@ static UINT wait_thread_handle( msi_custom_action_info *info )
         if (!(info->type & msidbCustomActionTypeContinue))
             rc = custom_get_thread_return( info->package, info->handle );
 
-        release_custom_action_data( info );
+        free_custom_action_data( info );
     }
     else
     {
@@ -451,7 +441,6 @@ static msi_custom_action_info *find_action_by_guid( const GUID *guid )
     {
         if (IsEqualGUID( &info->guid, guid ))
         {
-            addref_custom_action_data( info );
             found = TRUE;
             break;
         }
@@ -740,7 +729,6 @@ static msi_custom_action_info *do_msidbCustomActionTypeDll(
         return NULL;
 
     msiobj_addref( &package->hdr );
-    info->refs = 2; /* 1 for our caller and 1 for thread we created */
     info->package = package;
     info->type = type;
     info->target = strdupW( target );
@@ -782,9 +770,7 @@ static msi_custom_action_info *do_msidbCustomActionTypeDll(
     info->handle = CreateThread(NULL, 0, custom_client_thread, info, 0, NULL);
     if (!info->handle)
     {
-        /* release both references */
-        release_custom_action_data( info );
-        release_custom_action_data( info );
+        free_custom_action_data( info );
         return NULL;
     }
 
@@ -1071,7 +1057,6 @@ static DWORD ACTION_CallScript( const GUID *guid )
     else
         ERR("failed to create handle for %p\n", info->package );
 
-    release_custom_action_data( info );
     return r;
 }
 
@@ -1100,7 +1085,6 @@ static msi_custom_action_info *do_msidbCustomActionTypeScript(
         return NULL;
 
     msiobj_addref( &package->hdr );
-    info->refs = 2; /* 1 for our caller and 1 for thread we created */
     info->package = package;
     info->type = type;
     info->target = strdupW( function );
@@ -1115,9 +1099,7 @@ static msi_custom_action_info *do_msidbCustomActionTypeScript(
     info->handle = CreateThread( NULL, 0, ScriptThread, &info->guid, 0, NULL );
     if (!info->handle)
     {
-        /* release both references */
-        release_custom_action_data( info );
-        release_custom_action_data( info );
+        free_custom_action_data( info );
         return NULL;
     }
 
@@ -1511,7 +1493,8 @@ void ACTION_FinishCustomActions(const MSIPACKAGE* package)
     EnterCriticalSection( &msi_custom_action_cs );
     LIST_FOR_EACH_ENTRY_SAFE( info, cursor, &msi_pending_custom_actions, msi_custom_action_info, entry )
     {
-        if (info->package == package) release_custom_action_data( info );
+        if (info->package == package)
+            free_custom_action_data( info );
     }
     LeaveCriticalSection( &msi_custom_action_cs );
 }
@@ -1529,6 +1512,5 @@ UINT __cdecl s_remote_GetActionInfo(const GUID *guid, int *type, LPWSTR *dll, LP
     *dll = strdupW(info->source);
     *func = strdupWtoA(info->target);
 
-    release_custom_action_data(info);
     return ERROR_SUCCESS;
 }
