@@ -541,6 +541,22 @@ static void test_targetpath(MSIHANDLE hinst)
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !lstrcmpW(bufferW, xyzW), "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 3, "got size %u\n", sz);
+
+    r = MsiSetTargetPathA(hinst, NULL, "C:\\subdir");
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    r = MsiSetTargetPathA(hinst, "TARGETDIR", NULL);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    r = MsiSetTargetPathA(hinst, "TARGETDIR", "C:\\subdir");
+    ok(hinst, !r, "got %u\n", r);
+
+    sz = sizeof(buffer);
+    r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "C:\\subdir\\"), "got \"%s\"\n", buffer);
+
+    r = MsiSetTargetPathA(hinst, "TARGETDIR", "C:\\");
 }
 
 /* Main test. Anything that doesn't depend on a specific install configuration

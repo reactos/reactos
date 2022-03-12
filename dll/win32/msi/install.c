@@ -535,36 +535,12 @@ UINT WINAPI MsiSetTargetPathW(MSIHANDLE hInstall, LPCWSTR szFolder,
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
-        HRESULT hr;
-        BSTR folder, path;
         MSIHANDLE remote;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        folder = SysAllocString( szFolder );
-        path = SysAllocString( szFolderPath );
-        if (!folder || !path)
-        {
-            SysFreeString(folder);
-            SysFreeString(path);
-            return ERROR_OUTOFMEMORY;
-        }
-
-        hr = remote_SetTargetPath(remote, folder, path);
-
-        SysFreeString(folder);
-        SysFreeString(path);
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_SetTargetPath(remote, szFolder, szFolderPath);
     }
 
     ret = MSI_SetTargetPathW( package, szFolder, szFolderPath );

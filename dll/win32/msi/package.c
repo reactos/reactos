@@ -2498,10 +2498,9 @@ UINT __cdecl remote_GetTargetPath(MSIHANDLE hinst, LPCWSTR folder, LPWSTR *value
     return r;
 }
 
-HRESULT __cdecl remote_SetTargetPath(MSIHANDLE hinst, BSTR folder, BSTR value)
+UINT __cdecl remote_SetTargetPath(MSIHANDLE hinst, LPCWSTR folder, LPCWSTR value)
 {
-    UINT r = MsiSetTargetPathW(hinst, folder, value);
-    return HRESULT_FROM_WIN32(r);
+    return MsiSetTargetPathW(hinst, folder, value);
 }
 
 HRESULT __cdecl remote_GetSourcePath(MSIHANDLE hinst, BSTR folder, BSTR value, DWORD *size)
