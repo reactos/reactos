@@ -43,6 +43,8 @@
 @ stdcall sds_absent(long)
 @ stdcall sis_present(long)
 @ stdcall sis_absent(long)
+@ stdcall sr_present(long)
+@ stdcall sr_absent(long)
 @ stdcall sss_started(long)
 @ stdcall sss_stopped(long)
 @ stdcall tl_present(long)

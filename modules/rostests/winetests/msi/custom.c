@@ -1833,3 +1833,28 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
 
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI sr_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "selfreg_test", &key);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI sr_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "selfreg_test", &key);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    return ERROR_SUCCESS;
+}

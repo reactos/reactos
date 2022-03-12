@@ -777,14 +777,27 @@ static const char sr_install_exec_seq_dat[] =
     "InstallInitialize\t\t1500\n"
     "ProcessComponents\t\t1600\n"
     "SelfUnregModules\t\t3800\n"
+    "su_immediate\tREMOVE\t3801\n"
+    "su_deferred\tREMOVE\t3802\n"
     "RemoveFiles\t\t3900\n"
     "InstallFiles\t\t4000\n"
     "SelfRegModules\t\t4100\n"
+    "sr_immediate\tNOT REMOVE\t4101\n"
+    "sr_deferred\tNOT REMOVE\t4102\n"
     "CreateShortcuts\t\t4600\n"
     "RegisterProduct\t\t5100\n"
     "PublishFeatures\t\t5200\n"
     "PublishProduct\t\t5300\n"
     "InstallFinalize\t\t6600\n";
+
+static const char sr_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "sr_immediate\t1\tcustom.dll\tsr_absent\n"
+    "sr_deferred\t1025\tcustom.dll\tsr_present\n"
+    "su_immediate\t1\tcustom.dll\tsr_present\n"
+    "su_deferred\t1025\tcustom.dll\tsr_absent\n";
 
 static const char font_media_dat[] =
     "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
@@ -2131,6 +2144,7 @@ static const msi_table sr_tables[] =
     ADD_TABLE(sr_file),
     ADD_TABLE(sr_selfreg),
     ADD_TABLE(sr_install_exec_seq),
+    ADD_TABLE(sr_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
