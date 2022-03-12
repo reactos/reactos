@@ -24,8 +24,7 @@
 #include <windef.h>
 #include <winbase.h>
 #define COBJMACROS
-#include <objbase.h>
-#include <unknwn.h>
+#include <msxml.h>
 #include <msi.h>
 #include <msiquery.h>
 
@@ -248,13 +247,18 @@ UINT WINAPI main_test(MSIHANDLE hinst)
 {
     UINT res;
     IUnknown *unk = NULL;
-    HRESULT hres;
+    HRESULT hr;
 
     /* Test for an MTA apartment */
-    hres = CoCreateInstance(&CLSID_Picture_Metafile, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&unk);
-    todo_wine_ok(hinst, hres == S_OK, "CoCreateInstance failed with %08x\n", hres);
+    hr = CoCreateInstance(&CLSID_XMLDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&unk);
+    todo_wine_ok(hinst, hr == S_OK, "CoCreateInstance failed with %08x\n", hr);
 
     if (unk) IUnknown_Release(unk);
+
+    /* but ours is uninitialized */
+    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    ok(hinst, hr == S_OK, "got %#x\n", hr);
+    CoUninitialize();
 
     /* Test MsiGetDatabaseState() */
     res = MsiGetDatabaseState(hinst);
