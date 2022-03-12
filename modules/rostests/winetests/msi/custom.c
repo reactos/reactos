@@ -750,6 +750,104 @@ static void test_feature_states(MSIHANDLE hinst)
     ok(hinst, action == INSTALLSTATE_LOCAL, "got action %d\n", action);
 }
 
+static void test_format_record(MSIHANDLE hinst)
+{
+    static const WCHAR xyzW[] = {'f','o','o',' ','1','2','3',0};
+    static const WCHAR xyW[] = {'f','o','o',' ','1','2',0};
+    WCHAR bufferW[10];
+    char buffer[10];
+    MSIHANDLE rec;
+    DWORD sz;
+    UINT r;
+
+    r = MsiFormatRecordA(hinst, 0, NULL, NULL);
+    ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+
+    rec = MsiCreateRecord(1);
+    MsiRecordSetStringA(rec, 0, "foo [1]");
+    MsiRecordSetInteger(rec, 1, 123);
+
+    r = MsiFormatRecordA(hinst, rec, NULL, NULL);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiFormatRecordA(hinst, rec, buffer, NULL);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    /* Returned size is in bytes, not chars, but only for custom actions. */
+
+    sz = 0;
+    r = MsiFormatRecordA(hinst, rec, NULL, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    todo_wine_ok(hinst, sz == 14, "got size %u\n", sz);
+
+    sz = 0;
+    strcpy(buffer,"q");
+    r = MsiFormatRecordA(hinst, rec, buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 14, "got size %u\n", sz);
+
+    sz = 1;
+    strcpy(buffer,"x");
+    r = MsiFormatRecordA(hinst, rec, buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 14, "got size %u\n", sz);
+
+    sz = 7;
+    strcpy(buffer,"x");
+    r = MsiFormatRecordA(hinst, rec, buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "foo 12"), "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 14, "got size %u\n", sz);
+
+    sz = 8;
+    strcpy(buffer,"x");
+    r = MsiFormatRecordA(hinst, rec, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "foo 123"), "got \"%s\"\n", buffer);
+    ok(hinst, sz == 7, "got size %u\n", sz);
+
+    sz = 0;
+    bufferW[0] = 'q';
+    r = MsiFormatRecordW(hinst, rec, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 7, "got size %u\n", sz);
+
+    sz = 1;
+    bufferW[0] = 'q';
+    r = MsiFormatRecordW(hinst, rec, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 7, "got size %u\n", sz);
+
+    sz = 7;
+    bufferW[0] = 'q';
+    r = MsiFormatRecordW(hinst, rec, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !lstrcmpW(bufferW, xyW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 7, "got size %u\n", sz);
+
+    sz = 8;
+    bufferW[0] = 'q';
+    r = MsiFormatRecordW(hinst, rec, bufferW, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !lstrcmpW(bufferW, xyzW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 7, "got size %u\n", sz);
+
+    /* check that properties work */
+    MsiSetPropertyA(hinst, "fmtprop", "foobar");
+    MsiRecordSetStringA(rec, 0, "[fmtprop]");
+    sz = sizeof(buffer);
+    r = MsiFormatRecordA(hinst, rec, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "foobar"), "got \"%s\"\n", buffer);
+    ok(hinst, sz == 6, "got size %u\n", sz);
+
+    MsiCloseHandle(rec);
+}
+
 /* Main test. Anything that doesn't depend on a specific install configuration
  * or have undesired side effects should go here. */
 UINT WINAPI main_test(MSIHANDLE hinst)
@@ -779,6 +877,7 @@ UINT WINAPI main_test(MSIHANDLE hinst)
     test_targetpath(hinst);
     test_misc(hinst);
     test_feature_states(hinst);
+    test_format_record(hinst);
 
     return ERROR_SUCCESS;
 }

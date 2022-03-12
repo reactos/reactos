@@ -907,43 +907,35 @@ UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
 
     TRACE("%d %d %p %p\n", hInstall, hRecord, szResult, sz);
 
+    record = msihandle2msiinfo(hRecord, MSIHANDLETYPE_RECORD);
+    if (!record)
+        return ERROR_INVALID_HANDLE;
+
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if (!package)
     {
-        HRESULT hr;
+        LPWSTR value = NULL;
         MSIHANDLE remote;
-        BSTR value = NULL;
         awstring wstr;
 
         if ((remote = msi_get_remote(hInstall)))
         {
-            hr = remote_FormatRecord(remote, hRecord, &value);
-            if (FAILED(hr))
-                goto done;
+            r = remote_FormatRecord(remote, (struct wire_record *)&record->count, &value);
+            if (r)
+            {
+                midl_user_free(value);
+                return r;
+            }
 
             wstr.unicode = TRUE;
             wstr.str.w = szResult;
-            r = msi_strcpy_to_awstring( value, SysStringLen(value), &wstr, sz );
+            r = msi_strcpy_to_awstring(value, -1, &wstr, sz);
 
-done:
-            SysFreeString( value );
-
-            if (FAILED(hr))
-            {
-                if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                    return HRESULT_CODE(hr);
-
-                return ERROR_FUNCTION_FAILED;
-            }
-
+            midl_user_free(value);
             return r;
         }
     }
 
-    record = msihandle2msiinfo( hRecord, MSIHANDLETYPE_RECORD );
-
-    if (!record)
-        return ERROR_INVALID_HANDLE;
     if (!sz)
     {
         msiobj_release( &record->hdr );

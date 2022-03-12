@@ -2562,20 +2562,27 @@ UINT __cdecl remote_SetInstallLevel(MSIHANDLE hinst, int level)
     return MsiSetInstallLevel(hinst, level);
 }
 
-HRESULT __cdecl remote_FormatRecord(MSIHANDLE hinst, MSIHANDLE record,
-                                        BSTR *value)
+UINT __cdecl remote_FormatRecord(MSIHANDLE hinst, struct wire_record *remote_rec, LPWSTR *value)
 {
+    WCHAR empty[1];
     DWORD size = 0;
-    UINT r = MsiFormatRecordW(hinst, record, NULL, &size);
-    if (r == ERROR_SUCCESS)
+    MSIHANDLE rec;
+    UINT r;
+
+    if ((r = unmarshal_record(remote_rec, &rec)))
+        return r;
+
+    r = MsiFormatRecordW(hinst, rec, empty, &size);
+    if (r == ERROR_MORE_DATA)
     {
-        *value = SysAllocStringLen(NULL, size);
+        *value = midl_user_allocate(++size * sizeof(WCHAR));
         if (!*value)
-            return E_OUTOFMEMORY;
-        size++;
-        r = MsiFormatRecordW(hinst, record, *value, &size);
+            return ERROR_OUTOFMEMORY;
+        r = MsiFormatRecordW(hinst, rec, *value, &size);
     }
-    return HRESULT_FROM_WIN32(r);
+
+    MsiCloseHandle(rec);
+    return r;
 }
 
 HRESULT __cdecl remote_EvaluateCondition(MSIHANDLE hinst, BSTR condition)
