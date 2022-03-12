@@ -359,6 +359,9 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 
     msi_set_sourcedir_props(package, FALSE);
 
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szInstallFiles);
+
     schedule_install_files(package);
     mi = msi_alloc_zero( sizeof(MSIMEDIAINFO) );
 
@@ -583,6 +586,9 @@ UINT ACTION_PatchFiles( MSIPACKAGE *package )
     UINT rc = ERROR_SUCCESS;
 
     TRACE("%p\n", package);
+
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szPatchFiles);
 
     mi = msi_alloc_zero( sizeof(MSIMEDIAINFO) );
 
@@ -1002,6 +1008,9 @@ UINT ACTION_MoveFiles( MSIPACKAGE *package )
     MSIQUERY *view;
     UINT rc;
 
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szMoveFiles);
+
     rc = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
@@ -1134,6 +1143,9 @@ UINT ACTION_DuplicateFiles(MSIPACKAGE *package)
     MSIQUERY *view;
     UINT rc;
 
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szDuplicateFiles);
+
     rc = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
@@ -1209,6 +1221,9 @@ UINT ACTION_RemoveDuplicateFiles( MSIPACKAGE *package )
         '`','D','u','p','l','i','c','a','t','e','F','i','l','e','`',0};
     MSIQUERY *view;
     UINT rc;
+
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szRemoveDuplicateFiles);
 
     rc = MSI_DatabaseOpenViewW( package->db, query, &view );
     if (rc != ERROR_SUCCESS)
@@ -1349,6 +1364,9 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
     MSICOMPONENT *comp;
     MSIFILE *file;
     UINT r;
+
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szRemoveFiles);
 
     r = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (r == ERROR_SUCCESS)

@@ -6086,7 +6086,6 @@ static void test_deferred_action(void)
     }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-todo_wine
     check_file_matches(file, "onetwo");
 
     ok(DeleteFileA(file), "Directory not created\n");
