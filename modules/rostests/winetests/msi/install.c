@@ -703,6 +703,8 @@ static const CHAR ca1_custom_action_dat[] = "Action\tType\tSource\tTarget\n"
                                              "s72\ti2\tS64\tS0\n"
                                              "CustomAction\tAction\n"
                                              "embednull\t51\tembednullprop\ta[~]b\n"
+                                             "nested51\t51\tnested\t1\n"
+                                             "nested1\t1\tcustom.dll\tnested\n"
                                              "maintest\t1\tcustom.dll\tmain_test\n"
                                              "testretval\t1\tcustom.dll\ttest_retval\n";
 

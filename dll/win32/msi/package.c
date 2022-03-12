@@ -2471,10 +2471,9 @@ int __cdecl remote_ProcessMessage(MSIHANDLE hinst, INSTALLMESSAGE message, struc
     return ret;
 }
 
-HRESULT __cdecl remote_DoAction(MSIHANDLE hinst, BSTR action)
+UINT __cdecl remote_DoAction(MSIHANDLE hinst, LPCWSTR action)
 {
-    UINT r = MsiDoActionW(hinst, action);
-    return HRESULT_FROM_WIN32(r);
+    return MsiDoActionW(hinst, action);
 }
 
 HRESULT __cdecl remote_Sequence(MSIHANDLE hinst, BSTR table, int sequence)

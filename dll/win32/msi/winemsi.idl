@@ -74,7 +74,7 @@ interface IWineMsiRemote
     UINT remote_GetProperty( [in] MSIHANDLE hinst, [in, string] LPCWSTR property, [out, string] LPWSTR *value, [out] DWORD *size );
     UINT remote_SetProperty( [in] MSIHANDLE hinst, [in, string, unique] LPCWSTR property, [in, string, unique] LPCWSTR value );
     int remote_ProcessMessage( [in] MSIHANDLE hinst, [in] INSTALLMESSAGE message, [in] struct wire_record *record );
-    HRESULT remote_DoAction( [in] MSIHANDLE hinst, [in] BSTR action );
+    UINT remote_DoAction( [in] MSIHANDLE hinst, [in, string] LPCWSTR action );
     HRESULT remote_Sequence( [in] MSIHANDLE hinst, [in] BSTR table, [in] int sequence );
     HRESULT remote_GetTargetPath( [in] MSIHANDLE hinst, [in] BSTR folder, [out, size_is(*size)] BSTR value, [in, out] DWORD *size );
     HRESULT remote_SetTargetPath( [in] MSIHANDLE hinst, [in] BSTR folder, [in] BSTR value );

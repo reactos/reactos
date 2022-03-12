@@ -75,29 +75,11 @@ UINT WINAPI MsiDoActionW( MSIHANDLE hInstall, LPCWSTR szAction )
     if (!package)
     {
         MSIHANDLE remote;
-        HRESULT hr;
-        BSTR action;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        action = SysAllocString( szAction );
-        if (!action)
-            return ERROR_OUTOFMEMORY;
-
-        hr = remote_DoAction(remote, action);
-
-        SysFreeString( action );
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_DoAction(remote, szAction);
     }
  
     ret = ACTION_PerformAction( package, szAction, SCRIPT_NONE );

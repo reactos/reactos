@@ -426,6 +426,26 @@ static void test_db(MSIHANDLE hinst)
     ok(hinst, !r, "got %u\n", r);
 }
 
+static void test_doaction(MSIHANDLE hinst)
+{
+    UINT r;
+
+    r = MsiDoActionA(hinst, "nested51");
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, "nested", "1");
+
+    r = MsiDoActionA(hinst, "nested1");
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, "nested", "2");
+}
+
+UINT WINAPI nested(MSIHANDLE hinst)
+{
+    MsiSetPropertyA(hinst, "nested", "2");
+
+    return ERROR_SUCCESS;
+}
+
 /* Main test. Anything that doesn't depend on a specific install configuration
  * or have undesired side effects should go here. */
 UINT WINAPI main_test(MSIHANDLE hinst)
@@ -451,6 +471,7 @@ UINT WINAPI main_test(MSIHANDLE hinst)
 
     test_props(hinst);
     test_db(hinst);
+    test_doaction(hinst);
 
     return ERROR_SUCCESS;
 }
