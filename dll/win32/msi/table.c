@@ -716,7 +716,6 @@ static UINT get_tablecolumns( MSIDATABASE *db, LPCWSTR szTableName, MSICOLUMNINF
 UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
                        MSICONDITION persistent )
 {
-    enum StringPersistence string_persistence = (persistent) ? StringPersistent : StringNonPersistent;
     UINT r, nField;
     MSIVIEW *tv = NULL;
     MSIRECORD *rec = NULL;
@@ -756,8 +755,8 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
 
     for( i = 0, col = col_info; col; i++, col = col->next )
     {
-        UINT table_id = msi_add_string( db->strings, col->table, -1, string_persistence );
-        UINT col_id = msi_add_string( db->strings, col->column, -1, string_persistence );
+        UINT table_id = msi_add_string( db->strings, col->table, -1, persistent );
+        UINT col_id = msi_add_string( db->strings, col->column, -1, persistent );
 
         table->colinfo[ i ].tablename = msi_string_lookup( db->strings, table_id, NULL );
         table->colinfo[ i ].number = i + 1;
@@ -1385,8 +1384,7 @@ static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UI
                 {
                     int len;
                     const WCHAR *sval = msi_record_get_string( rec, i + 1, &len );
-                    val = msi_add_string( tv->db->strings, sval, len,
-                                          persistent ? StringPersistent : StringNonPersistent );
+                    val = msi_add_string( tv->db->strings, sval, len, persistent );
                 }
                 else
                 {

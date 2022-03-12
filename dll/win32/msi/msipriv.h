@@ -742,13 +742,7 @@ extern UINT msi_commit_streams( MSIDATABASE *db ) DECLSPEC_HIDDEN;
 
 
 /* string table functions */
-enum StringPersistence
-{
-    StringPersistent = 0,
-    StringNonPersistent = 1
-};
-
-extern BOOL msi_add_string( string_table *st, const WCHAR *data, int len, enum StringPersistence persistence ) DECLSPEC_HIDDEN;
+extern BOOL msi_add_string( string_table *st, const WCHAR *data, int len, BOOL persistent ) DECLSPEC_HIDDEN;
 extern UINT msi_string2id( const string_table *st, const WCHAR *data, int len, UINT *id ) DECLSPEC_HIDDEN;
 extern VOID msi_destroy_stringtable( string_table *st ) DECLSPEC_HIDDEN;
 extern const WCHAR *msi_string_lookup( const string_table *st, UINT id, int *len ) DECLSPEC_HIDDEN;

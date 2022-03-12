@@ -127,7 +127,7 @@ static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
         const WCHAR *name = MSI_RecordGetString( rec, 1 );
 
         if (!name) return ERROR_INVALID_PARAMETER;
-        sv->db->streams[row].str_index = msi_add_string( sv->db->strings, name, -1, StringNonPersistent );
+        sv->db->streams[row].str_index = msi_add_string( sv->db->strings, name, -1, FALSE );
     }
     if (mask & 2)
     {
@@ -423,7 +423,7 @@ static UINT append_stream( MSIDATABASE *db, const WCHAR *name, IStream *stream )
     if (!streams_resize_table( db, db->num_streams + 1 ))
         return ERROR_OUTOFMEMORY;
 
-    db->streams[i].str_index = msi_add_string( db->strings, name, -1, StringNonPersistent );
+    db->streams[i].str_index = msi_add_string( db->strings, name, -1, FALSE );
     db->streams[i].stream = stream;
     db->num_streams++;
 
