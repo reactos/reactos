@@ -51,6 +51,196 @@ static void ok_(MSIHANDLE hinst, int todo, const char *file, int line, int condi
 #define ok(hinst, condition, ...)           ok_(hinst, 0, __FILE__, __LINE__, condition, __VA_ARGS__)
 #define todo_wine_ok(hinst, condition, ...) ok_(hinst, 1, __FILE__, __LINE__, condition, __VA_ARGS__)
 
+static const char *dbgstr_w(WCHAR *str)
+{
+    static char buffer[300], *p;
+
+    if (!str) return "(null)";
+
+    p = buffer;
+    *p++ = 'L';
+    *p++ = '"';
+    while ((*p++ = *str++));
+    *p++ = '"';
+    *p++ = 0;
+
+    return buffer;
+}
+
+static void check_prop(MSIHANDLE hinst, const char *prop, const char *expect)
+{
+    char buffer[10] = "x";
+    DWORD sz = sizeof(buffer);
+    UINT r = MsiGetPropertyA(hinst, prop, buffer, &sz);
+    ok(hinst, !r, "'%s': got %u\n", prop, r);
+    ok(hinst, sz == strlen(buffer), "'%s': expected %u, got %u\n", prop, strlen(buffer), sz);
+    ok(hinst, !strcmp(buffer, expect), "expected '%s', got '%s'\n", expect, buffer);
+}
+
+static void test_props(MSIHANDLE hinst)
+{
+    static const WCHAR booW[] = {'b','o','o',0};
+    static const WCHAR xyzW[] = {'x','y','z',0};
+    static const WCHAR xyW[] = {'x','y',0};
+    char buffer[10];
+    WCHAR bufferW[10];
+    DWORD sz;
+    UINT r;
+
+    /* test invalid values */
+    r = MsiGetPropertyA(hinst, NULL, NULL, NULL);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    r = MsiGetPropertyA(hinst, "boo", NULL, NULL);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiGetPropertyA(hinst, "boo", buffer, NULL );
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    sz = 0;
+    r = MsiGetPropertyA(hinst, "boo", NULL, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == 0, "got size %u\n", sz);
+
+    sz = 0;
+    strcpy(buffer,"x");
+    r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "x"), "got \"%s\"\n", buffer);
+    ok(hinst, sz == 0, "got size %u\n", sz);
+
+    sz = 1;
+    strcpy(buffer,"x");
+    r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
+    ok(hinst, sz == 0, "got size %u\n", sz);
+
+    /* set the property to something */
+    r = MsiSetPropertyA(hinst, NULL, NULL);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    r = MsiSetPropertyA(hinst, "", NULL);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiSetPropertyA(hinst, "", "asdf");
+    ok(hinst, r == ERROR_FUNCTION_FAILED, "got %u\n", r);
+
+    r = MsiSetPropertyA(hinst, "=", "asdf");
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, "=", "asdf");
+
+    r = MsiSetPropertyA(hinst, " ", "asdf");
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, " ", "asdf");
+
+    r = MsiSetPropertyA(hinst, "'", "asdf");
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, "'", "asdf");
+
+    r = MsiSetPropertyA(hinst, "boo", NULL);
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, "boo", "");
+
+    r = MsiSetPropertyA(hinst, "boo", "");
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, "boo", "");
+
+    r = MsiSetPropertyA(hinst, "boo", "xyz");
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, "boo", "xyz");
+
+    r = MsiGetPropertyA(hinst, "boo", NULL, NULL);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiGetPropertyA(hinst, "boo", buffer, NULL );
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    /* Returned size is in bytes, not chars, but only for custom actions.
+     * Seems to be a casualty of RPC... */
+
+    sz = 0;
+    r = MsiGetPropertyA(hinst, "boo", NULL, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == 6, "got size %u\n", sz);
+
+    sz = 0;
+    strcpy(buffer,"q");
+    r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+
+    sz = 1;
+    strcpy(buffer,"x");
+    r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+
+    sz = 3;
+    strcpy(buffer,"x");
+    r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "xy"), "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+
+    sz = 4;
+    strcpy(buffer,"x");
+    r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "xyz"), "got \"%s\"\n", buffer);
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    sz = 0;
+    r = MsiGetPropertyW(hinst, booW, NULL, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    sz = 0;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hinst, booW, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !lstrcmpW(bufferW, booW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    sz = 1;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hinst, booW, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    sz = 3;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hinst, booW, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !lstrcmpW(bufferW, xyW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    sz = 4;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hinst, booW, bufferW, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !lstrcmpW(bufferW, xyzW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    r = MsiSetPropertyA(hinst, "boo", NULL);
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, "boo", "");
+
+    sz = 0;
+    r = MsiGetPropertyA(hinst, "embednullprop", NULL, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == 6, "got size %u\n", sz);
+
+    sz = 4;
+    memset(buffer, 0xcc, sizeof(buffer));
+    r = MsiGetPropertyA(hinst, "embednullprop", buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, !memcmp(buffer, "a\0\0\0\xcc", 5), "wrong data\n");
+}
 
 /* Main test. Anything that doesn't depend on a specific install configuration
  * or have undesired side effects should go here. */
@@ -69,6 +259,8 @@ UINT WINAPI main_test(MSIHANDLE hinst)
     /* Test MsiGetDatabaseState() */
     res = MsiGetDatabaseState(hinst);
     todo_wine_ok(hinst, res == MSIDBSTATE_ERROR, "expected MSIDBSTATE_ERROR, got %u\n", res);
+
+    test_props(hinst);
 
     return ERROR_SUCCESS;
 }

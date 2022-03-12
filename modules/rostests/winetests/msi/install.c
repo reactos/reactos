@@ -695,12 +695,14 @@ static const CHAR wrv_component_dat[] = "Component\tComponentId\tDirectory_\tAtt
 static const CHAR ca1_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                                "s72\tS255\tI2\n"
                                                "InstallExecuteSequence\tAction\n"
+                                               "embednull\t\t600\n"
                                                "maintest\tMAIN_TEST\t700\n"
                                                "testretval\tTEST_RETVAL\t710\n";
 
 static const CHAR ca1_custom_action_dat[] = "Action\tType\tSource\tTarget\n"
                                              "s72\ti2\tS64\tS0\n"
                                              "CustomAction\tAction\n"
+                                             "embednull\t51\tembednullprop\ta[~]b\n"
                                              "maintest\t1\tcustom.dll\tmain_test\n"
                                              "testretval\t1\tcustom.dll\ttest_retval\n";
 
