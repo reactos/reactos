@@ -1059,7 +1059,7 @@ UINT copy_remote_record(const struct wire_record *in, MSIHANDLE out)
 {
     MSIRECORD *rec;
     unsigned int i;
-    UINT r;
+    UINT r = ERROR_SUCCESS;
 
     if (!(rec = msihandle2msiinfo(out, MSIHANDLETYPE_RECORD)))
         return ERROR_INVALID_HANDLE;
