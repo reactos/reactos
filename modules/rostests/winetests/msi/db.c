@@ -8706,9 +8706,7 @@ static void test_insertorder(void)
 static void test_columnorder(void)
 {
     MSIHANDLE hdb, view, rec;
-    char buf[MAX_PATH];
     LPCSTR query;
-    DWORD sz;
     UINT r;
 
     hdb = create_db();
@@ -8746,73 +8744,14 @@ static void test_columnorder(void)
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("s255", buf), "Expected \"s255\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 2, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("I2", buf), "Expected \"I2\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("S255", buf), "Expected \"S255\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 4, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("i2", buf), "Expected \"i2\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 5, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("i2", buf), "Expected \"i2\", got \"%s\"\n", buf);
-
+    check_record(rec, 5, "s255", "I2", "S255", "i2", "i2");
     MsiCloseHandle(rec);
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("D", buf), "Expected \"D\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 2, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("E", buf), "Expected \"E\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("A", buf), "Expected \"A\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 4, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("C", buf), "Expected \"C\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 5, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("B", buf), "Expected \"B\", got \"%s\"\n", buf);
-
+    check_record(rec, 5, "D", "E", "A", "C", "B");
     MsiCloseHandle(rec);
+
     MsiViewClose(view);
     MsiCloseHandle(view);
 
@@ -8824,31 +8763,10 @@ static void test_columnorder(void)
     query = "SELECT * FROM `T`";
     r = do_query(hdb, query, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("bc", buf), "Expected \"bc\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 3, "Expected 3, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("a", buf), "Expected \"a\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 4);
-    ok(r == 2, "Expected 2, got %d\n", r);
-
-    r = MsiRecordGetInteger(rec, 5);
-    ok(r == 1, "Expected 1, got %d\n", r);
-
+    check_record(rec, 5, "bc", "3", "a", "2", "1");
     MsiCloseHandle(rec);
 
-    query = "SELECT * FROM `_Columns` WHERE `Table` = 'T'";
+    query = "SELECT `Table`, `Number`, `Name` FROM `_Columns` WHERE `Table` = 'T'";
     r = MsiDatabaseOpenViewA(hdb, query, &view);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     r = MsiViewExecute(view, 0);
@@ -8856,102 +8774,27 @@ static void test_columnorder(void)
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("T", buf), "Expected \"T\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 1, "Expected 1, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("D", buf), "Expected \"D\", got \"%s\"\n", buf);
-
+    check_record(rec, 3, "T", "1", "D");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("T", buf), "Expected \"T\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 2, "Expected 2, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("E", buf), "Expected \"E\", got \"%s\"\n", buf);
-
+    check_record(rec, 3, "T", "2", "E");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("T", buf), "Expected \"T\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 3, "Expected 3, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("A", buf), "Expected \"A\", got \"%s\"\n", buf);
-
+    check_record(rec, 3, "T", "3", "A");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("T", buf), "Expected \"T\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 4, "Expected 4, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("C", buf), "Expected \"C\", got \"%s\"\n", buf);
-
+    check_record(rec, 3, "T", "4", "C");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("T", buf), "Expected \"T\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 5, "Expected 5, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("B", buf), "Expected \"B\", got \"%s\"\n", buf);
-
+    check_record(rec, 3, "T", "5", "B");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
@@ -8972,73 +8815,14 @@ static void test_columnorder(void)
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("i2", buf), "Expected \"i2\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 2, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("S255", buf), "Expected \"S255\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("s255", buf), "Expected \"s255\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 4, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("I2", buf), "Expected \"I2\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 5, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("i2", buf), "Expected \"i2\", got \"%s\"\n", buf);
-
+    check_record(rec, 5, "i2", "S255", "s255", "I2", "i2");
     MsiCloseHandle(rec);
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("C", buf), "Expected \"C\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 2, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("A", buf), "Expected \"A\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("D", buf), "Expected \"D\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 4, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("E", buf), "Expected \"E\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 5, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("B", buf), "Expected \"B\", got \"%s\"\n", buf);
-
+    check_record(rec, 5, "C", "A", "D", "E", "B");
     MsiCloseHandle(rec);
+
     MsiViewClose(view);
     MsiCloseHandle(view);
 
@@ -9050,31 +8834,10 @@ static void test_columnorder(void)
     query = "SELECT * FROM `Z`";
     r = do_query(hdb, query, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    r = MsiRecordGetInteger(rec, 1);
-    ok(r == 2, "Expected 2, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 2, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("a", buf), "Expected \"a\", got \"%s\"\n", buf);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("bc", buf), "Expected \"bc\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 4);
-    ok(r == 3, "Expected 3, got %d\n", r);
-
-    r = MsiRecordGetInteger(rec, 5);
-    ok(r == 1, "Expected 1, got %d\n", r);
-
+    check_record(rec, 5, "2", "a", "bc", "3", "1");
     MsiCloseHandle(rec);
 
-    query = "SELECT * FROM `_Columns` WHERE `Table` = 'T'";
+    query = "SELECT `Table`, `Number`, `Name` FROM `_Columns` WHERE `Table` = 'T'";
     r = MsiDatabaseOpenViewA(hdb, query, &view);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     r = MsiViewExecute(view, 0);
@@ -9082,102 +8845,27 @@ static void test_columnorder(void)
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("T", buf), "Expected \"T\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 1, "Expected 1, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("D", buf), "Expected \"D\", got \"%s\"\n", buf);
-
+    check_record(rec, 3, "T", "1", "D");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("T", buf), "Expected \"T\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 2, "Expected 2, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("E", buf), "Expected \"E\", got \"%s\"\n", buf);
-
+    check_record(rec, 3, "T", "2", "E");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("T", buf), "Expected \"T\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 3, "Expected 3, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("A", buf), "Expected \"A\", got \"%s\"\n", buf);
-
+    check_record(rec, 3, "T", "3", "A");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("T", buf), "Expected \"T\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 4, "Expected 4, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("C", buf), "Expected \"C\", got \"%s\"\n", buf);
-
+    check_record(rec, 3, "T", "4", "C");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 1, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("T", buf), "Expected \"T\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(rec, 2);
-    ok(r == 5, "Expected 5, got %d\n", r);
-
-    sz = MAX_PATH;
-    lstrcpyA(buf, "kiwi");
-    r = MsiRecordGetStringA(rec, 3, buf, &sz);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA("B", buf), "Expected \"B\", got \"%s\"\n", buf);
-
+    check_record(rec, 3, "T", "5", "B");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
