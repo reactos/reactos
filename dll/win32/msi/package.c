@@ -1693,7 +1693,8 @@ MSIHANDLE WINAPI MsiGetActiveDatabase(MSIHANDLE hInstall)
     }
     else if ((remote = msi_get_remote(hInstall)))
     {
-        remote_GetActiveDatabase(remote, &handle);
+        handle = remote_GetActiveDatabase(remote);
+        handle = alloc_msi_remote_handle(handle);
     }
 
     return handle;
@@ -2427,11 +2428,9 @@ UINT WINAPI MsiGetPropertyW( MSIHANDLE hInstall, LPCWSTR szName,
     return MSI_GetProperty( hInstall, szName, &val, pchValueBuf );
 }
 
-HRESULT __cdecl remote_GetActiveDatabase(MSIHANDLE hinst, MSIHANDLE *handle)
+MSIHANDLE __cdecl remote_GetActiveDatabase(MSIHANDLE hinst)
 {
-    *handle = MsiGetActiveDatabase(hinst);
-
-    return S_OK;
+    return MsiGetActiveDatabase(hinst);
 }
 
 UINT __cdecl remote_GetProperty(MSIHANDLE hinst, LPCWSTR property, LPWSTR *value, DWORD *size)

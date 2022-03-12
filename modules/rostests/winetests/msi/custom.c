@@ -241,6 +241,18 @@ static void test_props(MSIHANDLE hinst)
     ok(hinst, !memcmp(buffer, "a\0\0\0\xcc", 5), "wrong data\n");
 }
 
+static void test_db(MSIHANDLE hinst)
+{
+    MSIHANDLE hdb;
+    UINT r;
+
+    hdb = MsiGetActiveDatabase(hinst);
+    ok(hinst, hdb, "MsiGetActiveDatabase failed\n");
+
+    r = MsiCloseHandle(hdb);
+    ok(hinst, !r, "got %u\n", r);
+}
+
 /* Main test. Anything that doesn't depend on a specific install configuration
  * or have undesired side effects should go here. */
 UINT WINAPI main_test(MSIHANDLE hinst)
@@ -265,6 +277,7 @@ UINT WINAPI main_test(MSIHANDLE hinst)
     todo_wine_ok(hinst, res == MSIDBSTATE_ERROR, "expected MSIDBSTATE_ERROR, got %u\n", res);
 
     test_props(hinst);
+    test_db(hinst);
 
     return ERROR_SUCCESS;
 }
