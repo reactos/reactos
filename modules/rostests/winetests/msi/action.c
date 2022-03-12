@@ -870,13 +870,26 @@ static const char odbc_install_exec_seq_dat[] =
     "InstallInitialize\t\t1500\n"
     "ProcessComponents\t\t1600\n"
     "InstallODBC\t\t3000\n"
+    "io_immediate\tNOT REMOVE\t3001\n"
+    "io_deferred\tNOT REMOVE\t3002\n"
     "RemoveODBC\t\t3100\n"
+    "ro_immediate\tREMOVE\t3101\n"
+    "ro_deferred\tREMOVE\t3102\n"
     "RemoveFiles\t\t3900\n"
     "InstallFiles\t\t4000\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
+
+static const char odbc_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "io_immediate\t1\tcustom.dll\todbc_absent\n"
+    "io_deferred\t1025\tcustom.dll\todbc_present\n"
+    "ro_immediate\t1\tcustom.dll\todbc_present\n"
+    "ro_deferred\t1025\tcustom.dll\todbc_absent\n";
 
 static const char odbc_media_dat[] =
     "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
@@ -1969,6 +1982,7 @@ static const msi_table odbc_tables[] =
     ADD_TABLE(odbc_translator),
     ADD_TABLE(odbc_datasource),
     ADD_TABLE(odbc_install_exec_seq),
+    ADD_TABLE(odbc_custom_action),
     ADD_TABLE(odbc_media),
     ADD_TABLE(property)
 };

@@ -24,6 +24,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winsvc.h>
+#include <odbcinst.h>
 #define COBJMACROS
 #include <shlobj.h>
 #include <msxml.h>
@@ -1312,5 +1313,53 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
 }
     ok(hinst, !pf_exists("msitest\\original3.txt"), "file present\n");
     ok(hinst, !pf_exists("msitest\\duplicate2.txt"), "file present\n");
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI odbc_present(MSIHANDLE hinst)
+{
+    int gotdriver = 0, gotdriver2 = 0;
+    char buffer[1000], *p;
+    WORD len;
+    BOOL r;
+
+    r = SQLGetInstalledDrivers(buffer, sizeof(buffer), &len);
+    ok(hinst, len < sizeof(buffer), "buffer too small\n");
+    ok(hinst, r, "SQLGetInstalledDrivers failed\n");
+    for (p = buffer; *p; p += strlen(p) + 1)
+    {
+        if (!strcmp(p, "ODBC test driver"))
+            gotdriver = 1;
+        if (!strcmp(p, "ODBC test driver2"))
+            gotdriver2 = 1;
+    }
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    ok(hinst, gotdriver, "driver absent\n");
+    ok(hinst, gotdriver2, "driver 2 absent\n");
+}
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI odbc_absent(MSIHANDLE hinst)
+{
+    int gotdriver = 0, gotdriver2 = 0;
+    char buffer[1000], *p;
+    WORD len;
+    BOOL r;
+
+    r = SQLGetInstalledDrivers(buffer, sizeof(buffer), &len);
+    ok(hinst, len < sizeof(buffer), "buffer too small\n");
+    ok(hinst, r, "SQLGetInstalledDrivers failed\n");
+    for (p = buffer; *p; p += strlen(p) + 1)
+    {
+        if (!strcmp(p, "ODBC test driver"))
+            gotdriver = 1;
+        if (!strcmp(p, "ODBC test driver2"))
+            gotdriver2 = 1;
+    }
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    ok(hinst, !gotdriver, "driver present\n");
+    ok(hinst, !gotdriver2, "driver 2 present\n");
+}
     return ERROR_SUCCESS;
 }
