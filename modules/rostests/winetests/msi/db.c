@@ -9719,8 +9719,8 @@ static void test_primary_keys(void)
 
     r = MsiRecordGetFieldCount(keys);
     ok(r == 1, "got %d\n", r);
-    ok(check_record(keys, 0, "T"), "expected 'T'");
-    ok(check_record(keys, 1, "A"), "expected 'A'");
+    ok(check_record(keys, 0, "T"), "expected 'T'\n");
+    ok(check_record(keys, 1, "A"), "expected 'A'\n");
 
     MsiCloseHandle(keys);
 
@@ -9732,9 +9732,9 @@ static void test_primary_keys(void)
 
     r = MsiRecordGetFieldCount(keys);
     ok(r == 2, "got %d\n", r);
-    ok(check_record(keys, 0, "U"), "expected 'U'");
-    ok(check_record(keys, 1, "B"), "expected 'B'");
-    ok(check_record(keys, 2, "C"), "expected 'C'");
+    ok(check_record(keys, 0, "U"), "expected 'U'\n");
+    ok(check_record(keys, 1, "B"), "expected 'B'\n");
+    ok(check_record(keys, 2, "C"), "expected 'C'\n");
 
     MsiCloseHandle(keys);
     MsiCloseHandle(hdb);
