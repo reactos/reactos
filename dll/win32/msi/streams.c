@@ -141,9 +141,9 @@ static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
 
         old = sv->db->streams[row].stream;
         hr = IStream_QueryInterface( new, &IID_IStream, (void **)&sv->db->streams[row].stream );
+        IStream_Release( new );
         if (FAILED( hr ))
         {
-            IStream_Release( new );
             return ERROR_FUNCTION_FAILED;
         }
         if (old) IStream_Release( old );

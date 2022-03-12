@@ -411,8 +411,7 @@ WCHAR *msi_resolve_source_folder( MSIPACKAGE *package, const WCHAR *name, MSIFOL
 UINT WINAPI MsiGetSourcePathA(MSIHANDLE hinst, const char *folder, char *buf, DWORD *sz)
 {
     MSIPACKAGE *package;
-    const WCHAR *path;
-    WCHAR *folderW;
+    WCHAR *path, *folderW;
     UINT r;
 
     TRACE("%s %p %p\n", debugstr_a(folder), buf, sz);
@@ -459,6 +458,7 @@ UINT WINAPI MsiGetSourcePathA(MSIHANDLE hinst, const char *folder, char *buf, DW
     else
         r = ERROR_DIRECTORY;
 
+    heap_free(path);
     heap_free(folderW);
     msiobj_release(&package->hdr);
     return r;
@@ -470,7 +470,7 @@ UINT WINAPI MsiGetSourcePathA(MSIHANDLE hinst, const char *folder, char *buf, DW
 UINT WINAPI MsiGetSourcePathW(MSIHANDLE hinst, const WCHAR *folder, WCHAR *buf, DWORD *sz)
 {
     MSIPACKAGE *package;
-    const WCHAR *path;
+    WCHAR *path;
     UINT r;
 
     TRACE("%s %p %p\n", debugstr_w(folder), buf, sz);
@@ -510,6 +510,7 @@ UINT WINAPI MsiGetSourcePathW(MSIHANDLE hinst, const WCHAR *folder, WCHAR *buf, 
     else
         r = ERROR_DIRECTORY;
 
+    heap_free(path);
     msiobj_release(&package->hdr);
     return r;
 }
