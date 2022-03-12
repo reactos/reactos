@@ -2124,7 +2124,6 @@ static const MSIVIEWOPS table_ops =
 {
     TABLE_fetch_int,
     TABLE_fetch_stream,
-    TABLE_get_row,
     TABLE_set_int,
     TABLE_set_string,
     TABLE_set_row,

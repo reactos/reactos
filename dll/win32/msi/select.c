@@ -90,18 +90,6 @@ static UINT SELECT_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IS
     return sv->table->ops->fetch_stream( sv->table, row, col, stm );
 }
 
-static UINT SELECT_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
-{
-    MSISELECTVIEW *sv = (MSISELECTVIEW *)view;
-
-    TRACE("%p %d %p\n", sv, row, rec );
-
-    if( !sv->table )
-         return ERROR_FUNCTION_FAILED;
-
-    return msi_view_get_row(sv->db, view, row, rec);
-}
-
 static UINT SELECT_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
@@ -325,7 +313,6 @@ static const MSIVIEWOPS select_ops =
 {
     SELECT_fetch_int,
     SELECT_fetch_stream,
-    SELECT_get_row,
     NULL,
     NULL,
     SELECT_set_row,

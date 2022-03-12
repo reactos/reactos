@@ -243,12 +243,6 @@ typedef struct tagMSIVIEWOPS
     UINT (*fetch_stream)( struct tagMSIVIEW *view, UINT row, UINT col, IStream **stm );
 
     /*
-     * get_row - gets values from a row
-     *
-     */
-    UINT (*get_row)( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec );
-
-    /*
      * set_int - set the integer value at {row, col}
      * This function has undefined behaviour if the column does not contain
      * integers.

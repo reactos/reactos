@@ -115,15 +115,6 @@ static UINT STORAGES_fetch_stream(struct tagMSIVIEW *view, UINT row, UINT col, I
     return ERROR_INVALID_DATA;
 }
 
-static UINT STORAGES_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
-{
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
-
-    FIXME("%p %d %p\n", sv, row, rec);
-
-    return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
 static UINT STORAGES_set_string( struct tagMSIVIEW *view, UINT row, UINT col, const WCHAR *val, int len )
 {
     ERR("Cannot modify primary key.\n");
@@ -425,7 +416,6 @@ static const MSIVIEWOPS storages_ops =
 {
     STORAGES_fetch_int,
     STORAGES_fetch_stream,
-    STORAGES_get_row,
     NULL,
     STORAGES_set_string,
     STORAGES_set_row,

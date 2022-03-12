@@ -110,15 +110,6 @@ static UINT STREAMS_set_string( struct tagMSIVIEW *view, UINT row, UINT col, con
     return ERROR_FUNCTION_FAILED;
 }
 
-static UINT STREAMS_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
-{
-    MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
-
-    TRACE("%p %d %p\n", sv, row, rec);
-
-    return msi_view_get_row( sv->db, view, row, rec );
-}
-
 static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
@@ -371,7 +362,6 @@ static const MSIVIEWOPS streams_ops =
 {
     STREAMS_fetch_int,
     STREAMS_fetch_stream,
-    STREAMS_get_row,
     NULL,
     STREAMS_set_string,
     STREAMS_set_row,

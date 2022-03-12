@@ -256,7 +256,6 @@ static const MSIVIEWOPS distinct_ops =
     NULL,
     NULL,
     NULL,
-    NULL,
     DISTINCT_execute,
     DISTINCT_close,
     DISTINCT_get_dimensions,
