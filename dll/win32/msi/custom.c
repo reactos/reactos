@@ -485,6 +485,43 @@ static void handle_msi_break(LPCSTR target)
 static WCHAR ncalrpcW[] = {'n','c','a','l','r','p','c',0};
 static WCHAR endpoint_lrpcW[] = {'m','s','i',0};
 
+#if defined __i386__ && defined _MSC_VER
+__declspec(naked) UINT custom_proc_wrapper(MsiCustomActionEntryPoint entry, MSIHANDLE hinst)
+{
+    __asm
+    {
+        push ebp
+        mov ebp, esp
+        sub esp, 4
+        push [ebp+12]
+        call [ebp+8]
+        leave
+        ret
+    }
+}
+#elif defined __i386__ && defined __GNUC__
+/* wrapper for apps that don't declare the thread function correctly */
+extern UINT custom_proc_wrapper( MsiCustomActionEntryPoint entry, MSIHANDLE hinst );
+__ASM_GLOBAL_FUNC(custom_proc_wrapper,
+                  "pushl %ebp\n\t"
+                  __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
+                  __ASM_CFI(".cfi_rel_offset %ebp,0\n\t")
+                  "movl %esp,%ebp\n\t"
+                  __ASM_CFI(".cfi_def_cfa_register %ebp\n\t")
+                  "subl $4,%esp\n\t"
+                  "pushl 12(%ebp)\n\t"
+                  "call *8(%ebp)\n\t"
+                  "leave\n\t"
+                  __ASM_CFI(".cfi_def_cfa %esp,4\n\t")
+                  __ASM_CFI(".cfi_same_value %ebp\n\t")
+                  "ret" )
+#else
+static UINT custom_proc_wrapper( MsiCustomActionEntryPoint entry, MSIHANDLE hinst )
+{
+    return entry(hinst);
+}
+#endif
+
 UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
 {
     MsiCustomActionEntryPoint fn;
@@ -495,7 +532,6 @@ UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
     LPWSTR dll = NULL;
     LPSTR proc = NULL;
     HANDLE hModule;
-    HANDLE thread;
     INT type;
     UINT r;
 
@@ -514,9 +550,6 @@ UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
         return status;
     }
     RpcStringFreeW(&binding_str);
-
-    /* We need this to unmarshal streams, and some apps expect it to be present. */
-    CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
     r = remote_GetActionInfo(guid, &type, &dll, &proc, &remote_package);
     if (r != ERROR_SUCCESS)
@@ -540,9 +573,7 @@ UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
 
             __TRY
             {
-                thread = CreateThread(NULL, 0, (void *)fn, (void *)(ULONG_PTR) hPackage, 0, NULL);
-                WaitForSingleObject(thread, INFINITE);
-                GetExitCodeThread(thread, &r);
+                r = custom_proc_wrapper(fn, hPackage);
             }
             __EXCEPT_PAGE_FAULT
             {
@@ -565,8 +596,6 @@ UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
     MsiCloseHandle(hPackage);
     midl_user_free(dll);
     midl_user_free(proc);
-
-    CoUninitialize();
 
     RpcBindingFree(&rpc_handle);
 

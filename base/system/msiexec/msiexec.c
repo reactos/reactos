@@ -395,11 +395,30 @@ static DWORD DoUnregServer(void)
 
 extern UINT CDECL __wine_msi_call_dll_function(GUID *guid);
 
+static DWORD CALLBACK custom_action_thread(void *arg)
+{
+    GUID *guid = arg;
+    return __wine_msi_call_dll_function(guid);
+}
+
 static int DoEmbedding(LPCWSTR key)
 {
+    HANDLE thread;
     GUID guid;
+    UINT r;
+
+    /* We need this to unmarshal streams, and some apps expect it to be present. */
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
     CLSIDFromString(key, &guid);
-    return __wine_msi_call_dll_function(&guid);
+    thread = CreateThread(NULL, 0, custom_action_thread, &guid, 0, NULL);
+    WaitForSingleObject(thread, INFINITE);
+    GetExitCodeThread(thread, &r);
+    CloseHandle(thread);
+
+    CoUninitialize();
+
+    return r;
 }
 
 /*
