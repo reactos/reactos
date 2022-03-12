@@ -2352,76 +2352,13 @@ int msi_get_property_int( MSIDATABASE *db, LPCWSTR prop, int def )
     return val;
 }
 
-static UINT MSI_GetProperty( MSIHANDLE handle, LPCWSTR name,
-                             awstring *szValueBuf, LPDWORD pchValueBuf )
-{
-    MSIPACKAGE *package;
-    MSIRECORD *row = NULL;
-    UINT r = ERROR_FUNCTION_FAILED;
-    LPCWSTR val = NULL;
-    DWORD len = 0;
-
-    TRACE("%u %s %p %p\n", handle, debugstr_w(name),
-          szValueBuf->str.w, pchValueBuf );
-
-    if (!name)
-        return ERROR_INVALID_PARAMETER;
-
-    package = msihandle2msiinfo( handle, MSIHANDLETYPE_PACKAGE );
-    if (!package)
-    {
-        LPWSTR value = NULL, buffer;
-        MSIHANDLE remote;
-
-        if (!(remote = msi_get_remote(handle)))
-            return ERROR_INVALID_HANDLE;
-
-        r = remote_GetProperty(remote, name, &value, &len);
-        if (r != ERROR_SUCCESS)
-            return r;
-
-        /* String might contain embedded nulls.
-         * Native returns the correct size but truncates the string. */
-        buffer = heap_alloc_zero((len + 1) * sizeof(WCHAR));
-        if (!buffer)
-        {
-            midl_user_free(value);
-            return ERROR_OUTOFMEMORY;
-        }
-        strcpyW(buffer, value);
-
-        r = msi_strcpy_to_awstring(buffer, len, szValueBuf, pchValueBuf);
-
-        /* Bug required by Adobe installers */
-        if (pchValueBuf && !szValueBuf->unicode && !szValueBuf->str.a)
-            *pchValueBuf *= sizeof(WCHAR);
-
-        heap_free(buffer);
-        midl_user_free(value);
-        return r;
-    }
-
-    row = msi_get_property_row( package->db, name );
-    if (row)
-        val = msi_record_get_string( row, 1, (int *)&len );
-
-    if (!val)
-        val = szEmpty;
-
-    r = msi_strcpy_to_awstring( val, len, szValueBuf, pchValueBuf );
-
-    if (row)
-        msiobj_release( &row->hdr );
-    msiobj_release( &package->hdr );
-
-    return r;
-}
-
 UINT WINAPI MsiGetPropertyA(MSIHANDLE hinst, const char *name, char *buf, DWORD *sz)
 {
+    const WCHAR *value = szEmpty;
     MSIPACKAGE *package;
-    awstring val;
+    MSIRECORD *row;
     WCHAR *nameW;
+    int len = 0;
     UINT r;
 
     if (!name)
@@ -2462,25 +2399,69 @@ UINT WINAPI MsiGetPropertyA(MSIHANDLE hinst, const char *name, char *buf, DWORD 
         return r;
     }
 
-    val.unicode = FALSE;
-    val.str.a = buf;
+    row = msi_get_property_row(package->db, nameW);
+    if (row)
+        value = msi_record_get_string(row, 1, &len);
 
-    r = MSI_GetProperty(hinst, nameW, &val, sz);
+    r = msi_strncpyWtoA(value, len, buf, sz, FALSE);
 
     heap_free(nameW);
+    if (row) msiobj_release(&row->hdr);
     msiobj_release(&package->hdr);
     return r;
 }
 
-UINT WINAPI MsiGetPropertyW( MSIHANDLE hInstall, LPCWSTR szName,
-                             LPWSTR szValueBuf, LPDWORD pchValueBuf )
+UINT WINAPI MsiGetPropertyW(MSIHANDLE hinst, const WCHAR *name, WCHAR *buf, DWORD *sz)
 {
-    awstring val;
+    const WCHAR *value = szEmpty;
+    MSIPACKAGE *package;
+    MSIRECORD *row;
+    int len = 0;
+    UINT r;
 
-    val.unicode = TRUE;
-    val.str.w = szValueBuf;
+    if (!name)
+        return ERROR_INVALID_PARAMETER;
 
-    return MSI_GetProperty( hInstall, szName, &val, pchValueBuf );
+    package = msihandle2msiinfo(hinst, MSIHANDLETYPE_PACKAGE);
+    if (!package)
+    {
+        WCHAR *value = NULL, *tmp;
+        MSIHANDLE remote;
+        DWORD len;
+
+        if (!(remote = msi_get_remote(hinst)))
+            return ERROR_INVALID_HANDLE;
+
+        r = remote_GetProperty(remote, name, &value, &len);
+        if (!r)
+        {
+            /* String might contain embedded nulls.
+             * Native returns the correct size but truncates the string. */
+            tmp = heap_alloc_zero((len + 1) * sizeof(WCHAR));
+            if (!tmp)
+            {
+                midl_user_free(value);
+                return ERROR_OUTOFMEMORY;
+            }
+            strcpyW(tmp, value);
+
+            r = msi_strncpyW(tmp, len, buf, sz);
+
+            heap_free(tmp);
+        }
+        midl_user_free(value);
+        return r;
+    }
+
+    row = msi_get_property_row(package->db, name);
+    if (row)
+        value = msi_record_get_string(row, 1, &len);
+
+    r = msi_strncpyW(value, len, buf, sz);
+
+    if (row) msiobj_release(&row->hdr);
+    msiobj_release(&package->hdr);
+    return r;
 }
 
 MSIHANDLE __cdecl s_remote_GetActiveDatabase(MSIHANDLE hinst)

@@ -191,6 +191,12 @@ static void test_props(MSIHANDLE hinst)
     ok(hinst, !strcmp(buffer, "xyz"), "got \"%s\"\n", buffer);
     ok(hinst, sz == 3, "got size %u\n", sz);
 
+    r = MsiGetPropertyW(hinst, booW, NULL, NULL);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiGetPropertyW(hinst, booW, bufferW, NULL );
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
     sz = 0;
     r = MsiGetPropertyW(hinst, booW, NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
