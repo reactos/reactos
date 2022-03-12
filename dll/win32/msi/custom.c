@@ -698,6 +698,8 @@ static DWORD WINAPI custom_client_thread(void *arg)
         pipe = info->package->custom_server_64_pipe;
     }
 
+    EnterCriticalSection(&msi_custom_action_cs);
+
     if (!WriteFile(pipe, &info->guid, sizeof(info->guid), &size, NULL) ||
         size != sizeof(info->guid))
     {
@@ -709,6 +711,8 @@ static DWORD WINAPI custom_client_thread(void *arg)
         ERR("Failed to read from custom action client pipe: %u\n", GetLastError());
         return GetLastError();
     }
+
+    LeaveCriticalSection(&msi_custom_action_cs);
 
     if (DuplicateHandle(process, (HANDLE)(DWORD_PTR)thread64, GetCurrentProcess(),
         &thread, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE))
