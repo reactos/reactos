@@ -499,7 +499,9 @@ todo_wine
     ok(hinst, !lstrcmpA(buffer, "deadbeef"), "got %s\n", buffer);
 
     r = MsiSummaryInfoSetPropertyA(suminfo, PID_CODEPAGE, VT_I2, 1252, &ft, "");
-todo_wine
+    ok(hinst, r == ERROR_FUNCTION_FAILED, "got %u\n", r);
+
+    r = MsiSummaryInfoSetPropertyW(suminfo, PID_CODEPAGE, VT_I2, 1252, &ft, NULL);
     ok(hinst, r == ERROR_FUNCTION_FAILED, "got %u\n", r);
 
     r = MsiCloseHandle(suminfo);

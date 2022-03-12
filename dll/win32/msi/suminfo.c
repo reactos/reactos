@@ -851,7 +851,17 @@ UINT WINAPI MsiSummaryInfoSetPropertyW( MSIHANDLE handle, UINT uiProperty, UINT 
         return ERROR_INVALID_PARAMETER;
 
     if (!(si = msihandle2msiinfo( handle, MSIHANDLETYPE_SUMMARYINFO )))
+    {
+        MSIHANDLE remote;
+
+        if ((remote = msi_get_remote( handle )))
+        {
+            WARN("MsiSummaryInfoSetProperty not allowed during a custom action!\n");
+            return ERROR_FUNCTION_FAILED;
+        }
+
         return ERROR_INVALID_HANDLE;
+    }
 
     str.unicode = TRUE;
     str.str.w = szValue;
@@ -882,7 +892,17 @@ UINT WINAPI MsiSummaryInfoSetPropertyA( MSIHANDLE handle, UINT uiProperty, UINT 
         return ERROR_INVALID_PARAMETER;
 
     if (!(si = msihandle2msiinfo( handle, MSIHANDLETYPE_SUMMARYINFO )))
+    {
+        MSIHANDLE remote;
+
+        if ((remote = msi_get_remote( handle )))
+        {
+            WARN("MsiSummaryInfoSetProperty not allowed during a custom action!\n");
+            return ERROR_FUNCTION_FAILED;
+        }
+
         return ERROR_INVALID_HANDLE;
+    }
 
     str.unicode = FALSE;
     str.str.a = szValue;
