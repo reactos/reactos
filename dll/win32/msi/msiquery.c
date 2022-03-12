@@ -1024,19 +1024,12 @@ MSICONDITION WINAPI MsiDatabaseIsTablePersistentW(
     db = msihandle2msiinfo( hDatabase, MSIHANDLETYPE_DATABASE );
     if( !db )
     {
-        HRESULT hr;
-        MSICONDITION condition;
         MSIHANDLE remote;
 
         if (!(remote = msi_get_remote(hDatabase)))
             return MSICONDITION_ERROR;
 
-        hr = remote_DatabaseIsTablePersistent(remote, szTableName, &condition);
-
-        if (FAILED(hr))
-            return MSICONDITION_ERROR;
-
-        return condition;
+        return remote_DatabaseIsTablePersistent(remote, szTableName);
     }
 
     r = MSI_DatabaseIsTablePersistent( db, szTableName );

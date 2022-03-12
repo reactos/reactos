@@ -4108,10 +4108,24 @@ static INT CALLBACK ok_callback(void *context, UINT message_type, MSIHANDLE reco
 
 static void test_customaction1(void)
 {
+    MSIHANDLE hdb, record;
     UINT r;
 
     create_database(msifile, ca1_tables, sizeof(ca1_tables) / sizeof(msi_table));
     add_custom_dll();
+
+    /* create a test table */
+    MsiOpenDatabaseW(msifileW, MSIDBOPEN_TRANSACT, &hdb);
+    run_query(hdb, 0, "CREATE TABLE `Test` (`Name` CHAR(10), `Number` INTEGER, `Data` OBJECT PRIMARY KEY `Name`)");
+    create_file("unus", 10);
+    create_file("duo", 10);
+    record = MsiCreateRecord(1);
+    MsiRecordSetStreamA(record, 1, "unus");
+    run_query(hdb, record, "INSERT INTO `Test` (`Name`, `Number`, `Data`) VALUES ('one', 1, ?)");
+    MsiRecordSetStreamA(record, 1, "duo");
+    run_query(hdb, record, "INSERT INTO `Test` (`Name`, `Number`, `Data`) VALUES ('two', 2, ?)");
+    MsiDatabaseCommit(hdb);
+    MsiCloseHandle(hdb);
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -4136,6 +4150,8 @@ static void test_customaction1(void)
     ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
 
     DeleteFileA(msifile);
+    DeleteFileA("unus");
+    DeleteFileA("duo");
 }
 
 static void test_customaction51(void)

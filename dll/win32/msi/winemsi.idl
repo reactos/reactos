@@ -56,7 +56,7 @@ struct wire_record {
 ]
 interface IWineMsiRemote
 {
-    HRESULT remote_DatabaseIsTablePersistent( [in] MSIHANDLE db, [in] LPCWSTR table, [out] MSICONDITION *persistent );
+    MSICONDITION remote_DatabaseIsTablePersistent( [in] MSIHANDLE db, [in] LPCWSTR table );
     HRESULT remote_DatabaseGetPrimaryKeys( [in] MSIHANDLE db, [in] LPCWSTR table, [out] MSIHANDLE *keys );
     HRESULT remote_DatabaseGetSummaryInformation( [in] MSIHANDLE db, [in] UINT updatecount, [out] MSIHANDLE *suminfo );
     HRESULT remote_DatabaseOpenView( [in] MSIHANDLE db, [in] LPCWSTR query, [out] MSIHANDLE *view );

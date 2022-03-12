@@ -249,6 +249,9 @@ static void test_db(MSIHANDLE hinst)
     hdb = MsiGetActiveDatabase(hinst);
     ok(hinst, hdb, "MsiGetActiveDatabase failed\n");
 
+    r = MsiDatabaseIsTablePersistentA(hdb, "Test");
+    ok(hinst, r == MSICONDITION_TRUE, "got %u\n", r);
+
     r = MsiCloseHandle(hdb);
     ok(hinst, !r, "got %u\n", r);
 }
