@@ -24,9 +24,12 @@
 #include <windef.h>
 #include <winbase.h>
 #define COBJMACROS
+#include <shlobj.h>
 #include <msxml.h>
 #include <msi.h>
 #include <msiquery.h>
+
+static int todo_level, todo_do_loop;
 
 static void ok_(MSIHANDLE hinst, int todo, const char *file, int line, int condition, const char *msg, ...)
 {
@@ -47,8 +50,30 @@ static void ok_(MSIHANDLE hinst, int todo, const char *file, int line, int condi
     MsiProcessMessage(hinst, INSTALLMESSAGE_USER, record);
     MsiCloseHandle(record);
 }
-#define ok(hinst, condition, ...)           ok_(hinst, 0, __FILE__, __LINE__, condition, __VA_ARGS__)
-#define todo_wine_ok(hinst, condition, ...) ok_(hinst, 1, __FILE__, __LINE__, condition, __VA_ARGS__)
+
+static void winetest_start_todo( int is_todo )
+{
+    todo_level = (todo_level << 1) | (is_todo != 0);
+    todo_do_loop=1;
+}
+
+static int winetest_loop_todo(void)
+{
+    int do_loop=todo_do_loop;
+    todo_do_loop=0;
+    return do_loop;
+}
+
+static void winetest_end_todo(void)
+{
+    todo_level >>= 1;
+}
+
+#define ok(hinst, condition, ...)   ok_(hinst, todo_level, __FILE__, __LINE__, condition, __VA_ARGS__)
+#define todo_wine_if(is_todo) for (winetest_start_todo(is_todo); \
+                                   winetest_loop_todo(); \
+                                   winetest_end_todo())
+#define todo_wine   todo_wine_if(1)
 
 static const char *dbgstr_w(WCHAR *str)
 {
@@ -886,7 +911,8 @@ static void test_costs(MSIHANDLE hinst)
     cost = 0xdead;
     r = MsiGetFeatureCostA(hinst, NULL, MSICOSTTREE_CHILDREN, INSTALLSTATE_LOCAL, &cost);
     ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
-    todo_wine_ok(hinst, !cost, "got %d\n", cost);
+    todo_wine
+    ok(hinst, !cost, "got %d\n", cost);
 
     r = MsiGetFeatureCostA(hinst, "One", MSICOSTTREE_CHILDREN, INSTALLSTATE_LOCAL, NULL);
     ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
@@ -894,7 +920,8 @@ static void test_costs(MSIHANDLE hinst)
     cost = 0xdead;
     r = MsiGetFeatureCostA(hinst, "One", MSICOSTTREE_CHILDREN, INSTALLSTATE_LOCAL, &cost);
     ok(hinst, !r, "got %u\n", r);
-    todo_wine_ok(hinst, cost == 8, "got %d\n", cost);
+    todo_wine
+    ok(hinst, cost == 8, "got %d\n", cost);
 
     sz = cost = temp = 0xdead;
     r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, NULL, &sz, &cost, &temp);
@@ -946,7 +973,8 @@ static void test_costs(MSIHANDLE hinst)
     r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == 4, "got size %u\n", sz);
+    todo_wine
+    ok(hinst, sz == 4, "got size %u\n", sz);
     ok(hinst, cost == 8, "got cost %d\n", cost);
     ok(hinst, !temp, "got temp %d\n", temp);
 
@@ -954,15 +982,19 @@ static void test_costs(MSIHANDLE hinst)
     strcpy(buffer,"x");
     r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
-    todo_wine_ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == 4, "got size %u\n", sz);
+    todo_wine {
+    ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
+    ok(hinst, sz == 4, "got size %u\n", sz);
+    }
 
     sz = 2;
     strcpy(buffer,"x");
     r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
-    todo_wine_ok(hinst, !strcmp(buffer, "C"), "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == 4, "got size %u\n", sz);
+    todo_wine {
+    ok(hinst, !strcmp(buffer, "C"), "got \"%s\"\n", buffer);
+    ok(hinst, sz == 4, "got size %u\n", sz);
+    }
 
     sz = 3;
     strcpy(buffer,"x");
@@ -1021,7 +1053,8 @@ UINT WINAPI main_test(MSIHANDLE hinst)
 
     /* Test MsiGetDatabaseState() */
     res = MsiGetDatabaseState(hinst);
-    todo_wine_ok(hinst, res == MSIDBSTATE_ERROR, "expected MSIDBSTATE_ERROR, got %u\n", res);
+    todo_wine
+    ok(hinst, res == MSIDBSTATE_ERROR, "expected MSIDBSTATE_ERROR, got %u\n", res);
 
     test_props(hinst);
     test_db(hinst);
@@ -1101,7 +1134,8 @@ UINT WINAPI da_deferred(MSIHANDLE hinst)
     len = sizeof(prop);
     r = MsiGetPropertyA(hinst, "TESTPATH", prop, &len);
     ok(hinst, r == ERROR_SUCCESS, "got %u\n", r);
-    todo_wine_ok(hinst, !prop[0], "got %s\n", prop);
+    todo_wine
+    ok(hinst, !prop[0], "got %s\n", prop);
 
     /* Test modes */
     ok(hinst, MsiGetMode(hinst, MSIRUNMODE_SCHEDULED), "should be scheduled\n");
@@ -1111,5 +1145,36 @@ UINT WINAPI da_deferred(MSIHANDLE hinst)
     lang = MsiGetLanguage(hinst);
     ok(hinst, lang != ERROR_INVALID_HANDLE, "MsiGetLanguage failed\n");
 
+    return ERROR_SUCCESS;
+}
+
+static BOOL pf_exists(const char *file)
+{
+    char path[MAX_PATH];
+
+    if (FAILED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILESX86, NULL, 0, path)))
+        SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, path);
+    strcat(path, "\\");
+    strcat(path, file);
+    return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
+}
+
+UINT WINAPI cf_present(MSIHANDLE hinst)
+{
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    ok(hinst, pf_exists("msitest\\first"), "folder absent\n");
+    ok(hinst, pf_exists("msitest\\second"), "folder absent\n");
+    ok(hinst, pf_exists("msitest\\third"), "folder absent\n");
+}
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI cf_absent(MSIHANDLE hinst)
+{
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    ok(hinst, !pf_exists("msitest\\first"), "folder present\n");
+    ok(hinst, !pf_exists("msitest\\second"), "folder present\n");
+    ok(hinst, !pf_exists("msitest\\third"), "folder present\n");
+}
     return ERROR_SUCCESS;
 }

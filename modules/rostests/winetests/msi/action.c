@@ -596,7 +596,11 @@ static const char cf_install_exec_seq_dat[] =
     "FileCost\t\t900\n"
     "RemoveFiles\t\t3500\n"
     "CreateFolders\t\t3700\n"
+    "cf_immediate\tNOT REMOVE\t3701\n"
+    "cf_deferred\tNOT REMOVE\t3702\n"
     "RemoveFolders\t\t3800\n"
+    "rf_immediate\tREMOVE\t3801\n"
+    "rf_deferred\tREMOVE\t3802\n"
     "InstallFiles\t\t4000\n"
     "RegisterUser\t\t6000\n"
     "RegisterProduct\t\t6100\n"
@@ -608,6 +612,15 @@ static const char cf_install_exec_seq_dat[] =
     "UnpublishFeatures\t\t1800\n"
     "InstallValidate\t\t1400\n"
     "LaunchConditions\t\t100\n";
+
+static const char cf_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "cf_immediate\t1\tcustom.dll\tcf_absent\n"
+    "cf_deferred\t1025\tcustom.dll\tcf_present\n"
+    "rf_immediate\t1\tcustom.dll\tcf_present\n"
+    "rf_deferred\t1025\tcustom.dll\tcf_absent\n";
 
 static const char sr_selfreg_dat[] =
     "File_\tCost\n"
@@ -1771,6 +1784,7 @@ static const msi_table cf_tables[] =
     ADD_TABLE(cf_file),
     ADD_TABLE(cf_create_folders),
     ADD_TABLE(cf_install_exec_seq),
+    ADD_TABLE(cf_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
