@@ -48,6 +48,30 @@ typedef struct tagMSISELECTVIEW
     UINT           cols[1];
 } MSISELECTVIEW;
 
+static UINT translate_record( MSISELECTVIEW *sv, MSIRECORD *in, MSIRECORD **out )
+{
+    UINT r, col_count, i;
+    MSIRECORD *object;
+
+    if ((r = sv->table->ops->get_dimensions( sv->table, NULL, &col_count )))
+        return r;
+
+    if (!(object = MSI_CreateRecord( col_count )))
+        return ERROR_OUTOFMEMORY;
+
+    for (i = 0; i < sv->num_cols; i++)
+    {
+        if ((r = MSI_RecordCopyField( in, i + 1, object, sv->cols[i] )))
+        {
+            msiobj_release( &object->hdr );
+            return r;
+        }
+    }
+
+    *out = object;
+    return ERROR_SUCCESS;
+}
+
 static UINT SELECT_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
@@ -135,7 +159,7 @@ static UINT SELECT_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
 static UINT SELECT_insert_row( struct tagMSIVIEW *view, MSIRECORD *record, UINT row, BOOL temporary )
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
-    UINT i, table_cols, r;
+    UINT table_cols, r;
     MSIRECORD *outrec;
 
     TRACE("%p %p\n", sv, record );
@@ -148,20 +172,12 @@ static UINT SELECT_insert_row( struct tagMSIVIEW *view, MSIRECORD *record, UINT 
     if (r != ERROR_SUCCESS)
         return r;
 
-    outrec = MSI_CreateRecord( table_cols + 1 );
-
-    for (i=0; i<sv->num_cols; i++)
-    {
-        r = MSI_RecordCopyField( record, i+1, outrec, sv->cols[i] );
-        if (r != ERROR_SUCCESS)
-            goto fail;
-    }
+    if ((r = translate_record( sv, record, &outrec )))
+        return r;
 
     r = sv->table->ops->insert_row( sv->table, outrec, row, temporary );
 
-fail:
     msiobj_release( &outrec->hdr );
-
     return r;
 }
 
@@ -280,11 +296,18 @@ static UINT SELECT_modify( struct tagMSIVIEW *view, MSIMODIFY mode,
                            MSIRECORD *rec, UINT row )
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
+    MSIRECORD *table_rec;
+    UINT r;
 
     TRACE("view %p, mode %d, rec %p, row %u.\n", view, mode, rec, row);
 
     if( !sv->table )
          return ERROR_FUNCTION_FAILED;
+
+    /* Tests demonstrate that UPDATE only affects the columns selected and that
+     * others are left unchanged; however, ASSIGN overwrites unselected columns
+     * to NULL. Similarly, MERGE matches all unselected columns as NULL rather
+     * than just ignoring them. */
 
     switch (mode)
     {
@@ -292,8 +315,22 @@ static UINT SELECT_modify( struct tagMSIVIEW *view, MSIMODIFY mode,
         return msi_view_refresh_row(sv->db, view, row, rec);
     case MSIMODIFY_UPDATE:
         return msi_select_update(view, rec, row);
-    default:
+    case MSIMODIFY_INSERT:
+    case MSIMODIFY_ASSIGN:
+    case MSIMODIFY_MERGE:
+    case MSIMODIFY_INSERT_TEMPORARY:
+    case MSIMODIFY_VALIDATE_NEW:
+        if ((r = translate_record( sv, rec, &table_rec )))
+            return r;
+
+        r = sv->table->ops->modify( sv->table, mode, table_rec, row );
+        msiobj_release( &table_rec->hdr );
+        return r;
+    case MSIMODIFY_DELETE:
         return sv->table->ops->modify( sv->table, mode, rec, row );
+    default:
+        FIXME("unhandled mode %d\n", mode);
+        return ERROR_FUNCTION_FAILED;
     }
 }
 
