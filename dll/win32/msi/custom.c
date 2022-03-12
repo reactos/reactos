@@ -537,19 +537,22 @@ UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
 
     TRACE("%s\n", debugstr_guid( guid ));
 
-    status = RpcStringBindingComposeW(NULL, ncalrpcW, NULL, endpoint_lrpcW, NULL, &binding_str);
-    if (status != RPC_S_OK)
+    if (!rpc_handle)
     {
-        ERR("RpcStringBindingCompose failed: %#x\n", status);
-        return status;
+        status = RpcStringBindingComposeW(NULL, ncalrpcW, NULL, endpoint_lrpcW, NULL, &binding_str);
+        if (status != RPC_S_OK)
+        {
+            ERR("RpcStringBindingCompose failed: %#x\n", status);
+            return status;
+        }
+        status = RpcBindingFromStringBindingW(binding_str, &rpc_handle);
+        if (status != RPC_S_OK)
+        {
+            ERR("RpcBindingFromStringBinding failed: %#x\n", status);
+            return status;
+        }
+        RpcStringFreeW(&binding_str);
     }
-    status = RpcBindingFromStringBindingW(binding_str, &rpc_handle);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcBindingFromStringBinding failed: %#x\n", status);
-        return status;
-    }
-    RpcStringFreeW(&binding_str);
 
     r = remote_GetActionInfo(guid, &type, &dll, &proc, &remote_package);
     if (r != ERROR_SUCCESS)
@@ -596,8 +599,6 @@ UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
     MsiCloseHandle(hPackage);
     midl_user_free(dll);
     midl_user_free(proc);
-
-    RpcBindingFree(&rpc_handle);
 
     return r;
 }
