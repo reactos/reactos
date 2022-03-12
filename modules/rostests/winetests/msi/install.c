@@ -677,6 +677,8 @@ static const CHAR ca1_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                                "process1\tTEST_PROCESS\t720\n"
                                                "process2\tTEST_PROCESS\t721\n"
                                                "process_deferred\tTEST_PROCESS\t722\n"
+                                               "async1\tTEST_ASYNC\t730\n"
+                                               "async2\tTEST_ASYNC\t731\n"
                                                "InstallFinalize\t\t800\n";
 
 static const CHAR ca1_custom_action_dat[] = "Action\tType\tSource\tTarget\n"
@@ -689,6 +691,8 @@ static const CHAR ca1_custom_action_dat[] = "Action\tType\tSource\tTarget\n"
                                              "process1\t1\tcustom.dll\tprocess1\n"
                                              "process2\t1\tcustom.dll\tprocess2\n"
                                              "process_deferred\t1025\tcustom.dll\tprocess2\n"
+                                             "async1\t129\tcustom.dll\tasync1\n"
+                                             "async2\t1\tcustom.dll\tasync2\n"
                                              "testretval\t1\tcustom.dll\ttest_retval\n";
 
 static const CHAR ca1_test_seq_dat[] = "Action\tCondition\tSequence\n"
@@ -4129,7 +4133,7 @@ static void test_customaction1(void)
     r = MsiInstallProductA(msifile, "TEST_RETVAL=0");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    r = MsiInstallProductA(msifile, "TEST_RETVAL=1626"); /* ERROR_FUNCTION_NOT_CALLED*/
+    r = MsiInstallProductA(msifile, "TEST_RETVAL=1626"); /* ERROR_FUNCTION_NOT_CALLED */
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
     r = MsiInstallProductA(msifile, "TEST_RETVAL=1602");
@@ -4144,6 +4148,10 @@ static void test_customaction1(void)
 
     /* Custom actions execute in the same process, but they don't retain state */
     r = MsiInstallProductA(msifile, "TEST_PROCESS=1");
+    ok(!r, "got %u\n", r);
+
+    /* test asynchronous actions (msidbCustomActionTypeAsync) */
+    r = MsiInstallProductA(msifile, "TEST_ASYNC=1");
     ok(!r, "got %u\n", r);
 
     delete_test_files();

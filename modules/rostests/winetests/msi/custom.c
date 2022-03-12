@@ -1169,6 +1169,27 @@ UINT WINAPI process2(MSIHANDLE hinst)
     return ERROR_SUCCESS;
 }
 
+UINT WINAPI async1(MSIHANDLE hinst)
+{
+    HANDLE event = CreateEventA(NULL, TRUE, FALSE, "wine_msi_async_test");
+    HANDLE event2 = CreateEventA(NULL, TRUE, FALSE, "wine_msi_async_test2");
+    DWORD r = WaitForSingleObject(event, 10000);
+    ok(hinst, !r, "wait timed out\n");
+    SetEvent(event2);
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI async2(MSIHANDLE hinst)
+{
+    HANDLE event = CreateEventA(NULL, TRUE, FALSE, "wine_msi_async_test");
+    HANDLE event2 = CreateEventA(NULL, TRUE, FALSE, "wine_msi_async_test2");
+    DWORD r;
+    SetEvent(event);
+    r = WaitForSingleObject(event2, 10000);
+    ok(hinst, !r, "wait timed out\n");
+    return ERROR_SUCCESS;
+}
+
 static BOOL pf_exists(const char *file)
 {
     char path[MAX_PATH];

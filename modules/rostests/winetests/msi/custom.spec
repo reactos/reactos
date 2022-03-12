@@ -5,6 +5,8 @@
 @ stdcall nested(long)
 @ stdcall process1(long)
 @ stdcall process2(long)
+@ stdcall async1(long)
+@ stdcall async2(long)
 
 @ stdcall cf_present(long)
 @ stdcall cf_absent(long)
