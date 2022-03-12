@@ -644,22 +644,11 @@ UINT WINAPI MsiSetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode, BOOL fState)
     if (!package)
     {
         MSIHANDLE remote;
-        HRESULT hr;
 
         if (!(remote = msi_get_remote(hInstall)))
             return FALSE;
 
-        hr = remote_SetMode(remote, iRunMode, fState);
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_SetMode(remote, iRunMode, fState);
     }
 
     switch (iRunMode)

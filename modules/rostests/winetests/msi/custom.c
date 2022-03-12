@@ -642,6 +642,14 @@ static void test_targetpath(MSIHANDLE hinst)
     ok(hinst, sz == srcsz, "got size %u\n", sz);
 }
 
+static void test_mode(MSIHANDLE hinst)
+{
+    UINT r;
+
+    r = MsiSetMode(hinst, MSIRUNMODE_REBOOTATEND, FALSE);
+    ok(hinst, !r, "got %u\n", r);
+}
+
 /* Main test. Anything that doesn't depend on a specific install configuration
  * or have undesired side effects should go here. */
 UINT WINAPI main_test(MSIHANDLE hinst)
@@ -669,6 +677,7 @@ UINT WINAPI main_test(MSIHANDLE hinst)
     test_db(hinst);
     test_doaction(hinst);
     test_targetpath(hinst);
+    test_mode(hinst);
 
     return ERROR_SUCCESS;
 }
