@@ -36,6 +36,31 @@ static const char *mstfile = "winetst-db.mst";
 static const WCHAR msifileW[] = {'w','i','n','e','t','e','s','t','-','d','b','.','m','s','i',0};
 static const WCHAR msifile2W[] = {'w','i','n','e','t','s','t','2','-','d','b','.','m','s','i',0};
 
+static void check_record_(int line, MSIHANDLE rec, UINT count, ...)
+{
+    va_list args;
+    UINT i;
+
+    ok_(__FILE__, line)(count == MsiRecordGetFieldCount(rec),
+            "expected %u fields, got %u\n", count, MsiRecordGetFieldCount(rec));
+
+    va_start(args, count);
+
+    for (i = 1; i <= count; ++i)
+    {
+        const char *expect = va_arg(args, const char *);
+        char buffer[200] = "x";
+        DWORD sz = sizeof(buffer);
+        UINT r = MsiRecordGetStringA(rec, i, buffer, &sz);
+        ok_(__FILE__, line)(r == ERROR_SUCCESS, "field %u: got unexpected error %u\n", i, r);
+        ok_(__FILE__, line)(!strcmp(buffer, expect),
+                "field %u: expected \"%s\", got \"%s\"\n", i, expect, buffer);
+    }
+
+    va_end(args);
+}
+#define check_record(rec, ...) check_record_(__LINE__, rec, __VA_ARGS__)
+
 static void test_msidatabase(void)
 {
     MSIHANDLE hdb = 0, hdb2 = 0;
@@ -1299,17 +1324,6 @@ static UINT get_columns_table_type(MSIHANDLE hdb, const char *table, UINT field)
     return type;
 }
 
-static BOOL check_record( MSIHANDLE rec, UINT field, LPCSTR val )
-{
-    CHAR buffer[0x20];
-    UINT r;
-    DWORD sz;
-
-    sz = sizeof buffer;
-    r = MsiRecordGetStringA( rec, field, buffer, &sz );
-    return (r == ERROR_SUCCESS ) && !strcmp(val, buffer);
-}
-
 static void test_viewgetcolumninfo(void)
 {
     MSIHANDLE hdb = 0, rec;
@@ -1335,17 +1349,7 @@ static void test_viewgetcolumninfo(void)
     /* check the column types */
     rec = get_column_info( hdb, "select * from `Properties`", MSICOLINFO_TYPES );
     ok( rec, "failed to get column info record\n" );
-
-    ok( check_record( rec, 1, "S255"), "wrong record type\n");
-    ok( check_record( rec, 2, "S1"), "wrong record type\n");
-    ok( check_record( rec, 3, "I2"), "wrong record type\n");
-    ok( check_record( rec, 4, "I2"), "wrong record type\n");
-    ok( check_record( rec, 5, "I2"), "wrong record type\n");
-    ok( check_record( rec, 6, "I4"), "wrong record type\n");
-    ok( check_record( rec, 7, "S0"), "wrong record type\n");
-    ok( check_record( rec, 8, "S0"), "wrong record type\n");
-    ok( check_record( rec, 9, "L0"), "wrong record type\n");
-
+    check_record(rec, 9, "S255", "S1", "I2", "I2", "I2", "I4", "S0", "S0", "L0");
     MsiCloseHandle( rec );
 
     /* check the type in _Columns */
@@ -1362,17 +1366,8 @@ static void test_viewgetcolumninfo(void)
     /* now try the names */
     rec = get_column_info( hdb, "select * from `Properties`", MSICOLINFO_NAMES );
     ok( rec, "failed to get column info record\n" );
-
-    ok( check_record( rec, 1, "Property"), "wrong record type\n");
-    ok( check_record( rec, 2, "Value"), "wrong record type\n");
-    ok( check_record( rec, 3, "Intvalue"), "wrong record type\n");
-    ok( check_record( rec, 4, "Integervalue"), "wrong record type\n");
-    ok( check_record( rec, 5, "Shortvalue"), "wrong record type\n");
-    ok( check_record( rec, 6, "Longvalue"), "wrong record type\n");
-    ok( check_record( rec, 7, "Longcharvalue"), "wrong record type\n");
-    ok( check_record( rec, 8, "Charvalue"), "wrong record type\n");
-    ok( check_record( rec, 9, "Localizablevalue"), "wrong record type\n");
-
+    check_record(rec, 9, "Property", "Value", "Intvalue", "Integervalue", "Shortvalue",
+            "Longvalue", "Longcharvalue", "Charvalue", "Localizablevalue");
     MsiCloseHandle( rec );
 
     r = run_query( hdb, 0,
@@ -1383,10 +1378,7 @@ static void test_viewgetcolumninfo(void)
     /* check the column types */
     rec = get_column_info( hdb, "select * from `Binary`", MSICOLINFO_TYPES );
     ok( rec, "failed to get column info record\n" );
-
-    ok( check_record( rec, 1, "S255"), "wrong record type\n");
-    ok( check_record( rec, 2, "V0"), "wrong record type\n");
-
+    check_record(rec, 2, "S255", "V0");
     MsiCloseHandle( rec );
 
     /* check the type in _Columns */
@@ -1396,9 +1388,7 @@ static void test_viewgetcolumninfo(void)
     /* now try the names */
     rec = get_column_info( hdb, "select * from `Binary`", MSICOLINFO_NAMES );
     ok( rec, "failed to get column info record\n" );
-
-    ok( check_record( rec, 1, "Name"), "wrong record type\n");
-    ok( check_record( rec, 2, "Data"), "wrong record type\n");
+    check_record(rec, 2, "Name", "Data");
     MsiCloseHandle( rec );
 
     r = run_query( hdb, 0,
@@ -1411,14 +1401,12 @@ static void test_viewgetcolumninfo(void)
 
     rec = get_column_info( hdb, "select * from `UIText`", MSICOLINFO_NAMES );
     ok( rec, "failed to get column info record\n" );
-    ok( check_record( rec, 1, "Key"), "wrong record type\n");
-    ok( check_record( rec, 2, "Text"), "wrong record type\n");
+    check_record(rec, 2, "Key", "Text");
     MsiCloseHandle( rec );
 
     rec = get_column_info( hdb, "select * from `UIText`", MSICOLINFO_TYPES );
     ok( rec, "failed to get column info record\n" );
-    ok( check_record( rec, 1, "s72"), "wrong record type\n");
-    ok( check_record( rec, 2, "L255"), "wrong record type\n");
+    check_record(rec, 2, "s72", "L255");
     MsiCloseHandle( rec );
 
     MsiCloseHandle( hdb );
@@ -1613,19 +1601,13 @@ static void test_streamtable(void)
     /* check the column types */
     rec = get_column_info( hdb, "select * from `_Streams`", MSICOLINFO_TYPES );
     ok( rec, "failed to get column info record\n" );
-
-    ok( check_record( rec, 1, "s62"), "wrong record type\n");
-    ok( check_record( rec, 2, "V0"), "wrong record type\n");
-
+    check_record(rec, 2, "s62", "V0");
     MsiCloseHandle( rec );
 
     /* now try the names */
     rec = get_column_info( hdb, "select * from `_Streams`", MSICOLINFO_NAMES );
     ok( rec, "failed to get column info record\n" );
-
-    ok( check_record( rec, 1, "Name"), "wrong record type\n");
-    ok( check_record( rec, 2, "Data"), "wrong record type\n");
-
+    check_record(rec, 2, "Name", "Data");
     MsiCloseHandle( rec );
 
     r = MsiDatabaseOpenViewA( hdb,
@@ -2022,16 +2004,14 @@ static void test_where_not_in_selected(void)
 
     r = MsiViewFetch(view, &rec);
     ok( r == ERROR_SUCCESS, "failed to fetch view: %d\n", r );
-
-    ok( check_record( rec, 1, "cond2"), "wrong condition\n");
-
+    check_record(rec, 1, "cond2");
     MsiCloseHandle( rec );
+
     r = MsiViewFetch(view, &rec);
     ok( r == ERROR_SUCCESS, "failed to fetch view: %d\n", r );
-
-    ok( check_record( rec, 1, "cond3"), "wrong condition\n");
-
+    check_record(rec, 1, "cond3");
     MsiCloseHandle( rec );
+
     MsiViewClose(view);
     MsiCloseHandle(view);
 
@@ -2081,13 +2061,13 @@ static void test_where(void)
     query = "SELECT * FROM `Media`";
     r = do_query(hdb, query, &rec);
     ok(r == ERROR_SUCCESS, "MsiViewFetch failed: %d\n", r);
-    ok( check_record( rec, 4, "zero.cab"), "wrong cabinet\n");
+    check_record(rec, 6, "1", "0", "", "zero.cab", "", "");
     MsiCloseHandle( rec );
 
     query = "SELECT * FROM `Media` WHERE `LastSequence` >= 1";
     r = do_query(hdb, query, &rec);
     ok(r == ERROR_SUCCESS, "MsiViewFetch failed: %d\n", r);
-    ok( check_record( rec, 4, "one.cab"), "wrong cabinet\n");
+    check_record(rec, 6, "2", "1", "", "one.cab", "", "");
 
     r = MsiRecordGetInteger(rec, 1);
     ok( 2 == r, "field wrong\n");
@@ -2373,8 +2353,7 @@ static void test_msiimport(void)
 {
     MSIHANDLE hdb, view, rec;
     LPCSTR query;
-    UINT r, count;
-    signed int i;
+    UINT r;
 
     GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
 
@@ -2405,58 +2384,23 @@ static void test_msiimport(void)
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    count = MsiRecordGetFieldCount(rec);
-    ok(count == 9, "Expected 9, got %d\n", count);
-    ok(check_record(rec, 1, "FirstPrimaryColumn"), "Expected FirstPrimaryColumn\n");
-    ok(check_record(rec, 2, "SecondPrimaryColumn"), "Expected SecondPrimaryColumn\n");
-    ok(check_record(rec, 3, "ShortInt"), "Expected ShortInt\n");
-    ok(check_record(rec, 4, "ShortIntNullable"), "Expected ShortIntNullalble\n");
-    ok(check_record(rec, 5, "LongInt"), "Expected LongInt\n");
-    ok(check_record(rec, 6, "LongIntNullable"), "Expected LongIntNullalble\n");
-    ok(check_record(rec, 7, "String"), "Expected String\n");
-    ok(check_record(rec, 8, "LocalizableString"), "Expected LocalizableString\n");
-    ok(check_record(rec, 9, "LocalizableStringNullable"), "Expected LocalizableStringNullable\n");
+    check_record(rec, 9, "FirstPrimaryColumn", "SecondPrimaryColumn", "ShortInt",
+            "ShortIntNullable", "LongInt", "LongIntNullable", "String",
+            "LocalizableString", "LocalizableStringNullable");
     MsiCloseHandle(rec);
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    count = MsiRecordGetFieldCount(rec);
-    ok(count == 9, "Expected 9, got %d\n", count);
-    ok(check_record(rec, 1, "s255"), "Expected s255\n");
-    ok(check_record(rec, 2, "i2"), "Expected i2\n");
-    ok(check_record(rec, 3, "i2"), "Expected i2\n");
-    ok(check_record(rec, 4, "I2"), "Expected I2\n");
-    ok(check_record(rec, 5, "i4"), "Expected i4\n");
-    ok(check_record(rec, 6, "I4"), "Expected I4\n");
-    ok(check_record(rec, 7, "S255"), "Expected S255\n");
-    ok(check_record(rec, 8, "S0"), "Expected S0\n");
-    ok(check_record(rec, 9, "s0"), "Expected s0\n");
+    check_record(rec, 9, "s255", "i2", "i2", "I2", "i4", "I4", "S255", "S0", "s0");
     MsiCloseHandle(rec);
 
     query = "SELECT * FROM `TestTable`";
     r = do_query(hdb, query, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(check_record(rec, 1, "stringage"), "Expected 'stringage'\n");
-    ok(check_record(rec, 7, "another string"), "Expected 'another string'\n");
-    ok(check_record(rec, 8, "localizable"), "Expected 'localizable'\n");
-    ok(check_record(rec, 9, "duh"), "Expected 'duh'\n");
-
-    i = MsiRecordGetInteger(rec, 2);
-    ok(i == 5, "Expected 5, got %d\n", i);
-
-    i = MsiRecordGetInteger(rec, 3);
-    ok(i == 2, "Expected 2, got %d\n", i);
-
-    i = MsiRecordGetInteger(rec, 4);
-    ok(i == MSI_NULL_INTEGER, "Expected MSI_NULL_INTEGER, got %d\n", i);
-
-    i = MsiRecordGetInteger(rec, 5);
-    ok(i == 2147483640, "Expected 2147483640, got %d\n", i);
-
-    i = MsiRecordGetInteger(rec, 6);
-    ok(i == -2147483640, "Expected -2147483640, got %d\n", i);
-
+    check_record(rec, 9, "stringage", "5", "2", "", "2147483640", "-2147483640",
+            "another string", "localizable", "duh");
     MsiCloseHandle(rec);
+
     MsiViewClose(view);
     MsiCloseHandle(view);
 
@@ -2466,19 +2410,12 @@ static void test_msiimport(void)
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    count = MsiRecordGetFieldCount(rec);
-    ok(count == 2, "Expected 2, got %d\n", count);
-    ok(check_record(rec, 1, "PrimaryOne"), "Expected PrimaryOne\n");
-    ok(check_record(rec, 2, "PrimaryTwo"), "Expected PrimaryTwo\n");
-
+    check_record(rec, 2, "PrimaryOne", "PrimaryTwo");
     MsiCloseHandle(rec);
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    count = MsiRecordGetFieldCount(rec);
-    ok(count == 2, "Expected 2, got %d\n", count);
-    ok(check_record(rec, 1, "s255"), "Expected s255\n");
-    ok(check_record(rec, 2, "s255"), "Expected s255\n");
+    check_record(rec, 2, "s255", "s255");
     MsiCloseHandle(rec);
 
     r = MsiViewExecute(view, 0);
@@ -2486,18 +2423,12 @@ static void test_msiimport(void)
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    ok(check_record(rec, 1, "papaya"), "Expected 'papaya'\n");
-    ok(check_record(rec, 2, "leaf"), "Expected 'leaf'\n");
-
+    check_record(rec, 2, "papaya", "leaf");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    ok(check_record(rec, 1, "papaya"), "Expected 'papaya'\n");
-    ok(check_record(rec, 2, "flower"), "Expected 'flower'\n");
-
+    check_record(rec, 2, "papaya", "flower");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
@@ -2515,26 +2446,12 @@ static void test_msiimport(void)
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    count = MsiRecordGetFieldCount(rec);
-    ok(count == 6, "Expected 6, got %d\n", count);
-    ok(check_record(rec, 1, "A"), "Expected A\n");
-    ok(check_record(rec, 2, "B"), "Expected B\n");
-    ok(check_record(rec, 3, "C"), "Expected C\n");
-    ok(check_record(rec, 4, "D"), "Expected D\n");
-    ok(check_record(rec, 5, "E"), "Expected E\n");
-    ok(check_record(rec, 6, "F"), "Expected F\n");
+    check_record(rec, 6, "A", "B", "C", "D", "E", "F");
     MsiCloseHandle(rec);
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    count = MsiRecordGetFieldCount(rec);
-    ok(count == 6, "Expected 6, got %d\n", count);
-    ok(check_record(rec, 1, "s72"), "Expected s72\n");
-    ok(check_record(rec, 2, "s72"), "Expected s72\n");
-    ok(check_record(rec, 3, "s72"), "Expected s72\n");
-    ok(check_record(rec, 4, "s72"), "Expected s72\n");
-    ok(check_record(rec, 5, "s72"), "Expected s72\n");
-    ok(check_record(rec, 6, "s72"), "Expected s72\n");
+    check_record(rec, 6, "s72", "s72", "s72", "s72", "s72", "s72");
     MsiCloseHandle(rec);
 
     MsiViewClose(view);
@@ -2549,24 +2466,12 @@ static void test_msiimport(void)
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(check_record(rec, 1, "a"), "Expected 'a'\n");
-    ok(check_record(rec, 2, "b"), "Expected 'b'\n");
-    ok(check_record(rec, 3, "c"), "Expected 'c'\n");
-    ok(check_record(rec, 4, "d"), "Expected 'd'\n");
-    ok(check_record(rec, 5, "e"), "Expected 'e'\n");
-    ok(check_record(rec, 6, "f"), "Expected 'f'\n");
-
+    check_record(rec, 6, "a", "b", "c", "d", "e", "f");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(check_record(rec, 1, "g"), "Expected 'g'\n");
-    ok(check_record(rec, 2, "h"), "Expected 'h'\n");
-    ok(check_record(rec, 3, "i"), "Expected 'i'\n");
-    ok(check_record(rec, 4, "j"), "Expected 'j'\n");
-    ok(check_record(rec, 5, "k"), "Expected 'k'\n");
-    ok(check_record(rec, 6, "l"), "Expected 'l'\n");
-
+    check_record(rec, 6, "g", "h", "i", "j", "k", "l");
     MsiCloseHandle(rec);
 
     r = MsiViewFetch(view, &rec);
@@ -4358,7 +4263,7 @@ static void test_alter(void)
 static void test_integers(void)
 {
     MSIHANDLE hdb = 0, view = 0, rec = 0;
-    DWORD count, i;
+    DWORD i;
     const char *query;
     UINT r;
 
@@ -4387,30 +4292,12 @@ static void test_integers(void)
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    count = MsiRecordGetFieldCount(rec);
-    ok(count == 8, "Expected 8, got %d\n", count);
-    ok(check_record(rec, 1, "one"), "Expected one\n");
-    ok(check_record(rec, 2, "two"), "Expected two\n");
-    ok(check_record(rec, 3, "three"), "Expected three\n");
-    ok(check_record(rec, 4, "four"), "Expected four\n");
-    ok(check_record(rec, 5, "five"), "Expected five\n");
-    ok(check_record(rec, 6, "six"), "Expected six\n");
-    ok(check_record(rec, 7, "seven"), "Expected seven\n");
-    ok(check_record(rec, 8, "eight"), "Expected eight\n");
+    check_record(rec, 8, "one", "two", "three", "four", "five", "six", "seven", "eight");
     MsiCloseHandle(rec);
 
     r = MsiViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    count = MsiRecordGetFieldCount(rec);
-    ok(count == 8, "Expected 8, got %d\n", count);
-    ok(check_record(rec, 1, "I2"), "Expected I2\n");
-    ok(check_record(rec, 2, "I2"), "Expected I2\n");
-    ok(check_record(rec, 3, "I2"), "Expected I2\n");
-    ok(check_record(rec, 4, "I4"), "Expected I4\n");
-    ok(check_record(rec, 5, "i2"), "Expected i2\n");
-    ok(check_record(rec, 6, "i2"), "Expected i2\n");
-    ok(check_record(rec, 7, "i2"), "Expected i2\n");
-    ok(check_record(rec, 8, "i4"), "Expected i4\n");
+    check_record(rec, 8, "I2", "I2", "I2", "I4", "i2", "i2", "i2", "i4");
     MsiCloseHandle(rec);
 
     MsiViewClose(view);
@@ -7533,17 +7420,13 @@ static void test_storages_table(void)
     /* check the column types */
     hrec = get_column_info(hdb, "SELECT * FROM `_Storages`", MSICOLINFO_TYPES);
     ok(hrec, "failed to get column info hrecord\n");
-    ok(check_record(hrec, 1, "s62"), "wrong hrecord type\n");
-    ok(check_record(hrec, 2, "V0"), "wrong hrecord type\n");
-
+    check_record(hrec, 2, "s62", "V0");
     MsiCloseHandle(hrec);
 
     /* now try the names */
     hrec = get_column_info(hdb, "SELECT * FROM `_Storages`", MSICOLINFO_NAMES);
     ok(hrec, "failed to get column info hrecord\n");
-    ok(check_record(hrec, 1, "Name"), "wrong hrecord type\n");
-    ok(check_record(hrec, 2, "Data"), "wrong hrecord type\n");
-
+    check_record(hrec, 2, "Name", "Data");
     MsiCloseHandle(hrec);
 
     create_storage("storage.bin");
@@ -9702,6 +9585,8 @@ static void test_select_column_names(void)
 static void test_primary_keys(void)
 {
     MSIHANDLE hdb, keys;
+    char buffer[5];
+    DWORD size;
     UINT r;
 
     hdb = create_db();
@@ -9714,12 +9599,11 @@ static void test_primary_keys(void)
 
     r = MsiDatabaseGetPrimaryKeysA(hdb, "T", &keys);
     ok(!r, "got %u\n", r);
-
-    r = MsiRecordGetFieldCount(keys);
-    ok(r == 1, "got %d\n", r);
-    ok(check_record(keys, 0, "T"), "expected 'T'\n");
-    ok(check_record(keys, 1, "A"), "expected 'A'\n");
-
+    check_record(keys, 1, "A");
+    size = sizeof(buffer);
+    r = MsiRecordGetStringA(keys, 0, buffer, &size);
+    ok(!r, "got %u\n", r);
+    ok(!strcmp(buffer, "T"), "got \"%s\"\n", buffer);
     MsiCloseHandle(keys);
 
     r = run_query(hdb, 0, "CREATE TABLE `U` (`A` SHORT, `B` SHORT, `C` SHORT PRIMARY KEY `B`, `C`)");
@@ -9727,13 +9611,11 @@ static void test_primary_keys(void)
 
     r = MsiDatabaseGetPrimaryKeysA(hdb, "U", &keys);
     ok(!r, "got %u\n", r);
-
-    r = MsiRecordGetFieldCount(keys);
-    ok(r == 2, "got %d\n", r);
-    ok(check_record(keys, 0, "U"), "expected 'U'\n");
-    ok(check_record(keys, 1, "B"), "expected 'B'\n");
-    ok(check_record(keys, 2, "C"), "expected 'C'\n");
-
+    check_record(keys, 2, "B", "C");
+    size = sizeof(buffer);
+    r = MsiRecordGetStringA(keys, 0, buffer, &size);
+    ok(!r, "got %u\n", r);
+    ok(!strcmp(buffer, "U"), "got \"%s\"\n", buffer);
     MsiCloseHandle(keys);
     MsiCloseHandle(hdb);
     DeleteFileA(msifile);
