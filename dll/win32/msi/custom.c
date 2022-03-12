@@ -616,14 +616,17 @@ static DWORD custom_start_server(MSIPACKAGE *package, DWORD arch)
     if (pipe == INVALID_HANDLE_VALUE)
         ERR("Failed to create custom action client pipe: %u\n", GetLastError());
 
-    if (sizeof(void *) == 8 && arch == SCS_32BIT_BINARY)
+    if (!IsWow64Process(GetCurrentProcess(), &wow64))
+        wow64 = FALSE;
+
+    if ((sizeof(void *) == 8 || wow64) && arch == SCS_32BIT_BINARY)
         GetSystemWow64DirectoryW(path, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
     else
         GetSystemDirectoryW(path, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
     strcatW(path, msiexecW);
     sprintfW(cmdline, argsW, path, GetCurrentProcessId());
 
-    if (IsWow64Process(GetCurrentProcess(), &wow64) && wow64 && arch == SCS_64BIT_BINARY)
+    if (wow64 && arch == SCS_64BIT_BINARY)
     {
         Wow64DisableWow64FsRedirection(&cookie);
         CreateProcessW(path, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
