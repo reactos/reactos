@@ -1180,6 +1180,24 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
     return ERROR_SUCCESS;
 }
 
+UINT WINAPI file_present(MSIHANDLE hinst)
+{
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    ok(hinst, pf_exists("msitest\\first\\one.txt"), "file absent\n");
+    ok(hinst, pf_exists("msitest\\second\\two.txt"), "file absent\n");
+}
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI file_absent(MSIHANDLE hinst)
+{
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    ok(hinst, !pf_exists("msitest\\first\\one.txt"), "file present\n");
+    ok(hinst, !pf_exists("msitest\\second\\two.txt"), "file present\n");
+}
+    return ERROR_SUCCESS;
+}
+
 UINT WINAPI crs_present(MSIHANDLE hinst)
 {
 todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))

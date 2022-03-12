@@ -7,6 +7,8 @@
 @ stdcall cf_absent(long)
 @ stdcall crs_present(long)
 @ stdcall crs_absent(long)
+@ stdcall file_present(long)
+@ stdcall file_absent(long)
 @ stdcall rd_present(long)
 @ stdcall rd_absent(long)
 @ stdcall sds_present(long)
