@@ -824,50 +824,55 @@ MSIHANDLE WINAPI MsiGetLastErrorRecord( void )
     return 0;
 }
 
-UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db,
-                 LPCWSTR szTransformFile, int iErrorCond )
+UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db, const WCHAR *transform, int error_cond )
 {
-    HRESULT r;
+    HRESULT hr;
     UINT ret = ERROR_FUNCTION_FAILED;
-    IStorage *stg = NULL;
+    IStorage *stg;
     STATSTG stat;
 
-    TRACE("%p %s %d\n", db, debugstr_w(szTransformFile), iErrorCond);
+    TRACE( "%p %s %08x\n", db, debugstr_w(transform), error_cond );
 
-    r = StgOpenStorage( szTransformFile, NULL,
-           STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
-    if ( FAILED(r) )
+    if (*transform == ':')
     {
-        WARN("failed to open transform 0x%08x\n", r);
-        return ret;
+        hr = IStorage_OpenStorage( db->storage, transform + 1, NULL, STGM_SHARE_EXCLUSIVE, NULL, 0, &stg );
+        if (FAILED( hr ))
+        {
+            WARN( "failed to open substorage transform 0x%08x\n", hr );
+            return ERROR_FUNCTION_FAILED;
+        }
+    }
+    else
+    {
+        hr = StgOpenStorage( transform, NULL, STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE, NULL, 0, &stg );
+        if (FAILED( hr ))
+        {
+            WARN( "failed to open file transform 0x%08x\n", hr );
+            return ERROR_FUNCTION_FAILED;
+        }
     }
 
-    r = IStorage_Stat( stg, &stat, STATFLAG_NONAME );
-    if ( FAILED( r ) )
-        goto end;
-
-    if ( !IsEqualGUID( &stat.clsid, &CLSID_MsiTransform ) )
-        goto end;
-
-    if( TRACE_ON( msi ) )
-        enum_stream_names( stg );
+    hr = IStorage_Stat( stg, &stat, STATFLAG_NONAME );
+    if (FAILED( hr )) goto end;
+    if (!IsEqualGUID( &stat.clsid, &CLSID_MsiTransform )) goto end;
+    if (TRACE_ON( msi )) enum_stream_names( stg );
 
     ret = msi_table_apply_transform( db, stg );
 
 end:
     IStorage_Release( stg );
-
     return ret;
 }
 
-UINT WINAPI MsiDatabaseApplyTransformW( MSIHANDLE hdb,
-                 LPCWSTR szTransformFile, int iErrorCond)
+UINT WINAPI MsiDatabaseApplyTransformW( MSIHANDLE hdb, const WCHAR *transform, int error_cond )
 {
     MSIDATABASE *db;
     UINT r;
 
+    if (error_cond) FIXME( "ignoring error conditions\n" );
+
     db = msihandle2msiinfo( hdb, MSIHANDLETYPE_DATABASE );
-    if( !db )
+    if (!db)
     {
         MSIHANDLE remote;
 
@@ -879,27 +884,24 @@ UINT WINAPI MsiDatabaseApplyTransformW( MSIHANDLE hdb,
         return ERROR_SUCCESS;
     }
 
-    r = MSI_DatabaseApplyTransformW( db, szTransformFile, iErrorCond );
+    r = MSI_DatabaseApplyTransformW( db, transform, error_cond );
     msiobj_release( &db->hdr );
     return r;
 }
 
-UINT WINAPI MsiDatabaseApplyTransformA( MSIHANDLE hdb, 
-                 LPCSTR szTransformFile, int iErrorCond)
+UINT WINAPI MsiDatabaseApplyTransformA( MSIHANDLE hdb, const char *transform, int error_cond )
 {
-    LPWSTR wstr;
+    WCHAR *wstr;
     UINT ret;
 
-    TRACE("%d %s %d\n", hdb, debugstr_a(szTransformFile), iErrorCond);
+    TRACE( "%d %s %08x\n", hdb, debugstr_a(transform), error_cond );
 
-    wstr = strdupAtoW( szTransformFile );
-    if( szTransformFile && !wstr )
+    wstr = strdupAtoW( transform );
+    if (transform && !wstr)
         return ERROR_NOT_ENOUGH_MEMORY;
 
-    ret = MsiDatabaseApplyTransformW( hdb, wstr, iErrorCond);
-
+    ret = MsiDatabaseApplyTransformW( hdb, wstr, error_cond );
     msi_free( wstr );
-
     return ret;
 }
 
