@@ -29,6 +29,7 @@
 #include <msiquery.h>
 #include <srrestoreptapi.h>
 #include <shlobj.h>
+#include <sddl.h>
 
 #include "wine/test.h"
 
@@ -39,18 +40,10 @@ static const WCHAR msifileW[] =
 static char CURR_DIR[MAX_PATH];
 
 static INSTALLSTATE (WINAPI *pMsiGetComponentPathExA)(LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPSTR, LPDWORD);
-static HRESULT (WINAPI *pSHGetFolderPathA)(HWND, int, HANDLE, DWORD, LPSTR);
 
-static BOOL (WINAPI *pCheckTokenMembership)(HANDLE,PSID,PBOOL);
-static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
-static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static LONG (WINAPI *pRegDeleteKeyExW)(HKEY, LPCWSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
-static void (WINAPI *pGetSystemInfo)(LPSYSTEM_INFO);
-static void (WINAPI *pGetNativeSystemInfo)(LPSYSTEM_INFO);
-static UINT (WINAPI *pGetSystemWow64DirectoryA)(LPSTR, UINT);
-
 static BOOL (WINAPI *pSRRemoveRestorePoint)(DWORD);
 static BOOL (WINAPI *pSRSetRestorePointA)(RESTOREPOINTINFOA*, STATEMGRSTATUS*);
 
@@ -59,28 +52,20 @@ static void init_functionpointers(void)
     HMODULE hmsi = GetModuleHandleA("msi.dll");
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
-    HMODULE hshell32 = GetModuleHandleA("shell32.dll");
-    HMODULE hsrclient;
+    HMODULE hsrclient = LoadLibraryA("srclient.dll");
 
 #define GET_PROC(mod, func) \
     p ## func = (void*)GetProcAddress(mod, #func);
 
     GET_PROC(hmsi, MsiGetComponentPathExA);
-    GET_PROC(hshell32, SHGetFolderPathA);
 
-    GET_PROC(hadvapi32, CheckTokenMembership);
-    GET_PROC(hadvapi32, ConvertSidToStringSidA);
-    GET_PROC(hadvapi32, OpenProcessToken);
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hadvapi32, RegDeleteKeyExW)
     GET_PROC(hkernel32, IsWow64Process)
-    GET_PROC(hkernel32, GetNativeSystemInfo)
-    GET_PROC(hkernel32, GetSystemInfo)
-    GET_PROC(hkernel32, GetSystemWow64DirectoryA)
 
-    hsrclient = LoadLibraryA("srclient.dll");
     GET_PROC(hsrclient, SRRemoveRestorePoint);
     GET_PROC(hsrclient, SRSetRestorePointA);
+
 #undef GET_PROC
 }
 
@@ -91,11 +76,9 @@ static BOOL is_process_limited(void)
     BOOL IsInGroup;
     HANDLE token;
 
-    if (!pCheckTokenMembership || !pOpenProcessToken) return FALSE;
-
     if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
                                   DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
-        !pCheckTokenMembership(NULL, Group, &IsInGroup))
+        !CheckTokenMembership(NULL, Group, &IsInGroup))
     {
         trace("Could not check if the current user is an administrator\n");
         FreeSid(Group);
@@ -109,7 +92,7 @@ static BOOL is_process_limited(void)
                                       SECURITY_BUILTIN_DOMAIN_RID,
                                       DOMAIN_ALIAS_RID_POWER_USERS,
                                       0, 0, 0, 0, 0, 0, &Group) ||
-            !pCheckTokenMembership(NULL, Group, &IsInGroup))
+            !CheckTokenMembership(NULL, Group, &IsInGroup))
         {
             trace("Could not check if the current user is a power user\n");
             return FALSE;
@@ -121,7 +104,7 @@ static BOOL is_process_limited(void)
         }
     }
 
-    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
     {
         BOOL ret;
         TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
@@ -148,17 +131,12 @@ static char *get_user_sid(void)
     TOKEN_USER *user;
     char *usersid = NULL;
 
-    if (!pConvertSidToStringSidA)
-    {
-        win_skip("ConvertSidToStringSidA is not available\n");
-        return NULL;
-    }
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     GetTokenInformation(token, TokenUser, NULL, size, &size);
 
     user = HeapAlloc(GetProcessHeap(), 0, size);
     GetTokenInformation(token, TokenUser, user, size, &size);
-    pConvertSidToStringSidA(user->User.Sid, &usersid);
+    ConvertSidToStringSidA(user->User.Sid, &usersid);
     HeapFree(GetProcessHeap(), 0, user);
 
     CloseHandle(token);
@@ -4705,7 +4683,7 @@ static void test_appsearch_reglocator(void)
     ok(!lstrcmpA(prop, "#-42"), "Expected \"#-42\", got \"%s\"\n", prop);
 
     memset(&si, 0, sizeof(si));
-    if (pGetNativeSystemInfo) pGetNativeSystemInfo(&si);
+    GetNativeSystemInfo(&si);
 
     if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
     {
@@ -5721,10 +5699,7 @@ static void test_installprops(void)
     r = MsiGetPropertyA(hpkg, "MsiNetAssemblySupport", buf, &size);
     if (r == ERROR_SUCCESS) trace( "MsiNetAssemblySupport \"%s\"\n", buf );
 
-    if (pGetNativeSystemInfo)
-        pGetNativeSystemInfo(&si);
-    else
-        pGetSystemInfo(&si);
+    GetNativeSystemInfo(&si);
 
     if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
     {
@@ -5739,7 +5714,7 @@ static void test_installprops(void)
         strcat(path, "\\");
         check_prop(hpkg, "System64Folder", path);
 
-        pGetSystemWow64DirectoryA(path, MAX_PATH);
+        GetSystemWow64DirectoryA(path, MAX_PATH);
         strcat(path, "\\");
         check_prop(hpkg, "SystemFolder", path);
 

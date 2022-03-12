@@ -44,13 +44,11 @@ static UINT (WINAPI *pMsiSourceListEnumSourcesA)
 static INSTALLSTATE (WINAPI *pMsiGetComponentPathExA)
     (LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPSTR, LPDWORD);
 
-static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 static BOOL (WINAPI *pWow64DisableWow64FsRedirection)(void **);
 static BOOL (WINAPI *pWow64RevertWow64FsRedirection)(void *);
 
-static HMODULE hsrclient = 0;
 static BOOL (WINAPI *pSRRemoveRestorePoint)(DWORD);
 static BOOL (WINAPI *pSRSetRestorePointA)(RESTOREPOINTINFOA*, STATEMGRSTATUS*);
 
@@ -2146,6 +2144,7 @@ static void init_functionpointers(void)
     HMODULE hmsi = GetModuleHandleA("msi.dll");
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
+    HMODULE hsrclient = LoadLibraryA("srclient.dll");
 
 #define GET_PROC(mod, func) \
     p ## func = (void*)GetProcAddress(mod, #func); \
@@ -2156,13 +2155,11 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiSourceListEnumSourcesA);
     GET_PROC(hmsi, MsiGetComponentPathExA);
 
-    GET_PROC(hadvapi32, ConvertSidToStringSidA);
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
     GET_PROC(hkernel32, Wow64DisableWow64FsRedirection);
     GET_PROC(hkernel32, Wow64RevertWow64FsRedirection);
 
-    hsrclient = LoadLibraryA("srclient.dll");
     GET_PROC(hsrclient, SRRemoveRestorePoint);
     GET_PROC(hsrclient, SRSetRestorePointA);
 
@@ -6294,7 +6291,6 @@ START_TEST(install)
         if (ret)
             remove_restore_point(status.llSequenceNumber);
     }
-    FreeLibrary(hsrclient);
 
     SetCurrentDirectoryA(prev_path);
 }

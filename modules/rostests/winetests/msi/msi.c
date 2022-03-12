@@ -38,7 +38,6 @@ static BOOL is_wow64;
 static const char msifile[] = "winetest.msi";
 static const WCHAR msifileW[] = {'w','i','n','e','t','e','s','t','.','m','s','i',0};
 
-static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
@@ -104,7 +103,6 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiEnumComponentsExA)
     GET_PROC(hmsi, MsiSourceListGetInfoA)
 
-    GET_PROC(hadvapi32, ConvertSidToStringSidA)
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
 
@@ -1180,7 +1178,7 @@ static char *get_user_sid(void)
 
     user = HeapAlloc(GetProcessHeap(), 0, size);
     GetTokenInformation(token, TokenUser, user, size, &size);
-    pConvertSidToStringSidA(user->User.Sid, &usersid);
+    ConvertSidToStringSidA(user->User.Sid, &usersid);
     HeapFree(GetProcessHeap(), 0, user);
 
     CloseHandle(token);
@@ -14462,33 +14460,26 @@ START_TEST(msi)
     test_MsiGetFileHash();
     test_MsiSetInternalUI();
     test_MsiSetExternalUI();
-
-    if (!pConvertSidToStringSidA)
-        win_skip("ConvertSidToStringSidA not implemented\n");
-    else
-    {
-        /* These tests rely on get_user_sid that needs ConvertSidToStringSidA */
-        test_MsiQueryProductState();
-        test_MsiQueryFeatureState();
-        test_MsiQueryComponentState();
-        test_MsiGetComponentPath();
-        test_MsiGetComponentPathEx();
-        test_MsiProvideComponent();
-        test_MsiGetProductCode();
-        test_MsiEnumClients();
-        test_MsiGetProductInfo();
-        test_MsiGetProductInfoEx();
-        test_MsiGetUserInfo();
-        test_MsiOpenProduct();
-        test_MsiEnumPatchesEx();
-        test_MsiEnumPatches();
-        test_MsiGetPatchInfoEx();
-        test_MsiGetPatchInfo();
-        test_MsiEnumProducts();
-        test_MsiEnumProductsEx();
-        test_MsiEnumComponents();
-        test_MsiEnumComponentsEx();
-    }
+    test_MsiQueryProductState();
+    test_MsiQueryFeatureState();
+    test_MsiQueryComponentState();
+    test_MsiGetComponentPath();
+    test_MsiGetComponentPathEx();
+    test_MsiProvideComponent();
+    test_MsiGetProductCode();
+    test_MsiEnumClients();
+    test_MsiGetProductInfo();
+    test_MsiGetProductInfoEx();
+    test_MsiGetUserInfo();
+    test_MsiOpenProduct();
+    test_MsiEnumPatchesEx();
+    test_MsiEnumPatches();
+    test_MsiGetPatchInfoEx();
+    test_MsiGetPatchInfo();
+    test_MsiEnumProducts();
+    test_MsiEnumProductsEx();
+    test_MsiEnumComponents();
+    test_MsiEnumComponentsEx();
     test_MsiGetFileVersion();
     test_MsiGetFileSignatureInformation();
     test_MsiConfigureProductEx();

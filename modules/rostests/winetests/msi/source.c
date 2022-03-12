@@ -34,9 +34,7 @@
 
 static BOOL is_wow64;
 
-static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
-static BOOLEAN (WINAPI *pGetUserNameExA)(EXTENDED_NAME_FORMAT, LPSTR, PULONG);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
 static UINT (WINAPI *pMsiSourceListAddMediaDiskA)
@@ -60,7 +58,6 @@ static void init_functionpointers(void)
     HMODULE hmsi = GetModuleHandleA("msi.dll");
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
-    HMODULE hsecur32 = LoadLibraryA("secur32.dll");
 
 #define GET_PROC(dll, func) \
     p ## func = (void *)GetProcAddress(dll, #func); \
@@ -75,10 +72,8 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiSourceListSetInfoA)
     GET_PROC(hmsi, MsiSourceListAddSourceA)
 
-    GET_PROC(hadvapi32, ConvertSidToStringSidA)
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
-    GET_PROC(hsecur32, GetUserNameExA)
 
 #undef GET_PROC
 }
@@ -142,17 +137,12 @@ static char *get_user_sid(void)
     TOKEN_USER *user;
     char *usersid = NULL;
 
-    if (!pConvertSidToStringSidA)
-    {
-        win_skip("ConvertSidToStringSidA is not available\n");
-        return NULL;
-    }
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     GetTokenInformation(token, TokenUser, NULL, size, &size);
 
     user = HeapAlloc(GetProcessHeap(), 0, size);
     GetTokenInformation(token, TokenUser, user, size, &size);
-    pConvertSidToStringSidA(user->User.Sid, &usersid);
+    ConvertSidToStringSidA(user->User.Sid, &usersid);
     HeapFree(GetProcessHeap(), 0, user);
 
     CloseHandle(token);
@@ -3241,7 +3231,7 @@ static void test_MsiSourceListAddSource(void)
     CHAR prod_squashed[MAX_PATH];
     CHAR keypath[MAX_PATH*2];
     CHAR username[MAX_PATH];
-    LPSTR usersid, ptr;
+    LPSTR usersid;
     LONG res;
     UINT r;
     HKEY prodkey, userkey, net, source;
@@ -3263,16 +3253,7 @@ static void test_MsiSourceListAddSource(void)
 
     /* MACHINENAME\username */
     size = MAX_PATH;
-    if (pGetUserNameExA != NULL)
-        pGetUserNameExA(NameSamCompatible, username, &size);
-    else
-    {
-        GetComputerNameA(username, &size);
-        lstrcatA(username, "\\");
-        ptr = username + lstrlenA(username);
-        size = MAX_PATH - (ptr - username);
-        GetUserNameA(ptr, &size);
-    }
+    GetUserNameExA(NameSamCompatible, username, &size);
     trace("username: %s\n", username);
 
     if (is_wow64)

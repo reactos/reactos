@@ -37,6 +37,7 @@
 #ifdef __REACTOS__
 #include <oleauto.h>
 #endif
+#include <sddl.h>
 
 #include "wine/test.h"
 #include "utils.h"
@@ -53,11 +54,9 @@ static INSTALLSTATE (WINAPI *pMsiGetComponentPathExA)
 static UINT (WINAPI *pMsiQueryFeatureStateExA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR, INSTALLSTATE *);
 
-static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR *);
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
-static HMODULE hsrclient;
 static BOOL (WINAPI *pSRRemoveRestorePoint)(DWORD);
 static BOOL (WINAPI *pSRSetRestorePointA)(RESTOREPOINTINFOA *, STATEMGRSTATUS *);
 
@@ -2359,6 +2358,7 @@ static void init_functionpointers(void)
     HMODULE hmsi = GetModuleHandleA("msi.dll");
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
+    HMODULE hsrclient = LoadLibraryA("srclient.dll");
 
 #define GET_PROC(mod, func) \
     p ## func = (void*)GetProcAddress(mod, #func); \
@@ -2371,11 +2371,9 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiGetComponentPathExA);
     GET_PROC(hmsi, MsiQueryFeatureStateExA);
 
-    GET_PROC(hadvapi32, ConvertSidToStringSidA);
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
 
-    hsrclient = LoadLibraryA("srclient.dll");
     GET_PROC(hsrclient, SRRemoveRestorePoint);
     GET_PROC(hsrclient, SRSetRestorePointA);
 
@@ -2389,17 +2387,12 @@ static char *get_user_sid(void)
     TOKEN_USER *user;
     char *usersid = NULL;
 
-    if (!pConvertSidToStringSidA)
-    {
-        win_skip("ConvertSidToStringSidA is not available\n");
-        return NULL;
-    }
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     GetTokenInformation(token, TokenUser, NULL, size, &size);
 
     user = HeapAlloc(GetProcessHeap(), 0, size);
     GetTokenInformation(token, TokenUser, user, size, &size);
-    pConvertSidToStringSidA(user->User.Sid, &usersid);
+    ConvertSidToStringSidA(user->User.Sid, &usersid);
     HeapFree(GetProcessHeap(), 0, user);
 
     CloseHandle(token);
@@ -6470,7 +6463,6 @@ START_TEST(action)
         if (ret)
             remove_restore_point(status.llSequenceNumber);
     }
-    FreeLibrary(hsrclient);
 
     SetCurrentDirectoryA(prev_path);
 }

@@ -36,7 +36,6 @@ static UINT (WINAPI *pMsiGetPatchInfoExA)( LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCON
                                            LPCSTR, LPSTR, DWORD * );
 static UINT (WINAPI *pMsiEnumPatchesExA)( LPCSTR, LPCSTR, DWORD, DWORD, DWORD, LPSTR,
                                           LPSTR, MSIINSTALLCONTEXT *, LPSTR, LPDWORD );
-static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 
 static const char *msifile = "winetest-patch.msi";
 static const char *mspfile = "winetest-patch.msp";
@@ -145,7 +144,6 @@ static const struct msi_table tables[] =
 static void init_function_pointers( void )
 {
     HMODULE hmsi = GetModuleHandleA( "msi.dll" );
-    HMODULE hadvapi32 = GetModuleHandleA( "advapi32.dll" );
 
 #define GET_PROC( mod, func ) \
     p ## func = (void *)GetProcAddress( mod, #func ); \
@@ -156,7 +154,6 @@ static void init_function_pointers( void )
     GET_PROC( hmsi, MsiGetPatchInfoExA );
     GET_PROC( hmsi, MsiEnumPatchesExA );
 
-    GET_PROC( hadvapi32, OpenProcessToken );
 #undef GET_PROC
 }
 
@@ -164,9 +161,7 @@ static BOOL is_process_limited(void)
 {
     HANDLE token;
 
-    if (!pOpenProcessToken) return FALSE;
-
-    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
     {
         BOOL ret;
         TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
