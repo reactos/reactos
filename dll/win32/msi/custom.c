@@ -586,6 +586,7 @@ static DWORD WINAPI DllThread( LPVOID arg )
     void *cookie;
     BOOL wow64;
     DWORD arch;
+    BOOL ret;
     DWORD rc;
 
     TRACE("custom action (%x) started\n", GetCurrentThreadId() );
@@ -608,9 +609,9 @@ static DWORD WINAPI DllThread( LPVOID arg )
     }
 
     info = find_action_by_guid(guid);
-    GetBinaryTypeW(info->source, &arch);
+    ret = GetBinaryTypeW(info->source, &arch);
 
-    if (sizeof(void *) == 8 && arch == SCS_32BIT_BINARY)
+    if (sizeof(void *) == 8 && ret && arch == SCS_32BIT_BINARY)
         GetSystemWow64DirectoryW(buffer, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
     else
         GetSystemDirectoryW(buffer, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
