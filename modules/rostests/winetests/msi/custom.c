@@ -1698,3 +1698,31 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
 
     return ERROR_SUCCESS;
 }
+
+static const char rp_key[] = "Software\\Microsoft\\Windows\\CurrentVersion\\"
+    "Uninstall\\{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}";
+
+UINT WINAPI rp_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, rp_key, 0, KEY_READ | KEY_WOW64_32KEY, &key);
+    ok(hinst, !res, "got %u\n", res);
+    check_reg_str(hinst, key, "DisplayName", "MSITEST");
+    RegCloseKey(key);
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI rp_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, rp_key, 0, KEY_READ | KEY_WOW64_32KEY, &key);
+todo_wine
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    return ERROR_SUCCESS;
+}

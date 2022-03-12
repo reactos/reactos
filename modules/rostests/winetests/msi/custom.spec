@@ -33,6 +33,8 @@
 @ stdcall rmi_absent(long)
 @ stdcall rd_present(long)
 @ stdcall rd_absent(long)
+@ stdcall rp_present(long)
+@ stdcall rp_absent(long)
 @ stdcall sds_present(long)
 @ stdcall sds_absent(long)
 @ stdcall sis_present(long)
