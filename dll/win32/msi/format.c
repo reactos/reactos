@@ -242,7 +242,7 @@ static WCHAR *deformat_file( FORMAT *format, FORMSTR *str, BOOL shortname, int *
         if ((ret = strdupW( file->TargetPath ))) len = strlenW( ret );
         goto done;
     }
-    if ((len = GetShortPathNameW(file->TargetPath, NULL, 0)) <= 0)
+    if (!(len = GetShortPathNameW(file->TargetPath, NULL, 0)))
     {
         if ((ret = strdupW( file->TargetPath ))) len = strlenW( ret );
         goto done;
