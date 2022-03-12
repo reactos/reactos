@@ -32,19 +32,13 @@
 #include <objidl.h>
 
 #include "wine/test.h"
+#include "utils.h"
 
 static BOOL is_wow64;
 static const char msifile[] = "winetest.msi";
 static const WCHAR msifileW[] = {'w','i','n','e','t','e','s','t','.','m','s','i',0};
-static char CURR_DIR[MAX_PATH];
-static char PROG_FILES_DIR[MAX_PATH];
-static char PROG_FILES_DIR_NATIVE[MAX_PATH];
-static char COMMON_FILES_DIR[MAX_PATH];
-static char WINDOWS_DIR[MAX_PATH];
 
-static BOOL (WINAPI *pCheckTokenMembership)(HANDLE,PSID,PBOOL);
 static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
-static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
@@ -110,113 +104,11 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiEnumComponentsExA)
     GET_PROC(hmsi, MsiSourceListGetInfoA)
 
-    GET_PROC(hadvapi32, CheckTokenMembership);
     GET_PROC(hadvapi32, ConvertSidToStringSidA)
-    GET_PROC(hadvapi32, OpenProcessToken);
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
 
 #undef GET_PROC
-}
-
-static BOOL get_system_dirs(void)
-{
-    HKEY hkey;
-    DWORD type, size;
-
-    if (RegOpenKeyA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", &hkey))
-        return FALSE;
-
-    size = MAX_PATH;
-    if (RegQueryValueExA(hkey, "ProgramFilesDir (x86)", 0, &type, (LPBYTE)PROG_FILES_DIR, &size) &&
-        RegQueryValueExA(hkey, "ProgramFilesDir", 0, &type, (LPBYTE)PROG_FILES_DIR, &size))
-    {
-        RegCloseKey(hkey);
-        return FALSE;
-    }
-    size = MAX_PATH;
-    if (RegQueryValueExA(hkey, "CommonFilesDir (x86)", 0, &type, (LPBYTE)COMMON_FILES_DIR, &size) &&
-        RegQueryValueExA(hkey, "CommonFilesDir", 0, &type, (LPBYTE)COMMON_FILES_DIR, &size))
-    {
-        RegCloseKey(hkey);
-        return FALSE;
-    }
-    size = MAX_PATH;
-    if (RegQueryValueExA(hkey, "ProgramFilesDir", 0, &type, (LPBYTE)PROG_FILES_DIR_NATIVE, &size))
-    {
-        RegCloseKey(hkey);
-        return FALSE;
-    }
-    RegCloseKey(hkey);
-    if (!GetWindowsDirectoryA(WINDOWS_DIR, MAX_PATH)) return FALSE;
-    return TRUE;
-}
-
-static BOOL file_exists(const char *file)
-{
-    return GetFileAttributesA(file) != INVALID_FILE_ATTRIBUTES;
-}
-
-static BOOL pf_exists(const char *file)
-{
-    char path[MAX_PATH];
-
-    lstrcpyA(path, PROG_FILES_DIR);
-    lstrcatA(path, "\\");
-    lstrcatA(path, file);
-    return file_exists(path);
-}
-
-static BOOL delete_pf(const char *rel_path, BOOL is_file)
-{
-    char path[MAX_PATH];
-
-    lstrcpyA(path, PROG_FILES_DIR);
-    lstrcatA(path, "\\");
-    lstrcatA(path, rel_path);
-
-    if (is_file)
-        return DeleteFileA(path);
-    else
-        return RemoveDirectoryA(path);
-}
-
-static BOOL is_process_limited(void)
-{
-    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-    PSID Group = NULL;
-    BOOL IsInGroup;
-    HANDLE token;
-
-    if (!pCheckTokenMembership || !pOpenProcessToken) return FALSE;
-
-    if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
-        !pCheckTokenMembership(NULL, Group, &IsInGroup))
-    {
-        trace("Could not check if the current user is an administrator\n");
-        FreeSid(Group);
-        return FALSE;
-    }
-    FreeSid(Group);
-
-    if (!IsInGroup)
-    {
-        /* Only administrators have enough privileges for these tests */
-        return TRUE;
-    }
-
-    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
-    {
-        BOOL ret;
-        TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
-        DWORD size;
-
-        ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
-        CloseHandle(token);
-        return (ret && type == TokenElevationTypeLimited);
-    }
-    return FALSE;
 }
 
 /* cabinet definitions */
@@ -224,213 +116,6 @@ static BOOL is_process_limited(void)
 /* make the max size large so there is only one cab file */
 #define MEDIA_SIZE          0x7FFFFFFF
 #define FOLDER_THRESHOLD    900000
-
-/* the FCI callbacks */
-
-static void * CDECL mem_alloc(ULONG cb)
-{
-    return HeapAlloc(GetProcessHeap(), 0, cb);
-}
-
-static void CDECL mem_free(void *memory)
-{
-    HeapFree(GetProcessHeap(), 0, memory);
-}
-
-static BOOL CDECL get_next_cabinet(PCCAB pccab, ULONG  cbPrevCab, void *pv)
-{
-    sprintf(pccab->szCab, pv, pccab->iCab);
-    return TRUE;
-}
-
-static LONG CDECL progress(UINT typeStatus, ULONG cb1, ULONG cb2, void *pv)
-{
-    return 0;
-}
-
-static int CDECL file_placed(PCCAB pccab, char *pszFile, LONG cbFile,
-                             BOOL fContinuation, void *pv)
-{
-    return 0;
-}
-
-static INT_PTR CDECL fci_open(char *pszFile, int oflag, int pmode, int *err, void *pv)
-{
-    HANDLE handle;
-    DWORD dwAccess = 0;
-    DWORD dwShareMode = 0;
-    DWORD dwCreateDisposition = OPEN_EXISTING;
-
-    dwAccess = GENERIC_READ | GENERIC_WRITE;
-    /* FILE_SHARE_DELETE is not supported by Windows Me/98/95 */
-    dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-
-    if (GetFileAttributesA(pszFile) != INVALID_FILE_ATTRIBUTES)
-        dwCreateDisposition = OPEN_EXISTING;
-    else
-        dwCreateDisposition = CREATE_NEW;
-
-    handle = CreateFileA(pszFile, dwAccess, dwShareMode, NULL,
-                         dwCreateDisposition, 0, NULL);
-
-    ok(handle != INVALID_HANDLE_VALUE, "Failed to CreateFile %s\n", pszFile);
-
-    return (INT_PTR)handle;
-}
-
-static UINT CDECL fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
-{
-    HANDLE handle = (HANDLE)hf;
-    DWORD dwRead;
-    BOOL res;
-
-    res = ReadFile(handle, memory, cb, &dwRead, NULL);
-    ok(res, "Failed to ReadFile\n");
-
-    return dwRead;
-}
-
-static UINT CDECL fci_write(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
-{
-    HANDLE handle = (HANDLE)hf;
-    DWORD dwWritten;
-    BOOL res;
-
-    res = WriteFile(handle, memory, cb, &dwWritten, NULL);
-    ok(res, "Failed to WriteFile\n");
-
-    return dwWritten;
-}
-
-static int CDECL fci_close(INT_PTR hf, int *err, void *pv)
-{
-    HANDLE handle = (HANDLE)hf;
-    ok(CloseHandle(handle), "Failed to CloseHandle\n");
-
-    return 0;
-}
-
-static LONG CDECL fci_seek(INT_PTR hf, LONG dist, int seektype, int *err, void *pv)
-{
-    HANDLE handle = (HANDLE)hf;
-    DWORD ret;
-
-    ret = SetFilePointer(handle, dist, NULL, seektype);
-    ok(ret != INVALID_SET_FILE_POINTER, "Failed to SetFilePointer\n");
-
-    return ret;
-}
-
-static int CDECL fci_delete(char *pszFile, int *err, void *pv)
-{
-    BOOL ret = DeleteFileA(pszFile);
-    ok(ret, "Failed to DeleteFile %s\n", pszFile);
-
-    return 0;
-}
-
-static BOOL CDECL get_temp_file(char *pszTempName, int cbTempName, void *pv)
-{
-    LPSTR tempname;
-
-    tempname = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
-    GetTempFileNameA(".", "xx", 0, tempname);
-
-    if (tempname && (strlen(tempname) < (unsigned)cbTempName))
-    {
-        lstrcpyA(pszTempName, tempname);
-        HeapFree(GetProcessHeap(), 0, tempname);
-        return TRUE;
-    }
-
-    HeapFree(GetProcessHeap(), 0, tempname);
-
-    return FALSE;
-}
-
-static INT_PTR CDECL get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
-                                   USHORT *pattribs, int *err, void *pv)
-{
-    BY_HANDLE_FILE_INFORMATION finfo;
-    FILETIME filetime;
-    HANDLE handle;
-    DWORD attrs;
-    BOOL res;
-
-    handle = CreateFileA(pszName, GENERIC_READ, FILE_SHARE_READ, NULL,
-                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-    ok(handle != INVALID_HANDLE_VALUE, "Failed to CreateFile %s\n", pszName);
-
-    res = GetFileInformationByHandle(handle, &finfo);
-    ok(res, "Expected GetFileInformationByHandle to succeed\n");
-
-    FileTimeToLocalFileTime(&finfo.ftLastWriteTime, &filetime);
-    FileTimeToDosDateTime(&filetime, pdate, ptime);
-
-    attrs = GetFileAttributesA(pszName);
-    ok(attrs != INVALID_FILE_ATTRIBUTES, "Failed to GetFileAttributes\n");
-
-    return (INT_PTR)handle;
-}
-
-static BOOL add_file(HFCI hfci, const char *file, TCOMP compress)
-{
-    char path[MAX_PATH];
-    char filename[MAX_PATH];
-
-    lstrcpyA(path, CURR_DIR);
-    lstrcatA(path, "\\");
-    lstrcatA(path, file);
-
-    lstrcpyA(filename, file);
-
-    return FCIAddFile(hfci, path, filename, FALSE, get_next_cabinet,
-                      progress, get_open_info, compress);
-}
-
-static void set_cab_parameters(PCCAB pCabParams, const CHAR *name, DWORD max_size)
-{
-    ZeroMemory(pCabParams, sizeof(CCAB));
-
-    pCabParams->cb = max_size;
-    pCabParams->cbFolderThresh = FOLDER_THRESHOLD;
-    pCabParams->setID = 0xbeef;
-    pCabParams->iCab = 1;
-    lstrcpyA(pCabParams->szCabPath, CURR_DIR);
-    lstrcatA(pCabParams->szCabPath, "\\");
-    lstrcpyA(pCabParams->szCab, name);
-}
-
-static void create_cab_file(const CHAR *name, DWORD max_size, const CHAR *files)
-{
-    CCAB cabParams;
-    LPCSTR ptr;
-    HFCI hfci;
-    ERF erf;
-    BOOL res;
-
-    set_cab_parameters(&cabParams, name, max_size);
-
-    hfci = FCICreate(&erf, file_placed, mem_alloc, mem_free, fci_open,
-                      fci_read, fci_write, fci_close, fci_seek, fci_delete,
-                      get_temp_file, &cabParams, NULL);
-
-    ok(hfci != NULL, "Failed to create an FCI context\n");
-
-    ptr = files;
-    while (*ptr)
-    {
-        res = add_file(hfci, ptr, tcompTYPE_MSZIP);
-        ok(res, "Failed to add file: %s\n", ptr);
-        ptr += lstrlenA(ptr) + 1;
-    }
-
-    res = FCIFlushCabinet(hfci, FALSE, get_next_cabinet, progress);
-    ok(res, "Failed to flush the cabinet\n");
-
-    res = FCIDestroy(hfci);
-    ok(res, "Failed to destroy the cabinet\n");
-}
 
 static BOOL add_cabinet_storage(LPCSTR db, LPCSTR cabinet)
 {
@@ -467,24 +152,6 @@ static BOOL add_cabinet_storage(LPCSTR db, LPCSTR cabinet)
     IStorage_Release(stg);
 
     return TRUE;
-}
-
-static void delete_cab_files(void)
-{
-    SHFILEOPSTRUCTA shfl;
-    CHAR path[MAX_PATH+10];
-
-    lstrcpyA(path, CURR_DIR);
-    lstrcatA(path, "\\*.cab");
-    path[strlen(path) + 1] = '\0';
-
-    shfl.hwnd = NULL;
-    shfl.wFunc = FO_DELETE;
-    shfl.pFrom = path;
-    shfl.pTo = NULL;
-    shfl.fFlags = FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NORECURSION | FOF_SILENT;
-
-    SHFileOperationA(&shfl);
 }
 
 /* msi database data */
@@ -908,15 +575,6 @@ static const char cl_install_exec_seq_dat[] =
     "InstallValidate\t\t1400\n"
     "InstallFinalize\t\t5000\n";
 
-typedef struct _msi_table
-{
-    const CHAR *filename;
-    const CHAR *data;
-    int size;
-} msi_table;
-
-#define ADD_TABLE(x) {#x".idt", x##_dat, sizeof(x##_dat)}
-
 static const msi_table tables[] =
 {
     ADD_TABLE(directory),
@@ -1043,107 +701,6 @@ static const msi_table cl_tables[] =
     ADD_TABLE(property)
 };
 
-static void write_file(const CHAR *filename, const char *data, int data_size)
-{
-    DWORD size;
-
-    HANDLE hf = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
-                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    WriteFile(hf, data, data_size, &size, NULL);
-    CloseHandle(hf);
-}
-
-static void write_msi_summary_info(MSIHANDLE db, INT version, INT wordcount, const char *template)
-{
-    MSIHANDLE summary;
-    UINT r;
-
-    r = MsiGetSummaryInformationA(db, NULL, 5, &summary);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiSummaryInfoSetPropertyA(summary, PID_TEMPLATE, VT_LPSTR, 0, NULL, template);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiSummaryInfoSetPropertyA(summary, PID_REVNUMBER, VT_LPSTR, 0, NULL,
-                                   "{004757CA-5092-49C2-AD20-28E1CE0DF5F2}");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiSummaryInfoSetPropertyA(summary, PID_PAGECOUNT, VT_I4, version, NULL, NULL);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiSummaryInfoSetPropertyA(summary, PID_WORDCOUNT, VT_I4, wordcount, NULL, NULL);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiSummaryInfoSetPropertyA(summary, PID_TITLE, VT_LPSTR, 0, NULL, "MSITEST");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    /* write the summary changes back to the stream */
-    r = MsiSummaryInfoPersist(summary);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    MsiCloseHandle(summary);
-}
-
-#define create_database(name, tables, num_tables) \
-    create_database_wordcount(name, tables, num_tables, 100, 0, ";1033");
-
-#define create_database_template(name, tables, num_tables, version, template) \
-    create_database_wordcount(name, tables, num_tables, version, 0, template);
-
-static void create_database_wordcount(const CHAR *name, const msi_table *tables,
-                                      int num_tables, INT version, INT wordcount,
-                                      const char *template)
-{
-    MSIHANDLE db;
-    UINT r;
-    WCHAR *nameW;
-    int j, len;
-
-    len = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );
-    if (!(nameW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return;
-    MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, len );
-
-    r = MsiOpenDatabaseW(nameW, MSIDBOPEN_CREATE, &db);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    /* import the tables into the database */
-    for (j = 0; j < num_tables; j++)
-    {
-        const msi_table *table = &tables[j];
-
-        write_file(table->filename, table->data, (table->size - 1) * sizeof(char));
-
-        r = MsiDatabaseImportA(db, CURR_DIR, table->filename);
-        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-        DeleteFileA(table->filename);
-    }
-
-    write_msi_summary_info(db, version, wordcount, template);
-
-    r = MsiDatabaseCommit(db);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    MsiCloseHandle(db);
-    HeapFree( GetProcessHeap(), 0, nameW );
-}
-
-static UINT run_query(MSIHANDLE hdb, const char *query)
-{
-    MSIHANDLE hview = 0;
-    UINT r;
-
-    r = MsiDatabaseOpenViewA(hdb, query, &hview);
-    if (r != ERROR_SUCCESS)
-        return r;
-
-    r = MsiViewExecute(hview, 0);
-    if (r == ERROR_SUCCESS)
-        r = MsiViewClose(hview);
-    MsiCloseHandle(hview);
-    return r;
-}
-
 static UINT set_summary_info(MSIHANDLE hdb, LPSTR prodcode)
 {
     UINT res;
@@ -1207,7 +764,7 @@ static MSIHANDLE create_package_db(LPSTR prodcode)
 
     set_summary_info(hdb, prodcode);
 
-    res = run_query(hdb,
+    res = run_query(hdb, 0,
             "CREATE TABLE `Directory` ( "
             "`Directory` CHAR(255) NOT NULL, "
             "`Directory_Parent` CHAR(255), "
@@ -1215,7 +772,7 @@ static MSIHANDLE create_package_db(LPSTR prodcode)
             "PRIMARY KEY `Directory`)");
     ok(res == ERROR_SUCCESS , "Failed to create directory table\n");
 
-    res = run_query(hdb,
+    res = run_query(hdb, 0,
             "CREATE TABLE `Property` ( "
             "`Property` CHAR(72) NOT NULL, "
             "`Value` CHAR(255) "
@@ -1225,7 +782,7 @@ static MSIHANDLE create_package_db(LPSTR prodcode)
     sprintf(query, "INSERT INTO `Property` "
             "(`Property`, `Value`) "
             "VALUES( 'ProductCode', '%s' )", prodcode);
-    res = run_query(hdb, query);
+    res = run_query(hdb, 0, query);
     ok(res == ERROR_SUCCESS , "Failed\n");
 
     res = MsiDatabaseCommit(hdb);
@@ -1428,39 +985,21 @@ static void test_getcomponentpath(void)
     ok( r == INSTALLSTATE_UNKNOWN, "wrong return value\n");
 }
 
-static void create_file(LPCSTR name, LPCSTR data, DWORD size)
-{
-    HANDLE file;
-    DWORD written;
-
-    file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "Failure to open file %s\n", name);
-    WriteFile(file, data, strlen(data), &written, NULL);
-
-    if (size)
-    {
-        SetFilePointer(file, size, NULL, FILE_BEGIN);
-        SetEndOfFile(file);
-    }
-
-    CloseHandle(file);
-}
-
 static void create_test_files(void)
 {
     CreateDirectoryA("msitest", NULL);
-    create_file("msitest\\one.txt", "msitest\\one.txt", 100);
+    create_file("msitest\\one.txt", 100);
     CreateDirectoryA("msitest\\first", NULL);
-    create_file("msitest\\first\\two.txt", "msitest\\first\\two.txt", 100);
+    create_file("msitest\\first\\two.txt", 100);
     CreateDirectoryA("msitest\\second", NULL);
-    create_file("msitest\\second\\three.txt", "msitest\\second\\three.txt", 100);
+    create_file("msitest\\second\\three.txt", 100);
 
-    create_file("four.txt", "four.txt", 100);
-    create_file("five.txt", "five.txt", 100);
+    create_file("four.txt", 100);
+    create_file("five.txt", 100);
     create_cab_file("msitest.cab", MEDIA_SIZE, "four.txt\0five.txt\0");
 
-    create_file("msitest\\filename", "msitest\\filename", 100);
-    create_file("msitest\\service.exe", "msitest\\service.exe", 100);
+    create_file("msitest\\filename", 100);
+    create_file("msitest\\service.exe", 100);
 
     DeleteFileA("four.txt");
     DeleteFileA("five.txt");
@@ -1559,7 +1098,7 @@ static void test_MsiGetFileHash(void)
     {
         int ret;
 
-        create_file(name, hash_data[i].data, hash_data[i].size);
+        create_file_data(name, hash_data[i].data, hash_data[i].size);
 
         memset(&hash, 0, sizeof(MSIFILEHASHINFO));
         hash.dwFileHashInfoSize = sizeof(MSIFILEHASHINFO);
@@ -3030,7 +2569,7 @@ static void test_MsiGetComponentPath(void)
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
 
-    create_file("C:\\imapath", "C:\\imapath", 11);
+    create_file("C:\\imapath", 11);
 
     /* file exists */
     path[0] = 'a';
@@ -3134,7 +2673,7 @@ static void test_MsiGetComponentPath(void)
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
 
-    create_file("C:\\imapath", "C:\\imapath", 11);
+    create_file("C:\\imapath", 11);
 
     /* file exists */
     path[0] = 0;
@@ -3244,7 +2783,7 @@ static void test_MsiGetComponentPath(void)
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
 
-    create_file("C:\\imapath", "C:\\imapath", 11);
+    create_file("C:\\imapath", 11);
 
     /* file exists */
     path[0] = 0;
@@ -3326,7 +2865,7 @@ static void test_MsiGetComponentPath(void)
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
 
-    create_file("C:\\imapath", "C:\\imapath", 11);
+    create_file("C:\\imapath", 11);
 
     /* file exists */
     path[0] = 0;
@@ -3403,7 +2942,7 @@ static void test_MsiGetComponentPath(void)
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
 
-    create_file("C:\\imapath", "C:\\imapath", 11);
+    create_file("C:\\imapath", 11);
 
     /* file exists */
     path[0] = 0;
@@ -3537,7 +3076,7 @@ static void test_MsiGetComponentPathEx(void)
     ok( !lstrcmpA( path, "c:\\testcomponentpath"), "got %s\n", path );
     ok( size == 20, "got %u\n", size );
 
-    create_file( "c:\\testcomponentpath", "c:\\testcomponentpath", 21 );
+    create_file( "c:\\testcomponentpath", 21 );
 
     /* file exists */
     path[0] = 0;
@@ -3600,7 +3139,7 @@ static void test_MsiGetComponentPathEx(void)
     ok( !lstrcmpA( path, "c:\\testcomponentpath"), "got %s\n", path );
     ok( size == 20, "got %u\n", size );
 
-    create_file( "c:\\testcomponentpath", "c:\\testcomponentpath", 21 );
+    create_file( "c:\\testcomponentpath", 21 );
 
     /* file exists */
     path[0] = 0;
@@ -3676,7 +3215,7 @@ static void test_MsiGetComponentPathEx(void)
     ok( !lstrcmpA( path, "c:\\testcomponentpath" ), "got %s\n", path );
     ok( size == 20, "got %u\n", size );
 
-    create_file( "c:\\testcomponentpath", "C:\\testcomponentpath", 21 );
+    create_file( "c:\\testcomponentpath", 21 );
 
     /* file exists */
     path[0] = 0;
@@ -3731,7 +3270,7 @@ static void test_MsiGetComponentPathEx(void)
     ok( !lstrcmpA( path, "c:\\testcomponentpath" ), "got %s\n", path );
     ok( size == 20, "got %u\n", size );
 
-    create_file( "c:\\testcomponentpath", "c:\\testcomponentpath", 21 );
+    create_file( "c:\\testcomponentpath", 21 );
 
     /* file exists */
     path[0] = 0;
@@ -3773,7 +3312,7 @@ static void test_MsiProvideComponent(void)
     }
 
     create_test_files();
-    create_file("msitest\\sourcedir.txt", "msitest\\sourcedir.txt", 1000);
+    create_file("msitest\\sourcedir.txt", 1000);
     create_database(msifile, sd_tables, sizeof(sd_tables) / sizeof(msi_table));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
@@ -3957,7 +3496,7 @@ static void test_MsiProvideQualifiedComponentEx(void)
     lstrcatA( path, "\\msitest" );
     CreateDirectoryA( path, NULL );
     lstrcatA( path, "\\test.txt" );
-    create_file( path, "test", 100 );
+    create_file_data( path, "test", 100 );
 
     res = RegSetValueExA( hkey5, prod_squashed, 0, REG_SZ, (const BYTE *)path, lstrlenA(path) + 1 );
     ok( res == ERROR_SUCCESS, "got %d\n", res );
@@ -4600,7 +4139,7 @@ static void test_MsiGetFileVersion(void)
     ok(r == ERROR_FILE_NOT_FOUND,
        "Expected ERROR_FILE_NOT_FOUND, got %d\n", r);
 
-    create_file("ver.txt", "ver.txt", 20);
+    create_file("ver.txt", 20);
 
     /* file exists, no version information */
     r = MsiGetFileVersionA("ver.txt", NULL, NULL, NULL, NULL);
@@ -13544,7 +13083,7 @@ static void test_MsiGetFileSignatureInformation(void)
     hr = MsiGetFileSignatureInformationA( "signature.bin", 0, &cert, NULL, &len );
     todo_wine ok(hr == CRYPT_E_FILE_ERROR, "expected CRYPT_E_FILE_ERROR got 0x%08x\n", hr);
 
-    create_file( "signature.bin", "signature", sizeof("signature") );
+    create_file_data( "signature.bin", "signature", sizeof("signature") );
 
     hr = MsiGetFileSignatureInformationA( "signature.bin", 0, NULL, NULL, NULL );
     ok(hr == E_INVALIDARG, "expected E_INVALIDARG got 0x%08x\n", hr);
@@ -13909,9 +13448,9 @@ static void test_MsiConfigureProductEx(void)
     }
 
     CreateDirectoryA("msitest", NULL);
-    create_file("msitest\\hydrogen", "hydrogen", 500);
-    create_file("msitest\\helium", "helium", 500);
-    create_file("msitest\\lithium", "lithium", 500);
+    create_file_data("msitest\\hydrogen", "hydrogen", 500);
+    create_file_data("msitest\\helium", "helium", 500);
+    create_file_data("msitest\\lithium", "lithium", 500);
 
     create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
 
@@ -14452,7 +13991,7 @@ static void test_lastusedsource(void)
     }
 
     CreateDirectoryA("msitest", NULL);
-    create_file("maximus", "maximus", 500);
+    create_file("maximus", 500);
     create_cab_file("test1.cab", MEDIA_SIZE, "maximus\0");
     DeleteFileA("maximus");
 
@@ -14576,7 +14115,7 @@ static void test_setpropertyfolder(void)
     lstrcatA(path, "\\msitest\\added");
 
     CreateDirectoryA("msitest", NULL);
-    create_file("msitest\\maximus", "msitest\\maximus", 500);
+    create_file("msitest\\maximus", 500);
 
     create_database(msifile, spf_tables, sizeof(spf_tables) / sizeof(msi_table));
 
@@ -14620,7 +14159,7 @@ static void test_sourcedir_props(void)
     }
 
     create_test_files();
-    create_file("msitest\\sourcedir.txt", "msitest\\sourcedir.txt", 1000);
+    create_file("msitest\\sourcedir.txt", 1000);
     create_database(msifile, sd_tables, sizeof(sd_tables) / sizeof(msi_table));
 
     MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
@@ -14685,8 +14224,8 @@ static void test_concurrentinstall(void)
 
     CreateDirectoryA("msitest", NULL);
     CreateDirectoryA("msitest\\msitest", NULL);
-    create_file("msitest\\maximus", "msitest\\maximus", 500);
-    create_file("msitest\\msitest\\augustus", "msitest\\msitest\\augustus", 500);
+    create_file("msitest\\maximus", 500);
+    create_file("msitest\\msitest\\augustus", 500);
 
     create_database(msifile, ci_tables, sizeof(ci_tables) / sizeof(msi_table));
 

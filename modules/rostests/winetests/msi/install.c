@@ -35,6 +35,7 @@
 #include <shellapi.h>
 
 #include "wine/test.h"
+#include "utils.h"
 
 static UINT (WINAPI *pMsiQueryComponentStateA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR, INSTALLSTATE*);
@@ -43,9 +44,7 @@ static UINT (WINAPI *pMsiSourceListEnumSourcesA)
 static INSTALLSTATE (WINAPI *pMsiGetComponentPathExA)
     (LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPSTR, LPDWORD);
 
-static BOOL (WINAPI *pCheckTokenMembership)(HANDLE,PSID,PBOOL);
 static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
-static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 static BOOL (WINAPI *pWow64DisableWow64FsRedirection)(void **);
@@ -65,12 +64,12 @@ static const char *mstfile = "winetest.mst";
 static const WCHAR msifileW[] = {'m','s','i','t','e','s','t','.','m','s','i',0};
 static const WCHAR msifile2W[] = {'w','i','n','e','t','e','s','t','2','.','m','s','i',0};
 
-static CHAR CURR_DIR[MAX_PATH];
-static CHAR PROG_FILES_DIR[MAX_PATH];
-static CHAR PROG_FILES_DIR_NATIVE[MAX_PATH];
-static CHAR COMMON_FILES_DIR[MAX_PATH];
-static CHAR APP_DATA_DIR[MAX_PATH];
-static CHAR WINDOWS_DIR[MAX_PATH];
+char CURR_DIR[MAX_PATH];
+char PROG_FILES_DIR[MAX_PATH];
+char PROG_FILES_DIR_NATIVE[MAX_PATH];
+char COMMON_FILES_DIR[MAX_PATH];
+char APP_DATA_DIR[MAX_PATH];
+char WINDOWS_DIR[MAX_PATH];
 
 static const char *customdll;
 
@@ -1348,15 +1347,6 @@ static const CHAR x64_directory_dat[] =
     "ProgramFiles64Folder\tTARGETDIR\t.\n"
     "TARGETDIR\t\tSourceDir";
 
-typedef struct _msi_table
-{
-    const CHAR *filename;
-    const CHAR *data;
-    int size;
-} msi_table;
-
-#define ADD_TABLE(x) {#x".idt", x##_dat, sizeof(x##_dat)}
-
 static const msi_table tables[] =
 {
     ADD_TABLE(component),
@@ -2084,8 +2074,7 @@ static INT_PTR CDECL fci_open(char *pszFile, int oflag, int pmode, int *err, voi
     DWORD dwCreateDisposition = OPEN_EXISTING;
 
     dwAccess = GENERIC_READ | GENERIC_WRITE;
-    /* FILE_SHARE_DELETE is not supported by Windows Me/98/95 */
-    dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+    dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
 
     if (GetFileAttributesA(pszFile) != INVALID_FILE_ATTRIBUTES)
         dwCreateDisposition = OPEN_EXISTING;
@@ -2166,9 +2155,7 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiSourceListEnumSourcesA);
     GET_PROC(hmsi, MsiGetComponentPathExA);
 
-    GET_PROC(hadvapi32, CheckTokenMembership);
     GET_PROC(hadvapi32, ConvertSidToStringSidA);
-    GET_PROC(hadvapi32, OpenProcessToken);
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
     GET_PROC(hkernel32, Wow64DisableWow64FsRedirection);
@@ -2181,18 +2168,16 @@ static void init_functionpointers(void)
 #undef GET_PROC
 }
 
-static BOOL is_process_limited(void)
+BOOL is_process_limited(void)
 {
     SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
     PSID Group = NULL;
     BOOL IsInGroup;
     HANDLE token;
 
-    if (!pCheckTokenMembership || !pOpenProcessToken) return FALSE;
-
     if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
                                   DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
-        !pCheckTokenMembership(NULL, Group, &IsInGroup))
+        !CheckTokenMembership(NULL, Group, &IsInGroup))
     {
         trace("Could not check if the current user is an administrator\n");
         FreeSid(Group);
@@ -2206,7 +2191,7 @@ static BOOL is_process_limited(void)
         return TRUE;
     }
 
-    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
     {
         BOOL ret;
         TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
@@ -2303,7 +2288,7 @@ static void set_cab_parameters(PCCAB pCabParams, const CHAR *name, DWORD max_siz
     lstrcpyA(pCabParams->szCab, name);
 }
 
-static void create_cab_file(const CHAR *name, DWORD max_size, const CHAR *files)
+void create_cab_file(const CHAR *name, DWORD max_size, const CHAR *files)
 {
     CCAB cabParams;
     LPCSTR ptr;
@@ -2334,7 +2319,7 @@ static void create_cab_file(const CHAR *name, DWORD max_size, const CHAR *files)
     ok(res, "Failed to destroy the cabinet\n");
 }
 
-static BOOL get_user_dirs(void)
+BOOL get_user_dirs(void)
 {
     HKEY hkey;
     DWORD type, size;
@@ -2353,7 +2338,7 @@ static BOOL get_user_dirs(void)
     return TRUE;
 }
 
-static BOOL get_system_dirs(void)
+BOOL get_system_dirs(void)
 {
     HKEY hkey;
     DWORD type, size;
@@ -2390,7 +2375,7 @@ static BOOL get_system_dirs(void)
     return TRUE;
 }
 
-static void create_file_data(LPCSTR name, LPCSTR data, DWORD size)
+void create_file_data(LPCSTR name, LPCSTR data, DWORD size)
 {
     HANDLE file;
     DWORD written;
@@ -2409,8 +2394,6 @@ static void create_file_data(LPCSTR name, LPCSTR data, DWORD size)
 
     CloseHandle(file);
 }
-
-#define create_file(name, size) create_file_data(name, name, size)
 
 static void create_test_files(void)
 {
@@ -2432,7 +2415,7 @@ static void create_test_files(void)
     DeleteFileA("five.txt");
 }
 
-static BOOL delete_pf(const CHAR *rel_path, BOOL is_file)
+BOOL delete_pf(const CHAR *rel_path, BOOL is_file)
 {
     CHAR path[MAX_PATH];
 
@@ -2568,17 +2551,8 @@ static void write_msi_summary_info(MSIHANDLE db, INT version, INT wordcount,
     MsiCloseHandle(summary);
 }
 
-#define create_database(name, tables, num_tables) \
-    create_database_wordcount(name, tables, num_tables, 100, 0, ";1033", \
-                              "{004757CA-5092-49C2-AD20-28E1CE0DF5F2}");
-
-#define create_database_template(name, tables, num_tables, version, template) \
-    create_database_wordcount(name, tables, num_tables, version, 0, template, \
-                              "{004757CA-5092-49C2-AD20-28E1CE0DF5F2}");
-
-static void create_database_wordcount(const CHAR *name, const msi_table *tables,
-                                      int num_tables, INT version, INT wordcount,
-                                      const char *template, const char *packagecode)
+void create_database_wordcount(const CHAR *name, const msi_table *tables, int num_tables,
+    INT version, INT wordcount, const char *template, const char *packagecode)
 {
     MSIHANDLE db;
     UINT r;
@@ -3018,7 +2992,7 @@ static void create_cc_test_files(void)
     DeleteFileA("caesar");
 }
 
-static void delete_cab_files(void)
+void delete_cab_files(void)
 {
     SHFILEOPSTRUCTA shfl;
     CHAR path[MAX_PATH+10];
@@ -3536,12 +3510,12 @@ error:
     RemoveDirectoryA("msitest");
 }
 
-static BOOL file_exists(LPCSTR file)
+BOOL file_exists(const char *file)
 {
     return GetFileAttributesA(file) != INVALID_FILE_ATTRIBUTES;
 }
 
-static BOOL pf_exists(LPCSTR file)
+BOOL pf_exists(const char *file)
 {
     CHAR path[MAX_PATH];
 
@@ -3574,7 +3548,7 @@ static void delete_pfmsitest_files(void)
     RemoveDirectoryA(path);
 }
 
-static UINT run_query(MSIHANDLE hdb, MSIHANDLE hrec, const char *query)
+UINT run_query(MSIHANDLE hdb, MSIHANDLE hrec, const char *query)
 {
     MSIHANDLE hview = 0;
     UINT r;
@@ -3976,7 +3950,7 @@ error:
     RemoveDirectoryA("msitest");
 }
 
-static void create_pf_data(LPCSTR file, LPCSTR data, BOOL is_file)
+void create_pf_data(LPCSTR file, LPCSTR data, BOOL is_file)
 {
     CHAR path[MAX_PATH];
 
