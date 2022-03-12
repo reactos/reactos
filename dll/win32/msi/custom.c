@@ -35,15 +35,11 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "winemsi.h"
+#include "winemsi_s.h"
 #include "wine/heap.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "wine/exception.h"
-
-#ifdef _MSC_VER
-#include "msvchelper.h"
-#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -491,41 +487,41 @@ static void handle_msi_break(LPCSTR target)
     DebugBreak();
 }
 
-#ifdef __i386__
-extern UINT CUSTOMPROC_wrapper( MsiCustomActionEntryPoint proc, MSIHANDLE handle );
-__ASM_GLOBAL_FUNC( CUSTOMPROC_wrapper,
-    "pushl %ebp\n\t"
-    __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
-    __ASM_CFI(".cfi_rel_offset %ebp,0\n\t")
-    "movl %esp,%ebp\n\t"
-    __ASM_CFI(".cfi_def_cfa_register %ebp\n\t")
-    "subl $4,%esp\n\t"
-    "pushl 12(%ebp)\n\t"
-    "movl 8(%ebp),%eax\n\t"
-    "call *%eax\n\t"
-    "leave\n\t"
-    __ASM_CFI(".cfi_def_cfa %esp,4\n\t")
-    __ASM_CFI(".cfi_same_value %ebp\n\t")
-    "ret" )
-#else
-static inline UINT CUSTOMPROC_wrapper( MsiCustomActionEntryPoint proc, MSIHANDLE handle )
-{
-    return proc(handle);
-}
-#endif
+static WCHAR ncalrpcW[] = {'n','c','a','l','r','p','c',0};
+static WCHAR endpoint_lrpcW[] = {'m','s','i',0};
 
-static DWORD ACTION_CallDllFunction( const GUID *guid )
+UINT __wine_msi_call_dll_function(const GUID *guid)
 {
     MsiCustomActionEntryPoint fn;
     MSIHANDLE remote_package = 0;
+    RPC_WSTR binding_str;
     MSIHANDLE hPackage;
+    RPC_STATUS status;
     HANDLE hModule;
+    HANDLE thread;
     LPWSTR dll;
     LPSTR proc;
     INT type;
     UINT r;
 
     TRACE("%s\n", debugstr_guid( guid ));
+
+    status = RpcStringBindingComposeW(NULL, ncalrpcW, NULL, endpoint_lrpcW, NULL, &binding_str);
+    if (status != RPC_S_OK)
+    {
+        ERR("RpcStringBindingCompose failed: %#x\n", status);
+        return status;
+    }
+    status = RpcBindingFromStringBindingW(binding_str, &rpc_handle);
+    if (status != RPC_S_OK)
+    {
+        ERR("RpcBindingFromStringBinding failed: %#x\n", status);
+        return status;
+    }
+    RpcStringFreeW(&binding_str);
+
+    /* We need this to unmarshal streams, and some apps expect it to be present. */
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
     r = remote_GetActionInfo(guid, &type, &dll, &proc, &remote_package);
     if (r != ERROR_SUCCESS)
@@ -549,7 +545,9 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
 
             __TRY
             {
-                r = CUSTOMPROC_wrapper( fn, hPackage );
+                thread = CreateThread(NULL, 0, (void *)fn, (void *)(ULONG_PTR) hPackage, 0, NULL);
+                WaitForSingleObject(thread, INFINITE);
+                GetExitCodeThread(thread, &r);
             }
             __EXCEPT_PAGE_FAULT
             {
@@ -573,17 +571,56 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
     midl_user_free(dll);
     midl_user_free(proc);
 
+    CoUninitialize();
+
+    RpcBindingFree(&rpc_handle);
+
     return r;
 }
 
 static DWORD WINAPI DllThread( LPVOID arg )
 {
-    LPGUID guid = arg;
-    DWORD rc = 0;
+    WCHAR buffer[64] = {'m','s','i','e','x','e','c','.','e','x','e',' ','-','E','m','b','e','d','d','i','n','g',' ',0};
+    PROCESS_INFORMATION pi = {0};
+    STARTUPINFOW si = {0};
+    RPC_STATUS status;
+    GUID *guid = arg;
+    DWORD rc;
 
     TRACE("custom action (%x) started\n", GetCurrentThreadId() );
 
-    rc = ACTION_CallDllFunction( guid );
+    CoInitializeEx(NULL, COINIT_MULTITHREADED); /* needed to marshal streams */
+
+    status = RpcServerUseProtseqEpW(ncalrpcW, RPC_C_PROTSEQ_MAX_REQS_DEFAULT, endpoint_lrpcW, NULL);
+    if (status != RPC_S_OK)
+    {
+        ERR("RpcServerUseProtseqEp failed: %#x\n", status);
+        return status;
+    }
+
+    status = RpcServerRegisterIfEx((RPC_IF_HANDLE)s_IWineMsiRemote_v0_0_s_ifspec, NULL, NULL,
+        RPC_IF_AUTOLISTEN, RPC_C_LISTEN_MAX_CALLS_DEFAULT, NULL);
+    if (status != RPC_S_OK)
+    {
+        ERR("RpcServerRegisterIfEx failed: %#x\n", status);
+        return status;
+    }
+
+    StringFromGUID2(guid, buffer + strlenW(buffer), 39);
+    CreateProcessW(NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    GetExitCodeProcess(pi.hProcess, &rc);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    status = RpcServerUnregisterIf((RPC_IF_HANDLE)s_IWineMsiRemote_v0_0_s_ifspec, NULL, FALSE);
+    if (status != RPC_S_OK)
+    {
+        ERR("RpcServerUnregisterIf failed: %#x\n", status);
+        return status;
+    }
+
+    CoUninitialize();
 
     TRACE("custom action (%x) returned %i\n", GetCurrentThreadId(), rc );
 
@@ -1348,7 +1385,7 @@ void ACTION_FinishCustomActions(const MSIPACKAGE* package)
     LeaveCriticalSection( &msi_custom_action_cs );
 }
 
-UINT __cdecl remote_GetActionInfo(const GUID *guid, int *type, LPWSTR *dll, LPSTR *func, MSIHANDLE *hinst)
+UINT __cdecl s_remote_GetActionInfo(const GUID *guid, int *type, LPWSTR *dll, LPSTR *func, MSIHANDLE *hinst)
 {
     msi_custom_action_info *info;
 

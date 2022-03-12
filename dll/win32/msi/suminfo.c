@@ -38,7 +38,7 @@
 #include "propvarutil.h"
 
 #include "msipriv.h"
-#include "winemsi.h"
+#include "winemsi_s.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 

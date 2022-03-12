@@ -37,7 +37,7 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "winemsi.h"
+#include "winemsi_s.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "wine/list.h"

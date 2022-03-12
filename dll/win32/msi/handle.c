@@ -31,7 +31,7 @@
 #include "msiquery.h"
 
 #include "msipriv.h"
-#include "winemsi.h"
+#include "winemsi_s.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -344,7 +344,7 @@ UINT WINAPI MsiCloseAllHandles(void)
     return n;
 }
 
-UINT __cdecl remote_CloseHandle(MSIHANDLE handle)
+UINT __cdecl s_remote_CloseHandle(MSIHANDLE handle)
 {
     return MsiCloseHandle(handle);
 }

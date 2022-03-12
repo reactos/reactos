@@ -18,6 +18,8 @@
  */
 
 #pragma makedep header
+#pragma makedep client
+#pragma makedep server
 
 import "objidl.idl";
 
@@ -55,7 +57,8 @@ struct wire_record {
 };
 
 [
-    uuid(56D58B64-8780-4c22-A8BC-8B0B29E4A9F8)
+    uuid(56D58B64-8780-4c22-A8BC-8B0B29E4A9F8),
+    implicit_handle(handle_t rpc_handle)
 ]
 interface IWineMsiRemote
 {

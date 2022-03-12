@@ -393,10 +393,13 @@ static DWORD DoUnregServer(void)
     return ret;
 }
 
-static INT DoEmbedding( LPWSTR key )
+extern UINT __wine_msi_call_dll_function(GUID *guid);
+
+static int DoEmbedding(LPCWSTR key)
 {
-	printf("Remote custom actions are not supported yet\n");
-	return 1;
+    GUID guid;
+    CLSIDFromString(key, &guid);
+    return __wine_msi_call_dll_function(&guid);
 }
 
 /*

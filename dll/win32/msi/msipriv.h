@@ -39,7 +39,7 @@
 #include "wine/debug.h"
 
 #include "msiserver.h"
-#include "winemsi.h"
+#include "winemsi_s.h"
 
 static const BOOL is_64bit = sizeof(void *) > sizeof(int);
 BOOL is_wow64 DECLSPEC_HIDDEN;

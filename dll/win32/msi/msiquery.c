@@ -35,7 +35,7 @@
 
 #include "msipriv.h"
 #include "query.h"
-#include "winemsi.h"
+#include "winemsi_s.h"
 
 #include "initguid.h"
 
@@ -1093,12 +1093,12 @@ MSICONDITION WINAPI MsiDatabaseIsTablePersistentW(
     return r;
 }
 
-UINT __cdecl remote_ViewClose(MSIHANDLE view)
+UINT __cdecl s_remote_ViewClose(MSIHANDLE view)
 {
     return MsiViewClose(view);
 }
 
-UINT __cdecl remote_ViewExecute(MSIHANDLE view, struct wire_record *remote_rec)
+UINT __cdecl s_remote_ViewExecute(MSIHANDLE view, struct wire_record *remote_rec)
 {
     MSIHANDLE rec = 0;
     UINT r;
@@ -1112,7 +1112,7 @@ UINT __cdecl remote_ViewExecute(MSIHANDLE view, struct wire_record *remote_rec)
     return r;
 }
 
-UINT __cdecl remote_ViewFetch(MSIHANDLE view, struct wire_record **rec)
+UINT __cdecl s_remote_ViewFetch(MSIHANDLE view, struct wire_record **rec)
 {
     MSIHANDLE handle;
     UINT r = MsiViewFetch(view, &handle);
@@ -1123,7 +1123,7 @@ UINT __cdecl remote_ViewFetch(MSIHANDLE view, struct wire_record **rec)
     return r;
 }
 
-UINT __cdecl remote_ViewGetColumnInfo(MSIHANDLE view, MSICOLINFO info, struct wire_record **rec)
+UINT __cdecl s_remote_ViewGetColumnInfo(MSIHANDLE view, MSICOLINFO info, struct wire_record **rec)
 {
     MSIHANDLE handle;
     UINT r = MsiViewGetColumnInfo(view, info, &handle);
@@ -1134,7 +1134,7 @@ UINT __cdecl remote_ViewGetColumnInfo(MSIHANDLE view, MSICOLINFO info, struct wi
     return r;
 }
 
-UINT __cdecl remote_ViewModify(MSIHANDLE view, MSIMODIFY mode,
+UINT __cdecl s_remote_ViewModify(MSIHANDLE view, MSIMODIFY mode,
     struct wire_record *remote_rec, struct wire_record **remote_refreshed)
 {
     MSIHANDLE handle = 0;

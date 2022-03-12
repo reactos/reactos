@@ -52,11 +52,18 @@ list(APPEND SOURCE
 BISON_TARGET(cond cond.y ${CMAKE_CURRENT_BINARY_DIR}/cond.tab.c COMPILE_FLAGS "-p cond_")
 BISON_TARGET(sql sql.y ${CMAKE_CURRENT_BINARY_DIR}/sql.tab.c COMPILE_FLAGS "-p sql_")
 
+set(OLD_IDL_FLAGS ${IDL_FLAGS})
+set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
+add_rpc_files(client winemsi.idl)
+add_rpc_files(server winemsi.idl)
+set(IDL_FLAGS ${OLD_IDL_FLAGS})
+
 list(APPEND PCH_SKIP_SOURCE
     ${BISON_cond_OUTPUTS}
     ${BISON_sql_OUTPUTS}
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
-    ${CMAKE_CURRENT_BINARY_DIR}/winemsi_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/winemsi_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/winemsi_s.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c)
 
 add_library(msi MODULE
@@ -80,7 +87,7 @@ set_module_type(msi win32dll)
 target_link_libraries(msi uuid ${PSEH_LIB} wine)
 add_dependencies(msi msi_idlheader)
 add_delay_importlibs(msi odbccp32 crypt32 wintrust)
-add_importlibs(msi advapi32 advapi32_vista cabinet comctl32 gdi32 ole32 oleaut32 shell32 shlwapi urlmon user32 version wininet mspatcha
+add_importlibs(msi advapi32 advapi32_vista cabinet comctl32 gdi32 ole32 oleaut32 shell32 shlwapi rpcrt4 urlmon user32 version wininet mspatcha
     #FIXME : should be in delayed imports
     imagehlp
     msvcrt

@@ -993,7 +993,7 @@ UINT WINAPI main_test(MSIHANDLE hinst)
 
     /* Test for an MTA apartment */
     hr = CoCreateInstance(&CLSID_XMLDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&unk);
-    todo_wine_ok(hinst, hr == S_OK, "CoCreateInstance failed with %08x\n", hr);
+    ok(hinst, hr == S_OK, "CoCreateInstance failed with %08x\n", hr);
 
     if (unk) IUnknown_Release(unk);
 
