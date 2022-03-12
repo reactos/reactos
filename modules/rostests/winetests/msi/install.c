@@ -3671,8 +3671,6 @@ static const struct {
     { name3, data3, sizeof data3 },
 };
 
-#define NUM_TRANSFORM_TABLES (sizeof table_transform_data/sizeof table_transform_data[0])
-
 static void generate_transform_manual(void)
 {
     IStorage *stg = NULL;
@@ -3694,7 +3692,7 @@ static void generate_transform_manual(void)
     r = IStorage_SetClass(stg, &CLSID_MsiTransform);
     ok(r == S_OK, "failed to set storage type\n");
 
-    for (i=0; i<NUM_TRANSFORM_TABLES; i++)
+    for (i=0; i<ARRAY_SIZE(table_transform_data); i++)
     {
         r = IStorage_CreateStream(stg, table_transform_data[i].name,
                             STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
