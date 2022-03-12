@@ -14221,7 +14221,7 @@ static void test_setpropertyfolder(void)
     ok(delete_pf("msitest\\maximus", TRUE), "file not installed\n");
     ok(delete_pf("msitest", FALSE), "directory not created\n");
 
-    ok(DeleteFileA("c:\\parent\\child\\Shortcut.lnk"), "file not installed");
+    ok(DeleteFileA("c:\\parent\\child\\Shortcut.lnk"), "file not installed\n");
     ok(RemoveDirectoryA("c:\\parent\\child"), "directory not created\n");
     ok(RemoveDirectoryA("c:\\parent"), "directory not created\n");
 
