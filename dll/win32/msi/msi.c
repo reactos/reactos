@@ -137,7 +137,7 @@ static UINT MSI_OpenProductW(LPCWSTR szProduct, MSIPACKAGE **package)
         goto done;
     }
 
-    r = MSI_OpenPackageW(path, package);
+    r = MSI_OpenPackageW(path, 0, package);
 
 done:
     RegCloseKey(props);
@@ -236,7 +236,9 @@ end:
 UINT WINAPI MsiInstallProductW(LPCWSTR szPackagePath, LPCWSTR szCommandLine)
 {
     MSIPACKAGE *package = NULL;
-    UINT r;
+    const WCHAR *reinstallmode;
+    DWORD options = 0;
+    UINT r, len;
 
     TRACE("%s %s\n",debugstr_w(szPackagePath), debugstr_w(szCommandLine));
 
@@ -246,7 +248,20 @@ UINT WINAPI MsiInstallProductW(LPCWSTR szPackagePath, LPCWSTR szCommandLine)
     if (!*szPackagePath)
         return ERROR_PATH_NOT_FOUND;
 
-    r = MSI_OpenPackageW( szPackagePath, &package );
+    reinstallmode = msi_get_command_line_option(szCommandLine, szReinstallMode, &len);
+    if (reinstallmode)
+    {
+        while (len > 0)
+        {
+            if (reinstallmode[--len] == 'v' || reinstallmode[len] == 'V')
+            {
+                options |= WINE_OPENPACKAGEFLAGS_RECACHE;
+                break;
+            }
+        }
+    }
+
+    r = MSI_OpenPackageW( szPackagePath, options, &package );
     if (r == ERROR_SUCCESS)
     {
         r = MSI_InstallPackage( package, szPackagePath, szCommandLine );
@@ -732,7 +747,7 @@ UINT WINAPI MsiDetermineApplicablePatchesW(LPCWSTR szProductPackagePath,
 
     TRACE("%s, %u, %p\n", debugstr_w(szProductPackagePath), cPatchInfo, pPatchInfo);
 
-    r = MSI_OpenPackageW( szProductPackagePath, &package );
+    r = MSI_OpenPackageW( szProductPackagePath, 0, &package );
     if (r != ERROR_SUCCESS)
     {
         ERR("failed to open package %u\n", r);
@@ -810,7 +825,7 @@ static UINT open_package( const WCHAR *product, const WCHAR *usersid,
     if (GetFileAttributesW( sourcepath ) == INVALID_FILE_ATTRIBUTES)
         return ERROR_INSTALL_SOURCE_ABSENT;
 
-    return MSI_OpenPackageW( sourcepath, package );
+    return MSI_OpenPackageW( sourcepath, 0, package );
 }
 
 UINT WINAPI MsiDeterminePatchSequenceW( LPCWSTR product, LPCWSTR usersid,
@@ -4027,7 +4042,7 @@ UINT WINAPI MsiReinstallFeatureW( LPCWSTR szProduct, LPCWSTR szFeature, DWORD dw
     strcatW( sourcepath, filename );
 
     if (dwReinstallMode & REINSTALLMODE_PACKAGE)
-        r = MSI_OpenPackageW( sourcepath, &package );
+        r = MSI_OpenPackageW( sourcepath, 0, &package );
     else
         r = MSI_OpenProductW( szProduct, &package );
 

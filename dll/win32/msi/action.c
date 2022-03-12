@@ -301,15 +301,18 @@ static int parse_prop( const WCHAR *str, WCHAR *value, int *quotes )
 
         default: break;
         }
-        if (!ignore) *out++ = *p;
+        if (!ignore && value) *out++ = *p;
         if (!count) in_quotes = FALSE;
     }
 
 done:
-    if (!len) *value = 0;
-    else *out = 0;
+    if (value)
+    {
+        if (!len) *value = 0;
+        else *out = 0;
+    }
 
-    *quotes = count;
+    if(quotes) *quotes = count;
     return p - str;
 }
 
@@ -383,6 +386,37 @@ UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine,
     }
 
     return ERROR_SUCCESS;
+}
+
+const WCHAR *msi_get_command_line_option(const WCHAR *cmd, const WCHAR *option, UINT *len)
+{
+    DWORD opt_len = strlenW(option);
+
+    if (!cmd)
+        return NULL;
+
+    while (*cmd)
+    {
+        BOOL found = FALSE;
+
+        while (*cmd == ' ') cmd++;
+        if (!*cmd) break;
+
+        if(!strncmpiW(cmd, option, opt_len))
+            found = TRUE;
+
+        cmd = strchrW( cmd, '=' );
+        if(!cmd) break;
+        cmd++;
+        while (*cmd == ' ') cmd++;
+        if (!*cmd) break;
+
+        *len = parse_prop( cmd, NULL, NULL);
+        if (found) return cmd;
+        cmd += *len;
+    }
+
+    return NULL;
 }
 
 WCHAR **msi_split_string( const WCHAR *str, WCHAR sep )

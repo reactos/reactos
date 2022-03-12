@@ -1433,7 +1433,7 @@ UINT msi_set_original_database_property( MSIDATABASE *db, const WCHAR *package )
     return r;
 }
 
-UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
+UINT MSI_OpenPackageW(LPCWSTR szPackage, DWORD dwOptions, MSIPACKAGE **pPackage)
 {
     static const WCHAR dotmsi[] = {'.','m','s','i',0};
     MSIDATABASE *db;
@@ -1515,6 +1515,16 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
             localfile_attr = GetFileAttributesW( localfile );
             if (localfile_attr & FILE_ATTRIBUTE_READONLY)
                 SetFileAttributesW( localfile, localfile_attr & ~FILE_ATTRIBUTE_READONLY);
+        }
+        else if (dwOptions & WINE_OPENPACKAGEFLAGS_RECACHE)
+        {
+            if (!CopyFileW( file, localfile, FALSE ))
+            {
+                r = GetLastError();
+                WARN("unable to update cached package (%u)\n", r);
+                msiobj_release( &db->hdr );
+                return r;
+            }
         }
         else
             product_version = get_product_version( db );
@@ -1669,7 +1679,7 @@ UINT WINAPI MsiOpenPackageExW(LPCWSTR szPackage, DWORD dwOptions, MSIHANDLE *phP
     if( dwOptions )
         FIXME("dwOptions %08x not supported\n", dwOptions);
 
-    ret = MSI_OpenPackageW( szPackage, &package );
+    ret = MSI_OpenPackageW( szPackage, 0, &package );
     if( ret == ERROR_SUCCESS )
     {
         *phPackage = alloc_msihandle( &package->hdr );

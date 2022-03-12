@@ -3840,15 +3840,15 @@ static void test_states(void)
     r = MsiInstallProductA(msifile2, "");
     ok(r == ERROR_PRODUCT_VERSION, "Expected ERROR_PRODUCT_VERSION, got %d\n", r);
 
-    r = MsiInstallProductA(msifile2, "REINSTALLMODE=v");
-    todo_wine ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    r = MsiInstallProductA(msifile2, "REINSTALLMODe=V");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     r = MsiOpenProductA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", &hprod);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     size = MAX_PATH;
     r = MsiGetProductPropertyA(hprod, "ProductVersion", value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    todo_wine ok(!strcmp(value, "1.1.2"), "ProductVersion = %s\n", value);
+    ok(!strcmp(value, "1.1.2"), "ProductVersion = %s\n", value);
     MsiCloseHandle(hprod);
 
     /* major upgrade test */
