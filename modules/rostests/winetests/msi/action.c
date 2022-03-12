@@ -259,15 +259,26 @@ static const char sss_install_exec_seq_dat[] =
     "InstallValidate\t\t1400\n"
     "InstallInitialize\t\t1500\n"
     "StopServices\t\t4000\n"
+    "stop_immediate\tNOT REMOVE\t4001\n"
+    "stop_deferred\tNOT REMOVE\t4002\n"
     "DeleteServices\t\t5000\n"
     "MoveFiles\t\t5100\n"
     "InstallFiles\t\t5200\n"
     "DuplicateFiles\t\t5300\n"
     "StartServices\t\t5400\n"
+    "start_deferred\tNOT REMOVE\t5401\n"
     "RegisterProduct\t\t5500\n"
     "PublishFeatures\t\t5600\n"
     "PublishProduct\t\t5700\n"
     "InstallFinalize\t\t6000\n";
+
+static const char sss_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "stop_immediate\t1\tcustom.dll\tsss_started\n"
+    "stop_deferred\t1025\tcustom.dll\tsss_stopped\n"
+    "start_deferred\t1025\tcustom.dll\tsss_started\n";
 
 static const char sds_install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
@@ -1848,6 +1859,7 @@ static const msi_table sss_tables[] =
     ADD_TABLE(file),
     ADD_TABLE(sss_install_exec_seq),
     ADD_TABLE(sss_service_control),
+    ADD_TABLE(sss_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };

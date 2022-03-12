@@ -1239,3 +1239,38 @@ todo_wine
     CloseServiceHandle(manager);
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI sss_started(MSIHANDLE hinst)
+{
+    SC_HANDLE manager, service;
+    SERVICE_STATUS status;
+    BOOL ret;
+
+    manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    service = OpenServiceA(manager, "Spooler", SC_MANAGER_ALL_ACCESS);
+    ret = QueryServiceStatus(service, &status);
+    ok(hinst, ret, "QueryServiceStatus failed: %u\n", GetLastError());
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, status.dwCurrentState == SERVICE_RUNNING, "got %u\n", status.dwCurrentState);
+
+    CloseServiceHandle(service);
+    CloseServiceHandle(manager);
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI sss_stopped(MSIHANDLE hinst)
+{
+    SC_HANDLE manager, service;
+    SERVICE_STATUS status;
+    BOOL ret;
+
+    manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    service = OpenServiceA(manager, "Spooler", SC_MANAGER_ALL_ACCESS);
+    ret = QueryServiceStatus(service, &status);
+    ok(hinst, ret, "QueryServiceStatus failed: %u\n", GetLastError());
+    ok(hinst, status.dwCurrentState == SERVICE_STOPPED, "got %u\n", status.dwCurrentState);
+
+    CloseServiceHandle(service);
+    CloseServiceHandle(manager);
+    return ERROR_SUCCESS;
+}
