@@ -2633,12 +2633,9 @@ static void test_register_product(void)
     LPSTR usersid;
     char date[MAX_PATH], temp[MAX_PATH], keypath[MAX_PATH], path[MAX_PATH];
     DWORD size, type;
-    REGSAM access = KEY_ALL_ACCESS;
 
     static const CHAR uninstall[] = "Software\\Microsoft\\Windows\\CurrentVersion"
                                     "\\Uninstall\\{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}";
-    static const CHAR uninstall_32node[] = "Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion"
-                                           "\\Uninstall\\{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}";
     static const CHAR userdata[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Installer"
                                    "\\UserData\\%s\\Products\\84A88FD7F6998CE40A22FB59F6B9C2BB";
     static const CHAR ugkey[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Installer"
@@ -2663,9 +2660,6 @@ static void test_register_product(void)
 
     create_database(msifile, pp_tables, sizeof(pp_tables) / sizeof(msi_table));
 
-    if (is_wow64)
-        access |= KEY_WOW64_64KEY;
-
     MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
 
     /* RegisterProduct */
@@ -2682,16 +2676,8 @@ static void test_register_product(void)
     res = RegOpenKeyA(HKEY_CURRENT_USER, userugkey, &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
-    if (is_64bit)
-    {
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, uninstall_32node, 0, KEY_ALL_ACCESS, &hkey);
-        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    }
-    else
-    {
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, uninstall, 0, KEY_ALL_ACCESS, &hkey);
-        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    }
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, uninstall, 0, KEY_READ | KEY_WOW64_32KEY, &hkey);
+    ok(!res, "got %d\n", res);
 
     CHECK_DEL_REG_STR(hkey, "DisplayName", "MSITEST");
     CHECK_DEL_REG_STR(hkey, "DisplayVersion", "1.1.1");
@@ -2718,14 +2704,15 @@ static void test_register_product(void)
     todo_wine
     CHECK_DEL_REG_DWORD(hkey, "EstimatedSize", get_estimated_size());
 
-    delete_key(hkey, "", access);
+    res = RegDeleteKeyA(hkey, "");
+    ok(!res, "got %d\n", res);
     RegCloseKey(hkey);
 
     sprintf(keypath, userdata, usersid);
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, access, &hkey);
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, KEY_ALL_ACCESS | KEY_WOW64_64KEY, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
-    res = RegOpenKeyExA(hkey, "InstallProperties", 0, access, &props);
+    res = RegOpenKeyExA(hkey, "InstallProperties", 0, KEY_READ, &props);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     size = sizeof(path);
@@ -2758,26 +2745,31 @@ static void test_register_product(void)
     todo_wine
     CHECK_DEL_REG_DWORD(props, "EstimatedSize", get_estimated_size());
 
-    delete_key(props, "", access);
+    res = RegDeleteKeyA(props, "");
+    ok(!res, "got %d\n", res);
     RegCloseKey(props);
 
-    res = RegOpenKeyExA(hkey, "Usage", 0, access, &usage);
+    res = RegOpenKeyExA(hkey, "Usage", 0, KEY_READ, &usage);
     todo_wine
     {
         ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     }
 
-    delete_key(usage, "", access);
+    res = RegDeleteKeyA(usage, "");
+todo_wine
+    ok(!res, "got %d\n", res);
     RegCloseKey(usage);
-    delete_key(hkey, "", access);
+    res = RegDeleteKeyA(hkey, "");
+    ok(!res, "got %d\n", res);
     RegCloseKey(hkey);
 
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ugkey, 0, access, &hkey);
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ugkey, 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     CHECK_DEL_REG_STR(hkey, "84A88FD7F6998CE40A22FB59F6B9C2BB", NULL);
 
-    delete_key(hkey, "", access);
+    res = RegDeleteKeyA(hkey, "");
+    ok(!res, "got %d\n", res);
     RegCloseKey(hkey);
 
     /* RegisterProduct, machine */
@@ -2786,19 +2778,11 @@ static void test_register_product(void)
     ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
     ok(delete_pf("msitest", FALSE), "Directory not created\n");
 
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, userugkey, 0, access, &hkey);
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, userugkey, 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
-    if (is_64bit)
-    {
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, uninstall_32node, 0, KEY_ALL_ACCESS, &hkey);
-        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    }
-    else
-    {
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, uninstall, 0, KEY_ALL_ACCESS, &hkey);
-        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    }
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, uninstall, 0, KEY_READ | KEY_WOW64_32KEY, &hkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     CHECK_DEL_REG_STR(hkey, "DisplayName", "MSITEST");
     CHECK_DEL_REG_STR(hkey, "DisplayVersion", "1.1.1");
@@ -2825,14 +2809,15 @@ static void test_register_product(void)
     todo_wine
     CHECK_DEL_REG_DWORD(hkey, "EstimatedSize", get_estimated_size());
 
-    delete_key(hkey, "", access);
+    res = RegDeleteKeyA(hkey, "");
+    ok(!res, "got %d\n", res);
     RegCloseKey(hkey);
 
     sprintf(keypath, userdata, "S-1-5-18");
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, access, &hkey);
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
-    res = RegOpenKeyExA(hkey, "InstallProperties", 0, access, &props);
+    res = RegOpenKeyExA(hkey, "InstallProperties", 0, KEY_READ, &props);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     size = sizeof(path);
@@ -2865,26 +2850,31 @@ static void test_register_product(void)
     todo_wine
     CHECK_DEL_REG_DWORD(props, "EstimatedSize", get_estimated_size());
 
-    delete_key(props, "", access);
+    res = RegDeleteKeyA(props, "");
+    ok(!res, "got %d\n", res);
     RegCloseKey(props);
 
-    res = RegOpenKeyExA(hkey, "Usage", 0, access, &usage);
+    res = RegOpenKeyExA(hkey, "Usage", 0, KEY_READ, &usage);
     todo_wine
     {
         ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     }
 
-    delete_key(usage, "", access);
+    res = RegDeleteKeyA(usage, "");
+todo_wine
+    ok(!res, "got %d\n", res);
     RegCloseKey(usage);
-    delete_key(hkey, "", access);
+    res = RegDeleteKeyA(hkey, "");
+    ok(!res, "got %d\n", res);
     RegCloseKey(hkey);
 
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ugkey, 0, access, &hkey);
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ugkey, 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     CHECK_DEL_REG_STR(hkey, "84A88FD7F6998CE40A22FB59F6B9C2BB", NULL);
 
-    delete_key(hkey, "", access);
+    res = RegDeleteKeyA(hkey, "");
+    ok(!res, "got %d\n", res);
     RegCloseKey(hkey);
 
 error:
