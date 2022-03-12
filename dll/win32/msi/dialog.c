@@ -577,7 +577,7 @@ static void msi_dialog_set_property( MSIPACKAGE *package, LPCWSTR property, LPCW
 {
     UINT r = msi_set_property( package->db, property, value, -1 );
     if (r == ERROR_SUCCESS && !strcmpW( property, szSourceDir ))
-        msi_reset_folders( package, TRUE );
+        msi_reset_source_folders( package );
 }
 
 static MSIFEATURE *msi_seltree_feature_from_item( HWND hwnd, HTREEITEM hItem )

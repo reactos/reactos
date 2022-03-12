@@ -375,7 +375,7 @@ UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine,
 
         r = msi_set_property( package->db, prop, val, -1 );
         if (r == ERROR_SUCCESS && !strcmpW( prop, szSourceDir ))
-            msi_reset_folders( package, TRUE );
+            msi_reset_source_folders( package );
 
         msi_free( val );
         msi_free( prop );
@@ -493,7 +493,7 @@ UINT msi_set_sourcedir_props(MSIPACKAGE *package, BOOL replace)
     {
         UINT r = msi_set_property( package->db, szSourceDir, source, -1 );
         if (r == ERROR_SUCCESS)
-            msi_reset_folders( package, TRUE );
+            msi_reset_source_folders( package );
     }
     msi_free( check );
 

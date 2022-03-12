@@ -1423,7 +1423,7 @@ UINT ACTION_CustomAction(MSIPACKAGE *package, const WCHAR *action)
             len = deformat_string( package, target, &deformated );
             rc = msi_set_property( package->db, source, deformated, len );
             if (rc == ERROR_SUCCESS && !strcmpW( source, szSourceDir ))
-                msi_reset_folders( package, TRUE );
+                msi_reset_source_folders( package );
             msi_free(deformated);
             break;
     case 37: /* JScript/VBScript text stored in target column. */
