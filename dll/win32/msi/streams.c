@@ -110,6 +110,19 @@ static UINT STREAMS_set_string( struct tagMSIVIEW *view, UINT row, UINT col, con
     return ERROR_FUNCTION_FAILED;
 }
 
+static UINT STREAMS_set_stream( MSIVIEW *view, UINT row, UINT col, IStream *stream )
+{
+    MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
+    IStream *prev;
+
+    TRACE("view %p, row %u, col %u, stream %p.\n", view, row, col, stream);
+
+    prev = sv->db->streams[row].stream;
+    IStream_AddRef(sv->db->streams[row].stream = stream);
+    if (prev) IStream_Release(prev);
+    return ERROR_SUCCESS;
+}
+
 static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
@@ -364,6 +377,7 @@ static const MSIVIEWOPS streams_ops =
     STREAMS_fetch_stream,
     NULL,
     STREAMS_set_string,
+    STREAMS_set_stream,
     STREAMS_set_row,
     STREAMS_insert_row,
     STREAMS_delete_row,

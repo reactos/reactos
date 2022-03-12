@@ -204,6 +204,7 @@ static const MSIVIEWOPS update_ops =
     NULL,
     NULL,
     NULL,
+    NULL,
     UPDATE_execute,
     UPDATE_close,
     UPDATE_get_dimensions,

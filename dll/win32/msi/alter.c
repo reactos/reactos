@@ -221,6 +221,7 @@ static const MSIVIEWOPS alter_ops =
     NULL,
     NULL,
     NULL,
+    NULL,
     ALTER_execute,
     ALTER_close,
     ALTER_get_dimensions,

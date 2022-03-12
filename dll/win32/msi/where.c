@@ -299,6 +299,26 @@ static UINT WHERE_set_string(struct tagMSIVIEW *view, UINT row, UINT col, const 
     return table->view->ops->set_string(table->view, rows[table->table_index], col, val, len);
 }
 
+static UINT WHERE_set_stream(MSIVIEW *view, UINT row, UINT col, IStream *stream)
+{
+    MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
+    JOINTABLE *table;
+    UINT *rows;
+    UINT r;
+
+    TRACE("view %p, row %u, col %u, stream %p.\n", wv, row, col, stream);
+
+    r = find_row(wv, row, &rows);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    table = find_table(wv, col, &col);
+    if (!table)
+        return ERROR_FUNCTION_FAILED;
+
+    return table->view->ops->set_stream(table->view, rows[table->table_index], col, stream);
+}
+
 static UINT WHERE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
@@ -1098,6 +1118,7 @@ static const MSIVIEWOPS where_ops =
     WHERE_fetch_stream,
     WHERE_set_int,
     WHERE_set_string,
+    WHERE_set_stream,
     WHERE_set_row,
     NULL,
     WHERE_delete_row,

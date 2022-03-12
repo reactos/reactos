@@ -1357,6 +1357,22 @@ done:
     return r;
 }
 
+static UINT TABLE_set_stream( MSIVIEW *view, UINT row, UINT col, IStream *stream )
+{
+    MSITABLEVIEW *tv = (MSITABLEVIEW *)view;
+    WCHAR *name;
+    UINT r;
+
+    TRACE("row %u, col %u, stream %p.\n", row, col, stream);
+
+    if ((r = get_stream_name( tv, row - 1, &name )))
+        return r;
+
+    r = add_stream( tv->db, name, stream );
+    msi_free( name );
+    return r;
+}
+
 static UINT get_table_value_from_record( MSITABLEVIEW *tv, MSIRECORD *rec, UINT iField, UINT *pvalue )
 {
     MSICOLUMNINFO columninfo;
@@ -2126,6 +2142,7 @@ static const MSIVIEWOPS table_ops =
     TABLE_fetch_stream,
     TABLE_set_int,
     TABLE_set_string,
+    TABLE_set_stream,
     TABLE_set_row,
     TABLE_insert_row,
     TABLE_delete_row,

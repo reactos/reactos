@@ -327,6 +327,7 @@ static const MSIVIEWOPS insert_ops =
     NULL,
     NULL,
     NULL,
+    NULL,
     INSERT_execute,
     INSERT_close,
     INSERT_get_dimensions,

@@ -257,6 +257,13 @@ typedef struct tagMSIVIEWOPS
     UINT (*set_string)( struct tagMSIVIEW *view, UINT row, UINT col, const WCHAR *val, int len );
 
     /*
+     * set_stream - set the stream value at {row, col}
+     * This function has undefined behaviour if the column does not contain
+     * streams.
+     */
+    UINT (*set_stream)( struct tagMSIVIEW *view, UINT row, UINT col, IStream *stream );
+
+    /*
      * set_row - sets values in a row as specified by mask
      *
      *  Similar semantics to fetch_int

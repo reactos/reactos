@@ -153,6 +153,46 @@ done:
     return hr;
 }
 
+static UINT STORAGES_set_stream( MSIVIEW *view, UINT row, UINT col, IStream *stream )
+{
+    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    IStorage *stg, *substg, *prev;
+    const WCHAR *name;
+    HRESULT hr;
+    UINT r;
+
+    TRACE("view %p, row %u, col %u, stream %p.\n", view, row, col, stream);
+
+    if ((r = stream_to_storage(stream, &stg)))
+        return r;
+
+    name = msi_string_lookup(sv->db->strings, sv->storages[row].str_index, NULL);
+
+    hr = IStorage_CreateStorage(sv->db->storage, name,
+                                STGM_WRITE | STGM_SHARE_EXCLUSIVE,
+                                0, 0, &substg);
+    if (FAILED(hr))
+    {
+        IStorage_Release(stg);
+        return ERROR_FUNCTION_FAILED;
+    }
+
+    hr = IStorage_CopyTo(stg, 0, NULL, NULL, substg);
+    if (FAILED(hr))
+    {
+        IStorage_Release(substg);
+        IStorage_Release(stg);
+        return ERROR_FUNCTION_FAILED;
+    }
+    IStorage_Release(substg);
+
+    prev = sv->storages[row].storage;
+    sv->storages[row].storage = stg;
+    if (prev) IStorage_Release(prev);
+
+    return ERROR_SUCCESS;
+}
+
 static UINT STORAGES_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask)
 {
     MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
@@ -404,6 +444,7 @@ static const MSIVIEWOPS storages_ops =
     STORAGES_fetch_stream,
     NULL,
     STORAGES_set_string,
+    STORAGES_set_stream,
     STORAGES_set_row,
     STORAGES_insert_row,
     STORAGES_delete_row,

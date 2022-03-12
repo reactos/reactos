@@ -234,6 +234,7 @@ static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
     UINT r, i, col, type, val;
+    IStream *stream;
     LPCWSTR str;
 
     for (i = 0; i < sv->num_cols; i++)
@@ -249,8 +250,9 @@ static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
 
         if (MSITYPE_IS_BINARY(type))
         {
-            ERR("Cannot modify binary data!\n");
-            return ERROR_FUNCTION_FAILED;
+            if (MSI_RecordGetIStream(rec, i + 1, &stream))
+                return ERROR_FUNCTION_FAILED;
+            r = sv->table->ops->set_stream(sv->table, row, col, stream);
         }
         else if (type & MSITYPE_STRING)
         {
@@ -309,6 +311,7 @@ static const MSIVIEWOPS select_ops =
 {
     SELECT_fetch_int,
     SELECT_fetch_stream,
+    NULL,
     NULL,
     NULL,
     SELECT_set_row,

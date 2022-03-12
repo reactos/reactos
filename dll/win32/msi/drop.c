@@ -101,6 +101,7 @@ static const MSIVIEWOPS drop_ops =
     NULL,
     NULL,
     NULL,
+    NULL,
     DROP_execute,
     DROP_close,
     DROP_get_dimensions,
