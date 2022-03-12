@@ -1565,3 +1565,46 @@ todo_wine
 
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI rci_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT, "CLSID\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}",
+        0, KEY_READ | KEY_WOW64_32KEY, &key);
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "FileType\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}", &key);
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "AppID\\{CFCC3B38-E683-497D-9AB4-CB40AAFE307F}", &key);
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+}
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI rci_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT, "CLSID\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}",
+        0, KEY_READ | KEY_WOW64_32KEY, &key);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "FileType\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}", &key);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "AppID\\{CFCC3B38-E683-497D-9AB4-CB40AAFE307F}", &key);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+}
+
+    return ERROR_SUCCESS;
+}

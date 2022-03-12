@@ -1463,11 +1463,24 @@ static const char rci_install_exec_seq_dat[] =
     "RemoveFiles\t\t1700\n"
     "InstallFiles\t\t2000\n"
     "UnregisterClassInfo\t\t3000\n"
+    "uci_immediate\tREMOVE\t3001\n"
+    "uci_deferred\tREMOVE\t3002\n"
     "RegisterClassInfo\t\t4000\n"
+    "rci_immediate\tNOT REMOVE\t4001\n"
+    "rci_deferred\tNOT REMOVE\t4002\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
+
+static const char rci_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "rci_immediate\t1\tcustom.dll\trci_absent\n"
+    "rci_deferred\t1025\tcustom.dll\trci_present\n"
+    "uci_immediate\t1\tcustom.dll\trci_present\n"
+    "uci_deferred\t1025\tcustom.dll\trci_absent\n";
 
 static const char rei_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -2181,6 +2194,7 @@ static const msi_table rci_tables[] =
     ADD_TABLE(rci_appid),
     ADD_TABLE(rci_class),
     ADD_TABLE(rci_install_exec_seq),
+    ADD_TABLE(rci_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
