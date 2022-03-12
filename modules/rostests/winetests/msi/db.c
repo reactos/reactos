@@ -1779,6 +1779,84 @@ static void test_streamtable(void)
     MsiCloseHandle( view );
     MsiCloseHandle( hdb );
     DeleteFileA(msifile);
+
+    /* insert a file into the _Streams table */
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_CREATEDIRECT, &hdb);
+    ok(r == ERROR_SUCCESS, "Failed to create database\n");
+    ok( hdb, "failed to create db\n");
+    create_file( "test.txt" );
+    rec = MsiCreateRecord( 2 );
+    MsiRecordSetStringA( rec, 1, "data" );
+    r = MsiRecordSetStreamA( rec, 2, "test.txt" );
+    ok( r == ERROR_SUCCESS, "Failed to add stream data to the record: %d\n", r);
+    DeleteFileA("test.txt");
+    r = MsiDatabaseOpenViewA( hdb,
+            "INSERT INTO `_Streams` ( `Name`, `Data` ) VALUES ( ?, ? )", &view );
+    ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r);
+    r = MsiViewExecute( view, rec );
+    ok( r == ERROR_SUCCESS, "Failed to execute view: %d\n", r);
+    MsiCloseHandle( rec );
+    MsiViewClose( view );
+    MsiCloseHandle( view );
+    r = MsiDatabaseCommit( hdb );
+    ok( r == ERROR_SUCCESS , "Failed to commit database\n" );
+
+    /* open a handle to the "data" stream */
+    r = MsiDatabaseOpenViewA( hdb,
+            "SELECT `Name`, `Data` FROM `_Streams` WHERE `Name` = 'data'", &view );
+    ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r);
+    r = MsiViewExecute( view, 0 );
+    ok( r == ERROR_SUCCESS, "Failed to execute view: %d\n", r);
+    r = MsiViewFetch( view, &rec );
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    MsiViewClose( view );
+    MsiCloseHandle( view );
+    /* read the stream while it still exists (normal case) */
+    size = MAX_PATH;
+    r = MsiRecordGetStringA( rec, 1, file, &size );
+    ok( r == ERROR_SUCCESS, "Failed to get string: %d\n", r);
+    ok( !lstrcmpA(file, "data"), "Expected 'data', got %s\n", file);
+    size = MAX_PATH;
+    memset(buf, 0, MAX_PATH);
+    r = MsiRecordReadStream( rec, 2, buf, &size );
+    ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
+    ok( !lstrcmpA(buf, "test.txt\n"), "Expected 'test.txt\\n', got '%s' (%d)\n", buf, size);
+    MsiCloseHandle( rec );
+
+    /* open a handle to the "data" stream (and keep it open during removal) */
+    r = MsiDatabaseOpenViewA( hdb,
+            "SELECT `Name`, `Data` FROM `_Streams` WHERE `Name` = 'data'", &view );
+    ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r);
+    r = MsiViewExecute( view, 0 );
+    ok( r == ERROR_SUCCESS, "Failed to execute view: %d\n", r);
+    r = MsiViewFetch( view, &rec );
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    MsiViewClose( view );
+    MsiCloseHandle( view );
+
+    /* remove the stream */
+    r = MsiDatabaseOpenViewA( hdb,
+            "DELETE FROM `_Streams` WHERE `Name` = 'data'", &view );
+    ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r);
+    r = MsiViewExecute( view, 0 );
+    ok( r == ERROR_SUCCESS, "Failed to execute view: %d\n", r);
+    MsiViewClose( view );
+    MsiCloseHandle( view );
+
+    /* attempt to read the stream that no longer exists (abnormal case) */
+    size = MAX_PATH;
+    r = MsiRecordGetStringA( rec, 1, file, &size );
+    ok( r == ERROR_SUCCESS, "Failed to get string: %d\n", r);
+    ok( !lstrcmpA(file, "data"), "Expected 'data', got %s\n", file);
+    size = MAX_PATH;
+    memset(buf, 0, MAX_PATH);
+    r = MsiRecordReadStream( rec, 2, buf, &size );
+    ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
+    todo_wine ok( size == 0, "Expected empty buffer, got %d bytes\n", size);
+    MsiCloseHandle( rec );
+
+    MsiCloseHandle( hdb );
+    DeleteFileA(msifile);
 }
 
 static void test_binary(void)
