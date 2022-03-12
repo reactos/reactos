@@ -693,11 +693,13 @@ static DWORD WINAPI custom_client_thread(void *arg)
         size != sizeof(info->guid))
     {
         ERR("Failed to write to custom action client pipe: %u\n", GetLastError());
+        LeaveCriticalSection(&msi_custom_action_cs);
         return GetLastError();
     }
     if (!ReadFile(pipe, &thread64, sizeof(thread64), &size, NULL) || size != sizeof(thread64))
     {
         ERR("Failed to read from custom action client pipe: %u\n", GetLastError());
+        LeaveCriticalSection(&msi_custom_action_cs);
         return GetLastError();
     }
 
