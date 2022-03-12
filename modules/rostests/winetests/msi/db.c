@@ -5498,6 +5498,7 @@ static void test_viewmodify_delete(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* delete 2 */
+    MsiRecordSetInteger(hrec, 1, 4);
     r = MsiViewModify(hview, MSIMODIFY_DELETE, hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
