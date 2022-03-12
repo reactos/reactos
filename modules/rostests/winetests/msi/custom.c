@@ -1674,3 +1674,27 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
 
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI rmi_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "MIME\\Database\\Content Type\\mime/type", &key);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, !res, "got %u\n", res);
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI rmi_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "MIME\\Database\\Content Type\\mime/type", &key);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    return ERROR_SUCCESS;
+}

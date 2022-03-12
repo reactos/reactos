@@ -29,6 +29,8 @@
 @ stdcall rci_absent(long)
 @ stdcall rei_present(long)
 @ stdcall rei_absent(long)
+@ stdcall rmi_present(long)
+@ stdcall rmi_absent(long)
 @ stdcall rd_present(long)
 @ stdcall rd_absent(long)
 @ stdcall sds_present(long)

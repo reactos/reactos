@@ -1716,12 +1716,25 @@ static const char rmi_install_exec_seq_dat[] =
     "InstallFiles\t\t2000\n"
     "UnregisterExtensionInfo\t\t3000\n"
     "UnregisterMIMEInfo\t\t3500\n"
+    "umi_immediate\tREMOVE\t3501\n"
+    "umi_deferred\tREMOVE\t3502\n"
     "RegisterExtensionInfo\t\t4000\n"
     "RegisterMIMEInfo\t\t4500\n"
+    "rmi_immediate\tNOT REMOVE\t4501\n"
+    "rmi_deferred\tNOT REMOVE\t4502\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
+
+static const char rmi_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "rmi_immediate\t1\tcustom.dll\trmi_absent\n"
+    "rmi_deferred\t1025\tcustom.dll\trmi_present\n"
+    "umi_immediate\t1\tcustom.dll\trmi_present\n"
+    "umi_deferred\t1025\tcustom.dll\trmi_absent\n";
 
 static const char pa_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -2270,6 +2283,7 @@ static const msi_table rmi_tables[] =
     ADD_TABLE(rmi_verb),
     ADD_TABLE(rmi_mime),
     ADD_TABLE(rmi_install_exec_seq),
+    ADD_TABLE(rmi_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
