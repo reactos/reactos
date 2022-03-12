@@ -8170,15 +8170,7 @@ static void test_dbmerge(void)
     query = "SELECT * FROM `MergeErrors`";
     r = do_query(hdb, query, &hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA(hrec, 1, buf, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "One"), "Expected \"One\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(hrec, 2);
-    ok(r == 2, "Expected 2, got %d\n", r);
-
+    check_record(hrec, 2, "One", "2");
     MsiCloseHandle(hrec);
 
     r = MsiDatabaseOpenViewA(hdb, "SELECT * FROM `MergeErrors`", &hview);
@@ -8186,34 +8178,14 @@ static void test_dbmerge(void)
 
     r = MsiViewGetColumnInfo(hview, MSICOLINFO_NAMES, &hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA(hrec, 1, buf, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "Table"), "Expected \"Table\", got \"%s\"\n", buf);
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA(hrec, 2, buf, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "NumRowMergeConflicts"),
-       "Expected \"NumRowMergeConflicts\", got \"%s\"\n", buf);
-
+    check_record(hrec, 2, "Table", "NumRowMergeConflicts");
     MsiCloseHandle(hrec);
 
     r = MsiViewGetColumnInfo(hview, MSICOLINFO_TYPES, &hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA(hrec, 1, buf, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "s255"), "Expected \"s255\", got \"%s\"\n", buf);
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA(hrec, 2, buf, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "i2"), "Expected \"i2\", got \"%s\"\n", buf);
-
+    check_record(hrec, 2, "s255", "i2");
     MsiCloseHandle(hrec);
+
     MsiViewClose(hview);
     MsiCloseHandle(hview);
 
@@ -8244,15 +8216,7 @@ static void test_dbmerge(void)
     query = "SELECT * FROM `One`";
     r = do_query(hdb, query, &hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    r = MsiRecordGetInteger(hrec, 1);
-    ok(r == 1, "Expected 1, got %d\n", r);
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA(hrec, 2, buf, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "hi"), "Expected \"hi\", got \"%s\"\n", buf);
-
+    check_record(hrec, 2, "1", "hi");
     MsiCloseHandle(hrec);
 
     /* nothing in MergeErrors */
@@ -8290,15 +8254,7 @@ static void test_dbmerge(void)
     query = "SELECT * FROM `One`";
     r = do_query(hdb, query, &hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA(hrec, 1, buf, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "hi"), "Expected \"hi\", got \"%s\"\n", buf);
-
-    r = MsiRecordGetInteger(hrec, 2);
-    ok(r == 1, "Expected 1, got %d\n", r);
-
+    check_record(hrec, 2, "hi", "1");
     MsiCloseHandle(hrec);
 
     /* nothing in MergeErrors */
@@ -8342,15 +8298,7 @@ static void test_dbmerge(void)
     query = "SELECT * FROM `One`";
     r = do_query(hdb, query, &hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    r = MsiRecordGetInteger(hrec, 1);
-    ok(r == 1, "Expected 1, got %d\n", r);
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA(hrec, 2, buf, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "hi"), "Expected \"hi\", got \"%s\"\n", buf);
-
+    check_record(hrec, 2, "1", "hi");
     MsiCloseHandle(hrec);
 
     /* nothing in MergeErrors */
@@ -8444,28 +8392,12 @@ static void test_dbmerge(void)
 
     r = MsiViewFetch(hview, &hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    r = MsiRecordGetInteger(hrec, 1);
-    ok(r == 1, "Expected 1, got %d\n", r);
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA(hrec, 2, buf, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "foo"), "Expected \"foo\", got \"%s\"\n", buf);
-
+    check_record(hrec, 2, "1", "foo");
     MsiCloseHandle(hrec);
 
     r = MsiViewFetch(hview, &hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    r = MsiRecordGetInteger(hrec, 1);
-    ok(r == 2, "Expected 2, got %d\n", r);
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA(hrec, 2, buf, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "bar"), "Expected \"bar\", got \"%s\"\n", buf);
-
+    check_record(hrec, 2, "2", "bar");
     MsiCloseHandle(hrec);
 
     r = MsiViewFetch(hview, &hrec);
