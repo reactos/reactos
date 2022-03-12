@@ -662,7 +662,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     WCHAR *ptr;
     OSVERSIONINFOEXW OSVersion;
     MEMORYSTATUSEX msex;
-    DWORD verval, len;
+    DWORD verval, len, type;
     WCHAR pth[MAX_PATH], verstr[11], bufstr[22];
     HDC dc;
     HKEY hkey;
@@ -708,6 +708,10 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szSystem64Folder[] = { 'S','y','s','t','e','m','6','4','F','o','l','d','e','r',0 };
     static const WCHAR szCommonFiles64Folder[] = { 'C','o','m','m','o','n','F','i','l','e','s','6','4','F','o','l','d','e','r',0 };
     static const WCHAR szProgramFiles64Folder[] = { 'P','r','o','g','r','a','m','F','i','l','e','s','6','4','F','o','l','d','e','r',0 };
+    static const WCHAR szProgramFilesDir[] = {'P','r','o','g','r','a','m','F','i','l','e','s','D','i','r',0};
+    static const WCHAR szProgramFilesDirx86[] = {'P','r','o','g','r','a','m','F','i','l','e','s','D','i','r',' ','(','x','8','6',')',0};
+    static const WCHAR szCommonFilesDir[] = {'C','o','m','m','o','n','F','i','l','e','s','D','i','r',0};
+    static const WCHAR szCommonFilesDirx86[] = {'C','o','m','m','o','n','F','i','l','e','s','D','i','r',' ','(','x','8','6',')',0};
     static const WCHAR szVersionNT64[] = { 'V','e','r','s','i','o','n','N','T','6','4',0 };
     static const WCHAR szUserInfo[] = {
         'S','O','F','T','W','A','R','E','\\',
@@ -718,6 +722,12 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szDefName[] = { 'D','e','f','N','a','m','e',0 };
     static const WCHAR szDefCompany[] = { 'D','e','f','C','o','m','p','a','n','y',0 };
     static const WCHAR szCurrentVersion[] = {
+        'S','O','F','T','W','A','R','E','\\',
+        'M','i','c','r','o','s','o','f','t','\\',
+        'W','i','n','d','o','w','s','\\',
+        'C','u','r','r','e','n','t','V','e','r','s','i','o','n',0
+    };
+    static const WCHAR szCurrentVersionNT[] = {
         'S','O','F','T','W','A','R','E','\\',
         'M','i','c','r','o','s','o','f','t','\\',
         'W','i','n','d','o','w','s',' ','N','T','\\',
@@ -867,6 +877,9 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     len = sprintfW( bufstr, szFormat, MSI_MAJORVERSION * 100 );
     msi_set_property( package->db, szVersionDatabase, bufstr, len );
 
+    RegOpenKeyExW(HKEY_LOCAL_MACHINE, szCurrentVersion, 0,
+        KEY_QUERY_VALUE | KEY_WOW64_64KEY, &hkey);
+
     GetNativeSystemInfo( &sys_info );
     len = sprintfW( bufstr, szIntFormat, sys_info.wProcessorLevel );
     msi_set_property( package->db, szIntel, bufstr, len );
@@ -876,11 +889,13 @@ static VOID set_installer_properties(MSIPACKAGE *package)
         PathAddBackslashW( pth );
         msi_set_property( package->db, szSystemFolder, pth, -1 );
 
-        SHGetFolderPathW( NULL, CSIDL_PROGRAM_FILES, NULL, 0, pth );
+        len = MAX_PATH;
+        RegQueryValueExW(hkey, szProgramFilesDir, 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, szProgramFilesFolder, pth, -1 );
 
-        SHGetFolderPathW( NULL, CSIDL_PROGRAM_FILES_COMMON, NULL, 0, pth );
+        len = MAX_PATH;
+        RegQueryValueExW(hkey, szCommonFilesDir, 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, szCommonFilesFolder, pth, -1 );
     }
@@ -898,22 +913,28 @@ static VOID set_installer_properties(MSIPACKAGE *package)
         PathAddBackslashW( pth );
         msi_set_property( package->db, szSystemFolder, pth, -1 );
 
-        SHGetFolderPathW( NULL, CSIDL_PROGRAM_FILES, NULL, 0, pth );
+        len = MAX_PATH;
+        RegQueryValueExW(hkey, szProgramFilesDir, 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, szProgramFiles64Folder, pth, -1 );
 
-        SHGetFolderPathW( NULL, CSIDL_PROGRAM_FILESX86, NULL, 0, pth );
+        len = MAX_PATH;
+        RegQueryValueExW(hkey, szProgramFilesDirx86, 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, szProgramFilesFolder, pth, -1 );
 
-        SHGetFolderPathW( NULL, CSIDL_PROGRAM_FILES_COMMON, NULL, 0, pth );
+        len = MAX_PATH;
+        RegQueryValueExW(hkey, szCommonFilesDir, 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, szCommonFiles64Folder, pth, -1 );
 
-        SHGetFolderPathW( NULL, CSIDL_PROGRAM_FILES_COMMONX86, NULL, 0, pth );
+        len = MAX_PATH;
+        RegQueryValueExW(hkey, szCommonFilesDirx86, 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, szCommonFilesFolder, pth, -1 );
     }
+
+    RegCloseKey(hkey);
 
     /* Screen properties. */
     dc = GetDC(0);
@@ -941,7 +962,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
         CloseHandle( hkey );
     }
     if ((!username || !companyname) &&
-        RegOpenKeyW( HKEY_LOCAL_MACHINE, szCurrentVersion, &hkey ) == ERROR_SUCCESS)
+        RegOpenKeyW( HKEY_LOCAL_MACHINE, szCurrentVersionNT, &hkey ) == ERROR_SUCCESS)
     {
         if (!username &&
             (username = msi_reg_get_val_str( hkey, szRegisteredUser )))
