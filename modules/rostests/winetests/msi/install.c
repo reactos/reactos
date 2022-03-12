@@ -1328,6 +1328,7 @@ static const CHAR sr_install_exec_seq_dat[] =
     "sourcedir_unset\tSourceDir\t700\n"
     "ResolveSource\tRESOLVE_SOURCE\t800\n"
     "ProcessComponents\tPROCESS_COMPONENTS\t800\n"
+    "InstallFiles\tINSTALL_FILES\t800\n"
     "sourcedir_set\tNOT SourceDir\t900\n"
     "InstallFinalize\t\t1000\n";
 
@@ -6166,6 +6167,10 @@ static void test_source_resolution(void)
     r = MsiInstallProductA(msifile, "PROCESS_COMPONENTS=1");
     ok(r == ERROR_SUCCESS, "got %u\n", r);
 
+    r = MsiInstallProductA(msifile, "INSTALL_FILES=1");
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+
+    delete_pf_files();
     delete_test_files();
     DeleteFileA(msifile);
 }

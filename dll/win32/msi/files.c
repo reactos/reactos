@@ -357,6 +357,8 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
     UINT rc = ERROR_SUCCESS;
     MSIFILE *file;
 
+    msi_set_sourcedir_props(package, FALSE);
+
     schedule_install_files(package);
     mi = msi_alloc_zero( sizeof(MSIMEDIAINFO) );
 
