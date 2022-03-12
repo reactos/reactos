@@ -1055,26 +1055,22 @@ void dump_record(MSIRECORD *rec)
     TRACE("]\n");
 }
 
-UINT unmarshal_record(const struct wire_record *in, MSIHANDLE *out)
+UINT copy_remote_record(const struct wire_record *in, MSIHANDLE out)
 {
     MSIRECORD *rec;
     unsigned int i;
     UINT r;
 
-    if (!in)
-    {
-        *out = 0;
-        return ERROR_SUCCESS;
-    }
-
-    rec = MSI_CreateRecord(in->count);
-    if (!rec) return ERROR_OUTOFMEMORY;
+    if (!(rec = msihandle2msiinfo(out, MSIHANDLETYPE_RECORD)))
+        return ERROR_INVALID_HANDLE;
 
     for (i = 0; i <= in->count; i++)
     {
         switch (in->fields[i].type)
         {
         case MSIFIELD_NULL:
+            MSI_FreeField(&rec->fields[i]);
+            rec->fields[i].type = MSIFIELD_NULL;
             break;
         case MSIFIELD_INT:
             r = MSI_RecordSetInteger(rec, i, in->fields[i].u.iVal);
@@ -1097,11 +1093,22 @@ UINT unmarshal_record(const struct wire_record *in, MSIHANDLE *out)
         }
     }
 
-    *out = alloc_msihandle(&rec->hdr);
-    if (!*out) return ERROR_OUTOFMEMORY;
-
     msiobj_release(&rec->hdr);
     return ERROR_SUCCESS;
+}
+
+UINT unmarshal_record(const struct wire_record *in, MSIHANDLE *out)
+{
+    if (!in)
+    {
+        *out = 0;
+        return ERROR_SUCCESS;
+    }
+
+    *out = MsiCreateRecord(in->count);
+    if (!*out) return ERROR_OUTOFMEMORY;
+
+    return copy_remote_record(in, *out);
 }
 
 struct wire_record *marshal_record(MSIHANDLE handle)

@@ -666,17 +666,36 @@ UINT WINAPI MsiViewModify( MSIHANDLE hView, MSIMODIFY eModifyMode,
 
     TRACE("%d %x %d\n", hView, eModifyMode, hRecord);
 
-    query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
-    if( !query )
+    rec = msihandle2msiinfo( hRecord, MSIHANDLETYPE_RECORD );
+
+    if (!rec)
         return ERROR_INVALID_HANDLE;
 
-    rec = msihandle2msiinfo( hRecord, MSIHANDLETYPE_RECORD );
+    query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
+    if (!query)
+    {
+        struct wire_record *wire_refreshed = NULL;
+        MSIHANDLE remote;
+
+        if (!(remote = msi_get_remote(hView)))
+            return ERROR_INVALID_HANDLE;
+
+        r = remote_ViewModify(remote, eModifyMode,
+            (struct wire_record *)&rec->count, &wire_refreshed);
+        if (!r && (eModifyMode == MSIMODIFY_REFRESH || eModifyMode == MSIMODIFY_SEEK))
+        {
+            r = copy_remote_record(wire_refreshed, hRecord);
+            free_remote_record(wire_refreshed);
+        }
+
+        msiobj_release(&rec->hdr);
+        return r;
+    }
+
     r = MSI_ViewModify( query, eModifyMode, rec );
 
     msiobj_release( &query->hdr );
-    if( rec )
-        msiobj_release( &rec->hdr );
-
+    msiobj_release(&rec->hdr);
     return r;
 }
 
@@ -1114,6 +1133,24 @@ UINT __cdecl remote_ViewGetColumnInfo(MSIHANDLE view, MSICOLINFO info, struct wi
     *rec = NULL;
     if (!r)
         *rec = marshal_record(handle);
+    MsiCloseHandle(handle);
+    return r;
+}
+
+UINT __cdecl remote_ViewModify(MSIHANDLE view, MSIMODIFY mode,
+    struct wire_record *remote_rec, struct wire_record **remote_refreshed)
+{
+    MSIHANDLE handle = 0;
+    UINT r;
+
+    if ((r = unmarshal_record(remote_rec, &handle)))
+        return r;
+
+    r = MsiViewModify(view, mode, handle);
+    *remote_refreshed = NULL;
+    if (!r && (mode == MSIMODIFY_REFRESH || mode == MSIMODIFY_SEEK))
+        *remote_refreshed = marshal_record(handle);
+
     MsiCloseHandle(handle);
     return r;
 }

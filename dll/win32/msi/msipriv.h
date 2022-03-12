@@ -833,6 +833,7 @@ extern void dump_record(MSIRECORD *) DECLSPEC_HIDDEN;
 extern UINT unmarshal_record(const struct wire_record *in, MSIHANDLE *out) DECLSPEC_HIDDEN;
 extern struct wire_record *marshal_record(MSIHANDLE handle) DECLSPEC_HIDDEN;
 extern void free_remote_record(struct wire_record *rec) DECLSPEC_HIDDEN;
+extern UINT copy_remote_record(const struct wire_record *rec, MSIHANDLE handle) DECLSPEC_HIDDEN;
 
 /* stream internals */
 extern void enum_stream_names( IStorage *stg ) DECLSPEC_HIDDEN;

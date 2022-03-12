@@ -28,6 +28,7 @@ typedef int MSICONDITION;
 typedef int MSIRUNMODE;
 typedef int INSTALLSTATE;
 typedef int MSICOLINFO;
+typedef int MSIMODIFY;
 
 #define MSIFIELD_NULL   0
 #define MSIFIELD_INT    1
@@ -61,6 +62,8 @@ interface IWineMsiRemote
     UINT remote_ViewExecute( [in] MSIHANDLE view, [in, unique] struct wire_record *record );
     UINT remote_ViewFetch( [in] MSIHANDLE view, [out] struct wire_record **record );
     UINT remote_ViewGetColumnInfo( [in] MSIHANDLE view, [in] MSICOLINFO info, [out] struct wire_record **record );
+    UINT remote_ViewModify( [in] MSIHANDLE view, [in] MSIMODIFY mode,
+        [in] struct wire_record *record, [out] struct wire_record **refreshed );
 
     MSICONDITION remote_DatabaseIsTablePersistent( [in] MSIHANDLE db, [in] LPCWSTR table );
     HRESULT remote_DatabaseGetPrimaryKeys( [in] MSIHANDLE db, [in] LPCWSTR table, [out] MSIHANDLE *keys );

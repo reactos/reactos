@@ -321,6 +321,35 @@ static void test_db(MSIHANDLE hinst)
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !memcmp(buffer, "duo", 3), "wrong data\n");
 
+    r = MsiViewModify(view, MSIMODIFY_REFRESH, 0);
+    ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+
+    r = MsiRecordSetStringA(rec2, 1, "three");
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiRecordSetInteger(rec2, 2, 3);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiRecordSetInteger(rec2, 3, 3);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiViewModify(view, MSIMODIFY_REFRESH, rec2);
+    ok(hinst, !r, "got %d\n", r);
+
+    sz = sizeof(buffer);
+    r = MsiRecordGetStringA(rec2, 1, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, !strcmp(buffer, "two"), "got '%s'\n", buffer);
+
+    r = MsiRecordGetInteger(rec2, 2);
+    ok(hinst, r == 2, "got %d\n", r);
+
+    sz = sizeof(buffer);
+    r = MsiRecordReadStream(rec2, 3, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !memcmp(buffer, "duo", 3), "wrong data\n");
+
     r = MsiCloseHandle(rec2);
     ok(hinst, !r, "got %u\n", r);
 
