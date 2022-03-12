@@ -3289,7 +3289,7 @@ static void msi_dialog_vcl_add_drives( msi_dialog *dialog, msi_control *control 
     WCHAR cost_text[MAX_PATH];
     LPWSTR drives, ptr;
     LVITEMW lvitem;
-    DWORD size;
+    DWORD size, flags;
     int i = 0;
 
     cost = msi_vcl_get_cost(dialog);
@@ -3306,13 +3306,13 @@ static void msi_dialog_vcl_add_drives( msi_dialog *dialog, msi_control *control 
     ptr = drives;
     while (*ptr)
     {
-#ifdef __REACTOS__
-        if (GetDriveTypeW(ptr) != DRIVE_FIXED)
+        if (GetVolumeInformationW(ptr, NULL, 0, NULL, 0, &flags, NULL, 0) &&
+            flags & FILE_READ_ONLY_VOLUME)
         {
             ptr += lstrlenW(ptr) + 1;
             continue;
         }
-#endif
+
         lvitem.mask = LVIF_TEXT;
         lvitem.iItem = i;
         lvitem.iSubItem = 0;
