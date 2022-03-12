@@ -287,7 +287,7 @@ UINT WINAPI MsiDatabaseOpenViewW(MSIHANDLE hdb,
     return ret;
 }
 
-UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
+UINT msi_view_refresh_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD *rec)
 {
     UINT row_count = 0, col_count = 0, i, ival, ret, type;
 
@@ -299,13 +299,6 @@ UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
 
     if (!col_count)
         return ERROR_INVALID_PARAMETER;
-
-    if (row >= row_count)
-        return ERROR_NO_MORE_ITEMS;
-
-    *rec = MSI_CreateRecord(col_count);
-    if (!*rec)
-        return ERROR_FUNCTION_FAILED;
 
     for (i = 1; i <= col_count; i++)
     {
@@ -323,7 +316,7 @@ UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
             ret = view->ops->fetch_stream(view, row, i, &stm);
             if ((ret == ERROR_SUCCESS) && stm)
             {
-                MSI_RecordSetIStream(*rec, i, stm);
+                MSI_RecordSetIStream(rec, i, stm);
                 IStream_Release(stm);
             }
             else
@@ -342,26 +335,46 @@ UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
         if (! (type & MSITYPE_VALID))
             ERR("Invalid type!\n");
 
-        /* check if it's nul (0) - if so, don't set anything */
-        if (!ival)
-            continue;
-
         if (type & MSITYPE_STRING)
         {
             int len;
-            const WCHAR *sval = msi_string_lookup( db->strings, ival, &len );
-            msi_record_set_string( *rec, i, sval, len );
+            const WCHAR *sval = msi_string_lookup(db->strings, ival, &len);
+            msi_record_set_string(rec, i, sval, len);
         }
         else
         {
             if ((type & MSI_DATASIZEMASK) == 2)
-                MSI_RecordSetInteger(*rec, i, ival - (1<<15));
+                MSI_RecordSetInteger(rec, i, ival ? ival - (1<<15) : MSI_NULL_INTEGER);
             else
-                MSI_RecordSetInteger(*rec, i, ival - (1u<<31));
+                MSI_RecordSetInteger(rec, i, ival - (1u<<31));
         }
     }
 
     return ERROR_SUCCESS;
+}
+
+UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
+{
+    UINT row_count = 0, col_count = 0, r;
+    MSIRECORD *object;
+
+    TRACE("view %p, row %u, rec %p.\n", view, row, rec);
+
+    if ((r = view->ops->get_dimensions(view, &row_count, &col_count)))
+        return r;
+
+    if (row >= row_count)
+        return ERROR_NO_MORE_ITEMS;
+
+    if (!(object = MSI_CreateRecord( col_count )))
+        return ERROR_OUTOFMEMORY;
+
+    if ((r = msi_view_refresh_row(db, view, row, object)))
+        msiobj_release( &object->hdr );
+    else
+        *rec = object;
+
+    return r;
 }
 
 UINT MSI_ViewFetch(MSIQUERY *query, MSIRECORD **prec)
