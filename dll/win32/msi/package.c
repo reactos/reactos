@@ -2503,10 +2503,21 @@ UINT __cdecl remote_SetTargetPath(MSIHANDLE hinst, LPCWSTR folder, LPCWSTR value
     return MsiSetTargetPathW(hinst, folder, value);
 }
 
-HRESULT __cdecl remote_GetSourcePath(MSIHANDLE hinst, BSTR folder, BSTR value, DWORD *size)
+UINT __cdecl remote_GetSourcePath(MSIHANDLE hinst, LPCWSTR folder, LPWSTR *value)
 {
-    UINT r = MsiGetSourcePathW(hinst, folder, value, size);
-    return HRESULT_FROM_WIN32(r);
+    WCHAR empty[1];
+    DWORD size = 1;
+    UINT r;
+
+    r = MsiGetSourcePathW(hinst, folder, empty, &size);
+    if (r == ERROR_MORE_DATA)
+    {
+        *value = midl_user_allocate(++size * sizeof(WCHAR));
+        if (!*value)
+            return ERROR_OUTOFMEMORY;
+        r = MsiGetSourcePathW(hinst, folder, *value, &size);
+    }
+    return r;
 }
 
 HRESULT __cdecl remote_GetMode(MSIHANDLE hinst, MSIRUNMODE mode, BOOL *ret)

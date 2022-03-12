@@ -458,9 +458,9 @@ static void test_targetpath(MSIHANDLE hinst)
     static const WCHAR targetdirW[] = {'T','A','R','G','E','T','D','I','R',0};
     static const WCHAR xyzW[] = {'C',':','\\',0};
     static const WCHAR xyW[] = {'C',':',0};
-    char buffer[20];
-    WCHAR bufferW[20];
-    DWORD sz;
+    WCHAR bufferW[100];
+    char buffer[100];
+    DWORD sz, srcsz;
     UINT r;
 
     /* test invalid values */
@@ -557,6 +557,89 @@ static void test_targetpath(MSIHANDLE hinst)
     ok(hinst, !strcmp(buffer, "C:\\subdir\\"), "got \"%s\"\n", buffer);
 
     r = MsiSetTargetPathA(hinst, "TARGETDIR", "C:\\");
+
+    /* test GetSourcePath() */
+
+    r = MsiGetSourcePathA(hinst, NULL, NULL, NULL);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    r = MsiGetSourcePathA(hinst, "TARGETDIR", NULL, NULL );
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, NULL );
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    /* Returned size is in bytes, not chars, but only for custom actions.
+     * Seems to be a casualty of RPC... */
+
+    srcsz = 0;
+    MsiGetSourcePathW(hinst, targetdirW, NULL, &srcsz);
+
+    sz = 0;
+    r = MsiGetSourcePathA(hinst, "TARGETDIR", NULL, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    todo_wine_ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+
+    sz = 0;
+    strcpy(buffer,"q");
+    r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+
+    sz = 1;
+    strcpy(buffer,"x");
+    r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+
+    sz = srcsz;
+    strcpy(buffer,"x");
+    r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, strlen(buffer) == srcsz - 1, "wrong buffer length %d\n", strlen(buffer));
+    todo_wine_ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+
+    sz = srcsz + 1;
+    strcpy(buffer,"x");
+    r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, strlen(buffer) == srcsz, "wrong buffer length %d\n", strlen(buffer));
+    ok(hinst, sz == srcsz, "got size %u\n", sz);
+
+    sz = 0;
+    r = MsiGetSourcePathW(hinst, targetdirW, NULL, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == srcsz, "got size %u\n", sz);
+
+    sz = 0;
+    bufferW[0] = 'q';
+    r = MsiGetSourcePathW(hinst, targetdirW, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == srcsz, "got size %u\n", sz);
+
+    sz = 1;
+    bufferW[0] = 'q';
+    r = MsiGetSourcePathW(hinst, targetdirW, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == srcsz, "got size %u\n", sz);
+
+    sz = srcsz;
+    bufferW[0] = 'q';
+    r = MsiGetSourcePathW(hinst, targetdirW, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, lstrlenW(bufferW) == srcsz - 1, "wrong buffer length %d\n", lstrlenW(bufferW));
+    ok(hinst, sz == srcsz, "got size %u\n", sz);
+
+    sz = srcsz + 1;
+    bufferW[0] = 'q';
+    r = MsiGetSourcePathW(hinst, targetdirW, bufferW, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, lstrlenW(bufferW) == srcsz, "wrong buffer length %d\n", lstrlenW(bufferW));
+    ok(hinst, sz == srcsz, "got size %u\n", sz);
 }
 
 /* Main test. Anything that doesn't depend on a specific install configuration
