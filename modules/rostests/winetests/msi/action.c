@@ -186,7 +186,7 @@ static const char property_dat[] =
     "SERVDISP\tTestServiceDisp\n"
     "SERVDISP2\tTestServiceDisp2\n"
     "MSIFASTINSTALL\t1\n"
-    "regdata15\t#x01\n";
+    "regdata17\t#1\n";
 
 static const char env_install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
@@ -637,8 +637,8 @@ static const char wrv_component_dat[] =
     "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
     "s72\tS38\ts72\ti2\tS255\tS72\n"
     "Component\tComponent\n"
-    "augustus\t\tMSITESTDIR\t0\t\taugustus\n"
-    "caesar\t\tMSITESTDIR\t1\t\t\n";
+    "augustus\t{bafe0297-cbcc-4e08-8a78-7e9b83456eef}\tMSITESTDIR\t0\t\t\n"
+    "caesar\t{bafe0298-cbcc-4e08-8a78-7e9b83456eef}\tMSITESTDIR\t1\t\t\n";
 
 static const char wrv_feature_dat[] =
     "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
@@ -658,23 +658,51 @@ static const char wrv_registry_dat[] =
     "Registry\tRoot\tKey\tName\tValue\tComponent_\n"
     "s72\ti2\tl255\tL255\tL0\ts72\n"
     "Registry\tRegistry\n"
-    "regdata\t2\tSOFTWARE\\Wine\\msitest\tValue\t[~]one[~]two[~]three\taugustus\n"
-    "regdata1\t2\tSOFTWARE\\Wine\\msitest\t*\t\taugustus\n"
-    "regdata2\t2\tSOFTWARE\\Wine\\msitest\t*\t#%\taugustus\n"
-    "regdata3\t2\tSOFTWARE\\Wine\\msitest\t*\t#x\taugustus\n"
-    "regdata4\t2\tSOFTWARE\\Wine\\msitest\\VisualStudio\\10.0\\AD7Metrics\\Exception\\{049EC4CC-30D2-4032-9256-EE18EB41B62B}\\Common Language Runtime Exceptions\\System.Workflow.ComponentModel.Serialization\\System.Workflow.ComponentModel.Serialization.WorkflowMarkupSerializationException\tlong\tkey\taugustus\n"
-    "regdata5\t2\tSOFTWARE\\Wine\\msitest\tValue1\t[~]one[~]\taugustus\n"
-    "regdata6\t2\tSOFTWARE\\Wine\\msitest\tValue2\t[~]two\taugustus\n"
-    "regdata7\t2\tSOFTWARE\\Wine\\msitest\tValue3\tone[~]\taugustus\n"
-    "regdata8\t2\tSOFTWARE\\Wine\\msitest\tValue4\tone[~]two\taugustus\n"
-    "regdata9\t2\tSOFTWARE\\Wine\\msitest\tValue5\t[~]one[~]two[~]three\taugustus\n"
-    "regdata10\t2\tSOFTWARE\\Wine\\msitest\tValue6\t[~]\taugustus\n"
-    "regdata11\t2\tSOFTWARE\\Wine\\msitest\tValue7\t[~]two\taugustus\n"
-    "regdata12\t2\tSOFTWARE\\Wine\\msitest\tValue8\t#1\taugustus\n"
-    "regdata13\t2\tSOFTWARE\\Wine\\msitest\tValue9\t#x1\taugustus\n"
-    "regdata14\t2\tSOFTWARE\\Wine\\msitest\tValue10\t#x01\taugustus\n"
-    "regdata15\t2\tSOFTWARE\\Wine\\msitest\tValue11\t[regdata15]\taugustus\n"
-    "regdata16\t2\tSOFTWARE\\Wine\\msitest\tValue12\t#1\tcaesar\n";
+    "regdata0\t1\tmsitest\tsz\tstring\taugustus\n"
+    "regdata1\t1\tmsitest\tmultisz\tone[~]two[~]three\taugustus\n"
+    "regdata2\t1\tmsitest\texpandsz\t#%string\taugustus\n"
+    "regdata3\t1\tmsitest\tdword\t#123\taugustus\n"
+    "regdata4\t1\tmsitest\tbinary\t#x01234567\taugustus\n"
+    "regdata5\t1\tmsitest\t\tdefault\taugustus\n"
+    "regdata6\t1\tmsitest\\subkey\t*\t\taugustus\n"
+    "regdata7\t1\tmsitest\\subkey\t*\t#%\taugustus\n"
+    "regdata8\t1\tmsitest\\subkey\t*\t#x\taugustus\n"
+    "regdata9\t1\tmsitest\\VisualStudio\\10.0\\AD7Metrics\\Exception\\{049EC4CC-30D2-4032-9256-EE18EB41B62B}\\Common Language Runtime Exceptions\\System.Workflow.ComponentModel.Serialization\\System.Workflow.ComponentModel.Serialization.WorkflowMarkupSerializationException\tlong\tkey\taugustus\n"
+    "regdata10\t1\tmsitest\tValue1\t[~]one[~]\taugustus\n"
+    "regdata11\t1\tmsitest\tValue2\t[~]two\taugustus\n"
+    "regdata12\t1\tmsitest\tValue3\tone[~]\taugustus\n"
+    "regdata13\t1\tmsitest\tValue4\tone[~]two\taugustus\n"
+    "regdata14\t1\tmsitest\tValue5\t[~]one[~]two[~]three\taugustus\n"
+    "regdata15\t1\tmsitest\tValue6\t[~]\taugustus\n"
+    "regdata16\t1\tmsitest\tValue7\t[~]two\taugustus\n"
+    "regdata17\t1\tmsitest\tformat\t[regdata17]\taugustus\n"
+    "regdata18\t1\tmsitest\tsource\t#1\tcaesar\n"
+    "regdata19\t1\tmsitest\\create\t+\t\taugustus\n"
+    "regdata20\t1\tmsitest\\delete\t-\t\taugustus\n";
+
+static const char wrv_remove_registry_dat[] =
+    "RemoveRegistry\tRoot\tKey\tName\tComponent_\n"
+    "s72\ti2\tl255\tL255\ts72\n"
+    "RemoveRegistry\tRemoveRegistry\n"
+    "regdata0\t1\tmsitest\tinstremove\taugustus\n"
+    "regdata1\t1\tmsitest\\instremove\t-\taugustus\n";
+
+static const char wrv_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "CostInitialize\t\t800\n"
+    "FileCost\t\t900\n"
+    "CostFinalize\t\t1000\n"
+    "InstallValidate\t\t1400\n"
+    "InstallInitialize\t\t1500\n"
+    "ProcessComponents\t\t1600\n"
+    "RemoveRegistryValues\t\t4900\n"
+    "WriteRegistryValues\t\t5000\n"
+    "RegisterProduct\t\t6100\n"
+    "PublishFeatures\t\t6200\n"
+    "PublishProduct\t\t6300\n"
+    "InstallFinalize\t\t6600\n";
 
 static const char cf_directory_dat[] =
     "Directory\tDirectory_Parent\tDefaultDir\n"
@@ -1291,65 +1319,6 @@ static const char rd_custom_action_dat[] =
     "df_deferred\t1025\tcustom.dll\trd_present\n"
     "rd_immediate\t1\tcustom.dll\trd_present\n"
     "rd_deferred\t1025\tcustom.dll\trd_absent\n";
-
-static const char rrv_file_dat[] =
-    "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
-    "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
-    "File\tFile\n"
-    "registry.txt\tregistry\tregistry.txt\t1000\t\t\t8192\t1\n";
-
-static const char rrv_feature_dat[] =
-    "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
-    "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
-    "Feature\tFeature\n"
-    "registry\t\t\tregistry feature\t1\t2\tMSITESTDIR\t0\n";
-
-static const char rrv_feature_comp_dat[] =
-    "Feature_\tComponent_\n"
-    "s38\ts72\n"
-    "FeatureComponents\tFeature_\tComponent_\n"
-    "registry\tregistry\n";
-
-static const char rrv_component_dat[] =
-    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
-    "s72\tS38\ts72\ti2\tS255\tS72\n"
-    "Component\tComponent\n"
-    "registry\t{DA97585B-962D-45EB-AD32-DA15E60CA9EE}\tMSITESTDIR\t0\t\tregistry.txt\n";
-
-static const char rrv_registry_dat[] =
-    "Registry\tRoot\tKey\tName\tValue\tComponent_\n"
-    "s72\ti2\tl255\tL255\tL0\ts72\n"
-    "Registry\tRegistry\n"
-    "reg1\t2\tSOFTWARE\\Wine\\keyA\t\tA\tregistry\n"
-    "reg2\t2\tSOFTWARE\\Wine\\keyA\tvalueA\tA\tregistry\n"
-    "reg3\t2\tSOFTWARE\\Wine\\key1\t-\t\tregistry\n";
-
-static const char rrv_remove_registry_dat[] =
-    "RemoveRegistry\tRoot\tKey\tName\tComponent_\n"
-    "s72\ti2\tl255\tL255\ts72\n"
-    "RemoveRegistry\tRemoveRegistry\n"
-    "reg1\t2\tSOFTWARE\\Wine\\keyB\t\tregistry\n"
-    "reg2\t2\tSOFTWARE\\Wine\\keyB\tValueB\tregistry\n"
-    "reg3\t2\tSOFTWARE\\Wine\\key2\t-\tregistry\n";
-
-static const char rrv_install_exec_seq_dat[] =
-    "Action\tCondition\tSequence\n"
-    "s72\tS255\tI2\n"
-    "InstallExecuteSequence\tAction\n"
-    "LaunchConditions\t\t100\n"
-    "CostInitialize\t\t800\n"
-    "FileCost\t\t900\n"
-    "CostFinalize\t\t1000\n"
-    "InstallValidate\t\t1400\n"
-    "InstallInitialize\t\t1500\n"
-    "ProcessComponents\t\t1600\n"
-    "RemoveFiles\t\t1700\n"
-    "InstallFiles\t\t2000\n"
-    "RemoveRegistryValues\t\t3000\n"
-    "RegisterProduct\t\t5000\n"
-    "PublishFeatures\t\t5100\n"
-    "PublishProduct\t\t5200\n"
-    "InstallFinalize\t\t6000\n";
 
 static const char frp_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -2058,11 +2027,11 @@ static const msi_table wrv_tables[] =
     ADD_TABLE(directory),
     ADD_TABLE(wrv_feature),
     ADD_TABLE(wrv_feature_comp),
-    ADD_TABLE(ci2_file),
-    ADD_TABLE(install_exec_seq),
-    ADD_TABLE(rof_media),
+    ADD_TABLE(wrv_install_exec_seq),
     ADD_TABLE(property),
+    ADD_TABLE(media),
     ADD_TABLE(wrv_registry),
+    ADD_TABLE(wrv_remove_registry),
 };
 
 static const msi_table cf_tables[] =
@@ -2235,20 +2204,6 @@ static const msi_table rd_tables[] =
     ADD_TABLE(property)
 };
 
-static const msi_table rrv_tables[] =
-{
-    ADD_TABLE(directory),
-    ADD_TABLE(rrv_component),
-    ADD_TABLE(rrv_feature),
-    ADD_TABLE(rrv_feature_comp),
-    ADD_TABLE(rrv_file),
-    ADD_TABLE(rrv_registry),
-    ADD_TABLE(rrv_remove_registry),
-    ADD_TABLE(rrv_install_exec_seq),
-    ADD_TABLE(media),
-    ADD_TABLE(property)
-};
-
 static const msi_table frp_tables[] =
 {
     ADD_TABLE(directory),
@@ -2370,75 +2325,6 @@ static const msi_table rep_tables[] =
     ADD_TABLE(rep_install_exec_seq),
     ADD_TABLE(media)
 };
-
-/* based on RegDeleteTreeW from dlls/advapi32/registry.c */
-static LSTATUS action_RegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey, REGSAM access)
-{
-    LONG ret;
-    DWORD dwMaxSubkeyLen, dwMaxValueLen;
-    DWORD dwMaxLen, dwSize;
-    char szNameBuf[MAX_PATH], *lpszName = szNameBuf;
-    HKEY hSubKey = hKey;
-
-    if(lpszSubKey)
-    {
-        ret = RegOpenKeyExA(hKey, lpszSubKey, 0, access, &hSubKey);
-        if (ret) return ret;
-    }
-
-    ret = RegQueryInfoKeyA(hSubKey, NULL, NULL, NULL, NULL,
-            &dwMaxSubkeyLen, NULL, NULL, &dwMaxValueLen, NULL, NULL, NULL);
-    if (ret) goto cleanup;
-
-    dwMaxSubkeyLen++;
-    dwMaxValueLen++;
-    dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
-    if (dwMaxLen > sizeof(szNameBuf))
-    {
-        /* Name too big: alloc a buffer for it */
-        if (!(lpszName = HeapAlloc( GetProcessHeap(), 0, dwMaxLen)))
-        {
-            ret = ERROR_NOT_ENOUGH_MEMORY;
-            goto cleanup;
-        }
-    }
-
-    /* Recursively delete all the subkeys */
-    while (TRUE)
-    {
-        dwSize = dwMaxLen;
-        if (RegEnumKeyExA(hSubKey, 0, lpszName, &dwSize, NULL,
-                          NULL, NULL, NULL)) break;
-
-        ret = action_RegDeleteTreeA(hSubKey, lpszName, access);
-        if (ret) goto cleanup;
-    }
-
-    if (lpszSubKey)
-    {
-        if (pRegDeleteKeyExA)
-            ret = pRegDeleteKeyExA(hKey, lpszSubKey, access, 0);
-        else
-            ret = RegDeleteKeyA(hKey, lpszSubKey);
-    }
-    else
-        while (TRUE)
-        {
-            dwSize = dwMaxLen;
-            if (RegEnumValueA(hKey, 0, lpszName, &dwSize,
-                  NULL, NULL, NULL, NULL)) break;
-
-            ret = RegDeleteValueA(hKey, lpszName);
-            if (ret) goto cleanup;
-        }
-
-cleanup:
-    if (lpszName != szNameBuf)
-        HeapFree(GetProcessHeap(), 0, lpszName);
-    if(lpszSubKey)
-        RegCloseKey(hSubKey);
-    return ret;
-}
 
 /* cabinet definitions */
 
@@ -2611,6 +2497,25 @@ static void check_reg_str(HKEY prodkey, LPCSTR name, LPCSTR expected, BOOL bcase
     }
 }
 
+static void check_reg_multi(HKEY prodkey, const char *name, const char *expect, DWORD line)
+{
+    char val[MAX_PATH];
+    DWORD size, type;
+    LONG res;
+
+    size = MAX_PATH;
+    val[0] = '\0';
+    res = RegQueryValueExA(prodkey, name, NULL, &type, (BYTE *)val, &size);
+
+    if (res != ERROR_SUCCESS || type != REG_MULTI_SZ)
+    {
+        ok_(__FILE__, line)(FALSE, "Key doesn't exist or wrong type\n");
+        return;
+    }
+
+    ok_(__FILE__, line)(!memcmp(val, expect, size), "wrong data\n");
+}
+
 static void check_reg_dword(HKEY prodkey, LPCSTR name, DWORD expected, DWORD line)
 {
     DWORD val, size, type;
@@ -2645,6 +2550,9 @@ static void check_reg_dword(HKEY prodkey, LPCSTR name, DWORD expected, DWORD lin
         check_reg_str(prodkey, name, expected, FALSE, __LINE__); \
         RegDeleteValueA(prodkey, name); \
     } while(0)
+
+#define CHECK_REG_MULTI(key, name, expect) \
+    check_reg_multi(key, name, expect, __LINE__);
 
 #define CHECK_REG_DWORD(prodkey, name, expected) \
     check_reg_dword(prodkey, name, expected, __LINE__);
@@ -4740,12 +4648,11 @@ error:
 
 static void test_write_registry_values(void)
 {
-    UINT r;
-    LONG res;
-    HKEY hkey;
+    HKEY hkey, subkey;
     DWORD type, size;
-    CHAR path[MAX_PATH];
-    BYTE buf[8];
+    char buf[20];
+    LONG res;
+    UINT r;
 
     if (is_process_limited())
     {
@@ -4754,18 +4661,12 @@ static void test_write_registry_values(void)
     }
 
     CreateDirectoryA("msitest", NULL);
-    create_file("msitest\\augustus", 500);
 
     create_database(msifile, wrv_tables, sizeof(wrv_tables) / sizeof(msi_table));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
-    if (is_64bit)
-        res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Wow6432Node\\Wine\\msitest", 0, NULL, 0,
-                              KEY_ALL_ACCESS, NULL, &hkey, NULL);
-    else
-        res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Wine\\msitest", 0, NULL, 0, KEY_ALL_ACCESS,
-                              NULL, &hkey, NULL);
+    res = RegCreateKeyA(HKEY_CURRENT_USER, "msitest", &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     res = RegSetValueExA(hkey, "Value1", 0, REG_MULTI_SZ, (const BYTE *)"two\0", 5);
@@ -4782,7 +4683,13 @@ static void test_write_registry_values(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     res = RegSetValueExA(hkey, "Value7", 0, REG_SZ, (const BYTE *)"one", 4);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    RegCloseKey(hkey);
+
+    res = RegSetValueExA(hkey, "instremove", 0, REG_SZ, (const BYTE *)"val", 3);
+    ok(!res, "got %u\n", res);
+
+    res = RegCreateKeyA(hkey, "instremove", &subkey);
+    ok(!res, "got %u\n", res);
+    RegCloseKey(subkey);
 
     r = MsiInstallProductA(msifile, NULL);
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
@@ -4791,157 +4698,120 @@ static void test_write_registry_values(void)
         goto error;
     }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(delete_pf("msitest\\augustus", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
 
-    if (is_64bit)
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Wow6432Node\\Wine\\msitest", 0, KEY_ALL_ACCESS, &hkey);
-    else
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Wine\\msitest", 0, KEY_ALL_ACCESS, &hkey);
+    CHECK_REG_STR(hkey, "sz", "string");
+    CHECK_REG_MULTI(hkey, "multisz", "one\0two\0three\0");
+    CHECK_REG_DWORD(hkey, "dword", 123);
+
+    size = sizeof(buf);
+    res = RegQueryValueExA(hkey, "expandsz", NULL, &type, (BYTE *)buf, &size);
+    ok(!res, "got %u\n", res);
+    ok(type == REG_EXPAND_SZ, "got %d\n", type);
+    ok(!strcmp(buf, "string"), "got %s\n", buf);
+
+    size = sizeof(buf);
+    res = RegQueryValueExA(hkey, "binary", NULL, &type, (BYTE *)buf, &size);
+    ok(!res, "got %u\n", res);
+    ok(type == REG_BINARY, "got %d\n", type);
+    ok(size == 4, "got size %u\n", size);
+    ok(!memcmp(buf, "\x01\x23\x45\x67", 4), "wrong data\n");
+
+    CHECK_REG_STR(hkey, "", "default");
+
+    res = RegOpenKeyA(hkey, "VisualStudio", &subkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    RegCloseKey(subkey);
 
-    size = MAX_PATH;
-    type = 0xdeadbeef;
-    memset(path, 'a', MAX_PATH);
-    res = RegQueryValueExA(hkey, "Value", NULL, &type, (LPBYTE)path, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    ok(!memcmp(path, "one\0two\0three\0\0", size), "Wrong multi-sz data\n");
-    ok(size == 15, "Expected 15, got %d\n", size);
-    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+    CHECK_REG_MULTI(hkey, "Value1", "one\0");
+    CHECK_REG_MULTI(hkey, "Value2", "one\0two\0");
+    CHECK_REG_MULTI(hkey, "Value3", "one\0two\0");
+    CHECK_REG_MULTI(hkey, "Value4", "one\0two\0");
+    CHECK_REG_MULTI(hkey, "Value5", "one\0two\0three\0");
+    CHECK_REG_MULTI(hkey, "Value6", "");
+    CHECK_REG_MULTI(hkey, "Value7", "two\0");
 
+    CHECK_REG_DWORD(hkey, "format", 1);
+    CHECK_REG_DWORD(hkey, "source", 1);
+
+    res = RegOpenKeyA(hkey, "subkey", &subkey);
+    ok(!res, "got %u\n", res);
+    res = RegQueryValueExA(subkey, "", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    RegCloseKey(subkey);
+
+    res = RegOpenKeyA(hkey, "create", &subkey);
+    ok(!res, "got %u\n", res);
+    RegCloseKey(subkey);
+
+    res = RegOpenKeyA(hkey, "delete", &subkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegCreateKeyA(hkey, "delete", &subkey);
+    ok(!res, "got %u\n", res);
+    RegCloseKey(subkey);
+
+    res = RegQueryValueExA(hkey, "instremove", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegOpenKeyA(hkey, "instremove", &subkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(!r, "got %u\n", r);
+
+    res = RegQueryValueExA(hkey, "sz", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegQueryValueExA(hkey, "multisz", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegQueryValueExA(hkey, "dword", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegQueryValueExA(hkey, "expandsz", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegQueryValueExA(hkey, "binary", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
     res = RegQueryValueExA(hkey, "", NULL, NULL, NULL, NULL);
-    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
 
-    res = action_RegDeleteTreeA(hkey, "VisualStudio", KEY_ALL_ACCESS);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegOpenKeyA(hkey, "VisualStudio", &subkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
 
-    size = MAX_PATH;
-    type = 0xdeadbeef;
-    memset(path, 'a', MAX_PATH);
-    res = RegQueryValueExA(hkey, "Value1", NULL, &type, (LPBYTE)path, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    ok(!memcmp(path, "one\0", size), "Wrong multi-sz data\n");
-    ok(size == 5, "Expected 5, got %d\n", size);
-    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+    res = RegQueryValueExA(hkey, "Value1", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegQueryValueExA(hkey, "Value4", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegQueryValueExA(hkey, "Value5", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegQueryValueExA(hkey, "Value6", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegQueryValueExA(hkey, "Value7", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
 
-    size = MAX_PATH;
-    type = 0xdeadbeef;
-    memset(path, 'a', MAX_PATH);
-    res = RegQueryValueExA(hkey, "Value2", NULL, &type, (LPBYTE)path, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    ok(!memcmp(path, "one\0two\0", size), "Wrong multi-sz data\n");
-    ok(size == 9, "Expected 9, got %d\n", size);
-    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+todo_wine {
+    CHECK_REG_MULTI(hkey, "Value2", "one\0");
+    CHECK_REG_MULTI(hkey, "Value3", "two\0");
+}
 
-    size = MAX_PATH;
-    type = 0xdeadbeef;
-    memset(path, 'a', MAX_PATH);
-    res = RegQueryValueExA(hkey, "Value3", NULL, &type, (LPBYTE)path, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    ok(!memcmp(path, "one\0two\0", size), "Wrong multi-sz data\n");
-    ok(size == 9, "Expected 9, got %d\n", size);
-    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+    res = RegQueryValueExA(hkey, "format", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    res = RegQueryValueExA(hkey, "source", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
 
-    size = MAX_PATH;
-    type = 0xdeadbeef;
-    memset(path, 'a', MAX_PATH);
-    res = RegQueryValueExA(hkey, "Value4", NULL, &type, (LPBYTE)path, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    ok(!memcmp(path, "one\0two\0", size), "Wrong multi-sz data\n");
-    ok(size == 9, "Expected 9, got %d\n", size);
-    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+    res = RegOpenKeyA(hkey, "subkey", &subkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
 
-    size = MAX_PATH;
-    type = 0xdeadbeef;
-    memset(path, 'a', MAX_PATH);
-    res = RegQueryValueExA(hkey, "Value5", NULL, &type, (LPBYTE)path, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    ok(!memcmp(path, "one\0two\0three\0", size), "Wrong multi-sz data\n");
-    ok(size == 15, "Expected 15, got %d\n", size);
-    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+    res = RegOpenKeyA(hkey, "create", &subkey);
+    ok(!res, "got %u\n", res);
+    RegCloseKey(subkey);
+    res = RegDeleteKeyA(hkey, "create");
+    ok(!res, "got %u\n", res);
 
-    size = MAX_PATH;
-    type = 0xdeadbeef;
-    memset(path, 'a', MAX_PATH);
-    res = RegQueryValueExA(hkey, "Value6", NULL, &type, (LPBYTE)path, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    ok(!memcmp(path, "", size), "Wrong multi-sz data\n");
-    ok(size == 1, "Expected 1, got %d\n", size);
-    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+    res = RegOpenKeyA(hkey, "delete", &subkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
 
-    size = MAX_PATH;
-    type = 0xdeadbeef;
-    memset(path, 'a', MAX_PATH);
-    res = RegQueryValueExA(hkey, "Value7", NULL, &type, (LPBYTE)path, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    ok(!memcmp(path, "two\0", size), "Wrong multi-sz data\n");
-    ok(size == 5, "Expected 5, got %d\n", size);
-    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
-
-    size = sizeof(buf);
-    type = 0xdeadbeef;
-    memset(buf, 0, size);
-    res = RegQueryValueExA(hkey, "Value8", NULL, &type, buf, &size);
-    ok(res == ERROR_SUCCESS, "got %u\n", res);
-    ok(*(DWORD *)buf == 1, "got %u\n", *(DWORD *)buf);
-    ok(size == 4, "got %u\n", size);
-    ok(type == REG_DWORD, "got %u\n", type);
-
-    size = sizeof(buf);
-    type = 0xdeadbeef;
-    memset(buf, 0, size);
-    res = RegQueryValueExA(hkey, "Value9", NULL, &type, buf, &size);
-    ok(res == ERROR_SUCCESS, "got %u\n", res);
-    ok(buf[0] == 1, "got %u\n", buf[0]);
-    ok(size == 1, "got %u\n", size);
-    ok(type == REG_BINARY, "got %u\n", type);
-
-    size = sizeof(buf);
-    type = 0xdeadbeef;
-    memset(buf, 0, size);
-    res = RegQueryValueExA(hkey, "Value10", NULL, &type, buf, &size);
-    ok(res == ERROR_SUCCESS, "got %u\n", res);
-    ok(buf[0] == 1, "got %u\n", buf[0]);
-    ok(size == 1, "got %u\n", size);
-    ok(type == REG_BINARY, "got %u\n", type);
-
-    size = sizeof(buf);
-    type = 0xdeadbeef;
-    memset(buf, 0, size);
-    res = RegQueryValueExA(hkey, "Value11", NULL, &type, buf, &size);
-    ok(res == ERROR_SUCCESS, "got %u\n", res);
-    ok(buf[0] == 1, "got %u\n", buf[0]);
-    ok(size == 1, "got %u\n", size);
-    ok(type == REG_BINARY, "got %u\n", type);
-
-    size = sizeof(buf);
-    type = 0xdeadbeef;
-    memset(buf, 0, size);
-    res = RegQueryValueExA(hkey, "Value12", NULL, &type, buf, &size);
-    ok(res == ERROR_SUCCESS, "got %u\n", res);
-    ok(*(DWORD *)buf == 1, "got %u\n", *(DWORD *)buf);
-    ok(size == 4, "got %u\n", size);
-    ok(type == REG_DWORD, "got %u\n", type);
-
-    RegDeleteValueA(hkey, "Value");
-    RegDeleteValueA(hkey, "Value1");
-    RegDeleteValueA(hkey, "Value2");
-    RegDeleteValueA(hkey, "Value3");
-    RegDeleteValueA(hkey, "Value4");
-    RegDeleteValueA(hkey, "Value5");
-    RegDeleteValueA(hkey, "Value6");
-    RegDeleteValueA(hkey, "Value7");
-    RegDeleteValueA(hkey, "Value8");
-    RegDeleteValueA(hkey, "Value9");
-    RegDeleteValueA(hkey, "Value10");
-    RegDeleteValueA(hkey, "Value11");
-    RegDeleteValueA(hkey, "Value12");
     RegCloseKey(hkey);
-    RegDeleteKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Wine\\msitest");
+    res = RegDeleteKeyA(HKEY_CURRENT_USER, "msitest");
+    ok(!res, "got %u\n", res);
 
 error:
     DeleteFileA(msifile);
-    DeleteFileA("msitest\\augustus");
     RemoveDirectoryA("msitest");
 }
 
@@ -5843,125 +5713,6 @@ error:
     DeleteFileA(msifile);
 }
 
-static void test_remove_registry_values(void)
-{
-    UINT r;
-    LONG res;
-    HKEY key;
-    REGSAM access = KEY_ALL_ACCESS;
-
-    if (is_process_limited())
-    {
-        skip("process is limited\n");
-        return;
-    }
-
-    create_test_files();
-    create_file("msitest\\registry.txt", 1000);
-    create_database(msifile, rrv_tables, sizeof(rrv_tables) / sizeof(msi_table));
-
-    if (is_wow64)
-        access |= KEY_WOW64_64KEY;
-
-    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
-
-    RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\key1", 0, NULL, 0, access, NULL, &key, NULL);
-    RegSetValueExA(key, "value1", 0, REG_SZ, (const BYTE *)"1", 2);
-    RegCloseKey(key);
-
-    RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\key2", 0, NULL, 0, access, NULL, &key, NULL);
-    RegSetValueExA(key, "value2", 0, REG_SZ, (const BYTE *)"2", 2);
-    RegCloseKey(key);
-
-    RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\keyA", 0, NULL, 0, access, NULL, &key, NULL);
-    RegSetValueExA(key, "", 0, REG_SZ, (const BYTE *)"default", 8);
-    RegSetValueExA(key, "valueA", 0, REG_SZ, (const BYTE *)"A", 2);
-    RegSetValueExA(key, "valueB", 0, REG_SZ, (const BYTE *)"B", 2);
-    RegCloseKey(key);
-
-    RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\keyB", 0, NULL, 0, access, NULL, &key, NULL);
-    RegSetValueExA(key, "", 0, REG_SZ, (const BYTE *)"default", 8);
-    RegSetValueExA(key, "valueB", 0, REG_SZ, (const BYTE *)"B", 2);
-    RegCloseKey(key);
-
-    r = MsiInstallProductA(msifile, NULL);
-    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
-    {
-        skip("Not enough rights to perform tests\n");
-        goto error;
-    }
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\key1", 0, access, &key);
-    ok(res == ERROR_SUCCESS, "key removed\n");
-    RegCloseKey(key);
-
-    if (is_64bit)
-    {
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wow6432Node\\Wine\\key2", 0, KEY_ALL_ACCESS, &key);
-        ok(res == ERROR_FILE_NOT_FOUND, "key not removed\n");
-    }
-    else
-    {
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\key2", 0, KEY_ALL_ACCESS, &key);
-        ok(res == ERROR_FILE_NOT_FOUND, "key not removed\n");
-    }
-
-    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\key2", 0, NULL, 0, access, NULL, &key, NULL);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    RegCloseKey(key);
-
-    r = MsiInstallProductA(msifile, "REMOVE=ALL");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    if (is_64bit)
-    {
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wow6432Node\\Wine\\key1", 0, KEY_ALL_ACCESS, &key);
-        ok(res == ERROR_FILE_NOT_FOUND, "key not removed\n");
-    }
-    else
-    {
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\key1", 0, KEY_ALL_ACCESS, &key);
-        ok(res == ERROR_FILE_NOT_FOUND, "key not removed\n");
-    }
-
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\key2", 0, access, &key);
-    ok(res == ERROR_SUCCESS, "key removed\n");
-    RegCloseKey(key);
-
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\keyA", 0, access, &key);
-    ok(res == ERROR_SUCCESS, "key removed\n");
-    RegCloseKey(key);
-
-    if (is_64bit)
-    {
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wow6432Node\\Wine\\keyB", 0, KEY_ALL_ACCESS, &key);
-        ok(res == ERROR_FILE_NOT_FOUND, "key not removed\n");
-    }
-    else
-    {
-        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Wine\\keyB", 0, KEY_ALL_ACCESS, &key);
-        ok(res == ERROR_FILE_NOT_FOUND, "key not removed\n");
-    }
-
-    delete_key(HKEY_LOCAL_MACHINE, "Software\\Wine\\keyA", access);
-    delete_key(HKEY_LOCAL_MACHINE, "Software\\Wine\\key2", access);
-    delete_key(HKEY_LOCAL_MACHINE, "Software\\Wine", access);
-
-    ok(!delete_pf("msitest\\registry.txt", TRUE), "file not removed\n");
-    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
-
-error:
-    delete_key(HKEY_LOCAL_MACHINE, "Software\\Wine\\key1", access);
-    delete_key(HKEY_LOCAL_MACHINE, "Software\\Wine\\key2", access);
-    delete_key(HKEY_LOCAL_MACHINE, "Software\\Wine\\keyA", access);
-    delete_key(HKEY_LOCAL_MACHINE, "Software\\Wine\\keyB", access);
-
-    DeleteFileA("msitest\\registry.txt");
-    delete_test_files();
-    DeleteFileA(msifile);
-}
-
 static void test_find_related_products(void)
 {
     UINT r;
@@ -6672,7 +6423,6 @@ START_TEST(action)
     test_create_remove_shortcut();
     test_publish_components();
     test_remove_duplicate_files();
-    test_remove_registry_values();
     test_find_related_products();
     test_ini_values();
     test_register_class_info();
