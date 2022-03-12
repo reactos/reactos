@@ -756,7 +756,29 @@ UINT WINAPI MsiSummaryInfoGetPropertyA(
     }
 
     if (!(si = msihandle2msiinfo( handle, MSIHANDLETYPE_SUMMARYINFO )))
-        return ERROR_INVALID_HANDLE;
+    {
+        MSIHANDLE remote;
+        WCHAR *buf = NULL;
+
+        if (!(remote = msi_get_remote( handle )))
+            return ERROR_INVALID_HANDLE;
+
+        __TRY
+        {
+            r = remote_SummaryInfoGetProperty( remote, uiProperty, puiDataType, piValue, pftValue, &buf );
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
+
+        if (!r)
+            r = msi_strncpyWtoA( buf, -1, szValueBuf, pcchValueBuf, TRUE );
+
+        midl_user_free( buf );
+        return r;
+    }
 
     str.unicode = FALSE;
     str.str.a = szValueBuf;
@@ -784,7 +806,29 @@ UINT WINAPI MsiSummaryInfoGetPropertyW(
     }
 
     if (!(si = msihandle2msiinfo( handle, MSIHANDLETYPE_SUMMARYINFO )))
-        return ERROR_INVALID_HANDLE;
+    {
+        MSIHANDLE remote;
+        WCHAR *buf = NULL;
+
+        if (!(remote = msi_get_remote( handle )))
+            return ERROR_INVALID_HANDLE;
+
+        __TRY
+        {
+            r = remote_SummaryInfoGetProperty( remote, uiProperty, puiDataType, piValue, pftValue, &buf );
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY
+
+        if (!r)
+            r = msi_strncpyW( buf, -1, szValueBuf, pcchValueBuf );
+
+        midl_user_free( buf );
+        return r;
+    }
 
     str.unicode = TRUE;
     str.str.w = szValueBuf;
@@ -1283,4 +1327,22 @@ UINT msi_load_suminfo_properties( MSIPACKAGE *package )
 UINT __cdecl s_remote_SummaryInfoGetPropertyCount( MSIHANDLE suminfo, UINT *count )
 {
     return MsiSummaryInfoGetPropertyCount( suminfo, count );
+}
+
+UINT __cdecl s_remote_SummaryInfoGetProperty( MSIHANDLE suminfo, UINT property, UINT *type,
+                                              INT *value, FILETIME *ft, LPWSTR *buf )
+{
+    WCHAR empty[1];
+    DWORD size = 0;
+    UINT r;
+
+    r = MsiSummaryInfoGetPropertyW( suminfo, property, type, value, ft, empty, &size );
+    if (r == ERROR_MORE_DATA)
+    {
+        size++;
+        *buf = midl_user_allocate( size * sizeof(WCHAR) );
+        if (!*buf) return ERROR_OUTOFMEMORY;
+        r = MsiSummaryInfoGetPropertyW( suminfo, property, type, value, ft, *buf, &size );
+    }
+    return r;
 }

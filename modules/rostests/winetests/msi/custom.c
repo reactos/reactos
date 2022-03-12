@@ -464,7 +464,6 @@ static void test_db(MSIHANDLE hinst)
     ok(hinst, count == 5, "got %u\n", count);
 
     r = MsiSummaryInfoGetPropertyA(suminfo, 0, NULL, NULL, NULL, NULL, NULL);
-todo_wine
     ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
 
     type = 0xdeadbeef;
@@ -472,11 +471,8 @@ todo_wine
     strcpy(buffer, "deadbeef");
     sz = sizeof(buffer);
     r = MsiSummaryInfoGetPropertyA(suminfo, PID_AUTHOR, &type, &int_value, &ft, buffer, &sz);
-todo_wine
     ok(hinst, !r, "got %u\n", r);
-todo_wine
     ok(hinst, type == 0, "got %u\n", type);
-todo_wine
     ok(hinst, int_value == 0, "got %u\n", int_value);
     ok(hinst, sz == sizeof(buffer), "got %u\n", sz);
     ok(hinst, !lstrcmpA(buffer, "deadbeef"), "got %s\n", buffer);
@@ -486,11 +482,8 @@ todo_wine
     strcpy(buffer, "deadbeef");
     sz = sizeof(buffer);
     r = MsiSummaryInfoGetPropertyA(suminfo, PID_CODEPAGE, &type, &int_value, &ft, buffer, &sz);
-todo_wine
     ok(hinst, !r, "got %u\n", r);
-todo_wine
     ok(hinst, type == 0, "got %u\n", type);
-todo_wine
     ok(hinst, int_value == 0, "got %u\n", int_value);
     ok(hinst, sz == sizeof(buffer), "got %u\n", sz);
     ok(hinst, !lstrcmpA(buffer, "deadbeef"), "got %s\n", buffer);
