@@ -2401,15 +2401,11 @@ void msi_resolve_target_folder( MSIPACKAGE *package, const WCHAR *name, BOOL loa
         else
             path = msi_build_directory_name( 2, folder->TargetDefault, NULL );
     }
+
     normalized_path = msi_normalize_path( path );
-    msi_free( path );
-    if (folder->ResolvedTarget && !strcmpiW( normalized_path, folder->ResolvedTarget ))
-    {
-        TRACE("%s already resolved to %s\n", debugstr_w(name), debugstr_w(folder->ResolvedTarget));
-        msi_free( normalized_path );
-        return;
-    }
     msi_set_property( package->db, folder->Directory, normalized_path, -1 );
+    msi_free( path );
+
     msi_free( folder->ResolvedTarget );
     folder->ResolvedTarget = normalized_path;
 

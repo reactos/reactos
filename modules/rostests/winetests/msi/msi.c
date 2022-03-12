@@ -336,16 +336,18 @@ static const char spf_custom_action_dat[] =
     "Action\tType\tSource\tTarget\tISComments\n"
     "s72\ti2\tS64\tS0\tS255\n"
     "CustomAction\tAction\n"
-    "SetFolderProp\t51\tMSITESTDIR\t[ProgramFilesFolder]\\msitest\\added\t\n";
+    "SetFolderProp\t51\tMSITESTDIR\t[ProgramFilesFolder]\\msitest\\added\t\n"
+    "SetFolderProp2\t51\tMSITESTDIR\t[ProgramFilesFolder]\\msitest\\added\\added2\t\n";
 
 static const char spf_install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
     "s72\tS255\tI2\n"
     "InstallExecuteSequence\tAction\n"
-    "CostFinalize\t\t1000\n"
     "CostInitialize\t\t800\n"
     "FileCost\t\t900\n"
     "SetFolderProp\t\t950\n"
+    "SetFolderProp2\t\t960\n"
+    "CostFinalize\t\t1000\n"
     "InstallFiles\t\t4000\n"
     "InstallServices\t\t5000\n"
     "InstallFinalize\t\t6600\n"
@@ -14103,7 +14105,6 @@ static void test_setpropertyfolder(void)
 {
     UINT r;
     CHAR path[MAX_PATH];
-    DWORD attr;
 
     if (is_process_limited())
     {
@@ -14128,19 +14129,10 @@ static void test_setpropertyfolder(void)
         goto error;
     }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    attr = GetFileAttributesA(path);
-    if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
-    {
-        ok(delete_pf("msitest\\added\\maximus", TRUE), "File not installed\n");
-        ok(delete_pf("msitest\\added", FALSE), "Directory not created\n");
-        ok(delete_pf("msitest", FALSE), "Directory not created\n");
-    }
-    else
-    {
-        trace("changing folder property not supported\n");
-        ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
-        ok(delete_pf("msitest", FALSE), "Directory not created\n");
-    }
+    ok(delete_pf("msitest\\added\\added2\\maximus", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\added\\added2", FALSE), "Directory not created\n");
+    ok(delete_pf("msitest\\added", FALSE), "Directory not created\n");
+    ok(delete_pf("msitest", FALSE), "Directory not created\n");
 
 error:
     DeleteFileA(msifile);
