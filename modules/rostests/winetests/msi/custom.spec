@@ -5,3 +5,5 @@
 @ stdcall nested(long)
 @ stdcall cf_present(long)
 @ stdcall cf_absent(long)
+@ stdcall crs_present(long)
+@ stdcall crs_absent(long)

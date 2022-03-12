@@ -917,11 +917,24 @@ static const char crs_install_exec_seq_dat[] =
     "RemoveFiles\t\t1700\n"
     "InstallFiles\t\t2000\n"
     "RemoveShortcuts\t\t3000\n"
+    "rs_immediate\tREMOVE\t3001\n"
+    "rs_deferred\tREMOVE\t3002\n"
     "CreateShortcuts\t\t3100\n"
+    "cs_immediate\tNOT REMOVE\t3101\n"
+    "cs_deferred\tNOT REMOVE\t3102\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
+
+static const char crs_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "cs_immediate\t1\tcustom.dll\tcrs_absent\n"
+    "cs_deferred\t1025\tcustom.dll\tcrs_present\n"
+    "rs_immediate\t1\tcustom.dll\tcrs_present\n"
+    "rs_deferred\t1025\tcustom.dll\tcrs_absent\n";
 
 static const char pub_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -1905,6 +1918,7 @@ static const msi_table crs_tables[] =
     ADD_TABLE(crs_file),
     ADD_TABLE(crs_shortcut),
     ADD_TABLE(crs_install_exec_seq),
+    ADD_TABLE(crs_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };

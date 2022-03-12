@@ -1178,3 +1178,17 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
 }
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI crs_present(MSIHANDLE hinst)
+{
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, pf_exists("msitest\\shortcut.lnk"), "shortcut absent\n");
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI crs_absent(MSIHANDLE hinst)
+{
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, !pf_exists("msitest\\shortcut.lnk"), "shortcut present\n");
+    return ERROR_SUCCESS;
+}
