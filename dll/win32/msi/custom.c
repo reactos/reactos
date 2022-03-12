@@ -485,7 +485,7 @@ static void handle_msi_break(LPCSTR target)
 static WCHAR ncalrpcW[] = {'n','c','a','l','r','p','c',0};
 static WCHAR endpoint_lrpcW[] = {'m','s','i',0};
 
-UINT __wine_msi_call_dll_function(const GUID *guid)
+UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
 {
     MsiCustomActionEntryPoint fn;
     MSIHANDLE remote_package = 0;

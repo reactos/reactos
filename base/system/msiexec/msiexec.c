@@ -393,7 +393,7 @@ static DWORD DoUnregServer(void)
     return ret;
 }
 
-extern UINT __wine_msi_call_dll_function(GUID *guid);
+extern UINT CDECL __wine_msi_call_dll_function(GUID *guid);
 
 static int DoEmbedding(LPCWSTR key)
 {
