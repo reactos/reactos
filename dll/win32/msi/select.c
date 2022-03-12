@@ -247,13 +247,8 @@ static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
     UINT r, i, num_columns, col, type, val;
     LPCWSTR str;
-    MSIRECORD *mod;
 
     r = SELECT_get_dimensions(view, NULL, &num_columns);
-    if (r != ERROR_SUCCESS)
-        return r;
-
-    r = sv->table->ops->get_row(sv->table, row, &mod);
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -265,39 +260,34 @@ static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
         if (r != ERROR_SUCCESS)
         {
             ERR("Failed to get column information: %d\n", r);
-            goto done;
+            return r;
         }
 
         if (MSITYPE_IS_BINARY(type))
         {
             ERR("Cannot modify binary data!\n");
-            r = ERROR_FUNCTION_FAILED;
-            goto done;
+            return ERROR_FUNCTION_FAILED;
         }
         else if (type & MSITYPE_STRING)
         {
             int len;
-            str = msi_record_get_string( rec, i + 1, &len );
-            r = msi_record_set_string( mod, col, str, len );
+            str = msi_record_get_string(rec, i + 1, &len);
+            r = sv->table->ops->set_string(sv->table, row, col, str, len);
         }
         else
         {
             val = MSI_RecordGetInteger(rec, i + 1);
-            r = MSI_RecordSetInteger(mod, col, val);
+            r = sv->table->ops->set_int(sv->table, row, col, val);
         }
 
         if (r != ERROR_SUCCESS)
         {
             ERR("Failed to modify record: %d\n", r);
-            goto done;
+            return r;
         }
     }
 
-    r = sv->table->ops->modify(sv->table, MSIMODIFY_UPDATE, mod, row);
-
-done:
-    msiobj_release(&mod->hdr);
-    return r;
+    return ERROR_SUCCESS;
 }
 
 static UINT SELECT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
@@ -336,6 +326,8 @@ static const MSIVIEWOPS select_ops =
     SELECT_fetch_int,
     SELECT_fetch_stream,
     SELECT_get_row,
+    NULL,
+    NULL,
     SELECT_set_row,
     SELECT_insert_row,
     NULL,

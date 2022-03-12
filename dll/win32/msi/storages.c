@@ -124,6 +124,12 @@ static UINT STORAGES_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+static UINT STORAGES_set_string( struct tagMSIVIEW *view, UINT row, UINT col, const WCHAR *val, int len )
+{
+    ERR("Cannot modify primary key.\n");
+    return ERROR_FUNCTION_FAILED;
+}
+
 static HRESULT stream_to_storage(IStream *stm, IStorage **stg)
 {
     ILockBytes *lockbytes = NULL;
@@ -420,6 +426,8 @@ static const MSIVIEWOPS storages_ops =
     STORAGES_fetch_int,
     STORAGES_fetch_stream,
     STORAGES_get_row,
+    NULL,
+    STORAGES_set_string,
     STORAGES_set_row,
     STORAGES_insert_row,
     STORAGES_delete_row,

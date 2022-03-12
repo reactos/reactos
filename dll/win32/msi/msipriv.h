@@ -249,6 +249,20 @@ typedef struct tagMSIVIEWOPS
     UINT (*get_row)( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec );
 
     /*
+     * set_int - set the integer value at {row, col}
+     * This function has undefined behaviour if the column does not contain
+     * integers.
+     */
+    UINT (*set_int)( struct tagMSIVIEW *view, UINT row, UINT col, int val );
+
+    /*
+     * set_string - set the string value at {row, col}
+     * This function has undefined behaviour if the column does not contain
+     * strings.
+     */
+    UINT (*set_string)( struct tagMSIVIEW *view, UINT row, UINT col, const WCHAR *val, int len );
+
+    /*
      * set_row - sets values in a row as specified by mask
      *
      *  Similar semantics to fetch_int

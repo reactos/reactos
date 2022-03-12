@@ -172,6 +172,8 @@ static const MSIVIEWOPS delete_ops =
     NULL,
     NULL,
     NULL,
+    NULL,
+    NULL,
     DELETE_execute,
     DELETE_close,
     DELETE_get_dimensions,

@@ -1164,7 +1164,8 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
     return r;
 }
 
-static UINT TABLE_set_int( MSITABLEVIEW *tv, UINT row, UINT col, UINT val )
+/* Set a table value, i.e. preadjusted integer or string ID. */
+static UINT table_set_bytes( MSITABLEVIEW *tv, UINT row, UINT col, UINT val )
 {
     UINT offset, n, i;
 
@@ -1219,6 +1220,70 @@ static UINT int_to_table_storage( const MSITABLEVIEW *tv, UINT col, int val, UIN
         *ret = val ^ 0x80000000;
 
     return ERROR_SUCCESS;
+}
+
+static UINT TABLE_set_int( MSIVIEW *view, UINT row, UINT col, int val )
+{
+    MSITABLEVIEW *tv = (MSITABLEVIEW *)view;
+    UINT r, table_int;
+
+    TRACE("row %u, col %u, val %d.\n", row, col, val);
+
+    if ((r = int_to_table_storage( tv, col, val, &table_int )))
+        return r;
+
+    if (tv->columns[col-1].type & MSITYPE_KEY)
+    {
+        UINT key;
+
+        if ((r = TABLE_fetch_int( view, row, col, &key )))
+            return r;
+        if (key != table_int)
+        {
+            ERR("Cannot modify primary key %s.%s.\n",
+                debugstr_w(tv->table->name), debugstr_w(tv->columns[col-1].colname));
+            return ERROR_FUNCTION_FAILED;
+        }
+    }
+
+    return table_set_bytes( tv, row, col, table_int );
+}
+
+static UINT TABLE_set_string( MSIVIEW *view, UINT row, UINT col, const WCHAR *val, int len )
+{
+    MSITABLEVIEW *tv = (MSITABLEVIEW *)view;
+    BOOL persistent;
+    UINT id, r;
+
+    TRACE("row %u, col %u, val %s.\n", row, col, debugstr_wn(val, len));
+
+    persistent = (tv->table->persistent != MSICONDITION_FALSE)
+                  && tv->table->data_persistent[row];
+
+    if (val)
+    {
+        r = msi_string2id( tv->db->strings, val, len, &id );
+        if (r != ERROR_SUCCESS)
+            id = msi_add_string( tv->db->strings, val, len, persistent );
+    }
+    else
+        id = 0;
+
+    if (tv->columns[col-1].type & MSITYPE_KEY)
+    {
+        UINT key;
+
+        if ((r = TABLE_fetch_int( view, row, col, &key )))
+            return r;
+        if (key != id)
+        {
+            ERR("Cannot modify primary key %s.%s.\n",
+                debugstr_w(tv->table->name), debugstr_w(tv->columns[col-1].colname));
+            return ERROR_FUNCTION_FAILED;
+        }
+    }
+
+    return table_set_bytes( tv, row, col, id );
 }
 
 static UINT TABLE_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
@@ -1402,7 +1467,7 @@ static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UI
             }
         }
 
-        r = TABLE_set_int( tv, row, i+1, val );
+        r = table_set_bytes( tv, row, i+1, val );
         if ( r != ERROR_SUCCESS )
             break;
     }
@@ -2060,6 +2125,8 @@ static const MSIVIEWOPS table_ops =
     TABLE_fetch_int,
     TABLE_fetch_stream,
     TABLE_get_row,
+    TABLE_set_int,
+    TABLE_set_string,
     TABLE_set_row,
     TABLE_insert_row,
     TABLE_delete_row,

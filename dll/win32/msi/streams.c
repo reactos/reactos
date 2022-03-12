@@ -104,6 +104,12 @@ static UINT STREAMS_fetch_stream(struct tagMSIVIEW *view, UINT row, UINT col, IS
     return ERROR_SUCCESS;
 }
 
+static UINT STREAMS_set_string( struct tagMSIVIEW *view, UINT row, UINT col, const WCHAR *val, int len )
+{
+    ERR("Cannot modify primary key.\n");
+    return ERROR_FUNCTION_FAILED;
+}
+
 static UINT STREAMS_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
@@ -366,6 +372,8 @@ static const MSIVIEWOPS streams_ops =
     STREAMS_fetch_int,
     STREAMS_fetch_stream,
     STREAMS_get_row,
+    NULL,
+    STREAMS_set_string,
     STREAMS_set_row,
     STREAMS_insert_row,
     STREAMS_delete_row,
