@@ -2590,11 +2590,10 @@ MSICONDITION __cdecl remote_EvaluateCondition(MSIHANDLE hinst, LPCWSTR condition
     return MsiEvaluateConditionW(hinst, condition);
 }
 
-HRESULT __cdecl remote_GetFeatureCost(MSIHANDLE hinst, BSTR feature,
-                                          INT cost_tree, INSTALLSTATE state, INT *cost)
+UINT __cdecl remote_GetFeatureCost(MSIHANDLE hinst, LPCWSTR feature,
+    MSICOSTTREE cost_tree, INSTALLSTATE state, INT *cost)
 {
-    UINT r = MsiGetFeatureCostW(hinst, feature, cost_tree, state, cost);
-    return HRESULT_FROM_WIN32(r);
+    return MsiGetFeatureCostW(hinst, feature, cost_tree, state, cost);
 }
 
 HRESULT __cdecl remote_EnumComponentCosts(MSIHANDLE hinst, BSTR component,

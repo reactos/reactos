@@ -855,6 +855,25 @@ static void test_format_record(MSIHANDLE hinst)
     MsiCloseHandle(rec);
 }
 
+static void test_costs(MSIHANDLE hinst)
+{
+    INT cost;
+    UINT r;
+
+    cost = 0xdead;
+    r = MsiGetFeatureCostA(hinst, NULL, MSICOSTTREE_CHILDREN, INSTALLSTATE_LOCAL, &cost);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+    todo_wine_ok(hinst, !cost, "got %d\n", cost);
+
+    r = MsiGetFeatureCostA(hinst, "One", MSICOSTTREE_CHILDREN, INSTALLSTATE_LOCAL, NULL);
+    ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
+
+    cost = 0xdead;
+    r = MsiGetFeatureCostA(hinst, "One", MSICOSTTREE_CHILDREN, INSTALLSTATE_LOCAL, &cost);
+    ok(hinst, !r, "got %u\n", r);
+    todo_wine_ok(hinst, cost == 8, "got %d\n", cost);
+}
+
 /* Main test. Anything that doesn't depend on a specific install configuration
  * or have undesired side effects should go here. */
 UINT WINAPI main_test(MSIHANDLE hinst)
@@ -885,6 +904,7 @@ UINT WINAPI main_test(MSIHANDLE hinst)
     test_misc(hinst);
     test_feature_states(hinst);
     test_format_record(hinst);
+    test_costs(hinst);
 
     return ERROR_SUCCESS;
 }

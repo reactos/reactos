@@ -698,6 +698,7 @@ static const CHAR ca1_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                                "CostInitialize\t\t100\n"
                                                "FileCost\t\t200\n"
                                                "CostFinalize\t\t300\n"
+                                               "InstallValidate\t\t400\n"
                                                "embednull\t\t600\n"
                                                "maintest\tMAIN_TEST\t700\n"
                                                "testretval\tTEST_RETVAL\t710\n";

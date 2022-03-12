@@ -29,6 +29,7 @@ typedef int MSIRUNMODE;
 typedef int INSTALLSTATE;
 typedef int MSICOLINFO;
 typedef int MSIMODIFY;
+typedef int MSICOSTTREE;
 
 #define MSIFIELD_NULL   0
 #define MSIFIELD_INT    1
@@ -89,7 +90,7 @@ interface IWineMsiRemote
     UINT remote_SetInstallLevel( [in] MSIHANDLE hinst, [in] int level );
     UINT remote_FormatRecord( [in] MSIHANDLE hinst, [in] struct wire_record *record, [out, string] LPWSTR *value);
     MSICONDITION remote_EvaluateCondition( [in] MSIHANDLE hinst, [in, string] LPCWSTR condition );
-    HRESULT remote_GetFeatureCost( [in] MSIHANDLE hinst, [in] BSTR feature, [in] INT cost_tree, [in] INSTALLSTATE state, [out] INT *cost );
+    UINT remote_GetFeatureCost( [in] MSIHANDLE hinst, [in, string] LPCWSTR feature, [in] MSICOSTTREE cost_tree, [in] INSTALLSTATE state, [out] INT *cost );
     HRESULT remote_EnumComponentCosts( [in] MSIHANDLE hinst, [in] BSTR component, [in] DWORD index, [in] INSTALLSTATE state,
                                        [out, size_is(*buflen)] BSTR drive, [in, out] DWORD *buflen, [out] INT *cost, [out] INT *temp );
 

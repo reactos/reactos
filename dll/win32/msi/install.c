@@ -1068,29 +1068,15 @@ UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
     if (!package)
     {
         MSIHANDLE remote;
-        HRESULT hr;
-        BSTR feature;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        feature = SysAllocString(szFeature);
-        if (!feature)
-            return ERROR_OUTOFMEMORY;
+        /* FIXME: should use SEH */
+        if (!piCost)
+            return RPC_X_NULL_REF_POINTER;
 
-        hr = remote_GetFeatureCost(remote, feature, iCostTree, iState, piCost);
-
-        SysFreeString(feature);
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_GetFeatureCost(remote, szFeature, iCostTree, iState, piCost);
     }
 
     if (!piCost)
