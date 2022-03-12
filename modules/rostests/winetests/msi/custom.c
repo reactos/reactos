@@ -30,6 +30,7 @@
 #include <msxml.h>
 #include <msi.h>
 #include <msiquery.h>
+#include <msidefs.h>
 
 static int todo_level, todo_do_loop;
 
@@ -279,7 +280,9 @@ static void test_db(MSIHANDLE hinst)
     MSIHANDLE hdb, view, rec, rec2, suminfo;
     char buffer[10];
     DWORD sz;
-    UINT r;
+    UINT r, count, type;
+    INT int_value;
+    FILETIME ft;
 
     hdb = MsiGetActiveDatabase(hinst);
     ok(hinst, hdb, "MsiGetActiveDatabase failed\n");
@@ -451,6 +454,53 @@ static void test_db(MSIHANDLE hinst)
 
     r = MsiGetSummaryInformationA(hdb, NULL, 1, &suminfo);
     ok(hinst, !r, "got %u\n", r);
+
+    r = MsiSummaryInfoGetPropertyCount(suminfo, NULL);
+todo_wine
+    ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
+
+    count = 0xdeadbeef;
+    r = MsiSummaryInfoGetPropertyCount(suminfo, &count);
+todo_wine
+    ok(hinst, !r, "got %u\n", r);
+todo_wine
+    ok(hinst, count == 5, "got %u\n", count);
+
+    r = MsiSummaryInfoGetPropertyA(suminfo, 0, NULL, NULL, NULL, NULL, NULL);
+todo_wine
+    ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
+
+    type = 0xdeadbeef;
+    int_value = 0xdeadbeef;
+    strcpy(buffer, "deadbeef");
+    sz = sizeof(buffer);
+    r = MsiSummaryInfoGetPropertyA(suminfo, PID_AUTHOR, &type, &int_value, &ft, buffer, &sz);
+todo_wine
+    ok(hinst, !r, "got %u\n", r);
+todo_wine
+    ok(hinst, type == 0, "got %u\n", type);
+todo_wine
+    ok(hinst, int_value == 0, "got %u\n", int_value);
+    ok(hinst, sz == sizeof(buffer), "got %u\n", sz);
+    ok(hinst, !lstrcmpA(buffer, "deadbeef"), "got %s\n", buffer);
+
+    type = 0xdeadbeef;
+    int_value = 0xdeadbeef;
+    strcpy(buffer, "deadbeef");
+    sz = sizeof(buffer);
+    r = MsiSummaryInfoGetPropertyA(suminfo, PID_CODEPAGE, &type, &int_value, &ft, buffer, &sz);
+todo_wine
+    ok(hinst, !r, "got %u\n", r);
+todo_wine
+    ok(hinst, type == 0, "got %u\n", type);
+todo_wine
+    ok(hinst, int_value == 0, "got %u\n", int_value);
+    ok(hinst, sz == sizeof(buffer), "got %u\n", sz);
+    ok(hinst, !lstrcmpA(buffer, "deadbeef"), "got %s\n", buffer);
+
+    r = MsiSummaryInfoSetPropertyA(suminfo, PID_CODEPAGE, VT_I2, 1252, &ft, "");
+todo_wine
+    ok(hinst, r == ERROR_FUNCTION_FAILED, "got %u\n", r);
 
     r = MsiCloseHandle(suminfo);
     ok(hinst, !r, "got %u\n", r);
