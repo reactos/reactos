@@ -153,4 +153,6 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
 
 UINT msi_select_update( MSIVIEW *view, MSIRECORD *rec, UINT row ) DECLSPEC_HIDDEN;
 
+UINT msi_view_refresh_row( MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD *rec ) DECLSPEC_HIDDEN;
+
 #endif /* __WINE_MSI_QUERY_H */

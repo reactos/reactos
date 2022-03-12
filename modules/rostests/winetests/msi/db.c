@@ -3618,6 +3618,7 @@ static void test_join(void)
 
     r = MsiViewFetch(hview, &hrec);
     ok( r == ERROR_SUCCESS, "failed to fetch view: %d\n", r );
+    check_record(hrec, 2, "alveolar", "procerus");
 
     r = MsiRecordSetStringA( hrec, 1, "epicranius" );
     ok( r == ERROR_SUCCESS, "failed to set string: %d\n", r );
@@ -3627,7 +3628,8 @@ static void test_join(void)
 
     /* try another valid operation for joins */
     r = MsiViewModify(hview, MSIMODIFY_REFRESH, hrec);
-    todo_wine ok( r == ERROR_SUCCESS, "failed to refresh row: %d\n", r );
+    ok( r == ERROR_SUCCESS, "failed to refresh row: %d\n", r );
+    check_record(hrec, 2, "epicranius", "procerus");
 
     /* try an invalid operation for joins */
     r = MsiViewModify(hview, MSIMODIFY_DELETE, hrec);

@@ -276,20 +276,25 @@ UINT msi_select_update(MSIVIEW *view, MSIRECORD *rec, UINT row)
     return ERROR_SUCCESS;
 }
 
-static UINT SELECT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
+static UINT SELECT_modify( struct tagMSIVIEW *view, MSIMODIFY mode,
                            MSIRECORD *rec, UINT row )
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
 
-    TRACE("%p %d %p %d\n", sv, eModifyMode, rec, row );
+    TRACE("view %p, mode %d, rec %p, row %u.\n", view, mode, rec, row);
 
     if( !sv->table )
          return ERROR_FUNCTION_FAILED;
 
-    if (eModifyMode == MSIMODIFY_UPDATE)
+    switch (mode)
+    {
+    case MSIMODIFY_REFRESH:
+        return msi_view_refresh_row(sv->db, view, row, rec);
+    case MSIMODIFY_UPDATE:
         return msi_select_update(view, rec, row);
-
-    return sv->table->ops->modify( sv->table, eModifyMode, rec, row );
+    default:
+        return sv->table->ops->modify( sv->table, mode, rec, row );
+    }
 }
 
 static UINT SELECT_delete( struct tagMSIVIEW *view )
