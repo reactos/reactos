@@ -1274,3 +1274,25 @@ UINT WINAPI sss_stopped(MSIHANDLE hinst)
     CloseServiceHandle(manager);
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI rd_present(MSIHANDLE hinst)
+{
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    ok(hinst, pf_exists("msitest\\original2.txt"), "file absent\n");
+    ok(hinst, pf_exists("msitest\\duplicate.txt"), "file absent\n");
+}
+    ok(hinst, !pf_exists("msitest\\original3.txt"), "file present\n");
+    ok(hinst, !pf_exists("msitest\\duplicate2.txt"), "file present\n");
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI rd_absent(MSIHANDLE hinst)
+{
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    ok(hinst, !pf_exists("msitest\\original2.txt"), "file present\n");
+    ok(hinst, !pf_exists("msitest\\duplicate.txt"), "file present\n");
+}
+    ok(hinst, !pf_exists("msitest\\original3.txt"), "file present\n");
+    ok(hinst, !pf_exists("msitest\\duplicate2.txt"), "file present\n");
+    return ERROR_SUCCESS;
+}

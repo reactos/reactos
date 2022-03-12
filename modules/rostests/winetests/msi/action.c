@@ -1081,12 +1081,25 @@ static const char rd_install_exec_seq_dat[] =
     "InstallInitialize\t\t1500\n"
     "ProcessComponents\t\t1600\n"
     "RemoveDuplicateFiles\t\t1900\n"
+    "rd_immediate\tREMOVE\t1901\n"
+    "rd_deferred\tREMOVE\t1902\n"
     "InstallFiles\t\t2000\n"
     "DuplicateFiles\t\t2100\n"
+    "df_immediate\tNOT REMOVE\t2101\n"
+    "df_deferred\tNOT REMOVE\t2102\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
+
+static const char rd_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "df_immediate\t1\tcustom.dll\trd_absent\n"
+    "df_deferred\t1025\tcustom.dll\trd_present\n"
+    "rd_immediate\t1\tcustom.dll\trd_present\n"
+    "rd_deferred\t1025\tcustom.dll\trd_absent\n";
 
 static const char rrv_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -1996,6 +2009,7 @@ static const msi_table rd_tables[] =
     ADD_TABLE(rd_file),
     ADD_TABLE(rd_duplicate_file),
     ADD_TABLE(rd_install_exec_seq),
+    ADD_TABLE(rd_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
