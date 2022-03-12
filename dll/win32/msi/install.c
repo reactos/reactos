@@ -1428,22 +1428,11 @@ UINT WINAPI MsiSetInstallLevel(MSIHANDLE hInstall, int iInstallLevel)
     if (!package)
     {
         MSIHANDLE remote;
-        HRESULT hr;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        hr = remote_SetInstallLevel(remote, iInstallLevel);
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_SetInstallLevel(remote, iInstallLevel);
     }
 
     r = MSI_SetInstallLevel( package, iInstallLevel );

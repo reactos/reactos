@@ -2557,10 +2557,9 @@ LANGID __cdecl remote_GetLanguage(MSIHANDLE hinst)
     return MsiGetLanguage(hinst);
 }
 
-HRESULT __cdecl remote_SetInstallLevel(MSIHANDLE hinst, int level)
+UINT __cdecl remote_SetInstallLevel(MSIHANDLE hinst, int level)
 {
-    UINT r = MsiSetInstallLevel(hinst, level);
-    return HRESULT_FROM_WIN32(r);
+    return MsiSetInstallLevel(hinst, level);
 }
 
 HRESULT __cdecl remote_FormatRecord(MSIHANDLE hinst, MSIHANDLE record,

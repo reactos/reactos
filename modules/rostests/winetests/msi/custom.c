@@ -652,6 +652,12 @@ static void test_misc(MSIHANDLE hinst)
 
     lang = MsiGetLanguage(hinst);
     ok(hinst, lang == 1033, "got %u\n", lang);
+
+    check_prop(hinst, "INSTALLLEVEL", "3");
+    r = MsiSetInstallLevel(hinst, 123);
+    ok(hinst, !r, "got %u\n", r);
+    check_prop(hinst, "INSTALLLEVEL", "123");
+    MsiSetInstallLevel(hinst, 3);
 }
 
 static void test_feature_states(MSIHANDLE hinst)
