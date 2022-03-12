@@ -1208,6 +1208,7 @@ static enum platform parse_platform( const WCHAR *str )
     else if (!strcmpW( str, szIntel64 )) return PLATFORM_INTEL64;
     else if (!strcmpW( str, szX64 ) || !strcmpW( str, szAMD64 )) return PLATFORM_X64;
     else if (!strcmpW( str, szARM )) return PLATFORM_ARM;
+    else if (!strcmpW( str, szARM64 )) return PLATFORM_ARM64;
     return PLATFORM_UNKNOWN;
 }
 
@@ -1288,6 +1289,10 @@ static UINT validate_package( MSIPACKAGE *package )
         return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
 #ifndef __arm__
     if (package->platform == PLATFORM_ARM)
+        return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
+#endif
+#ifndef __aarch64__
+    if (package->platform == PLATFORM_ARM64)
         return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
 #endif
     if (package->platform == PLATFORM_X64)
