@@ -1407,43 +1407,43 @@ static const char frp_install_exec_seq_dat[] =
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
 
-static const char riv_file_dat[] =
+static const char ini_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
     "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
     "File\tFile\n"
     "inifile.txt\tinifile\tinifile.txt\t1000\t\t\t8192\t1\n";
 
-static const char riv_feature_dat[] =
+static const char ini_feature_dat[] =
     "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
     "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
     "Feature\tFeature\n"
     "inifile\t\t\tinifile feature\t1\t2\tMSITESTDIR\t0\n";
 
-static const char riv_feature_comp_dat[] =
+static const char ini_feature_comp_dat[] =
     "Feature_\tComponent_\n"
     "s38\ts72\n"
     "FeatureComponents\tFeature_\tComponent_\n"
     "inifile\tinifile\n";
 
-static const char riv_component_dat[] =
+static const char ini_component_dat[] =
     "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
     "s72\tS38\ts72\ti2\tS255\tS72\n"
     "Component\tComponent\n"
     "inifile\t{A0F15705-4F57-4437-88C4-6C8B37ACC6DE}\tMSITESTDIR\t0\t\tinifile.txt\n";
 
-static const char riv_ini_file_dat[] =
+static const char ini_ini_file_dat[] =
     "IniFile\tFileName\tDirProperty\tSection\tKey\tValue\tAction\tComponent_\n"
     "s72\tl255\tS72\tl96\tl128\tl255\ti2\ts72\n"
     "IniFile\tIniFile\n"
     "inifile1\ttest.ini\tMSITESTDIR\tsection1\tkey1\tvalue1\t0\tinifile\n";
 
-static const char riv_remove_ini_file_dat[] =
+static const char ini_remove_ini_file_dat[] =
     "RemoveIniFile\tFileName\tDirProperty\tSection\tKey\tValue\tAction\tComponent_\n"
     "s72\tl255\tS72\tl96\tl128\tL255\ti2\ts72\n"
     "RemoveIniFile\tRemoveIniFile\n"
     "inifile1\ttest.ini\tMSITESTDIR\tsectionA\tkeyA\tvalueA\t2\tinifile\n";
 
-static const char riv_install_exec_seq_dat[] =
+static const char ini_install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
     "s72\tS255\tI2\n"
     "InstallExecuteSequence\tAction\n"
@@ -1457,6 +1457,7 @@ static const char riv_install_exec_seq_dat[] =
     "RemoveFiles\t\t1700\n"
     "InstallFiles\t\t2000\n"
     "RemoveIniValues\t\t3000\n"
+    "WriteIniValues\t\t3100\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
@@ -2249,16 +2250,16 @@ static const msi_table frp_tables[] =
     ADD_TABLE(property)
 };
 
-static const msi_table riv_tables[] =
+static const msi_table ini_tables[] =
 {
     ADD_TABLE(directory),
-    ADD_TABLE(riv_component),
-    ADD_TABLE(riv_feature),
-    ADD_TABLE(riv_feature_comp),
-    ADD_TABLE(riv_file),
-    ADD_TABLE(riv_ini_file),
-    ADD_TABLE(riv_remove_ini_file),
-    ADD_TABLE(riv_install_exec_seq),
+    ADD_TABLE(ini_component),
+    ADD_TABLE(ini_feature),
+    ADD_TABLE(ini_feature_comp),
+    ADD_TABLE(ini_file),
+    ADD_TABLE(ini_ini_file),
+    ADD_TABLE(ini_remove_ini_file),
+    ADD_TABLE(ini_install_exec_seq),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
@@ -5987,7 +5988,7 @@ error:
     DeleteFileA(msifile);
 }
 
-static void test_remove_ini_values(void)
+static void test_ini_values(void)
 {
     UINT r;
     DWORD len;
@@ -6003,7 +6004,7 @@ static void test_remove_ini_values(void)
 
     create_test_files();
     create_file("msitest\\inifile.txt", 1000);
-    create_database(msifile, riv_tables, sizeof(riv_tables) / sizeof(msi_table));
+    create_database(msifile, ini_tables, sizeof(ini_tables) / sizeof(msi_table));
 
     lstrcpyA(inifile, PROG_FILES_DIR);
     lstrcatA(inifile, "\\msitest");
@@ -6016,9 +6017,6 @@ static void test_remove_ini_values(void)
     lstrcatA(inifile, "\\test.ini");
     file = CreateFileA(inifile, GENERIC_WRITE|GENERIC_READ, 0, NULL, CREATE_ALWAYS, 0, NULL);
     CloseHandle(file);
-
-    ret = WritePrivateProfileStringA("section1", "key1", "value1", inifile);
-    ok(ret, "failed to write profile string %u\n", GetLastError());
 
     ret = WritePrivateProfileStringA("sectionA", "keyA", "valueA", inifile);
     ok(ret, "failed to write profile string %u\n", GetLastError());
@@ -6662,7 +6660,7 @@ START_TEST(action)
     test_remove_duplicate_files();
     test_remove_registry_values();
     test_find_related_products();
-    test_remove_ini_values();
+    test_ini_values();
     test_register_class_info();
     test_register_extension_info();
     test_register_progid_info();
