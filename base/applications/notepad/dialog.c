@@ -496,7 +496,7 @@ DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 hCombo = GetDlgItem(hDlg, ID_ENCODING);
                 if (hCombo)
-                    Globals.encFile = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+                    Globals.encFile = (ENCODING) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
 
                 hCombo = GetDlgItem(hDlg, ID_EOLN);
                 if (hCombo)
