@@ -243,7 +243,7 @@ static void test_props(MSIHANDLE hinst)
 
 static void test_db(MSIHANDLE hinst)
 {
-    MSIHANDLE hdb, view, rec, rec2;
+    MSIHANDLE hdb, view, rec, rec2, suminfo;
     char buffer[10];
     DWORD sz;
     UINT r;
@@ -411,6 +411,15 @@ static void test_db(MSIHANDLE hinst)
     ok(hinst, !strcmp(buffer, "Name"), "got '%s'\n", buffer);
 
     r = MsiCloseHandle(rec);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiGetSummaryInformationA(hdb, NULL, 1, NULL);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    r = MsiGetSummaryInformationA(hdb, NULL, 1, &suminfo);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiCloseHandle(suminfo);
     ok(hinst, !r, "got %u\n", r);
 
     r = MsiCloseHandle(hdb);

@@ -67,7 +67,7 @@ interface IWineMsiRemote
 
     MSICONDITION remote_DatabaseIsTablePersistent( [in] MSIHANDLE db, [in] LPCWSTR table );
     UINT remote_DatabaseGetPrimaryKeys( [in] MSIHANDLE db, [in, string] LPCWSTR table, [out] struct wire_record **keys );
-    HRESULT remote_DatabaseGetSummaryInformation( [in] MSIHANDLE db, [in] UINT updatecount, [out] MSIHANDLE *suminfo );
+    UINT remote_DatabaseGetSummaryInformation( [in] MSIHANDLE db, [in] UINT updatecount, [out] MSIHANDLE *suminfo );
     UINT remote_DatabaseOpenView( [in] MSIHANDLE db, [in, string] LPCWSTR query, [out] MSIHANDLE *view );
 
     MSIHANDLE remote_GetActiveDatabase( [in] MSIHANDLE hinst );

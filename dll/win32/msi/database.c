@@ -2033,10 +2033,9 @@ UINT __cdecl remote_DatabaseGetPrimaryKeys(MSIHANDLE db, LPCWSTR table, struct w
     return r;
 }
 
-HRESULT __cdecl remote_DatabaseGetSummaryInformation(MSIHANDLE db, UINT updatecount, MSIHANDLE *suminfo)
+UINT __cdecl remote_DatabaseGetSummaryInformation(MSIHANDLE db, UINT updatecount, MSIHANDLE *suminfo)
 {
-    UINT r = MsiGetSummaryInformationW(db, NULL, updatecount, suminfo);
-    return HRESULT_FROM_WIN32(r);
+    return MsiGetSummaryInformationW(db, NULL, updatecount, suminfo);
 }
 
 UINT __cdecl remote_DatabaseOpenView(MSIHANDLE db, LPCWSTR query, MSIHANDLE *view)

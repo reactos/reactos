@@ -538,23 +538,16 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
         db = msihandle2msiinfo( hDatabase, MSIHANDLETYPE_DATABASE );
         if( !db )
         {
-            MSIHANDLE remote;
-            HRESULT hr;
+            MSIHANDLE remote, remote_suminfo;
 
             if (!(remote = msi_get_remote(hDatabase)))
                 return ERROR_INVALID_HANDLE;
 
-            hr = remote_DatabaseGetSummaryInformation(remote, uiUpdateCount, pHandle);
+            ret = remote_DatabaseGetSummaryInformation(remote, uiUpdateCount, &remote_suminfo);
+            if (!ret)
+                *pHandle = alloc_msi_remote_handle(remote_suminfo);
 
-            if (FAILED(hr))
-            {
-                if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                    return HRESULT_CODE(hr);
-
-                return ERROR_FUNCTION_FAILED;
-            }
-
-            return ERROR_SUCCESS;
+            return ret;
         }
     }
 
