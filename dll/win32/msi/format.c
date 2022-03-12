@@ -952,52 +952,55 @@ UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
     return r;
 }
 
-UINT WINAPI MsiFormatRecordA( MSIHANDLE hInstall, MSIHANDLE hRecord,
-                              LPSTR szResult, LPDWORD sz )
+UINT WINAPI MsiFormatRecordA(MSIHANDLE hinst, MSIHANDLE hrec, char *buf, DWORD *sz)
 {
-    UINT r;
-    DWORD len, save;
+    MSIPACKAGE *package;
+    MSIRECORD *rec;
     LPWSTR value;
+    DWORD len;
+    UINT r;
 
-    TRACE("%d %d %p %p\n", hInstall, hRecord, szResult, sz);
+    TRACE("%d %d %p %p\n", hinst, hrec, buf, sz);
 
-    if (!hRecord)
+    rec = msihandle2msiinfo(hrec, MSIHANDLETYPE_RECORD);
+    if (!rec)
         return ERROR_INVALID_HANDLE;
 
-    if (!sz)
+    package = msihandle2msiinfo(hinst, MSIHANDLETYPE_PACKAGE);
+    if (!package)
     {
-        if (szResult)
-            return ERROR_INVALID_PARAMETER;
-        else
-            return ERROR_SUCCESS;
+        LPWSTR value = NULL;
+        MSIHANDLE remote;
+
+        if ((remote = msi_get_remote(hinst)))
+        {
+            r = remote_FormatRecord(remote, (struct wire_record *)&rec->count, &value);
+
+            if (!r)
+                r = msi_strncpyWtoA(value, -1, buf, sz, TRUE);
+
+            midl_user_free(value);
+            msiobj_release(&rec->hdr);
+            return r;
+        }
     }
 
-    r = MsiFormatRecordW( hInstall, hRecord, NULL, &len );
+    r = MSI_FormatRecordW(package, rec, NULL, &len);
     if (r != ERROR_SUCCESS)
         return r;
 
     value = msi_alloc(++len * sizeof(WCHAR));
     if (!value)
-        return ERROR_OUTOFMEMORY;
-
-    r = MsiFormatRecordW( hInstall, hRecord, value, &len );
-    if (r != ERROR_SUCCESS)
         goto done;
 
-    save = len + 1;
-    len = WideCharToMultiByte(CP_ACP, 0, value, len + 1, NULL, 0, NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, value, len, szResult, *sz, NULL, NULL);
+    r = MSI_FormatRecordW(package, rec, value, &len);
+    if (!r)
+        r = msi_strncpyWtoA(value, len, buf, sz, FALSE);
 
-    if (szResult && len > *sz)
-    {
-        if (*sz) szResult[*sz - 1] = '\0';
-        r = ERROR_MORE_DATA;
-    }
-
-    *sz = save - 1;
-
-done:
     msi_free(value);
+done:
+    msiobj_release(&rec->hdr);
+    if (package) msiobj_release(&package->hdr);
     return r;
 }
 

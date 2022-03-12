@@ -168,6 +168,29 @@ UINT msi_strcpy_to_awstring( const WCHAR *str, int len, awstring *awbuf, DWORD *
     return r;
 }
 
+UINT msi_strncpyWtoA(const WCHAR *str, int lenW, char *buf, DWORD *sz, BOOL remote)
+{
+    UINT r = ERROR_SUCCESS;
+    DWORD lenA;
+
+    if (!sz)
+        return buf ? ERROR_INVALID_PARAMETER : ERROR_SUCCESS;
+
+    if (lenW < 0) lenW = strlenW(str);
+    lenA = WideCharToMultiByte(CP_ACP, 0, str, lenW + 1, NULL, 0, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, str, lenW + 1, buf, *sz, NULL, NULL);
+    lenA--;
+    if (buf && lenA >= *sz)
+    {
+        if (*sz) buf[*sz - 1] = 0;
+        r = ERROR_MORE_DATA;
+    }
+    if (remote && lenA >= *sz)
+        lenA *= 2;
+    *sz = lenA;
+    return r;
+}
+
 const WCHAR *msi_get_target_folder( MSIPACKAGE *package, const WCHAR *name )
 {
     MSIFOLDER *folder = msi_get_loaded_folder( package, name );

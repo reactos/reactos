@@ -785,28 +785,28 @@ static void test_format_record(MSIHANDLE hinst)
     sz = 0;
     r = MsiFormatRecordA(hinst, rec, NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    todo_wine_ok(hinst, sz == 14, "got size %u\n", sz);
+    ok(hinst, sz == 14, "got size %u\n", sz);
 
     sz = 0;
     strcpy(buffer,"q");
     r = MsiFormatRecordA(hinst, rec, buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == 14, "got size %u\n", sz);
+    ok(hinst, sz == 14, "got size %u\n", sz);
 
     sz = 1;
     strcpy(buffer,"x");
     r = MsiFormatRecordA(hinst, rec, buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == 14, "got size %u\n", sz);
+    ok(hinst, sz == 14, "got size %u\n", sz);
 
     sz = 7;
     strcpy(buffer,"x");
     r = MsiFormatRecordA(hinst, rec, buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "foo 12"), "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == 14, "got size %u\n", sz);
+    ok(hinst, sz == 14, "got size %u\n", sz);
 
     sz = 8;
     strcpy(buffer,"x");
