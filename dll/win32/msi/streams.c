@@ -616,7 +616,10 @@ UINT msi_commit_streams( MSIDATABASE *db )
     for (i = 0; i < db->num_streams; i++)
     {
         name = msi_string_lookup( db->strings, db->streams[i].str_index, NULL );
+        if (!strcmpW( name, szSumInfo )) continue;
+
         if (!(encname = encode_streamname( FALSE, name ))) return ERROR_OUTOFMEMORY;
+        TRACE("saving stream %s as %s\n", debugstr_w(name), debugstr_w(encname));
 
         hr = IStorage_CreateStream( db->storage, encname, STGM_WRITE|STGM_SHARE_EXCLUSIVE, 0, 0, &stream );
         if (SUCCEEDED( hr ))
