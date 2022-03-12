@@ -584,28 +584,28 @@ static void test_targetpath(MSIHANDLE hinst)
     sz = 0;
     r = MsiGetSourcePathA(hinst, "TARGETDIR", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    todo_wine_ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+    ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
 
     sz = 0;
     strcpy(buffer,"q");
     r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+    ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
 
     sz = 1;
     strcpy(buffer,"x");
     r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+    ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
 
     sz = srcsz;
     strcpy(buffer,"x");
     r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, strlen(buffer) == srcsz - 1, "wrong buffer length %d\n", strlen(buffer));
-    todo_wine_ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+    ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
 
     sz = srcsz + 1;
     strcpy(buffer,"x");
