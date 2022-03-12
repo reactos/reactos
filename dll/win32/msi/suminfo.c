@@ -1121,8 +1121,8 @@ end:
 
 static UINT save_prop( MSISUMMARYINFO *si, HANDLE handle, UINT row )
 {
-    static const char fmt_systemtime[] = "%d/%02d/%02d %02d:%02d:%02d";
-    char data[20]; /* largest string: YYYY/MM/DD hh:mm:ss */
+    static const char fmt_systemtime[] = "%04u/%02u/%02u %02u:%02u:%02u";
+    char data[36]; /* largest string: YYYY/MM/DD hh:mm:ss */
     static const char fmt_begin[] = "%u\t";
     static const char data_end[] = "\r\n";
     static const char fmt_int[] = "%u";
@@ -1141,17 +1141,15 @@ static UINT save_prop( MSISUMMARYINFO *si, HANDLE handle, UINT row )
         return r;
     if (data_type == VT_EMPTY)
         return ERROR_SUCCESS; /* property not set */
-    snprintf( data, sizeof(data), fmt_begin, row );
-    sz = lstrlenA( data );
+    sz = sprintf( data, fmt_begin, row );
     if (!WriteFile( handle, data, sz, &sz, NULL ))
         return ERROR_WRITE_FAULT;
 
-    switch (data_type)
+    switch( data_type )
     {
     case VT_I2:
     case VT_I4:
-        snprintf( data, sizeof(data), fmt_int, int_value );
-        sz = lstrlenA( data );
+        sz = sprintf( data, fmt_int, int_value );
         if (!WriteFile( handle, data, sz, &sz, NULL ))
             return ERROR_WRITE_FAULT;
         break;
@@ -1165,7 +1163,7 @@ static UINT save_prop( MSISUMMARYINFO *si, HANDLE handle, UINT row )
             msi_free( str.str.a );
             return r;
         }
-        sz = lstrlenA( str.str.a );
+        sz = len;
         if (!WriteFile( handle, str.str.a, sz, &sz, NULL ))
         {
             msi_free( str.str.a );
@@ -1176,10 +1174,9 @@ static UINT save_prop( MSISUMMARYINFO *si, HANDLE handle, UINT row )
     case VT_FILETIME:
         if (!FileTimeToSystemTime( &file_time, &system_time ))
             return ERROR_FUNCTION_FAILED;
-        snprintf( data, sizeof(data), fmt_systemtime, system_time.wYear, system_time.wMonth,
-                  system_time.wDay, system_time.wHour, system_time.wMinute,
-                  system_time.wSecond );
-        sz = lstrlenA( data );
+        sz = sprintf( data, fmt_systemtime, system_time.wYear, system_time.wMonth,
+                      system_time.wDay, system_time.wHour, system_time.wMinute,
+                      system_time.wSecond );
         if (!WriteFile( handle, data, sz, &sz, NULL ))
             return ERROR_WRITE_FAULT;
         break;
@@ -1191,7 +1188,7 @@ static UINT save_prop( MSISUMMARYINFO *si, HANDLE handle, UINT row )
         return ERROR_FUNCTION_FAILED;
     }
 
-    sz = lstrlenA( data_end );
+    sz = ARRAY_SIZE(data_end) - 1;
     if (!WriteFile( handle, data_end, sz, &sz, NULL ))
         return ERROR_WRITE_FAULT;
 

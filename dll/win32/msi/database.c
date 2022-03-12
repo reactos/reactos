@@ -1062,11 +1062,8 @@ static UINT msi_export_forcecodepage( HANDLE handle, UINT codepage )
 {
     static const char fmt[] = "\r\n\r\n%u\t_ForceCodepage\r\n";
     char data[sizeof(fmt) + 10];
-    DWORD sz;
+    DWORD sz = sprintf( data, fmt, codepage );
 
-    sprintf( data, fmt, codepage );
-
-    sz = lstrlenA(data) + 1;
     if (!WriteFile(handle, data, sz, &sz, NULL))
         return ERROR_FUNCTION_FAILED;
 
@@ -1078,24 +1075,22 @@ static UINT msi_export_summaryinformation( MSIDATABASE *db, HANDLE handle )
     static const char header[] = "PropertyId\tValue\r\n"
                                  "i2\tl255\r\n"
                                  "_SummaryInformation\tPropertyId\r\n";
-    DWORD sz;
+    DWORD sz = ARRAY_SIZE(header) - 1;
 
-    sz = lstrlenA(header);
     if (!WriteFile(handle, header, sz, &sz, NULL))
         return ERROR_WRITE_FAULT;
 
     return msi_export_suminfo( db, handle );
 }
 
-static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
-               LPCWSTR folder, LPCWSTR file )
+static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table, LPCWSTR folder, LPCWSTR file )
 {
-    static const WCHAR summaryinformation[] = {
-        '_','S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0 };
     static const WCHAR query[] = {
         's','e','l','e','c','t',' ','*',' ','f','r','o','m',' ','%','s',0 };
     static const WCHAR forcecodepage[] = {
         '_','F','o','r','c','e','C','o','d','e','p','a','g','e',0 };
+    static const WCHAR summaryinformation[] = {
+        '_','S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0 };
     MSIRECORD *rec = NULL;
     MSIQUERY *view = NULL;
     LPWSTR filename;
