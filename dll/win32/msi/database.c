@@ -925,50 +925,6 @@ end:
     return r;
 }
 
-static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
-{
-    char *buffer;
-    BOOL bret;
-    DWORD sz;
-    UINT r;
-
-    sz = 0x100;
-    buffer = msi_alloc( sz );
-    if (!buffer)
-        return ERROR_OUTOFMEMORY;
-
-    r = MSI_RecordGetStringA( row, field, buffer, &sz );
-    if (r == ERROR_MORE_DATA)
-    {
-        char *p;
-
-        sz++; /* leave room for NULL terminator */
-        p = msi_realloc( buffer, sz );
-        if (!p)
-        {
-            msi_free( buffer );
-            return ERROR_OUTOFMEMORY;
-        }
-        buffer = p;
-
-        r = MSI_RecordGetStringA( row, field, buffer, &sz );
-        if (r != ERROR_SUCCESS)
-        {
-            msi_free( buffer );
-            return r;
-        }
-    }
-    else if (r != ERROR_SUCCESS)
-        return r;
-
-    bret = WriteFile( handle, buffer, sz, &sz, NULL );
-    msi_free( buffer );
-    if (!bret)
-        return ERROR_FUNCTION_FAILED;
-
-    return r;
-}
-
 static UINT msi_export_stream( LPCWSTR folder, LPCWSTR table, MSIRECORD *row, UINT field,
                                UINT start )
 {
@@ -1021,9 +977,51 @@ static UINT msi_export_stream( LPCWSTR folder, LPCWSTR table, MSIRECORD *row, UI
     return r;
 }
 
-static UINT msi_export_record( struct row_export_info *row_export_info, MSIRECORD *row, UINT start )
+static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
 {
-    HANDLE handle = row_export_info->handle;
+    char *buffer;
+    BOOL ret;
+    DWORD sz = 0x100;
+    UINT r;
+
+    buffer = msi_alloc( sz );
+    if (!buffer)
+        return ERROR_OUTOFMEMORY;
+
+    r = MSI_RecordGetStringA( row, field, buffer, &sz );
+    if (r == ERROR_MORE_DATA)
+    {
+        char *tmp;
+
+        sz++; /* leave room for NULL terminator */
+        tmp = msi_realloc( buffer, sz );
+        if (!tmp)
+        {
+            msi_free( buffer );
+            return ERROR_OUTOFMEMORY;
+        }
+        buffer = tmp;
+
+        r = MSI_RecordGetStringA( row, field, buffer, &sz );
+        if (r != ERROR_SUCCESS)
+        {
+            msi_free( buffer );
+            return r;
+        }
+    }
+    else if (r != ERROR_SUCCESS)
+    {
+        msi_free( buffer );
+        return r;
+    }
+
+    ret = WriteFile( handle, buffer, sz, &sz, NULL );
+    msi_free( buffer );
+    return ret ? ERROR_SUCCESS : ERROR_FUNCTION_FAILED;
+}
+
+static UINT msi_export_record( HANDLE handle, MSIRECORD *row, UINT start )
+{
     UINT i, count, r = ERROR_SUCCESS;
     const char *sep;
     DWORD sz;
@@ -1032,18 +1030,7 @@ static UINT msi_export_record( struct row_export_info *row_export_info, MSIRECOR
     for (i = start; i <= count; i++)
     {
         r = msi_export_field( handle, row, i );
-        if (r == ERROR_INVALID_PARAMETER)
-        {
-            r = msi_export_stream( row_export_info->folder, row_export_info->table, row, i, start );
-            if (r != ERROR_SUCCESS)
-                return r;
-
-            /* exporting a binary stream, repeat the "Name" field */
-            r = msi_export_field( handle, row, start );
-            if (r != ERROR_SUCCESS)
-                return r;
-        }
-        else if (r != ERROR_SUCCESS)
+        if (r != ERROR_SUCCESS)
             return r;
 
         sep = (i < count) ? "\t" : "\r\n";
