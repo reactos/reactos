@@ -3704,9 +3704,12 @@ static void test_states(void)
     add_custom_action_entry( hdb, "'ConditionCheck6', 19, '', 'Condition check failed (6)'" );
     add_custom_action_entry( hdb, "'ConditionCheck7', 19, '', 'Condition check failed (7)'" );
     add_custom_action_entry( hdb, "'ConditionCheck8', 19, '', 'Condition check failed (8)'" );
+    add_custom_action_entry( hdb,
+            "'VBFeatureRequest', 38, '', 'Session.FeatureRequestState(\"three\") = 3'" );
 
     add_install_execute_sequence_entry( hdb, "'ConditionCheck1', 'REINSTALL', '798'" );
     add_install_execute_sequence_entry( hdb, "'ConditionCheck2', 'NOT REMOVE AND Preselected', '799'" );
+    add_install_execute_sequence_entry( hdb, "'VBFeatureRequest', 'NOT REMOVE', '1001'" );
     add_install_execute_sequence_entry( hdb, "'ConditionCheck3', 'REINSTALL', '6598'" );
     add_install_execute_sequence_entry( hdb, "'ConditionCheck4', 'NOT REMOVE AND Preselected', '6599'" );
     add_install_execute_sequence_entry( hdb, "'ConditionCheck5', 'REINSTALL', '6601'" );
@@ -3773,6 +3776,8 @@ static void test_states(void)
     ok(state == INSTALLSTATE_SOURCE, "state = %d\n", state);
     state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "two");
     ok(state == INSTALLSTATE_ABSENT, "state = %d\n", state);
+    state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "three");
+    ok(state == INSTALLSTATE_LOCAL, "state = %d\n", state);
 
     /* uninstall the product */
     r = MsiInstallProductA(msifile4, "REMOVE=ALL");

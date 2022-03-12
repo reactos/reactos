@@ -4945,6 +4945,8 @@ static UINT ACTION_PublishFeatures(MSIPACKAGE *package)
         MSIRECORD *uirow;
 
         if (feature->Level <= 0) continue;
+        if (feature->Action == INSTALLSTATE_UNKNOWN &&
+                feature->Installed != INSTALLSTATE_ABSENT) continue;
 
         if (feature->Action != INSTALLSTATE_LOCAL &&
             feature->Action != INSTALLSTATE_SOURCE &&
