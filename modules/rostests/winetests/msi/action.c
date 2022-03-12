@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define COBJMACROS
 #include <windows.h>
 #include <msiquery.h>
 #include <msidefs.h>
@@ -33,9 +34,13 @@
 #include <shellapi.h>
 #include <winsvc.h>
 #include <odbcinst.h>
+#ifdef __REACTOS__
+#include <oleauto.h>
+#endif
 
 #include "wine/test.h"
 #include "utils.h"
+#include "typelib.h"
 
 static UINT (WINAPI *pMsiQueryComponentStateA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR, INSTALLSTATE *);
@@ -1003,10 +1008,10 @@ static const char tl_install_exec_seq_dat[] =
     "InstallValidate\t\t1400\n"
     "InstallInitialize\t\t1500\n"
     "ProcessComponents\t\t1600\n"
-    "RemoveFiles\t\t1700\n"
-    "InstallFiles\t\t2000\n"
-    "RegisterTypeLibraries\tREGISTER_TYPELIB=1\t3000\n"
     "UnregisterTypeLibraries\t\t3100\n"
+    "RemoveFiles\t\t3200\n"
+    "InstallFiles\t\t3300\n"
+    "RegisterTypeLibraries\t\t3400\n"
     "RegisterProduct\t\t5100\n"
     "PublishFeatures\t\t5200\n"
     "PublishProduct\t\t5300\n"
@@ -2645,6 +2650,24 @@ static DWORD get_estimated_size(void)
     size = size * si.dwPageSize / 1024;
     CloseHandle(file);
     return size;
+}
+
+static void extract_resource(const char *name, const char *type, const char *path)
+{
+    DWORD written;
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+
+    file = CreateFileA(path, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE, "file creation failed, at %s, error %d\n", path, GetLastError());
+
+    res = FindResourceA(NULL, name, type);
+    ok( res != 0, "couldn't find resource\n" );
+    ptr = LockResource( LoadResource( GetModuleHandleA(NULL), res ));
+    WriteFile( file, ptr, SizeofResource( GetModuleHandleA(NULL), res ), &written, NULL );
+    ok( written == SizeofResource( GetModuleHandleA(NULL), res ), "couldn't write resource\n" );
+    CloseHandle( file );
 }
 
 static void test_register_product(void)
@@ -5594,6 +5617,8 @@ error:
 
 static void test_register_typelib(void)
 {
+    ITypeLib *tlb;
+    HRESULT hr;
     UINT r;
 
     if (is_process_limited())
@@ -5602,25 +5627,36 @@ static void test_register_typelib(void)
         return;
     }
 
+    /* UnregisterTypeLibraries action fails in 64-bit Windows <= 7 */
+    if (sizeof(void *) == 8)
+    {
+        win_skip("broken on 64-bit Windows\n");
+        return;
+    }
+
     create_test_files();
-    create_file("msitest\\typelib.dll", 1000);
+    extract_resource("typelib.tlb", "TYPELIB", "msitest\\typelib.dll");
     create_database(msifile, tl_tables, sizeof(tl_tables) / sizeof(msi_table));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
-    r = MsiInstallProductA(msifile, "REGISTER_TYPELIB=1");
+    r = MsiInstallProductA(msifile, NULL);
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
     {
         skip("Not enough rights to perform tests\n");
         goto error;
     }
-    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
 
-    r = MsiInstallProductA(msifile, NULL);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+    hr = LoadRegTypeLib(&LIBID_register_test, 7, 1, 0, &tlb);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ITypeLib_Release(tlb);
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    hr = LoadRegTypeLib(&LIBID_register_test, 7, 1, 0, &tlb);
+    ok(hr == TYPE_E_LIBNOTREGISTERED, "got %#x\n", hr);
 
     ok(!delete_pf("msitest\\typelib.dll", TRUE), "file not removed\n");
     ok(!delete_pf("msitest", FALSE), "directory not removed\n");

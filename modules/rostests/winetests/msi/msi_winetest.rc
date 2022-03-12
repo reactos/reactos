@@ -1,2 +1,4 @@
 
 CUSTOM.DLL TESTDLL "custom.dll"
+
+typelib.tlb TYPELIB "typelib.tlb"
