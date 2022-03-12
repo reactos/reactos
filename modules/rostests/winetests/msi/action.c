@@ -1733,11 +1733,24 @@ static const char pa_install_exec_seq_dat[] =
     "InstallInitialize\t\t1500\n"
     "ProcessComponents\t\t1600\n"
     "MsiPublishAssemblies\t\t3000\n"
+    "pa_immediate\tNOT REMOVE AND NOT ALLUSERS\t3001\n"
+    "pa_deferred\tNOT REMOVE AND NOT ALLUSERS\t3002\n"
     "MsiUnpublishAssemblies\t\t4000\n"
+    "ua_immediate\tREMOVE AND NOT ALLUSERS\t4001\n"
+    "ua_deferred\tREMOVE AND NOT ALLUSERS\t4002\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
+
+static const char pa_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "pa_immediate\t1\tcustom.dll\tpa_absent\n"
+    "pa_deferred\t1025\tcustom.dll\tpa_present\n"
+    "ua_immediate\t1\tcustom.dll\tpa_present\n"
+    "ua_deferred\t1025\tcustom.dll\tpa_absent\n";
 
 static const char rep_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -2191,6 +2204,7 @@ static const msi_table pa_tables[] =
     ADD_TABLE(pa_msi_assembly),
     ADD_TABLE(pa_msi_assembly_name),
     ADD_TABLE(pa_install_exec_seq),
+    ADD_TABLE(pa_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };

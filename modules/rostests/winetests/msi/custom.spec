@@ -13,6 +13,8 @@
 @ stdcall mov_absent(long)
 @ stdcall odbc_present(long)
 @ stdcall odbc_absent(long)
+@ stdcall pa_present(long)
+@ stdcall pa_absent(long)
 @ stdcall rd_present(long)
 @ stdcall rd_absent(long)
 @ stdcall sds_present(long)

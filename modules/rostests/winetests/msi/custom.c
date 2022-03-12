@@ -1379,3 +1379,58 @@ todo_wine {
 }
     return ERROR_SUCCESS;
 }
+
+static void check_reg_str(MSIHANDLE hinst, HKEY key, const char *name, const char *expect)
+{
+    char value[300];
+    DWORD sz;
+    LONG res;
+
+    sz = sizeof(value);
+    res = RegQueryValueExA(key, name, NULL, NULL, (BYTE *)value, &sz);
+    if (expect)
+    {
+        ok(hinst, !res, "failed to get value \"%s\": %d\n", name, res);
+        ok(hinst, !strcmp(value, expect), "\"%s\": expected \"%s\", got \"%s\"\n",
+            name, expect, value);
+    }
+    else
+        ok(hinst, res == ERROR_FILE_NOT_FOUND, "\"%s\": expected missing, got %u\n",
+            name, res);
+}
+
+static const char path_dotnet[] = "Software\\Microsoft\\Installer\\Assemblies\\Global";
+static const char name_dotnet[] = "Wine.Dotnet.Assembly,processorArchitecture=\"MSIL\","
+    "publicKeyToken=\"abcdef0123456789\",version=\"1.0.0.0\",culture=\"neutral\"";
+
+UINT WINAPI pa_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CURRENT_USER, path_dotnet, &key);
+    ok(hinst, !res, "got %d\n", res);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    check_reg_str(hinst, key, name_dotnet, "rcHQPHq?CA@Uv-XqMI1e>Z'q,T*76M@=YEg6My?~]");
+}
+    RegCloseKey(key);
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI pa_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CURRENT_USER, path_dotnet, &key);
+    ok(hinst, !res || res == ERROR_FILE_NOT_FOUND, "got %d\n", res);
+    if (!res)
+    {
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+        check_reg_str(hinst, key, name_dotnet, NULL);
+}
+        RegCloseKey(key);
+    }
+    return ERROR_SUCCESS;
+}
