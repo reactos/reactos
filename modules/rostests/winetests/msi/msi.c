@@ -34,6 +34,9 @@
 #include "wine/test.h"
 #include "utils.h"
 
+#define GUID_SIZE (39)
+#define SQUASHED_GUID_SIZE (33)
+
 static BOOL is_wow64;
 static const char msifile[] = "winetest.msi";
 static const WCHAR msifileW[] = {'w','i','n','e','t','e','s','t','.','m','s','i',0};
@@ -1224,8 +1227,8 @@ static BOOL squash_guid(LPCWSTR in, LPWSTR out)
 
 static void create_test_guid(LPSTR prodcode, LPSTR squashed)
 {
-    WCHAR guidW[MAX_PATH];
-    WCHAR squashedW[MAX_PATH];
+    WCHAR guidW[GUID_SIZE];
+    WCHAR squashedW[SQUASHED_GUID_SIZE];
     GUID guid;
     HRESULT hr;
     int size;
@@ -1233,14 +1236,14 @@ static void create_test_guid(LPSTR prodcode, LPSTR squashed)
     hr = CoCreateGuid(&guid);
     ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
 
-    size = StringFromGUID2(&guid, guidW, MAX_PATH);
-    ok(size == 39, "Expected 39, got %d\n", hr);
+    size = StringFromGUID2(&guid, guidW, ARRAY_SIZE(guidW));
+    ok(size == GUID_SIZE, "Expected %d, got %d.\n", GUID_SIZE, size);
 
-    WideCharToMultiByte(CP_ACP, 0, guidW, size, prodcode, MAX_PATH, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, guidW, size, prodcode, GUID_SIZE, NULL, NULL);
     if (squashed)
     {
         squash_guid(guidW, squashedW);
-        WideCharToMultiByte(CP_ACP, 0, squashedW, -1, squashed, MAX_PATH, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, squashedW, -1, squashed, SQUASHED_GUID_SIZE, NULL, NULL);
     }
 }
 
