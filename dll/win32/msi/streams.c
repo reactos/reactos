@@ -361,35 +361,6 @@ static UINT STREAMS_delete(struct tagMSIVIEW *view)
     return ERROR_SUCCESS;
 }
 
-static UINT STREAMS_find_matching_rows(struct tagMSIVIEW *view, UINT col,
-                                       UINT val, UINT *row, MSIITERHANDLE *handle)
-{
-    MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
-    UINT index = PtrToUlong(*handle);
-
-    TRACE("(%p, %d, %d, %p, %p)\n", view, col, val, row, handle);
-
-    if (!col || col > sv->num_cols)
-        return ERROR_INVALID_PARAMETER;
-
-    while (index < sv->db->num_streams)
-    {
-        if (sv->db->streams[index].str_index == val)
-        {
-            *row = index;
-            break;
-        }
-        index++;
-    }
-
-    *handle = UlongToPtr(++index);
-
-    if (index > sv->db->num_streams)
-        return ERROR_NO_MORE_ITEMS;
-
-    return ERROR_SUCCESS;
-}
-
 static const MSIVIEWOPS streams_ops =
 {
     STREAMS_fetch_int,
@@ -404,7 +375,6 @@ static const MSIVIEWOPS streams_ops =
     STREAMS_get_column_info,
     STREAMS_modify,
     STREAMS_delete,
-    STREAMS_find_matching_rows,
     NULL,
     NULL,
     NULL,

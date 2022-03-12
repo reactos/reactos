@@ -221,14 +221,6 @@ static UINT ALTER_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-static UINT ALTER_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    return ERROR_FUNCTION_FAILED;
-}
-
 static const MSIVIEWOPS alter_ops =
 {
     ALTER_fetch_int,
@@ -243,7 +235,6 @@ static const MSIVIEWOPS alter_ops =
     ALTER_get_column_info,
     ALTER_modify,
     ALTER_delete,
-    ALTER_find_matching_rows,
     NULL,
     NULL,
     NULL,

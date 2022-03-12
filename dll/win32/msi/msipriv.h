@@ -302,19 +302,6 @@ typedef struct tagMSIVIEWOPS
     UINT (*delete)( struct tagMSIVIEW * );
 
     /*
-     * find_matching_rows - iterates through rows that match a value
-     *
-     * If the column type is a string then a string ID should be passed in.
-     *  If the value to be looked up is an integer then no transformation of
-     *  the input value is required, except if the column is a string, in which
-     *  case a string ID should be passed in.
-     * The handle is an input/output parameter that keeps track of the current
-     *  position in the iteration. It must be initialised to zero before the
-     *  first call and continued to be passed in to subsequent calls.
-     */
-    UINT (*find_matching_rows)( struct tagMSIVIEW *view, UINT col, UINT val, UINT *row, MSIITERHANDLE *handle );
-
-    /*
      * add_ref - increases the reference count of the table
      */
     UINT (*add_ref)( struct tagMSIVIEW *view );

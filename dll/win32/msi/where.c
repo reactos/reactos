@@ -1015,36 +1015,6 @@ static UINT WHERE_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-static UINT WHERE_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
-    UINT i, row_value;
-
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    if (!wv->tables)
-         return ERROR_FUNCTION_FAILED;
-
-    if (col == 0 || col > wv->col_count)
-        return ERROR_INVALID_PARAMETER;
-
-    for (i = PtrToUlong(*handle); i < wv->row_count; i++)
-    {
-        if (view->ops->fetch_int( view, i, col, &row_value ) != ERROR_SUCCESS)
-            continue;
-
-        if (row_value == val)
-        {
-            *row = i;
-            *handle = UlongToPtr(i + 1);
-            return ERROR_SUCCESS;
-        }
-    }
-
-    return ERROR_NO_MORE_ITEMS;
-}
-
 static UINT WHERE_sort(struct tagMSIVIEW *view, column_info *columns)
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW *)view;
@@ -1108,7 +1078,6 @@ static const MSIVIEWOPS where_ops =
     WHERE_get_column_info,
     WHERE_modify,
     WHERE_delete,
-    WHERE_find_matching_rows,
     NULL,
     NULL,
     NULL,

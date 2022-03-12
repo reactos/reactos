@@ -1875,85 +1875,6 @@ static UINT TABLE_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-static UINT TABLE_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
-    const MSICOLUMNHASHENTRY *entry;
-
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    if( !tv->table )
-        return ERROR_INVALID_PARAMETER;
-
-    if( (col==0) || (col > tv->num_cols) )
-        return ERROR_INVALID_PARAMETER;
-
-    if( !tv->columns[col-1].hash_table )
-    {
-        UINT i;
-        UINT num_rows = tv->table->row_count;
-        MSICOLUMNHASHENTRY **hash_table;
-        MSICOLUMNHASHENTRY *new_entry;
-
-        if( tv->columns[col-1].offset >= tv->row_size )
-        {
-            ERR("Stuffed up %d >= %d\n", tv->columns[col-1].offset, tv->row_size );
-            ERR("%p %p\n", tv, tv->columns );
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        /* allocate contiguous memory for the table and its entries so we
-         * don't have to do an expensive cleanup */
-        hash_table = msi_alloc(MSITABLE_HASH_TABLE_SIZE * sizeof(MSICOLUMNHASHENTRY*) +
-            num_rows * sizeof(MSICOLUMNHASHENTRY));
-        if (!hash_table)
-            return ERROR_OUTOFMEMORY;
-
-        memset(hash_table, 0, MSITABLE_HASH_TABLE_SIZE * sizeof(MSICOLUMNHASHENTRY*));
-        tv->columns[col-1].hash_table = hash_table;
-
-        new_entry = (MSICOLUMNHASHENTRY *)(hash_table + MSITABLE_HASH_TABLE_SIZE);
-
-        for (i = 0; i < num_rows; i++, new_entry++)
-        {
-            UINT row_value;
-
-            if (view->ops->fetch_int( view, i, col, &row_value ) != ERROR_SUCCESS)
-                continue;
-
-            new_entry->next = NULL;
-            new_entry->value = row_value;
-            new_entry->row = i;
-            if (hash_table[row_value % MSITABLE_HASH_TABLE_SIZE])
-            {
-                MSICOLUMNHASHENTRY *prev_entry = hash_table[row_value % MSITABLE_HASH_TABLE_SIZE];
-                while (prev_entry->next)
-                    prev_entry = prev_entry->next;
-                prev_entry->next = new_entry;
-            }
-            else
-                hash_table[row_value % MSITABLE_HASH_TABLE_SIZE] = new_entry;
-        }
-    }
-
-    if( !*handle )
-        entry = tv->columns[col-1].hash_table[val % MSITABLE_HASH_TABLE_SIZE];
-    else
-        entry = (*handle)->next;
-
-    while (entry && entry->value != val)
-        entry = entry->next;
-
-    *handle = entry;
-    if (!entry)
-        return ERROR_NO_MORE_ITEMS;
-
-    *row = entry->row;
-
-    return ERROR_SUCCESS;
-}
-
 static UINT TABLE_add_ref(struct tagMSIVIEW *view)
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
@@ -2148,7 +2069,6 @@ static const MSIVIEWOPS table_ops =
     TABLE_get_column_info,
     TABLE_modify,
     TABLE_delete,
-    TABLE_find_matching_rows,
     TABLE_add_ref,
     TABLE_release,
     TABLE_add_column,

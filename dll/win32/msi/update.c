@@ -195,14 +195,6 @@ static UINT UPDATE_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-static UINT UPDATE_find_matching_rows( struct tagMSIVIEW *view, UINT col, UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    TRACE("%p %d %d %p\n", view, col, val, *handle );
-
-    return ERROR_FUNCTION_FAILED;
-}
-
-
 static const MSIVIEWOPS update_ops =
 {
     UPDATE_fetch_int,
@@ -217,7 +209,6 @@ static const MSIVIEWOPS update_ops =
     UPDATE_get_column_info,
     UPDATE_modify,
     UPDATE_delete,
-    UPDATE_find_matching_rows,
     NULL,
     NULL,
     NULL,

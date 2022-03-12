@@ -331,25 +331,6 @@ static UINT SELECT_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-static UINT SELECT_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
-
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    if( !sv->table )
-         return ERROR_FUNCTION_FAILED;
-
-    if( (col==0) || (col>sv->num_cols) )
-         return ERROR_FUNCTION_FAILED;
-
-    col = sv->cols[ col - 1 ];
-
-    return sv->table->ops->find_matching_rows( sv->table, col, val, row, handle );
-}
-
-
 static const MSIVIEWOPS select_ops =
 {
     SELECT_fetch_int,
@@ -364,7 +345,6 @@ static const MSIVIEWOPS select_ops =
     SELECT_get_column_info,
     SELECT_modify,
     SELECT_delete,
-    SELECT_find_matching_rows,
     NULL,
     NULL,
     NULL,

@@ -415,35 +415,6 @@ static UINT STORAGES_delete(struct tagMSIVIEW *view)
     return ERROR_SUCCESS;
 }
 
-static UINT STORAGES_find_matching_rows(struct tagMSIVIEW *view, UINT col,
-                                       UINT val, UINT *row, MSIITERHANDLE *handle)
-{
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
-    UINT index = PtrToUlong(*handle);
-
-    TRACE("(%d, %d): %d\n", *row, col, val);
-
-    if (col == 0 || col > NUM_STORAGES_COLS)
-        return ERROR_INVALID_PARAMETER;
-
-    while (index < sv->num_rows)
-    {
-        if (sv->storages[index]->str_index == val)
-        {
-            *row = index;
-            break;
-        }
-
-        index++;
-    }
-
-    *handle = UlongToPtr(++index);
-    if (index >= sv->num_rows)
-        return ERROR_NO_MORE_ITEMS;
-
-    return ERROR_SUCCESS;
-}
-
 static const MSIVIEWOPS storages_ops =
 {
     STORAGES_fetch_int,
@@ -458,7 +429,6 @@ static const MSIVIEWOPS storages_ops =
     STORAGES_get_column_info,
     STORAGES_modify,
     STORAGES_delete,
-    STORAGES_find_matching_rows,
     NULL,
     NULL,
     NULL,

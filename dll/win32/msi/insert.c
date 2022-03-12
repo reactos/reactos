@@ -318,15 +318,6 @@ static UINT INSERT_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-static UINT INSERT_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    return ERROR_FUNCTION_FAILED;
-}
-
-
 static const MSIVIEWOPS insert_ops =
 {
     INSERT_fetch_int,
@@ -341,7 +332,6 @@ static const MSIVIEWOPS insert_ops =
     INSERT_get_column_info,
     INSERT_modify,
     INSERT_delete,
-    INSERT_find_matching_rows,
     NULL,
     NULL,
     NULL,

@@ -164,15 +164,6 @@ static UINT DELETE_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-static UINT DELETE_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    return ERROR_FUNCTION_FAILED;
-}
-
-
 static const MSIVIEWOPS delete_ops =
 {
     DELETE_fetch_int,
@@ -187,7 +178,6 @@ static const MSIVIEWOPS delete_ops =
     DELETE_get_column_info,
     DELETE_modify,
     DELETE_delete,
-    DELETE_find_matching_rows,
     NULL,
     NULL,
     NULL,
