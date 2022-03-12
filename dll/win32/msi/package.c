@@ -1471,7 +1471,8 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     DWORD index = 0;
     MSISUMMARYINFO *si;
     BOOL delete_on_close = FALSE;
-    WCHAR *info_template, *productname;
+    WCHAR *info_template, *productname, *product_code;
+    MSIINSTALLCONTEXT context;
 
     TRACE("%s %p\n", debugstr_w(szPackage), pPackage);
 
@@ -1566,6 +1567,14 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     msi_set_property( package->db, szDatabase, db->path, -1 );
     set_installed_prop( package );
     msi_set_context( package );
+
+    product_code = get_product_code( db );
+    if (msi_locate_product( product_code, &context ) == ERROR_SUCCESS)
+    {
+        TRACE("product already registered\n");
+        msi_set_property( package->db, szProductToBeRegistered, szOne, -1 );
+    }
+    msi_free(product_code);
 
     while (1)
     {

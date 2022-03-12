@@ -5236,7 +5236,8 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
     UINT rc;
 
     /* FIXME: also need to publish if the product is in advertise mode */
-    if (!msi_check_publish(package))
+    if (!msi_get_property_int( package->db, szProductToBeRegistered, 0 )
+            && !msi_check_publish(package))
         return ERROR_SUCCESS;
 
     rc = MSIREG_OpenUninstallKey(package->ProductCode, package->platform, &hkey, TRUE);
