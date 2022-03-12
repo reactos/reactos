@@ -2210,35 +2210,11 @@ UINT WINAPI MsiSetPropertyW( MSIHANDLE hInstall, LPCWSTR szName, LPCWSTR szValue
     if( !package )
     {
         MSIHANDLE remote;
-        HRESULT hr;
-        BSTR name = NULL, value = NULL;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        name = SysAllocString( szName );
-        value = SysAllocString( szValue );
-        if ((!name && szName) || (!value && szValue))
-        {
-            SysFreeString( name );
-            SysFreeString( value );
-            return ERROR_OUTOFMEMORY;
-        }
-
-        hr = remote_SetProperty(remote, name, value);
-
-        SysFreeString( name );
-        SysFreeString( value );
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_SetProperty(remote, szName, szValue);
     }
 
     ret = msi_set_property( package->db, szName, szValue, -1 );
@@ -2507,10 +2483,9 @@ UINT __cdecl remote_GetProperty(MSIHANDLE hinst, LPCWSTR property, LPWSTR *value
     return r;
 }
 
-HRESULT __cdecl remote_SetProperty(MSIHANDLE hinst, BSTR property, BSTR value)
+UINT __cdecl remote_SetProperty(MSIHANDLE hinst, LPCWSTR property, LPCWSTR value)
 {
-    UINT r = MsiSetPropertyW(hinst, property, value);
-    return HRESULT_FROM_WIN32(r);
+    return MsiSetPropertyW(hinst, property, value);
 }
 
 HRESULT __cdecl remote_ProcessMessage(MSIHANDLE hinst, INSTALLMESSAGE message, MSIHANDLE record)
