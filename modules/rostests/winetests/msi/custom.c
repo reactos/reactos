@@ -391,6 +391,28 @@ static void test_db(MSIHANDLE hinst)
     r = MsiCloseHandle(view);
     ok(hinst, !r, "got %u\n", r);
 
+    /* test MsiDatabaseGetPrimaryKeys() */
+    r = MsiDatabaseGetPrimaryKeysA(hdb, "Test", &rec);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiRecordGetFieldCount(rec);
+    ok(hinst, r == 1, "got %d\n", r);
+
+    sz = sizeof(buffer);
+    r = MsiRecordGetStringA(rec, 0, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, !strcmp(buffer, "Test"), "got '%s'\n", buffer);
+
+    sz = sizeof(buffer);
+    r = MsiRecordGetStringA(rec, 1, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, !strcmp(buffer, "Name"), "got '%s'\n", buffer);
+
+    r = MsiCloseHandle(rec);
+    ok(hinst, !r, "got %u\n", r);
+
     r = MsiCloseHandle(hdb);
     ok(hinst, !r, "got %u\n", r);
 }

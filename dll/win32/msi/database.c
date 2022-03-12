@@ -2022,10 +2022,15 @@ MSICONDITION __cdecl remote_DatabaseIsTablePersistent(MSIHANDLE db, LPCWSTR tabl
     return MsiDatabaseIsTablePersistentW(db, table);
 }
 
-HRESULT __cdecl remote_DatabaseGetPrimaryKeys(MSIHANDLE db, LPCWSTR table, MSIHANDLE *keys)
+UINT __cdecl remote_DatabaseGetPrimaryKeys(MSIHANDLE db, LPCWSTR table, struct wire_record **rec)
 {
-    UINT r = MsiDatabaseGetPrimaryKeysW(db, table, keys);
-    return HRESULT_FROM_WIN32(r);
+    MSIHANDLE handle;
+    UINT r = MsiDatabaseGetPrimaryKeysW(db, table, &handle);
+    *rec = NULL;
+    if (!r)
+        *rec = marshal_record(handle);
+    MsiCloseHandle(handle);
+    return r;
 }
 
 HRESULT __cdecl remote_DatabaseGetSummaryInformation(MSIHANDLE db, UINT updatecount, MSIHANDLE *suminfo)

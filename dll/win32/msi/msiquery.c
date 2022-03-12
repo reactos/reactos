@@ -998,23 +998,20 @@ UINT WINAPI MsiDatabaseGetPrimaryKeysW( MSIHANDLE hdb,
     db = msihandle2msiinfo( hdb, MSIHANDLETYPE_DATABASE );
     if( !db )
     {
+        struct wire_record *wire_rec = NULL;
         MSIHANDLE remote;
-        HRESULT hr;
 
         if (!(remote = msi_get_remote(hdb)))
             return ERROR_INVALID_HANDLE;
 
-        hr = remote_DatabaseGetPrimaryKeys(remote, table, phRec);
-
-        if (FAILED(hr))
+        r = remote_DatabaseGetPrimaryKeys(remote, table, &wire_rec);
+        if (!r)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            r = unmarshal_record(wire_rec, phRec);
+            free_remote_record(wire_rec);
         }
 
-        return ERROR_SUCCESS;
+        return r;
     }
 
     r = MSI_DatabaseGetPrimaryKeys( db, table, &rec );
