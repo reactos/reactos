@@ -321,7 +321,6 @@ static void free_package_structures( MSIPACKAGE *package )
         msi_free_patchinfo( patch );
     }
 
-    msi_free( package->BaseURL );
     msi_free( package->PackagePath );
     msi_free( package->ProductCode );
     msi_free( package->ActionFormat );
@@ -1056,7 +1055,7 @@ void msi_adjust_privilege_properties( MSIPACKAGE *package )
     msi_set_property( package->db, szAdminUser, szOne, -1 );
 }
 
-MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
+MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
 {
     static const WCHAR fmtW[] = {'%','u',0};
     MSIPACKAGE *package;
@@ -1077,7 +1076,6 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
         package->LastActionResult = MSI_NULL_INTEGER;
         package->WordCount = 0;
         package->PackagePath = strdupW( db->path );
-        package->BaseURL = strdupW( base_url );
 
         create_temp_property_table( package );
         msi_clone_properties( package->db );
@@ -1447,15 +1445,13 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     MSIPACKAGE *package;
     MSIHANDLE handle;
     MSIRECORD *data_row, *info_row;
-    LPWSTR ptr, base_url = NULL;
     UINT r;
     WCHAR localfile[MAX_PATH], cachefile[MAX_PATH];
     LPCWSTR file = szPackage;
     DWORD index = 0;
     MSISUMMARYINFO *si;
     BOOL delete_on_close = FALSE;
-    LPWSTR productname;
-    WCHAR *info_template;
+    WCHAR *info_template, *productname;
 
     TRACE("%s %p\n", debugstr_w(szPackage), pPackage);
 
@@ -1487,13 +1483,6 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
                 return r;
 
             file = cachefile;
-
-            base_url = strdupW( szPackage );
-            if (!base_url)
-                return ERROR_OUTOFMEMORY;
-
-            ptr = strrchrW( base_url, '/' );
-            if (ptr) *(ptr + 1) = '\0';
         }
         r = get_local_package( file, localfile );
         if (r != ERROR_SUCCESS || GetFileAttributesW( localfile ) == INVALID_FILE_ATTRIBUTES)
@@ -1502,17 +1491,13 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
 
             r = msi_create_empty_local_file( localfile, dotmsi );
             if (r != ERROR_SUCCESS)
-            {
-                msi_free ( base_url );
                 return r;
-            }
 
             if (!CopyFileW( file, localfile, FALSE ))
             {
                 r = GetLastError();
                 WARN("unable to copy package %s to %s (%u)\n", debugstr_w(file), debugstr_w(localfile), r);
                 DeleteFileW( localfile );
-                msi_free ( base_url );
                 return r;
             }
             delete_on_close = TRUE;
@@ -1525,13 +1510,9 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         TRACE("opening package %s\n", debugstr_w( localfile ));
         r = MSI_OpenDatabaseW( localfile, MSIDBOPEN_TRANSACT, &db );
         if (r != ERROR_SUCCESS)
-        {
-            msi_free ( base_url );
             return r;
-        }
     }
-    package = MSI_CreatePackage( db, base_url );
-    msi_free( base_url );
+    package = MSI_CreatePackage( db );
     msiobj_release( &db->hdr );
     if (!package) return ERROR_INSTALL_PACKAGE_INVALID;
     package->localfile = strdupW( localfile );
