@@ -642,12 +642,16 @@ static void test_targetpath(MSIHANDLE hinst)
     ok(hinst, sz == srcsz, "got size %u\n", sz);
 }
 
-static void test_mode(MSIHANDLE hinst)
+static void test_misc(MSIHANDLE hinst)
 {
+    LANGID lang;
     UINT r;
 
     r = MsiSetMode(hinst, MSIRUNMODE_REBOOTATEND, FALSE);
     ok(hinst, !r, "got %u\n", r);
+
+    lang = MsiGetLanguage(hinst);
+    ok(hinst, lang == 1033, "got %u\n", lang);
 }
 
 static void test_feature_states(MSIHANDLE hinst)
@@ -767,7 +771,7 @@ UINT WINAPI main_test(MSIHANDLE hinst)
     test_db(hinst);
     test_doaction(hinst);
     test_targetpath(hinst);
-    test_mode(hinst);
+    test_misc(hinst);
     test_feature_states(hinst);
 
     return ERROR_SUCCESS;

@@ -2552,10 +2552,9 @@ UINT __cdecl remote_SetComponentState(MSIHANDLE hinst, LPCWSTR component, INSTAL
     return MsiSetComponentStateW(hinst, component, state);
 }
 
-HRESULT __cdecl remote_GetLanguage(MSIHANDLE hinst, LANGID *language)
+LANGID __cdecl remote_GetLanguage(MSIHANDLE hinst)
 {
-    *language = MsiGetLanguage(hinst);
-    return S_OK;
+    return MsiGetLanguage(hinst);
 }
 
 HRESULT __cdecl remote_SetInstallLevel(MSIHANDLE hinst, int level)
