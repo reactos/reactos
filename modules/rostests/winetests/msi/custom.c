@@ -650,6 +650,29 @@ static void test_mode(MSIHANDLE hinst)
     ok(hinst, !r, "got %u\n", r);
 }
 
+static void test_feature_states(MSIHANDLE hinst)
+{
+    INSTALLSTATE state, action;
+    UINT r;
+
+    r = MsiGetFeatureStateA(hinst, NULL, &state, &action);
+    ok(hinst, r == ERROR_UNKNOWN_FEATURE, "got %u\n", r);
+
+    r = MsiGetFeatureStateA(hinst, "fake", &state, &action);
+    ok(hinst, r == ERROR_UNKNOWN_FEATURE, "got %u\n", r);
+
+    r = MsiGetFeatureStateA(hinst, "One", NULL, &action);
+    ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
+
+    r = MsiGetFeatureStateA(hinst, "One", &state, NULL);
+    ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
+
+    r = MsiGetFeatureStateA(hinst, "One", &state, &action);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, state == INSTALLSTATE_ABSENT, "got state %d\n", state);
+    ok(hinst, action == INSTALLSTATE_LOCAL, "got action %d\n", action);
+}
+
 /* Main test. Anything that doesn't depend on a specific install configuration
  * or have undesired side effects should go here. */
 UINT WINAPI main_test(MSIHANDLE hinst)
@@ -678,6 +701,7 @@ UINT WINAPI main_test(MSIHANDLE hinst)
     test_doaction(hinst);
     test_targetpath(hinst);
     test_mode(hinst);
+    test_feature_states(hinst);
 
     return ERROR_SUCCESS;
 }

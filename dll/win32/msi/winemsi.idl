@@ -81,7 +81,7 @@ interface IWineMsiRemote
     UINT remote_GetSourcePath( [in] MSIHANDLE hinst, [in, string] LPCWSTR folder, [out, string] LPWSTR *value );
     BOOL remote_GetMode( [in] MSIHANDLE hinst, [in] MSIRUNMODE mode );
     UINT remote_SetMode( [in] MSIHANDLE hinst, [in] MSIRUNMODE mode, [in] BOOL state );
-    HRESULT remote_GetFeatureState( [in] MSIHANDLE hinst, [in] BSTR feature, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
+    UINT remote_GetFeatureState( [in] MSIHANDLE hinst, [in, string] LPCWSTR feature, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
     HRESULT remote_SetFeatureState( [in] MSIHANDLE hinst, [in] BSTR feature, [in] INSTALLSTATE state );
     HRESULT remote_GetComponentState( [in] MSIHANDLE hinst, [in] BSTR component, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
     HRESULT remote_SetComponentState( [in] MSIHANDLE hinst, [in] BSTR component, [in] INSTALLSTATE state );

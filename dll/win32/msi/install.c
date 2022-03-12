@@ -964,33 +964,22 @@ UINT WINAPI MsiGetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
 
     TRACE("%d %s %p %p\n", hInstall, debugstr_w(szFeature), piInstalled, piAction);
 
+    if (!szFeature)
+        return ERROR_UNKNOWN_FEATURE;
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
         MSIHANDLE remote;
-        HRESULT hr;
-        BSTR feature;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        feature = SysAllocString(szFeature);
-        if (!feature)
-            return ERROR_OUTOFMEMORY;
+        /* FIXME: should use SEH */
+        if (!piInstalled || !piAction)
+            return RPC_X_NULL_REF_POINTER;
 
-        hr = remote_GetFeatureState(remote, feature, piInstalled, piAction);
-
-        SysFreeString(feature);
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_GetFeatureState(remote, szFeature, piInstalled, piAction);
     }
 
     ret = MSI_GetFeatureStateW(package, szFeature, piInstalled, piAction);

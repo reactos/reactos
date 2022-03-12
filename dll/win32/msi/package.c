@@ -2530,11 +2530,10 @@ UINT __cdecl remote_SetMode(MSIHANDLE hinst, MSIRUNMODE mode, BOOL state)
     return MsiSetMode(hinst, mode, state);
 }
 
-HRESULT __cdecl remote_GetFeatureState(MSIHANDLE hinst, BSTR feature,
+UINT __cdecl remote_GetFeatureState(MSIHANDLE hinst, LPCWSTR feature,
                                     INSTALLSTATE *installed, INSTALLSTATE *action)
 {
-    UINT r = MsiGetFeatureStateW(hinst, feature, installed, action);
-    return HRESULT_FROM_WIN32(r);
+    return MsiGetFeatureStateW(hinst, feature, installed, action);
 }
 
 HRESULT __cdecl remote_SetFeatureState(MSIHANDLE hinst, BSTR feature, INSTALLSTATE state)
