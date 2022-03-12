@@ -1009,13 +1009,26 @@ static const char tl_install_exec_seq_dat[] =
     "InstallInitialize\t\t1500\n"
     "ProcessComponents\t\t1600\n"
     "UnregisterTypeLibraries\t\t3100\n"
+    "ut_immediate\tREMOVE\t3101\n"
+    "ut_deferred\tREMOVE\t3102\n"
     "RemoveFiles\t\t3200\n"
     "InstallFiles\t\t3300\n"
     "RegisterTypeLibraries\t\t3400\n"
+    "rt_immediate\tNOT REMOVE\t3401\n"
+    "rt_deferred\tNOT REMOVE\t3402\n"
     "RegisterProduct\t\t5100\n"
     "PublishFeatures\t\t5200\n"
     "PublishProduct\t\t5300\n"
     "InstallFinalize\t\t6000\n";
+
+static const char tl_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "rt_immediate\t1\tcustom.dll\ttl_absent\n"
+    "rt_deferred\t1025\tcustom.dll\ttl_present\n"
+    "ut_immediate\t1\tcustom.dll\ttl_present\n"
+    "ut_deferred\t1025\tcustom.dll\ttl_absent\n";
 
 static const char crs_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -2149,6 +2162,7 @@ static const msi_table tl_tables[] =
     ADD_TABLE(tl_file),
     ADD_TABLE(tl_typelib),
     ADD_TABLE(tl_install_exec_seq),
+    ADD_TABLE(tl_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };

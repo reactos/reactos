@@ -1804,3 +1804,32 @@ todo_wine
 
     return ERROR_SUCCESS;
 }
+
+static const GUID LIBID_register_test =
+    {0xeac5166a, 0x9734, 0x4d91, {0x87,0x8f, 0x1d,0xd0,0x23,0x04,0xc6,0x6c}};
+
+UINT WINAPI tl_present(MSIHANDLE hinst)
+{
+    ITypeLib *tlb;
+    HRESULT hr;
+
+    hr = LoadRegTypeLib(&LIBID_register_test, 7, 1, 0, &tlb);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, hr == S_OK, "got %#x\n", hr);
+    if (tlb)
+        ITypeLib_Release(tlb);
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI tl_absent(MSIHANDLE hinst)
+{
+    ITypeLib *tlb;
+    HRESULT hr;
+
+    hr = LoadRegTypeLib(&LIBID_register_test, 7, 1, 0, &tlb);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, hr == TYPE_E_LIBNOTREGISTERED, "got %#x\n", hr);
+
+    return ERROR_SUCCESS;
+}

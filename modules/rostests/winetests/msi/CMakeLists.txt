@@ -3,7 +3,7 @@ spec2def(custom.dll custom.spec)
 add_library(custom MODULE custom.c ${CMAKE_CURRENT_BINARY_DIR}/custom.def)
 target_link_libraries(custom uuid)
 set_module_type(custom win32dll)
-add_importlibs(custom msi ole32 odbccp32 shell32 advapi32 msvcrt kernel32)
+add_importlibs(custom msi ole32 oleaut32 odbccp32 shell32 advapi32 msvcrt kernel32)
 
 list(APPEND SOURCE
     action.c
