@@ -696,7 +696,7 @@ UINT MSI_ViewModify( MSIQUERY *query, MSIMODIFY mode, MSIRECORD *rec )
     if ( mode == MSIMODIFY_UPDATE && rec->cookie != (UINT64)(ULONG_PTR)query )
         return ERROR_FUNCTION_FAILED;
 
-    r = view->ops->modify( view, mode, rec, query->row );
+    r = view->ops->modify( view, mode, rec, query->row - 1 );
     if (mode == MSIMODIFY_DELETE && r == ERROR_SUCCESS)
         query->row--;
 

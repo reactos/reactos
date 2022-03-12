@@ -944,8 +944,8 @@ static UINT WHERE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
     {
         UINT *rows;
 
-        if (find_row(wv, row - 1, &rows) == ERROR_SUCCESS)
-            row = rows[0] + 1;
+        if (find_row(wv, row, &rows) == ERROR_SUCCESS)
+            row = rows[0];
         else
             row = -1;
 

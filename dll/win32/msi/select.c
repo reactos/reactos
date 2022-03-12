@@ -253,7 +253,7 @@ static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
     if (r != ERROR_SUCCESS)
         return r;
 
-    r = sv->table->ops->get_row(sv->table, row - 1, &mod);
+    r = sv->table->ops->get_row(sv->table, row, &mod);
     if (r != ERROR_SUCCESS)
         return r;
 

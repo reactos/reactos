@@ -1731,7 +1731,7 @@ static UINT msi_table_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
     }
 
     /* the row cannot be changed */
-    if (row != new_row + 1)
+    if (row != new_row)
         return ERROR_FUNCTION_FAILED;
 
     return TABLE_set_row(view, new_row, rec, (1 << tv->num_cols) - 1);
@@ -1769,7 +1769,7 @@ static UINT msi_refresh_record( struct tagMSIVIEW *view, MSIRECORD *rec, UINT ro
     MSIRECORD *curr;
     UINT r, i, count;
 
-    r = TABLE_get_row(view, row - 1, &curr);
+    r = TABLE_get_row(view, row, &curr);
     if (r != ERROR_SUCCESS)
         return r;
 
