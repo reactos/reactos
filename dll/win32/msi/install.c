@@ -180,7 +180,11 @@ UINT msi_strcpy_to_awstring( const WCHAR *str, int len, awstring *awbuf, DWORD *
     if (len < 0) len = strlenW( str );
  
     if (awbuf->unicode && awbuf->str.w)
+    {
         memcpy( awbuf->str.w, str, min(len + 1, *sz) * sizeof(WCHAR) );
+        if (*sz && len >= *sz)
+            awbuf->str.w[*sz - 1] = 0;
+    }
     else
     {
         int lenA = WideCharToMultiByte( CP_ACP, 0, str, len + 1, NULL, 0, NULL, NULL );

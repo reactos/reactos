@@ -2150,10 +2150,14 @@ static void check_prop(MSIHANDLE hpkg, const char *prop, const char *expect)
 
 static void test_props(void)
 {
+    static const WCHAR booW[] = {'b','o','o',0};
+    static const WCHAR xyzW[] = {'x','y','z',0};
+    static const WCHAR xyW[] = {'x','y',0};
     MSIHANDLE hpkg, hdb;
     UINT r;
     DWORD sz;
     char buffer[0x100];
+    WCHAR bufferW[10];
 
     hdb = create_package_db();
 
@@ -2278,6 +2282,39 @@ static void test_props(void)
     r = MsiGetPropertyA( hpkg, "boo", buffer, &sz );
     ok(!r, "got %u\n", r);
     ok(!strcmp(buffer,"xyz"), "got \"%s\"\n", buffer);
+    ok(sz == 3, "got size %u\n", sz);
+
+    sz = 0;
+    r = MsiGetPropertyW(hpkg, booW, NULL, &sz);
+    ok(!r, "got %u\n", r);
+    ok(sz == 3, "got size %u\n", sz);
+
+    sz = 0;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hpkg, booW, bufferW, &sz);
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(!lstrcmpW(bufferW, booW), "got %s\n", wine_dbgstr_w(bufferW));
+    ok(sz == 3, "got size %u\n", sz);
+
+    sz = 1;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hpkg, booW, bufferW, &sz );
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(!bufferW[0], "got %s\n", wine_dbgstr_w(bufferW));
+    ok(sz == 3, "got size %u\n", sz);
+
+    sz = 3;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hpkg, booW, bufferW, &sz );
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(!lstrcmpW(bufferW, xyW), "got %s\n", wine_dbgstr_w(bufferW));
+    ok(sz == 3, "got size %u\n", sz);
+
+    sz = 4;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hpkg, booW, bufferW, &sz );
+    ok(!r, "got %u\n", r);
+    ok(!lstrcmpW(bufferW, xyzW), "got %s\n", wine_dbgstr_w(bufferW));
     ok(sz == 3, "got size %u\n", sz);
 
     /* properties are case-sensitive */
