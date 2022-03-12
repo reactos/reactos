@@ -389,6 +389,7 @@ typedef struct _msi_custom_action_info {
     LPWSTR action;
     INT type;
     GUID guid;
+    DWORD arch;
 } msi_custom_action_info;
 
 static void release_custom_action_data( msi_custom_action_info *info )
@@ -677,45 +678,16 @@ void custom_stop_server(HANDLE process, HANDLE pipe)
 static DWORD WINAPI custom_client_thread(void *arg)
 {
     msi_custom_action_info *info = arg;
-    RPC_STATUS status;
     DWORD64 thread64;
     HANDLE process;
     HANDLE thread;
     HANDLE pipe;
-    DWORD arch;
     DWORD size;
-    BOOL ret;
     UINT rc;
 
     CoInitializeEx(NULL, COINIT_MULTITHREADED); /* needed to marshal streams */
 
-    if (!info->package->rpc_server_started)
-    {
-        status = RpcServerUseProtseqEpW(ncalrpcW, RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
-            endpoint_lrpcW, NULL);
-        if (status != RPC_S_OK)
-        {
-            ERR("RpcServerUseProtseqEp failed: %#x\n", status);
-            return status;
-        }
-
-        status = RpcServerRegisterIfEx((RPC_IF_HANDLE)s_IWineMsiRemote_v0_0_s_ifspec, NULL, NULL,
-            RPC_IF_AUTOLISTEN, RPC_C_LISTEN_MAX_CALLS_DEFAULT, NULL);
-        if (status != RPC_S_OK)
-        {
-            ERR("RpcServerRegisterIfEx failed: %#x\n", status);
-            return status;
-        }
-
-        info->package->rpc_server_started = 1;
-    }
-
-    ret = GetBinaryTypeW(info->source, &arch);
-    if (!ret)
-        arch = (sizeof(void *) == 8 ? SCS_64BIT_BINARY : SCS_32BIT_BINARY);
-
-    custom_start_server(info->package, arch);
-    if (arch == SCS_32BIT_BINARY)
+    if (info->arch == SCS_32BIT_BINARY)
     {
         process = info->package->custom_server_32_process;
         pipe = info->package->custom_server_32_pipe;
@@ -756,6 +728,8 @@ static msi_custom_action_info *do_msidbCustomActionTypeDll(
     MSIPACKAGE *package, INT type, LPCWSTR source, LPCWSTR target, LPCWSTR action )
 {
     msi_custom_action_info *info;
+    RPC_STATUS status;
+    BOOL ret;
 
     info = msi_alloc( sizeof *info );
     if (!info)
@@ -773,6 +747,33 @@ static msi_custom_action_info *do_msidbCustomActionTypeDll(
     EnterCriticalSection( &msi_custom_action_cs );
     list_add_tail( &msi_pending_custom_actions, &info->entry );
     LeaveCriticalSection( &msi_custom_action_cs );
+
+    if (!package->rpc_server_started)
+    {
+        status = RpcServerUseProtseqEpW(ncalrpcW, RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
+            endpoint_lrpcW, NULL);
+        if (status != RPC_S_OK)
+        {
+            ERR("RpcServerUseProtseqEp failed: %#x\n", status);
+            return NULL;
+        }
+
+        status = RpcServerRegisterIfEx(s_IWineMsiRemote_v0_0_s_ifspec, NULL, NULL,
+            RPC_IF_AUTOLISTEN, RPC_C_LISTEN_MAX_CALLS_DEFAULT, NULL);
+        if (status != RPC_S_OK)
+        {
+            ERR("RpcServerRegisterIfEx failed: %#x\n", status);
+            return NULL;
+        }
+
+        info->package->rpc_server_started = 1;
+    }
+
+    ret = GetBinaryTypeW(source, &info->arch);
+    if (!ret)
+        info->arch = (sizeof(void *) == 8 ? SCS_64BIT_BINARY : SCS_32BIT_BINARY);
+
+    custom_start_server(package, info->arch);
 
     info->handle = CreateThread(NULL, 0, custom_client_thread, info, 0, NULL);
     if (!info->handle)
