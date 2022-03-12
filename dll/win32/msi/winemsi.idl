@@ -51,8 +51,10 @@ struct wire_field {
     int len;
 };
 
+/* compatible with MSIRECORD minus header */
 struct wire_record {
     unsigned int count;
+    UINT64 cookie;
     [size_is(count+1)] struct wire_field fields[];
 };
 

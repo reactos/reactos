@@ -141,8 +141,8 @@ typedef struct tagMSIFIELD
 typedef struct tagMSIRECORD
 {
     MSIOBJECTHDR hdr;
-    MSIQUERY *query;
     UINT count;       /* as passed to MsiCreateRecord */
+    UINT64 cookie;
     MSIFIELD fields[1]; /* nb. array size is count+1 */
 } MSIRECORD;
 

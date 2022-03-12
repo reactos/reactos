@@ -379,7 +379,7 @@ UINT MSI_ViewFetch(MSIQUERY *query, MSIRECORD **prec)
     if (r == ERROR_SUCCESS)
     {
         query->row ++;
-        (*prec)->query = query;
+        (*prec)->cookie = (UINT64)(ULONG_PTR)query;
         MSI_RecordSetInteger(*prec, 0, 1);
     }
 
@@ -693,7 +693,7 @@ UINT MSI_ViewModify( MSIQUERY *query, MSIMODIFY mode, MSIRECORD *rec )
     if ( !view  || !view->ops->modify)
         return ERROR_FUNCTION_FAILED;
 
-    if ( mode == MSIMODIFY_UPDATE && rec->query != query )
+    if ( mode == MSIMODIFY_UPDATE && rec->cookie != (UINT64)(ULONG_PTR)query )
         return ERROR_FUNCTION_FAILED;
 
     r = view->ops->modify( view, mode, rec, query->row );

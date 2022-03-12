@@ -1064,6 +1064,7 @@ UINT copy_remote_record(const struct wire_record *in, MSIHANDLE out)
     if (!(rec = msihandle2msiinfo(out, MSIHANDLETYPE_RECORD)))
         return ERROR_INVALID_HANDLE;
 
+    rec->cookie = in->cookie;
     for (i = 0; i <= in->count; i++)
     {
         switch (in->fields[i].type)
@@ -1114,17 +1115,17 @@ UINT unmarshal_record(const struct wire_record *in, MSIHANDLE *out)
 struct wire_record *marshal_record(MSIHANDLE handle)
 {
     struct wire_record *ret;
-    unsigned int i, count;
+    unsigned int i;
     MSIRECORD *rec;
 
     if (!(rec = msihandle2msiinfo(handle, MSIHANDLETYPE_RECORD)))
         return NULL;
 
-    count = MSI_RecordGetFieldCount(rec);
-    ret = midl_user_allocate(sizeof(*ret) + count * sizeof(ret->fields[0]));
-    ret->count = count;
+    ret = midl_user_allocate(sizeof(*ret) + rec->count * sizeof(ret->fields[0]));
+    ret->count = rec->count;
+    ret->cookie = rec->cookie;
 
-    for (i = 0; i <= count; i++)
+    for (i = 0; i <= rec->count; i++)
     {
         switch (rec->fields[i].type)
         {
