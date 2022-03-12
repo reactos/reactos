@@ -53,3 +53,5 @@
 @ stdcall sss_stopped(long)
 @ stdcall tl_present(long)
 @ stdcall tl_absent(long)
+@ stdcall wrv_present(long)
+@ stdcall wrv_absent(long)

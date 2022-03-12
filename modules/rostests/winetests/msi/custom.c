@@ -1922,3 +1922,31 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
 
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI wrv_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CURRENT_USER, "msitest", &key);
+    ok(hinst, !res, "got %u\n", res);
+    todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    check_reg_str(hinst, key, "sz", "string");
+    RegCloseKey(key);
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI wrv_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CURRENT_USER, "msitest", &key);
+    ok(hinst, !res, "got %u\n", res);
+    todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    check_reg_str(hinst, key, "sz", NULL);
+    RegCloseKey(key);
+
+    return ERROR_SUCCESS;
+}

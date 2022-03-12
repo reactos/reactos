@@ -698,11 +698,24 @@ static const char wrv_install_exec_seq_dat[] =
     "InstallInitialize\t\t1500\n"
     "ProcessComponents\t\t1600\n"
     "RemoveRegistryValues\t\t4900\n"
+    "rrv_immediate\tREMOVE\t4901\n"
+    "rrv_deferred\tREMOVE\t4902\n"
     "WriteRegistryValues\t\t5000\n"
+    "wrv_immediate\tNOT REMOVE\t5001\n"
+    "wrv_deferred\tNOT REMOVE\t5002\n"
     "RegisterProduct\t\t6100\n"
     "PublishFeatures\t\t6200\n"
     "PublishProduct\t\t6300\n"
     "InstallFinalize\t\t6600\n";
+
+static const char wrv_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "wrv_immediate\t1\tcustom.dll\twrv_absent\n"
+    "wrv_deferred\t1025\tcustom.dll\twrv_present\n"
+    "rrv_immediate\t1\tcustom.dll\twrv_present\n"
+    "rrv_deferred\t1025\tcustom.dll\twrv_absent\n";
 
 static const char cf_directory_dat[] =
     "Directory\tDirectory_Parent\tDefaultDir\n"
@@ -2028,6 +2041,7 @@ static const msi_table wrv_tables[] =
     ADD_TABLE(wrv_feature),
     ADD_TABLE(wrv_feature_comp),
     ADD_TABLE(wrv_install_exec_seq),
+    ADD_TABLE(wrv_custom_action),
     ADD_TABLE(property),
     ADD_TABLE(media),
     ADD_TABLE(wrv_registry),
