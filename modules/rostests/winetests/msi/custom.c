@@ -1434,3 +1434,35 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
     }
     return ERROR_SUCCESS;
 }
+
+static const char ppc_key[] = "Software\\Microsoft\\Windows\\CurrentVersion\\"
+    "Installer\\UserData\\S-1-5-18\\Components\\CBABC2FDCCB35E749A8944D8C1C098B5";
+
+UINT WINAPI ppc_present(MSIHANDLE hinst)
+{
+    char expect[MAX_PATH];
+    HKEY key;
+    UINT r;
+
+    r = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ppc_key, 0, KEY_QUERY_VALUE | KEY_WOW64_64KEY, &key);
+    ok(hinst, !r, "got %u\n", r);
+
+    if (FAILED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILESX86, NULL, 0, expect)))
+        SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, expect);
+    strcat(expect, "\\msitest\\maximus");
+    check_reg_str(hinst, key, "84A88FD7F6998CE40A22FB59F6B9C2BB", expect);
+
+    RegCloseKey(key);
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI ppc_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    UINT r;
+
+    r = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ppc_key, 0, KEY_QUERY_VALUE | KEY_WOW64_64KEY, &key);
+todo_wine
+    ok(hinst, r == ERROR_FILE_NOT_FOUND, "got %u\n", r);
+    return ERROR_SUCCESS;
+}

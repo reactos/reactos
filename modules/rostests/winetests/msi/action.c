@@ -396,6 +396,8 @@ static const char pp_install_exec_seq_dat[] =
     "InstallValidate\t\t1400\n"
     "InstallInitialize\t\t1500\n"
     "ProcessComponents\tPROCESS_COMPONENTS=1 Or FULL=1\t1600\n"
+    "ppc_immediate\tPROCESS_COMPONENTS AND ALLUSERS\t1601\n"
+    "ppc_deferred\tPROCESS_COMPONENTS AND ALLUSERS\t1602\n"
     "UnpublishFeatures\tUNPUBLISH_FEATURES=1 Or FULL=1\t1800\n"
     "RemoveFiles\t\t3500\n"
     "InstallFiles\t\t4000\n"
@@ -404,6 +406,13 @@ static const char pp_install_exec_seq_dat[] =
     "PublishFeatures\tPUBLISH_FEATURES=1 Or FULL=1\t6300\n"
     "PublishProduct\tPUBLISH_PRODUCT=1 Or FULL=1\t6400\n"
     "InstallFinalize\t\t6600";
+
+static const char pp_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "ppc_immediate\t1\tcustom.dll\tppc_absent\n"
+    "ppc_deferred\t1025\tcustom.dll\tppc_present\n";
 
 static const char pp_component_dat[] =
     "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
@@ -1855,6 +1864,7 @@ static const msi_table ppc_tables[] =
     ADD_TABLE(ppc_feature_comp),
     ADD_TABLE(ppc_file),
     ADD_TABLE(pp_install_exec_seq),
+    ADD_TABLE(pp_custom_action),
     ADD_TABLE(ppc_media),
     ADD_TABLE(property),
 };
