@@ -31,6 +31,7 @@ STRINGTABLE
     13 "Eksik özellik için ağ sürücüsü"
     14 "Şuradan özellik:"
     15 "%s içeren dizini seçiniz."
+    100 "New Folder"
 }
 
 /* Error messages */

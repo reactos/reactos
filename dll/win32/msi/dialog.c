@@ -2151,23 +2151,27 @@ struct msi_pathedit_info
     WNDPROC oldproc;
 };
 
+static WCHAR *get_path_property( msi_dialog *dialog, msi_control *control )
+{
+    WCHAR *prop, *path;
+    BOOL indirect = control->attributes & msidbControlAttributesIndirect;
+    if (!(prop = msi_dialog_dup_property( dialog, control->property, indirect ))) return NULL;
+    path = msi_dialog_dup_property( dialog, prop, TRUE );
+    msi_free( prop );
+    return path;
+}
+
 static void msi_dialog_update_pathedit( msi_dialog *dialog, msi_control *control )
 {
-    LPWSTR prop, path;
-    BOOL indirect;
+    WCHAR *path;
 
     if (!control && !(control = msi_dialog_find_control_by_type( dialog, szPathEdit )))
        return;
 
-    indirect = control->attributes & msidbControlAttributesIndirect;
-    prop = msi_dialog_dup_property( dialog, control->property, indirect );
-    path = msi_dialog_dup_property( dialog, prop, TRUE );
-
+    if (!(path = get_path_property( dialog, control ))) return;
     SetWindowTextW( control->hwnd, path );
     SendMessageW( control->hwnd, EM_SETSEL, 0, -1 );
-
     msi_free( path );
-    msi_free( prop );
 }
 
 /* FIXME: test when this should fail */
@@ -2921,16 +2925,12 @@ static UINT msi_dialog_list_box( msi_dialog *dialog, MSIRECORD *rec )
 
 static void msi_dialog_update_directory_combo( msi_dialog *dialog, msi_control *control )
 {
-    LPWSTR prop, path;
-    BOOL indirect;
+    WCHAR *path;
 
     if (!control && !(control = msi_dialog_find_control_by_type( dialog, szDirectoryCombo )))
         return;
 
-    indirect = control->attributes & msidbControlAttributesIndirect;
-    prop = msi_dialog_dup_property( dialog, control->property, indirect );
-    path = msi_dialog_dup_property( dialog, prop, TRUE );
-
+    if (!(path = get_path_property( dialog, control ))) return;
     PathStripPathW( path );
     PathRemoveBackslashW( path );
 
@@ -2938,7 +2938,6 @@ static void msi_dialog_update_directory_combo( msi_dialog *dialog, msi_control *
     SendMessageW( control->hwnd, CB_SETCURSEL, 0, 0 );
 
     msi_free( path );
-    msi_free( prop );
 }
 
 static UINT msi_dialog_directory_combo( msi_dialog *dialog, MSIRECORD *rec )
@@ -2967,14 +2966,11 @@ static UINT msi_dialog_directory_combo( msi_dialog *dialog, MSIRECORD *rec )
 
 static void msi_dialog_update_directory_list( msi_dialog *dialog, msi_control *control )
 {
-    WCHAR dir_spec[MAX_PATH];
+    static const WCHAR asterisk[] = {'*',0};
+    WCHAR dir_spec[MAX_PATH], *path;
     WIN32_FIND_DATAW wfd;
-    LPWSTR prop, path;
-    BOOL indirect;
     LVITEMW item;
     HANDLE file;
-
-    static const WCHAR asterisk[] = {'*',0};
 
     if (!control && !(control = msi_dialog_find_control_by_type( dialog, szDirectoryList )))
         return;
@@ -2982,16 +2978,16 @@ static void msi_dialog_update_directory_list( msi_dialog *dialog, msi_control *c
     /* clear the list-view */
     SendMessageW( control->hwnd, LVM_DELETEALLITEMS, 0, 0 );
 
-    indirect = control->attributes & msidbControlAttributesIndirect;
-    prop = msi_dialog_dup_property( dialog, control->property, indirect );
-    path = msi_dialog_dup_property( dialog, prop, TRUE );
-
+    if (!(path = get_path_property( dialog, control ))) return;
     lstrcpyW( dir_spec, path );
     lstrcatW( dir_spec, asterisk );
 
     file = FindFirstFileW( dir_spec, &wfd );
-    if ( file == INVALID_HANDLE_VALUE )
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        msi_free( path );
         return;
+    }
 
     do
     {
@@ -3010,7 +3006,6 @@ static void msi_dialog_update_directory_list( msi_dialog *dialog, msi_control *c
         SendMessageW( control->hwnd, LVM_INSERTITEMW, 0, (LPARAM)&item );
     } while ( FindNextFileW( file, &wfd ) );
 
-    msi_free( prop );
     msi_free( path );
     FindClose( file );
 }
@@ -3043,38 +3038,110 @@ static UINT msi_dialog_directorylist_up( msi_dialog *dialog )
     return ERROR_SUCCESS;
 }
 
-static UINT msi_dialog_dirlist_handler( msi_dialog *dialog,
-                                        msi_control *control, WPARAM param )
+static WCHAR *get_unique_folder_name( const WCHAR *root, int *ret_len )
 {
-    LPNMHDR nmhdr = (LPNMHDR)param;
-    WCHAR new_path[MAX_PATH];
-    WCHAR text[MAX_PATH];
-    LPWSTR path, prop;
-    BOOL indirect;
+    static const WCHAR fmtW[] = {'%','s','%','s',' ','%','u',0};
+    WCHAR newfolder[MAX_PATH], *path, *ptr;
+    int len, count = 2;
+
+    len = LoadStringW( msi_hInstance, IDS_NEWFOLDER, newfolder, ARRAY_SIZE(newfolder) );
+    len += strlenW(root) + 1;
+    if (!(path = msi_alloc( (len + 4) * sizeof(WCHAR) ))) return NULL;
+    strcpyW( path, root );
+    strcatW( path, newfolder );
+
+    for (;;)
+    {
+        if (GetFileAttributesW( path ) == INVALID_FILE_ATTRIBUTES) break;
+        if (count > 99)
+        {
+            msi_free( path );
+            return NULL;
+        }
+        len = sprintfW( path, fmtW, root, newfolder, count++ ) + 1;
+    }
+
+    ptr = strrchrW( path, '\\' ) + 1;
+    *ret_len = len - (ptr - path);
+    memmove( path, ptr, *ret_len * sizeof(WCHAR) );
+    return path;
+}
+
+static UINT msi_dialog_directorylist_new( msi_dialog *dialog )
+{
+    msi_control *control;
+    WCHAR *path;
     LVITEMW item;
     int index;
 
-    if (nmhdr->code != LVN_ITEMACTIVATE)
-        return ERROR_SUCCESS;
+    control = msi_dialog_find_control_by_type( dialog, szDirectoryList );
 
-    index = SendMessageW( control->hwnd, LVM_GETNEXTITEM, -1, LVNI_SELECTED );
-    if ( index < 0 )
-    {
-        ERR("No list-view item selected!\n");
-        return ERROR_FUNCTION_FAILED;
-    }
+    if (!(path = get_path_property( dialog, control ))) return ERROR_OUTOFMEMORY;
 
+    item.mask = LVIF_TEXT;
+    item.iItem = 0;
     item.iSubItem = 0;
-    item.pszText = text;
-    item.cchTextMax = MAX_PATH;
-    SendMessageW( control->hwnd, LVM_GETITEMTEXTW, index, (LPARAM)&item );
+    item.pszText = get_unique_folder_name( path, &item.cchTextMax );
+
+    index = SendMessageW( control->hwnd, LVM_INSERTITEMW, 0, (LPARAM)&item );
+    SendMessageW( control->hwnd, LVM_ENSUREVISIBLE, index, 0 );
+    SendMessageW( control->hwnd, LVM_EDITLABELW, index, -1 );
+
+    msi_free( path );
+    msi_free( item.pszText );
+    return ERROR_SUCCESS;
+}
+
+static UINT msi_dialog_dirlist_handler( msi_dialog *dialog, msi_control *control, WPARAM param )
+{
+    NMHDR *nmhdr = (NMHDR *)param;
+    WCHAR text[MAX_PATH], *new_path, *path, *prop;
+    BOOL indirect;
+
+    switch (nmhdr->code)
+    {
+    case LVN_ENDLABELEDITW:
+    {
+        NMLVDISPINFOW *info = (NMLVDISPINFOW *)param;
+        if (!info->item.pszText) return ERROR_SUCCESS;
+        lstrcpynW( text, info->item.pszText, ARRAY_SIZE(text) );
+        text[ARRAY_SIZE(text) - 1] = 0;
+        break;
+    }
+    case LVN_ITEMACTIVATE:
+    {
+        LVITEMW item;
+        int index = SendMessageW( control->hwnd, LVM_GETNEXTITEM, -1, LVNI_SELECTED );
+        if (index < 0)
+        {
+            ERR("no list-view item selected\n");
+            return ERROR_FUNCTION_FAILED;
+        }
+
+        item.iSubItem = 0;
+        item.pszText = text;
+        item.cchTextMax = MAX_PATH;
+        SendMessageW( control->hwnd, LVM_GETITEMTEXTW, index, (LPARAM)&item );
+        text[ARRAY_SIZE(text) - 1] = 0;
+        break;
+    }
+    default:
+        return ERROR_SUCCESS;
+    }
 
     indirect = control->attributes & msidbControlAttributesIndirect;
     prop = msi_dialog_dup_property( dialog, control->property, indirect );
     path = msi_dialog_dup_property( dialog, prop, TRUE );
 
+    if (!(new_path = msi_alloc( (strlenW(path) + strlenW(text) + 2) * sizeof(WCHAR) )))
+    {
+        msi_free( prop );
+        msi_free( path );
+        return ERROR_OUTOFMEMORY;
+    }
     lstrcpyW( new_path, path );
     lstrcatW( new_path, text );
+    if (nmhdr->code == LVN_ENDLABELEDITW) CreateDirectoryW( new_path, NULL );
     lstrcatW( new_path, szBackSlash );
 
     msi_dialog_set_property( dialog->package, prop, new_path );
@@ -3085,6 +3152,8 @@ static UINT msi_dialog_dirlist_handler( msi_dialog *dialog,
 
     msi_free( prop );
     msi_free( path );
+    msi_free( new_path );
+
     return ERROR_SUCCESS;
 }
 
@@ -3094,7 +3163,7 @@ static UINT msi_dialog_directory_list( msi_dialog *dialog, MSIRECORD *rec )
     LPCWSTR prop;
     DWORD style;
 
-    style = LVS_LIST | WS_VSCROLL | LVS_SHAREIMAGELISTS |
+    style = LVS_LIST | WS_VSCROLL | LVS_SHAREIMAGELISTS | LVS_EDITLABELS |
             LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER |
             LVS_SORTASCENDING | WS_CHILD | WS_GROUP | WS_TABSTOP;
     control = msi_dialog_add_control( dialog, rec, WC_LISTVIEWW, style );
@@ -4533,6 +4602,11 @@ static UINT event_directory_list_up( msi_dialog *dialog, const WCHAR *argument )
     return msi_dialog_directorylist_up( dialog );
 }
 
+static UINT event_directory_list_new( msi_dialog *dialog, const WCHAR *argument )
+{
+    return msi_dialog_directorylist_new( dialog );
+}
+
 static UINT event_reinstall_mode( msi_dialog *dialog, const WCHAR *argument )
 {
     return msi_set_property( dialog->package->db, szReinstallMode, argument, -1 );
@@ -4560,6 +4634,7 @@ static const WCHAR set_target_pathW[] = {'S','e','t','T','a','r','g','e','t','P'
 static const WCHAR resetW[] = {'R','e','s','e','t',0};
 static const WCHAR set_install_levelW[] = {'S','e','t','I','n','s','t','a','l','l','L','e','v','e','l',0};
 static const WCHAR directory_list_upW[] = {'D','i','r','e','c','t','o','r','y','L','i','s','t','U','p',0};
+static const WCHAR directory_list_newW[] = {'D','i','r','e','c','t','o','r','y','L','i','s','t','N','e','w',0};
 static const WCHAR selection_browseW[] = {'S','e','l','e','c','t','i','o','n','B','r','o','w','s','e',0};
 static const WCHAR reinstall_modeW[] = {'R','e','i','n','s','t','a','l','l','M','o','d','e',0};
 static const WCHAR reinstallW[] = {'R','e','i','n','s','t','a','l','l',0};
@@ -4579,6 +4654,7 @@ static const struct control_event control_events[] =
     { resetW, event_reset },
     { set_install_levelW, event_set_install_level },
     { directory_list_upW, event_directory_list_up },
+    { directory_list_newW, event_directory_list_new },
     { selection_browseW, event_spawn_dialog },
     { reinstall_modeW, event_reinstall_mode },
     { reinstallW, event_reinstall },
