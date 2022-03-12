@@ -1216,3 +1216,26 @@ UINT WINAPI sds_absent(MSIHANDLE hinst)
     CloseServiceHandle(manager);
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI sis_present(MSIHANDLE hinst)
+{
+    SC_HANDLE manager, service;
+    manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    service = OpenServiceA(manager, "TestService", GENERIC_ALL);
+    ok(hinst, !!service, "service absent: %u\n", GetLastError());
+    CloseServiceHandle(service);
+    CloseServiceHandle(manager);
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI sis_absent(MSIHANDLE hinst)
+{
+    SC_HANDLE manager, service;
+    manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    service = OpenServiceA(manager, "TestService", GENERIC_ALL);
+todo_wine
+    ok(hinst, !service, "service present\n");
+    if (service) CloseServiceHandle(service);
+    CloseServiceHandle(manager);
+    return ERROR_SUCCESS;
+}

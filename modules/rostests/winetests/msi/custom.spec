@@ -9,3 +9,5 @@
 @ stdcall crs_absent(long)
 @ stdcall sds_present(long)
 @ stdcall sds_absent(long)
+@ stdcall sis_present(long)
+@ stdcall sis_absent(long)
