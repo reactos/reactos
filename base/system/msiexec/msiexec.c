@@ -406,7 +406,7 @@ static DWORD CALLBACK custom_action_thread(void *arg)
 
 static int custom_action_server(const WCHAR *arg)
 {
-    static const WCHAR pipe_name[] = {'\\','\\','.','\\','p','i','p','e','\\','m','s','i','c','a','_','%','x',0};
+    static const WCHAR pipe_name[] = {'\\','\\','.','\\','p','i','p','e','\\','m','s','i','c','a','_','%','x','_','%','d',0};
     DWORD client_pid = atoiW(arg);
     DWORD64 thread64;
     WCHAR buffer[24];
@@ -423,7 +423,7 @@ static int custom_action_server(const WCHAR *arg)
         return 1;
     }
 
-    sprintfW(buffer, pipe_name, client_pid);
+    sprintfW(buffer, pipe_name, client_pid, sizeof(void *) * 8);
     pipe = CreateFileW(buffer, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (pipe == INVALID_HANDLE_VALUE)
     {
