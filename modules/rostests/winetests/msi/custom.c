@@ -577,18 +577,18 @@ static void test_targetpath(MSIHANDLE hinst)
     r = MsiSetTargetPathA(hinst, NULL, "C:\\subdir");
     ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
 
-    r = MsiSetTargetPathA(hinst, "TARGETDIR", NULL);
+    r = MsiSetTargetPathA(hinst, "MSITESTDIR", NULL);
     ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
 
-    r = MsiSetTargetPathA(hinst, "TARGETDIR", "C:\\subdir");
+    r = MsiSetTargetPathA(hinst, "MSITESTDIR", "C:\\subdir");
     ok(hinst, !r, "got %u\n", r);
 
     sz = sizeof(buffer);
-    r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
+    r = MsiGetTargetPathA(hinst, "MSITESTDIR", buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "C:\\subdir\\"), "got \"%s\"\n", buffer);
 
-    r = MsiSetTargetPathA(hinst, "TARGETDIR", "C:\\");
+    r = MsiSetTargetPathA(hinst, "MSITESTDIR", "C:\\");
 
     /* test GetSourcePath() */
 
