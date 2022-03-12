@@ -1,0 +1,70 @@
+/*
+ * Copyright (C) 2007 James Hawkins
+ * Copyright (C) 2018 Zebediah Figura
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep header
+
+import "objidl.idl";
+
+cpp_quote("#if 0")
+typedef unsigned long MSIHANDLE;
+typedef int INSTALLMESSAGE;
+typedef int MSICONDITION;
+typedef int MSIRUNMODE;
+typedef int INSTALLSTATE;
+
+cpp_quote("#endif")
+cpp_quote("#include \"msiquery.h\"")
+
+[
+    uuid(56D58B64-8780-4c22-A8BC-8B0B29E4A9F8)
+]
+interface IWineMsiRemote
+{
+    HRESULT remote_DatabaseIsTablePersistent( [in] MSIHANDLE db, [in] LPCWSTR table, [out] MSICONDITION *persistent );
+    HRESULT remote_DatabaseGetPrimaryKeys( [in] MSIHANDLE db, [in] LPCWSTR table, [out] MSIHANDLE *keys );
+    HRESULT remote_DatabaseGetSummaryInformation( [in] MSIHANDLE db, [in] UINT updatecount, [out] MSIHANDLE *suminfo );
+    HRESULT remote_DatabaseOpenView( [in] MSIHANDLE db, [in] LPCWSTR query, [out] MSIHANDLE *view );
+
+    HRESULT remote_GetActiveDatabase( [in] MSIHANDLE hinst, [out] MSIHANDLE *handle );
+    HRESULT remote_GetProperty( [in] MSIHANDLE hinst, [in] BSTR property, [out, size_is(*size)] BSTR value, [in, out] DWORD *size );
+    HRESULT remote_SetProperty( [in] MSIHANDLE hinst, [in] BSTR property, [in] BSTR value );
+    HRESULT remote_ProcessMessage( [in] MSIHANDLE hinst, [in] INSTALLMESSAGE message, [in] MSIHANDLE record );
+    HRESULT remote_DoAction( [in] MSIHANDLE hinst, [in] BSTR action );
+    HRESULT remote_Sequence( [in] MSIHANDLE hinst, [in] BSTR table, [in] int sequence );
+    HRESULT remote_GetTargetPath( [in] MSIHANDLE hinst, [in] BSTR folder, [out, size_is(*size)] BSTR value, [in, out] DWORD *size );
+    HRESULT remote_SetTargetPath( [in] MSIHANDLE hinst, [in] BSTR folder, [in] BSTR value );
+    HRESULT remote_GetSourcePath( [in] MSIHANDLE hinst, [in] BSTR folder, [out, size_is(*size)] BSTR value, [in, out] DWORD *size );
+    HRESULT remote_GetMode( [in] MSIHANDLE hinst, [in] MSIRUNMODE mode, [out] BOOL *ret );
+    HRESULT remote_SetMode( [in] MSIHANDLE hinst, [in] MSIRUNMODE mode, [in] BOOL state );
+    HRESULT remote_GetFeatureState( [in] MSIHANDLE hinst, [in] BSTR feature, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
+    HRESULT remote_SetFeatureState( [in] MSIHANDLE hinst, [in] BSTR feature, [in] INSTALLSTATE state );
+    HRESULT remote_GetComponentState( [in] MSIHANDLE hinst, [in] BSTR component, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
+    HRESULT remote_SetComponentState( [in] MSIHANDLE hinst, [in] BSTR component, [in] INSTALLSTATE state );
+    HRESULT remote_GetLanguage( [in] MSIHANDLE hinst, [out] LANGID *language );
+    HRESULT remote_SetInstallLevel( [in] MSIHANDLE hinst, [in] int level );
+    HRESULT remote_FormatRecord( [in] MSIHANDLE hinst, [in] MSIHANDLE record, [out] BSTR *value );
+    HRESULT remote_EvaluateCondition( [in] MSIHANDLE hinst, [in] BSTR condition );
+    HRESULT remote_GetFeatureCost( [in] MSIHANDLE hinst, [in] BSTR feature, [in] INT cost_tree, [in] INSTALLSTATE state, [out] INT *cost );
+    HRESULT remote_EnumComponentCosts( [in] MSIHANDLE hinst, [in] BSTR component, [in] DWORD index, [in] INSTALLSTATE state,
+                                       [out, size_is(*buflen)] BSTR drive, [in, out] DWORD *buflen, [out] INT *cost, [out] INT *temp );
+
+    HRESULT remote_GetActionInfo( [in] LPCGUID guid, [out] INT *type, [out] BSTR *dllname,
+                                  [out] BSTR *function, [out] MSIHANDLE *package );
+    UINT remote_CloseHandle( [in] MSIHANDLE handle );
+}

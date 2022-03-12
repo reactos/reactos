@@ -37,7 +37,7 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "msiserver.h"
+#include "winemsi.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "wine/list.h"
@@ -850,25 +850,20 @@ MSICONDITION WINAPI MsiEvaluateConditionW( MSIHANDLE hInstall, LPCWSTR szConditi
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE);
     if( !package )
     {
+        MSIHANDLE remote;
         HRESULT hr;
         BSTR condition;
-        IWineMsiRemotePackage *remote_package;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return MSICONDITION_ERROR;
 
         condition = SysAllocString( szCondition );
         if (!condition)
-        {
-            IWineMsiRemotePackage_Release( remote_package );
             return ERROR_OUTOFMEMORY;
-        }
 
-        hr = IWineMsiRemotePackage_EvaluateCondition( remote_package, condition );
+        hr = remote_EvaluateCondition(remote, condition);
 
         SysFreeString( condition );
-        IWineMsiRemotePackage_Release( remote_package );
 
         if (FAILED(hr))
         {

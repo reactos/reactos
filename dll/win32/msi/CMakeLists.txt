@@ -6,6 +6,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__ -D__ROS_LONG64__ -DMSIRUNMODE=MSIRUNMODE_T)
 spec2def(msi.dll msi.spec ADD_IMPORTLIB)
 generate_idl_iids(msiserver.idl)
+generate_idl_iids(winemsi.idl)
 
 list(APPEND SOURCE
     action.c
@@ -55,6 +56,7 @@ list(APPEND PCH_SKIP_SOURCE
     ${BISON_cond_OUTPUTS}
     ${BISON_sql_OUTPUTS}
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/winemsi_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c)
 
 add_library(msi MODULE
@@ -71,9 +73,9 @@ if(MSVC)
     target_compile_options(msi PRIVATE /wd4090 /wd4133 /wd4146 /wd4312)
 endif()
 
-add_idl_headers(msi_idlheader msiserver.idl)
-add_typelib(msiserver.idl)
-set_source_files_properties(msi.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msiserver.tlb)
+add_idl_headers(msi_idlheader msiserver.idl winemsi.idl)
+add_typelib(msiserver.idl winemsi.idl)
+set_source_files_properties(msi.rc PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/msiserver.tlb;${CMAKE_CURRENT_BINARY_DIR}/winemsi.tlb")
 set_module_type(msi win32dll)
 target_link_libraries(msi uuid ${PSEH_LIB} wine)
 add_dependencies(msi msi_idlheader)

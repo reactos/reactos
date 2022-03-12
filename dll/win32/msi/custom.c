@@ -34,7 +34,7 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "msiserver.h"
+#include "winemsi.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "wine/exception.h"
@@ -495,40 +495,6 @@ static void handle_msi_break( LPCWSTR target )
     DebugBreak();
 }
 
-static UINT get_action_info( const GUID *guid, INT *type,
-                             BSTR *dll, BSTR *funcname,
-                             IWineMsiRemotePackage **package )
-{
-    IClassFactory *cf = NULL;
-    IWineMsiRemoteCustomAction *rca = NULL;
-    HRESULT r;
-
-    r = DllGetClassObject( &CLSID_WineMsiRemoteCustomAction,
-                           &IID_IClassFactory, (LPVOID *)&cf );
-    if (FAILED(r))
-    {
-        ERR("failed to get IClassFactory interface\n");
-        return ERROR_FUNCTION_FAILED;
-    }
-
-    r = IClassFactory_CreateInstance( cf, NULL, &IID_IWineMsiRemoteCustomAction, (LPVOID *)&rca );
-    if (FAILED(r))
-    {
-        ERR("failed to get IWineMsiRemoteCustomAction interface\n");
-        return ERROR_FUNCTION_FAILED;
-    }
-
-    r = IWineMsiRemoteCustomAction_GetActionInfo( rca, guid, type, dll, funcname, package );
-    IWineMsiRemoteCustomAction_Release( rca );
-    if (FAILED(r))
-    {
-        ERR("GetActionInfo failed\n");
-        return ERROR_FUNCTION_FAILED;
-    }
-
-    return ERROR_SUCCESS;
-}
-
 #ifdef __i386__
 extern UINT CUSTOMPROC_wrapper( MsiCustomActionEntryPoint proc, MSIHANDLE handle );
 __ASM_GLOBAL_FUNC( CUSTOMPROC_wrapper,
@@ -555,17 +521,17 @@ static inline UINT CUSTOMPROC_wrapper( MsiCustomActionEntryPoint proc, MSIHANDLE
 static DWORD ACTION_CallDllFunction( const GUID *guid )
 {
     MsiCustomActionEntryPoint fn;
+    MSIHANDLE remote_package = 0;
     MSIHANDLE hPackage;
     HANDLE hModule;
     LPSTR proc;
     UINT r = ERROR_FUNCTION_FAILED;
     BSTR dll = NULL, function = NULL;
     INT type;
-    IWineMsiRemotePackage *remote_package = NULL;
 
     TRACE("%s\n", debugstr_guid( guid ));
 
-    r = get_action_info( guid, &type, &dll, &function, &remote_package );
+    r = remote_GetActionInfo( guid, &type, &dll, &function, &remote_package );
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -581,7 +547,7 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
     msi_free( proc );
     if (fn)
     {
-        hPackage = alloc_msi_remote_handle( (IUnknown *)remote_package );
+        hPackage = alloc_msi_remote_handle( remote_package );
         if (hPackage)
         {
             TRACE("calling %s\n", debugstr_w( function ) );
@@ -602,14 +568,14 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
             MsiCloseHandle( hPackage );
         }
         else
-            ERR("failed to create handle for %p\n", remote_package );
+            ERR("failed to create handle for %x\n", remote_package );
     }
     else
         ERR("GetProcAddress(%s) failed\n", debugstr_w( function ) );
 
     FreeLibrary(hModule);
 
-    IWineMsiRemotePackage_Release( remote_package );
+    MsiCloseHandle(hPackage);
     SysFreeString( dll );
     SysFreeString( function );
 
@@ -1388,50 +1354,8 @@ void ACTION_FinishCustomActions(const MSIPACKAGE* package)
     LeaveCriticalSection( &msi_custom_action_cs );
 }
 
-typedef struct _msi_custom_remote_impl {
-    IWineMsiRemoteCustomAction IWineMsiRemoteCustomAction_iface;
-    LONG refs;
-} msi_custom_remote_impl;
-
-static inline msi_custom_remote_impl *impl_from_IWineMsiRemoteCustomAction( IWineMsiRemoteCustomAction *iface )
-{
-    return CONTAINING_RECORD(iface, msi_custom_remote_impl, IWineMsiRemoteCustomAction_iface);
-}
-
-static HRESULT WINAPI mcr_QueryInterface( IWineMsiRemoteCustomAction *iface,
-                REFIID riid,LPVOID *ppobj)
-{
-    if( IsEqualCLSID( riid, &IID_IUnknown ) ||
-        IsEqualCLSID( riid, &IID_IWineMsiRemoteCustomAction ) )
-    {
-        IWineMsiRemoteCustomAction_AddRef( iface );
-        *ppobj = iface;
-        return S_OK;
-    }
-
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI mcr_AddRef( IWineMsiRemoteCustomAction *iface )
-{
-    msi_custom_remote_impl* This = impl_from_IWineMsiRemoteCustomAction( iface );
-
-    return InterlockedIncrement( &This->refs );
-}
-
-static ULONG WINAPI mcr_Release( IWineMsiRemoteCustomAction *iface )
-{
-    msi_custom_remote_impl* This = impl_from_IWineMsiRemoteCustomAction( iface );
-    ULONG r;
-
-    r = InterlockedDecrement( &This->refs );
-    if (r == 0)
-        msi_free( This );
-    return r;
-}
-
-static HRESULT WINAPI mcr_GetActionInfo( IWineMsiRemoteCustomAction *iface, LPCGUID custom_action_guid,
-         INT *type, BSTR *dll, BSTR *func, IWineMsiRemotePackage **remote_package )
+HRESULT __cdecl remote_GetActionInfo( const GUID *custom_action_guid,
+         INT *type, BSTR *dll, BSTR *func, MSIHANDLE *remote_package )
 {
     msi_custom_action_info *info;
     MSIHANDLE handle;
@@ -1446,29 +1370,6 @@ static HRESULT WINAPI mcr_GetActionInfo( IWineMsiRemoteCustomAction *iface, LPCG
     *func = SysAllocString( info->target );
 
     release_custom_action_data( info );
-    return create_msi_remote_package( handle, remote_package );
-}
-
-static const IWineMsiRemoteCustomActionVtbl msi_custom_remote_vtbl =
-{
-    mcr_QueryInterface,
-    mcr_AddRef,
-    mcr_Release,
-    mcr_GetActionInfo,
-};
-
-HRESULT create_msi_custom_remote( IUnknown *pOuter, LPVOID *ppObj )
-{
-    msi_custom_remote_impl* This;
-
-    This = msi_alloc( sizeof *This );
-    if (!This)
-        return E_OUTOFMEMORY;
-
-    This->IWineMsiRemoteCustomAction_iface.lpVtbl = &msi_custom_remote_vtbl;
-    This->refs = 1;
-
-    *ppObj = &This->IWineMsiRemoteCustomAction_iface;
-
+    *remote_package = handle;
     return S_OK;
 }

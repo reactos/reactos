@@ -34,7 +34,7 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "msiserver.h"
+#include "winemsi.h"
 #include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -911,15 +911,13 @@ UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
     if (!package)
     {
         HRESULT hr;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
         BSTR value = NULL;
         awstring wstr;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (remote_package)
+        if ((remote = msi_get_remote(hInstall)))
         {
-            hr = IWineMsiRemotePackage_FormatRecord( remote_package, hRecord,
-                                                     &value );
+            hr = remote_FormatRecord(remote, hRecord, &value);
             if (FAILED(hr))
                 goto done;
 
@@ -928,7 +926,6 @@ UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
             r = msi_strcpy_to_awstring( value, SysStringLen(value), &wstr, sz );
 
 done:
-            IWineMsiRemotePackage_Release( remote_package );
             SysFreeString( value );
 
             if (FAILED(hr))
