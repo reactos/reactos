@@ -25,6 +25,7 @@
 #define COBJMACROS
 
 #include <stdarg.h>
+#include <stdio.h>
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -472,37 +473,21 @@ static msi_custom_action_info *find_action_by_guid( const GUID *guid )
     return info;
 }
 
-static void handle_msi_break( LPCWSTR target )
+static void handle_msi_break(LPCSTR target)
 {
-    LPWSTR msg;
-    WCHAR val[MAX_PATH];
+    char format[] = "To debug your custom action, attach your debugger to "
+                    "process %i (0x%X) and press OK";
+    char val[MAX_PATH];
+    char msg[100];
 
-    static const WCHAR MsiBreak[] = { 'M','s','i','B','r','e','a','k',0 };
-    static const WCHAR WindowsInstaller[] = {
-        'W','i','n','d','o','w','s',' ','I','n','s','t','a','l','l','e','r',0
-    };
-
-    static const WCHAR format[] = {
-        'T','o',' ','d','e','b','u','g',' ','y','o','u','r',' ',
-        'c','u','s','t','o','m',' ','a','c','t','i','o','n',',',' ',
-        'a','t','t','a','c','h',' ','y','o','u','r',' ','d','e','b','u','g','g','e','r',' ',
-        't','o',' ','p','r','o','c','e','s','s',' ','%','i',' ','(','0','x','%','X',')',' ',
-        'a','n','d',' ','p','r','e','s','s',' ','O','K',0
-    };
-
-    if( !GetEnvironmentVariableW( MsiBreak, val, MAX_PATH ))
+    if (!GetEnvironmentVariableA("MsiBreak", val, MAX_PATH))
         return;
 
-    if( strcmpiW( val, target ))
+    if (strcasecmp(val, target))
         return;
 
-    msg = msi_alloc( (lstrlenW(format) + 10) * sizeof(WCHAR) );
-    if (!msg)
-        return;
-
-    wsprintfW( msg, format, GetCurrentProcessId(), GetCurrentProcessId());
-    MessageBoxW( NULL, msg, WindowsInstaller, MB_OK);
-    msi_free(msg);
+    sprintf(msg, format, GetCurrentProcessId(), GetCurrentProcessId());
+    MessageBoxA(NULL, msg, "Windows Installer", MB_OK);
     DebugBreak();
 }
 
@@ -535,14 +520,14 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
     MSIHANDLE remote_package = 0;
     MSIHANDLE hPackage;
     HANDLE hModule;
+    LPWSTR dll;
     LPSTR proc;
-    UINT r = ERROR_FUNCTION_FAILED;
-    BSTR dll = NULL, function = NULL;
     INT type;
+    UINT r;
 
     TRACE("%s\n", debugstr_guid( guid ));
 
-    r = remote_GetActionInfo( guid, &type, &dll, &function, &remote_package );
+    r = remote_GetActionInfo(guid, &type, &dll, &proc, &remote_package);
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -553,16 +538,14 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
         return ERROR_SUCCESS;
     }
 
-    proc = strdupWtoA( function );
     fn = (MsiCustomActionEntryPoint) GetProcAddress( hModule, proc );
-    msi_free( proc );
     if (fn)
     {
         hPackage = alloc_msi_remote_handle( remote_package );
         if (hPackage)
         {
-            TRACE("calling %s\n", debugstr_w( function ) );
-            handle_msi_break( function );
+            TRACE("calling %s\n", debugstr_a(proc));
+            handle_msi_break(proc);
 
             __TRY
             {
@@ -571,7 +554,7 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
             __EXCEPT_PAGE_FAULT
             {
                 ERR("Custom action (%s:%s) caused a page fault: %08x\n",
-                    debugstr_w(dll), debugstr_w(function), GetExceptionCode());
+                    debugstr_w(dll), debugstr_a(proc), GetExceptionCode());
                 r = ERROR_SUCCESS;
             }
             __ENDTRY;
@@ -582,13 +565,13 @@ static DWORD ACTION_CallDllFunction( const GUID *guid )
             ERR("failed to create handle for %x\n", remote_package );
     }
     else
-        ERR("GetProcAddress(%s) failed\n", debugstr_w( function ) );
+        ERR("GetProcAddress(%s) failed\n", debugstr_a(proc));
 
     FreeLibrary(hModule);
 
     MsiCloseHandle(hPackage);
-    SysFreeString( dll );
-    SysFreeString( function );
+    midl_user_free(dll);
+    midl_user_free(proc);
 
     return r;
 }
@@ -1365,22 +1348,19 @@ void ACTION_FinishCustomActions(const MSIPACKAGE* package)
     LeaveCriticalSection( &msi_custom_action_cs );
 }
 
-HRESULT __cdecl remote_GetActionInfo( const GUID *custom_action_guid,
-         INT *type, BSTR *dll, BSTR *func, MSIHANDLE *remote_package )
+UINT __cdecl remote_GetActionInfo(const GUID *guid, int *type, LPWSTR *dll, LPSTR *func, MSIHANDLE *hinst)
 {
     msi_custom_action_info *info;
-    MSIHANDLE handle;
 
-    info = find_action_by_guid( custom_action_guid );
+    info = find_action_by_guid(guid);
     if (!info)
-        return E_FAIL;
+        return ERROR_INVALID_DATA;
 
     *type = info->type;
-    handle = alloc_msihandle( &info->package->hdr );
-    *dll = SysAllocString( info->source );
-    *func = SysAllocString( info->target );
+    *hinst = alloc_msihandle(&info->package->hdr);
+    *dll = strdupW(info->source);
+    *func = strdupWtoA(info->target);
 
-    release_custom_action_data( info );
-    *remote_package = handle;
-    return S_OK;
+    release_custom_action_data(info);
+    return ERROR_SUCCESS;
 }

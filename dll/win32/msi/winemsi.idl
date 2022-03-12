@@ -94,7 +94,7 @@ interface IWineMsiRemote
     UINT remote_EnumComponentCosts( [in] MSIHANDLE hinst, [in, string, unique] LPCWSTR component, [in] DWORD index, [in] INSTALLSTATE state,
                                     [out, string, size_is(3)] LPWSTR drive, [out] INT *cost, [out] INT *temp );
 
-    HRESULT remote_GetActionInfo( [in] LPCGUID guid, [out] INT *type, [out] BSTR *dllname,
-                                  [out] BSTR *function, [out] MSIHANDLE *package );
+    UINT remote_GetActionInfo( [in] const GUID *guid, [out] int *type, [out, string] LPWSTR *dllname,
+                               [out, string] LPSTR *function, [out] MSIHANDLE *hinst );
     UINT remote_CloseHandle( [in] MSIHANDLE handle );
 }
