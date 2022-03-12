@@ -71,11 +71,11 @@ static void ShowUsage(int ExitCode)
 
     /* MsiGetFileVersion need the full path */
     *filename = 0;
-    res = GetModuleFileNameW(hmsi, filename, sizeof(filename) / sizeof(filename[0]));
+    res = GetModuleFileNameW(hmsi, filename, ARRAY_SIZE(filename));
     if (!res)
         WINE_ERR("GetModuleFileName failed: %d\n", GetLastError());
 
-    len = sizeof(msiexec_version) / sizeof(msiexec_version[0]);
+    len = ARRAY_SIZE(msiexec_version);
     *msiexec_version = 0;
     res = MsiGetFileVersionW(filename, msiexec_version, &len, NULL, NULL);
     if (res)
