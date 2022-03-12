@@ -6750,6 +6750,17 @@ static void test_viewmodify_refresh(void)
 
     r = MsiViewFetch(hview, &hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    check_record(hrec, 2, "hi", "1");
+
+    MsiRecordSetInteger(hrec, 2, 5);
+    r = MsiViewModify(hview, MSIMODIFY_REFRESH, hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 2, "hi", "1");
+
+    MsiRecordSetStringA(hrec, 1, "foo");
+    r = MsiViewModify(hview, MSIMODIFY_REFRESH, hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 2, "hi", "1");
 
     query = "UPDATE `Table` SET `B` = 2 WHERE `A` = 'hi'";
     r = run_query(hdb, 0, query);
@@ -6758,6 +6769,14 @@ static void test_viewmodify_refresh(void)
     r = MsiViewModify(hview, MSIMODIFY_REFRESH, hrec);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     check_record(hrec, 2, "hi", "2");
+
+    r = run_query(hdb, 0, "UPDATE `Table` SET `B` = NULL WHERE `A` = 'hi'");
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewModify(hview, MSIMODIFY_REFRESH, hrec);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    check_record(hrec, 2, "hi", "");
+
     MsiCloseHandle(hrec);
 
     MsiViewClose(hview);
@@ -6791,6 +6810,24 @@ static void test_viewmodify_refresh(void)
 
     MsiViewClose(hview);
     MsiCloseHandle(hview);
+
+    r = MsiDatabaseOpenViewA(hdb, "SELECT `B` FROM `Table` WHERE `A` = 'hello'", &hview);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(hview, 0);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 1, "2");
+
+    MsiRecordSetInteger(hrec, 1, 8);
+    r = MsiViewModify(hview, MSIMODIFY_REFRESH, hrec);
+    ok(!r, "got %u\n", r);
+    check_record(hrec, 1, "2");
+
+    MsiCloseHandle(hrec);
+    MsiCloseHandle(hview);
+
     MsiCloseHandle(hdb);
     DeleteFileA(msifile);
 }
