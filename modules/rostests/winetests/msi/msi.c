@@ -13400,6 +13400,7 @@ static void test_MsiEnumComponentsEx(void)
             ok( !sid[0], "got \"%s\"\n", sid );
             ok( !len, "unexpected length %u\n", len );
             found1 = TRUE;
+            if (found2) break;
         }
         if (!strcmp( comp2, guid ))
         {
@@ -13407,6 +13408,7 @@ static void test_MsiEnumComponentsEx(void)
             ok( sid[0], "empty sid\n" );
             ok( len == strlen(sid), "unexpected length %u\n", len );
             found2 = TRUE;
+            if (found1) break;
         }
         index++;
         guid[0] = 0;
