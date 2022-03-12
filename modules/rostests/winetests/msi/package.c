@@ -3705,7 +3705,7 @@ static void test_states(void)
     add_custom_action_entry( hdb, "'ConditionCheck7', 19, '', 'Condition check failed (7)'" );
     add_custom_action_entry( hdb, "'ConditionCheck8', 19, '', 'Condition check failed (8)'" );
     add_custom_action_entry( hdb,
-            "'VBFeatureRequest', 38, '', 'Session.FeatureRequestState(\"three\") = 3'" );
+            "'VBFeatureRequest', 38, NULL, 'Session.FeatureRequestState(\"three\") = 3'" );
 
     add_install_execute_sequence_entry( hdb, "'ConditionCheck1', 'REINSTALL', '798'" );
     add_install_execute_sequence_entry( hdb, "'ConditionCheck2', 'NOT REMOVE AND Preselected', '799'" );

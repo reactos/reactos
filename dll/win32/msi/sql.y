@@ -658,6 +658,12 @@ const_val:
             if( !$$ )
                 YYABORT;
         }
+   | TK_NULL
+        {
+            $$ = EXPR_sval( info, NULL );
+            if ( !$$ )
+                YYABORT;
+        }
     ;
 
 column_val:
@@ -921,7 +927,8 @@ static struct expr * EXPR_sval( void *info, const struct sql_str *str )
     if( e )
     {
         e->type = EXPR_SVAL;
-        if( SQL_getstring( info, str, (LPWSTR *)&e->u.sval ) != ERROR_SUCCESS )
+        if( !str) e->u.sval = NULL;
+        else if( SQL_getstring( info, str, (LPWSTR *)&e->u.sval ) != ERROR_SUCCESS )
             return NULL; /* e will be freed by query destructor */
     }
     return e;
