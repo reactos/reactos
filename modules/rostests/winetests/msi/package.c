@@ -2097,6 +2097,10 @@ static void test_condition(void)
     ok( r == MSICONDITION_FALSE, "wrong return val (%d)\n", r);
     r = MsiEvaluateConditionA(hpkg, "&nofeature=\"\"");
     ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
+    r = MsiEvaluateConditionA(hpkg, "&nofeature<>3");
+    ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
+    r = MsiEvaluateConditionA(hpkg, "\"\"<>3");
+    ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
     r = MsiEvaluateConditionA(hpkg, "!nofeature=\"\"");
     ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
     MsiEvaluateConditionA(hpkg, "$nocomponent=\"\"");
