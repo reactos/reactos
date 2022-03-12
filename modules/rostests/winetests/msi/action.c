@@ -6195,11 +6195,6 @@ static void test_publish_assemblies(void)
         skip("Not enough rights to perform tests\n");
         goto done;
     }
-    if (r == ERROR_INSTALL_FAILURE)
-    {
-        skip("No support for installing side-by-side assemblies\n");
-        goto done;
-    }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, path_dotnet, &hkey);
@@ -6214,23 +6209,20 @@ static void test_publish_assemblies(void)
     RegCloseKey(hkey);
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, path_win32, &hkey);
-    ok(res == ERROR_SUCCESS || res == ERROR_FILE_NOT_FOUND /* win2k without sxs support */,
-       "Expected ERROR_SUCCESS, got %d\n", res);
-    if (res == ERROR_SUCCESS) CHECK_REG_STR(hkey, name_win32, "rcHQPHq?CA@Uv-XqMI1e>}NJjwR'%D9v1p!v{WV(%");
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    CHECK_REG_STR(hkey, name_win32, "rcHQPHq?CA@Uv-XqMI1e>}NJjwR'%D9v1p!v{WV(%");
     RegCloseKey(hkey);
 
     path = (is_wow64 || is_64bit) ? path_win32_local_wow64 : path_win32_local;
     res = RegOpenKeyA(HKEY_CURRENT_USER, path, &hkey);
-    ok(res == ERROR_SUCCESS || res == ERROR_FILE_NOT_FOUND /* win2k without sxs support */,
-       "Expected ERROR_SUCCESS, got %d\n", res);
-    if (res == ERROR_SUCCESS) CHECK_REG_STR(hkey, name_win32_local, "rcHQPHq?CA@Uv-XqMI1e>C)Uvlj*53A)u(QQ9=)X!");
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    CHECK_REG_STR(hkey, name_win32_local, "rcHQPHq?CA@Uv-XqMI1e>C)Uvlj*53A)u(QQ9=)X!");
     RegCloseKey(hkey);
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, path_dotnet, &hkey);
-    ok(res == ERROR_SUCCESS || res == ERROR_FILE_NOT_FOUND, "got %d\n", res);
     if (res == ERROR_SUCCESS)
     {
         res = RegDeleteValueA(hkey, name_dotnet);
@@ -6243,7 +6235,6 @@ static void test_publish_assemblies(void)
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, path_win32, &hkey);
-    ok(res == ERROR_SUCCESS || res == ERROR_FILE_NOT_FOUND, "got %d\n", res);
     if (res == ERROR_SUCCESS)
     {
         res = RegDeleteValueA(hkey, name_win32);
@@ -6277,23 +6268,20 @@ static void test_publish_assemblies(void)
     RegCloseKey(hkey);
 
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, classes_path_win32, 0, access, &hkey);
-    ok(res == ERROR_SUCCESS || res == ERROR_FILE_NOT_FOUND /* win2k without sxs support */,
-       "Expected ERROR_SUCCESS, got %d\n", res);
-    if (res == ERROR_SUCCESS) CHECK_REG_STR(hkey, name_win32, "rcHQPHq?CA@Uv-XqMI1e>}NJjwR'%D9v1p!v{WV(%");
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    CHECK_REG_STR(hkey, name_win32, "rcHQPHq?CA@Uv-XqMI1e>}NJjwR'%D9v1p!v{WV(%");
     RegCloseKey(hkey);
 
     path = (is_wow64 || is_64bit) ? classes_path_win32_local_wow64 : classes_path_win32_local;
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, path, 0, access, &hkey);
-    ok(res == ERROR_SUCCESS || res == ERROR_FILE_NOT_FOUND /* win2k without sxs support */,
-       "Expected ERROR_SUCCESS, got %d\n", res);
-    if (res == ERROR_SUCCESS) CHECK_REG_STR(hkey, name_win32_local, "rcHQPHq?CA@Uv-XqMI1e>C)Uvlj*53A)u(QQ9=)X!");
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    CHECK_REG_STR(hkey, name_win32_local, "rcHQPHq?CA@Uv-XqMI1e>C)Uvlj*53A)u(QQ9=)X!");
     RegCloseKey(hkey);
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL ALLUSERS=1");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, classes_path_dotnet, &hkey);
-    ok(res == ERROR_SUCCESS || res == ERROR_FILE_NOT_FOUND, "got %d\n", res);
     if (res == ERROR_SUCCESS)
     {
         res = RegDeleteValueA(hkey, name_dotnet);
@@ -6306,7 +6294,6 @@ static void test_publish_assemblies(void)
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, classes_path_win32, &hkey);
-    ok(res == ERROR_SUCCESS || res == ERROR_FILE_NOT_FOUND, "got %d\n", res);
     if (res == ERROR_SUCCESS)
     {
         res = RegDeleteValueA(hkey, name_win32);
