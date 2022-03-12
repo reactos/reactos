@@ -290,8 +290,6 @@ static void free_package_structures( MSIPACKAGE *package )
         MSIBINARY *binary = LIST_ENTRY( item, MSIBINARY, entry );
 
         list_remove( &binary->entry );
-        if (binary->module)
-            FreeLibrary( binary->module );
         if (!DeleteFileW( binary->tmpfile ))
             ERR("failed to delete %s (%u)\n", debugstr_w(binary->tmpfile), GetLastError());
         msi_free( binary->source );
