@@ -1890,3 +1890,35 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
 
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI ini_present(MSIHANDLE hinst)
+{
+    char path[MAX_PATH], buf[10];
+    DWORD len;
+
+    if (FAILED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILESX86, NULL, 0, path)))
+        SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, path);
+    strcat(path, "\\msitest\\test.ini");
+
+    len = GetPrivateProfileStringA("section1", "key1", NULL, buf, sizeof(buf), path);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, len == 6, "got %u\n", len);
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI ini_absent(MSIHANDLE hinst)
+{
+    char path[MAX_PATH], buf[10];
+    DWORD len;
+
+    if (FAILED(SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILESX86, NULL, 0, path)))
+        SHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, path);
+    strcat(path, "\\msitest\\test.ini");
+
+    len = GetPrivateProfileStringA("section1", "key1", NULL, buf, sizeof(buf), path);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, !len, "got %u\n", len);
+
+    return ERROR_SUCCESS;
+}

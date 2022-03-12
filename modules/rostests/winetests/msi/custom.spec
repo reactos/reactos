@@ -13,6 +13,8 @@
 @ stdcall file_absent(long)
 @ stdcall font_present(long)
 @ stdcall font_absent(long)
+@ stdcall ini_present(long)
+@ stdcall ini_absent(long)
 @ stdcall mov_present(long)
 @ stdcall mov_absent(long)
 @ stdcall odbc_present(long)

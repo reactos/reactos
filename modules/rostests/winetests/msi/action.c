@@ -1457,11 +1457,24 @@ static const char ini_install_exec_seq_dat[] =
     "RemoveFiles\t\t1700\n"
     "InstallFiles\t\t2000\n"
     "RemoveIniValues\t\t3000\n"
+    "riv_immediate\tREMOVE\t3001\n"
+    "riv_deferred\tREMOVE\t3002\n"
     "WriteIniValues\t\t3100\n"
+    "wiv_immediate\tNOT REMOVE\t3101\n"
+    "wiv_deferred\tNOT REMOVE\t3102\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
+
+static const char ini_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "wiv_immediate\t1\tcustom.dll\tini_absent\n"
+    "wiv_deferred\t1025\tcustom.dll\tini_present\n"
+    "riv_immediate\t1\tcustom.dll\tini_present\n"
+    "riv_deferred\t1025\tcustom.dll\tini_absent\n";
 
 static const char rci_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -2260,6 +2273,7 @@ static const msi_table ini_tables[] =
     ADD_TABLE(ini_ini_file),
     ADD_TABLE(ini_remove_ini_file),
     ADD_TABLE(ini_install_exec_seq),
+    ADD_TABLE(ini_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
