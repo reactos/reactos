@@ -32,6 +32,7 @@
 #include <wtypes.h>
 #include <shellapi.h>
 #include <winsvc.h>
+#include <odbcinst.h>
 
 #include "wine/test.h"
 #include "utils.h"
@@ -825,18 +826,22 @@ static const char odbc_feature_comp_dat[] =
     "Feature_\tComponent_\n"
     "s38\ts72\n"
     "FeatureComponents\tFeature_\tComponent_\n"
+    "odbc\todbc64\n"
     "odbc\todbc\n";
 
 static const char odbc_component_dat[] =
     "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
     "s72\tS38\ts72\ti2\tS255\tS72\n"
     "Component\tComponent\n"
+    "odbc64\t{B6F3E4AF-35D1-4B72-9044-989F03E20A43}\tMSITESTDIR\t256\tMsix64\tODBCdriver.dll\n"
     "odbc\t{B6F3E4AE-35D1-4B72-9044-989F03E20A43}\tMSITESTDIR\t0\t\tODBCdriver.dll\n";
 
 static const char odbc_driver_dat[] =
     "Driver\tComponent_\tDescription\tFile_\tFile_Setup\n"
     "s72\ts72\ts255\ts72\tS72\n"
     "ODBCDriver\tDriver\n"
+    "64-bit driver\todbc64\tODBC test driver\tODBCdriver.dll\t\n"
+    "64-bit driver2\todbc64\tODBC test driver2\tODBCdriver2.dll\tODBCsetup.dll\n"
     "ODBC test driver\todbc\tODBC test driver\tODBCdriver.dll\t\n"
     "ODBC test driver2\todbc\tODBC test driver2\tODBCdriver2.dll\tODBCsetup.dll\n";
 
@@ -5347,6 +5352,9 @@ error:
 
 static void test_install_remove_odbc(void)
 {
+    int gotdriver = 0, gotdriver2 = 0;
+    char buffer[1000], *p;
+    WORD len;
     UINT r;
 
     if (is_process_limited())
@@ -5379,6 +5387,19 @@ static void test_install_remove_odbc(void)
     ok(pf_exists("msitest\\ODBCtranslator2.dll"), "file not created\n");
     ok(pf_exists("msitest\\ODBCsetup.dll"), "file not created\n");
 
+    r = SQLGetInstalledDrivers(buffer, sizeof(buffer), &len);
+    ok(len < sizeof(buffer), "buffer too small\n");
+    ok(r, "SQLGetInstalledDrivers failed\n");
+    for (p = buffer; *p; p += strlen(p) + 1)
+    {
+        if (!strcmp(p, "ODBC test driver"))
+            gotdriver = 1;
+        if (!strcmp(p, "ODBC test driver2"))
+            gotdriver2 = 1;
+    }
+    ok(gotdriver, "driver not installed\n");
+    ok(gotdriver2, "driver 2 not installed\n");
+
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
@@ -5388,6 +5409,20 @@ static void test_install_remove_odbc(void)
     ok(!delete_pf("msitest\\ODBCtranslator2.dll", TRUE), "file not removed\n");
     ok(!delete_pf("msitest\\ODBCsetup.dll", TRUE), "file not removed\n");
     ok(!delete_pf("msitest", FALSE), "directory not removed\n");
+
+    gotdriver = gotdriver2 = 0;
+    r = SQLGetInstalledDrivers(buffer, sizeof(buffer), &len);
+    ok(len < sizeof(buffer), "buffer too small\n");
+    ok(r, "SQLGetInstalledDrivers failed\n");
+    for (p = buffer; *p; p += strlen(p) + 1)
+    {
+        if (!strcmp(p, "ODBC test driver"))
+            gotdriver = 1;
+        if (!strcmp(p, "ODBC test driver2"))
+            gotdriver2 = 1;
+    }
+    ok(!gotdriver, "driver not installed\n");
+    ok(!gotdriver2, "driver 2 not installed\n");
 
 error:
     DeleteFileA("msitest\\ODBCdriver.dll");

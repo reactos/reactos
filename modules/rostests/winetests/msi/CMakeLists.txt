@@ -43,7 +43,7 @@ endif()
 
 target_link_libraries(msi_winetest uuid)
 set_module_type(msi_winetest win32cui)
-add_importlibs(msi_winetest cabinet msi shell32 ole32 oleaut32 user32 advapi32 version msvcrt kernel32)
+add_importlibs(msi_winetest cabinet msi shell32 ole32 oleaut32 odbccp32 user32 advapi32 version msvcrt kernel32)
 add_pch(msi_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET msi_winetest)
 add_dependencies(msi_winetest custom)
