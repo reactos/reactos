@@ -596,7 +596,6 @@ UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
 
     FreeLibrary(hModule);
 
-    MsiCloseHandle(hPackage);
     midl_user_free(dll);
     midl_user_free(proc);
 
