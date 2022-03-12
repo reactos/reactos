@@ -687,6 +687,11 @@ UINT ACTION_MsiPublishAssemblies( MSIPACKAGE *package )
         if (assembly->application)
         {
             MSIFILE *file = msi_get_loaded_file( package, assembly->application );
+            if (!file)
+            {
+                WARN("no matching file %s for local assembly\n", debugstr_w(assembly->application));
+                continue;
+            }
             if ((res = open_local_assembly_key( package->Context, win32, file->TargetPath, &hkey )))
             {
                 WARN("failed to open local assembly key %d\n", res);
@@ -744,6 +749,11 @@ UINT ACTION_MsiUnpublishAssemblies( MSIPACKAGE *package )
         if (assembly->application)
         {
             MSIFILE *file = msi_get_loaded_file( package, assembly->application );
+            if (!file)
+            {
+                WARN("no matching file %s for local assembly\n", debugstr_w(assembly->application));
+                continue;
+            }
             if ((res = delete_local_assembly_key( package->Context, win32, file->TargetPath )))
                 WARN("failed to delete local assembly key %d\n", res);
         }

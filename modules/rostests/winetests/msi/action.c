@@ -1785,6 +1785,7 @@ static const char pa_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
     "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
     "File\tFile\n"
+    "fake_local.txt\tfake_local\tfake_local.txt\t1000\t\t\t8192\t1\n"
     "win32.txt\twin32\twin32.txt\t1000\t\t\t8192\t1\n"
     "manifest.txt\twin32\tmanifest.txt\t1000\t\t\t8192\t1\n"
     "win32_local.txt\twin32_local\twin32_local.txt\t1000\t\t\t8192\t1\n"
@@ -1804,6 +1805,7 @@ static const char pa_feature_comp_dat[] =
     "Feature_\tComponent_\n"
     "s38\ts72\n"
     "FeatureComponents\tFeature_\tComponent_\n"
+    "assembly\tfake_local\n"
     "assembly\twin32\n"
     "assembly\twin32_local\n"
     "assembly\tdotnet\n"
@@ -1813,6 +1815,7 @@ static const char pa_component_dat[] =
     "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
     "s72\tS38\ts72\ti2\tS255\tS72\n"
     "Component\tComponent\n"
+    "fake_local\t{F515549D-7E61-425D-AAC1-9BEF2E066D06}\tMSITESTDIR\t0\t\tfake_local.txt\n"
     "win32\t{F515549E-7E61-425D-AAC1-9BEF2E066D06}\tMSITESTDIR\t0\t\twin32.txt\n"
     "win32_local\t{D34D3FBA-6789-4E57-AD1A-1281297DC201}\tMSITESTDIR\t0\t\twin32_local.txt\n"
     "dotnet\t{8943164F-2B31-4C09-A894-493A8CBDE0A4}\tMSITESTDIR\t0\t\tdotnet.txt\n"
@@ -1822,6 +1825,7 @@ static const char pa_msi_assembly_dat[] =
     "Component_\tFeature_\tFile_Manifest\tFile_Application\tAttributes\n"
     "s72\ts38\tS72\tS72\tI2\n"
     "MsiAssembly\tComponent_\n"
+    "fake_local\tassembly\t\tnonexistent.txt\t0\n"
     "win32\tassembly\tmanifest.txt\t\t1\n"
     "win32_local\tassembly\tmanifest_local.txt\tapplication_win32.txt\t1\n"
     "dotnet\tassembly\t\t\t0\n"
@@ -1831,6 +1835,11 @@ static const char pa_msi_assembly_name_dat[] =
     "Component_\tName\tValue\n"
     "s72\ts255\ts255\n"
     "MsiAssemblyName\tComponent_\tName\n"
+    "fake_local\tName\tWine.Fake.Application.Assembly\n"
+    "fake_local\tprocessorArchitecture\tx86\n"
+    "fake_local\tpublicKeyToken\tabcdef0123456789\n"
+    "fake_local\ttype\twin32\n"
+    "fake_local\tversion\t1.0.0.0\n"
     "win32\tName\tWine.Win32.Assembly\n"
     "win32\tprocessorArchitecture\tx86\n"
     "win32\tpublicKeyToken\tabcdef0123456789\n"
@@ -6134,6 +6143,10 @@ static void test_publish_assemblies(void)
         "Installer\\Assemblies\\C:|Program Files|msitest|application_dotnet.txt";
     static const char classes_path_dotnet_local_wow64[] =
         "Installer\\Assemblies\\C:|Program Files (x86)|msitest|application_dotnet.txt";
+    static const char classes_path_fake_local[] =
+        "Installer\\Assemblies\\C:|Program Files|msitest|nonexistent.txt";
+    static const char classes_path_fake_local_wow64[] =
+        "Installer\\Assemblies\\C:|Program Files (x86)|msitest|nonexistent.txt";
     static const char classes_path_win32[] =
         "Installer\\Win32Assemblies\\Global";
     static const char classes_path_win32_local[] =
@@ -6146,6 +6159,10 @@ static void test_publish_assemblies(void)
         "Software\\Microsoft\\Installer\\Assemblies\\C:|Program Files|msitest|application_dotnet.txt";
     static const char path_dotnet_local_wow64[] =
         "Software\\Microsoft\\Installer\\Assemblies\\C:|Program Files (x86)|msitest|application_dotnet.txt";
+    static const char path_fake_local[] =
+        "Software\\Microsoft\\Installer\\Assemblies\\C:|Program Files|msitest|nonexistent.txt";
+    static const char path_fake_local_wow64[] =
+        "Software\\Microsoft\\Installer\\Assemblies\\C:|Program Files (x86)|msitest|nonexistent.txt";
     static const char path_win32[] =
         "Software\\Microsoft\\Installer\\Win32Assemblies\\Global";
     static const char path_win32_local[] =
@@ -6185,6 +6202,7 @@ static void test_publish_assemblies(void)
     create_file_data("msitest\\manifest_local.txt", manifest_local, 0);
     create_file("msitest\\application_win32.txt", 1000);
     create_file("msitest\\application_dotnet.txt", 1000);
+    create_file("msitest\\fake_local.txt", 1000);
     create_database(msifile, pa_tables, ARRAY_SIZE(pa_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
@@ -6218,6 +6236,11 @@ static void test_publish_assemblies(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     CHECK_REG_STR(hkey, name_win32_local, "rcHQPHq?CA@Uv-XqMI1e>C)Uvlj*53A)u(QQ9=)X!");
     RegCloseKey(hkey);
+
+    /* No registration is done for a local assembly with no matching file */
+    path = (is_wow64 || is_64bit) ? path_fake_local_wow64 : path_fake_local;
+    res = RegOpenKeyA(HKEY_CURRENT_USER, path, &hkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -6278,6 +6301,11 @@ static void test_publish_assemblies(void)
     CHECK_REG_STR(hkey, name_win32_local, "rcHQPHq?CA@Uv-XqMI1e>C)Uvlj*53A)u(QQ9=)X!");
     RegCloseKey(hkey);
 
+    /* No registration is done for a local assembly with no matching file */
+    path = (is_wow64 || is_64bit) ? classes_path_fake_local_wow64 : classes_path_fake_local;
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT, path, 0, access, &hkey);
+    ok(res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
     r = MsiInstallProductA(msifile, "REMOVE=ALL ALLUSERS=1");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
@@ -6314,6 +6342,7 @@ done:
     DeleteFileA("msitest\\manifest_local.txt");
     DeleteFileA("msitest\\application_win32.txt");
     DeleteFileA("msitest\\application_dotnet.txt");
+    DeleteFileA("msitest\\fake_local.txt");
     delete_test_files();
     DeleteFileA(msifile);
 }
