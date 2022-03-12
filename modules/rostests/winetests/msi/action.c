@@ -409,6 +409,8 @@ static const char pp_install_exec_seq_dat[] =
     "pf_immediate\tPUBLISH_FEATURES AND ALLUSERS\t6301\n"
     "pf_deferred\tPUBLISH_FEATURES AND ALLUSERS\t6302\n"
     "PublishProduct\tPUBLISH_PRODUCT=1 Or FULL=1\t6400\n"
+    "pp_immediate\tPUBLISH_PRODUCT AND ALLUSERS\t6401\n"
+    "pp_deferred\tPUBLISH_PRODUCT AND ALLUSERS\t6402\n"
     "InstallFinalize\t\t6600";
 
 static const char pp_custom_action_dat[] =
@@ -419,6 +421,8 @@ static const char pp_custom_action_dat[] =
     "pf_deferred\t1025\tcustom.dll\tpf_present\n"
     "uf_immediate\t1\tcustom.dll\tpf_present\n"
     "uf_deferred\t1025\tcustom.dll\tpf_absent\n"
+    "pp_immediate\t1\tcustom.dll\tpp_absent\n"
+    "pp_deferred\t1025\tcustom.dll\tpp_present\n"
     "ppc_immediate\t1\tcustom.dll\tppc_absent\n"
     "ppc_deferred\t1025\tcustom.dll\tppc_present\n";
 
