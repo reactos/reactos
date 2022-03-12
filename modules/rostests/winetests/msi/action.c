@@ -736,30 +736,55 @@ static const char cf_custom_action_dat[] =
     "rf_immediate\t1\tcustom.dll\tcf_present\n"
     "rf_deferred\t1025\tcustom.dll\tcf_absent\n";
 
+static const char sr_file_dat[] =
+    "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
+    "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
+    "File\tFile\n"
+    "selfreg.dll\tselfreg\tselfreg.dll\t1000\t\t\t8192\t1\n";
+
+static const char sr_feature_dat[] =
+    "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
+    "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
+    "Feature\tFeature\n"
+    "selfreg\t\t\tselfreg feature\t1\t2\tMSITESTDIR\t0\n";
+
+static const char sr_feature_comp_dat[] =
+    "Feature_\tComponent_\n"
+    "s38\ts72\n"
+    "FeatureComponents\tFeature_\tComponent_\n"
+    "selfreg\tselfreg\n";
+
+static const char sr_component_dat[] =
+    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
+    "s72\tS38\ts72\ti2\tS255\tS72\n"
+    "Component\tComponent\n"
+    "selfreg\t{BB4C26FD-89D8-4E49-AF1C-DB4DCB5BF1B0}\tMSITESTDIR\t0\t\tselfreg.dll\n";
+
 static const char sr_selfreg_dat[] =
     "File_\tCost\n"
     "s72\tI2\n"
     "SelfReg\tFile_\n"
-    "one.txt\t1\n";
+    "selfreg.dll\t\n";
 
 static const char sr_install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
     "s72\tS255\tI2\n"
     "InstallExecuteSequence\tAction\n"
-    "CostFinalize\t\t1000\n"
     "CostInitialize\t\t800\n"
     "FileCost\t\t900\n"
-    "ResolveSource\t\t950\n"
-    "MoveFiles\t\t1700\n"
-    "SelfUnregModules\t\t3900\n"
-    "InstallFiles\t\t4000\n"
-    "DuplicateFiles\t\t4500\n"
-    "WriteEnvironmentStrings\t\t4550\n"
-    "CreateShortcuts\t\t4600\n"
-    "InstallFinalize\t\t6600\n"
-    "InstallInitialize\t\t1500\n"
+    "CostFinalize\t\t1000\n"
     "InstallValidate\t\t1400\n"
-    "LaunchConditions\t\t100\n";
+    "InstallInitialize\t\t1500\n"
+    "ProcessComponents\t\t1600\n"
+    "SelfUnregModules\t\t3800\n"
+    "RemoveFiles\t\t3900\n"
+    "InstallFiles\t\t4000\n"
+    "SelfRegModules\t\t4100\n"
+    "CreateShortcuts\t\t4600\n"
+    "RegisterProduct\t\t5100\n"
+    "PublishFeatures\t\t5200\n"
+    "PublishProduct\t\t5300\n"
+    "InstallFinalize\t\t6600\n";
 
 static const char font_media_dat[] =
     "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
@@ -2099,11 +2124,11 @@ static const msi_table sis_tables[] =
 
 static const msi_table sr_tables[] =
 {
-    ADD_TABLE(component),
+    ADD_TABLE(sr_component),
     ADD_TABLE(directory),
-    ADD_TABLE(feature),
-    ADD_TABLE(feature_comp),
-    ADD_TABLE(file),
+    ADD_TABLE(sr_feature),
+    ADD_TABLE(sr_feature_comp),
+    ADD_TABLE(sr_file),
     ADD_TABLE(sr_selfreg),
     ADD_TABLE(sr_install_exec_seq),
     ADD_TABLE(media),
@@ -5398,6 +5423,7 @@ error:
 
 static void test_self_registration(void)
 {
+    HKEY key;
     UINT r;
 
     if (is_process_limited())
@@ -5407,6 +5433,7 @@ static void test_self_registration(void)
     }
 
     create_test_files();
+    extract_resource("selfreg.dll", "TESTDLL", "msitest\\selfreg.dll");
     create_database(msifile, sr_tables, sizeof(sr_tables) / sizeof(msi_table));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
@@ -5419,21 +5446,21 @@ static void test_self_registration(void)
     }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    ok(delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout\\new", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\cabout", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\changed\\three.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\changed", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\first\\two.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\first", FALSE), "Directory not created\n");
-    ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\service2.exe", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    r = RegOpenKeyA(HKEY_CLASSES_ROOT, "selfreg_test", &key);
+    ok(!r, "got %u\n", r);
+    RegCloseKey(key);
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(!r, "got %u\n", r);
+
+    r = RegOpenKeyA(HKEY_CLASSES_ROOT, "selfreg_test", &key);
+    ok(r == ERROR_FILE_NOT_FOUND, "got %u\n", r);
+
+    ok(!delete_pf("msitest\\selfreg.dll", TRUE), "file not removed\n");
+    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
 
 error:
+    DeleteFileA("msitest\\selfreg.dll");
     delete_test_files();
     DeleteFileA(msifile);
 }

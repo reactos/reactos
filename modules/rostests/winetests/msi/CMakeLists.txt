@@ -5,6 +5,11 @@ target_link_libraries(custom uuid)
 set_module_type(custom win32dll)
 add_importlibs(custom msi ole32 oleaut32 odbccp32 shell32 advapi32 msvcrt kernel32)
 
+spec2def(selfreg.dll selfreg.spec)
+add_library(selfreg MODULE selfreg.c ${CMAKE_CURRENT_BINARY_DIR}/selfreg.def)
+set_module_type(selfreg win32dll)
+add_importlibs(selfreg advapi32 msvcrt kernel32)
+
 list(APPEND SOURCE
     action.c
     automation.c
@@ -25,7 +30,7 @@ list(APPEND PCH_SKIP_SOURCE
 
 # CMake 3.9 and higher requires to specify this dependency manually
 # see https://gitlab.kitware.com/cmake/cmake/issues/19933
-set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/custom.dll ${CMAKE_CURRENT_BINARY_DIR}/typelib.tlb)
+set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/custom.dll  ${CMAKE_CURRENT_BINARY_DIR}/selfreg.dll ${CMAKE_CURRENT_BINARY_DIR}/typelib.tlb)
 
 add_executable(msi_winetest
     ${SOURCE}
@@ -52,4 +57,4 @@ set_module_type(msi_winetest win32cui)
 add_importlibs(msi_winetest cabinet msi shell32 ole32 oleaut32 odbccp32 user32 advapi32 version msvcrt kernel32)
 add_pch(msi_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET msi_winetest)
-add_dependencies(msi_winetest custom msi_winetest_idlheader stdole2)
+add_dependencies(msi_winetest custom selfreg msi_winetest_idlheader stdole2)
