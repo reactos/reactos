@@ -27,7 +27,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
-#include "wine/debug.h"
 #include "msi.h"
 #include "msidefs.h"
 #include "objbase.h"
@@ -35,6 +34,8 @@
 
 #include "msipriv.h"
 #include "winemsi.h"
+#include "wine/heap.h"
+#include "wine/debug.h"
 #include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -200,50 +201,19 @@ static UINT MSI_GetTargetPath( MSIHANDLE hInstall, LPCWSTR szFolder,
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if (!package)
     {
-        MSIHANDLE remote;
-        HRESULT hr;
         LPWSTR value = NULL;
-        BSTR folder;
-        DWORD len;
+        MSIHANDLE remote;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        folder = SysAllocString( szFolder );
-        if (!folder)
-            return ERROR_OUTOFMEMORY;
+        r = remote_GetTargetPath(remote, szFolder, &value);
+        if (r != ERROR_SUCCESS)
+            return r;
 
-        len = 0;
-        hr = remote_GetTargetPath(remote, folder, NULL, &len);
-        if (FAILED(hr))
-            goto done;
+        r = msi_strcpy_to_awstring(value, -1, szPathBuf, pcchPathBuf);
 
-        len++;
-        value = msi_alloc(len * sizeof(WCHAR));
-        if (!value)
-        {
-            r = ERROR_OUTOFMEMORY;
-            goto done;
-        }
-
-        hr = remote_GetTargetPath(remote, folder, value, &len);
-        if (FAILED(hr))
-            goto done;
-
-        r = msi_strcpy_to_awstring( value, len, szPathBuf, pcchPathBuf );
-
-done:
-        SysFreeString( folder );
-        msi_free( value );
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
+        midl_user_free(value);
         return r;
     }
 

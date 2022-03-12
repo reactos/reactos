@@ -453,6 +453,96 @@ UINT WINAPI nested(MSIHANDLE hinst)
     return ERROR_SUCCESS;
 }
 
+static void test_targetpath(MSIHANDLE hinst)
+{
+    static const WCHAR targetdirW[] = {'T','A','R','G','E','T','D','I','R',0};
+    static const WCHAR xyzW[] = {'C',':','\\',0};
+    static const WCHAR xyW[] = {'C',':',0};
+    char buffer[20];
+    WCHAR bufferW[20];
+    DWORD sz;
+    UINT r;
+
+    /* test invalid values */
+    r = MsiGetTargetPathA(hinst, NULL, NULL, NULL);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    r = MsiGetTargetPathA(hinst, "TARGETDIR", NULL, NULL );
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, NULL );
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    /* Returned size is in bytes, not chars, but only for custom actions.
+     * Seems to be a casualty of RPC... */
+
+    sz = 0;
+    r = MsiGetTargetPathA(hinst, "TARGETDIR", NULL, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+
+    sz = 0;
+    strcpy(buffer,"q");
+    r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+
+    sz = 1;
+    strcpy(buffer,"x");
+    r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+
+    sz = 3;
+    strcpy(buffer,"x");
+    r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "C:"), "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+
+    sz = 4;
+    strcpy(buffer,"x");
+    r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "C:\\"), "got \"%s\"\n", buffer);
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    sz = 0;
+    r = MsiGetTargetPathW(hinst, targetdirW, NULL, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    sz = 0;
+    bufferW[0] = 'q';
+    r = MsiGetTargetPathW(hinst, targetdirW, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    sz = 1;
+    bufferW[0] = 'q';
+    r = MsiGetTargetPathW(hinst, targetdirW, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    sz = 3;
+    bufferW[0] = 'q';
+    r = MsiGetTargetPathW(hinst, targetdirW, bufferW, &sz);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !lstrcmpW(bufferW, xyW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 3, "got size %u\n", sz);
+
+    sz = 4;
+    bufferW[0] = 'q';
+    r = MsiGetTargetPathW(hinst, targetdirW, bufferW, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !lstrcmpW(bufferW, xyzW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 3, "got size %u\n", sz);
+}
+
 /* Main test. Anything that doesn't depend on a specific install configuration
  * or have undesired side effects should go here. */
 UINT WINAPI main_test(MSIHANDLE hinst)
@@ -479,6 +569,7 @@ UINT WINAPI main_test(MSIHANDLE hinst)
     test_props(hinst);
     test_db(hinst);
     test_doaction(hinst);
+    test_targetpath(hinst);
 
     return ERROR_SUCCESS;
 }

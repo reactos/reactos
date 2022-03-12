@@ -2481,10 +2481,21 @@ UINT __cdecl remote_Sequence(MSIHANDLE hinst, LPCWSTR table, int sequence)
     return MsiSequenceW(hinst, table, sequence);
 }
 
-HRESULT __cdecl remote_GetTargetPath(MSIHANDLE hinst, BSTR folder, BSTR value, DWORD *size)
+UINT __cdecl remote_GetTargetPath(MSIHANDLE hinst, LPCWSTR folder, LPWSTR *value)
 {
-    UINT r = MsiGetTargetPathW(hinst, folder, value, size);
-    return HRESULT_FROM_WIN32(r);
+    WCHAR empty[1];
+    DWORD size = 0;
+    UINT r;
+
+    r = MsiGetTargetPathW(hinst, folder, empty, &size);
+    if (r == ERROR_MORE_DATA)
+    {
+        *value = midl_user_allocate(++size * sizeof(WCHAR));
+        if (!*value)
+            return ERROR_OUTOFMEMORY;
+        r = MsiGetTargetPathW(hinst, folder, *value, &size);
+    }
+    return r;
 }
 
 HRESULT __cdecl remote_SetTargetPath(MSIHANDLE hinst, BSTR folder, BSTR value)

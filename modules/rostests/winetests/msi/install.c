@@ -695,6 +695,9 @@ static const CHAR wrv_component_dat[] = "Component\tComponentId\tDirectory_\tAtt
 static const CHAR ca1_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                                "s72\tS255\tI2\n"
                                                "InstallExecuteSequence\tAction\n"
+                                               "CostInitialize\t\t100\n"
+                                               "FileCost\t\t200\n"
+                                               "CostFinalize\t\t300\n"
                                                "embednull\t\t600\n"
                                                "maintest\tMAIN_TEST\t700\n"
                                                "testretval\tTEST_RETVAL\t710\n";
@@ -1709,7 +1712,13 @@ static const msi_table sf_tables[] =
 
 static const msi_table ca1_tables[] =
 {
+    ADD_TABLE(component),
+    ADD_TABLE(directory),
+    ADD_TABLE(feature),
+    ADD_TABLE(feature_comp),
+    ADD_TABLE(file),
     ADD_TABLE(property),
+    ADD_TABLE(directory),
     ADD_TABLE(ca1_install_exec_seq),
     ADD_TABLE(ca1_custom_action),
     ADD_TABLE(ca1_test_seq),
@@ -4120,6 +4129,7 @@ static void test_customaction1(void)
     MSIHANDLE hdb, record;
     UINT r;
 
+    create_test_files();
     create_database(msifile, ca1_tables, sizeof(ca1_tables) / sizeof(msi_table));
     add_custom_dll();
 
@@ -4158,6 +4168,7 @@ static void test_customaction1(void)
     r = MsiInstallProductA(msifile, "TEST_RETVAL=1");
     ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
 
+    delete_test_files();
     DeleteFileA(msifile);
     DeleteFileA("unus");
     DeleteFileA("duo");
