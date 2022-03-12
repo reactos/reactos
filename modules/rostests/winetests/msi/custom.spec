@@ -25,6 +25,8 @@
 @ stdcall pub_absent(long)
 @ stdcall rci_present(long)
 @ stdcall rci_absent(long)
+@ stdcall rei_present(long)
+@ stdcall rei_absent(long)
 @ stdcall rd_present(long)
 @ stdcall rd_absent(long)
 @ stdcall sds_present(long)

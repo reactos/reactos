@@ -1538,11 +1538,24 @@ static const char rei_install_exec_seq_dat[] =
     "RemoveFiles\t\t1700\n"
     "InstallFiles\t\t2000\n"
     "UnregisterExtensionInfo\t\t3000\n"
+    "uei_immediate\tREMOVE\t3001\n"
+    "uei_deferred\tREMOVE\t3002\n"
     "RegisterExtensionInfo\t\t4000\n"
+    "rei_immediate\tNOT REMOVE\t4001\n"
+    "rei_deferred\tNOT REMOVE\t4002\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
+
+static const char rei_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "rei_immediate\t1\tcustom.dll\trei_absent\n"
+    "rei_deferred\t1025\tcustom.dll\trei_present\n"
+    "uei_immediate\t1\tcustom.dll\trei_present\n"
+    "uei_deferred\t1025\tcustom.dll\trei_absent\n";
 
 static const char rpi_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -2210,6 +2223,7 @@ static const msi_table rei_tables[] =
     ADD_TABLE(rei_verb),
     ADD_TABLE(rei_progid),
     ADD_TABLE(rei_install_exec_seq),
+    ADD_TABLE(rei_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };

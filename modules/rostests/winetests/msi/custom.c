@@ -1608,3 +1608,37 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
 
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI rei_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, ".extension", &key);
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Prog.Id.1\\shell\\Open\\command", &key);
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+}
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI rei_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, ".extension", &key);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Prog.Id.1\\shell\\Open\\command", &key);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+}
+
+    return ERROR_SUCCESS;
+}
