@@ -455,7 +455,7 @@ Standard = "Standartinis procesorius"
 
 [Strings.0404]
 Processor.DeviceDesc = "處理器"
-Processor.ServiceDesc = "處理器驱动程序"
+Processor.ServiceDesc = "處理器驅動程式"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 處理器"
 IntelProcessor.DeviceDesc = "Intel Pentium 處理器"
 IntelMMXProcessor.DeviceDesc = "Intel Pentium MMX 處理器"
@@ -485,7 +485,7 @@ ViaProcessor.DeviceDesc = "VIA 處理器"
 
 [Strings.0c04]
 Processor.DeviceDesc = "處理器"
-Processor.ServiceDesc = "處理器驱动程序"
+Processor.ServiceDesc = "處理器驅動程式"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 處理器"
 IntelProcessor.DeviceDesc = "Intel Pentium 處理器"
 IntelMMXProcessor.DeviceDesc = "Intel Pentium MMX 處理器"
