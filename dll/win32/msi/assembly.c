@@ -35,19 +35,17 @@ static HRESULT (WINAPI *pCreateAssemblyCacheNet10)( IAssemblyCache **, DWORD );
 static HRESULT (WINAPI *pCreateAssemblyCacheNet11)( IAssemblyCache **, DWORD );
 static HRESULT (WINAPI *pCreateAssemblyCacheNet20)( IAssemblyCache **, DWORD );
 static HRESULT (WINAPI *pCreateAssemblyCacheNet40)( IAssemblyCache **, DWORD );
-static HRESULT (WINAPI *pCreateAssemblyCacheSxs)( IAssemblyCache **, DWORD );
 static HRESULT (WINAPI *pGetFileVersion)( LPCWSTR, LPWSTR, DWORD, DWORD * );
 static HRESULT (WINAPI *pCreateAssemblyNameObject)( IAssemblyName **, LPCWSTR, DWORD, LPVOID );
 static HRESULT (WINAPI *pCreateAssemblyEnum)( IAssemblyEnum **, IUnknown *, IAssemblyName *, DWORD, LPVOID );
 
-static HMODULE hfusion10, hfusion11, hfusion20, hfusion40, hmscoree, hsxs;
+static HMODULE hfusion10, hfusion11, hfusion20, hfusion40, hmscoree;
 static BOOL assembly_caches_initialized;
 
 static BOOL init_function_pointers( void )
 {
     static const WCHAR szFusion[]    = {'f','u','s','i','o','n','.','d','l','l',0};
     static const WCHAR szMscoree[]   = {'\\','m','s','c','o','r','e','e','.','d','l','l',0};
-    static const WCHAR szSxs[]       = {'s','x','s','.','d','l','l',0};
     static const WCHAR szVersion10[] = {'v','1','.','0','.','3','7','0','5',0};
     static const WCHAR szVersion11[] = {'v','1','.','1','.','4','3','2','2',0};
     static const WCHAR szVersion20[] = {'v','2','.','0','.','5','0','7','2','7',0};
@@ -56,13 +54,6 @@ static BOOL init_function_pointers( void )
     WCHAR path[MAX_PATH];
     DWORD len = GetSystemDirectoryW( path, MAX_PATH );
 
-    if (!hsxs && !(hsxs = LoadLibraryW( szSxs ))) return FALSE;
-    if (!(pCreateAssemblyCacheSxs = (void *)GetProcAddress( hsxs, "CreateAssemblyCache" )))
-    {
-        FreeLibrary( hsxs );
-        hsxs = NULL;
-        return FALSE;
-    }
     strcpyW( path + len, szMscoree );
     if (hmscoree || !(hmscoree = LoadLibraryW( path ))) return TRUE;
     pGetFileVersion = (void *)GetProcAddress( hmscoree, "GetFileVersion" ); /* missing from v1.0.3705 */
@@ -95,7 +86,7 @@ BOOL msi_init_assembly_caches( MSIPACKAGE *package )
     if (assembly_caches_initialized) return TRUE;
     if (!init_function_pointers()) return FALSE;
 
-    if (pCreateAssemblyCacheSxs( &package->cache_sxs, 0 ) != S_OK) return FALSE;
+    if (CreateAssemblyCache( &package->cache_sxs, 0 ) != S_OK) return FALSE;
     if (pCreateAssemblyCacheNet10) pCreateAssemblyCacheNet10( &package->cache_net[CLR_VERSION_V10], 0 );
     if (pCreateAssemblyCacheNet11) pCreateAssemblyCacheNet11( &package->cache_net[CLR_VERSION_V11], 0 );
     if (pCreateAssemblyCacheNet20) pCreateAssemblyCacheNet20( &package->cache_net[CLR_VERSION_V20], 0 );
@@ -134,13 +125,11 @@ void msi_destroy_assembly_caches( MSIPACKAGE *package )
     FreeLibrary( hfusion20 );
     FreeLibrary( hfusion40 );
     FreeLibrary( hmscoree );
-    FreeLibrary( hsxs );
     hfusion10 = NULL;
     hfusion11 = NULL;
     hfusion20 = NULL;
     hfusion40 = NULL;
     hmscoree = NULL;
-    hsxs = NULL;
 }
 
 static MSIRECORD *get_assembly_record( MSIPACKAGE *package, const WCHAR *comp )
