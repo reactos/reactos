@@ -1201,6 +1201,26 @@ static UINT TABLE_set_int( MSITABLEVIEW *tv, UINT row, UINT col, UINT val )
     return ERROR_SUCCESS;
 }
 
+static UINT int_to_table_storage( const MSITABLEVIEW *tv, UINT col, int val, UINT *ret )
+{
+    if ((tv->columns[col-1].type & MSI_DATASIZEMASK) == 2)
+    {
+        if (val == MSI_NULL_INTEGER)
+            *ret = 0;
+        else if ((val + 0x8000) & 0xffff0000)
+        {
+            ERR("value %d out of range\n", val);
+            return ERROR_FUNCTION_FAILED;
+        }
+        else
+            *ret = val + 0x8000;
+    }
+    else
+        *ret = val ^ 0x80000000;
+
+    return ERROR_SUCCESS;
+}
+
 static UINT TABLE_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW *)view;
@@ -1276,7 +1296,6 @@ static UINT get_table_value_from_record( MSITABLEVIEW *tv, MSIRECORD *rec, UINT 
 {
     MSICOLUMNINFO columninfo;
     UINT r;
-    int ival;
 
     if (!iField || iField > tv->num_cols || MSI_RecordIsNull( rec, iField ))
         return ERROR_FUNCTION_FAILED;
@@ -1299,25 +1318,8 @@ static UINT get_table_value_from_record( MSITABLEVIEW *tv, MSIRECORD *rec, UINT 
         }
         else *pvalue = 0;
     }
-    else if ( bytes_per_column( tv->db, &columninfo, LONG_STR_BYTES ) == 2 )
-    {
-        ival = MSI_RecordGetInteger( rec, iField );
-        if (ival == 0x80000000) *pvalue = 0x8000;
-        else
-        {
-            *pvalue = 0x8000 + MSI_RecordGetInteger( rec, iField );
-            if (*pvalue & 0xffff0000)
-            {
-                ERR("field %u value %d out of range\n", iField, *pvalue - 0x8000);
-                return ERROR_FUNCTION_FAILED;
-            }
-        }
-    }
     else
-    {
-        ival = MSI_RecordGetInteger( rec, iField );
-        *pvalue = ival ^ 0x80000000;
-    }
+        return int_to_table_storage( tv, iField, MSI_RecordGetInteger( rec, iField ), pvalue );
 
     return ERROR_SUCCESS;
 }
@@ -2370,14 +2372,11 @@ static UINT* msi_record_to_row( const MSITABLEVIEW *tv, MSIRECORD *rec )
         }
         else
         {
-            data[i] = MSI_RecordGetInteger( rec, i+1 );
-
-            if (data[i] == MSI_NULL_INTEGER)
-                data[i] = 0;
-            else if ((tv->columns[i].type&0xff) == 2)
-                data[i] += 0x8000;
-            else
-                data[i] += 0x80000000;
+            if (int_to_table_storage( tv, i + 1, MSI_RecordGetInteger( rec, i + 1 ), &data[i] ))
+            {
+                msi_free( data );
+                return NULL;
+            }
         }
     }
     return data;
