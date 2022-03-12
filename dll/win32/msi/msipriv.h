@@ -131,7 +131,6 @@ typedef struct tagMSIFIELD
     union
     {
         INT iVal;
-        INT_PTR pVal;
         LPWSTR szwVal;
         IStream *stream;
     } u;
@@ -141,6 +140,7 @@ typedef struct tagMSIFIELD
 typedef struct tagMSIRECORD
 {
     MSIOBJECTHDR hdr;
+    MSIQUERY *query;
     UINT count;       /* as passed to MsiCreateRecord */
     MSIFIELD fields[1]; /* nb. array size is count+1 */
 } MSIRECORD;
@@ -813,13 +813,11 @@ extern UINT MSI_RecordGetIStream( MSIRECORD *, UINT, IStream **) DECLSPEC_HIDDEN
 extern const WCHAR *MSI_RecordGetString( const MSIRECORD *, UINT ) DECLSPEC_HIDDEN;
 extern MSIRECORD *MSI_CreateRecord( UINT ) DECLSPEC_HIDDEN;
 extern UINT MSI_RecordSetInteger( MSIRECORD *, UINT, int ) DECLSPEC_HIDDEN;
-extern UINT MSI_RecordSetIntPtr( MSIRECORD *, UINT, INT_PTR ) DECLSPEC_HIDDEN;
 extern UINT MSI_RecordSetStringW( MSIRECORD *, UINT, LPCWSTR ) DECLSPEC_HIDDEN;
 extern BOOL MSI_RecordIsNull( MSIRECORD *, UINT ) DECLSPEC_HIDDEN;
 extern UINT MSI_RecordGetStringW( MSIRECORD * , UINT, LPWSTR, LPDWORD) DECLSPEC_HIDDEN;
 extern UINT MSI_RecordGetStringA( MSIRECORD *, UINT, LPSTR, LPDWORD) DECLSPEC_HIDDEN;
 extern int MSI_RecordGetInteger( MSIRECORD *, UINT ) DECLSPEC_HIDDEN;
-extern INT_PTR MSI_RecordGetIntPtr( MSIRECORD *, UINT ) DECLSPEC_HIDDEN;
 extern UINT MSI_RecordReadStream( MSIRECORD *, UINT, char *, LPDWORD) DECLSPEC_HIDDEN;
 extern UINT MSI_RecordSetStream(MSIRECORD *, UINT, IStream *) DECLSPEC_HIDDEN;
 extern UINT MSI_RecordGetFieldCount( const MSIRECORD *rec ) DECLSPEC_HIDDEN;

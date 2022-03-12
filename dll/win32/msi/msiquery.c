@@ -374,7 +374,8 @@ UINT MSI_ViewFetch(MSIQUERY *query, MSIRECORD **prec)
     if (r == ERROR_SUCCESS)
     {
         query->row ++;
-        MSI_RecordSetIntPtr(*prec, 0, (INT_PTR)query);
+        (*prec)->query = query;
+        MSI_RecordSetInteger(*prec, 0, 1);
     }
 
     return r;
@@ -608,7 +609,7 @@ UINT MSI_ViewModify( MSIQUERY *query, MSIMODIFY mode, MSIRECORD *rec )
     if ( !view  || !view->ops->modify)
         return ERROR_FUNCTION_FAILED;
 
-    if ( mode == MSIMODIFY_UPDATE && MSI_RecordGetIntPtr( rec, 0 ) != (INT_PTR)query )
+    if ( mode == MSIMODIFY_UPDATE && rec->query != query )
         return ERROR_FUNCTION_FAILED;
 
     r = view->ops->modify( view, mode, rec, query->row );

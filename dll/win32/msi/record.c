@@ -46,7 +46,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 #define MSIFIELD_INT    1
 #define MSIFIELD_WSTR   3
 #define MSIFIELD_STREAM 4
-#define MSIFIELD_INTPTR 5
 
 static void MSI_FreeField( MSIFIELD *field )
 {
@@ -54,7 +53,6 @@ static void MSI_FreeField( MSIFIELD *field )
     {
     case MSIFIELD_NULL:
     case MSIFIELD_INT:
-    case MSIFIELD_INTPTR:
         break;
     case MSIFIELD_WSTR:
         msi_free( field->u.szwVal);
@@ -190,9 +188,6 @@ UINT MSI_RecordCopyField( MSIRECORD *in_rec, UINT in_n,
         case MSIFIELD_INT:
             out->u.iVal = in->u.iVal;
             break;
-        case MSIFIELD_INTPTR:
-            out->u.pVal = in->u.pVal;
-            break;
         case MSIFIELD_WSTR:
             if ((str = msi_strdupW( in->u.szwVal, in->len )))
             {
@@ -216,32 +211,6 @@ UINT MSI_RecordCopyField( MSIRECORD *in_rec, UINT in_n,
     return r;
 }
 
-INT_PTR MSI_RecordGetIntPtr( MSIRECORD *rec, UINT iField )
-{
-    int ret;
-
-    TRACE( "%p %d\n", rec, iField );
-
-    if( iField > rec->count )
-        return MININT_PTR;
-
-    switch( rec->fields[iField].type )
-    {
-    case MSIFIELD_INT:
-        return rec->fields[iField].u.iVal;
-    case MSIFIELD_INTPTR:
-        return rec->fields[iField].u.pVal;
-    case MSIFIELD_WSTR:
-        if( string2intW( rec->fields[iField].u.szwVal, &ret ) )
-            return ret;
-        return MININT_PTR;
-    default:
-        break;
-    }
-
-    return MININT_PTR;
-}
-
 int MSI_RecordGetInteger( MSIRECORD *rec, UINT iField)
 {
     int ret = 0;
@@ -255,8 +224,6 @@ int MSI_RecordGetInteger( MSIRECORD *rec, UINT iField)
     {
     case MSIFIELD_INT:
         return rec->fields[iField].u.iVal;
-    case MSIFIELD_INTPTR:
-        return rec->fields[iField].u.pVal;
     case MSIFIELD_WSTR:
         if( string2intW( rec->fields[iField].u.szwVal, &ret ) )
             return ret;
@@ -307,20 +274,6 @@ UINT WINAPI MsiRecordClearData( MSIHANDLE handle )
     }
     msiobj_unlock( &rec->hdr );
     msiobj_release( &rec->hdr );
-
-    return ERROR_SUCCESS;
-}
-
-UINT MSI_RecordSetIntPtr( MSIRECORD *rec, UINT iField, INT_PTR pVal )
-{
-    TRACE("%p %u %ld\n", rec, iField, pVal);
-
-    if( iField > rec->count )
-        return ERROR_INVALID_PARAMETER;
-
-    MSI_FreeField( &rec->fields[iField] );
-    rec->fields[iField].type = MSIFIELD_INTPTR;
-    rec->fields[iField].u.pVal = pVal;
 
     return ERROR_SUCCESS;
 }
@@ -1095,7 +1048,6 @@ void dump_record(MSIRECORD *rec)
         case MSIFIELD_NULL: TRACE("(null)"); break;
         case MSIFIELD_INT: TRACE("%d", rec->fields[i].u.iVal); break;
         case MSIFIELD_WSTR: TRACE("%s", debugstr_w(rec->fields[i].u.szwVal)); break;
-        case MSIFIELD_INTPTR: TRACE("%ld", rec->fields[i].u.pVal); break;
         case MSIFIELD_STREAM: TRACE("%p", rec->fields[i].u.stream); break;
         }
         if (i < rec->count) TRACE(", ");
