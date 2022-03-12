@@ -1061,6 +1061,9 @@ UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
     TRACE("(%d %s %i %i %p)\n", hInstall, debugstr_w(szFeature),
           iCostTree, iState, piCost);
 
+    if (!szFeature)
+        return ERROR_INVALID_PARAMETER;
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
@@ -1088,6 +1091,12 @@ UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
         }
 
         return ERROR_SUCCESS;
+    }
+
+    if (!piCost)
+    {
+        msiobj_release( &package->hdr );
+        return ERROR_INVALID_PARAMETER;
     }
 
     feature = msi_get_loaded_feature(package, szFeature);

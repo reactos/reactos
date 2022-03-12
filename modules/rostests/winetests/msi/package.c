@@ -8479,7 +8479,7 @@ static void test_MsiApplyPatch(void)
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %u\n", r);
 }
 
-static void test_MsiEnumComponentCosts(void)
+static void test_costs(void)
 {
     MSIHANDLE hdb, hpkg;
     char package[12], drive[3];
@@ -8661,6 +8661,20 @@ static void test_MsiEnumComponentCosts(void)
     len = sizeof(drive);
     r = MsiEnumComponentCostsA( hpkg, "", 1, INSTALLSTATE_UNKNOWN, drive, &len, &cost, &temp );
     ok( r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %u\n", r );
+
+    /* test MsiGetFeatureCost */
+    cost = 0xdead;
+    r = MsiGetFeatureCostA( hpkg, NULL, MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, &cost );
+    ok( r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+    ok( cost == 0xdead, "got %d\n", cost );
+
+    r = MsiGetFeatureCostA( hpkg, "one", MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, NULL );
+    ok( r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    cost = 0xdead;
+    r = MsiGetFeatureCostA( hpkg, "one", MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, &cost );
+    ok( !r, "got %u\n", r);
+    ok( cost == 8, "got %d\n", cost );
 
     MsiCloseHandle( hpkg );
 error:
@@ -9702,7 +9716,7 @@ START_TEST(package)
     test_MsiSetProperty();
     test_MsiApplyMultiplePatches();
     test_MsiApplyPatch();
-    test_MsiEnumComponentCosts();
+    test_costs();
     test_MsiDatabaseCommit();
     test_externalui();
     test_externalui_message();
