@@ -97,7 +97,7 @@ static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
     msiobj_release(&record->hdr);
     msi_free(source_dir);
 
-    return r;
+    return r == IDRETRY ? ERROR_SUCCESS : ERROR_INSTALL_SOURCE_ABSENT;
 }
 
 static MSICABINETSTREAM *msi_get_cabinet_stream( MSIPACKAGE *package, UINT disk_id )
