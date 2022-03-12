@@ -9701,6 +9701,46 @@ static void test_select_column_names(void)
     ok(r == ERROR_SUCCESS , "failed to close database: %u\n", r);
 }
 
+static void test_primary_keys(void)
+{
+    MSIHANDLE hdb, keys;
+    UINT r;
+
+    hdb = create_db();
+
+    r = MsiDatabaseGetPrimaryKeysA(hdb, "T", &keys);
+    ok(r == ERROR_INVALID_TABLE, "got %u\n", r);
+
+    r = run_query(hdb, 0, "CREATE TABLE `T` (`A` SHORT, `B` SHORT, `C` SHORT PRIMARY KEY `A`)");
+    ok(!r, "got %u\n", r);
+
+    r = MsiDatabaseGetPrimaryKeysA(hdb, "T", &keys);
+    ok(!r, "got %u\n", r);
+
+    r = MsiRecordGetFieldCount(keys);
+    ok(r == 1, "got %d\n", r);
+    ok(check_record(keys, 0, "T"), "expected 'T'");
+    ok(check_record(keys, 1, "A"), "expected 'A'");
+
+    MsiCloseHandle(keys);
+
+    r = run_query(hdb, 0, "CREATE TABLE `U` (`A` SHORT, `B` SHORT, `C` SHORT PRIMARY KEY `B`, `C`)");
+    ok(!r, "got %u\n", r);
+
+    r = MsiDatabaseGetPrimaryKeysA(hdb, "U", &keys);
+    ok(!r, "got %u\n", r);
+
+    r = MsiRecordGetFieldCount(keys);
+    ok(r == 2, "got %d\n", r);
+    ok(check_record(keys, 0, "U"), "expected 'U'");
+    ok(check_record(keys, 1, "B"), "expected 'B'");
+    ok(check_record(keys, 2, "C"), "expected 'C'");
+
+    MsiCloseHandle(keys);
+    MsiCloseHandle(hdb);
+    DeleteFileA(msifile);
+}
+
 START_TEST(db)
 {
     test_msidatabase();
@@ -9756,4 +9796,5 @@ START_TEST(db)
     test_collation();
     test_embedded_nulls();
     test_select_column_names();
+    test_primary_keys();
 }
