@@ -685,9 +685,6 @@ UINT WINAPI MsiSetFeatureStateA(MSIHANDLE hInstall, LPCSTR szFeature,
 
     szwFeature = strdupAtoW(szFeature);
 
-    if (!szwFeature)
-        return ERROR_FUNCTION_FAILED;
-   
     rc = MsiSetFeatureStateW(hInstall,szwFeature, iState); 
 
     msi_free(szwFeature);
@@ -818,33 +815,18 @@ UINT WINAPI MsiSetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
 
     TRACE("%s %i\n",debugstr_w(szFeature), iState);
 
+    if (!szFeature)
+        return ERROR_UNKNOWN_FEATURE;
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
         MSIHANDLE remote;
-        HRESULT hr;
-        BSTR feature;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        feature = SysAllocString(szFeature);
-        if (!feature)
-            return ERROR_OUTOFMEMORY;
-
-        hr = remote_SetFeatureState(remote, feature, iState);
-
-        SysFreeString(feature);
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_SetFeatureState(remote, szFeature, iState);
     }
 
     rc = MSI_SetFeatureStateW(package,szFeature,iState);

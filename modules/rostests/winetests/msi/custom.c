@@ -671,6 +671,23 @@ static void test_feature_states(MSIHANDLE hinst)
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, state == INSTALLSTATE_ABSENT, "got state %d\n", state);
     ok(hinst, action == INSTALLSTATE_LOCAL, "got action %d\n", action);
+
+    r = MsiSetFeatureStateA(hinst, NULL, INSTALLSTATE_ABSENT);
+    ok(hinst, r == ERROR_UNKNOWN_FEATURE, "got %u\n", r);
+
+    r = MsiSetFeatureStateA(hinst, "One", INSTALLSTATE_ADVERTISED);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiGetFeatureStateA(hinst, "One", &state, &action);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, action == INSTALLSTATE_ADVERTISED, "got action %d\n", action);
+
+    r = MsiSetFeatureStateA(hinst, "One", INSTALLSTATE_LOCAL);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiGetFeatureStateA(hinst, "One", &state, &action);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, action == INSTALLSTATE_LOCAL, "got action %d\n", action);
 }
 
 /* Main test. Anything that doesn't depend on a specific install configuration

@@ -82,7 +82,7 @@ interface IWineMsiRemote
     BOOL remote_GetMode( [in] MSIHANDLE hinst, [in] MSIRUNMODE mode );
     UINT remote_SetMode( [in] MSIHANDLE hinst, [in] MSIRUNMODE mode, [in] BOOL state );
     UINT remote_GetFeatureState( [in] MSIHANDLE hinst, [in, string] LPCWSTR feature, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
-    HRESULT remote_SetFeatureState( [in] MSIHANDLE hinst, [in] BSTR feature, [in] INSTALLSTATE state );
+    UINT remote_SetFeatureState( [in] MSIHANDLE hinst, [in, string] LPCWSTR feature, [in] INSTALLSTATE state );
     HRESULT remote_GetComponentState( [in] MSIHANDLE hinst, [in] BSTR component, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
     HRESULT remote_SetComponentState( [in] MSIHANDLE hinst, [in] BSTR component, [in] INSTALLSTATE state );
     HRESULT remote_GetLanguage( [in] MSIHANDLE hinst, [out] LANGID *language );
