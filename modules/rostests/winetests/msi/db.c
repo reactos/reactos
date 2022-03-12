@@ -3267,31 +3267,7 @@ error:
     DeleteFileA(mstfile);
 }
 
-struct join_res
-{
-    const CHAR one[MAX_PATH];
-    const CHAR two[MAX_PATH];
-};
-
-struct join_res_4col
-{
-    const CHAR one[MAX_PATH];
-    const CHAR two[MAX_PATH];
-    const CHAR three[MAX_PATH];
-    const CHAR four[MAX_PATH];
-};
-
-struct join_res_uint
-{
-    UINT one;
-    UINT two;
-    UINT three;
-    UINT four;
-    UINT five;
-    UINT six;
-};
-
-static const struct join_res join_res_first[] =
+static const char *join_res_first[][2] =
 {
     { "alveolar", "procerus" },
     { "septum", "procerus" },
@@ -3300,29 +3276,29 @@ static const struct join_res join_res_first[] =
     { "malar", "mentalis" },
 };
 
-static const struct join_res join_res_second[] =
+static const char *join_res_second[][2] =
 {
     { "nasal", "septum" },
     { "mandible", "ramus" },
 };
 
-static const struct join_res join_res_third[] =
+static const char *join_res_third[][2] =
 {
     { "msvcp.dll", "abcdefgh" },
     { "msvcr.dll", "ijklmnop" },
 };
 
-static const struct join_res join_res_fourth[] =
+static const char *join_res_fourth[][2] =
 {
     { "msvcp.dll.01234", "single.dll.31415" },
 };
 
-static const struct join_res join_res_fifth[] =
+static const char *join_res_fifth[][2] =
 {
     { "malar", "procerus" },
 };
 
-static const struct join_res join_res_sixth[] =
+static const char *join_res_sixth[][2] =
 {
     { "malar", "procerus" },
     { "malar", "procerus" },
@@ -3332,14 +3308,14 @@ static const struct join_res join_res_sixth[] =
     { "malar", "mentalis" },
 };
 
-static const struct join_res join_res_seventh[] =
+static const char *join_res_seventh[][2] =
 {
     { "malar", "nasalis" },
     { "malar", "nasalis" },
     { "malar", "nasalis" },
 };
 
-static const struct join_res_4col join_res_eighth[] =
+static const char *join_res_eighth[][4] =
 {
     { "msvcp.dll", "msvcp.dll.01234", "msvcp.dll.01234", "abcdefgh" },
     { "msvcr.dll", "msvcr.dll.56789", "msvcp.dll.01234", "abcdefgh" },
@@ -3349,24 +3325,22 @@ static const struct join_res_4col join_res_eighth[] =
     { "msvcr.dll", "msvcr.dll.56789", "single.dll.31415", "msvcp.dll" },
 };
 
-static const struct join_res_uint join_res_ninth[] =
+static const char *join_res_ninth[][6] =
 {
-    { 1, 2, 3, 4, 7, 8 },
-    { 1, 2, 5, 6, 7, 8 },
-    { 1, 2, 3, 4, 9, 10 },
-    { 1, 2, 5, 6, 9, 10 },
-    { 1, 2, 3, 4, 11, 12 },
-    { 1, 2, 5, 6, 11, 12 },
+    { "1", "2", "3", "4", "7", "8" },
+    { "1", "2", "5", "6", "7", "8" },
+    { "1", "2", "3", "4", "9", "10" },
+    { "1", "2", "5", "6", "9", "10" },
+    { "1", "2", "3", "4", "11", "12" },
+    { "1", "2", "5", "6", "11", "12" },
 };
 
 static void test_join(void)
 {
     MSIHANDLE hdb, hview, hrec;
     LPCSTR query;
-    CHAR buf[MAX_PATH];
-    UINT r, count;
-    DWORD size, i;
-    BOOL data_correct;
+    UINT r;
+    DWORD i;
 
     hdb = create_db();
     ok( hdb, "failed to create db\n");
@@ -3459,25 +3433,10 @@ static void test_join(void)
     i = 0;
     while ((r = MsiViewFetch(hview, &hrec)) == ERROR_SUCCESS)
     {
-        count = MsiRecordGetFieldCount( hrec );
-        ok( count == 2, "Expected 2 record fields, got %d\n", count );
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 1, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        ok( !lstrcmpA( buf, join_res_first[i].one ),
-            "For (row %d, column 1) expected '%s', got %s\n", i, join_res_first[i].one, buf );
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 2, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        ok( !lstrcmpA( buf, join_res_first[i].two ),
-            "For (row %d, column 2) expected '%s', got %s\n", i, join_res_first[i].two, buf );
-
+        check_record(hrec, 2, join_res_first[i][0], join_res_first[i][1]);
         i++;
         MsiCloseHandle(hrec);
     }
-
     ok( i == 5, "Expected 5 rows, got %d\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
@@ -3514,29 +3473,12 @@ static void test_join(void)
     ok( r == ERROR_SUCCESS, "failed to execute view: %d\n", r );
 
     i = 0;
-    data_correct = TRUE;
     while ((r = MsiViewFetch(hview, &hrec)) == ERROR_SUCCESS)
     {
-        count = MsiRecordGetFieldCount( hrec );
-        ok( count == 2, "Expected 2 record fields, got %d\n", count );
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 1, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_second[i].one ))
-            data_correct = FALSE;
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 2, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_second[i].two ))
-            data_correct = FALSE;
-
+        check_record(hrec, 2, join_res_second[i][0], join_res_second[i][1]);
         i++;
         MsiCloseHandle(hrec);
     }
-
-    ok( data_correct, "data returned in the wrong order\n");
 
     ok( i == 2, "Expected 2 rows, got %d\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
@@ -3555,31 +3497,13 @@ static void test_join(void)
     ok( r == ERROR_SUCCESS, "failed to execute view: %d\n", r );
 
     i = 0;
-    data_correct = TRUE;
     while ((r = MsiViewFetch(hview, &hrec)) == ERROR_SUCCESS)
     {
-        count = MsiRecordGetFieldCount( hrec );
-        ok( count == 2, "Expected 2 record fields, got %d\n", count );
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 1, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_third[i].one ) )
-            data_correct = FALSE;
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 2, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_third[i].two ) )
-            data_correct = FALSE;
-
+        check_record(hrec, 2, join_res_third[i][0], join_res_third[i][1]);
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( data_correct, "data returned in the wrong order\n");
-
     ok( i == 2, "Expected 2 rows, got %d\n", i );
-
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -3596,29 +3520,12 @@ static void test_join(void)
     ok( r == ERROR_SUCCESS, "failed to execute view: %d\n", r );
 
     i = 0;
-    data_correct = TRUE;
     while ((r = MsiViewFetch(hview, &hrec)) == ERROR_SUCCESS)
     {
-        count = MsiRecordGetFieldCount( hrec );
-        ok( count == 2, "Expected 2 record fields, got %d\n", count );
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 1, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_fourth[i].one ))
-            data_correct = FALSE;
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 2, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_fourth[i].two ))
-            data_correct = FALSE;
-
+        check_record(hrec, 2, join_res_fourth[i][0], join_res_fourth[i][1]);
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( data_correct, "data returned in the wrong order\n");
-
     ok( i == 1, "Expected 1 rows, got %d\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
@@ -3637,29 +3544,12 @@ static void test_join(void)
     ok( r == ERROR_SUCCESS, "failed to execute view: %d\n", r );
 
     i = 0;
-    data_correct = TRUE;
     while ((r = MsiViewFetch(hview, &hrec)) == ERROR_SUCCESS)
     {
-        count = MsiRecordGetFieldCount( hrec );
-        ok( count == 2, "Expected 2 record fields, got %d\n", count );
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 1, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_fifth[i].one ))
-            data_correct = FALSE;
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 2, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_fifth[i].two ))
-            data_correct = FALSE;
-
+        check_record(hrec, 2, join_res_fifth[i][0], join_res_fifth[i][1]);
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( data_correct, "data returned in the wrong order\n");
-
     ok( i == 1, "Expected 1 rows, got %d\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
@@ -3677,29 +3567,12 @@ static void test_join(void)
     ok( r == ERROR_SUCCESS, "failed to execute view: %d\n", r );
 
     i = 0;
-    data_correct = TRUE;
     while ((r = MsiViewFetch(hview, &hrec)) == ERROR_SUCCESS)
     {
-        count = MsiRecordGetFieldCount( hrec );
-        ok( count == 2, "Expected 2 record fields, got %d\n", count );
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 1, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_sixth[i].one ))
-            data_correct = FALSE;
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 2, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_sixth[i].two ))
-            data_correct = FALSE;
-
+        check_record(hrec, 2, join_res_sixth[i][0], join_res_sixth[i][1]);
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( data_correct, "data returned in the wrong order\n");
-
     ok( i == 6, "Expected 6 rows, got %d\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
@@ -3718,29 +3591,12 @@ static void test_join(void)
     ok( r == ERROR_SUCCESS, "failed to execute view: %d\n", r );
 
     i = 0;
-    data_correct = TRUE;
     while ((r = MsiViewFetch(hview, &hrec)) == ERROR_SUCCESS)
     {
-        count = MsiRecordGetFieldCount( hrec );
-        ok( count == 2, "Expected 2 record fields, got %d\n", count );
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 1, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_seventh[i].one ))
-            data_correct = FALSE;
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 2, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_seventh[i].two ))
-            data_correct = FALSE;
-
+        check_record(hrec, 2, join_res_seventh[i][0], join_res_seventh[i][1]);
         i++;
         MsiCloseHandle(hrec);
     }
-
-    ok( data_correct, "data returned in the wrong order\n");
     ok( i == 3, "Expected 3 rows, got %d\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
@@ -3756,29 +3612,12 @@ static void test_join(void)
     ok( r == ERROR_SUCCESS, "failed to execute view: %d\n", r );
 
     i = 0;
-    data_correct = TRUE;
     while ((r = MsiViewFetch(hview, &hrec)) == ERROR_SUCCESS)
     {
-        count = MsiRecordGetFieldCount( hrec );
-        ok( count == 2, "Expected 2 record fields, got %d\n", count );
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 1, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_eighth[i].one ))
-            data_correct = FALSE;
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 2, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_eighth[i].four ))
-            data_correct = FALSE;
-
+        check_record(hrec, 2, join_res_eighth[i][0], join_res_eighth[i][3]);
         i++;
         MsiCloseHandle(hrec);
     }
-
-    ok( data_correct, "data returned in the wrong order\n");
     ok( i == 6, "Expected 6 rows, got %d\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
@@ -3793,41 +3632,13 @@ static void test_join(void)
     ok( r == ERROR_SUCCESS, "failed to execute view: %d\n", r );
 
     i = 0;
-    data_correct = TRUE;
     while ((r = MsiViewFetch(hview, &hrec)) == ERROR_SUCCESS)
     {
-        count = MsiRecordGetFieldCount( hrec );
-        ok( count == 4, "Expected 4 record fields, got %d\n", count );
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 1, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_eighth[i].one ))
-            data_correct = FALSE;
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 2, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_eighth[i].two ))
-            data_correct = FALSE;
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 3, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_eighth[i].three ))
-            data_correct = FALSE;
-
-        size = MAX_PATH;
-        r = MsiRecordGetStringA( hrec, 4, buf, &size );
-        ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-        if( lstrcmpA( buf, join_res_eighth[i].four ))
-            data_correct = FALSE;
-
+        check_record(hrec, 4, join_res_eighth[i][0], join_res_eighth[i][1],
+                join_res_eighth[i][2], join_res_eighth[i][3]);
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( data_correct, "data returned in the wrong order\n");
-
     ok( i == 6, "Expected 6 rows, got %d\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
@@ -3842,41 +3653,14 @@ static void test_join(void)
     ok( r == ERROR_SUCCESS, "failed to execute view: %d\n", r );
 
     i = 0;
-    data_correct = TRUE;
     while ((r = MsiViewFetch(hview, &hrec)) == ERROR_SUCCESS)
     {
-        count = MsiRecordGetFieldCount( hrec );
-        ok( count == 6, "Expected 6 record fields, got %d\n", count );
-
-        r = MsiRecordGetInteger( hrec, 1 );
-        if( r != join_res_ninth[i].one )
-            data_correct = FALSE;
-
-        r = MsiRecordGetInteger( hrec, 2 );
-        if( r != join_res_ninth[i].two )
-            data_correct = FALSE;
-
-        r = MsiRecordGetInteger( hrec, 3 );
-        if( r != join_res_ninth[i].three )
-            data_correct = FALSE;
-
-        r = MsiRecordGetInteger( hrec, 4 );
-        if( r != join_res_ninth[i].four )
-            data_correct = FALSE;
-
-        r = MsiRecordGetInteger( hrec, 5 );
-        if( r != join_res_ninth[i].five )
-            data_correct = FALSE;
-
-        r = MsiRecordGetInteger( hrec, 6);
-        if( r != join_res_ninth[i].six )
-            data_correct = FALSE;
-
+        check_record(hrec, 6, join_res_ninth[i][0], join_res_ninth[i][1],
+                join_res_ninth[i][2], join_res_ninth[i][3],
+                join_res_ninth[i][4], join_res_ninth[i][5]);
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( data_correct, "data returned in the wrong order\n");
-
     ok( i == 6, "Expected 6 rows, got %d\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
@@ -3948,13 +3732,9 @@ static void test_join(void)
 
     r = MsiViewFetch(hview, &hrec);
     ok(r == ERROR_SUCCESS, "MsiViewFetch failed\n");
-
-    size = MAX_PATH;
-    r = MsiRecordGetStringA( hrec, 1, buf, &size );
-    ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
-    ok( !lstrcmpA( buf, "epicranius" ), "expected 'epicranius', got %s\n", buf );
-
+    check_record(hrec, 2, "epicranius", "procerus");
     MsiCloseHandle(hrec);
+
     MsiViewClose(hview);
     MsiCloseHandle(hview);
 
