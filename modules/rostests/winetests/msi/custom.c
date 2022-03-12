@@ -1858,3 +1858,35 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
 
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI env_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CURRENT_USER, "Environment", &key);
+    ok(hinst, !res, "got %u\n", res);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    check_reg_str(hinst, key, "MSITESTVAR3", "1");
+    check_reg_str(hinst, key, "MSITESTVAR4", "1");
+}
+    RegCloseKey(key);
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI env_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CURRENT_USER, "Environment", &key);
+    ok(hinst, !res, "got %u\n", res);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    check_reg_str(hinst, key, "MSITESTVAR3", NULL);
+    check_reg_str(hinst, key, "MSITESTVAR4", NULL);
+}
+    RegCloseKey(key);
+
+    return ERROR_SUCCESS;
+}

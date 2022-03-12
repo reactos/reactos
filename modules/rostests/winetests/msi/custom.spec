@@ -7,6 +7,8 @@
 @ stdcall cf_absent(long)
 @ stdcall crs_present(long)
 @ stdcall crs_absent(long)
+@ stdcall env_present(long)
+@ stdcall env_absent(long)
 @ stdcall file_present(long)
 @ stdcall file_absent(long)
 @ stdcall font_present(long)

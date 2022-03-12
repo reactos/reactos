@@ -199,11 +199,24 @@ static const char env_install_exec_seq_dat[] =
     "InstallInitialize\t\t500\n"
     "ProcessComponents\t\t600\n"
     "WriteEnvironmentStrings\t\t700\n"
+    "wes_immediate\tNOT REMOVE\t701\n"
+    "wes_deferred\tNOT REMOVE\t702\n"
     "RemoveEnvironmentStrings\t\t800\n"
+    "res_immediate\tREMOVE\t801\n"
+    "res_deferred\tREMOVE\t802\n"
     "RegisterProduct\t\t900\n"
     "PublishFeatures\t\t1000\n"
     "PublishProduct\t\t1100\n"
     "InstallFinalize\t\t1200\n";
+
+static const char env_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "wes_immediate\t1\tcustom.dll\tenv_absent\n"
+    "wes_deferred\t1025\tcustom.dll\tenv_present\n"
+    "res_immediate\t1\tcustom.dll\tenv_present\n"
+    "res_deferred\t1025\tcustom.dll\tenv_absent\n";
 
 static const char env_environment_dat[] =
     "Environment\tName\tValue\tComponent_\n"
@@ -1953,6 +1966,7 @@ static const msi_table env_tables[] =
     ADD_TABLE(feature_comp),
     ADD_TABLE(file),
     ADD_TABLE(env_install_exec_seq),
+    ADD_TABLE(env_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property),
     ADD_TABLE(env_environment)
