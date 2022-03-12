@@ -603,22 +603,88 @@ UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
     return r;
 }
 
-static DWORD WINAPI custom_client_thread(void *arg)
+static DWORD custom_start_server(MSIPACKAGE *package, DWORD arch)
 {
+    static const WCHAR pipe_name[] = {'\\','\\','.','\\','p','i','p','e','\\','m','s','i','c','a','_','%','x',0};
     static const WCHAR msiexecW[] = {'\\','m','s','i','e','x','e','c','.','e','x','e',0};
-    static const WCHAR argsW[] = {' ','-','E','m','b','e','d','d','i','n','g',' ',0};
-    msi_custom_action_info *info = arg;
+    static const WCHAR argsW[] = {'%','s',' ','-','E','m','b','e','d','d','i','n','g',' ','%','d',0};
+
+    WCHAR path[MAX_PATH], cmdline[MAX_PATH + 23];
     PROCESS_INFORMATION pi = {0};
     STARTUPINFOW si = {0};
-    WCHAR buffer[MAX_PATH], cmdline[MAX_PATH + 60];
-    RPC_STATUS status;
+    WCHAR buffer[24];
     void *cookie;
+    HANDLE pipe;
     BOOL wow64;
-    DWORD arch;
-    BOOL ret;
-    DWORD rc;
 
-    TRACE("custom action (%x) started\n", GetCurrentThreadId() );
+    if ((arch == SCS_32BIT_BINARY && package->custom_server_32_process) ||
+        (arch == SCS_64BIT_BINARY && package->custom_server_64_process))
+        return ERROR_SUCCESS;
+
+    sprintfW(buffer, pipe_name, GetCurrentProcessId());
+    pipe = CreateNamedPipeW(buffer, PIPE_ACCESS_DUPLEX, 0, 1, sizeof(DWORD64),
+        sizeof(GUID), 0, NULL);
+
+    if (sizeof(void *) == 8 && arch == SCS_32BIT_BINARY)
+        GetSystemWow64DirectoryW(path, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
+    else
+        GetSystemDirectoryW(path, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
+    strcatW(path, msiexecW);
+    sprintfW(cmdline, argsW, path, GetCurrentProcessId());
+
+    if (IsWow64Process(GetCurrentProcess(), &wow64) && wow64 && arch == SCS_64BIT_BINARY)
+    {
+        Wow64DisableWow64FsRedirection(&cookie);
+        CreateProcessW(path, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+        Wow64RevertWow64FsRedirection(cookie);
+    }
+    else
+        CreateProcessW(path, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+
+    CloseHandle(pi.hThread);
+
+    if (arch == SCS_32BIT_BINARY)
+    {
+        package->custom_server_32_process = pi.hProcess;
+        package->custom_server_32_pipe = pipe;
+    }
+    else
+    {
+        package->custom_server_64_process = pi.hProcess;
+        package->custom_server_64_pipe = pipe;
+    }
+
+    if (!ConnectNamedPipe(pipe, NULL))
+    {
+        ERR("Failed to connect to custom action server: %u\n", GetLastError());
+        return GetLastError();
+    }
+
+    return ERROR_SUCCESS;
+}
+
+void custom_stop_server(HANDLE process, HANDLE pipe)
+{
+    DWORD size;
+
+    WriteFile(pipe, &GUID_NULL, sizeof(GUID_NULL), &size, NULL);
+    WaitForSingleObject(process, INFINITE);
+    CloseHandle(process);
+    CloseHandle(pipe);
+}
+
+static DWORD WINAPI custom_client_thread(void *arg)
+{
+    msi_custom_action_info *info = arg;
+    RPC_STATUS status;
+    DWORD64 thread64;
+    HANDLE process;
+    HANDLE thread;
+    HANDLE pipe;
+    DWORD arch;
+    DWORD size;
+    BOOL ret;
+    UINT rc;
 
     CoInitializeEx(NULL, COINIT_MULTITHREADED); /* needed to marshal streams */
 
@@ -644,35 +710,44 @@ static DWORD WINAPI custom_client_thread(void *arg)
     }
 
     ret = GetBinaryTypeW(info->source, &arch);
+    if (!ret)
+        arch = (sizeof(void *) == 8 ? SCS_64BIT_BINARY : SCS_32BIT_BINARY);
 
-    if (sizeof(void *) == 8 && ret && arch == SCS_32BIT_BINARY)
-        GetSystemWow64DirectoryW(buffer, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
-    else
-        GetSystemDirectoryW(buffer, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
-    strcatW(buffer, msiexecW);
-    strcpyW(cmdline, buffer);
-    strcatW(cmdline, argsW);
-    StringFromGUID2(&info->guid, cmdline + strlenW(cmdline), 39);
-
-    if (IsWow64Process(GetCurrentProcess(), &wow64) && wow64 && arch == SCS_64BIT_BINARY)
+    custom_start_server(info->package, arch);
+    if (arch == SCS_32BIT_BINARY)
     {
-        Wow64DisableWow64FsRedirection(&cookie);
-        CreateProcessW(buffer, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-        Wow64RevertWow64FsRedirection(cookie);
+        process = info->package->custom_server_32_process;
+        pipe = info->package->custom_server_32_pipe;
     }
     else
-        CreateProcessW(buffer, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    {
+        process = info->package->custom_server_64_process;
+        pipe = info->package->custom_server_64_pipe;
+    }
 
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    GetExitCodeProcess(pi.hProcess, &rc);
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
+    if (!WriteFile(pipe, &info->guid, sizeof(info->guid), &size, NULL) ||
+        size != sizeof(info->guid))
+    {
+        ERR("Failed to write to custom action client pipe: %u\n", GetLastError());
+        return GetLastError();
+    }
+    if (!ReadFile(pipe, &thread64, sizeof(thread64), &size, NULL) || size != sizeof(thread64))
+    {
+        ERR("Failed to read from custom action client pipe: %u\n", GetLastError());
+        return GetLastError();
+    }
+
+    if (DuplicateHandle(process, (HANDLE)(DWORD_PTR)thread64, GetCurrentProcess(),
+        &thread, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE))
+    {
+        WaitForSingleObject(thread, INFINITE);
+        GetExitCodeThread(thread, &rc);
+        CloseHandle(thread);
+    }
+    else
+        rc = GetLastError();
 
     CoUninitialize();
-
-    TRACE("custom action (%x) returned %i\n", GetCurrentThreadId(), rc );
-
-    MsiCloseAllHandles();
     return rc;
 }
 

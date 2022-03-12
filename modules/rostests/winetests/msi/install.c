@@ -670,9 +670,14 @@ static const CHAR ca1_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                                "FileCost\t\t200\n"
                                                "CostFinalize\t\t300\n"
                                                "InstallValidate\t\t400\n"
+                                               "InstallInitialize\t\t500\n"
                                                "embednull\t\t600\n"
                                                "maintest\tMAIN_TEST\t700\n"
-                                               "testretval\tTEST_RETVAL\t710\n";
+                                               "testretval\tTEST_RETVAL\t710\n"
+                                               "process1\tTEST_PROCESS\t720\n"
+                                               "process2\tTEST_PROCESS\t721\n"
+                                               "process_deferred\tTEST_PROCESS\t722\n"
+                                               "InstallFinalize\t\t800\n";
 
 static const CHAR ca1_custom_action_dat[] = "Action\tType\tSource\tTarget\n"
                                              "s72\ti2\tS64\tS0\n"
@@ -681,6 +686,9 @@ static const CHAR ca1_custom_action_dat[] = "Action\tType\tSource\tTarget\n"
                                              "nested51\t51\tnested\t1\n"
                                              "nested1\t1\tcustom.dll\tnested\n"
                                              "maintest\t1\tcustom.dll\tmain_test\n"
+                                             "process1\t1\tcustom.dll\tprocess1\n"
+                                             "process2\t1\tcustom.dll\tprocess2\n"
+                                             "process_deferred\t1025\tcustom.dll\tprocess2\n"
                                              "testretval\t1\tcustom.dll\ttest_retval\n";
 
 static const CHAR ca1_test_seq_dat[] = "Action\tCondition\tSequence\n"
@@ -4133,6 +4141,10 @@ static void test_customaction1(void)
     /* any other error maps to ERROR_INSTALL_FAILURE */
     r = MsiInstallProductA(msifile, "TEST_RETVAL=1");
     ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
+
+    /* Custom actions execute in the same process, but they don't retain state */
+    r = MsiInstallProductA(msifile, "TEST_PROCESS=1");
+    ok(!r, "got %u\n", r);
 
     delete_test_files();
     DeleteFileA(msifile);

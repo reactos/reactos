@@ -346,6 +346,10 @@ static void MSI_FreePackage( MSIOBJECTHDR *arg)
         RpcServerUnregisterIf(s_IWineMsiRemote_v0_0_s_ifspec, NULL, FALSE);
     if (rpc_handle)
         RpcBindingFree(&rpc_handle);
+    if (package->custom_server_32_process)
+        custom_stop_server(package->custom_server_32_process, package->custom_server_32_pipe);
+    if (package->custom_server_64_process)
+        custom_stop_server(package->custom_server_64_process, package->custom_server_64_pipe);
 
     if (package->delete_on_close) DeleteFileW( package->localfile );
     msi_free( package->localfile );

@@ -1150,6 +1150,25 @@ UINT WINAPI da_deferred(MSIHANDLE hinst)
     return ERROR_SUCCESS;
 }
 
+static int global_state;
+
+UINT WINAPI process1(MSIHANDLE hinst)
+{
+    SetEnvironmentVariableA("MSI_PROCESS_TEST","1");
+    global_state++;
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI process2(MSIHANDLE hinst)
+{
+    char env[2] = {0};
+    DWORD r = GetEnvironmentVariableA("MSI_PROCESS_TEST", env, sizeof(env));
+    ok(hinst, r == 1, "got %d, error %u\n", r, GetLastError());
+    ok(hinst, !strcmp(env, "1"), "got %s\n", env);
+    ok(hinst, !global_state, "got global_state %d\n", global_state);
+    return ERROR_SUCCESS;
+}
+
 static BOOL pf_exists(const char *file)
 {
     char path[MAX_PATH];

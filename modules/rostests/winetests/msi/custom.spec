@@ -3,6 +3,9 @@
 @ stdcall da_immediate(long)
 @ stdcall da_deferred(long)
 @ stdcall nested(long)
+@ stdcall process1(long)
+@ stdcall process2(long)
+
 @ stdcall cf_present(long)
 @ stdcall cf_absent(long)
 @ stdcall crs_present(long)
