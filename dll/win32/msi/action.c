@@ -167,7 +167,7 @@ struct dummy_thread
 
 static INT ui_actionstart(MSIPACKAGE *package, LPCWSTR action, LPCWSTR description, LPCWSTR template)
 {
-    WCHAR query[] = {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+    static const WCHAR query[] = {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
         '`','A','c','t','i','o','n','T','e','x','t','`',' ','W','H','E','R','E',' ',
         '`','A','c','t','i','o','n','`',' ','=',' ','\'','%','s','\'',0};
     MSIRECORD *row, *textrow;
@@ -3553,7 +3553,7 @@ static WCHAR *build_full_keypath( MSIPACKAGE *package, MSICOMPONENT *comp )
 {
     if (comp->assembly)
     {
-        const WCHAR prefixW[] = {'<','\\',0};
+        static const WCHAR prefixW[] = {'<','\\',0};
         DWORD len = strlenW( prefixW ) + strlenW( comp->assembly->display_name );
         WCHAR *keypath = msi_alloc( (len + 1) * sizeof(WCHAR) );
 

@@ -1445,7 +1445,7 @@ static LPWSTR get_key_value(MSIQUERY *view, LPCWSTR key, MSIRECORD *rec)
     if (MSI_RecordGetString(rec, i))  /* check record field is a string */
     {
         /* quote string record fields */
-        const WCHAR szQuote[] = {'\'', 0};
+        static const WCHAR szQuote[] = {'\'', 0};
         sz += 2;
         val = msi_alloc(sz*sizeof(WCHAR));
         if (!val)
