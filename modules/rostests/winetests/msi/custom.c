@@ -485,28 +485,28 @@ static void test_targetpath(MSIHANDLE hinst)
     sz = 0;
     r = MsiGetTargetPathA(hinst, "TARGETDIR", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %u\n", sz);
 
     sz = 0;
     strcpy(buffer,"q");
     r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %u\n", sz);
 
     sz = 1;
     strcpy(buffer,"x");
     r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %u\n", sz);
 
     sz = 3;
     strcpy(buffer,"x");
     r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "C:"), "got \"%s\"\n", buffer);
-    todo_wine_ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %u\n", sz);
 
     sz = 4;
     strcpy(buffer,"x");
