@@ -48,6 +48,8 @@ static UINT (WINAPI *pMsiSourceListEnumSourcesA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, DWORD, LPSTR, LPDWORD);
 static UINT (WINAPI *pMsiSourceListGetInfoA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, LPCSTR, LPSTR, LPDWORD);
+static UINT (WINAPI *pMsiSourceListGetInfoW)
+    (LPCWSTR, LPCWSTR, MSIINSTALLCONTEXT, DWORD, LPCWSTR, LPWSTR, LPDWORD);
 static UINT (WINAPI *pMsiSourceListSetInfoA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT,  DWORD,LPCSTR,  LPCSTR);
 static UINT (WINAPI *pMsiSourceListAddSourceA)
@@ -69,6 +71,7 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiSourceListEnumMediaDisksA)
     GET_PROC(hmsi, MsiSourceListEnumSourcesA)
     GET_PROC(hmsi, MsiSourceListGetInfoA)
+    GET_PROC(hmsi, MsiSourceListGetInfoW)
     GET_PROC(hmsi, MsiSourceListSetInfoA)
     GET_PROC(hmsi, MsiSourceListAddSourceA)
 
@@ -179,14 +182,21 @@ static void check_reg_str(HKEY prodkey, LPCSTR name, LPCSTR expected, BOOL bcase
 #define CHECK_REG_STR(prodkey, name, expected) \
     check_reg_str(prodkey, name, expected, TRUE, __LINE__);
 
+static inline WCHAR *strdupAW( const char *str )
+{
+    int len;
+    WCHAR *ret;
+    len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
+    if (!(ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return NULL;
+    MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
+    return ret;
+}
+
 static void test_MsiSourceListGetInfo(void)
 {
-    CHAR prodcode[MAX_PATH];
-    CHAR prod_squashed[MAX_PATH];
-    CHAR keypath[MAX_PATH*2];
-    CHAR value[MAX_PATH];
-    LPSTR usersid;
-    LPCSTR data;
+    char prodcode[MAX_PATH], prod_squashed[MAX_PATH], keypath[MAX_PATH * 2], value[MAX_PATH], *usersid;
+    WCHAR valueW[MAX_PATH], *usersidW, *prodcodeW;
+    const char *data;
     LONG res;
     UINT r;
     HKEY userkey, hkey, media;
@@ -415,6 +425,30 @@ static void test_MsiSourceListGetInfo(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "prompt"), "Expected \"prompt\", got \"%s\"\n", value);
     ok(size == 6, "Expected 6, got %d\n", size);
+
+    /* LastUsedSource value doesn't exist */
+    RegDeleteValueA(hkey, "LastUsedSource");
+    size = MAX_PATH;
+    memset(value, 0x55, sizeof(value));
+    r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCEA,
+                               value, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!lstrcmpA(value, ""), "Expected \"\", got \"%s\"\n", value);
+    ok(size == 0, "Expected 0, got %d\n", size);
+
+    size = MAX_PATH;
+    usersidW = strdupAW(usersid);
+    prodcodeW = strdupAW(prodcode);
+    memset(valueW, 0x55, sizeof(valueW));
+    r = pMsiSourceListGetInfoW(prodcodeW, usersidW, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCEW,
+                               valueW, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!valueW[0], "Expected \"\"");
+    ok(size == 0, "Expected 0, got %d\n", size);
+    HeapFree(GetProcessHeap(), 0, usersidW);
+    HeapFree(GetProcessHeap(), 0, prodcodeW);
 
     data = "";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
