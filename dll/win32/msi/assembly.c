@@ -344,7 +344,7 @@ static const WCHAR *clr_version[] =
 
 static const WCHAR *get_clr_version_str( enum clr_version version )
 {
-    if (version >= sizeof(clr_version)/sizeof(clr_version[0])) return clr_version_unknown;
+    if (version >= ARRAY_SIZE( clr_version )) return clr_version_unknown;
     return clr_version[version];
 }
 

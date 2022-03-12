@@ -1028,7 +1028,7 @@ UINT WINAPI MsiGetProductCodeW(LPCWSTR szComponent, LPWSTR szBuffer)
     UINT rc, index;
     HKEY compkey, prodkey;
     WCHAR squashed_comp[SQUASHED_GUID_SIZE], squashed_prod[SQUASHED_GUID_SIZE];
-    DWORD sz = sizeof(squashed_prod)/sizeof(squashed_prod[0]);
+    DWORD sz = ARRAY_SIZE(squashed_prod);
 
     TRACE("%s %p\n", debugstr_w(szComponent), szBuffer);
 
@@ -3482,7 +3482,7 @@ static UINT MSI_ProvideQualifiedComponentEx(LPCWSTR szComponent,
             return ERROR_FILE_NOT_FOUND;
         }
         msi_free( components );
-        StringFromGUID2( &guid, comp, sizeof(comp)/sizeof(comp[0]) );
+        StringFromGUID2( &guid, comp, ARRAY_SIZE( comp ));
     }
 
     state = MSI_GetComponentPath( szProduct, comp, szAllSid, MSIINSTALLCONTEXT_ALL, lpPathBuf, pcchPathBuf );

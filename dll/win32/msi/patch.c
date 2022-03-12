@@ -1037,7 +1037,7 @@ UINT msi_apply_registered_patch( MSIPACKAGE *package, LPCWSTR patch_code )
 
     TRACE("%p, %s\n", package, debugstr_w(patch_code));
 
-    len = sizeof(patch_file) / sizeof(WCHAR);
+    len = ARRAY_SIZE( patch_file );
     r = MsiGetPatchInfoExW( patch_code, package->ProductCode, NULL, package->Context,
                             INSTALLPROPERTY_LOCALPACKAGEW, patch_file, &len );
     if (r != ERROR_SUCCESS)

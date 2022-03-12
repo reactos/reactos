@@ -2159,7 +2159,7 @@ static WCHAR *create_temp_dir( MSIDATABASE *db )
     if (!db->tempfolder)
     {
         WCHAR tmp[MAX_PATH];
-        UINT len = sizeof(tmp)/sizeof(tmp[0]);
+        UINT len = ARRAY_SIZE( tmp );
 
         if (msi_get_property( db, szTempFolder, tmp, &len ) ||
             GetFileAttributesW( tmp ) != FILE_ATTRIBUTE_DIRECTORY)
@@ -5560,9 +5560,9 @@ UINT ACTION_ForceReboot(MSIPACKAGE *package)
 
     squash_guid( package->ProductCode, squashed_pc );
 
-    GetSystemDirectoryW(sysdir, sizeof(sysdir)/sizeof(sysdir[0]));
+    GetSystemDirectoryW(sysdir, ARRAY_SIZE(sysdir));
     RegCreateKeyW(HKEY_LOCAL_MACHINE,RunOnce,&hkey);
-    snprintfW( buffer, sizeof(buffer)/sizeof(buffer[0]), msiexec_fmt, sysdir, squashed_pc );
+    snprintfW(buffer, ARRAY_SIZE(buffer), msiexec_fmt, sysdir, squashed_pc);
 
     msi_reg_set_val_str( hkey, squashed_pc, buffer );
     RegCloseKey(hkey);
@@ -6228,7 +6228,7 @@ static LPCWSTR *msi_service_args_to_vector(LPWSTR args, DWORD *numargs)
     static const WCHAR separator[] = {'[','~',']',0};
 
     *numargs = 0;
-    sep_len = sizeof(separator) / sizeof(WCHAR) - 1;
+    sep_len = ARRAY_SIZE(separator) - 1;
 
     if (!args)
         return NULL;
@@ -7704,7 +7704,7 @@ static UINT ITERATE_RemoveExistingProducts( MSIRECORD *rec, LPVOID param )
     MSIPACKAGE *package = param;
     const WCHAR *property = MSI_RecordGetString( rec, 7 );
     int attrs = MSI_RecordGetInteger( rec, 5 );
-    UINT len = sizeof(fmtW)/sizeof(fmtW[0]);
+    UINT len = ARRAY_SIZE( fmtW );
     WCHAR *product, *features, *cmd;
     STARTUPINFOW si;
     PROCESS_INFORMATION info;
@@ -7719,7 +7719,7 @@ static UINT ITERATE_RemoveExistingProducts( MSIRECORD *rec, LPVOID param )
     if (features)
         len += strlenW( features );
     else
-        len += sizeof(szAll) / sizeof(szAll[0]);
+        len += ARRAY_SIZE( szAll );
 
     if (!(cmd = msi_alloc( len * sizeof(WCHAR) )))
     {

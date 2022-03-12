@@ -3384,7 +3384,7 @@ static UINT msi_dialog_hyperlink_handler( msi_dialog *dialog, msi_control *contr
 {
     static const WCHAR hrefW[] = {'h','r','e','f'};
     static const WCHAR openW[] = {'o','p','e','n',0};
-    int len, len_href = sizeof(hrefW) / sizeof(hrefW[0]);
+    int len, len_href = ARRAY_SIZE( hrefW );
     const WCHAR *p, *q;
     WCHAR quote = 0;
     LITEM item;

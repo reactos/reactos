@@ -559,7 +559,7 @@ static LPWSTR get_fusion_filename(MSIPACKAGE *package)
 
     if (!RegCreateKeyExW(netsetup, v4client, 0, NULL, 0, KEY_QUERY_VALUE, NULL, &hkey, NULL))
     {
-        size = sizeof(path)/sizeof(path[0]);
+        size = ARRAY_SIZE(path);
         if (!RegQueryValueExW(hkey, installpath, NULL, &type, (BYTE *)path, &size))
         {
             len = strlenW(path) + strlenW(fusion) + 2;

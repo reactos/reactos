@@ -130,7 +130,7 @@ void release_typelib(void)
 {
     unsigned i;
 
-    for (i = 0; i < sizeof(typeinfos)/sizeof(*typeinfos); i++)
+    for (i = 0; i < ARRAY_SIZE(typeinfos); i++)
         if (typeinfos[i])
             ITypeInfo_Release(typeinfos[i]);
 
