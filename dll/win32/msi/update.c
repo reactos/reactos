@@ -113,7 +113,7 @@ static UINT UPDATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 
     for ( i=0; i<row_count; i++ )
     {
-        r = wv->ops->set_row( wv, i, values, (1 << col_count) - 1 );
+        r = msi_select_update( wv, values, i );
         if (r != ERROR_SUCCESS)
             break;
     }

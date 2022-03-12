@@ -230,7 +230,7 @@ static UINT SELECT_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *na
                                             type, temporary, table_name );
 }
 
-static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
+UINT msi_select_update(MSIVIEW *view, MSIRECORD *rec, UINT row)
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
     UINT r, i, col, type, val;

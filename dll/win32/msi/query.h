@@ -151,4 +151,6 @@ MSIRECORD *msi_query_merge_record( UINT fields, const column_info *vl, MSIRECORD
 UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
                        MSICONDITION persistent ) DECLSPEC_HIDDEN;
 
+UINT msi_select_update( MSIVIEW *view, MSIRECORD *rec, UINT row ) DECLSPEC_HIDDEN;
+
 #endif /* __WINE_MSI_QUERY_H */
