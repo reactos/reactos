@@ -83,7 +83,7 @@ UINT WINAPI MsiDoActionW( MSIHANDLE hInstall, LPCWSTR szAction )
         return remote_DoAction(remote, szAction);
     }
  
-    ret = ACTION_PerformAction( package, szAction, SCRIPT_NONE );
+    ret = ACTION_PerformAction(package, szAction);
     msiobj_release( &package->hdr );
 
     return ret;

@@ -1209,7 +1209,7 @@ static UINT defer_custom_action( MSIPACKAGE *package, const WCHAR *action, UINT 
     return ERROR_SUCCESS;
 }
 
-UINT ACTION_CustomAction( MSIPACKAGE *package, LPCWSTR action, UINT script )
+UINT ACTION_CustomAction(MSIPACKAGE *package, const WCHAR *action)
 {
     static const WCHAR query[] = {
         'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
@@ -1249,7 +1249,7 @@ UINT ACTION_CustomAction( MSIPACKAGE *package, LPCWSTR action, UINT script )
         if (type & msidbCustomActionTypeNoImpersonate)
             WARN("msidbCustomActionTypeNoImpersonate not handled\n");
 
-        if (!action_type_matches_script( type, script ))
+        if (!action_type_matches_script(type, package->script))
         {
             rc = defer_custom_action( package, action, type );
             goto end;

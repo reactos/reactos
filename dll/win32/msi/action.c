@@ -517,7 +517,7 @@ static UINT ITERATE_Actions(MSIRECORD *row, LPVOID param)
         return ERROR_SUCCESS;
     }
 
-    rc = ACTION_PerformAction(package, action, SCRIPT_NONE);
+    rc = ACTION_PerformAction(package, action);
 
     msi_dialog_check_messages( NULL );
 
@@ -611,7 +611,7 @@ static UINT ACTION_ProcessUISequence(MSIPACKAGE *package)
 /********************************************************
  * ACTION helper functions and functions that perform the actions
  *******************************************************/
-static UINT ACTION_HandleCustomAction(MSIPACKAGE *package, LPCWSTR action, UINT script)
+static UINT ACTION_HandleCustomAction(MSIPACKAGE *package, LPCWSTR action)
 {
     UINT arc;
     INT uirc;
@@ -620,7 +620,7 @@ static UINT ACTION_HandleCustomAction(MSIPACKAGE *package, LPCWSTR action, UINT 
     if (uirc == IDCANCEL)
         return ERROR_INSTALL_USEREXIT;
     ui_actioninfo(package, action, TRUE, 0);
-    arc = ACTION_CustomAction( package, action, script );
+    arc = ACTION_CustomAction(package, action);
     uirc = !arc;
 
     if (arc == ERROR_FUNCTION_NOT_CALLED && needs_ui_sequence(package))
@@ -1553,11 +1553,13 @@ static UINT execute_script( MSIPACKAGE *package, UINT script )
 
     TRACE("executing script %u\n", script);
 
+    package->script = script;
+
     if (script == SCRIPT_ROLLBACK)
     {
         for (i = package->script_actions_count[script]; i > 0; i--)
         {
-            rc = ACTION_PerformAction(package, package->script_actions[script][i-1], script);
+            rc = ACTION_PerformAction(package, package->script_actions[script][i-1]);
             if (rc != ERROR_SUCCESS)
             {
                 ERR("Execution of script %i halted; action %s returned %u\n",
@@ -1570,7 +1572,7 @@ static UINT execute_script( MSIPACKAGE *package, UINT script )
     {
         for (i = 0; i < package->script_actions_count[script]; i++)
         {
-            rc = ACTION_PerformAction(package, package->script_actions[script][i], script);
+            rc = ACTION_PerformAction(package, package->script_actions[script][i]);
             if (rc != ERROR_SUCCESS)
             {
                 ERR("Execution of script %i halted; action %s returned %u\n",
@@ -1579,6 +1581,9 @@ static UINT execute_script( MSIPACKAGE *package, UINT script )
             }
         }
     }
+
+    package->script = SCRIPT_NONE;
+
     msi_free_action_script(package, script);
     return rc;
 }
@@ -5686,7 +5691,7 @@ static UINT ACTION_ExecuteAction(MSIPACKAGE *package)
         msiobj_release(&uirow->hdr);
     }
     else
-        rc = ACTION_PerformAction(package, action, SCRIPT_NONE);
+        rc = ACTION_PerformAction(package, action);
 
     /* Send all set properties. */
     if (!MSI_OpenQuery(package->db, &view, prop_query))
@@ -7937,7 +7942,7 @@ static UINT ACTION_HandleStandardAction(MSIPACKAGE *package, LPCWSTR action)
     return rc;
 }
 
-UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, UINT script)
+UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action)
 {
     UINT rc;
 
@@ -7947,7 +7952,7 @@ UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, UINT script)
     rc = ACTION_HandleStandardAction(package, action);
 
     if (rc == ERROR_FUNCTION_NOT_CALLED)
-        rc = ACTION_HandleCustomAction(package, action, script);
+        rc = ACTION_HandleCustomAction(package, action);
 
     if (rc == ERROR_FUNCTION_NOT_CALLED)
         WARN("unhandled msi action %s\n", debugstr_w(action));
@@ -8000,7 +8005,7 @@ static UINT ACTION_PerformActionSequence(MSIPACKAGE *package, UINT seq)
             return ERROR_FUNCTION_FAILED;
         }
 
-        rc = ACTION_PerformAction(package, action, SCRIPT_NONE);
+        rc = ACTION_PerformAction(package, action);
 
         msiobj_release(&row->hdr);
     }
@@ -8128,7 +8133,7 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
         msi_set_property( package->db, szRollbackDisabled, szOne, -1 );
     }
 
-    rc = ACTION_PerformAction(package, action, SCRIPT_NONE);
+    rc = ACTION_PerformAction(package, action);
 
     /* process the ending type action */
     if (rc == ERROR_SUCCESS)
