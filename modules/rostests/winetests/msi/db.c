@@ -8670,6 +8670,203 @@ static void test_primary_keys(void)
     DeleteFileA(msifile);
 }
 
+static void test_viewmodify_merge(void)
+{
+    MSIHANDLE view, rec, db = create_db();
+    UINT r;
+
+    r = run_query(db, 0, "CREATE TABLE `T` (`A` SHORT, `B` SHORT PRIMARY KEY `A`)");
+    ok(!r, "got %u\n", r);
+    r = run_query(db, 0, "INSERT INTO `T` (`A`, `B`) VALUES (1, 2)");
+    ok(!r, "got %u\n", r);
+
+    r = MsiDatabaseOpenViewA(db, "SELECT * FROM `T`", &view);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(view, 0);
+    ok(!r, "got %u\n", r);
+
+    rec = MsiCreateRecord(2);
+    MsiRecordSetInteger(rec, 1, 1);
+    MsiRecordSetInteger(rec, 2, 2);
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+    ok(!r, "got %u\n", r);
+
+    MsiCloseHandle(rec);
+    MsiCloseHandle(view);
+
+    r = MsiDatabaseOpenViewA(db, "SELECT * FROM `T`", &view);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(view, 0);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewFetch(view, &rec);
+    ok(!r, "got %u\n", r);
+    check_record(rec, 2, "1", "2");
+    MsiCloseHandle(rec);
+
+    r = MsiViewFetch(view, &rec);
+    ok(r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
+    MsiCloseHandle(view);
+
+    r = MsiDatabaseOpenViewA(db, "SELECT * FROM `T`", &view);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(view, 0);
+    ok(!r, "got %u\n", r);
+
+    rec = MsiCreateRecord(2);
+    MsiRecordSetInteger(rec, 1, 1);
+    MsiRecordSetInteger(rec, 2, 3);
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+todo_wine
+    ok(r == ERROR_FUNCTION_FAILED, "got %u\n", r);
+
+    MsiRecordSetInteger(rec, 1, 2);
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+    ok(!r, "got %u\n", r);
+
+    MsiCloseHandle(rec);
+    MsiCloseHandle(view);
+
+    r = MsiDatabaseOpenViewA(db, "SELECT * FROM `T`", &view);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(view, 0);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewFetch(view, &rec);
+    ok(!r, "got %u\n", r);
+    check_record(rec, 2, "1", "2");
+    MsiCloseHandle(rec);
+
+    r = MsiViewFetch(view, &rec);
+    ok(!r, "got %u\n", r);
+    check_record(rec, 2, "2", "3");
+    MsiCloseHandle(rec);
+
+    r = MsiViewFetch(view, &rec);
+    ok(r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
+    MsiCloseHandle(view);
+
+    r = run_query(db, 0, "CREATE TABLE `U` (`A` SHORT, `B` SHORT, `C` SHORT, `D` SHORT PRIMARY KEY `A`, `B`)");
+    ok(!r, "got %u\n", r);
+    r = run_query(db, 0, "INSERT INTO `U` (`A`, `B`, `C`, `D`) VALUES (1, 2, 3, 4)");
+    ok(!r, "got %u\n", r);
+
+    r = MsiDatabaseOpenViewA(db, "SELECT * FROM `U`", &view);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(view, 0);
+    ok(!r, "got %u\n", r);
+
+    rec = MsiCreateRecord(4);
+    MsiRecordSetInteger(rec, 1, 1);
+    MsiRecordSetInteger(rec, 2, 2);
+    MsiRecordSetInteger(rec, 3, 3);
+    MsiRecordSetInteger(rec, 4, 4);
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+    ok(!r, "got %u\n", r);
+
+    MsiRecordSetInteger(rec, 3, 4);
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+todo_wine
+    ok(r == ERROR_FUNCTION_FAILED, "got %u\n", r);
+
+    MsiRecordSetInteger(rec, 2, 4);
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+    ok(!r, "got %u\n", r);
+
+    MsiCloseHandle(rec);
+    MsiCloseHandle(view);
+
+    r = MsiDatabaseOpenViewA(db, "SELECT * FROM `U`", &view);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(view, 0);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewFetch(view, &rec);
+    ok(!r, "got %u\n", r);
+    check_record(rec, 4, "1", "2", "3", "4");
+    MsiCloseHandle(rec);
+
+    r = MsiViewFetch(view, &rec);
+    ok(!r, "got %u\n", r);
+    check_record(rec, 4, "1", "4", "4", "4");
+    MsiCloseHandle(rec);
+
+    r = MsiViewFetch(view, &rec);
+    ok(r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
+    MsiCloseHandle(view);
+
+    r = MsiDatabaseOpenViewA(db, "SELECT `A`,`C` FROM `U`", &view);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(view, 0);
+    ok(!r, "got %u\n", r);
+
+    rec = MsiCreateRecord(2);
+    MsiRecordSetInteger(rec, 1, 1);
+    MsiRecordSetInteger(rec, 2, 2);
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+    ok(!r, "got %u\n", r);
+
+    MsiRecordSetInteger(rec, 2, 3);
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+todo_wine
+    ok(r == ERROR_FUNCTION_FAILED, "got %u\n", r);
+
+    MsiCloseHandle(rec);
+    MsiCloseHandle(view);
+
+    r = MsiDatabaseOpenViewA(db, "SELECT * FROM `U` ORDER BY `B`", &view);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(view, 0);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewFetch(view, &rec);
+    ok(!r, "got %u\n", r);
+    check_record(rec, 4, "1", "", "2", "");
+    MsiCloseHandle(rec);
+
+    r = MsiViewFetch(view, &rec);
+    ok(!r, "got %u\n", r);
+    check_record(rec, 4, "1", "2", "3", "4");
+    MsiCloseHandle(rec);
+
+    r = MsiViewFetch(view, &rec);
+    ok(!r, "got %u\n", r);
+    check_record(rec, 4, "1", "4", "4", "4");
+    MsiCloseHandle(rec);
+
+    r = MsiViewFetch(view, &rec);
+    ok(r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
+    MsiCloseHandle(view);
+
+    r = MsiDatabaseOpenViewA(db, "SELECT `A`,`B`,`C` FROM `U`", &view);
+    ok(!r, "got %u\n", r);
+    r = MsiViewExecute(view, 0);
+    ok(!r, "got %u\n", r);
+
+    rec = MsiCreateRecord(3);
+    MsiRecordSetInteger(rec, 1, 1);
+    MsiRecordSetInteger(rec, 2, 2);
+    MsiRecordSetInteger(rec, 3, 3);
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+todo_wine
+    ok(r == ERROR_FUNCTION_FAILED, "got %u\n", r);
+
+    MsiRecordSetInteger(rec, 1, 1);
+    MsiRecordSetInteger(rec, 2, MSI_NULL_INTEGER);
+    MsiRecordSetInteger(rec, 3, 2);
+    r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
+    ok(!r, "got %u\n", r);
+
+    MsiCloseHandle(rec);
+    MsiCloseHandle(view);
+
+    MsiCloseHandle(db);
+    DeleteFileA(msifile);
+}
+
 START_TEST(db)
 {
     test_msidatabase();
@@ -8726,4 +8923,5 @@ START_TEST(db)
     test_embedded_nulls();
     test_select_column_names();
     test_primary_keys();
+    test_viewmodify_merge();
 }
