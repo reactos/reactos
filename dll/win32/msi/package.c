@@ -2585,10 +2585,9 @@ UINT __cdecl remote_FormatRecord(MSIHANDLE hinst, struct wire_record *remote_rec
     return r;
 }
 
-HRESULT __cdecl remote_EvaluateCondition(MSIHANDLE hinst, BSTR condition)
+MSICONDITION __cdecl remote_EvaluateCondition(MSIHANDLE hinst, LPCWSTR condition)
 {
-    UINT r = MsiEvaluateConditionW(hinst, condition);
-    return HRESULT_FROM_WIN32(r);
+    return MsiEvaluateConditionW(hinst, condition);
 }
 
 HRESULT __cdecl remote_GetFeatureCost(MSIHANDLE hinst, BSTR feature,

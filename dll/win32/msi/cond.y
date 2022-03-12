@@ -851,29 +851,14 @@ MSICONDITION WINAPI MsiEvaluateConditionW( MSIHANDLE hInstall, LPCWSTR szConditi
     if( !package )
     {
         MSIHANDLE remote;
-        HRESULT hr;
-        BSTR condition;
 
         if (!(remote = msi_get_remote(hInstall)))
             return MSICONDITION_ERROR;
 
-        condition = SysAllocString( szCondition );
-        if (!condition)
-            return ERROR_OUTOFMEMORY;
+        if (!szCondition)
+            return MSICONDITION_NONE;
 
-        hr = remote_EvaluateCondition(remote, condition);
-
-        SysFreeString( condition );
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_EvaluateCondition(remote, szCondition);
     }
 
     ret = MSI_EvaluateConditionW( package, szCondition );

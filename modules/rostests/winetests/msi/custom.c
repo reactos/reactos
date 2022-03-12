@@ -644,6 +644,7 @@ static void test_targetpath(MSIHANDLE hinst)
 
 static void test_misc(MSIHANDLE hinst)
 {
+    MSICONDITION cond;
     LANGID lang;
     UINT r;
 
@@ -658,6 +659,12 @@ static void test_misc(MSIHANDLE hinst)
     ok(hinst, !r, "got %u\n", r);
     check_prop(hinst, "INSTALLLEVEL", "123");
     MsiSetInstallLevel(hinst, 3);
+
+    cond = MsiEvaluateConditionA(hinst, NULL);
+    ok(hinst, cond == MSICONDITION_NONE, "got %u\n", cond);
+    MsiSetPropertyA(hinst, "condprop", "1");
+    cond = MsiEvaluateConditionA(hinst, "condprop = 1");
+    ok(hinst, cond == MSICONDITION_TRUE, "got %u\n", cond);
 }
 
 static void test_feature_states(MSIHANDLE hinst)

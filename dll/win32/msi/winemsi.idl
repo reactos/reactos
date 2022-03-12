@@ -88,7 +88,7 @@ interface IWineMsiRemote
     LANGID remote_GetLanguage( [in] MSIHANDLE hinst );
     UINT remote_SetInstallLevel( [in] MSIHANDLE hinst, [in] int level );
     UINT remote_FormatRecord( [in] MSIHANDLE hinst, [in] struct wire_record *record, [out, string] LPWSTR *value);
-    HRESULT remote_EvaluateCondition( [in] MSIHANDLE hinst, [in] BSTR condition );
+    MSICONDITION remote_EvaluateCondition( [in] MSIHANDLE hinst, [in, string] LPCWSTR condition );
     HRESULT remote_GetFeatureCost( [in] MSIHANDLE hinst, [in] BSTR feature, [in] INT cost_tree, [in] INSTALLSTATE state, [out] INT *cost );
     HRESULT remote_EnumComponentCosts( [in] MSIHANDLE hinst, [in] BSTR component, [in] DWORD index, [in] INSTALLSTATE state,
                                        [out, size_is(*buflen)] BSTR drive, [in, out] DWORD *buflen, [out] INT *cost, [out] INT *temp );
