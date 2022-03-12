@@ -456,14 +456,11 @@ static void test_db(MSIHANDLE hinst)
     ok(hinst, !r, "got %u\n", r);
 
     r = MsiSummaryInfoGetPropertyCount(suminfo, NULL);
-todo_wine
     ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
 
     count = 0xdeadbeef;
     r = MsiSummaryInfoGetPropertyCount(suminfo, &count);
-todo_wine
     ok(hinst, !r, "got %u\n", r);
-todo_wine
     ok(hinst, count == 5, "got %u\n", count);
 
     r = MsiSummaryInfoGetPropertyA(suminfo, 0, NULL, NULL, NULL, NULL, NULL);
