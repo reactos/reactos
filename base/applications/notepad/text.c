@@ -48,7 +48,7 @@ static BOOL Append(LPWSTR *ppszText, DWORD *pdwTextLen, LPCWSTR pszAppendText, D
 }
 
 BOOL
-ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *pencFile, int *piEoln)
+ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, ENCODING *pencFile, int *piEoln)
 {
     DWORD dwSize;
     LPBYTE pBytes = NULL;
@@ -58,7 +58,7 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *pencFile, int *
     DWORD dwCharCount;
     BOOL bSuccess = FALSE;
     BYTE b = 0;
-    int encFile = ENCODING_ANSI;
+    ENCODING encFile = ENCODING_ANSI;
     int iCodePage = 0;
     WCHAR szCrlf[2] = {'\r', '\n'};
     DWORD adwEolnCount[3] = {0, 0, 0};
@@ -147,6 +147,7 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *pencFile, int *
         pszAllocText[dwCharCount] = '\0';
         pszText = pszAllocText;
         break;
+    DEFAULT_UNREACHABLE;
     }
 
     dwPos = 0;
@@ -221,7 +222,7 @@ done:
     return bSuccess;
 }
 
-static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int encFile)
+static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile)
 {
     LPBYTE pBytes = NULL;
     LPBYTE pAllocBuffer = NULL;
@@ -315,7 +316,7 @@ done:
     return bSuccess;
 }
 
-BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int encFile, int iEoln)
+BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, int iEoln)
 {
     WCHAR wcBom;
     LPCWSTR pszLF = L"\n";
