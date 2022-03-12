@@ -8955,9 +8955,8 @@ static void test_embedded_nulls(void)
 
 static void test_select_column_names(void)
 {
-    MSIHANDLE hdb = 0, rec, rec2, view;
-    char buffer[32];
-    UINT r, size;
+    MSIHANDLE hdb = 0, rec, view;
+    UINT r;
 
     DeleteFileA(msifile);
 
@@ -9008,43 +9007,22 @@ static void test_select_column_names(void)
 
     r = MsiViewFetch( view, &rec );
     ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    r = MsiRecordGetFieldCount( rec );
-    ok( r == 1, "got %u\n",  r );
-    r = MsiViewGetColumnInfo( view, MSICOLINFO_NAMES, &rec2 );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    r = MsiRecordGetFieldCount( rec2 );
-    ok( r == 1, "got %u\n",  r );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec2, 1, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !buffer[0], "got \"%s\"\n", buffer );
-    MsiCloseHandle( rec2 );
-    r = MsiViewGetColumnInfo( view, MSICOLINFO_TYPES, &rec2 );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    r = MsiRecordGetFieldCount( rec2 );
-    ok( r == 1, "got %u\n",  r );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec2, 1, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !lstrcmpA( buffer, "f0" ), "got \"%s\"\n", buffer );
-    MsiCloseHandle( rec2 );
+    check_record(rec, 1, "");
+    MsiCloseHandle(rec);
 
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 1, buffer, &size );
+    r = MsiViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
     ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !buffer[0], "got \"%s\"\n", buffer );
-    MsiCloseHandle( rec );
+    check_record(rec, 1, "");
+    MsiCloseHandle(rec);
+
+    r = MsiViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
+    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
+    check_record(rec, 1, "f0");
+    MsiCloseHandle(rec);
 
     r = MsiViewFetch( view, &rec );
     ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 1, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !buffer[0], "got \"%s\"\n", buffer );
+    check_record(rec, 1, "");
     MsiCloseHandle( rec );
 
     r = MsiViewFetch( view, &rec );
@@ -9062,22 +9040,12 @@ static void test_select_column_names(void)
 
     r = MsiViewFetch( view, &rec );
     ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    r = MsiRecordGetFieldCount( rec );
-    ok( r == 2, "got %u\n",  r );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 1, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !lstrcmpA( buffer, "1" ), "got \"%s\"\n", buffer );
+    check_record(rec, 2, "1", "");
     MsiCloseHandle( rec );
 
     r = MsiViewFetch( view, &rec );
     ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 2, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !buffer[0], "got \"%s\"\n", buffer );
+    check_record(rec, 2, "3", "");
     MsiCloseHandle( rec );
 
     r = MsiViewFetch( view, &rec );
@@ -9095,32 +9063,12 @@ static void test_select_column_names(void)
 
     r = MsiViewFetch( view, &rec );
     ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    r = MsiRecordGetFieldCount( rec );
-    ok( r == 2, "got %u\n",  r );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 1, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !buffer[0], "got \"%s\"\n", buffer );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 2, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !lstrcmpA( buffer, "1" ), "got \"%s\"\n", buffer );
+    check_record(rec, 2, "", "1");
     MsiCloseHandle( rec );
 
     r = MsiViewFetch( view, &rec );
     ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 1, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !buffer[0], "got \"%s\"\n", buffer );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 2, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !lstrcmpA( buffer, "3" ), "got \"%s\"\n", buffer );
+    check_record(rec, 2, "", "3");
     MsiCloseHandle( rec );
 
     r = MsiViewFetch( view, &rec );
@@ -9138,42 +9086,12 @@ static void test_select_column_names(void)
 
     r = MsiViewFetch( view, &rec );
     ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    r = MsiRecordGetFieldCount( rec );
-    ok( r == 3, "got %u\n",  r );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 1, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !lstrcmpA( buffer, "1" ), "got \"%s\"\n", buffer );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 2, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !buffer[0], "got \"%s\"\n", buffer );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 3, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !lstrcmpA( buffer, "2" ), "got \"%s\"\n", buffer );
+    check_record(rec, 3, "1", "", "2");
     MsiCloseHandle( rec );
 
     r = MsiViewFetch( view, &rec );
     ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 1, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !lstrcmpA( buffer, "3" ), "got \"%s\"\n", buffer );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 2, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !buffer[0], "got \"%s\"\n", buffer );
-    size = sizeof(buffer);
-    memset( buffer, 0x55, sizeof(buffer) );
-    r = MsiRecordGetStringA( rec, 3, buffer, &size );
-    ok( r == ERROR_SUCCESS, "unexpected result: %u\n", r );
-    ok( !lstrcmpA( buffer, "4" ), "got \"%s\"\n", buffer );
+    check_record(rec, 3, "3", "", "4");
     MsiCloseHandle( rec );
 
     r = MsiViewFetch( view, &rec );
