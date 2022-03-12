@@ -1002,13 +1002,6 @@ UINT msi_load_all_components( MSIPACKAGE *package )
     if (r != ERROR_SUCCESS)
         return r;
 
-    if (!msi_init_assembly_caches( package ))
-    {
-        ERR("can't initialize assembly caches\n");
-        msiobj_release( &view->hdr );
-        return ERROR_FUNCTION_FAILED;
-    }
-
     r = MSI_IterateRecords(view, NULL, load_component, package);
     msiobj_release(&view->hdr);
     return r;
@@ -8111,6 +8104,12 @@ UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action)
     UINT rc;
 
     TRACE("Performing action (%s)\n", debugstr_w(action));
+
+    if (!msi_init_assembly_caches( package ))
+    {
+        ERR("can't initialize assembly caches\n");
+        return ERROR_FUNCTION_FAILED;
+    }
 
     package->action_progress_increment = 0;
     rc = ACTION_HandleStandardAction(package, action);

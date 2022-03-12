@@ -41,6 +41,7 @@ static HRESULT (WINAPI *pCreateAssemblyNameObject)( IAssemblyName **, LPCWSTR, D
 static HRESULT (WINAPI *pCreateAssemblyEnum)( IAssemblyEnum **, IUnknown *, IAssemblyName *, DWORD, LPVOID );
 
 static HMODULE hfusion10, hfusion11, hfusion20, hfusion40, hmscoree, hsxs;
+static BOOL assembly_caches_initialized;
 
 static BOOL init_function_pointers( void )
 {
@@ -91,12 +92,16 @@ static BOOL init_function_pointers( void )
 
 BOOL msi_init_assembly_caches( MSIPACKAGE *package )
 {
+    if (assembly_caches_initialized) return TRUE;
     if (!init_function_pointers()) return FALSE;
+
     if (pCreateAssemblyCacheSxs( &package->cache_sxs, 0 ) != S_OK) return FALSE;
     if (pCreateAssemblyCacheNet10) pCreateAssemblyCacheNet10( &package->cache_net[CLR_VERSION_V10], 0 );
     if (pCreateAssemblyCacheNet11) pCreateAssemblyCacheNet11( &package->cache_net[CLR_VERSION_V11], 0 );
     if (pCreateAssemblyCacheNet20) pCreateAssemblyCacheNet20( &package->cache_net[CLR_VERSION_V20], 0 );
     if (pCreateAssemblyCacheNet40) pCreateAssemblyCacheNet40( &package->cache_net[CLR_VERSION_V40], 0 );
+
+    assembly_caches_initialized = TRUE;
     return TRUE;
 }
 
