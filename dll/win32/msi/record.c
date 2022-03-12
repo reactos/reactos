@@ -1103,3 +1103,58 @@ UINT unmarshal_record(const struct wire_record *in, MSIHANDLE *out)
     msiobj_release(&rec->hdr);
     return ERROR_SUCCESS;
 }
+
+struct wire_record *marshal_record(MSIHANDLE handle)
+{
+    struct wire_record *ret;
+    unsigned int i, count;
+    MSIRECORD *rec;
+
+    if (!(rec = msihandle2msiinfo(handle, MSIHANDLETYPE_RECORD)))
+        return NULL;
+
+    count = MSI_RecordGetFieldCount(rec);
+    ret = midl_user_allocate(sizeof(*ret) + count * sizeof(ret->fields[0]));
+    ret->count = count;
+
+    for (i = 0; i <= count; i++)
+    {
+        switch (rec->fields[i].type)
+        {
+        case MSIFIELD_NULL:
+            break;
+        case MSIFIELD_INT:
+            ret->fields[i].u.iVal = rec->fields[i].u.iVal;
+            break;
+        case MSIFIELD_WSTR:
+            ret->fields[i].u.szwVal = strdupW(rec->fields[i].u.szwVal);
+            break;
+        case MSIFIELD_STREAM:
+            IStream_AddRef(rec->fields[i].u.stream);
+            ret->fields[i].u.stream = rec->fields[i].u.stream;
+            break;
+        default:
+            ERR("invalid field type %d\n", rec->fields[i].type);
+            break;
+        }
+        ret->fields[i].type = rec->fields[i].type;
+    }
+
+    msiobj_release(&rec->hdr);
+    return ret;
+}
+
+void free_remote_record(struct wire_record *rec)
+{
+    int i;
+
+    for (i = 0; i <= rec->count; i++)
+    {
+        if (rec->fields[i].type == MSIFIELD_WSTR)
+            midl_user_free(rec->fields[i].u.szwVal);
+        else if (rec->fields[i].type == MSIFIELD_STREAM)
+            IStream_Release(rec->fields[i].u.stream);
+    }
+
+    midl_user_free(rec);
+}

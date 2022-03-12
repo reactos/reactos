@@ -57,6 +57,7 @@ struct wire_record {
 interface IWineMsiRemote
 {
     UINT remote_ViewExecute( [in] MSIHANDLE view, [in, unique] struct wire_record *record );
+    UINT remote_ViewFetch( [in] MSIHANDLE view, [out] struct wire_record **record );
 
     MSICONDITION remote_DatabaseIsTablePersistent( [in] MSIHANDLE db, [in] LPCWSTR table );
     HRESULT remote_DatabaseGetPrimaryKeys( [in] MSIHANDLE db, [in] LPCWSTR table, [out] MSIHANDLE *keys );

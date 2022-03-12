@@ -389,8 +389,22 @@ UINT WINAPI MsiViewFetch(MSIHANDLE hView, MSIHANDLE *record)
     *record = 0;
 
     query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
-    if( !query )
-        return ERROR_INVALID_HANDLE;
+    if (!query)
+    {
+        struct wire_record *wire_rec = NULL;
+        MSIHANDLE remote;
+
+        if (!(remote = msi_get_remote(hView)))
+            return ERROR_INVALID_HANDLE;
+
+        ret = remote_ViewFetch(remote, &wire_rec);
+        if (!ret)
+        {
+            ret = unmarshal_record(wire_rec, record);
+            free_remote_record(wire_rec);
+        }
+        return ret;
+    }
     ret = MSI_ViewFetch( query, &rec );
     if( ret == ERROR_SUCCESS )
     {
@@ -1052,5 +1066,16 @@ UINT __cdecl remote_ViewExecute(MSIHANDLE view, struct wire_record *remote_rec)
     r = MsiViewExecute(view, rec);
 
     MsiCloseHandle(rec);
+    return r;
+}
+
+UINT __cdecl remote_ViewFetch(MSIHANDLE view, struct wire_record **rec)
+{
+    MSIHANDLE handle;
+    UINT r = MsiViewFetch(view, &handle);
+    *rec = NULL;
+    if (!r)
+        *rec = marshal_record(handle);
+    MsiCloseHandle(handle);
     return r;
 }

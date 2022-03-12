@@ -243,7 +243,9 @@ static void test_props(MSIHANDLE hinst)
 
 static void test_db(MSIHANDLE hinst)
 {
-    MSIHANDLE hdb, view, rec;
+    MSIHANDLE hdb, view, rec, rec2;
+    char buffer[10];
+    DWORD sz;
     UINT r;
 
     hdb = MsiGetActiveDatabase(hinst);
@@ -264,6 +266,56 @@ static void test_db(MSIHANDLE hinst)
     r = MsiViewExecute(view, 0);
     ok(hinst, !r, "got %u\n", r);
 
+    r = MsiViewFetch(view, &rec2);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiRecordGetFieldCount(rec2);
+    ok(hinst, r == 3, "got %u\n", r);
+
+    sz = sizeof(buffer);
+    r = MsiRecordGetStringA(rec2, 1, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, !strcmp(buffer, "one"), "got '%s'\n", buffer);
+
+    r = MsiRecordGetInteger(rec2, 2);
+    ok(hinst, r == 1, "got %d\n", r);
+
+    sz = sizeof(buffer);
+    r = MsiRecordReadStream(rec2, 3, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !memcmp(buffer, "unus", 4), "wrong data\n");
+
+    r = MsiCloseHandle(rec2);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiViewFetch(view, &rec2);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiRecordGetFieldCount(rec2);
+    ok(hinst, r == 3, "got %u\n", r);
+
+    sz = sizeof(buffer);
+    r = MsiRecordGetStringA(rec2, 1, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, !strcmp(buffer, "two"), "got '%s'\n", buffer);
+
+    r = MsiRecordGetInteger(rec2, 2);
+    ok(hinst, r == 2, "got %d\n", r);
+
+    sz = sizeof(buffer);
+    r = MsiRecordReadStream(rec2, 3, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !memcmp(buffer, "duo", 3), "wrong data\n");
+
+    r = MsiCloseHandle(rec2);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiViewFetch(view, &rec2);
+    ok(hinst, r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
+    ok(hinst, !rec2, "got %u\n", rec2);
+
     r = MsiCloseHandle(view);
     ok(hinst, !r, "got %u\n", r);
 
@@ -275,6 +327,19 @@ static void test_db(MSIHANDLE hinst)
 
     r = MsiViewExecute(view, rec);
     ok(hinst, !r, "got %u\n", r);
+
+    r = MsiViewFetch(view, &rec2);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiRecordGetInteger(rec2, 2);
+    ok(hinst, r == 1, "got %d\n", r);
+
+    r = MsiCloseHandle(rec2);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiViewFetch(view, &rec2);
+    ok(hinst, r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
+    ok(hinst, !rec2, "got %u\n", rec2);
 
     r = MsiCloseHandle(rec);
     ok(hinst, !r, "got %u\n", r);
