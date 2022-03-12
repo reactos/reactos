@@ -404,6 +404,8 @@ static const char pp_install_exec_seq_dat[] =
     "RemoveFiles\t\t3500\n"
     "InstallFiles\t\t4000\n"
     "RegisterUser\tREGISTER_USER=1 Or FULL=1\t6000\n"
+    "ru_immediate\tREGISTER_USER AND ALLUSERS\t6001\n"
+    "ru_deferred\tREGISTER_USER AND ALLUSERS\t6002\n"
     "RegisterProduct\tREGISTER_PRODUCT=1 Or FULL=1\t6100\n"
     "rp_immediate\tREGISTER_PRODUCT AND ALLUSERS\t6101\n"
     "rp_deferred\tREGISTER_PRODUCT AND ALLUSERS\t6102\n"
@@ -427,6 +429,8 @@ static const char pp_custom_action_dat[] =
     "pp_deferred\t1025\tcustom.dll\tpp_present\n"
     "rp_immediate\t1\tcustom.dll\trp_absent\n"
     "rp_deferred\t1025\tcustom.dll\trp_present\n"
+    "ru_immediate\t1\tcustom.dll\tru_absent\n"
+    "ru_deferred\t1025\tcustom.dll\tru_present\n"
     "ppc_immediate\t1\tcustom.dll\tppc_absent\n"
     "ppc_deferred\t1025\tcustom.dll\tppc_present\n";
 

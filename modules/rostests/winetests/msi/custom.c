@@ -1776,3 +1776,31 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
 
     return ERROR_SUCCESS;
 }
+
+static const CHAR ru_key[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Installer"
+    "\\UserData\\S-1-5-18\\Products\\84A88FD7F6998CE40A22FB59F6B9C2BB\\InstallProperties";
+
+UINT WINAPI ru_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ru_key, 0, KEY_READ | KEY_WOW64_64KEY, &key);
+    ok(hinst, !res, "got %u\n", res);
+    check_reg_str(hinst, key, "ProductID", "none");
+    RegCloseKey(key);
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI ru_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ru_key, 0, KEY_READ | KEY_WOW64_64KEY, &key);
+todo_wine
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    return ERROR_SUCCESS;
+}
