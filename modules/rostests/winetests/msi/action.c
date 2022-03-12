@@ -399,11 +399,15 @@ static const char pp_install_exec_seq_dat[] =
     "ppc_immediate\tPROCESS_COMPONENTS AND ALLUSERS\t1601\n"
     "ppc_deferred\tPROCESS_COMPONENTS AND ALLUSERS\t1602\n"
     "UnpublishFeatures\tUNPUBLISH_FEATURES=1 Or FULL=1\t1800\n"
+    "uf_immediate\tUNPUBLISH_FEATURES AND ALLUSERS\t1801\n"
+    "uf_deferred\tUNPUBLISH_FEATURES AND ALLUSERS\t1802\n"
     "RemoveFiles\t\t3500\n"
     "InstallFiles\t\t4000\n"
     "RegisterUser\tREGISTER_USER=1 Or FULL=1\t6000\n"
     "RegisterProduct\tREGISTER_PRODUCT=1 Or FULL=1\t6100\n"
     "PublishFeatures\tPUBLISH_FEATURES=1 Or FULL=1\t6300\n"
+    "pf_immediate\tPUBLISH_FEATURES AND ALLUSERS\t6301\n"
+    "pf_deferred\tPUBLISH_FEATURES AND ALLUSERS\t6302\n"
     "PublishProduct\tPUBLISH_PRODUCT=1 Or FULL=1\t6400\n"
     "InstallFinalize\t\t6600";
 
@@ -411,6 +415,10 @@ static const char pp_custom_action_dat[] =
     "Action\tType\tSource\tTarget\n"
     "s72\ti2\tS64\tS0\n"
     "CustomAction\tAction\n"
+    "pf_immediate\t1\tcustom.dll\tpf_absent\n"
+    "pf_deferred\t1025\tcustom.dll\tpf_present\n"
+    "uf_immediate\t1\tcustom.dll\tpf_present\n"
+    "uf_deferred\t1025\tcustom.dll\tpf_absent\n"
     "ppc_immediate\t1\tcustom.dll\tppc_absent\n"
     "ppc_deferred\t1025\tcustom.dll\tppc_present\n";
 
@@ -1763,6 +1771,7 @@ static const char pa_install_exec_seq_dat[] =
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
+    "UnpublishFeatures\t\t5300\n"
     "InstallFinalize\t\t6000\n";
 
 static const char pa_custom_action_dat[] =
@@ -1865,6 +1874,7 @@ static const msi_table pp_tables[] =
     ADD_TABLE(rof_feature_comp),
     ADD_TABLE(rof_file),
     ADD_TABLE(pp_install_exec_seq),
+    ADD_TABLE(pp_custom_action),
     ADD_TABLE(rof_media),
     ADD_TABLE(property),
 };

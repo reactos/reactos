@@ -15,6 +15,8 @@
 @ stdcall odbc_absent(long)
 @ stdcall pa_present(long)
 @ stdcall pa_absent(long)
+@ stdcall pf_present(long)
+@ stdcall pf_absent(long)
 @ stdcall ppc_present(long)
 @ stdcall ppc_absent(long)
 @ stdcall pub_present(long)

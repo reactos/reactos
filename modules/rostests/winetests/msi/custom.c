@@ -1494,3 +1494,45 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
     ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
     return ERROR_SUCCESS;
 }
+
+static const char pf_classkey[] = "Installer\\Features\\84A88FD7F6998CE40A22FB59F6B9C2BB";
+static const char pf_userkey[] = "Software\\Microsoft\\Windows\\CurrentVersion\\"
+    "Installer\\UserData\\S-1-5-18\\Products\\84A88FD7F6998CE40A22FB59F6B9C2BB\\Features";
+
+UINT WINAPI pf_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT, pf_classkey, 0, KEY_READ | KEY_WOW64_64KEY, &key);
+    ok(hinst, !res, "got %u\n", res);
+    check_reg_str(hinst, key, "feature", "");
+    check_reg_str(hinst, key, "montecristo", "");
+    RegCloseKey(key);
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, pf_userkey, 0, KEY_READ | KEY_WOW64_64KEY, &key);
+    ok(hinst, !res, "got %u\n", res);
+    check_reg_str(hinst, key, "feature", "VGtfp^p+,?82@JU1j_KE");
+    check_reg_str(hinst, key, "montecristo", "VGtfp^p+,?82@JU1j_KE");
+    RegCloseKey(key);
+}
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI pf_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT, pf_classkey, 0, KEY_READ | KEY_WOW64_64KEY, &key);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, pf_userkey, 0, KEY_READ | KEY_WOW64_64KEY, &key);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    return ERROR_SUCCESS;
+}
