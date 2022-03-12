@@ -4288,10 +4288,8 @@ static UINT msi_publish_product_properties(MSIPACKAGE *package, HKEY hkey)
     static const WCHAR szClients[] =
         {'C','l','i','e','n','t','s',0};
     static const WCHAR szColon[] = {':',0};
-    MSIHANDLE hdb, suminfo;
-    WCHAR *buffer, *ptr, guids[MAX_PATH], packcode[SQUASHED_GUID_SIZE];
-    DWORD langid, size;
-    UINT r;
+    WCHAR *buffer, *ptr, *guids, packcode[SQUASHED_GUID_SIZE];
+    DWORD langid;
 
     buffer = msi_dup_property(package->db, INSTALLPROPERTY_PRODUCTNAMEW);
     msi_reg_set_val_str(hkey, INSTALLPROPERTY_PRODUCTNAMEW, buffer);
@@ -4325,28 +4323,12 @@ static UINT msi_publish_product_properties(MSIPACKAGE *package, HKEY hkey)
     msi_reg_set_val_dword(hkey, INSTALLPROPERTY_INSTANCETYPEW, 0);
     msi_reg_set_val_str(hkey, szClients, szColon);
 
-    hdb = alloc_msihandle(&package->db->hdr);
-    if (!hdb)
-        return ERROR_NOT_ENOUGH_MEMORY;
-
-    r = MsiGetSummaryInformationW(hdb, NULL, 0, &suminfo);
-    MsiCloseHandle(hdb);
-    if (r != ERROR_SUCCESS)
-        goto done;
-
-    size = MAX_PATH;
-    r = MsiSummaryInfoGetPropertyW(suminfo, PID_REVNUMBER, NULL, NULL,
-                                   NULL, guids, &size);
-    if (r != ERROR_SUCCESS)
-        goto done;
-
-    ptr = strchrW(guids, ';');
-    if (ptr) *ptr = 0;
+    if (!(guids = msi_get_package_code(package->db))) return ERROR_OUTOFMEMORY;
+    if ((ptr = strchrW(guids, ';'))) *ptr = 0;
     squash_guid(guids, packcode);
+    msi_free( guids);
     msi_reg_set_val_str(hkey, INSTALLPROPERTY_PACKAGECODEW, packcode);
 
-done:
-    MsiCloseHandle(suminfo);
     return ERROR_SUCCESS;
 }
 
