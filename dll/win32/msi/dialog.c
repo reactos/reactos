@@ -3479,8 +3479,6 @@ static const struct control_handler msi_dialog_handler[] =
     { szHyperLink, msi_dialog_hyperlink }
 };
 
-#define NUM_CONTROL_TYPES (sizeof msi_dialog_handler/sizeof msi_dialog_handler[0])
-
 static UINT msi_dialog_create_controls( MSIRECORD *rec, LPVOID param )
 {
     msi_dialog *dialog = param;
@@ -3489,10 +3487,10 @@ static UINT msi_dialog_create_controls( MSIRECORD *rec, LPVOID param )
 
     /* find and call the function that can create this type of control */
     control_type = MSI_RecordGetString( rec, 3 );
-    for( i=0; i<NUM_CONTROL_TYPES; i++ )
+    for( i = 0; i < ARRAY_SIZE( msi_dialog_handler ); i++ )
         if (!strcmpiW( msi_dialog_handler[i].control_type, control_type ))
             break;
-    if( i != NUM_CONTROL_TYPES )
+    if( i != ARRAY_SIZE( msi_dialog_handler  ))
         msi_dialog_handler[i].func( dialog, rec );
     else
         ERR("no handler for element type %s\n", debugstr_w(control_type));
