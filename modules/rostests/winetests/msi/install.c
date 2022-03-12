@@ -1316,6 +1316,28 @@ static const CHAR x64_directory_dat[] =
     "ProgramFiles64Folder\tTARGETDIR\t.\n"
     "TARGETDIR\t\tSourceDir";
 
+static const CHAR sr_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "CostInitialize\t\t200\n"
+    "FileCost\t\t300\n"
+    "CostFinalize\t\t400\n"
+    "InstallValidate\t\t500\n"
+    "InstallInitialize\t\t600\n"
+    "sourcedir_unset\tSourceDir\t700\n"
+    "ResolveSource\tRESOLVE_SOURCE\t800\n"
+    "ProcessComponents\tPROCESS_COMPONENTS\t800\n"
+    "sourcedir_set\tNOT SourceDir\t900\n"
+    "InstallFinalize\t\t1000\n";
+
+static const CHAR sr_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "sourcedir_unset\t19\t\tSourceDir should not be set\n"
+    "sourcedir_set\t19\t\tSourceDir should be set\n";
+
 static const msi_table tables[] =
 {
     ADD_TABLE(component),
@@ -1982,6 +2004,19 @@ static const msi_table x64_tables[] =
     ADD_TABLE(feature_comp),
     ADD_TABLE(property),
     ADD_TABLE(install_exec_seq),
+};
+
+static const msi_table sr_tables[] =
+{
+    ADD_TABLE(media),
+    ADD_TABLE(directory),
+    ADD_TABLE(file),
+    ADD_TABLE(component),
+    ADD_TABLE(feature),
+    ADD_TABLE(feature_comp),
+    ADD_TABLE(property),
+    ADD_TABLE(sr_install_exec_seq),
+    ADD_TABLE(sr_custom_action),
 };
 
 /* cabinet definitions */
@@ -6109,6 +6144,32 @@ error:
     DeleteFileA(msifile);
 }
 
+/* Test what actions cause resolution of SourceDir when executed. */
+static void test_source_resolution(void)
+{
+    UINT r;
+
+    if (is_process_limited())
+    {
+        skip( "process is limited\n" );
+        return;
+    }
+
+    create_test_files();
+    create_database(msifile, sr_tables, sizeof(sr_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    r = MsiInstallProductA(msifile, "RESOLVE_SOURCE=1");
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "PROCESS_COMPONENTS=1");
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+
+    delete_test_files();
+    DeleteFileA(msifile);
+}
+
 START_TEST(install)
 {
     DWORD len;
@@ -6200,6 +6261,7 @@ START_TEST(install)
     test_feature_tree();
     test_deferred_action();
     test_wow64();
+    test_source_resolution();
 
     DeleteFileA(customdll);
 
