@@ -84,7 +84,7 @@ interface IWineMsiRemote
     UINT remote_GetFeatureState( [in] MSIHANDLE hinst, [in, string] LPCWSTR feature, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
     UINT remote_SetFeatureState( [in] MSIHANDLE hinst, [in, string] LPCWSTR feature, [in] INSTALLSTATE state );
     UINT remote_GetComponentState( [in] MSIHANDLE hinst, [in, string] LPCWSTR component, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
-    HRESULT remote_SetComponentState( [in] MSIHANDLE hinst, [in] BSTR component, [in] INSTALLSTATE state );
+    UINT remote_SetComponentState( [in] MSIHANDLE hinst, [in, string] LPCWSTR component, [in] INSTALLSTATE state );
     HRESULT remote_GetLanguage( [in] MSIHANDLE hinst, [out] LANGID *language );
     HRESULT remote_SetInstallLevel( [in] MSIHANDLE hinst, [in] int level );
     HRESULT remote_FormatRecord( [in] MSIHANDLE hinst, [in] MSIHANDLE record, [out] BSTR *value );

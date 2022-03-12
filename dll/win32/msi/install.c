@@ -1313,33 +1313,18 @@ UINT WINAPI MsiSetComponentStateW(MSIHANDLE hInstall, LPCWSTR szComponent,
     MSIPACKAGE* package;
     UINT ret;
 
+    if (!szComponent)
+        return ERROR_UNKNOWN_COMPONENT;
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
         MSIHANDLE remote;
-        HRESULT hr;
-        BSTR component;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        component = SysAllocString(szComponent);
-        if (!component)
-            return ERROR_OUTOFMEMORY;
-
-        hr = remote_SetComponentState(remote, component, iState);
-
-        SysFreeString(component);
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_SetComponentState(remote, szComponent, iState);
     }
 
     ret = MSI_SetComponentStateW(package, szComponent, iState);

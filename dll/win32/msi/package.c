@@ -2547,10 +2547,9 @@ UINT __cdecl remote_GetComponentState(MSIHANDLE hinst, LPCWSTR component,
     return MsiGetComponentStateW(hinst, component, installed, action);
 }
 
-HRESULT __cdecl remote_SetComponentState(MSIHANDLE hinst, BSTR component, INSTALLSTATE state)
+UINT __cdecl remote_SetComponentState(MSIHANDLE hinst, LPCWSTR component, INSTALLSTATE state)
 {
-    UINT r = MsiSetComponentStateW(hinst, component, state);
-    return HRESULT_FROM_WIN32(r);
+    return MsiSetComponentStateW(hinst, component, state);
 }
 
 HRESULT __cdecl remote_GetLanguage(MSIHANDLE hinst, LANGID *language)
