@@ -9,6 +9,8 @@
 @ stdcall crs_absent(long)
 @ stdcall file_present(long)
 @ stdcall file_absent(long)
+@ stdcall mov_present(long)
+@ stdcall mov_absent(long)
 @ stdcall odbc_present(long)
 @ stdcall odbc_absent(long)
 @ stdcall rd_present(long)

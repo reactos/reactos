@@ -526,6 +526,29 @@ static const char mov_move_file_dat[] =
     "wildcardnodest\taugustus\tbudd*\t\tSourceDir\tMSITESTDIR\t1\n"
     "singlenodest\taugustus\tb?r\t\tSourceDir\tMSITESTDIR\t1\n";
 
+static const char mov_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "CostInitialize\t\t100\n"
+    "FileCost\t\t200\n"
+    "ResolveSource\t\t300\n"
+    "CostFinalize\t\t400\n"
+    "InstallValidate\t\t500\n"
+    "InstallInitialize\t\t600\n"
+    "MoveFiles\t\t700\n"
+    "mov_immediate\t\t701\n"
+    "mov_deferred\t\t702\n"
+    "InstallFiles\t\t800\n"
+    "InstallFinalize\t\t900\n";
+
+static const char mov_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "mov_immediate\t1\tcustom.dll\tmov_absent\n"
+    "mov_deferred\t1025\tcustom.dll\tmov_present\n";
+
 static const char df_directory_dat[] =
     "Directory\tDirectory_Parent\tDefaultDir\n"
     "s72\tS72\tl255\n"
@@ -1843,7 +1866,8 @@ static const msi_table mov_tables[] =
     ADD_TABLE(rof_feature),
     ADD_TABLE(ci2_feature_comp),
     ADD_TABLE(ci2_file),
-    ADD_TABLE(install_exec_seq),
+    ADD_TABLE(mov_install_exec_seq),
+    ADD_TABLE(mov_custom_action),
     ADD_TABLE(rof_media),
     ADD_TABLE(property),
     ADD_TABLE(mov_move_file),

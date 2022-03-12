@@ -1363,3 +1363,19 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
 }
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI mov_present(MSIHANDLE hinst)
+{
+    ok(hinst, pf_exists("msitest\\canada"), "file absent\n");
+    ok(hinst, pf_exists("msitest\\dominica"), "file absent\n");
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI mov_absent(MSIHANDLE hinst)
+{
+todo_wine {
+    ok(hinst, !pf_exists("msitest\\canada"), "file present\n");
+    ok(hinst, !pf_exists("msitest\\dominica"), "file present\n");
+}
+    return ERROR_SUCCESS;
+}
