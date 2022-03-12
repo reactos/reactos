@@ -497,10 +497,10 @@ UINT __wine_msi_call_dll_function(const GUID *guid)
     RPC_WSTR binding_str;
     MSIHANDLE hPackage;
     RPC_STATUS status;
+    LPWSTR dll = NULL;
+    LPSTR proc = NULL;
     HANDLE hModule;
     HANDLE thread;
-    LPWSTR dll;
-    LPSTR proc;
     INT type;
     UINT r;
 
