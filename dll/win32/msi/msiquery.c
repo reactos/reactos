@@ -440,8 +440,15 @@ UINT WINAPI MsiViewClose(MSIHANDLE hView)
     TRACE("%d\n", hView );
 
     query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
-    if( !query )
-        return ERROR_INVALID_HANDLE;
+    if (!query)
+    {
+        MSIHANDLE remote;
+
+        if (!(remote = msi_get_remote(hView)))
+            return ERROR_INVALID_HANDLE;
+
+        return remote_ViewClose(remote);
+    }
 
     ret = MSI_ViewClose( query );
     msiobj_release( &query->hdr );
@@ -1053,6 +1060,11 @@ MSICONDITION WINAPI MsiDatabaseIsTablePersistentW(
     msiobj_release( &db->hdr );
 
     return r;
+}
+
+UINT __cdecl remote_ViewClose(MSIHANDLE view)
+{
+    return MsiViewClose(view);
 }
 
 UINT __cdecl remote_ViewExecute(MSIHANDLE view, struct wire_record *remote_rec)

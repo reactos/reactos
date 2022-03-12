@@ -316,6 +316,9 @@ static void test_db(MSIHANDLE hinst)
     ok(hinst, r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
     ok(hinst, !rec2, "got %u\n", rec2);
 
+    r = MsiViewClose(view);
+    ok(hinst, !r, "got %u\n", r);
+
     r = MsiCloseHandle(view);
     ok(hinst, !r, "got %u\n", r);
 
