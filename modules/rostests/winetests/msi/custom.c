@@ -263,6 +263,18 @@ static void test_db(MSIHANDLE hinst)
     r = MsiDatabaseOpenViewA(hdb, "SELECT * FROM `Test`", &view);
     ok(hinst, !r, "got %u\n", r);
 
+    r = MsiViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec2);
+    ok(hinst, !r, "got %u\n", r);
+
+    sz = sizeof(buffer);
+    r = MsiRecordGetStringA(rec2, 1, buffer, &sz);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, !strcmp(buffer, "Name"), "got '%s'\n", buffer);
+
+    r = MsiCloseHandle(rec2);
+    ok(hinst, !r, "got %u\n", r);
+
     r = MsiViewExecute(view, 0);
     ok(hinst, !r, "got %u\n", r);
 

@@ -603,8 +603,23 @@ UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hR
         return ERROR_INVALID_PARAMETER;
 
     query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
-    if( !query )
-        return ERROR_INVALID_HANDLE;
+    if (!query)
+    {
+        struct wire_record *wire_rec = NULL;
+        MSIHANDLE remote;
+
+        if (!(remote = msi_get_remote(hView)))
+            return ERROR_INVALID_HANDLE;
+
+        r = remote_ViewGetColumnInfo(remote, info, &wire_rec);
+        if (!r)
+        {
+            r = unmarshal_record(wire_rec, hRec);
+            free_remote_record(wire_rec);
+        }
+
+        return r;
+    }
 
     r = MSI_ViewGetColumnInfo( query, info, &rec );
     if ( r == ERROR_SUCCESS )
@@ -1085,6 +1100,17 @@ UINT __cdecl remote_ViewFetch(MSIHANDLE view, struct wire_record **rec)
 {
     MSIHANDLE handle;
     UINT r = MsiViewFetch(view, &handle);
+    *rec = NULL;
+    if (!r)
+        *rec = marshal_record(handle);
+    MsiCloseHandle(handle);
+    return r;
+}
+
+UINT __cdecl remote_ViewGetColumnInfo(MSIHANDLE view, MSICOLINFO info, struct wire_record **rec)
+{
+    MSIHANDLE handle;
+    UINT r = MsiViewGetColumnInfo(view, info, &handle);
     *rec = NULL;
     if (!r)
         *rec = marshal_record(handle);
