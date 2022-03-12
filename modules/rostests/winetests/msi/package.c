@@ -3327,6 +3327,12 @@ static void test_states(void)
     CopyFileA(msifile, msifile3, FALSE);
     CopyFileA(msifile, msifile4, FALSE);
 
+    size = sizeof(value);
+    memset(value, 0, sizeof(value));
+    r = MsiGetPropertyA(hpkg, "ProductToBeRegistered", value, &size);
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    ok(!value[0], "ProductToBeRegistered = %s\n", value);
+
     test_feature_states( __LINE__, hpkg, "one", ERROR_UNKNOWN_FEATURE, 0, 0, FALSE );
     test_component_states( __LINE__, hpkg, "alpha", ERROR_UNKNOWN_COMPONENT, 0, 0, FALSE );
 
@@ -3406,6 +3412,12 @@ static void test_states(void)
     ok( r == ERROR_SUCCESS, "failed to create package %u\n", r );
 
     MsiCloseHandle(hdb);
+
+    size = sizeof(value);
+    memset(value, 0, sizeof(value));
+    r = MsiGetPropertyA(hpkg, "ProductToBeRegistered", value, &size);
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    ok(value[0]=='1' && !value[1], "ProductToBeRegistered = %s\n", value);
 
     test_feature_states( __LINE__, hpkg, "one", ERROR_UNKNOWN_FEATURE, 0, 0, FALSE );
     test_component_states( __LINE__, hpkg, "alpha", ERROR_UNKNOWN_COMPONENT, 0, 0, FALSE );
