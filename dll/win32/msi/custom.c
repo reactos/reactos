@@ -580,11 +580,17 @@ UINT __wine_msi_call_dll_function(const GUID *guid)
 
 static DWORD WINAPI DllThread( LPVOID arg )
 {
-    WCHAR buffer[64] = {'m','s','i','e','x','e','c','.','e','x','e',' ','-','E','m','b','e','d','d','i','n','g',' ',0};
+    static const WCHAR msiexecW[] = {'\\','m','s','i','e','x','e','c','.','e','x','e',0};
+    static const WCHAR argsW[] = {' ','-','E','m','b','e','d','d','i','n','g',' ',0};
+    msi_custom_action_info *info;
     PROCESS_INFORMATION pi = {0};
     STARTUPINFOW si = {0};
+    WCHAR buffer[MAX_PATH], cmdline[MAX_PATH + 60];
     RPC_STATUS status;
     GUID *guid = arg;
+    void *cookie;
+    BOOL wow64;
+    DWORD arch;
     DWORD rc;
 
     TRACE("custom action (%x) started\n", GetCurrentThreadId() );
@@ -606,8 +612,27 @@ static DWORD WINAPI DllThread( LPVOID arg )
         return status;
     }
 
-    StringFromGUID2(guid, buffer + strlenW(buffer), 39);
-    CreateProcessW(NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    info = find_action_by_guid(guid);
+    GetBinaryTypeW(info->source, &arch);
+
+    if (sizeof(void *) == 8 && arch == SCS_32BIT_BINARY)
+        GetSystemWow64DirectoryW(buffer, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
+    else
+        GetSystemDirectoryW(buffer, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
+    strcatW(buffer, msiexecW);
+    strcpyW(cmdline, buffer);
+    strcatW(cmdline, argsW);
+    StringFromGUID2(guid, cmdline + strlenW(cmdline), 39);
+
+    if (IsWow64Process(GetCurrentProcess(), &wow64) && wow64 && arch == SCS_64BIT_BINARY)
+    {
+        Wow64DisableWow64FsRedirection(&cookie);
+        CreateProcessW(buffer, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+        Wow64RevertWow64FsRedirection(cookie);
+    }
+    else
+        CreateProcessW(buffer, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+
     WaitForSingleObject(pi.hProcess, INFINITE);
     GetExitCodeProcess(pi.hProcess, &rc);
     CloseHandle(pi.hProcess);
