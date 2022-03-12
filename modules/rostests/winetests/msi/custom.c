@@ -1726,3 +1726,53 @@ todo_wine
 
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI rpi_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT, "CLSID\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}",
+        0, KEY_READ | KEY_WOW64_32KEY, &key);
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class.1", &key);
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class", &key);
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class.2", &key);
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+}
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI rpi_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    res = RegOpenKeyExA(HKEY_CLASSES_ROOT, "CLSID\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}",
+        0, KEY_READ | KEY_WOW64_32KEY, &key);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class.1", &key);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class", &key);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+
+    res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class.2", &key);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+}
+
+    return ERROR_SUCCESS;
+}

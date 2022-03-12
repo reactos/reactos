@@ -1654,14 +1654,27 @@ static const char rpi_install_exec_seq_dat[] =
     "UnregisterClassInfo\t\t3000\n"
     "UnregisterExtensionInfo\t\t3200\n"
     "UnregisterProgIdInfo\t\t3400\n"
+    "upi_immediate\tREMOVE\t3401\n"
+    "upi_deferred\tREMOVE\t3402\n"
     "InstallFiles\t\t3600\n"
     "RegisterClassInfo\t\t4000\n"
     "RegisterExtensionInfo\t\t4200\n"
     "RegisterProgIdInfo\t\t4400\n"
+    "rpi_immediate\tNOT REMOVE\t4401\n"
+    "rpi_deferred\tNOT REMOVE\t4402\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
+
+static const char rpi_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "rpi_immediate\t1\tcustom.dll\trpi_absent\n"
+    "rpi_deferred\t1025\tcustom.dll\trpi_present\n"
+    "upi_immediate\t1\tcustom.dll\trpi_present\n"
+    "upi_deferred\t1025\tcustom.dll\trpi_absent\n";
 
 static const char rmi_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -2272,6 +2285,7 @@ static const msi_table rpi_tables[] =
     ADD_TABLE(rpi_verb),
     ADD_TABLE(rpi_progid),
     ADD_TABLE(rpi_install_exec_seq),
+    ADD_TABLE(rpi_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
