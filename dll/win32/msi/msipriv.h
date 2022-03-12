@@ -404,6 +404,14 @@ typedef struct tagMSIPACKAGE
     UINT   LastActionResult;
     UINT   action_progress_increment;
     HANDLE log_file;
+    HMODULE hfusion10;
+    HMODULE hfusion11;
+    HMODULE hfusion20;
+    HMODULE hfusion40;
+    HMODULE hmscoree;
+    HRESULT (WINAPI *pGetFileVersion)( const WCHAR *, WCHAR *, DWORD, DWORD * );
+    HRESULT (WINAPI *pCreateAssemblyNameObject)( IAssemblyName **, const WCHAR *, DWORD, void * );
+    HRESULT (WINAPI *pCreateAssemblyEnum)( IAssemblyEnum **, IUnknown *, IAssemblyName *, DWORD, void * );
     IAssemblyCache *cache_net[CLR_VERSION_MAX];
     IAssemblyCache *cache_sxs;
 
