@@ -14459,6 +14459,7 @@ START_TEST(msi)
     test_getcomponentpath();
     test_MsiGetFileHash();
     test_MsiSetInternalUI();
+    test_MsiSetExternalUI();
 
     if (!pConvertSidToStringSidA)
         win_skip("ConvertSidToStringSidA not implemented\n");
@@ -14491,7 +14492,6 @@ START_TEST(msi)
     test_MsiConfigureProductEx();
     test_MsiSetFeatureAttributes();
     test_MsiGetFeatureInfo();
-    test_MsiSetExternalUI();
     test_lastusedsource();
     test_setpropertyfolder();
     test_sourcedir_props();

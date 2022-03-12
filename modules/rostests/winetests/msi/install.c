@@ -2551,6 +2551,73 @@ static void write_msi_summary_info(MSIHANDLE db, INT version, INT wordcount,
     MsiCloseHandle(summary);
 }
 
+static char *load_resource(const char *name)
+{
+    static char path[MAX_PATH];
+    DWORD written;
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+
+    GetTempFileNameA(".", name, 0, path);
+
+    file = CreateFileA(path, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE, "file creation failed, at %s, error %d\n", path, GetLastError());
+
+    res = FindResourceA(NULL, name, "TESTDLL");
+    ok( res != 0, "couldn't find resource\n" );
+    ptr = LockResource( LoadResource( GetModuleHandleA(NULL), res ));
+    WriteFile( file, ptr, SizeofResource( GetModuleHandleA(NULL), res ), &written, NULL );
+    ok( written == SizeofResource( GetModuleHandleA(NULL), res ), "couldn't write resource\n" );
+    CloseHandle( file );
+
+    return path;
+}
+
+static INT CALLBACK ok_callback(void *context, UINT message_type, MSIHANDLE record)
+{
+    if (message_type == INSTALLMESSAGE_USER)
+    {
+        char file[200];
+        char msg[2000];
+        DWORD len;
+
+        len = sizeof(file);
+        MsiRecordGetStringA(record, 2, file, &len);
+        len = sizeof(msg);
+        MsiRecordGetStringA(record, 5, msg, &len);
+
+        todo_wine_if(MsiRecordGetInteger(record, 1))
+        ok_(file, MsiRecordGetInteger(record, 3)) (MsiRecordGetInteger(record, 4), "%s", msg);
+
+        return 1;
+    }
+    return 0;
+}
+
+static void add_custom_dll(MSIHANDLE hdb)
+{
+    MSIHANDLE record;
+    UINT res;
+
+    if (!customdll)
+        customdll = load_resource("custom.dll");
+
+    MsiSetExternalUIRecord(ok_callback, INSTALLLOGMODE_USER, NULL, NULL);
+
+    res = run_query(hdb, 0, "CREATE TABLE `Binary` (`Name` CHAR(72) NOT NULL, `Data` OBJECT NOT NULL PRIMARY KEY `Name`)");
+    ok(res == ERROR_SUCCESS, "failed to create Binary table: %u\n", res);
+
+    record = MsiCreateRecord(1);
+    res = MsiRecordSetStreamA(record, 1, customdll);
+    ok(res == ERROR_SUCCESS, "failed to add %s to stream: %u\n", customdll, res);
+
+    res = run_query(hdb, record, "INSERT INTO `Binary` (`Name`, `Data`) VALUES ('custom.dll', ?)");
+    ok(res == ERROR_SUCCESS, "failed to insert into Binary table: %u\n", res);
+
+    MsiCloseHandle(record);
+}
+
 void create_database_wordcount(const CHAR *name, const msi_table *tables, int num_tables,
     INT version, INT wordcount, const char *template, const char *packagecode)
 {
@@ -2580,6 +2647,7 @@ void create_database_wordcount(const CHAR *name, const msi_table *tables, int nu
     }
 
     write_msi_summary_info(db, version, wordcount, template, packagecode);
+    add_custom_dll(db);
 
     r = MsiDatabaseCommit(db);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -2632,29 +2700,6 @@ static LONG delete_key( HKEY key, LPCSTR subkey, REGSAM access )
     if (pRegDeleteKeyExA)
         return pRegDeleteKeyExA( key, subkey, access, 0 );
     return RegDeleteKeyA( key, subkey );
-}
-
-static char *load_resource(const char *name)
-{
-    static char path[MAX_PATH];
-    DWORD written;
-    HANDLE file;
-    HRSRC res;
-    void *ptr;
-
-    GetTempFileNameA(".", name, 0, path);
-
-    file = CreateFileA(path, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
-    ok(file != INVALID_HANDLE_VALUE, "file creation failed, at %s, error %d\n", path, GetLastError());
-
-    res = FindResourceA(NULL, name, "TESTDLL");
-    ok( res != 0, "couldn't find resource\n" );
-    ptr = LockResource( LoadResource( GetModuleHandleA(NULL), res ));
-    WriteFile( file, ptr, SizeofResource( GetModuleHandleA(NULL), res ), &written, NULL );
-    ok( written == SizeofResource( GetModuleHandleA(NULL), res ), "couldn't write resource\n" );
-    CloseHandle( file );
-
-    return path;
 }
 
 static void test_MsiInstallProduct(void)
@@ -4082,52 +4127,6 @@ error:
     DeleteFileA("augustus");
 }
 
-static void add_custom_dll(void)
-{
-    MSIHANDLE hdb = 0, record;
-    UINT res;
-
-    res = MsiOpenDatabaseW(msifileW, MSIDBOPEN_TRANSACT, &hdb);
-    ok(res == ERROR_SUCCESS, "failed to open db: %u\n", res);
-
-    res = run_query(hdb, 0, "CREATE TABLE `Binary` (`Name` CHAR(72) NOT NULL, `Data` OBJECT NOT NULL PRIMARY KEY `Name`)");
-    ok(res == ERROR_SUCCESS, "failed to create Binary table: %u\n", res);
-
-    record = MsiCreateRecord(1);
-    res = MsiRecordSetStreamA(record, 1, customdll);
-    ok(res == ERROR_SUCCESS, "failed to add %s to stream: %u\n", customdll, res);
-
-    res = run_query(hdb, record, "INSERT INTO `Binary` (`Name`, `Data`) VALUES ('custom.dll', ?)");
-    ok(res == ERROR_SUCCESS, "failed to insert into Binary table: %u\n", res);
-
-    res = MsiDatabaseCommit(hdb);
-    ok(res == ERROR_SUCCESS, "failed to commit database: %u\n", res);
-
-    MsiCloseHandle(record);
-    MsiCloseHandle(hdb);
-}
-
-static INT CALLBACK ok_callback(void *context, UINT message_type, MSIHANDLE record)
-{
-    if (message_type == INSTALLMESSAGE_USER)
-    {
-        char file[200];
-        char msg[2000];
-        DWORD len;
-
-        len = sizeof(file);
-        MsiRecordGetStringA(record, 2, file, &len);
-        len = sizeof(msg);
-        MsiRecordGetStringA(record, 5, msg, &len);
-
-        todo_wine_if(MsiRecordGetInteger(record, 1))
-        ok_(file, MsiRecordGetInteger(record, 3)) (MsiRecordGetInteger(record, 4), "%s", msg);
-
-        return 1;
-    }
-    return 0;
-}
-
 static void test_customaction1(void)
 {
     MSIHANDLE hdb, record;
@@ -4135,7 +4134,6 @@ static void test_customaction1(void)
 
     create_test_files();
     create_database(msifile, ca1_tables, sizeof(ca1_tables) / sizeof(msi_table));
-    add_custom_dll();
 
     /* create a test table */
     MsiOpenDatabaseW(msifileW, MSIDBOPEN_TRANSACT, &hdb);
@@ -6106,7 +6104,6 @@ static void test_deferred_action(void)
     sprintf(buffer, "TESTPATH=\"%s\"", file);
 
     create_database(msifile, da_tables, sizeof(da_tables) / sizeof(da_tables[0]));
-    add_custom_dll();
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -6233,9 +6230,6 @@ START_TEST(install)
     lstrcpyA(log_file, temp_path);
     lstrcatA(log_file, "\\msitest.log");
     MsiEnableLogA(INSTALLLOGMODE_FATALEXIT, log_file, 0);
-
-    customdll = load_resource("custom.dll");
-    MsiSetExternalUIRecord(ok_callback, INSTALLLOGMODE_USER, NULL, NULL);
 
     if (pSRSetRestorePointA) /* test has side-effects on win2k3 that cause failures in following tests */
         test_MsiInstallProduct();
