@@ -2321,45 +2321,6 @@ static void check_reg_dword(HKEY prodkey, LPCSTR name, DWORD expected, DWORD lin
     ok_(__FILE__, line)(val == expected, "Expected %d, got %d\n", expected, val);
 }
 
-static void check_reg_dword4(HKEY prodkey, LPCSTR name, DWORD expected1, DWORD expected2, DWORD expected3,
-                             DWORD expected4, DWORD line)
-{
-    DWORD val, size, type;
-    LONG res;
-
-    size = sizeof(DWORD);
-    res = RegQueryValueExA(prodkey, name, NULL, &type, (LPBYTE)&val, &size);
-
-    if (res != ERROR_SUCCESS || type != REG_DWORD)
-    {
-        ok_(__FILE__, line)(FALSE, "Key doesn't exist or wrong type\n");
-        return;
-    }
-
-    ok_(__FILE__, line)(val == expected1 || val == expected2 || val == expected3 || val == expected4,
-        "Expected %d, %d, %d or %d, got %d\n", expected1, expected2, expected3, expected4, val);
-}
-
-static void check_reg_dword5(HKEY prodkey, LPCSTR name, DWORD expected1, DWORD expected2, DWORD expected3,
-                             DWORD expected4, DWORD expected5, DWORD line)
-{
-    DWORD val, size, type;
-    LONG res;
-
-    size = sizeof(DWORD);
-    res = RegQueryValueExA(prodkey, name, NULL, &type, (LPBYTE)&val, &size);
-
-    if (res != ERROR_SUCCESS || type != REG_DWORD)
-    {
-        ok_(__FILE__, line)(FALSE, "Key doesn't exist or wrong type\n");
-        return;
-    }
-
-    ok_(__FILE__, line)(val == expected1 || val == expected2 || val == expected3 || val == expected4 ||
-        val == expected5,
-        "Expected %d, %d, %d, %d or %d, got %d\n", expected1, expected2, expected3, expected4, expected5, val);
-}
-
 #define CHECK_REG_STR(prodkey, name, expected) \
     check_reg_str(prodkey, name, expected, TRUE, __LINE__);
 
@@ -2387,24 +2348,6 @@ static void check_reg_dword5(HKEY prodkey, LPCSTR name, DWORD expected1, DWORD e
         RegDeleteValueA(prodkey, name); \
     } while(0)
 
-#define CHECK_REG_DWORD2(prodkey, name, expected1, expected2) \
-    check_reg_dword2(prodkey, name, expected1, expected2, __LINE__);
-
-#define CHECK_DEL_REG_DWORD2(prodkey, name, expected1, expected2) \
-    do { \
-        check_reg_dword2(prodkey, name, expected1, expected2, __LINE__); \
-        RegDeleteValueA(prodkey, name); \
-    } while(0)
-
-#define CHECK_REG_DWORD4(prodkey, name, expected1, expected2, expected3, expected4) \
-    check_reg_dword4(prodkey, name, expected1, expected2, expected3, expected4, __LINE__);
-
-#define CHECK_DEL_REG_DWORD5(prodkey, name, expected1, expected2, expected3, expected4 ,expected5) \
-    do { \
-        check_reg_dword5(prodkey, name, expected1, expected2, expected3, expected4, expected5, __LINE__); \
-        RegDeleteValueA(prodkey, name); \
-    } while(0)
-
 static void get_date_str(LPSTR date)
 {
     SYSTEMTIME systime;
@@ -2412,6 +2355,22 @@ static void get_date_str(LPSTR date)
     static const char date_fmt[] = "%d%02d%02d";
     GetLocalTime(&systime);
     sprintf(date, date_fmt, systime.wYear, systime.wMonth, systime.wDay);
+}
+
+/* EstimatedSize is the size in KiB of .msi + installed files, rounded up to page size. */
+static DWORD get_estimated_size(void)
+{
+    SYSTEM_INFO si;
+    HANDLE file;
+    DWORD size;
+
+    GetSystemInfo(&si);
+
+    file = CreateFileA(msifile, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    size = ((GetFileSize(file, NULL) + si.dwPageSize - 1) / si.dwPageSize + 1);
+    size = size * si.dwPageSize / 1024;
+    CloseHandle(file);
+    return size;
 }
 
 static void test_register_product(void)
@@ -2505,9 +2464,7 @@ static void test_register_product(void)
     CHECK_DEL_REG_DWORD(hkey, "VersionMinor", 1);
     CHECK_DEL_REG_DWORD(hkey, "WindowsInstaller", 1);
     todo_wine
-    {
-        CHECK_DEL_REG_DWORD5(hkey, "EstimatedSize", 12, -12, 4, 10, 24);
-    }
+    CHECK_DEL_REG_DWORD(hkey, "EstimatedSize", get_estimated_size());
 
     delete_key(hkey, "", access);
     RegCloseKey(hkey);
@@ -2547,9 +2504,7 @@ static void test_register_product(void)
     CHECK_DEL_REG_DWORD(props, "VersionMinor", 1);
     CHECK_DEL_REG_DWORD(props, "WindowsInstaller", 1);
     todo_wine
-    {
-        CHECK_DEL_REG_DWORD5(props, "EstimatedSize", 12, -12, 4, 10, 24);
-    }
+    CHECK_DEL_REG_DWORD(props, "EstimatedSize", get_estimated_size());
 
     delete_key(props, "", access);
     RegCloseKey(props);
@@ -2616,9 +2571,7 @@ static void test_register_product(void)
     CHECK_DEL_REG_DWORD(hkey, "VersionMinor", 1);
     CHECK_DEL_REG_DWORD(hkey, "WindowsInstaller", 1);
     todo_wine
-    {
-        CHECK_DEL_REG_DWORD5(hkey, "EstimatedSize", 12, -12, 4, 10, 24);
-    }
+    CHECK_DEL_REG_DWORD(hkey, "EstimatedSize", get_estimated_size());
 
     delete_key(hkey, "", access);
     RegCloseKey(hkey);
@@ -2658,9 +2611,7 @@ static void test_register_product(void)
     CHECK_DEL_REG_DWORD(props, "VersionMinor", 1);
     CHECK_DEL_REG_DWORD(props, "WindowsInstaller", 1);
     todo_wine
-    {
-        CHECK_DEL_REG_DWORD5(props, "EstimatedSize", 12, -12, 4, 10, 24);
-    }
+    CHECK_DEL_REG_DWORD(props, "EstimatedSize", get_estimated_size());
 
     delete_key(props, "", access);
     RegCloseKey(props);
@@ -3525,9 +3476,7 @@ static void test_publish(void)
     CHECK_REG_DWORD(prodkey, "VersionMinor", 1);
     CHECK_REG_DWORD(prodkey, "WindowsInstaller", 1);
     todo_wine
-    {
-        CHECK_REG_DWORD4(prodkey, "EstimatedSize", 12, -12, 10, 24);
-    }
+    CHECK_REG_DWORD(prodkey, "EstimatedSize", get_estimated_size());
 
     RegCloseKey(prodkey);
 
@@ -3631,9 +3580,7 @@ static void test_publish(void)
     CHECK_REG_DWORD(prodkey, "VersionMinor", 1);
     CHECK_REG_DWORD(prodkey, "WindowsInstaller", 1);
     todo_wine
-    {
-        CHECK_REG_DWORD4(prodkey, "EstimatedSize", 12, -12, 10, 24);
-    }
+    CHECK_REG_DWORD(prodkey, "EstimatedSize", get_estimated_size());
 
     RegCloseKey(prodkey);
 
@@ -3714,9 +3661,7 @@ static void test_publish(void)
     CHECK_REG_DWORD(prodkey, "VersionMinor", 1);
     CHECK_REG_DWORD(prodkey, "WindowsInstaller", 1);
     todo_wine
-    {
-        CHECK_REG_DWORD4(prodkey, "EstimatedSize", 12, -12, 10, 24);
-    }
+    CHECK_REG_DWORD(prodkey, "EstimatedSize", get_estimated_size());
 
     RegCloseKey(prodkey);
 
@@ -3774,9 +3719,7 @@ static void test_publish(void)
     CHECK_REG_DWORD(prodkey, "VersionMinor", 1);
     CHECK_REG_DWORD(prodkey, "WindowsInstaller", 1);
     todo_wine
-    {
-        CHECK_REG_DWORD4(prodkey, "EstimatedSize", 12, -12, 10, 24);
-    }
+    CHECK_REG_DWORD(prodkey, "EstimatedSize", get_estimated_size());
 
     RegCloseKey(prodkey);
 
@@ -3834,9 +3777,7 @@ static void test_publish(void)
     CHECK_REG_DWORD(prodkey, "VersionMinor", 1);
     CHECK_REG_DWORD(prodkey, "WindowsInstaller", 1);
     todo_wine
-    {
-        CHECK_REG_DWORD4(prodkey, "EstimatedSize", 12, -20, 10, 24);
-    }
+    CHECK_REG_DWORD(prodkey, "EstimatedSize", get_estimated_size());
 
     RegCloseKey(prodkey);
 
@@ -3917,9 +3858,7 @@ static void test_publish(void)
     CHECK_REG_DWORD(prodkey, "VersionMinor", 1);
     CHECK_REG_DWORD(prodkey, "WindowsInstaller", 1);
     todo_wine
-    {
-        CHECK_REG_DWORD4(prodkey, "EstimatedSize", 12, -12, 10, 24);
-    }
+    CHECK_REG_DWORD(prodkey, "EstimatedSize", get_estimated_size());
 
     RegCloseKey(prodkey);
 
