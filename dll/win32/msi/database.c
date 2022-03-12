@@ -2034,8 +2034,7 @@ HRESULT __cdecl remote_DatabaseGetSummaryInformation(MSIHANDLE db, UINT updateco
     return HRESULT_FROM_WIN32(r);
 }
 
-HRESULT __cdecl remote_DatabaseOpenView(MSIHANDLE db, LPCWSTR query, MSIHANDLE *view)
+UINT __cdecl remote_DatabaseOpenView(MSIHANDLE db, LPCWSTR query, MSIHANDLE *view)
 {
-    UINT r = MsiDatabaseOpenViewW(db, query, view);
-    return HRESULT_FROM_WIN32(r);
+    return MsiDatabaseOpenViewW(db, query, view);
 }

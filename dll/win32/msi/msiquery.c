@@ -116,9 +116,6 @@ UINT MSI_DatabaseOpenViewW(MSIDATABASE *db,
 
     TRACE("%s %p\n", debugstr_w(szQuery), pView);
 
-    if( !szQuery)
-        return ERROR_INVALID_PARAMETER;
-
     /* pre allocate a handle to hold a pointer to the view */
     query = alloc_msiobject( MSIHANDLETYPE_VIEW, sizeof (MSIQUERY),
                               MSI_CloseView );
@@ -247,26 +244,24 @@ UINT WINAPI MsiDatabaseOpenViewW(MSIHANDLE hdb,
 
     TRACE("%s %p\n", debugstr_w(szQuery), phView);
 
+    if (!phView)
+        return ERROR_INVALID_PARAMETER;
+
+    if (!szQuery)
+        return ERROR_BAD_QUERY_SYNTAX;
+
     db = msihandle2msiinfo( hdb, MSIHANDLETYPE_DATABASE );
     if( !db )
     {
-        MSIHANDLE remote;
-        HRESULT hr;
+        MSIHANDLE remote, remote_view;
 
         if (!(remote = msi_get_remote(hdb)))
             return ERROR_INVALID_HANDLE;
 
-        hr = remote_DatabaseOpenView(remote, szQuery, phView);
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        ret = remote_DatabaseOpenView(remote, szQuery, &remote_view);
+        if (!ret)
+            *phView = alloc_msi_remote_handle(remote_view);
+        return ret;
     }
 
     ret = MSI_DatabaseOpenViewW( db, szQuery, &query );
