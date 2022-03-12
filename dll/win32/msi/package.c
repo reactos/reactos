@@ -1385,7 +1385,7 @@ done:
     return r;
 }
 
-static WCHAR *get_package_code( MSIDATABASE *db )
+WCHAR *msi_get_package_code( MSIDATABASE *db )
 {
     WCHAR *ret;
     MSISUMMARYINFO *si;
@@ -1423,7 +1423,7 @@ static UINT get_local_package( const WCHAR *filename, WCHAR *localfile )
         msiobj_release( &db->hdr );
         return ERROR_INSTALL_PACKAGE_INVALID;
     }
-    if (!(package_code = get_package_code( db )))
+    if (!(package_code = msi_get_package_code( db )))
     {
         msi_free( product_code );
         msiobj_release( &db->hdr );

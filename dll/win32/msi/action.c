@@ -4480,6 +4480,7 @@ static UINT ACTION_PublishProduct(MSIPACKAGE *package)
     UINT rc;
     HKEY hukey = NULL, hudkey = NULL;
     MSIRECORD *uirow;
+    BOOL republish = FALSE;
 
     if (!list_empty(&package->patches))
     {
@@ -4488,14 +4489,49 @@ static UINT ACTION_PublishProduct(MSIPACKAGE *package)
             goto end;
     }
 
-    /* FIXME: also need to publish if the product is in advertise mode */
-    if (!msi_check_publish(package))
-        return ERROR_SUCCESS;
-
     rc = MSIREG_OpenProductKey(package->ProductCode, NULL, package->Context,
-                               &hukey, TRUE);
-    if (rc != ERROR_SUCCESS)
-        goto end;
+                               &hukey, FALSE);
+    if (rc == ERROR_SUCCESS)
+    {
+        WCHAR *package_code;
+
+        package_code = msi_reg_get_val_str(hukey, INSTALLPROPERTY_PACKAGECODEW);
+        if (package_code)
+        {
+            WCHAR *guid;
+
+            guid = msi_get_package_code(package->db);
+            if (guid)
+            {
+                WCHAR packed[SQUASHED_GUID_SIZE];
+
+                squash_guid(guid, packed);
+                msi_free(guid);
+                if (!strcmpW(packed, package_code))
+                {
+                    TRACE("re-publishing product - new package\n");
+                    republish = TRUE;
+                }
+            }
+            msi_free(package_code);
+        }
+    }
+
+    /* FIXME: also need to publish if the product is in advertise mode */
+    if (!republish && !msi_check_publish(package))
+    {
+        if (hukey)
+            RegCloseKey(hukey);
+        return ERROR_SUCCESS;
+    }
+
+    if (!hukey)
+    {
+        rc = MSIREG_OpenProductKey(package->ProductCode, NULL, package->Context,
+                                   &hukey, TRUE);
+        if (rc != ERROR_SUCCESS)
+            goto end;
+    }
 
     rc = MSIREG_OpenUserDataProductKey(package->ProductCode, package->Context,
                                        NULL, &hudkey, TRUE);
