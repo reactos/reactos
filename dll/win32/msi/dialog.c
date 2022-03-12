@@ -4132,10 +4132,10 @@ void msi_dialog_destroy( msi_dialog *dialog )
     }
 
     if( dialog->hwnd )
+    {
         ShowWindow( dialog->hwnd, SW_HIDE );
-
-    if( dialog->hwnd )
         DestroyWindow( dialog->hwnd );
+    }
 
     /* unsubscribe events */
     event_cleanup_subscriptions( dialog->package, dialog->name );
