@@ -36,7 +36,6 @@ static HRESULT (WINAPI *pCreateAssemblyCacheNet11)( IAssemblyCache **, DWORD );
 static HRESULT (WINAPI *pCreateAssemblyCacheNet20)( IAssemblyCache **, DWORD );
 static HRESULT (WINAPI *pCreateAssemblyCacheNet40)( IAssemblyCache **, DWORD );
 static HRESULT (WINAPI *pCreateAssemblyCacheSxs)( IAssemblyCache **, DWORD );
-static HRESULT (WINAPI *pLoadLibraryShim)( LPCWSTR, LPCWSTR, LPVOID, HMODULE * );
 static HRESULT (WINAPI *pGetFileVersion)( LPCWSTR, LPWSTR, DWORD, DWORD * );
 static HRESULT (WINAPI *pCreateAssemblyNameObject)( IAssemblyName **, LPCWSTR, DWORD, LPVOID );
 static HRESULT (WINAPI *pCreateAssemblyEnum)( IAssemblyEnum **, IUnknown *, IAssemblyName *, DWORD, LPVOID );
@@ -52,6 +51,7 @@ static BOOL init_function_pointers( void )
     static const WCHAR szVersion11[] = {'v','1','.','1','.','4','3','2','2',0};
     static const WCHAR szVersion20[] = {'v','2','.','0','.','5','0','7','2','7',0};
     static const WCHAR szVersion40[] = {'v','4','.','0','.','3','0','3','1','9',0};
+    HRESULT (WINAPI *pLoadLibraryShim)( LPCWSTR, LPCWSTR, LPVOID, HMODULE * );
     WCHAR path[MAX_PATH];
     DWORD len = GetSystemDirectoryW( path, MAX_PATH );
 
@@ -121,6 +121,9 @@ void msi_destroy_assembly_caches( MSIPACKAGE *package )
     pCreateAssemblyCacheNet11 = NULL;
     pCreateAssemblyCacheNet20 = NULL;
     pCreateAssemblyCacheNet40 = NULL;
+    pGetFileVersion = NULL;
+    pCreateAssemblyNameObject = NULL;
+    pCreateAssemblyEnum = NULL;
     FreeLibrary( hfusion10 );
     FreeLibrary( hfusion11 );
     FreeLibrary( hfusion20 );
