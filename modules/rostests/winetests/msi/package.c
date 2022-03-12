@@ -3819,10 +3819,6 @@ static void test_states(void)
 
     r = MsiOpenDatabaseA(msifile2, (const char*)MSIDBOPEN_DIRECT, &hdb);
     ok(r == ERROR_SUCCESS, "failed to open database: %d\n", r);
-    add_install_execute_sequence_entry( hdb, "'FindRelatedProducts', '', '100'" );
-    add_install_execute_sequence_entry( hdb, "'RemoveExistingProducts', '', '1401'" );
-    create_upgrade_table( hdb );
-    add_upgrade_entry( hdb, "'{3494EEEA-4221-4A66-802E-DED8916BC5C5}', NULL, '1.1.2', NULL, 0, NULL, 'OLDERVERSIONBEINGUPGRADED'");
     update_ProductVersion_property( hdb, "1.1.2" );
     set_summary_str(hdb, PID_REVNUMBER, "{A219A62A-D931-4F1B-89DB-FF1C300A8D43}");
     r = MsiDatabaseCommit(hdb);
@@ -3832,16 +3828,33 @@ static void test_states(void)
     r = MsiInstallProductA(msifile2, "");
     todo_wine ok(r == ERROR_PRODUCT_VERSION, "Expected ERROR_PRODUCT_VERSION, got %d\n", r);
 
+    r = MsiInstallProductA(msifile2, "REINSTALLMODE=v");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    r = MsiOpenProductA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", &hprod);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    size = MAX_PATH;
+    r = MsiGetProductPropertyA(hprod, "ProductVersion", value, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!strcmp(value, "1.1.2"), "ProductVersion = %s\n", value);
+    MsiCloseHandle(hprod);
+
     /* major upgrade test */
     r = MsiOpenDatabaseA(msifile2, (const char*)MSIDBOPEN_DIRECT, &hdb);
     ok(r == ERROR_SUCCESS, "failed to open database: %d\n", r);
+    add_install_execute_sequence_entry( hdb, "'FindRelatedProducts', '', '100'" );
+    add_install_execute_sequence_entry( hdb, "'RemoveExistingProducts', '', '1401'" );
+    create_upgrade_table( hdb );
+    add_upgrade_entry( hdb, "'{3494EEEA-4221-4A66-802E-DED8916BC5C5}', NULL, '1.1.3', NULL, 0, NULL, 'OLDERVERSIONBEINGUPGRADED'");
     update_ProductCode_property( hdb, "{333DB27A-C25E-4EBC-9BEC-0F49546C19A6}" );
+    update_ProductVersion_property( hdb, "1.1.3" );
+    set_summary_str(hdb, PID_REVNUMBER, "{5F99011C-02E6-48BD-8B8D-DE7CFABC7A09}");
     r = MsiDatabaseCommit(hdb);
     ok(r == ERROR_SUCCESS, "MsiDatabaseCommit failed: %d\n", r);
     MsiCloseHandle(hdb);
 
     r = MsiInstallProductA(msifile2, "");
-    ok(r == S_OK, "Expected ERROR_PRODUCT_VERSION, got %d\n", r);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     r = MsiOpenProductA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", &hprod);
     ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
@@ -3850,7 +3863,7 @@ static void test_states(void)
     size = MAX_PATH;
     r = MsiGetProductPropertyA(hprod, "ProductVersion", value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!strcmp(value, "1.1.2"), "ProductVersion = %s\n", value);
+    ok(!strcmp(value, "1.1.3"), "ProductVersion = %s\n", value);
     MsiCloseHandle(hprod);
 
     /* uninstall the product */
