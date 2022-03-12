@@ -42,7 +42,7 @@ interface IWineMsiRemote
     HRESULT remote_DatabaseOpenView( [in] MSIHANDLE db, [in] LPCWSTR query, [out] MSIHANDLE *view );
 
     HRESULT remote_GetActiveDatabase( [in] MSIHANDLE hinst, [out] MSIHANDLE *handle );
-    HRESULT remote_GetProperty( [in] MSIHANDLE hinst, [in] BSTR property, [out, size_is(*size)] BSTR value, [in, out] DWORD *size );
+    UINT remote_GetProperty( [in] MSIHANDLE hinst, [in, string] LPCWSTR property, [out, string] LPWSTR *value, [out] DWORD *size );
     HRESULT remote_SetProperty( [in] MSIHANDLE hinst, [in] BSTR property, [in] BSTR value );
     HRESULT remote_ProcessMessage( [in] MSIHANDLE hinst, [in] INSTALLMESSAGE message, [in] MSIHANDLE record );
     HRESULT remote_DoAction( [in] MSIHANDLE hinst, [in] BSTR action );

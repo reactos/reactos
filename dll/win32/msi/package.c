@@ -29,7 +29,6 @@
 #include "winnls.h"
 #include "shlwapi.h"
 #include "wingdi.h"
-#include "wine/debug.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objidl.h"
@@ -39,10 +38,13 @@
 #include "winver.h"
 #include "urlmon.h"
 #include "shlobj.h"
-#include "wine/unicode.h"
 #include "objbase.h"
 #include "msidefs.h"
 #include "sddl.h"
+
+#include "wine/heap.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
 #include "msipriv.h"
 #include "winemsi.h"
@@ -2403,52 +2405,34 @@ static UINT MSI_GetProperty( MSIHANDLE handle, LPCWSTR name,
     package = msihandle2msiinfo( handle, MSIHANDLETYPE_PACKAGE );
     if (!package)
     {
-        HRESULT hr;
-        LPWSTR value = NULL;
+        LPWSTR value = NULL, buffer;
         MSIHANDLE remote;
-        BSTR bname;
 
         if (!(remote = msi_get_remote(handle)))
             return ERROR_INVALID_HANDLE;
 
-        bname = SysAllocString( name );
-        if (!bname)
-            return ERROR_OUTOFMEMORY;
+        r = remote_GetProperty(remote, name, &value, &len);
+        if (r != ERROR_SUCCESS)
+            return r;
 
-        hr = remote_GetProperty(remote, bname, NULL, &len);
-        if (FAILED(hr))
-            goto done;
-
-        len++;
-        value = msi_alloc(len * sizeof(WCHAR));
-        if (!value)
+        /* String might contain embedded nulls.
+         * Native returns the correct size but truncates the string. */
+        buffer = heap_alloc_zero((len + 1) * sizeof(WCHAR));
+        if (!buffer)
         {
-            r = ERROR_OUTOFMEMORY;
-            goto done;
+            midl_user_free(value);
+            return ERROR_OUTOFMEMORY;
         }
+        strcpyW(buffer, value);
 
-        hr = remote_GetProperty(remote, bname, value, &len);
-        if (FAILED(hr))
-            goto done;
-
-        r = msi_strcpy_to_awstring( value, len, szValueBuf, pchValueBuf );
+        r = msi_strcpy_to_awstring(buffer, len, szValueBuf, pchValueBuf);
 
         /* Bug required by Adobe installers */
-        if (!szValueBuf->unicode && !szValueBuf->str.a)
+        if (pchValueBuf && !szValueBuf->unicode && !szValueBuf->str.a)
             *pchValueBuf *= sizeof(WCHAR);
 
-done:
-        SysFreeString(bname);
-        msi_free(value);
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
+        heap_free(buffer);
+        midl_user_free(value);
         return r;
     }
 
@@ -2505,11 +2489,22 @@ HRESULT __cdecl remote_GetActiveDatabase(MSIHANDLE hinst, MSIHANDLE *handle)
     return S_OK;
 }
 
-HRESULT __cdecl remote_GetProperty(MSIHANDLE hinst, BSTR property, BSTR value, DWORD *size)
+UINT __cdecl remote_GetProperty(MSIHANDLE hinst, LPCWSTR property, LPWSTR *value, DWORD *size)
 {
-    UINT r = MsiGetPropertyW(hinst, property, value, size);
-    if (r != ERROR_SUCCESS) return HRESULT_FROM_WIN32(r);
-    return S_OK;
+    WCHAR empty[1];
+    UINT r;
+
+    *size = 0;
+    r = MsiGetPropertyW(hinst, property, empty, size);
+    if (r == ERROR_MORE_DATA)
+    {
+        ++*size;
+        *value = midl_user_allocate(*size * sizeof(WCHAR));
+        if (!*value)
+            return ERROR_OUTOFMEMORY;
+        r = MsiGetPropertyW(hinst, property, *value, size);
+    }
+    return r;
 }
 
 HRESULT __cdecl remote_SetProperty(MSIHANDLE hinst, BSTR property, BSTR value)

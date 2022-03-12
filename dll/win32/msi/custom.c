@@ -35,6 +35,7 @@
 
 #include "msipriv.h"
 #include "winemsi.h"
+#include "wine/heap.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "wine/exception.h"
@@ -68,6 +69,16 @@ static CRITICAL_SECTION_DEBUG msi_custom_action_cs_debug =
 static CRITICAL_SECTION msi_custom_action_cs = { &msi_custom_action_cs_debug, -1, 0, 0, 0, 0 };
 
 static struct list msi_pending_custom_actions = LIST_INIT( msi_pending_custom_actions );
+
+void  __RPC_FAR * __RPC_USER MIDL_user_allocate(SIZE_T len)
+{
+    return heap_alloc(len);
+}
+
+void __RPC_USER MIDL_user_free(void __RPC_FAR * ptr)
+{
+    heap_free(ptr);
+}
 
 UINT msi_schedule_action( MSIPACKAGE *package, UINT script, const WCHAR *action )
 {
