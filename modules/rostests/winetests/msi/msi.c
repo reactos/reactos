@@ -348,12 +348,11 @@ static const char spf_install_exec_seq_dat[] =
     "SetFolderProp\t\t950\n"
     "SetFolderProp2\t\t960\n"
     "CostFinalize\t\t1000\n"
+    "InstallValidate\t\t1400\n"
+    "InstallInitialize\t\t1500\n"
     "InstallFiles\t\t4000\n"
     "InstallServices\t\t5000\n"
-    "InstallFinalize\t\t6600\n"
-    "InstallInitialize\t\t1500\n"
-    "InstallValidate\t\t1400\n"
-    "LaunchConditions\t\t100";
+    "InstallFinalize\t\t6600\n";
 
 static const char spf_install_ui_seq_dat[] =
     "Action\tCondition\tSequence\n"
@@ -363,6 +362,68 @@ static const char spf_install_ui_seq_dat[] =
     "FileCost\t\t900\n"
     "CostFinalize\t\t1000\n"
     "ExecuteAction\t\t1100\n";
+
+static const char spf_directory_dat[] =
+    "Directory\tDirectory_Parent\tDefaultDir\n"
+    "s72\tS72\tl255\n"
+    "Directory\tDirectory\n"
+    "PARENTDIR\tTARGETDIR\tparent\n"
+    "CHILDDIR\tPARENTDIR\tchild\n"
+    "MSITESTDIR\tProgramFilesFolder\tmsitest\n"
+    "ProgramFilesFolder\tTARGETDIR\t.\n"
+    "TARGETDIR\t\tSourceDir";
+
+static const char spf_component_dat[] =
+    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
+    "s72\tS38\ts72\ti2\tS255\tS72\n"
+    "Component\tComponent\n"
+    "maximus\t{DF2CBABC-3BCC-47E5-A998-448D1C0C895B}\tMSITESTDIR\t0\tUILevel=5\tmaximus\n";
+
+static const char spf2_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "CostInitialize\t\t800\n"
+    "FileCost\t\t900\n"
+    "FormatParentFolderCheck\t\t910\n"
+    "FormatChildFolderCheck\t\t920\n"
+    "CheckParentFolder\tNOT PARENTDIR=PARENTDIRCHECK\t930\n"
+    "CheckChildFolder\tNOT CHILDDIR=CHILDDIRCHECK\t940\n"
+    "FormatParentFolderCheck2\t\t945\n"
+    "SetParentFolder\t\t950\n"
+    "CheckParentFolder2\tNOT PARENTDIR=PARENTDIRCHECK\t960\n"
+    "CheckChildFolder2\tNOT CHILDDIR=CHILDDIRCHECK\t970\n"
+    "CostFinalize\t\t1000\n"
+    "FormatParentFolderCheck3\t\t1005\n"
+    "CheckParentFolder3\tNOT PARENTDIR=PARENTDIRCHECK\t1010\n"
+    "CheckChildFolder3\tNOT CHILDDIR=CHILDDIRCHECK\t1020\n"
+    "InstallValidate\t\t1400\n"
+    "InstallInitialize\t\t1500\n"
+    "InstallFiles\t\t4000\n"
+    "CreateShortcuts\t\t4100\n"
+    "InstallFinalize\t\t6600\n";
+
+static const char spf2_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\tISComments\n"
+    "s72\ti2\tS64\tS0\tS255\n"
+    "CustomAction\tAction\n"
+    "FormatParentFolderCheck\t51\tPARENTDIRCHECK\t[TARGETDIR]parent\\\t\n"
+    "FormatChildFolderCheck\t51\tCHILDDIRCHECK\t[TARGETDIR]parent\\child\\\t\n"
+    "CheckParentFolder\t19\tPARENTDIR\tparent prop wrong before set: [PARENTDIR]\t\n"
+    "CheckChildFolder\t19\tCHILDDIR\tchild prop wrong before set: [CHILDDIR]\t\n"
+    "FormatParentFolderCheck2\t51\tPARENTDIRCHECK\t[ProgramFilesFolder]msitest\\parent\t\n"
+    "SetParentFolder\t51\tPARENTDIR\t[PARENTDIRCHECK]\t\n"
+    "CheckParentFolder2\t19\tPARENTDIR\tparent prop wrong after set: [PARENTDIR]\t\n"
+    "CheckChildFolder2\t19\tCHILDDIR\tchild prop wrong after set: [CHILDDIR]\t\n"
+    "FormatParentFolderCheck3\t51\tPARENTDIRCHECK\t[ProgramFilesFolder]msitest\\parent\\\t\n"
+    "CheckParentFolder3\t19\tPARENTDIR\tparent prop wrong after CostFinalize: [PARENTDIR]\t\n"
+    "CheckChildFolder3\t19\tCHILDDIR\tchild prop wrong after CostFinalize: [CHILDDIR]\t\n";
+
+static const char shortcut_dat[] =
+    "Shortcut\tDirectory_\tName\tComponent_\tTarget\tArguments\tDescription\tHotkey\tIcon_\tIconIndex\tShowCmd\tWkDir\n"
+    "s72\ts72\tl128\ts72\ts72\tS255\tL255\tI2\tS72\tI2\tI2\tS72\n"
+    "Shortcut\tShortcut\n"
+    "Shortcut\tCHILDDIR\tShortcut\tmaximus\t[#maximus]\t\tShortcut\t\t\t\t\tMSITESTDIR\n";
 
 static const char sd_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -647,6 +708,21 @@ static const msi_table spf_tables[] =
     ADD_TABLE(spf_custom_action),
     ADD_TABLE(spf_install_exec_seq),
     ADD_TABLE(spf_install_ui_seq)
+};
+
+static const msi_table spf2_tables[] =
+{
+    ADD_TABLE(spf_component),
+    ADD_TABLE(spf_directory),
+    ADD_TABLE(lus_feature),
+    ADD_TABLE(lus_feature_comp),
+    ADD_TABLE(lus_file),
+    ADD_TABLE(lus0_media),
+    ADD_TABLE(property),
+    ADD_TABLE(spf2_custom_action),
+    ADD_TABLE(spf2_install_exec_seq),
+    ADD_TABLE(spf_install_ui_seq),
+    ADD_TABLE(shortcut)
 };
 
 static const msi_table sd_tables[] =
@@ -14104,16 +14180,12 @@ error:
 static void test_setpropertyfolder(void)
 {
     UINT r;
-    CHAR path[MAX_PATH];
 
     if (is_process_limited())
     {
         skip("process is limited\n");
         return;
     }
-
-    lstrcpyA(path, PROG_FILES_DIR);
-    lstrcatA(path, "\\msitest\\added");
 
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\maximus", 500);
@@ -14133,6 +14205,26 @@ static void test_setpropertyfolder(void)
     ok(delete_pf("msitest\\added\\added2", FALSE), "Directory not created\n");
     ok(delete_pf("msitest\\added", FALSE), "Directory not created\n");
     ok(delete_pf("msitest", FALSE), "Directory not created\n");
+
+    CreateDirectoryA("parent", NULL);
+    CreateDirectoryA("parent\\child", NULL);
+    create_file("parent\\child\\maximus", 500);
+
+    create_database(msifile, spf2_tables, ARRAY_SIZE(spf2_tables));
+
+    r = MsiInstallProductA(msifile, "TARGETDIR=c:\\");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    ok(delete_pf("msitest\\maximus", TRUE), "file not installed\n");
+    ok(delete_pf("msitest", FALSE), "directory not created\n");
+
+    ok(DeleteFileA("c:\\parent\\child\\Shortcut.lnk"), "file not installed");
+    ok(RemoveDirectoryA("c:\\parent\\child"), "directory not created\n");
+    ok(RemoveDirectoryA("c:\\parent"), "directory not created\n");
+
+    DeleteFileA("parent\\child\\maximus");
+    RemoveDirectoryA("parent\\child");
+    RemoveDirectoryA("parent");
 
 error:
     DeleteFileA(msifile);
