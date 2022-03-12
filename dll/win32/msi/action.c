@@ -5191,19 +5191,8 @@ static UINT ACTION_UnpublishFeatures(MSIPACKAGE *package)
 
 static UINT msi_publish_install_properties(MSIPACKAGE *package, HKEY hkey)
 {
-    SYSTEMTIME systime;
-    DWORD size, langid;
-    WCHAR date[9], *val, *buffer;
-    const WCHAR *prop, *key;
-
-    static const WCHAR date_fmt[] = {'%','i','%','0','2','i','%','0','2','i',0};
-    static const WCHAR modpath_fmt[] =
-        {'M','s','i','E','x','e','c','.','e','x','e',' ',
-         '/','I','[','P','r','o','d','u','c','t','C','o','d','e',']',0};
-    static const WCHAR szModifyPath[] =
-        {'M','o','d','i','f','y','P','a','t','h',0};
-    static const WCHAR szUninstallString[] =
-        {'U','n','i','n','s','t','a','l','l','S','t','r','i','n','g',0};
+    static const WCHAR date_fmt[] =
+        {'%','i','%','0','2','i','%','0','2','i',0};
     static const WCHAR szEstimatedSize[] =
         {'E','s','t','i','m','a','t','e','d','S','i','z','e',0};
     static const WCHAR szDisplayVersion[] =
@@ -5260,6 +5249,18 @@ static UINT msi_publish_install_properties(MSIPACKAGE *package, HKEY hkey)
         {'A','R','P','S','Y','S','T','E','M','C','O','M','P','O','N','E','N','T',0};
     static const WCHAR szSystemComponent[] =
         {'S','y','s','t','e','m','C','o','m','p','o','n','e','n','t',0};
+    static const WCHAR szARPNOMODIFY[] =
+        {'A','R','P','N','O','M','O','D','I','F','Y',0};
+    static const WCHAR szNoModify[] =
+        {'N','o','M','o','d','i','f','y',0};
+    static const WCHAR szARPNOREMOVE[] =
+        {'A','R','P','N','O','R','E','M','O','V','E',0};
+    static const WCHAR szNoRemove[] =
+        {'N','o','R','e','m','o','v','e',0};
+    static const WCHAR szARPNOREPAIR[] =
+        {'A','R','P','N','O','R','E','P','A','I','R',0};
+    static const WCHAR szNoRepair[] =
+        {'N','o','R','e','p','a','i','r',0};
 
     static const WCHAR *propval[] = {
         szARPAUTHORIZEDCDFPREFIX, szAuthorizedCDFPrefix,
@@ -5278,6 +5279,10 @@ static UINT msi_publish_install_properties(MSIPACKAGE *package, HKEY hkey)
         NULL
     };
     const WCHAR **p = propval;
+    SYSTEMTIME systime;
+    DWORD size, langid;
+    WCHAR date[9], *val, *buffer;
+    const WCHAR *prop, *key;
 
     while (*p)
     {
@@ -5293,10 +5298,37 @@ static UINT msi_publish_install_properties(MSIPACKAGE *package, HKEY hkey)
     {
         msi_reg_set_val_dword( hkey, szSystemComponent, 1 );
     }
-    size = deformat_string(package, modpath_fmt, &buffer) * sizeof(WCHAR);
-    RegSetValueExW(hkey, szModifyPath, 0, REG_EXPAND_SZ, (LPBYTE)buffer, size);
-    RegSetValueExW(hkey, szUninstallString, 0, REG_EXPAND_SZ, (LPBYTE)buffer, size);
-    msi_free(buffer);
+
+    if (msi_get_property_int( package->db, szARPNOREMOVE, 0 ))
+        msi_reg_set_val_dword( hkey, szNoRemove, 1 );
+    else
+    {
+        static const WCHAR fmt_install[] =
+            {'M','s','i','E','x','e','c','.','e','x','e',' ',
+             '/','I','[','P','r','o','d','u','c','t','C','o','d','e',']',0};
+        static const WCHAR fmt_uninstall[] =
+            {'M','s','i','E','x','e','c','.','e','x','e',' ',
+             '/','X','[','P','r','o','d','u','c','t','C','o','d','e',']',0};
+        static const WCHAR szModifyPath[] =
+            {'M','o','d','i','f','y','P','a','t','h',0};
+        static const WCHAR szUninstallString[] =
+            {'U','n','i','n','s','t','a','l','l','S','t','r','i','n','g',0};
+        const WCHAR *fmt = fmt_install;
+
+        if (msi_get_property_int( package->db, szARPNOREPAIR, 0 ))
+            msi_reg_set_val_dword( hkey, szNoRepair, 1 );
+
+        if (msi_get_property_int( package->db, szARPNOMODIFY, 0 ))
+        {
+            msi_reg_set_val_dword( hkey, szNoModify, 1 );
+            fmt = fmt_uninstall;
+        }
+
+        size = deformat_string(package, fmt, &buffer) * sizeof(WCHAR);
+        RegSetValueExW(hkey, szModifyPath, 0, REG_EXPAND_SZ, (LPBYTE)buffer, size);
+        RegSetValueExW(hkey, szUninstallString, 0, REG_EXPAND_SZ, (LPBYTE)buffer, size);
+        msi_free(buffer);
+    }
 
     /* FIXME: Write real Estimated Size when we have it */
     msi_reg_set_val_dword(hkey, szEstimatedSize, 0);
