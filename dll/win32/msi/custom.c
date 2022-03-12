@@ -553,46 +553,49 @@ UINT CDECL __wine_msi_call_dll_function(const GUID *guid)
     if (r != ERROR_SUCCESS)
         return r;
 
+    hPackage = alloc_msi_remote_handle( remote_package );
+    if (!hPackage)
+    {
+        ERR( "failed to create handle for %x\n", remote_package );
+        midl_user_free( dll );
+        midl_user_free( proc );
+        return ERROR_INSTALL_FAILURE;
+    }
+
     hModule = LoadLibraryW( dll );
     if (!hModule)
     {
         ERR( "failed to load dll %s (%u)\n", debugstr_w( dll ), GetLastError() );
+        midl_user_free( dll );
+        midl_user_free( proc );
+        MsiCloseHandle( hPackage );
         return ERROR_SUCCESS;
     }
 
     fn = (MsiCustomActionEntryPoint) GetProcAddress( hModule, proc );
-    if (fn)
-    {
-        hPackage = alloc_msi_remote_handle( remote_package );
-        if (hPackage)
-        {
-            TRACE("calling %s\n", debugstr_a(proc));
-            handle_msi_break(proc);
-
-            __TRY
-            {
-                r = custom_proc_wrapper(fn, hPackage);
-            }
-            __EXCEPT_PAGE_FAULT
-            {
-                ERR("Custom action (%s:%s) caused a page fault: %08x\n",
-                    debugstr_w(dll), debugstr_a(proc), GetExceptionCode());
-                r = ERROR_SUCCESS;
-            }
-            __ENDTRY;
-
-            MsiCloseHandle( hPackage );
-        }
-        else
-            ERR("failed to create handle for %x\n", remote_package );
-    }
+    if (!fn) WARN( "GetProcAddress(%s) failed\n", debugstr_a(proc) );
     else
-        ERR("GetProcAddress(%s) failed\n", debugstr_a(proc));
+    {
+        handle_msi_break(proc);
+
+        __TRY
+        {
+            r = custom_proc_wrapper( fn, hPackage );
+        }
+        __EXCEPT_PAGE_FAULT
+        {
+            ERR( "Custom action (%s:%s) caused a page fault: %08x\n",
+                 debugstr_w(dll), debugstr_a(proc), GetExceptionCode() );
+            r = ERROR_SUCCESS;
+        }
+        __ENDTRY;
+    }
 
     FreeLibrary(hModule);
 
     midl_user_free(dll);
     midl_user_free(proc);
+    MsiCloseHandle(hPackage);
 
     return r;
 }
