@@ -173,6 +173,7 @@ typedef struct tagMSIMEDIAINFO
     LPWSTR disk_prompt;
     LPWSTR cabinet;
     LPWSTR volume_label;
+    LPWSTR last_volume;
     BOOL is_continuous;
     BOOL is_extracted;
     WCHAR sourcedir[MAX_PATH];

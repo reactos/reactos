@@ -664,6 +664,7 @@ void msi_free_media_info(MSIMEDIAINFO *mi)
     msi_free(mi->disk_prompt);
     msi_free(mi->cabinet);
     msi_free(mi->volume_label);
+    msi_free(mi->last_volume);
     msi_free(mi);
 }
 
@@ -898,20 +899,27 @@ UINT ready_media( MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi )
         }
     }
     /* check volume matches, change media if not */
-    if (mi->volume_label && mi->disk_id > 1)
+    if (mi->volume_label)
     {
-        WCHAR *source = msi_dup_property( package->db, szSourceDir );
-        BOOL match = source_matches_volume( mi, source );
-        msi_free( source );
-
-        if (!match && (mi->type == DRIVE_CDROM || mi->type == DRIVE_REMOVABLE))
+        /* assume first volume is in the drive */
+        if (mi->last_volume && strcmpiW( mi->last_volume, mi->volume_label ))
         {
-            if ((rc = msi_change_media( package, mi )) != ERROR_SUCCESS)
+            WCHAR *source = msi_dup_property( package->db, szSourceDir );
+            BOOL match = source_matches_volume( mi, source );
+            msi_free( source );
+
+            if (!match && (mi->type == DRIVE_CDROM || mi->type == DRIVE_REMOVABLE))
             {
-                msi_free( cabinet_file );
-                return rc;
+                if ((rc = msi_change_media( package, mi )) != ERROR_SUCCESS)
+                {
+                    msi_free( cabinet_file );
+                    return rc;
+                }
             }
         }
+
+        msi_free(mi->last_volume);
+        mi->last_volume = strdupW(mi->volume_label);
     }
     if (mi->cabinet)
     {
