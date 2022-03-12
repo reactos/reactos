@@ -434,7 +434,6 @@ static const MSIVIEWOPS storages_ops =
     NULL,
     NULL,
     NULL,
-    NULL,
 };
 
 static INT add_storages_to_table(MSISTORAGESVIEW *sv)

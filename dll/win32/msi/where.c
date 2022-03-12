@@ -1081,7 +1081,6 @@ static const MSIVIEWOPS where_ops =
     NULL,
     NULL,
     NULL,
-    NULL,
     WHERE_sort,
     NULL,
 };

@@ -2072,7 +2072,6 @@ static const MSIVIEWOPS table_ops =
     TABLE_add_ref,
     TABLE_release,
     TABLE_add_column,
-    TABLE_remove_column,
     NULL,
     TABLE_drop,
 };

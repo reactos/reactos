@@ -111,7 +111,6 @@ static const MSIVIEWOPS drop_ops =
     NULL,
     NULL,
     NULL,
-    NULL,
 };
 
 UINT DROP_CreateView(MSIDATABASE *db, MSIVIEW **view, LPCWSTR name)

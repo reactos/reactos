@@ -141,7 +141,6 @@ static const MSIVIEWOPS create_ops =
     NULL,
     NULL,
     NULL,
-    NULL,
 };
 
 static UINT check_columns( const column_info *col_info )

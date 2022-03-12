@@ -213,7 +213,6 @@ static const MSIVIEWOPS update_ops =
     NULL,
     NULL,
     NULL,
-    NULL,
 };
 
 UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,

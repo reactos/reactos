@@ -266,7 +266,6 @@ static const MSIVIEWOPS distinct_ops =
     NULL,
     NULL,
     NULL,
-    NULL,
 };
 
 UINT DISTINCT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table )

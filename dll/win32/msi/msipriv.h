@@ -317,11 +317,6 @@ typedef struct tagMSIVIEWOPS
     UINT (*add_column)( struct tagMSIVIEW *view, LPCWSTR table, UINT number, LPCWSTR column, UINT type, BOOL hold );
 
     /*
-     * remove_column - removes the column represented by table name and column number from the table
-     */
-    UINT (*remove_column)( struct tagMSIVIEW *view, LPCWSTR table, UINT number );
-
-    /*
      * sort - orders the table by columns
      */
     UINT (*sort)( struct tagMSIVIEW *view, column_info *columns );
