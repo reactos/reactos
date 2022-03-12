@@ -187,11 +187,6 @@ coclass MsiServerX3 { interface IMsiServer; }
 ]
 coclass WineMsiRemoteCustomAction { interface WineMsiRemoteCustomAction; }
 
-[
-    uuid(902b3592-9d08-4dfd-a593-d07c52546421)
-]
-coclass WineMsiRemotePackage { interface WineMsiRemotePackage; }
-
 [ uuid(000C1092-0000-0000-C000-000000000046), version(1.0) ]
 library WindowsInstaller
 {
