@@ -655,6 +655,8 @@ static void test_feature_states(MSIHANDLE hinst)
     INSTALLSTATE state, action;
     UINT r;
 
+    /* test feature states */
+
     r = MsiGetFeatureStateA(hinst, NULL, &state, &action);
     ok(hinst, r == ERROR_UNKNOWN_FEATURE, "got %u\n", r);
 
@@ -687,6 +689,35 @@ static void test_feature_states(MSIHANDLE hinst)
 
     r = MsiGetFeatureStateA(hinst, "One", &state, &action);
     ok(hinst, !r, "got %u\n", r);
+    ok(hinst, action == INSTALLSTATE_LOCAL, "got action %d\n", action);
+
+    /* test component states */
+
+    r = MsiGetComponentStateA(hinst, NULL, &state, &action);
+    ok(hinst, r == ERROR_UNKNOWN_COMPONENT, "got %u\n", r);
+
+    r = MsiGetComponentStateA(hinst, "fake", &state, &action);
+    ok(hinst, r == ERROR_UNKNOWN_COMPONENT, "got %u\n", r);
+
+    r = MsiGetComponentStateA(hinst, "One", NULL, &action);
+    ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
+
+    r = MsiGetComponentStateA(hinst, "One", &state, NULL);
+    ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
+
+    r = MsiGetComponentStateA(hinst, "One", &state, &action);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, state == INSTALLSTATE_ABSENT, "got state %d\n", state);
+    ok(hinst, action == INSTALLSTATE_LOCAL, "got action %d\n", action);
+
+    r = MsiGetComponentStateA(hinst, "dangler", &state, &action);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, state == INSTALLSTATE_ABSENT, "got state %d\n", state);
+    ok(hinst, action == INSTALLSTATE_UNKNOWN, "got action %d\n", action);
+
+    r = MsiGetComponentStateA(hinst, "component", &state, &action);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, state == INSTALLSTATE_UNKNOWN, "got state %d\n", state);
     ok(hinst, action == INSTALLSTATE_LOCAL, "got action %d\n", action);
 }
 

@@ -1359,33 +1359,22 @@ UINT WINAPI MsiGetComponentStateW(MSIHANDLE hInstall, LPCWSTR szComponent,
     TRACE("%d %s %p %p\n", hInstall, debugstr_w(szComponent),
            piInstalled, piAction);
 
+    if (!szComponent)
+        return ERROR_UNKNOWN_COMPONENT;
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
         MSIHANDLE remote;
-        HRESULT hr;
-        BSTR component;
 
         if (!(remote = msi_get_remote(hInstall)))
             return ERROR_INVALID_HANDLE;
 
-        component = SysAllocString(szComponent);
-        if (!component)
-            return ERROR_OUTOFMEMORY;
+        /* FIXME: should use SEH */
+        if (!piInstalled || !piAction)
+            return RPC_X_NULL_REF_POINTER;
 
-        hr = remote_GetComponentState(remote, component, piInstalled, piAction);
-
-        SysFreeString(component);
-
-        if (FAILED(hr))
-        {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
+        return remote_GetComponentState(remote, szComponent, piInstalled, piAction);
     }
 
     ret = MSI_GetComponentStateW( package, szComponent, piInstalled, piAction);

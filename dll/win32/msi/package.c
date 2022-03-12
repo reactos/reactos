@@ -2541,11 +2541,10 @@ UINT __cdecl remote_SetFeatureState(MSIHANDLE hinst, LPCWSTR feature, INSTALLSTA
     return MsiSetFeatureStateW(hinst, feature, state);
 }
 
-HRESULT __cdecl remote_GetComponentState(MSIHANDLE hinst, BSTR component,
+UINT __cdecl remote_GetComponentState(MSIHANDLE hinst, LPCWSTR component,
                                       INSTALLSTATE *installed, INSTALLSTATE *action)
 {
-    UINT r = MsiGetComponentStateW(hinst, component, installed, action);
-    return HRESULT_FROM_WIN32(r);
+    return MsiGetComponentStateW(hinst, component, installed, action);
 }
 
 HRESULT __cdecl remote_SetComponentState(MSIHANDLE hinst, BSTR component, INSTALLSTATE state)
