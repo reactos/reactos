@@ -28,6 +28,7 @@
 #include <stdio.h>
 
 #include "wine/debug.h"
+#include "wine/heap.h"
 #include "wine/unicode.h"
 
 #include "initguid.h"
@@ -400,20 +401,21 @@ extern UINT CDECL __wine_msi_call_dll_function(GUID *guid);
 
 static DWORD CALLBACK custom_action_thread(void *arg)
 {
-    GUID *guid = arg;
-    return __wine_msi_call_dll_function(guid);
+    GUID guid = *(GUID *)arg;
+    heap_free(arg);
+    return __wine_msi_call_dll_function(&guid);
 }
 
 static int custom_action_server(const WCHAR *arg)
 {
     static const WCHAR pipe_name[] = {'\\','\\','.','\\','p','i','p','e','\\','m','s','i','c','a','_','%','x','_','%','d',0};
     DWORD client_pid = atoiW(arg);
+    GUID guid, *thread_guid;
     DWORD64 thread64;
     WCHAR buffer[24];
     HANDLE thread;
     HANDLE pipe;
     DWORD size;
-    GUID guid;
 
     TRACE("%s\n", debugstr_w(arg));
 
@@ -443,7 +445,9 @@ static int custom_action_server(const WCHAR *arg)
             return 0;
         }
 
-        thread = CreateThread(NULL, 0, custom_action_thread, &guid, 0, NULL);
+        thread_guid = heap_alloc(sizeof(GUID));
+        memcpy(thread_guid, &guid, sizeof(GUID));
+        thread = CreateThread(NULL, 0, custom_action_thread, thread_guid, 0, NULL);
 
         /* give the thread handle to the client to wait on, since we might have
          * to run a nested action and can't block during this one */
