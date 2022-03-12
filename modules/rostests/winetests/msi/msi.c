@@ -1094,7 +1094,7 @@ static void test_MsiGetFileHash(void)
     r = pMsiGetFileHashA(name, 0, NULL);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
-    for (i = 0; i < sizeof(hash_data) / sizeof(hash_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(hash_data); i++)
     {
         int ret;
 
@@ -3313,7 +3313,7 @@ static void test_MsiProvideComponent(void)
 
     create_test_files();
     create_file("msitest\\sourcedir.txt", 1000);
-    create_database(msifile, sd_tables, sizeof(sd_tables) / sizeof(msi_table));
+    create_database(msifile, sd_tables, ARRAY_SIZE(sd_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -13454,7 +13454,7 @@ static void test_MsiConfigureProductEx(void)
     create_file_data("msitest\\helium", "helium", 500);
     create_file_data("msitest\\lithium", "lithium", 500);
 
-    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
+    create_database(msifile, mcp_tables, ARRAY_SIZE(mcp_tables));
 
     if (is_wow64)
         access |= KEY_WOW64_64KEY;
@@ -13582,7 +13582,7 @@ static void test_MsiConfigureProductEx(void)
     ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
     ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
 
-    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
+    create_database(msifile, mcp_tables, ARRAY_SIZE(mcp_tables));
 
     /* install the product, machine */
     r = MsiInstallProductA(msifile, "ALLUSERS=1 INSTALLLEVEL=10 PROPVAR=42");
@@ -13623,7 +13623,7 @@ static void test_MsiConfigureProductEx(void)
     ok(pf_exists("msitest"), "File not installed\n");
 
     RegCloseKey(props);
-    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
+    create_database(msifile, mcp_tables, ARRAY_SIZE(mcp_tables));
 
     /* LastUsedSource can be used as a last resort */
     r = MsiConfigureProductExA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}",
@@ -13731,7 +13731,7 @@ static void test_MsiSetFeatureAttributes(void)
         skip("process is limited\n");
         return;
     }
-    create_database( msifile, tables, sizeof(tables) / sizeof(tables[0]) );
+    create_database( msifile, tables, ARRAY_SIZE( tables ));
 
     strcpy( path, CURR_DIR );
     strcat( path, "\\" );
@@ -13813,7 +13813,7 @@ static void test_MsiGetFeatureInfo(void)
         skip("process is limited\n");
         return;
     }
-    create_database( msifile, tables, sizeof(tables) / sizeof(tables[0]) );
+    create_database( msifile, tables, ARRAY_SIZE( tables ));
 
     strcpy( path, CURR_DIR );
     strcat( path, "\\" );
@@ -13997,9 +13997,9 @@ static void test_lastusedsource(void)
     create_cab_file("test1.cab", MEDIA_SIZE, "maximus\0");
     DeleteFileA("maximus");
 
-    create_database("msifile0.msi", lus0_tables, sizeof(lus0_tables) / sizeof(msi_table));
-    create_database("msifile1.msi", lus1_tables, sizeof(lus1_tables) / sizeof(msi_table));
-    create_database("msifile2.msi", lus2_tables, sizeof(lus2_tables) / sizeof(msi_table));
+    create_database("msifile0.msi", lus0_tables, ARRAY_SIZE(lus0_tables));
+    create_database("msifile1.msi", lus1_tables, ARRAY_SIZE(lus1_tables));
+    create_database("msifile2.msi", lus2_tables, ARRAY_SIZE(lus2_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -14119,7 +14119,7 @@ static void test_setpropertyfolder(void)
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\maximus", 500);
 
-    create_database(msifile, spf_tables, sizeof(spf_tables) / sizeof(msi_table));
+    create_database(msifile, spf_tables, ARRAY_SIZE(spf_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
 
@@ -14162,7 +14162,7 @@ static void test_sourcedir_props(void)
 
     create_test_files();
     create_file("msitest\\sourcedir.txt", 1000);
-    create_database(msifile, sd_tables, sizeof(sd_tables) / sizeof(msi_table));
+    create_database(msifile, sd_tables, ARRAY_SIZE(sd_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
 
@@ -14229,11 +14229,11 @@ static void test_concurrentinstall(void)
     create_file("msitest\\maximus", 500);
     create_file("msitest\\msitest\\augustus", 500);
 
-    create_database(msifile, ci_tables, sizeof(ci_tables) / sizeof(msi_table));
+    create_database(msifile, ci_tables, ARRAY_SIZE(ci_tables));
 
     lstrcpyA(path, CURR_DIR);
     lstrcatA(path, "\\msitest\\concurrent.msi");
-    create_database(path, ci2_tables, sizeof(ci2_tables) / sizeof(msi_table));
+    create_database(path, ci2_tables, ARRAY_SIZE(ci2_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
 
@@ -14277,7 +14277,7 @@ static void test_command_line_parsing(void)
     }
 
     create_test_files();
-    create_database(msifile, cl_tables, sizeof(cl_tables)/sizeof(msi_table));
+    create_database(msifile, cl_tables, ARRAY_SIZE(cl_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 

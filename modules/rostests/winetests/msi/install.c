@@ -2706,7 +2706,7 @@ static void test_MsiInstallProduct(void)
        "Expected ERROR_PATH_NOT_FOUND, got %d\n", r);
 
     create_test_files();
-    create_database(msifile, tables, sizeof(tables) / sizeof(msi_table));
+    create_database(msifile, tables, ARRAY_SIZE(tables));
 
     /* install, don't publish */
     r = MsiInstallProductA(msifile, NULL);
@@ -2757,7 +2757,7 @@ static void test_MsiInstallProduct(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     RegDeleteKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest");
 
-    create_database(msifile, up_tables, sizeof(up_tables) / sizeof(msi_table));
+    create_database(msifile, up_tables, ARRAY_SIZE(up_tables));
 
     /* not published, RemovePreviousVersions set */
     r = MsiInstallProductA(msifile, NULL);
@@ -2769,7 +2769,7 @@ static void test_MsiInstallProduct(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     RegDeleteKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest");
 
-    create_database(msifile, up2_tables, sizeof(up2_tables) / sizeof(msi_table));
+    create_database(msifile, up2_tables, ARRAY_SIZE(up2_tables));
 
     /* not published, version number bumped */
     r = MsiInstallProductA(msifile, NULL);
@@ -2781,7 +2781,7 @@ static void test_MsiInstallProduct(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     RegDeleteKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest");
 
-    create_database(msifile, up3_tables, sizeof(up3_tables) / sizeof(msi_table));
+    create_database(msifile, up3_tables, ARRAY_SIZE(up3_tables));
 
     /* not published, RemovePreviousVersions set and version number bumped */
     r = MsiInstallProductA(msifile, NULL);
@@ -2793,7 +2793,7 @@ static void test_MsiInstallProduct(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
     RegDeleteKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest");
 
-    create_database(msifile, up4_tables, sizeof(up4_tables) / sizeof(msi_table));
+    create_database(msifile, up4_tables, ARRAY_SIZE(up4_tables));
 
     /* install, publish product */
     r = MsiInstallProductA(msifile, "PUBLISH_PRODUCT=1");
@@ -2804,7 +2804,7 @@ static void test_MsiInstallProduct(void)
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
-    create_database(msifile, up4_tables, sizeof(up4_tables) / sizeof(msi_table));
+    create_database(msifile, up4_tables, ARRAY_SIZE(up4_tables));
 
     /* published, reinstall */
     r = MsiInstallProductA(msifile, NULL);
@@ -2815,7 +2815,7 @@ static void test_MsiInstallProduct(void)
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
-    create_database(msifile, up5_tables, sizeof(up5_tables) / sizeof(msi_table));
+    create_database(msifile, up5_tables, ARRAY_SIZE(up5_tables));
 
     /* published product, RemovePreviousVersions set */
     r = MsiInstallProductA(msifile, NULL);
@@ -2826,7 +2826,7 @@ static void test_MsiInstallProduct(void)
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
-    create_database(msifile, up6_tables, sizeof(up6_tables) / sizeof(msi_table));
+    create_database(msifile, up6_tables, ARRAY_SIZE(up6_tables));
 
     /* published product, version number bumped */
     r = MsiInstallProductA(msifile, NULL);
@@ -2837,7 +2837,7 @@ static void test_MsiInstallProduct(void)
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
-    create_database(msifile, up7_tables, sizeof(up7_tables) / sizeof(msi_table));
+    create_database(msifile, up7_tables, ARRAY_SIZE(up7_tables));
 
     /* published product, RemovePreviousVersions set and version number bumped */
     r = MsiInstallProductA(msifile, NULL);
@@ -2863,7 +2863,7 @@ static void test_MsiSetComponentState(void)
     char path[MAX_PATH];
     UINT r;
 
-    create_database(msifile, tables, sizeof(tables) / sizeof(msi_table));
+    create_database(msifile, tables, ARRAY_SIZE(tables));
 
     CoInitialize(NULL);
 
@@ -2913,7 +2913,7 @@ static void test_packagecoltypes(void)
     LPCSTR query;
     UINT r, count;
 
-    create_database(msifile, tables, sizeof(tables) / sizeof(msi_table));
+    create_database(msifile, tables, ARRAY_SIZE(tables));
 
     CoInitialize(NULL);
 
@@ -3032,7 +3032,7 @@ static void test_continuouscabs(void)
     }
 
     create_cc_test_files();
-    create_database(msifile, cc_tables, sizeof(cc_tables) / sizeof(msi_table));
+    create_database(msifile, cc_tables, ARRAY_SIZE(cc_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3055,7 +3055,7 @@ static void test_continuouscabs(void)
     DeleteFileA(msifile);
 
     create_cc_test_files();
-    create_database(msifile, cc2_tables, sizeof(cc2_tables) / sizeof(msi_table));
+    create_database(msifile, cc2_tables, ARRAY_SIZE(cc2_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3081,7 +3081,7 @@ static void test_continuouscabs(void)
 
     /* Filename from cab is right and the one from msi is wrong */
     create_cc_test_files();
-    create_database(msifile, cc3_tables, sizeof(cc3_tables) / sizeof(msi_table));
+    create_database(msifile, cc3_tables, ARRAY_SIZE(cc3_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3105,7 +3105,7 @@ static void test_continuouscabs(void)
     /* Filename from msi is right and the one from cab is wrong */
     create_cc_test_files();
     ok(MoveFileA("test2.cab", "test2_.cab"), "Cannot rename test2.cab to test2_.cab\n");
-    create_database(msifile, cc3_tables, sizeof(cc3_tables) / sizeof(msi_table));
+    create_database(msifile, cc3_tables, ARRAY_SIZE(cc3_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3137,7 +3137,7 @@ static void test_caborder(void)
     create_file("augustus", 50000);
     create_file("caesar", 500);
 
-    create_database(msifile, cc_tables, sizeof(cc_tables) / sizeof(msi_table));
+    create_database(msifile, cc_tables, ARRAY_SIZE(cc_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3177,7 +3177,7 @@ static void test_caborder(void)
     DeleteFileA(msifile);
 
     create_cc_test_files();
-    create_database(msifile, co_tables, sizeof(co_tables) / sizeof(msi_table));
+    create_database(msifile, co_tables, ARRAY_SIZE(co_tables));
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
@@ -3193,7 +3193,7 @@ static void test_caborder(void)
     DeleteFileA(msifile);
 
     create_cc_test_files();
-    create_database(msifile, co2_tables, sizeof(co2_tables) / sizeof(msi_table));
+    create_database(msifile, co2_tables, ARRAY_SIZE(co2_tables));
 
     r = MsiInstallProductA(msifile, NULL);
     ok(!delete_pf("msitest\\caesar", TRUE), "File is installed\n");
@@ -3229,7 +3229,7 @@ static void test_mixedmedia(void)
     create_file("msitest\\augustus", 500);
     create_file("caesar", 500);
 
-    create_database(msifile, mm_tables, sizeof(mm_tables) / sizeof(msi_table));
+    create_database(msifile, mm_tables, ARRAY_SIZE(mm_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3262,7 +3262,7 @@ static void test_samesequence(void)
     UINT r;
 
     create_cc_test_files();
-    create_database(msifile, ss_tables, sizeof(ss_tables) / sizeof(msi_table));
+    create_database(msifile, ss_tables, ARRAY_SIZE(ss_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3291,7 +3291,7 @@ static void test_uiLevelFlags(void)
     UINT r;
 
     create_cc_test_files();
-    create_database(msifile, ui_tables, sizeof(ui_tables) / sizeof(msi_table));
+    create_database(msifile, ui_tables, ARRAY_SIZE(ui_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE | INSTALLUILEVEL_SOURCERESONLY, NULL);
 
@@ -3346,7 +3346,7 @@ static void test_readonlyfile(void)
 
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\maximus", 500);
-    create_database(msifile, rof_tables, sizeof(rof_tables) / sizeof(msi_table));
+    create_database(msifile, rof_tables, ARRAY_SIZE(rof_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3398,7 +3398,7 @@ static void test_readonlyfile_cab(void)
     create_cab_file("test1.cab", MEDIA_SIZE, "maximus\0");
     DeleteFileA("maximus");
 
-    create_database(msifile, rofc_tables, sizeof(rofc_tables) / sizeof(msi_table));
+    create_database(msifile, rofc_tables, ARRAY_SIZE(rofc_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3452,7 +3452,7 @@ static void test_setdirproperty(void)
 
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\maximus", 500);
-    create_database(msifile, sdp_tables, sizeof(sdp_tables) / sizeof(msi_table));
+    create_database(msifile, sdp_tables, ARRAY_SIZE(sdp_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3493,7 +3493,7 @@ static void test_cabisextracted(void)
     create_cab_file("test2.cab", MEDIA_SIZE, "augustus\0");
     create_cab_file("test3.cab", MEDIA_SIZE, "caesar\0");
 
-    create_database(msifile, cie_tables, sizeof(cie_tables) / sizeof(msi_table));
+    create_database(msifile, cie_tables, ARRAY_SIZE(cie_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3727,7 +3727,7 @@ static void test_transformprop(void)
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\augustus", 500);
 
-    create_database(msifile, tp_tables, sizeof(tp_tables) / sizeof(msi_table));
+    create_database(msifile, tp_tables, ARRAY_SIZE(tp_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3775,7 +3775,7 @@ static void test_currentworkingdir(void)
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\augustus", 500);
 
-    create_database(msifile, cwd_tables, sizeof(cwd_tables) / sizeof(msi_table));
+    create_database(msifile, cwd_tables, ARRAY_SIZE(cwd_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -3859,7 +3859,7 @@ static void test_admin(void)
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\augustus", 500);
 
-    create_database(msifile, adm_tables, sizeof(adm_tables) / sizeof(msi_table));
+    create_database(msifile, adm_tables, ARRAY_SIZE(adm_tables));
     set_admin_summary_info(msifileW);
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
@@ -3937,7 +3937,7 @@ static void test_adminprops(void)
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\augustus", 500);
 
-    create_database(msifile, amp_tables, sizeof(amp_tables) / sizeof(msi_table));
+    create_database(msifile, amp_tables, ARRAY_SIZE(amp_tables));
     set_admin_summary_info(msifileW);
     set_admin_property_stream(msifile);
 
@@ -3990,7 +3990,7 @@ static void test_missingcab(void)
     create_file("maximus", 500);
     create_file("tiberius", 500);
 
-    create_database(msifile, mc_tables, sizeof(mc_tables) / sizeof(msi_table));
+    create_database(msifile, mc_tables, ARRAY_SIZE(mc_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -4058,7 +4058,7 @@ static void test_sourcefolder(void)
     CreateDirectoryA("msitest", NULL);
     create_file("augustus", 500);
 
-    create_database(msifile, sf_tables, sizeof(sf_tables) / sizeof(msi_table));
+    create_database(msifile, sf_tables, ARRAY_SIZE(sf_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -4097,7 +4097,7 @@ static void test_customaction1(void)
     UINT r;
 
     create_test_files();
-    create_database(msifile, ca1_tables, sizeof(ca1_tables) / sizeof(msi_table));
+    create_database(msifile, ca1_tables, ARRAY_SIZE(ca1_tables));
 
     /* create a test table */
     MsiOpenDatabaseW(msifileW, MSIDBOPEN_TRANSACT, &hdb);
@@ -4153,7 +4153,7 @@ static void test_customaction51(void)
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\augustus", 500);
 
-    create_database(msifile, ca51_tables, sizeof(ca51_tables) / sizeof(msi_table));
+    create_database(msifile, ca51_tables, ARRAY_SIZE(ca51_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -4197,7 +4197,7 @@ static void test_installstate(void)
     create_file("msitest\\lambda", 500);
     create_file("msitest\\mu", 500);
 
-    create_database(msifile, is_tables, sizeof(is_tables) / sizeof(msi_table));
+    create_database(msifile, is_tables, ARRAY_SIZE(is_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -4588,11 +4588,11 @@ static void test_sourcepath(void)
         return;
     }
 
-    create_database(msifile, sp_tables, sizeof(sp_tables) / sizeof(msi_table));
+    create_database(msifile, sp_tables, ARRAY_SIZE(sp_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
-    for (i = 0; i < sizeof(spmap) / sizeof(spmap[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(spmap); i++)
     {
         if (spmap[i].sost)
         {
@@ -4675,7 +4675,7 @@ static void test_missingcomponent(void)
     create_file("msitest\\lithium", 500);
     create_file("beryllium", 500);
 
-    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
+    create_database(msifile, mcp_tables, ARRAY_SIZE(mcp_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -4728,7 +4728,7 @@ static void test_sourcedirprop(void)
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\augustus", 500);
 
-    create_database(msifile, ca51_tables, sizeof(ca51_tables) / sizeof(msi_table));
+    create_database(msifile, ca51_tables, ARRAY_SIZE(ca51_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -4788,8 +4788,7 @@ static void test_adminimage(void)
     create_file("msitest\\cabout\\new\\five.txt", 100);
     create_file("msitest\\filename", 100);
 
-    create_database_wordcount(msifile, ai_tables,
-                              sizeof(ai_tables) / sizeof(msi_table),
+    create_database_wordcount(msifile, ai_tables, ARRAY_SIZE(ai_tables),
                               100, msidbSumInfoSourceTypeAdminImage, ";1033",
                               "{004757CA-5092-49C2-AD20-28E1CE0DF5F2}");
 
@@ -4833,7 +4832,7 @@ static void test_propcase(void)
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\augustus", 500);
 
-    create_database(msifile, pc_tables, sizeof(pc_tables) / sizeof(msi_table));
+    create_database(msifile, pc_tables, ARRAY_SIZE(pc_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -4909,7 +4908,7 @@ static void test_int_widths( void )
     r = MsiOpenDatabaseW(msidb, MSIDBOPEN_CREATE, &db);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
-    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         DWORD count;
         HANDLE handle = CreateFileW(msitable, GENERIC_WRITE, 0, NULL,
@@ -4942,7 +4941,7 @@ static void test_shortcut(void)
     }
 
     create_test_files();
-    create_database(msifile, sc_tables, sizeof(sc_tables) / sizeof(msi_table));
+    create_database(msifile, sc_tables, ARRAY_SIZE(sc_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -4989,7 +4988,7 @@ static void test_preselected(void)
     }
 
     create_test_files();
-    create_database(msifile, ps_tables, sizeof(ps_tables) / sizeof(msi_table));
+    create_database(msifile, ps_tables, ARRAY_SIZE(ps_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -5045,7 +5044,7 @@ static void test_installed_prop(void)
     }
 
     create_test_files();
-    create_database(msifile, ip_tables, sizeof(ip_tables) / sizeof(msi_table));
+    create_database(msifile, ip_tables, ARRAY_SIZE(ip_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -5084,7 +5083,7 @@ static void test_allusers_prop(void)
     }
 
     create_test_files();
-    create_database(msifile, aup_tables, sizeof(aup_tables) / sizeof(msi_table));
+    create_database(msifile, aup_tables, ARRAY_SIZE(aup_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -5105,7 +5104,7 @@ static void test_allusers_prop(void)
     delete_test_files();
 
     create_test_files();
-    create_database(msifile, aup2_tables, sizeof(aup2_tables) / sizeof(msi_table));
+    create_database(msifile, aup2_tables, ARRAY_SIZE(aup2_tables));
 
     /* ALLUSERS property set to 1 */
     r = MsiInstallProductA(msifile, "FULL=1");
@@ -5119,7 +5118,7 @@ static void test_allusers_prop(void)
     delete_test_files();
 
     create_test_files();
-    create_database(msifile, aup3_tables, sizeof(aup3_tables) / sizeof(msi_table));
+    create_database(msifile, aup3_tables, ARRAY_SIZE(aup3_tables));
 
     /* ALLUSERS property set to 2 */
     r = MsiInstallProductA(msifile, "FULL=1");
@@ -5133,7 +5132,7 @@ static void test_allusers_prop(void)
     delete_test_files();
 
     create_test_files();
-    create_database(msifile, aup4_tables, sizeof(aup4_tables) / sizeof(msi_table));
+    create_database(msifile, aup4_tables, ARRAY_SIZE(aup4_tables));
 
     /* ALLUSERS property set to 2, conditioned on ALLUSERS = 1 */
     r = MsiInstallProductA(msifile, "FULL=1");
@@ -5248,7 +5247,7 @@ static void test_file_in_use(void)
 
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\maximus", 500);
-    create_database(msifile, fiu_tables, sizeof(fiu_tables) / sizeof(msi_table));
+    create_database(msifile, fiu_tables, ARRAY_SIZE(fiu_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -5310,7 +5309,7 @@ static void test_file_in_use_cab(void)
     create_cab_file("test1.cab", MEDIA_SIZE, "maximus\0");
     DeleteFileA("maximus");
 
-    create_database(msifile, fiuc_tables, sizeof(fiuc_tables) / sizeof(msi_table));
+    create_database(msifile, fiuc_tables, ARRAY_SIZE(fiuc_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -5368,7 +5367,7 @@ static void test_feature_override(void)
     create_file("msitest\\override.txt", 1000);
     create_file("msitest\\preselected.txt", 1000);
     create_file("msitest\\notpreselected.txt", 1000);
-    create_database(msifile, fo_tables, sizeof(fo_tables) / sizeof(msi_table));
+    create_database(msifile, fo_tables, ARRAY_SIZE(fo_tables));
 
     if (is_wow64)
         access |= KEY_WOW64_64KEY;
@@ -5448,7 +5447,7 @@ static void test_icon_table(void)
         return;
     }
 
-    create_database(msifile, icon_base_tables, sizeof(icon_base_tables) / sizeof(msi_table));
+    create_database(msifile, icon_base_tables, ARRAY_SIZE(icon_base_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -5528,7 +5527,7 @@ static void test_package_validation(void)
 
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\maximus", 500);
-    create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "Intel;1033");
+    create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "Intel;1033");
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -5543,19 +5542,19 @@ static void test_package_validation(void)
     ok(delete_pf("msitest", FALSE), "directory does not exist\n");
 
     DeleteFileA(msifile);
-    create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 200, "Intel,9999;9999");
+    create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 200, "Intel,9999;9999");
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_INSTALL_LANGUAGE_UNSUPPORTED, "Expected ERROR_INSTALL_LANGUAGE_UNSUPPORTED, got %u\n", r);
 
     DeleteFileA(msifile);
-    create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 200, "Intel,1033;9999");
+    create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 200, "Intel,1033;9999");
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_INSTALL_LANGUAGE_UNSUPPORTED, "Expected ERROR_INSTALL_LANGUAGE_UNSUPPORTED, got %u\n", r);
 
     DeleteFileA(msifile);
-    create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 200, "Intel,9999;1033");
+    create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 200, "Intel,9999;1033");
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5563,25 +5562,25 @@ static void test_package_validation(void)
     ok(delete_pf("msitest", FALSE), "directory does not exist\n");
 
     DeleteFileA(msifile);
-    create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 200, "Intel64,9999;1033");
+    create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 200, "Intel64,9999;1033");
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_INSTALL_PLATFORM_UNSUPPORTED, "Expected ERROR_INSTALL_PLATFORM_UNSUPPORTED, got %u\n", r);
 
     DeleteFileA(msifile);
-    create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 200, "Intel32,1033;1033");
+    create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 200, "Intel32,1033;1033");
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_INSTALL_PLATFORM_UNSUPPORTED, "Expected ERROR_INSTALL_PLATFORM_UNSUPPORTED, got %u\n", r);
 
     DeleteFileA(msifile);
-    create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 200, "Intel32,9999;1033");
+    create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 200, "Intel32,9999;1033");
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_INSTALL_PLATFORM_UNSUPPORTED, "Expected ERROR_INSTALL_PLATFORM_UNSUPPORTED, got %u\n", r);
 
     DeleteFileA(msifile);
-    create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "Intel;9999");
+    create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "Intel;9999");
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_INSTALL_LANGUAGE_UNSUPPORTED, "Expected ERROR_INSTALL_LANGUAGE_UNSUPPORTED, got %u\n", r);
@@ -5591,14 +5590,14 @@ static void test_package_validation(void)
     if (GetSystemDefaultLangID() == MAKELANGID( LANG_ENGLISH, SUBLANG_ENGLISH_US ))
     {
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "Intel;9");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "Intel;9");
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
         ok(delete_pf("msitest\\maximus", TRUE), "file does not exist\n");
         ok(delete_pf("msitest", FALSE), "directory does not exist\n");
 
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "Intel;1024");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "Intel;1024");
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
         ok(delete_pf("msitest\\maximus", TRUE), "file does not exist\n");
@@ -5606,7 +5605,7 @@ static void test_package_validation(void)
     }
 
     DeleteFileA(msifile);
-    create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "Intel32;0");
+    create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "Intel32;0");
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_INSTALL_PLATFORM_UNSUPPORTED, "Expected ERROR_INSTALL_PLATFORM_UNSUPPORTED, got %u\n", r);
@@ -5616,7 +5615,7 @@ static void test_package_validation(void)
     if (is_64bit && !is_wow64)
     {
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "Intel;0");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "Intel;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5624,7 +5623,7 @@ static void test_package_validation(void)
         ok(delete_pf("msitest", FALSE), "directory does not exist\n");
 
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "x64;0");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "x64;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_INSTALL_PACKAGE_INVALID, "Expected ERROR_INSTALL_PACKAGE_INVALID, got %u\n", r);
@@ -5632,7 +5631,7 @@ static void test_package_validation(void)
         ok(!delete_pf("msitest", FALSE), "directory exists\n");
 
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 200, "x64;0");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 200, "x64;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5642,7 +5641,7 @@ static void test_package_validation(void)
     else if (is_wow64)
     {
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "Intel;0");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "Intel;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5650,7 +5649,7 @@ static void test_package_validation(void)
         ok(delete_pf("msitest", FALSE), "directory does not exist\n");
 
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "x64;0");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "x64;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_INSTALL_PACKAGE_INVALID, "Expected ERROR_INSTALL_PACKAGE_INVALID, got %u\n", r);
@@ -5658,7 +5657,7 @@ static void test_package_validation(void)
         ok(!delete_pf("msitest", FALSE), "directory exists\n");
 
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 200, "x64;0");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 200, "x64;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5668,7 +5667,7 @@ static void test_package_validation(void)
     else
     {
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "Intel;0");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "Intel;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5676,7 +5675,7 @@ static void test_package_validation(void)
         ok(delete_pf("msitest", FALSE), "directory does not exist\n");
 
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "Alpha,Beta,Intel;0");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "Alpha,Beta,Intel;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5684,7 +5683,7 @@ static void test_package_validation(void)
         ok(delete_pf("msitest", FALSE), "directory does not exist\n");
 
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "x64;0");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 100, "x64;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_INSTALL_PLATFORM_UNSUPPORTED, "Expected ERROR_INSTALL_PLATFORM_UNSUPPORTED, got %u\n", r);
@@ -5692,7 +5691,7 @@ static void test_package_validation(void)
         ok(!delete_pf("msitest", FALSE), "directory exists\n");
 
         DeleteFileA(msifile);
-        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 200, "x64;0");
+        create_database_template(msifile, pv_tables, ARRAY_SIZE(pv_tables), 200, "x64;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_INSTALL_PLATFORM_UNSUPPORTED, "Expected ERROR_INSTALL_PLATFORM_UNSUPPORTED, got %u\n", r);
@@ -5719,7 +5718,7 @@ static void test_upgrade_code(void)
 
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\upgradecode.txt", 1000);
-    create_database(msifile, uc_tables, sizeof(uc_tables) / sizeof(msi_table));
+    create_database(msifile, uc_tables, ARRAY_SIZE(uc_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -5758,7 +5757,7 @@ static void test_mixed_package(void)
         return;
     }
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
-    create_database_template(msifile, mixed_tables, sizeof(mixed_tables)/sizeof(msi_table), 200, "x64;1033");
+    create_database_template(msifile, mixed_tables, ARRAY_SIZE(mixed_tables), 200, "x64;1033");
 
     r = MsiInstallProductA(msifile, NULL);
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
@@ -5826,7 +5825,7 @@ static void test_mixed_package(void)
     ok(res == ERROR_FILE_NOT_FOUND, "64-bit CLSID key not removed\n");
 
     DeleteFileA( msifile );
-    create_database_template(msifile, mixed_tables, sizeof(mixed_tables)/sizeof(msi_table), 200, "Intel;1033");
+    create_database_template(msifile, mixed_tables, ARRAY_SIZE(mixed_tables), 200, "Intel;1033");
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5903,7 +5902,7 @@ static void test_volume_props(void)
     }
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\volumeprop.txt", 1000);
-    create_database(msifile, vp_tables, sizeof(vp_tables)/sizeof(msi_table));
+    create_database(msifile, vp_tables, ARRAY_SIZE(vp_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -5929,9 +5928,9 @@ static void test_shared_component(void)
     }
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\sharedcomponent.txt", 1000);
-    create_database_wordcount(msifile, shc_tables, sizeof(shc_tables)/sizeof(shc_tables[0]),
+    create_database_wordcount(msifile, shc_tables, ARRAY_SIZE(shc_tables),
                               100, 0, ";", "{A8826420-FD72-4E61-9E15-C1944CF4CBE1}");
-    create_database_wordcount(msifile2, shc2_tables, sizeof(shc2_tables)/sizeof(shc2_tables[0]),
+    create_database_wordcount(msifile2, shc2_tables, ARRAY_SIZE(shc2_tables),
                               100, 0, ";", "{A8B50B30-0E8A-4ACD-B3CF-1A5DC58B2739}");
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
@@ -5979,7 +5978,7 @@ static void test_remove_upgrade_code(void)
     if (is_wow64) access |= KEY_WOW64_64KEY;
 
     create_test_files();
-    create_database( msifile, icon_base_tables, sizeof(icon_base_tables)/sizeof(icon_base_tables[0]) );
+    create_database( msifile, icon_base_tables, ARRAY_SIZE( icon_base_tables ));
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
@@ -6024,7 +6023,7 @@ static void test_feature_tree(void)
     }
 
     create_file( "msitest\\featuretree.txt", 1000 );
-    create_database( msifile, ft_tables, sizeof(ft_tables)/sizeof(ft_tables[0]) );
+    create_database( msifile, ft_tables, ARRAY_SIZE( ft_tables ));
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
@@ -6063,7 +6062,7 @@ static void test_deferred_action(void)
     GetTempFileNameA(path, "da", 0, file);
     sprintf(buffer, "TESTPATH=\"%s\"", file);
 
-    create_database(msifile, da_tables, sizeof(da_tables) / sizeof(da_tables[0]));
+    create_database(msifile, da_tables, ARRAY_SIZE(da_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -6102,7 +6101,7 @@ static void test_wow64(void)
     }
 
     create_test_files();
-    create_database_template(msifile, x64_tables, sizeof(x64_tables)/sizeof(msi_table), 200, "x64;0");
+    create_database_template(msifile, x64_tables, ARRAY_SIZE(x64_tables), 200, "x64;0");
     r = MsiInstallProductA(msifile, NULL);
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
     {
@@ -6155,7 +6154,7 @@ static void test_source_resolution(void)
     }
 
     create_test_files();
-    create_database(msifile, sr_tables, sizeof(sr_tables) / sizeof(msi_table));
+    create_database(msifile, sr_tables, ARRAY_SIZE(sr_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 

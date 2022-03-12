@@ -138,7 +138,7 @@ static void test_msirecord(void)
     ok(buf[0] == 0, "MsiRecordGetStringA returned the wrong string\n");
     ok(sz == 0, "MsiRecordGetStringA returned the wrong length\n");
     bufW[0] = 0;
-    sz = sizeof bufW / sizeof bufW[0];
+    sz = ARRAY_SIZE(bufW);
     r = MsiRecordGetStringW(h, 0, bufW, &sz);
     ok(r == ERROR_SUCCESS, "Failed to get string at 0\n");
     ok(bufW[0] == 0, "MsiRecordGetStringW returned the wrong string\n");
@@ -156,7 +156,7 @@ static void test_msirecord(void)
     ok(buf[0] == 0, "MsiRecordGetStringA returned the wrong string\n");
     ok(sz == 0, "MsiRecordGetStringA returned the wrong length\n");
     bufW[0] = 0;
-    sz = sizeof bufW / sizeof bufW[0];
+    sz = ARRAY_SIZE(bufW);
     r = MsiRecordGetStringW(h, 0, bufW, &sz);
     ok(r == ERROR_SUCCESS, "Failed to get string at 0\n");
     ok(bufW[0] == 0, "MsiRecordGetStringW returned the wrong string\n");

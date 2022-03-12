@@ -731,7 +731,7 @@ static void test_simple_patch( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
@@ -929,7 +929,7 @@ static void test_MsiOpenDatabase( void )
     MsiCloseHandle( hdb );
     DeleteFileA( mspfile );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     r = MsiOpenDatabaseW( msifileW, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
@@ -1072,7 +1072,7 @@ static void test_system_tables( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
@@ -1261,7 +1261,7 @@ static void test_patch_registration( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
