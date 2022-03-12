@@ -1466,3 +1466,31 @@ todo_wine
     ok(hinst, r == ERROR_FILE_NOT_FOUND, "got %u\n", r);
     return ERROR_SUCCESS;
 }
+
+static const char pub_key[] = "Software\\Microsoft\\Installer\\Components\\0CBCFA296AC907244845745CEEB2F8AA";
+
+UINT WINAPI pub_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    res = RegOpenKeyA(HKEY_CURRENT_USER, pub_key, &key);
+    ok(hinst, !res, "got %u\n", res);
+    res = RegQueryValueExA(key, "english.txt", NULL, NULL, NULL, NULL);
+    ok(hinst, !res, "got %u\n", res);
+}
+    RegCloseKey(key);
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI pub_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyA(HKEY_CURRENT_USER, pub_key, &key);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    return ERROR_SUCCESS;
+}

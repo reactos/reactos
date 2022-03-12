@@ -17,6 +17,8 @@
 @ stdcall pa_absent(long)
 @ stdcall ppc_present(long)
 @ stdcall ppc_absent(long)
+@ stdcall pub_present(long)
+@ stdcall pub_absent(long)
 @ stdcall rd_present(long)
 @ stdcall rd_absent(long)
 @ stdcall sds_present(long)

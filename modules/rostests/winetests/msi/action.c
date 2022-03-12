@@ -1086,11 +1086,24 @@ static const char pub_install_exec_seq_dat[] =
     "RemoveFiles\t\t1700\n"
     "InstallFiles\t\t2000\n"
     "PublishComponents\t\t3000\n"
+    "pub_immediate\tNOT REMOVE\t3001\n"
+    "pub_deferred\tNOT REMOVE\t3002\n"
     "UnpublishComponents\t\t3100\n"
+    "unp_immediate\tREMOVE\t3101\n"
+    "unp_deferred\tREMOVE\t3102\n"
     "RegisterProduct\t\t5000\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
     "InstallFinalize\t\t6000\n";
+
+static const char pub_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "pub_immediate\t1\tcustom.dll\tpub_absent\n"
+    "pub_deferred\t1025\tcustom.dll\tpub_present\n"
+    "unp_immediate\t1\tcustom.dll\tpub_present\n"
+    "unp_deferred\t1025\tcustom.dll\tpub_absent\n";
 
 static const char rd_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -2070,6 +2083,7 @@ static const msi_table pub_tables[] =
     ADD_TABLE(pub_file),
     ADD_TABLE(pub_publish_component),
     ADD_TABLE(pub_install_exec_seq),
+    ADD_TABLE(pub_custom_action),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
