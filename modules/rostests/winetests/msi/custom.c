@@ -243,7 +243,7 @@ static void test_props(MSIHANDLE hinst)
 
 static void test_db(MSIHANDLE hinst)
 {
-    MSIHANDLE hdb, view;
+    MSIHANDLE hdb, view, rec;
     UINT r;
 
     hdb = MsiGetActiveDatabase(hinst);
@@ -259,6 +259,24 @@ static void test_db(MSIHANDLE hinst)
     ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
 
     r = MsiDatabaseOpenViewA(hdb, "SELECT * FROM `Test`", &view);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiViewExecute(view, 0);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiCloseHandle(view);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiDatabaseOpenViewA(hdb, "SELECT * FROM `Test` WHERE `Name` = ?", &view);
+    ok(hinst, !r, "got %u\n", r);
+
+    rec = MsiCreateRecord(1);
+    MsiRecordSetStringA(rec, 1, "one");
+
+    r = MsiViewExecute(view, rec);
+    ok(hinst, !r, "got %u\n", r);
+
+    r = MsiCloseHandle(rec);
     ok(hinst, !r, "got %u\n", r);
 
     r = MsiCloseHandle(view);

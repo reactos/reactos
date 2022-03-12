@@ -1061,6 +1061,12 @@ UINT unmarshal_record(const struct wire_record *in, MSIHANDLE *out)
     unsigned int i;
     UINT r;
 
+    if (!in)
+    {
+        *out = 0;
+        return ERROR_SUCCESS;
+    }
+
     rec = MSI_CreateRecord(in->count);
     if (!rec) return ERROR_OUTOFMEMORY;
 

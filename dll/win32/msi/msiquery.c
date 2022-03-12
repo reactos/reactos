@@ -458,25 +458,32 @@ UINT WINAPI MsiViewExecute(MSIHANDLE hView, MSIHANDLE hRec)
     
     TRACE("%d %d\n", hView, hRec);
 
-    query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
-    if( !query )
-        return ERROR_INVALID_HANDLE;
-
     if( hRec )
     {
         rec = msihandle2msiinfo( hRec, MSIHANDLETYPE_RECORD );
         if( !rec )
-        {
-            ret = ERROR_INVALID_HANDLE;
-            goto out;
-        }
+            return ERROR_INVALID_HANDLE;
+    }
+
+    query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
+    if( !query )
+    {
+        MSIHANDLE remote;
+
+        if (!(remote = msi_get_remote(hView)))
+            return ERROR_INVALID_HANDLE;
+
+        ret = remote_ViewExecute(remote, rec ? (struct wire_record *)&rec->count : NULL);
+
+        if (rec)
+            msiobj_release(&rec->hdr);
+        return ret;
     }
 
     msiobj_lock( &rec->hdr );
     ret = MSI_ViewExecute( query, rec );
     msiobj_unlock( &rec->hdr );
 
-out:
     msiobj_release( &query->hdr );
     if( rec )
         msiobj_release( &rec->hdr );
@@ -1031,5 +1038,19 @@ MSICONDITION WINAPI MsiDatabaseIsTablePersistentW(
 
     msiobj_release( &db->hdr );
 
+    return r;
+}
+
+UINT __cdecl remote_ViewExecute(MSIHANDLE view, struct wire_record *remote_rec)
+{
+    MSIHANDLE rec = 0;
+    UINT r;
+
+    if ((r = unmarshal_record(remote_rec, &rec)))
+        return r;
+
+    r = MsiViewExecute(view, rec);
+
+    MsiCloseHandle(rec);
     return r;
 }
