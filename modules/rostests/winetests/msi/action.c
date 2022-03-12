@@ -799,12 +799,25 @@ static const char font_install_exec_seq_dat[] =
     "RemoveFiles\t\t3500\n"
     "InstallFiles\t\t4000\n"
     "RegisterFonts\t\t4100\n"
+    "rf_immediate\tNOT REMOVE\t4101\n"
+    "rf_deferred\tNOT REMOVE\t4102\n"
     "UnregisterFonts\t\t4200\n"
+    "uf_immediate\tREMOVE\t4201\n"
+    "uf_deferred\tREMOVE\t4202\n"
     "RegisterUser\t\t6000\n"
     "RegisterProduct\t\t6100\n"
     "PublishFeatures\t\t6300\n"
     "PublishProduct\t\t6400\n"
     "InstallFinalize\t\t6600";
+
+static const char font_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\n"
+    "s72\ti2\tS64\tS0\n"
+    "CustomAction\tAction\n"
+    "rf_immediate\t1\tcustom.dll\tfont_absent\n"
+    "rf_deferred\t1025\tcustom.dll\tfont_present\n"
+    "uf_immediate\t1\tcustom.dll\tfont_present\n"
+    "uf_deferred\t1025\tcustom.dll\tfont_absent\n";
 
 static const char vp_property_dat[] =
     "Property\tValue\n"
@@ -2054,6 +2067,7 @@ static const msi_table font_tables[] =
     ADD_TABLE(font_file),
     ADD_TABLE(font),
     ADD_TABLE(font_install_exec_seq),
+    ADD_TABLE(font_custom_action),
     ADD_TABLE(font_media),
     ADD_TABLE(property)
 };

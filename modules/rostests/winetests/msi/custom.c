@@ -1642,3 +1642,35 @@ todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
 
     return ERROR_SUCCESS;
 }
+
+static const char font_key[] = "Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts";
+
+UINT WINAPI font_present(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, font_key, 0, KEY_QUERY_VALUE | KEY_WOW64_64KEY, &key);
+    ok(hinst, !res, "got %u\n", res);
+    res = RegQueryValueExA(key, "msi test font", NULL, NULL, NULL, NULL);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED))
+    ok(hinst, !res, "got %u\n", res);
+    RegCloseKey(key);
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI font_absent(MSIHANDLE hinst)
+{
+    HKEY key;
+    LONG res;
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, font_key, 0, KEY_QUERY_VALUE | KEY_WOW64_64KEY, &key);
+    ok(hinst, !res, "got %u\n", res);
+todo_wine_if(!MsiGetMode(hinst, MSIRUNMODE_SCHEDULED)) {
+    check_reg_str(hinst, key, "msi test font", NULL);
+}
+    RegCloseKey(key);
+
+    return ERROR_SUCCESS;
+}
