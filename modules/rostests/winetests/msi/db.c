@@ -3620,27 +3620,62 @@ static void test_join(void)
     ok( r == ERROR_SUCCESS, "failed to fetch view: %d\n", r );
     check_record(hrec, 2, "alveolar", "procerus");
 
+    r = MsiRecordSetStringA( hrec, 1, "fascia" );
+    ok( r == ERROR_SUCCESS, "failed to set string: %d\n", r );
+    r = MsiRecordSetStringA( hrec, 2, "pterygoid" );
+    ok( r == ERROR_SUCCESS, "failed to set string: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_REFRESH, hrec);
+    ok( r == ERROR_SUCCESS, "failed to refresh row: %d\n", r );
+    check_record(hrec, 2, "alveolar", "procerus");
+
     r = MsiRecordSetStringA( hrec, 1, "epicranius" );
     ok( r == ERROR_SUCCESS, "failed to set string: %d\n", r );
 
     r = MsiViewModify(hview, MSIMODIFY_UPDATE, hrec);
     ok( r == ERROR_SUCCESS, "failed to update row: %d\n", r );
 
-    /* try another valid operation for joins */
-    r = MsiViewModify(hview, MSIMODIFY_REFRESH, hrec);
-    ok( r == ERROR_SUCCESS, "failed to refresh row: %d\n", r );
-    check_record(hrec, 2, "epicranius", "procerus");
-
-    /* try an invalid operation for joins */
-    r = MsiViewModify(hview, MSIMODIFY_DELETE, hrec);
-    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
-
+    /* primary key cannot be updated */
     r = MsiRecordSetStringA( hrec, 2, "epicranius" );
     ok( r == ERROR_SUCCESS, "failed to set string: %d\n", r );
 
-    /* primary key cannot be updated */
     r = MsiViewModify(hview, MSIMODIFY_UPDATE, hrec);
     ok( r == ERROR_FUNCTION_FAILED, "failed to update row: %d\n", r );
+
+    /* all other operations are invalid for joins */
+    r = MsiViewModify(hview, MSIMODIFY_SEEK, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_ASSIGN, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_REPLACE, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_MERGE, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_DELETE, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_VALIDATE, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_VALIDATE_DELETE, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    MsiRecordSetStringA(hrec, 2, "epicranius");
+    r = MsiViewModify(hview, MSIMODIFY_INSERT, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_INSERT_TEMPORARY, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_VALIDATE_NEW, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_VALIDATE_FIELD, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
 
     MsiCloseHandle(hrec);
     MsiViewClose(hview);
