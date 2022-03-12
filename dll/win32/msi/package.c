@@ -2596,12 +2596,11 @@ UINT __cdecl remote_GetFeatureCost(MSIHANDLE hinst, LPCWSTR feature,
     return MsiGetFeatureCostW(hinst, feature, cost_tree, state, cost);
 }
 
-HRESULT __cdecl remote_EnumComponentCosts(MSIHANDLE hinst, BSTR component,
-                                              DWORD index, INSTALLSTATE state, BSTR drive,
-                                              DWORD *buflen, INT *cost, INT *temp)
+UINT __cdecl remote_EnumComponentCosts(MSIHANDLE hinst, LPCWSTR component,
+    DWORD index, INSTALLSTATE state, LPWSTR drive, INT *cost, INT *temp)
 {
-    UINT r = MsiEnumComponentCostsW(hinst, component, index, state, drive, buflen, cost, temp);
-    return HRESULT_FROM_WIN32(r);
+    DWORD size = 3;
+    return MsiEnumComponentCostsW(hinst, component, index, state, drive, &size, cost, temp);
 }
 
 UINT msi_package_add_info(MSIPACKAGE *package, DWORD context, DWORD options,

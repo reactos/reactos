@@ -2005,25 +2005,21 @@ UINT WINAPI MsiEnumComponentCostsW( MSIHANDLE handle, LPCWSTR component, DWORD i
     if (!drive || !buflen || !cost || !temp) return ERROR_INVALID_PARAMETER;
     if (!(package = msihandle2msiinfo( handle, MSIHANDLETYPE_PACKAGE )))
     {
+        WCHAR buffer[3];
         MSIHANDLE remote;
-        HRESULT hr;
-        BSTR bname = NULL;
 
         if (!(remote = msi_get_remote(handle)))
             return ERROR_INVALID_HANDLE;
 
-        if (component && !(bname = SysAllocString( component )))
-            return ERROR_OUTOFMEMORY;
-
-        hr = remote_EnumComponentCosts(remote, bname, index, state, drive, buflen, cost, temp);
-
-        SysFreeString( bname );
-        if (FAILED(hr))
+        r = remote_EnumComponentCosts(remote, component, index, state, buffer, cost, temp);
+        if (r == ERROR_SUCCESS)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32) return HRESULT_CODE(hr);
-            return ERROR_FUNCTION_FAILED;
+            lstrcpynW(drive, buffer, *buflen);
+            if (*buflen < 3)
+                r = ERROR_MORE_DATA;
+            *buflen = 2;
         }
-        return ERROR_SUCCESS;
+        return r;
     }
 
     if (!msi_get_property_int( package->db, szCostingComplete, 0 ))

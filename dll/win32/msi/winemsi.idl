@@ -91,8 +91,8 @@ interface IWineMsiRemote
     UINT remote_FormatRecord( [in] MSIHANDLE hinst, [in] struct wire_record *record, [out, string] LPWSTR *value);
     MSICONDITION remote_EvaluateCondition( [in] MSIHANDLE hinst, [in, string] LPCWSTR condition );
     UINT remote_GetFeatureCost( [in] MSIHANDLE hinst, [in, string] LPCWSTR feature, [in] MSICOSTTREE cost_tree, [in] INSTALLSTATE state, [out] INT *cost );
-    HRESULT remote_EnumComponentCosts( [in] MSIHANDLE hinst, [in] BSTR component, [in] DWORD index, [in] INSTALLSTATE state,
-                                       [out, size_is(*buflen)] BSTR drive, [in, out] DWORD *buflen, [out] INT *cost, [out] INT *temp );
+    UINT remote_EnumComponentCosts( [in] MSIHANDLE hinst, [in, string, unique] LPCWSTR component, [in] DWORD index, [in] INSTALLSTATE state,
+                                    [out, string, size_is(3)] LPWSTR drive, [out] INT *cost, [out] INT *temp );
 
     HRESULT remote_GetActionInfo( [in] LPCGUID guid, [out] INT *type, [out] BSTR *dllname,
                                   [out] BSTR *function, [out] MSIHANDLE *package );

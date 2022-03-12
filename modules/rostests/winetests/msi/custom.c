@@ -857,7 +857,13 @@ static void test_format_record(MSIHANDLE hinst)
 
 static void test_costs(MSIHANDLE hinst)
 {
-    INT cost;
+    static const WCHAR oneW[] = {'O','n','e',0};
+    static const WCHAR xyzW[] = {'C',':',0};
+    static const WCHAR xyW[] = {'C',0};
+    WCHAR bufferW[10];
+    char buffer[10];
+    int cost, temp;
+    DWORD sz;
     UINT r;
 
     cost = 0xdead;
@@ -872,6 +878,109 @@ static void test_costs(MSIHANDLE hinst)
     r = MsiGetFeatureCostA(hinst, "One", MSICOSTTREE_CHILDREN, INSTALLSTATE_LOCAL, &cost);
     ok(hinst, !r, "got %u\n", r);
     todo_wine_ok(hinst, cost == 8, "got %d\n", cost);
+
+    sz = cost = temp = 0xdead;
+    r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, NULL, &sz, &cost, &temp);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+    ok(hinst, sz == 0xdead, "got size %d\n", sz);
+    ok(hinst, cost == 0xdead, "got cost %d\n", cost);
+    ok(hinst, temp == 0xdead, "got temp %d\n", temp);
+
+    cost = temp = 0xdead;
+    r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, NULL, &cost, &temp);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+    ok(hinst, cost == 0xdead, "got cost %d\n", cost);
+    ok(hinst, temp == 0xdead, "got temp %d\n", temp);
+
+    sz = temp = 0xdead;
+    r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, NULL, &temp);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+    ok(hinst, sz == 0xdead, "got size %d\n", sz);
+    ok(hinst, temp == 0xdead, "got temp %d\n", temp);
+
+    sz = cost = 0xdead;
+    r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, NULL);
+    ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+    ok(hinst, sz == 0xdead, "got size %d\n", sz);
+    ok(hinst, cost == 0xdead, "got cost %d\n", cost);
+
+    cost = temp = 0xdead;
+    sz = sizeof(buffer);
+    r = MsiEnumComponentCostsA(hinst, NULL, 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == 2, "got size %u\n", sz);
+    ok(hinst, !strcmp(buffer, "C:"), "got '%s'\n", buffer);
+    ok(hinst, !cost, "got cost %d\n", cost);
+    ok(hinst, temp && temp != 0xdead, "got temp %d\n", temp);
+
+    cost = temp = 0xdead;
+    sz = sizeof(buffer);
+    r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, sz == 2, "got size %u\n", sz);
+    ok(hinst, !strcmp(buffer, "C:"), "got '%s'\n", buffer);
+    ok(hinst, cost == 8, "got cost %d\n", cost);
+    ok(hinst, !temp, "got temp %d\n", temp);
+
+    /* same string behaviour */
+    cost = temp = 0xdead;
+    sz = 0;
+    strcpy(buffer,"q");
+    r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 4, "got size %u\n", sz);
+    ok(hinst, cost == 8, "got cost %d\n", cost);
+    ok(hinst, !temp, "got temp %d\n", temp);
+
+    sz = 1;
+    strcpy(buffer,"x");
+    r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    todo_wine_ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 4, "got size %u\n", sz);
+
+    sz = 2;
+    strcpy(buffer,"x");
+    r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    todo_wine_ok(hinst, !strcmp(buffer, "C"), "got \"%s\"\n", buffer);
+    todo_wine_ok(hinst, sz == 4, "got size %u\n", sz);
+
+    sz = 3;
+    strcpy(buffer,"x");
+    r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !strcmp(buffer, "C:"), "got \"%s\"\n", buffer);
+    ok(hinst, sz == 2, "got size %u\n", sz);
+
+    sz = 0;
+    bufferW[0] = 'q';
+    r = MsiEnumComponentCostsW(hinst, oneW, 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 2, "got size %u\n", sz);
+
+    sz = 1;
+    bufferW[0] = 'q';
+    r = MsiEnumComponentCostsW(hinst, oneW, 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 2, "got size %u\n", sz);
+
+    sz = 2;
+    bufferW[0] = 'q';
+    r = MsiEnumComponentCostsW(hinst, oneW, 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
+    ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(hinst, !lstrcmpW(bufferW, xyW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 2, "got size %u\n", sz);
+
+    sz = 3;
+    bufferW[0] = 'q';
+    r = MsiEnumComponentCostsW(hinst, oneW, 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
+    ok(hinst, !r, "got %u\n", r);
+    ok(hinst, !lstrcmpW(bufferW, xyzW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, sz == 2, "got size %u\n", sz);
 }
 
 /* Main test. Anything that doesn't depend on a specific install configuration
