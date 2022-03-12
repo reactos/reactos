@@ -48,6 +48,8 @@ static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
 static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
+static BOOL (WINAPI *pWow64DisableWow64FsRedirection)(void **);
+static BOOL (WINAPI *pWow64RevertWow64FsRedirection)(void *);
 
 static HMODULE hsrclient = 0;
 static BOOL (WINAPI *pSRRemoveRestorePoint)(DWORD);
@@ -1334,6 +1336,18 @@ static const char da_install_exec_seq_dat[] =
     "immediate\t\t800\n"
     "InstallFinalize\t\t1100\n";
 
+static const CHAR x64_directory_dat[] =
+    "Directory\tDirectory_Parent\tDefaultDir\n"
+    "s72\tS72\tl255\n"
+    "Directory\tDirectory\n"
+    "CABOUTDIR\tMSITESTDIR\tcabout\n"
+    "CHANGEDDIR\tMSITESTDIR\tchanged:second\n"
+    "FIRSTDIR\tMSITESTDIR\tfirst\n"
+    "MSITESTDIR\tProgramFiles64Folder\tmsitest\n"
+    "NEWDIR\tCABOUTDIR\tnew\n"
+    "ProgramFiles64Folder\tTARGETDIR\t.\n"
+    "TARGETDIR\t\tSourceDir";
+
 typedef struct _msi_table
 {
     const CHAR *filename;
@@ -2015,6 +2029,18 @@ static const msi_table da_tables[] =
     ADD_TABLE(da_custom_action),
 };
 
+static const msi_table x64_tables[] =
+{
+    ADD_TABLE(media),
+    ADD_TABLE(x64_directory),
+    ADD_TABLE(file),
+    ADD_TABLE(component),
+    ADD_TABLE(feature),
+    ADD_TABLE(feature_comp),
+    ADD_TABLE(property),
+    ADD_TABLE(install_exec_seq),
+};
+
 /* cabinet definitions */
 
 /* make the max size large so there is only one cab file */
@@ -2145,6 +2171,8 @@ static void init_functionpointers(void)
     GET_PROC(hadvapi32, OpenProcessToken);
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
+    GET_PROC(hkernel32, Wow64DisableWow64FsRedirection);
+    GET_PROC(hkernel32, Wow64RevertWow64FsRedirection);
 
     hsrclient = LoadLibraryA("srclient.dll");
     GET_PROC(hsrclient, SRRemoveRestorePoint);
@@ -2330,7 +2358,8 @@ static BOOL get_system_dirs(void)
     HKEY hkey;
     DWORD type, size;
 
-    if (RegOpenKeyA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", &hkey))
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion",
+        0, KEY_QUERY_VALUE | KEY_WOW64_64KEY, &hkey))
         return FALSE;
 
     size = MAX_PATH;
@@ -5693,16 +5722,16 @@ static void test_package_validation(void)
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_INSTALL_PACKAGE_INVALID, "Expected ERROR_INSTALL_PACKAGE_INVALID, got %u\n", r);
-        ok(!delete_pf_native("msitest\\maximus", TRUE), "file exists\n");
-        ok(!delete_pf_native("msitest", FALSE), "directory exists\n");
+        ok(!delete_pf("msitest\\maximus", TRUE), "file exists\n");
+        ok(!delete_pf("msitest", FALSE), "directory exists\n");
 
         DeleteFileA(msifile);
         create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 200, "x64;0");
 
         r = MsiInstallProductA(msifile, NULL);
         ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-        ok(delete_pf_native("msitest\\maximus", TRUE), "file exists\n");
-        ok(delete_pf_native("msitest", FALSE), "directory exists\n");
+        ok(delete_pf("msitest\\maximus", TRUE), "file exists\n");
+        ok(delete_pf("msitest", FALSE), "directory exists\n");
     }
     else
     {
@@ -6124,6 +6153,67 @@ error:
     DeleteFileA(msifile);
 }
 
+static void test_wow64(void)
+{
+    void *cookie;
+    UINT r;
+
+    if (!is_wow64)
+    {
+        skip("test must be run on WoW64\n");
+        return;
+    }
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+
+    create_test_files();
+    create_database_template(msifile, x64_tables, sizeof(x64_tables)/sizeof(msi_table), 200, "x64;0");
+    r = MsiInstallProductA(msifile, NULL);
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        goto error;
+    }
+
+    pWow64DisableWow64FsRedirection(&cookie);
+
+    ok(!delete_pf("msitest\\cabout\\new\\five.txt", TRUE), "File installed\n");
+    ok(!delete_pf("msitest\\cabout\\new", FALSE), "Directory created\n");
+    ok(!delete_pf("msitest\\cabout\\four.txt", TRUE), "File installed\n");
+    ok(!delete_pf("msitest\\cabout", FALSE), "Directory created\n");
+    ok(!delete_pf("msitest\\changed\\three.txt", TRUE), "File installed\n");
+    ok(!delete_pf("msitest\\changed", FALSE), "Directory created\n");
+    ok(!delete_pf("msitest\\first\\two.txt", TRUE), "File installed\n");
+    ok(!delete_pf("msitest\\first", FALSE), "Directory created\n");
+    ok(!delete_pf("msitest\\one.txt", TRUE), "File installed\n");
+    ok(!delete_pf("msitest\\filename", TRUE), "File installed\n");
+    ok(!delete_pf("msitest\\service.exe", TRUE), "File installed\n");
+    ok(!delete_pf("msitest", FALSE), "Directory created\n");
+
+    ok(delete_pf_native("msitest\\cabout\\new\\five.txt", TRUE), "File not installed\n");
+    ok(delete_pf_native("msitest\\cabout\\new", FALSE), "Directory not created\n");
+    ok(delete_pf_native("msitest\\cabout\\four.txt", TRUE), "File not installed\n");
+    ok(delete_pf_native("msitest\\cabout", FALSE), "Directory not created\n");
+    ok(delete_pf_native("msitest\\changed\\three.txt", TRUE), "File not installed\n");
+    ok(delete_pf_native("msitest\\changed", FALSE), "Directory not created\n");
+    ok(delete_pf_native("msitest\\first\\two.txt", TRUE), "File not installed\n");
+    ok(delete_pf_native("msitest\\first", FALSE), "Directory not created\n");
+    ok(delete_pf_native("msitest\\one.txt", TRUE), "File not installed\n");
+    ok(delete_pf_native("msitest\\filename", TRUE), "File not installed\n");
+    ok(delete_pf_native("msitest\\service.exe", TRUE), "File not installed\n");
+    ok(delete_pf_native("msitest", FALSE), "Directory not created\n");
+
+    pWow64RevertWow64FsRedirection(cookie);
+
+error:
+    delete_test_files();
+    DeleteFileA(msifile);
+}
+
 START_TEST(install)
 {
     DWORD len;
@@ -6217,6 +6307,7 @@ START_TEST(install)
     test_remove_upgrade_code();
     test_feature_tree();
     test_deferred_action();
+    test_wow64();
 
     DeleteFileA(customdll);
 
