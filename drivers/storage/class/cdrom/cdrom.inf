@@ -189,6 +189,44 @@ ISO_Generic_FriendlyName = "Wirtualna stacja dysków DVD-ROM firmy Microsoft"
 
 cdrom_ServiceDesc   = "Sterownik stacji dysków CD-ROM"
 
+[Strings.0404]
+MSFT           = "Microsoft"
+CDROMClassName = "DVD/CD-ROM 光碟機"
+
+;; Manufacturer specific strings
+MITSUMI         = "Mitsumi"
+GenManufacturer = "（標準 CD-ROM 光碟機）"
+
+;; Descriptions for enumerated brands and models
+Mitsumi_cdrom_devdesc    = "Mitsumi CD-ROM 光碟機"
+gencdrom_devdesc         = "CD-ROM 光碟機"
+
+;; Friendly names
+Mitsumi_Generic_FriendlyName = "Mitsumi CD-ROM 光碟機"
+ISO_Generic_FriendlyName = "Microsoft 虛擬 DVD-ROM"
+
+;; Service descriptions
+cdrom_ServiceDesc   = "CD-ROM 驅動程式"
+
+[Strings.0804]
+MSFT           = "Microsoft"
+CDROMClassName = "DVD/CD-ROM 驱动器"
+
+;; Manufacturer specific strings
+MITSUMI         = "Mitsumi"
+GenManufacturer = "（标准 CD-ROM 驱动器）"
+
+;; Descriptions for enumerated brands and models
+Mitsumi_cdrom_devdesc    = "Mitsumi CD-ROM 驱动器"
+gencdrom_devdesc         = "CD-ROM 驱动器"
+
+;; Friendly names
+Mitsumi_Generic_FriendlyName = "Mitsumi CD-ROM 驱动器"
+ISO_Generic_FriendlyName = "Microsoft 虚拟 DVD-ROM"
+
+;; Service descriptions
+cdrom_ServiceDesc   = "CD-ROM 驱动程序"
+
 [Strings.0419]
 CDROMClassName = "DVD/CD-ROM дисководы"
 
@@ -201,3 +239,22 @@ Mitsumi_Generic_FriendlyName = "Mitsumi CD-ROM дисковод"
 ISO_Generic_FriendlyName = "Microsoft виртуальный DVD-ROM дисковод"
 
 cdrom_ServiceDesc   = "CD-ROM дисковод"
+
+[Strings.0c04]
+MSFT           = "Microsoft"
+CDROMClassName = "DVD/CD-ROM 光碟機"
+
+;; Manufacturer specific strings
+MITSUMI         = "Mitsumi"
+GenManufacturer = "（標準 CD-ROM 光碟機）"
+
+;; Descriptions for enumerated brands and models
+Mitsumi_cdrom_devdesc    = "Mitsumi CD-ROM 光碟機"
+gencdrom_devdesc         = "CD-ROM 光碟機"
+
+;; Friendly names
+Mitsumi_Generic_FriendlyName = "Mitsumi CD-ROM 光碟機"
+ISO_Generic_FriendlyName = "Microsoft 虛擬 DVD-ROM"
+
+;; Service descriptions
+cdrom_ServiceDesc   = "CD-ROM 驅動程式"

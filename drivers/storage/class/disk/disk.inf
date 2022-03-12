@@ -213,6 +213,40 @@ mylex_array.DeviceDesc = "Mylex RAID дисковое устройство"
 
 VHD_Generic_FriendlyName = "Microsoft виртуальный диск"
 
+;Chinese(PRC)
+[Strings.0404]
+MSFT="Microsoft"
+DiskClassName="磁碟機"
+GenManufacturer="（標準磁碟機）"
+Compaq="Compaq"
+Mylex="Mylex"
+
+disk_devdesc="磁碟機"
+opticaldisk_devdesc="光碟機"
+
+disk_ServiceDesc="磁碟驅動程式"
+compaq_array.DeviceDesc = "Compaq SCSI 磁碟機陣列"
+mylex_array.DeviceDesc = "Mylex RAID 磁碟機裝置"
+
+VHD_Generic_FriendlyName = "Microsoft 虛擬磁碟"
+
+;Chinese(Taiwan)
+[Strings.0804]
+MSFT="Microsoft"
+DiskClassName="磁盘驱动器"
+GenManufacturer="（准磁盘驱动器）"
+Compaq="Compaq"
+Mylex="Mylex"
+
+disk_devdesc="磁盘驱动器"
+opticaldisk_devdesc="光盘驱动器"
+
+disk_ServiceDesc="磁盘驱动程序"
+compaq_array.DeviceDesc = "Compaq SCSI 磁盘驱动器阵列"
+mylex_array.DeviceDesc = "Mylex RAID 磁盘设备"
+
+VHD_Generic_FriendlyName = "Microsoft 虚拟磁盘"
+
 [Strings.0a]
 DiskClassName="Unidades de discos"
 GenManufacturer="(Unidades de disco estándar)"
@@ -226,3 +260,19 @@ mylex_array.DeviceDesc = "Dispositivo de Disco Mylex RAID"
 
 VHD_Generic_FriendlyName = "Disco Virtual de Microsoft"
 
+;Chinese(Hong Kong)
+[Strings.0c04]
+MSFT="Microsoft"
+DiskClassName="磁碟機"
+GenManufacturer="（標準磁碟機）"
+Compaq="Compaq"
+Mylex="Mylex"
+
+disk_devdesc="磁碟機"
+opticaldisk_devdesc="光碟機"
+
+disk_ServiceDesc="磁碟驅動程式"
+compaq_array.DeviceDesc = "Compaq SCSI 磁碟機陣列"
+mylex_array.DeviceDesc = "Mylex RAID 磁碟機裝置"
+
+VHD_Generic_FriendlyName = "Microsoft 虛擬磁碟"
