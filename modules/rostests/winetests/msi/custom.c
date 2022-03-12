@@ -277,10 +277,14 @@ static void test_props(MSIHANDLE hinst)
 
 static void test_db(MSIHANDLE hinst)
 {
+    static const UINT prop_type[20] = { VT_EMPTY, VT_EMPTY, VT_LPSTR, VT_EMPTY, VT_EMPTY,
+                                        VT_EMPTY, VT_EMPTY, VT_LPSTR, VT_EMPTY, VT_LPSTR,
+                                        VT_EMPTY, VT_EMPTY, VT_EMPTY, VT_EMPTY, VT_I4,
+                                        VT_I4, VT_EMPTY, VT_EMPTY, VT_EMPTY, VT_EMPTY };
     MSIHANDLE hdb, view, rec, rec2, suminfo;
     char buffer[10];
     DWORD sz;
-    UINT r, count, type;
+    UINT r, count, type, i;
     INT int_value;
     FILETIME ft;
 
@@ -466,30 +470,49 @@ static void test_db(MSIHANDLE hinst)
     r = MsiSummaryInfoGetPropertyA(suminfo, 0, NULL, NULL, NULL, NULL, NULL);
     ok(hinst, r == RPC_X_NULL_REF_POINTER, "got %u\n", r);
 
-    type = 0xdeadbeef;
-    int_value = 0xdeadbeef;
-    strcpy(buffer, "deadbeef");
-    sz = sizeof(buffer);
-    r = MsiSummaryInfoGetPropertyA(suminfo, PID_AUTHOR, &type, &int_value, &ft, buffer, &sz);
-    ok(hinst, !r, "got %u\n", r);
-    ok(hinst, type == 0, "got %u\n", type);
-    ok(hinst, int_value == 0, "got %u\n", int_value);
-    ok(hinst, sz == sizeof(buffer), "got %u\n", sz);
-    ok(hinst, !lstrcmpA(buffer, "deadbeef"), "got %s\n", buffer);
+    for (i = 0; i < 20; i++)
+    {
+        /* for some reason query for PID_TITLE leads to install failure under Windows */
+        if (i == PID_TITLE) continue;
 
-    type = 0xdeadbeef;
-    int_value = 0xdeadbeef;
-    strcpy(buffer, "deadbeef");
-    sz = sizeof(buffer);
-    r = MsiSummaryInfoGetPropertyA(suminfo, PID_CODEPAGE, &type, &int_value, &ft, buffer, &sz);
-    ok(hinst, !r, "got %u\n", r);
-    ok(hinst, type == 0, "got %u\n", type);
-    ok(hinst, int_value == 0, "got %u\n", int_value);
-    ok(hinst, sz == sizeof(buffer), "got %u\n", sz);
-    ok(hinst, !lstrcmpA(buffer, "deadbeef"), "got %s\n", buffer);
+        type = 0xdeadbeef;
+        int_value = 0xdeadbeef;
+        *buffer = 0;
+        sz = sizeof(buffer);
+        r = MsiSummaryInfoGetPropertyA(suminfo, i, &type, &int_value, &ft, buffer, &sz);
+        if (sz == sizeof(buffer) || i == PID_TEMPLATE)
+            ok(hinst, !r, "%u: got %u\n", i, r);
+        else
+            ok(hinst, r == ERROR_MORE_DATA, "%u: got %u\n", i, r);
+        ok(hinst, type == prop_type[i], "%u: expected %u, got %u\n", i, prop_type[i], type);
+        if (i == PID_PAGECOUNT)
+            ok(hinst, int_value == 100, "%u: got %u\n", i, int_value);
+        else
+            ok(hinst, int_value == 0, "%u: got %u\n", i, int_value);
+        if (i == PID_TEMPLATE)
+        {
+            ok(hinst, sz == 5, "%u: got %u\n", i, sz);
+            ok(hinst, !lstrcmpA(buffer, ";1033"), "%u: got %s\n", i, buffer);
+        }
+        else if (i == PID_REVNUMBER)
+        {
+            ok(hinst, sz == 76, "%u: got %u\n", i, sz);
+            ok(hinst, !lstrcmpA(buffer, "{004757CA"), "%u: got %s\n", i, buffer);
+        }
+        else
+        {
+            ok(hinst, sz == sizeof(buffer), "%u: got %u\n", i, sz);
+            ok(hinst, !*buffer, "%u: got %s\n", i, buffer);
+        }
+    }
 
-    r = MsiSummaryInfoSetPropertyA(suminfo, PID_CODEPAGE, VT_I2, 1252, &ft, "");
-    ok(hinst, r == ERROR_FUNCTION_FAILED, "got %u\n", r);
+    GetSystemTimeAsFileTime(&ft);
+
+    for (i = 0; i < 20; i++)
+    {
+        r = MsiSummaryInfoSetPropertyA(suminfo, i, prop_type[i], 1252, &ft, "");
+        ok(hinst, r == ERROR_FUNCTION_FAILED, "%u: got %u\n", i, r);
+    }
 
     r = MsiSummaryInfoSetPropertyW(suminfo, PID_CODEPAGE, VT_I2, 1252, &ft, NULL);
     ok(hinst, r == ERROR_FUNCTION_FAILED, "got %u\n", r);
