@@ -610,6 +610,7 @@ static DWORD WINAPI DllThread( LPVOID arg )
 
     info = find_action_by_guid(guid);
     ret = GetBinaryTypeW(info->source, &arch);
+    release_custom_action_data(info);
 
     if (sizeof(void *) == 8 && ret && arch == SCS_32BIT_BINARY)
         GetSystemWow64DirectoryW(buffer, MAX_PATH - sizeof(msiexecW)/sizeof(WCHAR));
