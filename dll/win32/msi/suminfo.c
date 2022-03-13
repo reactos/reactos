@@ -21,7 +21,6 @@
 #include <stdarg.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
 
 #include "stdio.h"
 #include "windef.h"
@@ -91,7 +90,7 @@ static HRESULT (WINAPI *pPropVariantChangeType)
 static void free_prop( PROPVARIANT *prop )
 {
     if (prop->vt == VT_LPSTR )
-        msi_free( prop->u.pszVal );
+        msi_free( prop->pszVal );
     prop->vt = VT_EMPTY;
 }
 
@@ -227,14 +226,14 @@ static void read_properties_from_data( PROPVARIANT *prop, LPBYTE data, DWORD sz 
             LPSTR str = msi_alloc( propdata->u.str.len );
             memcpy( str, propdata->u.str.str, propdata->u.str.len );
             str[ propdata->u.str.len - 1 ] = 0;
-            property.u.pszVal = str;
+            property.pszVal = str;
         }
         else if( propdata->type == VT_FILETIME )
-            property.u.filetime = propdata->u.ft;
+            property.filetime = propdata->u.ft;
         else if( propdata->type == VT_I2 )
-            property.u.iVal = propdata->u.i2;
+            property.iVal = propdata->u.i2;
         else if( propdata->type == VT_I4 )
-            property.u.lVal = propdata->u.i4;
+            property.lVal = propdata->u.i4;
 
         /* check the type is the same as we expect */
         if( type != propdata->type )
@@ -358,16 +357,16 @@ static UINT write_property_to_data( const PROPVARIANT *prop, LPBYTE data )
     switch( prop->vt )
     {
     case VT_I2:
-        sz += write_dword( data, sz, prop->u.iVal );
+        sz += write_dword( data, sz, prop->iVal );
         break;
     case VT_I4:
-        sz += write_dword( data, sz, prop->u.lVal );
+        sz += write_dword( data, sz, prop->lVal );
         break;
     case VT_FILETIME:
-        sz += write_filetime( data, sz, &prop->u.filetime );
+        sz += write_filetime( data, sz, &prop->filetime );
         break;
     case VT_LPSTR:
-        sz += write_string( data, sz, prop->u.pszVal );
+        sz += write_string( data, sz, prop->pszVal );
         break;
     }
     return sz;
@@ -656,11 +655,11 @@ static UINT get_prop( MSISUMMARYINFO *si, UINT uiProperty, UINT *puiDataType, IN
     {
     case VT_I2:
         if( piValue )
-            *piValue = prop->u.iVal;
+            *piValue = prop->iVal;
         break;
     case VT_I4:
         if( piValue )
-            *piValue = prop->u.lVal;
+            *piValue = prop->lVal;
         break;
     case VT_LPSTR:
         if( pcchValueBuf )
@@ -669,14 +668,14 @@ static UINT get_prop( MSISUMMARYINFO *si, UINT uiProperty, UINT *puiDataType, IN
 
             if( str->unicode )
             {
-                len = MultiByteToWideChar( CP_ACP, 0, prop->u.pszVal, -1, NULL, 0 ) - 1;
-                MultiByteToWideChar( CP_ACP, 0, prop->u.pszVal, -1, str->str.w, *pcchValueBuf );
+                len = MultiByteToWideChar( CP_ACP, 0, prop->pszVal, -1, NULL, 0 ) - 1;
+                MultiByteToWideChar( CP_ACP, 0, prop->pszVal, -1, str->str.w, *pcchValueBuf );
             }
             else
             {
-                len = lstrlenA( prop->u.pszVal );
+                len = lstrlenA( prop->pszVal );
                 if( str->str.a )
-                    lstrcpynA(str->str.a, prop->u.pszVal, *pcchValueBuf );
+                    lstrcpynA(str->str.a, prop->pszVal, *pcchValueBuf );
             }
             if (len >= *pcchValueBuf)
                 ret = ERROR_MORE_DATA;
@@ -685,7 +684,7 @@ static UINT get_prop( MSISUMMARYINFO *si, UINT uiProperty, UINT *puiDataType, IN
         break;
     case VT_FILETIME:
         if( pftValue )
-            *pftValue = prop->u.filetime;
+            *pftValue = prop->filetime;
         break;
     case VT_EMPTY:
         break;
@@ -705,7 +704,7 @@ LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty )
     prop = &si->property[uiProperty];
     if( prop->vt != VT_LPSTR )
         return NULL;
-    return strdupAtoW( prop->u.pszVal );
+    return strdupAtoW( prop->pszVal );
 }
 
 INT msi_suminfo_get_int32( MSISUMMARYINFO *si, UINT uiProperty )
@@ -717,7 +716,7 @@ INT msi_suminfo_get_int32( MSISUMMARYINFO *si, UINT uiProperty )
     prop = &si->property[uiProperty];
     if( prop->vt != VT_I4 )
         return -1;
-    return prop->u.lVal;
+    return prop->lVal;
 }
 
 LPWSTR msi_get_suminfo_product( IStorage *stg )
@@ -864,28 +863,28 @@ static UINT set_prop( MSISUMMARYINFO *si, UINT uiProperty, UINT type,
     switch( type )
     {
     case VT_I4:
-        prop->u.lVal = iValue;
+        prop->lVal = iValue;
         break;
     case VT_I2:
-        prop->u.iVal = iValue;
+        prop->iVal = iValue;
         break;
     case VT_FILETIME:
-        prop->u.filetime = *pftValue;
+        prop->filetime = *pftValue;
         break;
     case VT_LPSTR:
         if( str->unicode )
         {
             len = WideCharToMultiByte( CP_ACP, 0, str->str.w, -1,
                                        NULL, 0, NULL, NULL );
-            prop->u.pszVal = msi_alloc( len );
+            prop->pszVal = msi_alloc( len );
             WideCharToMultiByte( CP_ACP, 0, str->str.w, -1,
-                                 prop->u.pszVal, len, NULL, NULL );
+                                 prop->pszVal, len, NULL, NULL );
         }
         else
         {
             len = lstrlenA( str->str.a ) + 1;
-            prop->u.pszVal = msi_alloc( len );
-            lstrcpyA( prop->u.pszVal, str->str.a );
+            prop->pszVal = msi_alloc( len );
+            lstrcpyA( prop->pszVal, str->str.a );
         }
         break;
     }

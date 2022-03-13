@@ -42,7 +42,6 @@ list(APPEND SOURCE
     storages.c
     streams.c
     string.c
-    suminfo.c
     table.c
     tokenize.c
     update.c
@@ -59,6 +58,7 @@ add_rpc_files(server winemsi.idl)
 set(IDL_FLAGS ${OLD_IDL_FLAGS})
 
 list(APPEND PCH_SKIP_SOURCE
+    suminfo.c   # The only file without NONAMELESSUNION
     ${BISON_cond_OUTPUTS}
     ${BISON_sql_OUTPUTS}
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
