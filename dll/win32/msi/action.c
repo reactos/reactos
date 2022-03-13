@@ -6797,10 +6797,7 @@ static UINT ITERATE_InstallODBCDataSource( MSIRECORD *rec, LPVOID param )
     attrs[len + 1] = 0;
 
     if (!SQLConfigDataSourceW(NULL, request, driver, attrs))
-    {
-        ERR("Failed to install SQL data source!\n");
-        r = ERROR_FUNCTION_FAILED;
-    }
+        WARN("Failed to install SQL data source!\n");
 
     uirow = MSI_CreateRecord( 5 );
     MSI_RecordSetStringW( uirow, 1, desc );
