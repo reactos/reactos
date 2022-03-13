@@ -1135,7 +1135,7 @@ static void test_invalid_functions(MSIHANDLE hinst)
 
     GetCurrentDirectoryA(sizeof(path), path);
     r = MsiDatabaseExportA(db, "Test", path, "bogus.idt");
-    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+    ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
     r = MsiDatabaseImportA(db, path, "bogus.idt");
     todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
