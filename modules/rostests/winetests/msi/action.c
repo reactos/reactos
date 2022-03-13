@@ -5668,7 +5668,7 @@ static void test_register_typelib(void)
     }
 
     create_test_files();
-    extract_resource("typelib.tlb", "TYPELIB", "msitest\\typelib.dll");
+    extract_resource(MAKEINTRESOURCEA(1), "TYPELIB", "msitest\\typelib.dll");
     create_database(msifile, tl_tables, ARRAY_SIZE(tl_tables));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
