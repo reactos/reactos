@@ -54,7 +54,6 @@ typedef struct tagMSICOLUMNINFO
     LPCWSTR colname;
     UINT    type;
     UINT    offset;
-    BOOL    temporary;
     MSICOLUMNHASHENTRY **hash_table;
 } MSICOLUMNINFO;
 
@@ -79,14 +78,14 @@ static const WCHAR szNumber[]  = {'N','u','m','b','e','r',0};
 static const WCHAR szType[]    = {'T','y','p','e',0};
 
 static const MSICOLUMNINFO _Columns_cols[4] = {
-    { szColumns, 1, szTable,  MSITYPE_VALID | MSITYPE_STRING | MSITYPE_KEY | 64, 0, 0, NULL },
-    { szColumns, 2, szNumber, MSITYPE_VALID | MSITYPE_KEY | 2,     2, 0, NULL },
-    { szColumns, 3, szName,   MSITYPE_VALID | MSITYPE_STRING | 64, 4, 0, NULL },
-    { szColumns, 4, szType,   MSITYPE_VALID | 2,                   6, 0, NULL },
+    { szColumns, 1, szTable,  MSITYPE_VALID | MSITYPE_STRING | MSITYPE_KEY | 64, 0, NULL },
+    { szColumns, 2, szNumber, MSITYPE_VALID | MSITYPE_KEY | 2,     2, NULL },
+    { szColumns, 3, szName,   MSITYPE_VALID | MSITYPE_STRING | 64, 4, NULL },
+    { szColumns, 4, szType,   MSITYPE_VALID | 2,                   6, NULL },
 };
 
 static const MSICOLUMNINFO _Tables_cols[1] = {
-    { szTables,  1, szName,   MSITYPE_VALID | MSITYPE_STRING | MSITYPE_KEY | 64, 0, 0, NULL },
+    { szTables,  1, szName,   MSITYPE_VALID | MSITYPE_STRING | MSITYPE_KEY | 64, 0, NULL },
 };
 
 #define MAX_STREAM_NAME 0x1f
@@ -764,7 +763,6 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
         table->colinfo[ i ].type = col->type;
         table->colinfo[ i ].offset = 0;
         table->colinfo[ i ].hash_table = NULL;
-        table->colinfo[ i ].temporary = (col->type & MSITYPE_TEMPORARY) != 0;
     }
     table_calc_column_offsets( db, table->colinfo, table->col_count);
 
@@ -1613,7 +1611,7 @@ static UINT TABLE_get_column_info( struct tagMSIVIEW *view,
         *type = tv->columns[n-1].type;
 
     if( temporary )
-        *temporary = tv->columns[n-1].temporary;
+        *temporary = (tv->columns[n-1].type & MSITYPE_TEMPORARY) != 0;
 
     return ERROR_SUCCESS;
 }
@@ -1961,7 +1959,7 @@ static UINT TABLE_remove_column(struct tagMSIVIEW *view, LPCWSTR table, UINT num
     if (tv->table->col_count != number)
         return ERROR_BAD_QUERY_SYNTAX;
 
-    if (tv->table->colinfo[number-1].temporary)
+    if (tv->table->colinfo[number-1].type & MSITYPE_TEMPORARY)
     {
         UINT size = tv->table->colinfo[number-1].offset;
         tv->table->col_count--;
@@ -2052,7 +2050,7 @@ static UINT TABLE_add_column(struct tagMSIVIEW *view, LPCWSTR column,
         return ERROR_SUCCESS;
 
     if (!temporary && tv->table->col_count &&
-            tv->table->colinfo[tv->table->col_count-1].temporary)
+            tv->table->colinfo[tv->table->col_count-1].type & MSITYPE_TEMPORARY)
         return ERROR_BAD_QUERY_SYNTAX;
 
     for (i = 0; i < tv->table->col_count; i++)
@@ -2077,7 +2075,6 @@ static UINT TABLE_add_column(struct tagMSIVIEW *view, LPCWSTR column,
     colinfo[tv->table->col_count].type = type;
     colinfo[tv->table->col_count].offset = 0;
     colinfo[tv->table->col_count].hash_table = NULL;
-    colinfo[tv->table->col_count].temporary = temporary;
     tv->table->col_count++;
 
     table_calc_column_offsets( tv->db, tv->table->colinfo, tv->table->col_count);
