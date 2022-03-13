@@ -4219,19 +4219,9 @@ UINT WINAPI MsiEnableUIPreview( MSIHANDLE hdb, MSIHANDLE *phPreview )
 
     TRACE("%d %p\n", hdb, phPreview);
 
-    db = msihandle2msiinfo( hdb, MSIHANDLETYPE_DATABASE );
-    if (!db)
-    {
-        MSIHANDLE remote_database = msi_get_remote( hdb );
-        if (!remote_database)
-            return ERROR_INVALID_HANDLE;
+    if (!(db = msihandle2msiinfo(hdb, MSIHANDLETYPE_DATABASE)))
+        return ERROR_INVALID_HANDLE;
 
-        *phPreview = 0;
-
-        WARN("MsiEnableUIPreview not allowed during a custom action!\n");
-
-        return ERROR_FUNCTION_FAILED;
-    }
     preview = MSI_EnableUIPreview( db );
     if (preview)
     {

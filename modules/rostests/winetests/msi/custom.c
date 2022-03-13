@@ -1150,7 +1150,7 @@ static void test_invalid_functions(MSIHANDLE hinst)
     ok(hinst, r == MSIDBSTATE_ERROR, "got %u\n", r);
 
     r = MsiEnableUIPreview(db, &preview);
-    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+    ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
     sprintf(package_name, "#%u", db);
     r = MsiOpenPackageA(package_name, &package);
