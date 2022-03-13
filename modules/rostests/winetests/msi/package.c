@@ -4054,7 +4054,6 @@ static void test_appsearch(void)
 
     r = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Winetest_msi", 0, NULL, 0, KEY_ALL_ACCESS|KEY_WOW64_32KEY,
                         NULL, &hkey, NULL);
-    ok( r == ERROR_SUCCESS, "Could not create key: %d.\n", r );
     if (r == ERROR_ACCESS_DENIED)
     {
         skip("insufficient rights\n");
@@ -4063,6 +4062,7 @@ static void test_appsearch(void)
         DeleteFileA(msifile);
         return;
     }
+    ok( r == ERROR_SUCCESS, "Could not create key: %d.\n", r );
 
     r = RegSetValueExA(hkey, NULL, 0, REG_SZ, (const BYTE *)"c:\\windows\\system32\\notepad.exe",
                        sizeof("c:\\windows\\system32\\notepad.exe"));
