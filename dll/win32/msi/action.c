@@ -7064,7 +7064,7 @@ static UINT env_parse_flags( LPCWSTR *name, LPCWSTR *value, DWORD *flags )
         else if (*cptr == '!')
             *flags |= ENV_ACT_REMOVEMATCH;
         else if (*cptr == '*')
-            *flags |= ENV_MOD_MACHINE;
+            *flags |= ENV_MOD_MACHINE | ENV_ACT_REMOVE;
         else
             break;
 

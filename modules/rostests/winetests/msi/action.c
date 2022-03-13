@@ -250,7 +250,8 @@ static const char env_environment_dat[] =
     "Var26\t+-MSITESTVAR20\t2[~]\tOne\n"
     "Var27\t+-MSITESTVAR21\t[~];1\tOne\n"
     "Var28\t-MSITESTVAR22\t1\tOne\n"
-    "Var29\t-MSITESTVAR23\t2\tOne\n";
+    "Var29\t-MSITESTVAR23\t2\tOne\n"
+    "Var30\t*MSITESTVAR100\t1\tOne\n";
 
 static const char service_install_dat[] =
     "ServiceInstall\tName\tDisplayName\tServiceType\tStartType\tErrorControl\t"
@@ -4846,7 +4847,7 @@ static void test_envvar(void)
 {
     char buffer[16];
     UINT r, i;
-    HKEY env;
+    HKEY env, env2;
     LONG res;
 
     if (is_process_limited())
@@ -4858,6 +4859,10 @@ static void test_envvar(void)
     create_database(msifile, env_tables, ARRAY_SIZE(env_tables));
 
     res = RegCreateKeyExA(HKEY_CURRENT_USER, "Environment", 0, NULL, 0, KEY_ALL_ACCESS, NULL, &env, NULL);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Control\\Session Manager\\Environment",
+                          0, NULL, 0, KEY_ALL_ACCESS, NULL, &env2, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     res = RegSetValueExA(env, "MSITESTVAR1", 0, REG_SZ, (const BYTE *)"0", 2);
@@ -4913,6 +4918,7 @@ static void test_envvar(void)
     CHECK_REG_STR(env, "MSITESTVAR19", "1");
     CHECK_REG_STR(env, "MSITESTVAR20", "1");
     CHECK_REG_STR(env, "MSITESTVAR21", "1");
+    CHECK_REG_STR(env2, "MSITESTVAR100", "1");
 
     res = RegSetValueExA(env, "MSITESTVAR22", 0, REG_SZ, (const BYTE *)"1", 2);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -4940,11 +4946,15 @@ todo_wine {
         ok(res == ERROR_FILE_NOT_FOUND, "[%d] got %u\n", i, res);
     }
 
+    res = RegDeleteValueA(env2, "MSITESTVAR100");
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+
 error:
     RegDeleteValueA(env, "MSITESTVAR1");
     RegDeleteValueA(env, "MSITESTVAR2");
     RegDeleteValueA(env, "MSITESTVAR21");
     RegCloseKey(env);
+    RegCloseKey(env2);
 
     DeleteFileA(msifile);
 }
