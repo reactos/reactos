@@ -9640,15 +9640,25 @@ static void test_top_level_action(void)
 
 START_TEST(package)
 {
+    char temp_path[MAX_PATH], prev_path[MAX_PATH];
     STATEMGRSTATUS status;
     BOOL ret = FALSE;
+    DWORD len;
 
     init_functionpointers();
 
     if (pIsWow64Process)
         pIsWow64Process(GetCurrentProcess(), &is_wow64);
 
-    GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
+    GetCurrentDirectoryA(MAX_PATH, prev_path);
+    GetTempPathA(MAX_PATH, temp_path);
+    SetCurrentDirectoryA(temp_path);
+
+    lstrcpyA(CURR_DIR, temp_path);
+    len = lstrlenA(CURR_DIR);
+
+    if (len && (CURR_DIR[len - 1] == '\\'))
+        CURR_DIR[len - 1] = 0;
 
     /* Create a restore point ourselves so we circumvent the multitude of restore points
      * that would have been created by all the installation and removal tests.
@@ -9706,4 +9716,6 @@ START_TEST(package)
         if (ret)
             remove_restore_point(status.llSequenceNumber);
     }
+
+    SetCurrentDirectoryA(prev_path);
 }
