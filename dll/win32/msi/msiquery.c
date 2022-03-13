@@ -907,7 +907,7 @@ UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db, const WCHAR *transform, int e
     if (!IsEqualGUID( &stat.clsid, &CLSID_MsiTransform )) goto end;
     if (TRACE_ON( msi )) enum_stream_names( stg );
 
-    ret = msi_table_apply_transform( db, stg );
+    ret = msi_table_apply_transform( db, stg, error_cond );
 
 end:
     IStorage_Release( stg );
@@ -919,7 +919,7 @@ UINT WINAPI MsiDatabaseApplyTransformW( MSIHANDLE hdb, const WCHAR *transform, i
     MSIDATABASE *db;
     UINT r;
 
-    if (error_cond) FIXME( "ignoring error conditions\n" );
+    if (error_cond & ~MSITRANSFORM_ERROR_VIEWTRANSFORM) FIXME( "ignoring error conditions\n" );
 
     if (!(db = msihandle2msiinfo(hdb, MSIHANDLETYPE_DATABASE)))
         return ERROR_INVALID_HANDLE;

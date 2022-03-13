@@ -2220,6 +2220,112 @@ static UINT msi_record_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWS
     return ERROR_SUCCESS;
 }
 
+static UINT TransformView_fetch_int( MSIVIEW *view, UINT row, UINT col, UINT *val )
+{
+    FIXME("\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static UINT TransformView_fetch_stream( MSIVIEW *view, UINT row, UINT col, IStream **stm )
+{
+    FIXME("\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static UINT TransformView_set_row( MSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
+{
+    FIXME("\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static UINT TransformView_insert_row( MSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary )
+{
+    FIXME("\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static UINT TransformView_delete_row( MSIVIEW *view, UINT row )
+{
+    FIXME("\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static UINT TransformView_execute( MSIVIEW *view, MSIRECORD *record )
+{
+    return ERROR_SUCCESS;
+}
+
+static UINT TransformView_close( MSIVIEW *view )
+{
+    return ERROR_SUCCESS;
+}
+
+static UINT TransformView_get_dimensions( MSIVIEW *view, UINT *rows, UINT *cols )
+{
+    FIXME("\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static UINT TransformView_get_column_info( MSIVIEW *view, UINT n, LPCWSTR *name, UINT *type,
+                             BOOL *temporary, LPCWSTR *table_name )
+{
+    FIXME("\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+static UINT TransformView_delete( MSIVIEW *view )
+{
+    return TABLE_delete( view );
+}
+
+static const MSIVIEWOPS transform_view_ops =
+{
+    TransformView_fetch_int,
+    TransformView_fetch_stream,
+    NULL,
+    NULL,
+    NULL,
+    TransformView_set_row,
+    TransformView_insert_row,
+    TransformView_delete_row,
+    TransformView_execute,
+    TransformView_close,
+    TransformView_get_dimensions,
+    TransformView_get_column_info,
+    NULL,
+    TransformView_delete,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR name, MSIVIEW **view )
+{
+    MSITABLEVIEW *tv;
+    UINT r;
+
+    r = TABLE_CreateView( db, name, view );
+    if (r == ERROR_INVALID_PARAMETER)
+    {
+        /* table does not exist */
+        FIXME("\n");
+        return ERROR_CALL_NOT_IMPLEMENTED;
+    }
+    else if (r != ERROR_SUCCESS)
+    {
+        return r;
+    }
+    else
+    {
+        tv = (MSITABLEVIEW*)*view;
+    }
+
+    tv->view.ops = &transform_view_ops;
+    return ERROR_SUCCESS;
+}
+
 UINT MSI_CommitTables( MSIDATABASE *db )
 {
     UINT r, bytes_per_strref;
@@ -2510,7 +2616,7 @@ typedef struct
 
 static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
                                       string_table *st, TRANSFORMDATA *transform,
-                                      UINT bytes_per_strref )
+                                      UINT bytes_per_strref, int err_cond )
 {
     BYTE *rawdata = NULL;
     MSITABLEVIEW *tv = NULL;
@@ -2536,7 +2642,10 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
     }
 
     /* create a table view */
-    r = TABLE_CreateView( db, name, (MSIVIEW**) &tv );
+    if ( err_cond & MSITRANSFORM_ERROR_VIEWTRANSFORM )
+        r = TransformView_Create( db, st, name, (MSIVIEW**) &tv );
+    else
+        r = TABLE_CreateView( db, name, (MSIVIEW**) &tv );
     if( r != ERROR_SUCCESS )
         goto err;
 
@@ -2646,21 +2755,21 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
                 if (!mask)
                 {
                     TRACE("deleting row [%d]:\n", row);
-                    r = TABLE_delete_row( &tv->view, row );
+                    r = tv->view.ops->delete_row( &tv->view, row );
                     if (r != ERROR_SUCCESS)
                         WARN("failed to delete row %u\n", r);
                 }
                 else if (mask & 1)
                 {
                     TRACE("modifying full row [%d]:\n", row);
-                    r = TABLE_set_row( &tv->view, row, rec, (1 << tv->num_cols) - 1 );
+                    r = tv->view.ops->set_row( &tv->view, row, rec, (1 << tv->num_cols) - 1 );
                     if (r != ERROR_SUCCESS)
                         WARN("failed to modify row %u\n", r);
                 }
                 else
                 {
                     TRACE("modifying masked row [%d]:\n", row);
-                    r = TABLE_set_row( &tv->view, row, rec, mask );
+                    r = tv->view.ops->set_row( &tv->view, row, rec, mask );
                     if (r != ERROR_SUCCESS)
                         WARN("failed to modify row %u\n", r);
                 }
@@ -2668,12 +2777,13 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
             else
             {
                 TRACE("inserting row\n");
-                r = TABLE_insert_row( &tv->view, rec, -1, FALSE );
+                r = tv->view.ops->insert_row( &tv->view, rec, -1, FALSE );
                 if (r != ERROR_SUCCESS)
                     WARN("failed to insert row %u\n", r);
             }
 
-            if (!wcscmp( name, szColumns ))
+            if (!(err_cond & MSITRANSFORM_ERROR_VIEWTRANSFORM) &&
+                    !wcscmp( name, szColumns ))
                 msi_update_table_columns( db, table );
 
             msiobj_release( &rec->hdr );
@@ -2696,7 +2806,7 @@ err:
  *
  * Enumerate the table transforms in a transform storage and apply each one.
  */
-UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
+UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg, int err_cond )
 {
     struct list transforms;
     IEnumSTATSTG *stgenum = NULL;
@@ -2708,6 +2818,7 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
     UINT ret = ERROR_FUNCTION_FAILED;
     UINT bytes_per_strref;
     BOOL property_update = FALSE;
+    BOOL free_transform_view = FALSE;
 
     TRACE("%p %p\n", db, stg );
 
@@ -2770,15 +2881,39 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
         tv->view.ops->delete( &tv->view );
     }
 
+    if (err_cond & MSITRANSFORM_ERROR_VIEWTRANSFORM)
+    {
+        static const WCHAR create_query[] = L"CREATE TABLE `_TransformView` ( "
+            L"`Table` CHAR(0) NOT NULL TEMPORARY, `Column` CHAR(0) NOT NULL TEMPORARY, "
+            L"`Row` CHAR(0) TEMPORARY, `Data` CHAR(0) TEMPORARY, `Current` CHAR(0) TEMPORARY "
+            L"PRIMARY KEY `Table`, `Column`, `Row` ) HOLD";
+        MSIQUERY *query;
+        UINT r;
+
+        r = MSI_DatabaseOpenViewW( db, create_query, &query );
+        if (r != ERROR_SUCCESS)
+            goto end;
+
+        r = MSI_ViewExecute( query, NULL );
+        if (r == ERROR_SUCCESS)
+            MSI_ViewClose( query );
+        msiobj_release( &query->hdr );
+        if (r == ERROR_BAD_QUERY_SYNTAX)
+            FIXME( "support adding to _TransformView\n" );
+        if (r != ERROR_SUCCESS)
+            goto end;
+        free_transform_view = TRUE;
+    }
+
     /*
      * Apply _Tables and _Columns transforms first so that
      * the table metadata is correct, and empty tables exist.
      */
-    ret = msi_table_load_transform( db, stg, strings, tables, bytes_per_strref );
+    ret = msi_table_load_transform( db, stg, strings, tables, bytes_per_strref, err_cond );
     if (ret != ERROR_SUCCESS && ret != ERROR_INVALID_TABLE)
         goto end;
 
-    ret = msi_table_load_transform( db, stg, strings, columns, bytes_per_strref );
+    ret = msi_table_load_transform( db, stg, strings, columns, bytes_per_strref, err_cond );
     if (ret != ERROR_SUCCESS && ret != ERROR_INVALID_TABLE)
         goto end;
 
@@ -2792,7 +2927,7 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg )
              wcscmp( transform->name, szTables ) &&
              ret == ERROR_SUCCESS )
         {
-            ret = msi_table_load_transform( db, stg, strings, transform, bytes_per_strref );
+            ret = msi_table_load_transform( db, stg, strings, transform, bytes_per_strref, err_cond );
         }
 
         list_remove( &transform->entry );
@@ -2811,6 +2946,17 @@ end:
         IEnumSTATSTG_Release( stgenum );
     if ( strings )
         msi_destroy_stringtable( strings );
+    if (ret != ERROR_SUCCESS && free_transform_view)
+    {
+        MSIQUERY *query;
+        if (MSI_DatabaseOpenViewW( db, L"ALTER TABLE `_TransformView` FREE",
+                    &query ) == ERROR_SUCCESS)
+        {
+            if (MSI_ViewExecute( query, NULL ) == ERROR_SUCCESS)
+                MSI_ViewClose( query );
+            msiobj_release( &query->hdr );
+        }
+    }
 
     return ret;
 }

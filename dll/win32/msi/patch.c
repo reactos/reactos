@@ -274,7 +274,7 @@ static UINT apply_substorage_transform( MSIPACKAGE *package, MSIDATABASE *patch_
     {
         ret = check_transform_applicable( package, stg );
         if (ret == ERROR_SUCCESS)
-            msi_table_apply_transform( package->db, stg );
+            msi_table_apply_transform( package->db, stg, 0 );
         else
             TRACE("substorage transform %s wasn't applicable\n", debugstr_w(name));
         IStorage_Release( stg );

@@ -794,7 +794,7 @@ extern UINT write_stream_data( IStorage *stg, LPCWSTR stname,
                                LPCVOID data, UINT sz, BOOL bTable ) DECLSPEC_HIDDEN;
 
 /* transform functions */
-extern UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg ) DECLSPEC_HIDDEN;
+extern UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg, int err_cond ) DECLSPEC_HIDDEN;
 extern UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db,
                  LPCWSTR szTransformFile, int iErrorCond ) DECLSPEC_HIDDEN;
 extern void append_storage_to_db( MSIDATABASE *db, IStorage *stg ) DECLSPEC_HIDDEN;
