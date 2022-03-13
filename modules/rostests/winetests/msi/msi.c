@@ -1318,8 +1318,7 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA("{6700E8CF-95AB-4D9C-BC2C-15840DEA7A5D}");
     error = GetLastError();
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     /* same length as guid, but random */
     SetLastError(0xdeadbeef);
@@ -1334,8 +1333,7 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA(prodcode);
     error = GetLastError();
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     lstrcpyA(keypath, "Software\\Microsoft\\Installer\\Products\\");
     lstrcatA(keypath, prod_squashed);
@@ -1348,8 +1346,7 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA(prodcode);
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\");
     lstrcatA(keypath, prodcode);
@@ -1370,8 +1367,7 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA(prodcode);
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     data = 1;
     res = RegSetValueExA(localkey, "WindowsInstaller", 0, REG_DWORD, (const BYTE *)&data, sizeof(DWORD));
@@ -1382,8 +1378,7 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA(prodcode);
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     RegDeleteValueA(localkey, "WindowsInstaller");
     delete_key(localkey, "", access & KEY_WOW64_64KEY);
@@ -1409,8 +1404,7 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA(prodcode);
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegCreateKeyExA(localkey, "InstallProperties", 0, NULL, 0, access, NULL, &props, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1420,8 +1414,7 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA(prodcode);
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     data = 1;
     res = RegSetValueExA(props, "WindowsInstaller", 0, REG_DWORD, (const BYTE *)&data, sizeof(DWORD));
@@ -1445,8 +1438,7 @@ static void test_MsiQueryProductState(void)
         return;
     }
     ok(state == INSTALLSTATE_DEFAULT, "Expected INSTALLSTATE_DEFAULT, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     data = 2;
     res = RegSetValueExA(props, "WindowsInstaller", 0, REG_DWORD, (const BYTE *)&data, sizeof(DWORD));
@@ -1457,8 +1449,7 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA(prodcode);
     error = GetLastError();
     ok(state == INSTALLSTATE_DEFAULT, "Expected INSTALLSTATE_DEFAULT, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     RegDeleteKeyA(userkey, "");
 
@@ -1467,8 +1458,7 @@ static void test_MsiQueryProductState(void)
     state = MsiQueryProductStateA(prodcode);
     error = GetLastError();
     ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     RegDeleteValueA(props, "WindowsInstaller");
     delete_key(props, "", access & KEY_WOW64_64KEY);
@@ -1689,8 +1679,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA("{6700E8CF-95AB-4D9C-BC2C-15840DEA7A5D}", "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_ALREADY_EXISTS) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     /* same length as guid, but random */
     SetLastError(0xdeadbeef);
@@ -1711,16 +1700,14 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "");
     error = GetLastError();
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     /* feature key does not exist yet */
     SetLastError(0xdeadbeef);
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     /* MSIINSTALLCONTEXT_USERUNMANAGED */
 
@@ -1735,8 +1722,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(userkey, "feature", 0, REG_SZ, (const BYTE *)"", 2);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1746,8 +1732,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\UserData\\");
     lstrcatA(keypath, usersid);
@@ -1771,8 +1756,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)"aaaaaaaaaaaaaaaaaaa", 20);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1781,8 +1765,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_BADCONFIG, "Expected INSTALLSTATE_BADCONFIG, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)"aaaaaaaaaaaaaaaaaaaa", 21);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1791,8 +1774,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)"aaaaaaaaaaaaaaaaaaaaa", 22);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1801,8 +1783,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)comp_base85, 41);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1811,8 +1792,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\UserData\\");
     lstrcatA(keypath, usersid);
@@ -1834,8 +1814,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"", 1);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1844,8 +1823,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"apple", 6);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1854,8 +1832,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(compkey2, prod_squashed, 0, REG_SZ, (const BYTE *)"orange", 7);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1865,8 +1842,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"01\\", 4);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1876,8 +1852,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_SOURCE, "Expected INSTALLSTATE_SOURCE, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"01", 3);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1887,8 +1862,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"01a", 4);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1898,8 +1872,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_SOURCE, "Expected INSTALLSTATE_SOURCE, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"01", 3);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -1909,8 +1882,7 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     error = GetLastError();
     ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
-    ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
-       "expected ERROR_SUCCESS, got %u\n", error);
+    ok(error == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", error);
 
     RegDeleteValueA(compkey, prod_squashed);
     RegDeleteValueA(compkey2, prod_squashed);
