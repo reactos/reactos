@@ -56,7 +56,6 @@ static void test_msirecord(void)
     char buf[10];
     WCHAR bufW[10];
     const char str[] = "hello";
-    const WCHAR strW[] = { 'h','e','l','l','o',0};
     char filename[MAX_PATH];
 
     /* check behaviour with an invalid record */
@@ -210,7 +209,7 @@ static void test_msirecord(void)
     r = MsiRecordGetStringW(h,0,bufW,&sz);
     ok(r == ERROR_MORE_DATA, "wrong error\n");
     ok(sz == 5, "MsiRecordGetStringA returned the wrong length\n");
-    ok(0==memcmp(bufW,strW,8), "MsiRecordGetStringA returned the wrong string\n");
+    ok(!memcmp(bufW, L"hello", 8), "MsiRecordGetStringA returned the wrong string\n");
 
     sz = 0;
     bufW[0] = 'x';

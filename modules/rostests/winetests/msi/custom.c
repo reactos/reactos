@@ -518,12 +518,10 @@ static void test_db(MSIHANDLE hinst)
 
     for (i = 0; i < 20; i++)
     {
-        WCHAR emptyW[1] = { 0 };
-
         r = MsiSummaryInfoSetPropertyA(suminfo, i, prop_type[i], 1252, &ft, "");
         ok(hinst, r == ERROR_FUNCTION_FAILED, "%u: got %u\n", i, r);
 
-        r = MsiSummaryInfoSetPropertyW(suminfo, i, prop_type[i], 1252, &ft, emptyW);
+        r = MsiSummaryInfoSetPropertyW(suminfo, i, prop_type[i], 1252, &ft, L"");
         ok(hinst, r == ERROR_FUNCTION_FAILED, "%u: got %u\n", i, r);
     }
 
