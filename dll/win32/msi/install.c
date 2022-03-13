@@ -37,7 +37,6 @@
 #include "wine/heap.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -166,7 +165,7 @@ UINT msi_strcpy_to_awstring( const WCHAR *str, int len, awstring *awbuf, DWORD *
     if (!sz)
         return ERROR_SUCCESS;
 
-    if (len < 0) len = strlenW( str );
+    if (len < 0) len = lstrlenW( str );
  
     if (awbuf->unicode && awbuf->str.w)
     {
@@ -197,7 +196,7 @@ UINT msi_strncpyWtoA(const WCHAR *str, int lenW, char *buf, DWORD *sz, BOOL remo
     if (!sz)
         return buf ? ERROR_INVALID_PARAMETER : ERROR_SUCCESS;
 
-    if (lenW < 0) lenW = strlenW(str);
+    if (lenW < 0) lenW = lstrlenW(str);
     lenA = WideCharToMultiByte(CP_ACP, 0, str, lenW + 1, NULL, 0, NULL, NULL);
     WideCharToMultiByte(CP_ACP, 0, str, lenW + 1, buf, *sz, NULL, NULL);
     lenA--;
@@ -219,7 +218,7 @@ UINT msi_strncpyW(const WCHAR *str, int len, WCHAR *buf, DWORD *sz)
     if (!sz)
         return buf ? ERROR_INVALID_PARAMETER : ERROR_SUCCESS;
 
-    if (len < 0) len = strlenW(str);
+    if (len < 0) len = lstrlenW(str);
     if (buf)
         memcpy(buf, str, min(len + 1, *sz) * sizeof(WCHAR));
     if (buf && len >= *sz)
@@ -239,7 +238,7 @@ const WCHAR *msi_get_target_folder( MSIPACKAGE *package, const WCHAR *name )
     if (!folder->ResolvedTarget)
     {
         MSIFOLDER *parent = folder;
-        while (parent->Parent && strcmpW( parent->Parent, parent->Directory ))
+        while (parent->Parent && wcscmp( parent->Parent, parent->Directory ))
         {
             parent = msi_get_loaded_folder( package, parent->Parent );
         }
@@ -370,11 +369,11 @@ WCHAR *msi_resolve_source_folder( MSIPACKAGE *package, const WCHAR *name, MSIFOL
 
     TRACE("working to resolve %s\n", debugstr_w(name));
 
-    if (!strcmpW( name, szSourceDir )) name = szTargetDir;
+    if (!wcscmp( name, szSourceDir )) name = szTargetDir;
     if (!(f = msi_get_loaded_folder( package, name ))) return NULL;
 
     /* special resolving for root dir */
-    if (!strcmpW( name, szTargetDir ) && !f->ResolvedSource)
+    if (!wcscmp( name, szTargetDir ) && !f->ResolvedSource)
     {
         f->ResolvedSource = get_source_root( package );
     }
@@ -548,7 +547,7 @@ static void set_target_path( MSIPACKAGE *package, MSIFOLDER *folder, const WCHAR
     WCHAR *target_path;
 
     if (!(target_path = msi_normalize_path( path ))) return;
-    if (strcmpW( target_path, folder->ResolvedTarget ))
+    if (wcscmp( target_path, folder->ResolvedTarget ))
     {
         msi_free( folder->ResolvedTarget );
         folder->ResolvedTarget = target_path;
@@ -936,7 +935,7 @@ UINT MSI_SetFeatureStateW( MSIPACKAGE *package, LPCWSTR szFeature, INSTALLSTATE 
     /* update all the features that are children of this feature */
     LIST_FOR_EACH_ENTRY( child, &package->features, MSIFEATURE, entry )
     {
-        if (child->Feature_Parent && !strcmpW( szFeature, child->Feature_Parent ))
+        if (child->Feature_Parent && !wcscmp( szFeature, child->Feature_Parent ))
             MSI_SetFeatureStateW(package, child->Feature, iState);
     }
     
@@ -1031,7 +1030,7 @@ UINT WINAPI MsiSetFeatureAttributesW( MSIHANDLE handle, LPCWSTR name, DWORD attr
         return ERROR_INVALID_HANDLE;
 
     costing = msi_dup_property( package->db, szCostingComplete );
-    if (!costing || !strcmpW( costing, szOne ))
+    if (!costing || !wcscmp( costing, szOne ))
     {
         msi_free( costing );
         msiobj_release( &package->hdr );
@@ -1318,7 +1317,7 @@ static UINT MSI_GetFeatureInfo( MSIPACKAGE *package, LPCWSTR name, LPDWORD attrs
     if (attrs) *attrs = map_feature_attributes( feature->Attributes );
     if (title_len)
     {
-        if (feature->Title) len = strlenW( feature->Title );
+        if (feature->Title) len = lstrlenW( feature->Title );
         else len = 0;
         if (*title_len <= len)
         {
@@ -1327,14 +1326,14 @@ static UINT MSI_GetFeatureInfo( MSIPACKAGE *package, LPCWSTR name, LPDWORD attrs
         }
         else if (title)
         {
-            if (feature->Title) strcpyW( title, feature->Title );
+            if (feature->Title) lstrcpyW( title, feature->Title );
             else *title = 0;
             *title_len = len;
         }
     }
     if (help_len)
     {
-        if (feature->Description) len = strlenW( feature->Description );
+        if (feature->Description) len = lstrlenW( feature->Description );
         else len = 0;
         if (*help_len <= len)
         {
@@ -1343,7 +1342,7 @@ static UINT MSI_GetFeatureInfo( MSIPACKAGE *package, LPCWSTR name, LPDWORD attrs
         }
         else if (help)
         {
-            if (feature->Description) strcpyW( help, feature->Description );
+            if (feature->Description) lstrcpyW( help, feature->Description );
             else *help = 0;
             *help_len = len;
         }
@@ -1588,7 +1587,7 @@ UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel )
     if (iInstallLevel < 1)
         return MSI_SetFeatureStates( package );
 
-    len = sprintfW( level, fmt, iInstallLevel );
+    len = swprintf( level, ARRAY_SIZE(level), fmt, iInstallLevel );
     r = msi_set_property( package->db, szInstallLevel, level, len );
     if ( r == ERROR_SUCCESS )
         r = MSI_SetFeatureStates( package );

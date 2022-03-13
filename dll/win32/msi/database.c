@@ -28,7 +28,6 @@
 #include "winreg.h"
 #include "winnls.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "msipriv.h"
@@ -251,7 +250,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         goto end;
     }
 
-    if (!strchrW( save_path, '\\' ))
+    if (!wcschr( save_path, '\\' ))
     {
         GetCurrentDirectoryW( MAX_PATH, path );
         lstrcatW( path, szBackSlash );
@@ -456,7 +455,7 @@ static LPWSTR msi_build_createsql_prelude(LPWSTR table)
     if (!prelude)
         return NULL;
 
-    sprintfW(prelude, create_fmt, table);
+    swprintf(prelude, size, create_fmt, table);
     return prelude;
 }
 
@@ -492,7 +491,7 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
             comma[0] = ',';
 
         ptr = &types[i][1];
-        len = atolW(ptr);
+        len = wcstol(ptr, NULL, 10);
         extra[0] = '\0';
 
         switch (types[i][0])
@@ -503,14 +502,14 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
             case 'L':
                 lstrcatW(extra, localizable);
                 type = type_char;
-                sprintfW(size, size_fmt, ptr);
+                swprintf(size, ARRAY_SIZE(size), size_fmt, ptr);
                 break;
             case 's':
                 lstrcpyW(extra, type_notnull);
                 /* fall through */
             case 'S':
                 type = type_char;
-                sprintfW(size, size_fmt, ptr);
+                swprintf(size, ARRAY_SIZE(size), size_fmt, ptr);
                 break;
             case 'i':
                 lstrcpyW(extra, type_notnull);
@@ -539,7 +538,7 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
                 return NULL;
         }
 
-        sprintfW(expanded, column_fmt, columns_data[i], type, size, extra, comma);
+        swprintf(expanded, ARRAY_SIZE(expanded), column_fmt, columns_data[i], type, size, extra, comma);
         sql_size += lstrlenW(expanded);
 
         p = msi_realloc(columns, sql_size * sizeof(WCHAR));
@@ -573,7 +572,7 @@ static LPWSTR msi_build_createsql_postlude(LPWSTR *primary_keys, DWORD num_keys)
 
     for (i = 0, ptr = keys; i < num_keys; i++)
     {
-        ptr += sprintfW(ptr, key_fmt, primary_keys[i]);
+        ptr += swprintf(ptr, size - (ptr - keys), key_fmt, primary_keys[i]);
     }
 
     /* remove final ', ' */
@@ -584,7 +583,7 @@ static LPWSTR msi_build_createsql_postlude(LPWSTR *primary_keys, DWORD num_keys)
     if (!postlude)
         goto done;
 
-    sprintfW(postlude, postlude_fmt, keys);
+    swprintf(postlude, size, postlude_fmt, keys);
 
 done:
     msi_free(keys);
@@ -644,7 +643,7 @@ static LPWSTR msi_import_stream_filename(LPCWSTR path, LPCWSTR name)
     lstrcpyW( fullname, path );
 
     /* chop off extension from path */
-    ptr = strrchrW(fullname, '.');
+    ptr = wcsrchr(fullname, '.');
     if (!ptr)
     {
         msi_free (fullname);
@@ -673,7 +672,7 @@ static UINT construct_record(DWORD num_columns, LPWSTR *types,
                 break;
             case 'I': case 'i':
                 if (*data[i])
-                    MSI_RecordSetInteger(*rec, i + 1, atoiW(data[i]));
+                    MSI_RecordSetInteger(*rec, i + 1, wcstol(data[i], NULL, 10));
                 break;
             case 'V': case 'v':
                 if (*data[i])
@@ -790,9 +789,9 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     msi_parse_line( &ptr, &labels, &num_labels, &len );
 
     if (num_columns == 1 && !columns[0][0] && num_labels == 1 && !labels[0][0] &&
-        num_types == 2 && !strcmpW( types[1], forcecodepage ))
+        num_types == 2 && !wcscmp( types[1], forcecodepage ))
     {
-        r = msi_set_string_table_codepage( db->strings, atoiW( types[0] ) );
+        r = msi_set_string_table_codepage( db->strings, wcstol( types[0], NULL, 10 ) );
         goto done;
     }
 
@@ -824,7 +823,7 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
         records = temp_records;
     }
 
-    if (!strcmpW(labels[0], suminfo))
+    if (!wcscmp(labels[0], suminfo))
     {
         r = msi_add_suminfo( db, records, num_records, num_columns );
         if (r != ERROR_SUCCESS)
@@ -966,11 +965,11 @@ static UINT msi_export_stream( const WCHAR *folder, const WCHAR *table, MSIRECOR
     if (r != ERROR_SUCCESS)
         return r;
 
-    len = (sz + strlenW( folder ) + strlenW( table ) + ARRAY_SIZE( fmt ) + 1) * sizeof(WCHAR);
-    if (!(path = msi_alloc( len )))
+    len = sz + lstrlenW( folder ) + lstrlenW( table ) + ARRAY_SIZE( fmt ) + 1;
+    if (!(path = msi_alloc( len * sizeof(WCHAR) )))
         return ERROR_OUTOFMEMORY;
 
-    len = sprintfW( path, fmt, folder, table );
+    len = swprintf( path, len, fmt, folder, table );
     if (!CreateDirectoryW( path, NULL ) && GetLastError() != ERROR_ALREADY_EXISTS)
     {
         msi_free( path );
@@ -978,7 +977,7 @@ static UINT msi_export_stream( const WCHAR *folder, const WCHAR *table, MSIRECOR
     }
 
     path[len++] = '\\';
-    strcpyW( path + len, stream );
+    lstrcpyW( path + len, stream );
     file = CreateFileW( path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
                         NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
     msi_free( path );
@@ -1108,14 +1107,14 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table, LPCWSTR folder, 
     if (handle == INVALID_HANDLE_VALUE)
         return ERROR_FUNCTION_FAILED;
 
-    if (!strcmpW( table, forcecodepage ))
+    if (!wcscmp( table, forcecodepage ))
     {
         UINT codepage = msi_get_string_table_codepage( db->strings );
         r = msi_export_forcecodepage( handle, codepage );
         goto done;
     }
 
-    if (!strcmpW( table, summaryinformation ))
+    if (!wcscmp( table, summaryinformation ))
     {
         r = msi_export_summaryinformation( db, handle );
         goto done;
@@ -1288,7 +1287,7 @@ static BOOL merge_type_match(LPCWSTR type1, LPCWSTR type2)
         ((type2[0] == 'L') || (type2[0] == 'S')))
         return TRUE;
 
-    return !strcmpW( type1, type2 );
+    return !wcscmp( type1, type2 );
 }
 
 static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
@@ -1313,7 +1312,7 @@ static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
         if (!MSI_RecordGetString(mergerec, i))
             break;
 
-        if (strcmpW( MSI_RecordGetString( dbrec, i ), MSI_RecordGetString( mergerec, i ) ))
+        if (wcscmp( MSI_RecordGetString( dbrec, i ), MSI_RecordGetString( mergerec, i ) ))
         {
             r = ERROR_DATATYPE_MISMATCH;
             goto done;
@@ -1379,7 +1378,7 @@ static UINT merge_verify_primary_keys(MSIDATABASE *db, MSIDATABASE *mergedb,
 
     for (i = 1; i <= count; i++)
     {
-        if (strcmpW( MSI_RecordGetString( dbrec, i ), MSI_RecordGetString( mergerec, i ) ))
+        if (wcscmp( MSI_RecordGetString( dbrec, i ), MSI_RecordGetString( mergerec, i ) ))
         {
             r = ERROR_DATATYPE_MISMATCH;
             goto done;
@@ -1407,7 +1406,7 @@ static LPWSTR get_key_value(MSIQUERY *view, LPCWSTR key, MSIRECORD *rec)
     do
     {
         str = msi_dup_record_field(colnames, ++i);
-        cmp = strcmpW( key, str );
+        cmp = wcscmp( key, str );
         msi_free(str);
     } while (cmp);
 
@@ -1497,7 +1496,7 @@ static LPWSTR create_diff_row_query(MSIDATABASE *merge, MSIQUERY *view,
             goto done;
         }
 
-        sprintfW(clause + oldsize - 1, setptr, key, val);
+        swprintf(clause + oldsize - 1, size - (oldsize - 1), setptr, key, val);
         msi_free(val);
     }
 
@@ -1506,7 +1505,7 @@ static LPWSTR create_diff_row_query(MSIDATABASE *merge, MSIQUERY *view,
     if (!query)
         goto done;
 
-    sprintfW(query, fmt, table, clause);
+    swprintf(query, size, fmt, table, clause);
 
 done:
     msi_free(clause);

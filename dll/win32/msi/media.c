@@ -31,7 +31,6 @@
 #include "winreg.h"
 #include "shlwapi.h"
 #include "objidl.h"
-#include "wine/unicode.h"
 #include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -59,7 +58,7 @@ static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
     const WCHAR *p;
     int len, len2;
 
-    strcpyW(root, source_root);
+    lstrcpyW(root, source_root);
     PathStripToRootW(root);
     PathAddBackslashW(root);
 
@@ -69,12 +68,12 @@ static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
         return FALSE;
     }
 
-    len = strlenW( volume_name );
-    len2 = strlenW( mi->volume_label );
+    len = lstrlenW( volume_name );
+    len2 = lstrlenW( mi->volume_label );
     if (len2 > len) return FALSE;
     p = volume_name + len - len2;
 
-    return !strcmpiW( mi->volume_label, p );
+    return !wcsicmp( mi->volume_label, p );
 }
 
 static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
@@ -309,10 +308,10 @@ static WCHAR *get_cabinet_filename(MSIMEDIAINFO *mi)
     int len;
     WCHAR *ret;
 
-    len = strlenW(mi->sourcedir) + strlenW(mi->cabinet) + 1;
+    len = lstrlenW(mi->sourcedir) + lstrlenW(mi->cabinet) + 1;
     if (!(ret = msi_alloc(len * sizeof(WCHAR)))) return NULL;
-    strcpyW(ret, mi->sourcedir);
-    strcatW(ret, mi->cabinet);
+    lstrcpyW(ret, mi->sourcedir);
+    lstrcatW(ret, mi->cabinet);
     return ret;
 }
 
@@ -342,7 +341,7 @@ static INT_PTR cabinet_next_cabinet(FDINOTIFICATIONTYPE fdint,
         goto done;
     }
 
-    if (strcmpiW( mi->cabinet, cab ))
+    if (wcsicmp( mi->cabinet, cab ))
     {
         char *next_cab;
         ULONG length;
@@ -467,8 +466,8 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
             TRACE("file in use, scheduling rename operation\n");
 
             if (!(tmppathW = strdupW( path ))) return ERROR_OUTOFMEMORY;
-            if ((p = strrchrW(tmppathW, '\\'))) *p = 0;
-            len = strlenW( tmppathW ) + 16;
+            if ((p = wcsrchr(tmppathW, '\\'))) *p = 0;
+            len = lstrlenW( tmppathW ) + 16;
             if (!(tmpfileW = msi_alloc(len * sizeof(WCHAR))))
             {
                 msi_free( tmppathW );
@@ -671,7 +670,7 @@ static UINT get_drive_type(const WCHAR *path)
 {
     WCHAR root[MAX_PATH + 1];
 
-    strcpyW(root, path);
+    lstrcpyW(root, path);
     PathStripToRootW(root);
     PathAddBackslashW(root);
 
@@ -681,7 +680,7 @@ static UINT get_drive_type(const WCHAR *path)
 static WCHAR *get_base_url( MSIDATABASE *db )
 {
     WCHAR *p, *ret = NULL, *orig_db = msi_dup_property( db, szOriginalDatabase );
-    if (UrlIsW( orig_db, URLIS_URL ) && (ret = strdupW( orig_db )) && (p = strrchrW( ret, '/'))) p[1] = 0;
+    if (UrlIsW( orig_db, URLIS_URL ) && (ret = strdupW( orig_db )) && (p = wcsrchr( ret, '/'))) p[1] = 0;
     msi_free( orig_db );
     return ret;
 }
@@ -793,7 +792,7 @@ static UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi)
                                              MSISOURCETYPE_NETWORK, index++,
                                              volume, &volumesz) == ERROR_SUCCESS)
             {
-                if (check_all || !strncmpiW(source, volume, strlenW(source)))
+                if (check_all || !wcsnicmp(source, volume, lstrlenW(source)))
                 {
                     lstrcpyW(cabinet_file, volume);
                     PathAddBackslashW(cabinet_file);
@@ -832,11 +831,11 @@ static UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi)
         mi->disk_id = id;
         msi_free( mi->volume_label );
         if (!(mi->volume_label = msi_alloc( ++volumesz * sizeof(WCHAR) ))) return ERROR_OUTOFMEMORY;
-        strcpyW( mi->volume_label, volume );
+        lstrcpyW( mi->volume_label, volume );
 
         msi_free( mi->disk_prompt );
         if (!(mi->disk_prompt = msi_alloc( ++promptsz * sizeof(WCHAR) ))) return ERROR_OUTOFMEMORY;
-        strcpyW( mi->disk_prompt, prompt );
+        lstrcpyW( mi->disk_prompt, prompt );
 
         if (source_matches_volume(mi, source))
         {
@@ -875,20 +874,20 @@ UINT ready_media( MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi )
             WCHAR temppath[MAX_PATH], *p, *url;
 
             msi_free( cabinet_file );
-            if (!(url = msi_alloc( (strlenW( base_url ) + strlenW( mi->cabinet ) + 1) * sizeof(WCHAR) )))
+            if (!(url = msi_alloc( (lstrlenW( base_url ) + lstrlenW( mi->cabinet ) + 1) * sizeof(WCHAR) )))
             {
                 return ERROR_OUTOFMEMORY;
             }
-            strcpyW( url, base_url );
-            strcatW( url, mi->cabinet );
+            lstrcpyW( url, base_url );
+            lstrcatW( url, mi->cabinet );
             if ((rc = msi_download_file( url, temppath )) != ERROR_SUCCESS)
             {
                 ERR("failed to download %s (%u)\n", debugstr_w(url), rc);
                 msi_free( url );
                 return rc;
             }
-            if ((p = strrchrW( temppath, '\\' ))) *p = 0;
-            strcpyW( mi->sourcedir, temppath );
+            if ((p = wcsrchr( temppath, '\\' ))) *p = 0;
+            lstrcpyW( mi->sourcedir, temppath );
             PathAddBackslashW( mi->sourcedir );
             msi_free( mi->cabinet );
             mi->cabinet = strdupW( p + 1 );
@@ -901,7 +900,7 @@ UINT ready_media( MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi )
     if (mi->volume_label)
     {
         /* assume first volume is in the drive */
-        if (mi->last_volume && strcmpiW( mi->last_volume, mi->volume_label ))
+        if (mi->last_volume && wcsicmp( mi->last_volume, mi->volume_label ))
         {
             WCHAR *source = msi_dup_property( package->db, szSourceDir );
             BOOL match = source_matches_volume( mi, source );
@@ -951,12 +950,12 @@ UINT msi_add_cabinet_stream( MSIPACKAGE *package, UINT disk_id, IStorage *storag
         }
     }
     if (!(cab = msi_alloc( sizeof(*cab) ))) return ERROR_OUTOFMEMORY;
-    if (!(cab->stream = msi_alloc( (strlenW( name ) + 1) * sizeof(WCHAR ) )))
+    if (!(cab->stream = msi_alloc( (lstrlenW( name ) + 1) * sizeof(WCHAR ) )))
     {
         msi_free( cab );
         return ERROR_OUTOFMEMORY;
     }
-    strcpyW( cab->stream, name );
+    lstrcpyW( cab->stream, name );
     cab->disk_id = disk_id;
     cab->storage = storage;
     IStorage_AddRef( storage );

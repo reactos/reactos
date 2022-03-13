@@ -27,7 +27,6 @@
 #include "winuser.h"
 #include "winerror.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "msipriv.h"
@@ -582,7 +581,7 @@ UINT msi_record_set_string( MSIRECORD *rec, UINT field, const WCHAR *value, int 
 
     MSI_FreeField( &rec->fields[field] );
 
-    if (value && len < 0) len = strlenW( value );
+    if (value && len < 0) len = lstrlenW( value );
 
     if (value && len)
     {

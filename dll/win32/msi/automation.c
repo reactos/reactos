@@ -32,7 +32,6 @@
 #include "oleauto.h"
 #include "shlwapi.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 #include "msiserver.h"
 #include "msiserver_dispids.h"
@@ -1976,7 +1975,7 @@ static HRESULT InstallerImpl_Version(WORD wFlags,
     if (FAILED(hr))
         return hr;
 
-    sprintfW(version, format, verinfo.dwMajorVersion, verinfo.dwMinorVersion,
+    swprintf(version, ARRAY_SIZE(version), format, verinfo.dwMajorVersion, verinfo.dwMinorVersion,
              verinfo.dwBuildNumber, verinfo.dwPlatformID);
 
     V_VT(pVarResult) = VT_BSTR;

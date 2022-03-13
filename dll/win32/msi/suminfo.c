@@ -31,7 +31,6 @@
 #include "shlwapi.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "msidefs.h"
@@ -999,31 +998,31 @@ static void parse_filetime( LPCWSTR str, FILETIME *ft )
 
     /* YYYY/MM/DD hh:mm:ss */
 
-    while (isspaceW( *p )) p++;
+    while (iswspace( *p )) p++;
 
-    lt.wYear = strtolW( p, &end, 10 );
+    lt.wYear = wcstol( p, &end, 10 );
     if (*end != '/') return;
     p = end + 1;
 
-    lt.wMonth = strtolW( p, &end, 10 );
+    lt.wMonth = wcstol( p, &end, 10 );
     if (*end != '/') return;
     p = end + 1;
 
-    lt.wDay = strtolW( p, &end, 10 );
+    lt.wDay = wcstol( p, &end, 10 );
     if (*end != ' ') return;
     p = end + 1;
 
-    while (isspaceW( *p )) p++;
+    while (iswspace( *p )) p++;
 
-    lt.wHour = strtolW( p, &end, 10 );
+    lt.wHour = wcstol( p, &end, 10 );
     if (*end != ':') return;
     p = end + 1;
 
-    lt.wMinute = strtolW( p, &end, 10 );
+    lt.wMinute = wcstol( p, &end, 10 );
     if (*end != ':') return;
     p = end + 1;
 
-    lt.wSecond = strtolW( p, &end, 10 );
+    lt.wSecond = wcstol( p, &end, 10 );
 
     TzSpecificLocalTimeToSystemTime( NULL, &lt, &utc );
     SystemTimeToFileTime( &utc, ft );
@@ -1032,7 +1031,7 @@ static void parse_filetime( LPCWSTR str, FILETIME *ft )
 static UINT parse_prop( LPCWSTR prop, LPCWSTR value, UINT *pid, INT *int_value,
                         FILETIME *ft_value, awcstring *str_value )
 {
-    *pid = atoiW( prop );
+    *pid = wcstol( prop, NULL, 10);
     switch (*pid)
     {
 #ifdef __REACTOS__
@@ -1048,7 +1047,7 @@ static UINT parse_prop( LPCWSTR prop, LPCWSTR value, UINT *pid, INT *int_value,
     case PID_SECURITY:
 #endif
     case PID_PAGECOUNT:
-        *int_value = atoiW( value );
+        *int_value = wcstol( value, NULL, 10);
         break;
 
     case PID_LASTPRINTED:

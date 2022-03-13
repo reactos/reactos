@@ -29,7 +29,6 @@
 #include "msidefs.h"
 #include "winver.h"
 #include "shlwapi.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "msipriv.h"
 
@@ -55,20 +54,20 @@ void msi_parse_version_string(LPCWSTR verStr, PDWORD ms, PDWORD ls)
     const WCHAR *ptr;
     int x1 = 0, x2 = 0, x3 = 0, x4 = 0;
 
-    x1 = atoiW(verStr);
-    ptr = strchrW(verStr, '.');
+    x1 = wcstol(verStr, NULL, 10);
+    ptr = wcschr(verStr, '.');
     if (ptr)
     {
-        x2 = atoiW(ptr + 1);
-        ptr = strchrW(ptr + 1, '.');
+        x2 = wcstol(ptr + 1, NULL, 10);
+        ptr = wcschr(ptr + 1, '.');
     }
     if (ptr)
     {
-        x3 = atoiW(ptr + 1);
-        ptr = strchrW(ptr + 1, '.');
+        x3 = wcstol(ptr + 1, NULL, 10);
+        ptr = wcschr(ptr + 1, '.');
     }
     if (ptr)
-        x4 = atoiW(ptr + 1);
+        x4 = wcstol(ptr + 1, NULL, 10);
     /* FIXME: byte-order dependent? */
     *ms = x1 << 16 | x2;
     if (ls) *ls = x3 << 16 | x4;
@@ -106,10 +105,10 @@ static UINT get_signature( MSIPACKAGE *package, MSISIGNATURE *sig, const WCHAR *
 
     /* get properties */
     sig->File = msi_dup_record_field(row,2);
-    if ((p = strchrW(sig->File, '|')))
+    if ((p = wcschr(sig->File, '|')))
     {
         p++;
-        memmove(sig->File, p, (strlenW(p) + 1) * sizeof(WCHAR));
+        memmove(sig->File, p, (lstrlenW(p) + 1) * sizeof(WCHAR));
     }
 
     minVersion = msi_dup_record_field(row,3);
@@ -287,7 +286,7 @@ static UINT search_components( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATU
     {
         if (type == msidbLocatorTypeFileName)
         {
-            ptr = strrchrW(path, '\\');
+            ptr = wcsrchr(path, '\\');
             *(ptr + 1) = '\0';
         }
         else
@@ -327,12 +326,12 @@ static void convert_reg_value( DWORD regType, const BYTE *value, DWORD sz, WCHAR
                 /* escape leading pound with another */
                 *appValue = msi_alloc(sz + sizeof(WCHAR));
                 (*appValue)[0] = '#';
-                strcpyW(*appValue + 1, (LPCWSTR)value);
+                lstrcpyW(*appValue + 1, (LPCWSTR)value);
             }
             else
             {
                 *appValue = msi_alloc(sz);
-                strcpyW(*appValue, (LPCWSTR)value);
+                lstrcpyW(*appValue, (LPCWSTR)value);
             }
             break;
         case REG_DWORD:
@@ -340,7 +339,7 @@ static void convert_reg_value( DWORD regType, const BYTE *value, DWORD sz, WCHAR
              * char if needed
              */
             *appValue = msi_alloc(10 * sizeof(WCHAR));
-            sprintfW(*appValue, dwordFmt, *(const DWORD *)value);
+            swprintf(*appValue, 10, dwordFmt, *(const DWORD *)value);
             break;
         case REG_EXPAND_SZ:
             sz = ExpandEnvironmentStringsW((LPCWSTR)value, NULL, 0);
@@ -353,7 +352,7 @@ static void convert_reg_value( DWORD regType, const BYTE *value, DWORD sz, WCHAR
             lstrcpyW(*appValue, binPre);
             ptr = *appValue + lstrlenW(binPre);
             for (i = 0; i < sz; i++, ptr += 2)
-                sprintfW(ptr, binFmt, value[i]);
+                swprintf(ptr, 3, binFmt, value[i]);
             break;
         default:
             WARN("unimplemented for values of type %d\n", regType);
@@ -463,7 +462,7 @@ static UINT search_reg( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig
     }
 
     if ((regType == REG_SZ || regType == REG_EXPAND_SZ) &&
-        (ptr = strchrW((LPWSTR)value, '"')) && (end = strchrW(++ptr, '"')))
+        (ptr = wcschr((LPWSTR)value, '"')) && (end = wcschr(++ptr, '"')))
         *end = '\0';
     else
         ptr = (LPWSTR)value;
@@ -501,7 +500,7 @@ static LPWSTR get_ini_field(LPWSTR buf, int field)
         return strdupW(buf);
 
     beg = buf;
-    while ((end = strchrW(beg, ',')) && i < field)
+    while ((end = wcschr(beg, ',')) && i < field)
     {
         beg = end + 1;
         while (*beg == ' ')
@@ -510,7 +509,7 @@ static LPWSTR get_ini_field(LPWSTR buf, int field)
         i++;
     }
 
-    end = strchrW(beg, ',');
+    end = wcschr(beg, ',');
     if (!end)
         end = beg + lstrlenW(beg);
 
@@ -600,13 +599,13 @@ static void expand_any_path( MSIPACKAGE *package, WCHAR *src, WCHAR *dst, size_t
     dst[0] = '\0';
 
     /* Ignore the short portion of the path */
-    if ((ptr = strchrW(src, '|')))
+    if ((ptr = wcschr(src, '|')))
         ptr++;
     else
         ptr = src;
 
     deformat_string(package, ptr, &deformatted);
-    if (!deformatted || strlenW(deformatted) > len - 1)
+    if (!deformatted || lstrlenW(deformatted) > len - 1)
     {
         msi_free(deformatted);
         return;
@@ -624,7 +623,7 @@ static LANGID *parse_languages( const WCHAR *languages, DWORD *num_ids )
     LANGID *ret;
 
     if (!str) return NULL;
-    for (p = q = str; (q = strchrW( q, ',' )); q++) count++;
+    for (p = q = str; (q = wcschr( q, ',' )); q++) count++;
 
     if (!(ret = msi_alloc( count * sizeof(LANGID) )))
     {
@@ -634,9 +633,9 @@ static LANGID *parse_languages( const WCHAR *languages, DWORD *num_ids )
     i = 0;
     while (*p)
     {
-        q = strchrW( p, ',' );
+        q = wcschr( p, ',' );
         if (q) *q = 0;
-        ret[i] = atoiW( p );
+        ret[i] = wcstol( p, NULL, 10 );
         if (!q) break;
         p = q + 1;
         i++;
@@ -808,7 +807,7 @@ static UINT recurse_search_directory( MSIPACKAGE *package, WCHAR **appValue, MSI
      * here.  Add two because we might need to add a backslash if the dir name
      * isn't backslash-terminated.
      */
-    len = dirLen + max(fileLen, strlenW(starDotStarW)) + 2;
+    len = dirLen + max(fileLen, lstrlenW(starDotStarW)) + 2;
     buf = msi_alloc(len * sizeof(WCHAR));
     if (!buf)
         return ERROR_OUTOFMEMORY;
@@ -844,8 +843,8 @@ static UINT recurse_search_directory( MSIPACKAGE *package, WCHAR **appValue, MSI
         if (hFind != INVALID_HANDLE_VALUE)
         {
             if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY &&
-                strcmpW( findData.cFileName, szDot ) &&
-                strcmpW( findData.cFileName, szDotDot ))
+                wcscmp( findData.cFileName, szDot ) &&
+                wcscmp( findData.cFileName, szDotDot ))
             {
                 lstrcpyW(subpath, dir);
                 PathAppendW(subpath, findData.cFileName);
@@ -854,8 +853,8 @@ static UINT recurse_search_directory( MSIPACKAGE *package, WCHAR **appValue, MSI
 
             while (rc == ERROR_SUCCESS && !*appValue && msi_find_next_file( package, hFind, &findData ))
             {
-                if (!strcmpW( findData.cFileName, szDot ) ||
-                    !strcmpW( findData.cFileName, szDotDot ))
+                if (!wcscmp( findData.cFileName, szDot ) ||
+                    !wcscmp( findData.cFileName, szDotDot ))
                     continue;
 
                 lstrcpyW(subpath, dir);
@@ -889,7 +888,7 @@ static UINT check_directory( MSIPACKAGE *package, const WCHAR *dir, WCHAR **appV
 
 static BOOL is_full_path( const WCHAR *path )
 {
-    WCHAR first = toupperW(path[0]);
+    WCHAR first = towupper(path[0]);
     BOOL ret;
 
     if (first >= 'A' && first <= 'Z' && path[1] == ':')
@@ -1019,7 +1018,7 @@ static UINT search_dr( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig 
     if (sz)
         expand_any_path( package, path, expanded, MAX_PATH );
     else
-        strcpyW(expanded, path);
+        lstrcpyW(expanded, path);
 
     if (parent)
     {
@@ -1031,10 +1030,10 @@ static UINT search_dr( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig 
             PathAddBackslashW(parent);
         }
 
-        strcpyW(path, parent);
-        strcatW(path, expanded);
+        lstrcpyW(path, parent);
+        lstrcatW(path, expanded);
     }
-    else if (sz) strcpyW(path, expanded);
+    else if (sz) lstrcpyW(path, expanded);
 
     PathAddBackslashW(path);
 
@@ -1088,7 +1087,7 @@ static UINT ITERATE_AppSearch(MSIRECORD *row, LPVOID param)
     if (value)
     {
         r = msi_set_property( package->db, propName, value, -1 );
-        if (r == ERROR_SUCCESS && !strcmpW( propName, szSourceDir ))
+        if (r == ERROR_SUCCESS && !wcscmp( propName, szSourceDir ))
             msi_reset_source_folders( package );
 
         msi_free(value);

@@ -25,7 +25,6 @@
 #include "winreg.h"
 #include "wine/debug.h"
 #include "msipriv.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -190,9 +189,9 @@ static WCHAR *font_name_from_file( MSIPACKAGE *package, const WCHAR *filename )
             msi_free( name );
             return NULL;
         }
-        ret = msi_alloc( (strlenW( name ) + strlenW( truetypeW ) + 1 ) * sizeof(WCHAR) );
-        strcpyW( ret, name );
-        strcatW( ret, truetypeW );
+        ret = msi_alloc( (lstrlenW( name ) + lstrlenW( truetypeW ) + 1 ) * sizeof(WCHAR) );
+        lstrcpyW( ret, name );
+        lstrcatW( ret, truetypeW );
         msi_free( name );
     }
     return ret;
@@ -206,20 +205,20 @@ WCHAR *msi_get_font_file_version( MSIPACKAGE *package, const WCHAR *filename )
     if ((version = load_ttf_name_id( package, filename, NAME_ID_VERSION )))
     {
         int len, major = 0, minor = 0;
-        if ((p = strchrW( version, ';' ))) *p = 0;
+        if ((p = wcschr( version, ';' ))) *p = 0;
         p = version;
-        while (*p && !isdigitW( *p )) p++;
-        if ((q = strchrW( p, '.' )))
+        while (*p && !iswdigit( *p )) p++;
+        if ((q = wcschr( p, '.' )))
         {
-            major = atoiW( p );
+            major = wcstol( p, NULL, 10 );
             p = ++q;
-            while (*q && isdigitW( *q )) q++;
-            if (!*q || *q == ' ') minor = atoiW( p );
+            while (*q && iswdigit( *q )) q++;
+            if (!*q || *q == ' ') minor = wcstol( p, NULL, 10 );
             else major = 0;
         }
-        len = strlenW( fmtW ) + 20;
+        len = lstrlenW( fmtW ) + 20;
         ret = msi_alloc( len * sizeof(WCHAR) );
-        sprintfW( ret, fmtW, major, minor );
+        swprintf( ret, len, fmtW, major, minor );
         msi_free( version );
     }
     return ret;
@@ -277,7 +276,7 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
     /* the UI chunk */
     uirow = MSI_CreateRecord( 1 );
     uipath = strdupW( file->TargetPath );
-    p = strrchrW(uipath,'\\');
+    p = wcsrchr(uipath,'\\');
     if (p) p++;
     else p = uipath;
     MSI_RecordSetStringW( uirow, 1, p );
@@ -360,7 +359,7 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
     /* the UI chunk */
     uirow = MSI_CreateRecord( 1 );
     uipath = strdupW( file->TargetPath );
-    p = strrchrW( uipath,'\\' );
+    p = wcsrchr( uipath,'\\' );
     if (p) p++;
     else p = uipath;
     MSI_RecordSetStringW( uirow, 1, p );

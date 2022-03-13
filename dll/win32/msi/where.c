@@ -26,7 +26,6 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -187,7 +186,7 @@ static UINT parse_column(MSIWHEREVIEW *wv, union ext_column *column,
                                                   NULL, &table_name);
             if (r != ERROR_SUCCESS)
                 return r;
-            if (strcmpW(table_name, column->unparsed.table) != 0)
+            if (wcscmp(table_name, column->unparsed.table) != 0)
                 continue;
         }
 
@@ -200,7 +199,7 @@ static UINT parse_column(MSIWHEREVIEW *wv, union ext_column *column,
             if(r != ERROR_SUCCESS )
                 return r;
 
-            if(strcmpW(col_name, column->unparsed.column))
+            if(wcscmp(col_name, column->unparsed.column))
                 continue;
             column->parsed.column = i;
             column->parsed.table = table;
@@ -587,7 +586,7 @@ static UINT STRCMP_Evaluate( MSIWHEREVIEW *wv, const UINT rows[], const struct c
     else if( r_str && ! l_str )
         sr = -1;
     else
-        sr = strcmpW( l_str, r_str );
+        sr = wcscmp( l_str, r_str );
 
     *val = ( expr->op == OP_EQ && ( sr == 0 ) ) ||
            ( expr->op == OP_NE && ( sr != 0 ) );
@@ -682,7 +681,7 @@ static UINT check_condition( MSIWHEREVIEW *wv, MSIRECORD *record, JOINTABLE **ta
     return r;
 }
 
-static int compare_entry( const void *left, const void *right )
+static int __cdecl compare_entry( const void *left, const void *right )
 {
     const MSIROWENTRY *le = *(const MSIROWENTRY**)left;
     const MSIROWENTRY *re = *(const MSIROWENTRY**)right;
@@ -1247,7 +1246,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
     {
         JOINTABLE *table;
 
-        if ((ptr = strchrW(tables, ' ')))
+        if ((ptr = wcschr(tables, ' ')))
             *ptr = '\0';
 
         table = msi_alloc(sizeof(JOINTABLE));

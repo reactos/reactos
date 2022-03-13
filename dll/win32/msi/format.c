@@ -36,7 +36,6 @@
 #include "msipriv.h"
 #include "winemsi_s.h"
 #include "wine/exception.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -163,7 +162,7 @@ static WCHAR *deformat_index( FORMAT *format, FORMSTR *str, int *ret_len )
 
     if (!(val = msi_alloc( (str->len + 1) * sizeof(WCHAR) ))) return NULL;
     lstrcpynW(val, get_formstr_data(format, str), str->len + 1);
-    field = atoiW( val );
+    field = wcstol( val, NULL, 10 );
     msi_free( val );
 
     if (MSI_RecordIsNull( format->record, field ) ||
@@ -222,7 +221,7 @@ static WCHAR *deformat_component( FORMAT *format, FORMSTR *str, int *ret_len )
     else
         ret = strdupW( msi_get_target_folder( format->package, comp->Directory ) );
 
-    if (ret) *ret_len = strlenW( ret );
+    if (ret) *ret_len = lstrlenW( ret );
     else *ret_len = 0;
     msi_free( key );
     return ret;
@@ -240,12 +239,12 @@ static WCHAR *deformat_file( FORMAT *format, FORMSTR *str, BOOL shortname, int *
     if (!(file = msi_get_loaded_file( format->package, key ))) goto done;
     if (!shortname)
     {
-        if ((ret = strdupW( file->TargetPath ))) len = strlenW( ret );
+        if ((ret = strdupW( file->TargetPath ))) len = lstrlenW( ret );
         goto done;
     }
     if (!(len = GetShortPathNameW(file->TargetPath, NULL, 0)))
     {
-        if ((ret = strdupW( file->TargetPath ))) len = strlenW( ret );
+        if ((ret = strdupW( file->TargetPath ))) len = lstrlenW( ret );
         goto done;
     }
     len++;
@@ -352,14 +351,14 @@ static WCHAR *build_default_format( const MSIRECORD *record )
 
     for (i = 1; i <= count; i++)
     {
-        size += sprintfW( buf, fmt, i, i );
+        size += swprintf( buf, ARRAY_SIZE(buf), fmt, i, i );
         if (!(tmp = msi_realloc( ret, size * sizeof(*ret) )))
         {
             msi_free( ret );
             return NULL;
         }
         ret = tmp;
-        strcatW( ret, buf );
+        lstrcatW( ret, buf );
     }
     return ret;
 }

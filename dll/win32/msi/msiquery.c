@@ -27,7 +27,6 @@
 #include "winerror.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -74,9 +73,9 @@ UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, LPCWSTR table_name, UINT *n
                                          NULL, &haystack_table_name );
         if( r != ERROR_SUCCESS )
             return r;
-        x = strcmpW( name, col_name );
+        x = wcscmp( name, col_name );
         if( table_name )
-            x |= strcmpW( table_name, haystack_table_name );
+            x |= wcscmp( table_name, haystack_table_name );
         if( !x )
         {
             *n = i;
@@ -138,7 +137,7 @@ UINT MSI_DatabaseOpenViewW(MSIDATABASE *db,
     return r;
 }
 
-UINT MSI_OpenQuery( MSIDATABASE *db, MSIQUERY **view, LPCWSTR fmt, ... )
+UINT WINAPIV MSI_OpenQuery( MSIDATABASE *db, MSIQUERY **view, LPCWSTR fmt, ... )
 {
     UINT r;
     int size = 100, res;
@@ -147,11 +146,11 @@ UINT MSI_OpenQuery( MSIDATABASE *db, MSIQUERY **view, LPCWSTR fmt, ... )
     /* construct the string */
     for (;;)
     {
-        va_list va;
+        __ms_va_list va;
         query = msi_alloc( size*sizeof(WCHAR) );
-        va_start(va, fmt);
-        res = vsnprintfW(query, size, fmt, va);
-        va_end(va);
+        __ms_va_start(va, fmt);
+        res = vswprintf(query, size, fmt, va);
+        __ms_va_end(va);
         if (res == -1) size *= 2;
         else if (res >= size) size = res + 1;
         else break;
@@ -201,7 +200,7 @@ UINT MSI_IterateRecords( MSIQUERY *view, LPDWORD count,
 }
 
 /* return a single record from a query */
-MSIRECORD *MSI_QueryGetRecord( MSIDATABASE *db, LPCWSTR fmt, ... )
+MSIRECORD * WINAPIV MSI_QueryGetRecord( MSIDATABASE *db, LPCWSTR fmt, ... )
 {
     MSIRECORD *rec = NULL;
     MSIQUERY *view = NULL;
@@ -212,11 +211,11 @@ MSIRECORD *MSI_QueryGetRecord( MSIDATABASE *db, LPCWSTR fmt, ... )
     /* construct the string */
     for (;;)
     {
-        va_list va;
+        __ms_va_list va;
         query = msi_alloc( size*sizeof(WCHAR) );
-        va_start(va, fmt);
-        res = vsnprintfW(query, size, fmt, va);
-        va_end(va);
+        __ms_va_start(va, fmt);
+        res = vswprintf(query, size, fmt, va);
+        __ms_va_end(va);
         if (res == -1) size *= 2;
         else if (res >= size) size = res + 1;
         else break;
@@ -592,7 +591,7 @@ static UINT msi_set_record_type_string( MSIRECORD *rec, UINT field,
     if (type & MSITYPE_NULLABLE)
         szType[0] &= ~0x20;
 
-    sprintfW( &szType[1], fmt, (type&0xff) );
+    swprintf( &szType[1], ARRAY_SIZE(szType) - 1, fmt, (type&0xff) );
 
     TRACE("type %04x -> %s\n", type, debugstr_w(szType) );
 

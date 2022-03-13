@@ -22,7 +22,6 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wine/unicode.h"
 #include "query.h"
 #include "sql.tab.h"
 
@@ -124,11 +123,11 @@ static const Keyword aKeywordTable[] = {
 /*
 ** Comparison function for binary search.
 */
-static int compKeyword(const void *m1, const void *m2){
+static int __cdecl compKeyword(const void *m1, const void *m2){
   const Keyword *k1 = m1, *k2 = m2;
   int ret, len = min( k1->len, k2->len );
 
-  if ((ret = strncmpiW( k1->name, k2->name, len ))) return ret;
+  if ((ret = wcsnicmp( k1->name, k2->name, len ))) return ret;
   if (k1->len < k2->len) return -1;
   else if (k1->len > k2->len) return 1;
   return 0;

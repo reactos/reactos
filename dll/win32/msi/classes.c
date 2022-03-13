@@ -39,7 +39,6 @@
 #include "wine/debug.h"
 #include "msipriv.h"
 #include "winuser.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -87,7 +86,7 @@ static MSIAPPID *load_given_appid( MSIPACKAGE *package, LPCWSTR name )
     /* check for appids already loaded */
     LIST_FOR_EACH_ENTRY( appid, &package->appids, MSIAPPID, entry )
     {
-        if (!strcmpiW( appid->AppID, name ))
+        if (!wcsicmp( appid->AppID, name ))
         {
             TRACE("found appid %s %p\n", debugstr_w(name), appid);
             return appid;
@@ -143,9 +142,9 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
 
         FilePath = msi_build_icon_path(package, FileName);
        
-        progid->IconPath = msi_alloc( (strlenW(FilePath)+10)* sizeof(WCHAR) );
+        progid->IconPath = msi_alloc( (lstrlenW(FilePath)+10)* sizeof(WCHAR) );
 
-        sprintfW(progid->IconPath,fmt,FilePath,icon_index);
+        swprintf(progid->IconPath,lstrlenW(FilePath)+10,fmt,FilePath,icon_index);
 
         msi_free(FilePath);
     }
@@ -191,7 +190,7 @@ static MSIPROGID *load_given_progid(MSIPACKAGE *package, LPCWSTR name)
     /* check for progids already loaded */
     LIST_FOR_EACH_ENTRY( progid, &package->progids, MSIPROGID, entry )
     {
-        if (!strcmpiW( progid->ProgID, name ))
+        if (!wcsicmp( progid->ProgID, name ))
         {
             TRACE("found progid %s (%p)\n",debugstr_w(name), progid );
             return progid;
@@ -248,9 +247,9 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
 
         FilePath = msi_build_icon_path(package, FileName);
        
-        cls->IconPath = msi_alloc( (strlenW(FilePath)+5)* sizeof(WCHAR) );
+        cls->IconPath = msi_alloc( (lstrlenW(FilePath)+5)* sizeof(WCHAR) );
 
-        sprintfW(cls->IconPath,fmt,FilePath,icon_index);
+        swprintf(cls->IconPath,lstrlenW(FilePath)+5,fmt,FilePath,icon_index);
 
         msi_free(FilePath);
     }
@@ -321,7 +320,7 @@ static MSICLASS *load_given_class(MSIPACKAGE *package, LPCWSTR classid)
     /* check for classes already loaded */
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
     {
-        if (!strcmpiW( cls->clsid, classid ))
+        if (!wcsicmp( cls->clsid, classid ))
         {
             TRACE("found class %s (%p)\n",debugstr_w(classid), cls);
             return cls;
@@ -380,7 +379,7 @@ static MSIMIME *load_given_mime( MSIPACKAGE *package, LPCWSTR mime )
     /* check for mime already loaded */
     LIST_FOR_EACH_ENTRY( mt, &package->mimes, MSIMIME, entry )
     {
-        if (!strcmpiW( mt->ContentType, mime ))
+        if (!wcsicmp( mt->ContentType, mime ))
         {
             TRACE("found mime %s (%p)\n",debugstr_w(mime), mt);
             return mt;
@@ -451,7 +450,7 @@ static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR name )
     /* check for extensions already loaded */
     LIST_FOR_EACH_ENTRY( ext, &package->extensions, MSIEXTENSION, entry )
     {
-        if (!strcmpiW( ext->Extension, name ))
+        if (!wcsicmp( ext->Extension, name ))
         {
             TRACE("extension %s already loaded %p\n", debugstr_w(name), ext);
             return ext;
@@ -521,9 +520,9 @@ static UINT iterate_all_classes(MSIRECORD *rec, LPVOID param)
 
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
     {
-        if (strcmpiW( clsid, cls->clsid ))
+        if (wcsicmp( clsid, cls->clsid ))
             continue;
-        if (strcmpW( context, cls->Context ))
+        if (wcscmp( context, cls->Context ))
             continue;
         if (comp == cls->Component)
         {
@@ -569,7 +568,7 @@ static UINT iterate_all_extensions(MSIRECORD *rec, LPVOID param)
 
     LIST_FOR_EACH_ENTRY( ext, &package->extensions, MSIEXTENSION, entry )
     {
-        if (strcmpiW(extension, ext->Extension))
+        if (wcsicmp(extension, ext->Extension))
             continue;
         if (comp == ext->Component)
         {
@@ -884,11 +883,12 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
             ptr = cls->FileTypeMask;
             while (ptr && *ptr)
             {
-                ptr2 = strchrW(ptr,';');
+                ptr2 = wcschr(ptr,';');
                 if (ptr2)
                     *ptr2 = 0;
-                keyname = msi_alloc( (strlenW(szFileType_fmt) + strlenW(cls->clsid) + 4) * sizeof(WCHAR));
-                sprintfW( keyname, szFileType_fmt, cls->clsid, index );
+                keyname = msi_alloc( (lstrlenW(szFileType_fmt) + lstrlenW(cls->clsid) + 4) * sizeof(WCHAR));
+                swprintf( keyname, lstrlenW(szFileType_fmt) + lstrlenW(cls->clsid) + 4,
+                          szFileType_fmt, cls->clsid, index );
 
                 msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, keyname, NULL, ptr );
                 msi_free(keyname);
@@ -984,11 +984,11 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
         }
         if (cls->FileTypeMask)
         {
-            filetype = msi_alloc( (strlenW( szFileType ) + strlenW( cls->clsid ) + 1) * sizeof(WCHAR) );
+            filetype = msi_alloc( (lstrlenW( szFileType ) + lstrlenW( cls->clsid ) + 1) * sizeof(WCHAR) );
             if (filetype)
             {
-                strcpyW( filetype, szFileType );
-                strcatW( filetype, cls->clsid );
+                lstrcpyW( filetype, szFileType );
+                lstrcatW( filetype, cls->clsid );
                 res = RegDeleteTreeW( HKEY_CLASSES_ROOT, filetype );
                 msi_free( filetype );
 
@@ -1198,35 +1198,35 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
 
     TRACE("Making Key %s\n",debugstr_w(keyname));
     RegCreateKeyW(HKEY_CLASSES_ROOT, keyname, &key);
-    size = strlenW(component->FullKeypath);
+    size = lstrlenW(component->FullKeypath);
     if (verb->Argument)
-        size += strlenW(verb->Argument);
+        size += lstrlenW(verb->Argument);
      size += 4;
 
      command = msi_alloc(size * sizeof (WCHAR));
      if (verb->Argument)
-        sprintfW(command, fmt, component->FullKeypath, verb->Argument);
+         swprintf(command, size, fmt, component->FullKeypath, verb->Argument);
      else
-        sprintfW(command, fmt2, component->FullKeypath);
+         swprintf(command, size, fmt2, component->FullKeypath);
 
      msi_reg_set_val_str( key, NULL, command );
      msi_free(command);
 
      advertise = msi_create_component_advertise_string(package, component,
                                                        extension->Feature->Feature);
-     size = strlenW(advertise);
+     size = lstrlenW(advertise);
 
      if (verb->Argument)
-         size += strlenW(verb->Argument);
+         size += lstrlenW(verb->Argument);
      size += 4;
 
      command = msi_alloc_zero(size * sizeof (WCHAR));
 
-     strcpyW(command,advertise);
+     lstrcpyW(command,advertise);
      if (verb->Argument)
      {
-         strcatW(command,szSpace);
-         strcatW(command,verb->Argument);
+         lstrcatW(command,szSpace);
+         lstrcatW(command,verb->Argument);
      }
 
      msi_reg_set_val_multi_str( key, szCommand, command );
@@ -1312,11 +1312,11 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 
         ext->action = INSTALLSTATE_LOCAL;
 
-        extension = msi_alloc( (strlenW( ext->Extension ) + 2) * sizeof(WCHAR) );
+        extension = msi_alloc( (lstrlenW( ext->Extension ) + 2) * sizeof(WCHAR) );
         if (extension)
         {
             extension[0] = '.';
-            strcpyW( extension + 1, ext->Extension );
+            lstrcpyW( extension + 1, ext->Extension );
             res = RegCreateKeyW( HKEY_CLASSES_ROOT, extension, &hkey );
             msi_free( extension );
             if (res != ERROR_SUCCESS)
@@ -1343,10 +1343,10 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 
             msi_reg_set_val_str( hkey, NULL, progid );
 
-            newkey = msi_alloc( (strlenW(progid)+strlenW(szSN)+1) * sizeof(WCHAR)); 
+            newkey = msi_alloc( (lstrlenW(progid)+lstrlenW(szSN)+1) * sizeof(WCHAR));
 
-            strcpyW(newkey,progid);
-            strcatW(newkey,szSN);
+            lstrcpyW(newkey,progid);
+            lstrcatW(newkey,szSN);
             RegCreateKeyW(hkey,newkey,&hkey2);
             RegCloseKey(hkey2);
 
@@ -1413,11 +1413,11 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
 
         ext->action = INSTALLSTATE_ABSENT;
 
-        extension = msi_alloc( (strlenW( ext->Extension ) + 2) * sizeof(WCHAR) );
+        extension = msi_alloc( (lstrlenW( ext->Extension ) + 2) * sizeof(WCHAR) );
         if (extension)
         {
             extension[0] = '.';
-            strcpyW( extension + 1, ext->Extension );
+            lstrcpyW( extension + 1, ext->Extension );
             res = RegDeleteTreeW( HKEY_CLASSES_ROOT, extension );
             msi_free( extension );
             if (res != ERROR_SUCCESS)
@@ -1435,11 +1435,11 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
             else
                 progid = ext->ProgIDText;
 
-            progid_shell = msi_alloc( (strlenW( progid ) + strlenW( shellW ) + 1) * sizeof(WCHAR) );
+            progid_shell = msi_alloc( (lstrlenW( progid ) + lstrlenW( shellW ) + 1) * sizeof(WCHAR) );
             if (progid_shell)
             {
-                strcpyW( progid_shell, progid );
-                strcatW( progid_shell, shellW );
+                lstrcpyW( progid_shell, progid );
+                lstrcatW( progid_shell, shellW );
                 res = RegDeleteTreeW( HKEY_CLASSES_ROOT, progid_shell );
                 msi_free( progid_shell );
                 if (res != ERROR_SUCCESS)
@@ -1487,16 +1487,16 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 
         TRACE("Registering MIME type %s\n", debugstr_w(mt->ContentType));
 
-        if (mt->Extension) extension = msi_alloc( (strlenW( mt->Extension->Extension ) + 2) * sizeof(WCHAR) );
-        key = msi_alloc( (strlenW( mt->ContentType ) + strlenW( szMIMEDatabase ) + 1) * sizeof(WCHAR) );
+        if (mt->Extension) extension = msi_alloc( (lstrlenW( mt->Extension->Extension ) + 2) * sizeof(WCHAR) );
+        key = msi_alloc( (lstrlenW( mt->ContentType ) + lstrlenW( szMIMEDatabase ) + 1) * sizeof(WCHAR) );
 
         if (extension && key)
         {
             extension[0] = '.';
-            strcpyW( extension + 1, mt->Extension->Extension );
+            lstrcpyW( extension + 1, mt->Extension->Extension );
 
-            strcpyW( key, szMIMEDatabase );
-            strcatW( key, mt->ContentType );
+            lstrcpyW( key, szMIMEDatabase );
+            lstrcatW( key, mt->ContentType );
             msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, key, szExtension, extension );
 
             if (mt->clsid)
@@ -1541,11 +1541,11 @@ UINT ACTION_UnregisterMIMEInfo( MSIPACKAGE *package )
 
         TRACE("Unregistering MIME type %s\n", debugstr_w(mime->ContentType));
 
-        mime_key = msi_alloc( (strlenW( szMIMEDatabase ) + strlenW( mime->ContentType ) + 1) * sizeof(WCHAR) );
+        mime_key = msi_alloc( (lstrlenW( szMIMEDatabase ) + lstrlenW( mime->ContentType ) + 1) * sizeof(WCHAR) );
         if (mime_key)
         {
-            strcpyW( mime_key, szMIMEDatabase );
-            strcatW( mime_key, mime->ContentType );
+            lstrcpyW( mime_key, szMIMEDatabase );
+            lstrcatW( mime_key, mime->ContentType );
             res = RegDeleteKeyW( HKEY_CLASSES_ROOT, mime_key );
             if (res != ERROR_SUCCESS)
                 WARN("Failed to delete MIME key %d\n", res);

@@ -26,7 +26,6 @@
 #include "winbase.h"
 #include "winreg.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msipriv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -43,7 +42,7 @@ static BOOL load_fusion_dlls( MSIPACKAGE *package )
     WCHAR path[MAX_PATH];
     DWORD len = GetSystemDirectoryW( path, MAX_PATH );
 
-    strcpyW( path + len, szMscoree );
+    lstrcpyW( path + len, szMscoree );
     if (package->hmscoree || !(package->hmscoree = LoadLibraryW( path ))) return TRUE;
     if (!(pLoadLibraryShim = (void *)GetProcAddress( package->hmscoree, "LoadLibraryShim" )))
     {
@@ -176,13 +175,13 @@ static UINT get_assembly_name_attribute( MSIRECORD *rec, LPVOID param )
     struct assembly_name *name = param;
     const WCHAR *attr = MSI_RecordGetString( rec, 2 );
     const WCHAR *value = MSI_RecordGetString( rec, 3 );
-    int len = strlenW( fmtW ) + strlenW( attr ) + strlenW( value );
+    int len = lstrlenW( fmtW ) + lstrlenW( attr ) + lstrlenW( value );
 
     if (!(name->attrs[name->index] = msi_alloc( len * sizeof(WCHAR) )))
         return ERROR_OUTOFMEMORY;
 
-    if (!strcmpiW( attr, nameW )) strcpyW( name->attrs[name->index++], value );
-    else sprintfW( name->attrs[name->index++], fmtW, attr, value );
+    if (!wcsicmp( attr, nameW )) lstrcpyW( name->attrs[name->index++], value );
+    else swprintf( name->attrs[name->index++], len, fmtW, attr, value );
     return ERROR_SUCCESS;
 }
 
@@ -216,7 +215,7 @@ static WCHAR *get_assembly_display_name( MSIDATABASE *db, const WCHAR *comp, MSI
     MSI_IterateRecords( view, NULL, get_assembly_name_attribute, &name );
 
     len = 0;
-    for (i = 0; i < name.count; i++) len += strlenW( name.attrs[i] ) + 1;
+    for (i = 0; i < name.count; i++) len += lstrlenW( name.attrs[i] ) + 1;
 
     display_name = msi_alloc( (len + 1) * sizeof(WCHAR) );
     if (display_name)
@@ -224,8 +223,8 @@ static WCHAR *get_assembly_display_name( MSIDATABASE *db, const WCHAR *comp, MSI
         display_name[0] = 0;
         for (i = 0; i < name.count; i++)
         {
-            strcatW( display_name, name.attrs[i] );
-            if (i < name.count - 1) strcatW( display_name, commaW );
+            lstrcatW( display_name, name.attrs[i] );
+            if (i < name.count - 1) lstrcatW( display_name, commaW );
         }
     }
 
@@ -427,7 +426,7 @@ static enum clr_version get_clr_version( MSIPACKAGE *package, const WCHAR *filen
         {
             UINT i;
             for (i = 0; i < CLR_VERSION_MAX; i++)
-                if (!strcmpW( strW, clr_version[i] )) version = i;
+                if (!wcscmp( strW, clr_version[i] )) version = i;
         }
         msi_free( strW );
     }
@@ -526,7 +525,7 @@ static WCHAR *build_local_assembly_path( const WCHAR *filename )
     UINT i;
     WCHAR *ret;
 
-    if (!(ret = msi_alloc( (strlenW( filename ) + 1) * sizeof(WCHAR) )))
+    if (!(ret = msi_alloc( (lstrlenW( filename ) + 1) * sizeof(WCHAR) )))
         return NULL;
 
     for (i = 0; filename[i]; i++)

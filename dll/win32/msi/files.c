@@ -45,7 +45,6 @@
 #include "shlwapi.h"
 #include "patchapi.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -206,10 +205,10 @@ BOOL msi_create_full_path( MSIPACKAGE *package, const WCHAR *path )
     WCHAR *new_path;
     int len;
 
-    if (!(new_path = msi_alloc( (strlenW( path ) + 1) * sizeof(WCHAR) ))) return FALSE;
-    strcpyW( new_path, path );
+    if (!(new_path = msi_alloc( (lstrlenW( path ) + 1) * sizeof(WCHAR) ))) return FALSE;
+    lstrcpyW( new_path, path );
 
-    while ((len = strlenW( new_path )) && new_path[len - 1] == '\\')
+    while ((len = lstrlenW( new_path )) && new_path[len - 1] == '\\')
     new_path[len - 1] = 0;
 
     while (!msi_create_directory( package, new_path ))
@@ -222,7 +221,7 @@ BOOL msi_create_full_path( MSIPACKAGE *package, const WCHAR *path )
             ret = FALSE;
             break;
         }
-        if (!(slash = strrchrW( new_path, '\\' )))
+        if (!(slash = wcsrchr( new_path, '\\' )))
         {
             ret = FALSE;
             break;
@@ -436,8 +435,8 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
         TRACE("file in use, scheduling rename operation\n");
 
         if (!(pathW = strdupW( file->TargetPath ))) return ERROR_OUTOFMEMORY;
-        if ((p = strrchrW(pathW, '\\'))) *p = 0;
-        len = strlenW( pathW ) + 16;
+        if ((p = wcsrchr(pathW, '\\'))) *p = 0;
+        len = lstrlenW( pathW ) + 16;
         if (!(tmpfileW = msi_alloc(len * sizeof(WCHAR))))
         {
             msi_free( pathW );
@@ -490,7 +489,7 @@ static MSIFILE *find_file( MSIPACKAGE *package, UINT disk_id, const WCHAR *filen
     {
         if (file->disk_id == disk_id &&
             file->state != msifs_installed &&
-            !strcmpiW( filename, file->File )) return file;
+            !wcsicmp( filename, file->File )) return file;
     }
     return NULL;
 }
@@ -670,7 +669,7 @@ static MSIFILEPATCH *find_filepatch( MSIPACKAGE *package, UINT disk_id, const WC
 
     LIST_FOR_EACH_ENTRY( patch, &package->filepatches, MSIFILEPATCH, entry )
     {
-        if (!patch->extracted && patch->disk_id == disk_id && !strcmpW( key, patch->File->File ))
+        if (!patch->extracted && patch->disk_id == disk_id && !wcscmp( key, patch->File->File ))
             return patch;
     }
     return NULL;
@@ -923,7 +922,7 @@ static WCHAR *wildcard_to_file( const WCHAR *wildcard, const WCHAR *filename )
     WCHAR *path;
     DWORD dirlen, pathlen;
 
-    ptr = strrchrW(wildcard, '\\');
+    ptr = wcsrchr(wildcard, '\\');
     dirlen = ptr - wildcard + 1;
 
     pathlen = dirlen + lstrlenW(filename) + 1;
@@ -964,8 +963,8 @@ static BOOL add_wildcard( FILE_LIST *files, const WCHAR *source, WCHAR *dest )
         return FALSE;
 
     new->source = strdupW(source);
-    ptr = strrchrW(dest, '\\') + 1;
-    filename = strrchrW(new->source, '\\') + 1;
+    ptr = wcsrchr(dest, '\\') + 1;
+    filename = wcsrchr(new->source, '\\') + 1;
 
     new->sourcename = filename;
 
@@ -993,7 +992,7 @@ static BOOL add_wildcard( FILE_LIST *files, const WCHAR *source, WCHAR *dest )
 
     LIST_FOR_EACH_ENTRY(file, &files->entry, FILE_LIST, entry)
     {
-        if (strcmpW( source, file->source ) < 0)
+        if (wcscmp( source, file->source ) < 0)
         {
             list_add_before(&file->entry, &new->entry);
             return TRUE;
@@ -1039,7 +1038,7 @@ static BOOL move_files_wildcard( MSIPACKAGE *package, const WCHAR *source, WCHAR
 
     /* only the first wildcard match gets renamed to dest */
     file = LIST_ENTRY(list_head(&files.entry), FILE_LIST, entry);
-    size = (strrchrW(file->dest, '\\') - file->dest) + lstrlenW(file->destname) + 2;
+    size = (wcsrchr(file->dest, '\\') - file->dest) + lstrlenW(file->destname) + 2;
     file->dest = msi_realloc(file->dest, size * sizeof(WCHAR));
     if (!file->dest)
     {
@@ -1048,11 +1047,11 @@ static BOOL move_files_wildcard( MSIPACKAGE *package, const WCHAR *source, WCHAR
     }
 
     /* file->dest may be shorter after the reallocation, so add a NULL
-     * terminator.  This is needed for the call to strrchrW, as there will no
+     * terminator.  This is needed for the call to wcsrchr, as there will no
      * longer be a NULL terminator within the bounds of the allocation in this case.
      */
     file->dest[size - 1] = '\0';
-    lstrcpyW(strrchrW(file->dest, '\\') + 1, file->destname);
+    lstrcpyW(wcsrchr(file->dest, '\\') + 1, file->destname);
 
     while (!list_empty(&files.entry))
     {
@@ -1074,8 +1073,8 @@ done:
 
 void msi_reduce_to_long_filename( WCHAR *filename )
 {
-    WCHAR *p = strchrW( filename, '|' );
-    if (p) memmove( filename, p + 1, (strlenW( p + 1 ) + 1) * sizeof(WCHAR) );
+    WCHAR *p = wcschr( filename, '|' );
+    if (p) memmove( filename, p + 1, (lstrlenW( p + 1 ) + 1) * sizeof(WCHAR) );
 }
 
 static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
@@ -1134,7 +1133,7 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
         lstrcatW(source, sourcename);
     }
 
-    wildcards = strchrW(source, '*') || strchrW(source, '?');
+    wildcards = wcschr(source, '*') || wcschr(source, '?');
 
     if (MSI_RecordIsNull(rec, 4))
     {
@@ -1143,7 +1142,7 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
             WCHAR *p;
             if (sourcename)
                 destname = strdupW(sourcename);
-            else if ((p = strrchrW(sourcedir, '\\')))
+            else if ((p = wcsrchr(sourcedir, '\\')))
                 destname = strdupW(p + 1);
             else
                 destname = strdupW(sourcedir);
@@ -1231,9 +1230,9 @@ static WCHAR *get_duplicate_filename( MSIPACKAGE *package, MSIRECORD *row, const
 
     if (MSI_RecordIsNull( row, 4 ))
     {
-        len = strlenW( src ) + 1;
+        len = lstrlenW( src ) + 1;
         if (!(dst_name = msi_alloc( len * sizeof(WCHAR)))) return NULL;
-        strcpyW( dst_name, strrchrW( src, '\\' ) + 1 );
+        lstrcpyW( dst_name, wcsrchr( src, '\\' ) + 1 );
     }
     else
     {
@@ -1247,7 +1246,7 @@ static WCHAR *get_duplicate_filename( MSIPACKAGE *package, MSIRECORD *row, const
     {
         WCHAR *p;
         dst_path = strdupW( src );
-        p = strrchrW( dst_path, '\\' );
+        p = wcsrchr( dst_path, '\\' );
         if (p) *p = 0;
     }
     else

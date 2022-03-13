@@ -27,7 +27,6 @@
 #include "objbase.h"
 #include "shlwapi.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msipriv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -71,7 +70,7 @@ static struct transform_desc *parse_transform_desc( const WCHAR *str )
 
     if (!(ret = msi_alloc_zero( sizeof(*ret) ))) return NULL;
 
-    q = strchrW( p, '}' );
+    q = wcschr( p, '}' );
     if (*p != '{' || !q) goto error;
 
     len = q - p + 1;
@@ -80,14 +79,14 @@ static struct transform_desc *parse_transform_desc( const WCHAR *str )
     ret->product_code_from[len] = 0;
 
     p = q + 1;
-    if (!(q = strchrW( p, ';' ))) goto error;
+    if (!(q = wcschr( p, ';' ))) goto error;
     len = q - p;
     if (!(ret->version_from = msi_alloc( (len + 1) * sizeof(WCHAR) ))) goto error;
     memcpy( ret->version_from, p, len * sizeof(WCHAR) );
     ret->version_from[len] = 0;
 
     p = q + 1;
-    q = strchrW( p, '}' );
+    q = wcschr( p, '}' );
     if (*p != '{' || !q) goto error;
 
     len = q - p + 1;
@@ -96,14 +95,14 @@ static struct transform_desc *parse_transform_desc( const WCHAR *str )
     ret->product_code_to[len] = 0;
 
     p = q + 1;
-    if (!(q = strchrW( p, ';' ))) goto error;
+    if (!(q = wcschr( p, ';' ))) goto error;
     len = q - p;
     if (!(ret->version_to = msi_alloc( (len + 1) * sizeof(WCHAR) ))) goto error;
     memcpy( ret->version_to, p, len * sizeof(WCHAR) );
     ret->version_to[len] = 0;
 
     p = q + 1;
-    q = strchrW( p, '}' );
+    q = wcschr( p, '}' );
     if (*p != '{' || !q) goto error;
 
     len = q - p + 1;
@@ -173,7 +172,7 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
 
     if (wanted_flags & MSITRANSFORM_VALIDATE_LANGUAGE)
     {
-        if (!template[0] || ((p = strchrW( template, ';' )) && match_language( package, atoiW( p + 1 ) )))
+        if (!template[0] || ((p = wcschr( template, ';' )) && match_language( package, wcstol( p + 1, NULL, 10 ) )))
         {
             valid_flags |= MSITRANSFORM_VALIDATE_LANGUAGE;
         }
@@ -189,7 +188,7 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
             msiobj_release( &si->hdr );
             return ERROR_INSTALL_PACKAGE_INVALID;
         }
-        if (!strcmpW( desc->product_code_from, product_code_installed ))
+        if (!wcscmp( desc->product_code_from, product_code_installed ))
         {
             valid_flags |= MSITRANSFORM_VALIDATE_PRODUCT;
         }
@@ -245,7 +244,7 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
             msiobj_release( &si->hdr );
             return ERROR_INSTALL_PACKAGE_INVALID;
         }
-        if (!strcmpW( desc->upgrade_code, upgrade_code_installed ))
+        if (!wcscmp( desc->upgrade_code, upgrade_code_installed ))
             valid_flags |= MSITRANSFORM_VALIDATE_UPGRADECODE;
         msi_free( upgrade_code_installed );
     }
@@ -303,7 +302,7 @@ UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si )
     guids = msi_split_string( guid_list, ';' );
     for (i = 0; guids[i] && ret != ERROR_SUCCESS; i++)
     {
-        if (!strcmpW( guids[i], product_code )) ret = ERROR_SUCCESS;
+        if (!wcscmp( guids[i], product_code )) ret = ERROR_SUCCESS;
     }
     msi_free( guids );
     msi_free( guid_list );
@@ -333,7 +332,7 @@ static UINT msi_parse_patch_summary( MSISUMMARYINFO *si, MSIPATCHINFO **patch )
         msi_free( pi );
         return ERROR_PATCH_PACKAGE_INVALID;
     }
-    if (!(p = strchrW( p + 1, '}' )))
+    if (!(p = wcschr( p + 1, '}' )))
     {
         msi_free( pi->patchcode );
         msi_free( pi );
@@ -526,7 +525,7 @@ static UINT patch_update_file_sequence( MSIDATABASE *db, const struct patch_offs
 
     LIST_FOR_EACH_ENTRY( po, &pos->files, struct patch_offset, entry )
     {
-        if (!strcmpiW( file, po->name ))
+        if (!wcsicmp( file, po->name ))
         {
             MSI_RecordSetInteger( rec, 8, seq + pos->offset_to_apply );
             r = MSI_ViewModify( view, MSIMODIFY_UPDATE, rec );
@@ -557,7 +556,7 @@ static UINT patch_update_filepatch_sequence( MSIDATABASE *db, const struct patch
 
     LIST_FOR_EACH_ENTRY( po, &pos->patches, struct patch_offset, entry )
     {
-        if (seq == po->sequence && !strcmpiW( file, po->name ))
+        if (seq == po->sequence && !wcsicmp( file, po->name ))
         {
             MSIQUERY *delete_view, *insert_view;
             MSIRECORD *rec2;
@@ -858,7 +857,7 @@ static DWORD is_uninstallable( MSIDATABASE *db )
     if (MSI_ViewFetch( view, &rec ) == ERROR_SUCCESS)
     {
         const WCHAR *value = MSI_RecordGetString( rec, 1 );
-        ret = atoiW( value );
+        ret = wcstol( value, NULL, 10 );
         msiobj_release( &rec->hdr );
     }
 
@@ -1005,17 +1004,17 @@ UINT msi_apply_transforms( MSIPACKAGE *package )
             if (!PathIsRelativeW( xforms[i] )) transform = xforms[i];
             else
             {
-                WCHAR *p = strrchrW( package->PackagePath, '\\' );
+                WCHAR *p = wcsrchr( package->PackagePath, '\\' );
                 DWORD len = p - package->PackagePath + 1;
 
-                if (!(transform = msi_alloc( (len + strlenW( xforms[i] ) + 1) * sizeof(WCHAR)) ))
+                if (!(transform = msi_alloc( (len + lstrlenW( xforms[i] ) + 1) * sizeof(WCHAR)) ))
                 {
                     msi_free( xforms );
                     msi_free( xform_list );
                     return ERROR_OUTOFMEMORY;
                 }
                 memcpy( transform, package->PackagePath, len * sizeof(WCHAR) );
-                memcpy( transform + len, xforms[i], (strlenW( xforms[i] ) + 1) * sizeof(WCHAR) );
+                memcpy( transform + len, xforms[i], (lstrlenW( xforms[i] ) + 1) * sizeof(WCHAR) );
             }
             r = MSI_DatabaseApplyTransformW( package->db, transform, 0 );
             if (transform != xforms[i]) msi_free( transform );

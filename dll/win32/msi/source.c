@@ -34,7 +34,6 @@
 #include "wincrypt.h"
 #include "winver.h"
 #include "winuser.h"
-#include "wine/unicode.h"
 #include "sddl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -273,10 +272,10 @@ UINT WINAPI MsiSourceListEnumMediaDisksW(LPCWSTR szProductCodeOrPatchCode,
         goto done;
 
     if (pdwDiskId)
-        *pdwDiskId = atolW(value);
+        *pdwDiskId = wcstol(value, NULL, 10);
 
     ptr2 = data;
-    ptr = strchrW(data, ';');
+    ptr = wcschr(data, ';');
     if (!ptr)
         ptr = data;
     else
@@ -286,7 +285,7 @@ UINT WINAPI MsiSourceListEnumMediaDisksW(LPCWSTR szProductCodeOrPatchCode,
     {
         if (type == REG_DWORD)
         {
-            sprintfW(convert, fmt, *data);
+            swprintf(convert, ARRAY_SIZE(convert), fmt, *data);
             size = lstrlenW(convert);
             ptr2 = convert;
         }
@@ -308,7 +307,7 @@ UINT WINAPI MsiSourceListEnumMediaDisksW(LPCWSTR szProductCodeOrPatchCode,
 
         if (type == REG_DWORD)
         {
-            sprintfW(convert, fmt, *ptr);
+            swprintf(convert, ARRAY_SIZE(convert), fmt, *ptr);
             size = lstrlenW(convert);
             ptr = convert;
         }
@@ -459,7 +458,7 @@ UINT WINAPI MsiSourceListEnumSourcesW(LPCWSTR szProductCodeOrPatch, LPCWSTR szUs
         goto done;
     }
 
-    sprintfW(name, format, dwIndex + 1);
+    swprintf(name, ARRAY_SIZE(name), format, dwIndex + 1);
 
     res = RegQueryValueExW(subkey, name, 0, 0, (LPBYTE)szSource, pcchSource);
     if (res != ERROR_SUCCESS && res != ERROR_MORE_DATA)
@@ -569,8 +568,8 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
     if (rc != ERROR_SUCCESS)
         return rc;
 
-    if (!strcmpW( szProperty, INSTALLPROPERTY_MEDIAPACKAGEPATHW ) ||
-        !strcmpW( szProperty, INSTALLPROPERTY_DISKPROMPTW ))
+    if (!wcscmp( szProperty, INSTALLPROPERTY_MEDIAPACKAGEPATHW ) ||
+        !wcscmp( szProperty, INSTALLPROPERTY_DISKPROMPTW ))
     {
         rc = OpenMediaSubkey(sourcekey, &media, FALSE);
         if (rc != ERROR_SUCCESS)
@@ -579,14 +578,14 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
             return ERROR_SUCCESS;
         }
 
-        if (!strcmpW( szProperty, INSTALLPROPERTY_MEDIAPACKAGEPATHW ))
+        if (!wcscmp( szProperty, INSTALLPROPERTY_MEDIAPACKAGEPATHW ))
             szProperty = mediapack;
 
         RegQueryValueExW(media, szProperty, 0, 0, (LPBYTE)szValue, pcchValue);
         RegCloseKey(media);
     }
-    else if (!strcmpW( szProperty, INSTALLPROPERTY_LASTUSEDSOURCEW ) ||
-             !strcmpW( szProperty, INSTALLPROPERTY_LASTUSEDTYPEW ))
+    else if (!wcscmp( szProperty, INSTALLPROPERTY_LASTUSEDSOURCEW ) ||
+             !wcscmp( szProperty, INSTALLPROPERTY_LASTUSEDTYPEW ))
     {
         rc = RegQueryValueExW(sourcekey, INSTALLPROPERTY_LASTUSEDSOURCEW,
                               0, 0, NULL, &size);
@@ -610,7 +609,7 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
             return ERROR_SUCCESS;
         }
 
-        if (!strcmpW( szProperty, INSTALLPROPERTY_LASTUSEDTYPEW ))
+        if (!wcscmp( szProperty, INSTALLPROPERTY_LASTUSEDTYPEW ))
         {
             if (*source != 'n' && *source != 'u' && *source != 'm')
             {
@@ -624,7 +623,7 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
         }
         else
         {
-            ptr = strrchrW(source, ';');
+            ptr = wcsrchr(source, ';');
             if (!ptr)
                 ptr = source;
             else
@@ -633,7 +632,7 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
 output_out:
         if (szValue)
         {
-            if (strlenW(ptr) < *pcchValue)
+            if (lstrlenW(ptr) < *pcchValue)
                 lstrcpyW(szValue, ptr);
             else
                 rc = ERROR_MORE_DATA;
@@ -642,7 +641,7 @@ output_out:
         *pcchValue = lstrlenW(ptr);
         msi_free(source);
     }
-    else if (!strcmpW( szProperty, INSTALLPROPERTY_PACKAGENAMEW ))
+    else if (!wcscmp( szProperty, INSTALLPROPERTY_PACKAGENAMEW ))
     {
         *pcchValue = *pcchValue * sizeof(WCHAR);
         rc = RegQueryValueExW(sourcekey, INSTALLPROPERTY_PACKAGENAMEW, 0, 0,
@@ -737,8 +736,8 @@ UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
             return r;
     }
 
-    size = (lstrlenW(format) + lstrlenW(value) + 7) * sizeof(WCHAR);
-    buffer = msi_alloc(size);
+    size = lstrlenW(format) + lstrlenW(value) + 7;
+    buffer = msi_alloc(size * sizeof(WCHAR));
     if (!buffer)
         return ERROR_OUTOFMEMORY;
 
@@ -749,7 +748,7 @@ UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
         return r;
     }
 
-    sprintfW(buffer, format, typechar, index, value);
+    swprintf(buffer, size, format, typechar, index, value);
 
     size = (lstrlenW(buffer) + 1) * sizeof(WCHAR);
     r = RegSetValueExW(source, INSTALLPROPERTY_LASTUSEDSOURCEW, 0,
@@ -795,22 +794,22 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
     }
 
     property = szProperty;
-    if (!strcmpW( szProperty, INSTALLPROPERTY_MEDIAPACKAGEPATHW ))
+    if (!wcscmp( szProperty, INSTALLPROPERTY_MEDIAPACKAGEPATHW ))
         property = media_package;
 
     rc = OpenSourceKey(szProduct, &sourcekey, MSICODE_PRODUCT, dwContext, FALSE);
     if (rc != ERROR_SUCCESS)
         return rc;
 
-    if (strcmpW( szProperty, INSTALLPROPERTY_LASTUSEDSOURCEW ) &&
+    if (wcscmp( szProperty, INSTALLPROPERTY_LASTUSEDSOURCEW ) &&
         dwOptions & (MSISOURCETYPE_NETWORK | MSISOURCETYPE_URL))
     {
         RegCloseKey(sourcekey);
         return ERROR_INVALID_PARAMETER;
     }
 
-    if (!strcmpW( szProperty, INSTALLPROPERTY_MEDIAPACKAGEPATHW ) ||
-        !strcmpW( szProperty, INSTALLPROPERTY_DISKPROMPTW ))
+    if (!wcscmp( szProperty, INSTALLPROPERTY_MEDIAPACKAGEPATHW ) ||
+        !wcscmp( szProperty, INSTALLPROPERTY_DISKPROMPTW ))
     {
         rc = OpenMediaSubkey(sourcekey, &media, TRUE);
         if (rc == ERROR_SUCCESS)
@@ -819,7 +818,7 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
             RegCloseKey(media);
         }
     }
-    else if (!strcmpW( szProperty, INSTALLPROPERTY_PACKAGENAMEW ))
+    else if (!wcscmp( szProperty, INSTALLPROPERTY_PACKAGENAMEW ))
     {
         DWORD size = (lstrlenW(szValue) + 1) * sizeof(WCHAR);
         rc = RegSetValueExW(sourcekey, INSTALLPROPERTY_PACKAGENAMEW, 0,
@@ -827,7 +826,7 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
         if (rc != ERROR_SUCCESS)
             rc = ERROR_UNKNOWN_PROPERTY;
     }
-    else if (!strcmpW( szProperty, INSTALLPROPERTY_LASTUSEDSOURCEW ))
+    else if (!wcscmp( szProperty, INSTALLPROPERTY_LASTUSEDSOURCEW ))
     {
         if (!(dwOptions & (MSISOURCETYPE_NETWORK | MSISOURCETYPE_URL)))
             rc = ERROR_INVALID_PARAMETER;
@@ -989,7 +988,7 @@ static void add_source_to_list(struct list *sourcelist, media_info *info,
 
         /* update the rest of the list */
         if (found)
-            sprintfW(iter->szIndex, fmt, ++iter->index);
+            swprintf(iter->szIndex, ARRAY_SIZE(iter->szIndex), fmt, ++iter->index);
         else if (index)
             (*index)++;
     }
@@ -1027,7 +1026,7 @@ static UINT fill_source_list(struct list *sourcelist, HKEY sourcekey, DWORD *cou
         }
 
         lstrcpyW(entry->szIndex, name);
-        entry->index = atoiW(name);
+        entry->index = wcstol(name, NULL, 10);
 
         size++;
         r = RegEnumValueW(sourcekey, index, name, &size, NULL,
@@ -1134,13 +1133,13 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
     }
     else if (dwIndex > count || dwIndex == 0)
     {
-        sprintfW(name, fmt, count + 1);
+        swprintf(name, ARRAY_SIZE(name), fmt, count + 1);
         rc = RegSetValueExW(typekey, name, 0, REG_EXPAND_SZ, (LPBYTE)source, size);
         goto done;
     }
     else
     {
-        sprintfW(name, fmt, dwIndex);
+        swprintf(name, ARRAY_SIZE(name), fmt, dwIndex);
         info = msi_alloc(sizeof(media_info));
         if (!info)
         {
@@ -1244,7 +1243,7 @@ UINT WINAPI MsiSourceListAddMediaDiskW(LPCWSTR szProduct, LPCWSTR szUserSid,
 
     OpenMediaSubkey(sourcekey, &mediakey, TRUE);
 
-    sprintfW(szIndex, fmt, dwDiskId);
+    swprintf(szIndex, ARRAY_SIZE(szIndex), fmt, dwDiskId);
 
     size = 2;
     if (szVolumeLabel) size += lstrlenW(szVolumeLabel);

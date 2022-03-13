@@ -29,7 +29,6 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -311,7 +310,7 @@ int msi_add_string( string_table *st, const WCHAR *data, int len, BOOL persisten
     if( !data )
         return 0;
 
-    if (len < 0) len = strlenW( data );
+    if (len < 0) len = lstrlenW( data );
 
     if( !data[0] && !len )
         return 0;
@@ -404,7 +403,7 @@ UINT msi_string2id( const string_table *st, const WCHAR *str, int len, UINT *id 
 {
     int i, c, low = 0, high = st->sortcount - 1;
 
-    if (len < 0) len = strlenW( str );
+    if (len < 0) len = lstrlenW( str );
 
     while (low <= high)
     {

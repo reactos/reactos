@@ -22,8 +22,6 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -314,7 +312,7 @@ value:
             if( !szNum )
                 YYABORT;
             $$.type = VALUE_INTEGER;
-            $$.u.integer = atoiW( szNum );
+            $$.u.integer = wcstol( szNum, NULL, 10 );
             cond_free( szNum );
         }
   | COND_DOLLARS identifier
@@ -417,7 +415,7 @@ static WCHAR *strstriW( const WCHAR *str, const WCHAR *sub )
     LPWSTR strlower, sublower, r;
     strlower = CharLowerW( strdupW( str ) );
     sublower = CharLowerW( strdupW( sub ) );
-    r = strstrW( strlower, sublower );
+    r = wcsstr( strlower, sublower );
     if (r)
         r = (LPWSTR)str + (r - strlower);
     msi_free( strlower );
@@ -433,7 +431,7 @@ static BOOL str_is_number( LPCWSTR str )
         return FALSE;
 
     for (i = 0; i < lstrlenW( str ); i++)
-        if (!isdigitW(str[i]))
+        if (!iswdigit(str[i]))
             return FALSE;
 
     return TRUE;
@@ -452,44 +450,44 @@ static INT compare_substring( LPCWSTR a, INT operator, LPCWSTR b )
         return 1;
 
     /* if both strings contain only numbers, use integer comparison */
-    lhs = atoiW(a);
-    rhs = atoiW(b);
+    lhs = wcstol(a, NULL, 10);
+    rhs = wcstol(b, NULL, 10);
     if (str_is_number(a) && str_is_number(b))
         return compare_int( lhs, operator, rhs );
 
     switch (operator)
     {
     case COND_SS:
-        return strstrW( a, b ) != 0;
+        return wcsstr( a, b ) != 0;
     case COND_ISS:
         return strstriW( a, b ) != 0;
     case COND_LHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpW( a, b, r );
+        return !wcsncmp( a, b, r );
     }
     case COND_RHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpW( a + (l - r), b, r );
+        return !wcsncmp( a + (l - r), b, r );
     }
     case COND_ILHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpiW( a, b, r );
+        return !wcsnicmp( a, b, r );
     }
     case COND_IRHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpiW( a + (l - r), b, r );
+        return !wcsnicmp( a + (l - r), b, r );
     }
     default:
         ERR("invalid substring operator\n");
@@ -508,35 +506,35 @@ static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert )
     if (!b) b = szEmpty;
 
     if (convert && str_is_number(a) && str_is_number(b))
-        return compare_int( atoiW(a), operator, atoiW(b) );
+        return compare_int( wcstol(a, NULL, 10), operator, wcstol(b, NULL, 10) );
 
     /* a or b may be NULL */
     switch (operator)
     {
     case COND_LT:
-        return strcmpW( a, b ) < 0;
+        return wcscmp( a, b ) < 0;
     case COND_GT:
-        return strcmpW( a, b ) > 0;
+        return wcscmp( a, b ) > 0;
     case COND_EQ:
-        return strcmpW( a, b ) == 0;
+        return wcscmp( a, b ) == 0;
     case COND_NE:
-        return strcmpW( a, b ) != 0;
+        return wcscmp( a, b ) != 0;
     case COND_GE:
-        return strcmpW( a, b ) >= 0;
+        return wcscmp( a, b ) >= 0;
     case COND_LE:
-        return strcmpW( a, b ) <= 0;
+        return wcscmp( a, b ) <= 0;
     case COND_ILT:
-        return strcmpiW( a, b ) < 0;
+        return wcsicmp( a, b ) < 0;
     case COND_IGT:
-        return strcmpiW( a, b ) > 0;
+        return wcsicmp( a, b ) > 0;
     case COND_IEQ:
-        return strcmpiW( a, b ) == 0;
+        return wcsicmp( a, b ) == 0;
     case COND_INE:
-        return strcmpiW( a, b ) != 0;
+        return wcsicmp( a, b ) != 0;
     case COND_IGE:
-        return strcmpiW( a, b ) >= 0;
+        return wcsicmp( a, b ) >= 0;
     case COND_ILE:
-        return strcmpiW( a, b ) <= 0;
+        return wcsicmp( a, b ) <= 0;
     default:
         ERR("invalid string operator\n");
         return 0;
@@ -619,7 +617,7 @@ static int COND_GetOperator( COND_input *cond )
     while ( 1 )
     {
         len = lstrlenW( table[i].str );
-        if ( !len || 0 == strncmpW( table[i].str, p, len ) )
+        if ( !len || 0 == wcsncmp( table[i].str, p, len ) )
             break;
         i++;
     }
@@ -668,7 +666,7 @@ static int COND_GetOne( struct cond_str *str, COND_input *cond )
 
     if (ch == '"' )
     {
-        LPCWSTR p = strchrW( str->data + 1, '"' );
+        LPCWSTR p = wcschr( str->data + 1, '"' );
         if (!p) return COND_ERROR;
         len = p - str->data + 1;
         rc = COND_LITER;
@@ -688,18 +686,18 @@ static int COND_GetOne( struct cond_str *str, COND_input *cond )
 
         if ( len == 3 )
         {
-            if ( !strncmpiW( str->data, szNot, len ) )
+            if ( !wcsnicmp( str->data, szNot, len ) )
                 rc = COND_NOT;
-            else if( !strncmpiW( str->data, szAnd, len ) )
+            else if( !wcsnicmp( str->data, szAnd, len ) )
                 rc = COND_AND;
-            else if( !strncmpiW( str->data, szXor, len ) )
+            else if( !wcsnicmp( str->data, szXor, len ) )
                 rc = COND_XOR;
-            else if( !strncmpiW( str->data, szEqv, len ) )
+            else if( !wcsnicmp( str->data, szEqv, len ) )
                 rc = COND_EQV;
-            else if( !strncmpiW( str->data, szImp, len ) )
+            else if( !wcsnicmp( str->data, szImp, len ) )
                 rc = COND_IMP;
         }
-        else if( (len == 2) && !strncmpiW( str->data, szOr, len ) )
+        else if( (len == 2) && !wcsnicmp( str->data, szOr, len ) )
             rc = COND_OR;
     }
     else if( COND_IsNumber( ch ) )

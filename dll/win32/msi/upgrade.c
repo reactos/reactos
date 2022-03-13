@@ -36,7 +36,6 @@
 #include "msidefs.h"
 #include "msipriv.h"
 #include "winuser.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -47,7 +46,7 @@ static BOOL check_language(DWORD lang1, LPCWSTR lang2, DWORD attributes)
     if (!lang2 || lang2[0]==0)
         return TRUE;
 
-    langdword = atoiW(lang2);
+    langdword = wcstol(lang2, NULL, 10);
 
     if (attributes & msidbUpgradeAttributesLanguagesExclusive)
         return (lang1 != langdword);
@@ -68,7 +67,7 @@ static BOOL find_product( const WCHAR *list, const WCHAR *product )
         while (*q && *q != '}') q++;
         if (*q != '}') return FALSE;
         q++;
-        if (q - p < strlenW( product )) return FALSE;
+        if (q - p < lstrlenW( product )) return FALSE;
         if (!memcmp( p, product, (q - p) * sizeof(WCHAR) )) return TRUE;
         p = q + 1;
         while (*p && *p != ';') p++;
@@ -92,19 +91,19 @@ static void append_productcode( MSIPACKAGE *package, const WCHAR *action_prop, c
         return;
     }
 
-    if (prop) len += strlenW( prop );
-    len += strlenW( product ) + 2;
+    if (prop) len += lstrlenW( prop );
+    len += lstrlenW( product ) + 2;
     if (!(newprop = msi_alloc( len * sizeof(WCHAR) ))) return;
     if (prop)
     {
-        strcpyW( newprop, prop );
-        strcatW( newprop, szSemiColon );
+        lstrcpyW( newprop, prop );
+        lstrcatW( newprop, szSemiColon );
     }
     else newprop[0] = 0;
-    strcatW( newprop, product );
+    lstrcatW( newprop, product );
 
     r = msi_set_property( package->db, action_prop, newprop, -1 );
-    if (r == ERROR_SUCCESS && !strcmpW( action_prop, szSourceDir ))
+    if (r == ERROR_SUCCESS && !wcscmp( action_prop, szSourceDir ))
         msi_reset_source_folders( package );
 
     TRACE( "related product property %s now %s\n", debugstr_w(action_prop), debugstr_w(newprop) );
