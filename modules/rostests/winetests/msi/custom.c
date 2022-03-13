@@ -1112,11 +1112,57 @@ static void test_costs(MSIHANDLE hinst)
     ok(hinst, sz == 2, "got size %u\n", sz);
 }
 
+static void test_invalid_functions(MSIHANDLE hinst)
+{
+    char path[MAX_PATH], package_name[20];
+    MSIHANDLE db, preview, package;
+    UINT r;
+
+    r = MsiGetDatabaseState(hinst);
+    todo_wine ok(hinst, r == MSIDBSTATE_ERROR, "got %u\n", r);
+
+    db = MsiGetActiveDatabase(hinst);
+    ok(hinst, db, "MsiGetActiveDatabase failed\n");
+
+    r = MsiDatabaseGenerateTransformA(db, db, "bogus.mst", 0, 0);
+    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+
+    r = MsiDatabaseApplyTransformA(db, "bogus.mst", 0);
+    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+
+    r = MsiCreateTransformSummaryInfoA(db, db, "bogus.mst", 0, 0);
+    todo_wine ok(hinst, r == ERROR_INSTALL_PACKAGE_OPEN_FAILED, "got %u\n", r);
+
+    GetCurrentDirectoryA(sizeof(path), path);
+    r = MsiDatabaseExportA(db, "Test", path, "bogus.idt");
+    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+
+    r = MsiDatabaseImportA(db, path, "bogus.idt");
+    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+
+    r = MsiDatabaseCommit(db);
+    ok(hinst, r == ERROR_SUCCESS, "got %u\n", r);
+
+    r = MsiDatabaseMergeA(db, db, "MergeErrors");
+    ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+
+    r = MsiGetDatabaseState(db);
+    todo_wine ok(hinst, r == MSIDBSTATE_ERROR, "got %u\n", r);
+
+    r = MsiEnableUIPreview(db, &preview);
+    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+
+    sprintf(package_name, "#%u", db);
+    r = MsiOpenPackageA(package_name, &package);
+    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+
+    MsiCloseHandle(db);
+}
+
 /* Main test. Anything that doesn't depend on a specific install configuration
  * or have undesired side effects should go here. */
 UINT WINAPI main_test(MSIHANDLE hinst)
 {
-    UINT res;
     IUnknown *unk = NULL;
     HRESULT hr;
 
@@ -1131,11 +1177,6 @@ UINT WINAPI main_test(MSIHANDLE hinst)
     ok(hinst, hr == S_OK, "got %#x\n", hr);
     CoUninitialize();
 
-    /* Test MsiGetDatabaseState() */
-    res = MsiGetDatabaseState(hinst);
-    todo_wine
-    ok(hinst, res == MSIDBSTATE_ERROR, "expected MSIDBSTATE_ERROR, got %u\n", res);
-
     test_props(hinst);
     test_db(hinst);
     test_doaction(hinst);
@@ -1144,6 +1185,7 @@ UINT WINAPI main_test(MSIHANDLE hinst)
     test_feature_states(hinst);
     test_format_record(hinst);
     test_costs(hinst);
+    test_invalid_functions(hinst);
 
     return ERROR_SUCCESS;
 }
