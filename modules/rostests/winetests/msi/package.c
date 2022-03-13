@@ -2081,9 +2081,9 @@ static void test_condition(void)
     ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
     r = MsiEvaluateConditionA(hpkg, "!nofeature=\"\"");
     ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
-    MsiEvaluateConditionA(hpkg, "$nocomponent=\"\"");
+    r = MsiEvaluateConditionA(hpkg, "$nocomponent=\"\"");
     ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
-    MsiEvaluateConditionA(hpkg, "?nocomponent=\"\"");
+    r = MsiEvaluateConditionA(hpkg, "?nocomponent=\"\"");
     ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
 
     MsiSetPropertyA(hpkg, "A", "2");
