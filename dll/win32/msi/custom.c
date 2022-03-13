@@ -595,7 +595,8 @@ UINT CDECL __wine_msi_call_dll_function(DWORD client_pid, const GUID *guid)
 
     midl_user_free(dll);
     midl_user_free(proc);
-    MsiCloseHandle(hPackage);
+
+    MsiCloseAllHandles();
 
     return r;
 }
