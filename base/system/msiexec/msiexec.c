@@ -588,6 +588,31 @@ static BOOL process_args_from_reg( const WCHAR *ident, int *pargc, WCHAR ***parg
 	return ret;
 }
 
+static WCHAR *get_path_with_extension(const WCHAR *package_name)
+{
+    static const WCHAR ext[] = L".msi";
+    unsigned int p;
+    WCHAR *path;
+
+    if (!(path = heap_alloc(lstrlenW(package_name) * sizeof(WCHAR) + sizeof(ext))))
+    {
+        WINE_ERR("No memory.\n");
+        return NULL;
+    }
+
+    lstrcpyW(path, package_name);
+    p = lstrlenW(path);
+    while (p && path[p] != '.' && path[p] != L'\\' && path[p] != '/')
+        --p;
+    if (path[p] == '.')
+    {
+        heap_free(path);
+        return NULL;
+    }
+    lstrcatW(path, ext);
+    return path;
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	int i;
@@ -626,6 +651,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	DWORD ReturnCode;
 	int argc;
 	LPWSTR *argvW = NULL;
+	WCHAR *path;
 
         InitCommonControls();
 
@@ -1040,14 +1066,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if(IsProductCode(PackageName))
 			ReturnCode = MsiConfigureProductExW(PackageName, 0, INSTALLSTATE_DEFAULT, Properties);
 		else
-			ReturnCode = MsiInstallProductW(PackageName, Properties);
+		{
+			if ((ReturnCode = MsiInstallProductW(PackageName, Properties)) == ERROR_FILE_NOT_FOUND
+					&& (path = get_path_with_extension(PackageName)))
+			{
+				ReturnCode = MsiInstallProductW(path, Properties);
+				heap_free(path);
+			}
+		}
 	}
 	else if(FunctionRepair)
 	{
 		if(IsProductCode(PackageName))
 			WINE_FIXME("Product code treatment not implemented yet\n");
 		else
-			ReturnCode = MsiReinstallProductW(PackageName, RepairMode);
+		{
+			if ((ReturnCode = MsiReinstallProductW(PackageName, RepairMode)) == ERROR_FILE_NOT_FOUND
+					&& (path = get_path_with_extension(PackageName)))
+			{
+				ReturnCode = MsiReinstallProductW(path, RepairMode);
+				heap_free(path);
+			}
+		}
 	}
 	else if(FunctionAdvertise)
 	{

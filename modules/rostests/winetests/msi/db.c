@@ -64,6 +64,8 @@ static void WINAPIV check_record_(int line, MSIHANDLE rec, UINT count, ...)
 static void test_msidatabase(void)
 {
     MSIHANDLE hdb = 0, hdb2 = 0;
+    WCHAR path[MAX_PATH];
+    DWORD len;
     UINT res;
 
     DeleteFileW(msifileW);
@@ -161,6 +163,22 @@ static void test_msidatabase(void)
 
     res = MsiCloseHandle( hdb );
     ok( res == ERROR_SUCCESS , "Failed to close database\n" );
+
+    res = GetCurrentDirectoryW(ARRAY_SIZE(path), path);
+    ok ( res, "Got zero res.\n" );
+    lstrcatW( path, L"\\");
+    lstrcatW( path, msifileW);
+    len = lstrlenW(path);
+    path[len - 4] = 0;
+
+    res = MsiOpenDatabaseW( path, MSIDBOPEN_READONLY, &hdb );
+    ok( res != ERROR_SUCCESS , "Got unexpected res %u.\n", res );
+
+    lstrcpyW( path, msifileW );
+    path[lstrlenW(path) - 4] = 0;
+
+    res = MsiOpenDatabaseW( path, MSIDBOPEN_READONLY, &hdb );
+    ok( res != ERROR_SUCCESS , "Got unexpected res %u.\n", res );
 
     res = DeleteFileA( msifile2 );
     ok( res == TRUE, "Failed to delete database\n" );
