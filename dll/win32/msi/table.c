@@ -2188,6 +2188,38 @@ UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view )
     return ERROR_SUCCESS;
 }
 
+static UINT msi_record_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWSTR name, UINT *len )
+{
+    UINT p = 0, l, i, r;
+
+    l = wcslen( tv->name );
+    if (name && *len > l)
+        memcpy(name, tv->name, l * sizeof(WCHAR));
+    p += l;
+
+    for ( i = 0; i < tv->num_cols; i++ )
+    {
+        if (!(tv->columns[i].type & MSITYPE_KEY))
+            continue;
+
+        if (name && *len > p + 1)
+            name[p] = '.';
+        p++;
+
+        l = (*len > p ? *len - p : 0);
+        r = MSI_RecordGetStringW( rec, i + 1, name ? name + p : NULL, &l );
+        if (r != ERROR_SUCCESS)
+            return r;
+        p += l;
+    }
+
+    if (name && *len > p)
+        name[p] = 0;
+
+    *len = p;
+    return ERROR_SUCCESS;
+}
+
 UINT MSI_CommitTables( MSIDATABASE *db )
 {
     UINT r, bytes_per_strref;
@@ -2252,61 +2284,30 @@ static UINT read_raw_int(const BYTE *data, UINT col, UINT bytes)
 
 static UINT msi_record_encoded_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWSTR *pstname )
 {
-    LPWSTR stname = NULL, sval, p;
-    DWORD len;
-    UINT i, r;
+    UINT r, len;
+    WCHAR *name;
 
     TRACE("%p %p\n", tv, rec);
 
-    len = lstrlenW( tv->name ) + 1;
-    stname = msi_alloc( len*sizeof(WCHAR) );
-    if ( !stname )
+    r = msi_record_stream_name( tv, rec, NULL, &len );
+    if (r != ERROR_SUCCESS)
+        return r;
+    len++;
+
+    name = msi_alloc( len * sizeof(WCHAR) );
+    if (!name)
+        return ERROR_OUTOFMEMORY;
+
+    r = msi_record_stream_name( tv, rec, name, &len );
+    if (r != ERROR_SUCCESS)
     {
-       r = ERROR_OUTOFMEMORY;
-       goto err;
+        msi_free( name );
+        return r;
     }
 
-    lstrcpyW( stname, tv->name );
-
-    for ( i = 0; i < tv->num_cols; i++ )
-    {
-        if ( tv->columns[i].type & MSITYPE_KEY )
-        {
-            sval = msi_dup_record_field( rec, i + 1 );
-            if ( !sval )
-            {
-                r = ERROR_OUTOFMEMORY;
-                goto err;
-            }
-
-            len += lstrlenW( szDot ) + lstrlenW ( sval );
-            p = msi_realloc ( stname, len*sizeof(WCHAR) );
-            if ( !p )
-            {
-                r = ERROR_OUTOFMEMORY;
-                msi_free(sval);
-                goto err;
-            }
-            stname = p;
-
-            lstrcatW( stname, szDot );
-            lstrcatW( stname, sval );
-
-            msi_free( sval );
-        }
-        else
-            continue;
-    }
-
-    *pstname = encode_streamname( FALSE, stname );
-    msi_free( stname );
-
+    *pstname = encode_streamname( FALSE, name );
+    msi_free( name );
     return ERROR_SUCCESS;
-
-err:
-    msi_free ( stname );
-    *pstname = NULL;
-    return r;
 }
 
 static MSIRECORD *msi_get_transform_record( const MSITABLEVIEW *tv, const string_table *st,
