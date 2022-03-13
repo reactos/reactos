@@ -62,6 +62,7 @@ extern int winetest_interactive;
 extern const char *winetest_platform;
 
 extern void winetest_set_location( const char* file, int line );
+extern void winetest_subtest(const char* name);
 extern void winetest_start_todo( int is_todo );
 extern int winetest_loop_todo(void);
 extern void winetest_end_todo(void);
@@ -141,11 +142,13 @@ extern void __winetest_cdecl winetest_print(const char* msg, ...);
 
 #endif /* __GNUC__ */
 
+#define subtest_(file, line)  (winetest_set_location(file, line), 0) ? (void)0 : winetest_subtest
 #define ok_(file, line)       (winetest_set_location(file, line), 0) ? (void)0 : winetest_ok
 #define skip_(file, line)     (winetest_set_location(file, line), 0) ? (void)0 : winetest_skip
 #define win_skip_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_win_skip
 #define trace_(file, line)    (winetest_set_location(file, line), 0) ? (void)0 : winetest_trace
 
+#define subtest  subtest_(__FILE__, __LINE__)
 #define ok       ok_(__FILE__, __LINE__)
 #define skip     skip_(__FILE__, __LINE__)
 #define win_skip win_skip_(__FILE__, __LINE__)
@@ -343,6 +346,13 @@ void winetest_set_location( const char* file, int line )
         data->current_file++;
 #endif
     data->current_line=line;
+}
+
+void winetest_subtest(const char* name)
+{
+    tls_data* data = get_tls_data();
+    printf(__winetest_file_line_prefix ": Subtest %s\n",
+        data->current_file, data->current_line, name);
 }
 
 int broken( int condition )
