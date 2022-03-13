@@ -9343,7 +9343,7 @@ static void test_viewfetch_wraparound(void)
             winetest_push_context( "Record #%d", i );
 
             r = MsiViewFetch( view, &rec );
-            todo_wine_if(tries > 0) ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+            ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
             if (r != ERROR_SUCCESS)
             {
                 winetest_pop_context();

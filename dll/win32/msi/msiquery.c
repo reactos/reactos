@@ -394,6 +394,11 @@ UINT MSI_ViewFetch(MSIQUERY *query, MSIRECORD **prec)
         (*prec)->cookie = (UINT64)(ULONG_PTR)query;
         MSI_RecordSetInteger(*prec, 0, 1);
     }
+    else if (r == ERROR_NO_MORE_ITEMS)
+    {
+        /* end of view; reset cursor to first row */
+        query->row = 0;
+    }
 
     return r;
 }
