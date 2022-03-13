@@ -870,17 +870,8 @@ UINT WINAPI MsiDatabaseImportW(MSIHANDLE handle, LPCWSTR szFolder, LPCWSTR szFil
 
     TRACE("%x %s %s\n",handle,debugstr_w(szFolder), debugstr_w(szFilename));
 
-    db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
-    if( !db )
-    {
-        MSIHANDLE remote_database = msi_get_remote( handle );
-        if ( !remote_database )
-            return ERROR_INVALID_HANDLE;
-
-        WARN("MsiDatabaseImport not allowed during a custom action!\n");
-
-        return ERROR_SUCCESS;
-    }
+    if (!(db = msihandle2msiinfo(handle, MSIHANDLETYPE_DATABASE)))
+        return ERROR_INVALID_HANDLE;
 
     r = MSI_DatabaseImport( db, szFolder, szFilename );
     msiobj_release( &db->hdr );

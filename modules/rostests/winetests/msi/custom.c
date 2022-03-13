@@ -1138,7 +1138,7 @@ static void test_invalid_functions(MSIHANDLE hinst)
     ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
     r = MsiDatabaseImportA(db, path, "bogus.idt");
-    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+    ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
     r = MsiDatabaseCommit(db);
     ok(hinst, r == ERROR_SUCCESS, "got %u\n", r);
