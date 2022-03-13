@@ -1747,11 +1747,11 @@ UINT WINAPI MsiGetPatchInfoExW(LPCWSTR szPatchCode, LPCWSTR szProductCode,
 
     r = ERROR_UNKNOWN_PATCH;
 
-    res = RegOpenKeyExW(udprod, szPatches, 0, KEY_WOW64_64KEY|KEY_READ, &patches);
+    res = RegOpenKeyExW(udprod, szPatches, 0, KEY_READ, &patches);
     if (res != ERROR_SUCCESS)
         goto done;
 
-    res = RegOpenKeyExW( patches, squashed_patch, 0, KEY_WOW64_64KEY|KEY_READ, &patch );
+    res = RegOpenKeyExW( patches, squashed_patch, 0, KEY_READ, &patch );
     if (res != ERROR_SUCCESS)
         goto done;
 
@@ -1761,7 +1761,7 @@ UINT WINAPI MsiGetPatchInfoExW(LPCWSTR szPatchCode, LPCWSTR szProductCode,
                                   &prod, FALSE) != ERROR_SUCCESS)
             goto done;
 
-        res = RegOpenKeyExW(prod, szPatches, 0, KEY_WOW64_64KEY|KEY_ALL_ACCESS, &prodpatches);
+        res = RegOpenKeyExW(prod, szPatches, 0, KEY_ALL_ACCESS, &prodpatches);
         if (res != ERROR_SUCCESS)
             goto done;
 
