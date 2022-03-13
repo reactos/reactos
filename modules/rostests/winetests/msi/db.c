@@ -3069,11 +3069,40 @@ static UINT package_from_db(MSIHANDLE hdb, MSIHANDLE *handle)
 
 static void test_try_transform(void)
 {
+    static const struct {
+        const char *table;
+        const char *column;
+        const char *row;
+        const char *data;
+        const char *current;
+    } transform_view[] = {
+        { "MOO", "OOO", "1", "c", "a" },
+        { "MOO", "COW", "", "5378", "3" },
+        { "MOO", "PIG", "", "5378", "4" },
+        { "MOO", "PIG", "1", "5", "" },
+        { "MOO", "DELETE", "3", "", "" },
+        { "BINARY", "BLOB", "1", "BINARY.1", "" },
+        { "BINARY", "INSERT", "1", "", "" },
+        { "AAR", "CREATE", "", "", "" },
+        { "AAR", "CAR", "", "15871", "1" },
+        { "AAR", "BAR", "", "1282", "2" },
+        { "AAR", "BAR", "vw", "1", "" },
+        { "AAR", "BAR", "bmw", "2", "" },
+        { "AAR", "INSERT", "vw", "", "" },
+        { "AAR", "INSERT", "bmw", "", "" },
+        { "Property", "CREATE", "", "", "" },
+        { "Property", "Property", "", "11592", "1" },
+        { "Property", "Value", "", "7424", "2" },
+        { "Property", "Value", "prop", "val", "" },
+        { "Property", "INSERT", "prop", "", "" }
+    };
+
     MSIHANDLE hdb, hview, hrec, hpkg = 0;
     LPCSTR query;
     UINT r;
     DWORD sz;
     char buffer[MAX_PATH];
+    int i, matched;
 
     DeleteFileA(msifile);
     DeleteFileA(mstfile);
@@ -3134,6 +3163,59 @@ static void test_try_transform(void)
 
     r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_DIRECT, &hdb );
     ok( r == ERROR_SUCCESS , "Failed to create database\n" );
+
+    r = MsiDatabaseApplyTransformA(hdb, mstfile, MSITRANSFORM_ERROR_VIEWTRANSFORM);
+    ok(r == ERROR_SUCCESS, "return code %d, should be ERROR_SUCCESS\n", r);
+
+    query = "select * from `_TransformView`";
+    r = MsiDatabaseOpenViewA(hdb, query, &hview);
+    ok(r == ERROR_SUCCESS, "MsiDatabaseOpenView failed\n");
+    r = MsiViewExecute(hview, 0);
+    ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
+
+    r = MsiViewGetColumnInfo(hview, MSICOLINFO_NAMES, &hrec);
+    ok(r == ERROR_SUCCESS, "error\n");
+    check_record(hrec, 5, "Table", "Column", "Row", "Data", "Current");
+    MsiCloseHandle(hrec);
+
+    r = MsiViewGetColumnInfo(hview, MSICOLINFO_TYPES, &hrec);
+    ok(r == ERROR_SUCCESS, "error\n");
+    check_record(hrec, 5, "g0", "g0", "G0", "G0", "G0");
+    MsiCloseHandle(hrec);
+
+    matched = 0;
+    while (MsiViewFetch(hview, &hrec) == ERROR_SUCCESS)
+    {
+        char data[5][256];
+
+        for (i = 1; i <= 5; i++) {
+            sz = ARRAY_SIZE(data[0]);
+            r = MsiRecordGetStringA(hrec, i, data[i-1], &sz);
+            ok(r == ERROR_SUCCESS, "%d) MsiRecordGetStringA failed %d\n", i, r);
+        }
+
+        for (i = 0; i < ARRAY_SIZE(transform_view); i++)
+        {
+            if (strcmp(data[0], transform_view[i].table) ||
+                    strcmp(data[1], transform_view[i].column) ||
+                    strcmp(data[2], transform_view[i].row))
+                continue;
+
+            matched++;
+            ok(!strcmp(data[3], transform_view[i].data), "%d) data[3] = %s\n", i, data[3]);
+            ok(!strcmp(data[4], transform_view[i].current), "%d) data[4] = %s\n", i, data[4]);
+            break;
+        }
+        ok(i != ARRAY_SIZE(transform_view), "invalid row: %s, %s, %s\n",
+                wine_dbgstr_a(data[0]), wine_dbgstr_a(data[1]), wine_dbgstr_a(data[2]));
+        MsiCloseHandle(hrec);
+    }
+    ok(matched == ARRAY_SIZE(transform_view), "matched = %d\n", matched);
+
+    r = MsiViewClose(hview);
+    ok(r == ERROR_SUCCESS, "MsiViewClose failed\n");
+    r = MsiCloseHandle(hview);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
     r = MsiDatabaseApplyTransformA( hdb, mstfile, 0 );
     ok( r == ERROR_SUCCESS, "return code %d, should be ERROR_SUCCESS\n", r );
