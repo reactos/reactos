@@ -51,6 +51,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
+BOOL is_wow64;
+
 static const WCHAR installerW[] = {'\\','I','n','s','t','a','l','l','e','r',0};
 
 UINT msi_locate_product(LPCWSTR szProduct, MSIINSTALLCONTEXT *context)

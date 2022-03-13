@@ -42,7 +42,7 @@
 #include "winemsi_s.h"
 
 static const BOOL is_64bit = sizeof(void *) > sizeof(int);
-BOOL is_wow64 DECLSPEC_HIDDEN;
+extern BOOL is_wow64 DECLSPEC_HIDDEN;
 
 #define MSI_DATASIZEMASK 0x00ff
 #define MSITYPE_VALID    0x0100
