@@ -225,6 +225,9 @@ BOOL detail_main(INT argc, LPWSTR *argv);
 
 /* diskpart.c */
 
+/* dump.c */
+BOOL dump_main(INT argc, LPWSTR *argv);
+
 /* expand.c */
 BOOL expand_main(INT argc, LPWSTR *argv);
 
@@ -257,6 +260,11 @@ VOID InterpretMain(VOID);
 
 /* list.c */
 BOOL list_main(INT argc, LPWSTR *argv);
+
+ULONGLONG
+RoundingDivide(
+   _In_ ULONGLONG Dividend,
+   _In_ ULONGLONG Divisor);
 
 /* merge.c */
 BOOL merge_main(INT argc, LPWSTR *argv);
