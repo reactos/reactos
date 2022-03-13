@@ -1431,6 +1431,19 @@ static void test_MsiQueryProductState(void)
     SetLastError(0xdeadbeef);
     state = MsiQueryProductStateA(prodcode);
     error = GetLastError();
+    if (state == INSTALLSTATE_ADVERTISED)
+    {
+        win_skip("broken result\n");
+        RegDeleteValueA(props, "WindowsInstaller");
+        delete_key(props, "", access & KEY_WOW64_64KEY);
+        RegCloseKey(props);
+        delete_key(localkey, "", access & KEY_WOW64_64KEY);
+        RegCloseKey(localkey);
+        RegDeleteKeyA(userkey, "");
+        RegCloseKey(userkey);
+        LocalFree(usersid);
+        return;
+    }
     ok(state == INSTALLSTATE_DEFAULT, "Expected INSTALLSTATE_DEFAULT, got %d\n", state);
     ok(error == ERROR_SUCCESS || broken(error == ERROR_NO_TOKEN) /* win2k */,
        "expected ERROR_SUCCESS, got %u\n", error);
@@ -1520,6 +1533,12 @@ static void test_MsiQueryProductState(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     state = MsiQueryProductStateA(prodcode);
@@ -2018,6 +2037,12 @@ static void test_MsiQueryFeatureState(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* feature key exists */
@@ -2972,6 +2997,12 @@ static void test_MsiGetComponentPath(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* local classes product key exists */
@@ -3317,6 +3348,12 @@ static void test_MsiGetComponentPathEx(void)
     lstrcatA( path_key, prod_squashed );
 
     res = RegCreateKeyExA( HKEY_LOCAL_MACHINE, path_key, 0, NULL, 0, access, NULL, &key_prod, NULL );
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok( res == ERROR_SUCCESS, "got %d\n", res );
 
     /* local classes product key exists */
@@ -3739,6 +3776,12 @@ static void test_MsiGetProductCode(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* local classes product key exists */
@@ -3834,6 +3877,12 @@ static void test_MsiGetProductCode(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* local classes product key exists */
@@ -4687,6 +4736,12 @@ static void test_MsiGetProductInfo(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* classes product key exists */
@@ -8015,6 +8070,12 @@ static void test_MsiGetProductInfoEx(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* local classes product key exists */
@@ -8894,6 +8955,12 @@ static void test_MsiGetUserInfo(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* product key exists */
@@ -9243,6 +9310,12 @@ static void test_MsiOpenProduct(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* managed product key exists */
@@ -12732,6 +12805,12 @@ static void test_MsiGetPatchInfoEx(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* local product key exists */
@@ -13063,6 +13142,12 @@ static void test_MsiEnumProducts(void)
     HKEY key1, key2, key3;
     REGSAM access = KEY_ALL_ACCESS;
 
+    if (is_process_limited())
+    {
+        skip( "process is limited\n" );
+        return;
+    }
+
     create_test_guid(product1, product_squashed1);
     create_test_guid(product2, product_squashed2);
     create_test_guid(product3, product_squashed3);
@@ -13089,6 +13174,12 @@ static void test_MsiEnumProducts(void)
     strcat(keypath1, product_squashed1);
 
     r = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath1, 0, NULL, 0, access, NULL, &key1, NULL);
+    if (r == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     strcpy(keypath3, "Software\\Microsoft\\Installer\\Products\\");
@@ -13118,9 +13209,9 @@ static void test_MsiEnumProducts(void)
         if (!strcmp(product1, guid)) found1 = TRUE;
         if (!strcmp(product2, guid)) found2 = TRUE;
         if (!strcmp(product3, guid)) found3 = TRUE;
+        if (found1 && found2 && found3) break;
         index++;
     }
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %u\n", r);
     ok(found1, "product1 not found\n");
     ok(found2, "product2 not found\n");
     ros_skip_flaky
@@ -13189,6 +13280,7 @@ static void test_MsiEnumProductsEx(void)
     HKEY key1 = NULL, key2 = NULL, key3 = NULL;
     REGSAM access = KEY_ALL_ACCESS;
     char *usersid = get_user_sid();
+    BOOL found1, found2, found3;
 
     if (!pMsiEnumProductsExA)
     {
@@ -13220,6 +13312,11 @@ static void test_MsiEnumProductsEx(void)
     strcat( keypath1, product_squashed1 );
 
     r = RegCreateKeyExA( HKEY_LOCAL_MACHINE, keypath1, 0, NULL, 0, access, NULL, &key1, NULL );
+    if (r == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        goto done;
+    }
     ok( r == ERROR_SUCCESS, "got %u\n", r );
 
     strcpy( keypath3, usersid );
@@ -13304,6 +13401,7 @@ static void test_MsiEnumProductsEx(void)
     context = 0xdeadbeef;
     sid[0] = 0;
     len = sizeof(sid);
+    found1 = found2 = found3 = FALSE;
     while (!pMsiEnumProductsExA( NULL, "S-1-1-0", MSIINSTALLCONTEXT_ALL, index, guid, &context, sid, &len ))
     {
         if (!strcmp( product1, guid ))
@@ -13311,32 +13409,32 @@ static void test_MsiEnumProductsEx(void)
             ok( context == MSIINSTALLCONTEXT_MACHINE, "got %u\n", context );
             ok( !sid[0], "got \"%s\"\n", sid );
             ok( !len, "unexpected length %u\n", len );
+            found1 = TRUE;
         }
-        else if (!strcmp( product2, guid ))
+        if (!strcmp( product2, guid ))
         {
             ok( context == MSIINSTALLCONTEXT_USERMANAGED, "got %u\n", context );
             ok( sid[0], "empty sid\n" );
             ok( len == strlen(sid), "unexpected length %u\n", len );
+            found2 = TRUE;
         }
-        else if (!strcmp( product3, guid ))
+        if (!strcmp( product3, guid ))
         {
             ok( context == MSIINSTALLCONTEXT_USERUNMANAGED, "got %u\n", context );
             ok( sid[0], "empty sid\n" );
             ok( len == strlen(sid), "unexpected length %u\n", len );
+            found3 = TRUE;
         }
-        else
-        {
-            trace("Unexpected guid: %s (have %s | %s | %s)\n", guid, product1, product2, product3);
-            ok(context != MSIINSTALLCONTEXT_NONE, "got %u\n", context);
-            ok(sid[0], "empty sid\n");
-            ok(len == strlen(sid), "unexpected length %u\n", len);
-        }
+        if (found1 && found2 && found3) break;
         index++;
         guid[0] = 0;
         context = 0xdeadbeef;
         sid[0] = 0;
         len = sizeof(sid);
     }
+    ok(found1, "product1 not found\n");
+    ok(found2, "product2 not found\n");
+    ok(found3, "product3 not found\n");
 
 done:
     delete_key( key1, "", access );
@@ -13359,6 +13457,12 @@ static void test_MsiEnumComponents(void)
     REGSAM access = KEY_ALL_ACCESS;
     char *usersid = get_user_sid();
     HKEY key1 = NULL, key2 = NULL;
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
 
     create_test_guid( comp1, comp_squashed1 );
     create_test_guid( comp2, comp_squashed2 );
@@ -13400,6 +13504,7 @@ static void test_MsiEnumComponents(void)
         if (!strcmp( guid, comp1 )) found1 = TRUE;
         if (!strcmp( guid, comp2 )) found2 = TRUE;
         ok( guid[0], "empty guid\n" );
+        if (found1 && found2) break;
         guid[0] = 0;
         index++;
     }
@@ -13432,6 +13537,12 @@ static void test_MsiEnumComponentsEx(void)
         win_skip( "MsiEnumComponentsExA not implemented\n" );
         return;
     }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+
     create_test_guid( comp1, comp_squashed1 );
     create_test_guid( comp2, comp_squashed2 );
 

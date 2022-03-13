@@ -31,6 +31,7 @@
 #include <objbase.h>
 
 #include "wine/test.h"
+#include "utils.h"
 
 static BOOL is_wow64;
 
@@ -684,6 +685,11 @@ static void test_MsiSourceListAddSourceEx(void)
     if (!pMsiSourceListAddSourceExA)
     {
         win_skip("Skipping MsiSourceListAddSourceExA tests\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
@@ -1695,6 +1701,11 @@ static void test_MsiSourceListSetInfo(void)
         win_skip("MsiSourceListSetInfoA is not available\n");
         return;
     }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
 
     create_test_guid(prodcode, prod_squashed);
     if (!(usersid = get_user_sid()))
@@ -2124,6 +2135,11 @@ static void test_MsiSourceListAddMediaDisk(void)
     if (!pMsiSourceListAddMediaDiskA)
     {
         win_skip("MsiSourceListAddMediaDiskA is not available\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
@@ -3275,6 +3291,11 @@ static void test_MsiSourceListAddSource(void)
     if (!pMsiSourceListAddSourceA)
     {
         win_skip("Skipping MsiSourceListAddSourceA tests\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
