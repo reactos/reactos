@@ -700,6 +700,19 @@ static const CHAR ca1_test_seq_dat[] = "Action\tCondition\tSequence\n"
                                        "nested1\t\t1\n"
                                        "nested51\t\t2\n";
 
+static const CHAR ca1_test2_dat[] =
+    "A\tB\n"
+    "i2\ti2\n"
+    "test2\tA\n"
+    "1\t2\n";
+
+static const CHAR ca1__validation_dat[] =
+    "Table\tColumn\tNullable\tMinValue\tMaxValue\tKeyTable\tKeyColumn\tCategory\tSet\tDescription\n"
+    "s32\ts32\ts4\tI4\tI4\tS255\tI2\tS32\tS255\tS255\n"
+    "_Validation\tTable\tColumn\n"
+    "test2\tA\tN\t\t\t\t\t\t\t\n"
+    "test2\tB\tN\t\t\t\t\t\t\t\n";
+
 static const CHAR ca51_component_dat[] = "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
                                          "s72\tS38\ts72\ti2\tS255\tS72\n"
                                          "Component\tComponent\n"
@@ -1714,6 +1727,8 @@ static const msi_table ca1_tables[] =
     ADD_TABLE(ca1_install_exec_seq),
     ADD_TABLE(ca1_custom_action),
     ADD_TABLE(ca1_test_seq),
+    ADD_TABLE(ca1_test2),
+    ADD_TABLE(ca1__validation),
 };
 
 static const msi_table ca51_tables[] =

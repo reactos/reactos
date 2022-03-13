@@ -778,9 +778,35 @@ MSIDBERROR WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR buffer, LPDWORD buf
     if (!buflen)
         return MSIDBERROR_INVALIDARG;
 
-    query = msihandle2msiinfo( handle, MSIHANDLETYPE_VIEW );
-    if( !query )
-        return MSIDBERROR_INVALIDARG;
+    if (!(query = msihandle2msiinfo(handle, MSIHANDLETYPE_VIEW)))
+    {
+        WCHAR *remote_column = NULL;
+        MSIHANDLE remote;
+
+        if (!(remote = msi_get_remote(handle)))
+            return MSIDBERROR_INVALIDARG;
+
+        if (!*buflen)
+            return MSIDBERROR_FUNCTIONERROR;
+
+        __TRY
+        {
+            r = remote_ViewGetError(remote, &remote_column);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY;
+
+        if (msi_strncpyW(remote_column ? remote_column : szEmpty, -1, buffer, buflen) == ERROR_MORE_DATA)
+            r = MSIDBERROR_MOREDATA;
+
+        if (remote_column)
+            midl_user_free(remote_column);
+
+        return r;
+    }
 
     if ((r = query->view->error)) column = query->view->error_column;
     else column = szEmpty;
@@ -803,9 +829,35 @@ MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR buffer, LPDWORD bufl
     if (!buflen)
         return MSIDBERROR_INVALIDARG;
 
-    query = msihandle2msiinfo( handle, MSIHANDLETYPE_VIEW );
-    if (!query)
-        return MSIDBERROR_INVALIDARG;
+    if (!(query = msihandle2msiinfo(handle, MSIHANDLETYPE_VIEW)))
+    {
+        WCHAR *remote_column = NULL;
+        MSIHANDLE remote;
+
+        if (!(remote = msi_get_remote(handle)))
+            return MSIDBERROR_INVALIDARG;
+
+        if (!*buflen)
+            return MSIDBERROR_FUNCTIONERROR;
+
+        __TRY
+        {
+            r = remote_ViewGetError(remote, &remote_column);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            r = GetExceptionCode();
+        }
+        __ENDTRY;
+
+        if (msi_strncpyWtoA(remote_column ? remote_column : szEmpty, -1, buffer, buflen, FALSE) == ERROR_MORE_DATA)
+            r = MSIDBERROR_MOREDATA;
+
+        if (remote_column)
+            midl_user_free(remote_column);
+
+        return r;
+    }
 
     if ((r = query->view->error)) column = query->view->error_column;
     else column = szEmpty;
@@ -1196,6 +1248,22 @@ UINT __cdecl s_remote_ViewGetColumnInfo(MSIHANDLE view, MSICOLINFO info, struct 
     if (!r)
         *rec = marshal_record(handle);
     MsiCloseHandle(handle);
+    return r;
+}
+
+MSIDBERROR __cdecl s_remote_ViewGetError(MSIHANDLE view, LPWSTR *column)
+{
+    WCHAR empty[1];
+    DWORD size = 1;
+    UINT r;
+
+    r = MsiViewGetErrorW(view, empty, &size);
+    if (r == MSIDBERROR_MOREDATA)
+    {
+        if (!(*column = midl_user_allocate(++size * sizeof(WCHAR))))
+            return MSIDBERROR_FUNCTIONERROR;
+        r = MsiViewGetErrorW(view, *column, &size);
+    }
     return r;
 }
 

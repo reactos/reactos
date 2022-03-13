@@ -32,6 +32,7 @@ typedef int INSTALLSTATE;
 typedef int MSICOLINFO;
 typedef int MSIMODIFY;
 typedef int MSICOSTTREE;
+typedef int MSIDBERROR;
 
 #define MSIFIELD_NULL   0
 #define MSIFIELD_INT    1
@@ -68,6 +69,7 @@ interface IWineMsiRemote
     UINT remote_ViewExecute( [in] MSIHANDLE view, [in, unique] struct wire_record *record );
     UINT remote_ViewFetch( [in] MSIHANDLE view, [out] struct wire_record **record );
     UINT remote_ViewGetColumnInfo( [in] MSIHANDLE view, [in] MSICOLINFO info, [out] struct wire_record **record );
+    MSIDBERROR remote_ViewGetError( [in] MSIHANDLE view, [out, string] LPWSTR *column );
     UINT remote_ViewModify( [in] MSIHANDLE view, [in] MSIMODIFY mode,
         [in] struct wire_record *record, [out] struct wire_record **refreshed );
 
