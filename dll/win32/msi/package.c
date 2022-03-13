@@ -541,7 +541,7 @@ static LPWSTR get_fusion_filename(MSIPACKAGE *package)
             if (!(filename = msi_alloc(len * sizeof(WCHAR)))) return NULL;
 
             lstrcpyW(filename, path);
-            lstrcpyW(filename, L"\\");
+            lstrcatW(filename, L"\\");
             lstrcatW(filename, L"fusion.dll");
             if (GetFileAttributesW(filename) != INVALID_FILE_ATTRIBUTES)
             {
