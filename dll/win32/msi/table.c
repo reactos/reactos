@@ -2336,7 +2336,7 @@ static UINT TransformView_fetch_stream( MSIVIEW *view, UINT row, UINT col, IStre
 static UINT TransformView_set_row( MSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
 {
     static const WCHAR query_pfx[] =
-        L"INSERT INTO `_TransformView` (`Table`, `Column`, `Row`, `Data`, `Current`) VALUES ('";
+        L"INSERT INTO `_TransformView` (`new`, `Table`, `Column`, `Row`, `Data`, `Current`) VALUES (1, '";
 
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     WCHAR buf[256], *query;
@@ -2372,7 +2372,7 @@ static UINT TransformView_set_row( MSIVIEW *view, UINT row, MSIRECORD *rec, UINT
         if (tv->columns[i].type & MSITYPE_KEY)
             continue;
 
-        qlen = p = wcslen( query_pfx );
+        qlen = p = ARRAY_SIZE( query_pfx ) - 1;
         qlen += wcslen( tv->name ) + 3; /* strlen("','") */
         qlen += wcslen( tv->columns[i].colname ) + 3;
         qlen += wcslen( key ) + 3;
@@ -2481,7 +2481,7 @@ static UINT TransformView_set_row( MSIVIEW *view, UINT row, MSIRECORD *rec, UINT
 static UINT TransformView_create_table( MSITABLEVIEW *tv, MSIRECORD *rec )
 {
     static const WCHAR query_fmt[] =
-        L"INSERT INTO `_TransformView` (`Table`, `Column`) VALUES ('%s', 'CREATE')";
+        L"INSERT INTO `_TransformView` (`Table`, `Column`, `new`) VALUES ('%s', 'CREATE', 1)";
 
     WCHAR buf[256], *query = buf;
     const WCHAR *name;
@@ -2516,7 +2516,7 @@ static UINT TransformView_create_table( MSITABLEVIEW *tv, MSIRECORD *rec )
 static UINT TransformView_add_column( MSITABLEVIEW *tv, MSIRECORD *rec )
 {
     static const WCHAR query_pfx[] =
-        L"INSERT INTO `_TransformView` (`Table`, `Current`, `Column`, `Data`) VALUES ('";
+        L"INSERT INTO `_TransformView` (`new`, `Table`, `Current`, `Column`, `Data`) VALUES (1, '";
 
     WCHAR buf[256], *query = buf;
     UINT i, p, len, r, qlen;
@@ -2569,7 +2569,7 @@ static UINT TransformView_add_column( MSITABLEVIEW *tv, MSIRECORD *rec )
 static UINT TransformView_insert_row( MSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary )
 {
     static const WCHAR query_fmt[] =
-        L"INSERT INTO `_TransformView` (`Table`, `Column`, `Row`) VALUES ('%s', 'INSERT', '%s')";
+        L"INSERT INTO `_TransformView` (`new`, `Table`, `Column`, `Row`) VALUES (1, '%s', 'INSERT', '%s')";
 
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     WCHAR buf[256], *query = buf;
@@ -2617,7 +2617,7 @@ static UINT TransformView_insert_row( MSIVIEW *view, MSIRECORD *rec, UINT row, B
 
 static UINT TransformView_drop_table( MSITABLEVIEW *tv, UINT row )
 {
-    static const WCHAR query_pfx[] = L"INSERT INTO `_TransformView` ( `Table`, `Column` ) VALUES ( '";
+    static const WCHAR query_pfx[] = L"INSERT INTO `_TransformView` ( `new`, `Table`, `Column` ) VALUES ( 1, '";
     static const WCHAR query_sfx[] = L"', 'DROP' )";
 
     WCHAR buf[256], *query = buf;
@@ -2661,7 +2661,7 @@ static UINT TransformView_drop_table( MSITABLEVIEW *tv, UINT row )
 
 static UINT TransformView_delete_row( MSIVIEW *view, UINT row )
 {
-    static const WCHAR query_pfx[] = L"INSERT INTO `_TransformView` ( `Table`, `Column`, `Row`) VALUES ( '";
+    static const WCHAR query_pfx[] = L"INSERT INTO `_TransformView` ( `new`, `Table`, `Column`, `Row`) VALUES ( 1, '";
     static const WCHAR query_column[] = L"', 'DELETE', '";
     static const WCHAR query_sfx[] = L"')";
 
@@ -2780,7 +2780,7 @@ static const MSIVIEWOPS transform_view_ops =
 UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR name, MSIVIEW **view )
 {
     static const WCHAR query_pfx[] = L"SELECT `Column`, `Data`, `Current` FROM `_TransformView` WHERE `Table`='";
-    static const WCHAR query_sfx[] = L"' AND `Row` IS NULL AND `Current` IS NOT NULL";
+    static const WCHAR query_sfx[] = L"' AND `Row` IS NULL AND `Current` IS NOT NULL AND `new` = 1";
 
     WCHAR buf[256], *query = buf;
     UINT r, len, name_len, size, add_col;
@@ -3392,7 +3392,7 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg, int err_cond )
     UINT ret = ERROR_FUNCTION_FAILED;
     UINT bytes_per_strref;
     BOOL property_update = FALSE;
-    BOOL free_transform_view = FALSE;
+    MSIVIEW *transform_view = NULL;
 
     TRACE("%p %p\n", db, stg );
 
@@ -3472,11 +3472,19 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg, int err_cond )
         if (r == ERROR_SUCCESS)
             MSI_ViewClose( query );
         msiobj_release( &query->hdr );
+        if (r != ERROR_BAD_QUERY_SYNTAX && r != ERROR_SUCCESS)
+            goto end;
+
+        if (TABLE_CreateView(db, L"_TransformView", &transform_view) != ERROR_SUCCESS)
+            goto end;
+
         if (r == ERROR_BAD_QUERY_SYNTAX)
-            FIXME( "support adding to _TransformView\n" );
+            transform_view->ops->add_ref( transform_view );
+
+        r = transform_view->ops->add_column( transform_view, L"new",
+                MSITYPE_TEMPORARY | MSITYPE_NULLABLE | 0x402 /* INT */, FALSE );
         if (r != ERROR_SUCCESS)
             goto end;
-        free_transform_view = TRUE;
     }
 
     /*
@@ -3520,16 +3528,16 @@ end:
         IEnumSTATSTG_Release( stgenum );
     if ( strings )
         msi_destroy_stringtable( strings );
-    if (ret != ERROR_SUCCESS && free_transform_view)
+    if (transform_view)
     {
-        MSIQUERY *query;
-        if (MSI_DatabaseOpenViewW( db, L"ALTER TABLE `_TransformView` FREE",
-                    &query ) == ERROR_SUCCESS)
-        {
-            if (MSI_ViewExecute( query, NULL ) == ERROR_SUCCESS)
-                MSI_ViewClose( query );
-            msiobj_release( &query->hdr );
-        }
+        struct tagMSITABLE *table = ((MSITABLEVIEW*)transform_view)->table;
+
+        if (ret != ERROR_SUCCESS)
+            transform_view->ops->release( transform_view );
+
+        if (!wcscmp(table->colinfo[table->col_count - 1].colname, L"new"))
+            TABLE_remove_column( transform_view, table->colinfo[table->col_count - 1].number );
+        transform_view->ops->delete( transform_view );
     }
 
     return ret;
