@@ -164,11 +164,6 @@ static const WCHAR szUninstall[] = {
     'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
     'U','n','i','n','s','t','a','l','l','\\',0};
 
-static const WCHAR szUninstall_32node[] = {
-    'S','o','f','t','w','a','r','e','\\','W','o','w','6','4','3','2','N','o','d','e','\\',
-    'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
-    'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','U','n','i','n','s','t','a','l','l','\\',0};
-
 static const WCHAR szUserComponents[] = {
     'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
     'I','n','s','t','a','l','l','e','r','\\','C','o','m','p','o','n','e','n','t','s','\\',0};
@@ -452,41 +447,38 @@ static WCHAR *get_user_sid(void)
 
 UINT MSIREG_OpenUninstallKey(const WCHAR *product, enum platform platform, HKEY *key, BOOL create)
 {
+    REGSAM access = KEY_ALL_ACCESS;
     WCHAR keypath[0x200];
 
     TRACE("%s\n", debugstr_w(product));
 
-    if (is_64bit && platform == PLATFORM_INTEL)
-    {
-        strcpyW(keypath, szUninstall_32node);
-        strcatW(keypath, product);
-    }
+    if (platform == PLATFORM_INTEL)
+        access |= KEY_WOW64_32KEY;
     else
-    {
-        strcpyW(keypath, szUninstall);
-        strcatW(keypath, product);
-    }
-    if (create) return RegCreateKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, KEY_ALL_ACCESS, NULL, key, NULL);
-    return RegOpenKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, KEY_ALL_ACCESS, key);
+        access |= KEY_WOW64_64KEY;
+    strcpyW(keypath, szUninstall);
+    strcatW(keypath, product);
+    if (create) return RegCreateKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, key, NULL);
+    return RegOpenKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, access, key);
 }
 
 UINT MSIREG_DeleteUninstallKey(const WCHAR *product, enum platform platform)
 {
-    WCHAR keypath[0x200];
+    REGSAM access = KEY_ALL_ACCESS;
+    HKEY parent;
+    LONG r;
 
     TRACE("%s\n", debugstr_w(product));
 
-    if (is_64bit && platform == PLATFORM_INTEL)
-    {
-        strcpyW(keypath, szUninstall_32node);
-        strcatW(keypath, product);
-    }
+    if (platform == PLATFORM_INTEL)
+        access |= KEY_WOW64_32KEY;
     else
-    {
-        strcpyW(keypath, szUninstall);
-        strcatW(keypath, product);
-    }
-    return RegDeleteTreeW(HKEY_LOCAL_MACHINE, keypath);
+        access |= KEY_WOW64_64KEY;
+    if ((r = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szUninstall, 0, access, &parent)))
+        return r;
+    r = RegDeleteTreeW(parent, product);
+    RegCloseKey(parent);
+    return r;
 }
 
 UINT MSIREG_OpenProductKey(LPCWSTR szProduct, LPCWSTR szUserSid, MSIINSTALLCONTEXT context, HKEY *key, BOOL create)

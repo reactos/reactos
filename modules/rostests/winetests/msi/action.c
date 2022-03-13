@@ -444,8 +444,8 @@ static const char pp_install_exec_seq_dat[] =
     "ru_immediate\tREGISTER_USER AND ALLUSERS\t6001\n"
     "ru_deferred\tREGISTER_USER AND ALLUSERS\t6002\n"
     "RegisterProduct\tREGISTER_PRODUCT=1 Or FULL=1\t6100\n"
-    "rp_immediate\tREGISTER_PRODUCT AND ALLUSERS\t6101\n"
-    "rp_deferred\tREGISTER_PRODUCT AND ALLUSERS\t6102\n"
+    "rp_immediate\tREGISTER_PRODUCT AND ALLUSERS AND NOT RP_TEST64\t6101\n"
+    "rp_deferred\tREGISTER_PRODUCT AND ALLUSERS AND NOT RP_TEST64\t6102\n"
     "PublishFeatures\tPUBLISH_FEATURES=1 Or FULL=1\t6300\n"
     "pf_immediate\tPUBLISH_FEATURES AND ALLUSERS\t6301\n"
     "pf_deferred\tPUBLISH_FEATURES AND ALLUSERS\t6302\n"
@@ -2879,6 +2879,123 @@ todo_wine
     res = RegDeleteKeyA(hkey, "");
     ok(!res, "got %d\n", res);
     RegCloseKey(hkey);
+
+    if (is_wow64 || is_64bit)
+    {
+        DeleteFileA(msifile);
+        create_database_template(msifile, pp_tables, ARRAY_SIZE(pp_tables), 200, "x64;1033");
+
+        r = MsiInstallProductA(msifile, "REGISTER_PRODUCT=1 ALLUSERS=1 RP_TEST64=1");
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+        ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
+        ok(delete_pf("msitest", FALSE), "Directory not created\n");
+
+        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, userugkey, 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
+        ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
+
+        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, uninstall, 0, KEY_READ | KEY_WOW64_32KEY, &hkey);
+        ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, uninstall, 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        CHECK_DEL_REG_STR(hkey, "DisplayName", "MSITEST");
+        CHECK_DEL_REG_STR(hkey, "DisplayVersion", "1.1.1");
+        CHECK_DEL_REG_STR(hkey, "InstallDate", date);
+        CHECK_DEL_REG_STR(hkey, "InstallSource", temp);
+        CHECK_DEL_REG_ISTR(hkey, "ModifyPath", "MsiExec.exe /X{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}");
+        CHECK_DEL_REG_STR(hkey, "Publisher", "Wine");
+        CHECK_DEL_REG_STR(hkey, "UninstallString", "MsiExec.exe /X{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}");
+        CHECK_DEL_REG_STR(hkey, "AuthorizedCDFPrefix", NULL);
+        CHECK_DEL_REG_STR(hkey, "Comments", NULL);
+        CHECK_DEL_REG_STR(hkey, "Contact", NULL);
+        CHECK_DEL_REG_STR(hkey, "HelpLink", NULL);
+        CHECK_DEL_REG_STR(hkey, "HelpTelephone", NULL);
+        CHECK_DEL_REG_STR(hkey, "InstallLocation", NULL);
+        CHECK_DEL_REG_DWORD(hkey, "NoModify", 1);
+        CHECK_DEL_REG_STR(hkey, "Readme", NULL);
+        CHECK_DEL_REG_STR(hkey, "Size", NULL);
+        CHECK_DEL_REG_STR(hkey, "URLInfoAbout", NULL);
+        CHECK_DEL_REG_STR(hkey, "URLUpdateInfo", NULL);
+        CHECK_DEL_REG_DWORD(hkey, "Language", 1033);
+        CHECK_DEL_REG_DWORD(hkey, "Version", 0x1010001);
+        CHECK_DEL_REG_DWORD(hkey, "VersionMajor", 1);
+        CHECK_DEL_REG_DWORD(hkey, "VersionMinor", 1);
+        CHECK_DEL_REG_DWORD(hkey, "WindowsInstaller", 1);
+        todo_wine
+        CHECK_DEL_REG_DWORD(hkey, "EstimatedSize", get_estimated_size());
+
+        res = RegDeleteKeyA(hkey, "");
+        ok(!res, "got %d\n", res);
+        RegCloseKey(hkey);
+
+        sprintf(keypath, userdata, "S-1-5-18");
+        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = RegOpenKeyExA(hkey, "InstallProperties", 0, KEY_READ, &props);
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        size = sizeof(path);
+        RegQueryValueExA(props, "LocalPackage", NULL, &type, (LPBYTE)path, &size);
+        DeleteFileA(path);
+        RegDeleteValueA(props, "LocalPackage"); /* LocalPackage is nondeterministic */
+
+        CHECK_DEL_REG_STR(props, "DisplayName", "MSITEST");
+        CHECK_DEL_REG_STR(props, "DisplayVersion", "1.1.1");
+        CHECK_DEL_REG_STR(props, "InstallDate", date);
+        CHECK_DEL_REG_STR(props, "InstallSource", temp);
+        CHECK_DEL_REG_ISTR(props, "ModifyPath", "MsiExec.exe /X{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}");
+        CHECK_DEL_REG_STR(props, "Publisher", "Wine");
+        CHECK_DEL_REG_STR(props, "UninstallString", "MsiExec.exe /X{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}");
+        CHECK_DEL_REG_STR(props, "AuthorizedCDFPrefix", NULL);
+        CHECK_DEL_REG_STR(props, "Comments", NULL);
+        CHECK_DEL_REG_STR(props, "Contact", NULL);
+        CHECK_DEL_REG_STR(props, "HelpLink", NULL);
+        CHECK_DEL_REG_STR(props, "HelpTelephone", NULL);
+        CHECK_DEL_REG_STR(props, "InstallLocation", NULL);
+        CHECK_DEL_REG_DWORD(props, "NoModify", 1);
+        CHECK_DEL_REG_STR(props, "Readme", NULL);
+        CHECK_DEL_REG_STR(props, "Size", NULL);
+        CHECK_DEL_REG_STR(props, "URLInfoAbout", NULL);
+        CHECK_DEL_REG_STR(props, "URLUpdateInfo", NULL);
+        CHECK_DEL_REG_DWORD(props, "Language", 1033);
+        CHECK_DEL_REG_DWORD(props, "Version", 0x1010001);
+        CHECK_DEL_REG_DWORD(props, "VersionMajor", 1);
+        CHECK_DEL_REG_DWORD(props, "VersionMinor", 1);
+        CHECK_DEL_REG_DWORD(props, "WindowsInstaller", 1);
+        todo_wine
+        CHECK_DEL_REG_DWORD(props, "EstimatedSize", get_estimated_size());
+
+        res = RegDeleteKeyA(props, "");
+        ok(!res, "got %d\n", res);
+        RegCloseKey(props);
+
+        res = RegOpenKeyExA(hkey, "Usage", 0, KEY_READ, &usage);
+        todo_wine
+        {
+            ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+        }
+
+        res = RegDeleteKeyA(usage, "");
+    todo_wine
+        ok(!res, "got %d\n", res);
+        RegCloseKey(usage);
+        res = RegDeleteKeyA(hkey, "");
+        ok(!res, "got %d\n", res);
+        RegCloseKey(hkey);
+
+        res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ugkey, 0, KEY_READ | KEY_WOW64_64KEY, &hkey);
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        CHECK_DEL_REG_STR(hkey, "84A88FD7F6998CE40A22FB59F6B9C2BB", NULL);
+
+        res = RegDeleteKeyA(hkey, "");
+        ok(!res, "got %d\n", res);
+        RegCloseKey(hkey);
+    }
+    else
+        skip("64-bit RegisterProduct tests\n");
 
 error:
     DeleteFileA(msifile);
