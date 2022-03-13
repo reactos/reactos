@@ -1230,10 +1230,9 @@ static UINT load_file(MSIRECORD *row, LPVOID param)
      */
     if (package->WordCount & msidbSumInfoSourceTypeAdminImage)
     {
-        file->IsCompressed = FALSE;
+        file->IsCompressed = package->WordCount & msidbSumInfoSourceTypeCompressed;
     }
-    else if (file->Attributes &
-             (msidbFileAttributesCompressed | msidbFileAttributesPatchAdded))
+    else if (file->Attributes & (msidbFileAttributesCompressed | msidbFileAttributesPatchAdded))
     {
         file->IsCompressed = TRUE;
     }
@@ -1241,10 +1240,7 @@ static UINT load_file(MSIRECORD *row, LPVOID param)
     {
         file->IsCompressed = FALSE;
     }
-    else
-    {
-        file->IsCompressed = package->WordCount & msidbSumInfoSourceTypeCompressed;
-    }
+    else file->IsCompressed = package->WordCount & msidbSumInfoSourceTypeCompressed;
 
     load_file_hash(package, file);
     load_file_disk_id(package, file);
