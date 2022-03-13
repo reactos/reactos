@@ -216,19 +216,3 @@ HRESULT WINAPI DllCanUnloadNow(void)
 {
     return dll_count == 0 ? S_OK : S_FALSE;
 }
-
-/***********************************************************************
- *  DllRegisterServer (MSI.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( msi_hInstance );
-}
-
-/***********************************************************************
- *  DllUnregisterServer (MSI.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( msi_hInstance );
-}

@@ -84,7 +84,7 @@ add_idl_headers(msi_idlheader msiserver.idl winemsi.idl)
 add_typelib(msiserver.idl winemsi.idl)
 set_source_files_properties(msi.rc PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/msiserver.tlb;${CMAKE_CURRENT_BINARY_DIR}/winemsi.tlb")
 set_module_type(msi win32dll)
-target_link_libraries(msi uuid ${PSEH_LIB} wine oldnames)
+target_link_libraries(msi uuid ${PSEH_LIB} wine_dll_register oldnames)
 add_dependencies(msi msi_idlheader)
 add_delay_importlibs(msi odbccp32 crypt32 wintrust)
 add_importlibs(msi advapi32 advapi32_vista cabinet comctl32 gdi32 ole32 oleaut32 shell32 shlwapi rpcrt4 urlmon user32 version wininet sxs
