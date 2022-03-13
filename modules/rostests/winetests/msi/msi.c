@@ -827,7 +827,7 @@ static UINT set_summary_info(MSIHANDLE hdb, LPSTR prodcode)
 static MSIHANDLE create_package_db(LPSTR prodcode)
 {
     MSIHANDLE hdb = 0;
-    CHAR query[MAX_PATH];
+    CHAR query[MAX_PATH + 72];
     UINT res;
 
     DeleteFileA(msifile);

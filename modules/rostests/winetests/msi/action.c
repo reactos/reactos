@@ -4626,7 +4626,7 @@ error:
 static void test_move_files(void)
 {
     UINT r;
-    char props[MAX_PATH];
+    char props[4 * MAX_PATH + 74];
 
     if (is_process_limited())
     {

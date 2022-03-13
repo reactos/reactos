@@ -269,7 +269,7 @@ static void set_component_path(LPCSTR filename, MSIINSTALLCONTEXT context,
     WCHAR guidW[MAX_PATH];
     WCHAR squashedW[MAX_PATH];
     CHAR squashed[MAX_PATH];
-    CHAR comppath[MAX_PATH];
+    CHAR comppath[MAX_PATH + 81];
     CHAR prodpath[MAX_PATH];
     CHAR path[MAX_PATH];
     LPCSTR prod = NULL;
@@ -335,7 +335,7 @@ static void delete_component_path(LPCSTR guid, MSIINSTALLCONTEXT context, LPSTR 
     WCHAR squashedW[MAX_PATH];
     WCHAR substrW[MAX_PATH];
     CHAR squashed[MAX_PATH];
-    CHAR comppath[MAX_PATH];
+    CHAR comppath[MAX_PATH + 81];
     CHAR prodpath[MAX_PATH];
     REGSAM access = KEY_ALL_ACCESS;
 
@@ -1223,7 +1223,7 @@ static void query_file_path(MSIHANDLE hpkg, LPCSTR file, LPSTR buff)
 
 static void test_settargetpath(void)
 {
-    char tempdir[MAX_PATH+8], buffer[MAX_PATH], file[MAX_PATH];
+    char tempdir[MAX_PATH+8], buffer[MAX_PATH], file[MAX_PATH + 20];
     DWORD sz;
     MSIHANDLE hpkg;
     UINT r;
@@ -2759,9 +2759,9 @@ static void test_formatrecord2(void)
 static void test_formatrecord_tables(void)
 {
     MSIHANDLE hdb, hrec, hpkg = 0;
-    CHAR buf[MAX_PATH];
+    CHAR buf[MAX_PATH + 41];
     CHAR curr_dir[MAX_PATH];
-    CHAR expected[MAX_PATH];
+    CHAR expected[MAX_PATH + 45];
     CHAR root[MAX_PATH];
     DWORD size;
     UINT r;
@@ -4142,7 +4142,7 @@ done:
 static void test_appsearch_complocator(void)
 {
     MSIHANDLE hpkg, hdb;
-    char path[MAX_PATH], expected[MAX_PATH], prop[MAX_PATH];
+    char path[MAX_PATH + 15], expected[MAX_PATH], prop[MAX_PATH];
     LPSTR usersid;
     DWORD size;
     UINT r;
@@ -4391,7 +4391,7 @@ error:
 static void test_appsearch_reglocator(void)
 {
     MSIHANDLE hpkg, hdb;
-    char path[MAX_PATH], expected[MAX_PATH], prop[MAX_PATH];
+    char path[MAX_PATH + 20], expected[MAX_PATH], prop[MAX_PATH];
     DWORD binary[2], size, val;
     BOOL space, version, is_64bit = sizeof(void *) > sizeof(int);
     HKEY hklm, classes, hkcu, users;
@@ -4973,7 +4973,7 @@ static void delete_win_ini(LPCSTR file)
 static void test_appsearch_inilocator(void)
 {
     MSIHANDLE hpkg, hdb;
-    char path[MAX_PATH], expected[MAX_PATH], prop[MAX_PATH];
+    char path[MAX_PATH + 14], expected[MAX_PATH], prop[MAX_PATH];
     BOOL version;
     LPSTR ptr;
     DWORD size;
@@ -5210,7 +5210,7 @@ static void search_absolute_directory(LPSTR absolute, LPCSTR relative)
 static void test_appsearch_drlocator(void)
 {
     MSIHANDLE hpkg, hdb;
-    char path[MAX_PATH], expected[MAX_PATH], prop[MAX_PATH];
+    char path[MAX_PATH + 27], expected[MAX_PATH], prop[MAX_PATH];
     BOOL version;
     DWORD size;
     UINT r;
@@ -7968,7 +7968,7 @@ static void test_MsiGetProductProperty(void)
     MSIHANDLE hprod, hdb;
     CHAR val[MAX_PATH];
     CHAR path[MAX_PATH];
-    CHAR query[MAX_PATH];
+    CHAR query[MAX_PATH + 17];
     CHAR keypath[MAX_PATH*2];
     CHAR prodcode[MAX_PATH];
     WCHAR prodcodeW[MAX_PATH];

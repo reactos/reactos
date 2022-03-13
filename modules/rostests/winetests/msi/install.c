@@ -3816,7 +3816,7 @@ error:
 static void test_currentworkingdir(void)
 {
     UINT r;
-    CHAR drive[MAX_PATH], path[MAX_PATH];
+    CHAR drive[MAX_PATH], path[MAX_PATH + 12];
     LPSTR ptr;
 
     if (is_process_limited())
@@ -4778,7 +4778,7 @@ error:
 static void test_sourcedirprop(void)
 {
     UINT r;
-    CHAR props[MAX_PATH];
+    CHAR props[MAX_PATH + 18];
 
     if (is_process_limited())
     {
@@ -6112,7 +6112,7 @@ static void check_file_matches(const char *filename, const char *text)
 
 static void test_deferred_action(void)
 {
-    char path[200], file[200], buffer[200];
+    char path[200], file[200], buffer[211];
     UINT r;
 
     GetTempPathA(sizeof(path), path);
