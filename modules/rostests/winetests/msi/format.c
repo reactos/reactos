@@ -1771,7 +1771,7 @@ static void test_formatrecord_package(void)
     ok( 0 == strcmp(buffer,"1:  2:  3:  4:  5:  6:  7:  8:  9:  10:  11:  12:  "), "wrong output(%s)\n",buffer);
 
     r = MsiSetPropertyA(package, "prop", "val");
-    ok( r == ERROR_SUCCESS, "failed to set propertY: %d\n", r);
+    ok( r == ERROR_SUCCESS, "failed to set property: %d\n", r);
 
     r = MsiRecordSetStringA(hrec, 0, NULL);
     ok( r == ERROR_SUCCESS, "set string failed\n");
