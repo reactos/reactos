@@ -2554,8 +2554,63 @@ static UINT TransformView_insert_row( MSIVIEW *view, MSIRECORD *rec, UINT row, B
     return TransformView_set_row( view, row, rec, ~0 );
 }
 
+static UINT TransformView_drop_table( MSITABLEVIEW *tv, UINT row )
+{
+    static const WCHAR query_pfx[] = L"INSERT INTO `_TransformView` ( `Table`, `Column` ) VALUES ( '";
+    static const WCHAR query_sfx[] = L"', 'DROP' )";
+
+    WCHAR buf[256], *query = buf;
+    UINT r, table_id, len;
+    const WCHAR *table;
+    int table_len;
+    MSIQUERY *q;
+
+    r = TABLE_fetch_int( &tv->view, row, 1, &table_id );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    table = msi_string_lookup( tv->db->strings, table_id, &table_len );
+    if (!table)
+        return ERROR_INSTALL_TRANSFORM_FAILURE;
+
+    len = ARRAY_SIZE(query_pfx) - 1 + table_len + ARRAY_SIZE(query_sfx);
+    if (len > ARRAY_SIZE(buf))
+    {
+        query = msi_alloc( len * sizeof(WCHAR) );
+        if (!query)
+            return ERROR_OUTOFMEMORY;
+    }
+
+    memcpy( query, query_pfx, ARRAY_SIZE(query_pfx) * sizeof(WCHAR) );
+    len = ARRAY_SIZE(query_pfx) - 1;
+    memcpy( query + len, table, table_len * sizeof(WCHAR) );
+    len += table_len;
+    memcpy( query + len, query_sfx, ARRAY_SIZE(query_sfx) * sizeof(WCHAR) );
+
+    r = MSI_DatabaseOpenViewW( tv->db, query, &q );
+    if (query != buf)
+        msi_free( query );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = MSI_ViewExecute( q, NULL );
+    msiobj_release( &q->hdr );
+    return r;
+}
+
 static UINT TransformView_delete_row( MSIVIEW *view, UINT row )
 {
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+
+    if (!wcscmp( tv->name, szColumns ))
+    {
+        ERR("trying to remove column\n");
+        return ERROR_INSTALL_TRANSFORM_FAILURE;
+    }
+
+    if (!wcscmp( tv->name, szTables ))
+        return TransformView_drop_table( tv, row );
+
     FIXME("\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
