@@ -3471,7 +3471,7 @@ static UINT msi_dialog_hyperlink_handler( msi_dialog *dialog, msi_control *contr
     while (*p && isspaceW( *p )) p++;
 
     len = strlenW( p );
-    if (len > len_href && !memicmpW( p, hrefW, len_href ))
+    if (len > len_href && !strncmpiW( p, hrefW, len_href ))
     {
         p += len_href;
         while (*p && isspaceW( *p )) p++;
