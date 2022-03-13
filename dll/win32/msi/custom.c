@@ -38,6 +38,12 @@
 #include "wine/unicode.h"
 #include "wine/exception.h"
 
+#ifdef __REACTOS__
+#ifndef STATUS_ACCESS_VIOLATION
+#define STATUS_ACCESS_VIOLATION ((NTSTATUS)0xC0000005)
+#endif
+#endif
+
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #define CUSTOM_ACTION_TYPE_MASK 0x3F

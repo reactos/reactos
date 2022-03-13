@@ -21,12 +21,20 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#endif
 
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
 #include "winnls.h"
+#ifdef __REACTOS__
+#include <ndk/rtlfuncs.h>
+#else
+#include "winternl.h"
+#endif
 #include "shlwapi.h"
 #include "wingdi.h"
 #include "msi.h"
@@ -668,7 +676,7 @@ done:
 static VOID set_installer_properties(MSIPACKAGE *package)
 {
     WCHAR *ptr;
-    OSVERSIONINFOEXW OSVersion;
+    RTL_OSVERSIONINFOEXW OSVersion;
     MEMORYSTATUSEX msex;
     DWORD verval, len, type;
     WCHAR pth[MAX_PATH], verstr[11], bufstr[22];
@@ -860,9 +868,14 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     msi_set_property( package->db, szPrivileged, szOne, -1 );
 
     /* set the os things */
-    OSVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
-    GetVersionExW((OSVERSIONINFOW *)&OSVersion);
+    OSVersion.dwOSVersionInfoSize = sizeof(OSVersion);
+    RtlGetVersion((PRTL_OSVERSIONINFOW)&OSVersion);
     verval = OSVersion.dwMinorVersion + OSVersion.dwMajorVersion * 100;
+    if (verval > 603)
+    {
+        verval = 603;
+        OSVersion.dwBuildNumber = 9600;
+    }
     len = swprintf( verstr, ARRAY_SIZE(verstr), szFormat, verval );
     switch (OSVersion.dwPlatformId)
     {

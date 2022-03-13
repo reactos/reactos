@@ -8,6 +8,9 @@
 
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#endif
 
 #define COBJMACROS
 #define NONAMELESSUNION
