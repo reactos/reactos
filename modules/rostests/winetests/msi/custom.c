@@ -1128,7 +1128,7 @@ static void test_invalid_functions(MSIHANDLE hinst)
     todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
     r = MsiDatabaseApplyTransformA(db, "bogus.mst", 0);
-    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+    ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
     r = MsiCreateTransformSummaryInfoA(db, db, "bogus.mst", 0, 0);
     todo_wine ok(hinst, r == ERROR_INSTALL_PACKAGE_OPEN_FAILED, "got %u\n", r);

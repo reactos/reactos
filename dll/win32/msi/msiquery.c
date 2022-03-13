@@ -884,18 +884,8 @@ UINT WINAPI MsiDatabaseApplyTransformW( MSIHANDLE hdb, const WCHAR *transform, i
 
     if (error_cond) FIXME( "ignoring error conditions\n" );
 
-    db = msihandle2msiinfo( hdb, MSIHANDLETYPE_DATABASE );
-    if (!db)
-    {
-        MSIHANDLE remote;
-
-        if (!(remote = msi_get_remote(hdb)))
-            return ERROR_INVALID_HANDLE;
-
-        WARN("MsiDatabaseApplyTransform not allowed during a custom action!\n");
-
-        return ERROR_SUCCESS;
-    }
+    if (!(db = msihandle2msiinfo(hdb, MSIHANDLETYPE_DATABASE)))
+        return ERROR_INVALID_HANDLE;
 
     r = MSI_DatabaseApplyTransformW( db, transform, error_cond );
     msiobj_release( &db->hdr );
