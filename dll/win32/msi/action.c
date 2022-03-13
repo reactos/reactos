@@ -1381,6 +1381,49 @@ static UINT load_all_patches(MSIPACKAGE *package)
     return rc;
 }
 
+static UINT iterate_patched_component( MSIRECORD *row, LPVOID param )
+{
+    MSIPACKAGE *package = param;
+    const WCHAR *name;
+    MSICOMPONENT *c;
+
+    name = MSI_RecordGetString( row, 1 );
+    TRACE( "found patched component: %s\n", wine_dbgstr_w(name) );
+    c = msi_get_loaded_component( package, name );
+    if (!c)
+        return ERROR_SUCCESS;
+
+    c->updated = 1;
+    if (!wcscmp( MSI_RecordGetString( row, 2 ), L"INSERT" ))
+        c->added = 1;
+    return ERROR_SUCCESS;
+}
+
+static void mark_patched_components( MSIPACKAGE *package )
+{
+    static const WCHAR select[] = L"SELECT `Row`, `Column` FROM `_TransformView` WHERE `Table`='Component'";
+    MSIQUERY *q;
+    UINT r;
+
+    r = MSI_OpenQuery( package->db, &q, select );
+    if (r != ERROR_SUCCESS)
+        return;
+
+    MSI_IterateRecords( q, NULL, iterate_patched_component, package );
+    msiobj_release( &q->hdr );
+
+    while (1)
+    {
+        r = MSI_OpenQuery( package->db, &q, L"ALTER TABLE `_TransformView` FREE" );
+        if (r != ERROR_SUCCESS)
+            return;
+        r = MSI_ViewExecute( q, NULL );
+        msiobj_release( &q->hdr );
+        if (r != ERROR_SUCCESS)
+            return;
+    }
+}
+
 static UINT load_folder_persistence( MSIPACKAGE *package, MSIFOLDER *folder )
 {
     static const WCHAR query[] = {
@@ -1525,6 +1568,7 @@ static UINT ACTION_CostInitialize(MSIPACKAGE *package)
     msi_load_all_features( package );
     load_all_files( package );
     load_all_patches( package );
+    mark_patched_components( package );
     load_all_media( package );
 
     return ERROR_SUCCESS;
@@ -1809,12 +1853,6 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
                 }
             }
         }
-        LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
-        {
-            if (feature->Feature_Parent) continue;
-            disable_children( feature, level );
-            follow_parent( feature );
-        }
     }
     else if (!msi_get_property_int( package->db, szInstalled, 0 ))
     {
@@ -1841,13 +1879,67 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
                 }
             }
         }
-        /* disable child features of unselected parent or follow parent */
+    }
+    else
+    {
         LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
         {
-            if (feature->Feature_Parent) continue;
-            disable_children( feature, level );
-            follow_parent( feature );
+            ComponentList *cl;
+            MSIFEATURE *cur;
+
+            if (!is_feature_selected( feature, level )) continue;
+            if (feature->ActionRequest != INSTALLSTATE_UNKNOWN) continue;
+
+            LIST_FOR_EACH_ENTRY( cl, &feature->Components, ComponentList, entry )
+            {
+                if (!cl->component->updated && !cl->component->added)
+                    continue;
+
+                cur = feature;
+                while (cur)
+                {
+                    if (cur->ActionRequest != INSTALLSTATE_UNKNOWN)
+                        break;
+
+                    if (cur->Installed != INSTALLSTATE_ABSENT)
+                    {
+                        cur->Action = cur->Installed;
+                        cur->ActionRequest = cur->Installed;
+                    }
+                    else if (!cl->component->added)
+                    {
+                        break;
+                    }
+                    else if (cur->Attributes & msidbFeatureAttributesFavorSource)
+                    {
+                        cur->Action = INSTALLSTATE_SOURCE;
+                        cur->ActionRequest = INSTALLSTATE_SOURCE;
+                    }
+                    else if (cur->Attributes & msidbFeatureAttributesFavorAdvertise)
+                    {
+                        cur->Action = INSTALLSTATE_ADVERTISED;
+                        cur->ActionRequest = INSTALLSTATE_ADVERTISED;
+                    }
+                    else
+                    {
+                        cur->Action = INSTALLSTATE_LOCAL;
+                        cur->ActionRequest = INSTALLSTATE_LOCAL;
+                    }
+
+                    if (!cur->Feature_Parent)
+                        break;
+                    cur = msi_get_loaded_feature(package, cur->Feature_Parent);
+                }
+            }
         }
+    }
+
+    /* disable child features of unselected parent or follow parent */
+    LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
+    {
+        if (feature->Feature_Parent) continue;
+        disable_children( feature, level );
+        follow_parent( feature );
     }
 
     /* now we want to set component state based based on feature state */

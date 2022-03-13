@@ -844,7 +844,7 @@ static void test_simple_patch( void )
     size = get_pf_file_size( "msitest\\patch.txt" );
     ok( size == 1002, "expected 1002, got %u\n", size );
     size = get_pf_file_size( "msitest\\file.txt" );
-    todo_wine ok( size == 1000, "expected 1000, got %u\n", size );
+    ok( size == 1000, "expected 1000, got %u\n", size );
 
     /* show that MsiOpenPackage applies registered patches */
     r = MsiOpenPackageA( path, &hpackage );

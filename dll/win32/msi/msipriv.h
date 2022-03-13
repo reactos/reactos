@@ -544,6 +544,8 @@ typedef struct tagMSICOMPONENT
     unsigned int hasAdvertisedFeature:1;
     unsigned int hasLocalFeature:1;
     unsigned int hasSourceFeature:1;
+    unsigned int added:1;
+    unsigned int updated:1;
 } MSICOMPONENT;
 
 typedef struct tagComponentList
