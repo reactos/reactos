@@ -147,6 +147,9 @@ static UINT ALTER_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 
     TRACE("%p %p\n", av, record);
 
+    if (av->colinfo)
+        return alter_add_column(av);
+
     if (av->hold == 1)
         av->table->ops->add_ref(av->table);
     else if (av->hold == -1)
@@ -155,9 +158,6 @@ static UINT ALTER_execute( struct tagMSIVIEW *view, MSIRECORD *record )
         if (ref == 0)
             av->table = NULL;
     }
-
-    if (av->colinfo)
-        return alter_add_column(av);
 
     return ERROR_SUCCESS;
 }

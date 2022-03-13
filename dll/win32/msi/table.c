@@ -54,7 +54,6 @@ typedef struct tagMSICOLUMNINFO
     LPCWSTR colname;
     UINT    type;
     UINT    offset;
-    INT     ref_count;
     BOOL    temporary;
     MSICOLUMNHASHENTRY **hash_table;
 } MSICOLUMNINFO;
@@ -80,14 +79,14 @@ static const WCHAR szNumber[]  = {'N','u','m','b','e','r',0};
 static const WCHAR szType[]    = {'T','y','p','e',0};
 
 static const MSICOLUMNINFO _Columns_cols[4] = {
-    { szColumns, 1, szTable,  MSITYPE_VALID | MSITYPE_STRING | MSITYPE_KEY | 64, 0, 0, 0, NULL },
-    { szColumns, 2, szNumber, MSITYPE_VALID | MSITYPE_KEY | 2,     2, 0, 0, NULL },
-    { szColumns, 3, szName,   MSITYPE_VALID | MSITYPE_STRING | 64, 4, 0, 0, NULL },
-    { szColumns, 4, szType,   MSITYPE_VALID | 2,                   6, 0, 0, NULL },
+    { szColumns, 1, szTable,  MSITYPE_VALID | MSITYPE_STRING | MSITYPE_KEY | 64, 0, 0, NULL },
+    { szColumns, 2, szNumber, MSITYPE_VALID | MSITYPE_KEY | 2,     2, 0, NULL },
+    { szColumns, 3, szName,   MSITYPE_VALID | MSITYPE_STRING | 64, 4, 0, NULL },
+    { szColumns, 4, szType,   MSITYPE_VALID | 2,                   6, 0, NULL },
 };
 
 static const MSICOLUMNINFO _Tables_cols[1] = {
-    { szTables,  1, szName,   MSITYPE_VALID | MSITYPE_STRING | MSITYPE_KEY | 64, 0, 0, 0, NULL },
+    { szTables,  1, szName,   MSITYPE_VALID | MSITYPE_STRING | MSITYPE_KEY | 64, 0, 0, NULL },
 };
 
 #define MAX_STREAM_NAME 0x1f
@@ -694,7 +693,6 @@ static UINT get_tablecolumns( MSIDATABASE *db, LPCWSTR szTableName, MSICOLUMNINF
             colinfo[col - 1].type = read_table_int( table->data, i, table->colinfo[3].offset,
                                                     sizeof(USHORT) ) - (1 << 15);
             colinfo[col - 1].offset = 0;
-            colinfo[col - 1].ref_count = 0;
             colinfo[col - 1].hash_table = NULL;
         }
         n++;
@@ -765,7 +763,6 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
         table->colinfo[ i ].colname = msi_string_lookup( db->strings, col_id, NULL );
         table->colinfo[ i ].type = col->type;
         table->colinfo[ i ].offset = 0;
-        table->colinfo[ i ].ref_count = 0;
         table->colinfo[ i ].hash_table = NULL;
         table->colinfo[ i ].temporary = col->temporary;
     }
@@ -1949,16 +1946,8 @@ static UINT TABLE_delete( struct tagMSIVIEW *view )
 static UINT TABLE_add_ref(struct tagMSIVIEW *view)
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
-    UINT i;
 
     TRACE("%p %d\n", view, tv->table->ref_count);
-
-    for (i = 0; i < tv->table->col_count; i++)
-    {
-        if (tv->table->colinfo[i].type & MSITYPE_TEMPORARY)
-            InterlockedIncrement(&tv->table->colinfo[i].ref_count);
-    }
-
     return InterlockedIncrement(&tv->table->ref_count);
 }
 
@@ -2022,25 +2011,25 @@ static UINT TABLE_release(struct tagMSIVIEW *view)
 
     TRACE("%p %d\n", view, ref);
 
-    for (i = tv->table->col_count - 1; i >= 0; i--)
+    ref = InterlockedDecrement(&tv->table->ref_count);
+    if (ref == 0)
     {
-        if (tv->table->colinfo[i].type & MSITYPE_TEMPORARY)
+        for (i = tv->table->col_count - 1; i >= 0; i--)
         {
-            ref = InterlockedDecrement(&tv->table->colinfo[i].ref_count);
-            if (ref == 0)
+            if (tv->table->colinfo[i].type & MSITYPE_TEMPORARY)
             {
                 r = TABLE_remove_column(view, tv->table->colinfo[i].tablename,
                                         tv->table->colinfo[i].number);
                 if (r != ERROR_SUCCESS)
                     break;
             }
+            else
+            {
+                break;
+            }
         }
-    }
 
-    ref = InterlockedDecrement(&tv->table->ref_count);
-    if (ref == 0)
-    {
-        if (!tv->table->row_count)
+        if (!tv->table->col_count)
         {
             list_remove(&tv->table->entry);
             free_table(tv->table);
@@ -2057,7 +2046,7 @@ static UINT TABLE_add_column(struct tagMSIVIEW *view, LPCWSTR table, UINT number
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     MSITABLE *msitable;
     MSIRECORD *rec;
-    UINT r, i;
+    UINT r;
 
     rec = MSI_CreateRecord(4);
     if (!rec)
@@ -2078,14 +2067,7 @@ static UINT TABLE_add_column(struct tagMSIVIEW *view, LPCWSTR table, UINT number
         goto done;
 
     msitable = find_cached_table(tv->db, table);
-    for (i = 0; i < msitable->col_count; i++)
-    {
-        if (!wcscmp( msitable->colinfo[i].colname, column ))
-        {
-            InterlockedIncrement(&msitable->colinfo[i].ref_count);
-            break;
-        }
-    }
+    InterlockedIncrement(&msitable->ref_count);
 
 done:
     msiobj_release(&rec->hdr);
