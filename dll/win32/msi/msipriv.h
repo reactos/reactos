@@ -1039,7 +1039,7 @@ extern MSIFOLDER *msi_get_loaded_folder(MSIPACKAGE *package, const WCHAR *dir) D
 extern WCHAR *msi_create_temp_file(MSIDATABASE *db) DECLSPEC_HIDDEN;
 extern void msi_free_action_script(MSIPACKAGE *package, UINT script) DECLSPEC_HIDDEN;
 extern WCHAR *msi_build_icon_path(MSIPACKAGE *, const WCHAR *) DECLSPEC_HIDDEN;
-extern WCHAR *msi_build_directory_name(DWORD , ...) DECLSPEC_HIDDEN;
+extern WCHAR * WINAPIV msi_build_directory_name(DWORD , ...) DECLSPEC_HIDDEN;
 extern void msi_reduce_to_long_filename(WCHAR *) DECLSPEC_HIDDEN;
 extern WCHAR *msi_create_component_advertise_string(MSIPACKAGE *, MSICOMPONENT *, const WCHAR *) DECLSPEC_HIDDEN;
 extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, MSIFEATURE *feature) DECLSPEC_HIDDEN;

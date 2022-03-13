@@ -2005,7 +2005,7 @@ static WCHAR *create_temp_dir( MSIDATABASE *db )
  *  A \ will not be added after the last segment, however if the
  *  last segment is NULL, then the last character will be a \
  */
-WCHAR *msi_build_directory_name( DWORD count, ... )
+WCHAR * WINAPIV msi_build_directory_name( DWORD count, ... )
 {
     DWORD sz = 1, i;
     WCHAR *dir;
