@@ -73,7 +73,8 @@ static const char file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
     "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
     "File\tFile\n"
-    "patch.txt\tpatch\tpatch.txt\t1000\t\t\t0\t1\n";
+    "patch.txt\tpatch\tpatch.txt\t1000\t\t\t0\t1\n"
+    "disable.txt\tdisable\tdisable.txt\t1000\t\t\t0\t1\n";
 
 static const char directory_dat[] =
     "Directory\tDirectory_Parent\tDefaultDir\n"
@@ -87,19 +88,22 @@ static const char component_dat[] =
     "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
     "s72\tS38\ts72\ti2\tS255\tS72\n"
     "Component\tComponent\n"
-    "patch\t{4B79D87E-6D28-4FD3-92D6-CD9B26AF64F1}\tMSITESTDIR\t0\t\tpatch.txt\n";
+    "patch\t{4B79D87E-6D28-4FD3-92D6-CD9B26AF64F1}\tMSITESTDIR\t0\t\tpatch.txt\n"
+    "disable\t{BDDBA0EE-0031-4591-ADC0-33308175AC19}\tMSITESTDIR\t0\t\tdisable.txt\n";
 
 static const char feature_dat[] =
     "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
     "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
     "Feature\tFeature\n"
-    "patch\t\t\tpatch feature\t1\t1\tMSITESTDIR\t0\n";
+    "patch\t\t\tpatch feature\t1\t1\tMSITESTDIR\t0\n"
+    "disable\t\t\tdisabled feature\t1\t1\tMSITESTDIR\t0\n";
 
 static const char feature_comp_dat[] =
     "Feature_\tComponent_\n"
     "s38\ts72\n"
     "FeatureComponents\tFeature_\tComponent_\n"
-    "patch\tpatch\n";
+    "patch\tpatch\n"
+    "disable\tdisable\n";
 
 static const char install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
@@ -121,6 +125,12 @@ static const char install_exec_seq_dat[] =
     "UnpublishFeatures\t\t5300\n"
     "InstallFinalize\t\t6000\n";
 
+static const char condition_dat[] =
+    "Feature_\tLevel\tCondition\n"
+    "s38\ti2\tS255\n"
+    "Condition\tFeature_\tLevel\n"
+    "disable\t0\tDISABLE_FEATURE\n";
+
 struct msi_table
 {
     const char *filename;
@@ -139,7 +149,8 @@ static const struct msi_table tables[] =
     ADD_TABLE( feature_comp ),
     ADD_TABLE( property ),
     ADD_TABLE( install_exec_seq ),
-    ADD_TABLE( media )
+    ADD_TABLE( media ),
+    ADD_TABLE( condition )
 };
 
 static void init_function_pointers( void )
@@ -757,7 +768,7 @@ static void test_simple_patch( void )
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
-    r = MsiInstallProductA( msifile, NULL );
+    r = MsiInstallProductA( msifile, "DISABLE_FEATURE=1" );
     if (r != ERROR_SUCCESS)
     {
         skip("Product installation failed with error code %u\n", r);
@@ -1101,7 +1112,7 @@ static void test_system_tables( void )
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
-    r = MsiInstallProductA( msifile, NULL );
+    r = MsiInstallProductA( msifile, "DISABLE_FEATURE=1" );
     if (r != ERROR_SUCCESS)
     {
         skip("Product installation failed with error code %d\n", r);
@@ -1290,7 +1301,7 @@ static void test_patch_registration( void )
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
-    r = MsiInstallProductA( msifile, NULL );
+    r = MsiInstallProductA( msifile, "DISABLE_FEATURE=1" );
     if (r != ERROR_SUCCESS)
     {
         skip("Product installation failed with error code %d\n", r);
