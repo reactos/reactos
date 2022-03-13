@@ -13,7 +13,6 @@
 
 /* FUNCTIONS ******************************************************************/
 
-static
 ULONGLONG
 RoundingDivide(
    IN ULONGLONG Dividend,
