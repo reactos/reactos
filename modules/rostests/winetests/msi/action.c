@@ -252,7 +252,9 @@ static const char env_environment_dat[] =
     "Var27\t+-MSITESTVAR21\t[~];1\tOne\n"
     "Var28\t-MSITESTVAR22\t1\tOne\n"
     "Var29\t-MSITESTVAR23\t2\tOne\n"
-    "Var30\t*MSITESTVAR100\t1\tOne\n";
+    "Var30\t*MSITESTVAR100\t1\tOne\n"
+    "Var31\t-=MSITESTVAR24\t[SERVNAME]\tOne\n"
+    "Var32\t-=MSITESTVAR25\t[bogus_prop]\tOne\n";
 
 static const char service_install_dat[] =
     "ServiceInstall\tName\tDisplayName\tServiceType\tStartType\tErrorControl\t"
@@ -5047,6 +5049,7 @@ static void test_envvar(void)
     CHECK_REG_STR(env, "MSITESTVAR19", "1");
     CHECK_REG_STR(env, "MSITESTVAR20", "1");
     CHECK_REG_STR(env, "MSITESTVAR21", "1");
+    CHECK_REG_STR(env, "MSITESTVAR24", "TestService");
     CHECK_REG_STR(env2, "MSITESTVAR100", "1");
 
     res = RegSetValueExA(env, "MSITESTVAR22", 0, REG_SZ, (const BYTE *)"1", 2);
@@ -5054,6 +5057,9 @@ static void test_envvar(void)
 
     res = RegSetValueExA(env, "MSITESTVAR23", 0, REG_SZ, (const BYTE *)"1", 2);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegDeleteValueA(env, "MSITESTVAR25");
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(!r, "got %u\n", r);
