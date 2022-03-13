@@ -2146,14 +2146,17 @@ static void test_condition(void)
     DeleteFileA(msifile);
 }
 
-static void check_prop(MSIHANDLE hpkg, const char *prop, const char *expect)
+static void check_prop(MSIHANDLE hpkg, const char *prop, const char *expect, int match_case)
 {
     char buffer[MAX_PATH] = "x";
     DWORD sz = sizeof(buffer);
     UINT r = MsiGetPropertyA(hpkg, prop, buffer, &sz);
     ok(!r, "'%s': got %u\n", prop, r);
     ok(sz == lstrlenA(buffer), "'%s': expected %u, got %u\n", prop, lstrlenA(buffer), sz);
-    ok(!strcmp(buffer, expect), "'%s': expected '%s', got '%s'\n", prop, expect, buffer);
+    if (match_case)
+        ok(!strcmp(buffer, expect), "'%s': expected '%s', got '%s'\n", prop, expect, buffer);
+    else
+        ok(!_stricmp(buffer, expect), "'%s': expected '%s', got '%s'\n", prop, expect, buffer);
 }
 
 static void test_props(void)
@@ -2229,29 +2232,29 @@ static void test_props(void)
 
     r = MsiSetPropertyA( hpkg, "=", "asdf" );
     ok(!r, "got %u\n", r);
-    check_prop(hpkg, "=", "asdf");
+    check_prop(hpkg, "=", "asdf", 1);
 
     r = MsiSetPropertyA( hpkg, " ", "asdf" );
     ok(!r, "got %u\n", r);
-    check_prop(hpkg, " ", "asdf");
+    check_prop(hpkg, " ", "asdf", 1);
 
     r = MsiSetPropertyA( hpkg, "'", "asdf" );
     ok(!r, "got %u\n", r);
-    check_prop(hpkg, "'", "asdf");
+    check_prop(hpkg, "'", "asdf", 1);
 
     /* set empty values */
     r = MsiSetPropertyA( hpkg, "boo", NULL );
     ok(!r, "got %u\n", r);
-    check_prop(hpkg, "boo", "");
+    check_prop(hpkg, "boo", "", 1);
 
     r = MsiSetPropertyA( hpkg, "boo", "" );
     ok(!r, "got %u\n", r);
-    check_prop(hpkg, "boo", "");
+    check_prop(hpkg, "boo", "", 1);
 
     /* set a non-empty value */
     r = MsiSetPropertyA( hpkg, "boo", "xyz" );
     ok(!r, "got %u\n", r);
-    check_prop(hpkg, "boo", "xyz");
+    check_prop(hpkg, "boo", "xyz", 1);
 
     r = MsiGetPropertyA(hpkg, "boo", NULL, NULL);
     ok(!r, "got %u\n", r);
@@ -2326,10 +2329,10 @@ static void test_props(void)
     ok(sz == 3, "got size %u\n", sz);
 
     /* properties are case-sensitive */
-    check_prop(hpkg, "BOO", "");
+    check_prop(hpkg, "BOO", "", 1);
 
     /* properties set in Property table should work */
-    check_prop(hpkg, "MetadataCompName", "Photoshop.dll");
+    check_prop(hpkg, "MetadataCompName", "Photoshop.dll", 1);
 
     MsiCloseHandle( hpkg );
     DeleteFileA(msifile);
@@ -5739,65 +5742,65 @@ static void test_installprops(void)
     if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
     {
         sprintf(buf, "%d", si.wProcessorLevel);
-        check_prop(hpkg, "Intel", buf);
-        check_prop(hpkg, "MsiAMD64", buf);
-        check_prop(hpkg, "Msix64", buf);
+        check_prop(hpkg, "Intel", buf, 1);
+        check_prop(hpkg, "MsiAMD64", buf, 1);
+        check_prop(hpkg, "Msix64", buf, 1);
         sprintf(buf, "%d", LOBYTE(LOWORD(GetVersion())) * 100 + HIBYTE(LOWORD(GetVersion())));
-        check_prop(hpkg, "VersionNT64", buf);
+        check_prop(hpkg, "VersionNT64", buf, 1);
 
         GetSystemDirectoryA(path, MAX_PATH);
         strcat(path, "\\");
-        check_prop(hpkg, "System64Folder", path);
+        check_prop(hpkg, "System64Folder", path, 0);
 
         GetSystemWow64DirectoryA(path, MAX_PATH);
         strcat(path, "\\");
-        check_prop(hpkg, "SystemFolder", path);
+        check_prop(hpkg, "SystemFolder", path, 0);
 
         size = MAX_PATH;
         r = RegQueryValueExA(pathkey, "ProgramFilesDir (x86)", 0, &type, (BYTE *)path, &size);
         strcat(path, "\\");
-        check_prop(hpkg, "ProgramFilesFolder", path);
+        check_prop(hpkg, "ProgramFilesFolder", path, 0);
 
         size = MAX_PATH;
         RegQueryValueExA(pathkey, "ProgramFilesDir", 0, &type, (BYTE *)path, &size);
         strcat(path, "\\");
-        check_prop(hpkg, "ProgramFiles64Folder", path);
+        check_prop(hpkg, "ProgramFiles64Folder", path, 0);
 
         size = MAX_PATH;
         RegQueryValueExA(pathkey, "CommonFilesDir (x86)", 0, &type, (BYTE *)path, &size);
         strcat(path, "\\");
-        check_prop(hpkg, "CommonFilesFolder", path);
+        check_prop(hpkg, "CommonFilesFolder", path, 0);
 
         size = MAX_PATH;
         RegQueryValueExA(pathkey, "CommonFilesDir", 0, &type, (BYTE *)path, &size);
         strcat(path, "\\");
-        check_prop(hpkg, "CommonFiles64Folder", path);
+        check_prop(hpkg, "CommonFiles64Folder", path, 0);
     }
     else if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
     {
         sprintf(buf, "%d", si.wProcessorLevel);
-        check_prop(hpkg, "Intel", buf);
+        check_prop(hpkg, "Intel", buf, 1);
 
         GetSystemDirectoryA(path, MAX_PATH);
         strcat(path, "\\");
-        check_prop(hpkg, "SystemFolder", path);
+        check_prop(hpkg, "SystemFolder", path, 0);
 
         size = MAX_PATH;
         RegQueryValueExA(pathkey, "ProgramFilesDir", 0, &type, (BYTE *)path, &size);
         strcat(path, "\\");
-        check_prop(hpkg, "ProgramFilesFolder", path);
+        check_prop(hpkg, "ProgramFilesFolder", path, 0);
 
         size = MAX_PATH;
         RegQueryValueExA(pathkey, "CommonFilesDir", 0, &type, (BYTE *)path, &size);
         strcat(path, "\\");
-        check_prop(hpkg, "CommonFilesFolder", path);
+        check_prop(hpkg, "CommonFilesFolder", path, 0);
 
-        check_prop(hpkg, "MsiAMD64", "");
-        check_prop(hpkg, "Msix64", "");
-        check_prop(hpkg, "VersionNT64", "");
-        check_prop(hpkg, "System64Folder", "");
-        check_prop(hpkg, "ProgramFiles64Dir", "");
-        check_prop(hpkg, "CommonFiles64Dir", "");
+        check_prop(hpkg, "MsiAMD64", "", 1);
+        check_prop(hpkg, "Msix64", "", 1);
+        check_prop(hpkg, "VersionNT64", "", 1);
+        check_prop(hpkg, "System64Folder", "", 0);
+        check_prop(hpkg, "ProgramFiles64Dir", "", 0);
+        check_prop(hpkg, "CommonFiles64Dir", "", 0);
     }
 
     CloseHandle(hkey1);
