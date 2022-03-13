@@ -792,7 +792,8 @@ static UINT HANDLE_CustomType1( MSIPACKAGE *package, const WCHAR *source, const 
 
     TRACE("Calling function %s from %s\n", debugstr_w(target), debugstr_w(binary->tmpfile));
 
-    info = do_msidbCustomActionTypeDll( package, type, binary->tmpfile, target, action );
+    if (!(info = do_msidbCustomActionTypeDll( package, type, binary->tmpfile, target, action )))
+        return ERROR_FUNCTION_FAILED;
     return wait_thread_handle( info );
 }
 
@@ -897,7 +898,8 @@ static UINT HANDLE_CustomType17( MSIPACKAGE *package, const WCHAR *source, const
         return ERROR_FUNCTION_FAILED;
     }
 
-    info = do_msidbCustomActionTypeDll( package, type, file->TargetPath, target, action );
+    if (!(info = do_msidbCustomActionTypeDll( package, type, file->TargetPath, target, action )))
+        return ERROR_FUNCTION_FAILED;
     return wait_thread_handle( info );
 }
 
