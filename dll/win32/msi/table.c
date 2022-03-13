@@ -2887,6 +2887,7 @@ UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR name, MSIV
             colinfo[idx - 1].colname = msi_string_lookup( st, name_id, NULL );
         else
             ERR( "column name %s is not defined in strings table\n", wine_dbgstr_w(name) );
+        msiobj_release( &rec->hdr );
     }
     MSI_ViewClose( q );
     msiobj_release( &q->hdr );
