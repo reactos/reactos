@@ -25,8 +25,7 @@
 #include "wine/test.h"
 
 static const char *msifile = "winetest-record.msi";
-static const WCHAR msifileW[] =
-    {'w','i','n','e','t','e','s','t','-','r','e','c','o','r','d','.','m','s','i',0};
+static const WCHAR msifileW[] = L"winetest-record.msi";
 
 static BOOL create_temp_file(char *name)
 {
@@ -34,7 +33,7 @@ static BOOL create_temp_file(char *name)
     unsigned char buffer[26], i;
     DWORD sz;
     HANDLE handle;
-    
+
     r = GetTempFileNameA(".", "msitest",0,name);
     if(!r)
         return r;
@@ -338,7 +337,7 @@ static void test_msirecord(void)
     ok(r == ERROR_SUCCESS, "Failed to close handle\n");
 
     /* now try streams in a new record - need to create a file to play with */
-    r = create_temp_file(filename); 
+    r = create_temp_file(filename);
     if(!r)
         return;
 

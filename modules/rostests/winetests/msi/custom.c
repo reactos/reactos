@@ -106,9 +106,6 @@ static void check_prop(MSIHANDLE hinst, const char *prop, const char *expect)
 
 static void test_props(MSIHANDLE hinst)
 {
-    static const WCHAR booW[] = {'b','o','o',0};
-    static const WCHAR xyzW[] = {'x','y','z',0};
-    static const WCHAR xyW[] = {'x','y',0};
     char buffer[10];
     WCHAR bufferW[10];
     DWORD sz;
@@ -219,43 +216,43 @@ static void test_props(MSIHANDLE hinst)
     ok(hinst, !strcmp(buffer, "xyz"), "got \"%s\"\n", buffer);
     ok(hinst, sz == 3, "got size %u\n", sz);
 
-    r = MsiGetPropertyW(hinst, booW, NULL, NULL);
+    r = MsiGetPropertyW(hinst, L"boo", NULL, NULL);
     ok(hinst, !r, "got %u\n", r);
 
-    r = MsiGetPropertyW(hinst, booW, bufferW, NULL );
+    r = MsiGetPropertyW(hinst, L"boo", bufferW, NULL );
     ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
 
     sz = 0;
-    r = MsiGetPropertyW(hinst, booW, NULL, &sz);
+    r = MsiGetPropertyW(hinst, L"boo", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     sz = 0;
-    lstrcpyW(bufferW, booW);
-    r = MsiGetPropertyW(hinst, booW, bufferW, &sz);
+    lstrcpyW(bufferW, L"boo");
+    r = MsiGetPropertyW(hinst, L"boo", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
-    ok(hinst, !lstrcmpW(bufferW, booW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, !lstrcmpW(bufferW, L"boo"), "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     sz = 1;
-    lstrcpyW(bufferW, booW);
-    r = MsiGetPropertyW(hinst, booW, bufferW, &sz);
+    lstrcpyW(bufferW, L"boo");
+    r = MsiGetPropertyW(hinst, L"boo", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     sz = 3;
-    lstrcpyW(bufferW, booW);
-    r = MsiGetPropertyW(hinst, booW, bufferW, &sz);
+    lstrcpyW(bufferW, L"boo");
+    r = MsiGetPropertyW(hinst, L"boo", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
-    ok(hinst, !lstrcmpW(bufferW, xyW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, !lstrcmpW(bufferW, L"xy"), "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     sz = 4;
-    lstrcpyW(bufferW, booW);
-    r = MsiGetPropertyW(hinst, booW, bufferW, &sz);
+    lstrcpyW(bufferW, L"boo");
+    r = MsiGetPropertyW(hinst, L"boo", bufferW, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, !lstrcmpW(bufferW, xyzW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, !lstrcmpW(bufferW, L"xyz"), "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     r = MsiSetPropertyA(hinst, "boo", NULL);
@@ -566,9 +563,6 @@ UINT WINAPI nested(MSIHANDLE hinst)
 
 static void test_targetpath(MSIHANDLE hinst)
 {
-    static const WCHAR targetdirW[] = {'T','A','R','G','E','T','D','I','R',0};
-    static const WCHAR xyzW[] = {'C',':','\\',0};
-    static const WCHAR xyW[] = {'C',':',0};
     WCHAR bufferW[100];
     char buffer[100];
     DWORD sz, srcsz;
@@ -621,36 +615,36 @@ static void test_targetpath(MSIHANDLE hinst)
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     sz = 0;
-    r = MsiGetTargetPathW(hinst, targetdirW, NULL, &sz);
+    r = MsiGetTargetPathW(hinst, L"TARGETDIR", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     sz = 0;
     bufferW[0] = 'q';
-    r = MsiGetTargetPathW(hinst, targetdirW, bufferW, &sz);
+    r = MsiGetTargetPathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     sz = 1;
     bufferW[0] = 'q';
-    r = MsiGetTargetPathW(hinst, targetdirW, bufferW, &sz);
+    r = MsiGetTargetPathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     sz = 3;
     bufferW[0] = 'q';
-    r = MsiGetTargetPathW(hinst, targetdirW, bufferW, &sz);
+    r = MsiGetTargetPathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
-    ok(hinst, !lstrcmpW(bufferW, xyW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, !lstrcmpW(bufferW, L"C:"), "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     sz = 4;
     bufferW[0] = 'q';
-    r = MsiGetTargetPathW(hinst, targetdirW, bufferW, &sz);
+    r = MsiGetTargetPathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, !lstrcmpW(bufferW, xyzW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, !lstrcmpW(bufferW, L"C:\\"), "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 3, "got size %u\n", sz);
 
     r = MsiSetTargetPathA(hinst, NULL, "C:\\subdir");
@@ -684,7 +678,7 @@ static void test_targetpath(MSIHANDLE hinst)
      * Seems to be a casualty of RPC... */
 
     srcsz = 0;
-    MsiGetSourcePathW(hinst, targetdirW, NULL, &srcsz);
+    MsiGetSourcePathW(hinst, L"TARGETDIR", NULL, &srcsz);
 
     sz = 0;
     r = MsiGetSourcePathA(hinst, "TARGETDIR", NULL, &sz);
@@ -720,34 +714,34 @@ static void test_targetpath(MSIHANDLE hinst)
     ok(hinst, sz == srcsz, "got size %u\n", sz);
 
     sz = 0;
-    r = MsiGetSourcePathW(hinst, targetdirW, NULL, &sz);
+    r = MsiGetSourcePathW(hinst, L"TARGETDIR", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, sz == srcsz, "got size %u\n", sz);
 
     sz = 0;
     bufferW[0] = 'q';
-    r = MsiGetSourcePathW(hinst, targetdirW, bufferW, &sz);
+    r = MsiGetSourcePathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == srcsz, "got size %u\n", sz);
 
     sz = 1;
     bufferW[0] = 'q';
-    r = MsiGetSourcePathW(hinst, targetdirW, bufferW, &sz);
+    r = MsiGetSourcePathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == srcsz, "got size %u\n", sz);
 
     sz = srcsz;
     bufferW[0] = 'q';
-    r = MsiGetSourcePathW(hinst, targetdirW, bufferW, &sz);
+    r = MsiGetSourcePathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, lstrlenW(bufferW) == srcsz - 1, "wrong buffer length %d\n", lstrlenW(bufferW));
     ok(hinst, sz == srcsz, "got size %u\n", sz);
 
     sz = srcsz + 1;
     bufferW[0] = 'q';
-    r = MsiGetSourcePathW(hinst, targetdirW, bufferW, &sz);
+    r = MsiGetSourcePathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, lstrlenW(bufferW) == srcsz, "wrong buffer length %d\n", lstrlenW(bufferW));
     ok(hinst, sz == srcsz, "got size %u\n", sz);
@@ -870,8 +864,6 @@ static void test_feature_states(MSIHANDLE hinst)
 
 static void test_format_record(MSIHANDLE hinst)
 {
-    static const WCHAR xyzW[] = {'f','o','o',' ','1','2','3',0};
-    static const WCHAR xyW[] = {'f','o','o',' ','1','2',0};
     WCHAR bufferW[10];
     char buffer[10];
     MSIHANDLE rec;
@@ -955,14 +947,14 @@ static void test_format_record(MSIHANDLE hinst)
     bufferW[0] = 'q';
     r = MsiFormatRecordW(hinst, rec, bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
-    ok(hinst, !lstrcmpW(bufferW, xyW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, !lstrcmpW(bufferW, L"foo 12"), "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 7, "got size %u\n", sz);
 
     sz = 8;
     bufferW[0] = 'q';
     r = MsiFormatRecordW(hinst, rec, bufferW, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, !lstrcmpW(bufferW, xyzW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, !lstrcmpW(bufferW, L"foo 123"), "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 7, "got size %u\n", sz);
 
     /* check that properties work */
@@ -979,9 +971,6 @@ static void test_format_record(MSIHANDLE hinst)
 
 static void test_costs(MSIHANDLE hinst)
 {
-    static const WCHAR oneW[] = {'O','n','e',0};
-    static const WCHAR xyzW[] = {'C',':',0};
-    static const WCHAR xyW[] = {'C',0};
     WCHAR bufferW[10];
     char buffer[10];
     int cost, temp;
@@ -1085,30 +1074,30 @@ static void test_costs(MSIHANDLE hinst)
 
     sz = 0;
     bufferW[0] = 'q';
-    r = MsiEnumComponentCostsW(hinst, oneW, 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
+    r = MsiEnumComponentCostsW(hinst, L"One", 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 2, "got size %u\n", sz);
 
     sz = 1;
     bufferW[0] = 'q';
-    r = MsiEnumComponentCostsW(hinst, oneW, 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
+    r = MsiEnumComponentCostsW(hinst, L"One", 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 2, "got size %u\n", sz);
 
     sz = 2;
     bufferW[0] = 'q';
-    r = MsiEnumComponentCostsW(hinst, oneW, 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
+    r = MsiEnumComponentCostsW(hinst, L"One", 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
-    ok(hinst, !lstrcmpW(bufferW, xyW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, !lstrcmpW(bufferW, L"C"), "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 2, "got size %u\n", sz);
 
     sz = 3;
     bufferW[0] = 'q';
-    r = MsiEnumComponentCostsW(hinst, oneW, 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
+    r = MsiEnumComponentCostsW(hinst, L"One", 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, !lstrcmpW(bufferW, xyzW), "got %s\n", dbgstr_w(bufferW));
+    ok(hinst, !lstrcmpW(bufferW, L"C:"), "got %s\n", dbgstr_w(bufferW));
     ok(hinst, sz == 2, "got size %u\n", sz);
 }
 

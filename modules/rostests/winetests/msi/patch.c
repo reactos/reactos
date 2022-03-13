@@ -39,10 +39,8 @@ static UINT (WINAPI *pMsiEnumPatchesExA)( LPCSTR, LPCSTR, DWORD, DWORD, DWORD, L
 
 static const char *msifile = "winetest-patch.msi";
 static const char *mspfile = "winetest-patch.msp";
-static const WCHAR msifileW[] =
-    {'w','i','n','e','t','e','s','t','-','p','a','t','c','h','.','m','s','i',0};
-static const WCHAR mspfileW[] =
-    {'w','i','n','e','t','e','s','t','-','p','a','t','c','h','.','m','s','p',0};
+static const WCHAR msifileW[] = L"winetest-patch.msi";
+static const WCHAR mspfileW[] = L"winetest-patch.msp";
 
 static char CURR_DIR[MAX_PATH];
 static char PROG_FILES_DIR[MAX_PATH];
@@ -1001,14 +999,11 @@ static UINT find_entry( MSIHANDLE hdb, const char *table, const char *entry )
 
 static UINT find_entryW( MSIHANDLE hdb, const WCHAR *table, const WCHAR *entry )
 {
-    static const WCHAR fmt[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','%','s','`',' ',
-         'W','H','E','R','E',' ','`','N','a','m','e','`',' ','=',' ','\'','%','s','\'',0};
     WCHAR query[0x100];
     MSIHANDLE hview, hrec;
     UINT r;
 
-    wsprintfW( query, fmt, table, entry );
+    wsprintfW( query, L"SELECT * FROM `%s` WHERE `Name` = '%s'", table, entry );
     r = MsiDatabaseOpenViewW( hdb, query, &hview );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
@@ -1086,8 +1081,6 @@ static char *get_string( MSIHANDLE hdb, UINT field, const char *query)
 static void test_system_tables( void )
 {
     static const char patchsource[] = "MSPSRC0F96CDC04CDF4304B2837B9264889EF7";
-    static const WCHAR streamsW[] = {'_','S','t','r','e','a','m','s',0};
-    static const WCHAR CAB_msitest_encodedW[] = {0x3a8c,0x47cb,0x45b0,0x45ec,0x45a8,0x4837,0};
     UINT r;
     char *cr;
     const char *query;
@@ -1193,7 +1186,7 @@ static void test_system_tables( void )
     r = find_entry( hdb, "_Streams", "\5SummaryInformation" );
     ok( r == ERROR_SUCCESS, "failed to find entry %u\n", r );
 
-    r = find_entryW( hdb, streamsW, CAB_msitest_encodedW );
+    r = find_entryW( hdb, L"_Streams", L"\x3a8c\x47cb\x45b0\x45ec\x45a8\x4837" );
     ok( r == ERROR_NO_MORE_ITEMS, "failed to find entry %u\n", r );
 
     query = "SELECT * FROM `_Storages`";

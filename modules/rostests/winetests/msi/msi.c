@@ -39,7 +39,7 @@
 
 static BOOL is_wow64;
 static const char msifile[] = "winetest.msi";
-static const WCHAR msifileW[] = {'w','i','n','e','t','e','s','t','.','m','s','i',0};
+static const WCHAR msifileW[] = L"winetest.msi";
 
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
@@ -892,19 +892,19 @@ static void test_usefeature(void)
     r = pMsiUseFeatureExA(NULL, "WORDVIEWFiles", -2, 1 );
     ok( r == INSTALLSTATE_INVALIDARG, "wrong return val\n");
 
-    r = pMsiUseFeatureExA("{90850409-6000-11d3-8cfe-0150048383c9}", 
+    r = pMsiUseFeatureExA("{90850409-6000-11d3-8cfe-0150048383c9}",
                          NULL, -2, 0 );
     ok( r == INSTALLSTATE_INVALIDARG, "wrong return val\n");
 
-    r = pMsiUseFeatureExA("{9085040-6000-11d3-8cfe-0150048383c9}", 
+    r = pMsiUseFeatureExA("{9085040-6000-11d3-8cfe-0150048383c9}",
                          "WORDVIEWFiles", -2, 0 );
     ok( r == INSTALLSTATE_INVALIDARG, "wrong return val\n");
 
-    r = pMsiUseFeatureExA("{0085040-6000-11d3-8cfe-0150048383c9}", 
+    r = pMsiUseFeatureExA("{0085040-6000-11d3-8cfe-0150048383c9}",
                          "WORDVIEWFiles", -2, 0 );
     ok( r == INSTALLSTATE_INVALIDARG, "wrong return val\n");
 
-    r = pMsiUseFeatureExA("{90850409-6000-11d3-8cfe-0150048383c9}", 
+    r = pMsiUseFeatureExA("{90850409-6000-11d3-8cfe-0150048383c9}",
                          "WORDVIEWFiles", -2, 1 );
     ok( r == INSTALLSTATE_INVALIDARG, "wrong return val\n");
 }
@@ -3379,14 +3379,6 @@ static void test_MsiGetComponentPathEx(void)
 
 static void test_MsiProvideComponent(void)
 {
-    static const WCHAR sourcedirW[] =
-        {'s','o','u','r','c','e','d','i','r',0};
-    static const WCHAR productW[] =
-        {'{','3','8','8','4','7','3','3','8','-','1','B','B','C','-','4','1','0','4','-',
-         '8','1','A','C','-','2','F','A','A','C','7','E','C','D','D','C','D','}',0};
-    static const WCHAR componentW[] =
-        {'{','D','D','4','2','2','F','9','2','-','3','E','D','8','-','4','9','B','5','-',
-         'A','0','B','7','-','F','2','6','6','F','9','8','3','5','7','D','F','}',0};
     INSTALLSTATE state;
     char buf[0x100];
     WCHAR bufW[0x100];
@@ -3445,21 +3437,21 @@ static void test_MsiProvideComponent(void)
 
     bufW[0] = 0;
     len = sizeof(buf);
-    r = pMsiProvideComponentW(productW, sourcedirW, componentW,
-                              INSTALLMODE_NODETECTION, bufW, &len);
+    r = pMsiProvideComponentW(L"{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}", L"sourcedir",
+                              L"{DD422F92-3ED8-49B5-A0B7-F266F98357DF}", INSTALLMODE_NODETECTION, bufW, &len);
     ok(r == ERROR_SUCCESS, "got %u\n", r);
     ok(bufW[0], "empty path\n");
     ok(len == lstrlenW(bufW), "got %u\n", len);
 
     len2 = 0;
-    r = pMsiProvideComponentW(productW, sourcedirW, componentW,
-                              INSTALLMODE_NODETECTION, NULL, &len2);
+    r = pMsiProvideComponentW(L"{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}", L"sourcedir",
+                              L"{DD422F92-3ED8-49B5-A0B7-F266F98357DF}", INSTALLMODE_NODETECTION, NULL, &len2);
     ok(r == ERROR_SUCCESS, "got %u\n", r);
     ok(len2 == len, "got %u\n", len2);
 
     len2 = 0;
-    r = pMsiProvideComponentW(productW, sourcedirW, componentW,
-                              INSTALLMODE_NODETECTION, bufW, &len2);
+    r = pMsiProvideComponentW(L"{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}", L"sourcedir",
+                              L"{DD422F92-3ED8-49B5-A0B7-F266F98357DF}", INSTALLMODE_NODETECTION, bufW, &len2);
     ok(r == ERROR_MORE_DATA, "got %u\n", r);
     ok(len2 == len, "got %u\n", len2);
 

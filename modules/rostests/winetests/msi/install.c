@@ -59,8 +59,8 @@ static const char *msifile = "msitest.msi";
 static const char *msifile2 = "winetest2.msi";
 static const char *mstfile = "winetest.mst";
 
-static const WCHAR msifileW[] = {'m','s','i','t','e','s','t','.','m','s','i',0};
-static const WCHAR msifile2W[] = {'w','i','n','e','t','e','s','t','2','.','m','s','i',0};
+static const WCHAR msifileW[] = L"msitest.msi";
+static const WCHAR msifile2W[] = L"msitest2.msi";
 
 char CURR_DIR[MAX_PATH];
 char PROG_FILES_DIR[MAX_PATH];
@@ -2209,7 +2209,7 @@ static LONG CDECL fci_seek(INT_PTR hf, LONG dist, int seektype, int *err, void *
 {
     HANDLE handle = (HANDLE)hf;
     DWORD ret;
-    
+
     ret = SetFilePointer(handle, dist, NULL, seektype);
     ok(ret != INVALID_SET_FILE_POINTER, "Failed to SetFilePointer\n");
 
@@ -3995,11 +3995,6 @@ static void set_admin_property_stream(LPCSTR file)
     DWORD count;
     const DWORD mode = STGM_DIRECT | STGM_READWRITE | STGM_SHARE_EXCLUSIVE;
 
-    /* AdminProperties */
-    static const WCHAR stmname[] = {0x41ca,0x4330,0x3e71,0x44b5,0x4233,0x45f5,0x422c,0x4836,0};
-    static const WCHAR data[] = {'M','Y','P','R','O','P','=','2','7','1','8',' ',
-        'M','y','P','r','o','p','=','4','2',0};
-
     MultiByteToWideChar(CP_ACP, 0, file, -1, fileW, MAX_PATH);
 
     hr = StgOpenStorage(fileW, NULL, mode, NULL, 0, &stg);
@@ -4007,10 +4002,11 @@ static void set_admin_property_stream(LPCSTR file)
     if (!stg)
         return;
 
-    hr = IStorage_CreateStream(stg, stmname, STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
+    hr = IStorage_CreateStream(stg, L"\x41ca\x4330\x3e71\x44b5\x4233\x45f5\x422c\x4836",
+                               STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
     ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
 
-    hr = IStream_Write(stm, data, sizeof(data), &count);
+    hr = IStream_Write(stm, L"MYPROP=2718 MyProp=42", sizeof(L"MYPROP=2718 MyProp=42"), &count);
     ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
 
     IStream_Release(stm);
@@ -4983,9 +4979,6 @@ error:
 
 static void test_int_widths( void )
 {
-    static const WCHAR msitestW[] = {'m','s','i','t','e','s','t','.','m','s','i',0};
-    static const WCHAR msitableW[] = {'m','s','i','t','a','b','l','e','.','i','d','t',0};
-    static const WCHAR slashW[] = {'\\',0};
     static const char int0[] = "int0\ni0\nint0\tint0\n1";
     static const char int1[] = "int1\ni1\nint1\tint1\n1";
     static const char int2[] = "int2\ni2\nint2\tint2\n1";
@@ -5017,12 +5010,10 @@ static void test_int_widths( void )
     CreateDirectoryW(tmpdir, NULL);
 
     lstrcpyW(msitable, tmpdir);
-    lstrcatW(msitable, slashW);
-    lstrcatW(msitable, msitableW);
+    lstrcatW(msitable, L"\\msitable.idt");
 
     lstrcpyW(msidb, tmpdir);
-    lstrcatW(msidb, slashW);
-    lstrcatW(msidb, msitestW);
+    lstrcatW(msidb, L"\\msitest.msi");
 
     r = MsiOpenDatabaseW(msidb, MSIDBOPEN_CREATE, &db);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5035,7 +5026,7 @@ static void test_int_widths( void )
         WriteFile(handle, tests[i].data, tests[i].size, &count, NULL);
         CloseHandle(handle);
 
-        r = MsiDatabaseImportW(db, tmpdir, msitableW);
+        r = MsiDatabaseImportW(db, tmpdir, L"msitable.idt");
         ok(r == tests[i].ret, " %u expected %u, got %u\n", i, tests[i].ret, r);
 
         r = MsiDatabaseCommit(db);

@@ -45,14 +45,6 @@ static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 static const char *msifile = "winetest-automation.msi";
-static const WCHAR szMsifile[] = {'w','i','n','e','t','e','s','t','-','a','u','t','o','m','a','t','i','o','n','.','m','s','i',0};
-static const WCHAR szMSITEST[] = { 'M','S','I','T','E','S','T',0 };
-static const WCHAR szProductCode[] = { '{','8','3','7','4','5','0','f','a','-','a','3','9','b','-','4','b','c','8','-','b','3','2','1','-','0','8','b','3','9','3','f','7','8','4','b','3','}',0 };
-static const WCHAR szUpgradeCode[] = { '{','C','E','0','6','7','E','8','D','-','2','E','1','A','-','4','3','6','7','-','B','7','3','4','-','4','E','B','2','B','D','A','D','6','5','6','5','}',0 };
-static const WCHAR szProductInfoException[] = { 'P','r','o','d','u','c','t','I','n','f','o',',','P','r','o','d','u','c','t',',','A','t','t','r','i','b','u','t','e',0 };
-static const WCHAR WINE_INSTALLPROPERTY_PACKAGENAMEW[] = {'P','a','c','k','a','g','e','N','a','m','e',0};
-static const WCHAR WINE_INSTALLPROPERTY_PRODUCTNAMEW[] = {'P','r','o','d','u','c','t','N','a','m','e',0};
-static const WCHAR WINE_INSTALLPROPERTY_LOCALPACKAGEW[] = {'L','o','c','a','l','P','a','c','k','a','g','e',0};
 static FILETIME systemtime;
 static CHAR CURR_DIR[MAX_PATH];
 static EXCEPINFO excepinfo;
@@ -60,7 +52,6 @@ static EXCEPINFO excepinfo;
 /*
  * OLE automation data
  **/
-static const WCHAR szProgId[] = { 'W','i','n','d','o','w','s','I','n','s','t','a','l','l','e','r','.','I','n','s','t','a','l','l','e','r',0 };
 static IDispatch *pInstaller;
 
 /* msi database data */
@@ -349,7 +340,6 @@ static void create_database(const CHAR *name, const msi_table *tables, int num_t
 
 static BOOL create_package(LPWSTR path)
 {
-    static const WCHAR slashW[] = {'\\',0};
     DWORD len;
 
     /* Prepare package */
@@ -361,8 +351,7 @@ static BOOL create_package(LPWSTR path)
     if (!len)
         return FALSE;
 
-    lstrcatW(path, slashW);
-    lstrcatW(path, szMsifile);
+    lstrcatW(path, L"\\winetest-automation.msi");
     return TRUE;
 }
 
@@ -490,8 +479,6 @@ static CHAR string1[MAX_PATH], string2[MAX_PATH];
         ok(0, format, extra, string1, aString);  \
 
 /* exception checker */
-static const WCHAR szSource[] = {'M','s','i',' ','A','P','I',' ','E','r','r','o','r',0};
-
 #define ok_exception(hr, szDescription)           \
     if (hr == DISP_E_EXCEPTION) \
     { \
@@ -500,7 +487,7 @@ static const WCHAR szSource[] = {'M','s','i',' ','A','P','I',' ','E','r','r','o'
 \
         ok(excepinfo.bstrSource != NULL, "Exception source was NULL\n"); \
         if (excepinfo.bstrSource)                                       \
-            ok_w2("Exception source was \"%s\" but expected to be \"%s\"\n", excepinfo.bstrSource, szSource); \
+            ok_w2("Exception source was \"%s\" but expected to be \"%s\"\n", excepinfo.bstrSource, L"Msi API Error"); \
 \
         ok(excepinfo.bstrDescription != NULL, "Exception description was NULL\n"); \
         if (excepinfo.bstrDescription) \
@@ -629,9 +616,6 @@ static void test_dispid(void)
 /* Test basic IDispatch functions */
 static void test_dispatch(void)
 {
-    static WCHAR szOpenPackage[] = { 'O','p','e','n','P','a','c','k','a','g','e',0 };
-    static const WCHAR szOpenPackageException[] = {'O','p','e','n','P','a','c','k','a','g','e',',','P','a','c','k','a','g','e','P','a','t','h',',','O','p','t','i','o','n','s',0};
-    static WCHAR szProductState[] = { 'P','r','o','d','u','c','t','S','t','a','t','e',0 };
     HRESULT hr;
     DISPID dispid;
     OLECHAR *name;
@@ -641,7 +625,7 @@ static void test_dispatch(void)
     DISPPARAMS dispparams = {NULL, NULL, 0, 0};
 
     /* Test getting ID of a function name that does not exist */
-    name = (WCHAR *)szMsifile;
+    name = (WCHAR *)L"winetest-automation.msi";
     hr = IDispatch_GetIDsOfNames(pInstaller, &IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
     ok(hr == DISP_E_UNKNOWNNAME, "IDispatch::GetIDsOfNames returned 0x%08x\n", hr);
 
@@ -650,7 +634,7 @@ static void test_dispatch(void)
     ok(hr == DISP_E_MEMBERNOTFOUND, "IDispatch::Invoke returned 0x%08x\n", hr);
 
     /* Test getting ID of a function name that does exist */
-    name = szOpenPackage;
+    name = (WCHAR *)L"OpenPackage";
     hr = IDispatch_GetIDsOfNames(pInstaller, &IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
     ok(hr == S_OK, "IDispatch::GetIDsOfNames returned 0x%08x\n", hr);
 
@@ -687,10 +671,10 @@ static void test_dispatch(void)
     dispparams.cArgs = 1;
     VariantInit(&vararg[0]);
     V_VT(&vararg[0]) = VT_BSTR;
-    V_BSTR(&vararg[0]) = SysAllocString(szMsifile);
+    V_BSTR(&vararg[0]) = SysAllocString(L"winetest-automation.msi");
     hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
     ok(hr == DISP_E_EXCEPTION, "IDispatch::Invoke returned 0x%08x\n", hr);
-    ok_exception(hr, szOpenPackageException);
+    ok_exception(hr, L"OpenPackage,PackagePath,Options");
     VariantClear(&vararg[0]);
 
     /* Provide the required BSTR and an empty second parameter.
@@ -699,11 +683,11 @@ static void test_dispatch(void)
     dispparams.cArgs = 2;
     VariantInit(&vararg[1]);
     V_VT(&vararg[1]) = VT_BSTR;
-    V_BSTR(&vararg[1]) = SysAllocString(szMsifile);
+    V_BSTR(&vararg[1]) = SysAllocString(L"winetest-automation.msi");
     VariantInit(&vararg[0]);
     hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
     ok(hr == DISP_E_EXCEPTION, "IDispatch::Invoke returned 0x%08x\n", hr);
-    ok_exception(hr, szOpenPackageException);
+    ok_exception(hr, L"OpenPackage,PackagePath,Options");
     VariantClear(&vararg[1]);
 
     /* Provide the required BSTR and two empty parameters.
@@ -712,22 +696,22 @@ static void test_dispatch(void)
     dispparams.cArgs = 3;
     VariantInit(&vararg[2]);
     V_VT(&vararg[2]) = VT_BSTR;
-    V_BSTR(&vararg[2]) = SysAllocString(szMsifile);
+    V_BSTR(&vararg[2]) = SysAllocString(L"winetest-automation.msi");
     VariantInit(&vararg[1]);
     VariantInit(&vararg[0]);
     hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
     ok(hr == DISP_E_EXCEPTION, "IDispatch::Invoke returned 0x%08x\n", hr);
-    ok_exception(hr, szOpenPackageException);
+    ok_exception(hr, L"OpenPackage,PackagePath,Options");
     VariantClear(&vararg[2]);
 
     /* Provide the required BSTR and a second parameter with the wrong type. */
     dispparams.cArgs = 2;
     VariantInit(&vararg[1]);
     V_VT(&vararg[1]) = VT_BSTR;
-    V_BSTR(&vararg[1]) = SysAllocString(szMsifile);
+    V_BSTR(&vararg[1]) = SysAllocString(L"winetest-automation.msi");
     VariantInit(&vararg[0]);
     V_VT(&vararg[0]) = VT_BSTR;
-    V_BSTR(&vararg[0]) = SysAllocString(szMsifile);
+    V_BSTR(&vararg[0]) = SysAllocString(L"winetest-automation.msi");
     hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
     ok(hr == DISP_E_TYPEMISMATCH, "IDispatch::Invoke returned 0x%08x\n", hr);
     VariantClear(&vararg[0]);
@@ -742,10 +726,10 @@ static void test_dispatch(void)
     dispparams.cArgs = 1;
     VariantInit(&vararg[0]);
     V_VT(&vararg[0]) = VT_BSTR;
-    V_BSTR(&vararg[0]) = SysAllocString(szMsifile);
+    V_BSTR(&vararg[0]) = SysAllocString(L"winetest-automation.msi");
     hr = IDispatch_Invoke(pInstaller, dispid, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
     todo_wine ok(hr == DISP_E_EXCEPTION, "IDispatch::Invoke returned 0x%08x\n", hr);
-    ok_exception(hr, szOpenPackageException);
+    ok_exception(hr, L"OpenPackage,PackagePath,Options");
     VariantClear(&vararg[0]);
     if (hr != DISP_E_EXCEPTION)
         VariantClear(&varresult);
@@ -835,7 +819,7 @@ static void test_dispatch(void)
     ok(hr == DISP_E_MEMBERNOTFOUND, "IDispatch::Invoke returned 0x%08x\n", hr);
 
     /* Test invoking a read-only property as DISPATCH_PROPERTYPUT or as a DISPATCH_METHOD */
-    name = szProductState;
+    name = (WCHAR *)L"ProductState";
     hr = IDispatch_GetIDsOfNames(pInstaller, &IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
     ok(hr == S_OK, "IDispatch::GetIDsOfNames returned 0x%08x\n", hr);
 
@@ -1597,8 +1581,6 @@ static HRESULT SummaryInfo_PropertyCountGet(IDispatch *pSummaryInfo, int *pCount
 
 static void test_SummaryInfo(IDispatch *pSummaryInfo, const msi_summary_info *info, int num_info, BOOL readonly)
 {
-    static const WCHAR szPropertyException[] = { 'P','r','o','p','e','r','t','y',',','P','i','d',0 };
-    static const WCHAR szTitle[] = { 'T','i','t','l','e',0 };
     VARIANT varresult, var;
     SYSTEMTIME st;
     HRESULT hr;
@@ -1651,11 +1633,11 @@ static void test_SummaryInfo(IDispatch *pSummaryInfo, const msi_summary_info *in
     /* Invalid pids */
     hr = SummaryInfo_PropertyGet(pSummaryInfo, -1, &varresult, VT_EMPTY);
     ok(hr == DISP_E_EXCEPTION, "SummaryInfo_PropertyGet failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szPropertyException);
+    ok_exception(hr, L"Property,Pid");
 
     hr = SummaryInfo_PropertyGet(pSummaryInfo, 1000, &varresult, VT_EMPTY);
     ok(hr == DISP_E_EXCEPTION, "SummaryInfo_PropertyGet failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szPropertyException);
+    ok_exception(hr, L"Property,Pid");
 
     /* Unsupported pids */
     hr = SummaryInfo_PropertyGet(pSummaryInfo, PID_DICTIONARY, &varresult, VT_EMPTY);
@@ -1696,7 +1678,7 @@ static void test_SummaryInfo(IDispatch *pSummaryInfo, const msi_summary_info *in
 
         /* VT_BSTR */
         V_VT(&var) = VT_BSTR;
-        V_BSTR(&var) = SysAllocString(szTitle);
+        V_BSTR(&var) = SysAllocString(L"Title");
         hr = SummaryInfo_PropertyPut(pSummaryInfo, PID_TITLE, &var);
         ok(hr == S_OK, "SummaryInfo_PropertyPut failed, hresult 0x%08x\n", hr);
 
@@ -1740,15 +1722,10 @@ static void test_SummaryInfo(IDispatch *pSummaryInfo, const msi_summary_info *in
 
 static void test_Database(IDispatch *pDatabase, BOOL readonly)
 {
-    static const WCHAR szSql[] = { 'S','E','L','E','C','T',' ','`','F','e','a','t','u','r','e','`',' ','F','R','O','M',' ','`','F','e','a','t','u','r','e','`',' ','W','H','E','R','E',' ','`','F','e','a','t','u','r','e','_','P','a','r','e','n','t','`','=','\'','O','n','e','\'',0 };
-    static const WCHAR szThree[] = { 'T','h','r','e','e',0 };
-    static const WCHAR szTwo[] = { 'T','w','o',0 };
-    static const WCHAR szStringDataField[] = { 'S','t','r','i','n','g','D','a','t','a',',','F','i','e','l','d',0 };
-    static const WCHAR szModifyModeRecord[] = { 'M','o','d','i','f','y',',','M','o','d','e',',','R','e','c','o','r','d',0 };
     IDispatch *pView = NULL, *pSummaryInfo = NULL;
     HRESULT hr;
 
-    hr = Database_OpenView(pDatabase, szSql, &pView);
+    hr = Database_OpenView(pDatabase, L"SELECT `Feature` FROM `Feature` WHERE `Feature_Parent`='One'", &pView);
     ok(hr == S_OK, "Database_OpenView failed, hresult 0x%08x\n", hr);
     if (hr == S_OK)
     {
@@ -1769,35 +1746,35 @@ static void test_Database(IDispatch *pDatabase, BOOL readonly)
             memset(szString, 0, sizeof(szString));
             hr = Record_StringDataGet(pRecord, 1, szString);
             ok(hr == S_OK, "Record_StringDataGet failed, hresult 0x%08x\n", hr);
-            ok_w2("Record_StringDataGet result was %s but expected %s\n", szString, szThree);
+            ok_w2("Record_StringDataGet result was %s but expected %s\n", szString, L"Three");
 
             /* Record::StringDataPut with correct index */
-            hr = Record_StringDataPut(pRecord, 1, szTwo);
+            hr = Record_StringDataPut(pRecord, 1, L"Two");
             ok(hr == S_OK, "Record_StringDataPut failed, hresult 0x%08x\n", hr);
 
             /* Record::StringDataGet */
             memset(szString, 0, sizeof(szString));
             hr = Record_StringDataGet(pRecord, 1, szString);
             ok(hr == S_OK, "Record_StringDataGet failed, hresult 0x%08x\n", hr);
-            ok_w2("Record_StringDataGet result was %s but expected %s\n", szString, szTwo);
+            ok_w2("Record_StringDataGet result was %s but expected %s\n", szString, L"Two");
 
             /* Record::StringDataPut with incorrect index */
             hr = Record_StringDataPut(pRecord, -1, szString);
             ok(hr == DISP_E_EXCEPTION, "Record_StringDataPut failed, hresult 0x%08x\n", hr);
-            ok_exception(hr, szStringDataField);
+            ok_exception(hr, L"StringData,Field");
 
             /* View::Modify with incorrect parameters */
             hr = View_Modify(pView, -5, NULL);
             ok(hr == DISP_E_EXCEPTION, "View_Modify failed, hresult 0x%08x\n", hr);
-            ok_exception(hr, szModifyModeRecord);
+            ok_exception(hr, L"Modify,Mode,Record");
 
             hr = View_Modify(pView, -5, pRecord);
             ok(hr == DISP_E_EXCEPTION, "View_Modify failed, hresult 0x%08x\n", hr);
-            ok_exception(hr, szModifyModeRecord);
+            ok_exception(hr, L"Modify,Mode,Record");
 
             hr = View_Modify(pView, MSIMODIFY_REFRESH, NULL);
             ok(hr == DISP_E_EXCEPTION, "View_Modify failed, hresult 0x%08x\n", hr);
-            ok_exception(hr, szModifyModeRecord);
+            ok_exception(hr, L"Modify,Mode,Record");
 
             hr = View_Modify(pView, MSIMODIFY_REFRESH, pRecord);
             ok(hr == S_OK, "View_Modify failed, hresult 0x%08x\n", hr);
@@ -1806,7 +1783,7 @@ static void test_Database(IDispatch *pDatabase, BOOL readonly)
             memset(szString, 0, sizeof(szString));
             hr = Record_StringDataGet(pRecord, 1, szString);
             ok(hr == S_OK, "Record_StringDataGet failed, hresult 0x%08x\n", hr);
-            todo_wine ok_w2("Record_StringDataGet result was %s but expected %s\n", szString, szThree);
+            todo_wine ok_w2("Record_StringDataGet result was %s but expected %s\n", szString, L"Three");
 
             IDispatch_Release(pRecord);
         }
@@ -1821,7 +1798,7 @@ static void test_Database(IDispatch *pDatabase, BOOL readonly)
             memset(szString, 0, sizeof(szString));
             hr = Record_StringDataGet(pRecord, 1, szString);
             ok(hr == S_OK, "Record_StringDataGet failed, hresult 0x%08x\n", hr);
-            ok_w2("Record_StringDataGet result was %s but expected %s\n", szString, szTwo);
+            ok_w2("Record_StringDataGet result was %s but expected %s\n", szString, L"Two");
 
             IDispatch_Release(pRecord);
         }
@@ -1853,17 +1830,6 @@ static void test_Database(IDispatch *pDatabase, BOOL readonly)
 
 static void test_Session(IDispatch *pSession)
 {
-    static const WCHAR szProductName[] = { 'P','r','o','d','u','c','t','N','a','m','e',0 };
-    static const WCHAR szOne[] = { 'O','n','e',0 };
-    static const WCHAR szOneStateFalse[] = { '!','O','n','e','>','0',0 };
-    static const WCHAR szOneStateTrue[] = { '!','O','n','e','=','-','1',0 };
-    static const WCHAR szOneActionFalse[] = { '$','O','n','e','=','-','1',0 };
-    static const WCHAR szOneActionTrue[] = { '$','O','n','e','>','0',0 };
-    static const WCHAR szCostInitialize[] = { 'C','o','s','t','I','n','i','t','i','a','l','i','z','e',0 };
-    static const WCHAR szEmpty[] = { 0 };
-    static const WCHAR szEquals[] = { '=',0 };
-    static const WCHAR szPropertyName[] = { 'P','r','o','p','e','r','t','y',',','N','a','m','e',0 };
-    static const WCHAR szModeFlag[] = { 'M','o','d','e',',','F','l','a','g',0 };
     WCHAR stringw[MAX_PATH];
     CHAR string[MAX_PATH];
     UINT len;
@@ -1889,9 +1855,9 @@ static void test_Session(IDispatch *pSession)
 
     /* Session::Property, get */
     memset(stringw, 0, sizeof(stringw));
-    hr = Session_PropertyGet(pSession, szProductName, stringw);
+    hr = Session_PropertyGet(pSession, L"ProductName", stringw);
     ok(hr == S_OK, "Session_PropertyGet failed, hresult 0x%08x\n", hr);
-    if (lstrcmpW(stringw, szMSITEST) != 0)
+    if (lstrcmpW(stringw, L"MSITEST") != 0)
     {
         len = WideCharToMultiByte(CP_ACP, 0, stringw, -1, string, MAX_PATH, NULL, NULL);
         ok(len, "WideCharToMultiByteChar returned error %d\n", GetLastError());
@@ -1899,12 +1865,12 @@ static void test_Session(IDispatch *pSession)
     }
 
     /* Session::Property, put */
-    hr = Session_PropertyPut(pSession, szProductName, szProductName);
+    hr = Session_PropertyPut(pSession, L"ProductName", L"ProductName");
     ok(hr == S_OK, "Session_PropertyPut failed, hresult 0x%08x\n", hr);
     memset(stringw, 0, sizeof(stringw));
-    hr = Session_PropertyGet(pSession, szProductName, stringw);
+    hr = Session_PropertyGet(pSession, L"ProductName", stringw);
     ok(hr == S_OK, "Session_PropertyGet failed, hresult 0x%08x\n", hr);
-    if (lstrcmpW(stringw, szProductName) != 0)
+    if (lstrcmpW(stringw, L"ProductName") != 0)
     {
         len = WideCharToMultiByte(CP_ACP, 0, stringw, -1, string, MAX_PATH, NULL, NULL);
         ok(len, "WideCharToMultiByteChar returned error %d\n", GetLastError());
@@ -1912,12 +1878,12 @@ static void test_Session(IDispatch *pSession)
     }
 
     /* Try putting a property using empty property identifier */
-    hr = Session_PropertyPut(pSession, szEmpty, szProductName);
+    hr = Session_PropertyPut(pSession, L"", L"ProductName");
     ok(hr == DISP_E_EXCEPTION, "Session_PropertyPut failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szPropertyName);
+    ok_exception(hr, L"Property,Name");
 
     /* Try putting a property using illegal property identifier */
-    hr = Session_PropertyPut(pSession, szEquals, szProductName);
+    hr = Session_PropertyPut(pSession, L"=", L"ProductName");
     ok(hr == S_OK, "Session_PropertyPut failed, hresult 0x%08x\n", hr);
 
     /* Session::Language, get */
@@ -1945,7 +1911,7 @@ static void test_Session(IDispatch *pSession)
 
     hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTNOW, VARIANT_TRUE);
     ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szModeFlag);
+    ok_exception(hr, L"Mode,Flag");
 
     hr = Session_ModeGet(pSession, MSIRUNMODE_REBOOTNOW, &bool);
     ok(hr == S_OK, "Session_ModeGet failed, hresult 0x%08x\n", hr);
@@ -1953,11 +1919,11 @@ static void test_Session(IDispatch *pSession)
 
     hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTNOW, VARIANT_FALSE);  /* set it again so we don't reboot */
     ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szModeFlag);
+    ok_exception(hr, L"Mode,Flag");
 
     hr = Session_ModePut(pSession, MSIRUNMODE_MAINTENANCE, VARIANT_TRUE);
     ok(hr == DISP_E_EXCEPTION, "Session_ModePut failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szModeFlag);
+    ok_exception(hr, L"Mode,Flag");
 
     /* Session::Database, get */
     hr = Session_Database(pSession, &pDatabase);
@@ -1973,16 +1939,16 @@ static void test_Session(IDispatch *pSession)
     ok(hr == S_OK, "Session_EvaluateCondition failed, hresult 0x%08x\n", hr);
     ok(myint == MSICONDITION_NONE, "Feature current state was %d but expected %d\n", myint, INSTALLSTATE_UNKNOWN);
 
-    hr = Session_EvaluateCondition(pSession, szEmpty, &myint);
+    hr = Session_EvaluateCondition(pSession, L"", &myint);
     ok(hr == S_OK, "Session_EvaluateCondition failed, hresult 0x%08x\n", hr);
     ok(myint == MSICONDITION_NONE, "Feature current state was %d but expected %d\n", myint, INSTALLSTATE_UNKNOWN);
 
-    hr = Session_EvaluateCondition(pSession, szEquals, &myint);
+    hr = Session_EvaluateCondition(pSession, L"=", &myint);
     ok(hr == S_OK, "Session_EvaluateCondition failed, hresult 0x%08x\n", hr);
     ok(myint == MSICONDITION_ERROR, "Feature current state was %d but expected %d\n", myint, INSTALLSTATE_UNKNOWN);
 
     /* Session::DoAction(CostInitialize) must occur before the next statements */
-    hr = Session_DoAction(pSession, szCostInitialize, &myint);
+    hr = Session_DoAction(pSession, L"CostInitialize", &myint);
     ok(hr == S_OK, "Session_DoAction failed, hresult 0x%08x\n", hr);
     ok(myint == IDOK, "DoAction(CostInitialize) returned %d, %d expected\n", myint, IDOK);
 
@@ -1991,7 +1957,7 @@ static void test_Session(IDispatch *pSession)
     ok(hr == S_OK, "Session_SetInstallLevel failed, hresult 0x%08x\n", hr);
 
     /* Session::FeatureCurrentState, get */
-    hr = Session_FeatureCurrentState(pSession, szOne, &myint);
+    hr = Session_FeatureCurrentState(pSession, L"One", &myint);
     ok(hr == S_OK, "Session_FeatureCurrentState failed, hresult 0x%08x\n", hr);
     ok(myint == INSTALLSTATE_UNKNOWN, "Feature current state was %d but expected %d\n", myint, INSTALLSTATE_UNKNOWN);
 
@@ -2003,27 +1969,27 @@ static void test_Session(IDispatch *pSession)
     ok(myint == 0, "Session_Message returned %x\n", myint);
 
     /* Session::EvaluateCondition */
-    hr = Session_EvaluateCondition(pSession, szOneStateFalse, &myint);
+    hr = Session_EvaluateCondition(pSession, L"!One>0", &myint);
     ok(hr == S_OK, "Session_EvaluateCondition failed, hresult 0x%08x\n", hr);
     ok(myint == MSICONDITION_FALSE, "Feature current state was %d but expected %d\n", myint, INSTALLSTATE_UNKNOWN);
 
-    hr = Session_EvaluateCondition(pSession, szOneStateTrue, &myint);
+    hr = Session_EvaluateCondition(pSession, L"!One=-1", &myint);
     ok(hr == S_OK, "Session_EvaluateCondition failed, hresult 0x%08x\n", hr);
     ok(myint == MSICONDITION_TRUE, "Feature current state was %d but expected %d\n", myint, INSTALLSTATE_UNKNOWN);
 
     /* Session::FeatureRequestState, put */
-    hr = Session_FeatureRequestStatePut(pSession, szOne, INSTALLSTATE_ADVERTISED);
+    hr = Session_FeatureRequestStatePut(pSession, L"One", INSTALLSTATE_ADVERTISED);
     ok(hr == S_OK, "Session_FeatureRequestStatePut failed, hresult 0x%08x\n", hr);
-    hr = Session_FeatureRequestStateGet(pSession, szOne, &myint);
+    hr = Session_FeatureRequestStateGet(pSession, L"One", &myint);
     ok(hr == S_OK, "Session_FeatureRequestStateGet failed, hresult 0x%08x\n", hr);
     ok(myint == INSTALLSTATE_ADVERTISED, "Feature request state was %d but expected %d\n", myint, INSTALLSTATE_ADVERTISED);
 
     /* Session::EvaluateCondition */
-    hr = Session_EvaluateCondition(pSession, szOneActionFalse, &myint);
+    hr = Session_EvaluateCondition(pSession, L"$One=-1", &myint);
     ok(hr == S_OK, "Session_EvaluateCondition failed, hresult 0x%08x\n", hr);
     ok(myint == MSICONDITION_FALSE, "Feature current state was %d but expected %d\n", myint, INSTALLSTATE_UNKNOWN);
 
-    hr = Session_EvaluateCondition(pSession, szOneActionTrue, &myint);
+    hr = Session_EvaluateCondition(pSession, L"$One>0", &myint);
     ok(hr == S_OK, "Session_EvaluateCondition failed, hresult 0x%08x\n", hr);
     ok(myint == MSICONDITION_TRUE, "Feature current state was %d but expected %d\n", myint, INSTALLSTATE_UNKNOWN);
 }
@@ -2052,21 +2018,6 @@ static DWORD delete_key( HKEY hkey )
 static void test_Installer_RegistryValue(void)
 {
     static const DWORD qw[2] = { 0x12345678, 0x87654321 };
-    static const WCHAR szKey[] = { 'S','o','f','t','w','a','r','e','\\','W','i','n','e','\\','T','e','s','t',0 };
-    static const WCHAR szOne[] = { 'O','n','e',0 };
-    static const WCHAR szTwo[] = { 'T','w','o',0 };
-    static const WCHAR szThree[] = { 'T','h','r','e','e',0 };
-    static const WCHAR szREG_BINARY[] = { '(','R','E','G','_','B','I','N','A','R','Y',')',0 };
-    static const WCHAR szFour[] = { 'F','o','u','r',0 };
-    static const WCHAR szExpand[] = { '%','M','S','I','T','E','S','T','%',0 };
-    static const WCHAR szFive[] = { 'F','i','v','e',0,'H','i',0,0 };
-    static const WCHAR szFiveHi[] = { 'F','i','v','e','\n','H','i',0 };
-    static const WCHAR szSix[] = { 'S','i','x',0 };
-    static const WCHAR szREG_[] = { '(','R','E','G','_',']',0 };
-    static const WCHAR szREG_2[] = { '(','R','E','G','_','?','?',')',0 };
-    static const WCHAR szSeven[] = { 'S','e','v','e','n',0 };
-    static const WCHAR szEight[] = { 'E','i','g','h','t',0 };
-    static const WCHAR szBlank[] = { 0 };
     VARIANT varresult;
     VARIANTARG vararg;
     WCHAR szString[MAX_PATH];
@@ -2078,7 +2029,7 @@ static void test_Installer_RegistryValue(void)
 
     /* Delete keys */
     SetLastError(0xdeadbeef);
-    lRet = RegOpenKeyW( HKEY_CURRENT_USER, szKey, &hkey );
+    lRet = RegOpenKeyW( HKEY_CURRENT_USER, L"Software\\Wine\\Test", &hkey );
     if (!lRet && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
         win_skip("Needed W-functions are not implemented\n");
@@ -2088,129 +2039,129 @@ static void test_Installer_RegistryValue(void)
         delete_key( hkey );
 
     /* Does our key exist? Shouldn't; check with all three possible value parameter types */
-    hr = Installer_RegistryValueE(curr_user, szKey, &bRet);
+    hr = Installer_RegistryValueE(curr_user, L"Software\\Wine\\Test", &bRet);
     ok(hr == S_OK, "Installer_RegistryValueE failed, hresult 0x%08x\n", hr);
     ok(!bRet, "Registry key expected to not exist, but Installer_RegistryValue claims it does\n");
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(curr_user, szKey, NULL, szString);
+    hr = Installer_RegistryValueW(curr_user, L"Software\\Wine\\Test", NULL, szString);
     ok(hr == DISP_E_BADINDEX, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(curr_user, szKey, 0, szString, VT_BSTR);
+    hr = Installer_RegistryValueI(curr_user, L"Software\\Wine\\Test", 0, szString, VT_BSTR);
     ok(hr == DISP_E_BADINDEX, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
 
     /* Create key */
-    ok(!RegCreateKeyW( HKEY_CURRENT_USER, szKey, &hkey ), "RegCreateKeyW failed\n");
+    ok(!RegCreateKeyW( HKEY_CURRENT_USER, L"Software\\Wine\\Test", &hkey ), "RegCreateKeyW failed\n");
 
-    ok(!RegSetValueExW(hkey,szOne,0,REG_SZ, (const BYTE *)szOne, sizeof(szOne)),
+    ok(!RegSetValueExW(hkey, L"One", 0, REG_SZ, (const BYTE *)L"One", sizeof(L"one")),
         "RegSetValueExW failed\n");
-    ok(!RegSetValueExW(hkey,szTwo,0,REG_DWORD, (const BYTE *)qw, 4),
+    ok(!RegSetValueExW(hkey, L"Two", 0, REG_DWORD, (const BYTE *)qw, 4),
         "RegSetValueExW failed\n");
-    ok(!RegSetValueExW(hkey,szThree,0,REG_BINARY, (const BYTE *)qw, 4),
+    ok(!RegSetValueExW(hkey, L"Three", 0, REG_BINARY, (const BYTE *)qw, 4),
         "RegSetValueExW failed\n");
     bRet = SetEnvironmentVariableA("MSITEST", "Four");
     ok(bRet, "SetEnvironmentVariableA failed %d\n", GetLastError());
-    ok(!RegSetValueExW(hkey,szFour,0,REG_EXPAND_SZ, (const BYTE *)szExpand, sizeof(szExpand)),
+    ok(!RegSetValueExW(hkey, L"Four", 0, REG_EXPAND_SZ, (const BYTE *)L"%MSITEST%", sizeof(L"%MSITEST%")),
         "RegSetValueExW failed\n");
-    ok(!RegSetValueExW(hkey,szFive,0,REG_MULTI_SZ, (const BYTE *)szFive, sizeof(szFive)),
+    ok(!RegSetValueExW(hkey, L"Five\0Hi\0", 0, REG_MULTI_SZ, (const BYTE *)L"Five\0Hi\0", sizeof(L"Five\0Hi\0")),
         "RegSetValueExW failed\n");
-    ok(!RegSetValueExW(hkey,szSix,0,REG_QWORD, (const BYTE *)qw, 8),
+    ok(!RegSetValueExW(hkey, L"Six", 0, REG_QWORD, (const BYTE *)qw, 8),
         "RegSetValueExW failed\n");
-    ok(!RegSetValueExW(hkey,szSeven,0,REG_NONE, NULL, 0),
-        "RegSetValueExW failed\n");
-
-    ok(!RegSetValueExW(hkey,NULL,0,REG_SZ, (const BYTE *)szOne, sizeof(szOne)),
+    ok(!RegSetValueExW(hkey, L"Seven", 0, REG_NONE, NULL, 0),
         "RegSetValueExW failed\n");
 
-    ok(!RegCreateKeyW( hkey, szEight, &hkey_sub ), "RegCreateKeyW failed\n");
+    ok(!RegSetValueExW(hkey, NULL, 0, REG_SZ, (const BYTE *)L"One", sizeof(L"One")),
+        "RegSetValueExW failed\n");
+
+    ok(!RegCreateKeyW( hkey, L"Eight", &hkey_sub ), "RegCreateKeyW failed\n");
 
     /* Does our key exist? It should, and make sure we retrieve the correct default value */
     bRet = FALSE;
-    hr = Installer_RegistryValueE(curr_user, szKey, &bRet);
+    hr = Installer_RegistryValueE(curr_user, L"Software\\Wine\\Test", &bRet);
     ok(hr == S_OK, "Installer_RegistryValueE failed, hresult 0x%08x\n", hr);
     ok(bRet, "Registry key expected to exist, but Installer_RegistryValue claims it does not\n");
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(curr_user, szKey, NULL, szString);
+    hr = Installer_RegistryValueW(curr_user, L"Software\\Wine\\Test", NULL, szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
-    ok_w2("Default registry value \"%s\" does not match expected \"%s\"\n", szString, szOne);
+    ok_w2("Default registry value \"%s\" does not match expected \"%s\"\n", szString, L"One");
 
     /* Ask for the value of a nonexistent key */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(curr_user, szKey, szExpand, szString);
+    hr = Installer_RegistryValueW(curr_user, L"Software\\Wine\\Test", L"%MSITEST%", szString);
     ok(hr == DISP_E_BADINDEX, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
 
     /* Get values of keys */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(curr_user, szKey, szOne, szString);
+    hr = Installer_RegistryValueW(curr_user, L"Software\\Wine\\Test", L"One", szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
-    ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, szOne);
+    ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, L"One");
 
     VariantInit(&vararg);
     V_VT(&vararg) = VT_BSTR;
-    V_BSTR(&vararg) = SysAllocString(szTwo);
-    hr = Installer_RegistryValue(curr_user, szKey, vararg, &varresult, VT_I4);
+    V_BSTR(&vararg) = SysAllocString(L"Two");
+    hr = Installer_RegistryValue(curr_user, L"Software\\Wine\\Test", vararg, &varresult, VT_I4);
     ok(hr == S_OK, "Installer_RegistryValue failed, hresult 0x%08x\n", hr);
     ok(V_I4(&varresult) == 305419896, "Registry value %d does not match expected value\n", V_I4(&varresult));
     VariantClear(&varresult);
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(curr_user, szKey, szThree, szString);
+    hr = Installer_RegistryValueW(curr_user, L"Software\\Wine\\Test", L"Three", szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
-    ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, szREG_BINARY);
+    ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, L"(REG_BINARY)");
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(curr_user, szKey, szFour, szString);
+    hr = Installer_RegistryValueW(curr_user, L"Software\\Wine\\Test", L"Four", szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
-    ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, szFour);
+    ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, L"Four");
 
     /* Vista does not NULL-terminate this case */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(curr_user, szKey, szFive, szString);
+    hr = Installer_RegistryValueW(curr_user, L"Software\\Wine\\Test", L"Five\0Hi\0", szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
     ok_w2n("Registry value \"%s\" does not match expected \"%s\"\n",
-           szString, szFiveHi, lstrlenW(szFiveHi));
+           szString, L"Five\nHi", lstrlenW(L"Five\nHi"));
 
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueW(curr_user, szKey, szSix, szString);
+    hr = Installer_RegistryValueW(curr_user, L"Software\\Wine\\Test", L"Six", szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
-    ok(!lstrcmpW(szString, szREG_2) || broken(!lstrcmpW(szString, szREG_)),
+    ok(!lstrcmpW(szString, L"(REG_\?\?)") || broken(!lstrcmpW(szString, L"(REG_]")),
        "Registry value does not match\n");
 
     VariantInit(&vararg);
     V_VT(&vararg) = VT_BSTR;
-    V_BSTR(&vararg) = SysAllocString(szSeven);
-    hr = Installer_RegistryValue(curr_user, szKey, vararg, &varresult, VT_EMPTY);
+    V_BSTR(&vararg) = SysAllocString(L"Seven");
+    hr = Installer_RegistryValue(curr_user, L"Software\\Wine\\Test", vararg, &varresult, VT_EMPTY);
     ok(hr == S_OK, "Installer_RegistryValue failed, hresult 0x%08x\n", hr);
 
     /* Get string class name for the key */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(curr_user, szKey, 0, szString, VT_BSTR);
+    hr = Installer_RegistryValueI(curr_user, L"Software\\Wine\\Test", 0, szString, VT_BSTR);
     ok(hr == S_OK, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
-    ok_w2("Registry name \"%s\" does not match expected \"%s\"\n", szString, szBlank);
+    ok_w2("Registry name \"%s\" does not match expected \"%s\"\n", szString, L"");
 
     /* Get name of a value by positive number (RegEnumValue like), valid index */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(curr_user, szKey, 2, szString, VT_BSTR);
+    hr = Installer_RegistryValueI(curr_user, L"Software\\Wine\\Test", 2, szString, VT_BSTR);
     ok(hr == S_OK, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
     /* RegEnumValue order seems different on wine */
-    todo_wine ok_w2("Registry name \"%s\" does not match expected \"%s\"\n", szString, szTwo);
+    todo_wine ok_w2("Registry name \"%s\" does not match expected \"%s\"\n", szString, L"Two");
 
     /* Get name of a value by positive number (RegEnumValue like), invalid index */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(curr_user, szKey, 10, szString, VT_EMPTY);
+    hr = Installer_RegistryValueI(curr_user, L"Software\\Wine\\Test", 10, szString, VT_EMPTY);
     ok(hr == S_OK, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
 
     /* Get name of a subkey by negative number (RegEnumValue like), valid index */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(curr_user, szKey, -1, szString, VT_BSTR);
+    hr = Installer_RegistryValueI(curr_user, L"Software\\Wine\\Test", -1, szString, VT_BSTR);
     ok(hr == S_OK, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
-    ok_w2("Registry name \"%s\" does not match expected \"%s\"\n", szString, szEight);
+    ok_w2("Registry name \"%s\" does not match expected \"%s\"\n", szString, L"Eight");
 
     /* Get name of a subkey by negative number (RegEnumValue like), invalid index */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_RegistryValueI(curr_user, szKey, -10, szString, VT_EMPTY);
+    hr = Installer_RegistryValueI(curr_user, L"Software\\Wine\\Test", -10, szString, VT_EMPTY);
     ok(hr == S_OK, "Installer_RegistryValueI failed, hresult 0x%08x\n", hr);
 
     /* clean up */
@@ -2266,7 +2217,7 @@ static void test_Installer_Products(BOOL bProductInstalled)
                     ok(iValue == INSTALLSTATE_DEFAULT || iValue == INSTALLSTATE_ADVERTISED, "Installer_ProductState returned %d, expected %d or %d\n", iValue, INSTALLSTATE_DEFAULT, INSTALLSTATE_ADVERTISED);
 
                 /* Not found our product code yet? Check */
-                if (!bProductFound && !lstrcmpW(szString, szProductCode))
+                if (!bProductFound && !lstrcmpW(szString, L"{837450fa-a39b-4bc8-b321-08b393f784b3}"))
                     bProductFound = TRUE;
 
                 /* IEnumVARIANT::Next */
@@ -2458,7 +2409,7 @@ static void test_Installer_InstallProduct(void)
     ok(hr == S_OK, "Expected UILevel property put invoke to return S_OK, got 0x%08x\n", hr);
 
     /* Installer::InstallProduct */
-    hr = Installer_InstallProduct(szMsifile, NULL);
+    hr = Installer_InstallProduct(L"winetest-automation.msi", NULL);
     if (hr == DISP_E_EXCEPTION)
     {
         skip("InstallProduct failed, insufficient rights?\n");
@@ -2468,7 +2419,7 @@ static void test_Installer_InstallProduct(void)
     ok(hr == S_OK, "Installer_InstallProduct failed, hresult 0x%08x\n", hr);
 
     /* Installer::ProductState for our product code, which has been installed */
-    hr = Installer_ProductState(szProductCode, &iValue);
+    hr = Installer_ProductState(L"{837450fa-a39b-4bc8-b321-08b393f784b3}", &iValue);
     ok(hr == S_OK, "Installer_ProductState failed, hresult 0x%08x\n", hr);
     ok(iValue == INSTALLSTATE_DEFAULT, "Installer_ProductState returned %d, expected %d\n", iValue, INSTALLSTATE_DEFAULT);
 
@@ -2476,33 +2427,33 @@ static void test_Installer_InstallProduct(void)
 
     /* NULL attribute */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_ProductInfo(szProductCode, NULL, szString);
+    hr = Installer_ProductInfo(L"{837450fa-a39b-4bc8-b321-08b393f784b3}", NULL, szString);
     ok(hr == DISP_E_EXCEPTION, "Installer_ProductInfo failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szProductInfoException);
+    ok_exception(hr, L"ProductInfo,Product,Attribute");
 
     /* Nonexistent attribute */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_ProductInfo(szProductCode, szMsifile, szString);
+    hr = Installer_ProductInfo(L"{837450fa-a39b-4bc8-b321-08b393f784b3}", L"winetest-automation.msi", szString);
     ok(hr == DISP_E_EXCEPTION, "Installer_ProductInfo failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szProductInfoException);
+    ok_exception(hr, L"ProductInfo,Product,Attribute");
 
     /* Package name */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_ProductInfo(szProductCode, WINE_INSTALLPROPERTY_PACKAGENAMEW, szString);
+    hr = Installer_ProductInfo(L"{837450fa-a39b-4bc8-b321-08b393f784b3}", L"PackageName", szString);
     ok(hr == S_OK, "Installer_ProductInfo failed, hresult 0x%08x\n", hr);
-    todo_wine ok_w2("Installer_ProductInfo returned %s but expected %s\n", szString, szMsifile);
+    todo_wine ok_w2("Installer_ProductInfo returned %s but expected %s\n", szString, L"winetest-automation.msi");
 
     /* Product name */
     memset(szString, 0, sizeof(szString));
-    hr = Installer_ProductInfo(szProductCode, WINE_INSTALLPROPERTY_PRODUCTNAMEW, szString);
+    hr = Installer_ProductInfo(L"{837450fa-a39b-4bc8-b321-08b393f784b3}", L"ProductName", szString);
     ok(hr == S_OK, "Installer_ProductInfo failed, hresult 0x%08x\n", hr);
-    todo_wine ok_w2("Installer_ProductInfo returned %s but expected %s\n", szString, szMSITEST);
+    todo_wine ok_w2("Installer_ProductInfo returned %s but expected %s\n", szString, L"MSITEST");
 
     /* Installer::Products */
     test_Installer_Products(TRUE);
 
     /* Installer::RelatedProducts for our upgrade code */
-    hr = Installer_RelatedProducts(szUpgradeCode, &pStringList);
+    hr = Installer_RelatedProducts(L"{CE067E8D-2E1A-4367-B734-4EB2BDAD6565}", &pStringList);
     ok(hr == S_OK, "Installer_RelatedProducts failed, hresult 0x%08x\n", hr);
     if (hr == S_OK)
     {
@@ -2515,12 +2466,12 @@ static void test_Installer_InstallProduct(void)
         memset(szString, 0, sizeof(szString));
         hr = StringList_Item(pStringList, 0, szString);
         ok(hr == S_OK, "StringList_Item failed (idx 0, count %d), hresult 0x%08x\n", iCount, hr);
-        ok_w2("StringList_Item returned %s but expected %s\n", szString, szProductCode);
+        ok_w2("StringList_Item returned %s but expected %s\n", szString, L"{837450fa-a39b-4bc8-b321-08b393f784b3}");
 
         IDispatch_Release(pStringList);
     }
 
-    hr = Installer_ProductInfo(szProductCode, WINE_INSTALLPROPERTY_LOCALPACKAGEW, szString);
+    hr = Installer_ProductInfo(L"{837450fa-a39b-4bc8-b321-08b393f784b3}", L"LocalPackage", szString);
     ok(hr == S_OK, "Installer_ProductInfo failed, hresult 0x%08x\n", hr);
     DeleteFileW( szString );
 
@@ -2608,8 +2559,6 @@ static void test_Installer_InstallProduct(void)
 
 static void test_Installer(void)
 {
-    static const WCHAR szCreateRecordException[] = { 'C','r','e','a','t','e','R','e','c','o','r','d',',','C','o','u','n','t',0 };
-    static const WCHAR szIntegerDataException[] = { 'I','n','t','e','g','e','r','D','a','t','a',',','F','i','e','l','d',0 };
     WCHAR szPath[MAX_PATH];
     HRESULT hr;
     IDispatch *pSession = NULL, *pDatabase = NULL, *pRecord = NULL, *pStringList = NULL, *pSumInfo = NULL;
@@ -2622,7 +2571,7 @@ static void test_Installer(void)
     /* Test for error */
     hr = Installer_CreateRecord(-1, &pRecord);
     ok(hr == DISP_E_EXCEPTION, "Installer_CreateRecord failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szCreateRecordException);
+    ok_exception(hr, L"CreateRecord,Count");
 
     /* Test for success */
     hr = Installer_CreateRecord(1, &pRecord);
@@ -2652,7 +2601,7 @@ static void test_Installer(void)
         /* Record::IntegerDataPut, bad index */
         hr = Record_IntegerDataPut(pRecord, 10, 100);
         ok(hr == DISP_E_EXCEPTION, "Record_IntegerDataPut failed, hresult 0x%08x\n", hr);
-        ok_exception(hr, szIntegerDataException);
+        ok_exception(hr, L"IntegerData,Field");
 
         /* Record::IntegerDataGet */
         hr = Record_IntegerDataGet(pRecord, 1, &iValue);
@@ -2704,7 +2653,7 @@ static void test_Installer(void)
     test_Installer_RegistryValue();
 
     /* Installer::ProductState for our product code, which should not be installed */
-    hr = Installer_ProductState(szProductCode, &iValue);
+    hr = Installer_ProductState(L"{837450fa-a39b-4bc8-b321-08b393f784b3}", &iValue);
     ok(hr == S_OK, "Installer_ProductState failed, hresult 0x%08x\n", hr);
     ok(iValue == INSTALLSTATE_UNKNOWN, "Installer_ProductState returned %d, expected %d\n", iValue, INSTALLSTATE_UNKNOWN);
 
@@ -2712,21 +2661,21 @@ static void test_Installer(void)
 
     /* Package name */
     memset(szPath, 0, sizeof(szPath));
-    hr = Installer_ProductInfo(szProductCode, WINE_INSTALLPROPERTY_PACKAGENAMEW, szPath);
+    hr = Installer_ProductInfo(L"{837450fa-a39b-4bc8-b321-08b393f784b3}", L"PackageName", szPath);
     ok(hr == DISP_E_EXCEPTION, "Installer_ProductInfo failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szProductInfoException);
+    ok_exception(hr, L"ProductInfo,Product,Attribute");
 
     /* NULL attribute and NULL product code */
     memset(szPath, 0, sizeof(szPath));
     hr = Installer_ProductInfo(NULL, NULL, szPath);
     ok(hr == DISP_E_EXCEPTION, "Installer_ProductInfo failed, hresult 0x%08x\n", hr);
-    ok_exception(hr, szProductInfoException);
+    ok_exception(hr, L"ProductInfo,Product,Attribute");
 
     /* Installer::Products */
     test_Installer_Products(FALSE);
 
     /* Installer::RelatedProducts for our upgrade code, should not find anything */
-    hr = Installer_RelatedProducts(szUpgradeCode, &pStringList);
+    hr = Installer_RelatedProducts(L"{CE067E8D-2E1A-4367-B734-4EB2BDAD6565}", &pStringList);
     ok(hr == S_OK, "Installer_RelatedProducts failed, hresult 0x%08x\n", hr);
     if (hr == S_OK)
     {
@@ -2776,7 +2725,7 @@ START_TEST(automation)
 
     hr = OleInitialize(NULL);
     ok (hr == S_OK, "OleInitialize returned 0x%08x\n", hr);
-    hr = CLSIDFromProgID(szProgId, &clsid);
+    hr = CLSIDFromProgID(L"WindowsInstaller.Installer", &clsid);
     ok (hr == S_OK, "CLSIDFromProgID returned 0x%08x\n", hr);
     hr = CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&pUnk);
     ok(hr == S_OK, "CoCreateInstance returned 0x%08x\n", hr);

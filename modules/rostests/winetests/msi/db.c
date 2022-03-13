@@ -33,8 +33,8 @@
 static const char *msifile = "winetest-db.msi";
 static const char *msifile2 = "winetst2-db.msi";
 static const char *mstfile = "winetst-db.mst";
-static const WCHAR msifileW[] = {'w','i','n','e','t','e','s','t','-','d','b','.','m','s','i',0};
-static const WCHAR msifile2W[] = {'w','i','n','e','t','s','t','2','-','d','b','.','m','s','i',0};
+static const WCHAR msifileW[] = L"winetest-db.msi";
+static const WCHAR msifile2W[] = L"winetst2-db.msi";
 
 static void WINAPIV check_record_(int line, MSIHANDLE rec, UINT count, ...)
 {
@@ -1428,7 +1428,7 @@ static void test_msiexport(void)
 
 static void test_longstrings(void)
 {
-    const char insert_query[] = 
+    const char insert_query[] =
         "INSERT INTO `strings` ( `id`, `val` ) VALUES('1', 'Z')";
     char *str;
     MSIHANDLE hdb = 0, hview = 0, hrec = 0;
@@ -1442,7 +1442,7 @@ static void test_longstrings(void)
     ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
 
     /* create a table */
-    r = try_query( hdb, 
+    r = try_query( hdb,
         "CREATE TABLE `strings` ( `id` INT, `val` CHAR(0) PRIMARY KEY `id`)");
     ok(r == ERROR_SUCCESS, "query failed\n");
 
@@ -1507,7 +1507,7 @@ static void create_file_data(LPCSTR name, LPCSTR data, DWORD size)
 }
 
 #define create_file(name) create_file_data(name, name, 0)
- 
+
 static void test_streamtable(void)
 {
     MSIHANDLE hdb = 0, rec, view, hsi;
@@ -2740,7 +2740,7 @@ static void test_handle_limit(void)
         static char szQueryBuf[256] = "SELECT * from `_Tables`";
         hviews[i] = 0xdeadbeeb;
         r = MsiDatabaseOpenViewA(hdb, szQueryBuf, &hviews[i]);
-        if( r != ERROR_SUCCESS || hviews[i] == 0xdeadbeeb || 
+        if( r != ERROR_SUCCESS || hviews[i] == 0xdeadbeeb ||
             hviews[i] == 0 || (i && (hviews[i] == hviews[i-1])))
             break;
     }
@@ -4776,34 +4776,6 @@ static void test_rows_order(void)
 
 static void test_collation(void)
 {
-    static const WCHAR query1[] =
-        {'I','N','S','E','R','T',' ','I','N','T','O',' ','`','b','a','r','`',' ',
-         '(','`','f','o','o','`',',','`','b','a','z','`',')',' ','V','A','L','U','E','S',' ',
-         '(','\'','a',0x30a,'\'',',','\'','C','\'',')',0};
-    static const WCHAR query2[] =
-        {'I','N','S','E','R','T',' ','I','N','T','O',' ','`','b','a','r','`',' ',
-         '(','`','f','o','o','`',',','`','b','a','z','`',')',' ','V','A','L','U','E','S',' ',
-         '(','\'',0xe5,'\'',',','\'','D','\'',')',0};
-    static const WCHAR query3[] =
-        {'C','R','E','A','T','E',' ','T','A','B','L','E',' ','`','b','a','z','`',' ',
-         '(',' ','`','a',0x30a,'`',' ','L','O','N','G','C','H','A','R',' ','N','O','T',' ','N','U','L','L',',',
-           ' ','`',0xe5,'`',' ','L','O','N','G','C','H','A','R',' ','N','O','T',' ','N','U','L','L',' ',
-           'P','R','I','M','A','R','Y',' ','K','E','Y',' ','`','a',0x30a,'`',')',0};
-    static const WCHAR query4[] =
-        {'C','R','E','A','T','E',' ','T','A','B','L','E',' ','`','a',0x30a,'`',' ',
-         '(',' ','`','f','o','o','`',' ','L','O','N','G','C','H','A','R',' ','N','O','T',' ',
-         'N','U','L','L',' ','P','R','I','M','A','R','Y',' ','K','E','Y',' ','`','f','o','o','`',')',0};
-    static const WCHAR query5[] =
-        {'C','R','E','A','T','E',' ','T','A','B','L','E',' ','`',0xe5,'`',' ',
-         '(',' ','`','f','o','o','`',' ','L','O','N','G','C','H','A','R',' ','N','O','T',' ',
-         'N','U','L','L',' ','P','R','I','M','A','R','Y',' ','K','E','Y',' ','`','f','o','o','`',')',0};
-    static const WCHAR query6[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','b','a','r','`',' ','W','H','E','R','E',
-         ' ','`','f','o','o','`',' ','=','\'',0xe5,'\'',0};
-    static const WCHAR letter_C[] = {'C',0};
-    static const WCHAR letter_D[] = {'D',0};
-    static const WCHAR letter_a_ring[] = {'a',0x30a,0};
-    static const WCHAR letter_a_with_ring[] = {0xe5,0};
     const char *query;
     MSIHANDLE hdb = 0, hview = 0, hrec = 0;
     UINT r;
@@ -4832,19 +4804,19 @@ static void test_collation(void)
             "( `foo`, `baz` ) VALUES ( '\1', 'B' )");
     ok(r == ERROR_SUCCESS, "cannot add value to table %u\n", r);
 
-    r = run_queryW(hdb, 0, query1);
+    r = run_queryW(hdb, 0, L"INSERT INTO `bar` (`foo`,`baz`) VALUES ('a\x30a','C')");
     ok(r == ERROR_SUCCESS, "cannot add value to table %u\n", r);
 
-    r = run_queryW(hdb, 0, query2);
+    r = run_queryW(hdb, 0, L"INSERT INTO `bar` (`foo`,`baz`) VALUES ('\xe5','D')");
     ok(r == ERROR_SUCCESS, "cannot add value to table %u\n", r);
 
-    r = run_queryW(hdb, 0, query3);
+    r = run_queryW(hdb, 0, L"CREATE TABLE `baz` ( `a\x30a` LONGCHAR NOT NULL, `\xe5` LONGCHAR NOT NULL PRIMARY KEY `a\x30a`)");
     ok(r == ERROR_SUCCESS, "cannot create table %u\n", r);
 
-    r = run_queryW(hdb, 0, query4);
+    r = run_queryW(hdb, 0, L"CREATE TABLE `a\x30a` ( `foo` LONGCHAR NOT NULL PRIMARY KEY `foo`)");
     ok(r == ERROR_SUCCESS, "cannot create table %u\n", r);
 
-    r = run_queryW(hdb, 0, query5);
+    r = run_queryW(hdb, 0, L"CREATE TABLE `\xe5` ( `foo` LONGCHAR NOT NULL PRIMARY KEY `foo`)");
     ok(r == ERROR_SUCCESS, "cannot create table %u\n", r);
 
     query = "SELECT * FROM `bar`";
@@ -4882,12 +4854,12 @@ static void test_collation(void)
     sz = ARRAY_SIZE(bufferW);
     r = MsiRecordGetStringW(hrec, 1, bufferW, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!memcmp(bufferW, letter_a_ring, sizeof(letter_a_ring)),
-       "Expected %s, got %s\n", wine_dbgstr_w(letter_a_ring), wine_dbgstr_w(bufferW));
+    ok(!memcmp(bufferW, L"a\x30a", sizeof(L"a\x30a")),
+       "Expected %s, got %s\n", wine_dbgstr_w(L"a\x30a"), wine_dbgstr_w(bufferW));
     sz = ARRAY_SIZE(bufferW);
     r = MsiRecordGetStringW(hrec, 2, bufferW, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpW(bufferW, letter_C), "Expected C, got %s\n", wine_dbgstr_w(bufferW));
+    ok(!lstrcmpW(bufferW, L"C"), "Expected C, got %s\n", wine_dbgstr_w(bufferW));
     MsiCloseHandle(hrec);
 
     r = MsiViewFetch(hview, &hrec);
@@ -4895,12 +4867,12 @@ static void test_collation(void)
     sz = ARRAY_SIZE(bufferW);
     r = MsiRecordGetStringW(hrec, 1, bufferW, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!memcmp(bufferW, letter_a_with_ring, sizeof(letter_a_with_ring)),
-       "Expected %s, got %s\n", wine_dbgstr_w(letter_a_with_ring), wine_dbgstr_w(bufferW));
+    ok(!memcmp(bufferW, L"\xe5", sizeof(L"\xe5")),
+       "Expected %s, got %s\n", wine_dbgstr_w(L"\xe5"), wine_dbgstr_w(bufferW));
     sz = ARRAY_SIZE(bufferW);
     r = MsiRecordGetStringW(hrec, 2, bufferW, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpW(bufferW, letter_D), "Expected D, got %s\n", wine_dbgstr_w(bufferW));
+    ok(!lstrcmpW(bufferW, L"D"), "Expected D, got %s\n", wine_dbgstr_w(bufferW));
     MsiCloseHandle(hrec);
 
     r = MsiViewClose(hview);
@@ -4908,7 +4880,7 @@ static void test_collation(void)
     r = MsiCloseHandle(hview);
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
-    r = MsiDatabaseOpenViewW(hdb, query6, &hview);
+    r = MsiDatabaseOpenViewW(hdb, L"SELECT * FROM `bar` WHERE `foo` ='\xe5'", &hview);
     ok(r == ERROR_SUCCESS, "MsiDatabaseOpenView failed\n");
     r = MsiViewExecute(hview, 0);
     ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
@@ -4918,12 +4890,12 @@ static void test_collation(void)
     sz = ARRAY_SIZE(bufferW);
     r = MsiRecordGetStringW(hrec, 1, bufferW, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!memcmp(bufferW, letter_a_with_ring, sizeof(letter_a_with_ring)),
-       "Expected %s, got %s\n", wine_dbgstr_w(letter_a_with_ring), wine_dbgstr_w(bufferW));
+    ok(!memcmp(bufferW, L"\xe5", sizeof(L"\xe5")),
+       "Expected %s, got %s\n", wine_dbgstr_w(L"\xe5"), wine_dbgstr_w(bufferW));
     sz = ARRAY_SIZE(bufferW);
     r = MsiRecordGetStringW(hrec, 2, bufferW, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpW(bufferW, letter_D), "Expected D, got %s\n", wine_dbgstr_w(bufferW));
+    ok(!lstrcmpW(bufferW, L"D"), "Expected D, got %s\n", wine_dbgstr_w(bufferW));
     MsiCloseHandle(hrec);
 
     r = MsiViewFetch(hview, &hrec);
@@ -7539,7 +7511,6 @@ static void test_droptable(void)
 
 static void test_dbmerge(void)
 {
-    static const WCHAR refdbW[] = {'r','e','f','d','b','.','m','s','i',0};
     MSIHANDLE hdb, href, hview, hrec;
     CHAR buf[MAX_PATH];
     LPCSTR query;
@@ -7549,7 +7520,7 @@ static void test_dbmerge(void)
     r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_CREATE, &hdb);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    r = MsiOpenDatabaseW(refdbW, MSIDBOPEN_CREATE, &href);
+    r = MsiOpenDatabaseW(L"refdb.msi", MSIDBOPEN_CREATE, &href);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* hDatabase is invalid */
@@ -8090,7 +8061,7 @@ static void test_dbmerge(void)
     MsiCloseHandle(hdb);
     MsiCloseHandle(href);
     DeleteFileA(msifile);
-    DeleteFileW(refdbW);
+    DeleteFileW(L"refdb.msi");
     DeleteFileA("codepage.idt");
     DeleteFileA("binary.dat");
 }
