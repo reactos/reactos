@@ -2254,11 +2254,25 @@ static UINT msi_record_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWS
 
 static UINT TransformView_fetch_int( MSIVIEW *view, UINT row, UINT col, UINT *val )
 {
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+
+    if (!tv->table)
+    {
+        *val = 0;
+        return ERROR_SUCCESS;
+    }
     return TABLE_fetch_int( view, row, col, val );
 }
 
 static UINT TransformView_fetch_stream( MSIVIEW *view, UINT row, UINT col, IStream **stm )
 {
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+
+    if (!tv->table)
+    {
+        *stm = NULL;
+        return ERROR_SUCCESS;
+    }
     return TABLE_fetch_stream( view, row, col, stm );
 }
 
@@ -2403,8 +2417,48 @@ static UINT TransformView_set_row( MSIVIEW *view, UINT row, MSIRECORD *rec, UINT
     return ERROR_SUCCESS;
 }
 
+static UINT TransformView_create_table( MSITABLEVIEW *tv, MSIRECORD *rec )
+{
+    static const WCHAR query_fmt[] =
+        L"INSERT INTO `_TransformView` (`Table`, `Column`) VALUES ('%s', 'CREATE')";
+
+    WCHAR buf[256], *query = buf;
+    const WCHAR *name;
+    MSIQUERY *q;
+    int len;
+    UINT r;
+
+    name = msi_record_get_string( rec, 1, &len );
+    if (!name)
+        return ERROR_INSTALL_TRANSFORM_FAILURE;
+
+    len = _snwprintf( NULL, 0, query_fmt, name ) + 1;
+    if (len > ARRAY_SIZE(buf))
+    {
+        query = msi_alloc( len * sizeof(WCHAR) );
+        if (!query)
+            return ERROR_OUTOFMEMORY;
+    }
+    swprintf( query, len, query_fmt, name );
+
+    r = MSI_DatabaseOpenViewW( tv->db, query, &q );
+    if (query != buf)
+        msi_free( query );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = MSI_ViewExecute( q, NULL );
+    msiobj_release( &q->hdr );
+    return r;
+}
+
 static UINT TransformView_insert_row( MSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary )
 {
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+
+    if (!wcscmp(tv->name, szTables))
+        return TransformView_create_table( tv, rec );
+
     FIXME("\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
@@ -2466,15 +2520,23 @@ static const MSIVIEWOPS transform_view_ops =
 
 UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR name, MSIVIEW **view )
 {
+    UINT r, name_len, size;
     MSITABLEVIEW *tv;
-    UINT r;
+
+    name_len = wcslen( name );
 
     r = TABLE_CreateView( db, name, view );
     if (r == ERROR_INVALID_PARAMETER)
     {
         /* table does not exist */
-        FIXME("\n");
-        return ERROR_CALL_NOT_IMPLEMENTED;
+        size = FIELD_OFFSET( MSITABLEVIEW, name[name_len + 1] );
+        tv = msi_alloc_zero( size );
+        if (!tv)
+            return ERROR_OUTOFMEMORY;
+
+        tv->db = db;
+        memcpy( tv->name, name, name_len * sizeof(WCHAR) );
+        *view = (MSIVIEW*)tv;
     }
     else if (r != ERROR_SUCCESS)
     {
@@ -2912,7 +2974,10 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
 
             if (TRACE_ON(msidb)) dump_record( rec );
 
-            r = msi_table_find_row( tv, rec, &row, NULL );
+            if (tv->table)
+                r = msi_table_find_row( tv, rec, &row, NULL );
+            else
+                r = ERROR_FUNCTION_FAILED;
             if (r == ERROR_SUCCESS)
             {
                 if (!mask)
