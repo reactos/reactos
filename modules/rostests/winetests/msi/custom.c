@@ -38,11 +38,11 @@ static void WINAPIV ok_(MSIHANDLE hinst, int todo, const char *file, int line, i
 {
     static char buffer[2000];
     MSIHANDLE record;
-    __ms_va_list valist;
+    va_list valist;
 
-    __ms_va_start(valist, msg);
+    va_start(valist, msg);
     vsprintf(buffer, msg, valist);
-    __ms_va_end(valist);
+    va_end(valist);
 
     record = MsiCreateRecord(5);
     MsiRecordSetInteger(record, 1, todo);
