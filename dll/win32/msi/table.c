@@ -2188,6 +2188,38 @@ UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view )
     return ERROR_SUCCESS;
 }
 
+static WCHAR* create_key_string(MSITABLEVIEW *tv, MSIRECORD *rec)
+{
+    DWORD i, p, len, key_len = 0;
+    WCHAR *key;
+
+    for (i = 0; i < tv->num_cols; i++)
+    {
+        if (!(tv->columns[i].type & MSITYPE_KEY))
+            continue;
+        if (MSI_RecordGetStringW( rec, i+1, NULL, &len ) == ERROR_SUCCESS)
+            key_len += len;
+        key_len++;
+    }
+
+    key = msi_alloc( key_len * sizeof(WCHAR) );
+    if(!key)
+        return NULL;
+
+    p = 0;
+    for (i = 0; i < tv->num_cols; i++)
+    {
+        if (!(tv->columns[i].type & MSITYPE_KEY))
+            continue;
+        if (p)
+            key[p++] = '\t';
+        len = key_len - p;
+        if (MSI_RecordGetStringW( rec, i+1, key + p, &len ) == ERROR_SUCCESS)
+            p += len;
+    }
+    return key;
+}
+
 static UINT msi_record_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWSTR name, UINT *len )
 {
     UINT p = 0, l, i, r;
@@ -2222,20 +2254,153 @@ static UINT msi_record_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWS
 
 static UINT TransformView_fetch_int( MSIVIEW *view, UINT row, UINT col, UINT *val )
 {
-    FIXME("\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return TABLE_fetch_int( view, row, col, val );
 }
 
 static UINT TransformView_fetch_stream( MSIVIEW *view, UINT row, UINT col, IStream **stm )
 {
-    FIXME("\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return TABLE_fetch_stream( view, row, col, stm );
 }
 
 static UINT TransformView_set_row( MSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
 {
-    FIXME("\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    static const WCHAR query_pfx[] =
+        L"INSERT INTO `_TransformView` (`Table`, `Column`, `Row`, `Data`, `Current`) VALUES ('";
+
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+    WCHAR buf[256], *query = buf;
+    MSIRECORD *old_rec;
+    MSIQUERY *q;
+    WCHAR *key;
+    UINT i, p, r, len, qlen;
+
+    if (!wcscmp( tv->name, szColumns ))
+    {
+        ERR( "trying to modify existing column\n" );
+        return ERROR_INSTALL_TRANSFORM_FAILURE;
+    }
+
+    if (!wcscmp( tv->name, szTables ))
+    {
+        ERR( "trying to modify existing table\n" );
+        return ERROR_INSTALL_TRANSFORM_FAILURE;
+    }
+
+    key = create_key_string( tv, rec );
+    if (!key)
+        return ERROR_OUTOFMEMORY;
+
+    r = msi_view_get_row( tv->db, view, row, &old_rec );
+    if (r != ERROR_SUCCESS)
+        old_rec = NULL;
+
+    for (i = 0; i < tv->num_cols; i++)
+    {
+        if (!(mask & (1 << i)))
+            continue;
+        if (tv->columns[i].type & MSITYPE_KEY)
+            continue;
+
+        qlen = p = wcslen( query_pfx );
+        qlen += wcslen( tv->name ) + 3; /* strlen("','") */
+        qlen += wcslen( tv->columns[i].colname ) + 3;
+        qlen += wcslen( key ) + 3;
+        if (MSITYPE_IS_BINARY( tv->columns[i].type ))
+            r = msi_record_stream_name( tv, rec, NULL, &len );
+        else
+            r = MSI_RecordGetStringW( rec, i + 1, NULL, &len );
+        if (r != ERROR_SUCCESS)
+        {
+            if (old_rec)
+                msiobj_release( &old_rec->hdr );
+            msi_free( key );
+            return r;
+        }
+        qlen += len + 3;
+        if (old_rec && (r = MSI_RecordGetStringW( old_rec, i+1, NULL, &len )))
+        {
+            msiobj_release( &old_rec->hdr );
+            msi_free( key );
+            return r;
+        }
+        qlen += len + 3; /* strlen("')") + 1 */
+
+        if (qlen > ARRAY_SIZE(buf))
+        {
+            query = msi_alloc( qlen * sizeof(WCHAR) );
+            if (!query)
+            {
+                if (old_rec)
+                    msiobj_release( &old_rec->hdr );
+                msi_free( key );
+                return ERROR_OUTOFMEMORY;
+            }
+        }
+
+        memcpy( query, query_pfx, p * sizeof(WCHAR) );
+        len = wcslen( tv->name );
+        memcpy( query + p, tv->name, len * sizeof(WCHAR) );
+        p += len;
+        query[p++] = '\'';
+        query[p++] = ',';
+        query[p++] = '\'';
+        len = wcslen( tv->columns[i].colname );
+        memcpy( query + p, tv->columns[i].colname, len * sizeof(WCHAR) );
+        p += len;
+        query[p++] = '\'';
+        query[p++] = ',';
+        query[p++] = '\'';
+        len = wcslen( key );
+        memcpy( query + p, key, len * sizeof(WCHAR) );
+        p += len;
+        query[p++] = '\'';
+        query[p++] = ',';
+        query[p++] = '\'';
+        len = qlen - p;
+        if (MSITYPE_IS_BINARY( tv->columns[i].type ))
+            msi_record_stream_name( tv, rec, query + p, &len );
+        else
+            MSI_RecordGetStringW( rec, i + 1, query + p, &len );
+        p += len;
+        query[p++] = '\'';
+        query[p++] = ',';
+        query[p++] = '\'';
+        if (old_rec)
+        {
+            len = qlen - p;
+            MSI_RecordGetStringW( old_rec, i + 1, query + p, &len );
+            p += len;
+        }
+        query[p++] = '\'';
+        query[p++] = ')';
+        query[p++] = 0;
+
+        r = MSI_DatabaseOpenViewW( tv->db, query, &q );
+        if (query != buf)
+            msi_free( query );
+        if (r != ERROR_SUCCESS)
+        {
+            if (old_rec)
+                msiobj_release( &old_rec->hdr );
+            msi_free( key );
+            return r;
+        }
+
+        r = MSI_ViewExecute( q, NULL );
+        msiobj_release( &q->hdr );
+        if (r != ERROR_SUCCESS)
+        {
+            if (old_rec)
+                msiobj_release( &old_rec->hdr );
+            msi_free( key );
+            return r;
+        }
+    }
+
+    if (old_rec)
+        msiobj_release( &old_rec->hdr );
+    msi_free( key );
+    return ERROR_SUCCESS;
 }
 
 static UINT TransformView_insert_row( MSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary )
@@ -2262,15 +2427,13 @@ static UINT TransformView_close( MSIVIEW *view )
 
 static UINT TransformView_get_dimensions( MSIVIEW *view, UINT *rows, UINT *cols )
 {
-    FIXME("\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return TABLE_get_dimensions( view, rows, cols );
 }
 
 static UINT TransformView_get_column_info( MSIVIEW *view, UINT n, LPCWSTR *name, UINT *type,
                              BOOL *temporary, LPCWSTR *table_name )
 {
-    FIXME("\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return TABLE_get_column_info( view, n, name, type, temporary, table_name );
 }
 
 static UINT TransformView_delete( MSIVIEW *view )
