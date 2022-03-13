@@ -1014,38 +1014,120 @@ static UINT msi_dialog_button_handler( msi_dialog *dialog, msi_control *control,
     return r;
 }
 
+static HBITMAP msi_load_picture( MSIDATABASE *db, const WCHAR *name, INT cx, INT cy, DWORD flags )
+{
+    HBITMAP hOleBitmap = 0, hBitmap = 0, hOldSrcBitmap, hOldDestBitmap;
+    MSIRECORD *rec = NULL;
+    IStream *stm = NULL;
+    IPicture *pic = NULL;
+    HDC srcdc, destdc;
+    BITMAP bm;
+    UINT r;
+
+    rec = msi_get_binary_record( db, name );
+    if (!rec)
+        goto end;
+
+    r = MSI_RecordGetIStream( rec, 2, &stm );
+    msiobj_release( &rec->hdr );
+    if (r != ERROR_SUCCESS)
+        goto end;
+
+    r = OleLoadPicture( stm, 0, TRUE, &IID_IPicture, (void **)&pic );
+    IStream_Release( stm );
+    if (FAILED( r ))
+    {
+        ERR("failed to load picture\n");
+        goto end;
+    }
+
+    r = IPicture_get_Handle( pic, (OLE_HANDLE *)&hOleBitmap );
+    if (FAILED( r ))
+    {
+        ERR("failed to get bitmap handle\n");
+        goto end;
+    }
+
+    /* make the bitmap the desired size */
+    r = GetObjectW( hOleBitmap, sizeof(bm), &bm );
+    if (r != sizeof(bm))
+    {
+        ERR("failed to get bitmap size\n");
+        goto end;
+    }
+
+    if (flags & LR_DEFAULTSIZE)
+    {
+        cx = bm.bmWidth;
+        cy = bm.bmHeight;
+    }
+
+    srcdc = CreateCompatibleDC( NULL );
+    hOldSrcBitmap = SelectObject( srcdc, hOleBitmap );
+    destdc = CreateCompatibleDC( NULL );
+    hBitmap = CreateCompatibleBitmap( srcdc, cx, cy );
+    hOldDestBitmap = SelectObject( destdc, hBitmap );
+    StretchBlt( destdc, 0, 0, cx, cy, srcdc, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY );
+    SelectObject( srcdc, hOldSrcBitmap );
+    SelectObject( destdc, hOldDestBitmap );
+    DeleteDC( srcdc );
+    DeleteDC( destdc );
+
+end:
+    if (pic) IPicture_Release( pic );
+    return hBitmap;
+}
+
 static UINT msi_dialog_button_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
-    UINT attributes, style;
+    UINT attributes, style, cx = 0, cy = 0, flags = 0;
+    WCHAR *name = NULL;
 
     TRACE("%p %p\n", dialog, rec);
 
     style = WS_TABSTOP;
     attributes = MSI_RecordGetInteger( rec, 8 );
-    if( attributes & msidbControlAttributesIcon )
-        style |= BS_ICON;
+    if (attributes & msidbControlAttributesIcon) style |= BS_ICON;
+    else if (attributes & msidbControlAttributesBitmap)
+    {
+        style |= BS_BITMAP;
+        if (attributes & msidbControlAttributesFixedSize) flags |= LR_DEFAULTSIZE;
+        else
+        {
+            cx = msi_dialog_scale_unit( dialog, MSI_RecordGetInteger(rec, 6) );
+            cy = msi_dialog_scale_unit( dialog, MSI_RecordGetInteger(rec, 7) );
+        }
+    }
 
     control = msi_dialog_add_control( dialog, rec, szButton, style );
-    if( !control )
+    if (!control)
         return ERROR_FUNCTION_FAILED;
 
     control->handler = msi_dialog_button_handler;
 
     if (attributes & msidbControlAttributesIcon)
     {
-        /* set the icon */
-        LPWSTR name = msi_get_binary_name( dialog->package, rec );
+        name = msi_get_binary_name( dialog->package, rec );
         control->hIcon = msi_load_icon( dialog->package->db, name, attributes );
         if (control->hIcon)
         {
             SendMessageW( control->hwnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM) control->hIcon );
         }
-        else
-            ERR("Failed to load icon %s\n", debugstr_w(name));
-        msi_free( name );
+        else ERR("Failed to load icon %s\n", debugstr_w(name));
+    }
+    else if (attributes & msidbControlAttributesBitmap)
+    {
+        name = msi_get_binary_name( dialog->package, rec );
+        control->hBitmap = msi_load_picture( dialog->package->db, name, cx, cy, flags );
+        if (control->hBitmap)
+        {
+            SendMessageW( control->hwnd, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM) control->hBitmap );
+        }
+        else ERR("Failed to load bitmap %s\n", debugstr_w(name));
     }
 
+    msi_free( name );
     return ERROR_SUCCESS;
 }
 
@@ -1341,72 +1423,6 @@ static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
     return ERROR_SUCCESS;
 }
 
-static HBITMAP msi_load_picture( MSIDATABASE *db, LPCWSTR name,
-                                 INT cx, INT cy, DWORD flags )
-{
-    HBITMAP hOleBitmap = 0, hBitmap = 0, hOldSrcBitmap, hOldDestBitmap;
-    MSIRECORD *rec = NULL;
-    IStream *stm = NULL;
-    IPicture *pic = NULL;
-    HDC srcdc, destdc;
-    BITMAP bm;
-    UINT r;
-
-    rec = msi_get_binary_record( db, name );
-    if( !rec )
-        goto end;
-
-    r = MSI_RecordGetIStream( rec, 2, &stm );
-    msiobj_release( &rec->hdr );
-    if( r != ERROR_SUCCESS )
-        goto end;
-
-    r = OleLoadPicture( stm, 0, TRUE, &IID_IPicture, (LPVOID*) &pic );
-    IStream_Release( stm );
-    if( FAILED( r ) )
-    {
-        ERR("failed to load picture\n");
-        goto end;
-    }
-
-    r = IPicture_get_Handle( pic, (OLE_HANDLE*) &hOleBitmap );
-    if( FAILED( r ) )
-    {
-        ERR("failed to get bitmap handle\n");
-        goto end;
-    }
- 
-    /* make the bitmap the desired size */
-    r = GetObjectW( hOleBitmap, sizeof bm, &bm );
-    if (r != sizeof bm )
-    {
-        ERR("failed to get bitmap size\n");
-        goto end;
-    }
-
-    if (flags & LR_DEFAULTSIZE)
-    {
-        cx = bm.bmWidth;
-        cy = bm.bmHeight;
-    }
-
-    srcdc = CreateCompatibleDC( NULL );
-    hOldSrcBitmap = SelectObject( srcdc, hOleBitmap );
-    destdc = CreateCompatibleDC( NULL );
-    hBitmap = CreateCompatibleBitmap( srcdc, cx, cy );
-    hOldDestBitmap = SelectObject( destdc, hBitmap );
-    StretchBlt( destdc, 0, 0, cx, cy,
-                srcdc, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
-    SelectObject( srcdc, hOldSrcBitmap );
-    SelectObject( destdc, hOldDestBitmap );
-    DeleteDC( srcdc );
-    DeleteDC( destdc );
-
-end:
-    if ( pic )
-        IPicture_Release( pic );
-    return hBitmap;
-}
 
 static UINT msi_dialog_bitmap_control( msi_dialog *dialog, MSIRECORD *rec )
 {
