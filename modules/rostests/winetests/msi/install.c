@@ -1004,6 +1004,7 @@ static const CHAR fo_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                               "RegisterProduct\t\t5000\n"
                                               "PublishFeatures\t\t5100\n"
                                               "PublishProduct\t\t5200\n"
+                                              "UnpublishFeatures\t\t5300\n"
                                               "InstallFinalize\t\t6000\n";
 
 static const CHAR uc_file_dat[] = "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -1051,6 +1052,7 @@ static const CHAR uc_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                               "RegisterProduct\t\t1000\n"
                                               "PublishFeatures\t\t1100\n"
                                               "PublishProduct\t\t1200\n"
+                                              "UnpublishFeatures\t\t1250\n"
                                               "InstallFinalize\t\t1300\n";
 
 static const char mixed_feature_dat[] =
@@ -1173,6 +1175,7 @@ static const char vp_install_exec_seq_dat[] =
     "RegisterProduct\t\t1600\n"
     "PublishFeatures\t\t1700\n"
     "PublishProduct\t\t1800\n"
+    "UnpublishFeatures\t\t1850\n"
     "InstallFinalize\t\t1900\n";
 
 static const char shc_property_dat[] =
@@ -1245,6 +1248,7 @@ static const char shc_install_exec_seq_dat[] =
     "RegisterProduct\t\t1700\n"
     "PublishFeatures\t\t1800\n"
     "PublishProduct\t\t1900\n"
+    "UnpublishFeatures\t\t1950\n"
     "InstallFinalize\t\t2000\n";
 
 static const char shc2_install_exec_seq_dat[] =
@@ -1265,6 +1269,7 @@ static const char shc2_install_exec_seq_dat[] =
     "RegisterProduct\t\t1700\n"
     "PublishFeatures\t\t1800\n"
     "PublishProduct\t\t1900\n"
+    "UnpublishFeatures\t\t1950\n"
     "InstallFinalize\t\t2000\n";
 
 static const char ft_file_dat[] =
@@ -1328,6 +1333,7 @@ static const char ft_install_exec_seq_dat[] =
     "RegisterProduct\t\t1200\n"
     "PublishFeatures\t\t1300\n"
     "PublishProduct\t\t1400\n"
+    "UnpublishFeatures\t\t1450\n"
     "InstallFinalize\t\t1500\n";
 
 static const char da_custom_action_dat[] =
@@ -2896,7 +2902,7 @@ static void test_MsiInstallProduct(void)
     res = RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Wine\\msitest", &hkey);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
-    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    r = MsiInstallProductA(msifile, "REMOVE=ALL FULL=1");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
 error:
@@ -5332,7 +5338,7 @@ static void test_file_in_use(void)
     ok(delete_pf("msitest\\maximus", TRUE), "File not present\n");
     ok(delete_pf("msitest", FALSE), "Directory not present or not empty\n");
 
-    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    r = MsiInstallProductA(msifile, "REMOVE=ALL FULL=1");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
 error:
@@ -5394,7 +5400,7 @@ static void test_file_in_use_cab(void)
     ok(delete_pf("msitest\\maximus", TRUE), "File not present\n");
     ok(delete_pf("msitest", FALSE), "Directory not present or not empty\n");
 
-    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    r = MsiInstallProductA(msifile, "REMOVE=ALL FULL=1");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
 error:
@@ -5548,7 +5554,7 @@ static void test_icon_table(void)
     lstrcatA(path, "\\testicon");
     ok(file_exists(path), "Per-user icon file isn't where it's expected (%s)\n", path);
 
-    res = MsiInstallProductA(msifile, "REMOVE=ALL");
+    res = MsiInstallProductA(msifile, "REMOVE=ALL FULL=1");
     ok(res == ERROR_SUCCESS, "Failed to uninstall per-user\n");
     ok(!file_exists(path), "Per-user icon file not removed (%s)\n", path);
 
@@ -5563,7 +5569,7 @@ static void test_icon_table(void)
     lstrcatA(path, "\\testicon");
     ok(file_exists(path), "System-wide icon file isn't where it's expected (%s)\n", path);
 
-    res = MsiInstallProductA(msifile, "REMOVE=ALL");
+    res = MsiInstallProductA(msifile, "REMOVE=ALL FULL=1");
     ok(res == ERROR_SUCCESS, "Failed to uninstall system-wide\n");
     ok(!file_exists(path), "System-wide icon file not removed (%s)\n", path);
 

@@ -118,6 +118,7 @@ static const char install_exec_seq_dat[] =
     "RegisterProduct\t\t3100\n"
     "PublishFeatures\t\t5100\n"
     "PublishProduct\t\t5200\n"
+    "UnpublishFeatures\t\t5300\n"
     "InstallFinalize\t\t6000\n";
 
 struct msi_table
