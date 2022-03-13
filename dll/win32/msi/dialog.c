@@ -463,7 +463,7 @@ static HANDLE msi_load_image( MSIDATABASE *db, LPCWSTR name, UINT type,
 
     if (!(tmp = msi_create_temp_file( db ))) return NULL;
 
-    rec = MSI_QueryGetRecord( db, L"SELCT * FROM `Binary` WHERE `Name` = '%s'", name );
+    rec = MSI_QueryGetRecord( db, L"SELECT * FROM `Binary` WHERE `Name` = '%s'", name );
     if( rec )
     {
         r = MSI_RecordStreamToFile( rec, 2, tmp );
@@ -962,7 +962,7 @@ static HBITMAP msi_load_picture( MSIDATABASE *db, const WCHAR *name, INT cx, INT
     BITMAP bm;
     UINT r;
 
-    rec = MSI_QueryGetRecord( db, L"SELCT * FROM `Binary` WHERE `Name` = '%s'", name );
+    rec = MSI_QueryGetRecord( db, L"SELECT * FROM `Binary` WHERE `Name` = '%s'", name );
     if (!rec)
         goto end;
 
