@@ -66,6 +66,7 @@ struct msi_control_tag
     LPWSTR value;
     HBITMAP hBitmap;
     HICON hIcon;
+    HIMAGELIST hImageList;
     LPWSTR tabnext;
     LPWSTR type;
     HMODULE hDll;
@@ -159,6 +160,7 @@ static const WCHAR szVolumeSelectCombo[] = { 'V','o','l','u','m','e','S','e','l'
 static const WCHAR szSelectionDescription[] = {'S','e','l','e','c','t','i','o','n','D','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR szSelectionPath[] = {'S','e','l','e','c','t','i','o','n','P','a','t','h',0};
 static const WCHAR szHyperLink[] = {'H','y','p','e','r','L','i','n','k',0};
+static const WCHAR szListView[] = {'L','i','s','t','V','i','e','w',0};
 
 /* dialog sequencing */
 
@@ -401,6 +403,8 @@ static void msi_destroy_control( msi_control *t )
         DeleteObject( t->hBitmap );
     if( t->hIcon )
         DestroyIcon( t->hIcon );
+    if ( t->hImageList )
+        ImageList_Destroy( t->hImageList );
     msi_free( t->tabnext );
     msi_free( t->type );
     if (t->hDll)
@@ -431,6 +435,7 @@ static msi_control *dialog_create_window( msi_dialog *dialog, MSIRECORD *rec, DW
     control->value = NULL;
     control->hBitmap = NULL;
     control->hIcon = NULL;
+    control->hImageList = NULL;
     control->hDll = NULL;
     control->tabnext = strdupW( MSI_RecordGetString( rec, 11) );
     control->type = strdupW( MSI_RecordGetString( rec, 3 ) );
@@ -3522,6 +3527,107 @@ static UINT msi_dialog_hyperlink( msi_dialog *dialog, MSIRECORD *rec )
     return ERROR_SUCCESS;
 }
 
+/******************** ListView *****************************************/
+
+struct listview_param
+{
+    msi_dialog *dialog;
+    msi_control *control;
+};
+
+static UINT msi_dialog_listview_handler( msi_dialog *dialog, msi_control *control, WPARAM param )
+{
+    NMHDR *nmhdr = (NMHDR *)param;
+
+    FIXME("code %#x (%d)\n", nmhdr->code, nmhdr->code);
+
+    return ERROR_SUCCESS;
+}
+
+static UINT msi_listview_add_item( MSIRECORD *rec, LPVOID param )
+{
+    struct listview_param *lv_param = (struct listview_param *)param;
+    LPCWSTR text, binary;
+    LVITEMW item;
+    HICON hIcon;
+
+    text = MSI_RecordGetString( rec, 4 );
+    binary = MSI_RecordGetString( rec, 5 );
+    hIcon = msi_load_icon( lv_param->dialog->package->db, binary, 0 );
+
+    TRACE("Adding: text %s, binary %s, icon %p\n", debugstr_w(text), debugstr_w(binary), hIcon);
+
+    memset( &item, 0, sizeof(item) );
+    item.mask = LVIF_TEXT | LVIF_IMAGE;
+    deformat_string( lv_param->dialog->package, text, &item.pszText );
+    item.iImage = ImageList_AddIcon( lv_param->control->hImageList, hIcon );
+    item.iItem = item.iImage;
+    SendMessageW( lv_param->control->hwnd, LVM_INSERTITEMW, 0, (LPARAM)&item );
+
+    DestroyIcon( hIcon );
+
+    return ERROR_SUCCESS;
+}
+
+static UINT msi_listview_add_items( msi_dialog *dialog, msi_control *control )
+{
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','L','i','s','t','V','i','e','w','`',' ','W','H','E','R','E',' ',
+        '`','P','r','o','p','e','r','t','y','`',' ','=',' ','\'','%','s','\'',' ',
+        'O','R','D','E','R',' ','B','Y',' ','`','O','r','d','e','r','`',0};
+    MSIQUERY *view;
+    struct listview_param lv_param = { dialog, control };
+
+    if (MSI_OpenQuery( dialog->package->db, &view, query, control->property ) == ERROR_SUCCESS)
+    {
+        MSI_IterateRecords( view, NULL, msi_listview_add_item, &lv_param );
+        msiobj_release( &view->hdr );
+    }
+
+    return ERROR_SUCCESS;
+}
+
+static UINT msi_dialog_listview( msi_dialog *dialog, MSIRECORD *rec )
+{
+    msi_control *control;
+    LPCWSTR prop;
+    DWORD style, attributes;
+    LVCOLUMNW col;
+    RECT rc;
+
+    style = LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_VSCROLL | WS_HSCROLL | WS_BORDER | WS_TABSTOP | WS_CHILD;
+    attributes = MSI_RecordGetInteger( rec, 8 );
+    if ( ~attributes & msidbControlAttributesSorted )
+        style |= LVS_SORTASCENDING;
+    control = msi_dialog_add_control( dialog, rec, WC_LISTVIEWW, style );
+    if (!control)
+        return ERROR_FUNCTION_FAILED;
+
+    prop = MSI_RecordGetString( rec, 9 );
+    control->property = msi_dialog_dup_property( dialog, prop, FALSE );
+
+    control->hImageList = ImageList_Create( 16, 16, ILC_COLOR32, 0, 1);
+    SendMessageW( control->hwnd, LVM_SETIMAGELIST, LVSIL_SMALL, (LPARAM)control->hImageList );
+
+    col.mask = LVCF_FMT | LVCF_WIDTH;
+    col.fmt = LVCFMT_LEFT;
+    col.cx = 16;
+    SendMessageW( control->hwnd, LVM_INSERTCOLUMNW, 0, (LPARAM)&col );
+
+    GetClientRect( control->hwnd, &rc );
+    col.cx = rc.right - 16;
+    SendMessageW( control->hwnd, LVM_INSERTCOLUMNW, 0, (LPARAM)&col );
+
+    if (control->property)
+        msi_listview_add_items( dialog, control );
+
+    control->handler = msi_dialog_listview_handler;
+
+    return ERROR_SUCCESS;
+}
+
 static const struct control_handler msi_dialog_handler[] =
 {
     { szText, msi_dialog_text_control },
@@ -3544,7 +3650,8 @@ static const struct control_handler msi_dialog_handler[] =
     { szDirectoryList, msi_dialog_directory_list },
     { szVolumeCostList, msi_dialog_volumecost_list },
     { szVolumeSelectCombo, msi_dialog_volumeselect_combo },
-    { szHyperLink, msi_dialog_hyperlink }
+    { szHyperLink, msi_dialog_hyperlink },
+    { szListView, msi_dialog_listview }
 };
 
 static UINT msi_dialog_create_controls( MSIRECORD *rec, LPVOID param )
