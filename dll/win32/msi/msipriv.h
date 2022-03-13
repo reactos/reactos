@@ -735,7 +735,7 @@ struct tagMSIMIME
 
 #define MSIHANDLE_MAGIC 0x4d434923
 
-/* handle unicode/ascii output in the Msi* API functions */
+/* handle unicode/ansi output in the Msi* API functions */
 typedef struct {
     BOOL unicode;
     union {

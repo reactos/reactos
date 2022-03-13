@@ -1813,7 +1813,7 @@ INT MSI_ProcessMessageVerbatim(MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
         MSI_FormatRecordW(package, record, message, &len);
     }
 
-    /* convert it to ASCII */
+    /* convert it to ANSI */
     len = WideCharToMultiByte( CP_ACP, 0, message, -1, NULL, 0, NULL, NULL );
     msg = msi_alloc( len );
     WideCharToMultiByte( CP_ACP, 0, message, -1, msg, len, NULL, NULL );
