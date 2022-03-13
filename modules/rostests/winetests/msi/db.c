@@ -9293,6 +9293,88 @@ static void test_view_get_error(void)
     DeleteFileA(msifile);
 }
 
+static void test_viewfetch_wraparound(void)
+{
+    MSIHANDLE db = 0, view = 0, rec = 0;
+    UINT r, i, idset, tries;
+    const char *query;
+
+    DeleteFileA(msifile);
+
+    /* just MsiOpenDatabase should not create a file */
+    r = MsiOpenDatabaseW( msifileW, MSIDBOPEN_CREATE, &db );
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+
+    query = "CREATE TABLE `phone` ( "
+            "`id` INT, `name` CHAR(32), `number` CHAR(32) "
+            "PRIMARY KEY `id`)";
+    r = run_query( db, 0, query );
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+
+    query = "INSERT INTO `phone` ( `id`, `name`, `number` )"
+        "VALUES('1', 'Alan', '5030581')";
+    r = run_query( db, 0, query );
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+
+    query = "INSERT INTO `phone` ( `id`, `name`, `number` )"
+        "VALUES('2', 'Barry', '928440')";
+    r = run_query( db, 0, query );
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+
+    query = "INSERT INTO `phone` ( `id`, `name`, `number` )"
+        "VALUES('3', 'Cindy', '2937550')";
+    r = run_query( db, 0, query );
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+
+    query = "SELECT * FROM `phone`";
+    r = MsiDatabaseOpenViewA( db, query, &view );
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+
+    r = MsiViewExecute( view, 0 );
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+
+    for (tries = 0; tries < 3; tries++)
+    {
+        winetest_push_context( "Wraparound attempt #%d", tries );
+        idset = 0;
+
+        for (i = 0; i < 3; i++)
+        {
+            winetest_push_context( "Record #%d", i );
+
+            r = MsiViewFetch( view, &rec );
+            todo_wine_if(tries > 0) ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+            if (r != ERROR_SUCCESS)
+            {
+                winetest_pop_context();
+                break;
+            }
+
+            r = MsiRecordGetInteger(rec, 1);
+            ok(r >= 1 && r <= 3, "Expected 1 <= id <= 3, got %d\n", r);
+            if (r < sizeof(idset) * 8)
+            {
+                ok(!(idset & (1 << r)), "Duplicate id %d\n", r);
+                idset |= 1 << r;
+            }
+
+            MsiCloseHandle(rec);
+
+            winetest_pop_context();
+        }
+
+        r = MsiViewFetch(view, &rec);
+        ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+
+        winetest_pop_context();
+    }
+
+    MsiViewClose(view);
+    MsiCloseHandle(view);
+    MsiCloseHandle(db);
+    DeleteFileA(msifile);
+}
+
 START_TEST(db)
 {
     test_msidatabase();
@@ -9352,4 +9434,5 @@ START_TEST(db)
     test_viewmodify_merge();
     test_viewmodify_insert();
     test_view_get_error();
+    test_viewfetch_wraparound();
 }
