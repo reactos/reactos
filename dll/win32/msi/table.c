@@ -2256,7 +2256,7 @@ static UINT TransformView_fetch_int( MSIVIEW *view, UINT row, UINT col, UINT *va
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
 
-    if (!tv->table)
+    if (!tv->table || col > tv->table->col_count)
     {
         *val = 0;
         return ERROR_SUCCESS;
@@ -2268,7 +2268,7 @@ static UINT TransformView_fetch_stream( MSIVIEW *view, UINT row, UINT col, IStre
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
 
-    if (!tv->table)
+    if (!tv->table || col > tv->table->col_count)
     {
         *stm = NULL;
         return ERROR_SUCCESS;
@@ -2452,12 +2452,68 @@ static UINT TransformView_create_table( MSITABLEVIEW *tv, MSIRECORD *rec )
     return r;
 }
 
+static UINT TransformView_add_column( MSITABLEVIEW *tv, MSIRECORD *rec )
+{
+    static const WCHAR query_pfx[] =
+        L"INSERT INTO `_TransformView` (`Table`, `Current`, `Column`, `Data`) VALUES ('";
+
+    WCHAR buf[256], *query = buf;
+    UINT i, p, len, r, qlen;
+    MSIQUERY *q;
+
+    qlen = p = wcslen( query_pfx );
+    for (i = 1; i <= 4; i++)
+    {
+        r = MSI_RecordGetStringW( rec, i, NULL, &len );
+        if (r != ERROR_SUCCESS)
+            return r;
+        qlen += len + 3; /* strlen( "','" ) */
+    }
+
+    if (qlen > ARRAY_SIZE(buf))
+    {
+        query = msi_alloc( len * sizeof(WCHAR) );
+        qlen = len;
+        if (!query)
+            return ERROR_OUTOFMEMORY;
+    }
+
+    memcpy( query, query_pfx, p * sizeof(WCHAR) );
+    for (i = 1; i <= 4; i++)
+    {
+        len = qlen - p;
+        MSI_RecordGetStringW( rec, i, query + p, &len );
+        p += len;
+        query[p++] = '\'';
+        if (i != 4)
+        {
+            query[p++] = ',';
+            query[p++] = '\'';
+        }
+    }
+    query[p++] = ')';
+    query[p++] = 0;
+
+    r = MSI_DatabaseOpenViewW( tv->db, query, &q );
+    if (query != buf)
+        msi_free( query );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = MSI_ViewExecute( q, NULL );
+    msiobj_release( &q->hdr );
+    return r;
+}
+
 static UINT TransformView_insert_row( MSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
 
     if (!wcscmp(tv->name, szTables))
         return TransformView_create_table( tv, rec );
+
+    if (!wcscmp(tv->name, szColumns))
+        return TransformView_add_column( tv, rec );
 
     FIXME("\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -2492,6 +2548,9 @@ static UINT TransformView_get_column_info( MSIVIEW *view, UINT n, LPCWSTR *name,
 
 static UINT TransformView_delete( MSIVIEW *view )
 {
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+    if (!tv->table || tv->columns != tv->table->colinfo)
+        msi_free( tv->columns );
     return TABLE_delete( view );
 }
 
@@ -2520,8 +2579,15 @@ static const MSIVIEWOPS transform_view_ops =
 
 UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR name, MSIVIEW **view )
 {
-    UINT r, name_len, size;
+    static const WCHAR query_pfx[] = L"SELECT `Column`, `Data`, `Current` FROM `_TransformView` WHERE `Table`='";
+    static const WCHAR query_sfx[] = L"' AND `Row` IS NULL AND `Current` IS NOT NULL";
+
+    WCHAR buf[256], *query = buf;
+    UINT r, len, name_len, size, add_col;
+    MSICOLUMNINFO *colinfo;
     MSITABLEVIEW *tv;
+    MSIRECORD *rec;
+    MSIQUERY *q;
 
     name_len = wcslen( name );
 
@@ -2548,6 +2614,86 @@ UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR name, MSIV
     }
 
     tv->view.ops = &transform_view_ops;
+
+    len = ARRAY_SIZE(query_pfx) + name_len + ARRAY_SIZE(query_sfx) - 1;
+    if (len > ARRAY_SIZE(buf))
+    {
+        query = msi_alloc( len * sizeof(WCHAR) );
+        if (!query)
+        {
+            msi_free( tv );
+            return ERROR_OUTOFMEMORY;
+        }
+    }
+    memcpy( query, query_pfx, ARRAY_SIZE(query_pfx) * sizeof(WCHAR) );
+    len = ARRAY_SIZE(query_pfx) - 1;
+    memcpy( query + len, name, name_len * sizeof(WCHAR) );
+    len += name_len;
+    memcpy( query + len, query_sfx, ARRAY_SIZE(query_sfx) * sizeof(WCHAR) );
+
+    r = MSI_DatabaseOpenViewW( tv->db, query, &q );
+    if (query != buf)
+        msi_free( query );
+    if (r != ERROR_SUCCESS)
+    {
+        msi_free( tv );
+        return r;
+    }
+
+    r = MSI_ViewExecute( q, NULL );
+    if (r != ERROR_SUCCESS)
+    {
+        msi_free( tv );
+        return r;
+    }
+
+    r = q->view->ops->get_dimensions( q->view, &add_col, NULL );
+    if (r != ERROR_SUCCESS)
+    {
+        MSI_ViewClose( q );
+        msiobj_release( &q->hdr );
+        msi_free( tv );
+        return r;
+    }
+    if (!add_col)
+    {
+        MSI_ViewClose( q );
+        msiobj_release( &q->hdr );
+        return ERROR_SUCCESS;
+    }
+
+    colinfo = msi_alloc_zero( (add_col + tv->num_cols) * sizeof(*colinfo) );
+    if (!colinfo)
+    {
+        MSI_ViewClose( q );
+        msiobj_release( &q->hdr );
+        msi_free( tv );
+        return r;
+    }
+
+    while (MSI_ViewFetch( q, &rec ) == ERROR_SUCCESS)
+    {
+        int name_len;
+        const WCHAR *name = msi_record_get_string( rec, 1, &name_len );
+        const WCHAR *type = msi_record_get_string( rec, 2, NULL );
+        UINT name_id, idx;
+
+        idx = _wtoi( msi_record_get_string(rec, 3, NULL) );
+        colinfo[idx - 1].number = idx;
+        colinfo[idx - 1].type = _wtoi( type );
+
+        r = msi_string2id( st, name, name_len, &name_id );
+        if (r == ERROR_SUCCESS)
+            colinfo[idx - 1].colname = msi_string_lookup( st, name_id, NULL );
+        else
+            ERR( "column name %s is not defined in strings table\n", wine_dbgstr_w(name) );
+    }
+    MSI_ViewClose( q );
+    msiobj_release( &q->hdr );
+
+    memcpy( colinfo, tv->columns, tv->num_cols * sizeof(*colinfo) );
+    tv->columns = colinfo;
+    tv->num_cols += add_col;
     return ERROR_SUCCESS;
 }
 
