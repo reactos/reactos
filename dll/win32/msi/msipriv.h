@@ -95,6 +95,14 @@ typedef struct tagMSITRANSFORM
     IStorage *stg;
 } MSITRANSFORM;
 
+/* integer versions of the MSIDBOPEN_* constants */
+#define MSI_OPEN_READONLY 0
+#define MSI_OPEN_TRANSACT 1
+#define MSI_OPEN_DIRECT 2
+#define MSI_OPEN_CREATE 3
+#define MSI_OPEN_CREATEDIRECT 4
+#define MSI_OPEN_PATCHFILE 32
+
 typedef struct tagMSIDATABASE
 {
     MSIOBJECTHDR hdr;
@@ -104,7 +112,7 @@ typedef struct tagMSIDATABASE
     LPWSTR path;
     LPWSTR deletefile;
     LPWSTR tempfolder;
-    LPCWSTR mode;
+    UINT mode;
     UINT media_transform_offset;
     UINT media_transform_disk_id;
     struct list tables;

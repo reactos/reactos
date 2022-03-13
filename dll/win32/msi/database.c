@@ -144,7 +144,8 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     HRESULT r;
     MSIDATABASE *db = NULL;
     UINT ret = ERROR_FUNCTION_FAILED;
-    LPCWSTR szMode, save_path;
+    LPCWSTR save_path;
+    UINT mode;
     STATSTG stat;
     BOOL created = FALSE, patch = FALSE;
     WCHAR path[MAX_PATH];
@@ -154,31 +155,34 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     if( !pdb )
         return ERROR_INVALID_PARAMETER;
 
-    if (szPersist - MSIDBOPEN_PATCHFILE <= MSIDBOPEN_CREATEDIRECT)
-    {
-        TRACE("Database is a patch\n");
-        szPersist -= MSIDBOPEN_PATCHFILE;
-        patch = TRUE;
-    }
-
     save_path = szDBPath;
-    szMode = szPersist;
-    if( !IS_INTMSIDBOPEN(szPersist) )
+    if ( IS_INTMSIDBOPEN(szPersist) )
+    {
+        mode = LOWORD(szPersist);
+    }
+    else
     {
         if (!CopyFileW( szDBPath, szPersist, FALSE ))
             return ERROR_OPEN_FAILED;
 
         szDBPath = szPersist;
-        szPersist = MSIDBOPEN_TRANSACT;
+        mode = MSI_OPEN_TRANSACT;
         created = TRUE;
     }
 
-    if( szPersist == MSIDBOPEN_READONLY )
+    if ((mode & MSI_OPEN_PATCHFILE) == MSI_OPEN_PATCHFILE)
+    {
+        TRACE("Database is a patch\n");
+        mode &= ~MSI_OPEN_PATCHFILE;
+        patch = TRUE;
+    }
+
+    if( mode == MSI_OPEN_READONLY )
     {
         r = StgOpenStorage( szDBPath, NULL,
               STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
     }
-    else if( szPersist == MSIDBOPEN_CREATE )
+    else if( mode == MSI_OPEN_CREATE )
     {
         r = StgCreateDocfile( szDBPath,
               STGM_CREATE|STGM_TRANSACTED|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, 0, &stg );
@@ -187,7 +191,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
             r = db_initialize( stg, patch ? &CLSID_MsiPatch : &CLSID_MsiDatabase );
         created = TRUE;
     }
-    else if( szPersist == MSIDBOPEN_CREATEDIRECT )
+    else if( mode == MSI_OPEN_CREATEDIRECT )
     {
         r = StgCreateDocfile( szDBPath,
               STGM_CREATE|STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, 0, &stg );
@@ -196,19 +200,19 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
             r = db_initialize( stg, patch ? &CLSID_MsiPatch : &CLSID_MsiDatabase );
         created = TRUE;
     }
-    else if( szPersist == MSIDBOPEN_TRANSACT )
+    else if( mode == MSI_OPEN_TRANSACT )
     {
         r = StgOpenStorage( szDBPath, NULL,
               STGM_TRANSACTED|STGM_READWRITE|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
     }
-    else if( szPersist == MSIDBOPEN_DIRECT )
+    else if( mode == MSI_OPEN_DIRECT )
     {
         r = StgOpenStorage( szDBPath, NULL,
               STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, NULL, 0, &stg);
     }
     else
     {
-        ERR("unknown flag %p\n",szPersist);
+        ERR("unknown flag %x\n",mode);
         return ERROR_INVALID_PARAMETER;
     }
 
@@ -267,7 +271,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         enum_stream_names( stg );
 
     db->storage = stg;
-    db->mode = szMode;
+    db->mode = mode;
     if (created)
         db->deletefile = strdupW( szDBPath );
     list_init( &db->tables );
@@ -1977,7 +1981,7 @@ MSIDBSTATE WINAPI MsiGetDatabaseState( MSIHANDLE handle )
     if (!(db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE )))
         return MSIDBSTATE_ERROR;
 
-    if (db->mode != MSIDBOPEN_READONLY )
+    if (db->mode != MSI_OPEN_READONLY )
         ret = MSIDBSTATE_WRITE;
     msiobj_release( &db->hdr );
 

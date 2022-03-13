@@ -981,7 +981,7 @@ UINT WINAPI MsiDatabaseCommit( MSIHANDLE hdb )
         return ERROR_SUCCESS;
     }
 
-    if (db->mode == MSIDBOPEN_READONLY)
+    if (db->mode == MSI_OPEN_READONLY)
     {
         msiobj_release( &db->hdr );
         return ERROR_SUCCESS;
