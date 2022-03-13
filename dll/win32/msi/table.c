@@ -1966,6 +1966,20 @@ static UINT TABLE_remove_column(struct tagMSIVIEW *view, LPCWSTR table, UINT num
     MSIVIEW *columns = NULL;
     UINT row, r;
 
+    if (tv->table->col_count != number)
+        return ERROR_BAD_QUERY_SYNTAX;
+
+    if (tv->table->colinfo[number-1].temporary)
+    {
+        UINT size = tv->table->colinfo[number-1].offset;
+        tv->table->col_count--;
+        tv->table->colinfo = msi_realloc( tv->table->colinfo, sizeof(*tv->table->colinfo) * tv->table->col_count );
+
+        for (row = 0; row < tv->table->row_count; row++)
+            tv->table->data[row] = msi_realloc( tv->table->data[row], size );
+        return ERROR_SUCCESS;
+    }
+
     rec = MSI_CreateRecord(2);
     if (!rec)
         return ERROR_OUTOFMEMORY;
@@ -2000,11 +2014,12 @@ static UINT TABLE_release(struct tagMSIVIEW *view)
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     INT ref = tv->table->ref_count;
-    UINT i, r;
+    UINT r;
+    INT i;
 
     TRACE("%p %d\n", view, ref);
 
-    for (i = 0; i < tv->table->col_count; i++)
+    for (i = tv->table->col_count - 1; i >= 0; i--)
     {
         if (tv->table->colinfo[i].type & MSITYPE_TEMPORARY)
         {
