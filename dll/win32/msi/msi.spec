@@ -205,8 +205,8 @@
 209 stdcall MsiSourceListClearAllW(wstr wstr long)
 210 stdcall MsiSourceListAddSourceA(str str long str)
 211 stdcall MsiSourceListAddSourceW(wstr wstr long wstr)
-212 stub MsiSourceListForceResolutionA
-213 stub MsiSourceListForceResolutionW
+212 stdcall MsiSourceListForceResolutionA(str str long)
+213 stdcall MsiSourceListForceResolutionW(wstr wstr long)
 214 stdcall MsiIsProductElevatedA(str ptr)
 215 stdcall MsiIsProductElevatedW(wstr ptr)
 216 stdcall MsiGetShortcutTargetA(str ptr ptr ptr)

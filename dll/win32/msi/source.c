@@ -1330,3 +1330,21 @@ UINT WINAPI MsiSourceListClearSourceW(LPCWSTR szProductCodeOrPatchCode, LPCWSTR 
           dwContext, dwOptions, debugstr_w(szSource));
     return ERROR_SUCCESS;
 }
+
+/******************************************************************
+ *  MsiSourceListForceResolutionA (MSI.@)
+ */
+UINT WINAPI MsiSourceListForceResolutionA(const CHAR *product, const CHAR *user, DWORD reserved)
+{
+    FIXME("(%s %s %x)\n", debugstr_a(product), debugstr_a(user), reserved);
+    return ERROR_SUCCESS;
+}
+
+/******************************************************************
+ *  MsiSourceListForceResolutionW (MSI.@)
+ */
+UINT WINAPI MsiSourceListForceResolutionW(const WCHAR *product, const WCHAR *user, DWORD reserved)
+{
+    FIXME("(%s %s %x)\n", debugstr_w(product), debugstr_w(user), reserved);
+    return ERROR_SUCCESS;
+}
