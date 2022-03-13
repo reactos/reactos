@@ -22,6 +22,9 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -39,9 +42,9 @@
 #include "wine/exception.h"
 
 #ifdef __REACTOS__
-#ifndef STATUS_ACCESS_VIOLATION
-#define STATUS_ACCESS_VIOLATION ((NTSTATUS)0xC0000005)
-#endif
+#undef WIN32_NO_STATUS
+#include <psdk/ntstatus.h>
+#include <ndk/mmfuncs.h>
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -718,6 +721,51 @@ static DWORD WINAPI custom_client_thread(void *arg)
     return rc;
 }
 
+/* based on kernel32.GetBinaryTypeW() */
+static BOOL get_binary_type( const WCHAR *name, DWORD *type )
+{
+    HANDLE hfile, mapping;
+    NTSTATUS status;
+
+    hfile = CreateFileW( name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
+    if (hfile == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    status = NtCreateSection( &mapping, STANDARD_RIGHTS_REQUIRED | SECTION_QUERY, NULL, NULL, PAGE_READONLY,
+                              SEC_IMAGE, hfile );
+    CloseHandle( hfile );
+
+    switch (status)
+    {
+    case STATUS_SUCCESS:
+        {
+            SECTION_IMAGE_INFORMATION info;
+
+            status = NtQuerySection( mapping, SectionImageInformation, &info, sizeof(info), NULL );
+            CloseHandle( mapping );
+            if (status) return FALSE;
+            switch (info.Machine)
+            {
+            case IMAGE_FILE_MACHINE_I386:
+            case IMAGE_FILE_MACHINE_ARMNT:
+                *type = SCS_32BIT_BINARY;
+                return TRUE;
+            case IMAGE_FILE_MACHINE_AMD64:
+            case IMAGE_FILE_MACHINE_ARM64:
+                *type = SCS_64BIT_BINARY;
+                return TRUE;
+            default:
+                return FALSE;
+            }
+        }
+    case STATUS_INVALID_IMAGE_WIN_64:
+        *type = SCS_64BIT_BINARY;
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
 static msi_custom_action_info *do_msidbCustomActionTypeDll(
     MSIPACKAGE *package, INT type, LPCWSTR source, LPCWSTR target, LPCWSTR action )
 {
@@ -765,7 +813,7 @@ static msi_custom_action_info *do_msidbCustomActionTypeDll(
         info->package->rpc_server_started = 1;
     }
 
-    ret = GetBinaryTypeW(source, &info->arch);
+    ret = get_binary_type(source, &info->arch);
     if (!ret)
         info->arch = (sizeof(void *) == 8 ? SCS_64BIT_BINARY : SCS_32BIT_BINARY);
 

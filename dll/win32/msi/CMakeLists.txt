@@ -16,7 +16,6 @@ list(APPEND SOURCE
     automation.c
     classes.c
     create.c
-    custom.c
     database.c
     delete.c
     dialog.c
@@ -58,6 +57,7 @@ add_rpc_files(server winemsi.idl)
 set(IDL_FLAGS ${OLD_IDL_FLAGS})
 
 list(APPEND PCH_SKIP_SOURCE
+    custom.c    # Need custom defines for WIN32_NO_STATUS
     suminfo.c   # The only file without NONAMELESSUNION
     ${BISON_cond_OUTPUTS}
     ${BISON_sql_OUTPUTS}
