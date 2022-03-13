@@ -33,3 +33,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: msiexec.ico */
 1 ICON msiexec.ico
+
+/* @makedep: msiexec.manifest */
+1 RT_MANIFEST msiexec.manifest
