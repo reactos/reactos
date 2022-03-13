@@ -534,7 +534,7 @@ static LPWSTR get_fusion_filename(MSIPACKAGE *package)
 
     if (!RegCreateKeyExW(netsetup, L"v4\\Client", 0, NULL, 0, KEY_QUERY_VALUE, NULL, &hkey, NULL))
     {
-        size = ARRAY_SIZE(path);
+        size = sizeof(path);
         if (!RegQueryValueExW(hkey, L"InstallPath", NULL, &type, (BYTE *)path, &size))
         {
             len = lstrlenW(path) + lstrlenW(L"fusion.dll") + 2;
@@ -789,12 +789,12 @@ static VOID set_installer_properties(MSIPACKAGE *package)
         PathAddBackslashW( pth );
         msi_set_property( package->db, L"SystemFolder", pth, -1 );
 
-        len = MAX_PATH;
+        len = sizeof(pth);
         RegQueryValueExW(hkey, L"ProgramFilesDir", 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, L"ProgramFilesFolder", pth, -1 );
 
-        len = MAX_PATH;
+        len = sizeof(pth);
         RegQueryValueExW(hkey, L"CommonFilesDir", 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, L"CommonFilesFolder", pth, -1 );
@@ -813,22 +813,22 @@ static VOID set_installer_properties(MSIPACKAGE *package)
         PathAddBackslashW( pth );
         msi_set_property( package->db, L"SystemFolder", pth, -1 );
 
-        len = MAX_PATH;
+        len = sizeof(pth);
         RegQueryValueExW(hkey, L"ProgramFilesDir", 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, L"ProgramFiles64Folder", pth, -1 );
 
-        len = MAX_PATH;
+        len = sizeof(pth);
         RegQueryValueExW(hkey, L"ProgramFilesDir (x86)", 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, L"ProgramFilesFolder", pth, -1 );
 
-        len = MAX_PATH;
+        len = sizeof(pth);
         RegQueryValueExW(hkey, L"CommonFilesDir", 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, L"CommonFiles64Folder", pth, -1 );
 
-        len = MAX_PATH;
+        len = sizeof(pth);
         RegQueryValueExW(hkey, L"CommonFilesDir (x86)", 0, &type, (BYTE *)pth, &len);
         PathAddBackslashW( pth );
         msi_set_property( package->db, L"CommonFilesFolder", pth, -1 );
