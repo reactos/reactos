@@ -66,19 +66,6 @@ typedef struct _tagTT_NAME_RECORD {
 #define SWAPWORD(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
 #define SWAPLONG(x) MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
 
-static const WCHAR regfont1[] =
-    {'S','o','f','t','w','a','r','e','\\',
-     'M','i','c','r','o','s','o','f','t','\\',
-     'W','i','n','d','o','w','s',' ','N','T','\\',
-     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-     'F','o','n','t','s',0};
-static const WCHAR regfont2[] =
-    {'S','o','f','t','w','a','r','e','\\',
-     'M','i','c','r','o','s','o','f','t','\\',
-     'W','i','n','d','o','w','s','\\',
-     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-     'F','o','n','t','s',0};
-
 /*
  * Code based off of code located here
  * http://www.codeproject.com/gdi/fontnamefromfile.asp
@@ -178,7 +165,6 @@ end:
 
 static WCHAR *font_name_from_file( MSIPACKAGE *package, const WCHAR *filename )
 {
-    static const WCHAR truetypeW[] = {' ','(','T','r','u','e','T','y','p','e',')',0};
     WCHAR *name, *ret = NULL;
 
     if ((name = load_ttf_name_id( package, filename, NAME_ID_FULL_FONT_NAME )))
@@ -189,9 +175,9 @@ static WCHAR *font_name_from_file( MSIPACKAGE *package, const WCHAR *filename )
             msi_free( name );
             return NULL;
         }
-        ret = msi_alloc( (lstrlenW( name ) + lstrlenW( truetypeW ) + 1 ) * sizeof(WCHAR) );
+        ret = msi_alloc( (lstrlenW( name ) + lstrlenW( L" (TrueType)" ) + 1 ) * sizeof(WCHAR) );
         lstrcpyW( ret, name );
-        lstrcatW( ret, truetypeW );
+        lstrcatW( ret, L" (TrueType)" );
         msi_free( name );
     }
     return ret;
@@ -199,7 +185,6 @@ static WCHAR *font_name_from_file( MSIPACKAGE *package, const WCHAR *filename )
 
 WCHAR *msi_get_font_file_version( MSIPACKAGE *package, const WCHAR *filename )
 {
-    static const WCHAR fmtW[] = {'%','u','.','%','u','.','0','.','0',0};
     WCHAR *version, *p, *q, *ret = NULL;
 
     if ((version = load_ttf_name_id( package, filename, NAME_ID_VERSION )))
@@ -216,9 +201,9 @@ WCHAR *msi_get_font_file_version( MSIPACKAGE *package, const WCHAR *filename )
             if (!*q || *q == ' ') minor = wcstol( p, NULL, 10 );
             else major = 0;
         }
-        len = lstrlenW( fmtW ) + 20;
+        len = lstrlenW( L"%u.%u.0.0" ) + 20;
         ret = msi_alloc( len * sizeof(WCHAR) );
-        swprintf( ret, len, fmtW, major, minor );
+        swprintf( ret, len, L"%u.%u.0.0", major, minor );
         msi_free( version );
     }
     return ret;
@@ -255,8 +240,8 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
         return ERROR_SUCCESS;
     }
 
-    RegCreateKeyW(HKEY_LOCAL_MACHINE,regfont1,&hkey1);
-    RegCreateKeyW(HKEY_LOCAL_MACHINE,regfont2,&hkey2);
+    RegCreateKeyW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts" ,&hkey1 );
+    RegCreateKeyW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Fonts", &hkey2 );
 
     if (MSI_RecordIsNull(row,2))
         name = font_name_from_file( package, file->TargetPath );
@@ -290,15 +275,13 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
 
 UINT ACTION_RegisterFonts(MSIPACKAGE *package)
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','F','o','n','t','`',0};
     MSIQUERY *view;
     UINT rc;
 
     if (package->script == SCRIPT_NONE)
-        return msi_schedule_action(package, SCRIPT_INSTALL, szRegisterFonts);
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"RegisterFonts");
 
-    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, L"SELECT * FROM `Font`", &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
@@ -338,8 +321,8 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
         return ERROR_SUCCESS;
     }
 
-    RegCreateKeyW( HKEY_LOCAL_MACHINE, regfont1, &hkey1 );
-    RegCreateKeyW( HKEY_LOCAL_MACHINE, regfont2, &hkey2 );
+    RegCreateKeyW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts", &hkey1 );
+    RegCreateKeyW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Fonts", &hkey2 );
 
     if (MSI_RecordIsNull( row, 2 ))
         name = font_name_from_file( package, file->TargetPath );
@@ -373,15 +356,13 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
 
 UINT ACTION_UnregisterFonts( MSIPACKAGE *package )
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','F','o','n','t','`',0};
     MSIQUERY *view;
     UINT r;
 
     if (package->script == SCRIPT_NONE)
-        return msi_schedule_action(package, SCRIPT_INSTALL, szUnregisterFonts);
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"UnregisterFonts");
 
-    r = MSI_DatabaseOpenViewW( package->db, query, &view );
+    r = MSI_DatabaseOpenViewW( package->db, L"SELECT * FROM `Font`", &view );
     if (r != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 

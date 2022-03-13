@@ -97,13 +97,13 @@ static void append_productcode( MSIPACKAGE *package, const WCHAR *action_prop, c
     if (prop)
     {
         lstrcpyW( newprop, prop );
-        lstrcatW( newprop, szSemiColon );
+        lstrcatW( newprop, L";" );
     }
     else newprop[0] = 0;
     lstrcatW( newprop, product );
 
     r = msi_set_property( package->db, action_prop, newprop, -1 );
-    if (r == ERROR_SUCCESS && !wcscmp( action_prop, szSourceDir ))
+    if (r == ERROR_SUCCESS && !wcscmp( action_prop, L"SourceDir" ))
         msi_reset_source_folders( package );
 
     TRACE( "related product property %s now %s\n", debugstr_w(action_prop), debugstr_w(newprop) );
@@ -210,35 +210,32 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
     }
     RegCloseKey(hkey);
     msiobj_release( &uirow->hdr);
-    
+
     return ERROR_SUCCESS;
 }
 
 UINT ACTION_FindRelatedProducts(MSIPACKAGE *package)
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','U','p','g','r','a','d','e','`',0};
     MSIQUERY *view;
     UINT rc;
 
-    if (msi_get_property_int(package->db, szInstalled, 0))
+    if (msi_get_property_int(package->db, L"Installed", 0))
     {
         TRACE("Skipping FindRelatedProducts action: product already installed\n");
         return ERROR_SUCCESS;
     }
-    if (msi_action_is_unique(package, szFindRelatedProducts))
+    if (msi_action_is_unique(package, L"FindRelatedProducts"))
     {
         TRACE("Skipping FindRelatedProducts action: already done in UI sequence\n");
         return ERROR_SUCCESS;
     }
     else
-        msi_register_unique_action(package, szFindRelatedProducts);
+        msi_register_unique_action(package, L"FindRelatedProducts");
 
-    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, L"SELECT * FROM `Upgrade`", &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
-    
+
     rc = MSI_IterateRecords(view, NULL, ITERATE_FindRelatedProducts, package);
     msiobj_release(&view->hdr);
     return rc;

@@ -773,8 +773,8 @@ UINT MSIREG_OpenPatchesKey(LPCWSTR szPatch, HKEY *key, BOOL create)
     if (!squash_guid( szPatch, squashed_pc )) return ERROR_FUNCTION_FAILED;
     TRACE("%s squashed %s\n", debugstr_w(szPatch), debugstr_w(squashed_pc));
 
-    swprintf( keypath, ARRAY_SIZE(keypath), L"Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\Patches",
-              squashed_pc );
+    lstrcpyW( keypath, L"Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\Patches\\" );
+    lstrcatW( keypath, squashed_pc );
 
     if (create) return RegCreateKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, key, NULL);
     return RegOpenKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, access, key);

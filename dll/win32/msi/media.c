@@ -82,7 +82,7 @@ static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
     LPWSTR source_dir;
     UINT r = IDRETRY;
 
-    source_dir = msi_dup_property(package->db, szSourceDir);
+    source_dir = msi_dup_property(package->db, L"SourceDir");
     record = MSI_CreateRecord(2);
 
     while (r == IDRETRY && !source_matches_volume(mi, source_dir))
@@ -275,12 +275,7 @@ static UINT CDECL msi_media_get_disk_info(MSIPACKAGE *package, MSIMEDIAINFO *mi)
 {
     MSIRECORD *row;
 
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ', 'F','R','O','M',' ',
-        '`','M','e','d','i','a','`',' ','W','H','E','R','E',' ',
-        '`','D','i','s','k','I','d','`',' ','=',' ','%','i',0};
-
-    row = MSI_QueryGetRecord(package->db, query, mi->disk_id);
+    row = MSI_QueryGetRecord(package->db, L"SELECT * FROM `Media` WHERE `DiskId` = %d", mi->disk_id);
     if (!row)
     {
         TRACE("Unable to query row\n");
@@ -473,7 +468,7 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
                 msi_free( tmppathW );
                 return ERROR_OUTOFMEMORY;
             }
-            if (!GetTempFileNameW(tmppathW, szMsi, 0, tmpfileW)) tmpfileW[0] = 0;
+            if (!GetTempFileNameW(tmppathW, L"msi", 0, tmpfileW)) tmpfileW[0] = 0;
             msi_free( tmppathW );
 
             handle = CreateFileW(tmpfileW, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs, NULL);
@@ -679,7 +674,7 @@ static UINT get_drive_type(const WCHAR *path)
 
 static WCHAR *get_base_url( MSIDATABASE *db )
 {
-    WCHAR *p, *ret = NULL, *orig_db = msi_dup_property( db, szOriginalDatabase );
+    WCHAR *p, *ret = NULL, *orig_db = msi_dup_property( db, L"OriginalDatabase" );
     if (UrlIsW( orig_db, URLIS_URL ) && (ret = strdupW( orig_db )) && (p = wcsrchr( ret, '/'))) p[1] = 0;
     msi_free( orig_db );
     return ret;
@@ -687,10 +682,6 @@ static WCHAR *get_base_url( MSIDATABASE *db )
 
 UINT msi_load_media_info(MSIPACKAGE *package, UINT Sequence, MSIMEDIAINFO *mi)
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','M','e','d','i','a','`',' ',
-        'W','H','E','R','E',' ','`','L','a','s','t','S','e','q','u','e','n','c','e','`',' ',
-        '>','=',' ','%','i',' ','O','R','D','E','R',' ','B','Y',' ','`','D','i','s','k','I','d','`',0};
     MSIRECORD *row;
     WCHAR *source_dir, *source, *base_url = NULL;
     DWORD options;
@@ -698,7 +689,7 @@ UINT msi_load_media_info(MSIPACKAGE *package, UINT Sequence, MSIMEDIAINFO *mi)
     if (Sequence <= mi->last_sequence) /* already loaded */
         return ERROR_SUCCESS;
 
-    row = MSI_QueryGetRecord(package->db, query, Sequence);
+    row = MSI_QueryGetRecord(package->db, L"SELECT * FROM `Media` WHERE `LastSequence` >= %d ORDER BY `DiskId`", Sequence);
     if (!row)
     {
         TRACE("Unable to query row\n");
@@ -717,7 +708,7 @@ UINT msi_load_media_info(MSIPACKAGE *package, UINT Sequence, MSIMEDIAINFO *mi)
     msiobj_release(&row->hdr);
 
     msi_set_sourcedir_props(package, FALSE);
-    source_dir = msi_dup_property(package->db, szSourceDir);
+    source_dir = msi_dup_property(package->db, L"SourceDir");
     lstrcpyW(mi->sourcedir, source_dir);
     PathAddBackslashW(mi->sourcedir);
     mi->type = get_drive_type(source_dir);
@@ -902,7 +893,7 @@ UINT ready_media( MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi )
         /* assume first volume is in the drive */
         if (mi->last_volume && wcsicmp( mi->last_volume, mi->volume_label ))
         {
-            WCHAR *source = msi_dup_property( package->db, szSourceDir );
+            WCHAR *source = msi_dup_property( package->db, L"SourceDir" );
             BOOL match = source_matches_volume( mi, source );
             msi_free( source );
 

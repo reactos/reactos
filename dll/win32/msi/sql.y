@@ -740,7 +740,6 @@ number:
 
 static LPWSTR parser_add_table( void *info, LPCWSTR list, LPCWSTR table )
 {
-    static const WCHAR space[] = {' ',0};
     DWORD len = lstrlenW( list ) + lstrlenW( table ) + 2;
     LPWSTR ret;
 
@@ -748,7 +747,7 @@ static LPWSTR parser_add_table( void *info, LPCWSTR list, LPCWSTR table )
     if( ret )
     {
         lstrcpyW( ret, list );
-        lstrcatW( ret, space );
+        lstrcatW( ret, L" " );
         lstrcatW( ret, table );
     }
     return ret;

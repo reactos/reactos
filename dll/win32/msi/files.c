@@ -160,7 +160,6 @@ DWORD msi_get_file_version_info( MSIPACKAGE *package, const WCHAR *path, DWORD b
 
 VS_FIXEDFILEINFO *msi_get_disk_file_version( MSIPACKAGE *package, const WCHAR *filename )
 {
-    static const WCHAR name[] = {'\\',0};
     VS_FIXEDFILEINFO *ptr, *ret;
     DWORD version_size, size;
     void *version;
@@ -170,7 +169,7 @@ VS_FIXEDFILEINFO *msi_get_disk_file_version( MSIPACKAGE *package, const WCHAR *f
 
     msi_get_file_version_info( package, filename, version_size, version );
 
-    if (!VerQueryValueW( version, name, (void **)&ptr, &size ))
+    if (!VerQueryValueW( version, L"\\", (void **)&ptr, &size ))
     {
         msi_free( version );
         return NULL;
@@ -267,7 +266,7 @@ static BOOL is_obsoleted_by_patch( MSIPACKAGE *package, MSIFILE *file )
 {
     if (!list_empty( &package->patches ) && file->disk_id < MSI_INITIAL_MEDIA_TRANSFORM_DISKID)
     {
-        if (!msi_get_property_int( package->db, szInstalled, 0 )) return FALSE;
+        if (!msi_get_property_int( package->db, L"Installed", 0 )) return FALSE;
         return TRUE;
     }
     if (is_registered_patch_media( package, file->disk_id )) return TRUE;
@@ -442,7 +441,7 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
             msi_free( pathW );
             return ERROR_OUTOFMEMORY;
         }
-        if (!GetTempFileNameW( pathW, szMsi, 0, tmpfileW )) tmpfileW[0] = 0;
+        if (!GetTempFileNameW( pathW, L"msi", 0, tmpfileW )) tmpfileW[0] = 0;
         msi_free( pathW );
 
         if (msi_copy_file( package, source, tmpfileW, FALSE ) &&
@@ -548,7 +547,7 @@ WCHAR *msi_resolve_file_source( MSIPACKAGE *package, MSIFILE *file )
 
 /*
  * ACTION_InstallFiles()
- * 
+ *
  * For efficiency, this is done in two passes:
  * 1) Correct all the TargetPaths and determine what files are to be installed.
  * 2) Extract Cabinets and copy files.
@@ -562,7 +561,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
     msi_set_sourcedir_props(package, FALSE);
 
     if (package->script == SCRIPT_NONE)
-        return msi_schedule_action(package, SCRIPT_INSTALL, szInstallFiles);
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"InstallFiles");
 
     schedule_install_files(package);
     mi = msi_alloc_zero( sizeof(MSIMEDIAINFO) );
@@ -571,7 +570,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
     {
         BOOL is_global_assembly = msi_is_global_assembly( file->Component );
 
-        msi_file_update_ui( package, file, szInstallFiles );
+        msi_file_update_ui( package, file, L"InstallFiles" );
 
         rc = msi_load_media_info( package, file->Sequence, mi );
         if (rc != ERROR_SUCCESS)
@@ -583,7 +582,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 
         if (file->state != msifs_hashmatch &&
             file->state != msifs_skipped &&
-            (file->state != msifs_present || !msi_get_property_int( package->db, szInstalled, 0 )) &&
+            (file->state != msifs_present || !msi_get_property_int( package->db, L"Installed", 0 )) &&
             (rc = ready_media( package, file->IsCompressed, mi )))
         {
             ERR("Failed to ready media for %s\n", debugstr_w(file->File));
@@ -790,7 +789,7 @@ UINT ACTION_PatchFiles( MSIPACKAGE *package )
     TRACE("%p\n", package);
 
     if (package->script == SCRIPT_NONE)
-        return msi_schedule_action(package, SCRIPT_INSTALL, szPatchFiles);
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"PatchFiles");
 
     mi = msi_alloc_zero( sizeof(MSIMEDIAINFO) );
 
@@ -1129,7 +1128,7 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
 
         lstrcpyW(source, sourcedir);
         if (source[lstrlenW(source) - 1] != '\\')
-            lstrcatW(source, szBackSlash);
+            lstrcatW(source, L"\\");
         lstrcatW(source, sourcename);
     }
 
@@ -1167,7 +1166,7 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
 
     lstrcpyW(dest, destdir);
     if (dest[lstrlenW(dest) - 1] != '\\')
-        lstrcatW(dest, szBackSlash);
+        lstrcatW(dest, L"\\");
 
     if (destname)
         lstrcatW(dest, destname);
@@ -1205,16 +1204,13 @@ done:
 
 UINT ACTION_MoveFiles( MSIPACKAGE *package )
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','M','o','v','e','F','i','l','e','`',0};
     MSIQUERY *view;
     UINT rc;
 
     if (package->script == SCRIPT_NONE)
-        return msi_schedule_action(package, SCRIPT_INSTALL, szMoveFiles);
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"MoveFiles");
 
-    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, L"SELECT * FROM `MoveFile`", &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
@@ -1338,16 +1334,13 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
 
 UINT ACTION_DuplicateFiles(MSIPACKAGE *package)
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','D','u','p','l','i','c','a','t','e','F','i','l','e','`',0};
     MSIQUERY *view;
     UINT rc;
 
     if (package->script == SCRIPT_NONE)
-        return msi_schedule_action(package, SCRIPT_INSTALL, szDuplicateFiles);
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"DuplicateFiles");
 
-    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, L"SELECT * FROM `DuplicateFile`", &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
@@ -1416,16 +1409,13 @@ static UINT ITERATE_RemoveDuplicateFiles( MSIRECORD *row, LPVOID param )
 
 UINT ACTION_RemoveDuplicateFiles( MSIPACKAGE *package )
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','D','u','p','l','i','c','a','t','e','F','i','l','e','`',0};
     MSIQUERY *view;
     UINT rc;
 
     if (package->script == SCRIPT_NONE)
-        return msi_schedule_action(package, SCRIPT_INSTALL, szRemoveDuplicateFiles);
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"RemoveDuplicateFiles");
 
-    rc = MSI_DatabaseOpenViewW( package->db, query, &view );
+    rc = MSI_DatabaseOpenViewW( package->db, L"SELECT * FROM `DuplicateFile`", &view );
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
@@ -1557,18 +1547,15 @@ static void remove_folder( MSIFOLDER *folder )
 
 UINT ACTION_RemoveFiles( MSIPACKAGE *package )
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','R','e','m','o','v','e','F','i','l','e','`',0};
     MSIQUERY *view;
     MSICOMPONENT *comp;
     MSIFILE *file;
     UINT r;
 
     if (package->script == SCRIPT_NONE)
-        return msi_schedule_action(package, SCRIPT_INSTALL, szRemoveFiles);
+        return msi_schedule_action(package, SCRIPT_INSTALL, L"RemoveFiles");
 
-    r = MSI_DatabaseOpenViewW(package->db, query, &view);
+    r = MSI_DatabaseOpenViewW(package->db, L"SELECT * FROM `RemoveFile`", &view);
     if (r == ERROR_SUCCESS)
     {
         r = MSI_IterateRecords(view, NULL, ITERATE_RemoveFiles, package);
@@ -1583,7 +1570,7 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
         VS_FIXEDFILEINFO *ver;
 
         comp = file->Component;
-        msi_file_update_ui( package, file, szRemoveFiles );
+        msi_file_update_ui( package, file, L"RemoveFiles" );
 
         comp->Action = msi_get_component_action( package, comp );
         if (comp->Action != INSTALLSTATE_ABSENT || comp->Installed == INSTALLSTATE_SOURCE)

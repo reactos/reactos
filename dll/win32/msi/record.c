@@ -147,7 +147,7 @@ static BOOL string2intW( LPCWSTR str, int *out )
 
     if( str[0] == '-' ) /* check if it's negative */
         x = -x;
-    *out = x; 
+    *out = x;
 
     return TRUE;
 }
@@ -439,7 +439,6 @@ const WCHAR *MSI_RecordGetString( const MSIRECORD *rec, UINT iField )
 UINT MSI_RecordGetStringW(MSIRECORD *rec, UINT iField,
                LPWSTR szValue, LPDWORD pcchValue)
 {
-    static const WCHAR szFormat[] = {'%','d',0};
     UINT len = 0, ret = ERROR_SUCCESS;
     WCHAR buffer[16];
 
@@ -457,7 +456,7 @@ UINT MSI_RecordGetStringW(MSIRECORD *rec, UINT iField,
     switch( rec->fields[iField].type )
     {
     case MSIFIELD_INT:
-        wsprintfW(buffer, szFormat, rec->fields[iField].u.iVal);
+        wsprintfW(buffer, L"%d", rec->fields[iField].u.iVal);
         len = lstrlenW( buffer );
         if (szValue)
             lstrcpynW(szValue, buffer, *pcchValue);

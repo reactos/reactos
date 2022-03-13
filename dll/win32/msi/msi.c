@@ -2469,7 +2469,7 @@ UINT WINAPI MsiMessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uTyp
 {
     FIXME("%p %s %s %u %08x %08x\n", hWnd, debugstr_a(lpText), debugstr_a(lpCaption),
           uType, wLanguageId, f);
-    return MessageBoxExA(hWnd,lpText,lpCaption,uType,wLanguageId); 
+    return MessageBoxExA(hWnd,lpText,lpCaption,uType,wLanguageId);
 }
 
 UINT WINAPI MsiMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType,
@@ -2477,7 +2477,7 @@ UINT WINAPI MsiMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uT
 {
     FIXME("%p %s %s %u %08x %08x\n", hWnd, debugstr_w(lpText), debugstr_w(lpCaption),
           uType, wLanguageId, f);
-    return MessageBoxExW(hWnd,lpText,lpCaption,uType,wLanguageId); 
+    return MessageBoxExW(hWnd,lpText,lpCaption,uType,wLanguageId);
 }
 
 UINT WINAPI MsiMessageBoxExA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType,
@@ -3522,7 +3522,7 @@ UINT WINAPI MsiProvideQualifiedComponentW( LPCWSTR szComponent,
                 LPCWSTR szQualifier, DWORD dwInstallMode, LPWSTR lpPathBuf,
                 LPDWORD pcchPathBuf)
 {
-    return MsiProvideQualifiedComponentExW(szComponent, szQualifier, 
+    return MsiProvideQualifiedComponentExW(szComponent, szQualifier,
                     dwInstallMode, NULL, 0, 0, lpPathBuf, pcchPathBuf);
 }
 
@@ -3989,7 +3989,7 @@ UINT WINAPI MsiReinstallFeatureW( LPCWSTR szProduct, LPCWSTR szFeature, DWORD dw
     if (dwReinstallMode & REINSTALLMODE_PACKAGE)
         *ptr++ = 'v';
     *ptr = 0;
-    
+
     sz = sizeof(sourcepath);
     MsiSourceListGetInfoW( szProduct, NULL, context, MSICODE_PRODUCT,
                            INSTALLPROPERTY_LASTUSEDSOURCEW, sourcepath, &sz );

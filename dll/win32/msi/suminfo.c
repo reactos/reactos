@@ -44,7 +44,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #include "pshpack1.h"
 
-typedef struct { 
+typedef struct {
     WORD wByteOrder;
     WORD wFormat;
     DWORD dwOSVer;
@@ -52,20 +52,20 @@ typedef struct {
     DWORD reserved;
 } PROPERTYSETHEADER;
 
-typedef struct { 
+typedef struct {
     FMTID fmtid;
     DWORD dwOffset;
 } FORMATIDOFFSET;
 
-typedef struct { 
+typedef struct {
     DWORD cbSection;
     DWORD cProperties;
-} PROPERTYSECTIONHEADER; 
- 
-typedef struct { 
+} PROPERTYSECTIONHEADER;
+
+typedef struct {
     DWORD propid;
     DWORD dwOffset;
-} PROPERTYIDOFFSET; 
+} PROPERTYIDOFFSET;
 
 typedef struct {
     DWORD type;
@@ -79,7 +79,7 @@ typedef struct {
         } str;
     } u;
 } PROPERTY_DATA;
- 
+
 #include "poppack.h"
 
 static HRESULT (WINAPI *pPropVariantChangeType)
@@ -466,7 +466,7 @@ UINT msi_get_suminfo( IStorage *stg, UINT uiUpdateCount, MSISUMMARYINFO **ret )
 
     if (!(si = create_suminfo( stg, uiUpdateCount ))) return ERROR_OUTOFMEMORY;
 
-    hr = IStorage_OpenStream( si->storage, szSumInfo, 0, STGM_READ|STGM_SHARE_EXCLUSIVE, 0, &stm );
+    hr = IStorage_OpenStream( si->storage, L"\5SummaryInformation", 0, STGM_READ|STGM_SHARE_EXCLUSIVE, 0, &stm );
     if (FAILED( hr ))
     {
         msiobj_release( &si->hdr );
@@ -493,7 +493,7 @@ UINT msi_get_db_suminfo( MSIDATABASE *db, UINT uiUpdateCount, MSISUMMARYINFO **r
 
     if (!(si = create_suminfo( db->storage, uiUpdateCount ))) return ERROR_OUTOFMEMORY;
 
-    r = msi_get_stream( db, szSumInfo, &stm );
+    r = msi_get_stream( db, L"\5SummaryInformation", &stm );
     if (r != ERROR_SUCCESS)
     {
         msiobj_release( &si->hdr );
@@ -512,7 +512,7 @@ UINT msi_get_db_suminfo( MSIDATABASE *db, UINT uiUpdateCount, MSISUMMARYINFO **r
     return ERROR_SUCCESS;
 }
 
-UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase, 
+UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
               LPCWSTR szDatabase, UINT uiUpdateCount, MSIHANDLE *pHandle )
 {
     MSISUMMARYINFO *si;
@@ -583,7 +583,7 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
     return ret;
 }
 
-UINT WINAPI MsiGetSummaryInformationA(MSIHANDLE hDatabase, 
+UINT WINAPI MsiGetSummaryInformationA(MSIHANDLE hDatabase,
               LPCSTR szDatabase, UINT uiUpdateCount, MSIHANDLE *pHandle)
 {
     LPWSTR szwDatabase = NULL;
@@ -979,7 +979,7 @@ static UINT suminfo_persist( MSISUMMARYINFO *si )
     HRESULT r;
 
     grfMode = STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE;
-    r = IStorage_CreateStream( si->storage, szSumInfo, grfMode, 0, 0, &stm );
+    r = IStorage_CreateStream( si->storage, L"\5SummaryInformation", grfMode, 0, 0, &stm );
     if( SUCCEEDED(r) )
     {
         ret = save_summary_info( si, stm );
@@ -1266,7 +1266,6 @@ UINT WINAPI MsiCreateTransformSummaryInfoW( MSIHANDLE db, MSIHANDLE db_ref, LPCW
 
 UINT msi_load_suminfo_properties( MSIPACKAGE *package )
 {
-    static const WCHAR packagecodeW[] = {'P','a','c','k','a','g','e','C','o','d','e',0};
     MSISUMMARYINFO *si;
     WCHAR *package_code;
     UINT r, len;
@@ -1307,7 +1306,7 @@ UINT msi_load_suminfo_properties( MSIPACKAGE *package )
         return r;
     }
 
-    r = msi_set_property( package->db, packagecodeW, package_code, len );
+    r = msi_set_property( package->db, L"PackageCode", package_code, len );
     msi_free( package_code );
 
     count = 0;

@@ -1235,7 +1235,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
     wv = msi_alloc_zero( sizeof *wv );
     if( !wv )
         return ERROR_FUNCTION_FAILED;
-    
+
     /* fill the structure */
     wv->view.ops = &where_ops;
     msiobj_addref( &db->hdr );

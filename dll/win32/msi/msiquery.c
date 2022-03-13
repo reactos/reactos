@@ -517,7 +517,7 @@ UINT WINAPI MsiViewExecute(MSIHANDLE hView, MSIHANDLE hRec)
     MSIQUERY *query;
     MSIRECORD *rec = NULL;
     UINT ret;
-    
+
     TRACE("%d %d\n", hView, hRec);
 
     if( hRec )
@@ -564,7 +564,6 @@ UINT WINAPI MsiViewExecute(MSIHANDLE hView, MSIHANDLE hRec)
 static UINT msi_set_record_type_string( MSIRECORD *rec, UINT field,
                                         UINT type, BOOL temporary )
 {
-    static const WCHAR fmt[] = { '%','d',0 };
     WCHAR szType[0x10];
 
     if (MSITYPE_IS_BINARY(type))
@@ -591,7 +590,7 @@ static UINT msi_set_record_type_string( MSIRECORD *rec, UINT field,
     if (type & MSITYPE_NULLABLE)
         szType[0] &= ~0x20;
 
-    swprintf( &szType[1], ARRAY_SIZE(szType) - 1, fmt, (type&0xff) );
+    swprintf( &szType[1], ARRAY_SIZE(szType) - 1, L"%d", (type&0xff) );
 
     TRACE("type %04x -> %s\n", type, debugstr_w(szType) );
 
@@ -798,7 +797,7 @@ MSIDBERROR WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR buffer, LPDWORD buf
         }
         __ENDTRY;
 
-        if (msi_strncpyW(remote_column ? remote_column : szEmpty, -1, buffer, buflen) == ERROR_MORE_DATA)
+        if (msi_strncpyW(remote_column ? remote_column : L"", -1, buffer, buflen) == ERROR_MORE_DATA)
             r = MSIDBERROR_MOREDATA;
 
         if (remote_column)
@@ -808,7 +807,7 @@ MSIDBERROR WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR buffer, LPDWORD buf
     }
 
     if ((r = query->view->error)) column = query->view->error_column;
-    else column = szEmpty;
+    else column = L"";
 
     if (msi_strncpyW(column, -1, buffer, buflen) == ERROR_MORE_DATA)
         r = MSIDBERROR_MOREDATA;
@@ -849,7 +848,7 @@ MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR buffer, LPDWORD bufl
         }
         __ENDTRY;
 
-        if (msi_strncpyWtoA(remote_column ? remote_column : szEmpty, -1, buffer, buflen, FALSE) == ERROR_MORE_DATA)
+        if (msi_strncpyWtoA(remote_column ? remote_column : L"", -1, buffer, buflen, FALSE) == ERROR_MORE_DATA)
             r = MSIDBERROR_MOREDATA;
 
         if (remote_column)
@@ -859,7 +858,7 @@ MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR buffer, LPDWORD bufl
     }
 
     if ((r = query->view->error)) column = query->view->error_column;
-    else column = szEmpty;
+    else column = L"";
 
     if (msi_strncpyWtoA(column, -1, buffer, buflen, FALSE) == ERROR_MORE_DATA)
         r = MSIDBERROR_MOREDATA;
@@ -1045,11 +1044,6 @@ static UINT msi_primary_key_iterator( MSIRECORD *rec, LPVOID param )
 UINT MSI_DatabaseGetPrimaryKeys( MSIDATABASE *db,
                 LPCWSTR table, MSIRECORD **prec )
 {
-    static const WCHAR sql[] = {
-        's','e','l','e','c','t',' ','*',' ',
-        'f','r','o','m',' ','`','_','C','o','l','u','m','n','s','`',' ',
-        'w','h','e','r','e',' ',
-        '`','T','a','b','l','e','`',' ','=',' ','\'','%','s','\'',0 };
     struct msi_primary_key_record_info info;
     MSIQUERY *query = NULL;
     UINT r;
@@ -1057,7 +1051,7 @@ UINT MSI_DatabaseGetPrimaryKeys( MSIDATABASE *db,
     if (!TABLE_Exists( db, table ))
         return ERROR_INVALID_TABLE;
 
-    r = MSI_OpenQuery( db, &query, sql, table );
+    r = MSI_OpenQuery( db, &query, L"SELECT * FROM `_Columns` WHERE `Table` = '%s'", table );
     if( r != ERROR_SUCCESS )
         return r;
 
@@ -1133,7 +1127,7 @@ UINT WINAPI MsiDatabaseGetPrimaryKeysW( MSIHANDLE hdb,
     return r;
 }
 
-UINT WINAPI MsiDatabaseGetPrimaryKeysA(MSIHANDLE hdb, 
+UINT WINAPI MsiDatabaseGetPrimaryKeysA(MSIHANDLE hdb,
                     LPCSTR table, MSIHANDLE* phRec)
 {
     LPWSTR szwTable = NULL;

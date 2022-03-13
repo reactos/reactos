@@ -236,10 +236,10 @@ static UINT SELECT_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *na
     n = sv->cols[ n - 1 ];
     if( !n )
     {
-        if (name) *name = szEmpty;
+        if (name) *name = L"";
         if (type) *type = MSITYPE_UNKNOWN | MSITYPE_VALID;
         if (temporary) *temporary = FALSE;
-        if (table_name) *table_name = szEmpty;
+        if (table_name) *table_name = L"";
         return ERROR_SUCCESS;
     }
     return sv->table->ops->get_column_info( sv->table, n, name,
@@ -404,7 +404,7 @@ static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPCWSTR name,
     }
 
     sv->cols[sv->num_cols] = n;
-    TRACE("Translating column %s from %d -> %d\n", 
+    TRACE("Translating column %s from %d -> %d\n",
           debugstr_w( name ), sv->num_cols, n);
 
     sv->num_cols++;
@@ -433,7 +433,7 @@ UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
     sv = msi_alloc_zero( FIELD_OFFSET( MSISELECTVIEW, cols[count] ));
     if( !sv )
         return ERROR_FUNCTION_FAILED;
-    
+
     /* fill the structure */
     sv->view.ops = &select_ops;
     sv->db = db;

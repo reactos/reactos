@@ -278,16 +278,16 @@ static UINT STREAMS_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *n
     switch (n)
     {
     case 1:
-        if (name) *name = szName;
+        if (name) *name = L"Name";
         if (type) *type = MSITYPE_STRING | MSITYPE_VALID | MAX_STREAM_NAME_LEN;
         break;
 
     case 2:
-        if (name) *name = szData;
+        if (name) *name = L"Data";
         if (type) *type = MSITYPE_STRING | MSITYPE_VALID | MSITYPE_NULLABLE;
         break;
     }
-    if (table_name) *table_name = szStreams;
+    if (table_name) *table_name = L"_Streams";
     if (temporary) *temporary = FALSE;
     return ERROR_SUCCESS;
 }
@@ -614,7 +614,7 @@ UINT msi_commit_streams( MSIDATABASE *db )
     for (i = 0; i < db->num_streams; i++)
     {
         name = msi_string_lookup( db->strings, db->streams[i].str_index, NULL );
-        if (!wcscmp( name, szSumInfo )) continue;
+        if (!wcscmp( name, L"\5SummaryInformation" )) continue;
 
         if (!(encname = encode_streamname( FALSE, name ))) return ERROR_OUTOFMEMORY;
         TRACE("saving stream %s as %s\n", debugstr_w(name), debugstr_w(encname));
