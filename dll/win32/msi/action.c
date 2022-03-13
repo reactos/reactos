@@ -7827,10 +7827,10 @@ static UINT ACTION_BindImage( MSIPACKAGE *package )
     r = MSI_DatabaseOpenViewW( package->db, query, &view );
     if (r == ERROR_SUCCESS)
     {
-        r = MSI_IterateRecords( view, NULL, ITERATE_BindImage, package );
+        MSI_IterateRecords( view, NULL, ITERATE_BindImage, package );
         msiobj_release( &view->hdr );
     }
-    return r;
+    return ERROR_SUCCESS;
 }
 
 static UINT msi_unimplemented_action_stub( MSIPACKAGE *package, LPCSTR action, LPCWSTR table )
