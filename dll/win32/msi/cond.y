@@ -115,7 +115,7 @@ static void value_free( struct value val )
 
 %lex-param { COND_input *info }
 %parse-param { COND_input *info }
-%pure-parser
+%define api.pure
 
 %union
 {
