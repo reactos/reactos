@@ -222,7 +222,6 @@ typedef struct _column_info
     LPCWSTR table;
     LPCWSTR column;
     INT   type;
-    BOOL   temporary;
     struct expr *val;
     struct _column_info *next;
 } column_info;
@@ -337,7 +336,7 @@ typedef struct tagMSIVIEWOPS
     /*
      * add_column - adds a column to the table
      */
-    UINT (*add_column)( struct tagMSIVIEW *view, LPCWSTR column, INT type, BOOL temporary, BOOL hold );
+    UINT (*add_column)( struct tagMSIVIEW *view, LPCWSTR column, INT type, BOOL hold );
 
     /*
      * sort - orders the table by columns

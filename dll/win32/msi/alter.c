@@ -70,7 +70,7 @@ static UINT ALTER_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 
     if (av->colinfo)
         return av->table->ops->add_column(av->table, av->colinfo->column,
-                av->colinfo->type, av->colinfo->temporary, av->hold == 1);
+                av->colinfo->type, av->hold == 1);
 
     if (av->hold == 1)
         av->table->ops->add_ref(av->table);

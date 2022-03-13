@@ -764,7 +764,7 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
         table->colinfo[ i ].type = col->type;
         table->colinfo[ i ].offset = 0;
         table->colinfo[ i ].hash_table = NULL;
-        table->colinfo[ i ].temporary = col->temporary;
+        table->colinfo[ i ].temporary = (col->type & MSITYPE_TEMPORARY) != 0;
     }
     table_calc_column_offsets( db, table->colinfo, table->col_count);
 
@@ -2041,9 +2041,10 @@ static UINT TABLE_release(struct tagMSIVIEW *view)
 }
 
 static UINT TABLE_add_column(struct tagMSIVIEW *view, LPCWSTR column,
-                             INT type, BOOL temporary, BOOL hold)
+                             INT type, BOOL hold)
 {
     UINT i, r, table_id, col_id, size, offset;
+    BOOL temporary = type & MSITYPE_TEMPORARY;
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     MSICOLUMNINFO *colinfo;
 

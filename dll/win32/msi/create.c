@@ -181,7 +181,7 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
         if (!col->table)
             col->table = table;
 
-        if( !col->temporary )
+        if( !(col->type & MSITYPE_TEMPORARY) )
             temp = FALSE;
         else if ( col->type & MSITYPE_KEY )
             tempprim = TRUE;

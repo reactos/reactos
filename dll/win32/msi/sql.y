@@ -318,7 +318,6 @@ column_and_type:
         {
             $$ = $1;
             $$->type = ($2 | MSITYPE_VALID);
-            $$->temporary = $2 & MSITYPE_TEMPORARY ? TRUE : FALSE;
         }
     ;
 
