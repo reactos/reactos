@@ -744,6 +744,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     /* in a wine environment the user is always admin and privileged */
     msi_set_property( package->db, L"AdminUser", L"1", -1 );
     msi_set_property( package->db, L"Privileged", L"1", -1 );
+    msi_set_property( package->db, L"MsiRunningElevated", L"1", -1 );
 
     /* set the os things */
     OSVersion.dwOSVersionInfoSize = sizeof(OSVersion);
@@ -970,6 +971,8 @@ void msi_adjust_privilege_properties( MSIPACKAGE *package )
         msi_set_property( package->db, L"ALLUSERS", L"1", -1 );
     }
     msi_set_property( package->db, L"AdminUser", L"1", -1 );
+    msi_set_property( package->db, L"Privileged", L"1", -1 );
+    msi_set_property( package->db, L"MsiRunningElevated", L"1", -1 );
 }
 
 MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
