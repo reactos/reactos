@@ -1209,7 +1209,7 @@ static enum platform parse_platform( const WCHAR *str )
     else if (!wcscmp( str, szX64 ) || !wcscmp( str, szAMD64 )) return PLATFORM_X64;
     else if (!wcscmp( str, szARM )) return PLATFORM_ARM;
     else if (!wcscmp( str, szARM64 )) return PLATFORM_ARM64;
-    return PLATFORM_UNKNOWN;
+    return PLATFORM_UNRECOGNIZED;
 }
 
 static UINT parse_suminfo( MSISUMMARYINFO *si, MSIPACKAGE *package )
@@ -1237,13 +1237,13 @@ static UINT parse_suminfo( MSISUMMARYINFO *si, MSIPACKAGE *package )
     platform = template;
     if ((q = wcschr( platform, ',' ))) *q = 0;
     package->platform = parse_platform( platform );
-    while (package->platform == PLATFORM_UNKNOWN && q)
+    while (package->platform == PLATFORM_UNRECOGNIZED && q)
     {
         platform = q + 1;
         if ((q = wcschr( platform, ',' ))) *q = 0;
         package->platform = parse_platform( platform );
     }
-    if (package->platform == PLATFORM_UNKNOWN)
+    if (package->platform == PLATFORM_UNRECOGNIZED)
     {
         WARN("unknown platform %s\n", debugstr_w(template));
         msi_free( template );

@@ -363,7 +363,7 @@ typedef struct msi_dialog_tag msi_dialog;
 
 enum platform
 {
-    PLATFORM_UNKNOWN,
+    PLATFORM_UNRECOGNIZED,
     PLATFORM_INTEL,
     PLATFORM_INTEL64,
     PLATFORM_X64,
