@@ -2516,7 +2516,7 @@ static void check_reg_str(HKEY prodkey, LPCSTR name, LPCSTR expected, BOOL bcase
     res = RegQueryValueExA(prodkey, name, NULL, &type, (LPBYTE)val, &size);
 
     if (res != ERROR_SUCCESS ||
-        (type != REG_SZ && type != REG_EXPAND_SZ && type != REG_MULTI_SZ))
+        (type != REG_SZ && type != REG_EXPAND_SZ))
     {
         ok_(__FILE__, line)(FALSE, "Key doesn't exist or wrong type\n");
         return;
@@ -2531,8 +2531,13 @@ static void check_reg_str(HKEY prodkey, LPCSTR name, LPCSTR expected, BOOL bcase
 static void check_reg_multi(HKEY prodkey, const char *name, const char *expect, DWORD line)
 {
     char val[MAX_PATH];
-    DWORD size, type;
+    DWORD expect_size = 0, size, type;
+    const char *p;
     LONG res;
+
+    for (p = expect; *p; p += strlen(p) + 1)
+        ;
+    expect_size = (p + 1) - expect;
 
     size = MAX_PATH;
     val[0] = '\0';
@@ -2544,7 +2549,8 @@ static void check_reg_multi(HKEY prodkey, const char *name, const char *expect, 
         return;
     }
 
-    ok_(__FILE__, line)(!memcmp(val, expect, size), "wrong data\n");
+    ok_(__FILE__, line)(size == expect_size, "expected size %u, got %u\n", expect_size, size);
+    ok_(__FILE__, line)(!memcmp(val, expect, size), "got %s\n", debugstr_an(val, size));
 }
 
 static void check_reg_dword(HKEY prodkey, LPCSTR name, DWORD expected, DWORD line)
@@ -2584,6 +2590,12 @@ static void check_reg_dword(HKEY prodkey, LPCSTR name, DWORD expected, DWORD lin
 
 #define CHECK_REG_MULTI(key, name, expect) \
     check_reg_multi(key, name, expect, __LINE__);
+
+#define CHECK_DEL_REG_MULTI(key, name, expect) \
+    do { \
+        check_reg_multi(key, name, expect, __LINE__); \
+        RegDeleteValueA(key, name); \
+    } while(0)
 
 #define CHECK_REG_DWORD(prodkey, name, expected) \
     check_reg_dword(prodkey, name, expected, __LINE__);
@@ -3127,7 +3139,7 @@ currentuser:
     CHECK_DEL_REG_DWORD(hkey, "Assignment", 0);
     CHECK_DEL_REG_DWORD(hkey, "AdvertiseFlags", 0x184);
     CHECK_DEL_REG_DWORD(hkey, "InstanceType", 0);
-    CHECK_DEL_REG_STR(hkey, "Clients", ":");
+    CHECK_DEL_REG_MULTI(hkey, "Clients", ":\0");
 
     res = RegOpenKeyA(hkey, "SourceList", &sourcelist);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -3208,7 +3220,7 @@ machprod:
     todo_wine CHECK_DEL_REG_DWORD(hkey, "Assignment", 1);
     CHECK_DEL_REG_DWORD(hkey, "AdvertiseFlags", 0x184);
     CHECK_DEL_REG_DWORD(hkey, "InstanceType", 0);
-    CHECK_DEL_REG_STR(hkey, "Clients", ":");
+    CHECK_DEL_REG_MULTI(hkey, "Clients", ":\0");
 
     res = RegOpenKeyExA(hkey, "SourceList", 0, access, &sourcelist);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
@@ -6361,24 +6373,24 @@ static void test_publish_assemblies(void)
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, path_dotnet, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    CHECK_REG_STR(hkey, name_dotnet, "rcHQPHq?CA@Uv-XqMI1e>Z'q,T*76M@=YEg6My?~]");
+    CHECK_REG_MULTI(hkey, name_dotnet, "rcHQPHq?CA@Uv-XqMI1e>Z'q,T*76M@=YEg6My?~]\0");
     RegCloseKey(hkey);
 
     path = (is_wow64 || is_64bit) ? path_dotnet_local_wow64 : path_dotnet_local;
     res = RegOpenKeyA(HKEY_CURRENT_USER, path, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    CHECK_REG_STR(hkey, name_dotnet_local, "rcHQPHq?CA@Uv-XqMI1e>LF,8A?0d.AW@vcZ$Cgox");
+    CHECK_REG_MULTI(hkey, name_dotnet_local, "rcHQPHq?CA@Uv-XqMI1e>LF,8A?0d.AW@vcZ$Cgox\0");
     RegCloseKey(hkey);
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, path_win32, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    CHECK_REG_STR(hkey, name_win32, "rcHQPHq?CA@Uv-XqMI1e>}NJjwR'%D9v1p!v{WV(%");
+    CHECK_REG_MULTI(hkey, name_win32, "rcHQPHq?CA@Uv-XqMI1e>}NJjwR'%D9v1p!v{WV(%\0");
     RegCloseKey(hkey);
 
     path = (is_wow64 || is_64bit) ? path_win32_local_wow64 : path_win32_local;
     res = RegOpenKeyA(HKEY_CURRENT_USER, path, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    CHECK_REG_STR(hkey, name_win32_local, "rcHQPHq?CA@Uv-XqMI1e>C)Uvlj*53A)u(QQ9=)X!");
+    CHECK_REG_MULTI(hkey, name_win32_local, "rcHQPHq?CA@Uv-XqMI1e>C)Uvlj*53A)u(QQ9=)X!\0");
     RegCloseKey(hkey);
 
     /* No registration is done for a local assembly with no matching file */
@@ -6425,24 +6437,24 @@ static void test_publish_assemblies(void)
         res = RegOpenKeyExA(HKEY_CLASSES_ROOT, classes_path_dotnet, 0, access, &hkey);
     }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    CHECK_REG_STR(hkey, name_dotnet, "rcHQPHq?CA@Uv-XqMI1e>Z'q,T*76M@=YEg6My?~]");
+    CHECK_REG_MULTI(hkey, name_dotnet, "rcHQPHq?CA@Uv-XqMI1e>Z'q,T*76M@=YEg6My?~]\0");
     RegCloseKey(hkey);
 
     path = (is_wow64 || is_64bit) ? classes_path_dotnet_local_wow64 : classes_path_dotnet_local;
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, path, 0, access, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    CHECK_REG_STR(hkey, name_dotnet_local, "rcHQPHq?CA@Uv-XqMI1e>LF,8A?0d.AW@vcZ$Cgox");
+    CHECK_REG_MULTI(hkey, name_dotnet_local, "rcHQPHq?CA@Uv-XqMI1e>LF,8A?0d.AW@vcZ$Cgox\0");
     RegCloseKey(hkey);
 
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, classes_path_win32, 0, access, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    CHECK_REG_STR(hkey, name_win32, "rcHQPHq?CA@Uv-XqMI1e>}NJjwR'%D9v1p!v{WV(%");
+    CHECK_REG_MULTI(hkey, name_win32, "rcHQPHq?CA@Uv-XqMI1e>}NJjwR'%D9v1p!v{WV(%\0");
     RegCloseKey(hkey);
 
     path = (is_wow64 || is_64bit) ? classes_path_win32_local_wow64 : classes_path_win32_local;
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, path, 0, access, &hkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-    CHECK_REG_STR(hkey, name_win32_local, "rcHQPHq?CA@Uv-XqMI1e>C)Uvlj*53A)u(QQ9=)X!");
+    CHECK_REG_MULTI(hkey, name_win32_local, "rcHQPHq?CA@Uv-XqMI1e>C)Uvlj*53A)u(QQ9=)X!\0");
     RegCloseKey(hkey);
 
     /* No registration is done for a local assembly with no matching file */
