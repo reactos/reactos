@@ -1223,7 +1223,9 @@ static const char shc_custom_action_dat[] =
     "Action\tType\tSource\tTarget\tISComments\n"
     "s72\ti2\tS64\tS0\tS255\n"
     "CustomAction\tAction\n"
-    "TestComponentAction\t19\t\twrong component action on install\t\n";
+    "TestComponentAction\t19\t\twrong component action on install\t\n"
+    "TestDisallowedAction\t19\t\twrong component action on disallowed remove\t\n"
+    "TestRemoveAction\t19\t\twrong component action on remove\t\n";
 
 static const char shc_install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
@@ -1233,6 +1235,27 @@ static const char shc_install_exec_seq_dat[] =
     "CostInitialize\t\t200\n"
     "FileCost\t\t300\n"
     "CostFinalize\t\t600\n"
+    "TestDisallowedAction\tREMOVE AND ($sharedcomponent <> -1)\t700\n"
+    "InstallValidate\t\t900\n"
+    "InstallInitialize\t\t1200\n"
+    "ProcessComponents\t\t1300\n"
+    "RemoveFiles\t\t1400\n"
+    "InstallFiles\t\t1500\n"
+    "TestComponentAction\tNOT REMOVE AND ($sharedcomponent <> 3)\t1600\n"
+    "RegisterProduct\t\t1700\n"
+    "PublishFeatures\t\t1800\n"
+    "PublishProduct\t\t1900\n"
+    "InstallFinalize\t\t2000\n";
+
+static const char shc2_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "LaunchConditions\t\t100\n"
+    "CostInitialize\t\t200\n"
+    "FileCost\t\t300\n"
+    "CostFinalize\t\t600\n"
+    "TestRemoveAction\tREMOVE AND ($sharedcomponent <> 2)\t700\n"
     "InstallValidate\t\t900\n"
     "InstallInitialize\t\t1200\n"
     "ProcessComponents\t\t1300\n"
@@ -1990,7 +2013,7 @@ static const msi_table shc2_tables[] =
     ADD_TABLE(shc_feature),
     ADD_TABLE(shc_feature_comp),
     ADD_TABLE(shc_custom_action),
-    ADD_TABLE(shc_install_exec_seq),
+    ADD_TABLE(shc2_install_exec_seq),
     ADD_TABLE(shc2_property)
 };
 
