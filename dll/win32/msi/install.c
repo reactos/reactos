@@ -571,7 +571,7 @@ UINT MSI_SetTargetPathW( MSIPACKAGE *package, LPCWSTR szFolder, LPCWSTR szFolder
 
     TRACE("%p %s %s\n", package, debugstr_w(szFolder), debugstr_w(szFolderPath));
 
-    attrib = GetFileAttributesW(szFolderPath);
+    attrib = msi_get_file_attributes( package, szFolderPath );
     /* native MSI tests writeability by making temporary files at each drive */
     if (attrib != INVALID_FILE_ATTRIBUTES &&
         (attrib & FILE_ATTRIBUTE_OFFLINE || attrib & FILE_ATTRIBUTE_READONLY))

@@ -3298,7 +3298,7 @@ UINT WINAPI MsiGetFileVersionW( LPCWSTR path, LPWSTR verbuf, LPDWORD verlen,
     if (ret == ERROR_RESOURCE_DATA_NOT_FOUND && verlen)
     {
         int len;
-        WCHAR *version = msi_font_version_from_file( path );
+        WCHAR *version = msi_get_font_file_version( NULL, path );
         if (!version) return ERROR_FILE_INVALID;
         len = strlenW( version );
         if (len >= *verlen) ret = ERROR_MORE_DATA;
@@ -4107,14 +4107,17 @@ extern VOID WINAPI MD5Init( MD5_CTX *);
 extern VOID WINAPI MD5Update( MD5_CTX *, const unsigned char *, unsigned int );
 extern VOID WINAPI MD5Final( MD5_CTX *);
 
-UINT msi_get_filehash( const WCHAR *path, MSIFILEHASHINFO *hash )
+UINT msi_get_filehash( MSIPACKAGE *package, const WCHAR *path, MSIFILEHASHINFO *hash )
 {
     HANDLE handle, mapping;
     void *p;
     DWORD length;
     UINT r = ERROR_FUNCTION_FAILED;
 
-    handle = CreateFileW( path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
+    if (package)
+        handle = msi_create_file( package, path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE, OPEN_EXISTING, 0 );
+    else
+        handle = CreateFileW( path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
     if (handle == INVALID_HANDLE_VALUE)
     {
         WARN("can't open file %u\n", GetLastError());
@@ -4171,7 +4174,7 @@ UINT WINAPI MsiGetFileHashW( LPCWSTR szFilePath, DWORD dwOptions,
     if (pHash->dwFileHashInfoSize < sizeof *pHash)
         return ERROR_INVALID_PARAMETER;
 
-    return msi_get_filehash( szFilePath, pHash );
+    return msi_get_filehash( NULL, szFilePath, pHash );
 }
 
 /***********************************************************************

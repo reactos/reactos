@@ -439,12 +439,11 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
     attrs = attrs & (FILE_ATTRIBUTE_READONLY|FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_SYSTEM);
     if (!attrs) attrs = FILE_ATTRIBUTE_NORMAL;
 
-    handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0,
-                         NULL, CREATE_ALWAYS, attrs, NULL);
+    handle = msi_create_file( data->package, path, GENERIC_READ | GENERIC_WRITE, 0, CREATE_ALWAYS, attrs );
     if (handle == INVALID_HANDLE_VALUE)
     {
         DWORD err = GetLastError();
-        DWORD attrs2 = GetFileAttributesW(path);
+        DWORD attrs2 = msi_get_file_attributes( data->package, path );
 
         if (attrs2 == INVALID_FILE_ATTRIBUTES)
         {
@@ -454,8 +453,8 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
         else if (err == ERROR_ACCESS_DENIED && (attrs2 & FILE_ATTRIBUTE_READONLY))
         {
             TRACE("removing read-only attribute on %s\n", debugstr_w(path));
-            SetFileAttributesW( path, attrs2 & ~FILE_ATTRIBUTE_READONLY );
-            handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs, NULL);
+            msi_set_file_attributes( data->package, path, attrs2 & ~FILE_ATTRIBUTE_READONLY );
+            handle = msi_create_file( data->package, path, GENERIC_READ | GENERIC_WRITE, 0, CREATE_ALWAYS, attrs );
 
             if (handle != INVALID_HANDLE_VALUE) goto done;
             err = GetLastError();
@@ -481,8 +480,8 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
             handle = CreateFileW(tmpfileW, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs, NULL);
 
             if (handle != INVALID_HANDLE_VALUE &&
-                MoveFileExW(path, NULL, MOVEFILE_DELAY_UNTIL_REBOOT) &&
-                MoveFileExW(tmpfileW, path, MOVEFILE_DELAY_UNTIL_REBOOT))
+                msi_move_file( data->package, path, NULL, MOVEFILE_DELAY_UNTIL_REBOOT ) &&
+                msi_move_file( data->package, tmpfileW, path, MOVEFILE_DELAY_UNTIL_REBOOT ))
             {
                 data->package->need_reboot_at_end = 1;
             }

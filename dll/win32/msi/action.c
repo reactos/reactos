@@ -725,50 +725,6 @@ MSIFOLDER *msi_get_loaded_folder( MSIPACKAGE *package, const WCHAR *dir )
     return NULL;
 }
 
-/*
- * Recursively create all directories in the path.
- * shamelessly stolen from setupapi/queue.c
- */
-BOOL msi_create_full_path( const WCHAR *path )
-{
-    BOOL ret = TRUE;
-    WCHAR *new_path;
-    int len;
-
-    new_path = msi_alloc( (strlenW( path ) + 1) * sizeof(WCHAR) );
-    strcpyW( new_path, path );
-
-    while ((len = strlenW( new_path )) && new_path[len - 1] == '\\')
-    new_path[len - 1] = 0;
-
-    while (!CreateDirectoryW( new_path, NULL ))
-    {
-        WCHAR *slash;
-        DWORD last_error = GetLastError();
-        if (last_error == ERROR_ALREADY_EXISTS) break;
-        if (last_error != ERROR_PATH_NOT_FOUND)
-        {
-            ret = FALSE;
-            break;
-        }
-        if (!(slash = strrchrW( new_path, '\\' )))
-        {
-            ret = FALSE;
-            break;
-        }
-        len = slash - new_path;
-        new_path[len] = 0;
-        if (!msi_create_full_path( new_path ))
-        {
-            ret = FALSE;
-            break;
-        }
-        new_path[len] = '\\';
-    }
-    msi_free( new_path );
-    return ret;
-}
-
 void msi_ui_progress( MSIPACKAGE *package, int a, int b, int c, int d )
 {
     MSIRECORD *row;
@@ -850,8 +806,9 @@ static UINT ITERATE_CreateFolders(MSIRECORD *row, LPVOID param)
     TRACE("folder is %s\n", debugstr_w(full_path));
 
     folder = msi_get_loaded_folder( package, dir );
-    if (folder->State == FOLDER_STATE_UNINITIALIZED) msi_create_full_path( full_path );
+    if (folder->State == FOLDER_STATE_UNINITIALIZED) msi_create_full_path( package, full_path );
     folder->State = FOLDER_STATE_CREATED;
+
     return ERROR_SUCCESS;
 }
 
@@ -2061,37 +2018,6 @@ static UINT ITERATE_CostFinalizeConditions(MSIRECORD *row, LPVOID param)
     return ERROR_SUCCESS;
 }
 
-VS_FIXEDFILEINFO *msi_get_disk_file_version( LPCWSTR filename )
-{
-    static const WCHAR name[] = {'\\',0};
-    VS_FIXEDFILEINFO *ptr, *ret;
-    LPVOID version;
-    DWORD versize, handle;
-    UINT sz;
-
-    versize = GetFileVersionInfoSizeW( filename, &handle );
-    if (!versize)
-        return NULL;
-
-    version = msi_alloc( versize );
-    if (!version)
-        return NULL;
-
-    GetFileVersionInfoW( filename, 0, versize, version );
-
-    if (!VerQueryValueW( version, name, (LPVOID *)&ptr, &sz ))
-    {
-        msi_free( version );
-        return NULL;
-    }
-
-    ret = msi_alloc( sz );
-    memcpy( ret, ptr, sz );
-
-    msi_free( version );
-    return ret;
-}
-
 int msi_compare_file_versions( VS_FIXEDFILEINFO *fi, const WCHAR *version )
 {
     DWORD ms, ls;
@@ -2115,33 +2041,6 @@ int msi_compare_font_versions( const WCHAR *ver1, const WCHAR *ver2 )
     if (ms1 > ms2) return 1;
     else if (ms1 < ms2) return -1;
     return 0;
-}
-
-DWORD msi_get_disk_file_size( LPCWSTR filename )
-{
-    HANDLE file;
-    DWORD size;
-
-    file = CreateFileW( filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
-    if (file == INVALID_HANDLE_VALUE)
-        return INVALID_FILE_SIZE;
-
-    size = GetFileSize( file, NULL );
-    CloseHandle( file );
-    return size;
-}
-
-BOOL msi_file_hash_matches( MSIFILE *file )
-{
-    UINT r;
-    MSIFILEHASHINFO hash;
-
-    hash.dwFileHashInfoSize = sizeof(MSIFILEHASHINFO);
-    r = msi_get_filehash( file->TargetPath, &hash );
-    if (r != ERROR_SUCCESS)
-        return FALSE;
-
-    return !memcmp( &hash, &file->hash, sizeof(MSIFILEHASHINFO) );
 }
 
 static WCHAR *create_temp_dir( MSIDATABASE *db )
@@ -2269,17 +2168,17 @@ static UINT calculate_file_cost( MSIPACKAGE *package )
         set_target_path( package, file );
 
         if ((comp->assembly && !comp->assembly->installed) ||
-            GetFileAttributesW(file->TargetPath) == INVALID_FILE_ATTRIBUTES)
+            msi_get_file_attributes( package, file->TargetPath ) == INVALID_FILE_ATTRIBUTES)
         {
             comp->Cost += file->FileSize;
             continue;
         }
-        file_size = msi_get_disk_file_size( file->TargetPath );
+        file_size = msi_get_disk_file_size( package, file->TargetPath );
         TRACE("%s (size %u)\n", debugstr_w(file->TargetPath), file_size);
 
         if (file->Version)
         {
-            if ((file_version = msi_get_disk_file_version( file->TargetPath )))
+            if ((file_version = msi_get_disk_file_version( package, file->TargetPath )))
             {
                 if (msi_compare_file_versions( file_version, file->Version ) < 0)
                 {
@@ -2288,7 +2187,7 @@ static UINT calculate_file_cost( MSIPACKAGE *package )
                 msi_free( file_version );
                 continue;
             }
-            else if ((font_version = msi_font_version_from_file( file->TargetPath )))
+            else if ((font_version = msi_get_font_file_version( package, file->TargetPath )))
             {
                 if (msi_compare_font_versions( font_version, file->Version ) < 0)
                 {
@@ -2303,6 +2202,7 @@ static UINT calculate_file_cost( MSIPACKAGE *package )
             comp->Cost += file->FileSize - file_size;
         }
     }
+
     return ERROR_SUCCESS;
 }
 
@@ -3761,6 +3661,24 @@ static BOOL CALLBACK Typelib_EnumResNameProc( HMODULE hModule, LPCWSTR lpszType,
     return TRUE;
 }
 
+static HMODULE msi_load_library( MSIPACKAGE *package, const WCHAR *filename, DWORD flags )
+{
+    HMODULE module;
+    msi_disable_fs_redirection( package );
+    module = LoadLibraryExW( filename, NULL, flags );
+    msi_revert_fs_redirection( package );
+    return module;
+}
+
+static HRESULT msi_load_typelib( MSIPACKAGE *package, const WCHAR *filename, REGKIND kind, ITypeLib **lib )
+{
+    HRESULT hr;
+    msi_disable_fs_redirection( package );
+    hr = LoadTypeLibEx( filename, kind, lib );
+    msi_revert_fs_redirection( package );
+    return hr;
+}
+
 static UINT ITERATE_RegisterTypeLibraries(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE* package = param;
@@ -3791,7 +3709,7 @@ static UINT ITERATE_RegisterTypeLibraries(MSIRECORD *row, LPVOID param)
     }
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, row);
 
-    module = LoadLibraryExW( file->TargetPath, NULL, LOAD_LIBRARY_AS_DATAFILE );
+    module = msi_load_library( package, file->TargetPath, LOAD_LIBRARY_AS_DATAFILE );
     if (module)
     {
         LPCWSTR guid;
@@ -3828,7 +3746,7 @@ static UINT ITERATE_RegisterTypeLibraries(MSIRECORD *row, LPVOID param)
     }
     else
     {
-        hr = LoadTypeLibEx(file->TargetPath, REGKIND_REGISTER, &tlib);
+        hr = msi_load_typelib( package, file->TargetPath, REGKIND_REGISTER, &tlib );
         if (FAILED(hr))
         {
             ERR("Failed to load type library: %08x\n", hr);
@@ -3939,7 +3857,7 @@ static WCHAR *get_link_file( MSIPACKAGE *package, MSIRECORD *row )
         return NULL;
     }
     /* may be needed because of a bug somewhere else */
-    msi_create_full_path( link_folder );
+    msi_create_full_path( package, link_folder );
 
     filename = msi_dup_record_field( row, 3 );
     msi_reduce_to_long_filename( filename );
@@ -3972,7 +3890,7 @@ WCHAR *msi_build_icon_path( MSIPACKAGE *package, const WCHAR *icon_name )
         msi_free( appdata );
     }
     dest = msi_build_directory_name( 3, folder, szInstaller, package->ProductCode );
-    msi_create_full_path( dest );
+    msi_create_full_path( package, dest );
     path = msi_build_directory_name( 2, dest, icon_name );
     msi_free( folder );
     msi_free( dest );
@@ -4076,10 +3994,14 @@ static UINT ITERATE_CreateShortcuts(MSIRECORD *row, LPVOID param)
         full_path = msi_get_target_folder( package, wkdir );
         if (full_path) IShellLinkW_SetWorkingDirectory( sl, full_path );
     }
-    link_file = get_link_file(package, row);
 
+    link_file = get_link_file(package, row);
     TRACE("Writing shortcut to %s\n", debugstr_w(link_file));
+
+    msi_disable_fs_redirection( package );
     IPersistFile_Save(pf, link_file, FALSE);
+    msi_revert_fs_redirection( package );
+
     msi_free(link_file);
 
 err:
@@ -4137,12 +4059,8 @@ static UINT ITERATE_RemoveShortcuts( MSIRECORD *row, LPVOID param )
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, row);
 
     link_file = get_link_file( package, row );
-
     TRACE("Removing shortcut file %s\n", debugstr_w( link_file ));
-    if (!DeleteFileW( link_file ))
-    {
-        WARN("Failed to remove shortcut file %u\n", GetLastError());
-    }
+    if (!msi_delete_file( package, link_file )) WARN("Failed to remove shortcut file %u\n", GetLastError());
     msi_free( link_file );
 
     return ERROR_SUCCESS;
@@ -4170,51 +4088,49 @@ static UINT ACTION_RemoveShortcuts( MSIPACKAGE *package )
 
 static UINT ITERATE_PublishIcon(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE* package = param;
-    HANDLE the_file;
-    LPWSTR FilePath;
-    LPCWSTR FileName;
-    CHAR buffer[1024];
+    MSIPACKAGE *package = param;
+    HANDLE handle;
+    WCHAR *icon_path;
+    const WCHAR *filename;
+    char buffer[1024];
     DWORD sz;
     UINT rc;
 
-    FileName = MSI_RecordGetString(row,1);
-    if (!FileName)
+    filename = MSI_RecordGetString( row, 1 );
+    if (!filename)
     {
-        ERR("Unable to get FileName\n");
+        ERR("Unable to get filename\n");
         return ERROR_SUCCESS;
     }
 
-    FilePath = msi_build_icon_path(package, FileName);
+    icon_path = msi_build_icon_path( package, filename );
 
-    TRACE("Creating icon file at %s\n",debugstr_w(FilePath));
+    TRACE("Creating icon file at %s\n", debugstr_w(icon_path));
 
-    the_file = CreateFileW(FilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-                        FILE_ATTRIBUTE_NORMAL, NULL);
-
-    if (the_file == INVALID_HANDLE_VALUE)
+    handle = msi_create_file( package, icon_path, GENERIC_WRITE, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL );
+    if (handle == INVALID_HANDLE_VALUE)
     {
-        ERR("Unable to create file %s\n",debugstr_w(FilePath));
-        msi_free(FilePath);
+        ERR("Unable to create file %s\n", debugstr_w(icon_path));
+        msi_free( icon_path );
         return ERROR_SUCCESS;
     }
 
-    do 
+    do
     {
-        DWORD write;
+        DWORD count;
         sz = 1024;
-        rc = MSI_RecordReadStream(row,2,buffer,&sz);
+        rc = MSI_RecordReadStream( row, 2, buffer, &sz );
         if (rc != ERROR_SUCCESS)
         {
             ERR("Failed to get stream\n");
-            DeleteFileW(FilePath);
+            msi_delete_file( package, icon_path );
             break;
         }
-        WriteFile(the_file,buffer,sz,&write,NULL);
+        WriteFile( handle, buffer, sz, &count, NULL );
     } while (sz == 1024);
 
-    msi_free(FilePath);
-    CloseHandle(the_file);
+    msi_free( icon_path );
+    CloseHandle( handle );
 
     return ERROR_SUCCESS;
 }
@@ -5419,11 +5335,11 @@ static UINT ITERATE_UnpublishIcon( MSIRECORD *row, LPVOID param )
     if ((icon_path = msi_build_icon_path( package, icon )))
     {
         TRACE("removing icon file %s\n", debugstr_w(icon_path));
-        DeleteFileW( icon_path );
+        msi_delete_file( package, icon_path );
         if ((p = strrchrW( icon_path, '\\' )))
         {
             *p = 0;
-            RemoveDirectoryW( icon_path );
+            msi_remove_directory( package, icon_path );
         }
         msi_free( icon_path );
     }
@@ -7845,9 +7761,18 @@ static UINT ACTION_MigrateFeatureStates( MSIPACKAGE *package )
     return ERROR_SUCCESS;
 }
 
-static void bind_image( const char *filename, const char *path )
+static BOOL msi_bind_image( MSIPACKAGE *package, const char *filename, const char *path )
 {
-    if (!BindImageEx( 0, filename, path, NULL, NULL ))
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = BindImage( filename, path, NULL );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
+static void bind_image( MSIPACKAGE *package, const char *filename, const char *path )
+{
+    if (!msi_bind_image( package, filename, path ))
     {
         WARN("failed to bind image %u\n", GetLastError());
     }
@@ -7869,8 +7794,9 @@ static UINT ITERATE_BindImage( MSIRECORD *rec, LPVOID param )
         return ERROR_SUCCESS;
     }
     if (!(filenameA = strdupWtoA( file->TargetPath ))) return ERROR_SUCCESS;
+
     path_list = msi_split_string( paths, ';' );
-    if (!path_list) bind_image( filenameA, NULL );
+    if (!path_list) bind_image( package, filenameA, NULL );
     else
     {
         for (i = 0; path_list[i] && path_list[i][0]; i++)
@@ -7878,7 +7804,7 @@ static UINT ITERATE_BindImage( MSIRECORD *rec, LPVOID param )
             deformat_string( package, path_list[i], &pathW );
             if ((pathA = strdupWtoA( pathW )))
             {
-                bind_image( filenameA, pathA );
+                bind_image( package, filenameA, pathA );
                 msi_free( pathA );
             }
             msi_free( pathW );
@@ -7886,6 +7812,7 @@ static UINT ITERATE_BindImage( MSIRECORD *rec, LPVOID param )
     }
     msi_free( path_list );
     msi_free( filenameA );
+
     return ERROR_SUCCESS;
 }
 
@@ -7902,10 +7829,8 @@ static UINT ACTION_BindImage( MSIPACKAGE *package )
     {
         r = MSI_IterateRecords( view, NULL, ITERATE_BindImage, package );
         msiobj_release( &view->hdr );
-        if (r != ERROR_SUCCESS)
-            return r;
     }
-    return ERROR_SUCCESS;
+    return r;
 }
 
 static UINT msi_unimplemented_action_stub( MSIPACKAGE *package, LPCSTR action, LPCWSTR table )
@@ -8052,11 +7977,7 @@ StandardActions[] =
 static UINT ACTION_HandleStandardAction(MSIPACKAGE *package, LPCWSTR action)
 {
     UINT rc = ERROR_FUNCTION_NOT_CALLED;
-    void *cookie;
     UINT i;
-
-    if (is_wow64 && package->platform == PLATFORM_X64)
-        Wow64DisableWow64FsRedirection(&cookie);
 
     i = 0;
     while (StandardActions[i].action != NULL)
@@ -8093,9 +8014,6 @@ static UINT ACTION_HandleStandardAction(MSIPACKAGE *package, LPCWSTR action)
         i++;
     }
 
-    if (is_wow64 && package->platform == PLATFORM_X64)
-        Wow64RevertWow64FsRedirection(cookie);
-
     return rc;
 }
 
@@ -8104,12 +8022,6 @@ UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action)
     UINT rc;
 
     TRACE("Performing action (%s)\n", debugstr_w(action));
-
-    if (!msi_init_assembly_caches( package ))
-    {
-        ERR("can't initialize assembly caches\n");
-        return ERROR_FUNCTION_FAILED;
-    }
 
     package->action_progress_increment = 0;
     rc = ACTION_HandleStandardAction(package, action);

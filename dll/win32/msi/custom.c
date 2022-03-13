@@ -1203,7 +1203,7 @@ static UINT HANDLE_CustomType21_22( MSIPACKAGE *package, const WCHAR *source, co
         return ERROR_FUNCTION_FAILED;
     }
 
-    hFile = CreateFileW(file->TargetPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    hFile = msi_create_file( package, file->TargetPath, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, 0 );
     if (hFile == INVALID_HANDLE_VALUE) return ERROR_FUNCTION_FAILED;
 
     sz = GetFileSize(hFile, &szHighWord);
