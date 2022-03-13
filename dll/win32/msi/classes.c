@@ -747,7 +747,7 @@ static UINT register_appid(const MSIAPPID *appid, LPCWSTR app )
 UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 {
     static const WCHAR szFileType_fmt[] = {'F','i','l','e','T','y','p','e','\\','%','s','\\','%','i',0};
-    const WCHAR *keypath;
+    REGSAM access = KEY_ALL_ACCESS;
     MSIRECORD *uirow;
     HKEY hkey, hkey2, hkey3;
     MSICLASS *cls;
@@ -760,12 +760,12 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
     if (r != ERROR_SUCCESS)
         return r;
 
-    if (is_64bit && package->platform == PLATFORM_INTEL)
-        keypath = szWow6432NodeCLSID;
+    if (package->platform == PLATFORM_INTEL)
+        access |= KEY_WOW64_32KEY;
     else
-        keypath = szCLSID;
+        access |= KEY_WOW64_64KEY;
 
-    if (RegCreateKeyW(HKEY_CLASSES_ROOT, keypath, &hkey) != ERROR_SUCCESS)
+    if (RegCreateKeyExW( HKEY_CLASSES_ROOT, szCLSID, 0, NULL, 0, access, NULL, &hkey, NULL ))
         return ERROR_FUNCTION_FAILED;
 
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
@@ -873,7 +873,6 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 
         if (cls->DefInprocHandler32)
             msi_reg_set_subkey_val( hkey2, szInprocHandler32, NULL, cls->DefInprocHandler32 );
-        
         RegCloseKey(hkey2);
 
         /* if there is a FileTypeMask, register the FileType */
@@ -902,7 +901,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
                 index ++;
             }
         }
-        
+
         uirow = MSI_CreateRecord(1);
         MSI_RecordSetStringW( uirow, 1, cls->clsid );
         MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
@@ -915,7 +914,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
 {
     static const WCHAR szFileType[] = {'F','i','l','e','T','y','p','e','\\',0};
-    const WCHAR *keypath;
+    REGSAM access = KEY_ALL_ACCESS;
     MSIRECORD *uirow;
     MSICLASS *cls;
     HKEY hkey, hkey2;
@@ -928,13 +927,13 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
     if (r != ERROR_SUCCESS)
         return r;
 
-    if (is_64bit && package->platform == PLATFORM_INTEL)
-        keypath = szWow6432NodeCLSID;
+    if (package->platform == PLATFORM_INTEL)
+        access |= KEY_WOW64_32KEY;
     else
-        keypath = szCLSID;
+        access |= KEY_WOW64_64KEY;
 
-    if (RegOpenKeyW( HKEY_CLASSES_ROOT, keypath, &hkey ) != ERROR_SUCCESS)
-        return ERROR_SUCCESS;
+    if (RegCreateKeyExW( HKEY_CLASSES_ROOT, szCLSID, 0, NULL, 0, access, NULL, &hkey, NULL ))
+        return ERROR_FUNCTION_FAILED;
 
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
     {
