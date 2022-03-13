@@ -38,87 +38,51 @@ struct Keyword {
 
 #define MAX_TOKEN_LEN 11
 
-static const WCHAR addW[] = {'A','D','D'};
-static const WCHAR alterW[] = {'A','L','T','E','R'};
-static const WCHAR andW[] = {'A','N','D'};
-static const WCHAR byW[] = {'B','Y'};
-static const WCHAR charW[] = {'C','H','A','R'};
-static const WCHAR characterW[] = {'C','H','A','R','A','C','T','E','R'};
-static const WCHAR createW[] = {'C','R','E','A','T','E'};
-static const WCHAR deleteW[] = {'D','E','L','E','T','E'};
-static const WCHAR distinctW[] = {'D','I','S','T','I','N','C','T'};
-static const WCHAR dropW[] = {'D','R','O','P'};
-static const WCHAR freeW[] = {'F','R','E','E'};
-static const WCHAR fromW[] = {'F','R','O','M'};
-static const WCHAR holdW[] = {'H','O','L','D'};
-static const WCHAR insertW[] = {'I','N','S','E','R','T'};
-static const WCHAR intW[] = {'I','N','T'};
-static const WCHAR integerW[] = {'I','N','T','E','G','E','R'};
-static const WCHAR intoW[] = {'I','N','T','O'};
-static const WCHAR isW[] = {'I','S'};
-static const WCHAR keyW[] = {'K','E','Y'};
-static const WCHAR likeW[] = {'L','I','K','E'};
-static const WCHAR localizableW[] = {'L','O','C','A','L','I','Z','A','B','L','E'};
-static const WCHAR longW[] = {'L','O','N','G'};
-static const WCHAR longcharW[] = {'L','O','N','G','C','H','A','R'};
-static const WCHAR notW[] = {'N','O','T'};
-static const WCHAR nullW[] = {'N','U','L','L'};
-static const WCHAR objectW[] = {'O','B','J','E','C','T'};
-static const WCHAR orW[] = {'O','R'};
-static const WCHAR orderW[] = {'O','R','D','E','R'};
-static const WCHAR primaryW[] = {'P','R','I','M','A','R','Y'};
-static const WCHAR selectW[] = {'S','E','L','E','C','T'};
-static const WCHAR setW[] = {'S','E','T'};
-static const WCHAR shortW[] = {'S','H','O','R','T'};
-static const WCHAR tableW[] = {'T','A','B','L','E'};
-static const WCHAR temporaryW[] = {'T','E','M','P','O','R','A','R','Y'};
-static const WCHAR updateW[] = {'U','P','D','A','T','E'};
-static const WCHAR valuesW[] = {'V','A','L','U','E','S'};
-static const WCHAR whereW[] = {'W','H','E','R','E'};
-
 /*
 ** These are the keywords
 ** They MUST be in alphabetical order
 */
+#define X(str)  str, ARRAY_SIZE(str) - 1
 static const Keyword aKeywordTable[] = {
-  { addW,         ARRAY_SIZE(addW),         TK_ADD },
-  { alterW,       ARRAY_SIZE(alterW),       TK_ALTER },
-  { andW,         ARRAY_SIZE(andW),         TK_AND },
-  { byW,          ARRAY_SIZE(byW),          TK_BY },
-  { charW,        ARRAY_SIZE(charW),        TK_CHAR },
-  { characterW,   ARRAY_SIZE(characterW),   TK_CHAR },
-  { createW,      ARRAY_SIZE(createW),      TK_CREATE },
-  { deleteW,      ARRAY_SIZE(deleteW),      TK_DELETE },
-  { distinctW,    ARRAY_SIZE(distinctW),    TK_DISTINCT },
-  { dropW,        ARRAY_SIZE(dropW),        TK_DROP },
-  { freeW,        ARRAY_SIZE(freeW),        TK_FREE },
-  { fromW,        ARRAY_SIZE(fromW),        TK_FROM },
-  { holdW,        ARRAY_SIZE(holdW),        TK_HOLD },
-  { insertW,      ARRAY_SIZE(insertW),      TK_INSERT },
-  { intW,         ARRAY_SIZE(intW),         TK_INT },
-  { integerW,     ARRAY_SIZE(integerW),     TK_INT },
-  { intoW,        ARRAY_SIZE(intoW),        TK_INTO },
-  { isW,          ARRAY_SIZE(isW),          TK_IS },
-  { keyW,         ARRAY_SIZE(keyW),         TK_KEY },
-  { likeW,        ARRAY_SIZE(likeW),        TK_LIKE },
-  { localizableW, ARRAY_SIZE(localizableW), TK_LOCALIZABLE },
-  { longW,        ARRAY_SIZE(longW),        TK_LONG },
-  { longcharW,    ARRAY_SIZE(longcharW),    TK_LONGCHAR },
-  { notW,         ARRAY_SIZE(notW),         TK_NOT },
-  { nullW,        ARRAY_SIZE(nullW),        TK_NULL },
-  { objectW,      ARRAY_SIZE(objectW),      TK_OBJECT },
-  { orW,          ARRAY_SIZE(orW),          TK_OR },
-  { orderW,       ARRAY_SIZE(orderW),       TK_ORDER },
-  { primaryW,     ARRAY_SIZE(primaryW),     TK_PRIMARY },
-  { selectW,      ARRAY_SIZE(selectW),      TK_SELECT },
-  { setW,         ARRAY_SIZE(setW),         TK_SET },
-  { shortW,       ARRAY_SIZE(shortW),       TK_SHORT },
-  { tableW,       ARRAY_SIZE(tableW),       TK_TABLE },
-  { temporaryW,   ARRAY_SIZE(temporaryW),   TK_TEMPORARY },
-  { updateW,      ARRAY_SIZE(updateW),      TK_UPDATE },
-  { valuesW,      ARRAY_SIZE(valuesW),      TK_VALUES },
-  { whereW,       ARRAY_SIZE(whereW),       TK_WHERE },
+  { X(L"ADD"),         TK_ADD },
+  { X(L"ALTER"),       TK_ALTER },
+  { X(L"AND"),         TK_AND },
+  { X(L"BY"),          TK_BY },
+  { X(L"CHAR"),        TK_CHAR },
+  { X(L"CHARACTER"),   TK_CHAR },
+  { X(L"CREATE"),      TK_CREATE },
+  { X(L"DELETE"),      TK_DELETE },
+  { X(L"DISTINCT"),    TK_DISTINCT },
+  { X(L"DROP"),        TK_DROP },
+  { X(L"FREE"),        TK_FREE },
+  { X(L"FROM"),        TK_FROM },
+  { X(L"HOLD"),        TK_HOLD },
+  { X(L"INSERT"),      TK_INSERT },
+  { X(L"INT"),         TK_INT },
+  { X(L"INTEGER"),     TK_INT },
+  { X(L"INTO"),        TK_INTO },
+  { X(L"IS"),          TK_IS },
+  { X(L"KEY"),         TK_KEY },
+  { X(L"LIKE"),        TK_LIKE },
+  { X(L"LOCALIZABLE"), TK_LOCALIZABLE },
+  { X(L"LONG"),        TK_LONG },
+  { X(L"LONGCHAR"),    TK_LONGCHAR },
+  { X(L"NOT"),         TK_NOT },
+  { X(L"NULL"),        TK_NULL },
+  { X(L"OBJECT"),      TK_OBJECT },
+  { X(L"OR"),          TK_OR },
+  { X(L"ORDER"),       TK_ORDER },
+  { X(L"PRIMARY"),     TK_PRIMARY },
+  { X(L"SELECT"),      TK_SELECT },
+  { X(L"SET"),         TK_SET },
+  { X(L"SHORT"),       TK_SHORT },
+  { X(L"TABLE"),       TK_TABLE },
+  { X(L"TEMPORARY"),   TK_TEMPORARY },
+  { X(L"UPDATE"),      TK_UPDATE },
+  { X(L"VALUES"),      TK_VALUES },
+  { X(L"WHERE"),       TK_WHERE },
 };
+#undef X
 
 /*
 ** Comparison function for binary search.
