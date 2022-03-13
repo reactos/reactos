@@ -1276,7 +1276,7 @@ static UINT load_folder_persistence( MSIPACKAGE *package, MSIFOLDER *folder )
 static UINT load_folder( MSIRECORD *row, LPVOID param )
 {
     MSIPACKAGE *package = param;
-    static WCHAR szEmpty[] = {0};
+    static WCHAR szEmpty[] = L"";
     LPWSTR p, tgt_short, tgt_long, src_short, src_long;
     MSIFOLDER *folder;
 
@@ -5268,14 +5268,14 @@ static UINT ACTION_RegisterUser(MSIPACKAGE *package)
         L"ProductID",
         L"USERNAME",
         L"COMPANYNAME",
-        {0},
+        L"",
     };
     static const WCHAR szRegKeys[][80] =
     {
         L"ProductID",
         L"RegOwner",
         L"RegCompany",
-        {0},
+        L"",
     };
     HKEY hkey = 0;
     LPWSTR buffer, productid = NULL;

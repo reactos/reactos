@@ -781,7 +781,7 @@ static HRESULT summaryinfo_invoke(
                 DATE date;
                 LPWSTR str;
 
-                static WCHAR szEmpty[] = {0};
+                static WCHAR szEmpty[] = L"";
 
                 hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
                 if (FAILED(hr)) return hr;

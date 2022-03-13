@@ -324,7 +324,7 @@ static UINT get_patch_product_codes( LPCWSTR szPatchPackage, WCHAR ***product_co
     MSIHANDLE patch, info = 0;
     UINT r, type;
     DWORD size;
-    static WCHAR empty[] = {0};
+    static WCHAR empty[] = L"";
     WCHAR *codes = NULL;
 
     r = MsiOpenDatabaseW( szPatchPackage, MSIDBOPEN_READONLY, &patch );
@@ -1096,7 +1096,7 @@ static WCHAR *reg_get_value( HKEY hkey, const WCHAR *name, DWORD *type )
 static UINT MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
                                awstring *szValue, LPDWORD pcchValueBuf)
 {
-    static WCHAR empty[] = {0};
+    static WCHAR empty[] = L"";
     MSIINSTALLCONTEXT context = MSIINSTALLCONTEXT_USERUNMANAGED;
     UINT r = ERROR_UNKNOWN_PROPERTY;
     HKEY prodkey, userdata, source;

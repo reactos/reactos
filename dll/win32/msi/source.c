@@ -585,7 +585,7 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
                               0, 0, NULL, &size);
         if (rc != ERROR_SUCCESS)
         {
-            static WCHAR szEmpty[] = {0};
+            static WCHAR szEmpty[] = L"";
             rc = ERROR_SUCCESS;
             source = NULL;
             ptr = szEmpty;
