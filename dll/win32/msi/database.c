@@ -53,13 +53,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #define IS_INTMSIDBOPEN(x)      (((ULONG_PTR)(x) >> 16) == 0)
 
-struct row_export_info
-{
-    HANDLE handle;
-    LPCWSTR folder;
-    LPCWSTR table;
-};
-
 static void free_transforms( MSIDATABASE *db )
 {
     while( !list_empty( &db->transforms ) )
@@ -925,58 +918,6 @@ end:
     return r;
 }
 
-static UINT msi_export_stream( LPCWSTR folder, LPCWSTR table, MSIRECORD *row, UINT field,
-                               UINT start )
-{
-    static const WCHAR fmt_file[] = { '%','s','/','%','s','/','%','s',0 };
-    static const WCHAR fmt_folder[] = { '%','s','/','%','s',0 };
-    WCHAR stream_name[256], stream_filename[MAX_PATH];
-    DWORD sz, read_size, write_size;
-    char buffer[1024];
-    HANDLE file;
-    UINT r;
-
-    /* get the name of the file */
-    sz = sizeof(stream_name)/sizeof(WCHAR);
-    r = MSI_RecordGetStringW( row, start, stream_name, &sz );
-    if (r != ERROR_SUCCESS)
-        return r;
-
-    /* if the destination folder does not exist then create it (folder name = table name) */
-    snprintfW( stream_filename, sizeof(stream_filename)/sizeof(WCHAR), fmt_folder, folder, table );
-    if (GetFileAttributesW( stream_filename ) == INVALID_FILE_ATTRIBUTES)
-    {
-        if (!CreateDirectoryW( stream_filename, NULL ))
-            return ERROR_PATH_NOT_FOUND;
-    }
-
-    /* actually create the file */
-    snprintfW( stream_filename, sizeof(stream_filename)/sizeof(WCHAR), fmt_file, folder, table, stream_name );
-    file = CreateFileW( stream_filename, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
-    if (file == INVALID_HANDLE_VALUE)
-        return ERROR_FILE_NOT_FOUND;
-
-    /* copy the stream to the file */
-    read_size = sizeof(buffer);
-    while (read_size == sizeof(buffer))
-    {
-        r = MSI_RecordReadStream( row, field, buffer, &read_size );
-        if (r != ERROR_SUCCESS)
-        {
-            CloseHandle( file );
-            return r;
-        }
-        if (!WriteFile( file, buffer, read_size, &write_size, NULL ) || read_size != write_size)
-        {
-            CloseHandle( file );
-            return ERROR_WRITE_FAULT;
-        }
-    }
-    CloseHandle( file );
-    return r;
-}
-
 static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
 {
     char *buffer;
@@ -1020,8 +961,68 @@ static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
     return ret ? ERROR_SUCCESS : ERROR_FUNCTION_FAILED;
 }
 
-static UINT msi_export_record( HANDLE handle, MSIRECORD *row, UINT start )
+static UINT msi_export_stream( const WCHAR *folder, const WCHAR *table, MSIRECORD *row, UINT field, UINT start )
 {
+    static const WCHAR fmt[] = {'%','s','\\','%','s',0};
+    WCHAR stream[MAX_STREAM_NAME_LEN + 1], *path;
+    DWORD sz, read_size, write_size;
+    char buffer[1024];
+    HANDLE file;
+    UINT len, r;
+
+    sz = ARRAY_SIZE( stream );
+    r = MSI_RecordGetStringW( row, start, stream, &sz );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    len = (sz + strlenW( folder ) + strlenW( table ) + ARRAY_SIZE( fmt ) + 1) * sizeof(WCHAR);
+    if (!(path = msi_alloc( len )))
+        return ERROR_OUTOFMEMORY;
+
+    len = sprintfW( path, fmt, folder, table );
+    if (!CreateDirectoryW( path, NULL ) && GetLastError() != ERROR_ALREADY_EXISTS)
+    {
+        msi_free( path );
+        return ERROR_FUNCTION_FAILED;
+    }
+
+    path[len++] = '\\';
+    strcpyW( path + len, stream );
+    file = CreateFileW( path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+    msi_free( path );
+    if (file == INVALID_HANDLE_VALUE)
+        return ERROR_FUNCTION_FAILED;
+
+    read_size = sizeof(buffer);
+    while (read_size == sizeof(buffer))
+    {
+        r = MSI_RecordReadStream( row, field, buffer, &read_size );
+        if (r != ERROR_SUCCESS)
+        {
+            CloseHandle( file );
+            return r;
+        }
+        if (!WriteFile( file, buffer, read_size, &write_size, NULL ) || read_size != write_size)
+        {
+            CloseHandle( file );
+            return ERROR_WRITE_FAULT;
+        }
+    }
+    CloseHandle( file );
+    return r;
+}
+
+struct row_export_info
+{
+    HANDLE       handle;
+    const WCHAR *folder;
+    const WCHAR *table;
+};
+
+static UINT msi_export_record( struct row_export_info *row_export_info, MSIRECORD *row, UINT start )
+{
+    HANDLE handle = row_export_info->handle;
     UINT i, count, r = ERROR_SUCCESS;
     const char *sep;
     DWORD sz;
@@ -1030,7 +1031,18 @@ static UINT msi_export_record( HANDLE handle, MSIRECORD *row, UINT start )
     for (i = start; i <= count; i++)
     {
         r = msi_export_field( handle, row, i );
-        if (r != ERROR_SUCCESS)
+        if (r == ERROR_INVALID_PARAMETER)
+        {
+            r = msi_export_stream( row_export_info->folder, row_export_info->table, row, i, start );
+            if (r != ERROR_SUCCESS)
+                return r;
+
+            /* exporting a binary stream, repeat the "Name" field */
+            r = msi_export_field( handle, row, start );
+            if (r != ERROR_SUCCESS)
+                return r;
+        }
+        else if (r != ERROR_SUCCESS)
             return r;
 
         sep = (i < count) ? "\t" : "\r\n";
