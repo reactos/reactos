@@ -713,7 +713,7 @@ static UINT get_tablecolumns( MSIDATABASE *db, LPCWSTR szTableName, MSICOLUMNINF
 }
 
 UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
-                       MSICONDITION persistent )
+                       MSICONDITION persistent, BOOL hold )
 {
     UINT r, nField;
     MSIVIEW *tv = NULL;
@@ -733,7 +733,7 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
     if( !table )
         return ERROR_FUNCTION_FAILED;
 
-    table->ref_count = 1;
+    table->ref_count = 0;
     table->row_count = 0;
     table->data = NULL;
     table->data_persistent = NULL;
@@ -741,6 +741,9 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
     table->col_count = 0;
     table->persistent = persistent;
     lstrcpyW( table->name, name );
+
+    if( hold )
+        table->ref_count++;
 
     for( col = col_info; col; col = col->next )
         table->col_count++;

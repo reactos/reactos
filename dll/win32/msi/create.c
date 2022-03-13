@@ -68,7 +68,7 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if (cv->bIsTemp && !cv->hold)
         return ERROR_SUCCESS;
 
-    return msi_create_table( cv->db, cv->name, cv->col_info, persist );
+    return msi_create_table( cv->db, cv->name, cv->col_info, persist, cv->hold );
 }
 
 static UINT CREATE_close( struct tagMSIVIEW *view )
