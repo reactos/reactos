@@ -2040,38 +2040,99 @@ static UINT TABLE_release(struct tagMSIVIEW *view)
     return ref;
 }
 
-static UINT TABLE_add_column(struct tagMSIVIEW *view, LPCWSTR table, UINT number,
-                             LPCWSTR column, UINT type, BOOL hold)
+static UINT TABLE_add_column(struct tagMSIVIEW *view, LPCWSTR column,
+                             INT type, BOOL temporary, BOOL hold)
 {
+    UINT i, r, table_id, col_id, size, offset;
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
-    MSITABLE *msitable;
-    MSIRECORD *rec;
-    UINT r;
+    MSICOLUMNINFO *colinfo;
 
-    rec = MSI_CreateRecord(4);
-    if (!rec)
+    if (temporary && !hold && !tv->table->ref_count)
+        return ERROR_SUCCESS;
+
+    if (!temporary && tv->table->col_count &&
+            tv->table->colinfo[tv->table->col_count-1].temporary)
+        return ERROR_BAD_QUERY_SYNTAX;
+
+    for (i = 0; i < tv->table->col_count; i++)
+    {
+        if (!wcscmp(tv->table->colinfo[i].colname, column))
+            return ERROR_BAD_QUERY_SYNTAX;
+    }
+
+    colinfo = msi_realloc(tv->table->colinfo, sizeof(*tv->table->colinfo) * (tv->table->col_count + 1));
+    if (!colinfo)
         return ERROR_OUTOFMEMORY;
+    tv->table->colinfo = colinfo;
 
-    MSI_RecordSetStringW(rec, 1, table);
-    MSI_RecordSetInteger(rec, 2, number);
-    MSI_RecordSetStringW(rec, 3, column);
-    MSI_RecordSetInteger(rec, 4, type);
-
-    r = TABLE_insert_row(&tv->view, rec, -1, FALSE);
+    r = msi_string2id( tv->db->strings, tv->name, -1, &table_id );
     if (r != ERROR_SUCCESS)
-        goto done;
+        return r;
+    col_id = msi_add_string( tv->db->strings, column, -1, !temporary );
 
-    msi_update_table_columns(tv->db, table);
+    colinfo[tv->table->col_count].tablename = msi_string_lookup( tv->db->strings, table_id, NULL );
+    colinfo[tv->table->col_count].number = tv->table->col_count + 1;
+    colinfo[tv->table->col_count].colname = msi_string_lookup( tv->db->strings, col_id, NULL );
+    colinfo[tv->table->col_count].type = type;
+    colinfo[tv->table->col_count].offset = 0;
+    colinfo[tv->table->col_count].hash_table = NULL;
+    colinfo[tv->table->col_count].temporary = temporary;
+    tv->table->col_count++;
 
-    if (!hold)
-        goto done;
+    table_calc_column_offsets( tv->db, tv->table->colinfo, tv->table->col_count);
 
-    msitable = find_cached_table(tv->db, table);
-    InterlockedIncrement(&msitable->ref_count);
+    size = msi_table_get_row_size( tv->db, tv->table->colinfo, tv->table->col_count, LONG_STR_BYTES );
+    offset = tv->table->colinfo[tv->table->col_count - 1].offset;
+    for (i = 0; i < tv->table->row_count; i++)
+    {
+        BYTE *data = msi_realloc( tv->table->data[i], size );
+        if (!data)
+        {
+            tv->table->col_count--;
+            return ERROR_OUTOFMEMORY;
+        }
 
-done:
-    msiobj_release(&rec->hdr);
-    return r;
+        tv->table->data[i] = data;
+        memset(data + offset, 0, size - offset);
+    }
+
+    if (!temporary)
+    {
+        MSIVIEW *columns;
+        MSIRECORD *rec;
+
+        rec = MSI_CreateRecord(4);
+        if (!rec)
+        {
+            tv->table->col_count--;
+            return ERROR_OUTOFMEMORY;
+        }
+
+        MSI_RecordSetStringW(rec, 1, tv->name);
+        MSI_RecordSetInteger(rec, 2, tv->table->col_count);
+        MSI_RecordSetStringW(rec, 3, column);
+        MSI_RecordSetInteger(rec, 4, type);
+
+        r = TABLE_CreateView(tv->db, szColumns, &columns);
+        if (r != ERROR_SUCCESS)
+        {
+            tv->table->col_count--;
+            msiobj_release(&rec->hdr);
+            return r;
+        }
+
+        r = TABLE_insert_row(columns, rec, -1, FALSE);
+        columns->ops->delete(columns);
+        msiobj_release(&rec->hdr);
+        if (r != ERROR_SUCCESS)
+        {
+            tv->table->col_count--;
+            return r;
+        }
+    }
+    if (hold)
+        TABLE_add_ref(view);
+    return ERROR_SUCCESS;
 }
 
 static UINT TABLE_drop(struct tagMSIVIEW *view)
