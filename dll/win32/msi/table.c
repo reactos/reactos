@@ -2341,7 +2341,7 @@ static UINT TransformView_set_row( MSIVIEW *view, UINT row, MSIRECORD *rec, UINT
         L"INSERT INTO `_TransformView` (`Table`, `Column`, `Row`, `Data`, `Current`) VALUES ('";
 
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
-    WCHAR buf[256], *query = buf;
+    WCHAR buf[256], *query;
     MSIRECORD *old_rec;
     MSIQUERY *q;
     WCHAR *key;
@@ -2408,6 +2408,10 @@ static UINT TransformView_set_row( MSIVIEW *view, UINT row, MSIRECORD *rec, UINT
                 msi_free( key );
                 return ERROR_OUTOFMEMORY;
             }
+        }
+        else
+        {
+            query = buf;
         }
 
         memcpy( query, query_pfx, p * sizeof(WCHAR) );
