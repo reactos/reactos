@@ -4036,7 +4036,11 @@ static msi_dialog *dialog_create( MSIPACKAGE *package, const WCHAR *name, msi_di
     msiobj_release( &rec->hdr );
 
     rec = MSI_CreateRecord(2);
-    if (!rec) return NULL;
+    if (!rec)
+    {
+        msi_dialog_destroy(dialog);
+        return NULL;
+    }
     MSI_RecordSetStringW(rec, 1, name);
     MSI_RecordSetStringW(rec, 2, szDialogCreated);
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONSTART, rec);
