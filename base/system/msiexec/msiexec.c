@@ -397,19 +397,20 @@ static DWORD DoUnregServer(void)
     return ret;
 }
 
-extern UINT CDECL __wine_msi_call_dll_function(GUID *guid);
+extern UINT CDECL __wine_msi_call_dll_function(DWORD client_pid, const GUID *guid);
+
+static DWORD client_pid;
 
 static DWORD CALLBACK custom_action_thread(void *arg)
 {
     GUID guid = *(GUID *)arg;
     heap_free(arg);
-    return __wine_msi_call_dll_function(&guid);
+    return __wine_msi_call_dll_function(client_pid, &guid);
 }
 
 static int custom_action_server(const WCHAR *arg)
 {
     static const WCHAR pipe_name[] = {'\\','\\','.','\\','p','i','p','e','\\','m','s','i','c','a','_','%','x','_','%','d',0};
-    DWORD client_pid = atoiW(arg);
     GUID guid, *thread_guid;
     DWORD64 thread64;
     WCHAR buffer[24];
@@ -419,7 +420,7 @@ static int custom_action_server(const WCHAR *arg)
 
     TRACE("%s\n", debugstr_w(arg));
 
-    if (!client_pid)
+    if (!(client_pid = atoiW(arg)))
     {
         ERR("Invalid parameter %s\n", debugstr_w(arg));
         return 1;

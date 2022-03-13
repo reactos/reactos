@@ -295,4 +295,4 @@
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
 
-@ cdecl __wine_msi_call_dll_function(ptr)
+@ cdecl __wine_msi_call_dll_function(long ptr)
