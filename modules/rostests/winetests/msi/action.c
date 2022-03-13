@@ -2509,9 +2509,9 @@ static void check_reg_str(HKEY prodkey, LPCSTR name, LPCSTR expected, BOOL bcase
     else
     {
         if (bcase)
-            ok_(__FILE__, line)(!lstrcmpA(val, expected), "Expected %s, got %s\n", expected, val);
+            ok_(__FILE__, line)(!lstrcmpA(val, expected), "Expected \"%s\", got \"%s\"\n", expected, val);
         else
-            ok_(__FILE__, line)(!lstrcmpiA(val, expected), "Expected %s, got %s\n", expected, val);
+            ok_(__FILE__, line)(!lstrcmpiA(val, expected), "Expected \"%s\", got \"%s\"\n", expected, val);
     }
 }
 
@@ -3411,7 +3411,7 @@ static void get_owner_company(LPSTR *owner, LPSTR *company)
     if (!*owner || !*company)
     {
         res = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
-                            "Software\\Microsoft\\Windows\\CurrentVersion", 0, access, &hkey);
+                            "Software\\Microsoft\\Windows NT\\CurrentVersion", 0, access, &hkey);
         if (res == ERROR_SUCCESS)
         {
             *owner = reg_get_val_str(hkey, "RegisteredOwner");
@@ -3423,7 +3423,7 @@ static void get_owner_company(LPSTR *owner, LPSTR *company)
     if (!*owner || !*company)
     {
         res = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
-                            "Software\\Microsoft\\Windows NT\\CurrentVersion", 0, access, &hkey);
+                            "Software\\Microsoft\\Windows\\CurrentVersion", 0, access, &hkey);
         if (res == ERROR_SUCCESS)
         {
             *owner = reg_get_val_str(hkey, "RegisteredOwner");
