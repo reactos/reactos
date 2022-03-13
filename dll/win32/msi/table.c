@@ -2600,7 +2600,15 @@ static UINT TransformView_drop_table( MSITABLEVIEW *tv, UINT row )
 
 static UINT TransformView_delete_row( MSIVIEW *view, UINT row )
 {
+    static const WCHAR query_pfx[] = L"INSERT INTO `_TransformView` ( `Table`, `Column`, `Row`) VALUES ( '";
+    static const WCHAR query_column[] = L"', 'DELETE', '";
+    static const WCHAR query_sfx[] = L"')";
+
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+    WCHAR *key, buf[256], *query = buf;
+    UINT r, len, name_len, key_len;
+    MSIRECORD *rec;
+    MSIQUERY *q;
 
     if (!wcscmp( tv->name, szColumns ))
     {
@@ -2611,8 +2619,49 @@ static UINT TransformView_delete_row( MSIVIEW *view, UINT row )
     if (!wcscmp( tv->name, szTables ))
         return TransformView_drop_table( tv, row );
 
-    FIXME("\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    r = msi_view_get_row( tv->db, view, row, &rec );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    key = create_key_string( tv, rec );
+    msiobj_release( &rec->hdr );
+    if (!key)
+        return ERROR_OUTOFMEMORY;
+
+    name_len = wcslen( tv->name );
+    key_len = wcslen( key );
+    len = ARRAY_SIZE(query_pfx) + name_len + ARRAY_SIZE(query_column) + key_len + ARRAY_SIZE(query_sfx) - 2;
+    if (len > ARRAY_SIZE(buf))
+    {
+        query = msi_alloc( len * sizeof(WCHAR) );
+        if (!query)
+        {
+            msi_free( tv );
+            msi_free( key );
+            return ERROR_OUTOFMEMORY;
+        }
+    }
+
+    memcpy( query, query_pfx, ARRAY_SIZE(query_pfx) * sizeof(WCHAR) );
+    len = ARRAY_SIZE(query_pfx) - 1;
+    memcpy( query + len, tv->name, name_len * sizeof(WCHAR) );
+    len += name_len;
+    memcpy( query + len, query_column, ARRAY_SIZE(query_column) * sizeof(WCHAR) );
+    len += ARRAY_SIZE(query_column) - 1;
+    memcpy( query + len, key, key_len * sizeof(WCHAR) );
+    len += key_len;
+    memcpy( query + len, query_sfx, ARRAY_SIZE(query_sfx) * sizeof(WCHAR) );
+    msi_free( key );
+
+    r = MSI_DatabaseOpenViewW( tv->db, query, &q );
+    if (query != buf)
+        msi_free( query );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = MSI_ViewExecute( q, NULL );
+    msiobj_release( &q->hdr );
+    return r;
 }
 
 static UINT TransformView_execute( MSIVIEW *view, MSIRECORD *record )
