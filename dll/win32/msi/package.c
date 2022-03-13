@@ -1471,18 +1471,8 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, DWORD dwOptions, MSIPACKAGE **pPackage)
     if( szPackage[0] == '#' )
     {
         handle = atoiW(&szPackage[1]);
-        db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
-        if( !db )
-        {
-            MSIHANDLE remote;
-
-            if (!(remote = msi_get_remote(handle)))
-                return ERROR_INVALID_HANDLE;
-
-            WARN("MsiOpenPackage not allowed during a custom action!\n");
-
-            return ERROR_FUNCTION_FAILED;
-        }
+        if (!(db = msihandle2msiinfo(handle, MSIHANDLETYPE_DATABASE)))
+            return ERROR_INVALID_HANDLE;
     }
     else
     {

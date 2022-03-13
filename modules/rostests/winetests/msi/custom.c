@@ -1154,7 +1154,7 @@ static void test_invalid_functions(MSIHANDLE hinst)
 
     sprintf(package_name, "#%u", db);
     r = MsiOpenPackageA(package_name, &package);
-    todo_wine ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
+    ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
     MsiCloseHandle(db);
 }
