@@ -5892,7 +5892,7 @@ end:
 }
 
 /*
- * At present I am ignorning the advertised components part of this and only
+ * At present I am ignoring the advertised components part of this and only
  * focusing on the qualified component sets
  */
 static UINT ACTION_PublishComponents(MSIPACKAGE *package)
