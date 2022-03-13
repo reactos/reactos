@@ -372,6 +372,7 @@ static UINT search_reg( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig
     const WCHAR *keyPath, *valueName;
     WCHAR *deformatted = NULL, *ptr = NULL, *end;
     int root, type;
+    REGSAM access = KEY_READ;
     HKEY rootKey, key = NULL;
     DWORD sz = 0, regType;
     LPBYTE value = NULL;
@@ -406,6 +407,8 @@ static UINT search_reg( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig
         break;
     case msidbRegistryRootLocalMachine:
         rootKey = HKEY_LOCAL_MACHINE;
+        if (type & msidbLocatorType64bit) access |= KEY_WOW64_64KEY;
+        else access |= KEY_WOW64_32KEY;
         break;
     case msidbRegistryRootUsers:
         rootKey = HKEY_USERS;
@@ -415,10 +418,10 @@ static UINT search_reg( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig
         goto end;
     }
 
-    rc = RegOpenKeyW(rootKey, deformatted, &key);
+    rc = RegOpenKeyExW( rootKey, deformatted, 0, access, &key );
     if (rc)
     {
-        TRACE("RegOpenKeyW returned %d\n", rc);
+        TRACE("RegOpenKeyExW returned %d\n", rc);
         goto end;
     }
 

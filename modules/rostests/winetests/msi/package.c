@@ -4036,6 +4036,8 @@ static void test_appsearch(void)
     add_appsearch_entry( hdb, "'WEBBROWSERPROG', 'NewSignature1'" );
     add_appsearch_entry( hdb, "'NOTEPAD', 'NewSignature2'" );
     add_appsearch_entry( hdb, "'REGEXPANDVAL', 'NewSignature3'" );
+    add_appsearch_entry( hdb, "'32KEYVAL', 'NewSignature4'" );
+    add_appsearch_entry( hdb, "'64KEYVAL', 'NewSignature5'" );
 
     create_reglocator_table( hdb );
     add_reglocator_entry( hdb, "NewSignature1", 0, "htmlfile\\shell\\open\\command", "", 1 );
@@ -4045,7 +4047,26 @@ static void test_appsearch(void)
     r = RegSetValueExA(hkey, NULL, 0, REG_EXPAND_SZ, (const BYTE*)reg_expand_value, strlen(reg_expand_value) + 1);
     ok( r == ERROR_SUCCESS, "Could not set key value: %d.\n", r);
     RegCloseKey(hkey);
-    add_reglocator_entry( hdb, "NewSignature3", 1, "Software\\Winetest_msi", "", 1 );
+    add_reglocator_entry( hdb, "NewSignature3", 1, "Software\\Winetest_msi", "", msidbLocatorTypeFileName );
+
+    r = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Winetest_msi", 0, NULL, 0, KEY_ALL_ACCESS|KEY_WOW64_32KEY,
+                        NULL, &hkey, NULL);
+    ok( r == ERROR_SUCCESS, "Could not create key: %d.\n", r );
+    r = RegSetValueExA(hkey, NULL, 0, REG_SZ, (const BYTE *)"c:\\windows\\system32\\notepad.exe",
+                       sizeof("c:\\windows\\system32\\notepad.exe"));
+    ok( r == ERROR_SUCCESS, "Could not set key value: %d.\n", r);
+    RegCloseKey(hkey);
+    add_reglocator_entry( hdb, "NewSignature4", 2, "Software\\Winetest_msi", "", msidbLocatorTypeFileName );
+
+    r = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Winetest_msi", 0, NULL, 0, KEY_ALL_ACCESS|KEY_WOW64_64KEY,
+                        NULL, &hkey, NULL);
+    ok( r == ERROR_SUCCESS, "Could not create key: %d.\n", r );
+    r = RegSetValueExA(hkey, NULL, 0, REG_SZ, (const BYTE *)"c:\\windows\\system32\\notepad.exe",
+                       sizeof("c:\\windows\\system32\\notepad.exe"));
+    ok( r == ERROR_SUCCESS, "Could not set key value: %d.\n", r);
+    RegCloseKey(hkey);
+    add_reglocator_entry( hdb, "NewSignature5", 2, "Software\\Winetest_msi", "",
+                          msidbLocatorTypeFileName|msidbLocatorType64bit );
 
     create_drlocator_table( hdb );
     add_drlocator_entry( hdb, "'NewSignature2', 0, 'c:\\windows\\system32', 0" );
@@ -4054,6 +4075,8 @@ static void test_appsearch(void)
     add_signature_entry( hdb, "'NewSignature1', 'FileName', '', '', '', '', '', '', ''" );
     add_signature_entry( hdb, "'NewSignature2', 'NOTEPAD.EXE|notepad.exe', '', '', '', '', '', '', ''" );
     add_signature_entry( hdb, "'NewSignature3', 'NOTEPAD.EXE|notepad.exe', '', '', '', '', '', '', ''" );
+    add_signature_entry( hdb, "'NewSignature4', 'NOTEPAD.EXE|notepad.exe', '', '', '', '', '', '', ''" );
+    add_signature_entry( hdb, "'NewSignature5', 'NOTEPAD.EXE|notepad.exe', '', '', '', '', '', '', ''" );
 
     r = package_from_db( hdb, &hpkg );
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
@@ -4086,10 +4109,22 @@ static void test_appsearch(void)
     ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
     ok( lstrlenA(prop) != 0, "Expected non-zero length\n");
 
+    size = sizeof(prop);
+    r = MsiGetPropertyA( hpkg, "32KEYVAL", prop, &size );
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    ok( lstrlenA(prop) != 0, "Expected non-zero length\n");
+
+    size = sizeof(prop);
+    r = MsiGetPropertyA( hpkg, "64KEYVAL", prop, &size );
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    ok( lstrlenA(prop) != 0, "Expected non-zero length\n");
+
 done:
     MsiCloseHandle( hpkg );
     DeleteFileA(msifile);
     RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Winetest_msi");
+    delete_key(HKEY_LOCAL_MACHINE, "Software\\Winetest_msi", KEY_WOW64_32KEY);
+    delete_key(HKEY_LOCAL_MACHINE, "Software\\Winetest_msi", KEY_WOW64_64KEY);
 }
 
 static void test_appsearch_complocator(void)
