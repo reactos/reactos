@@ -16,12 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-char PROG_FILES_DIR[MAX_PATH];
-char PROG_FILES_DIR_NATIVE[MAX_PATH];
-char COMMON_FILES_DIR[MAX_PATH];
-char APP_DATA_DIR[MAX_PATH];
-char WINDOWS_DIR[MAX_PATH];
-char CURR_DIR[MAX_PATH];
+extern char PROG_FILES_DIR[MAX_PATH];
+extern char PROG_FILES_DIR_NATIVE[MAX_PATH];
+extern char COMMON_FILES_DIR[MAX_PATH];
+extern char APP_DATA_DIR[MAX_PATH];
+extern char WINDOWS_DIR[MAX_PATH];
+extern char CURR_DIR[MAX_PATH];
 
 BOOL get_system_dirs(void);
 BOOL get_user_dirs(void);
