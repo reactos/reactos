@@ -1993,16 +1993,8 @@ MSIDBSTATE WINAPI MsiGetDatabaseState( MSIHANDLE handle )
 
     TRACE("%d\n", handle);
 
-    db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
-    if( !db )
-    {
-        MSIHANDLE remote_database = msi_get_remote(handle);
-        if ( !remote_database )
-            return MSIDBSTATE_ERROR;
-
-        WARN("MsiGetDatabaseState not allowed during a custom action!\n");
-        return MSIDBSTATE_READ;
-    }
+    if (!(db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE )))
+        return MSIDBSTATE_ERROR;
 
     if (db->mode != MSIDBOPEN_READONLY )
         ret = MSIDBSTATE_WRITE;
