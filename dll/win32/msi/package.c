@@ -742,7 +742,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
         'W','i','n','d','o','w','s',' ','N','T','\\',
         'C','u','r','r','e','n','t','V','e','r','s','i','o','n',0
     };
-    static const WCHAR szRegisteredUser[] = {'R','e','g','i','s','t','e','r','e','d','O','w','n','e','r',0};
+    static const WCHAR szRegisteredOwner[] = {'R','e','g','i','s','t','e','r','e','d','O','w','n','e','r',0};
     static const WCHAR szRegisteredOrganization[] = {
         'R','e','g','i','s','t','e','r','e','d','O','r','g','a','n','i','z','a','t','i','o','n',0
     };
@@ -971,10 +971,11 @@ static VOID set_installer_properties(MSIPACKAGE *package)
         CloseHandle( hkey );
     }
     if ((!username || !companyname) &&
-        RegOpenKeyW( HKEY_LOCAL_MACHINE, szCurrentVersionNT, &hkey ) == ERROR_SUCCESS)
+        RegOpenKeyExW( HKEY_LOCAL_MACHINE, szCurrentVersionNT, 0, KEY_QUERY_VALUE|KEY_WOW64_64KEY,
+                       &hkey ) == ERROR_SUCCESS)
     {
         if (!username &&
-            (username = msi_reg_get_val_str( hkey, szRegisteredUser )))
+            (username = msi_reg_get_val_str( hkey, szRegisteredOwner )))
             msi_set_property( package->db, szUSERNAME, username, -1 );
         if (!companyname &&
             (companyname = msi_reg_get_val_str( hkey, szRegisteredOrganization )))
