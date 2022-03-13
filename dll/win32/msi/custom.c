@@ -769,6 +769,13 @@ static msi_custom_action_info *do_msidbCustomActionTypeDll(
     if (!ret)
         info->arch = (sizeof(void *) == 8 ? SCS_64BIT_BINARY : SCS_32BIT_BINARY);
 
+    if (info->arch == SCS_64BIT_BINARY && sizeof(void *) == 4 && !is_wow64)
+    {
+        ERR("Attempt to run a 64-bit custom action inside a 32-bit WINEPREFIX.\n");
+        free_custom_action_data( info );
+        return NULL;
+    }
+
     custom_start_server(package, info->arch);
 
     info->handle = CreateThread(NULL, 0, custom_client_thread, info, 0, NULL);
