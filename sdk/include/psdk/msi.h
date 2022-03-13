@@ -604,6 +604,10 @@ MsiEnumClientsW(
 
 #define     MsiEnumClients WINELIB_NAME_AW(MsiEnumClients)
 
+UINT WINAPI MsiEnumClientsExA(_In_ LPCSTR szComponent, _In_opt_ LPCSTR szUserSid, _In_ DWORD dwContext, _In_ DWORD dwProductIndex, _Out_opt_ CHAR szProductBuf[39], _Out_opt_ MSIINSTALLCONTEXT* pdwInstalledContext, _Out_opt_ LPSTR szSid, _Inout_opt_ LPDWORD pcchSid);
+UINT WINAPI MsiEnumClientsExW(_In_ LPCWSTR szComponent, _In_opt_ LPCWSTR szUserSid, _In_ DWORD dwContext, _In_ DWORD dwProductIndex, _Out_opt_ WCHAR szProductBuf[39], _Out_opt_ MSIINSTALLCONTEXT* pdwInstalledContext, _Out_opt_ LPWSTR szSid, _Inout_opt_ LPDWORD pcchSid);
+#define     MsiEnumClientsEx WINELIB_NAME_AW(MsiEnumClientsEx)
+
 UINT WINAPI MsiOpenPackageA(_In_ LPCSTR, _Out_ MSIHANDLE*);
 UINT WINAPI MsiOpenPackageW(_In_ LPCWSTR, _Out_ MSIHANDLE*);
 #define     MsiOpenPackage WINELIB_NAME_AW(MsiOpenPackage)
