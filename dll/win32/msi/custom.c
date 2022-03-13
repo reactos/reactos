@@ -469,7 +469,7 @@ static void handle_msi_break(LPCSTR target)
     if (!GetEnvironmentVariableA("MsiBreak", val, MAX_PATH))
         return;
 
-    if (strcasecmp(val, target))
+    if (strcmp(val, target))
         return;
 
     sprintf(msg, format, GetCurrentProcessId(), GetCurrentProcessId());
