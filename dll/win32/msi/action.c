@@ -4065,7 +4065,7 @@ static UINT msi_publish_product_properties(MSIPACKAGE *package, HKEY hkey)
     msi_reg_set_val_dword(hkey, L"Assignment", 0);
     msi_reg_set_val_dword(hkey, L"AdvertiseFlags", 0x184);
     msi_reg_set_val_dword(hkey, INSTALLPROPERTY_INSTANCETYPEW, 0);
-    msi_reg_set_val_str(hkey, L"Clients", L":");
+    msi_reg_set_val_multi_str(hkey, L"Clients", L":\0");
 
     if (!(guids = msi_get_package_code(package->db))) return ERROR_OUTOFMEMORY;
     if ((ptr = wcschr(guids, ';'))) *ptr = 0;
