@@ -3217,6 +3217,12 @@ static void test_try_transform(void)
     r = MsiCloseHandle(hview);
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
+    query = "ALTER TABLE `_TransformView` FREE";
+    r = run_query( hdb, 0, query );
+    ok( r == ERROR_SUCCESS, "cannot free _TransformView table: %d\n", r );
+    r = run_query( hdb, 0, query );
+    ok( r == ERROR_BAD_QUERY_SYNTAX, "_TransformView table still exist: %d\n", r );
+
     r = MsiDatabaseApplyTransformA( hdb, mstfile, 0 );
     ok( r == ERROR_SUCCESS, "return code %d, should be ERROR_SUCCESS\n", r );
 
