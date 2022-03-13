@@ -46,19 +46,6 @@ struct string_list
 	WCHAR str[1];
 };
 
-static const WCHAR ActionAdmin[] = {
-   'A','C','T','I','O','N','=','A','D','M','I','N',0 };
-static const WCHAR RemoveAll[] = {
-   'R','E','M','O','V','E','=','A','L','L',0 };
-
-static const WCHAR InstallRunOnce[] = {
-   'S','o','f','t','w','a','r','e','\\',
-   'M','i','c','r','o','s','o','f','t','\\',
-   'W','i','n','d','o','w','s','\\',
-   'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-   'I','n','s','t','a','l','l','e','r','\\',
-   'R','u','n','O','n','c','e','E','n','t','r','i','e','s',0};
-
 static void ShowUsage(int ExitCode)
 {
     WCHAR msiexec_version[40];
@@ -339,8 +326,6 @@ static DWORD DoDllUnregisterServer(LPCWSTR DllName)
 
 static DWORD DoRegServer(void)
 {
-    static const WCHAR msiserverW[] = {'M','S','I','S','e','r','v','e','r',0};
-    static const WCHAR msiexecW[] = {'\\','m','s','i','e','x','e','c',' ','/','V',0};
     SC_HANDLE scm, service;
     WCHAR path[MAX_PATH+12];
     DWORD len, ret = 0;
@@ -351,8 +336,8 @@ static DWORD DoRegServer(void)
         return 1;
     }
     len = GetSystemDirectoryW(path, MAX_PATH);
-    lstrcpyW(path + len, msiexecW);
-    if ((service = CreateServiceW(scm, msiserverW, msiserverW, GENERIC_ALL,
+    lstrcpyW(path + len, L"\\msiexec /V");
+    if ((service = CreateServiceW(scm, L"MSIServer", L"MSIServer", GENERIC_ALL,
                                   SERVICE_WIN32_SHARE_PROCESS, SERVICE_DEMAND_START,
                                   SERVICE_ERROR_NORMAL, path, NULL, NULL, NULL, NULL, NULL)))
     {
@@ -369,7 +354,6 @@ static DWORD DoRegServer(void)
 
 static DWORD DoUnregServer(void)
 {
-    static const WCHAR msiserverW[] = {'M','S','I','S','e','r','v','e','r',0};
     SC_HANDLE scm, service;
     DWORD ret = 0;
 
@@ -378,7 +362,7 @@ static DWORD DoUnregServer(void)
         fprintf(stderr, "Failed to open service control manager\n");
         return 1;
     }
-    if ((service = OpenServiceW(scm, msiserverW, DELETE)))
+    if ((service = OpenServiceW(scm, L"MSIServer", DELETE)))
     {
         if (!DeleteService(service))
         {
@@ -409,7 +393,6 @@ static DWORD CALLBACK custom_action_thread(void *arg)
 
 static int custom_action_server(const WCHAR *arg)
 {
-    static const WCHAR pipe_name[] = {'\\','\\','.','\\','p','i','p','e','\\','m','s','i','c','a','_','%','x','_','%','d',0};
     GUID guid, *thread_guid;
     DWORD64 thread64;
     WCHAR buffer[24];
@@ -425,7 +408,7 @@ static int custom_action_server(const WCHAR *arg)
         return 1;
     }
 
-    swprintf(buffer, ARRAY_SIZE(buffer), pipe_name, client_pid, sizeof(void *) * 8);
+    swprintf(buffer, ARRAY_SIZE(buffer), L"\\\\.\\pipe\\msica_%x_%d", client_pid, (int)(sizeof(void *) * 8));
     pipe = CreateFileW(buffer, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (pipe == INVALID_HANDLE_VALUE)
     {
@@ -577,7 +560,8 @@ static BOOL process_args_from_reg( const WCHAR *ident, int *pargc, WCHAR ***parg
 	WCHAR *buf;
 	BOOL ret = FALSE;
 
-	r = RegOpenKeyW(HKEY_LOCAL_MACHINE, InstallRunOnce, &hkey);
+	r = RegOpenKeyW(HKEY_LOCAL_MACHINE,
+			L"Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\RunOnceEntries", &hkey);
 	if(r != ERROR_SUCCESS)
 		return FALSE;
 	r = RegQueryValueExW(hkey, ident, 0, &type, 0, &sz);
@@ -700,7 +684,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				ShowUsage(1);
 			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
 			PackageName = argvW[i];
-			StringListAppend(&property_list, ActionAdmin);
+			StringListAppend(&property_list, L"ACTION=ADMIN");
 			WINE_FIXME("Administrative installs are not currently supported\n");
 		}
 		else if(msi_option_prefix(argvW[i], "f"))
@@ -783,7 +767,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				PackageName = argvW[i];
 			}
 			WINE_TRACE("PackageName = %s\n", wine_dbgstr_w(PackageName));
-			StringListAppend(&property_list, RemoveAll);
+			StringListAppend(&property_list, L"REMOVE=ALL");
 		}
 		else if(msi_option_prefix(argvW[i], "j"))
 		{
@@ -996,11 +980,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
                 else if(msi_option_equal(argvW[i], "passive"))
                 {
-                    static const WCHAR rebootpromptW[] =
-                        {'R','E','B','O','O','T','P','R','O','M','P','T','=','"','S','"',0};
-
                     InstallUILevel = INSTALLUILEVEL_BASIC|INSTALLUILEVEL_PROGRESSONLY|INSTALLUILEVEL_HIDECANCEL;
-                    StringListAppend(&property_list, rebootpromptW);
+                    StringListAppend(&property_list, L"REBOOTPROMPT=\"S\"");
                 }
 		else if(msi_option_equal(argvW[i], "y"))
 		{
