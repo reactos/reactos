@@ -7001,7 +7001,7 @@ static UINT ITERATE_RemoveEnvironmentString( MSIRECORD *rec, LPVOID param )
     LPCWSTR name, value, component;
     WCHAR *p, *q, *deformatted = NULL, *new_value = NULL;
     DWORD flags, type, size, len, len_value = 0, len_new_value;
-    HKEY env;
+    HKEY env = NULL;
     MSICOMPONENT *comp;
     MSIRECORD *uirow;
     int action = 0;
