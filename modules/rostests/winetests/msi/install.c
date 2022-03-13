@@ -2744,15 +2744,14 @@ static void test_MsiInstallProduct(void)
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
-    /* szPackagePath is NULL */
-    r = MsiInstallProductA(NULL, "INSTALL=ALL");
-    ok(r == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+    if (0) /* crashes on Win10 1709 */
+    {
+        r = MsiInstallProductA(NULL, "INSTALL=ALL");
+        ok(r == ERROR_INVALID_PARAMETER, "got %u\n", r);
 
-    /* both szPackagePath and szCommandLine are NULL */
-    r = MsiInstallProductA(NULL, NULL);
-    ok(r == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+        r = MsiInstallProductA(NULL, NULL);
+        ok(r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+    }
 
     /* szPackagePath is empty */
     r = MsiInstallProductA("", "INSTALL=ALL");
