@@ -2929,7 +2929,7 @@ static int is_key_empty(const MSICOMPONENT *comp, HKEY root, const WCHAR *path)
     HKEY key;
     LONG res;
 
-    key = open_key(comp, root, path, FALSE, get_registry_view(comp) | KEY_READ);
+    key = open_key(comp, root, path, FALSE, KEY_READ);
     if (!key) return 0;
 
     res = RegQueryInfoKeyW(key, 0, 0, 0, &subkeys, 0, 0, &values, 0, 0, 0, 0);
@@ -2941,11 +2941,9 @@ static int is_key_empty(const MSICOMPONENT *comp, HKEY root, const WCHAR *path)
 static void delete_key( const MSICOMPONENT *comp, HKEY root, const WCHAR *path )
 {
     LONG res = ERROR_SUCCESS;
-    REGSAM access = 0;
+    REGSAM access = get_registry_view( comp );
     WCHAR *subkey, *p;
     HKEY hkey;
-
-    access |= get_registry_view( comp );
 
     if (!(subkey = strdupW( path ))) return;
     do
@@ -2954,7 +2952,7 @@ static void delete_key( const MSICOMPONENT *comp, HKEY root, const WCHAR *path )
         {
             *p = 0;
             if (!p[1]) continue; /* trailing backslash */
-            hkey = open_key( comp, root, subkey, FALSE, access | READ_CONTROL );
+            hkey = open_key( comp, root, subkey, FALSE, READ_CONTROL );
             if (!hkey) break;
             if (!is_key_empty(comp, hkey, p + 1))
             {
