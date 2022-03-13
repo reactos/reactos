@@ -5720,14 +5720,14 @@ static void test_installprops(void)
     size = MAX_PATH;
     r = MsiGetPropertyA(hpkg, "ScreenX", buf, &size);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS got %d\n", r);
-    ok(atol(buf) == res, "Expected %d, got %ld\n", res, atol(buf));
+    ok(atol(buf) == res, "Expected %d, got %s\n", res, buf);
 
     res = GetSystemMetrics(SM_CYSCREEN);
     buf[0] = 0;
     size = MAX_PATH;
     r = MsiGetPropertyA(hpkg, "ScreenY", buf, &size);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS got %d\n", r);
-    ok(atol(buf) == res, "Expected %d, got %ld\n", res, atol(buf));
+    ok(atol(buf) == res, "Expected %d, got %s\n", res, buf);
 
     buf[0] = 0;
     size = MAX_PATH;
