@@ -5735,6 +5735,9 @@ static void test_installprops(void)
 
     GetNativeSystemInfo(&si);
 
+    sprintf(buf, "%d", LOBYTE(LOWORD(GetVersion())) * 100 + HIBYTE(LOWORD(GetVersion())));
+    check_prop(hpkg, "VersionNT", buf, 1);
+
     if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
     {
         sprintf(buf, "%d", si.wProcessorLevel);
