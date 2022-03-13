@@ -879,45 +879,17 @@ static void test_viewmodify(void)
     r = run_query( hdb, 0, query );
     ok(r == ERROR_SUCCESS, "query failed\n");
 
-    /* check what the error function reports without doing anything */
-    sz = 0;
-    /* passing NULL as the 3rd param make function to crash on older platforms */
-    err = MsiViewGetErrorA( 0, NULL, &sz );
-    ok(err == MSIDBERROR_INVALIDARG, "MsiViewGetError return\n");
-
-    /* open a view */
     query = "SELECT * FROM `phone`";
     r = MsiDatabaseOpenViewA(hdb, query, &hview);
     ok(r == ERROR_SUCCESS, "MsiDatabaseOpenView failed\n");
 
-    /* see what happens with a good hview and bad args */
-    err = MsiViewGetErrorA( hview, NULL, NULL );
-    ok(err == MSIDBERROR_INVALIDARG || err == MSIDBERROR_NOERROR,
-       "MsiViewGetError returns %u (expected -3)\n", err);
-    err = MsiViewGetErrorA( hview, buffer, NULL );
-    ok(err == MSIDBERROR_INVALIDARG, "MsiViewGetError return\n");
-
-    /* see what happens with a zero length buffer */
-    sz = 0;
-    buffer[0] = 'x';
+    /* check what the error function reports without doing anything */
+    sz = sizeof(buffer);
+    strcpy(buffer, "x");
     err = MsiViewGetErrorA( hview, buffer, &sz );
-    ok(err == MSIDBERROR_MOREDATA, "MsiViewGetError return\n");
-    ok(buffer[0] == 'x', "buffer cleared\n");
-    ok(sz == 0, "size not zero\n");
-
-    /* ok this one is strange */
-    sz = 0;
-    err = MsiViewGetErrorA( hview, NULL, &sz );
-    ok(err == MSIDBERROR_NOERROR, "MsiViewGetError return\n");
-    ok(sz == 0, "size not zero\n");
-
-    /* see if it really has an error */
-    sz = sizeof buffer;
-    buffer[0] = 'x';
-    err = MsiViewGetErrorA( hview, buffer, &sz );
-    ok(err == MSIDBERROR_NOERROR, "MsiViewGetError return\n");
-    ok(buffer[0] == 0, "buffer not cleared\n");
-    ok(sz == 0, "size not zero\n");
+    ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
+    ok(!buffer[0], "got \"%s\"\n", buffer);
+    ok(sz == 0, "got size %u\n", sz);
 
     r = MsiViewExecute(hview, 0);
     ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
@@ -933,12 +905,12 @@ static void test_viewmodify(void)
     r = MsiViewModify(hview, -1, hrec );
     ok(r == ERROR_INVALID_DATA, "MsiViewModify failed\n");
 
-    sz = sizeof buffer;
-    buffer[0] = 'x';
+    sz = sizeof(buffer);
+    strcpy(buffer, "x");
     err = MsiViewGetErrorA( hview, buffer, &sz );
-    ok(err == MSIDBERROR_NOERROR, "MsiViewGetError return\n");
-    ok(buffer[0] == 0, "buffer not cleared\n");
-    ok(sz == 0, "size not zero\n");
+    ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
+    ok(!buffer[0], "got \"%s\"\n", buffer);
+    ok(sz == 0, "got size %u\n", sz);
 
     r = MsiCloseHandle(hrec);
     ok(r == ERROR_SUCCESS, "failed to close record\n");
@@ -965,12 +937,12 @@ static void test_viewmodify(void)
     r = MsiViewModify(hview, MSIMODIFY_VALIDATE_NEW, hrec );
     ok(r == ERROR_INVALID_DATA, "MsiViewModify failed %u\n", r);
 
-    sz = sizeof buffer;
-    buffer[0] = 'x';
+    sz = sizeof(buffer);
+    strcpy(buffer, "x");
     err = MsiViewGetErrorA( hview, buffer, &sz );
-    ok(err == MSIDBERROR_DUPLICATEKEY, "MsiViewGetError returned %u\n", err);
-    ok(!strcmp(buffer, "id"), "expected \"id\" c, got \"%s\"\n", buffer);
-    ok(sz == 2, "size not 2\n");
+    ok(err == MSIDBERROR_DUPLICATEKEY, "got %d\n", err);
+    ok(!strcmp(buffer, "id"), "got \"%s\"\n", buffer);
+    ok(sz == 2, "got size %u\n", sz);
 
     /* insert the same thing again */
     r = MsiViewExecute(hview, 0);
@@ -9109,6 +9081,121 @@ static void test_viewmodify_insert(void)
     DeleteFileA(msifile);
 }
 
+static void test_view_get_error(void)
+{
+    MSIHANDLE view, rec, db = create_db();
+    MSIDBERROR err;
+    char buffer[5];
+    DWORD sz;
+    UINT r;
+
+    r = run_query(db, 0, "CREATE TABLE `T` (`A` SHORT, `B` SHORT NOT NULL PRIMARY KEY `A`)");
+    ok(!r, "got %u\n", r);
+    r = run_query(db, 0, "INSERT INTO `T` (`A`, `B`) VALUES (1, 2)");
+    r = run_query(db, 0, "CREATE TABLE `_Validation` ("
+            "`Table` CHAR(32) NOT NULL, `Column` CHAR(32) NOT NULL, "
+            "`Nullable` CHAR(4) NOT NULL, `MinValue` INT, `MaxValue` INT, "
+            "`KeyTable` CHAR(255), `KeyColumn` SHORT, `Category` CHAR(32), "
+            "`Set` CHAR(255), `Description` CHAR(255) PRIMARY KEY `Table`, `Column`)");
+    ok(!r, "got %u\n", r);
+    r = run_query(db, 0, "INSERT INTO `_Validation` (`Table`, `Column`, `Nullable`) VALUES ('T', 'A', 'N')");
+    ok(!r, "got %u\n", r);
+    r = run_query(db, 0, "INSERT INTO `_Validation` (`Table`, `Column`, `Nullable`) VALUES ('T', 'B', 'N')");
+    ok(!r, "got %u\n", r);
+
+    r = MsiDatabaseOpenViewA(db, "SELECT * FROM `T`", &view);
+    ok(!r, "got %u\n", r);
+
+    r = MsiViewExecute(view, 0);
+    ok(!r, "got %u\n", r);
+
+    sz = 0;
+    err = MsiViewGetErrorA(0, NULL, &sz);
+    ok(err == MSIDBERROR_INVALIDARG, "got %d\n", err);
+    ok(sz == 0, "got size %u\n", sz);
+
+    err = MsiViewGetErrorA(view, NULL, NULL);
+    ok(err == MSIDBERROR_INVALIDARG, "got %d\n", err);
+
+    sz = 0;
+    err = MsiViewGetErrorA(view, NULL, &sz);
+    ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
+    ok(sz == 0, "got size %u\n", sz);
+
+    sz = 0;
+    strcpy(buffer, "x");
+    err = MsiViewGetErrorA(view, buffer, &sz);
+    ok(err == MSIDBERROR_MOREDATA, "got %d\n", err);
+    ok(!strcmp(buffer, "x"), "got \"%s\"\n", buffer);
+    ok(sz == 0, "got size %u\n", sz);
+
+    sz = 1;
+    strcpy(buffer, "x");
+    err = MsiViewGetErrorA(view, buffer, &sz);
+    ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
+    ok(!buffer[0], "got \"%s\"\n", buffer);
+    ok(sz == 0, "got size %u\n", sz);
+
+    rec = MsiCreateRecord(2);
+    MsiRecordSetInteger(rec, 1, 1);
+    MsiRecordSetInteger(rec, 2, 2);
+    r = MsiViewModify(view, MSIMODIFY_VALIDATE_NEW, rec);
+    ok(r == ERROR_INVALID_DATA, "got %u\n", r);
+
+    sz = 2;
+    strcpy(buffer, "x");
+    err = MsiViewGetErrorA(view, buffer, &sz);
+    ok(err == MSIDBERROR_DUPLICATEKEY, "got %d\n", err);
+    ok(!strcmp(buffer, "A"), "got \"%s\"\n", buffer);
+    ok(sz == 1, "got size %u\n", sz);
+
+    sz = 2;
+    strcpy(buffer, "x");
+    err = MsiViewGetErrorA(view, buffer, &sz);
+    todo_wine ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
+    todo_wine ok(!buffer[0], "got \"%s\"\n", buffer);
+    todo_wine ok(sz == 0, "got size %u\n", sz);
+
+    r = MsiViewModify(view, MSIMODIFY_VALIDATE_NEW, rec);
+    ok(r == ERROR_INVALID_DATA, "got %u\n", r);
+
+    sz = 1;
+    strcpy(buffer, "x");
+    err = MsiViewGetErrorA(view, buffer, &sz);
+    ok(err == MSIDBERROR_MOREDATA, "got %d\n", err);
+    todo_wine ok(!buffer[0], "got \"%s\"\n", buffer);
+    ok(sz == 1, "got size %u\n", sz);
+
+    sz = 1;
+    strcpy(buffer, "x");
+    err = MsiViewGetErrorA(view, buffer, &sz);
+    todo_wine ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
+    todo_wine ok(!buffer[0], "got \"%s\"\n", buffer);
+    todo_wine ok(sz == 0, "got size %u\n", sz);
+
+    r = MsiViewModify(view, MSIMODIFY_VALIDATE_NEW, rec);
+    ok(r == ERROR_INVALID_DATA, "got %u\n", r);
+
+    sz = 0;
+    strcpy(buffer, "x");
+    err = MsiViewGetErrorA(view, buffer, &sz);
+    ok(err == MSIDBERROR_MOREDATA, "got %d\n", err);
+    ok(!strcmp(buffer, "x"), "got \"%s\"\n", buffer);
+    ok(sz == 1, "got size %u\n", sz);
+
+    sz = 0;
+    strcpy(buffer, "x");
+    err = MsiViewGetErrorA(view, buffer, &sz);
+    ok(err == MSIDBERROR_MOREDATA, "got %d\n", err);
+    ok(!strcmp(buffer, "x"), "got \"%s\"\n", buffer);
+    todo_wine ok(sz == 0, "got size %u\n", sz);
+
+    MsiCloseHandle(rec);
+    MsiCloseHandle(view);
+    MsiCloseHandle(db);
+    DeleteFileA(msifile);
+}
+
 START_TEST(db)
 {
     test_msidatabase();
@@ -9167,4 +9254,5 @@ START_TEST(db)
     test_primary_keys();
     test_viewmodify_merge();
     test_viewmodify_insert();
+    test_view_get_error();
 }
