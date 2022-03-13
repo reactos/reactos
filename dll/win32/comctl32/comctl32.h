@@ -45,8 +45,6 @@
 extern HMODULE COMCTL32_hModule DECLSPEC_HIDDEN;
 extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
-
 /* Property sheet / Wizard */
 #define IDD_PROPSHEET 1006
 #define IDD_WIZARD    1020
