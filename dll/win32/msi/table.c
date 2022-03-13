@@ -1949,7 +1949,7 @@ static UINT TABLE_add_ref(struct tagMSIVIEW *view)
     return InterlockedIncrement(&tv->table->ref_count);
 }
 
-static UINT TABLE_remove_column(struct tagMSIVIEW *view, LPCWSTR table, UINT number)
+static UINT TABLE_remove_column(struct tagMSIVIEW *view, UINT number)
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     MSIRECORD *rec = NULL;
@@ -1974,7 +1974,7 @@ static UINT TABLE_remove_column(struct tagMSIVIEW *view, LPCWSTR table, UINT num
     if (!rec)
         return ERROR_OUTOFMEMORY;
 
-    MSI_RecordSetStringW(rec, 1, table);
+    MSI_RecordSetStringW(rec, 1, tv->name);
     MSI_RecordSetInteger(rec, 2, number);
 
     r = TABLE_CreateView(tv->db, szColumns, &columns);
@@ -1992,7 +1992,7 @@ static UINT TABLE_remove_column(struct tagMSIVIEW *view, LPCWSTR table, UINT num
     if (r != ERROR_SUCCESS)
         goto done;
 
-    msi_update_table_columns(tv->db, table);
+    msi_update_table_columns(tv->db, tv->name);
 
 done:
     msiobj_release(&rec->hdr);
@@ -2016,8 +2016,7 @@ static UINT TABLE_release(struct tagMSIVIEW *view)
         {
             if (tv->table->colinfo[i].type & MSITYPE_TEMPORARY)
             {
-                r = TABLE_remove_column(view, tv->table->colinfo[i].tablename,
-                                        tv->table->colinfo[i].number);
+                r = TABLE_remove_column(view, tv->table->colinfo[i].number);
                 if (r != ERROR_SUCCESS)
                     break;
             }
@@ -2145,8 +2144,7 @@ static UINT TABLE_drop(struct tagMSIVIEW *view)
 
     for (i = tv->table->col_count - 1; i >= 0; i--)
     {
-        r = TABLE_remove_column(view, tv->table->colinfo[i].tablename,
-                                tv->table->colinfo[i].number);
+        r = TABLE_remove_column(view, tv->table->colinfo[i].number);
         if (r != ERROR_SUCCESS)
             return r;
     }
