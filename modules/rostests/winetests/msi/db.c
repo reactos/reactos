@@ -9163,14 +9163,14 @@ static void test_view_get_error(void)
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(err == MSIDBERROR_MOREDATA, "got %d\n", err);
-    todo_wine ok(!buffer[0], "got \"%s\"\n", buffer);
+    ok(!buffer[0], "got \"%s\"\n", buffer);
     ok(sz == 1, "got size %u\n", sz);
 
     sz = 1;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     todo_wine ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
-    todo_wine ok(!buffer[0], "got \"%s\"\n", buffer);
+    ok(!buffer[0], "got \"%s\"\n", buffer);
     todo_wine ok(sz == 0, "got size %u\n", sz);
 
     r = MsiViewModify(view, MSIMODIFY_VALIDATE_NEW, rec);

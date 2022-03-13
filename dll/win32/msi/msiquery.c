@@ -772,7 +772,6 @@ MSIDBERROR WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR buffer, LPDWORD buf
     MSIQUERY *query;
     const WCHAR *column;
     MSIDBERROR r;
-    DWORD len;
 
     TRACE("%u %p %p\n", handle, buffer, buflen);
 
@@ -786,15 +785,9 @@ MSIDBERROR WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR buffer, LPDWORD buf
     if ((r = query->view->error)) column = query->view->error_column;
     else column = szEmpty;
 
-    len = strlenW( column );
-    if (buffer)
-    {
-        if (*buflen > len)
-            strcpyW( buffer, column );
-        else
-            r = MSIDBERROR_MOREDATA;
-    }
-    *buflen = len;
+    if (msi_strncpyW(column, -1, buffer, buflen) == ERROR_MORE_DATA)
+        r = MSIDBERROR_MOREDATA;
+
     msiobj_release( &query->hdr );
     return r;
 }
@@ -804,7 +797,6 @@ MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR buffer, LPDWORD bufl
     MSIQUERY *query;
     const WCHAR *column;
     MSIDBERROR r;
-    DWORD len;
 
     TRACE("%u %p %p\n", handle, buffer, buflen);
 
@@ -818,15 +810,9 @@ MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR buffer, LPDWORD bufl
     if ((r = query->view->error)) column = query->view->error_column;
     else column = szEmpty;
 
-    len = WideCharToMultiByte( CP_ACP, 0, column, -1, NULL, 0, NULL, NULL );
-    if (buffer)
-    {
-        if (*buflen >= len)
-            WideCharToMultiByte( CP_ACP, 0, column, -1, buffer, *buflen, NULL, NULL );
-        else
-            r = MSIDBERROR_MOREDATA;
-    }
-    *buflen = len - 1;
+    if (msi_strncpyWtoA(column, -1, buffer, buflen, FALSE) == ERROR_MORE_DATA)
+        r = MSIDBERROR_MOREDATA;
+
     msiobj_release( &query->hdr );
     return r;
 }
