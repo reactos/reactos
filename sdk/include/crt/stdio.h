@@ -885,6 +885,7 @@ extern _CRTIMP int _commode;
     _In_z_ _Printf_format_string_ const wchar_t *_Format,
     va_list _ArgList);
 
+#if defined __cplusplus || defined _CRT_NON_CONFORMING_SWPRINTFS
   _Check_return_opt_
   _CRTIMP
   int
@@ -901,6 +902,7 @@ extern _CRTIMP int _commode;
     _Out_ wchar_t*,
     const wchar_t*,
     va_list);
+#endif
 
   _Check_return_opt_
   _CRTIMP
@@ -948,15 +950,38 @@ extern _CRTIMP int _commode;
 #include <vadefs.h>
 #endif
 
-#if 0 //this is for MSVCRT80 and higher, which we don't use nor implement
-#ifdef _CRT_NON_CONFORMING_SWPRINTFS
-#ifndef __cplusplus
-#define swprintf _swprintf
-#define vswprintf _vswprintf
-#define _swprintf_l __swprintf_l
-#define _vswprintf_l __vswprintf_l
-#endif
-#endif
+#ifndef _CRT_NON_CONFORMING_SWPRINTFS
+  _Check_return_opt_
+  static inline
+  int
+  __cdecl
+  swprintf(
+      _Out_writes_z_(_SizeInWords) wchar_t* _DstBuf,
+      _In_ size_t _SizeInWords,
+      _In_z_ _Printf_format_string_ const wchar_t* _Format,
+      ...)
+  {
+      int ret;
+      va_list args;
+
+      va_start(args, _Format);
+      ret = _vsnwprintf(_DstBuf, _SizeInWords, _Format, args);
+      va_end(args);
+      return ret;
+  }
+
+  _Check_return_opt_
+  static inline
+  int
+  __cdecl
+  vswprintf(
+      _Out_writes_z_(_SizeInWords) wchar_t* _DstBuf,
+      _In_ size_t _SizeInWords,
+      _In_z_ _Printf_format_string_ const wchar_t* _Format,
+      va_list _ArgList)
+  {
+      return _vsnwprintf(_DstBuf, _SizeInWords, _Format, _ArgList);
+  }
 #endif
 
   _Check_return_
