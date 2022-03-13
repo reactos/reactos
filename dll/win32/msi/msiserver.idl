@@ -117,11 +117,6 @@ coclass MsiPatch { }
 /* FIXME: unidentified class */
 coclass MsiServerX3 { interface IMsiServer; }
 
-[
-    uuid(ba26e6fa-4f27-4f56-953a-3f90272018aa)
-]
-coclass WineMsiRemoteCustomAction { interface WineMsiRemoteCustomAction; }
-
 [ uuid(000C1092-0000-0000-C000-000000000046), version(1.0) ]
 library WindowsInstaller
 {
