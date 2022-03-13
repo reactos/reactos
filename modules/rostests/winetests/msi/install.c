@@ -6235,6 +6235,7 @@ START_TEST(install)
     BOOL ret = FALSE;
 
     init_functionpointers();
+    subtest("custom");
 
     if (pIsWow64Process)
         pIsWow64Process(GetCurrentProcess(), &is_wow64);
