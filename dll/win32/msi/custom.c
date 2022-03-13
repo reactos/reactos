@@ -603,7 +603,6 @@ static DWORD custom_start_server(MSIPACKAGE *package, DWORD arch)
     WCHAR buffer[24];
     void *cookie;
     HANDLE pipe;
-    BOOL wow64;
 
     if ((arch == SCS_32BIT_BINARY && package->custom_server_32_process) ||
         (arch == SCS_64BIT_BINARY && package->custom_server_64_process))
@@ -616,17 +615,14 @@ static DWORD custom_start_server(MSIPACKAGE *package, DWORD arch)
     if (pipe == INVALID_HANDLE_VALUE)
         ERR("Failed to create custom action client pipe: %u\n", GetLastError());
 
-    if (!IsWow64Process(GetCurrentProcess(), &wow64))
-        wow64 = FALSE;
-
-    if ((sizeof(void *) == 8 || wow64) && arch == SCS_32BIT_BINARY)
+    if ((sizeof(void *) == 8 || is_wow64) && arch == SCS_32BIT_BINARY)
         GetSystemWow64DirectoryW(path, MAX_PATH - ARRAY_SIZE(L"\\msiexec.exe"));
     else
         GetSystemDirectoryW(path, MAX_PATH - ARRAY_SIZE(L"\\msiexec.exe"));
     lstrcatW(path, L"\\msiexec.exe");
     swprintf(cmdline, ARRAY_SIZE(cmdline), L"%s -Embedding %d", path, GetCurrentProcessId());
 
-    if (wow64 && arch == SCS_64BIT_BINARY)
+    if (is_wow64 && arch == SCS_64BIT_BINARY)
     {
         Wow64DisableWow64FsRedirection(&cookie);
         CreateProcessW(path, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
