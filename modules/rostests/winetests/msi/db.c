@@ -3957,9 +3957,21 @@ static void test_alter(void)
     hdb = create_db();
     ok( hdb, "failed to create db\n");
 
+    query = "CREATE TABLE `T` ( `B` SHORT NOT NULL TEMPORARY, `C` CHAR(255) TEMPORARY PRIMARY KEY `C`)";
+    r = run_query(hdb, 0, query);
+    ok(r == ERROR_SUCCESS, "failed to add table\n");
+
+    query = "SELECT * FROM `T`";
+    r = run_query(hdb, 0, query);
+    ok(r == ERROR_BAD_QUERY_SYNTAX, "expected ERROR_BAD_QUERY_SYNTAX, got %d\n", r);
+
     query = "CREATE TABLE `T` ( `B` SHORT NOT NULL TEMPORARY, `C` CHAR(255) TEMPORARY PRIMARY KEY `C`) HOLD";
     r = run_query(hdb, 0, query);
     ok(r == ERROR_SUCCESS, "failed to add table\n");
+
+    query = "SELECT * FROM `T`";
+    r = run_query(hdb, 0, query);
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", r);
 
     cond = MsiDatabaseIsTablePersistentA(hdb, "T");
     ok( cond == MSICONDITION_FALSE, "wrong return condition\n");
