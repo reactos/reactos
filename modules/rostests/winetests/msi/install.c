@@ -966,8 +966,8 @@ static const CHAR fo_feature_dat[] = "Feature\tFeature_Parent\tTitle\tDescriptio
 static const CHAR fo_condition_dat[] = "Feature_\tLevel\tCondition\n"
                                        "s38\ti2\tS255\n"
                                        "Condition\tFeature_\tLevel\n"
-                                       "preselected\t0\tPreselected\n"
-                                       "notpreselected\t0\tNOT Preselected\n";
+                                       "preselected\t0\tPreselected AND NOT REMOVE\n"
+                                       "notpreselected\t0\tNOT Preselected AND NOT REMOVE\n";
 
 static const CHAR fo_feature_comp_dat[] = "Feature_\tComponent_\n"
                                           "s38\ts72\n"
@@ -5464,10 +5464,8 @@ static void test_feature_override(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
     ok(!delete_pf("msitest\\override.txt", TRUE), "file not removed\n");
-    todo_wine {
-    ok(delete_pf("msitest\\preselected.txt", TRUE), "file removed\n");
-    ok(delete_pf("msitest", FALSE), "directory removed\n");
-    }
+    ok(!delete_pf("msitest\\preselected.txt", TRUE), "file not removed\n");
+    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
 
     r = MsiInstallProductA(msifile, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -5480,10 +5478,8 @@ static void test_feature_override(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
     ok(!delete_pf("msitest\\override.txt", TRUE), "file not removed\n");
-    todo_wine {
-    ok(delete_pf("msitest\\preselected.txt", TRUE), "file removed\n");
-    ok(delete_pf("msitest", FALSE), "directory removed\n");
-    }
+    ok(!delete_pf("msitest\\preselected.txt", TRUE), "file not removed\n");
+    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
 
     delete_key(HKEY_LOCAL_MACHINE, "Software\\Wine\\msitest", access);
 
