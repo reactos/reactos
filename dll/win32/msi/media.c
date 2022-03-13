@@ -271,7 +271,7 @@ static LONG CDECL cabinet_seek_stream( INT_PTR hf, LONG dist, int seektype )
     return -1;
 }
 
-static UINT CDECL msi_media_get_disk_info(MSIPACKAGE *package, MSIMEDIAINFO *mi)
+static UINT msi_media_get_disk_info(MSIPACKAGE *package, MSIMEDIAINFO *mi)
 {
     MSIRECORD *row;
 
