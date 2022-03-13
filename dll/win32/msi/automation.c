@@ -543,18 +543,15 @@ static const IProvideMultipleClassInfoVtbl ProvideMultipleClassInfoVtbl =
     ProvideMultipleClassInfo_GetInfoOfIndex
 };
 
-static HRESULT init_automation_object(AutomationObject *This, MSIHANDLE msiHandle, tid_t tid)
+static void init_automation_object(AutomationObject *This, MSIHANDLE msiHandle, tid_t tid)
 {
     TRACE("(%p, %d, %s)\n", This, msiHandle, debugstr_guid(get_riid_from_tid(tid)));
 
     This->IDispatch_iface.lpVtbl = &AutomationObjectVtbl;
     This->IProvideMultipleClassInfo_iface.lpVtbl = &ProvideMultipleClassInfoVtbl;
     This->ref = 1;
-
     This->msiHandle = msiHandle;
     This->tid = tid;
-
-    return S_OK;
 }
 
 /*
@@ -1002,21 +999,15 @@ static HRESULT record_invoke(
 static HRESULT create_record(MSIHANDLE msiHandle, IDispatch **disp)
 {
     AutomationObject *record;
-    HRESULT hr;
 
     record = msi_alloc(sizeof(*record));
     if (!record) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(record, msiHandle, Record_tid);
-    if (hr != S_OK)
-    {
-        msi_free(record);
-        return hr;
-    }
+    init_automation_object(record, msiHandle, Record_tid);
 
     *disp = &record->IDispatch_iface;
 
-    return hr;
+    return S_OK;
 }
 
 static HRESULT list_invoke(
@@ -1123,12 +1114,7 @@ static HRESULT create_list(const WCHAR *product, IDispatch **dispatch)
     list = msi_alloc_zero(sizeof(ListObject));
     if (!list) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(&list->autoobj, 0, StringList_tid);
-    if (hr != S_OK)
-    {
-        msi_free(list);
-        return hr;
-    }
+    init_automation_object(&list->autoobj, 0, StringList_tid);
 
     *dispatch = &list->autoobj.IDispatch_iface;
 
@@ -2442,7 +2428,6 @@ static HRESULT installer_invoke(
 HRESULT create_msiserver(IUnknown *outer, void **ppObj)
 {
     AutomationObject *installer;
-    HRESULT hr;
 
     TRACE("(%p %p)\n", outer, ppObj);
 
@@ -2452,99 +2437,70 @@ HRESULT create_msiserver(IUnknown *outer, void **ppObj)
     installer = msi_alloc(sizeof(AutomationObject));
     if (!installer) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(installer, 0, Installer_tid);
-    if (hr != S_OK)
-    {
-        msi_free(installer);
-        return hr;
-    }
+    init_automation_object(installer, 0, Installer_tid);
 
     *ppObj = &installer->IDispatch_iface;
 
-    return hr;
+    return S_OK;
 }
 
 HRESULT create_session(MSIHANDLE msiHandle, IDispatch *installer, IDispatch **disp)
 {
     SessionObject *session;
-    HRESULT hr;
 
     session = msi_alloc(sizeof(SessionObject));
     if (!session) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(&session->autoobj, msiHandle, Session_tid);
-    if (hr != S_OK)
-    {
-        msi_free(session);
-        return hr;
-    }
+    init_automation_object(&session->autoobj, msiHandle, Session_tid);
 
     session->installer = installer;
     *disp = &session->autoobj.IDispatch_iface;
 
-    return hr;
+    return S_OK;
 }
 
 static HRESULT create_database(MSIHANDLE msiHandle, IDispatch **dispatch)
 {
     AutomationObject *database;
-    HRESULT hr;
 
     TRACE("(%d %p)\n", msiHandle, dispatch);
 
     database = msi_alloc(sizeof(AutomationObject));
     if (!database) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(database, msiHandle, Database_tid);
-    if (hr != S_OK)
-    {
-        msi_free(database);
-        return hr;
-    }
+    init_automation_object(database, msiHandle, Database_tid);
 
     *dispatch = &database->IDispatch_iface;
 
-    return hr;
+    return S_OK;
 }
 
 static HRESULT create_view(MSIHANDLE msiHandle, IDispatch **dispatch)
 {
     AutomationObject *view;
-    HRESULT hr;
 
     TRACE("(%d %p)\n", msiHandle, dispatch);
 
     view = msi_alloc(sizeof(AutomationObject));
     if (!view) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(view, msiHandle, View_tid);
-    if (hr != S_OK)
-    {
-        msi_free(view);
-        return hr;
-    }
+    init_automation_object(view, msiHandle, View_tid);
 
     *dispatch = &view->IDispatch_iface;
 
-    return hr;
+    return S_OK;
 }
 
 static HRESULT create_summaryinfo(MSIHANDLE msiHandle, IDispatch **disp)
 {
     AutomationObject *info;
-    HRESULT hr;
 
     info = msi_alloc(sizeof(*info));
     if (!info) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(info, msiHandle, SummaryInfo_tid);
-    if (hr != S_OK)
-    {
-        msi_free(info);
-        return hr;
-    }
+    init_automation_object(info, msiHandle, SummaryInfo_tid);
 
     *disp = &info->IDispatch_iface;
 
-    return hr;
+    return S_OK;
 }
