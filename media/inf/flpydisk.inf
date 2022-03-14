@@ -66,7 +66,7 @@ Floppy.DeviceDesc = "Generic floppy disk drive"
 
 [Strings.0404]
 FloppyClassName = "軟碟機"
-GenericMfg = "(標準軟碟機)"
+GenericMfg = "（標準軟碟機）"
 Floppy.DeviceDesc = "標準軟碟機"
 
 [Strings.0405]
@@ -111,7 +111,7 @@ GenericMfg = "(Genel Disket Sürücüleri)"
 Floppy.DeviceDesc = "Genel Disket Sürücüsü"
 
 [Strings.0804]
-GenericMfg = "(通用软盘驱动器)"
+GenericMfg = "（通用软盘驱动器）"
 Floppy.DeviceDesc = "通用软盘驱动器"
 
 [Strings.0816]
@@ -123,5 +123,5 @@ Floppy.DeviceDesc = "Controlador disquete Genérico"
 
 [Strings.0C04]
 FloppyClassName = "軟碟機"
-GenericMfg = "(標準軟碟機)"
+GenericMfg = "（標準軟碟機）"
 Floppy.DeviceDesc = "標準軟碟機"

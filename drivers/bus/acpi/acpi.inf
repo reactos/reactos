@@ -49,6 +49,10 @@ GenericMfg = "(Generic system devices)"
 [Strings.0405]
 GenericMfg = "(Generická systémová zařízení)"
 
+[Strings.0404]
+GenericMfg = "（標準系統裝置）"
+*PNP0C08.DeviceDesc = "ACPI 硬體"
+
 [Strings.0407]
 GenericMfg = "(Generische Systemgeräte)"
 *PNP0C08.DeviceDesc = "ACPI Hardware"
@@ -108,5 +112,9 @@ GenericMfg = "(Стандартні системні пристрої)"
 GenericMfg = "(Standartiniai sisteminiai įrenginiai)"
 
 [Strings.0804]
-GenericMfg = "(通用系统设备)"
+GenericMfg = "（通用系统设备）"
 *PNP0C08.DeviceDesc = "ACPI 硬件"
+
+[Strings.0c04]
+GenericMfg = "（標準系統裝置）"
+*PNP0C08.DeviceDesc = "ACPI 硬體"

@@ -71,6 +71,10 @@ RealtekMfg = "Realtek Semiconductor Co., Ltd."
 *RTL8019.DeviceDesc = "Realtek RTL8019AS ISA Ethernet Adapter"
 PCI\VEN_10EC&DEV_8029.DeviceDesc = "Realtek RTL8029 PCI Ethernet Adapter"
 
+[Strings.0404]
+GenericMfg = "（標準網路卡）"
+*PNP80D6.DeviceDesc = "與 NE2000 相容的乙太網路卡"
+
 [Strings.0405]
 GenericMfg = "(Generické síťové karty)"
 *PNP80D6.DeviceDesc = "NE2000 kompatibilní síťová karta"
@@ -139,5 +143,9 @@ GenericMfg = "(Standartinės tinklo plokštės)"
 *PNP80D6.DeviceDesc = "Su NE2000 suderinama tinklo plokštė"
 
 [Strings.0804]
-GenericMfg = "(通用网卡)"
-*PNP80D6.DeviceDesc = "NE2000 兼容"
+GenericMfg = "（通用网卡）"
+*PNP80D6.DeviceDesc = "与 NE2000 兼容的以太网适配器"
+
+[Strings.0c04]
+GenericMfg = "（一般網路卡）"
+*PNP80D6.DeviceDesc = "與 NE2000 相容的乙太網路卡"

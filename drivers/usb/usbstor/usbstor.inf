@@ -48,6 +48,10 @@ ReactOS = "ReactOS Team"
 GenericMfg = "(Generic USB devices)"
 GenericBulkOnlyTransport.DeviceDesc = "USB Storage device"
 
+[Strings.0404]
+GenericMfg = "（標準 USB 裝置）"
+GenericBulkOnlyTransport.DeviceDesc = "USB 儲存裝置"
+
 [Strings.0405]
 GenericMfg = "(Generická USB zařízení)"
 GenericBulkOnlyTransport.DeviceDesc = "USB úložné zařízení"
@@ -109,5 +113,9 @@ GenericMfg = "(Standartiniai USB įrenginiai)"
 GenericBulkOnlyTransport.DeviceDesc = "USB atminties įrenginys"
 
 [Strings.0804]
-GenericMfg = "(通用 USB 设备)"
+GenericMfg = "（通用 USB 设备）"
 GenericBulkOnlyTransport.DeviceDesc = "USB 存储设备"
+
+[Strings.0c04]
+GenericMfg = "（標準 USB 裝置）"
+GenericBulkOnlyTransport.DeviceDesc = "USB 儲存裝置"
