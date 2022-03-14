@@ -4553,7 +4553,7 @@ static void test_MsiGetProductInfo(void)
     ok(r == ERROR_UNKNOWN_PROPERTY,
        "Expected ERROR_UNKNOWN_PROPERTY, got %d\n", r);
     ok(!lstrcmpA(buf, "apple"), "Expected buf to be unchanged, got %s\n", buf);
-    ok(sz == MAX_PATH, "%lun", sz);
+    ok(sz == MAX_PATH, "%lu\n", sz);
 
     res = RegCreateKeyExA(localkey, "InstallProperties", 0, NULL, 0, access, NULL, &propkey, NULL);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
