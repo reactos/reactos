@@ -321,7 +321,7 @@ static void create_database( const char *filename, const struct msi_table *table
     int len;
 
     len = MultiByteToWideChar( CP_ACP, 0, filename, -1, NULL, 0 );
-    if (!(filenameW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return;
+    if (!(filenameW = malloc( len * sizeof(WCHAR) ))) return;
     MultiByteToWideChar( CP_ACP, 0, filename, -1, filenameW, len );
 
     r = MsiOpenDatabaseW( filenameW, MSIDBOPEN_CREATE, &hdb );
@@ -345,7 +345,7 @@ static void create_database( const char *filename, const struct msi_table *table
 
     MsiCloseHandle( hdb );
     set_suminfo( filenameW );
-    HeapFree( GetProcessHeap(), 0, filenameW );
+    free( filenameW );
 }
 
 /* data for generating a patch */
@@ -704,11 +704,11 @@ static void create_patch( const char *filename )
     const CLSID CLSID_MsiTransform = {0xc1082, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46}};
 
     len = MultiByteToWideChar( CP_ACP, 0, filename, -1, NULL, 0 );
-    filenameW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+    filenameW = malloc( len * sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, filename, -1, filenameW, len );
 
     r = StgCreateDocfile( filenameW, mode, 0, &stg );
-    HeapFree( GetProcessHeap(), 0, filenameW );
+    free( filenameW );
     ok( r == S_OK, "failed to create storage 0x%08x\n", r );
     if (!stg)
         return;

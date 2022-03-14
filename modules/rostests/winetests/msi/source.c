@@ -144,10 +144,10 @@ static char *get_user_sid(void)
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     GetTokenInformation(token, TokenUser, NULL, size, &size);
 
-    user = HeapAlloc(GetProcessHeap(), 0, size);
+    user = malloc(size);
     GetTokenInformation(token, TokenUser, user, size, &size);
     ConvertSidToStringSidA(user->User.Sid, &usersid);
-    HeapFree(GetProcessHeap(), 0, user);
+    free(user);
 
     CloseHandle(token);
     return usersid;
@@ -188,7 +188,7 @@ static inline WCHAR *strdupAW( const char *str )
     int len;
     WCHAR *ret;
     len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return NULL;
+    if (!(ret = malloc( len * sizeof(WCHAR) ))) return NULL;
     MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
     return ret;
 }
@@ -448,8 +448,8 @@ static void test_MsiSourceListGetInfo(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!valueW[0], "Expected \"\"");
     ok(size == 0, "Expected 0, got %d\n", size);
-    HeapFree(GetProcessHeap(), 0, usersidW);
-    HeapFree(GetProcessHeap(), 0, prodcodeW);
+    free(usersidW);
+    free(prodcodeW);
 
     data = "";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,

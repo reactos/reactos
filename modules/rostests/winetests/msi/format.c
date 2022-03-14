@@ -61,13 +61,12 @@ static UINT helper_createpackage( const char *szName, MSIHANDLE *handle )
     DeleteFileA(szName);
 
     len = MultiByteToWideChar( CP_ACP, 0, szName, -1, NULL, 0 );
-    if (!(nameW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
-        return ERROR_OUTOFMEMORY;
+    if (!(nameW = malloc( len * sizeof(WCHAR) ))) return ERROR_OUTOFMEMORY;
     MultiByteToWideChar( CP_ACP, 0, szName, -1, nameW, len );
 
     /* create an empty database */
     res = MsiOpenDatabaseW( nameW, MSIDBOPEN_CREATEDIRECT, &hdb );
-    HeapFree( GetProcessHeap(), 0, nameW );
+    free( nameW );
     ok( res == ERROR_SUCCESS , "Failed to create database %u\n", res );
     if (res != ERROR_SUCCESS)
         return res;

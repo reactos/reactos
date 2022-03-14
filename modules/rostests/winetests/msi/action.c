@@ -2412,10 +2412,10 @@ static char *get_user_sid(void)
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     GetTokenInformation(token, TokenUser, NULL, size, &size);
 
-    user = HeapAlloc(GetProcessHeap(), 0, size);
+    user = malloc(size);
     GetTokenInformation(token, TokenUser, user, size, &size);
     ConvertSidToStringSidA(user->User.Sid, &usersid);
-    HeapFree(GetProcessHeap(), 0, user);
+    free(user);
 
     CloseHandle(token);
     return usersid;
@@ -3025,7 +3025,7 @@ error:
     DeleteFileA(msifile);
     DeleteFileA("msitest\\maximus");
     RemoveDirectoryA("msitest");
-    HeapFree(GetProcessHeap(), 0, usersid);
+    free(usersid);
 }
 
 static void test_publish_product(void)
@@ -3262,7 +3262,7 @@ error:
     DeleteFileA(msifile);
     DeleteFileA("msitest\\maximus");
     RemoveDirectoryA("msitest");
-    HeapFree(GetProcessHeap(), 0, usersid);
+    free(usersid);
 }
 
 static void test_publish_features(void)
@@ -3387,7 +3387,7 @@ error:
     DeleteFileA(msifile);
     DeleteFileA("msitest\\maximus");
     RemoveDirectoryA("msitest");
-    HeapFree(GetProcessHeap(), 0, usersid);
+    free(usersid);
 }
 
 static LPSTR reg_get_val_str(HKEY hkey, LPCSTR name)
@@ -3401,7 +3401,7 @@ static LPSTR reg_get_val_str(HKEY hkey, LPCSTR name)
         return NULL;
 
     len += sizeof (WCHAR);
-    val = HeapAlloc(GetProcessHeap(), 0, len);
+    val = malloc(len);
     if (!val) return NULL;
     val[0] = 0;
     RegQueryValueExA(hkey, name, NULL, NULL, (LPBYTE)val, &len);
@@ -3541,8 +3541,8 @@ static void test_register_user(void)
     delete_key(HKEY_LOCAL_MACHINE, keypath, access);
 
 error:
-    HeapFree(GetProcessHeap(), 0, company);
-    HeapFree(GetProcessHeap(), 0, owner);
+    free(company);
+    free(owner);
 
     DeleteFileA(msifile);
     DeleteFileA("msitest\\maximus");
@@ -5784,7 +5784,7 @@ static void test_publish_components(void)
     res = RegQueryValueExA(key, "english.txt", NULL, NULL, NULL, &size);
     ok(res == ERROR_SUCCESS, "value not found %d\n", res);
 
-    data = HeapAlloc(GetProcessHeap(), 0, size);
+    data = malloc(size);
     res = RegQueryValueExA(key, "english.txt", NULL, NULL, data, &size);
     ok(res == ERROR_SUCCESS, "value not found %d\n", res);
     RegCloseKey(key);
@@ -5815,7 +5815,7 @@ static void test_publish_components(void)
 
     res = RegSetValueExA(key, "english.txt", 0, REG_MULTI_SZ, data, size);
     ok(res == ERROR_SUCCESS, "RegSetValueEx failed %d\n", res);
-    HeapFree(GetProcessHeap(), 0, data);
+    free(data);
     RegCloseKey(key);
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");

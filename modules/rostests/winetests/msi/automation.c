@@ -310,7 +310,7 @@ static void create_database(const CHAR *name, const msi_table *tables, int num_t
     int j, len;
 
     len = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );
-    if (!(nameW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return;
+    if (!(nameW = malloc( len * sizeof(WCHAR) ))) return;
     MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, len );
 
     r = MsiOpenDatabaseW(nameW, MSIDBOPEN_CREATE, &db);
@@ -335,7 +335,7 @@ static void create_database(const CHAR *name, const msi_table *tables, int num_t
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
     MsiCloseHandle(db);
-    HeapFree( GetProcessHeap(), 0, nameW );
+    free( nameW );
 }
 
 static BOOL create_package(LPWSTR path)
@@ -506,12 +506,12 @@ static DISPID get_dispid( IDispatch *disp, const char *name )
     HRESULT r;
 
     len = MultiByteToWideChar(CP_ACP, 0, name, -1, NULL, 0 );
-    str = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR) );
+    str = malloc( len * sizeof(WCHAR) );
     if (str)
     {
         MultiByteToWideChar(CP_ACP, 0, name, -1, str, len );
         r = IDispatch_GetIDsOfNames( disp, &IID_NULL, &str, 1, 0, &id );
-        HeapFree(GetProcessHeap(), 0, str);
+        free( str );
         if (r != S_OK)
             return -1;
     }
@@ -849,11 +849,11 @@ static HRESULT invoke(IDispatch *pDispatch, LPCSTR szName, WORD wFlags, DISPPARA
     VariantInit(pVarResult);
 
     len = MultiByteToWideChar(CP_ACP, 0, szName, -1, NULL, 0 );
-    name = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR) );
+    name = malloc(len * sizeof(WCHAR));
     if (!name) return E_FAIL;
     MultiByteToWideChar(CP_ACP, 0, szName, -1, name, len );
     hr = IDispatch_GetIDsOfNames(pDispatch, &IID_NULL, &name, 1, LOCALE_USER_DEFAULT, &dispid);
-    HeapFree(GetProcessHeap(), 0, name);
+    free(name);
     ok(hr == S_OK, "IDispatch::GetIDsOfNames returned 0x%08x\n", hr);
     if (hr != S_OK) return hr;
 
@@ -2333,13 +2333,13 @@ static UINT delete_registry_key(HKEY hkeyParent, LPCSTR subkey, REGSAM access)
     if (ret != ERROR_SUCCESS) return ret;
     ret = RegQueryInfoKeyA(hkey, NULL, NULL, NULL, NULL, &dwSize, NULL, NULL, NULL, NULL, NULL, NULL);
     if (ret != ERROR_SUCCESS) return ret;
-    if (!(string = HeapAlloc(GetProcessHeap(), 0, ++dwSize))) return ERROR_NOT_ENOUGH_MEMORY;
+    if (!(string = malloc(++dwSize))) return ERROR_NOT_ENOUGH_MEMORY;
 
     while (RegEnumKeyA(hkey, 0, string, dwSize) == ERROR_SUCCESS)
         delete_registry_key(hkey, string, access);
 
     RegCloseKey(hkey);
-    HeapFree(GetProcessHeap(), 0, string);
+    free(string);
     delete_key_portable(hkeyParent, subkey, access);
     return ERROR_SUCCESS;
 }
@@ -2360,7 +2360,7 @@ static UINT find_registry_key(HKEY hkeyParent, LPCSTR subkey, LPCSTR findkey, RE
     if (ret != ERROR_SUCCESS) return ret;
     ret = RegQueryInfoKeyA(hkey, NULL, NULL, NULL, NULL, &dwSize, NULL, NULL, NULL, NULL, NULL, NULL);
     if (ret != ERROR_SUCCESS) return ret;
-    if (!(string = HeapAlloc(GetProcessHeap(), 0, ++dwSize))) return ERROR_NOT_ENOUGH_MEMORY;
+    if (!(string = malloc(++dwSize))) return ERROR_NOT_ENOUGH_MEMORY;
 
     while (!found &&
            RegEnumKeyA(hkey, idx++, string, dwSize) == ERROR_SUCCESS)
@@ -2374,7 +2374,7 @@ static UINT find_registry_key(HKEY hkeyParent, LPCSTR subkey, LPCSTR findkey, RE
     }
 
     if (*phkey != hkey) RegCloseKey(hkey);
-    HeapFree(GetProcessHeap(), 0, string);
+    free(string);
     return (found ? ERROR_SUCCESS : ERROR_FILE_NOT_FOUND);
 }
 

@@ -323,10 +323,10 @@ static inline UINT add_entry(const char *file, int line, const char *type, MSIHA
     UINT sz, r;
 
     sz = strlen(values) + strlen(insert) + 1;
-    query = HeapAlloc(GetProcessHeap(), 0, sz);
+    query = malloc(sz);
     sprintf(query, insert, values);
     r = run_query(hdb, 0, query);
-    HeapFree(GetProcessHeap(), 0, query);
+    free(query);
     ok_(file, line)(r == ERROR_SUCCESS, "failed to insert into %s table: %u\n", type, r);
     return r;
 }
@@ -1465,15 +1465,14 @@ static void test_longstrings(void)
     ok(r == ERROR_SUCCESS, "query failed\n");
 
     /* try to insert a very long string */
-    str = HeapAlloc(GetProcessHeap(), 0, STRING_LENGTH+sizeof insert_query);
+    str = malloc(STRING_LENGTH + sizeof insert_query);
     len = strchr(insert_query, 'Z') - insert_query;
     strcpy(str, insert_query);
     memset(str+len, 'Z', STRING_LENGTH);
     strcpy(str+len+STRING_LENGTH, insert_query+len+1);
     r = try_query( hdb, str );
     ok(r == ERROR_SUCCESS, "MsiDatabaseOpenView failed\n");
-
-    HeapFree(GetProcessHeap(), 0, str);
+    free(str);
 
     r = MsiDatabaseCommit(hdb);
     ok(r == ERROR_SUCCESS, "MsiDatabaseCommit failed\n");

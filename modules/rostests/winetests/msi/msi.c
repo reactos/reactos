@@ -966,9 +966,7 @@ static void test_null(void)
     ok ( r == ERROR_SUCCESS || r == ERROR_FILE_NOT_FOUND, "wrong error %d\n", r);
     if ( r == ERROR_SUCCESS )
     {
-        lpData = HeapAlloc(GetProcessHeap(), 0, cbData);
-        if (!lpData)
-            skip("Out of memory\n");
+        if (!(lpData = malloc(cbData))) skip("Out of memory\n");
         else
         {
             r = RegQueryValueExA(hkey, NULL, 0, &dwType, lpData, &cbData);
@@ -980,7 +978,7 @@ static void test_null(void)
     if (r == ERROR_ACCESS_DENIED)
     {
         skip("Not enough rights to perform tests\n");
-        HeapFree(GetProcessHeap(), 0, lpData);
+        free(lpData);
         RegCloseKey(hkey);
         return;
     }
@@ -993,8 +991,7 @@ static void test_null(void)
     {
         r = RegSetValueExA(hkey, NULL, 0, dwType, lpData, cbData);
         ok ( r == ERROR_SUCCESS, "wrong error %d\n", r);
-
-        HeapFree(GetProcessHeap(), 0, lpData);
+        free(lpData);
     }
     else
     {
@@ -1257,10 +1254,10 @@ static char *get_user_sid(void)
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     GetTokenInformation(token, TokenUser, NULL, size, &size);
 
-    user = HeapAlloc(GetProcessHeap(), 0, size);
+    user = malloc(size);
     GetTokenInformation(token, TokenUser, user, size, &size);
     ConvertSidToStringSidA(user->User.Sid, &usersid);
-    HeapFree(GetProcessHeap(), 0, user);
+    free(user);
 
     CloseHandle(token);
     return usersid;
@@ -4087,22 +4084,22 @@ static void get_version_info(LPSTR path, LPSTR *vercheck, LPDWORD verchecksz,
     DWORD size = GetFileVersionInfoSizeA(path, NULL);
     USHORT *lang;
 
-    version = HeapAlloc(GetProcessHeap(), 0, size);
+    version = malloc(size);
     GetFileVersionInfoA(path, 0, size, version);
 
     VerQueryValueA(version, "\\", (LPVOID *)&ffi, &size);
-    *vercheck = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
+    *vercheck = malloc(MAX_PATH);
     sprintf(*vercheck, "%d.%d.%d.%d", HIWORD(ffi->dwFileVersionMS),
             LOWORD(ffi->dwFileVersionMS), HIWORD(ffi->dwFileVersionLS),
             LOWORD(ffi->dwFileVersionLS));
     *verchecksz = lstrlenA(*vercheck);
 
     VerQueryValueA(version, "\\VarFileInfo\\Translation", (void **)&lang, &size);
-    *langcheck = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
+    *langcheck = malloc(MAX_PATH);
     sprintf(*langcheck, "%d", *lang);
     *langchecksz = lstrlenA(*langcheck);
 
-    HeapFree(GetProcessHeap(), 0, version);
+    free(version);
 }
 
 static void test_MsiGetFileVersion(void)
@@ -4286,8 +4283,8 @@ static void test_MsiGetFileVersion(void)
     if (langchecksz && !langsz)
     {
         win_skip("broken MsiGetFileVersionA detected\n");
-        HeapFree(GetProcessHeap(), 0, vercheck);
-        HeapFree(GetProcessHeap(), 0, langcheck);
+        free(vercheck);
+        free(langcheck);
         return;
     }
     ok(versz == verchecksz, "Expected %d, got %d\n", verchecksz, versz);
@@ -4372,8 +4369,8 @@ static void test_MsiGetFileVersion(void)
     r = MsiGetFileVersionA(path, NULL, NULL, NULL, NULL);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    HeapFree(GetProcessHeap(), 0, vercheck);
-    HeapFree(GetProcessHeap(), 0, langcheck);
+    free(vercheck);
+    free(langcheck);
 }
 
 static void test_MsiGetProductInfo(void)
