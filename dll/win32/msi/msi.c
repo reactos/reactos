@@ -3167,7 +3167,8 @@ static UINT get_file_version( const WCHAR *path, WCHAR *verbuf, DWORD *verlen,
                               WCHAR *langbuf, DWORD *langlen )
 {
     UINT ret = ERROR_MORE_DATA;
-    DWORD len, error;
+    UINT len;
+    DWORD error;
     LPVOID version;
     VS_FIXEDFILEINFO *ffi;
     USHORT *lang;

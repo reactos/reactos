@@ -219,7 +219,7 @@ WCHAR *msi_create_temp_file( MSIDATABASE *db )
     if (!db->tempfolder)
     {
         WCHAR tmp[MAX_PATH];
-        UINT len = ARRAY_SIZE( tmp );
+        DWORD len = ARRAY_SIZE( tmp );
 
         if (msi_get_property( db, L"TempFolder", tmp, &len ) ||
             GetFileAttributesW( tmp ) != FILE_ATTRIBUTE_DIRECTORY)
@@ -669,7 +669,7 @@ static DWORD WINAPI custom_client_thread(void *arg)
     HANDLE thread;
     HANDLE pipe;
     DWORD size;
-    UINT rc;
+    DWORD rc;
 
     CoInitializeEx(NULL, COINIT_MULTITHREADED); /* needed to marshal streams */
 

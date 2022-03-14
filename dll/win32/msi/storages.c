@@ -466,7 +466,8 @@ static INT add_storages_to_table(MSISTORAGESVIEW *sv)
     IEnumSTATSTG *stgenum = NULL;
     STATSTG stat;
     HRESULT hr;
-    UINT count = 0, size;
+    UINT count = 0;
+    ULONG size;
 
     hr = IStorage_EnumElements(sv->db->storage, 0, NULL, 0, &stgenum);
     if (FAILED(hr))

@@ -66,7 +66,7 @@ struct tagMSITABLE
     MSICOLUMNINFO *colinfo;
     UINT col_count;
     MSICONDITION persistent;
-    INT ref_count;
+    LONG ref_count;
     WCHAR name[1];
 };
 
@@ -2261,9 +2261,10 @@ static WCHAR* create_key_string(MSITABLEVIEW *tv, MSIRECORD *rec)
     return key;
 }
 
-static UINT msi_record_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWSTR name, UINT *len )
+static UINT msi_record_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWSTR name, DWORD *len )
 {
-    UINT p = 0, l, i, r;
+    UINT p = 0, i, r;
+    DWORD l;
 
     l = wcslen( tv->name );
     if (name && *len > l)
@@ -2327,7 +2328,8 @@ static UINT TransformView_set_row( MSIVIEW *view, UINT row, MSIRECORD *rec, UINT
     MSIRECORD *old_rec;
     MSIQUERY *q;
     WCHAR *key;
-    UINT i, p, r, len, qlen;
+    UINT i, p, r, qlen;
+    DWORD len;
 
     if (!wcscmp( tv->name, L"_Columns" ))
     {
@@ -2503,7 +2505,8 @@ static UINT TransformView_add_column( MSITABLEVIEW *tv, MSIRECORD *rec )
         L"INSERT INTO `_TransformView` (`new`, `Table`, `Current`, `Column`, `Data`) VALUES (1, '";
 
     WCHAR buf[256], *query = buf;
-    UINT i, p, len, r, qlen;
+    UINT i, p, r, qlen;
+    DWORD len;
     MSIQUERY *q;
 
     qlen = p = wcslen( query_pfx );
@@ -2946,7 +2949,8 @@ static UINT read_raw_int(const BYTE *data, UINT col, UINT bytes)
 
 static UINT msi_record_encoded_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWSTR *pstname )
 {
-    UINT r, len;
+    UINT r;
+    DWORD len;
     WCHAR *name;
 
     TRACE("%p %p\n", tv, rec);

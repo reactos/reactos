@@ -152,7 +152,7 @@ static MSIRECORD *get_assembly_record( MSIPACKAGE *package, const WCHAR *comp )
 
 struct assembly_name
 {
-    UINT    count;
+    DWORD   count;
     UINT    index;
     WCHAR **attrs;
 };
@@ -268,7 +268,7 @@ IAssemblyEnum *msi_create_assembly_enum( MSIPACKAGE *package, const WCHAR *displ
     IAssemblyName *name;
     IAssemblyEnum *ret;
     WCHAR *str;
-    UINT len = 0;
+    DWORD len = 0;
 
     if (!package->pCreateAssemblyNameObject || !package->pCreateAssemblyEnum) return NULL;
 

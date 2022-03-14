@@ -1960,7 +1960,7 @@ static WCHAR *create_temp_dir( MSIDATABASE *db )
     if (!db->tempfolder)
     {
         WCHAR tmp[MAX_PATH];
-        UINT len = ARRAY_SIZE( tmp );
+        DWORD len = ARRAY_SIZE( tmp );
 
         if (msi_get_property( db, L"TempFolder", tmp, &len ) ||
             GetFileAttributesW( tmp ) != FILE_ATTRIBUTE_DIRECTORY)
@@ -7220,7 +7220,8 @@ static UINT ACTION_InstallAdminPackage( MSIPACKAGE *package )
 static UINT ACTION_SetODBCFolders( MSIPACKAGE *package )
 {
     MSIQUERY *view;
-    UINT r, count;
+    UINT r;
+    DWORD count;
 
     r = MSI_DatabaseOpenViewW( package->db, L"SELECT * FROM `ODBCDriver`", &view );
     if (r == ERROR_SUCCESS)

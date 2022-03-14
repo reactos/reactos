@@ -1362,7 +1362,8 @@ static LPWSTR get_key_value(MSIQUERY *view, LPCWSTR key, MSIRECORD *rec)
 {
     MSIRECORD *colnames;
     LPWSTR str, val;
-    UINT r, i = 0, sz = 0;
+    UINT r, i = 0;
+    DWORD sz = 0;
     int cmp;
 
     r = MSI_ViewGetColumnInfo(view, MSICOLINFO_NAMES, &colnames);

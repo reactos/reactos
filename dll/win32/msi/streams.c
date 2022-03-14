@@ -448,7 +448,8 @@ static UINT load_streams( MSIDATABASE *db )
     IEnumSTATSTG *stgenum;
     STATSTG stat;
     HRESULT hr;
-    UINT count, r = ERROR_SUCCESS;
+    ULONG count;
+    UINT r = ERROR_SUCCESS;
     IStream *stream;
 
     hr = IStorage_EnumElements( db->storage, 0, NULL, 0, &stgenum );
@@ -564,7 +565,8 @@ static HRESULT write_stream( IStream *dst, IStream *src )
     char buf[4096];
     STATSTG stat;
     LARGE_INTEGER pos;
-    UINT count, size;
+    ULONG count;
+    UINT size;
 
     hr = IStream_Stat( src, &stat, STATFLAG_NONAME );
     if (FAILED( hr )) return hr;

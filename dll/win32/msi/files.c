@@ -161,7 +161,8 @@ DWORD msi_get_file_version_info( MSIPACKAGE *package, const WCHAR *path, DWORD b
 VS_FIXEDFILEINFO *msi_get_disk_file_version( MSIPACKAGE *package, const WCHAR *filename )
 {
     VS_FIXEDFILEINFO *ptr, *ret;
-    DWORD version_size, size;
+    DWORD version_size;
+    UINT size;
     void *version;
 
     if (!(version_size = msi_get_file_version_info( package, filename, 0, NULL ))) return NULL;
@@ -742,7 +743,7 @@ static UINT patch_assembly( MSIPACKAGE *package, MSIASSEMBLY *assembly, MSIFILEP
     while ((IAssemblyEnum_GetNextAssembly( iter, NULL, &name, 0 ) == S_OK))
     {
         WCHAR *displayname, *path;
-        UINT len = 0;
+        DWORD len = 0;
         HRESULT hr;
 
         hr = IAssemblyName_GetDisplayName( name, NULL, &len, 0 );

@@ -157,7 +157,8 @@ static void free_signature( MSISIGNATURE *sig )
 static WCHAR *search_file( MSIPACKAGE *package, WCHAR *path, MSISIGNATURE *sig )
 {
     VS_FIXEDFILEINFO *info;
-    DWORD attr, size;
+    DWORD attr;
+    UINT size;
     LPWSTR val = NULL;
     LPBYTE buffer;
 
@@ -622,7 +623,8 @@ static BOOL match_languages( const void *version, const WCHAR *languages )
         USHORT id;
         USHORT codepage;
     } *lang;
-    DWORD len, num_ids, i, j;
+    UINT len, j;
+    DWORD num_ids, i;
     BOOL found = FALSE;
     LANGID *ids;
 

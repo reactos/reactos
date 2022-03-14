@@ -1124,12 +1124,12 @@ static UINT save_prop( MSISUMMARYINFO *si, HANDLE handle, UINT row )
     static const char fmt_begin[] = "%u\t";
     static const char data_end[] = "\r\n";
     static const char fmt_int[] = "%u";
-    UINT r, data_type, len;
+    UINT r, data_type;
     SYSTEMTIME system_time;
     FILETIME file_time;
     INT int_value;
     awstring str;
-    DWORD sz;
+    DWORD len, sz;
 
     str.unicode = FALSE;
     str.str.a = NULL;
@@ -1267,7 +1267,8 @@ UINT msi_load_suminfo_properties( MSIPACKAGE *package )
 {
     MSISUMMARYINFO *si;
     WCHAR *package_code;
-    UINT r, len;
+    UINT r;
+    DWORD len;
     awstring str;
     INT count;
 
