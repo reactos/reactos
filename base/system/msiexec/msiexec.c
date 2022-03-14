@@ -61,13 +61,13 @@ static void ShowUsage(int ExitCode)
     *filename = 0;
     res = GetModuleFileNameW(hmsi, filename, ARRAY_SIZE(filename));
     if (!res)
-        WINE_ERR("GetModuleFileName failed: %d\n", GetLastError());
+        WINE_ERR("GetModuleFileName failed: %ld\n", GetLastError());
 
     len = ARRAY_SIZE(msiexec_version);
     *msiexec_version = 0;
     res = MsiGetFileVersionW(filename, msiexec_version, &len, NULL, NULL);
     if (res)
-        WINE_ERR("MsiGetFileVersion failed with %d\n", res);
+        WINE_ERR("MsiGetFileVersion failed with %ld\n", res);
 
     /* Return the length of the resource.
        No typo: The LPWSTR parameter must be a LPWSTR * for this mode */
@@ -413,7 +413,7 @@ static int custom_action_server(const WCHAR *arg)
     pipe = CreateFileW(buffer, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (pipe == INVALID_HANDLE_VALUE)
     {
-        ERR("Failed to create custom action server pipe: %u\n", GetLastError());
+        ERR("Failed to create custom action server pipe: %lu\n", GetLastError());
         return GetLastError();
     }
 
@@ -438,12 +438,12 @@ static int custom_action_server(const WCHAR *arg)
         thread64 = (DWORD_PTR)thread;
         if (!WriteFile(pipe, &thread64, sizeof(thread64), &size, NULL) || size != sizeof(thread64))
         {
-            ERR("Failed to write to custom action server pipe: %u\n", GetLastError());
+            ERR("Failed to write to custom action server pipe: %lu\n", GetLastError());
             CoUninitialize();
             return GetLastError();
         }
     }
-    ERR("Failed to read from custom action server pipe: %u\n", GetLastError());
+    ERR("Failed to read from custom action server pipe: %lu\n", GetLastError());
     CoUninitialize();
     return GetLastError();
 }
