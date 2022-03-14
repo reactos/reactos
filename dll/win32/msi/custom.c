@@ -456,21 +456,15 @@ static msi_custom_action_info *find_action_by_guid( const GUID *guid )
     return info;
 }
 
-static void handle_msi_break(LPCSTR target)
+static void handle_msi_break( const WCHAR *action )
 {
-    char format[] = "To debug your custom action, attach your debugger to "
-                    "process %i (0x%X) and press OK";
-    char val[MAX_PATH];
-    char msg[100];
+    const WCHAR fmt[] = L"To debug your custom action, attach your debugger to process %u (0x%x) and press OK";
+    WCHAR val[MAX_PATH], msg[100];
 
-    if (!GetEnvironmentVariableA("MsiBreak", val, MAX_PATH))
-        return;
+    if (!GetEnvironmentVariableW( L"MsiBreak", val, MAX_PATH ) || wcscmp( val, action )) return;
 
-    if (strcmp(val, target))
-        return;
-
-    sprintf(msg, format, GetCurrentProcessId(), GetCurrentProcessId());
-    MessageBoxA(NULL, msg, "Windows Installer", MB_OK);
+    swprintf( msg, ARRAY_SIZE(msg), fmt, GetCurrentProcessId(), GetCurrentProcessId() );
+    MessageBoxW( NULL, msg, L"Windows Installer", MB_OK );
     DebugBreak();
 }
 
@@ -518,7 +512,7 @@ UINT CDECL __wine_msi_call_dll_function(DWORD client_pid, const GUID *guid)
     RPC_WSTR binding_str;
     MSIHANDLE hPackage;
     RPC_STATUS status;
-    LPWSTR dll = NULL;
+    WCHAR *dll = NULL, *action = NULL;
     LPSTR proc = NULL;
     HANDLE hModule;
     INT type;
@@ -546,7 +540,7 @@ UINT CDECL __wine_msi_call_dll_function(DWORD client_pid, const GUID *guid)
         RpcStringFreeW(&binding_str);
     }
 
-    r = remote_GetActionInfo(guid, &type, &dll, &proc, &remote_package);
+    r = remote_GetActionInfo(guid, &action, &type, &dll, &proc, &remote_package);
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -554,6 +548,7 @@ UINT CDECL __wine_msi_call_dll_function(DWORD client_pid, const GUID *guid)
     if (!hPackage)
     {
         ERR( "failed to create handle for %x\n", remote_package );
+        midl_user_free( action );
         midl_user_free( dll );
         midl_user_free( proc );
         return ERROR_INSTALL_FAILURE;
@@ -563,6 +558,7 @@ UINT CDECL __wine_msi_call_dll_function(DWORD client_pid, const GUID *guid)
     if (!hModule)
     {
         ERR( "failed to load dll %s (%u)\n", debugstr_w( dll ), GetLastError() );
+        midl_user_free( action );
         midl_user_free( dll );
         midl_user_free( proc );
         MsiCloseHandle( hPackage );
@@ -573,7 +569,7 @@ UINT CDECL __wine_msi_call_dll_function(DWORD client_pid, const GUID *guid)
     if (!fn) WARN( "GetProcAddress(%s) failed\n", debugstr_a(proc) );
     else
     {
-        handle_msi_break(proc);
+        handle_msi_break(action);
 
         __TRY
         {
@@ -590,11 +586,11 @@ UINT CDECL __wine_msi_call_dll_function(DWORD client_pid, const GUID *guid)
 
     FreeLibrary(hModule);
 
+    midl_user_free(action);
     midl_user_free(dll);
     midl_user_free(proc);
 
     MsiCloseAllHandles();
-
     return r;
 }
 
@@ -1633,7 +1629,7 @@ void ACTION_FinishCustomActions(const MSIPACKAGE* package)
     LeaveCriticalSection( &msi_custom_action_cs );
 }
 
-UINT __cdecl s_remote_GetActionInfo(const GUID *guid, int *type, LPWSTR *dll, LPSTR *func, MSIHANDLE *hinst)
+UINT __cdecl s_remote_GetActionInfo(const GUID *guid, WCHAR **name, int *type, WCHAR **dll, char **func, MSIHANDLE *hinst)
 {
     msi_custom_action_info *info;
 
@@ -1641,6 +1637,7 @@ UINT __cdecl s_remote_GetActionInfo(const GUID *guid, int *type, LPWSTR *dll, LP
     if (!info)
         return ERROR_INVALID_DATA;
 
+    *name = strdupW(info->action);
     *type = info->type;
     *hinst = alloc_msihandle(&info->package->hdr);
     *dll = strdupW(info->source);
