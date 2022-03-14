@@ -36,7 +36,6 @@
 #include "msipriv.h"
 #include "winemsi_s.h"
 #include "wine/asm.h"
-#include "wine/heap.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "wine/exception.h"
@@ -75,12 +74,12 @@ static struct list msi_pending_custom_actions = LIST_INIT( msi_pending_custom_ac
 
 void  __RPC_FAR * __RPC_USER MIDL_user_allocate(SIZE_T len)
 {
-    return heap_alloc(len);
+    return malloc(len);
 }
 
 void __RPC_USER MIDL_user_free(void __RPC_FAR * ptr)
 {
-    heap_free(ptr);
+    free(ptr);
 }
 
 LONG WINAPI rpc_filter(EXCEPTION_POINTERS *eptr)

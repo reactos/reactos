@@ -1141,30 +1141,24 @@ extern void msi_ui_progress(MSIPACKAGE *, int, int, int, int) DECLSPEC_HIDDEN;
 static void *msi_alloc( size_t len ) __WINE_ALLOC_SIZE(1);
 static inline void *msi_alloc( size_t len )
 {
-    return HeapAlloc( GetProcessHeap(), 0, len );
+    return malloc( len );
 }
 
 static void *msi_alloc_zero( size_t len ) __WINE_ALLOC_SIZE(1);
 static inline void *msi_alloc_zero( size_t len )
 {
-    return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, len );
+    return calloc( 1, len );
 }
 
 static void *msi_realloc( void *mem, size_t len ) __WINE_ALLOC_SIZE(2);
 static inline void *msi_realloc( void *mem, size_t len )
 {
-    return HeapReAlloc( GetProcessHeap(), 0, mem, len );
+    return realloc( mem, len );
 }
 
-static void *msi_realloc_zero( void *mem, size_t len ) __WINE_ALLOC_SIZE(2);
-static inline void *msi_realloc_zero( void *mem, size_t len )
+static inline void msi_free( void *mem )
 {
-    return HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, mem, len );
-}
-
-static inline BOOL msi_free( void *mem )
-{
-    return HeapFree( GetProcessHeap(), 0, mem );
+    free( mem );
 }
 
 static inline char *strdupWtoA( LPCWSTR str )

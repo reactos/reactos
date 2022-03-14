@@ -50,7 +50,6 @@
 #include "msidefs.h"
 #include "sddl.h"
 
-#include "wine/heap.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
 
@@ -2279,7 +2278,7 @@ UINT WINAPI MsiGetPropertyA(MSIHANDLE hinst, const char *name, char *buf, DWORD 
 
         if (!(remote = msi_get_remote(hinst)))
         {
-            heap_free(nameW);
+            free(nameW);
             return ERROR_INVALID_HANDLE;
         }
 
@@ -2293,13 +2292,13 @@ UINT WINAPI MsiGetPropertyA(MSIHANDLE hinst, const char *name, char *buf, DWORD 
         }
         __ENDTRY
 
-        heap_free(nameW);
+        free(nameW);
 
         if (!r)
         {
             /* String might contain embedded nulls.
              * Native returns the correct size but truncates the string. */
-            tmp = heap_alloc_zero((len + 1) * sizeof(WCHAR));
+            tmp = calloc(1, (len + 1) * sizeof(WCHAR));
             if (!tmp)
             {
                 midl_user_free(value);
@@ -2309,7 +2308,7 @@ UINT WINAPI MsiGetPropertyA(MSIHANDLE hinst, const char *name, char *buf, DWORD 
 
             r = msi_strncpyWtoA(tmp, len, buf, sz, TRUE);
 
-            heap_free(tmp);
+            free(tmp);
         }
         midl_user_free(value);
         return r;
@@ -2321,7 +2320,7 @@ UINT WINAPI MsiGetPropertyA(MSIHANDLE hinst, const char *name, char *buf, DWORD 
 
     r = msi_strncpyWtoA(value, len, buf, sz, FALSE);
 
-    heap_free(nameW);
+    free(nameW);
     if (row) msiobj_release(&row->hdr);
     msiobj_release(&package->hdr);
     return r;
@@ -2362,7 +2361,7 @@ UINT WINAPI MsiGetPropertyW(MSIHANDLE hinst, const WCHAR *name, WCHAR *buf, DWOR
         {
             /* String might contain embedded nulls.
              * Native returns the correct size but truncates the string. */
-            tmp = heap_alloc_zero((len + 1) * sizeof(WCHAR));
+            tmp = calloc(1, (len + 1) * sizeof(WCHAR));
             if (!tmp)
             {
                 midl_user_free(value);
@@ -2372,7 +2371,7 @@ UINT WINAPI MsiGetPropertyW(MSIHANDLE hinst, const WCHAR *name, WCHAR *buf, DWOR
 
             r = msi_strncpyW(tmp, len, buf, sz);
 
-            heap_free(tmp);
+            free(tmp);
         }
         midl_user_free(value);
         return r;

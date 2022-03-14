@@ -57,7 +57,8 @@ static BOOL streams_resize_table( MSIDATABASE *db, UINT size )
     {
         MSISTREAM *tmp;
         UINT new_size = db->num_streams_allocated * 2;
-        if (!(tmp = msi_realloc_zero( db->streams, new_size * sizeof(MSISTREAM) ))) return FALSE;
+        if (!(tmp = msi_realloc( db->streams, new_size * sizeof(*tmp) ))) return FALSE;
+        memset( tmp + db->num_streams_allocated, 0, (new_size - db->num_streams_allocated) * sizeof(*tmp) );
         db->streams = tmp;
         db->num_streams_allocated = new_size;
     }

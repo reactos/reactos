@@ -34,7 +34,6 @@
 
 #include "msipriv.h"
 #include "winemsi_s.h"
-#include "wine/heap.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
 
@@ -273,7 +272,7 @@ UINT WINAPI MsiGetTargetPathA(MSIHANDLE hinst, const char *folder, char *buf, DW
 
         if (!(remote = msi_get_remote(hinst)))
         {
-            heap_free(folderW);
+            free(folderW);
             return ERROR_INVALID_HANDLE;
         }
 
@@ -291,7 +290,7 @@ UINT WINAPI MsiGetTargetPathA(MSIHANDLE hinst, const char *folder, char *buf, DW
             r = msi_strncpyWtoA(path, -1, buf, sz, TRUE);
 
         midl_user_free(path);
-        heap_free(folderW);
+        free(folderW);
         return r;
     }
 
@@ -301,7 +300,7 @@ UINT WINAPI MsiGetTargetPathA(MSIHANDLE hinst, const char *folder, char *buf, DW
     else
         r = ERROR_DIRECTORY;
 
-    heap_free(folderW);
+    free(folderW);
     msiobj_release(&package->hdr);
     return r;
 }
@@ -429,7 +428,7 @@ UINT WINAPI MsiGetSourcePathA(MSIHANDLE hinst, const char *folder, char *buf, DW
 
         if (!(remote = msi_get_remote(hinst)))
         {
-            heap_free(folderW);
+            free(folderW);
             return ERROR_INVALID_HANDLE;
         }
 
@@ -447,7 +446,7 @@ UINT WINAPI MsiGetSourcePathA(MSIHANDLE hinst, const char *folder, char *buf, DW
             r = msi_strncpyWtoA(path, -1, buf, sz, TRUE);
 
         midl_user_free(path);
-        heap_free(folderW);
+        free(folderW);
         return r;
     }
 
@@ -457,8 +456,8 @@ UINT WINAPI MsiGetSourcePathA(MSIHANDLE hinst, const char *folder, char *buf, DW
     else
         r = ERROR_DIRECTORY;
 
-    heap_free(path);
-    heap_free(folderW);
+    free(path);
+    free(folderW);
     msiobj_release(&package->hdr);
     return r;
 }
@@ -509,7 +508,7 @@ UINT WINAPI MsiGetSourcePathW(MSIHANDLE hinst, const WCHAR *folder, WCHAR *buf, 
     else
         r = ERROR_DIRECTORY;
 
-    heap_free(path);
+    free(path);
     msiobj_release(&package->hdr);
     return r;
 }

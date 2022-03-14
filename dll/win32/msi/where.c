@@ -131,9 +131,10 @@ static UINT add_row(MSIWHEREVIEW *wv, UINT vals[])
         MSIROWENTRY **new_reorder;
         UINT newsize = wv->reorder_size * 2;
 
-        new_reorder = msi_realloc_zero(wv->reorder, sizeof(MSIROWENTRY *) * newsize);
+        new_reorder = msi_realloc(wv->reorder, newsize * sizeof(*new_reorder));
         if (!new_reorder)
             return ERROR_OUTOFMEMORY;
+        memset(new_reorder + wv->reorder_size, 0, (newsize - wv->reorder_size) * sizeof(*new_reorder));
 
         wv->reorder = new_reorder;
         wv->reorder_size = newsize;

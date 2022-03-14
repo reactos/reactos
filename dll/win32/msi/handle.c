@@ -92,13 +92,13 @@ static MSIHANDLE alloc_handle_table_entry(void)
         if (msihandletable_size == 0)
         {
             newsize = 256;
-            p = msi_alloc_zero(newsize*sizeof(msi_handle_info));
+            p = msi_alloc_zero(newsize * sizeof(*p));
         }
         else
         {
             newsize = msihandletable_size * 2;
-            p = msi_realloc_zero(msihandletable,
-                            newsize*sizeof(msi_handle_info));
+            p = msi_realloc(msihandletable, newsize * sizeof(*p));
+            if (p) memset(p + msihandletable_size, 0, (newsize - msihandletable_size) * sizeof(*p));
         }
         if (!p)
             return 0;
