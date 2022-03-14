@@ -27,8 +27,6 @@
 /* not defined in public headers */
 DEFINE_GUID(IID_IXmlWriterOutput, 0xc1131708, 0x0f59, 0x477f, 0x93, 0x59, 0x7d, 0x33, 0x24, 0x51, 0xbc, 0x1a);
 
-#define ARRAY_SIZE(array) (sizeof(array)/sizeof((array)[0]))
-
 static const WCHAR closeelementW[] = {'<','/'};
 static const WCHAR closetagW[] = {' ','/','>'};
 static const WCHAR closepiW[] = {'?','>'};

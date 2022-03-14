@@ -70,8 +70,6 @@ static const WCHAR updateW[] = {'U','P','D','A','T','E'};
 static const WCHAR valuesW[] = {'V','A','L','U','E','S'};
 static const WCHAR whereW[] = {'W','H','E','R','E'};
 
-#define ARRAY_SIZE(array) (sizeof(array)/sizeof((array)[0]))
-
 /*
 ** These are the keywords
 ** They MUST be in alphabetical order
