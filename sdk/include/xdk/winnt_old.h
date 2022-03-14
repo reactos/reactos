@@ -4225,6 +4225,10 @@ typedef struct _TP_CALLBACK_ENVIRON_V1 {
 } TP_CALLBACK_ENVIRON_V1, TP_CALLBACK_ENVIRON, *PTP_CALLBACK_ENVIRON;
 #endif /* (_WIN32_WINNT >= _WIN32_WINNT_WIN7) */
 
+#ifdef __WINESRC__
+# define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
