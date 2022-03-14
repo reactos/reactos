@@ -1141,7 +1141,7 @@ static void test_invalid_functions(MSIHANDLE hinst)
     r = MsiEnableUIPreview(db, &preview);
     ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
-    sprintf(package_name, "#%u", db);
+    sprintf(package_name, "#%lu", db);
     r = MsiOpenPackageA(package_name, &package);
     ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 

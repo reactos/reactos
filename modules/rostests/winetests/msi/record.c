@@ -410,21 +410,21 @@ static void test_MsiRecordGetString(void)
     sz = MAX_PATH;
     r = MsiRecordGetStringA(rec, 1, NULL, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n",r);
-    ok(sz == 0, "Expected 0, got %d\n",sz);
+    ok(sz == 0, "Expected 0, got %lu\n", sz);
 
     sz = MAX_PATH;
     lstrcpyA(buf, "apple");
     r = MsiRecordGetStringA(rec, 1, buf, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
-    ok(sz == 0, "Expected 0, got %d\n", sz);
+    ok(sz == 0, "Expected 0, got %lu\n", sz);
 
     sz = MAX_PATH;
     lstrcpyA(buf, "apple");
     r = MsiRecordGetStringA(rec, 10, buf, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
-    ok(sz == 0, "Expected 0, got %d\n", sz);
+    ok(sz == 0, "Expected 0, got %lu\n", sz);
 
     MsiCloseHandle(rec);
 
@@ -437,14 +437,14 @@ static void test_MsiRecordGetString(void)
     sz = MAX_PATH;
     r = MsiRecordGetStringA(rec, 1, NULL, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n",r);
-    ok(sz == 1, "Expected 1, got %d\n",sz);
+    ok(sz == 1, "Expected 1, got %lu\n",sz);
 
     sz = MAX_PATH;
     lstrcpyA(buf, "apple");
     r = MsiRecordGetStringA(rec, 1, buf, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, "5"), "Expected \"5\", got \"%s\"\n", buf);
-    ok(sz == 1, "Expected 1, got %d\n", sz);
+    ok(sz == 1, "Expected 1, got %lu\n", sz);
 
     r = MsiRecordSetInteger(rec, 1, -5);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
@@ -454,7 +454,7 @@ static void test_MsiRecordGetString(void)
     r = MsiRecordGetStringA(rec, 1, buf, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, "-5"), "Expected \"-5\", got \"%s\"\n", buf);
-    ok(sz == 2, "Expected 2, got %d\n", sz);
+    ok(sz == 2, "Expected 2, got %lu\n", sz);
 
     MsiCloseHandle(rec);
 }
@@ -508,7 +508,7 @@ static void test_fieldzero(void)
     r = MsiRecordGetStringA(rec, 0, buf, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
-    ok(sz == 0, "Expected 0, got %d\n", sz);
+    ok(sz == 0, "Expected 0, got %lu\n", sz);
 
     r = MsiRecordIsNull(rec, 0);
     ok(r == TRUE, "Expected TRUE, got %d\n", r);
@@ -527,7 +527,7 @@ static void test_fieldzero(void)
     r = MsiRecordGetStringA(rec, 0, buf, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
-    ok(sz == 0, "Expected 0, got %d\n", sz);
+    ok(sz == 0, "Expected 0, got %lu\n", sz);
 
     r = MsiRecordIsNull(rec, 0);
     ok(r == TRUE, "Expected TRUE, got %d\n", r);
@@ -546,7 +546,7 @@ static void test_fieldzero(void)
     r = MsiRecordGetStringA(rec, 0, buf, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
-    ok(sz == 0, "Expected 0, got %d\n", sz);
+    ok(sz == 0, "Expected 0, got %lu\n", sz);
 
     r = MsiRecordIsNull(rec, 0);
     ok(r == TRUE, "Expected TRUE, got %d\n", r);
@@ -556,7 +556,7 @@ static void test_fieldzero(void)
     r = MsiRecordGetStringA(rec, 1, buf, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, "bologna"), "Expected \"bologna\", got \"%s\"\n", buf);
-    ok(sz == 7, "Expected 7, got %d\n", sz);
+    ok(sz == 7, "Expected 7, got %lu\n", sz);
 
     MsiCloseHandle(rec);
 
@@ -597,7 +597,7 @@ static void test_fieldzero(void)
     r = MsiRecordGetStringA(rec, 0, buf, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, "drone"), "Expected \"drone\", got \"%s\"\n", buf);
-    ok(sz == 5, "Expected 5, got %d\n", sz);
+    ok(sz == 5, "Expected 5, got %lu\n", sz);
 
     r = MsiRecordIsNull(rec, 0);
     ok(r == FALSE, "Expected FALSE, got %d\n", r);

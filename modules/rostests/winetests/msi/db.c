@@ -548,7 +548,7 @@ static void test_msidecomposedesc(void)
     comp[0] = 0x55;
     r = pMsiDecomposeDescriptorA(desc, prod, feature, comp, &len);
     ok(r == ERROR_SUCCESS, "returned an error\n");
-    ok(len == 41, "got %u\n", len);
+    ok(len == 41, "got %lu\n", len);
     ok(!strcmp(prod,"{90110409-6000-11D3-8CFE-0150048383C9}"), "got '%s'\n", prod);
     ok(!strcmp(feature,"FollowTheWhiteRabbit"), "got '%s'\n", feature);
     ok(!comp[0], "got '%s'\n", comp);
@@ -558,7 +558,7 @@ static void test_msidecomposedesc(void)
     comp[0] = 0x55;
     r = pMsiDecomposeDescriptorA("yh1BVN)8A$!!!!!MKKSkAlwaysInstalledIntl_1033<", prod, feature, comp, &len);
     ok(r == ERROR_SUCCESS, "got %u\n", r);
-    ok(len == 45, "got %u\n", len);
+    ok(len == 45, "got %lu\n", len);
     ok(!strcmp(prod, "{90150000-006E-0409-0000-0000000FF1CE}"), "got '%s'\n", prod);
     ok(!strcmp(feature, "AlwaysInstalledIntl_1033"), "got '%s'\n", feature);
     ok(!comp[0], "got '%s'\n", comp);
@@ -907,7 +907,7 @@ static void test_viewmodify(void)
     err = MsiViewGetErrorA( hview, buffer, &sz );
     ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
     ok(!buffer[0], "got \"%s\"\n", buffer);
-    ok(sz == 0, "got size %u\n", sz);
+    ok(sz == 0, "got size %lu\n", sz);
 
     r = MsiViewExecute(hview, 0);
     ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
@@ -928,7 +928,7 @@ static void test_viewmodify(void)
     err = MsiViewGetErrorA( hview, buffer, &sz );
     ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
     ok(!buffer[0], "got \"%s\"\n", buffer);
-    ok(sz == 0, "got size %u\n", sz);
+    ok(sz == 0, "got size %lu\n", sz);
 
     r = MsiCloseHandle(hrec);
     ok(r == ERROR_SUCCESS, "failed to close record\n");
@@ -960,7 +960,7 @@ static void test_viewmodify(void)
     err = MsiViewGetErrorA( hview, buffer, &sz );
     ok(err == MSIDBERROR_DUPLICATEKEY, "got %d\n", err);
     ok(!strcmp(buffer, "id"), "got \"%s\"\n", buffer);
-    ok(sz == 2, "got size %u\n", sz);
+    ok(sz == 2, "got size %lu\n", sz);
 
     /* insert the same thing again */
     r = MsiViewExecute(hview, 0);
@@ -1809,7 +1809,7 @@ static void test_streamtable(void)
     memset(buf, 0, MAX_PATH);
     r = MsiRecordReadStream( rec, 2, buf, &size );
     ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
-    ok( !lstrcmpA(buf, "test.txt\n"), "Expected 'test.txt\\n', got '%s' (%d)\n", buf, size);
+    ok( !lstrcmpA(buf, "test.txt\n"), "Expected 'test.txt\\n', got '%s' (%lu)\n", buf, size);
     MsiCloseHandle( rec );
 
     /* open a handle to the "data" stream (and keep it open during removal) */
@@ -1841,7 +1841,7 @@ static void test_streamtable(void)
     memset(buf, 0, MAX_PATH);
     r = MsiRecordReadStream( rec, 2, buf, &size );
     ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
-    todo_wine ok( size == 0, "Expected empty buffer, got %d bytes\n", size);
+    todo_wine ok( size == 0, "Expected empty buffer, got %lu bytes\n", size);
     MsiCloseHandle( rec );
 
     MsiCloseHandle( hdb );
@@ -2246,7 +2246,8 @@ static void test_suminfo_import(void)
 {
     MSIHANDLE hdb, hsi, view = 0;
     LPCSTR query;
-    UINT r, count, size, type;
+    UINT r, count, type;
+    DWORD size;
     char str_value[50];
     INT int_value;
     FILETIME ft_value;
@@ -2284,7 +2285,7 @@ static void test_suminfo_import(void)
     r = MsiSummaryInfoGetPropertyA(hsi, PID_TITLE, &type, NULL, NULL, str_value, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
     ok(type == VT_LPSTR, "Expected VT_LPSTR, got %u\n", type);
-    ok(size == 18, "Expected 18, got %u\n", size);
+    ok(size == 18, "Expected 18, got %lu\n", size);
     ok(!strcmp(str_value, "Installer Database"),
        "Expected \"Installer Database\", got %s\n", str_value);
 
@@ -2980,7 +2981,7 @@ static void generate_transform_manual(void)
                             STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm );
         if (FAILED(r))
         {
-            ok(0, "failed to create stream %08x\n", r);
+            ok(0, "failed to create stream %#lx\n", r);
             continue;
         }
 
@@ -3068,7 +3069,7 @@ static UINT package_from_db(MSIHANDLE hdb, MSIHANDLE *handle)
     CHAR szPackage[12];
     MSIHANDLE hPackage;
 
-    sprintf(szPackage, "#%u", hdb);
+    sprintf(szPackage, "#%lu", hdb);
     res = MsiOpenPackageA(szPackage, &hPackage);
     if (res != ERROR_SUCCESS)
         return res;
@@ -3512,7 +3513,7 @@ static void test_join(void)
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( i == 5, "Expected 5 rows, got %d\n", i );
+    ok( i == 5, "Expected 5 rows, got %lu\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -3533,7 +3534,7 @@ static void test_join(void)
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( i == 24, "Expected 24 rows, got %d\n", i );
+    ok( i == 24, "Expected 24 rows, got %lu\n", i );
 
     MsiViewClose(hview);
     MsiCloseHandle(hview);
@@ -3555,7 +3556,7 @@ static void test_join(void)
         MsiCloseHandle(hrec);
     }
 
-    ok( i == 2, "Expected 2 rows, got %d\n", i );
+    ok( i == 2, "Expected 2 rows, got %lu\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -3578,7 +3579,7 @@ static void test_join(void)
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( i == 2, "Expected 2 rows, got %d\n", i );
+    ok( i == 2, "Expected 2 rows, got %lu\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -3601,7 +3602,7 @@ static void test_join(void)
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( i == 1, "Expected 1 rows, got %d\n", i );
+    ok( i == 1, "Expected 1 rows, got %lu\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -3625,7 +3626,7 @@ static void test_join(void)
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( i == 1, "Expected 1 rows, got %d\n", i );
+    ok( i == 1, "Expected 1 rows, got %lu\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -3648,7 +3649,7 @@ static void test_join(void)
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( i == 6, "Expected 6 rows, got %d\n", i );
+    ok( i == 6, "Expected 6 rows, got %lu\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -3672,7 +3673,7 @@ static void test_join(void)
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( i == 3, "Expected 3 rows, got %d\n", i );
+    ok( i == 3, "Expected 3 rows, got %lu\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -3693,7 +3694,7 @@ static void test_join(void)
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( i == 6, "Expected 6 rows, got %d\n", i );
+    ok( i == 6, "Expected 6 rows, got %lu\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -3714,7 +3715,7 @@ static void test_join(void)
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( i == 6, "Expected 6 rows, got %d\n", i );
+    ok( i == 6, "Expected 6 rows, got %lu\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -3736,7 +3737,7 @@ static void test_join(void)
         i++;
         MsiCloseHandle(hrec);
     }
-    ok( i == 6, "Expected 6 rows, got %d\n", i );
+    ok( i == 6, "Expected 6 rows, got %lu\n", i );
     ok( r == ERROR_NO_MORE_ITEMS, "expected no more items: %d\n", r );
 
     MsiViewClose(hview);
@@ -4240,21 +4241,21 @@ static void test_integers(void)
     ok(r == 8, "record count wrong: %d\n", r);
 
     i = MsiRecordGetInteger(rec, 1);
-    ok(i == MSI_NULL_INTEGER, "Expected MSI_NULL_INTEGER, got %d\n", i);
+    ok(i == MSI_NULL_INTEGER, "Expected MSI_NULL_INTEGER, got %lu\n", i);
     i = MsiRecordGetInteger(rec, 3);
-    ok(i == MSI_NULL_INTEGER, "Expected MSI_NULL_INTEGER, got %d\n", i);
+    ok(i == MSI_NULL_INTEGER, "Expected MSI_NULL_INTEGER, got %lu\n", i);
     i = MsiRecordGetInteger(rec, 2);
-    ok(i == 2, "Expected 2, got %d\n", i);
+    ok(i == 2, "Expected 2, got %lu\n", i);
     i = MsiRecordGetInteger(rec, 4);
-    ok(i == 4, "Expected 4, got %d\n", i);
+    ok(i == 4, "Expected 4, got %lu\n", i);
     i = MsiRecordGetInteger(rec, 5);
-    ok(i == 5, "Expected 5, got %d\n", i);
+    ok(i == 5, "Expected 5, got %lu\n", i);
     i = MsiRecordGetInteger(rec, 6);
-    ok(i == 6, "Expected 6, got %d\n", i);
+    ok(i == 6, "Expected 6, got %lu\n", i);
     i = MsiRecordGetInteger(rec, 7);
-    ok(i == 7, "Expected 7, got %d\n", i);
+    ok(i == 7, "Expected 7, got %lu\n", i);
     i = MsiRecordGetInteger(rec, 8);
-    ok(i == 8, "Expected 8, got %d\n", i);
+    ok(i == 8, "Expected 8, got %lu\n", i);
 
     MsiCloseHandle(rec);
     MsiViewClose(view);
@@ -5714,65 +5715,65 @@ static void test_stringtable(void)
 
     MultiByteToWideChar(CP_ACP, 0, msifile, -1, name, 0x20);
     hr = StgOpenStorage(name, NULL, mode, NULL, 0, &stg);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
     ok(stg != NULL, "Expected non-NULL storage\n");
 
     hr = IStorage_OpenStream(stg, moo, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
     ok(stm != NULL, "Expected non-NULL stream\n");
 
     hr = IStream_Read(stm, data, MAX_PATH, &read);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
-    ok(read == 4, "Expected 4, got %d\n", read);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
+    ok(read == 4, "Expected 4, got %lu\n", read);
     todo_wine ok(!memcmp(data, data10, read), "Unexpected data\n");
 
     hr = IStream_Release(stm);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
 
     hr = IStorage_OpenStream(stg, aar, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
     ok(stm != NULL, "Expected non-NULL stream\n");
 
     hr = IStream_Read(stm, data, MAX_PATH, &read);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
-    ok(read == 8, "Expected 8, got %d\n", read);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
+    ok(read == 8, "Expected 8, got %lu\n", read);
     todo_wine
     {
         ok(!memcmp(data, data11, read), "Unexpected data\n");
     }
 
     hr = IStream_Release(stm);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
 
     hr = IStorage_OpenStream(stg, stringdata, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
     ok(stm != NULL, "Expected non-NULL stream\n");
 
     hr = IStream_Read(stm, buffer, MAX_PATH, &read);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
-    ok(read == 24, "Expected 24, got %d\n", read);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
+    ok(read == 24, "Expected 24, got %lu\n", read);
     ok(!memcmp(buffer, data12, read), "Unexpected data\n");
 
     hr = IStream_Release(stm);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
 
     hr = IStorage_OpenStream(stg, stringpool, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
     ok(stm != NULL, "Expected non-NULL stream\n");
 
     hr = IStream_Read(stm, data, MAX_PATH, &read);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
     todo_wine
     {
-        ok(read == 64, "Expected 64, got %d\n", read);
+        ok(read == 64, "Expected 64, got %lu\n", read);
         ok(!memcmp(data, data13, read), "Unexpected data\n");
     }
 
     hr = IStream_Release(stm);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
 
     hr = IStorage_Release(stg);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
 
     DeleteFileA(msifile);
 }
@@ -5895,7 +5896,7 @@ static void enum_stream_names(IStorage *stg)
     memset(check, 'a', MAX_PATH);
 
     hr = IStorage_EnumElements(stg, 0, NULL, 0, &stgenum);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
 
     n = 0;
     while(TRUE)
@@ -5906,12 +5907,12 @@ static void enum_stream_names(IStorage *stg)
             break;
 
         ok(!lstrcmpW(stat.pwcsName, database_table_data[n].name),
-           "Expected table %d name to match\n", n);
+           "Expected table %lu name to match\n", n);
 
         stm = NULL;
         hr = IStorage_OpenStream(stg, stat.pwcsName, NULL,
                                  STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
         ok(stm != NULL, "Expected non-NULL stream\n");
 
         CoTaskMemFree(stat.pwcsName);
@@ -5919,22 +5920,22 @@ static void enum_stream_names(IStorage *stg)
         sz = MAX_PATH;
         memset(data, 'a', MAX_PATH);
         hr = IStream_Read(stm, data, sz, &count);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
 
         ok(count == database_table_data[n].size,
-           "Expected %d, got %d\n", database_table_data[n].size, count);
+           "Expected %lu, got %lu\n", database_table_data[n].size, count);
 
         if (!database_table_data[n].size)
             ok(!memcmp(data, check, MAX_PATH), "data should not be changed\n");
         else
             ok(!memcmp(data, database_table_data[n].data, database_table_data[n].size),
-               "Expected table %d data to match\n", n);
+               "Expected table %lu data to match\n", n);
 
         IStream_Release(stm);
         n++;
     }
 
-    ok(n == 3, "Expected 3, got %d\n", n);
+    ok(n == 3, "Expected 3, got %lu\n", n);
 
     IEnumSTATSTG_Release(stgenum);
 }
@@ -5957,7 +5958,7 @@ static void test_defaultdatabase(void)
     MsiCloseHandle(hdb);
 
     hr = StgOpenStorage(msifileW, NULL, STGM_READ | STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
     ok(stg != NULL, "Expected non-NULL stg\n");
 
     enum_stream_names(stg);
@@ -7188,7 +7189,7 @@ static void test_storages_table(void)
     r = MsiRecordReadStream(hrec, 2, buf, &size);
     ok(r == ERROR_INVALID_DATA, "Expected ERROR_INVALID_DATA, got %d\n", r);
     ok(!lstrcmpA(buf, "apple"), "Expected buf to be unchanged, got %s\n", buf);
-    ok(size == 0, "Expected 0, got %d\n", size);
+    ok(size == 0, "Expected 0, got %lu\n", size);
 
     MsiCloseHandle(hrec);
 
@@ -7204,23 +7205,23 @@ static void test_storages_table(void)
     MultiByteToWideChar(CP_ACP, 0, msifile, -1, name, MAX_PATH);
     hr = StgOpenStorage(name, NULL, STGM_DIRECT | STGM_READ |
                         STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
     ok(stg != NULL, "Expected non-NULL storage\n");
 
     MultiByteToWideChar(CP_ACP, 0, "stgname", -1, name, MAX_PATH);
     hr = IStorage_OpenStorage(stg, name, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE,
                               NULL, 0, &inner);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
     ok(inner != NULL, "Expected non-NULL storage\n");
 
     MultiByteToWideChar(CP_ACP, 0, "storage.bin", -1, name, MAX_PATH);
     hr = IStorage_OpenStream(inner, name, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
     ok(stm != NULL, "Expected non-NULL stream\n");
 
     hr = IStream_Read(stm, buf, MAX_PATH, &size);
-    ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
-    ok(size == 8, "Expected 8, got %d\n", size);
+    ok(hr == S_OK, "Expected S_OK, got %#lx\n", hr);
+    ok(size == 8, "Expected 8, got %lu\n", size);
     ok(!lstrcmpA(buf, "stgdata"), "Expected \"stgdata\", got \"%s\"\n", buf);
 
     IStream_Release(stm);
@@ -7248,7 +7249,7 @@ static void test_dbtopackage(void)
     create_custom_action_table(hdb);
     add_custom_action_entry(hdb, "'SetProp', 51, 'MYPROP', 'grape'");
 
-    sprintf(package, "#%u", hdb);
+    sprintf(package, "#%lu", hdb);
     r = MsiOpenPackageA(package, &hpkg);
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
     {
@@ -7263,7 +7264,7 @@ static void test_dbtopackage(void)
     r = MsiGetPropertyA(hpkg, "MYPROP", buf, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
-    ok(size == 0, "Expected 0, got %d\n", size);
+    ok(size == 0, "Expected 0, got %lu\n", size);
 
     /* run the custom action to set the property */
     r = MsiDoActionA(hpkg, "SetProp");
@@ -7275,7 +7276,7 @@ static void test_dbtopackage(void)
     r = MsiGetPropertyA(hpkg, "MYPROP", buf, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, "grape"), "Expected \"grape\", got \"%s\"\n", buf);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     MsiCloseHandle(hpkg);
 
@@ -7291,7 +7292,7 @@ static void test_dbtopackage(void)
     todo_wine
     {
         ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
-        ok(size == 0, "Expected 0, got %d\n", size);
+        ok(size == 0, "Expected 0, got %lu\n", size);
     }
 
     MsiCloseHandle(hdb);
@@ -7308,7 +7309,7 @@ static void test_dbtopackage(void)
     create_custom_action_table(hdb);
     add_custom_action_entry(hdb, "'SetProp', 51, 'MYPROP', 'grape'");
 
-    sprintf(package, "#%u", hdb);
+    sprintf(package, "#%lu", hdb);
     r = MsiOpenPackageA(package, &hpkg);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
@@ -7318,7 +7319,7 @@ static void test_dbtopackage(void)
     r = MsiGetPropertyA(hpkg, "MYPROP", buf, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
-    ok(size == 0, "Expected 0, got %d\n", size);
+    ok(size == 0, "Expected 0, got %lu\n", size);
 
     /* run the custom action to set the property */
     r = MsiDoActionA(hpkg, "SetProp");
@@ -7330,7 +7331,7 @@ static void test_dbtopackage(void)
     r = MsiGetPropertyA(hpkg, "MYPROP", buf, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(buf, "grape"), "Expected \"grape\", got \"%s\"\n", buf);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %lu\n", size);
 
     MsiCloseHandle(hpkg);
 
@@ -7346,7 +7347,7 @@ static void test_dbtopackage(void)
     todo_wine
     {
         ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
-        ok(size == 0, "Expected 0, got %d\n", size);
+        ok(size == 0, "Expected 0, got %lu\n", size);
     }
 
     MsiCloseHandle(hpkg);
@@ -8583,7 +8584,8 @@ static void test_embedded_nulls(void)
         "s72\tL0\n"
         "Control\tDialog\n"
         "LicenseAgreementDlg\ttext\x11\x19text\0text";
-    UINT r, sz;
+    UINT r;
+    DWORD sz;
     MSIHANDLE hdb, hrec;
     char buffer[32];
 
@@ -9208,7 +9210,7 @@ static void test_view_get_error(void)
     sz = 0;
     err = MsiViewGetErrorA(0, NULL, &sz);
     ok(err == MSIDBERROR_INVALIDARG, "got %d\n", err);
-    ok(sz == 0, "got size %u\n", sz);
+    ok(sz == 0, "got size %lu\n", sz);
 
     err = MsiViewGetErrorA(view, NULL, NULL);
     ok(err == MSIDBERROR_INVALIDARG, "got %d\n", err);
@@ -9216,21 +9218,21 @@ static void test_view_get_error(void)
     sz = 0;
     err = MsiViewGetErrorA(view, NULL, &sz);
     ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
-    ok(sz == 0, "got size %u\n", sz);
+    ok(sz == 0, "got size %lu\n", sz);
 
     sz = 0;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(err == MSIDBERROR_MOREDATA, "got %d\n", err);
     ok(!strcmp(buffer, "x"), "got \"%s\"\n", buffer);
-    ok(sz == 0, "got size %u\n", sz);
+    ok(sz == 0, "got size %lu\n", sz);
 
     sz = 1;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
     ok(!buffer[0], "got \"%s\"\n", buffer);
-    ok(sz == 0, "got size %u\n", sz);
+    ok(sz == 0, "got size %lu\n", sz);
 
     rec = MsiCreateRecord(2);
     MsiRecordSetInteger(rec, 1, 1);
@@ -9243,14 +9245,14 @@ static void test_view_get_error(void)
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(err == MSIDBERROR_DUPLICATEKEY, "got %d\n", err);
     ok(!strcmp(buffer, "A"), "got \"%s\"\n", buffer);
-    ok(sz == 1, "got size %u\n", sz);
+    ok(sz == 1, "got size %lu\n", sz);
 
     sz = 2;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     todo_wine ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
     todo_wine ok(!buffer[0], "got \"%s\"\n", buffer);
-    todo_wine ok(sz == 0, "got size %u\n", sz);
+    todo_wine ok(sz == 0, "got size %lu\n", sz);
 
     r = MsiViewModify(view, MSIMODIFY_VALIDATE_NEW, rec);
     ok(r == ERROR_INVALID_DATA, "got %u\n", r);
@@ -9260,14 +9262,14 @@ static void test_view_get_error(void)
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(err == MSIDBERROR_MOREDATA, "got %d\n", err);
     ok(!buffer[0], "got \"%s\"\n", buffer);
-    ok(sz == 1, "got size %u\n", sz);
+    ok(sz == 1, "got size %lu\n", sz);
 
     sz = 1;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     todo_wine ok(err == MSIDBERROR_NOERROR, "got %d\n", err);
     ok(!buffer[0], "got \"%s\"\n", buffer);
-    todo_wine ok(sz == 0, "got size %u\n", sz);
+    todo_wine ok(sz == 0, "got size %lu\n", sz);
 
     r = MsiViewModify(view, MSIMODIFY_VALIDATE_NEW, rec);
     ok(r == ERROR_INVALID_DATA, "got %u\n", r);
@@ -9277,14 +9279,14 @@ static void test_view_get_error(void)
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(err == MSIDBERROR_MOREDATA, "got %d\n", err);
     ok(!strcmp(buffer, "x"), "got \"%s\"\n", buffer);
-    ok(sz == 1, "got size %u\n", sz);
+    ok(sz == 1, "got size %lu\n", sz);
 
     sz = 0;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(err == MSIDBERROR_MOREDATA, "got %d\n", err);
     ok(!strcmp(buffer, "x"), "got \"%s\"\n", buffer);
-    todo_wine ok(sz == 0, "got size %u\n", sz);
+    todo_wine ok(sz == 0, "got size %lu\n", sz);
 
     MsiCloseHandle(rec);
     MsiCloseHandle(view);

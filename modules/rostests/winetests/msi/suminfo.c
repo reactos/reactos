@@ -431,7 +431,7 @@ static void test_summary_binary(void)
         "Expected empty string or \"7\", got \"%s\"\n", sval);
     todo_wine {
     ok(type == VT_LPSTR, "Expected VT_LPSTR, got %d\n", type);
-    ok(sz == 0 || sz == 1, "Expected 0 or 1, got %d\n", sz);
+    ok(sz == 0 || sz == 1, "Expected 0 or 1, got %lu\n", sz);
     }
 
     ival = -1;

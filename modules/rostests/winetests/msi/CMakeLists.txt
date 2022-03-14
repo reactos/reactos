@@ -44,7 +44,8 @@ add_typelib(typelib.idl)
 target_compile_definitions(msi_winetest PRIVATE __WINESRC__ USE_WINE_TODOS)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(msi_winetest PRIVATE -Wno-format-overflow)
+    target_compile_options(msi_winetest PRIVATE -Wno-format-overflow -Wno-format)
+    target_compile_options(custom PRIVATE -Wno-format)
 endif()
 
 # msi_winetest.rc: let rc.exe find custom.dll in its subdirectory, i.e. Debug.
