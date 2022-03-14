@@ -8864,7 +8864,7 @@ static void test_viewmodify_merge(void)
     MsiRecordSetInteger(rec, 1, 1);
     MsiRecordSetInteger(rec, 2, 3);
     r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
-todo_wine
+    todo_wine
     ok(r == ERROR_FUNCTION_FAILED, "got %u\n", r);
 
     MsiRecordSetInteger(rec, 1, 2);
@@ -8913,7 +8913,7 @@ todo_wine
 
     MsiRecordSetInteger(rec, 3, 4);
     r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
-todo_wine
+    todo_wine
     ok(r == ERROR_FUNCTION_FAILED, "got %u\n", r);
 
     MsiRecordSetInteger(rec, 2, 4);
@@ -8958,7 +8958,7 @@ todo_wine
 
     MsiRecordSetInteger(rec, 2, 3);
     r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
-todo_wine
+    todo_wine
     ok(r == ERROR_FUNCTION_FAILED, "got %u\n", r);
 
     MsiCloseHandle(rec);
@@ -8998,7 +8998,7 @@ todo_wine
     MsiRecordSetInteger(rec, 2, 2);
     MsiRecordSetInteger(rec, 3, 3);
     r = MsiViewModify(view, MSIMODIFY_MERGE, rec);
-todo_wine
+    todo_wine
     ok(r == ERROR_FUNCTION_FAILED, "got %u\n", r);
 
     MsiRecordSetInteger(rec, 1, 1);
