@@ -559,6 +559,7 @@ static LPWSTR get_fusion_filename(MSIPACKAGE *package)
         GetWindowsDirectoryW(windir, MAX_PATH);
         len = lstrlenW(windir) + lstrlenW(L"Microsoft.NET\\Framework\\") + lstrlenW(L"v2.0.50727") +
               lstrlenW(L"fusion.dll") + 3;
+        msi_free(filename);
         if (!(filename = msi_alloc(len * sizeof(WCHAR)))) return NULL;
 
         lstrcpyW(filename, windir);
