@@ -2083,7 +2083,7 @@ static UINT calculate_file_cost( MSIPACKAGE *package )
             continue;
         }
         file_size = msi_get_disk_file_size( package, file->TargetPath );
-        TRACE("%s (size %u)\n", debugstr_w(file->TargetPath), file_size);
+        TRACE("%s (size %lu)\n", debugstr_w(file->TargetPath), file_size);
 
         if (file->Version)
         {
@@ -2389,7 +2389,7 @@ static BYTE *parse_value( MSIPACKAGE *package, const WCHAR *value, DWORD len, DW
             }
             msi_free(deformated);
 
-            TRACE("Data %i bytes(%i)\n",*size,count);
+            TRACE( "data %lu bytes(%u)\n", *size, count );
         }
         else
         {
@@ -2414,8 +2414,8 @@ static BYTE *parse_value( MSIPACKAGE *package, const WCHAR *value, DWORD len, DW
             }
             if (deformated[0] == '-')
                 d = -d;
-            *(LPDWORD)data = d;
-            TRACE("DWORD %i\n",*(LPDWORD)data);
+            *(DWORD *)data = d;
+            TRACE( "DWORD %lu\n", *(DWORD *)data);
 
             msi_free(deformated);
         }
@@ -2508,7 +2508,7 @@ static HKEY open_key( const MSICOMPONENT *comp, HKEY root, const WCHAR *path, BO
         res = RegOpenKeyExW( root, subkey, 0, access, &hkey );
     if (res)
     {
-        TRACE("failed to open key %s (%d)\n", debugstr_w(subkey), res);
+        TRACE( "failed to open key %s (%ld)\n", debugstr_w(subkey), res );
         msi_free( subkey );
         return NULL;
     }
@@ -2772,14 +2772,14 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
         }
         if (!check_first)
         {
-            TRACE("setting value %s of %s type %u\n", debugstr_w(deformated), debugstr_w(uikey), type);
+            TRACE( "setting value %s of %s type %lu\n", debugstr_w(deformated), debugstr_w(uikey), type );
             RegSetValueExW( hkey, deformated, 0, type, new_value, new_size );
         }
         else if (!old_value)
         {
             if (deformated || new_size)
             {
-                TRACE("setting value %s of %s type %u\n", debugstr_w(deformated), debugstr_w(uikey), type);
+                TRACE( "setting value %s of %s type %lu\n", debugstr_w(deformated), debugstr_w(uikey), type );
                 RegSetValueExW( hkey, deformated, 0, type, new_value, new_size );
             }
         }
@@ -2863,7 +2863,7 @@ static void delete_key( const MSICOMPONENT *comp, HKEY root, const WCHAR *path )
             res = RegDeleteKeyExW( root, subkey, access, 0 );
         if (res)
         {
-            TRACE("failed to delete key %s (%d)\n", debugstr_w(subkey), res);
+            TRACE( "failed to delete key %s (%ld)\n", debugstr_w(subkey), res );
             break;
         }
     } while (p);
@@ -2878,7 +2878,7 @@ static void delete_value( const MSICOMPONENT *comp, HKEY root, const WCHAR *path
     if ((hkey = open_key( comp, root, path, FALSE, KEY_SET_VALUE | KEY_QUERY_VALUE )))
     {
         if ((res = RegDeleteValueW( hkey, value )))
-            TRACE("failed to delete value %s (%d)\n", debugstr_w(value), res);
+            TRACE( "failed to delete value %s (%ld)\n", debugstr_w(value), res );
 
         RegCloseKey( hkey );
         if (is_key_empty(comp, root, path))
@@ -2896,7 +2896,7 @@ static void delete_tree( const MSICOMPONENT *comp, HKEY root, const WCHAR *path 
 
     if (!(hkey = open_key( comp, root, path, FALSE, KEY_ALL_ACCESS ))) return;
     res = RegDeleteTreeW( hkey, NULL );
-    if (res) TRACE("failed to delete subtree of %s (%d)\n", debugstr_w(path), res);
+    if (res) TRACE( "failed to delete subtree of %s (%ld)\n", debugstr_w(path), res );
     delete_key( comp, root, path );
     RegCloseKey( hkey );
 }
@@ -3424,7 +3424,7 @@ static UINT ACTION_ProcessComponents(MSIPACKAGE *package)
                 }
                 res = RegDeleteValueW( hkey, squashed_pc );
                 RegCloseKey(hkey);
-                if (res) WARN( "failed to delete component value %d\n", res );
+                if (res) WARN( "failed to delete component value %ld\n", res );
             }
         }
 
@@ -3589,7 +3589,7 @@ static UINT ITERATE_RegisterTypeLibraries(MSIRECORD *row, LPVOID param)
         hr = msi_load_typelib( package, file->TargetPath, REGKIND_REGISTER, &tlib );
         if (FAILED(hr))
         {
-            ERR("Failed to load type library: %08x\n", hr);
+            ERR( "failed to load type library: %#lx\n", hr );
             return ERROR_INSTALL_FAILURE;
         }
 
@@ -3654,7 +3654,7 @@ static UINT ITERATE_UnregisterTypeLibraries( MSIRECORD *row, LPVOID param )
     hr = UnRegisterTypeLib( &libid, (version >> 8) & 0xffff, version & 0xff, language, syskind );
     if (FAILED(hr))
     {
-        WARN("Failed to unregister typelib: %08x\n", hr);
+        WARN( "failed to unregister typelib: %#lx\n", hr );
     }
 
     return ERROR_SUCCESS;
@@ -3888,7 +3888,7 @@ static UINT ITERATE_RemoveShortcuts( MSIRECORD *row, LPVOID param )
 
     link_file = get_link_file( package, row );
     TRACE("Removing shortcut file %s\n", debugstr_w( link_file ));
-    if (!msi_delete_file( package, link_file )) WARN("Failed to remove shortcut file %u\n", GetLastError());
+    if (!msi_delete_file( package, link_file )) WARN( "failed to remove shortcut file %lu\n", GetLastError() );
     msi_free( link_file );
 
     return ERROR_SUCCESS;
@@ -4193,7 +4193,7 @@ static UINT msi_publish_patches( MSIPACKAGE *package )
         if (patch->filename && !CopyFileW( patch->filename, patch->localfile, FALSE ))
         {
             res = GetLastError();
-            ERR("Unable to copy patch package %d\n", res);
+            ERR( "unable to copy patch package %lu\n", res );
             goto done;
         }
         res = RegCreateKeyExW( product_patches_key, patch_squashed, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &patch_key, NULL );
@@ -4490,7 +4490,7 @@ static UINT ITERATE_RemoveIniValuesOnUninstall( MSIRECORD *row, LPVOID param )
 
         if (!WritePrivateProfileStringW( deformated_section, deformated_key, NULL, filename ))
         {
-            WARN("Unable to remove key %u\n", GetLastError());
+            WARN( "unable to remove key %lu\n", GetLastError() );
         }
         msi_free( filename );
     }
@@ -4552,7 +4552,7 @@ static UINT ITERATE_RemoveIniValuesOnInstall( MSIRECORD *row, LPVOID param )
 
         if (!WritePrivateProfileStringW( deformated_section, deformated_key, NULL, filename ))
         {
-            WARN("Unable to remove key %u\n", GetLastError());
+            WARN( "unable to remove key %lu\n", GetLastError() );
         }
         msi_free( filename );
     }
@@ -5648,7 +5648,7 @@ static UINT ITERATE_UnpublishComponent( MSIRECORD *rec, LPVOID param )
     res = RegDeleteKeyW( HKEY_CURRENT_USER, keypath );
     if (res != ERROR_SUCCESS)
     {
-        WARN("Unable to delete component key %d\n", res);
+        WARN( "unable to delete component key %ld\n", res );
     }
 
     uirow = MSI_CreateRecord( 2 );
@@ -5776,7 +5776,7 @@ static UINT ITERATE_InstallService(MSIRECORD *rec, LPVOID param)
     {
         if (GetLastError() != ERROR_SERVICE_EXISTS)
         {
-            WARN("Failed to create service %s: %d\n", debugstr_w(name), GetLastError());
+            WARN( "failed to create service %s (%lu)\n", debugstr_w(name), GetLastError() );
             if (is_vital)
                 ret = ERROR_INSTALL_FAILURE;
 
@@ -5785,7 +5785,7 @@ static UINT ITERATE_InstallService(MSIRECORD *rec, LPVOID param)
     else if (sd.lpDescription)
     {
         if (!ChangeServiceConfig2W(service, SERVICE_CONFIG_DESCRIPTION, &sd))
-            WARN("failed to set service description %u\n", GetLastError());
+            WARN( "failed to set service description %lu\n", GetLastError() );
     }
 
     if (image_path != file->TargetPath) msi_free(image_path);
@@ -5914,7 +5914,7 @@ static UINT ITERATE_StartService(MSIRECORD *rec, LPVOID param)
     service = OpenServiceW(scm, name, SERVICE_START|SERVICE_QUERY_STATUS);
     if (!service)
     {
-        ERR("Failed to open service %s (%u)\n", debugstr_w(name), GetLastError());
+        ERR( "failed to open service %s (%lu)\n", debugstr_w(name), GetLastError() );
         goto done;
     }
 
@@ -5923,7 +5923,7 @@ static UINT ITERATE_StartService(MSIRECORD *rec, LPVOID param)
     if (!StartServiceW(service, numargs, vector) &&
         GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
     {
-        ERR("Failed to start service %s (%u)\n", debugstr_w(name), GetLastError());
+        ERR( "failed to start service %s (%lu)\n", debugstr_w(name), GetLastError() );
         goto done;
     }
 
@@ -5934,7 +5934,7 @@ static UINT ITERATE_StartService(MSIRECORD *rec, LPVOID param)
         if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
             (BYTE *)&status, sizeof(SERVICE_STATUS_PROCESS), &dummy))
         {
-            TRACE("failed to query service status (%u)\n", GetLastError());
+            TRACE( "failed to query service status (%lu)\n", GetLastError() );
             goto done;
         }
         start_time = GetTickCount64();
@@ -5945,13 +5945,13 @@ static UINT ITERATE_StartService(MSIRECORD *rec, LPVOID param)
             if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO,
                 (BYTE *)&status, sizeof(SERVICE_STATUS_PROCESS), &dummy))
             {
-                TRACE("failed to query service status (%u)\n", GetLastError());
+                TRACE( "failed to query service status (%lu)\n", GetLastError() );
                 goto done;
             }
         }
         if (status.dwCurrentState != SERVICE_RUNNING)
         {
-            WARN("service failed to start %u\n", status.dwCurrentState);
+            WARN( "service failed to start %lu\n", status.dwCurrentState );
             r = ERROR_FUNCTION_FAILED;
         }
     }
@@ -6043,24 +6043,20 @@ static UINT stop_service( LPCWSTR name )
     scm = OpenSCManagerW(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     if (!scm)
     {
-        WARN("Failed to open the SCM: %d\n", GetLastError());
+        WARN( "failed to open the SCM (%lu)\n", GetLastError() );
         goto done;
     }
 
-    service = OpenServiceW(scm, name,
-                           SERVICE_STOP |
-                           SERVICE_QUERY_STATUS |
-                           SERVICE_ENUMERATE_DEPENDENTS);
+    service = OpenServiceW(scm, name, SERVICE_STOP | SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS);
     if (!service)
     {
-        WARN("Failed to open service (%s): %d\n", debugstr_w(name), GetLastError());
+        WARN( "failed to open service %s (%lu)\n", debugstr_w(name), GetLastError() );
         goto done;
     }
 
-    if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp,
-                              sizeof(SERVICE_STATUS_PROCESS), &needed))
+    if (!QueryServiceStatusEx( service, SC_STATUS_PROCESS_INFO, (BYTE *)&ssp, sizeof(ssp), &needed) )
     {
-        WARN("Failed to query service status (%s): %d\n", debugstr_w(name), GetLastError());
+        WARN( "failed to query service status %s (%lu)\n", debugstr_w(name), GetLastError() );
         goto done;
     }
 
@@ -6070,7 +6066,7 @@ static UINT stop_service( LPCWSTR name )
     stop_service_dependents(scm, service);
 
     if (!ControlService(service, SERVICE_CONTROL_STOP, &status))
-        WARN("Failed to stop service (%s): %d\n", debugstr_w(name), GetLastError());
+        WARN( "failed to stop service %s (%lu)\n", debugstr_w(name), GetLastError() );
 
 done:
     if (service) CloseServiceHandle(service);
@@ -6182,7 +6178,7 @@ static UINT ITERATE_DeleteService( MSIRECORD *rec, LPVOID param )
     scm = OpenSCManagerW( NULL, NULL, SC_MANAGER_ALL_ACCESS );
     if (!scm)
     {
-        WARN("Failed to open the SCM: %d\n", GetLastError());
+        WARN( "failed to open the SCM (%lu)\n", GetLastError() );
         goto done;
     }
 
@@ -6197,12 +6193,12 @@ static UINT ITERATE_DeleteService( MSIRECORD *rec, LPVOID param )
     service = OpenServiceW( scm, name, DELETE );
     if (!service)
     {
-        WARN("Failed to open service (%s): %u\n", debugstr_w(name), GetLastError());
+        WARN( "failed to open service %s (%lu)\n", debugstr_w(name), GetLastError() );
         goto done;
     }
 
     if (!DeleteService( service ))
-        WARN("Failed to delete service (%s): %u\n", debugstr_w(name), GetLastError());
+        WARN( "failed to delete service %s (%lu)\n", debugstr_w(name), GetLastError() );
 
 done:
     uirow = MSI_CreateRecord( 2 );
@@ -6749,7 +6745,7 @@ static UINT env_parse_flags( LPCWSTR *name, LPCWSTR *value, DWORD *flags )
         check_flag_combo(*flags, ENV_ACT_REMOVEMATCH | ENV_ACT_SETALWAYS) ||
         check_flag_combo(*flags, ENV_ACT_SETABSENT | ENV_MOD_MASK))
     {
-        ERR("Invalid flags: %08x\n", *flags);
+        ERR( "invalid flags: %#lx\n", *flags );
         return ERROR_FUNCTION_FAILED;
     }
 
@@ -6779,7 +6775,7 @@ static UINT open_env_key( DWORD flags, HKEY *key )
     res = RegOpenKeyExW( root, env, 0, KEY_ALL_ACCESS, key );
     if (res != ERROR_SUCCESS)
     {
-        WARN("Failed to open key %s (%d)\n", debugstr_w(env), res);
+        WARN( "failed to open key %s (%ld)\n", debugstr_w(env), res );
         return ERROR_FUNCTION_FAILED;
     }
 
@@ -7107,7 +7103,7 @@ static UINT ITERATE_RemoveEnvironmentString( MSIRECORD *rec, LPVOID param )
         TRACE("removing %s\n", debugstr_w(name));
         res = RegDeleteValueW( env, name );
         if (res != ERROR_SUCCESS)
-            WARN("failed to delete value %s (%d)\n", debugstr_w(name), res);
+            WARN( "failed to delete value %s (%ld)\n", debugstr_w(name), res );
     }
     else
     {
@@ -7115,7 +7111,7 @@ static UINT ITERATE_RemoveEnvironmentString( MSIRECORD *rec, LPVOID param )
         size = (lstrlenW( new_value ) + 1) * sizeof(WCHAR);
         res = RegSetValueExW( env, name, 0, type, (BYTE *)new_value, size );
         if (res != ERROR_SUCCESS)
-            WARN("failed to set %s to %s (%d)\n", debugstr_w(name), debugstr_w(new_value), res);
+            WARN( "failed to set %s to %s (%ld)\n", debugstr_w(name), debugstr_w(new_value), res );
     }
 
 done:
@@ -7231,7 +7227,7 @@ static UINT ACTION_SetODBCFolders( MSIPACKAGE *package )
         msiobj_release( &view->hdr );
         if (r != ERROR_SUCCESS)
             return r;
-        if (count) FIXME("ignored %u rows in ODBCDriver table\n", count);
+        if (count) FIXME( "ignored %lu rows in ODBCDriver table\n", count );
     }
     r = MSI_DatabaseOpenViewW( package->db, L"SELECT * FROM `ODBCTranslator`", &view );
     if (r == ERROR_SUCCESS)
@@ -7241,7 +7237,7 @@ static UINT ACTION_SetODBCFolders( MSIPACKAGE *package )
         msiobj_release( &view->hdr );
         if (r != ERROR_SUCCESS)
             return r;
-        if (count) FIXME("ignored %u rows in ODBCTranslator table\n", count);
+        if (count) FIXME( "ignored %lu rows in ODBCTranslator table\n", count );
     }
     return ERROR_SUCCESS;
 }
@@ -7379,7 +7375,7 @@ static void bind_image( MSIPACKAGE *package, const char *filename, const char *p
 {
     if (!msi_bind_image( package, filename, path ))
     {
-        WARN("failed to bind image %u\n", GetLastError());
+        WARN( "failed to bind image %lu\n", GetLastError() );
     }
 }
 
@@ -7449,7 +7445,7 @@ static UINT msi_unimplemented_action_stub( MSIPACKAGE *package, LPCSTR action, L
         if (r != ERROR_SUCCESS)
             return r;
     }
-    if (count) FIXME("%s: ignored %u rows from %s\n", action, count, debugstr_w(table));
+    if (count) FIXME( "%s: ignored %lu rows from %s\n", action, count, debugstr_w(table) );
     return ERROR_SUCCESS;
 }
 

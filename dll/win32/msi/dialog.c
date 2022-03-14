@@ -590,7 +590,7 @@ static void dialog_handle_event( msi_dialog *dialog, const WCHAR *control,
         val1 = MSI_RecordGetInteger( rec, 2 );
         val2 = MSI_RecordGetInteger( rec, 3 );
 
-        TRACE("progress: func %u val1 %u val2 %u\n", func, val1, val2);
+        TRACE( "progress: func %lu val1 %lu val2 %lu\n", func, val1, val2 );
 
         units = val1 / 512;
         switch (func)
@@ -633,7 +633,7 @@ static void dialog_handle_event( msi_dialog *dialog, const WCHAR *control,
             ctrl->progress_max += units;
             break;
         default:
-            FIXME("Unknown progress message %u\n", func);
+            FIXME( "unknown progress message %lu\n", func );
             break;
         }
     }
@@ -730,8 +730,7 @@ static msi_control *msi_dialog_add_control( msi_dialog *dialog,
     attributes = MSI_RecordGetInteger( rec, 8 );
     if (wcscmp( control_type, L"ScrollableText" )) text = MSI_RecordGetString( rec, 10 );
 
-    TRACE("%s, %s, %08x, %s, %08x\n", debugstr_w(szCls), debugstr_w(name),
-          attributes, debugstr_w(text), style);
+    TRACE( "%s, %s, %#lx, %s, %#lx\n", debugstr_w(szCls), debugstr_w(name), attributes, debugstr_w(text), style );
 
     if( attributes & msidbControlAttributesVisible )
         style |= WS_VISIBLE;
@@ -773,7 +772,7 @@ MSIText_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     struct msi_text_info *info;
     LRESULT r = 0;
 
-    TRACE("%p %04x %08lx %08lx\n", hWnd, msg, wParam, lParam);
+    TRACE( "%p %04x %#Ix %#Ix\n", hWnd, msg, wParam, lParam );
 
     info = GetPropW(hWnd, L"MSIDATA");
 
@@ -1247,7 +1246,7 @@ MSIScrollText_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     struct msi_scrolltext_info *info;
     HRESULT r;
 
-    TRACE("%p %04x %08lx %08lx\n", hWnd, msg, wParam, lParam);
+    TRACE( "%p %04x %#Ix %#Ix\n", hWnd, msg, wParam, lParam );
 
     info = GetPropW( hWnd, L"MSIDATA" );
 
@@ -1287,7 +1286,7 @@ msi_richedit_stream_in( DWORD_PTR arg, LPBYTE buffer, LONG count, LONG *pcb )
     *pcb = count;
     info->offset += count;
 
-    TRACE("%d/%d\n", info->offset, info->length);
+    TRACE( "%lu/%lu\n", info->offset, info->length );
 
     return 0;
 }
@@ -1428,7 +1427,7 @@ static LRESULT WINAPI MSIComboBox_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     LRESULT r;
     DWORD j;
 
-    TRACE("%p %04x %08lx %08lx\n", hWnd, msg, wParam, lParam);
+    TRACE( "%p %04x %#Ix %#Ix\n", hWnd, msg, wParam, lParam );
 
     info = GetPropW( hWnd, L"MSIDATA" );
     if (!info)
@@ -1828,7 +1827,7 @@ MSIMaskedEdit_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     struct msi_maskedit_info *info;
     HRESULT r;
 
-    TRACE("%p %04x %08lx %08lx\n", hWnd, msg, wParam, lParam);
+    TRACE("%p %04x %#Ix %#Ix\n", hWnd, msg, wParam, lParam);
 
     info = GetPropW(hWnd, L"MSIDATA");
 
@@ -2163,7 +2162,7 @@ static LRESULT WINAPI MSIPathEdit_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     struct msi_pathedit_info *info = GetPropW(hWnd, L"MSIDATA");
     LRESULT r = 0;
 
-    TRACE("%p %04x %08lx %08lx\n", hWnd, msg, wParam, lParam);
+    TRACE("%p %04x %#Ix %#Ix\n", hWnd, msg, wParam, lParam);
 
     if ( msg == WM_KILLFOCUS )
     {
@@ -2262,7 +2261,7 @@ static LRESULT WINAPI MSIRadioGroup_WndProc( HWND hWnd, UINT msg, WPARAM wParam,
     WNDPROC oldproc = (WNDPROC)GetPropW( hWnd, L"MSIDATA" );
     LRESULT r;
 
-    TRACE("hWnd %p msg %04x wParam 0x%08lx lParam 0x%08lx\n", hWnd, msg, wParam, lParam);
+    TRACE( "hWnd %p msg %04x wParam %#Ix lParam %#Ix\n", hWnd, msg, wParam, lParam );
 
     if (msg == WM_COMMAND) /* Forward notifications to dialog */
         SendMessageW( GetParent( hWnd ), msg, wParam, lParam );
@@ -2463,7 +2462,7 @@ MSISelectionTree_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     TVHITTESTINFO tvhti;
     HRESULT r;
 
-    TRACE("%p %04x %08lx %08lx\n", hWnd, msg, wParam, lParam);
+    TRACE("%p %04x %#Ix %#Ix\n", hWnd, msg, wParam, lParam);
 
     info = GetPropW(hWnd, L"MSIDATA");
 
@@ -2714,7 +2713,7 @@ static LRESULT WINAPI MSIListBox_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
     LRESULT r;
     DWORD j;
 
-    TRACE("%p %04x %08lx %08lx\n", hWnd, msg, wParam, lParam);
+    TRACE("%p %04x %#Ix %#Ix\n", hWnd, msg, wParam, lParam);
 
     info = GetPropW( hWnd, L"MSIDATA" );
     if (!info)
@@ -3792,7 +3791,7 @@ static LRESULT msi_dialog_oncommand( msi_dialog *dialog, WPARAM param, HWND hwnd
 {
     msi_control *control = NULL;
 
-    TRACE("%p %p %08lx\n", dialog, hwnd, param);
+    TRACE( "%p, %#Ix, %p\n", dialog, param, hwnd );
 
     switch (param)
     {
@@ -4214,7 +4213,7 @@ UINT WINAPI MsiEnableUIPreview( MSIHANDLE hdb, MSIHANDLE *phPreview )
     MSIPREVIEW *preview;
     UINT r = ERROR_FUNCTION_FAILED;
 
-    TRACE("%d %p\n", hdb, phPreview);
+    TRACE( "%lu %p\n", hdb, phPreview );
 
     if (!(db = msihandle2msiinfo(hdb, MSIHANDLETYPE_DATABASE)))
         return ERROR_INVALID_HANDLE;
@@ -4264,7 +4263,7 @@ UINT WINAPI MsiPreviewDialogW( MSIHANDLE hPreview, LPCWSTR szDialogName )
     MSIPREVIEW *preview;
     UINT r;
 
-    TRACE("%d %s\n", hPreview, debugstr_w(szDialogName));
+    TRACE( "%lu %s\n", hPreview, debugstr_w(szDialogName) );
 
     preview = msihandle2msiinfo( hPreview, MSIHANDLETYPE_PREVIEW );
     if (!preview)
@@ -4280,7 +4279,7 @@ UINT WINAPI MsiPreviewDialogA( MSIHANDLE hPreview, LPCSTR szDialogName )
     UINT r;
     LPWSTR strW = NULL;
 
-    TRACE("%d %s\n", hPreview, debugstr_a(szDialogName));
+    TRACE( "%lu %s\n", hPreview, debugstr_a(szDialogName) );
 
     if (szDialogName)
     {
@@ -4293,15 +4292,15 @@ UINT WINAPI MsiPreviewDialogA( MSIHANDLE hPreview, LPCSTR szDialogName )
     return r;
 }
 
-UINT WINAPI MsiPreviewBillboardW( MSIHANDLE hPreview, LPCWSTR szControlName, LPCWSTR szBillboard )
+UINT WINAPI MsiPreviewBillboardW( MSIHANDLE hPreview, const WCHAR *szControlName, const WCHAR *szBillboard )
 {
-    FIXME("%d %s %s\n", hPreview, debugstr_w(szControlName), debugstr_w(szBillboard));
+    FIXME( "%lu %s %s\n", hPreview, debugstr_w(szControlName), debugstr_w(szBillboard) );
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
-UINT WINAPI MsiPreviewBillboardA( MSIHANDLE hPreview, LPCSTR szControlName, LPCSTR szBillboard )
+UINT WINAPI MsiPreviewBillboardA( MSIHANDLE hPreview, const char *szControlName, const char *szBillboard )
 {
-    FIXME("%d %s %s\n", hPreview, debugstr_a(szControlName), debugstr_a(szBillboard));
+    FIXME( "%lu %s %s\n", hPreview, debugstr_a(szControlName), debugstr_a(szBillboard) );
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 

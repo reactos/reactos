@@ -108,7 +108,7 @@ static HRESULT db_initialize( IStorage *stg, const GUID *clsid )
     hr = IStorage_SetClass( stg, clsid );
     if (FAILED( hr ))
     {
-        WARN("failed to set class id 0x%08x\n", hr);
+        WARN("failed to set class id %#lx\n", hr);
         return hr;
     }
 
@@ -116,21 +116,21 @@ static HRESULT db_initialize( IStorage *stg, const GUID *clsid )
     hr = write_stream_data( stg, L"_Tables", NULL, 0, TRUE );
     if (FAILED( hr ))
     {
-        WARN("failed to create _Tables stream 0x%08x\n", hr);
+        WARN("failed to create _Tables stream %#lx\n", hr);
         return hr;
     }
 
     hr = msi_init_string_table( stg );
     if (FAILED( hr ))
     {
-        WARN("failed to initialize string table 0x%08x\n", hr);
+        WARN("failed to initialize string table %#lx\n", hr);
         return hr;
     }
 
     hr = IStorage_Commit( stg, 0 );
     if (FAILED( hr ))
     {
-        WARN("failed to commit changes 0x%08x\n", hr);
+        WARN("failed to commit changes %#lx\n", hr);
         return hr;
     }
 
@@ -217,7 +217,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
 
     if( FAILED( r ) || !stg )
     {
-        WARN("open failed r = %08x for %s\n", r, debugstr_w(szDBPath));
+        WARN("open failed r = %#lx for %s\n", r, debugstr_w(szDBPath));
         return ERROR_FUNCTION_FAILED;
     }
 
@@ -513,7 +513,7 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
                     type = L"LONG";
                 else
                 {
-                    WARN("invalid int width %u\n", len);
+                    WARN("invalid int width %lu\n", len);
                     msi_free(columns);
                     return NULL;
                 }
@@ -835,12 +835,12 @@ done:
     return r;
 }
 
-UINT WINAPI MsiDatabaseImportW(MSIHANDLE handle, LPCWSTR szFolder, LPCWSTR szFilename)
+UINT WINAPI MsiDatabaseImportW( MSIHANDLE handle, const WCHAR *szFolder, const WCHAR *szFilename )
 {
     MSIDATABASE *db;
     UINT r;
 
-    TRACE("%x %s %s\n",handle,debugstr_w(szFolder), debugstr_w(szFilename));
+    TRACE( "%lu %s %s\n", handle, debugstr_w(szFolder), debugstr_w(szFilename) );
 
     if (!(db = msihandle2msiinfo(handle, MSIHANDLETYPE_DATABASE)))
         return ERROR_INVALID_HANDLE;
@@ -850,13 +850,12 @@ UINT WINAPI MsiDatabaseImportW(MSIHANDLE handle, LPCWSTR szFolder, LPCWSTR szFil
     return r;
 }
 
-UINT WINAPI MsiDatabaseImportA( MSIHANDLE handle,
-               LPCSTR szFolder, LPCSTR szFilename )
+UINT WINAPI MsiDatabaseImportA( MSIHANDLE handle, const char *szFolder, const char *szFilename )
 {
-    LPWSTR path = NULL, file = NULL;
+    WCHAR *path = NULL, *file = NULL;
     UINT r = ERROR_OUTOFMEMORY;
 
-    TRACE("%x %s %s\n", handle, debugstr_a(szFolder), debugstr_a(szFilename));
+    TRACE( "%lu %s %s\n", handle, debugstr_a(szFolder), debugstr_a(szFilename) );
 
     if( szFolder )
     {
@@ -1141,14 +1140,12 @@ done:
  *
  * row4 : data <tab> data <tab> data <tab> ... data <cr> <lf>
  */
-UINT WINAPI MsiDatabaseExportW( MSIHANDLE handle, LPCWSTR szTable,
-               LPCWSTR szFolder, LPCWSTR szFilename )
+UINT WINAPI MsiDatabaseExportW( MSIHANDLE handle, const WCHAR *szTable, const WCHAR *szFolder, const WCHAR *szFilename )
 {
     MSIDATABASE *db;
     UINT r;
 
-    TRACE("%x %s %s %s\n", handle, debugstr_w(szTable),
-          debugstr_w(szFolder), debugstr_w(szFilename));
+    TRACE( "%lu %s %s %s\n", handle, debugstr_w(szTable), debugstr_w(szFolder), debugstr_w(szFilename) );
 
     if (!(db = msihandle2msiinfo(handle, MSIHANDLETYPE_DATABASE)))
         return ERROR_INVALID_HANDLE;
@@ -1158,14 +1155,12 @@ UINT WINAPI MsiDatabaseExportW( MSIHANDLE handle, LPCWSTR szTable,
     return r;
 }
 
-UINT WINAPI MsiDatabaseExportA( MSIHANDLE handle, LPCSTR szTable,
-               LPCSTR szFolder, LPCSTR szFilename )
+UINT WINAPI MsiDatabaseExportA( MSIHANDLE handle, const char *szTable, const char *szFolder, const char *szFilename )
 {
-    LPWSTR path = NULL, file = NULL, table = NULL;
+    WCHAR *path = NULL, *file = NULL, *table = NULL;
     UINT r = ERROR_OUTOFMEMORY;
 
-    TRACE("%x %s %s %s\n", handle, debugstr_a(szTable),
-          debugstr_a(szFolder), debugstr_a(szFilename));
+    TRACE( "%lu %s %s %s\n", handle, debugstr_a(szTable), debugstr_a(szFolder), debugstr_a(szFilename) );
 
     if( szTable )
     {
@@ -1198,14 +1193,12 @@ end:
     return r;
 }
 
-UINT WINAPI MsiDatabaseMergeA(MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge,
-                              LPCSTR szTableName)
+UINT WINAPI MsiDatabaseMergeA( MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge, const char *szTableName )
 {
     UINT r;
-    LPWSTR table;
+    WCHAR *table;
 
-    TRACE("(%d, %d, %s)\n", hDatabase, hDatabaseMerge,
-          debugstr_a(szTableName));
+    TRACE("%lu, %lu, %s\n", hDatabase, hDatabaseMerge, debugstr_a(szTableName) );
 
     table = strdupAtoW(szTableName);
     r = MsiDatabaseMergeW(hDatabase, hDatabaseMerge, table);
@@ -1839,7 +1832,7 @@ static UINT update_merge_errors(MSIDATABASE *db, LPCWSTR error,
     return r;
 }
 
-UINT WINAPI MsiDatabaseMergeW(MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge, LPCWSTR szTableName)
+UINT WINAPI MsiDatabaseMergeW( MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge, const WCHAR *szTableName )
 {
     struct list tabledata = LIST_INIT(tabledata);
     struct list *item, *cursor;
@@ -1848,7 +1841,7 @@ UINT WINAPI MsiDatabaseMergeW(MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge, LPC
     BOOL conflicts;
     UINT r;
 
-    TRACE("(%d, %d, %s)\n", hDatabase, hDatabaseMerge, debugstr_w(szTableName));
+    TRACE( "%lu, %lu, %s\n", hDatabase, hDatabaseMerge, debugstr_w(szTableName) );
 
     if (szTableName && !*szTableName)
         return ERROR_INVALID_TABLE;
@@ -1906,7 +1899,7 @@ MSIDBSTATE WINAPI MsiGetDatabaseState( MSIHANDLE handle )
     MSIDBSTATE ret = MSIDBSTATE_READ;
     MSIDATABASE *db;
 
-    TRACE("%d\n", handle);
+    TRACE( "%lu\n", handle );
 
     if (!(db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE )))
         return MSIDBSTATE_ERROR;

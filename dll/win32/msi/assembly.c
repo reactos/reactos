@@ -233,7 +233,7 @@ static BOOL is_assembly_installed( IAssemblyCache *cache, const WCHAR *display_n
     {
         return (info.dwAssemblyFlags == ASSEMBLYINFO_FLAG_INSTALLED);
     }
-    TRACE("QueryAssemblyInfo returned 0x%08x\n", hr);
+    TRACE( "QueryAssemblyInfo returned %#lx\n", hr );
     return FALSE;
 }
 
@@ -337,7 +337,7 @@ MSIASSEMBLY *msi_load_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
     TRACE("application %s\n", debugstr_w(a->application));
 
     a->attributes = MSI_RecordGetInteger( rec, 5 );
-    TRACE("attributes %u\n", a->attributes);
+    TRACE( "attributes %lu\n", a->attributes );
 
     if (!(a->display_name = get_assembly_display_name( package->db, comp->Component, a )))
     {
@@ -445,7 +445,7 @@ UINT msi_install_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
     hr = IAssemblyCache_InstallAssembly( cache, 0, manifest, NULL );
     if (hr != S_OK)
     {
-        ERR("Failed to install assembly %s (0x%08x)\n", debugstr_w(manifest), hr);
+        ERR( "failed to install assembly %s (%#lx)\n", debugstr_w(manifest), hr );
         return ERROR_FUNCTION_FAILED;
     }
     if (feature) feature->Action = INSTALLSTATE_LOCAL;
@@ -474,7 +474,7 @@ UINT msi_uninstall_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
     {
         cache = package->cache_sxs;
         hr = IAssemblyCache_UninstallAssembly( cache, 0, assembly->display_name, NULL, NULL );
-        if (FAILED( hr )) WARN("failed to uninstall assembly 0x%08x\n", hr);
+        if (FAILED( hr )) WARN( "failed to uninstall assembly %#lx\n", hr );
     }
     else
     {
@@ -486,7 +486,7 @@ UINT msi_uninstall_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
             if (cache)
             {
                 hr = IAssemblyCache_UninstallAssembly( cache, 0, assembly->display_name, NULL, NULL );
-                if (FAILED( hr )) WARN("failed to uninstall assembly 0x%08x\n", hr);
+                if (FAILED( hr )) WARN( "failed to uninstall assembly %#lx\n", hr );
             }
         }
     }
@@ -638,7 +638,7 @@ UINT ACTION_MsiPublishAssemblies( MSIPACKAGE *package )
             }
             if ((res = open_local_assembly_key( package->Context, win32, file->TargetPath, &hkey )))
             {
-                WARN("failed to open local assembly key %d\n", res);
+                WARN( "failed to open local assembly key %ld\n", res );
                 return ERROR_FUNCTION_FAILED;
             }
         }
@@ -646,14 +646,14 @@ UINT ACTION_MsiPublishAssemblies( MSIPACKAGE *package )
         {
             if ((res = open_global_assembly_key( package->Context, win32, &hkey )))
             {
-                WARN("failed to open global assembly key %d\n", res);
+                WARN( "failed to open global assembly key %ld\n", res );
                 return ERROR_FUNCTION_FAILED;
             }
         }
         size = sizeof(buffer);
         if ((res = RegSetValueExW( hkey, assembly->display_name, 0, REG_MULTI_SZ, (const BYTE *)buffer, size )))
         {
-            WARN("failed to set assembly value %d\n", res);
+            WARN( "failed to set assembly value %ld\n", res );
         }
         RegCloseKey( hkey );
 
@@ -699,17 +699,17 @@ UINT ACTION_MsiUnpublishAssemblies( MSIPACKAGE *package )
                 continue;
             }
             if ((res = delete_local_assembly_key( package->Context, win32, file->TargetPath )))
-                WARN("failed to delete local assembly key %d\n", res);
+                WARN( "failed to delete local assembly key %ld\n", res );
         }
         else
         {
             HKEY hkey;
             if ((res = open_global_assembly_key( package->Context, win32, &hkey )))
-                WARN("failed to delete global assembly key %d\n", res);
+                WARN( "failed to delete global assembly key %ld\n", res );
             else
             {
                 if ((res = RegDeleteValueW( hkey, assembly->display_name )))
-                    WARN("failed to delete global assembly value %d\n", res);
+                    WARN( "failed to delete global assembly value %ld\n", res );
                 RegCloseKey( hkey );
             }
         }

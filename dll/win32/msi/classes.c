@@ -911,7 +911,7 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
 
         res = RegDeleteTreeW( hkey, cls->clsid );
         if (res != ERROR_SUCCESS)
-            WARN("Failed to delete class key %d\n", res);
+            WARN("failed to delete class key %ld\n", res);
 
         if (cls->AppID)
         {
@@ -920,7 +920,7 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
             {
                 res = RegDeleteKeyW( hkey2, cls->AppID->AppID );
                 if (res != ERROR_SUCCESS)
-                    WARN("Failed to delete appid key %d\n", res);
+                    WARN("failed to delete appid key %ld\n", res);
                 RegCloseKey( hkey2 );
             }
         }
@@ -935,7 +935,7 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
                 msi_free( filetype );
 
                 if (res != ERROR_SUCCESS)
-                    WARN("Failed to delete file type %d\n", res);
+                    WARN("failed to delete file type %ld\n", res);
             }
         }
 
@@ -1111,7 +1111,7 @@ UINT ACTION_UnregisterProgIdInfo( MSIPACKAGE *package )
 
         res = RegDeleteTreeW( HKEY_CLASSES_ROOT, progid->ProgID );
         if (res != ERROR_SUCCESS)
-            TRACE("Failed to delete progid key %d\n", res);
+            TRACE("failed to delete progid key %ld\n", res);
 
         uirow = MSI_CreateRecord( 1 );
         MSI_RecordSetStringW( uirow, 1, progid->ProgID );
@@ -1256,7 +1256,7 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
             res = RegCreateKeyW( HKEY_CLASSES_ROOT, extension, &hkey );
             msi_free( extension );
             if (res != ERROR_SUCCESS)
-                WARN("Failed to create extension key %d\n", res);
+                WARN("failed to create extension key %ld\n", res);
         }
 
         if (ext->Mime)
@@ -1355,7 +1355,7 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
             res = RegDeleteTreeW( HKEY_CLASSES_ROOT, extension );
             msi_free( extension );
             if (res != ERROR_SUCCESS)
-                WARN("Failed to delete extension key %d\n", res);
+                WARN("failed to delete extension key %ld\n", res);
         }
 
         if (ext->ProgID || ext->ProgIDText)
@@ -1376,7 +1376,7 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
                 res = RegDeleteTreeW( HKEY_CLASSES_ROOT, progid_shell );
                 msi_free( progid_shell );
                 if (res != ERROR_SUCCESS)
-                    WARN("Failed to delete shell key %d\n", res);
+                    WARN("failed to delete shell key %ld\n", res);
                 RegDeleteKeyW( HKEY_CLASSES_ROOT, progid );
             }
         }
@@ -1482,7 +1482,7 @@ UINT ACTION_UnregisterMIMEInfo( MSIPACKAGE *package )
             lstrcatW( mime_key, mime->ContentType );
             res = RegDeleteKeyW( HKEY_CLASSES_ROOT, mime_key );
             if (res != ERROR_SUCCESS)
-                WARN("Failed to delete MIME key %d\n", res);
+                WARN("failed to delete MIME key %ld\n", res);
             msi_free( mime_key );
         }
 

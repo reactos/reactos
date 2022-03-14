@@ -672,7 +672,7 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
     MSIPACKAGE *package;
     BOOL r = FALSE;
 
-    TRACE("%d %d\n", hInstall, iRunMode);
+    TRACE( "%lu, %d\n", hInstall, iRunMode );
 
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
@@ -765,7 +765,7 @@ UINT WINAPI MsiSetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode, BOOL fState)
     MSIPACKAGE *package;
     UINT r;
 
-    TRACE("%d %d %d\n", hInstall, iRunMode, fState);
+    TRACE( "%lu, %d, %d\n", hInstall, iRunMode, fState );
 
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if (!package)
@@ -990,7 +990,7 @@ UINT WINAPI MsiSetFeatureAttributesA( MSIHANDLE handle, LPCSTR feature, DWORD at
     UINT r;
     WCHAR *featureW = NULL;
 
-    TRACE("%u, %s, 0x%08x\n", handle, debugstr_a(feature), attrs);
+    TRACE( "%lu, %s, %#lx\n", handle, debugstr_a(feature), attrs );
 
     if (feature && !(featureW = strdupAtoW( feature ))) return ERROR_OUTOFMEMORY;
 
@@ -1021,7 +1021,7 @@ UINT WINAPI MsiSetFeatureAttributesW( MSIHANDLE handle, LPCWSTR name, DWORD attr
     MSIFEATURE *feature;
     WCHAR *costing;
 
-    TRACE("%u, %s, 0x%08x\n", handle, debugstr_w(name), attrs);
+    TRACE( "%lu, %s, %#lx\n", handle, debugstr_w(name), attrs );
 
     if (!name || !name[0]) return ERROR_UNKNOWN_FEATURE;
 
@@ -1085,13 +1085,13 @@ UINT MSI_GetFeatureStateW(MSIPACKAGE *package, LPCWSTR szFeature,
 /***********************************************************************
 * MsiGetFeatureStateW   (MSI.@)
 */
-UINT WINAPI MsiGetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
-                  INSTALLSTATE *piInstalled, INSTALLSTATE *piAction)
+UINT WINAPI MsiGetFeatureStateW( MSIHANDLE hInstall, const WCHAR *szFeature, INSTALLSTATE *piInstalled,
+                                 INSTALLSTATE *piAction )
 {
     MSIPACKAGE* package;
     UINT ret;
 
-    TRACE("%d %s %p %p\n", hInstall, debugstr_w(szFeature), piInstalled, piAction);
+    TRACE( "%lu, %s, %p, %p\n", hInstall, debugstr_w(szFeature), piInstalled, piAction );
 
     if (!szFeature)
         return ERROR_UNKNOWN_FEATURE;
@@ -1204,15 +1204,14 @@ UINT MSI_GetFeatureCost( MSIPACKAGE *package, MSIFEATURE *feature, MSICOSTTREE t
 /***********************************************************************
 * MsiGetFeatureCostW   (MSI.@)
 */
-UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
-                  MSICOSTTREE iCostTree, INSTALLSTATE iState, LPINT piCost)
+UINT WINAPI MsiGetFeatureCostW( MSIHANDLE hInstall, const WCHAR *szFeature, MSICOSTTREE iCostTree,
+                                INSTALLSTATE iState, INT *piCost )
 {
     MSIPACKAGE *package;
     MSIFEATURE *feature;
     UINT ret;
 
-    TRACE("(%d %s %i %i %p)\n", hInstall, debugstr_w(szFeature),
-          iCostTree, iState, piCost);
+    TRACE( "%lu, %s, %d, %d, %p\n", hInstall, debugstr_w(szFeature), iCostTree, iState, piCost );
 
     if (!szFeature)
         return ERROR_INVALID_PARAMETER;
@@ -1258,14 +1257,14 @@ UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
 /***********************************************************************
 * MsiGetFeatureInfoA   (MSI.@)
 */
-UINT WINAPI MsiGetFeatureInfoA( MSIHANDLE handle, LPCSTR feature, LPDWORD attrs,
-                                LPSTR title, LPDWORD title_len, LPSTR help, LPDWORD help_len )
+UINT WINAPI MsiGetFeatureInfoA( MSIHANDLE handle, const char *feature, DWORD *attrs,
+                                char *title, DWORD *title_len, char *help, DWORD *help_len )
 {
     UINT r;
     WCHAR *titleW = NULL, *helpW = NULL, *featureW = NULL;
 
-    TRACE("%u, %s, %p, %p, %p, %p, %p\n", handle, debugstr_a(feature), attrs, title,
-          title_len, help, help_len);
+    TRACE( "%lu, %s, %p, %p, %p, %p, %p\n", handle, debugstr_a(feature), attrs, title,
+           title_len, help, help_len );
 
     if (feature && !(featureW = strdupAtoW( feature ))) return ERROR_OUTOFMEMORY;
 
@@ -1352,14 +1351,14 @@ static UINT MSI_GetFeatureInfo( MSIPACKAGE *package, LPCWSTR name, LPDWORD attrs
 /***********************************************************************
 * MsiGetFeatureInfoW   (MSI.@)
 */
-UINT WINAPI MsiGetFeatureInfoW( MSIHANDLE handle, LPCWSTR feature, LPDWORD attrs,
-                                LPWSTR title, LPDWORD title_len, LPWSTR help, LPDWORD help_len )
+UINT WINAPI MsiGetFeatureInfoW( MSIHANDLE handle, const WCHAR *feature, DWORD *attrs,
+                                WCHAR *title, DWORD *title_len, WCHAR *help, DWORD *help_len )
 {
     UINT r;
     MSIPACKAGE *package;
 
-    TRACE("%u, %s, %p, %p, %p, %p, %p\n", handle, debugstr_w(feature), attrs, title,
-          title_len, help, help_len);
+    TRACE( "%lu, %s, %p, %p, %p, %p, %p\n", handle, debugstr_w(feature), attrs, title,
+           title_len, help, help_len );
 
     if (!feature) return ERROR_INVALID_PARAMETER;
 
@@ -1499,14 +1498,13 @@ UINT WINAPI MsiSetComponentStateW(MSIHANDLE hInstall, LPCWSTR szComponent,
 /***********************************************************************
  * MsiGetComponentStateW (MSI.@)
  */
-UINT WINAPI MsiGetComponentStateW(MSIHANDLE hInstall, LPCWSTR szComponent,
-                  INSTALLSTATE *piInstalled, INSTALLSTATE *piAction)
+UINT WINAPI MsiGetComponentStateW( MSIHANDLE hInstall, const WCHAR *szComponent, INSTALLSTATE *piInstalled,
+                                   INSTALLSTATE *piAction )
 {
     MSIPACKAGE* package;
     UINT ret;
 
-    TRACE("%d %s %p %p\n", hInstall, debugstr_w(szComponent),
-           piInstalled, piAction);
+    TRACE( "%lu, %s, %p, %p\n", hInstall, debugstr_w(szComponent), piInstalled, piAction );
 
     if (!szComponent)
         return ERROR_UNKNOWN_COMPONENT;
@@ -1601,7 +1599,7 @@ UINT WINAPI MsiSetInstallLevel(MSIHANDLE hInstall, int iInstallLevel)
     MSIPACKAGE* package;
     UINT r;
 
-    TRACE("%d %i\n", hInstall, iInstallLevel);
+    TRACE( "%lu %d\n", hInstall, iInstallLevel );
 
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
@@ -1634,28 +1632,22 @@ UINT WINAPI MsiSetInstallLevel(MSIHANDLE hInstall, int iInstallLevel)
 /***********************************************************************
  * MsiGetFeatureValidStatesW (MSI.@)
  */
-UINT WINAPI MsiGetFeatureValidStatesW(MSIHANDLE hInstall, LPCWSTR szFeature,
-                  LPDWORD pInstallState)
+UINT WINAPI MsiGetFeatureValidStatesW( MSIHANDLE hInstall, const WCHAR *szFeature, DWORD *pInstallState )
 {
-    if(pInstallState) *pInstallState = 1<<INSTALLSTATE_LOCAL;
-    FIXME("%d %s %p stub returning %d\n",
-        hInstall, debugstr_w(szFeature), pInstallState, pInstallState ? *pInstallState : 0);
-
+    if (pInstallState) *pInstallState = 1 << INSTALLSTATE_LOCAL;
+    FIXME( "%lu, %s, %p stub returning %lu\n", hInstall, debugstr_w(szFeature), pInstallState,
+           pInstallState ? *pInstallState : 0 );
     return ERROR_SUCCESS;
 }
 
 /***********************************************************************
  * MsiGetFeatureValidStatesA (MSI.@)
  */
-UINT WINAPI MsiGetFeatureValidStatesA(MSIHANDLE hInstall, LPCSTR szFeature,
-                  LPDWORD pInstallState)
+UINT WINAPI MsiGetFeatureValidStatesA( MSIHANDLE hInstall, const char *szFeature, DWORD *pInstallState )
 {
     UINT ret;
-    LPWSTR szwFeature = strdupAtoW(szFeature);
-
+    WCHAR *szwFeature = strdupAtoW(szFeature);
     ret = MsiGetFeatureValidStatesW(hInstall, szwFeature, pInstallState);
-
     msi_free(szwFeature);
-
     return ret;
 }

@@ -142,7 +142,7 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
             HKEY hukey;
             INT r;
 
-            TRACE("Looking at index %u product %s\n", index, debugstr_w(product));
+            TRACE( "looking at index %lu product %s\n", index, debugstr_w(product) );
 
             unsquash_guid(product, productid);
             if (MSIREG_OpenProductKey(productid, NULL, MSIINSTALLCONTEXT_USERMANAGED, &hukey, FALSE) &&

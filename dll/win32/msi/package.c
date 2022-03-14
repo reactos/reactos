@@ -298,7 +298,7 @@ static void free_package_structures( MSIPACKAGE *package )
 
         list_remove( &binary->entry );
         if (!DeleteFileW( binary->tmpfile ))
-            ERR("failed to delete %s (%u)\n", debugstr_w(binary->tmpfile), GetLastError());
+            ERR( "failed to delete %s (%lu)\n", debugstr_w(binary->tmpfile), GetLastError() );
         msi_free( binary->source );
         msi_free( binary->tmpfile );
         msi_free( binary );
@@ -321,7 +321,7 @@ static void free_package_structures( MSIPACKAGE *package )
         list_remove( &patch->entry );
         if (patch->delete_on_close && !DeleteFileW( patch->localfile ))
         {
-            ERR("failed to delete %s (%u)\n", debugstr_w(patch->localfile), GetLastError());
+            ERR( "failed to delete %s (%lu)\n", debugstr_w(patch->localfile), GetLastError() );
         }
         msi_free_patchinfo( patch );
     }
@@ -1553,12 +1553,12 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, DWORD dwOptions, MSIPACKAGE **pPackage)
     return ERROR_SUCCESS;
 }
 
-UINT WINAPI MsiOpenPackageExW(LPCWSTR szPackage, DWORD dwOptions, MSIHANDLE *phPackage)
+UINT WINAPI MsiOpenPackageExW( const WCHAR *szPackage, DWORD dwOptions, MSIHANDLE *phPackage )
 {
     MSIPACKAGE *package = NULL;
     UINT ret;
 
-    TRACE("%s %08x %p\n", debugstr_w(szPackage), dwOptions, phPackage );
+    TRACE( "%s, %#lx, %p\n", debugstr_w(szPackage), dwOptions, phPackage );
 
     if( !szPackage || !phPackage )
         return ERROR_INVALID_PARAMETER;
@@ -1570,7 +1570,7 @@ UINT WINAPI MsiOpenPackageExW(LPCWSTR szPackage, DWORD dwOptions, MSIHANDLE *phP
     }
 
     if( dwOptions )
-        FIXME("dwOptions %08x not supported\n", dwOptions);
+        FIXME( "dwOptions %#lx not supported\n", dwOptions );
 
     ret = MSI_OpenPackageW( szPackage, 0, &package );
     if( ret == ERROR_SUCCESS )
@@ -1615,13 +1615,13 @@ UINT WINAPI MsiOpenPackageA(LPCSTR szPackage, MSIHANDLE *phPackage)
     return MsiOpenPackageExA( szPackage, 0, phPackage );
 }
 
-MSIHANDLE WINAPI MsiGetActiveDatabase(MSIHANDLE hInstall)
+MSIHANDLE WINAPI MsiGetActiveDatabase( MSIHANDLE hInstall )
 {
     MSIPACKAGE *package;
     MSIHANDLE handle = 0;
     MSIHANDLE remote;
 
-    TRACE("(%d)\n",hInstall);
+    TRACE( "%lu\n", hInstall );
 
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE);
     if( package)
@@ -1821,21 +1821,21 @@ INT MSI_ProcessMessageVerbatim(MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
     if (gUIHandlerRecord && (gUIFilterRecord & log_type))
     {
         MSIHANDLE rec = alloc_msihandle(&record->hdr);
-        TRACE("Calling UI handler %p(pvContext=%p, iMessageType=%08x, hRecord=%u)\n",
-              gUIHandlerRecord, gUIContextRecord, eMessageType, rec);
+        TRACE( "calling UI handler %p(pvContext = %p, iMessageType = %#x, hRecord = %lu)\n",
+               gUIHandlerRecord, gUIContextRecord, eMessageType, rec );
         rc = gUIHandlerRecord( gUIContextRecord, eMessageType, rec );
         MsiCloseHandle( rec );
     }
     if (!rc && gUIHandlerW && (gUIFilter & log_type))
     {
-        TRACE("Calling UI handler %p(pvContext=%p, iMessageType=%08x, szMessage=%s)\n",
-              gUIHandlerW, gUIContext, eMessageType, debugstr_w(message));
+        TRACE( "calling UI handler %p(pvContext = %p, iMessageType = %#x, szMessage = %s)\n",
+               gUIHandlerW, gUIContext, eMessageType, debugstr_w(message) );
         rc = gUIHandlerW( gUIContext, eMessageType, message );
     }
     else if (!rc && gUIHandlerA && (gUIFilter & log_type))
     {
-        TRACE("Calling UI handler %p(pvContext=%p, iMessageType=%08x, szMessage=%s)\n",
-              gUIHandlerA, gUIContext, eMessageType, debugstr_a(msg));
+        TRACE( "calling UI handler %p(pvContext = %p, iMessageType = %#x, szMessage = %s)\n",
+               gUIHandlerA, gUIContext, eMessageType, debugstr_a(msg) );
         rc = gUIHandlerA( gUIContext, eMessageType, msg );
     }
 
@@ -2214,8 +2214,7 @@ UINT msi_get_property( MSIDATABASE *db, LPCWSTR szName,
         TRACE("returning %s for property %s\n", debugstr_wn(szValueBuf, *pchValueBuf),
             debugstr_w(szName));
     else if (rc == ERROR_MORE_DATA)
-        TRACE("need %d sized buffer for %s\n", *pchValueBuf,
-            debugstr_w(szName));
+        TRACE( "need %lu sized buffer for %s\n", *pchValueBuf, debugstr_w(szName) );
     else
     {
         *pchValueBuf = 0;

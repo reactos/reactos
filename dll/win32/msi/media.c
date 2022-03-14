@@ -64,7 +64,7 @@ static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
 
     if (!GetVolumeInformationW(root, volume_name, MAX_PATH + 1, NULL, NULL, NULL, NULL, 0))
     {
-        WARN("failed to get volume information for %s (%u)\n", debugstr_w(root), GetLastError());
+        WARN( "failed to get volume information for %s (%lu)\n", debugstr_w(root), GetLastError() );
         return FALSE;
     }
 
@@ -227,7 +227,7 @@ static INT_PTR CDECL cabinet_open_stream( char *pszFile, int oflag, int pmode )
         msi_free( encoded );
         if (FAILED(hr))
         {
-            WARN("failed to open stream 0x%08x\n", hr);
+            WARN( "failed to open stream %#lx\n", hr );
             return -1;
         }
     }
@@ -349,7 +349,7 @@ static INT_PTR cabinet_next_cabinet(FDINOTIFICATIONTYPE fdint,
         length = strlen(pfdin->psz3) + 1 + strlen(next_cab) + 1;
         if (length > 256)
         {
-            WARN("Cannot update next cabinet filename with a string size %u > 256\n", length);
+            WARN( "cannot update next cabinet filename with a string size %lu > 256\n", length );
             msi_free(next_cab);
             goto done;
         }
@@ -441,7 +441,7 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
 
         if (attrs2 == INVALID_FILE_ATTRIBUTES)
         {
-            ERR("failed to create %s (error %d)\n", debugstr_w(path), err);
+            ERR( "failed to create %s (error %lu)\n", debugstr_w(path), err );
             goto done;
         }
         else if (err == ERROR_ACCESS_DENIED && (attrs2 & FILE_ATTRIBUTE_READONLY))
@@ -481,13 +481,12 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
             }
             else
             {
-                WARN("failed to schedule rename operation %s (error %d)\n", debugstr_w(path), GetLastError());
+                WARN( "failed to schedule rename operation %s (error %lu)\n", debugstr_w(path), GetLastError() );
                 DeleteFileW( tmpfileW );
             }
             msi_free(tmpfileW);
         }
-        else
-            WARN("failed to create %s (error %d)\n", debugstr_w(path), err);
+        else WARN( "failed to create %s (error %lu)\n", debugstr_w(path), err );
     }
 
 done:

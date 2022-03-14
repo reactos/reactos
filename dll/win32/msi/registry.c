@@ -1021,12 +1021,12 @@ UINT WINAPI MsiDecomposeDescriptorA( LPCSTR szDescriptor, LPSTR szProduct,
     return r;
 }
 
-UINT WINAPI MsiEnumProductsA(DWORD index, LPSTR lpguid)
+UINT WINAPI MsiEnumProductsA( DWORD index, char *lpguid )
 {
     DWORD r;
     WCHAR szwGuid[GUID_SIZE];
 
-    TRACE("%d %p\n", index, lpguid);
+    TRACE( "%lu, %p\n", index, lpguid );
 
     if (NULL == lpguid)
         return ERROR_INVALID_PARAMETER;
@@ -1037,9 +1037,9 @@ UINT WINAPI MsiEnumProductsA(DWORD index, LPSTR lpguid)
     return r;
 }
 
-UINT WINAPI MsiEnumProductsW(DWORD index, LPWSTR lpguid)
+UINT WINAPI MsiEnumProductsW( DWORD index, WCHAR *lpguid )
 {
-    TRACE("%d %p\n", index, lpguid);
+    TRACE("%lu, %p\n", index, lpguid );
 
     if (NULL == lpguid)
         return ERROR_INVALID_PARAMETER;
@@ -1048,13 +1048,13 @@ UINT WINAPI MsiEnumProductsW(DWORD index, LPWSTR lpguid)
                                NULL, NULL, NULL );
 }
 
-UINT WINAPI MsiEnumFeaturesA(LPCSTR szProduct, DWORD index, LPSTR szFeature, LPSTR szParent)
+UINT WINAPI MsiEnumFeaturesA( const char *szProduct, DWORD index, char *szFeature, char *szParent )
 {
     DWORD r;
     WCHAR szwFeature[GUID_SIZE], szwParent[GUID_SIZE];
-    LPWSTR szwProduct = NULL;
+    WCHAR *szwProduct = NULL;
 
-    TRACE("%s %d %p %p\n", debugstr_a(szProduct), index, szFeature, szParent);
+    TRACE( "%s, %lu, %p, %p\n", debugstr_a(szProduct), index, szFeature, szParent );
 
     if( szProduct )
     {
@@ -1066,10 +1066,8 @@ UINT WINAPI MsiEnumFeaturesA(LPCSTR szProduct, DWORD index, LPSTR szFeature, LPS
     r = MsiEnumFeaturesW(szwProduct, index, szwFeature, szwParent);
     if( r == ERROR_SUCCESS )
     {
-        WideCharToMultiByte(CP_ACP, 0, szwFeature, -1,
-                            szFeature, GUID_SIZE, NULL, NULL);
-        WideCharToMultiByte(CP_ACP, 0, szwParent, -1,
-                            szParent, GUID_SIZE, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, szwFeature, -1, szFeature, GUID_SIZE, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, szwParent, -1, szParent, GUID_SIZE, NULL, NULL);
     }
 
     msi_free( szwProduct);
@@ -1077,12 +1075,12 @@ UINT WINAPI MsiEnumFeaturesA(LPCSTR szProduct, DWORD index, LPSTR szFeature, LPS
     return r;
 }
 
-UINT WINAPI MsiEnumFeaturesW(LPCWSTR szProduct, DWORD index, LPWSTR szFeature, LPWSTR szParent)
+UINT WINAPI MsiEnumFeaturesW( const WCHAR *szProduct, DWORD index, WCHAR *szFeature, WCHAR *szParent )
 {
     HKEY hkeyProduct = 0;
     DWORD r, sz;
 
-    TRACE("%s %d %p %p\n", debugstr_w(szProduct), index, szFeature, szParent);
+    TRACE( "%s, %lu, %p, %p\n", debugstr_w(szProduct), index, szFeature, szParent );
 
     if( !szProduct )
         return ERROR_INVALID_PARAMETER;
@@ -1098,12 +1096,12 @@ UINT WINAPI MsiEnumFeaturesW(LPCWSTR szProduct, DWORD index, LPWSTR szFeature, L
     return r;
 }
 
-UINT WINAPI MsiEnumComponentsA(DWORD index, LPSTR lpguid)
+UINT WINAPI MsiEnumComponentsA( DWORD index, char *lpguid )
 {
     DWORD r;
     WCHAR szwGuid[GUID_SIZE];
 
-    TRACE("%u, %p\n", index, lpguid);
+    TRACE( "%lu, %p\n", index, lpguid );
 
     if (!lpguid) return ERROR_INVALID_PARAMETER;
 
@@ -1114,23 +1112,23 @@ UINT WINAPI MsiEnumComponentsA(DWORD index, LPSTR lpguid)
     return r;
 }
 
-UINT WINAPI MsiEnumComponentsW(DWORD index, LPWSTR lpguid)
+UINT WINAPI MsiEnumComponentsW( DWORD index, WCHAR *lpguid )
 {
-    TRACE("%u, %p\n", index, lpguid);
+    TRACE( "%lu, %p\n", index, lpguid );
 
     if (!lpguid) return ERROR_INVALID_PARAMETER;
 
     return MsiEnumComponentsExW( L"S-1-1-0", MSIINSTALLCONTEXT_ALL, index, lpguid, NULL, NULL, NULL );
 }
 
-UINT WINAPI MsiEnumComponentsExA( LPCSTR user_sid, DWORD ctx, DWORD index, CHAR guid[39],
-                                  MSIINSTALLCONTEXT *installed_ctx, LPSTR sid, LPDWORD sid_len )
+UINT WINAPI MsiEnumComponentsExA( const char *user_sid, DWORD ctx, DWORD index, CHAR guid[39],
+                                  MSIINSTALLCONTEXT *installed_ctx, char *sid, DWORD *sid_len )
 {
     UINT r;
     WCHAR *user_sidW = NULL, *sidW = NULL, guidW[GUID_SIZE];
 
-    TRACE("%s, %u, %u, %p, %p, %p, %p\n", debugstr_a(user_sid), ctx, index, guid, installed_ctx,
-          sid, sid_len);
+    TRACE( "%s, %#lx, %lu, %p, %p, %p, %p\n", debugstr_a(user_sid), ctx, index, guid, installed_ctx,
+           sid, sid_len );
 
     if (sid && !sid_len) return ERROR_INVALID_PARAMETER;
     if (user_sid && !(user_sidW = strdupAtoW( user_sid ))) return ERROR_OUTOFMEMORY;
@@ -1300,15 +1298,15 @@ done:
     return r;
 }
 
-UINT WINAPI MsiEnumComponentsExW( LPCWSTR user_sid, DWORD ctx, DWORD index, WCHAR guid[39],
-                                  MSIINSTALLCONTEXT *installed_ctx, LPWSTR sid, LPDWORD sid_len )
+UINT WINAPI MsiEnumComponentsExW( const WCHAR *user_sid, DWORD ctx, DWORD index, WCHAR guid[39],
+                                  MSIINSTALLCONTEXT *installed_ctx, WCHAR *sid, DWORD *sid_len )
 {
     UINT r;
     DWORD idx = 0;
     static DWORD last_index;
 
-    TRACE("%s, %u, %u, %p, %p, %p, %p\n", debugstr_w(user_sid), ctx, index, guid, installed_ctx,
-          sid, sid_len);
+    TRACE( "%s, %#lx, %lu, %p, %p, %p, %p\n", debugstr_w(user_sid), ctx, index, guid, installed_ctx,
+          sid, sid_len );
 
     if ((sid && !sid_len) || !ctx || (user_sid && ctx == MSIINSTALLCONTEXT_MACHINE))
         return ERROR_INVALID_PARAMETER;
@@ -1327,13 +1325,13 @@ UINT WINAPI MsiEnumComponentsExW( LPCWSTR user_sid, DWORD ctx, DWORD index, WCHA
     return r;
 }
 
-UINT WINAPI MsiEnumClientsA(LPCSTR szComponent, DWORD index, LPSTR szProduct)
+UINT WINAPI MsiEnumClientsA( const char *szComponent, DWORD index, char *szProduct )
 {
     DWORD r;
     WCHAR szwProduct[GUID_SIZE];
-    LPWSTR szwComponent = NULL;
+    WCHAR *szwComponent = NULL;
 
-    TRACE("%s %d %p\n", debugstr_a(szComponent), index, szProduct);
+    TRACE( "%s, %lu, %p\n", debugstr_a(szComponent), index, szProduct );
 
     if ( !szProduct )
         return ERROR_INVALID_PARAMETER;
@@ -1347,23 +1345,20 @@ UINT WINAPI MsiEnumClientsA(LPCSTR szComponent, DWORD index, LPSTR szProduct)
 
     r = MsiEnumClientsW(szComponent?szwComponent:NULL, index, szwProduct);
     if( r == ERROR_SUCCESS )
-    {
-        WideCharToMultiByte(CP_ACP, 0, szwProduct, -1,
-                            szProduct, GUID_SIZE, NULL, NULL);
-    }
+        WideCharToMultiByte(CP_ACP, 0, szwProduct, -1, szProduct, GUID_SIZE, NULL, NULL);
 
     msi_free( szwComponent);
 
     return r;
 }
 
-UINT WINAPI MsiEnumClientsW(LPCWSTR szComponent, DWORD index, LPWSTR szProduct)
+UINT WINAPI MsiEnumClientsW( const WCHAR *szComponent, DWORD index, WCHAR *szProduct )
 {
     HKEY hkeyComp = 0;
     DWORD r, sz;
     WCHAR szValName[SQUASHED_GUID_SIZE];
 
-    TRACE("%s %d %p\n", debugstr_w(szComponent), index, szProduct);
+    TRACE( "%s, %lu, %p\n", debugstr_w(szComponent), index, szProduct );
 
     if (!szComponent || !*szComponent || !szProduct)
         return ERROR_INVALID_PARAMETER;
@@ -1396,35 +1391,33 @@ UINT WINAPI MsiEnumClientsW(LPCWSTR szComponent, DWORD index, LPWSTR szProduct)
     return r;
 }
 
-UINT WINAPI MsiEnumClientsExA(LPCSTR component, LPCSTR usersid, DWORD ctx, DWORD index,
-                              CHAR installed_product[GUID_SIZE],
-                              MSIINSTALLCONTEXT *installed_ctx, LPSTR sid, LPDWORD sid_len)
+UINT WINAPI MsiEnumClientsExA( const char *component, const char *usersid, DWORD ctx, DWORD index,
+                               char installed_product[GUID_SIZE], MSIINSTALLCONTEXT *installed_ctx, char *sid,
+                               DWORD *sid_len )
 {
-    FIXME("%s, %s, %u, %u, %p, %p, %p, %p\n", debugstr_a(component), debugstr_a(usersid),
-          ctx, index, installed_product, installed_ctx, sid, sid_len);
+    FIXME( "%s, %s, %#lx, %lu, %p, %p, %p, %p\n", debugstr_a(component), debugstr_a(usersid), ctx, index,
+           installed_product, installed_ctx, sid, sid_len );
     return ERROR_ACCESS_DENIED;
 }
 
-UINT WINAPI MsiEnumClientsExW(LPCWSTR component, LPCWSTR usersid, DWORD ctx, DWORD index,
-                              WCHAR installed_product[GUID_SIZE],
-                              MSIINSTALLCONTEXT *installed_ctx, LPWSTR sid, LPDWORD sid_len)
+UINT WINAPI MsiEnumClientsExW( const WCHAR *component, const WCHAR *usersid, DWORD ctx, DWORD index,
+                               WCHAR installed_product[GUID_SIZE], MSIINSTALLCONTEXT *installed_ctx, WCHAR *sid,
+                               DWORD *sid_len )
 {
-    FIXME("%s, %s, %u, %u, %p, %p, %p, %p\n", debugstr_w(component), debugstr_w(usersid),
-          ctx, index, installed_product, installed_ctx, sid, sid_len);
+    FIXME( "%s, %s, %#lx, %lu, %p, %p, %p, %p\n", debugstr_w(component), debugstr_w(usersid), ctx, index,
+           installed_product, installed_ctx, sid, sid_len );
     return ERROR_ACCESS_DENIED;
 }
 
-static UINT MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
-                awstring *lpQualBuf, LPDWORD pcchQual,
-                awstring *lpAppBuf, LPDWORD pcchAppBuf )
+static UINT MSI_EnumComponentQualifiers( const WCHAR *szComponent, DWORD iIndex, awstring *lpQualBuf,
+                                         DWORD *pcchQual, awstring *lpAppBuf, DWORD *pcchAppBuf )
 {
     DWORD name_sz, val_sz, name_max, val_max, type, ofs;
-    LPWSTR name = NULL, val = NULL;
+    WCHAR *name = NULL, *val = NULL;
     UINT r, r2;
     HKEY key;
 
-    TRACE("%s %08x %p %p %p %p\n", debugstr_w(szComponent), iIndex,
-          lpQualBuf, pcchQual, lpAppBuf, pcchAppBuf);
+    TRACE( "%s, %lu, %p, %p, %p, %p\n", debugstr_w(szComponent), iIndex, lpQualBuf, pcchQual, lpAppBuf, pcchAppBuf );
 
     if (!szComponent)
         return ERROR_INVALID_PARAMETER;
@@ -1451,8 +1444,7 @@ static UINT MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
     {
         name_sz = name_max;
         val_sz = val_max;
-        r = RegEnumValueW( key, iIndex, name, &name_sz,
-                           NULL, &type, (LPBYTE)val, &val_sz );
+        r = RegEnumValueW( key, iIndex, name, &name_sz, NULL, &type, (BYTE *)val, &val_sz );
         if (r == ERROR_SUCCESS)
             break;
         if (r != ERROR_MORE_DATA)
@@ -1460,7 +1452,7 @@ static UINT MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
 
         if (type != REG_MULTI_SZ)
         {
-            ERR("component data has wrong type (%d)\n", type);
+            ERR( "component data has wrong type (%lu)\n", type );
             goto end;
         }
 
@@ -1483,7 +1475,7 @@ static UINT MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
                 goto end;
             continue;
         }
-        ERR("should be enough data, but isn't %d %d\n", name_sz, val_sz );
+        ERR( "should be enough data, but isn't %lu %lu\n", name_sz, val_sz );
         goto end;
     }
 
@@ -1510,17 +1502,16 @@ end:
 /*************************************************************************
  *  MsiEnumComponentQualifiersA [MSI.@]
  */
-UINT WINAPI MsiEnumComponentQualifiersA( LPCSTR szComponent, DWORD iIndex,
-                LPSTR lpQualifierBuf, LPDWORD pcchQualifierBuf,
-                LPSTR lpApplicationDataBuf, LPDWORD pcchApplicationDataBuf )
+UINT WINAPI MsiEnumComponentQualifiersA( const char *szComponent, DWORD iIndex, char *lpQualifierBuf,
+                                         DWORD *pcchQualifierBuf, char *lpApplicationDataBuf,
+                                         DWORD *pcchApplicationDataBuf )
 {
     awstring qual, appdata;
-    LPWSTR comp;
+    WCHAR *comp;
     UINT r;
 
-    TRACE("%s %08x %p %p %p %p\n", debugstr_a(szComponent), iIndex,
-          lpQualifierBuf, pcchQualifierBuf, lpApplicationDataBuf,
-          pcchApplicationDataBuf);
+    TRACE( "%s, %lu, %p, %p, %p, %p\n", debugstr_a(szComponent), iIndex, lpQualifierBuf, pcchQualifierBuf,
+           lpApplicationDataBuf, pcchApplicationDataBuf );
 
     comp = strdupAtoW( szComponent );
     if (szComponent && !comp)
@@ -1541,15 +1532,14 @@ UINT WINAPI MsiEnumComponentQualifiersA( LPCSTR szComponent, DWORD iIndex,
 /*************************************************************************
  *  MsiEnumComponentQualifiersW [MSI.@]
  */
-UINT WINAPI MsiEnumComponentQualifiersW( LPCWSTR szComponent, DWORD iIndex,
-                LPWSTR lpQualifierBuf, LPDWORD pcchQualifierBuf,
-                LPWSTR lpApplicationDataBuf, LPDWORD pcchApplicationDataBuf )
+UINT WINAPI MsiEnumComponentQualifiersW( const WCHAR *szComponent, DWORD iIndex, WCHAR *lpQualifierBuf,
+                                         DWORD *pcchQualifierBuf, WCHAR *lpApplicationDataBuf,
+                                         DWORD *pcchApplicationDataBuf )
 {
     awstring qual, appdata;
 
-    TRACE("%s %08x %p %p %p %p\n", debugstr_w(szComponent), iIndex,
-          lpQualifierBuf, pcchQualifierBuf, lpApplicationDataBuf,
-          pcchApplicationDataBuf);
+    TRACE( "%s, %lu, %p, %p, %p, %p\n", debugstr_w(szComponent), iIndex, lpQualifierBuf, pcchQualifierBuf,
+           lpApplicationDataBuf, pcchApplicationDataBuf );
 
     qual.unicode = TRUE;
     qual.str.w = lpQualifierBuf;
@@ -1557,24 +1547,22 @@ UINT WINAPI MsiEnumComponentQualifiersW( LPCWSTR szComponent, DWORD iIndex,
     appdata.unicode = TRUE;
     appdata.str.w = lpApplicationDataBuf;
 
-    return MSI_EnumComponentQualifiers( szComponent, iIndex,
-                 &qual, pcchQualifierBuf, &appdata, pcchApplicationDataBuf );
+    return MSI_EnumComponentQualifiers( szComponent, iIndex, &qual, pcchQualifierBuf, &appdata, pcchApplicationDataBuf );
 }
 
 /*************************************************************************
  *  MsiEnumRelatedProductsW   [MSI.@]
  *
  */
-UINT WINAPI MsiEnumRelatedProductsW(LPCWSTR szUpgradeCode, DWORD dwReserved,
-                                    DWORD iProductIndex, LPWSTR lpProductBuf)
+UINT WINAPI MsiEnumRelatedProductsW( const WCHAR *szUpgradeCode, DWORD dwReserved, DWORD iProductIndex,
+                                     WCHAR *lpProductBuf )
 {
     UINT r;
     HKEY hkey;
     WCHAR szKeyName[SQUASHED_GUID_SIZE];
     DWORD dwSize = ARRAY_SIZE(szKeyName);
 
-    TRACE("%s %u %u %p\n", debugstr_w(szUpgradeCode), dwReserved,
-          iProductIndex, lpProductBuf);
+    TRACE( "%s, %#lx, %lu, %p\n", debugstr_w(szUpgradeCode), dwReserved, iProductIndex, lpProductBuf );
 
     if (NULL == szUpgradeCode)
         return ERROR_INVALID_PARAMETER;
@@ -1597,15 +1585,14 @@ UINT WINAPI MsiEnumRelatedProductsW(LPCWSTR szUpgradeCode, DWORD dwReserved,
  *  MsiEnumRelatedProductsA   [MSI.@]
  *
  */
-UINT WINAPI MsiEnumRelatedProductsA(LPCSTR szUpgradeCode, DWORD dwReserved,
-                                    DWORD iProductIndex, LPSTR lpProductBuf)
+UINT WINAPI MsiEnumRelatedProductsA( const char *szUpgradeCode, DWORD dwReserved, DWORD iProductIndex,
+                                     char *lpProductBuf )
 {
-    LPWSTR szwUpgradeCode = NULL;
+    WCHAR *szwUpgradeCode = NULL;
     WCHAR productW[GUID_SIZE];
     UINT r;
 
-    TRACE("%s %u %u %p\n", debugstr_a(szUpgradeCode), dwReserved,
-          iProductIndex, lpProductBuf);
+    TRACE( "%s, %#lx, %lu, %p\n", debugstr_a(szUpgradeCode), dwReserved, iProductIndex, lpProductBuf );
 
     if (szUpgradeCode)
     {
@@ -1628,23 +1615,19 @@ UINT WINAPI MsiEnumRelatedProductsA(LPCSTR szUpgradeCode, DWORD dwReserved,
 /***********************************************************************
  * MsiEnumPatchesExA            [MSI.@]
  */
-UINT WINAPI MsiEnumPatchesExA(LPCSTR szProductCode, LPCSTR szUserSid,
-        DWORD dwContext, DWORD dwFilter, DWORD dwIndex, LPSTR szPatchCode,
-        LPSTR szTargetProductCode, MSIINSTALLCONTEXT *pdwTargetProductContext,
-        LPSTR szTargetUserSid, LPDWORD pcchTargetUserSid)
+UINT WINAPI MsiEnumPatchesExA( const char *szProductCode, const char *szUserSid, DWORD dwContext, DWORD dwFilter,
+                               DWORD dwIndex, char *szPatchCode, char *szTargetProductCode,
+                               MSIINSTALLCONTEXT *pdwTargetProductContext, char *szTargetUserSid,
+                               DWORD *pcchTargetUserSid )
 {
-    LPWSTR prodcode = NULL;
-    LPWSTR usersid = NULL;
-    LPWSTR targsid = NULL;
-    WCHAR patch[GUID_SIZE];
-    WCHAR targprod[GUID_SIZE];
+    WCHAR *prodcode = NULL, *usersid = NULL, *targsid = NULL;
+    WCHAR patch[GUID_SIZE], targprod[GUID_SIZE];
     DWORD len;
     UINT r;
 
-    TRACE("(%s, %s, %d, %d, %d, %p, %p, %p, %p, %p)\n",
-          debugstr_a(szProductCode), debugstr_a(szUserSid), dwContext, dwFilter,
-          dwIndex, szPatchCode, szTargetProductCode, pdwTargetProductContext,
-          szTargetUserSid, pcchTargetUserSid);
+    TRACE( "%s, %s, %#lx, %lu, %lu, %p, %p, %p, %p, %p\n", debugstr_a(szProductCode), debugstr_a(szUserSid),
+           dwContext, dwFilter, dwIndex, szPatchCode, szTargetProductCode, pdwTargetProductContext, szTargetUserSid,
+           pcchTargetUserSid );
 
     if (szTargetUserSid && !pcchTargetUserSid)
         return ERROR_INVALID_PARAMETER;
@@ -1977,10 +1960,10 @@ done:
 /***********************************************************************
  * MsiEnumPatchesExW            [MSI.@]
  */
-UINT WINAPI MsiEnumPatchesExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
-        DWORD dwContext, DWORD dwFilter, DWORD dwIndex, LPWSTR szPatchCode,
-        LPWSTR szTargetProductCode, MSIINSTALLCONTEXT *pdwTargetProductContext,
-        LPWSTR szTargetUserSid, LPDWORD pcchTargetUserSid)
+UINT WINAPI MsiEnumPatchesExW( const WCHAR *szProductCode, const WCHAR *szUserSid, DWORD dwContext, DWORD dwFilter,
+                               DWORD dwIndex, WCHAR *szPatchCode, WCHAR *szTargetProductCode,
+                               MSIINSTALLCONTEXT *pdwTargetProductContext, WCHAR *szTargetUserSid,
+                               DWORD *pcchTargetUserSid )
 {
     WCHAR squashed_pc[SQUASHED_GUID_SIZE];
     DWORD idx = 0;
@@ -1988,10 +1971,9 @@ UINT WINAPI MsiEnumPatchesExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
 
     static DWORD last_index;
 
-    TRACE("(%s, %s, %d, %d, %d, %p, %p, %p, %p, %p)\n",
-          debugstr_w(szProductCode), debugstr_w(szUserSid), dwContext, dwFilter,
-          dwIndex, szPatchCode, szTargetProductCode, pdwTargetProductContext,
-          szTargetUserSid, pcchTargetUserSid);
+    TRACE( "%s, %s, %#lx, %lu, %lu, %p, %p, %p, %p, %p)\n", debugstr_w(szProductCode), debugstr_w(szUserSid),
+           dwContext, dwFilter, dwIndex, szPatchCode, szTargetProductCode, pdwTargetProductContext, szTargetUserSid,
+           pcchTargetUserSid );
 
     if (!szProductCode || !squash_guid( szProductCode, squashed_pc ))
         return ERROR_INVALID_PARAMETER;
@@ -2031,16 +2013,15 @@ UINT WINAPI MsiEnumPatchesExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
 /***********************************************************************
  * MsiEnumPatchesA            [MSI.@]
  */
-UINT WINAPI MsiEnumPatchesA(LPCSTR szProduct, DWORD iPatchIndex,
-        LPSTR lpPatchBuf, LPSTR lpTransformsBuf, LPDWORD pcchTransformsBuf)
+UINT WINAPI MsiEnumPatchesA( const char *szProduct, DWORD iPatchIndex, char *lpPatchBuf, char *lpTransformsBuf,
+                             DWORD *pcchTransformsBuf )
 {
-    LPWSTR product, transforms;
-    WCHAR patch[GUID_SIZE];
+    WCHAR *product, *transforms, patch[GUID_SIZE];
     DWORD len;
     UINT r;
 
-    TRACE("(%s %d %p %p %p)\n", debugstr_a(szProduct), iPatchIndex,
-          lpPatchBuf, lpTransformsBuf, pcchTransformsBuf);
+    TRACE( "%s, %lu, %p, %p, %p\n", debugstr_a(szProduct), iPatchIndex, lpPatchBuf, lpTransformsBuf,
+           pcchTransformsBuf );
 
     if (!szProduct || !lpPatchBuf || !lpTransformsBuf || !pcchTransformsBuf)
         return ERROR_INVALID_PARAMETER;
@@ -2086,16 +2067,16 @@ done:
 /***********************************************************************
  * MsiEnumPatchesW            [MSI.@]
  */
-UINT WINAPI MsiEnumPatchesW(LPCWSTR szProduct, DWORD iPatchIndex,
-        LPWSTR lpPatchBuf, LPWSTR lpTransformsBuf, LPDWORD pcchTransformsBuf)
+UINT WINAPI MsiEnumPatchesW( const WCHAR *szProduct, DWORD iPatchIndex, WCHAR *lpPatchBuf, WCHAR *lpTransformsBuf,
+                             DWORD *pcchTransformsBuf )
 {
     WCHAR *transforms = NULL, squashed_pc[SQUASHED_GUID_SIZE];
     HKEY prod;
     DWORD idx = 0;
     UINT r;
 
-    TRACE("(%s %d %p %p %p)\n", debugstr_w(szProduct), iPatchIndex,
-          lpPatchBuf, lpTransformsBuf, pcchTransformsBuf);
+    TRACE( "%s, %lu, %p, %p, %p)\n", debugstr_w(szProduct), iPatchIndex, lpPatchBuf, lpTransformsBuf,
+           pcchTransformsBuf );
 
     if (!szProduct || !squash_guid( szProduct, squashed_pc ))
         return ERROR_INVALID_PARAMETER;
@@ -2133,15 +2114,15 @@ done:
     return r;
 }
 
-UINT WINAPI MsiEnumProductsExA( LPCSTR product, LPCSTR usersid, DWORD ctx, DWORD index,
-                                CHAR installed_product[GUID_SIZE],
-                                MSIINSTALLCONTEXT *installed_ctx, LPSTR sid, LPDWORD sid_len )
+UINT WINAPI MsiEnumProductsExA( const char *product, const char *usersid, DWORD ctx, DWORD index,
+                                char installed_product[GUID_SIZE], MSIINSTALLCONTEXT *installed_ctx, char *sid,
+                                DWORD *sid_len )
 {
     UINT r;
     WCHAR installed_productW[GUID_SIZE], *productW = NULL, *usersidW = NULL, *sidW = NULL;
 
-    TRACE("%s, %s, %u, %u, %p, %p, %p, %p\n", debugstr_a(product), debugstr_a(usersid),
-          ctx, index, installed_product, installed_ctx, sid, sid_len);
+    TRACE( "%s, %s, %#lx, %lu, %p, %p, %p, %p\n", debugstr_a(product), debugstr_a(usersid), ctx, index,
+           installed_product, installed_ctx, sid, sid_len );
 
     if (sid && !sid_len) return ERROR_INVALID_PARAMETER;
     if (product && !(productW = strdupAtoW( product ))) return ERROR_OUTOFMEMORY;
@@ -2342,16 +2323,16 @@ done:
     return r;
 }
 
-UINT WINAPI MsiEnumProductsExW( LPCWSTR product, LPCWSTR usersid, DWORD ctx, DWORD index,
-                                WCHAR installed_product[GUID_SIZE],
-                                MSIINSTALLCONTEXT *installed_ctx, LPWSTR sid, LPDWORD sid_len )
+UINT WINAPI MsiEnumProductsExW( const WCHAR *product, const WCHAR *usersid, DWORD ctx, DWORD index,
+                                WCHAR installed_product[GUID_SIZE], MSIINSTALLCONTEXT *installed_ctx, WCHAR *sid,
+                                DWORD *sid_len )
 {
     UINT r;
     DWORD idx = 0;
     static DWORD last_index;
 
-    TRACE("%s, %s, %u, %u, %p, %p, %p, %p\n", debugstr_w(product), debugstr_w(usersid),
-          ctx, index, installed_product, installed_ctx, sid, sid_len);
+    TRACE( "%s, %s, %#lx, %lu, %p, %p, %p, %p\n", debugstr_w(product), debugstr_w(usersid), ctx, index,
+           installed_product, installed_ctx, sid, sid_len );
 
     if ((sid && !sid_len) || !ctx || (usersid && ctx == MSIINSTALLCONTEXT_MACHINE))
         return ERROR_INVALID_PARAMETER;

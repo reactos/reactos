@@ -90,7 +90,7 @@ static ULONG WINAPI MsiActiveScriptSite_AddRef(IActiveScriptSite* iface)
 {
     MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE( "(%p)->(%lu)\n", This, ref );
     return ref;
 }
 
@@ -99,7 +99,7 @@ static ULONG WINAPI MsiActiveScriptSite_Release(IActiveScriptSite* iface)
     MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE( "(%p)->(%lu)\n", This, ref );
 
     if (!ref)
         msi_free(This);
@@ -118,7 +118,7 @@ static HRESULT WINAPI MsiActiveScriptSite_GetItemInfo(IActiveScriptSite* iface, 
 {
     MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
 
-    TRACE("(%p)->(%p, %d, %p, %p)\n", This, pstrName, dwReturnMask, ppiunkItem, ppti);
+    TRACE( "(%p)->(%p, %lu, %p, %p)\n", This, pstrName, dwReturnMask, ppiunkItem, ppti );
 
     /* Determine the kind of pointer that is requested, and make sure placeholder is valid */
     if (dwReturnMask & SCRIPTINFO_ITYPEINFO) {

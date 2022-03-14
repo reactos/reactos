@@ -544,15 +544,15 @@ string_table *msi_load_string_table( IStorage *stg, UINT *bytes_per_strref )
 
         r = add_string( st, n, data+offset, len, refs, TRUE );
         if( r != n )
-            ERR("Failed to add string %d\n", n );
+            ERR( "Failed to add string %lu\n", n );
         n++;
         offset += len;
     }
 
     if ( datasize != offset )
-        ERR("string table load failed! (%08x != %08x), please report\n", datasize, offset );
+        ERR( "string table load failed! (%u != %lu), please report\n", datasize, offset );
 
-    TRACE("Loaded %d strings\n", count);
+    TRACE( "loaded %lu strings\n", count );
 
 end:
     msi_free( pool );

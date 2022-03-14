@@ -897,14 +897,13 @@ end:
     return rc;
 }
 
-UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
-                              LPWSTR szResult, LPDWORD sz )
+UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord, WCHAR *szResult, DWORD *sz )
 {
     UINT r = ERROR_INVALID_HANDLE;
     MSIPACKAGE *package;
     MSIRECORD *record;
 
-    TRACE("%d %d %p %p\n", hInstall, hRecord, szResult, sz);
+    TRACE( "%lu, %lu, %p, %p\n", hInstall, hRecord, szResult, sz );
 
     record = msihandle2msiinfo(hRecord, MSIHANDLETYPE_RECORD);
     if (!record)
@@ -961,7 +960,7 @@ UINT WINAPI MsiFormatRecordA(MSIHANDLE hinst, MSIHANDLE hrec, char *buf, DWORD *
     DWORD len;
     UINT r;
 
-    TRACE("%d %d %p %p\n", hinst, hrec, buf, sz);
+    TRACE( "%lu, %lu, %p, %p\n", hinst, hrec, buf, sz );
 
     rec = msihandle2msiinfo(hrec, MSIHANDLETYPE_RECORD);
     if (!rec)
