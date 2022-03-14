@@ -31,8 +31,6 @@
 # error You must include config.h to use this header
 #endif
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
-
 typedef enum {
     MSXML_DEFAULT = 0,
     MSXML2        = 20,

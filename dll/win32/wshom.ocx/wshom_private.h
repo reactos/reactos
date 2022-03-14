@@ -27,8 +27,6 @@
 #include "ole2.h"
 #include "olectl.h"
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
-
 /* typelibs */
 typedef enum tid_t {
     NULL_tid,
