@@ -3025,7 +3025,7 @@ error:
     DeleteFileA(msifile);
     DeleteFileA("msitest\\maximus");
     RemoveDirectoryA("msitest");
-    free(usersid);
+    LocalFree(usersid);
 }
 
 static void test_publish_product(void)
@@ -3262,7 +3262,7 @@ error:
     DeleteFileA(msifile);
     DeleteFileA("msitest\\maximus");
     RemoveDirectoryA("msitest");
-    free(usersid);
+    LocalFree(usersid);
 }
 
 static void test_publish_features(void)
@@ -3387,7 +3387,7 @@ error:
     DeleteFileA(msifile);
     DeleteFileA("msitest\\maximus");
     RemoveDirectoryA("msitest");
-    free(usersid);
+    LocalFree(usersid);
 }
 
 static LPSTR reg_get_val_str(HKEY hkey, LPCSTR name)
