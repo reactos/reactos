@@ -1093,7 +1093,7 @@ static void test_basics(void)
     IShellBrowser *psb;
     FOLDERSETTINGS fs;
     ULONG lres;
-    DWORD flags;
+    EXPLORER_BROWSER_OPTIONS flags;
     HDWP hdwp;
     RECT rc;
     HRESULT hr;
