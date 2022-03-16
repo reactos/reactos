@@ -117,4 +117,4 @@ GenericMfg = "（通用系统设备）"
 
 [Strings.0c04]
 GenericMfg = "（標準系統裝置）"
-*PNP0C08.DeviceDesc = "ACPI 硬體"
+*PNP0C08.DeviceDesc = "ACPI 硬件"
