@@ -81,6 +81,7 @@ typedef struct _DC *PDC;
 #include "user/ntuser/painting.h"
 #include "user/ntuser/class.h"
 #include "user/ntuser/window.h"
+#include "user/ntuser/security.h"
 #include "user/ntuser/sysparams.h"
 #include "user/ntuser/prop.h"
 #include "user/ntuser/guicheck.h"

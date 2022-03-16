@@ -144,6 +144,7 @@ list(APPEND SOURCE
     user/ntuser/prop.c
     user/ntuser/scrollbar.c
     user/ntuser/scrollex.c
+    user/ntuser/security.c
     user/ntuser/session.c
     user/ntuser/shutdown.c
     user/ntuser/simplecall.c
