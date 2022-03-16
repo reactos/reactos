@@ -147,5 +147,5 @@ GenericMfg = "（通用网卡）"
 *PNP80D6.DeviceDesc = "与 NE2000 兼容的以太网适配器"
 
 [Strings.0c04]
-GenericMfg = "（一般網路卡）"
-*PNP80D6.DeviceDesc = "與 NE2000 相容的乙太網路卡"
+GenericMfg = "（標準網絡卡）"
+*PNP80D6.DeviceDesc = "與 NE2000 相容的乙太網絡卡"
