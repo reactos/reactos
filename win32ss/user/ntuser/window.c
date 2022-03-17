@@ -2087,6 +2087,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    UserDereferenceObject(Window);
    ObDereferenceObject(WinSta);
 
+   /* NCCREATE, WM_NCCALCSIZE and Hooks need the original values */
+   Cs->lpszName = (LPCWSTR) WindowName;
+   Cs->lpszClass = (LPCWSTR) ClassName;
+
    //// Check for a hook to eliminate overhead. ////
    if ( ISITHOOKED(WH_CBT) ||  (pti->rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CBT)) )
    {
@@ -2099,79 +2103,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       	 goto cleanup;
       }
 
-      /* Fill the new CREATESTRUCTW */
-      RtlCopyMemory(pCsw, Cs, sizeof(CREATESTRUCTW));
-      pCsw->style = Window->style; /* HCBT_CREATEWND needs the real window style */
-
-      // Based on the assumption this is from "unicode source" user32, ReactOS, answer is yes.
-      if (!IS_ATOM(ClassName->Buffer))
+      if (!IntMsgCreateStructW( Window, pCsw, Cs, &pszClass, &pszName ) )
       {
-         if (Window->state & WNDS_ANSICREATOR)
-         {
-            ANSI_STRING AnsiString;
-            AnsiString.MaximumLength = (USHORT)RtlUnicodeStringToAnsiSize(ClassName)+sizeof(CHAR);
-            pszClass = UserHeapAlloc(AnsiString.MaximumLength);
-            if (!pszClass)
-            {
-               ERR("UserHeapAlloc() failed!\n");
-               goto cleanup;
-            }
-            RtlZeroMemory(pszClass, AnsiString.MaximumLength);
-            AnsiString.Buffer = (PCHAR)pszClass;
-            RtlUnicodeStringToAnsiString(&AnsiString, ClassName, FALSE);
-         }
-         else
-         {
-            UNICODE_STRING UnicodeString;
-            UnicodeString.MaximumLength = ClassName->Length + sizeof(UNICODE_NULL);
-            pszClass = UserHeapAlloc(UnicodeString.MaximumLength);
-            if (!pszClass)
-            {
-               ERR("UserHeapAlloc() failed!\n");
-               goto cleanup;
-            }
-            RtlZeroMemory(pszClass, UnicodeString.MaximumLength);
-            UnicodeString.Buffer = (PWSTR)pszClass;
-            RtlCopyUnicodeString(&UnicodeString, ClassName);
-         }
-         pCsw->lpszClass = UserHeapAddressToUser(pszClass);
-      }
-      if (WindowName->Length)
-      {
-         UNICODE_STRING Name;
-         Name.Buffer = WindowName->Buffer;
-         Name.Length = (USHORT)min(WindowName->Length, MAXUSHORT); // FIXME: LARGE_STRING truncated
-         Name.MaximumLength = (USHORT)min(WindowName->MaximumLength, MAXUSHORT);
-
-         if (Window->state & WNDS_ANSICREATOR)
-         {
-            ANSI_STRING AnsiString;
-            AnsiString.MaximumLength = (USHORT)RtlUnicodeStringToAnsiSize(&Name) + sizeof(CHAR);
-            pszName = UserHeapAlloc(AnsiString.MaximumLength);
-            if (!pszName)
-            {
-               ERR("UserHeapAlloc() failed!\n");
-               goto cleanup;
-            }
-            RtlZeroMemory(pszName, AnsiString.MaximumLength);
-            AnsiString.Buffer = (PCHAR)pszName;
-            RtlUnicodeStringToAnsiString(&AnsiString, &Name, FALSE);
-         }
-         else
-         {
-            UNICODE_STRING UnicodeString;
-            UnicodeString.MaximumLength = Name.Length + sizeof(UNICODE_NULL);
-            pszName = UserHeapAlloc(UnicodeString.MaximumLength);
-            if (!pszName)
-            {
-               ERR("UserHeapAlloc() failed!\n");
-               goto cleanup;
-            }
-            RtlZeroMemory(pszName, UnicodeString.MaximumLength);
-            UnicodeString.Buffer = (PWSTR)pszName;
-            RtlCopyUnicodeString(&UnicodeString, &Name);
-         }
-         pCsw->lpszName = UserHeapAddressToUser(pszName);
+          ERR("IntMsgCreateStructW() failed!\n");
+          goto cleanup;
       }
 
       pCbtCreate->lpcs = pCsw;
@@ -2191,10 +2126,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       Cs->y = pCsw->y;
       hwndInsertAfter = pCbtCreate->hwndInsertAfter;
    }
-
-   /* NCCREATE and WM_NCCALCSIZE need the original values */
-   Cs->lpszName = (LPCWSTR) WindowName;
-   Cs->lpszClass = (LPCWSTR) ClassName;
 
    if ((Cs->style & (WS_CHILD|WS_POPUP)) == WS_CHILD)
    {
