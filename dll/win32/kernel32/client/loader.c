@@ -462,16 +462,8 @@ FreeLibrary(HINSTANCE hLibModule)
 
     if (LDR_IS_DATAFILE(hLibModule))
     {
-        // FIXME: This SEH should go inside RtlImageNtHeader instead
-        _SEH2_TRY
-        {
-            /* This is a LOAD_LIBRARY_AS_DATAFILE module, check if it's a valid one */
-            NtHeaders = RtlImageNtHeader((PVOID)((ULONG_PTR)hLibModule & ~1));
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            NtHeaders = NULL;
-        } _SEH2_END
+        /* This is a LOAD_LIBRARY_AS_DATAFILE module, check if it's a valid one */
+        NtHeaders = RtlImageNtHeader((PVOID)((ULONG_PTR)hLibModule & ~1));
 
         if (NtHeaders)
         {
