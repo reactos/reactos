@@ -137,7 +137,7 @@ LdrVerifyMappedImageMatchesChecksum(
  */
 NTSTATUS
 NTAPI
-RtlImageNtHeaderEx(
+RtlpImageNtHeaderEx(
     _In_ ULONG Flags,
     _In_ PVOID Base,
     _In_ ULONG64 Size,
