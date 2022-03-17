@@ -554,8 +554,8 @@ NTSTATUS WINAPI
 User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PHOOKPROC_CALLBACK_ARGUMENTS Common;
-  CREATESTRUCTW Csw;
-  CBT_CREATEWNDW CbtCreatewndw;
+  CREATESTRUCTW *pCsw = NULL;
+  CBT_CREATEWNDW *pCbtCreatewndw = NULL;
   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
   KBDLLHOOKSTRUCT KeyboardLlData, *pKeyboardLlData;
   MSLLHOOKSTRUCT MouseLlData, *pMouseLlData;
@@ -608,12 +608,18 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
         case HCBT_CREATEWND:
           CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS)
                               ((PCHAR) Common + Common->lParam);
-          RtlCopyMemory(&Csw, &CbtCreatewndExtra->Cs, sizeof(CREATESTRUCTW));
-          CbtCreatewndw.lpcs = &Csw;
-          CbtCreatewndw.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+
+          pCbtCreatewndw = (CBT_CREATEWNDW*)HeapAlloc(GetProcessHeap(), 0, sizeof(CBT_CREATEWNDW));
+          RtlCopyMemory(pCbtCreatewndw, CbtCreatewndExtra, sizeof(CBT_CREATEWNDW));
+
+          pCsw = (CREATESTRUCTW*)HeapAlloc(GetProcessHeap(), 0, sizeof(CREATESTRUCTW));
+          RtlCopyMemory(pCsw, &CbtCreatewndExtra->Cs, sizeof(CREATESTRUCTW));
+
+          pCbtCreatewndw->lpcs = pCsw;
+          pCbtCreatewndw->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
           wParam = Common->wParam;
-          lParam = (LPARAM) &CbtCreatewndw;
-          //ERR("HCBT_CREATEWND: hWnd 0x%x Name 0x%x Class 0x%x\n", Common->wParam, Csw.lpszName, Csw.lpszClass);
+          lParam = (LPARAM) pCbtCreatewndw;
+          //ERR("HCBT_CREATEWND: hWnd %p Csw %p Name %p Class %p\n", Common->wParam, pCsw, pCsw->lpszName, pCsw->lpszClass);
           break;
         case HCBT_CLICKSKIPPED:
             pMHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
@@ -665,11 +671,13 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       switch(Common->Code)
       {
         case HCBT_CREATEWND:
-          CbtCreatewndExtra->WndInsertAfter = CbtCreatewndw.hwndInsertAfter;
-          CbtCreatewndExtra->Cs.x = CbtCreatewndw.lpcs->x;
-          CbtCreatewndExtra->Cs.y = CbtCreatewndw.lpcs->y;
-          CbtCreatewndExtra->Cs.cx = CbtCreatewndw.lpcs->cx;
-          CbtCreatewndExtra->Cs.cy = CbtCreatewndw.lpcs->cy;
+          CbtCreatewndExtra->WndInsertAfter = pCbtCreatewndw->hwndInsertAfter;
+          CbtCreatewndExtra->Cs.x  = pCbtCreatewndw->lpcs->x;
+          CbtCreatewndExtra->Cs.y  = pCbtCreatewndw->lpcs->y;
+          CbtCreatewndExtra->Cs.cx = pCbtCreatewndw->lpcs->cx;
+          CbtCreatewndExtra->Cs.cy = pCbtCreatewndw->lpcs->cy;
+          HeapFree(GetProcessHeap(), 0, pCsw);
+          HeapFree(GetProcessHeap(), 0, pCbtCreatewndw);
           break;
       }
       break;
@@ -699,35 +707,40 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       _SEH2_END;
       break;
     case WH_CALLWNDPROC:
-//      ERR("WH_CALLWNDPROC: Code %d, wParam %d\n",Common->Code,Common->wParam);
-      pCWP = HeapAlloc(GetProcessHeap(), 0, ArgumentLength - sizeof(HOOKPROC_CALLBACK_ARGUMENTS));
-      RtlCopyMemory(pCWP, (PCHAR) Common + Common->lParam, sizeof(CWPSTRUCT));
+    {
+      PCWP_Struct pcwps = (PCWP_Struct)Common;
+      CWPSTRUCT *pCWPT = &pcwps->cwps;
+      pCWP = HeapAlloc(GetProcessHeap(), 0, Common->lParamSize + sizeof(CWPSTRUCT));
+      RtlCopyMemory(pCWP, pCWPT, sizeof(CWPSTRUCT));
+      //ERR("WH_CALLWNDPROC: Code %d, wParam %d hwnd %p msg %d\n",Common->Code,Common->wParam,pCWP->hwnd,pCWP->message);
       /* If more memory is reserved, then lParam is a pointer.
        * Size of the buffer is stocked in the lParam member, and its content
        * is at the end of the argument buffer */
-      if(ArgumentLength > (sizeof(CWPSTRUCT) + sizeof(HOOKPROC_CALLBACK_ARGUMENTS)))
+      if ( Common->lParamSize )
       {
-         RtlCopyMemory((PCHAR)pCWP + sizeof(CWPSTRUCT),
-            (PCHAR)Common + Common->lParam + sizeof(CWPSTRUCT),
-            pCWP->lParam);
          pCWP->lParam = (LPARAM)((PCHAR)pCWP + sizeof(CWPSTRUCT));
+         RtlCopyMemory( (PCHAR)pCWP + sizeof(CWPSTRUCT), &pcwps->Extra, Common->lParamSize );
       }
       Result = Proc(Common->Code, Common->wParam, (LPARAM) pCWP);
       HeapFree(GetProcessHeap(), 0, pCWP);
+    }
       break;
     case WH_CALLWNDPROCRET:
       /* Almost the same as WH_CALLWNDPROC */
-      pCWPR = HeapAlloc(GetProcessHeap(), 0, ArgumentLength - sizeof(HOOKPROC_CALLBACK_ARGUMENTS));
-      RtlCopyMemory(pCWPR, (PCHAR) Common + Common->lParam, sizeof(CWPRETSTRUCT));
-      if(ArgumentLength > (sizeof(CWPRETSTRUCT) + sizeof(HOOKPROC_CALLBACK_ARGUMENTS)))
+    {
+      PCWPR_Struct pcwprs = (PCWPR_Struct)Common;
+      CWPRETSTRUCT *pCWPRT = &pcwprs->cwprs;
+      pCWPR = HeapAlloc(GetProcessHeap(), 0, Common->lParamSize + sizeof(CWPRETSTRUCT));
+      RtlCopyMemory(pCWPR, pCWPRT, sizeof(CWPRETSTRUCT));
+      //ERR("WH_CALLWNDPROCRET: Code %d, wParam %d hwnd %p msg %d\n",Common->Code,Common->wParam,pCWPRT->hwnd,pCWPRT->message);
+      if ( Common->lParamSize )
       {
-         RtlCopyMemory((PCHAR)pCWPR + sizeof(CWPRETSTRUCT),
-            (PCHAR)Common + Common->lParam + sizeof(CWPRETSTRUCT),
-            pCWPR->lParam);
          pCWPR->lParam = (LPARAM)((PCHAR)pCWPR + sizeof(CWPRETSTRUCT));
+         RtlCopyMemory( (PCHAR)pCWPR + sizeof(CWPRETSTRUCT), &pcwprs->Extra, Common->lParamSize );
       }
       Result = Proc(Common->Code, Common->wParam, (LPARAM) pCWPR);
       HeapFree(GetProcessHeap(), 0, pCWPR);
+    }
       break;
     case WH_MSGFILTER: /* All SEH support */
     case WH_SYSMSGFILTER:
