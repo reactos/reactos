@@ -19,9 +19,13 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 ULONG TotalNLSSize = 0;
 
 static BOOLEAN
-WinLdrGetNLSNames(PSTR AnsiName,
-                  PSTR OemName,
-                  PSTR LangName);
+WinLdrGetNLSNames(
+    _Out_z_bytecap_(AnsiNameSize) PSTR AnsiName,
+    _In_ SIZE_T AnsiNameSize,
+    _Out_z_bytecap_(OemNameSize)  PSTR OemName,
+    _In_ SIZE_T OemNameSize,
+    _Out_z_bytecap_(LangNameSize) PSTR LangName,
+    _In_ SIZE_T LangNameSize);
 
 static VOID
 WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
@@ -173,15 +177,17 @@ WinLdrInitSystemHive(
 BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                              IN PCSTR SystemRoot)
 {
+    BOOLEAN Success;
     CHAR SearchPath[1024];
     CHAR AnsiName[256], OemName[256], LangName[256];
-    BOOLEAN Success;
 
     /* Scan registry and prepare boot drivers list */
     WinLdrScanRegistry(&LoaderBlock->BootDriverListHead, SystemRoot);
 
     /* Get names of NLS files */
-    Success = WinLdrGetNLSNames(AnsiName, OemName, LangName);
+    Success = WinLdrGetNLSNames(AnsiName, sizeof(AnsiName),
+                                OemName, sizeof(OemName),
+                                LangName, sizeof(LangName));
     if (!Success)
     {
         UiMessageBox("Getting NLS names from registry failed!");
@@ -207,16 +213,21 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 /* PRIVATE FUNCTIONS ******************************************************/
 
 // Queries registry for those three file names
+_Use_decl_annotations_
 static BOOLEAN
-WinLdrGetNLSNames(PSTR AnsiName,
-                  PSTR OemName,
-                  PSTR LangName)
+WinLdrGetNLSNames(
+    _Out_ PSTR AnsiName,
+    _In_ SIZE_T AnsiNameSize,
+    _Out_ PSTR OemName,
+    _In_ SIZE_T OemNameSize,
+    _Out_ PSTR LangName,
+    _In_ SIZE_T LangNameSize)
 {
     LONG rc = ERROR_SUCCESS;
     HKEY hKey;
+    ULONG BufferSize;
     WCHAR szIdBuffer[80];
     WCHAR NameBuffer[80];
-    ULONG BufferSize;
 
     /* Open the CodePage key */
     rc = RegOpenKey(NULL,
@@ -224,7 +235,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
                     &hKey);
     if (rc != ERROR_SUCCESS)
     {
-        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't open CodePage registry key");
+        //TRACE("Couldn't open CodePage registry key");
         return FALSE;
     }
 
@@ -233,7 +244,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, L"ACP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get ACP NLS setting");
+        //TRACE("Couldn't get ACP NLS setting");
         RegCloseKey(hKey);
         return FALSE;
     }
@@ -242,19 +253,19 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "ACP NLS Setting exists, but isn't readable");
+        //TRACE("ACP NLS Setting exists, but isn't readable");
         //RegCloseKey(hKey);
         //return FALSE;
         wcscpy(NameBuffer, L"c_1252.nls"); // HACK: ReactOS bug CORE-6105
     }
-    sprintf(AnsiName, "%S", NameBuffer);
+    RtlStringCbPrintfA(AnsiName, AnsiNameSize, "%S", NameBuffer);
 
     /* Get OEM codepage */
     BufferSize = sizeof(szIdBuffer);
     rc = RegQueryValue(hKey, L"OEMCP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get OEMCP NLS setting");
+        //TRACE("Couldn't get OEMCP NLS setting");
         RegCloseKey(hKey);
         return FALSE;
     }
@@ -263,12 +274,12 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "OEMCP NLS setting exists, but isn't readable");
+        //TRACE("OEMCP NLS setting exists, but isn't readable");
         //RegCloseKey(hKey);
         //return FALSE;
         wcscpy(NameBuffer, L"c_437.nls"); // HACK: ReactOS bug CORE-6105
     }
-    sprintf(OemName, "%S", NameBuffer);
+    RtlStringCbPrintfA(OemName, OemNameSize, "%S", NameBuffer);
 
     RegCloseKey(hKey);
 
@@ -278,7 +289,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
                     &hKey);
     if (rc != ERROR_SUCCESS)
     {
-        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't open Language registry key");
+        //TRACE("Couldn't open Language registry key");
         return FALSE;
     }
 
@@ -287,7 +298,7 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, L"Default", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Couldn't get Language Default setting");
+        //TRACE("Couldn't get Language Default setting");
         RegCloseKey(hKey);
         return FALSE;
     }
@@ -296,11 +307,11 @@ WinLdrGetNLSNames(PSTR AnsiName,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //RtlStringCbCopyA(szErrorOut, sizeof(szErrorOut), "Language Default setting exists, but isn't readable");
+        //TRACE("Language Default setting exists, but isn't readable");
         RegCloseKey(hKey);
         return FALSE;
     }
-    sprintf(LangName, "%S", NameBuffer);
+    RtlStringCbPrintfA(LangName, LangNameSize, "%S", NameBuffer);
 
     RegCloseKey(hKey);
     return TRUE;
