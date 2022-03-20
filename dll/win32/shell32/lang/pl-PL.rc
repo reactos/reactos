@@ -36,8 +36,6 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Autorozmieszczanie", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "&Wyrównaj ikony", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Odśwież", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "W&klej", FCIDM_SHVIEW_INSERT
