@@ -77,6 +77,7 @@ list(APPEND SOURCE
     gdi/eng/mem.c
     gdi/eng/engmisc.c
     gdi/eng/mouse.c
+    gdi/eng/multidisp.c
     gdi/eng/paint.c
     gdi/eng/pathobj.c
     gdi/eng/pdevobj.c
