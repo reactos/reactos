@@ -38,8 +38,6 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Arrangere Automatisk", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Line up Ikoner", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Opfrisk", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Indsæt", FCIDM_SHVIEW_INSERT

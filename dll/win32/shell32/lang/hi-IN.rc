@@ -32,8 +32,6 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&ऑटो अरेंज", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "लाइन अप आइकन", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "रिफ़्रिश", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "पेस्ट", FCIDM_SHVIEW_INSERT

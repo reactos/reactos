@@ -34,8 +34,6 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Criteriu &automat", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Aranjea&ză în grilă", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Împ&rospătează", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Lipește", FCIDM_SHVIEW_INSERT
