@@ -214,7 +214,7 @@
 #include "hivedata.h"
 #include "cmdata.h"
 
-#if defined(_TYPEDEFS_HOST_H) || defined(__FREELDR_H) // || defined(_BLDR_)
+#if defined(_TYPEDEFS_HOST_H) || defined(_BLDR_)
 
 #define PCM_KEY_SECURITY_CACHE_ENTRY    PVOID
 #define PCM_KEY_CONTROL_BLOCK           PVOID
@@ -224,7 +224,7 @@
 #define CMP_SECURITY_HASH_LISTS         64
 
 // #endif // Commented out until one finds a way to properly include
-          // this header in freeldr and in ntoskrnl.
+          // this header in the bootloader and in ntoskrnl.
 
 //
 // Use Count Log and Entry

@@ -42,7 +42,6 @@
 #include <GlobalVariable.h>
 
 /* Registry Headers */
-#define __FREELDR_H
 #include <cmlib.h>
 
 /* DEFINES *******************************************************************/
