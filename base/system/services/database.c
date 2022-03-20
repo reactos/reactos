@@ -4,7 +4,7 @@
  * FILE:        base/system/services/database.c
  * PURPOSE:     Database control interface
  * COPYRIGHT:   Copyright 2002-2006 Eric Kohl
- *              Copyright 2006 H. Poussineau <hpoussin@reactos.org>
+ *              Copyright 2006 Hervé Poussineau <hpoussin@reactos.org>
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  *                             Gregor Brunmar <gregor.brunmar@home.se>
  *

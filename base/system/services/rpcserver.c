@@ -4,7 +4,7 @@
  * FILE:        base/system/services/rpcserver.c
  * PURPOSE:     RPC server interface for the advapi32 calls
  * COPYRIGHT:   Copyright 2005-2006 Eric Kohl
- *              Copyright 2006-2007 H. Poussineau <hpoussin@reactos.org>
+ *              Copyright 2006-2007 Hervé Poussineau <hpoussin@reactos.org>
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  */
 
@@ -99,6 +99,7 @@ ScmServiceMapping = {SERVICE_READ,
                      SERVICE_EXECUTE,
                      SERVICE_ALL_ACCESS};
 
+DWORD g_dwServiceBits = 0;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -1893,14 +1894,20 @@ RI_ScSetServiceBitsW(
     if (bSetBitsOn)
     {
         DPRINT("Old service bits: %08lx\n", pService->dwServiceBits);
+        DPRINT("Old global service bits: %08lx\n", g_dwServiceBits);
         pService->dwServiceBits |= dwServiceBits;
+        g_dwServiceBits |= dwServiceBits;
         DPRINT("New service bits: %08lx\n", pService->dwServiceBits);
+        DPRINT("New global service bits: %08lx\n", g_dwServiceBits);
     }
     else
     {
         DPRINT("Old service bits: %08lx\n", pService->dwServiceBits);
+        DPRINT("Old global service bits: %08lx\n", g_dwServiceBits);
         pService->dwServiceBits &= ~dwServiceBits;
+        g_dwServiceBits &= ~dwServiceBits;
         DPRINT("New service bits: %08lx\n", pService->dwServiceBits);
+        DPRINT("New global service bits: %08lx\n", g_dwServiceBits);
     }
 
     return ERROR_SUCCESS;
