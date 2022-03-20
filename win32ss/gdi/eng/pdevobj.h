@@ -228,4 +228,20 @@ PDEVOBJ_Create(
     _In_opt_ PDEVMODEW pdm,
     _In_ ULONG ldevtype);
 
+/* Change display settings:
+ * - pustrDeviceName: name of the device to change settings. Can be NULL to specify whole display surface
+ * - RequestedMode: new parameters for device. Ignored if pstrDeviceName is NULL
+ * - pmdevOld: old MDEVOBJ. Can be NULL if we are creating the first one
+ * - ppdevNew: MDEVOBJ created by this function, with the new settings
+ * - bSearchClosestMode: do we need to search exact requested mode, or a mostly similar one
+ * Return value: a DISP_CHANGE_* value
+ */
+LONG
+PDEVOBJ_lChangeDisplaySettings(
+    _In_opt_ PUNICODE_STRING pustrDeviceName,
+    _In_opt_ PDEVMODEW RequestedMode,
+    _In_opt_ PMDEVOBJ pmdevOld,
+    _Out_ PMDEVOBJ *ppmdevNew,
+    _In_ BOOL bSearchClosestMode);
+
 #endif /* !__WIN32K_PDEVOBJ_H */
