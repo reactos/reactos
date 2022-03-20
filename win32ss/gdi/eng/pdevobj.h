@@ -150,11 +150,6 @@ typedef struct _PDEVOBJ
     struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
 } PDEVOBJ, *PPDEVOBJ;
 
-/* Globals ********************************************************************/
-
-extern PPDEVOBJ gppdevPrimary;
-
-
 /* Function prototypes ********************************************************/
 
 PPDEVOBJ

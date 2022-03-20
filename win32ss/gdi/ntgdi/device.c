@@ -29,13 +29,13 @@ BOOL FASTCALL
 IntCreatePrimarySurface(VOID)
 {
     /* Create surface */
-    PDEVOBJ_pSurface(gppdevPrimary);
+    PDEVOBJ_pSurface(gpmdev->ppdevGlobal);
 
-    DPRINT("IntCreatePrimarySurface, gppdevPrimary=%p, gppdevPrimary->pSurface = %p\n",
-        gppdevPrimary, gppdevPrimary->pSurface);
+    DPRINT("IntCreatePrimarySurface, ppdevGlobal=%p, ppdevGlobal->pSurface = %p\n",
+        gpmdev->ppdevGlobal, gpmdev->ppdevGlobal->pSurface);
 
     // Init Primary Displays Device Capabilities.
-    PDEVOBJ_vGetDeviceCaps(gppdevPrimary, &GdiHandleTable->DevCaps);
+    PDEVOBJ_vGetDeviceCaps(gpmdev->ppdevGlobal, &GdiHandleTable->DevCaps);
 
     return TRUE;
 }
@@ -51,7 +51,7 @@ IntEnumHDev(VOID)
 {
 // I guess we will soon have more than one primary surface.
 // This will do for now.
-    return gppdevPrimary;
+    return gpmdev->ppdevGlobal;
 }
 
 

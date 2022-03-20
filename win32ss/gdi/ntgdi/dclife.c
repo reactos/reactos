@@ -144,7 +144,7 @@ DC_vInitDc(
     pdc->pdcattr = &pdc->dcattr;
     pdc->dcattr.pvLDC = NULL;
     pdc->dcattr.ulDirty_ = DIRTY_DEFAULT;
-    if (ppdev == gppdevPrimary)
+    if (ppdev == gpmdev->ppdevGlobal)
         pdc->dcattr.ulDirty_ |= DC_PRIMARY_DISPLAY;
 
     /* Setup the DC size */

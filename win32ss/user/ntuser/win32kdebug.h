@@ -53,6 +53,7 @@
         DbgChEngLDev,
         DbgChEngLine,
         DbgChEngMapping,
+        DbgChEngMDev,
         DbgChEngPDev,
         DbgChEngSurface,
         DbgChEngWnd,
