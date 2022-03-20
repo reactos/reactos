@@ -32,8 +32,6 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Auto organi&zar", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Alin&har ícones", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Atualizar", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Co&lar", FCIDM_SHVIEW_INSERT

@@ -32,8 +32,6 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "T&ri automatique", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Aligner les icônes", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Rafraîchir", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Coller", FCIDM_SHVIEW_INSERT
