@@ -263,6 +263,13 @@ co_IntInitializeDesktopGraphics(VOID)
     UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
     PDESKTOP pdesk;
 
+    gpmdev = ExAllocatePoolZero(PagedPool, sizeof(MDEVOBJ), GDITAG_MDEV);
+    if (!gpmdev)
+    {
+        ERR("Failed to allocate MDEV.\n");
+        return FALSE;
+    }
+
     ScreenDeviceContext = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
     if (NULL == ScreenDeviceContext)
     {
@@ -285,11 +292,11 @@ co_IntInitializeDesktopGraphics(VOID)
     InitMetrics();
 
     /* Set new size of the monitor */
-    UserUpdateMonitorSize((HDEV)gppdevPrimary);
+    UserUpdateMonitorSize((HDEV)gpmdev->ppdevGlobal);
 
     /* Update the SERVERINFO */
-    gpsi->aiSysMet[SM_CXSCREEN] = gppdevPrimary->gdiinfo.ulHorzRes;
-    gpsi->aiSysMet[SM_CYSCREEN] = gppdevPrimary->gdiinfo.ulVertRes;
+    gpsi->aiSysMet[SM_CXSCREEN] = gpmdev->ppdevGlobal->gdiinfo.ulHorzRes;
+    gpsi->aiSysMet[SM_CYSCREEN] = gpmdev->ppdevGlobal->gdiinfo.ulVertRes;
     gpsi->Planes        = NtGdiGetDeviceCaps(ScreenDeviceContext, PLANES);
     gpsi->BitsPixel     = NtGdiGetDeviceCaps(ScreenDeviceContext, BITSPIXEL);
     gpsi->BitCount      = gpsi->Planes * gpsi->BitsPixel;
@@ -311,7 +318,7 @@ co_IntInitializeDesktopGraphics(VOID)
     gpsi->ptCursor.y = gpsi->aiSysMet[SM_CYSCREEN] / 2;
 
     /* Attach monitor */
-    UserAttachMonitor((HDEV)gppdevPrimary);
+    UserAttachMonitor((HDEV)gpmdev->ppdevGlobal);
 
     /* Setup the cursor */
     co_IntLoadDefaultCursors();

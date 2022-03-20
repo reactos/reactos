@@ -11,8 +11,6 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(EngPDev);
 
-PPDEVOBJ gppdevPrimary = NULL;
-
 static PPDEVOBJ gppdevList = NULL;
 static HSEMAPHORE ghsemPDEV;
 
@@ -150,8 +148,8 @@ PDEVOBJ_vRelease(
         }
 
         /* Is this the primary one ? */
-        if (ppdev == gppdevPrimary)
-            gppdevPrimary = NULL;
+        if (ppdev == gpmdev->ppdevGlobal)
+            gpmdev->ppdevGlobal = NULL;
 
         /* Unload display driver */
         EngUnloadImage(ppdev->pldev);
@@ -615,7 +613,7 @@ PDEVOBJ_bSwitchMode(
     PDEVOBJ_vRelease(ppdevTmp);
 
     /* Update primary display capabilities */
-    if (ppdev == gppdevPrimary)
+    if (ppdev == gpmdev->ppdevGlobal)
     {
         PDEVOBJ_vGetDeviceCaps(ppdev, &GdiHandleTable->DevCaps);
     }
@@ -669,10 +667,10 @@ EngpGetPDEV(
             }
         }
     }
-    else
+    else if (gpmdev)
     {
         /* Otherwise use the primary PDEV */
-        ppdev = gppdevPrimary;
+        ppdev = gpmdev->ppdevGlobal;
     }
 
     /* Did we find one? */
@@ -695,9 +693,9 @@ EngpGetPDEV(
         if (ppdev)
         {
             /* Set as primary PDEV, if we don't have one yet */
-            if (!gppdevPrimary)
+            if (!gpmdev->ppdevGlobal)
             {
-                gppdevPrimary = ppdev;
+                gpmdev->ppdevGlobal = ppdev;
                 ppdev->pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_PRIMARY_DEVICE;
             }
         }

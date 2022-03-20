@@ -73,6 +73,7 @@ list(APPEND SOURCE
     gdi/eng/ldevobj.c
     gdi/eng/mapping.c
     gdi/eng/math.c
+    gdi/eng/mdevobj.c
     gdi/eng/mem.c
     gdi/eng/engmisc.c
     gdi/eng/mouse.c

@@ -198,7 +198,7 @@ VideoPortCallout(
             if (CallbackParams->Param == TRUE)
             {
                 /* Re-enable the display */
-                UserRefreshDisplay(gppdevPrimary);
+                UserRefreshDisplay(gpmdev->ppdevGlobal);
             }
             else
             {
