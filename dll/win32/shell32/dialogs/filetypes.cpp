@@ -1495,7 +1495,7 @@ FileTypesDlg_InitListView(HWND hwndDlg, HWND hListView)
 
     GetClientRect(hListView, &clientRect);
     ZeroMemory(&col, sizeof(LV_COLUMN));
-    columnSize      = 120;
+    columnSize      = (clientRect.right - clientRect.left) / 4;
     col.iSubItem    = 0;
     col.mask        = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
     col.fmt         = LVCFMT_FIXED_WIDTH;
@@ -1512,7 +1512,7 @@ FileTypesDlg_InitListView(HWND hwndDlg, HWND hListView)
     }
 
     col.iSubItem    = 1;
-    col.cx          = clientRect.right - clientRect.left - columnSize;
+    col.cx          = clientRect.right - clientRect.left - columnSize - GetSystemMetrics(SM_CYVTHUMB);
     col.cchTextMax  = wcslen(szName);
     col.pszText     = szName;
     SendMessageW(hListView, LVM_INSERTCOLUMNW, 1, (LPARAM)&col);
