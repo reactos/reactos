@@ -74,7 +74,7 @@ typedef struct _LOG_CONF_INFO
 typedef struct _NOTIFY_DATA
 {
     ULONG ulMagic;
-    ULONG ulNotifyData;
+    PVOID hNotifyHandle;
 } NOTIFY_DATA, *PNOTIFY_DATA;
 
 #define NOTIFY_MAGIC 0x44556677
@@ -634,6 +634,7 @@ CMP_RegisterNotification(
         return CR_OUT_OF_MEMORY;
 
     pNotifyData->ulMagic = NOTIFY_MAGIC;
+    pNotifyData->hNotifyHandle = NULL;
 
     if ((ulFlags & DEVICE_NOTIFY_SERVICE_HANDLE) == DEVICE_NOTIFY_WINDOW_HANDLE)
     {
@@ -674,7 +675,7 @@ CMP_RegisterNotification(
                                        (BYTE*)lpvNotificationFilter,
                                        ((DEV_BROADCAST_HDR*)lpvNotificationFilter)->dbch_size,
                                        ulFlags,
-                                       &pNotifyData->ulNotifyData,
+                                       &pNotifyData->hNotifyHandle,
                                        GetCurrentProcessId(),
                                        &ulUnknown9); /* ??? */
     }
@@ -686,11 +687,12 @@ CMP_RegisterNotification(
 
     if (ret == CR_SUCCESS)
     {
+        TRACE("hNotifyHandle: %p\n", pNotifyData->hNotifyHandle);
         *phDevNotify = (HDEVNOTIFY)pNotifyData;
     }
     else
     {
-        if (pNotifyData != NULL)
+        if (pNotifyData->hNotifyHandle == NULL)
             HeapFree(GetProcessHeap(), 0, pNotifyData);
 
         *phDevNotify = (HDEVNOTIFY)NULL;
@@ -774,7 +776,7 @@ CMP_UnregisterNotification(
     RpcTryExcept
     {
         ret = PNP_UnregisterNotification(BindingHandle,
-                                         pNotifyData->ulNotifyData);
+                                         &pNotifyData->hNotifyHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -783,7 +785,10 @@ CMP_UnregisterNotification(
     RpcEndExcept;
 
     if (ret == CR_SUCCESS)
+    {
+        pNotifyData->hNotifyHandle = NULL;
         HeapFree(GetProcessHeap(), 0, pNotifyData);
+    }
 
     return ret;
 }
