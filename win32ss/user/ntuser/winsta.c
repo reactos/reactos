@@ -263,10 +263,9 @@ co_IntInitializeDesktopGraphics(VOID)
     UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
     PDESKTOP pdesk;
 
-    gpmdev = ExAllocatePoolZero(PagedPool, sizeof(MDEVOBJ), GDITAG_MDEV);
-    if (!gpmdev)
+    if (PDEVOBJ_lChangeDisplaySettings(NULL, NULL, NULL, &gpmdev, TRUE) != DISP_CHANGE_SUCCESSFUL)
     {
-        ERR("Failed to allocate MDEV.\n");
+        ERR("PDEVOBJ_lChangeDisplaySettings() failed.\n");
         return FALSE;
     }
 

@@ -643,8 +643,9 @@ EngpGetPDEV(
     _In_opt_ PUNICODE_STRING pustrDeviceName)
 {
     UNICODE_STRING ustrCurrent;
-    PPDEVOBJ ppdev;
+    PPDEVOBJ ppdev = NULL;
     PGRAPHICS_DEVICE pGraphicsDevice;
+    ULONG i;
 
     /* Acquire PDEV lock */
     EngAcquireSemaphore(ghsemPDEV);
@@ -653,16 +654,17 @@ EngpGetPDEV(
     if (pustrDeviceName)
     {
         /* Loop all present PDEVs */
-        for (ppdev = gppdevList; ppdev; ppdev = ppdev->ppdevNext)
+        for (i = 0; i < gpmdev->cDev; i++)
         {
             /* Get a pointer to the GRAPHICS_DEVICE */
-            pGraphicsDevice = ppdev->pGraphicsDevice;
+            pGraphicsDevice = gpmdev->dev[i].ppdev->pGraphicsDevice;
 
             /* Compare the name */
             RtlInitUnicodeString(&ustrCurrent, pGraphicsDevice->szWinDeviceName);
             if (RtlEqualUnicodeString(pustrDeviceName, &ustrCurrent, FALSE))
             {
                 /* Found! */
+                ppdev = gpmdev->dev[i].ppdev;
                 break;
             }
         }
@@ -679,32 +681,173 @@ EngpGetPDEV(
         /* Yes, reference the PDEV */
         PDEVOBJ_vReference(ppdev);
     }
-    else
-    {
-        if (pustrDeviceName)
-            pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0);
-        if (!pGraphicsDevice)
-            pGraphicsDevice = gpPrimaryGraphicsDevice;
-
-        /* No, create a new PDEV for the given device */
-        ppdev = PDEVOBJ_Create(pGraphicsDevice,
-                               pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm,
-                               LDEV_DEVICE_DISPLAY);
-        if (ppdev)
-        {
-            /* Set as primary PDEV, if we don't have one yet */
-            if (!gpmdev->ppdevGlobal)
-            {
-                gpmdev->ppdevGlobal = ppdev;
-                ppdev->pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_PRIMARY_DEVICE;
-            }
-        }
-    }
 
     /* Release PDEV lock */
     EngReleaseSemaphore(ghsemPDEV);
 
     return ppdev;
+}
+
+LONG
+PDEVOBJ_lChangeDisplaySettings(
+    _In_opt_ PUNICODE_STRING pustrDeviceName,
+    _In_opt_ PDEVMODEW RequestedMode,
+    _In_opt_ PMDEVOBJ pmdevOld,
+    _Out_ PMDEVOBJ *ppmdevNew,
+    _In_ BOOL bSearchClosestMode)
+{
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    PMDEVOBJ pmdev = NULL;
+    PDEVMODEW pdm = NULL;
+    ULONG lRet = DISP_CHANGE_SUCCESSFUL;
+    ULONG i, j;
+
+    TRACE("PDEVOBJ_lChangeDisplaySettings('%wZ' '%dx%dx%d (%d Hz)' %p %p)\n",
+        pustrDeviceName,
+        RequestedMode ? RequestedMode->dmPelsWidth : 0,
+        RequestedMode ? RequestedMode->dmPelsHeight : 0,
+        RequestedMode ? RequestedMode->dmBitsPerPel : 0,
+        RequestedMode ? RequestedMode->dmDisplayFrequency : 0,
+        pmdevOld, ppmdevNew);
+
+    if (pustrDeviceName)
+    {
+        pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0);
+        if (!pGraphicsDevice)
+        {
+            ERR("Wrong device name provided: '%wZ'\n", pustrDeviceName);
+            lRet = DISP_CHANGE_BADPARAM;
+            goto cleanup;
+        }
+    }
+    else if (RequestedMode)
+    {
+        pGraphicsDevice = gpPrimaryGraphicsDevice;
+        if (!pGraphicsDevice)
+        {
+            ERR("Wrong device'\n");
+            lRet = DISP_CHANGE_BADPARAM;
+            goto cleanup;
+        }
+    }
+
+    if (pGraphicsDevice)
+    {
+        if (!LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, RequestedMode, &pdm, bSearchClosestMode))
+        {
+            ERR("DrvProbeAndCaptureDevmode() failed\n");
+            lRet = DISP_CHANGE_BADMODE;
+            goto cleanup;
+        }
+    }
+
+    /* Here, we know that input parameters were correct */
+
+    {
+        /* Create new MDEV. Note that if we provide a device name,
+         * MDEV will only contain one device.
+         * */
+
+        if (pmdevOld)
+        {
+            /* Disable old MDEV */
+            if (MDEVOBJ_bDisable(pmdevOld))
+            {
+                /* Create new MDEV. On failure, reenable old MDEV */
+                pmdev = MDEVOBJ_Create(pustrDeviceName, pdm);
+                if (!pmdev)
+                    MDEVOBJ_vEnable(pmdevOld);
+            }
+        }
+        else
+        {
+            pmdev = MDEVOBJ_Create(pustrDeviceName, pdm);
+        }
+
+        if (!pmdev)
+        {
+            ERR("Failed to create new MDEV\n");
+            lRet = DISP_CHANGE_FAILED;
+            goto cleanup;
+        }
+
+        lRet = DISP_CHANGE_SUCCESSFUL;
+        *ppmdevNew = pmdev;
+
+        /* We now have to do the mode switch */
+
+        if (pustrDeviceName && pmdevOld)
+        {
+            /* We changed settings of one device. Add other devices which were already present */
+            for (i = 0; i < pmdevOld->cDev; i++)
+            {
+                for (j = 0; j < pmdev->cDev; j++)
+                {
+                    if (pmdev->dev[j].ppdev->pGraphicsDevice == pmdevOld->dev[i].ppdev->pGraphicsDevice)
+                    {
+                        if (PDEVOBJ_bDynamicModeChange(pmdevOld->dev[i].ppdev, pmdev->dev[j].ppdev))
+                        {
+                            PPDEVOBJ tmp = pmdevOld->dev[i].ppdev;
+                            pmdevOld->dev[i].ppdev = pmdev->dev[j].ppdev;
+                            pmdev->dev[j].ppdev = tmp;
+                        }
+                        else
+                        {
+                            ERR("Failed to apply new settings\n");
+                            UNIMPLEMENTED;
+                            ASSERT(FALSE);
+                        }
+                        break;
+                    }
+                }
+                if (j == pmdev->cDev)
+                {
+                    PDEVOBJ_vReference(pmdevOld->dev[i].ppdev);
+                    pmdev->dev[pmdev->cDev].ppdev = pmdevOld->dev[i].ppdev;
+                    pmdev->cDev++;
+                }
+            }
+        }
+
+        if (pmdev->cDev == 1)
+        {
+            pmdev->ppdevGlobal = pmdev->dev[0].ppdev;
+        }
+        else
+        {
+            /* FIXME: currently, only use the first display */
+            UNIMPLEMENTED;
+            PDEVOBJ_vReference(pmdev->dev[0].ppdev);
+            pmdev->ppdevGlobal = pmdev->dev[0].ppdev;
+        }
+
+        if (pmdevOld)
+        {
+            /* Search PDEVs which were in pmdevOld, but are not anymore in pmdev, and disable them */
+            for (i = 0; i < pmdevOld->cDev; i++)
+            {
+                for (j = 0; j < pmdev->cDev; j++)
+                {
+                    if (pmdev->dev[j].ppdev->pGraphicsDevice == pmdevOld->dev[i].ppdev->pGraphicsDevice)
+                        break;
+                }
+                if (j == pmdev->cDev)
+                    PDEVOBJ_bDisableDisplay(pmdevOld->dev[i].ppdev);
+            }
+        }
+    }
+
+cleanup:
+    if (lRet != DISP_CHANGE_SUCCESSFUL)
+    {
+        *ppmdevNew = NULL;
+        if (pmdev)
+            MDEVOBJ_vDestroy(pmdev);
+        if (pdm && pdm != RequestedMode)
+            ExFreePoolWithTag(pdm, GDITAG_DEVMODE);
+    }
+
+    return lRet;
 }
 
 INT
