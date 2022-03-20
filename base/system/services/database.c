@@ -4,7 +4,7 @@
  * FILE:        base/system/services/database.c
  * PURPOSE:     Database control interface
  * COPYRIGHT:   Copyright 2002-2006 Eric Kohl
- *              Copyright 2006 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2006 H. Poussineau <hpoussin@reactos.org>
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  *                             Gregor Brunmar <gregor.brunmar@home.se>
  *
@@ -141,7 +141,7 @@ ScmCreateNewControlPipe(
     DPRINT("CreateNamedPipeW(%S) done\n", szControlPipeName);
     if (pServiceImage->hControlPipe == INVALID_HANDLE_VALUE)
     {
-        DPRINT1("Failed to create control pipe!\n");
+        DPRINT1("Failed to create control pipe\n");
         return GetLastError();
     }
 
@@ -323,7 +323,7 @@ ScmEnableBackupRestorePrivileges(
     pTokenPrivileges = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
     if (pTokenPrivileges == NULL)
     {
-        DPRINT1("Failed to allocate the privilege buffer!\n");
+        DPRINT1("Failed to allocate privilege buffer\n");
         goto done;
     }
 
@@ -989,7 +989,7 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
         /* Assing the default security descriptor if the security descriptor cannot be read */
         if (lpService->pSecurityDescriptor == NULL)
         {
-            DPRINT("No security descriptor found! Assign default security descriptor!\n");
+            DPRINT("No security descriptor found! Assign default security descriptor\n");
             dwError = ScmCreateDefaultServiceSD(&lpService->pSecurityDescriptor);
             if (dwError != ERROR_SUCCESS)
                 goto done;
@@ -1769,7 +1769,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
         }
     }
 
-    DPRINT("Control pipe connected!\n");
+    DPRINT("Control pipe connected\n");
 
     Overlapped.hEvent = (HANDLE) NULL;
 
@@ -1901,7 +1901,7 @@ ScmStartUserModeService(PSERVICE Service,
         if (!CreateEnvironmentBlock(&lpEnvironment, Service->lpImage->hToken, FALSE))
         {
             /* We failed, run the service with the current environment */
-            DPRINT1("CreateEnvironmentBlock() failed with error %d; service '%S' will run with the current environment.\n",
+            DPRINT1("CreateEnvironmentBlock() failed with error %d; service '%S' will run with current environment\n",
                     GetLastError(), Service->lpServiceName);
             lpEnvironment = NULL;
         }
@@ -1941,7 +1941,7 @@ ScmStartUserModeService(PSERVICE Service,
         if (!CreateEnvironmentBlock(&lpEnvironment, NULL, TRUE))
         {
             /* We failed, run the service with the current environment */
-            DPRINT1("CreateEnvironmentBlock() failed with error %d; service '%S' will run with the current environment.\n",
+            DPRINT1("CreateEnvironmentBlock() failed with error %d; service '%S' will run with current environment\n",
                     GetLastError(), Service->lpServiceName);
             lpEnvironment = NULL;
         }
@@ -2030,7 +2030,7 @@ ScmLoadService(PSERVICE Service,
 
     if (Service->Status.dwCurrentState != SERVICE_STOPPED)
     {
-        DPRINT("Service %S is already running!\n", Service->lpServiceName);
+        DPRINT("Service %S is already running\n", Service->lpServiceName);
         return ERROR_SERVICE_ALREADY_RUNNING;
     }
 
@@ -2273,7 +2273,7 @@ ScmAutoStartServices(VOID)
             }
             else
             {
-                DPRINT1("WARNING: Could not open the associated Safe Boot key!");
+                DPRINT1("WARNING: Could not open the associated Safe Boot key");
                 CurrentService->ServiceVisited = FALSE;
             }
         }
