@@ -989,6 +989,33 @@ PDEVOBJ_vGetDeviceCaps(
 
 /** Exported functions ********************************************************/
 
+/*
+ * @implemented
+ */
+BOOL
+APIENTRY
+EngQueryDeviceAttribute(
+    _In_ HDEV hdev,
+    _In_ ENG_DEVICE_ATTRIBUTE devAttr,
+    _In_reads_bytes_(cjInSize) PVOID pvIn,
+    _In_ ULONG cjInSize,
+    _Out_writes_bytes_(cjOutSize) PVOID pvOut,
+    _In_ ULONG cjOutSize)
+{
+    PPDEVOBJ ppdev = (PPDEVOBJ)hdev;
+
+    if (devAttr != QDA_ACCELERATION_LEVEL)
+        return FALSE;
+
+    if (cjOutSize >= sizeof(DWORD))
+    {
+        *(DWORD*)pvOut = ppdev->dwAccelerationLevel;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 _Must_inspect_result_ _Ret_z_
 LPWSTR
 APIENTRY
