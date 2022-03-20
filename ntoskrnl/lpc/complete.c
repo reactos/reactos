@@ -59,6 +59,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     LARGE_INTEGER SectionOffset;
 
     PAGED_CODE();
+
     LPCTRACE(LPC_COMPLETE_DEBUG,
              "Context: %p. Message: %p. Accept: %lx. Views: %p/%p\n",
              PortContext,
@@ -306,10 +307,11 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
             /* Otherwise, quit */
             ObDereferenceObject(ServerPort);
             DPRINT1("Client section mapping failed: %lx\n", Status);
-            DPRINT1("View base, offset, size: %p %lx %p\n",
-                    ServerPort->ClientSectionBase,
-                    ConnectMessage->ClientView.ViewSize,
-                    SectionOffset);
+            LPCTRACE(LPC_COMPLETE_DEBUG,
+                     "View base, offset, size: %p %lx %p\n",
+                     ServerPort->ClientSectionBase,
+                     ConnectMessage->ClientView.ViewSize,
+                     SectionOffset);
             goto Cleanup;
         }
     }
