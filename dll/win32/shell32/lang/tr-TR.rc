@@ -34,8 +34,6 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Kendiliğinden Düzenle", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "&Kılavuza Hizâla", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Yenile", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Y&apıştır", FCIDM_SHVIEW_INSERT
