@@ -227,4 +227,10 @@ BOOL
 PDEVOBJ_bDisableDisplay(
     _Inout_ PPDEVOBJ ppdev);
 
+PPDEVOBJ
+PDEVOBJ_Create(
+    _In_opt_ PGRAPHICS_DEVICE pGraphicsDevice,
+    _In_opt_ PDEVMODEW pdm,
+    _In_ ULONG ldevtype);
+
 #endif /* !__WIN32K_PDEVOBJ_H */
