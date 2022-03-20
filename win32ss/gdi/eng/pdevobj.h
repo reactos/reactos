@@ -128,6 +128,7 @@ typedef struct _PDEVOBJ
     PDEVMODEW                 pdmwDev;        /* Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size. */
 //  DWORD                     Unknown3;
     FLONG                     DxDd_Flags;     /* DxDD active status flags. */
+    DWORD                     dwAccelerationLevel;
 //  LONG                      devAttr;
 //  PVOID                     WatchDogContext;
 //  ULONG                     WatchDogs;
@@ -224,6 +225,7 @@ PPDEVOBJ
 PDEVOBJ_Create(
     _In_opt_ PGRAPHICS_DEVICE pGraphicsDevice,
     _In_opt_ PDEVMODEW pdm,
+    _In_ ULONG dwAccelerationLevel,
     _In_ ULONG ldevtype);
 
 /* Change display settings:

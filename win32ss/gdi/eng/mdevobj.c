@@ -64,6 +64,7 @@ MDEVOBJ_Create(
     DEVMODEW dmDefault;
     PDEVMODEW localPdm;
     ULONG iDevNum = 0;
+    ULONG dwAccelerationLevel = 0;
 
     TRACE("MDEVOBJ_Create('%wZ' '%dx%dx%d (%d Hz)')\n",
         pustrDeviceName,
@@ -152,13 +153,14 @@ MDEVOBJ_Create(
             READ(dmDisplayFixedOutput, "DefaultSettings.FixedOutput", DM_DISPLAYFIXEDOUTPUT);
             READ(dmPosition.x, "Attach.RelativeX", DM_POSITION);
             READ(dmPosition.y, "Attach.RelativeY", DM_POSITION);
+            RegReadDWORD(hKey, L"Acceleration.Level", &dwAccelerationLevel);
             ZwClose(hKey);
         }
 
         /* Get or create a PDEV for these settings */
         if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, pdm ? pdm : &dmDefault, &localPdm, !pdm))
         {
-            ppdev = PDEVOBJ_Create(pGraphicsDevice, localPdm, LDEV_DEVICE_DISPLAY);
+            ppdev = PDEVOBJ_Create(pGraphicsDevice, localPdm, dwAccelerationLevel, LDEV_DEVICE_DISPLAY);
         }
         else
         {
