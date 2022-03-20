@@ -124,48 +124,6 @@ EngpUpdateGraphicsDeviceList(VOID)
     return STATUS_SUCCESS;
 }
 
-BOOLEAN
-EngpPopulateDeviceModeList(
-    _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
-    _In_ PDEVMODEW pdmDefault)
-{
-    PDEVMODEINFO pdminfo;
-    PDEVMODEW pdm, pdmSelected;
-    ULONG i;
-
-    ASSERT(pGraphicsDevice->pdevmodeInfo == NULL);
-    ASSERT(pGraphicsDevice->pDevModeList == NULL);
-
-    if (!LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, pdmDefault, &pdmSelected, TRUE))
-    {
-        ERR("LDEVOBJ_bProbeAndCaptureDevmode() failed\n");
-        return FALSE;
-    }
-
-    /* Loop through all DEVMODEINFOs */
-    for (pdminfo = pGraphicsDevice->pdevmodeInfo, i = 0;
-         pdminfo;
-         pdminfo = pdminfo->pdmiNext)
-    {
-        /* Loop through the DEVMODEs */
-        for (i = 0; i < pGraphicsDevice->cDevModes; i++)
-        {
-            pdm = pGraphicsDevice->pDevModeList[i].pdm;
-
-            /* Compare with the selected entry */
-            if (pdm->dmSize == pdmSelected->dmSize &&
-                RtlCompareMemory(pdm, pdmSelected, pdm->dmSize) == pdm->dmSize)
-            {
-                pGraphicsDevice->iDefaultMode = i;
-                pGraphicsDevice->iCurrentMode = i;
-                TRACE("Found default entry: %lu '%ls'\n", i, pdm->dmDeviceName);
-                break;
-            }
-        }
-    }
-    return TRUE;
-}
-
 extern VOID
 UserRefreshDisplay(IN PPDEVOBJ ppdev);
 
@@ -235,8 +193,7 @@ NTAPI
 EngpRegisterGraphicsDevice(
     _In_ PUNICODE_STRING pustrDeviceName,
     _In_ PUNICODE_STRING pustrDiplayDrivers,
-    _In_ PUNICODE_STRING pustrDescription,
-    _In_ PDEVMODEW pdmDefault)
+    _In_ PUNICODE_STRING pustrDescription)
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVICE_OBJECT pDeviceObject;
@@ -335,21 +292,14 @@ EngpRegisterGraphicsDevice(
                   pustrDescription->Length);
     pGraphicsDevice->pwszDescription[pustrDescription->Length/sizeof(WCHAR)] = 0;
 
-    /* Initialize the pdevmodeInfo list and default index  */
+    /* Initialize the pdevmodeInfo list */
     pGraphicsDevice->pdevmodeInfo = NULL;
-    pGraphicsDevice->iDefaultMode = 0;
-    pGraphicsDevice->iCurrentMode = 0;
 
     // FIXME: initialize state flags
     pGraphicsDevice->StateFlags = 0;
 
     /* Create the mode list */
     pGraphicsDevice->pDevModeList = NULL;
-    if (!EngpPopulateDeviceModeList(pGraphicsDevice, pdmDefault))
-    {
-        ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
-        return NULL;
-    }
 
     /* Lock loader */
     EngAcquireSemaphore(ghsemGraphicsDeviceList);

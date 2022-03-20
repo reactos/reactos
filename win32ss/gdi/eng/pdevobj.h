@@ -74,8 +74,6 @@ typedef struct _GRAPHICS_DEVICE
     PVOID            pUnknown;
     PFILE_OBJECT     FileObject;
     DWORD            ProtocolType;
-    ULONG            iDefaultMode;
-    ULONG            iCurrentMode;
 } GRAPHICS_DEVICE, *PGRAPHICS_DEVICE;
 
 typedef struct _PDEVOBJ

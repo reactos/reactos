@@ -73,7 +73,6 @@ InitDisplayDriver(
     WCHAR awcBuffer[128];
     ULONG cbSize;
     HKEY hkey;
-    DEVMODEW dmDefault;
     DWORD dwVga;
 
     TRACE("InitDisplayDriver(%S, %S);\n",
@@ -126,9 +125,6 @@ InitDisplayDriver(
         RtlInitUnicodeString(&ustrDescription, L"<unknown>");
     }
 
-    /* Query the default settings */
-    RegReadDisplaySettings(hkey, &dmDefault);
-
     /* Query if this is a VGA compatible driver */
     cbSize = sizeof(DWORD);
     Status = RegQueryValue(hkey, L"VgaCompatible", REG_DWORD, &dwVga, &cbSize);
@@ -141,8 +137,7 @@ InitDisplayDriver(
     RtlInitUnicodeString(&ustrDeviceName, pwszDeviceName);
     pGraphicsDevice = EngpRegisterGraphicsDevice(&ustrDeviceName,
                                                  &ustrDisplayDrivers,
-                                                 &ustrDescription,
-                                                 &dmDefault);
+                                                 &ustrDescription);
     if (pGraphicsDevice && dwVga)
     {
         pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_VGA_COMPATIBLE;
