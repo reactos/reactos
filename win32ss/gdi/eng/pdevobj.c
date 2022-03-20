@@ -14,6 +14,13 @@ DBG_DEFAULT_CHANNEL(EngPDev);
 static PPDEVOBJ gppdevList = NULL;
 static HSEMAPHORE ghsemPDEV;
 
+BOOL
+APIENTRY
+MultiEnableDriver(
+    _In_ ULONG iEngineVersion,
+    _In_ ULONG cj,
+    _Inout_bytecount_(cj) PDRVENABLEDATA pded);
+
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
@@ -456,7 +463,10 @@ PDEVOBJ_Create(
     }
 
     /* Try to get a display driver */
-    pldev = LDEVOBJ_pLoadDriver(pdm->dmDeviceName, ldevtype);
+    if (ldevtype == LDEV_DEVICE_META)
+        pldev = LDEVOBJ_pLoadInternal(MultiEnableDriver, ldevtype);
+    else
+        pldev = LDEVOBJ_pLoadDriver(pdm->dmDeviceName, ldevtype);
     if (!pldev)
     {
         ERR("Could not load display driver '%S'\n",
@@ -877,10 +887,14 @@ PDEVOBJ_lChangeDisplaySettings(
         }
         else
         {
-            /* FIXME: currently, only use the first display */
-            UNIMPLEMENTED;
-            PDEVOBJ_vReference(pmdev->dev[0].ppdev);
-            pmdev->ppdevGlobal = pmdev->dev[0].ppdev;
+            /* Enable MultiDriver */
+            pmdev->ppdevGlobal = PDEVOBJ_Create(NULL, (PDEVMODEW)pmdev, 0, LDEV_DEVICE_META);
+            if (!pmdev->ppdevGlobal)
+            {
+                WARN("Failed to create meta-device. Using only first display\n");
+                PDEVOBJ_vReference(pmdev->dev[0].ppdev);
+                pmdev->ppdevGlobal = pmdev->dev[0].ppdev;
+            }
         }
 
         if (pmdevOld)
