@@ -32,8 +32,6 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Icons anordnen", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Aktualisieren", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Einfügen", FCIDM_SHVIEW_INSERT

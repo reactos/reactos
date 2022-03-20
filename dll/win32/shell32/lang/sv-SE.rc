@@ -32,8 +32,6 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Ordna automatiskt", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Rada upp ikoner", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Uppdatera", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Klistra in", FCIDM_SHVIEW_INSERT
