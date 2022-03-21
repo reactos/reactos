@@ -38,10 +38,10 @@ list(APPEND SOURCE
     heapuser.c
     image.c
     interlck.c
-    memstream.c
-    message.c
     largeint.c
     luid.c
+    memstream.c
+    message.c
     network.c
     nls.c
     path.c
@@ -58,14 +58,14 @@ list(APPEND SOURCE
     rxact.c
     sd.c
     security.c
-    slist.c
     sid.c
+    slist.c
     splaytree.c
     sysvol.c
     thread.c
     time.c
-    timezone.c
     timerqueue.c
+    timezone.c
     trace.c
     unicode.c
     unicodeprefix.c
