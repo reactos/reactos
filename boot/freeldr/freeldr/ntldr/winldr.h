@@ -124,12 +124,16 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                        PCSTR SystemPath,
                        PCSTR BootPath,
                        USHORT VersionToBoot);
+
 BOOLEAN
-WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                  IN PCSTR DirectoryPath,
-                  IN PCSTR AnsiFileName,
-                  IN PCSTR OemFileName,
-                  IN PCSTR LanguageFileName);
+WinLdrLoadNLSData(
+    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ PCSTR DirectoryPath,
+    _In_ PCUNICODE_STRING AnsiFileName,
+    _In_ PCUNICODE_STRING OemFileName,
+    _In_ PCUNICODE_STRING LangFileName, // CaseTable
+    _In_ PCUNICODE_STRING OemHalFileName);
+
 BOOLEAN
 WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
                       PWSTR RegistryPath,

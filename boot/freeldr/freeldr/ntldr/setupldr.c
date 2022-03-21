@@ -22,60 +22,74 @@ AllocateAndInitLPB(
     OUT PLOADER_PARAMETER_BLOCK* OutLoaderBlock);
 
 static VOID
-SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, PCSTR SearchPath)
+SetupLdrLoadNlsData(
+    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ HINF InfHandle,
+    _In_ PCSTR SearchPath)
 {
+    BOOLEAN Success;
     INFCONTEXT InfContext;
-    PCSTR AnsiName, OemName, LangName;
+    PCSTR AnsiData;
+    UNICODE_STRING AnsiFileName = {0};
+    UNICODE_STRING OemFileName = {0};
+    UNICODE_STRING LangFileName = {0}; // CaseTable
+    UNICODE_STRING OemHalFileName = {0};
 
     /* Get ANSI codepage file */
-    if (!InfFindFirstLine(InfHandle, "NLS", "AnsiCodepage", &InfContext))
+    if (!InfFindFirstLine(InfHandle, "NLS", "AnsiCodepage", &InfContext) ||
+        !InfGetDataField(&InfContext, 1, &AnsiData) ||
+        !RtlCreateUnicodeStringFromAsciiz(&AnsiFileName, AnsiData))
     {
-        ERR("Failed to find 'NLS/AnsiCodepage'\n");
-        return;
-    }
-    if (!InfGetDataField(&InfContext, 1, &AnsiName))
-    {
-        ERR("Failed to get load options\n");
+        ERR("Failed to find or get 'NLS/AnsiCodepage'\n");
         return;
     }
 
     /* Get OEM codepage file */
-    if (!InfFindFirstLine(InfHandle, "NLS", "OemCodepage", &InfContext))
+    if (!InfFindFirstLine(InfHandle, "NLS", "OemCodepage", &InfContext) ||
+        !InfGetDataField(&InfContext, 1, &AnsiData) ||
+        !RtlCreateUnicodeStringFromAsciiz(&OemFileName, AnsiData))
     {
-        ERR("Failed to find 'NLS/AnsiCodepage'\n");
-        return;
-    }
-    if (!InfGetDataField(&InfContext, 1, &OemName))
-    {
-        ERR("Failed to get load options\n");
-        return;
+        ERR("Failed to find or get 'NLS/OemCodepage'\n");
+        goto Quit;
     }
 
-    if (!InfFindFirstLine(InfHandle, "NLS", "UnicodeCasetable", &InfContext))
+    /* Get the Unicode case table file */
+    if (!InfFindFirstLine(InfHandle, "NLS", "UnicodeCasetable", &InfContext) ||
+        !InfGetDataField(&InfContext, 1, &AnsiData) ||
+        !RtlCreateUnicodeStringFromAsciiz(&LangFileName, AnsiData))
     {
-        ERR("Failed to find 'NLS/AnsiCodepage'\n");
-        return;
-    }
-    if (!InfGetDataField(&InfContext, 1, &LangName))
-    {
-        ERR("Failed to get load options\n");
-        return;
+        ERR("Failed to find or get 'NLS/UnicodeCasetable'\n");
+        goto Quit;
     }
 
-    TRACE("NLS data '%s' '%s' '%s'\n", AnsiName, OemName, LangName);
-
-#if DBG
+    /* Get OEM HAL font file */
+    if (!InfFindFirstLine(InfHandle, "NLS", "OemHalFont", &InfContext) ||
+        !InfGetData(&InfContext, NULL, &AnsiData) ||
+        !RtlCreateUnicodeStringFromAsciiz(&OemHalFileName, AnsiData))
     {
-        BOOLEAN Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
-        (VOID)Success;
-        TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
+        WARN("Failed to find or get 'NLS/OemHalFont'\n");
+        /* Ignore, this is an optional file */
+        RtlInitEmptyUnicodeString(&OemHalFileName, NULL, 0);
     }
-#else
-    WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
-#endif
 
-    /* TODO: Load OEM HAL font */
-    // Value "OemHalFont"
+    TRACE("NLS data: '%wZ' '%wZ' '%wZ' '%wZ'\n",
+          &AnsiFileName, &OemFileName, &LangFileName, &OemHalFileName);
+
+    /* Load NLS data */
+    Success = WinLdrLoadNLSData(LoaderBlock,
+                                SearchPath,
+                                &AnsiFileName,
+                                &OemFileName,
+                                &LangFileName,
+                                &OemHalFileName);
+    TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
+    (VOID)Success;
+
+Quit:
+    RtlFreeUnicodeString(&OemHalFileName);
+    RtlFreeUnicodeString(&LangFileName);
+    RtlFreeUnicodeString(&OemFileName);
+    RtlFreeUnicodeString(&AnsiFileName);
 }
 
 static

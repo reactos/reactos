@@ -20,12 +20,10 @@ ULONG TotalNLSSize = 0;
 
 static BOOLEAN
 WinLdrGetNLSNames(
-    _Out_z_bytecap_(AnsiNameSize) PSTR AnsiName,
-    _In_ SIZE_T AnsiNameSize,
-    _Out_z_bytecap_(OemNameSize)  PSTR OemName,
-    _In_ SIZE_T OemNameSize,
-    _Out_z_bytecap_(LangNameSize) PSTR LangName,
-    _In_ SIZE_T LangNameSize);
+    _Inout_ PUNICODE_STRING AnsiFileName,
+    _Inout_ PUNICODE_STRING OemFileName,
+    _Inout_ PUNICODE_STRING LangFileName, // CaseTable
+    _Inout_ PUNICODE_STRING OemHalFileName);
 
 static VOID
 WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
@@ -178,33 +176,39 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                              IN PCSTR SystemRoot)
 {
     BOOLEAN Success;
+    DECLARE_UNICODE_STRING_SIZE(AnsiFileName, MAX_PATH);
+    DECLARE_UNICODE_STRING_SIZE(OemFileName, MAX_PATH);
+    DECLARE_UNICODE_STRING_SIZE(LangFileName, MAX_PATH); // CaseTable
+    DECLARE_UNICODE_STRING_SIZE(OemHalFileName, MAX_PATH);
     CHAR SearchPath[1024];
-    CHAR AnsiName[256], OemName[256], LangName[256];
 
     /* Scan registry and prepare boot drivers list */
     WinLdrScanRegistry(&LoaderBlock->BootDriverListHead, SystemRoot);
 
     /* Get names of NLS files */
-    Success = WinLdrGetNLSNames(AnsiName, sizeof(AnsiName),
-                                OemName, sizeof(OemName),
-                                LangName, sizeof(LangName));
+    Success = WinLdrGetNLSNames(&AnsiFileName,
+                                &OemFileName,
+                                &LangFileName,
+                                &OemHalFileName);
     if (!Success)
     {
         UiMessageBox("Getting NLS names from registry failed!");
         return FALSE;
     }
 
-    TRACE("NLS data %s %s %s\n", AnsiName, OemName, LangName);
+    TRACE("NLS data: '%wZ' '%wZ' '%wZ' '%wZ'\n",
+          &AnsiFileName, &OemFileName, &LangFileName, &OemHalFileName);
 
     /* Load NLS data */
     RtlStringCbCopyA(SearchPath, sizeof(SearchPath), SystemRoot);
     RtlStringCbCatA(SearchPath, sizeof(SearchPath), "system32\\");
-    Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
+    Success = WinLdrLoadNLSData(LoaderBlock,
+                                SearchPath,
+                                &AnsiFileName,
+                                &OemFileName,
+                                &LangFileName,
+                                &OemHalFileName);
     TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
-
-    /* TODO: Load OEM HAL font */
-    // In HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Nls\CodePage,
-    // REG_SZ value "OEMHAL"
 
     return TRUE;
 }
@@ -213,21 +217,17 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 /* PRIVATE FUNCTIONS ******************************************************/
 
 // Queries registry for those three file names
-_Use_decl_annotations_
 static BOOLEAN
 WinLdrGetNLSNames(
-    _Out_ PSTR AnsiName,
-    _In_ SIZE_T AnsiNameSize,
-    _Out_ PSTR OemName,
-    _In_ SIZE_T OemNameSize,
-    _Out_ PSTR LangName,
-    _In_ SIZE_T LangNameSize)
+    _Inout_ PUNICODE_STRING AnsiFileName,
+    _Inout_ PUNICODE_STRING OemFileName,
+    _Inout_ PUNICODE_STRING LangFileName, // CaseTable
+    _Inout_ PUNICODE_STRING OemHalFileName)
 {
-    LONG rc = ERROR_SUCCESS;
+    LONG rc;
     HKEY hKey;
     ULONG BufferSize;
     WCHAR szIdBuffer[80];
-    WCHAR NameBuffer[80];
 
     /* Open the CodePage key */
     rc = RegOpenKey(NULL,
@@ -239,47 +239,68 @@ WinLdrGetNLSNames(
         return FALSE;
     }
 
-    /* Get ANSI codepage */
+    /* Get ANSI codepage file */
     BufferSize = sizeof(szIdBuffer);
     rc = RegQueryValue(hKey, L"ACP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
         //TRACE("Couldn't get ACP NLS setting");
-        RegCloseKey(hKey);
-        return FALSE;
+        goto Quit;
     }
 
-    BufferSize = sizeof(NameBuffer);
-    rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
+    BufferSize = AnsiFileName->MaximumLength;
+    rc = RegQueryValue(hKey, szIdBuffer, NULL,
+                       (PUCHAR)AnsiFileName->Buffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
         //TRACE("ACP NLS Setting exists, but isn't readable");
-        //RegCloseKey(hKey);
-        //return FALSE;
-        wcscpy(NameBuffer, L"c_1252.nls"); // HACK: ReactOS bug CORE-6105
+        //goto Quit;
+        AnsiFileName->Length = 0;
+        RtlAppendUnicodeToString(AnsiFileName, L"c_1252.nls"); // HACK: ReactOS bug CORE-6105
     }
-    RtlStringCbPrintfA(AnsiName, AnsiNameSize, "%S", NameBuffer);
+    else
+    {
+        AnsiFileName->Length = (USHORT)BufferSize - sizeof(UNICODE_NULL);
+    }
 
-    /* Get OEM codepage */
+    /* Get OEM codepage file */
     BufferSize = sizeof(szIdBuffer);
     rc = RegQueryValue(hKey, L"OEMCP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
         //TRACE("Couldn't get OEMCP NLS setting");
-        RegCloseKey(hKey);
-        return FALSE;
+        goto Quit;
     }
 
-    BufferSize = sizeof(NameBuffer);
-    rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
+    BufferSize = OemFileName->MaximumLength;
+    rc = RegQueryValue(hKey, szIdBuffer, NULL,
+                       (PUCHAR)OemFileName->Buffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
         //TRACE("OEMCP NLS setting exists, but isn't readable");
-        //RegCloseKey(hKey);
-        //return FALSE;
-        wcscpy(NameBuffer, L"c_437.nls"); // HACK: ReactOS bug CORE-6105
+        //goto Quit;
+        OemFileName->Length = 0;
+        RtlAppendUnicodeToString(OemFileName, L"c_437.nls"); // HACK: ReactOS bug CORE-6105
     }
-    RtlStringCbPrintfA(OemName, OemNameSize, "%S", NameBuffer);
+    else
+    {
+        OemFileName->Length = (USHORT)BufferSize - sizeof(UNICODE_NULL);
+    }
+
+    /* Get OEM HAL font file */
+    BufferSize = OemHalFileName->MaximumLength;
+    rc = RegQueryValue(hKey, L"OEMHAL", NULL,
+                       (PUCHAR)OemHalFileName->Buffer, &BufferSize);
+    if (rc != ERROR_SUCCESS)
+    {
+        //TRACE("Couldn't get OEMHAL NLS setting");
+        //goto Quit;
+        RtlInitEmptyUnicodeString(OemHalFileName, NULL, 0);
+    }
+    else
+    {
+        OemHalFileName->Length = (USHORT)BufferSize - sizeof(UNICODE_NULL);
+    }
 
     RegCloseKey(hKey);
 
@@ -293,68 +314,71 @@ WinLdrGetNLSNames(
         return FALSE;
     }
 
-    /* Get the Unicode case table */
+    /* Get the Unicode case table file */
     BufferSize = sizeof(szIdBuffer);
     rc = RegQueryValue(hKey, L"Default", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
         //TRACE("Couldn't get Language Default setting");
-        RegCloseKey(hKey);
-        return FALSE;
+        goto Quit;
     }
 
-    BufferSize = sizeof(NameBuffer);
-    rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)NameBuffer, &BufferSize);
+    BufferSize = LangFileName->MaximumLength;
+    rc = RegQueryValue(hKey, szIdBuffer, NULL,
+                       (PUCHAR)LangFileName->Buffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
         //TRACE("Language Default setting exists, but isn't readable");
-        RegCloseKey(hKey);
-        return FALSE;
+        //goto Quit;
+        LangFileName->Length = 0;
+        RtlAppendUnicodeToString(LangFileName, L"l_intl.nls");
     }
-    RtlStringCbPrintfA(LangName, LangNameSize, "%S", NameBuffer);
+    else
+    {
+        LangFileName->Length = (USHORT)BufferSize - sizeof(UNICODE_NULL);
+    }
 
+Quit:
     RegCloseKey(hKey);
-    return TRUE;
+    return (rc == ERROR_SUCCESS);
 }
 
 BOOLEAN
-WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                  IN PCSTR DirectoryPath,
-                  IN PCSTR AnsiFileName,
-                  IN PCSTR OemFileName,
-                  IN PCSTR LanguageFileName)
+WinLdrLoadNLSData(
+    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ PCSTR DirectoryPath,
+    _In_ PCUNICODE_STRING AnsiFileName,
+    _In_ PCUNICODE_STRING OemFileName,
+    _In_ PCUNICODE_STRING LangFileName, // CaseTable
+    _In_ PCUNICODE_STRING OemHalFileName)
 {
-    CHAR FileName[255];
-    ULONG FileId;
-    ULONG AnsiFileSize, OemFileSize, LanguageFileSize;
-    ULONG TotalSize;
-    PVOID NlsDataBase;
-    PVOID NlsVirtual;
-    BOOLEAN AnsiEqualsOem = FALSE;
-    FILEINFORMATION FileInfo;
-    ULONG BytesRead;
     ARC_STATUS Status;
+    FILEINFORMATION FileInfo;
+    ULONG AnsiFileId = -1, OemFileId = -1, LangFileId = -1;
+    ULONG AnsiFileSize, OemFileSize, LangFileSize;
+    ULONG TotalSize;
+    ULONG BytesRead;
+    PVOID NlsDataBase, NlsVirtual;
+    BOOLEAN AnsiEqualsOem = FALSE;
+    CHAR FileName[MAX_PATH];
 
-    /* There may be a case, when OEM and ANSI page coincide */
-    if (!strcmp(AnsiFileName, OemFileName))
+    /* There may be a case, where OEM and ANSI pages coincide */
+    if (RtlCompareUnicodeString(AnsiFileName, OemFileName, TRUE) == 0)
         AnsiEqualsOem = TRUE;
 
     /* Open file with ANSI and store its size */
-    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
-    RtlStringCbCatA(FileName, sizeof(FileName), AnsiFileName);
-
-    NtLdrOutputLoadMsg(FileName, NULL);
-    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
+    RtlStringCbPrintfA(FileName, sizeof(FileName), "%s%wZ",
+                       DirectoryPath, AnsiFileName);
+    Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
     if (Status != ESUCCESS)
     {
         WARN("Error while opening '%s', Status: %u\n", FileName, Status);
-        goto Failure;
+        goto Quit;
     }
 
-    Status = ArcGetFileInformation(FileId, &FileInfo);
-    ArcClose(FileId);
+    Status = ArcGetFileInformation(AnsiFileId, &FileInfo);
     if (Status != ESUCCESS)
-        goto Failure;
+        goto Quit;
     AnsiFileSize = FileInfo.EndingAddress.LowPart;
     TRACE("AnsiFileSize: %d\n", AnsiFileSize);
 
@@ -365,146 +389,133 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
     else
     {
-        RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
-        RtlStringCbCatA(FileName, sizeof(FileName), OemFileName);
-
-        NtLdrOutputLoadMsg(FileName, NULL);
-        Status = ArcOpen(FileName, OpenReadOnly, &FileId);
+        RtlStringCbPrintfA(FileName, sizeof(FileName), "%s%wZ",
+                           DirectoryPath, OemFileName);
+        Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
         if (Status != ESUCCESS)
         {
             WARN("Error while opening '%s', Status: %u\n", FileName, Status);
-            goto Failure;
+            goto Quit;
         }
 
-        Status = ArcGetFileInformation(FileId, &FileInfo);
-        ArcClose(FileId);
+        Status = ArcGetFileInformation(OemFileId, &FileInfo);
         if (Status != ESUCCESS)
-            goto Failure;
+            goto Quit;
         OemFileSize = FileInfo.EndingAddress.LowPart;
     }
     TRACE("OemFileSize: %d\n", OemFileSize);
 
-    /* And finally open the language codepage file and store its length */
-    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
-    RtlStringCbCatA(FileName, sizeof(FileName), LanguageFileName);
-
-    NtLdrOutputLoadMsg(FileName, NULL);
-    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
+    /* Finally open the language codepage file and store its length */
+    RtlStringCbPrintfA(FileName, sizeof(FileName), "%s%wZ",
+                       DirectoryPath, LangFileName);
+    Status = ArcOpen(FileName, OpenReadOnly, &LangFileId);
     if (Status != ESUCCESS)
     {
         WARN("Error while opening '%s', Status: %u\n", FileName, Status);
-        goto Failure;
+        goto Quit;
     }
 
-    Status = ArcGetFileInformation(FileId, &FileInfo);
-    ArcClose(FileId);
+    Status = ArcGetFileInformation(LangFileId, &FileInfo);
     if (Status != ESUCCESS)
-        goto Failure;
-    LanguageFileSize = FileInfo.EndingAddress.LowPart;
-    TRACE("LanguageFileSize: %d\n", LanguageFileSize);
+        goto Quit;
+    LangFileSize = FileInfo.EndingAddress.LowPart;
+    TRACE("LangFileSize: %d\n", LangFileSize);
+
+    //
+    // TODO: The OEMHAL file.
+    //
 
     /* Sum up all three length, having in mind that every one of them
        must start at a page boundary => thus round up each file to a page */
     TotalSize = MM_SIZE_TO_PAGES(AnsiFileSize) +
                 MM_SIZE_TO_PAGES(OemFileSize)  +
-                MM_SIZE_TO_PAGES(LanguageFileSize);
+                MM_SIZE_TO_PAGES(LangFileSize);
 
     /* Store it for later marking the pages as NlsData type */
     TotalNLSSize = TotalSize;
 
     NlsDataBase = MmAllocateMemoryWithType(TotalSize*MM_PAGE_SIZE, LoaderNlsData);
     if (NlsDataBase == NULL)
-        goto Failure;
+        goto Quit;
 
     NlsVirtual = PaToVa(NlsDataBase);
     LoaderBlock->NlsData->AnsiCodePageData = NlsVirtual;
-    LoaderBlock->NlsData->OemCodePageData = (PVOID)((ULONG_PTR)NlsVirtual +
+
+    LoaderBlock->NlsData->OemCodePageData =
+        (PVOID)((ULONG_PTR)NlsVirtual +
         (MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT));
-    LoaderBlock->NlsData->UnicodeCodePageData = (PVOID)((ULONG_PTR)NlsVirtual +
+
+    LoaderBlock->NlsData->UnicodeCodePageData =
+        (PVOID)((ULONG_PTR)NlsVirtual +
         (MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT) +
         (MM_SIZE_TO_PAGES(OemFileSize)  << MM_PAGE_SHIFT));
 
-    /* Ansi and OEM data are the same - just set pointers to the same area */
+    /* ANSI and OEM data are the same - just set pointers to the same area */
     if (AnsiEqualsOem)
         LoaderBlock->NlsData->OemCodePageData = LoaderBlock->NlsData->AnsiCodePageData;
 
-    /* Now actually read the data into memory, starting with Ansi file */
-    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
-    RtlStringCbCatA(FileName, sizeof(FileName), AnsiFileName);
-
+    /* Now actually read the data into memory, starting with the ANSI file */
+    RtlStringCbPrintfA(FileName, sizeof(FileName), "%s%wZ",
+                       DirectoryPath, AnsiFileName);
     NtLdrOutputLoadMsg(FileName, NULL);
-    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
-    if (Status != ESUCCESS)
-    {
-        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
-        goto Failure;
-    }
-
-    Status = ArcRead(FileId, VaToPa(LoaderBlock->NlsData->AnsiCodePageData), AnsiFileSize, &BytesRead);
-    ArcClose(FileId);
+    Status = ArcRead(AnsiFileId,
+                     VaToPa(LoaderBlock->NlsData->AnsiCodePageData),
+                     AnsiFileSize, &BytesRead);
     if (Status != ESUCCESS)
     {
         WARN("Error while reading '%s', Status: %u\n", FileName, Status);
-        goto Failure;
+        goto Quit;
     }
 
-    /* OEM now, if it doesn't equal Ansi of course */
+    /* OEM now, if it isn't the same as the ANSI one */
     if (!AnsiEqualsOem)
     {
-        RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
-        RtlStringCbCatA(FileName, sizeof(FileName), OemFileName);
-
+        RtlStringCbPrintfA(FileName, sizeof(FileName), "%s%wZ",
+                           DirectoryPath, OemFileName);
         NtLdrOutputLoadMsg(FileName, NULL);
-        Status = ArcOpen(FileName, OpenReadOnly, &FileId);
-        if (Status != ESUCCESS)
-        {
-            WARN("Error while opening '%s', Status: %u\n", FileName, Status);
-            goto Failure;
-        }
-
-        Status = ArcRead(FileId, VaToPa(LoaderBlock->NlsData->OemCodePageData), OemFileSize, &BytesRead);
-        ArcClose(FileId);
+        Status = ArcRead(OemFileId,
+                         VaToPa(LoaderBlock->NlsData->OemCodePageData),
+                         OemFileSize, &BytesRead);
         if (Status != ESUCCESS)
         {
             WARN("Error while reading '%s', Status: %u\n", FileName, Status);
-            goto Failure;
+            goto Quit;
         }
     }
 
     /* Finally the language file */
-    RtlStringCbCopyA(FileName, sizeof(FileName), DirectoryPath);
-    RtlStringCbCatA(FileName, sizeof(FileName), LanguageFileName);
-
+    RtlStringCbPrintfA(FileName, sizeof(FileName), "%s%wZ",
+                       DirectoryPath, LangFileName);
     NtLdrOutputLoadMsg(FileName, NULL);
-    Status = ArcOpen(FileName, OpenReadOnly, &FileId);
-    if (Status != ESUCCESS)
-    {
-        WARN("Error while opening '%s', Status: %u\n", FileName, Status);
-        goto Failure;
-    }
-
-    Status = ArcRead(FileId, VaToPa(LoaderBlock->NlsData->UnicodeCodePageData), LanguageFileSize, &BytesRead);
-    ArcClose(FileId);
+    Status = ArcRead(LangFileId,
+                     VaToPa(LoaderBlock->NlsData->UnicodeCodePageData),
+                     LangFileSize, &BytesRead);
     if (Status != ESUCCESS)
     {
         WARN("Error while reading '%s', Status: %u\n", FileName, Status);
-        goto Failure;
+        goto Quit;
     }
 
     //
-    // THIS IS HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACK
-    // Should go to WinLdrLoadOemHalFont(), when it will be implemented
+    // THIS IS a HACK and should be replaced by actually loading the OEMHAL file!
     //
     LoaderBlock->OemFontFile = VaToPa(LoaderBlock->NlsData->UnicodeCodePageData);
 
     /* Convert NlsTables address to VA */
     LoaderBlock->NlsData = PaToVa(LoaderBlock->NlsData);
 
-    return TRUE;
+Quit:
+    if (LangFileId != -1)
+        ArcClose(LangFileId);
+    if (OemFileId != -1)
+        ArcClose(OemFileId);
+    if (AnsiFileId != -1)
+        ArcClose(AnsiFileId);
 
-Failure:
-    UiMessageBox("Error reading NLS file %s", FileName);
-    return FALSE;
+    if (Status != ESUCCESS)
+        UiMessageBox("Error reading NLS file %s", FileName);
+
+    return (Status == ESUCCESS);
 }
 
 static VOID
