@@ -292,7 +292,7 @@ if(ARCH STREQUAL "i386")
     target_link_libraries(freeldr_pe mini_hal)
 endif()
 
-target_link_libraries(freeldr_pe freeldr_common cportlib cmlib rtl libcntpr)
+target_link_libraries(freeldr_pe freeldr_common cportlib cmlib blrtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
