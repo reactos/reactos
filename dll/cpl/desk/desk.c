@@ -5,9 +5,12 @@
  * PURPOSE:         ReactOS Display Control Panel
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
+ *                  Raymond Czerny
  */
 
 #include "desk.h"
+#include "../common/cpl_common.h"
+
 #include <shellapi.h>
 #include <cplext.h>
 #include <debug.h>
@@ -260,7 +263,15 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     switch (uMsg)
     {
         case CPL_INIT:
+        {
+            HWND hwnd = CPL_GetHWndByResource(hApplet, IDS_CPLNAME);
+            if(hwnd)
+            {
+                BringWindowToTop(hwnd);
+                return FALSE;
+            }
             return TRUE;
+        }
 
         case CPL_GETCOUNT:
             return NUM_APPLETS;

@@ -20,7 +20,9 @@ list(APPEND SOURCE
     general.c
     draw.c
     theme.c
-    muireg.c)
+    muireg.c
+    ../common/cpl_common.c
+)
 
 list(APPEND PCH_SKIP_SOURCE
     guid.c)
