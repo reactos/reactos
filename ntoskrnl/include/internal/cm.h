@@ -5,9 +5,12 @@
  * PURPOSE:         Internal header for the Configuration Manager
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
-#define _CM_
-#include "cmlib.h"
+
+#pragma once
+
+#include <cmlib.h>
 #include <cmreslist.h>
+#include "cmboot.h"
 
 //
 // Define this if you want debugging support
@@ -1169,16 +1172,6 @@ CmpCreateLinkNode(
 // Boot Routines
 //
 CODE_SEG("INIT")
-HCELL_INDEX
-NTAPI
-CmpFindControlSet(
-    IN PHHIVE SystemHive,
-    IN HCELL_INDEX RootCell,
-    IN PUNICODE_STRING SelectKeyName,
-    OUT PBOOLEAN AutoSelect
-);
-
-CODE_SEG("INIT")
 VOID
 NTAPI
 CmGetSystemControlValues(
@@ -1452,41 +1445,6 @@ NTAPI
 CmGetSystemDriverList(
     VOID
 );
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-CmpFindDrivers(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX ControlSet,
-    IN SERVICE_LOAD_TYPE LoadType,
-    IN PWSTR BootFileSystem OPTIONAL,
-    IN PLIST_ENTRY DriverListHead
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-CmpSortDriverList(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX ControlSet,
-    IN PLIST_ENTRY DriverListHead
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-CmpResolveDriverDependencies(
-    IN PLIST_ENTRY DriverListHead
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-NTAPI
-CmpIsSafe(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX SafeBootCell,
-    IN HCELL_INDEX DriverCell);
 
 //
 // Global variables accessible from all of Cm
