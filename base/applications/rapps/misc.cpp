@@ -247,7 +247,7 @@ BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
     BOOL bHasSucceded = FALSE;
     ATL::CRegKey key;
     ATL::CStringW szVersion;
-    ATL::CStringW szPath = ATL::CStringW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%ls") + szRegName;
+    ATL::CStringW szPath = ATL::CStringW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") + szRegName;
 
     if (key.Open(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
                  szPath.GetString(),

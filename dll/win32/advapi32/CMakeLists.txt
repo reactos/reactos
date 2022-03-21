@@ -11,6 +11,7 @@ include_directories(
 add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/eventlogrpc.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/lsa.idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/seclogon.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/svcctl.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/winreg.idl)
 
@@ -49,6 +50,7 @@ list(APPEND PCH_SKIP_SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/eventlogrpc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/lsa_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/seclogon_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/svcctl_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/winreg_c.c)
 

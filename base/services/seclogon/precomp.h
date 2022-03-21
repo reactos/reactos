@@ -20,6 +20,7 @@
 #include <winreg.h>
 #include <winsvc.h>
 #include <svc.h>
+#include <userenv.h>
 
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>

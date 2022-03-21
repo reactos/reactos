@@ -34,6 +34,7 @@ STRINGTABLE
     13 "本功能的网络驱动器不存在"
     14 "功能来自:"
     15 "选择包含 %s 的文件夹"
+    100 "New Folder"
 }
 
 /* Error messages */

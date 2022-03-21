@@ -528,6 +528,11 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    Info = IntGetScrollInfoFromWindow(Window, nBar);
    pSBData = IntGetSBData(Window, nBar);
 
+   if (lpsi->fMask & SIF_THEMED && !(Info->fMask & SIF_THEMED))
+   {
+       Info->fMask |= SIF_THEMED;
+   }
+
    /* Set the page size */
    if (lpsi->fMask & SIF_PAGE)
    {
@@ -660,7 +665,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
             return lpsi->fMask & SIF_PREVIOUSPOS ? OldPos : pSBData->pos; /* SetWindowPos() already did the painting */
       if (bRedraw)
       {
-         if (!(lpsi->fMask & SIF_THEMED)) /* Not Using Themes */
+         if (!(Info->fMask & SIF_THEMED)) /* Not Using Themes */
          {
             TRACE("Not using themes.\n");
             if (action & SA_SSI_REPAINT_ARROWS)

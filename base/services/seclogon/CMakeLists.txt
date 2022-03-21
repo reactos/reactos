@@ -17,6 +17,6 @@ add_library(seclogon MODULE
 
 set_module_type(seclogon win32dll UNICODE)
 target_link_libraries(seclogon wine ${PSEH_LIB})
-add_importlibs(seclogon advapi32 rpcrt4 msvcrt kernel32 ntdll)
+add_importlibs(seclogon userenv advapi32 rpcrt4 msvcrt kernel32 ntdll)
 add_pch(seclogon precomp.h SOURCE)
 add_cd_file(TARGET seclogon DESTINATION reactos/system32 FOR all)

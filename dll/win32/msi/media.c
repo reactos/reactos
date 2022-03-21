@@ -31,7 +31,6 @@
 #include "winreg.h"
 #include "shlwapi.h"
 #include "objidl.h"
-#include "wine/unicode.h"
 #include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -59,22 +58,22 @@ static BOOL source_matches_volume(MSIMEDIAINFO *mi, LPCWSTR source_root)
     const WCHAR *p;
     int len, len2;
 
-    strcpyW(root, source_root);
+    lstrcpyW(root, source_root);
     PathStripToRootW(root);
     PathAddBackslashW(root);
 
     if (!GetVolumeInformationW(root, volume_name, MAX_PATH + 1, NULL, NULL, NULL, NULL, 0))
     {
-        WARN("failed to get volume information for %s (%u)\n", debugstr_w(root), GetLastError());
+        WARN( "failed to get volume information for %s (%lu)\n", debugstr_w(root), GetLastError() );
         return FALSE;
     }
 
-    len = strlenW( volume_name );
-    len2 = strlenW( mi->volume_label );
+    len = lstrlenW( volume_name );
+    len2 = lstrlenW( mi->volume_label );
     if (len2 > len) return FALSE;
     p = volume_name + len - len2;
 
-    return !strcmpiW( mi->volume_label, p );
+    return !wcsicmp( mi->volume_label, p );
 }
 
 static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
@@ -83,7 +82,7 @@ static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
     LPWSTR source_dir;
     UINT r = IDRETRY;
 
-    source_dir = msi_dup_property(package->db, szSourceDir);
+    source_dir = msi_dup_property(package->db, L"SourceDir");
     record = MSI_CreateRecord(2);
 
     while (r == IDRETRY && !source_matches_volume(mi, source_dir))
@@ -97,7 +96,7 @@ static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
     msiobj_release(&record->hdr);
     msi_free(source_dir);
 
-    return r;
+    return r == IDRETRY ? ERROR_SUCCESS : ERROR_INSTALL_SOURCE_ABSENT;
 }
 
 static MSICABINETSTREAM *msi_get_cabinet_stream( MSIPACKAGE *package, UINT disk_id )
@@ -228,7 +227,7 @@ static INT_PTR CDECL cabinet_open_stream( char *pszFile, int oflag, int pmode )
         msi_free( encoded );
         if (FAILED(hr))
         {
-            WARN("failed to open stream 0x%08x\n", hr);
+            WARN( "failed to open stream %#lx\n", hr );
             return -1;
         }
     }
@@ -272,16 +271,11 @@ static LONG CDECL cabinet_seek_stream( INT_PTR hf, LONG dist, int seektype )
     return -1;
 }
 
-static UINT CDECL msi_media_get_disk_info(MSIPACKAGE *package, MSIMEDIAINFO *mi)
+static UINT msi_media_get_disk_info(MSIPACKAGE *package, MSIMEDIAINFO *mi)
 {
     MSIRECORD *row;
 
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ', 'F','R','O','M',' ',
-        '`','M','e','d','i','a','`',' ','W','H','E','R','E',' ',
-        '`','D','i','s','k','I','d','`',' ','=',' ','%','i',0};
-
-    row = MSI_QueryGetRecord(package->db, query, mi->disk_id);
+    row = MSI_QueryGetRecord(package->db, L"SELECT * FROM `Media` WHERE `DiskId` = %d", mi->disk_id);
     if (!row)
     {
         TRACE("Unable to query row\n");
@@ -309,10 +303,10 @@ static WCHAR *get_cabinet_filename(MSIMEDIAINFO *mi)
     int len;
     WCHAR *ret;
 
-    len = strlenW(mi->sourcedir) + strlenW(mi->cabinet) + 1;
+    len = lstrlenW(mi->sourcedir) + lstrlenW(mi->cabinet) + 1;
     if (!(ret = msi_alloc(len * sizeof(WCHAR)))) return NULL;
-    strcpyW(ret, mi->sourcedir);
-    strcatW(ret, mi->cabinet);
+    lstrcpyW(ret, mi->sourcedir);
+    lstrcatW(ret, mi->cabinet);
     return ret;
 }
 
@@ -342,7 +336,7 @@ static INT_PTR cabinet_next_cabinet(FDINOTIFICATIONTYPE fdint,
         goto done;
     }
 
-    if (strcmpiW( mi->cabinet, cab ))
+    if (wcsicmp( mi->cabinet, cab ))
     {
         char *next_cab;
         ULONG length;
@@ -355,7 +349,7 @@ static INT_PTR cabinet_next_cabinet(FDINOTIFICATIONTYPE fdint,
         length = strlen(pfdin->psz3) + 1 + strlen(next_cab) + 1;
         if (length > 256)
         {
-            WARN("Cannot update next cabinet filename with a string size %u > 256\n", length);
+            WARN( "cannot update next cabinet filename with a string size %lu > 256\n", length );
             msi_free(next_cab);
             goto done;
         }
@@ -439,23 +433,22 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
     attrs = attrs & (FILE_ATTRIBUTE_READONLY|FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_SYSTEM);
     if (!attrs) attrs = FILE_ATTRIBUTE_NORMAL;
 
-    handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0,
-                         NULL, CREATE_ALWAYS, attrs, NULL);
+    handle = msi_create_file( data->package, path, GENERIC_READ | GENERIC_WRITE, 0, CREATE_ALWAYS, attrs );
     if (handle == INVALID_HANDLE_VALUE)
     {
         DWORD err = GetLastError();
-        DWORD attrs2 = GetFileAttributesW(path);
+        DWORD attrs2 = msi_get_file_attributes( data->package, path );
 
         if (attrs2 == INVALID_FILE_ATTRIBUTES)
         {
-            ERR("failed to create %s (error %d)\n", debugstr_w(path), err);
+            ERR( "failed to create %s (error %lu)\n", debugstr_w(path), err );
             goto done;
         }
         else if (err == ERROR_ACCESS_DENIED && (attrs2 & FILE_ATTRIBUTE_READONLY))
         {
             TRACE("removing read-only attribute on %s\n", debugstr_w(path));
-            SetFileAttributesW( path, attrs2 & ~FILE_ATTRIBUTE_READONLY );
-            handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs, NULL);
+            msi_set_file_attributes( data->package, path, attrs2 & ~FILE_ATTRIBUTE_READONLY );
+            handle = msi_create_file( data->package, path, GENERIC_READ | GENERIC_WRITE, 0, CREATE_ALWAYS, attrs );
 
             if (handle != INVALID_HANDLE_VALUE) goto done;
             err = GetLastError();
@@ -468,33 +461,32 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
             TRACE("file in use, scheduling rename operation\n");
 
             if (!(tmppathW = strdupW( path ))) return ERROR_OUTOFMEMORY;
-            if ((p = strrchrW(tmppathW, '\\'))) *p = 0;
-            len = strlenW( tmppathW ) + 16;
+            if ((p = wcsrchr(tmppathW, '\\'))) *p = 0;
+            len = lstrlenW( tmppathW ) + 16;
             if (!(tmpfileW = msi_alloc(len * sizeof(WCHAR))))
             {
                 msi_free( tmppathW );
                 return ERROR_OUTOFMEMORY;
             }
-            if (!GetTempFileNameW(tmppathW, szMsi, 0, tmpfileW)) tmpfileW[0] = 0;
+            if (!GetTempFileNameW(tmppathW, L"msi", 0, tmpfileW)) tmpfileW[0] = 0;
             msi_free( tmppathW );
 
             handle = CreateFileW(tmpfileW, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs, NULL);
 
             if (handle != INVALID_HANDLE_VALUE &&
-                MoveFileExW(path, NULL, MOVEFILE_DELAY_UNTIL_REBOOT) &&
-                MoveFileExW(tmpfileW, path, MOVEFILE_DELAY_UNTIL_REBOOT))
+                msi_move_file( data->package, path, NULL, MOVEFILE_DELAY_UNTIL_REBOOT ) &&
+                msi_move_file( data->package, tmpfileW, path, MOVEFILE_DELAY_UNTIL_REBOOT ))
             {
                 data->package->need_reboot_at_end = 1;
             }
             else
             {
-                WARN("failed to schedule rename operation %s (error %d)\n", debugstr_w(path), GetLastError());
+                WARN( "failed to schedule rename operation %s (error %lu)\n", debugstr_w(path), GetLastError() );
                 DeleteFileW( tmpfileW );
             }
             msi_free(tmpfileW);
         }
-        else
-            WARN("failed to create %s (error %d)\n", debugstr_w(path), err);
+        else WARN( "failed to create %s (error %lu)\n", debugstr_w(path), err );
     }
 
 done:
@@ -514,16 +506,23 @@ static INT_PTR cabinet_close_file_info(FDINOTIFICATIONTYPE fdint,
     data->mi->is_continuous = FALSE;
 
     if (!DosDateTimeToFileTime(pfdin->date, pfdin->time, &ft))
+    {
+        CloseHandle(handle);
         return -1;
+    }
     if (!LocalFileTimeToFileTime(&ft, &ftLocal))
+    {
+        CloseHandle(handle);
         return -1;
+    }
     if (!SetFileTime(handle, &ftLocal, 0, &ftLocal))
+    {
+        CloseHandle(handle);
         return -1;
+    }
 
     CloseHandle(handle);
-
-    data->cb(data->package, data->curfile, MSICABEXTRACT_FILEEXTRACTED, NULL, NULL,
-             data->user);
+    data->cb(data->package, data->curfile, MSICABEXTRACT_FILEEXTRACTED, NULL, NULL, data->user);
 
     msi_free(data->curfile);
     data->curfile = NULL;
@@ -664,6 +663,7 @@ void msi_free_media_info(MSIMEDIAINFO *mi)
     msi_free(mi->disk_prompt);
     msi_free(mi->cabinet);
     msi_free(mi->volume_label);
+    msi_free(mi->last_volume);
     msi_free(mi);
 }
 
@@ -671,27 +671,31 @@ static UINT get_drive_type(const WCHAR *path)
 {
     WCHAR root[MAX_PATH + 1];
 
-    strcpyW(root, path);
+    lstrcpyW(root, path);
     PathStripToRootW(root);
     PathAddBackslashW(root);
 
     return GetDriveTypeW(root);
 }
 
+static WCHAR *get_base_url( MSIDATABASE *db )
+{
+    WCHAR *p, *ret = NULL, *orig_db = msi_dup_property( db, L"OriginalDatabase" );
+    if (UrlIsW( orig_db, URLIS_URL ) && (ret = strdupW( orig_db )) && (p = wcsrchr( ret, '/'))) p[1] = 0;
+    msi_free( orig_db );
+    return ret;
+}
+
 UINT msi_load_media_info(MSIPACKAGE *package, UINT Sequence, MSIMEDIAINFO *mi)
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','M','e','d','i','a','`',' ',
-        'W','H','E','R','E',' ','`','L','a','s','t','S','e','q','u','e','n','c','e','`',' ',
-        '>','=',' ','%','i',' ','O','R','D','E','R',' ','B','Y',' ','`','D','i','s','k','I','d','`',0};
     MSIRECORD *row;
-    LPWSTR source_dir, source;
+    WCHAR *source_dir, *source, *base_url = NULL;
     DWORD options;
 
     if (Sequence <= mi->last_sequence) /* already loaded */
         return ERROR_SUCCESS;
 
-    row = MSI_QueryGetRecord(package->db, query, Sequence);
+    row = MSI_QueryGetRecord(package->db, L"SELECT * FROM `Media` WHERE `LastSequence` >= %d ORDER BY `DiskId`", Sequence);
     if (!row)
     {
         TRACE("Unable to query row\n");
@@ -710,7 +714,7 @@ UINT msi_load_media_info(MSIPACKAGE *package, UINT Sequence, MSIMEDIAINFO *mi)
     msiobj_release(&row->hdr);
 
     msi_set_sourcedir_props(package, FALSE);
-    source_dir = msi_dup_property(package->db, szSourceDir);
+    source_dir = msi_dup_property(package->db, L"SourceDir");
     lstrcpyW(mi->sourcedir, source_dir);
     PathAddBackslashW(mi->sourcedir);
     mi->type = get_drive_type(source_dir);
@@ -721,9 +725,9 @@ UINT msi_load_media_info(MSIPACKAGE *package, UINT Sequence, MSIMEDIAINFO *mi)
         source = source_dir;
         options |= MSISOURCETYPE_MEDIA;
     }
-    else if (package->BaseURL && UrlIsW(package->BaseURL, URLIS_URL))
+    else if ((base_url = get_base_url(package->db)))
     {
-        source = package->BaseURL;
+        source = base_url;
         options |= MSISOURCETYPE_URL;
     }
     else
@@ -739,8 +743,10 @@ UINT msi_load_media_info(MSIPACKAGE *package, UINT Sequence, MSIMEDIAINFO *mi)
     msi_package_add_info(package, package->Context,
                          options, INSTALLPROPERTY_LASTUSEDSOURCEW, source);
 
-    msi_free(source_dir);
     TRACE("sequence %u -> cabinet %s disk id %u\n", Sequence, debugstr_w(mi->cabinet), mi->disk_id);
+
+    msi_free(base_url);
+    msi_free(source_dir);
     return ERROR_SUCCESS;
 }
 
@@ -783,7 +789,7 @@ static UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi)
                                              MSISOURCETYPE_NETWORK, index++,
                                              volume, &volumesz) == ERROR_SUCCESS)
             {
-                if (check_all || !strncmpiW(source, volume, strlenW(source)))
+                if (check_all || !wcsnicmp(source, volume, lstrlenW(source)))
                 {
                     lstrcpyW(cabinet_file, volume);
                     PathAddBackslashW(cabinet_file);
@@ -822,11 +828,11 @@ static UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi)
         mi->disk_id = id;
         msi_free( mi->volume_label );
         if (!(mi->volume_label = msi_alloc( ++volumesz * sizeof(WCHAR) ))) return ERROR_OUTOFMEMORY;
-        strcpyW( mi->volume_label, volume );
+        lstrcpyW( mi->volume_label, volume );
 
         msi_free( mi->disk_prompt );
         if (!(mi->disk_prompt = msi_alloc( ++promptsz * sizeof(WCHAR) ))) return ERROR_OUTOFMEMORY;
-        strcpyW( mi->disk_prompt, prompt );
+        lstrcpyW( mi->disk_prompt, prompt );
 
         if (source_matches_volume(mi, source))
         {
@@ -851,6 +857,8 @@ UINT ready_media( MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi )
 
     if (mi->cabinet)
     {
+        WCHAR *base_url;
+
         /* cabinet is internal, no checks needed */
         if (mi->cabinet[0] == '#') return ERROR_SUCCESS;
 
@@ -858,40 +866,55 @@ UINT ready_media( MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi )
 
         /* package should be downloaded */
         if (compressed && GetFileAttributesW( cabinet_file ) == INVALID_FILE_ATTRIBUTES &&
-            package->BaseURL && UrlIsW( package->BaseURL, URLIS_URL ))
+            (base_url = get_base_url( package->db )))
         {
-            WCHAR temppath[MAX_PATH], *p;
+            WCHAR temppath[MAX_PATH], *p, *url;
 
-            if ((rc = msi_download_file( cabinet_file, temppath )) != ERROR_SUCCESS)
+            msi_free( cabinet_file );
+            if (!(url = msi_alloc( (lstrlenW( base_url ) + lstrlenW( mi->cabinet ) + 1) * sizeof(WCHAR) )))
             {
-                ERR("failed to download %s (%u)\n", debugstr_w(cabinet_file), rc);
-                msi_free( cabinet_file );
+                return ERROR_OUTOFMEMORY;
+            }
+            lstrcpyW( url, base_url );
+            lstrcatW( url, mi->cabinet );
+            if ((rc = msi_download_file( url, temppath )) != ERROR_SUCCESS)
+            {
+                ERR("failed to download %s (%u)\n", debugstr_w(url), rc);
+                msi_free( url );
                 return rc;
             }
-            if ((p = strrchrW( temppath, '\\' ))) *p = 0;
-            strcpyW( mi->sourcedir, temppath );
+            if ((p = wcsrchr( temppath, '\\' ))) *p = 0;
+            lstrcpyW( mi->sourcedir, temppath );
             PathAddBackslashW( mi->sourcedir );
             msi_free( mi->cabinet );
             mi->cabinet = strdupW( p + 1 );
-            msi_free( cabinet_file );
+
+            msi_free( url );
             return ERROR_SUCCESS;
         }
     }
     /* check volume matches, change media if not */
-    if (mi->volume_label && mi->disk_id > 1)
+    if (mi->volume_label)
     {
-        WCHAR *source = msi_dup_property( package->db, szSourceDir );
-        BOOL match = source_matches_volume( mi, source );
-        msi_free( source );
-
-        if (!match && (mi->type == DRIVE_CDROM || mi->type == DRIVE_REMOVABLE))
+        /* assume first volume is in the drive */
+        if (mi->last_volume && wcsicmp( mi->last_volume, mi->volume_label ))
         {
-            if ((rc = msi_change_media( package, mi )) != ERROR_SUCCESS)
+            WCHAR *source = msi_dup_property( package->db, L"SourceDir" );
+            BOOL match = source_matches_volume( mi, source );
+            msi_free( source );
+
+            if (!match && (mi->type == DRIVE_CDROM || mi->type == DRIVE_REMOVABLE))
             {
-                msi_free( cabinet_file );
-                return rc;
+                if ((rc = msi_change_media( package, mi )) != ERROR_SUCCESS)
+                {
+                    msi_free( cabinet_file );
+                    return rc;
+                }
             }
         }
+
+        msi_free(mi->last_volume);
+        mi->last_volume = strdupW(mi->volume_label);
     }
     if (mi->cabinet)
     {
@@ -924,12 +947,12 @@ UINT msi_add_cabinet_stream( MSIPACKAGE *package, UINT disk_id, IStorage *storag
         }
     }
     if (!(cab = msi_alloc( sizeof(*cab) ))) return ERROR_OUTOFMEMORY;
-    if (!(cab->stream = msi_alloc( (strlenW( name ) + 1) * sizeof(WCHAR ) )))
+    if (!(cab->stream = msi_alloc( (lstrlenW( name ) + 1) * sizeof(WCHAR ) )))
     {
         msi_free( cab );
         return ERROR_OUTOFMEMORY;
     }
-    strcpyW( cab->stream, name );
+    lstrcpyW( cab->stream, name );
     cab->disk_id = disk_id;
     cab->storage = storage;
     IStorage_AddRef( storage );

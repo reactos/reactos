@@ -13,12 +13,18 @@
 VOID MiniTuiDrawBackdrop(VOID);
 VOID MiniTuiDrawStatusText(PCSTR StatusText);
 
+VOID
+MiniTuiSetProgressBarText(
+    _In_ PCSTR ProgressText);
+
+VOID
+MiniTuiTickProgressBar(
+    _In_ ULONG SubPercentTimes100);
+
 /* Draws the progress bar showing nPos percent filled */
 VOID
 MiniTuiDrawProgressBarCenter(
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText);
+    _In_ PCSTR ProgressText);
 
 /* Draws the progress bar showing nPos percent filled */
 VOID
@@ -27,9 +33,7 @@ MiniTuiDrawProgressBar(
     _In_ ULONG Top,
     _In_ ULONG Right,
     _In_ ULONG Bottom,
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText);
+    _In_ PCSTR ProgressText);
 
 /* Menu Functions ************************************************************/
 

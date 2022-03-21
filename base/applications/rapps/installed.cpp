@@ -71,8 +71,40 @@ void CInstalledApplicationInfo::EnsureDetailsLoaded()
         }
         GetApplicationRegString(L"InstallLocation", szInstallLocation);
         GetApplicationRegString(L"InstallSource", szInstallSource);
-        GetApplicationRegString(L"UninstallString", szUninstallString);
-        GetApplicationRegString(L"ModifyPath",szModifyPath);
+        DWORD dwWindowsInstaller = 0;
+        if (GetApplicationRegDword(L"WindowsInstaller", &dwWindowsInstaller) && dwWindowsInstaller)
+        {
+            // MSI has the same info in Uninstall / modify, so manually build it
+            szUninstallString.Format(L"msiexec /x%s", m_szKeyName.GetString());
+        }
+        else
+        {
+            GetApplicationRegString(L"UninstallString", szUninstallString);
+        }
+        DWORD dwNoModify = 0;
+        if (!GetApplicationRegDword(L"NoModify", &dwNoModify))
+        {
+            CStringW Tmp;
+            if (GetApplicationRegString(L"NoModify", Tmp))
+            {
+                dwNoModify = Tmp.GetLength() > 0 ? (Tmp[0] == '1') : 0;
+            }
+            else
+            {
+                dwNoModify = 0;
+            }
+        }
+        if (!dwNoModify)
+        {
+            if (dwWindowsInstaller)
+            {
+                szModifyPath.Format(L"msiexec /i%s", m_szKeyName.GetString());
+            }
+            else
+            {
+                GetApplicationRegString(L"ModifyPath", szModifyPath);
+            }
+        }
 
         CloseHandle(m_hSubKey);
         m_hSubKey = NULL;
@@ -84,8 +116,13 @@ BOOL CInstalledApplicationInfo::GetApplicationRegString(LPCWSTR lpKeyName, ATL::
     DWORD dwAllocated = 0, dwSize, dwType;
 
     // retrieve the size of value first.
-    if (RegQueryValueExW(m_hSubKey, lpKeyName, NULL, &dwType, NULL, &dwAllocated) != ERROR_SUCCESS ||
-        dwType != REG_SZ)
+    if (RegQueryValueExW(m_hSubKey, lpKeyName, NULL, &dwType, NULL, &dwAllocated) != ERROR_SUCCESS)
+    {
+        String.Empty();
+        return FALSE;
+    }
+
+    if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
     {
         String.Empty();
         return FALSE;
@@ -104,6 +141,27 @@ BOOL CInstalledApplicationInfo::GetApplicationRegString(LPCWSTR lpKeyName, ATL::
     {
         String.Empty();
         return FALSE;
+    }
+
+    if (dwType == REG_EXPAND_SZ)
+    {
+        CStringW Tmp;
+
+        DWORD dwLen = ExpandEnvironmentStringsW(String, NULL, 0);
+        if (dwLen > 0)
+        {
+            BOOL bSuccess = ExpandEnvironmentStringsW(String, Tmp.GetBuffer(dwLen), dwLen) == dwLen;
+            Tmp.ReleaseBuffer(dwLen - 1);
+            if (bSuccess)
+            {
+                String = Tmp;
+            }
+            else
+            {
+                String.Empty();
+                return FALSE;
+            }
+        }
     }
 
     return TRUE;

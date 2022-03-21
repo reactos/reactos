@@ -22,6 +22,7 @@
 #define __WINE_SHELL32_DEBUGHLP_H
 
 extern void pdump (LPCITEMIDLIST pidl);
+extern void pdump_always (LPCITEMIDLIST pidl);
 extern BOOL pcheck (LPCITEMIDLIST pidl);
 #ifdef __cplusplus
 extern "C"

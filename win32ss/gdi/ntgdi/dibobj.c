@@ -529,7 +529,7 @@ NtGdiSetDIBitsToDeviceInternal(
         goto Exit;
     }
 
-    if (pDC->dctype == DC_TYPE_INFO)
+    if (pDC->dctype == DCTYPE_INFO)
     {
         ret = 0;
         goto Exit;
@@ -714,7 +714,7 @@ GreGetDIBitsInternal(
         return 0;
 
     pDC = DC_LockDc(hDC);
-    if (pDC == NULL || pDC->dctype == DC_TYPE_INFO)
+    if (pDC == NULL || pDC->dctype == DCTYPE_INFO)
     {
         ScanLines = 0;
         goto done;

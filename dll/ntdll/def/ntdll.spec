@@ -825,7 +825,7 @@
 @ stdcall -arch=win32 -ret64 RtlExtendedLargeIntegerDivide(double long ptr)
 @ stdcall -arch=win32 -ret64 RtlExtendedMagicDivide(double double long)
 @ stdcall RtlFillMemory(ptr long long)
-@ stdcall -arch=i386 RtlFillMemoryUlong(ptr long long)
+@ stdcall -arch=i386,arm RtlFillMemoryUlong(ptr long long)
 @ stdcall RtlFinalReleaseOutOfProcessMemoryStream(ptr)
 @ stub -version=0x600+ RtlFindAceByType
 @ stdcall RtlFindActivationContextSectionGuid(long ptr long ptr ptr)

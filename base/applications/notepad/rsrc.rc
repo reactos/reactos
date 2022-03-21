@@ -75,7 +75,7 @@ IDI_NPICON ICON "res/notepad.ico"
     #include "lang/hi-IN.rc"
 #endif
 #ifdef LANGUAGE_HR_HR
-    #include "lang/hr-Hr.rc"
+    #include "lang/hr-HR.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"

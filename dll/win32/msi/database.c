@@ -28,7 +28,6 @@
 #include "winreg.h"
 #include "winnls.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "msipriv.h"
@@ -52,13 +51,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
  */
 
 #define IS_INTMSIDBOPEN(x)      (((ULONG_PTR)(x) >> 16) == 0)
-
-struct row_export_info
-{
-    HANDLE handle;
-    LPCWSTR folder;
-    LPCWSTR table;
-};
 
 static void free_transforms( MSIDATABASE *db )
 {
@@ -111,35 +103,34 @@ static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
 
 static HRESULT db_initialize( IStorage *stg, const GUID *clsid )
 {
-    static const WCHAR szTables[]  = { '_','T','a','b','l','e','s',0 };
     HRESULT hr;
 
     hr = IStorage_SetClass( stg, clsid );
     if (FAILED( hr ))
     {
-        WARN("failed to set class id 0x%08x\n", hr);
+        WARN("failed to set class id %#lx\n", hr);
         return hr;
     }
 
     /* create the _Tables stream */
-    hr = write_stream_data( stg, szTables, NULL, 0, TRUE );
+    hr = write_stream_data( stg, L"_Tables", NULL, 0, TRUE );
     if (FAILED( hr ))
     {
-        WARN("failed to create _Tables stream 0x%08x\n", hr);
+        WARN("failed to create _Tables stream %#lx\n", hr);
         return hr;
     }
 
     hr = msi_init_string_table( stg );
     if (FAILED( hr ))
     {
-        WARN("failed to initialize string table 0x%08x\n", hr);
+        WARN("failed to initialize string table %#lx\n", hr);
         return hr;
     }
 
     hr = IStorage_Commit( stg, 0 );
     if (FAILED( hr ))
     {
-        WARN("failed to commit changes 0x%08x\n", hr);
+        WARN("failed to commit changes %#lx\n", hr);
         return hr;
     }
 
@@ -152,7 +143,8 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     HRESULT r;
     MSIDATABASE *db = NULL;
     UINT ret = ERROR_FUNCTION_FAILED;
-    LPCWSTR szMode, save_path;
+    LPCWSTR save_path;
+    UINT mode;
     STATSTG stat;
     BOOL created = FALSE, patch = FALSE;
     WCHAR path[MAX_PATH];
@@ -162,31 +154,34 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     if( !pdb )
         return ERROR_INVALID_PARAMETER;
 
-    if (szPersist - MSIDBOPEN_PATCHFILE <= MSIDBOPEN_CREATEDIRECT)
-    {
-        TRACE("Database is a patch\n");
-        szPersist -= MSIDBOPEN_PATCHFILE;
-        patch = TRUE;
-    }
-
     save_path = szDBPath;
-    szMode = szPersist;
-    if( !IS_INTMSIDBOPEN(szPersist) )
+    if ( IS_INTMSIDBOPEN(szPersist) )
+    {
+        mode = LOWORD(szPersist);
+    }
+    else
     {
         if (!CopyFileW( szDBPath, szPersist, FALSE ))
             return ERROR_OPEN_FAILED;
 
         szDBPath = szPersist;
-        szPersist = MSIDBOPEN_TRANSACT;
+        mode = MSI_OPEN_TRANSACT;
         created = TRUE;
     }
 
-    if( szPersist == MSIDBOPEN_READONLY )
+    if ((mode & MSI_OPEN_PATCHFILE) == MSI_OPEN_PATCHFILE)
+    {
+        TRACE("Database is a patch\n");
+        mode &= ~MSI_OPEN_PATCHFILE;
+        patch = TRUE;
+    }
+
+    if( mode == MSI_OPEN_READONLY )
     {
         r = StgOpenStorage( szDBPath, NULL,
               STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
     }
-    else if( szPersist == MSIDBOPEN_CREATE )
+    else if( mode == MSI_OPEN_CREATE )
     {
         r = StgCreateDocfile( szDBPath,
               STGM_CREATE|STGM_TRANSACTED|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, 0, &stg );
@@ -195,7 +190,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
             r = db_initialize( stg, patch ? &CLSID_MsiPatch : &CLSID_MsiDatabase );
         created = TRUE;
     }
-    else if( szPersist == MSIDBOPEN_CREATEDIRECT )
+    else if( mode == MSI_OPEN_CREATEDIRECT )
     {
         r = StgCreateDocfile( szDBPath,
               STGM_CREATE|STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, 0, &stg );
@@ -204,25 +199,25 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
             r = db_initialize( stg, patch ? &CLSID_MsiPatch : &CLSID_MsiDatabase );
         created = TRUE;
     }
-    else if( szPersist == MSIDBOPEN_TRANSACT )
+    else if( mode == MSI_OPEN_TRANSACT )
     {
         r = StgOpenStorage( szDBPath, NULL,
               STGM_TRANSACTED|STGM_READWRITE|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
     }
-    else if( szPersist == MSIDBOPEN_DIRECT )
+    else if( mode == MSI_OPEN_DIRECT )
     {
         r = StgOpenStorage( szDBPath, NULL,
               STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, NULL, 0, &stg);
     }
     else
     {
-        ERR("unknown flag %p\n",szPersist);
+        ERR("unknown flag %x\n",mode);
         return ERROR_INVALID_PARAMETER;
     }
 
     if( FAILED( r ) || !stg )
     {
-        WARN("open failed r = %08x for %s\n", r, debugstr_w(szDBPath));
+        WARN("open failed r = %#lx for %s\n", r, debugstr_w(szDBPath));
         return ERROR_FUNCTION_FAILED;
     }
 
@@ -258,10 +253,10 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         goto end;
     }
 
-    if (!strchrW( save_path, '\\' ))
+    if (!wcschr( save_path, '\\' ))
     {
         GetCurrentDirectoryW( MAX_PATH, path );
-        lstrcatW( path, szBackSlash );
+        lstrcatW( path, L"\\" );
         lstrcatW( path, save_path );
     }
     else
@@ -275,7 +270,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         enum_stream_names( stg );
 
     db->storage = stg;
-    db->mode = szMode;
+    db->mode = mode;
     if (created)
         db->deletefile = strdupW( szDBPath );
     list_init( &db->tables );
@@ -456,14 +451,12 @@ static LPWSTR msi_build_createsql_prelude(LPWSTR table)
     LPWSTR prelude;
     DWORD size;
 
-    static const WCHAR create_fmt[] = {'C','R','E','A','T','E',' ','T','A','B','L','E',' ','`','%','s','`',' ','(',' ',0};
-
-    size = sizeof(create_fmt)/sizeof(create_fmt[0]) + lstrlenW(table) - 2;
+    size = ARRAY_SIZE(L"CREATE TABLE `%s` ( ") + lstrlenW(table) - 2;
     prelude = msi_alloc(size * sizeof(WCHAR));
     if (!prelude)
         return NULL;
 
-    sprintfW(prelude, create_fmt, table);
+    swprintf(prelude, size, L"CREATE TABLE `%s` ( ", table);
     return prelude;
 }
 
@@ -474,15 +467,6 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
     DWORD sql_size = 1, i, len;
     WCHAR expanded[128], *ptr;
     WCHAR size[10], comma[2], extra[30];
-
-    static const WCHAR column_fmt[] = {'`','%','s','`',' ','%','s','%','s','%','s','%','s',' ',0};
-    static const WCHAR size_fmt[] = {'(','%','s',')',0};
-    static const WCHAR type_char[] = {'C','H','A','R',0};
-    static const WCHAR type_int[] = {'I','N','T',0};
-    static const WCHAR type_long[] = {'L','O','N','G',0};
-    static const WCHAR type_object[] = {'O','B','J','E','C','T',0};
-    static const WCHAR type_notnull[] = {' ','N','O','T',' ','N','U','L','L',0};
-    static const WCHAR localizable[] = {' ','L','O','C','A','L','I','Z','A','B','L','E',0};
 
     columns = msi_alloc_zero(sql_size * sizeof(WCHAR));
     if (!columns)
@@ -499,46 +483,46 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
             comma[0] = ',';
 
         ptr = &types[i][1];
-        len = atolW(ptr);
+        len = wcstol(ptr, NULL, 10);
         extra[0] = '\0';
 
         switch (types[i][0])
         {
             case 'l':
-                lstrcpyW(extra, type_notnull);
+                lstrcpyW(extra, L" NOT NULL");
                 /* fall through */
             case 'L':
-                lstrcatW(extra, localizable);
-                type = type_char;
-                sprintfW(size, size_fmt, ptr);
+                lstrcatW(extra, L" LOCALIZABLE");
+                type = L"CHAR";
+                swprintf(size, ARRAY_SIZE(size), L"(%s)", ptr);
                 break;
             case 's':
-                lstrcpyW(extra, type_notnull);
+                lstrcpyW(extra, L" NOT NULL");
                 /* fall through */
             case 'S':
-                type = type_char;
-                sprintfW(size, size_fmt, ptr);
+                type = L"CHAR";
+                swprintf(size, ARRAY_SIZE(size), L"(%s)", ptr);
                 break;
             case 'i':
-                lstrcpyW(extra, type_notnull);
+                lstrcpyW(extra, L" NOT NULL");
                 /* fall through */
             case 'I':
                 if (len <= 2)
-                    type = type_int;
+                    type = L"INT";
                 else if (len == 4)
-                    type = type_long;
+                    type = L"LONG";
                 else
                 {
-                    WARN("invalid int width %u\n", len);
+                    WARN("invalid int width %lu\n", len);
                     msi_free(columns);
                     return NULL;
                 }
                 break;
             case 'v':
-                lstrcpyW(extra, type_notnull);
+                lstrcpyW(extra, L" NOT NULL");
                 /* fall through */
             case 'V':
-                type = type_object;
+                type = L"OBJECT";
                 break;
             default:
                 ERR("Unknown type: %c\n", types[i][0]);
@@ -546,7 +530,7 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
                 return NULL;
         }
 
-        sprintfW(expanded, column_fmt, columns_data[i], type, size, extra, comma);
+        swprintf(expanded, ARRAY_SIZE(expanded), L"`%s` %s%s%s%s ", columns_data[i], type, size, extra, comma);
         sql_size += lstrlenW(expanded);
 
         p = msi_realloc(columns, sql_size * sizeof(WCHAR));
@@ -568,11 +552,8 @@ static LPWSTR msi_build_createsql_postlude(LPWSTR *primary_keys, DWORD num_keys)
     LPWSTR postlude, keys, ptr;
     DWORD size, i;
 
-    static const WCHAR key_fmt[] = {'`','%','s','`',',',' ',0};
-    static const WCHAR postlude_fmt[] = {'P','R','I','M','A','R','Y',' ','K','E','Y',' ','%','s',')',0};
-
     for (i = 0, size = 1; i < num_keys; i++)
-        size += lstrlenW(key_fmt) + lstrlenW(primary_keys[i]) - 2;
+        size += lstrlenW(L"`%s`, ") + lstrlenW(primary_keys[i]) - 2;
 
     keys = msi_alloc(size * sizeof(WCHAR));
     if (!keys)
@@ -580,18 +561,18 @@ static LPWSTR msi_build_createsql_postlude(LPWSTR *primary_keys, DWORD num_keys)
 
     for (i = 0, ptr = keys; i < num_keys; i++)
     {
-        ptr += sprintfW(ptr, key_fmt, primary_keys[i]);
+        ptr += swprintf(ptr, size - (ptr - keys), L"`%s`, ", primary_keys[i]);
     }
 
     /* remove final ', ' */
     *(ptr - 2) = '\0';
 
-    size = lstrlenW(postlude_fmt) + size - 1;
+    size = lstrlenW(L"PRIMARY KEY %s)") + size - 1;
     postlude = msi_alloc(size * sizeof(WCHAR));
     if (!postlude)
         goto done;
 
-    sprintfW(postlude, postlude_fmt, keys);
+    swprintf(postlude, size, L"PRIMARY KEY %s)", keys);
 
 done:
     msi_free(keys);
@@ -651,7 +632,7 @@ static LPWSTR msi_import_stream_filename(LPCWSTR path, LPCWSTR name)
     lstrcpyW( fullname, path );
 
     /* chop off extension from path */
-    ptr = strrchrW(fullname, '.');
+    ptr = wcsrchr(fullname, '.');
     if (!ptr)
     {
         msi_free (fullname);
@@ -680,7 +661,7 @@ static UINT construct_record(DWORD num_columns, LPWSTR *types,
                 break;
             case 'I': case 'i':
                 if (*data[i])
-                    MSI_RecordSetInteger(*rec, i + 1, atoiW(data[i]));
+                    MSI_RecordSetInteger(*rec, i + 1, wcstol(data[i], NULL, 10));
                 break;
             case 'V': case 'v':
                 if (*data[i])
@@ -716,12 +697,7 @@ static UINT msi_add_records_to_table(MSIDATABASE *db, LPWSTR *columns, LPWSTR *t
     MSIQUERY *view;
     MSIRECORD *rec;
 
-    static const WCHAR select[] = {
-        'S','E','L','E','C','T',' ','*',' ',
-        'F','R','O','M',' ','`','%','s','`',0
-    };
-
-    r = MSI_OpenQuery(db, &view, select, labels[0]);
+    r = MSI_OpenQuery(db, &view, L"SELECT * FROM `%s`", labels[0]);
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -757,31 +733,21 @@ done:
 static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
 {
     UINT r;
-    DWORD len, i;
-    DWORD num_labels, num_types;
-    DWORD num_columns, num_records = 0;
-    LPWSTR *columns, *types, *labels;
-    LPWSTR path, ptr, data;
-    LPWSTR **records = NULL;
-    LPWSTR **temp_records;
-
-    static const WCHAR suminfo[] =
-        {'_','S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0};
-    static const WCHAR forcecodepage[] =
-        {'_','F','o','r','c','e','C','o','d','e','p','a','g','e',0};
+    DWORD len, i, num_labels, num_types, num_columns, num_records = 0;
+    WCHAR **columns, **types, **labels, *path, *ptr, *data, ***records = NULL, ***temp_records;
 
     TRACE("%p %s %s\n", db, debugstr_w(folder), debugstr_w(file) );
 
-    if( folder == NULL || file == NULL )
+    if (!folder || !file)
         return ERROR_INVALID_PARAMETER;
 
-    len = lstrlenW(folder) + lstrlenW(szBackSlash) + lstrlenW(file) + 1;
+    len = lstrlenW(folder) + lstrlenW(L"\\") + lstrlenW(file) + 1;
     path = msi_alloc( len * sizeof(WCHAR) );
     if (!path)
         return ERROR_OUTOFMEMORY;
 
     lstrcpyW( path, folder );
-    lstrcatW( path, szBackSlash );
+    lstrcatW( path, L"\\" );
     lstrcatW( path, file );
 
     data = msi_read_text_archive( path, &len );
@@ -797,9 +763,9 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     msi_parse_line( &ptr, &labels, &num_labels, &len );
 
     if (num_columns == 1 && !columns[0][0] && num_labels == 1 && !labels[0][0] &&
-        num_types == 2 && !strcmpW( types[1], forcecodepage ))
+        num_types == 2 && !wcscmp( types[1], L"_ForceCodepage" ))
     {
-        r = msi_set_string_table_codepage( db->strings, atoiW( types[0] ) );
+        r = msi_set_string_table_codepage( db->strings, wcstol( types[0], NULL, 10 ) );
         goto done;
     }
 
@@ -809,7 +775,7 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
         goto done;
     }
 
-    records = msi_alloc(sizeof(LPWSTR *));
+    records = msi_alloc(sizeof(WCHAR **));
     if (!records)
     {
         r = ERROR_OUTOFMEMORY;
@@ -822,7 +788,7 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
         msi_parse_line( &ptr, &records[num_records], NULL, &len );
 
         num_records++;
-        temp_records = msi_realloc(records, (num_records + 1) * sizeof(LPWSTR *));
+        temp_records = msi_realloc(records, (num_records + 1) * sizeof(WCHAR **));
         if (!temp_records)
         {
             r = ERROR_OUTOFMEMORY;
@@ -831,7 +797,7 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
         records = temp_records;
     }
 
-    if (!strcmpW(labels[0], suminfo))
+    if (!wcscmp(labels[0], L"_SummaryInformation"))
     {
         r = msi_add_suminfo( db, records, num_records, num_columns );
         if (r != ERROR_SUCCESS)
@@ -866,44 +832,30 @@ done:
         msi_free(records[i]);
 
     msi_free(records);
-
     return r;
 }
 
-UINT WINAPI MsiDatabaseImportW(MSIHANDLE handle, LPCWSTR szFolder, LPCWSTR szFilename)
+UINT WINAPI MsiDatabaseImportW( MSIHANDLE handle, const WCHAR *szFolder, const WCHAR *szFilename )
 {
     MSIDATABASE *db;
     UINT r;
 
-    TRACE("%x %s %s\n",handle,debugstr_w(szFolder), debugstr_w(szFilename));
+    TRACE( "%lu %s %s\n", handle, debugstr_w(szFolder), debugstr_w(szFilename) );
 
-    db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
-    if( !db )
-    {
-        IWineMsiRemoteDatabase *remote_database;
-
-        remote_database = (IWineMsiRemoteDatabase *)msi_get_remote( handle );
-        if ( !remote_database )
-            return ERROR_INVALID_HANDLE;
-
-        IWineMsiRemoteDatabase_Release( remote_database );
-        WARN("MsiDatabaseImport not allowed during a custom action!\n");
-
-        return ERROR_SUCCESS;
-    }
+    if (!(db = msihandle2msiinfo(handle, MSIHANDLETYPE_DATABASE)))
+        return ERROR_INVALID_HANDLE;
 
     r = MSI_DatabaseImport( db, szFolder, szFilename );
     msiobj_release( &db->hdr );
     return r;
 }
 
-UINT WINAPI MsiDatabaseImportA( MSIHANDLE handle,
-               LPCSTR szFolder, LPCSTR szFilename )
+UINT WINAPI MsiDatabaseImportA( MSIHANDLE handle, const char *szFolder, const char *szFilename )
 {
-    LPWSTR path = NULL, file = NULL;
+    WCHAR *path = NULL, *file = NULL;
     UINT r = ERROR_OUTOFMEMORY;
 
-    TRACE("%x %s %s\n", handle, debugstr_a(szFolder), debugstr_a(szFilename));
+    TRACE( "%lu %s %s\n", handle, debugstr_a(szFolder), debugstr_a(szFilename) );
 
     if( szFolder )
     {
@@ -931,11 +883,10 @@ end:
 static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
 {
     char *buffer;
-    BOOL bret;
-    DWORD sz;
+    BOOL ret;
+    DWORD sz = 0x100;
     UINT r;
 
-    sz = 0x100;
     buffer = msi_alloc( sz );
     if (!buffer)
         return ERROR_OUTOFMEMORY;
@@ -943,16 +894,16 @@ static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
     r = MSI_RecordGetStringA( row, field, buffer, &sz );
     if (r == ERROR_MORE_DATA)
     {
-        char *p;
+        char *tmp;
 
         sz++; /* leave room for NULL terminator */
-        p = msi_realloc( buffer, sz );
-        if (!p)
+        tmp = msi_realloc( buffer, sz );
+        if (!tmp)
         {
             msi_free( buffer );
             return ERROR_OUTOFMEMORY;
         }
-        buffer = p;
+        buffer = tmp;
 
         r = MSI_RecordGetStringA( row, field, buffer, &sz );
         if (r != ERROR_SUCCESS)
@@ -962,49 +913,48 @@ static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
         }
     }
     else if (r != ERROR_SUCCESS)
+    {
+        msi_free( buffer );
         return r;
+    }
 
-    bret = WriteFile( handle, buffer, sz, &sz, NULL );
+    ret = WriteFile( handle, buffer, sz, &sz, NULL );
     msi_free( buffer );
-    if (!bret)
-        return ERROR_FUNCTION_FAILED;
-
-    return r;
+    return ret ? ERROR_SUCCESS : ERROR_FUNCTION_FAILED;
 }
 
-static UINT msi_export_stream( LPCWSTR folder, LPCWSTR table, MSIRECORD *row, UINT field,
-                               UINT start )
+static UINT msi_export_stream( const WCHAR *folder, const WCHAR *table, MSIRECORD *row, UINT field, UINT start )
 {
-    static const WCHAR fmt_file[] = { '%','s','/','%','s','/','%','s',0 };
-    static const WCHAR fmt_folder[] = { '%','s','/','%','s',0 };
-    WCHAR stream_name[256], stream_filename[MAX_PATH];
+    WCHAR stream[MAX_STREAM_NAME_LEN + 1], *path;
     DWORD sz, read_size, write_size;
     char buffer[1024];
     HANDLE file;
-    UINT r;
+    UINT len, r;
 
-    /* get the name of the file */
-    sz = sizeof(stream_name)/sizeof(WCHAR);
-    r = MSI_RecordGetStringW( row, start, stream_name, &sz );
+    sz = ARRAY_SIZE( stream );
+    r = MSI_RecordGetStringW( row, start, stream, &sz );
     if (r != ERROR_SUCCESS)
         return r;
 
-    /* if the destination folder does not exist then create it (folder name = table name) */
-    snprintfW( stream_filename, sizeof(stream_filename)/sizeof(WCHAR), fmt_folder, folder, table );
-    if (GetFileAttributesW( stream_filename ) == INVALID_FILE_ATTRIBUTES)
+    len = sz + lstrlenW( folder ) + lstrlenW( table ) + ARRAY_SIZE( L"%s\\%s" ) + 1;
+    if (!(path = msi_alloc( len * sizeof(WCHAR) )))
+        return ERROR_OUTOFMEMORY;
+
+    len = swprintf( path, len, L"%s\\%s", folder, table );
+    if (!CreateDirectoryW( path, NULL ) && GetLastError() != ERROR_ALREADY_EXISTS)
     {
-        if (!CreateDirectoryW( stream_filename, NULL ))
-            return ERROR_PATH_NOT_FOUND;
+        msi_free( path );
+        return ERROR_FUNCTION_FAILED;
     }
 
-    /* actually create the file */
-    snprintfW( stream_filename, sizeof(stream_filename)/sizeof(WCHAR), fmt_file, folder, table, stream_name );
-    file = CreateFileW( stream_filename, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+    path[len++] = '\\';
+    lstrcpyW( path + len, stream );
+    file = CreateFileW( path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
                         NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+    msi_free( path );
     if (file == INVALID_HANDLE_VALUE)
-        return ERROR_FILE_NOT_FOUND;
+        return ERROR_FUNCTION_FAILED;
 
-    /* copy the stream to the file */
     read_size = sizeof(buffer);
     while (read_size == sizeof(buffer))
     {
@@ -1023,6 +973,13 @@ static UINT msi_export_stream( LPCWSTR folder, LPCWSTR table, MSIRECORD *row, UI
     CloseHandle( file );
     return r;
 }
+
+struct row_export_info
+{
+    HANDLE       handle;
+    const WCHAR *folder;
+    const WCHAR *table;
+};
 
 static UINT msi_export_record( struct row_export_info *row_export_info, MSIRECORD *row, UINT start )
 {
@@ -1065,11 +1022,8 @@ static UINT msi_export_forcecodepage( HANDLE handle, UINT codepage )
 {
     static const char fmt[] = "\r\n\r\n%u\t_ForceCodepage\r\n";
     char data[sizeof(fmt) + 10];
-    DWORD sz;
+    DWORD sz = sprintf( data, fmt, codepage );
 
-    sprintf( data, fmt, codepage );
-
-    sz = lstrlenA(data) + 1;
     if (!WriteFile(handle, data, sz, &sz, NULL))
         return ERROR_FUNCTION_FAILED;
 
@@ -1081,34 +1035,26 @@ static UINT msi_export_summaryinformation( MSIDATABASE *db, HANDLE handle )
     static const char header[] = "PropertyId\tValue\r\n"
                                  "i2\tl255\r\n"
                                  "_SummaryInformation\tPropertyId\r\n";
-    DWORD sz;
+    DWORD sz = ARRAY_SIZE(header) - 1;
 
-    sz = lstrlenA(header);
     if (!WriteFile(handle, header, sz, &sz, NULL))
         return ERROR_WRITE_FAULT;
 
     return msi_export_suminfo( db, handle );
 }
 
-static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
-               LPCWSTR folder, LPCWSTR file )
+static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table, LPCWSTR folder, LPCWSTR file )
 {
-    static const WCHAR summaryinformation[] = {
-        '_','S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0 };
-    static const WCHAR query[] = {
-        's','e','l','e','c','t',' ','*',' ','f','r','o','m',' ','%','s',0 };
-    static const WCHAR forcecodepage[] = {
-        '_','F','o','r','c','e','C','o','d','e','p','a','g','e',0 };
     MSIRECORD *rec = NULL;
     MSIQUERY *view = NULL;
-    LPWSTR filename;
+    WCHAR *filename;
     HANDLE handle;
     UINT len, r;
 
     TRACE("%p %s %s %s\n", db, debugstr_w(table),
           debugstr_w(folder), debugstr_w(file) );
 
-    if( folder == NULL || file == NULL )
+    if (!folder || !file)
         return ERROR_INVALID_PARAMETER;
 
     len = lstrlenW(folder) + lstrlenW(file) + 2;
@@ -1117,7 +1063,7 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
         return ERROR_OUTOFMEMORY;
 
     lstrcpyW( filename, folder );
-    lstrcatW( filename, szBackSlash );
+    lstrcatW( filename, L"\\" );
     lstrcatW( filename, file );
 
     handle = CreateFileW( filename, GENERIC_READ | GENERIC_WRITE, 0,
@@ -1126,20 +1072,20 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
     if (handle == INVALID_HANDLE_VALUE)
         return ERROR_FUNCTION_FAILED;
 
-    if (!strcmpW( table, forcecodepage ))
+    if (!wcscmp( table, L"_ForceCodepage" ))
     {
         UINT codepage = msi_get_string_table_codepage( db->strings );
         r = msi_export_forcecodepage( handle, codepage );
         goto done;
     }
 
-    if (!strcmpW( table, summaryinformation ))
+    if (!wcscmp( table, L"_SummaryInformation" ))
     {
         r = msi_export_summaryinformation( db, handle );
         goto done;
     }
 
-    r = MSI_OpenQuery( db, &view, query, table );
+    r = MSI_OpenQuery( db, &view, L"SELECT * FROM %s", table );
     if (r == ERROR_SUCCESS)
     {
         struct row_export_info row_export_info = { handle, folder, table };
@@ -1194,43 +1140,27 @@ done:
  *
  * row4 : data <tab> data <tab> data <tab> ... data <cr> <lf>
  */
-UINT WINAPI MsiDatabaseExportW( MSIHANDLE handle, LPCWSTR szTable,
-               LPCWSTR szFolder, LPCWSTR szFilename )
+UINT WINAPI MsiDatabaseExportW( MSIHANDLE handle, const WCHAR *szTable, const WCHAR *szFolder, const WCHAR *szFilename )
 {
     MSIDATABASE *db;
     UINT r;
 
-    TRACE("%x %s %s %s\n", handle, debugstr_w(szTable),
-          debugstr_w(szFolder), debugstr_w(szFilename));
+    TRACE( "%lu %s %s %s\n", handle, debugstr_w(szTable), debugstr_w(szFolder), debugstr_w(szFilename) );
 
-    db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
-    if( !db )
-    {
-        IWineMsiRemoteDatabase *remote_database;
-
-        remote_database = (IWineMsiRemoteDatabase *)msi_get_remote( handle );
-        if ( !remote_database )
-            return ERROR_INVALID_HANDLE;
-
-        IWineMsiRemoteDatabase_Release( remote_database );
-        WARN("MsiDatabaseExport not allowed during a custom action!\n");
-
-        return ERROR_SUCCESS;
-    }
+    if (!(db = msihandle2msiinfo(handle, MSIHANDLETYPE_DATABASE)))
+        return ERROR_INVALID_HANDLE;
 
     r = MSI_DatabaseExport( db, szTable, szFolder, szFilename );
     msiobj_release( &db->hdr );
     return r;
 }
 
-UINT WINAPI MsiDatabaseExportA( MSIHANDLE handle, LPCSTR szTable,
-               LPCSTR szFolder, LPCSTR szFilename )
+UINT WINAPI MsiDatabaseExportA( MSIHANDLE handle, const char *szTable, const char *szFolder, const char *szFilename )
 {
-    LPWSTR path = NULL, file = NULL, table = NULL;
+    WCHAR *path = NULL, *file = NULL, *table = NULL;
     UINT r = ERROR_OUTOFMEMORY;
 
-    TRACE("%x %s %s %s\n", handle, debugstr_a(szTable),
-          debugstr_a(szFolder), debugstr_a(szFilename));
+    TRACE( "%lu %s %s %s\n", handle, debugstr_a(szTable), debugstr_a(szFolder), debugstr_a(szFilename) );
 
     if( szTable )
     {
@@ -1263,14 +1193,12 @@ end:
     return r;
 }
 
-UINT WINAPI MsiDatabaseMergeA(MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge,
-                              LPCSTR szTableName)
+UINT WINAPI MsiDatabaseMergeA( MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge, const char *szTableName )
 {
     UINT r;
-    LPWSTR table;
+    WCHAR *table;
 
-    TRACE("(%d, %d, %s)\n", hDatabase, hDatabaseMerge,
-          debugstr_a(szTableName));
+    TRACE("%lu, %lu, %s\n", hDatabase, hDatabaseMerge, debugstr_a(szTableName) );
 
     table = strdupAtoW(szTableName);
     r = MsiDatabaseMergeW(hDatabase, hDatabaseMerge, table);
@@ -1318,7 +1246,7 @@ static BOOL merge_type_match(LPCWSTR type1, LPCWSTR type2)
         ((type2[0] == 'L') || (type2[0] == 'S')))
         return TRUE;
 
-    return !strcmpW( type1, type2 );
+    return !wcscmp( type1, type2 );
 }
 
 static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
@@ -1343,7 +1271,7 @@ static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
         if (!MSI_RecordGetString(mergerec, i))
             break;
 
-        if (strcmpW( MSI_RecordGetString( dbrec, i ), MSI_RecordGetString( mergerec, i ) ))
+        if (wcscmp( MSI_RecordGetString( dbrec, i ), MSI_RecordGetString( mergerec, i ) ))
         {
             r = ERROR_DATATYPE_MISMATCH;
             goto done;
@@ -1409,7 +1337,7 @@ static UINT merge_verify_primary_keys(MSIDATABASE *db, MSIDATABASE *mergedb,
 
     for (i = 1; i <= count; i++)
     {
-        if (strcmpW( MSI_RecordGetString( dbrec, i ), MSI_RecordGetString( mergerec, i ) ))
+        if (wcscmp( MSI_RecordGetString( dbrec, i ), MSI_RecordGetString( mergerec, i ) ))
         {
             r = ERROR_DATATYPE_MISMATCH;
             goto done;
@@ -1427,7 +1355,8 @@ static LPWSTR get_key_value(MSIQUERY *view, LPCWSTR key, MSIRECORD *rec)
 {
     MSIRECORD *colnames;
     LPWSTR str, val;
-    UINT r, i = 0, sz = 0;
+    UINT r, i = 0;
+    DWORD sz = 0;
     int cmp;
 
     r = MSI_ViewGetColumnInfo(view, MSICOLINFO_NAMES, &colnames);
@@ -1437,7 +1366,7 @@ static LPWSTR get_key_value(MSIQUERY *view, LPCWSTR key, MSIRECORD *rec)
     do
     {
         str = msi_dup_record_field(colnames, ++i);
-        cmp = strcmpW( key, str );
+        cmp = wcscmp( key, str );
         msi_free(str);
     } while (cmp);
 
@@ -1451,20 +1380,19 @@ static LPWSTR get_key_value(MSIQUERY *view, LPCWSTR key, MSIRECORD *rec)
     if (MSI_RecordGetString(rec, i))  /* check record field is a string */
     {
         /* quote string record fields */
-        const WCHAR szQuote[] = {'\'', 0};
         sz += 2;
-        val = msi_alloc(sz*sizeof(WCHAR));
+        val = msi_alloc(sz * sizeof(WCHAR));
         if (!val)
             return NULL;
 
-        lstrcpyW(val, szQuote);
-        r = MSI_RecordGetStringW(rec, i, val+1, &sz);
-        lstrcpyW(val+1+sz, szQuote);
+        lstrcpyW(val, L"'");
+        r = MSI_RecordGetStringW(rec, i, val + 1, &sz);
+        lstrcpyW(val + 1 + sz, L"'");
     }
     else
     {
         /* do not quote integer record fields */
-        val = msi_alloc(sz*sizeof(WCHAR));
+        val = msi_alloc(sz * sizeof(WCHAR));
         if (!val)
             return NULL;
 
@@ -1490,14 +1418,6 @@ static LPWSTR create_diff_row_query(MSIDATABASE *merge, MSIQUERY *view,
     MSIRECORD *keys;
     UINT r, i, count;
 
-    static const WCHAR keyset[] = {
-        '`','%','s','`',' ','=',' ','%','s',' ','A','N','D',' ',0};
-    static const WCHAR lastkeyset[] = {
-        '`','%','s','`',' ','=',' ','%','s',' ',0};
-    static const WCHAR fmt[] = {'S','E','L','E','C','T',' ','*',' ',
-        'F','R','O','M',' ','`','%','s','`',' ',
-        'W','H','E','R','E',' ','%','s',0};
-
     r = MSI_DatabaseGetPrimaryKeys(merge, table, &keys);
     if (r != ERROR_SUCCESS)
         return NULL;
@@ -1514,9 +1434,9 @@ static LPWSTR create_diff_row_query(MSIDATABASE *merge, MSIQUERY *view,
         val = get_key_value(view, key, rec);
 
         if (i == count)
-            setptr = lastkeyset;
+            setptr = L"`%s` = %s ";
         else
-            setptr = keyset;
+            setptr = L"`%s` = %s AND ";
 
         oldsize = size;
         size += lstrlenW(setptr) + lstrlenW(key) + lstrlenW(val) - 4;
@@ -1527,16 +1447,16 @@ static LPWSTR create_diff_row_query(MSIDATABASE *merge, MSIQUERY *view,
             goto done;
         }
 
-        sprintfW(clause + oldsize - 1, setptr, key, val);
+        swprintf(clause + oldsize - 1, size - (oldsize - 1), setptr, key, val);
         msi_free(val);
     }
 
-    size = lstrlenW(fmt) + lstrlenW(table) + lstrlenW(clause) + 1;
+    size = lstrlenW(L"SELECT * FROM `%s` WHERE %s") + lstrlenW(table) + lstrlenW(clause) + 1;
     query = msi_alloc(size * sizeof(WCHAR));
     if (!query)
         goto done;
 
-    sprintfW(query, fmt, table, clause);
+    swprintf(query, size, L"SELECT * FROM `%s` WHERE %s", table, clause);
 
 done:
     msi_free(clause);
@@ -1744,9 +1664,6 @@ static UINT msi_get_merge_table (MSIDATABASE *db, LPCWSTR name, MERGETABLE **pta
     MERGETABLE *table;
     MSIQUERY *mergeview = NULL;
 
-    static const WCHAR query[] = {'S','E','L','E','C','T',' ','*',' ',
-        'F','R','O','M',' ','`','%','s','`',0};
-
     table = msi_alloc_zero(sizeof(MERGETABLE));
     if (!table)
     {
@@ -1758,7 +1675,7 @@ static UINT msi_get_merge_table (MSIDATABASE *db, LPCWSTR name, MERGETABLE **pta
     if (r != ERROR_SUCCESS)
         goto err;
 
-    r = MSI_OpenQuery(db, &mergeview, query, name);
+    r = MSI_OpenQuery(db, &mergeview, L"SELECT * FROM `%s`", name);
     if (r != ERROR_SUCCESS)
         goto err;
 
@@ -1795,18 +1712,15 @@ static UINT merge_diff_tables(MSIRECORD *rec, LPVOID param)
     LPCWSTR name;
     UINT r;
 
-    static const WCHAR query[] = {'S','E','L','E','C','T',' ','*',' ',
-        'F','R','O','M',' ','`','%','s','`',0};
-
     name = MSI_RecordGetString(rec, 1);
 
-    r = MSI_OpenQuery(data->merge, &mergeview, query, name);
+    r = MSI_OpenQuery(data->merge, &mergeview, L"SELECT * FROM `%s`", name);
     if (r != ERROR_SUCCESS)
         goto done;
 
     if (TABLE_Exists(data->db, name))
     {
-        r = MSI_OpenQuery(data->db, &dbview, query, name);
+        r = MSI_OpenQuery(data->db, &dbview, L"SELECT * FROM `%s`", name);
         if (r != ERROR_SUCCESS)
             goto done;
 
@@ -1843,14 +1757,11 @@ done:
 static UINT gather_merge_data(MSIDATABASE *db, MSIDATABASE *merge,
                               struct list *tabledata)
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','_','T','a','b','l','e','s','`',0};
     MSIQUERY *view;
     MERGEDATA data;
     UINT r;
 
-    r = MSI_DatabaseOpenViewW(merge, query, &view);
+    r = MSI_DatabaseOpenViewW(merge, L"SELECT * FROM `_Tables`", &view);
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -1898,24 +1809,10 @@ static UINT update_merge_errors(MSIDATABASE *db, LPCWSTR error,
     UINT r;
     MSIQUERY *view;
 
-    static const WCHAR create[] = {
-        'C','R','E','A','T','E',' ','T','A','B','L','E',' ',
-        '`','%','s','`',' ','(','`','T','a','b','l','e','`',' ',
-        'C','H','A','R','(','2','5','5',')',' ','N','O','T',' ',
-        'N','U','L','L',',',' ','`','N','u','m','R','o','w','M','e','r','g','e',
-        'C','o','n','f','l','i','c','t','s','`',' ','S','H','O','R','T',' ',
-        'N','O','T',' ','N','U','L','L',' ','P','R','I','M','A','R','Y',' ',
-        'K','E','Y',' ','`','T','a','b','l','e','`',')',0};
-    static const WCHAR insert[] = {
-        'I','N','S','E','R','T',' ','I','N','T','O',' ',
-        '`','%','s','`',' ','(','`','T','a','b','l','e','`',',',' ',
-        '`','N','u','m','R','o','w','M','e','r','g','e',
-        'C','o','n','f','l','i','c','t','s','`',')',' ','V','A','L','U','E','S',
-        ' ','(','\'','%','s','\'',',',' ','%','d',')',0};
-
     if (!TABLE_Exists(db, error))
     {
-        r = MSI_OpenQuery(db, &view, create, error);
+        r = MSI_OpenQuery(db, &view, L"CREATE TABLE `%s` (`Table` CHAR(255) NOT NULL, `NumRowMergeConflicts` SHORT "
+                                      "NOT NULL PRIMARY KEY `Table`)" , error);
         if (r != ERROR_SUCCESS)
             return r;
 
@@ -1925,7 +1822,8 @@ static UINT update_merge_errors(MSIDATABASE *db, LPCWSTR error,
             return r;
     }
 
-    r = MSI_OpenQuery(db, &view, insert, error, table, numconflicts);
+    r = MSI_OpenQuery(db, &view, L"INSERT INTO `%s` (`Table`, `NumRowMergeConflicts`) VALUES ('%s', %d)", error,
+                      table, numconflicts);
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -1934,8 +1832,7 @@ static UINT update_merge_errors(MSIDATABASE *db, LPCWSTR error,
     return r;
 }
 
-UINT WINAPI MsiDatabaseMergeW(MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge,
-                              LPCWSTR szTableName)
+UINT WINAPI MsiDatabaseMergeW( MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge, const WCHAR *szTableName )
 {
     struct list tabledata = LIST_INIT(tabledata);
     struct list *item, *cursor;
@@ -1944,8 +1841,7 @@ UINT WINAPI MsiDatabaseMergeW(MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge,
     BOOL conflicts;
     UINT r;
 
-    TRACE("(%d, %d, %s)\n", hDatabase, hDatabaseMerge,
-          debugstr_w(szTableName));
+    TRACE( "%lu, %lu, %s\n", hDatabase, hDatabaseMerge, debugstr_w(szTableName) );
 
     if (szTableName && !*szTableName)
         return ERROR_INVALID_TABLE;
@@ -2003,132 +1899,40 @@ MSIDBSTATE WINAPI MsiGetDatabaseState( MSIHANDLE handle )
     MSIDBSTATE ret = MSIDBSTATE_READ;
     MSIDATABASE *db;
 
-    TRACE("%d\n", handle);
+    TRACE( "%lu\n", handle );
 
-    db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
-    if( !db )
-    {
-        WARN("MsiGetDatabaseState not allowed during a custom action!\n");
+    if (!(db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE )))
         return MSIDBSTATE_ERROR;
-    }
 
-    if (db->mode != MSIDBOPEN_READONLY )
+    if (db->mode != MSI_OPEN_READONLY )
         ret = MSIDBSTATE_WRITE;
     msiobj_release( &db->hdr );
 
     return ret;
 }
 
-typedef struct _msi_remote_database_impl {
-    IWineMsiRemoteDatabase IWineMsiRemoteDatabase_iface;
-    MSIHANDLE database;
-    LONG refs;
-} msi_remote_database_impl;
-
-static inline msi_remote_database_impl *impl_from_IWineMsiRemoteDatabase( IWineMsiRemoteDatabase *iface )
+MSICONDITION __cdecl s_remote_DatabaseIsTablePersistent(MSIHANDLE db, LPCWSTR table)
 {
-    return CONTAINING_RECORD(iface, msi_remote_database_impl, IWineMsiRemoteDatabase_iface);
+    return MsiDatabaseIsTablePersistentW(db, table);
 }
 
-static HRESULT WINAPI mrd_QueryInterface( IWineMsiRemoteDatabase *iface,
-                                          REFIID riid,LPVOID *ppobj)
+UINT __cdecl s_remote_DatabaseGetPrimaryKeys(MSIHANDLE db, LPCWSTR table, struct wire_record **rec)
 {
-    if( IsEqualCLSID( riid, &IID_IUnknown ) ||
-        IsEqualCLSID( riid, &IID_IWineMsiRemoteDatabase ) )
-    {
-        IWineMsiRemoteDatabase_AddRef( iface );
-        *ppobj = iface;
-        return S_OK;
-    }
-
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI mrd_AddRef( IWineMsiRemoteDatabase *iface )
-{
-    msi_remote_database_impl* This = impl_from_IWineMsiRemoteDatabase( iface );
-
-    return InterlockedIncrement( &This->refs );
-}
-
-static ULONG WINAPI mrd_Release( IWineMsiRemoteDatabase *iface )
-{
-    msi_remote_database_impl* This = impl_from_IWineMsiRemoteDatabase( iface );
-    ULONG r;
-
-    r = InterlockedDecrement( &This->refs );
-    if (r == 0)
-    {
-        MsiCloseHandle( This->database );
-        msi_free( This );
-    }
+    MSIHANDLE handle;
+    UINT r = MsiDatabaseGetPrimaryKeysW(db, table, &handle);
+    *rec = NULL;
+    if (!r)
+        *rec = marshal_record(handle);
+    MsiCloseHandle(handle);
     return r;
 }
 
-static HRESULT WINAPI mrd_IsTablePersistent( IWineMsiRemoteDatabase *iface,
-                                             LPCWSTR table, MSICONDITION *persistent )
+UINT __cdecl s_remote_DatabaseGetSummaryInformation(MSIHANDLE db, UINT updatecount, MSIHANDLE *suminfo)
 {
-    msi_remote_database_impl *This = impl_from_IWineMsiRemoteDatabase( iface );
-    *persistent = MsiDatabaseIsTablePersistentW(This->database, table);
-    return S_OK;
+    return MsiGetSummaryInformationW(db, NULL, updatecount, suminfo);
 }
 
-static HRESULT WINAPI mrd_GetPrimaryKeys( IWineMsiRemoteDatabase *iface,
-                                          LPCWSTR table, MSIHANDLE *keys )
+UINT __cdecl s_remote_DatabaseOpenView(MSIHANDLE db, LPCWSTR query, MSIHANDLE *view)
 {
-    msi_remote_database_impl *This = impl_from_IWineMsiRemoteDatabase( iface );
-    UINT r = MsiDatabaseGetPrimaryKeysW(This->database, table, keys);
-    return HRESULT_FROM_WIN32(r);
-}
-
-static HRESULT WINAPI mrd_GetSummaryInformation( IWineMsiRemoteDatabase *iface,
-                                                UINT updatecount, MSIHANDLE *suminfo )
-{
-    msi_remote_database_impl *This = impl_from_IWineMsiRemoteDatabase( iface );
-    UINT r = MsiGetSummaryInformationW(This->database, NULL, updatecount, suminfo);
-    return HRESULT_FROM_WIN32(r);
-}
-
-static HRESULT WINAPI mrd_OpenView( IWineMsiRemoteDatabase *iface,
-                                    LPCWSTR query, MSIHANDLE *view )
-{
-    msi_remote_database_impl *This = impl_from_IWineMsiRemoteDatabase( iface );
-    UINT r = MsiDatabaseOpenViewW(This->database, query, view);
-    return HRESULT_FROM_WIN32(r);
-}
-
-static HRESULT WINAPI mrd_SetMsiHandle( IWineMsiRemoteDatabase *iface, MSIHANDLE handle )
-{
-    msi_remote_database_impl* This = impl_from_IWineMsiRemoteDatabase( iface );
-    This->database = handle;
-    return S_OK;
-}
-
-static const IWineMsiRemoteDatabaseVtbl msi_remote_database_vtbl =
-{
-    mrd_QueryInterface,
-    mrd_AddRef,
-    mrd_Release,
-    mrd_IsTablePersistent,
-    mrd_GetPrimaryKeys,
-    mrd_GetSummaryInformation,
-    mrd_OpenView,
-    mrd_SetMsiHandle,
-};
-
-HRESULT create_msi_remote_database( IUnknown *pOuter, LPVOID *ppObj )
-{
-    msi_remote_database_impl *This;
-
-    This = msi_alloc( sizeof *This );
-    if (!This)
-        return E_OUTOFMEMORY;
-
-    This->IWineMsiRemoteDatabase_iface.lpVtbl = &msi_remote_database_vtbl;
-    This->database = 0;
-    This->refs = 1;
-
-    *ppObj = &This->IWineMsiRemoteDatabase_iface;
-
-    return S_OK;
+    return MsiDatabaseOpenViewW(db, query, view);
 }

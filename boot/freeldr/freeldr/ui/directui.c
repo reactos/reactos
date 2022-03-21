@@ -19,7 +19,7 @@ UCHAR UiMenuBgColor = COLOR_BLACK;
 UCHAR UiTextColor = COLOR_GRAY;
 UCHAR UiSelectedTextColor = COLOR_BLACK;
 UCHAR UiSelectedTextBgColor = COLOR_GRAY;
-CHAR UiTimeText[260] = "Seconds until highlighted choice will be started automatically:   ";
+CHAR  UiTimeText[260] = "Seconds until highlighted choice will be started automatically:";
 
 /* FUNCTIONS ******************************************************************/
 
@@ -112,28 +112,6 @@ UiMessageBoxCritical(IN PCSTR MessageText)
 }
 
 VOID
-UiDrawProgressBarCenter(
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText)
-{
-    MiniTuiDrawProgressBarCenter(Position, Range, ProgressText);
-}
-
-VOID
-UiDrawProgressBar(
-    _In_ ULONG Left,
-    _In_ ULONG Top,
-    _In_ ULONG Right,
-    _In_ ULONG Bottom,
-    _In_ ULONG Position,
-    _In_ ULONG Range,
-    _Inout_z_ PSTR ProgressText)
-{
-    MiniTuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
-}
-
-VOID
 UiShowMessageBoxesInSection(
     IN ULONG_PTR SectionId)
 {
@@ -146,15 +124,6 @@ UiShowMessageBoxesInArgv(
     IN PCHAR Argv[])
 {
     return;
-}
-
-VOID
-UiTruncateStringEllipsis(IN PCHAR StringText,
-                         IN ULONG MaxChars)
-{
-    /* If it's too large, just add some ellipsis past the maximum */
-    if (strlen(StringText) > MaxChars)
-        strcpy(&StringText[MaxChars - 3], "...");
 }
 
 VOID

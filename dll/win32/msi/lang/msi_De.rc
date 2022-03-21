@@ -32,6 +32,7 @@ STRINGTABLE
     13 "Das Netzwerklaufwerk für das Feature fehlt."
     14 "Feature von:"
     15 "Wählen Sie das Verzeichnis aus, dass %s enthält."
+    100 "New Folder"
 }
 
 /* Error messages */

@@ -261,7 +261,7 @@ PlaySoundRoutine(
             {
                 if (!bLogon)
                 {
-                    Beep(500, 500);
+                    Beep(440, 125);
                 }
                 FreeLibrary(hLibrary);
                 return FALSE;

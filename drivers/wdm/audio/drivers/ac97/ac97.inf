@@ -47,30 +47,62 @@ ac97.inf=222
 ExcludeFromSelect = *
 
 [Intel]
+%ac97_440MX.DeviceDesc%=ac97, PCI\VEN_8086&DEV_7195
 %ac97_AA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2415
 %ac97_AB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2425
 %ac97_BA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2445
+%ac97_CA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2485
+%ac97_DB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_24C5
+%ac97_EB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_24D5
+%ac97_FB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_266E
+%ac97_GB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_27DE
+%ac97_6300ESB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_25A6
+%ac97_63xxESB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2698
 
 ;; This section enables installing on x64 systems
 
 [Intel.NTAMD64]
+%ac97_440MX.DeviceDesc%=ac97, PCI\VEN_8086&DEV_7195
 %ac97_AA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2415
 %ac97_AB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2425
 %ac97_BA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2445
+%ac97_CA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2485
+%ac97_DB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_24C5
+%ac97_EB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_24D5
+%ac97_FB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_266E
+%ac97_GB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_27DE
+%ac97_6300ESB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_25A6
+%ac97_63xxESB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2698
 
 ;;  This section enables installing on Itanium systems
 
 [Intel.NTIA64]
+%ac97_440MX.DeviceDesc%=ac97, PCI\VEN_8086&DEV_7195
 %ac97_AA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2415
 %ac97_AB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2425
 %ac97_BA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2445
+%ac97_CA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2485
+%ac97_DB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_24C5
+%ac97_EB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_24D5
+%ac97_FB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_266E
+%ac97_GB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_27DE
+%ac97_6300ESB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_25A6
+%ac97_63xxESB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2698
 
 ;; This section enables installing on ARM systems
 
 [Intel.NTARM]
+%ac97_440MX.DeviceDesc%=ac97, PCI\VEN_8086&DEV_7195
 %ac97_AA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2415
 %ac97_AB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2425
 %ac97_BA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2445
+%ac97_CA.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2485
+%ac97_DB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_24C5
+%ac97_EB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_24D5
+%ac97_FB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_266E
+%ac97_GB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_27DE
+%ac97_6300ESB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_25A6
+%ac97_63xxESB.DeviceDesc%=ac97, PCI\VEN_8086&DEV_2698
 
 [DestinationDirs]
 ac97.CopyList=10,system32\drivers
@@ -306,9 +338,17 @@ ProviderName="FooProviderName"
 MfgName="Intel"
 DiskDescription="AC'97 WDM Driver Disk"
 
+ac97_440MX.DeviceDesc="Intel 82440MX AC'97 Audio Controller"
 ac97_AA.DeviceDesc="Intel 82801AA AC'97 Audio Controller"
 ac97_AB.DeviceDesc="Intel 82801AB AC'97 Audio Controller"
 ac97_BA.DeviceDesc="Intel 82801BA/BAM AC'97 Audio Controller"
+ac97_CA.DeviceDesc="Intel 82801CA/CAM AC'97 Audio Controller"
+ac97_DB.DeviceDesc="Intel 82801DB/DBL/DBM AC'97 Audio Controller"
+ac97_EB.DeviceDesc="Intel 82801EB/ER AC'97 Audio Controller"
+ac97_FB.DeviceDesc="Intel 82801FB/FBM/FR/FW/FRW AC'97 Audio Controller"
+ac97_GB.DeviceDesc="Intel 82801GB/GR/GDH/GBM/GHM AC'97 Audio Controller"
+ac97_6300ESB.DeviceDesc="Intel 6300ESB AC'97 Audio Controller"
+ac97_63xxESB.DeviceDesc="Intel 631xESB/632xESB AC'97 Audio Controller"
 ac97.DeviceDesc="Intel 82801 AC'97 Audio Controller"
 
 ac97.Wave.szPname="AC'97 Sound Card"
@@ -396,9 +436,17 @@ ProviderName="FooProviderName"
 MfgName="Intel"
 
 DiskDescription="Diskette für AC'97 WDM Treiberbeispiel"
+ac97_440MX.DeviceDesc="Intel 82440MX AC'97 Audiocontroller"
 ac97_AA.DeviceDesc="Intel 82801AA AC'97 Audiocontroller"
 ac97_AB.DeviceDesc="Intel 82801AB AC'97 Audiocontroller"
 ac97_BA.DeviceDesc="Intel 82801BA/BAM AC'97 Audiocontroller"
+ac97_CA.DeviceDesc="Intel 82801CA/CAM AC'97 Audiocontroller"
+ac97_DB.DeviceDesc="Intel 82801DB/DBL/DBM AC'97 Audiocontroller"
+ac97_EB.DeviceDesc="Intel 82801EB/ER AC'97 Audiocontroller"
+ac97_FB.DeviceDesc="Intel 82801FB/FBM/FR/FW/FRW AC'97 Audiocontroller"
+ac97_GB.DeviceDesc="Intel 82801GB/GR/GDH/GBM/GHM AC'97 Audiocontroller"
+ac97_6300ESB.DeviceDesc="Intel 6300ESB AC'97 Audiocontroller"
+ac97_63xxESB.DeviceDesc="Intel 631xESB/632xESB AC'97 Audiocontroller"
 ac97.DeviceDesc="Intel 82801 AC'97 Audiocontroller"
 
 ac97.Wave.szPname="AC'97 Musikkarte"

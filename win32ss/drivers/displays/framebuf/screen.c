@@ -79,7 +79,7 @@ GetAvailableModes(
                           &ulTemp))
    {
       EngFreeMem(*ModeInfo);
-      *ModeInfo = (PVIDEO_MODE_INFORMATION)NULL;
+      *ModeInfo = NULL;
       return 0;
    }
 
