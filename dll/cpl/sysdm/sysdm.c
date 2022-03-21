@@ -8,6 +8,7 @@
  */
 
 #include "precomp.h"
+#include "../common/cpl_common.h"
 
 #include <regstr.h>
 
@@ -210,8 +211,15 @@ CPlApplet(HWND hwndCPl,
     switch (uMsg)
     {
         case CPL_INIT:
+        {
+            HWND hwnd = CPL_GetHWndByResource(hApplet, IDS_CPLSYSTEMNAME);
+            if(hwnd)
+            {
+                BringWindowToTop(hwnd);
+                return FALSE;
+            }
             return TRUE;
-
+        }
         case CPL_GETCOUNT:
             return NUM_APPLETS;
 

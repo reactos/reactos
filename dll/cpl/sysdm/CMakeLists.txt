@@ -16,7 +16,9 @@ list(APPEND SOURCE
     sysdm.c
     userprofile.c
     virtmem.c
-    precomp.h)
+    precomp.h
+    ../common/cpl_common.c
+)
 
 file(GLOB sysdm_rc_deps resources/*.*)
 add_rc_deps(sysdm.rc ${sysdm_rc_deps})
