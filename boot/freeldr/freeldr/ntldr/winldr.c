@@ -473,9 +473,7 @@ WinLdrDetectVersion(VOID)
     LONG rc;
     HKEY hKey;
 
-    rc = RegOpenKey(NULL,
-                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server",
-                    &hKey);
+    rc = RegOpenKey(CurrentControlSetKey, L"Control\\Terminal Server", &hKey);
     if (rc != ERROR_SUCCESS)
     {
         /* Key doesn't exist; assume NT 4.0 */
@@ -905,15 +903,11 @@ WinLdrInitErrataInf(
     /* Open either the 'BiosInfo' (Windows <= 2003) or the 'Errata' (Vista+) key */
     if (OperatingSystemVersion >= _WIN32_WINNT_VISTA)
     {
-        rc = RegOpenKey(NULL,
-                        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Errata",
-                        &hKey);
+        rc = RegOpenKey(CurrentControlSetKey, L"Control\\Errata", &hKey);
     }
     else // (OperatingSystemVersion <= _WIN32_WINNT_WS03)
     {
-        rc = RegOpenKey(NULL,
-                        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\BiosInfo",
-                        &hKey);
+        rc = RegOpenKey(CurrentControlSetKey, L"Control\\BiosInfo", &hKey);
     }
     if (rc != ERROR_SUCCESS)
     {

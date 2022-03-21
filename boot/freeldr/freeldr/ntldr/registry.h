@@ -32,6 +32,8 @@ LONG
 RegInitCurrentControlSet(
     _In_ BOOLEAN LastKnownGood);
 
+extern HKEY CurrentControlSetKey;
+
 /*
  * LONG
  * RegCloseKey(

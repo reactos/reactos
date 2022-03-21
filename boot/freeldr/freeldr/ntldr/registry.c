@@ -27,7 +27,7 @@ DBG_DEFAULT_CHANNEL(REGISTRY);
 
 static PCMHIVE CmHive;
 static PCM_KEY_NODE RootKeyNode;
-static HKEY CurrentControlSetKey;
+HKEY CurrentControlSetKey;
 
 PVOID
 NTAPI

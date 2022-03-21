@@ -20,6 +20,7 @@ ULONG TotalNLSSize = 0;
 
 static BOOLEAN
 WinLdrGetNLSNames(
+    _In_ HKEY ControlSet,
     _Inout_ PUNICODE_STRING AnsiFileName,
     _Inout_ PUNICODE_STRING OemFileName,
     _Inout_ PUNICODE_STRING LangFileName, // CaseTable
@@ -186,7 +187,8 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     WinLdrScanRegistry(&LoaderBlock->BootDriverListHead, SystemRoot);
 
     /* Get names of NLS files */
-    Success = WinLdrGetNLSNames(&AnsiFileName,
+    Success = WinLdrGetNLSNames(CurrentControlSetKey,
+                                &AnsiFileName,
                                 &OemFileName,
                                 &LangFileName,
                                 &OemHalFileName);
@@ -219,6 +221,7 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 // Queries registry for those three file names
 static BOOLEAN
 WinLdrGetNLSNames(
+    _In_ HKEY ControlSet,
     _Inout_ PUNICODE_STRING AnsiFileName,
     _Inout_ PUNICODE_STRING OemFileName,
     _Inout_ PUNICODE_STRING LangFileName, // CaseTable
@@ -230,9 +233,7 @@ WinLdrGetNLSNames(
     WCHAR szIdBuffer[80];
 
     /* Open the CodePage key */
-    rc = RegOpenKey(NULL,
-                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage",
-                    &hKey);
+    rc = RegOpenKey(ControlSet, L"Control\\NLS\\CodePage", &hKey);
     if (rc != ERROR_SUCCESS)
     {
         //TRACE("Couldn't open CodePage registry key");
@@ -305,9 +306,7 @@ WinLdrGetNLSNames(
     RegCloseKey(hKey);
 
     /* Open the Language key */
-    rc = RegOpenKey(NULL,
-                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
-                    &hKey);
+    rc = RegOpenKey(ControlSet, L"Control\\NLS\\Language", &hKey);
     if (rc != ERROR_SUCCESS)
     {
         //TRACE("Couldn't open Language registry key");
@@ -545,9 +544,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
     BOOLEAN Success;
 
     /* Get 'group order list' key */
-    rc = RegOpenKey(NULL,
-                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\GroupOrderList",
-                    &hOrderKey);
+    rc = RegOpenKey(CurrentControlSetKey, L"Control\\GroupOrderList", &hOrderKey);
     if (rc != ERROR_SUCCESS)
     {
         TRACE_CH(REACTOS, "Failed to open the 'GroupOrderList' key (rc %d)\n", (int)rc);
@@ -555,9 +552,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
     }
 
     /* Get 'services' key */
-    rc = RegOpenKey(NULL,
-                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services",
-                    &hServiceKey);
+    rc = RegOpenKey(CurrentControlSetKey, L"Services", &hServiceKey);
     if (rc != ERROR_SUCCESS)
     {
         TRACE_CH(REACTOS, "Failed to open the 'Services' key (rc %d)\n", (int)rc);
@@ -566,9 +561,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
     }
 
     /* Get 'service group order' key */
-    rc = RegOpenKey(NULL,
-                    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ServiceGroupOrder",
-                    &hGroupKey);
+    rc = RegOpenKey(CurrentControlSetKey, L"Control\\ServiceGroupOrder", &hGroupKey);
     if (rc != ERROR_SUCCESS)
     {
         TRACE_CH(REACTOS, "Failed to open the 'ServiceGroupOrder' key (rc %d)\n", (int)rc);
