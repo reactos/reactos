@@ -5,9 +5,11 @@
  * PURPOSE:         Main control panel code
  * COPYRIGHT:       Copyright 2004 Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Copyright 2007 Eric Kohl
+ *                  Copyright 2022 Raymond Czerny
  */
 
 #include "access.h"
+#include "../common/cpl_common.h"
 
 #include <cpl.h>
 
@@ -247,8 +249,16 @@ CPlApplet(HWND hwndCPl,
 
     switch (uMsg)
     {
-        case CPL_INIT:
+       case CPL_INIT:
+        {
+            HWND hwnd = CPL_GetHWndByResource(hApplet, IDS_CPLSYSTEMNAME);
+            if(hwnd)
+            {
+                BringWindowToTop(hwnd);
+                return FALSE;
+            }
             return TRUE;
+        }
 
         case CPL_GETCOUNT:
             return NUM_APPLETS;

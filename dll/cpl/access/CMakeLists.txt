@@ -8,7 +8,9 @@ list(APPEND SOURCE
     keyboard.c
     mouse.c
     sound.c
-    access.h)
+    access.h
+    ../common/cpl_common.c
+)
 
 add_rc_deps(access.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
 
