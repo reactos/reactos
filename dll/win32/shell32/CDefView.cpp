@@ -1262,7 +1262,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     // A folder is special if it is the Desktop folder, a network folder, or a Control Panel folder
     m_isParentFolderSpecial = _ILIsDesktop(m_pidlParent) || _ILIsNetHood(m_pidlParent) 
-        || _ILIsControlPanel(m_pidlParent);
+        || _ILIsControlPanel(ILFindLastID(m_pidlParent));
 
     // Only force Status Bar part refresh if the state changed from the preivous folder
     if (bPreviousParentSpecial != m_isParentFolderSpecial)
