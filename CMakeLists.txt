@@ -68,7 +68,11 @@ include(sdk/cmake/config.cmake)
 # Compiler flags handling
 include(sdk/cmake/compilerflags.cmake)
 
-add_definitions(-D__REACTOS__)
+add_definitions(
+    -D__REACTOS__
+    # swprintf without count argument is used in most of the codebase
+    -D_CRT_NON_CONFORMING_SWPRINTFS
+)
 
 # There doesn't seem to be a standard for __FILE__ being relative or absolute, so detect it at runtime.
 file(RELATIVE_PATH _PATH_PREFIX ${REACTOS_BINARY_DIR} ${REACTOS_SOURCE_DIR})

@@ -1550,7 +1550,7 @@ UserGetDesktopDC(ULONG DcType, BOOL bAltDc, BOOL ValidatehWnd)
     /* This can be called from GDI/DX, so acquire the USER lock */
     UserEnterExclusive();
 
-    if (DcType == DC_TYPE_DIRECT)
+    if (DcType == DCTYPE_DIRECT)
     {
         DesktopObject = UserGetDesktopWindow();
         DesktopHDC = (HDC)UserGetWindowDC(DesktopObject);

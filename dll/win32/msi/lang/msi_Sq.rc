@@ -32,6 +32,7 @@ STRINGTABLE
     13 "rrjet drive-ri për funksionin e munguar"
     14 "funksione nga:"
     15 "zgjidhni dosjen që përmban %s"
+    100 "New Folder"
 }
 
 /* Error messages */

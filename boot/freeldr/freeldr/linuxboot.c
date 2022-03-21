@@ -107,7 +107,7 @@ LoadAndBootLinux(
 
     UiDrawBackdrop();
     UiDrawStatusText(LinuxBootDescription);
-    UiDrawProgressBarCenter(0, 100, LinuxBootDescription);
+    UiDrawProgressBarCenter(LinuxBootDescription);
 
     /* Find all the message box settings and run them */
     UiShowMessageBoxesInArgv(Argc, Argv);
@@ -445,7 +445,7 @@ static BOOLEAN LinuxReadKernel(ULONG LinuxKernelFile)
         BytesLoaded += LINUX_READ_CHUNK_SIZE;
         LoadAddress = (PVOID)((ULONG_PTR)LoadAddress + LINUX_READ_CHUNK_SIZE);
 
-        UiDrawProgressBarCenter(BytesLoaded, LinuxKernelSize + LinuxInitrdSize, LinuxBootDescription);
+        UiUpdateProgressBar(BytesLoaded * 100 / (LinuxKernelSize + LinuxInitrdSize), NULL);
     }
 
     return TRUE;
@@ -540,7 +540,7 @@ static BOOLEAN LinuxReadInitrd(ULONG LinuxInitrdFile)
         BytesLoaded += LINUX_READ_CHUNK_SIZE;
         LinuxInitrdLoadAddress = (PVOID)((ULONG_PTR)LinuxInitrdLoadAddress + LINUX_READ_CHUNK_SIZE);
 
-        UiDrawProgressBarCenter(BytesLoaded + LinuxKernelSize, LinuxInitrdSize + LinuxKernelSize, LinuxBootDescription);
+        UiUpdateProgressBar((BytesLoaded + LinuxKernelSize) * 100 / (LinuxInitrdSize + LinuxKernelSize), NULL);
     }
 
     return TRUE;

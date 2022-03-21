@@ -31,6 +31,7 @@ STRINGTABLE
     13 "nätverksenhet för funktion saknar"
     14 "funktion från:"
     15 "välj den mapp som innehåller %s"
+    100 "New Folder"
 }
 
 /* Error messages */

@@ -22,6 +22,7 @@
 #define __WINE_DEBUG_H
 
 #include <stdarg.h>
+#include <stdio.h>
 #include <windef.h>
 #ifndef GUID_DEFINED
 #include <guiddef.h>

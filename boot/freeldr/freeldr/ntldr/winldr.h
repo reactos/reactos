@@ -74,6 +74,9 @@ VOID ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start);
 
 // winldr.c
 extern BOOLEAN SosEnabled;
+#ifdef _M_IX86
+extern BOOLEAN PaeModeOn;
+#endif
 
 FORCEINLINE
 VOID
@@ -88,6 +91,8 @@ UiResetForSOS(VOID)
     UiVtbl = MiniTuiVtbl;
     UiVtbl.Initialize();
 #endif
+    /* Disable the progress bar */
+    UiProgressBar.Show = FALSE;
 }
 
 VOID

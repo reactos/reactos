@@ -31,6 +31,7 @@ STRINGTABLE
     13 "unidad de red para característica ausente"
     14 "característica de:"
     15 "elija qué carpeta contiene %s"
+    100 "New Folder"
 }
 
 /* Error messages */

@@ -3,7 +3,12 @@ spec2def(custom.dll custom.spec)
 add_library(custom MODULE custom.c ${CMAKE_CURRENT_BINARY_DIR}/custom.def)
 target_link_libraries(custom uuid)
 set_module_type(custom win32dll)
-add_importlibs(custom msi ole32 msvcrt kernel32)
+add_importlibs(custom msi ole32 oleaut32 odbccp32 shell32 advapi32 msvcrt kernel32)
+
+spec2def(selfreg.dll selfreg.spec)
+add_library(selfreg MODULE selfreg.c ${CMAKE_CURRENT_BINARY_DIR}/selfreg.def)
+set_module_type(selfreg win32dll)
+add_importlibs(selfreg advapi32 msvcrt kernel32)
 
 list(APPEND SOURCE
     action.c
@@ -16,24 +21,31 @@ list(APPEND SOURCE
     patch.c
     record.c
     source.c
-    suminfo.c)
+    suminfo.c
+    typelib.idl)
 
 list(APPEND PCH_SKIP_SOURCE
+    ${CMAKE_CURRENT_BINARY_DIR}/typelib_i.c
     testlist.c)
 
 # CMake 3.9 and higher requires to specify this dependency manually
 # see https://gitlab.kitware.com/cmake/cmake/issues/19933
-set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/custom.dll)
+set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/custom.dll  ${CMAKE_CURRENT_BINARY_DIR}/selfreg.dll ${CMAKE_CURRENT_BINARY_DIR}/typelib.tlb)
 
 add_executable(msi_winetest
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
     msi_winetest.rc)
 
+add_idl_headers(msi_winetest_idlheader typelib.idl)
+generate_idl_iids(typelib.idl)
+add_typelib(typelib.idl)
+
 target_compile_definitions(msi_winetest PRIVATE __WINESRC__ USE_WINE_TODOS)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(msi_winetest PRIVATE -Wno-format-overflow)
+    target_compile_options(msi_winetest PRIVATE -Wno-format-overflow -Wno-format)
+    target_compile_options(custom PRIVATE -Wno-format)
 endif()
 
 # msi_winetest.rc: let rc.exe find custom.dll in its subdirectory, i.e. Debug.
@@ -43,7 +55,7 @@ endif()
 
 target_link_libraries(msi_winetest uuid)
 set_module_type(msi_winetest win32cui)
-add_importlibs(msi_winetest cabinet msi shell32 ole32 oleaut32 user32 advapi32 version msvcrt kernel32)
+add_importlibs(msi_winetest secur32 cabinet msi shell32 ole32 oleaut32 odbccp32 user32 advapi32 version msvcrt kernel32)
 add_pch(msi_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET msi_winetest)
-add_dependencies(msi_winetest custom)
+add_dependencies(msi_winetest custom selfreg msi_winetest_idlheader stdole2)

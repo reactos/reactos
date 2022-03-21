@@ -102,7 +102,7 @@ DrvSetPointerShape(
     }
 
     /* check see if the apps ask to hide the mouse or not */
-    if (psoMask == (SURFOBJ *) NULL)
+    if (psoMask == NULL)
     {
         if (EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_DISABLE_POINTER, NULL, 0, NULL, 0, &returnedDataLength))
         {
@@ -119,7 +119,7 @@ DrvSetPointerShape(
 
     /* Set the hw mouse shape */
 
-    if (psoColor != (SURFOBJ *) NULL)
+    if (psoColor != NULL)
     {
         /* We got a color mouse pointer */
         if ((ppdev->PointerCapabilities.Flags & VIDEO_MODE_COLOR_POINTER) &&

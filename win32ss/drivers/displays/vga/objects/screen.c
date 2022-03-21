@@ -64,7 +64,7 @@ DWORD getAvailableModes(
                         EngAllocMem(0, modes.NumModes *
                                     modes.ModeInformationLength, ALLOC_TAG);
 
-    if (*modeInformation == (PVIDEO_MODE_INFORMATION) NULL)
+    if (*modeInformation == NULL)
     {
         /* couldn't allocate buffer */
         return 0;
@@ -81,7 +81,7 @@ DWORD getAvailableModes(
     {
         /* failed to query modes */
         EngFreeMem(*modeInformation);
-        *modeInformation = (PVIDEO_MODE_INFORMATION) NULL;
+        *modeInformation = NULL;
 
         return 0;
     }

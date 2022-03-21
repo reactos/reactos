@@ -62,6 +62,7 @@ extern int winetest_interactive;
 extern const char *winetest_platform;
 
 extern void winetest_set_location( const char* file, int line );
+extern void winetest_subtest(const char* name);
 extern void winetest_start_todo( int is_todo );
 extern int winetest_loop_todo(void);
 extern void winetest_end_todo(void);
@@ -84,6 +85,8 @@ extern const char *wine_dbgstr_rect( const RECT *rect );
 extern const char *wine_dbgstr_longlong( ULONGLONG ll );
 #endif
 static inline const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
+static inline const char *debugstr_an( const CHAR *s, intptr_t n ) { return wine_dbgstr_an( s, n ); }
+static inline const char *wine_dbgstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
 static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 
 /* strcmpW is available for tests compiled under Wine, but not in standalone
@@ -130,6 +133,8 @@ extern void __winetest_cdecl winetest_skip( const char *msg, ... ) __attribute__
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_print(const char* msg, ...) __attribute__((format(printf, 1, 2)));
+extern void __winetest_cdecl winetest_push_context( const char *fmt, ... ) __attribute__((format(printf, 1, 2)));
+extern void winetest_pop_context(void);
 
 #else /* __GNUC__ */
 # define WINETEST_PRINTF_ATTR(fmt,args)
@@ -138,14 +143,18 @@ extern void __winetest_cdecl winetest_skip( const char *msg, ... );
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... );
 extern void __winetest_cdecl winetest_trace( const char *msg, ... );
 extern void __winetest_cdecl winetest_print(const char* msg, ...);
+extern void __winetest_cdecl winetest_push_context( const char *fmt, ... );
+extern void winetest_pop_context(void);
 
 #endif /* __GNUC__ */
 
+#define subtest_(file, line)  (winetest_set_location(file, line), 0) ? (void)0 : winetest_subtest
 #define ok_(file, line)       (winetest_set_location(file, line), 0) ? (void)0 : winetest_ok
 #define skip_(file, line)     (winetest_set_location(file, line), 0) ? (void)0 : winetest_skip
 #define win_skip_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_win_skip
 #define trace_(file, line)    (winetest_set_location(file, line), 0) ? (void)0 : winetest_trace
 
+#define subtest  subtest_(__FILE__, __LINE__)
 #define ok       ok_(__FILE__, __LINE__)
 #define skip     skip_(__FILE__, __LINE__)
 #define win_skip win_skip_(__FILE__, __LINE__)
@@ -283,6 +292,8 @@ typedef struct
     int todo_do_loop;
     char *str_pos;                   /* position in debug buffer */
     char strings[2000];              /* buffer for debug strings */
+    char context[8][128];            /* data to print before messages */
+    unsigned int context_count;      /* number of context prefixes */
 } tls_data;
 static DWORD tls_index;
 
@@ -345,6 +356,39 @@ void winetest_set_location( const char* file, int line )
     data->current_line=line;
 }
 
+#ifdef __GNUC__
+static void __winetest_cdecl winetest_printf( const char *msg, ... ) __attribute__((format(printf,1,2)));
+#else
+static void __winetest_cdecl winetest_printf(const char* msg, ...);
+#endif
+static void __winetest_cdecl winetest_printf( const char *msg, ... )
+{
+    tls_data *data = get_tls_data();
+    __winetest_va_list valist;
+
+    fprintf( stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line );
+    __winetest_va_start( valist, msg );
+    vfprintf( stdout, msg, valist );
+    __winetest_va_end( valist );
+}
+
+static void __winetest_cdecl winetest_print_context( const char *msgtype )
+{
+    tls_data *data = get_tls_data();
+    unsigned int i;
+
+    winetest_printf( "%s", msgtype );
+    for (i = 0; i < data->context_count; ++i)
+        fprintf( stdout, "%s: ", data->context[i] );
+}
+
+void winetest_subtest(const char* name)
+{
+    tls_data* data = get_tls_data();
+    fprintf(stdout, __winetest_file_line_prefix ": Subtest %s\n",
+        data->current_file, data->current_line, name);
+}
+
 int broken( int condition )
 {
     return ((strcmp(winetest_platform, "windows") == 0)
@@ -372,8 +416,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
     {
         if (condition)
         {
-            fprintf( stdout, __winetest_file_line_prefix ": Test succeeded inside todo block: ",
-                     data->current_file, data->current_line );
+            winetest_print_context( "Test succeeded inside todo block: " );
             vfprintf(stdout, msg, args);
             if ((data->nocount_level & 2) == 0)
             InterlockedIncrement(&todo_failures);
@@ -384,8 +427,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
             /* show todos even if traces are disabled*/
             /*if (winetest_debug > 0)*/
             {
-                fprintf( stdout, __winetest_file_line_prefix ": Test marked todo: ",
-                         data->current_file, data->current_line );
+                winetest_print_context( "Test marked todo: " );
                 vfprintf(stdout, msg, args);
             }
             if ((data->nocount_level & 1) == 0)
@@ -397,8 +439,7 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
     {
         if (!condition)
         {
-            fprintf( stdout, __winetest_file_line_prefix ": Test failed: ",
-                     data->current_file, data->current_line );
+            winetest_print_context( "Test failed: " );
             vfprintf(stdout, msg, args);
             if ((data->nocount_level & 2) == 0)
             InterlockedIncrement(&failures);
@@ -407,8 +448,9 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
         else
         {
             if (report_success && (data->nocount_level & 1) == 0)
-                fprintf( stdout, __winetest_file_line_prefix ": Test succeeded\n",
-                         data->current_file, data->current_line);
+            {
+                winetest_printf("Test succeeded\n");
+            }
             if ((data->nocount_level & 1) == 0)
             InterlockedIncrement(&successes);
             return 1;
@@ -428,11 +470,10 @@ void __winetest_cdecl winetest_ok( int condition, const char *msg, ... )
 void __winetest_cdecl winetest_trace( const char *msg, ... )
 {
     __winetest_va_list valist;
-    tls_data* data=get_tls_data();
 
     if (winetest_debug > 0)
     {
-        fprintf( stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line );
+        winetest_print_context( "" );
         __winetest_va_start(valist, msg);
         vfprintf(stdout, msg, valist);
         __winetest_va_end(valist);
@@ -452,9 +493,7 @@ void __winetest_cdecl winetest_print(const char* msg, ...)
 
 void winetest_vskip( const char *msg, __winetest_va_list args )
 {
-    tls_data* data=get_tls_data();
-
-    fprintf( stdout, __winetest_file_line_prefix ": Tests skipped: ", data->current_file, data->current_line );
+    winetest_print_context( "Tests skipped: " );
     vfprintf(stdout, msg, args);
     skipped++;
 }
@@ -529,6 +568,29 @@ void winetest_end_nocount(void)
 {
     tls_data* data = get_tls_data();
     data->nocount_level >>= 2;
+}
+
+void __winetest_cdecl winetest_push_context(const char* fmt, ...)
+{
+    tls_data* data = get_tls_data();
+    __winetest_va_list valist;
+
+    if (data->context_count < ARRAY_SIZE(data->context))
+    {
+        __winetest_va_start(valist, fmt);
+        vsnprintf(data->context[data->context_count], sizeof(data->context[data->context_count]), fmt, valist);
+        __winetest_va_end(valist);
+        data->context[data->context_count][sizeof(data->context[data->context_count]) - 1] = 0;
+    }
+    ++data->context_count;
+}
+
+void winetest_pop_context(void)
+{
+    tls_data* data = get_tls_data();
+
+    if (data->context_count)
+        --data->context_count;
 }
 
 int winetest_get_mainargs( char*** pargv )

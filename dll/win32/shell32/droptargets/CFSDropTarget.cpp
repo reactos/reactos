@@ -40,7 +40,8 @@ static WCHAR* BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls
         FileStructW* pDataW = _ILGetFileStructW(pidls[i]);
         if (!pDataW)
         {
-            ERR("Got garbage pidl\n");
+            ERR("Mistreating a pidl:\n");
+            pdump_always(pidls[i]);
             continue;
         }
 

@@ -29,6 +29,7 @@ COMMAND cmds[] =
     {L"delete",      delete_main,      IDS_HELP_CMD_DELETE,      IDS_HELP_CMD_DESC_DELETE},
     {L"detail",      detail_main,      IDS_HELP_CMD_DETAIL,      IDS_HELP_CMD_DESC_DETAIL},
     {L"detach",      detach_main,      IDS_HELP_CMD_DETACH,      IDS_HELP_CMD_DESC_DETACH},
+    {L"dump",        dump_main,        IDS_NONE,                 IDS_NONE},
     {L"exit",        NULL,             IDS_NONE,                 IDS_HELP_CMD_DESC_EXIT},
     {L"expand",      expand_main,      IDS_HELP_CMD_EXPAND,      IDS_HELP_CMD_DESC_EXPAND},
     {L"extend",      extend_main,      IDS_HELP_CMD_EXTEND,      IDS_HELP_CMD_DESC_EXTEND},

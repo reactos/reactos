@@ -17,6 +17,7 @@ list(APPEND SOURCE
     detach.c
     detail.c
     diskpart.c
+    dump.c
     expand.c
     extend.c
     filesystems.c

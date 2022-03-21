@@ -130,7 +130,7 @@ ULONG NTAPI DrvSetPointerShape
     // to exclude out pointer before drawing to the pixels in prcl.
     UNREFERENCED_PARAMETER(prcl);
 
-    if (ppdev->pPointerAttributes == (PVIDEO_POINTER_ATTRIBUTES) NULL)
+    if (ppdev->pPointerAttributes == NULL)
     {
         // Mini-port has no hardware Pointer support.
         return(SPS_ERROR);
@@ -138,7 +138,7 @@ ULONG NTAPI DrvSetPointerShape
 
     // See if we are being asked to hide the pointer
 
-    if (psoMask == (SURFOBJ *) NULL)
+    if (psoMask == NULL)
     {
         if (EngDeviceIoControl(ppdev->hDriver,
                                IOCTL_VIDEO_DISABLE_POINTER,
@@ -215,7 +215,7 @@ FLONG     fl)
     PVIDEO_POINTER_ATTRIBUTES pPointerAttributes = ppdev->pPointerAttributes;
     DWORD     returnedDataLength;
 
-    if (psoColor != (SURFOBJ *) NULL)
+    if (psoColor != NULL)
     {
         if ((ppdev->PointerCapabilities.Flags & VIDEO_MODE_COLOR_POINTER) &&
                 bCopyColorPointer(ppdev, psoMask, psoColor, pxlo))
@@ -401,7 +401,7 @@ BOOL NTAPI bInitPointer(PPDEV ppdev, DEVINFO *pdevinfo)
 {
     DWORD    returnedDataLength;
 
-    ppdev->pPointerAttributes = (PVIDEO_POINTER_ATTRIBUTES) NULL;
+    ppdev->pPointerAttributes = NULL;
     ppdev->cjPointerAttributes = 0; // initialized in screen.c
 
     //

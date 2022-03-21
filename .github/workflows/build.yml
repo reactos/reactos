@@ -161,8 +161,8 @@ jobs:
         path: src
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
-    - name: Build applications
-      run: cmake --build build --target base/applications/all
+    - name: Build base module
+      run: cmake --build build --target base/all
     - name: Build control panel applets
       run: cmake --build build --target dll/cpl/all
     - name: Build rosapps
@@ -172,7 +172,7 @@ jobs:
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
-          build/base/applications
+          build/base
           build/dll/cpl
           build/modules/rosapps
           !**/CMakeFiles

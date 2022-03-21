@@ -24,7 +24,6 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -80,7 +79,7 @@ MSIRECORD *msi_query_merge_record( UINT fields, const column_info *vl, MSIRECORD
         switch( vl->val->type )
         {
         case EXPR_SVAL:
-            TRACE("field %d -> %s\n", i, debugstr_w(vl->val->u.sval));
+            TRACE( "field %lu -> %s\n", i, debugstr_w(vl->val->u.sval) );
             MSI_RecordSetStringW( merged, i, vl->val->u.sval );
             break;
         case EXPR_IVAL:
@@ -117,7 +116,7 @@ static BOOL msi_columns_in_order(MSIINSERTVIEW *iv, UINT col_count)
         iv->sv->ops->get_column_info(iv->sv, i, &a, NULL, NULL, NULL);
         iv->table->ops->get_column_info(iv->table, i, &b, NULL, NULL, NULL);
 
-        if (strcmpW( a, b )) return FALSE;
+        if (wcscmp( a, b )) return FALSE;
     }
     return TRUE;
 }
@@ -161,7 +160,7 @@ static UINT msi_arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
             if (r != ERROR_SUCCESS)
                 goto err;
 
-            if (!strcmpW( a, b ))
+            if (!wcscmp( a, b ))
             {
                 MSI_RecordCopyField(*values, colidx, padded, i);
                 break;
@@ -318,18 +317,11 @@ static UINT INSERT_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-static UINT INSERT_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    return ERROR_FUNCTION_FAILED;
-}
-
-
 static const MSIVIEWOPS insert_ops =
 {
     INSERT_fetch_int,
+    NULL,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -341,8 +333,6 @@ static const MSIVIEWOPS insert_ops =
     INSERT_get_column_info,
     INSERT_modify,
     INSERT_delete,
-    INSERT_find_matching_rows,
-    NULL,
     NULL,
     NULL,
     NULL,

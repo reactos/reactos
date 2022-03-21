@@ -546,7 +546,7 @@ DC_vPrepareDCsForBlit(
         prcSecond = NULL;
     }
 
-    if (pdcDest->fs & DC_FLAG_DIRTY_RAO)
+    if (pdcDest->fs & DC_DIRTY_RAO)
         CLIPPING_UpdateGCRegion(pdcDest);
 
     /* Lock and update first DC */
@@ -905,7 +905,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
          * For some reason, it's still a valid handle, pointing to some kernel data.
          * Not sure if this is a bug, a feature, some cache stuff... Who knows?
          * See NtGdiDeleteObjectApp test for details */
-        if (DCToDelete->fs & DC_FLAG_PERMANENT)
+        if (DCToDelete->fs & DC_PERMANANT)
         {
             DC_UnlockDc(DCToDelete);
             if(UserReleaseDC(NULL, hDC, FALSE))
@@ -972,16 +972,16 @@ MakeInfoDC(PDC pdc, BOOL bSet)
     SIZEL sizl;
 
     /* Can not be a display DC. */
-    if (pdc->fs & DC_FLAG_DISPLAY) return FALSE;
+    if (pdc->fs & DC_DISPLAY) return FALSE;
     if (bSet)
     {
-        if (pdc->fs & DC_FLAG_TEMPINFODC || pdc->dctype == DC_TYPE_DIRECT)
+        if (pdc->fs & DC_TEMPINFODC || pdc->dctype == DCTYPE_DIRECT)
             return FALSE;
 
         pSurface = pdc->dclevel.pSurface;
-        pdc->fs |= DC_FLAG_TEMPINFODC;
+        pdc->fs |= DC_TEMPINFODC;
         pdc->pSurfInfo = pSurface;
-        pdc->dctype = DC_TYPE_INFO;
+        pdc->dctype = DCTYPE_INFO;
         pdc->dclevel.pSurface = NULL;
 
         PDEVOBJ_sizl(pdc->ppdev, &sizl);
@@ -995,13 +995,13 @@ MakeInfoDC(PDC pdc, BOOL bSet)
     }
     else
     {
-        if (!(pdc->fs & DC_FLAG_TEMPINFODC) || pdc->dctype != DC_TYPE_INFO)
+        if (!(pdc->fs & DC_TEMPINFODC) || pdc->dctype != DCTYPE_INFO)
             return FALSE;
 
         pSurface = pdc->pSurfInfo;
-        pdc->fs &= ~DC_FLAG_TEMPINFODC;
+        pdc->fs &= ~DC_TEMPINFODC;
         pdc->dclevel.pSurface = pSurface;
-        pdc->dctype = DC_TYPE_DIRECT;
+        pdc->dctype = DCTYPE_DIRECT;
         pdc->pSurfInfo = NULL;
 
         if ( !pSurface ||
@@ -1050,7 +1050,7 @@ IntGdiCreateDC(
                      pdmInit,
                      NULL,
                      CreateAsIC ? DCTYPE_INFO :
-                          (Driver ? DC_TYPE_DIRECT : DC_TYPE_DIRECT),
+                          (Driver ? DCTYPE_DIRECT : DCTYPE_DIRECT),
                      TRUE,
                      NULL,
                      NULL,
@@ -1064,12 +1064,11 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
 {
     HDC hDC;
     UNIMPLEMENTED;
-    ASSERT(FALSE);
 
-    if (DcType == DC_TYPE_MEMORY)
+    if (DcType == DCTYPE_MEMORY)
         hDC = NtGdiCreateCompatibleDC(NULL); // OH~ Yuck! I think I taste vomit in my mouth!
     else
-        hDC = IntGdiCreateDC(NULL, NULL, NULL, NULL, (DcType == DC_TYPE_INFO));
+        hDC = IntGdiCreateDC(NULL, NULL, NULL, NULL, (DcType == DCTYPE_INFO));
 
     return hDC;
 }

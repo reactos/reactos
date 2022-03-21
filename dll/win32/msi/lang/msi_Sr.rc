@@ -32,6 +32,7 @@ STRINGTABLE
     13 "mrežni drajv nedostaje"
     14 "dodatak sa:"
     15 "izaberite koji folder sadrži %s"
+    100 "New Folder"
 }
 
 /* Error messages */

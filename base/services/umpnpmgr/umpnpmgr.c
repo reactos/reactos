@@ -22,7 +22,7 @@
  * FILE:             base/services/umpnpmgr/umpnpmgr.c
  * PURPOSE:          User-mode Plug and Play manager
  * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
- *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   HervÃ© Poussineau (hpoussin@reactos.org)
  *                   Colin Finck (colin@reactos.org)
  */
 
@@ -205,14 +205,20 @@ PnpEventThread(LPVOID lpParameter)
 
 
 static VOID
-UpdateServiceStatus(DWORD dwState)
+UpdateServiceStatus(
+    _In_ DWORD dwState,
+    _In_ DWORD dwCheckPoint)
 {
     ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
     ServiceStatus.dwCurrentState = dwState;
-    ServiceStatus.dwControlsAccepted = 0;
     ServiceStatus.dwWin32ExitCode = 0;
     ServiceStatus.dwServiceSpecificExitCode = 0;
-    ServiceStatus.dwCheckPoint = 0;
+    ServiceStatus.dwCheckPoint = dwCheckPoint;
+
+    if (dwState == SERVICE_RUNNING)
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_SHUTDOWN;
+    else
+        ServiceStatus.dwControlsAccepted = 0;
 
     if (dwState == SERVICE_START_PENDING ||
         dwState == SERVICE_STOP_PENDING ||
@@ -239,19 +245,20 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT1("  SERVICE_CONTROL_STOP received\n");
+            UpdateServiceStatus(SERVICE_STOP_PENDING, 1);
             /* Stop listening to RPC Messages */
             RpcMgmtStopServerListening(NULL);
-            UpdateServiceStatus(SERVICE_STOPPED);
+            UpdateServiceStatus(SERVICE_STOPPED, 0);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_PAUSE:
             DPRINT1("  SERVICE_CONTROL_PAUSE received\n");
-            UpdateServiceStatus(SERVICE_PAUSED);
+            UpdateServiceStatus(SERVICE_PAUSED, 0);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_CONTINUE:
             DPRINT1("  SERVICE_CONTROL_CONTINUE received\n");
-            UpdateServiceStatus(SERVICE_RUNNING);
+            UpdateServiceStatus(SERVICE_RUNNING, 0);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_INTERROGATE:
@@ -262,9 +269,10 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT1("  SERVICE_CONTROL_SHUTDOWN received\n");
+            UpdateServiceStatus(SERVICE_STOP_PENDING, 1);
             /* Stop listening to RPC Messages */
             RpcMgmtStopServerListening(NULL);
-            UpdateServiceStatus(SERVICE_STOPPED);
+            UpdateServiceStatus(SERVICE_STOPPED, 0);
             return ERROR_SUCCESS;
 
         default :
@@ -365,7 +373,7 @@ ServiceMain(DWORD argc, LPTSTR *argv)
         return;
     }
 
-    UpdateServiceStatus(SERVICE_START_PENDING);
+    UpdateServiceStatus(SERVICE_START_PENDING, 1);
 
     hThread = CreateThread(NULL,
                            0,
@@ -376,6 +384,8 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     if (hThread != NULL)
         CloseHandle(hThread);
 
+    UpdateServiceStatus(SERVICE_START_PENDING, 2);
+
     hThread = CreateThread(NULL,
                            0,
                            RpcServerThread,
@@ -384,6 +394,8 @@ ServiceMain(DWORD argc, LPTSTR *argv)
                            &dwThreadId);
     if (hThread != NULL)
         CloseHandle(hThread);
+
+    UpdateServiceStatus(SERVICE_START_PENDING, 3);
 
     hThread = CreateThread(NULL,
                            0,
@@ -394,7 +406,7 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     if (hThread != NULL)
         CloseHandle(hThread);
 
-    UpdateServiceStatus(SERVICE_RUNNING);
+    UpdateServiceStatus(SERVICE_RUNNING, 0);
 
     DPRINT("ServiceMain() done\n");
 }

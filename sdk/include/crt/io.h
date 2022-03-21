@@ -474,6 +474,7 @@ _getcwd(
 #include <string.h>
 #endif
 
+  _Check_return_
   __CRT_INLINE
   intptr_t
   __cdecl
@@ -492,6 +493,7 @@ _getcwd(
     return ret;
   }
 
+  _Check_return_
   __CRT_INLINE
   int
   __cdecl

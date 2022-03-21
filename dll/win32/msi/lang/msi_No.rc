@@ -31,6 +31,7 @@ STRINGTABLE
     13 "Egenskapens nettverksstasjon mangler."
     14 "Egenskap fra::"
     15 "Velg katalogen som inneholder '%s'."
+    100 "New Folder"
 }
 
 /* Error messages */

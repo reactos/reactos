@@ -31,6 +31,7 @@ STRINGTABLE
     13 "trūksta tinklo disko komponentui"
     14 "komponentas iš:"
     15 "parinkite aplanką, kuris turi %s"
+    100 "New Folder"
 }
 
 /* Error messages */

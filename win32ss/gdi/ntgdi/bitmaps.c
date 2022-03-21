@@ -286,7 +286,7 @@ IntCreateCompatibleBitmap(
         return NtGdiGetStockObject(DEFAULT_BITMAP);
     }
 
-    if (Dc->dctype != DC_TYPE_MEMORY)
+    if (Dc->dctype != DCTYPE_MEMORY)
     {
         PSURFACE psurf;
 

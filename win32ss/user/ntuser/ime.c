@@ -1200,7 +1200,10 @@ AllocInputContextObject(PDESKTOP pDesk,
     ASSERT(Size > sizeof(*ObjHead));
     ASSERT(pti != NULL);
 
-    ObjHead = ExAllocatePoolWithTag(PagedPool, Size, USERTAG_IME);
+    if (!pDesk)
+        pDesk = pti->rpdesk;
+
+    ObjHead = DesktopHeapAlloc(pDesk, Size);
     if (!ObjHead)
         return NULL;
 
@@ -1218,6 +1221,8 @@ AllocInputContextObject(PDESKTOP pDesk,
 
 VOID UserFreeInputContext(PVOID Object)
 {
+    PTHRDESKHEAD ObjHead = Object;
+    PDESKTOP pDesk = ObjHead->rpdesk;
     PIMC pIMC = Object, *ppIMC;
     PTHREADINFO pti;
 
@@ -1235,7 +1240,7 @@ VOID UserFreeInputContext(PVOID Object)
         }
     }
 
-    ExFreePoolWithTag(pIMC, USERTAG_IME);
+    DesktopHeapFree(pDesk, Object);
 
     pti->ppi->UserHandleCount--;
     IntDereferenceThreadInfo(pti);
@@ -1250,7 +1255,7 @@ BOOLEAN UserDestroyInputContext(PVOID Object)
 
     UserMarkObjectDestroy(pIMC);
 
-    return UserDeleteObject(pIMC->head.h, TYPE_INPUTCONTEXT);
+    return UserDeleteObject(UserHMGetHandle(pIMC), TYPE_INPUTCONTEXT);
 }
 
 BOOL NTAPI NtUserDestroyInputContext(HIMC hIMC)

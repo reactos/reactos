@@ -770,7 +770,7 @@ IntGdiRealizePalette(HDC hDC)
     ASSERT(ppalDC->flFlags & PAL_INDEXED);
 
     DPRINT1("RealizePalette unimplemented for %s\n", 
-            (pdc->dctype == DC_TYPE_MEMORY ? "memory managed DCs" : "device DCs"));
+            (pdc->dctype == DCTYPE_MEMORY ? "memory managed DCs" : "device DCs"));
 
 cleanup:
     DC_UnlockDc(pdc);
