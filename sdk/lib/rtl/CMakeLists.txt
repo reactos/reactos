@@ -116,7 +116,7 @@ list(APPEND SOURCE_VISTA
     condvar.c
     runonce.c
     srw.c
-)
+    utf8.c)
 
 add_library(rtl_vista ${SOURCE_VISTA})
 add_pch(rtl_vista rtl_vista.h SOURCE_VISTA)
