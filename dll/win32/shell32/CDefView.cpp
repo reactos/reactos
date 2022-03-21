@@ -533,7 +533,7 @@ void CDefView::UpdateStatusbar()
     m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)szPartText, &lResult);
 
     // Don't bother with the extra processing if we only have one StatusBar part
-    if(!m_isParentFolderSpecial)
+    if (!m_isParentFolderSpecial)
     {
         DWORD uTotalFileSize = 0;
         WORD uFileFlags = LVNI_ALL;
@@ -542,7 +542,7 @@ void CDefView::UpdateStatusbar()
         bool bIsOnlyFoldersSelected = true;
 
         // If we have something selected then only count selected file sizes
-        if(cSelectedItems)
+        if (cSelectedItems)
         {
             uFileFlags = LVNI_SELECTED;
         }
@@ -3588,14 +3588,9 @@ void CDefView::_HandleStatusBarResize(int nWidth)
     // If the window is small enough just divide each part into thirds
     // This is the behavior of Windows Server 2003
     if (nObjectsPartLength <= nLocationPartLength)
-    {
-        const int nThird = nWidth / 3;
+        nObjectsPartLength = nFileSizePartLength = nWidth / 3;
 
-        nFileSizePartLength = nThird;
-        nObjectsPartLength = nThird;
-    }
-
-    int nPartArray[] = { nObjectsPartLength, nObjectsPartLength + nFileSizePartLength, -1};
+    int nPartArray[] = {nObjectsPartLength, nObjectsPartLength + nFileSizePartLength, -1};
     
     m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETPARTS, _countof(nPartArray), (LPARAM)nPartArray, &lResult);
 }
