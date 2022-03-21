@@ -1,5 +1,5 @@
 /**
- * @file common.h
+ * @file cpl_common.h
  * @brief Auxiliary functions for the realization
  *        of a one-instance cpl applet
  *

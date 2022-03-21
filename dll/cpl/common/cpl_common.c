@@ -1,5 +1,5 @@
 /**
- * @file common.c
+ * @file cpl_common.c
  * @brief Auxiliary functions for the realization
  *        of a one-instance cpl applet
  *
@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "common.h"
+#include "cpl_common.h"
 
 /** Structure for in and out data when
  *  search for the cpl dialog of first instance
