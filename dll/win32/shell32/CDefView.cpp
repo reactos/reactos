@@ -410,7 +410,7 @@ CDefView::CDefView() :
     m_viewinfo_data.clrTextBack = GetSysColor(COLOR_WINDOW);
     m_viewinfo_data.hbmBack = NULL;
 
-    m_hMyComputerIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_COMPUTER_DESKTOP));
+    m_hMyComputerIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_COMPUTER_DESKTOP));
 }
 
 CDefView::~CDefView()
@@ -521,12 +521,12 @@ void CDefView::UpdateStatusbar()
     if (cSelectedItems)
     {
         LoadStringW(shell32_hInstance, IDS_OBJECTS_SELECTED, szFormat, _countof(szFormat));
-        StringCchPrintfW(szPartText, MAX_PATH, szFormat, cSelectedItems);
+        StringCchPrintfW(szPartText, _countof(szPartText), szFormat, cSelectedItems);
     }
     else
     {
         LoadStringW(shell32_hInstance, IDS_OBJECTS, szFormat, _countof(szFormat));
-        StringCchPrintfW(szPartText, MAX_PATH, szFormat, m_ListView.GetItemCount());
+        StringCchPrintfW(szPartText, _countof(szPartText), szFormat, m_ListView.GetItemCount());
     }
 
     LRESULT lResult;
@@ -547,13 +547,13 @@ void CDefView::UpdateStatusbar()
             uFileFlags = LVNI_SELECTED;
         }
 
-        while((nItem = m_ListView.GetNextItem(nItem, uFileFlags)) >= 0)
+        while ((nItem = m_ListView.GetNextItem(nItem, uFileFlags)) >= 0)
         {
             PCUITEMID_CHILD pidl = _PidlByItem(nItem);
 
             uTotalFileSize += _ILGetFileSize(pidl, NULL, 0);
 
-            if(!_ILIsFolder(pidl))
+            if (!_ILIsFolder(pidl))
             {
                 bIsOnlyFoldersSelected = false;
             }
@@ -561,9 +561,9 @@ void CDefView::UpdateStatusbar()
 
         // Don't show the file size text if there is 0 bytes in the folder OR we only have
         // folders selected.
-        if((cSelectedItems && !bIsOnlyFoldersSelected) || uTotalFileSize)
+        if ((cSelectedItems && !bIsOnlyFoldersSelected) || uTotalFileSize)
         {
-            StrFormatByteSizeW(uTotalFileSize, szPartText, MAX_PATH);
+            StrFormatByteSizeW(uTotalFileSize, szPartText, _countof(szPartText));
         }
         else
         {
@@ -573,7 +573,7 @@ void CDefView::UpdateStatusbar()
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
 
         // If we are in a Recycle Bin folder then show no text for the location part
-        if(!_ILIsBitBucket(m_pidlParent))
+        if (!_ILIsBitBucket(m_pidlParent))
         {
             LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText, _countof(szPartText));
             pIcon = (LPARAM)m_hMyComputerIcon;
@@ -1265,7 +1265,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         || _ILIsCPanelStruct(m_pidlParent);
 
     // Only force Status Bar part refresh if the state changed from the preivous folder
-    if(bPreviousParentSpecial != m_isParentFolderSpecial)
+    if (bPreviousParentSpecial != m_isParentFolderSpecial)
     {
         // This handles changing StatusBar parts
         _ForceStatusBarResize();
@@ -3573,7 +3573,7 @@ void CDefView::_HandleStatusBarResize(int nWidth)
 {
     LRESULT lResult;
 
-    if(m_isParentFolderSpecial)
+    if (m_isParentFolderSpecial)
     {
         int nPartArray[] = {-1};
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETPARTS, _countof(nPartArray), (LPARAM)nPartArray, &lResult);
@@ -3587,7 +3587,7 @@ void CDefView::_HandleStatusBarResize(int nWidth)
     
     // If the window is small enough just divide each part into thirds
     // This is the behavior of Windows Server 2003
-    if(nObjectsPartLength <= nLocationPartLength)
+    if (nObjectsPartLength <= nLocationPartLength)
     {
         const int nThird = nWidth / 3;
 
