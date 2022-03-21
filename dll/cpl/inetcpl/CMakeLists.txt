@@ -9,7 +9,9 @@ list(APPEND SOURCE
     general.c
     inetcpl.c
     security.c
-    precomp.h)
+    precomp.h
+    ../common/cpl_common.c
+)
 
 file(GLOB inetcpl_rc_deps resources/*.*)
 add_rc_deps(inetcpl.rc ${inetcpl_rc_deps})

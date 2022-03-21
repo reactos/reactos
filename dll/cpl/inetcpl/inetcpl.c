@@ -35,6 +35,7 @@
 #include "wine/debug.h"
 
 #include "inetcpl.h"
+#include "../common/cpl_common.h"
 
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
@@ -185,7 +186,15 @@ LONG CALLBACK CPlApplet(HWND hWnd, UINT command, LPARAM lParam1, LPARAM lParam2)
     switch (command)
     {
         case CPL_INIT:
+        {
+            HWND hwnd = CPL_GetHWndByResource(hcpl, IDS_CPL_NAME);
+            if(hwnd)
+            {
+                BringWindowToTop(hwnd);
+                return FALSE;
+            }
             return TRUE;
+        }
 
         case CPL_GETCOUNT:
             return 1;
