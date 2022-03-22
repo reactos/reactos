@@ -21,6 +21,8 @@
 #ifndef __REGISTRY_H
 #define __REGISTRY_H
 
+#include <cmlib.h>
+
 typedef HANDLE HKEY, *PHKEY;
 
 BOOLEAN
@@ -32,6 +34,7 @@ LONG
 RegInitCurrentControlSet(
     _In_ BOOLEAN LastKnownGood);
 
+extern PHHIVE SystemHive;
 extern HKEY CurrentControlSetKey;
 
 /*

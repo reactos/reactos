@@ -25,9 +25,15 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(REGISTRY);
 
-static PCMHIVE CmHive;
-static PCM_KEY_NODE RootKeyNode;
-HKEY CurrentControlSetKey;
+static PCMHIVE CmSystemHive;
+static HCELL_INDEX SystemRootCell;
+
+PHHIVE SystemHive = NULL;
+HKEY CurrentControlSetKey = NULL;
+
+#define GET_HHIVE(CmHive)               (&((CmHive)->Hive))
+#define GET_HHIVE_FROM_HKEY(hKey)       GET_HHIVE(CmSystemHive)
+#define GET_CM_KEY_NODE(hHive, hKey)    ((PCM_KEY_NODE)HvGetCell(hHive, (HCELL_INDEX)hKey))
 
 PVOID
 NTAPI
@@ -37,9 +43,7 @@ CmpAllocate(
     IN ULONG Tag)
 {
     UNREFERENCED_PARAMETER(Paged);
-    UNREFERENCED_PARAMETER(Tag);
-
-    return FrLdrTempAlloc(Size, Tag);
+    return FrLdrHeapAlloc(Size, Tag);
 }
 
 VOID
@@ -49,7 +53,7 @@ CmpFree(
     IN ULONG Quota)
 {
     UNREFERENCED_PARAMETER(Quota);
-    FrLdrTempFree(Ptr, 0);
+    FrLdrHeapFree(Ptr, 0);
 }
 
 BOOLEAN
@@ -58,12 +62,13 @@ RegImportBinaryHive(
     _In_ ULONG ChunkSize)
 {
     NTSTATUS Status;
+    PCM_KEY_NODE KeyNode;
 
     TRACE("RegImportBinaryHive(%p, 0x%lx)\n", ChunkBase, ChunkSize);
 
     /* Allocate and initialize the hive */
-    CmHive = CmpAllocate(sizeof(CMHIVE), FALSE, 'eviH');
-    Status = HvInitialize(&CmHive->Hive,
+    CmSystemHive = FrLdrTempAlloc(sizeof(CMHIVE), 'eviH');
+    Status = HvInitialize(GET_HHIVE(CmSystemHive),
                           HINIT_FLAT, // HINIT_MEMORY_INPLACE
                           0,
                           0,
@@ -79,12 +84,20 @@ RegImportBinaryHive(
     if (!NT_SUCCESS(Status))
     {
         ERR("Corrupted hive %p!\n", ChunkBase);
-        CmpFree(CmHive, 0);
+        FrLdrTempFree(CmSystemHive, 'eviH');
         return FALSE;
     }
 
     /* Save the root key node */
-    RootKeyNode = (PCM_KEY_NODE)HvGetCell(&CmHive->Hive, CmHive->Hive.BaseBlock->RootCell);
+    SystemHive = GET_HHIVE(CmSystemHive);
+    SystemRootCell = SystemHive->BaseBlock->RootCell;
+    ASSERT(SystemRootCell != HCELL_NIL);
+
+    /* Verify it is accessible */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(SystemHive, SystemRootCell);
+    ASSERT(KeyNode);
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+    HvReleaseCell(SystemHive, SystemRootCell);
 
     TRACE("RegImportBinaryHive done\n");
     return TRUE;
@@ -237,7 +250,7 @@ RegEnumKey(
     _Inout_ PULONG NameSize,
     _Out_opt_ PHKEY SubKey)
 {
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = GET_HHIVE_FROM_HKEY(Key);
     PCM_KEY_NODE KeyNode, SubKeyNode;
     HCELL_INDEX CellIndex;
     USHORT NameLength;
@@ -246,7 +259,8 @@ RegEnumKey(
           Key, Index, Name, NameSize, NameSize ? *NameSize : 0);
 
     /* Get the key node */
-    KeyNode = (PCM_KEY_NODE)Key;
+    KeyNode = GET_CM_KEY_NODE(Hive, Key);
+    ASSERT(KeyNode);
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     CellIndex = CmpFindSubKeyByNumber(Hive, KeyNode, Index);
@@ -254,8 +268,10 @@ RegEnumKey(
     {
         TRACE("RegEnumKey index out of bounds (%d) in key (%.*s)\n",
               Index, KeyNode->NameLength, KeyNode->Name);
+        HvReleaseCell(Hive, (HCELL_INDEX)Key);
         return ERROR_NO_MORE_ITEMS;
     }
+    HvReleaseCell(Hive, (HCELL_INDEX)Key);
 
     /* Get the value cell */
     SubKeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
@@ -288,12 +304,10 @@ RegEnumKey(
 
     *NameSize = NameLength + sizeof(WCHAR);
 
-    /**/HvReleaseCell(Hive, CellIndex);/**/
+    HvReleaseCell(Hive, CellIndex);
 
     if (SubKey != NULL)
-        *SubKey = (HKEY)SubKeyNode;
-    // else
-        // RegCloseKey((HKEY)SubKeyNode);
+        *SubKey = (HKEY)CellIndex;
 
     TRACE("RegEnumKey done -> %u, '%.*S'\n", *NameSize, *NameSize, Name);
     return ERROR_SUCCESS;
@@ -307,7 +321,7 @@ RegOpenKey(
 {
     UNICODE_STRING RemainingPath, SubKeyName;
     UNICODE_STRING CurrentControlSet = RTL_CONSTANT_STRING(L"CurrentControlSet");
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = (ParentKey ? GET_HHIVE_FROM_HKEY(ParentKey) : GET_HHIVE(CmSystemHive));
     PCM_KEY_NODE KeyNode;
     HCELL_INDEX CellIndex;
 
@@ -316,11 +330,8 @@ RegOpenKey(
     /* Initialize the remaining path name */
     RtlInitUnicodeString(&RemainingPath, KeyName);
 
-    /* Get the parent key node */
-    KeyNode = (PCM_KEY_NODE)ParentKey;
-
     /* Check if we have a parent key */
-    if (KeyNode == NULL)
+    if (ParentKey == NULL)
     {
         UNICODE_STRING SubKeyName1, SubKeyName2, SubKeyName3;
         UNICODE_STRING RegistryPath = RTL_CONSTANT_STRING(L"Registry");
@@ -358,13 +369,16 @@ RegOpenKey(
         }
 
         /* Use the root key */
-        KeyNode = RootKeyNode;
+        CellIndex = SystemRootCell;
+    }
+    else
+    {
+        /* Use the parent key */
+        CellIndex = (HCELL_INDEX)ParentKey;
     }
 
-    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
-
     /* Check if this is the root key */
-    if (KeyNode == RootKeyNode)
+    if (CellIndex == SystemRootCell)
     {
         UNICODE_STRING TempPath = RemainingPath;
 
@@ -375,20 +389,29 @@ RegOpenKey(
         if (RtlEqualUnicodeString(&SubKeyName, &CurrentControlSet, TRUE))
         {
             /* Use the CurrentControlSetKey and update the remaining path */
-            KeyNode = (PCM_KEY_NODE)CurrentControlSetKey;
+            CellIndex = (HCELL_INDEX)CurrentControlSetKey;
             RemainingPath = TempPath;
         }
     }
+
+    /* Get the key node */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
+    ASSERT(KeyNode);
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     TRACE("RegOpenKey: RemainingPath '%wZ'\n", &RemainingPath);
 
     /* Loop while there are path elements */
     while (GetNextPathElement(&SubKeyName, &RemainingPath))
     {
+        HCELL_INDEX NextCellIndex;
+
         TRACE("RegOpenKey: next element '%wZ'\n", &SubKeyName);
 
         /* Get the next sub key */
-        CellIndex = CmpFindSubKeyByName(Hive, KeyNode, &SubKeyName);
+        NextCellIndex = CmpFindSubKeyByName(Hive, KeyNode, &SubKeyName);
+        HvReleaseCell(Hive, CellIndex);
+        CellIndex = NextCellIndex;
         if (CellIndex == HCELL_NIL)
         {
             WARN("Did not find sub key '%wZ' (full: %S)\n", &SubKeyName, KeyName);
@@ -398,9 +421,11 @@ RegOpenKey(
         /* Get the found key */
         KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
         ASSERT(KeyNode);
+        ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
     }
 
-    *Key = (HKEY)KeyNode;
+    HvReleaseCell(Hive, CellIndex);
+    *Key = (HKEY)CellIndex;
 
     TRACE("RegOpenKey done\n");
     return ERROR_SUCCESS;
@@ -452,7 +477,7 @@ RegQueryValue(
     _Out_opt_ PUCHAR Data,
     _Inout_opt_ PULONG DataSize)
 {
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = GET_HHIVE_FROM_HKEY(Key);
     PCM_KEY_NODE KeyNode;
     PCM_KEY_VALUE ValueCell;
     HCELL_INDEX CellIndex;
@@ -462,7 +487,8 @@ RegQueryValue(
           Key, ValueName, Type, Data, DataSize);
 
     /* Get the key node */
-    KeyNode = (PCM_KEY_NODE)Key;
+    KeyNode = GET_CM_KEY_NODE(Hive, Key);
+    ASSERT(KeyNode);
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     /* Initialize value name string */
@@ -472,8 +498,10 @@ RegQueryValue(
     {
         TRACE("RegQueryValue value not found in key (%.*s)\n",
               KeyNode->NameLength, KeyNode->Name);
+        HvReleaseCell(Hive, (HCELL_INDEX)Key);
         return ERROR_FILE_NOT_FOUND;
     }
+    HvReleaseCell(Hive, (HCELL_INDEX)Key);
 
     /* Get the value cell */
     ValueCell = (PCM_KEY_VALUE)HvGetCell(Hive, CellIndex);
@@ -503,7 +531,7 @@ RegEnumValue(
     _Out_opt_ PUCHAR Data,
     _Inout_opt_ PULONG DataSize)
 {
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = GET_HHIVE_FROM_HKEY(Key);
     PCM_KEY_NODE KeyNode;
     PCELL_DATA ValueListCell;
     PCM_KEY_VALUE ValueCell;
@@ -513,7 +541,8 @@ RegEnumValue(
           Key, Index, ValueName, NameSize, Type, Data, DataSize, *DataSize);
 
     /* Get the key node */
-    KeyNode = (PCM_KEY_NODE)Key;
+    KeyNode = GET_CM_KEY_NODE(Hive, Key);
+    ASSERT(KeyNode);
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     /* Check if the index is valid */
@@ -522,6 +551,7 @@ RegEnumValue(
         (Index >= KeyNode->ValueList.Count))
     {
         ERR("RegEnumValue: index invalid\n");
+        HvReleaseCell(Hive, (HCELL_INDEX)Key);
         return ERROR_NO_MORE_ITEMS;
     }
 
@@ -563,6 +593,7 @@ RegEnumValue(
 
     HvReleaseCell(Hive, ValueListCell->KeyList[Index]);
     HvReleaseCell(Hive, KeyNode->ValueList.List);
+    HvReleaseCell(Hive, (HCELL_INDEX)Key);
 
     TRACE("RegEnumValue done -> %u, '%.*S'\n", *NameSize, *NameSize, ValueName);
     return ERROR_SUCCESS;
