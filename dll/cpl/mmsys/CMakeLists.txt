@@ -8,7 +8,9 @@ list(APPEND SOURCE
     volume.c
     audio.c
     voice.c
-    mmsys.h)
+    mmsys.h
+    ../common/cpl_common.c
+)
 
 file(GLOB mmsys_rc_deps resources/*.*)
 add_rc_deps(mmsys.rc ${mmsys_rc_deps})

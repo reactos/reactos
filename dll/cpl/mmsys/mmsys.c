@@ -10,6 +10,7 @@
  */
 
 #include "mmsys.h"
+#include "../common/cpl_common.h"
 
 #include <winsvc.h>
 #include <shlwapi.h>
@@ -755,6 +756,15 @@ CPlApplet(HWND hwndCpl,
     switch(uMsg)
     {
         case CPL_INIT:
+        {
+            HWND hwnd = CPL_GetHWndByResource(hApplet, IDS_CPLNAME);
+            if(hwnd)
+            {
+                BringWindowToTop(hwnd);
+                return FALSE;
+            }
+            return TRUE;
+        }
             return TRUE;
 
         case CPL_GETCOUNT:
