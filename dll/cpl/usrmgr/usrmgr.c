@@ -5,9 +5,11 @@
  * PURPOSE:         Main functions
  *
  * PROGRAMMERS:     Eric Kohl
+ *                  Raymond Czerny <chip@raymisoft.de>
  */
 
 #include "usrmgr.h"
+#include "../common/cpl_common.h"
 
 #define NUM_APPLETS 1
 
@@ -98,7 +100,15 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     switch (uMsg)
     {
         case CPL_INIT:
+        {
+            HWND hwnd = CPL_GetHWndByResource(hApplet, IDS_CPLNAME);
+            if (hwnd)
+            {
+                BringWindowToTop(hwnd);
+                return FALSE;
+            }
             return TRUE;
+        }
 
         case CPL_GETCOUNT:
             return NUM_APPLETS;

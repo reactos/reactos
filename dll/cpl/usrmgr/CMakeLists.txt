@@ -10,7 +10,9 @@ list(APPEND SOURCE
     userprops.c
     users.c
     usrmgr.c
-    usrmgr.h)
+    usrmgr.h
+    ../common/cpl_common.c
+)
 
 file(GLOB usrmgr_rc_deps resources/*.*)
 add_rc_deps(usrmgr.rc ${usrmgr_rc_deps})
