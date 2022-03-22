@@ -736,6 +736,53 @@ static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 }
 #endif
 
+/** Structure for in and out data when
+ *  search for the cpl dialog of first instance
+ */
+typedef struct tagAppDlgFindData
+{
+    const WCHAR*    szCaption;  /**< second search value */
+    HWND            hResult;    /**< variable for result value */
+} AppDlgFindData;
+
+/**
+ * Callback function to search applet dialog
+ * @param hwnd A handle to a top-level window.
+ * @param lParam Pointer of AppDlgFindData
+ * @return TRUE: continue enumeration, FALSE: stop enumeration
+ */
+static BOOL CALLBACK Control_EnumWinProc(
+  _In_ HWND   hwnd,
+  _In_ LPARAM lParam
+)
+{
+    WCHAR szClassName[256];
+    if (GetClassNameW(hwnd, szClassName,
+                      sizeof(szClassName) / sizeof(WCHAR)))
+    {
+        // check of first search value
+        if (0 == wcscmp(L"#32770", szClassName))
+        {
+            WCHAR szCaption[255];
+            ZeroMemory(szCaption, sizeof(szCaption));
+            if (GetWindowTextW(hwnd, szCaption,
+                               sizeof(szCaption) / sizeof(WCHAR)))
+            {
+                AppDlgFindData* pData = (AppDlgFindData*)lParam;
+                // check of second search value
+                if(NULL != wcsstr(szCaption, pData->szCaption))
+                {
+                    pData->hResult = hwnd;
+                    return FALSE; // stop enumeration
+                }
+            }
+        }
+    }
+    return TRUE; // continue enumeration
+}
+
+
+
 static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
    /* forms to parse:
     *	foo.cpl,@sp,str
@@ -848,8 +895,20 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
         bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
 #endif
 
-        if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
-            applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
+        // Find the dialog of this applet in the first instance.
+        // Note: The simpler function "FindWindow" does not find this type of dialogs.
+        AppDlgFindData findData = {applet->info[sp].name, NULL};
+        EnumWindows(Control_EnumWinProc, (LPARAM)&findData);
+        if (findData.hResult)
+        {
+            // Bring the dialog of this applet to the foreground
+            BringWindowToTop(findData.hResult);
+        }
+        else
+        {
+            if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
+                applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
+        }
 
         Control_UnloadApplet(applet);
 
