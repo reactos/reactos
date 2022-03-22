@@ -44,6 +44,7 @@ extern HKEY CurrentControlSetKey;
  */
 #define RegCloseKey(hKey)   (ERROR_SUCCESS)
 
+#if 0
 LONG
 RegEnumKey(
     _In_ HKEY Key,
@@ -51,6 +52,7 @@ RegEnumKey(
     _Out_ PWCHAR Name,
     _Inout_ PULONG NameSize,
     _Out_opt_ PHKEY SubKey);
+#endif
 
 LONG
 RegOpenKey(

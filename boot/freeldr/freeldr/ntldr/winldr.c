@@ -10,6 +10,7 @@
 #include "winldr.h"
 #include "ntldropts.h"
 #include "registry.h"
+#include <internal/cmboot.h>
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
@@ -26,6 +27,7 @@ extern BOOLEAN WinLdrTerminalConnected;
 extern VOID WinLdrSetupEms(IN PCSTR BootOptions);
 
 PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
+/**/PCWSTR BootFileSystem = NULL;/**/
 
 BOOLEAN VirtualBias = FALSE;
 BOOLEAN SosEnabled = FALSE;
@@ -363,23 +365,30 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
                       PCSTR BootPath)
 {
     PLIST_ENTRY NextBd;
+    PBOOT_DRIVER_NODE DriverNode;
     PBOOT_DRIVER_LIST_ENTRY BootDriver;
     BOOLEAN Success;
     BOOLEAN ret = TRUE;
 
-    // Walk through the boot drivers list
+    /* Walk through the boot drivers list */
     NextBd = LoaderBlock->BootDriverListHead.Flink;
-
     while (NextBd != &LoaderBlock->BootDriverListHead)
     {
-        BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, Link);
+        DriverNode = CONTAINING_RECORD(NextBd,
+                                       BOOT_DRIVER_NODE,
+                                       ListEntry.Link);
+        BootDriver = &DriverNode->ListEntry;
 
-        TRACE("BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
-            BootDriver->LdrEntry, &BootDriver->RegistryPath);
+        /* Get the next list entry as we may remove the current one on failure */
+        NextBd = BootDriver->Link.Flink;
+
+        TRACE("BootDriver %wZ DTE %08X RegPath: %wZ\n",
+              &BootDriver->FilePath, BootDriver->LdrEntry,
+              &BootDriver->RegistryPath);
 
         // Paths are relative (FIXME: Are they always relative?)
 
-        // Load it
+        /* Load it */
         UiIndicateProgress();
         Success = WinLdrLoadDeviceDriver(&LoaderBlock->LoadOrderListHead,
                                          BootPath,
@@ -388,23 +397,25 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
                                          &BootDriver->LdrEntry);
         if (Success)
         {
-            // Convert the RegistryPath and DTE addresses to VA since we are not going to use it anymore
+            /* Convert the addresses to VA since we are not going to use them anymore */
             BootDriver->RegistryPath.Buffer = PaToVa(BootDriver->RegistryPath.Buffer);
             BootDriver->FilePath.Buffer = PaToVa(BootDriver->FilePath.Buffer);
             BootDriver->LdrEntry = PaToVa(BootDriver->LdrEntry);
+
+            if (DriverNode->Group.Buffer)
+                DriverNode->Group.Buffer = PaToVa(DriverNode->Group.Buffer);
+            DriverNode->Name.Buffer = PaToVa(DriverNode->Name.Buffer);
         }
         else
         {
-            // Loading failed - cry loudly
-            ERR("Can't load boot driver '%wZ'!\n", &BootDriver->FilePath);
-            UiMessageBox("Can't load boot driver '%wZ'!", &BootDriver->FilePath);
+            /* Loading failed: cry loudly */
+            ERR("Cannot load boot driver '%wZ'!\n", &BootDriver->FilePath);
+            UiMessageBox("Cannot load boot driver '%wZ'!", &BootDriver->FilePath);
             ret = FALSE;
 
-            // Remove it from the list and try to continue
-            RemoveEntryList(NextBd);
+            /* Remove it from the list and try to continue */
+            RemoveEntryList(&BootDriver->Link);
         }
-
-        NextBd = BootDriver->Link.Flink;
     }
 
     return ret;

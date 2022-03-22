@@ -242,6 +242,7 @@ GetNextPathElement(
     return TRUE;
 }
 
+#if 0
 LONG
 RegEnumKey(
     _In_ HKEY Key,
@@ -312,6 +313,7 @@ RegEnumKey(
     TRACE("RegEnumKey done -> %u, '%.*S'\n", *NameSize, *NameSize, Name);
     return ERROR_SUCCESS;
 }
+#endif
 
 LONG
 RegOpenKey(

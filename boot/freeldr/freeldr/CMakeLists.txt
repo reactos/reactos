@@ -48,6 +48,7 @@ list(APPEND FREELDR_BOOTLIB_SOURCE
     lib/mm/heap.c)
 
 list(APPEND FREELDR_NTLDR_SOURCE
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
     ntldr/conversion.c
     ntldr/registry.c
     ntldr/winldr.c
