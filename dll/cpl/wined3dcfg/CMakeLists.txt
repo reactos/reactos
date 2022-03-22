@@ -4,7 +4,9 @@ spec2def(wined3dcfg.cpl wined3dcfg.spec)
 list(APPEND SOURCE
     wined3dcfg.c
     general.c
-    wined3dcfg.h)
+    wined3dcfg.h
+    ../common/cpl_common.c
+)
 
 add_rc_deps(wined3dcfg.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/wined3dcfg.ico)
 
