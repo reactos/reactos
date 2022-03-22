@@ -5,7 +5,9 @@ list(APPEND SOURCE
     keyboard.c
     main.c
     mouse.c
-    main.h)
+    main.h
+    ../common/cpl_common.c
+)
 
 file(GLOB main_rc_deps resources/*.*)
 add_rc_deps(main.rc ${main_rc_deps})

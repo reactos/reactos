@@ -21,11 +21,13 @@
  * FILE:            dll/cpl/main/main.c
  * PURPOSE:         ReactOS Main Control Panel
  * PROGRAMMER:      Eric Kohl
+ *                  Raymond Czerny
  * UPDATE HISTORY:
  *      05-01-2004  Created
  */
 
 #include "main.h"
+#include "../common/cpl_common.h"
 
 #define NUM_APPLETS	(2)
 
@@ -90,7 +92,15 @@ CPlApplet(HWND hwndCpl,
     switch(uMsg)
     {
         case CPL_INIT:
+        {
+            HWND hwnd = CPL_GetHWndByResource(hApplet, IDS_CPLNAME_1);
+            if(hwnd)
+            {
+                BringWindowToTop(hwnd);
+                return FALSE;
+            }
             return TRUE;
+        }
 
         case CPL_GETCOUNT:
             return NUM_APPLETS;
