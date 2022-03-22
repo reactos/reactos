@@ -5,6 +5,7 @@ add_rc_deps(joy.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
 add_library(joy MODULE
     joy.c
     joy.rc
+    ../common/cpl_common.c
     ${CMAKE_CURRENT_BINARY_DIR}/joy.def)
 
 set_module_type(joy cpl UNICODE)

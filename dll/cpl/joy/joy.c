@@ -22,12 +22,14 @@
  * FILE:            dll/cpl/joy/joy.c
  * PURPOSE:         ReactOS Software Control Panel
  * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
+ *                  Raymond Czerny (chip@raymisoft.de)
  * UPDATE HISTORY:
  *    10-18-2007  Created
  *    05-18-2020  Updated (init of dialog and combobox)
  */
 
 #include "joy.h"
+#include "../common/cpl_common.h"
 
 #define NUM_APPLETS    (1)
 
@@ -327,7 +329,15 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     switch (uMsg)
     {
         case CPL_INIT:
+        {
+            HWND hwnd = CPL_GetHWndByResource(hApplet, IDS_CPLSYSTEMNAME);
+            if(hwnd)
+            {
+                BringWindowToTop(hwnd);
+                return FALSE;
+            }
             return TRUE;
+        }
 
         case CPL_GETCOUNT:
             return NUM_APPLETS;
