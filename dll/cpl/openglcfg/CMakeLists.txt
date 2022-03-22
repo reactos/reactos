@@ -4,7 +4,9 @@ spec2def(openglcfg.cpl openglcfg.spec)
 list(APPEND SOURCE
     openglcfg.c
     general.c
-    openglcfg.h)
+    openglcfg.h
+    ../common/cpl_common.c
+)
 
 add_rc_deps(openglcfg.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/openglcfg.ico)
 
