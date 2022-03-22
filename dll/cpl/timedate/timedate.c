@@ -5,10 +5,12 @@
  * PURPOSE:     ReactOS Timedate Control Panel
  * COPYRIGHT:   Copyright 2004-2005 Eric Kohl
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
+ *              Copyright 2022 Raymond Czerny <chip@raymisoft.de>
  *
  */
 
 #include "timedate.h"
+#include "../common/cpl_common.h"
 
 #define NUM_APPLETS 1
 
@@ -139,7 +141,15 @@ CPlApplet(HWND hwndCpl,
     switch (uMsg)
     {
         case CPL_INIT:
+        {
+            HWND hwnd = CPL_GetHWndByResource(hApplet, IDS_CPLNAME);
+            if (hwnd)
+            {
+                BringWindowToTop(hwnd);
+                return FALSE;
+            }
             return TRUE;
+        }
 
         case CPL_GETCOUNT:
             return NUM_APPLETS;

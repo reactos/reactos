@@ -10,7 +10,9 @@ list(APPEND SOURCE
     monthcal.c
     timedate.c
     timezone.c
-    timedate.h)
+    timedate.h
+    ../common/cpl_common.c
+)
 
 file(GLOB timedate_rc_deps resources/*.*)
 add_rc_deps(timedate.rc ${timedate_rc_deps})
