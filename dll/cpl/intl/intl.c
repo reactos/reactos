@@ -21,9 +21,11 @@
  * FILE:            dll/cpl/intl/intl.c
  * PURPOSE:         Property sheet code
  * PROGRAMMER:      Eric Kohl
+ *                  Raymond Czerny
  */
 
 #include "intl.h"
+#include "../common/cpl_common.h"
 
 #include <debug.h>
 
@@ -238,7 +240,15 @@ CPlApplet(HWND hwndCpl,
     switch (uMsg)
     {
         case CPL_INIT:
+        {
+            HWND hwnd = CPL_GetHWndByResource(hApplet, IDS_CPLNAME);
+            if(hwnd)
+            {
+                BringWindowToTop(hwnd);
+                return FALSE;
+            }
             return TRUE;
+        }
 
         case CPL_GETCOUNT:
             return NUM_APPLETS;

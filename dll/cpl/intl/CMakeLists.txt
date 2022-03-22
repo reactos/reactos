@@ -14,7 +14,9 @@ list(APPEND SOURCE
     languages.c
     advanced.c
     sort.c
-    intl.h)
+    intl.h
+    ../common/cpl_common.c
+)
 
 add_rc_deps(intl.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
 
