@@ -10,7 +10,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-用法: tracert [-d] [-h 最大躍點數目] [-j 主機清單] [-w 逾時] 目標名稱 \n\n\
+用法: tracert [-d] [-h 最大躍點數目] [-j 主機清單] [-w 逾時] 目標名稱\n\n\
 選項:\n\
     -d                 不要將位址解析為主機名稱。\n\
     -h 最大躍點數目    搜尋目標所使用的最大躍點數目。\n\
