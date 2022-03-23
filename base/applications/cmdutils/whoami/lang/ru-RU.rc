@@ -47,9 +47,9 @@ BEGIN
   Используйте '/nh' чтобы скрыть заголовки. По умолчанию данные отображаются в таблице.\n\
 \n\
 Синтаксис:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <формат>] [/nh] \n\
-  whoami /all [/fo <формат>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <формат>] [/nh]\n\
+  whoami /all [/fo <формат>] [/nh]\n\
 \n\
 Примеры:\n\
   whoami /groups /priv /nh /fo csv \n\

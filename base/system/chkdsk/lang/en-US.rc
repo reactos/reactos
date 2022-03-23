@@ -3,7 +3,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Usage: %s [drive:] [-F] [-V] [-R] [-C] \n\n\
+Usage: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
 [drive:]    Specifies the drive to check.\n\
 -F          Fixes errors on the disk.\n\
 -V          Displays the full path of every file on the disk.\n\
