@@ -85,7 +85,7 @@ BEGIN
     IDS_DEV_TRANSLATION_FAILED "See seade ei reageeri draiverile."
     IDS_DEV_NO_SOFTCONFIG "ReactOS ei saanud määrata seadistada seda seadet. Uuri dokumentatsiooni, mis kaasnes seadmega ja kasuta ressursi vahekaarti selle seadistamiseks."
     IDS_DEV_BIOS_TABLE "Teie arvuti süsteemi püsivara ei sisalda piisavalt informatsiooni selle seadme kasutuseks ja seadistuseks.\nSelle seadme kasutamiseks pöörudega arvuti tootja poole, et saada püsivara või BIOS uuenduse."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "See seade taotleb PCI katkestust, aga on seadistatud ISA katkestuseks (või vastupidi). \nPalun kasutage arvuti süsteemipaigaldus programmi, et taasseadistada katkestus selle seadme jaoks."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "See seade taotleb PCI katkestust, aga on seadistatud ISA katkestuseks (või vastupidi).\nPalun kasutage arvuti süsteemipaigaldus programmi, et taasseadistada katkestus selle seadme jaoks."
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS ei saa käivitada draiverit selle seadme jaoks."
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS ei saa selle riistvara seadmedraiverit laadida, sest eelmine juhtum selle seadme draiverist on veel mälus."
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS ei saa selle riistvara seadmedraiverit laadida. Draiver võib olla rikutud või puududa."
