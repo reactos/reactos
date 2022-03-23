@@ -138,7 +138,7 @@ CAPTION "הגדרות מקשי סינון"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "קיצורי מקלדת", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for FilterKeys is:  \nHold down <Right Shift> for eight seconds.",
+    LTEXT "The shortcut for FilterKeys is:\nHold down <Right Shift> for eight seconds.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Use shortcut", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "אפשרויות סינון", -1, 6, 79, 234, 79
@@ -178,7 +178,7 @@ CAPTION "הגדרות ניגודיות גבוהה"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "קיצורי מקלדת", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for High Contrast is:  \nPress <Left Alt+Left Shift+Print Screen>.",
+    LTEXT "The shortcut for High Contrast is:\nPress <Left Alt+Left Shift+Print Screen>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Use shortcut", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "High Contrast Color Scheme", -1, 6, 83, 234, 44
@@ -195,7 +195,7 @@ CAPTION "Mouse Keys Settings"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "The shortcut for Mouse Keys is:  \nPress <Left Alt+Left Shift+Num Lock>.",
+    LTEXT "The shortcut for Mouse Keys is:\nPress <Left Alt+Left Shift+Num Lock>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Use shortcut", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
