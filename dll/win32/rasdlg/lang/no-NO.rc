@@ -2319,7 +2319,7 @@ BEGIN
     7353 "Innkommende tilkobling advarsel\0"
     7354 "Alle brukere som deg  vil bli sletter fullstendig og fjernet fra systemet nettopp hvis avbryt er trykket.  Er du sikker på at du ønsker å fullstendig fjerne %s? \0"
     7355 "Du er cirka til å bytte til et system behandling konsoll.  Denne innkommende tilkobling egenskap sheet vil bli lukket og andre endringer du har gjort vil bli committed til systemet.  Er det greit å fortsette?\0"
-    7356 "Din nettverk maske verdi har blitt endret.  Et null bit i en maske kan bare bli følgt etter andre null bits.  For eksempel, et Nettverk Mask verdi, uttrykt i desimal prikket notation, av 255.255.0.0, er gyldig, men 255.0.255.0 er ikke gyldig.  \n\0"
+    7356 "Din nettverk maske verdi har blitt endret.  Et null bit i en maske kan bare bli følgt etter andre null bits.  For eksempel, et Nettverk Mask verdi, uttrykt i desimal prikket notation, av 255.255.0.0, er gyldig, men 255.0.255.0 er ikke gyldig.\n\0"
     7357 "Bruker rettigheter\0"
     7358 "Du kan bestemme brukere som kan koble til denne datamaskinen.\0"
     7359 "Enheter for Innkommende tilkoblinger\0"
