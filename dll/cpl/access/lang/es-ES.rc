@@ -178,7 +178,7 @@ CAPTION "Configuración para contraste alto"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Método abreviado de teclado ", -1, 6, 11, 234, 62
-    LTEXT "El método abreviado para contraste alto es:  \nPresionar <Alt Izq+Mayús Izq+Impr Pant>.",
+    LTEXT "El método abreviado para contraste alto es:\nPresionar <Alt Izq+Mayús Izq+Impr Pant>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar método abreviado", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Combinación en contraste alto ", -1, 6, 83, 234, 44
@@ -195,7 +195,7 @@ CAPTION "Configuración para MouseKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Método abreviado de teclado ", -1, 6, 11, 234, 62
-    LTEXT "El método abreviado para el Ratón de teclas es:  \nPresionar <Alt Izq+Mayús Izq+Bloq Num>.",
+    LTEXT "El método abreviado para el Ratón de teclas es:\nPresionar <Alt Izq+Mayús Izq+Bloq Num>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar método abreviado", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14

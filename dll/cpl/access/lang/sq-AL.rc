@@ -140,7 +140,7 @@ CAPTION "Filtro Konfigurim Çelesat"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "Menyra e shpejt per FilterKeys është:  \nShtyp down <Right Shift> per tete sekonda.",
+    LTEXT "Menyra e shpejt per FilterKeys është:\nShtyp down <Right Shift> per tete sekonda.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Perdorim i shortcut", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Opsione te filtruara", -1, 6, 79, 234, 79
@@ -180,7 +180,7 @@ CAPTION "Konfigurime i Kontrastit te Larte"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "Menyra e shpejte per High Contrast është:  \nShtyp <Left Alt+Left Shift+Print Screen>.",
+    LTEXT "Menyra e shpejte per High Contrast është:\nShtyp <Left Alt+Left Shift+Print Screen>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Perdor shortcut", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Skema e lart e ngjyrave te kontrastit", -1, 6, 83, 234, 44
@@ -197,7 +197,7 @@ CAPTION "Konfigurimi i Çelesave te Miut"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "Menyra e shpejte per Mouse Keys është:  \nShtyp <Left Alt+Left Shift+Num Lock>.",
+    LTEXT "Menyra e shpejte per Mouse Keys është:\nShtyp <Left Alt+Left Shift+Num Lock>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Perdor shortcut", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
