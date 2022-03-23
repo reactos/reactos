@@ -10,7 +10,7 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=大小]\n\
        [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=文件] [宏名=[文本]]\n\
 \n\
   /INSERT             開啟插入模式。\n\
-  /OVERSTRIKE         \n\
+  /OVERSTRIKE\n\
   /EXENAME=exename    設置要查看或改變歷史記錄和宏的程式名。\n\
                       預設為 cmd.exe。\n\
   /HISTORY            顯示命令歷史。\n\

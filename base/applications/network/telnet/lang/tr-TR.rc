@@ -8,7 +8,7 @@ BEGIN
     MSG_COPYRIGHT_1 "Bu özgür yazılımdır ve onu kesin şartlar altında yeniden dağıtmaya buyurunuz.\n\n"
     MSG_USAGE "Kullanım: TELNET [değişkenler][anabilgisayar [giriş]]\n\n  değişkenler\n    -d:kütükadı.ext  kütükadı.ext'e tüm gelen veriyi dök.\n  anabilgisayar     Bağlanılacak uzak anabilgisayarın adı ya da IP adresi.\n"
     MSG_USAGE_1 "  giriş             Açılacak hizmet girişi. (Ön Tanımlı: Telnet girişi 23.)\n\n"
-    MSG_HELP "Komutlar kısaltılmış olabilir.  Komutlar:\n  \ncl[ose]         Şimdiki bağlantıyı kapat.\nop[en]          Bir siteye bağlan.\nq[uit]          Telnet'ten çık.\n"
+    MSG_HELP "Komutlar kısaltılmış olabilir.  Komutlar:\n\ncl[ose]         Şimdiki bağlantıyı kapat.\nop[en]          Bir siteye bağlan.\nq[uit]          Telnet'ten çık.\n"
     MSG_HELP_1 "ke[ys]          Düğme haritasını değiştirir ya da görüntüler. (Seçenekleri görmek için keys yazınız.)\nse[t]           Yapılandırma seçeneklerini görüntüler ya da değiştirir.\nz               Askıya al.\n? h[elp]        Yardım bilgisini yazdır.\n"
     MSG_INVCMD "Geçersiz komut. Yardım için ? yazınız.\n"
     MSG_ERROR "%1 başarısız.\n"
