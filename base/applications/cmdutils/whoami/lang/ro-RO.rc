@@ -51,7 +51,7 @@ BEGIN
   whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
   whoami /all [/fo <Format>] [/nh] \n\
   \n\
-            EXEMPLE: \n\
+            EXEMPLE:\n\
   whoami /groups /priv /nh /fo csv \n\
   whoami /logonid \n\
   whoami \n"

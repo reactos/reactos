@@ -138,7 +138,7 @@ CAPTION "篩選鍵設定"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "篩選鍵的快捷鍵是: \n將右手的 SHIFT 鍵按住八秒鐘。",
+    LTEXT "篩選鍵的快捷鍵是:\n將右手的 SHIFT 鍵按住八秒鐘。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&U)", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "篩選器選項", -1, 6, 79, 234, 79
