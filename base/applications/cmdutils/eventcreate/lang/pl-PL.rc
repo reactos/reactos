@@ -41,7 +41,7 @@ Lista parametrów:\n\
     /C  kategoria         Określa kategorię zdarzenia (liczba całkowita)\n\
                           dla zdarzenia.\n\
 \n\
-    /ID EventID           Określa identyfikator zdarzenia dla zdarzenia. \n\
+    /ID EventID           Określa identyfikator zdarzenia dla zdarzenia.\n\
                           Musi to być liczba całkowita z zakresu od 0 do 65535.\n\
 \n\
     /D  opis              Określa opis, jaki ma być ustawiony\n\
