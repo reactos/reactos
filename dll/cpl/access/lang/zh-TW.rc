@@ -165,7 +165,7 @@ CAPTION "切換鍵設定"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "切換鍵的快捷鍵是:  \n將 NUM LOCK 鍵按住五秒鐘。",
+    LTEXT "切換鍵的快捷鍵是:\n將 NUM LOCK 鍵按住五秒鐘。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&S)", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "確定", IDOK, 135, 207, 50, 14
@@ -178,7 +178,7 @@ CAPTION "高對比度設定"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "高對比度的快捷鍵是:  \n同時按住左 Alt 鍵、左 SHIFT 鍵和 PRINT SCREEN 鍵。",
+    LTEXT "高對比度的快捷鍵是:\n同時按住左 Alt 鍵、左 SHIFT 鍵和 PRINT SCREEN 鍵。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&U)", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "高對比度外觀方案", -1, 6, 83, 234, 44
