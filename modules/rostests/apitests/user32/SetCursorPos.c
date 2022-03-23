@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-HHOOK hMouseHookLL, hMouseHook;
+static HHOOK hMouseHookLL, hMouseHook;
 
 struct _test_info
 {
@@ -16,18 +16,20 @@ struct _test_info
     int mouse_move_called;
 };
 
-struct _test_info info[] = { {0,0,0}, /* SetCursorPos without a window */
-                             {1,1,0}, /* mouse_event without a window */
-                             {0,1,1}, /* SetCursorPos with a window */
-                             {1,1,1}, /* mouse_event with a window */
-                             {0,1,1}, /* multiple SetCursorPos with a window with coalescing */
-                             {0,2,2}, /* multiple SetCursorPos with a window without coalescing */
-                             {2,1,1}, /* multiple mouse_event with a window with coalescing */
-                             {2,2,2}, /* multiple mouse_event with a window without coalescing */
-                           };
+static struct _test_info info[] =
+{
+    {0,0,0}, /* SetCursorPos without a window */
+    {1,1,0}, /* mouse_event without a window */
+    {0,1,1}, /* SetCursorPos with a window */
+    {1,1,1}, /* mouse_event with a window */
+    {0,1,1}, /* multiple SetCursorPos with a window with coalescing */
+    {0,2,2}, /* multiple SetCursorPos with a window without coalescing */
+    {2,1,1}, /* multiple mouse_event with a window with coalescing */
+    {2,2,2}, /* multiple mouse_event with a window without coalescing */
+};
 
-struct _test_info results[8];
-int test_no = 0;
+static struct _test_info results[8];
+static int test_no = 0;
 
 
 LRESULT CALLBACK MouseLLHookProc(int nCode, WPARAM wParam, LPARAM lParam)
