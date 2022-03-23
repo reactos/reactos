@@ -138,7 +138,7 @@ CAPTION "Paramètres des touches filtre"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Raccourci clavier", -1, 6, 11, 234, 62
-    LTEXT "Le raccourci pour les touches filtre est:  \nMaintenir la touche <Maj droit> pressée pendant huit secondes.",
+    LTEXT "Le raccourci pour les touches filtre est:\nMaintenir la touche <Maj droit> pressée pendant huit secondes.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utiliser le raccourci", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Options de filtre", -1, 6, 79, 234, 79
@@ -178,7 +178,7 @@ CAPTION "Paramètres du contraste élevé"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Raccourci clavier", -1, 6, 11, 234, 62
-    LTEXT "Le raccourci pour le contraste élevé est :  \nPresser <Alt gauche+Maj gauche+Impr écran>.",
+    LTEXT "Le raccourci pour le contraste élevé est :\nPresser <Alt gauche+Maj gauche+Impr écran>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Utili&ser le raccourci", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Schéma de couleur du contraste élevé", -1, 6, 83, 234, 44
@@ -195,7 +195,7 @@ CAPTION "Paramètres des touches souris"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Raccourci clavier", -1, 6, 11, 234, 62
-    LTEXT "Le raccourci pour les touches souris est :  \nPresser <Alt gauche+Maj gauche+Verr num>.",
+    LTEXT "Le raccourci pour les touches souris est :\nPresser <Alt gauche+Maj gauche+Verr num>.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Utili&ser le raccourci", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
