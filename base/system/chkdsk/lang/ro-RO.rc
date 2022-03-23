@@ -10,7 +10,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Uz: %s [drive:] [-F] [-V] [-R] [-C] \n\n\
+Uz: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
 [drive:]    Specifică unitatea de stocare pentru control.\n\
 -F          Rezolvă erorile discului.\n\
 -V          Vizualizează calea tuturor fișierelor de pe disc.\n\
