@@ -29,11 +29,11 @@ BEGIN
                   /flushdns | /displaydns | /registerdns |\n \
                   /showclassid kort |\n \
                   /setclassid kort [classid] ]\n \
-    \n \
+\n \
     der\n \
         kort            Tilkoblingsnavn\n \
                        (jokertegnene * og ? er tillatt, se eksemplene)\n \
-    \n \
+\n \
         Eksempler:\n \
            /?           Viser denne hjelpe meldingen\n \
            /all         Viser detaljert informasjon.\n \
@@ -44,15 +44,15 @@ BEGIN
            /displaydns  Viser innhold av DNS Resolver-bufferen.\n \
            /showclassid Viser alle klasse IDene for DHCP som er tillatt for kortet.\n \
            /setclassid  Endrer klasse-IDene for DHCP.\n \
-    \n \
+\n \
     Standardverdien er å bare vise IP-addressen, nettverksmasken og\n \
     standard gatewayen for hver kort knyttet til TCP/IP.\n \
-    \n \
+\n \
     For Release og Renew, hvis ingen kortnavn er angitt, vil IP addressen\n \
     for alle kort knyttet til TCP/IP frigis eller fornyes hvis det ikke angis et kortnavn.\n \
-    \n \
+\n \
     For Setclassid, fjernes ClassId hvis det ikke angis en ClassId.\n \
-    \n \
+\n \
     Eksempler:\n \
         > ipconfig                   ... Vis informasjon.\n \
         > ipconfig /all              ... Vis detaljert informasjon\n \
