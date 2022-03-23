@@ -36,11 +36,11 @@ BEGIN
                   /flushdns | /displaydns | /registerdns |\n \
                   /showclassid kort |\n \
                   /setclassid kort [classid] ]\n \
-    \n \
+\n \
     där\n \
         kort         Anslutningssnamn\n \
                        (jokertecken * och ? är tillåtet, se exempeln)\n \
-    \n \
+\n \
         Alternativ:\n \
            /?           Visar detta hjälpmeddelandet\n \
            /all         Visar detaljerd information.\n \
@@ -51,15 +51,15 @@ BEGIN
            /displaydns  Visar inhåll i DNS Resolver-bufferen.\n \
            /showclassid Visar alla klass-ID:na för DHCP som är tillåtet för kortet.\n \
            /setclassid  Ändrar DHCP-klass-ID:t.\n \
-    \n \
+\n \
     Som standard visas bara IP-adressen, nätsmasken och\n \
     standardgateway för varje nätverkskort som är bundet till TCP/IP.\n \
-    \n \
+\n \
     Om inget nätverkskort angetts för Release och Renew, kommer IP-adresserna\n \
     för alla nätverkskort som är bundna till TCP/IP att frigöras eller förnyas.\n \
-    \n \
+\n \
     Om inget klass-ID har angetts för Setclassid tas klass-ID:t bort.\n \
-    \n \
+\n \
     Exempel:\n \
         > ipconfig                   ... Visar informastion.\n \
         > ipconfig /all              ... Visar detaljerd information\n \
