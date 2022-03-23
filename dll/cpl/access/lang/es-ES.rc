@@ -115,7 +115,7 @@ CAPTION "Configuración para StickyKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Método abreviado de teclado ", -1, 6, 11, 234, 62
-    LTEXT "El método abreviado para StickyKeys es: \nPresionar la tecla MAYÚS cinco veces.",
+    LTEXT "El método abreviado para StickyKeys es:\nPresionar la tecla MAYÚS cinco veces.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar método abreviado", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "Opciones ", -1, 6, 83, 234, 44
@@ -138,7 +138,7 @@ CAPTION "Configuración para FilterKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Método abreviado de teclado ", -1, 6, 11, 234, 62
-    LTEXT "El método abreviado para FilterKeys es: \nMantener presionada <MAYÚS Drch> ocho segundos.",
+    LTEXT "El método abreviado para FilterKeys es:\nMantener presionada <MAYÚS Drch> ocho segundos.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar método abreviado", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Opciones de filtro ", -1, 6, 79, 234, 79
@@ -165,7 +165,7 @@ CAPTION "Configuración para ToogleKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Método abreviado de teclado ", -1, 6, 11, 234, 62
-    LTEXT "El método abreviado para ToogleKeys es: \nMantener presionado <Block Num> cinco segundos.",
+    LTEXT "El método abreviado para ToogleKeys es:\nMantener presionado <Block Num> cinco segundos.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar método abreviado", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "Aceptar", IDOK, 135, 207, 50, 14

@@ -49,7 +49,7 @@ SYNTAX:\n\
   whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
   whoami /all [/fo <Format>] [/nh] \n\
 \n\
-BEISPIELE: \n\
+BEISPIELE:\n\
   whoami /groups /priv /nh /fo csv \n\
   whoami /logonid \n\
   whoami \n"

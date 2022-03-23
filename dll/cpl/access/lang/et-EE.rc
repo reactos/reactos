@@ -170,7 +170,7 @@ CAPTION "Tumblerklahvide sätted"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Klaviatuuri otetee", -1, 6, 11, 234, 62
-    LTEXT "Tumblerklahvide otsetee: \nVajutage ja hoide viis sekundit all numbrilukku (NUM LOCK)",
+    LTEXT "Tumblerklahvide otsetee:\nVajutage ja hoide viis sekundit all numbrilukku (NUM LOCK)",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Kasuta &otseteed", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14

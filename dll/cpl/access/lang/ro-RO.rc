@@ -168,7 +168,7 @@ CAPTION "Opțiuni pentru TasteDeComutare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Activare din taste", -1, 6, 11, 234, 62
-    LTEXT "Combinația de activare a accesibilității TasteDeComutare: \nApăsați «Num Lock» timp de 5 secunde.",
+    LTEXT "Combinația de activare a accesibilității TasteDeComutare:\nApăsați «Num Lock» timp de 5 secunde.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Permite activarea din taste", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "Con&firmă", IDOK, 135, 207, 50, 14
