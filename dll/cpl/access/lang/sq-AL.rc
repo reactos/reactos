@@ -167,7 +167,7 @@ CAPTION "Konfigurime Toggle Keys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Keyboard shortcut", -1, 6, 11, 234, 62
-    LTEXT "Menyra e shpejt per ToggleKeys është: \nShtyp down <Num Lock> per pese sekonda.",
+    LTEXT "Menyra e shpejt per ToggleKeys është:\nShtyp down <Num Lock> per pese sekonda.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Perdor &shortcut", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
