@@ -51,7 +51,7 @@ SINTAXIS:\n\
   whoami {[/user] [/groups] [/priv]} [/fo <Formato>] [/nh] \n\
   whoami /all [/fo <Formato>] [/nh] \n\
 \n\
-EJEMPLOS: \n\
+EJEMPLOS:\n\
   whoami /groups /priv /nh /fo csv \n\
   whoami /logonid \n\
   whoami \n"
