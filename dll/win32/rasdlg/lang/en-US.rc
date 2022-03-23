@@ -2320,7 +2320,7 @@ BEGIN
     7353 "Incoming Connections Warning\0"
     7354 "Any users that you delete will be permanently removed from the system even if cancel is pressed.  Are you sure you want to permanently remove %s? \0"
     7355 "You are about to switch to a system management console.  This Incoming Connections property sheet will be closed and any changes you may have made will be committed to the system.  Is it ok to continue?\0"
-    7356 "Your Network Mask value has been changed.  A zero bit in a mask can only be followed by other zero bits.  For example, a Network Mask value, expressed in decimal dotted notation, of 255.255.0.0, is valid, but 255.0.255.0 is not.  \n\0"
+    7356 "Your Network Mask value has been changed.  A zero bit in a mask can only be followed by other zero bits.  For example, a Network Mask value, expressed in decimal dotted notation, of 255.255.0.0, is valid, but 255.0.255.0 is not.\n\0"
     7357 "User Permissions\0"
     7358 "You can specify the users who can connect to this computer.\0"
     7359 "Devices for Incoming Connections\0"

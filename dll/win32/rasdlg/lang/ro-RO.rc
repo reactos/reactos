@@ -2326,7 +2326,7 @@ BEGIN
     7353 "Avertisment al conexiunilor de intrare\0"
     7354 "Un utilizator șters va fi eliminat definitiv din sistem, chiar dacă va fi apăsat „Anulează”.  Sigur doriți eliminarea irevocabilă a utilizatorului %s? \0"
     7355 "Sunteți pe calea de a comuta în consola de gestiune a sistemului.  Formularul curent al conexiunilor de intrare va fi închis și toate modificările efectuate vor fi instituite în sistem.  Confirmați continuarea?\0"
-    7356 "Valoarea măștii de rețea s-a schimbat.  În mască, un bit de zero poate fi urmat doar de alți biți de zero.  De exemplu, pentru Masca de Rețea, în notația cu punct, valoarea 255.255.0.0 este validă, pe când 255.0.255.0 nu este.  \n\0"
+    7356 "Valoarea măștii de rețea s-a schimbat.  În mască, un bit de zero poate fi urmat doar de alți biți de zero.  De exemplu, pentru Masca de Rețea, în notația cu punct, valoarea 255.255.0.0 este validă, pe când 255.0.255.0 nu este.\n\0"
     7357 "Permisiuni de utilizator\0"
     7358 "Puteți specifica utilizatorii care se vor conecta la acest calculator.\0"
     7359 "Dispozitive pentru conexiunile de intrare\0"
