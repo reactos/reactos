@@ -48,9 +48,9 @@ BEGIN
   Argumentul «/nh» ascunde anteturile. Datele sunt implicit afișate tabelar.\n\
   \n\
             SINTAXĂ:\n\
-  whoami [/upn | /fqdn | /logonid] \n\
-  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
-  whoami /all [/fo <Format>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid]\n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh]\n\
+  whoami /all [/fo <Format>] [/nh]\n\
   \n\
             EXEMPLE:\n\
   whoami /groups /priv /nh /fo csv \n\
