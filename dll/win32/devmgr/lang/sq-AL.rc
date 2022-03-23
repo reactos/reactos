@@ -82,7 +82,7 @@ BEGIN
     IDS_DEV_TRANSLATION_FAILED "Kjo pajisje nuk i përgjigjer komanduesit të saj."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nuk mund të përcaktojë parametrat për këtë pajisje. Konsultoni dokumentacionin që erdhi me këtë pajisje dhe të përdorin tabelen e Burimeve për të vendosur konfigurimin."
     IDS_DEV_BIOS_TABLE "Firmware i sistemit kompjuterit tuaj nuk përfshin informacione të mjaftueshme për të konfiguruar siç duhet dhe të përdorë këtë pajisje.\nPër përdorimin e kësaj pajisje, kontaktoni prodhuesin e kompjuterit tuaj për të marrë një firmware apo azhornim BIOS-i."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "Kjo pajisje është duke kërkuar një interrupt PCI por është konfiguruar për një interrupt ISA (ose anasjelltas). \nJu lutemi përdorni programin e konfigurimit e sistemit të kompjuterit për të rikonfiguruar interrupt për këtë pajisje."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Kjo pajisje është duke kërkuar një interrupt PCI por është konfiguruar për një interrupt ISA (ose anasjelltas).\nJu lutemi përdorni programin e konfigurimit e sistemit të kompjuterit për të rikonfiguruar interrupt për këtë pajisje."
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS nuk mund nisë komanduesin e pajisjes për këtë pjesë elektronike."
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS nuk mund të ngarkojë komanduesin e pajisjes për këtë pjesë elektronike, sepse një shembull i mëparshëm i komanduesit të pajisjes është ende në memorie."
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS nuk mund të ngarkojë komanduesin e pajisjes për këtë pjesë elektronike. Komanduesi mund të jetë i korruptuar ose mungon."
