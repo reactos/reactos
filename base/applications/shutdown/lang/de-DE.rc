@@ -43,7 +43,7 @@ Benutzung: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     /s      Fährt den Computer herunter.\n\
     /r      Fährt den Computer herunter und startet ihn neu.\n\
     /g      Fährt den Computer herunter und startet ihn neu. Nach dem\n\
-			Neustart des Systems werden alle registrierten Anwendungen \n\
+			Neustart des Systems werden alle registrierten Anwendungen\n\
 			ebenfalls neu gestartet.\n\
     /a      Brich ein geplantes Herunterfahren ab. Diese Option kann\n\
             nur bei einem geplanten zeitverzögerten Herunterfahren\n\

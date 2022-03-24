@@ -8,7 +8,7 @@ uruchomiona, aby używać poleceń AT.\n\n\
 AT [\\\\nazwa_komputera] [ [id] [/DELETE] | /DELETE [/YES]]\n\
 AT [\\\\nazwa_komputera] godzina [/INTERACTIVE]\n\
     [ /EVERY:data[,...] | /NEXT:data[,...]] ""polecenie""\n\n\
-\\\\nazwa_komputera   Określa komputer zdalny. Polecenia są zaplanowane w \n\
+\\\\nazwa_komputera   Określa komputer zdalny. Polecenia są zaplanowane w\n\
                    komputerze lokalnym, jeśli ten parametr jest pominięty.\n\
 id                 Jest numerem identyfikacyjnym przyporządkowanym do\n\
                    zaplanowanego polecenia.\n\

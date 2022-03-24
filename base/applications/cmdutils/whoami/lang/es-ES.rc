@@ -52,7 +52,7 @@ SINTAXIS:\n\
   whoami /all [/fo <Formato>] [/nh]\n\
 \n\
 EJEMPLOS:\n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

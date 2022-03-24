@@ -12,7 +12,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Afișează date pe ecran, pagină-cu-pagină.\n\n\
   MORE < [Unitate:][Cale]Nume fișier\n\
-  Comandă | MORE \n\
+  Comandă | MORE\n\
   MORE [Unitate:][Cale]Nume fișier\n\n\
   [Unitate:][Cale]Nume fișier    Fișierul al cărui conținut va fi afișat.\n\
   Comandă                        Comanda a cărei ieșire va fi afișată.\n\n\

@@ -9,6 +9,6 @@ CHCP [nnn]\n\n\
   nnn   Indique la page de codes.\n\n\
 Taper CHCP sans paramètre pour afficher la page de codes active."
     STRING_CHCP_ERROR1 "Page de codes actuelle : %u\n"
-    STRING_CHCP_ERROR4 "Page de codes invalide \n"
+    STRING_CHCP_ERROR4 "Page de codes invalide\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Format de paramètre incorrect - %s\n"
 END
