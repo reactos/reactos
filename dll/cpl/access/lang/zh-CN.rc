@@ -199,7 +199,7 @@ CAPTION "鼠标键设置"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "键盘快捷键", -1, 6, 11, 234, 62
-    LTEXT "鼠标键的快捷键是： \n同时按住左 Alt 键、左 Shift 键和 Num Lock 键。",
+    LTEXT "鼠标键的快捷键是：\n同时按住左 Alt 键、左 Shift 键和 Num Lock 键。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷键(&U)", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14

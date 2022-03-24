@@ -2019,7 +2019,7 @@ BEGIN
     405 "Protocolul NetBEUI este necesar pentru a apela vechile servere RAS.\0"
     406 "Înainte de a apela un server RAS, este necesară instalarea protocolului NetBEUI.  NetBEUI poate fi instalat în Panoul de control, la Rețea.\0"
     407 "&Reapelează\0"
-    408 "Ați ales să dezactivați unul sau mai multe transporturi. Aceasta solicită gestionarilor și protocoalelor de redirecționare să elimine transporturile dezactivate din această interfață de apel la cerere.\nApăsați Da dacă \n\n\n\n\n\n\ndoriți să continuați, sau No dacă preferați reactivarea transporturilor.\0"
+    408 "Ați ales să dezactivați unul sau mai multe transporturi. Aceasta solicită gestionarilor și protocoalelor de redirecționare să elimine transporturile dezactivate din această interfață de apel la cerere.\nApăsați Da dacă\n\n\n\n\n\n\ndoriți să continuați, sau No dacă preferați reactivarea transporturilor.\0"
     409 "Partajarea conexiunii de Internet\0"
     410 "Contul de apelare al interfaței de apel la cerere.\0"
     411 "Este necesară stabilirea informațiilor de autentificare pe care interfața „%1” le va utiliza în conectarea la serverul de redirecționare. Aceste informații de autentificare trebuie să corespundă cu informațiile de autentificare configurate în serverul de redirecționare. La conectarea la un server de redirecționare Win NT4/2000, numele de utilizator trebuie să corespundă cu numele interfeței din serverul de redirecționare.\0"
