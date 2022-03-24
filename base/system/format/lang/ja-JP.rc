@@ -32,7 +32,7 @@ BEGIN
     STRING_LABEL_NAME_EDIT "ドライブ D: の現在のボリューム ラベルを入力してください "
     STRING_ERROR_LABEL "このドライブに対して、無効なボリューム ラベルが入力されました。\n"
     STRING_YN_FORMAT "\n警告!! 固定ディスクの %C: ドライブの全てのデータが\n\
-失われます! \nフォーマットを開始しますか (Y/N)? "
+失われます!\nフォーマットを開始しますか (Y/N)? "
     STRING_YES_NO_FAQ "YN"
     STRING_VERIFYING "ベリファイしています"
     STRING_FAST_FMT "クイックフォーマットしています"

@@ -33,7 +33,7 @@ spełnione dwa warunki.\n\n"
                                minąć, zanim użytkownik może zmienić hasło.\n\
                                Wartość 0 ustawia brak tego ograniczenia.\n\
                                Zakres wynosi od 0 do 999; wartość domyślna\n\
-                               to 0 dni. Wartość /MINPWAGE nie może być \n\
+                               to 0 dni. Wartość /MINPWAGE nie może być\n\
 							   większa od wartości /MAXPWAGE."
     IDS_ACCOUNTS_HELP_9 "/UNIQUEPW:liczba               Wymaga, aby hasło użytkownika było unikatowe,\n\
                                poprzez określoną liczbę zmian hasła.\n\
