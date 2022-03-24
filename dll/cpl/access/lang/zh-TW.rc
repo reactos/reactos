@@ -195,7 +195,7 @@ CAPTION "滑鼠鍵設定"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "鍵盤快捷鍵", -1, 6, 11, 234, 62
-    LTEXT "滑鼠鍵的快捷鍵是： \n同時按住左 Alt 鍵、左 Shift 鍵和 Num Lock 鍵。",
+    LTEXT "滑鼠鍵的快捷鍵是：\n同時按住左 Alt 鍵、左 Shift 鍵和 Num Lock 鍵。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷鍵(&U)", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
