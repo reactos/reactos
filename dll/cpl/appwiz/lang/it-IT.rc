@@ -24,7 +24,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Create Scociatoia"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Questo wizard permette la creazione di collegamenti verso programmi locali o di rete, file, cartella, computer, o \nindirizzi Internet.", -1, 120, 15, 200, 30
+    LTEXT "Questo wizard permette la creazione di collegamenti verso programmi locali o di rete, file, cartella, computer, o\nindirizzi Internet.", -1, 120, 15, 200, 30
     LTEXT "Digitare la posizione:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
     PUSHBUTTON "Sfoglia...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
