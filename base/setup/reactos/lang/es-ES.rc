@@ -121,9 +121,9 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Directorio de destino:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "Confirmo que las configuraciones de instalación son correctas. También conozco \nque ReactOS está en un fase de software Alpha y podría romper mi ordenador y corromper mis datos.",
+    AUTOCHECKBOX "Confirmo que las configuraciones de instalación son correctas. También conozco\nque ReactOS está en un fase de software Alpha y podría romper mi ordenador y corromper mis datos.",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
-    LTEXT "Por favor, confirme que todas las configuraciones son correctas, \nluego haga clic en Instalar para empezar el Proceso de Instalación.", IDC_STATIC, 7, 124, 303, 18
+    LTEXT "Por favor, confirme que todas las configuraciones son correctas,\nluego haga clic en Instalar para empezar el Proceso de Instalación.", IDC_STATIC, 7, 124, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
