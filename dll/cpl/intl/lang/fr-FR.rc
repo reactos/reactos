@@ -132,7 +132,7 @@ BEGIN
     GROUPBOX "", -1, 7, 124, 228, 60, WS_VISIBLE
     LTEXT "Notation de l'heure\n\n\
 h = heure    m = minute    s = seconde    t = AM ou PM\n\n\
-h = 12 heures   H =24 heures \n\
+h = 12 heures   H =24 heures\n\
 hh, mm, ss = Zéro de départ   h, m, s = Pas de zéro de départ", -1, 13, 133, 214, 47, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 

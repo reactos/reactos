@@ -96,7 +96,7 @@ used without parameters, it displays the groupnames on the server.\n\n"
     IDS_GROUP_HELP_3 "/COMMENT:""text""  Adds a comment for a new or existing group.\n\
                  Enclose the text inquotation marks.\n"
     IDS_GROUP_HELP_4 "/DOMAIN          Performs the operation on a domain controller\n\
-                 of the current domain. Otherwise, the operation is \n\
+                 of the current domain. Otherwise, the operation is\n\
                  performed on the local computer.\n"
     IDS_GROUP_HELP_5 "username[ ...]   List one or more usernames to add to or remove from\n\
                  a group. Separate multiple username entries with a space.\n"
@@ -130,7 +130,7 @@ used without parameters, it displays the local groups on the computer.\n\n"
     IDS_LOCALGROUP_HELP_3 "/COMMENT:""text""  Adds a comment for a new or existing group.\n\
                  Enclose the text inquotation marks.\n"
     IDS_LOCALGROUP_HELP_4 "/DOMAIN          Performs the operation on a domain controller\n\
-                 of the current domain. Otherwise, the operation is \n\
+                 of the current domain. Otherwise, the operation is\n\
                  performed on the local computer.\n"
     IDS_LOCALGROUP_HELP_5 "name[ ...]       List one or more usernames or groupnams to add to or\n\
                  remove from a local group. Separate multiple entries with\n\
