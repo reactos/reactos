@@ -15,7 +15,7 @@ BEGIN
                             FAT soporta 8192, 16K, 32K, 64K, 128K, 256K.\n\
                             La compresión NTFS no es soportada para tamaños de la unidad asignada\n\
                             por encima de 4096.\n\
-  -C                        Por defecto los archivos creados en el nuevo volumen serán \n\
+  -C                        Por defecto los archivos creados en el nuevo volumen serán\n\
                             comprimidos.\n\n"
     STRING_COMPLETE "%lu por ciento completado.\r"
     STRING_FORMAT_FAIL "FormatEx fue incapaz de completarse satisfactoriamente.\n\n"

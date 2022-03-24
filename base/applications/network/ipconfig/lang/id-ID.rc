@@ -49,7 +49,7 @@ BEGIN
     gateway standar untuk setiap adapter yang terikat ke TCP/IP.\n \
 \n \
     Untuk Melepas dan Memperbarui, jika tidak ada nama adapter, maka sewa\n \
-    alamat IP untuk seluruh adapter yang terikat ke TCP/IP akan dilepaskan \n \
+    alamat IP untuk seluruh adapter yang terikat ke TCP/IP akan dilepaskan\n \
     atau diperbaharui.\n \
 \n \
     Untuk Setclassid, jika tidak ada ClassId yang ditetapkan, maka ClassId dihapus.\n \

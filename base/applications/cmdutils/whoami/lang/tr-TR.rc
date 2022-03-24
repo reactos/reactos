@@ -52,7 +52,7 @@ YAZIM:\n\
   whoami /all [/fo <Biçim>] [/nh]\n\
 \n\
 ÖRNEKLER:\n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END

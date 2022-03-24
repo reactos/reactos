@@ -417,10 +417,10 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
                     1    hh%cmm%css%cdd\n\n\
 hvis hverken ON, OFF eller /S är spesifisert\n\
 vil status for stoppeklokken veksles.\n\n"
-    STRING_TYPE_HELP1 "Vis innholdet av tekstfiler.\n\nSkriv [enhet:][mapp]filnamn \n\
+    STRING_TYPE_HELP1 "Vis innholdet av tekstfiler.\n\nSkriv [enhet:][mapp]filnamn\n\
   /P          Vis en full skjerm om gangen.\n"
     STRING_VERIFY_HELP1 "Denne kommandoen är bare en etterlikning!!\n\
-Anger om det skal bekreftes at dine filer är skrevet korrekt til disk \n\n\
+Anger om det skal bekreftes at dine filer är skrevet korrekt til disk\n\n\
 VERIFY [ON | OFF]\n\n\
 Skriv VERIFY uten parametre för att visa aktuell VERIFY inställninar.\n"
     STRING_VERIFY_HELP2 "VERIFY är %s.\n"

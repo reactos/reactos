@@ -28,7 +28,7 @@ BEGIN
     STRING_FILESYSTEM "Typen av filsystem er %s.\n"
     STRING_LABEL_NAME_EDIT "Velg aktuell volum merke for stasjon %C: "
     STRING_ERROR_LABEL "Et uriktig volum merke ble innskrivet for denne stasjonen.\n"
-    STRING_YN_FORMAT "\nADVARSEL, ALLE DATA PÅ EN DISK SOM IKKE KAN FJERNES \n\
+    STRING_YN_FORMAT "\nADVARSEL, ALLE DATA PÅ EN DISK SOM IKKE KAN FJERNES\n\
 STASJON %C: VIL BLI BORTE!\nFortsette med Formateringen (J/N)? "
     STRING_YES_NO_FAQ "JN"
     STRING_VERIFYING "kontrollerer"

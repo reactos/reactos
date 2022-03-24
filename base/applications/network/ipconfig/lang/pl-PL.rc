@@ -33,7 +33,7 @@ BEGIN
     IDS_USAGE
     "\nSPOSÓB UŻYCIA:\n \
         ipconfig [/? | /all | /renew [karta] | /release [karta] |\n \
-                  /flushdns | /displaydns | /registerdns \n \
+                  /flushdns | /displaydns | /registerdns\n \
                   /showclassid karta |\n \
                   /setclassid karta [identyfikator_klasy] ]\n \
 \n \

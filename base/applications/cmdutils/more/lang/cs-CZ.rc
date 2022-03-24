@@ -10,7 +10,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Zobrazí výstup po jednotlivých stránkách na obrazovku.\n\n\
   MORE < [Jednotka:][Cesta]Název souboru\n\
-  Příkaz | MORE \n\
+  Příkaz | MORE\n\
   MORE [Jednotka:][Cesta]Název souboru\n\n\
   [Jednotka:][Cesta]Název souboru    Soubor, jehož obsah bude zobrazen.\n\
   Příkaz\t\t     Příkaz, jehož výstup bude zobrazen.\n\n\
