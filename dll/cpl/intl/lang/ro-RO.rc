@@ -132,7 +132,7 @@ BEGIN
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
     LTEXT "Notația orei:\n\n\
 h = oră     m = minut    s = secundă\nt = „ante meridiem” sau „post meridiem”\n\
-h = 12 ore    H = 24 ore \n\
+h = 12 ore    H = 24 ore\n\
 hh, mm, ss = cu zerouri   h, m, s = fără zerouri", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 

@@ -50,7 +50,7 @@ SYNTAX:\n\
   whoami /all [/fo <Format>] [/nh]\n\
 \n\
 EXAMPLES:\n\
-  whoami /groups /priv /nh /fo csv \n\
-  whoami /logonid \n\
-  whoami \n"
+  whoami /groups /priv /nh /fo csv\n\
+  whoami /logonid\n\
+  whoami\n"
 END
