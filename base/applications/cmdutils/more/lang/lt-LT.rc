@@ -13,7 +13,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Atvaizduoja duomenis puslapiais.\n\n\
   MORE < [Diskas:][Kelias iki bylos]Bylos vardas\n\
-  Komanda | MORE \n\
+  Komanda | MORE\n\
   MORE [Diskas:][Kelias iki bylos]Bylos vardas\n\n\
   [Diskas:][Kelias iki bylos]Bylos vardas    Byla, kurios turinys turi būti\n\
                                              atvaizduotas.\n\

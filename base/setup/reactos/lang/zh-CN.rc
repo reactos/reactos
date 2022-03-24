@@ -112,7 +112,7 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "目标目录:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "我确认我的操作是无误的。我同样了解 ReactOS \n 是一款 alpha 级软件，可能会损害我的计算机或破坏我的数据。",
+    AUTOCHECKBOX "我确认我的操作是无误的。我同样了解 ReactOS\n 是一款 alpha 级软件，可能会损害我的计算机或破坏我的数据。",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
     LTEXT "请确认所有安装设置正确，\n然后点击安装开始安装。", IDC_STATIC, 7, 124, 303, 18
 END

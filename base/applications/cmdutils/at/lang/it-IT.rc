@@ -15,7 +15,7 @@ poter usare il comando AT.\n\n\
 AT [\\\\nomecomputer] [ [id] [/DELETE] | /DELETE [/YES]]\n\
 AT [\\\\nomecomputer] tempo [/INTERACTIVE]\n\
     [ /EVERY:data[,...] | /NEXT:data[,...]] ""comando""\n\n\
-\\\\nomecomputer     Specifica un computer remoto. I comandi saranno programmati \n\
+\\\\nomecomputer     Specifica un computer remoto. I comandi saranno programmati\n\
                    sul computer locale se questo parametro è omesso.\n\
 id                 È un numero d'identificazione assegnato al comando programmato.\n\
 /DELETE            Cancella un comando programmato. Se l'id viene omesso, tutti\n\
