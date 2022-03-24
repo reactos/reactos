@@ -1838,7 +1838,7 @@ BEGIN
     191 "Thirr të gjitha pajisjet\0"
     192 "Thirr pajisjet sipas nevojave\0"
     193 "Futni një emër përdoruesi dhe fjalëkalim me të drejta në domenin e rrjetit të largët.\0"
-    194 "Përkthimi i Adresa të Rrjeti (NAT) aktualisht është instaluar si një protokoll konfiguruar,\ndhe duhet të hiqet para se të bëjë të mundur Shpërndarjen e Lidhjes së Internetit.\nPër të hequr Përkthimin e Adreses së Rrjetit, hapni Konfigurimin dhe Menaxhuesin e Të Dreltave në Distancë\nkapë dhe zgjero hyrjen e router-it në panelin e majtë.\nFshi Përkthimin e Adresave të Rrjetit së protokollit Router-it nga lista e protokolleve \nrouti-m IP've.\0"
+    194 "Përkthimi i Adresa të Rrjeti (NAT) aktualisht është instaluar si një protokoll konfiguruar,\ndhe duhet të hiqet para se të bëjë të mundur Shpërndarjen e Lidhjes së Internetit.\nPër të hequr Përkthimin e Adreses së Rrjetit, hapni Konfigurimin dhe Menaxhuesin e Të Dreltave në Distancë\nkapë dhe zgjero hyrjen e router-it në panelin e majtë.\nFshi Përkthimin e Adresave të Rrjetit së protokollit Router-it nga lista e protokolleve\nrouti-m IP've.\0"
     195 "Kodi i zonës duhet të përmbajë vetëm shifra 0 tek 9.\0"
     196 "Emri hyrjes duhet të përmbajë të paktën një karakter jo-bosh dhe nuk mund të fillojë me një periudhë. Zgjidhni një emër tjetër..\0"
     197 "Ju duhet të zgjidhni një vlerë prej %1 tek %2 për këtë fushë.\0"

@@ -171,7 +171,7 @@ sortu nahi duzu?"
     STRING_NOTFOUND "Ez da aurkitu '%s'."
     STRING_OUT_OF_MEMORY "Ez dago memoria nahikorik lan hau\
 amaitzeko.\nItxi aplikazio bat edo gehiago \
-memoria librearen \nkopurua handitzeko."
+memoria librearen\nkopurua handitzeko."
     STRING_CANNOTFIND "Ez da '%s' aurkitu"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"

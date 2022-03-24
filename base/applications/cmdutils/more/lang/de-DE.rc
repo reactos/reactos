@@ -4,7 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_USAGE "Zeigt Daten seitenweise auf dem Bildschirm an.\n\n\
   MORE < [Laufwerk:][Pfad]Dateiname\n\
-  Befehl | MORE \n\
+  Befehl | MORE\n\
   MORE [Laufwerk:][Pfad]Dateiname\n\n\
   [Laufwerk:][Pfad]Dateiname Eine Datei, deren Inhalt angezeigt werden soll.\n\
   Befehl\t\t     Ein Befehl, dessen Ausgabe angezeigt werden soll.\n\n\

@@ -627,8 +627,8 @@ CAPTION "Attenzione"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "Questo file potrebbe essere utilizzato dal sistema operativo o da \n\
-un'altra applicazione. Modificare questo file potrebbe danneggiare il \n\
+    LTEXT "Questo file potrebbe essere utilizzato dal sistema operativo o da\n\
+un'altra applicazione. Modificare questo file potrebbe danneggiare il\n\
 sistema o renderlo meno funzionale.\n\n\
 Si desidera comunque aprire questo file?", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
@@ -722,7 +722,7 @@ BEGIN
     IDS_CANTTRASH_TEXT "L'elemento '%1' non può essere spostato nel cestino. Volete cancellarlo?"
     IDS_OVERWRITEFILE_TEXT "Questa cartella contiene già un file con nome '%1'.\n\nVolete sostituirlo?"
     IDS_OVERWRITEFILE_CAPTION "Confermare la sovrascrittura del file"
-    IDS_OVERWRITEFOLDER_TEXT "Questa cartella contiene già una cartella con nome '%1'.\n\nSe i file nella cartella di destinazione hanno gli stessi nomi di quelli della \ncartella selezionata saranno sovrascritti. Volete procedere comunque?\n"
+    IDS_OVERWRITEFOLDER_TEXT "Questa cartella contiene già una cartella con nome '%1'.\n\nSe i file nella cartella di destinazione hanno gli stessi nomi di quelli della\ncartella selezionata saranno sovrascritti. Volete procedere comunque?\n"
 
     IDS_FILEOOP_COPYING "Copia in corso..."
     IDS_FILEOOP_MOVING "Spostamento in corso..."

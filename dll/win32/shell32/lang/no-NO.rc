@@ -334,7 +334,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Feilsøking", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "Dette alternativet vil kontrollere volumet for \nfeil.", -1, 40, 25, 160, 20
+    LTEXT "Dette alternativet vil kontrollere volumet for\nfeil.", -1, 40, 25, 160, 20
     PUSHBUTTON "Kontroller nå...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentering", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
@@ -722,7 +722,7 @@ BEGIN
     IDS_CANTTRASH_TEXT "Elementet «%1» kan ikke legges i papirkurven. Vil du slette det i stedet?"
     IDS_OVERWRITEFILE_TEXT "Denne mapppen innholder allerede en fil som heter '%1'.\n\nVil du overskrive denne?"
     IDS_OVERWRITEFILE_CAPTION "Bekreft overskriving av fil"
-    IDS_OVERWRITEFOLDER_TEXT "Denne mappen inneholder allerede en mappe som heter '%1'.\n\nHvis filene i destinasjon mappen har samme navn filer i \nvalgte mapper her vil bli overskrevet. Ønsker du fortsatt å flytte eller kopiere \ndenne mappen?"
+    IDS_OVERWRITEFOLDER_TEXT "Denne mappen inneholder allerede en mappe som heter '%1'.\n\nHvis filene i destinasjon mappen har samme navn filer i\nvalgte mapper her vil bli overskrevet. Ønsker du fortsatt å flytte eller kopiere\ndenne mappen?"
 
     IDS_FILEOOP_COPYING "Copying..."
     IDS_FILEOOP_MOVING "Moving..."
