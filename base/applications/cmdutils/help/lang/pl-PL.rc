@@ -12,7 +12,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "To polecenie nie jest obsługiwane przez narzędzie pomocy.\nSpróbuj ""%s /?""\n."
+    IDS_NO_ENTRY "To polecenie nie jest obsługiwane przez narzędzie pomocy.\nSpróbuj ""%s /?"".\n"
 END
 
 STRINGTABLE
