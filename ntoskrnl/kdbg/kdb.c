@@ -415,7 +415,7 @@ KdbpStepIntoInstruction(
     __sidt(&Idtr.Limit);
     if (IntVect >= (Idtr.Limit + 1) / 8)
     {
-        /*KdbpPrint("IDT does not contain interrupt vector %d\n.", IntVect);*/
+        /*KdbpPrint("IDT does not contain interrupt vector %d.\n", IntVect);*/
         return TRUE;
     }
 
