@@ -250,5 +250,5 @@ BEGIN
     IDS_DMUSIC_DLS "Поддерживает DLS"
     IDS_DMUSIC_EXT "Внешний"
     IDS_DMUSIC_PORT "Стандартный порт"
-    IDS_DDDISABLE_MSG "Это отключит все аппаратное ускорение DirectDraw на всех дисплеях\n.Вы хотите продолжить?\n"
+    IDS_DDDISABLE_MSG "Это отключит все аппаратное ускорение DirectDraw на всех дисплеях.\nВы хотите продолжить?\n"
 END

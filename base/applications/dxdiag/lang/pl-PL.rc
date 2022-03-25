@@ -259,5 +259,5 @@ BEGIN
     IDS_DMUSIC_DLS "Obsługuje próbki DLS"
     IDS_DMUSIC_EXT "Zewnętrzny"
     IDS_DMUSIC_PORT "Port domyślny"
-    IDS_DDDISABLE_MSG "Spowoduje to wyłączenie przyspieszania sprzętowego DirectDraw dla wszystkich urządzeń wyświetlających w systemie\n.Czy chcesz kontynuować?\n"
+    IDS_DDDISABLE_MSG "Spowoduje to wyłączenie przyspieszania sprzętowego DirectDraw dla wszystkich urządzeń wyświetlających w systemie.\nCzy chcesz kontynuować?\n"
 END

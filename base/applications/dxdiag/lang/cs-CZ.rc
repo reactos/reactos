@@ -255,5 +255,5 @@ BEGIN
     IDS_DMUSIC_DLS "Podporuje DLS"
     IDS_DMUSIC_EXT "Externí"
     IDS_DMUSIC_PORT "Výchozí port"
-    IDS_DDDISABLE_MSG "Tímto dojde k zakázání akcelerace DirectDraw na všech zobrazovacích zařízeních\n.Přejete si pokračovat?\n"
+    IDS_DDDISABLE_MSG "Tímto dojde k zakázání akcelerace DirectDraw na všech zobrazovacích zařízeních.\nPřejete si pokračovat?\n"
 END
