@@ -7,7 +7,7 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?""\n."
+    IDS_NO_ENTRY "This command is not supported by the help utility.\nTry ""%s /?"".\n"
 END
 
 STRINGTABLE
