@@ -91,6 +91,346 @@ CloseLogonLsaHandle(VOID)
 
 /**
  * @brief
+ * Creates a default security descriptor that is going
+ * to be used by both the newly created process and thread
+ * by a call to CreateProcessAsUserA/W. This descriptor also
+ * serves for the newly duplicated token object that is going
+ * to be set for the token which acts as the main user.
+ *
+ * @param[in] TokenHandle
+ * A handle to a token. The function will use this token to
+ * query security details such as the owner and primary group
+ * associated with the security context of this token. The
+ * obtained information will then be assigned to the security
+ * descriptor.
+ *
+ * @param[out] Sd
+ * A pointer to an allocated security descriptor that is given
+ * to the caller.
+ *
+ * @return
+ * Return TRUE if the security descriptor has been successfully
+ * created, FALSE otherwise.
+ *
+ * @remarks
+ * When a process is created on behald of the user's security context
+ * this user will be the owner and responsible for that process. Whatever
+ * objects created or stuff done within the process space is at the
+ * discretion of the user, that is, further objects created are in
+ * charge by the user himself as is the owner of the process.
+ *
+ * !!!NOTE!!! -- On Windows the security descriptor is created by using
+ * CreatePrivateObjectSecurity(Ex) API call. Whilst the way the security
+ * descriptor is created in our end is not wrong per se, this function
+ * serves a placeholder until CreatePrivateObjectSecurity is implemented.
+ */
+static
+BOOL
+CreateDefaultProcessSecurityCommon(
+    _In_ HANDLE TokenHandle,
+    _Out_ PSECURITY_DESCRIPTOR *Sd)
+{
+    NTSTATUS Status;
+    BOOL Success;
+    PACL Dacl;
+    PTOKEN_OWNER OwnerOfToken;
+    PTOKEN_PRIMARY_GROUP PrimaryGroupOfToken;
+    SECURITY_DESCRIPTOR AbsoluteSd;
+    ULONG DaclSize, TokenOwnerSize, PrimaryGroupSize, RelativeSDSize = 0;
+    PSID OwnerSid = NULL, SystemSid = NULL, PrimaryGroupSid = NULL;
+    PSECURITY_DESCRIPTOR RelativeSD = NULL;
+    static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+
+    /*
+     * Since we do not know how much space
+     * is needed to allocate the buffer to
+     * hold the token owner, first we must
+     * query the exact size.
+     */
+    Status = NtQueryInformationToken(TokenHandle,
+                                     TokenOwner,
+                                     NULL,
+                                     0,
+                                     &TokenOwnerSize);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Unexpected status code returned, must be STATUS_BUFFER_TOO_SMALL (Status 0x%08lx)\n", Status);
+        return FALSE;
+    }
+
+    /* We have the required space size, allocate the buffer now */
+    OwnerOfToken = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   TokenOwnerSize);
+    if (OwnerOfToken == NULL)
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for token owner!\n");
+        return FALSE;
+    }
+
+    /* Now query the token owner */
+    Status = NtQueryInformationToken(TokenHandle,
+                                     TokenOwner,
+                                     OwnerOfToken,
+                                     TokenOwnerSize,
+                                     &TokenOwnerSize);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to query the token owner (Status 0x%08lx)\n", Status);
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Do the same process but for the primary group now */
+    Status = NtQueryInformationToken(TokenHandle,
+                                     TokenPrimaryGroup,
+                                     NULL,
+                                     0,
+                                     &PrimaryGroupSize);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Unexpected status code returned, must be STATUS_BUFFER_TOO_SMALL (Status 0x%08lx)\n", Status);
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Allocate the buffer */
+    PrimaryGroupOfToken = RtlAllocateHeap(RtlGetProcessHeap(),
+                                          HEAP_ZERO_MEMORY,
+                                          PrimaryGroupSize);
+    if (PrimaryGroupOfToken == NULL)
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for primary group token!\n");
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Query the primary group now */
+    Status = NtQueryInformationToken(TokenHandle,
+                                     TokenPrimaryGroup,
+                                     PrimaryGroupOfToken,
+                                     PrimaryGroupSize,
+                                     &PrimaryGroupSize);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to query the token owner (Status 0x%08lx)\n", Status);
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Create the SYSTEM SID */
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_LOCAL_SYSTEM_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &SystemSid))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to create Local System SID (error code %d)\n", GetLastError());
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Cache the token owner and primary group SID */
+    OwnerSid = OwnerOfToken->Owner;
+    PrimaryGroupSid = PrimaryGroupOfToken->PrimaryGroup;
+
+    /* Set up the DACL size */
+    DaclSize = sizeof(ACL) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(OwnerSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(SystemSid);
+
+    /* Allocate buffer for the DACL */
+    Dacl = RtlAllocateHeap(RtlGetProcessHeap(),
+                           HEAP_ZERO_MEMORY,
+                           DaclSize);
+    if (Dacl == NULL)
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for DACL!\n");
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Initialize the DACL */
+    if (!InitializeAcl(Dacl, DaclSize, ACL_REVISION))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to initialize DACL (error code %d)\n", GetLastError());
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Give full powers to the owner */
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_ALL,
+                             OwnerSid))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up ACE for owner (error code %d)\n", GetLastError());
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Give full powers to SYSTEM as well */
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             GENERIC_ALL,
+                             SystemSid))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up ACE for SYSTEM (error code %d)\n", GetLastError());
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Initialize the descriptor in absolute format */
+    if (!InitializeSecurityDescriptor(&AbsoluteSd, SECURITY_DESCRIPTOR_REVISION))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to initialize absolute security descriptor (error code %d)\n", GetLastError());
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Set the DACL to the security descriptor */
+    if (!SetSecurityDescriptorDacl(&AbsoluteSd, TRUE, Dacl, FALSE))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up DACL to absolute security descriptor (error code %d)\n", GetLastError());
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Set the owner for this descriptor */
+    if (!SetSecurityDescriptorOwner(&AbsoluteSd, OwnerSid, FALSE))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up owner to absolute security descriptor (error code %d)\n", GetLastError());
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Set the primary group for this descriptor */
+    if (!SetSecurityDescriptorGroup(&AbsoluteSd, PrimaryGroupSid, FALSE))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up group to absolute security descriptor (error code %d)\n", GetLastError());
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /*
+     * Determine the exact size space of the absolute
+     * descriptor so that we can allocate a buffer
+     * to hold the descriptor in a converted self
+     * relative format.
+     */
+    if (!MakeSelfRelativeSD(&AbsoluteSd, NULL, &RelativeSDSize) && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Unexpected error code (error code %d -- must be ERROR_INSUFFICIENT_BUFFER)\n", GetLastError());
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Allocate the buffer */
+    RelativeSD = RtlAllocateHeap(RtlGetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 RelativeSDSize);
+    if (RelativeSD == NULL)
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for self relative descriptor!\n");
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Convert to a self relative format now */
+    if (!MakeSelfRelativeSD(&AbsoluteSd, RelativeSD, &RelativeSDSize))
+    {
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate relative SD, buffer too smal (error code %d)\n", GetLastError());
+        Success = FALSE;
+        goto Quit;
+    }
+
+    /* Success, give the descriptor to the caller */
+    *Sd = RelativeSD;
+    Success = TRUE;
+
+Quit:
+    /* Free all the stuff we have allocated */
+    if (OwnerOfToken != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, OwnerOfToken);
+
+    if (PrimaryGroupOfToken != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PrimaryGroupOfToken);
+
+    if (SystemSid != NULL)
+        FreeSid(SystemSid);
+
+    if (Dacl != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Dacl);
+
+    if (Success == FALSE)
+    {
+        if (RelativeSD != NULL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeSD);
+        }
+    }
+
+    return Success;
+}
+
+
+/**
+ * @brief
+ * Changes the object security information of a process
+ * and thread that belongs to the process with new security
+ * data, basically by replacing the previous security descriptor
+ * with a new one.
+ *
+ * @param[in] ProcessHandle
+ * A handle to a valid process of which security information is
+ * to be changed by setting up a new security descriptor.
+ *
+ * @param[in] ThreadHandle
+ * A handle to a valid thread of which security information is
+ * to be changed by setting up a new security descriptor.
+ *
+ * @param[in] ProcessSecurity
+ * A pointer to a security descriptor that is for the process.
+ *
+ * @param[in] ThreadSecurity
+ * A pointer to a security descriptor that is for the thread.
+ *
+ * @return
+ * Return TRUE if new security information has been set, FALSE
+ * otherwise.
+ */
+static
+BOOL
+InsertProcessSecurityCommon(
+    _In_ HANDLE ProcessHandle,
+    _In_ HANDLE ThreadHandle,
+    _In_ PSECURITY_DESCRIPTOR ProcessSecurity,
+    _In_ PSECURITY_DESCRIPTOR ThreadSecurity)
+{
+    /* Set new security data for the process */
+    if (!SetKernelObjectSecurity(ProcessHandle,
+                                 DACL_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION,
+                                 ProcessSecurity))
+    {
+        ERR("InsertProcessSecurityCommon(): Failed to set security for process (error code %d)\n", GetLastError());
+        return FALSE;
+    }
+
+    /* Set new security data for the thread */
+    if (!SetKernelObjectSecurity(ThreadHandle,
+                                 DACL_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION,
+                                 ThreadSecurity))
+    {
+        ERR("InsertProcessSecurityCommon(): Failed to set security for thread (error code %d)\n", GetLastError());
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/**
+ * @brief
  * Sets a primary token to the newly created process.
  * The primary token that gets assigned to is a token
  * whose security context is associated with the logged
@@ -267,6 +607,20 @@ InsertTokenToProcessCommon(
  * if the process wasn't created in a suspended way
  * and if not the function will resume the main thread.
  *
+ * @param[in] lpProcessAttributes
+ * A pointer to process attributes. This function uses
+ * this parameter to gather the security descriptor,
+ * if ever present. If it is, this descriptor takes
+ * precedence over the default one when setting
+ * new security information to the process.
+ *
+ * @param[in] lpThreadAttributes
+ * A pointer to thread attributes. This function uses
+ * this parameter to gather the security descriptor,
+ * if ever present. If it is, this descriptor takes
+ * precedence over the default one when setting
+ * new security information to the thread.
+ *
  * @param[in,out] lpProcessInformation
  * A pointer to a structure that contains process creation
  * information data. Such pointer contains the process
@@ -291,6 +645,8 @@ BOOL
 CreateProcessAsUserCommon(
     _In_opt_ HANDLE hToken,
     _In_ DWORD dwCreationFlags,
+    _In_opt_ LPSECURITY_ATTRIBUTES lpProcessAttributes,
+    _In_opt_ LPSECURITY_ATTRIBUTES lpThreadAttributes,
     _Inout_ LPPROCESS_INFORMATION lpProcessInformation)
 {
     NTSTATUS Status = STATUS_SUCCESS, StatusOnExit;
@@ -298,6 +654,7 @@ CreateProcessAsUserCommon(
     TOKEN_TYPE Type;
     ULONG ReturnLength;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    PSECURITY_DESCRIPTOR DefaultSd = NULL, ProcessSd, ThreadSd;
     HANDLE hTokenDup = NULL;
     HANDLE OriginalImpersonationToken = NULL;
     HANDLE NullToken = NULL;
@@ -367,12 +724,27 @@ CreateProcessAsUserCommon(
             }
         }
 
-        /* Duplicate the token for this new process */
+        /*
+         * Create a security descriptor that will be common for the
+         * newly created process on behalf of the context user.
+         */
+        if (!CreateDefaultProcessSecurityCommon(hToken, &DefaultSd))
+        {
+            ERR("Failed to create common security descriptor for the token for new process!\n");
+            Success = FALSE;
+            goto Quit;
+        }
+
+        /*
+         * Duplicate the token for this new process. This token
+         * object will get a default security descriptor that we
+         * have created ourselves in ADVAPI32.
+         */
         InitializeObjectAttributes(&ObjectAttributes,
                                    NULL,
                                    0,
                                    NULL,
-                                   NULL); // FIXME: Use a valid SecurityDescriptor!
+                                   DefaultSd);
         Status = NtDuplicateToken(hToken,
                                   0,
                                   &ObjectAttributes,
@@ -452,6 +824,53 @@ CreateProcessAsUserCommon(
          * this user.
          */
 
+        /*
+         * As we have successfully set the token into the process now
+         * it is time that we set up new security information for both
+         * the process and its thread as well, that is, these securable
+         * objects will grant a security descriptor. The security descriptors
+         * provided by the caller take precedence so we should use theirs
+         * if possible in this case. Otherwise both the process and thread
+         * will receive the default security descriptor that we have created
+         * ourselves.
+         *
+         * BEAR IN MIND!!! AT THE MOMENT when these securable objects get new
+         * security information, the process (and the thread) can't be opened
+         * by the creator anymore as the new owner will take in charge of
+         * the process and future objects that are going to be created within
+         * the process. For further information in regard of the documentation
+         * see https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessasuserw.
+         */
+        if (lpProcessAttributes && lpProcessAttributes->lpSecurityDescriptor)
+        {
+            ProcessSd = lpProcessAttributes->lpSecurityDescriptor;
+        }
+        else
+        {
+            ProcessSd = DefaultSd;
+        }
+
+        if (lpThreadAttributes && lpThreadAttributes->lpSecurityDescriptor)
+        {
+            ThreadSd = lpThreadAttributes->lpSecurityDescriptor;
+        }
+        else
+        {
+            ThreadSd = DefaultSd;
+        }
+
+        /* Set new security info to the process and thread now */
+        if (!InsertProcessSecurityCommon(lpProcessInformation->hProcess,
+                                         lpProcessInformation->hThread,
+                                         ProcessSd,
+                                         ThreadSd))
+        {
+            ERR("Failed to set new security information for process and thread!\n");
+            NtClose(hTokenDup);
+            Success = FALSE;
+            goto Quit;
+        }
+
         /* Close the duplicated token */
         NtClose(hTokenDup);
         Success = TRUE;
@@ -507,6 +926,12 @@ Quit:
         ResumeThread(lpProcessInformation->hThread);
     }
 
+    /* Free the security descriptor from memory */
+    if (DefaultSd != NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DefaultSd);
+    }
+
     return Success;
 }
 
@@ -553,6 +978,8 @@ CreateProcessAsUserA(
     /* Call the helper function */
     return CreateProcessAsUserCommon(hToken,
                                      dwCreationFlags,
+                                     lpProcessAttributes,
+                                     lpThreadAttributes,
                                      lpProcessInformation);
 }
 
@@ -599,6 +1026,8 @@ CreateProcessAsUserW(
     /* Call the helper function */
     return CreateProcessAsUserCommon(hToken,
                                      dwCreationFlags,
+                                     lpProcessAttributes,
+                                     lpThreadAttributes,
                                      lpProcessInformation);
 }
 
