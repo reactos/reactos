@@ -567,7 +567,7 @@ USHORT
 NTAPI
 CmpNameSize(
     IN PHHIVE Hive,
-    IN PUNICODE_STRING Name
+    IN PCUNICODE_STRING Name
 );
 
 USHORT
@@ -582,7 +582,7 @@ NTAPI
 CmpCopyName(
     IN PHHIVE Hive,
     OUT PWCHAR Destination,
-    IN PUNICODE_STRING Source
+    IN PCUNICODE_STRING Source
 );
 
 VOID
@@ -599,7 +599,7 @@ NTAPI
 CmpFindNameInList(
     IN PHHIVE Hive,
     IN PCHILD_LIST ChildList,
-    IN PUNICODE_STRING Name,
+    IN PCUNICODE_STRING Name,
     OUT PULONG ChildIndex OPTIONAL,
     OUT PHCELL_INDEX CellIndex
 );
@@ -613,7 +613,7 @@ NTAPI
 CmpFindValueByName(
     IN PHHIVE Hive,
     IN PCM_KEY_NODE KeyNode,
-    IN PUNICODE_STRING Name
+    IN PCUNICODE_STRING Name
 );
 
 PCELL_DATA

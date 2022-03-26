@@ -98,7 +98,7 @@ HCELL_INDEX
 NTAPI
 CmpFindValueByName(IN PHHIVE Hive,
                    IN PCM_KEY_NODE KeyNode,
-                   IN PUNICODE_STRING Name)
+                   IN PCUNICODE_STRING Name)
 {
     HCELL_INDEX CellIndex;
 

@@ -923,7 +923,7 @@ NTAPI
 CmpAddToLeaf(IN PHHIVE Hive,
              IN HCELL_INDEX LeafCell,
              IN HCELL_INDEX NewKey,
-             IN PUNICODE_STRING Name)
+             IN PCUNICODE_STRING Name)
 {
     PCM_KEY_INDEX Leaf;
     PCM_KEY_FAST_INDEX FastLeaf;
@@ -1265,7 +1265,7 @@ HCELL_INDEX
 NTAPI
 CmpSelectLeaf(IN PHHIVE Hive,
               IN PCM_KEY_NODE KeyNode,
-              IN PUNICODE_STRING Name,
+              IN PCUNICODE_STRING Name,
               IN HSTORAGE_TYPE Type,
               IN PHCELL_INDEX *RootCell)
 {
