@@ -14,11 +14,20 @@
 
 /* GLOBALS *******************************************************************/
 
+extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
 HalpSetupProcessorsTable(
     _In_ UINT32 NTProcessorNumber)
 {
-    UNIMPLEMENTED;
+    PKPRCB CurrentPrcb;
+
+    /*
+     * Link the Prcb of the current CPU to
+     * the current CPUs entry in the global ProcessorIdentity
+     */
+    CurrentPrcb = KeGetCurrentPrcb();
+    HalpProcessorIdentity[NTProcessorNumber].ProcessorPrcb = CurrentPrcb;
 }
