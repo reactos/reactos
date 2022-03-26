@@ -129,7 +129,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot","AlternateShell",2,"cmd.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\AppMgmt","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Base","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Boot Bus Extender","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Boot file system","",0x00000000,"Driver Group"
+HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Boot File System","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\CryptSvc","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\DcomLaunch","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\dmadmin","",0x00000000,"Service"
@@ -173,7 +173,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\AFD","",0x00000000,"Serv
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\AppMgmt","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Base","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Boot Bus Extender","",0x00000000,"Driver Group"
-HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Boot file system","",0x00000000,"Driver Group"
+HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Boot File System","",0x00000000,"Driver Group"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Browser","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\CryptSvc","",0x00000000,"Service"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\DcomLaunch","",0x00000000,"Service"
@@ -1655,7 +1655,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager"
 
 ; Filesystem recognizer driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Group",0x00000000,"Boot file system"
+HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Group",0x00000000,"Boot File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ImagePath",0x00020000,"system32\drivers\fs_rec.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
