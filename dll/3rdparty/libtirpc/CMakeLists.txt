@@ -2,7 +2,7 @@ spec2def(libtirpc.dll libtirpc/libtirpc.spec ADD_IMPORTLIB)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-add_definitions(-DUNICODE -D_WIN32 -DPORTMAP -Dstrdup=_strdup)
+add_definitions(-DUNICODE -D_WIN32 -DPORTMAP -Dstrdup=_strdup -D_CRT_NONSTDC_NO_DEPRECATE=1)
 
 include_directories(${REACTOS_SOURCE_DIR}/dll/3rdparty/libtirpc/tirpc)
 
@@ -94,6 +94,7 @@ add_library(libtirpc SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/libtirpc.def)
 
 if(MSVC)
+    add_target_compile_flags(libtirpc "/wd4101 /wd4133 /wd4473 /wd4477")
 else()
     # FIXME: Tons of warnings.
     add_target_compile_flags(libtirpc "-w")
