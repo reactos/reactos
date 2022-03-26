@@ -77,7 +77,6 @@ private:
     INT   m_selectedItem;
     DWORD m_selectedItemFlags;
 
-    BOOL m_isLButtonDown;
     BOOL m_movedSinceDown;
     HWND m_windowAtDown;
 
