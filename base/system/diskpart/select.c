@@ -157,6 +157,63 @@ SelectPartition(
 }
 
 
+static
+VOID
+SelectVolume(
+    INT argc,
+    LPWSTR *argv)
+{
+    PLIST_ENTRY Entry;
+    PVOLENTRY VolumeEntry;
+    LONG lValue;
+    LPWSTR endptr = NULL;
+
+    DPRINT("SelectVolume()\n");
+
+    if (argc > 3)
+    {
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+        return;
+    }
+
+    if (argc == 2)
+    {
+        if (CurrentDisk == NULL)
+            ConResPuts(StdOut, IDS_SELECT_NO_VOLUME);
+        else
+            ConResPrintf(StdOut, IDS_SELECT_VOLUME, CurrentVolume->VolumeNumber);
+        return;
+    }
+
+    lValue = wcstol(argv[2], &endptr, 10);
+    if (((lValue == 0) && (endptr == argv[2])) ||
+        (lValue < 0))
+    {
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+        return;
+    }
+
+    CurrentVolume = NULL;
+
+    Entry = VolumeListHead.Flink;
+    while (Entry != &VolumeListHead)
+    {
+        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+        if (VolumeEntry->VolumeNumber == (ULONG)lValue)
+        {
+            CurrentVolume = VolumeEntry;
+            ConResPrintf(StdOut, IDS_SELECT_VOLUME, CurrentVolume->VolumeNumber);
+            return;
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    ConResPuts(StdErr, IDS_SELECT_VOLUME_INVALID);
+}
+
+
 BOOL
 select_main(
     INT argc,
@@ -174,6 +231,8 @@ select_main(
         SelectDisk(argc, argv);
     else if (!wcsicmp(argv[1], L"partition"))
         SelectPartition(argc, argv);
+    else if (!wcsicmp(argv[1], L"volume"))
+        SelectVolume(argc, argv);
     else
         ConResPuts(StdOut, IDS_HELP_CMD_SELECT);
 

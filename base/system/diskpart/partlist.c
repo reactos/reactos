@@ -69,9 +69,11 @@ typedef struct _PARTITION_SECTOR
 
 LIST_ENTRY DiskListHead;
 LIST_ENTRY BiosDiskListHead;
+LIST_ENTRY VolumeListHead;
 
 PDISKENTRY CurrentDisk = NULL;
 PPARTENTRY CurrentPartition = NULL;
+PVOLENTRY  CurrentVolume = NULL;
 
 
 /* FUNCTIONS ******************************************************************/
@@ -1170,6 +1172,139 @@ DestroyPartitionList(VOID)
         BiosDiskEntry = CONTAINING_RECORD(Entry, BIOSDISKENTRY, ListEntry);
 
         RtlFreeHeap(RtlGetProcessHeap(), 0, BiosDiskEntry);
+    }
+}
+
+
+static
+VOID
+AddVolumeToList(
+    ULONG ulVolumeNumber,
+    PWSTR pszVolumeName)
+{
+    PVOLENTRY VolumeEntry;
+
+    WCHAR szPathNames[256];
+    DWORD dwLength;
+    WCHAR szVolumeName[MAX_PATH + 1];
+    WCHAR szFilesystem[MAX_PATH + 1];
+
+
+    VolumeEntry = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  sizeof(VOLENTRY));
+    if (VolumeEntry == NULL)
+    {
+        return;
+    }
+
+
+    if (GetVolumePathNamesForVolumeNameW(pszVolumeName,
+                                     szPathNames,
+                                     256,
+                                     &dwLength))
+    {
+        VolumeEntry->DriveLetter = szPathNames[0];
+
+        if (GetVolumeInformationW(szPathNames,
+                              szVolumeName,
+                              MAX_PATH + 1,
+                              NULL, //  [out, optional] LPDWORD lpVolumeSerialNumber,
+                              NULL, //  [out, optional] LPDWORD lpMaximumComponentLength,
+                              NULL, //  [out, optional] LPDWORD lpFileSystemFlags,
+                              szFilesystem,
+                              MAX_PATH + 1))
+        {
+            VolumeEntry->pszLabel = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                    0,
+                                                    (wcslen(szVolumeName) + 1) * sizeof(WCHAR));
+            if (VolumeEntry->pszLabel)
+                wcscpy(VolumeEntry->pszLabel, szVolumeName);
+
+            VolumeEntry->pszFilesystem = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                         0,
+                                                         (wcslen(szFilesystem) + 1) * sizeof(WCHAR));
+            if (VolumeEntry->pszFilesystem)
+                wcscpy(VolumeEntry->pszFilesystem, szFilesystem);
+
+            VolumeEntry->DriveType = GetDriveType(szPathNames);
+
+            GetDiskFreeSpaceExW(szPathNames,
+                                NULL, //  [out, optional] PULARGE_INTEGER lpFreeBytesAvailableToCaller,
+                                &VolumeEntry->Size, //  [out, optional] PULARGE_INTEGER lpTotalNumberOfBytes,
+                                NULL //    [out, optional] PULARGE_INTEGER lpTotalNumberOfFreeBytes
+                                );
+        }
+    }
+
+    VolumeEntry->VolumeNumber = ulVolumeNumber;
+    wcscpy(VolumeEntry->VolumeName, pszVolumeName);
+
+    InsertTailList(&VolumeListHead,
+                   &VolumeEntry->ListEntry);
+}
+
+
+NTSTATUS
+CreateVolumeList(VOID)
+{
+    HANDLE hVolume = INVALID_HANDLE_VALUE;
+    WCHAR szVolumeName[MAX_PATH];
+    ULONG ulVolumeNumber = 0;
+    BOOL Success;
+
+    CurrentVolume = NULL;
+
+    InitializeListHead(&VolumeListHead);
+
+    hVolume = FindFirstVolumeW(szVolumeName, ARRAYSIZE(szVolumeName));
+    if (hVolume == INVALID_HANDLE_VALUE)
+    {
+
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    AddVolumeToList(ulVolumeNumber++, szVolumeName);
+
+    for (;;)
+    {
+        Success = FindNextVolumeW(hVolume, szVolumeName, ARRAYSIZE(szVolumeName));
+        if (!Success)
+        {
+            break;
+        }
+
+        AddVolumeToList(ulVolumeNumber++, szVolumeName);
+    }
+
+    FindVolumeClose(hVolume);
+
+    return STATUS_SUCCESS;
+}
+
+
+VOID
+DestroyVolumeList(VOID)
+{
+    PLIST_ENTRY Entry;
+    PVOLENTRY VolumeEntry;
+
+    CurrentVolume = NULL;
+
+    /* Release disk and partition info */
+    while (!IsListEmpty(&VolumeListHead))
+    {
+        Entry = RemoveHeadList(&VolumeListHead);
+        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+        if (VolumeEntry->pszLabel)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry->pszLabel);
+
+        if (VolumeEntry->pszFilesystem)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry->pszFilesystem);
+
+        /* Release disk entry */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry);
     }
 }
 

@@ -170,14 +170,32 @@ typedef struct _DISKENTRY
 
 } DISKENTRY, *PDISKENTRY;
 
+typedef struct _VOLENTRY
+{
+    LIST_ENTRY ListEntry;
+
+    ULONG VolumeNumber;
+    WCHAR VolumeName[MAX_PATH];
+
+    WCHAR DriveLetter;
+
+    PWSTR pszLabel;
+    PWSTR pszFilesystem;
+    UINT DriveType;
+    ULARGE_INTEGER Size;
+
+} VOLENTRY, *PVOLENTRY;
+
 
 /* GLOBAL VARIABLES ***********************************************************/
 
 extern LIST_ENTRY DiskListHead;
 extern LIST_ENTRY BiosDiskListHead;
+extern LIST_ENTRY VolumeListHead;
 
 extern PDISKENTRY CurrentDisk;
 extern PPARTENTRY CurrentPartition;
+extern PVOLENTRY  CurrentVolume;
 
 /* PROTOTYPES *****************************************************************/
 
@@ -281,6 +299,12 @@ CreatePartitionList(VOID);
 
 VOID
 DestroyPartitionList(VOID);
+
+NTSTATUS
+CreateVolumeList(VOID);
+
+VOID
+DestroyVolumeList(VOID);
 
 /* recover.c */
 BOOL recover_main(INT argc, LPWSTR *argv);

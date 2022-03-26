@@ -47,7 +47,9 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c 磁碟分割 %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\n沒有可列出分區的磁碟。\n請選擇一個磁碟，再試一次。\n\n"
-    IDS_LIST_VOLUME_HEAD "  磁碟區 ###  Ltr  標籤\n"
+    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
+    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "  Volume %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
@@ -69,6 +71,7 @@ BEGIN
     IDS_SELECT_PARTITION_INVALID "\n無效的磁碟分割。\n\n"
     IDS_SELECT_NO_VOLUME "\n目前沒有選擇磁碟區。\n請選擇一個磁碟，然後再試一次。\n\n"
     IDS_SELECT_VOLUME "\n磁碟區 %lu 現在是所選的磁碟區。\n\n"
+    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
 END
 
 /* Disk Status */

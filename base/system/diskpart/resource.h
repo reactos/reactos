@@ -40,6 +40,8 @@
 #define IDS_LIST_PARTITION_FORMAT      3305
 #define IDS_LIST_PARTITION_NO_DISK     3306
 #define IDS_LIST_VOLUME_HEAD           3307
+#define IDS_LIST_VOLUME_LINE           3308
+#define IDS_LIST_VOLUME_FORMAT         3309
 
 #define IDS_RESCAN_START               4100
 #define IDS_RESCAN_END                 4101
@@ -53,6 +55,7 @@
 #define IDS_SELECT_PARTITION_INVALID   4406
 #define IDS_SELECT_NO_VOLUME           4407
 #define IDS_SELECT_VOLUME              4408
+#define IDS_SELECT_VOLUME_INVALID      4409
 
 #define IDS_STATUS_YES          31
 #define IDS_STATUS_NO           32

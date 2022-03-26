@@ -47,7 +47,9 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\n这里没有要列出分区的磁盘。\n请选择一个磁盘，再试一次。\n\n"
-    IDS_LIST_VOLUME_HEAD "  卷 ###  Ltr  标签\n"
+    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
+    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "  Volume %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
@@ -69,6 +71,7 @@ BEGIN
     IDS_SELECT_PARTITION_INVALID "\n无效的分区。\n\n"
     IDS_SELECT_NO_VOLUME "\n没有当前所选的卷。\n请选择一个磁盘，再试一次。\n\n"
     IDS_SELECT_VOLUME "\n卷 %lu 现在是所选的卷。\n\n"
+    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
 END
 
 /* Disk Status */
