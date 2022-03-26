@@ -18,6 +18,19 @@ typedef struct _PROCESSOR_IDENTITY
 
 } PROCESSOR_IDENTITY, *PPROCESSOR_IDENTITY;
 
+/* This table is counter of the overall APIC constants acquired from madt */
+typedef struct _HALP_APIC_INFO_TABLE
+{
+    ULONG ApicMode;
+    ULONG ProcessorCount; /* Count of all physical cores, This includes BSP */
+    ULONG IOAPICCount;
+    ULONG LocalApicPA;                // The 32-bit physical address at which each processor can access its local interrupt controller
+    ULONG IoApicVA[256];
+    ULONG IoApicPA[256];
+    ULONG IoApicIrqBase[256]; // Global system interrupt base
+
+} HALP_APIC_INFO_TABLE, *PHALP_APIC_INFO_TABLE;
+
 VOID
 HalpParseApicTables(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock);

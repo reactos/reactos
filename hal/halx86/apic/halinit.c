@@ -25,13 +25,14 @@ HalpInitProcessor(
     IN ULONG ProcessorNumber,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+#ifdef CONFIG_SMP
     if (ProcessorNumber == 0)
     {
-        /* APIC tables should always be parsed once before touching APIC */
+#endif
         HalpParseApicTables(LoaderBlock);
+#ifdef CONFIG_SMP
     }
 
-#ifdef CONFIG_SMP
     HalpSetupProcessorsTable(ProcessorNumber);
 #endif
 
@@ -52,6 +53,8 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             (HalpBuildType & PRCB_BUILD_UNIPROCESSOR) ? "UP" : "SMP",
             (HalpBuildType & PRCB_BUILD_DEBUG) ? "DBG" : "REL");
 
+    HalpPrintApicTables();
+
     /* Enable clock interrupt handler */
     HalpEnableInterruptHandler(IDT_INTERNAL,
                                0,
@@ -59,9 +62,6 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                CLOCK2_LEVEL,
                                HalpClockInterrupt,
                                Latched);
-#if DBG
-    HalpPrintApicTables();
-#endif
 }
 
 VOID
