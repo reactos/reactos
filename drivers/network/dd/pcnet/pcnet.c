@@ -1223,7 +1223,7 @@ MiniportSend(
   Adapter->CurrentTransmitEndIndex %= Adapter->BufferCount;
 
   Desc->FLAGS = TD1_OWN | TD1_STP | TD1_ENP;
-  Desc->BCNT = 0xf000 | -TotalPacketLength;
+  Desc->BCNT = 0xf000 | -(INT)TotalPacketLength;
 
   NdisMSynchronizeWithInterrupt(&Adapter->InterruptObject, MiSyncStartTransmit, Adapter);
 
