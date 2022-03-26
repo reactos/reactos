@@ -28,3 +28,18 @@ HalpParseApicTables(
 {
     UNIMPLEMENTED;
 }
+
+VOID
+HalpPrintApicTables(VOID)
+{ 
+    UINT32 i;
+
+    DPRINT1("HAL has detected a physical processor count of: %d\n", HalpApicInfoTable.ProcessorCount);
+    for (i = 0; i < HalpApicInfoTable.ProcessorCount; i++)
+    {
+        DPRINT1("Information about the following processor is for processors number: %d\n"
+                "   The BSPCheck is set to: %X\n"
+                "   The LapicID is set to: %X\n",
+                i, HalpProcessorIdentity[i].BSPCheck, HalpProcessorIdentity[i].LapicId);
+    }
+}

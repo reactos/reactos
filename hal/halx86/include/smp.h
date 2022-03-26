@@ -25,3 +25,6 @@ HalpParseApicTables(
 VOID
 HalpSetupProcessorsTable(
     _In_ UINT32 NTProcessorNumber);
+
+VOID
+HalpPrintApicTables(VOID);
