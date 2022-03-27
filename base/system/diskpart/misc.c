@@ -11,6 +11,28 @@
 /* FUNCTIONS ******************************************************************/
 
 BOOL
+IsDecString(
+    _In_ PWSTR pszDecString)
+{
+    PWSTR ptr;
+
+    if ((pszDecString == NULL) || (*pszDecString == UNICODE_NULL))
+        return FALSE;
+
+    ptr = pszDecString;
+    while (*ptr != UNICODE_NULL)
+    {
+        if (!iswdigit(*ptr))
+            return FALSE;
+
+        ptr++;
+    }
+
+    return TRUE;
+}
+
+
+BOOL
 IsHexString(
     _In_ PWSTR pszHexString)
 {

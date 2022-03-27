@@ -19,9 +19,7 @@ UniqueIdDisk(
     _In_ INT argc,
     _In_ LPWSTR *argv)
 {
-    ULONG ulLength;
-    ULONG ulValue;
-    PWSTR startptr = NULL, endptr = NULL;
+    ULONG ulLength, ulValue;
 
     if (CurrentDisk == NULL)
     {
@@ -39,31 +37,30 @@ UniqueIdDisk(
 
     if (argc != 3)
     {
-        ConResPuts(StdOut, IDS_ERROR_INVALID_ARGS);
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
         return;
     }
 
     ulLength = wcslen(argv[2]);
     if ((ulLength <= 3) || (ulLength > 11))
     {
-        ConResPuts(StdOut, IDS_ERROR_INVALID_ARGS);
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
         return;
     }
 
     if (!HasPrefix(argv[2], L"ID="))
     {
-        ConResPuts(StdOut, IDS_ERROR_INVALID_ARGS);
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
         return;
     }
 
-    startptr = &argv[2][3];
-    if (!IsHexString(startptr))
+    if (!IsHexString(&argv[2][3]))
     {
-        ConResPuts(StdOut, IDS_ERROR_INVALID_ARGS);
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
         return;
     }
 
-    ulValue = wcstoul(startptr, &endptr, 16);
+    ulValue = wcstoul(&argv[2][3], NULL, 16);
     if ((ulValue == 0) && (errno == ERANGE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);

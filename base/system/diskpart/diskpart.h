@@ -287,6 +287,10 @@ BOOL merge_main(INT argc, LPWSTR *argv);
 
 /* misc.c */
 BOOL
+IsDecString(
+    _In_ PWSTR pszDecString);
+
+BOOL
 IsHexString(
     _In_ PWSTR pszHexString);
 
