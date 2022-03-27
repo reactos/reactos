@@ -20,12 +20,12 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disc"
+    IDS_DETAIL_INFO_DISK_ID "Disc ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Tip"
     IDS_DETAIL_INFO_STATUS "Stare"
-    IDS_DETAIL_INFO_PATH "Cale"
-    IDS_DETAIL_INFO_TARGET "Țintă"
-    IDS_DETAIL_INFO_LUN_ID "LUN ID"
+    IDS_DETAIL_INFO_PATH "Cale   : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Țintă  : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "LUN ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Localizat în"
     IDS_DETAIL_INFO_CURR_RO_STATE "Stare curentă nemodificabilă"
     IDS_DETAIL_INFO_RO "Nemodificabil"
@@ -34,6 +34,11 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Disc cu fișier de hibernare"
     IDS_DETAIL_INFO_CRASH_DSK "Disc cu fișier «crashdump»"
     IDS_DETAIL_INFO_CLST_DSK "Disc în «cluster»"
+    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
+    IDS_DETAIL_PARTITION_TYPE "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
 END
 
 /* Detail header titles */

@@ -22,12 +22,12 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disk"
+    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Tipi"
     IDS_DETAIL_INFO_STATUS "Gjendja"
-    IDS_DETAIL_INFO_PATH "Rrugë"
-    IDS_DETAIL_INFO_TARGET "Objektivi"
-    IDS_DETAIL_INFO_LUN_ID "LUN ID"
+    IDS_DETAIL_INFO_PATH "Path   : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Target : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Rruga e vendndodhjes"
     IDS_DETAIL_INFO_CURR_RO_STATE "Read-only Gjendja aktuale"
     IDS_DETAIL_INFO_RO "Read-only"
@@ -36,6 +36,11 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Hibernimi i dokumeteve Disk"
     IDS_DETAIL_INFO_CRASH_DSK "Hedhja e te dhenave Disk"
     IDS_DETAIL_INFO_CLST_DSK "Grupimet ne Disk"
+    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
+    IDS_DETAIL_PARTITION_TYPE "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
 END
 
 /* Detail header titles */

@@ -21,12 +21,12 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "磁碟"
+    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "類型"
     IDS_DETAIL_INFO_STATUS "狀態"
-    IDS_DETAIL_INFO_PATH "路徑"
-    IDS_DETAIL_INFO_TARGET "目標"
-    IDS_DETAIL_INFO_LUN_ID "LUN ID"
+    IDS_DETAIL_INFO_PATH "Path   : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Target : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "位置路徑"
     IDS_DETAIL_INFO_CURR_RO_STATE "當前的唯讀狀態"
     IDS_DETAIL_INFO_RO "唯讀模式"
@@ -35,6 +35,11 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "休眠檔案磁碟"
     IDS_DETAIL_INFO_CRASH_DSK "損毀傾印磁碟"
     IDS_DETAIL_INFO_CLST_DSK "叢集磁碟"
+    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
+    IDS_DETAIL_PARTITION_TYPE "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
 END
 
 /* Detail header titles */

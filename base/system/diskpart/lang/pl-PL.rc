@@ -18,12 +18,12 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Dysk"
+    IDS_DETAIL_INFO_DISK_ID "Dysk ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Typ"
     IDS_DETAIL_INFO_STATUS "Stan"
-    IDS_DETAIL_INFO_PATH "Ścieżka"
-    IDS_DETAIL_INFO_TARGET "Docelowy"
-    IDS_DETAIL_INFO_LUN_ID "Identyfikator LUN"
+    IDS_DETAIL_INFO_PATH "Ścieżka           : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Docelowy          : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "Identyfikator LUN : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Ścieżka lokalizacji"
     IDS_DETAIL_INFO_CURR_RO_STATE "Aktualny stan Read-only"
     IDS_DETAIL_INFO_RO "Tylko do odczytu"
@@ -32,6 +32,11 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Dysk pliku hibernacji"
     IDS_DETAIL_INFO_CRASH_DSK "Dysk zrzutu awarii systemu"
     IDS_DETAIL_INFO_CLST_DSK "Dysk klastrowany"
+    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
+    IDS_DETAIL_PARTITION_TYPE "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
 END
 
 /* Detail header titles */

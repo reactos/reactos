@@ -20,12 +20,12 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disk"
+    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Tür"
     IDS_DETAIL_INFO_STATUS "Durum"
-    IDS_DETAIL_INFO_PATH "Yol"
-    IDS_DETAIL_INFO_TARGET "Varış"
-    IDS_DETAIL_INFO_LUN_ID "LUN ID"
+    IDS_DETAIL_INFO_PATH "Path   : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Target : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Konum Yolu"
     IDS_DETAIL_INFO_CURR_RO_STATE "Şimdiki Yalnızca Okunur Durumu"
     IDS_DETAIL_INFO_RO "Yalnızca Okunur"
@@ -34,6 +34,11 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Hazırda Bekletme Dosyası Diski"
     IDS_DETAIL_INFO_CRASH_DSK "Çöküş Dökümü Diski"
     IDS_DETAIL_INFO_CLST_DSK "Kümelenmiş Disk"
+    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
+    IDS_DETAIL_PARTITION_TYPE "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
 END
 
 /* Detail header titles */
