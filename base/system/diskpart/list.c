@@ -13,15 +13,6 @@
 
 /* FUNCTIONS ******************************************************************/
 
-ULONGLONG
-RoundingDivide(
-   IN ULONGLONG Dividend,
-   IN ULONGLONG Divisor)
-{
-    return (Dividend + Divisor / 2) / Divisor;
-}
-
-
 static
 VOID
 ListDisk(VOID)

@@ -14,36 +14,6 @@
 /* FUNCTIONS ******************************************************************/
 
 static
-BOOL
-isHexString(
-    _In_ PWSTR pszHexString)
-{
-    PWSTR ptr;
-
-    ptr = pszHexString;
-    while (*ptr != UNICODE_NULL)
-    {
-        if (!iswxdigit(*ptr))
-            return FALSE;
-
-        ptr++;
-    }
-
-    return TRUE;
-}
-
-
-static
-BOOL
-hasPrefix(
-    _In_ PWSTR pszString,
-    _In_ PWSTR pszPrefix)
-{
-    return (_wcsnicmp(pszString, pszPrefix, wcslen(pszPrefix)) == 0);
-}
-
-
-static
 VOID
 UniqueIdDisk(
     _In_ INT argc,
@@ -80,14 +50,14 @@ UniqueIdDisk(
         return;
     }
 
-    if (!hasPrefix(argv[2], L"ID="))
+    if (!HasPrefix(argv[2], L"ID="))
     {
         ConResPuts(StdOut, IDS_ERROR_INVALID_ARGS);
         return;
     }
 
     startptr = &argv[2][3];
-    if (isHexString(startptr) == FALSE)
+    if (!IsHexString(startptr))
     {
         ConResPuts(StdOut, IDS_ERROR_INVALID_ARGS);
         return;

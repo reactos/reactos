@@ -282,13 +282,24 @@ VOID InterpretMain(VOID);
 /* list.c */
 BOOL list_main(INT argc, LPWSTR *argv);
 
-ULONGLONG
-RoundingDivide(
-   _In_ ULONGLONG Dividend,
-   _In_ ULONGLONG Divisor);
-
 /* merge.c */
 BOOL merge_main(INT argc, LPWSTR *argv);
+
+/* misc.c */
+BOOL
+IsHexString(
+    _In_ PWSTR pszHexString);
+
+BOOL
+HasPrefix(
+    _In_ PWSTR pszString,
+    _In_ PWSTR pszPrefix);
+
+ULONGLONG
+RoundingDivide(
+    _In_ ULONGLONG Dividend,
+    _In_ ULONGLONG Divisor);
+
 
 /* offline.c */
 BOOL offline_main(INT argc, LPWSTR *argv);
