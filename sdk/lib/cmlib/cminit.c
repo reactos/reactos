@@ -87,7 +87,7 @@ CmpPrepareIndexOfKeys(
     {
         for (i = 0; i < IndexCell->Count; i++)
         {
-            PCM_KEY_INDEX SubIndexCell = HvGetCell(RegistryHive, IndexCell->List[i]);
+            PCM_KEY_INDEX SubIndexCell = (PCM_KEY_INDEX)HvGetCell(RegistryHive, IndexCell->List[i]);
             if (SubIndexCell->Signature == CM_KEY_NODE_SIGNATURE)
                 CmpPrepareKey(RegistryHive, (PCM_KEY_NODE)SubIndexCell);
             else
@@ -100,7 +100,7 @@ CmpPrepareIndexOfKeys(
         PCM_KEY_FAST_INDEX HashCell = (PCM_KEY_FAST_INDEX)IndexCell;
         for (i = 0; i < HashCell->Count; i++)
         {
-            PCM_KEY_NODE SubKeyCell = HvGetCell(RegistryHive, HashCell->List[i].Cell);
+            PCM_KEY_NODE SubKeyCell = (PCM_KEY_NODE)HvGetCell(RegistryHive, HashCell->List[i].Cell);
             CmpPrepareKey(RegistryHive, SubKeyCell);
         }
     }
@@ -126,7 +126,7 @@ CmpPrepareKey(
     /* Enumerate and add subkeys */
     if (KeyCell->SubKeyCounts[Stable] > 0)
     {
-        IndexCell = HvGetCell(RegistryHive, KeyCell->SubKeyLists[Stable]);
+        IndexCell = (PCM_KEY_INDEX)HvGetCell(RegistryHive, KeyCell->SubKeyLists[Stable]);
         CmpPrepareIndexOfKeys(RegistryHive, IndexCell);
     }
 }
@@ -137,6 +137,6 @@ CmPrepareHive(
 {
     PCM_KEY_NODE RootCell;
 
-    RootCell = HvGetCell(RegistryHive, RegistryHive->BaseBlock->RootCell);
+    RootCell = (PCM_KEY_NODE)HvGetCell(RegistryHive, RegistryHive->BaseBlock->RootCell);
     CmpPrepareKey(RegistryHive, RootCell);
 }
