@@ -20,6 +20,8 @@
 #include <winreg.h>
 #include <wincon.h>
 
+#include <errno.h>
+
 #include <conutils.h>
 
 /*
