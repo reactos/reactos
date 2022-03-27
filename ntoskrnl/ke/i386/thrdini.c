@@ -427,6 +427,9 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     /* Get the old thread and set its kernel stack */
     OldThread->KernelStack = SwitchFrame;
 
+    /* Set swapbusy to false for the new thread */
+    NewThread->SwapBusy = FALSE;
+
     /* ISRs can change FPU state, so disable interrupts while checking */
     _disable();
 
