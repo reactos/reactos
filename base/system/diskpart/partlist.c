@@ -936,8 +936,9 @@ AddDiskToList(
 
     DiskEntry->DiskNumber = DiskNumber;
     DiskEntry->Port = ScsiAddress.PortNumber;
-    DiskEntry->Bus = ScsiAddress.PathId;
-    DiskEntry->Id = ScsiAddress.TargetId;
+    DiskEntry->PathId = ScsiAddress.PathId;
+    DiskEntry->TargetId = ScsiAddress.TargetId;
+    DiskEntry->Lun = ScsiAddress.Lun;
 
     GetDriverName(DiskEntry);
 

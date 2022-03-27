@@ -152,8 +152,9 @@ typedef struct _DISKENTRY
 
     ULONG DiskNumber;
     USHORT Port;
-    USHORT Bus;
-    USHORT Id;
+    USHORT PathId;
+    USHORT TargetId;
+    USHORT Lun;
 
     /* Has the partition list been modified? */
     BOOLEAN Dirty;
