@@ -384,15 +384,13 @@ VOID CMAPI
 HvFree(
    PHHIVE RegistryHive);
 
-PVOID CMAPI
-HvGetCell(
-   PHHIVE RegistryHive,
-   HCELL_INDEX CellOffset);
+#define HvGetCell(Hive, Cell)   \
+    (Hive)->GetCellRoutine(Hive, Cell)
 
-#define HvReleaseCell(h, c)             \
-do {                                    \
-    if ((h)->ReleaseCellRoutine)        \
-        (h)->ReleaseCellRoutine(h, c);  \
+#define HvReleaseCell(Hive, Cell)               \
+do {                                            \
+    if ((Hive)->ReleaseCellRoutine)             \
+        (Hive)->ReleaseCellRoutine(Hive, Cell); \
 } while(0)
 
 LONG CMAPI
@@ -467,6 +465,11 @@ HvReleaseFreeCellRefArray(
 /*
  * Private functions.
  */
+
+PCELL_DATA CMAPI
+HvpGetCellData(
+    _In_ PHHIVE Hive,
+    _In_ HCELL_INDEX CellIndex);
 
 PHBIN CMAPI
 HvpAddBin(

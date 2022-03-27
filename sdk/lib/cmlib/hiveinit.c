@@ -562,6 +562,11 @@ HvInitialize(
 #endif
     Hive->HiveFlags = HiveFlags & ~HIVE_NOLAZYFLUSH;
 
+    // TODO: The CellRoutines point to different callbacks
+    // depending on the OperationType.
+    Hive->GetCellRoutine = HvpGetCellData;
+    Hive->ReleaseCellRoutine = NULL;
+
     switch (OperationType)
     {
         case HINIT_CREATE:
