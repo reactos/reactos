@@ -146,19 +146,19 @@ CmpFindTagIndex(IN PHHIVE Hive,
     ASSERT(Hive->ReleaseCellRoutine == NULL);
 
     /* Get the tag */
-    Value = HvGetCell(Hive, TagCell);
+    Value = (PCM_KEY_VALUE)HvGetCell(Hive, TagCell);
     ASSERT(Value);
     DriverTag = (PULONG)CmpValueToData(Hive, Value, &Length);
     ASSERT(DriverTag);
 
     /* Get the order array */
-    Node = HvGetCell(Hive, GroupOrderCell);
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, GroupOrderCell);
     ASSERT(Node);
     OrderCell = CmpFindValueByName(Hive, Node, GroupName);
     if (OrderCell == HCELL_NIL) return -2;
 
     /* And read it */
-    TagValue = HvGetCell(Hive, OrderCell);
+    TagValue = (PCM_KEY_VALUE)HvGetCell(Hive, OrderCell);
     CmpGetValueData(Hive, TagValue, &Length, (PVOID*)&TagOrder, &BufferAllocated, &OrderCell);
     ASSERT(TagOrder);
 
@@ -208,7 +208,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
     DriverEntry->FilePath.Buffer = NULL;
 
     /* Get the driver cell */
-    Node = HvGetCell(Hive, DriverCell);
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, DriverCell);
     ASSERT(Node);
 
     /* Get the name from the cell */
@@ -258,7 +258,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
     else
     {
         /* Path name exists, so grab it */
-        Value = HvGetCell(Hive, ValueCell);
+        Value = (PCM_KEY_VALUE)HvGetCell(Hive, ValueCell);
         ASSERT(Value);
 
         /* Allocate and setup the path name */
@@ -297,7 +297,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
     else
     {
         /* Otherwise, read whatever the data says */
-        Value = HvGetCell(Hive, ValueCell);
+        Value = (PCM_KEY_VALUE)HvGetCell(Hive, ValueCell);
         ASSERT(Value);
         ErrorControl = (PULONG)CmpValueToData(Hive, Value, &Length);
         ASSERT(ErrorControl);
@@ -315,7 +315,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
     else
     {
         /* Found it, read the group value */
-        Value = HvGetCell(Hive, ValueCell);
+        Value = (PCM_KEY_VALUE)HvGetCell(Hive, ValueCell);
         ASSERT(Value);
 
         /* Copy it into the node */
@@ -362,13 +362,13 @@ CmpIsLoadType(IN PHHIVE Hive,
     ASSERT(Hive->ReleaseCellRoutine == NULL);
 
     /* Open the start cell */
-    Node = HvGetCell(Hive, Cell);
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
     ASSERT(Node);
     ValueCell = CmpFindValueByName(Hive, Node, &ValueString);
     if (ValueCell == HCELL_NIL) return FALSE;
 
     /* Read the start value */
-    Value = HvGetCell(Hive, ValueCell);
+    Value = (PCM_KEY_VALUE)HvGetCell(Hive, ValueCell);
     ASSERT(Value);
     Data = (PLONG)CmpValueToData(Hive, Value, &Length);
     ASSERT(Data);
@@ -397,7 +397,7 @@ CmpFindDrivers(IN PHHIVE Hive,
     ASSERT(Hive->ReleaseCellRoutine == NULL);
 
     /* Open the control set key */
-    ControlNode = HvGetCell(Hive, ControlSet);
+    ControlNode = (PCM_KEY_NODE)HvGetCell(Hive, ControlSet);
     ASSERT(ControlNode);
 
     /* Get services cell */
@@ -406,7 +406,7 @@ CmpFindDrivers(IN PHHIVE Hive,
     if (ServicesCell == HCELL_NIL) return FALSE;
 
     /* Open services key */
-    ServicesNode = HvGetCell(Hive, ServicesCell);
+    ServicesNode = (PCM_KEY_NODE)HvGetCell(Hive, ServicesCell);
     ASSERT(ServicesNode);
 
     /* Get control cell */
@@ -416,7 +416,7 @@ CmpFindDrivers(IN PHHIVE Hive,
 
     /* Get the group order cell and read it */
     RtlInitUnicodeString(&Name, L"GroupOrderList");
-    Node = HvGetCell(Hive, ControlCell);
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, ControlCell);
     ASSERT(Node);
     GroupOrderCell = CmpFindSubKeyByName(Hive, Node, &Name);
     if (GroupOrderCell == HCELL_NIL) return FALSE;
@@ -426,13 +426,13 @@ CmpFindDrivers(IN PHHIVE Hive,
     {
         /* Open the Safe Boot key */
         RtlInitUnicodeString(&Name, L"SafeBoot");
-        Node = HvGetCell(Hive, ControlCell);
+        Node = (PCM_KEY_NODE)HvGetCell(Hive, ControlCell);
         ASSERT(Node);
         SafeBootCell = CmpFindSubKeyByName(Hive, Node, &Name);
         if (SafeBootCell == HCELL_NIL) return FALSE;
 
         /* Open the correct start key (depending on the mode) */
-        Node = HvGetCell(Hive, SafeBootCell);
+        Node = (PCM_KEY_NODE)HvGetCell(Hive, SafeBootCell);
         ASSERT(Node);
         switch(InitSafeBootMode)
         {
@@ -571,28 +571,28 @@ CmpSortDriverList(IN PHHIVE Hive,
     ASSERT(Hive->ReleaseCellRoutine == NULL);
 
     /* Open the control key */
-    Node = HvGetCell(Hive, ControlSet);
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, ControlSet);
     ASSERT(Node);
     RtlInitUnicodeString(&Name, L"Control");
     Controls = CmpFindSubKeyByName(Hive, Node, &Name);
     if (Controls == HCELL_NIL) return FALSE;
 
     /* Open the service group order */
-    Node = HvGetCell(Hive, Controls);
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, Controls);
     ASSERT(Node);
     RtlInitUnicodeString(&Name, L"ServiceGroupOrder");
     GroupOrder = CmpFindSubKeyByName(Hive, Node, &Name);
     if (GroupOrder == HCELL_NIL) return FALSE;
 
     /* Open the list key */
-    Node = HvGetCell(Hive, GroupOrder);
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, GroupOrder);
     ASSERT(Node);
     RtlInitUnicodeString(&Name, L"list");
     ListCell = CmpFindValueByName(Hive, Node, &Name);
     if (ListCell == HCELL_NIL) return FALSE;
 
     /* Now read the actual list */
-    ListNode = HvGetCell(Hive, ListCell);
+    ListNode = (PCM_KEY_VALUE)HvGetCell(Hive, ListCell);
     ASSERT(ListNode);
     if (ListNode->Type != REG_MULTI_SZ) return FALSE;
 
@@ -736,12 +736,12 @@ CmpIsSafe(IN PHHIVE Hive,
 
     /* Driver key node (mandatory) */
     ASSERT(DriverCell != HCELL_NIL);
-    DriverNode = HvGetCell(Hive, DriverCell);
+    DriverNode = (PCM_KEY_NODE)HvGetCell(Hive, DriverCell);
     ASSERT(DriverNode);
 
     /* Safe boot key node (optional but return TRUE if not present) */
     if(SafeBootCell == HCELL_NIL) return TRUE;
-    SafeBootNode = HvGetCell(Hive, SafeBootCell);
+    SafeBootNode = (PCM_KEY_NODE)HvGetCell(Hive, SafeBootCell);
     if(!SafeBootNode) return FALSE;
 
     /* Search by the name from the group */
@@ -749,7 +749,7 @@ CmpIsSafe(IN PHHIVE Hive,
     CellIndex = CmpFindValueByName(Hive, DriverNode, &Name);
     if(CellIndex != HCELL_NIL)
     {
-        KeyValue = HvGetCell(Hive, CellIndex);
+        KeyValue = (PCM_KEY_VALUE)HvGetCell(Hive, CellIndex);
         ASSERT(KeyValue);
         if (KeyValue->Type == REG_SZ || KeyValue->Type == REG_EXPAND_SZ)
         {
@@ -795,7 +795,7 @@ CmpIsSafe(IN PHHIVE Hive,
     CellIndex = CmpFindValueByName(Hive, DriverNode, &Name);
     if(CellIndex != HCELL_NIL)
     {
-        KeyValue = HvGetCell(Hive, CellIndex);
+        KeyValue = (PCM_KEY_VALUE)HvGetCell(Hive, CellIndex);
         ASSERT(KeyValue);
         if (KeyValue->Type == REG_SZ || KeyValue->Type == REG_EXPAND_SZ)
         {
