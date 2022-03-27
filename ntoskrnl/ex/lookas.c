@@ -20,8 +20,8 @@ LIST_ENTRY ExpPagedLookasideListHead;
 KSPIN_LOCK ExpPagedLookasideListLock;
 LIST_ENTRY ExSystemLookasideListHead;
 LIST_ENTRY ExPoolLookasideListHead;
-GENERAL_LOOKASIDE ExpSmallNPagedPoolLookasideLists[MAXIMUM_PROCESSORS];
-GENERAL_LOOKASIDE ExpSmallPagedPoolLookasideLists[MAXIMUM_PROCESSORS];
+GENERAL_LOOKASIDE ExpSmallNPagedPoolLookasideLists[NUMBER_POOL_LOOKASIDE_LISTS];
+GENERAL_LOOKASIDE ExpSmallPagedPoolLookasideLists[NUMBER_POOL_LOOKASIDE_LISTS];
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -99,7 +99,7 @@ ExpInitLookasideLists(VOID)
     KeInitializeSpinLock(&ExpPagedLookasideListLock);
 
     /* Initialize the system lookaside lists */
-    for (i = 0; i < MAXIMUM_PROCESSORS; i++)
+    for (i = 0; i < NUMBER_POOL_LOOKASIDE_LISTS; i++)
     {
         /* Initialize the non-paged list */
         ExInitializeSystemLookasideList(&ExpSmallNPagedPoolLookasideLists[i],
