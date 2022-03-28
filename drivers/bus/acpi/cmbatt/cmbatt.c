@@ -980,7 +980,7 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     else if (DeviceExtension->State & BATTERY_DISCHARGING)
     {
         /* The battery is discharging, so treat the rate as a negative rate */
-        DeviceExtension->Rate = -DeviceExtension->Rate;
+        DeviceExtension->Rate = -(LONG)DeviceExtension->Rate;
     }
     else if (!(DeviceExtension->State & BATTERY_CHARGING) && (DeviceExtension->Rate))
     {
