@@ -7,6 +7,7 @@
  *
  * Contributors:
  *   Created by Timo Kreuzer <timo.kreuzer@reactos.org>
+ *   Modified by Raymond Czerny <chip@raymisoft.de>
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
  *
@@ -148,9 +149,58 @@ IsActiveSessionCountLimited()
 VERSIONHELPERAPI
 IsReactOS()
 {
-    // FIXME: Find a better method!
-    WCHAR szWinDir[MAX_PATH];
-    GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
-    return (wcsstr(szWinDir, L"ReactOS") != NULL);
+    BOOL bResult = FALSE;
+    BOOL bLibFree = FALSE;
+    HMODULE hMod;
+
+    hMod = GetModuleHandleW(L"shell32");
+    if (hMod == NULL)
+    {
+        hMod = LoadLibraryW(L"shell32");
+        bLibFree = (hMod != NULL);
+    }
+
+    if (hMod)
+    {
+        DWORD dwLen;
+        WCHAR szFullPath[MAX_PATH];
+
+        dwLen = GetModuleFileNameW(hMod, szFullPath, MAX_PATH);
+        if (dwLen)
+        {
+            DWORD dwSize;
+
+            szFullPath[dwLen] = 0; // required by Windows XP
+            dwSize = GetFileVersionInfoSizeW(szFullPath, NULL);
+            if(dwSize)
+            {
+                BOOL bProduct;
+                UINT cchVer = 0;
+                LPCWSTR lszValue = NULL;
+                HANDLE hMem = NULL;
+                LPVOID VerInfo = NULL;
+
+                hMem = GlobalAlloc(GMEM_MOVEABLE, dwSize);
+                VerInfo  = GlobalLock(hMem);
+                GetFileVersionInfoW(szFullPath, 0L, dwSize, VerInfo);
+                bProduct = VerQueryValueW(VerInfo,
+                                          L"\\StringFileInfo\\040904B0\\ProductName",
+                                          (LPVOID)&lszValue,
+                                          &cchVer);
+                if (bProduct)
+                {
+                    bResult = (wcsstr(lszValue, L"ReactOS") != NULL);
+                }
+                GlobalUnlock(hMem);
+                GlobalFree(hMem);
+            }
+        }
+        if (bLibFree)
+        {
+            FreeLibrary(hMod);
+        }
+    }
+
+    return bResult;
 }
 #endif // __REACTOS__
