@@ -150,17 +150,11 @@ VERSIONHELPERAPI
 IsReactOS()
 {
     BOOL bResult = FALSE;
-    BOOL bLibFree = FALSE;
     HMODULE hMod;
 
-    hMod = GetModuleHandleW(L"shell32");
-    if (hMod == NULL)
-    {
-        hMod = LoadLibraryW(L"shell32");
-        bLibFree = (hMod != NULL);
-    }
+    hMod = GetModuleHandleW(L"ntdll");
 
-    if (hMod)
+    if (hMod)   // should always be loaded
     {
         DWORD dwLen;
         WCHAR szFullPath[MAX_PATH];
@@ -172,7 +166,7 @@ IsReactOS()
 
             szFullPath[dwLen] = 0; // required by Windows XP
             dwSize = GetFileVersionInfoSizeW(szFullPath, NULL);
-            if(dwSize)
+            if (dwSize)
             {
                 BOOL bProduct;
                 UINT cchVer = 0;
@@ -194,10 +188,6 @@ IsReactOS()
                 GlobalUnlock(hMem);
                 GlobalFree(hMem);
             }
-        }
-        if (bLibFree)
-        {
-            FreeLibrary(hMod);
         }
     }
 
