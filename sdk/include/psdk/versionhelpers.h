@@ -171,11 +171,9 @@ IsReactOS()
                 BOOL bProduct;
                 UINT cchVer = 0;
                 LPCWSTR lszValue = NULL;
-                HANDLE hMem = NULL;
                 LPVOID VerInfo = NULL;
 
-                hMem = GlobalAlloc(GMEM_MOVEABLE, dwSize);
-                VerInfo  = GlobalLock(hMem);
+                VerInfo  = HeapAlloc(GetProcessHeap(), 0, dwSize);
                 GetFileVersionInfoW(szFullPath, 0L, dwSize, VerInfo);
                 bProduct = VerQueryValueW(VerInfo,
                                           L"\\StringFileInfo\\040904B0\\ProductName",
@@ -185,8 +183,7 @@ IsReactOS()
                 {
                     bResult = (wcsstr(lszValue, L"ReactOS") != NULL);
                 }
-                GlobalUnlock(hMem);
-                GlobalFree(hMem);
+                HeapFree(GetProcessHeap(), 0, VerInfo);
             }
         }
     }
