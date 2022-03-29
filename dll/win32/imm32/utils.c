@@ -63,7 +63,7 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA)
 {
     INT cch = lstrlenA(pszA);
-    LPWSTR pszW = Imm32HeapAlloc(0, (cch + 1) * sizeof(WCHAR));
+    LPWSTR pszW = ImmLocalAlloc(0, (cch + 1) * sizeof(WCHAR));
     if (pszW == NULL)
         return NULL;
     cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszA, cch, pszW, cch + 1);
@@ -75,7 +75,7 @@ LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW)
 {
     INT cchW = lstrlenW(pszW);
     INT cchA = (cchW + 1) * sizeof(WCHAR);
-    LPSTR pszA = Imm32HeapAlloc(0, cchA);
+    LPSTR pszA = ImmLocalAlloc(0, cchA);
     if (!pszA)
         return NULL;
     cchA = WideCharToMultiByte(CP_ACP, 0, pszW, cchW, pszA, cchA, NULL, NULL);
@@ -219,7 +219,7 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
     return dwProcessID == (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
 }
 
-LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
+LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
 {
     if (!pImmHeap)
     {
@@ -270,18 +270,18 @@ DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
     DWORD dwCount = INITIAL_COUNT, cRetry = 0;
     HIMC *phNewList;
 
-    phNewList = Imm32HeapAlloc(0, dwCount * sizeof(HIMC));
+    phNewList = ImmLocalAlloc(0, dwCount * sizeof(HIMC));
     if (phNewList == NULL)
         return 0;
 
     Status = NtUserBuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
     while (Status == STATUS_BUFFER_TOO_SMALL)
     {
-        Imm32HeapFree(phNewList);
+        ImmLocalFree(phNewList);
         if (cRetry++ >= MAX_RETRY)
             return 0;
 
-        phNewList = Imm32HeapAlloc(0, dwCount * sizeof(HIMC));
+        phNewList = ImmLocalAlloc(0, dwCount * sizeof(HIMC));
         if (phNewList == NULL)
             return 0;
 
@@ -290,7 +290,7 @@ DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
 
     if (NT_ERROR(Status) || !dwCount)
     {
-        Imm32HeapFree(phNewList);
+        ImmLocalFree(phNewList);
         return 0;
     }
 
@@ -361,7 +361,7 @@ Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
     }
     if (!pState)
     {
-        pState = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IME_STATE));
+        pState = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(IME_STATE));
         if (pState)
         {
             pState->wLang = Lang;
@@ -381,7 +381,7 @@ Imm32FetchImeSubState(PIME_STATE pState, HKL hKL)
         if (pSubState->hKL == hKL)
             return pSubState;
     }
-    pSubState = Imm32HeapAlloc(0, sizeof(IME_SUBSTATE));
+    pSubState = ImmLocalAlloc(0, sizeof(IME_SUBSTATE));
     if (!pSubState)
         return NULL;
     pSubState->dwValue = 0;
@@ -650,7 +650,7 @@ BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
     if (!cbVerInfo)
         goto Quit;
 
-    pVerInfo = Imm32HeapAlloc(0, cbVerInfo);
+    pVerInfo = ImmLocalAlloc(0, cbVerInfo);
     if (!pVerInfo)
         goto Quit;
 
@@ -661,7 +661,7 @@ BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
         ret = Imm32LoadImeLangAndDesc(pImeInfoEx, pVerInfo);
     }
 
-    Imm32HeapFree(pVerInfo);
+    ImmLocalFree(pVerInfo);
 
 Quit:
     if (bLoaded)

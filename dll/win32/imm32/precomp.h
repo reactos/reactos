@@ -84,8 +84,8 @@ PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType);
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC);
 
-LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes);
-#define Imm32HeapFree(lpData) HeapFree(pImmHeap, 0, (lpData))
+LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes);
+#define ImmLocalFree(lpData) HeapFree(pImmHeap, 0, (lpData))
 
 LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA);
 LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW);

@@ -281,7 +281,7 @@ static DWORD WINAPI Imm32UnknownProcess1Proc(LPVOID arg)
         SendMessageTimeoutW(hwndDefIME, WM_IME_SYSTEM, uValue, (LPARAM)pUnknown->hWnd,
                             SMTO_BLOCK | SMTO_ABORTIFHUNG, 5000, &lResult);
     }
-    Imm32HeapFree(pUnknown);
+    ImmLocalFree(pUnknown);
     return FALSE;
 }
 
@@ -304,7 +304,7 @@ LRESULT APIENTRY Imm32UnknownProcess1(HWND hWnd, BOOL fFlag)
         return lResult;
     }
 
-    pUnknown1 = Imm32HeapAlloc(0, sizeof(IMM_UNKNOWN_PROCESS1));
+    pUnknown1 = ImmLocalAlloc(0, sizeof(IMM_UNKNOWN_PROCESS1));
     if (!pUnknown1)
         return 0;
 
@@ -428,9 +428,9 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
             if (bAnsiAPI == bAnsiWnd)
                 goto DoIt;
             if (bAnsiWnd)
-                pTempData = Imm32HeapAlloc(0, sizeof(LOGFONTA));
+                pTempData = ImmLocalAlloc(0, sizeof(LOGFONTA));
             else
-                pTempData = Imm32HeapAlloc(0, sizeof(LOGFONTW));
+                pTempData = ImmLocalAlloc(0, sizeof(LOGFONTW));
             if (!pTempData)
                 return 0;
             break;
@@ -444,7 +444,7 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
             else
                 ret = Imm32ReconvertWideFromAnsi(NULL, pData, uCodePage);
 
-            pTempData = Imm32HeapAlloc(0, ret + sizeof(WCHAR));
+            pTempData = ImmLocalAlloc(0, ret + sizeof(WCHAR));
             if (!pTempData)
                 return 0;
 
@@ -474,7 +474,7 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
                 if (!cchCompStr)
                     return 0;
 
-                pCS = Imm32HeapAlloc(0, (cchCompStr + 1) * sizeof(CHAR));
+                pCS = ImmLocalAlloc(0, (cchCompStr + 1) * sizeof(CHAR));
                 if (!pCS)
                     return 0;
 
@@ -487,7 +487,7 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
                 if (!cchCompStr)
                     return 0;
 
-                pCS = Imm32HeapAlloc(0, (cchCompStr + 1) * sizeof(WCHAR));
+                pCS = ImmLocalAlloc(0, (cchCompStr + 1) * sizeof(WCHAR));
                 if (!pCS)
                     return 0;
 
@@ -495,7 +495,7 @@ Imm32ProcessRequest(HIMC hIMC, PWND pWnd, DWORD dwCommand, LPVOID pData, BOOL bA
                 pICP->dwCharPos = IchAnsiFromWide(pICP->dwCharPos, pCS, uCodePage);
             }
 
-            Imm32HeapFree(pCS);
+            ImmLocalFree(pCS);
             break;
 
         default:
@@ -552,7 +552,7 @@ DoIt:
 
 Quit:
     if (pTempData != pData)
-        Imm32HeapFree(pTempData);
+        ImmLocalFree(pTempData);
     return ret;
 }
 
@@ -810,7 +810,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
         goto Quit;
 
     cbTrans = dwCount * sizeof(TRANSMSG);
-    pTrans = Imm32HeapAlloc(0, cbTrans);
+    pTrans = ImmLocalAlloc(0, cbTrans);
     if (pTrans == NULL)
         goto Quit;
 
@@ -843,7 +843,7 @@ BOOL WINAPI ImmGenerateMessage(HIMC hIMC)
     }
 
 Quit:
-    Imm32HeapFree(pTrans);
+    ImmLocalFree(pTrans);
     if (hMsgBuf)
         ImmUnlockIMCC(hMsgBuf);
     pIC->dwNumMsgBuf = 0; /* done */
@@ -877,7 +877,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
             (Lang == LANG_KOREAN && NtUserGetAppImeLevel(hwnd) == 3))
         {
             DWORD cbTransMsg = dwCount * sizeof(TRANSMSG);
-            pNewTransMsg = Imm32HeapAlloc(0, cbTransMsg);
+            pNewTransMsg = ImmLocalAlloc(0, cbTransMsg);
             if (pNewTransMsg)
             {
                 RtlCopyMemory(pNewTransMsg, lpTransMsg, cbTransMsg);
@@ -903,7 +903,7 @@ Imm32PostMessages(HWND hwnd, HIMC hIMC, DWORD dwCount, LPTRANSMSG lpTransMsg)
 
 #ifdef IMM_WIN3_SUPPORT
     if (pNewTransMsg != lpTransMsg)
-        Imm32HeapFree(pNewTransMsg);
+        ImmLocalFree(pNewTransMsg);
 #endif
 }
 
@@ -997,7 +997,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
 
     /* allocate a list */
     cbList = offsetof(TRANSMSGLIST, TransMsg) + MSG_COUNT * sizeof(TRANSMSG);
-    pList = Imm32HeapAlloc(0, cbList);
+    pList = ImmLocalAlloc(0, cbList);
     if (!pList)
         goto Quit;
 
@@ -1023,7 +1023,7 @@ BOOL WINAPI ImmTranslateMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lKeyD
     }
 
 Quit:
-    Imm32HeapFree(pList);
+    ImmLocalFree(pList);
     ImmUnlockImeDpi(pImeDpi);
     ImmUnlockIMC(hIMC);
     ImmReleaseContext(hwnd, hIMC);

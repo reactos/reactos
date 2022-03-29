@@ -136,7 +136,7 @@ BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
         cKLs = GetKeyboardLayoutList(0, NULL);
         if (cKLs)
         {
-            pList = Imm32HeapAlloc(0, cKLs * sizeof(HKL));
+            pList = ImmLocalAlloc(0, cKLs * sizeof(HKL));
             if (pList == NULL)
                 return FALSE;
 
@@ -150,7 +150,7 @@ BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
                 }
             }
 
-            Imm32HeapFree(pList);
+            ImmLocalFree(pList);
         }
 
         StringCchPrintfW(szKBD, _countof(szKBD), L"%08X", LangID);
@@ -593,14 +593,14 @@ HIMC WINAPI ImmCreateContext(void)
     if (!IS_IMM_MODE())
         return NULL;
 
-    pClientImc = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
+    pClientImc = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
     if (pClientImc == NULL)
         return NULL;
 
     hIMC = NtUserCreateInputContext((ULONG_PTR)pClientImc);
     if (hIMC == NULL)
     {
-        Imm32HeapFree(pClientImc);
+        ImmLocalFree(pClientImc);
         return NULL;
     }
 
@@ -624,9 +624,9 @@ static VOID APIENTRY Imm32FreeImeStates(LPINPUTCONTEXTDX pIC)
         for (pSubState = pState->pSubState; pSubState; pSubState = pSubStateNext)
         {
             pSubStateNext = pSubState->pNext;
-            Imm32HeapFree(pSubState);
+            ImmLocalFree(pSubState);
         }
-        Imm32HeapFree(pState);
+        ImmLocalFree(pState);
     }
 }
 
@@ -913,7 +913,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
     pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
     if (!pClientImc)
     {
-        pClientImc = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
+        pClientImc = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
         if (!pClientImc)
             return NULL;
 
@@ -923,7 +923,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 
         if (!NtUserUpdateInputContext(hImc, UIC_CLIENTIMCDATA, (DWORD_PTR)pClientImc))
         {
-            Imm32HeapFree(pClientImc);
+            ImmLocalFree(pClientImc);
             return NULL;
         }
 
@@ -958,7 +958,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
         LocalFree(hInputContext);
 
     RtlDeleteCriticalSection(&pClientImc->cs);
-    Imm32HeapFree(pClientImc);
+    ImmLocalFree(pClientImc);
 }
 
 static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
@@ -1117,7 +1117,7 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
             break;
     }
 
-    Imm32HeapFree(phList);
+    ImmLocalFree(phList);
     return ret;
 }
 

@@ -229,7 +229,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         return NULL;
     }
 
-    pImeDpiNew = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IMEDPI));
+    pImeDpiNew = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(IMEDPI));
     if (pImeDpiNew == NULL)
         return NULL;
 
@@ -244,7 +244,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
 
     if (!Imm32LoadImeInfo(&ImeInfoEx, pImeDpiNew))
     {
-        Imm32HeapFree(pImeDpiNew);
+        ImmLocalFree(pImeDpiNew);
         return FALSE;
     }
 
@@ -259,7 +259,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         RtlLeaveCriticalSection(&g_csImeDpi);
 
         Imm32FreeImeDpi(pImeDpiNew, FALSE);
-        Imm32HeapFree(pImeDpiNew);
+        ImmLocalFree(pImeDpiNew);
         return pImeDpiFound;
     }
     else
@@ -343,7 +343,7 @@ BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
     }
 
     Imm32FreeImeDpi(pImeDpi0, TRUE);
-    Imm32HeapFree(pImeDpi0);
+    ImmLocalFree(pImeDpi0);
 
 Quit:
     RtlLeaveCriticalSection(&g_csImeDpi);
@@ -422,7 +422,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
             if (lpImeMenu)
             {
                 cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOA)) * sizeof(IMEMENUITEMINFOW));
-                pNewItems = Imm32HeapAlloc(0, cbTotal);
+                pNewItems = ImmLocalAlloc(0, cbTotal);
                 if (!pNewItems)
                     goto Quit;
             }
@@ -435,7 +435,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
             if (lpImeMenu)
             {
                 cbTotal = ((dwSize / sizeof(IMEMENUITEMINFOW)) * sizeof(IMEMENUITEMINFOA));
-                pNewItems = Imm32HeapAlloc(0, cbTotal);
+                pNewItems = ImmLocalAlloc(0, cbTotal);
                 if (!pNewItems)
                     goto Quit;
             }
@@ -489,7 +489,7 @@ Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParen
 
 Quit:
     if (pNewItems != lpImeMenu)
-        Imm32HeapFree(pNewItems);
+        ImmLocalFree(pNewItems);
     ImmUnlockImeDpi(pImeDpi);
     ImmUnlockIMC(hIMC);
     return ret;
@@ -516,8 +516,8 @@ HKL WINAPI ImmInstallIMEA(LPCSTR lpszIMEFileName, LPCSTR lpszLayoutText)
     hKL = ImmInstallIMEW(pszFileNameW, pszLayoutTextW);
 
 Quit:
-    Imm32HeapFree(pszFileNameW);
-    Imm32HeapFree(pszLayoutTextW);
+    ImmLocalFree(pszFileNameW);
+    ImmLocalFree(pszLayoutTextW);
     return hKL;
 }
 
@@ -553,10 +553,10 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     cLayouts = Imm32GetRegImes(NULL, 0);
     if (cLayouts)
     {
-        pLayouts = Imm32HeapAlloc(0, cLayouts * sizeof(REG_IME));
+        pLayouts = ImmLocalAlloc(0, cLayouts * sizeof(REG_IME));
         if (!pLayouts || !Imm32GetRegImes(pLayouts, cLayouts))
         {
-            Imm32HeapFree(pLayouts);
+            ImmLocalFree(pLayouts);
             return NULL;
         }
 
@@ -611,7 +611,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
     }
 
 Quit:
-    Imm32HeapFree(pLayouts);
+    ImmLocalFree(pLayouts);
     return hNewKL;
 }
 
@@ -788,7 +788,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
     }
 
     Imm32FreeImeDpi(pImeDpi, TRUE);
-    Imm32HeapFree(pImeDpi);
+    ImmLocalFree(pImeDpi);
 
     RtlLeaveCriticalSection(&g_csImeDpi);
 }
@@ -1520,7 +1520,7 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     if (cb == 0)
         goto Quit;
 
-    pCL = Imm32HeapAlloc(0, cb);
+    pCL = ImmLocalAlloc(0, cb);
     if (pCL == NULL)
         goto Quit;
 
@@ -1531,8 +1531,8 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     ret = CandidateListWideToAnsi(pCL, lpDst, dwBufLen, CP_ACP);
 
 Quit:
-    Imm32HeapFree(pszSrcW);
-    Imm32HeapFree(pCL);
+    ImmLocalFree(pszSrcW);
+    ImmLocalFree(pCL);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1575,7 +1575,7 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     if (cb == 0)
         goto Quit;
 
-    pCL = Imm32HeapAlloc(0, cb);
+    pCL = ImmLocalAlloc(0, cb);
     if (!pCL)
         goto Quit;
 
@@ -1586,8 +1586,8 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     ret = CandidateListAnsiToWide(pCL, lpDst, dwBufLen, CP_ACP);
 
 Quit:
-    Imm32HeapFree(pszSrcA);
-    Imm32HeapFree(pCL);
+    ImmLocalFree(pszSrcA);
+    ImmLocalFree(pCL);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1721,8 +1721,8 @@ DoIt:
     SendMessageW(hWnd, WM_IME_SYSTEM, 0x1A, 0);
 
 Quit:
-    Imm32HeapFree(RegWordW.lpReading);
-    Imm32HeapFree(RegWordW.lpWord);
+    ImmLocalFree(RegWordW.lpReading);
+    ImmLocalFree(RegWordW.lpWord);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
@@ -1775,8 +1775,8 @@ DoIt:
     SendMessageW(hWnd, WM_IME_SYSTEM, 0x1A, 0);
 
 Quit:
-    Imm32HeapFree(RegWordA.lpReading);
-    Imm32HeapFree(RegWordA.lpWord);
+    ImmLocalFree(RegWordA.lpReading);
+    ImmLocalFree(RegWordA.lpWord);
     ImmUnlockImeDpi(pImeDpi);
     return ret;
 }
