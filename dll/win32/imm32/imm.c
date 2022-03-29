@@ -630,7 +630,7 @@ static VOID APIENTRY Imm32FreeImeStates(LPINPUTCONTEXTDX pIC)
     }
 }
 
-BOOL APIENTRY Imm32CleanupContext(HIMC hIMC, HKL hKL, BOOL bKeep)
+BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
 {
     PIMEDPI pImeDpi;
     LPINPUTCONTEXTDX pIC;
@@ -890,7 +890,7 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
         return FALSE;
 
     hKL = GetKeyboardLayout(0);
-    return Imm32CleanupContext(hIMC, hKL, FALSE);
+    return Imm32DestroyInputContext(hIMC, hKL, FALSE);
 }
 
 /***********************************************************************
@@ -1278,7 +1278,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
             hKL = GetKeyboardLayout(0);
             hIMC = (HIMC)NtUserGetThreadState(THREADSTATE_DEFAULTINPUTCONTEXT);
-            Imm32CleanupContext(hIMC, hKL, TRUE);
+            Imm32DestroyInputContext(hIMC, hKL, TRUE);
             break;
 
         case DLL_PROCESS_DETACH:
