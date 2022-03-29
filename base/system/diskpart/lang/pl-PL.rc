@@ -32,11 +32,11 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Dysk pliku hibernacji"
     IDS_DETAIL_INFO_CRASH_DSK "Dysk zrzutu awarii systemu"
     IDS_DETAIL_INFO_CLST_DSK "Dysk klastrowany"
-    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
-    IDS_DETAIL_PARTITION_TYPE   "Typ           : %02x\n"
-    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
-    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
-    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
+    IDS_DETAIL_PARTITION_NUMBER "Partycja %lu\n"
+    IDS_DETAIL_PARTITION_TYPE   "Typ                   : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Ukryta                : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Aktywna               : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Przesunięcie w bajtach: %I64u\n"
 END
 
 /* Detail header titles */
@@ -49,9 +49,9 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  ------------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partycja    %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nNie wybrano dysku do wyświetlenia partycji.\nWybierz dysk i spróbuj ponownie.\n\n"
-    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
-    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
-    IDS_LIST_VOLUME_FORMAT "  Volume %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_HEAD "  Wolumin ###  Lit  Etykieta     FS     Typ         Rozmiar  Stan     Info\n"
+    IDS_LIST_VOLUME_LINE "  -----------  ---  -----------  -----  ----------  -------  -------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "  Wolumin %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
@@ -73,7 +73,7 @@ BEGIN
     IDS_SELECT_PARTITION_INVALID "\nNieprawidłowa partycja.\n\n"
     IDS_SELECT_NO_VOLUME "\nNie wybrano woluminu.\nWybierz dysk i spróbuj ponownie.\n\n"
     IDS_SELECT_VOLUME "\nObecnie wybranym woluminem jest wolumin %lu.\n\n"
-    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
+    IDS_SELECT_VOLUME_INVALID "\nNieprawidłowy wolumin.\n\n"
 END
 
 /* Disk Status */
