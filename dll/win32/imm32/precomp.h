@@ -72,7 +72,7 @@ typedef struct REG_IME
 extern HMODULE g_hImm32Inst;
 extern RTL_CRITICAL_SECTION g_csImeDpi;
 extern PIMEDPI g_pImeDpiList;
-extern PSERVERINFO g_psi;
+extern PSERVERINFO gpsi;
 extern SHAREDINFO g_SharedInfo;
 extern BYTE g_bClientRegd;
 extern HANDLE g_hImm32Heap;
@@ -112,8 +112,8 @@ static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC);
 
 #define ImeDpi_IsUnicode(pImeDpi)   ((pImeDpi)->ImeInfo.fdwProperty & IME_PROP_UNICODE)
-#define IS_IMM_MODE()               (g_psi && (g_psi->dwSRVIFlags & SRVINFO_IMM32))
-#define Imm32IsCiceroMode()         (g_psi && (g_psi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
+#define IS_IMM_MODE()               (gpsi && (gpsi->dwSRVIFlags & SRVINFO_IMM32))
+#define Imm32IsCiceroMode()         (gpsi && (gpsi->dwSRVIFlags & SRVINFO_CICERO_ENABLED))
 #define Imm32Is16BitMode()          (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
 
 DWORD APIENTRY

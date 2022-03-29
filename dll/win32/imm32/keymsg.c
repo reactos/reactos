@@ -292,7 +292,7 @@ LRESULT APIENTRY Imm32UnknownProcess1(HWND hWnd, BOOL fFlag)
     PIMM_UNKNOWN_PROCESS1 pUnknown1;
     DWORD_PTR lResult = 0;
 
-    if (hWnd && g_psi)
+    if (hWnd && gpsi)
         pWnd = ValidateHwndNoErr(hWnd);
 
     if (!pWnd)
