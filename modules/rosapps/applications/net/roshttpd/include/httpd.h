@@ -67,7 +67,7 @@ public:
 	virtual BOOL Stop();
 	virtual LPCServerClientSocket OnGetSocket(LPCServerSocket lpServerSocket);
 	virtual LPCServerClientThread OnGetThread(LPCServerClientSocket Socket);
-	virtual void OnAccept(const LPCServerClientThread lpThread);
+	virtual void OnAccept(LPCServerClientThread lpThread);
 private:
 	HTTPdState State;
 };
