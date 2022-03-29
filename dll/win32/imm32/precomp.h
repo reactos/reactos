@@ -75,7 +75,7 @@ extern PIMEDPI g_pImeDpiList;
 extern PSERVERINFO gpsi;
 extern SHAREDINFO g_SharedInfo;
 extern BYTE g_bClientRegd;
-extern HANDLE g_hImm32Heap;
+extern HANDLE pImmHeap;
 
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName);
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);
@@ -85,7 +85,7 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType);
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC);
 
 LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes);
-#define Imm32HeapFree(lpData) HeapFree(g_hImm32Heap, 0, (lpData))
+#define Imm32HeapFree(lpData) HeapFree(pImmHeap, 0, (lpData))
 
 LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA);
 LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW);
