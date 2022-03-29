@@ -961,7 +961,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     ImmLocalFree(pClientImc);
 }
 
-static HIMC APIENTRY Imm32GetContextEx(HWND hWnd, DWORD dwContextFlags)
+static HIMC APIENTRY ImmGetSaveContext(HWND hWnd, DWORD dwContextFlags)
 {
     HIMC hIMC;
     PCLIENTIMC pClientImc;
@@ -1002,7 +1002,7 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
     TRACE("(%p)\n", hWnd);
     if (hWnd == NULL)
         return NULL;
-    return Imm32GetContextEx(hWnd, 2);
+    return ImmGetSaveContext(hWnd, 2);
 }
 
 /***********************************************************************
@@ -1171,7 +1171,7 @@ BOOL WINAPI ImmSetActiveContext(HWND hWnd, HIMC hIMC, BOOL fActive)
     }
     else
     {
-        hIMC = Imm32GetContextEx(hWnd, 1);
+        hIMC = ImmGetSaveContext(hWnd, 1);
         pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
         if (pIC)
         {
@@ -1228,7 +1228,7 @@ BOOL WINAPI ImmWINNLSGetEnableStatus(HWND hWnd)
         return FALSE;
     }
 
-    return !!Imm32GetContextEx(hWnd, 2);
+    return !!ImmGetSaveContext(hWnd, 2);
 }
 
 /***********************************************************************
