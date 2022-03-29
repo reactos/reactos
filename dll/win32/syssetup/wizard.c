@@ -7,7 +7,7 @@
  *                  Pierre Schweitzer <heis_spiter@hotmail.com>
  *                  Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
- *                  Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
+ *                  Oleg Dubinskiy <oleg.dubinskij30@gmail.com>
  */
 
 /* INCLUDES *****************************************************************/

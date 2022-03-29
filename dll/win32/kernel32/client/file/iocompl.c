@@ -4,7 +4,7 @@
  * FILE:            dll/win32/kernel32/client/file/iocompl.c
  * PURPOSE:         Io Completion functions
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
- *                  Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ *                  Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
