@@ -4,7 +4,7 @@
  * FILE:             win32ss/reactx/ntddraw/dxeng.c
  * PURPOSE:          Implementation of DxEng functions
  * PROGRAMMERS:      Magnus Olsen (magnus@greatlord.com)
- *                   Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ *                   Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  */
 
 #include <win32k.h>
