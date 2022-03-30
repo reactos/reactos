@@ -14,7 +14,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-HANDLE pImmHeap = NULL;
+HANDLE ghImmHeap = NULL;
 
 HRESULT APIENTRY
 Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase)
@@ -221,13 +221,13 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 
 LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
 {
-    if (!pImmHeap)
+    if (!ghImmHeap)
     {
-        pImmHeap = RtlGetProcessHeap();
-        if (pImmHeap == NULL)
+        ghImmHeap = RtlGetProcessHeap();
+        if (ghImmHeap == NULL)
             return NULL;
     }
-    return HeapAlloc(pImmHeap, dwFlags, dwBytes);
+    return HeapAlloc(ghImmHeap, dwFlags, dwBytes);
 }
 
 BOOL APIENTRY
