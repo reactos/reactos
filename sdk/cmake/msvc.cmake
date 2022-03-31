@@ -55,7 +55,7 @@ if(ARCH STREQUAL "i386")
     endif()
 endif()
 
-# CLang default to -fno-common from version 11 onward. We are not rady for this now
+# CLang default to -fno-common from version 11 onward. We are not ready for this now
 if (USE_CLANG_CL)
     add_compile_options(-fcommon)
 endif()
