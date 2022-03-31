@@ -819,7 +819,7 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
             Word = LOWORD(hKL);
             hNewKL = (HKL)(DWORD_PTR)MAKELONG(Word, Word);
 
-            pImeDpi = ImmLockOrLoadImeDpi(hNewKL);
+            pImeDpi = Imm32FindOrLoadImeDpi(hNewKL);
             if (pImeDpi)
             {
                 FIXME("We have to do something here\n");

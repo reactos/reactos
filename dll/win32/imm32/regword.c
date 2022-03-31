@@ -102,7 +102,7 @@ ImmEnumRegisterWordA(HKL hKL, REGISTERWORDENUMPROCA lpfnEnumProc,
     TRACE("(%p, %p, %s, 0x%lX, %s, %p)", hKL, lpfnEnumProc, debugstr_a(lpszReading),
           dwStyle, debugstr_a(lpszRegister), lpData);
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return 0;
 
@@ -158,7 +158,7 @@ ImmEnumRegisterWordW(HKL hKL, REGISTERWORDENUMPROCW lpfnEnumProc,
     TRACE("(%p, %p, %s, 0x%lX, %s, %p)", hKL, lpfnEnumProc, debugstr_w(lpszReading),
           dwStyle, debugstr_w(lpszRegister), lpData);
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return 0;
 
@@ -212,7 +212,7 @@ UINT WINAPI ImmGetRegisterWordStyleA(HKL hKL, UINT nItem, LPSTYLEBUFA lpStyleBuf
 
     TRACE("(%p, %u, %p)\n", hKL, nItem, lpStyleBuf);
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return 0;
 
@@ -270,7 +270,7 @@ UINT WINAPI ImmGetRegisterWordStyleW(HKL hKL, UINT nItem, LPSTYLEBUFW lpStyleBuf
 
     TRACE("(%p, %u, %p)\n", hKL, nItem, lpStyleBuf);
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return 0;
 
@@ -326,7 +326,7 @@ ImmRegisterWordA(HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszRegister
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle,
           debugstr_a(lpszRegister));
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return FALSE;
 
@@ -373,7 +373,7 @@ ImmRegisterWordW(HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszRegist
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
           debugstr_w(lpszRegister));
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return FALSE;
 
@@ -420,7 +420,7 @@ ImmUnregisterWordA(HKL hKL, LPCSTR lpszReading, DWORD dwStyle, LPCSTR lpszUnregi
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_a(lpszReading), dwStyle,
           debugstr_a(lpszUnregister));
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (pImeDpi == NULL)
         return FALSE;
 
@@ -467,7 +467,7 @@ ImmUnregisterWordW(HKL hKL, LPCWSTR lpszReading, DWORD dwStyle, LPCWSTR lpszUnre
     TRACE("(%p, %s, 0x%lX, %s)\n", hKL, debugstr_w(lpszReading), dwStyle,
           debugstr_w(lpszUnregister));
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return FALSE;
 

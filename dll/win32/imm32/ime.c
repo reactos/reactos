@@ -277,7 +277,8 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
     }
 }
 
-PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL)
+// Win: FindOrLoadImeDpi
+PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
@@ -940,7 +941,7 @@ DWORD WINAPI ImmGetProperty(HKL hKL, DWORD fdwIndex)
 
     if (ImeInfoEx.fLoadFlag != 2)
     {
-        pImeDpi = ImmLockOrLoadImeDpi(hKL);
+        pImeDpi = Imm32FindOrLoadImeDpi(hKL);
         if (pImeDpi == NULL)
             return FALSE;
 
@@ -980,7 +981,7 @@ LRESULT WINAPI ImmEscapeA(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 
     TRACE("(%p, %p, %u, %p)\n", hKL, hIMC, uSubFunc, lpData);
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return 0;
 
@@ -1068,7 +1069,7 @@ LRESULT WINAPI ImmEscapeW(HKL hKL, HIMC hIMC, UINT uSubFunc, LPVOID lpData)
 
     TRACE("(%p, %p, %u, %p)\n", hKL, hIMC, uSubFunc, lpData);
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return 0;
 
@@ -1498,7 +1499,7 @@ ImmGetConversionListA(HKL hKL, HIMC hIMC, LPCSTR pSrc, LPCANDIDATELIST lpDst,
     TRACE("(%p, %p, %s, %p, %lu, 0x%lX)\n", hKL, hIMC, debugstr_a(pSrc),
           lpDst, dwBufLen, uFlag);
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (pImeDpi == NULL)
         return 0;
 
@@ -1553,7 +1554,7 @@ ImmGetConversionListW(HKL hKL, HIMC hIMC, LPCWSTR pSrc, LPCANDIDATELIST lpDst,
     TRACE("(%p, %p, %s, %p, %lu, 0x%lX)\n", hKL, hIMC, debugstr_w(pSrc),
           lpDst, dwBufLen, uFlag);
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return 0;
 
@@ -1688,7 +1689,7 @@ BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
     if (!ValidateHwndNoErr(hWnd) || Imm32IsCrossProcessAccess(hWnd))
         return FALSE;
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return FALSE;
 
@@ -1742,7 +1743,7 @@ BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
     if (!ValidateHwndNoErr(hWnd) || Imm32IsCrossProcessAccess(hWnd))
         return FALSE;
 
-    pImeDpi = ImmLockOrLoadImeDpi(hKL);
+    pImeDpi = Imm32FindOrLoadImeDpi(hKL);
     if (!pImeDpi)
         return FALSE;
 
