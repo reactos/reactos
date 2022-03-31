@@ -513,7 +513,6 @@ ViaESTProcessor.DeviceDesc = "VIA Esther 处理器"
 ViaNANOProcessor.DeviceDesc = "VIA Nano 处理器"
 ViaProcessor.DeviceDesc = "VIA 处理器"
 
-
 [Strings.0c04]
 Processor.DeviceDesc = "處理器"
 Processor.ServiceDesc = "處理器驅動程式"
