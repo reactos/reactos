@@ -124,8 +124,8 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
                         UINT uCodePage);
 
 BOOL APIENTRY
-Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
-                  DWORD_PTR dwCommand, DWORD_PTR dwData);
+Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
+                   DWORD_PTR dwCommand, DWORD_PTR dwData);
 
 DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList);
 
@@ -152,10 +152,10 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 HRESULT APIENTRY Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase);
 HRESULT APIENTRY Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff);
 BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx);
-UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts);
-BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
-HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
-BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
+UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts);
+BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
+HKL APIENTRY Imm32AssignNewLayout(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
+BOOL APIENTRY Imm32CopyImeFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
 
 static inline PTHREADINFO FASTCALL Imm32CurrentPti(VOID)
 {

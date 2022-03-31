@@ -229,9 +229,10 @@ LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
     return HeapAlloc(ghImmHeap, dwFlags, dwBytes);
 }
 
+// Win: MakeIMENotify
 BOOL APIENTRY
-Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
-                  DWORD_PTR dwCommand, DWORD_PTR dwData)
+Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
+                   DWORD_PTR dwCommand, DWORD_PTR dwData)
 {
     DWORD dwThreadId;
     HKL hKL;
@@ -668,7 +669,8 @@ Quit:
     return ret;
 }
 
-HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID)
+// Win: AssignNewLayout
+HKL APIENTRY Imm32AssignNewLayout(UINT cKLs, const REG_IME *pLayouts, WORD wLangID)
 {
     UINT iKL, wID, wLow = 0xE0FF, wHigh = 0xE01F, wNextID = 0;
 
@@ -713,7 +715,8 @@ HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID)
     return (HKL)(DWORD_PTR)MAKELONG(wLangID, wNextID);
 }
 
-UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts)
+// Win: GetImeLayout
+UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
 {
     HKEY hkeyLayouts, hkeyIME;
     WCHAR szImeFileName[80], szImeKey[20];
@@ -780,7 +783,8 @@ UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts)
     return nCount;
 }
 
-BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
+// Win: WriteImeLayout
+BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
 {
     UINT iPreload;
     HKEY hkeyLayouts, hkeyIME, hkeyPreload;
@@ -876,7 +880,8 @@ typedef INT (WINAPI *FN_LZOpenFileW)(LPWSTR, LPOFSTRUCT, WORD);
 typedef LONG (WINAPI *FN_LZCopy)(INT, INT);
 typedef VOID (WINAPI *FN_LZClose)(INT);
 
-BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile)
+// Win: CopyImeFile
+BOOL APIENTRY Imm32CopyImeFile(LPWSTR pszOldFile, LPCWSTR pszNewFile)
 {
     BOOL ret = FALSE, bLoaded = FALSE;
     HMODULE hinstLZ32;
