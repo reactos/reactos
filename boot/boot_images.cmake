@@ -1,12 +1,11 @@
-## efisys.bin
 
-# EFI platform ID, used in environ/CMakelists.txt for bootmgfw filename naming also.
-if(ARCH STREQUAL "amd64")
-    set(EFI_PLATFORM_ID "x64")
-elseif(ARCH STREQUAL "i386")
+# EFI platform ID - Used for naming the EFI boot image on supported platforms.
+if(ARCH STREQUAL "i386")
     if(NOT (SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox"))
         set(EFI_PLATFORM_ID "ia32")
     endif()
+elseif(ARCH STREQUAL "amd64")
+    set(EFI_PLATFORM_ID "x64")
 elseif(ARCH STREQUAL "ia64")
     set(EFI_PLATFORM_ID "ia64")
 elseif(ARCH STREQUAL "arm")
@@ -14,9 +13,10 @@ elseif(ARCH STREQUAL "arm")
 elseif(ARCH STREQUAL "arm64")
     set(EFI_PLATFORM_ID "aa64")
 else()
-    message(FATAL_ERROR "Unknown ARCH '" ${ARCH} "', cannot generate a valid UEFI boot filename.")
+    message(FATAL_ERROR "Unknown ARCH '" ${ARCH} "', cannot generate a valid UEFI boot image filename.")
 endif()
 
+## efisys.bin
 if(DEFINED EFI_PLATFORM_ID)
     add_custom_target(efisys
         COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 EFIBOOT
@@ -26,8 +26,6 @@ if(DEFINED EFI_PLATFORM_ID)
         VERBATIM)
 endif()
 
-# ISO image EFI boot parameters
-set(ISO_EFI_BOOT_PARAMS)
 
 # Create an 'empty' directory (guaranteed to be empty) to be able to add
 # arbitrary empty directories to the ISO image using mkisofs.
@@ -39,22 +37,23 @@ set(_isoboot_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin) # ge
 set(_isobtrt_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isobtrt.bin) # get_target_property(_isobtrt_file isobtrt LOCATION)
 if(DEFINED EFI_PLATFORM_ID)
     set(_efisys_file  ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin) # get_target_property(_efisys_file  efisys  LOCATION)
-    list(APPEND ISO_EFI_BOOT_PARAMS -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot)
 endif()
 
-# Create a mkisofs sort file to specify an explicit ordering for the boot files
-# to place them at the beginning of the image (makes ISO image analysis easier).
+# Create an mkisofs sort file that defines an explicit ordering to place the
+# boot files at the beginning of the ISO image, making its analysis easier.
 # See mkisofs/schilytools/mkisofs/README.sort for more details.
+#
 # As the default file sort weight is '0', give the boot files sort weights >= 1.
-# Note that it is sad that '-sort' does not work using grafted points, and as a
-# result we need in particular to use the boot catalog file "path" mkisofs that
-# mkisofs expects, that is, the boot catalog file name is appended to the first
-# host-system path listed in the file list, whatever it is, and that does not
-# work well if the first item is a graft point (and especially if it's a file
-# and not a directory). To fix that, the trick is to use as the first file item
-# the empty directory created earlier. This ensures that:
+# Note that, sadly, '-sort' does not work using grafted points. As a result, we
+# need in particular to use the boot catalog file "path" that mkisofs expects.
+# Indeed, the boot catalog file name is appended to the first host-system path
+# listed in the file list (whatever it is), and this does not work well if the
+# first item is a graft point, especially if it's a file and not a directory.
+#
+# To fix that, the trick is to use, as the first file item, the empty directory
+# created earlier. This ensures that:
 # - the boot catalog file path is meaningful;
-# - since its contents are included by mkisofs in the root of the ISO image,
+# - since its contents are included by mkisofs at the root of the ISO image,
 #   using the empty directory ensures that no extra unwanted files are added.
 #
 set(ISO_SORT_FILE_DATA "\
@@ -70,6 +69,39 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort ${ISO_SORT_FILE_DATA})
 # ISO image identifier names
 set(ISO_MANUFACTURER "ReactOS Project") # For both the publisher and the preparer
 set(ISO_VOLNAME      "ReactOS")         # For both the Volume ID and the Volume set ID
+
+# ISO image options
+set(ISO_COMMON_OPTIONS
+    -iso-level 4 -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME})
+set(ISO_LAYOUT_OPTIONS
+    -duplicates-once -no-cache-inodes -graft-points)
+# Boot catalog and sorting files options
+set(ISO_BOOT_FILES_OPTIONS
+    -hide boot.catalog -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort)
+
+## "El Torito" ISO boot options
+# ISO_BOOT_OPTIONS; ISO_BOOT_OPTIONS_REGTEST (only for BootCDRegTest)
+
+# BIOS-based PC boot entry (x86/x64 only)
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
+    set(ISO_BOOT_OPTIONS
+        -eltorito-platform x86 -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4)
+    set(ISO_BOOT_OPTIONS_REGTEST
+        -eltorito-platform x86 -eltorito-boot loader/isobtrt.bin -no-emul-boot -boot-load-size 4)
+endif()
+
+# EFI boot entry
+if(DEFINED EFI_PLATFORM_ID)
+    set(ISO_BOOT_EFI_OPTIONS
+        -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot)
+
+    if(DEFINED ISO_BOOT_OPTIONS)
+        list(APPEND ISO_BOOT_OPTIONS -eltorito-alt-boot)
+        list(APPEND ISO_BOOT_OPTIONS_REGTEST -eltorito-alt-boot)
+    endif()
+    list(APPEND ISO_BOOT_OPTIONS ${ISO_BOOT_EFI_OPTIONS})
+    list(APPEND ISO_BOOT_OPTIONS_REGTEST ${ISO_BOOT_EFI_OPTIONS})
+endif()
 
 
 # Create user profile directories in the LiveImage
@@ -112,11 +144,9 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.cmake.lst "")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.cmake.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
 add_custom_target(bootcd
-    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcd.iso -iso-level 4
-        -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
-        -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 ${ISO_EFI_BOOT_PARAMS} -hide boot.catalog
-        -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
-        -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcd.$<CONFIG>.lst
+    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcd.iso
+        ${ISO_COMMON_OPTIONS} ${ISO_BOOT_OPTIONS} ${ISO_BOOT_FILES_OPTIONS} ${ISO_LAYOUT_OPTIONS}
+        -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcd.$<CONFIG>.lst
     COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/bootcd.iso
     DEPENDS isombr native-isohybrid native-mkisofs
     VERBATIM)
@@ -127,11 +157,9 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.cmake.lst "")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.cmake.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
 add_custom_target(bootcdregtest
-    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcdregtest.iso -iso-level 4
-        -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
-        -eltorito-boot loader/isobtrt.bin -no-emul-boot -boot-load-size 4 ${ISO_EFI_BOOT_PARAMS} -hide boot.catalog
-        -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
-        -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.$<CONFIG>.lst
+    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcdregtest.iso
+        ${ISO_COMMON_OPTIONS} ${ISO_BOOT_OPTIONS_REGTEST} ${ISO_BOOT_FILES_OPTIONS} ${ISO_LAYOUT_OPTIONS}
+        -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.$<CONFIG>.lst
     COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/bootcdregtest.iso
     DEPENDS isombr native-isohybrid native-mkisofs
     VERBATIM)
@@ -149,11 +177,9 @@ add_allusers_profile_dirs(${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake.lst "Profiles
 add_user_profile_dirs(${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake.lst "Profiles" "Default User")
 
 add_custom_target(livecd
-    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/livecd.iso -iso-level 4
-        -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
-        -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 ${ISO_EFI_BOOT_PARAMS} -hide boot.catalog
-        -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
-        -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/livecd.$<CONFIG>.lst
+    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/livecd.iso
+        ${ISO_COMMON_OPTIONS} ${ISO_BOOT_OPTIONS} ${ISO_BOOT_FILES_OPTIONS} ${ISO_LAYOUT_OPTIONS}
+        -path-list ${CMAKE_CURRENT_BINARY_DIR}/livecd.$<CONFIG>.lst
     COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/livecd.iso
     DEPENDS isombr native-isohybrid native-mkisofs
     VERBATIM)
@@ -168,23 +194,16 @@ add_allusers_profile_dirs(${CMAKE_CURRENT_BINARY_DIR}/hybridcd.cmake.lst "livecd
 add_user_profile_dirs(${CMAKE_CURRENT_BINARY_DIR}/hybridcd.cmake.lst "livecd/Profiles" "Default User")
 
 add_custom_target(hybridcd
-    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/hybridcd.iso -iso-level 4
-        -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
-        -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 ${ISO_EFI_BOOT_PARAMS} -hide boot.catalog
-        -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
-        -duplicates-once -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.$<CONFIG>.lst
+    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/hybridcd.iso
+        ${ISO_COMMON_OPTIONS} ${ISO_BOOT_OPTIONS} ${ISO_BOOT_FILES_OPTIONS} ${ISO_LAYOUT_OPTIONS}
+        -path-list ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.$<CONFIG>.lst
     COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/hybridcd.iso
     DEPENDS bootcd livecd
     VERBATIM)
 
-if(DEFINED EFI_PLATFORM_ID)
-    # For things like flashing USB drives, we also add the efi file into efi/boot.
-    add_cd_file(TARGET efisys FILE ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd regtest livecd hybridcd)
 
-    add_cd_file(
-        TARGET uefildr
-        DESTINATION efi/boot
-        NO_CAB
-        NAME_ON_CD boot${EFI_PLATFORM_ID}.efi
-        FOR livecd hybridcd)
+if(DEFINED EFI_PLATFORM_ID)
+    # For devices such as USB drives, add also the EFI boot image into efi/boot.
+    add_cd_file(TARGET efisys FILE ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd regtest livecd hybridcd)
+    add_cd_file(TARGET uefildr DESTINATION efi/boot NO_CAB NAME_ON_CD boot${EFI_PLATFORM_ID}.efi FOR livecd hybridcd)
 endif()
