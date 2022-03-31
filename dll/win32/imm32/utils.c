@@ -27,6 +27,7 @@ Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase)
     return S_OK;
 }
 
+// Win: UIntToStr
 HRESULT APIENTRY
 Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff)
 {
@@ -115,6 +116,7 @@ LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage)
     return cchAnsi;
 }
 
+// Win: InternalGetSystemPathName
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName)
 {
     if (!pszFileName[0] || !GetSystemDirectoryW(pszPath, cchPath))
@@ -124,6 +126,7 @@ BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileNam
     return TRUE;
 }
 
+// Win: LFontAtoLFontW
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
 {
     size_t cch;
@@ -136,6 +139,7 @@ VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
     plfW->lfFaceName[cch] = 0;
 }
 
+// Win: LFontWtoLFontA
 VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
 {
     size_t cch;
@@ -615,6 +619,7 @@ BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     return TRUE;
 }
 
+// Win: LoadVersionInfo
 BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
 {
     HINSTANCE hinstVersion;

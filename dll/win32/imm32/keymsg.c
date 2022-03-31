@@ -179,6 +179,7 @@ BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
     return TRUE;
 }
 
+// Win: HotKeyIDDispatcher
 BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
 {
     PIMEDPI pImeDpi;
