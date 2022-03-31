@@ -14,7 +14,7 @@ elseif(OPTIMIZE STREQUAL "3")
 elseif(OPTIMIZE STREQUAL "4")
     add_compile_options(/Ob0 /Od)
 elseif(OPTIMIZE STREQUAL "5")
-    add_compile_options(/Gy /Ob2 /Os /Ox /GS-)
+    add_compile_options(/Ob2 /Os /Ox /GS-)
 endif()
 
 # Always use string pooling: this helps reducing the binaries size since a lot
