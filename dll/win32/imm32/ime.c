@@ -1791,8 +1791,7 @@ ImmGetImeMenuItemsA(HIMC hIMC, DWORD dwFlags, DWORD dwType,
 {
     TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
           hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
-    return ImmGetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu,
-                                dwSize, TRUE);
+    return ImmGetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize, TRUE);
 }
 
 /***********************************************************************
@@ -1805,6 +1804,5 @@ ImmGetImeMenuItemsW(HIMC hIMC, DWORD dwFlags, DWORD dwType,
 {
     TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
           hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
-    return ImmGetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu,
-                                dwSize, FALSE);
+    return ImmGetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize, FALSE);
 }

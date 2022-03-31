@@ -935,8 +935,7 @@ ImmSetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpComp, DWORD dwCompLe
 {
     TRACE("(%p, %lu, %p, %lu, %p, %lu)\n",
           hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
-    return ImmSetCompositionStringAW(hIMC, dwIndex, lpComp, dwCompLen,
-                                     lpRead, dwReadLen, TRUE);
+    return ImmSetCompositionStringAW(hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen, TRUE);
 }
 
 /***********************************************************************
@@ -948,6 +947,5 @@ ImmSetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpComp, DWORD dwCompLe
 {
     TRACE("(%p, %lu, %p, %lu, %p, %lu)\n",
           hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
-    return ImmSetCompositionStringAW(hIMC, dwIndex, lpComp, dwCompLen,
-                                     lpRead, dwReadLen, FALSE);
+    return ImmSetCompositionStringAW(hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen, FALSE);
 }
