@@ -557,7 +557,7 @@ Quit:
 }
 
 // Win: ImmRequestMessageWorker
-LRESULT APIENTRY Imm32RequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
+LRESULT APIENTRY ImmRequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
 {
     LRESULT ret = 0;
     LPINPUTCONTEXT pIC;
@@ -1038,7 +1038,7 @@ Quit:
 LRESULT WINAPI ImmRequestMessageA(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 {
     TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
-    return Imm32RequestMessageAW(hIMC, wParam, lParam, TRUE);
+    return ImmRequestMessageAW(hIMC, wParam, lParam, TRUE);
 }
 
 /***********************************************************************
@@ -1047,7 +1047,7 @@ LRESULT WINAPI ImmRequestMessageA(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 {
     TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
-    return Imm32RequestMessageAW(hIMC, wParam, lParam, FALSE);
+    return ImmRequestMessageAW(hIMC, wParam, lParam, FALSE);
 }
 
 /***********************************************************************

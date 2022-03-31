@@ -359,7 +359,7 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
 
 // Win: ImmGetImeMenuItemsWorker
 DWORD APIENTRY
-Imm32GetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
+ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
                        LPVOID lpImeMenu, DWORD dwSize, BOOL bTargetIsAnsi)
 {
     DWORD ret = 0, cbTotal, dwProcessId, dwThreadId, iItem;
@@ -1791,8 +1791,8 @@ ImmGetImeMenuItemsA(HIMC hIMC, DWORD dwFlags, DWORD dwType,
 {
     TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
           hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
-    return Imm32GetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu,
-                                  dwSize, TRUE);
+    return ImmGetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu,
+                                dwSize, TRUE);
 }
 
 /***********************************************************************
@@ -1805,6 +1805,6 @@ ImmGetImeMenuItemsW(HIMC hIMC, DWORD dwFlags, DWORD dwType,
 {
     TRACE("(%p, 0x%lX, 0x%lX, %p, %p, 0x%lX)\n",
           hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu, dwSize);
-    return Imm32GetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu,
-                                  dwSize, FALSE);
+    return ImmGetImeMenuItemsAW(hIMC, dwFlags, dwType, lpImeParentMenu, lpImeMenu,
+                                dwSize, FALSE);
 }
