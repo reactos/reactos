@@ -549,11 +549,11 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
         return NULL;
 
     /* Get the IME layouts from registry */
-    cLayouts = Imm32GetRegImes(NULL, 0);
+    cLayouts = Imm32GetImeLayout(NULL, 0);
     if (cLayouts)
     {
         pLayouts = ImmLocalAlloc(0, cLayouts * sizeof(REG_IME));
-        if (!pLayouts || !Imm32GetRegImes(pLayouts, cLayouts))
+        if (!pLayouts || !Imm32GetImeLayout(pLayouts, cLayouts))
         {
             ImmLocalFree(pLayouts);
             return NULL;
@@ -585,19 +585,19 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
 
     /* If the source and the destination pathnames were different, then copy the IME file */
     if (lstrcmpiW(szImeFileName, szImeDestPath) != 0 &&
-        !Imm32CopyFile(szImeFileName, szImeDestPath))
+        !Imm32CopyImeFile(szImeFileName, szImeDestPath))
     {
         hNewKL = NULL;
         goto Quit;
     }
 
     if (hNewKL == NULL)
-        hNewKL = Imm32GetNextHKL(cLayouts, pLayouts, wLangID);
+        hNewKL = Imm32AssignNewLayout(cLayouts, pLayouts, wLangID);
 
     if (hNewKL)
     {
         /* Write the IME layout to registry */
-        if (Imm32WriteRegIme(hNewKL, pchFilePart, lpszLayoutText))
+        if (Imm32WriteImeLayout(hNewKL, pchFilePart, lpszLayoutText))
         {
             /* Load the keyboard layout */
             Imm32UIntToStr((DWORD)(DWORD_PTR)hNewKL, 16, szImeKey, _countof(szImeKey));
@@ -1184,7 +1184,7 @@ BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
 
     if (bHasChange)
     {
-        Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
+        Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
                           IMC_SETOPENSTATUS, IMN_SETOPENSTATUS, 0);
         NtUserNotifyIMEStatus(hWnd, fOpen, dwConversion);
     }
@@ -1237,7 +1237,7 @@ BOOL WINAPI ImmSetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
 
     ImmUnlockIMC(hIMC);
 
-    Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
+    Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
                       IMC_SETSTATUSWINDOWPOS, IMN_SETSTATUSWINDOWPOS, 0);
     return TRUE;
 }
@@ -1288,7 +1288,7 @@ BOOL WINAPI ImmSetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
 
     ImmUnlockIMC(hIMC);
 
-    Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
+    Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
                       IMC_SETCOMPOSITIONWINDOW, IMN_SETCOMPOSITIONWINDOW, 0);
     return TRUE;
 }
@@ -1418,7 +1418,7 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
 
     ImmUnlockIMC(hIMC);
 
-    Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCOMPOSITIONFONT,
+    Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCOMPOSITIONFONT,
                       IMN_SETCOMPOSITIONFONT, 0);
     return TRUE;
 }
@@ -1476,7 +1476,7 @@ BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
 
     ImmUnlockIMC(hIMC);
 
-    Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCOMPOSITIONFONT,
+    Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCOMPOSITIONFONT,
                       IMN_SETCOMPOSITIONFONT, 0);
     return TRUE;
 }
@@ -1657,7 +1657,7 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
 
     if (fConversionChange || fUseCicero)
     {
-        Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldConversion,
+        Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldConversion,
                           IMC_SETCONVERSIONMODE, IMN_SETCONVERSIONMODE, 0);
         if (fConversionChange)
             NtUserNotifyIMEStatus(hWnd, fOpen, fdwConversion);
@@ -1665,7 +1665,7 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
 
     if (fSentenceChange || fUseCicero)
     {
-        Imm32NotifyAction(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldSentence,
+        Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldSentence,
                           IMC_SETSENTENCEMODE, IMN_SETSENTENCEMODE, 0);
     }
 
