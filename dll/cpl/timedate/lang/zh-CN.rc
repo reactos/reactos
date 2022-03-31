@@ -7,8 +7,6 @@
  *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
-/* Improved by Wu Haotian <rigoligo03@gmail.com> 2021 */
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
