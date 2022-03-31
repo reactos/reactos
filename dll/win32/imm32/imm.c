@@ -15,7 +15,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 HMODULE g_hImm32Inst = NULL;
 PSERVERINFO gpsi = NULL;
-SHAREDINFO g_SharedInfo = { NULL };
+SHAREDINFO gSharedInfo = { NULL };
 BYTE g_bClientRegd = FALSE;
 
 static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
@@ -42,8 +42,8 @@ static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
  */
 BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 {
-    g_SharedInfo = *ptr;
-    gpsi = g_SharedInfo.psi;
+    gSharedInfo = *ptr;
+    gpsi = gSharedInfo.psi;
     return Imm32InitInstance(hMod);
 }
 

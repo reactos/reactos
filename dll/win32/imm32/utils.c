@@ -172,11 +172,11 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
     if (!NtUserValidateHandleSecure(hObject))
         return NULL;
 
-    ht = g_SharedInfo.aheList; /* handle table */
+    ht = gSharedInfo.aheList; /* handle table */
     ASSERT(ht);
     /* ReactOS-Specific! */
-    ASSERT(g_SharedInfo.ulSharedDelta != 0);
-    he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - g_SharedInfo.ulSharedDelta);
+    ASSERT(gSharedInfo.ulSharedDelta != 0);
+    he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - gSharedInfo.ulSharedDelta);
 
     index = (LOWORD(hObject) - FIRST_USER_HANDLE) >> 1;
     if ((INT)index < 0 || ht->nb_handles <= index || he[index].type != uType)

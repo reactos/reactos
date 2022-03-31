@@ -73,7 +73,7 @@ extern HMODULE g_hImm32Inst;
 extern RTL_CRITICAL_SECTION g_csImeDpi;
 extern PIMEDPI g_pImeDpiList;
 extern PSERVERINFO gpsi;
-extern SHAREDINFO g_SharedInfo;
+extern SHAREDINFO gSharedInfo;
 extern BYTE g_bClientRegd;
 extern HANDLE ghImmHeap;
 
