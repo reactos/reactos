@@ -360,7 +360,7 @@ Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID 
 // Win: ImmGetImeMenuItemsWorker
 DWORD APIENTRY
 ImmGetImeMenuItemsAW(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
-                       LPVOID lpImeMenu, DWORD dwSize, BOOL bTargetIsAnsi)
+                     LPVOID lpImeMenu, DWORD dwSize, BOOL bTargetIsAnsi)
 {
     DWORD ret = 0, cbTotal, dwProcessId, dwThreadId, iItem;
     LPINPUTCONTEXT pIC;

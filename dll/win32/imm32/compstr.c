@@ -515,7 +515,7 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
 // Win: ImmSetCompositionStringWorker
 BOOL APIENTRY
 ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLen,
-                            LPVOID pRead, DWORD dwReadLen, BOOL bAnsiAPI)
+                          LPVOID pRead, DWORD dwReadLen, BOOL bAnsiAPI)
 {
     BOOL ret = FALSE, bAnsiClient;
     LPVOID pCompNew = NULL, pReadNew = NULL;
