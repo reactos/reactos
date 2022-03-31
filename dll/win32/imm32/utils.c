@@ -14,7 +14,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-HANDLE ghImmHeap = NULL;
+HANDLE ghImmHeap = NULL; // Win: pImmHeap
 
 HRESULT APIENTRY
 Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase)

@@ -75,7 +75,7 @@ extern PIMEDPI g_pImeDpiList;
 extern PSERVERINFO gpsi;
 extern SHAREDINFO g_SharedInfo;
 extern BYTE g_bClientRegd;
-extern HANDLE ghImmHeap; // Win: pImmHeap
+extern HANDLE ghImmHeap;
 
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName);
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);
