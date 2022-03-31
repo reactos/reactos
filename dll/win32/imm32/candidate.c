@@ -146,6 +146,7 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
     return dwBufLen;
 }
 
+// Win: ImmGetCandidateListWorker
 static DWORD APIENTRY
 ImmGetCandidateListAW(HIMC hIMC, DWORD dwIndex, LPCANDIDATELIST lpCandList, DWORD dwBufLen,
                       BOOL bAnsi)
@@ -227,6 +228,7 @@ Quit:
     return ret;
 }
 
+// Win: ImmGetCandidateListCountWorker
 DWORD APIENTRY
 ImmGetCandidateListCountAW(HIMC hIMC, LPDWORD lpdwListCount, BOOL bAnsi)
 {
