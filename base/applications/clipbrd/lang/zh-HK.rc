@@ -20,7 +20,7 @@ BEGIN
         MENUITEM "開啟(&O)...", CMD_OPEN
         MENUITEM "另存新檔(&A)...", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "退出(&X)", CMD_EXIT
+        MENUITEM "結束(&X)", CMD_EXIT
     END
     POPUP "編輯(&E)"
     BEGIN
@@ -60,7 +60,7 @@ BEGIN
     STRING_CF_ENHMETAFILE "增強型圖元檔案"
     STRING_CF_METAFILEPICT "圖元檔案"
     STRING_CF_PALETTE "調色盤"
-    STRING_CF_DIBV5 "DIB 點陣圖 (第 5 版)"
+    STRING_CF_DIBV5 "DIB 點陣圖（第 5 版）"
     STRING_CF_SYLK "符號連結格式"
     STRING_CF_DIF "資料交換格式"
     STRING_CF_HDROP "刪除資料"

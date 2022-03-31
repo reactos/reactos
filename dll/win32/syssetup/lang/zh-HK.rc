@@ -189,10 +189,10 @@ BEGIN
     IDS_LAYOUTTEXT "您的預設文字輸入語言和方法是：%s 鍵盤配置。"
     IDS_DATETIMETITLE "日期和時間"
     IDS_DATETIMESUBTITLE "為您的電腦設定正確的日期及時間。"
-    IDS_PROCESSTITLE "Finishing the Installation"
-    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
+    IDS_PROCESSTITLE "正在完成安裝"
+    IDS_PROCESSSUBTITLE "請稍候，安裝程式正在完成最後階段工作。"
     IDS_THEMESELECTIONTITLE "外觀"
-    IDS_THEMESELECTIONSUBTITLE "選擇您的主題。"
+    IDS_THEMESELECTIONSUBTITLE "選擇您想使用的主題。"
 
 END
 
@@ -222,7 +222,7 @@ BEGIN
     IDS_WZD_SETCOMPUTERNAME "安裝程式無法設定電腦名稱。"
     IDS_WZD_COMPUTERNAME "安裝程式無法繼續，直到您輸入電腦名稱。"
     IDS_WZD_PASSWORDEMPTY "您必須輸入密碼！"
-    IDS_WZD_PASSWORDMATCH "您輸入的密碼不相符。請再次輸入所需的密碼。"
+    IDS_WZD_PASSWORDMATCH "您輸入的密碼不相符。請再次輸入密碼。"
     IDS_WZD_PASSWORDCHAR "您輸入的密碼包含無效字元。請輸入符合要求的密碼。"
     IDS_WZD_LOCALTIME "安裝程式無法設定本地時間。"
 END
@@ -232,10 +232,11 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "正在安裝裝置驅動程式..."
 END
 
-/* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
-
-/* ATTENTION: If there is no special situation, please DO NOT change 
-English folder names into Chinese, or it may cause problems in the system. */
+/* ATTENTION: Synchronize these strings with dll/win32/shell32/lang.
+ *
+ * WARNING:   DO NOT change English folder names in this file
+ *            into Chinese, or it may cause problems in the system. 
+ */
 
 STRINGTABLE
 BEGIN
