@@ -1185,7 +1185,7 @@ BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
     if (bHasChange)
     {
         Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
-                          IMC_SETOPENSTATUS, IMN_SETOPENSTATUS, 0);
+                           IMC_SETOPENSTATUS, IMN_SETOPENSTATUS, 0);
         NtUserNotifyIMEStatus(hWnd, fOpen, dwConversion);
     }
 
@@ -1238,7 +1238,7 @@ BOOL WINAPI ImmSetStatusWindowPos(HIMC hIMC, LPPOINT lpptPos)
     ImmUnlockIMC(hIMC);
 
     Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
-                      IMC_SETSTATUSWINDOWPOS, IMN_SETSTATUSWINDOWPOS, 0);
+                       IMC_SETSTATUSWINDOWPOS, IMN_SETSTATUSWINDOWPOS, 0);
     return TRUE;
 }
 
@@ -1289,7 +1289,7 @@ BOOL WINAPI ImmSetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
     ImmUnlockIMC(hIMC);
 
     Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0,
-                      IMC_SETCOMPOSITIONWINDOW, IMN_SETCOMPOSITIONWINDOW, 0);
+                       IMC_SETCOMPOSITIONWINDOW, IMN_SETCOMPOSITIONWINDOW, 0);
     return TRUE;
 }
 
@@ -1419,7 +1419,7 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
     ImmUnlockIMC(hIMC);
 
     Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCOMPOSITIONFONT,
-                      IMN_SETCOMPOSITIONFONT, 0);
+                       IMN_SETCOMPOSITIONFONT, 0);
     return TRUE;
 }
 
@@ -1477,7 +1477,7 @@ BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
     ImmUnlockIMC(hIMC);
 
     Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, 0, IMC_SETCOMPOSITIONFONT,
-                      IMN_SETCOMPOSITIONFONT, 0);
+                       IMN_SETCOMPOSITIONFONT, 0);
     return TRUE;
 }
 
@@ -1658,7 +1658,7 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
     if (fConversionChange || fUseCicero)
     {
         Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldConversion,
-                          IMC_SETCONVERSIONMODE, IMN_SETCONVERSIONMODE, 0);
+                           IMC_SETCONVERSIONMODE, IMN_SETCONVERSIONMODE, 0);
         if (fConversionChange)
             NtUserNotifyIMEStatus(hWnd, fOpen, fdwConversion);
     }
@@ -1666,7 +1666,7 @@ BOOL WINAPI ImmSetConversionStatus(HIMC hIMC, DWORD fdwConversion, DWORD fdwSent
     if (fSentenceChange || fUseCicero)
     {
         Imm32MakeIMENotify(hIMC, hWnd, NI_CONTEXTUPDATED, dwOldSentence,
-                          IMC_SETSENTENCEMODE, IMN_SETSENTENCEMODE, 0);
+                           IMC_SETSENTENCEMODE, IMN_SETSENTENCEMODE, 0);
     }
 
     return TRUE;

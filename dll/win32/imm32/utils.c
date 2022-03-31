@@ -232,7 +232,7 @@ LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
 // Win: MakeIMENotify
 BOOL APIENTRY
 Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
-                  DWORD_PTR dwCommand, DWORD_PTR dwData)
+                   DWORD_PTR dwCommand, DWORD_PTR dwData)
 {
     DWORD dwThreadId;
     HKL hKL;
