@@ -14,7 +14,7 @@ elseif(OPTIMIZE STREQUAL "3")
 elseif(OPTIMIZE STREQUAL "4")
     add_compile_options(/Ob0 /Od)
 elseif(OPTIMIZE STREQUAL "5")
-    add_compile_options(/Gy /Ob2 /Os /Ox /GS-)
+    add_compile_options(/Ob2 /Os /Ox /GS-)
 endif()
 
 # Always use string pooling: this helps reducing the binaries size since a lot
@@ -55,7 +55,7 @@ if(ARCH STREQUAL "i386")
     endif()
 endif()
 
-# CLang default to -fno-common from version 11 onward. We are not rady for this now
+# CLang default to -fno-common from version 11 onward. We are not ready for this now
 if (USE_CLANG_CL)
     add_compile_options(-fcommon)
 endif()
