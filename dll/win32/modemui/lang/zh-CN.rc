@@ -22,9 +22,9 @@ CAPTION "高级"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "额外的设置", 1018, 6, 6, 225, 70
-    LTEXT "额外的初始化命令:(&X)", 1011, 16, 20, 143, 8
+    LTEXT "额外的初始化命令：(&X)", 1011, 16, 20, 143, 8
     EDITTEXT 1016, 16, 31, 205, 13, ES_AUTOHSCROLL
-    LTEXT "等待信用卡提示音:(&W)", 1007, 16, 55, 109, 8, NOT WS_VISIBLE
+    LTEXT "等待信用卡提示音：(&W)", 1007, 16, 55, 109, 8, NOT WS_VISIBLE
     EDITTEXT 1008, 133, 52, 26, 12, ES_RIGHT | NOT WS_VISIBLE | WS_GROUP
     CONTROL "", 1009, "MSCTLS_UPDOWN32", NOT WS_VISIBLE | WS_BORDER | WS_GROUP | 0x00000036, 159, 52, 12, 12
     LTEXT "秒", 1010, 173, 54, 40, 8, NOT WS_VISIBLE
@@ -39,7 +39,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "常规"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "端口:", 1018, 9, 8, 32, 10
+    LTEXT "端口：", 1018, 9, 8, 32, 10
     LTEXT "作为端口", 1095, 48, 8, 181, 10
     GROUPBOX "扬声器音量(&S)", 1029, 10, 21, 218, 48
     CONTROL "", 1032, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000001, 84, 40, 66, 20
@@ -60,22 +60,22 @@ BEGIN
     AUTOCHECKBOX "这条电话线有独特震铃服务(&T)", 1069, 20, 7, 184, 10
     CTEXT "响铃模式", -1, 84, 21, 70, 8
     CTEXT "呼叫类型", -1, 159, 21, 63, 8
-    LTEXT "主地址:(&P)", 1070, 20, 41, 62, 8
+    LTEXT "主地址：(&P)", 1070, 20, 41, 62, 8
     COMBOBOX 1073, 84, 37, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
     COMBOBOX 1082, 160, 37, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "地址 &1:", 1071, 20, 59, 62, 8
+    LTEXT "地址 &1：", 1071, 20, 59, 62, 8
     COMBOBOX 1074, 84, 55, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
     COMBOBOX 1083, 160, 55, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "地址 &2:", 1072, 20, 77, 62, 8
+    LTEXT "地址 &2：", 1072, 20, 77, 62, 8
     COMBOBOX 1075, 84, 73, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
     COMBOBOX 1084, 160, 73, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "地址 &3:", 1076, 20, 95, 62, 8
+    LTEXT "地址 &3：", 1076, 20, 95, 62, 8
     COMBOBOX 1077, 84, 91, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
     COMBOBOX 1085, 160, 91, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "来电者优先:(&C)", 1078, 20, 112, 62, 8
+    LTEXT "来电者优先：(&C)", 1078, 20, 112, 62, 8
     COMBOBOX 1079, 84, 109, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
     COMBOBOX 1086, 160, 109, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "回拨:(&B)", 1080, 20, 131, 62, 8
+    LTEXT "回拨：(&B)", 1080, 20, 131, 62, 8
     COMBOBOX 1081, 84, 127, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
     COMBOBOX 1087, 160, 127, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
@@ -89,11 +89,11 @@ BEGIN
     AUTOCHECKBOX "这条电话线有独特震铃服务(&T)", 1069, 19, 7, 177, 10
     CTEXT "响铃模式", -1, 20, 21, 74, 8
     CTEXT "呼叫类型", -1, 96, 21, 65, 8
-    LTEXT "单响铃:(&S)", 1088, 20, 37, 53, 8
+    LTEXT "单响铃：(&S)", 1088, 20, 37, 53, 8
     COMBOBOX 1091, 96, 37, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "双响铃:(&D)", 1089, 20, 57, 53, 8
+    LTEXT "双响铃：(&D)", 1089, 20, 57, 53, 8
     COMBOBOX 1092, 96, 55, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "三响铃:(&R)", 1090, 20, 76, 53, 8
+    LTEXT "三响铃：(&R)", 1090, 20, 76, 53, 8
     COMBOBOX 1093, 96, 73, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
@@ -126,18 +126,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "常规"
 FONT 9, "宋体"
 BEGIN
-    AUTOCHECKBOX "接线员辅助的 (手动) 拨号(&O)", 1002, 19, 22, 150, 10
+    AUTOCHECKBOX "接线员辅助的（手动）拨号(&O)", 1002, 19, 22, 150, 10
     AUTOCHECKBOX "如果空闲时间就断开呼叫超过(&D)", 1042, 19, 38, 143, 10
     EDITTEXT 1043, 168, 35, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT "如果时间内未连接就取消呼叫:(&C)", -1, 19, 56, 147, 10
+    LTEXT "如果时间内未连接就取消呼叫：(&C)", -1, 19, 56, 147, 10
     EDITTEXT 1040, 168, 54, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
-    RTEXT "端口速度:(&P)", 1034, 16, 102, 93, 8
+    RTEXT "端口速度：(&P)", 1034, 16, 102, 93, 8
     COMBOBOX 1036, 114, 100, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    RTEXT "数据协议:(&A)", 1032, 16, 122, 93, 8
+    RTEXT "数据协议：(&A)", 1032, 16, 122, 93, 8
     COMBOBOX 1037, 114, 119, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    RTEXT "压缩:(&R)", 1035, 16, 139, 93, 8
+    RTEXT "压缩：(&R)", 1035, 16, 139, 93, 8
     COMBOBOX 1099, 114, 137, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    RTEXT "流量控制:(&F)", 1027, 16, 157, 93, 8
+    RTEXT "流量控制：(&F)", 1027, 16, 157, 93, 8
     COMBOBOX 1031, 114, 155, 84, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     GROUPBOX "电话首选项", 1060, 11, 7, 217, 66
     LTEXT "分钟", 1044, 195, 38, 22, 8
@@ -152,13 +152,13 @@ FONT 9, "宋体"
 BEGIN
     AUTOCHECKBOX "拨号前显示终端窗口(&B)", 1000, 20, 21, 200, 10
     AUTOCHECKBOX "拨号后弹出终端窗口(&F)", 1001, 20, 38, 200, 10
-    RTEXT "数据位:(&D)", 1024, 18, 79, 93, 8
+    RTEXT "数据位：(&D)", 1024, 18, 79, 93, 8
     COMBOBOX 1025, 114, 77, 106, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    RTEXT "奇偶校验:(&P)", 1026, 18, 97, 93, 8
+    RTEXT "奇偶校验：(&P)", 1026, 18, 97, 93, 8
     COMBOBOX 1028, 114, 95, 106, 60, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    RTEXT "停止位:(&S)", 1029, 18, 115, 93, 8
+    RTEXT "停止位：(&S)", 1029, 18, 115, 93, 8
     COMBOBOX 1030, 114, 113, 106, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    RTEXT "调制:(&M)", 1045, 18, 133, 93, 8
+    RTEXT "调制：(&M)", 1045, 18, 133, 93, 8
     COMBOBOX 1038, 114, 131, 106, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     GROUPBOX "终端窗口", 1004, 10, 7, 217, 49
     GROUPBOX "硬件设置", 1005, 10, 64, 217, 89
@@ -173,11 +173,11 @@ BEGIN
     COMBOBOX 1104, 17, 20, 204, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     GROUPBOX "第一个数字(&F)", -1, 11, 50, 217, 50
     EDITTEXT 1017, 33, 62, 188, 13, ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT "S&PID/EAZ:", 1027, 34, 83, 67, 8
+    LTEXT "S&PID/EAZ：", 1027, 34, 83, 67, 8
     EDITTEXT 1107, 104, 79, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
     GROUPBOX "第二个数字(&S)", -1, 11, 105, 217, 49
     EDITTEXT 1018, 33, 114, 189, 13, ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT "SPI&D/EAZ:", 1028, 35, 135, 68, 8
+    LTEXT "SPI&D/EAZ：", 1028, 35, 135, 68, 8
     EDITTEXT 1108, 105, 132, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
 END
 
@@ -187,7 +187,7 @@ CAPTION "请稍后"
 FONT 9, "宋体"
 BEGIN
     ICON 5100, -1, 9, 7, 20, 20
-    LTEXT "发送到调制解调器的国家 (地区) 信息。", -1, 42, 7, 146, 28
+    LTEXT "发送到调制解调器的国家（地区）信息。", -1, 42, 7, 146, 28
 END
 
 IDD_WARNING DIALOGEX 0, 0, 360, 105
@@ -209,7 +209,7 @@ CAPTION "调制解调器"
 FONT 9, "宋体"
 BEGIN
     ICON 5100, 1057, 6, 7, 20, 20
-    LTEXT "安装下列调制解调器:(&M)", -1, 44, 12, 203, 9
+    LTEXT "安装下列调制解调器：(&M)", -1, 44, 12, 203, 9
     CONTROL "", 113, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00000849, 7, 32, 238, 158, WS_EX_CLIENTEDGE
     PUSHBUTTON "添加...(&A)", 110, 56, 198, 60, 14
     PUSHBUTTON "删除(&R)", 112, 121, 198, 60, 14
@@ -266,9 +266,9 @@ BEGIN
     262 "无"
     263 "开"
     264 "低"
-    265 "V.23 (Minitel)"
+    265 "V.23（Minitel）"
     266 "标准"
-    267 "非标准 (Bell, HST)"
+    267 "非标准（Bell，HST）"
     270 "将追加到日志(&L)"
     300 "未指定"
     301 "数据"
@@ -291,62 +291,62 @@ BEGIN
     468 "禁用"
     469 "启用"
     470 "禁用"
-    480 "AUTO  (1 Ch.)"
-    481 "AUTO  (2 Ch.)"
-    482 "PPP   (56K)"
-    483 "PPP   (64K)"
-    484 "PPP   (112K)"
-    485 "PPP   (112K,PAP)"
-    486 "PPP   (112K,CHAP)"
-    487 "PPP   (112K,MSCHAP)"
-    488 "PPP   (128K)"
-    489 "PPP   (128K,PAP)"
-    490 "PPP   (128K,CHAP)"
-    491 "PPP   (128K,MSCHAP)"
-    500 "V.120 (64K)"
-    501 "V.120 (56K)"
-    502 "V.120 (112K)"
-    503 "V.120 (128K)"
-    504 "X.75  (64K)"
-    505 "X.75  (128K)"
-    506 "X.75  (T.70)"
-    507 "X.75  (BTX)"
-    508 "V.110 (1.2K)"
-    509 "V.110 (2.4K)"
-    510 "V.110 (4.8K)"
-    511 "V.110 (9.6K)"
-    512 "V.110 (12.0K)"
-    513 "V.110 (14.4K)"
-    514 "V.110 (19.2K)"
-    515 "V.110 (28.8K)"
-    516 "V.110 (38.4K)"
-    517 "V.110 (57.6K)"
-    518 "模拟 (V.34/V.90)"
-    550 "ESS5 (AT&T) (北美地区)"
+    480 "AUTO （1 Ch.）"
+    481 "AUTO （2 Ch.）"
+    482 "PPP  （56K）"
+    483 "PPP  （64K）"
+    484 "PPP  （112K）"
+    485 "PPP  （112K，PAP）"
+    486 "PPP  （112K，CHAP）"
+    487 "PPP  （112K，MSCHAP）"
+    488 "PPP  （128K）"
+    489 "PPP  （128K，PAP）"
+    490 "PPP  （128K，CHAP）"
+    491 "PPP  （128K，MSCHAP）"
+    500 "V.120（64K）"
+    501 "V.120（56K）"
+    502 "V.120（112K）"
+    503 "V.120（128K）"
+    504 "X.75 （64K）"
+    505 "X.75 （128K）"
+    506 "X.75 （T.70）"
+    507 "X.75 （BTX）"
+    508 "V.110（1.2K）"
+    509 "V.110（2.4K）"
+    510 "V.110（4.8K）"
+    511 "V.110（9.6K）"
+    512 "V.110（12.0K）"
+    513 "V.110（14.4K）"
+    514 "V.110（19.2K）"
+    515 "V.110（28.8K）"
+    516 "V.110（38.4K）"
+    517 "V.110（57.6K）"
+    518 "模拟（V.34/V.90）"
+    550 "ESS5（AT&T）（北美地区）"
     551 "AT&T 点对多点"
-    552 "National ISDN 1 (NI-1)"
-    553 "Northern Telecom DMS 100 (NT1)"
-    554 "NTT INS64 (日本)"
-    555 "European ISDN (DSS1)"
-    556 "German National (1TR6) (很少使用)"
-    557 "French National (VN3) (很少使用)"
-    558 "Belgium National (很少使用)"
-    559 "Australian National (很少使用)"
+    552 "National ISDN 1（NI-1）"
+    553 "Northern Telecom DMS 100（NT1）"
+    554 "NTT INS64（日本）"
+    555 "European ISDN（DSS1）"
+    556 "German National（1TR6）（很少使用）"
+    557 "French National（VN3）（很少使用）"
+    558 "Belgium National（很少使用）"
+    559 "Australian National（很少使用）"
     560 "未知开关"
     570 "该调制解调器的 ISDN 配置\n未完成。\n\n请填写之前使用此调制解调器\nISDN 选项卡中的信息。"
-    600 "PPP   (56K,GSM)"
-    601 "PPP   (64K,GSM)"
-    602 "V.120 (64K,GSM)"
-    604 "V.110 (1.2K,GSM)"
-    605 "V.110 (2.4K,GSM)"
-    606 "V.110 (4.8K,GSM)"
-    607 "V.110 (9.6K,GSM)"
-    608 "V.110 (12.0K,GSM)"
-    609 "V.110 (14.4K,GSM)"
-    610 "V.110 (19.2K,GSM)"
-    611 "V.110 (28.8K,GSM)"
-    612 "V.110 (38.4K,GSM)"
-    613 "V.110 (57.6K,GSM)"
+    600 "PPP  （56K，GSM）"
+    601 "PPP  （64K，GSM）"
+    602 "V.120（64K，GSM）"
+    604 "V.110（1.2K，GSM）"
+    605 "V.110（2.4K，GSM）"
+    606 "V.110（4.8K，GSM）"
+    607 "V.110（9.6K，GSM）"
+    608 "V.110（12.0K，GSM）"
+    609 "V.110（14.4K，GSM）"
+    610 "V.110（19.2K，GSM）"
+    611 "V.110（28.8K，GSM）"
+    612 "V.110（38.4K，GSM）"
+    613 "V.110（57.6K，GSM）"
     614 "模拟 RLP"
     615 "模拟 NRLP"
     616 "GPRS"
@@ -366,7 +366,7 @@ BEGIN
     3053 "不能显示调制解调器属性，因为调制解调器不可用。\n\n重新启动系统并再试一次。"
     3054 "调制解调器的属性"
     3060 "你确定你想要从系统中删除选定的调制解调器?"
-    3061 "ReactOS 是无法从 %2 中删除 '%1' 的调制解调器。"
+    3061 "ReactOS 是无法从 %2 中删除“%1”的调制解调器。"
     3062 "调制解调器"
     3069 "内存不足，无法打开调制解调器控制面板。\n\n请关闭一些程序，然后重试。"
     3073 "您必须是系统管理员才能安装调制解调器。"
@@ -419,7 +419,7 @@ BEGIN
     6164 "玻利维亚"
     6165 "博茨瓦纳"
     6166 "巴西"
-    6167 "国家/地区代码 (23)"
+    6167 "国家/地区代码（23）"
     6168 "英属印度洋领地"
     6169 "英属维京群岛"
     6170 "文莱"
@@ -454,15 +454,15 @@ BEGIN
     6199 "萨尔瓦多"
     6200 "赤道几内亚"
     6201 "埃塞俄比亚"
-    6202 "福克兰群岛 (马尔维纳斯群岛)"
+    6202 "福克兰群岛（马尔维纳斯群岛）"
     6203 "斐济群岛"
     6204 "芬兰"
     6205 "法国"
     6206 "法属波利尼西亚"
-    6207 "国家/地区代码 (63)"
+    6207 "国家/地区代码（63）"
     6208 "加蓬"
     6209 "冈比亚"
-    6210 "德国 (国家/地区代码 66)"
+    6210 "德国（国家/地区代码 66）"
     6211 "安哥拉"
     6212 "加纳"
     6213 "直布罗陀"
@@ -541,11 +541,11 @@ BEGIN
     6286 "罗马尼亚"
     6287 "卢旺达"
     6288 "圣基茨和尼维斯"
-    6289 "国家/地区代码 (145)"
+    6289 "国家/地区代码（145）"
     6290 "圣海伦娜"
     6291 "圣露西亚"
     6292 "圣马力诺"
-    6293 "国家/地区代码 (148)"
+    6293 "国家/地区代码（148）"
     6294 "圣多美和普林西比"
     6295 "圣文森特和格林纳丁斯"
     6296 "沙特阿拉伯"
@@ -580,7 +580,7 @@ BEGIN
     6325 "美国"
     6326 "布吉纳法索"
     6327 "乌拉圭"
-    6328 "国家/地区代码 (184)"
+    6328 "国家/地区代码（184）"
     6329 "瓦努阿图"
     6330 "梵蒂冈城"
     6331 "委内瑞拉"
@@ -589,7 +589,7 @@ BEGIN
     6334 "萨摩亚"
     6335 "也门"
     6336 "也门"
-    6337 "国家/地区代码 (193)"
+    6337 "国家/地区代码（193）"
     6338 "刚果民主共和国"
     6339 "赞比亚"
     6340 "津巴布韦"

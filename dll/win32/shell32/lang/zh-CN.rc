@@ -5,6 +5,7 @@
  * TRANSLATORS: Copyright 2008 Zhang Bing <e_zb@21cn.com> <ezb@mail.gywb.cn>
  *              Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
  *              Copyright 2018-2021 Luo Yufan <njlyf2011@hotmail.com>
+                Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -394,7 +395,7 @@ BEGIN
     RADIOBUTTON "自定义大小(&C)：", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "最大值(MB)(&A)：", -1, 20, 105, 70, 10
-    RADIOBUTTON "不要将文件移动到回收站，而是彻底删除。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    RADIOBUTTON "不要将文件移动到回收站，而是彻底删除(&R)。", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "显示确认删除对话框(&D)", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
@@ -429,8 +430,8 @@ BEGIN
     AUTORADIOBUTTON "在相同窗口中打开自己的文件夹(&W)", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
     GROUPBOX "点击项目的方式", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "通过单击来打开项目(指向时选择)(&S)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "通过双击来打开项目(单击时选择)(&D)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
+    AUTORADIOBUTTON "通过单击来打开项目（指向时选择）(&S)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "通过双击来打开项目（单击时选择）(&D)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
     AUTORADIOBUTTON "在图标标题下添加下划线，和浏览器设置相同(&B)", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "仅当我指向图标标题时才添加下划线(&P)", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
     PUSHBUTTON "还原为默认值(&R)", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
@@ -483,10 +484,10 @@ BEGIN
     LTEXT "此文件夹已包含一个名为“%2”的只读文件。", 12292, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "此文件夹已包含一个名为“%2”的系统文件。", 12293, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "您想要替换现有文件吗？", -1, 44, 35, 228, 10, SS_NOPREFIX
-    LTEXT "(未知的日期和大小)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+    LTEXT "（未知的日期和大小）", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
     LTEXT "用这个吗？", -1, 44, 75, 228, 10, SS_NOPREFIX
-    LTEXT "(未知的日期和大小)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+    LTEXT "（未知的日期和大小）", 12303, 79, 91, 198, 20, SS_NOPREFIX
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
@@ -591,7 +592,7 @@ BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
     LTEXT "您想让计算机做什么？", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-    LTEXT "维护会话，计算机数据仍然保持在内存中。当你按下一个键或移动鼠标将唤醒这台计算机。", 8225, 39, 40, 167, 37
+    LTEXT "保持会话，计算机数据仍然保持在内存中。当你按下一个键或移动鼠标将唤醒这台计算机。", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "确定", 1, 7, 82, 60, 14, WS_GROUP
     PUSHBUTTON "取消", IDCANCEL, 75, 82, 60, 14
     PUSHBUTTON "帮助(&H)", IDHELP, 144, 82, 60, 14
@@ -652,7 +653,7 @@ CAPTION "警告"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "由操作系统或另一个应用程序，也可以使用此文件。\n修改此文件可能会损坏您的系统，\n或者使它的功能变弱。\n\n\
+    LTEXT "操作系统或其他应用程序可能会使用此文件。\n修改此文件可能会损坏您的系统，\n或者使它的功能不正常。\n\n\
 你确定您想要打开此文件？", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "是", IDYES, 125, 55, 50, 14
     PUSHBUTTON "否", IDNO, 180, 55, 50, 14
@@ -714,7 +715,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "您想要什么类型的文件夹？", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "将此文件夹类型设置成模板(&F):", IDC_STATIC, 15, 20, 210, 12
+    LTEXT "将此文件夹类型设置成模板(&F)：", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "将此模板应用到所有子文件夹(&S)", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
     GROUPBOX "文件夹图片", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
@@ -735,9 +736,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 9, "宋体"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "这个快捷方式指向的项目“%s”已被更改或移动，因此这个快捷方式将不再正常工作。", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "基于名称、类型、大小和日期的最近匹配：", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "您是要修复此快捷方式以指向此目标还是只是想删除它？", -1, 35, 85, 210, 30
+    LTEXT "快捷方式所指向的目标“%s”已被更改或移动，所以此快捷方式不能正常工作。", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "基于名称、类型、大小和修改日期，最接近的匹配文件是：", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "您想要让快捷方式指向该目标来修复这个问题，还是想删除该快捷方式？", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "修复(&F)", IDOK, 55, 120, 60, 15, WS_DISABLED
     PUSHBUTTON "删除(&D)", IDYES, 120, 120, 60, 15
     PUSHBUTTON "取消", IDCANCEL, 185, 120, 60, 15
@@ -782,7 +783,7 @@ BEGIN
     IDS_PRINTERS_DESCRIPTION "显示安装的打印机和传真打印机，并帮助您添加新的。"
 
     /* About shell dialog version string */
-    IDS_ABOUT_VERSION_STRING "版本 %S (%S)"
+    IDS_ABOUT_VERSION_STRING "版本 %S（%S）"
 
     /* context menus */
     IDS_VIEW_LARGE "大图标(&G)"
@@ -850,11 +851,11 @@ BEGIN
 
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "无法格式化该卷"
-    IDS_NO_FORMAT "无法格式化该卷！因为它包含使 ReactOS 正常工作的系统文件。"
+    IDS_NO_FORMAT "无法格式化该卷！因为它包含 ReactOS 正常工作所需的系统文件。"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "无法显示运行文件对话框 (内部错误)"
-    IDS_RUNDLG_BROWSE_ERROR "无法显示浏览对话框 (内部错误)"
+    IDS_RUNDLG_ERROR "无法显示运行文件对话框（内部错误）"
+    IDS_RUNDLG_BROWSE_ERROR "无法显示浏览对话框（内部错误）"
     IDS_RUNDLG_BROWSE_CAPTION "浏览"
     IDS_RUNDLG_BROWSE_FILTER "可执行文件 (*.exe)\0*.exe\0所有文件 (*.*)\0*.*\0"
 
@@ -1025,13 +1026,13 @@ BEGIN
     IDS_EDITING_ACTION "编辑操作类型："
     IDS_NO_ICONS "文件“%s”不包含图标\n\n从列表中选择一个图标或指定其他文件。"
     IDS_FILE_NOT_FOUND "无法找到文件“%s”。"
-    IDS_LINK_INVALID "这个快捷方式指向的项目“%s”已被更改或移动，因此这个快捷方式将不再正常工作。"
+    IDS_LINK_INVALID "这个快捷方式指向的项目“%s”已被更改或移动，所以此快捷方式不能正常工作。"
     IDS_COPYTOMENU "复制到文件夹(&F)..."
-    IDS_COPYTOTITLE "请选择要复制“%s”的位置。然后点击“复制”按钮。"
+    IDS_COPYTOTITLE "请选择要将“%s”复制到的位置，然后点击“复制”按钮。"
     IDS_COPYITEMS "复制项目"
     IDS_COPYBUTTON "复制"
     IDS_MOVETOMENU "移动到文件夹(&V)..."
-    IDS_MOVETOTITLE "请选择要移动“%s”的位置。然后点击“移动”按钮。"
+    IDS_MOVETOTITLE "请选择要将“%s”移动到的位置，然后点击“移动”按钮。"
     IDS_MOVEITEMS "移动项目"
     IDS_MOVEBUTTON "移动"
 

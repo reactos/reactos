@@ -28,7 +28,7 @@ STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "Internet 设置"
     IDS_CPL_INFO        "配置 WINE Internet Explorer 以及相关设置"
-    IDS_SEC_SETTINGS    "区域的安全设置: "
+    IDS_SEC_SETTINGS    "区域的安全设置："
     IDS_SEC_LEVEL0      "自定义"
     IDS_SEC_LEVEL1      "非常低"
     IDS_SEC_LEVEL2      "低"
@@ -55,7 +55,7 @@ BEGIN
     LTEXT       "您可以删除缓存的页面、 Cookie 和其他数据。",
                 IDC_STATIC, 10, 76, 300, 10
     PUSHBUTTON  "删除文件...(&F)", IDC_HISTORY_DELETE, 144, 90, 80, 14
-    PUSHBUTTON  "设置...(&S)", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
+    PUSHBUTTON  "设置(&S)...", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
 
 END
 
@@ -121,14 +121,14 @@ FONT 9, "宋体"
 CAPTION "连接"
 BEGIN
     GROUPBOX        "自动配置", IDC_STATIC, 4, 4, 312, 56
-    AUTOCHECKBOX    "使用 Web 代理自动发现 (WPAD)", IDC_USE_WPAD, 10, 14, 200, 14, BS_TOP
-    AUTOCHECKBOX    "使用代理自动配置 (PAC) 脚本", IDC_USE_PAC_SCRIPT, 10, 28, 200, 14, BS_TOP
-    LTEXT           "地址:", IDC_STATIC, 10, 42, 40, 14
+    AUTOCHECKBOX    "使用 Web 代理自动发现（WPAD）", IDC_USE_WPAD, 10, 14, 200, 14, BS_TOP
+    AUTOCHECKBOX    "使用代理自动配置（PAC）脚本", IDC_USE_PAC_SCRIPT, 10, 28, 200, 14, BS_TOP
+    LTEXT           "地址：", IDC_STATIC, 10, 42, 40, 14
     EDITTEXT        IDC_EDIT_PAC_SCRIPT, 50, 42, 160, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX        "代理服务器", IDC_STATIC, 4, 66, 312, 42
     AUTOCHECKBOX    "使用代理服务器", IDC_USE_PROXY_SERVER, 10, 76, 200, 14, BS_TOP | BS_MULTILINE
-    LTEXT           "地址:", IDC_STATIC, 10, 90, 40, 14
+    LTEXT           "地址：", IDC_STATIC, 10, 90, 40, 14
     EDITTEXT        IDC_EDIT_PROXY_SERVER, 50, 90, 80, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT           "端口:", IDC_STATIC, 140, 90, 30, 14
+    LTEXT           "端口：", IDC_STATIC, 140, 90, 30, 14
     EDITTEXT        IDC_EDIT_PROXY_PORT, 170, 90, 40, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED | ES_NUMBER
 END
