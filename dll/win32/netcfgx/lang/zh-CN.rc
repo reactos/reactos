@@ -1,10 +1,10 @@
 /*
- * PROJECT:    ReactOS Configuration of network devices
- * COPYRIGHT:  GPL - See COPYING in the top level directory
- * FILE:       dll/win32/netcfgx/lang/zh-CN.rc
- * PURPOSE:    Chinese (Simplified) Language Resources
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
-               Wu Haotian 2022 <rigoligo03@gmail.com>
+ * PROJECT:     ReactOS Configuration of network devices
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2012 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2014 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2022 Wu Haotian <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED

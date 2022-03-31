@@ -1,11 +1,10 @@
 /*
- * Simplified Chinese resource for appwiz (dll/cpl/appwiz/lang/zh-CN.rc)
- *
- * TRANSLATOR:  Jingjing Fu (jingjingf AT 188.com)
- *              Luo Yufan (njlyf2011@hotmail.com)
- *              Wu Haotian (rigoligo03@gmail.com)
- * CREATED:     2009-04-25
- * UPDATED:     2021-08-24
+ * PROJECT:     ReactOS Software Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2009 Jingjing Fu <jingjingf@188.com>
+ *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED

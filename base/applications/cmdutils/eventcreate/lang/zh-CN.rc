@@ -1,5 +1,11 @@
-/* Translated by Li Keqing <auroracloud4096@gmail.com> */
-/* Improved by Wu Haotian <rigoligo03@gmail.com> 2021 */
+/*
+ * PROJECT:     ReactOS EventCreate Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2017 Li Keqing <auroracloud4096@gmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE

@@ -1,6 +1,11 @@
-/* Simplified Chinese translation by Jingjing Fu (jingjingf AT 188.com) 2009-05-02 */
-/* Translation has been changed by Luo Yufan (njlyf2011@hotmail.com) */
-/* Improved by Wu Haotian <rigoligo03@gmail.com> 2021 */
+/*
+ * PROJECT:     ReactOS System Control Panel Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2009 Jingjing Fu <jingjingf@188.com>
+ *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 

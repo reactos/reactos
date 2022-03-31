@@ -1,4 +1,11 @@
-/* Improved by Wu Haotian <rigoligo03@gmail.com> 2021 */
+/*
+ * PROJECT:     ReactOS Registry Console Tool
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2015 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018 Li Keqing <forucial@icloud.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 

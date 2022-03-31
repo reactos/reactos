@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS Notepad
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
- * TRANSLATOR:  Copyright 2018, 2022 Luo Yufan <njlyf2011@hotmail.com>
-                Copyright 2021, 2022 Wu Haotian <rigoligo03@gmail.com>
+ * TRANSLATORS: Copyright 2018, 2022 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021-2022 Wu Haotian <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED

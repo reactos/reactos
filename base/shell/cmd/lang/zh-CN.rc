@@ -1,6 +1,11 @@
-/* Simplified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
-/* Improved by He Yang (@kernel.bin) <1160386205@qq.com> 2020 */
-/* Improved by Wu Haotian <rigoligo03@gmail.com> */
+/*
+ * PROJECT:     ReactOS Command shell
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ *              Copyright 2020 He Yang <1160386205@qq.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 

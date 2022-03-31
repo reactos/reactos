@@ -1,5 +1,12 @@
-/* Simplified Chinese translation by zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn> */
-/* Improved by Wu Haotian <rigoligo03@gmail.com> 2021 */
+/*
+ * PROJECT:     ReactOS Registry Editor
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2007 Zhang Bing <e_zb@21cn.com> <ezb@mail.gywb.cn>
+ *              Copyright 2014 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2018 Li Keqing <forucial@icloud.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 

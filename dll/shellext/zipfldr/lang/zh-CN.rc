@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Chinese (Simplified) resource translation
- * COPYRIGHT:   Copyright 2018 Li Keqing (auroracloud4096@gmail.com)
- *                        2021 Wu Haotian (rigoligo03@gmail.com)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2018 Li Keqing <auroracloud4096@gmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
