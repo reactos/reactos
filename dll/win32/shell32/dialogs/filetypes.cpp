@@ -1482,7 +1482,7 @@ FileTypesDlg_InitListView(HWND hwndDlg, HWND hListView)
     LVCOLUMNW col;
     WCHAR szName[50];
     DWORD dwStyle;
-    INT columnSize = 140;
+    INT columnSize;
 
     if (!LoadStringW(shell32_hInstance, IDS_COLUMN_EXTENSION, szName, _countof(szName)))
     {
@@ -1512,7 +1512,7 @@ FileTypesDlg_InitListView(HWND hwndDlg, HWND hListView)
     }
 
     col.iSubItem    = 1;
-    col.cx          = clientRect.right - clientRect.left - columnSize - GetSystemMetrics(SM_CYVTHUMB);
+    col.cx          = clientRect.right - clientRect.left - columnSize - GetSystemMetrics(SM_CYVSCROLL);
     col.cchTextMax  = wcslen(szName);
     col.pszText     = szName;
     SendMessageW(hListView, LVM_INSERTCOLUMNW, 1, (LPARAM)&col);
