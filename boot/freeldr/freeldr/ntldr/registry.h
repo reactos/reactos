@@ -30,7 +30,7 @@ RegImportBinaryHive(
     _In_ PVOID ChunkBase,
     _In_ ULONG ChunkSize);
 
-LONG
+BOOLEAN
 RegInitCurrentControlSet(
     _In_ BOOLEAN LastKnownGood);
 

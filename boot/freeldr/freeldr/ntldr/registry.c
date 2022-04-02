@@ -21,6 +21,7 @@
 #include <freeldr.h>
 #include <cmlib.h>
 #include "registry.h"
+#include <internal/cmboot.h>
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(REGISTRY);
@@ -99,106 +100,44 @@ RegImportBinaryHive(
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
     HvReleaseCell(SystemHive, SystemRootCell);
 
-    TRACE("RegImportBinaryHive done\n");
     return TRUE;
 }
 
-LONG
+BOOLEAN
 RegInitCurrentControlSet(
     _In_ BOOLEAN LastKnownGood)
 {
-    WCHAR ControlSetKeyName[80];
-    HKEY SelectKey;
-    HKEY SystemKey;
-    ULONG CurrentSet = 0;
-    ULONG DefaultSet = 0;
-    ULONG LastKnownGoodSet = 0;
-    ULONG DataSize;
-    LONG Error;
+    UNICODE_STRING ControlSetName;
+    HCELL_INDEX ControlCell;
+    PCM_KEY_NODE KeyNode;
+    BOOLEAN AutoSelect;
 
     TRACE("RegInitCurrentControlSet\n");
 
-    Error = RegOpenKey(NULL,
-                       L"\\Registry\\Machine\\SYSTEM\\Select",
-                       &SelectKey);
-    if (Error != ERROR_SUCCESS)
+    /* Choose which control set to open and set it as the new "Current" */
+    RtlInitUnicodeString(&ControlSetName,
+                         LastKnownGood ? L"LastKnownGood"
+                                       : L"Default");
+
+    ControlCell = CmpFindControlSet(SystemHive,
+                                    SystemRootCell,
+                                    &ControlSetName,
+                                    &AutoSelect);
+    if (ControlCell == HCELL_NIL)
     {
-        ERR("RegOpenKey('SYSTEM\\Select') failed (Error %lu)\n", Error);
-        return Error;
+        ERR("CmpFindControlSet('%wZ') failed\n", &ControlSetName);
+        return FALSE;
     }
 
-    DataSize = sizeof(ULONG);
-    Error = RegQueryValue(SelectKey,
-                          L"Default",
-                          NULL,
-                          (PUCHAR)&DefaultSet,
-                          &DataSize);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegQueryValue('Default') failed (Error %lu)\n", Error);
-        RegCloseKey(SelectKey);
-        return Error;
-    }
+    CurrentControlSetKey = (HKEY)ControlCell;
 
-    DataSize = sizeof(ULONG);
-    Error = RegQueryValue(SelectKey,
-                          L"LastKnownGood",
-                          NULL,
-                          (PUCHAR)&LastKnownGoodSet,
-                          &DataSize);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegQueryValue('LastKnownGood') failed (Error %lu)\n", Error);
-        RegCloseKey(SelectKey);
-        return Error;
-    }
+    /* Verify it is accessible */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(SystemHive, ControlCell);
+    ASSERT(KeyNode);
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+    HvReleaseCell(SystemHive, ControlCell);
 
-    RegCloseKey(SelectKey);
-
-    CurrentSet = (LastKnownGood) ? LastKnownGoodSet : DefaultSet;
-    wcscpy(ControlSetKeyName, L"ControlSet");
-    switch(CurrentSet)
-    {
-        case 1:
-            wcscat(ControlSetKeyName, L"001");
-            break;
-        case 2:
-            wcscat(ControlSetKeyName, L"002");
-            break;
-        case 3:
-            wcscat(ControlSetKeyName, L"003");
-            break;
-        case 4:
-            wcscat(ControlSetKeyName, L"004");
-            break;
-        case 5:
-            wcscat(ControlSetKeyName, L"005");
-            break;
-    }
-
-    Error = RegOpenKey(NULL,
-                       L"\\Registry\\Machine\\SYSTEM",
-                       &SystemKey);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegOpenKey('SYSTEM') failed (Error %lu)\n", Error);
-        return Error;
-    }
-
-    Error = RegOpenKey(SystemKey,
-                       ControlSetKeyName,
-                       &CurrentControlSetKey);
-
-    RegCloseKey(SystemKey);
-
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegOpenKey('%S') failed (Error %lu)\n", ControlSetKeyName, Error);
-        return Error;
-    }
-
-    TRACE("RegInitCurrentControlSet done\n");
-    return ERROR_SUCCESS;
+    return TRUE;
 }
 
 static
@@ -429,7 +368,6 @@ RegOpenKey(
     HvReleaseCell(Hive, CellIndex);
     *Key = (HKEY)CellIndex;
 
-    TRACE("RegOpenKey done\n");
     return ERROR_SUCCESS;
 }
 
@@ -513,7 +451,6 @@ RegQueryValue(
 
     HvReleaseCell(Hive, CellIndex);
 
-    TRACE("RegQueryValue success\n");
     return ERROR_SUCCESS;
 }
 

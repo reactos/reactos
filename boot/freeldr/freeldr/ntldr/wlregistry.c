@@ -149,7 +149,7 @@ WinLdrInitSystemHive(
     }
 
     /* Initialize the 'CurrentControlSet' link */
-    if (RegInitCurrentControlSet(FALSE) != ERROR_SUCCESS)
+    if (!RegInitCurrentControlSet(FALSE))
     {
         UiMessageBox("Initializing CurrentControlSet link failed!");
         return FALSE;
