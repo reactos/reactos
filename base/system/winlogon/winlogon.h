@@ -320,6 +320,41 @@ InitializeScreenSaver(IN OUT PWLSESSION Session);
 VOID
 StartScreenSaver(IN PWLSESSION Session);
 
+/* security.c */
+PSECURITY_DESCRIPTOR
+ConvertToSelfRelative(
+    _In_ PSECURITY_DESCRIPTOR AbsoluteSd);
+
+BOOL
+CreateWinstaSecurity(
+    _Out_ PSECURITY_DESCRIPTOR *WinstaSd);
+
+BOOL
+CreateApplicationDesktopSecurity(
+    _Out_ PSECURITY_DESCRIPTOR *ApplicationDesktopSd);
+
+BOOL
+CreateWinlogonDesktopSecurity(
+    _Out_ PSECURITY_DESCRIPTOR *WinlogonDesktopSd);
+
+BOOL
+CreateScreenSaverSecurity(
+    _Out_ PSECURITY_DESCRIPTOR *ScreenSaverDesktopSd);
+
+BOOL
+AllowWinstaAccessToUser(
+    _In_ HWINSTA WinSta,
+    _In_ PSID LogonSid);
+
+BOOL
+AllowDesktopAccessToUser(
+    _In_ HDESK Desktop,
+    _In_ PSID LogonSid);
+
+BOOL
+AllowAccessOnSession(
+    _In_ PWLSESSION Session);
+
 /* setup.c */
 DWORD
 GetSetupType(VOID);
@@ -364,12 +399,8 @@ BOOL
 GinaInit(IN OUT PWLSESSION Session);
 
 BOOL
-AddAceToWindowStation(
-    IN HWINSTA WinSta,
-    IN PSID Sid);
-
-BOOL
-CreateWindowStationAndDesktops(IN OUT PWLSESSION Session);
+CreateWindowStationAndDesktops(
+    _Inout_ PWLSESSION Session);
 
 
 VOID WINAPI WlxUseCtrlAltDel(HANDLE hWlx);
