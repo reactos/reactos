@@ -118,9 +118,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Instalacija"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Registriranje komponenti", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -190,14 +193,12 @@ BEGIN
     IDS_PROCESSSUBTITLE "Molimo pričekajte..."
     IDS_THEMESELECTIONTITLE "Izgled"
     IDS_THEMESELECTIONSUBTITLE "Odaberite temu koju preferirate."
-
 END
 
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS Instalacija"
     IDS_UNKNOWN_ERROR "Nepoznata pogreška"
-    IDS_REGISTERING_COMPONENTS "Registriranje komponenti..."
     IDS_LOADLIBRARY_FAILED "Učitavanje LoadLibrary-a je neuspješno: "
     IDS_GETPROCADDR_FAILED "Učitavanje GetProcAddr-a je neuspješno: "
     IDS_REGSVR_FAILED "Učitavnaje DllRegisterServer-a je neuspješno: "
