@@ -640,7 +640,10 @@ NtSetTimer(IN HANDLE TimerHandle,
      * functionality required to support them, make this check dependent
      * on the actual PM capabilities
      */
-    if (WakeTimer) Status = STATUS_TIMER_RESUME_IGNORED;
+    if (NT_SUCCESS(Status) && WakeTimer)
+    {
+        Status = STATUS_TIMER_RESUME_IGNORED;
+    }
 
     /* Check status */
     if (NT_SUCCESS(Status))
