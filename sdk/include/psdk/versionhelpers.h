@@ -177,7 +177,7 @@ IsReactOS()
                 GetFileVersionInfoW(szFullPath, 0L, dwSize, VerInfo);
                 bProduct = VerQueryValueW(VerInfo,
                                           L"\\StringFileInfo\\000004B0\\ProductName",
-                                          (LPVOID)&lszValue,
+                                          (LPVOID*)&lszValue,
                                           &cchVer);
                 if (bProduct)
                 {
