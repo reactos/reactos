@@ -2617,8 +2617,6 @@ NtUserCreateWindowEx(
     lstrClassName.Buffer = NULL;
     lstrClsVersion.Buffer = NULL;
 
-    ASSERT(plstrWindowName);
-
     if ( (dwStyle & (WS_POPUP|WS_CHILD)) != WS_CHILD)
     {
         /* check hMenu is valid handle */
