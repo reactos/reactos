@@ -514,13 +514,13 @@ WinLdrDetectVersion(VOID)
 static
 PVOID
 LoadModule(
-    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN PCCH Path,
-    IN PCCH File,
-    IN PCCH ImportName, // BaseDllName
-    IN TYPE_OF_MEMORY MemoryType,
-    OUT PLDR_DATA_TABLE_ENTRY *Dte,
-    IN ULONG Percentage)
+    _Inout_ PLIST_ENTRY LoadOrderListHead,
+    _In_ PCSTR Path,
+    _In_ PCSTR File,
+    _In_ PCSTR ImportName, // BaseDllName
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PLDR_DATA_TABLE_ENTRY* Dte,
+    _In_ ULONG Percentage)
 {
     BOOLEAN Success;
     CHAR FullFileName[MAX_PATH];
@@ -542,7 +542,7 @@ LoadModule(
     }
     TRACE("%s loaded successfully at %p\n", File, BaseAddress);
 
-    Success = PeLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
+    Success = PeLdrAllocateDataTableEntry(LoadOrderListHead,
                                           ImportName,
                                           FullFileName,
                                           PaToVa(BaseAddress),
@@ -761,8 +761,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
      */
 
     /* Load the Kernel */
-    KernelBase = LoadModule(LoaderBlock, DirPath, KernelFileName,
-                            "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
+    KernelBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                            DirPath, KernelFileName,
+                            "ntoskrnl.exe", LoaderSystemCode,
+                            KernelDTE, 30);
     if (!KernelBase)
     {
         ERR("LoadModule('%s') failed\n", KernelFileName);
@@ -771,8 +773,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     }
 
     /* Load the HAL */
-    HalBase = LoadModule(LoaderBlock, DirPath, HalFileName,
-                         "hal.dll", LoaderHalCode, &HalDTE, 35);
+    HalBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                         DirPath, HalFileName,
+                         "hal.dll", LoaderHalCode,
+                         &HalDTE, 35);
     if (!HalBase)
     {
         ERR("LoadModule('%s') failed\n", HalFileName);
@@ -846,8 +850,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         _strlwr(KdDllName);
 
         /* Load the KD DLL. Override its base DLL name to the default "KDCOM.DLL". */
-        KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
-                               "kdcom.dll", LoaderSystemCode, &KdDllDTE, 40);
+        KdDllBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                               DirPath, KdDllName,
+                               "kdcom.dll", LoaderSystemCode,
+                               &KdDllDTE, 40);
         if (!KdDllBase)
         {
             /* If we failed to load a custom KD DLL, fall back to the standard one */
@@ -859,8 +865,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 IsCustomKdDll = FALSE;
                 RtlStringCbCopyA(KdDllName, sizeof(KdDllName), "kdcom.dll");
 
-                KdDllBase = LoadModule(LoaderBlock, DirPath, KdDllName,
-                                       "kdcom.dll", LoaderSystemCode, &KdDllDTE, 40);
+                KdDllBase = LoadModule(&LoaderBlock->LoadOrderListHead,
+                                       DirPath, KdDllName,
+                                       "kdcom.dll", LoaderSystemCode,
+                                       &KdDllDTE, 40);
             }
 
             if (!KdDllBase)
