@@ -24,9 +24,12 @@
 
 #include <reactos/manifest_hosted.rc>
 
- /* UTF-8 */
- #pragma code_page(65001)
+/* UTF-8 */
+#pragma code_page(65001)
 
+#ifdef LANGUAGE_BG_BG
+    #include "lang/bg-BG.rc"
+#endif
 #ifdef LANGUAGE_CS_CZ
     #include "lang/cs-CZ.rc"
 #endif

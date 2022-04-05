@@ -12,7 +12,7 @@ END
 
 IDD_WELCOME DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "РеактОС ви приветства"
+CAPTION "Добре Дошли в ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -59,67 +59,67 @@ END
 
 IDD_LOCKED DIALOGEX 0, 0, 275, 121
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Computer Locked"
+CAPTION "Компютърът е заключен"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
-    LTEXT "This computer is in use and has been locked.", IDC_STATIC, 37, 61, 231, 8
+    LTEXT "Този компютър е бил заключен.", IDC_STATIC, 37, 61, 231, 8
     LTEXT "<Message>", IDC_LOCKED_MESSAGE, 37, 75, 231, 26
-    LTEXT "Press Ctrl-Alt-Del to unlock this computer.", IDC_STATIC, 37, 106, 231, 8
+    LTEXT "Натиснете Ctrl-Alt-Del за да отключите компютъра.", IDC_STATIC, 37, 106, 231, 8
 END
 
 IDD_UNLOCK DIALOGEX 0, 0, 275, 179
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Unlock Computer"
+CAPTION "Отключване на компютъра"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
-    LTEXT "This computer is in use and has been locked.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "Този компютър е бил заключен.", IDC_STATIC, 36, 61, 232, 8
     LTEXT "<Message>", IDC_UNLOCK_MESSAGE, 36, 75, 232, 26
-    LTEXT "User name:", IDC_STATIC, 36, 107, 40, 8
+    LTEXT "Потребителско име:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_UNLOCK_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
-    LTEXT "Password:", IDC_STATIC, 36, 125, 42, 8
+    LTEXT "Парола:", IDC_STATIC, 36, 125, 42, 8
     EDITTEXT IDC_UNLOCK_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON "OK", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 144, 154, 50, 14
+    PUSHBUTTON "Добре", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Изход", IDCANCEL, 144, 154, 50, 14
 END
 
 IDD_CHANGEPWD DIALOGEX 0, 0, 275, 166
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Change Password"
+CAPTION "Смяна на паролата"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "User name:", IDC_STATIC, 7, 61, 78, 8
+    LTEXT "Потребителско име:", IDC_STATIC, 7, 61, 78, 8
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
-    LTEXT "Log on to:", IDC_STATIC, 7, 78, 78, 8
+    LTEXT "Вход в:", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP
-    LTEXT "Old Password:", IDC_STATIC, 7, 95, 78, 8
+    LTEXT "Текуща парола:", IDC_STATIC, 7, 95, 78, 8
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "New Password:", IDC_STATIC, 7, 111, 78, 8
+    LTEXT "Нова парола:", IDC_STATIC, 7, 111, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Confirm new Password:", IDC_STATIC, 7, 127, 78, 8
+    LTEXT "Потвърдете новата парола:", IDC_STATIC, 7, 127, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 218, 145, 50, 14
+    PUSHBUTTON "Добре", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Изход", IDCANCEL, 218, 145, 50, 14
 END
 
 IDD_LOGOFF DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Log Off ReactOS"
+CAPTION "Излизане от ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
-    LTEXT "Are you sure you want to log off?", IDC_STATIC, 35, 16, 146, 8
-    PUSHBUTTON "Yes", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "No", IDNO, 95, 39, 50, 14
+    LTEXT "Сигурен ли сте че искате да излезете?", IDC_STATIC, 35, 16, 146, 8
+    PUSHBUTTON "Да", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Не", IDNO, 95, 39, 50, 14
 END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 275, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Изключване на РеактОС"
+CAPTION "Изключване на ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -147,13 +147,13 @@ BEGIN
     LTEXT "&Какво искате да направи компютъра?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 190, 27
-    GROUPBOX "Shutdown Event Tracker", IDC_STATIC, 9, 122, 257, 146
-    LTEXT "Select the option that best describes why you want to shut down your computer.", IDC_STATIC, 39, 134, 190, 17
-    LTEXT "&Option:", IDC_STATIC, 39, 154, 80, 8
-    AUTOCHECKBOX "&Planned", IDC_REASON_PLANNED, 182, 154, 47, 10
+    GROUPBOX "Проследяване на събитията за изключване", IDC_STATIC, 9, 122, 257, 146
+    LTEXT "Изберете опцията, която описва причината за изключване на компютъра.", IDC_STATIC, 39, 134, 190, 17
+    LTEXT "&Опции:", IDC_STATIC, 39, 154, 80, 8
+    AUTOCHECKBOX "&Планирано", IDC_REASON_PLANNED, 182, 154, 47, 10
     COMBOBOX IDC_REASON_LIST, 39, 165, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_REASON_DESCRIPTION, 39, 184, 190, 27
-    LTEXT "&Comment:", IDC_STATIC, 39, 214, 80, 8
+    LTEXT "&Коментар:", IDC_STATIC, 39, 214, 80, 8
     EDITTEXT IDC_REASON_COMMENT, 39, 224, 190, 35, ES_MULTILINE | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "Добре", IDOK, 150, 276, 55, 14, WS_GROUP
     PUSHBUTTON "Отказ", IDCANCEL, 211, 276, 55, 14
@@ -178,15 +178,15 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_DLG_BG, IDC_DLG_BG, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDI_ROSLOGO_FLAG, IDC_ROSLOGO_WHITE, "STATIC", SS_BITMAP, 176, 1, 32, 26
-    PUSHBUTTON "&Hibernate", IDC_BUTTON_HIBERNATE, 30093, 30049, 22, 20, BS_OWNERDRAW | WS_DISABLED
-    PUSHBUTTON "Slee&p", IDC_BUTTON_SLEEP, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
+    PUSHBUTTON "&Хибернация", IDC_BUTTON_HIBERNATE, 30093, 30049, 22, 20, BS_OWNERDRAW | WS_DISABLED
+    PUSHBUTTON "Заспиване", IDC_BUTTON_SLEEP, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
     PUSHBUTTON "&Изключване", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "&Restart", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "&Рестартиране", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Отказ", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Изключване на РеактОС", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
-    CTEXT "Sleep", IDC_SLEEP_STATIC, 22, 70, 51, 11
+    LTEXT "Изключване на ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    CTEXT "Заспиване", IDC_SLEEP_STATIC, 22, 70, 51, 11
     CTEXT "Изключване", IDC_SHUTDOWN_STATIC, 79, 70, 51, 11
-    CTEXT "Restart", IDC_RESTART_STATIC, 136, 70, 51, 11
+    CTEXT "Рестартиране", IDC_RESTART_STATIC, 136, 70, 51, 11
 END
 
 IDD_SHUTDOWN_FANCY_LONG DIALOGEX 0, 0, 264, 122
@@ -195,16 +195,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_DLG_BG, IDC_DLG_BG, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 264, 122
     CONTROL IDI_ROSLOGO_FLAG, IDC_ROSLOGO_WHITE, "STATIC", SS_BITMAP, 232, 1, 32, 26
-    PUSHBUTTON "&Hibernate", IDC_BUTTON_HIBERNATE, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
-    PUSHBUTTON "Slee&p", IDC_BUTTON_SLEEP, 93, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "&Хибернация", IDC_BUTTON_HIBERNATE, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
+    PUSHBUTTON "Заспиване", IDC_BUTTON_SLEEP, 93, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Изключване", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "&Restart", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "&Рестартиране", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Отказ", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Изключване на РеактОС", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
-    CTEXT "Hibernate", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
-    CTEXT "Sleep", IDC_SLEEP_STATIC, 79, 70, 51, 11
+    LTEXT "Изключване на ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    CTEXT "Хибернация", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
+    CTEXT "Заспиване", IDC_SLEEP_STATIC, 79, 70, 51, 11
     CTEXT "Изключване", IDC_SHUTDOWN_STATIC, 136, 70, 51, 11
-    CTEXT "Restart", IDC_RESTART_STATIC, 193, 70, 51, 11
+    CTEXT "Рестартиране", IDC_RESTART_STATIC, 193, 70, 51, 11
 END
 
 STRINGTABLE
@@ -215,39 +215,39 @@ BEGIN
     IDS_ASKFORUSER "Потребителско име: "
     IDS_ASKFORPASSWORD "Парола: "
     IDS_FORCELOGOFF "Така текущият потребител ще излезе и ще изгуби всички несъхранени данни. Да продължа ли?"
-    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
-    IDS_LOGONMSG "You are logged on as %s."
-    IDS_LOGONDATE "Logon date: %s %s"
-    IDS_COMPUTERLOCKED "Computer locked"
-    IDS_LOCKEDWRONGPASSWORD "The password is wrong. Please enter your password again. Letters in passwords must be typed using the correct case."
-    IDS_LOCKEDWRONGUSER "This computer is locked. Only %s\\%s or an Administrator can unlock this computer."
-    IDS_CHANGEPWDTITLE "Change Password"
-    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
-    IDS_PASSWORDCHANGED "Your password has been changed."
-    IDS_LOGONTITLE "Logon Message"
-    IDS_LOGONWRONGUSERORPWD "The system could not log you on. Make sure your User name and domain are correct, then type your password again. Letters in passwords must be typed using the correct case."
-    IDS_LOGONUSERDISABLED "Your account has been disabled. Please see your system administrator."
-    IDS_PASSWORDMUSTCHANGE "You are required to change your password at first logon."
-    IDS_PASSWORDEXPIRED "Your password has expired and must be changed."
-    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
-    IDS_ACCOUNTLOCKED "Unable to log you on beacuse your account has been locked out. Please see your system administrator."
-    IDS_INVALIDLOGONHOURS "Your account has time restrictions that prevent you from logging on at this time. Please try again later."
-    IDS_INVALIDWORKSTATION "Your account is configured to prevent you from using this computer. Please try another computer."
-    IDS_ACCOUNTRESTRICTION "Unable to log you on because of an account restriction."
+    IDS_LOCKMSG "Само %s или Администратор може да отключи този компютър."
+    IDS_LOGONMSG "Вие сте влезсли с %s."
+    IDS_LOGONDATE "Време на вход: %s %s"
+    IDS_COMPUTERLOCKED "Компютърът е заключен"
+    IDS_LOCKEDWRONGPASSWORD "Паролата е грешна. Моля въведете вашата парола. Има значение, дали буквите са малки или големи."
+    IDS_LOCKEDWRONGUSER "Този компютър е заключен. Само %s\\%s или Администратор може да отключи този компютър."
+    IDS_CHANGEPWDTITLE "Смяна на паролата"
+    IDS_NONMATCHINGPASSWORDS "Паролите които сте въвели не съвпадат. Въведете една и съща парола и в двете полета."
+    IDS_PASSWORDCHANGED "Вашата парола е била сменена."
+    IDS_LOGONTITLE "Съобщение за вход"
+    IDS_LOGONWRONGUSERORPWD "Не може да се осъществи вход в системата. Уверете се, че вашето потребителско име и домейн са правилни, след което въведете паролата си отново. Има значение дали в паролата буквите са малки или големи."
+    IDS_LOGONUSERDISABLED "Вашият акаунт е бил забранен. Моля свържете се със системния администратор."
+    IDS_PASSWORDMUSTCHANGE "Желателно е да промените паролата си при следващото влизане в системата."
+    IDS_PASSWORDEXPIRED "Вашата парола е сменена и трябва да я смените."
+    IDS_ACCOUNTEXPIRED "Вашият акаунт е изтекъл. Моля свържете се със системния администратор."
+    IDS_ACCOUNTLOCKED "Не можете да влезете в акаунта си, защото акаунта е бил заключен. Моля свържете се със системния администратор."
+    IDS_INVALIDLOGONHOURS "Вашия акаунт е временно ограничен в момента. Моля опитайте по-късно."
+    IDS_INVALIDWORKSTATION "Акаунта ви е ограничен на този компютър. Моля използвайте друг компютър."
+    IDS_ACCOUNTRESTRICTION "Не можете да влезете поради ограничение на акаунта."
 END
 
 /* Shutdown Dialog Strings */
 STRINGTABLE
 BEGIN
-    IDS_SHUTDOWN_LOGOFF "Log off ""%s"""
-    IDS_SHUTDOWN_SHUTDOWN "Shut down"
-    IDS_SHUTDOWN_RESTART "Restart"
-    IDS_SHUTDOWN_SLEEP "Sleep"
-    IDS_SHUTDOWN_HIBERNATE "Hibernate"
+    IDS_SHUTDOWN_LOGOFF "Излизане на ""%s"""
+    IDS_SHUTDOWN_SHUTDOWN "Изключване"
+    IDS_SHUTDOWN_RESTART "Рестарт"
+    IDS_SHUTDOWN_SLEEP "Заспиване"
+    IDS_SHUTDOWN_HIBERNATE "Хибернация"
     /* Shut down descriptions */
-    IDS_SHUTDOWN_LOGOFF_DESC "Ends your current session and allows other users to log on to the system."
-    IDS_SHUTDOWN_SHUTDOWN_DESC "Ends your current session and shuts down the system so you can safely shut down the power."
-    IDS_SHUTDOWN_RESTART_DESC "Ends your current session and reboots the system."
-    IDS_SHUTDOWN_SLEEP_DESC "Puts the system in sleep mode."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Saves the current session and shuts down the computer."
+    IDS_SHUTDOWN_LOGOFF_DESC "Прекъсва текущата ви сесия и визуализира потребителите за вход в системата."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Прекъсва текущата ви сесия и изключва системата."
+    IDS_SHUTDOWN_RESTART_DESC "Прекъсва текущата ви сесия и рестартира системата."
+    IDS_SHUTDOWN_SLEEP_DESC "Поставя системата в режим на заспиване."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Записва моментното състояние на компютъра и го изключва."
 END

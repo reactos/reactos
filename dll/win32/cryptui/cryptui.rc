@@ -46,6 +46,9 @@ IDB_CERT_HEADER BITMAP "res/certheader.bmp"
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_BG_BG
+    #include "lang/cryptui_Bg.rc"
+#endif
 #ifdef LANGUAGE_EN_US
     #include "lang/cryptui_En.rc"
 #endif
