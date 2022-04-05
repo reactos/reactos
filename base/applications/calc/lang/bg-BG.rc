@@ -10,7 +10,7 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 163
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Изчислителят на РеактОС"
+CAPTION "Калкулатор за ReactOS"
 MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -145,7 +145,7 @@ BEGIN
             NOT WS_VISIBLE, 270, 21, 38, 10
     CONTROL "Градуси", IDC_RADIO_DEG, "Button", BS_AUTORADIOBUTTON, 150, 21, 45, 10
     CONTROL "Радиани", IDC_RADIO_RAD, "Button", BS_AUTORADIOBUTTON, 204, 21, 45, 10
-    CONTROL "Градове", IDC_RADIO_GRAD, "Button", BS_AUTORADIOBUTTON, 258, 21, 45, 10
+    CONTROL "Градиани", IDC_RADIO_GRAD, "Button", BS_AUTORADIOBUTTON, 258, 21, 45, 10
     PUSHBUTTON "C", IDC_BUTTON_CANC, 267, 38, 43, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "CE", IDC_BUTTON_CE, 222, 38, 43, 18, BS_CENTER | BS_VCENTER |
@@ -158,7 +158,7 @@ END
 
 IDD_DIALOG_STANDARD DIALOGEX 0, 0, 169, 128
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Изчислителян на РеактОС"
+CAPTION "Калкулатор за ReactOS"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -223,7 +223,7 @@ END
 
 IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Изчислителят на РеактОС"
+CAPTION "Калкулатор за ReactOS"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -331,7 +331,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Градуси\tF2", IDM_VIEW_DEG, CHECKED
         MENUITEM "Радиани\tF3", IDM_VIEW_RAD, CHECKED
-        MENUITEM "Градове\tF4", IDM_VIEW_GRAD, CHECKED
+        MENUITEM "Градиани\tF4", IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Разделяне на хилядите", IDM_VIEW_GROUP, CHECKED
     END
@@ -339,7 +339,7 @@ BEGIN
     BEGIN
         MENUITEM "Помощ", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "За ReactOS Calc", IDM_HELP_ABOUT
+        MENUITEM "За ReactOS Calculator", IDM_HELP_ABOUT
     END
 END
 
@@ -372,7 +372,7 @@ BEGIN
     BEGIN
         MENUITEM "Помощ", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "За ReactOS Calc", IDM_HELP_ABOUT
+        MENUITEM "За ReactOS Calculator", IDM_HELP_ABOUT
     END
 END
 
@@ -395,7 +395,7 @@ BEGIN
     BEGIN
         MENUITEM "Помощ", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "За ReactOS Calc", IDM_HELP_ABOUT
+        MENUITEM "За ReactOS Calculator", IDM_HELP_ABOUT
     END
 END
 
@@ -410,7 +410,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "Изчислителят на РеактОС"
+    IDS_CALC_NAME "Калкулатор за ReactOS"
     IDS_AUTHOR "Написано от Carlo Bramini"
 END
 
@@ -419,7 +419,7 @@ STRINGTABLE
 BEGIN
     IDS_CONV_ANGLE "Ъгъл"
     IDS_CONV_AREA "Площ"
-    IDS_CONV_CONSUMPTION "Потребление (двигатели)"
+    IDS_CONV_CONSUMPTION "Разход (двигатели)"
     IDS_CONV_CURRENCY "Парични единици"
     IDS_CONV_ENERGY "Енергия"
     IDS_CONV_LENGTH "Дължина"
@@ -435,10 +435,10 @@ END
 /* Angles */
 STRINGTABLE
 BEGIN
-    IDS_ANGLE_ARCMINUTES "Minute of arc"
-    IDS_ANGLE_ARCSECONDS "Second of arc"
+    IDS_ANGLE_ARCMINUTES "Минути от arc"
+    IDS_ANGLE_ARCSECONDS "Секунди от arc"
     IDS_ANGLE_DEGREES "Градуси"
-    IDS_ANGLE_GRADIANS "Гради"
+    IDS_ANGLE_GRADIANS "Градиани"
     IDS_ANGLE_RADIANS "Радиани"
 END
 
@@ -486,7 +486,7 @@ STRINGTABLE
 BEGIN
     IDS_CONSUMPTION_KM_PER_L "Километри/литър"
     IDS_CONSUMPTION_L_PER_100_KM "Литри/100 километра"
-    IDS_CONSUMPTION_MILES_GALLON_UK "Мили/галон (ОК)"
+    IDS_CONSUMPTION_MILES_GALLON_UK "Мили/галон (ВБ)"
     IDS_CONSUMPTION_MILES_GALLON_US "Мили/галон (САЩ)"
 END
 
@@ -710,6 +710,6 @@ BEGIN
     IDS_WEIGHT_STONES "Камъни"
     IDS_WEIGHT_TAMLUNG "Tamlung"
     IDS_WEIGHT_TONNES "Тонове"
-    IDS_WEIGHT_TONS_UK "Тонове (ОК)"
+    IDS_WEIGHT_TONS_UK "Тонове (ВБ)"
     IDS_WEIGHT_TONS_US "Тонове (САЩ)"
 END
