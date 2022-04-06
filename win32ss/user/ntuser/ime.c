@@ -134,6 +134,7 @@ static LANGID FASTCALL IntGetImeHotKeyLangId(DWORD dwHotKeyId)
     return LANGID_NEUTRAL;
 }
 
+// Win: AddImeHotKey
 static VOID FASTCALL IntAddImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
 {
     PIMEHOTKEY pNode;
@@ -279,6 +280,7 @@ IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVir
     return ret;
 }
 
+// Win: CheckImeHotKey
 PIMEHOTKEY IntCheckImeHotKey(PUSER_MESSAGE_QUEUE MessageQueue, UINT uVirtualKey, LPARAM lParam)
 {
     PIMEHOTKEY pHotKey;
@@ -329,6 +331,7 @@ PIMEHOTKEY IntCheckImeHotKey(PUSER_MESSAGE_QUEUE MessageQueue, UINT uVirtualKey,
     return NULL;
 }
 
+// Win: FreeImeHotKeys
 VOID FASTCALL IntFreeImeHotKeys(VOID)
 {
     PIMEHOTKEY pNode, pNext;
@@ -340,6 +343,7 @@ VOID FASTCALL IntFreeImeHotKeys(VOID)
     gpImeHotKeyList = NULL;
 }
 
+// Win: SetImeHotKey
 static BOOL APIENTRY
 IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DWORD dwAction)
 {
