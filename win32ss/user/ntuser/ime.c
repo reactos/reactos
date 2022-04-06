@@ -134,6 +134,7 @@ static LANGID FASTCALL IntGetImeHotKeyLangId(DWORD dwHotKeyId)
     return LANGID_NEUTRAL;
 }
 
+// Win: AddImeHotKey
 static VOID FASTCALL IntAddImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
 {
     PIMEHOTKEY pNode;
@@ -279,6 +280,7 @@ IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVir
     return ret;
 }
 
+// Win: CheckImeHotKey
 PIMEHOTKEY IntCheckImeHotKey(PUSER_MESSAGE_QUEUE MessageQueue, UINT uVirtualKey, LPARAM lParam)
 {
     PIMEHOTKEY pHotKey;
@@ -329,6 +331,7 @@ PIMEHOTKEY IntCheckImeHotKey(PUSER_MESSAGE_QUEUE MessageQueue, UINT uVirtualKey,
     return NULL;
 }
 
+// Win: FreeImeHotKeys
 VOID FASTCALL IntFreeImeHotKeys(VOID)
 {
     PIMEHOTKEY pNode, pNext;
@@ -340,6 +343,7 @@ VOID FASTCALL IntFreeImeHotKeys(VOID)
     gpImeHotKeyList = NULL;
 }
 
+// Win: SetImeHotKey
 static BOOL APIENTRY
 IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DWORD dwAction)
 {
@@ -493,6 +497,7 @@ PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
     return pwnd;
 }
 
+// Win: AssociateInputContext
 HIMC FASTCALL IntAssociateInputContext(PWND pWnd, PIMC pImc)
 {
     HIMC hOldImc = pWnd->hImc;
@@ -528,6 +533,7 @@ Quit:
     return 0;
 }
 
+// Win: BuildHimcList
 DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
 {
     PIMC pIMC;
@@ -938,6 +944,7 @@ Quit:
     return ret;
 }
 
+// Win: GetImeInfoEx
 BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLASS SearchType)
 {
     PKL pkl, pklHead;
@@ -1064,6 +1071,7 @@ Quit:
     return ret;
 }
 
+// Win: SetImeInfoEx
 BOOL FASTCALL UserSetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pImeInfoEx)
 {
     PKL pklHead, pkl;
@@ -1310,6 +1318,7 @@ Quit:
     return ret;
 }
 
+// Win: CreateInputContext
 PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
 {
     PIMC pIMC;
@@ -1381,6 +1390,7 @@ Quit:
     return ret;
 }
 
+// Win: AssociateInputContextEx
 DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
 {
     DWORD ret = 0;

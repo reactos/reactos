@@ -1390,6 +1390,7 @@ PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFla
     return pwl;
 }
 
+// Win: BuildHwndList
 PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
 {
     PWINDOWLIST pwl;
@@ -1435,6 +1436,7 @@ PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
     return pwl;
 }
 
+// Win: FreeHwndList
 VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget)
 {
     PWINDOWLIST pwl, *ppwl;
