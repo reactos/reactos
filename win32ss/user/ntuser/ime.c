@@ -493,6 +493,7 @@ PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
     return pwnd;
 }
 
+// Win: AssociateInputContext
 HIMC FASTCALL IntAssociateInputContext(PWND pWnd, PIMC pImc)
 {
     HIMC hOldImc = pWnd->hImc;
@@ -528,6 +529,7 @@ Quit:
     return 0;
 }
 
+// Win: BuildHimcList
 DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
 {
     PIMC pIMC;
@@ -938,6 +940,7 @@ Quit:
     return ret;
 }
 
+// Win: GetImeInfoEx
 BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLASS SearchType)
 {
     PKL pkl, pklHead;
@@ -1064,6 +1067,7 @@ Quit:
     return ret;
 }
 
+// Win: SetImeInfoEx
 BOOL FASTCALL UserSetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pImeInfoEx)
 {
     PKL pklHead, pkl;
@@ -1310,6 +1314,7 @@ Quit:
     return ret;
 }
 
+// Win: CreateInputContext
 PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
 {
     PIMC pIMC;
@@ -1381,6 +1386,7 @@ Quit:
     return ret;
 }
 
+// Win: AssociateInputContextEx
 DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
 {
     DWORD ret = 0;
