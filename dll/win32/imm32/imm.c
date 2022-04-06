@@ -6,7 +6,7 @@
  *              Copyright 2002, 2003, 2007 CodeWeavers, Aric Stewart
  *              Copyright 2017 James Tabor <james.tabor@reactos.org>
  *              Copyright 2018 Amine Khaldi <amine.khaldi@reactos.org>
- *              Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2020-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -18,7 +18,8 @@ PSERVERINFO gpsi = NULL;
 SHAREDINFO gSharedInfo = { NULL };
 BYTE g_bClientRegd = FALSE;
 
-static BOOL APIENTRY Imm32InitInstance(HMODULE hMod)
+// Win: ImmInitializeGlobals
+static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
 {
     NTSTATUS status;
 
@@ -44,7 +45,7 @@ BOOL WINAPI ImmRegisterClient(PSHAREDINFO ptr, HINSTANCE hMod)
 {
     gSharedInfo = *ptr;
     gpsi = gSharedInfo.psi;
-    return Imm32InitInstance(hMod);
+    return ImmInitializeGlobals(hMod);
 }
 
 /***********************************************************************
@@ -629,6 +630,7 @@ static VOID APIENTRY Imm32FreeImeStates(LPINPUTCONTEXTDX pIC)
     }
 }
 
+// Win: DestroyInputContext
 BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
 {
     PIMEDPI pImeDpi;
@@ -792,6 +794,7 @@ Fail:
     return FALSE;
 }
 
+// Win: InternalImmLockIMC
 LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
 {
     HANDLE hIC;
@@ -960,6 +963,7 @@ VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc)
     ImmLocalFree(pClientImc);
 }
 
+// Win: ImmGetSaveContext
 static HIMC APIENTRY ImmGetSaveContext(HWND hWnd, DWORD dwContextFlags)
 {
     HIMC hIMC;
@@ -1256,9 +1260,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
-            if (!Imm32InitInstance(hinstDLL))
+            if (!ImmInitializeGlobals(hinstDLL))
             {
-                ERR("Imm32InitInstance failed\n");
+                ERR("ImmInitializeGlobals failed\n");
                 return FALSE;
             }
             if (!User32InitializeImmEntryTable(IMM_INIT_MAGIC))
