@@ -1009,14 +1009,6 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
 }
 
 /***********************************************************************
- *		CtfImmIsCiceroEnabled (IMM32.@)
- */
-BOOL WINAPI CtfImmIsCiceroEnabled(VOID)
-{
-    return Imm32IsCiceroMode();
-}
-
-/***********************************************************************
  *		ImmLockIMC(IMM32.@)
  *
  * NOTE: This is not ImmLockIMCC. Don't confuse.

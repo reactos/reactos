@@ -10,6 +10,7 @@ spec2def(imm32.dll imm32.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     candidate.c
     compstr.c
+    ctf.c
     guideline.c
     ime.c
     imm.c
