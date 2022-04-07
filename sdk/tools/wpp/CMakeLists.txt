@@ -11,6 +11,13 @@ if(MSVC)
             add_definitions(-Dvsnprintf=_vsnprintf)
         endif()
     endif()
+
+    # Disable warning " unary minus operator applied to unsigned type, result still unsigned"
+    add_compile_flags("/wd4146")
+
+    # Disable warning "'=': conversion from 'a' to 'b', possible loss of data"
+    add_compile_flags("/wd4244")
+
 endif()
 
 if(CMAKE_CROSSCOMPILING)
