@@ -40,7 +40,8 @@ if(ARCH STREQUAL "i386")
 elseif(ARCH STREQUAL "amd64")
     list(APPEND ASM_SOURCE
         ${NTOS_RTL_SOURCE_DIR}/amd64/debug_asm.S
-        ${NTOS_RTL_SOURCE_DIR}/amd64/rtlmem.S)
+        ## ${NTOS_RTL_SOURCE_DIR}/amd64/rtlmem.S
+        )
     list(APPEND SOURCE
         ${NTOS_RTL_SOURCE_DIR}/bitmap64.c
         ${NTOS_RTL_SOURCE_DIR}/byteswap.c
