@@ -18,6 +18,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc);
 VOID WINAPI ImmUnlockClientImc(PCLIENTIMC pClientImc);
 PIMEDPI WINAPI ImmLockImeDpi(HKL hKL);
 VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi);
+HRESULT APIENTRY CtfImmTIMDestroyInputContext(HIMC hIMC);
 
 #ifdef __cplusplus
 } // extern "C"
