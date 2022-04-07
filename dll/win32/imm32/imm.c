@@ -681,7 +681,7 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
 
     if (pClientImc->hKL == hKL)
     {
-        pImeDpi = IMM32!ImmLockImeDpi(hKL);
+        pImeDpi = ImmLockImeDpi(hKL);
         if (pImeDpi)
         {
             if (IS_IME_HKL(hKL))
