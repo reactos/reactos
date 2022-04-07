@@ -611,23 +611,26 @@ HIMC WINAPI ImmCreateContext(void)
     return hIMC;
 }
 
-static VOID APIENTRY Imm32FreeImeStates(LPINPUTCONTEXTDX pIC)
+// Win: DestroyImeModeSaver
+static VOID APIENTRY Imm32DestroyImeModeSaver(LPINPUTCONTEXTDX pIC)
 {
-    PIME_STATE pState, pStateNext;
-    PIME_SUBSTATE pSubState, pSubStateNext;
+    PIME_STATE pState, pNext;
+    PIME_SUBSTATE pSubState, pSubNext;
 
-    pState = pIC->pState;
-    pIC->pState = NULL;
-    for (; pState; pState = pStateNext)
+    for (pState = pIC->pState; pState; pState = pNext)
     {
-        pStateNext = pState->pNext;
-        for (pSubState = pState->pSubState; pSubState; pSubState = pSubStateNext)
+        pNext = pState->pNext;
+
+        for (pSubState = pState->pSubState; pSubState; pSubState = pSubNext)
         {
-            pSubStateNext = pSubState->pNext;
+            pSubNext = pSubState->pNext;
             ImmLocalFree(pSubState);
         }
+
         ImmLocalFree(pState);
     }
+
+    pIC->pState = NULL;
 }
 
 // Win: DestroyInputContext
@@ -638,7 +641,7 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     PCLIENTIMC pClientImc;
     PIMC pIMC;
 
-    if (!IS_IMM_MODE() || hIMC == NULL)
+    if (!hIMC || !IS_IMM_MODE())
         return FALSE;
 
     pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
@@ -674,19 +677,30 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
         return FALSE;
     }
 
-    pImeDpi = ImmLockImeDpi(hKL);
-    if (pImeDpi)
+    CtfImmTIMDestroyInputContext(hIMC);
+
+    if (pClientImc->hKL == hKL)
     {
-        pImeDpi->ImeSelect(hIMC, FALSE);
-        ImmUnlockImeDpi(pImeDpi);
+        pImeDpi = IMM32!ImmLockImeDpi(hKL);
+        if (pImeDpi)
+        {
+            if (IS_IME_HKL(hKL))
+                pImeDpi->ImeSelect(hIMC, FALSE);
+            else if (Imm32IsCiceroMode() && !Imm32Is16BitMode())
+                pImeDpi->CtfImeSelectEx(hIMC, FALSE, hKL);
+
+            ImmUnlockImeDpi(pImeDpi);
+        }
+
+        pClientImc->hKL = NULL;
     }
 
-    pIC->hPrivate = ImmDestroyIMCC(pIC->hPrivate);
-    pIC->hMsgBuf = ImmDestroyIMCC(pIC->hMsgBuf);
-    pIC->hGuideLine = ImmDestroyIMCC(pIC->hGuideLine);
-    pIC->hCandInfo = ImmDestroyIMCC(pIC->hCandInfo);
-    pIC->hCompStr = ImmDestroyIMCC(pIC->hCompStr);
-    Imm32FreeImeStates(pIC);
+    ImmDestroyIMCC(pIC->hPrivate);
+    ImmDestroyIMCC(pIC->hMsgBuf);
+    ImmDestroyIMCC(pIC->hGuideLine);
+    ImmDestroyIMCC(pIC->hCandInfo);
+    ImmDestroyIMCC(pIC->hCompStr);
+    Imm32DestroyImeModeSaver(pIC);
     ImmUnlockIMC(hIMC);
 
 Quit:
