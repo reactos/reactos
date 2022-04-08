@@ -29,7 +29,7 @@ static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
     if (g_bClientRegd)
         return TRUE;
 
-    status = RtlInitializeCriticalSection(&g_csImeDpi);
+    status = RtlInitializeCriticalSection(&gcsImeDpi);
     if (NT_ERROR(status))
         return FALSE;
 
@@ -159,14 +159,14 @@ BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
     }
     else if (dwUnknown == 2)
     {
-        RtlEnterCriticalSection(&g_csImeDpi);
+        RtlEnterCriticalSection(&gcsImeDpi);
 Retry:
         for (pImeDpi = g_pImeDpiList; pImeDpi; pImeDpi = pImeDpi->pNext)
         {
             if (Imm32ReleaseIME(pImeDpi->hKL))
                 goto Retry;
         }
-        RtlLeaveCriticalSection(&g_csImeDpi);
+        RtlLeaveCriticalSection(&gcsImeDpi);
     }
     else
     {
@@ -1291,7 +1291,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             break;
 
         case DLL_PROCESS_DETACH:
-            RtlDeleteCriticalSection(&g_csImeDpi);
+            RtlDeleteCriticalSection(&gcsImeDpi);
             TRACE("imm32.dll is unloaded\n");
             break;
     }

@@ -6,27 +6,27 @@
  *              Copyright 2002, 2003, 2007 CodeWeavers, Aric Stewart
  *              Copyright 2017 James Tabor <james.tabor@reactos.org>
  *              Copyright 2018 Amine Khaldi <amine.khaldi@reactos.org>
- *              Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2020-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-RTL_CRITICAL_SECTION g_csImeDpi;
+RTL_CRITICAL_SECTION gcsImeDpi; // Win: gcsImeDpi
 PIMEDPI g_pImeDpiList = NULL;
 
 PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
-    RtlEnterCriticalSection(&g_csImeDpi);
+    RtlEnterCriticalSection(&gcsImeDpi);
     for (pImeDpi = g_pImeDpiList; pImeDpi != NULL; pImeDpi = pImeDpi->pNext)
     {
         if (pImeDpi->hKL == hKL)
             break;
     }
-    RtlLeaveCriticalSection(&g_csImeDpi);
+    RtlLeaveCriticalSection(&gcsImeDpi);
 
     return pImeDpi;
 }
@@ -247,7 +247,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         return FALSE;
     }
 
-    RtlEnterCriticalSection(&g_csImeDpi);
+    RtlEnterCriticalSection(&gcsImeDpi);
 
     pImeDpiFound = Imm32FindImeDpi(hKL);
     if (pImeDpiFound)
@@ -255,7 +255,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         if (!bLock)
             pImeDpiFound->dwFlags &= ~IMEDPI_FLAG_LOCKED;
 
-        RtlLeaveCriticalSection(&g_csImeDpi);
+        RtlLeaveCriticalSection(&gcsImeDpi);
 
         Imm32FreeImeDpi(pImeDpiNew, FALSE);
         ImmLocalFree(pImeDpiNew);
@@ -272,7 +272,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         pImeDpiNew->pNext = g_pImeDpiList;
         g_pImeDpiList = pImeDpiNew;
 
-        RtlLeaveCriticalSection(&g_csImeDpi);
+        RtlLeaveCriticalSection(&gcsImeDpi);
         return pImeDpiNew;
     }
 }
@@ -308,7 +308,7 @@ BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
     BOOL ret = TRUE;
     PIMEDPI pImeDpi0, pImeDpi1;
 
-    RtlEnterCriticalSection(&g_csImeDpi);
+    RtlEnterCriticalSection(&gcsImeDpi);
 
     for (pImeDpi0 = g_pImeDpiList; pImeDpi0; pImeDpi0 = pImeDpi0->pNext)
     {
@@ -346,7 +346,7 @@ BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
     ImmLocalFree(pImeDpi0);
 
 Quit:
-    RtlLeaveCriticalSection(&g_csImeDpi);
+    RtlLeaveCriticalSection(&gcsImeDpi);
     return ret;
 }
 
@@ -726,7 +726,7 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
 
     TRACE("(%p)\n", hKL);
 
-    RtlEnterCriticalSection(&g_csImeDpi);
+    RtlEnterCriticalSection(&gcsImeDpi);
 
     /* Find by hKL */
     for (pImeDpi = g_pImeDpiList; pImeDpi; pImeDpi = pImeDpi->pNext)
@@ -742,7 +742,7 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
         }
     }
 
-    RtlLeaveCriticalSection(&g_csImeDpi);
+    RtlLeaveCriticalSection(&gcsImeDpi);
     return pImeDpi;
 }
 
@@ -758,13 +758,13 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
     if (pImeDpi == NULL)
         return;
 
-    RtlEnterCriticalSection(&g_csImeDpi);
+    RtlEnterCriticalSection(&gcsImeDpi);
 
     /* unlock */
     --(pImeDpi->cLockObj);
     if (pImeDpi->cLockObj != 0)
     {
-        RtlLeaveCriticalSection(&g_csImeDpi);
+        RtlLeaveCriticalSection(&gcsImeDpi);
         return;
     }
 
@@ -773,7 +773,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
         if ((pImeDpi->dwFlags & IMEDPI_FLAG_LOCKED) == 0 ||
             (pImeDpi->ImeInfo.fdwProperty & IME_PROP_END_UNLOAD) == 0)
         {
-            RtlLeaveCriticalSection(&g_csImeDpi);
+            RtlLeaveCriticalSection(&gcsImeDpi);
             return;
         }
     }
@@ -791,7 +791,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
     Imm32FreeImeDpi(pImeDpi, TRUE);
     ImmLocalFree(pImeDpi);
 
-    RtlLeaveCriticalSection(&g_csImeDpi);
+    RtlLeaveCriticalSection(&gcsImeDpi);
 }
 
 /***********************************************************************
