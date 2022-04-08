@@ -38,6 +38,13 @@ HRESULT APIENTRY CtfImmTIMDestroyInputContext(HIMC hIMC)
     return Imm32CtfImeDestroyInputContext(hIMC);
 }
 
+// Win: CtfImmTIMCreateInputContext
+HRESULT APIENTRY CtfImmTIMCreateInputContext(HIMC hIMC)
+{
+    FIXME("(%p)\n", hIMC);
+    return E_NOTIMPL;
+}
+
 /***********************************************************************
  *		CtfImmIsCiceroEnabled (IMM32.@)
  */

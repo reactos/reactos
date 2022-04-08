@@ -713,15 +713,16 @@ Finish:
     return NtUserDestroyInputContext(hIMC);
 }
 
+// NOTE: Windows does recursive call ImmLockIMC here but we don't do so.
+// Win: BOOL CreateInputContext(HIMC hIMC, HKL hKL, BOOL fSelect)
 BOOL APIENTRY
-Imm32InitContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HKL hKL, BOOL fSelect)
+Imm32CreateInputContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HKL hKL, BOOL fSelect)
 {
     DWORD dwIndex, cbPrivate;
     PIMEDPI pImeDpi = NULL;
     LPCOMPOSITIONSTRING pCS;
     LPCANDIDATEINFO pCI;
     LPGUIDELINE pGL;
-    /* NOTE: Windows does recursive call ImmLockIMC here but we don't do so. */
 
     /* Create IC components */
     pIC->hCompStr = ImmCreateIMCC(sizeof(COMPOSITIONSTRING));
@@ -814,11 +815,10 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
     HANDLE hIC;
     LPINPUTCONTEXT pIC = NULL;
     PCLIENTIMC pClientImc;
-    WORD Word;
+    WORD LangID;
     DWORD dwThreadId;
-    HKL hKL, hNewKL;
+    HKL hOldKL, hNewKL;
     PIMEDPI pImeDpi = NULL;
-    BOOL bInited;
 
     pClientImc = ImmLockClientImc(hIMC);
     if (!pClientImc)
@@ -826,68 +826,53 @@ LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
 
     RtlEnterCriticalSection(&pClientImc->cs);
 
-    if (!pClientImc->hInputContext)
+    if (pClientImc->hInputContext)
+        goto Finish;
+
+    dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
+    if (dwThreadId == GetCurrentThreadId() && Imm32IsCiceroMode() && !Imm32Is16BitMode())
     {
-        dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
+        hOldKL = GetKeyboardLayout(0);
+        LangID = LOWORD(hOldKL);
+        hNewKL = (HKL)(DWORD_PTR)MAKELONG(LangID, LangID);
 
-        if (dwThreadId == GetCurrentThreadId() && Imm32IsCiceroMode() && !Imm32Is16BitMode())
+        pImeDpi = Imm32FindOrLoadImeDpi(hNewKL);
+        if (pImeDpi)
         {
-            hKL = GetKeyboardLayout(0);
-            Word = LOWORD(hKL);
-            hNewKL = (HKL)(DWORD_PTR)MAKELONG(Word, Word);
-
-            pImeDpi = Imm32FindOrLoadImeDpi(hNewKL);
-            if (pImeDpi)
-            {
-                FIXME("We have to do something here\n");
-            }
-        }
-
-        if (!NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME))
-        {
-            RtlLeaveCriticalSection(&pClientImc->cs);
-            goto Quit;
-        }
-
-        hIC = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
-        if (!hIC)
-        {
-            RtlLeaveCriticalSection(&pClientImc->cs);
-            goto Quit;
-        }
-        pClientImc->hInputContext = hIC;
-
-        pIC = LocalLock(pClientImc->hInputContext);
-        if (!pIC)
-        {
-            pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
-            RtlLeaveCriticalSection(&pClientImc->cs);
-            goto Quit;
-        }
-
-        hKL = GetKeyboardLayout(dwThreadId);
-        // bInited = Imm32InitContext(hIMC, hKL, fSelect);
-        bInited = Imm32InitContext(hIMC, pIC, pClientImc, hKL, fSelect);
-        LocalUnlock(pClientImc->hInputContext);
-
-        if (!bInited)
-        {
-            pIC = NULL;
-            pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
-            RtlLeaveCriticalSection(&pClientImc->cs);
-            goto Quit;
+            CtfImmTIMActivate(hNewKL);
         }
     }
 
-    FIXME("We have to do something here\n");
+    if (!NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME))
+        goto Quit;
 
+    hIC = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
+    pIC = LocalLock(hIC);
+    if (!pIC)
+    {
+        LocalFree(hIC);
+        goto Quit;
+    }
+    pClientImc->hInputContext = hIC;
+
+    hNewKL = GetKeyboardLayout(dwThreadId);
+    if (!Imm32CreateInputContext(hIMC, pIC, pClientImc, hNewKL, fSelect))
+    {
+        pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
+        goto Quit;
+    }
+
+Finish:
+    CtfImmTIMCreateInputContext(hIMC);
     RtlLeaveCriticalSection(&pClientImc->cs);
-    pIC = LocalLock(pClientImc->hInputContext);
     InterlockedIncrement(&pClientImc->cLockObj);
-
-Quit:
     ImmUnlockClientImc(pClientImc);
     return pIC;
+
+Quit:
+    RtlLeaveCriticalSection(&pClientImc->cs);
+    ImmUnlockClientImc(pClientImc);
+    return NULL;
 }
 
 /***********************************************************************
