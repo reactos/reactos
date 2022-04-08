@@ -71,7 +71,7 @@ typedef struct REG_IME
 
 extern HMODULE g_hImm32Inst;
 extern RTL_CRITICAL_SECTION gcsImeDpi;
-extern PIMEDPI g_pImeDpiList;
+extern PIMEDPI gpImeDpiList;
 extern PSERVERINFO gpsi;
 extern SHAREDINFO gSharedInfo;
 extern BYTE g_bClientRegd;

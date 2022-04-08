@@ -161,7 +161,7 @@ BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
     {
         RtlEnterCriticalSection(&gcsImeDpi);
 Retry:
-        for (pImeDpi = g_pImeDpiList; pImeDpi; pImeDpi = pImeDpi->pNext)
+        for (pImeDpi = gpImeDpiList; pImeDpi; pImeDpi = pImeDpi->pNext)
         {
             if (Imm32ReleaseIME(pImeDpi->hKL))
                 goto Retry;
