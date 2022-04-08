@@ -70,7 +70,7 @@ typedef struct REG_IME
 } REG_IME, *PREG_IME;
 
 extern HMODULE g_hImm32Inst;
-extern RTL_CRITICAL_SECTION g_csImeDpi;
+extern RTL_CRITICAL_SECTION gcsImeDpi;
 extern PIMEDPI g_pImeDpiList;
 extern PSERVERINFO gpsi;
 extern SHAREDINFO gSharedInfo;
