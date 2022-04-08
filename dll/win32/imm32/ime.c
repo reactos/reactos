@@ -31,7 +31,8 @@ PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
     return pImeDpi;
 }
 
-VOID APIENTRY Imm32FreeImeDpi(PIMEDPI pImeDpi, BOOL bDestroy)
+// Win: UnloadIME
+VOID APIENTRY Imm32UnloadIME(PIMEDPI pImeDpi, BOOL bDestroy)
 {
     if (pImeDpi->hInst == NULL)
         return;
@@ -257,7 +258,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
 
         RtlLeaveCriticalSection(&gcsImeDpi);
 
-        Imm32FreeImeDpi(pImeDpiNew, FALSE);
+        Imm32UnloadIME(pImeDpiNew, FALSE);
         ImmLocalFree(pImeDpiNew);
         return pImeDpiFound;
     }
@@ -342,7 +343,7 @@ BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
         }
     }
 
-    Imm32FreeImeDpi(pImeDpi0, TRUE);
+    Imm32UnloadIME(pImeDpi0, TRUE);
     ImmLocalFree(pImeDpi0);
 
 Quit:
@@ -788,7 +789,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
         }
     }
 
-    Imm32FreeImeDpi(pImeDpi, TRUE);
+    Imm32UnloadIME(pImeDpi, TRUE);
     ImmLocalFree(pImeDpi);
 
     RtlLeaveCriticalSection(&gcsImeDpi);
