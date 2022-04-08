@@ -242,7 +242,7 @@ VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
         }
     }
 
-    pIC = (LPINPUTCONTEXTDX)Imm32LockIMCEx(hIMC, FALSE);
+    pIC = (LPINPUTCONTEXTDX)Imm32InternalLockIMC(hIMC, FALSE);
     if (!pIC)
     {
         if (pNewImeDpi)
@@ -810,7 +810,7 @@ Fail:
 }
 
 // Win: InternalImmLockIMC
-LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect)
+LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
 {
     HANDLE hIC;
     LPINPUTCONTEXT pIC = NULL;
@@ -1015,7 +1015,7 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
 {
     TRACE("(%p)\n", hIMC);
-    return Imm32LockIMCEx(hIMC, TRUE);
+    return Imm32InternalLockIMC(hIMC, TRUE);
 }
 
 /***********************************************************************
