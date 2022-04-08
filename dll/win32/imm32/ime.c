@@ -14,14 +14,14 @@
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 RTL_CRITICAL_SECTION gcsImeDpi; // Win: gcsImeDpi
-PIMEDPI g_pImeDpiList = NULL;
+PIMEDPI gpImeDpiList = NULL; // Win: gpImeDpi
 
 PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
     RtlEnterCriticalSection(&gcsImeDpi);
-    for (pImeDpi = g_pImeDpiList; pImeDpi != NULL; pImeDpi = pImeDpi->pNext)
+    for (pImeDpi = gpImeDpiList; pImeDpi != NULL; pImeDpi = pImeDpi->pNext)
     {
         if (pImeDpi->hKL == hKL)
             break;
@@ -269,8 +269,8 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
             pImeDpiNew->cLockObj = 1;
         }
 
-        pImeDpiNew->pNext = g_pImeDpiList;
-        g_pImeDpiList = pImeDpiNew;
+        pImeDpiNew->pNext = gpImeDpiList;
+        gpImeDpiList = pImeDpiNew;
 
         RtlLeaveCriticalSection(&gcsImeDpi);
         return pImeDpiNew;
@@ -310,7 +310,7 @@ BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
 
     RtlEnterCriticalSection(&gcsImeDpi);
 
-    for (pImeDpi0 = g_pImeDpiList; pImeDpi0; pImeDpi0 = pImeDpi0->pNext)
+    for (pImeDpi0 = gpImeDpiList; pImeDpi0; pImeDpi0 = pImeDpi0->pNext)
     {
         if (pImeDpi0->hKL == hKL)
             break;
@@ -326,13 +326,13 @@ BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
         goto Quit;
     }
 
-    if (g_pImeDpiList == pImeDpi0)
+    if (gpImeDpiList == pImeDpi0)
     {
-        g_pImeDpiList = pImeDpi0->pNext;
+        gpImeDpiList = pImeDpi0->pNext;
     }
-    else if (g_pImeDpiList)
+    else if (gpImeDpiList)
     {
-        for (pImeDpi1 = g_pImeDpiList; pImeDpi1; pImeDpi1 = pImeDpi1->pNext)
+        for (pImeDpi1 = gpImeDpiList; pImeDpi1; pImeDpi1 = pImeDpi1->pNext)
         {
             if (pImeDpi1->pNext == pImeDpi0)
             {
@@ -729,7 +729,7 @@ PIMEDPI WINAPI ImmLockImeDpi(HKL hKL)
     RtlEnterCriticalSection(&gcsImeDpi);
 
     /* Find by hKL */
-    for (pImeDpi = g_pImeDpiList; pImeDpi; pImeDpi = pImeDpi->pNext)
+    for (pImeDpi = gpImeDpiList; pImeDpi; pImeDpi = pImeDpi->pNext)
     {
         if (pImeDpi->hKL == hKL) /* found */
         {
@@ -779,7 +779,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
     }
 
     /* Remove from list */
-    for (ppEntry = &g_pImeDpiList; *ppEntry; ppEntry = &((*ppEntry)->pNext))
+    for (ppEntry = &gpImeDpiList; *ppEntry; ppEntry = &((*ppEntry)->pNext))
     {
         if (*ppEntry == pImeDpi) /* found */
         {
