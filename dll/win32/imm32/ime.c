@@ -308,7 +308,7 @@ ImeDpi_Escape(PIMEDPI pImeDpi, HIMC hIMC, UINT uSubFunc, LPVOID lpData, HKL hKL)
 }
 
 // Win: ImmUnloadIME
-BOOL APIENTRY ImmUnloadIME(HKL hKL)
+BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
 {
     BOOL ret = TRUE;
     PIMEDPI pImeDpi0, pImeDpi1;

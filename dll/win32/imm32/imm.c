@@ -163,7 +163,7 @@ BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
 Retry:
         for (pImeDpi = gpImeDpiList; pImeDpi; pImeDpi = pImeDpi->pNext)
         {
-            if (ImmUnloadIME(pImeDpi->hKL))
+            if (Imm32ReleaseIME(pImeDpi->hKL))
                 goto Retry;
         }
         RtlLeaveCriticalSection(&gcsImeDpi);
@@ -172,7 +172,7 @@ Retry:
     {
         hNewKL = (HKL)(DWORD_PTR)dwUnknown;
         if (IS_IME_HKL(hNewKL) && hNewKL != hOldKL)
-            ImmUnloadIME(hNewKL);
+            Imm32ReleaseIME(hNewKL);
     }
 
     return TRUE;
