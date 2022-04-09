@@ -69,12 +69,11 @@ typedef struct REG_IME
     WCHAR szFileName[80];   /* The IME module filename */
 } REG_IME, *PREG_IME;
 
-extern HMODULE g_hImm32Inst;
+extern HMODULE ghImm32Inst;
 extern RTL_CRITICAL_SECTION gcsImeDpi;
 extern PIMEDPI gpImeDpiList;
 extern PSERVERINFO gpsi;
 extern SHAREDINFO gSharedInfo;
-extern BYTE g_bClientRegd;
 extern HANDLE ghImmHeap;
 
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName);
@@ -127,7 +126,7 @@ BOOL APIENTRY
 Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
                    DWORD_PTR dwCommand, DWORD_PTR dwData);
 
-DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList);
+DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList);
 
 INT APIENTRY
 Imm32ImeMenuAnsiToWide(const IMEMENUITEMINFOA *pItemA, LPIMEMENUITEMINFOW pItemW,

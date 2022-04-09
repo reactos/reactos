@@ -16,6 +16,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 RTL_CRITICAL_SECTION gcsImeDpi; // Win: gcsImeDpi
 PIMEDPI gpImeDpiList = NULL; // Win: gpImeDpi
 
+// Win: ImmGetImeDpi
 PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi;
@@ -32,7 +33,7 @@ PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
 }
 
 // Win: UnloadIME
-VOID APIENTRY Imm32UnloadIME(PIMEDPI pImeDpi, BOOL bDestroy)
+VOID APIENTRY Imm32FreeIME(PIMEDPI pImeDpi, BOOL bDestroy)
 {
     if (pImeDpi->hInst == NULL)
         return;
@@ -42,6 +43,7 @@ VOID APIENTRY Imm32UnloadIME(PIMEDPI pImeDpi, BOOL bDestroy)
     pImeDpi->hInst = NULL;
 }
 
+// Win: InquireIme
 BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
 {
     WCHAR szUIClass[64];
@@ -147,7 +149,8 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     return GetClassInfoW(pImeDpi->hInst, pImeDpi->szUIClass, &wcW);
 }
 
-BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
+// Win: LoadIME
+BOOL APIENTRY Imm32LoadIME(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
 {
     WCHAR szPath[MAX_PATH];
     HINSTANCE hIME;
@@ -163,7 +166,7 @@ BOOL APIENTRY Imm32LoadImeInfo(PIMEINFOEX pImeInfoEx, PIMEDPI pImeDpi)
         hIME = LoadLibraryW(szPath);
         if (hIME == NULL)
         {
-            ERR("Imm32LoadImeInfo: LoadLibraryW(%S) failed\n", szPath);
+            ERR("Imm32LoadIME: LoadLibraryW(%S) failed\n", szPath);
             return FALSE;
         }
     }
@@ -215,6 +218,7 @@ Failed:
     return ret;
 }
 
+// Win: LoadImeDpi
 PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
 {
     IMEINFOEX ImeInfoEx;
@@ -242,7 +246,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
         uCodePage = CP_ACP;
     pImeDpiNew->uCodePage = uCodePage;
 
-    if (!Imm32LoadImeInfo(&ImeInfoEx, pImeDpiNew))
+    if (!Imm32LoadIME(&ImeInfoEx, pImeDpiNew))
     {
         ImmLocalFree(pImeDpiNew);
         return FALSE;
@@ -257,8 +261,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
             pImeDpiFound->dwFlags &= ~IMEDPI_FLAG_LOCKED;
 
         RtlLeaveCriticalSection(&gcsImeDpi);
-
-        Imm32UnloadIME(pImeDpiNew, FALSE);
+        Imm32FreeIME(pImeDpiNew, FALSE);
         ImmLocalFree(pImeDpiNew);
         return pImeDpiFound;
     }
@@ -304,6 +307,7 @@ ImeDpi_Escape(PIMEDPI pImeDpi, HIMC hIMC, UINT uSubFunc, LPVOID lpData, HKL hKL)
     return 0;
 }
 
+// Win: ImmUnloadIME
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
 {
     BOOL ret = TRUE;
@@ -343,7 +347,7 @@ BOOL APIENTRY Imm32ReleaseIME(HKL hKL)
         }
     }
 
-    Imm32UnloadIME(pImeDpi0, TRUE);
+    Imm32FreeIME(pImeDpi0, TRUE);
     ImmLocalFree(pImeDpi0);
 
 Quit:
@@ -789,7 +793,7 @@ VOID WINAPI ImmUnlockImeDpi(PIMEDPI pImeDpi)
         }
     }
 
-    Imm32UnloadIME(pImeDpi, TRUE);
+    Imm32FreeIME(pImeDpi, TRUE);
     ImmLocalFree(pImeDpi);
 
     RtlLeaveCriticalSection(&gcsImeDpi);

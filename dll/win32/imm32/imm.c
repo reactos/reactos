@@ -13,10 +13,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-HMODULE g_hImm32Inst = NULL;
-PSERVERINFO gpsi = NULL;
-SHAREDINFO gSharedInfo = { NULL };
-BYTE g_bClientRegd = FALSE;
+HMODULE ghImm32Inst = NULL; // Win: ghInst
+PSERVERINFO gpsi = NULL; // Win: gpsi
+SHAREDINFO gSharedInfo = { NULL }; // Win: gSharedInfo
+BYTE gfImmInitialized = FALSE; // Win: gfInitialized
 
 // Win: ImmInitializeGlobals
 static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
@@ -24,16 +24,16 @@ static BOOL APIENTRY ImmInitializeGlobals(HMODULE hMod)
     NTSTATUS status;
 
     if (hMod)
-        g_hImm32Inst = hMod;
+        ghImm32Inst = hMod;
 
-    if (g_bClientRegd)
+    if (gfImmInitialized)
         return TRUE;
 
     status = RtlInitializeCriticalSection(&gcsImeDpi);
     if (NT_ERROR(status))
         return FALSE;
 
-    g_bClientRegd = TRUE;
+    gfImmInitialized = TRUE;
     return TRUE;
 }
 
@@ -178,7 +178,8 @@ Retry:
     return TRUE;
 }
 
-VOID APIENTRY Imm32SelectLayout(HKL hNewKL, HKL hOldKL, HIMC hIMC)
+// Win: SelectInputContext
+VOID APIENTRY Imm32SelectInputContext(HKL hNewKL, HKL hOldKL, HIMC hIMC)
 {
     PCLIENTIMC pClientImc;
     LPINPUTCONTEXTDX pIC;
@@ -424,14 +425,16 @@ typedef struct SELECT_LAYOUT
     HKL hOldKL;
 } SELECT_LAYOUT, *LPSELECT_LAYOUT;
 
-static BOOL CALLBACK Imm32SelectLayoutProc(HIMC hIMC, LPARAM lParam)
+// Win: SelectContextProc
+static BOOL CALLBACK Imm32SelectContextProc(HIMC hIMC, LPARAM lParam)
 {
     LPSELECT_LAYOUT pSelect = (LPSELECT_LAYOUT)lParam;
-    Imm32SelectLayout(pSelect->hNewKL, pSelect->hOldKL, hIMC);
+    Imm32SelectInputContext(pSelect->hNewKL, pSelect->hOldKL, hIMC);
     return TRUE;
 }
 
-static BOOL CALLBACK Imm32NotifyCompStrProc(HIMC hIMC, LPARAM lParam)
+// Win: NotifyIMEProc
+static BOOL CALLBACK Imm32NotifyIMEProc(HIMC hIMC, LPARAM lParam)
 {
     ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, (DWORD)lParam, 0);
     return TRUE;
@@ -466,7 +469,7 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
                 lParam = CPS_CANCEL;
             ImmUnlockImeDpi(pImeDpi);
 
-            ImmEnumInputContext(0, Imm32NotifyCompStrProc, lParam);
+            ImmEnumInputContext(0, Imm32NotifyIMEProc, lParam);
         }
 
         hwndDefIME = ImmGetDefaultIMEWnd(NULL);
@@ -478,7 +481,7 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
 
     SelectLayout.hNewKL = hKL;
     SelectLayout.hOldKL = hOldKL;
-    ImmEnumInputContext(0, Imm32SelectLayoutProc, (LPARAM)&SelectLayout);
+    ImmEnumInputContext(0, Imm32SelectContextProc, (LPARAM)&SelectLayout);
 
     if (IsWindow(hwndDefIME))
         SendMessageW(hwndDefIME, WM_IME_SELECT, TRUE, (LPARAM)hKL);
@@ -1099,7 +1102,7 @@ BOOL WINAPI ImmEnumInputContext(DWORD dwThreadId, IMCENUMPROC lpfn, LPARAM lPara
 
     TRACE("(%lu, %p, %p)\n", dwThreadId, lpfn, lParam);
 
-    dwCount = Imm32AllocAndBuildHimcList(dwThreadId, &phList);
+    dwCount = Imm32BuildHimcList(dwThreadId, &phList);
     if (!dwCount)
         return FALSE;
 

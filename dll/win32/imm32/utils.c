@@ -15,6 +15,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 HANDLE ghImmHeap = NULL; // Win: pImmHeap
 
+// Win: StrToUInt
 HRESULT APIENTRY
 Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase)
 {
@@ -266,7 +267,8 @@ Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWOR
     return TRUE;
 }
 
-DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
+// Win: BuildHimcList
+DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList)
 {
 #define INITIAL_COUNT 0x40
 #define MAX_RETRY 10
@@ -304,6 +306,7 @@ DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
 #undef MAX_RETRY
 }
 
+// Win: ConvertImeMenuItemInfoAtoW
 INT APIENTRY
 Imm32ImeMenuAnsiToWide(const IMEMENUITEMINFOA *pItemA, LPIMEMENUITEMINFOW pItemW,
                        UINT uCodePage, BOOL bBitmap)
@@ -330,6 +333,7 @@ Imm32ImeMenuAnsiToWide(const IMEMENUITEMINFOA *pItemA, LPIMEMENUITEMINFOW pItemW
     return ret;
 }
 
+// Win: ConvertImeMenuItemInfoWtoA
 INT APIENTRY
 Imm32ImeMenuWideToAnsi(const IMEMENUITEMINFOW *pItemW, LPIMEMENUITEMINFOA pItemA,
                        UINT uCodePage)
@@ -353,6 +357,7 @@ Imm32ImeMenuWideToAnsi(const IMEMENUITEMINFOW *pItemW, LPIMEMENUITEMINFOA pItemA
     return ret;
 }
 
+// Win: GetImeModeSaver
 PIME_STATE APIENTRY
 Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
 {
@@ -376,6 +381,7 @@ Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
     return pState;
 }
 
+// Win: GetImePrivateModeSaver
 PIME_SUBSTATE APIENTRY
 Imm32FetchImeSubState(PIME_STATE pState, HKL hKL)
 {
@@ -395,6 +401,7 @@ Imm32FetchImeSubState(PIME_STATE pState, HKL hKL)
     return pSubState;
 }
 
+// Win: RestorePrivateMode
 BOOL APIENTRY
 Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 {
@@ -407,6 +414,7 @@ Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
     return FALSE;
 }
 
+// Win: SavePrivateMode
 BOOL APIENTRY
 Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 {
@@ -550,6 +558,7 @@ static FN_GetFileVersionInfoW s_fnGetFileVersionInfoW = NULL;
 static FN_GetFileVersionInfoSizeW s_fnGetFileVersionInfoSizeW = NULL;
 static FN_VerQueryValueW s_fnVerQueryValueW = NULL;
 
+// Win: LoadFixVersionInfo
 static BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
 {
     UINT cbFixed = 0;
@@ -566,6 +575,7 @@ static BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     return TRUE;
 }
 
+// Win: GetVersionDatum
 static LPWSTR APIENTRY
 Imm32GetVerInfoValue(LPCVOID pVerInfo, LPWSTR pszKey, DWORD cchKey, LPCWSTR pszName)
 {
@@ -582,6 +592,7 @@ Imm32GetVerInfoValue(LPCVOID pVerInfo, LPWSTR pszKey, DWORD cchKey, LPCWSTR pszN
     return (cbValue ? pszValue : NULL);
 }
 
+// Win: LoadVarVersionInfo
 BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
 {
     BOOL ret;
