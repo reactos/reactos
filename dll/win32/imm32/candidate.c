@@ -9,6 +9,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
+// Win: InternalGetCandidateListWtoA
 DWORD APIENTRY
 CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, DWORD dwBufLen,
                         UINT uCodePage)
@@ -78,6 +79,7 @@ CandidateListWideToAnsi(const CANDIDATELIST *pWideCL, LPCANDIDATELIST pAnsiCL, D
     return dwBufLen;
 }
 
+// Win: InternalGetCandidateListAtoW
 DWORD APIENTRY
 CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, DWORD dwBufLen,
                         UINT uCodePage)
