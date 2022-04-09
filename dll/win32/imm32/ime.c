@@ -16,7 +16,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 RTL_CRITICAL_SECTION gcsImeDpi; // Win: gcsImeDpi
 PIMEDPI gpImeDpiList = NULL; // Win: gpImeDpi
 
-// Win: GetImeDpi
+// Win: ImmGetImeDpi
 PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi;
