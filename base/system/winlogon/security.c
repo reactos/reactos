@@ -115,7 +115,7 @@ CreateWinstaSecurity(
     BOOL Success = FALSE;
     SECURITY_DESCRIPTOR AbsoluteSd;
     PSECURITY_DESCRIPTOR RelativeSd = NULL;
-    PSID WinlogonSid = NULL, AdminsSid = NULL;
+    PSID WinlogonSid = NULL, AdminsSid = NULL, NetworkServiceSid = NULL; /* NetworkServiceSid is a HACK, see the comment below for information */
     DWORD DaclSize;
     PACL Dacl;
 
@@ -142,18 +142,62 @@ CreateWinstaSecurity(
         goto Quit;
     }
 
+    /* HACK: Create the network service SID */
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_NETWORK_SERVICE_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &NetworkServiceSid))
+    {
+        ERR("CreateWinstaSecurity(): Failed to create the network service SID (error code %lu)\n", GetLastError());
+        goto Quit;
+    }
+
     /*
      * Build up the DACL size. This includes a number
      * of four ACEs of two different SIDs. The first two
      * ACEs give both window station and generic access
      * to Winlogon, the last two give limited window station
      * and desktop access to admins.
+     *
+     * ===================== !!!MUST READ!!! =====================
+     *
+     * HACK -- Include in the DACL two more ACEs for network
+     * service SID. Network services will be granted full
+     * access to the default window station. Whilst technically
+     * services that are either network or local ones are part
+     * and act on behalf of the system, what we are doing here
+     * is a hack because of two reasons:
+     *
+     * 1) Winlogon does not allow default window station (Winsta0)
+     * access to network services on Windows. As a matter of fact,
+     * network services must access their own service window station
+     * (aka Service-0x0-3e4$) which never gets created. Why it never
+     * gets created is explained on the second point.
+     *
+     * 2) Our LSASS terribly lacks in code that handles special logon
+     * service types, NetworkService and LocalService. For this reason
+     * whenever an access token is created for a network service process
+     * for example, its authentication ID (aka LogonId represented as a LUID)
+     * is a uniquely generated ID by LSASS for this process. This is wrong
+     * on so many levels, partly because a network service is not a regular
+     * service and network services have their own special authentication logon
+     * ID (with its respective LUID as {0x3e4, 0x0}). On top of that, a network
+     * service process must have an impersonation token but for whatever reason
+     * we are creating a primary access token instead.
+     *
+     * FOR ANYONE WHO'S INTERESTED ON FIXING THIS, DO NOT FORGET TO REMOVE THIS
+     * HACK!!!
+     *
+     * =========================== !!!END!!! ================================
      */
     DaclSize = sizeof(ACL) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(WinlogonSid) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(WinlogonSid) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(AdminsSid) +
-               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(AdminsSid);
+               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(AdminsSid) +
+               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(NetworkServiceSid) +
+               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(NetworkServiceSid);
 
     /* Allocate the DACL now */
     Dacl = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -216,6 +260,28 @@ CreateWinstaSecurity(
         goto Quit;
     }
 
+    /* HACK: Fifth ACE -- give full access to network services */
+    if (!AddAccessAllowedAceEx(Dacl,
+                               ACL_REVISION,
+                               NO_PROPAGATE_INHERIT_ACE,
+                               WINSTA_ALL,
+                               NetworkServiceSid))
+    {
+        ERR("CreateWinstaSecurity(): Failed to set ACE for network service (error code %lu)\n", GetLastError());
+        goto Quit;
+    }
+
+    /* HACK: Sixth ACE -- give full generic access to network services */
+    if (!AddAccessAllowedAceEx(Dacl,
+                               ACL_REVISION,
+                               INHERIT_ONLY_ACE | OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE,
+                               GENERIC_ACCESS,
+                               NetworkServiceSid))
+    {
+        ERR("CreateWinstaSecurity(): Failed to set ACE for network service (error code %lu)\n", GetLastError());
+        goto Quit;
+    }
+
     /* Initialize the security descriptor */
     if (!InitializeSecurityDescriptor(&AbsoluteSd, SECURITY_DESCRIPTOR_REVISION))
     {
@@ -253,6 +319,13 @@ Quit:
         FreeSid(AdminsSid);
     }
 
+    /* HACK */
+    if (NetworkServiceSid != NULL)
+    {
+        FreeSid(NetworkServiceSid);
+    }
+    /* END HACK */
+
     if (Dacl != NULL)
     {
         RtlFreeHeap(RtlGetProcessHeap(), 0, Dacl);
@@ -289,7 +362,7 @@ CreateApplicationDesktopSecurity(
     BOOL Success = FALSE;
     SECURITY_DESCRIPTOR AbsoluteSd;
     PSECURITY_DESCRIPTOR RelativeSd = NULL;
-    PSID WinlogonSid = NULL, AdminsSid = NULL;
+    PSID WinlogonSid = NULL, AdminsSid = NULL, NetworkServiceSid = NULL; /* NetworkServiceSid is a HACK, see the comment in CreateWinstaSecurity for information */
     DWORD DaclSize;
     PACL Dacl;
 
@@ -316,6 +389,17 @@ CreateApplicationDesktopSecurity(
         goto Quit;
     }
 
+    /* HACK: Create the network service SID */
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_NETWORK_SERVICE_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &NetworkServiceSid))
+    {
+        ERR("CreateApplicationDesktopSecurity(): Failed to create the network service SID (error code %lu)\n", GetLastError());
+        goto Quit;
+    }
+
     /*
      * Build up the DACL size. This includes a number
      * of two ACEs of two different SIDs. The first ACE
@@ -324,7 +408,8 @@ CreateApplicationDesktopSecurity(
      */
     DaclSize = sizeof(ACL) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(WinlogonSid) +
-               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(AdminsSid);
+               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(AdminsSid) +
+               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(NetworkServiceSid); /* HACK */
 
     /* Allocate the DACL now */
     Dacl = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -365,6 +450,17 @@ CreateApplicationDesktopSecurity(
         goto Quit;
     }
 
+    /* HACK: Third ACE -- Give full desktop power to network services */
+    if (!AddAccessAllowedAceEx(Dacl,
+                               ACL_REVISION,
+                               0,
+                               DESKTOP_ALL,
+                               NetworkServiceSid))
+    {
+        ERR("CreateApplicationDesktopSecurity(): Failed to set ACE for network services (error code %lu)\n", GetLastError());
+        goto Quit;
+    }
+
     /* Initialize the security descriptor */
     if (!InitializeSecurityDescriptor(&AbsoluteSd, SECURITY_DESCRIPTOR_REVISION))
     {
@@ -401,6 +497,13 @@ Quit:
     {
         FreeSid(AdminsSid);
     }
+
+    /* HACK */
+    if (NetworkServiceSid != NULL)
+    {
+        FreeSid(NetworkServiceSid);
+    }
+    /* END HACK */
 
     if (Dacl != NULL)
     {
@@ -775,7 +878,7 @@ AllowWinstaAccessToUser(
     BOOL Success = FALSE;
     SECURITY_DESCRIPTOR AbsoluteSd;
     PSECURITY_DESCRIPTOR RelativeSd = NULL;
-    PSID WinlogonSid = NULL, AdminsSid = NULL, InteractiveSid = NULL;
+    PSID WinlogonSid = NULL, AdminsSid = NULL, InteractiveSid = NULL, NetworkServiceSid = NULL; /* NetworkServiceSid is a HACK, see the comment in CreateWinstaSecurity for information */
     SECURITY_INFORMATION SecurityInformation;
     DWORD DaclSize;
     PACL Dacl;
@@ -814,6 +917,17 @@ AllowWinstaAccessToUser(
         goto Quit;
     }
 
+    /* HACK: Create the network service SID */
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_NETWORK_SERVICE_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &NetworkServiceSid))
+    {
+        ERR("AllowWinstaAccessToUser(): Failed to create the network service SID (error code %lu)\n", GetLastError());
+        goto Quit;
+    }
+
     /*
      * Build up the DACL size. This includes a number
      * of eight ACEs of four different SIDs. The first ACE
@@ -830,7 +944,9 @@ AllowWinstaAccessToUser(
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(InteractiveSid) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(InteractiveSid) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(LogonSid) +
-               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(LogonSid);
+               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(LogonSid) +
+               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(NetworkServiceSid) + /* HACK */
+               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(NetworkServiceSid);
 
     /* Allocate the DACL now */
     Dacl = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -937,6 +1053,28 @@ AllowWinstaAccessToUser(
         goto Quit;
     }
 
+    /* HACK : Ninenth ACE -- Give full winsta access to network services */
+    if (!AddAccessAllowedAceEx(Dacl,
+                               ACL_REVISION,
+                               NO_PROPAGATE_INHERIT_ACE,
+                               WINSTA_ALL,
+                               NetworkServiceSid))
+    {
+        ERR("AllowWinstaAccessToUser(): Failed to set ACE for logon network service SID (error code %lu)\n", GetLastError());
+        goto Quit;
+    }
+
+    /* HACK: Tenth ACE -- Give generic access to network services */
+    if (!AddAccessAllowedAceEx(Dacl,
+                               ACL_REVISION,
+                               INHERIT_ONLY_ACE | OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE,
+                               GENERIC_ACCESS,
+                               NetworkServiceSid))
+    {
+        ERR("AllowWinstaAccessToUser(): Failed to set ACE for network service SID (error code %lu)\n", GetLastError());
+        goto Quit;
+    }
+
     /* Initialize the security descriptor */
     if (!InitializeSecurityDescriptor(&AbsoluteSd, SECURITY_DESCRIPTOR_REVISION))
     {
@@ -985,6 +1123,13 @@ Quit:
         FreeSid(InteractiveSid);
     }
 
+    /* HACK */
+    if (NetworkServiceSid != NULL)
+    {
+        FreeSid(NetworkServiceSid);
+    }
+    /* END HACK */
+
     if (Dacl != NULL)
     {
         RtlFreeHeap(RtlGetProcessHeap(), 0, Dacl);
@@ -1024,7 +1169,7 @@ AllowDesktopAccessToUser(
     BOOL Success = FALSE;
     SECURITY_DESCRIPTOR AbsoluteSd;
     PSECURITY_DESCRIPTOR RelativeSd = NULL;
-    PSID WinlogonSid = NULL, AdminsSid = NULL, InteractiveSid = NULL;
+    PSID WinlogonSid = NULL, AdminsSid = NULL, InteractiveSid = NULL, NetworkServiceSid = NULL; /* NetworkServiceSid is a HACK, see the comment in CreateWinstaSecurity for information */
     SECURITY_INFORMATION SecurityInformation;
     DWORD DaclSize;
     PACL Dacl;
@@ -1063,6 +1208,17 @@ AllowDesktopAccessToUser(
         goto Quit;
     }
 
+    /* HACK: Create the network service SID */
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_NETWORK_SERVICE_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &NetworkServiceSid))
+    {
+        ERR("AllowDesktopAccessToUser(): Failed to create the network service SID (error code %lu)\n", GetLastError());
+        goto Quit;
+    }
+
     /*
      * Build up the DACL size. This includes a number
      * of four ACEs of four different SIDs. The first ACE
@@ -1075,7 +1231,8 @@ AllowDesktopAccessToUser(
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(WinlogonSid) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(AdminsSid) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(InteractiveSid) +
-               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(LogonSid);
+               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(LogonSid) +
+               sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD) + GetLengthSid(NetworkServiceSid); /* HACK */
 
     /* Allocate the DACL now */
     Dacl = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -1138,6 +1295,17 @@ AllowDesktopAccessToUser(
         goto Quit;
     }
 
+    /* HACK: Fifth ACE -- Give full desktop to network services */
+    if (!AddAccessAllowedAceEx(Dacl,
+                               ACL_REVISION,
+                               0,
+                               DESKTOP_ALL,
+                               NetworkServiceSid))
+    {
+        ERR("AllowDesktopAccessToUser(): Failed to set ACE for network service SID (error code %lu)\n", GetLastError());
+        goto Quit;
+    }
+
     /* Initialize the security descriptor */
     if (!InitializeSecurityDescriptor(&AbsoluteSd, SECURITY_DESCRIPTOR_REVISION))
     {
@@ -1185,6 +1353,13 @@ Quit:
     {
         FreeSid(InteractiveSid);
     }
+
+    /* HACK */
+    if (NetworkServiceSid != NULL)
+    {
+        FreeSid(NetworkServiceSid);
+    }
+    /* END HACK */
 
     if (Dacl != NULL)
     {
