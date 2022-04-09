@@ -17,7 +17,7 @@ RTL_CRITICAL_SECTION gcsImeDpi; // Win: gcsImeDpi
 PIMEDPI gpImeDpiList = NULL; // Win: gpImeDpi
 
 // Win: GetImeDpi
-PIMEDPI APIENTRY Imm32GetImeDpi(HKL hKL)
+PIMEDPI APIENTRY Imm32FindImeDpi(HKL hKL)
 {
     PIMEDPI pImeDpi;
 
@@ -254,7 +254,7 @@ PIMEDPI APIENTRY Ime32LoadImeDpi(HKL hKL, BOOL bLock)
 
     RtlEnterCriticalSection(&gcsImeDpi);
 
-    pImeDpiFound = Imm32GetImeDpi(hKL);
+    pImeDpiFound = Imm32FindImeDpi(hKL);
     if (pImeDpiFound)
     {
         if (!bLock)
@@ -809,7 +809,7 @@ BOOL WINAPI ImmLoadIME(HKL hKL)
     if (!IS_IME_HKL(hKL) && (!Imm32IsCiceroMode() || Imm32Is16BitMode()))
         return FALSE;
 
-    pImeDpi = Imm32GetImeDpi(hKL);
+    pImeDpi = Imm32FindImeDpi(hKL);
     if (pImeDpi == NULL)
         pImeDpi = Ime32LoadImeDpi(hKL, FALSE);
     return (pImeDpi != NULL);
