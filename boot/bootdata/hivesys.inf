@@ -1466,11 +1466,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "SpoolerGroup", \
  "AudioGroup", \
  "SmartCardGroup", \
- "NetworkProvider" \
+ "NetworkProvider", \
  "RemoteValidation", \
  "NetDDEGroup", \
  "Parallel arbitrator", \
- "Extended Base" \
+ "Extended Base", \
  "PCI Configuration", \
  "MS Transactions"
 
