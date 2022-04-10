@@ -58,9 +58,9 @@ typedef BOOL (WINAPI *PGET_NLS_SECTION_NAME)(UINT   CodePage,
                                              ULONG  ResultSize);
 
 typedef BOOL (WINAPI *PVALIDATE_LOCALE)(IN ULONG LocaleId);
-typedef NTSTATUS (WINAPI *PCREATE_NLS_SECURTY_DESCRIPTOR)(IN PVOID Buffer,
-                                                          IN ULONG BufferSize,
-                                                          IN ULONG AceType);
+typedef NTSTATUS (WINAPI *PCREATE_NLS_SECURTY_DESCRIPTOR)(_Out_ PVOID *SecurityDescriptorBuffer,
+                                                          _In_ ULONG DescriptorSize,
+                                                          _In_ ULONG AccessMask);
 
 /* Globals */
 extern HANDLE BaseSrvHeap;
