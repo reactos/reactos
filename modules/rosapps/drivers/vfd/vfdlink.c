@@ -49,7 +49,11 @@ VfdSetLink(
 		//
 		//	Delete the old drive letter
 		//
+#ifndef __REACTOS__
 		name_buf[sizeof(name_buf) - 1] = UNICODE_NULL;
+#else
+		name_buf[ARRAYSIZE(name_buf) - 1] = UNICODE_NULL;
+#endif
 
 		_snwprintf(name_buf, sizeof(name_buf) - 1,
 			L"\\??\\%wc:", DeviceExtension->DriveLetter);
@@ -85,12 +89,21 @@ VfdSetLink(
 		//	Create a new drive letter
 		//
 
+#ifndef __REACTOS__
 		name_buf[sizeof(name_buf) - 1] = UNICODE_NULL;
 
 		_snwprintf(name_buf, sizeof(name_buf) - 1,
 			(OsMajorVersion >= 5) ?
 			L"\\??\\Global\\%wc:" : L"\\??\\%wc:",
 			DriveLetter);
+#else
+		name_buf[ARRAYSIZE(name_buf) - 1] = UNICODE_NULL;
+
+		_snwprintf(name_buf, ARRAYSIZE(name_buf) - 1,
+			(OsMajorVersion >= 5) ?
+			L"\\??\\Global\\%wc:" : L"\\??\\%wc:",
+			DriveLetter);
+#endif
 
 		RtlInitUnicodeString(&unicode_name, name_buf);
 
@@ -133,11 +146,19 @@ VfdLoadLink(
 
 	RtlZeroMemory(params, sizeof(params));
 
+#ifndef __REACTOS__
 	name_buf[sizeof(name_buf) - 1] = UNICODE_NULL;
 
 	_snwprintf(name_buf, sizeof(name_buf) - 1,
 		VFD_REG_DRIVE_LETTER L"%lu",
 		DeviceExtension->DeviceNumber);
+#else
+	name_buf[ARRAYSIZE(name_buf) - 1] = UNICODE_NULL;
+
+	_snwprintf(name_buf, ARRAYSIZE(name_buf) - 1,
+		VFD_REG_DRIVE_LETTER L"%lu",
+		DeviceExtension->DeviceNumber);
+#endif
 
 	params[0].Flags			= RTL_QUERY_REGISTRY_DIRECT;
 	params[0].Name			= name_buf;
@@ -192,11 +213,19 @@ VfdStoreLink(
 		return STATUS_DRIVER_INTERNAL_ERROR;
 	}
 
+#ifndef __REACTOS__
 	name_buf[sizeof(name_buf) - 1] = UNICODE_NULL;
 
 	_snwprintf(name_buf, sizeof(name_buf) - 1,
 		VFD_REG_DRIVE_LETTER L"%lu",
 		DeviceExtension->DeviceNumber);
+#else
+	name_buf[ARRAYSIZE(name_buf) - 1] = UNICODE_NULL;
+
+	_snwprintf(name_buf, ARRAYSIZE(name_buf) - 1,
+		VFD_REG_DRIVE_LETTER L"%lu",
+		DeviceExtension->DeviceNumber);
+#endif
 
 	letter = DeviceExtension->DriveLetter;
 
