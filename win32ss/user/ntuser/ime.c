@@ -1318,14 +1318,14 @@ BOOL NTAPI NtUserDestroyInputContext(HIMC hIMC)
     if (!IS_IMM_MODE())
     {
         EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        UserLeave();
-        return FALSE;
+        goto Quit;
     }
 
     pIMC = UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
     if (pIMC)
         ret = IntDestroyInputContext(pIMC);
 
+Quit:
     UserLeave();
     return ret;
 }
