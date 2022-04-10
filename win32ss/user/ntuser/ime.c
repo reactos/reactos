@@ -1231,19 +1231,18 @@ VOID UserFreeInputContext(PVOID Object)
 {
     PTHRDESKHEAD ObjHead = Object;
     PDESKTOP pDesk = ObjHead->rpdesk;
-    PIMC pIMC = Object, *ppIMC;
+    PIMC pNode, pIMC = Object;
     PTHREADINFO pti;
 
     if (!pIMC)
         return;
 
-    /* Find the IMC in the list and remove it */
     pti = pIMC->head.pti;
-    for (ppIMC = &pti->spDefaultImc; *ppIMC; ppIMC = &(*ppIMC)->pImcNext)
+    for (pNode = pti->spDefaultImc; pNode; pNode = pNode->pImcNext)
     {
-        if (*ppIMC == pIMC)
+        if (pNode->pImcNext != pIMC)
         {
-            *ppIMC = pIMC->pImcNext;
+            pNode->pImcNext = pIMC->pImcNext;
             break;
         }
     }
@@ -1261,59 +1260,71 @@ BOOLEAN UserDestroyInputContext(PVOID Object)
     if (!pIMC)
         return TRUE;
 
-    UserMarkObjectDestroy(pIMC);
+    if (!UserMarkObjectDestroy(pIMC))
+        return FALSE;
 
     return UserDeleteObject(UserHMGetHandle(pIMC), TYPE_INPUTCONTEXT);
 }
 
-BOOL NTAPI NtUserDestroyInputContext(HIMC hIMC)
+// Win: DestroyInputContext
+BOOLEAN IntDestroyInputContext(PVOID Object)
 {
-    PIMC pIMC;
-    BOOL ret = FALSE;
+    PIMC pIMC = Object;
+    HIMC hIMC = pIMC->head.h;
+    PTHREADINFO pti = pIMC->head.pti;
+    PWND pwndChild;
+    PWINDOWLIST pwl;
     HWND *phwnd;
     PWND pWnd;
-    PWINDOWLIST pwl;
-    PTHREADINFO pti;
 
-    UserEnterExclusive();
-
-    if (!IS_IMM_MODE())
+    if (pIMC->head.pti != gptiCurrent)
     {
-        ERR("!IS_IMM_MODE()\n");
-        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        goto Quit;
+        EngSetLastError(ERROR_ACCESS_DENIED);
+        return FALSE;
     }
 
-    pIMC = UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
-    if (!pIMC)
-        goto Quit;
+    if (pIMC == pti->spDefaultImc)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-    pti = pIMC->head.pti;
-    if (pti != GetW32ThreadInfo() || pIMC == pti->spDefaultImc)
-        goto Quit;
-
-    UserMarkObjectDestroy(pIMC);
-
-    pwl = IntBuildHwndList(pti->rpdesk->pDeskInfo->spwnd->spwndChild,
-                           IACE_CHILDREN | IACE_LIST, pti);
+    pwndChild = pti->rpdesk->pDeskInfo->spwnd->spwndChild;
+    pwl = IntBuildHwndList(pwndChild, IACE_LIST | IACE_CHILDREN, pti);
     if (pwl)
     {
         for (phwnd = pwl->ahwnd; *phwnd != HWND_TERMINATOR; ++phwnd)
         {
-            pWnd = ValidateHwndNoErr(*phwnd);
-            if (!pWnd)
-                continue;
-
-            if (pWnd->hImc == hIMC)
+            pWnd = UserGetObjectNoErr(gHandleTable, *phwnd, TYPE_WINDOW);
+            if (pWnd && pWnd->hImc == hIMC)
                 IntAssociateInputContext(pWnd, pti->spDefaultImc);
         }
 
         IntFreeHwndList(pwl);
     }
 
-    ret = UserDeleteObject(hIMC, TYPE_INPUTCONTEXT);
+    UserDeleteObject(hIMC, TYPE_INPUTCONTEXT);
+    return TRUE;
+}
 
-Quit:
+BOOL NTAPI NtUserDestroyInputContext(HIMC hIMC)
+{
+    BOOL ret = FALSE;
+    PIMC pIMC;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+    {
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        UserLeave();
+        return FALSE;
+    }
+
+    pIMC = UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (pIMC)
+        ret = IntDestroyInputContext(pIMC);
+
     UserLeave();
     return ret;
 }
