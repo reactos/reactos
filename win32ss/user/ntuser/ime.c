@@ -1237,10 +1237,11 @@ VOID UserFreeInputContext(PVOID Object)
     if (!pIMC)
         return;
 
+    // Remove pIMC from the list except spDefaultImc
     pti = pIMC->head.pti;
     for (pNode = pti->spDefaultImc; pNode; pNode = pNode->pImcNext)
     {
-        if (pNode->pImcNext != pIMC)
+        if (pNode->pImcNext == pIMC)
         {
             pNode->pImcNext = pIMC->pImcNext;
             break;
