@@ -1257,7 +1257,6 @@ VOID UserFreeInputContext(PVOID Object)
 BOOLEAN UserDestroyInputContext(PVOID Object)
 {
     PIMC pIMC = Object;
-
     if (!pIMC || !UserMarkObjectDestroy(pIMC))
         return TRUE;
 
@@ -1265,17 +1264,16 @@ BOOLEAN UserDestroyInputContext(PVOID Object)
 }
 
 // Win: DestroyInputContext
-BOOLEAN IntDestroyInputContext(PVOID Object)
+BOOL IntDestroyInputContext(PIMC pIMC)
 {
-    PIMC pIMC = Object;
-    HIMC hIMC = pIMC->head.h;
+    HIMC hIMC = UserHMGetHandle(pIMC);
     PTHREADINFO pti = pIMC->head.pti;
     PWND pwndChild;
     PWINDOWLIST pwl;
     HWND *phwnd;
     PWND pWnd;
 
-    if (pIMC->head.pti != gptiCurrent)
+    if (pti != gptiCurrent)
     {
         EngSetLastError(ERROR_ACCESS_DENIED);
         return FALSE;
