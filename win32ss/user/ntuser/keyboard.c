@@ -635,7 +635,7 @@ NtUserGetAsyncKeyState(INT Key)
 
     TRACE("Enter NtUserGetAsyncKeyState\n");
 
-    if (Key >= 0x100)
+    if (Key >= 0x100 || Key < 0)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         ERR("Invalid parameter Key\n");
