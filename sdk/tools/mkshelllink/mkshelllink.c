@@ -129,7 +129,7 @@ typedef struct _ID_LIST_DRIVE
 
 int main(int argc, const char *argv[])
 {
-    unsigned i;
+    int i;
     const char *pszOutputPath = "shortcut.lnk";
     const char *pszTarget = NULL;
     const char *pszDescription = "Description";
