@@ -29,6 +29,8 @@
 #define NO_SHLWAPI_REG
 #include <shlwapi.h>
 #include <shellapi.h>
+#define COBJMACROS
+#include <shobjidl.h>
 #include <wine/debug.h>
 
 #include <strsafe.h>
@@ -814,9 +816,28 @@ Control_EnumWinProc(
 static void 
 Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
 {
+    ITaskbarList* pTaskbar = NULL;
+
     SetWindowTextW(applet->hWnd, applet->info[index].name);
     SendMessageW(applet->hWnd, WM_SETICON, ICON_SMALL, (LPARAM)applet->info[index].icon);
+
+    // Add button to TaskBar
     ShowWindow(applet->hWnd, SW_SHOWMINNOACTIVE);
+
+    // Engaging the corresponding button in the Taskbar
+    CoInitialize(NULL);
+    if (CoCreateInstance(&CLSID_TaskbarList, 
+                         NULL, CLSCTX_INPROC_SERVER, 
+                         &IID_ITaskbarList, 
+                         (LPVOID*)&pTaskbar) == S_OK)
+    {
+        if (ITaskbarList_HrInit(pTaskbar) == S_OK)
+        {
+            ITaskbarList_ActivateTab(pTaskbar, applet->hWnd);
+        }
+        ITaskbarList_Release(pTaskbar);
+    }
+    CoUninitialize();
 }
 
 #endif /* __REACTOS__ */
