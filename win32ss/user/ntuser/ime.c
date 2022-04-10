@@ -1377,14 +1377,18 @@ NtUserCreateInputContext(ULONG_PTR dwClientImcData)
     PIMC pIMC;
     HIMC ret = NULL;
 
-    if (!dwClientImcData)
-        return NULL;
-
     UserEnterExclusive();
 
     if (!IS_IMM_MODE())
     {
         ERR("!IS_IMM_MODE()\n");
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        goto Quit;
+    }
+
+    if (!dwClientImcData)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         goto Quit;
     }
 
