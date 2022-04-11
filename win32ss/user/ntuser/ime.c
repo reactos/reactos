@@ -1362,6 +1362,8 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
     else // First time. It's the default IMC.
     {
         // Add the first one (default) to the list.
+        if (pti->spDefaultImc)
+            UserDereferenceObject(pti->spDefaultImc);
         pti->spDefaultImc = pIMC;
         pIMC->pImcNext = NULL;
     }
