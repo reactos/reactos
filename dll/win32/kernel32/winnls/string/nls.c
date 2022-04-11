@@ -59,6 +59,9 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize);
 NTSTATUS
 CreateNlsDirectorySecurity(_Out_ PSECURITY_DESCRIPTOR *NlsSecurityDescriptor);
 
+NTSTATUS WINAPI
+CreateNlsSecurityDescriptor(_Out_ PSECURITY_DESCRIPTOR *SecurityDescriptor, _In_ SIZE_T DescriptorSize, _In_ ULONG AccessMask);
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /**
@@ -219,6 +222,7 @@ IntGetCodePageEntry(UINT CodePage)
     WCHAR FileName[MAX_PATH + 1];
     UINT FileNamePos;
     PCODEPAGE_ENTRY CodePageEntry;
+    PSECURITY_DESCRIPTOR NlsSd;
     if (CodePage == CP_ACP)
     {
         return &AnsiCodePage;
@@ -281,7 +285,23 @@ IntGetCodePageEntry(UINT CodePage)
     RtlInitAnsiString(&AnsiName, SectionName);
     RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
 
-    InitializeObjectAttributes(&ObjectAttributes, &UnicodeName, 0, NULL, NULL);
+    /*
+     * FIXME: IntGetCodePageEntry should not create any security
+     * descriptor here but instead this responsibility should be
+     * assigned to Base Server API (aka basesrv.dll). That is,
+     * kernel32 must instruct basesrv.dll on creating NLS section
+     * names that do not exist through API message communication.
+     * However since we do not do that, let the kernel32 do the job
+     * by assigning security to NLS section names for the time being...
+     */
+    Status = CreateNlsSecurityDescriptor(&NlsSd, sizeof(SECURITY_DESCRIPTOR), SECTION_MAP_READ);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlLeaveCriticalSection(&CodePageListLock);
+        return NULL;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes, &UnicodeName, 0, NULL, NlsSd);
 
     /* Try to open the section first */
     Status = NtOpenSection(&SectionHandle, SECTION_MAP_READ, &ObjectAttributes);
@@ -329,6 +349,7 @@ IntGetCodePageEntry(UINT CodePage)
         }
     }
     RtlFreeUnicodeString(&UnicodeName);
+    HeapFree(GetProcessHeap(), 0, NlsSd);
 
     if (!NT_SUCCESS(Status))
     {
