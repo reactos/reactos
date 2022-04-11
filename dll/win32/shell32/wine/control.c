@@ -809,11 +809,11 @@ Control_EnumWinProc(
 
 /**
  * This function makes the system control applet accessible via the taskbar.
- * 
+ *
  * @param applet Pointer of system control applet
  * @param index Number of applet in a system control library
  */
-static void 
+static void
 Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
 {
     ITaskbarList* pTaskbar = NULL;
@@ -826,9 +826,9 @@ Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
 
     // Engaging the corresponding button in the Taskbar
     CoInitialize(NULL);
-    if (CoCreateInstance(&CLSID_TaskbarList, 
-                         NULL, CLSCTX_INPROC_SERVER, 
-                         &IID_ITaskbarList, 
+    if (CoCreateInstance(&CLSID_TaskbarList,
+                         NULL, CLSCTX_INPROC_SERVER,
+                         &IID_ITaskbarList,
                          (LPVOID*)&pTaskbar) == S_OK)
     {
         if (ITaskbarList_HrInit(pTaskbar) == S_OK)
