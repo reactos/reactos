@@ -944,6 +944,8 @@ void ApplicationPage_OnGotoProcess(void)
         i = ProcGetIndexByProcessId(dwProcessId);
         if (i != -1)
         {
+            ListView_SetSelectionMark(hProcessPageListCtrl, i);
+
             ListView_SetItemState(hProcessPageListCtrl,
                                   i,
                                   LVIS_SELECTED | LVIS_FOCUSED,
