@@ -355,6 +355,7 @@ Quit:
     return ret;
 }
 
+// Win: ImmGetImeMenuItemsInterProcess
 DWORD APIENTRY
 Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
                                  LPVOID lpImeMenu, DWORD dwSize)

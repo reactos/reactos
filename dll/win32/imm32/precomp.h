@@ -102,6 +102,7 @@ static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
     return (dwImeThreadId != dwThreadId);
 }
 
+// Win: TestWindowProcess
 static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
 {
     return (NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) !=
