@@ -50,6 +50,7 @@ BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
     return (wPrimary == LANG_JAPANESE || wPrimary == LANG_KOREAN);
 }
 
+// Win: IsAnsiIMC
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 {
     BOOL ret;
@@ -166,6 +167,7 @@ static PVOID FASTCALL DesktopPtrToUser(PVOID ptr)
         return (PVOID)NtUserCallOneParam((DWORD_PTR)ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING);
 }
 
+// Win: HMValidateHandle
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 {
     UINT index;
@@ -223,6 +225,7 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
     return dwProcessID == (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
 }
 
+// Win: ImmLocalAlloc
 LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
 {
     if (!ghImmHeap)
