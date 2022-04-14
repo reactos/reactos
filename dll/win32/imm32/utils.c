@@ -213,6 +213,7 @@ PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
     return ValidateHandleNoErr(hwnd, TYPE_WINDOW);
 }
 
+// Win: TestInputContextProcess
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 {
     HIMC hIMC;
