@@ -907,38 +907,37 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
 
     TRACE("(%p)\n", hImc);
 
-    if (hImc == NULL)
+    if (!hImc)
         return NULL;
 
     pIMC = ValidateHandleNoErr(hImc, TYPE_INPUTCONTEXT);
-    if (pIMC == NULL || !Imm32CheckImcProcess(pIMC))
+    if (!pIMC || !Imm32CheckImcProcess(pIMC))
         return NULL;
 
     pClientImc = (PCLIENTIMC)pIMC->dwClientImcData;
-    if (!pClientImc)
-    {
-        pClientImc = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
-        if (!pClientImc)
-            return NULL;
-
-        RtlInitializeCriticalSection(&pClientImc->cs);
-
-        pClientImc->dwCompatFlags = (DWORD)NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
-
-        if (!NtUserUpdateInputContext(hImc, UIC_CLIENTIMCDATA, (DWORD_PTR)pClientImc))
-        {
-            ImmLocalFree(pClientImc);
-            return NULL;
-        }
-
-        pClientImc->dwFlags |= CLIENTIMC_UNKNOWN2;
-    }
-    else
+    if (pClientImc)
     {
         if (pClientImc->dwFlags & CLIENTIMC_DESTROY)
             return NULL;
+        goto Finish;
     }
 
+    pClientImc = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(CLIENTIMC));
+    if (!pClientImc)
+        return NULL;
+
+    RtlInitializeCriticalSection(&pClientImc->cs);
+    pClientImc->dwCompatFlags = (DWORD)NtUserGetThreadState(THREADSTATE_IMECOMPATFLAGS);
+
+    if (!NtUserUpdateInputContext(hImc, UIC_CLIENTIMCDATA, (DWORD_PTR)pClientImc))
+    {
+        ImmLocalFree(pClientImc);
+        return NULL;
+    }
+
+    pClientImc->dwFlags |= CLIENTIMC_UNKNOWN2;
+
+Finish:
     InterlockedIncrement(&pClientImc->cLockObj);
     return pClientImc;
 }
