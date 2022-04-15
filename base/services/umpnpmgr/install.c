@@ -45,6 +45,9 @@ HANDLE hDeviceInstallListMutex;
 LIST_ENTRY DeviceInstallListHead;
 HANDLE hDeviceInstallListNotEmpty;
 
+DWORD
+CreatePnpInstallEventSecurity(
+    _Out_ PSECURITY_DESCRIPTOR *EventSd);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -54,6 +57,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     BOOL DeviceInstalled = FALSE;
     DWORD BytesWritten;
     DWORD Value;
+    DWORD ErrCode;
     HANDLE hInstallEvent;
     HANDLE hPipe = INVALID_HANDLE_VALUE;
     LPVOID Environment = NULL;
@@ -61,6 +65,8 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     STARTUPINFOW StartupInfo;
     UUID RandomUuid;
     HKEY DeviceKey;
+    SECURITY_ATTRIBUTES EventAttrs;
+    PSECURITY_DESCRIPTOR EventSd;
 
     /* The following lengths are constant (see below), they cannot overflow */
     WCHAR CommandLine[116];
@@ -119,10 +125,23 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
         RandomUuid.Data4[3], RandomUuid.Data4[4], RandomUuid.Data4[5],
         RandomUuid.Data4[6], RandomUuid.Data4[7]);
 
+    ErrCode = CreatePnpInstallEventSecurity(&EventSd);
+    if (ErrCode != ERROR_SUCCESS)
+    {
+        DPRINT1("CreatePnpInstallEventSecurity failed with error %u\n", GetLastError());
+        return FALSE;
+    }
+
+    /* Set up the security attributes for the event */
+    EventAttrs.nLength = sizeof(SECURITY_ATTRIBUTES);
+    EventAttrs.lpSecurityDescriptor = EventSd;
+    EventAttrs.bInheritHandle = FALSE;
+
     /* Create the event */
     wcscpy(InstallEventName, L"Global\\PNP_Device_Install_Event_0.");
     wcscat(InstallEventName, UuidString);
-    hInstallEvent = CreateEventW(NULL, TRUE, FALSE, InstallEventName);
+    hInstallEvent = CreateEventW(&EventAttrs, TRUE, FALSE, InstallEventName);
+    HeapFree(GetProcessHeap(), 0, EventSd);
     if (!hInstallEvent)
     {
         DPRINT1("CreateEventW('%ls') failed with error %lu\n", InstallEventName, GetLastError());
@@ -295,6 +314,164 @@ cleanup:
     DPRINT("System setup in progress? %S\n", ret ? L"YES" : L"NO");
 
     return ret;
+}
+
+
+/**
+ * @brief
+ * Creates a security descriptor for the PnP event
+ * installation.
+ *
+ * @param[out] EventSd
+ * A pointer to an allocated security descriptor
+ * for the event.
+ *
+ * @return
+ * ERROR_SUCCESS is returned if the function has
+ * successfully created the descriptor, otherwise
+ * a Win32 error code is returned.
+ *
+ * @remarks
+ * Only admins and local system have full power
+ * over this event as privileged users can install
+ * devices on a system.
+ */
+DWORD
+CreatePnpInstallEventSecurity(
+    _Out_ PSECURITY_DESCRIPTOR *EventSd)
+{
+    DWORD ErrCode;
+    PACL Dacl;
+    ULONG DaclSize;
+    SECURITY_DESCRIPTOR AbsoluteSd;
+    ULONG Size = 0;
+    PSECURITY_DESCRIPTOR RelativeSd = NULL;
+    PSID SystemSid = NULL, AdminsSid = NULL;
+    static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_LOCAL_SYSTEM_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &SystemSid))
+    {
+        return GetLastError();
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  2,
+                                  SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS,
+                                  0, 0, 0, 0, 0, 0,
+                                  &AdminsSid))
+    {
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    DaclSize = sizeof(ACL) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(SystemSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(AdminsSid);
+
+    Dacl = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DaclSize);
+    if (!Dacl)
+    {
+        ErrCode = ERROR_OUTOFMEMORY;
+        goto Quit;
+    }
+
+    if (!InitializeAcl(Dacl, DaclSize, ACL_REVISION))
+    {
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             EVENT_ALL_ACCESS,
+                             SystemSid))
+    {
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             EVENT_ALL_ACCESS,
+                             AdminsSid))
+    {
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!InitializeSecurityDescriptor(&AbsoluteSd, SECURITY_DESCRIPTOR_REVISION))
+    {
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorDacl(&AbsoluteSd, TRUE, Dacl, FALSE))
+    {
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorOwner(&AbsoluteSd, SystemSid, FALSE))
+    {
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorGroup(&AbsoluteSd, AdminsSid, FALSE))
+    {
+        ErrCode = GetLastError();
+        goto Quit;
+    }
+
+    if (!MakeSelfRelativeSD(&AbsoluteSd, NULL, &Size) && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        RelativeSd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+        if (RelativeSd == NULL)
+        {
+            ErrCode = ERROR_OUTOFMEMORY;
+            goto Quit;
+        }
+
+        if (!MakeSelfRelativeSD(&AbsoluteSd, RelativeSd, &Size))
+        {
+            ErrCode = GetLastError();
+            goto Quit;
+        }
+    }
+
+    *EventSd = RelativeSd;
+    ErrCode = ERROR_SUCCESS;
+
+Quit:
+    if (SystemSid)
+    {
+        FreeSid(SystemSid);
+    }
+
+    if (AdminsSid)
+    {
+        FreeSid(AdminsSid);
+    }
+
+    if (Dacl)
+    {
+        HeapFree(GetProcessHeap(), 0, Dacl);
+    }
+
+    if (ErrCode != ERROR_SUCCESS)
+    {
+        if (RelativeSd)
+        {
+            HeapFree(GetProcessHeap(), 0, RelativeSd);
+        }
+    }
+
+    return ErrCode;
 }
 
 
