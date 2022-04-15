@@ -52,8 +52,7 @@ Imm32ApiTable gImmApiEntries = {
 
 // Win: GetImmFileName
 HRESULT
-GetImmFileName(_Out_ LPWSTR lpBuffer,
-               _In_ size_t cchBuffer)
+User32GetImmFileName(_Out_ LPWSTR lpBuffer, _In_ size_t cchBuffer)
 {
     UINT length = GetSystemDirectoryW(lpBuffer, cchBuffer);
     if (length && length < cchBuffer)
@@ -64,9 +63,7 @@ GetImmFileName(_Out_ LPWSTR lpBuffer,
     return StringCchCopyW(lpBuffer, cchBuffer, L"imm32.dll");
 }
 
-/*
- * @unimplemented
- */
+// @unimplemented
 // Win: _InitializeImmEntryTable
 static BOOL IntInitializeImmEntryTable(VOID)
 {
@@ -77,7 +74,7 @@ static BOOL IntInitializeImmEntryTable(VOID)
     if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
         return TRUE;
 
-    GetImmFileName(ImmFile, _countof(ImmFile));
+    User32GetImmFileName(ImmFile, _countof(ImmFile));
     TRACE("File %S\n", ImmFile);
 
     /* If IMM32 is already loaded, use it without increasing reference count. */
@@ -140,7 +137,7 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     if (ghImm32 == NULL && !gbImmInitializing)
     {
         WCHAR ImmFile[MAX_PATH];
-        GetImmFileName(ImmFile, _countof(ImmFile));
+        User32GetImmFileName(ImmFile, _countof(ImmFile));
         ghImm32 = LoadLibraryW(ImmFile);
         if (ghImm32 == NULL)
         {
