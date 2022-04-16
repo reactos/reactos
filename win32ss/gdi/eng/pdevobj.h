@@ -70,8 +70,8 @@ typedef struct _GRAPHICS_DEVICE
     PDEVMODEENTRY    pDevModeList;
     LPWSTR           pDiplayDrivers;
     LPWSTR           pwszDescription;
-    DWORD            dwUnknown;
-    PVOID            pUnknown;
+    DWORD            dwMonCnt;
+    PVIDEO_MONITOR_DEVICE pvMonDev;
     PFILE_OBJECT     FileObject;
     DWORD            ProtocolType;
 } GRAPHICS_DEVICE, *PGRAPHICS_DEVICE;
@@ -95,7 +95,7 @@ typedef struct _PDEVOBJ
 //  HFONT                     hlfntAnsiVariable;
 //  HFONT                     hlfntAnsiFixed;
     HSURF                     ahsurf[HS_DDI_MAX];
-//  PUNICODE_STRING           pusPrtDataFileName;
+    PWSTR                     pusPrtDataFileName; // DRIVER_INFO_2->pDataFile
 //  PVOID                     pDevHTInfo;
 //  RFONT *                   prfntActive;
 //  RFONT *                   prfntInactive;
@@ -104,9 +104,10 @@ typedef struct _PDEVOBJ
 //  ULONG                     cDirectDrawDisableLocks;
 //  PVOID                     TypeOneInfo;
     PVOID                     pvGammaRamp;    /* Gamma ramp pointer. */
-//  PVOID                     RemoteTypeOne;
-    ULONG                     ulHorzRes;
-    ULONG                     ulVertRes;
+    PVOID                     RemoteTypeOne;
+    SIZEL                     szlMetaRes;     /* if PDEV_META_DEVICE */
+   // ULONG                     ulHorzRes;
+   // ULONG                     ulVertRes;
 //  PFN_DrvSetPointerShape    pfnDrvSetPointerShape;
 //  PFN_DrvMovePointer        pfnDrvMovePointer;
     PFN_DrvMovePointer        pfnMovePointer;
@@ -127,9 +128,8 @@ typedef struct _PDEVOBJ
     POINTL                    ptlOrigion;
     PDEVMODEW                 pdmwDev;        /* Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size. */
 //  DWORD                     Unknown3;
-    FLONG                     DxDd_Flags;     /* DxDD active status flags. */
-    DWORD                     dwAccelerationLevel;
-//  LONG                      devAttr;
+    FLONG                     DxDd_Flags;     /* DxDD active status flags set by CapabilityOverride Registry Key while Create Info DC type */
+    DWORD                     dwAccelerationLevel; /* Set by Accelerations.Level (0 - 5) Registry Key while Create Info DC type */
 //  PVOID                     WatchDogContext;
 //  ULONG                     WatchDogs;
     union
