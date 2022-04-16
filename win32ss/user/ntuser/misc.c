@@ -35,8 +35,8 @@ _scwprintf(
 
 /*
  * Test the Thread to verify and validate it. Hard to the core tests are required.
+ * Win: PtiFromThreadId
  */
-// Win: PtiFromThreadId
 PTHREADINFO
 FASTCALL
 IntTID2PTI(HANDLE id)
