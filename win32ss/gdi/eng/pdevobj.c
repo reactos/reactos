@@ -1023,6 +1023,7 @@ EngQueryDeviceAttribute(
 
     if (cjOutSize >= sizeof(DWORD))
     {
+        /* Set all Accelerations Level Key to enabled Full 0 to 5 turned off. */
         *(DWORD*)pvOut = ppdev->dwAccelerationLevel;
         return TRUE;
     }
@@ -1274,8 +1275,7 @@ PDEVOBJ_sizl(PPDEVOBJ ppdev, PSIZEL psizl)
 {
     if (ppdev->flFlags & PDEV_META_DEVICE)
     {
-        psizl->cx = ppdev->ulHorzRes;
-        psizl->cy = ppdev->ulVertRes;
+        *psizl = ppdev->szlMetaRes;
     }
     else
     {
