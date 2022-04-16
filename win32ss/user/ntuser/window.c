@@ -121,6 +121,7 @@ PWND FASTCALL ValidateHwndNoErr(HWND hWnd)
 }
 
 /* Temp HACK */
+// Win: ValidateHwnd
 PWND FASTCALL UserGetWindowObject(HWND hWnd)
 {
     PWND Window;
@@ -1263,6 +1264,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    return WndOldParent;
 }
 
+// Win: xxxSetParent
 HWND FASTCALL
 co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 {
@@ -2128,6 +2130,7 @@ Error:
 
 /*
  * @implemented
+ * Win: xxxCreateWindowEx
  */
 PWND FASTCALL
 co_UserCreateWindowEx(CREATESTRUCTW* Cs,
@@ -2742,7 +2745,7 @@ cleanup:
    return hwnd;
 }
 
-
+// Win: xxxDestroyWindow
 BOOLEAN co_UserDestroyWindow(PVOID Object)
 {
    HWND hWnd;
