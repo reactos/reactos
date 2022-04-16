@@ -68,6 +68,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <ddrawi.h>
 #include <imm.h>
 #include <dbt.h>
+#include <ntddvdeo.h>
 
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
