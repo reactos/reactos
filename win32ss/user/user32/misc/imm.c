@@ -5,8 +5,6 @@
  * PURPOSE:         User32.dll Imm functions
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
- * UPDATE HISTORY:
- *      01/27/2009  Created
  */
 
 #include <user32.h>
@@ -19,12 +17,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define MAX_CANDIDATEFORM 4
 
 /* Is != NULL when we have loaded the IMM ourselves */
-HINSTANCE ghImm32 = NULL;
+HINSTANCE ghImm32 = NULL; // Win: ghImm32
 
-BOOL bImmInitializing = FALSE;
+BOOL gbImmInitializing = FALSE; // Win: bImmInitializing
 
-INT gnImmUnknownFlag1 = -1;
+INT gfConIme = -1; // Win: gfConIme
 
+// Win: GetTopLevelWindow
 PWND FASTCALL User32GetTopLevelWindow(PWND pwnd)
 {
     if (!pwnd)
@@ -42,6 +41,7 @@ PWND FASTCALL User32GetTopLevelWindow(PWND pwnd)
     static type WINAPI IMMSTUB_##name params { IMM_RETURN_##retkind((type)retval); }
 #include "immtable.h"
 
+// Win: gImmApiEntries
 Imm32ApiTable gImmApiEntries = {
 /* initialize by stubs */
 #undef DEFINE_IMM_ENTRY
@@ -50,9 +50,9 @@ Imm32ApiTable gImmApiEntries = {
 #include "immtable.h"
 };
 
+// Win: GetImmFileName
 HRESULT
-GetImmFileName(_Out_ LPWSTR lpBuffer,
-               _In_ size_t cchBuffer)
+User32GetImmFileName(_Out_ LPWSTR lpBuffer, _In_ size_t cchBuffer)
 {
     UINT length = GetSystemDirectoryW(lpBuffer, cchBuffer);
     if (length && length < cchBuffer)
@@ -63,9 +63,8 @@ GetImmFileName(_Out_ LPWSTR lpBuffer,
     return StringCchCopyW(lpBuffer, cchBuffer, L"imm32.dll");
 }
 
-/*
- * @unimplemented
- */
+// @unimplemented
+// Win: _InitializeImmEntryTable
 static BOOL IntInitializeImmEntryTable(VOID)
 {
     WCHAR ImmFile[MAX_PATH];
@@ -75,7 +74,7 @@ static BOOL IntInitializeImmEntryTable(VOID)
     if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
         return TRUE;
 
-    GetImmFileName(ImmFile, _countof(ImmFile));
+    User32GetImmFileName(ImmFile, _countof(ImmFile));
     TRACE("File %S\n", ImmFile);
 
     /* If IMM32 is already loaded, use it without increasing reference count. */
@@ -114,12 +113,14 @@ static BOOL IntInitializeImmEntryTable(VOID)
     return TRUE;
 }
 
+// Win: InitializeImmEntryTable
 BOOL WINAPI InitializeImmEntryTable(VOID)
 {
-    bImmInitializing = TRUE;
+    gbImmInitializing = TRUE;
     return IntInitializeImmEntryTable();
 }
 
+// Win: User32InitializeImmEntryTable
 BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
 {
     TRACE("Imm (%x)\n", magic);
@@ -133,10 +134,10 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
 
     IntInitializeImmEntryTable();
 
-    if (ghImm32 == NULL && !bImmInitializing)
+    if (ghImm32 == NULL && !gbImmInitializing)
     {
         WCHAR ImmFile[MAX_PATH];
-        GetImmFileName(ImmFile, _countof(ImmFile));
+        User32GetImmFileName(ImmFile, _countof(ImmFile));
         ghImm32 = LoadLibraryW(ImmFile);
         if (ghImm32 == NULL)
         {
@@ -148,17 +149,20 @@ BOOL WINAPI User32InitializeImmEntryTable(DWORD magic)
     return IMM_FN(ImmRegisterClient)(&gSharedInfo, ghImm32);
 }
 
+// Win: ImeIsUsableContext
 static BOOL User32CanSetImeWindowToImc(HIMC hIMC, HWND hImeWnd)
 {
     PIMC pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
     return pIMC && (!pIMC->hImeWnd || pIMC->hImeWnd == hImeWnd || !ValidateHwnd(pIMC->hImeWnd));
 }
 
+// Win: GetIMEShowStatus
 static BOOL User32GetImeShowStatus(VOID)
 {
     return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_GETIMESHOWSTATUS);
 }
 
+// Win: SendMessageToUI(pimeui, uMsg, wParam, lParam, !unicode)
 static LRESULT
 User32SendImeUIMessage(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode)
 {
@@ -186,6 +190,7 @@ User32SendImeUIMessage(PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam, B
     return ret;
 }
 
+// Win: SendOpenStatusNotify
 static VOID User32NotifyOpenStatus(PIMEUI pimeui, HWND hwndIMC, BOOL bOpen)
 {
     WPARAM wParam = (bOpen ? IMN_OPENSTATUSWINDOW : IMN_CLOSESTATUSWINDOW);
@@ -198,6 +203,7 @@ static VOID User32NotifyOpenStatus(PIMEUI pimeui, HWND hwndIMC, BOOL bOpen)
         User32SendImeUIMessage(pimeui, WM_IME_NOTIFY, wParam, 0, TRUE);
 }
 
+// Win: ImeMarkUsedContext
 static VOID User32SetImeWindowOfImc(HIMC hIMC, HWND hImeWnd)
 {
     PIMC pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
@@ -207,6 +213,7 @@ static VOID User32SetImeWindowOfImc(HIMC hIMC, HWND hImeWnd)
     NtUserUpdateInputContext(hIMC, UIC_IMEWINDOW, (ULONG_PTR)hImeWnd);
 }
 
+// Win: ImeSetImc
 static VOID User32UpdateImcOfImeUI(PIMEUI pimeui, HIMC hNewIMC)
 {
     HWND hImeWnd = UserHMGetHandle(pimeui->spwnd);
@@ -224,6 +231,7 @@ static VOID User32UpdateImcOfImeUI(PIMEUI pimeui, HIMC hNewIMC)
         User32SetImeWindowOfImc(hNewIMC, hImeWnd);
 }
 
+// Win: ImeNotifyHandler
 static LRESULT ImeWnd_OnImeNotify(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret = 0;
@@ -266,6 +274,7 @@ static LRESULT ImeWnd_OnImeNotify(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
+// Win: CreateIMEUI
 static HWND User32CreateImeUIWindow(PIMEUI pimeui, HKL hKL)
 {
     IMEINFOEX ImeInfoEx;
@@ -308,6 +317,7 @@ Quit:
     return hwndUI;
 }
 
+// Win: ImeWndCreateHandler
 static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
 {
     PWND pParentWnd, pWnd = pimeui->spwnd;
@@ -341,6 +351,7 @@ static BOOL ImeWnd_OnCreate(PIMEUI pimeui, LPCREATESTRUCT lpCS)
     return TRUE;
 }
 
+// Win: DestroyIMEUI
 static VOID User32DestroyImeUIWindow(PIMEUI pimeui)
 {
     HWND hwndUI = pimeui->hwndUI;
@@ -355,6 +366,7 @@ static VOID User32DestroyImeUIWindow(PIMEUI pimeui)
     pimeui->hwndUI = NULL;
 }
 
+// Win: ImeSelectHandler
 static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     HKL hKL;
@@ -384,6 +396,7 @@ static VOID ImeWnd_OnImeSelect(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     }
 }
 
+// Win: ImeControlHandler(pimeui, wParam, lParam, !unicode)
 static LRESULT
 ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
 {
@@ -505,6 +518,7 @@ ImeWnd_OnImeControl(PIMEUI pimeui, WPARAM wParam, LPARAM lParam, BOOL unicode)
     return 0;
 }
 
+// Win: FocusSetIMCContext
 static VOID FASTCALL User32SetImeActivenessOfWindow(HWND hWnd, BOOL bActive)
 {
     HIMC hIMC;
@@ -520,6 +534,7 @@ static VOID FASTCALL User32SetImeActivenessOfWindow(HWND hWnd, BOOL bActive)
     IMM_FN(ImmReleaseContext)(hWnd, hIMC);
 }
 
+// Win: ImeSystemHandler
 static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret = 0;
@@ -667,6 +682,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
+// Win: ImeSetContextHandler
 LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret;
@@ -684,14 +700,14 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
         if (!pimeui->hwndUI)
             pimeui->hwndUI = User32CreateImeUIWindow(pimeui, pimeui->hKL);
 
-        if (gnImmUnknownFlag1 == -1)
+        if (gfConIme == -1)
         {
-            gnImmUnknownFlag1 = (INT)NtUserGetThreadState(THREADSTATE_UNKNOWN17);
-            if (gnImmUnknownFlag1)
+            gfConIme = (INT)NtUserGetThreadState(THREADSTATE_UNKNOWN17);
+            if (gfConIme)
                 pimeui->fCtrlShowStatus = FALSE;
         }
 
-        if (gnImmUnknownFlag1)
+        if (gfConIme)
         {
             pwndOwner = pimeui->spwnd->spwndOwner;
             if (pwndOwner)
@@ -818,7 +834,9 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
-LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
+// Win: ImeWndProcWorker(hwnd, msg, wParam, lParam, !unicode)
+LRESULT WINAPI
+ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode) // ReactOS
 {
     PWND pWnd;
     PIMEUI pimeui;
@@ -953,38 +971,40 @@ LRESULT WINAPI ImeWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     return 0;
 }
 
+// Win: ImeWndProcA
 LRESULT WINAPI ImeWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     return ImeWndProc_common(hwnd, msg, wParam, lParam, FALSE);
 }
 
+// Win: ImeWndProcW
 LRESULT WINAPI ImeWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     return ImeWndProc_common(hwnd, msg, wParam, lParam, TRUE);
 }
 
-BOOL
-WINAPI
-UpdatePerUserImmEnabling(VOID)
+// Win: UpdatePerUserImmEnabling
+BOOL WINAPI UpdatePerUserImmEnabling(VOID)
 {
-  BOOL Ret = NtUserCallNoParam(NOPARAM_ROUTINE_UPDATEPERUSERIMMENABLING);
-  if ( Ret )
-  {
-    if ( gpsi->dwSRVIFlags & SRVINFO_IMM32 )
+    HMODULE imm32;
+    BOOL ret;
+
+    ret = NtUserCallNoParam(NOPARAM_ROUTINE_UPDATEPERUSERIMMENABLING);
+    if (!ret || !(gpsi->dwSRVIFlags & SRVINFO_IMM32))
+        return FALSE;
+
+    imm32 = GetModuleHandleW(L"imm32.dll");
+    if (imm32)
+        return TRUE;
+
+    imm32 = LoadLibraryW(L"imm32.dll");
+    if (imm32)
     {
-      HMODULE imm32 = GetModuleHandleW(L"imm32.dll");
-      if ( !imm32 )
-      {
-        imm32 = LoadLibraryW(L"imm32.dll");
-        if (!imm32)
-        {
-           ERR("UPUIE: Imm32 not installed!\n");
-           Ret = FALSE;
-        }
-      }
+        ERR("UPUIE: Imm32 not installed!\n");
+        ret = FALSE;
     }
-  }
-  return Ret;
+
+    return ret;
 }
 
 BOOL
