@@ -41,9 +41,6 @@ static void Test1(void)
     /* ImmGetContext/ImmReleaseContext and ImmLockIMC/ImmUnlockIMC */
     hIMC1 = hIMC = ImmGetContext(hwndEdit);
     ok(hIMC != NULL, "ImmGetContext failed\n");
-    printf("ImmLockIMC: %p\n", ImmLockIMC);
-    fflush(stdout);
-    DebugBreak();
     pIC = ImmLockIMC(hIMC);
     ok(pIC != NULL, "ImmLockIMC failed\n");
     if (pIC != NULL)
