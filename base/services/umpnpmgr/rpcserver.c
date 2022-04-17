@@ -781,6 +781,14 @@ PNP_GetRelatedDeviceInstance(
     if (!IsValidDeviceInstanceID(pDeviceID))
         return CR_INVALID_DEVINST;
 
+    /* The root device does not have a parent device or sibling devices */
+    if ((ulRelationship == PNP_GET_PARENT_DEVICE_INSTANCE) ||
+        (ulRelationship == PNP_GET_SIBLING_DEVICE_INSTANCE))
+    {
+        if (IsRootDeviceInstanceID(pDeviceID))
+            return CR_NO_SUCH_DEVINST;
+    }
+
     RtlInitUnicodeString(&PlugPlayData.TargetDeviceInstance,
                          pDeviceID);
 
