@@ -1722,55 +1722,6 @@ CmInitSystem1(VOID)
 }
 
 CODE_SEG("INIT")
-VOID
-NTAPI
-CmpFreeDriverList(IN PHHIVE Hive,
-                  IN PLIST_ENTRY DriverList)
-{
-    PLIST_ENTRY NextEntry, OldEntry;
-    PBOOT_DRIVER_NODE DriverNode;
-    PAGED_CODE();
-
-    /* Parse the current list */
-    NextEntry = DriverList->Flink;
-    while (NextEntry != DriverList)
-    {
-        /* Get the driver node */
-        DriverNode = CONTAINING_RECORD(NextEntry, BOOT_DRIVER_NODE, ListEntry.Link);
-
-        /* Get the next entry now, since we're going to free it later */
-        OldEntry = NextEntry;
-        NextEntry = NextEntry->Flink;
-
-        /* Was there a name? */
-        if (DriverNode->Name.Buffer)
-        {
-            /* Free it */
-            CmpFree(DriverNode->Name.Buffer, DriverNode->Name.Length);
-        }
-
-        /* Was there a registry path? */
-        if (DriverNode->ListEntry.RegistryPath.Buffer)
-        {
-            /* Free it */
-            CmpFree(DriverNode->ListEntry.RegistryPath.Buffer,
-                    DriverNode->ListEntry.RegistryPath.MaximumLength);
-        }
-
-        /* Was there a file path? */
-        if (DriverNode->ListEntry.FilePath.Buffer)
-        {
-            /* Free it */
-            CmpFree(DriverNode->ListEntry.FilePath.Buffer,
-                    DriverNode->ListEntry.FilePath.MaximumLength);
-        }
-
-        /* Now free the node, and move on */
-        CmpFree(OldEntry, sizeof(BOOT_DRIVER_NODE));
-    }
-}
-
-CODE_SEG("INIT")
 PUNICODE_STRING*
 NTAPI
 CmGetSystemDriverList(VOID)

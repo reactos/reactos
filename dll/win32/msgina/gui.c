@@ -132,7 +132,7 @@ SetWelcomeText(HWND hWnd)
     TRACE("SetWelcomeText(%p)\n", hWnd);
 
     /* Open the Winlogon key */
-    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                        0,
                        KEY_QUERY_VALUE,
@@ -181,6 +181,69 @@ done:
     RegCloseKey(hKey);
 }
 
+static VOID
+AdjustStatusMessageWindow(HWND hwndDlg, PDLG_DATA pDlgData)
+{
+    INT xOld, yOld, cxOld, cyOld;
+    INT xNew, yNew, cxNew, cyNew;
+    INT cxLabel, cyLabel, dyLabel;
+    RECT rc, rcBar, rcLabel, rcWnd;
+    BITMAP bmLogo, bmBar;
+    DWORD style, exstyle;
+    HWND hwndLogo = GetDlgItem(hwndDlg, IDC_ROSLOGO);
+    HWND hwndBar = GetDlgItem(hwndDlg, IDC_BAR);
+    HWND hwndLabel = GetDlgItem(hwndDlg, IDC_STATUS_MESSAGE);
+
+    /* This adjustment is for CJK only */
+    switch (PRIMARYLANGID(GetUserDefaultLangID()))
+    {
+        case LANG_CHINESE:
+        case LANG_JAPANESE:
+        case LANG_KOREAN:
+            break;
+
+        default:
+            return;
+    }
+
+    if (!GetObjectW(pDlgData->hLogoBitmap, sizeof(BITMAP), &bmLogo) ||
+        !GetObjectW(pDlgData->hBarBitmap, sizeof(BITMAP), &bmBar))
+    {
+        return;
+    }
+
+    GetWindowRect(hwndBar, &rcBar);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcBar, 2);
+    dyLabel = bmLogo.bmHeight - rcBar.top;
+
+    GetWindowRect(hwndLabel, &rcLabel);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcLabel, 2);
+    cxLabel = rcLabel.right - rcLabel.left;
+    cyLabel = rcLabel.bottom - rcLabel.top;
+
+    MoveWindow(hwndLogo, 0, 0, bmLogo.bmWidth, bmLogo.bmHeight, TRUE);
+    MoveWindow(hwndBar, 0, bmLogo.bmHeight, bmLogo.bmWidth, bmBar.bmHeight, TRUE);
+    MoveWindow(hwndLabel, rcLabel.left, rcLabel.top + dyLabel, cxLabel, cyLabel, TRUE);
+
+    GetWindowRect(hwndDlg, &rcWnd);
+    xOld = rcWnd.left;
+    yOld = rcWnd.top;
+    cxOld = rcWnd.right - rcWnd.left;
+    cyOld = rcWnd.bottom - rcWnd.top;
+
+    GetClientRect(hwndDlg, &rc);
+    SetRect(&rc, 0, 0, bmLogo.bmWidth, rc.bottom - rc.top); /* new client size */
+
+    style = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_STYLE);
+    exstyle = (DWORD)GetWindowLongPtrW(hwndDlg, GWL_EXSTYLE);
+    AdjustWindowRectEx(&rc, style, FALSE, exstyle);
+
+    cxNew = rc.right - rc.left;
+    cyNew = (rc.bottom - rc.top) + dyLabel;
+    xNew = xOld - (cxNew - cxOld) / 2;
+    yNew = yOld - (cyNew - cyOld) / 2;
+    MoveWindow(hwndDlg, xNew, yNew, cxNew, cyNew, TRUE);
+}
 
 static INT_PTR CALLBACK
 StatusDialogProc(
@@ -226,6 +289,8 @@ StatusDialogProc(
                     pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
                 }
             }
+
+            AdjustStatusMessageWindow(hwndDlg, pDlgData);
             return TRUE;
         }
 
@@ -294,12 +359,12 @@ StartupWindowThread(LPVOID lpParam)
 
     /* When SetThreadDesktop is called the system closes the desktop handle when needed
        so we have to create a new handle because this handle may still be in use by winlogon  */
-    if (!DuplicateHandle (  GetCurrentProcess(), 
-                            msg->hDesktop, 
-                            GetCurrentProcess(), 
-                            (HANDLE*)&hDesk, 
-                            0, 
-                            FALSE, 
+    if (!DuplicateHandle (  GetCurrentProcess(),
+                            msg->hDesktop,
+                            GetCurrentProcess(),
+                            (HANDLE*)&hDesk,
+                            0,
+                            FALSE,
                             DUPLICATE_SAME_ACCESS))
     {
         ERR("Duplicating handle failed!\n");
@@ -580,7 +645,7 @@ DoChangePassword(
     Ptr = (LPWSTR)((ULONG_PTR)RequestBuffer + sizeof(MSV1_0_CHANGEPASSWORD_REQUEST));
 
     /* Pack the domain name */
-    RequestBuffer->DomainName.Length = wcslen(Domain) * sizeof(WCHAR);
+    RequestBuffer->DomainName.Length = (USHORT)wcslen(Domain) * sizeof(WCHAR);
     RequestBuffer->DomainName.MaximumLength = RequestBuffer->DomainName.Length + sizeof(WCHAR);
     RequestBuffer->DomainName.Buffer = Ptr;
 
@@ -591,7 +656,7 @@ DoChangePassword(
     Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->DomainName.MaximumLength);
 
     /* Pack the user name */
-    RequestBuffer->AccountName.Length = wcslen(UserName) * sizeof(WCHAR);
+    RequestBuffer->AccountName.Length = (USHORT)wcslen(UserName) * sizeof(WCHAR);
     RequestBuffer->AccountName.MaximumLength = RequestBuffer->AccountName.Length + sizeof(WCHAR);
     RequestBuffer->AccountName.Buffer = Ptr;
 
@@ -602,7 +667,7 @@ DoChangePassword(
     Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->AccountName.MaximumLength);
 
     /* Pack the old password */
-    RequestBuffer->OldPassword.Length = wcslen(OldPassword) * sizeof(WCHAR);
+    RequestBuffer->OldPassword.Length = (USHORT)wcslen(OldPassword) * sizeof(WCHAR);
     RequestBuffer->OldPassword.MaximumLength = RequestBuffer->OldPassword.Length + sizeof(WCHAR);
     RequestBuffer->OldPassword.Buffer = Ptr;
 
@@ -613,7 +678,7 @@ DoChangePassword(
     Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->OldPassword.MaximumLength);
 
     /* Pack the new password */
-    RequestBuffer->NewPassword.Length = wcslen(NewPassword1) * sizeof(WCHAR);
+    RequestBuffer->NewPassword.Length = (USHORT)wcslen(NewPassword1) * sizeof(WCHAR);
     RequestBuffer->NewPassword.MaximumLength = RequestBuffer->NewPassword.Length + sizeof(WCHAR);
     RequestBuffer->NewPassword.Buffer = Ptr;
 

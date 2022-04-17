@@ -1,5 +1,7 @@
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-he-IL.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "&קובץ"
@@ -186,6 +188,17 @@ BEGIN
     PUSHBUTTON "ביטול", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Fonts"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "צייר"
@@ -193,7 +206,7 @@ BEGIN
     IDS_INFOTITLE "צייר עבור ReactOS"
     IDS_INFOTEXT "Available under the GNU Lesser General Public License (LGPL, see www.gnu.org)"
     IDS_SAVEPROMPTTEXT "האם ברצונך לשמור את השינויים של %s?"
-    IDS_DEFAULTFILENAME "ללא שם.bmp"
+    IDS_DEFAULTFILENAME "ללא שם"
     IDS_MINIATURETITLE "ממוזער"
     IDS_TOOLTIP1 "בחירה חופשית"
     IDS_TOOLTIP2 "בחירה"
@@ -220,4 +233,8 @@ BEGIN
     IDS_ANGLE, "The angle must be between -89 and 89."
     IDS_LOADERRORTEXT, ".%s לא היה ניתן לטעון את הקובץ"
     IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
 END

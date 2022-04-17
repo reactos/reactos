@@ -130,7 +130,7 @@ BEGIN
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
     LTEXT            "Usted puede personalizar el Menú Inicio añadiendo o quitando elementos.", IDC_STATIC, 48, 17, 108, 39
     PUSHBUTTON       "&Añadir...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
-    PUSHBUTTON       "&Remover...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
+    PUSHBUTTON       "&Quitar...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
     PUSHBUTTON       "A&vanzado", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
     PUSHBUTTON       "&Ordenar", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20

@@ -49,3 +49,10 @@ ImageClassName = "Образ"
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 ImageClassName = "Resim"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+ImageClassName = "Imagem"
+
+[Strings.0c04]
+ImageClassName = "圖像"

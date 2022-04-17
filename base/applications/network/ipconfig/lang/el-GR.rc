@@ -24,42 +24,42 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\Χρήση:\n \
-        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid adapter |\n \
-                  /setclassid adapter [classid] ]\n \
-\n \
-    where\n \
-        adapter         Connection name\n \
-                       (wildcard characters * and ? allowed, see examples)\n \
-\n \
-        Options:\n \
-           /?           Εμφάνιοση αυτού του μηνύματος βοήθειας.\n \
-           /all         Εμφάνιση όλων των πληροφοριών ρύθμισης παραμέτρων.\n \
-           /release     Αποδέσμευση της διεύθυνσης IP για τον καθορισμένο προσαρμογέα.\n \
-           /renew       Ανανέωση της διεύθυνσης IP για τον καθορισμένο προσαρμογέα.\n \
-           /flushdns    Εκκαθάριση της μνήμης cache της επίλυσης DNS.\n \
-           /registerdns Ανανεώνει όλες τις μισθώσεις DHCP και καταχωρεί πάλι τα ονόματα DNS.\n \
-           /displaydns  Εμφανίζει το περιεχόμενο της μνήμης cache της επίλυσης DNS.\n \
-           /showclassid Εμφανίζει όλα τα αναγνωριστικά κλάσης dhcp που επιτρέπονται για τον προσαρμογέα.\n \
-           /setclassid  Τροποποιεί το αναγνωριστικό κλάσης dhcp.\n \
-\n \
-    Η προεπιλογή είναι εμφάνιση μόνο διεύθυνσης IP, μάσκας υποδικτύου και\n \
-    προεπιλεγμένης πύλης για κάθε προσαρμογέα συνδεδεμένο στο TCP/IP.\n \
-\n \
-    Για Release και Renew, αν δεν έχει καθοριστεί όνομα προσαρμογέα, θα\n \
-    αποδεσμευτούν ή ανανεωθούν οι μισθώσεις διευθύνσεων IP για όλους τους συνδεδεμένους προσαρμογείς στο TCP/IP.\n \
-\n \
-    Για Setclassid, αν δεν έχει καθοριστεί αναγνωριστικό κλάσης, το αναγνωριστικό κλάσης καταργείται.\n \
-\n \
-    Παραδείγματα:\n \
-        > ipconfig                   ... Εμφάνιση πληροφοριών.\n \
-        > ipconfig /all              ... Εμφάνιση λεπτομερών πληροφοριών\n \
-        > ipconfig /renew            ... ανανεώνει όλους τους προσαρμογείς\n \
-        > ipconfig /renew EL*        ... ανανεώνει όλες τις συνδέσεις με\n \
-                                         όνομα που αρχίζει με EL\n \
-        > ipconfig /release *Con*    ... αποδεσμεύει όλες τις συνδέσεις που ταιριάζουν,\n \
-                                         eg. ""Local Area Connection 1"" or\n \
+    "\Χρήση:\n\
+        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid adapter |\n\
+                  /setclassid adapter [classid] ]\n\
+\n\
+    where\n\
+        adapter         Connection name\n\
+                       (wildcard characters * and ? allowed, see examples)\n\
+\n\
+        Options:\n\
+           /?           Εμφάνιοση αυτού του μηνύματος βοήθειας.\n\
+           /all         Εμφάνιση όλων των πληροφοριών ρύθμισης παραμέτρων.\n\
+           /release     Αποδέσμευση της διεύθυνσης IP για τον καθορισμένο προσαρμογέα.\n\
+           /renew       Ανανέωση της διεύθυνσης IP για τον καθορισμένο προσαρμογέα.\n\
+           /flushdns    Εκκαθάριση της μνήμης cache της επίλυσης DNS.\n\
+           /registerdns Ανανεώνει όλες τις μισθώσεις DHCP και καταχωρεί πάλι τα ονόματα DNS.\n\
+           /displaydns  Εμφανίζει το περιεχόμενο της μνήμης cache της επίλυσης DNS.\n\
+           /showclassid Εμφανίζει όλα τα αναγνωριστικά κλάσης dhcp που επιτρέπονται για τον προσαρμογέα.\n\
+           /setclassid  Τροποποιεί το αναγνωριστικό κλάσης dhcp.\n\
+\n\
+    Η προεπιλογή είναι εμφάνιση μόνο διεύθυνσης IP, μάσκας υποδικτύου και\n\
+    προεπιλεγμένης πύλης για κάθε προσαρμογέα συνδεδεμένο στο TCP/IP.\n\
+\n\
+    Για Release και Renew, αν δεν έχει καθοριστεί όνομα προσαρμογέα, θα\n\
+    αποδεσμευτούν ή ανανεωθούν οι μισθώσεις διευθύνσεων IP για όλους τους συνδεδεμένους προσαρμογείς στο TCP/IP.\n\
+\n\
+    Για Setclassid, αν δεν έχει καθοριστεί αναγνωριστικό κλάσης, το αναγνωριστικό κλάσης καταργείται.\n\
+\n\
+    Παραδείγματα:\n\
+        > ipconfig                   ... Εμφάνιση πληροφοριών.\n\
+        > ipconfig /all              ... Εμφάνιση λεπτομερών πληροφοριών\n\
+        > ipconfig /renew            ... ανανεώνει όλους τους προσαρμογείς\n\
+        > ipconfig /renew EL*        ... ανανεώνει όλες τις συνδέσεις με\n\
+                                         όνομα που αρχίζει με EL\n\
+        > ipconfig /release *Con*    ... αποδεσμεύει όλες τις συνδέσεις που ταιριάζουν,\n\
+                                         eg. ""Local Area Connection 1"" or\n\
                                              ""Local Area Connection 2""\n"
 END

@@ -10,5 +10,5 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "ReactOS 當機報告"
-    IDS_USER_ALERT_MESSAGE "應用程式 %ls 發生錯誤並已強制結束。有關本次錯誤的資訊將儲存在︰\r\n\r\n%ls"
+    IDS_USER_ALERT_MESSAGE "應用程式 %ls 發生錯誤並已強制結束。有關本次錯誤的資訊將儲存在︰\n\n%ls"
 END

@@ -1,7 +1,8 @@
-/* TRANSLATOR : Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR.: 09-02-2008
- * LAST CHANGE: 15-12-2009
- * THANKS TO  : Filip Navara and Kamil Hornicek and all good people ;-)
+/*
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATORS: Copyright 2008-2009 Mário Kačmár aka Kario <kario@szm.sk>
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -80,11 +81,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Lokalizácia systému by mala súhlasiť s jazykom aplikácií, ktoré chcete používať. Lokalizácia určí ako budú zobrazené čísla, meny a údaje kalendára.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<text lokality>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pre zmenu lokalizácie systému kliknite na Zmeniť.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Zmeniť...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "Rozloženie kláves určí znaky, ktoré sa zobrazia, keď píšete.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<text rozloženia>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pre zmenu rozloženia kláves, kliknite na Zmeniť.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Z&meniť...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -116,9 +118,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Registrujem súčasti", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -180,10 +185,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Zadajte meno a heslo pre účet Administrator."
     IDS_LOCALETITLE "Regionálne nastavenia"
     IDS_LOCALESUBTITLE "Systém ReactOS môžete prispôsobiť rôznym regiónom a jazykom."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Dátum a čas"
     IDS_DATETIMESUBTITLE "Nastavte správny čas pre Váš počítač."
-    IDS_PROCESSTITLE "Registrácia súčastí"
-    IDS_PROCESSSUBTITLE "Počkajte, prosím ..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Appearance"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
@@ -192,7 +199,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "Inštalátor systému ReactOS"
     IDS_UNKNOWN_ERROR "Neznáma chyba"
-    IDS_REGISTERING_COMPONENTS "Registrujem súčasti..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary zlyhal: "
     IDS_GETPROCADDR_FAILED "GetProcAddr zlyhal: "
     IDS_REGSVR_FAILED "DllRegisterServer zlyhal: "
@@ -250,7 +256,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."

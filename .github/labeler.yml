@@ -10,3 +10,6 @@ freeldr:
 "kernel&hal":
   - hal/**
   - ntoskrnl/**
+
+ROSTESTS:
+  - modules/rostests/**

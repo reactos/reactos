@@ -480,29 +480,29 @@ HID_MOUSE.DeviceDesc = "HID myš"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-MouseClassName = "Fâre ve Başka İmleme Aygıtları"
-LocationOverride = "PS/2 fâre girişine takılı"
+MouseClassName = "Fare ve Diğer İşaretçi Aygıtları"
+LocationOverride = "PS/2 fare girişine takılı"
 
-StdMfg = "(Ölçünlü Fâre)"
-SERIAL_MOUSE.DeviceDesc = "Ölçünlü Dizilik Fâre"
-PS2_MOUSE.DeviceDesc = "Ölçünlü PS/2 Fâre"
-HID_MOUSE.DeviceDesc = "HID Fâre"
-*PNP0F0D.DeviceDesc = "Standard InPort Mouse"
-*PNP0F11.DeviceDesc = "Standard Bus Mouse"
-*PNP0F13.DeviceDesc = "PS/2 Türünde Fâre İçin PS/2 Girişi"
+StdMfg = "(Standart Fare)"
+SERIAL_MOUSE.DeviceDesc = "Standart Seri Fare"
+PS2_MOUSE.DeviceDesc = "Standart PS/2 Fare"
+HID_MOUSE.DeviceDesc = "HID Fare"
+*PNP0F0D.DeviceDesc = "Standart InPort Fare"
+*PNP0F11.DeviceDesc = "Standart Veriyolu Faresi"
+*PNP0F13.DeviceDesc = "PS/2 Fare İçin PS/2 Girişi"
 
-*IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
+*IBM3780.DeviceDesc = "IBM PS/2 Nokta Fare"
 
-*PNP0F08.DeviceDesc = "Logitech Dizilik Fâre"
-*PNP0F12.DeviceDesc = "Logitech PS/2 Türünde Fâre"
-*PNP0F15.DeviceDesc = "Logitech Bus Mouse"
+*PNP0F08.DeviceDesc = "Logitech Seri Fare"
+*PNP0F12.DeviceDesc = "Logitech PS/2 Fare"
+*PNP0F15.DeviceDesc = "Logitech Veriyolu Faresi"
 
-*PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
-*PNP0F01.DeviceDesc = "Microsoft Dizilik Fâre"
-*PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
-*PNP0F03.DeviceDesc = "Microsoft PS/2 Türünde Fâre"
+*PNP0F00.DeviceDesc = "Microsoft Veriyolu Faresi"
+*PNP0F01.DeviceDesc = "Microsoft Seri Fare"
+*PNP0F02.DeviceDesc = "Microsoft InPort Fare"
+*PNP0F03.DeviceDesc = "Microsoft PS/2 Fare"
 
-*nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
+*nEC1F00.DeviceDesc = "NEC PC-98 Veriyolu Faresi"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"
@@ -573,3 +573,53 @@ HID_MOUSE.DeviceDesc = "HID 鼠标"
 *PNP0F03.DeviceDesc = "Microsoft PS/2 风格鼠标"
 
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+MouseClassName = "Ratos e outros dispositivos apontadores"
+LocationOverride = "Ligado à porta PS/2 do rato"
+
+StdMfg = "(Rato padrão)"
+SERIAL_MOUSE.DeviceDesc = "Rato série padrão"
+PS2_MOUSE.DeviceDesc = "Rato PS/2 padrão"
+HID_MOUSE.DeviceDesc = "Rato oculto"
+*PNP0F0D.DeviceDesc = "Standard InPort Mouse"
+*PNP0F11.DeviceDesc = "Standard Bus Mouse"
+*PNP0F13.DeviceDesc = "Porta PS/2 para rato PS/2"
+
+*IBM3780.DeviceDesc = "Trackpoint PS/2 da IBM"
+
+*PNP0F08.DeviceDesc = "Rato série da Logitech"
+*PNP0F12.DeviceDesc = "Rato PS/2 da Logitech"
+*PNP0F15.DeviceDesc = "Logitech Bus Mouse"
+
+*PNP0F00.DeviceDesc = "Microsoft Bus Mouse"
+*PNP0F01.DeviceDesc = "Rato série de Microsoft"
+*PNP0F02.DeviceDesc = "Microsoft InPort Mouse"
+*PNP0F03.DeviceDesc = "Rato PS/2 da Microsoft"
+
+*nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
+
+[Strings.0C04]
+MouseClassName = "滑鼠和其他指標裝置"
+
+StdMfg = "(標準滑鼠)"
+SERIAL_MOUSE.DeviceDesc = "標準序列滑鼠"
+PS2_MOUSE.DeviceDesc = "標準 PS/2 滑鼠"
+HID_MOUSE.DeviceDesc = "HID 滑鼠"
+*PNP0F0D.DeviceDesc = "標準 InPort 滑鼠"
+*PNP0F11.DeviceDesc = "標準匯流排滑鼠"
+*PNP0F13.DeviceDesc = "用於 PS/2 風格滑鼠嘅 PS/2 連接埠"
+
+*IBM3780.DeviceDesc = "IBM PS/2 Trackpoint 指點桿"
+
+*PNP0F08.DeviceDesc = "Logitech 序列滑鼠"
+*PNP0F12.DeviceDesc = "Logitech PS/2 風格滑鼠"
+*PNP0F15.DeviceDesc = "Logitech 匯流排滑鼠"
+
+*PNP0F00.DeviceDesc = "Microsoft 匯流排滑鼠"
+*PNP0F01.DeviceDesc = "Microsoft 序列滑鼠"
+*PNP0F02.DeviceDesc = "Microsoft InPort 滑鼠"
+*PNP0F03.DeviceDesc = "Microsoft PS/2 風格滑鼠"
+
+*nEC1F00.DeviceDesc = "NEC PC-98 匯流排滑鼠"

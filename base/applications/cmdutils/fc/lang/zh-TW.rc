@@ -1,41 +1,47 @@
+/*
+ * PROJECT:     ReactOS FC Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
-them\n\
+	IDS_USAGE "比較兩個或兩組檔案，並顯示兩者的不同之處。\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
-   [drive1:][path1]filename1 [drive2:][path2]filename2\n\
-FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
+   [磁碟機1:][路徑1]檔案名稱1 [磁碟機2:][路徑2]檔案名稱2\n\
+FC /B [磁碟機1:][路徑1]檔案名稱1 [磁碟機2:][路徑2]檔案名稱2\n\
 \n\
-  /A         Displays only first and last lines for each set of differences.\n\
-  /B         Performs a binary comparison.\n\
-  /C         Disregards the case of letters.\n\
-  /L         Compares files as ASCII text.\n\
-  /LBn       Sets the maximum consecutive mismatches to the specified\n\
-             number of lines (default: 100).\n\
-  /N         Displays the line numbers on an ASCII comparison.\n\
-  /OFF[LINE] Doesn't skip files with offline attribute set.\n\
-  /T         Doesn't expand tabs to spaces (default: expand).\n\
-  /U         Compare files as UNICODE text files.\n\
-  /W         Compresses white space (tabs and spaces) for comparison.\n\
-  /nnnn      Specifies the number of consecutive lines that must match\n\
-             after a mismatch (default: 2).\n\
-  [drive1:][path1]filename1\n\
-             Specifies the first file or set of files to compare.\n\
-  [drive2:][path2]filename2\n\
-             Specifies the second file or set of files to compare.\n"
-    IDS_NO_DIFFERENCE "FC: no differences encountered\n"
-    IDS_LONGER_THAN "FC: %ls longer than %ls\n"
-    IDS_COMPARING "Comparing files %ls and %ls\n"
-    IDS_OUT_OF_MEMORY "FC: Out of memory\n"
-    IDS_CANNOT_READ "FC: cannot read from %ls\n"
-    IDS_INVALID_SWITCH "FC: Invalid Switch\n"
-    IDS_CANNOT_OPEN "FC: cannot open %ls - No such file or folder\n"
-    IDS_NEEDS_FILES "FC: Insufficient number of file specifications\n"
-    IDS_CANT_USE_WILDCARD "Wildcard ('*' and '?') are not supported yet\n"
-    IDS_DIFFERENT "FC: File %ls and %ls are different\n"
-    IDS_TOO_LARGE "FC: File %ls too large\n"
-    IDS_RESYNC_FAILED "Resync failed.  Files are too different.\n"
+  /A         只顯示每組不同之處的第一行和最後一行。\n\
+  /B         使用二進位進行比較。\n\
+  /C         忽略字母的大小寫。\n\
+  /L         以 ASCII 文字檔案方式來比較檔案。\n\
+  /LBn       在指定的行數中設定最多可容許的\n\
+             連續不相同之處 (預設值: 100)。\n\
+  /N         在 ASCII 方式的比較中顯示行數。\n\
+  /OFF[LINE] 不要以離線屬性組略過檔案。\n\
+  /T         不要將定位字元展開為空 (預設值: 展開).\n\
+  /U         以 UNICODE 文字檔案方式來比較檔案。\n\
+  /W         壓縮空白字元 (定位字元和空格) 後再進行比較。\n\
+  /nnnn      指定在一處不相同之後必須相同的\n\
+             連續行數 (預設值: 2)。\n\
+  [磁碟機1:][路徑1]檔案名稱1\n\
+             指定要比較的第一個或第一組檔案。\n\
+  [磁碟機2:][路徑2]檔案名稱2\n\
+             指定要比較的第二個或第二組檔案。\n"
+    IDS_NO_DIFFERENCE "FC: 找不到不同之處\n"
+    IDS_LONGER_THAN "FC: %ls 比 %ls 為長\n"
+    IDS_COMPARING "正在比較 %ls 和 %ls\n"
+    IDS_OUT_OF_MEMORY "FC: 記憶體不足\n"
+    IDS_CANNOT_READ "FC: 無法讀取檔案 %ls\n"
+    IDS_INVALID_SWITCH "FC: 無效的切換參數\n"
+    IDS_CANNOT_OPEN "FC: 無法開啟 %ls - 沒有此檔案或資料夾\n"
+    IDS_NEEDS_FILES "FC: 檔案規格的數量不足\n"
+    IDS_CANT_USE_WILDCARD "萬用字元 ('*' 和 '?') 暫未支援\n"
+    IDS_DIFFERENT "FC: 檔案 %ls 和 %ls 不相同\n"
+    IDS_TOO_LARGE "FC: 檔案 %ls 太大\n"
+    IDS_RESYNC_FAILED "Resync 失敗。  檔案的差異過大。\n"
 END

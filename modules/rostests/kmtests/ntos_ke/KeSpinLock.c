@@ -167,12 +167,16 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
 {                                                                                   \
     PKTHREAD Thread = KeGetCurrentThread();                                         \
     (VOID)Thread;                                                                   \
-    if (KmtIsMultiProcessorBuild)                                                   \
+    if (KmtIsMultiProcessorBuild || KmtIsCheckedBuild)                              \
     {                                                                               \
         ok_eq_bool(Ret, (Value) == 0);                                              \
         if (SpinLock)                                                               \
-            ok_eq_ulongptr(*(SpinLock),                                             \
-                        (Value) ? (ULONG_PTR)Thread | 1 : 0);                       \
+        {                                                                           \
+            if (KmtIsCheckedBuild)                                                  \
+                ok_eq_ulongptr(*(SpinLock), (Value) ? (ULONG_PTR)Thread | 1 : 0);   \
+            else                                                                    \
+                ok_eq_ulongptr(*(SpinLock), (Value) ? 1 : 0);                       \
+        }                                                                           \
     }                                                                               \
     else                                                                            \
     {                                                                               \
@@ -192,7 +196,7 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
 
 #define CheckSpinLockQueueHandle(SpinLock, CheckData, Value) do                     \
 {                                                                                   \
-    if (KmtIsMultiProcessorBuild)                                                   \
+    if (KmtIsMultiProcessorBuild || KmtIsCheckedBuild)                              \
     {                                                                               \
         ok_eq_bool(Ret, (Value) == 0);                                              \
         if (SpinLock)                                                               \

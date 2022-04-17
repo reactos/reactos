@@ -28,7 +28,7 @@ WahOpenApcHelper(OUT PHANDLE ApcHelperHandle)
     /* Validate handle */
     if (!ApcHelperHandle) return ERROR_INVALID_PARAMETER;
 
-    /* 
+    /*
      * Return a bogus handle ("ROS")
      * Historical note:(MS sends "CKM", which probably stands for "Keith Moore"
      * (KM), one of the core architects of Winsock 2.2 from Microsoft.
@@ -86,7 +86,7 @@ WahCloseThread(IN HANDLE ApcHelperHandle,
 }
 
 INT
-WINAPI 
+WINAPI
 WahQueueUserApc(IN HANDLE ApcHelperHandle,
                 IN LPWSATHREADID ThreadId,
                 IN LPWSAUSERAPC ApcRoutine,

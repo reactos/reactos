@@ -15,6 +15,7 @@ PTHREADINFO gptiForeground = NULL;
 PPROCESSINFO gppiLockSFW = NULL;
 ULONG guSFWLockCount = 0; // Rule #8, No menus are active. So should be zero.
 PTHREADINFO ptiLastInput = NULL;
+HWND ghwndOldFullscreen = NULL;
 
 /*
   Check locking of a process or one or more menus are active.
@@ -48,9 +49,57 @@ IntGetThreadFocusWindow(VOID)
    return ThreadQueue->spwndFocus ? UserHMGetHandle(ThreadQueue->spwndFocus) : 0;
 }
 
+BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
+{
+    RECTL rclAnd, rclMonitor, rclWindow;
+    PMONITOR pMonitor;
+
+    if (!Window || !(Window->style & WS_VISIBLE) || (Window->style & WS_CHILD) ||
+        (Window->ExStyle & WS_EX_TOOLWINDOW) || !IntGetWindowRect(Window, &rclWindow))
+    {
+        return FALSE;
+    }
+
+    pMonitor = UserGetPrimaryMonitor();
+    if (!pMonitor)
+    {
+        RECTL_vSetRect(&rclMonitor, 0, 0,
+                       UserGetSystemMetrics(SM_CXSCREEN), UserGetSystemMetrics(SM_CYSCREEN));
+    }
+    else
+    {
+        rclMonitor = *(LPRECTL)&pMonitor->rcMonitor;
+    }
+
+    RECTL_bIntersectRect(&rclAnd, &rclMonitor, &rclWindow);
+    return RtlEqualMemory(&rclAnd, &rclMonitor, sizeof(RECTL));
+}
+
+BOOL FASTCALL IntCheckFullscreen(PWND Window)
+{
+    HWND hWnd;
+
+    if (ghwndOldFullscreen && !IntIsWindowFullscreen(ValidateHwndNoErr(ghwndOldFullscreen)))
+        ghwndOldFullscreen = NULL;
+
+    if (!IntIsWindowFullscreen(Window))
+        return FALSE;
+
+    hWnd = UserHMGetHandle(Window);
+    if (ghwndOldFullscreen != hWnd)
+    {
+        co_IntShellHookNotify(HSHELL_RUDEAPPACTIVATED, (WPARAM)hWnd, TRUE);
+        ghwndOldFullscreen = hWnd;
+    }
+    return TRUE;
+}
+
 VOID FASTCALL
 UpdateShellHook(PWND Window)
 {
+   if (IntCheckFullscreen(Window))
+       return;
+
    if ( Window->spwndParent == UserGetDesktopWindow() &&
        (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
          (Window->ExStyle & WS_EX_APPWINDOW)))

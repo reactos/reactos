@@ -82,7 +82,7 @@ ServiceControlHandler(DWORD dwControl,
             return ERROR_SUCCESS;
 
         default :
-            DPRINT1("WU ServiceControlHandler()  Control %lu received\n");
+            DPRINT1("WU ServiceControlHandler()  Control %lu received\n", dwControl);
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
 }
@@ -94,7 +94,7 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     UNREFERENCED_PARAMETER(argv);
 
     DPRINT("WU ServiceMain() called\n");
-    
+
     ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
                                                         ServiceControlHandler,
                                                         NULL);

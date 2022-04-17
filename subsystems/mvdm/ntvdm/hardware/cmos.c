@@ -22,6 +22,8 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+#define CMOS_RAM_FILE   "cmos.ram"
+
 static HANDLE hCmosRam = INVALID_HANDLE_VALUE;
 static CMOS_MEMORY CmosMemory;
 
@@ -438,41 +440,88 @@ BOOLEAN IsNmiEnabled(VOID)
     return NmiEnabled;
 }
 
+static inline BOOL
+CmosWriteFile(
+    _In_ HANDLE FileHandle,
+    _In_ PVOID Buffer,
+    _In_ ULONG BufferSize,
+    _Out_opt_ PULONG BytesWritten)
+{
+    BOOL Success;
+    ULONG Written;
+
+    SetFilePointer(FileHandle, 0, NULL, FILE_BEGIN);
+    Success = WriteFile(FileHandle, Buffer, BufferSize, &Written, NULL);
+    if (BytesWritten)
+        *BytesWritten = (Success ? Written : 0);
+    return Success;
+}
+
 VOID CmosInitialize(VOID)
 {
-    DWORD CmosSize = sizeof(CmosMemory);
+    BOOL Success;
+    WCHAR CmosPath[_countof(NtVdmPath) + _countof("\\" CMOS_RAM_FILE)];
 
-    /* File must not be opened before */
+    /* CMOS file must not be opened before */
     ASSERT(hCmosRam == INVALID_HANDLE_VALUE);
+
+    /* Always open (and if needed, create) a RAM file with shared access */
+    Success = NT_SUCCESS(RtlStringCbPrintfW(CmosPath,
+                                            sizeof(CmosPath),
+                                            L"%s\\" L(CMOS_RAM_FILE),
+                                            NtVdmPath));
+    if (!Success)
+        DPRINT1("Could not create CMOS file path!\n");
+
+    if (Success)
+    {
+        SetLastError(ERROR_SUCCESS);
+        hCmosRam = CreateFileW(CmosPath,
+                               GENERIC_READ | GENERIC_WRITE,
+                               FILE_SHARE_READ | FILE_SHARE_WRITE,
+                               NULL,
+                               OPEN_ALWAYS,
+                               FILE_ATTRIBUTE_NORMAL,
+                               NULL);
+        Success = (hCmosRam != INVALID_HANDLE_VALUE);
+        if (!Success)
+            DPRINT1("CMOS opening failed (Error: %u)\n", GetLastError());
+    }
 
     /* Clear the CMOS memory */
     RtlZeroMemory(&CmosMemory, sizeof(CmosMemory));
 
-    /* Always open (and if needed, create) a RAM file with shared access */
-    SetLastError(0); // For debugging purposes
-    hCmosRam = CreateFileW(L"cmos.ram",
-                           GENERIC_READ | GENERIC_WRITE,
-                           FILE_SHARE_READ | FILE_SHARE_WRITE,
-                           NULL,
-                           OPEN_ALWAYS,
-                           FILE_ATTRIBUTE_NORMAL,
-                           NULL);
-    DPRINT1("CMOS opening %s (Error: %u)\n", hCmosRam != INVALID_HANDLE_VALUE ? "succeeded" : "failed", GetLastError());
-
-    if (hCmosRam != INVALID_HANDLE_VALUE)
+    /* Load the file only if it already existed and was opened, not newly created */
+    if (Success)
     {
-        BOOL Success;
-
-        /* Attempt to fill the CMOS memory with the RAM file */
-        SetLastError(0); // For debugging purposes
-        Success = ReadFile(hCmosRam, &CmosMemory, CmosSize, &CmosSize, NULL);
-        if (CmosSize != sizeof(CmosMemory))
+        if ((GetLastError() == ERROR_ALREADY_EXISTS) /* || (GetLastError() == ERROR_FILE_EXISTS) */)
         {
-            /* Bad CMOS RAM file. Reinitialize the CMOS memory. */
-            DPRINT1("Invalid CMOS file, read bytes %u, expected bytes %u\n", CmosSize, sizeof(CmosMemory));
-            RtlZeroMemory(&CmosMemory, sizeof(CmosMemory));
+            /* Attempt to load the CMOS memory from the RAM file */
+            DWORD CmosSize = sizeof(CmosMemory);
+            Success = ReadFile(hCmosRam, &CmosMemory, CmosSize, &CmosSize, NULL);
+            if (!Success)
+            {
+                DPRINT1("CMOS loading failed (Error: %u)\n", GetLastError());
+            }
+            else if (CmosSize != sizeof(CmosMemory))
+            {
+                /* Invalid CMOS RAM file; reinitialize the CMOS memory */
+                DPRINT1("Invalid CMOS file, read %u bytes, expected %u bytes\n",
+                        CmosSize, sizeof(CmosMemory));
+                Success = FALSE;
+            }
+            if (!Success)
+            {
+                /* Reset the CMOS memory and its RAM file */
+                RtlZeroMemory(&CmosMemory, sizeof(CmosMemory));
+                CmosWriteFile(hCmosRam, &CmosMemory, sizeof(CmosMemory), NULL);
+            }
         }
-        DPRINT1("CMOS loading %s (Error: %u)\n", Success ? "succeeded" : "failed", GetLastError());
+        else
+        {
+            /* Reset the CMOS RAM file */
+            CmosWriteFile(hCmosRam, &CmosMemory, sizeof(CmosMemory), NULL);
+        }
         SetFilePointer(hCmosRam, 0, NULL, FILE_BEGIN);
     }
 
@@ -518,19 +567,25 @@ VOID CmosInitialize(VOID)
 
 VOID CmosCleanup(VOID)
 {
-    DWORD CmosSize = sizeof(CmosMemory);
-
-    if (hCmosRam == INVALID_HANDLE_VALUE) return;
-
     DestroyHardwareTimer(PeriodicTimer);
     DestroyHardwareTimer(ClockTimer);
 
-    /* Flush the CMOS memory back to the RAM file and close it */
-    SetFilePointer(hCmosRam, 0, NULL, FILE_BEGIN);
-    WriteFile(hCmosRam, &CmosMemory, CmosSize, &CmosSize, NULL);
+    if (hCmosRam != INVALID_HANDLE_VALUE)
+    {
+        /* Flush the CMOS memory back to the RAM file and close it */
+        BOOL Success;
+        DWORD CmosSize = sizeof(CmosMemory);
 
-    CloseHandle(hCmosRam);
-    hCmosRam = INVALID_HANDLE_VALUE;
+        Success = CmosWriteFile(hCmosRam, &CmosMemory, CmosSize, &CmosSize);
+        if (!Success || (CmosSize != sizeof(CmosMemory)))
+        {
+            DPRINT1("CMOS saving failed (Error: %u), written %u bytes, expected %u bytes\n",
+                    GetLastError(), CmosSize, sizeof(CmosMemory));
+        }
+
+        CloseHandle(hCmosRam);
+        hCmosRam = INVALID_HANDLE_VALUE;
+    }
 }
 
 /* EOF */

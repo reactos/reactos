@@ -412,7 +412,6 @@ exit:
     return ntStatus;
 }
 
-_Must_inspect_result_
 VOID
 FxChildList::Initialize(
     __in PWDF_CHILD_LIST_CONFIG Config

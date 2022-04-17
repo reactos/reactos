@@ -363,17 +363,17 @@ HRESULT WINAPI CNetworkConnections::GetDetailsOf(
         case COLUMN_STATUS:
             switch(pdata->Status)
             {
-                case NCS_HARDWARE_DISABLED: 
+                case NCS_HARDWARE_DISABLED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_NON_OPERATIONAL);
-                case NCS_DISCONNECTED: 
+                case NCS_DISCONNECTED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_UNREACHABLE);
-                case NCS_MEDIA_DISCONNECTED: 
+                case NCS_MEDIA_DISCONNECTED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_DISCONNECTED);
-                case NCS_CONNECTING: 
+                case NCS_CONNECTING:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_CONNECTING);
-                case NCS_CONNECTED: 
+                case NCS_CONNECTED:
                     return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_CONNECTED);
-                default: 
+                default:
                     return SHSetStrRet(&psd->str, "");
             }
             break;

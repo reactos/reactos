@@ -112,7 +112,7 @@ BEGIN
         END
         MENUITEM "В&ідкрити папку", IDM_OPEN_FOLDER
         MENUITEM "&Показувати текст", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */

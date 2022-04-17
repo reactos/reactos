@@ -76,6 +76,9 @@ target_link_libraries(msxml3 libxml2 iconv-static uuid wine zlib)
 
 if(MSVC)
     target_compile_options(msxml3 PRIVATE /FIwine/typeof.h /FImsvc.h)
+
+    # Disable warning C4090: 'function': different 'const' qualifiers
+    target_compile_options(msxml3 PRIVATE /wd4090)
 endif()
 
 add_importlibs(msxml3 urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel32 ntdll)

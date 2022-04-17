@@ -26,6 +26,7 @@
 #include "atlcomcli.h"
 #include "atlalloc.h"
 #include "atlexcept.h"
+#include "atltrace.h"
 #include "comcat.h"
 #include "tchar.h"
 
@@ -1043,6 +1044,7 @@ public:
 
     ~CRegKey() throw()
     {
+        Close();
     }
 
     void Attach(HKEY hKey) throw()
@@ -1359,7 +1361,11 @@ public:
 
     CRegKey& operator=(CRegKey& key) throw()
     {
-        Attach(key.Detach());
+        if (m_hKey != key.m_hKey)
+        {
+            Close();
+            Attach(key.Detach());
+        }
         return *this;
     }
 
@@ -1850,7 +1856,6 @@ inline HRESULT WINAPI AtlComModuleRevokeClassObjects(_ATL_COM_MODULE *module)
 
     return S_OK;
 }
-
 
 }; // namespace ATL
 

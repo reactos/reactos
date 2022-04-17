@@ -1,4 +1,4 @@
-; File generated automatically, do not edit! 
+; File generated automatically, do not edit!
 
 .586
 .model flat

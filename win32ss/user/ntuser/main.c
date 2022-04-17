@@ -180,6 +180,14 @@ UserProcessDestroy(PEPROCESS Process)
     if (ppiScrnSaver == ppiCurrent)
         ppiScrnSaver = NULL;
 
+    IntFreeImeHotKeys();
+
+    if (gpwlCache)
+    {
+        ExFreePoolWithTag(gpwlCache, USERTAG_WINDOWLIST);
+        gpwlCache = NULL;
+    }
+
     /* Destroy user objects */
     UserDestroyObjectsForOwner(gHandleTable, ppiCurrent);
 
@@ -651,6 +659,12 @@ InitThreadCallback(PETHREAD Thread)
     }
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
 
+    /* Create the default input context */
+    if (IS_IMM_MODE())
+    {
+        (VOID)UserCreateInputContext(0);
+    }
+
     /* Last things to do only if we are not a SYSTEM or CSRSS thread */
     if (!(ptiCurrent->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD)))
     {
@@ -691,6 +705,7 @@ ExitThreadCallback(PETHREAD Thread)
     PPROCESSINFO ppiCurrent;
     PEPROCESS Process;
     PTHREADINFO ptiCurrent;
+    PWINDOWLIST pwl, pwlNext;
 
     Process = Thread->ThreadsProcess;
 
@@ -707,6 +722,16 @@ ExitThreadCallback(PETHREAD Thread)
     ASSERT(ppiCurrent);
 
     IsRemoveAttachThread(ptiCurrent);
+
+    if (gpwlList)
+    {
+        for (pwl = gpwlList; pwl; pwl = pwlNext)
+        {
+            pwlNext = pwl->pNextList;
+            if (pwl->pti == ptiCurrent)
+                IntFreeHwndList(pwl);
+        }
+    }
 
     ptiCurrent->TIF_flags |= TIF_DONTATTACHQUEUE;
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
@@ -896,6 +921,21 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
     } \
 }
 
+// Lock & return on failure
+#define USERLOCK_AND_ROF(x)         \
+{                                   \
+    UserEnterExclusive();           \
+    Status = (x);                   \
+    UserLeave();                    \
+    if (!NT_SUCCESS(Status))        \
+    { \
+        DPRINT1("Failed '%s' (0x%lx)\n", #x, Status); \
+        return Status; \
+    } \
+}
+
+
+
 /*
  * This definition doesn't work
  */
@@ -968,8 +1008,15 @@ DriverEntry(
         return STATUS_UNSUCCESSFUL;
     }
 
+    /* Init the global user lock */
+    ExInitializeResourceLite(&UserLock);
+
+    /* Lock while we use the heap (UserHeapAlloc asserts on this) */
+    UserEnterExclusive();
+
     /* Allocate global server info structure */
     gpsi = UserHeapAlloc(sizeof(*gpsi));
+    UserLeave();
     if (!gpsi)
     {
         DPRINT1("Failed allocate server info structure!\n");
@@ -992,7 +1039,7 @@ DriverEntry(
     NT_ROF(InitLDEVImpl());
     NT_ROF(InitDeviceImpl());
     NT_ROF(InitDcImpl());
-    NT_ROF(InitUserImpl());
+    USERLOCK_AND_ROF(InitUserImpl());
     NT_ROF(InitWindowStationImpl());
     NT_ROF(InitDesktopImpl());
     NT_ROF(InitInputImpl());

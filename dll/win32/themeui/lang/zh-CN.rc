@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     Theme UI Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2018 Lee Schroeder <spaceseel@gmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
@@ -29,7 +37,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SIZE_NORMAL "Normal"
-    IDS_SIZE_LARGE "Large"
-    IDS_SIZE_XLARGE "Extra Large"
+    IDS_SIZE_NORMAL "正常"
+    IDS_SIZE_LARGE "大"
+    IDS_SIZE_XLARGE "非常大"
 END

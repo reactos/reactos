@@ -11253,7 +11253,6 @@ static void LISTVIEW_UpdateSize(LISTVIEW_INFO *infoPtr)
 
         rect = infoPtr->rcList;
         rect.left += origin.x;
-        rect.top += origin.y;
 
         hl.prc = &rect;
 	hl.pwpos = &wp;

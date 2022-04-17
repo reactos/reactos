@@ -102,13 +102,6 @@ StreamClassAddDevice(
     IN PDRIVER_OBJECT  DriverObject,
     IN PDEVICE_OBJECT  PhysicalDeviceObject);
 
-
-NTSTATUS
-NTAPI
-ForwardIrpSynchronous(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp);
-
 BOOLEAN
 NTAPI
 StreamClassSynchronize(

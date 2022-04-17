@@ -1,6 +1,6 @@
 /*
- * Summary: compile-time version informations
- * Description: compile-time version informations for the XML library
+ * Summary: compile-time version information
+ * Description: compile-time version information for the XML library
  *
  * Copy: See Copyright for the status of this software.
  *
@@ -29,28 +29,28 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * the version string like "1.2.3"
  */
-#define LIBXML_DOTTED_VERSION "2.9.10"
+#define LIBXML_DOTTED_VERSION "2.9.12"
 
 /**
  * LIBXML_VERSION:
  *
  * the version number: 1.2.3 value is 10203
  */
-#define LIBXML_VERSION 20910
+#define LIBXML_VERSION 20912
 
 /**
  * LIBXML_VERSION_STRING:
  *
  * the version number string, 1.2.3 value is "10203"
  */
-#define LIBXML_VERSION_STRING "20910"
+#define LIBXML_VERSION_STRING "20912"
 
 /**
  * LIBXML_VERSION_EXTRA:
  *
  * extra version information, used to show a CVS compilation
  */
-#define LIBXML_VERSION_EXTRA "-GITv2.9.10-rc1-2-ga5bb6aaa2"
+#define LIBXML_VERSION_EXTRA "-GITv2.9.11"
 
 /**
  * LIBXML_TEST_VERSION:
@@ -58,7 +58,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  * Macro to check that the libxml version in use is compatible with
  * the version the software has been compiled against
  */
-#define LIBXML_TEST_VERSION xmlCheckVersion(20910);
+#define LIBXML_TEST_VERSION xmlCheckVersion(20912);
 
 #ifndef VMS
 #if 0

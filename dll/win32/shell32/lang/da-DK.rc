@@ -139,15 +139,15 @@ CAPTION "Om %s"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
-    LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
+    LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10, SS_NOPREFIX
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
-    LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
+    LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
     LTEXT "This ReactOS version is registered to:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
-    LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
-    LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
+    LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
+    LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
     LTEXT "Installed physical memory:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
@@ -811,6 +811,8 @@ BEGIN
     IDS_COPYERRORSAME "Cannot copy '%s': The source and destination file names are the same."
     IDS_MOVEERRORSUBFOLDER "Cannot move '%s': The destination folder is a subfolder of the source folder."
     IDS_COPYERRORSUBFOLDER "Cannot copy '%s': The destination folder is a subfolder of the source folder."
+    IDS_MOVEERROR "Cannot move '%s': %s"
+    IDS_COPYERROR "Cannot copy '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Unable to create folder"

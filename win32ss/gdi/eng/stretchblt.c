@@ -516,7 +516,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     else
     {
         DPRINT("ClipRegion->rclBounds is (%d,%d)-(%d,%d).\n",
-           ClipRegion->rclBounds.left, ClipRegion->rclBounds.top, 
+           ClipRegion->rclBounds.left, ClipRegion->rclBounds.top,
            ClipRegion->rclBounds.right, ClipRegion->rclBounds.bottom);
     }
 
@@ -829,7 +829,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
             OutputRect.top = OutputRect.bottom;
             OutputRect.bottom = lTmp;
         }
- 
+
         DPRINT("Calling EngStretchBltROP: InputRect: (%d,%d)-(%d,%d) and OutputRect: (%d,%d)-(%d,%d)\n",
                InputRect.left, InputRect.top, InputRect.right, InputRect.bottom,
                OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);

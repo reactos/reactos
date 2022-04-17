@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS net command 
+ * PROJECT:         ReactOS net command
  * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)
  */
 
@@ -37,6 +37,10 @@ VOID
 PrintPadding(
     WCHAR chr,
     INT nPaddedLength);
+
+DWORD
+TranslateAppMessage(
+    DWORD dwMessage);
 
 VOID
 PrintMessageString(

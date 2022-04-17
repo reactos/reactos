@@ -3,7 +3,7 @@ add_definitions(-Dtzset=_tzset)
 include_directories(include)
 spec2def(dhcpcsvc.dll dhcpcsvc.spec ADD_IMPORTLIB)
 
-list(APPEND SOURCE 
+list(APPEND SOURCE
     dhcp/adapter.c
     dhcp/alloc.c
     dhcp/api.c

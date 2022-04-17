@@ -74,11 +74,12 @@ FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "システムのロケールを、アプリケーションで使用したい言語に設定して下さい。ユーザー ロケールは、数値、通貨、日付の表示方法を制御します。", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "システム、ユーザー ロケール設定変更には [カスタマイズ] をクリックします。", IDC_STATIC, 53, 50, 166, 25
     PUSHBUTTON "カスタマイズ(&C)...", IDC_CUSTOMLOCALE, 220, 52, 80, 14
+    LTEXT "", IDC_STATIC, 53, 74, 246, 1, SS_ETCHEDHORZ
     LTEXT "キーボード レイアウトは、キーを押したときにどの文字が入力されるかを制御します。", IDC_STATIC, 53, 81, 253, 20
-    LTEXT "", IDC_LAYOUTTEXT, 53, 106, 250, 14
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "キーボード レイアウト変更には [カスタマイズ] をクリックします。", IDC_STATIC, 53, 120, 166, 25
     PUSHBUTTON "カスタマイズ(&U)...", IDC_CUSTOMLAYOUT, 220, 122, 80, 14
 END
@@ -110,9 +111,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "コンポーネントを登録しています", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -174,10 +178,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "コンピュータ名と Administrator パスワードを入力する必要があります。"
     IDS_LOCALETITLE "地域の設定"
     IDS_LOCALESUBTITLE "ReactOS を様々な地域と言語にあわせてカスタマイズすることができます。"
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "日付と時刻"
     IDS_DATETIMESUBTITLE "コンピュータの日付と時刻を正しく設定して下さい。"
-    IDS_PROCESSTITLE "コンポーネントの登録中"
-    IDS_PROCESSSUBTITLE "お待ち下さい..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "外観"
     IDS_THEMESELECTIONSUBTITLE "好きなテーマをお選び下さい"
 END
@@ -186,7 +192,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS セットアップ"
     IDS_UNKNOWN_ERROR "不明なエラー"
-    IDS_REGISTERING_COMPONENTS "コンポーネントを登録しています..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary に失敗: "
     IDS_GETPROCADDR_FAILED "GetProcAddr に失敗: "
     IDS_REGSVR_FAILED "DllRegisterServer に失敗: "

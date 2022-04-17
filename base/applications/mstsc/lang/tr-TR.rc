@@ -6,7 +6,7 @@ IDD_GENERAL DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Oturum Açma Seçenkeleri", IDC_STATIC, 7, 7, 228, 89
+    GROUPBOX "Oturum Açma Seçenekleri", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Bağlantı Seçenekleri", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
     LTEXT "Sunucu adresini giriniz.", IDC_STATIC, 47, 24, 81, 8
@@ -14,11 +14,11 @@ BEGIN
     LTEXT "Kullanıcı Adı:", IDC_STATIC, 47, 58, 38, 8
     COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 13, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_NAMEEDIT, 79, 55, 141, 14, WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "Sakla", IDC_SAVE, 67, 139, 50, 14
-    PUSHBUTTON "Ayrı Sakla...", IDC_SAVEAS, 123, 139, 50, 14
+    PUSHBUTTON "Kaydet", IDC_SAVE, 67, 139, 50, 14
+    PUSHBUTTON "Farklı Kaydet...", IDC_SAVEAS, 123, 139, 50, 14
     PUSHBUTTON "Aç...", IDC_OPEN, 177, 139, 50, 14
     ICON "", IDC_CONNICON, 16, 114, 20, 20
-    LTEXT "Şimdiki bağlantı ayarlarını saklayabilir ya da var olan bir yapılandırmayı açabilirsiniz.", IDC_STATIC, 50, 115, 172, 20
+    LTEXT "Şimdiki bağlantı ayarlarını kaydedebilir ya da var olan bir yapılandırmayı yükleyebilirsiniz.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
@@ -29,11 +29,11 @@ BEGIN
     GROUPBOX "Uzak Masaüstü Renk Sayısı", IDC_STATIC, 7, 83, 228, 85
     ICON "", IDC_REMICON, 15, 19, 20, 20
     ICON "", IDC_COLORSICON, 15, 98, 20, 20
-    LTEXT "Uzak masaüstünüzün boyutunu belirleyebilirsiniz. Tüm görüntülüğe geçmek için sürgüyü en sağa kaydırınız.", IDC_STATIC, 53, 22, 175, 21
+    LTEXT "Uzak masaüstünüzün boyutunu belirleyebilirsiniz. Tam ekrana geçmek için sürgüyü en sağa kaydırınız.", IDC_STATIC, 53, 22, 175, 21
     CONTROL "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
     COMBOBOX IDC_BPPCOMBO, 56, 102, 128, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_COLORIMAGE, "Static", SS_OWNERDRAW | SS_SUNKEN, 56, 121, 127, 10
-    LTEXT "ÖNEMLİ: Uzak bilgisayarın ayarları bu ayârı geçersiz kılabilir.", IDC_STATIC, 56, 143, 165, 18
+    LTEXT "ÖNEMLİ: Uzak bilgisayarın ayarları bu ayarı geçersiz kılabilir.", IDC_STATIC, 56, 143, 165, 18
     LTEXT "Daha Küçük", IDC_STATIC, 35, 42, 15, 8
     LTEXT "Daha Büyük", IDC_STATIC, 189, 42, 17, 8
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
@@ -51,7 +51,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TAB_GENERAL "Umûmî"
+    IDS_TAB_GENERAL "Genel"
     IDS_TAB_DISPLAY "Görüntü"
     IDS_256COLORS "256 Renk"
     IDS_HIGHCOLOR15 "32,768 (15 Bitlik) Renk"
@@ -59,7 +59,7 @@ BEGIN
     IDS_HIGHCOLOR24 "16,777,216 (24 Bitlik) Renk"
     IDS_HIGHCOLOR32 "En Yüksek Nitelik (32 Bitlik)"
     IDS_PIXEL "%lu*%lu Nokta"
-    IDS_FULLSCREEN "Tüm Görüntülük"
+    IDS_FULLSCREEN "Tam Ekran"
     IDS_BROWSESERVER "(Daha Çoğu İçin Göz At...)"
     IDS_HEADERTEXT1 "Uzak Masaüstü"
     IDS_HEADERTEXT2 "Bağlantısı"

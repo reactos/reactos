@@ -10,6 +10,18 @@
 
 #include "kbdhid.h"
 
+/* This structure starts with the same layout as KEYBOARD_INDICATOR_TRANSLATION */
+typedef struct _LOCAL_KEYBOARD_INDICATOR_TRANSLATION {
+    USHORT NumberOfIndicatorKeys;
+    INDICATOR_LIST IndicatorList[3];
+} LOCAL_KEYBOARD_INDICATOR_TRANSLATION, *PLOCAL_KEYBOARD_INDICATOR_TRANSLATION;
+
+static LOCAL_KEYBOARD_INDICATOR_TRANSLATION IndicatorTranslation = { 3, {
+    {0x3A, KEYBOARD_CAPS_LOCK_ON},
+    {0x45, KEYBOARD_NUM_LOCK_ON},
+    {0x46, KEYBOARD_SCROLL_LOCK_ON}}};
+
+
 VOID
 KbdHid_DispatchInputData(
     IN PKBDHID_DEVICE_EXTENSION DeviceExtension,
@@ -369,7 +381,7 @@ KbdHid_InternalDeviceControl(
     {
         case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
             /* verify output buffer length */
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUSE_ATTRIBUTES))
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_ATTRIBUTES))
             {
                 /* invalid request */
                 DPRINT1("[KBDHID] IOCTL_KEYBOARD_QUERY_ATTRIBUTES Buffer too small\n");
@@ -387,7 +399,7 @@ KbdHid_InternalDeviceControl(
                           sizeof(KEYBOARD_ATTRIBUTES));
 
             /* complete request */
-            Irp->IoStatus.Information = sizeof(MOUSE_ATTRIBUTES);
+            Irp->IoStatus.Information = sizeof(KEYBOARD_ATTRIBUTES);
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;
@@ -444,10 +456,10 @@ KbdHid_InternalDeviceControl(
         case IOCTL_KEYBOARD_QUERY_INDICATORS:
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_INDICATOR_PARAMETERS))
             {
-                /* invalid parameter */
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                /* buffer too small */
+                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                return STATUS_INVALID_PARAMETER;
+                return STATUS_BUFFER_TOO_SMALL;
             }
 
             /* copy indicators */
@@ -464,10 +476,10 @@ KbdHid_InternalDeviceControl(
         case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_TYPEMATIC_PARAMETERS))
             {
-                /* invalid parameter */
-                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                /* buffer too small */
+                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                return STATUS_INVALID_PARAMETER;
+                return STATUS_BUFFER_TOO_SMALL;
             }
 
             /* copy indicators */
@@ -522,11 +534,24 @@ KbdHid_InternalDeviceControl(
             return STATUS_SUCCESS;
 
         case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
-            /* not implemented */
-            DPRINT1("IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION not implemented\n");
-            Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION))
+            {
+                /* buffer too small */
+                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* copy translations */
+            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                          &IndicatorTranslation,
+                          sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION));
+
+            /* done */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION);
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_NOT_IMPLEMENTED;
+            return STATUS_SUCCESS;
     }
 
     /* unknown control code */

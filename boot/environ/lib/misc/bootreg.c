@@ -351,7 +351,7 @@ BiInitializeAndValidateHive (
     if (NT_SUCCESS(Status))
     {
         /* Cleanup volatile/old data */
-        CmPrepareHive(&Hive->Hive.Hive); // CmCheckRegistry 
+        CmPrepareHive(&Hive->Hive.Hive); // CmCheckRegistry
         Status = STATUS_SUCCESS;
     }
 
@@ -826,7 +826,7 @@ BiEnumerateSubKeys (
         }
 
         /* Get the cell data for it */
-        Node = HvGetCell(Hive, CellIndex);
+        Node = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
         if (!Node)
         {
             Status = STATUS_REGISTRY_CORRUPT;

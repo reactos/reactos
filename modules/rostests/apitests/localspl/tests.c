@@ -9,7 +9,7 @@
  * The original localspl.dll from Windows Server 2003 is not easily testable.
  * It relies on a proper initialization inside spoolsv.exe, so we can't just load it in an API-Test as usual.
  * See https://www.reactos.org/pipermail/ros-dev/2015-June/017395.html for more information.
- * 
+ *
  * To make testing possible anyway, this program basically does four things:
  *     - Injecting our testing code into spoolsv.exe.
  *     - Registering and running us as a service in the SYSTEM security context like spoolsv.exe, so that injection is possible at all.
@@ -210,15 +210,39 @@ Cleanup:
 
 START_TEST(fpEnumPrinters)
 {
+#if defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-366: Skipping localspl_apitest:fpEnumPrinters because it hangs on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     _RunRemoteTest("fpEnumPrinters");
 }
 
 START_TEST(fpGetPrintProcessorDirectory)
 {
+#if defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-366: Skipping localspl_apitest:fpGetPrintProcessorDirectory because it hangs on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     _RunRemoteTest("fpGetPrintProcessorDirectory");
 }
 
 START_TEST(fpSetJob)
 {
+#if defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-366: Skipping localspl_apitest:fpSetJob because it hangs on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     _RunRemoteTest("fpSetJob");
 }

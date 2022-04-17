@@ -191,7 +191,7 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    }
 
    TRACE("NtPathU \'%wZ\'\n", &NtPathU);
-   
+
    TrailingBackslash = FALSE;
    if (NtPathU.Length >= sizeof(WCHAR) &&
        NtPathU.Buffer[NtPathU.Length / sizeof(WCHAR) - 1])

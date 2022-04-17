@@ -34,7 +34,7 @@ VOID
 test()
 {
 
- 
+
     hwnd = CreateWindowExA(0, "static", "winmm test", WS_POPUP, 0,0,100,100,
                            0, 0, 0, NULL);
 

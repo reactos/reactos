@@ -66,14 +66,6 @@ extern "C" {
 #define _SYS_OPEN 20
 #define TMP_MAX 32767
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifndef _OFF_T_DEFINED
 #define _OFF_T_DEFINED
 #ifndef _OFF_T_
@@ -121,6 +113,13 @@ extern "C" {
 #endif
 
 #endif
+
+#if defined(_M_IX86) // newer Windows versions always have it
+_CRTIMP int* __cdecl __p__commode(void);
+#endif
+
+/* On newer Windows windows versions, (*__p__commode()) is used */
+extern _CRTIMP int _commode;
 
 #define _IOREAD 0x0001
 #define _IOWRT 0x0002
@@ -391,8 +390,8 @@ extern "C" {
     _In_ __int64 _Offset,
     _In_ int _Origin);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -886,6 +885,7 @@ extern "C" {
     _In_z_ _Printf_format_string_ const wchar_t *_Format,
     va_list _ArgList);
 
+#if defined __cplusplus || defined _CRT_NON_CONFORMING_SWPRINTFS
   _Check_return_opt_
   _CRTIMP
   int
@@ -902,6 +902,7 @@ extern "C" {
     _Out_ wchar_t*,
     const wchar_t*,
     va_list);
+#endif
 
   _Check_return_opt_
   _CRTIMP
@@ -949,15 +950,38 @@ extern "C" {
 #include <vadefs.h>
 #endif
 
-#if 0 //this is for MSVCRT80 and higher, which we don't use nor implement
-#ifdef _CRT_NON_CONFORMING_SWPRINTFS
-#ifndef __cplusplus
-#define swprintf _swprintf
-#define vswprintf _vswprintf
-#define _swprintf_l __swprintf_l
-#define _vswprintf_l __vswprintf_l
-#endif
-#endif
+#ifndef _CRT_NON_CONFORMING_SWPRINTFS
+  _Check_return_opt_
+  static inline
+  int
+  __cdecl
+  swprintf(
+      _Out_writes_z_(_SizeInWords) wchar_t* _DstBuf,
+      _In_ size_t _SizeInWords,
+      _In_z_ _Printf_format_string_ const wchar_t* _Format,
+      ...)
+  {
+      int ret;
+      va_list args;
+
+      va_start(args, _Format);
+      ret = _vsnwprintf(_DstBuf, _SizeInWords, _Format, args);
+      va_end(args);
+      return ret;
+  }
+
+  _Check_return_opt_
+  static inline
+  int
+  __cdecl
+  vswprintf(
+      _Out_writes_z_(_SizeInWords) wchar_t* _DstBuf,
+      _In_ size_t _SizeInWords,
+      _In_z_ _Printf_format_string_ const wchar_t* _Format,
+      va_list _ArgList)
+  {
+      return _vsnwprintf(_DstBuf, _SizeInWords, _Format, _ArgList);
+  }
 #endif
 
   _Check_return_
@@ -1186,8 +1210,8 @@ extern "C" {
     _In_ __int64 _Offset,
     _In_ int _Origin);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl

@@ -185,11 +185,11 @@ StdMfg = "(Štandardné klávesnice)"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-KeyboardClassName = "Düğme Takımları"
-HID.KeyboardDevice    = "HID Düğme Takımı"
-StdMfg = "(Ölçünlü Düğme Takımları)"
-LocationOverride = "düğme takımı girişine takılı"
-*PNP0303.DeviceDesc = "IBM PC/AT Düğme Takımı"
+KeyboardClassName = "Klavyeler"
+HID.KeyboardDevice    = "HID Klavyeler"
+StdMfg = "(Standart Klavyeler)"
+LocationOverride = "klavye girişine takılı"
+*PNP0303.DeviceDesc = "IBM PC/AT Klavye"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"
@@ -208,3 +208,15 @@ StdMfg = "(Standartinė klaviatūra)"
 HID.KeyboardDevice    = "HID 键盘"
 StdMfg = "(标准键盘)"
 *PNP0303.DeviceDesc = "IBM PC/AT 键盘"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+KeyboardClassName = "Teclados"
+StdMfg = "(Teclado padrão)"
+*PNP0303.DeviceDesc = "Teclado IBM PC/AT"
+
+[Strings.0C04]
+KeyboardClassName = "鍵盤"
+HID.KeyboardDevice    = "HID 鍵盤"
+StdMfg = "(標準鍵盤)"
+*PNP0303.DeviceDesc = "IBM PC/AT 鍵盤"

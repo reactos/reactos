@@ -1,5 +1,5 @@
 FROM gitpod/workspace-full-vnc
-                    
+
 USER gitpod
 
 # Install custom tools, runtime, etc. using apt-get
@@ -14,8 +14,7 @@ RUN sudo apt-get -q update && \
     sudo rm -rf /var/lib/apt/lists/*
 
 RUN wget https://svn.reactos.org/amine/RosBEBinFull.tar.gz && \
-    sudo tar -xzf RosBEBinFull.tar.gz -C /usr/local && \
-    sudo mv /usr/local/RosBEBinFull /usr/local/RosBE && \
+    sudo tar -xzvf RosBEBinFull.tar.gz -C /usr/local --one-top-level=RosBE --strip-components 1 && \
     rm -f RosBEBinFull.tar.gz
 
 RUN echo 'export PATH=/usr/local/RosBE/i386/bin:$PATH' >> /home/gitpod/.profile

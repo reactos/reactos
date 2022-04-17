@@ -97,7 +97,7 @@ WlanGetProfile(IN HANDLE hClientHandle,
         return ERROR_INVALID_PARAMETER;
 
     UNIMPLEMENTED;
-    return ERROR_SUCCESS;    
+    return ERROR_SUCCESS;
 }
 
 DWORD
@@ -113,9 +113,9 @@ WlanSetProfile(IN HANDLE hClientHandle,
 {
     if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (strProfileXml == NULL) || (pdwReasonCode == NULL))
         return ERROR_INVALID_PARAMETER;
-    
+
     UNIMPLEMENTED;
-    return ERROR_SUCCESS;    
+    return ERROR_SUCCESS;
 }
 
 DWORD
@@ -131,7 +131,7 @@ WlanGetProfileCustomUserData(IN HANDLE hClientHandle,
         return ERROR_INVALID_PARAMETER;
 
     UNIMPLEMENTED;
-    return ERROR_SUCCESS;    
+    return ERROR_SUCCESS;
 }
 
 DWORD
@@ -147,10 +147,10 @@ WlanSetProfileCustomUserData(IN HANDLE hClientHandle,
         return ERROR_INVALID_PARAMETER;
 
     if ((dwDataSize != 0) && (pData == NULL))
-        return ERROR_INVALID_PARAMETER;        
-    
+        return ERROR_INVALID_PARAMETER;
+
     UNIMPLEMENTED;
-    return ERROR_SUCCESS;    
+    return ERROR_SUCCESS;
 }
 
 DWORD

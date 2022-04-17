@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Shutdown
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2015 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 /* Dialog */
@@ -8,22 +16,22 @@ FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON "確定(&O)", IDC_OK, 125, 232, 50, 14
     PUSHBUTTON "取消(&C)", IDC_CANCEL, 178, 232, 50, 14
-    LTEXT "電腦:(&M)", IDC_STATIC, 9, 9, 35, 36
+    LTEXT "電腦(&M)：", IDC_STATIC, 9, 9, 35, 36
     LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
-    PUSHBUTTON "新增...(&A)", IDC_ADD_SYSTEM, 179, 19, 50, 14
+    PUSHBUTTON "新增(&A)...", IDC_ADD_SYSTEM, 179, 19, 50, 14
     PUSHBUTTON "刪除(&R)", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
-    PUSHBUTTON "瀏覽...(&B)", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    PUSHBUTTON "瀏覽(&B)...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
     LTEXT "行動", IDC_ACTION, 11, 81, 20, 14
     COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
     CHECKBOX "警告使用者", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "顯示警告", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
     EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
     LTEXT "秒", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
-    GROUPBOX "關閉事件跟蹤程式", IDC_STATIC, 5, 114, 224, 114
-    LTEXT "原因:", IDC_STATIC, 16, 130, 27, 8
+    GROUPBOX "關機事件跟蹤程式", IDC_STATIC, 5, 114, 224, 114
+    LTEXT "原因：", IDC_STATIC, 16, 130, 27, 8
     CHECKBOX "計劃", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
-    LTEXT "評論:(&E)", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    LTEXT "註釋(&E)：", IDC_COMMENT_CAPTION, 16, 159, 38, 8
     EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
 END
 
@@ -33,36 +41,35 @@ BEGIN
     IDS_USAGE "電腦關機公用程式\n\
 \n\
 使用方法: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
-       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\
+       [/m \\\\電腦][/t xxx][/d [p|u:]xx:yy [/c ""註釋""]]\n\
 \n\
-    沒有參數或 /?    顯示此説明。\n\
-    /i      顯示圖形化使用者介面 (GUI)。此選項必須是\n\
-            第一個。\n\
-    /l      只在本地系統上登出。不能與 /m 或 /d 一起使用。\n\
-    /s      關閉電腦。\n\
-    /r      重新啟動電腦。\n\
-    /g      重新啟動電腦並重新啟動所有已註冊的應用程式。\n\
-    /a      取消延遲關閉電源。只有在延遲週期\n\
-            內使用。\n\
-    /p      關閉本地電腦沒有任何超時或警告。 可以\n\
-            用 /d 或 /f。\n\
-    /h      休眠本地電腦。可用與 /f。\n\
-    /e      記錄電腦意外的關機的原因。\n\
-    /m \\\\computer  指定目的電腦 (UNC 或 IP 位址)。\n\
-    /t xxx  將超時時間設置為 xxx 秒後關閉。\n\
-            有效範圍從 0 開始到 315360000 (10 年)，\n\
-            預設值為 30。\n\
-    /c ""comment""  關閉原因發表評論，或重新開機。\n\
-            512 個字元最大允許。\n\
-    /f      強制運行沒有警告使用者關閉應用程式。如果您\n\
-            不指定任何其他參數，此選項將也登出。\n\
+    沒有參數或 /?   顯示此說明。\n\
+    /i              顯示圖形化使用者介面 (GUI)。\n\
+                    此選項必須首先使用。\n\
+    /l              只在本地系統上登出。不能與 /m 或 /d 一起使用。\n\
+    /s              關閉電腦。\n\
+    /r              重新啟動電腦。\n\
+    /g              重新啟動電腦並重新啟動所有已註冊的應用程式。\n\
+    /a              取消延遲關閉電源。只可在延遲期間內使用。\n\
+    /p              關閉本地電腦而沒有任何延遲或警告。\n\
+                    可與 /d 或 /f 一起使用。\n\
+    /h              休眠本地電腦。可與 /f 一起使用。\n\
+    /e              記錄電腦意外關機的原因。\n\
+    /m \\\\電腦     指定目標電腦 (UNC 或 IP 位址)。\n\
+    /t xxx          將超時時間設置為 xxx 秒後關閉。\n\
+                    有效範圍從 0 開始到 315360000 (10 年)，\n\
+                    預設值為 30。\n\
+    /c ""註釋""     為關機或重新開機原因提供註釋。\n\
+                    最多可輸入 512 個字元。\n\
+    /f              強制關閉應用程式而不警告使用者。如果您不指定\n\
+                    其他參數，此選項會將登出目前的使用者。\n\
     /d [p|u:]xx:yy  給關機或重新開機的原因代碼。\n\
-            p 指示關機或重新開機計劃。\n\
-            u 表示原因由使用者定義。\n\
-            如果指定了既不是 p 也不是你，不會計畫關機或\n\
-            重新開機。\n\
-            xx 是主要原因代碼 (正整數小於 256)。\n\
-            yy 是次要原因代碼 (小於 65536 正整數)。\n"
+                p   代表關機或重新開機是已計劃的。\n\
+                u   代表原因由使用者定義。\n\
+                    如果沒有指定 p 或 u，則代表關機或\n\
+                    重新開機為非計劃的。\n\
+                xx  主要原因代碼 (小於 256 的正整數)。\n\
+                yy  次要原因代碼 (小於 65536 的正整數)。\n"
 
     IDS_ERROR_SHUTDOWN_REBOOT "錯誤: 在同一時間無法關機和重新開機。\n"
     IDS_ERROR_TIMEOUT "錯誤: 等候逾時的值 %u 超出範圍 (0-315360000)。\n"
@@ -83,7 +90,7 @@ STRINGTABLE
 BEGIN
     IDS_ACTION_SHUTDOWN "關閉系統"
     IDS_ACTION_RESTART "重新開機系統"
-    IDS_ACTION_UNEXPECTED_SHUTDOWN "注釋意外的關閉"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "註釋意外的關閉"
 END
 
 /* Remote shutdown reason strings */

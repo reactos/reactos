@@ -9,13 +9,13 @@ list(APPEND SOURCE
     heap.c
     locale.c
     misc.c
-    printf.c
     scanf.c
     signal.c
     string.c
     time.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    printf.c    # _CRT_NON_CONFORMING_SWPRINTFS
     testlist.c)
 
 add_executable(msvcrt_winetest

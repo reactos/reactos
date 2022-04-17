@@ -57,7 +57,7 @@ wWinMain(HINSTANCE hInstance,
   HACCEL hAccelerators;
   MSG msg;
   WNDCLASSEXW wc;
-    
+
   /* Class for our main window */
   wc.cbSize        = sizeof(wc);
   wc.style         = 0;
@@ -224,7 +224,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             DrawTest(hdc, 700, Test10, DT_NOPREFIX, LPK);
             DrawTest(hdc, 720, Test10, DT_HIDEPREFIX, LPK);
             DrawTest(hdc, 740, Test10, DT_PREFIXONLY, LPK);
-            
+
             TextOutW(hdc, 100, 760, L"LpkPSMTextOut", 13);
 
             DrawTest(hdc, 0,   Test,  0, USERLPK);

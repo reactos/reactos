@@ -18,6 +18,7 @@
 
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 /* Translation has been changed by Luo Yufan 2018, 2019 (njlyf2011@hotmail.com) */
+/* Improved by Wu Haotian <rigoligo03@gmail.com> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -81,7 +82,7 @@ BEGIN
         MENUITEM "添加到收藏夹...(&A)", IDM_FAVORITES_ADDTOFAVORITES
         MENUITEM "整理收藏夹...(&O)", IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "(空)", IDM_FAVORITES_EMPTY
+        MENUITEM "（空）", IDM_FAVORITES_EMPTY
     END
     POPUP "工具(&T)", FCIDM_MENU_TOOLS
     BEGIN
@@ -125,7 +126,7 @@ BEGIN
         END
         MENUITEM "打开文件夹(&O)", IDM_OPEN_FOLDER
         MENUITEM "显示文本(&S)", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */
@@ -147,31 +148,31 @@ IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 9, "宋体", 0, 0, 0x1
 BEGIN
-    LTEXT "文本选项(&X):", -1, 4, 2, 48, 15
+    LTEXT "文本选项(&X)：", -1, 4, 2, 48, 15
     COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "图标选项(&N):", -1, 4, 20, 48, 15
+    LTEXT "图标选项(&N)：", -1, 4, 20, 48, 15
     COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SEARCH_DLG DIALOGEX 0, 0, 260, 85
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | WS_DLGFRAME
-FONT 8, "MS Shell Dlg"
+FONT 9, "宋体"
 BEGIN
-    LTEXT "Search by any or all of the criteria below.", IDC_SEARCH_LABEL, 4, 2, 120, 20
+    LTEXT "使用下面的任一或全部条件搜索。", IDC_SEARCH_LABEL, 4, 2, 120, 20
 
-    LTEXT "All or part &of the file name:", -1, 10, 25, 500, 10
+    LTEXT "文件名的全部或一部分(&O)：", -1, 10, 25, 500, 10
     EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "A &word or phrase in the file:", -1, 10, 50, 500, 10
+    LTEXT "文件内的一个词语或短句(&W)：", -1, 10, 50, 500, 10
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "&Look in:", -1, 10, 75, 500, 10
+    LTEXT "搜索范围(&L)：", -1, 10, 75, 500, 10
     CONTROL "", IDC_SEARCH_COMBOBOX, WC_COMBOBOXEXW, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_TABSTOP | CCS_NODIVIDER | CCS_NOMOVEY | CBS_OWNERDRAWFIXED, 10, 85, 200, 200
 
-    DEFPUSHBUTTON "Sea&rch", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Stop", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "搜索(&R)", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "停止搜索(&S)", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
-    AUTOCHECKBOX "Search Hidden Files and Folders",
+    AUTOCHECKBOX "同时搜索隐藏的文件和文件夹",
                  IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
@@ -348,18 +349,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCH_RESULTS "Search Results"
-    IDS_SEARCHINVALID "'%1' is not a valid folder."
-    IDS_SEARCH_FOLDER "Searching %s"
-    IDS_SEARCH_FILES_FOUND "%u files found"
-    IDS_SEARCH_OPEN_FOLDER "Open Containing &Folder"
-    IDS_COL_NAME "Name"
-    IDS_COL_LOCATION "In Folder"
-    IDS_COL_RELEVANCE "Relevance"
+    IDS_SEARCH_RESULTS "搜索结果"
+    IDS_SEARCHINVALID "“%1”不是一个合法的目录。"
+    IDS_SEARCH_FOLDER "正在搜索 %s"
+    IDS_SEARCH_FILES_FOUND "找到了 %u 个文件"
+    IDS_SEARCH_OPEN_FOLDER "打开所在文件夹(&F)"
+    IDS_COL_NAME "文件名"
+    IDS_COL_LOCATION "所在文件夹"
+    IDS_COL_RELEVANCE "相关度"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS 资源管理器"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS 资源管理器找不到“%1”。请检查拼写，然后重试。"
 END

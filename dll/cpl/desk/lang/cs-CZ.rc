@@ -166,7 +166,7 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilita", -1, 7, 67, 237, 97
-    LTEXT "Některé programy nefungují správně, pokud není počítač restartován po změně nastavení barev.\r\n\nPo změně nastavení barev:", -1, 12, 78, 228, 34
+    LTEXT "Některé programy nefungují správně, pokud není počítač restartován po změně nastavení barev.\n\nPo změně nastavení barev:", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Restartovat počítač před aplikováním nového nastavení barev.", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "Aplikovat nové nastavení barev bez restartování.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
     AUTORADIOBUTTON "Zeptat se před aplikováním nového nastavení barev.", IDC_ASKME_RB, 14, 146, 228, 10

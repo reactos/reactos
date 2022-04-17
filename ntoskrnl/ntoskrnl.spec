@@ -1559,7 +1559,7 @@
 @ cdecl -arch=x86_64 _local_unwind()
 @ cdecl _purecall()
 @ cdecl -arch=x86_64,arm _setjmp(ptr ptr)
-@ cdecl -arch=x86_64 _setjmpex(ptr ptr)
+@ cdecl -arch=x86_64,arm _setjmpex(ptr ptr)
 @ cdecl _snprintf()
 @ cdecl _snwprintf()
 @ cdecl _stricmp()

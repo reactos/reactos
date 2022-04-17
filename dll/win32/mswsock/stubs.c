@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-#include <windef.h>
 #include <ws2spi.h>
 #include <nspapi.h>
 #include <svc.h>
@@ -442,12 +441,12 @@ StopWsdpService()
 
 /*
  * @unimplemented
- * 
+ *
  * See https://www.geoffchappell.com/studies/windows/win32/services/svchost/dll/svchostpushserviceglobals.htm
  */
 VOID
 WINAPI
-SvchostPushServiceGlobals(SVCHOST_GLOBALS *lpGlobals)
+SvchostPushServiceGlobals(PSVCHOST_GLOBAL_DATA lpGlobals)
 {
   OutputDebugStringW(L"mswsock SvchostPushServiceGlobals stub called\n");
 }

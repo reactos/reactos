@@ -53,18 +53,6 @@ PciIdeXFdoPnpDispatch(
 
 /* misc.c */
 
-IO_COMPLETION_ROUTINE PciIdeXGenericCompletion;
-NTSTATUS NTAPI
-PciIdeXGenericCompletion(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp,
-	IN PVOID Context);
-
-NTSTATUS
-ForwardIrpAndWait(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
-
 NTSTATUS NTAPI
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,

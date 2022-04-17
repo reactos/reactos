@@ -230,6 +230,8 @@ static __inline PVOID
 DesktopHeapAlloc(IN PDESKTOP Desktop,
                  IN SIZE_T Bytes)
 {
+    /* Desktop heap has no lock, using global user lock instead. */
+    ASSERT(UserIsEnteredExclusive());
     return RtlAllocateHeap(Desktop->pheapDesktop,
                            HEAP_NO_SERIALIZE,
                            Bytes);
@@ -239,6 +241,8 @@ static __inline BOOL
 DesktopHeapFree(IN PDESKTOP Desktop,
                 IN PVOID lpMem)
 {
+    /* Desktop heap has no lock, using global user lock instead. */
+    ASSERT(UserIsEnteredExclusive());
     return RtlFreeHeap(Desktop->pheapDesktop,
                        HEAP_NO_SERIALIZE,
                        lpMem);
@@ -258,6 +262,9 @@ DesktopHeapReAlloc(IN PDESKTOP Desktop,
 #else
     SIZE_T PrevSize;
     PVOID pNew;
+
+    /* Desktop heap has no lock, using global user lock instead. */
+    ASSERT(UserIsEnteredExclusive());
 
     PrevSize = RtlSizeHeap(Desktop->pheapDesktop,
                            HEAP_NO_SERIALIZE,

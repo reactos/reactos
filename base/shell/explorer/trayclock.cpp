@@ -195,7 +195,7 @@ LRESULT CTrayClockWnd::OnThemeChanged()
     }
     else
     {
-        /* We don't need to set a font here, our parent will use 
+        /* We don't need to set a font here, our parent will use
             * WM_SETFONT to set the right one when themes are not enabled. */
         textColor = RGB(0, 0, 0);
     }

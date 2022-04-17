@@ -28,7 +28,6 @@ add_subdirectory(fslib)
 add_subdirectory(ioevent)
 add_subdirectory(lsalib)
 add_subdirectory(nt)
-add_subdirectory(ppcmmu)
 add_subdirectory(pseh)
 
 if(KDBG)

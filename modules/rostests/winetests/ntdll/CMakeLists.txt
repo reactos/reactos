@@ -8,6 +8,7 @@ list(APPEND SOURCE
     directory.c
     env.c
     error.c
+    exception.c
     file.c
     info.c
     large_int.c
@@ -21,20 +22,16 @@ list(APPEND SOURCE
     rtlbitmap.c
     rtlstr.c
     string.c
+    testlist.c
     time.c)
 
 if(ARCH STREQUAL "i386")
     list(APPEND SOURCE
-        exception.c
         generated.c)
 endif()
 
-list(APPEND PCH_SKIP_SOURCE
-    testlist.c)
-
 add_executable(ntdll_winetest
-    ${SOURCE}
-    ${PCH_SKIP_SOURCE})
+    ${SOURCE})
 
 target_link_libraries(ntdll_winetest pseh)
 
@@ -49,5 +46,4 @@ endif()
 
 set_module_type(ntdll_winetest win32cui)
 add_importlibs(ntdll_winetest user32 ole32 advapi32 msvcrt kernel32 ntdll)
-add_pch(ntdll_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET ntdll_winetest)

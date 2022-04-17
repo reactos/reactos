@@ -9,6 +9,8 @@
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-sk-SK.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "&Súbor"
@@ -192,6 +194,17 @@ BEGIN
     PUSHBUTTON "Zrušiť", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Fonts"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Skicár"
@@ -199,7 +212,7 @@ BEGIN
     IDS_INFOTITLE "Skicár systému ReactOS"
     IDS_INFOTEXT "Dostupný za podmienok GNU Lesser General Public License (LGPL, viď www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Chcete uložiť vykonané zmeny do %s?"
-    IDS_DEFAULTFILENAME "Bez názvu.bmp"
+    IDS_DEFAULTFILENAME "Bez názvu"
     IDS_MINIATURETITLE "Miniature"
     IDS_TOOLTIP1 "Voľný výber"
     IDS_TOOLTIP2 "Výber"
@@ -226,4 +239,8 @@ BEGIN
     IDS_ANGLE "The angle must be between -89 and 89."
     IDS_LOADERRORTEXT "The file %s could not be loaded."
     IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
 END

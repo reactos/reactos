@@ -961,8 +961,7 @@ CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
            if the key is not deleted */
         if (!DeletedKey && !MyKcb->Delete)
         {
-            KeyNode = HvGetCell(MyKcb->KeyHive, MyKcb->KeyCell);
-
+            KeyNode = (PCM_KEY_NODE)HvGetCell(MyKcb->KeyHive, MyKcb->KeyCell);
             if (!KeyNode)
             {
                 /* Failure */

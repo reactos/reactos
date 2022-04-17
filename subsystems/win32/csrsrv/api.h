@@ -66,8 +66,10 @@ extern HANDLE CsrObjectDirectory;
 
 CSR_API(CsrSrvClientConnect);
 CSR_API(CsrSrvUnusedFunction);
+#if (NTDDI_VERSION < NTDDI_WS03)
 CSR_API(CsrSrvIdentifyAlertableThread);
 CSR_API(CsrSrvSetPriorityClass);
+#endif
 
 
 NTSTATUS

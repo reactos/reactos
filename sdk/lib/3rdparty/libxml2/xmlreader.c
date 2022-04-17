@@ -48,6 +48,13 @@
 
 #define MAX_ERR_MSG_SIZE 64000
 
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+/* Keeping free objects can hide memory errors. */
+#define MAX_FREE_NODES 1
+#else
+#define MAX_FREE_NODES 100
+#endif
+
 /*
  * The following VA_COPY was coded following an example in
  * the Samba project.  It may not be sufficient for some
@@ -279,6 +286,59 @@ xmlTextReaderRemoveID(xmlDocPtr doc, xmlAttrPtr attr) {
 }
 
 /**
+ * xmlTextReaderWalkRemoveRef:
+ * @data:  Contents of current link
+ * @user:  Value supplied by the user
+ *
+ * Returns 0 to abort the walk or 1 to continue
+ */
+static int
+xmlTextReaderWalkRemoveRef(const void *data, void *user)
+{
+    xmlRefPtr ref = (xmlRefPtr)data;
+    xmlAttrPtr attr = (xmlAttrPtr)user;
+
+    if (ref->attr == attr) { /* Matched: remove and terminate walk */
+        ref->name = xmlStrdup(attr->name);
+        ref->attr = NULL;
+        return 0;
+    }
+    return 1;
+}
+
+/**
+ * xmlTextReaderRemoveRef:
+ * @doc:  the document
+ * @attr:  the attribute
+ *
+ * Remove the given attribute from the Ref table maintained internally.
+ *
+ * Returns -1 if the lookup failed and 0 otherwise
+ */
+static int
+xmlTextReaderRemoveRef(xmlDocPtr doc, xmlAttrPtr attr) {
+    xmlListPtr ref_list;
+    xmlRefTablePtr table;
+    xmlChar *ID;
+
+    if (doc == NULL) return(-1);
+    if (attr == NULL) return(-1);
+    table = (xmlRefTablePtr) doc->refs;
+    if (table == NULL)
+        return(-1);
+
+    ID = xmlNodeListGetString(doc, attr->children, 1);
+    if (ID == NULL)
+        return(-1);
+    ref_list = xmlHashLookup(table, ID);
+    xmlFree(ID);
+    if(ref_list == NULL)
+        return (-1);
+    xmlListWalk(ref_list, xmlTextReaderWalkRemoveRef, attr);
+    return(0);
+}
+
+/**
  * xmlTextReaderFreeProp:
  * @reader:  the xmlTextReaderPtr used
  * @cur:  the node
@@ -299,18 +359,20 @@ xmlTextReaderFreeProp(xmlTextReaderPtr reader, xmlAttrPtr cur) {
 	xmlDeregisterNodeDefaultValue((xmlNodePtr) cur);
 
     /* Check for ID removal -> leading to invalid references ! */
-    if ((cur->parent != NULL) && (cur->parent->doc != NULL) &&
-	((cur->parent->doc->intSubset != NULL) ||
-	 (cur->parent->doc->extSubset != NULL))) {
+    if ((cur->parent != NULL) && (cur->parent->doc != NULL)) {
         if (xmlIsID(cur->parent->doc, cur->parent, cur))
 	    xmlTextReaderRemoveID(cur->parent->doc, cur);
+	if (((cur->parent->doc->intSubset != NULL) ||
+	     (cur->parent->doc->extSubset != NULL)) &&
+            (xmlIsRef(cur->parent->doc, cur->parent, cur)))
+            xmlTextReaderRemoveRef(cur->parent->doc, cur);
     }
     if (cur->children != NULL)
         xmlTextReaderFreeNodeList(reader, cur->children);
 
     DICT_FREE(cur->name);
     if ((reader != NULL) && (reader->ctxt != NULL) &&
-        (reader->ctxt->freeAttrsNr < 100)) {
+        (reader->ctxt->freeAttrsNr < MAX_FREE_NODES)) {
         cur->next = reader->ctxt->freeAttrs;
 	reader->ctxt->freeAttrs = cur;
 	reader->ctxt->freeAttrsNr++;
@@ -411,7 +473,7 @@ xmlTextReaderFreeNodeList(xmlTextReaderPtr reader, xmlNodePtr cur) {
 	    if (((cur->type == XML_ELEMENT_NODE) ||
 		 (cur->type == XML_TEXT_NODE)) &&
 	        (reader != NULL) && (reader->ctxt != NULL) &&
-		(reader->ctxt->freeElemsNr < 100)) {
+		(reader->ctxt->freeElemsNr < MAX_FREE_NODES)) {
 	        cur->next = reader->ctxt->freeElems;
 		reader->ctxt->freeElems = cur;
 		reader->ctxt->freeElemsNr++;
@@ -499,7 +561,7 @@ xmlTextReaderFreeNode(xmlTextReaderPtr reader, xmlNodePtr cur) {
     if (((cur->type == XML_ELEMENT_NODE) ||
 	 (cur->type == XML_TEXT_NODE)) &&
 	(reader != NULL) && (reader->ctxt != NULL) &&
-	(reader->ctxt->freeElemsNr < 100)) {
+	(reader->ctxt->freeElemsNr < MAX_FREE_NODES)) {
 	cur->next = reader->ctxt->freeElems;
 	reader->ctxt->freeElems = cur;
 	reader->ctxt->freeElemsNr++;
@@ -1106,20 +1168,9 @@ static void
 xmlTextReaderValidateEntity(xmlTextReaderPtr reader) {
     xmlNodePtr oldnode = reader->node;
     xmlNodePtr node = reader->node;
-    xmlParserCtxtPtr ctxt = reader->ctxt;
 
     do {
 	if (node->type == XML_ENTITY_REF_NODE) {
-	    /*
-	     * Case where the underlying tree is not available, lookup the entity
-	     * and walk it.
-	     */
-	    if ((node->children == NULL) && (ctxt->sax != NULL) &&
-		(ctxt->sax->getEntity != NULL)) {
-		node->children = (xmlNodePtr)
-		    ctxt->sax->getEntity(ctxt, node->name);
-	    }
-
 	    if ((node->children != NULL) &&
 		(node->children->type == XML_ENTITY_DECL) &&
 		(node->children->children != NULL)) {
@@ -1447,6 +1498,8 @@ get_next_node:
             (reader->node->prev->type != XML_DTD_NODE)) {
 	    xmlNodePtr tmp = reader->node->prev;
 	    if ((tmp->extra & NODE_IS_PRESERVED) == 0) {
+                if (oldnode == tmp)
+                    oldnode = NULL;
 		xmlUnlinkNode(tmp);
 		xmlTextReaderFreeNode(reader, tmp);
 	    }
@@ -1532,7 +1585,8 @@ node_found:
     /*
      * Handle XInclude if asked for
      */
-    if ((reader->xinclude) && (reader->node != NULL) &&
+    if ((reader->xinclude) && (reader->in_xinclude == 0) &&
+        (reader->node != NULL) &&
 	(reader->node->type == XML_ELEMENT_NODE) &&
 	(reader->node->ns != NULL) &&
 	((xmlStrEqual(reader->node->ns->href, XINCLUDE_NS)) ||
@@ -1564,16 +1618,6 @@ node_found:
     if ((reader->node != NULL) &&
 	(reader->node->type == XML_ENTITY_REF_NODE) &&
 	(reader->ctxt != NULL) && (reader->ctxt->replaceEntities == 1)) {
-	/*
-	 * Case where the underlying tree is not available, lookup the entity
-	 * and walk it.
-	 */
-	if ((reader->node->children == NULL) && (reader->ctxt->sax != NULL) &&
-	    (reader->ctxt->sax->getEntity != NULL)) {
-	    reader->node->children = (xmlNodePtr)
-		reader->ctxt->sax->getEntity(reader->ctxt, reader->node->name);
-	}
-
 	if ((reader->node->children != NULL) &&
 	    (reader->node->children->type == XML_ENTITY_DECL) &&
 	    (reader->node->children->children != NULL)) {
@@ -2281,14 +2325,18 @@ xmlFreeTextReader(xmlTextReaderPtr reader) {
     if (reader->ctxt != NULL) {
         if (reader->dict == reader->ctxt->dict)
 	    reader->dict = NULL;
+#ifdef LIBXML_VALID_ENABLED
 	if ((reader->ctxt->vctxt.vstateTab != NULL) &&
 	    (reader->ctxt->vctxt.vstateMax > 0)){
+#ifdef LIBXML_REGEXP_ENABLED
             while (reader->ctxt->vctxt.vstateNr > 0)
                 xmlValidatePopElement(&reader->ctxt->vctxt, NULL, NULL, NULL);
+#endif /* LIBXML_REGEXP_ENABLED */
 	    xmlFree(reader->ctxt->vctxt.vstateTab);
 	    reader->ctxt->vctxt.vstateTab = NULL;
 	    reader->ctxt->vctxt.vstateMax = 0;
 	}
+#endif /* LIBXML_VALID_ENABLED */
 	if (reader->ctxt->myDoc != NULL) {
 	    if (reader->preserve == 0)
 		xmlTextReaderFreeDoc(reader, reader->ctxt->myDoc);
@@ -2971,7 +3019,7 @@ xmlTextReaderConstEncoding(xmlTextReaderPtr reader) {
 
 /************************************************************************
  *									*
- *			Acces API to the current node			*
+ *			Access API to the current node			*
  *									*
  ************************************************************************/
 /**
@@ -3786,7 +3834,7 @@ xmlTextReaderConstString(xmlTextReaderPtr reader, const xmlChar *str) {
  *
  * The value indicating whether to normalize white space and attribute values.
  * Since attribute value and end of line normalizations are a MUST in the XML
- * specification only the value true is accepted. The broken bahaviour of
+ * specification only the value true is accepted. The broken behaviour of
  * accepting out of range character entities like &#0; is of course not
  * supported either.
  *
@@ -3848,16 +3896,20 @@ xmlTextReaderSetParserProp(xmlTextReaderPtr reader, int prop, int value) {
 	    return(0);
         case XML_PARSER_VALIDATE:
 	    if (value != 0) {
+                ctxt->options |= XML_PARSE_DTDVALID;
 		ctxt->validate = 1;
 		reader->validate = XML_TEXTREADER_VALIDATE_DTD;
 	    } else {
+                ctxt->options &= ~XML_PARSE_DTDVALID;
 		ctxt->validate = 0;
 	    }
 	    return(0);
         case XML_PARSER_SUBST_ENTITIES:
 	    if (value != 0) {
+                ctxt->options |= XML_PARSE_NOENT;
 		ctxt->replaceEntities = 1;
 	    } else {
+                ctxt->options &= ~XML_PARSE_NOENT;
 		ctxt->replaceEntities = 0;
 	    }
 	    return(0);

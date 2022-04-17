@@ -140,7 +140,7 @@ MUIClearPage(
         CONSOLE_ClearStyledText(entry[index].X,
                                 entry[index].Y,
                                 entry[index].Flags,
-                                strlen(entry[index].Buffer));
+                                (USHORT)strlen(entry[index].Buffer));
         index++;
     }
 }
@@ -347,7 +347,7 @@ MUIClearText(
         CONSOLE_ClearTextXY(
             entry[Index].X,
             entry[Index].Y,
-            (ULONG)strlen(entry[Index].Buffer));
+            (USHORT)strlen(entry[Index].Buffer));
 
         /* Increment the index and loop over next entires with the same ID */
         Index++;
@@ -404,7 +404,7 @@ MUIClearStyledText(
             entry[Index].X,
             entry[Index].Y,
             Flags,
-            (ULONG)strlen(entry[Index].Buffer));
+            (USHORT)strlen(entry[Index].Buffer));
 
         /* Increment the index and loop over next entires with the same ID */
         Index++;

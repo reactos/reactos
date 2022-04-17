@@ -286,9 +286,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Sveiki atvėrę liudijimo importo vediklį", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Šis vediklis padeda jums importuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš failo į liudijimų saugyklą.\n\n\
-Liudijimas gali būti naudojamas nustatyti jūsų ar kompiuterio su kuriuo esate užmezgę ryšį tapatumą. Jis taip pat gali būti naudojamas tapatumo nustatymui ir pranešimų pasirašymui. Liudijimų saugyklos yra liudijimų, atšauktų liudijimų sąrašų ir patikintų liudijimų sąrašų rinkiniai.\n\n\
-Jei norite tęsti, spauskite Kitas.",
+  LTEXT "Šis vediklis padeda jums importuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš failo į liudijimų saugyklą.\n\nKompiuteriai gali naudoti sertifikatus identifikavimui ir pasirašymui.",
     -1, 115,40,195,120
 END
 
@@ -382,9 +380,7 @@ STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Sveiki atvėrę liudijimo eksporto vediklį", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Šis vediklis padeda jums eksportuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš liudijimų saugyklos į failą.\n\n\
-Liudijimas gali būti naudojamas nustatyti jūsų ar kompiuterio su kuriuo esate užmezgę ryšį tapatumą. Jis taip pat gali būti naudojamas tapatumo nustatymui ir pranešimų pasirašymui. Liudijimų saugyklos yra liudijimų, atšauktų liudijimų sąrašų ir patikintų liudijimų sąrašų rinkiniai.\n\n\
-Jei norite tęsti, spauskite Kitas.",
+  LTEXT "Šis vediklis padeda jums eksportuoti liudijimus, atšauktų liudijimų sąrašus ir patikintų liudijimų sąrašus iš liudijimų saugyklos į failą.\n\nKompiuteriai gali naudoti sertifikatus identifikavimui ir pasirašymui.",
     -1, 115,40,195,120
 END
 

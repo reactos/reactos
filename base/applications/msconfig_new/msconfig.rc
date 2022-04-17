@@ -140,6 +140,10 @@ END
     #include "lang/zh-CN.rc"
     APP_TOOLS   HTML    "lang/mscfgtl/zh-CN.xml"
 #endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
+    APP_TOOLS   HTML    "lang/mscfgtl/zh-HK.xml"
+#endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
     APP_TOOLS   HTML    "lang/mscfgtl/zh-TW.xml"

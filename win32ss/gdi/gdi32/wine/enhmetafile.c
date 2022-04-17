@@ -48,6 +48,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(enhmetafile);
 
+
+static CRITICAL_SECTION enhmetafile_cs;
+static CRITICAL_SECTION_DEBUG critsect_debug =
+{
+    0, 0, &enhmetafile_cs,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": enhmetafile_cs") }
+};
+static CRITICAL_SECTION enhmetafile_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
+
 typedef struct
 {
     ENHMETAHEADER  *emh;
@@ -246,7 +256,7 @@ static inline BOOL is_dib_monochrome( const BITMAPINFO* info )
 /****************************************************************************
  *          EMF_Create_HENHMETAFILE
  */
-HENHMETAFILE EMF_Create_HENHMETAFILE(ENHMETAHEADER *emh, BOOL on_disk )
+HENHMETAFILE EMF_Create_HENHMETAFILE(ENHMETAHEADER *emh, DWORD filesize, BOOL on_disk )
 {
     HENHMETAFILE hmf;
     ENHMETAFILEOBJ *metaObj;
@@ -261,6 +271,11 @@ HENHMETAFILE EMF_Create_HENHMETAFILE(ENHMETAHEADER *emh, BOOL on_disk )
     {
         WARN("Invalid emf header type 0x%08x sig 0x%08x.\n",
              emh->iType, emh->dSignature);
+        return 0;
+    }
+    if (filesize < emh->nBytes)
+    {
+        WARN("File truncated (got %u bytes, header says %u)\n", emh->nBytes, filesize);
         return 0;
     }
 
@@ -279,15 +294,22 @@ HENHMETAFILE EMF_Create_HENHMETAFILE(ENHMETAHEADER *emh, BOOL on_disk )
  */
 static BOOL EMF_Delete_HENHMETAFILE( HENHMETAFILE hmf )
 {
-    ENHMETAFILEOBJ *metaObj = free_gdi_handle( hmf );
+    ENHMETAFILEOBJ *metaObj;
+    BOOL Ret = FALSE;
 
-    if(!metaObj) return FALSE;
-
-    if(metaObj->on_disk)
-        UnmapViewOfFile( metaObj->emh );
-    else
-        HeapFree( GetProcessHeap(), 0, metaObj->emh );
-    return HeapFree( GetProcessHeap(), 0, metaObj );
+    EnterCriticalSection( &enhmetafile_cs );
+    metaObj = free_gdi_handle( hmf );
+    if(metaObj)
+    {
+        if(metaObj->on_disk)
+            UnmapViewOfFile( metaObj->emh );
+        else
+            HeapFree( GetProcessHeap(), 0, metaObj->emh );
+        HeapFree( GetProcessHeap(), 0, metaObj );
+        Ret = TRUE;
+    }
+    LeaveCriticalSection( &enhmetafile_cs );
+    return Ret;
 }
 
 /******************************************************************
@@ -298,13 +320,17 @@ static BOOL EMF_Delete_HENHMETAFILE( HENHMETAFILE hmf )
 static ENHMETAHEADER *EMF_GetEnhMetaHeader( HENHMETAFILE hmf )
 {
     ENHMETAHEADER *ret = NULL;
-    ENHMETAFILEOBJ *metaObj = GDI_GetObjPtr( hmf, OBJ_ENHMETAFILE );
+    ENHMETAFILEOBJ *metaObj;
+
+    EnterCriticalSection( &enhmetafile_cs );
+    metaObj = GDI_GetObjPtr( hmf, OBJ_ENHMETAFILE );
     TRACE("hmf %p -> enhmetaObj %p\n", hmf, metaObj);
     if (metaObj)
     {
         ret = metaObj->emh;
         GDI_ReleaseObj( hmf );
     }
+    LeaveCriticalSection( &enhmetafile_cs );
     return ret;
 }
 
@@ -317,6 +343,9 @@ static HENHMETAFILE EMF_GetEnhMetaFile( HANDLE hFile )
     ENHMETAHEADER *emh;
     HANDLE hMapping;
     HENHMETAFILE hemf;
+    DWORD filesize;
+
+    filesize = GetFileSize( hFile, NULL );
 
     hMapping = CreateFileMappingA( hFile, NULL, PAGE_READONLY, 0, 0, NULL );
     emh = MapViewOfFile( hMapping, FILE_MAP_READ, 0, 0, 0 );
@@ -324,7 +353,7 @@ static HENHMETAFILE EMF_GetEnhMetaFile( HANDLE hFile )
 
     if (!emh) return 0;
 
-    hemf = EMF_Create_HENHMETAFILE( emh, TRUE );
+    hemf = EMF_Create_HENHMETAFILE( emh, filesize, TRUE );
     if (!hemf)
         UnmapViewOfFile( emh );
     return hemf;
@@ -467,7 +496,7 @@ HENHMETAFILE WINAPI SetEnhMetaFileBits(UINT bufsize, const BYTE *buf)
     ENHMETAHEADER *emh = HeapAlloc( GetProcessHeap(), 0, bufsize );
     HENHMETAFILE hmf;
     memmove(emh, buf, bufsize);
-    hmf = EMF_Create_HENHMETAFILE( emh, FALSE );
+    hmf = EMF_Create_HENHMETAFILE( emh, bufsize, FALSE );
     if (!hmf)
         HeapFree( GetProcessHeap(), 0, emh );
     return hmf;
@@ -1126,6 +1155,31 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	HeapFree( GetProcessHeap(), 0, pt );
 	break;
       }
+
+    case EMR_POLYDRAW16:
+    {
+        const EMRPOLYDRAW16 *pPolyDraw16 = (const EMRPOLYDRAW16 *)mr;
+        const POINTS *ptl = pPolyDraw16->apts;
+        POINT *pts = HeapAlloc(GetProcessHeap(), 0, pPolyDraw16->cpts * sizeof(POINT));
+        DWORD i;
+
+        /* NB abTypes array doesn't start at pPolyDraw16->abTypes. It's actually
+           pPolyDraw16->apts + pPolyDraw16->cpts. */
+        const BYTE *types = (BYTE*)(pPolyDraw16->apts + pPolyDraw16->cpts);
+
+        if (!pts)
+            break;
+
+        for (i = 0; i < pPolyDraw16->cpts; ++i)
+        {
+            pts[i].x = ptl[i].x;
+            pts[i].y = ptl[i].y;
+        }
+
+        PolyDraw(hdc, pts, types, pPolyDraw16->cpts);
+        HeapFree(GetProcessHeap(), 0, pts);
+        break;
+    }
 
     case EMR_STRETCHDIBITS:
       {
@@ -2231,15 +2285,33 @@ BOOL WINAPI PlayEnhMetaFileRecord(
         break;
     }
 
-    case EMR_POLYDRAW16:
+    case EMR_DRAWESCAPE:
+    {
+        PEMRESCAPE pemr = (PEMRESCAPE)mr;
+        DrawEscape( hdc, pemr->iEsc, pemr->cjIn, (LPCSTR)pemr->Data );
+        break;
+    }
+
+    case EMR_EXTESCAPE:
+    {
+        PEMRESCAPE pemr = (PEMRESCAPE)mr;
+        ExtEscape( hdc, pemr->iEsc, pemr->cjIn, (LPCSTR)pemr->Data, 0, NULL );
+        break;
+    }
+
+    case EMR_NAMEDESCAPE:
+    {
+        PEMRNAMEDESCAPE pemr = (PEMRNAMEDESCAPE)mr;
+        INT rounded_size = (pemr->cjIn+3) & ~3;
+        NamedEscape( hdc, (PWCHAR)&pemr->Data[rounded_size], pemr->iEsc, pemr->cjIn, (LPSTR)pemr->Data, 0, NULL );
+        break;
+    }
+
     case EMR_GLSRECORD:
     case EMR_GLSBOUNDEDRECORD:
-    case EMR_DRAWESCAPE:
-    case EMR_EXTESCAPE:
     case EMR_STARTDOC:
     case EMR_SMALLTEXTOUT:
     case EMR_FORCEUFIMAPPING:
-    case EMR_NAMEDESCAPE:
     case EMR_COLORCORRECTPALETTE:
     case EMR_SETICMPROFILEA:
     case EMR_SETICMPROFILEW:
@@ -2261,7 +2333,6 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 
   return TRUE;
 }
-
 
 /*****************************************************************************
  *
@@ -2358,13 +2429,14 @@ BOOL WINAPI EnumEnhMetaFile(
     info->state.next = NULL;
     info->save_level = 0;
     info->saved_state = NULL;
+    info->init_transform = info->state.world_transform;
 
     ht = (HANDLETABLE*) &info[1];
     ht->objectHandle[0] = hmf;
     for(i = 1; i < emh->nHandles; i++)
         ht->objectHandle[i] = NULL;
 
-    if(hdc)
+    if(hdc && !is_meta_dc( hdc ))
     {
 	savedMode = SetGraphicsMode(hdc, GM_ADVANCED);
 	GetWorldTransform(hdc, &savedXform);
@@ -2394,17 +2466,7 @@ BOOL WINAPI EnumEnhMetaFile(
         old_polyfill = SetPolyFillMode(hdc, ALTERNATE);
         old_stretchblt = SetStretchBltMode(hdc, BLACKONWHITE);
 
-        if ( IS_WIN9X() )
-        {
-            /* Win95 leaves the vp/win ext/org info alone */
-            info->init_transform.eM11 = 1.0;
-            info->init_transform.eM12 = 0.0;
-            info->init_transform.eM21 = 0.0;
-            info->init_transform.eM22 = 1.0;
-            info->init_transform.eDx  = 0.0;
-            info->init_transform.eDy  = 0.0;
-        }
-        else
+        if (!IS_WIN9X() )
         {
             /* WinNT combines the vp/win ext/org info into a transform */
             double xscale, yscale;
@@ -2463,6 +2525,14 @@ BOOL WINAPI EnumEnhMetaFile(
     {
 	emr = (ENHMETARECORD *)((char *)emh + offset);
 
+        if (offset + 8 > emh->nBytes ||
+            offset > offset + emr->nSize ||
+            offset + emr->nSize > emh->nBytes)
+        {
+            WARN("record truncated\n");
+            break;
+        }
+
         /* In Win9x mode we update the xform if the record will produce output */
         if (hdc && IS_WIN9X() && emr_produces_output(emr->iType))
             EMF_Update_MF_Xform(hdc, info);
@@ -2472,7 +2542,7 @@ BOOL WINAPI EnumEnhMetaFile(
 	offset += emr->nSize;
     }
 
-    if (hdc)
+    if (hdc && !is_meta_dc( hdc ))
     {
         SetStretchBltMode(hdc, old_stretchblt);
         SetPolyFillMode(hdc, old_polyfill);
@@ -2536,8 +2606,7 @@ BOOL WINAPI PlayEnhMetaFile(
        const RECT *lpRect /* [in] rectangle to place metafile inside */
       )
 {
-    return EnumEnhMetaFile(hdc, hmf, EMF_PlayEnhMetaFileCallback, NULL,
-			   lpRect);
+    return EnumEnhMetaFile(hdc, hmf, EMF_PlayEnhMetaFileCallback, NULL, lpRect);
 }
 
 /*****************************************************************************
@@ -2568,7 +2637,7 @@ HENHMETAFILE WINAPI CopyEnhMetaFileA(
     if (!file) {
         emrDst = HeapAlloc( GetProcessHeap(), 0, emrSrc->nBytes );
 	memcpy( emrDst, emrSrc, emrSrc->nBytes );
-	hmfDst = EMF_Create_HENHMETAFILE( emrDst, FALSE );
+	hmfDst = EMF_Create_HENHMETAFILE( emrDst, emrSrc->nBytes, FALSE );
 	if (!hmfDst)
 		HeapFree( GetProcessHeap(), 0, emrDst );
     } else {
@@ -2610,7 +2679,7 @@ HENHMETAFILE WINAPI CopyEnhMetaFileW(
     if (!file) {
         emrDst = HeapAlloc( GetProcessHeap(), 0, emrSrc->nBytes );
 	memcpy( emrDst, emrSrc, emrSrc->nBytes );
-	hmfDst = EMF_Create_HENHMETAFILE( emrDst, FALSE );
+	hmfDst = EMF_Create_HENHMETAFILE( emrDst, emrSrc->nBytes, FALSE );
 	if (!hmfDst)
 		HeapFree( GetProcessHeap(), 0, emrDst );
     } else {

@@ -62,6 +62,9 @@ HKR, , Icon,           0, "-28"
 %IntelP4Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_15
 %IntelProcessor.DeviceDesc%       = Processr_Inst,ACPI\GenuineIntel_-_x86
 
+[Intel.NTAMD64]
+%IntelProcessor.DeviceDesc%       = Processr_Inst,ACPI\GenuineIntel_-_EM64T
+
 [AMD]
 %AMDK6Processor.DeviceDesc%   = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_5_Model_7
 %AMDK62Processor.DeviceDesc%  = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_5_Model_8
@@ -74,6 +77,10 @@ HKR, , Icon,           0, "-28"
 %AMDQProcessor.DeviceDesc%    = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_17
 %AMDProcessor.DeviceDesc%     = Processr_Inst,ACPI\AuthenticAMD_-_x86
 
+[AMD.NTAMD64]
+%AMDK8Processor.DeviceDesc%   = Processr_Inst,ACPI\AuthenticAMD_-_AMD64_Family_15
+%AMDProcessor.DeviceDesc%     = Processr_Inst,ACPI\AuthenticAMD_-_AMD64
+
 [Transmeta]
 %TransmetaProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineTMx86_-_x86
 
@@ -83,6 +90,9 @@ HKR, , Icon,           0, "-28"
 %ViaC7Processor.DeviceDesc%   = Processr_Inst,ACPI\CentaurHauls_-_x86_Family_6_Model_13
 %ViaNANOProcessor.DeviceDesc% = Processr_Inst,ACPI\CentaurHauls_-_x86_Family_6_Model_15
 %ViaProcessor.DeviceDesc%     = Processr_Inst,ACPI\CentaurHauls_-_x86
+
+[VIA.NTAMD64]
+%ViaProcessor.DeviceDesc%     = Processr_Inst,ACPI\CentaurHauls_-_VIA64
 
 ;---------------------------- Processr Driver ---------------------------
 
@@ -217,11 +227,37 @@ Standard = "Πρότυπος επεξεργαστής"
 
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"
+ProcessorClassName = "Procesadores"
+
 Processor.DeviceDesc = "Procesador"
-Processor.ServiceDesc = "Processor driver"
-IntelProcessor.DeviceDesc = "Procesador Intel"
+Processor.ServiceDesc = "Driver de procesador"
+CyrixProcessor.DeviceDesc = "Procesador Cyrix 6x86"
+IntelProcessor.DeviceDesc = "Procesador Intel Pentium"
+IntelMMXProcessor.DeviceDesc = "Procesador Intel Pentium MMX"
+IntelPROProcessor.DeviceDesc = "Procesador Intel Pentium Pro"
+IntelP2Processor.DeviceDesc = "Procesador Intel Pentium II / Celeron"
+IntelP3Processor.DeviceDesc = "Procesador Intel Pentium III / Celeron / Xeon"
+IntelMProcessor.DeviceDesc = "Procesador Intel Pentium M / Celeron M"
+IntelP4Processor.DeviceDesc = "Procesador Intel Pentium 4 / Celeron / Xeon / D"
+IntelAtomProcessor.DeviceDesc = "Procesador Intel Atom"
+IntelCoreProcessor.DeviceDesc = "Procesador Intel Core Solo/Duo/Ex / Celeron / Xeon / M"
+IntelCoreiXProcessor.DeviceDesc = "Procesador Intel Core i*"
 AMDProcessor.DeviceDesc = "Procesador AMD"
+AMDK6Processor.DeviceDesc = "Procesador AMD K6"
+AMDK62Processor.DeviceDesc = "Procesador AMD K6-2"
+AMDK63Processor.DeviceDesc = "Procesador AMD K6-III / Geode"
+AMDK7Processor.DeviceDesc = "Procesador AMD Athlon / Duron / Geode NX / Sempron"
+AMDK8Processor.DeviceDesc = "Procesador AMD Athlon 64 / Turion 64 / Opteron / Sempron"
+AMDPHENProcessor.DeviceDesc = "Procesador AMD Athlon 64 X / Turion 64 X / Phenom"
+AMDQProcessor.DeviceDesc = "Procesador AMD Athlon 64 Q* / Turion 64 *M / Sempron S*"
+TransmetaProcessor.DeviceDesc = "Procesador Transmeta Crusoe"
 Standard = "Procesador estándar"
+ViaC7Processor.DeviceDesc = "Procesador VIA C7"
+ViaNEHProcessor.DeviceDesc = "Procesador VIA Nehemiah"
+ViaESTProcessor.DeviceDesc = "Procesador VIA Esther"
+ViaNANOProcessor.DeviceDesc = "Procesador VIA Nano"
+ViaProcessor.DeviceDesc = "Procesador VIA"
+
 
 [Strings.040C]
 Processor.DeviceDesc = "Processeur"
@@ -239,11 +275,6 @@ Standard = "スタンダードプロセッサ"
 ReactOS = "Zespół ReactOS"
 ProcessorClassName = "Procesory"
 
-CyrixMfg = "Cyrix"
-IntelMfg = "Intel"
-AMDMfg = "Advanced Micro Devices"
-TransmetaMfg = "Transmeta"
-VIAMfg = "VIA"
 Processor.DeviceDesc = "Procesor"
 Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Procesor Cyrix 6x86"
@@ -355,11 +386,6 @@ Standard = "Štandardný procesor"
 ReactOS = "ReactOS Vakfı"
 ProcessorClassName = "İşlemciler"
 
-CyrixMfg = "Cyrix"
-IntelMfg = "Intel"
-AMDMfg = "Advanced Micro Devices"
-TransmetaMfg = "Transmeta"
-VIAMfg = "VIA"
 Processor.DeviceDesc = "İşlemci"
 Processor.ServiceDesc = "İşlemci sürücüsü"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 İşlemci"
@@ -427,6 +453,36 @@ Processor.ServiceDesc = "Processor driver"
 IntelProcessor.DeviceDesc = "Intel procesorius"
 Standard = "Standartinis procesorius"
 
+[Strings.0404]
+Processor.DeviceDesc = "處理器"
+Processor.ServiceDesc = "處理器驅動程式"
+CyrixProcessor.DeviceDesc = "Cyrix 6x86 處理器"
+IntelProcessor.DeviceDesc = "Intel Pentium 處理器"
+IntelMMXProcessor.DeviceDesc = "Intel Pentium MMX 處理器"
+IntelPROProcessor.DeviceDesc = "Intel Pentium Pro 處理器"
+IntelP2Processor.DeviceDesc = "Intel Pentium II / Celeron 處理器"
+IntelP3Processor.DeviceDesc = "Intel Pentium III / Celeron / Xeon 處理器"
+IntelMProcessor.DeviceDesc = "Intel Pentium M / Celeron M 處理器"
+IntelP4Processor.DeviceDesc = "Intel Pentium 4 / Celeron / Xeon / D 處理器"
+IntelAtomProcessor.DeviceDesc = "Intel Atom 處理器"
+IntelCoreProcessor.DeviceDesc = "Intel Core Solo/Duo/Ex / Celeron / Xeon / M 處理器"
+IntelCoreiXProcessor.DeviceDesc = "Intel Core i* 處理器"
+AMDProcessor.DeviceDesc = "AMD 處理器"
+AMDK6Processor.DeviceDesc = "AMD K6 處理器"
+AMDK62Processor.DeviceDesc = "AMD K6-2 處理器"
+AMDK63Processor.DeviceDesc = "AMD K6-III / Geode 處理器"
+AMDK7Processor.DeviceDesc = "AMD Athlon / Duron / Geode NX / Sempron 處理器"
+AMDK8Processor.DeviceDesc = "AMD Athlon 64 / Turion 64 / Opteron / Sempron 處理器"
+AMDPHENProcessor.DeviceDesc = "AMD Athlon 64 X / Turion 64 X / Phenom 處理器"
+AMDQProcessor.DeviceDesc = "AMD Athlon 64 Q* / Turion 64 *M / Sempron S* 處理器"
+TransmetaProcessor.DeviceDesc = "Transmeta Crusoe 處理器"
+Standard = "標準處理器"
+ViaC7Processor.DeviceDesc = "VIA C7 處理器"
+ViaNEHProcessor.DeviceDesc = "VIA Nehemiah 處理器"
+ViaESTProcessor.DeviceDesc = "VIA Esther 處理器"
+ViaNANOProcessor.DeviceDesc = "VIA Nano 處理器"
+ViaProcessor.DeviceDesc = "VIA 處理器"
+
 [Strings.0804]
 Processor.DeviceDesc = "处理器"
 Processor.ServiceDesc = "处理器驱动程序"
@@ -456,3 +512,34 @@ ViaNEHProcessor.DeviceDesc = "VIA Nehemiah 处理器"
 ViaESTProcessor.DeviceDesc = "VIA Esther 处理器"
 ViaNANOProcessor.DeviceDesc = "VIA Nano 处理器"
 ViaProcessor.DeviceDesc = "VIA 处理器"
+
+[Strings.0c04]
+Processor.DeviceDesc = "處理器"
+Processor.ServiceDesc = "處理器驅動程式"
+CyrixProcessor.DeviceDesc = "Cyrix 6x86 處理器"
+IntelProcessor.DeviceDesc = "Intel Pentium 處理器"
+IntelMMXProcessor.DeviceDesc = "Intel Pentium MMX 處理器"
+IntelPROProcessor.DeviceDesc = "Intel Pentium Pro 處理器"
+IntelP2Processor.DeviceDesc = "Intel Pentium II / Celeron 處理器"
+IntelP3Processor.DeviceDesc = "Intel Pentium III / Celeron / Xeon 處理器"
+IntelMProcessor.DeviceDesc = "Intel Pentium M / Celeron M 處理器"
+IntelP4Processor.DeviceDesc = "Intel Pentium 4 / Celeron / Xeon / D 處理器"
+IntelAtomProcessor.DeviceDesc = "Intel Atom 處理器"
+IntelCoreProcessor.DeviceDesc = "Intel Core Solo/Duo/Ex / Celeron / Xeon / M 處理器"
+IntelCoreiXProcessor.DeviceDesc = "Intel Core i* 處理器"
+AMDProcessor.DeviceDesc = "AMD 處理器"
+AMDK6Processor.DeviceDesc = "AMD K6 處理器"
+AMDK62Processor.DeviceDesc = "AMD K6-2 處理器"
+AMDK63Processor.DeviceDesc = "AMD K6-III / Geode 處理器"
+AMDK7Processor.DeviceDesc = "AMD Athlon / Duron / Geode NX / Sempron 處理器"
+AMDK8Processor.DeviceDesc = "AMD Athlon 64 / Turion 64 / Opteron / Sempron 處理器"
+AMDPHENProcessor.DeviceDesc = "AMD Athlon 64 X / Turion 64 X / Phenom 處理器"
+AMDQProcessor.DeviceDesc = "AMD Athlon 64 Q* / Turion 64 *M / Sempron S* 處理器"
+TransmetaProcessor.DeviceDesc = "Transmeta Crusoe 處理器"
+Standard = "標準處理器"
+ViaC7Processor.DeviceDesc = "VIA C7 處理器"
+ViaNEHProcessor.DeviceDesc = "VIA Nehemiah 處理器"
+ViaESTProcessor.DeviceDesc = "VIA Esther 處理器"
+ViaNANOProcessor.DeviceDesc = "VIA Nano 處理器"
+ViaProcessor.DeviceDesc = "VIA 處理器"
+

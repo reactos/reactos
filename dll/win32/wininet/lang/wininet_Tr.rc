@@ -23,21 +23,21 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 {
   IDS_LANCONNECTION "LAN Bağlantısı"
-  IDS_CERT_CA_INVALID   "Onay belgesi, bilinmeyen ya da güvenilmeyen bir yayımcı eliyle yayımlandı."
-  IDS_CERT_DATE_INVALID "Onay belgesindeki zaman geçersiz."
-  IDS_CERT_CN_INVALID   "Onay belgesindeki ad siteyle uyuşmuyor."
-  IDS_CERT_ERRORS       "Bu onay belgesiyle en az bir belirtilmemiş güvenlik sorunu var."
-  IDS_CERT_SUBJECT      "Subject"
-  IDS_CERT_ISSUER       "Issuer"
-  IDS_CERT_EFFECTIVE    "Effective Date"
-  IDS_CERT_EXPIRATION   "Expiration Date"
-  IDS_CERT_PROTOCOL     "Security Protocol"
-  IDS_CERT_SIGNATURE    "Signature Type"
-  IDS_CERT_ENCRYPTION   "Encryption Type"
-  IDS_CERT_PRIVACY      "Privacy Strength"
-  IDS_CERT_HIGH         "High"
-  IDS_CERT_LOW          "Low"
-  IDS_CERT_BITS         "bits"
+  IDS_CERT_CA_INVALID   "Sertifika, bilinmeyen ya da güvenilmeyen bir yayımcı tarafından yayımlandı."
+  IDS_CERT_DATE_INVALID "Sertifikadaki tarih geçersiz."
+  IDS_CERT_CN_INVALID   "Sertifikadaki ad siteyle uyuşmuyor."
+  IDS_CERT_ERRORS       "Bu sertifikayla en az bir belirtilmemiş güvenlik sorunu var."
+  IDS_CERT_SUBJECT      "Konu"
+  IDS_CERT_ISSUER       "Yayımcı"
+  IDS_CERT_EFFECTIVE    "Veriliş Tarihi"
+  IDS_CERT_EXPIRATION   "Geçerlilik Tarihi"
+  IDS_CERT_PROTOCOL     "Güvenlik Protokolü"
+  IDS_CERT_SIGNATURE    "İmza Türü"
+  IDS_CERT_ENCRYPTION   "Şifreleme Türü"
+  IDS_CERT_PRIVACY      "Gizlilik Gücü"
+  IDS_CERT_HIGH         "Yüksek"
+  IDS_CERT_LOW          "Düşük"
+  IDS_CERT_BITS         "bit"
 }
 
 IDD_PROXYDLG DIALOGEX 36, 24, 220, 146
@@ -54,7 +54,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Bu Şifreyi Sakla (Güvensiz)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Bu Şifreyi Kaydet (Güvensiz)", IDC_SAVEPASSWORD,
            60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Tamam", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "İptal", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
@@ -74,7 +74,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Bu Şifreyi Sakla (Güvensiz)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Bu Şifreyi Kaydet (Güvensiz)", IDC_SAVEPASSWORD,
            60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Tamam", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "İptal", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
@@ -85,9 +85,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Güvenlik Uyarısı"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Bu site için onay belgesiyle ilgili bir sorun var.", -1, 40, 6, 200, 20
+ LTEXT "Bu site için sertifikayla ilgili bir sorun var.", -1, 40, 6, 200, 20
  LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
- LTEXT "Yine de sürdürmek istiyor musunuz?", -1, 40, 46, 200, 20
+ LTEXT "Yine de devam etmek istiyor musunuz?", -1, 40, 46, 200, 20
  PUSHBUTTON "Evet", IDOK, 40, 66, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Hayır", IDCANCEL, 100, 66, 56, 14, WS_GROUP | WS_TABSTOP
 }

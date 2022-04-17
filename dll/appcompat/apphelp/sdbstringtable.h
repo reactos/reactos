@@ -27,11 +27,11 @@ void SdbpTableDestroy(struct SdbStringHashTable* * table);
  *   and the pTagid specified will be associated with this string.
  * - When the string specified does already exist,
  *   the TAGID associated with this string will be returned in pTagid.
- * 
+ *
  *
  * @param [in]  table       Pointer to table pointer, will be allocated when needed.
  * @param [in]  str         The string to search for
- * @param [in,out] pTagid   
+ * @param [in,out] pTagid
  *                          the data written (in bytes)
  *
  * @return  TRUE if the string was added to the table, FALSE if it already existed

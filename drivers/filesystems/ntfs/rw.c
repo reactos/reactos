@@ -79,6 +79,13 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         return STATUS_NOT_IMPLEMENTED;
     }
 
+    if (NtfsFCBIsEncrypted(Fcb))
+    {
+        DPRINT1("Encrypted file!\n");
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
     FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (FileRecord == NULL)
     {

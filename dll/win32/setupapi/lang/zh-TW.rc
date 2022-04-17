@@ -1,4 +1,11 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* 
+ * PROJECT:     ReactOS SetupAPI DLL
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Wine's Chinese resource translation
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -8,33 +15,33 @@ CAPTION "正在複製檔案..."
 FONT 9, "新細明體"
 BEGIN
     PUSHBUTTON "取消", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "資料來源：", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "原始檔案：", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "目的地：", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "目標檔案：", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", PROGRESSORD, "setupx_progress", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 63, 194, 13
 END
 
 IDPROMPTFORDISK DIALOG 0, 0, 260, 120
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Files Needed"
+CAPTION "需要檔案"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "Insert the manufacturer's installation disk, and then\nmake sure the correct drive is selected below", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "請插入製造廠商的安裝磁片，\n然後確認從下方選取了正確的磁碟。", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Copy manufacturer's files from:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "製造廠商檔案複製來源：", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
-    DEFPUSHBUTTON "OK", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Cancel", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Browse...", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "確定", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "取消", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "瀏覽...", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROMPTDISK   "The file '%1' on %2 is needed"
-    IDS_UNKNOWN      "Unknown"
-    IDS_COPYFROM     "Copy files from:"
-    IDS_INFO         "Type the path where the file is located, and then click OK."
+    IDS_PROMPTDISK   "需要位於 %2 的檔案「%1」"
+    IDS_UNKNOWN      "不明"
+    IDS_COPYFROM     "檔案複製來源："
+    IDS_INFO         "輸入檔案所在的路徑，然後按［確定］。"
 END
 
 STRINGTABLE
@@ -43,4 +50,3 @@ BEGIN
     IDS_QUERY_REBOOT_CAPTION "重新開機"
     IDS_INF_FILE "安裝程式資訊"
 END
-

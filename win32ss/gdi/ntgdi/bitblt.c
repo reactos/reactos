@@ -61,7 +61,7 @@ NtGdiAlphaBlend(
     DCDest = apObj[0];
     DCSrc = apObj[1];
 
-    if (DCDest->dctype == DC_TYPE_INFO || DCDest->dctype == DCTYPE_INFO)
+    if (DCDest->dctype == DCTYPE_INFO || DCDest->dctype == DCTYPE_INFO)
     {
         GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
         GDIOBJ_vUnlockObject(&DCDest->BaseObject);
@@ -239,7 +239,7 @@ NtGdiTransparentBlt(
     DCDest = apObj[0];
     DCSrc = apObj[1];
 
-    if (DCDest->dctype == DC_TYPE_INFO || DCDest->dctype == DCTYPE_INFO)
+    if (DCDest->dctype == DCTYPE_INFO || DCDest->dctype == DCTYPE_INFO)
     {
         GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
         GDIOBJ_vUnlockObject(&DCDest->BaseObject);
@@ -385,6 +385,7 @@ NtGdiMaskBlt(
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
         WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiMaskBlt\n", hdcDest, hdcSrc);
+        if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -396,25 +397,28 @@ NtGdiMaskBlt(
     {
         if(DCSrc) DC_UnlockDc(DCSrc);
         WARN("Invalid destination dc handle (0x%p) passed to NtGdiMaskBlt\n", hdcDest);
+        if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
         return FALSE;
     }
 
-    if (DCDest->dctype == DC_TYPE_INFO)
+    if (DCDest->dctype == DCTYPE_INFO)
     {
         if(DCSrc) DC_UnlockDc(DCSrc);
         DC_UnlockDc(DCDest);
         /* Yes, Windows really returns TRUE in this case */
+        if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
         return TRUE;
     }
 
     if (UsesSource)
     {
         ASSERT(DCSrc);
-        if (DCSrc->dctype == DC_TYPE_INFO)
+        if (DCSrc->dctype == DCTYPE_INFO)
         {
             DC_UnlockDc(DCDest);
             DC_UnlockDc(DCSrc);
             /* Yes, Windows really returns TRUE in this case */
+            if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
             return TRUE;
         }
     }
@@ -620,7 +624,7 @@ GreStretchBltMask(
     DCSrc = apObj[1];
     DCMask = apObj[2];
 
-    if (DCDest->dctype == DC_TYPE_INFO)
+    if (DCDest->dctype == DCTYPE_INFO)
     {
         if(DCSrc) GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
         if(DCMask) GDIOBJ_vUnlockObject(&DCMask->BaseObject);
@@ -631,7 +635,7 @@ GreStretchBltMask(
 
     if (UsesSource)
     {
-        if (DCSrc->dctype == DC_TYPE_INFO)
+        if (DCSrc->dctype == DCTYPE_INFO)
         {
             GDIOBJ_vUnlockObject(&DCDest->BaseObject);
             GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
@@ -937,7 +941,7 @@ IntGdiPolyPatBlt(
         return FALSE;
     }
 
-    if (pdc->dctype == DC_TYPE_INFO)
+    if (pdc->dctype == DCTYPE_INFO)
     {
         DC_UnlockDc(pdc);
         /* Yes, Windows really returns TRUE in this case */
@@ -1141,7 +1145,7 @@ IntGdiBitBltRgn(
 
     if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
     {
-        RECTL rcrgn;        
+        RECTL rcrgn;
         REGION_GetRgnBox(prgnClip, &rcrgn);
         IntUpdateBoundsRect(pdc, &rcrgn);
     }
@@ -1226,7 +1230,7 @@ IntGdiFillRgn(
 
     if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
     {
-        RECTL rcrgn;        
+        RECTL rcrgn;
         REGION_GetRgnBox(prgnClip, &rcrgn);
         IntUpdateBoundsRect(pdc, &rcrgn);
     }

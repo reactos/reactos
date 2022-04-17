@@ -136,6 +136,17 @@
 #define XPATH_MAX_NODESET_LENGTH 10000000
 
 /*
+ * XPATH_MAX_RECRUSION_DEPTH:
+ * Maximum amount of nested functions calls when parsing or evaluating
+ * expressions
+ */
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+#define XPATH_MAX_RECURSION_DEPTH 500
+#else
+#define XPATH_MAX_RECURSION_DEPTH 5000
+#endif
+
+/*
  * TODO:
  * There are a few spots where some tests are done which depend upon ascii
  * data.  These should be enhanced for full UTF8 support (see particularly
@@ -477,14 +488,6 @@ int wrap_cmp( xmlNodePtr x, xmlNodePtr y );
  *									*
  ************************************************************************/
 
-#ifndef INFINITY
-#define INFINITY (DBL_MAX * DBL_MAX)
-#endif
-
-#ifndef NAN
-#define NAN (INFINITY / INFINITY)
-#endif
-
 double xmlXPathNAN;
 double xmlXPathPINF;
 double xmlXPathNINF;
@@ -494,11 +497,14 @@ double xmlXPathNINF;
  *
  * Initialize the XPath environment
  */
+ATTRIBUTE_NO_SANITIZE("float-divide-by-zero")
 void
 xmlXPathInit(void) {
-    xmlXPathNAN = NAN;
-    xmlXPathPINF = INFINITY;
-    xmlXPathNINF = -INFINITY;
+    /* MSVC doesn't allow division by zero in constant expressions. */
+    double zero = 0.0;
+    xmlXPathNAN = 0.0 / zero;
+    xmlXPathPINF = 1.0 / zero;
+    xmlXPathNINF = -xmlXPathPINF;
 }
 
 /**
@@ -527,9 +533,9 @@ xmlXPathIsInf(double val) {
 #ifdef isinf
     return isinf(val) ? (val > 0 ? 1 : -1) : 0;
 #else
-    if (val >= INFINITY)
+    if (val >= xmlXPathPINF)
         return 1;
-    if (val <= -INFINITY)
+    if (val <= -xmlXPathPINF)
         return -1;
     return 0;
 #endif
@@ -619,7 +625,7 @@ static const char *xmlXPathErrorMessages[] = {
 /**
  * xmlXPathErrMemory:
  * @ctxt:  an XPath context
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of attribute error
  */
@@ -662,7 +668,7 @@ xmlXPathErrMemory(xmlXPathContextPtr ctxt, const char *extra)
 /**
  * xmlXPathPErrMemory:
  * @ctxt:  an XPath parser context
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of attribute error
  */
@@ -1746,7 +1752,6 @@ static int xmlXPathDebugObjMaxUsers = 0;
 static int xmlXPathDebugObjMaxXSLTTree = 0;
 static int xmlXPathDebugObjMaxAll = 0;
 
-/* REVISIT TODO: Make this static when committing */
 static void
 xmlXPathDebugObjUsageReset(xmlXPathContextPtr ctxt)
 {
@@ -2061,7 +2066,6 @@ xmlXPathDebugObjUsageReleased(xmlXPathContextPtr ctxt,
     xmlXPathDebugObjCounterAll--;
 }
 
-/* REVISIT TODO: Make this static when committing */
 static void
 xmlXPathDebugObjUsageDisplay(xmlXPathContextPtr ctxt)
 {
@@ -5864,10 +5868,10 @@ xmlXPathCastNodeToNumber (xmlNodePtr node) {
     double ret;
 
     if (node == NULL)
-	return(NAN);
+	return(xmlXPathNAN);
     strval = xmlXPathCastNodeToString(node);
     if (strval == NULL)
-	return(NAN);
+	return(xmlXPathNAN);
     ret = xmlXPathCastStringToNumber(strval);
     xmlFree(strval);
 
@@ -5888,7 +5892,7 @@ xmlXPathCastNodeSetToNumber (xmlNodeSetPtr ns) {
     double ret;
 
     if (ns == NULL)
-	return(NAN);
+	return(xmlXPathNAN);
     str = xmlXPathCastNodeSetToString(ns);
     ret = xmlXPathCastStringToNumber(str);
     xmlFree(str);
@@ -5908,13 +5912,13 @@ xmlXPathCastToNumber(xmlXPathObjectPtr val) {
     double ret = 0.0;
 
     if (val == NULL)
-	return(NAN);
+	return(xmlXPathNAN);
     switch (val->type) {
     case XPATH_UNDEFINED:
 #ifdef DEBUG_EXPR
 	xmlGenericError(xmlGenericErrorContext, "NUMBER: undefined\n");
 #endif
-	ret = NAN;
+	ret = xmlXPathNAN;
 	break;
     case XPATH_NODESET:
     case XPATH_XSLT_TREE:
@@ -5934,7 +5938,7 @@ xmlXPathCastToNumber(xmlXPathObjectPtr val) {
     case XPATH_RANGE:
     case XPATH_LOCATIONSET:
 	TODO;
-	ret = NAN;
+	ret = xmlXPathNAN;
 	break;
     }
     return(ret);
@@ -6119,9 +6123,6 @@ xmlXPathNewContext(xmlDocPtr doc) {
 
     ret->contextSize = -1;
     ret->proximityPosition = -1;
-
-    ret->maxDepth = INT_MAX;
-    ret->maxParserDepth = INT_MAX;
 
 #ifdef XP_DEFAULT_CACHE_ON
     if (xmlXPathContextSetCache(ret, 1, -1, 0) == -1) {
@@ -7564,7 +7565,7 @@ xmlXPathModValues(xmlXPathParserContextPtr ctxt) {
     CHECK_TYPE(XPATH_NUMBER);
     arg1 = ctxt->value->floatval;
     if (arg2 == 0)
-	ctxt->value->floatval = NAN;
+	ctxt->value->floatval = xmlXPathNAN;
     else {
 	ctxt->value->floatval = fmod(arg1, arg2);
     }
@@ -9994,7 +9995,7 @@ xmlXPathStringEvalNumber(const xmlChar *str) {
     if (cur == NULL) return(0);
     while (IS_BLANK_CH(*cur)) cur++;
     if ((*cur != '.') && ((*cur < '0') || (*cur > '9')) && (*cur != '-')) {
-        return(NAN);
+        return(xmlXPathNAN);
     }
     if (*cur == '-') {
 	isneg = 1;
@@ -10030,7 +10031,7 @@ xmlXPathStringEvalNumber(const xmlChar *str) {
 
         cur++;
 	if (((*cur < '0') || (*cur > '9')) && (!ok)) {
-	    return(NAN);
+	    return(xmlXPathNAN);
 	}
         while (*cur == '0') {
 	    frac = frac + 1;
@@ -10063,7 +10064,7 @@ xmlXPathStringEvalNumber(const xmlChar *str) {
       }
     }
     while (IS_BLANK_CH(*cur)) cur++;
-    if (*cur != 0) return(NAN);
+    if (*cur != 0) return(xmlXPathNAN);
     if (isneg) ret = -ret;
     if (is_exponent_negative) exponent = -exponent;
     ret *= pow(10.0, (double)exponent);
@@ -10088,6 +10089,7 @@ xmlXPathCompNumber(xmlXPathParserContextPtr ctxt)
     int ok = 0;
     int exponent = 0;
     int is_exponent_negative = 0;
+    xmlXPathObjectPtr num;
 #ifdef __GNUC__
     unsigned long tmp = 0;
     double temp;
@@ -10160,8 +10162,13 @@ xmlXPathCompNumber(xmlXPathParserContextPtr ctxt)
             exponent = -exponent;
         ret *= pow(10.0, (double) exponent);
     }
-    PUSH_LONG_EXPR(XPATH_OP_VALUE, XPATH_NUMBER, 0, 0,
-                   xmlXPathCacheNewFloat(ctxt->context, ret), NULL);
+    num = xmlXPathCacheNewFloat(ctxt->context, ret);
+    if (num == NULL) {
+	ctxt->error = XPATH_MEMORY_ERROR;
+    } else if (PUSH_LONG_EXPR(XPATH_OP_VALUE, XPATH_NUMBER, 0, 0, num,
+                              NULL) == -1) {
+        xmlXPathReleaseObject(ctxt->context, num);
+    }
 }
 
 /**
@@ -10223,6 +10230,7 @@ static void
 xmlXPathCompLiteral(xmlXPathParserContextPtr ctxt) {
     const xmlChar *q;
     xmlChar *ret = NULL;
+    xmlXPathObjectPtr lit;
 
     if (CUR == '"') {
         NEXT;
@@ -10250,8 +10258,13 @@ xmlXPathCompLiteral(xmlXPathParserContextPtr ctxt) {
 	XP_ERROR(XPATH_START_LITERAL_ERROR);
     }
     if (ret == NULL) return;
-    PUSH_LONG_EXPR(XPATH_OP_VALUE, XPATH_STRING, 0, 0,
-	           xmlXPathCacheNewString(ctxt->context, ret), NULL);
+    lit = xmlXPathCacheNewString(ctxt->context, ret);
+    if (lit == NULL) {
+	ctxt->error = XPATH_MEMORY_ERROR;
+    } else if (PUSH_LONG_EXPR(XPATH_OP_VALUE, XPATH_STRING, 0, 0, lit,
+                              NULL) == -1) {
+        xmlXPathReleaseObject(ctxt->context, lit);
+    }
     xmlFree(ret);
 }
 
@@ -10288,8 +10301,10 @@ xmlXPathCompVariableReference(xmlXPathParserContextPtr ctxt) {
 	XP_ERROR(XPATH_VARIABLE_REF_ERROR);
     }
     ctxt->comp->last = -1;
-    PUSH_LONG_EXPR(XPATH_OP_VARIABLE, 0, 0, 0,
-	           name, prefix);
+    if (PUSH_LONG_EXPR(XPATH_OP_VARIABLE, 0, 0, 0, name, prefix) == -1) {
+        xmlFree(prefix);
+        xmlFree(name);
+    }
     SKIP_BLANKS;
     if ((ctxt->context != NULL) && (ctxt->context->flags & XML_XPATH_NOVAR)) {
 	XP_ERROR(XPATH_FORBID_VARIABLE_ERROR);
@@ -10396,8 +10411,10 @@ xmlXPathCompFunctionCall(xmlXPathParserContextPtr ctxt) {
 	    SKIP_BLANKS;
 	}
     }
-    PUSH_LONG_EXPR(XPATH_OP_FUNCTION, nbargs, 0, 0,
-	           name, prefix);
+    if (PUSH_LONG_EXPR(XPATH_OP_FUNCTION, nbargs, 0, 0, name, prefix) == -1) {
+        xmlFree(prefix);
+        xmlFree(name);
+    }
     NEXT;
     SKIP_BLANKS;
 }
@@ -10934,9 +10951,13 @@ xmlXPathCompileExpr(xmlXPathParserContextPtr ctxt, int sort) {
     xmlXPathContextPtr xpctxt = ctxt->context;
 
     if (xpctxt != NULL) {
-        if (xpctxt->depth >= xpctxt->maxParserDepth)
+        if (xpctxt->depth >= XPATH_MAX_RECURSION_DEPTH)
             XP_ERROR(XPATH_RECURSION_LIMIT_EXCEEDED);
-        xpctxt->depth += 1;
+        /*
+         * Parsing a single '(' pushes about 10 functions on the call stack
+         * before recursing!
+         */
+        xpctxt->depth += 10;
     }
 
     xmlXPathCompAndExpr(ctxt);
@@ -11038,7 +11059,7 @@ xmlXPathCompPredicate(xmlXPathParserContextPtr ctxt, int filter) {
  */
 static xmlChar *
 xmlXPathCompNodeTest(xmlXPathParserContextPtr ctxt, xmlXPathTestVal *test,
-	             xmlXPathTypeVal *type, const xmlChar **prefix,
+	             xmlXPathTypeVal *type, xmlChar **prefix,
 		     xmlChar *name) {
     int blanks;
 
@@ -11269,7 +11290,7 @@ xmlXPathCompStep(xmlXPathParserContextPtr ctxt) {
 	SKIP_BLANKS;
     } else {
 	xmlChar *name = NULL;
-	const xmlChar *prefix = NULL;
+	xmlChar *prefix = NULL;
 	xmlXPathTestVal test = (xmlXPathTestVal) 0;
 	xmlXPathAxisVal axis = (xmlXPathAxisVal) 0;
 	xmlXPathTypeVal type = (xmlXPathTypeVal) 0;
@@ -11379,9 +11400,11 @@ eval_predicates:
 	    PUSH_BINARY_EXPR(XPATH_OP_RANGETO, op2, op1, 0, 0);
 	} else
 #endif
-	    PUSH_FULL_EXPR(XPATH_OP_COLLECT, op1, ctxt->comp->last, axis,
-			   test, type, (void *)prefix, (void *)name);
-
+        if (PUSH_FULL_EXPR(XPATH_OP_COLLECT, op1, ctxt->comp->last, axis,
+                           test, type, (void *)prefix, (void *)name) == -1) {
+            xmlFree(prefix);
+            xmlFree(name);
+        }
     }
 #ifdef DEBUG_STEP
     xmlGenericError(xmlGenericErrorContext, "Step : ");
@@ -11649,11 +11672,11 @@ xmlXPathNodeSetFilter(xmlXPathParserContextPtr ctxt,
         res = xmlXPathCompOpEvalToBoolean(ctxt, filterOp, 1);
 
         if (ctxt->error != XPATH_EXPRESSION_OK)
-            goto exit;
+            break;
         if (res < 0) {
             /* Shouldn't happen */
             xmlXPathErr(ctxt, XPATH_EXPR_ERROR);
-            goto exit;
+            break;
         }
 
         if ((res != 0) && ((pos >= minPos) && (pos <= maxPos))) {
@@ -11672,19 +11695,20 @@ xmlXPathNodeSetFilter(xmlXPathParserContextPtr ctxt,
 
         if (res != 0) {
             if (pos == maxPos) {
-                /* Clear remaining nodes and exit loop. */
-                if (hasNsNodes) {
-                    for (i++; i < set->nodeNr; i++) {
-                        node = set->nodeTab[i];
-                        if ((node != NULL) &&
-                            (node->type == XML_NAMESPACE_DECL))
-                            xmlXPathNodeSetFreeNs((xmlNsPtr) node);
-                    }
-                }
+                i += 1;
                 break;
             }
 
             pos += 1;
+        }
+    }
+
+    /* Free remaining nodes. */
+    if (hasNsNodes) {
+        for (; i < set->nodeNr; i++) {
+            xmlNodePtr node = set->nodeTab[i];
+            if ((node != NULL) && (node->type == XML_NAMESPACE_DECL))
+                xmlXPathNodeSetFreeNs((xmlNsPtr) node);
         }
     }
 
@@ -11708,7 +11732,6 @@ xmlXPathNodeSetFilter(xmlXPathParserContextPtr ctxt,
         }
     }
 
-exit:
     xpctxt->node = oldnode;
     xpctxt->doc = olddoc;
     xpctxt->contextSize = oldcs;
@@ -11773,11 +11796,11 @@ xmlXPathLocationSetFilter(xmlXPathParserContextPtr ctxt,
         res = xmlXPathCompOpEvalToBoolean(ctxt, filterOp, 1);
 
         if (ctxt->error != XPATH_EXPRESSION_OK)
-            goto exit;
+            break;
         if (res < 0) {
             /* Shouldn't happen */
             xmlXPathErr(ctxt, XPATH_EXPR_ERROR);
-            goto exit;
+            break;
         }
 
         if ((res != 0) && ((pos >= minPos) && (pos <= maxPos))) {
@@ -11795,16 +11818,17 @@ xmlXPathLocationSetFilter(xmlXPathParserContextPtr ctxt,
 
         if (res != 0) {
             if (pos == maxPos) {
-                /* Clear remaining nodes and exit loop. */
-                for (i++; i < locset->locNr; i++) {
-                    xmlXPathFreeObject(locset->locTab[i]);
-                }
+                i += 1;
                 break;
             }
 
             pos += 1;
         }
     }
+
+    /* Free remaining nodes. */
+    for (; i < locset->locNr; i++)
+        xmlXPathFreeObject(locset->locTab[i]);
 
     locset->locNr = j;
 
@@ -11826,7 +11850,6 @@ xmlXPathLocationSetFilter(xmlXPathParserContextPtr ctxt,
         }
     }
 
-exit:
     xpctxt->node = oldnode;
     xpctxt->doc = olddoc;
     xpctxt->contextSize = oldcs;
@@ -11864,7 +11887,7 @@ xmlXPathCompOpEvalPredicate(xmlXPathParserContextPtr ctxt,
                 "xmlXPathCompOpEvalPredicate: Expected a predicate\n");
             XP_ERROR(XPATH_INVALID_OPERAND);
 	}
-        if (ctxt->context->depth >= ctxt->context->maxDepth)
+        if (ctxt->context->depth >= XPATH_MAX_RECURSION_DEPTH)
             XP_ERROR(XPATH_RECURSION_LIMIT_EXCEEDED);
         ctxt->context->depth += 1;
 	xmlXPathCompOpEvalPredicate(ctxt, &comp->steps[op->ch1], set,
@@ -12580,7 +12603,7 @@ xmlXPathCompOpEvalFirst(xmlXPathParserContextPtr ctxt,
     CHECK_ERROR0;
     if (OP_LIMIT_EXCEEDED(ctxt, 1))
         return(0);
-    if (ctxt->context->depth >= ctxt->context->maxDepth)
+    if (ctxt->context->depth >= XPATH_MAX_RECURSION_DEPTH)
         XP_ERROR0(XPATH_RECURSION_LIMIT_EXCEEDED);
     ctxt->context->depth += 1;
     comp = ctxt->comp;
@@ -12721,7 +12744,7 @@ xmlXPathCompOpEvalLast(xmlXPathParserContextPtr ctxt, xmlXPathStepOpPtr op,
     CHECK_ERROR0;
     if (OP_LIMIT_EXCEEDED(ctxt, 1))
         return(0);
-    if (ctxt->context->depth >= ctxt->context->maxDepth)
+    if (ctxt->context->depth >= XPATH_MAX_RECURSION_DEPTH)
         XP_ERROR0(XPATH_RECURSION_LIMIT_EXCEEDED);
     ctxt->context->depth += 1;
     comp = ctxt->comp;
@@ -12939,7 +12962,7 @@ xmlXPathCompOpEval(xmlXPathParserContextPtr ctxt, xmlXPathStepOpPtr op)
     CHECK_ERROR0;
     if (OP_LIMIT_EXCEEDED(ctxt, 1))
         return(0);
-    if (ctxt->context->depth >= ctxt->context->maxDepth)
+    if (ctxt->context->depth >= XPATH_MAX_RECURSION_DEPTH)
         XP_ERROR0(XPATH_RECURSION_LIMIT_EXCEEDED);
     ctxt->context->depth += 1;
     comp = ctxt->comp;
@@ -13815,7 +13838,8 @@ scan_children:
 	do {
 	    cur = cur->parent;
 	    depth--;
-	    if ((cur == NULL) || (cur == limit))
+	    if ((cur == NULL) || (cur == limit) ||
+                (cur->type == XML_DOCUMENT_NODE))
 	        goto done;
 	    if (cur->type == XML_ELEMENT_NODE) {
 		ret = xmlStreamPop(patstream);
@@ -14086,8 +14110,7 @@ xmlXPathTryStreamCompile(xmlXPathContextPtr ctxt, const xmlChar *str) {
 	    }
 	}
 
-	stream = xmlPatterncompile(str, dict, XML_PATTERN_XPATH,
-			&namespaces[0]);
+	stream = xmlPatterncompile(str, dict, XML_PATTERN_XPATH, namespaces);
 	if (namespaces != NULL) {
 	    xmlFree((xmlChar **)namespaces);
 	}
@@ -14173,7 +14196,7 @@ xmlXPathOptimizeExpression(xmlXPathParserContextPtr pctxt,
     /* Recurse */
     ctxt = pctxt->context;
     if (ctxt != NULL) {
-        if (ctxt->depth >= ctxt->maxDepth)
+        if (ctxt->depth >= XPATH_MAX_RECURSION_DEPTH)
             return;
         ctxt->depth += 1;
     }
@@ -14206,7 +14229,7 @@ xmlXPathCtxtCompile(xmlXPathContextPtr ctxt, const xmlChar *str) {
         return(comp);
 #endif
 
-    xmlXPathInit();
+    xmlInitParser();
 
     pctxt = xmlXPathNewParserContext(str, ctxt);
     if (pctxt == NULL)
@@ -14295,7 +14318,7 @@ xmlXPathCompiledEvalInternal(xmlXPathCompExprPtr comp,
 
     if (comp == NULL)
 	return(-1);
-    xmlXPathInit();
+    xmlInitParser();
 
 #ifndef LIBXML_THREAD_ENABLED
     reentance++;
@@ -14440,7 +14463,7 @@ xmlXPathEval(const xmlChar *str, xmlXPathContextPtr ctx) {
 
     CHECK_CTXT(ctx)
 
-    xmlXPathInit();
+    xmlInitParser();
 
     ctxt = xmlXPathNewParserContext(str, ctx);
     if (ctxt == NULL)

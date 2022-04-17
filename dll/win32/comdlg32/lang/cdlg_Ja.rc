@@ -369,7 +369,7 @@ FONT 9, "MS UI Gothic"
 
     GROUPBOX        "印刷部数",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "部数(&C):",stc5,168,105,68,8
-    ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
+    ICON            "",               ico3, 210,131,  76,24, WS_GROUP
     CONTROL         "部単位で印刷(&O)",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 

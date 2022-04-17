@@ -4,20 +4,20 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
-    STRING_ATTRIB_HELP "Kütük öz niteliklerini görüntüler ya da değiştirir.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] kütük ...\n\
+    STRING_FILE_NOT_FOUND "Dosya bulunamadı - '%s'\n"
+    STRING_ATTRIB_HELP "Dosya öz niteliklerini görüntüler ya da değiştirir.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] dosya ...\n\
        [/S [/D]]\n\n\
   +   Bir öz nitelik ayarlar\n\
   -   Bir öz nitelik siler\n\
-  R   Yalnızca okunur kütük öz niteliği\n\
-  A   Belgelik kütük öz niteliği\n\
-  S   Dizge kütük öz niteliği\n\
-  H   Gizli kütük öz niteliği\n\
-  /S  Şimdiki dizindeki ve tüm alt dizinlerdeki kütükleri eşlemeyi yapar\n\
+  R   Yalnızca okunur dosya öz niteliği\n\
+  A   Belgelik dosya öz niteliği\n\
+  S   Sistem dosyası öz niteliği\n\
+  H   Gizli dosya öz niteliği\n\
+  /S  Şimdiki dizindeki ve tüm alt dizinlerdeki dosyaları eşlemeyi yapar\n\
   /D  Dizinleri de yap\n\n\
-Tüm kütüklerin öz niteliklerini görüntülemek için bir değişken olmadan ATTRIB\n\
+Tüm dosyaların öz niteliklerini görüntülemek için bir değişken olmadan ATTRIB\n\
 yazınız.\n"
-    STRING_CONSOLE_ERROR "Bilinmeyen yanlışlık: %d\n"
+    STRING_CONSOLE_ERROR "Bilinmeyen hata: %d\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Geçersiz değişken biçimi - %s\n"
 END

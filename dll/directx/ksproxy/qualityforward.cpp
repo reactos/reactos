@@ -36,7 +36,7 @@ public:
     HANDLE STDMETHODCALLTYPE KsGetObjectHandle();
 
     // IKsQualityForwarder
-    VOID STDMETHODCALLTYPE KsFlushClient(IN IKsPin  *Pin); 
+    VOID STDMETHODCALLTYPE KsFlushClient(IN IKsPin  *Pin);
 
     CKsQualityForwarder(HANDLE handle) : m_Ref(0), m_Handle(handle){}
     virtual ~CKsQualityForwarder(){ if (m_Handle) CloseHandle(m_Handle);}

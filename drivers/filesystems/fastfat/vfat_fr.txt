@@ -54,7 +54,7 @@ fonctions strictement internes dans iface.c :
  void  WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
                    ULONG NewValue)
  ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
- unsigned long ClusterToSector(PDEVICE_EXTENSION DeviceExt, 
+ unsigned long ClusterToSector(PDEVICE_EXTENSION DeviceExt,
 			      unsigned long Cluster)
  void RtlAnsiToUnicode(PWSTR Dest, PCH Source, ULONG Length)
  void vfat_initstr(wchar_t *wstr, ULONG wsize)
@@ -76,7 +76,7 @@ fonctions strictement internes dans iface.c :
 	renvoie STATUS_UNSUCCESSFUL sinon.
  NTSTATUS FsdCloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
 	ne fait rien, renvoie STATUS_SUCCESS.
- NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
+ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 		     PWSTR FileName)
 	parcourt l'arborescence pour trouver le fichier(appelle FindFile à chaque niveau)
 	si trouvé : FileObject->FsContext = Fcb du fichier, renvoie STATUS_SUCCESS
@@ -94,4 +94,4 @@ fonctions strictement internes dans iface.c :
  NTSTATUS FsdMount(PDEVICE_OBJECT DeviceToMount)
  NTSTATUS FsdGetStandardInformation(PFCB FCB, PDEVICE_OBJECT DeviceObject,
                                    PFILE_STANDARD_INFORMATION StandardInfo);
-	
+

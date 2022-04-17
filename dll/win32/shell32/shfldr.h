@@ -60,7 +60,7 @@ HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, const GUID* clsid,
 
 HRESULT SHELL32_BindToSF (LPCITEMIDLIST pidlRoot, PERSIST_FOLDER_TARGET_INFO* ppfti,
                 LPCITEMIDLIST pidl, const GUID* clsid, REFIID riid, LPVOID *ppvOut);
-                
+
 extern "C"
 BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);
 
@@ -92,7 +92,7 @@ static __inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 }
 
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
-BOOL SHELL_FS_HideExtension(LPWSTR pwszPath);
+BOOL SHELL_FS_HideExtension(LPCWSTR pwszPath);
 
 void AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys);
 

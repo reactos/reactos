@@ -1,7 +1,7 @@
 /*
  *  Elliptic curves over GF(p): generic functions
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -42,8 +42,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 /*
@@ -53,6 +51,7 @@
  * GECC = Guide to Elliptic Curve Cryptography - Hankerson, Menezes, Vanstone
  * FIPS 186-3 http://csrc.nist.gov/publications/fips/fips186-3/fips_186-3.pdf
  * RFC 4492 for the related TLS structures and constants
+ * RFC 7748 for the Curve448 and Curve25519 curve definitions
  *
  * [Curve25519] http://cr.yp.to/ecdh/curve25519-20060209.pdf
  *
@@ -73,14 +72,51 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
+/**
+ * \brief Function level alternative implementation.
+ *
+ * The MBEDTLS_ECP_INTERNAL_ALT macro enables alternative implementations to
+ * replace certain functions in this module. The alternative implementations are
+ * typically hardware accelerators and need to activate the hardware before the
+ * computation starts and deactivate it after it finishes. The
+ * mbedtls_internal_ecp_init() and mbedtls_internal_ecp_free() functions serve
+ * this purpose.
+ *
+ * To preserve the correct functionality the following conditions must hold:
+ *
+ * - The alternative implementation must be activated by
+ *   mbedtls_internal_ecp_init() before any of the replaceable functions is
+ *   called.
+ * - mbedtls_internal_ecp_free() must \b only be called when the alternative
+ *   implementation is activated.
+ * - mbedtls_internal_ecp_init() must \b not be called when the alternative
+ *   implementation is activated.
+ * - Public functions must not return while the alternative implementation is
+ *   activated.
+ * - Replaceable functions are guarded by \c MBEDTLS_ECP_XXX_ALT macros and
+ *   before calling them an \code if( mbedtls_internal_ecp_grp_capable( grp ) )
+ *   \endcode ensures that the alternative implementation supports the current
+ *   group.
+ */
+#if defined(MBEDTLS_ECP_INTERNAL_ALT)
+#endif
+
 #if defined(MBEDTLS_ECP_C)
 
 #include "mbedtls/ecp.h"
 #include "mbedtls/threading.h"
+#include "mbedtls/platform_util.h"
+#include "mbedtls/bn_mul.h"
 
 #include <string.h>
 
 #if !defined(MBEDTLS_ECP_ALT)
+
+/* Parameter validation macros based on platform_util.h */
+#define ECP_VALIDATE_RET( cond )    \
+    MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_ECP_BAD_INPUT_DATA )
+#define ECP_VALIDATE( cond )        \
+    MBEDTLS_INTERNAL_VALIDATE( cond )
 
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
@@ -112,11 +148,6 @@
     !defined(inline) && !defined(__cplusplus)
 #define inline __inline
 #endif
-
-/* Implementation that should never be optimized out by the compiler */
-static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
-}
 
 #if defined(MBEDTLS_SELF_TEST)
 /*
@@ -185,7 +216,7 @@ static int ecp_drbg_seed( ecp_drbg_context *ctx,
     ret = mbedtls_hmac_drbg_seed_buf( ctx, md_info, secret_bytes, secret_len );
 
 cleanup:
-    mbedtls_zeroize( secret_bytes, secret_len );
+    mbedtls_platform_zeroize( secret_bytes, secret_len );
 
     return( ret );
 }
@@ -242,7 +273,7 @@ static int ecp_drbg_seed( ecp_drbg_context *ctx,
                                  secret_bytes, secret_len );
 
 cleanup:
-    mbedtls_zeroize( secret_bytes, secret_len );
+    mbedtls_platform_zeroize( secret_bytes, secret_len );
 
     return( ret );
 }
@@ -291,7 +322,7 @@ static void ecp_drbg_init( ecp_drbg_context *ctx )
 
 static void ecp_drbg_free( ecp_drbg_context *ctx )
 {
-    mbedtls_zeroize( ctx, sizeof( ecp_drbg_context ) );
+    mbedtls_platform_zeroize( ctx, sizeof( ecp_drbg_context ) );
 }
 
 static int ecp_drbg_seed( ecp_drbg_context *ctx,
@@ -343,7 +374,7 @@ static int ecp_drbg_random( void *p_rng, unsigned char *output, size_t output_le
         len_done += use_len;
     }
 
-    mbedtls_zeroize( tmp, sizeof( tmp ) );
+    mbedtls_platform_zeroize( tmp, sizeof( tmp ) );
 
     return( 0 );
 }
@@ -352,6 +383,245 @@ static int ecp_drbg_random( void *p_rng, unsigned char *output, size_t output_le
 #error "Invalid configuration detected. Include check_config.h to ensure that the configuration is valid."
 #endif /* DRBG/SHA modules */
 #endif /* MBEDTLS_ECP_NO_INTERNAL_RNG */
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+/*
+ * Maximum number of "basic operations" to be done in a row.
+ *
+ * Default value 0 means that ECC operations will not yield.
+ * Note that regardless of the value of ecp_max_ops, always at
+ * least one step is performed before yielding.
+ *
+ * Setting ecp_max_ops=1 can be suitable for testing purposes
+ * as it will interrupt computation at all possible points.
+ */
+static unsigned ecp_max_ops = 0;
+
+/*
+ * Set ecp_max_ops
+ */
+void mbedtls_ecp_set_max_ops( unsigned max_ops )
+{
+    ecp_max_ops = max_ops;
+}
+
+/*
+ * Check if restart is enabled
+ */
+int mbedtls_ecp_restart_is_enabled( void )
+{
+    return( ecp_max_ops != 0 );
+}
+
+/*
+ * Restart sub-context for ecp_mul_comb()
+ */
+struct mbedtls_ecp_restart_mul
+{
+    mbedtls_ecp_point R;    /* current intermediate result                  */
+    size_t i;               /* current index in various loops, 0 outside    */
+    mbedtls_ecp_point *T;   /* table for precomputed points                 */
+    unsigned char T_size;   /* number of points in table T                  */
+    enum {                  /* what were we doing last time we returned?    */
+        ecp_rsm_init = 0,       /* nothing so far, dummy initial state      */
+        ecp_rsm_pre_dbl,        /* precompute 2^n multiples                 */
+        ecp_rsm_pre_norm_dbl,   /* normalize precomputed 2^n multiples      */
+        ecp_rsm_pre_add,        /* precompute remaining points by adding    */
+        ecp_rsm_pre_norm_add,   /* normalize all precomputed points         */
+        ecp_rsm_comb_core,      /* ecp_mul_comb_core()                      */
+        ecp_rsm_final_norm,     /* do the final normalization               */
+    } state;
+#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
+    ecp_drbg_context drbg_ctx;
+    unsigned char drbg_seeded;
+#endif
+};
+
+/*
+ * Init restart_mul sub-context
+ */
+static void ecp_restart_rsm_init( mbedtls_ecp_restart_mul_ctx *ctx )
+{
+    mbedtls_ecp_point_init( &ctx->R );
+    ctx->i = 0;
+    ctx->T = NULL;
+    ctx->T_size = 0;
+    ctx->state = ecp_rsm_init;
+#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
+    ecp_drbg_init( &ctx->drbg_ctx );
+    ctx->drbg_seeded = 0;
+#endif
+}
+
+/*
+ * Free the components of a restart_mul sub-context
+ */
+static void ecp_restart_rsm_free( mbedtls_ecp_restart_mul_ctx *ctx )
+{
+    unsigned char i;
+
+    if( ctx == NULL )
+        return;
+
+    mbedtls_ecp_point_free( &ctx->R );
+
+    if( ctx->T != NULL )
+    {
+        for( i = 0; i < ctx->T_size; i++ )
+            mbedtls_ecp_point_free( ctx->T + i );
+        mbedtls_free( ctx->T );
+    }
+
+#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
+    ecp_drbg_free( &ctx->drbg_ctx );
+#endif
+
+    ecp_restart_rsm_init( ctx );
+}
+
+/*
+ * Restart context for ecp_muladd()
+ */
+struct mbedtls_ecp_restart_muladd
+{
+    mbedtls_ecp_point mP;       /* mP value                             */
+    mbedtls_ecp_point R;        /* R intermediate result                */
+    enum {                      /* what should we do next?              */
+        ecp_rsma_mul1 = 0,      /* first multiplication                 */
+        ecp_rsma_mul2,          /* second multiplication                */
+        ecp_rsma_add,           /* addition                             */
+        ecp_rsma_norm,          /* normalization                        */
+    } state;
+};
+
+/*
+ * Init restart_muladd sub-context
+ */
+static void ecp_restart_ma_init( mbedtls_ecp_restart_muladd_ctx *ctx )
+{
+    mbedtls_ecp_point_init( &ctx->mP );
+    mbedtls_ecp_point_init( &ctx->R );
+    ctx->state = ecp_rsma_mul1;
+}
+
+/*
+ * Free the components of a restart_muladd sub-context
+ */
+static void ecp_restart_ma_free( mbedtls_ecp_restart_muladd_ctx *ctx )
+{
+    if( ctx == NULL )
+        return;
+
+    mbedtls_ecp_point_free( &ctx->mP );
+    mbedtls_ecp_point_free( &ctx->R );
+
+    ecp_restart_ma_init( ctx );
+}
+
+/*
+ * Initialize a restart context
+ */
+void mbedtls_ecp_restart_init( mbedtls_ecp_restart_ctx *ctx )
+{
+    ECP_VALIDATE( ctx != NULL );
+    ctx->ops_done = 0;
+    ctx->depth = 0;
+    ctx->rsm = NULL;
+    ctx->ma = NULL;
+}
+
+/*
+ * Free the components of a restart context
+ */
+void mbedtls_ecp_restart_free( mbedtls_ecp_restart_ctx *ctx )
+{
+    if( ctx == NULL )
+        return;
+
+    ecp_restart_rsm_free( ctx->rsm );
+    mbedtls_free( ctx->rsm );
+
+    ecp_restart_ma_free( ctx->ma );
+    mbedtls_free( ctx->ma );
+
+    mbedtls_ecp_restart_init( ctx );
+}
+
+/*
+ * Check if we can do the next step
+ */
+int mbedtls_ecp_check_budget( const mbedtls_ecp_group *grp,
+                              mbedtls_ecp_restart_ctx *rs_ctx,
+                              unsigned ops )
+{
+    ECP_VALIDATE_RET( grp != NULL );
+
+    if( rs_ctx != NULL && ecp_max_ops != 0 )
+    {
+        /* scale depending on curve size: the chosen reference is 256-bit,
+         * and multiplication is quadratic. Round to the closest integer. */
+        if( grp->pbits >= 512 )
+            ops *= 4;
+        else if( grp->pbits >= 384 )
+            ops *= 2;
+
+        /* Avoid infinite loops: always allow first step.
+         * Because of that, however, it's not generally true
+         * that ops_done <= ecp_max_ops, so the check
+         * ops_done > ecp_max_ops below is mandatory. */
+        if( ( rs_ctx->ops_done != 0 ) &&
+            ( rs_ctx->ops_done > ecp_max_ops ||
+              ops > ecp_max_ops - rs_ctx->ops_done ) )
+        {
+            return( MBEDTLS_ERR_ECP_IN_PROGRESS );
+        }
+
+        /* update running count */
+        rs_ctx->ops_done += ops;
+    }
+
+    return( 0 );
+}
+
+/* Call this when entering a function that needs its own sub-context */
+#define ECP_RS_ENTER( SUB )   do {                                      \
+    /* reset ops count for this call if top-level */                    \
+    if( rs_ctx != NULL && rs_ctx->depth++ == 0 )                        \
+        rs_ctx->ops_done = 0;                                           \
+                                                                        \
+    /* set up our own sub-context if needed */                          \
+    if( mbedtls_ecp_restart_is_enabled() &&                             \
+        rs_ctx != NULL && rs_ctx->SUB == NULL )                         \
+    {                                                                   \
+        rs_ctx->SUB = mbedtls_calloc( 1, sizeof( *rs_ctx->SUB ) );      \
+        if( rs_ctx->SUB == NULL )                                       \
+            return( MBEDTLS_ERR_ECP_ALLOC_FAILED );                     \
+                                                                        \
+        ecp_restart_## SUB ##_init( rs_ctx->SUB );                      \
+    }                                                                   \
+} while( 0 )
+
+/* Call this when leaving a function that needs its own sub-context */
+#define ECP_RS_LEAVE( SUB )   do {                                      \
+    /* clear our sub-context when not in progress (done or error) */    \
+    if( rs_ctx != NULL && rs_ctx->SUB != NULL &&                        \
+        ret != MBEDTLS_ERR_ECP_IN_PROGRESS )                            \
+    {                                                                   \
+        ecp_restart_## SUB ##_free( rs_ctx->SUB );                      \
+        mbedtls_free( rs_ctx->SUB );                                    \
+        rs_ctx->SUB = NULL;                                             \
+    }                                                                   \
+                                                                        \
+    if( rs_ctx != NULL )                                                \
+        rs_ctx->depth--;                                                \
+} while( 0 )
+
+#else /* MBEDTLS_ECP_RESTARTABLE */
+
+#define ECP_RS_ENTER( sub )     (void) rs_ctx;
+#define ECP_RS_LEAVE( sub )     (void) rs_ctx;
+
+#endif /* MBEDTLS_ECP_RESTARTABLE */
 
 #if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) ||   \
     defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED) ||   \
@@ -367,7 +637,8 @@ static int ecp_drbg_random( void *p_rng, unsigned char *output, size_t output_le
 #define ECP_SHORTWEIERSTRASS
 #endif
 
-#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
+#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
 #define ECP_MONTGOMERY
 #endif
 
@@ -513,6 +784,9 @@ const mbedtls_ecp_curve_info *mbedtls_ecp_curve_info_from_name( const char *name
 {
     const mbedtls_ecp_curve_info *curve_info;
 
+    if( name == NULL )
+        return( NULL );
+
     for( curve_info = mbedtls_ecp_curve_list();
          curve_info->grp_id != MBEDTLS_ECP_DP_NONE;
          curve_info++ )
@@ -543,8 +817,7 @@ static inline ecp_curve_type ecp_get_type( const mbedtls_ecp_group *grp )
  */
 void mbedtls_ecp_point_init( mbedtls_ecp_point *pt )
 {
-    if( pt == NULL )
-        return;
+    ECP_VALIDATE( pt != NULL );
 
     mbedtls_mpi_init( &pt->X );
     mbedtls_mpi_init( &pt->Y );
@@ -556,10 +829,23 @@ void mbedtls_ecp_point_init( mbedtls_ecp_point *pt )
  */
 void mbedtls_ecp_group_init( mbedtls_ecp_group *grp )
 {
-    if( grp == NULL )
-        return;
+    ECP_VALIDATE( grp != NULL );
 
-    memset( grp, 0, sizeof( mbedtls_ecp_group ) );
+    grp->id = MBEDTLS_ECP_DP_NONE;
+    mbedtls_mpi_init( &grp->P );
+    mbedtls_mpi_init( &grp->A );
+    mbedtls_mpi_init( &grp->B );
+    mbedtls_ecp_point_init( &grp->G );
+    mbedtls_mpi_init( &grp->N );
+    grp->pbits = 0;
+    grp->nbits = 0;
+    grp->h = 0;
+    grp->modp = NULL;
+    grp->t_pre = NULL;
+    grp->t_post = NULL;
+    grp->t_data = NULL;
+    grp->T = NULL;
+    grp->T_size = 0;
 }
 
 /*
@@ -567,8 +853,7 @@ void mbedtls_ecp_group_init( mbedtls_ecp_group *grp )
  */
 void mbedtls_ecp_keypair_init( mbedtls_ecp_keypair *key )
 {
-    if( key == NULL )
-        return;
+    ECP_VALIDATE( key != NULL );
 
     mbedtls_ecp_group_init( &key->grp );
     mbedtls_mpi_init( &key->d );
@@ -614,7 +899,7 @@ void mbedtls_ecp_group_free( mbedtls_ecp_group *grp )
         mbedtls_free( grp->T );
     }
 
-    mbedtls_zeroize( grp, sizeof( mbedtls_ecp_group ) );
+    mbedtls_platform_zeroize( grp, sizeof( mbedtls_ecp_group ) );
 }
 
 /*
@@ -636,6 +921,8 @@ void mbedtls_ecp_keypair_free( mbedtls_ecp_keypair *key )
 int mbedtls_ecp_copy( mbedtls_ecp_point *P, const mbedtls_ecp_point *Q )
 {
     int ret;
+    ECP_VALIDATE_RET( P != NULL );
+    ECP_VALIDATE_RET( Q != NULL );
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &P->X, &Q->X ) );
     MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &P->Y, &Q->Y ) );
@@ -650,7 +937,10 @@ cleanup:
  */
 int mbedtls_ecp_group_copy( mbedtls_ecp_group *dst, const mbedtls_ecp_group *src )
 {
-    return mbedtls_ecp_group_load( dst, src->id );
+    ECP_VALIDATE_RET( dst != NULL );
+    ECP_VALIDATE_RET( src != NULL );
+
+    return( mbedtls_ecp_group_load( dst, src->id ) );
 }
 
 /*
@@ -659,6 +949,7 @@ int mbedtls_ecp_group_copy( mbedtls_ecp_group *dst, const mbedtls_ecp_group *src
 int mbedtls_ecp_set_zero( mbedtls_ecp_point *pt )
 {
     int ret;
+    ECP_VALIDATE_RET( pt != NULL );
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &pt->X , 1 ) );
     MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &pt->Y , 1 ) );
@@ -673,6 +964,8 @@ cleanup:
  */
 int mbedtls_ecp_is_zero( mbedtls_ecp_point *pt )
 {
+    ECP_VALIDATE_RET( pt != NULL );
+
     return( mbedtls_mpi_cmp_int( &pt->Z, 0 ) == 0 );
 }
 
@@ -682,6 +975,9 @@ int mbedtls_ecp_is_zero( mbedtls_ecp_point *pt )
 int mbedtls_ecp_point_cmp( const mbedtls_ecp_point *P,
                            const mbedtls_ecp_point *Q )
 {
+    ECP_VALIDATE_RET( P != NULL );
+    ECP_VALIDATE_RET( Q != NULL );
+
     if( mbedtls_mpi_cmp_mpi( &P->X, &Q->X ) == 0 &&
         mbedtls_mpi_cmp_mpi( &P->Y, &Q->Y ) == 0 &&
         mbedtls_mpi_cmp_mpi( &P->Z, &Q->Z ) == 0 )
@@ -699,6 +995,9 @@ int mbedtls_ecp_point_read_string( mbedtls_ecp_point *P, int radix,
                            const char *x, const char *y )
 {
     int ret;
+    ECP_VALIDATE_RET( P != NULL );
+    ECP_VALIDATE_RET( x != NULL );
+    ECP_VALIDATE_RET( y != NULL );
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_read_string( &P->X, radix, x ) );
     MBEDTLS_MPI_CHK( mbedtls_mpi_read_string( &P->Y, radix, y ) );
@@ -711,16 +1010,19 @@ cleanup:
 /*
  * Export a point into unsigned binary data (SEC1 2.3.3)
  */
-int mbedtls_ecp_point_write_binary( const mbedtls_ecp_group *grp, const mbedtls_ecp_point *P,
-                            int format, size_t *olen,
-                            unsigned char *buf, size_t buflen )
+int mbedtls_ecp_point_write_binary( const mbedtls_ecp_group *grp,
+                                    const mbedtls_ecp_point *P,
+                                    int format, size_t *olen,
+                                    unsigned char *buf, size_t buflen )
 {
     int ret = 0;
     size_t plen;
-
-    if( format != MBEDTLS_ECP_PF_UNCOMPRESSED &&
-        format != MBEDTLS_ECP_PF_COMPRESSED )
-        return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
+    ECP_VALIDATE_RET( grp  != NULL );
+    ECP_VALIDATE_RET( P    != NULL );
+    ECP_VALIDATE_RET( olen != NULL );
+    ECP_VALIDATE_RET( buf  != NULL );
+    ECP_VALIDATE_RET( format == MBEDTLS_ECP_PF_UNCOMPRESSED ||
+                      format == MBEDTLS_ECP_PF_COMPRESSED );
 
     /*
      * Common case: P == 0
@@ -767,11 +1069,15 @@ cleanup:
 /*
  * Import a point from unsigned binary data (SEC1 2.3.4)
  */
-int mbedtls_ecp_point_read_binary( const mbedtls_ecp_group *grp, mbedtls_ecp_point *pt,
-                           const unsigned char *buf, size_t ilen )
+int mbedtls_ecp_point_read_binary( const mbedtls_ecp_group *grp,
+                                   mbedtls_ecp_point *pt,
+                                   const unsigned char *buf, size_t ilen )
 {
     int ret;
     size_t plen;
+    ECP_VALIDATE_RET( grp != NULL );
+    ECP_VALIDATE_RET( pt  != NULL );
+    ECP_VALIDATE_RET( buf != NULL );
 
     if( ilen < 1 )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
@@ -806,11 +1112,16 @@ cleanup:
  *          opaque point <1..2^8-1>;
  *      } ECPoint;
  */
-int mbedtls_ecp_tls_read_point( const mbedtls_ecp_group *grp, mbedtls_ecp_point *pt,
-                        const unsigned char **buf, size_t buf_len )
+int mbedtls_ecp_tls_read_point( const mbedtls_ecp_group *grp,
+                                mbedtls_ecp_point *pt,
+                                const unsigned char **buf, size_t buf_len )
 {
     unsigned char data_len;
     const unsigned char *buf_start;
+    ECP_VALIDATE_RET( grp != NULL );
+    ECP_VALIDATE_RET( pt  != NULL );
+    ECP_VALIDATE_RET( buf != NULL );
+    ECP_VALIDATE_RET( *buf != NULL );
 
     /*
      * We must have at least two bytes (1 for length, at least one for data)
@@ -828,7 +1139,7 @@ int mbedtls_ecp_tls_read_point( const mbedtls_ecp_group *grp, mbedtls_ecp_point 
     buf_start = *buf;
     *buf += data_len;
 
-    return mbedtls_ecp_point_read_binary( grp, pt, buf_start, data_len );
+    return( mbedtls_ecp_point_read_binary( grp, pt, buf_start, data_len ) );
 }
 
 /*
@@ -842,6 +1153,12 @@ int mbedtls_ecp_tls_write_point( const mbedtls_ecp_group *grp, const mbedtls_ecp
                          unsigned char *buf, size_t blen )
 {
     int ret;
+    ECP_VALIDATE_RET( grp  != NULL );
+    ECP_VALIDATE_RET( pt   != NULL );
+    ECP_VALIDATE_RET( olen != NULL );
+    ECP_VALIDATE_RET( buf  != NULL );
+    ECP_VALIDATE_RET( format == MBEDTLS_ECP_PF_UNCOMPRESSED ||
+                      format == MBEDTLS_ECP_PF_COMPRESSED );
 
     /*
      * buffer length must be at least one, for our length byte
@@ -865,10 +1182,33 @@ int mbedtls_ecp_tls_write_point( const mbedtls_ecp_group *grp, const mbedtls_ecp
 /*
  * Set a group from an ECParameters record (RFC 4492)
  */
-int mbedtls_ecp_tls_read_group( mbedtls_ecp_group *grp, const unsigned char **buf, size_t len )
+int mbedtls_ecp_tls_read_group( mbedtls_ecp_group *grp,
+                                const unsigned char **buf, size_t len )
+{
+    int ret;
+    mbedtls_ecp_group_id grp_id;
+    ECP_VALIDATE_RET( grp  != NULL );
+    ECP_VALIDATE_RET( buf  != NULL );
+    ECP_VALIDATE_RET( *buf != NULL );
+
+    if( ( ret = mbedtls_ecp_tls_read_group_id( &grp_id, buf, len ) ) != 0 )
+        return( ret );
+
+    return( mbedtls_ecp_group_load( grp, grp_id ) );
+}
+
+/*
+ * Read a group id from an ECParameters record (RFC 4492) and convert it to
+ * mbedtls_ecp_group_id.
+ */
+int mbedtls_ecp_tls_read_group_id( mbedtls_ecp_group_id *grp,
+                                   const unsigned char **buf, size_t len )
 {
     uint16_t tls_id;
     const mbedtls_ecp_curve_info *curve_info;
+    ECP_VALIDATE_RET( grp  != NULL );
+    ECP_VALIDATE_RET( buf  != NULL );
+    ECP_VALIDATE_RET( *buf != NULL );
 
     /*
      * We expect at least three bytes (see below)
@@ -892,7 +1232,9 @@ int mbedtls_ecp_tls_read_group( mbedtls_ecp_group *grp, const unsigned char **bu
     if( ( curve_info = mbedtls_ecp_curve_info_from_tls_id( tls_id ) ) == NULL )
         return( MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE );
 
-    return mbedtls_ecp_group_load( grp, curve_info->grp_id );
+    *grp = curve_info->grp_id;
+
+    return( 0 );
 }
 
 /*
@@ -902,6 +1244,9 @@ int mbedtls_ecp_tls_write_group( const mbedtls_ecp_group *grp, size_t *olen,
                          unsigned char *buf, size_t blen )
 {
     const mbedtls_ecp_curve_info *curve_info;
+    ECP_VALIDATE_RET( grp  != NULL );
+    ECP_VALIDATE_RET( buf  != NULL );
+    ECP_VALIDATE_RET( olen != NULL );
 
     if( ( curve_info = mbedtls_ecp_curve_info_from_grp_id( grp->id ) ) == NULL )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
@@ -980,25 +1325,29 @@ cleanup:
 #define INC_MUL_COUNT
 #endif
 
-#define MOD_MUL( N )    do { MBEDTLS_MPI_CHK( ecp_modp( &N, grp ) ); INC_MUL_COUNT } \
-                        while( 0 )
+#define MOD_MUL( N )                                                    \
+    do                                                                  \
+    {                                                                   \
+        MBEDTLS_MPI_CHK( ecp_modp( &(N), grp ) );                       \
+        INC_MUL_COUNT                                                   \
+    } while( 0 )
 
 /*
  * Reduce a mbedtls_mpi mod p in-place, to use after mbedtls_mpi_sub_mpi
  * N->s < 0 is a very fast test, which fails only if N is 0
  */
-#define MOD_SUB( N )                                \
-    while( N.s < 0 && mbedtls_mpi_cmp_int( &N, 0 ) != 0 )   \
-        MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( &N, &N, &grp->P ) )
+#define MOD_SUB( N )                                                    \
+    while( (N).s < 0 && mbedtls_mpi_cmp_int( &(N), 0 ) != 0 )           \
+        MBEDTLS_MPI_CHK( mbedtls_mpi_add_mpi( &(N), &(N), &grp->P ) )
 
 /*
  * Reduce a mbedtls_mpi mod p in-place, to use after mbedtls_mpi_add_mpi and mbedtls_mpi_mul_int.
  * We known P, N and the result are positive, so sub_abs is correct, and
  * a bit faster.
  */
-#define MOD_ADD( N )                                \
-    while( mbedtls_mpi_cmp_mpi( &N, &grp->P ) >= 0 )        \
-        MBEDTLS_MPI_CHK( mbedtls_mpi_sub_abs( &N, &N, &grp->P ) )
+#define MOD_ADD( N )                                                    \
+    while( mbedtls_mpi_cmp_mpi( &(N), &grp->P ) >= 0 )                  \
+        MBEDTLS_MPI_CHK( mbedtls_mpi_sub_abs( &(N), &(N), &grp->P ) )
 
 #if defined(ECP_SHORTWEIERSTRASS)
 /*
@@ -1022,11 +1371,10 @@ static int ecp_normalize_jac( const mbedtls_ecp_group *grp, mbedtls_ecp_point *p
         return( 0 );
 
 #if defined(MBEDTLS_ECP_NORMALIZE_JAC_ALT)
-    if ( mbedtls_internal_ecp_grp_capable( grp ) )
-    {
-        return mbedtls_internal_ecp_normalize_jac( grp, pt );
-    }
+    if( mbedtls_internal_ecp_grp_capable( grp ) )
+        return( mbedtls_internal_ecp_normalize_jac( grp, pt ) );
 #endif /* MBEDTLS_ECP_NORMALIZE_JAC_ALT */
+
     mbedtls_mpi_init( &Zi ); mbedtls_mpi_init( &ZZi );
 
     /*
@@ -1066,24 +1414,25 @@ cleanup:
  * Cost: 1N(t) := 1I + (6t - 3)M + 1S
  */
 static int ecp_normalize_jac_many( const mbedtls_ecp_group *grp,
-                                   mbedtls_ecp_point *T[], size_t t_len )
+                                   mbedtls_ecp_point *T[], size_t T_size )
 {
     int ret;
     size_t i;
     mbedtls_mpi *c, u, Zi, ZZi;
 
-    if( t_len < 2 )
+    if( T_size < 2 )
         return( ecp_normalize_jac( grp, *T ) );
 
 #if defined(MBEDTLS_ECP_NORMALIZE_JAC_MANY_ALT)
-    if ( mbedtls_internal_ecp_grp_capable( grp ) )
-    {
-        return mbedtls_internal_ecp_normalize_jac_many(grp, T, t_len);
-    }
+    if( mbedtls_internal_ecp_grp_capable( grp ) )
+        return( mbedtls_internal_ecp_normalize_jac_many( grp, T, T_size ) );
 #endif
 
-    if( ( c = mbedtls_calloc( t_len, sizeof( mbedtls_mpi ) ) ) == NULL )
+    if( ( c = mbedtls_calloc( T_size, sizeof( mbedtls_mpi ) ) ) == NULL )
         return( MBEDTLS_ERR_ECP_ALLOC_FAILED );
+
+    for( i = 0; i < T_size; i++ )
+        mbedtls_mpi_init( &c[i] );
 
     mbedtls_mpi_init( &u ); mbedtls_mpi_init( &Zi ); mbedtls_mpi_init( &ZZi );
 
@@ -1091,7 +1440,7 @@ static int ecp_normalize_jac_many( const mbedtls_ecp_group *grp,
      * c[i] = Z_0 * ... * Z_i
      */
     MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &c[0], &T[0]->Z ) );
-    for( i = 1; i < t_len; i++ )
+    for( i = 1; i < T_size; i++ )
     {
         MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &c[i], &c[i-1], &T[i]->Z ) );
         MOD_MUL( c[i] );
@@ -1100,9 +1449,9 @@ static int ecp_normalize_jac_many( const mbedtls_ecp_group *grp,
     /*
      * u = 1 / (Z_0 * ... * Z_n) mod P
      */
-    MBEDTLS_MPI_CHK( mbedtls_mpi_inv_mod( &u, &c[t_len-1], &grp->P ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_inv_mod( &u, &c[T_size-1], &grp->P ) );
 
-    for( i = t_len - 1; ; i-- )
+    for( i = T_size - 1; ; i-- )
     {
         /*
          * Zi = 1 / Z_i mod p
@@ -1142,7 +1491,7 @@ static int ecp_normalize_jac_many( const mbedtls_ecp_group *grp,
 cleanup:
 
     mbedtls_mpi_free( &u ); mbedtls_mpi_free( &Zi ); mbedtls_mpi_free( &ZZi );
-    for( i = 0; i < t_len; i++ )
+    for( i = 0; i < T_size; i++ )
         mbedtls_mpi_free( &c[i] );
     mbedtls_free( c );
 
@@ -1199,10 +1548,8 @@ static int ecp_double_jac( const mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
 #endif
 
 #if defined(MBEDTLS_ECP_DOUBLE_JAC_ALT)
-    if ( mbedtls_internal_ecp_grp_capable( grp ) )
-    {
-        return mbedtls_internal_ecp_double_jac( grp, R, P );
-    }
+    if( mbedtls_internal_ecp_grp_capable( grp ) )
+        return( mbedtls_internal_ecp_double_jac( grp, R, P ) );
 #endif /* MBEDTLS_ECP_DOUBLE_JAC_ALT */
 
     mbedtls_mpi_init( &M ); mbedtls_mpi_init( &S ); mbedtls_mpi_init( &T ); mbedtls_mpi_init( &U );
@@ -1297,10 +1644,8 @@ static int ecp_add_mixed( const mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
 #endif
 
 #if defined(MBEDTLS_ECP_ADD_MIXED_ALT)
-    if ( mbedtls_internal_ecp_grp_capable( grp ) )
-    {
-        return mbedtls_internal_ecp_add_mixed( grp, R, P, Q );
-    }
+    if( mbedtls_internal_ecp_grp_capable( grp ) )
+        return( mbedtls_internal_ecp_add_mixed( grp, R, P, Q ) );
 #endif /* MBEDTLS_ECP_ADD_MIXED_ALT */
 
     /*
@@ -1384,10 +1729,8 @@ static int ecp_randomize_jac( const mbedtls_ecp_group *grp, mbedtls_ecp_point *p
     int count = 0;
 
 #if defined(MBEDTLS_ECP_RANDOMIZE_JAC_ALT)
-    if ( mbedtls_internal_ecp_grp_capable( grp ) )
-    {
-        return mbedtls_internal_ecp_randomize_jac( grp, pt, f_rng, p_rng );
-    }
+    if( mbedtls_internal_ecp_grp_capable( grp ) )
+        return( mbedtls_internal_ecp_randomize_jac( grp, pt, f_rng, p_rng ) );
 #endif /* MBEDTLS_ECP_RANDOMIZE_JAC_ALT */
 
     p_size = ( grp->pbits + 7 ) / 8;
@@ -1396,18 +1739,17 @@ static int ecp_randomize_jac( const mbedtls_ecp_group *grp, mbedtls_ecp_point *p
     /* Generate l such that 1 < l < p */
     do
     {
-        MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &l, p_size, f_rng, p_rng ) );
-
-        while( mbedtls_mpi_cmp_mpi( &l, &grp->P ) >= 0 )
-            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &l, 1 ) );
-
-        if( count++ > 10 )
+        if( count++ > 30 )
         {
             ret = MBEDTLS_ERR_ECP_RANDOM_FAILED;
             goto cleanup;
         }
+
+        MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &l, p_size, f_rng, p_rng ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &l, ( p_size * 8 ) - grp->pbits ) );
     }
-    while( mbedtls_mpi_cmp_int( &l, 1 ) <= 0 );
+    while( ( mbedtls_mpi_cmp_int( &l, 1 ) <= 0 ) ||
+           ( mbedtls_mpi_cmp_mpi( &l, &grp->P ) >= 0 ) );
 
     /* Z = l * Z */
     MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &pt->Z,   &pt->Z,     &l  ) ); MOD_MUL( pt->Z );
@@ -1446,11 +1788,38 @@ cleanup:
  * modified version that provides resistance to SPA by avoiding zero
  * digits in the representation as in [3]. We modify the method further by
  * requiring that all K_i be odd, which has the small cost that our
- * representation uses one more K_i, due to carries.
+ * representation uses one more K_i, due to carries, but saves on the size of
+ * the precomputed table.
  *
- * Also, for the sake of compactness, only the seven low-order bits of x[i]
- * are used to represent K_i, and the msb of x[i] encodes the the sign (s_i in
- * the paper): it is set if and only if if s_i == -1;
+ * Summary of the comb method and its modifications:
+ *
+ * - The goal is to compute m*P for some w*d-bit integer m.
+ *
+ * - The basic comb method splits m into the w-bit integers
+ *   x[0] .. x[d-1] where x[i] consists of the bits in m whose
+ *   index has residue i modulo d, and computes m * P as
+ *   S[x[0]] + 2 * S[x[1]] + .. + 2^(d-1) S[x[d-1]], where
+ *   S[i_{w-1} .. i_0] := i_{w-1} 2^{(w-1)d} P + ... + i_1 2^d P + i_0 P.
+ *
+ * - If it happens that, say, x[i+1]=0 (=> S[x[i+1]]=0), one can replace the sum by
+ *    .. + 2^{i-1} S[x[i-1]] - 2^i S[x[i]] + 2^{i+1} S[x[i]] + 2^{i+2} S[x[i+2]] ..,
+ *   thereby successively converting it into a form where all summands
+ *   are nonzero, at the cost of negative summands. This is the basic idea of [3].
+ *
+ * - More generally, even if x[i+1] != 0, we can first transform the sum as
+ *   .. - 2^i S[x[i]] + 2^{i+1} ( S[x[i]] + S[x[i+1]] ) + 2^{i+2} S[x[i+2]] ..,
+ *   and then replace S[x[i]] + S[x[i+1]] = S[x[i] ^ x[i+1]] + 2 S[x[i] & x[i+1]].
+ *   Performing and iterating this procedure for those x[i] that are even
+ *   (keeping track of carry), we can transform the original sum into one of the form
+ *   S[x'[0]] +- 2 S[x'[1]] +- .. +- 2^{d-1} S[x'[d-1]] + 2^d S[x'[d]]
+ *   with all x'[i] odd. It is therefore only necessary to know S at odd indices,
+ *   which is why we are only computing half of it in the first place in
+ *   ecp_precompute_comb and accessing it with index abs(i) / 2 in ecp_select_comb.
+ *
+ * - For the sake of compactness, only the seven low-order bits of x[i]
+ *   are used to represent its absolute value (K_i in the paper), and the msb
+ *   of x[i] encodes the sign (s_i in the paper): it is set if and only if
+ *   if s_i == -1;
  *
  * Calling conventions:
  * - x is an array of size d + 1
@@ -1459,8 +1828,8 @@ cleanup:
  * - m is the MPI, expected to be odd and such that bitlength(m) <= w * d
  *   (the result will be incorrect if these assumptions are not satisfied)
  */
-static void ecp_comb_fixed( unsigned char x[], size_t d,
-                            unsigned char w, const mbedtls_mpi *m )
+static void ecp_comb_recode_core( unsigned char x[], size_t d,
+                                  unsigned char w, const mbedtls_mpi *m )
 {
     size_t i, j;
     unsigned char c, cc, adjust;
@@ -1490,70 +1859,178 @@ static void ecp_comb_fixed( unsigned char x[], size_t d,
 }
 
 /*
- * Precompute points for the comb method
+ * Precompute points for the adapted comb method
  *
- * If i = i_{w-1} ... i_1 is the binary representation of i, then
- * T[i] = i_{w-1} 2^{(w-1)d} P + ... + i_1 2^d P + P
+ * Assumption: T must be able to hold 2^{w - 1} elements.
  *
- * T must be able to hold 2^{w - 1} elements
+ * Operation: If i = i_{w-1} ... i_1 is the binary representation of i,
+ *            sets T[i] = i_{w-1} 2^{(w-1)d} P + ... + i_1 2^d P + P.
  *
  * Cost: d(w-1) D + (2^{w-1} - 1) A + 1 N(w-1) + 1 N(2^{w-1} - 1)
+ *
+ * Note: Even comb values (those where P would be omitted from the
+ *       sum defining T[i] above) are not needed in our adaption
+ *       the comb method. See ecp_comb_recode_core().
+ *
+ * This function currently works in four steps:
+ * (1) [dbl]      Computation of intermediate T[i] for 2-power values of i
+ * (2) [norm_dbl] Normalization of coordinates of these T[i]
+ * (3) [add]      Computation of all T[i]
+ * (4) [norm_add] Normalization of all T[i]
+ *
+ * Step 1 can be interrupted but not the others; together with the final
+ * coordinate normalization they are the largest steps done at once, depending
+ * on the window size. Here are operation counts for P-256:
+ *
+ * step     (2)     (3)     (4)
+ * w = 5    142     165     208
+ * w = 4    136      77     160
+ * w = 3    130      33     136
+ * w = 2    124      11     124
+ *
+ * So if ECC operations are blocking for too long even with a low max_ops
+ * value, it's useful to set MBEDTLS_ECP_WINDOW_SIZE to a lower value in order
+ * to minimize maximum blocking time.
  */
 static int ecp_precompute_comb( const mbedtls_ecp_group *grp,
                                 mbedtls_ecp_point T[], const mbedtls_ecp_point *P,
-                                unsigned char w, size_t d )
+                                unsigned char w, size_t d,
+                                mbedtls_ecp_restart_ctx *rs_ctx )
 {
     int ret;
-    unsigned char i, k;
-    size_t j;
+    unsigned char i;
+    size_t j = 0;
+    const unsigned char T_size = 1U << ( w - 1 );
     mbedtls_ecp_point *cur, *TT[COMB_MAX_PRE - 1];
 
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL )
+    {
+        if( rs_ctx->rsm->state == ecp_rsm_pre_dbl )
+            goto dbl;
+        if( rs_ctx->rsm->state == ecp_rsm_pre_norm_dbl )
+            goto norm_dbl;
+        if( rs_ctx->rsm->state == ecp_rsm_pre_add )
+            goto add;
+        if( rs_ctx->rsm->state == ecp_rsm_pre_norm_add )
+            goto norm_add;
+    }
+#else
+    (void) rs_ctx;
+#endif
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL )
+    {
+        rs_ctx->rsm->state = ecp_rsm_pre_dbl;
+
+        /* initial state for the loop */
+        rs_ctx->rsm->i = 0;
+    }
+
+dbl:
+#endif
     /*
      * Set T[0] = P and
      * T[2^{l-1}] = 2^{dl} P for l = 1 .. w-1 (this is not the final value)
      */
     MBEDTLS_MPI_CHK( mbedtls_ecp_copy( &T[0], P ) );
 
-    k = 0;
-    for( i = 1; i < ( 1U << ( w - 1 ) ); i <<= 1 )
-    {
-        cur = T + i;
-        MBEDTLS_MPI_CHK( mbedtls_ecp_copy( cur, T + ( i >> 1 ) ) );
-        for( j = 0; j < d; j++ )
-            MBEDTLS_MPI_CHK( ecp_double_jac( grp, cur, cur ) );
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL && rs_ctx->rsm->i != 0 )
+        j = rs_ctx->rsm->i;
+    else
+#endif
+        j = 0;
 
-        TT[k++] = cur;
+    for( ; j < d * ( w - 1 ); j++ )
+    {
+        MBEDTLS_ECP_BUDGET( MBEDTLS_ECP_OPS_DBL );
+
+        i = 1U << ( j / d );
+        cur = T + i;
+
+        if( j % d == 0 )
+            MBEDTLS_MPI_CHK( mbedtls_ecp_copy( cur, T + ( i >> 1 ) ) );
+
+        MBEDTLS_MPI_CHK( ecp_double_jac( grp, cur, cur ) );
     }
 
-    MBEDTLS_MPI_CHK( ecp_normalize_jac_many( grp, TT, k ) );
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL )
+        rs_ctx->rsm->state = ecp_rsm_pre_norm_dbl;
 
+norm_dbl:
+#endif
+    /*
+     * Normalize current elements in T. As T has holes,
+     * use an auxiliary array of pointers to elements in T.
+     */
+    j = 0;
+    for( i = 1; i < T_size; i <<= 1 )
+        TT[j++] = T + i;
+
+    MBEDTLS_ECP_BUDGET( MBEDTLS_ECP_OPS_INV + 6 * j - 2 );
+
+    MBEDTLS_MPI_CHK( ecp_normalize_jac_many( grp, TT, j ) );
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL )
+        rs_ctx->rsm->state = ecp_rsm_pre_add;
+
+add:
+#endif
     /*
      * Compute the remaining ones using the minimal number of additions
      * Be careful to update T[2^l] only after using it!
      */
-    k = 0;
-    for( i = 1; i < ( 1U << ( w - 1 ) ); i <<= 1 )
+    MBEDTLS_ECP_BUDGET( ( T_size - 1 ) * MBEDTLS_ECP_OPS_ADD );
+
+    for( i = 1; i < T_size; i <<= 1 )
     {
         j = i;
         while( j-- )
-        {
             MBEDTLS_MPI_CHK( ecp_add_mixed( grp, &T[i + j], &T[j], &T[i] ) );
-            TT[k++] = &T[i + j];
-        }
     }
 
-    MBEDTLS_MPI_CHK( ecp_normalize_jac_many( grp, TT, k ) );
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL )
+        rs_ctx->rsm->state = ecp_rsm_pre_norm_add;
+
+norm_add:
+#endif
+    /*
+     * Normalize final elements in T. Even though there are no holes now, we
+     * still need the auxiliary array for homogeneity with the previous
+     * call. Also, skip T[0] which is already normalised, being a copy of P.
+     */
+    for( j = 0; j + 1 < T_size; j++ )
+        TT[j] = T + j + 1;
+
+    MBEDTLS_ECP_BUDGET( MBEDTLS_ECP_OPS_INV + 6 * j - 2 );
+
+    MBEDTLS_MPI_CHK( ecp_normalize_jac_many( grp, TT, j ) );
 
 cleanup:
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL &&
+        ret == MBEDTLS_ERR_ECP_IN_PROGRESS )
+    {
+        if( rs_ctx->rsm->state == ecp_rsm_pre_dbl )
+            rs_ctx->rsm->i = j;
+    }
+#endif
 
     return( ret );
 }
 
 /*
  * Select precomputed point: R = sign(i) * T[ abs(i) / 2 ]
+ *
+ * See ecp_comb_recode_core() for background
  */
 static int ecp_select_comb( const mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
-                            const mbedtls_ecp_point T[], unsigned char t_len,
+                            const mbedtls_ecp_point T[], unsigned char T_size,
                             unsigned char i )
 {
     int ret;
@@ -1563,7 +2040,7 @@ static int ecp_select_comb( const mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
     ii =  ( i & 0x7Fu ) >> 1;
 
     /* Read the whole table to thwart cache-based timing attacks */
-    for( j = 0; j < t_len; j++ )
+    for( j = 0; j < T_size; j++ )
     {
         MBEDTLS_MPI_CHK( mbedtls_mpi_safe_cond_assign( &R->X, &T[j].X, j == ii ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_safe_cond_assign( &R->Y, &T[j].Y, j == ii ) );
@@ -1583,10 +2060,11 @@ cleanup:
  * Cost: d A + d D + 1 R
  */
 static int ecp_mul_comb_core( const mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
-                              const mbedtls_ecp_point T[], unsigned char t_len,
+                              const mbedtls_ecp_point T[], unsigned char T_size,
                               const unsigned char x[], size_t d,
                               int (*f_rng)(void *, unsigned char *, size_t),
-                              void *p_rng )
+                              void *p_rng,
+                              mbedtls_ecp_restart_ctx *rs_ctx )
 {
     int ret;
     mbedtls_ecp_point Txi;
@@ -1594,19 +2072,44 @@ static int ecp_mul_comb_core( const mbedtls_ecp_group *grp, mbedtls_ecp_point *R
 
     mbedtls_ecp_point_init( &Txi );
 
-    /* Start with a non-zero point and randomize its coordinates */
-    i = d;
-    MBEDTLS_MPI_CHK( ecp_select_comb( grp, R, T, t_len, x[i] ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &R->Z, 1 ) );
-#if defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
-    if( f_rng != 0 )
+#if !defined(MBEDTLS_ECP_RESTARTABLE)
+    (void) rs_ctx;
 #endif
-        MBEDTLS_MPI_CHK( ecp_randomize_jac( grp, R, f_rng, p_rng ) );
 
-    while( i-- != 0 )
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL &&
+        rs_ctx->rsm->state != ecp_rsm_comb_core )
     {
+        rs_ctx->rsm->i = 0;
+        rs_ctx->rsm->state = ecp_rsm_comb_core;
+    }
+
+    /* new 'if' instead of nested for the sake of the 'else' branch */
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL && rs_ctx->rsm->i != 0 )
+    {
+        /* restore current index (R already pointing to rs_ctx->rsm->R) */
+        i = rs_ctx->rsm->i;
+    }
+    else
+#endif
+    {
+        /* Start with a non-zero point and randomize its coordinates */
+        i = d;
+        MBEDTLS_MPI_CHK( ecp_select_comb( grp, R, T, T_size, x[i] ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &R->Z, 1 ) );
+#if defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
+        if( f_rng != 0 )
+#endif
+            MBEDTLS_MPI_CHK( ecp_randomize_jac( grp, R, f_rng, p_rng ) );
+    }
+
+    while( i != 0 )
+    {
+        MBEDTLS_ECP_BUDGET( MBEDTLS_ECP_OPS_DBL + MBEDTLS_ECP_OPS_ADD );
+        --i;
+
         MBEDTLS_MPI_CHK( ecp_double_jac( grp, R, R ) );
-        MBEDTLS_MPI_CHK( ecp_select_comb( grp, &Txi, T, t_len, x[i] ) );
+        MBEDTLS_MPI_CHK( ecp_select_comb( grp, &Txi, T, T_size, x[i] ) );
         MBEDTLS_MPI_CHK( ecp_add_mixed( grp, R, R, &Txi ) );
     }
 
@@ -1614,110 +2117,111 @@ cleanup:
 
     mbedtls_ecp_point_free( &Txi );
 
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL &&
+        ret == MBEDTLS_ERR_ECP_IN_PROGRESS )
+    {
+        rs_ctx->rsm->i = i;
+        /* no need to save R, already pointing to rs_ctx->rsm->R */
+    }
+#endif
+
     return( ret );
 }
 
 /*
- * Multiplication using the comb method,
- * for curves in short Weierstrass form
+ * Recode the scalar to get constant-time comb multiplication
+ *
+ * As the actual scalar recoding needs an odd scalar as a starting point,
+ * this wrapper ensures that by replacing m by N - m if necessary, and
+ * informs the caller that the result of multiplication will be negated.
+ *
+ * This works because we only support large prime order for Short Weierstrass
+ * curves, so N is always odd hence either m or N - m is.
+ *
+ * See ecp_comb_recode_core() for background.
  */
-static int ecp_mul_comb( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
-                         const mbedtls_mpi *m, const mbedtls_ecp_point *P,
-                         int (*f_rng)(void *, unsigned char *, size_t),
-                         void *p_rng )
+static int ecp_comb_recode_scalar( const mbedtls_ecp_group *grp,
+                                   const mbedtls_mpi *m,
+                                   unsigned char k[COMB_MAX_D + 1],
+                                   size_t d,
+                                   unsigned char w,
+                                   unsigned char *parity_trick )
 {
     int ret;
-    unsigned char w, m_is_odd, p_eq_g, pre_len, i;
-    size_t d;
-    unsigned char k[COMB_MAX_D + 1];
-    mbedtls_ecp_point *T;
     mbedtls_mpi M, mm;
 
     mbedtls_mpi_init( &M );
     mbedtls_mpi_init( &mm );
 
-    /* we need N to be odd to trnaform m in an odd number, check now */
+    /* N is always odd (see above), just make extra sure */
     if( mbedtls_mpi_get_bit( &grp->N, 0 ) != 1 )
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
-    /*
-     * Minimize the number of multiplications, that is minimize
-     * 10 * d * w + 18 * 2^(w-1) + 11 * d + 7 * w, with d = ceil( nbits / w )
-     * (see costs of the various parts, with 1S = 1M)
-     */
-    w = grp->nbits >= 384 ? 5 : 4;
+    /* do we need the parity trick? */
+    *parity_trick = ( mbedtls_mpi_get_bit( m, 0 ) == 0 );
 
-    /*
-     * If P == G, pre-compute a bit more, since this may be re-used later.
-     * Just adding one avoids upping the cost of the first mul too much,
-     * and the memory cost too.
-     */
-#if MBEDTLS_ECP_FIXED_POINT_OPTIM == 1
-    p_eq_g = ( mbedtls_mpi_cmp_mpi( &P->Y, &grp->G.Y ) == 0 &&
-               mbedtls_mpi_cmp_mpi( &P->X, &grp->G.X ) == 0 );
-    if( p_eq_g )
-        w++;
-#else
-    p_eq_g = 0;
-#endif
-
-    /*
-     * Make sure w is within bounds.
-     * (The last test is useful only for very small curves in the test suite.)
-     */
-    if( w > MBEDTLS_ECP_WINDOW_SIZE )
-        w = MBEDTLS_ECP_WINDOW_SIZE;
-    if( w >= grp->nbits )
-        w = 2;
-
-    /* Other sizes that depend on w */
-    pre_len = 1U << ( w - 1 );
-    d = ( grp->nbits + w - 1 ) / w;
-
-    /*
-     * Prepare precomputed points: if P == G we want to
-     * use grp->T if already initialized, or initialize it.
-     */
-    T = p_eq_g ? grp->T : NULL;
-
-    if( T == NULL )
-    {
-        T = mbedtls_calloc( pre_len, sizeof( mbedtls_ecp_point ) );
-        if( T == NULL )
-        {
-            ret = MBEDTLS_ERR_ECP_ALLOC_FAILED;
-            goto cleanup;
-        }
-
-        MBEDTLS_MPI_CHK( ecp_precompute_comb( grp, T, P, w, d ) );
-
-        if( p_eq_g )
-        {
-            grp->T = T;
-            grp->T_size = pre_len;
-        }
-    }
-
-    /*
-     * Make sure M is odd (M = m or M = N - m, since N is odd)
-     * using the fact that m * P = - (N - m) * P
-     */
-    m_is_odd = ( mbedtls_mpi_get_bit( m, 0 ) == 1 );
+    /* execute parity fix in constant time */
     MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &M, m ) );
     MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &mm, &grp->N, m ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_safe_cond_assign( &M, &mm, ! m_is_odd ) );
+    MBEDTLS_MPI_CHK( mbedtls_mpi_safe_cond_assign( &M, &mm, *parity_trick ) );
 
-    /*
-     * Go for comb multiplication, R = M * P
-     */
-    ecp_comb_fixed( k, d, w, &M );
-    MBEDTLS_MPI_CHK( ecp_mul_comb_core( grp, R, T, pre_len, k, d, f_rng, p_rng ) );
+    /* actual scalar recoding */
+    ecp_comb_recode_core( k, d, w, &M );
 
-    /*
-     * Now get m * P from M * P and normalize it
-     */
-    MBEDTLS_MPI_CHK( ecp_safe_invert_jac( grp, R, ! m_is_odd ) );
+cleanup:
+    mbedtls_mpi_free( &mm );
+    mbedtls_mpi_free( &M );
 
+    return( ret );
+}
+
+/*
+ * Perform comb multiplication (for short Weierstrass curves)
+ * once the auxiliary table has been pre-computed.
+ *
+ * Scalar recoding may use a parity trick that makes us compute -m * P,
+ * if that is the case we'll need to recover m * P at the end.
+ */
+static int ecp_mul_comb_after_precomp( const mbedtls_ecp_group *grp,
+                                mbedtls_ecp_point *R,
+                                const mbedtls_mpi *m,
+                                const mbedtls_ecp_point *T,
+                                unsigned char T_size,
+                                unsigned char w,
+                                size_t d,
+                                int (*f_rng)(void *, unsigned char *, size_t),
+                                void *p_rng,
+                                mbedtls_ecp_restart_ctx *rs_ctx )
+{
+    int ret;
+    unsigned char parity_trick;
+    unsigned char k[COMB_MAX_D + 1];
+    mbedtls_ecp_point *RR = R;
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL )
+    {
+        RR = &rs_ctx->rsm->R;
+
+        if( rs_ctx->rsm->state == ecp_rsm_final_norm )
+            goto final_norm;
+    }
+#endif
+
+    MBEDTLS_MPI_CHK( ecp_comb_recode_scalar( grp, m, k, d, w,
+                                            &parity_trick ) );
+    MBEDTLS_MPI_CHK( ecp_mul_comb_core( grp, RR, T, T_size, k, d,
+                                        f_rng, p_rng, rs_ctx ) );
+    MBEDTLS_MPI_CHK( ecp_safe_invert_jac( grp, RR, parity_trick ) );
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL )
+        rs_ctx->rsm->state = ecp_rsm_final_norm;
+
+final_norm:
+    MBEDTLS_ECP_BUDGET( MBEDTLS_ECP_OPS_INV );
+#endif
     /*
      * Knowledge of the jacobian coordinates may leak the last few bits of the
      * scalar [1], and since our MPI implementation isn't constant-flow,
@@ -1732,28 +2236,221 @@ static int ecp_mul_comb( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
 #if defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
     if( f_rng != 0 )
 #endif
-        MBEDTLS_MPI_CHK( ecp_randomize_jac( grp, R, f_rng, p_rng ) );
-    MBEDTLS_MPI_CHK( ecp_normalize_jac( grp, R ) );
+        MBEDTLS_MPI_CHK( ecp_randomize_jac( grp, RR, f_rng, p_rng ) );
+
+    MBEDTLS_MPI_CHK( ecp_normalize_jac( grp, RR ) );
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL )
+        MBEDTLS_MPI_CHK( mbedtls_ecp_copy( R, RR ) );
+#endif
+
+cleanup:
+    return( ret );
+}
+
+/*
+ * Pick window size based on curve size and whether we optimize for base point
+ */
+static unsigned char ecp_pick_window_size( const mbedtls_ecp_group *grp,
+                                           unsigned char p_eq_g )
+{
+    unsigned char w;
+
+    /*
+     * Minimize the number of multiplications, that is minimize
+     * 10 * d * w + 18 * 2^(w-1) + 11 * d + 7 * w, with d = ceil( nbits / w )
+     * (see costs of the various parts, with 1S = 1M)
+     */
+    w = grp->nbits >= 384 ? 5 : 4;
+
+    /*
+     * If P == G, pre-compute a bit more, since this may be re-used later.
+     * Just adding one avoids upping the cost of the first mul too much,
+     * and the memory cost too.
+     */
+    if( p_eq_g )
+        w++;
+
+    /*
+     * Make sure w is within bounds.
+     * (The last test is useful only for very small curves in the test suite.)
+     */
+    if( w > MBEDTLS_ECP_WINDOW_SIZE )
+        w = MBEDTLS_ECP_WINDOW_SIZE;
+    if( w >= grp->nbits )
+        w = 2;
+
+    return( w );
+}
+
+/*
+ * Multiplication using the comb method - for curves in short Weierstrass form
+ *
+ * This function is mainly responsible for administrative work:
+ * - managing the restart context if enabled
+ * - managing the table of precomputed points (passed between the below two
+ *   functions): allocation, computation, ownership tranfer, freeing.
+ *
+ * It delegates the actual arithmetic work to:
+ *      ecp_precompute_comb() and ecp_mul_comb_with_precomp()
+ *
+ * See comments on ecp_comb_recode_core() regarding the computation strategy.
+ */
+static int ecp_mul_comb( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
+                         const mbedtls_mpi *m, const mbedtls_ecp_point *P,
+                         int (*f_rng)(void *, unsigned char *, size_t),
+                         void *p_rng,
+                         mbedtls_ecp_restart_ctx *rs_ctx )
+{
+    int ret;
+    unsigned char w, p_eq_g, i;
+    size_t d;
+    unsigned char T_size = 0, T_ok = 0;
+    mbedtls_ecp_point *T = NULL;
+#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
+    ecp_drbg_context drbg_ctx;
+
+    ecp_drbg_init( &drbg_ctx );
+#endif
+
+    ECP_RS_ENTER( rsm );
+
+#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
+    if( f_rng == NULL )
+    {
+        /* Adjust pointers */
+        f_rng = &ecp_drbg_random;
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+        if( rs_ctx != NULL && rs_ctx->rsm != NULL )
+            p_rng = &rs_ctx->rsm->drbg_ctx;
+        else
+#endif
+            p_rng = &drbg_ctx;
+
+        /* Initialize internal DRBG if necessary */
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+        if( rs_ctx == NULL || rs_ctx->rsm == NULL ||
+            rs_ctx->rsm->drbg_seeded == 0 )
+#endif
+        {
+            const size_t m_len = ( grp->nbits + 7 ) / 8;
+            MBEDTLS_MPI_CHK( ecp_drbg_seed( p_rng, m, m_len ) );
+        }
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+        if( rs_ctx != NULL && rs_ctx->rsm != NULL )
+            rs_ctx->rsm->drbg_seeded = 1;
+#endif
+    }
+#endif /* !MBEDTLS_ECP_NO_INTERNAL_RNG */
+
+    /* Is P the base point ? */
+#if MBEDTLS_ECP_FIXED_POINT_OPTIM == 1
+    p_eq_g = ( mbedtls_mpi_cmp_mpi( &P->Y, &grp->G.Y ) == 0 &&
+               mbedtls_mpi_cmp_mpi( &P->X, &grp->G.X ) == 0 );
+#else
+    p_eq_g = 0;
+#endif
+
+    /* Pick window size and deduce related sizes */
+    w = ecp_pick_window_size( grp, p_eq_g );
+    T_size = 1U << ( w - 1 );
+    d = ( grp->nbits + w - 1 ) / w;
+
+    /* Pre-computed table: do we have it already for the base point? */
+    if( p_eq_g && grp->T != NULL )
+    {
+        /* second pointer to the same table, will be deleted on exit */
+        T = grp->T;
+        T_ok = 1;
+    }
+    else
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    /* Pre-computed table: do we have one in progress? complete? */
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL && rs_ctx->rsm->T != NULL )
+    {
+        /* transfer ownership of T from rsm to local function */
+        T = rs_ctx->rsm->T;
+        rs_ctx->rsm->T = NULL;
+        rs_ctx->rsm->T_size = 0;
+
+        /* This effectively jumps to the call to mul_comb_after_precomp() */
+        T_ok = rs_ctx->rsm->state >= ecp_rsm_comb_core;
+    }
+    else
+#endif
+    /* Allocate table if we didn't have any */
+    {
+        T = mbedtls_calloc( T_size, sizeof( mbedtls_ecp_point ) );
+        if( T == NULL )
+        {
+            ret = MBEDTLS_ERR_ECP_ALLOC_FAILED;
+            goto cleanup;
+        }
+
+        for( i = 0; i < T_size; i++ )
+            mbedtls_ecp_point_init( &T[i] );
+
+        T_ok = 0;
+    }
+
+    /* Compute table (or finish computing it) if not done already */
+    if( !T_ok )
+    {
+        MBEDTLS_MPI_CHK( ecp_precompute_comb( grp, T, P, w, d, rs_ctx ) );
+
+        if( p_eq_g )
+        {
+            /* almost transfer ownership of T to the group, but keep a copy of
+             * the pointer to use for calling the next function more easily */
+            grp->T = T;
+            grp->T_size = T_size;
+        }
+    }
+
+    /* Actual comb multiplication using precomputed points */
+    MBEDTLS_MPI_CHK( ecp_mul_comb_after_precomp( grp, R, m,
+                                                 T, T_size, w, d,
+                                                 f_rng, p_rng, rs_ctx ) );
 
 cleanup:
 
-    /* There are two cases where T is not stored in grp:
-     * - P != G
-     * - An intermediate operation failed before setting grp->T
-     * In either case, T must be freed.
-     */
-    if( T != NULL && T != grp->T )
+#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
+    ecp_drbg_free( &drbg_ctx );
+#endif
+
+    /* does T belong to the group? */
+    if( T == grp->T )
+        T = NULL;
+
+    /* does T belong to the restart context? */
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->rsm != NULL && ret == MBEDTLS_ERR_ECP_IN_PROGRESS && T != NULL )
     {
-        for( i = 0; i < pre_len; i++ )
+        /* transfer ownership of T from local function to rsm */
+        rs_ctx->rsm->T_size = T_size;
+        rs_ctx->rsm->T = T;
+        T = NULL;
+    }
+#endif
+
+    /* did T belong to us? then let's destroy it! */
+    if( T != NULL )
+    {
+        for( i = 0; i < T_size; i++ )
             mbedtls_ecp_point_free( &T[i] );
         mbedtls_free( T );
     }
 
-    mbedtls_mpi_free( &M );
-    mbedtls_mpi_free( &mm );
-
+    /* don't free R while in progress in case R == P */
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( ret != MBEDTLS_ERR_ECP_IN_PROGRESS )
+#endif
+    /* prevent caller from using invalid value */
     if( ret != 0 )
         mbedtls_ecp_point_free( R );
+
+    ECP_RS_LEAVE( rsm );
 
     return( ret );
 }
@@ -1778,10 +2475,8 @@ static int ecp_normalize_mxz( const mbedtls_ecp_group *grp, mbedtls_ecp_point *P
     int ret;
 
 #if defined(MBEDTLS_ECP_NORMALIZE_MXZ_ALT)
-    if ( mbedtls_internal_ecp_grp_capable( grp ) )
-    {
-        return mbedtls_internal_ecp_normalize_mxz( grp, P );
-    }
+    if( mbedtls_internal_ecp_grp_capable( grp ) )
+        return( mbedtls_internal_ecp_normalize_mxz( grp, P ) );
 #endif /* MBEDTLS_ECP_NORMALIZE_MXZ_ALT */
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_inv_mod( &P->Z, &P->Z, &grp->P ) );
@@ -1809,10 +2504,8 @@ static int ecp_randomize_mxz( const mbedtls_ecp_group *grp, mbedtls_ecp_point *P
     int count = 0;
 
 #if defined(MBEDTLS_ECP_RANDOMIZE_MXZ_ALT)
-    if ( mbedtls_internal_ecp_grp_capable( grp ) )
-    {
-        return mbedtls_internal_ecp_randomize_mxz( grp, P, f_rng, p_rng );
-    }
+    if( mbedtls_internal_ecp_grp_capable( grp ) )
+        return( mbedtls_internal_ecp_randomize_mxz( grp, P, f_rng, p_rng ) );
 #endif /* MBEDTLS_ECP_RANDOMIZE_MXZ_ALT */
 
     p_size = ( grp->pbits + 7 ) / 8;
@@ -1821,18 +2514,17 @@ static int ecp_randomize_mxz( const mbedtls_ecp_group *grp, mbedtls_ecp_point *P
     /* Generate l such that 1 < l < p */
     do
     {
-        MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &l, p_size, f_rng, p_rng ) );
-
-        while( mbedtls_mpi_cmp_mpi( &l, &grp->P ) >= 0 )
-            MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &l, 1 ) );
-
-        if( count++ > 10 )
+        if( count++ > 30 )
         {
             ret = MBEDTLS_ERR_ECP_RANDOM_FAILED;
             goto cleanup;
         }
+
+        MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( &l, p_size, f_rng, p_rng ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &l, ( p_size * 8 ) - grp->pbits ) );
     }
-    while( mbedtls_mpi_cmp_int( &l, 1 ) <= 0 );
+    while( ( mbedtls_mpi_cmp_int( &l, 1 ) <= 0 ) ||
+           ( mbedtls_mpi_cmp_mpi( &l, &grp->P ) >= 0 ) );
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &P->X, &P->X, &l ) ); MOD_MUL( P->X );
     MBEDTLS_MPI_CHK( mbedtls_mpi_mul_mpi( &P->Z, &P->Z, &l ) ); MOD_MUL( P->Z );
@@ -1867,10 +2559,8 @@ static int ecp_double_add_mxz( const mbedtls_ecp_group *grp,
     mbedtls_mpi A, AA, B, BB, E, C, D, DA, CB;
 
 #if defined(MBEDTLS_ECP_DOUBLE_ADD_MXZ_ALT)
-    if ( mbedtls_internal_ecp_grp_capable( grp ) )
-    {
-        return mbedtls_internal_ecp_double_add_mxz( grp, R, S, P, Q, d );
-    }
+    if( mbedtls_internal_ecp_grp_capable( grp ) )
+        return( mbedtls_internal_ecp_double_add_mxz( grp, R, S, P, Q, d ) );
 #endif /* MBEDTLS_ECP_DOUBLE_ADD_MXZ_ALT */
 
     mbedtls_mpi_init( &A ); mbedtls_mpi_init( &AA ); mbedtls_mpi_init( &B );
@@ -1918,8 +2608,22 @@ static int ecp_mul_mxz( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
     unsigned char b;
     mbedtls_ecp_point RP;
     mbedtls_mpi PX;
+#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
+    ecp_drbg_context drbg_ctx;
 
+    ecp_drbg_init( &drbg_ctx );
+#endif
     mbedtls_ecp_point_init( &RP ); mbedtls_mpi_init( &PX );
+
+#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
+    if( f_rng == NULL )
+    {
+        const size_t m_len = ( grp->nbits + 7 ) / 8;
+        MBEDTLS_MPI_CHK( ecp_drbg_seed( &drbg_ctx, m, m_len ) );
+        f_rng = &ecp_drbg_random;
+        p_rng = &drbg_ctx;
+    }
+#endif /* !MBEDTLS_ECP_NO_INTERNAL_RNG */
 
     /* Save PX and read from P before writing to R, in case P == R */
     MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &PX, &P->X ) );
@@ -1977,6 +2681,10 @@ static int ecp_mul_mxz( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
     MBEDTLS_MPI_CHK( ecp_normalize_mxz( grp, R ) );
 
 cleanup:
+#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
+    ecp_drbg_free( &drbg_ctx );
+#endif
+
     mbedtls_ecp_point_free( &RP ); mbedtls_mpi_free( &PX );
 
     return( ret );
@@ -1985,71 +2693,83 @@ cleanup:
 #endif /* ECP_MONTGOMERY */
 
 /*
+ * Restartable multiplication R = m * P
+ */
+int mbedtls_ecp_mul_restartable( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
+             const mbedtls_mpi *m, const mbedtls_ecp_point *P,
+             int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
+             mbedtls_ecp_restart_ctx *rs_ctx )
+{
+    int ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+#if defined(MBEDTLS_ECP_INTERNAL_ALT)
+    char is_grp_capable = 0;
+#endif
+    ECP_VALIDATE_RET( grp != NULL );
+    ECP_VALIDATE_RET( R   != NULL );
+    ECP_VALIDATE_RET( m   != NULL );
+    ECP_VALIDATE_RET( P   != NULL );
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    /* reset ops count for this call if top-level */
+    if( rs_ctx != NULL && rs_ctx->depth++ == 0 )
+        rs_ctx->ops_done = 0;
+#endif
+
+#if defined(MBEDTLS_ECP_INTERNAL_ALT)
+    if( ( is_grp_capable = mbedtls_internal_ecp_grp_capable( grp ) ) )
+        MBEDTLS_MPI_CHK( mbedtls_internal_ecp_init( grp ) );
+#endif /* MBEDTLS_ECP_INTERNAL_ALT */
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    /* skip argument check when restarting */
+    if( rs_ctx == NULL || rs_ctx->rsm == NULL )
+#endif
+    {
+        /* check_privkey is free */
+        MBEDTLS_ECP_BUDGET( MBEDTLS_ECP_OPS_CHK );
+
+        /* Common sanity checks */
+        MBEDTLS_MPI_CHK( mbedtls_ecp_check_privkey( grp, m ) );
+        MBEDTLS_MPI_CHK( mbedtls_ecp_check_pubkey( grp, P ) );
+    }
+
+    ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
+#if defined(ECP_MONTGOMERY)
+    if( ecp_get_type( grp ) == ECP_TYPE_MONTGOMERY )
+        MBEDTLS_MPI_CHK( ecp_mul_mxz( grp, R, m, P, f_rng, p_rng ) );
+#endif
+#if defined(ECP_SHORTWEIERSTRASS)
+    if( ecp_get_type( grp ) == ECP_TYPE_SHORT_WEIERSTRASS )
+        MBEDTLS_MPI_CHK( ecp_mul_comb( grp, R, m, P, f_rng, p_rng, rs_ctx ) );
+#endif
+
+cleanup:
+
+#if defined(MBEDTLS_ECP_INTERNAL_ALT)
+    if( is_grp_capable )
+        mbedtls_internal_ecp_free( grp );
+#endif /* MBEDTLS_ECP_INTERNAL_ALT */
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL )
+        rs_ctx->depth--;
+#endif
+
+    return( ret );
+}
+
+/*
  * Multiplication R = m * P
  */
 int mbedtls_ecp_mul( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
              const mbedtls_mpi *m, const mbedtls_ecp_point *P,
              int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
-    int ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
-#if defined(MBEDTLS_ECP_INTERNAL_ALT)
-    char is_grp_capable = 0;
-#endif
-#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
-    ecp_drbg_context drbg_ctx;
-
-    ecp_drbg_init( &drbg_ctx );
-#endif /* !MBEDTLS_ECP_NO_INTERNAL_RNG */
-
-    /* Common sanity checks */
-    if( mbedtls_mpi_cmp_int( &P->Z, 1 ) != 0 )
-        return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
-
-    if( ( ret = mbedtls_ecp_check_privkey( grp, m ) ) != 0 ||
-        ( ret = mbedtls_ecp_check_pubkey( grp, P ) ) != 0 )
-        return( ret );
-
-#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
-    if( f_rng == NULL )
-    {
-        const size_t m_len = ( grp->nbits + 7 ) / 8;
-        MBEDTLS_MPI_CHK( ecp_drbg_seed( &drbg_ctx, m, m_len ) );
-        f_rng = &ecp_drbg_random;
-        p_rng = &drbg_ctx;
-    }
-#endif /* !MBEDTLS_ECP_NO_INTERNAL_RNG */
-
-#if defined(MBEDTLS_ECP_INTERNAL_ALT)
-    if ( is_grp_capable = mbedtls_internal_ecp_grp_capable( grp )  )
-    {
-        MBEDTLS_MPI_CHK( mbedtls_internal_ecp_init( grp ) );
-    }
-#endif /* MBEDTLS_ECP_INTERNAL_ALT */
-
-#if defined(ECP_MONTGOMERY)
-    if( ecp_get_type( grp ) == ECP_TYPE_MONTGOMERY )
-        ret = ecp_mul_mxz( grp, R, m, P, f_rng, p_rng );
-#endif
-#if defined(ECP_SHORTWEIERSTRASS)
-    if( ecp_get_type( grp ) == ECP_TYPE_SHORT_WEIERSTRASS )
-        ret = ecp_mul_comb( grp, R, m, P, f_rng, p_rng );
-#endif
-
-#if defined(MBEDTLS_ECP_INTERNAL_ALT) || !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
-cleanup:
-#endif
-#if defined(MBEDTLS_ECP_INTERNAL_ALT)
-    if ( is_grp_capable )
-    {
-        mbedtls_internal_ecp_free( grp );
-    }
-#endif /* MBEDTLS_ECP_INTERNAL_ALT */
-
-#if !defined(MBEDTLS_ECP_NO_INTERNAL_RNG)
-    ecp_drbg_free( &drbg_ctx );
-#endif
-
-    return( ret );
+    ECP_VALIDATE_RET( grp != NULL );
+    ECP_VALIDATE_RET( R   != NULL );
+    ECP_VALIDATE_RET( m   != NULL );
+    ECP_VALIDATE_RET( P   != NULL );
+    return( mbedtls_ecp_mul_restartable( grp, R, m, P, f_rng, p_rng, NULL ) );
 }
 
 #if defined(ECP_SHORTWEIERSTRASS)
@@ -2109,7 +2829,8 @@ cleanup:
 static int mbedtls_ecp_mul_shortcuts( mbedtls_ecp_group *grp,
                                       mbedtls_ecp_point *R,
                                       const mbedtls_mpi *m,
-                                      const mbedtls_ecp_point *P )
+                                      const mbedtls_ecp_point *P,
+                                      mbedtls_ecp_restart_ctx *rs_ctx )
 {
     int ret;
 
@@ -2125,10 +2846,108 @@ static int mbedtls_ecp_mul_shortcuts( mbedtls_ecp_group *grp,
     }
     else
     {
-        MBEDTLS_MPI_CHK( mbedtls_ecp_mul( grp, R, m, P, NULL, NULL ) );
+        MBEDTLS_MPI_CHK( mbedtls_ecp_mul_restartable( grp, R, m, P,
+                                                      NULL, NULL, rs_ctx ) );
     }
 
 cleanup:
+    return( ret );
+}
+
+/*
+ * Restartable linear combination
+ * NOT constant-time
+ */
+int mbedtls_ecp_muladd_restartable(
+             mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
+             const mbedtls_mpi *m, const mbedtls_ecp_point *P,
+             const mbedtls_mpi *n, const mbedtls_ecp_point *Q,
+             mbedtls_ecp_restart_ctx *rs_ctx )
+{
+    int ret;
+    mbedtls_ecp_point mP;
+    mbedtls_ecp_point *pmP = &mP;
+    mbedtls_ecp_point *pR = R;
+#if defined(MBEDTLS_ECP_INTERNAL_ALT)
+    char is_grp_capable = 0;
+#endif
+    ECP_VALIDATE_RET( grp != NULL );
+    ECP_VALIDATE_RET( R   != NULL );
+    ECP_VALIDATE_RET( m   != NULL );
+    ECP_VALIDATE_RET( P   != NULL );
+    ECP_VALIDATE_RET( n   != NULL );
+    ECP_VALIDATE_RET( Q   != NULL );
+
+    if( ecp_get_type( grp ) != ECP_TYPE_SHORT_WEIERSTRASS )
+        return( MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE );
+
+    mbedtls_ecp_point_init( &mP );
+
+    ECP_RS_ENTER( ma );
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->ma != NULL )
+    {
+        /* redirect intermediate results to restart context */
+        pmP = &rs_ctx->ma->mP;
+        pR  = &rs_ctx->ma->R;
+
+        /* jump to next operation */
+        if( rs_ctx->ma->state == ecp_rsma_mul2 )
+            goto mul2;
+        if( rs_ctx->ma->state == ecp_rsma_add )
+            goto add;
+        if( rs_ctx->ma->state == ecp_rsma_norm )
+            goto norm;
+    }
+#endif /* MBEDTLS_ECP_RESTARTABLE */
+
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul_shortcuts( grp, pmP, m, P, rs_ctx ) );
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->ma != NULL )
+        rs_ctx->ma->state = ecp_rsma_mul2;
+
+mul2:
+#endif
+    MBEDTLS_MPI_CHK( mbedtls_ecp_mul_shortcuts( grp, pR,  n, Q, rs_ctx ) );
+
+#if defined(MBEDTLS_ECP_INTERNAL_ALT)
+    if( ( is_grp_capable = mbedtls_internal_ecp_grp_capable( grp ) ) )
+        MBEDTLS_MPI_CHK( mbedtls_internal_ecp_init( grp ) );
+#endif /* MBEDTLS_ECP_INTERNAL_ALT */
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->ma != NULL )
+        rs_ctx->ma->state = ecp_rsma_add;
+
+add:
+#endif
+    MBEDTLS_ECP_BUDGET( MBEDTLS_ECP_OPS_ADD );
+    MBEDTLS_MPI_CHK( ecp_add_mixed( grp, pR, pmP, pR ) );
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->ma != NULL )
+        rs_ctx->ma->state = ecp_rsma_norm;
+
+norm:
+#endif
+    MBEDTLS_ECP_BUDGET( MBEDTLS_ECP_OPS_INV );
+    MBEDTLS_MPI_CHK( ecp_normalize_jac( grp, pR ) );
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    if( rs_ctx != NULL && rs_ctx->ma != NULL )
+        MBEDTLS_MPI_CHK( mbedtls_ecp_copy( R, pR ) );
+#endif
+
+cleanup:
+#if defined(MBEDTLS_ECP_INTERNAL_ALT)
+    if( is_grp_capable )
+        mbedtls_internal_ecp_free( grp );
+#endif /* MBEDTLS_ECP_INTERNAL_ALT */
+
+    mbedtls_ecp_point_free( &mP );
+
+    ECP_RS_LEAVE( ma );
+
     return( ret );
 }
 
@@ -2140,64 +2959,137 @@ int mbedtls_ecp_muladd( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
              const mbedtls_mpi *m, const mbedtls_ecp_point *P,
              const mbedtls_mpi *n, const mbedtls_ecp_point *Q )
 {
+    ECP_VALIDATE_RET( grp != NULL );
+    ECP_VALIDATE_RET( R   != NULL );
+    ECP_VALIDATE_RET( m   != NULL );
+    ECP_VALIDATE_RET( P   != NULL );
+    ECP_VALIDATE_RET( n   != NULL );
+    ECP_VALIDATE_RET( Q   != NULL );
+    return( mbedtls_ecp_muladd_restartable( grp, R, m, P, n, Q, NULL ) );
+}
+
+#if defined(ECP_MONTGOMERY)
+#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
+#define ECP_MPI_INIT(s, n, p) {s, (n), (mbedtls_mpi_uint *)(p)}
+#define ECP_MPI_INIT_ARRAY(x)   \
+    ECP_MPI_INIT(1, sizeof(x) / sizeof(mbedtls_mpi_uint), x)
+/*
+ * Constants for the two points other than 0, 1, -1 (mod p) in
+ * https://cr.yp.to/ecdh.html#validate
+ * See ecp_check_pubkey_x25519().
+ */
+static const mbedtls_mpi_uint x25519_bad_point_1[] = {
+    MBEDTLS_BYTES_TO_T_UINT_8( 0xe0, 0xeb, 0x7a, 0x7c, 0x3b, 0x41, 0xb8, 0xae ),
+    MBEDTLS_BYTES_TO_T_UINT_8( 0x16, 0x56, 0xe3, 0xfa, 0xf1, 0x9f, 0xc4, 0x6a ),
+    MBEDTLS_BYTES_TO_T_UINT_8( 0xda, 0x09, 0x8d, 0xeb, 0x9c, 0x32, 0xb1, 0xfd ),
+    MBEDTLS_BYTES_TO_T_UINT_8( 0x86, 0x62, 0x05, 0x16, 0x5f, 0x49, 0xb8, 0x00 ),
+};
+static const mbedtls_mpi_uint x25519_bad_point_2[] = {
+    MBEDTLS_BYTES_TO_T_UINT_8( 0x5f, 0x9c, 0x95, 0xbc, 0xa3, 0x50, 0x8c, 0x24 ),
+    MBEDTLS_BYTES_TO_T_UINT_8( 0xb1, 0xd0, 0xb1, 0x55, 0x9c, 0x83, 0xef, 0x5b ),
+    MBEDTLS_BYTES_TO_T_UINT_8( 0x04, 0x44, 0x5c, 0xc4, 0x58, 0x1c, 0x8e, 0x86 ),
+    MBEDTLS_BYTES_TO_T_UINT_8( 0xd8, 0x22, 0x4e, 0xdd, 0xd0, 0x9f, 0x11, 0x57 ),
+};
+static const mbedtls_mpi ecp_x25519_bad_point_1 = ECP_MPI_INIT_ARRAY(
+        x25519_bad_point_1 );
+static const mbedtls_mpi ecp_x25519_bad_point_2 = ECP_MPI_INIT_ARRAY(
+        x25519_bad_point_2 );
+#endif /* MBEDTLS_ECP_DP_CURVE25519_ENABLED */
+
+/*
+ * Check that the input point is not one of the low-order points.
+ * This is recommended by the "May the Fourth" paper:
+ * https://eprint.iacr.org/2017/806.pdf
+ * Those points are never sent by an honest peer.
+ */
+static int ecp_check_bad_points_mx( const mbedtls_mpi *X, const mbedtls_mpi *P,
+                                    const mbedtls_ecp_group_id grp_id )
+{
     int ret;
-    mbedtls_ecp_point mP;
-#if defined(MBEDTLS_ECP_INTERNAL_ALT)
-    char is_grp_capable = 0;
+    mbedtls_mpi XmP;
+
+    mbedtls_mpi_init( &XmP );
+
+    /* Reduce X mod P so that we only need to check values less than P.
+     * We know X < 2^256 so we can proceed by subtraction. */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_copy( &XmP, X ) );
+    while( mbedtls_mpi_cmp_mpi( &XmP, P ) >= 0 )
+        MBEDTLS_MPI_CHK( mbedtls_mpi_sub_mpi( &XmP, &XmP, P ) );
+
+    /* Check against the known bad values that are less than P. For Curve448
+     * these are 0, 1 and -1. For Curve25519 we check the values less than P
+     * from the following list: https://cr.yp.to/ecdh.html#validate */
+    if( mbedtls_mpi_cmp_int( &XmP, 1 ) <= 0 ) /* takes care of 0 and 1 */
+    {
+        ret = MBEDTLS_ERR_ECP_INVALID_KEY;
+        goto cleanup;
+    }
+
+#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
+    if( grp_id == MBEDTLS_ECP_DP_CURVE25519 )
+    {
+        if( mbedtls_mpi_cmp_mpi( &XmP, &ecp_x25519_bad_point_1 ) == 0 )
+        {
+            ret = MBEDTLS_ERR_ECP_INVALID_KEY;
+            goto cleanup;
+        }
+
+        if( mbedtls_mpi_cmp_mpi( &XmP, &ecp_x25519_bad_point_2 ) == 0 )
+        {
+            ret = MBEDTLS_ERR_ECP_INVALID_KEY;
+            goto cleanup;
+        }
+    }
+#else
+    (void) grp_id;
 #endif
 
-    if( ecp_get_type( grp ) != ECP_TYPE_SHORT_WEIERSTRASS )
-        return( MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE );
-
-    mbedtls_ecp_point_init( &mP );
-
-    MBEDTLS_MPI_CHK( mbedtls_ecp_mul_shortcuts( grp, &mP, m, P ) );
-    MBEDTLS_MPI_CHK( mbedtls_ecp_mul_shortcuts( grp, R,   n, Q ) );
-
-#if defined(MBEDTLS_ECP_INTERNAL_ALT)
-    if (  is_grp_capable = mbedtls_internal_ecp_grp_capable( grp )  )
+    /* Final check: check if XmP + 1 is P (final because it changes XmP!) */
+    MBEDTLS_MPI_CHK( mbedtls_mpi_add_int( &XmP, &XmP, 1 ) );
+    if( mbedtls_mpi_cmp_mpi( &XmP, P ) == 0 )
     {
-        MBEDTLS_MPI_CHK( mbedtls_internal_ecp_init( grp ) );
+        ret = MBEDTLS_ERR_ECP_INVALID_KEY;
+        goto cleanup;
     }
 
-#endif /* MBEDTLS_ECP_INTERNAL_ALT */
-    MBEDTLS_MPI_CHK( ecp_add_mixed( grp, R, &mP, R ) );
-    MBEDTLS_MPI_CHK( ecp_normalize_jac( grp, R ) );
+    ret = 0;
 
 cleanup:
-
-#if defined(MBEDTLS_ECP_INTERNAL_ALT)
-    if ( is_grp_capable )
-    {
-        mbedtls_internal_ecp_free( grp );
-    }
-
-#endif /* MBEDTLS_ECP_INTERNAL_ALT */
-    mbedtls_ecp_point_free( &mP );
+    mbedtls_mpi_free( &XmP );
 
     return( ret );
 }
 
-
-#if defined(ECP_MONTGOMERY)
 /*
  * Check validity of a public key for Montgomery curves with x-only schemes
  */
 static int ecp_check_pubkey_mx( const mbedtls_ecp_group *grp, const mbedtls_ecp_point *pt )
 {
     /* [Curve25519 p. 5] Just check X is the correct number of bytes */
+    /* Allow any public value, if it's too big then we'll just reduce it mod p
+     * (RFC 7748 sec. 5 para. 3). */
     if( mbedtls_mpi_size( &pt->X ) > ( grp->nbits + 7 ) / 8 )
         return( MBEDTLS_ERR_ECP_INVALID_KEY );
 
-    return( 0 );
+    /* Implicit in all standards (as they don't consider negative numbers):
+     * X must be non-negative. This is normally ensured by the way it's
+     * encoded for transmission, but let's be extra sure. */
+    if( mbedtls_mpi_cmp_int( &pt->X, 0 ) < 0 )
+        return( MBEDTLS_ERR_ECP_INVALID_KEY );
+
+    return( ecp_check_bad_points_mx( &pt->X, &grp->P, grp->id ) );
 }
 #endif /* ECP_MONTGOMERY */
 
 /*
  * Check that a point is valid as a public key
  */
-int mbedtls_ecp_check_pubkey( const mbedtls_ecp_group *grp, const mbedtls_ecp_point *pt )
+int mbedtls_ecp_check_pubkey( const mbedtls_ecp_group *grp,
+                              const mbedtls_ecp_point *pt )
 {
+    ECP_VALIDATE_RET( grp != NULL );
+    ECP_VALIDATE_RET( pt  != NULL );
+
     /* Must use affine coordinates */
     if( mbedtls_mpi_cmp_int( &pt->Z, 1 ) != 0 )
         return( MBEDTLS_ERR_ECP_INVALID_KEY );
@@ -2216,19 +3108,26 @@ int mbedtls_ecp_check_pubkey( const mbedtls_ecp_group *grp, const mbedtls_ecp_po
 /*
  * Check that an mbedtls_mpi is valid as a private key
  */
-int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *d )
+int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp,
+                               const mbedtls_mpi *d )
 {
+    ECP_VALIDATE_RET( grp != NULL );
+    ECP_VALIDATE_RET( d   != NULL );
+
 #if defined(ECP_MONTGOMERY)
     if( ecp_get_type( grp ) == ECP_TYPE_MONTGOMERY )
     {
-        /* see [Curve25519] page 5 */
+        /* see RFC 7748 sec. 5 para. 5 */
         if( mbedtls_mpi_get_bit( d, 0 ) != 0 ||
             mbedtls_mpi_get_bit( d, 1 ) != 0 ||
-            mbedtls_mpi_get_bit( d, 2 ) != 0 ||
             mbedtls_mpi_bitlen( d ) - 1 != grp->nbits ) /* mbedtls_mpi_bitlen is one-based! */
             return( MBEDTLS_ERR_ECP_INVALID_KEY );
-        else
-            return( 0 );
+
+        /* see [Curve25519] page 5 */
+        if( grp->nbits == 254 && mbedtls_mpi_get_bit( d, 2 ) != 0 )
+            return( MBEDTLS_ERR_ECP_INVALID_KEY );
+
+        return( 0 );
     }
 #endif /* ECP_MONTGOMERY */
 #if defined(ECP_SHORTWEIERSTRASS)
@@ -2255,7 +3154,18 @@ int mbedtls_ecp_gen_privkey( const mbedtls_ecp_group *grp,
                      void *p_rng )
 {
     int ret = MBEDTLS_ERR_ECP_BAD_INPUT_DATA;
-    size_t n_size = ( grp->nbits + 7 ) / 8;
+    size_t n_size;
+#if defined(ECP_SHORTWEIERSTRASS)
+    mbedtls_mpi one;
+
+    mbedtls_mpi_init( &one );
+#endif
+
+    ECP_VALIDATE_RET( grp   != NULL );
+    ECP_VALIDATE_RET( d     != NULL );
+    ECP_VALIDATE_RET( f_rng != NULL );
+
+    n_size = ( grp->nbits + 7 ) / 8;
 
 #if defined(ECP_MONTGOMERY)
     if( ecp_get_type( grp ) == ECP_TYPE_MONTGOMERY )
@@ -2274,10 +3184,14 @@ int mbedtls_ecp_gen_privkey( const mbedtls_ecp_group *grp,
         else
             MBEDTLS_MPI_CHK( mbedtls_mpi_set_bit( d, grp->nbits, 1 ) );
 
-        /* Make sure the last three bits are unset */
+        /* Make sure the last two bits are unset for Curve448, three bits for
+           Curve25519 */
         MBEDTLS_MPI_CHK( mbedtls_mpi_set_bit( d, 0, 0 ) );
         MBEDTLS_MPI_CHK( mbedtls_mpi_set_bit( d, 1, 0 ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_set_bit( d, 2, 0 ) );
+        if( grp->nbits == 254 )
+        {
+            MBEDTLS_MPI_CHK( mbedtls_mpi_set_bit( d, 2, 0 ) );
+        }
     }
 #endif /* ECP_MONTGOMERY */
 
@@ -2286,7 +3200,10 @@ int mbedtls_ecp_gen_privkey( const mbedtls_ecp_group *grp,
     {
         /* SEC1 3.2.1: Generate d such that 1 <= n < N */
         int count = 0;
-        unsigned cmp = 0;
+        unsigned lt_lower = 1, lt_upper = 0;
+
+        MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &one, grp->N.n ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &one, 1 ) );
 
         /*
          * Match the procedure given in RFC 6979 (deterministic ECDSA):
@@ -2310,19 +3227,22 @@ int mbedtls_ecp_gen_privkey( const mbedtls_ecp_group *grp,
              * such as secp224k1 are actually very close to the worst case.
              */
             if( ++count > 30 )
-                return( MBEDTLS_ERR_ECP_RANDOM_FAILED );
-
-            ret = mbedtls_mpi_lt_mpi_ct( d, &grp->N, &cmp );
-            if( ret != 0 )
             {
+                ret = MBEDTLS_ERR_ECP_RANDOM_FAILED;
                 goto cleanup;
             }
+
+            MBEDTLS_MPI_CHK( mbedtls_mpi_lt_mpi_ct( d, &grp->N, &lt_upper ) );
+            MBEDTLS_MPI_CHK( mbedtls_mpi_lt_mpi_ct( d, &one, &lt_lower ) );
         }
-        while( mbedtls_mpi_cmp_int( d, 1 ) < 0 || cmp != 1 );
+        while( lt_lower != 0 || lt_upper == 0 );
     }
 #endif /* ECP_SHORTWEIERSTRASS */
 
 cleanup:
+#if defined(ECP_SHORTWEIERSTRASS)
+    mbedtls_mpi_free( &one );
+#endif
     return( ret );
 }
 
@@ -2336,6 +3256,11 @@ int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
                      void *p_rng )
 {
     int ret;
+    ECP_VALIDATE_RET( grp   != NULL );
+    ECP_VALIDATE_RET( d     != NULL );
+    ECP_VALIDATE_RET( G     != NULL );
+    ECP_VALIDATE_RET( Q     != NULL );
+    ECP_VALIDATE_RET( f_rng != NULL );
 
     MBEDTLS_MPI_CHK( mbedtls_ecp_gen_privkey( grp, d, f_rng, p_rng ) );
     MBEDTLS_MPI_CHK( mbedtls_ecp_mul( grp, Q, d, G, f_rng, p_rng ) );
@@ -2352,6 +3277,11 @@ int mbedtls_ecp_gen_keypair( mbedtls_ecp_group *grp,
                              int (*f_rng)(void *, unsigned char *, size_t),
                              void *p_rng )
 {
+    ECP_VALIDATE_RET( grp   != NULL );
+    ECP_VALIDATE_RET( d     != NULL );
+    ECP_VALIDATE_RET( Q     != NULL );
+    ECP_VALIDATE_RET( f_rng != NULL );
+
     return( mbedtls_ecp_gen_keypair_base( grp, &grp->G, d, Q, f_rng, p_rng ) );
 }
 
@@ -2362,6 +3292,8 @@ int mbedtls_ecp_gen_key( mbedtls_ecp_group_id grp_id, mbedtls_ecp_keypair *key,
                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
     int ret;
+    ECP_VALIDATE_RET( key   != NULL );
+    ECP_VALIDATE_RET( f_rng != NULL );
 
     if( ( ret = mbedtls_ecp_group_load( &key->grp, grp_id ) ) != 0 )
         return( ret );
@@ -2377,6 +3309,8 @@ int mbedtls_ecp_check_pub_priv( const mbedtls_ecp_keypair *pub, const mbedtls_ec
     int ret;
     mbedtls_ecp_point Q;
     mbedtls_ecp_group grp;
+    ECP_VALIDATE_RET( pub != NULL );
+    ECP_VALIDATE_RET( prv != NULL );
 
     if( pub->grp.id == MBEDTLS_ECP_DP_NONE ||
         pub->grp.id != prv->grp.id ||

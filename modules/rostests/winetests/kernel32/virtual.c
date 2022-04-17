@@ -4110,6 +4110,14 @@ START_TEST(virtual)
     char **argv;
     argc = winetest_get_mainargs( &argv );
 
+#if defined(__REACTOS__) && defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-369: Skipping kernel32_winetest:virtual because it crashes on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     if (argc >= 3)
     {
         if (!strcmp(argv[2], "sleep"))

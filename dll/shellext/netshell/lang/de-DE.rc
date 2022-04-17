@@ -110,12 +110,12 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Soll dieser Computer einer Domäne oder Arbeitsgruppe hinzugefügt werden?\n\
-(Domänen-Anmelde-Informationen müssen eventuell vom Netzwerkadministrator bezogen werden.)", IDC_STATIC, 33, 2, 263, 50
+(Domänen-Anmeldedaten müssen eventuell vom Netzwerkadministrator bezogen werden.)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "Diesen Computer folgender Arbeitsgruppe hinzufügen.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Diesen Computer folgender Domäne hinzufügen.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Arbeitsgruppe oder Domäne:", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Hinweis: Soll dieser Computer nicht mit einem Netzwerk verbunden werden, ungenügend Rechte besitzen, einer Domäne beizutreten oder Sie schlicht nicht wissen, was Sie eingeben sollen, wählen Sie vorläufig Arbeitsgruppe.\nDiese Einstellung kann später jederzeit verändert werden.", IDC_STATIC, 33, 107, 263, 50
+    LTEXT "Sollte dieser Computer nicht mit einem Netzwerk verbunden werden, Sie keine Domänen-Anmeldedaten besitzen oder falls Sie unschlüssig sind, wählen Sie vorläufig Arbeitsgruppe.\nDiese Einstellung kann später jederzeit verändert werden.", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE

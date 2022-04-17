@@ -450,7 +450,7 @@
 731 stdcall -noname -stub SHRegisterDarwinLink(long long long)
 732 stdcall -noname SHReValidateDarwinCache()
 733 stdcall -noname CheckDiskSpace()
-740 stub -noname SHCreateFileDataObject
+740 stdcall -noname SHCreateFileDataObject(ptr long ptr ptr ptr)
 743 stdcall SHCreateFileExtractIconW(wstr long ptr ptr)
 744 stub -noname Create_IEnumUICommand
 745 stub -noname Create_IUIElement

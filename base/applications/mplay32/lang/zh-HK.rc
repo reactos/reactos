@@ -1,0 +1,75 @@
+/*
+ * PROJECT:     ReactOS Multimedia Player
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "檔案(&F)"
+    BEGIN
+        MENUITEM "開啟(&O)...\tCtrl+O", IDM_OPEN_FILE
+        MENUITEM "關閉(&C)\tCtrl+W", IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "結束(&E)", IDM_EXIT
+    END
+    POPUP "播放(&P)"
+    BEGIN
+        MENUITEM "播放／暫停(&P)\tCtrl+P", IDC_PLAY
+        MENUITEM "停止(&O)\tCtrl+S", IDC_STOP
+        MENUITEM SEPARATOR
+        MENUITEM "重複(&T)\tCtrl+T", IDM_REPEAT
+    END
+    POPUP "視圖(&V)"
+    BEGIN
+        MENUITEM "單窗模式(&M)", IDM_SWITCHVIEW
+    END
+    POPUP "設備(&D)"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "內容(&P)", IDM_DEVPROPS
+        MENUITEM SEPARATOR
+        MENUITEM "音量控制(&V)", IDM_VOLUMECTL
+    END
+    POPUP "説明(&H)"
+    BEGIN
+        MENUITEM "關於(&A)", IDM_ABOUT
+    END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^O", IDM_OPEN_FILE
+    "^W", IDM_CLOSE_FILE
+    "^P", IDC_PLAY
+    "^S", IDC_STOP
+    "^T", IDM_REPEAT
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MODE_UNKNOWN "未知"
+    IDS_MODE_OPEN "已開啟"
+    IDS_MODE_STOP "已停止"
+    IDS_MODE_PLAY "播放中"
+    IDS_MODE_PAUSE "已暫停"
+    IDS_MODE_RECORD "錄音中"
+    IDS_MODE_SEEK "尋找中"
+    IDS_MODE_NOT_READY "未就緒"
+    IDS_ALL_TYPES_FILTER "所有支援的格式"
+    IDS_TOOLTIP_PLAY "播放"
+    IDS_TOOLTIP_STOP "停止"
+    IDS_TOOLTIP_EJECT "卸載"
+    IDS_TOOLTIP_BACKWARD "倒轉"
+    IDS_TOOLTIP_SEEKBACK "後退"
+    IDS_TOOLTIP_SEEKFORW "前進"
+    IDS_TOOLTIP_FORWARD "快轉"
+    IDS_TOOLTIP_PAUSE "暫停"
+    IDS_APPTITLE "ReactOS 多媒體播放器"
+    IDS_PLAY "播放"
+    IDS_DEFAULTMCIERRMSG "該錯誤沒有可用的描述。"
+END

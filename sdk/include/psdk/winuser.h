@@ -865,32 +865,36 @@ extern "C" {
 #define DWLP_DLGPROC (DWLP_MSGRESULT + sizeof(LRESULT))
 #define DWLP_USER (DWLP_DLGPROC + sizeof(DLGPROC))
 
+#define QS_KEY              1
+#define QS_MOUSEMOVE        2
+#define QS_MOUSEBUTTON      4
+#define QS_POSTMESSAGE      8
+#define QS_TIMER            16
+#define QS_PAINT            32
+#define QS_SENDMESSAGE      64
+#define QS_HOTKEY           128
+#define QS_ALLPOSTMESSAGE   256
+
 #if (_WIN32_WINNT >= 0x0501)
-#define QS_ALLEVENTS 1215
-#define QS_ALLINPUT 1279
-#define QS_RAWINPUT 1024
+#define QS_RAWINPUT         1024
+#endif
+#if (_WIN32_WINNT >= 0x0602)
+#define QS_TOUCH            2048
+#define QS_POINTER          4096
+#endif
+
+#define QS_MOUSE            (QS_MOUSEMOVE | QS_MOUSEBUTTON)
+
+#if (_WIN32_WINNT >= 0x0602)
+#define QS_INPUT            (QS_KEY | QS_MOUSE | QS_RAWINPUT | QS_TOUCH | QS_POINTER)
+#elif (_WIN32_WINNT >= 0x0501)
+#define QS_INPUT            (QS_KEY | QS_MOUSE | QS_RAWINPUT)
 #else
-#define QS_ALLEVENTS 191
-#define QS_ALLINPUT 255
+#define QS_INPUT            (QS_KEY | QS_MOUSE)
 #endif
-#define QS_ALLPOSTMESSAGE 256
-#define QS_HOTKEY 128
-#if (_WIN32_WINNT >= 0x0501)
-#define QS_INPUT 1031
-#else
-#define QS_INPUT 7
-#endif
-#define QS_KEY 1
-#define QS_MOUSE 6
-#define QS_MOUSEBUTTON 4
-#define QS_MOUSEMOVE 2
-#define QS_PAINT 32
-#define QS_POSTMESSAGE 8
-#if (_WIN32_WINNT >= 0x0501)
-#define QS_RAWINPUT 1024
-#endif
-#define QS_SENDMESSAGE 64
-#define QS_TIMER 16
+
+#define QS_ALLEVENTS        (QS_INPUT | QS_POSTMESSAGE | QS_TIMER | QS_PAINT | QS_HOTKEY)
+#define QS_ALLINPUT         (QS_ALLEVENTS | QS_SENDMESSAGE)
 
 #define USER_TIMER_MAXIMUM  2147483647
 #define USER_TIMER_MINIMUM  10
@@ -1221,6 +1225,7 @@ extern "C" {
 #define SIF_RANGE 1
 #define SIF_DISABLENOSCROLL 8
 #define SIF_TRACKPOS   16
+#define SIF_THEMED 128      /* REACTOS Specific Only */
 #define SWP_DRAWFRAME 32
 #define SWP_FRAMECHANGED 32
 #define SWP_HIDEWINDOW 128
@@ -4500,13 +4505,13 @@ BOOL WINAPI EnumDisplayDevicesW(_In_opt_ LPCWSTR, _In_ DWORD, _Inout_ PDISPLAY_D
 #endif
 int WINAPI EnumPropsA(_In_ HWND, _In_ PROPENUMPROCA);
 int WINAPI EnumPropsW(_In_ HWND, _In_ PROPENUMPROCW);
-int WINAPI EnumPropsExA(_In_ HWND, _In_ PROPENUMPROCEXA, _In_ LPARAM);
-int WINAPI EnumPropsExW(_In_ HWND, _In_ PROPENUMPROCEXW, _In_ LPARAM);
+int WINAPI EnumPropsExA(_In_ HWND, _In_ PROPENUMPROCEXA, _In_ LPARAM lParam);
+int WINAPI EnumPropsExW(_In_ HWND, _In_ PROPENUMPROCEXW, _In_ LPARAM lParam);
 #define EnumTaskWindows(h,f,p) EnumThreadWindows((DWORD)h,f,p)
 BOOL WINAPI EnumThreadWindows(_In_ DWORD, _In_ WNDENUMPROC, _In_ LPARAM);
-BOOL WINAPI EnumWindows(_In_ WNDENUMPROC, _In_ LPARAM);
-BOOL WINAPI EnumWindowStationsA(_In_ WINSTAENUMPROCA, _In_ LPARAM);
-BOOL WINAPI EnumWindowStationsW(_In_ WINSTAENUMPROCW, _In_ LPARAM);
+BOOL WINAPI EnumWindows(_In_ WNDENUMPROC lpEnumFunc, _In_ LPARAM lParam);
+BOOL WINAPI EnumWindowStationsA(_In_ WINSTAENUMPROCA, _In_ LPARAM lParam);
+BOOL WINAPI EnumWindowStationsW(_In_ WINSTAENUMPROCW, _In_ LPARAM lParam);
 BOOL WINAPI EqualRect(_In_ LPCRECT, _In_ LPCRECT);
 #define ExitWindows(r,c) ExitWindowsEx(EWX_LOGOFF,0)
 BOOL WINAPI ExitWindowsEx(_In_ UINT, _In_ DWORD);
@@ -4653,7 +4658,7 @@ HWND WINAPI GetLastActivePopup(_In_ HWND);
 HMENU WINAPI GetMenu(_In_ HWND);
 LONG WINAPI GetMenuCheckMarkDimensions(void);
 DWORD WINAPI GetMenuContextHelpId(_In_ HMENU);
-UINT WINAPI GetMenuDefaultItem(_In_ HMENU, _In_ UINT, _In_ UINT);
+UINT WINAPI GetMenuDefaultItem(_In_ HMENU hMenu, _In_ UINT fByPos, _In_ UINT gmdiFlags);
 int WINAPI GetMenuItemCount(_In_opt_ HMENU);
 UINT WINAPI GetMenuItemID(_In_ HMENU, _In_ int);
 BOOL WINAPI GetMenuItemInfoA(_In_ HMENU, _In_ UINT, _In_ BOOL, _Inout_ LPMENUITEMINFOA);

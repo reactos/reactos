@@ -28,7 +28,7 @@ BEGIN
     IDS_ALIAS_LOGGING_USERS_NAME "Performance-Protokoll Benutzer"
     IDS_ALIAS_LOGGING_USERS_COMMENT "Mitglieder dieser Gruppe verfügen über Remotezugriff um die Protokollierung von Leistungsindikatoren auf diesem Computer zu planen."
     /*
-     * ATTENTION: 
+     * ATTENTION:
      *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
      *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
      */

@@ -8,6 +8,7 @@
 #ifdef HAVE_APITEST
     #include <apitest.h>
     #define ATLASSUME(x) /*empty*/
+    #undef ATLASSERT
     #define ATLASSERT(x) /*empty*/
 #else
     #include "atltest.h"

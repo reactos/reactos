@@ -251,11 +251,17 @@ FdoScanAdapter(
             /* Scan all logical units */
             for (UINT8 lun = 0; lun < PortExtension->MaxLunCount; lun++)
             {
+                PSCSI_PORT_LUN_EXTENSION lunExt;
+
+                /* Skip invalid lun values */
+                if (lun >= PortExtension->PortConfig->MaximumNumberOfLogicalUnits)
+                    continue;
+
                 // try to find an existing device
-                PSCSI_PORT_LUN_EXTENSION lunExt = GetLunByPath(PortExtension,
-                                                               pathId,
-                                                               targetId,
-                                                               lun);
+                lunExt = GetLunByPath(PortExtension,
+                                      pathId,
+                                      targetId,
+                                      lun);
 
                 if (lunExt)
                 {
@@ -318,12 +324,10 @@ FdoScanAdapter(
                     /* Clear the "in scan" flag */
                     lunExt->Flags &= ~SCSI_PORT_SCAN_IN_PROGRESS;
 
-                    DPRINT("FdoScanAdapter(): Found device of type %d at bus %d tid %d lun %d\n",
-                        InquiryData->DeviceType, pathId, targetId, lun);
+                    DPRINT1("Found device of type %d at controller %d bus %d tid %d lun %d, PDO: %p\n",
+                        InquiryData->DeviceType, PortExtension->PortNumber, pathId, targetId, lun, lunPDO);
 
                     InsertTailList(&currentBus->LunsListHead, &lunExt->LunEntry);
-
-                    DPRINT1("SCSIPORT: created lun device: %p Status: %x\n", lunPDO, status);
 
                     totalLUNs++;
                     currentBus->LogicalUnitsCount++;

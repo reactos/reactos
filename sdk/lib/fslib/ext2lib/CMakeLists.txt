@@ -14,3 +14,8 @@ list(APPEND SOURCE
 add_library(ext2lib ${SOURCE})
 add_pch(ext2lib Mke2fs.h SOURCE)
 add_dependencies(ext2lib psdk)
+
+if(MSVC)
+    # Disable warning C4267: '=': conversion from 'size_t' to '__u8', possible loss of data
+    target_compile_options(ext2lib PRIVATE /wd4267)
+endif()

@@ -34,7 +34,7 @@ function(add_hal _halname)
     set_module_type(${_halname} kerneldll ENTRYPOINT HalInitSystem 8)
     add_cd_file(TARGET ${_halname} DESTINATION reactos/system32 NO_CAB FOR all)
     if(MSVC)
-        add_target_link_flags(${_halname} "/ignore:4216 /SECTION:INIT,ERWD")
+        target_link_options(${_halname} PRIVATE /ignore:4216 /SECTION:INIT,ERWD)
     else()
         target_link_libraries(${_halname} -lgcc)
     endif()
@@ -71,7 +71,8 @@ if(ARCH STREQUAL "i386")
     add_hal(halxbox SOURCES xbox/halxbox.rc COMPONENTS xbox up)
     add_hal(halpc98 SOURCES pc98/halpc98.rc COMPONENTS pc98 up)
 
-    #add_hal(halmacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi smp pic)
+    #add_hal(halmacpi SOURCES smp/halmacpi.rc COMPONENTS generic acpi smp apic)
+    #add_hal(halmp SOURCES mp/halmp.rc COMPONENTS generic legacy smp apic)
 
 elseif(ARCH STREQUAL "amd64")
 

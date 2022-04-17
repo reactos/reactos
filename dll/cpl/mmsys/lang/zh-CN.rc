@@ -1,9 +1,11 @@
 /*
- * (Simplified Chinese resources)
- * (简体中文资源)
- * by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
- * Updated: 2009-05-02 Jingjing Fu <jingjingf AT 188.com>
- *          2018-01-06 Luo Yufan <njlyf2011@hotmail.com>
+ * PROJECT:     ReactOS Multimedia Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2008 Zhang Bing <e_zb@21cn.com> <ezb@mail.gywb.cn>
+ *              Copyright 2009 Jingjing Fu <jingjingf@188.com>
+ *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -36,14 +38,14 @@ CAPTION "事件方案"
 FONT 9, "宋体"
 BEGIN
     LTEXT "声音方案是应用于 ReactOS 和程序事件中的一组声音。请选择一个现有方案或保存您已经更改的方案。", -1, 8, 7, 230, 40
-    LTEXT "声音方案(&C):", -1, 8, 42, 150, 17
+    LTEXT "声音方案(&C)：", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "另存为(&E)...", IDC_SAVEAS_BTN, 134, 70, 50, 15
     PUSHBUTTON "删除(&D)", IDC_DELETE_BTN, 188, 70, 50, 15
     LTEXT "要改变声音，请单击下列表中的程序事件然后选择声音。您可将更改保存为新声音方案。", -1, 8, 90, 230, 40
-    LTEXT "程序事件(&P):", -1, 8, 118, 150, 17
+    LTEXT "程序事件(&P)：", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
-    LTEXT "声音(&S):", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
+    LTEXT "声音(&S)：", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "", IDC_PLAY_SOUND, 168, 205, 15, 15, WS_DISABLED | BS_ICON
     PUSHBUTTON "浏览(&B)...", IDC_BROWSE_SOUND, 188, 205, 50, 15, WS_DISABLED
@@ -56,19 +58,19 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "声音播放", -1, 7, 7, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
-    LTEXT "默认设备(&D):", -1, 50, 20, 80, 17
+    LTEXT "默认设备(&D)：", -1, 50, 20, 80, 17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&V)...", IDC_VOLUME1_BTN, 85, 47, 70, 15
     PUSHBUTTON "高级(&D)...", IDC_ADV2_BTN, 160, 47, 70, 15
     GROUPBOX "录音", -1, 7, 75, 230, 60, WS_GROUP
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
-    LTEXT "默认设备(&E):", -1, 50, 88, 80, 17
+    LTEXT "默认设备(&E)：", -1, 50, 88, 80, 17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&O)...", IDC_VOLUME2_BTN, 85, 115, 70, 15
     PUSHBUTTON "高级(&C)...", IDC_ADV1_BTN, 160, 115, 70, 15
     GROUPBOX "MIDI 音乐播放", -1, 7, 145, 230, 60, WS_GROUP
     ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
-    LTEXT "默认设备(&F):", -1, 50, 158, 80, 17
+    LTEXT "默认设备(&F)：", -1, 50, 158, 80, 17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&M)...", IDC_VOLUME3_BTN, 85, 185, 70, 15
     PUSHBUTTON "关于(&B)...", IDC_ADV3_BTN, 160, 185, 70, 15
@@ -83,13 +85,13 @@ BEGIN
     LTEXT "这些设置控制声音播放或您选择的录音设备的音量和高级选项。", -1, 8, 7, 230, 40
     GROUPBOX "声音播放", -1, 7, 37, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
-    LTEXT "默认设备(&D):", -1, 50, 50, 80, 17
+    LTEXT "默认设备(&D)：", -1, 50, 50, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&V)...", IDC_VOLUME4_BTN, 85, 77, 70, 15
     PUSHBUTTON "高级(&N)...", IDC_ADV4_BTN, 160, 77, 70, 15
     GROUPBOX "录音", -1, 7, 105, 230, 60, WS_GROUP
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
-    LTEXT "默认设备(&E):", -1, 50, 118, 80, 17
+    LTEXT "默认设备(&E)：", -1, 50, 118, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&O)...", IDC_VOLUME5_BTN, 85, 145, 70, 15
     PUSHBUTTON "高级(&C)...", IDC_ADV5_BTN, 160, 145, 70, 15
@@ -108,7 +110,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "将方案另存为"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "将此声音方案存为(&S):", -1, 7, 7, 212, 9
+    LTEXT "将此声音方案存为(&S)：", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "确定", IDOK, 93, 36, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 157, 36, 60, 14
@@ -122,7 +124,7 @@ BEGIN
     ICON 4379, -1, 7, 8, 20, 20
     LTEXT "请选择最接近您的计算机设置的扬声器设置。", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
-    LTEXT "扬声器设置(&P):", 8502, 53, 169, 55, 10
+    LTEXT "扬声器设置(&P)：", 8502, 53, 169, 55, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
@@ -134,9 +136,9 @@ BEGIN
     LTEXT "这些设置控制 ReactOS 如何播放音频。他们能够帮助您解答有关音频方面的问题。", 8492, 34, 7, 218, 23
     GROUPBOX "音频播放", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
-    LTEXT "硬件加速(&H):", 8495, 13, 56, 111, 14
+    LTEXT "硬件加速(&H)：", 8495, 13, 56, 111, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
-    LTEXT "采样率转换质量(&S):", 8496, 13, 123, 103, 14
+    LTEXT "采样率转换质量(&S)：", 8496, 13, 123, 103, 14
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
     PUSHBUTTON "还原默认值(&R)", 5400, 7, 191, 110, 14
     LTEXT "无", 8497, 128, 56, 21, 10
@@ -155,9 +157,9 @@ BEGIN
     LTEXT "这些设置控制 ReactOS 如何录音。可帮助您诊断与音频有关的问题。", 8492, 34, 7, 217, 20
     GROUPBOX "音频录音", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
-    LTEXT "硬件加速(&H):", 8495, 13, 46, 103, 17
+    LTEXT "硬件加速(&H)：", 8495, 13, 46, 103, 17
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
-    LTEXT "采样率转换质量(&S):", 8496, 13, 103, 103, 17
+    LTEXT "采样率转换质量(&S)：", 8496, 13, 103, 103, 17
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 101, 62, 18
     PUSHBUTTON "还原默认值(&R)", 5400, 9, 158, 110, 14
     LTEXT "无", 8497, 125, 46, 24, 10
@@ -175,7 +177,7 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "ReactOS 声音", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "因为 ReactOS 声音服务无效因此这台计算机目前无法播放声音", 10245, 60, 25, 150, 40
+    LTEXT "因为 ReactOS 声音服务无效，所以这台计算机目前无法播放声音", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "启用 ReactOS 声音(&E)", 10253, 60, 68, 150, 9
     LTEXT "注意", 10246, 58, 87, 150, 11
     LTEXT "1. 您必须是管理员才能启用此服务。如果您没有以管理员身份登录，您将提示输入管理员名称和密码。", 10247, 60, 100, 150, 40
@@ -242,13 +244,13 @@ BEGIN
     IDS_CPLDESCRIPTION "更改计算机的声音方案，或配置扬声器和录音设备的设置。"
     IDS_NO_SOUND "(无)"
     IDS_NO_DEVICES "没有设备"
-    IDS_SPEAKER_VOLUME "Speaker Volume"
-    IDS_SPEAKER_LEFT "&Left:"
-    IDS_SPEAKER_RIGHT "&Right:"
-    IDS_SPEAKER_CENTER "&Center:"
-    IDS_SPEAKER_BACK_LEFT "&Back left:"
-    IDS_SPEAKER_BACK_RIGHT "B&ack right:"
-    IDS_SPEAKER_LOW_FREQUENCY "Low &Frequency:"
+    IDS_SPEAKER_VOLUME "扬声器音量"
+    IDS_SPEAKER_LEFT "左(&L)："
+    IDS_SPEAKER_RIGHT "右(&R)："
+    IDS_SPEAKER_CENTER "中(&C)："
+    IDS_SPEAKER_BACK_LEFT "左后(&B)："
+    IDS_SPEAKER_BACK_RIGHT "右后(&A)："
+    IDS_SPEAKER_LOW_FREQUENCY "低音(&F)："
     5825 "程序出错"
     5826 "关闭程序"
     5827 "电池严重短缺警报"

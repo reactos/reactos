@@ -32,130 +32,96 @@ InitDeviceImpl(VOID)
     return STATUS_SUCCESS;
 }
 
-BOOLEAN
-EngpPopulateDeviceModeList(
-    _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
-    _In_ PDEVMODEW pdmDefault)
+NTSTATUS
+EngpUpdateGraphicsDeviceList(VOID)
 {
-    PWSTR pwsz;
-    PLDEVOBJ pldev;
-    PDEVMODEINFO pdminfo;
-    PDEVMODEW pdm, pdmEnd;
-    ULONG i, cModes = 0;
-    BOOLEAN bModeMatch = FALSE;
+    ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
+    WCHAR awcDeviceName[20], awcWinDeviceName[20];
+    UNICODE_STRING ustrDeviceName;
+    WCHAR awcBuffer[256];
+    NTSTATUS Status;
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    ULONG cbValue;
+    HKEY hkey;
 
-    ASSERT(pGraphicsDevice->pdevmodeInfo == NULL);
-    ASSERT(pGraphicsDevice->pDevModeList == NULL);
-
-    pwsz = pGraphicsDevice->pDiplayDrivers;
-
-    /* Loop through the driver names
-     * This is a REG_MULTI_SZ string */
-    for (; *pwsz; pwsz += wcslen(pwsz) + 1)
+    /* Open the key for the adapters */
+    Status = RegOpenKey(L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO", &hkey);
+    if (!NT_SUCCESS(Status))
     {
-        /* Try to load the display driver */
-        TRACE("Trying driver: %ls\n", pwsz);
-        pldev = EngLoadImageEx(pwsz, LDEV_DEVICE_DISPLAY);
-        if (!pldev)
+        ERR("Could not open HARDWARE\\DEVICEMAP\\VIDEO registry key:0x%lx\n", Status);
+        return Status;
+    }
+
+    /* Read the name of the VGA adapter */
+    cbValue = sizeof(awcDeviceName);
+    Status = RegQueryValue(hkey, L"VgaCompatible", REG_SZ, awcDeviceName, &cbValue);
+    if (NT_SUCCESS(Status))
+    {
+        iVGACompatible = _wtoi(&awcDeviceName[sizeof("\\Device\\Video")-1]);
+        ERR("VGA adapter = %lu\n", iVGACompatible);
+    }
+
+    /* Get the maximum mumber of adapters */
+    if (!RegReadDWORD(hkey, L"MaxObjectNumber", &ulMaxObjectNumber))
+    {
+        ERR("Could not read MaxObjectNumber, defaulting to 0.\n");
+    }
+
+    TRACE("Found %lu devices\n", ulMaxObjectNumber + 1);
+
+    /* Loop through all adapters */
+    for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
+    {
+        /* Create the adapter's key name */
+        swprintf(awcDeviceName, L"\\Device\\Video%lu", iDevNum);
+
+        /* Create the display device name */
+        swprintf(awcWinDeviceName, L"\\\\.\\DISPLAY%lu", iDevNum + 1);
+        RtlInitUnicodeString(&ustrDeviceName, awcWinDeviceName);
+
+        /* Check if the device exists already */
+        pGraphicsDevice = EngpFindGraphicsDevice(&ustrDeviceName, iDevNum);
+        if (pGraphicsDevice != NULL)
         {
-            ERR("Could not load driver: '%ls'\n", pwsz);
             continue;
         }
 
-        /* Get the mode list from the driver */
-        pdminfo = LDEVOBJ_pdmiGetModes(pldev, pGraphicsDevice->DeviceObject);
-        if (!pdminfo)
+        /* Read the reg key name */
+        cbValue = sizeof(awcBuffer);
+        Status = RegQueryValue(hkey, awcDeviceName, REG_SZ, awcBuffer, &cbValue);
+        if (!NT_SUCCESS(Status))
         {
-            ERR("Could not get mode list for '%ls'\n", pwsz);
+            ERR("failed to query the registry path:0x%lx\n", Status);
             continue;
         }
 
-        /* Attach the mode info to the device */
-        pdminfo->pdmiNext = pGraphicsDevice->pdevmodeInfo;
-        pGraphicsDevice->pdevmodeInfo = pdminfo;
+        /* Initialize the driver for this device */
+        pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
+        if (!pGraphicsDevice) continue;
 
-        /* Loop all DEVMODEs */
-        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
-        for (pdm = pdminfo->adevmode;
-             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
-             pdm = (DEVMODEW*)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
+        /* Check if this is a VGA compatible adapter */
+        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE)
         {
-            /* Count this DEVMODE */
-            cModes++;
-
-            /* Some drivers like the VBox driver don't fill the dmDeviceName
-               with the name of the display driver. So fix that here. */
-            RtlStringCbCopyW(pdm->dmDeviceName, sizeof(pdm->dmDeviceName), pwsz);
-        }
-
-        // FIXME: release the driver again until it's used?
-    }
-
-    if (!pGraphicsDevice->pdevmodeInfo || cModes == 0)
-    {
-        ERR("No devmodes\n");
-        return FALSE;
-    }
-
-    /* Allocate an index buffer */
-    pGraphicsDevice->cDevModes = cModes;
-    pGraphicsDevice->pDevModeList = ExAllocatePoolWithTag(PagedPool,
-                                                          cModes * sizeof(DEVMODEENTRY),
-                                                          GDITAG_GDEVICE);
-    if (!pGraphicsDevice->pDevModeList)
-    {
-        ERR("No devmode list\n");
-        return FALSE;
-    }
-
-    TRACE("Looking for mode %lux%lux%lu(%lu Hz)\n",
-        pdmDefault->dmPelsWidth,
-        pdmDefault->dmPelsHeight,
-        pdmDefault->dmBitsPerPel,
-        pdmDefault->dmDisplayFrequency);
-
-    /* Loop through all DEVMODEINFOs */
-    for (pdminfo = pGraphicsDevice->pdevmodeInfo, i = 0;
-         pdminfo;
-         pdminfo = pdminfo->pdmiNext)
-    {
-        /* Calculate End of the DEVMODEs */
-        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
-
-        /* Loop through the DEVMODEs */
-        for (pdm = pdminfo->adevmode;
-             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
-             pdm = (PDEVMODEW)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
-        {
-            TRACE("    %S has mode %lux%lux%lu(%lu Hz)\n",
-                  pdm->dmDeviceName,
-                  pdm->dmPelsWidth,
-                  pdm->dmPelsHeight,
-                  pdm->dmBitsPerPel,
-                  pdm->dmDisplayFrequency);
-            /* Compare with the default entry */
-            if (!bModeMatch &&
-                pdm->dmBitsPerPel == pdmDefault->dmBitsPerPel &&
-                pdm->dmPelsWidth == pdmDefault->dmPelsWidth &&
-                pdm->dmPelsHeight == pdmDefault->dmPelsHeight)
+            /* Save this as the VGA adapter */
+            if (!gpVgaGraphicsDevice)
             {
-                pGraphicsDevice->iDefaultMode = i;
-                pGraphicsDevice->iCurrentMode = i;
-                TRACE("Found default entry: %lu '%ls'\n", i, pdm->dmDeviceName);
-                if (pdm->dmDisplayFrequency == pdmDefault->dmDisplayFrequency)
-                {
-                    /* Uh oh, even the display frequency matches. */
-                    bModeMatch = TRUE;
-                }
+                gpVgaGraphicsDevice = pGraphicsDevice;
+                TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
             }
+        }
 
-            /* Initialize the entry */
-            pGraphicsDevice->pDevModeList[i].dwFlags = 0;
-            pGraphicsDevice->pDevModeList[i].pdm = pdm;
-            i++;
+        /* Set the first one as primary device */
+        if (!gpPrimaryGraphicsDevice)
+        {
+            gpPrimaryGraphicsDevice = pGraphicsDevice;
+            TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
         }
     }
-    return TRUE;
+
+    /* Close the device map registry key */
+    ZwClose(hkey);
+
+    return STATUS_SUCCESS;
 }
 
 extern VOID
@@ -190,7 +156,7 @@ VideoPortCallout(
             if (CallbackParams->Param == TRUE)
             {
                 /* Re-enable the display */
-                UserRefreshDisplay(gppdevPrimary);
+                UserRefreshDisplay(gpmdev->ppdevGlobal);
             }
             else
             {
@@ -227,8 +193,7 @@ NTAPI
 EngpRegisterGraphicsDevice(
     _In_ PUNICODE_STRING pustrDeviceName,
     _In_ PUNICODE_STRING pustrDiplayDrivers,
-    _In_ PUNICODE_STRING pustrDescription,
-    _In_ PDEVMODEW pdmDefault)
+    _In_ PUNICODE_STRING pustrDescription)
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVICE_OBJECT pDeviceObject;
@@ -327,21 +292,14 @@ EngpRegisterGraphicsDevice(
                   pustrDescription->Length);
     pGraphicsDevice->pwszDescription[pustrDescription->Length/sizeof(WCHAR)] = 0;
 
-    /* Initialize the pdevmodeInfo list and default index  */
+    /* Initialize the pdevmodeInfo list */
     pGraphicsDevice->pdevmodeInfo = NULL;
-    pGraphicsDevice->iDefaultMode = 0;
-    pGraphicsDevice->iCurrentMode = 0;
 
     // FIXME: initialize state flags
     pGraphicsDevice->StateFlags = 0;
 
     /* Create the mode list */
     pGraphicsDevice->pDevModeList = NULL;
-    if (!EngpPopulateDeviceModeList(pGraphicsDevice, pdmDefault))
-    {
-        ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
-        return NULL;
-    }
 
     /* Lock loader */
     EngAcquireSemaphore(ghsemGraphicsDeviceList);
@@ -361,6 +319,17 @@ EngpRegisterGraphicsDevice(
     EngReleaseSemaphore(ghsemGraphicsDeviceList);
     TRACE("Prepared %lu modes for %ls\n", pGraphicsDevice->cDevModes, pGraphicsDevice->pwszDescription);
 
+    /* HACK: already in graphic mode; display wallpaper on this new display */
+    if (ScreenDeviceContext)
+    {
+        UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
+        UNICODE_STRING DisplayName;
+        HDC hdc;
+        RtlInitUnicodeString(&DisplayName, pGraphicsDevice->szWinDeviceName);
+        hdc = IntGdiCreateDC(&DriverName, &DisplayName, NULL, NULL, FALSE);
+        IntPaintDesktop(hdc);
+    }
+
     return pGraphicsDevice;
 }
 
@@ -368,14 +337,13 @@ PGRAPHICS_DEVICE
 NTAPI
 EngpFindGraphicsDevice(
     _In_opt_ PUNICODE_STRING pustrDevice,
-    _In_ ULONG iDevNum,
-    _In_ DWORD dwFlags)
+    _In_ ULONG iDevNum)
 {
     UNICODE_STRING ustrCurrent;
     PGRAPHICS_DEVICE pGraphicsDevice;
     ULONG i;
-    TRACE("EngpFindGraphicsDevice('%wZ', %lu, 0x%lx)\n",
-           pustrDevice, iDevNum, dwFlags);
+    TRACE("EngpFindGraphicsDevice('%wZ', %lu)\n",
+           pustrDevice, iDevNum);
 
     /* Lock list */
     EngAcquireSemaphore(ghsemGraphicsDeviceList);

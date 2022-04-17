@@ -1,4 +1,4 @@
-/* Spanish translation by Lucio Diaz-Flores Varela & Catalin Gabriel Draghita. Reviewed by Jose Pedro Fernandez Pascual. */
+/* Spanish translation by Lucio Diaz-Flores Varela & Catalin Gabriel Draghita. Reviewed by Jose Pedro Fernandez Pascual and Julen Urizar Compains. */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -14,11 +14,11 @@ END
 
 IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Error del Interfaz de Usuario"
+CAPTION "Error de Interfaz de Usuario"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "La DLL %s del interfaz de Logon dió un error al cargar.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "Contacte con el administrador de su sistema para sustituir la DLL, ó reinstale la DLL original.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "La DLL %s de la interfaz de inicio de sesión dio un error al cargar.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Contacte con el administrador de su sistema para sustituir la librería DLL, o reinstale la DLL original.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "&Reiniciar", 1, 80, 91, 68, 14
 END
 
@@ -46,17 +46,17 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Ejecutando los scripts de inicio de sesión..."
     IDS_LOADINGYOURPERSONALSETTINGS "Cargando su configuración personal..."
     IDS_CLOSINGNETWORKCONNECTIONS "Cerrando las conexiones de red..."
-    IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
-    IDS_PREPARETOSTANDBY "Preparando para entrar en estado de espera (Standby)..."
-    IDS_PREPARETOHIBERNATE "Preparando para hibernar..."
+    IDS_REACTOSISRESTARTING "Reiniciando..."
+    IDS_REACTOSISSHUTTINGDOWN "Apagando el equipo..."
+    IDS_PREPARETOSTANDBY "Entrando en modo de espera (Standby)..."
+    IDS_PREPARETOHIBERNATE "Hibernando..."
     IDS_SAVEYOURSETTINGS "Guardando su configuración personal..."
     IDS_REACTOSISSTARTINGUP "ReactOS se está iniciando..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
-    IDS_TIMEOUTLONGFORMAT "%d days"
+    IDS_TIMEOUTLONGFORMAT "%d días"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILEDACTIVATEUSERSHELL "!Winlogon falló al activar el shell de usuario!"
+    IDS_FAILEDACTIVATEUSERSHELL "¡Winlogon falló al activar el shell de usuario!"
 END

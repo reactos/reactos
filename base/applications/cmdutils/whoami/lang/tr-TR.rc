@@ -5,17 +5,17 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USER_HEADER "KULLANICI BİLGİSİ"
-    IDS_GROU_HEADER "TAKIM BİLGİSİ"
+    IDS_GROU_HEADER "GRUP BİLGİSİ"
     IDS_PRIV_HEADER "AYRICALIKLAR BİLGİSİ"
     IDS_COL_USER_NAME "Kulanıcı Adı"
-    IDS_COL_GROUP_NAME "Takım Adı"
+    IDS_COL_GROUP_NAME "Grup Adı"
     IDS_COL_TYPE "Tür"
     IDS_COL_SID "SID"
     IDS_COL_ATTRIB "Öz Nitelikler"
     IDS_COL_PRIV_NAME "Ayrıcalık Adı"
     IDS_COL_DESCRIPTION "Tanım"
     IDS_COL_STATE "Durum"
-    IDS_TP_WELL_KNOWN_GROUP "İyi Bilinen Takım"
+    IDS_TP_WELL_KNOWN_GROUP "İyi Bilinen Grup"
     IDS_TP_ALIAS "Başka Ad"
     IDS_TP_LABEL "Etiket"
 
@@ -24,29 +24,29 @@ BEGIN
 
        you can test your translation of these attributes by using 'whoami /groups' */
 
-    IDS_ATTR_GROUP_MANDATORY "Zorunlu takım, "
-    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Ön tanımlı olarak etkin, "
-    IDS_ATTR_GROUP_ENABLED "Etkin takım, "
-    IDS_ATTR_GROUP_OWNER "Takım iyesi, "
+    IDS_ATTR_GROUP_MANDATORY "Zorunlu grup, "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Varsayılan olarak etkin, "
+    IDS_ATTR_GROUP_ENABLED "Etkin grup, "
+    IDS_ATTR_GROUP_OWNER "Grup sahibi, "
     IDS_UNKNOWN_DESCRIPTION "???"
     IDS_STATE_ENABLED "Etkin"
-    IDS_STATE_DISABLED "Edilgin"
-    IDS_ERROR_UPN "YANLIŞLIK: Bir etki alanı kullanıcısı olmayan şimdiki oturumda olan kullanıcı\nolarak Kullanıcı Gerçek Adı (UPN) alınamaz.\n"
-    IDS_ERROR_FQDN "YANLIŞLIK: Bir etki alanı kullanıcısı olmayan şimdiki oturumda olan kullanıcı\nolarak Eksiksiz Ayırt Edici Adı (FQDN) alınamaz.\n"
-    IDS_ERROR_VALUEXPECTED "YANLIŞLIK: Geçersiz yazım. ""/fo"" için değer bekleniyordu.\nKullanım için ""WHOAMI /?"" yazınız.\n"
-    IDS_ERROR_VALUENOTALLOWED "YANLIŞLIK: Geçersiz yazım. ""%s"" değerine ""/fo"" seçeneği için izin verilmiyor.\nKullanım için ""WHOAMI /?"" yazınız.\n"
-    IDS_ERROR_1TIMES "YANLIŞLIK: Geçersiz yazım. ""%s"" seçeneğine ""1"" kezden çok izin verilmiyor.\nKullanım için ""WHOAMI /?"" yazınız.\n"
-    IDS_ERROR_INVALIDSYNTAX "YANLIŞLIK: Geçersiz yazım.\nKullanım için ""WHOAMI /?"" yazınız.\n"
-    IDS_ERROR_INVALIDARG "YANLIŞLIK: Geçersiz değiştirgen ya da seçenek: ""%s"".\nKullanım için ""WHOAMI /?"" yazınız.\n"
-    IDS_ERROR_NH_LIST "YANLIŞLIK: /NH seçeneği LIST biçimiyle kullanılamıyor.\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_STATE_DISABLED "Devre Dışı"
+    IDS_ERROR_UPN "HATA: Bir etki alanı kullanıcısı olmayan şimdiki oturumda olan kullanıcı\nolarak Kullanıcı Gerçek Adı (UPN) alınamaz.\n"
+    IDS_ERROR_FQDN "HATA: Bir etki alanı kullanıcısı olmayan şimdiki oturumda olan kullanıcı\nolarak Eksiksiz Ayırt Edici Adı (FQDN) alınamaz.\n"
+    IDS_ERROR_VALUEXPECTED "HATA: Geçersiz sözdizimi. ""/fo"" için değer bekleniyordu.\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_ERROR_VALUENOTALLOWED "HATA: Geçersiz sözdizimi. ""%s"" değerine ""/fo"" seçeneği için izin verilmiyor.\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_ERROR_1TIMES "HATA: Geçersiz sözdizimi. ""%s"" seçeneğine ""1"" kezden çok izin verilmiyor.\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_ERROR_INVALIDSYNTAX "HATA: Geçersiz sözdizimi.\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_ERROR_INVALIDARG "HATA: Geçersiz argüman ya da seçenek: ""%s"".\nKullanım için ""WHOAMI /?"" yazınız.\n"
+    IDS_ERROR_NH_LIST "HATA: /NH seçeneği LIST biçimiyle kullanılamıyor.\nKullanım için ""WHOAMI /?"" yazınız.\n"
     IDS_HELP "TANIM:\n\
-  Yerli oturumda olan kullanıcı için kullanıcı, takım ve ayrıcalıklar bilgilerini görüntüle.\n\
-  Bir değiştirgen sağlanmamışsa şimdiki etki alanını ve kullanıcı adını görüntüler.\n\
+  Yerel oturumda olan kullanıcı için kullanıcı, grup ve ayrıcalıklar bilgilerini görüntüle.\n\
+  Bir argüman sağlanmamışsa şimdiki etki alanını ve kullanıcı adını görüntüler.\n\
 \n\
   ""/fo"" seçeneği için kullanılabilir çıkış biçimleri ""csv"", ""list"" ve ""table""dır.\n\
-  Başlıkları gizlemek için ""/nh"" kullanınız. Ön tanımlı olarak veri bir çizelge içinde görüntülenmiştir.\n\
+  Başlıkları gizlemek için ""/nh"" kullanınız. Varsayılan olarak veri bir çizelge içinde görüntülenmiştir.\n\
 \n\
-YAZIM:\n\
+KULLANIM:\n\
   whoami [/upn | /fqdn | /logonid]\n\
   whoami {[/user] [/groups] [/priv]} [/fo <Biçim>] [/nh]\n\
   whoami /all [/fo <Biçim>] [/nh]\n\

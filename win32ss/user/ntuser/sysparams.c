@@ -73,6 +73,7 @@ static const WCHAR* VAL_SCRLLLINES = L"WheelScrollLines";
 static const WCHAR* VAL_CLICKLOCKTIME = L"ClickLockTime";
 static const WCHAR* VAL_PAINTDESKVER = L"PaintDesktopVersion";
 static const WCHAR* VAL_CARETRATE = L"CursorBlinkRate";
+static const WCHAR* VAL_CARETWIDTH = L"CaretWidth";
 #if (_WIN32_WINNT >= 0x0600)
 static const WCHAR* VAL_SCRLLCHARS = L"WheelScrollChars";
 #endif
@@ -288,6 +289,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.iWheelScrollLines = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLLINES, 3);
     gspv.dwMouseClickLockTime = SpiLoadDWord(KEY_DESKTOP, VAL_CLICKLOCKTIME, 1200);
     gpsi->dtCaretBlink = SpiLoadInt(KEY_DESKTOP, VAL_CARETRATE, 530);
+    gspv.dwCaretWidth = SpiLoadDWord(KEY_DESKTOP, VAL_CARETWIDTH, 1);
     gspv.dwUserPrefMask = SpiLoadUserPrefMask(UPM_DEFAULT);
     gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
     gspv.bMouseCursorShadow = (gspv.dwUserPrefMask & UPM_CURSORSHADOW) != 0;
@@ -949,7 +951,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
             /* Fixup user's structure size */
             metrics->cbSize = sizeof(NONCLIENTMETRICSW);
-            
+
             if (!SpiSet(&gspv.ncm, metrics, sizeof(NONCLIENTMETRICSW), fl))
                 return 0;
 

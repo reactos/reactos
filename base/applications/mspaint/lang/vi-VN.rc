@@ -8,6 +8,8 @@
 
 LANGUAGE LANG_VIETNAMESE, SUBLANG_VIETNAMESE_VIETNAM
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-vi-VN.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "&Tập tin"
@@ -146,7 +148,7 @@ BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
     LTEXT "&Chiều rộng:", IDD_ATTRIBUTESTEXT1, 10, 40, 35, 10
     LTEXT "&Chiều cao:", IDD_ATTRIBUTESTEXT2, 90, 40, 35, 10
-    LTEXT "Ngày tạo &tập tin:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10 
+    LTEXT "Ngày tạo &tập tin:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Kích thước &tập tin :", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "&Độ phân giải:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Không có sẵn", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
@@ -191,6 +193,17 @@ BEGIN
     PUSHBUTTON "Hủy", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Fonts"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Vẽ"
@@ -198,7 +211,7 @@ BEGIN
     IDS_INFOTITLE "Trình Vẽ cho ReactOS"
     IDS_INFOTEXT "Được cung cấp theo điều lệ trong GNU Lesser General Public License (LGPL, xem www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Bạn có muốn lưu lại những thay đổi trong %s?"
-    IDS_DEFAULTFILENAME "Khongten.bmp"
+    IDS_DEFAULTFILENAME "Khongten"
     IDS_MINIATURETITLE "Ảnh nhỏ"
     IDS_TOOLTIP1 "Chọn tự do"
     IDS_TOOLTIP2 "Chọn"
@@ -225,4 +238,8 @@ BEGIN
     IDS_ANGLE "Giá trị của góc phải ở giữa -89 và 89."
     IDS_LOADERRORTEXT "Không thể tải tập tin %s."
     IDS_ENLARGEPROMPTTEXT "Hình ảnh bạn định dán lớn hơn hình bitmap này.\n Bạn có muốn nới rộng hình bitmap?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
 END

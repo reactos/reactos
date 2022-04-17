@@ -15,12 +15,12 @@
 LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     RECT rc = { 0, 0, 31, 32 };
-    HDC hDC = GetDC();
     HPEN oldPen;
     HBRUSH oldBrush;
     int i, a, b;
 
-    DefWindowProc(WM_PAINT, wParam, lParam);
+    PAINTSTRUCT ps;
+    HDC hDC = BeginPaint(&ps);
 
     for(b = 2; b < 30; b++)
         for(a = 2; a < 29; a++)
@@ -54,7 +54,7 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
         DeleteObject(SelectObject(hDC, oldBrush));
         DeleteObject(SelectObject(hDC, oldPen));
     }
-    ReleaseDC(hDC);
+    EndPaint(&ps);
     return 0;
 }
 

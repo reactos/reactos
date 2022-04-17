@@ -17,12 +17,12 @@ static char* str_dbg_pfd_flags(DWORD flags)
     static char buffer[1000];
     static char *p = buffer;
     char* ret;
-    
+
     BOOL first = TRUE;
 
     if (p > &buffer[800])
         p = buffer;
-    
+
     *p = 0;
 
 #define FLAGS_TO_STR(__x__)                 \
@@ -58,9 +58,9 @@ static char* str_dbg_pfd_flags(DWORD flags)
         sprintf(tmp, " | 0x%08x", (UINT)flags);
         strcat(p, tmp);
     }
-    
+
     ret = p;
-    
+
     p += strlen(p) + 1;
 
     return ret;
@@ -140,10 +140,10 @@ static void test_format(HDC hdc, int num_pf, int pf, const struct test_color *co
     if (is_window)
     {
         DWORD flags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_GENERIC_FORMAT;
-        
+
         if ((pfd.cColorBits <= 8) && (pfd.iPixelType == PFD_TYPE_RGBA))
             flags |= PFD_NEED_PALETTE;
-        
+
         if (is_double_buffered)
         {
             flags |= PFD_DOUBLEBUFFER | PFD_SWAP_COPY;
@@ -224,7 +224,7 @@ static void test_screen_colors(const struct test_color **colors)
     }
 
     ok(pf < num_pf, "No generic pixel format!\n");
-    
+
     /* First the formats compatible with the DC */
     for (i = 0; i < 3; i++)
     {
@@ -240,7 +240,7 @@ static void test_screen_colors(const struct test_color **colors)
             test_format(hdc, num_pf, pf++, &colors[0][i], test_depths[j], TRUE, TRUE);
         }
     }
-    
+
     colors++;
 
     /* Then the rest */

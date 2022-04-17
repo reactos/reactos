@@ -430,7 +430,7 @@ That process has been killed and is being cleaned up by the system.
 MessageId=90
 SymbolicName=SACDRV_90
 Language=English
-A duplicate process id is being cleaned up by the system.  Try the 
+A duplicate process id is being cleaned up by the system.  Try the
 command again in a few seconds.
 .
 
@@ -537,7 +537,7 @@ Channel List
 
 (Use "ch -?" for information on using channels)
 
-# Status  Channel Name 
+# Status  Channel Name
 .
 
 MessageId=109
@@ -596,7 +596,7 @@ SAC preparing to shutdown the system.
 MessageId=116
 SymbolicName=SACDRV_116
 Language=English
-Error! Failed to remove channel! 
+Error! Failed to remove channel!
 
 Please contact your system administrator.
 
@@ -634,7 +634,7 @@ Language=English
 Error: Unable to launch a Command Prompt.  The service responsible for launching
        Command Prompt channels has not yet registered.  This may be because the
        service is not yet started, is disabled by the administrator, is
-       malfunctioning or is unresponsive.  
+       malfunctioning or is unresponsive.
 .
 
 MessageId=132

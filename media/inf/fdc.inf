@@ -140,10 +140,10 @@ GenericMfg = "(Generické radiče disketových mechaník)"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-FDCClassName = "Yumuşak Disk Denetleyicileri"
+FDCClassName = "Disket Denetleyicileri"
 
-GenericMfg = "(Umûmî Yumuşak Disk Denetleyicileri)"
-*PNP0700.DeviceDesc = "Umûmî Yumuşak Disk Denetleyicisi"
+GenericMfg = "(Genel Disket Denetleyicileri)"
+*PNP0700.DeviceDesc = "Genel Disket Denetleyicisi"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"
@@ -161,3 +161,15 @@ GenericMfg = "(Standartiniai diskelių įrenginių valdikliai)"
 [Strings.0804]
 GenericMfg = "(通用软盘控制器)"
 *PNP0700.DeviceDesc = "通用软盘控制器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+FDCClassName = "Unidades de disquete"
+GenericMfg = "(Unidades de disquete padrão)"
+*PNP0700.DeviceDesc = "Controlador de disquete padrão"
+
+[Strings.0C04]
+FDCClassName = "軟碟控制器"
+
+GenericMfg = "(標準軟碟控制器)"
+*PNP0700.DeviceDesc = "標準軟碟控制器"

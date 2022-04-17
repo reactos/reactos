@@ -68,10 +68,10 @@ extern LPFILTERINFO RootInfo;
 
 /* classfactory.c */
 
-IClassFactory * 
+IClassFactory *
 IClassFactory_fnConstructor(
-    LPFNCREATEINSTANCE lpfnCI, 
-    PLONG pcRefDll, 
+    LPFNCREATEINSTANCE lpfnCI,
+    PLONG pcRefDll,
     REFIID riidInst);
 
 
@@ -83,12 +83,12 @@ EnumAudioDeviceInterfaces(
 
 BOOL
 FindDeviceByGuid(
-    LPCGUID pGuidSrc, 
+    LPCGUID pGuidSrc,
     LPFILTERINFO *Filter);
 
 BOOL
 FindDeviceByMappedId(
-    IN ULONG DeviceID, 
+    IN ULONG DeviceID,
     LPFILTERINFO *Filter,
     BOOL bPlayback);
 

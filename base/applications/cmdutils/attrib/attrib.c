@@ -86,17 +86,23 @@ ErrorMessage(
         ConPrintf(StdOut, L"%s\n", szMsg);
 }
 
+/* Returns TRUE if anything is printed, FALSE otherwise */
 static
-INT
+BOOL
 PrintAttribute(
     LPWSTR pszPath,
     LPWSTR pszFile,
-    BOOL bRecurse)
+    BOOL   bRecurse,
+    BOOL   bDirectories)
 {
     WIN32_FIND_DATAW findData;
     HANDLE hFind;
     WCHAR  szFullName[MAX_PATH];
     LPWSTR pszFileName;
+    BOOL   bFound = FALSE;
+    BOOL   bIsDir;
+    BOOL   bExactMatch;
+    DWORD  Error;
 
     /* prepare full file name buffer */
     wcscpy(szFullName, pszPath);
@@ -105,14 +111,19 @@ PrintAttribute(
     /* display all subdirectories */
     if (bRecurse)
     {
-        /* append file name */
-        wcscpy(pszFileName, pszFile);
+        /* append *.* */
+        wcscpy(pszFileName, L"*.*");
 
         hFind = FindFirstFileW(szFullName, &findData);
         if (hFind == INVALID_HANDLE_VALUE)
         {
-            ErrorMessage(GetLastError(), pszFile);
-            return 1;
+            Error = GetLastError();
+            if ((Error != ERROR_DIRECTORY) && (Error != ERROR_SHARING_VIOLATION)
+                  && (Error != ERROR_FILE_NOT_FOUND))
+            {
+                ErrorMessage(Error, pszFile);
+            }
+            return FALSE;
         }
 
         do
@@ -122,29 +133,42 @@ PrintAttribute(
 
             if (!wcscmp(findData.cFileName, L".") ||
                 !wcscmp(findData.cFileName, L".."))
+            {
                 continue;
+            }
 
             wcscpy(pszFileName, findData.cFileName);
             wcscat(pszFileName, L"\\");
-            PrintAttribute(szFullName, pszFile, bRecurse);
+            bFound |= PrintAttribute(szFullName, pszFile, bRecurse, bDirectories);
         }
-        while(FindNextFileW(hFind, &findData));
+        while (FindNextFileW(hFind, &findData));
         FindClose(hFind);
     }
 
     /* append file name */
     wcscpy(pszFileName, pszFile);
 
-    /* display current directory */
+    /* search current directory */
     hFind = FindFirstFileW(szFullName, &findData);
     if (hFind == INVALID_HANDLE_VALUE)
     {
-        ErrorMessage(GetLastError(), pszFile);
-        return 1;
+        return bFound;
     }
 
     do
     {
+        bIsDir = findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        bExactMatch = wcsicmp(findData.cFileName, pszFile) == 0;
+
+        if (bIsDir && !bDirectories && !bExactMatch)
+            continue;
+
+        if (!wcscmp(findData.cFileName, L".") ||
+            !wcscmp(findData.cFileName, L".."))
+        {
+            continue;
+        }
+
         wcscpy(pszFileName, findData.cFileName);
 
         ConPrintf(StdOut,
@@ -154,129 +178,122 @@ PrintAttribute(
                   (findData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? L'H' : L' ',
                   (findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ? L'R' : L' ',
                   szFullName);
+        bFound = TRUE;
     }
-    while(FindNextFileW(hFind, &findData));
+    while (FindNextFileW(hFind, &findData));
     FindClose(hFind);
 
-    return 0;
+    return bFound;
 }
 
 
+/* Returns TRUE if anything changed, FALSE otherwise */
 static
 BOOL
 ChangeAttribute(
     LPWSTR pszPath,
     LPWSTR pszFile,
+    BOOL  bRecurse,
+    BOOL  bDirectories,
     DWORD dwMask,
-    DWORD dwAttrib,
-    BOOL bRecurse,
-    BOOL bDirectories)
+    DWORD dwAttrib)
 {
     WIN32_FIND_DATAW findData;
     HANDLE hFind;
-    DWORD  dwAttribute;
     WCHAR  szFullName[MAX_PATH];
     LPWSTR pszFileName;
-    BOOL bWildcard = (wcschr(pszFile, L'*') || wcschr(pszFile, L'?'));
+    BOOL   bFound = FALSE;
+    BOOL   bIsDir;
+    BOOL   bExactMatch;
+    DWORD  dwAttribute;
+    DWORD  Error;
 
     /* prepare full file name buffer */
     wcscpy(szFullName, pszPath);
     pszFileName = szFullName + wcslen(szFullName);
 
-    /* append file name */
-    wcscpy(pszFileName, pszFile);
-
-    hFind = FindFirstFileW(szFullName, &findData);
-    if (hFind == INVALID_HANDLE_VALUE)
-        return FALSE;
-
-    dwAttribute = findData.dwFileAttributes;
-
-    if (!bWildcard)
+    /* display all subdirectories */
+    if (bRecurse)
     {
-        FindClose(hFind);
-        if (dwAttribute & FILE_ATTRIBUTE_DIRECTORY)
+        /* append *.* */
+        wcscpy(pszFileName, L"*.*");
+
+        hFind = FindFirstFileW(szFullName, &findData);
+        if (hFind == INVALID_HANDLE_VALUE)
         {
-            dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
-            SetFileAttributes(szFullName, dwAttribute);
-            if (bRecurse)
+            Error = GetLastError();
+            if ((Error != ERROR_DIRECTORY) && (Error != ERROR_SHARING_VIOLATION)
+                  && (Error != ERROR_FILE_NOT_FOUND))
             {
-                if (bDirectories)
-                {
-                    ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
-                                    bRecurse, bDirectories);
-                }
-                else
-                {
-                    if (!ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
-                                         bRecurse, FALSE))
-                    {
-                        return FALSE;
-                    }
-                }
+                ErrorMessage(Error, pszFile);
             }
-            else
-            {
-                if (!bDirectories)
-                {
-                    ChangeAttribute(szFullName, L"*", dwMask, dwAttrib,
-                                    bRecurse, FALSE);
-                }
-            }
-            return TRUE;
-        }
-        else
-        {
-            dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
-            SetFileAttributes(szFullName, dwAttribute);
-            return TRUE;
-        }
-    }
-    else
-    {
-        if ((dwAttribute & FILE_ATTRIBUTE_DIRECTORY) && (!bRecurse || !bDirectories))
             return FALSE;
+        }
 
         do
         {
-            dwAttribute = findData.dwFileAttributes;
-            if (dwAttribute & FILE_ATTRIBUTE_DIRECTORY)
+            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                continue;
+
+            if (!wcscmp(findData.cFileName, L".") ||
+                !wcscmp(findData.cFileName, L".."))
             {
-                if (!bDirectories)
-                    continue;
-
-                if (!wcscmp(findData.cFileName, L".") ||
-                    !wcscmp(findData.cFileName, L".."))
-                    continue;
-
-                wcscpy(pszFileName, findData.cFileName);
-                dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
-                SetFileAttributes(szFullName, dwAttribute);
-
-                if (bRecurse)
-                {
-                    ChangeAttribute(szFullName, findData.cFileName, dwMask,
-                                    dwAttrib, bRecurse, FALSE);
-                }
+                continue;
             }
-            else
-            {
-                wcscpy(pszFileName, findData.cFileName);
-                dwAttribute = (dwAttribute & ~dwMask) | dwAttrib;
-                SetFileAttributes(szFullName, dwAttribute);
-            }
-        } while (FindNextFileW(hFind, &findData));
 
+            wcscpy(pszFileName, findData.cFileName);
+            wcscat(pszFileName, L"\\");
+            bFound |= ChangeAttribute(szFullName, pszFile, bRecurse, bDirectories,
+                                      dwMask, dwAttrib);
+        }
+        while (FindNextFileW(hFind, &findData));
         FindClose(hFind);
     }
 
-    return TRUE;
+    /* append file name */
+    wcscpy(pszFileName, pszFile);
+
+    /* search current directory */
+    hFind = FindFirstFileW(szFullName, &findData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        return bFound;
+    }
+
+    do
+    {
+        bIsDir = findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        bExactMatch = wcsicmp(findData.cFileName, pszFile) == 0;
+
+        if (bIsDir && !bDirectories && !bExactMatch)
+            continue;
+
+        if (!wcscmp(findData.cFileName, L".") ||
+            !wcscmp(findData.cFileName, L".."))
+        {
+            continue;
+        }
+
+        if (bRecurse && bIsDir && !bDirectories)
+            continue;
+
+        wcscpy(pszFileName, findData.cFileName);
+
+        dwAttribute = (findData.dwFileAttributes & ~dwMask) | dwAttrib;
+
+        SetFileAttributes(szFullName, dwAttribute);
+        bFound = TRUE;
+    }
+    while (FindNextFileW(hFind, &findData));
+    FindClose(hFind);
+
+    return bFound;
 }
 
 int wmain(int argc, WCHAR *argv[])
 {
     INT    i;
-    WCHAR  szPath[MAX_PATH];
+    WCHAR  szPath[MAX_PATH] = L""; // For case we only use 'attrib +h /s' there is no szPath
     WCHAR  szFileName [MAX_PATH];
     BOOL   bRecurse = FALSE;
     BOOL   bDirectories = FALSE;
@@ -389,7 +406,7 @@ int wmain(int argc, WCHAR *argv[])
             szPath[len + 1] = UNICODE_NULL;
         }
         wcscpy(szFileName, L"*.*");
-        PrintAttribute(szPath, szFileName, bRecurse);
+        PrintAttribute(szPath, szFileName, bRecurse, bDirectories);
         return 0;
     }
 
@@ -405,13 +422,32 @@ int wmain(int argc, WCHAR *argv[])
 
         if (dwMask == 0)
         {
-            PrintAttribute(szPath, szFileName, bRecurse);
+            if (!PrintAttribute(szPath, szFileName, bRecurse, bDirectories))
+            {
+                ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, argv[i]);
+            }
         }
-        else if (!ChangeAttribute(szPath, szFileName, dwMask,
-                                  dwAttrib, bRecurse, bDirectories))
+        else if (!ChangeAttribute(szPath, szFileName, bRecurse, bDirectories, dwMask, dwAttrib))
         {
             ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, argv[i]);
         }
+    }
+
+// Code below handles the special case of 'attrib +h /s' and similar
+
+    if (bRecurse && dwMask && (wcscmp(szPath, L"") == 0))
+    {
+        DWORD len;
+
+        len = GetCurrentDirectory(MAX_PATH, szPath);
+        if (szPath[len-1] != L'\\')
+        {
+            szPath[len] = L'\\';
+            szPath[len + 1] = UNICODE_NULL;
+        }
+        wcscpy(szFileName, L"*.*");
+        if (!ChangeAttribute(szPath, szFileName, bRecurse, bDirectories, dwMask, dwAttrib))
+            ConResPrintf(StdOut, STRING_FILE_NOT_FOUND, szFileName);
     }
 
     return 0;

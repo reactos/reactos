@@ -288,7 +288,7 @@ START_TEST(CImage)
     CSimpleString strExporters(mgr);
     aguidFileTypes.RemoveAll();
     hr = CImage::GetExporterFilterString(strExporters,
-                                         aguidFileTypes, 
+                                         aguidFileTypes,
                                          TEXT("All Image Files"), 0);
     ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
     ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 8, was %d.", aguidFileTypes.GetSize());

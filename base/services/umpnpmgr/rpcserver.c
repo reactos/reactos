@@ -22,7 +22,7 @@
  * FILE:             base/services/umpnpmgr/rpcserver.c
  * PURPOSE:          RPC server
  * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
- *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   HervÃ© Poussineau (hpoussin@reactos.org)
  *                   Colin Finck (colin@reactos.org)
  */
 
@@ -38,6 +38,7 @@
 
 static WCHAR szRootDeviceInstanceID[] = L"HTREE\\ROOT\\0";
 
+LIST_ENTRY NotificationListHead;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -50,6 +51,8 @@ RpcServerThread(LPVOID lpParameter)
     UNREFERENCED_PARAMETER(lpParameter);
 
     DPRINT("RpcServerThread() called\n");
+
+    InitializeListHead(&NotificationListHead);
 
 #if 0
     /* 2k/XP/2k3-compatible protocol sequence/endpoint */
@@ -535,6 +538,15 @@ GetConfigurationData(
 }
 
 
+VOID
+__RPC_USER
+PNP_NOTIFY_HANDLE_rundown(
+    PNP_NOTIFY_HANDLE pHandle)
+{
+    DPRINT1("PNP_NOTIFY_HANDLE_rundown(%p)\n", pHandle);
+}
+
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /* Function 0 */
@@ -768,6 +780,14 @@ PNP_GetRelatedDeviceInstance(
 
     if (!IsValidDeviceInstanceID(pDeviceID))
         return CR_INVALID_DEVINST;
+
+    /* The root device does not have a parent device or sibling devices */
+    if ((ulRelationship == PNP_GET_PARENT_DEVICE_INSTANCE) ||
+        (ulRelationship == PNP_GET_SIBLING_DEVICE_INSTANCE))
+    {
+        if (IsRootDeviceInstanceID(pDeviceID))
+            return CR_NO_SUCH_DEVINST;
+    }
 
     RtlInitUnicodeString(&PlugPlayData.TargetDeviceInstance,
                          pDeviceID);
@@ -3193,16 +3213,71 @@ PNP_GetDeviceStatus(
     DWORD *pulProblem,
     DWORD ulFlags)
 {
+    DWORD ulDataType, ulTransferLength, ulLength;
+    DWORD ulCapabilities, ulConfigFlags;
+    CONFIGRET ret;
+
     UNREFERENCED_PARAMETER(hBinding);
     UNREFERENCED_PARAMETER(ulFlags);
 
     DPRINT("PNP_GetDeviceStatus(%p %S %p %p 0x%08lx)\n",
            hBinding, pDeviceID, pulStatus, pulProblem, ulFlags);
 
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if ((pulStatus == NULL) || (pulProblem == NULL))
+        return CR_INVALID_POINTER;
+
     if (!IsValidDeviceInstanceID(pDeviceID))
         return CR_INVALID_DEVINST;
 
-    return GetDeviceStatus(pDeviceID, pulStatus, pulProblem);
+    ret = GetDeviceStatus(pDeviceID, pulStatus, pulProblem);
+    if (ret != CR_SUCCESS)
+        return ret;
+
+    /* Check for DN_REMOVABLE */
+    ulTransferLength = sizeof(ulCapabilities);
+    ulLength = sizeof(ulCapabilities);
+    ret = PNP_GetDeviceRegProp(NULL,
+                               pDeviceID,
+                               CM_DRP_CAPABILITIES,
+                               &ulDataType,
+                               (PBYTE)&ulCapabilities,
+                               &ulTransferLength,
+                               &ulLength,
+                               0);
+    if (ret != CR_SUCCESS)
+        ulCapabilities = 0;
+
+    if (ulCapabilities & CM_DEVCAP_REMOVABLE)
+        *pulStatus |= DN_REMOVABLE;
+
+    /* Check for DN_MANUAL */
+    ulTransferLength = sizeof(ulConfigFlags);
+    ulLength = sizeof(ulConfigFlags);
+    ret = PNP_GetDeviceRegProp(NULL,
+                               pDeviceID,
+                               CM_DRP_CONFIGFLAGS,
+                               &ulDataType,
+                               (PBYTE)&ulConfigFlags,
+                               &ulTransferLength,
+                               &ulLength,
+                               0);
+    if (ret != CR_SUCCESS)
+        ulConfigFlags = 0;
+
+    if (ulConfigFlags & CONFIGFLAG_MANUAL_INSTALL)
+        *pulStatus |= DN_MANUAL;
+
+    /* Check for failed install */
+    if (((*pulStatus & DN_HAS_PROBLEM) == 0) && (ulConfigFlags & CONFIGFLAG_FAILEDINSTALL))
+    {
+        *pulStatus |= DN_HAS_PROBLEM;
+        *pulProblem = CM_PROB_FAILED_INSTALL;
+    }
+
+    return CR_SUCCESS;
 }
 
 
@@ -4406,22 +4481,24 @@ PNP_RegisterNotification(
     BYTE *pNotificationFilter,
     DWORD ulNotificationFilterSize,
     DWORD ulFlags,
-    DWORD *pulNotify,
+    PNP_NOTIFY_HANDLE *pNotifyHandle,
     DWORD ulUnknown8,
     DWORD *pulUnknown9)
 {
     PDEV_BROADCAST_DEVICEINTERFACE_W pBroadcastDeviceInterface;
     PDEV_BROADCAST_HANDLE pBroadcastDeviceHandle;
-#if 0
-    PNOTIFY_DATA pNotifyData;
-#endif
+    PNOTIFY_ENTRY pNotifyData = NULL;
 
     DPRINT1("PNP_RegisterNotification(%p %lx '%S' %p %lu 0x%lx %p %lx %p)\n",
            hBinding, ulUnknown2, pszName, pNotificationFilter,
-           ulNotificationFilterSize, ulFlags, pulNotify, ulUnknown8, pulUnknown9);
+           ulNotificationFilterSize, ulFlags, pNotifyHandle, ulUnknown8, pulUnknown9);
+
+    if (pNotifyHandle == NULL)
+        return CR_INVALID_POINTER;
+
+    *pNotifyHandle = NULL;
 
     if (pNotificationFilter == NULL ||
-        pulNotify == NULL ||
         pulUnknown9 == NULL)
         return CR_INVALID_POINTER;
 
@@ -4440,6 +4517,28 @@ PNP_RegisterNotification(
         if ((ulNotificationFilterSize < sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)) ||
             (pBroadcastDeviceInterface->dbcc_size < sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)))
             return CR_INVALID_DATA;
+
+        pNotifyData = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NOTIFY_ENTRY));
+        if (pNotifyData == NULL)
+            return CR_OUT_OF_MEMORY;
+
+        if (pszName != NULL)
+        {
+            pNotifyData->pszName = RtlAllocateHeap(GetProcessHeap(),
+                                                   HEAP_ZERO_MEMORY,
+                                                   (wcslen(pszName) + 1) * sizeof(WCHAR));
+            if (pNotifyData->pszName == NULL)
+            {
+                RtlFreeHeap(GetProcessHeap(), 0, pNotifyData);
+                return CR_OUT_OF_MEMORY;
+            }
+        }
+
+        /* Add the entry to the notification list */
+        InsertTailList(&NotificationListHead, &pNotifyData->ListEntry);
+
+        DPRINT("pNotifyData: %p\n", pNotifyData);
+        *pNotifyHandle = (PNP_NOTIFY_HANDLE)pNotifyData;
     }
     else if (((PDEV_BROADCAST_HDR)pNotificationFilter)->dbch_devicetype == DBT_DEVTYP_HANDLE)
     {
@@ -4459,17 +4558,6 @@ PNP_RegisterNotification(
         return CR_INVALID_DATA;
     }
 
-
-#if 0
-    pNotifyData = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NOTIFY_DATA));
-    if (pNotifyData == NULL)
-        return CR_OUT_OF_MEMORY;
-
-    *pulNotify = (DWORD)pNotifyData;
-#endif
-
-    *pulNotify = 1;
-
     return CR_SUCCESS;
 }
 
@@ -4479,15 +4567,22 @@ DWORD
 WINAPI
 PNP_UnregisterNotification(
     handle_t hBinding,
-    DWORD ulNotify)
+    PNP_NOTIFY_HANDLE *pNotifyHandle)
 {
-    DPRINT1("PNP_UnregisterNotification(%p 0x%lx)\n",
-           hBinding, ulNotify);
+    PNOTIFY_ENTRY pEntry;
 
-#if 0
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
-#endif
+    DPRINT1("PNP_UnregisterNotification(%p %p)\n",
+           hBinding, pNotifyHandle);
+
+    pEntry = (PNOTIFY_ENTRY)*pNotifyHandle;
+    if (pEntry == NULL)
+        return CR_INVALID_DATA;
+
+    RemoveEntryList(&pEntry->ListEntry);
+    if (pEntry->pszName)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pEntry->pszName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, pEntry);
+    *pNotifyHandle = NULL;
 
     return CR_SUCCESS;
 }

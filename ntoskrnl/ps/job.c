@@ -546,10 +546,10 @@ NtQueryInformationJobObject (
                 ProbeForWrite(JobInformation, JobInformationLength, RequiredAlign);
             }
 
-            /* But also return lenght if asked */
+            /* But also return length if asked */
             if (ReturnLength != NULL)
             {
-                ProbeForWrite(JobInformation, sizeof(ULONG), sizeof(ULONG));
+                ProbeForWriteUlong(ReturnLength);
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

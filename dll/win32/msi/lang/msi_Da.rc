@@ -31,6 +31,7 @@ STRINGTABLE
     13 "featurens netværksdrev mangler."
     14 "feature fra:"
     15 "Vælg kataloget som indeholder '%s'."
+    100 "New Folder"
 }
 
 /* Error messages */

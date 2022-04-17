@@ -132,7 +132,7 @@ static xmlChar *xmlC11NNormalizeString(const xmlChar * input,
 
 /**
  * xmlC14NErrMemory:
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of memory error
  */
@@ -147,7 +147,7 @@ xmlC14NErrMemory(const char *extra)
 
 /**
  * xmlC14NErrParam:
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of param error
  */
@@ -162,7 +162,7 @@ xmlC14NErrParam(const char *extra)
 
 /**
  * xmlC14NErrInternal:
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of internal error
  */
@@ -177,7 +177,7 @@ xmlC14NErrInternal(const char *extra)
 
 /**
  * xmlC14NErrInvalidNode:
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of invalid node error
  */
@@ -192,7 +192,7 @@ xmlC14NErrInvalidNode(const char *node_type, const char *extra)
 
 /**
  * xmlC14NErrUnknownNode:
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of unknown node error
  */
@@ -207,7 +207,7 @@ xmlC14NErrUnknownNode(int node_type, const char *extra)
 
 /**
  * xmlC14NErrRelativeNamespace:
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of relative namespace error
  */
@@ -228,7 +228,7 @@ xmlC14NErrRelativeNamespace(const char *ns_uri)
  * @node:  the context node
  * @error:  the error code
  * @msg:  the message
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle a redefinition of attribute error
  */
@@ -2033,13 +2033,13 @@ xmlC14NDocDumpMemory(xmlDocPtr doc, xmlNodeSetPtr nodes,
     }
 
     ret = xmlBufUse(buf->buffer);
-    if (ret > 0) {
+    if (ret >= 0) {
         *doc_txt_ptr = xmlStrndup(xmlBufContent(buf->buffer), ret);
     }
     (void) xmlOutputBufferClose(buf);
 
-    if ((*doc_txt_ptr == NULL) && (ret > 0)) {
-        xmlC14NErrMemory("coping canonicalized document");
+    if ((*doc_txt_ptr == NULL) && (ret >= 0)) {
+        xmlC14NErrMemory("copying canonicalized document");
         return (-1);
     }
     return (ret);

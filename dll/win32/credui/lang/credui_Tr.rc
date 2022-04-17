@@ -24,10 +24,10 @@ STRINGTABLE
 {
     IDS_TITLEFORMAT     "Bağlan: %s"
     IDS_MESSAGEFORMAT   "Bağlanıyor: %s"
-    IDS_INCORRECTPASSWORDTITLE  "Oturum açma başarısız."
-    IDS_INCORRECTPASSWORD       "Kullanıcı adınızın ve şifrenizin\ndoğru olduğundan emin olunuz."
+    IDS_INCORRECTPASSWORDTITLE  "Oturum açılamadı."
+    IDS_INCORRECTPASSWORD       "Kullanıcı adınızın ve şifrenizin\ndoğru olduğundan emin olun."
     IDS_CAPSLOCKONTITLE "Büyük Harf Kilidi açık."
-    IDS_CAPSLOCKON      "Büyük Harf Kilidi'nin açık olması şifrenizi yanlış girmenize neden olabilir.\n\nŞifrenizi girmeden önce Büyük Harf Kilidi'ni kapatmak için düğme takımınızdaki Büyük Harf Kilidi düğmesine basınız."
+    IDS_CAPSLOCKON      "Büyük Harf Kilidi'nin açık olması şifrenizi yanlış girmenize neden olabilir.\n\nŞifrenizi girmeden önce Büyük Harf Kilidi'ni kapatmak için klavyenizdeki Caps Lock tuşuna basınız."
 }
 
 IDD_CREDDIALOG DIALOGEX  0, 0, 213, 149
@@ -42,7 +42,7 @@ BEGIN
                     CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
     LTEXT           "&Şifre:",-1,8,80,72,12,SS_CENTERIMAGE
     EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "Ş&ifremi Anımsa",IDC_SAVE,"Button",
+    CONTROL         "Ş&ifremi Hatırla",IDC_SAVE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
     DEFPUSHBUTTON   "Tamam",IDOK,97,128,50,14
     PUSHBUTTON      "İptal",IDCANCEL,156,128,50,14

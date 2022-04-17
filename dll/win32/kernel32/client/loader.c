@@ -677,7 +677,7 @@ GetModuleHandleForUnicodeString(PUNICODE_STRING ModuleName)
     if (NT_SUCCESS(Status)) return Module;
 
     /* If not, then the path should be computed */
-    DllPath = BaseComputeProcessDllPath(NULL, 0);
+    DllPath = BaseComputeProcessDllPath(NULL, NULL);
     if (!DllPath)
     {
         Status = STATUS_NO_MEMORY;

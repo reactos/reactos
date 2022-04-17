@@ -25,6 +25,7 @@ extern void func_GetSystemMetrics(void);
 extern void func_GetUserObjectInformation(void);
 extern void func_GetWindowPlacement(void);
 extern void func_InitializeLpkHooks(void);
+extern void func_keybd_event(void);
 extern void func_LoadImage(void);
 extern void func_LookupIconIdFromDirectoryEx(void);
 extern void func_MessageStateAnalyzer(void);
@@ -76,6 +77,7 @@ const struct test winetest_testlist[] =
     { "GetUserObjectInformation", func_GetUserObjectInformation },
     { "GetWindowPlacement", func_GetWindowPlacement },
     { "InitializeLpkHooks", func_InitializeLpkHooks },
+    { "keybd_event", func_keybd_event },
     { "LoadImage", func_LoadImage },
     { "LookupIconIdFromDirectoryEx", func_LookupIconIdFromDirectoryEx },
     { "MessageStateAnalyzer", func_MessageStateAnalyzer },

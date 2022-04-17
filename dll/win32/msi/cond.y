@@ -22,8 +22,6 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,8 +35,9 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "msiserver.h"
+#include "winemsi_s.h"
 #include "wine/debug.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 #include "wine/list.h"
 
@@ -116,7 +115,8 @@ static void value_free( struct value val )
 
 %lex-param { COND_input *info }
 %parse-param { COND_input *info }
-%pure-parser
+%define api.prefix {cond_}
+%define api.pure
 
 %union
 {
@@ -127,7 +127,7 @@ static void value_free( struct value val )
     BOOL bool;
 }
 
-%token COND_SPACE COND_EOF
+%token COND_SPACE
 %token COND_OR COND_AND COND_NOT COND_XOR COND_IMP COND_EQV
 %token COND_LT COND_GT COND_EQ COND_NE COND_GE COND_LE
 %token COND_ILT COND_IGT COND_IEQ COND_INE COND_IGE COND_ILE
@@ -136,7 +136,7 @@ static void value_free( struct value val )
 %token COND_PERCENT COND_DOLLARS COND_QUESTION COND_AMPER COND_EXCLAM
 %token <str> COND_IDENT <str> COND_NUMBER <str> COND_LITER
 
-%nonassoc COND_ERROR COND_EOF
+%nonassoc COND_ERROR
 
 %type <bool> expression boolean_term boolean_factor
 %type <value> value
@@ -146,7 +146,7 @@ static void value_free( struct value val )
 %%
 
 condition:
-    expression 
+    expression
         {
             COND_input* cond = (COND_input*) info;
             cond->result = $1;
@@ -159,7 +159,7 @@ condition:
     ;
 
 expression:
-    boolean_term 
+    boolean_term
         {
             $$ = $1;
         }
@@ -313,14 +313,14 @@ value:
             if( !szNum )
                 YYABORT;
             $$.type = VALUE_INTEGER;
-            $$.u.integer = atoiW( szNum );
+            $$.u.integer = wcstol( szNum, NULL, 10 );
             cond_free( szNum );
         }
   | COND_DOLLARS identifier
         {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
-      
+
             if(MSI_GetComponentStateW(cond->package, $2, &install, &action ) != ERROR_SUCCESS)
             {
                 $$.type = VALUE_LITERAL;
@@ -337,7 +337,7 @@ value:
         {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
-      
+
             if(MSI_GetComponentStateW(cond->package, $2, &install, &action ) != ERROR_SUCCESS)
             {
                 $$.type = VALUE_LITERAL;
@@ -354,7 +354,7 @@ value:
         {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install, action;
-      
+
             if (MSI_GetFeatureStateW(cond->package, $2, &install, &action ) != ERROR_SUCCESS)
             {
                 $$.type = VALUE_LITERAL;
@@ -371,7 +371,7 @@ value:
         {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
-      
+
             if(MSI_GetFeatureStateW(cond->package, $2, &install, &action ) != ERROR_SUCCESS)
             {
                 $$.type = VALUE_LITERAL;
@@ -416,7 +416,7 @@ static WCHAR *strstriW( const WCHAR *str, const WCHAR *sub )
     LPWSTR strlower, sublower, r;
     strlower = CharLowerW( strdupW( str ) );
     sublower = CharLowerW( strdupW( sub ) );
-    r = strstrW( strlower, sublower );
+    r = wcsstr( strlower, sublower );
     if (r)
         r = (LPWSTR)str + (r - strlower);
     msi_free( strlower );
@@ -432,7 +432,7 @@ static BOOL str_is_number( LPCWSTR str )
         return FALSE;
 
     for (i = 0; i < lstrlenW( str ); i++)
-        if (!isdigitW(str[i]))
+        if (!iswdigit(str[i]))
             return FALSE;
 
     return TRUE;
@@ -451,44 +451,44 @@ static INT compare_substring( LPCWSTR a, INT operator, LPCWSTR b )
         return 1;
 
     /* if both strings contain only numbers, use integer comparison */
-    lhs = atoiW(a);
-    rhs = atoiW(b);
+    lhs = wcstol(a, NULL, 10);
+    rhs = wcstol(b, NULL, 10);
     if (str_is_number(a) && str_is_number(b))
         return compare_int( lhs, operator, rhs );
 
     switch (operator)
     {
     case COND_SS:
-        return strstrW( a, b ) != 0;
+        return wcsstr( a, b ) != 0;
     case COND_ISS:
         return strstriW( a, b ) != 0;
     case COND_LHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpW( a, b, r );
+        return !wcsncmp( a, b, r );
     }
     case COND_RHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpW( a + (l - r), b, r );
+        return !wcsncmp( a + (l - r), b, r );
     }
     case COND_ILHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpiW( a, b, r );
+        return !wcsnicmp( a, b, r );
     }
     case COND_IRHS:
     {
-        int l = strlenW( a );
-        int r = strlenW( b );
+        int l = lstrlenW( a );
+        int r = lstrlenW( b );
         if (r > l) return 0;
-        return !strncmpiW( a + (l - r), b, r );
+        return !wcsnicmp( a + (l - r), b, r );
     }
     default:
         ERR("invalid substring operator\n");
@@ -503,39 +503,39 @@ static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert )
         return compare_substring( a, operator, b );
 
     /* null and empty string are equivalent */
-    if (!a) a = szEmpty;
-    if (!b) b = szEmpty;
+    if (!a) a = L"";
+    if (!b) b = L"";
 
     if (convert && str_is_number(a) && str_is_number(b))
-        return compare_int( atoiW(a), operator, atoiW(b) );
+        return compare_int( wcstol(a, NULL, 10), operator, wcstol(b, NULL, 10) );
 
     /* a or b may be NULL */
     switch (operator)
     {
     case COND_LT:
-        return strcmpW( a, b ) < 0;
+        return wcscmp( a, b ) < 0;
     case COND_GT:
-        return strcmpW( a, b ) > 0;
+        return wcscmp( a, b ) > 0;
     case COND_EQ:
-        return strcmpW( a, b ) == 0;
+        return wcscmp( a, b ) == 0;
     case COND_NE:
-        return strcmpW( a, b ) != 0;
+        return wcscmp( a, b ) != 0;
     case COND_GE:
-        return strcmpW( a, b ) >= 0;
+        return wcscmp( a, b ) >= 0;
     case COND_LE:
-        return strcmpW( a, b ) <= 0;
+        return wcscmp( a, b ) <= 0;
     case COND_ILT:
-        return strcmpiW( a, b ) < 0;
+        return wcsicmp( a, b ) < 0;
     case COND_IGT:
-        return strcmpiW( a, b ) > 0;
+        return wcsicmp( a, b ) > 0;
     case COND_IEQ:
-        return strcmpiW( a, b ) == 0;
+        return wcsicmp( a, b ) == 0;
     case COND_INE:
-        return strcmpiW( a, b ) != 0;
+        return wcsicmp( a, b ) != 0;
     case COND_IGE:
-        return strcmpiW( a, b ) >= 0;
+        return wcsicmp( a, b ) >= 0;
     case COND_ILE:
-        return strcmpiW( a, b ) <= 0;
+        return wcsicmp( a, b ) <= 0;
     default:
         ERR("invalid string operator\n");
         return 0;
@@ -583,7 +583,7 @@ static INT compare_int( INT a, INT operator, INT b )
 
 static int COND_IsIdent( WCHAR x )
 {
-    return( COND_IsAlpha( x ) || COND_IsNumber( x ) || ( x == '_' ) 
+    return( COND_IsAlpha( x ) || COND_IsNumber( x ) || ( x == '_' )
             || ( x == '#' ) || (x == '.') );
 }
 
@@ -593,24 +593,24 @@ static int COND_GetOperator( COND_input *cond )
         const WCHAR str[4];
         int id;
     } table[] = {
-        { {'~','<','=',0}, COND_ILE },
-        { {'~','>','<',0}, COND_ISS },
-        { {'~','>','>',0}, COND_IRHS },
-        { {'~','<','>',0}, COND_INE },
-        { {'~','>','=',0}, COND_IGE },
-        { {'~','<','<',0}, COND_ILHS },
-        { {'~','=',0},     COND_IEQ },
-        { {'~','<',0},     COND_ILT },
-        { {'~','>',0},     COND_IGT },
-        { {'>','=',0},     COND_GE  },
-        { {'>','<',0},     COND_SS  },
-        { {'<','<',0},     COND_LHS },
-        { {'<','>',0},     COND_NE  },
-        { {'<','=',0},     COND_LE  },
-        { {'>','>',0},     COND_RHS },
-        { {'>',0},         COND_GT  },
-        { {'<',0},         COND_LT  },
-        { {0},             0        }
+        { L"~<=", COND_ILE },
+        { L"~><", COND_ISS },
+        { L"~>>", COND_IRHS },
+        { L"~<>", COND_INE },
+        { L"~>=", COND_IGE },
+        { L"~<<", COND_ILHS },
+        { L"~=",  COND_IEQ },
+        { L"~<",  COND_ILT },
+        { L"~>",  COND_IGT },
+        { L">=",  COND_GE },
+        { L"><",  COND_SS },
+        { L"<<",  COND_LHS },
+        { L"<>",  COND_NE },
+        { L"<=",  COND_LE },
+        { L">>",  COND_RHS },
+        { L">",   COND_GT },
+        { L"<",   COND_LT },
+        { L"",    0 }
     };
     LPCWSTR p = &cond->str[cond->n];
     int i = 0, len;
@@ -618,7 +618,7 @@ static int COND_GetOperator( COND_input *cond )
     while ( 1 )
     {
         len = lstrlenW( table[i].str );
-        if ( !len || 0 == strncmpW( table[i].str, p, len ) )
+        if ( !len || 0 == wcsncmp( table[i].str, p, len ) )
             break;
         i++;
     }
@@ -667,38 +667,31 @@ static int COND_GetOne( struct cond_str *str, COND_input *cond )
 
     if (ch == '"' )
     {
-        LPCWSTR p = strchrW( str->data + 1, '"' );
+        LPCWSTR p = wcschr( str->data + 1, '"' );
         if (!p) return COND_ERROR;
         len = p - str->data + 1;
         rc = COND_LITER;
     }
     else if( COND_IsAlpha( ch ) )
     {
-        static const WCHAR szNot[] = {'N','O','T',0};
-        static const WCHAR szAnd[] = {'A','N','D',0};
-        static const WCHAR szXor[] = {'X','O','R',0};
-        static const WCHAR szEqv[] = {'E','Q','V',0};
-        static const WCHAR szImp[] = {'I','M','P',0};
-        static const WCHAR szOr[] = {'O','R',0};
-
         while( COND_IsIdent( str->data[len] ) )
             len++;
         rc = COND_IDENT;
 
         if ( len == 3 )
         {
-            if ( !strncmpiW( str->data, szNot, len ) )
+            if ( !wcsnicmp( str->data, L"NOT", len ) )
                 rc = COND_NOT;
-            else if( !strncmpiW( str->data, szAnd, len ) )
+            else if( !wcsnicmp( str->data, L"AND", len ) )
                 rc = COND_AND;
-            else if( !strncmpiW( str->data, szXor, len ) )
+            else if( !wcsnicmp( str->data, L"XOR", len ) )
                 rc = COND_XOR;
-            else if( !strncmpiW( str->data, szEqv, len ) )
+            else if( !wcsnicmp( str->data, L"EQV", len ) )
                 rc = COND_EQV;
-            else if( !strncmpiW( str->data, szImp, len ) )
+            else if( !wcsnicmp( str->data, L"IMP", len ) )
                 rc = COND_IMP;
         }
-        else if( (len == 2) && !strncmpiW( str->data, szOr, len ) )
+        else if( (len == 2) && !wcsnicmp( str->data, L"OR", len ) )
             rc = COND_OR;
     }
     else if( COND_IsNumber( ch ) )
@@ -727,7 +720,7 @@ static int cond_lex( void *COND_lval, COND_input *cond )
     do {
         rc = COND_GetOne( str, cond );
     } while (rc == COND_SPACE);
-    
+
     return rc;
 }
 
@@ -850,35 +843,25 @@ MSICONDITION WINAPI MsiEvaluateConditionW( MSIHANDLE hInstall, LPCWSTR szConditi
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE);
     if( !package )
     {
-        HRESULT hr;
-        BSTR condition;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return MSICONDITION_ERROR;
 
-        condition = SysAllocString( szCondition );
-        if (!condition)
+        if (!szCondition)
+            return MSICONDITION_NONE;
+
+        __TRY
         {
-            IWineMsiRemotePackage_Release( remote_package );
-            return ERROR_OUTOFMEMORY;
+            ret = remote_EvaluateCondition(remote, szCondition);
         }
-
-        hr = IWineMsiRemotePackage_EvaluateCondition( remote_package, condition );
-
-        SysFreeString( condition );
-        IWineMsiRemotePackage_Release( remote_package );
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
     }
 
     ret = MSI_EvaluateConditionW( package, szCondition );

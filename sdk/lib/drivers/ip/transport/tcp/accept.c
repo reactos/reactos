@@ -48,12 +48,11 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     struct ip_addr AddressToBind;
-    KIRQL OldIrql;
     TA_IP_ADDRESS LocalAddress;
 
     ASSERT(Connection);
 
-    LockObject(Connection, &OldIrql);
+    LockObject(Connection);
 
     ASSERT_KM_POINTER(Connection->AddressFile);
 
@@ -93,7 +92,7 @@ NTSTATUS TCPListen(PCONNECTION_ENDPOINT Connection, UINT Backlog)
             Status = STATUS_UNSUCCESSFUL;
     }
 
-    UnlockObject(Connection, OldIrql);
+    UnlockObject(Connection);
 
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPListen] Leaving. Status = %x\n", Status));
 
@@ -106,10 +105,9 @@ BOOLEAN TCPAbortListenForSocket
 {
     PLIST_ENTRY ListEntry;
     PTDI_BUCKET Bucket;
-    KIRQL OldIrql;
     BOOLEAN Found = FALSE;
 
-    LockObject(Listener, &OldIrql);
+    LockObject(Listener);
 
     ListEntry = Listener->ListenRequest.Flink;
     while (ListEntry != &Listener->ListenRequest)
@@ -128,7 +126,7 @@ BOOLEAN TCPAbortListenForSocket
         ListEntry = ListEntry->Flink;
     }
 
-    UnlockObject(Listener, OldIrql);
+    UnlockObject(Listener);
 
     return Found;
 }
@@ -141,9 +139,8 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
 {
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
-    KIRQL OldIrql;
 
-    LockObject(Listener, &OldIrql);
+    LockObject(Listener);
 
     Bucket = ExAllocateFromNPagedLookasideList(&TdiBucketLookasideList);
 
@@ -160,7 +157,7 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
     else
         Status = STATUS_NO_MEMORY;
 
-    UnlockObject(Listener, OldIrql);
+    UnlockObject(Listener);
 
     return Status;
 }

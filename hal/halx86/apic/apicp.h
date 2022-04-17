@@ -74,46 +74,52 @@
 
 
 /* APIC Register Address Map */
-#define APIC_ID       0x0020 /* Local APIC ID Register (R/W) */
-#define APIC_VER      0x0030 /* Local APIC Version Register (R) */
-#define APIC_TPR      0x0080 /* Task Priority Register (R/W) */
-#define APIC_APR      0x0090 /* Arbitration Priority Register (R) */
-#define APIC_PPR      0x00A0 /* Processor Priority Register (R) */
-#define APIC_EOI      0x00B0 /* EOI Register (W) */
-#define APIC_RRR      0x00C0 /* Remote Read Register () */
-#define APIC_LDR      0x00D0 /* Logical Destination Register (R/W) */
-#define APIC_DFR      0x00E0 /* Destination Format Register (0-27 R, 28-31 R/W) */
-#define APIC_SIVR     0x00F0 /* Spurious Interrupt Vector Register (0-3 R, 4-9 R/W) */
-#define APIC_ISR      0x0100 /* Interrupt Service Register 0-255 (R) */
-#define APIC_TMR      0x0180 /* Trigger Mode Register 0-255 (R) */
-#define APIC_IRR      0x0200 /* Interrupt Request Register 0-255 (r) */
-#define APIC_ESR      0x0280 /* Error Status Register (R) */
-#define APIC_ICR0     0x0300 /* Interrupt Command Register 0-31 (R/W) */
-#define APIC_ICR1     0x0310 /* Interrupt Command Register 32-63 (R/W) */
-#define APIC_TMRLVTR  0x0320 /* Timer Local Vector Table (R/W) */
-#define	APIC_THRMLVTR 0x0330 /* Thermal Local Vector Table */
-#define APIC_PCLVTR   0x0340 /* Performance Counter Local Vector Table (R/W) */
-#define APIC_LINT0    0x0350 /* LINT0 Local Vector Table (R/W) */
-#define APIC_LINT1    0x0360 /* LINT1 Local Vector Table (R/W) */
-#define APIC_ERRLVTR  0x0370 /* Error Local Vector Table (R/W) */
-#define APIC_TICR     0x0380 /* Initial Count Register for Timer (R/W) */
-#define APIC_TCCR     0x0390 /* Current Count Register for Timer (R) */
-#define APIC_TDCR     0x03E0 /* Timer Divide Configuration Register (R/W) */
-#define APIC_EAFR     0x0400 /* extended APIC Feature register (R/W) */
-#define APIC_EACR     0x0410 /* Extended APIC Control Register (R/W) */
-#define APIC_SEOI     0x0420 /* Specific End Of Interrupt Register (W) */
-#define APIC_EXT0LVTR 0x0500 /* Extended Interrupt 0 Local Vector Table */
-#define APIC_EXT1LVTR 0x0510 /* Extended Interrupt 1 Local Vector Table */
-#define APIC_EXT2LVTR 0x0520 /* Extended Interrupt 2 Local Vector Table */
-#define APIC_EXT3LVTR 0x0530 /* Extended Interrupt 3 Local Vector Table */
+typedef enum _APIC_REGISTER
+{
+    APIC_ID       = 0x0020, /* Local APIC ID Register (R/W) */
+    APIC_VER      = 0x0030, /* Local APIC Version Register (R) */
+    APIC_TPR      = 0x0080, /* Task Priority Register (R/W) */
+    APIC_APR      = 0x0090, /* Arbitration Priority Register (R) */
+    APIC_PPR      = 0x00A0, /* Processor Priority Register (R) */
+    APIC_EOI      = 0x00B0, /* EOI Register (W) */
+    APIC_RRR      = 0x00C0, /* Remote Read Register () */
+    APIC_LDR      = 0x00D0, /* Logical Destination Register (R/W) */
+    APIC_DFR      = 0x00E0, /* Destination Format Register (0-27 R, 28-31 R/W) */
+    APIC_SIVR     = 0x00F0, /* Spurious Interrupt Vector Register (0-3 R, 4-9 R/W) */
+    APIC_ISR      = 0x0100, /* Interrupt Service Register 0-255 (R) */
+    APIC_TMR      = 0x0180, /* Trigger Mode Register 0-255 (R) */
+    APIC_IRR      = 0x0200, /* Interrupt Request Register 0-255 (r) */
+    APIC_ESR      = 0x0280, /* Error Status Register (R) */
+    APIC_ICR0     = 0x0300, /* Interrupt Command Register 0-31 (R/W) */
+    APIC_ICR1     = 0x0310, /* Interrupt Command Register 32-63 (R/W) */
+    APIC_TMRLVTR  = 0x0320, /* Timer Local Vector Table (R/W) */
+    APIC_THRMLVTR = 0x0330, /* Thermal Local Vector Table */
+    APIC_PCLVTR   = 0x0340, /* Performance Counter Local Vector Table (R/W) */
+    APIC_LINT0    = 0x0350, /* LINT0 Local Vector Table (R/W) */
+    APIC_LINT1    = 0x0360, /* LINT1 Local Vector Table (R/W) */
+    APIC_ERRLVTR  = 0x0370, /* Error Local Vector Table (R/W) */
+    APIC_TICR     = 0x0380, /* Initial Count Register for Timer (R/W) */
+    APIC_TCCR     = 0x0390, /* Current Count Register for Timer (R) */
+    APIC_TDCR     = 0x03E0, /* Timer Divide Configuration Register (R/W) */
+    APIC_EAFR     = 0x0400, /* extended APIC Feature register (R/W) */
+    APIC_EACR     = 0x0410, /* Extended APIC Control Register (R/W) */
+    APIC_SEOI     = 0x0420, /* Specific End Of Interrupt Register (W) */
+    APIC_EXT0LVTR = 0x0500, /* Extended Interrupt 0 Local Vector Table */
+    APIC_EXT1LVTR = 0x0510, /* Extended Interrupt 1 Local Vector Table */
+    APIC_EXT2LVTR = 0x0520, /* Extended Interrupt 2 Local Vector Table */
+    APIC_EXT3LVTR = 0x0530  /* Extended Interrupt 3 Local Vector Table */
+} APIC_REGISTER;
 
 #define MSR_APIC_BASE 0x0000001B
 #define IOAPIC_PHYS_BASE 0xFEC00000
 #define APIC_CLOCK_INDEX 8
 #define ApicLogicalId(Cpu) ((UCHAR)(1<< Cpu))
 
-/* Message Type */
-enum
+/* The following definitions are based on AMD documentation.
+   They differ slightly in Intel documentation. */
+
+/* Message Type (Intel: "Delivery Mode") */
+typedef enum _APIC_MT
 {
     APIC_MT_Fixed = 0,
     APIC_MT_LowestPriority = 1,
@@ -123,40 +129,48 @@ enum
     APIC_MT_INIT = 5,
     APIC_MT_Startup = 6,
     APIC_MT_ExtInt = 7,
-};
+} APIC_MT;
 
 /* Trigger Mode */
-enum
+typedef enum _APIC_TGM
 {
     APIC_TGM_Edge,
     APIC_TGM_Level
-};
+} APIC_TGM;
 
-/* Delivery Mode */
-enum
+/* Destination Mode */
+typedef enum _APIC_DM
 {
     APIC_DM_Physical,
     APIC_DM_Logical
-};
+} APIC_DM;
 
 /* Destination Short Hand */
-enum
+typedef enum _APIC_DSH
 {
     APIC_DSH_Destination,
     APIC_DSH_Self,
     APIC_DSH_AllIncludingSelf,
     APIC_DSH_AllExclusingSelf
-};
+} APIC_DSH;
 
 /* Write Constants */
-enum
+typedef enum _APIC_DF
 {
     APIC_DF_Flat = 0xFFFFFFFF,
     APIC_DF_Cluster = 0x0FFFFFFF
-};
+} APIC_DF;
+
+/* Remote Read Status */
+typedef enum _APIC_RRS
+{
+    APIC_RRS_Invalid = 0,
+    APIC_RRS_Pending = 1,
+    APIC_RRS_Done = 2
+} APIC_RRS;
 
 /* Timer Constants */
-enum
+enum _TIMER_DV
 {
     TIMER_DV_DivideBy2 = 0,
     TIMER_DV_DivideBy4 = 1,
@@ -166,7 +180,7 @@ enum
     TIMER_DV_DivideBy64 = 9,
     TIMER_DV_DivideBy128 = 10,
     TIMER_DV_DivideBy1 = 11,
-};
+} TIMER_DV;
 
 #include <pshpack1.h>
 typedef union _APIC_BASE_ADRESS_REGISTER
@@ -220,7 +234,7 @@ typedef union _APIC_EXTENDED_CONTROL_REGISTER
     };
 } APIC_EXTENDED_CONTROL_REGISTER;
 
-typedef union _APIC_COMMAND_REGISTER
+typedef union _APIC_INTERRUPT_COMMAND_REGISTER
 {
     UINT64 LongLong;
     struct
@@ -237,12 +251,12 @@ typedef union _APIC_COMMAND_REGISTER
         UINT64 ReservedMBZ:1;
         UINT64 Level:1;
         UINT64 TriggerMode:1;
-        UINT64 RemoteReadStatus:2;
+        UINT64 RemoteReadStatus:2; /* Intel: Reserved */
         UINT64 DestinationShortHand:2;
         UINT64 Reserved2MBZ:36;
         UINT64 Destination:8;
     };
-} APIC_COMMAND_REGISTER;
+} APIC_INTERRUPT_COMMAND_REGISTER;
 
 typedef union _LVT_REGISTER
 {
@@ -304,16 +318,16 @@ typedef union _IOAPIC_REDIRECTION_REGISTER
 
 FORCEINLINE
 ULONG
-ApicRead(ULONG Offset)
+ApicRead(APIC_REGISTER Register)
 {
-    return READ_REGISTER_ULONG((PULONG)(APIC_BASE + Offset));
+    return READ_REGISTER_ULONG((PULONG)(APIC_BASE + Register));
 }
 
 FORCEINLINE
 VOID
-ApicWrite(ULONG Offset, ULONG Value)
+ApicWrite(APIC_REGISTER Register, ULONG Value)
 {
-    WRITE_REGISTER_ULONG((PULONG)(APIC_BASE + Offset), Value);
+    WRITE_REGISTER_ULONG((PULONG)(APIC_BASE + Register), Value);
 }
 
 VOID

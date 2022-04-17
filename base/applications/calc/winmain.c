@@ -852,7 +852,7 @@ static void update_memory_flag(HWND hWnd, BOOL mem_flag)
 
 static void update_n_stats_items(HWND hWnd, TCHAR *buffer)
 {
-    unsigned int n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCOUNT, 0, 0); 
+    unsigned int n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCOUNT, 0, 0);
 
     _stprintf(buffer, _T("n=%u"), n);
     SetDlgItemText(hWnd, IDC_TEXT_NITEMS, buffer);
@@ -1211,7 +1211,7 @@ static void handle_context_menu(HWND hWnd, WPARAM wp, LPARAM lp)
 #else
     (void)idm;
 #endif
-} 
+}
 
 static void run_canc(calc_number_t *c)
 {

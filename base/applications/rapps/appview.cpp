@@ -220,14 +220,14 @@ HWND CComboBox::Create(HWND hwndParent)
         NULL);
 
     SendMessageW(WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
-    
+
     for (int i = 0; i < (int)_countof(m_TypeStringID); i++)
     {
         ATL::CStringW szBuf;
         szBuf.LoadStringW(m_TypeStringID[i]);
         SendMessageW(CB_ADDSTRING, 0, (LPARAM)(LPCWSTR)szBuf);
     }
-    
+
     SendMessageW(CB_SETCURSEL, m_DefaultSelectType, 0); // select the first item
 
     return m_hWnd;
@@ -397,6 +397,8 @@ BOOL CAppRichEdit::ShowInstalledAppInfo(CInstalledApplicationInfo *Info)
 
     SetText(Info->szDisplayName, CFE_BOLD);
     InsertText(L"\n", 0);
+
+    Info->EnsureDetailsLoaded();
 
     InsertTextWithString(IDS_INFO_VERSION, CFE_BOLD, Info->szDisplayVersion, 0);
     InsertTextWithString(IDS_INFO_PUBLISHER, CFE_BOLD, Info->szPublisher, 0);
@@ -1125,6 +1127,30 @@ CAppsListView::~CAppsListView()
     }
 }
 
+LRESULT
+CAppsListView::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    LRESULT lRes = this->DefWindowProc(uMsg, wParam, lParam);
+    if (!m_Watermark.IsEmpty())
+    {
+        RECT rc;
+        GetClientRect(&rc);
+        HGDIOBJ oldFont = SelectFont(HDC(wParam), GetStockFont(DEFAULT_GUI_FONT));
+        DrawShadowText(
+            HDC(wParam), m_Watermark.GetString(), m_Watermark.GetLength(), &rc,
+            DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE, GetSysColor(COLOR_GRAYTEXT),
+            GetSysColor(COLOR_GRAYTEXT), 1, 1);
+        SelectFont(HDC(wParam), oldFont);
+    }
+    return lRes;
+}
+
+VOID CAppsListView::SetWatermark(const CStringW& Text)
+{
+    m_Watermark = Text;
+}
+
+
 VOID CAppsListView::SetCheckboxesVisible(BOOL bIsVisible)
 {
     if (bIsVisible)
@@ -1277,6 +1303,12 @@ HWND CAppsListView::Create(HWND hwndParent)
     SetImageList(m_hImageListView, LVSIL_SMALL);
     SetImageList(m_hImageListView, LVSIL_NORMAL);
 
+#pragma push_macro("SubclassWindow")
+#undef SubclassWindow
+    m_hWnd = NULL;
+    SubclassWindow(hwnd);
+#pragma pop_macro("SubclassWindow")
+
     return hwnd;
 }
 
@@ -1412,7 +1444,7 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
 
     if (!hIcon)
     {
-        /* Load default icon */
+        /* Load the default icon */
         hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
     }
 
@@ -1440,17 +1472,17 @@ BOOL CAppsListView::AddAvailableApplication(CAvailableApplicationInfo *AvlbAppIn
     if (AvlbAppInfo->RetrieveIcon(szIconPath))
     {
         hIcon = (HICON)LoadImageW(NULL,
-            szIconPath.GetString(),
-            IMAGE_ICON,
-            LISTVIEW_ICON_SIZE,
-            LISTVIEW_ICON_SIZE,
-            LR_LOADFROMFILE);
+                                  szIconPath.GetString(),
+                                  IMAGE_ICON,
+                                  LISTVIEW_ICON_SIZE,
+                                  LISTVIEW_ICON_SIZE,
+                                  LR_LOADFROMFILE);
     }
 
     if (!hIcon || GetLastError() != ERROR_SUCCESS)
     {
-        /* Load default icon */
-        hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        /* Load the default icon */
+        hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
     }
 
     int IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
@@ -1639,7 +1671,7 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
     return FALSE;
 }
 
-BOOL CApplicationView::CreateToolbar() 
+BOOL CApplicationView::CreateToolbar()
 {
     m_Toolbar = new CMainToolbar();
     m_Toolbar->m_VerticalAlignment = UiAlign_LeftTop;
@@ -1703,6 +1735,17 @@ BOOL CApplicationView::CreateAppInfoDisplay()
     m_HSplitter->Second().Append(m_AppsInfo);
 
     return m_AppsInfo->Create(m_hWnd) != NULL;
+}
+
+void CApplicationView::SetRedraw(BOOL bRedraw)
+{
+    CWindow::SetRedraw(bRedraw);
+    m_ListView->SetRedraw(bRedraw);
+}
+
+void CApplicationView::SetFocusOnSearchBar()
+{
+    m_SearchBar->SetFocus();
 }
 
 VOID CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
@@ -2000,6 +2043,11 @@ BOOL CApplicationView::AddAvailableApplication(CAvailableApplicationInfo *AvlbAp
         return FALSE;
     }
     return m_ListView->AddAvailableApplication(AvlbAppInfo, InitCheckState, param);
+}
+
+VOID CApplicationView::SetWatermark(const CStringW& Text)
+{
+    m_ListView->SetWatermark(Text);
 }
 
 void CApplicationView::CheckAll()

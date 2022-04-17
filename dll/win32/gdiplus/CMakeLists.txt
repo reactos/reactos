@@ -33,6 +33,12 @@ add_library(gdiplus MODULE
     gdiplus.rc
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
 
+if(MSVC)
+    # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
+    # Disable warning C4305: '=': truncation from 'double' to 'REAL'
+    target_compile_options(gdiplus PRIVATE /wd4146 /wd4305)
+endif()
+
 set_module_type(gdiplus win32dll)
 target_link_libraries(gdiplus wine)
 add_delay_importlibs(gdiplus windowscodecs)

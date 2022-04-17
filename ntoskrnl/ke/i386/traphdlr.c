@@ -1321,7 +1321,6 @@ FASTCALL
 KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
-    BOOLEAN StoreInstruction;
     ULONG_PTR Cr2;
     NTSTATUS Status;
 
@@ -1346,9 +1345,6 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 
     /* Enable interrupts */
     _enable();
-
-    /* Interpret the error code */
-    StoreInstruction = (TrapFrame->ErrCode & 2) != 0;
 
     /* Check if we came in with interrupts disabled */
     if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
@@ -1412,7 +1408,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         /* This status code is repurposed so we can recognize it later */
         KiDispatchException2Args(KI_EXCEPTION_ACCESS_VIOLATION,
                                  TrapFrame->Eip,
-                                 StoreInstruction,
+                                 MI_IS_WRITE_ACCESS(TrapFrame->ErrCode),
                                  Cr2,
                                  TrapFrame);
     }
@@ -1422,7 +1418,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         /* These faults only have two parameters */
         KiDispatchException2Args(Status,
                                  TrapFrame->Eip,
-                                 StoreInstruction,
+                                 MI_IS_WRITE_ACCESS(TrapFrame->ErrCode),
                                  Cr2,
                                  TrapFrame);
     }
@@ -1432,7 +1428,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                                      0,
                                      TrapFrame->Eip,
                                      3,
-                                     StoreInstruction,
+                                     MI_IS_WRITE_ACCESS(TrapFrame->ErrCode),
                                      Cr2,
                                      Status,
                                      TrapFrame);

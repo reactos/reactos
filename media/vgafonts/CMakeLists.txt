@@ -15,6 +15,6 @@ list(APPEND SOURCE
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/vgafonts.cab
                    COMMAND native-cabman -M raw -S ${CMAKE_CURRENT_BINARY_DIR}/vgafonts.cab ${SOURCE}
                    DEPENDS ${SOURCE} native-cabman)
-                   
+
 add_custom_target(vgafonts DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/vgafonts.cab)
 add_cd_file(TARGET vgafonts FILE ${CMAKE_CURRENT_BINARY_DIR}/vgafonts.cab DESTINATION reactos NO_CAB FOR all)

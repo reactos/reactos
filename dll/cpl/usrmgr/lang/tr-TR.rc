@@ -51,7 +51,7 @@ BEGIN
     AUTOCHECKBOX "&Kullanıcı ilk oturum açılışında parolayı değiştirmeli", IDC_USER_GENERAL_FORCE_CHANGE, 7, 82, 210, 10
     AUTOCHECKBOX "K&ullanıcı parolayı değiştirmemeli", IDC_USER_GENERAL_CANNOT_CHANGE, 7, 95, 210, 10
     AUTOCHECKBOX "&Parola hiçbir zaman geçerliliğini yitirmesin", IDC_USER_GENERAL_NEVER_EXPIRES, 7, 108, 210, 10
-    AUTOCHECKBOX "&Hesap pasif", IDC_USER_GENERAL_DISABLED, 7, 121, 210, 10
+    AUTOCHECKBOX "&Hesap devre dışı", IDC_USER_GENERAL_DISABLED, 7, 121, 210, 10
     AUTOCHECKBOX "H&esap kapalı", IDC_USER_GENERAL_LOCKED, 7, 134, 210, 10
 END
 
@@ -75,10 +75,10 @@ BEGIN
     GROUPBOX "Kullanıcı Profili", -1, 7, 7, 238, 54
     LTEXT "&Profil yolu:", -1, 16, 22, 55, 8
     EDITTEXT IDC_USER_PROFILE_PATH, 78, 19, 160, 13, ES_AUTOHSCROLL
-    LTEXT "&Otutrum açma betiği:", -1, 16, 40, 55, 8
+    LTEXT "&Oturum açma betiği:", -1, 16, 40, 55, 8
     EDITTEXT IDC_USER_PROFILE_SCRIPT, 78, 37, 160, 13, ES_AUTOHSCROLL
     GROUPBOX "Ev Dizini", -1, 7, 68, 238, 54
-    AUTORADIOBUTTON "&Yerel Yol:", IDC_USER_PROFILE_LOCAL, 16, 83, 60, 10
+    AUTORADIOBUTTON "&Yerel Profil:", IDC_USER_PROFILE_LOCAL, 16, 83, 60, 10
     AUTORADIOBUTTON "&Bağlan:", IDC_USER_PROFILE_REMOTE, 16, 100, 60, 10
     EDITTEXT IDC_USER_PROFILE_LOCAL_PATH, 78, 81, 160, 13, ES_AUTOHSCROLL
     COMBOBOX IDC_USER_PROFILE_DRIVE, 78, 99, 26, 160, CBS_DROPDOWNLIST | CBS_SORT |
@@ -133,7 +133,7 @@ BEGIN
     AUTOCHECKBOX "K&ullanıcı ilk oturum açılışında parolayı değiştirmeli", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 200, 10
     AUTOCHECKBOX "Ku&llanıcı parolayı değiştirmemeli", IDC_USER_NEW_CANNOT_CHANGE, 7, 123, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Pa&rola hiçbir zaman geçerliliğini yitirmesin", IDC_USER_NEW_NEVER_EXPIRES, 7, 137, 200, 10, WS_DISABLED
-    AUTOCHECKBOX "&Hesap pasif", IDC_USER_NEW_DISABLED, 7, 151, 200, 10
+    AUTOCHECKBOX "&Hesap devre dışı", IDC_USER_NEW_DISABLED, 7, 151, 200, 10
     DEFPUSHBUTTON "Tamam", IDOK, 156, 179, 50, 14, WS_DISABLED
     PUSHBUTTON "İptal", IDCANCEL, 210, 179, 50, 14
 END

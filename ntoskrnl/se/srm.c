@@ -1,11 +1,10 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/srm.c
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Security Reference Monitor Server
- *
- * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
- *                  Pierre Schweitzer (pierre@reactos.org)
+ * COPYRIGHT:       Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                  Copyright Pierre Schweitzer <pierre@reactos.org>
+ *                  Copyright 2021 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -14,13 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-extern LUID SeSystemAuthenticationId;
-extern LUID SeAnonymousAuthenticationId;
-
 /* PRIVATE DEFINITIONS ********************************************************/
-
-#define SEP_LOGON_SESSION_TAG 'sLeS'
-#define SEP_LOGON_NOTIFICATION_TAG 'nLeS'
 
 typedef struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION
 {
@@ -31,7 +24,7 @@ typedef struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION
 VOID
 NTAPI
 SepRmCommandServerThread(
-    PVOID StartContext);
+    _In_ PVOID StartContext);
 
 static
 NTSTATUS
@@ -41,10 +34,13 @@ SepCleanupLUIDDeviceMapDirectory(
 static
 NTSTATUS
 SepRmCreateLogonSession(
-    PLUID LogonLuid);
+    _In_ PLUID LogonLuid);
 
 
 /* GLOBALS ********************************************************************/
+
+extern LUID SeSystemAuthenticationId;
+extern LUID SeAnonymousAuthenticationId;
 
 HANDLE SeRmCommandPort;
 HANDLE SeLsaInitEvent;
@@ -65,7 +61,6 @@ UCHAR SeAuditingState[POLICY_AUDIT_EVENT_TYPE_COUNT];
 KGUARDED_MUTEX SepRmDbLock;
 PSEP_LOGON_SESSION_REFERENCES SepLogonSessions = NULL;
 PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION SepLogonNotifications = NULL;
-
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -167,7 +162,15 @@ Cleanup:
     return Status;
 }
 
-
+/**
+ * @brief
+ * Manages the phase 0 initialization of the security reference
+ * monitoring module of the kernel.
+ *
+ * @return
+ * Returns TRUE when phase 0 initialization has completed without
+ * problems, FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
 SeRmInitPhase0(VOID)
@@ -194,7 +197,15 @@ SeRmInitPhase0(VOID)
     return TRUE;
 }
 
-
+/**
+ * @brief
+ * Manages the phase 1 initialization of the security reference
+ * monitoring module of the kernel.
+ *
+ * @return
+ * Returns TRUE when phase 1 initialization has completed without
+ * problems, FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
 SeRmInitPhase1(VOID)
@@ -251,6 +262,13 @@ SeRmInitPhase1(VOID)
     return TRUE;
 }
 
+/**
+ * @brief
+ * Initializes the local security authority audit bounds.
+ *
+ * @return
+ * Nothing.
+ */
 static
 VOID
 SepAdtInitializeBounds(VOID)
@@ -289,11 +307,22 @@ SepAdtInitializeBounds(VOID)
     SepAdtMaxListLength = ListBounds.MaxLength;
 }
 
-
+/**
+ * @brief
+ * Sets an audit event for future security auditing monitoring.
+ *
+ * @param[in,out] Message
+ * The reference monitoring API message. It is used to determine
+ * if the right API message number is provided, RmAuditSetCommand
+ * in this case.
+ *
+ * @return
+ * Returns STATUS_SUCCESS.
+ */
 static
 NTSTATUS
 SepRmSetAuditEvent(
-    PSEP_RM_API_MESSAGE Message)
+    _Inout_ PSEP_RM_API_MESSAGE Message)
 {
     ULONG i;
     PAGED_CODE();
@@ -318,11 +347,170 @@ SepRmSetAuditEvent(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Inserts a logon session into an access token specified by the
+ * caller.
+ *
+ * @param[in,out] Token
+ * An access token where the logon session is about to be inserted
+ * in.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the logon session has been inserted into
+ * the token successfully. STATUS_NO_SUCH_LOGON_SESSION is returned when no logon
+ * session has been found with the matching ID of the token and as such
+ * we've failed to add the logon session to the token. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if memory pool allocation for the new session has failed.
+ */
+NTSTATUS
+NTAPI
+SepRmInsertLogonSessionIntoToken(
+    _Inout_ PTOKEN Token)
+{
+    PSEP_LOGON_SESSION_REFERENCES LogonSession;
+    PAGED_CODE();
 
+    /* Ensure that our token is not some plain garbage */
+    ASSERT(Token);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    for (LogonSession = SepLogonSessions;
+         LogonSession != NULL;
+         LogonSession = LogonSession->Next)
+    {
+        /*
+         * The insertion of a logon session into the token has to be done
+         * only IF the authentication ID of the token matches with the ID
+         * of the logon itself.
+         */
+        if (RtlEqualLuid(&LogonSession->LogonId, &Token->AuthenticationId))
+        {
+            break;
+        }
+    }
+
+    /* If we reach this then we cannot proceed further */
+    if (LogonSession == NULL)
+    {
+        DPRINT1("SepRmInsertLogonSessionIntoToken(): Couldn't insert the logon session into the specific access token!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_NO_SUCH_LOGON_SESSION;
+    }
+
+    /*
+     * Allocate the session that we are going
+     * to insert it to the token.
+     */
+    Token->LogonSession = ExAllocatePoolWithTag(PagedPool,
+                                                sizeof(SEP_LOGON_SESSION_REFERENCES),
+                                                TAG_LOGON_SESSION);
+    if (Token->LogonSession == NULL)
+    {
+        DPRINT1("SepRmInsertLogonSessionIntoToken(): Couldn't allocate new logon session into the memory pool!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /*
+     * Begin copying the logon session references data from the
+     * session whose ID matches with the token authentication ID to
+     * the new session we've allocated blocks of pool memory for it.
+     */
+    Token->LogonSession->Next = LogonSession->Next;
+    Token->LogonSession->LogonId = LogonSession->LogonId;
+    Token->LogonSession->ReferenceCount = LogonSession->ReferenceCount;
+    Token->LogonSession->Flags = LogonSession->Flags;
+    Token->LogonSession->pDeviceMap = LogonSession->pDeviceMap;
+    InsertHeadList(&LogonSession->TokenList, &Token->LogonSession->TokenList);
+
+    /* Release the database lock and we're done */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Removes a logon session from an access token.
+ *
+ * @param[in,out] Token
+ * An access token whose logon session is to be removed from it.
+ *
+ * @return
+ * STATUS_SUCCESS is returned if the logon session has been removed from
+ * the token successfully. STATUS_NO_SUCH_LOGON_SESSION is returned when no logon
+ * session has been found with the matching ID of the token and as such
+ * we've failed to remove the logon session from the token.
+ */
+NTSTATUS
+NTAPI
+SepRmRemoveLogonSessionFromToken(
+    _Inout_ PTOKEN Token)
+{
+    PSEP_LOGON_SESSION_REFERENCES LogonSession;
+    PAGED_CODE();
+
+    /* Ensure that our token is not some plain garbage */
+    ASSERT(Token);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    for (LogonSession = SepLogonSessions;
+         LogonSession != NULL;
+         LogonSession = LogonSession->Next)
+    {
+        /*
+         * Remove the logon session only when the IDs of the token and the
+         * logon match.
+         */
+        if (RtlEqualLuid(&LogonSession->LogonId, &Token->AuthenticationId))
+        {
+            break;
+        }
+    }
+
+    /* They don't match */
+    if (LogonSession == NULL)
+    {
+        DPRINT1("SepRmRemoveLogonSessionFromToken(): Couldn't remove the logon session from the access token!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_NO_SUCH_LOGON_SESSION;
+    }
+
+    /* Now it's time to delete the logon session from the token */
+    RemoveEntryList(&Token->LogonSession->TokenList);
+    ExFreePoolWithTag(Token->LogonSession, TAG_LOGON_SESSION);
+
+    /* Release the database lock and we're done */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Creates a logon session. The security reference monitoring (SRM)
+ * module of Executive uses this as an internal kernel data for
+ * respective logon sessions management within the kernel,
+ * as in form of a SEP_LOGON_SESSION_REFERENCES data structure.
+ *
+ * @param[in] LogonLuid
+ * A logon ID represented as a LUID. This LUID is used to create
+ * our logon session and add it to the sessions database.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the logon has been created successfully.
+ * STATUS_LOGON_SESSION_EXISTS is returned if a logon session with
+ * the pointed logon ID in the call already exists.
+ * STATUS_INSUFFICIENT_RESOURCES is returned if logon session allocation
+ * has failed because of lack of memory pool resources.
+ */
 static
 NTSTATUS
 SepRmCreateLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     PSEP_LOGON_SESSION_REFERENCES CurrentSession, NewSession;
     NTSTATUS Status;
@@ -334,7 +522,7 @@ SepRmCreateLogonSession(
     /* Allocate a new session structure */
     NewSession = ExAllocatePoolWithTag(PagedPool,
                                        sizeof(SEP_LOGON_SESSION_REFERENCES),
-                                       SEP_LOGON_SESSION_TAG);
+                                       TAG_LOGON_SESSION);
     if (NewSession == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -375,7 +563,7 @@ Leave:
 
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(NewSession, SEP_LOGON_SESSION_TAG);
+        ExFreePoolWithTag(NewSession, TAG_LOGON_SESSION);
     }
 
     return Status;
@@ -482,7 +670,7 @@ SepRmDeleteLogonSession(
     /* If we're here then we've deleted the logon session successfully */
     DPRINT("SepRmDeleteLogonSession(): Logon session deleted with success!\n");
     Status = STATUS_SUCCESS;
-    ExFreePoolWithTag(SessionToDelete, SEP_LOGON_SESSION_TAG);
+    ExFreePoolWithTag(SessionToDelete, TAG_LOGON_SESSION);
 
 Leave:
     /* Release the database lock */
@@ -490,10 +678,22 @@ Leave:
     return Status;
 }
 
-
+/**
+ * @brief
+ * References a logon session.
+ *
+ * @param[in] LogonLuid
+ * A valid LUID that points to the logon session in the database that
+ * we're going to reference it.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the logon has been referenced.
+ * STATUS_NO_SUCH_LOGON_SESSION is returned if the session couldn't be
+ * found otherwise.
+ */
 NTSTATUS
 SepRmReferenceLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     PSEP_LOGON_SESSION_REFERENCES CurrentSession;
 
@@ -530,6 +730,22 @@ SepRmReferenceLogonSession(
     return STATUS_NO_SUCH_LOGON_SESSION;
 }
 
+/**
+ * @brief
+ * Cleans the DOS device map directory of a logon
+ * session.
+ *
+ * @param[in] LogonLuid
+ * A logon session ID where its DOS device map directory
+ * is to be cleaned.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the device map directory has been
+ * successfully cleaned from the logon session. STATUS_INVALID_PARAMETER
+ * is returned if the caller hasn't submitted any logon ID. STATUS_NO_MEMORY
+ * is returned if buffer allocation for links has failed. A failure
+ * NTSTATUS code is returned otherwise.
+ */
 static
 NTSTATUS
 SepCleanupLUIDDeviceMapDirectory(
@@ -773,10 +989,24 @@ AllocateLinksAgain:
     return Status;
 }
 
-
+/**
+ * @brief
+ * De-references a logon session. If the session has a reference
+ * count of 0 by the time the function has de-referenced the logon,
+ * that means the session is no longer used and can be safely deleted
+ * from the logon sessions database.
+ *
+ * @param[in] LogonLuid
+ * A logon session ID to de-reference.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the logon session has been de-referenced
+ * without issues. STATUS_NO_SUCH_LOGON_SESSION is returned if no
+ * such logon exists otherwise.
+ */
 NTSTATUS
 SepRmDereferenceLogonSession(
-    PLUID LogonLuid)
+    _In_ PLUID LogonLuid)
 {
     ULONG RefCount;
     PDEVICE_MAP DeviceMap;
@@ -814,6 +1044,8 @@ SepRmDereferenceLogonSession(
                     SepCleanupLUIDDeviceMapDirectory(LogonLuid);
                     ObfDereferenceDeviceMap(DeviceMap);
                 }
+
+                /* FIXME: Alert LSA and filesystems that a logon is about to be deleted */
             }
 
             return STATUS_SUCCESS;
@@ -826,7 +1058,18 @@ SepRmDereferenceLogonSession(
     return STATUS_NO_SUCH_LOGON_SESSION;
 }
 
-
+/**
+ * @brief
+ * Main SRM server thread initialization function. It deals
+ * with security manager and LSASS port connection, thus
+ * thereby allowing communication between the kernel side
+ * (the SRM) and user mode side (the LSASS) of the security
+ * world of the operating system.
+ *
+ * @return
+ * Returns TRUE if command server connection between SRM
+ * and LSASS has succeeded, FALSE otherwise.
+ */
 BOOLEAN
 NTAPI
 SepRmCommandServerThreadInit(VOID)
@@ -969,10 +1212,19 @@ Cleanup:
     return Result;
 }
 
+/**
+ * @brief
+ * Manages the SRM server API commands, that is, receiving such API
+ * command messages from the user mode side of the security standpoint,
+ * the LSASS.
+ *
+ * @return
+ * Nothing.
+ */
 VOID
 NTAPI
 SepRmCommandServerThread(
-    PVOID StartContext)
+    _In_ PVOID StartContext)
 {
     SEP_RM_API_MESSAGE Message;
     PPORT_MESSAGE ReplyMessage;
@@ -1072,15 +1324,29 @@ SepRmCommandServerThread(
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Retrieves the DOS device map from a logon session.
+ *
+ * @param[in] LogonId
+ * A valid logon session ID.
+ *
+ * @param[out] DeviceMap
+ * The returned device map buffer from the logon session.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the device map could be gathered
+ * from the logon session. STATUS_INVALID_PARAMETER is returned if
+ * one of the parameters aren't initialized (that is, the caller has
+ * submitted a NULL pointer variable). STATUS_NO_SUCH_LOGON_SESSION is
+ * returned if no such session could be found. A failure NTSTATUS code
+ * is returned otherwise.
  */
 NTSTATUS
 NTAPI
 SeGetLogonIdDeviceMap(
-    IN PLUID LogonId,
-    OUT PDEVICE_MAP * DeviceMap
-    )
+    _In_ PLUID LogonId,
+    _Out_ PDEVICE_MAP *DeviceMap)
 {
     NTSTATUS Status;
     WCHAR Buffer[63];
@@ -1226,26 +1492,85 @@ SeGetLogonIdDeviceMap(
     return Status;
 }
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Marks a logon session for future termination, given its logon ID. This triggers
+ * a callout (the registered callback) when the logon is no longer used by anyone,
+ * that is, no token is still referencing the speciffied logon session.
+ *
+ * @param[in] LogonId
+ * The ID of the logon session.
+ *
+ * @return
+ * STATUS_SUCCESS if the logon session is marked for termination notification successfully,
+ * STATUS_NOT_FOUND if the logon session couldn't be found otherwise.
  */
 NTSTATUS
 NTAPI
 SeMarkLogonSessionForTerminationNotification(
-    IN PLUID LogonId)
+    _In_ PLUID LogonId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSEP_LOGON_SESSION_REFERENCES SessionToMark;
+    PAGED_CODE();
+
+    DPRINT("SeMarkLogonSessionForTerminationNotification(%08lx:%08lx)\n",
+           LogonId->HighPart, LogonId->LowPart);
+
+    /* Acquire the database lock */
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    /* Loop over the existing logon sessions */
+    for (SessionToMark = SepLogonSessions;
+         SessionToMark != NULL;
+         SessionToMark = SessionToMark->Next)
+    {
+        /* Does the logon with the given ID exist? */
+        if (RtlEqualLuid(&SessionToMark->LogonId, LogonId))
+        {
+            /* We found it */
+            break;
+        }
+    }
+
+    /*
+     * We've exhausted all the remaining logon sessions and
+     * couldn't find one with the provided ID.
+     */
+    if (SessionToMark == NULL)
+    {
+        DPRINT1("SeMarkLogonSessionForTerminationNotification(): Logon session couldn't be found!\n");
+        KeReleaseGuardedMutex(&SepRmDbLock);
+        return STATUS_NOT_FOUND;
+    }
+
+    /* Mark the logon session for termination */
+    SessionToMark->Flags |= SEP_LOGON_SESSION_TERMINATION_NOTIFY;
+    DPRINT("SeMarkLogonSessionForTerminationNotification(): Logon session marked for termination with success!\n");
+
+    /* Release the database lock */
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
+/**
+ * @brief
+ * Registers a callback that will be called once a logon session
+ * terminates.
+ *
+ * @param[in] CallbackRoutine
+ * Callback routine address.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the callback routine was registered
+ * successfully. STATUS_INVALID_PARAMETER is returned if the caller
+ * did not provide a callback routine. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if the callback notification data couldn't be allocated
+ * because of lack of memory pool resources.
  */
 NTSTATUS
 NTAPI
 SeRegisterLogonSessionTerminatedRoutine(
-    IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
+    _In_ PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
     PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION Notification;
     PAGED_CODE();
@@ -1257,7 +1582,7 @@ SeRegisterLogonSessionTerminatedRoutine(
     /* Allocate a new notification item */
     Notification = ExAllocatePoolWithTag(PagedPool,
                                          sizeof(SEP_LOGON_SESSION_TERMINATED_NOTIFICATION),
-                                         SEP_LOGON_NOTIFICATION_TAG);
+                                         TAG_LOGON_NOTIFICATION);
     if (Notification == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1277,14 +1602,24 @@ SeRegisterLogonSessionTerminatedRoutine(
     return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
+/**
+ * @brief
+ * Un-registers a callback routine, previously registered by
+ * SeRegisterLogonSessionTerminatedRoutine function.
+ *
+ * @param[in] CallbackRoutine
+ * Callback routine address to un-register.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the callback routine was un-registered
+ * successfully. STATUS_INVALID_PARAMETER is returned if the caller
+ * did not provide a callback routine. STATUS_NOT_FOUND is returned
+ * if the callback notification item couldn't be found.
  */
 NTSTATUS
 NTAPI
 SeUnregisterLogonSessionTerminatedRoutine(
-    IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
+    _In_ PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
     PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION Current, Previous = NULL;
     NTSTATUS Status;
@@ -1323,7 +1658,7 @@ SeUnregisterLogonSessionTerminatedRoutine(
 
         /* Free the current notification item */
         ExFreePoolWithTag(Current,
-                          SEP_LOGON_NOTIFICATION_TAG);
+                          TAG_LOGON_NOTIFICATION);
 
         Status = STATUS_SUCCESS;
     }
@@ -1333,3 +1668,5 @@ SeUnregisterLogonSessionTerminatedRoutine(
 
     return Status;
 }
+
+/* EOF */

@@ -27,6 +27,7 @@ extern "C" {
 #endif
 
 #include <wine/test.h>
+#undef subtest
 
 extern void no_op(void);
 extern int return_arg(int);

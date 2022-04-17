@@ -112,7 +112,7 @@ ApplyConsoleInfo(HWND hwndDlg)
         SetConsoleInfo  = (res != IDCANCEL);
         SaveConsoleInfo = (res == IDC_RADIO_APPLY_ALL);
 
-        if (SetConsoleInfo == FALSE)
+        if (!SetConsoleInfo)
         {
             /* Don't destroy when the user presses cancel */
             SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
@@ -227,7 +227,7 @@ InitApplet(HANDLE hSectionOrWnd)
         InitDefaultConsoleInfo(ConInfo);
     }
 
-    /* Initialize the font support -- additional TrueType fonts cache and current preview font */
+    /* Initialize the font support -- additional TrueType font cache and current preview font */
     InitTTFontCache();
     RefreshFontPreview(&FontPreview, ConInfo);
 
@@ -275,7 +275,7 @@ InitApplet(HANDLE hSectionOrWnd)
     ResetFontPreview(&FontPreview);
     ClearTTFontCache();
 
-    /* Save the console settings */
+    /* Apply the console settings if necessary */
     if (SetConsoleInfo)
     {
         HANDLE hSection;
@@ -303,19 +303,25 @@ InitApplet(HANDLE hSectionOrWnd)
             goto Quit;
         }
 
-        /* Copy the console information into the section */
+        /* Copy the console information into the section and unmap it */
         RtlCopyMemory(pSharedInfo, ConInfo, ConInfo->cbSize);
-
-        /* Unmap it */
         UnmapViewOfFile(pSharedInfo);
 
-        /* Signal to CONSRV that it can apply the new configuration */
+        /*
+         * Signal to CONSRV that it can apply the new settings.
+         *
+         * NOTE: SetConsoleInfo set to TRUE by ApplyConsoleInfo()
+         * *only* when ConInfo->hWnd != NULL and the user did not
+         * press IDCANCEL in the confirmation dialog.
+         */
+        ASSERT(ConInfo->hWnd);
         SendMessageW(ConInfo->hWnd, WM_SETCONSOLEINFO, (WPARAM)hSection, 0);
 
         /* Close the section and return */
         CloseHandle(hSection);
     }
 
+    /* Save the console settings */
     if (SaveConsoleInfo)
     {
         /* Default settings saved when ConInfo->hWnd == NULL */

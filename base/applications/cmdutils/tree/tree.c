@@ -28,7 +28,7 @@ BOOL bUseAscii = FALSE;
 /**
 * @name: HasSubFolder
 *
-* @param strPath 
+* @param strPath
 * Must specify folder name
 *
 * @return
@@ -207,7 +207,7 @@ static VOID DrawTree(PCWSTR strPath,
 
 /**
  * @name: GetDirectoryStructure
- * 
+ *
  * @param strPath
  * Must specify folder name
  *
@@ -240,7 +240,7 @@ GetDirectoryStructure(PWSTR strPath, UINT width, PCWSTR prevLine)
         wcscat(tmp, strPath);
         wcscat(tmp, L"\\*.*");
         hFind = FindFirstFileW(tmp, &FindFileData);
-        //err = GetLastError(); 
+        //err = GetLastError();
     }
 
     if (hFind == INVALID_HANDLE_VALUE)

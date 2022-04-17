@@ -23,12 +23,6 @@ typedef struct _DEVICE_EXTENSION
 
 NTSTATUS
 NTAPI
-ForwardIrpAndWait(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
-
-NTSTATUS
-NTAPI
 ForwardIrpAndForget(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);

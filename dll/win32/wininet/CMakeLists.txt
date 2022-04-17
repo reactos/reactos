@@ -39,6 +39,11 @@ add_library(wininet MODULE
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wininet.def)
 
+if(MSVC)
+    # Disable warning C4090: 'function': different 'const' qualifiers
+    target_compile_options(wininet PRIVATE /wd4090)
+endif()
+
 set_module_type(wininet win32dll)
 target_link_libraries(wininet wine ${PSEH_LIB} oldnames)
 

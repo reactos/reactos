@@ -223,8 +223,12 @@ typedef enum
 #define NTFS_FILE_TYPE_HIDDEN     0x2
 #define NTFS_FILE_TYPE_SYSTEM     0x4
 #define NTFS_FILE_TYPE_ARCHIVE    0x20
+#define NTFS_FILE_TYPE_TEMPORARY  0x100
+#define NTFS_FILE_TYPE_SPARSE     0x200
 #define NTFS_FILE_TYPE_REPARSE    0x400
 #define NTFS_FILE_TYPE_COMPRESSED 0x800
+#define NTFS_FILE_TYPE_OFFLINE    0x1000
+#define NTFS_FILE_TYPE_ENCRYPTED  0x4000
 #define NTFS_FILE_TYPE_DIRECTORY  0x10000000
 
 /* Indexed Flag in Resident attributes - still somewhat speculative */
@@ -930,6 +934,9 @@ NtfsFCBIsReparsePoint(PNTFS_FCB Fcb);
 
 BOOLEAN
 NtfsFCBIsCompressed(PNTFS_FCB Fcb);
+
+BOOLEAN
+NtfsFCBIsEncrypted(PNTFS_FCB Fcb);
 
 BOOLEAN
 NtfsFCBIsRoot(PNTFS_FCB Fcb);

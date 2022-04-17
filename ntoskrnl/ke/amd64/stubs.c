@@ -14,7 +14,6 @@
 #include <debug.h>
 
 ULONG ProcessCount;
-BOOLEAN CcPfEnablePrefetcher;
 SIZE_T KeXStateLength = sizeof(XSAVE_FORMAT);
 
 VOID
@@ -87,16 +86,6 @@ KiDpcInterruptHandler(VOID)
     /* Disable interrupts and go back to old irql */
     _disable();
     KeLowerIrql(OldIrql);
-}
-
-
-VOID
-FASTCALL
-KeZeroPages(IN PVOID Address,
-            IN ULONG Size)
-{
-    /* Not using XMMI in this routine */
-    RtlZeroMemory(Address, Size);
 }
 
 PVOID

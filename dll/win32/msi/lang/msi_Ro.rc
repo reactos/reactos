@@ -45,6 +45,7 @@ STRINGTABLE
     13 "lipsește unitatea de rețea pentru această caracteristică"
     14 "caracteristică de la:"
     15 "selectați fișierul care conține %s"
+    100 "New Folder"
 }
 
 /* Error messages */

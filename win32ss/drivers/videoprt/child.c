@@ -121,7 +121,7 @@ IntVideoPortChildQueryId(
 {
     PWCHAR Buffer = NULL, StaticBuffer;
     UNICODE_STRING UnicodeStr;
-    
+
     switch (IrpSp->Parameters.QueryId.IdType)
     {
         case BusQueryDeviceID:
@@ -353,7 +353,7 @@ IntVideoPortChildQueryCapabilities(
     DeviceCaps->DeviceD2 = FALSE;
     DeviceCaps->D1Latency = 0;
     DeviceCaps->D2Latency = 0;
-    DeviceCaps->D3Latency = 0; 
+    DeviceCaps->D3Latency = 0;
 
     switch (ChildExtension->ChildType)
     {

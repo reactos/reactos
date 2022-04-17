@@ -84,7 +84,7 @@ Test_CreateFontIndirectExA(void)
     LOGFONTA *plogfonta;
     HFONT hFont;
     ULONG ret;
- 
+
     memset(&elfedva, 0, sizeof(elfedva));
     penumlfa = &elfedva.elfEnumLogfontEx;
     plogfonta = &elfedva.elfEnumLogfontEx.elfLogFont;
@@ -130,7 +130,7 @@ Test_CreateFontIndirectExW(void)
     LOGFONTW *plogfontw;
     HFONT hFont;
     ULONG ret;
- 
+
     memset(&elfedv, 0, sizeof(elfedv));
     penumlfw = &elfedv.elfEnumLogfontEx;
     plogfontw = &elfedv.elfEnumLogfontEx.elfLogFont;

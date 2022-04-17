@@ -44,7 +44,7 @@ END
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Desfazer\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&Retroceder\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
     MENUITEM "Cor&tar\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Copiar\tCtrl+C", FCIDM_SHVIEW_COPY
@@ -70,7 +70,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Criar &atalho", IDM_CREATELINK
         MENUITEM "&Apagar", IDM_DELETE
-        MENUITEM "&Mudar o nome", IDM_RENAME
+        MENUITEM "&Alterar o nome", IDM_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Propriedades", IDM_PROPERTIES
     END
@@ -90,7 +90,7 @@ END
 
 IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Procurar pastas"
+CAPTION "Procurar pasta"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -102,7 +102,7 @@ END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Procurar pastas"
+CAPTION "Procurar pasta"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
@@ -133,15 +133,15 @@ CAPTION "Acerca do %s"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
-    LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10
-    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10
+    LTEXT "", IDC_ABOUT_APPNAME, 35, 55, 200, 10, SS_NOPREFIX
+    LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
-    LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
+    LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
     LTEXT "Esta versão do ReactOS é registada a:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
-    LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
-    LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
+    LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
+    LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
     LTEXT "Memória física instalada:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
@@ -163,7 +163,7 @@ CAPTION "Executar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Digite o nome do programa, pasta, documento, ou endereço Internet, que o ReactOS irá abrí-lo.", 12289, 36, 11, 185, 18
+    LTEXT "Digite o nome do programa, pasta, documento, ou endereço Internet, e o ReactOS abrí-lo-á.", 12289, 36, 11, 185, 18
     LTEXT "Abrir:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
     DEFPUSHBUTTON "&OK", IDOK, 62, 70, 50, 14, WS_TABSTOP
@@ -363,7 +363,7 @@ BEGIN
     LTEXT "Que conta de utilizador quer utilizar para executar este programa?", -1, 10, 20, 220, 20
     CHECKBOX "Utilizador actual %s", 14000, 10, 45, 150, 10
     LTEXT "Proteger o meu computador e dados de actividade de programas não autoridados.", -1, 25, 57, 200, 10, WS_DISABLED
-    CHECKBOX "Esta opção pode prevenir a acção de virus no computador,mas seleccionando-a pode levar a que alguns programas funcionem incorrectamente.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+    CHECKBOX "Esta opção pode prevenir a acção de virus no computador, mas seleccionando-a pode levar a que alguns programas funcionem incorrectamente.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "O seguinte utilizador:", 14002, 10, 100, 90, 10
     LTEXT "Nome do utilizador:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -414,7 +414,7 @@ BEGIN
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
     AUTORADIOBUTTON "Mostrar tarefas comuns nas &pastas", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Utilizar pastas class&icas ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
-    GROUPBOX "Procurar pastas", -1, 7, 60, 259, 45, WS_TABSTOP
+    GROUPBOX "Procurar pasta", -1, 7, 60, 259, 45, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Abrir cada pasta na &mesma janela", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Abrir cada pasta na sua &janela", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
@@ -498,11 +498,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
-    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&Mudar de utilizador", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Terminar a sessão", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Cancelar", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "Terminar sessão ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 150, 19
-    CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "Mudar de utilizador", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "Terminar a sessão", IDC_LOG_OFF_STATIC, 116, 70, 55, 11
 END
 
@@ -643,10 +643,10 @@ CAPTION "Atenção"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "Este arquivo pode ser usado pelo sistema operacional ou por\n\
-outro aplicativo. Modificar este arquivo pode danificar o seu\n\
+    LTEXT "Este ficheiro pode ser usado pelo sistema operativo ou por\n\
+outro aplicativo. Modificar este ficheiro pode danificar o seu\n\
 sistema ou torná-lo instável.\n\n\
-Tem a certeza que deseja abrir este arquivo?", IDC_STATIC, 35, 5, 230, 60
+Tem a certeza que deseja abrir este ficheiro?", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "&Sim", IDYES, 125, 55, 50, 14
     PUSHBUTTON "&Não", IDNO, 180, 55, 50, 14
 END
@@ -717,7 +717,7 @@ BEGIN
     LTEXT "Visualizar:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
     GROUPBOX "Icones", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "Para todas as exibições, excepto miniaturas, pode alterar o ícone padrão  'pasta' para outro ícone.", IDC_STATIC, 15, 180, 210, 25
+    LTEXT "Para todas as exibições, excepto miniaturas, pode alterar o ícone padrão 'pasta' para outro ícone.", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
     PUSHBUTTON "Alterar &Icone.", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
@@ -732,7 +732,7 @@ BEGIN
     LTEXT "Correspondência mais próxima com base no nome, tipo, tamanho e data:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
     LTEXT "Deseja corrigir este atalho para apontar para este destino ou apenas excluír?", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "&Corrigir", IDOK, 55, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "&Apagar", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "&Eliminar", IDYES, 120, 120, 60, 15
     PUSHBUTTON "Cancelar", IDCANCEL, 185, 120, 60, 15
 END
 
@@ -770,7 +770,7 @@ BEGIN
 
     /* special folders descriptions */
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Definir configurações administrativas para o seu computador."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Personalize a exibição de arquivos, pastas e altere a associação de arquivos."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Personalize a exibição de ficheiros, pastas e altere a associação de ficheiros."
     IDS_FONTS_DESCRIPTION "Adicionar, alterar e gerenciar fontes no seu computador."
     IDS_PRINTERS_DESCRIPTION "Lista as impressoras e fax instalados e ajuda-o a adicionar novos equipamentos."
 
@@ -801,10 +801,12 @@ BEGIN
     IDS_MOVEERRORTITLE "Erro ao mover pasta ou ficheiro"
     IDS_COPYERRORTITLE "Erro ao copiar pasta ou ficheiro"
     IDS_MOVEERRORSAMEFOLDER "Impossivel mover '%s': A paste de destino é a mesma da origem."
-    IDS_MOVEERRORSAME "Impossivel mover '%s': Os nomes dos arquivos de origem e de destino são os mesmos."
-    IDS_COPYERRORSAME "Impossivel copiar '%s': Os nomes dos arquivos de origem e de destino são os mesmos."
+    IDS_MOVEERRORSAME "Impossivel mover '%s': Os nomes dos ficheiros de origem e de destino são os mesmos."
+    IDS_COPYERRORSAME "Impossivel copiar '%s': Os nomes dos ficheiros de origem e de destino são os mesmos."
     IDS_MOVEERRORSUBFOLDER "Impossivel mover '%s': A pasta de destino é uma subpasta da pasta de origem."
     IDS_COPYERRORSUBFOLDER "Impossivel copiar '%s': A pasta de destino é uma subpasta da pasta de origem."
+    IDS_MOVEERROR "Impossivel mover '%s': %s"
+    IDS_COPYERROR "Impossivel copiar '%s': %s"
 
     IDS_CREATEFOLDER_DENIED "Impossivel criar pasta '%1'"
     IDS_CREATEFOLDER_CAPTION "Impossivel criar pasta"
@@ -840,14 +842,13 @@ BEGIN
     IDS_FORMAT_COMPLETE "Formatação concluida."
 
     /* Warning format system drive dialog strings */
-    IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
-
+    IDS_NO_FORMAT_TITLE "Impossivel formatar este volume"
+    IDS_NO_FORMAT "Este volume não pode ser formatado! Ele comtém ficheiros de sistem importantes para o funcionamento do ReactOS."
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Não é possível abrir a caixa de diálogo Executar arquivo (erro interno)"
-    IDS_RUNDLG_BROWSE_ERROR "Não é possível abrir a caixa de diálogo Procurar arquivo (erro interno)"
+    IDS_RUNDLG_ERROR "Não é possível abrir a caixa de diálogo ""Executar"" (erro interno)"
+    IDS_RUNDLG_BROWSE_ERROR "Não é possível abrir a caixa de diálogo ""Procurar ficheiro"" (erro interno)"
     IDS_RUNDLG_BROWSE_CAPTION "Procurar"
-    IDS_RUNDLG_BROWSE_FILTER "Arquivos executáveis (*.exe)\0*.exe\0Todos (*.*)\0*.*\0"
+    IDS_RUNDLG_BROWSE_FILTER "Ficheiros executáveis (*.exe)\0*.exe\0Todos (*.*)\0*.*\0"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Iniciar\\Programas"
@@ -916,17 +917,17 @@ BEGIN
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Pasta"
-    IDS_BAT_FILE "Arquivo em lote do ReactOS"
+    IDS_BAT_FILE "Ficheiro em lote do ReactOS"
     IDS_CMD_FILE "Script de Comando do ReactOS"
     IDS_COM_FILE "Aplicação DOS"
     IDS_CPL_FILE "Item do Painel de Controle"
     IDS_CUR_FILE "Cursor"
-    IDS_DB__FILE "Arquivo de banco de dados"
+    IDS_DB__FILE "Ficheiro de banco de dados"
     IDS_DLL_FILE "Extensão da Aplicação"
     IDS_DRV_FILE "Controlador do Dispositivo"
     IDS_EFI_FILE "Interface de Firmware Extensível Executável"
     IDS_EXE_FILE "Aplicação"
-    IDS_NLS_FILE "Arquivo de Suporte ao Idioma Nacional"
+    IDS_NLS_FILE "Ficheiro de Suporte ao Idioma Nacional"
     IDS_OCX_FILE "Control ActiveX"
     IDS_TLB_FILE "Biblioteca de tipos"
     IDS_FON_FILE "Ficheiro de tipo de letra"
@@ -936,12 +937,12 @@ BEGIN
     IDS_ICO_FILE "Icone"
     IDS_INI_FILE "Definições"
     IDS_LNK_FILE "Atalho"
-    IDS_NT__FILE "Arquivo de configuração do NT DOS32"
-    IDS_PIF_FILE "Arquivo de informações do programa NT VDM"
+    IDS_NT__FILE "Ficheiro de configuração do NT DOS32"
+    IDS_PIF_FILE "Ficheiro de informações do programa NT VDM"
     IDS_SCR_FILE "Protecção de ecrã"
     IDS_SYS_FILE "Ficheiro de Sistema"
     IDS_VXD_FILE "Controlador de Dispositivo Virtual"
-    IDS_ANY_FILE "Arquivo %s"
+    IDS_ANY_FILE "Ficheiro %s"
 
     IDS_OPEN_VERB "Abrir"
     IDS_EXPLORE_VERB "Explorar"
@@ -968,7 +969,7 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "Arquivo %s"
+    IDS_FILE_EXT_TYPE "Ficheiro %s"
 
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Aplicação desconhecida"
@@ -980,55 +981,55 @@ BEGIN
 
     IDS_ADVANCED_FOLDER "Pastas e ficheiros"
     IDS_ADVANCED_NET_CRAWLER "Pesquisar automaticamente pastas e impressoras de rede"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Exibir informações de tamanho de arquivo nas informações de pastas"
-    IDS_ADVANCED_FRIENDLY_TREE "Exibir visualização simples na lista de pastas do Explorador"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Exibir o conteúdo das pastas do sistema"
-    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Exibir o caminho completo na barra de endereço"
-    IDS_ADVANCED_SHOW_FULL_PATH "Exibir o caminho completo na barra de título"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Mostrar informações de tamanho de arquivo nas informações de pastas"
+    IDS_ADVANCED_FRIENDLY_TREE "Mostrar visualização simples na lista de pastas do Explorador"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Mostrar o conteúdo das pastas do sistema"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Mostrar o caminho completo na barra de endereço"
+    IDS_ADVANCED_SHOW_FULL_PATH "Mostrar o caminho completo na barra de título"
     IDS_ADVANCED_DISABLE_THUMB_CACHE "Não armazenar miniaturas em cache"
-    IDS_ADVANCED_HIDDEN "Arquivos e pastas ocultos"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Não mostrar arquivos e pastas ocultos"
-    IDS_ADVANCED_SHOW_HIDDEN "Mostrar arquivos e pastas ocultos"
+    IDS_ADVANCED_HIDDEN "Ficheiros e pastas ocultos"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Não mostrar ficheiros e pastas ocultos"
+    IDS_ADVANCED_SHOW_HIDDEN "Mostrar ficheiros e pastas ocultos"
     IDS_ADVANCED_HIDE_FILE_EXT "Ocultar extensões de ficheiros conhecidos"
-    IDS_ADVANCED_SUPER_HIDDEN "Ocultar arquivos protegidos do sistema operacional (recomendado)"
+    IDS_ADVANCED_SUPER_HIDDEN "Ocultar ficheiros protegidos do sistema operacional (recomendado)"
     IDS_ADVANCED_DESKTOP_PROCESS "Iniciar janelas de pastas num processo separado"
     IDS_ADVANCED_CLASSIC_VIEW_STATE "Lembre-se das configurações de exibição de cada pasta"
     IDS_ADVANCED_PERSIST_BROWSERS "Restaurar janelas de pastas anteriores no início de sessão"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Mostrar painel de controle no meu computador"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Mostrar arquivos NTFS criptografados ou compactados em cores"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Mostrar ficheiros NTFS criptografados ou compactados em cores"
     IDS_ADVANCED_SHOW_INFO_TIP "Mostrar descrição pop-up para itens de pastas e área de trabalho"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< A&vançado"
     IDS_NEWEXT_ADVANCED_RIGHT "Avança&do >>"
     IDS_NEWEXT_NEW "<Novo>"
     IDS_NEWEXT_SPECIFY_EXT "Deve especificar uma extensão."
-    IDS_NEWEXT_ALREADY_ASSOC "A extensão %s já está associada ao tipo de arquivo %s. Deseja desassociar %s com %s e criar um novo tipo de arquivo?"
+    IDS_NEWEXT_ALREADY_ASSOC "A extensão %s já está associada ao tipo de ficheiros %s. Deseja desassociar %s com %s e criar um novo tipo de ficheiros?"
     IDS_NEWEXT_EXT_IN_USE "A extensão está em uso"
 
-    IDS_REMOVE_EXT "Se remover uma extensão de nome de arquivo registrado, não poderá abrir arquivos com esta extensão clicando duas vezes nos ícones.\n\nTem a certeza de que deseja remover esta extensão?"
+    IDS_REMOVE_EXT "Se remover uma extensão de nome de ficheiros registrado, não poderá abrir ficheiros com esta extensão clicando duas vezes nos ícones.\n\nTem a certeza de que deseja remover esta extensão?"
     IDS_SPECIFY_ACTION "Deve especificar uma acção."
-    IDS_INVALID_PROGRAM "Não foi possível encontrar o programa especificado. Verifique se o nome e o caminho do arquivo estão correctos."
+    IDS_INVALID_PROGRAM "Não foi possível encontrar o programa especificado. Verifique se o nome e o caminho do ficheiros estão correctos."
     IDS_REMOVE_ACTION "Tem a certeza que deseja remover esta acção?"
-    IDS_ACTION_EXISTS "A acção '%s' já está registrada para este tipo de arquivo. Digite um nome diferente e tente novamente."
+    IDS_ACTION_EXISTS "A acção '%s' já está registrada para este tipo de ficheiros. Digite um nome diferente e tente novamente."
     IDS_EXE_FILTER "Programas\0*.exe\0Todos os tipos\0*.*\0"
     IDS_EDITING_ACTION "Editar acção para o tipo: "
-    IDS_NO_ICONS "O arquivo '%s' não contém ícones.\n\nEscolha um ícone da lista ou especifique um arquivo diferente."
-    IDS_FILE_NOT_FOUND "O arquivo '%s' não foi encontrado."
+    IDS_NO_ICONS "O ficheiros '%s' não contém ícones.\n\nEscolha um ícone da lista ou especifique um ficheiros diferente."
+    IDS_FILE_NOT_FOUND "O ficheiros '%s' não foi encontrado."
     IDS_LINK_INVALID "O item '%s' a que este atalho se refere foi alterado ou movido, assim, este atalho não mais funcionará correctamente."
     IDS_COPYTOMENU "Copiar para &pasta..."
-    IDS_COPYTOTITLE "Seleccione o local para onde deseja copiar '%s'. De seguida, clique no botão Copiar."
+    IDS_COPYTOTITLE "Seleccione o local para onde deseja copiar '%s'. De seguida, clique no botão ""Copiar""."
     IDS_COPYITEMS "Copiar Items"
     IDS_COPYBUTTON "Copiar"
     IDS_MOVETOMENU "Mo&ver para pasta..."
-    IDS_MOVETOTITLE "Seleccione o local para onde deseja mover '%s'. De seguida, clique no botão Mover."
+    IDS_MOVETOTITLE "Seleccione o local para onde deseja mover '%s'. De seguida, clique no botão ""Mover""."
     IDS_MOVEITEMS "Mover Items"
     IDS_MOVEBUTTON "Mover"
 
     IDS_SYSTEMFOLDER "Pasta de sistema"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
-    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_DESC "Feche todos os programas e termine a sua sessão ReactOS"
+    IDS_SWITCH_USER_DESC "Permite que outro utilizador inicie sessão enquanto seus programas e ficheiros permanecem abertos.\r\n\r\n(Também pode mudar de utilizador, pressionando a tecla do logotipo do Windows + L.)"
     IDS_LOG_OFF_TITLE "Terminar a sessão"
-    IDS_SWITCH_USER_TITLE "Switch User"
+    IDS_SWITCH_USER_TITLE "Mudar de utilizador"
 END

@@ -77,7 +77,7 @@ public:
         if (m_shellPidl)
             ILFree(m_shellPidl);
     }
-    
+
     // IShellFolder
     virtual HRESULT STDMETHODCALLTYPE ParseDisplayName(
         HWND hwndOwner,
@@ -215,8 +215,8 @@ protected:
         PWSTR path,
         const TItemId * info,
         LPITEMIDLIST first,
-        LPCITEMIDLIST rest, 
-        LPITEMIDLIST fullPidl, 
+        LPCITEMIDLIST rest,
+        LPITEMIDLIST fullPidl,
         LPBC pbcReserved,
         IShellFolder** ppsfChild) PURE;
 
@@ -448,7 +448,7 @@ public:
 
                 apidl = &child;
             }
-            
+
             if (cidl == 1 && IsFolder(apidl[0]))
             {
                 res = RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
@@ -653,8 +653,8 @@ public:
     // Internal
 protected:
     virtual HRESULT STDMETHODCALLTYPE CompareIDs(
-        LPARAM lParam, 
-        const TItemId * first, 
+        LPARAM lParam,
+        const TItemId * first,
         const TItemId * second) PURE;
 
     virtual ULONG STDMETHODCALLTYPE ConvertAttributes(

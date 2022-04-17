@@ -50,7 +50,7 @@ DrvEnableSurface(
                           &(ppdev->ModeIndex), sizeof(ULONG), NULL, 0,
                           &ulTemp))
    {
-      return FALSE;
+      return NULL;
    }
 
    /*
@@ -63,7 +63,7 @@ DrvEnableSurface(
                           &VideoMemoryInfo, sizeof(VIDEO_MEMORY_INFORMATION),
                           &ulTemp))
    {
-      return FALSE;
+      return NULL;
    }
 
    ppdev->ScreenPtr = VideoMemoryInfo.FrameBufferBase;
@@ -88,7 +88,7 @@ DrvEnableSurface(
          break;
 
       default:
-         return FALSE;
+         return NULL;
    }
 
    ppdev->iDitherFormat = BitmapType;
@@ -101,7 +101,7 @@ DrvEnableSurface(
                                      ppdev->ScreenPtr);
    if (hSurface == NULL)
    {
-      return FALSE;
+      return NULL;
    }
 
    /*
@@ -111,7 +111,7 @@ DrvEnableSurface(
    if (!EngAssociateSurface(hSurface, ppdev->hDevEng, 0))
    {
       EngDeleteSurface(hSurface);
-      return FALSE;
+      return NULL;
    }
 
    ppdev->hSurfEng = hSurface;

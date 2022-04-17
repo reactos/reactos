@@ -10,7 +10,7 @@ int __get_app_type()
     return 0;
 }
 
-int _fileinfo = 0;
+int _fileinfo = -1;
 
 void *
 __p__fileinfo()

@@ -134,8 +134,8 @@ UDFCommonDirControl(
     PFILE_OBJECT            FileObject = NULL;
     PtrUDFFCB               Fcb = NULL;
     PtrUDFCCB               Ccb = NULL;
-    PVCB                    Vcb = NULL;
-    BOOLEAN                 AcquiredVcb = FALSE;
+    _SEH2_VOLATILE PVCB     Vcb = NULL;
+    _SEH2_VOLATILE BOOLEAN  AcquiredVcb = FALSE;
 
     TmPrint(("UDFCommonDirControl: \n"));
 //    BrutePoint();
@@ -226,8 +226,8 @@ UDFQueryDirectory(
     BOOLEAN                     PostRequest = FALSE;
     PtrUDFNTRequiredFCB         NtReqFcb = NULL;
     BOOLEAN                     CanWait = FALSE;
-    PVCB                        Vcb = NULL;
-    BOOLEAN                     AcquiredFCB = FALSE;
+    _SEH2_VOLATILE PVCB         Vcb = NULL;
+    _SEH2_VOLATILE BOOLEAN      AcquiredFCB = FALSE;
     unsigned long               BufferLength = 0;
     UNICODE_STRING              SearchPattern;
     PUNICODE_STRING             PtrSearchPattern;
@@ -696,8 +696,8 @@ UDFNotifyChangeDirectory(
     BOOLEAN                     CanWait = FALSE;
     ULONG                       CompletionFilter = 0;
     BOOLEAN                     WatchTree = FALSE;
-    PVCB                        Vcb = NULL;
-    BOOLEAN                     AcquiredFCB = FALSE;
+    _SEH2_VOLATILE PVCB         Vcb = NULL;
+    _SEH2_VOLATILE BOOLEAN      AcquiredFCB = FALSE;
     PEXTENDED_IO_STACK_LOCATION pStackLocation = (PEXTENDED_IO_STACK_LOCATION) IrpSp;
 
     UDFPrint(("UDFNotifyChangeDirectory\n"));

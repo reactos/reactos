@@ -194,7 +194,8 @@
 // PAGE_SIZE definition
 //
 #ifndef PAGE_SIZE
-#if defined(TARGET_i386) || defined(TARGET_amd64) || defined(TARGET_arm)
+#if defined(TARGET_i386) || defined(TARGET_amd64) || \
+    defined(TARGET_arm)  || defined(TARGET_arm64)
 #define PAGE_SIZE 0x1000
 #else
 #error Local PAGE_SIZE definition required when built as host
@@ -213,7 +214,7 @@
 #include "hivedata.h"
 #include "cmdata.h"
 
-#if defined(_TYPEDEFS_HOST_H) || defined(__FREELDR_H) // || defined(_BLDR_)
+#if defined(_TYPEDEFS_HOST_H) || defined(_BLDR_)
 
 #define PCM_KEY_SECURITY_CACHE_ENTRY    PVOID
 #define PCM_KEY_CONTROL_BLOCK           PVOID
@@ -223,7 +224,7 @@
 #define CMP_SECURITY_HASH_LISTS         64
 
 // #endif // Commented out until one finds a way to properly include
-          // this header in freeldr and in ntoskrnl.
+          // this header in the bootloader and in ntoskrnl.
 
 //
 // Use Count Log and Entry
@@ -383,15 +384,13 @@ VOID CMAPI
 HvFree(
    PHHIVE RegistryHive);
 
-PVOID CMAPI
-HvGetCell(
-   PHHIVE RegistryHive,
-   HCELL_INDEX CellOffset);
+#define HvGetCell(Hive, Cell)   \
+    (Hive)->GetCellRoutine(Hive, Cell)
 
-#define HvReleaseCell(h, c)             \
-do {                                    \
-    if ((h)->ReleaseCellRoutine)        \
-        (h)->ReleaseCellRoutine(h, c);  \
+#define HvReleaseCell(Hive, Cell)               \
+do {                                            \
+    if ((Hive)->ReleaseCellRoutine)             \
+        (Hive)->ReleaseCellRoutine(Hive, Cell); \
 } while(0)
 
 LONG CMAPI
@@ -466,6 +465,11 @@ HvReleaseFreeCellRefArray(
 /*
  * Private functions.
  */
+
+PCELL_DATA CMAPI
+HvpGetCellData(
+    _In_ PHHIVE Hive,
+    _In_ HCELL_INDEX CellIndex);
 
 PHBIN CMAPI
 HvpAddBin(
@@ -563,7 +567,7 @@ USHORT
 NTAPI
 CmpNameSize(
     IN PHHIVE Hive,
-    IN PUNICODE_STRING Name
+    IN PCUNICODE_STRING Name
 );
 
 USHORT
@@ -578,7 +582,7 @@ NTAPI
 CmpCopyName(
     IN PHHIVE Hive,
     OUT PWCHAR Destination,
-    IN PUNICODE_STRING Source
+    IN PCUNICODE_STRING Source
 );
 
 VOID
@@ -595,7 +599,7 @@ NTAPI
 CmpFindNameInList(
     IN PHHIVE Hive,
     IN PCHILD_LIST ChildList,
-    IN PUNICODE_STRING Name,
+    IN PCUNICODE_STRING Name,
     OUT PULONG ChildIndex OPTIONAL,
     OUT PHCELL_INDEX CellIndex
 );
@@ -609,7 +613,7 @@ NTAPI
 CmpFindValueByName(
     IN PHHIVE Hive,
     IN PCM_KEY_NODE KeyNode,
-    IN PUNICODE_STRING Name
+    IN PCUNICODE_STRING Name
 );
 
 PCELL_DATA

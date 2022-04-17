@@ -113,7 +113,7 @@ HRESULT CMenuBand_CreateInstance(REFIID iid, LPVOID *ppv)
 #if USE_CUSTOM_MENUBAND
     HMODULE hRShell = GetModuleHandleW(L"rshell.dll");
 
-    if (!hRShell) 
+    if (!hRShell)
         hRShell = LoadLibraryW(L"rshell.dll");
 
     if (hRShell)

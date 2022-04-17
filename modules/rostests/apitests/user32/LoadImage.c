@@ -26,7 +26,7 @@ START_TEST(LoadImage)
         sscanf (test_argv[2], "%Iu", (ULONG_PTR*) &arg);
 
         ok(handle != arg, "Got same handles\n");
-        
+
         /* Try copying it */
         hCopy = CopyIcon(arg);
         ok(hCopy != NULL, "\n");
@@ -37,7 +37,7 @@ START_TEST(LoadImage)
         ok(DestroyIcon(hCopy), "\n");
         /* Unlike the original, this one is not shared */
         ok(!DestroyIcon(hCopy), "\n");
-        
+
         hCopy = CopyImage(arg, IMAGE_CURSOR, 0, 0, LR_COPYFROMRESOURCE);
         ok(hCopy != NULL, "\n");
         ok(DestroyIcon(hCopy), "\n");
@@ -49,7 +49,7 @@ START_TEST(LoadImage)
         ok(DestroyIcon(hCopy), "\n");
         /* This one is shared */
         ok(DestroyIcon(hCopy), "\n");
-        
+
         hCopy = CopyImage(arg, IMAGE_CURSOR, 0, 0, LR_SHARED);
         ok(hCopy != NULL, "\n");
         ok(DestroyIcon(hCopy), "DestroyIcon should succeed.\n");
@@ -65,13 +65,13 @@ START_TEST(LoadImage)
         ok(hbmp != NULL, "\n");
         hbmp = SelectObject(hdc, hbmp);
         ok(hbmp != NULL, "\n");
-        
+
         ok(DrawIcon(hdc, 0, 0, arg), "\n");
         hbmp = SelectObject(hdc, hbmp);
         DeleteObject(hbmp);
         DeleteDC(hdc);
         DeleteDC(hdcScreen);
-        
+
         ok(GetIconInfo(arg, &ii), "\n");
         ok(ii.hbmMask != NULL, "\n");
         DeleteObject(ii.hbmMask);

@@ -17,14 +17,6 @@ extern "C" {
 #define _NLSCMPERROR 2147483647
 #endif
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifndef _CRT_MEMORY_DEFINED
 #define _CRT_MEMORY_DEFINED
 
@@ -516,7 +508,7 @@ extern "C" {
   _strupr_s_l(
     _Inout_updates_z_(_Size) char *_Str,
     _In_ size_t _Size,
-    _locale_t _Locale);
+    _In_opt_ _locale_t _Locale);
 
   _Check_return_wat_
   _CRTIMP

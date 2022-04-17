@@ -74,7 +74,7 @@ dump(PUINT32 buffer, int width, LPCSTR title)
 
         if (pixel_value != WHITE_PIXEL && c != '?')
         {
-            attributes = (pixel_value & RED_PIXEL) ? FOREGROUND_RED : 0 | 
+            attributes = (pixel_value & RED_PIXEL) ? FOREGROUND_RED : 0 |
                          (pixel_value & GREEN_PIXEL) ? FOREGROUND_GREEN : 0 |
                          (pixel_value & BLUE_PIXEL) ? FOREGROUND_BLUE : 0;
         }

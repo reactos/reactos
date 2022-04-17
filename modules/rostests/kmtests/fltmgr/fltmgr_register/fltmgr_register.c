@@ -108,7 +108,7 @@ TestFltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject)
 
 
     ok_eq_hex(Filter->Base.Flags, FLT_OBFL_TYPE_FILTER);
-    
+
     /* Check we have the right filter name */
     RtlInitUnicodeString(&Name, L"Kmtest-FltMgrReg");
     ok_eq_long(RtlCompareUnicodeString(&Filter->Name, &Name, FALSE), 0);
@@ -125,7 +125,7 @@ TestFltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject)
     FltUnregisterFilter(Filter);
 
     /*
-     * The last thing we'll do before we exit is to properly register with the filter manager 
+     * The last thing we'll do before we exit is to properly register with the filter manager
      * and set an unload routine. This'll let us test the FltUnregisterFilter routine
      */
     RESET_REGISTRATION(TRUE);
@@ -136,7 +136,7 @@ TestFltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject)
     FilterRegistration.FilterUnloadCallback = TestRegFilterUnload;
     Status = FltRegisterFilter(DriverObject, &FilterRegistration, &TestFilter);
     ok_eq_hex(Status, STATUS_SUCCESS);
-    
+
     /* Test all the unlod routines */
     ok_eq_pointer(TestFilter->FilterUnload, TestRegFilterUnload);
     ok_eq_pointer(TestFilter->OldDriverUnload, (PFLT_FILTER_UNLOAD_CALLBACK)0x1234FFFF);

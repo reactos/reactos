@@ -7,7 +7,7 @@
 #include <sect_attribs.h>
 #include <internal.h>
 
-__declspec(dllimport) int __cdecl __lconv_init (void);
+_CRTIMP int __cdecl __lconv_init (void);
 
 int mingw_initcharmax = 0;
 

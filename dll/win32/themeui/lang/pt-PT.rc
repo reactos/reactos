@@ -4,7 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_BRICK "Tijolo"
     IDS_EGGPLANT "Berinjela"
-    IDS_GOLIVE "Oliva Verde"  
+    IDS_GOLIVE "Oliva Verde"
     IDS_HCONTRAST_1 "Alto contraste 1"
     IDS_HCONTRAST_2 "Alto contraste 2"
     IDS_HCONTRAST_BLACK "Alto contraste preto"

@@ -31,42 +31,42 @@ STRINGTABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
     IDS_USAGE
-    "\nSYNTAX:\n \
-        ipconfig [/? | /all | /renew [kort] | /release [kort] |\n \
-                  /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid kort |\n \
-                  /setclassid kort [classid] ]\n \
-\n \
-    där\n \
-        kort         Anslutningssnamn\n \
-                       (jokertecken * och ? är tillåtet, se exempeln)\n \
-\n \
-        Alternativ:\n \
-           /?           Visar detta hjälpmeddelandet\n \
-           /all         Visar detaljerd information.\n \
-           /release     Frigör IP adressen för det angivna kortet.\n \
-           /renew       Förnya alla IP adresser för det angivna kortet.\n \
-           /flushdns    Tömmer DNS Resolver-buffern.\n \
-           /registerdns Uppdaterar alla DHCP leaseavtal och registerer DNS namn på nytt.\n \
-           /displaydns  Visar inhåll i DNS Resolver-bufferen.\n \
-           /showclassid Visar alla klass-ID:na för DHCP som är tillåtet för kortet.\n \
-           /setclassid  Ändrar DHCP-klass-ID:t.\n \
-\n \
-    Som standard visas bara IP-adressen, nätsmasken och\n \
-    standardgateway för varje nätverkskort som är bundet till TCP/IP.\n \
-\n \
-    Om inget nätverkskort angetts för Release och Renew, kommer IP-adresserna\n \
-    för alla nätverkskort som är bundna till TCP/IP att frigöras eller förnyas.\n \
-\n \
-    Om inget klass-ID har angetts för Setclassid tas klass-ID:t bort.\n \
-\n \
-    Exempel:\n \
-        > ipconfig                   ... Visar informastion.\n \
-        > ipconfig /all              ... Visar detaljerd information\n \
-        > ipconfig /renew            ... Förnyar alla kort\n \
-        > ipconfig /renew EL*        ... Förnyar alle kort med navn som\n \
-                                         börjar med EL\n \
-        > ipconfig /release *Ans*    ... frigör alla matchande anslutningar,\n \
-                                         t.ex.  ""Anslutning till lokalt nätverk 1"" eller\n \
-												""Anslutning till lokalt nätverk 2""\n"
+    "\nSYNTAX:\n\
+        ipconfig [/? | /all | /renew [kort] | /release [kort] |\n\
+                  /flushdns | /displaydns | /registerdns |\n\
+                  /showclassid kort |\n\
+                  /setclassid kort [classid] ]\n\
+\n\
+    där\n\
+        kort         Anslutningssnamn\n\
+                       (jokertecken * och ? är tillåtet, se exempeln)\n\
+\n\
+        Alternativ:\n\
+           /?           Visar detta hjälpmeddelandet\n\
+           /all         Visar detaljerd information.\n\
+           /release     Frigör IP adressen för det angivna kortet.\n\
+           /renew       Förnya alla IP adresser för det angivna kortet.\n\
+           /flushdns    Tömmer DNS Resolver-buffern.\n\
+           /registerdns Uppdaterar alla DHCP leaseavtal och registerer DNS namn på nytt.\n\
+           /displaydns  Visar inhåll i DNS Resolver-bufferen.\n\
+           /showclassid Visar alla klass-ID:na för DHCP som är tillåtet för kortet.\n\
+           /setclassid  Ändrar DHCP-klass-ID:t.\n\
+\n\
+    Som standard visas bara IP-adressen, nätsmasken och\n\
+    standardgateway för varje nätverkskort som är bundet till TCP/IP.\n\
+\n\
+    Om inget nätverkskort angetts för Release och Renew, kommer IP-adresserna\n\
+    för alla nätverkskort som är bundna till TCP/IP att frigöras eller förnyas.\n\
+\n\
+    Om inget klass-ID har angetts för Setclassid tas klass-ID:t bort.\n\
+\n\
+    Exempel:\n\
+        > ipconfig                   ... Visar informastion.\n\
+        > ipconfig /all              ... Visar detaljerd information\n\
+        > ipconfig /renew            ... Förnyar alla kort\n\
+        > ipconfig /renew EL*        ... Förnyar alle kort med navn som\n\
+                                         börjar med EL\n\
+        > ipconfig /release *Ans*    ... frigör alla matchande anslutningar,\n\
+                                         t.ex. ""Anslutning till lokalt nätverk 1"" eller\n\
+                                               ""Anslutning till lokalt nätverk 2""\n"
 END

@@ -191,7 +191,7 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHI
         psh.pszCaption = wszName;
         psh.dwFlags |= PSH_PROPTITLE;
     }
-    
+
     ILFree(completePidl);
 
     CComPtr<IDataObject> pDataObj;
@@ -226,10 +226,8 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHI
     if (pDrvDefExt)
         pDrvDefExt->Release();
 
-    if (ret > 0)
+    if (ret >= 0)
         return S_OK;
-    if (ret == 0)
-        return S_FALSE;
     return E_FAIL;
 }
 

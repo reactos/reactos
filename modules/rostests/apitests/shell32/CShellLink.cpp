@@ -296,7 +296,7 @@ test_iconlocation(UINT i, TEST_SHELL_ICON* testDef)
     ok(iIcon == 0, "IShellLink::GetIconLocation(%d) returned %d, expected %d\n", i, iIcon, 0);
 
     /* Try to grab the IExtractIconW interface */
-    hr = psl->QueryInterface(IID_PPV_ARG(IExtractIconW, &pei)); 
+    hr = psl->QueryInterface(IID_PPV_ARG(IExtractIconW, &pei));
     ok(hr == S_OK, "IShellLink::QueryInterface(IExtractIconW)(%d) failed, hr = 0x%lx\n", i, hr);
     if (!pei)
     {

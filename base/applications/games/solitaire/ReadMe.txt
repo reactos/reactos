@@ -1,7 +1,7 @@
 Solitaire for ReactOS
 
 /*****************************************
-A complete working example of the CardLib 
+A complete working example of the CardLib
 card-game library.
 
 Freeware

@@ -153,9 +153,9 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           if(f1 == 1) {
             DEC_OR_INC(SourceLine_4BPP, bLeftToRight, 1);
             f1 = 0;
-          } 
+          }
           else
-          { 
+          {
             f1 = 1;
           }
           DEC_OR_INC(sx, bLeftToRight, 1);

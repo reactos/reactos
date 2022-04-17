@@ -32,6 +32,7 @@ STRINGTABLE
     13 "network drive for feature missing"
     14 "feature from:"
     15 "choose which folder contains %s"
+    100 "New Folder"
 }
 
 /* Error messages */

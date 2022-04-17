@@ -212,9 +212,9 @@ DllGetClassObject(
 
     *ppv = NULL;
 
-    for (i = 0; InterfaceTable[i].riid; i++) 
+    for (i = 0; InterfaceTable[i].riid; i++)
     {
-        if (IsEqualIID(*InterfaceTable[i].riid, rclsid)) 
+        if (IsEqualIID(*InterfaceTable[i].riid, rclsid))
         {
             pcf = CClassFactory_fnConstructor(InterfaceTable[i].lpfnCI, NULL, NULL);
             break;

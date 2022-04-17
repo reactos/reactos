@@ -56,7 +56,11 @@ int main(int argc, char** argv)
     string absolute_name = replace_backslashes(real_path(argv[1]));
     int prefixlen = absolute_name.find_last_of('/');
     clog << prefixlen << endl;
-    chdir(absolute_name.substr(0, prefixlen).c_str());  // change to the project file's directory
+    if (chdir(absolute_name.substr(0, prefixlen).c_str()) == -1)  // change to the project file's directory
+    {
+        cerr << "chdir: working directory couldn't be changed" << endl;
+        exit(0);
+    }
     hhp_reader project_file(absolute_name);
 
     struct chmcFile chm;

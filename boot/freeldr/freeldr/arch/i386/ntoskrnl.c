@@ -20,7 +20,7 @@ KeInitializeEvent(
     IN EVENT_TYPE Type,
     IN BOOLEAN State)
 {
-    memset(Event, 0, sizeof(*Event));
+    RtlZeroMemory(Event, sizeof(*Event));
 }
 
 VOID
@@ -28,6 +28,14 @@ FASTCALL
 KefAcquireSpinLockAtDpcLevel(
     IN PKSPIN_LOCK SpinLock)
 {
+#if DBG
+    /* To be on par with HAL/NTOSKRNL */
+#ifdef _M_AMD64
+    *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
+#else
+    *SpinLock = (KSPIN_LOCK)(((PKIPCR)KeGetPcr())->PrcbData.CurrentThread) | 1;
+#endif
+#endif
 }
 
 VOID

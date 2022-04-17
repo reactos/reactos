@@ -8,7 +8,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HOTPLUG, IDC_SAFE_REMOVE_ICON, 7, 10, 20, 20
-    LTEXT "ÇIkarmak istediğiniz aygıtı seçiniz, ardından Durdur'a tıklayınız. ReactOS sizi aygıtı çıkarmanın güvenli olduğunu uyardığında aygıtı bilgisayarınızdan çıkarabilirsiniz.", IDC_STATIC, 36, 10, 234, 24, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Çıkarmak istediğiniz aygıtı seçiniz, ardından Durdur'a tıklayınız. ReactOS sizi aygıtı çıkarmanın güvenli olduğunu uyardığında aygıtı bilgisayarınızdan çıkarabilirsiniz.", IDC_STATIC, 36, 10, 234, 24, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Do&nanım aygıtları:", IDC_STATIC, 7, 42, 248, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_SAFE_REMOVE_DEVICE_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 7, 52, 264, 102
     LTEXT "", IDC_SAFE_REMOVE_TEXT, 7, 156, 264, 16, WS_CHILD | WS_VISIBLE | WS_GROUP

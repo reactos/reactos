@@ -3,7 +3,7 @@
  *    testament@users.sourceforge.net
  *    https://sourceforge.net/projects/reactospl
  *    Corrected by Caemyr - Olaf Siejka (May, 2007; Jan, 2008)
- *    UTF-8 conversion by Caemyr (May, 2011) 
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -101,4 +101,5 @@ BEGIN
     IDS_CHSOURCE_TITLE "Wybierz opcje wyszukiwania i instalacji"
     IDS_SEARCHDRV_TITLE "Szukanie..."
     IDS_INSTALLDRV_TITLE "Instalowanie..."
+    IDS_BROWSE_FOR_FOLDER_TITLE "Wybierz folder zawierający odpowiednie sterowniki dla tego sprzętu."
 END

@@ -128,14 +128,6 @@ extern "C" {
 #define _WFINDDATA_T_DEFINED
 #endif /* !_WFINDDATA_T_DEFINED */
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifndef _CRT_CTYPEDATA_DEFINED
 # define _CRT_CTYPEDATA_DEFINED
 # ifndef _CTYPE_DISABLE_MACROS
@@ -1080,6 +1072,7 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_z_ _Printf_format_string_ const wchar_t *_Format,
     va_list _ArgList);
 
+#if defined __cplusplus || defined _CRT_NON_CONFORMING_SWPRINTFS
   _CRTIMP
   int
   __cdecl
@@ -1095,6 +1088,7 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _Out_ wchar_t*,
     const wchar_t*,
     va_list);
+#endif
 
   _Check_return_opt_
   _CRTIMP
@@ -1386,15 +1380,38 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
   _CRTIMP int __cdecl __swprintf_l(wchar_t *_Dest,const wchar_t *_Format,_locale_t _Plocinfo,...);
   _CRTIMP int __cdecl __vswprintf_l(wchar_t *_Dest,const wchar_t *_Format,_locale_t _Plocinfo,va_list _Args);
 
-#if 0 //this is for MSVCRT80 and higher, which we don't use nor implement
-#ifdef _CRT_NON_CONFORMING_SWPRINTFS
-#ifndef __cplusplus
-#define swprintf _swprintf
-#define vswprintf _vswprintf
-#define _swprintf_l __swprintf_l
-#define _vswprintf_l __vswprintf_l
-#endif
-#endif
+#ifndef _CRT_NON_CONFORMING_SWPRINTFS
+  _Check_return_opt_
+  static inline
+  int
+  __cdecl
+  swprintf(
+      _Out_writes_z_(_SizeInWords) wchar_t* _DstBuf,
+      _In_ size_t _SizeInWords,
+      _In_z_ _Printf_format_string_ const wchar_t* _Format,
+      ...)
+  {
+      int ret;
+      va_list args;
+
+      va_start(args, _Format);
+      ret = _vsnwprintf(_DstBuf, _SizeInWords, _Format, args);
+      va_end(args);
+      return ret;
+  }
+
+  _Check_return_opt_
+  static inline
+  int
+  __cdecl
+  vswprintf(
+      _Out_writes_z_(_SizeInWords) wchar_t* _DstBuf,
+      _In_ size_t _SizeInWords,
+      _In_z_ _Printf_format_string_ const wchar_t* _Format,
+      va_list _ArgList)
+  {
+      return _vsnwprintf(_DstBuf, _SizeInWords, _Format, _ArgList);
+  }
 #endif
 
   _Check_return_
@@ -1761,16 +1778,16 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _Pre_notnull_ _Post_z_ wchar_t *_DstBuf,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
   _wtoi64(
     _In_z_ const wchar_t *_Str);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1778,8 +1795,8 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_z_ const wchar_t *_Str,
     _In_opt_ _locale_t _Locale);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1788,8 +1805,8 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _Out_opt_ _Deref_post_z_ wchar_t **_EndPtr,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   __int64
   __cdecl
@@ -1799,8 +1816,8 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_ int _Radix,
     _In_opt_ _locale_t _Locale);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   unsigned __int64
   __cdecl
@@ -1809,8 +1826,8 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _Out_opt_ _Deref_post_z_ wchar_t **_EndPtr,
     _In_ int _Radix);
 
-  _Check_return_
   __MINGW_EXTENSION
+  _Check_return_
   _CRTIMP
   unsigned __int64
   __cdecl

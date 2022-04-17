@@ -1,4 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
  * DATE OF TR:  29-11-2013
 */
 
@@ -22,12 +22,12 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disk"
+    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Tipi"
     IDS_DETAIL_INFO_STATUS "Gjendja"
-    IDS_DETAIL_INFO_PATH "Rrugë"
-    IDS_DETAIL_INFO_TARGET "Objektivi"
-    IDS_DETAIL_INFO_LUN_ID "LUN ID"
+    IDS_DETAIL_INFO_PATH   "Path   : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Target : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Rruga e vendndodhjes"
     IDS_DETAIL_INFO_CURR_RO_STATE "Read-only Gjendja aktuale"
     IDS_DETAIL_INFO_RO "Read-only"
@@ -36,6 +36,11 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Hibernimi i dokumeteve Disk"
     IDS_DETAIL_INFO_CRASH_DSK "Hedhja e te dhenave Disk"
     IDS_DETAIL_INFO_CLST_DSK "Grupimet ne Disk"
+    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
+    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
 END
 
 /* Detail header titles */
@@ -48,7 +53,9 @@ BEGIN
     IDS_LIST_PARTITION_LINE "%c -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "  Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nThere is no disk to list partitions.\nPlease select a disk and try again.\n\n"
-    IDS_LIST_VOLUME_HEAD "Volume ###\tLtr\tLabel\n"
+    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
+    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "  Volume %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
@@ -70,6 +77,7 @@ BEGIN
     IDS_SELECT_PARTITION_INVALID "\nInvalid partition.\n\n"
     IDS_SELECT_NO_VOLUME "\nThere is no volume currently selected.\nPlease select a disk and try again.\n\n"
     IDS_SELECT_VOLUME "\nVolume %lu is now the selected volume.\n\n"
+    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
 END
 
 /* Disk Status */

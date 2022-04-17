@@ -25,7 +25,7 @@ target_link_libraries(msvcrt20 crt wine ${PSEH_LIB})
 
 if(MSVC)
     # export of deleting destructor "name"
-    add_target_link_flags(msvcrt20 "/ignore:4102")
+    target_link_options(msvcrt20 PRIVATE /ignore:4102)
 endif()
 
 add_importlibs(msvcrt20 kernel32 ntdll)

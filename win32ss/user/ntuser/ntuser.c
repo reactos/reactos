@@ -25,6 +25,7 @@ ATOM AtomQOS;           // Window DDE Quality of Service atom.
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
 ATOM gaGuiConsoleWndClass;
+ATOM AtomImeLevel;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -55,6 +56,7 @@ InitUserAtoms(VOID)
 
     AtomDDETrack = IntAddGlobalAtom(L"SysDT", TRUE);
     AtomQOS      = IntAddGlobalAtom(L"SysQOS", TRUE);
+    AtomImeLevel = IntAddGlobalAtom(L"SysIMEL", TRUE);
 
     /*
      * FIXME: AddPropW uses the global kernel atom table, thus leading to conflicts if we use
@@ -78,8 +80,6 @@ InitUserImpl(VOID)
 {
     NTSTATUS Status;
     HKEY hKey;
-
-    ExInitializeResourceLite(&UserLock);
 
     if (!UserCreateHandleTable())
     {
@@ -238,12 +238,14 @@ VOID FASTCALL CleanupUserImpl(VOID)
     ExDeleteResourceLite(&UserLock);
 }
 
+// Win: EnterSharedCrit
 VOID FASTCALL UserEnterShared(VOID)
 {
     KeEnterCriticalRegion();
     ExAcquireResourceSharedLite(&UserLock, TRUE);
 }
 
+// Win: EnterCrit
 VOID FASTCALL UserEnterExclusive(VOID)
 {
     ASSERT_NOGDILOCKS();
@@ -252,6 +254,7 @@ VOID FASTCALL UserEnterExclusive(VOID)
     gptiCurrent = PsGetCurrentThreadWin32Thread();
 }
 
+// Win: LeaveCrit
 VOID FASTCALL UserLeave(VOID)
 {
     ASSERT_NOGDILOCKS();

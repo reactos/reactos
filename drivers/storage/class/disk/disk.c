@@ -1,344 +1,148 @@
-/*
- * PROJECT:         ReactOS Storage Stack
- * LICENSE:         DDK - see license.txt in the root dir
- * FILE:            drivers/storage/disk/disk.c
- * PURPOSE:         Disk class driver
- * PROGRAMMERS:     Based on a source code sample from Microsoft NT4 DDK
- */
+/*++
 
-#include <ntddk.h>
-#include <ntdddisk.h>
-#include <scsi.h>
-#include <ntddscsi.h>
-#include <mountdev.h>
-#include <mountmgr.h>
-#include <ntiologc.h>
-#include <include/class2.h>
-#include <stdio.h>
+Copyright (C) Microsoft Corporation, 1991 - 2010
 
-#define NDEBUG
-#include <debug.h>
+Module Name:
+
+    disk.c
+
+Abstract:
+
+    SCSI disk class driver
+
+Environment:
+
+    kernel mode only
+
+Notes:
+
+Revision History:
+
+--*/
+
+#define DEBUG_MAIN_SOURCE   1
+#include "disk.h"
 
 
-#ifdef POOL_TAGGING
-#ifdef ExAllocatePool
-#undef ExAllocatePool
+//
+// Now instantiate the GUIDs
+//
+
+#include "initguid.h"
+#include "ntddstor.h"
+#include "ntddvol.h"
+#include "ioevent.h"
+
+#ifdef DEBUG_USE_WPP
+#include "disk.tmh"
 #endif
-#define ExAllocatePool(a,b) ExAllocatePoolWithTag(a,b,'DscS')
-#endif
-
-typedef enum {
-    NotInitialized,
-    Initializing,
-    Initialized
-} PARTITION_LIST_STATE;
-
-//
-// Disk device data
-//
-
-typedef struct _DISK_DATA {
-
-    //
-    // Partition chain
-    //
-
-    PDEVICE_EXTENSION NextPartition;
-
-    //
-    // Disk signature (from MBR)
-    //
-
-    ULONG Signature;
-
-    //
-    // MBR checksum
-    //
-
-    ULONG MbrCheckSum;
-
-    //
-    // Number of hidden sectors for BPB.
-    //
-
-    ULONG HiddenSectors;
-
-    //
-    // Partition number of this device object
-    //
-    // This field is set during driver initialization or when the partition
-    // is created to identify a partition to the system.
-    //
-
-    ULONG PartitionNumber;
-
-    //
-    // This field is the ordinal of a partition as it appears on a disk.
-    //
-
-    ULONG PartitionOrdinal;
-
-    //
-    // Partition type of this device object
-    //
-    // This field is set by:
-    //
-    //     1)  Initially set according to the partition list entry partition
-    //         type returned by IoReadPartitionTable.
-    //
-    //     2)  Subsequently set by the IOCTL_DISK_SET_PARTITION_INFORMATION
-    //         I/O control function when IoSetPartitionInformation function
-    //         successfully updates the partition type on the disk.
-    //
-
-    UCHAR PartitionType;
-
-    //
-    // Boot indicator - indicates whether this partition is a bootable (active)
-    // partition for this device
-    //
-    // This field is set according to the partition list entry boot indicator
-    // returned by IoReadPartitionTable.
-    //
-
-    BOOLEAN BootIndicator;
-
-    //
-    // DriveNotReady - indicates that the this device is currently not ready
-    // because there is no media in the device.
-    //
-
-    BOOLEAN DriveNotReady;
-
-    //
-    // State of PartitionList initialization
-    //
-
-    PARTITION_LIST_STATE PartitionListState;
-
-#ifdef __REACTOS__
-    //
-    // HACK so that we can use NT5+ NTOS functions with this NT4 driver
-    // for removable devices and avoid an infinite recursive loop between
-    // disk!UpdateRemovableGeometry() and ntos!IoReadPartitionTable().
-    //
-    ULONG UpdateRemovableGeometryCount;
-#endif
-
-} DISK_DATA, *PDISK_DATA;
-
-//
-// Define a general structure of identifying disk controllers with bad
-// hardware.
-//
-
-typedef struct _BAD_CONTROLLER_INFORMATION {
-    PCHAR InquiryString;
-    BOOLEAN DisableTaggedQueuing;
-    BOOLEAN DisableSynchronousTransfers;
-    BOOLEAN DisableDisconnects;
-    BOOLEAN DisableWriteCache;
-}BAD_CONTROLLER_INFORMATION, *PBAD_CONTROLLER_INFORMATION;
-
-BAD_CONTROLLER_INFORMATION const ScsiDiskBadControllers[] = {
-    { "TOSHIBA MK538FB         60",   TRUE,  FALSE, FALSE, FALSE },
-    { "CONNER  CP3500",               FALSE, TRUE,  FALSE, FALSE },
-    { "OLIVETTICP3500",               FALSE, TRUE,  FALSE, FALSE },
-    { "SyQuest SQ5110          CHC",  TRUE,  TRUE,  FALSE, FALSE },
-    { "SEAGATE ST41601N        0102", FALSE, TRUE,  FALSE, FALSE },
-    { "SEAGATE ST3655N",              FALSE, FALSE, FALSE, TRUE  },
-    { "SEAGATE ST3390N",              FALSE, FALSE, FALSE, TRUE  },
-    { "SEAGATE ST12550N",             FALSE, FALSE, FALSE, TRUE  },
-    { "SEAGATE ST32430N",             FALSE, FALSE, FALSE, TRUE  },
-    { "SEAGATE ST31230N",             FALSE, FALSE, FALSE, TRUE  },
-    { "SEAGATE ST15230N",             FALSE, FALSE, FALSE, TRUE  },
-    { "FUJITSU M2652S-512",           TRUE,  FALSE, FALSE, FALSE },
-    { "MAXTOR  MXT-540SL       I1.2", TRUE,  FALSE, FALSE, FALSE },
-    { "COMPAQ  PD-1",                 FALSE, TRUE,  FALSE, FALSE }
-};
-
-
-#define NUMBER_OF_BAD_CONTROLLERS (sizeof(ScsiDiskBadControllers) / sizeof(BAD_CONTROLLER_INFORMATION))
-#define DEVICE_EXTENSION_SIZE sizeof(DEVICE_EXTENSION) + sizeof(DISK_DATA)
-
-#define MODE_DATA_SIZE      192
-#define VALUE_BUFFER_SIZE  2048
-#define SCSI_DISK_TIMEOUT    10
-#define PARTITION0_LIST_SIZE  4
-
-
-NTSTATUS
-NTAPI
-DriverEntry(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPath
-    );
-
-BOOLEAN
-NTAPI
-ScsiDiskDeviceVerification(
-    IN PINQUIRYDATA InquiryData
-    );
-
-BOOLEAN
-NTAPI
-FindScsiDisks(
-    IN PDRIVER_OBJECT DriveObject,
-    IN PUNICODE_STRING RegistryPath,
-    IN PCLASS_INIT_DATA InitializationData,
-    IN PDEVICE_OBJECT PortDeviceObject,
-    IN ULONG PortNumber
-    );
-
-NTSTATUS
-NTAPI
-ScsiDiskCreateClose (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
-
-NTSTATUS
-NTAPI
-ScsiDiskReadWriteVerification(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
-
-NTSTATUS
-NTAPI
-ScsiDiskDeviceControl(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
-
-VOID
-NTAPI
-ScsiDiskProcessError(
-    PDEVICE_OBJECT DeviceObject,
-    PSCSI_REQUEST_BLOCK Srb,
-    NTSTATUS *Status,
-    BOOLEAN *Retry
-    );
-
-NTSTATUS
-NTAPI
-ScsiDiskShutdownFlush(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
-
-VOID
-NTAPI
-DisableWriteCache(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PSCSI_INQUIRY_DATA LunInfo
-    );
-
-BOOLEAN
-NTAPI
-ScsiDiskModeSelect(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PCHAR ModeSelectBuffer,
-    IN ULONG Length,
-    IN BOOLEAN SavePage
-    );
-
-BOOLEAN
-NTAPI
-IsFloppyDevice(
-    IN PDEVICE_OBJECT DeviceObject
-    );
-
-BOOLEAN
-NTAPI
-CalculateMbrCheckSum(
-    IN PDEVICE_EXTENSION DeviceExtension,
-    OUT PULONG Checksum
-    );
-
-BOOLEAN
-NTAPI
-EnumerateBusKey(
-    IN PDEVICE_EXTENSION DeviceExtension,
-    HANDLE BusKey,
-    PULONG DiskNumber
-    );
-
-VOID
-NTAPI
-UpdateGeometry(
-    IN PDEVICE_EXTENSION DeviceExtension
-    );
-
-NTSTATUS
-NTAPI
-UpdateRemovableGeometry (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
-
-NTSTATUS
-NTAPI
-CreateDiskDeviceObject(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPath,
-    IN PDEVICE_OBJECT PortDeviceObject,
-    IN ULONG PortNumber,
-    IN PULONG DeviceCount,
-    IN PIO_SCSI_CAPABILITIES PortCapabilities,
-    IN PSCSI_INQUIRY_DATA LunInfo,
-    IN PCLASS_INIT_DATA InitData
-    );
-
-NTSTATUS
-NTAPI
-CreatePartitionDeviceObjects(
-    IN PDEVICE_OBJECT PhysicalDeviceObject,
-    IN PUNICODE_STRING RegistryPath
-    );
-
-VOID
-NTAPI
-UpdateDeviceObjects(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
-
-VOID
-NTAPI
-ScanForSpecial(
-    PDEVICE_OBJECT DeviceObject,
-    PSCSI_INQUIRY_DATA LunInfo,
-    PIO_SCSI_CAPABILITIES PortCapabilities
-    );
-
-VOID
-NTAPI
-ResetScsiBus(
-    IN PDEVICE_OBJECT DeviceObject
-    );
-
-NTSTATUS
-NTAPI
-ScsiDiskFileSystemControl(PDEVICE_OBJECT DeviceObject,
-                          PIRP Irp);
 
 #ifdef ALLOC_PRAGMA
-#pragma alloc_text(PAGE, DriverEntry)
-#pragma alloc_text(PAGE, FindScsiDisks)
-#pragma alloc_text(PAGE, CreateDiskDeviceObject)
-#pragma alloc_text(PAGE, CalculateMbrCheckSum)
-#pragma alloc_text(PAGE, EnumerateBusKey)
-#pragma alloc_text(PAGE, UpdateGeometry)
-#pragma alloc_text(PAGE, IsFloppyDevice)
-#pragma alloc_text(PAGE, ScanForSpecial)
-#pragma alloc_text(PAGE, ScsiDiskDeviceControl)
-#pragma alloc_text(PAGE, ScsiDiskModeSelect)
+
+#pragma alloc_text(INIT, DriverEntry)
+#pragma alloc_text(PAGE, DiskUnload)
+#pragma alloc_text(PAGE, DiskCreateFdo)
+#pragma alloc_text(PAGE, DiskDetermineMediaTypes)
+#pragma alloc_text(PAGE, DiskModeSelect)
+#pragma alloc_text(PAGE, DisableWriteCache)
+#pragma alloc_text(PAGE, DiskSetSpecialHacks)
+#pragma alloc_text(PAGE, DiskGetCacheInformation)
+#pragma alloc_text(PAGE, DiskSetCacheInformation)
+#pragma alloc_text(PAGE, DiskLogCacheInformation)
+#pragma alloc_text(PAGE, DiskSetInfoExceptionInformation)
+#pragma alloc_text(PAGE, DiskGetInfoExceptionInformation)
+#pragma alloc_text(PAGE, DiskIoctlGetCacheSetting)
+#pragma alloc_text(PAGE, DiskIoctlSetCacheSetting)
+#pragma alloc_text(PAGE, DiskIoctlGetLengthInfo)
+#pragma alloc_text(PAGE, DiskIoctlGetDriveGeometry)
+#pragma alloc_text(PAGE, DiskIoctlGetDriveGeometryEx)
+#pragma alloc_text(PAGE, DiskIoctlGetCacheInformation)
+#pragma alloc_text(PAGE, DiskIoctlSetCacheInformation)
+#pragma alloc_text(PAGE, DiskIoctlGetMediaTypesEx)
+#pragma alloc_text(PAGE, DiskIoctlPredictFailure)
+#pragma alloc_text(PAGE, DiskIoctlEnableFailurePrediction)
+#pragma alloc_text(PAGE, DiskIoctlReassignBlocks)
+#pragma alloc_text(PAGE, DiskIoctlReassignBlocksEx)
+#pragma alloc_text(PAGE, DiskIoctlIsWritable)
+#pragma alloc_text(PAGE, DiskIoctlUpdateDriveSize)
+#pragma alloc_text(PAGE, DiskIoctlGetVolumeDiskExtents)
+#pragma alloc_text(PAGE, DiskIoctlSmartGetVersion)
+#pragma alloc_text(PAGE, DiskIoctlSmartReceiveDriveData)
+#pragma alloc_text(PAGE, DiskIoctlSmartSendDriveCommand)
+#pragma alloc_text(PAGE, DiskIoctlVerifyThread)
+
 #endif
 
+//
+//  ETW related globals
+//
+BOOLEAN DiskETWEnabled = FALSE;
+
+BOOLEAN DiskIsPastReinit = FALSE;
+
+const GUID GUID_NULL = { 0 };
+#define DiskCompareGuid(_First,_Second) \
+    (memcmp ((_First),(_Second), sizeof (GUID)))
+
+//
+// This macro is used to work around a bug in the definition of
+// DISK_CACHE_RETENTION_PRIORITY.  The value KeepReadData should be
+// assigned 0xf rather than 0x2.  Since the interface was already published
+// when this was discovered the disk driver has been modified to translate
+// between the interface value and the correct scsi value.
+//
+// 0x2 is turned into 0xf
+// 0xf is turned into 0x2 - this ensures that future SCSI defintions can be
+//                          accomodated.
+//
+
+#define TRANSLATE_RETENTION_PRIORITY(_x)\
+        ((_x) == 0xf ?  0x2 :           \
+            ((_x) == 0x2 ? 0xf : _x)    \
+        )
+
+#define IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS_ADMIN  CTL_CODE(IOCTL_VOLUME_BASE, 0, METHOD_BUFFERED, FILE_READ_ACCESS)
+
+VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskDriverReinit(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PVOID Nothing,
+    IN ULONG Count
+    )
+{
+    UNREFERENCED_PARAMETER(DriverObject);
+    UNREFERENCED_PARAMETER(Nothing);
+    UNREFERENCED_PARAMETER(Count);
+
+    DiskIsPastReinit = TRUE;
+}
+
+VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskBootDriverReinit(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PVOID Nothing,
+    IN ULONG Count
+    )
+{
+    IoRegisterDriverReinitialization(DriverObject, DiskDriverReinit, NULL);
+
+#if defined(_X86_) || defined(_AMD64_)
+
+    DiskDriverReinitialization(DriverObject, Nothing, Count);
+
+#else
+
+    UNREFERENCED_PARAMETER(Nothing);
+    UNREFERENCED_PARAMETER(Count);
+
+#endif
+
+}
 
 NTSTATUS
-NTAPI
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -363,375 +167,247 @@ Return Value:
 --*/
 
 {
-    CLASS_INIT_DATA InitializationData;
+    CLASS_INIT_DATA InitializationData = { 0 };
+    CLASS_QUERY_WMI_REGINFO_EX_LIST classQueryWmiRegInfoExList = { 0 };
+    GUID guidQueryRegInfoEx = GUID_CLASSPNP_QUERY_REGINFOEX;
+    GUID guidSrbSupport = GUID_CLASSPNP_SRB_SUPPORT;
+    ULONG srbSupport;
+
+    NTSTATUS status;
 
     //
-    // Zero InitData
+    // Initializes tracing
+    //
+    WPP_INIT_TRACING(DriverObject, RegistryPath);
+
+#if defined(_X86_) || defined(_AMD64_)
+
+    //
+    // Read the information NtDetect squirreled away about the disks in this
+    // system.
     //
 
-    RtlZeroMemory (&InitializationData, sizeof(CLASS_INIT_DATA));
+    DiskSaveDetectInfo(DriverObject);
 
-    //
-    // Set sizes
-    //
+#endif
 
     InitializationData.InitializationDataSize = sizeof(CLASS_INIT_DATA);
-    InitializationData.DeviceExtensionSize = DEVICE_EXTENSION_SIZE;
-
-    InitializationData.DeviceType = FILE_DEVICE_DISK;
-    InitializationData.DeviceCharacteristics = 0;
 
     //
-    // Set entry points
+    // Setup sizes and entry points for functional device objects
     //
 
-    InitializationData.ClassError = ScsiDiskProcessError;
-    InitializationData.ClassReadWriteVerification = ScsiDiskReadWriteVerification;
-    InitializationData.ClassFindDevices = FindScsiDisks;
-    InitializationData.ClassFindDeviceCallBack = ScsiDiskDeviceVerification;
-    InitializationData.ClassDeviceControl = ScsiDiskDeviceControl;
-    InitializationData.ClassShutdownFlush = ScsiDiskShutdownFlush;
-    InitializationData.ClassCreateClose = NULL;
+    InitializationData.FdoData.DeviceExtensionSize   = FUNCTIONAL_EXTENSION_SIZE;
+    InitializationData.FdoData.DeviceType            = FILE_DEVICE_DISK;
+    InitializationData.FdoData.DeviceCharacteristics = FILE_DEVICE_SECURE_OPEN;
+
+    InitializationData.FdoData.ClassInitDevice    = DiskInitFdo;
+    InitializationData.FdoData.ClassStartDevice   = DiskStartFdo;
+    InitializationData.FdoData.ClassStopDevice    = DiskStopDevice;
+    InitializationData.FdoData.ClassRemoveDevice  = DiskRemoveDevice;
+    InitializationData.FdoData.ClassPowerDevice   = ClassSpinDownPowerHandler;
+
+    InitializationData.FdoData.ClassError         = DiskFdoProcessError;
+    InitializationData.FdoData.ClassReadWriteVerification = DiskReadWriteVerification;
+    InitializationData.FdoData.ClassDeviceControl = DiskDeviceControl;
+    InitializationData.FdoData.ClassShutdownFlush = DiskShutdownFlush;
+    InitializationData.FdoData.ClassCreateClose   = NULL;
+
+
+    InitializationData.FdoData.ClassWmiInfo.GuidCount               = 7;
+    InitializationData.FdoData.ClassWmiInfo.GuidRegInfo             = DiskWmiFdoGuidList;
+    InitializationData.FdoData.ClassWmiInfo.ClassQueryWmiRegInfo    = DiskFdoQueryWmiRegInfo;
+    InitializationData.FdoData.ClassWmiInfo.ClassQueryWmiDataBlock  = DiskFdoQueryWmiDataBlock;
+    InitializationData.FdoData.ClassWmiInfo.ClassSetWmiDataBlock    = DiskFdoSetWmiDataBlock;
+    InitializationData.FdoData.ClassWmiInfo.ClassSetWmiDataItem     = DiskFdoSetWmiDataItem;
+    InitializationData.FdoData.ClassWmiInfo.ClassExecuteWmiMethod   = DiskFdoExecuteWmiMethod;
+    InitializationData.FdoData.ClassWmiInfo.ClassWmiFunctionControl = DiskWmiFunctionControl;
+
+    InitializationData.ClassAddDevice = DiskAddDevice;
+    InitializationData.ClassUnload = DiskUnload;
+
+    //
+    // Initialize regregistration data structures
+    //
+
+    DiskInitializeReregistration();
 
     //
     // Call the class init routine
     //
 
-    return ScsiClassInitialize( DriverObject, RegistryPath, &InitializationData);
+    status = ClassInitialize(DriverObject, RegistryPath, &InitializationData);
+
+    if (NT_SUCCESS(status)) {
+
+        IoRegisterBootDriverReinitialization(DriverObject,
+                                             DiskBootDriverReinit,
+                                             NULL);
+    }
+
+    //
+    // Call class init Ex routine to register a
+    // PCLASS_QUERY_WMI_REGINFO_EX routine
+    //
+
+    classQueryWmiRegInfoExList.Size = sizeof(CLASS_QUERY_WMI_REGINFO_EX_LIST);
+    classQueryWmiRegInfoExList.ClassFdoQueryWmiRegInfoEx = DiskFdoQueryWmiRegInfoEx;
+
+    (VOID)ClassInitializeEx(DriverObject,
+                            &guidQueryRegInfoEx,
+                            &classQueryWmiRegInfoExList);
+
+    //
+    // Call class init Ex routine to register SRB support
+    //
+    srbSupport = CLASS_SRB_SCSI_REQUEST_BLOCK | CLASS_SRB_STORAGE_REQUEST_BLOCK;
+    if (!NT_SUCCESS(ClassInitializeEx(DriverObject,
+                                      &guidSrbSupport,
+                                      &srbSupport))) {
+        //
+        // Should not fail
+        //
+        NT_ASSERT(FALSE);
+    }
+
+
+    return status;
 
 } // end DriverEntry()
 
 
-
-BOOLEAN
-NTAPI
-ScsiDiskDeviceVerification(
-    IN PINQUIRYDATA InquiryData
+VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskUnload(
+    IN PDRIVER_OBJECT DriverObject
     )
-
-/*++
-
-Routine Description:
-
-    This routine checks InquiryData for the correct device type and qualifier.
-
-Arguments:
-
-    InquiryData - Pointer to the inquiry data for the device in question.
-
-Return Value:
-
-    True is returned if the correct device type is found.
-
---*/
 {
+    PAGED_CODE();
 
-    if (((InquiryData->DeviceType == DIRECT_ACCESS_DEVICE) ||
-        (InquiryData->DeviceType == OPTICAL_DEVICE)) &&
-        InquiryData->DeviceTypeQualifier == 0) {
+#if defined(_X86_) || defined(_AMD64_)
+    DiskCleanupDetectInfo(DriverObject);
+#else
+    // NB: Need to use UNREFERENCED_PARAMETER to prevent build error
+    //     DriverObject is not referenced below in WPP_CLEANUP.
+    //     WPP_CLEANUP is currently an "NOOP" marco.
+    UNREFERENCED_PARAMETER(DriverObject);
+#endif
 
-        return TRUE;
 
-    } else {
-        return FALSE;
-    }
+    //
+    // Cleans up tracing
+    //
+    WPP_CLEANUP(DriverObject);
+
+    return;
 }
 
 
-BOOLEAN
-NTAPI
-FindScsiDisks(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPath,
-    IN PCLASS_INIT_DATA InitializationData,
-    IN PDEVICE_OBJECT PortDeviceObject,
-    IN ULONG PortNumber
-    )
-
-/*++
-
-Routine Description:
-
-    This routine gets a port drivers capabilities, obtains the
-    inquiry data, searches the SCSI bus for the port driver and creates
-    the device objects for the disks found.
-
-Arguments:
-
-    DriverObject - Pointer to driver object created by system.
-
-    PortDeviceObject - Device object use to send requests to port driver.
-
-    PortNumber - Number for port driver.  Used to pass on to
-                 CreateDiskDeviceObjects() and create device objects.
-
-Return Value:
-
-    True is returned if one disk was found and successfully created.
-
---*/
-
-{
-    PIO_SCSI_CAPABILITIES portCapabilities;
-    PULONG diskCount;
-    PCONFIGURATION_INFORMATION configurationInformation;
-    PCHAR buffer;
-    PSCSI_INQUIRY_DATA lunInfo;
-    PSCSI_ADAPTER_BUS_INFO  adapterInfo;
-    PINQUIRYDATA inquiryData;
-    ULONG scsiBus;
-    ULONG adapterDisk;
-    NTSTATUS status;
-    BOOLEAN foundOne = FALSE;
-
-    PAGED_CODE();
-
-    //
-    // Call port driver to get adapter capabilities.
-    //
-
-    status = ScsiClassGetCapabilities(PortDeviceObject, &portCapabilities);
-
-    if (!NT_SUCCESS(status)) {
-        DebugPrint((1,"FindScsiDevices: ScsiClassGetCapabilities failed\n"));
-        return(FALSE);
-    }
-
-    //
-    // Call port driver to get inquiry information to find disks.
-    //
-
-    status = ScsiClassGetInquiryData(PortDeviceObject, (PSCSI_ADAPTER_BUS_INFO *) &buffer);
-
-    if (!NT_SUCCESS(status)) {
-        DebugPrint((1,"FindScsiDevices: ScsiClassGetInquiryData failed\n"));
-        return(FALSE);
-    }
-
-    //
-    // Do a quick scan of the devices on this adapter to determine how many
-    // disks are on this adapter.  This is used to determine the number of
-    // SRB zone elements to allocate.
-    //
-
-    adapterInfo = (PVOID) buffer;
-
-    adapterDisk = ScsiClassFindUnclaimedDevices(InitializationData, adapterInfo);
-
-    //
-    // Allocate a zone of SRB for disks on this adapter.
-    //
-
-    if (adapterDisk == 0) {
-
-        //
-        // No free disks were found.
-        //
-
-        return(FALSE);
-    }
-
-    //
-    // Get the number of disks already initialized.
-    //
-
-    configurationInformation = IoGetConfigurationInformation();
-    diskCount = &configurationInformation->DiskCount;
-
-    //
-    // For each SCSI bus this adapter supports ...
-    //
-
-    for (scsiBus=0; scsiBus < (ULONG)adapterInfo->NumberOfBuses; scsiBus++) {
-
-        //
-        // Get the SCSI bus scan data for this bus.
-        //
-
-        lunInfo = (PVOID) (buffer + adapterInfo->BusData[scsiBus].InquiryDataOffset);
-
-        //
-        // Search list for unclaimed disk devices.
-        //
-
-        while (adapterInfo->BusData[scsiBus].InquiryDataOffset) {
-
-            inquiryData = (PVOID)lunInfo->InquiryData;
-
-            if (((inquiryData->DeviceType == DIRECT_ACCESS_DEVICE) ||
-                (inquiryData->DeviceType == OPTICAL_DEVICE)) &&
-                inquiryData->DeviceTypeQualifier == 0 &&
-                (!lunInfo->DeviceClaimed)) {
-
-                DebugPrint((1,
-                            "FindScsiDevices: Vendor string is %.24s\n",
-                            inquiryData->VendorId));
-
-                //
-                // Create device objects for disk
-                //
-
-                status = CreateDiskDeviceObject(DriverObject,
-                                                RegistryPath,
-                                                PortDeviceObject,
-                                                PortNumber,
-                                                diskCount,
-                                                portCapabilities,
-                                                lunInfo,
-                                                InitializationData);
-
-                if (NT_SUCCESS(status)) {
-
-                    //
-                    // Increment system disk device count.
-                    //
-
-                    (*diskCount)++;
-                    foundOne = TRUE;
-
-                }
-            }
-
-            //
-            // Get next LunInfo.
-            //
-
-            if (lunInfo->NextInquiryDataOffset == 0) {
-                break;
-            }
-
-            lunInfo = (PVOID) (buffer + lunInfo->NextInquiryDataOffset);
-
-        }
-    }
-
-    //
-    // Buffer is allocated by ScsiClassGetInquiryData and must be free returning.
-    //
-
-    ExFreePool(buffer);
-
-    return(foundOne);
-
-} // end FindScsiDisks()
-
-
 NTSTATUS
-NTAPI
-CreateDiskDeviceObject(
+DiskCreateFdo(
     IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPath,
-    IN PDEVICE_OBJECT PortDeviceObject,
-    IN ULONG PortNumber,
+    IN PDEVICE_OBJECT PhysicalDeviceObject,
     IN PULONG DeviceCount,
-    IN PIO_SCSI_CAPABILITIES PortCapabilities,
-    IN PSCSI_INQUIRY_DATA LunInfo,
-    IN PCLASS_INIT_DATA InitData
+    IN BOOLEAN DasdAccessOnly
     )
 
 /*++
 
 Routine Description:
 
-    This routine creates an object for the physical device and then searches
-    the device for partitions and creates an object for each partition.
+    This routine creates an object for the functional device
 
 Arguments:
 
     DriverObject - Pointer to driver object created by system.
 
-    PortDeviceObject - Miniport device object.
-
-    PortNumber   - port number.  Used in creating disk objects.
+    PhysicalDeviceObject - Lower level driver we should attach to
 
     DeviceCount  - Number of previously installed devices.
 
-    PortCapabilities - Capabilities of this SCSI port.
-
-    LunInfo      - LUN specific information.
+    DasdAccessOnly - indicates whether or not a file system is allowed to mount
+                     on this device object.  Used to avoid double-mounting of
+                     file systems on super-floppies (which can unfortunately be
+                     fixed disks).  If set the i/o system will only allow rawfs
+                     to be mounted.
 
 Return Value:
 
     NTSTATUS
 
 --*/
-{
-    CCHAR          ntNameBuffer[MAXIMUM_FILENAME_LENGTH];
-    STRING         ntNameString;
-    UNICODE_STRING ntUnicodeString;
-    OBJECT_ATTRIBUTES objectAttributes;
-    HANDLE         handle;
-    NTSTATUS       status;
-    PDEVICE_OBJECT deviceObject = NULL;
-    //PDEVICE_OBJECT physicalDevice;
-    PDISK_GEOMETRY_EX diskGeometry = NULL;
-    PDEVICE_EXTENSION deviceExtension = NULL;
-    //PDEVICE_EXTENSION physicalDeviceExtension;
-    UCHAR          pathId = LunInfo->PathId;
-    UCHAR          targetId = LunInfo->TargetId;
-    UCHAR          lun = LunInfo->Lun;
-    //BOOLEAN        writeCache;
-    PVOID          senseData = NULL;
-    //ULONG          srbFlags;
-    ULONG          timeOut = 0;
-    BOOLEAN        srbListInitialized = FALSE;
 
+{
+    PCCHAR deviceName = NULL;
+    HANDLE handle = NULL;
+    PDEVICE_OBJECT lowerDevice  = NULL;
+    PDEVICE_OBJECT deviceObject = NULL;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
+    NTSTATUS status;
 
     PAGED_CODE();
+
+    *DeviceCount = 0;
 
     //
     // Set up an object directory to contain the objects for this
     // device and all its partitions.
     //
 
-    sprintf(ntNameBuffer,
-            "\\Device\\Harddisk%lu",
-            *DeviceCount);
+    do {
 
-    RtlInitString(&ntNameString,
-                  ntNameBuffer);
+        WCHAR dirBuffer[64] = { 0 };
+        UNICODE_STRING dirName;
+        OBJECT_ATTRIBUTES objectAttribs;
 
-    status = RtlAnsiStringToUnicodeString(&ntUnicodeString,
-                                          &ntNameString,
-                                          TRUE);
+        status = RtlStringCchPrintfW(dirBuffer, sizeof(dirBuffer) / sizeof(dirBuffer[0]) - 1, L"\\Device\\Harddisk%d", *DeviceCount);
+        if (!NT_SUCCESS(status)) {
+            TracePrint((TRACE_LEVEL_FATAL, TRACE_FLAG_PNP, "DiskCreateFdo: Format symbolic link failed with error: 0x%X\n", status));
+            return status;
+        }
+
+        RtlInitUnicodeString(&dirName, dirBuffer);
+
+        InitializeObjectAttributes(&objectAttribs,
+                                   &dirName,
+                                   OBJ_CASE_INSENSITIVE | OBJ_PERMANENT | OBJ_KERNEL_HANDLE,
+                                   NULL,
+                                   NULL);
+
+        status = ZwCreateDirectoryObject(&handle,
+                                         DIRECTORY_ALL_ACCESS,
+                                         &objectAttribs);
+
+        (*DeviceCount)++;
+
+    } while((status == STATUS_OBJECT_NAME_COLLISION) ||
+            (status == STATUS_OBJECT_NAME_EXISTS));
 
     if (!NT_SUCCESS(status)) {
+
+        TracePrint((TRACE_LEVEL_FATAL, TRACE_FLAG_PNP, "DiskCreateFdo: Could not create directory - %lx\n", status));
+
         return(status);
     }
 
-    InitializeObjectAttributes(&objectAttributes,
-                               &ntUnicodeString,
-                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
-                               NULL,
-                               NULL);
+    //
+    // When this loop exits the count is inflated by one - fix that.
+    //
 
-    status = ZwCreateDirectoryObject(&handle,
-                                     DIRECTORY_ALL_ACCESS,
-                                     &objectAttributes);
-
-    RtlFreeUnicodeString(&ntUnicodeString);
-
-    if (!NT_SUCCESS(status)) {
-
-        DebugPrint((1,
-                    "CreateDiskDeviceObjects: Could not create directory %s\n",
-                    ntNameBuffer));
-
-        return(status);
-    }
+    (*DeviceCount)--;
 
     //
     // Claim the device.
     //
 
-    status = ScsiClassClaimDevice(PortDeviceObject,
-                                  LunInfo,
-                                  FALSE,
-                                  &PortDeviceObject);
+    lowerDevice = IoGetAttachedDeviceReference(PhysicalDeviceObject);
+
+    status = ClassClaimDevice(lowerDevice, FALSE);
 
     if (!NT_SUCCESS(status)) {
         ZwMakeTemporaryObject(handle);
         ZwClose(handle);
+        ObDereferenceObject(lowerDevice);
         return status;
     }
 
@@ -742,63 +418,49 @@ Return Value:
     // \Device\HarddiskN\Partition0, where N = device number.
     //
 
-    sprintf(ntNameBuffer,
-            "\\Device\\Harddisk%lu\\Partition0",
-            *DeviceCount);
+    status = DiskGenerateDeviceName(*DeviceCount, &deviceName);
 
+    if(!NT_SUCCESS(status)) {
+        TracePrint((TRACE_LEVEL_FATAL, TRACE_FLAG_PNP, "DiskCreateFdo - couldn't create name %lx\n", status));
 
-    status = ScsiClassCreateDeviceObject(DriverObject,
-                                         ntNameBuffer,
-                                         NULL,
-                                         &deviceObject,
-                                         InitData);
+        goto DiskCreateFdoExit;
+
+    }
+
+    status = ClassCreateDeviceObject(DriverObject,
+                                     deviceName,
+                                     PhysicalDeviceObject,
+                                     TRUE,
+                                     &deviceObject);
 
     if (!NT_SUCCESS(status)) {
-
-        DebugPrint((1,
-                    "CreateDiskDeviceObjects: Can not create device object %s\n",
-                    ntNameBuffer));
-
-        goto CreateDiskDeviceObjectsExit;
+        TracePrint((TRACE_LEVEL_FATAL, TRACE_FLAG_PNP, "DiskCreateFdo: Can not create device object %s\n", deviceName));
+        goto DiskCreateFdoExit;
     }
+
+    FREE_POOL(deviceName);
 
     //
     // Indicate that IRPs should include MDLs for data transfers.
     //
 
-    deviceObject->Flags |= DO_DIRECT_IO;
+    SET_FLAG(deviceObject->Flags, DO_DIRECT_IO);
 
-    //
-    // Check if this is during initialization. If not indicate that
-    // system initialization already took place and this disk is ready
-    // to be accessed.
-    //
+    fdoExtension = deviceObject->DeviceExtension;
 
-    if (!RegistryPath) {
-        deviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+    if(DasdAccessOnly) {
+
+        //
+        // Inidicate that only RAW should be allowed to mount on the root
+        // partition object.  This ensures that a file system can't doubly
+        // mount on a super-floppy by mounting once on P0 and once on P1.
+        //
+
+#ifdef _MSC_VER
+#pragma prefast(suppress:28175);
+#endif
+        SET_FLAG(deviceObject->Vpb->Flags, VPB_RAW_MOUNT);
     }
-
-    //
-    // Check for removable media support.
-    //
-
-    if (((PINQUIRYDATA)LunInfo->InquiryData)->RemovableMedia) {
-        deviceObject->Characteristics |= FILE_REMOVABLE_MEDIA;
-    }
-
-    //
-    // Set up required stack size in device object.
-    //
-
-    deviceObject->StackSize = (CCHAR)PortDeviceObject->StackSize + 1;
-
-    deviceExtension = deviceObject->DeviceExtension;
-
-    //
-    // Allocate spinlock for split request completion.
-    //
-
-    KeInitializeSpinLock(&deviceExtension->SplitRequestSpinLock);
 
     //
     // Initialize lock count to zero. The lock count is used to
@@ -807,835 +469,81 @@ Return Value:
     // device extension is used.
     //
 
-    deviceExtension->LockCount = 0;
+    fdoExtension->LockCount = 0;
 
     //
     // Save system disk number.
     //
 
-    deviceExtension->DeviceNumber = *DeviceCount;
-
-    //
-    // Copy port device object pointer to the device extension.
-    //
-
-    deviceExtension->PortDeviceObject = PortDeviceObject;
+    fdoExtension->DeviceNumber = *DeviceCount;
 
     //
     // Set the alignment requirements for the device based on the
     // host adapter requirements
     //
 
-    if (PortDeviceObject->AlignmentRequirement > deviceObject->AlignmentRequirement) {
-        deviceObject->AlignmentRequirement = PortDeviceObject->AlignmentRequirement;
+    if (lowerDevice->AlignmentRequirement > deviceObject->AlignmentRequirement) {
+        deviceObject->AlignmentRequirement = lowerDevice->AlignmentRequirement;
     }
 
     //
-    // This is the physical device object.
+    // Finally, attach to the pdo
     //
 
-    //physicalDevice = deviceObject;
-    //physicalDeviceExtension = deviceExtension;
+    fdoExtension->LowerPdo = PhysicalDeviceObject;
 
-    //
-    // Save address of port driver capabilities.
-    //
+    fdoExtension->CommonExtension.LowerDeviceObject =
+        IoAttachDeviceToDeviceStack(deviceObject, PhysicalDeviceObject);
 
-    deviceExtension->PortCapabilities = PortCapabilities;
 
-    //
-    // Build the lookaside list for srb's for the physical disk. Should only
-    // need a couple.
-    //
-
-    ScsiClassInitializeSrbLookasideList(deviceExtension,
-                                        PARTITION0_LIST_SIZE);
-
-    srbListInitialized = TRUE;
-
-    //
-    // Initialize the srb flags.
-    //
-
-    if (((PINQUIRYDATA)LunInfo->InquiryData)->CommandQueue &&
-        PortCapabilities->TaggedQueuing) {
-
-        deviceExtension->SrbFlags  = SRB_FLAGS_QUEUE_ACTION_ENABLE;
-
-    } else {
-
-        deviceExtension->SrbFlags  = 0;
-
-    }
-
-    //
-    // Allow queued requests if this is not removable media.
-    //
-
-    if (!(deviceObject->Characteristics & FILE_REMOVABLE_MEDIA)) {
-
-        deviceExtension->SrbFlags |= SRB_FLAGS_NO_QUEUE_FREEZE;
-
-    }
-
-    //
-    // Look for controller that require special flags.
-    //
-
-    ScanForSpecial(deviceObject,
-                    LunInfo,
-                    PortCapabilities);
-
-    //srbFlags = deviceExtension->SrbFlags;
-
-    //
-    // Allocate buffer for drive geometry.
-    //
-
-    diskGeometry = ExAllocatePool(NonPagedPool, sizeof(DISK_GEOMETRY_EX));
-
-    if (diskGeometry == NULL) {
-
-        DebugPrint((1,
-           "CreateDiskDeviceObjects: Can not allocate disk geometry buffer\n"));
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto CreateDiskDeviceObjectsExit;
-    }
-
-    deviceExtension->DiskGeometry = diskGeometry;
-
-    //
-    // Allocate request sense buffer.
-    //
-
-    senseData = ExAllocatePool(NonPagedPoolCacheAligned, SENSE_BUFFER_SIZE);
-
-    if (senseData == NULL) {
+    if(fdoExtension->CommonExtension.LowerDeviceObject == NULL) {
 
         //
-        // The buffer can not be allocated.
+        // Uh - oh, we couldn't attach
+        // cleanup and return
         //
 
-        DebugPrint((1,
-           "CreateDiskDeviceObjects: Can not allocate request sense buffer\n"));
-
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto CreateDiskDeviceObjectsExit;
+        status = STATUS_UNSUCCESSFUL;
+        goto DiskCreateFdoExit;
     }
 
     //
-    // Set the sense data pointer in the device extension.
+    // Clear the init flag.
     //
 
-    deviceExtension->SenseData = senseData;
+    CLEAR_FLAG(deviceObject->Flags, DO_DEVICE_INITIALIZING);
 
     //
-    // Physical device object will describe the entire
-    // device, starting at byte offset 0.
+    // Store a handle to the device object directory for this disk
     //
 
-    deviceExtension->StartingOffset.QuadPart = (LONGLONG)(0);
+    fdoExtension->DeviceDirectory = handle;
 
-    //
-    // TargetId/LUN describes a device location on the SCSI bus.
-    // This information comes from the inquiry buffer.
-    //
+    ObDereferenceObject(lowerDevice);
 
-    deviceExtension->PortNumber = (UCHAR)PortNumber;
-    deviceExtension->PathId = pathId;
-    deviceExtension->TargetId = targetId;
-    deviceExtension->Lun = lun;
+    return STATUS_SUCCESS;
 
-    //
-    // Set timeout value in seconds.
-    //
+DiskCreateFdoExit:
 
-    timeOut = ScsiClassQueryTimeOutRegistryValue(RegistryPath);
-    if (timeOut) {
-        deviceExtension->TimeOutValue = timeOut;
-    } else {
-        deviceExtension->TimeOutValue = SCSI_DISK_TIMEOUT;
-    }
-
-    //
-    // Back pointer to device object.
-    //
-
-    deviceExtension->DeviceObject = deviceObject;
-
-    //
-    // If this is a removable device, then make sure it is not a floppy.
-    // Perform a mode sense command to determine the media type. Note
-    // IsFloppyDevice also checks for write cache enabled.
-    //
-
-#if 0
-    if (IsFloppyDevice(deviceObject) && deviceObject->Characteristics & FILE_REMOVABLE_MEDIA &&
-        (((PINQUIRYDATA)LunInfo->InquiryData)->DeviceType == DIRECT_ACCESS_DEVICE)) {
-
-        status = STATUS_NO_SUCH_DEVICE;
-        goto CreateDiskDeviceObjectsExit;
-    }
-#endif
-
-    DisableWriteCache(deviceObject,LunInfo);
-
-    //writeCache = deviceExtension->DeviceFlags & DEV_WRITE_CACHE;
-
-    //
-    // NOTE: At this point one device object has been successfully created.
-    // from here on out return success.
-    //
-
-    //
-    // Do READ CAPACITY. This SCSI command
-    // returns the number of bytes on a device.
-    // Device extension is updated with device size.
-    //
-
-    status = ScsiClassReadDriveCapacity(deviceObject);
-
-    //
-    // If the read capacity failed then just return, unless this is a
-    // removable disk where a device object partition needs to be created.
-    //
-
-    if (!NT_SUCCESS(status) &&
-        !(deviceObject->Characteristics & FILE_REMOVABLE_MEDIA)) {
-
-        DebugPrint((1,
-            "CreateDiskDeviceObjects: Can't read capacity for device %s\n",
-            ntNameBuffer));
-
-        return(STATUS_SUCCESS);
-
-    } else {
-
-        //
-        // Make sure the volume verification bit is off so that
-        // IoReadPartitionTable will work.
-        //
-
-        deviceObject->Flags &= ~DO_VERIFY_VOLUME;
-    }
-
-    status = CreatePartitionDeviceObjects(deviceObject, RegistryPath);
-
-    if (NT_SUCCESS(status))
-        return STATUS_SUCCESS;
-
-
-CreateDiskDeviceObjectsExit:
-
-    //
-    // Release the device since an error occurred.
-    //
-
-    ScsiClassClaimDevice(PortDeviceObject,
-                         LunInfo,
-                         TRUE,
-                         NULL);
-
-    if (diskGeometry != NULL) {
-        ExFreePool(diskGeometry);
-    }
-
-    if (senseData != NULL) {
-        ExFreePool(senseData);
-    }
-
-    if (deviceObject != NULL) {
-
-        if (srbListInitialized) {
-            ExDeleteNPagedLookasideList(&deviceExtension->SrbLookasideListHead);
-        }
-
+    if (deviceObject != NULL)
+    {
         IoDeleteDevice(deviceObject);
     }
 
-    //
-    // Delete directory and return.
-    //
+    FREE_POOL(deviceName);
 
-    if (!NT_SUCCESS(status)) {
-        ZwMakeTemporaryObject(handle);
-    }
+    ObDereferenceObject(lowerDevice);
 
+    ZwMakeTemporaryObject(handle);
     ZwClose(handle);
 
-    return(status);
-
-} // end CreateDiskDeviceObjects()
-
-
-VOID
-NTAPI
-ReportToMountMgr(
-    IN PDEVICE_OBJECT DiskDeviceObject
-    )
-
-/*++
-
-Routine Description:
-
-    This routine reports the creation of a disk device object to the
-    MountMgr to fake PnP.
-
-Arguments:
-
-    DiskDeviceObject - Pointer to the created disk device.
-
-Return Value:
-
-    VOID
-
---*/
-{
-    NTSTATUS              status;
-    UNICODE_STRING        mountMgrDevice;
-    PDEVICE_OBJECT        deviceObject;
-    PFILE_OBJECT          fileObject;
-    PMOUNTMGR_TARGET_NAME mountTarget;
-    ULONG                 diskLen;
-    PDEVICE_EXTENSION     deviceExtension;
-    PIRP                  irp;
-    KEVENT                event;
-    IO_STATUS_BLOCK       ioStatus;
-
-    //
-    // First, get MountMgr DeviceObject.
-    //
-
-    RtlInitUnicodeString(&mountMgrDevice, MOUNTMGR_DEVICE_NAME);
-    status = IoGetDeviceObjectPointer(&mountMgrDevice, FILE_READ_ATTRIBUTES,
-                                      &fileObject, &deviceObject);
-
-    if (!NT_SUCCESS(status)) {
-
-        DebugPrint((1,
-                   "ReportToMountMgr: Can't get MountMgr pointers %lx\n",
-                   status));
-
-        return;
-    }
-
-    deviceExtension = DiskDeviceObject->DeviceExtension;
-    diskLen = deviceExtension->DeviceName.Length;
-
-    //
-    // Allocate input buffer to report our partition device.
-    //
-
-    mountTarget = ExAllocatePool(NonPagedPool,
-                                 sizeof(MOUNTMGR_TARGET_NAME) + diskLen);
-
-    if (!mountTarget) {
-
-        DebugPrint((1,
-                   "ReportToMountMgr: Allocation of mountTarget failed\n"));
-
-        ObDereferenceObject(fileObject);
-        return;
-    }
-
-    mountTarget->DeviceNameLength = diskLen;
-    RtlCopyMemory(mountTarget->DeviceName, deviceExtension->DeviceName.Buffer, diskLen);
-
-    KeInitializeEvent(&event, NotificationEvent, FALSE);
-
-    //
-    // Build the IRP used to communicate with the MountMgr.
-    //
-
-    irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION,
-                                        deviceObject,
-                                        mountTarget,
-                                        sizeof(MOUNTMGR_TARGET_NAME) + diskLen,
-                                        NULL,
-                                        0,
-                                        FALSE,
-                                        &event,
-                                        &ioStatus);
-
-    if (!irp) {
-
-        DebugPrint((1,
-                    "ReportToMountMgr: Allocation of irp failed\n"));
-
-        ExFreePool(mountTarget);
-        ObDereferenceObject(fileObject);
-        return;
-    }
-
-    //
-    // Call the MountMgr.
-    //
-
-    status = IoCallDriver(deviceObject, irp);
-
-    if (status == STATUS_PENDING) {
-        KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
-        status = ioStatus.Status;
-    }
-
-    //
-    // We're done.
-    //
-
-    DPRINT1("Reported to the MountMgr: %lx\n", status);
-
-    ExFreePool(mountTarget);
-    ObDereferenceObject(fileObject);
-
-    return;
+    return status;
 }
 
 
 NTSTATUS
-NTAPI
-CreatePartitionDeviceObjects(
-    IN PDEVICE_OBJECT PhysicalDeviceObject,
-    IN PUNICODE_STRING RegistryPath
-    )
-{
-    CCHAR          ntNameBuffer[MAXIMUM_FILENAME_LENGTH];
-    ULONG          partitionNumber = 0;
-    NTSTATUS       status;
-    PDEVICE_OBJECT deviceObject = NULL;
-    PDISK_GEOMETRY_EX diskGeometry = NULL;
-    PDRIVE_LAYOUT_INFORMATION partitionList = NULL;
-    PDEVICE_EXTENSION deviceExtension;
-    PDEVICE_EXTENSION physicalDeviceExtension;
-    PCLASS_INIT_DATA initData = NULL;
-    PDISK_DATA     diskData;
-    PDISK_DATA     physicalDiskData;
-    ULONG          bytesPerSector;
-    UCHAR          sectorShift;
-    ULONG          srbFlags;
-    ULONG          dmByteSkew = 0;
-    PULONG         dmSkew;
-    BOOLEAN        dmActive = FALSE;
-    ULONG          numberListElements = 0;
-
-
-    //
-    // Get physical device geometry information for partition table reads.
-    //
-
-    physicalDeviceExtension = PhysicalDeviceObject->DeviceExtension;
-    diskGeometry = physicalDeviceExtension->DiskGeometry;
-    bytesPerSector = diskGeometry->Geometry.BytesPerSector;
-
-    //
-    // Make sure sector size is not zero.
-    //
-
-    if (bytesPerSector == 0) {
-
-        //
-        // Default sector size for disk is 512.
-        //
-
-        bytesPerSector = diskGeometry->Geometry.BytesPerSector = 512;
-    }
-
-    sectorShift = physicalDeviceExtension->SectorShift;
-
-    //
-    // Set pointer to disk data area that follows device extension.
-    //
-
-    diskData = (PDISK_DATA)(physicalDeviceExtension + 1);
-    diskData->PartitionListState = Initializing;
-
-    //
-    // Determine is DM Driver is loaded on an IDE drive that is
-    // under control of Atapi - this could be either a crashdump or
-    // an Atapi device is sharing the controller with an IDE disk.
-    //
-
-    HalExamineMBR(PhysicalDeviceObject,
-                  physicalDeviceExtension->DiskGeometry->Geometry.BytesPerSector,
-                  (ULONG)0x54,
-                  (PVOID)&dmSkew);
-
-    if (dmSkew) {
-
-        //
-        // Update the device extension, so that the call to IoReadPartitionTable
-        // will get the correct information. Any I/O to this disk will have
-        // to be skewed by *dmSkew sectors aka DMByteSkew.
-        //
-
-        physicalDeviceExtension->DMSkew = *dmSkew;
-        physicalDeviceExtension->DMActive = TRUE;
-        physicalDeviceExtension->DMByteSkew = physicalDeviceExtension->DMSkew * bytesPerSector;
-
-        //
-        // Save away the information that we need, since this deviceExtension will soon be
-        // blown away.
-        //
-
-        dmActive = TRUE;
-        dmByteSkew = physicalDeviceExtension->DMByteSkew;
-
-    }
-
-#ifdef __REACTOS__
-    //
-    // HACK so that we can use NT5+ NTOS functions with this NT4 driver
-    // for removable devices and avoid an infinite recursive loop between
-    // disk!UpdateRemovableGeometry() and ntos!IoReadPartitionTable().
-    //
-    diskData->UpdateRemovableGeometryCount = 0;
-#endif
-
-    //
-    // Create objects for all the partitions on the device.
-    //
-
-    status = IoReadPartitionTable(PhysicalDeviceObject,
-                                  physicalDeviceExtension->DiskGeometry->Geometry.BytesPerSector,
-                                  TRUE,
-                                  (PVOID)&partitionList);
-
-    //
-    // If the I/O read partition table failed and this is a removable device,
-    // then fix up the partition list to make it look like there is one
-    // zero length partition.
-    //
-    DPRINT("IoReadPartitionTable() status: 0x%08X\n", status);
-    if ((!NT_SUCCESS(status) || partitionList->PartitionCount == 0) &&
-        PhysicalDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) {
-
-        if (!NT_SUCCESS(status)) {
-
-            //
-            // Remember this disk is not ready.
-            //
-
-            diskData->DriveNotReady = TRUE;
-
-        } else {
-
-            //
-            // Free the partition list allocated by IoReadPartitionTable.
-            //
-
-            ExFreePool(partitionList);
-        }
-
-        //
-        // Allocate and zero a partition list.
-        //
-
-        partitionList = ExAllocatePool(NonPagedPool, sizeof(*partitionList));
-
-
-        if (partitionList != NULL) {
-
-            RtlZeroMemory( partitionList, sizeof( *partitionList ));
-
-            //
-            // Set the partition count to one and the status to success
-            // so one device object will be created. Set the partition type
-            // to a bogus value.
-            //
-
-            partitionList->PartitionCount = 1;
-
-            status = STATUS_SUCCESS;
-        }
-    }
-
-    if (NT_SUCCESS(status)) {
-
-        //
-        // Record disk signature.
-        //
-
-        diskData->Signature = partitionList->Signature;
-
-        //
-        // If disk signature is zero, then calculate the MBR checksum.
-        //
-
-        if (!diskData->Signature) {
-
-            if (!CalculateMbrCheckSum(physicalDeviceExtension,
-                                      &diskData->MbrCheckSum)) {
-
-                DebugPrint((1,
-                            "SCSIDISK: Can't calculate MBR checksum for disk %x\n",
-                            physicalDeviceExtension->DeviceNumber));
-            } else {
-
-                DebugPrint((2,
-                           "SCSIDISK: MBR checksum for disk %x is %x\n",
-                           physicalDeviceExtension->DeviceNumber,
-                           diskData->MbrCheckSum));
-            }
-        }
-
-        //
-        // Check the registry and determine if the BIOS knew about this drive.  If
-        // it did then update the geometry with the BIOS information.
-        //
-
-        UpdateGeometry(physicalDeviceExtension);
-
-        srbFlags = physicalDeviceExtension->SrbFlags;
-
-        initData = ExAllocatePool(NonPagedPool, sizeof(CLASS_INIT_DATA));
-        if (!initData)
-        {
-            DebugPrint((1,
-                        "Disk.CreatePartitionDeviceObjects - Allocation of initData failed\n"));
-
-            status = STATUS_INSUFFICIENT_RESOURCES;
-            goto CreatePartitionDeviceObjectsExit;
-        }
-
-        RtlZeroMemory(initData, sizeof(CLASS_INIT_DATA));
-
-        initData->InitializationDataSize     = sizeof(CLASS_INIT_DATA);
-        initData->DeviceExtensionSize        = DEVICE_EXTENSION_SIZE;
-        initData->DeviceType                 = FILE_DEVICE_DISK;
-        initData->DeviceCharacteristics      = PhysicalDeviceObject->Characteristics;
-        initData->ClassError                 = physicalDeviceExtension->ClassError;
-        initData->ClassReadWriteVerification = physicalDeviceExtension->ClassReadWriteVerification;
-        initData->ClassFindDevices           = physicalDeviceExtension->ClassFindDevices;
-        initData->ClassDeviceControl         = physicalDeviceExtension->ClassDeviceControl;
-        initData->ClassShutdownFlush         = physicalDeviceExtension->ClassShutdownFlush;
-        initData->ClassCreateClose           = physicalDeviceExtension->ClassCreateClose;
-        initData->ClassStartIo               = physicalDeviceExtension->ClassStartIo;
-
-        //
-        // Create device objects for the device partitions (if any).
-        // PartitionCount includes physical device partition 0,
-        // so only one partition means no objects to create.
-        //
-
-        DebugPrint((2,
-                    "CreateDiskDeviceObjects: Number of partitions is %d\n",
-                    partitionList->PartitionCount));
-
-        for (partitionNumber = 0; partitionNumber <
-            partitionList->PartitionCount; partitionNumber++) {
-
-            //
-            // Create partition object and set up partition parameters.
-            //
-
-            sprintf(ntNameBuffer,
-                    "\\Device\\Harddisk%lu\\Partition%lu",
-                    physicalDeviceExtension->DeviceNumber,
-                    partitionNumber + 1);
-
-            DebugPrint((2,
-                        "CreateDiskDeviceObjects: Create device object %s\n",
-                        ntNameBuffer));
-
-            status = ScsiClassCreateDeviceObject(PhysicalDeviceObject->DriverObject,
-                                                 ntNameBuffer,
-                                                 PhysicalDeviceObject,
-                                                 &deviceObject,
-                                                 initData);
-
-            if (!NT_SUCCESS(status)) {
-
-                DebugPrint((1, "CreateDiskDeviceObjects: Can't create device object for %s\n", ntNameBuffer));
-
-                break;
-            }
-
-            //
-            // Set up device object fields.
-            //
-
-            deviceObject->Flags |= DO_DIRECT_IO;
-
-            //
-            // Check if this is during initialization. If not indicate that
-            // system initialization already took place and this disk is ready
-            // to be accessed.
-            //
-
-            if (!RegistryPath) {
-                deviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-            }
-
-            deviceObject->StackSize = (CCHAR)physicalDeviceExtension->PortDeviceObject->StackSize + 1;
-
-            //
-            // Set up device extension fields.
-            //
-
-            deviceExtension = deviceObject->DeviceExtension;
-
-            if (dmActive) {
-
-                //
-                // Restore any saved DM values.
-                //
-
-                deviceExtension->DMByteSkew = dmByteSkew;
-                deviceExtension->DMSkew     = *dmSkew;
-                deviceExtension->DMActive   = TRUE;
-
-            }
-
-            //
-            // Link new device extension to previous disk data
-            // to support dynamic partitioning.
-            //
-
-            diskData->NextPartition = deviceExtension;
-
-            //
-            // Get pointer to new disk data.
-            //
-
-            diskData = (PDISK_DATA)(deviceExtension + 1);
-
-            //
-            // Set next partition pointer to NULL in case this is the
-            // last partition.
-            //
-
-            diskData->NextPartition = NULL;
-
-            //
-            // Allocate spinlock for zoning for split-request completion.
-            //
-
-            KeInitializeSpinLock(&deviceExtension->SplitRequestSpinLock);
-
-            //
-            // Copy port device object pointer to device extension.
-            //
-
-            deviceExtension->PortDeviceObject = physicalDeviceExtension->PortDeviceObject;
-
-            //
-            // Set the alignment requirements for the device based on the
-            // host adapter requirements
-            //
-
-            if (physicalDeviceExtension->PortDeviceObject->AlignmentRequirement > deviceObject->AlignmentRequirement) {
-                deviceObject->AlignmentRequirement = physicalDeviceExtension->PortDeviceObject->AlignmentRequirement;
-            }
-
-
-            if (srbFlags & SRB_FLAGS_QUEUE_ACTION_ENABLE) {
-                numberListElements = 30;
-            } else {
-                numberListElements = 8;
-            }
-
-            //
-            // Build the lookaside list for srb's for this partition based on
-            // whether the adapter and disk can do tagged queueing.
-            //
-
-            ScsiClassInitializeSrbLookasideList(deviceExtension,
-                                                numberListElements);
-
-            deviceExtension->SrbFlags = srbFlags;
-
-            //
-            // Set the sense-data pointer in the device extension.
-            //
-
-            deviceExtension->SenseData        = physicalDeviceExtension->SenseData;
-            deviceExtension->PortCapabilities = physicalDeviceExtension->PortCapabilities;
-            deviceExtension->DiskGeometry     = diskGeometry;
-            diskData->PartitionOrdinal        = diskData->PartitionNumber = partitionNumber + 1;
-            diskData->PartitionType           = partitionList->PartitionEntry[partitionNumber].PartitionType;
-            diskData->BootIndicator           = partitionList->PartitionEntry[partitionNumber].BootIndicator;
-
-            DebugPrint((2, "CreateDiskDeviceObjects: Partition type is %x\n",
-                diskData->PartitionType));
-
-            deviceExtension->StartingOffset  = partitionList->PartitionEntry[partitionNumber].StartingOffset;
-            deviceExtension->PartitionLength = partitionList->PartitionEntry[partitionNumber].PartitionLength;
-            diskData->HiddenSectors          = partitionList->PartitionEntry[partitionNumber].HiddenSectors;
-            deviceExtension->PortNumber      = physicalDeviceExtension->PortNumber;
-            deviceExtension->PathId          = physicalDeviceExtension->PathId;
-            deviceExtension->TargetId        = physicalDeviceExtension->TargetId;
-            deviceExtension->Lun             = physicalDeviceExtension->Lun;
-
-            //
-            // Check for removable media support.
-            //
-
-            if (PhysicalDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) {
-                deviceObject->Characteristics |= FILE_REMOVABLE_MEDIA;
-            }
-
-            //
-            // Set timeout value in seconds.
-            //
-
-            deviceExtension->TimeOutValue = physicalDeviceExtension->TimeOutValue;
-            deviceExtension->DiskGeometry->Geometry.BytesPerSector = bytesPerSector;
-            deviceExtension->SectorShift  = sectorShift;
-            deviceExtension->DeviceObject = deviceObject;
-            deviceExtension->DeviceFlags |= physicalDeviceExtension->DeviceFlags;
-
-            //
-            // Now we're done, report to the MountMgr.
-            // This is a HACK required to have the driver
-            // handle the associated DosDevices.
-            //
-
-            ReportToMountMgr(deviceObject);
-
-        } // end for (partitionNumber) ...
-
-        //
-        // Free the buffer allocated by reading the
-        // partition table.
-        //
-
-        ExFreePool(partitionList);
-
-        if (dmSkew) {
-            ExFreePool(dmSkew);
-        }
-
-    } else {
-
-CreatePartitionDeviceObjectsExit:
-
-        if (partitionList) {
-            ExFreePool(partitionList);
-        }
-        if (initData) {
-            ExFreePool(initData);
-        }
-
-        if (dmSkew) {
-            ExFreePool(dmSkew);
-        }
-
-        return status;
-
-    } // end if...else
-
-
-    physicalDiskData = (PDISK_DATA)(physicalDeviceExtension + 1);
-    physicalDiskData->PartitionListState = Initialized;
-
-    return(STATUS_SUCCESS);
-
-
-} // end CreatePartitionDeviceObjects()
-
-
-NTSTATUS
-NTAPI
-ScsiDiskReadWriteVerification(
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskReadWriteVerification(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     )
@@ -1658,79 +566,375 @@ Return Value:
 --*/
 
 {
-    PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
-    PIO_STACK_LOCATION currentIrpStack = IoGetCurrentIrpStackLocation(Irp);
-    ULONG transferByteCount = currentIrpStack->Parameters.Read.Length;
-    LARGE_INTEGER startingOffset;
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION irpSp = IoGetCurrentIrpStackLocation(Irp);
+    ULONG residualBytes;
+    ULONG residualOffset;
+    NTSTATUS status = STATUS_SUCCESS;
 
     //
-    // HACK: How can we end here with null sector size?!
+    // Make sure that the request is within the bounds of the partition,
+    // the number of bytes to transfer and the byte offset are a
+    // multiple of the sector size.
     //
 
-    if (deviceExtension->DiskGeometry->Geometry.BytesPerSector == 0) {
-        DPRINT1("Hack! Received invalid sector size\n");
-        deviceExtension->DiskGeometry->Geometry.BytesPerSector = 512;
+    residualBytes = irpSp->Parameters.Read.Length & (commonExtension->PartitionZeroExtension->DiskGeometry.BytesPerSector - 1);
+    residualOffset = irpSp->Parameters.Read.ByteOffset.LowPart & (commonExtension->PartitionZeroExtension->DiskGeometry.BytesPerSector - 1);
+
+    if ((irpSp->Parameters.Read.ByteOffset.QuadPart > commonExtension->PartitionLength.QuadPart) ||
+        (irpSp->Parameters.Read.ByteOffset.QuadPart < 0) ||
+        (residualBytes != 0) ||
+        (residualOffset != 0))
+    {
+        NT_ASSERT(residualOffset == 0);
+        status = STATUS_INVALID_PARAMETER;
+    }
+    else
+    {
+        ULONGLONG bytesRemaining = commonExtension->PartitionLength.QuadPart - irpSp->Parameters.Read.ByteOffset.QuadPart;
+
+        if ((ULONGLONG)irpSp->Parameters.Read.Length > bytesRemaining)
+        {
+            status = STATUS_INVALID_PARAMETER;
+        }
     }
 
-    //
-    // Verify parameters of this request.
-    // Check that ending sector is within partition and
-    // that number of bytes to transfer is a multiple of
-    // the sector size.
-    //
-
-    startingOffset.QuadPart = (currentIrpStack->Parameters.Read.ByteOffset.QuadPart +
-                               transferByteCount);
-
-    if ((startingOffset.QuadPart > deviceExtension->PartitionLength.QuadPart) ||
-        (transferByteCount & (deviceExtension->DiskGeometry->Geometry.BytesPerSector - 1))) {
-
+    if (!NT_SUCCESS(status))
+    {
         //
-        // This error maybe caused by the fact that the drive is not ready.
+        // This error may be caused by the fact that the drive is not ready.
         //
 
-        if (((PDISK_DATA)(deviceExtension + 1))->DriveNotReady) {
+        status = ((PDISK_DATA) commonExtension->DriverData)->ReadyStatus;
+
+        if (!NT_SUCCESS(status)) {
 
             //
             // Flag this as a user error so that a popup is generated.
             //
 
-            Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
-            IoSetHardErrorOrVerifyDevice(Irp, DeviceObject);
+            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_RW, "DiskReadWriteVerification: ReadyStatus is %lx\n", status));
+
+            if (IoIsErrorUserInduced(status) && Irp->Tail.Overlay.Thread != NULL) {
+                IoSetHardErrorOrVerifyDevice(Irp, DeviceObject);
+            }
+
+            //
+            // status will keep the current error
+            //
+
+        } else if ((residualBytes == 0) && (residualOffset == 0)) {
+
+            //
+            // This failed because we think the physical disk is too small.
+            // Send it down to the drive and let the hardware decide for
+            // itself.
+            //
+
+            status = STATUS_SUCCESS;
 
         } else {
 
             //
             // Note fastfat depends on this parameter to determine when to
-            // remount do to a sector size change.
+            // remount due to a sector size change.
             //
 
-            Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+            status = STATUS_INVALID_PARAMETER;
         }
-
-        if (startingOffset.QuadPart > deviceExtension->PartitionLength.QuadPart) {
-            DPRINT1("Reading beyond partition end! startingOffset: %I64d, PartitionLength: %I64d\n", startingOffset.QuadPart, deviceExtension->PartitionLength.QuadPart);
-        }
-
-        if (transferByteCount & (deviceExtension->DiskGeometry->Geometry.BytesPerSector - 1)) {
-            DPRINT1("Not reading sectors! TransferByteCount: %lu, BytesPerSector: %lu\n", transferByteCount, deviceExtension->DiskGeometry->Geometry.BytesPerSector);
-        }
-
-        if (Irp->IoStatus.Status == STATUS_DEVICE_NOT_READY) {
-            DPRINT1("Failing due to device not ready!\n");
-        }
-
-        return STATUS_INVALID_PARAMETER;
     }
 
-    return STATUS_SUCCESS;
+    Irp->IoStatus.Status = status;
 
-} // end ScsiDiskReadWrite()
+    return status;
+
+} // end DiskReadWrite()
 
 
 NTSTATUS
-NTAPI
-ScsiDiskDeviceControl(
+DiskDetermineMediaTypes(
+    IN PDEVICE_OBJECT Fdo,
+    IN PIRP     Irp,
+    IN UCHAR    MediumType,
+    IN UCHAR    DensityCode,
+    IN BOOLEAN  MediaPresent,
+    IN BOOLEAN  IsWritable
+    )
+
+/*++
+
+Routine Description:
+
+    Determines number of types based on the physical device, validates the user buffer
+    and builds the MEDIA_TYPE information.
+
+Arguments:
+
+    DeviceObject - Pointer to functional device object created by system.
+    Irp - IOCTL_STORAGE_GET_MEDIA_TYPES_EX Irp.
+    MediumType - byte returned in mode data header.
+    DensityCode - byte returned in mode data block descriptor.
+    NumberOfTypes - pointer to be updated based on actual device.
+
+Return Value:
+
+    Status is returned.
+
+--*/
+
+{
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
+
+    PGET_MEDIA_TYPES  mediaTypes = Irp->AssociatedIrp.SystemBuffer;
+    PDEVICE_MEDIA_INFO mediaInfo = &mediaTypes->MediaInfo[0];
+    BOOLEAN deviceMatched = FALSE;
+
+    PAGED_CODE();
+
+    //
+    // this should be checked prior to calling into this routine
+    // as we use the buffer as mediaTypes
+    //
+
+    NT_ASSERT(irpStack->Parameters.DeviceIoControl.OutputBufferLength >=
+           sizeof(GET_MEDIA_TYPES));
+
+    //
+    // Determine if this device is removable or fixed.
+    //
+
+    if (!TEST_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA)) {
+
+        //
+        // Fixed disk.
+        //
+
+        mediaTypes->DeviceType = FILE_DEVICE_DISK;
+        mediaTypes->MediaInfoCount = 1;
+
+        mediaInfo->DeviceSpecific.DiskInfo.Cylinders.QuadPart   = fdoExtension->DiskGeometry.Cylinders.QuadPart;
+        mediaInfo->DeviceSpecific.DiskInfo.MediaType            = FixedMedia;
+        mediaInfo->DeviceSpecific.DiskInfo.TracksPerCylinder    = fdoExtension->DiskGeometry.TracksPerCylinder;
+        mediaInfo->DeviceSpecific.DiskInfo.SectorsPerTrack      = fdoExtension->DiskGeometry.SectorsPerTrack;
+        mediaInfo->DeviceSpecific.DiskInfo.BytesPerSector       = fdoExtension->DiskGeometry.BytesPerSector;
+        mediaInfo->DeviceSpecific.DiskInfo.NumberMediaSides     = 1;
+        mediaInfo->DeviceSpecific.DiskInfo.MediaCharacteristics = (MEDIA_CURRENTLY_MOUNTED | MEDIA_READ_WRITE);
+
+        if (!IsWritable) {
+
+            SET_FLAG(mediaInfo->DeviceSpecific.DiskInfo.MediaCharacteristics,
+                     MEDIA_WRITE_PROTECTED);
+        }
+
+    } else {
+
+        PCCHAR vendorId = (PCCHAR) fdoExtension->DeviceDescriptor + fdoExtension->DeviceDescriptor->VendorIdOffset;
+        PCCHAR productId = (PCCHAR) fdoExtension->DeviceDescriptor + fdoExtension->DeviceDescriptor->ProductIdOffset;
+        PCCHAR productRevision = (PCCHAR) fdoExtension->DeviceDescriptor + fdoExtension->DeviceDescriptor->ProductRevisionOffset;
+        DISK_MEDIA_TYPES_LIST const *mediaListEntry;
+        ULONG  currentMedia;
+        ULONG  i;
+        ULONG  j;
+        ULONG  sizeNeeded;
+
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL,
+                   "DiskDetermineMediaTypes: Vendor %s, Product %s\n",
+                   vendorId,
+                   productId));
+
+
+        //
+        // If there's an entry with such vendorId & ProductId in the DiskMediaTypesExclude list,
+        // this device shouldn't be looked up in the DiskMediaTypes list to determine a medium type.
+        // The exclude table allows to narrow down the set of devices described by the DiskMediaTypes
+        // list (e.g.: DiskMediaTypes says "all HP devices" and DiskMediaTypesExlclude says
+        // "except for HP RDX")
+        //
+
+        for (i = 0; DiskMediaTypesExclude[i].VendorId != NULL; i++) {
+            mediaListEntry = &DiskMediaTypesExclude[i];
+
+            if (strncmp(mediaListEntry->VendorId,vendorId,strlen(mediaListEntry->VendorId))) {
+                continue;
+            }
+
+            if ((mediaListEntry->ProductId != NULL) &&
+                 strncmp(mediaListEntry->ProductId, productId, strlen(mediaListEntry->ProductId))) {
+                continue;
+            }
+
+            goto SkipTable;
+        }
+
+        //
+        // Run through the list until we find the entry with a NULL Vendor Id.
+        //
+
+        for (i = 0; DiskMediaTypes[i].VendorId != NULL; i++) {
+
+            mediaListEntry = &DiskMediaTypes[i];
+
+            if (strncmp(mediaListEntry->VendorId,vendorId,strlen(mediaListEntry->VendorId))) {
+                continue;
+            }
+
+            if ((mediaListEntry->ProductId != NULL) &&
+                 strncmp(mediaListEntry->ProductId, productId, strlen(mediaListEntry->ProductId))) {
+                continue;
+            }
+
+            if ((mediaListEntry->Revision != NULL) &&
+                 strncmp(mediaListEntry->Revision, productRevision, strlen(mediaListEntry->Revision))) {
+                continue;
+            }
+
+            deviceMatched = TRUE;
+
+            mediaTypes->DeviceType = FILE_DEVICE_DISK;
+            mediaTypes->MediaInfoCount = mediaListEntry->NumberOfTypes;
+
+            //
+            // Ensure that buffer is large enough.
+            //
+
+            sizeNeeded = FIELD_OFFSET(GET_MEDIA_TYPES, MediaInfo[0]) +
+                         (mediaListEntry->NumberOfTypes *
+                          sizeof(DEVICE_MEDIA_INFO)
+                          );
+
+            if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+                sizeNeeded) {
+
+                //
+                // Buffer too small
+                //
+
+                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+
+            for (j = 0; j < mediaListEntry->NumberOfTypes; j++) {
+
+                mediaInfo->DeviceSpecific.RemovableDiskInfo.Cylinders.QuadPart = fdoExtension->DiskGeometry.Cylinders.QuadPart;
+                mediaInfo->DeviceSpecific.RemovableDiskInfo.TracksPerCylinder = fdoExtension->DiskGeometry.TracksPerCylinder;
+                mediaInfo->DeviceSpecific.RemovableDiskInfo.SectorsPerTrack = fdoExtension->DiskGeometry.SectorsPerTrack;
+                mediaInfo->DeviceSpecific.RemovableDiskInfo.BytesPerSector = fdoExtension->DiskGeometry.BytesPerSector;
+                mediaInfo->DeviceSpecific.RemovableDiskInfo.NumberMediaSides = mediaListEntry->NumberOfSides;
+
+                //
+                // Set the type.
+                //
+
+                mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaType = mediaListEntry->MediaTypes[j];
+
+                if (mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaType == MO_5_WO) {
+                    mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaCharacteristics = MEDIA_WRITE_ONCE;
+                } else {
+                    mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaCharacteristics = MEDIA_READ_WRITE;
+                }
+
+                //
+                // Status will either be success, if media is present, or no media.
+                // It would be optimal to base from density code and medium type, but not all devices
+                // have values for these fields.
+                //
+
+                if (MediaPresent) {
+
+                    //
+                    // The usage of MediumType and DensityCode is device specific, so this may need
+                    // to be extended to further key off of product/vendor ids.
+                    // Currently, the MO units are the only devices that return this information.
+                    //
+
+                    if (MediumType == 2) {
+                        currentMedia = MO_5_WO;
+                    } else if (MediumType == 3) {
+                        currentMedia = MO_5_RW;
+
+                        if (DensityCode == 0x87) {
+
+                            //
+                            // Indicate that the pinnacle 4.6 G media
+                            // is present. Other density codes will default to normal
+                            // RW MO media.
+                            //
+
+                            currentMedia = PINNACLE_APEX_5_RW;
+                        }
+                    } else {
+                        currentMedia = 0;
+                    }
+
+                    if (currentMedia) {
+                        if (mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaType == (STORAGE_MEDIA_TYPE)currentMedia) {
+                            SET_FLAG(mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaCharacteristics, MEDIA_CURRENTLY_MOUNTED);
+                        }
+
+                    } else {
+                        SET_FLAG(mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaCharacteristics, MEDIA_CURRENTLY_MOUNTED);
+                    }
+                }
+
+                if (!IsWritable) {
+                    SET_FLAG(mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaCharacteristics, MEDIA_WRITE_PROTECTED);
+                }
+
+                //
+                // Advance to next entry.
+                //
+
+                mediaInfo++;
+            }
+        }
+
+SkipTable:
+
+        if (!deviceMatched) {
+
+            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_IOCTL,
+                       "DiskDetermineMediaTypes: Unknown device. Vendor: %s Product: %s Revision: %s\n",
+                                   vendorId,
+                                   productId,
+                                   productRevision));
+            //
+            // Build an entry for unknown.
+            //
+
+            mediaTypes->DeviceType = FILE_DEVICE_DISK;
+            mediaTypes->MediaInfoCount = 1;
+
+            mediaInfo->DeviceSpecific.RemovableDiskInfo.Cylinders.QuadPart   = fdoExtension->DiskGeometry.Cylinders.QuadPart;
+            mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaType            = RemovableMedia;
+            mediaInfo->DeviceSpecific.RemovableDiskInfo.TracksPerCylinder    = fdoExtension->DiskGeometry.TracksPerCylinder;
+            mediaInfo->DeviceSpecific.RemovableDiskInfo.SectorsPerTrack      = fdoExtension->DiskGeometry.SectorsPerTrack;
+            mediaInfo->DeviceSpecific.RemovableDiskInfo.BytesPerSector       = fdoExtension->DiskGeometry.BytesPerSector;
+            mediaInfo->DeviceSpecific.RemovableDiskInfo.NumberMediaSides     = 1;
+            mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaCharacteristics = MEDIA_READ_WRITE;
+
+            if (MediaPresent) {
+
+                SET_FLAG(mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaCharacteristics, MEDIA_CURRENTLY_MOUNTED);
+            }
+
+            if (!IsWritable) {
+
+                SET_FLAG(mediaInfo->DeviceSpecific.RemovableDiskInfo.MediaCharacteristics, MEDIA_WRITE_PROTECTED);
+            }
+        }
+    }
+
+    Irp->IoStatus.Information =
+        FIELD_OFFSET(GET_MEDIA_TYPES, MediaInfo[0]) +
+        (mediaTypes->MediaInfoCount * sizeof(DEVICE_MEDIA_INFO));
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
     )
@@ -1743,7 +947,7 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject - Pointer to driver object created by system.
+    Fdo - Pointer to functional device object created by system.
     Irp - IRP involved.
 
 Return Value:
@@ -1753,1349 +957,169 @@ Return Value:
 --*/
 
 {
-    PIO_STACK_LOCATION     irpStack = IoGetCurrentIrpStackLocation(Irp);
-    PDEVICE_EXTENSION      deviceExtension = DeviceObject->DeviceExtension;
-    PDISK_DATA             diskData = (PDISK_DATA)(deviceExtension + 1);
-    PSCSI_REQUEST_BLOCK    srb;
-    PCDB                   cdb;
-    PMODE_PARAMETER_HEADER modeData;
-    PIRP                   irp2;
-    ULONG                  length;
-    NTSTATUS               status;
-    KEVENT                 event;
-    IO_STATUS_BLOCK        ioStatus;
+    PIO_STACK_LOCATION  irpStack = IoGetCurrentIrpStackLocation(Irp);
+    NTSTATUS            status = STATUS_SUCCESS;
+    ULONG               ioctlCode;
 
-    PAGED_CODE();
+    NT_ASSERT(DeviceObject != NULL);
 
-    srb = ExAllocatePool(NonPagedPool, SCSI_REQUEST_BLOCK_SIZE);
+    Irp->IoStatus.Information = 0;
+    ioctlCode = irpStack->Parameters.DeviceIoControl.IoControlCode;
 
-    if (srb == NULL) {
+    TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_IOCTL, "DiskDeviceControl: Received IOCTL 0x%X for device %p through IRP %p\n",
+                ioctlCode, DeviceObject, Irp));
 
-        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return(STATUS_INSUFFICIENT_RESOURCES);
+
+    switch (ioctlCode) {
+
+        case IOCTL_DISK_GET_CACHE_INFORMATION: {
+            status = DiskIoctlGetCacheInformation(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_SET_CACHE_INFORMATION: {
+            status = DiskIoctlSetCacheInformation(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_GET_CACHE_SETTING: {
+            status = DiskIoctlGetCacheSetting(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_SET_CACHE_SETTING: {
+            status = DiskIoctlSetCacheSetting(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_GET_DRIVE_GEOMETRY: {
+            status = DiskIoctlGetDriveGeometry(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_GET_DRIVE_GEOMETRY_EX: {
+            status = DiskIoctlGetDriveGeometryEx( DeviceObject, Irp );
+            break;
+        }
+
+        case IOCTL_DISK_VERIFY: {
+            status = DiskIoctlVerify(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_GET_LENGTH_INFO: {
+            status = DiskIoctlGetLengthInfo(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_IS_WRITABLE: {
+            status = DiskIoctlIsWritable(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_UPDATE_DRIVE_SIZE: {
+            status = DiskIoctlUpdateDriveSize(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_REASSIGN_BLOCKS: {
+            status = DiskIoctlReassignBlocks(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_REASSIGN_BLOCKS_EX: {
+            status = DiskIoctlReassignBlocksEx(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_INTERNAL_SET_VERIFY: {
+            status = DiskIoctlSetVerify(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_DISK_INTERNAL_CLEAR_VERIFY: {
+            status = DiskIoctlClearVerify(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_STORAGE_GET_MEDIA_TYPES_EX: {
+            status = DiskIoctlGetMediaTypesEx(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_STORAGE_PREDICT_FAILURE : {
+            status = DiskIoctlPredictFailure(DeviceObject, Irp);
+            break;
+        }
+
+        #if (NTDDI_VERSION >= NTDDI_WINBLUE)
+        case IOCTL_STORAGE_FAILURE_PREDICTION_CONFIG : {
+            status = DiskIoctlEnableFailurePrediction(DeviceObject, Irp);
+            break;
+        }
+        #endif
+
+        case SMART_GET_VERSION: {
+            status = DiskIoctlSmartGetVersion(DeviceObject, Irp);
+            break;
+        }
+
+        case SMART_RCV_DRIVE_DATA: {
+            status = DiskIoctlSmartReceiveDriveData(DeviceObject, Irp);
+            break;
+        }
+
+        case SMART_SEND_DRIVE_COMMAND: {
+            status = DiskIoctlSmartSendDriveCommand(DeviceObject, Irp);
+            break;
+        }
+
+        case IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS:
+        case IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS_ADMIN: {
+            status = DiskIoctlGetVolumeDiskExtents(DeviceObject, Irp);
+            break;
+        }
+
+        default: {
+
+            //
+            // Pass the request to the common device control routine.
+            //
+            return(ClassDeviceControl(DeviceObject, Irp));
+            break;
+        }
+    } // end switch
+
+    if (!NT_SUCCESS(status)) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskDeviceControl: IOCTL 0x%X to device %p failed with error 0x%X\n",
+                    ioctlCode, DeviceObject, status));
+        if (IoIsErrorUserInduced(status) &&
+            (Irp->Tail.Overlay.Thread != NULL)) {
+            IoSetHardErrorOrVerifyDevice(Irp, DeviceObject);
+        }
     }
 
     //
-    // Write zeros to Srb.
+    // DiskIoctlVerify() (IOCTL_DISK_VERIFY) function returns STATUS_PENDING
+    // and completes the IRP in the work item. Do not touch or complete
+    // the IRP if STATUS_PENDING is returned.
     //
 
-    RtlZeroMemory(srb, SCSI_REQUEST_BLOCK_SIZE);
+    if (status != STATUS_PENDING) {
 
-    cdb = (PCDB)srb->Cdb;
-
-    switch (irpStack->Parameters.DeviceIoControl.IoControlCode) {
-
-    case SMART_GET_VERSION: {
-
-        ULONG_PTR buffer;
-        PSRB_IO_CONTROL  srbControl;
-        PGETVERSIONINPARAMS versionParams;
-
-        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
-            sizeof(GETVERSIONINPARAMS)) {
-                status = STATUS_INVALID_PARAMETER;
-                break;
-        }
-
-        //
-        // Create notification event object to be used to signal the
-        // request completion.
-        //
-
-        KeInitializeEvent(&event, NotificationEvent, FALSE);
-
-        srbControl = ExAllocatePool(NonPagedPool,
-                                    sizeof(SRB_IO_CONTROL) + sizeof(GETVERSIONINPARAMS));
-
-        if (!srbControl) {
-            status =  STATUS_INSUFFICIENT_RESOURCES;
-            break;
-        }
-
-        //
-        // fill in srbControl fields
-        //
-
-        srbControl->HeaderLength = sizeof(SRB_IO_CONTROL);
-        RtlMoveMemory (srbControl->Signature, "SCSIDISK", 8);
-        srbControl->Timeout = deviceExtension->TimeOutValue;
-        srbControl->Length = sizeof(GETVERSIONINPARAMS);
-        srbControl->ControlCode = IOCTL_SCSI_MINIPORT_SMART_VERSION;
-
-        //
-        // Point to the 'buffer' portion of the SRB_CONTROL
-        //
-
-        buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
-
-        //
-        // Ensure correct target is set in the cmd parameters.
-        //
-
-        versionParams = (PGETVERSIONINPARAMS)buffer;
-        versionParams->bIDEDeviceMap = deviceExtension->TargetId;
-
-        //
-        // Copy the IOCTL parameters to the srb control buffer area.
-        //
-
-        RtlMoveMemory((PVOID)buffer, Irp->AssociatedIrp.SystemBuffer, sizeof(GETVERSIONINPARAMS));
-
-
-        irp2 = IoBuildDeviceIoControlRequest(IOCTL_SCSI_MINIPORT,
-                                            deviceExtension->PortDeviceObject,
-                                            srbControl,
-                                            sizeof(SRB_IO_CONTROL) + sizeof(GETVERSIONINPARAMS),
-                                            srbControl,
-                                            sizeof(SRB_IO_CONTROL) + sizeof(GETVERSIONINPARAMS),
-                                            FALSE,
-                                            &event,
-                                            &ioStatus);
-
-        if (irp2 == NULL) {
-            status = STATUS_INSUFFICIENT_RESOURCES;
-            break;
-        }
-
-        //
-        // Call the port driver with the request and wait for it to complete.
-        //
-
-        status = IoCallDriver(deviceExtension->PortDeviceObject, irp2);
-
-        if (status == STATUS_PENDING) {
-            KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
-            status = ioStatus.Status;
-        }
-
-        //
-        // If successful, copy the data received into the output buffer.
-        // This should only fail in the event that the IDE driver is older than this driver.
-        //
-
-        if (NT_SUCCESS(status)) {
-
-            buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
-
-            RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, (PVOID)buffer, sizeof(GETVERSIONINPARAMS));
-            Irp->IoStatus.Information = sizeof(GETVERSIONINPARAMS);
-        }
-
-        ExFreePool(srbControl);
-        break;
-    }
-
-    case SMART_RCV_DRIVE_DATA: {
-
-        PSENDCMDINPARAMS cmdInParameters = ((PSENDCMDINPARAMS)Irp->AssociatedIrp.SystemBuffer);
-        ULONG            controlCode = 0;
-        PSRB_IO_CONTROL  srbControl;
-        ULONG_PTR        buffer;
-
-        if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
-            (sizeof(SENDCMDINPARAMS) - 1)) {
-                status = STATUS_INVALID_PARAMETER;
-                break;
-
-        } else if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
-            (sizeof(SENDCMDOUTPARAMS) + 512 - 1)) {
-                status = STATUS_INVALID_PARAMETER;
-                break;
-        }
-
-        //
-        // Create notification event object to be used to signal the
-        // request completion.
-        //
-
-        KeInitializeEvent(&event, NotificationEvent, FALSE);
-
-        if (cmdInParameters->irDriveRegs.bCommandReg == ID_CMD) {
-
-            length = IDENTIFY_BUFFER_SIZE + sizeof(SENDCMDOUTPARAMS);
-            controlCode = IOCTL_SCSI_MINIPORT_IDENTIFY;
-
-        } else if (cmdInParameters->irDriveRegs.bCommandReg == SMART_CMD) {
-            switch (cmdInParameters->irDriveRegs.bFeaturesReg) {
-                case READ_ATTRIBUTES:
-                    controlCode = IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS;
-                    length = READ_ATTRIBUTE_BUFFER_SIZE + sizeof(SENDCMDOUTPARAMS);
-                    break;
-                case READ_THRESHOLDS:
-                    controlCode = IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS;
-                    length = READ_THRESHOLD_BUFFER_SIZE + sizeof(SENDCMDOUTPARAMS);
-                    break;
-                default:
-                    status = STATUS_INVALID_PARAMETER;
-                    break;
-            }
-        } else {
-
-            status = STATUS_INVALID_PARAMETER;
-        }
-
-        if (controlCode == 0) {
-            status = STATUS_INVALID_PARAMETER;
-            break;
-        }
-
-        srbControl = ExAllocatePool(NonPagedPool,
-                                    sizeof(SRB_IO_CONTROL) + length);
-
-        if (!srbControl) {
-            status =  STATUS_INSUFFICIENT_RESOURCES;
-            break;
-        }
-
-        //
-        // fill in srbControl fields
-        //
-
-        srbControl->HeaderLength = sizeof(SRB_IO_CONTROL);
-        RtlMoveMemory (srbControl->Signature, "SCSIDISK", 8);
-        srbControl->Timeout = deviceExtension->TimeOutValue;
-        srbControl->Length = length;
-        srbControl->ControlCode = controlCode;
-
-        //
-        // Point to the 'buffer' portion of the SRB_CONTROL
-        //
-
-        buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
-
-        //
-        // Ensure correct target is set in the cmd parameters.
-        //
-
-        cmdInParameters->bDriveNumber = deviceExtension->TargetId;
-
-        //
-        // Copy the IOCTL parameters to the srb control buffer area.
-        //
-
-        RtlMoveMemory((PVOID)buffer, Irp->AssociatedIrp.SystemBuffer, sizeof(SENDCMDINPARAMS) - 1);
-
-        irp2 = IoBuildDeviceIoControlRequest(IOCTL_SCSI_MINIPORT,
-                                            deviceExtension->PortDeviceObject,
-                                            srbControl,
-                                            sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDINPARAMS) - 1,
-                                            srbControl,
-                                            sizeof(SRB_IO_CONTROL) + length,
-                                            FALSE,
-                                            &event,
-                                            &ioStatus);
-
-        if (irp2 == NULL) {
-            status = STATUS_INSUFFICIENT_RESOURCES;
-            break;
-        }
-
-        //
-        // Call the port driver with the request and wait for it to complete.
-        //
-
-        status = IoCallDriver(deviceExtension->PortDeviceObject, irp2);
-
-        if (status == STATUS_PENDING) {
-            KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
-            status = ioStatus.Status;
-        }
-
-        //
-        // If successful, copy the data received into the output buffer
-        //
-
-        buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
-
-        if (NT_SUCCESS(status)) {
-
-            RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, (PVOID)buffer, length - 1);
-            Irp->IoStatus.Information = length - 1;
-
-        } else {
-
-            RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, (PVOID)buffer, (sizeof(SENDCMDOUTPARAMS) - 1));
-            Irp->IoStatus.Information = sizeof(SENDCMDOUTPARAMS) - 1;
-
-        }
-
-        ExFreePool(srbControl);
-        break;
-
-    }
-
-    case SMART_SEND_DRIVE_COMMAND: {
-
-        PSENDCMDINPARAMS cmdInParameters = ((PSENDCMDINPARAMS)Irp->AssociatedIrp.SystemBuffer);
-        PSRB_IO_CONTROL  srbControl;
-        ULONG            controlCode = 0;
-        ULONG_PTR        buffer;
-
-        if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
-               (sizeof(SENDCMDINPARAMS) - 1)) {
-                status = STATUS_INVALID_PARAMETER;
-                break;
-
-        } else if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
-                      (sizeof(SENDCMDOUTPARAMS) - 1)) {
-                status = STATUS_INVALID_PARAMETER;
-                break;
-        }
-
-        //
-        // Create notification event object to be used to signal the
-        // request completion.
-        //
-
-        KeInitializeEvent(&event, NotificationEvent, FALSE);
-
-        length = 0;
-
-        if (cmdInParameters->irDriveRegs.bCommandReg == SMART_CMD) {
-            switch (cmdInParameters->irDriveRegs.bFeaturesReg) {
-
-                case ENABLE_SMART:
-                    controlCode = IOCTL_SCSI_MINIPORT_ENABLE_SMART;
-                    break;
-
-                case DISABLE_SMART:
-                    controlCode = IOCTL_SCSI_MINIPORT_DISABLE_SMART;
-                    break;
-
-                case  RETURN_SMART_STATUS:
-
-                    //
-                    // Ensure bBuffer is at least 2 bytes (to hold the values of
-                    // cylinderLow and cylinderHigh).
-                    //
-
-                    if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
-                        (sizeof(SENDCMDOUTPARAMS) - 1 + sizeof(IDEREGS))) {
-
-                        status = STATUS_INVALID_PARAMETER;
-                        break;
-                    }
-
-                    controlCode = IOCTL_SCSI_MINIPORT_RETURN_STATUS;
-                    length = sizeof(IDEREGS);
-                    break;
-
-                case ENABLE_DISABLE_AUTOSAVE:
-                    controlCode = IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE;
-                    break;
-
-                case SAVE_ATTRIBUTE_VALUES:
-                    controlCode = IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES;
-                    break;
-
-                case EXECUTE_OFFLINE_DIAGS:
-                    controlCode = IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS;
-                    break;
-
-          default:
-                    status = STATUS_INVALID_PARAMETER;
-                    break;
-            }
-        } else {
-
-            status = STATUS_INVALID_PARAMETER;
-        }
-
-        if (controlCode == 0) {
-            status = STATUS_INVALID_PARAMETER;
-            break;
-        }
-
-        length += (sizeof(SENDCMDOUTPARAMS) > sizeof(SENDCMDINPARAMS)) ? sizeof(SENDCMDOUTPARAMS) : sizeof(SENDCMDINPARAMS);
-        srbControl = ExAllocatePool(NonPagedPool,
-                                    sizeof(SRB_IO_CONTROL) + length);
-
-        if (!srbControl) {
-            status =  STATUS_INSUFFICIENT_RESOURCES;
-            break;
-        }
-
-        //
-        // fill in srbControl fields
-        //
-
-        srbControl->HeaderLength = sizeof(SRB_IO_CONTROL);
-        RtlMoveMemory (srbControl->Signature, "SCSIDISK", 8);
-        srbControl->Timeout = deviceExtension->TimeOutValue;
-        srbControl->Length = length;
-
-        //
-        // Point to the 'buffer' portion of the SRB_CONTROL
-        //
-
-        buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
-
-        //
-        // Ensure correct target is set in the cmd parameters.
-        //
-
-        cmdInParameters->bDriveNumber = deviceExtension->TargetId;
-
-        //
-        // Copy the IOCTL parameters to the srb control buffer area.
-        //
-
-        RtlMoveMemory((PVOID)buffer, Irp->AssociatedIrp.SystemBuffer, sizeof(SENDCMDINPARAMS) - 1);
-
-        srbControl->ControlCode = controlCode;
-
-        irp2 = IoBuildDeviceIoControlRequest(IOCTL_SCSI_MINIPORT,
-                                            deviceExtension->PortDeviceObject,
-                                            srbControl,
-                                            sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDINPARAMS) - 1,
-                                            srbControl,
-                                            sizeof(SRB_IO_CONTROL) + length,
-                                            FALSE,
-                                            &event,
-                                            &ioStatus);
-
-        if (irp2 == NULL) {
-            status = STATUS_INSUFFICIENT_RESOURCES;
-            break;
-        }
-
-        //
-        // Call the port driver with the request and wait for it to complete.
-        //
-
-        status = IoCallDriver(deviceExtension->PortDeviceObject, irp2);
-
-        if (status == STATUS_PENDING) {
-            KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
-            status = ioStatus.Status;
-        }
-
-        //
-        // Copy the data received into the output buffer. Since the status buffer
-        // contains error information also, always perform this copy. IO will will
-        // either pass this back to the app, or zero it, in case of error.
-        //
-
-        buffer = (ULONG_PTR)srbControl + srbControl->HeaderLength;
-
-        //
-        // Update the return buffer size based on the sub-command.
-        //
-
-        if (cmdInParameters->irDriveRegs.bFeaturesReg == RETURN_SMART_STATUS) {
-            length = sizeof(SENDCMDOUTPARAMS) - 1 + sizeof(IDEREGS);
-        } else {
-            length = sizeof(SENDCMDOUTPARAMS) - 1;
-        }
-
-        RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, (PVOID)buffer, length);
-        Irp->IoStatus.Information = length;
-
-        ExFreePool(srbControl);
-        break;
-
-    }
-
-    case IOCTL_DISK_GET_DRIVE_GEOMETRY:
-    case IOCTL_DISK_GET_DRIVE_GEOMETRY_EX:
-        {
-
-        PDEVICE_EXTENSION physicalDeviceExtension;
-        PDISK_DATA        physicalDiskData;
-        BOOLEAN           removable = FALSE;
-        BOOLEAN           listInitialized = FALSE;
-        ULONG             copyLength;
-
-        if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY) {
-            if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY)) {
-                status = STATUS_BUFFER_TOO_SMALL;
-                break;
-            }
-
-            copyLength = sizeof(DISK_GEOMETRY);
-        } else {
-            ASSERT(irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY_EX);
-            if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < FIELD_OFFSET(DISK_GEOMETRY_EX, Data)) {
-                status = STATUS_BUFFER_TOO_SMALL;
-                break;
-            }
-
-            if (irpStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(DISK_GEOMETRY_EX)) {
-                copyLength = sizeof(DISK_GEOMETRY_EX);
-            } else {
-                copyLength = FIELD_OFFSET(DISK_GEOMETRY_EX, Data);
-            }
-        }
-
-        status = STATUS_SUCCESS;
-
-        physicalDeviceExtension = deviceExtension->PhysicalDevice->DeviceExtension;
-        physicalDiskData = (PDISK_DATA)(physicalDeviceExtension + 1);
-
-        removable = (BOOLEAN)DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA;
-        listInitialized = (physicalDiskData->PartitionListState == Initialized);
-
-        if (removable || (!listInitialized))
-        {
-            //
-            // Issue ReadCapacity to update device extension
-            // with information for current media.
-            //
-
-            status = ScsiClassReadDriveCapacity(deviceExtension->PhysicalDevice);
-
-        }
-
-        if (removable) {
-
-            if (!NT_SUCCESS(status)) {
-
-                //
-                // Note the drive is not ready.
-                //
-
-                diskData->DriveNotReady = TRUE;
-
-                break;
-            }
-
-            //
-            // Note the drive is now ready.
-            //
-
-            diskData->DriveNotReady = FALSE;
-
-        } else if (NT_SUCCESS(status)) {
-
-            // ReadDriveCapacity was alright, create Partition Objects
-
-            if (physicalDiskData->PartitionListState == NotInitialized) {
-                    status = CreatePartitionDeviceObjects(deviceExtension->PhysicalDevice, NULL);
-            }
-        }
-
-        if (NT_SUCCESS(status)) {
-
-            //
-            // Copy drive geometry information from device extension.
-            //
-
-            RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
-                          deviceExtension->DiskGeometry,
-                          copyLength);
-
-            status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = copyLength;
-        }
-
-        break;
-
-        }
-
-    case IOCTL_DISK_VERIFY:
-
-        {
-
-        PVERIFY_INFORMATION verifyInfo = Irp->AssociatedIrp.SystemBuffer;
-        LARGE_INTEGER byteOffset;
-        ULONG         sectorOffset;
-        USHORT        sectorCount;
-
-        //
-        // Validate buffer length.
-        //
-
-        if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
-            sizeof(VERIFY_INFORMATION)) {
-
-            status = STATUS_INFO_LENGTH_MISMATCH;
-            break;
-        }
-
-        //
-        // Verify sectors
-        //
-
-        srb->CdbLength = 10;
-
-        cdb->CDB10.OperationCode = SCSIOP_VERIFY;
-
-        //
-        // Add disk offset to starting sector.
-        //
-
-        byteOffset.QuadPart = deviceExtension->StartingOffset.QuadPart +
-                                        verifyInfo->StartingOffset.QuadPart;
-
-        //
-        // Convert byte offset to sector offset.
-        //
-
-        sectorOffset = (ULONG)(byteOffset.QuadPart >> deviceExtension->SectorShift);
-
-        //
-        // Convert ULONG byte count to USHORT sector count.
-        //
-
-        sectorCount = (USHORT)(verifyInfo->Length >> deviceExtension->SectorShift);
-
-        //
-        // Move little endian values into CDB in big endian format.
-        //
-
-        cdb->CDB10.LogicalBlockByte0 = ((PFOUR_BYTE)&sectorOffset)->Byte3;
-        cdb->CDB10.LogicalBlockByte1 = ((PFOUR_BYTE)&sectorOffset)->Byte2;
-        cdb->CDB10.LogicalBlockByte2 = ((PFOUR_BYTE)&sectorOffset)->Byte1;
-        cdb->CDB10.LogicalBlockByte3 = ((PFOUR_BYTE)&sectorOffset)->Byte0;
-
-        cdb->CDB10.TransferBlocksMsb = ((PFOUR_BYTE)&sectorCount)->Byte1;
-        cdb->CDB10.TransferBlocksLsb = ((PFOUR_BYTE)&sectorCount)->Byte0;
-
-        //
-        // The verify command is used by the NT FORMAT utility and
-        // requests are sent down for 5% of the volume size. The
-        // request timeout value is calculated based on the number of
-        // sectors verified.
-        //
-
-        srb->TimeOutValue = ((sectorCount + 0x7F) >> 7) *
-                                              deviceExtension->TimeOutValue;
-
-        status = ScsiClassSendSrbAsynchronous(DeviceObject,
-                                              srb,
-                                              Irp,
-                                              NULL,
-                                              0,
-                                              FALSE);
-
-        return(status);
-
-        }
-
-    case IOCTL_DISK_GET_PARTITION_INFO:
-
-        //
-        // Return the information about the partition specified by the device
-        // object.  Note that no information is ever returned about the size
-        // or partition type of the physical disk, as this doesn't make any
-        // sense.
-        //
-
-        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
-            sizeof(PARTITION_INFORMATION)) {
-
-            status = STATUS_INFO_LENGTH_MISMATCH;
-            break;
-        }
-
-        //
-        // Update the geometry in case it has changed.
-        //
-
-        status = UpdateRemovableGeometry (DeviceObject, Irp);
-
-        if (!NT_SUCCESS(status)) {
-
-            //
-            // Note the drive is not ready.
-            //
-
-            diskData->DriveNotReady = TRUE;
-            break;
-        }
-
-        //
-        // Note the drive is now ready.
-        //
-
-        diskData->DriveNotReady = FALSE;
-
-        //
-        // Handle the case were we query the whole disk
-        //
-
-        if (diskData->PartitionNumber == 0) {
-
-            PPARTITION_INFORMATION outputBuffer;
-
-            outputBuffer =
-                    (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
-
-            outputBuffer->PartitionType = PARTITION_ENTRY_UNUSED;
-            outputBuffer->StartingOffset = deviceExtension->StartingOffset;
-            outputBuffer->PartitionLength.QuadPart = deviceExtension->PartitionLength.QuadPart;
-            outputBuffer->HiddenSectors = 0;
-            outputBuffer->PartitionNumber = diskData->PartitionNumber;
-            outputBuffer->BootIndicator = FALSE;
-            outputBuffer->RewritePartition = FALSE;
-            outputBuffer->RecognizedPartition = FALSE;
-
-            status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
-
-        } else {
-
-            PPARTITION_INFORMATION outputBuffer;
-
-            //
-            // We query a single partition here
-            // FIXME: this can only work for MBR-based disks, check for this!
-            //
-
-            outputBuffer =
-                    (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
-
-            outputBuffer->PartitionType = diskData->PartitionType;
-            outputBuffer->StartingOffset = deviceExtension->StartingOffset;
-            outputBuffer->PartitionLength.QuadPart = deviceExtension->PartitionLength.QuadPart;
-            outputBuffer->HiddenSectors = diskData->HiddenSectors;
-            outputBuffer->PartitionNumber = diskData->PartitionNumber;
-            outputBuffer->BootIndicator = diskData->BootIndicator;
-            outputBuffer->RewritePartition = FALSE;
-            outputBuffer->RecognizedPartition =
-                IsRecognizedPartition(diskData->PartitionType);
-
-            status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
-        }
-
-        break;
-
-    case IOCTL_DISK_GET_PARTITION_INFO_EX:
-
-        //
-        // Return the information about the partition specified by the device
-        // object.  Note that no information is ever returned about the size
-        // or partition type of the physical disk, as this doesn't make any
-        // sense.
-        //
-
-        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
-            sizeof(PARTITION_INFORMATION_EX)) {
-
-            status = STATUS_INFO_LENGTH_MISMATCH;
-
-        }
-#if 0 // HACK: ReactOS partition numbers must be wrong
-        else if (diskData->PartitionNumber == 0) {
-
-            //
-            // Partition zero is not a partition so this is not a
-            // reasonable request.
-            //
-
-            status = STATUS_INVALID_DEVICE_REQUEST;
-
-        }
-#endif
-        else {
-
-            PPARTITION_INFORMATION_EX outputBuffer;
-
-            if (diskData->PartitionNumber == 0) {
-                DPRINT1("HACK: Handling partition 0 request!\n");
-                //ASSERT(FALSE);
-            }
-
-            //
-            // Update the geometry in case it has changed.
-            //
-
-            status = UpdateRemovableGeometry (DeviceObject, Irp);
-
-            if (!NT_SUCCESS(status)) {
-
-                //
-                // Note the drive is not ready.
-                //
-
-                diskData->DriveNotReady = TRUE;
-                break;
-            }
-
-            //
-            // Note the drive is now ready.
-            //
-
-            diskData->DriveNotReady = FALSE;
-
-            if (diskData->PartitionType == 0 && (diskData->PartitionNumber > 0)) {
-
-                status = STATUS_INVALID_DEVICE_REQUEST;
-                break;
-            }
-
-            outputBuffer =
-                    (PPARTITION_INFORMATION_EX)Irp->AssociatedIrp.SystemBuffer;
-
-            //
-            // FIXME: hack of the year, assume that partition is MBR
-            // Thing that can obviously be wrong...
-            //
-
-            outputBuffer->PartitionStyle = PARTITION_STYLE_MBR;
-            outputBuffer->Mbr.PartitionType = diskData->PartitionType;
-            outputBuffer->StartingOffset = deviceExtension->StartingOffset;
-            outputBuffer->PartitionLength.QuadPart = deviceExtension->PartitionLength.QuadPart;
-            outputBuffer->Mbr.HiddenSectors = diskData->HiddenSectors;
-            outputBuffer->PartitionNumber = diskData->PartitionNumber;
-            outputBuffer->Mbr.BootIndicator = diskData->BootIndicator;
-            outputBuffer->RewritePartition = FALSE;
-            outputBuffer->Mbr.RecognizedPartition =
-                IsRecognizedPartition(diskData->PartitionType);
-
-            status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION_EX);
-        }
-
-        break;
-
-    case IOCTL_DISK_SET_PARTITION_INFO:
-
-        if (diskData->PartitionNumber == 0) {
-
-            status = STATUS_UNSUCCESSFUL;
-
-        } else {
-
-            PSET_PARTITION_INFORMATION inputBuffer =
-                (PSET_PARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
-
-            //
-            // Validate buffer length.
-            //
-
-            if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
-                sizeof(SET_PARTITION_INFORMATION)) {
-
-                status = STATUS_INFO_LENGTH_MISMATCH;
-                break;
-            }
-
-            //
-            // The HAL routines IoGet- and IoSetPartitionInformation were
-            // developed before support of dynamic partitioning and therefore
-            // don't distinguish between partition ordinal (that is the order
-            // of a partition on a disk) and the partition number. (The
-            // partition number is assigned to a partition to identify it to
-            // the system.) Use partition ordinals for these legacy calls.
-            //
-
-            status = IoSetPartitionInformation(
-                          deviceExtension->PhysicalDevice,
-                          deviceExtension->DiskGeometry->Geometry.BytesPerSector,
-                          diskData->PartitionOrdinal,
-                          inputBuffer->PartitionType);
-
-            if (NT_SUCCESS(status)) {
-
-                diskData->PartitionType = inputBuffer->PartitionType;
-            }
-        }
-
-        break;
-
-    case IOCTL_DISK_GET_DRIVE_LAYOUT:
-
-        //
-        // Return the partition layout for the physical drive.  Note that
-        // the layout is returned for the actual physical drive, regardless
-        // of which partition was specified for the request.
-        //
-
-        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
-            sizeof(DRIVE_LAYOUT_INFORMATION)) {
-            status = STATUS_INFO_LENGTH_MISMATCH;
-
-        } else {
-
-            PDRIVE_LAYOUT_INFORMATION partitionList;
-            PDEVICE_EXTENSION         physicalExtension = deviceExtension;
-            PPARTITION_INFORMATION    partitionEntry;
-            PDISK_DATA                diskData;
-            ULONG                     tempSize;
-            ULONG                     i;
-
-            //
-            // Read partition information.
-            //
-
-            status = IoReadPartitionTable(deviceExtension->PhysicalDevice,
-                              deviceExtension->DiskGeometry->Geometry.BytesPerSector,
-                              FALSE,
-                              &partitionList);
-
-            if (!NT_SUCCESS(status)) {
-                break;
-            }
-
-            //
-            // The disk layout has been returned in the partitionList
-            // buffer.  Determine its size and, if the data will fit
-            // into the intermediary buffer, return it.
-            //
-
-            tempSize = FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION,PartitionEntry[0]);
-            tempSize += partitionList->PartitionCount *
-                        sizeof(PARTITION_INFORMATION);
-
-            if (tempSize >
-               irpStack->Parameters.DeviceIoControl.OutputBufferLength) {
-
-                status = STATUS_BUFFER_TOO_SMALL;
-                ExFreePool(partitionList);
-                break;
-            }
-
-            //
-            // Walk partition list to associate partition numbers with
-            // partition entries.
-            //
-
-            for (i = 0; i < partitionList->PartitionCount; i++) {
-
-                //
-                // Walk partition chain anchored at physical disk extension.
-                //
-
-                deviceExtension = physicalExtension;
-                diskData = (PDISK_DATA)(deviceExtension + 1);
-
-                do {
-
-                    deviceExtension = diskData->NextPartition;
-
-                    //
-                    // Check if this is the last partition in the chain.
-                    //
-
-                    if (!deviceExtension) {
-                       break;
-                    }
-
-                    //
-                    // Get the partition device extension from disk data.
-                    //
-
-                    diskData = (PDISK_DATA)(deviceExtension + 1);
-
-                    //
-                    // Check if this partition is not currently being used.
-                    //
-
-                    if (!deviceExtension->PartitionLength.QuadPart) {
-                       continue;
-                    }
-
-                    partitionEntry = &partitionList->PartitionEntry[i];
-
-                    //
-                    // Check if empty, or describes extended partition or hasn't changed.
-                    //
-
-                    if (partitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
-                        IsContainerPartition(partitionEntry->PartitionType)) {
-                        continue;
-                    }
-
-                    //
-                    // Check if new partition starts where this partition starts.
-                    //
-
-                    if (partitionEntry->StartingOffset.QuadPart !=
-                              deviceExtension->StartingOffset.QuadPart) {
-                        continue;
-                    }
-
-                    //
-                    // Check if partition length is the same.
-                    //
-
-                    if (partitionEntry->PartitionLength.QuadPart ==
-                              deviceExtension->PartitionLength.QuadPart) {
-
-                        //
-                        // Partitions match. Update partition number.
-                        //
-
-                        partitionEntry->PartitionNumber =
-                            diskData->PartitionNumber;
-                        break;
-                    }
-
-                } while (TRUE);
-            }
-
-            //
-            // Copy partition information to system buffer.
-            //
-
-            RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
-                          partitionList,
-                          tempSize);
-            status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = tempSize;
-
-            //
-            // Finally, free the buffer allocated by reading the
-            // partition table.
-            //
-
-            ExFreePool(partitionList);
-        }
-
-        break;
-
-    case IOCTL_DISK_SET_DRIVE_LAYOUT:
-
-        {
-
-        //
-        // Update the disk with new partition information.
-        //
-
-        PDRIVE_LAYOUT_INFORMATION partitionList = Irp->AssociatedIrp.SystemBuffer;
-
-        //
-        // Validate buffer length.
-        //
-
-        if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
-            sizeof(DRIVE_LAYOUT_INFORMATION)) {
-
-            status = STATUS_INFO_LENGTH_MISMATCH;
-            break;
-        }
-
-        length = sizeof(DRIVE_LAYOUT_INFORMATION) +
-            (partitionList->PartitionCount - 1) * sizeof(PARTITION_INFORMATION);
-
-
-        if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
-            length) {
-
-            status = STATUS_BUFFER_TOO_SMALL;
-            break;
-        }
-
-        //
-        // Verify that device object is for physical disk.
-        //
-
-        if (deviceExtension->PhysicalDevice->DeviceExtension != deviceExtension) {
-            status = STATUS_INVALID_PARAMETER;
-            break;
-        }
-
-        //
-        // Walk through partition table comparing partitions to
-        // existing partitions to create, delete and change
-        // device objects as necessary.
-        //
-
-        UpdateDeviceObjects(DeviceObject,
-                            Irp);
-
-        //
-        // Write changes to disk.
-        //
-
-        status = IoWritePartitionTable(
-                           deviceExtension->DeviceObject,
-                           deviceExtension->DiskGeometry->Geometry.BytesPerSector,
-                           deviceExtension->DiskGeometry->Geometry.SectorsPerTrack,
-                           deviceExtension->DiskGeometry->Geometry.TracksPerCylinder,
-                           partitionList);
-        }
-
-        //
-        // Update IRP with bytes returned.
-        //
-
-        if (NT_SUCCESS(status)) {
-            Irp->IoStatus.Information = length;
-        }
-
-        break;
-
-    case IOCTL_DISK_REASSIGN_BLOCKS:
-
-        //
-        // Map defective blocks to new location on disk.
-        //
-
-        {
-
-        PREASSIGN_BLOCKS badBlocks = Irp->AssociatedIrp.SystemBuffer;
-        ULONG bufferSize;
-        ULONG blockNumber;
-        ULONG blockCount;
-
-        //
-        // Validate buffer length.
-        //
-
-        if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
-            sizeof(REASSIGN_BLOCKS)) {
-
-            status = STATUS_INFO_LENGTH_MISMATCH;
-            break;
-        }
-
-        bufferSize = sizeof(REASSIGN_BLOCKS) +
-            (badBlocks->Count - 1) * sizeof(ULONG);
-
-        if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
-            bufferSize) {
-
-            status = STATUS_INFO_LENGTH_MISMATCH;
-            break;
-        }
-
-        //
-        // Build the data buffer to be transferred in the input buffer.
-        // The format of the data to the device is:
-        //
-        //      2 bytes Reserved
-        //      2 bytes Length
-        //      x * 4 btyes Block Address
-        //
-        // All values are big endian.
-        //
-
-        badBlocks->Reserved = 0;
-        blockCount = badBlocks->Count;
-
-        //
-        // Convert # of entries to # of bytes.
-        //
-
-        blockCount *= 4;
-        badBlocks->Count = (USHORT) ((blockCount >> 8) & 0XFF);
-        badBlocks->Count |= (USHORT) ((blockCount << 8) & 0XFF00);
-
-        //
-        // Convert back to number of entries.
-        //
-
-        blockCount /= 4;
-
-        for (; blockCount > 0; blockCount--) {
-
-            blockNumber = badBlocks->BlockNumber[blockCount-1];
-
-            REVERSE_BYTES((PFOUR_BYTE) &badBlocks->BlockNumber[blockCount-1],
-                          (PFOUR_BYTE) &blockNumber);
-        }
-
-        srb->CdbLength = 6;
-
-        cdb->CDB6GENERIC.OperationCode = SCSIOP_REASSIGN_BLOCKS;
-
-        //
-        // Set timeout value.
-        //
-
-        srb->TimeOutValue = deviceExtension->TimeOutValue;
-
-        status = ScsiClassSendSrbSynchronous(DeviceObject,
-                                             srb,
-                                             badBlocks,
-                                             bufferSize,
-                                             TRUE);
 
         Irp->IoStatus.Status = status;
-        Irp->IoStatus.Information = 0;
-        ExFreePool(srb);
-        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-        }
-
-        return(status);
-
-    case IOCTL_DISK_IS_WRITABLE:
-
-        //
-        // Determine if the device is writable.
-        //
-
-        modeData = ExAllocatePool(NonPagedPoolCacheAligned, MODE_DATA_SIZE);
-
-        if (modeData == NULL) {
-            status = STATUS_INSUFFICIENT_RESOURCES;
-            break;
-        }
-
-        RtlZeroMemory(modeData, MODE_DATA_SIZE);
-
-        length = ScsiClassModeSense(DeviceObject,
-                                    (PCHAR) modeData,
-                                    MODE_DATA_SIZE,
-                                    MODE_SENSE_RETURN_ALL);
-
-        if (length < sizeof(MODE_PARAMETER_HEADER)) {
-
-            //
-            // Retry the request in case of a check condition.
-            //
-
-            length = ScsiClassModeSense(DeviceObject,
-                                        (PCHAR) modeData,
-                                        MODE_DATA_SIZE,
-                                        MODE_SENSE_RETURN_ALL);
-
-            if (length < sizeof(MODE_PARAMETER_HEADER)) {
-                status = STATUS_IO_DEVICE_ERROR;
-                ExFreePool(modeData);
-                break;
-            }
-        }
-
-        if (modeData->DeviceSpecificParameter & MODE_DSP_WRITE_PROTECT) {
-            status = STATUS_MEDIA_WRITE_PROTECTED;
-        } else {
-            status = STATUS_SUCCESS;
-        }
-
-        ExFreePool(modeData);
-        break;
-
-    case IOCTL_DISK_INTERNAL_SET_VERIFY:
-
-        //
-        // If the caller is kernel mode, set the verify bit.
-        //
-
-        if (Irp->RequestorMode == KernelMode) {
-            DeviceObject->Flags |= DO_VERIFY_VOLUME;
-        }
-        status = STATUS_SUCCESS;
-        break;
-
-    case IOCTL_DISK_INTERNAL_CLEAR_VERIFY:
-
-        //
-        // If the caller is kernel mode, clear the verify bit.
-        //
-
-        if (Irp->RequestorMode == KernelMode) {
-            DeviceObject->Flags &= ~DO_VERIFY_VOLUME;
-        }
-        status = STATUS_SUCCESS;
-        break;
-
-    case IOCTL_DISK_FIND_NEW_DEVICES:
-
-        //
-        // Search for devices that have been powered on since the last
-        // device search or system initialization.
-        //
-
-        DebugPrint((3,"CdRomDeviceControl: Find devices\n"));
-        status = DriverEntry(DeviceObject->DriverObject,
-                             NULL);
-
-        Irp->IoStatus.Status = status;
-        ExFreePool(srb);
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return status;
-
-    case IOCTL_DISK_MEDIA_REMOVAL:
-
-        //
-        // If the disk is not removable then don't allow this command.
-        //
-
-        if (!(DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)) {
-            status = STATUS_INVALID_DEVICE_REQUEST;
-            break;
-        }
-
-        //
-        // Fall through and let the class driver process the request.
-        //
-
-    case IOCTL_DISK_GET_LENGTH_INFO:
-
-        //
-        // Validate buffer length.
-        //
-
-        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
-            sizeof(GET_LENGTH_INFORMATION)) {
-            status = STATUS_BUFFER_TOO_SMALL;
-
-        } else {
-
-            PGET_LENGTH_INFORMATION lengthInformation = Irp->AssociatedIrp.SystemBuffer;
-
-            //
-            // Update the geometry in case it has changed.
-            //
-
-            status = UpdateRemovableGeometry (DeviceObject, Irp);
-
-            if (!NT_SUCCESS(status)) {
-
-                //
-                // Note the drive is not ready.
-                //
-
-                diskData->DriveNotReady = TRUE;
-                break;
-            }
-
-            //
-            // Note the drive is now ready.
-            //
-
-            diskData->DriveNotReady = FALSE;
-
-            //
-            // Output data, and return
-            //
-
-            lengthInformation->Length.QuadPart = deviceExtension->PartitionLength.QuadPart;
-            status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = sizeof(GET_LENGTH_INFORMATION);
-        }
-
-        break;
-
-    default:
-
-        //
-        // Free the Srb, since it is not needed.
-        //
-
-        ExFreePool(srb);
-
-        //
-        // Pass the request to the common device control routine.
-        //
-
-        return(ScsiClassDeviceControl(DeviceObject, Irp));
-
-        break;
-
-    } // end switch( ...
-
-    Irp->IoStatus.Status = status;
-
-    if (!NT_SUCCESS(status) && IoIsErrorUserInduced(status)) {
-
-        IoSetHardErrorOrVerifyDevice(Irp, DeviceObject);
+        ClassReleaseRemoveLock(DeviceObject, Irp);
+        ClassCompleteRequest(DeviceObject, Irp, IO_NO_INCREMENT);
     }
 
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    ExFreePool(srb);
     return(status);
-
-} // end ScsiDiskDeviceControl()
+} // end DiskDeviceControl()
 
 NTSTATUS
-NTAPI
-ScsiDiskShutdownFlush (
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     )
@@ -3104,318 +1128,680 @@ ScsiDiskShutdownFlush (
 
 Routine Description:
 
-    This routine is called for a shutdown and flush IRPs.  These are sent by the
-    system before it actually shuts down or when the file system does a flush.
-    A synchronize cache command is sent to the device if it is write caching.
-    If the device is removable an unlock command will be sent. This routine
-    will sent a shutdown or flush Srb to the port driver.
+    This routine is the handler for shutdown and flush requests. It sends
+    down a synch cache command to the device if its cache is enabled.  If
+    the request is a  shutdown and the media is removable,  it sends down
+    an unlock request
+
+    Finally,  an SRB_FUNCTION_SHUTDOWN or SRB_FUNCTION_FLUSH is sent down
+    the stack
 
 Arguments:
 
-    DriverObject - Pointer to device object to being shutdown by system.
-
-    Irp - IRP involved.
+    DeviceObject - The device object processing the request
+    Irp - The shutdown | flush request being serviced
 
 Return Value:
 
-    NT Status
+    STATUS_PENDING if successful, an error code otherwise
 
 --*/
 
 {
-    PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = commonExtension->PartitionZeroExtension;
+    PDISK_DATA diskData = (PDISK_DATA) commonExtension->DriverData;
     PIO_STACK_LOCATION irpStack;
+    NTSTATUS status = STATUS_SUCCESS;
+    ULONG srbSize;
     PSCSI_REQUEST_BLOCK srb;
-    NTSTATUS status;
+    PSTORAGE_REQUEST_BLOCK srbEx = NULL;
+    PSTOR_ADDR_BTL8 storAddrBtl8 = NULL;
+    PSRBEX_DATA_SCSI_CDB16 srbExDataCdb16 = NULL;
     PCDB cdb;
+    KIRQL irql;
 
     //
-    // Allocate SCSI request block.
-    //
-
-    srb = ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK));
-
-    if (srb == NULL) {
-
-        //
-        // Set the status and complete the request.
-        //
-
-        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-    RtlZeroMemory(srb, SCSI_REQUEST_BLOCK_SIZE);
-
-    //
-    // Write length to SRB.
-    //
-
-    srb->Length = SCSI_REQUEST_BLOCK_SIZE;
-
-    //
-    // Set SCSI bus address.
-    //
-
-    srb->PathId = deviceExtension->PathId;
-    srb->TargetId = deviceExtension->TargetId;
-    srb->Lun = deviceExtension->Lun;
-
-    //
-    // Set timeout value and mark the request as not being a tagged request.
-    //
-
-    srb->TimeOutValue = deviceExtension->TimeOutValue * 4;
-    srb->QueueTag = SP_UNTAGGED;
-    srb->QueueAction = SRB_SIMPLE_TAG_REQUEST;
-    srb->SrbFlags = deviceExtension->SrbFlags;
-
-    //
-    // If the write cache is enabled then send a synchronize cache request.
-    //
-
-    if (deviceExtension->DeviceFlags & DEV_WRITE_CACHE) {
-
-        srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
-        srb->CdbLength = 10;
-
-        srb->Cdb[0] = SCSIOP_SYNCHRONIZE_CACHE;
-
-        status = ScsiClassSendSrbSynchronous(DeviceObject,
-                                             srb,
-                                             NULL,
-                                             0,
-                                             TRUE);
-
-        DebugPrint((1, "ScsiDiskShutdownFlush: Synchronize cache sent. Status = %lx\n", status ));
-    }
-
-    //
-    // Unlock the device if it is removable and this is a shutdown.
+    // Flush requests are combined and need to be handled in a special manner
     //
 
     irpStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA &&
-        irpStack->MajorFunction == IRP_MJ_SHUTDOWN) {
+    if (irpStack->MajorFunction == IRP_MJ_FLUSH_BUFFERS) {
 
-        srb->CdbLength = 6;
-        cdb = (PVOID) srb->Cdb;
-        cdb->MEDIA_REMOVAL.OperationCode = SCSIOP_MEDIUM_REMOVAL;
-        cdb->MEDIA_REMOVAL.Prevent = FALSE;
+        if (TEST_FLAG(fdoExtension->DeviceFlags, DEV_POWER_PROTECTED)) {
+
+            //
+            // We've been assured that both the disk
+            // and adapter caches are battery-backed
+            //
+
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            ClassReleaseRemoveLock(DeviceObject, Irp);
+            ClassCompleteRequest(DeviceObject, Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
+
+        KeAcquireSpinLock(&diskData->FlushContext.Spinlock, &irql);
+
+        TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_SCSI, "DiskShutdownFlush: IRP %p flags = 0x%x\n", Irp, irpStack->Flags));
 
         //
-        // Set timeout value.
+        // This request will most likely be completed asynchronously
+        //
+        IoMarkIrpPending(Irp);
+
+        //
+        // Look to see if a flush is in progress
         //
 
-        srb->TimeOutValue = deviceExtension->TimeOutValue;
-        status = ScsiClassSendSrbSynchronous(DeviceObject,
+        if (diskData->FlushContext.CurrIrp != NULL) {
+
+            //
+            // There is an outstanding flush. Queue this
+            // request to the group that is next in line
+            //
+
+            if (diskData->FlushContext.NextIrp != NULL) {
+
+                #if DBG
+                    diskData->FlushContext.DbgTagCount++;
+                #endif
+
+                InsertTailList(&diskData->FlushContext.NextList, &Irp->Tail.Overlay.ListEntry);
+
+                KeReleaseSpinLock(&diskData->FlushContext.Spinlock, irql);
+
+                //
+                // This request will be completed by its representative
+                //
+
+            } else {
+
+                #if DBG
+                    if (diskData->FlushContext.DbgTagCount < 64) {
+
+                        diskData->FlushContext.DbgRefCount[diskData->FlushContext.DbgTagCount]++;
+                    }
+
+                    diskData->FlushContext.DbgSavCount += diskData->FlushContext.DbgTagCount;
+                    diskData->FlushContext.DbgTagCount  = 0;
+                #endif
+
+                diskData->FlushContext.NextIrp = Irp;
+                NT_ASSERT(IsListEmpty(&diskData->FlushContext.NextList));
+
+
+                KeReleaseSpinLock(&diskData->FlushContext.Spinlock, irql);
+
+
+                    TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_SCSI, "DiskShutdownFlush: waiting for event\n"));
+
+                    //
+                    // Wait for the outstanding flush to complete
+                    //
+                    KeWaitForSingleObject(&diskData->FlushContext.Event, Executive, KernelMode, FALSE, NULL);
+
+                    TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_SCSI, "DiskShutdownFlush: event signal\n"));
+
+                    //
+                    // Make this group the outstanding one and free up the next slot
+                    //
+
+                    KeAcquireSpinLock(&diskData->FlushContext.Spinlock, &irql);
+
+                    NT_ASSERT(IsListEmpty(&diskData->FlushContext.CurrList));
+
+                    while (!IsListEmpty(&diskData->FlushContext.NextList)) {
+
+                        PLIST_ENTRY listEntry = RemoveHeadList(&diskData->FlushContext.NextList);
+                        InsertTailList(&diskData->FlushContext.CurrList, listEntry);
+                    }
+
+#ifndef __REACTOS__
+                    // ReactOS hits this assert, because CurrIrp can already be freed at this point
+                    // and it's possible that NextIrp has the same pointer value
+                    NT_ASSERT(diskData->FlushContext.CurrIrp != diskData->FlushContext.NextIrp);
+#endif
+                    diskData->FlushContext.CurrIrp = diskData->FlushContext.NextIrp;
+                    diskData->FlushContext.NextIrp = NULL;
+
+                    KeReleaseSpinLock(&diskData->FlushContext.Spinlock, irql);
+
+                    //
+                    // Send this request down to the device
+                    //
+                    DiskFlushDispatch(DeviceObject, &diskData->FlushContext);
+            }
+
+        } else {
+
+            diskData->FlushContext.CurrIrp = Irp;
+            NT_ASSERT(IsListEmpty(&diskData->FlushContext.CurrList));
+
+            NT_ASSERT(diskData->FlushContext.NextIrp == NULL);
+            NT_ASSERT(IsListEmpty(&diskData->FlushContext.NextList));
+
+
+            KeReleaseSpinLock(&diskData->FlushContext.Spinlock, irql);
+
+                DiskFlushDispatch(DeviceObject, &diskData->FlushContext);
+        }
+
+    } else {
+
+        //
+        // Allocate SCSI request block.
+        //
+
+        if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+            srbSize = CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE;
+        } else {
+            srbSize = sizeof(SCSI_REQUEST_BLOCK);
+        }
+
+        srb = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                    srbSize,
+                                    DISK_TAG_SRB);
+        if (srb == NULL) {
+
+            //
+            // Set the status and complete the request.
+            //
+
+            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            ClassReleaseRemoveLock(DeviceObject, Irp);
+            ClassCompleteRequest(DeviceObject, Irp, IO_NO_INCREMENT);
+            return(STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory(srb, srbSize);
+        if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+
+            srbEx = (PSTORAGE_REQUEST_BLOCK)srb;
+
+            //
+            // Set up STORAGE_REQUEST_BLOCK fields
+            //
+
+            srbEx->Length = FIELD_OFFSET(STORAGE_REQUEST_BLOCK, Signature);
+            srbEx->Function = SRB_FUNCTION_STORAGE_REQUEST_BLOCK;
+            srbEx->Signature = SRB_SIGNATURE;
+            srbEx->Version = STORAGE_REQUEST_BLOCK_VERSION_1;
+            srbEx->SrbLength = srbSize;
+            srbEx->SrbFunction = SRB_FUNCTION_EXECUTE_SCSI;
+            srbEx->RequestPriority = IoGetIoPriorityHint(Irp);
+            srbEx->AddressOffset = sizeof(STORAGE_REQUEST_BLOCK);
+            srbEx->NumSrbExData = 1;
+
+            // Set timeout value and mark the request as not being a tagged request.
+            srbEx->TimeOutValue = fdoExtension->TimeOutValue * 4;
+            srbEx->RequestTag = SP_UNTAGGED;
+            srbEx->RequestAttribute = SRB_SIMPLE_TAG_REQUEST;
+            srbEx->SrbFlags = fdoExtension->SrbFlags;
+
+            //
+            // Set up address fields
+            //
+
+            storAddrBtl8 = (PSTOR_ADDR_BTL8) ((PUCHAR)srbEx + srbEx->AddressOffset);
+            storAddrBtl8->Type = STOR_ADDRESS_TYPE_BTL8;
+            storAddrBtl8->AddressLength = STOR_ADDR_BTL8_ADDRESS_LENGTH;
+
+            //
+            // Set up SCSI SRB extended data fields
+            //
+
+            srbEx->SrbExDataOffset[0] = sizeof(STORAGE_REQUEST_BLOCK) +
+                sizeof(STOR_ADDR_BTL8);
+            if ((srbEx->SrbExDataOffset[0] + sizeof(SRBEX_DATA_SCSI_CDB16)) <= srbEx->SrbLength) {
+                srbExDataCdb16 = (PSRBEX_DATA_SCSI_CDB16)((PUCHAR)srbEx + srbEx->SrbExDataOffset[0]);
+                srbExDataCdb16->Type = SrbExDataTypeScsiCdb16;
+                srbExDataCdb16->Length = SRBEX_DATA_SCSI_CDB16_LENGTH;
+
+                cdb = (PCDB)srbExDataCdb16->Cdb;
+            } else {
+                // Should not happen
+                NT_ASSERT(FALSE);
+
+                //
+                // Set the status and complete the request.
+                //
+
+                Irp->IoStatus.Status = STATUS_INTERNAL_ERROR;
+                ClassReleaseRemoveLock(DeviceObject, Irp);
+                ClassCompleteRequest(DeviceObject, Irp, IO_NO_INCREMENT);
+                return(STATUS_INTERNAL_ERROR);
+            }
+
+        } else {
+
+            //
+            // Write length to SRB.
+            //
+
+            srb->Length = SCSI_REQUEST_BLOCK_SIZE;
+
+            //
+            // Set timeout value and mark the request as not being a tagged request.
+            //
+
+            srb->TimeOutValue = fdoExtension->TimeOutValue * 4;
+            srb->QueueTag = SP_UNTAGGED;
+            srb->QueueAction = SRB_SIMPLE_TAG_REQUEST;
+            srb->SrbFlags = fdoExtension->SrbFlags;
+            srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+
+            cdb = (PCDB)srb->Cdb;
+        }
+
+        //
+        // If the write cache is enabled then send a synchronize cache request.
+        //
+
+        if (TEST_FLAG(fdoExtension->DeviceFlags, DEV_WRITE_CACHE)) {
+
+            if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+                srbExDataCdb16->CdbLength = 10;
+            } else {
+                srb->CdbLength = 10;
+            }
+
+            cdb->CDB10.OperationCode = SCSIOP_SYNCHRONIZE_CACHE;
+
+            status = ClassSendSrbSynchronous(DeviceObject,
                                              srb,
                                              NULL,
                                              0,
                                              TRUE);
 
-        DebugPrint((1, "ScsiDiskShutdownFlush: Unlock device request sent. Status = %lx\n", status ));
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskShutdownFlush: Synchonize cache sent. Status = %lx\n", status));
+        }
+
+        //
+        // Unlock the device if it contains removable media
+        //
+
+        if (TEST_FLAG(DeviceObject->Characteristics, FILE_REMOVABLE_MEDIA))
+        {
+
+            if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+
+                //
+                // Reinitialize status fields to 0 in case there was a previous request
+                //
+
+                srbEx->SrbStatus = 0;
+                srbExDataCdb16->ScsiStatus = 0;
+
+                srbExDataCdb16->CdbLength = 6;
+
+                //
+                // Set timeout value
+                //
+
+                srbEx->TimeOutValue = fdoExtension->TimeOutValue;
+
+            } else {
+
+                //
+                // Reinitialize status fields to 0 in case there was a previous request
+                //
+
+                srb->SrbStatus = 0;
+                srb->ScsiStatus = 0;
+
+                srb->CdbLength = 6;
+
+                //
+                // Set timeout value.
+                //
+
+                srb->TimeOutValue = fdoExtension->TimeOutValue;
+            }
+
+            cdb->MEDIA_REMOVAL.OperationCode = SCSIOP_MEDIUM_REMOVAL;
+            cdb->MEDIA_REMOVAL.Prevent = FALSE;
+
+            status = ClassSendSrbSynchronous(DeviceObject,
+                                             srb,
+                                             NULL,
+                                             0,
+                                             TRUE);
+
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskShutdownFlush: Unlock device request sent. Status = %lx\n", status));
+        }
+
+        //
+        // Set up a SHUTDOWN SRB
+        //
+
+        if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+            srbEx->NumSrbExData = 0;
+            srbEx->SrbExDataOffset[0] = 0;
+            srbEx->SrbFunction = SRB_FUNCTION_SHUTDOWN;
+            srbEx->OriginalRequest = Irp;
+            srbEx->SrbLength = CLASS_SRBEX_NO_SRBEX_DATA_BUFFER_SIZE;
+            srbEx->SrbStatus = 0;
+        } else {
+            srb->CdbLength = 0;
+            srb->Function = SRB_FUNCTION_SHUTDOWN;
+            srb->SrbStatus = 0;
+            srb->OriginalRequest = Irp;
+        }
+
+        //
+        // Set the retry count to zero.
+        //
+
+        irpStack->Parameters.Others.Argument4 = (PVOID) 0;
+
+        //
+        // Set up IoCompletion routine address.
+        //
+
+        IoSetCompletionRoutine(Irp, ClassIoComplete, srb, TRUE, TRUE, TRUE);
+
+        //
+        // Get next stack location and
+        // set major function code.
+        //
+
+        irpStack = IoGetNextIrpStackLocation(Irp);
+
+        irpStack->MajorFunction = IRP_MJ_SCSI;
+
+        //
+        // Set up SRB for execute scsi request.
+        // Save SRB address in next stack for port driver.
+        //
+
+        irpStack->Parameters.Scsi.Srb = srb;
+
+        //
+        // Call the port driver to process the request.
+        //
+
+        IoMarkIrpPending(Irp);
+        IoCallDriver(commonExtension->LowerDeviceObject, Irp);
     }
 
-    srb->CdbLength = 0;
-
-    //
-    // Save a few parameters in the current stack location.
-    //
-
-    srb->Function = irpStack->MajorFunction == IRP_MJ_SHUTDOWN ?
-        SRB_FUNCTION_SHUTDOWN : SRB_FUNCTION_FLUSH;
-
-    //
-    // Set the retry count to zero.
-    //
-
-    irpStack->Parameters.Others.Argument4 = (PVOID) 0;
-
-    //
-    // Set up IoCompletion routine address.
-    //
-
-    IoSetCompletionRoutine(Irp, ScsiClassIoComplete, srb, TRUE, TRUE, TRUE);
-
-    //
-    // Get next stack location and
-    // set major function code.
-    //
-
-    irpStack = IoGetNextIrpStackLocation(Irp);
-
-    irpStack->MajorFunction = IRP_MJ_SCSI;
-
-    //
-    // Set up SRB for execute scsi request.
-    // Save SRB address in next stack for port driver.
-    //
-
-    irpStack->Parameters.Scsi.Srb = srb;
-
-    //
-    // Set up Irp Address.
-    //
-
-    srb->OriginalRequest = Irp;
-
-    //
-    // Call the port driver to process the request.
-    //
-
-    return(IoCallDriver(deviceExtension->PortDeviceObject, Irp));
-
-} // end ScsiDiskShutdown()
+    return STATUS_PENDING;
+}
 
 
-BOOLEAN
-NTAPI
-IsFloppyDevice(
-    PDEVICE_OBJECT DeviceObject
+VOID
+DiskFlushDispatch(
+    IN PDEVICE_OBJECT Fdo,
+    IN PDISK_GROUP_CONTEXT FlushContext
     )
+
 /*++
 
 Routine Description:
 
-    The routine performs the necessary functions to determine if a device is
-    really a floppy rather than a harddisk.  This is done by a mode sense
-    command.  First, a check is made to see if the media type is set.  Second
-    a check is made for the flexible parameters mode page.  Also a check is
-    made to see if the write cache is enabled.
+    This routine is the handler for flush requests. It sends down a synch
+    cache command to the device if its cache is enabled. This is followed
+    by an SRB_FUNCTION_FLUSH
 
 Arguments:
 
-    DeviceObject - Supplies the device object to be tested.
+    Fdo - The device object processing the flush request
+    FlushContext - The flush group context
 
 Return Value:
 
-    Return TRUE if the indicated device is a floppy.
+    None
 
 --*/
+
 {
-    PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
-    PVOID modeData;
-    PUCHAR pageData;
-    ULONG length;
-
-    PAGED_CODE();
-
-    modeData = ExAllocatePool(NonPagedPoolCacheAligned, MODE_DATA_SIZE);
-
-    if (modeData == NULL) {
-        return(FALSE);
-    }
-
-    RtlZeroMemory(modeData, MODE_DATA_SIZE);
-
-    length = ScsiClassModeSense(DeviceObject,
-                                modeData,
-                                MODE_DATA_SIZE,
-                                MODE_SENSE_RETURN_ALL);
-
-    if (length < sizeof(MODE_PARAMETER_HEADER)) {
-
-        //
-        // Retry the request in case of a check condition.
-        //
-
-        length = ScsiClassModeSense(DeviceObject,
-                                modeData,
-                                MODE_DATA_SIZE,
-                                MODE_SENSE_RETURN_ALL);
-
-        if (length < sizeof(MODE_PARAMETER_HEADER)) {
-
-            ExFreePool(modeData);
-            return(FALSE);
-
-        }
-    }
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
+    PSCSI_REQUEST_BLOCK srb = &FlushContext->Srb.Srb;
+    PSTORAGE_REQUEST_BLOCK srbEx = &FlushContext->Srb.SrbEx;
+    PIO_STACK_LOCATION  irpSp = NULL;
+    PSTOR_ADDR_BTL8 storAddrBtl8;
+    PSRBEX_DATA_SCSI_CDB16 srbExDataCdb16;
+    NTSTATUS SyncCacheStatus = STATUS_SUCCESS;
 
     //
-    // If the length is greater than length indicated by the mode data reset
-    // the data to the mode data.
+    // Fill in the srb fields appropriately
     //
+    if (fdoExt->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        RtlZeroMemory(srbEx, sizeof(FlushContext->Srb.SrbExBuffer));
 
-    if (length > (ULONG) ((PMODE_PARAMETER_HEADER) modeData)->ModeDataLength + 1) {
-        length = ((PMODE_PARAMETER_HEADER) modeData)->ModeDataLength + 1;
+        srbEx->Length = FIELD_OFFSET(STORAGE_REQUEST_BLOCK, Signature);
+        srbEx->Function = SRB_FUNCTION_STORAGE_REQUEST_BLOCK;
+        srbEx->Signature = SRB_SIGNATURE;
+        srbEx->Version = STORAGE_REQUEST_BLOCK_VERSION_1;
+        srbEx->SrbLength = sizeof(FlushContext->Srb.SrbExBuffer);
+        srbEx->RequestPriority = IoGetIoPriorityHint(FlushContext->CurrIrp);
+        srbEx->AddressOffset = sizeof(STORAGE_REQUEST_BLOCK);
+        srbEx->TimeOutValue = fdoExt->TimeOutValue * 4;
+        srbEx->RequestTag = SP_UNTAGGED;
+        srbEx->RequestAttribute  = SRB_SIMPLE_TAG_REQUEST;
+        srbEx->SrbFlags = fdoExt->SrbFlags;
+
+        //
+        // Set up address fields
+        //
+
+        storAddrBtl8 = (PSTOR_ADDR_BTL8) ((PUCHAR)srbEx + srbEx->AddressOffset);
+        storAddrBtl8->Type = STOR_ADDRESS_TYPE_BTL8;
+        storAddrBtl8->AddressLength = STOR_ADDR_BTL8_ADDRESS_LENGTH;
+
+    } else {
+        RtlZeroMemory(srb, SCSI_REQUEST_BLOCK_SIZE);
+
+        srb->Length       = SCSI_REQUEST_BLOCK_SIZE;
+        srb->TimeOutValue = fdoExt->TimeOutValue * 4;
+        srb->QueueTag     = SP_UNTAGGED;
+        srb->QueueAction  = SRB_SIMPLE_TAG_REQUEST;
+        srb->SrbFlags     = fdoExt->SrbFlags;
     }
 
     //
-    // Look for the flexible disk mode page.
+    // If write caching is enabled then send down a synchronize cache request
     //
+    if (TEST_FLAG(fdoExt->DeviceFlags, DEV_WRITE_CACHE))
+    {
 
-    pageData = ScsiClassFindModePage( modeData, length, MODE_PAGE_FLEXIBILE, TRUE);
-
-    if (pageData != NULL) {
-
-        DebugPrint((1, "Scsidisk: Flexible disk page found, This is a floppy.\n"));
-        ExFreePool(modeData);
-        return(TRUE);
-    }
-
-    //
-    // Check to see if the write cache is enabled.
-    //
-
-    pageData = ScsiClassFindModePage( modeData, length, MODE_PAGE_CACHING, TRUE);
-
-    //
-    // Assume that write cache is disabled or not supported.
-    //
-
-    deviceExtension->DeviceFlags &= ~DEV_WRITE_CACHE;
-
-    //
-    // Check if valid caching page exists.
-    //
-
-    if (pageData != NULL) {
-
-        //
-        // Check if write cache is disabled.
-        //
-
-        if (((PMODE_CACHING_PAGE)pageData)->WriteCacheEnable) {
-
-            DebugPrint((1,
-                       "SCSIDISK: Disk write cache enabled\n"));
+        if (fdoExt->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+            srbEx->SrbFunction = SRB_FUNCTION_EXECUTE_SCSI;
+            srbEx->NumSrbExData = 1;
 
             //
-            // Check if forced unit access (FUA) is supported.
+            // Set up SCSI SRB extended data fields
             //
 
-            if (((PMODE_PARAMETER_HEADER)modeData)->DeviceSpecificParameter & MODE_DSP_FUA_SUPPORTED) {
-
-                deviceExtension->DeviceFlags |= DEV_WRITE_CACHE;
-
+            srbEx->SrbExDataOffset[0] = sizeof(STORAGE_REQUEST_BLOCK) +
+                sizeof(STOR_ADDR_BTL8);
+            if ((srbEx->SrbExDataOffset[0] + sizeof(SRBEX_DATA_SCSI_CDB16)) <= srbEx->SrbLength) {
+                srbExDataCdb16 = (PSRBEX_DATA_SCSI_CDB16)((PUCHAR)srbEx + srbEx->SrbExDataOffset[0]);
+                srbExDataCdb16->Type = SrbExDataTypeScsiCdb16;
+                srbExDataCdb16->Length = SRBEX_DATA_SCSI_CDB16_LENGTH;
+                srbExDataCdb16->CdbLength = 10;
+                srbExDataCdb16->Cdb[0] = SCSIOP_SYNCHRONIZE_CACHE;
             } else {
-
-                DebugPrint((1,
-                           "SCSIDISK: Disk does not support FUA or DPO\n"));
-
-                //
-                // TODO: Log this.
-                //
-
+                // Should not happen
+                NT_ASSERT(FALSE);
+                return;
             }
+
+        } else {
+            srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+            srb->CdbLength = 10;
+            srb->Cdb[0] = SCSIOP_SYNCHRONIZE_CACHE;
         }
+
+        TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_SCSI, "DiskFlushDispatch: sending sync cache\n"));
+
+        SyncCacheStatus = ClassSendSrbSynchronous(Fdo, srb, NULL, 0, TRUE);
     }
 
-    ExFreePool(modeData);
-    return(FALSE);
+    //
+    // Set up a FLUSH SRB
+    //
+    if (fdoExt->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbEx->SrbFunction = SRB_FUNCTION_FLUSH;
+        srbEx->NumSrbExData = 0;
+        srbEx->SrbExDataOffset[0] = 0;
+        srbEx->OriginalRequest = FlushContext->CurrIrp;
+        srbEx->SrbStatus = 0;
 
-} // end IsFloppyDevice()
+        //
+        // Make sure that this srb does not get freed
+        //
+        SET_FLAG(srbEx->SrbFlags, SRB_CLASS_FLAGS_PERSISTANT);
+
+   } else {
+        srb->Function  = SRB_FUNCTION_FLUSH;
+        srb->CdbLength = 0;
+        srb->OriginalRequest = FlushContext->CurrIrp;
+        srb->SrbStatus = 0;
+        srb->ScsiStatus = 0;
+
+        //
+        // Make sure that this srb does not get freed
+        //
+        SET_FLAG(srb->SrbFlags, SRB_CLASS_FLAGS_PERSISTANT);
+    }
+
+    //
+    // Make sure that this request does not get retried
+    //
+    irpSp = IoGetCurrentIrpStackLocation(FlushContext->CurrIrp);
+
+    irpSp->Parameters.Others.Argument4 = (PVOID) 0;
+
+    //
+    // Fill in the irp fields appropriately
+    //
+    irpSp = IoGetNextIrpStackLocation(FlushContext->CurrIrp);
+
+    irpSp->MajorFunction       = IRP_MJ_SCSI;
+    irpSp->Parameters.Scsi.Srb = srb;
+
+    IoSetCompletionRoutine(FlushContext->CurrIrp, DiskFlushComplete, (PVOID)(ULONG_PTR)SyncCacheStatus, TRUE, TRUE, TRUE);
+
+    TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_SCSI, "DiskFlushDispatch: sending srb flush on irp %p\n", FlushContext->CurrIrp));
+
+    //
+    // Send down the flush request
+    //
+    IoCallDriver(((PCOMMON_DEVICE_EXTENSION)fdoExt)->LowerDeviceObject, FlushContext->CurrIrp);
+}
 
 
-BOOLEAN
-NTAPI
-ScsiDiskModeSelect(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PCHAR ModeSelectBuffer,
+
+NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskFlushComplete(
+    IN PDEVICE_OBJECT Fdo,
+    IN PIRP Irp,
+    IN PVOID Context
+    )
+
+/*++
+
+Routine Description:
+
+    This completion routine is a wrapper around ClassIoComplete. It
+    will complete all the flush requests that are tagged to it, set
+    an event to signal the next group to proceed and return
+
+Arguments:
+
+    Fdo - The device object which requested the completion routine
+    Irp - The irp that is being completed
+    Context - If disk had write cache enabled and SYNC CACHE command was sent as 1st part of FLUSH processing
+                   then context must carry the completion status of SYNC CACHE request,
+              else context must be set to STATUS_SUCCESS.
+
+Return Value:
+
+    STATUS_SUCCESS if successful, an error code otherwise
+
+--*/
+
+{
+    PDISK_GROUP_CONTEXT FlushContext;
+    NTSTATUS status;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExt;
+    PDISK_DATA diskData;
+#ifdef _MSC_VER
+    #pragma warning(suppress:4311) // pointer truncation from 'PVOID' to 'NTSTATUS'
+#endif
+    NTSTATUS SyncCacheStatus = (NTSTATUS)(ULONG_PTR)Context;
+
+    TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_GENERAL, "DiskFlushComplete: %p %p\n", Fdo, Irp));
+
+    //
+    // Get the flush context from the device extension
+    //
+    fdoExt = (PFUNCTIONAL_DEVICE_EXTENSION)Fdo->DeviceExtension;
+    diskData = (PDISK_DATA)fdoExt->CommonExtension.DriverData;
+    NT_ASSERT(diskData != NULL);
+    _Analysis_assume_(diskData != NULL);
+
+    FlushContext = &diskData->FlushContext;
+
+    //
+    // Make sure everything is in order
+    //
+    NT_ASSERT(Irp == FlushContext->CurrIrp);
+
+    TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_SCSI, "DiskFlushComplete: completing irp %p\n", Irp));
+    status = ClassIoComplete(Fdo, Irp, &FlushContext->Srb.Srb);
+
+    //
+    // Make sure that ClassIoComplete did not decide to retry this request
+    //
+    NT_ASSERT(status != STATUS_MORE_PROCESSING_REQUIRED);
+
+    //
+    // If sync cache failed earlier, final status of the flush request needs to be failure
+    // even if SRB_FUNCTION_FLUSH srb request succeeded
+    //
+    if (NT_SUCCESS(status) &&
+        (!NT_SUCCESS(SyncCacheStatus))) {
+        Irp->IoStatus.Status = status = SyncCacheStatus;
+    }
+
+    //
+    // Complete the flush requests tagged to this one
+    //
+
+    while (!IsListEmpty(&FlushContext->CurrList)) {
+
+        PLIST_ENTRY listEntry = RemoveHeadList(&FlushContext->CurrList);
+        PIRP tempIrp = CONTAINING_RECORD(listEntry, IRP, Tail.Overlay.ListEntry);
+
+        InitializeListHead(&tempIrp->Tail.Overlay.ListEntry);
+        tempIrp->IoStatus = Irp->IoStatus;
+
+        ClassReleaseRemoveLock(Fdo, tempIrp);
+        ClassCompleteRequest(Fdo, tempIrp, IO_NO_INCREMENT);
+    }
+
+
+        //
+        // Notify the next group's representative that it may go ahead now
+        //
+        KeSetEvent(&FlushContext->Event, IO_NO_INCREMENT, FALSE);
+
+
+    TracePrint((TRACE_LEVEL_VERBOSE, TRACE_FLAG_SCSI, "DiskFlushComplete: irp %p status = 0x%x\n", Irp, status));
+
+    return status;
+}
+
+
+
+NTSTATUS
+DiskModeSelect(
+    IN PDEVICE_OBJECT Fdo,
+    _In_reads_bytes_(Length) PCHAR ModeSelectBuffer,
     IN ULONG Length,
     IN BOOLEAN SavePage
     )
@@ -3441,17 +1827,36 @@ Return Value:
     Length of the transferred data is returned.
 
 --*/
+
 {
-    PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
     PCDB cdb;
-    SCSI_REQUEST_BLOCK srb;
+    SCSI_REQUEST_BLOCK srb = {0};
     ULONG retries = 1;
     ULONG length2;
     NTSTATUS status;
-    ULONG_PTR buffer;
+    PULONG buffer;
     PMODE_PARAMETER_BLOCK blockDescriptor;
+    UCHAR srbExBuffer[CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE] = {0};
+    PSTORAGE_REQUEST_BLOCK srbEx = (PSTORAGE_REQUEST_BLOCK)srbExBuffer;
+    PSTOR_ADDR_BTL8 storAddrBtl8;
+    PSRBEX_DATA_SCSI_CDB16 srbExDataCdb16;
+    PSCSI_REQUEST_BLOCK srbPtr;
 
     PAGED_CODE();
+
+    //
+    // Check whether block length is available
+    //
+
+    if (fdoExtension->DiskGeometry.BytesPerSector == 0) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskModeSelect: Block length is not available. Unable to send mode select\n"));
+        NT_ASSERT(fdoExtension->DiskGeometry.BytesPerSector != 0);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+
 
     length2 = Length + sizeof(MODE_PARAMETER_HEADER) + sizeof(MODE_PARAMETER_BLOCK);
 
@@ -3459,9 +1864,15 @@ Return Value:
     // Allocate buffer for mode select header, block descriptor, and mode page.
     //
 
-    buffer = (ULONG_PTR)ExAllocatePool(NonPagedPoolCacheAligned,length2);
+    buffer = ExAllocatePoolWithTag(NonPagedPoolNxCacheAligned,
+                                   length2,
+                                   DISK_TAG_MODE_DATA);
 
-    RtlZeroMemory((PVOID)buffer, length2);
+    if (buffer == NULL) {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(buffer, length2);
 
     //
     // Set length in header to size of mode page.
@@ -3472,35 +1883,87 @@ Return Value:
     blockDescriptor = (PMODE_PARAMETER_BLOCK)(buffer + 1);
 
     //
-    // Set size
+    // Set block length from the cached disk geometry
     //
 
-    blockDescriptor->BlockLength[1]=0x02;
+    blockDescriptor->BlockLength[2] = (UCHAR) (fdoExtension->DiskGeometry.BytesPerSector >> 16);
+    blockDescriptor->BlockLength[1] = (UCHAR) (fdoExtension->DiskGeometry.BytesPerSector >> 8);
+    blockDescriptor->BlockLength[0] = (UCHAR) (fdoExtension->DiskGeometry.BytesPerSector);
 
     //
     // Copy mode page to buffer.
     //
 
-    RtlCopyMemory((PVOID)(buffer + 3), ModeSelectBuffer, Length);
-
-    //
-    // Zero SRB.
-    //
-
-    RtlZeroMemory(&srb, sizeof(SCSI_REQUEST_BLOCK));
+    RtlCopyMemory(buffer + 3, ModeSelectBuffer, Length);
 
     //
     // Build the MODE SELECT CDB.
     //
 
-    srb.CdbLength = 6;
-    cdb = (PCDB)srb.Cdb;
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
 
-    //
-    // Set timeout value from device extension.
-    //
+        //
+        // Set up STORAGE_REQUEST_BLOCK fields
+        //
 
-    srb.TimeOutValue = deviceExtension->TimeOutValue * 2;
+        srbEx->Length = FIELD_OFFSET(STORAGE_REQUEST_BLOCK, Signature);
+        srbEx->Function = SRB_FUNCTION_STORAGE_REQUEST_BLOCK;
+        srbEx->Signature = SRB_SIGNATURE;
+        srbEx->Version = STORAGE_REQUEST_BLOCK_VERSION_1;
+        srbEx->SrbLength = sizeof(srbExBuffer);
+        srbEx->SrbFunction = SRB_FUNCTION_EXECUTE_SCSI;
+        srbEx->RequestPriority = IoPriorityNormal;
+        srbEx->AddressOffset = sizeof(STORAGE_REQUEST_BLOCK);
+        srbEx->NumSrbExData = 1;
+
+        // Set timeout value from device extension.
+        srbEx->TimeOutValue = fdoExtension->TimeOutValue * 2;
+
+       //
+       // Set up address fields
+       //
+
+       storAddrBtl8 = (PSTOR_ADDR_BTL8) ((PUCHAR)srbEx + srbEx->AddressOffset);
+       storAddrBtl8->Type = STOR_ADDRESS_TYPE_BTL8;
+       storAddrBtl8->AddressLength = STOR_ADDR_BTL8_ADDRESS_LENGTH;
+
+       //
+       // Set up SCSI SRB extended data fields
+       //
+
+       srbEx->SrbExDataOffset[0] = sizeof(STORAGE_REQUEST_BLOCK) +
+           sizeof(STOR_ADDR_BTL8);
+       if ((srbEx->SrbExDataOffset[0] + sizeof(SRBEX_DATA_SCSI_CDB16)) <= srbEx->SrbLength) {
+           srbExDataCdb16 = (PSRBEX_DATA_SCSI_CDB16)((PUCHAR)srbEx + srbEx->SrbExDataOffset[0]);
+           srbExDataCdb16->Type = SrbExDataTypeScsiCdb16;
+           srbExDataCdb16->Length = SRBEX_DATA_SCSI_CDB16_LENGTH;
+           srbExDataCdb16->CdbLength = 6;
+
+           cdb = (PCDB)srbExDataCdb16->Cdb;
+       } else {
+           // Should not happen
+           NT_ASSERT(FALSE);
+
+           FREE_POOL(buffer);
+           TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskModeSelect: Insufficient extended SRB size\n"));
+           return STATUS_INTERNAL_ERROR;
+       }
+
+       srbPtr = (PSCSI_REQUEST_BLOCK)srbEx;
+
+    } else {
+
+        srb.CdbLength = 6;
+        cdb = (PCDB)srb.Cdb;
+
+        //
+        // Set timeout value from device extension.
+        //
+
+        srb.TimeOutValue = fdoExtension->TimeOutValue * 2;
+
+        srbPtr = &srb;
+    }
 
     cdb->MODE_SELECT.OperationCode = SCSIOP_MODE_SELECT;
     cdb->MODE_SELECT.SPBit = SavePage;
@@ -3509,17 +1972,16 @@ Return Value:
 
 Retry:
 
-    status = ScsiClassSendSrbSynchronous(DeviceObject,
-                                         &srb,
-                                         (PVOID)buffer,
-                                         length2,
-                                         TRUE);
-
+    status = ClassSendSrbSynchronous(Fdo,
+                                     srbPtr,
+                                     buffer,
+                                     length2,
+                                     TRUE);
 
     if (status == STATUS_VERIFY_REQUIRED) {
 
         //
-        // Routine ScsiClassSendSrbSynchronous does not retry requests returned with
+        // Routine ClassSendSrbSynchronous does not retry requests returned with
         // this status.
         //
 
@@ -3532,1183 +1994,292 @@ Retry:
             goto Retry;
         }
 
-    } else if (SRB_STATUS(srb.SrbStatus) == SRB_STATUS_DATA_OVERRUN) {
+    } else if (SRB_STATUS(srbPtr->SrbStatus) == SRB_STATUS_DATA_OVERRUN) {
         status = STATUS_SUCCESS;
     }
 
-    ExFreePool((PVOID)buffer);
+    FREE_POOL(buffer);
 
-    if (NT_SUCCESS(status)) {
-        return(TRUE);
-    } else {
-        return(FALSE);
-    }
-
-} // end SciDiskModeSelect()
+    return status;
+} // end DiskModeSelect()
 
 
+//
+// This routine is structured as a work-item routine
+//
 VOID
-NTAPI
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DisableWriteCache(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PSCSI_INQUIRY_DATA LunInfo
+    IN PDEVICE_OBJECT Fdo,
+    IN PVOID Context
     )
 
 {
-    PDEVICE_EXTENSION          deviceExtension = DeviceObject->DeviceExtension;
-    PINQUIRYDATA               InquiryData     = (PINQUIRYDATA)LunInfo->InquiryData;
-    BAD_CONTROLLER_INFORMATION const *controller;
-    ULONG                      j,length;
-    PVOID                      modeData;
-    PUCHAR                     pageData;
-
-    for (j = 0; j <  NUMBER_OF_BAD_CONTROLLERS; j++) {
-
-        controller = &ScsiDiskBadControllers[j];
-
-        if (!controller->DisableWriteCache || strncmp(controller->InquiryString, (PCCHAR)InquiryData->VendorId, strlen(controller->InquiryString))) {
-            continue;
-        }
-
-        DebugPrint((1, "ScsiDisk.DisableWriteCache, Found bad controller! %s\n", controller->InquiryString));
-
-        modeData = ExAllocatePool(NonPagedPoolCacheAligned, MODE_DATA_SIZE);
-
-        if (modeData == NULL) {
-
-            DebugPrint((1,
-                        "ScsiDisk.DisableWriteCache: Check for write-cache enable failed\n"));
-            return;
-        }
-
-        RtlZeroMemory(modeData, MODE_DATA_SIZE);
-
-        length = ScsiClassModeSense(DeviceObject,
-                                    modeData,
-                                    MODE_DATA_SIZE,
-                                    MODE_SENSE_RETURN_ALL);
-
-        if (length < sizeof(MODE_PARAMETER_HEADER)) {
-
-            //
-            // Retry the request in case of a check condition.
-            //
-
-            length = ScsiClassModeSense(DeviceObject,
-                                    modeData,
-                                    MODE_DATA_SIZE,
-                                    MODE_SENSE_RETURN_ALL);
-
-            if (length < sizeof(MODE_PARAMETER_HEADER)) {
-
-
-                DebugPrint((1,
-                            "ScsiDisk.DisableWriteCache: Mode Sense failed\n"));
-
-                ExFreePool(modeData);
-                return;
-
-            }
-        }
-
-        //
-        // If the length is greater than length indicated by the mode data reset
-        // the data to the mode data.
-        //
-
-        if (length > (ULONG) ((PMODE_PARAMETER_HEADER) modeData)->ModeDataLength + 1) {
-            length = ((PMODE_PARAMETER_HEADER) modeData)->ModeDataLength + 1;
-        }
-
-        //
-        // Check to see if the write cache is enabled.
-        //
-
-        pageData = ScsiClassFindModePage( modeData, length, MODE_PAGE_CACHING, TRUE);
-
-        //
-        // Assume that write cache is disabled or not supported.
-        //
-
-        deviceExtension->DeviceFlags &= ~DEV_WRITE_CACHE;
-
-        //
-        // Check if valid caching page exists.
-        //
-
-        if (pageData != NULL) {
-
-            BOOLEAN savePage = FALSE;
-
-            savePage = (BOOLEAN)(((PMODE_CACHING_PAGE)pageData)->PageSavable);
-
-            //
-            // Check if write cache is disabled.
-            //
-
-            if (((PMODE_CACHING_PAGE)pageData)->WriteCacheEnable) {
-
-                PIO_ERROR_LOG_PACKET errorLogEntry;
-                LONG                 errorCode;
-
-
-                //
-                // Disable write cache and ensure necessary fields are zeroed.
-                //
-
-                ((PMODE_CACHING_PAGE)pageData)->WriteCacheEnable = FALSE;
-                ((PMODE_CACHING_PAGE)pageData)->Reserved = 0;
-                ((PMODE_CACHING_PAGE)pageData)->PageSavable = 0;
-                ((PMODE_CACHING_PAGE)pageData)->Reserved2 = 0;
-
-                //
-                // Extract length from caching page.
-                //
-
-                length = ((PMODE_CACHING_PAGE)pageData)->PageLength;
-
-                //
-                // Compensate for page code and page length.
-                //
-
-                length += 2;
-
-                //
-                // Issue mode select to set the parameter.
-                //
-
-                if (ScsiDiskModeSelect(DeviceObject,
-                                       (PCHAR)pageData,
-                                       length,
-                                       savePage)) {
-
-                    DebugPrint((1,
-                               "SCSIDISK: Disk write cache disabled\n"));
-
-                    deviceExtension->DeviceFlags &= ~DEV_WRITE_CACHE;
-                    errorCode = IO_WRITE_CACHE_DISABLED;
-
-                } else {
-                    if (ScsiDiskModeSelect(DeviceObject,
-                                           (PCHAR)pageData,
-                                           length,
-                                           savePage)) {
-
-                        DebugPrint((1,
-                                   "SCSIDISK: Disk write cache disabled\n"));
-
-
-                        deviceExtension->DeviceFlags &= ~DEV_WRITE_CACHE;
-                        errorCode = IO_WRITE_CACHE_DISABLED;
-
-                    } else {
-
-                            DebugPrint((1,
-                                       "SCSIDISK: Mode select to disable write cache failed\n"));
-
-                            deviceExtension->DeviceFlags |= DEV_WRITE_CACHE;
-                            errorCode = IO_WRITE_CACHE_ENABLED;
-                    }
-                }
-
-                //
-                // Log the appropriate informational or error entry.
-                //
-
-                errorLogEntry = (PIO_ERROR_LOG_PACKET)IoAllocateErrorLogEntry(
-                                                         DeviceObject,
-                                                         sizeof(IO_ERROR_LOG_PACKET) + 3
-                                                             * sizeof(ULONG));
-
-                if (errorLogEntry != NULL) {
-
-                    errorLogEntry->FinalStatus     = STATUS_SUCCESS;
-                    errorLogEntry->ErrorCode       = errorCode;
-                    errorLogEntry->SequenceNumber  = 0;
-                    errorLogEntry->MajorFunctionCode = IRP_MJ_SCSI;
-                    errorLogEntry->IoControlCode   = 0;
-                    errorLogEntry->RetryCount      = 0;
-                    errorLogEntry->UniqueErrorValue = 0x1;
-                    errorLogEntry->DumpDataSize    = 3 * sizeof(ULONG);
-                    errorLogEntry->DumpData[0]     = LunInfo->PathId;
-                    errorLogEntry->DumpData[1]     = LunInfo->TargetId;
-                    errorLogEntry->DumpData[2]     = LunInfo->Lun;
-
-                    //
-                    // Write the error log packet.
-                    //
-
-                    IoWriteErrorLogEntry(errorLogEntry);
-                }
-            }
-        }
-
-        //
-        // Found device so exit the loop and return.
-        //
-
-        break;
-    }
-
-    return;
-}
-
-
-BOOLEAN
-NTAPI
-CalculateMbrCheckSum(
-    IN PDEVICE_EXTENSION DeviceExtension,
-    OUT PULONG Checksum
-    )
-
-/*++
-
-Routine Description:
-
-    Read MBR and calculate checksum.
-
-Arguments:
-
-    DeviceExtension - Supplies a pointer to the device information for disk.
-    Checksum - Memory location to return MBR checksum.
-
-Return Value:
-
-    Returns TRUE if checksum is valid.
-
---*/
-{
-    LARGE_INTEGER   sectorZero;
-    PIRP            irp;
-    IO_STATUS_BLOCK ioStatus;
-    KEVENT          event;
-    NTSTATUS        status;
-    ULONG           sectorSize;
-    PULONG          mbr;
-    ULONG           i;
-
-    PAGED_CODE();
-    sectorZero.QuadPart = (LONGLONG) 0;
-
-    //
-    // Create notification event object to be used to signal the inquiry
-    // request completion.
-    //
-
-    KeInitializeEvent(&event, NotificationEvent, FALSE);
-
-    //
-    // Get sector size.
-    //
-
-    sectorSize = DeviceExtension->DiskGeometry->Geometry.BytesPerSector;
-
-    //
-    // Make sure sector size is at least 512 bytes.
-    //
-
-    if (sectorSize < 512) {
-        sectorSize = 512;
-    }
-
-    //
-    // Allocate buffer for sector read.
-    //
-
-    mbr = ExAllocatePool(NonPagedPoolCacheAligned, sectorSize);
-
-    if (!mbr) {
-        return FALSE;
-    }
-
-    //
-    // Build IRP to read MBR.
-    //
-
-    irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-                                       DeviceExtension->DeviceObject,
-                                       mbr,
-                                       sectorSize,
-                                       &sectorZero,
-                                       &event,
-                                       &ioStatus );
-
-    if (!irp) {
-        ExFreePool(mbr);
-        return FALSE;
-    }
-
-    //
-    // Pass request to port driver and wait for request to complete.
-    //
-
-    status = IoCallDriver(DeviceExtension->DeviceObject,
-                          irp);
-
-    if (status == STATUS_PENDING) {
-        KeWaitForSingleObject(&event,
-                              Suspended,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-        status = ioStatus.Status;
-    }
-
-    if (!NT_SUCCESS(status)) {
-        ExFreePool(mbr);
-        return FALSE;
-    }
-
-    //
-    // Calculate MBR checksum.
-    //
-
-    *Checksum = 0;
-
-    for (i = 0; i < 128; i++) {
-        *Checksum += mbr[i];
-    }
-
-    *Checksum = ~*Checksum + 1;
-
-    ExFreePool(mbr);
-    return TRUE;
-}
-
-
-BOOLEAN
-NTAPI
-EnumerateBusKey(
-    IN PDEVICE_EXTENSION DeviceExtension,
-    HANDLE BusKey,
-    PULONG DiskNumber
-    )
-
-/*++
-
-Routine Description:
-
-    The routine queries the registry to determine if this disk is visible to
-    the BIOS.  If the disk is visible to the BIOS, then the geometry information
-    is updated.
-
-Arguments:
-
-    DeviceExtension - Supplies a pointer to the device information for disk.
-    Signature - Unique identifier recorded in MBR.
-    BusKey - Handle of bus key.
-    DiskNumber - Returns ordinal of disk as BIOS sees it.
-
-Return Value:
-
-    TRUE is disk signature matched.
-
---*/
-{
-    PDISK_DATA        diskData = (PDISK_DATA)(DeviceExtension + 1);
-    BOOLEAN           diskFound = FALSE;
-    OBJECT_ATTRIBUTES objectAttributes;
-    UNICODE_STRING    unicodeString;
-    UNICODE_STRING    identifier;
-    ULONG             busNumber;
-    ULONG             adapterNumber;
-    ULONG             diskNumber;
-    HANDLE            adapterKey;
-    HANDLE            spareKey;
-    HANDLE            diskKey;
-    HANDLE            targetKey;
-    NTSTATUS          status;
-    STRING            string;
-    STRING            anotherString;
-    ULONG             length;
-    UCHAR             buffer[20];
-    PKEY_VALUE_FULL_INFORMATION keyData;
-
-    PAGED_CODE();
-
-    for (busNumber = 0; ; busNumber++) {
-
-        //
-        // Open controller name key.
-        //
-
-        sprintf((PCHAR)buffer,
-                "%lu",
-                busNumber);
-
-        RtlInitString(&string,
-                      (PCSZ)buffer);
-
-        status = RtlAnsiStringToUnicodeString(&unicodeString,
-                                              &string,
-                                              TRUE);
-
-        if (!NT_SUCCESS(status)){
-            break;
-        }
-
-        InitializeObjectAttributes(&objectAttributes,
-                                   &unicodeString,
-                                   OBJ_CASE_INSENSITIVE,
-                                   BusKey,
-                                   (PSECURITY_DESCRIPTOR)NULL);
-
-        status = ZwOpenKey(&spareKey,
-                           KEY_READ,
-                           &objectAttributes);
-
-        RtlFreeUnicodeString(&unicodeString);
-
-        if (!NT_SUCCESS(status)) {
-            break;
-        }
-
-        //
-        // Open up controller ordinal key.
-        //
-
-        RtlInitUnicodeString(&unicodeString, L"DiskController");
-        InitializeObjectAttributes(&objectAttributes,
-                                   &unicodeString,
-                                   OBJ_CASE_INSENSITIVE,
-                                   spareKey,
-                                   (PSECURITY_DESCRIPTOR)NULL);
-
-        status = ZwOpenKey(&adapterKey,
-                           KEY_READ,
-                           &objectAttributes);
-
-        //
-        // This could fail even with additional adapters of this type
-        // to search.
-        //
-
-        if (!NT_SUCCESS(status)) {
-            continue;
-        }
-
-        for (adapterNumber = 0; ; adapterNumber++) {
-
-            //
-            // Open disk key.
-            //
-
-            sprintf((PCHAR)buffer,
-                    "%lu\\DiskPeripheral",
-                    adapterNumber);
-
-            RtlInitString(&string,
-                          (PCSZ)buffer);
-
-            status = RtlAnsiStringToUnicodeString(&unicodeString,
-                                                  &string,
-                                                  TRUE);
-
-            if (!NT_SUCCESS(status)){
-                break;
-            }
-
-            InitializeObjectAttributes(&objectAttributes,
-                                       &unicodeString,
-                                       OBJ_CASE_INSENSITIVE,
-                                       adapterKey,
-                                       (PSECURITY_DESCRIPTOR)NULL);
-
-            status = ZwOpenKey(&diskKey,
-                               KEY_READ,
-                               &objectAttributes);
-
-            RtlFreeUnicodeString(&unicodeString);
-
-            if (!NT_SUCCESS(status)) {
-                break;
-            }
-
-            for (diskNumber = 0; ; diskNumber++) {
-
-                sprintf((PCHAR)buffer,
-                        "%lu",
-                        diskNumber);
-
-                RtlInitString(&string,
-                              (PCSZ)buffer);
-
-                status = RtlAnsiStringToUnicodeString(&unicodeString,
-                                                      &string,
-                                                      TRUE);
-
-                if (!NT_SUCCESS(status)){
-                    break;
-                }
-
-                InitializeObjectAttributes(&objectAttributes,
-                                           &unicodeString,
-                                           OBJ_CASE_INSENSITIVE,
-                                           diskKey,
-                                           (PSECURITY_DESCRIPTOR)NULL);
-
-                status = ZwOpenKey(&targetKey,
-                                   KEY_READ,
-                                   &objectAttributes);
-
-                RtlFreeUnicodeString(&unicodeString);
-
-                if (!NT_SUCCESS(status)) {
-                    break;
-                }
-
-                //
-                // Allocate buffer for registry query.
-                //
-
-                keyData = ExAllocatePool(PagedPool, VALUE_BUFFER_SIZE);
-
-                if (keyData == NULL) {
-                    ZwClose(targetKey);
-                    continue;
-                }
-
-                //
-                // Get disk peripheral identifier.
-                //
-
-                RtlInitUnicodeString(&unicodeString, L"Identifier");
-                status = ZwQueryValueKey(targetKey,
-                                         &unicodeString,
-                                         KeyValueFullInformation,
-                                         keyData,
-                                         VALUE_BUFFER_SIZE,
-                                         &length);
-
-                ZwClose(targetKey);
-
-                if (!NT_SUCCESS(status)) {
-                    ExFreePool(keyData);
-                    continue;
-                }
-
-                if (keyData->DataLength < 9*sizeof(WCHAR)) {
-                    //
-                    // the data is too short to use (we subtract 9 chars in normal path)
-                    //
-                    DebugPrint((1, "EnumerateBusKey: Saved data was invalid, "
-                                "not enough data in registry!\n"));
-                    ExFreePool(keyData);
-                    continue;
-                }
-
-                //
-                // Complete unicode string.
-                //
-
-                identifier.Buffer =
-                    (PWSTR)((PUCHAR)keyData + keyData->DataOffset);
-                identifier.Length = (USHORT)keyData->DataLength;
-                identifier.MaximumLength = (USHORT)keyData->DataLength;
-
-                //
-                // Convert unicode identifier to ansi string.
-                //
-
-                status =
-                    RtlUnicodeStringToAnsiString(&anotherString,
-                                                 &identifier,
-                                                 TRUE);
-
-                if (!NT_SUCCESS(status)) {
-                    ExFreePool(keyData);
-                    continue;
-                }
-
-                //
-                // If checksum is zero, then the MBR is valid and
-                // the signature is meaningful.
-                //
-
-                if (diskData->MbrCheckSum) {
-
-                    //
-                    // Convert checksum to ansi string.
-                    //
-
-                    sprintf((PCHAR)buffer, "%08lx", diskData->MbrCheckSum);
-
-                } else {
-
-                    //
-                    // Convert signature to ansi string.
-                    //
-
-                    sprintf((PCHAR)buffer, "%08lx", diskData->Signature);
-
-                    //
-                    // Make string point at signature. Can't use scan
-                    // functions because they are not exported for driver use.
-                    //
-
-                    anotherString.Buffer+=9;
-                }
-
-                //
-                // Convert to ansi string.
-                //
-
-                RtlInitString(&string,
-                              (PCSZ)buffer);
-
-
-                //
-                // Make string lengths equal.
-                //
-
-                anotherString.Length = string.Length;
-
-                //
-                // Check if strings match.
-                //
-
-                if (RtlCompareString(&string,
-                                     &anotherString,
-                                     TRUE) == 0)  {
-
-                    diskFound = TRUE;
-                    *DiskNumber = diskNumber;
-                }
-
-                ExFreePool(keyData);
-
-                //
-                // Readjust identifier string if necessary.
-                //
-
-                if (!diskData->MbrCheckSum) {
-                    anotherString.Buffer-=9;
-                }
-
-                RtlFreeAnsiString(&anotherString);
-
-                if (diskFound) {
-                    break;
-                }
-            }
-
-            ZwClose(diskKey);
-        }
-
-        ZwClose(adapterKey);
-    }
-
-    ZwClose(BusKey);
-    return diskFound;
-
-} // end EnumerateBusKey()
-
-
-VOID
-NTAPI
-UpdateGeometry(
-    IN PDEVICE_EXTENSION DeviceExtension
-    )
-/*++
-
-Routine Description:
-
-    The routine queries the registry to determine if this disk is visible to
-    the BIOS.  If the disk is visible to the BIOS, then the geometry information
-    is updated.
-
-Arguments:
-
-    DeviceExtension - Supplies a pointer to the device information for disk.
-
-Return Value:
-
-    None.
-
---*/
-
-{
-    OBJECT_ATTRIBUTES objectAttributes;
-    UNICODE_STRING unicodeString;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = (PFUNCTIONAL_DEVICE_EXTENSION)Fdo->DeviceExtension;
+    DISK_CACHE_INFORMATION cacheInfo = { 0 };
     NTSTATUS status;
-    HANDLE hardwareKey;
-    HANDLE busKey;
-    PCM_INT13_DRIVE_PARAMETER driveParameters;
-    PCM_FULL_RESOURCE_DESCRIPTOR resourceDescriptor;
-    PKEY_VALUE_FULL_INFORMATION keyData;
-    ULONG diskNumber;
-    PUCHAR buffer;
-    ULONG length;
-    ULONG numberOfDrives;
-    ULONG cylinders;
-    ULONG sectors;
-    ULONG sectorsPerTrack;
-    ULONG tracksPerCylinder;
-    BOOLEAN foundEZHooker;
-    PVOID tmpPtr;
+    PIO_WORKITEM WorkItem = (PIO_WORKITEM)Context;
 
     PAGED_CODE();
 
-    //
-    // Initialize the object for the key.
-    //
+    NT_ASSERT(WorkItem != NULL);
+    _Analysis_assume_(WorkItem != NULL);
 
-    InitializeObjectAttributes(&objectAttributes,
-                               DeviceExtension->DeviceObject->DriverObject->HardwareDatabase,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               (PSECURITY_DESCRIPTOR) NULL);
+    status = DiskGetCacheInformation(fdoExtension, &cacheInfo);
 
-    //
-    // Create the hardware base key.
-    //
+    if (NT_SUCCESS(status) && (cacheInfo.WriteCacheEnabled == TRUE)) {
 
-    status =  ZwOpenKey(&hardwareKey,
-                        KEY_READ,
-                        &objectAttributes);
+        cacheInfo.WriteCacheEnabled = FALSE;
 
-
-    if (!NT_SUCCESS(status)) {
-        DebugPrint((1, "ScsiDisk UpdateParameters: Cannot open hardware data. Name: %wZ\n", DeviceExtension->DeviceObject->DriverObject->HardwareDatabase));
-        return;
+        DiskSetCacheInformation(fdoExtension, &cacheInfo);
     }
 
+    IoFreeWorkItem(WorkItem);
+}
+
+
+//
+// This routine is structured as a work-item routine
+//
+VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskIoctlVerifyThread(
+    IN PDEVICE_OBJECT Fdo,
+    IN PVOID Context
+    )
+{
+    PDISK_VERIFY_WORKITEM_CONTEXT WorkContext = (PDISK_VERIFY_WORKITEM_CONTEXT)Context;
+    PIRP Irp = NULL;
+    PFUNCTIONAL_DEVICE_EXTENSION FdoExtension = (PFUNCTIONAL_DEVICE_EXTENSION)Fdo->DeviceExtension;
+    PDISK_DATA DiskData = (PDISK_DATA)FdoExtension->CommonExtension.DriverData;
+    PVERIFY_INFORMATION verifyInfo = NULL;
+    PSCSI_REQUEST_BLOCK Srb = NULL;
+    PCDB Cdb = NULL;
+    LARGE_INTEGER byteOffset;
+    LARGE_INTEGER sectorOffset;
+    ULONG sectorCount;
+    NTSTATUS status = STATUS_SUCCESS;
+    PSTORAGE_REQUEST_BLOCK srbEx = NULL;
+    PSTOR_ADDR_BTL8 storAddrBtl8 = NULL;
+    PSRBEX_DATA_SCSI_CDB16 srbExDataCdb16 = NULL;
+
+    PAGED_CODE();
+
+    NT_ASSERT(WorkContext != NULL);
+    _Analysis_assume_(WorkContext != NULL);
+
+    Srb = WorkContext->Srb;
+    Irp = WorkContext->Irp;
+    verifyInfo = (PVERIFY_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
     //
-    // Get disk BIOS geometry information.
+    // We don't need to hold on to this memory as
+    // the following operation may take some time
     //
 
-    RtlInitUnicodeString(&unicodeString, L"Configuration Data");
+    IoFreeWorkItem(WorkContext->WorkItem);
 
-    keyData = ExAllocatePool(PagedPool, VALUE_BUFFER_SIZE);
-
-    if (keyData == NULL) {
-        ZwClose(hardwareKey);
-        return;
-    }
-
-    status = ZwQueryValueKey(hardwareKey,
-                             &unicodeString,
-                             KeyValueFullInformation,
-                             keyData,
-                             VALUE_BUFFER_SIZE,
-                             &length);
-
-    if (!NT_SUCCESS(status)) {
-        DebugPrint((1,
-                   "SCSIDISK: ExtractBiosGeometry: Can't query configuration data (%x)\n",
-                   status));
-        ZwClose(hardwareKey);
-        ExFreePool(keyData);
-        return;
-    }
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlVerifyThread: Spliting up the request\n"));
 
     //
-    // Open EISA bus key.
+    // Add disk offset to starting the sector
     //
 
-    RtlInitUnicodeString(&unicodeString, L"EisaAdapter");
-
-    InitializeObjectAttributes(&objectAttributes,
-                               &unicodeString,
-                               OBJ_CASE_INSENSITIVE,
-                               hardwareKey,
-                               (PSECURITY_DESCRIPTOR)NULL);
-
-    status = ZwOpenKey(&busKey,
-                       KEY_READ,
-                       &objectAttributes);
-
-    if (!NT_SUCCESS(status)) {
-        goto openMultiKey;
-    }
-
-    DebugPrint((3,
-               "SCSIDISK: UpdateGeometry: Opened EisaAdapter key\n"));
-    if (EnumerateBusKey(DeviceExtension,
-                        busKey,
-                        &diskNumber)) {
-
-        ZwClose(hardwareKey);
-        goto diskMatched;
-    }
-
-openMultiKey:
+    byteOffset.QuadPart = FdoExtension->CommonExtension.StartingOffset.QuadPart +
+                          verifyInfo->StartingOffset.QuadPart;
 
     //
-    // Open Multifunction bus key.
+    // Convert byte offset to the sector offset
     //
 
-    RtlInitUnicodeString(&unicodeString, L"MultifunctionAdapter");
-
-    InitializeObjectAttributes(&objectAttributes,
-                               &unicodeString,
-                               OBJ_CASE_INSENSITIVE,
-                               hardwareKey,
-                               (PSECURITY_DESCRIPTOR)NULL);
-
-    status = ZwOpenKey(&busKey,
-                       KEY_READ,
-                       &objectAttributes);
-
-    ZwClose(hardwareKey);
-    if (NT_SUCCESS(status)) {
-        DebugPrint((3,
-                   "SCSIDISK: UpdateGeometry: Opened MultifunctionAdapter key\n"));
-        if (EnumerateBusKey(DeviceExtension,
-                            busKey,
-                            &diskNumber)) {
-
-            goto diskMatched;
-        }
-    }
-
-    ExFreePool(keyData);
-    return;
-
-diskMatched:
-
-    resourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)((PUCHAR)keyData +
-        keyData->DataOffset);
+    sectorOffset.QuadPart = byteOffset.QuadPart >> FdoExtension->SectorShift;
 
     //
-    // Check that the data is long enough to hold a full resource descriptor,
-    // and that the last resource list is device-specific and long enough.
+    // Convert byte count to sector count.
     //
 
-    if (keyData->DataLength < sizeof(CM_FULL_RESOURCE_DESCRIPTOR) ||
-        resourceDescriptor->PartialResourceList.Count == 0 ||
-        resourceDescriptor->PartialResourceList.PartialDescriptors[0].Type !=
-        CmResourceTypeDeviceSpecific ||
-        resourceDescriptor->PartialResourceList.PartialDescriptors[0]
-            .u.DeviceSpecificData.DataSize < sizeof(ULONG)) {
-
-        DebugPrint((1, "SCSIDISK: ExtractBiosGeometry: BIOS header data too small or invalid\n"));
-        ExFreePool(keyData);
-        return;
-    }
-
-    length =
-        resourceDescriptor->PartialResourceList.PartialDescriptors[0].u.DeviceSpecificData.DataSize;
+    sectorCount = verifyInfo->Length >> FdoExtension->SectorShift;
 
     //
-    // Point to the BIOS data. The BIOS data is located after the first
-    // partial Resource list which should be device specific data.
+    // Make sure  that all previous verify requests have indeed completed
+    // This greatly reduces the possibility of a Denial-of-Service attack
     //
 
-    buffer = (PUCHAR) keyData + keyData->DataOffset +
-        sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
-
-
-    numberOfDrives = length / sizeof(CM_INT13_DRIVE_PARAMETER);
-
-    //
-    // Use the defaults if the drive number is greater than the
-    // number of drives detected by the BIOS.
-    //
-
-    if (numberOfDrives <= diskNumber) {
-        ExFreePool(keyData);
-        return;
-    }
+    KeWaitForMutexObject(&DiskData->VerifyMutex,
+                         Executive,
+                         KernelMode,
+                         FALSE,
+                         NULL);
 
     //
-    // Point to the array of drive parameters.
+    // Initialize SCSI SRB for a verify CDB
     //
-
-    driveParameters = (PCM_INT13_DRIVE_PARAMETER) buffer + diskNumber;
-    cylinders = driveParameters->MaxCylinders + 1;
-    sectorsPerTrack = driveParameters->SectorsPerTrack;
-    tracksPerCylinder = driveParameters->MaxHeads +1;
-
-    //
-    // Calculate the actual number of sectors.
-    //
-
-    sectors = (ULONG)(DeviceExtension->PartitionLength.QuadPart >>
-                                     DeviceExtension->SectorShift);
-
-#if DBG
-    if (sectors >= cylinders * tracksPerCylinder * sectorsPerTrack) {
-        DebugPrint((1, "ScsiDisk: UpdateGeometry: Disk smaller than BIOS indicated\n"
-            "SCSIDISK: Sectors: %x, Cylinders: %x, Track per Cylinder: %x Sectors per track: %x\n",
-            sectors, cylinders, tracksPerCylinder, sectorsPerTrack));
-    }
-#endif
-
-    //
-    // Since the BIOS may not report the full drive, recalculate the drive
-    // size based on the volume size and the BIOS values for tracks per
-    // cylinder and sectors per track..
-    //
-
-    length = tracksPerCylinder * sectorsPerTrack;
-
-    if (length == 0) {
+    if (FdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        RtlZeroMemory(Srb, CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE);
+        srbEx = (PSTORAGE_REQUEST_BLOCK)Srb;
 
         //
-        // The BIOS information is bogus.
+        // Set up STORAGE_REQUEST_BLOCK fields
         //
 
-        DebugPrint((1, "ScsiDisk UpdateParameters: sectorPerTrack zero\n"));
-        ExFreePool(keyData);
-        return;
-    }
-
-    cylinders = sectors / length;
-
-    //
-    // Update the actual geometry information.
-    //
-
-    DeviceExtension->DiskGeometry->Geometry.SectorsPerTrack = sectorsPerTrack;
-    DeviceExtension->DiskGeometry->Geometry.TracksPerCylinder = tracksPerCylinder;
-    DeviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)cylinders;
-    DeviceExtension->DiskGeometry->DiskSize.QuadPart = (LONGLONG)cylinders * tracksPerCylinder * sectorsPerTrack *
-                                                       DeviceExtension->DiskGeometry->Geometry.BytesPerSector;
-
-    DebugPrint((3,
-               "SCSIDISK: UpdateGeometry: BIOS spt %x, #heads %x, #cylinders %x\n",
-               sectorsPerTrack,
-               tracksPerCylinder,
-               cylinders));
-
-    ExFreePool(keyData);
-
-    foundEZHooker = FALSE;
-
-    if (!DeviceExtension->DMActive) {
-
-        HalExamineMBR(DeviceExtension->DeviceObject,
-                      DeviceExtension->DiskGeometry->Geometry.BytesPerSector,
-                      (ULONG)0x55,
-                      &tmpPtr
-                      );
-
-        if (tmpPtr) {
-
-            ExFreePool(tmpPtr);
-            foundEZHooker = TRUE;
-
-        }
-
-    }
-
-    if (DeviceExtension->DMActive || foundEZHooker) {
-
-        while (cylinders > 1024) {
-
-            tracksPerCylinder = tracksPerCylinder*2;
-            cylinders = cylinders/2;
-
-        }
+        srbEx->Length = FIELD_OFFSET(STORAGE_REQUEST_BLOCK, Signature);
+        srbEx->Function = SRB_FUNCTION_STORAGE_REQUEST_BLOCK;
+        srbEx->Signature = SRB_SIGNATURE;
+        srbEx->Version = STORAGE_REQUEST_BLOCK_VERSION_1;
+        srbEx->SrbLength = CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE;
+        srbEx->SrbFunction = SRB_FUNCTION_EXECUTE_SCSI;
+        srbEx->RequestPriority = IoGetIoPriorityHint(Irp);
+        srbEx->AddressOffset = sizeof(STORAGE_REQUEST_BLOCK);
+        srbEx->NumSrbExData = 1;
 
         //
-        // int 13 values are always 1 less.
+        // Set up address fields
         //
 
-        tracksPerCylinder -= 1;
-        cylinders -= 1;
+        storAddrBtl8 = (PSTOR_ADDR_BTL8) ((PUCHAR)srbEx + srbEx->AddressOffset);
+        storAddrBtl8->Type = STOR_ADDRESS_TYPE_BTL8;
+        storAddrBtl8->AddressLength = STOR_ADDR_BTL8_ADDRESS_LENGTH;
 
         //
-        // DM reserves the CE cylinder
+        // Set up SCSI SRB extended data fields
         //
 
-        cylinders -= 1;
+        srbEx->SrbExDataOffset[0] = sizeof(STORAGE_REQUEST_BLOCK) +
+               sizeof(STOR_ADDR_BTL8);
+        if ((srbEx->SrbExDataOffset[0] + sizeof(SRBEX_DATA_SCSI_CDB16)) <= srbEx->SrbLength) {
+            srbExDataCdb16 = (PSRBEX_DATA_SCSI_CDB16)((PUCHAR)srbEx + srbEx->SrbExDataOffset[0]);
+            srbExDataCdb16->Type = SrbExDataTypeScsiCdb16;
+            srbExDataCdb16->Length = SRBEX_DATA_SCSI_CDB16_LENGTH;
 
-        DeviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = cylinders + 1;
-        DeviceExtension->DiskGeometry->Geometry.TracksPerCylinder = tracksPerCylinder + 1;
+            Cdb = (PCDB)srbExDataCdb16->Cdb;
+            if (TEST_FLAG(FdoExtension->DeviceFlags, DEV_USE_16BYTE_CDB)) {
+                srbExDataCdb16->CdbLength = 16;
+                Cdb->CDB16.OperationCode = SCSIOP_VERIFY16;
+            } else {
+                srbExDataCdb16->CdbLength = 10;
+                Cdb->CDB10.OperationCode = SCSIOP_VERIFY;
+            }
+        } else {
+            // Should not happen
+            NT_ASSERT(FALSE);
 
-        DeviceExtension->PartitionLength.QuadPart =
-        DeviceExtension->DiskGeometry->DiskSize.QuadPart =
-            DeviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart *
-                DeviceExtension->DiskGeometry->Geometry.SectorsPerTrack *
-                DeviceExtension->DiskGeometry->Geometry.BytesPerSector *
-                DeviceExtension->DiskGeometry->Geometry.TracksPerCylinder;
-
-        if (DeviceExtension->DMActive) {
-
-            DeviceExtension->DMByteSkew = DeviceExtension->DMSkew * DeviceExtension->DiskGeometry->Geometry.BytesPerSector;
-
+            FREE_POOL(Srb);
+            FREE_POOL(WorkContext);
+            status = STATUS_INTERNAL_ERROR;
         }
 
     } else {
+        RtlZeroMemory(Srb, SCSI_REQUEST_BLOCK_SIZE);
 
-        DeviceExtension->DMByteSkew = 0;
+        Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+        Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
 
-    }
-
-    return;
-
-} // end UpdateGeometry()
-
-
-
-NTSTATUS
-NTAPI
-UpdateRemovableGeometry (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    )
-
-/*++
-
-Routine Description:
-
-    This routines updates the size and starting offset of the device.  This is
-    used when the media on the device may have changed thereby changing the
-    size of the device.  If this is the physical device then a
-    ScsiClassReadDriveCapacity is done; otherewise, a read partition table is done.
-
-Arguments:
-
-    DeviceObject - Supplies the device object whos size needs to be updated.
-
-    Irp - Supplies a reference where the status can be updated.
-
-Return Value:
-
-    Returns the status of the operation.
-
---*/
-{
-
-    PDEVICE_EXTENSION         deviceExtension = DeviceObject->DeviceExtension;
-    PDRIVE_LAYOUT_INFORMATION partitionList;
-    NTSTATUS                  status;
-    PDISK_DATA                diskData;
-    ULONG                     partitionNumber;
-
-    //
-    // Determine if the size of the partition may have changed because
-    // the media has changed.
-    //
-
-    if (!(DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)) {
-
-        return(STATUS_SUCCESS);
+        Cdb = (PCDB)Srb->Cdb;
+        if (TEST_FLAG(FdoExtension->DeviceFlags, DEV_USE_16BYTE_CDB)) {
+            Srb->CdbLength = 16;
+            Cdb->CDB16.OperationCode = SCSIOP_VERIFY16;
+        } else {
+            Srb->CdbLength = 10;
+            Cdb->CDB10.OperationCode = SCSIOP_VERIFY;
+        }
 
     }
 
-    //
-    // If this request is for partition zero then do a read drive
-    // capacity otherwise do a I/O read partition table.
-    //
+    while (NT_SUCCESS(status) && (sectorCount != 0)) {
 
-    diskData = (PDISK_DATA) (deviceExtension + 1);
+        USHORT numSectors = (USHORT) min(sectorCount, MAX_SECTORS_PER_VERIFY);
 
-    //
-    // Read the drive capacity.  If that fails, give up.
-    //
+        if (FdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
 
-    status = ScsiClassReadDriveCapacity(deviceExtension->PhysicalDevice);
+            //
+            // Reset status fields
+            //
 
-    if (!NT_SUCCESS(status)) {
-        return(status);
+            srbEx->SrbStatus = 0;
+            srbExDataCdb16->ScsiStatus = 0;
+
+            //
+            // Calculate the request timeout value based
+            // on  the number of sectors  being verified
+            //
+
+            srbEx->TimeOutValue = ((numSectors + 0x7F) >> 7) * FdoExtension->TimeOutValue;
+        } else {
+
+            //
+            // Reset status fields
+            //
+
+            Srb->SrbStatus = 0;
+            Srb->ScsiStatus = 0;
+
+            //
+            // Calculate the request timeout value based
+            // on  the number of sectors  being verified
+            //
+
+            Srb->TimeOutValue = ((numSectors + 0x7F) >> 7) * FdoExtension->TimeOutValue;
+        }
+
+        //
+        // Update verify CDB info.
+        // NOTE - CDB opcode and length has been initialized prior to entering
+        // the while loop
+        //
+
+        if (TEST_FLAG(FdoExtension->DeviceFlags, DEV_USE_16BYTE_CDB)) {
+
+            REVERSE_BYTES_QUAD(&Cdb->CDB16.LogicalBlock, &sectorOffset);
+            REVERSE_BYTES_SHORT(&Cdb->CDB16.TransferLength[2], &numSectors);
+        } else {
+
+            //
+            // Move little endian values into CDB in big endian format
+            //
+
+            Cdb->CDB10.LogicalBlockByte0 = ((PFOUR_BYTE)&sectorOffset)->Byte3;
+            Cdb->CDB10.LogicalBlockByte1 = ((PFOUR_BYTE)&sectorOffset)->Byte2;
+            Cdb->CDB10.LogicalBlockByte2 = ((PFOUR_BYTE)&sectorOffset)->Byte1;
+            Cdb->CDB10.LogicalBlockByte3 = ((PFOUR_BYTE)&sectorOffset)->Byte0;
+
+            Cdb->CDB10.TransferBlocksMsb = ((PFOUR_BYTE)&numSectors)->Byte1;
+            Cdb->CDB10.TransferBlocksLsb = ((PFOUR_BYTE)&numSectors)->Byte0;
+        }
+
+        status = ClassSendSrbSynchronous(Fdo,
+                                         Srb,
+                                         NULL,
+                                         0,
+                                         FALSE);
+
+        NT_ASSERT(status != STATUS_NONEXISTENT_SECTOR);
+
+        sectorCount  -= numSectors;
+        sectorOffset.QuadPart += numSectors;
     }
 
-#ifdef __REACTOS__
-    //
-    // HACK so that we can use NT5+ NTOS functions with this NT4 driver
-    // for removable devices and avoid an infinite recursive loop between
-    // disk!UpdateRemovableGeometry() and ntos!IoReadPartitionTable().
-    //
-    // Check whether the update-count is greater or equal than one
-    // (and increase it) and if so, reset it and return success.
-    if (diskData->UpdateRemovableGeometryCount++ >= 1)
-    {
-        diskData->UpdateRemovableGeometryCount = 0;
-        return(STATUS_SUCCESS);
-    }
-#endif
+    KeReleaseMutex(&DiskData->VerifyMutex, FALSE);
 
-    //
-    // Read the partition table again.
-    //
+    Irp->IoStatus.Status = status;
+    Irp->IoStatus.Information = 0;
 
-    status = IoReadPartitionTable(deviceExtension->PhysicalDevice,
-                      deviceExtension->DiskGeometry->Geometry.BytesPerSector,
-                      TRUE,
-                      &partitionList);
+    ClassReleaseRemoveLock(Fdo, Irp);
+    ClassCompleteRequest(Fdo, Irp, IO_NO_INCREMENT);
 
-#ifdef __REACTOS__
-    //
-    // HACK so that we can use NT5+ NTOS functions with this NT4 driver
-    // for removable devices and avoid an infinite recursive loop between
-    // disk!UpdateRemovableGeometry() and ntos!IoReadPartitionTable().
-    //
-    // Inconditionally reset the update-count.
-    diskData->UpdateRemovableGeometryCount = 0;
-#endif
-
-    if (!NT_SUCCESS(status)) {
-
-        //
-        // Fail the request.
-        //
-
-        return(status);
-    }
-
-    if (diskData->PartitionNumber != 0 &&
-        diskData->PartitionNumber <= partitionList->PartitionCount ) {
-
-        partitionNumber = diskData->PartitionNumber - 1;
-
-        //
-        // Update the partition information for this partition.
-        //
-
-        diskData->PartitionType =
-            partitionList->PartitionEntry[partitionNumber].PartitionType;
-
-        diskData->BootIndicator =
-            partitionList->PartitionEntry[partitionNumber].BootIndicator;
-
-        deviceExtension->StartingOffset =
-            partitionList->PartitionEntry[partitionNumber].StartingOffset;
-
-        deviceExtension->PartitionLength =
-            partitionList->PartitionEntry[partitionNumber].PartitionLength;
-
-        diskData->HiddenSectors =
-            partitionList->PartitionEntry[partitionNumber].HiddenSectors;
-
-        deviceExtension->SectorShift = ((PDEVICE_EXTENSION)
-            deviceExtension->PhysicalDevice->DeviceExtension)->SectorShift;
-
-    } else if (diskData->PartitionNumber != 0) {
-
-        //
-        // The partition does not exist.  Zero all the data.
-        //
-
-        diskData->PartitionType = 0;
-        diskData->BootIndicator = 0;
-        diskData->HiddenSectors = 0;
-        deviceExtension->StartingOffset.QuadPart  = (LONGLONG)0;
-        deviceExtension->PartitionLength.QuadPart = (LONGLONG)0;
-    }
-
-    //
-    // Free the partition list allocate by I/O read partition table.
-    //
-
-    ExFreePool(partitionList);
-
-
-    return(STATUS_SUCCESS);
+    FREE_POOL(Srb);
+    FREE_POOL(WorkContext);
 }
 
 
 VOID
-NTAPI
-ScsiDiskProcessError(
-    PDEVICE_OBJECT DeviceObject,
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskFdoProcessError(
+    PDEVICE_OBJECT Fdo,
     PSCSI_REQUEST_BLOCK Srb,
     NTSTATUS *Status,
     BOOLEAN *Retry
     )
+
 /*++
 
 Routine Description:
@@ -4718,7 +2289,7 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject - Supplies a pointer to the device object.
+    Fdo - Supplies a pointer to the functional device object.
 
     Srb - Supplies a pointer to the failing Srb.
 
@@ -4733,10 +2304,55 @@ Return Value:
 --*/
 
 {
-    PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
+    PSTORAGE_REQUEST_BLOCK srbEx;
+    PCDB cdb = NULL;
+    UCHAR scsiStatus = 0;
+    UCHAR senseBufferLength = 0;
+    PVOID senseBuffer = NULL;
+    CDB noOp = {0};
+
+    //
+    // Get relevant fields from SRB
+    //
+    if (Srb->Function == SRB_FUNCTION_STORAGE_REQUEST_BLOCK) {
+
+        srbEx = (PSTORAGE_REQUEST_BLOCK)Srb;
+
+        //
+        // Look for SCSI SRB specific fields
+        //
+        if ((srbEx->SrbFunction == SRB_FUNCTION_EXECUTE_SCSI) &&
+            (srbEx->NumSrbExData > 0)) {
+            cdb = GetSrbScsiData(srbEx, NULL, NULL, &scsiStatus, &senseBuffer, &senseBufferLength);
+
+            //
+            // cdb and sense buffer should not be NULL
+            //
+            NT_ASSERT(cdb != NULL);
+            NT_ASSERT(senseBuffer != NULL);
+
+        }
+
+        if (cdb == NULL) {
+
+            //
+            // Use a cdb that is all 0s
+            //
+            cdb = &noOp;
+        }
+
+    } else {
+
+        cdb = (PCDB)(Srb->Cdb);
+        scsiStatus = Srb->ScsiStatus;
+        senseBufferLength = Srb->SenseInfoBufferLength;
+        senseBuffer = Srb->SenseInfoBuffer;
+    }
 
     if (*Status == STATUS_DATA_OVERRUN &&
-        ( Srb->Cdb[0] == SCSIOP_WRITE || Srb->Cdb[0] == SCSIOP_READ)) {
+        (cdb != NULL) &&
+        (IS_SCSIOP_READWRITE(cdb->CDB10.OperationCode))) {
 
             *Retry = TRUE;
 
@@ -4744,49 +2360,264 @@ Return Value:
             // Update the error count for the device.
             //
 
-            deviceExtension->ErrorCount++;
-    }
+            fdoExtension->ErrorCount++;
 
-    if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_ERROR &&
-        Srb->ScsiStatus == SCSISTAT_BUSY) {
+    } else if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_ERROR &&
+               scsiStatus == SCSISTAT_BUSY) {
 
         //
-        // The disk drive should never be busy this long. Reset the scsi bus
+        // a disk drive should never be busy this long. Reset the scsi bus
         // maybe this will clear the condition.
         //
 
-        ResetScsiBus(DeviceObject);
+        ResetBus(Fdo);
 
         //
         // Update the error count for the device.
         //
 
-        deviceExtension->ErrorCount++;
+        fdoExtension->ErrorCount++;
+
+    } else {
+
+        BOOLEAN invalidatePartitionTable = FALSE;
+
+        //
+        // See if this might indicate that something on the drive has changed.
+        //
+
+        if ((Srb->SrbStatus & SRB_STATUS_AUTOSENSE_VALID) &&
+            (senseBuffer != NULL) && (cdb != NULL)) {
+
+            BOOLEAN validSense = FALSE;
+            UCHAR senseKey = 0;
+            UCHAR asc = 0;
+            UCHAR ascq = 0;
+
+            validSense = ScsiGetSenseKeyAndCodes(senseBuffer,
+                                                 senseBufferLength,
+                                                 SCSI_SENSE_OPTIONS_FIXED_FORMAT_IF_UNKNOWN_FORMAT_INDICATED,
+                                                 &senseKey,
+                                                 &asc,
+                                                 &ascq);
+
+            if (validSense) {
+
+                switch (senseKey) {
+
+                    case SCSI_SENSE_ILLEGAL_REQUEST: {
+
+                        switch (asc) {
+
+                            case SCSI_ADSENSE_INVALID_CDB:
+                            {
+                                //
+                                // Look to see if this is an Io request with the ForceUnitAccess flag set
+                                //
+                                if (((cdb->CDB10.OperationCode == SCSIOP_WRITE)   ||
+                                    (cdb->CDB10.OperationCode == SCSIOP_WRITE16)) &&
+                                    (cdb->CDB10.ForceUnitAccess))
+                                {
+                                    PDISK_DATA diskData = (PDISK_DATA)fdoExtension->CommonExtension.DriverData;
+
+                                    if (diskData->WriteCacheOverride == DiskWriteCacheEnable)
+                                    {
+                                        PIO_ERROR_LOG_PACKET logEntry = NULL;
+
+                                        //
+                                        // The user has explicitly requested that write caching be turned on.
+                                        // Warn the user that writes with FUA enabled are not working and that
+                                        // they should disable write cache.
+                                        //
+
+                                        logEntry = IoAllocateErrorLogEntry(fdoExtension->DeviceObject,
+                                                                           sizeof(IO_ERROR_LOG_PACKET) + (4 * sizeof(ULONG)));
+
+                                        if (logEntry != NULL)
+                                        {
+                                            logEntry->FinalStatus       = *Status;
+                                            logEntry->ErrorCode         = IO_WARNING_WRITE_FUA_PROBLEM;
+                                            logEntry->SequenceNumber    = 0;
+                                            logEntry->MajorFunctionCode = IRP_MJ_SCSI;
+                                            logEntry->IoControlCode     = 0;
+                                            logEntry->RetryCount        = 0;
+                                            logEntry->UniqueErrorValue  = 0;
+                                            logEntry->DumpDataSize      = 4 * sizeof(ULONG);
+
+                                            logEntry->DumpData[0] = diskData->ScsiAddress.PortNumber;
+                                            logEntry->DumpData[1] = diskData->ScsiAddress.PathId;
+                                            logEntry->DumpData[2] = diskData->ScsiAddress.TargetId;
+                                            logEntry->DumpData[3] = diskData->ScsiAddress.Lun;
+
+                                            //
+                                            // Write the error log packet.
+                                            //
+
+                                            IoWriteErrorLogEntry(logEntry);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //
+                                        // Turn off write caching on this device. This is so that future
+                                        // critical requests need not be sent down with  ForceUnitAccess
+                                        //
+                                        PIO_WORKITEM workItem = IoAllocateWorkItem(Fdo);
+
+                                        if (workItem)
+                                        {
+                                            IoQueueWorkItem(workItem, DisableWriteCache, CriticalWorkQueue, workItem);
+                                        }
+                                    }
+
+                                    SET_FLAG(fdoExtension->ScanForSpecialFlags, CLASS_SPECIAL_FUA_NOT_SUPPORTED);
+                                    ADJUST_FUA_FLAG(fdoExtension);
+
+
+                                    cdb->CDB10.ForceUnitAccess = FALSE;
+                                    *Retry = TRUE;
+
+                                } else if ((cdb->CDB6FORMAT.OperationCode == SCSIOP_MODE_SENSE) &&
+                                           (cdb->MODE_SENSE.PageCode == MODE_SENSE_RETURN_ALL)) {
+
+                                    //
+                                    // Mode sense for all pages failed. This command could fail with
+                                    // SCSI_SENSE_ILLEGAL_REQUEST / SCSI_ADSENSE_INVALID_CDB if the data
+                                    // to be returned is more than 256 bytes. In which case, try to get
+                                    // only MODE_PAGE_CACHING since we only need the block descriptor.
+                                    //
+                                    // Simply change the page code and retry the request
+                                    //
+
+                                    cdb->MODE_SENSE.PageCode = MODE_PAGE_CACHING;
+                                    *Retry = TRUE;
+                                }
+
+                                break;
+                            }
+                        } // end switch(asc)
+                        break;
+                    }
+
+                    case SCSI_SENSE_NOT_READY: {
+
+                        switch (asc) {
+                        case SCSI_ADSENSE_LUN_NOT_READY: {
+                            switch (ascq) {
+                            case SCSI_SENSEQ_BECOMING_READY:
+                            case SCSI_SENSEQ_MANUAL_INTERVENTION_REQUIRED:
+                            case SCSI_SENSEQ_CAUSE_NOT_REPORTABLE: {
+                                invalidatePartitionTable = TRUE;
+                                break;
+                            }
+                            } // end switch(ascq)
+                            break;
+                        }
+
+                        case SCSI_ADSENSE_NO_MEDIA_IN_DEVICE: {
+                            invalidatePartitionTable = TRUE;
+                            break;
+                        }
+                        } // end switch(asc)
+                        break;
+                    }
+
+                    case SCSI_SENSE_MEDIUM_ERROR: {
+                        invalidatePartitionTable = TRUE;
+                        break;
+                    }
+
+                    case SCSI_SENSE_HARDWARE_ERROR: {
+                        invalidatePartitionTable = TRUE;
+                        break;
+                    }
+
+                    case SCSI_SENSE_UNIT_ATTENTION:
+                    {
+                        invalidatePartitionTable = TRUE;
+                        break;
+                    }
+
+                    case SCSI_SENSE_RECOVERED_ERROR: {
+                        invalidatePartitionTable = TRUE;
+                        break;
+                    }
+
+                } // end switch(senseKey)
+            } // end if (validSense)
+        } else {
+
+            //
+            // On any exceptional scsi condition which might indicate that the
+            // device was changed we will flush out the state of the partition
+            // table.
+            //
+
+            switch (SRB_STATUS(Srb->SrbStatus)) {
+                case SRB_STATUS_INVALID_LUN:
+                case SRB_STATUS_INVALID_TARGET_ID:
+                case SRB_STATUS_NO_DEVICE:
+                case SRB_STATUS_NO_HBA:
+                case SRB_STATUS_INVALID_PATH_ID:
+                case SRB_STATUS_COMMAND_TIMEOUT:
+                case SRB_STATUS_TIMEOUT:
+                case SRB_STATUS_SELECTION_TIMEOUT:
+                case SRB_STATUS_REQUEST_FLUSHED:
+                case SRB_STATUS_UNEXPECTED_BUS_FREE:
+                case SRB_STATUS_PARITY_ERROR:
+                {
+                    invalidatePartitionTable = TRUE;
+                    break;
+                }
+
+                case SRB_STATUS_ERROR:
+                {
+                    if (scsiStatus == SCSISTAT_RESERVATION_CONFLICT)
+                    {
+                        invalidatePartitionTable = TRUE;
+                    }
+
+                    break;
+                }
+            } // end switch(Srb->SrbStatus)
+        }
+
+        if (invalidatePartitionTable && TEST_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA)) {
+
+            //
+            // Inform the upper layers that the volume
+            // on this disk is in need of verification
+            //
+
+            SET_FLAG(Fdo->Flags, DO_VERIFY_VOLUME);
+        }
     }
+
+    return;
 }
 
+
 VOID
-NTAPI
-ScanForSpecial(
-    PDEVICE_OBJECT DeviceObject,
-    PSCSI_INQUIRY_DATA LunInfo,
-    PIO_SCSI_CAPABILITIES PortCapabilities
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskSetSpecialHacks(
+    IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+    IN ULONG_PTR Data
     )
 
 /*++
 
 Routine Description:
 
-    This function checks to see if an SCSI logical unit requires special
+    This function checks to see if an SCSI logical unit requires speical
     flags to be set.
 
 Arguments:
 
-    DeviceObject - Supplies the device object to be tested.
+    Fdo - Supplies the device object to be tested.
 
     InquiryData - Supplies the inquiry data returned by the device of interest.
 
-    PortCapabilities - Supplies the capabilities of the device object.
+    AdapterDescriptor - Supplies the capabilities of the device object.
 
 Return Value:
 
@@ -4795,82 +2626,84 @@ Return Value:
 --*/
 
 {
-    PDEVICE_EXTENSION          deviceExtension = DeviceObject->DeviceExtension;
-    PINQUIRYDATA               InquiryData     = (PINQUIRYDATA)LunInfo->InquiryData;
-    BAD_CONTROLLER_INFORMATION const *controller;
-    ULONG                      j;
+    PDEVICE_OBJECT fdo = FdoExtension->DeviceObject;
 
-    for (j = 0; j <  NUMBER_OF_BAD_CONTROLLERS; j++) {
+    PAGED_CODE();
 
-        controller = &ScsiDiskBadControllers[j];
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT, "Disk SetSpecialHacks, Setting Hacks %p\n", (void*) Data));
 
-        if (strncmp(controller->InquiryString, (PCCHAR)InquiryData->VendorId, strlen(controller->InquiryString))) {
-            continue;
-        }
+    //
+    // Found a listed controller.  Determine what must be done.
+    //
 
-        DebugPrint((1, "ScsiDisk ScanForSpecial, Found bad controller! %s\n", controller->InquiryString));
+    if (TEST_FLAG(Data, HackDisableTaggedQueuing)) {
 
         //
-        // Found a listed controller.  Determine what must be done.
+        // Disable tagged queuing.
         //
 
-        if (controller->DisableTaggedQueuing) {
-
-            //
-            // Disable tagged queuing.
-            //
-
-            deviceExtension->SrbFlags &= ~SRB_FLAGS_QUEUE_ACTION_ENABLE;
-        }
-
-        if (controller->DisableSynchronousTransfers) {
-
-            //
-            // Disable synchronous data transfers.
-            //
-
-            deviceExtension->SrbFlags |= SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
-
-        }
-
-        if (controller->DisableDisconnects) {
-
-            //
-            // Disable disconnects.
-            //
-
-            deviceExtension->SrbFlags |= SRB_FLAGS_DISABLE_DISCONNECT;
-
-        }
-
-        //
-        // Found device so exit the loop and return.
-        //
-
-        break;
+        CLEAR_FLAG(FdoExtension->SrbFlags, SRB_FLAGS_QUEUE_ACTION_ENABLE);
     }
 
-    //
-    // Set the StartUnit flag appropriately.
-    //
+    if (TEST_FLAG(Data, HackDisableSynchronousTransfers)) {
 
-    if (DeviceObject->DeviceType == FILE_DEVICE_DISK) {
-        deviceExtension->DeviceFlags |= DEV_SAFE_START_UNIT;
+        //
+        // Disable synchronous data transfers.
+        //
 
-        if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) {
-            if (_strnicmp((PCCHAR)InquiryData->VendorId, "iomega", strlen("iomega"))) {
-                deviceExtension->DeviceFlags &= ~DEV_SAFE_START_UNIT;
-            }
-        }
+        SET_FLAG(FdoExtension->SrbFlags, SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
+
+    }
+
+    if (TEST_FLAG(Data, HackDisableSpinDown)) {
+
+        //
+        // Disable spinning down of drives.
+        //
+
+        SET_FLAG(FdoExtension->ScanForSpecialFlags,
+                 CLASS_SPECIAL_DISABLE_SPIN_DOWN);
+
+    }
+
+    if (TEST_FLAG(Data, HackDisableWriteCache)) {
+
+        //
+        // Disable the drive's write cache
+        //
+
+        SET_FLAG(FdoExtension->ScanForSpecialFlags,
+                 CLASS_SPECIAL_DISABLE_WRITE_CACHE);
+
+    }
+
+    if (TEST_FLAG(Data, HackCauseNotReportableHack)) {
+
+        SET_FLAG(FdoExtension->ScanForSpecialFlags,
+                 CLASS_SPECIAL_CAUSE_NOT_REPORTABLE_HACK);
+    }
+
+    if (TEST_FLAG(fdo->Characteristics, FILE_REMOVABLE_MEDIA) &&
+        TEST_FLAG(Data, HackRequiresStartUnitCommand)
+        ) {
+
+        //
+        // this is a list of vendors who require the START_UNIT command
+        //
+
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT, "DiskScanForSpecial (%p) => This unit requires "
+                    " START_UNITS\n", fdo));
+        SET_FLAG(FdoExtension->DeviceFlags, DEV_SAFE_START_UNIT);
+
     }
 
     return;
 }
 
+
 VOID
-NTAPI
-ResetScsiBus(
-    IN PDEVICE_OBJECT DeviceObject
+ResetBus(
+    IN PDEVICE_OBJECT Fdo
     )
 
 /*++
@@ -4881,59 +2714,92 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject - The device object for the logical unit with
-        hardware problem.
+    Fdo - The functional device object for the logical unit with hardware problem.
 
 Return Value:
 
     None.
 
 --*/
+
 {
     PIO_STACK_LOCATION irpStack;
     PIRP irp;
-    PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
+
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
     PSCSI_REQUEST_BLOCK srb;
     PCOMPLETION_CONTEXT context;
+    PSTORAGE_REQUEST_BLOCK srbEx = NULL;
+    PSTOR_ADDR_BTL8 storAddrBtl8 = NULL;
 
-    DebugPrint((1, "ScsiDisk ResetScsiBus: Sending reset bus request to port driver.\n"));
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "Disk ResetBus: Sending reset bus request to port driver.\n"));
 
     //
     // Allocate Srb from nonpaged pool.
     //
 
-    context = ExAllocatePool(NonPagedPoolMustSucceed,
-                             sizeof(COMPLETION_CONTEXT));
+    context = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                    sizeof(COMPLETION_CONTEXT),
+                                    DISK_TAG_CCONTEXT);
+
+    if(context == NULL) {
+        return;
+    }
 
     //
     // Save the device object in the context for use by the completion
     // routine.
     //
 
-    context->DeviceObject = DeviceObject;
-    srb = &context->Srb;
+    context->DeviceObject = Fdo;
+    srb = &context->Srb.Srb;
 
-    //
-    // Zero out srb.
-    //
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbEx = &context->Srb.SrbEx;
 
-    RtlZeroMemory(srb, SCSI_REQUEST_BLOCK_SIZE);
+        //
+        // Zero out srb
+        //
 
-    //
-    // Write length to SRB.
-    //
+        RtlZeroMemory(srbEx, sizeof(context->Srb.SrbExBuffer));
 
-    srb->Length = SCSI_REQUEST_BLOCK_SIZE;
+        //
+        // Set up STORAGE_REQUEST_BLOCK fields
+        //
 
-    //
-    // Set up SCSI bus address.
-    //
+        srbEx->Length = FIELD_OFFSET(STORAGE_REQUEST_BLOCK, Signature);
+        srbEx->Function = SRB_FUNCTION_STORAGE_REQUEST_BLOCK;
+        srbEx->Signature = SRB_SIGNATURE;
+        srbEx->Version = STORAGE_REQUEST_BLOCK_VERSION_1;
+        srbEx->SrbLength = sizeof(context->Srb.SrbExBuffer);
+        srbEx->SrbFunction = SRB_FUNCTION_RESET_BUS;
+        srbEx->AddressOffset = sizeof(STORAGE_REQUEST_BLOCK);
 
-    srb->PathId = deviceExtension->PathId;
-    srb->TargetId = deviceExtension->TargetId;
-    srb->Lun = deviceExtension->Lun;
+        //
+        // Set up address fields
+        //
 
-    srb->Function = SRB_FUNCTION_RESET_BUS;
+        storAddrBtl8 = (PSTOR_ADDR_BTL8) ((PUCHAR)srbEx + srbEx->AddressOffset);
+        storAddrBtl8->Type = STOR_ADDRESS_TYPE_BTL8;
+        storAddrBtl8->AddressLength = STOR_ADDR_BTL8_ADDRESS_LENGTH;
+
+    } else {
+
+        //
+        // Zero out srb.
+        //
+
+        RtlZeroMemory(srb, SCSI_REQUEST_BLOCK_SIZE);
+
+        //
+        // Write length to SRB.
+        //
+
+        srb->Length = SCSI_REQUEST_BLOCK_SIZE;
+
+        srb->Function = SRB_FUNCTION_RESET_BUS;
+
+    }
 
     //
     // Build the asynchronous request to be sent to the port driver.
@@ -4941,10 +2807,17 @@ Return Value:
     // available.
     //
 
-    irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    irp = IoAllocateIrp(Fdo->StackSize, FALSE);
+
+    if (irp == NULL) {
+        FREE_POOL(context);
+        return;
+    }
+
+    ClassAcquireRemoveLock(Fdo, irp);
 
     IoSetCompletionRoutine(irp,
-                           (PIO_COMPLETION_ROUTINE)ScsiClassAsynchronousCompletion,
+                           (PIO_COMPLETION_ROUTINE)ClassAsynchronousCompletion,
                            context,
                            TRUE,
                            TRUE,
@@ -4954,7 +2827,12 @@ Return Value:
 
     irpStack->MajorFunction = IRP_MJ_SCSI;
 
-    srb->OriginalRequest = irp;
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbEx->RequestPriority = IoGetIoPriorityHint(irp);
+        srbEx->OriginalRequest = irp;
+    } else {
+        srb->OriginalRequest = irp;
+    }
 
     //
     // Store the SRB address in next stack for port driver.
@@ -4966,475 +2844,3356 @@ Return Value:
     // Call the port driver with the IRP.
     //
 
-    IoCallDriver(deviceExtension->PortDeviceObject, irp);
+    IoCallDriver(fdoExtension->CommonExtension.LowerDeviceObject, irp);
 
     return;
 
-} // end ResetScsiBus()
+} // end ResetBus()
+
 
 
 VOID
-NTAPI
-UpdateDeviceObjects(
-    IN PDEVICE_OBJECT PhysicalDisk,
+DiskLogCacheInformation(
+    IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+    IN PDISK_CACHE_INFORMATION CacheInfo,
+    IN NTSTATUS Status
+    )
+{
+    PIO_ERROR_LOG_PACKET logEntry = NULL;
+
+    PAGED_CODE();
+
+    logEntry = IoAllocateErrorLogEntry(FdoExtension->DeviceObject, sizeof(IO_ERROR_LOG_PACKET) + (4 * sizeof(ULONG)));
+
+    if (logEntry != NULL)
+    {
+        PDISK_DATA diskData = FdoExtension->CommonExtension.DriverData;
+        BOOLEAN bIsEnabled  = TEST_FLAG(FdoExtension->DeviceFlags, DEV_WRITE_CACHE);
+
+        logEntry->FinalStatus       = Status;
+        logEntry->ErrorCode         = (bIsEnabled) ? IO_WRITE_CACHE_ENABLED : IO_WRITE_CACHE_DISABLED;
+        logEntry->SequenceNumber    = 0;
+        logEntry->MajorFunctionCode = IRP_MJ_SCSI;
+        logEntry->IoControlCode     = 0;
+        logEntry->RetryCount        = 0;
+        logEntry->UniqueErrorValue  = 0x1;
+        logEntry->DumpDataSize      = 4 * sizeof(ULONG);
+
+        logEntry->DumpData[0] = diskData->ScsiAddress.PathId;
+        logEntry->DumpData[1] = diskData->ScsiAddress.TargetId;
+        logEntry->DumpData[2] = diskData->ScsiAddress.Lun;
+        logEntry->DumpData[3] = CacheInfo->WriteCacheEnabled;
+
+        //
+        // Write the error log packet.
+        //
+
+        IoWriteErrorLogEntry(logEntry);
+    }
+}
+
+NTSTATUS
+DiskGetInfoExceptionInformation(
+    IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+    IN PMODE_INFO_EXCEPTIONS ReturnPageData
+    )
+{
+    PMODE_PARAMETER_HEADER modeData;
+    PMODE_INFO_EXCEPTIONS pageData;
+    ULONG length;
+
+    NTSTATUS status;
+
+    PAGED_CODE();
+
+    //
+    // ReturnPageData is allocated by the caller
+    //
+
+    modeData = ExAllocatePoolWithTag(NonPagedPoolNxCacheAligned,
+                                         MODE_DATA_SIZE,
+                                         DISK_TAG_INFO_EXCEPTION);
+
+    if (modeData == NULL) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_WMI, "DiskGetInfoExceptionInformation: Unable to allocate mode "
+                       "data buffer\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(modeData, MODE_DATA_SIZE);
+
+    length = ClassModeSense(FdoExtension->DeviceObject,
+                            (PCHAR) modeData,
+                            MODE_DATA_SIZE,
+                            MODE_PAGE_FAULT_REPORTING);
+
+    if (length < sizeof(MODE_PARAMETER_HEADER)) {
+
+        //
+        // Retry the request in case of a check condition.
+        //
+
+        length = ClassModeSense(FdoExtension->DeviceObject,
+                                (PCHAR) modeData,
+                                MODE_DATA_SIZE,
+                                MODE_PAGE_FAULT_REPORTING);
+
+        if (length < sizeof(MODE_PARAMETER_HEADER)) {
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_WMI, "DiskGetInfoExceptionInformation: Mode Sense failed\n"));
+            FREE_POOL(modeData);
+            return STATUS_IO_DEVICE_ERROR;
+        }
+    }
+
+    //
+    // If the length is greater than length indicated by the mode data reset
+    // the data to the mode data.
+    //
+
+    if (length > (ULONG) (modeData->ModeDataLength + 1)) {
+        length = modeData->ModeDataLength + 1;
+    }
+
+    //
+    // Find the mode page for info exceptions
+    //
+
+    pageData = ClassFindModePage((PCHAR) modeData,
+                                 length,
+                                 MODE_PAGE_FAULT_REPORTING,
+                                 TRUE);
+
+    if (pageData != NULL) {
+        RtlCopyMemory(ReturnPageData, pageData, sizeof(MODE_INFO_EXCEPTIONS));
+        status =  STATUS_SUCCESS;
+    } else {
+        status = STATUS_NOT_SUPPORTED;
+    }
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_WMI, "DiskGetInfoExceptionInformation: %s support SMART for device %p\n",
+                  NT_SUCCESS(status) ? "does" : "does not",
+                  FdoExtension->DeviceObject));
+
+    FREE_POOL(modeData);
+
+    return(status);
+}
+
+
+NTSTATUS
+DiskSetInfoExceptionInformation(
+    IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+    IN PMODE_INFO_EXCEPTIONS PageData
+    )
+
+{
+    ULONG i;
+    NTSTATUS status = STATUS_SUCCESS;
+
+    PAGED_CODE();
+
+    //
+    // We will attempt (twice) to issue the mode select with the page.
+    // Make the setting persistant so that we don't have to turn it back
+    // on after a bus reset.
+    //
+
+    for (i = 0; i < 2; i++)
+    {
+        status = DiskModeSelect(FdoExtension->DeviceObject,
+                                (PCHAR) PageData,
+                                sizeof(MODE_INFO_EXCEPTIONS),
+                                TRUE);
+    }
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_WMI, "DiskSetInfoExceptionInformation: %s for device %p\n",
+                        NT_SUCCESS(status) ? "succeeded" : "failed",
+                        FdoExtension->DeviceObject));
+
+    return status;
+}
+
+NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskGetCacheInformation(
+    IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+    IN PDISK_CACHE_INFORMATION CacheInfo
+    )
+/*++
+
+Routine Description:
+
+    This function gets the caching mode page from the drive. This function
+    is called from DiskIoctlGetCacheInformation() in response to the IOCTL
+    IOCTL_DISK_GET_CACHE_INFORMATION. This is also called from the
+    DisableWriteCache() worker thread to disable caching when write commands fail.
+
+Arguments:
+
+    FdoExtension - The device extension for this device.
+
+    CacheInfo - Buffer to receive the Cache Information.
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PMODE_PARAMETER_HEADER modeData;
+    PMODE_CACHING_PAGE pageData;
+
+    ULONG length;
+
+    PAGED_CODE();
+
+
+
+    modeData = ExAllocatePoolWithTag(NonPagedPoolNxCacheAligned,
+                                     MODE_DATA_SIZE,
+                                     DISK_TAG_DISABLE_CACHE);
+
+    if (modeData == NULL) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskGetSetCacheInformation: Unable to allocate mode "
+                       "data buffer\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(modeData, MODE_DATA_SIZE);
+
+    length = ClassModeSense(FdoExtension->DeviceObject,
+                            (PCHAR) modeData,
+                            MODE_DATA_SIZE,
+                            MODE_PAGE_CACHING);
+
+    if (length < sizeof(MODE_PARAMETER_HEADER)) {
+
+        //
+        // Retry the request in case of a check condition.
+        //
+
+        length = ClassModeSense(FdoExtension->DeviceObject,
+                                (PCHAR) modeData,
+                                MODE_DATA_SIZE,
+                                MODE_PAGE_CACHING);
+
+        if (length < sizeof(MODE_PARAMETER_HEADER)) {
+
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskGetCacheInformation: Mode Sense failed\n"));
+
+            FREE_POOL(modeData);
+            return STATUS_IO_DEVICE_ERROR;
+        }
+    }
+
+    //
+    // If the length is greater than length indicated by the mode data reset
+    // the data to the mode data.
+    //
+
+    if (length > (ULONG) (modeData->ModeDataLength + 1)) {
+        length = modeData->ModeDataLength + 1;
+    }
+
+    //
+    // Check to see if the write cache is enabled.
+    //
+
+    pageData = ClassFindModePage((PCHAR) modeData,
+                                 length,
+                                 MODE_PAGE_CACHING,
+                                 TRUE);
+
+    //
+    // Check if valid caching page exists.
+    //
+
+    if (pageData == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskGetCacheInformation: Unable to find caching mode page.\n"));
+        FREE_POOL(modeData);
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    //
+    // Copy the parameters over.
+    //
+
+    RtlZeroMemory(CacheInfo, sizeof(DISK_CACHE_INFORMATION));
+
+    CacheInfo->ParametersSavable = pageData->PageSavable;
+
+    CacheInfo->ReadCacheEnabled = !(pageData->ReadDisableCache);
+    CacheInfo->WriteCacheEnabled = pageData->WriteCacheEnable;
+
+
+    //
+    // Translate the values in the mode page into the ones defined in
+    // ntdddisk.h.
+    //
+
+    CacheInfo->ReadRetentionPriority =
+        TRANSLATE_RETENTION_PRIORITY(pageData->ReadRetensionPriority);
+    CacheInfo->WriteRetentionPriority =
+        TRANSLATE_RETENTION_PRIORITY(pageData->WriteRetensionPriority);
+
+    CacheInfo->DisablePrefetchTransferLength =
+        ((pageData->DisablePrefetchTransfer[0] << 8) +
+         pageData->DisablePrefetchTransfer[1]);
+
+    CacheInfo->ScalarPrefetch.Minimum =
+        ((pageData->MinimumPrefetch[0] << 8) + pageData->MinimumPrefetch[1]);
+
+    CacheInfo->ScalarPrefetch.Maximum =
+        ((pageData->MaximumPrefetch[0] << 8) + pageData->MaximumPrefetch[1]);
+
+    if(pageData->MultiplicationFactor) {
+        CacheInfo->PrefetchScalar = TRUE;
+        CacheInfo->ScalarPrefetch.MaximumBlocks =
+            ((pageData->MaximumPrefetchCeiling[0] << 8) +
+             pageData->MaximumPrefetchCeiling[1]);
+    }
+
+
+    FREE_POOL(modeData);
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+DiskSetCacheInformation(
+    IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+    IN PDISK_CACHE_INFORMATION CacheInfo
+    )
+/*++
+
+Routine Description:
+
+    This function sets the caching mode page in the drive. This function
+    is also called from the DisableWriteCache() worker thread to disable
+    caching when write commands fail.
+
+Arguments:
+
+    FdoExtension - The device extension for this device.
+
+    CacheInfo - Buffer the contains the Cache Information to be set on the drive.
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+{
+    PMODE_PARAMETER_HEADER modeData;
+    ULONG length;
+    PMODE_CACHING_PAGE pageData;
+    ULONG i;
+    NTSTATUS status = STATUS_SUCCESS;
+
+    PAGED_CODE();
+
+    modeData = ExAllocatePoolWithTag(NonPagedPoolNxCacheAligned,
+                                     MODE_DATA_SIZE,
+                                     DISK_TAG_DISABLE_CACHE);
+
+    if (modeData == NULL) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskSetCacheInformation: Unable to allocate mode "
+                       "data buffer\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(modeData, MODE_DATA_SIZE);
+
+    length = ClassModeSense(FdoExtension->DeviceObject,
+                            (PCHAR) modeData,
+                            MODE_DATA_SIZE,
+                            MODE_PAGE_CACHING);
+
+    if (length < sizeof(MODE_PARAMETER_HEADER)) {
+
+        //
+        // Retry the request in case of a check condition.
+        //
+
+        length = ClassModeSense(FdoExtension->DeviceObject,
+                                (PCHAR) modeData,
+                                MODE_DATA_SIZE,
+                                MODE_PAGE_CACHING);
+
+        if (length < sizeof(MODE_PARAMETER_HEADER)) {
+
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskSetCacheInformation: Mode Sense failed\n"));
+
+            FREE_POOL(modeData);
+            return STATUS_IO_DEVICE_ERROR;
+        }
+    }
+
+    //
+    // If the length is greater than length indicated by the mode data reset
+    // the data to the mode data.
+    //
+
+    if (length > (ULONG) (modeData->ModeDataLength + 1)) {
+        length = modeData->ModeDataLength + 1;
+    }
+
+    //
+    // Check to see if the write cache is enabled.
+    //
+
+    pageData = ClassFindModePage((PCHAR) modeData,
+                                 length,
+                                 MODE_PAGE_CACHING,
+                                 TRUE);
+
+    //
+    // Check if valid caching page exists.
+    //
+
+    if (pageData == NULL) {
+        FREE_POOL(modeData);
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    //
+    // Don't touch any of the normal parameters - not all drives actually
+    // use the correct size of caching mode page.  Just change the things
+    // which the user could have modified.
+    //
+
+    pageData->PageSavable = FALSE;
+
+    pageData->ReadDisableCache = !(CacheInfo->ReadCacheEnabled);
+    pageData->MultiplicationFactor = CacheInfo->PrefetchScalar;
+    pageData->WriteCacheEnable = CacheInfo->WriteCacheEnabled;
+
+    pageData->WriteRetensionPriority = (UCHAR)
+        TRANSLATE_RETENTION_PRIORITY(CacheInfo->WriteRetentionPriority);
+    pageData->ReadRetensionPriority = (UCHAR)
+        TRANSLATE_RETENTION_PRIORITY(CacheInfo->ReadRetentionPriority);
+
+    pageData->DisablePrefetchTransfer[0] =
+        (UCHAR) (CacheInfo->DisablePrefetchTransferLength >> 8);
+    pageData->DisablePrefetchTransfer[1] =
+        (UCHAR) (CacheInfo->DisablePrefetchTransferLength & 0x00ff);
+
+    pageData->MinimumPrefetch[0] =
+        (UCHAR) (CacheInfo->ScalarPrefetch.Minimum >> 8);
+    pageData->MinimumPrefetch[1] =
+        (UCHAR) (CacheInfo->ScalarPrefetch.Minimum & 0x00ff);
+
+    pageData->MaximumPrefetch[0] =
+        (UCHAR) (CacheInfo->ScalarPrefetch.Maximum >> 8);
+    pageData->MaximumPrefetch[1] =
+        (UCHAR) (CacheInfo->ScalarPrefetch.Maximum & 0x00ff);
+
+    if(pageData->MultiplicationFactor) {
+
+        pageData->MaximumPrefetchCeiling[0] =
+            (UCHAR) (CacheInfo->ScalarPrefetch.MaximumBlocks >> 8);
+        pageData->MaximumPrefetchCeiling[1] =
+            (UCHAR) (CacheInfo->ScalarPrefetch.MaximumBlocks & 0x00ff);
+    }
+
+    //
+    // We will attempt (twice) to issue the mode select with the page.
+    //
+
+    for (i = 0; i < 2; i++) {
+
+        status = DiskModeSelect(FdoExtension->DeviceObject,
+                                (PCHAR) pageData,
+                                (pageData->PageLength + 2),
+                                CacheInfo->ParametersSavable);
+
+        if (NT_SUCCESS(status)) {
+
+            if (CacheInfo->WriteCacheEnabled)
+            {
+                SET_FLAG(FdoExtension->DeviceFlags, DEV_WRITE_CACHE);
+            }
+            else
+            {
+                CLEAR_FLAG(FdoExtension->DeviceFlags, DEV_WRITE_CACHE);
+            }
+            ADJUST_FUA_FLAG(FdoExtension);
+
+            break;
+        }
+    }
+
+    if (NT_SUCCESS(status))
+    {
+    } else {
+
+        //
+        // We were unable to modify the disk write cache setting
+        //
+
+        SET_FLAG(FdoExtension->ScanForSpecialFlags, CLASS_SPECIAL_MODIFY_CACHE_UNSUCCESSFUL);
+    }
+
+    FREE_POOL(modeData);
+    return status;
+}
+
+NTSTATUS
+DiskIoctlGetCacheSetting(
+    IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
+    )
+
+/*++
+
+Routine description:
+
+    This routine services IOCTL_DISK_GET_CACHE_SETTING. It looks to
+    see if there are any issues with the disk cache and whether the
+    user had previously indicated that the cache is power-protected
+
+Arguments:
+
+    Fdo - The functional device object processing the request
+    Irp - The ioctl to be processed
+
+Return Value:
+
+    STATUS_SUCCESS if successful, an error code otherwise
+
+--*/
+
+{
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION irpSp = IoGetCurrentIrpStackLocation(Irp);
+    NTSTATUS status = STATUS_SUCCESS;
+
+    PAGED_CODE();
+
+    if (irpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_CACHE_SETTING))
+    {
+        status = STATUS_BUFFER_TOO_SMALL;
+    }
+    else
+    {
+        PDISK_CACHE_SETTING cacheSetting = (PDISK_CACHE_SETTING)Irp->AssociatedIrp.SystemBuffer;
+
+        cacheSetting->Version = sizeof(DISK_CACHE_SETTING);
+        cacheSetting->State   = DiskCacheNormal;
+
+        //
+        // Determine whether it is safe to turn on the cache
+        //
+        if (TEST_FLAG(fdoExtension->ScanForSpecialFlags, CLASS_SPECIAL_FUA_NOT_SUPPORTED))
+        {
+            cacheSetting->State = DiskCacheWriteThroughNotSupported;
+        }
+
+        //
+        // Determine whether it is possible to modify the cache setting
+        //
+        if (TEST_FLAG(fdoExtension->ScanForSpecialFlags, CLASS_SPECIAL_MODIFY_CACHE_UNSUCCESSFUL))
+        {
+            cacheSetting->State = DiskCacheModifyUnsuccessful;
+        }
+
+        cacheSetting->IsPowerProtected = TEST_FLAG(fdoExtension->DeviceFlags, DEV_POWER_PROTECTED);
+
+        Irp->IoStatus.Information = sizeof(DISK_CACHE_SETTING);
+    }
+
+    return status;
+}
+
+
+NTSTATUS
+DiskIoctlSetCacheSetting(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+    )
+
+/*++
+
+Routine description:
+
+    This routine services IOCTL_DISK_SET_CACHE_SETTING. It allows
+    the user to specify whether the disk cache is power-protected
+    or not
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    Fdo - The functional device object processing the request
+    Irp - The ioctl to be processed
+
+Return Value:
+
+    STATUS_SUCCESS if successful, an error code otherwise
+
+--*/
+
+{
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION irpSp = IoGetCurrentIrpStackLocation(Irp);
+    NTSTATUS status = STATUS_SUCCESS;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    if (irpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(DISK_CACHE_SETTING))
+    {
+        status = STATUS_INFO_LENGTH_MISMATCH;
+    }
+    else
+    {
+        PDISK_CACHE_SETTING cacheSetting = (PDISK_CACHE_SETTING)Irp->AssociatedIrp.SystemBuffer;
+
+        if (cacheSetting->Version == sizeof(DISK_CACHE_SETTING))
+        {
+            ULONG isPowerProtected;
+
+            //
+            // Save away the user-defined override in our extension and the registry
+            //
+            if (cacheSetting->IsPowerProtected)
+            {
+                SET_FLAG(fdoExtension->DeviceFlags, DEV_POWER_PROTECTED);
+                isPowerProtected = 1;
+            }
+            else
+            {
+                CLEAR_FLAG(fdoExtension->DeviceFlags, DEV_POWER_PROTECTED);
+                isPowerProtected = 0;
+            }
+            ADJUST_FUA_FLAG(fdoExtension);
+
+            ClassSetDeviceParameter(fdoExtension, DiskDeviceParameterSubkey, DiskDeviceCacheIsPowerProtected, isPowerProtected);
+        }
+        else
+        {
+            status = STATUS_INVALID_PARAMETER;
+        }
+    }
+
+    return status;
+}
+
+NTSTATUS
+DiskIoctlGetLengthInfo(
+    IN OUT PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
     )
 
 /*++
 
 Routine Description:
 
-    This routine creates, deletes and changes device objects when
-    the IOCTL_SET_DRIVE_LAYOUT is called.  This routine also updates
-    the drive layout information for the user.  It is possible to
-    call this routine even in the GET_LAYOUT case because RewritePartition
-    will be false.
+    This routine services IOCTL_DISK_GET_LENGTH_INFO. It returns
+    the disk geometry to the caller.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
 
 Arguments:
 
-    DeviceObject - Device object for physical disk.
-    Irp - IO Request Packet (IRP).
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    NTSTATUS status;
+    PIO_STACK_LOCATION irpStack;
+    PGET_LENGTH_INFORMATION lengthInfo;
+    PFUNCTIONAL_DEVICE_EXTENSION p0Extension;
+    PCOMMON_DEVICE_EXTENSION commonExtension;
+    PDISK_DATA partitionZeroData;
+    NTSTATUS oldReadyStatus;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Initialization
+    //
+
+    commonExtension = DeviceObject->DeviceExtension;
+    irpStack = IoGetCurrentIrpStackLocation(Irp);
+    p0Extension = commonExtension->PartitionZeroExtension;
+    partitionZeroData = ((PDISK_DATA) p0Extension->CommonExtension.DriverData);
+
+    //
+    // Check that the buffer is large enough.
+    //
+
+    if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GET_LENGTH_INFORMATION)) {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    //
+    // Update the geometry in case it has changed
+    //
+
+    status = DiskReadDriveCapacity(p0Extension->DeviceObject);
+
+    //
+    // Note whether the drive is ready.  If the status has changed then
+    // notify pnp.
+    //
+
+    oldReadyStatus = InterlockedExchange(&(partitionZeroData->ReadyStatus), status);
+
+    if(partitionZeroData->ReadyStatus != oldReadyStatus) {
+        IoInvalidateDeviceRelations(p0Extension->LowerPdo, BusRelations);
+    }
+
+    if(!NT_SUCCESS(status)) {
+        return status;
+    }
+    lengthInfo = (PGET_LENGTH_INFORMATION) Irp->AssociatedIrp.SystemBuffer;
+
+    lengthInfo->Length = commonExtension->PartitionLength;
+
+    status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = sizeof(GET_LENGTH_INFORMATION);
+
+    return status;
+}
+
+NTSTATUS
+DiskIoctlGetDriveGeometry(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_GET_DRIVE_GEOMETRY. It returns
+    the disk geometry to the caller.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - IRP with a return buffer large enough to receive the
+            extended geometry information.
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    NTSTATUS status;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY)) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlGetDriveGeometry: Output buffer too small.\n"));
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    if (TEST_FLAG(DeviceObject->Characteristics, FILE_REMOVABLE_MEDIA)) {
+
+        //
+        // Issue ReadCapacity to update device extension
+        // with information for current media.
+        //
+
+        status = DiskReadDriveCapacity(commonExtension->PartitionZeroExtension->DeviceObject);
+
+        //
+        // Note whether the drive is ready.
+        //
+
+        diskData->ReadyStatus = status;
+
+        if (!NT_SUCCESS(status)) {
+            return status;
+        }
+    }
+
+    //
+    // Copy drive geometry information from device extension.
+    //
+
+    RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
+                  &(fdoExtension->DiskGeometry),
+                  sizeof(DISK_GEOMETRY));
+
+    if (((PDISK_GEOMETRY)Irp->AssociatedIrp.SystemBuffer)->BytesPerSector == 0) {
+        ((PDISK_GEOMETRY)Irp->AssociatedIrp.SystemBuffer)->BytesPerSector = 512;
+    }
+    Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
+    return STATUS_SUCCESS;
+}
+
+typedef struct _DISK_GEOMETRY_EX_INTERNAL {
+    DISK_GEOMETRY Geometry;
+    LARGE_INTEGER DiskSize;
+    DISK_PARTITION_INFO Partition;
+    DISK_DETECTION_INFO Detection;
+} DISK_GEOMETRY_EX_INTERNAL, *PDISK_GEOMETRY_EX_INTERNAL;
+
+NTSTATUS
+DiskIoctlGetDriveGeometryEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_GET_DRIVE_GEOMETRY_EX. It returns
+    the extended disk geometry to the caller.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - The device object to obtain the geometry for.
+
+    Irp - IRP with a return buffer large enough to receive the
+            extended geometry information.
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    NTSTATUS status;
+    PIO_STACK_LOCATION irpStack;
+    PCOMMON_DEVICE_EXTENSION commonExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
+    PDISK_DATA diskData;
+    PDISK_GEOMETRY_EX_INTERNAL geometryEx;
+    ULONG OutputBufferLength;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Setup parameters
+    //
+
+    commonExtension = DeviceObject->DeviceExtension;
+    fdoExtension = DeviceObject->DeviceExtension;
+    diskData = (PDISK_DATA)(commonExtension->DriverData);
+    irpStack = IoGetCurrentIrpStackLocation ( Irp );
+    geometryEx = NULL;
+    OutputBufferLength = irpStack->Parameters.DeviceIoControl.OutputBufferLength;
+
+    //
+    // Check that the buffer is large enough. It must be large enough
+    // to hold at lest the Geometry and DiskSize fields of of the
+    // DISK_GEOMETRY_EX structure.
+    //
+
+    if ( (LONG)OutputBufferLength < FIELD_OFFSET (DISK_GEOMETRY_EX, Data) ) {
+
+        //
+        // Buffer too small. Bail out, telling the caller the required
+        // size.
+        //
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlGetDriveGeometryEx: Output buffer too small.\n"));
+        status = STATUS_BUFFER_TOO_SMALL;
+        return status;
+    }
+
+    if (TEST_FLAG (DeviceObject->Characteristics, FILE_REMOVABLE_MEDIA)) {
+
+        //
+        // Issue a ReadCapacity to update device extension
+        // with information for the current media.
+        //
+
+        status = DiskReadDriveCapacity(commonExtension->PartitionZeroExtension->DeviceObject);
+
+        diskData->ReadyStatus = status;
+
+        if (!NT_SUCCESS (status)) {
+            return status;
+        }
+    }
+
+    //
+    // Copy drive geometry.
+    //
+
+    geometryEx = (PDISK_GEOMETRY_EX_INTERNAL)Irp->AssociatedIrp.SystemBuffer;
+    geometryEx->Geometry = fdoExtension->DiskGeometry;
+    if (geometryEx->Geometry.BytesPerSector == 0) {
+        geometryEx->Geometry.BytesPerSector = 512;
+    }
+    geometryEx->DiskSize = commonExtension->PartitionZeroExtension->CommonExtension.PartitionLength;
+
+    //
+    // If the user buffer is large enough to hold the partition information
+    // then add that as well.
+    //
+
+    if ((LONG)OutputBufferLength >=  FIELD_OFFSET (DISK_GEOMETRY_EX_INTERNAL, Detection)) {
+
+        geometryEx->Partition.SizeOfPartitionInfo = sizeof (geometryEx->Partition);
+        geometryEx->Partition.PartitionStyle = diskData->PartitionStyle;
+
+        switch ( diskData->PartitionStyle ) {
+
+            case PARTITION_STYLE_GPT:
+
+                //
+                // Copy GPT signature.
+                //
+
+                geometryEx->Partition.Gpt.DiskId = diskData->Efi.DiskId;
+                break;
+
+            case PARTITION_STYLE_MBR:
+
+                //
+                // Copy MBR signature and checksum.
+                //
+
+                geometryEx->Partition.Mbr.Signature = diskData->Mbr.Signature;
+                geometryEx->Partition.Mbr.CheckSum = diskData->Mbr.MbrCheckSum;
+                break;
+
+            default:
+
+                //
+                // This is a raw disk. Zero out the signature area so
+                // nobody gets confused.
+                //
+
+                RtlZeroMemory(&geometryEx->Partition, sizeof (geometryEx->Partition));
+        }
+    }
+
+    //
+    // If the buffer is large enough to hold the detection information,
+    // then also add that.
+    //
+
+    if (OutputBufferLength >= sizeof (DISK_GEOMETRY_EX_INTERNAL)) {
+
+        geometryEx->Detection.SizeOfDetectInfo = sizeof (geometryEx->Detection);
+
+        status = DiskGetDetectInfo(fdoExtension, &geometryEx->Detection);
+
+        //
+        // Failed to obtain detection information, set to none.
+        //
+
+        if (!NT_SUCCESS (status)) {
+            geometryEx->Detection.DetectionType = DetectNone;
+        }
+    }
+
+    status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = min (OutputBufferLength, sizeof (DISK_GEOMETRY_EX_INTERNAL));
+
+    return status;
+}
+
+NTSTATUS
+DiskIoctlGetCacheInformation(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_GET_CACHE_INFORMATION. It reads
+    the caching mode page from the device and returns information to
+    the caller. After validating the user parameter it calls the
+    DiskGetCacheInformation() function to get the mode page.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    PDISK_CACHE_INFORMATION cacheInfo = Irp->AssociatedIrp.SystemBuffer;
+    NTSTATUS status;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlGetCacheInformation: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_CACHE_INFORMATION)) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlGetCacheInformation: Output buffer too small.\n"));
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    status = DiskGetCacheInformation(fdoExtension, cacheInfo);
+
+    if (NT_SUCCESS(status)) {
+        Irp->IoStatus.Information = sizeof(DISK_CACHE_INFORMATION);
+
+        //
+        // Make sure write cache setting is reflected in device extension
+        //
+        if (cacheInfo->WriteCacheEnabled)
+        {
+            SET_FLAG(fdoExtension->DeviceFlags, DEV_WRITE_CACHE);
+        }
+        else
+        {
+            CLEAR_FLAG(fdoExtension->DeviceFlags, DEV_WRITE_CACHE);
+        }
+        ADJUST_FUA_FLAG(fdoExtension);
+
+    }
+    return status;
+}
+
+
+NTSTATUS
+DiskIoctlSetCacheInformation(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_SET_CACHE_INFORMATION. It allows
+    the caller to set the caching mode page on the device. This function
+    validates the user parameter and calls the DiskSetCacheInformation()
+    function to set the mode page. It also stores the cache value in the
+    device extension and registry.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    PDISK_CACHE_INFORMATION cacheInfo = Irp->AssociatedIrp.SystemBuffer;
+    NTSTATUS status;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL is equal or above DISPATCH_LEVEL.
+    //
+
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlSetCacheInformation: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(DISK_CACHE_INFORMATION)) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSetCacheInformation: Input buffer length mismatch.\n"));
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    status = DiskSetCacheInformation(fdoExtension, cacheInfo);
+
+    //
+    // Save away the user-defined override in our extension and the registry
+    //
+    if (cacheInfo->WriteCacheEnabled) {
+        diskData->WriteCacheOverride = DiskWriteCacheEnable;
+    } else {
+        diskData->WriteCacheOverride = DiskWriteCacheDisable;
+    }
+
+    ClassSetDeviceParameter(fdoExtension, DiskDeviceParameterSubkey,
+                            DiskDeviceUserWriteCacheSetting, diskData->WriteCacheOverride);
+
+    DiskLogCacheInformation(fdoExtension, cacheInfo, status);
+
+    return status;
+}
+
+NTSTATUS
+DiskIoctlGetMediaTypesEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_STORAGE_GET_MEDIA_TYPES_EX. It returns
+    the media type information to the caller. After validating the user
+    parameter it calls DiskDetermineMediaTypes() to get the media type.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    NTSTATUS status;
+
+    PMODE_PARAMETER_HEADER modeData;
+    PMODE_PARAMETER_BLOCK blockDescriptor;
+    PSCSI_REQUEST_BLOCK srb;
+    PCDB cdb;
+    ULONG modeLength;
+    ULONG retries = 4;
+    UCHAR densityCode = 0;
+    BOOLEAN writable = TRUE;
+    BOOLEAN mediaPresent = FALSE;
+    ULONG srbSize;
+    PSTORAGE_REQUEST_BLOCK srbEx = NULL;
+    PSTOR_ADDR_BTL8 storAddrBtl8 = NULL;
+    PSRBEX_DATA_SCSI_CDB16 srbExDataCdb16 = NULL;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlGetMediaTypesEx: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GET_MEDIA_TYPES)) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlGetMediaTypesEx: Output buffer too small.\n"));
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbSize = CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE;
+    } else {
+        srbSize = SCSI_REQUEST_BLOCK_SIZE;
+    }
+
+    srb = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                srbSize,
+                                DISK_TAG_SRB);
+
+    if (srb == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlGetMediaTypesEx: Unable to allocate memory.\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(srb, srbSize);
+
+    //
+    // Send a TUR to determine if media is present.
+    //
+
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbEx = (PSTORAGE_REQUEST_BLOCK)srb;
+
+        //
+        // Set up STORAGE_REQUEST_BLOCK fields
+        //
+
+        srbEx->Length = FIELD_OFFSET(STORAGE_REQUEST_BLOCK, Signature);
+        srbEx->Function = SRB_FUNCTION_STORAGE_REQUEST_BLOCK;
+        srbEx->Signature = SRB_SIGNATURE;
+        srbEx->Version = STORAGE_REQUEST_BLOCK_VERSION_1;
+        srbEx->SrbLength = srbSize;
+        srbEx->SrbFunction = SRB_FUNCTION_EXECUTE_SCSI;
+        srbEx->RequestPriority = IoGetIoPriorityHint(Irp);
+        srbEx->AddressOffset = sizeof(STORAGE_REQUEST_BLOCK);
+        srbEx->NumSrbExData = 1;
+
+        // Set timeout value.
+        srbEx->TimeOutValue = fdoExtension->TimeOutValue;
+
+        //
+        // Set up address fields
+        //
+
+        storAddrBtl8 = (PSTOR_ADDR_BTL8) ((PUCHAR)srbEx + srbEx->AddressOffset);
+        storAddrBtl8->Type = STOR_ADDRESS_TYPE_BTL8;
+        storAddrBtl8->AddressLength = STOR_ADDR_BTL8_ADDRESS_LENGTH;
+
+        //
+        // Set up SCSI SRB extended data fields
+        //
+
+        srbEx->SrbExDataOffset[0] = sizeof(STORAGE_REQUEST_BLOCK) +
+            sizeof(STOR_ADDR_BTL8);
+        if ((srbEx->SrbExDataOffset[0] + sizeof(SRBEX_DATA_SCSI_CDB16)) <= srbEx->SrbLength) {
+            srbExDataCdb16 = (PSRBEX_DATA_SCSI_CDB16)((PUCHAR)srbEx + srbEx->SrbExDataOffset[0]);
+            srbExDataCdb16->Type = SrbExDataTypeScsiCdb16;
+            srbExDataCdb16->Length = SRBEX_DATA_SCSI_CDB16_LENGTH;
+            srbExDataCdb16->CdbLength = 6;
+
+            cdb = (PCDB)srbExDataCdb16->Cdb;
+        } else {
+            // Should not happen
+            NT_ASSERT(FALSE);
+
+            FREE_POOL(srb);
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlGetMediaTypesEx: Insufficient extended SRB size.\n"));
+            return STATUS_INTERNAL_ERROR;
+        }
+
+    } else {
+
+        srb->Length = SCSI_REQUEST_BLOCK_SIZE;
+        srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+        srb->CdbLength = 6;
+        cdb = (PCDB)srb->Cdb;
+
+        //
+        // Set timeout value.
+        //
+
+        srb->TimeOutValue = fdoExtension->TimeOutValue;
+
+    }
+    cdb->CDB6GENERIC.OperationCode = SCSIOP_TEST_UNIT_READY;
+
+    status = ClassSendSrbSynchronous(DeviceObject,
+                                     srb,
+                                     NULL,
+                                     0,
+                                     FALSE);
+
+    if (NT_SUCCESS(status)) {
+        mediaPresent = TRUE;
+    }
+
+    modeLength = MODE_DATA_SIZE;
+    modeData = ExAllocatePoolWithTag(NonPagedPoolNxCacheAligned,
+                                     modeLength,
+                                     DISK_TAG_MODE_DATA);
+
+    if (modeData == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlGetMediaTypesEx: Unable to allocate memory.\n"));
+        FREE_POOL(srb);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(modeData, modeLength);
+
+    //
+    // Build the MODE SENSE CDB using previous SRB.
+    //
+
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbEx->SrbStatus = 0;
+        srbExDataCdb16->ScsiStatus = 0;
+        srbExDataCdb16->CdbLength = 6;
+
+        //
+        // Set timeout value from device extension.
+        //
+
+        srbEx->TimeOutValue = fdoExtension->TimeOutValue;
+    } else {
+        srb->SrbStatus = 0;
+        srb->ScsiStatus = 0;
+        srb->CdbLength = 6;
+
+        //
+        // Set timeout value from device extension.
+        //
+
+        srb->TimeOutValue = fdoExtension->TimeOutValue;
+    }
+
+    //
+    // Page code of 0x3F will return all pages.
+    // This command could fail if the data to be returned is
+    // more than 256 bytes. In which case, we should get only
+    // the caching page since we only need the block descriptor.
+    // DiskFdoProcessError will change the page code to
+    // MODE_PAGE_CACHING if there is an error.
+    //
+
+    cdb->MODE_SENSE.OperationCode    = SCSIOP_MODE_SENSE;
+    cdb->MODE_SENSE.PageCode         = MODE_SENSE_RETURN_ALL;
+    cdb->MODE_SENSE.AllocationLength = (UCHAR)modeLength;
+
+Retry:
+    status = ClassSendSrbSynchronous(DeviceObject,
+                                     srb,
+                                     modeData,
+                                     modeLength,
+                                     FALSE);
+
+    if (status == STATUS_VERIFY_REQUIRED) {
+
+        if (retries--) {
+
+            //
+            // Retry request.
+            //
+
+            goto Retry;
+        }
+    } else if (SRB_STATUS(srb->SrbStatus) == SRB_STATUS_DATA_OVERRUN) {
+        status = STATUS_SUCCESS;
+    }
+
+    if (NT_SUCCESS(status) || (status == STATUS_NO_MEDIA_IN_DEVICE)) {
+
+        //
+        // Get the block descriptor.
+        //
+
+        if (modeData->BlockDescriptorLength != 0) {
+
+            blockDescriptor = (PMODE_PARAMETER_BLOCK)((ULONG_PTR)modeData + sizeof(MODE_PARAMETER_HEADER));
+            densityCode = blockDescriptor->DensityCode;
+        }
+
+        if (TEST_FLAG(modeData->DeviceSpecificParameter,
+                      MODE_DSP_WRITE_PROTECT)) {
+
+            writable = FALSE;
+        }
+
+        status = DiskDetermineMediaTypes(DeviceObject,
+                                         Irp,
+                                         modeData->MediumType,
+                                         densityCode,
+                                         mediaPresent,
+                                         writable);
+        //
+        // If the buffer was too small, DetermineMediaTypes updated the status and information and the request will fail.
+        //
+
+    } else {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlGetMediaTypesEx: Mode sense for header/bd failed. %lx\n", status));
+    }
+
+    FREE_POOL(srb);
+    FREE_POOL(modeData);
+
+    return status;
+}
+
+NTSTATUS
+DiskIoctlPredictFailure(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_STORAGE_PREDICT_FAILURE. If the device
+    supports SMART then it returns any available failure data.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    NTSTATUS status = STATUS_SUCCESS;
+
+    PSTORAGE_PREDICT_FAILURE checkFailure;
+    STORAGE_FAILURE_PREDICT_STATUS diskSmartStatus;
+    IO_STATUS_BLOCK ioStatus = { 0 };
+    KEVENT event;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlPredictFailure: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(STORAGE_PREDICT_FAILURE)) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlPredictFailure: Output buffer too small.\n"));
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    //
+    // See if the disk is predicting failure
+    //
+
+    checkFailure = (PSTORAGE_PREDICT_FAILURE)Irp->AssociatedIrp.SystemBuffer;
+
+    if (diskData->FailurePredictionCapability == FailurePredictionSense) {
+        ULONG readBufferSize;
+        PUCHAR readBuffer;
+        PIRP readIrp;
+        PDEVICE_OBJECT topOfStack;
+
+        checkFailure->PredictFailure = 0;
+
+        KeInitializeEvent(&event, SynchronizationEvent, FALSE);
+
+        topOfStack = IoGetAttachedDeviceReference(DeviceObject);
+
+        //
+        // SCSI disks need to have a read sent down to provoke any
+        // failures to be reported.
+        //
+        // Issue a normal read operation.  The error-handling code in
+        // classpnp will take care of a failure prediction by logging the
+        // correct event.
+        //
+
+        readBufferSize = fdoExtension->DiskGeometry.BytesPerSector;
+        readBuffer = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                           readBufferSize,
+                                           DISK_TAG_SMART);
+
+        if (readBuffer != NULL) {
+            LARGE_INTEGER offset;
+
+            offset.QuadPart = 0;
+            readIrp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+                                                   topOfStack,
+                                                   readBuffer,
+                                                   readBufferSize,
+                                                   &offset,
+                                                   &event,
+                                                   &ioStatus);
+
+            if (readIrp != NULL) {
+
+                status = IoCallDriver(topOfStack, readIrp);
+                if (status == STATUS_PENDING) {
+                    KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
+                    status = ioStatus.Status;
+                }
+
+
+            } else {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            FREE_POOL(readBuffer);
+        } else {
+            status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        ObDereferenceObject(topOfStack);
+    }
+
+    if (status != STATUS_INSUFFICIENT_RESOURCES)
+    {
+        if ((diskData->FailurePredictionCapability == FailurePredictionSmart) ||
+            (diskData->FailurePredictionCapability == FailurePredictionSense)) {
+
+            status = DiskReadFailurePredictStatus(fdoExtension, &diskSmartStatus);
+
+            if (NT_SUCCESS(status)) {
+
+                status = DiskReadFailurePredictData(fdoExtension,
+                                                    Irp->AssociatedIrp.SystemBuffer);
+
+                if (diskSmartStatus.PredictFailure) {
+                    checkFailure->PredictFailure = 1;
+                } else {
+                    checkFailure->PredictFailure = 0;
+                }
+
+                Irp->IoStatus.Information = sizeof(STORAGE_PREDICT_FAILURE);
+            }
+        } else {
+            status = STATUS_INVALID_DEVICE_REQUEST;
+        }
+    }
+    return status;
+}
+
+#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+NTSTATUS
+DiskIoctlEnableFailurePrediction(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_STORAGE_FAILURE_PREDICTION_CONFIG. If the device
+    supports SMART then it returns any available failure data.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    NTSTATUS status = STATUS_SUCCESS;
+    PSTORAGE_FAILURE_PREDICTION_CONFIG enablePrediction;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlEnableFailurePrediction: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(STORAGE_FAILURE_PREDICTION_CONFIG) ||
+        irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(STORAGE_FAILURE_PREDICTION_CONFIG)) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlEnableFailurePrediction: Buffer too small.\n"));
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    enablePrediction = (PSTORAGE_FAILURE_PREDICTION_CONFIG)Irp->AssociatedIrp.SystemBuffer;
+
+    if (enablePrediction->Version != STORAGE_FAILURE_PREDICTION_CONFIG_V1 ||
+        enablePrediction->Size < sizeof(STORAGE_FAILURE_PREDICTION_CONFIG)) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlEnableFailurePrediction: Buffer version or size is incorrect.\n"));
+        status = STATUS_INVALID_PARAMETER;
+    }
+
+    if (enablePrediction->Reserved != 0) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlEnableFailurePrediction: Reserved bytes are not zero!\n"));
+        status = STATUS_INVALID_PARAMETER;
+    }
+
+    //
+    // Default to success.  This might get overwritten on failure below.
+    //
+    status = STATUS_SUCCESS;
+
+    //
+    // If this is a "set" and the current state (enabled/disabled) is
+    // different from the sender's desired state,
+    //
+    if (enablePrediction->Set && enablePrediction->Enabled != diskData->FailurePredictionEnabled) {
+        if (diskData->FailurePredictionCapability == FailurePredictionSmart ||
+            diskData->FailurePredictionCapability == FailurePredictionIoctl) {
+            //
+            // SMART or IOCTL based failure prediction is being used so call
+            // the generic function that is normally called in the WMI path.
+            //
+            status = DiskEnableDisableFailurePrediction(fdoExtension, enablePrediction->Enabled);
+        } else if (diskData->ScsiInfoExceptionsSupported) {
+            //
+            // If we know that the device supports the Informational Exceptions
+            // mode page, try to enable/disable failure prediction that way.
+            //
+            status = DiskEnableInfoExceptions(fdoExtension, enablePrediction->Enabled);
+        }
+    }
+
+    //
+    // Return the current state regardless if this was a "set" or a "get".
+    //
+    enablePrediction->Enabled = diskData->FailurePredictionEnabled;
+
+    if (NT_SUCCESS(status)) {
+        Irp->IoStatus.Information = sizeof(STORAGE_FAILURE_PREDICTION_CONFIG);
+    }
+
+    return status;
+}
+#endif //(NTDDI_VERSION >= NTDDI_WINBLUE)
+
+NTSTATUS
+DiskIoctlVerify(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_VERIFY. After verifying
+    user input, it starts the worker thread DiskIoctlVerifyThread()
+    to verify the device.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    PVERIFY_INFORMATION verifyInfo = Irp->AssociatedIrp.SystemBuffer;
+    PDISK_VERIFY_WORKITEM_CONTEXT Context = NULL;
+    PSCSI_REQUEST_BLOCK srb;
+    LARGE_INTEGER byteOffset;
+    ULONG srbSize;
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlVerify: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(VERIFY_INFORMATION)) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlVerify: Input buffer length mismatch.\n"));
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbSize = CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE;
+    } else {
+        srbSize = SCSI_REQUEST_BLOCK_SIZE;
+    }
+    srb = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                srbSize,
+                                DISK_TAG_SRB);
+
+    if (srb == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlVerify: Unable to allocate memory.\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(srb, srbSize);
+
+    //
+    // Add disk offset to starting sector.
+    //
+
+    byteOffset.QuadPart = commonExtension->StartingOffset.QuadPart +
+                          verifyInfo->StartingOffset.QuadPart;
+
+    //
+    // Perform a bounds check on the sector range
+    //
+
+    if ((verifyInfo->StartingOffset.QuadPart > commonExtension->PartitionLength.QuadPart) ||
+        (verifyInfo->StartingOffset.QuadPart < 0)) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlVerify: Verify request to invalid sector.\n"));
+        FREE_POOL(srb)
+        return STATUS_NONEXISTENT_SECTOR;
+    } else {
+
+        ULONGLONG bytesRemaining = commonExtension->PartitionLength.QuadPart - verifyInfo->StartingOffset.QuadPart;
+
+        if ((ULONGLONG)verifyInfo->Length > bytesRemaining) {
+
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlVerify: Verify request to invalid sector.\n"));
+            FREE_POOL(srb)
+            return STATUS_NONEXISTENT_SECTOR;
+        }
+    }
+
+    Context = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                    sizeof(DISK_VERIFY_WORKITEM_CONTEXT),
+                                    DISK_TAG_WI_CONTEXT);
+    if (Context) {
+
+        Context->Irp = Irp;
+        Context->Srb = srb;
+        Context->WorkItem = IoAllocateWorkItem(DeviceObject);
+
+        if (Context->WorkItem) {
+
+            //
+            // Queue the work item and return.
+            //
+
+            IoMarkIrpPending(Irp);
+
+            IoQueueWorkItem(Context->WorkItem,
+                            DiskIoctlVerifyThread,
+                            DelayedWorkQueue,
+                            Context);
+
+            return STATUS_PENDING;
+        }
+        FREE_POOL(Context);
+    }
+    FREE_POOL(srb)
+    return STATUS_INSUFFICIENT_RESOURCES;
+}
+
+NTSTATUS
+DiskIoctlReassignBlocks(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_REASSIGN_BLOCKS. This IOCTL
+    allows the caller to remap the defective blocks to a new
+    location on the disk.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    NTSTATUS status;
+    PREASSIGN_BLOCKS badBlocks = Irp->AssociatedIrp.SystemBuffer;
+    PSCSI_REQUEST_BLOCK srb;
+    PCDB cdb;
+    ULONG bufferSize;
+    ULONG blockNumber;
+    ULONG blockCount;
+    ULONG srbSize;
+    PSTORAGE_REQUEST_BLOCK srbEx;
+    PSTOR_ADDR_BTL8 storAddrBtl8;
+    PSRBEX_DATA_SCSI_CDB16 srbExDataCdb16;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocks: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(REASSIGN_BLOCKS)) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocks: Input buffer length mismatch.\n"));
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    //
+    // Make sure we have some data in the input buffer.
+    //
+
+    if (badBlocks->Count == 0) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocks: Invalid block count\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    bufferSize = sizeof(REASSIGN_BLOCKS) + ((badBlocks->Count - 1) * sizeof(ULONG));
+
+    if (irpStack->Parameters.DeviceIoControl.InputBufferLength < bufferSize) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocks: Input buffer length mismatch for bad blocks.\n"));
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbSize = CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE;
+    } else {
+        srbSize = SCSI_REQUEST_BLOCK_SIZE;
+    }
+    srb = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                srbSize,
+                                DISK_TAG_SRB);
+
+    if (srb == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocks: Unable to allocate memory.\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(srb, srbSize);
+
+    //
+    // Build the data buffer to be transferred in the input buffer.
+    // The format of the data to the device is:
+    //
+    //      2 bytes Reserved
+    //      2 bytes Length
+    //      x * 4 btyes Block Address
+    //
+    // All values are big endian.
+    //
+
+    badBlocks->Reserved = 0;
+    blockCount = badBlocks->Count;
+
+    //
+    // Convert # of entries to # of bytes.
+    //
+
+    blockCount *= 4;
+    badBlocks->Count = (USHORT) ((blockCount >> 8) & 0XFF);
+    badBlocks->Count |= (USHORT) ((blockCount << 8) & 0XFF00);
+
+    //
+    // Convert back to number of entries.
+    //
+
+    blockCount /= 4;
+
+    for (; blockCount > 0; blockCount--) {
+
+        blockNumber = badBlocks->BlockNumber[blockCount-1];
+        REVERSE_BYTES((PFOUR_BYTE) &badBlocks->BlockNumber[blockCount-1], (PFOUR_BYTE) &blockNumber);
+    }
+
+    //
+    // Build a SCSI SRB containing a SCSIOP_REASSIGN_BLOCKS cdb
+    //
+
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbEx = (PSTORAGE_REQUEST_BLOCK)srb;
+
+        //
+        // Set up STORAGE_REQUEST_BLOCK fields
+        //
+
+        srbEx->Length = FIELD_OFFSET(STORAGE_REQUEST_BLOCK, Signature);
+        srbEx->Function = SRB_FUNCTION_STORAGE_REQUEST_BLOCK;
+        srbEx->Signature = SRB_SIGNATURE;
+        srbEx->Version = STORAGE_REQUEST_BLOCK_VERSION_1;
+        srbEx->SrbLength = srbSize;
+        srbEx->SrbFunction = SRB_FUNCTION_EXECUTE_SCSI;
+        srbEx->RequestPriority = IoGetIoPriorityHint(Irp);
+        srbEx->AddressOffset = sizeof(STORAGE_REQUEST_BLOCK);
+        srbEx->NumSrbExData = 1;
+
+        // Set timeout value.
+        srbEx->TimeOutValue = fdoExtension->TimeOutValue;
+
+        //
+        // Set up address fields
+        //
+
+        storAddrBtl8 = (PSTOR_ADDR_BTL8) ((PUCHAR)srbEx + srbEx->AddressOffset);
+        storAddrBtl8->Type = STOR_ADDRESS_TYPE_BTL8;
+        storAddrBtl8->AddressLength = STOR_ADDR_BTL8_ADDRESS_LENGTH;
+
+        //
+        // Set up SCSI SRB extended data fields
+        //
+
+        srbEx->SrbExDataOffset[0] = sizeof(STORAGE_REQUEST_BLOCK) +
+            sizeof(STOR_ADDR_BTL8);
+        if ((srbEx->SrbExDataOffset[0] + sizeof(SRBEX_DATA_SCSI_CDB16)) <= srbEx->SrbLength) {
+            srbExDataCdb16 = (PSRBEX_DATA_SCSI_CDB16)((PUCHAR)srbEx + srbEx->SrbExDataOffset[0]);
+            srbExDataCdb16->Type = SrbExDataTypeScsiCdb16;
+            srbExDataCdb16->Length = SRBEX_DATA_SCSI_CDB16_LENGTH;
+            srbExDataCdb16->CdbLength = 6;
+
+            cdb = (PCDB)srbExDataCdb16->Cdb;
+        } else {
+            // Should not happen
+            NT_ASSERT(FALSE);
+
+            FREE_POOL(srb);
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocks: Insufficient extended SRB size.\n"));
+            return STATUS_INTERNAL_ERROR;
+        }
+
+    } else {
+        srb->Length = SCSI_REQUEST_BLOCK_SIZE;
+        srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+        srb->CdbLength = 6;
+
+        //
+        // Set timeout value.
+        //
+
+        srb->TimeOutValue = fdoExtension->TimeOutValue;
+
+        cdb = (PCDB)srb->Cdb;
+    }
+
+    cdb->CDB6GENERIC.OperationCode = SCSIOP_REASSIGN_BLOCKS;
+
+    status = ClassSendSrbSynchronous(DeviceObject,
+                                     srb,
+                                     badBlocks,
+                                     bufferSize,
+                                     TRUE);
+
+    FREE_POOL(srb);
+    return status;
+}
+
+NTSTATUS
+DiskIoctlReassignBlocksEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_REASSIGN_BLOCKS_EX. This IOCTL
+    allows the caller to remap the defective blocks to a new
+    location on the disk. The input buffer contains 8-byte LBAs.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    NTSTATUS status;
+    PREASSIGN_BLOCKS_EX badBlocks = Irp->AssociatedIrp.SystemBuffer;
+    PSCSI_REQUEST_BLOCK srb;
+    PCDB cdb;
+    LARGE_INTEGER blockNumber;
+    ULONG bufferSize;
+    ULONG blockCount;
+    ULONG srbSize;
+    PSTORAGE_REQUEST_BLOCK srbEx;
+    PSTOR_ADDR_BTL8 storAddrBtl8;
+    PSRBEX_DATA_SCSI_CDB16 srbExDataCdb16;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocksEx: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(REASSIGN_BLOCKS_EX)) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocksEx: Input buffer length mismatch.\n"));
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    //
+    // Make sure we have some data in the input buffer.
+    //
+
+    if (badBlocks->Count == 0) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocksEx: Invalid block count\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    bufferSize = sizeof(REASSIGN_BLOCKS_EX) + ((badBlocks->Count - 1) * sizeof(LARGE_INTEGER));
+
+    if (irpStack->Parameters.DeviceIoControl.InputBufferLength < bufferSize) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocksEx: Input buffer length mismatch for bad blocks.\n"));
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbSize = CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE;
+    } else {
+        srbSize = SCSI_REQUEST_BLOCK_SIZE;
+    }
+    srb = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                srbSize,
+                                DISK_TAG_SRB);
+
+    if (srb == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocks: Unable to allocate memory.\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(srb, srbSize);
+
+    //
+    // Build the data buffer to be transferred in the input buffer.
+    // The format of the data to the device is:
+    //
+    //      2 bytes Reserved
+    //      2 bytes Length
+    //      x * 8 btyes Block Address
+    //
+    // All values are big endian.
+    //
+
+    badBlocks->Reserved = 0;
+    blockCount = badBlocks->Count;
+
+    //
+    // Convert # of entries to # of bytes.
+    //
+
+    blockCount *= 8;
+    badBlocks->Count = (USHORT) ((blockCount >> 8) & 0XFF);
+    badBlocks->Count |= (USHORT) ((blockCount << 8) & 0XFF00);
+
+    //
+    // Convert back to number of entries.
+    //
+
+    blockCount /= 8;
+
+    for (; blockCount > 0; blockCount--) {
+
+        blockNumber = badBlocks->BlockNumber[blockCount-1];
+        REVERSE_BYTES_QUAD(&badBlocks->BlockNumber[blockCount-1], &blockNumber);
+    }
+
+    //
+    // Build a SCSI SRB containing a SCSIOP_REASSIGN_BLOCKS cdb
+    //
+
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbEx = (PSTORAGE_REQUEST_BLOCK)srb;
+
+        //
+        // Set up STORAGE_REQUEST_BLOCK fields
+        //
+
+        srbEx->Length = FIELD_OFFSET(STORAGE_REQUEST_BLOCK, Signature);
+        srbEx->Function = SRB_FUNCTION_STORAGE_REQUEST_BLOCK;
+        srbEx->Signature = SRB_SIGNATURE;
+        srbEx->Version = STORAGE_REQUEST_BLOCK_VERSION_1;
+        srbEx->SrbLength = srbSize;
+        srbEx->SrbFunction = SRB_FUNCTION_EXECUTE_SCSI;
+        srbEx->RequestPriority = IoGetIoPriorityHint(Irp);
+        srbEx->AddressOffset = sizeof(STORAGE_REQUEST_BLOCK);
+        srbEx->NumSrbExData = 1;
+
+        // Set timeout value.
+        srbEx->TimeOutValue = fdoExtension->TimeOutValue;
+
+        //
+        // Set up address fields
+        //
+
+        storAddrBtl8 = (PSTOR_ADDR_BTL8) ((PUCHAR)srbEx + srbEx->AddressOffset);
+        storAddrBtl8->Type = STOR_ADDRESS_TYPE_BTL8;
+        storAddrBtl8->AddressLength = STOR_ADDR_BTL8_ADDRESS_LENGTH;
+
+        //
+        // Set up SCSI SRB extended data fields
+        //
+
+        srbEx->SrbExDataOffset[0] = sizeof(STORAGE_REQUEST_BLOCK) +
+            sizeof(STOR_ADDR_BTL8);
+        if ((srbEx->SrbExDataOffset[0] + sizeof(SRBEX_DATA_SCSI_CDB16)) <= srbEx->SrbLength) {
+            srbExDataCdb16 = (PSRBEX_DATA_SCSI_CDB16)((PUCHAR)srbEx + srbEx->SrbExDataOffset[0]);
+            srbExDataCdb16->Type = SrbExDataTypeScsiCdb16;
+            srbExDataCdb16->Length = SRBEX_DATA_SCSI_CDB16_LENGTH;
+            srbExDataCdb16->CdbLength = 6;
+
+            cdb = (PCDB)srbExDataCdb16->Cdb;
+        } else {
+            // Should not happen
+            NT_ASSERT(FALSE);
+
+            FREE_POOL(srb);
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlReassignBlocks: Insufficient extended SRB size.\n"));
+            return STATUS_INTERNAL_ERROR;
+        }
+
+    } else {
+        srb->Length = SCSI_REQUEST_BLOCK_SIZE;
+        srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+        srb->CdbLength = 6;
+
+        //
+        // Set timeout value.
+        //
+
+        srb->TimeOutValue = fdoExtension->TimeOutValue;
+
+        cdb = (PCDB)srb->Cdb;
+    }
+
+    cdb->CDB6GENERIC.OperationCode = SCSIOP_REASSIGN_BLOCKS;
+    cdb->CDB6GENERIC.CommandUniqueBits =  1; // LONGLBA
+
+    status = ClassSendSrbSynchronous(DeviceObject,
+                                     srb,
+                                     badBlocks,
+                                     bufferSize,
+                                     TRUE);
+
+    FREE_POOL(srb);
+    return status;
+}
+
+NTSTATUS
+DiskIoctlIsWritable(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_IS_WRITABLE. This function
+    returns whether the disk is writable. If the device is not
+    writable then STATUS_MEDIA_WRITE_PROTECTED will be returned.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    NTSTATUS status = STATUS_SUCCESS;
+
+    PMODE_PARAMETER_HEADER modeData;
+    PSCSI_REQUEST_BLOCK srb;
+    PCDB cdb = NULL;
+    ULONG modeLength;
+    ULONG retries = 4;
+    ULONG srbSize;
+    PSTORAGE_REQUEST_BLOCK srbEx;
+    PSTOR_ADDR_BTL8 storAddrBtl8;
+    PSRBEX_DATA_SCSI_CDB16 srbExDataCdb16;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlIsWritable: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbSize = CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE;
+    } else {
+        srbSize = SCSI_REQUEST_BLOCK_SIZE;
+    }
+    srb = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                srbSize,
+                                DISK_TAG_SRB);
+
+    if (srb == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlIsWritable: Unable to allocate memory.\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(srb, srbSize);
+
+    //
+    // Allocate memory for a mode header and then some
+    // for port drivers that need to convert to MODE10
+    // or always return the MODE_PARAMETER_BLOCK (even
+    // when memory was not allocated for this purpose)
+    //
+
+    modeLength = MODE_DATA_SIZE;
+    modeData = ExAllocatePoolWithTag(NonPagedPoolNxCacheAligned,
+                                     modeLength,
+                                     DISK_TAG_MODE_DATA);
+
+    if (modeData == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlIsWritable: Unable to allocate memory.\n"));
+        FREE_POOL(srb);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(modeData, modeLength);
+
+    //
+    // Build the MODE SENSE CDB
+    //
+
+    if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        srbEx = (PSTORAGE_REQUEST_BLOCK)srb;
+
+        //
+        // Set up STORAGE_REQUEST_BLOCK fields
+        //
+
+        srbEx->Length = FIELD_OFFSET(STORAGE_REQUEST_BLOCK, Signature);
+        srbEx->Function = SRB_FUNCTION_STORAGE_REQUEST_BLOCK;
+        srbEx->Signature = SRB_SIGNATURE;
+        srbEx->Version = STORAGE_REQUEST_BLOCK_VERSION_1;
+        srbEx->SrbLength = srbSize;
+        srbEx->SrbFunction = SRB_FUNCTION_EXECUTE_SCSI;
+        srbEx->RequestPriority = IoGetIoPriorityHint(Irp);
+        srbEx->AddressOffset = sizeof(STORAGE_REQUEST_BLOCK);
+        srbEx->NumSrbExData = 1;
+
+        // Set timeout value.
+        srbEx->TimeOutValue = fdoExtension->TimeOutValue;
+
+        //
+        // Set up address fields
+        //
+
+        storAddrBtl8 = (PSTOR_ADDR_BTL8) ((PUCHAR)srbEx + srbEx->AddressOffset);
+        storAddrBtl8->Type = STOR_ADDRESS_TYPE_BTL8;
+        storAddrBtl8->AddressLength = STOR_ADDR_BTL8_ADDRESS_LENGTH;
+
+        //
+        // Set up SCSI SRB extended data fields
+        //
+
+        srbEx->SrbExDataOffset[0] = sizeof(STORAGE_REQUEST_BLOCK) +
+            sizeof(STOR_ADDR_BTL8);
+        if ((srbEx->SrbExDataOffset[0] + sizeof(SRBEX_DATA_SCSI_CDB16)) <= srbEx->SrbLength) {
+            srbExDataCdb16 = (PSRBEX_DATA_SCSI_CDB16)((PUCHAR)srbEx + srbEx->SrbExDataOffset[0]);
+            srbExDataCdb16->Type = SrbExDataTypeScsiCdb16;
+            srbExDataCdb16->Length = SRBEX_DATA_SCSI_CDB16_LENGTH;
+            srbExDataCdb16->CdbLength = 6;
+
+            cdb = (PCDB)srbExDataCdb16->Cdb;
+        } else {
+            // Should not happen
+            NT_ASSERT(FALSE);
+
+            FREE_POOL(srb);
+            FREE_POOL(modeData);
+            return STATUS_INTERNAL_ERROR;
+        }
+
+    } else {
+        srb->Length = SCSI_REQUEST_BLOCK_SIZE;
+        srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+        srb->CdbLength = 6;
+
+        //
+        // Set timeout value.
+        //
+
+        srb->TimeOutValue = fdoExtension->TimeOutValue;
+
+        cdb = (PCDB)srb->Cdb;
+    }
+
+    //
+    // Page code of 0x3F will return all pages.
+    // This command could fail if the data to be returned is
+    // more than 256 bytes. In which case, we should get only
+    // the caching page since we only need the block descriptor.
+    // DiskFdoProcessError will change the page code to
+    // MODE_PAGE_CACHING if there is an error.
+    //
+
+    cdb->MODE_SENSE.OperationCode    = SCSIOP_MODE_SENSE;
+    cdb->MODE_SENSE.PageCode         = MODE_SENSE_RETURN_ALL;
+    cdb->MODE_SENSE.AllocationLength = (UCHAR)modeLength;
+
+    while (retries != 0) {
+
+        status = ClassSendSrbSynchronous(DeviceObject,
+                                         srb,
+                                         modeData,
+                                         modeLength,
+                                         FALSE);
+
+        if (status != STATUS_VERIFY_REQUIRED) {
+            if (SRB_STATUS(srb->SrbStatus) == SRB_STATUS_DATA_OVERRUN) {
+                status = STATUS_SUCCESS;
+            }
+            break;
+        }
+        retries--;
+    }
+
+    if (NT_SUCCESS(status)) {
+
+        if (TEST_FLAG(modeData->DeviceSpecificParameter, MODE_DSP_WRITE_PROTECT)) {
+            status = STATUS_MEDIA_WRITE_PROTECTED;
+        }
+    }
+
+    FREE_POOL(srb);
+    FREE_POOL(modeData);
+    return status;
+}
+
+NTSTATUS
+DiskIoctlSetVerify(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_INTERNAL_SET_VERIFY.
+    This is an internal function used to set the DO_VERIFY_VOLUME
+    device object flag. Only a kernel mode component can send this
+    IOCTL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    NTSTATUS status = STATUS_NOT_SUPPORTED;
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlSetVerify: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    //
+    // If the caller is kernel mode, set the verify bit.
+    //
+
+    if (Irp->RequestorMode == KernelMode) {
+
+        SET_FLAG(DeviceObject->Flags, DO_VERIFY_VOLUME);
+        status = STATUS_SUCCESS;
+
+    }
+    return status;
+}
+
+NTSTATUS
+DiskIoctlClearVerify(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_INTERNAL_CLEAR_VERIFY.
+    This is an internal function used to clear the DO_VERIFY_VOLUME
+    device object flag. Only a kernel mode component can send this
+    IOCTL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    NTSTATUS status = STATUS_NOT_SUPPORTED;
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlClearVerify: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    //
+    // If the caller is kernel mode, set the verify bit.
+    //
+
+    if (Irp->RequestorMode == KernelMode) {
+
+        CLEAR_FLAG(DeviceObject->Flags, DO_VERIFY_VOLUME);
+        status = STATUS_SUCCESS;
+
+    }
+    return status;
+}
+
+NTSTATUS
+DiskIoctlUpdateDriveSize(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_DISK_UPDATE_DRIVE_SIZE.
+    This function is used to inform the disk driver to update
+    the device geometry information cached in the device extension
+    This is normally initiated from the drivers layers above disk
+    driver.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    TARGET_DEVICE_CUSTOM_NOTIFICATION Notification = {0};
+    NTSTATUS status;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlUpdateDriveSize: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY)) {
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlUpdateDriveSize: Output buffer too small.\n"));
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    status = DiskReadDriveCapacity(DeviceObject);
+
+    //
+    // Note whether the drive is ready.
+    //
+
+    diskData->ReadyStatus = status;
+
+    if (NT_SUCCESS(status)) {
+
+        //
+        // Copy drive geometry information from the device extension.
+        //
+
+        RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
+                      &(fdoExtension->DiskGeometry),
+                      sizeof(DISK_GEOMETRY));
+
+        if (((PDISK_GEOMETRY)Irp->AssociatedIrp.SystemBuffer)->BytesPerSector == 0) {
+            ((PDISK_GEOMETRY)Irp->AssociatedIrp.SystemBuffer)->BytesPerSector = 512;
+        }
+        Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
+        status = STATUS_SUCCESS;
+
+        //
+        // Notify everyone that the disk layout may have changed
+        //
+
+        Notification.Event   = GUID_IO_DISK_LAYOUT_CHANGE;
+        Notification.Version = 1;
+        Notification.Size    = (USHORT)FIELD_OFFSET(TARGET_DEVICE_CUSTOM_NOTIFICATION, CustomDataBuffer);
+        Notification.FileObject = NULL;
+        Notification.NameBufferOffset = -1;
+
+        IoReportTargetDeviceChangeAsynchronous(fdoExtension->LowerPdo,
+                                               &Notification,
+                                               NULL,
+                                               NULL);
+    }
+    return status;
+}
+
+NTSTATUS
+DiskIoctlGetVolumeDiskExtents(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS
+    and IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS_ADMIN. This function
+    returns the physical location of a volume.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    NTSTATUS status = STATUS_INVALID_DEVICE_REQUEST;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlGetVolumeDiskExtents: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+
+    if (TEST_FLAG(DeviceObject->Characteristics, FILE_REMOVABLE_MEDIA)) {
+
+        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(VOLUME_DISK_EXTENTS)) {
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlGetVolumeDiskExtents: Output buffer too small.\n"));
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        status = DiskReadDriveCapacity(commonExtension->PartitionZeroExtension->DeviceObject);
+
+        //
+        // Note whether the drive is ready.
+        //
+
+        diskData->ReadyStatus = status;
+
+        if (NT_SUCCESS(status)) {
+
+            PVOLUME_DISK_EXTENTS pVolExt = (PVOLUME_DISK_EXTENTS)Irp->AssociatedIrp.SystemBuffer;
+
+            pVolExt->NumberOfDiskExtents = 1;
+            pVolExt->Extents[0].DiskNumber     = commonExtension->PartitionZeroExtension->DeviceNumber;
+            pVolExt->Extents[0].StartingOffset = commonExtension->StartingOffset;
+            pVolExt->Extents[0].ExtentLength   = commonExtension->PartitionLength;
+
+            Irp->IoStatus.Information = sizeof(VOLUME_DISK_EXTENTS);
+        }
+    }
+
+    return status;
+}
+
+NTSTATUS
+DiskIoctlSmartGetVersion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services SMART_GET_VERSION. It returns the
+    SMART version information.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    NTSTATUS status;
+
+    PGETVERSIONINPARAMS versionParams;
+    PSRB_IO_CONTROL srbControl;
+    IO_STATUS_BLOCK ioStatus = { 0 };
+    PUCHAR buffer;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlSmartGetVersion: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+
+    if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GETVERSIONINPARAMS)) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartGetVersion: Output buffer too small.\n"));
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    srbControl = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                       sizeof(SRB_IO_CONTROL) +
+                                       sizeof(GETVERSIONINPARAMS),
+                                       DISK_TAG_SMART);
+
+    if (srbControl == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartGetVersion: Unable to allocate memory.\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(srbControl, sizeof(SRB_IO_CONTROL) + sizeof(GETVERSIONINPARAMS));
+
+    //
+    // fill in srbControl fields
+    //
+
+    srbControl->HeaderLength = sizeof(SRB_IO_CONTROL);
+    RtlMoveMemory (srbControl->Signature, "SCSIDISK", 8);
+    srbControl->Timeout = fdoExtension->TimeOutValue;
+    srbControl->Length = sizeof(GETVERSIONINPARAMS);
+    srbControl->ControlCode = IOCTL_SCSI_MINIPORT_SMART_VERSION;
+
+    //
+    // Point to the 'buffer' portion of the SRB_CONTROL
+    //
+
+    buffer = (PUCHAR)srbControl + srbControl->HeaderLength;
+
+    //
+    // Ensure correct target is set in the cmd parameters.
+    //
+
+    versionParams = (PGETVERSIONINPARAMS)buffer;
+    versionParams->bIDEDeviceMap = diskData->ScsiAddress.TargetId;
+
+    ClassSendDeviceIoControlSynchronous(
+                                    IOCTL_SCSI_MINIPORT,
+                                    commonExtension->LowerDeviceObject,
+                                    srbControl,
+                                    sizeof(SRB_IO_CONTROL) + sizeof(GETVERSIONINPARAMS),
+                                    sizeof(SRB_IO_CONTROL) + sizeof(GETVERSIONINPARAMS),
+                                    FALSE,
+                                    &ioStatus);
+
+    status = ioStatus.Status;
+
+    //
+    // If successful, copy the data received into the output buffer.
+    // This should only fail in the event that the IDE driver is older
+    // than this driver.
+    //
+
+    if (NT_SUCCESS(status)) {
+
+        buffer = (PUCHAR)srbControl + srbControl->HeaderLength;
+
+        RtlMoveMemory (Irp->AssociatedIrp.SystemBuffer, buffer, sizeof(GETVERSIONINPARAMS));
+        Irp->IoStatus.Information = sizeof(GETVERSIONINPARAMS);
+    }
+
+    FREE_POOL(srbControl);
+
+    return status;
+}
+
+NTSTATUS
+DiskIoctlSmartReceiveDriveData(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services SMART_RCV_DRIVE_DATA. This function
+    allows the caller to read SMART information from the device.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    PSENDCMDINPARAMS cmdInParameters = ((PSENDCMDINPARAMS)Irp->AssociatedIrp.SystemBuffer);
+    PSRB_IO_CONTROL srbControl;
+    IO_STATUS_BLOCK ioStatus = { 0 };
+    ULONG controlCode = 0;
+    PUCHAR buffer;
+    PIRP irp2;
+    KEVENT event;
+    ULONG length = 0;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlSmartReceiveDriveData: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.InputBufferLength < (sizeof(SENDCMDINPARAMS) - 1)) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartReceiveDriveData: Input buffer length invalid.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < (sizeof(SENDCMDOUTPARAMS) + 512 - 1)) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartReceiveDriveData: Output buffer too small.\n"));
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    //
+    // Create notification event object to be used to signal the
+    // request completion.
+    //
+
+    KeInitializeEvent(&event, NotificationEvent, FALSE);
+
+    //
+    // use controlCode as a sort of 'STATUS_SUCCESS' to see if it's
+    // a valid request type
+    //
+
+    if (cmdInParameters->irDriveRegs.bCommandReg == ID_CMD) {
+
+        length = IDENTIFY_BUFFER_SIZE + sizeof(SENDCMDOUTPARAMS);
+        controlCode = IOCTL_SCSI_MINIPORT_IDENTIFY;
+
+    } else if (cmdInParameters->irDriveRegs.bCommandReg == SMART_CMD) {
+
+        switch (cmdInParameters->irDriveRegs.bFeaturesReg) {
+
+            case READ_ATTRIBUTES:
+                controlCode = IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS;
+                length = READ_ATTRIBUTE_BUFFER_SIZE + sizeof(SENDCMDOUTPARAMS);
+                break;
+
+            case READ_THRESHOLDS:
+                controlCode = IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS;
+                length = READ_THRESHOLD_BUFFER_SIZE + sizeof(SENDCMDOUTPARAMS);
+                break;
+
+            case SMART_READ_LOG: {
+
+                if (diskData->FailurePredictionCapability != FailurePredictionSmart) {
+                    TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartReceiveDriveData: SMART failure prediction not supported.\n"));
+                    return STATUS_INVALID_DEVICE_REQUEST;
+                }
+
+                //
+                // Calculate additional length based on number of sectors to be read.
+                // Then verify the output buffer is large enough.
+                //
+
+                length = cmdInParameters->irDriveRegs.bSectorCountReg * SMART_LOG_SECTOR_SIZE;
+
+                //
+                // Ensure at least 1 sector is going to be read
+                //
+                if (length == 0) {
+                    return STATUS_INVALID_PARAMETER;
+                }
+
+                length += max(sizeof(SENDCMDOUTPARAMS), sizeof(SENDCMDINPARAMS));
+
+                if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < length - 1) {
+                    TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartReceiveDriveData: Output buffer too small for SMART_READ_LOG.\n"));
+                    return STATUS_BUFFER_TOO_SMALL;
+                }
+
+                controlCode = IOCTL_SCSI_MINIPORT_READ_SMART_LOG;
+                break;
+            }
+        }
+    }
+
+    if (controlCode == 0) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartReceiveDriveData: Invalid request.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    srbControl = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                       sizeof(SRB_IO_CONTROL) + length,
+                                       DISK_TAG_SMART);
+
+    if (srbControl == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartReceiveDriveData: Unable to allocate memory.\n"));
+        return  STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // fill in srbControl fields
+    //
+
+    srbControl->HeaderLength = sizeof(SRB_IO_CONTROL);
+    RtlMoveMemory (srbControl->Signature, "SCSIDISK", 8);
+    srbControl->Timeout = fdoExtension->TimeOutValue;
+    srbControl->Length = length;
+    srbControl->ControlCode = controlCode;
+
+    //
+    // Point to the 'buffer' portion of the SRB_CONTROL
+    //
+
+    buffer = (PUCHAR)srbControl + srbControl->HeaderLength;
+
+    //
+    // Ensure correct target is set in the cmd parameters.
+    //
+
+    cmdInParameters->bDriveNumber = diskData->ScsiAddress.TargetId;
+
+    //
+    // Copy the IOCTL parameters to the srb control buffer area.
+    //
+
+    RtlMoveMemory(buffer,
+                  Irp->AssociatedIrp.SystemBuffer,
+                  sizeof(SENDCMDINPARAMS) - 1);
+
+    irp2 = IoBuildDeviceIoControlRequest(IOCTL_SCSI_MINIPORT,
+                                        commonExtension->LowerDeviceObject,
+                                        srbControl,
+                                        sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDINPARAMS) - 1,
+                                        srbControl,
+                                        sizeof(SRB_IO_CONTROL) + length,
+                                        FALSE,
+                                        &event,
+                                        &ioStatus);
+
+    if (irp2 == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartReceiveDriveData: Unable to allocate IRP.\n"));
+        FREE_POOL(srbControl);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // Call the port driver with the request and wait for it to complete.
+    //
+
+    status = IoCallDriver(commonExtension->LowerDeviceObject, irp2);
+
+    if (status == STATUS_PENDING) {
+        KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
+        status = ioStatus.Status;
+    }
+
+    //
+    // Copy the data received into the output buffer. Since the status buffer
+    // contains error information also, always perform this copy. IO will
+    // either pass this back to the app, or zero it, in case of error.
+    //
+
+    buffer = (PUCHAR)srbControl + srbControl->HeaderLength;
+
+    if (NT_SUCCESS(status)) {
+
+        RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, buffer, length - 1);
+        Irp->IoStatus.Information = length - 1;
+
+    } else {
+
+        RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, buffer, (sizeof(SENDCMDOUTPARAMS) - 1));
+        Irp->IoStatus.Information = sizeof(SENDCMDOUTPARAMS) - 1;
+
+    }
+
+    FREE_POOL(srbControl);
+
+    return status;
+}
+
+NTSTATUS
+DiskIoctlSmartSendDriveCommand(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp
+    )
+
+/*++
+
+Routine Description:
+
+    This routine services SMART_SEND_DRIVE_COMMAND. This function
+    allows the caller to send SMART commands to the device.
+
+    This function must be called at IRQL < DISPATCH_LEVEL.
+
+Arguments:
+
+    DeviceObject - Supplies the device object associated with this request.
+
+    Irp - The IRP to be processed
+
+Return Value:
+
+    NTSTATUS code
+
+--*/
+
+{
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
+    PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation (Irp);
+    NTSTATUS status = STATUS_INVALID_PARAMETER;
+
+    PSENDCMDINPARAMS cmdInParameters = ((PSENDCMDINPARAMS)Irp->AssociatedIrp.SystemBuffer);
+    PSRB_IO_CONTROL srbControl;
+    IO_STATUS_BLOCK ioStatus = { 0 };
+    ULONG controlCode = 0;
+    PUCHAR buffer;
+    PIRP irp2;
+    KEVENT event;
+    ULONG length = 0;
+
+    //
+    // This function must be called at less than dispatch level.
+    // Fail if IRQL >= DISPATCH_LEVEL.
+    //
+    PAGED_CODE();
+    CHECK_IRQL();
+
+    //
+    // Validate the request.
+    //
+
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL, "DiskIoctlSmartSendDriveCommand: DeviceObject %p Irp %p\n", DeviceObject, Irp));
+
+    if (irpStack->Parameters.DeviceIoControl.InputBufferLength < (sizeof(SENDCMDINPARAMS) - 1)) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartSendDriveCommand: Input buffer size invalid.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < (sizeof(SENDCMDOUTPARAMS) - 1)) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartSendDriveCommand: Output buffer too small.\n"));
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    //
+    // Create notification event object to be used to signal the
+    // request completion.
+    //
+
+    KeInitializeEvent(&event, NotificationEvent, FALSE);
+
+    if (cmdInParameters->irDriveRegs.bCommandReg == SMART_CMD) {
+
+        switch (cmdInParameters->irDriveRegs.bFeaturesReg) {
+
+            case SMART_WRITE_LOG: {
+
+                if (diskData->FailurePredictionCapability != FailurePredictionSmart) {
+
+                    TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartSendDriveCommand: SMART failure prediction not supported.\n"));
+                    return STATUS_INVALID_DEVICE_REQUEST;
+                }
+
+                //
+                // Calculate additional length based on number of sectors to be written.
+                // Then verify the input buffer is large enough.
+                //
+
+                length = cmdInParameters->irDriveRegs.bSectorCountReg * SMART_LOG_SECTOR_SIZE;
+
+                //
+                // Ensure at least 1 sector is going to be written
+                //
+
+                if (length == 0) {
+                    return STATUS_INVALID_PARAMETER;
+                }
+
+                if (irpStack->Parameters.DeviceIoControl.InputBufferLength <
+                        (sizeof(SENDCMDINPARAMS) - 1) + length) {
+
+                    TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartSendDriveCommand: Input buffer too small for SMART_WRITE_LOG.\n"));
+                    return STATUS_BUFFER_TOO_SMALL;
+                }
+
+                controlCode = IOCTL_SCSI_MINIPORT_WRITE_SMART_LOG;
+                break;
+            }
+
+            case ENABLE_SMART:
+                controlCode = IOCTL_SCSI_MINIPORT_ENABLE_SMART;
+                break;
+
+            case DISABLE_SMART:
+                controlCode = IOCTL_SCSI_MINIPORT_DISABLE_SMART;
+                break;
+
+            case RETURN_SMART_STATUS:
+
+                //
+                // Ensure bBuffer is at least 2 bytes (to hold the values of
+                // cylinderLow and cylinderHigh).
+                //
+
+                if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+                    (sizeof(SENDCMDOUTPARAMS) - 1 + sizeof(IDEREGS))) {
+
+                    return STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
+
+                controlCode = IOCTL_SCSI_MINIPORT_RETURN_STATUS;
+                length = sizeof(IDEREGS);
+                break;
+
+            case ENABLE_DISABLE_AUTOSAVE:
+                controlCode = IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE;
+                break;
+
+            case SAVE_ATTRIBUTE_VALUES:
+                controlCode = IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES;
+                break;
+
+            case EXECUTE_OFFLINE_DIAGS:
+                //
+                // Validate that this is an ok self test command
+                //
+                if (DiskIsValidSmartSelfTest(cmdInParameters->irDriveRegs.bSectorNumberReg)) {
+
+                    controlCode = IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS;
+                }
+                break;
+
+            case ENABLE_DISABLE_AUTO_OFFLINE:
+                controlCode = IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTO_OFFLINE;
+                break;
+        }
+    }
+
+    if (controlCode == 0) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartSendDriveCommand: Invalid request.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    length += max(sizeof(SENDCMDOUTPARAMS), sizeof(SENDCMDINPARAMS));
+    srbControl = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                       sizeof(SRB_IO_CONTROL) + length,
+                                       DISK_TAG_SMART);
+
+    if (srbControl == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartSendDriveCommand: Unable to allocate memory.\n"));
+        return  STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // fill in srbControl fields
+    //
+
+    srbControl->HeaderLength = sizeof(SRB_IO_CONTROL);
+    RtlMoveMemory (srbControl->Signature, "SCSIDISK", 8);
+    srbControl->Timeout = fdoExtension->TimeOutValue;
+    srbControl->Length = length;
+    srbControl->ControlCode = controlCode;
+
+    //
+    // Point to the 'buffer' portion of the SRB_CONTROL
+    //
+
+    buffer = (PUCHAR)srbControl + srbControl->HeaderLength;
+
+    //
+    // Ensure correct target is set in the cmd parameters.
+    //
+
+    cmdInParameters->bDriveNumber = diskData->ScsiAddress.TargetId;
+
+    //
+    // Copy the IOCTL parameters to the srb control buffer area.
+    //
+
+    if (cmdInParameters->irDriveRegs.bFeaturesReg == SMART_WRITE_LOG) {
+        RtlMoveMemory(buffer,
+                     Irp->AssociatedIrp.SystemBuffer,
+                     sizeof(SENDCMDINPARAMS) - 1 +
+                        cmdInParameters->irDriveRegs.bSectorCountReg * SMART_LOG_SECTOR_SIZE);
+    } else {
+        RtlMoveMemory(buffer, Irp->AssociatedIrp.SystemBuffer, sizeof(SENDCMDINPARAMS) - 1);
+    }
+
+    irp2 = IoBuildDeviceIoControlRequest(IOCTL_SCSI_MINIPORT,
+                                        commonExtension->LowerDeviceObject,
+                                        srbControl,
+                                        sizeof(SRB_IO_CONTROL) + length,
+                                        srbControl,
+                                        sizeof(SRB_IO_CONTROL) + length,
+                                        FALSE,
+                                        &event,
+                                        &ioStatus);
+
+    if (irp2 == NULL) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_IOCTL, "DiskIoctlSmartSendDriveCommand: Unable to allocate IRP.\n"));
+        FREE_POOL(srbControl);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // Call the port driver with the request and wait for it to complete.
+    //
+
+    status = IoCallDriver(commonExtension->LowerDeviceObject, irp2);
+
+    if (status == STATUS_PENDING) {
+        KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
+        status = ioStatus.Status;
+    }
+
+    //
+    // Copy the data received into the output buffer. Since the status buffer
+    // contains error information also, always perform this copy. IO will
+    // either pass this back to the app, or zero it, in case of error.
+    //
+
+    buffer = (PUCHAR)srbControl + srbControl->HeaderLength;
+
+    //
+    // Update the return buffer size based on the sub-command.
+    //
+
+    if (cmdInParameters->irDriveRegs.bFeaturesReg == RETURN_SMART_STATUS) {
+        length = sizeof(SENDCMDOUTPARAMS) - 1 + sizeof(IDEREGS);
+    } else {
+        length = sizeof(SENDCMDOUTPARAMS) - 1;
+    }
+
+    RtlMoveMemory ( Irp->AssociatedIrp.SystemBuffer, buffer, length);
+    Irp->IoStatus.Information = length;
+
+    FREE_POOL(srbControl);
+
+    return status;
+}
+
+
+VOID
+DiskEtwEnableCallback (
+    _In_ LPCGUID                      SourceId,
+    _In_ ULONG                        IsEnabled,
+    _In_ UCHAR                        Level,
+    _In_ ULONGLONG                    MatchAnyKeyword,
+    _In_ ULONGLONG                    MatchAllKeyword,
+    _In_opt_ PEVENT_FILTER_DESCRIPTOR FilterData,
+    _In_opt_ PVOID                    CallbackContext
+    )
+/*+++
+
+Routine Description:
+
+    This routine is the enable callback routine for ETW. It gets called when
+    tracing is enabled or disabled for our provider.
+
+Arguments:
+
+    As per the ETW callback.
 
 Return Value:
 
     None.
-
 --*/
+
 {
-    PDEVICE_EXTENSION         physicalExtension = PhysicalDisk->DeviceExtension;
-    PDRIVE_LAYOUT_INFORMATION partitionList = Irp->AssociatedIrp.SystemBuffer;
-    ULONG                     partition;
-    ULONG                     partitionNumber;
-    ULONG                     partitionCount;
-    ULONG                     lastPartition;
-    ULONG                     partitionOrdinal;
-    PPARTITION_INFORMATION    partitionEntry;
-    CCHAR                     ntNameBuffer[MAXIMUM_FILENAME_LENGTH];
-    STRING                    ntNameString;
-    UNICODE_STRING            ntUnicodeString;
-    PDEVICE_OBJECT            deviceObject;
-    PDEVICE_EXTENSION         deviceExtension;
-    PDISK_DATA                diskData;
-    NTSTATUS                  status;
-    ULONG                     numberListElements;
-    BOOLEAN                   found;
-
-    partitionCount = ((partitionList->PartitionCount + 3) / 4) * 4;
+    //
+    // Initialize locals.
+    //
+    UNREFERENCED_PARAMETER(SourceId);
+    UNREFERENCED_PARAMETER(Level);
+    UNREFERENCED_PARAMETER(MatchAnyKeyword);
+    UNREFERENCED_PARAMETER(MatchAllKeyword);
+    UNREFERENCED_PARAMETER(FilterData);
+    UNREFERENCED_PARAMETER(CallbackContext);
 
     //
-    // Zero all of the partition numbers.
+    // Set the ETW tracing enable state.
     //
+    DiskETWEnabled = IsEnabled ? TRUE : FALSE;
 
-    for (partition = 0; partition < partitionCount; partition++) {
-        partitionEntry = &partitionList->PartitionEntry[partition];
-        partitionEntry->PartitionNumber = 0;
-    }
+    return;
+}
 
-    //
-    // Walk through chain of partitions for this disk to determine
-    // which existing partitions have no match.
-    //
-
-    deviceExtension = physicalExtension;
-    diskData = (PDISK_DATA)(deviceExtension + 1);
-    lastPartition = 0;
-
-    do {
-
-        deviceExtension = diskData->NextPartition;
-
-        //
-        // Check if this is the last partition in the chain.
-        //
-
-        if (!deviceExtension) {
-           break;
-        }
-
-        //
-        // Get the partition device extension from disk data.
-        //
-
-        diskData = (PDISK_DATA)(deviceExtension + 1);
-
-        //
-        // Check for highest partition number this far.
-        //
-
-        if (diskData->PartitionNumber > lastPartition) {
-           lastPartition = diskData->PartitionNumber;
-        }
-
-        //
-        // Check if this partition is not currently being used.
-        //
-
-        if (!deviceExtension->PartitionLength.QuadPart) {
-           continue;
-        }
-
-        //
-        // Loop through partition information to look for match.
-        //
-
-        found = FALSE;
-        partitionOrdinal = 0;
-
-        for (partition = 0; partition < partitionCount; partition++) {
-
-            //
-            // Get partition descriptor.
-            //
-
-            partitionEntry = &partitionList->PartitionEntry[partition];
-
-            //
-            // Check if empty, or describes extended partition or hasn't changed.
-            //
-
-            if (partitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
-                IsContainerPartition(partitionEntry->PartitionType)) {
-                continue;
-            }
-
-            //
-            // Advance partition ordinal.
-            //
-
-            partitionOrdinal++;
-
-            //
-            // Check if new partition starts where this partition starts.
-            //
-
-            if (partitionEntry->StartingOffset.QuadPart !=
-                      deviceExtension->StartingOffset.QuadPart) {
-                continue;
-            }
-
-            //
-            // Check if partition length is the same.
-            //
-
-            if (partitionEntry->PartitionLength.QuadPart ==
-                      deviceExtension->PartitionLength.QuadPart) {
-
-                DebugPrint((3,
-                           "UpdateDeviceObjects: Found match for \\Harddisk%d\\Partition%d\n",
-                           physicalExtension->DeviceNumber,
-                           diskData->PartitionNumber));
-
-                //
-                // Indicate match is found and set partition number
-                // in user buffer.
-                //
-
-                found = TRUE;
-                partitionEntry->PartitionNumber = diskData->PartitionNumber;
-                break;
-            }
-        }
-
-        if (found) {
-
-            //
-            // A match is found.
-            //
-
-            diskData = (PDISK_DATA)(deviceExtension + 1);
-
-            //
-            // If this partition is marked for update then update partition type.
-            //
-
-            if (partitionEntry->RewritePartition) {
-                diskData->PartitionType = partitionEntry->PartitionType;
-            }
-
-            //
-            // Update partitional ordinal for calls to HAL routine
-            // IoSetPartitionInformation.
-            //
-
-            diskData->PartitionOrdinal = partitionOrdinal;
-
-            DebugPrint((1,
-                       "UpdateDeviceObjects: Disk %d ordinal %d is partition %d\n",
-                       physicalExtension->DeviceNumber,
-                       diskData->PartitionOrdinal,
-                       diskData->PartitionNumber));
-
-        } else {
-
-            //
-            // no match was found, indicate this partition is gone.
-            //
-
-            DebugPrint((1,
-                       "UpdateDeviceObjects: Deleting \\Device\\Harddisk%x\\Partition%x\n",
-                       physicalExtension->DeviceNumber,
-                       diskData->PartitionNumber));
-
-            deviceExtension->PartitionLength.QuadPart = (LONGLONG) 0;
-        }
-
-    } while (TRUE);
-
-    //
-    // Walk through partition loop to find new partitions and set up
-    // device extensions to describe them. In some cases new device
-    // objects will be created.
-    //
-
-    partitionOrdinal = 0;
-
-    for (partition = 0;
-         partition < partitionCount;
-         partition++) {
-
-        //
-        // Get partition descriptor.
-        //
-
-        partitionEntry = &partitionList->PartitionEntry[partition];
-
-        //
-        // Check if empty, or describes an extended partition.
-        //
-
-        if (partitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
-            IsContainerPartition(partitionEntry->PartitionType)) {
-            continue;
-        }
-
-        //
-        // Keep track of position on the disk for calls to IoSetPartitionInformation.
-        //
-
-        partitionOrdinal++;
-
-        //
-        // Check if this entry should be rewritten.
-        //
-
-        if (!partitionEntry->RewritePartition) {
-            continue;
-        }
-
-        if (partitionEntry->PartitionNumber) {
-
-            //
-            // Partition is an exact match with an existing partition, but is
-            // being written anyway.
-            //
-
-            continue;
-        }
-
-        //
-        // Check first if existing device object is available by
-        // walking partition extension list.
-        //
-
-        partitionNumber = 0;
-        deviceExtension = physicalExtension;
-        diskData = (PDISK_DATA)(deviceExtension + 1);
-
-        do {
-
-            //
-            // Get next partition device extension from disk data.
-            //
-
-            deviceExtension = diskData->NextPartition;
-
-            if (!deviceExtension) {
-               break;
-            }
-
-            diskData = (PDISK_DATA)(deviceExtension + 1);
-
-            //
-            // A device object is free if the partition length is set to zero.
-            //
-
-            if (!deviceExtension->PartitionLength.QuadPart) {
-               partitionNumber = diskData->PartitionNumber;
-               break;
-            }
-
-        } while (TRUE);
-
-        //
-        // If partition number is still zero then a new device object
-        // must be created.
-        //
-
-        if (partitionNumber == 0) {
-
-            lastPartition++;
-            partitionNumber = lastPartition;
-
-            //
-            // Get or create partition object and set up partition parameters.
-            //
-
-            sprintf(ntNameBuffer,
-                    "\\Device\\Harddisk%lu\\Partition%lu",
-                    physicalExtension->DeviceNumber,
-                    partitionNumber);
-
-            RtlInitString(&ntNameString,
-                          ntNameBuffer);
-
-            status = RtlAnsiStringToUnicodeString(&ntUnicodeString,
-                                                  &ntNameString,
-                                                  TRUE);
-
-            if (!NT_SUCCESS(status)) {
-                continue;
-            }
-
-            DebugPrint((3,
-                        "UpdateDeviceObjects: Create device object %s\n",
-                        ntNameBuffer));
-
-            //
-            // This is a new name. Create the device object to represent it.
-            //
-
-            status = IoCreateDevice(PhysicalDisk->DriverObject,
-                                    DEVICE_EXTENSION_SIZE,
-                                    &ntUnicodeString,
-                                    FILE_DEVICE_DISK,
-                                    0,
-                                    FALSE,
-                                    &deviceObject);
-
-            if (!NT_SUCCESS(status)) {
-                DebugPrint((1,
-                            "UpdateDeviceObjects: Can't create device %s\n",
-                            ntNameBuffer));
-                RtlFreeUnicodeString(&ntUnicodeString);
-                continue;
-            }
-
-            //
-            // Set up device object fields.
-            //
-
-            deviceObject->Flags |= DO_DIRECT_IO;
-            deviceObject->StackSize = PhysicalDisk->StackSize;
-
-            //
-            // Set up device extension fields.
-            //
-
-            deviceExtension = deviceObject->DeviceExtension;
-
-            //
-            // Copy physical disk extension to partition extension.
-            //
-
-            RtlMoveMemory(deviceExtension,
-                          physicalExtension,
-                          sizeof(DEVICE_EXTENSION));
-
-            //
-            // Initialize the new S-List.
-            //
-
-            if (deviceExtension->SrbFlags & SRB_FLAGS_QUEUE_ACTION_ENABLE) {
-                numberListElements = 30;
-            } else {
-                numberListElements = 8;
-            }
-
-            //
-            // Build the lookaside list for srb's for this partition based on
-            // whether the adapter and disk can do tagged queueing.
-            //
-
-            ScsiClassInitializeSrbLookasideList(deviceExtension,
-                                                numberListElements);
-
-            //
-            // Allocate spinlock for zoning for split-request completion.
-            //
-
-            KeInitializeSpinLock(&deviceExtension->SplitRequestSpinLock);
-
-            //
-            // Write back partition number used in creating object name.
-            //
-
-            partitionEntry->PartitionNumber = partitionNumber;
-
-            //
-            // Clear flags initializing bit.
-            //
-
-            deviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-
-            //
-            // Point back at device object.
-            //
-
-            deviceExtension->DeviceObject = deviceObject;
-
-            RtlFreeUnicodeString(&ntUnicodeString);
-
-            //
-            // Link to end of partition chain using previous disk data.
-            //
-
-            diskData->NextPartition = deviceExtension;
-
-            //
-            // Get new disk data and zero next partition pointer.
-            //
-
-            diskData = (PDISK_DATA)(deviceExtension + 1);
-            diskData->NextPartition = NULL;
-
-        } else {
-
-            //
-            // Set pointer to disk data area that follows device extension.
-            //
-
-            diskData = (PDISK_DATA)(deviceExtension + 1);
-
-            DebugPrint((1,
-                        "UpdateDeviceObjects: Used existing device object \\Device\\Harddisk%x\\Partition%x\n",
-                        physicalExtension->DeviceNumber,
-                        partitionNumber));
-        }
-
-        //
-        // Update partition information in partition device extension.
-        //
-
-        diskData->PartitionNumber = partitionNumber;
-        diskData->PartitionType = partitionEntry->PartitionType;
-        diskData->BootIndicator = partitionEntry->BootIndicator;
-        deviceExtension->StartingOffset = partitionEntry->StartingOffset;
-        deviceExtension->PartitionLength = partitionEntry->PartitionLength;
-        diskData->HiddenSectors = partitionEntry->HiddenSectors;
-        diskData->PartitionOrdinal = partitionOrdinal;
-
-        DebugPrint((1,
-                   "UpdateDeviceObjects: Ordinal %d is partition %d\n",
-                   diskData->PartitionOrdinal,
-                   diskData->PartitionNumber));
-
-        //
-        // Update partition number passed in to indicate the
-        // device name for this partition.
-        //
-
-        partitionEntry->PartitionNumber = partitionNumber;
-    }
-
-} // end UpdateDeviceObjects()
 

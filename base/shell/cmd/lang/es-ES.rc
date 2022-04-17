@@ -298,7 +298,7 @@ PAUSE [mensaje]"
     STRING_PROMPT_HELP1 "Cambia el símbolo de comandos.\n\n\
 PROMPT [texto]\n\n\
   texto   Epecifica un nuevo símbolo de comandos.\n\n\
-El símbolo de comandos puede hacerce con carácteres normales y los siguientes\n\
+El símbolo de comandos puede hacerse con carácteres normales y los siguientes\n\
 códigos especiales:\n\n\
   $A   & (Signo y)\n\
   $B   | (Linea horizontal)\n\

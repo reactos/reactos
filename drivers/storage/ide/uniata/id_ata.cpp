@@ -570,6 +570,52 @@ AtapiSuckPortBuffer2(
     return i;
 } // AtapiSuckPortBuffer2()
 
+#ifdef __REACTOS__
+VOID
+DDKFASTAPI
+FillDeviceIdentificationString(
+    IN OUT PINQUIRYDATA InquiryData,
+    IN PIDENTIFY_DATA2 IdentifyData)
+{
+    ULONG i;
+    ULONG IdentifierLen, FirstWordLen;
+
+    /* We need to copy a field which is 20 chars long to two fields which are 8+16 bytes long (VendorId + ProductId)
+     * Note that a space will be added between those fields when displaying them.
+     * => Try to split identifier on space char.
+     */
+
+#define IDENTIFIER_LETTER(Identifier, i) (((PUCHAR)Identifier)[(i) ^ 1])
+
+    for (IdentifierLen = 20; IdentifierLen > 0 && IDENTIFIER_LETTER(IdentifyData->ModelNumber, IdentifierLen - 1) == ' '; IdentifierLen--)
+        ;
+
+    /* Strategy 1: copy first word to VendorId if len <= 8. Copy other chars to ProductId */
+    for (FirstWordLen = 0; IDENTIFIER_LETTER(IdentifyData->ModelNumber, FirstWordLen) != ' ' && FirstWordLen < IdentifierLen; FirstWordLen++)
+        ;
+    if (FirstWordLen <= 8)
+    {
+        for (i = 0; i < FirstWordLen; i++)
+            InquiryData->VendorId[i] = IDENTIFIER_LETTER(IdentifyData->ModelNumber, i);
+        for (i = FirstWordLen + 1; i < IdentifierLen; i++)
+            InquiryData->ProductId[i - FirstWordLen - 1] = IDENTIFIER_LETTER(IdentifyData->ModelNumber, i);
+        return;
+    }
+
+    /* Strategy 2: copy everything to ProductId */
+    if (IdentifierLen <= 16)
+    {
+        for (i = 0; i < IdentifierLen; i++)
+            InquiryData->ProductId[i] = IDENTIFIER_LETTER(IdentifyData->ModelNumber, i);
+        return;
+    }
+
+    /* Strategy 3: copy first to VendorId, then to ProductId */
+    for (i = 0; i < 24; i += 2)
+        MOV_DW_SWP(InquiryData->DeviceIdentificationString[i], ((PUCHAR)IdentifyData->ModelNumber)[i]);
+}
+#endif
+
 UCHAR
 DDKFASTAPI
 SelectDrive(
@@ -8354,9 +8400,13 @@ default_no_prep:
             inquiryData->CommandQueue = 1;
 
             // Fill in vendor identification fields.
+#ifdef __REACTOS__
+            FillDeviceIdentificationString(inquiryData, identifyData);
+#else
             for (i = 0; i < 24; i += 2) {
                 MOV_DW_SWP(inquiryData->DeviceIdentificationString[i], ((PUCHAR)identifyData->ModelNumber)[i]);
             }
+#endif
 /*
             // Initialize unused portion of product id.
             for (i = 0; i < 4; i++) {
@@ -9560,9 +9610,13 @@ reject_srb:
                             inquiryData->CommandQueue = 1;
 
                             // Fill in vendor identification fields.
+#ifdef __REACTOS__
+                            FillDeviceIdentificationString(inquiryData, identifyData);
+#else
                             for (i = 0; i < 24; i += 2) {
                                 MOV_DW_SWP(inquiryData->DeviceIdentificationString[i], ((PUCHAR)identifyData->ModelNumber)[i]);
                             }
+#endif
 
                             // Move firmware revision from IDENTIFY data to
                             // product revision in INQUIRY data.

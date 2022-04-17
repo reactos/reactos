@@ -81,7 +81,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
          BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
 
   /* Do not deal with negative numbers for these values */
-  if ((BltInfo->DestRect.left < 0) || (BltInfo->DestRect.top < 0) || 
+  if ((BltInfo->DestRect.left < 0) || (BltInfo->DestRect.top < 0) ||
       (BltInfo->DestRect.right < 0) || (BltInfo->DestRect.bottom < 0))
     return FALSE;
 
@@ -586,7 +586,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
            * unless we work with its output which is at the destination site. So in this case
            * our new Source becomes the previous outputs Destination.
            * Also in we use the same logic when we have corrected for negative lDelta's above
-           * and already completed a flip from Source to Destination for the first step 
+           * and already completed a flip from Source to Destination for the first step
            */
 
           if (TopToBottomDone || blDeltaAdjustDone)
@@ -614,7 +614,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
            * Then we do a flip in place at the destination location and we are done.
            */
           if ((BltInfo->SourcePoint.y != BltInfo->DestRect.top) &&                        // The values are not equal and
-             (abs(BltInfo->SourcePoint.y - BltInfo->DestRect.top) < (DestHeight + 2)) &&  // they are NOT seperated by > DestHeight 
+             (abs(BltInfo->SourcePoint.y - BltInfo->DestRect.top) < (DestHeight + 2)) &&  // they are NOT seperated by > DestHeight
              (BltInfo->SourceSurface->pvScan0 == BltInfo->DestSurface->pvScan0))          // and same surface (probably screen)
           {
             DPRINT("Flips Need Adjustments, so do move here.\n");

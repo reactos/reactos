@@ -4,7 +4,7 @@ dlg_bg.bmp
 image_strip.bmp
 reactos_flag.bmp
 
-Its source is available as the following files:
+Their source is available as the following files:
 
 svg/background.svg
 svg/flag.svg

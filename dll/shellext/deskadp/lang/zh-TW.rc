@@ -1,5 +1,11 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-
+/*
+ * PROJECT:     ReactOS Advanced display adapter properties
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+ 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 IDD_DISPLAYADAPTER DIALOGEX 0, 0, 252, 226
@@ -10,19 +16,19 @@ BEGIN
     GROUPBOX "介面卡類型", -1, 7, 3, 237, 50
     ICON IDC_DESK_ADAPTER, IDC_DESK_ADAPTER, 13, 11, 21, 20, SS_ICON
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
-    PUSHBUTTON "屬性(&P)", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
+    PUSHBUTTON "內容(&P)", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "介面卡資訊", -1, 7, 56, 237, 75
-    LTEXT "晶片類型:", -1, 13, 68, 58, 8
+    LTEXT "晶片類型：", -1, 13, 68, 58, 8
     LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-    LTEXT "DAC 類型:", -1, 13, 80, 58, 8
+    LTEXT "DAC 類型：", -1, 13, 80, 58, 8
     LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "內存大小:", -1, 13, 92, 58, 8
+    LTEXT "記憶體大小：", -1, 13, 92, 58, 8
     LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "介面卡字元串:", -1, 13, 104, 58, 8
+    LTEXT "介面卡字元串：", -1, 13, 104, 58, 8
     LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-    LTEXT "BIOS 資訊:", -1, 13, 116, 58, 8
+    LTEXT "BIOS 資訊：", -1, 13, 116, 58, 8
     LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
-    PUSHBUTTON "列出所有模式...(&L)", IDC_LISTALLMODES, 7, 139, 75, 14
+    PUSHBUTTON "列出所有模式(&L)...", IDC_LISTALLMODES, 7, 139, 75, 14
 END
 
 IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135
@@ -39,12 +45,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_MODEFMT "%d by %d, %s, %s"
-    IDS_DEFREFRESHRATE "默認重新整理"
+    IDS_DEFREFRESHRATE "預設重新整理率"
     IDES_REFRESHRATEFMT "%d 赫茲"
     IDS_4BPP "16 色"
     IDS_8BPP "256 色"
-    IDS_15BPP "增強色 (15 位)"
-    IDS_16BPP "增強色 (16 位)"
-    IDS_24BPP "真彩色 (24 位)"
-    IDS_32BPP "真彩色 (32 位)"
+    IDS_15BPP "增強色（15 位）"
+    IDS_16BPP "增強色（16 位）"
+    IDS_24BPP "真彩色（24 位）"
+    IDS_32BPP "真彩色（32 位）"
 END

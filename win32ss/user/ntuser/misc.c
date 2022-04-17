@@ -35,6 +35,7 @@ _scwprintf(
 
 /*
  * Test the Thread to verify and validate it. Hard to the core tests are required.
+ * Win: PtiFromThreadId
  */
 PTHREADINFO
 FASTCALL
@@ -232,6 +233,7 @@ NtUserGetThreadState(
    DWORD Routine)
 {
    DWORD_PTR ret = 0;
+   PTHREADINFO pti;
 
    TRACE("Enter NtUserGetThreadState\n");
    if (Routine != THREADSTATE_GETTHREADINFO)
@@ -243,10 +245,12 @@ NtUserGetThreadState(
        UserEnterExclusive();
    }
 
+   pti = PsGetCurrentThreadWin32Thread();
+
    switch (Routine)
    {
       case THREADSTATE_GETTHREADINFO:
-         GetW32ThreadInfo();
+         ret = TRUE;
          break;
       case THREADSTATE_FOCUSWINDOW:
          ret = (DWORD_PTR)IntGetThreadFocusWindow();
@@ -255,10 +259,10 @@ NtUserGetThreadState(
          /* FIXME: Should use UserEnterShared */
          ret = (DWORD_PTR)IntGetCapture();
          break;
-      case THREADSTATE_PROGMANWINDOW:
+      case THREADSTATE_PROGMANWINDOW: /* FIXME: Delete this HACK */
          ret = (DWORD_PTR)GetW32ThreadInfo()->pDeskInfo->hProgmanWindow;
          break;
-      case THREADSTATE_TASKMANWINDOW:
+      case THREADSTATE_TASKMANWINDOW: /* FIXME: Delete this HACK */
          ret = (DWORD_PTR)GetW32ThreadInfo()->pDeskInfo->hTaskManWindow;
          break;
       case THREADSTATE_ACTIVEWINDOW:
@@ -293,12 +297,8 @@ NtUserGetThreadState(
          break;
 
       case THREADSTATE_UPTIMELASTREAD:
-         {
-           PTHREADINFO pti;
-           pti = PsGetCurrentThreadWin32Thread();
-           pti->pcti->timeLastRead = EngGetTickCount32();
-           break;
-         }
+         pti->pcti->timeLastRead = EngGetTickCount32();
+         break;
 
       case THREADSTATE_GETINPUTSTATE:
          ret = LOWORD(IntGetQueueStatus(QS_POSTMESSAGE|QS_TIMER|QS_PAINT|QS_SENDMESSAGE|QS_INPUT)) & (QS_KEY | QS_MOUSEBUTTON);
@@ -313,7 +313,31 @@ NtUserGetThreadState(
          break;
       case THREADSTATE_GETMESSAGEEXTRAINFO:
          ret = (DWORD_PTR)MsqGetMessageExtraInfo();
-        break;
+         break;
+      case THREADSTATE_DEFAULTIMEWINDOW:
+         if (pti->spwndDefaultIme)
+            ret = (ULONG_PTR)UserHMGetHandle(pti->spwndDefaultIme);
+         break;
+      case THREADSTATE_DEFAULTINPUTCONTEXT:
+         if (pti->spDefaultImc)
+             ret = (ULONG_PTR)UserHMGetHandle(pti->spDefaultImc);
+         break;
+      case THREADSTATE_CHANGEBITS:
+         ret = pti->pcti->fsChangeBits;
+         break;
+      case THREADSTATE_IMECOMPATFLAGS:
+         ret = pti->ppi->dwImeCompatFlags;
+         break;
+      case THREADSTATE_OLDKEYBOARDLAYOUT:
+         ret = (ULONG_PTR)pti->hklPrev;
+         break;
+      case THREADSTATE_ISWINLOGON:
+      case THREADSTATE_ISWINLOGON2:
+         ret = (gpidLogon == PsGetCurrentProcessId());
+         break;
+      case THREADSTATE_UNKNOWN17:
+         /* FIXME */
+         break;
    }
 
    TRACE("Leave NtUserGetThreadState, ret=%lu\n", ret);
@@ -423,7 +447,7 @@ NtUserGetGUIThreadInfo(
         MsgQueue = W32Thread->MessageQueue;
       else
       {
-        if ( Desktop ) MsgQueue = Desktop->ActiveMessageQueue;
+        MsgQueue = Desktop->ActiveMessageQueue;
       }
    }
    else
@@ -723,8 +747,6 @@ void UserDbgAssertThreadInfo(BOOL showCaller)
     ASSERT(pci->ulClientDelta == DesktopHeapGetUserDelta());
     if (pti->pcti && pci->pDeskInfo)
         ASSERT(pci->pClientThreadInfo == (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta));
-    //if (pti->pcti && IsListEmpty(&pti->SentMessagesListHead))
-    //    ASSERT((pti->pcti->fsChangeBits & QS_SENDMESSAGE) == 0);
     if (pti->KeyboardLayout)
         ASSERT(pci->hKL == pti->KeyboardLayout->hkl);
     if(pti->rpdesk != NULL)

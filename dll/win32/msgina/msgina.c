@@ -531,7 +531,7 @@ WlxActivateUserShell(
 
     /* Get the path of userinit */
     rc = RegOpenKeyExW(
-        HKEY_LOCAL_MACHINE, 
+        HKEY_LOCAL_MACHINE,
         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
         0,
         KEY_QUERY_VALUE,
@@ -866,7 +866,7 @@ CreateProfile(
         goto cleanup;
     }
 
-    *pgContext->pAuthenticationId = Stats.AuthenticationId; 
+    *pgContext->pAuthenticationId = Stats.AuthenticationId;
     pgContext->pMprNotifyInfo->pszUserName = DuplicationString(UserName);
     pgContext->pMprNotifyInfo->pszDomain = DuplicationString(Domain);
     pgContext->pMprNotifyInfo->pszPassword = DuplicationString(Password);

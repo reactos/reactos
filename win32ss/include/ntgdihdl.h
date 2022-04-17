@@ -119,28 +119,6 @@
 #define GDI_OBJ_HMGR_RESTRICTED 0x80000022 /* Restricted? */
 
 
-/* DC OBJ Types */
-#define DC_TYPE_DIRECT 0  /* normal device context */
-#define DC_TYPE_MEMORY 1  /* memory device context */
-#define DC_TYPE_INFO   2  /* information context */
-
-/* DC OBJ Flags */
-#define DC_FLAG_DISPLAY            0x0001
-#define DC_FLAG_DIRECT             0x0002
-#define DC_FLAG_CANCELLED          0x0004
-#define DC_FLAG_PERMANENT          0x0008
-#define DC_FLAG_DIRTY_RAO          0x0010
-#define DC_FLAG_ACCUM_WMGR         0x0020
-#define DC_FLAG_ACCUM_APP          0x0040
-#define DC_FLAG_RESET              0x0080
-#define DC_FLAG_SYNCHRONIZEACCESS  0x0100
-#define DC_FLAG_EPSPRINTINGESCAPE  0x0200
-#define DC_FLAG_TEMPINFODC         0x0400
-#define DC_FLAG_FULLSCREEN         0x0800
-#define DC_FLAG_IN_CLONEPDEV       0x1000
-#define DC_FLAG_REDIRECTION        0x2000
-#define DC_FLAG_SHAREACCESS        0x4000
-
 /* DC_ATTR Dirty Flags */
 #define DIRTY_FILL                          0x00000001
 #define DIRTY_LINE                          0x00000002
@@ -174,16 +152,23 @@
 #define LDC_INIT_PAGE     0x00000080
 #define LDC_STARTPAGE     0x00000100
 #define LDC_NEXTBAND      0x00000200
+#define LDC_FONTHASH      0x00001000
 #define LDC_CLOCKWISE     0x00002000
+#define LDC_NEWFONT       0x00008000
 #define LDC_KILL_DOCUMENT 0x00010000
 #define LDC_META_PRINT    0x00020000
 #define LDC_DIRECT        0x00040000
 #define LDC_RESET_BANDING 0x00080000
+#define LDC_DOWNLOADFONTS 0x00100000
 #define LDC_RESETDC       0x00200000
 #define LDC_UFIMAP        0x00400000
 #define LDC_INFODC        0x01000000 /* If CreateIC was passed. */
 #define LDC_DEVCAPS       0x02000000
+#define LDC_XPS_PASS      0x08000000 // Guessing, not sure.
 #define LDC_ATENDPAGE     0x10000000
+#define LDC_COLORPAGE     0x20000000
+
+#define UFIHASHTABLESIZE  64
 
 /* DC_ATTR Xform Flags */
 #define METAFILE_TO_WORLD_IDENTITY          0x00000001
@@ -210,6 +195,8 @@
 #define ATTR_RGN_VALID                      0x00000010
 #define ATTR_RGN_DIRTY                      0x00000020
 
+/* Set/Clear Bitmap/Brush Stock Attribute */
+#define SC_BB_STOCKOBJ 1
 
 /* TYPES *********************************************************************/
 
@@ -285,11 +272,16 @@ typedef struct _LDC
     PDEVMODEW pdm;
     PVOID pUMPDev;        /* Ptr to User Mode Printer Device structure */
     PUMDHPDEV pUMdhpdev;  /* Ptr to Combined UMPD and DHPDEV structure */
+    PVOID UFIHashTable[3];
+    UNIVERSAL_FONT_ID ufi;
+    PVOID pvEMFSpoolData;
+    ULONG cjSize;
+    LIST_ENTRY leRecords;
     DEVCAPS DevCaps;
     HBRUSH BrushColor;
     HPEN PenColor;
     // wine data
-    DWORD dwData[7];
+    DWORD dwData[5];
 } LDC, *PLDC;
 
 typedef struct _DC_ATTR

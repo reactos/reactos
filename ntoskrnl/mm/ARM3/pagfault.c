@@ -674,6 +674,11 @@ MiResolveDemandZeroFault(IN PVOID Address,
             PageFrameNumber = MiRemoveAnyPage(Color);
             NeedZero = TRUE;
         }
+        else
+        {
+            /* Page guaranteed to be zero-filled */
+            NeedZero = FALSE;
+        }
     }
     else
     {
@@ -688,6 +693,8 @@ MiResolveDemandZeroFault(IN PVOID Address,
         {
             /* System wants a zero page, obtain one */
             PageFrameNumber = MiRemoveZeroPage(Color);
+            /* No need to zero-fill it */
+            NeedZero = FALSE;
         }
     }
 
@@ -1286,6 +1293,14 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
                                           (ULONG)TempPte.u.Soft.Protection,
                                           Process,
                                           OldIrql);
+#if MI_TRACE_PFNS
+        /* Update debug info */
+        if (TrapInformation)
+            MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+        else
+            MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
+#endif
+                                      
         ASSERT(NT_SUCCESS(Status));
     }
 
@@ -1637,6 +1652,14 @@ MiDispatchFault(IN ULONG FaultCode,
     ASSERT(KeAreAllApcsDisabled() == TRUE);
     if (NT_SUCCESS(Status))
     {
+#if MI_TRACE_PFNS
+        /* Update debug info */
+        if (TrapInformation)
+            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+        else
+            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
+#endif
+
         //
         // Make sure we're returning in a sane state and pass the status down
         //
@@ -2191,6 +2214,11 @@ UserFault:
 
 #if MI_TRACE_PFNS
         UserPdeFault = FALSE;
+        /* Update debug info */
+        if (TrapInformation)
+            MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+        else
+            MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
         /* We should come back with APCs enabled, and with a valid PDE */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
@@ -2285,6 +2313,14 @@ UserFault:
                                  TempPte.u.Soft.Protection,
                                  CurrentProcess,
                                  MM_NOIRQL);
+
+#if MI_TRACE_PFNS
+        /* Update debug info */
+        if (TrapInformation)
+            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+        else
+            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
+#endif
 
         /* Return the status */
         MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);

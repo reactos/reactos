@@ -305,7 +305,7 @@ SmpExecuteInitialCommand(IN ULONG MuSessionId,
     if (!SmApiPort)
     {
         /* Connect to ourselves, as a client */
-        Status = SmConnectToSm(0, 0, 0, &SmApiPort);
+        Status = SmConnectToSm(NULL, NULL, 0, &SmApiPort);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("SMSS: Unable to connect to SM - Status == %lx\n", Status);

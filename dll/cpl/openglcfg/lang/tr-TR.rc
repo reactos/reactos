@@ -11,16 +11,16 @@ BEGIN
     GROUPBOX "İşleyici Ayarları", -1, 5, 25, 230, 90
     LTEXT "İş&leyici:", -1, 15, 42, 37, 10
     COMBOBOX IDC_RENDERER, 55, 40, 160, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Bu, grafik sürücünüz için ön tanımlı ayarları geçersiz kılacak! Özgün ayarlara dönmek için ""Ön Tanımlı""yı seçiniz.", -1, 15, 60, 210, 40
+    LTEXT "Bu, grafik sürücünüz için ön tanımlı ayarları geçersiz kılacak! Ön tanımlı ayarlara dönmek için ""Ön Tanımlı""yı seçiniz.", -1, 15, 60, 210, 40
     GROUPBOX "Hata Ayıklama", -1, 5, 125, 230, 90
     LTEXT "DEBUGCHANNEL:", -1, 15, 142, 65, 10
     COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "opengl32'den hata ayıklama çıktısını etkinleştirir ya da pasifleştirir.\n\nUYARI: ""Ayarla""yı ya da ""Sil""i seçmek DEBUGCHANNEL ortam değişkeninin içeriğine yazacak!", -1, 15, 165, 210, 40
+    LTEXT "opengl32'den hata ayıklama çıktısını etkinleştirir ya da devre dışı bırakılır.\n\nUYARI: ""Ayarla""yı ya da ""Sil""i seçmek DEBUGCHANNEL ortam değişkeninin içeriğine yazacak!", -1, 15, 165, 210, 40
 END
 
 STRINGTABLE
 BEGIN
-    IDS_RENDERER_DEFAULT "Sistem Ön Tanımlı"
+    IDS_RENDERER_DEFAULT "Ön Tanımlı Sistem Ayarları"
     IDS_RENDERER_RSWR "ReactOS Yazılım Gerçekleştirmesi"
     IDS_CPLNAME "OpenGL Yapılandırması"
     IDS_CPLDESCRIPTION "OpenGL işleyicisini yapılandırır."

@@ -145,7 +145,7 @@ BOOL DlgInitHandler(IN HWND hDlg)
 
     /* Refresh the list */
     ListBoxRefreshContents();
-    
+
     /* Create a timer, we'll use it to control the state of our items in the listbox */
     Globals.iTimer = SetTimer(hDlg, 0, 400, NULL);
 

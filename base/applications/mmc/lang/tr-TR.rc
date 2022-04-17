@@ -4,37 +4,37 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDM_CONSOLE_SMALL MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
-        MENUITEM "&Yeni\tDenetim+N", IDM_FILE_NEW
-        MENUITEM "&Aç\tDenetim+O", IDM_FILE_OPEN
+        MENUITEM "&Yeni\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Aç\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tSeçenek+F4", IDM_FILE_EXIT
+        MENUITEM "&Çıkış\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&ReactOS Yönetim Konsolu Üzerine", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Yönetim Konsolu Hakkında", IDM_HELP_ABOUT
     END
 END
 
 IDM_CONSOLE_LARGE MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
-        MENUITEM "&Yeni\tDenetim+N", IDM_FILE_NEW
-        MENUITEM "&Aç\tDenetim+O", IDM_FILE_OPEN
-        MENUITEM "&Sakla", IDM_FILE_SAVE
-        MENUITEM "Ay&rı Sakla...", IDM_FILE_SAVEAS
+        MENUITEM "&Yeni\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Aç\tAlt+O", IDM_FILE_OPEN
+        MENUITEM "&Kaydet", IDM_FILE_SAVE
+        MENUITEM "Far&klı Kaydet...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tSeçenek+F4", IDM_FILE_EXIT
+        MENUITEM "&Çıkış\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Pencereler"
     BEGIN
-        MENUITEM "&Dizelgele", IDM_WINDOWS_LIST
+        MENUITEM "&Listele", IDM_WINDOWS_LIST
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&ReactOS Yönetim Konsolu Üzerine", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Yönetim Konsolu Hakkında", IDM_HELP_ABOUT
     END
 END
 

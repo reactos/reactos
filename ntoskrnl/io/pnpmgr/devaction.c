@@ -50,8 +50,6 @@ KSPIN_LOCK IopDeviceActionLock;
 KEVENT PiEnumerationFinished;
 static const WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
 
-#define TAG_PNP_DEVACTION 'aDpP'
-
 /* TYPES *********************************************************************/
 
 typedef struct _DEVICE_ACTION_REQUEST
@@ -253,7 +251,10 @@ IopCreateDeviceInstancePath(
     Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopQueryDeviceCapabilities() failed (Status 0x%08lx)\n", Status);
+        if (Status != STATUS_NOT_SUPPORTED)
+        {
+            DPRINT1("IopQueryDeviceCapabilities() failed (Status 0x%08lx)\n", Status);
+        }
         RtlFreeUnicodeString(&DeviceId);
         return Status;
     }
@@ -1396,6 +1397,14 @@ IopSetServiceEnumData(
         goto done;
     }
 
+    Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING,
+                                       &ServiceName,
+                                       &DeviceNode->ServiceName);
+    if (!NT_SUCCESS(Status))
+    {
+        goto done;
+    }
+
     RtlInitUnicodeString(&EnumKeyName, L"Enum");
     Status = IopCreateRegistryKeyEx(&ServiceEnumKey,
                                     ServiceKey,
@@ -1479,10 +1488,6 @@ IopSetServiceEnumData(
                                &NextInstance,
                                sizeof(NextInstance));
     }
-
-    RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING,
-                              &ServiceName,
-                              &DeviceNode->ServiceName);
 
 done:
     if (ServiceEnumKey != NULL)
@@ -1631,6 +1636,10 @@ PiIrpSendRemoveCheckVpb(
     return IopSynchronousCall(targetDevice, &stack, &info);
 }
 
+NTSTATUS
+IopUpdateResourceMapForPnPDevice(
+    IN PDEVICE_NODE DeviceNode);
+
 static
 VOID
 NTAPI
@@ -1642,6 +1651,16 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 
     /* Drivers should never fail a IRP_MN_REMOVE_DEVICE request */
     PiIrpSendRemoveCheckVpb(DeviceObject, IRP_MN_REMOVE_DEVICE);
+
+    /* Start of HACK: update resources stored in registry, so IopDetectResourceConflict works */
+    if (DeviceNode->ResourceList)
+    {
+        ASSERT(DeviceNode->ResourceListTranslated);
+        DeviceNode->ResourceList->Count = 0;
+        DeviceNode->ResourceListTranslated->Count = 0;
+        IopUpdateResourceMapForPnPDevice(DeviceNode);
+    }
+    /* End of HACK */
 
     PiSetDevNodeState(DeviceNode, DeviceNodeRemoved);
     PiNotifyTargetDeviceChange(&GUID_TARGET_DEVICE_REMOVE_COMPLETE, DeviceObject, NULL);

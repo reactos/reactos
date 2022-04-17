@@ -12,7 +12,7 @@
 #include <atlcom.h>
 #include <atlcoll.h>
 #include <atlstr.h>
-#include <rosdlgs.h>
+#include <ui/rosdlgs.h>
 #include <shlwapi.h>
 #include <shellapi.h>
 #include <strsafe.h>
@@ -75,6 +75,16 @@ enum eZipConfirmResponse
 };
 
 eZipConfirmResponse _CZipAskReplace(HWND hDlg, const char* FullPath);
+
+enum eZipExtractError
+{
+    eNoError,
+    eExtractAbort,
+    eDirectoryError,
+    eFileError,
+    eOpenError,
+    eUnpackError,
+};
 
 #include "CZipEnumerator.hpp"
 #include "CZipFolder.hpp"

@@ -19,7 +19,7 @@ BEGIN
     PUSHBUTTON "И&зменить...", IDC_NETWORK_PROPERTY, 180, 149, 72, 15
     LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
     ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
-    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
+    LTEXT "Изменения вступят в силу после перезагрузки компьютера.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -66,20 +66,20 @@ BEGIN
     4 "Изменение имени компьютера"
     5 "Рабочая группа:"
     6 "Домен:"
-    7 "The domain name ""%1"" does not conform to Internet Domain Name Service specifications, although it is a legal ReactOS name. You must use ReactOS DNS server for non-standard names."
-    8 "The domain name ""%1"" is not properly formatted. Periods (.) are used to separate domains. Each domain is limited to 63 characters. Example: domain-1.reactos.org."
-    10 "The new computer name ""%1"" is too long. The name may not be longer than 63 characters."
-    11 "The new computer name entered is not properly formatted. Standard names may contain letters (a-z, A-Z), numbers (0-9), and hyphens (-), but no spaces or periods (.). The name may not consist entirely of digits."
+    7 "Имя домена ""%1"" не соответствует спецификациям DNS Интернета, хотя оно является допустимым именем в ReactOS. Для поддержки нестандартных имён следует использовать DNS-сервер ReactOS."
+    8 "Имя домена ""%1"" имеет неправильный формат. Точки (.) используются как разделители доменов. Каждый домен должен быть не длиннее 63 символов. Пример: domain-1.reactos.org."
+    10 "Новое имя компьютера ""%1"" слишком длинное. Это имя не может быть длиннее, чем 63 символа."
+    11 "Введённое имя компьютера имеет неправильный формат. Стандартные имена могут содержать только латинские буквы (a-z, A-Z), цифры (0-9) и дефисы (-), но не могут содержать пробелы или точки (.). Имя не может состоять только из цифр."
     22 "Добро пожаловать в рабочую группу %1."
     23 "Добро пожаловать в домен %1."
     24 "Необходимо перезапустить компьютер для того, чтобы эти изменения вступили в силу."
     25 "Можно изменить имя и принадлежность этого компьютера. Изменения могут повлиять на доступ к сетевым ресурсам."
     1021 "Примечание: только администраторы могут изменить идентификацию этого компьютера."
     1022 "Примечание: идентификация этого компьютера не может быть изменена, потому что:"
-    1029 "The new computer name ""%1"" is a number. The name may not be a number."
-    1030 "Новое имя компьютера ""%1"" содержит запрещенные знаки. Запрещенные знаки ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / и ?"
-    1031 "The first domain of the domain name ""%1"" is a number. The first domain may not be a number."
-    1032 "The domain name ""%1"" contains characters which are not allowed. Standard DNS names may contain letters (a-z, A-Z), numbers (0-9), and hyphens, but no spaces. Periods (.) are used to separate domains. Example: domain-1.reactos.org."
+    1029 "Новое имя компьютера ""%1"" является числом. Имя компьютера не может быть числом."
+    1030 "Новое имя компьютера ""%1"" содержит запрещённые знаки. Запрещённые знаки ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / и ?"
+    1031 "Первый домен в доменном имени ""%1"" является числом. Имя первого домена не может быть числом."
+    1032 "Имя домена ""%1"" содержит запрещённые знаки. Стандартные DNS-имена могут содержать только латинские буквы (a-z, A-Z), цифры (0-9) и дефисы, но не могут содержать пробелы. Точки (.) используются как разделители доменов. Пример: domain-1.reactos.org."
     3210 "&Подробно >>"
     3220 "<< &Подробно"
     4000 "Информация"

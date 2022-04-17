@@ -21,6 +21,7 @@
 
 #include "videoprt.h"
 #include <ndk/obfuncs.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -301,6 +302,9 @@ IntSetupDeviceSettingsKey(
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
 
+    if (!DeviceExtension->PhysicalDeviceObject)
+        return STATUS_SUCCESS;
+
     /* Open the software key: HKLM\System\CurrentControlSet\Control\Class\<ClassGUID>\<n> */
     Status = IoOpenDeviceRegistryKey(DeviceExtension->PhysicalDeviceObject,
                                      PLUGPLAY_REGKEY_DRIVER,
@@ -335,7 +339,7 @@ IntSetupDeviceSettingsKey(
                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    Status = ZwOpenKey(&SourceKeyHandle, KEY_WRITE, &ObjectAttributes);
+    Status = ZwOpenKey(&SourceKeyHandle, KEY_READ, &ObjectAttributes);
     if (Status != STATUS_SUCCESS)
     {
         ERR_(VIDEOPRT, "ZwOpenKey failed for settings key: status 0x%lx\n", Status);
@@ -348,6 +352,52 @@ IntSetupDeviceSettingsKey(
 
     ObCloseHandle(SourceKeyHandle, KernelMode);
     ObCloseHandle(DestKeyHandle, KernelMode);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IntDuplicateUnicodeString(
+    IN ULONG Flags,
+    IN PCUNICODE_STRING SourceString,
+    OUT PUNICODE_STRING DestinationString)
+{
+    if (SourceString == NULL ||
+        DestinationString == NULL ||
+        SourceString->Length > SourceString->MaximumLength ||
+        (SourceString->Length == 0 && SourceString->MaximumLength > 0 && SourceString->Buffer == NULL) ||
+        Flags == RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING ||
+        Flags >= 4)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if ((SourceString->Length == 0) &&
+        (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE |
+                   RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING)))
+    {
+        DestinationString->Length = 0;
+        DestinationString->MaximumLength = 0;
+        DestinationString->Buffer = NULL;
+    }
+    else
+    {
+        USHORT DestMaxLength = SourceString->Length;
+
+        if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
+            DestMaxLength += sizeof(UNICODE_NULL);
+
+        DestinationString->Buffer = ExAllocatePoolWithTag(PagedPool, DestMaxLength, TAG_VIDEO_PORT);
+        if (DestinationString->Buffer == NULL)
+            return STATUS_NO_MEMORY;
+
+        RtlCopyMemory(DestinationString->Buffer, SourceString->Buffer, SourceString->Length);
+        DestinationString->Length = SourceString->Length;
+        DestinationString->MaximumLength = DestMaxLength;
+
+        if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
+            DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -369,6 +419,17 @@ IntCreateNewRegistryPath(
     ULONG ResultLength;
     USHORT KeyMaxLength;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    PWCHAR InstanceIdBuffer;
+
+    if (!DeviceExtension->PhysicalDeviceObject)
+    {
+        Status = IntDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                           &DeviceExtension->RegistryPath,
+                                           &DeviceExtension->NewRegistryPath);
+        if (!NT_SUCCESS(Status))
+            ERR_(VIDEOPRT, "IntDuplicateUnicodeString() failed with status 0x%lx\n", Status);
+        return Status;
+    }
 
     /* Open the hardware key: HKLM\System\CurrentControlSet\Enum\... */
     Status = IoOpenDeviceRegistryKey(DeviceExtension->PhysicalDeviceObject,
@@ -476,9 +537,14 @@ IntCreateNewRegistryPath(
 
     /* Append a the instance path */ /// \todo HACK
     RtlAppendUnicodeToString(&DeviceExtension->NewRegistryPath, L"\\");
+    InstanceIdBuffer = DeviceExtension->NewRegistryPath.Buffer +
+        DeviceExtension->NewRegistryPath.Length / sizeof(WCHAR);
     RtlAppendUnicodeToString(&DeviceExtension->NewRegistryPath, L"0000");
 
-    /* Check this key again */
+    /* Write instance ID */
+    swprintf(InstanceIdBuffer, L"%04u", DeviceExtension->DisplayNumber);
+
+    /* Check if the name exists */
     Status = RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE,
                                  DeviceExtension->NewRegistryPath.Buffer);
     if (Status != STATUS_SUCCESS)
@@ -498,7 +564,7 @@ IntCreateNewRegistryPath(
                                    OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                    NULL,
                                    NULL);
-        Status = ZwOpenKey(&NewKey, KEY_READ, &ObjectAttributes);
+        Status = ZwOpenKey(&NewKey, KEY_WRITE, &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
             ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
@@ -521,8 +587,11 @@ IntCreateNewRegistryPath(
 
         /* Copy the registry data from the legacy key */
         Status = IntCopyRegistryKey(SettingsKey, NewKey);
-    }
 
+        /* Close the key handles */
+        ObCloseHandle(SettingsKey, KernelMode);
+        ObCloseHandle(NewKey, KernelMode);
+    }
 
     return Status;
 }
@@ -599,7 +668,12 @@ IntCreateRegistryPath(
         }
     }
 
-    if (Valid)
+    if (!VideoPortUseNewKey)
+    {
+        INFO_(VIDEOPRT, "Using old registry key as 'UseNewKey' is FALSE\n");
+        Valid = FALSE;
+    }
+    else if (Valid)
     {
         DeviceRegistryPath->MaximumLength = DriverRegistryPath->Length + sizeof(Insert1) + sizeof(Insert2)
                                           + DeviceNumberString.Length;

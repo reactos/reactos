@@ -68,7 +68,7 @@
  #pragma strict_gs_check(push, on)
 #endif
 
-#if defined(_M_MRX000) || defined(_M_ALPHA) || defined(_M_PPC) || defined(_M_IA64) || defined(_M_AMD64) || defined(_M_ARM)
+#if defined(_M_MRX000) || defined(_M_ALPHA) || defined(_M_PPC) || defined(_M_IA64) || defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64)
  #define ALIGNMENT_MACHINE
  #define UNALIGNED __unaligned
  #if defined(_WIN64)
@@ -119,7 +119,7 @@
 
 #if defined(_AMD64_) || defined(_X86_)
  #define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT($ULONG)
-#elif defined(_IA64_) || defined(_ARM_)
+#elif defined(_IA64_) || defined(_ARM_) || defined(_ARM64_)
  #define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT($ULONG))
 #elif !defined(RC_INVOKED)
  #error "Unknown architecture"
@@ -735,12 +735,12 @@ extern "C++" { \
 #define COMPILETIME_OR_5FLAGS(a,b,c,d,e)    ((UINT)(a)|(UINT)(b)|(UINT)(c)|(UINT)(d)|(UINT)(e))
 
 /* Type Limits */
-#define MINCHAR   (-128)
-#define MAXCHAR   127
-#define MINSHORT  (-32768)
-#define MAXSHORT  32767
-#define MINLONG   (-2147483648)
-#define MAXLONG   2147483647
+#define MINCHAR   0x80
+#define MAXCHAR   0x7f
+#define MINSHORT  0x8000
+#define MAXSHORT  0x7fff
+#define MINLONG   0x80000000
+#define MAXLONG   0x7fffffff
 $if(_NTDEF_)
 #define MAXUCHAR  0xff
 #define MAXUSHORT 0xffff

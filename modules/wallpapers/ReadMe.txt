@@ -21,7 +21,7 @@ ReactOS_Mizu_16x9_A.png             | See above                                 
 ReactOS_Mizu_16x9_B.png             | See above                                      | See above
 Silhouette collection               | Jake Collins (polar@ever3st.com)               | https://ever3st.com/Graphics/Loot/
 
-To include the module in your build folder, run the configure script with the flags -DENABLE_WALLPAPERS=1 
+To include the module in your build folder, run the configure script with the flags -DENABLE_WALLPAPERS=1
 
 # For Windows users
 

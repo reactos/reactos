@@ -51,7 +51,7 @@ KdbpPrintDisasm(void* Ignored, const char* fmt, ...)
 
   va_start(ap, fmt);
   ret = vsprintf(buffer, fmt, ap);
-  DbgPrint("%s", buffer);
+  KdpDprintf("%s", buffer);
   va_end(ap);
   return(ret);
 }
@@ -80,7 +80,7 @@ KdbpPrintAddressInCode(unsigned int Addr, struct disassemble_info * Ignored)
 {
     if (!KdbSymPrintAddress((void*)Addr, NULL))
     {
-      DbgPrint("<%08x>", Addr);
+      KdpDprintf("<%08x>", Addr);
     }
 }
 

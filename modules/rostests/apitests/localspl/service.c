@@ -162,6 +162,14 @@ START_TEST(service)
     int argc;
     char** argv;
 
+#if defined(_M_AMD64)
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-366: Skipping localspl_apitest:service because it hangs on Windows Server 2003 x64-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
+
     SERVICE_TABLE_ENTRYW ServiceTable[] =
     {
         { SERVICE_NAME, _ServiceMain },

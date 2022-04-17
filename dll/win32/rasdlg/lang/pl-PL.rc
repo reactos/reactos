@@ -3,7 +3,7 @@
  *    Use ReactOS forum PM or IRC to contact me
  *    http://www.reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
- *    UTF-8 conversion by Caemyr (May, 2011) 
+ *    UTF-8 conversion by Caemyr (May, 2011)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -2167,7 +2167,7 @@ BEGIN
     585 "Jak się nazywa usługa za pośrednictwem której łączysz się z Internetem?\0"
     586 "Wpisz adres IP komputera-serwera w sieci prywatnej.\0"
     587 "Ustawienia Zaawansowane\0"
-    588 "Nazwa wpisu rozpoczyna się od kropki lub zawiera niedozwolone znaki. \nWybierz inną nazwę.\0"
+    588 "Nazwa wpisu rozpoczyna się od kropki lub zawiera niedozwolone znaki.\nWybierz inną nazwę.\0"
     589 "Właściwości\0"
     1512 "Port komunikacyjny\0"
     1523 " kanał\0"
@@ -2241,7 +2241,7 @@ BEGIN
     1595 "Protokół Point-to-Point Protocol w sieci Ethernet (PPPoE)\0"
     1596 "Typ połączenia &szerokopasmowego do utworzenia:\0"
     1611 "Połączenie szerokopasmowe\0"
-    1612 "Zostało wybrane użycie klucza wstępnego, ale nie został on wprowadzony. \nWprowadzić klucz wstępny.\0"
+    1612 "Zostało wybrane użycie klucza wstępnego, ale nie został on wprowadzony.\nWprowadzić klucz wstępny.\0"
     1613 "Nie można wysłać danych do uwierzytelnienia\0"
     1634 "Z powodu wyłączenia usługi Instrumentacji Zarządzania Windows (WMI), nie może wyświetlić właściwości tego połączenia albo sieci lokalnej.\n\nAby uzyskać dostęp do właściwości, musisz wpierw uruchomić usługę WMI.\0"
     1635 "ReactOS nie może wyświetlić właściwości tego połączenia. Informacja w Instrumentacji Zarządzania Windows (WMI) może być uszkodzona. Aby to poprawić, użyj Odtwarzania Systemu, by odtworzyć ReactOS z wcześniejszego momentu (punktu odtwarzania).\0"

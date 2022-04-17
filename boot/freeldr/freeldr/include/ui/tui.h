@@ -19,50 +19,114 @@
 
 #pragma once
 
+/* GENERIC TUI UTILS *********************************************************/
+
+INT
+TuiPrintf(
+    _In_ PCSTR Format, ...);
+
+VOID
+TuiTruncateStringEllipsis(
+    _Inout_z_ PSTR StringText,
+    _In_ ULONG MaxChars);
+
 #define TUI_TITLE_BOX_CHAR_HEIGHT    5
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Textual User Interface Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
+/* Textual User Interface Functions ******************************************/
+
 BOOLEAN    TuiInitialize(VOID);                                    // Initialize User-Interface
 VOID    TuiUnInitialize(VOID);                                    // Un-initialize User-Interface
 
 VOID    TuiDrawBackdrop(VOID);                                    // Fills the entire screen with a backdrop
 VOID    TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);    // Fills the area specified with FillChar and Attr
 VOID    TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);    // Draws a shadow on the bottom and right sides of the area specified
-VOID    TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);    // Draws a box around the area specified
-VOID    TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);    // Draws text at coordinates specified
-VOID    TuiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr);    // Draws text at coordinates specified
-VOID    TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);    // Draws centered text at the coordinates specified and clips the edges
+
+/* Draws a box around the area specified */
+VOID
+TuiDrawBox(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ BOOLEAN Fill,
+    _In_ BOOLEAN Shadow,
+    _In_ UCHAR Attr);
+
+VOID
+TuiDrawBoxTopLine(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ UCHAR Attr);
+
+VOID
+TuiDrawBoxBottomLine(
+    _In_ ULONG Left,
+    _In_ ULONG Bottom,
+    _In_ ULONG Right,
+    _In_ UCHAR VertStyle,
+    _In_ UCHAR HorzStyle,
+    _In_ UCHAR Attr);
+
+/* Draws text at coordinates specified */
+VOID
+TuiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr);
+
+/* Draws text at coordinates specified */
+VOID
+TuiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr);
+
+/* Draws centered text at the coordinates specified and clips the edges */
+VOID
+TuiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr);
+
 VOID    TuiDrawStatusText(PCSTR StatusText);                    // Draws text at the very bottom line on the screen
 VOID    TuiUpdateDateTime(VOID);                                // Updates the date and time
 VOID    TuiSaveScreen(PUCHAR Buffer);                            // Saves the screen so that it can be restored later
 VOID    TuiRestoreScreen(PUCHAR Buffer);                        // Restores the screen from a previous save
 VOID    TuiMessageBox(PCSTR MessageText);                        // Displays a message box on the screen with an ok button
 VOID    TuiMessageBoxCritical(PCSTR MessageText);                // Displays a message box on the screen with an ok button using no system resources
-VOID    TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
-VOID    TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);            // Draws the progress bar showing nPos percent filled
+
 BOOLEAN    TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
-int    TuiPrintf(const char *format, ... );
 UCHAR    TuiTextToColor(PCSTR ColorText);                        // Converts the text color into it's equivalent color value
 UCHAR    TuiTextToFillStyle(PCSTR FillStyleText);                // Converts the text fill into it's equivalent fill value
 
 VOID    TuiFadeInBackdrop(VOID);                                // Draws the backdrop and fades the screen in
 VOID    TuiFadeOut(VOID);                                        // Fades the screen out
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Menu Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
+/* Menu Functions ************************************************************/
 
-VOID  TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo);
-VOID  TuiDrawMenu(PUI_MENU_INFO MenuInfo);
-VOID  TuiDrawMenuBox(PUI_MENU_INFO MenuInfo);
-VOID  TuiDrawMenuItem(PUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
-ULONG TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
+VOID
+TuiDrawMenu(
+    _In_ PUI_MENU_INFO MenuInfo);
+
+VOID
+TuiDrawMenuBox(
+    _In_ PUI_MENU_INFO MenuInfo);
+
+VOID
+TuiDrawMenuItem(
+    _In_ PUI_MENU_INFO MenuInfo,
+    _In_ ULONG MenuItemNumber);
 
 BOOLEAN
 TuiDisplayMenu(
@@ -78,25 +142,27 @@ TuiDisplayMenu(
     IN UiMenuKeyPressFilterCallback KeyPressFilter OPTIONAL,
     IN PVOID Context OPTIONAL);
 
-/* Definitions for corners, depending on HORIZ and VERT */
-#define UL        (0xda)
-#define UR        (0xbf)  /* HORZ and VERT */
-#define LL        (0xc0)
-#define LR        (0xd9)
+/*
+ * Definitions for corners, depending on HORZ and VERT
+ */
+#define UL      0xDA    /* HORZ and VERT */
+#define UR      0xBF
+#define LL      0xC0
+#define LR      0xD9
 
-#define D_UL    (0xc9)
-#define D_UR    (0xbb)  /* D_HORZ and D_VERT */
-#define D_LL    (0xc8)
-#define D_LR    (0xbc)
+#define D_UL    0xC9    /* D_HORZ and D_VERT */
+#define D_UR    0xBB
+#define D_LL    0xC8
+#define D_LR    0xBC
 
-#define HD_UL    (0xd5)
-#define HD_UR    (0xb8)  /* D_HORZ and VERT */
-#define HD_LL    (0xd4)
-#define HD_LR    (0xbe)
+#define HD_UL   0xD5    /* D_HORZ and VERT */
+#define HD_UR   0xB8
+#define HD_LL   0xD4
+#define HD_LR   0xBE
 
-#define VD_UL    (0xd6)
-#define VD_UR    (0xb7)  /* HORZ and D_VERT */
-#define VD_LL    (0xd3)
-#define VD_LR    (0xbd)
+#define VD_UL   0xD6    /* HORZ and D_VERT */
+#define VD_UR   0xB7
+#define VD_LL   0xD3
+#define VD_LR   0xBD
 
 extern const UIVTBL TuiVtbl;

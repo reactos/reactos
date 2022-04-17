@@ -73,7 +73,6 @@ InitDisplayDriver(
     WCHAR awcBuffer[128];
     ULONG cbSize;
     HKEY hkey;
-    DEVMODEW dmDefault;
     DWORD dwVga;
 
     TRACE("InitDisplayDriver(%S, %S);\n",
@@ -126,9 +125,6 @@ InitDisplayDriver(
         RtlInitUnicodeString(&ustrDescription, L"<unknown>");
     }
 
-    /* Query the default settings */
-    RegReadDisplaySettings(hkey, &dmDefault);
-
     /* Query if this is a VGA compatible driver */
     cbSize = sizeof(DWORD);
     Status = RegQueryValue(hkey, L"VgaCompatible", REG_DWORD, &dwVga, &cbSize);
@@ -141,8 +137,7 @@ InitDisplayDriver(
     RtlInitUnicodeString(&ustrDeviceName, pwszDeviceName);
     pGraphicsDevice = EngpRegisterGraphicsDevice(&ustrDeviceName,
                                                  &ustrDisplayDrivers,
-                                                 &ustrDescription,
-                                                 &dmDefault);
+                                                 &ustrDescription);
     if (pGraphicsDevice && dwVga)
     {
         pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_VGA_COMPATIBLE;
@@ -155,12 +150,7 @@ NTSTATUS
 NTAPI
 InitVideo(VOID)
 {
-    ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
-    WCHAR awcDeviceName[20];
-    WCHAR awcBuffer[256];
     NTSTATUS Status;
-    PGRAPHICS_DEVICE pGraphicsDevice;
-    ULONG cbValue;
     HKEY hkey;
 
     TRACE("----------------------------- InitVideo() -------------------------------\n");
@@ -173,85 +163,10 @@ InitVideo(VOID)
     if (gbBaseVideo)
         ERR("VGA mode requested.\n");
 
-    /* Open the key for the adapters */
-    Status = RegOpenKey(KEY_VIDEO, &hkey);
+    /* Initialize all display devices */
+    Status = EngpUpdateGraphicsDeviceList();
     if (!NT_SUCCESS(Status))
-    {
-        ERR("Could not open HARDWARE\\DEVICEMAP\\VIDEO registry key:0x%lx\n", Status);
         return Status;
-    }
-
-    /* Read the name of the VGA adapter */
-    cbValue = sizeof(awcDeviceName);
-    Status = RegQueryValue(hkey, L"VgaCompatible", REG_SZ, awcDeviceName, &cbValue);
-    if (NT_SUCCESS(Status))
-    {
-        iVGACompatible = _wtoi(&awcDeviceName[sizeof("\\Device\\Video")-1]);
-        ERR("VGA adapter = %lu\n", iVGACompatible);
-    }
-
-    /* Get the maximum mumber of adapters */
-    if (!RegReadDWORD(hkey, L"MaxObjectNumber", &ulMaxObjectNumber))
-    {
-        ERR("Could not read MaxObjectNumber, defaulting to 0.\n");
-    }
-
-    TRACE("Found %lu devices\n", ulMaxObjectNumber + 1);
-
-    /* Loop through all adapters */
-    for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
-    {
-        /* Create the adapter's key name */
-        swprintf(awcDeviceName, L"\\Device\\Video%lu", iDevNum);
-
-        /* Read the reg key name */
-        cbValue = sizeof(awcBuffer);
-        Status = RegQueryValue(hkey, awcDeviceName, REG_SZ, awcBuffer, &cbValue);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("failed to query the registry path:0x%lx\n", Status);
-            continue;
-        }
-
-        /* Initialize the driver for this device */
-        pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
-        if (!pGraphicsDevice) continue;
-
-        /* Check if this is a VGA compatible adapter */
-        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE)
-        {
-            /* Save this as the VGA adapter */
-            if (!gpVgaGraphicsDevice)
-                gpVgaGraphicsDevice = pGraphicsDevice;
-            TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
-        }
-        else
-        {
-            /* Set the first one as primary device */
-            if (!gpPrimaryGraphicsDevice)
-                gpPrimaryGraphicsDevice = pGraphicsDevice;
-            TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
-        }
-    }
-
-    /* Close the device map registry key */
-    ZwClose(hkey);
-
-    /* Was VGA mode requested? */
-    if (gbBaseVideo)
-    {
-        /* Check if we found a VGA compatible device */
-        if (gpVgaGraphicsDevice)
-        {
-            /* Set the VgaAdapter as primary */
-            gpPrimaryGraphicsDevice = gpVgaGraphicsDevice;
-            // FIXME: DEVMODE
-        }
-        else
-        {
-            ERR("Could not find VGA compatible driver. Trying normal.\n");
-        }
-    }
 
     /* Check if we had any success */
     if (!gpPrimaryGraphicsDevice)
@@ -326,12 +241,18 @@ UserEnumDisplayDevices(
     HKEY hkey;
     NTSTATUS Status;
 
+    if (!pustrDevice)
+    {
+        /* Check if some devices have been added since last time */
+        EngpUpdateGraphicsDeviceList();
+    }
+
     /* Ask gdi for the GRAPHICS_DEVICE */
-    pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, iDevNum, 0);
+    pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, iDevNum);
     if (!pGraphicsDevice)
     {
         /* No device found */
-        ERR("No GRAPHICS_DEVICE found\n");
+        ERR("No GRAPHICS_DEVICE found for '%wZ', iDevNum %lu\n", pustrDevice, iDevNum);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -497,7 +418,7 @@ UserEnumDisplaySettings(
           pustrDevice, iModeNum);
 
     /* Ask GDI for the GRAPHICS_DEVICE */
-    pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
+    pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0);
     ppdev = EngpGetPDEV(pustrDevice);
 
     if (!pGraphicsDevice || !ppdev)
@@ -731,6 +652,7 @@ UserChangeDisplaySettings(
     PPDEVOBJ ppdev;
     WORD OrigBC;
     //PDESKTOP pdesk;
+    PDEVMODEW newDevMode = NULL;
 
     /* If no DEVMODE is given, use registry settings */
     if (!pdm)
@@ -781,8 +703,7 @@ UserChangeDisplaySettings(
         dm.dmDisplayFrequency = ppdev->pdmwDev->dmDisplayFrequency;
 
     /* Look for the requested DEVMODE */
-    pdm = PDEVOBJ_pdmMatchDevMode(ppdev, &dm);
-    if (!pdm)
+    if (!LDEVOBJ_bProbeAndCaptureDevmode(ppdev->pGraphicsDevice, &dm, &newDevMode, FALSE))
     {
         ERR("Could not find a matching DEVMODE\n");
         lResult = DISP_CHANGE_BADMODE;
@@ -803,7 +724,7 @@ UserChangeDisplaySettings(
         if (NT_SUCCESS(Status))
         {
             /* Store the settings */
-            RegWriteDisplaySettings(hkey, pdm);
+            RegWriteDisplaySettings(hkey, newDevMode);
 
             /* Close the registry key */
             ZwClose(hkey);
@@ -816,7 +737,9 @@ UserChangeDisplaySettings(
     }
 
     /* Check if DEVMODE matches the current mode */
-    if (pdm == ppdev->pdmwDev && !(flags & CDS_RESET))
+    if (newDevMode->dmSize == ppdev->pdmwDev->dmSize &&
+        RtlCompareMemory(newDevMode, ppdev->pdmwDev, newDevMode->dmSize) == newDevMode->dmSize &&
+        !(flags & CDS_RESET))
     {
         ERR("DEVMODE matches, nothing to do\n");
         goto leave;
@@ -833,7 +756,7 @@ UserChangeDisplaySettings(
         pvOldCursor = UserSetCursor(NULL, TRUE);
 
         /* Do the mode switch */
-        ulResult = PDEVOBJ_bSwitchMode(ppdev, pdm);
+        ulResult = PDEVOBJ_bSwitchMode(ppdev, newDevMode);
 
         /* Restore mouse pointer, no hooks called */
         pvOldCursor = UserSetCursor(pvOldCursor, TRUE);
@@ -855,6 +778,8 @@ UserChangeDisplaySettings(
         {
             /* Setting mode succeeded */
             lResult = DISP_CHANGE_SUCCESSFUL;
+            ExFreePoolWithTag(ppdev->pdmwDev, GDITAG_DEVMODE);
+            ppdev->pdmwDev = newDevMode;
 
             UserUpdateFullscreen(flags);
 
@@ -921,6 +846,9 @@ UserChangeDisplaySettings(
     }
 
 leave:
+    if (newDevMode && newDevMode != ppdev->pdmwDev)
+        ExFreePoolWithTag(newDevMode, GDITAG_DEVMODE);
+
     /* Release the PDEV */
     PDEVOBJ_vRelease(ppdev);
 

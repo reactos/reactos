@@ -506,7 +506,7 @@ START_TEST(NtLoadUnloadKey)
                 Disposition == REG_CREATED_NEW_KEY ? "create" : /* REG_OPENED_EXISTING_KEY */ "open",
                 Status);
     }
-    
+
     /* The key handle must be valid here */
     Status = NtFlushKey(KeyHandle);
     ok_ntstatus(Status, STATUS_SUCCESS);

@@ -1,5 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation improved by Aobi Chan CL (eason066@gmail.com) */
+/*
+ * PROJECT:     ReactOS Winlogon
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -19,7 +24,7 @@ CAPTION "使用者介面載入失敗"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "載入登入使用者介面的 DLL 檔案 %s 載入失敗。", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "請與系統管理員聯繫，以替換 DLL 檔案，或還原初始的 DLL。", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "請與系統管理員聯繫，以更換 DLL 檔案，或還原初始的 DLL。", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "重新開機(&R)", 1, 80, 91, 68, 14
 END
 
@@ -39,16 +44,16 @@ END
 STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "正在準備網路連線..."
-    IDS_APPLYINGCOMPUTERSETTINGS "正在應用電腦設定..."
-    IDS_RUNNINGSTARTUPSCRIPTS "正在運行啟動指令碼..."
-    IDS_RUNNINGSHUTDOWNSCRIPTS "正在運行關機指令碼..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "正在應用個人設定..."
-    IDS_RUNNINGLOGOFFSCRIPTS "正在運行登出指令碼..."
-    IDS_RUNNINGLOGONSCRIPTS "正在運行登入指令碼..."
+    IDS_APPLYINGCOMPUTERSETTINGS "正在套用電腦設定..."
+    IDS_RUNNINGSTARTUPSCRIPTS "正在執行啟動指令碼..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "正在執行關機指令碼..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "正在套用個人設定..."
+    IDS_RUNNINGLOGOFFSCRIPTS "正在執行登出指令碼..."
+    IDS_RUNNINGLOGONSCRIPTS "正在執行登入指令碼..."
     IDS_LOADINGYOURPERSONALSETTINGS "正在載入個人設定..."
     IDS_CLOSINGNETWORKCONNECTIONS "正在關閉網路連線..."
-    IDS_REACTOSISRESTARTING "Restarting..."
-    IDS_REACTOSISSHUTTINGDOWN "Shutting down..."
+    IDS_REACTOSISRESTARTING "正在重新啟動..."
+    IDS_REACTOSISSHUTTINGDOWN "正在關機..."
     IDS_PREPARETOSTANDBY "正在準備待機..."
     IDS_PREPARETOHIBERNATE "正在準備休眠..."
     IDS_SAVEYOURSETTINGS "正在儲存設定..."

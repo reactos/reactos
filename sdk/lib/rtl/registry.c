@@ -61,7 +61,7 @@ RtlpQueryRegistryDirect(IN ULONG ValueType,
         if (!ReturnString->Buffer)
         {
             /* Allocate it */
-            ReturnString->Buffer = RtlpAllocateMemory(ActualLength, TAG_RTLREGISTRY);
+            ReturnString->Buffer = RtlpAllocateStringMemory(ActualLength, TAG_RTLREGISTRY);
             if (!ReturnString->Buffer) return STATUS_NO_MEMORY;
             ReturnString->MaximumLength = ActualLength;
         }

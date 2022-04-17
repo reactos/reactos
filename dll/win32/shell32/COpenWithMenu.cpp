@@ -110,7 +110,7 @@ COpenWithList::~COpenWithList()
 
 BOOL COpenWithList::Load()
 {
-    HKEY hKey;
+    HKEY hKey, hKeyApp;
     WCHAR wszName[256], wszBuf[100];
     DWORD i = 0, cchName, dwSize;
     SApp *pApp;
@@ -131,18 +131,38 @@ BOOL COpenWithList::Load()
 
         if (pApp)
         {
-            StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s\\shell\\open\\command", wszName);
-            dwSize = sizeof(pApp->wszCmd);
-            if (RegGetValueW(hKey, wszBuf, L"", RRF_RT_REG_SZ, NULL, pApp->wszCmd, &dwSize) != ERROR_SUCCESS)
+            if (RegOpenKeyW(hKey, wszName, &hKeyApp) == ERROR_SUCCESS)
             {
-                ERR("Failed to add app %ls\n", wszName);
-                pApp->bHidden = TRUE;
+                if ((RegQueryValueExW(hKeyApp, L"NoOpenWith", NULL,  NULL, NULL, NULL) != ERROR_SUCCESS) &&
+                    (RegQueryValueExW(hKeyApp, L"NoStartPage", NULL,  NULL, NULL, NULL) != ERROR_SUCCESS))
+                {
+                    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s\\shell\\open\\command", wszName);
+                    dwSize = sizeof(pApp->wszCmd);
+                    if (RegGetValueW(hKey, wszBuf, L"", RRF_RT_REG_SZ, NULL, pApp->wszCmd, &dwSize) != ERROR_SUCCESS)
+                    {
+                        ERR("Failed to add app %ls\n", wszName);
+                        pApp->bHidden = TRUE;
+                    }
+                    else
+                    {
+                        TRACE("App added %ls\n", pApp->wszCmd);
+                    }
+                }
+                else
+                {
+                    pApp->bHidden = TRUE;
+                }
+                RegCloseKey(hKeyApp);
             }
             else
-                TRACE("App added %ls\n", pApp->wszCmd);
+            {
+                pApp->bHidden = TRUE;
+            }
         }
         else
+        {
             ERR("AddInternal failed\n");
+        }
     }
 
     RegCloseKey(hKey);
@@ -1332,53 +1352,33 @@ COpenWithMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                           IDataObject *pdtobj,
                           HKEY hkeyProgID)
 {
-    STGMEDIUM medium;
-    FORMATETC fmt;
-    HRESULT hr;
-    LPIDA pida;
     LPCITEMIDLIST pidlFolder2;
     LPCITEMIDLIST pidlChild;
-    LPCITEMIDLIST pidl;
-    LPCWSTR pwszExt;
 
     TRACE("This %p\n", this);
 
     if (pdtobj == NULL)
         return E_INVALIDARG;
 
-    fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_HGLOBAL;
-
-    hr = pdtobj->GetData(&fmt, &medium);
-
-    if (FAILED(hr))
+    CDataObjectHIDA pida(pdtobj);
+    if (FAILED(pida.hr()))
     {
-        ERR("pdtobj->GetData failed with 0x%x\n", hr);
-        return hr;
+        ERR("pdtobj->GetData failed with 0x%x\n", pida.hr());
+        return pida.hr();
     }
 
-    pida = (LPIDA)GlobalLock(medium.hGlobal);
     ASSERT(pida->cidl >= 1);
 
-    pidlFolder2 = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[0]);
-    pidlChild = (LPCITEMIDLIST) ((LPBYTE)pida + pida->aoffset[1]);
+    pidlFolder2 = HIDA_GetPIDLFolder(pida);
+    pidlChild = HIDA_GetPIDLItem(pida, 0);
 
     if (!_ILIsValue(pidlChild))
     {
         TRACE("pidl is not a file\n");
-        GlobalUnlock(medium.hGlobal);
-        ReleaseStgMedium(&medium);
         return E_FAIL;
     }
 
-    pidl = ILCombine(pidlFolder2, pidlChild);
-
-    GlobalUnlock(medium.hGlobal);
-    ReleaseStgMedium(&medium);
-
+    CComHeapPtr<ITEMIDLIST> pidl(ILCombine(pidlFolder2, pidlChild));
     if (!pidl)
     {
         ERR("no mem\n");
@@ -1387,15 +1387,13 @@ COpenWithMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
 
     if (!SHGetPathFromIDListW(pidl, m_wszPath))
     {
-        SHFree((void*)pidl);
         ERR("SHGetPathFromIDListW failed\n");
         return E_FAIL;
     }
 
-    SHFree((void*)pidl);
     TRACE("szPath %s\n", debugstr_w(m_wszPath));
 
-    pwszExt = PathFindExtensionW(m_wszPath);
+    LPCWSTR pwszExt = PathFindExtensionW(m_wszPath);
     if (PathIsExeW(pwszExt) || !_wcsicmp(pwszExt, L".lnk"))
     {
         TRACE("file is a executable or shortcut\n");

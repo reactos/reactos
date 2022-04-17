@@ -299,7 +299,7 @@ DiskGetBrfrPartitionEntry(
             return FALSE;
         }
 
-        memset(PartitionTableEntry, 0, sizeof(PARTITION_TABLE_ENTRY));
+        RtlZeroMemory(PartitionTableEntry, sizeof(PARTITION_TABLE_ENTRY));
         PartitionTableEntry->SystemIndicator = XboxPartitions[PartitionNumber - 1].SystemIndicator;
         PartitionTableEntry->SectorCountBeforePartition = XboxPartitions[PartitionNumber - 1].SectorCountBeforePartition;
         PartitionTableEntry->PartitionSectorCount = XboxPartitions[PartitionNumber - 1].PartitionSectorCount;

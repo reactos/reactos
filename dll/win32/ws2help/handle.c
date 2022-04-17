@@ -48,8 +48,8 @@ ApcThread(ULONG_PTR Context)
 
 NTSTATUS
 WINAPI
-DoSocketCancel(PVOID Context1,  
-               PVOID Context2,  
+DoSocketCancel(PVOID Context1,
+               PVOID Context2,
                PVOID Context3)
 {
     return STATUS_SUCCESS;
@@ -57,8 +57,8 @@ DoSocketCancel(PVOID Context1,
 
 NTSTATUS
 WINAPI
-DoSocketRequest(PVOID Context1,  
-                PVOID Context2,  
+DoSocketRequest(PVOID Context1,
+                PVOID Context2,
                 PVOID Context3)
 {
     return STATUS_SUCCESS;
@@ -149,7 +149,7 @@ WahCreateSocketHandle(IN HANDLE HelperHandle,
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
 	PWAH_HELPER_CONTEXT	Context = (PWAH_HELPER_CONTEXT)HelperHandle;
-    
+
     /* Enter the prolog, make sure we're initialized */
     ErrorCode = WS2HELP_PROLOG();
     if (ErrorCode != ERROR_SUCCESS) return ErrorCode;
@@ -229,7 +229,7 @@ WahCreateSocketHandle(IN HANDLE HelperHandle,
             /* Set success */
             ErrorCode = NO_ERROR;
         }
-        else 
+        else
         {
             /* We failed. Get the error and close the socket */
             ErrorCode = GetLastError();
@@ -263,7 +263,7 @@ WahDisableNonIFSHandleSupport(VOID)
                                      SERVICES_ACTIVE_DATABASE,
                                      SC_MANAGER_CREATE_SERVICE);
     if (!ServiceMgrHandle) return GetLastError();
-    
+
     /* Open the service */
     Ws2IfsHandle = OpenService(ServiceMgrHandle, "WS2IFSL", SERVICE_ALL_ACCESS);
 
@@ -372,7 +372,7 @@ WahOpenHandleHelper(OUT PHANDLE HelperHandle)
 			Ea->EaNameLength = sizeof("NifsPvd");
 			Ea->EaValueLength = sizeof(*EaData);
 			RtlCopyMemory(Ea->EaName, "NifsPvd", Ea->EaNameLength);
-                
+
             /* Get our EA data */
             EaData = (PWAH_EA_DATA2)(Ea + 1);
 
@@ -395,9 +395,9 @@ WahOpenHandleHelper(OUT PHANDLE HelperHandle)
 								  0,
 								  Ea,
 								  sizeof(*Ea) + sizeof(*EaData));
-			
+
             /* Check for success */
-            if (NT_SUCCESS(Status)) 
+            if (NT_SUCCESS(Status))
             {
                 /* Resume the thread and return a handle to the context */
                 ResumeThread(Context->ThreadHandle);
@@ -405,7 +405,7 @@ WahOpenHandleHelper(OUT PHANDLE HelperHandle)
 				return ERROR_SUCCESS;
 			}
 		    else
-            { 
+            {
                 /* Get the error code */
 			    ErrorCode = RtlNtStatusToDosError(Status);
             }

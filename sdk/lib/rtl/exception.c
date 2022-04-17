@@ -227,7 +227,7 @@ static VOID
     DbgPrint("R0: %lx   R1: %lx   R2: %lx    R3: %lx\n", pc->R0, pc->R1, pc->R2, pc->R3);
     DbgPrint("R4: %lx   R5: %lx   R6: %lx    R7: %lx\n", pc->R4, pc->R5, pc->R6, pc->R7);
     DbgPrint("R8: %lx   R9: %lx  R10: %lx   R11: %lx\n", pc->R8, pc->R9, pc->R10, pc->R11);
-    DbgPrint("R12: %lx   \n", pc->R12);
+    DbgPrint("R12: %lx\n", pc->R12);
 #else
 #pragma message ("Unknown architecture")
 #endif

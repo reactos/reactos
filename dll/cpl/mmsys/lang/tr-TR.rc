@@ -32,7 +32,7 @@ BEGIN
     LTEXT "Bir ses düzeni, ReactOS'taki ve programlardaki olaylara uygulayan bir sesler kümesidir. Var olan bir düzeni seçebilir veya değiştirdiğinizi kaydedebilirsiniz.", -1, 8, 7, 230, 30
     LTEXT "&Ses düzeni:", -1, 8, 42, 150, 9
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Ayrı Kaydet...", IDC_SAVEAS_BTN, 134, 70, 50, 15
+    PUSHBUTTON "&Farklı Kaydet...", IDC_SAVEAS_BTN, 134, 70, 50, 15
     PUSHBUTTON "S&il", IDC_DELETE_BTN, 188, 70, 50, 15
     LTEXT "Sesleri değiştirmek için aşağıdaki listede bir program olayına tıklayınız ve ona uygulamak için bir ses seçiniz. Değişiklikleri yeni bir ses düzeni olarak kaydedebilirsiniz.", -1, 8, 90, 230, 27
     LTEXT "&Program Olayları:", -1, 8, 118, 150, 9
@@ -102,7 +102,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Düzeni Kaydet"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Bu ses düzenini ayrı kaydet:", -1, 7, 7, 212, 9
+    LTEXT "&Bu ses düzenini farklı kaydet:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Tamam", IDOK, 93, 36, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 157, 36, 60, 14
@@ -122,13 +122,13 @@ END
 
 IDD_PERFORMANCE1 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Başarım"
+CAPTION "Performans"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bu ayarlar, ReactOS'un sesi nasıl çalacağını denetler. Sesle ilgili sorunları çözmenize yardımcı olabilir.", 8492, 34, 7, 218, 23
     GROUPBOX "Ses Çalma", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
-    LTEXT "&Donanım ivmesi:", 8495, 13, 56, 111, 14
+    LTEXT "&Donanım hızlandırması:", 8495, 13, 56, 111, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
     LTEXT "Ö&rnekleme hızı dönüştürme niteliği:", 8496, 13, 123, 103, 14
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
@@ -137,19 +137,19 @@ BEGIN
     LTEXT "Tam", 8498, 214, 56, 21, 9
     LTEXT "İyi", 8499, 128, 123, 21, 10
     LTEXT "En İyi", 8500, 214, 123, 23, 9
-    LTEXT "Bu dizgi, yakalama aygıtı için donanım ayarını tanımlar.", 5399, 13, 145, 227, 21
-    LTEXT "Bu dizgi, işleyici aygıt için donanım ayarını tanımlar.", 5398, 13, 78, 227, 22
+    LTEXT "Bu karakter dizisi, yakalama aygıtı için donanım ayarını tanımlar.", 5399, 13, 145, 227, 21
+    LTEXT "Bu karakter dizisi, işleyici aygıt için donanım ayarını tanımlar.", 5398, 13, 78, 227, 22
 END
 
 IDD_PERFORMANCE2 DIALOGEX 0, 0, 257, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Başarım"
+CAPTION "Performans"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bu ayarlar, ReactOS'un sesi nasıl çalacağını denetler. Sesle ilgili sorunları çözmenize yardımcı olabilir.", 8492, 34, 7, 217, 20
     GROUPBOX "Ses Kaydetme", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
-    LTEXT "&Donanım ivmesi:", 8495, 13, 46, 103, 9
+    LTEXT "&Donanım Hızlandırması:", 8495, 13, 46, 103, 9
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
     LTEXT "Ö&rnekleme hızı dönüştürme niteliği:", 8496, 13, 103, 103, 9
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 101, 62, 18
@@ -164,10 +164,10 @@ END
 
 IDD_SETUP1 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Kur"
+CAPTION "Kurulum"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS Ses", 10243, 7, 5, 213, 192
+    GROUPBOX "ReactOS Ses Kurulumu", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
     LTEXT "ReactOS Ses hizmeti etkin olmadığından dolayı bu bilgisayar ses çalamaz.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&ReactOS Ses'i etkinleştir", 10253, 60, 68, 150, 9
@@ -214,16 +214,16 @@ BEGIN
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 162, 108, 17
     LTEXT "Yüksek", 9502, 202, 164, 17, 8
-    AUTOCHECKBOX "&Tüm sürgüleri aynı anda hareketlendir.", 9504, 5, 185, 216, 9
+    AUTOCHECKBOX "&Tüm göstergeleri aynı anda hareketlendir.", 9504, 5, 185, 216, 9
     PUSHBUTTON "Ö&n Tanımlıları Geri Getir", 9505, 110, 199, 110, 14
 END
 
 IDD_SETUP2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Kur"
+CAPTION "Kurulum"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS Ses", 10259, 7, 5, 213, 192
+    GROUPBOX "ReactOS Ses Kurulumu", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
     LTEXT "ReactOS Ses hizmeti şimdi etkin. Bununla birlikte ReactOS'u yeniden başlatana dek ses düzgün çalışamayabilir. Eğer şimdi bilgisayarı yeniden başlatmak isterseniz ilk önce çalışmalarınızı kaydediniz ve tüm programları kapatınız.", 10261, 60, 25, 150, 50
     LTEXT "ReactOS'u yeniden başlatmak için ""Tamam""a tıklayınız.", 10262, 60, 75, 150, 20

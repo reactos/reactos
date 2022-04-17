@@ -545,7 +545,7 @@ GroupGeneralPageProc(HWND hwndDlg,
         case WM_INITDIALOG:
             pGroupData = (PGENERAL_GROUP_DATA)HeapAlloc(GetProcessHeap(),
                                                         HEAP_ZERO_MEMORY,
-                                                        sizeof(GENERAL_GROUP_DATA) + 
+                                                        sizeof(GENERAL_GROUP_DATA) +
                                                         lstrlen((LPTSTR)((PROPSHEETPAGE *)lParam)->lParam) * sizeof(TCHAR));
             lstrcpy(pGroupData->szGroupName, (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
 

@@ -41,4 +41,12 @@ SetupLocale(
     _In_ ULONG OemCode,
     _In_ ULONG Unicode);
 
+#define ConvertPrivLongToLuid(PrivilegeVal, ConvertedPrivLuid) \
+do {                                                           \
+    LUID Luid;                                                 \
+    Luid.LowPart = PrivilegeVal;                               \
+    Luid.HighPart = 0;                                         \
+    *ConvertedPrivLuid = Luid;                                 \
+} while (0)
+
 #endif /* _NTDLL_APITEST_PRECOMP_H_ */

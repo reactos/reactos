@@ -1,6 +1,10 @@
 #ifndef _PRECOMP_H__
 #define _PRECOMP_H__
 
+#if DBG && !defined(_DEBUG)
+    #define _DEBUG  // CORE-17505
+#endif
+
 #include <stdarg.h>
 #include <assert.h>
 
@@ -32,6 +36,7 @@
 #include <atlwin.h>
 #include <atlstr.h>
 #include <atlsimpcoll.h>
+#include <atlcoll.h>
 #include <powrprof.h>
 #include <winnetwk.h>
 #include <objsafe.h>

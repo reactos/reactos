@@ -4,11 +4,6 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#undef CRTDLL
-#ifndef _DLL
-#define _DLL
-#endif
-
 #define SPECIAL_CRTEXE
 
 #include <oscalls.h>
@@ -25,19 +20,9 @@
 #endif
 
 /* Special handling for ARM & ARM64, __winitenv & __initenv aren't present there. */
-
 #if !defined(__arm__) && !defined(__aarch64__)
-
-#ifndef __winitenv
-extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
-#define __winitenv (* __MINGW_IMP_SYMBOL(__winitenv))
-#endif
-
-#ifndef __initenv
-extern char *** __MINGW_IMP_SYMBOL(__initenv);
-#define __initenv (* __MINGW_IMP_SYMBOL(__initenv))
-#endif
-
+_CRTIMP extern wchar_t** __winitenv;
+_CRTIMP extern char** __initenv;
 #endif
 
 /* Hack, for bug in ld.  Will be removed soon.  */
@@ -52,13 +37,6 @@ extern void __cdecl _fpreset (void);
 #define SPACECHAR _T(' ')
 #define DQUOTECHAR _T('\"')
 
-extern int * __MINGW_IMP_SYMBOL(_fmode);
-extern int * __MINGW_IMP_SYMBOL(_commode);
-
-#undef _fmode
-extern int _fmode;
-extern int * __MINGW_IMP_SYMBOL(_commode);
-#define _commode (* __MINGW_IMP_SYMBOL(_commode))
 extern int _dowildcard;
 
 extern _CRTIMP void __cdecl _initterm(_PVFV *, _PVFV *);
@@ -129,9 +107,6 @@ pre_c_init (void)
     __set_app_type (_CONSOLE_APP);
   __onexitbegin = __onexitend = (_PVFV *)(-1);
 
-  * __MINGW_IMP_SYMBOL(_fmode) = _fmode;
-  * __MINGW_IMP_SYMBOL(_commode) = _commode;
-
 #ifdef WPRFLAG
   _wsetargv();
 #else
@@ -188,6 +163,7 @@ int __cdecl WinMainCRTStartup (void)
 }
 
 int __cdecl mainCRTStartup (void);
+BOOL crt_process_init(void);
 
 #ifdef _WIN64
 int __mingw_init_ehandler (void);
@@ -196,6 +172,12 @@ int __mingw_init_ehandler (void);
 int __cdecl mainCRTStartup (void)
 {
   int ret = 255;
+#ifndef _DLL
+  if (!crt_process_init())
+  {
+      return -1;
+  }
+#endif
 #ifdef __SEH__
   asm ("\t.l_start:\n"
     "\t.seh_handler __C_specific_handler, @except\n"

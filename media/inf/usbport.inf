@@ -279,7 +279,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB vald
 ReactOS = "ReactOS Takımı"
 USBClassName = "USB Denetleyicileri"
 
-GenericMfg = "(Umûmî USB Aygıtları)"
+GenericMfg = "(Genel USB Aygıtları)"
 PCI\CC_0C0300.DeviceDesc = "UHCI USB Denetleyicisi"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB Denetleyicisi"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB Denetleyicisi"
@@ -308,6 +308,32 @@ PCI\CC_0C0300.DeviceDesc = "UHCI USB 控制器"
 PCI\CC_0C0310.DeviceDesc = "OHCI USB 控制器"
 PCI\CC_0C0320.DeviceDesc = "EHCI USB 控制器"
 USB\ROOT_HUB.DeviceDesc = "根集线器"
+
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB 控制器"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB 控制器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+USBClassName = "Controladores de barramento série universal (USB)"
+
+GenericMfg = "(Dispositivo USB padrão)"
+PCI\CC_0C0300.DeviceDesc = "Controlador USB UHCI"
+PCI\CC_0C0310.DeviceDesc = "Controlador USB OHCI"
+PCI\CC_0C0320.DeviceDesc = "Controlador USB EHCI USB"
+USB\ROOT_HUB.DeviceDesc = "Concentrador raíz USB"
+
+IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371SB PIIX3"
+PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/MB PIIX4"
+
+[Strings.0C04]
+USBClassName = "USB 控制器"
+
+GenericMfg = "(標準 USB 裝置)"
+PCI\CC_0C0300.DeviceDesc = "UHCI USB 控制器"
+PCI\CC_0C0310.DeviceDesc = "OHCI USB 控制器"
+PCI\CC_0C0320.DeviceDesc = "EHCI USB 控制器"
+USB\ROOT_HUB.DeviceDesc = "根集線器"
 
 PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Intel 82371SB PIIX3 USB 控制器"
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Intel 82371AB/EB/MB PIIX4 USB 控制器"

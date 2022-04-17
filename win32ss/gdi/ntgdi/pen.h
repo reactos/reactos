@@ -29,3 +29,9 @@ PEN_GetObject(
     _Out_ PLOGPEN Buffer);
 
 VOID FASTCALL AddPenLinesBounds(PDC,int,POINT *);
+
+#define IntIsEffectiveWidePen(pbrLine) ( \
+    (pbrLine)->lWidth > 1 && \
+    ((pbrLine->flAttrs & BR_IS_OLDSTYLEPEN) || \
+     ((pbrLine)->ulPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC) \
+)

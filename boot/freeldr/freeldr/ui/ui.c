@@ -16,44 +16,56 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef _M_ARM
 
 #include <freeldr.h>
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(UI);
 
+#ifndef _M_ARM
+
+UCHAR UiStatusBarFgColor;       // Status bar foreground color
+UCHAR UiStatusBarBgColor;       // Status bar background color
+UCHAR UiBackdropFgColor;        // Backdrop foreground color
+UCHAR UiBackdropBgColor;        // Backdrop background color
+UCHAR UiBackdropFillStyle;      // Backdrop fill style
+UCHAR UiTitleBoxFgColor;        // Title box foreground color
+UCHAR UiTitleBoxBgColor;        // Title box background color
+UCHAR UiMessageBoxFgColor;      // Message box foreground color
+UCHAR UiMessageBoxBgColor;      // Message box background color
+UCHAR UiMenuFgColor;            // Menu foreground color
+UCHAR UiMenuBgColor;            // Menu background color
+UCHAR UiTextColor;              // Normal text color
+UCHAR UiSelectedTextColor;      // Selected text color
+UCHAR UiSelectedTextBgColor;    // Selected text background color
+UCHAR UiEditBoxTextColor;       // Edit box text color
+UCHAR UiEditBoxBgColor;         // Edit box text background color
+
+BOOLEAN UiShowTime;             // Whether to draw the time
+BOOLEAN UiMenuBox;              // Whether to draw a box around the menu
+BOOLEAN UiCenterMenu;           // Whether to use a centered or left-aligned menu
+BOOLEAN UiUseSpecialEffects;    // Whether to use fade effects
+
+CHAR UiTitleBoxTitleText[260] = "Boot Menu";    // Title box's title text
+CHAR UiTimeText[260] = "[Time Remaining: %d]";
+
+const PCSTR UiMonthNames[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+
 #define TAG_UI_TEXT 'xTiU'
 
 ULONG UiScreenWidth;    // Screen Width
 ULONG UiScreenHeight;   // Screen Height
 
-UCHAR UiStatusBarFgColor    = COLOR_BLACK;  // Status bar foreground color
-UCHAR UiStatusBarBgColor    = COLOR_CYAN;   // Status bar background color
-UCHAR UiBackdropFgColor     = COLOR_WHITE;  // Backdrop foreground color
-UCHAR UiBackdropBgColor     = COLOR_BLUE;   // Backdrop background color
-UCHAR UiBackdropFillStyle   = MEDIUM_FILL;  // Backdrop fill style
-UCHAR UiTitleBoxFgColor     = COLOR_WHITE;  // Title box foreground color
-UCHAR UiTitleBoxBgColor     = COLOR_RED;    // Title box background color
-UCHAR UiMessageBoxFgColor   = COLOR_WHITE;  // Message box foreground color
-UCHAR UiMessageBoxBgColor   = COLOR_BLUE;   // Message box background color
-UCHAR UiMenuFgColor         = COLOR_WHITE;  // Menu foreground color
-UCHAR UiMenuBgColor         = COLOR_BLUE;   // Menu background color
-UCHAR UiTextColor           = COLOR_YELLOW; // Normal text color
-UCHAR UiSelectedTextColor   = COLOR_BLACK;  // Selected text color
-UCHAR UiSelectedTextBgColor = COLOR_GRAY;   // Selected text background color
-UCHAR UiEditBoxTextColor    = COLOR_WHITE;  // Edit box text color
-UCHAR UiEditBoxBgColor      = COLOR_BLACK;  // Edit box text background color
+#endif // _M_ARM
 
-CHAR UiTitleBoxTitleText[260] = "Boot Menu";    // Title box's title text
+/*
+ * Loading progress bar, based on the NTOS Inbv one.
+ * Supports progress within sub-ranges, used when loading
+ * with an unknown number of steps.
+ */
+UI_PROGRESS_BAR UiProgressBar = {{0}};
 
-BOOLEAN UiUseSpecialEffects = FALSE;    // Tells us if we should use fade effects
-BOOLEAN UiDrawTime          = TRUE;     // Tells us if we should draw the time
-BOOLEAN UiCenterMenu        = TRUE;     // Tells us if we should use a centered or left-aligned menu
-BOOLEAN UiMenuBox           = TRUE;     // Tells us if we should draw a box around the menu
-CHAR    UiTimeText[260] = "[Time Remaining: ] ";
-
-const CHAR UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
+#ifndef _M_ARM
 
 UIVTBL UiVtbl =
 {
@@ -72,6 +84,8 @@ UIVTBL UiVtbl =
     NoUiMessageBoxCritical,
     NoUiDrawProgressBarCenter,
     NoUiDrawProgressBar,
+    NoUiSetProgressBarText,
+    NoUiTickProgressBar,
     NoUiEditBox,
     NoUiTextToColor,
     NoUiTextToFillStyle,
@@ -81,7 +95,7 @@ UIVTBL UiVtbl =
     NoUiDrawMenu,
 };
 
-BOOLEAN UiInitialize(BOOLEAN ShowGui)
+BOOLEAN UiInitialize(BOOLEAN ShowUi)
 {
     VIDEODISPLAYMODE UiDisplayMode; // Tells us if we are in text or graphics mode
     BOOLEAN UiMinimal = FALSE;      // Tells us if we are using a minimal console-like UI
@@ -89,7 +103,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
     ULONG Depth;
     CHAR  SettingText[260];
 
-    if (!ShowGui)
+    if (!ShowUi)
     {
         if (!UiVtbl.Initialize())
         {
@@ -118,59 +132,69 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
     /* Select the UI */
     if ((SectionId != 0) && IniReadSettingByName(SectionId, "MinimalUI", SettingText, sizeof(SettingText)))
     {
-        UiMinimal = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
+        UiMinimal = (_stricmp(SettingText, "Yes") == 0);
     }
 
-    if (UiDisplayMode == VideoTextMode)
-        UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
-    else
+    if (UiDisplayMode == VideoGraphicsMode)
+#if 0 // We don't support a GUI mode yet.
         UiVtbl = GuiVtbl;
+#else
+    {
+        // Switch back to text mode.
+        MachVideoSetDisplayMode(NULL, TRUE);
+        UiDisplayMode = VideoTextMode;
+    }
+#endif
+    else // if (UiDisplayMode == VideoTextMode)
+        UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
 
+    /* Load the UI and initialize its default settings */
     if (!UiVtbl.Initialize())
     {
         MachVideoSetDisplayMode(NULL, FALSE);
         return FALSE;
     }
 
-    /* Load the settings */
+    /* Load the user UI settings */
     if (SectionId != 0)
     {
         static const struct
         {
             PCSTR SettingName;
             PVOID SettingVar;
+            SIZE_T SettingSize OPTIONAL; // Must be non-zero only for text buffers.
             UCHAR SettingType; // 0: Text, 1: Yes/No, 2: Color, 3: Fill style
         } Settings[] =
         {
-            {"TitleText", &UiTitleBoxTitleText, 0},
-            {"TimeText" , &UiTimeText         , 0},
+            {"TitleText", &UiTitleBoxTitleText, sizeof(UiTitleBoxTitleText), 0},
+            {"TimeText" , &UiTimeText, sizeof(UiTimeText), 0},
 
-            {"SpecialEffects", &UiUseSpecialEffects, 1},
-            {"ShowTime"      , &UiDrawTime         , 1},
-            {"MenuBox"       , &UiMenuBox          , 1},
-            {"CenterMenu"    , &UiCenterMenu       , 1},
+            {"ShowTime"      , &UiShowTime         , 0, 1},
+            {"MenuBox"       , &UiMenuBox          , 0, 1},
+            {"CenterMenu"    , &UiCenterMenu       , 0, 1},
+            {"SpecialEffects", &UiUseSpecialEffects, 0, 1},
 
-            {"BackdropColor"      , &UiBackdropBgColor    , 2},
-            {"BackdropTextColor"  , &UiBackdropFgColor    , 2},
-            {"StatusBarColor"     , &UiStatusBarBgColor   , 2},
-            {"StatusBarTextColor" , &UiStatusBarFgColor   , 2},
-            {"TitleBoxColor"      , &UiTitleBoxBgColor    , 2},
-            {"TitleBoxTextColor"  , &UiTitleBoxFgColor    , 2},
-            {"MessageBoxColor"    , &UiMessageBoxBgColor  , 2},
-            {"MessageBoxTextColor", &UiMessageBoxFgColor  , 2},
-            {"MenuColor"          , &UiMenuBgColor        , 2},
-            {"MenuTextColor"      , &UiMenuFgColor        , 2},
-            {"TextColor"          , &UiTextColor          , 2},
-            {"SelectedColor"      , &UiSelectedTextBgColor, 2},
-            {"SelectedTextColor"  , &UiSelectedTextColor  , 2},
-            {"EditBoxColor"       , &UiEditBoxBgColor     , 2},
-            {"EditBoxTextColor"   , &UiEditBoxTextColor   , 2},
+            {"BackdropColor"      , &UiBackdropBgColor    , 0, 2},
+            {"BackdropTextColor"  , &UiBackdropFgColor    , 0, 2},
+            {"StatusBarColor"     , &UiStatusBarBgColor   , 0, 2},
+            {"StatusBarTextColor" , &UiStatusBarFgColor   , 0, 2},
+            {"TitleBoxColor"      , &UiTitleBoxBgColor    , 0, 2},
+            {"TitleBoxTextColor"  , &UiTitleBoxFgColor    , 0, 2},
+            {"MessageBoxColor"    , &UiMessageBoxBgColor  , 0, 2},
+            {"MessageBoxTextColor", &UiMessageBoxFgColor  , 0, 2},
+            {"MenuColor"          , &UiMenuBgColor        , 0, 2},
+            {"MenuTextColor"      , &UiMenuFgColor        , 0, 2},
+            {"TextColor"          , &UiTextColor          , 0, 2},
+            {"SelectedColor"      , &UiSelectedTextBgColor, 0, 2},
+            {"SelectedTextColor"  , &UiSelectedTextColor  , 0, 2},
+            {"EditBoxColor"       , &UiEditBoxBgColor     , 0, 2},
+            {"EditBoxTextColor"   , &UiEditBoxTextColor   , 0, 2},
 
-            {"BackdropFillStyle", &UiBackdropFillStyle, 3},
+            {"BackdropFillStyle", &UiBackdropFillStyle, 0, 3},
         };
         ULONG i;
 
-        for (i = 0; i < sizeof(Settings)/sizeof(Settings[0]); ++i)
+        for (i = 0; i < RTL_NUMBER_OF(Settings); ++i)
         {
             if (!IniReadSettingByName(SectionId, Settings[i].SettingName, SettingText, sizeof(SettingText)))
                 continue;
@@ -178,10 +202,11 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
             switch (Settings[i].SettingType)
             {
             case 0: // Text
-                strcpy((PCHAR)Settings[i].SettingVar, SettingText);
+                RtlStringCbCopyA((PCHAR)Settings[i].SettingVar,
+                                 Settings[i].SettingSize, SettingText);
                 break;
             case 1: // Yes/No
-                *(PBOOLEAN)Settings[i].SettingVar = (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3);
+                *(PBOOLEAN)Settings[i].SettingVar = (_stricmp(SettingText, "Yes") == 0);
                 break;
             case 2: // Color
                 *(PUCHAR)Settings[i].SettingVar = UiTextToColor(SettingText);
@@ -231,17 +256,35 @@ VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle
     UiVtbl.DrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
 }
 
-VOID UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
+VOID
+UiDrawText(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_ PCSTR Text,
+    _In_ UCHAR Attr)
 {
     UiVtbl.DrawText(X, Y, Text, Attr);
 }
 
-VOID UiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
+VOID
+UiDrawText2(
+    _In_ ULONG X,
+    _In_ ULONG Y,
+    _In_opt_ ULONG MaxNumChars,
+    _In_reads_or_z_(MaxNumChars) PCSTR Text,
+    _In_ UCHAR Attr)
 {
     UiVtbl.DrawText2(X, Y, MaxNumChars, Text, Attr);
 }
 
-VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
+VOID
+UiDrawCenteredText(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR TextString,
+    _In_ UCHAR Attr)
 {
     UiVtbl.DrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
 }
@@ -343,14 +386,164 @@ UCHAR UiTextToFillStyle(PCSTR FillStyleText)
     return UiVtbl.TextToFillStyle(FillStyleText);
 }
 
-VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
+#endif // _M_ARM
+
+VOID
+UiInitProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR ProgressText)
 {
-    UiVtbl.DrawProgressBarCenter(Position, Range, ProgressText);
+    /* Progress bar area */
+    UiProgressBar.Left = Left;
+    UiProgressBar.Top  = Top;
+    UiProgressBar.Right  = Right;
+    UiProgressBar.Bottom = Bottom;
+    // UiProgressBar.Width = Right - Left + 1;
+
+    /* Set the progress bar ranges */
+    UiSetProgressBarSubset(0, 100);
+    UiProgressBar.Indicator.Count = 0;
+    UiProgressBar.Indicator.Expected = 25;
+    UiProgressBar.Indicator.Percentage = 0;
+
+    /* Enable the progress bar */
+    UiProgressBar.Show = TRUE;
+
+    /* Initial drawing: set the "Loading..." text and the original position */
+#ifndef _M_ARM
+    UiVtbl.SetProgressBarText(ProgressText);
+    UiVtbl.TickProgressBar(0);
+#else
+    MiniTuiSetProgressBarText(ProgressText);
+    MiniTuiTickProgressBar(0);
+#endif
 }
 
-VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
+VOID
+UiIndicateProgress(VOID)
 {
-    UiVtbl.DrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
+    ULONG Percentage;
+
+    /* Increase progress */
+    UiProgressBar.Indicator.Count++;
+
+    /* Compute the new percentage - Don't go over 100% */
+    Percentage = 100 * UiProgressBar.Indicator.Count /
+                       UiProgressBar.Indicator.Expected;
+    Percentage = min(Percentage, 99);
+
+    if (Percentage != UiProgressBar.Indicator.Percentage)
+    {
+        /* Percentage has changed, update the progress bar */
+        UiProgressBar.Indicator.Percentage = Percentage;
+        UiUpdateProgressBar(Percentage, NULL);
+    }
+}
+
+VOID
+UiSetProgressBarSubset(
+    _In_ ULONG Floor,
+    _In_ ULONG Ceiling)
+{
+    /* Sanity checks */
+    ASSERT(Floor < Ceiling);
+    ASSERT(Ceiling <= 100);
+
+    /* Update the progress bar state */
+    UiProgressBar.State.Floor = Floor * 100;
+    // UiProgressBar.State.Ceiling = Ceiling * 100;
+    UiProgressBar.State.Bias = Ceiling - Floor;
+}
+
+VOID
+UiUpdateProgressBar(
+    _In_ ULONG Percentage,
+    _In_opt_ PCSTR ProgressText)
+{
+    ULONG TotalProgress;
+
+    /* Make sure the progress bar is enabled */
+    if (!UiProgressBar.Show)
+        return;
+
+    /* Set the progress text if specified */
+    if (ProgressText)
+        UiSetProgressBarText(ProgressText);
+
+    /* Compute the total progress and tick the progress bar */
+    TotalProgress = UiProgressBar.State.Floor + (Percentage * UiProgressBar.State.Bias);
+    // TotalProgress /= (100 * 100);
+
+#ifndef _M_ARM
+    UiVtbl.TickProgressBar(TotalProgress);
+#else
+    MiniTuiTickProgressBar(TotalProgress);
+#endif
+}
+
+VOID
+UiSetProgressBarText(
+    _In_ PCSTR ProgressText)
+{
+    /* Make sure the progress bar is enabled */
+    if (!UiProgressBar.Show)
+        return;
+
+#ifndef _M_ARM
+    UiVtbl.SetProgressBarText(ProgressText);
+#else
+    MiniTuiSetProgressBarText(ProgressText);
+#endif
+}
+
+VOID
+UiDrawProgressBarCenter(
+    _In_ PCSTR ProgressText)
+{
+#ifndef _M_ARM
+    UiVtbl.DrawProgressBarCenter(ProgressText);
+#else
+    MiniTuiDrawProgressBarCenter(ProgressText);
+#endif
+}
+
+VOID
+UiDrawProgressBar(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Right,
+    _In_ ULONG Bottom,
+    _In_ PCSTR ProgressText)
+{
+#ifndef _M_ARM
+    UiVtbl.DrawProgressBar(Left, Top, Right, Bottom, ProgressText);
+#else
+    MiniTuiDrawProgressBar(Left, Top, Right, Bottom, ProgressText);
+#endif
+}
+
+#ifndef _M_ARM
+
+static VOID
+UiEscapeString(PCHAR String)
+{
+    ULONG    Idx;
+
+    for (Idx=0; Idx<strlen(String); Idx++)
+    {
+        // Escape the new line characters
+        if (String[Idx] == '\\' && String[Idx+1] == 'n')
+        {
+            // Escape the character
+            String[Idx] = '\n';
+
+            // Move the rest of the string up
+            strcpy(&String[Idx+1], &String[Idx+2]);
+        }
+    }
 }
 
 VOID
@@ -432,31 +625,6 @@ UiShowMessageBoxesInArgv(
         /* Free the memory */
         FrLdrTempFree(MessageBoxText, TAG_UI_TEXT);
     }
-}
-
-VOID UiEscapeString(PCHAR String)
-{
-    ULONG    Idx;
-
-    for (Idx=0; Idx<strlen(String); Idx++)
-    {
-        // Escape the new line characters
-        if (String[Idx] == '\\' && String[Idx+1] == 'n')
-        {
-            // Escape the character
-            String[Idx] = '\n';
-
-            // Move the rest of the string up
-            strcpy(&String[Idx+1], &String[Idx+2]);
-        }
-    }
-}
-
-VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
-{
-    /* If it's too large, just add some ellipsis past the maximum */
-    if (strlen(StringText) > MaxChars)
-        strcpy(&StringText[MaxChars - 3], "...");
 }
 
 BOOLEAN

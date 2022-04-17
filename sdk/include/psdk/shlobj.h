@@ -222,11 +222,11 @@ HRESULT      WINAPI SHLoadOLE(LPARAM);
 HRESULT
 WINAPI
 SHParseDisplayName(
-  _In_ PCWSTR,
-  _In_opt_ IBindCtx*,
-  _Outptr_ PIDLIST_ABSOLUTE*,
-  _In_ SFGAOF,
-  _Out_opt_ SFGAOF*);
+  _In_ PCWSTR pszName,
+  _In_opt_ IBindCtx* pbc,
+  _Outptr_ PIDLIST_ABSOLUTE* ppidl,
+  _In_ SFGAOF sfgaoIn,
+  _Out_opt_ SFGAOF* psfgaoOut);
 
 HRESULT
 WINAPI
@@ -2092,6 +2092,28 @@ SHBindToParent(
   _Outptr_opt_ PCUITEMID_CHILD *ppidlLast);
 
 /****************************************************************************
+ * SHCreateFileExtractIcon API
+ */
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+// NOTE: Even if documented on MSDN, the SHCreateFileExtractIconA()
+// ANSI function never existed on Windows!
+
+HRESULT
+WINAPI
+SHCreateFileExtractIconW(
+    _In_ LPCWSTR pszFile,
+    _In_ DWORD dwFileAttributes,
+    _In_ REFIID riid,
+    _Outptr_ void **ppv);
+
+#ifdef UNICODE
+#define SHCreateFileExtractIcon  SHCreateFileExtractIconW
+#endif
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+/****************************************************************************
 * SHDefExtractIcon API
 */
 HRESULT
@@ -2477,6 +2499,18 @@ SHRunControlPanel(
   _In_opt_ HWND parent);
 
 /****************************************************************************
+ * SHGetAttributesFromDataObject
+ */
+
+HRESULT
+WINAPI
+SHGetAttributesFromDataObject(
+    _In_opt_ IDataObject* pdo,
+    DWORD dwAttributeMask,
+    _Out_opt_ DWORD* pdwAttributes,
+    _Out_opt_ UINT* pcItems);
+
+/****************************************************************************
  * SHOpenWithDialog
  */
 
@@ -2626,11 +2660,13 @@ DECLARE_INTERFACE_(IShellFolderBand, IUnknown)
 };
 #undef INTERFACE
 
-
+#if (NTDDI_VERSION >= NTDDI_WIN2K) && (NTDDI_VERSION <= NTDDI_WINXPSP2)
 /*****************************************************************************
  * Control Panel functions
  */
-LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6);
+DECLARE_HANDLE(FARPROC16);
+LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC16 pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6);
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

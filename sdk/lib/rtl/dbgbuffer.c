@@ -151,7 +151,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status))
     {
         /* failure */
-        DPRINT("NtQueryInformationProcess 1 0x%lx \n", Status);
+        DPRINT("NtQueryInformationProcess 1 0x%lx\n", Status);
         return Status;
     }
 
@@ -176,7 +176,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status))
     {
         /* failure */
-        DPRINT("NtReadVirtualMemory 1 0x%lx \n", Status);
+        DPRINT("NtReadVirtualMemory 1 0x%lx\n", Status);
         return Status;
     }
 
@@ -194,7 +194,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status))
     {
         /* failure */
-        DPRINT("NtReadVirtualMemory 2 0x%lx \n", Status);
+        DPRINT("NtReadVirtualMemory 2 0x%lx\n", Status);
         return Status;
     }
 
@@ -213,7 +213,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             /* failure */
-            DPRINT( "NtReadVirtualMemory 3 0x%lx \n", Status);
+            DPRINT( "NtReadVirtualMemory 3 0x%lx\n", Status);
             return Status;
         }
 
@@ -231,7 +231,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             /* failure */
-            DPRINT( "NtReadVirtualMemory 3 0x%lx \n", Status);
+            DPRINT( "NtReadVirtualMemory 3 0x%lx\n", Status);
             return Status;
         }
 
@@ -370,7 +370,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                 Buf->OffsetFree = Buf->OffsetFree + LSize;
             }
 
-            DPRINT("QueryProcessDebugInformation end \n");
+            DPRINT("QueryProcessDebugInformation end\n");
             DPRINT("QueryDebugInfo : 0x%lx\n", Buf->OffsetFree);
         }
         else
@@ -457,7 +457,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                 Buf->OffsetFree = Buf->OffsetFree + LSize;
             }
 
-            DPRINT("QueryProcessDebugInformation end \n");
+            DPRINT("QueryProcessDebugInformation end\n");
             DPRINT("QueryDebugInfo : 0x%lx\n", Buf->OffsetFree);
         }
 

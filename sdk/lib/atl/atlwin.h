@@ -60,7 +60,6 @@ namespace ATL
 #endif
 
 
-
 struct _ATL_WNDCLASSINFOW;
 typedef _ATL_WNDCLASSINFOW CWndClassInfo;
 
@@ -168,7 +167,7 @@ struct thunkCode
         m_mov = 0x042444C7;
         m_this = PtrToUlong(pThis);
         m_jmp = 0xe9;
-        m_relproc = DWORD(reinterpret_cast<char *>(proc) - (reinterpret_cast<char *>(this) + sizeof(thunkCode)));
+        m_relproc = DWORD(reinterpret_cast<char*>(proc) - (reinterpret_cast<char*>(this) + sizeof(thunkCode)));
         FlushInstructionCache(GetCurrentProcess(), this, sizeof(thunkCode));
     }
 };
@@ -229,8 +228,8 @@ class CWndProcThunk
 public:
     thunkCode *m_pthunk;
     _AtlCreateWndData cd;
-public:
 
+public:
     CWndProcThunk()
     {
         m_pthunk = (thunkCode*)VirtualAlloc(NULL, sizeof(thunkCode), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
@@ -267,6 +266,7 @@ class CWindow
 public:
     HWND m_hWnd;
     static RECT rcDefault;
+
 public:
     CWindow(HWND hWnd = NULL)
     {
@@ -568,39 +568,51 @@ public:
         return E_FAIL;//FIXME stub
     }
 
-    HWND GetDlgItem(int nID)
+    HWND GetDlgItem(_In_ int nID) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::GetDlgItem(m_hWnd, nID);
     }
 
-    UINT GetDlgItemInt(int nID, BOOL* lpTrans = NULL, BOOL bSigned = TRUE) const
+    UINT GetDlgItemInt(
+        _In_ int nID,
+        _Out_opt_ BOOL* lpTrans = NULL,
+        _In_ BOOL bSigned = TRUE) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::GetDlgItemInt(m_hWnd, nID, lpTrans, bSigned);
     }
 
-    UINT GetDlgItemText(int nID, LPTSTR lpStr, int nMaxCount) const
+    UINT GetDlgItemText(
+        _In_ int nID,
+        _Out_writes_to_(nMaxCount, return + 1) LPTSTR lpStr,
+        _In_ int nMaxCount) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::GetDlgItemText(m_hWnd, nID, lpStr, nMaxCount);
     }
 
 #ifdef __ATLSTR_H__
-    UINT GetDlgItemText(int nID, CSimpleString& string)
+    UINT GetDlgItemText(_In_ int nID, _Inout_ CSimpleString& strText) const
     {
         HWND item = GetDlgItem(nID);
-        int len = ::GetWindowTextLength(item);
-        len = GetDlgItemText(nID, string.GetBuffer(len+1), len+1);
-        string.ReleaseBuffer(len);
-        return len;
+        if (!item)
+        {
+            strText.Empty();
+            return 0;
+        }
+        return CWindow(item).GetWindowText(strText);
     }
 #endif
 
-    BOOL GetDlgItemText(int nID, BSTR& bstrText) const
+    BOOL GetDlgItemText(
+        _In_ int nID,
+        _Inout_ _Outref_result_maybenull_ _Post_z_ BSTR& bstrText) const
     {
-        ATLASSERT(::IsWindow(m_hWnd));
-        return FALSE;//FIXME stub
+        HWND item = GetDlgItem(nID);
+        if (!item)
+            return FALSE;
+        return CWindow(item).GetWindowText(bstrText);
     }
 
     DWORD GetExStyle() const
@@ -690,7 +702,13 @@ public:
     HWND GetTopLevelParent() const
     {
         ATLASSERT(::IsWindow(m_hWnd));
-        return NULL;//FIXME stub
+
+        HWND hWndParent = m_hWnd;
+        HWND hWndTmp;
+        while ((hWndTmp = ::GetParent(hWndParent)) != NULL)
+            hWndParent = hWndTmp;
+
+        return hWndParent;
     }
 
     HWND GetTopLevelWindow() const
@@ -773,13 +791,26 @@ public:
         return ::GetWindowRgn(m_hWnd, hRgn);
     }
 
-    int GetWindowText(LPTSTR lpszStringBuf, int nMaxCount) const
+    int GetWindowText(
+        _Out_writes_to_(nMaxCount, return + 1) LPTSTR lpszStringBuf,
+        _In_ int nMaxCount) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         return ::GetWindowText(m_hWnd, lpszStringBuf, nMaxCount);
     }
 
-    BOOL GetWindowText(BSTR& bstrText)
+#ifdef __ATLSTR_H__
+    int GetWindowText(_Inout_ CSimpleString& strText) const
+    {
+        int len = GetWindowTextLength();
+        len = GetWindowText(strText.GetBuffer(len + 1), len + 1);
+        strText.ReleaseBuffer(len);
+        return len;
+    }
+#endif
+
+    BOOL GetWindowText(
+        _Inout_ _Outref_result_maybenull_ _Post_z_ BSTR& bstrText) const
     {
         ATLASSERT(::IsWindow(m_hWnd));
         INT length = ::GetWindowTextLengthW(m_hWnd);
@@ -873,8 +904,8 @@ public:
     BOOL IsParentDialog()
     {
         ATLASSERT(::IsWindow(m_hWnd));
-        TCHAR pszType[10];
-        if (!RealGetWindowClass(::GetParent(m_hWnd), pszType, sizeof(pszType) / sizeof(pszType[0])))
+        TCHAR pszType[10]; // Use sizeof("#32770")+3 so that extra characters can be detected.
+        if (!RealGetWindowClass(::GetParent(m_hWnd), pszType, _countof(pszType)))
             return FALSE;
         return !_tcscmp(pszType, _T("#32770"));
     }
@@ -1345,7 +1376,7 @@ public:
 
     static INT_PTR CALLBACK StartDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        CDialogImplBaseT<TBase> *pThis;
+        CDialogImplBaseT<TBase>* pThis;
         DLGPROC newDlgProc;
         DLGPROC GCCU(pOldProc);
 
@@ -1353,6 +1384,7 @@ public:
         ATLASSERT(pThis != NULL);
         if (pThis == NULL)
             return 0;
+
         pThis->m_thunk.Init((WNDPROC)pThis->GetDialogProc(), pThis);
         newDlgProc = reinterpret_cast<DLGPROC>(pThis->m_thunk.GetWNDPROC());
         pOldProc = reinterpret_cast<DLGPROC>(::SetWindowLongPtr(hWnd, DWLP_DLGPROC, reinterpret_cast<LONG_PTR>(newDlgProc)));
@@ -1363,7 +1395,7 @@ public:
 
     static INT_PTR CALLBACK DialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        CDialogImplBaseT<TBase> *pThis = reinterpret_cast<CDialogImplBaseT<TBase>*>(hWnd);
+        CDialogImplBaseT<TBase>* pThis = reinterpret_cast<CDialogImplBaseT<TBase>*>(hWnd);
         _ATL_MSG msg(pThis->m_hWnd, uMsg, wParam, lParam);
         LRESULT lResult = 0;
         const _ATL_MSG *previousMessage;
@@ -1410,7 +1442,7 @@ public:
 
 
 template <class T, class TBase = CWindow>
-class CDialogImpl : public CDialogImplBaseT< TBase >
+class CDialogImpl : public CDialogImplBaseT<TBase>
 {
 public:
     // + Hacks for gcc
@@ -1488,7 +1520,7 @@ public:
         ATLASSERT(m_hWnd == NULL);
         ATLASSERT(::IsWindow(hWnd));
 
-        CWindowImplBaseT<TBase, TWinTraits> *pThis;
+        CWindowImplBaseT<TBase, TWinTraits>* pThis;
         pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits>*>(this);
 
         BOOL result = m_thunk.Init(GetWindowProc(), this);
@@ -1545,22 +1577,22 @@ public:
 
     LRESULT DefWindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        CWindowImplBaseT<TBase, TWinTraits>    *pThis;
-
-        pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits> *>(this);
+        CWindowImplBaseT<TBase, TWinTraits>* pThis;
+        pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits>*>(this);
         return ::CallWindowProc(m_pfnSuperWindowProc, pThis->m_hWnd, uMsg, wParam, lParam);
     }
 
     static LRESULT CALLBACK StartWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        CWindowImplBaseT<TBase, TWinTraits> *pThis;
+        CWindowImplBaseT<TBase, TWinTraits>* pThis;
         WNDPROC newWindowProc;
         WNDPROC GCCU(pOldProc);
 
-        pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits> *>(_AtlWinModule.ExtractCreateWndData());
+        pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits>*>(_AtlWinModule.ExtractCreateWndData());
         ATLASSERT(pThis != NULL);
         if (pThis == NULL)
             return 0;
+
         pThis->m_thunk.Init(pThis->GetWindowProc(), pThis);
         newWindowProc = pThis->m_thunk.GetWNDPROC();
         pOldProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(newWindowProc)));
@@ -1571,7 +1603,7 @@ public:
 
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        CWindowImplBaseT<TBase, TWinTraits> *pThis = reinterpret_cast<CWindowImplBaseT< TBase, TWinTraits> *>(hWnd);
+        CWindowImplBaseT<TBase, TWinTraits>* pThis = reinterpret_cast<CWindowImplBaseT< TBase, TWinTraits>*>(hWnd);
         _ATL_MSG msg(pThis->m_hWnd, uMsg, wParam, lParam);
         LRESULT lResult;
         const _ATL_MSG *previousMessage;
@@ -1605,7 +1637,9 @@ public:
                 pThis->m_dwState |= WINSTATE_DESTROYED;
             }
             else
+            {
                 lResult = pThis->DefWindowProc(uMsg, wParam, lParam);
+            }
         }
         ATLASSERT(pThis->m_pCurrentMsg == &msg);
         pThis->m_pCurrentMsg = previousMessage;
@@ -1619,9 +1653,9 @@ public:
     }
 
     HWND Create(HWND hWndParent, _U_RECT rect, LPCTSTR szWindowName, DWORD dwStyle, DWORD dwExStyle,
-                    _U_MENUorID MenuOrID, ATOM atom, LPVOID lpCreateParam)
+                _U_MENUorID MenuOrID, ATOM atom, LPVOID lpCreateParam)
     {
-        HWND                                hWnd;
+        HWND hWnd;
 
         ATLASSERT(m_hWnd == NULL);
         ATLASSERT(atom != 0);
@@ -1638,6 +1672,7 @@ public:
             MenuOrID.m_hMenu = (HMENU)(UINT_PTR)this;
         if (rect.m_lpRect == NULL)
             rect.m_lpRect = &TBase::rcDefault;
+
         hWnd = ::CreateWindowEx(dwExStyle, MAKEINTATOM(atom), szWindowName, dwStyle, rect.m_lpRect->left,
                     rect.m_lpRect->top, rect.m_lpRect->right - rect.m_lpRect->left, rect.m_lpRect->bottom - rect.m_lpRect->top,
                     hWndParent, MenuOrID.m_hMenu, _AtlBaseModule.GetModuleInstance(), lpCreateParam);
@@ -1657,16 +1692,15 @@ public:
     using CWindowImplRoot<TBase>::m_hWnd;
     // - Hacks for gcc
 
-
     static LPCTSTR GetWndCaption()
     {
         return NULL;
     }
 
     HWND Create(HWND hWndParent, _U_RECT rect = NULL, LPCTSTR szWindowName = NULL, DWORD dwStyle = 0,
-                    DWORD dwExStyle = 0, _U_MENUorID MenuOrID = 0U, LPVOID lpCreateParam = NULL)
+                DWORD dwExStyle = 0, _U_MENUorID MenuOrID = 0U, LPVOID lpCreateParam = NULL)
     {
-        CWindowImplBaseT<TBase, TWinTraits> *pThis;
+        CWindowImplBaseT<TBase, TWinTraits>* pThis;
         ATOM atom;
 
         ATLASSERT(m_hWnd == NULL);
@@ -1700,6 +1734,7 @@ public:
     CMessageMap *m_pObject;
     DWORD m_dwMsgMapID;
     const _ATL_MSG *m_pCurrentMsg;
+
 public:
     CContainedWindowT(CMessageMap *pObject, DWORD dwMsgMapID = 0)
     {
@@ -1729,8 +1764,8 @@ public:
         ATLASSERT(m_hWnd == NULL);
         ATLASSERT(::IsWindow(hWnd));
 
-        CContainedWindowT<TBase> *pThis;
-        pThis = reinterpret_cast<CContainedWindowT<TBase> *>(this);
+        CContainedWindowT<TBase>* pThis;
+        pThis = reinterpret_cast<CContainedWindowT<TBase>*>(this);
 
         BOOL result = m_thunk.Init(WindowProc, pThis);
         if (result == FALSE)
@@ -1770,11 +1805,11 @@ public:
 
     static LRESULT CALLBACK StartWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        CContainedWindowT<TBase> *pThis;
+        CContainedWindowT<TBase>* pThis;
         WNDPROC newWindowProc;
         WNDPROC GCCU(pOldProc);
 
-        pThis = reinterpret_cast<CContainedWindowT<TBase> *>(_AtlWinModule.ExtractCreateWndData());
+        pThis = reinterpret_cast<CContainedWindowT<TBase>*>(_AtlWinModule.ExtractCreateWndData());
         ATLASSERT(pThis != NULL);
         if (pThis == NULL)
             return 0;
@@ -1788,7 +1823,7 @@ public:
 
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        CContainedWindowT<TBase> *pThis = reinterpret_cast<CContainedWindowT<TBase> *>(hWnd);
+        CContainedWindowT<TBase>* pThis = reinterpret_cast<CContainedWindowT<TBase>*>(hWnd);
         _ATL_MSG msg(pThis->m_hWnd, uMsg, wParam, lParam);
         LRESULT lResult;
         const _ATL_MSG *previousMessage;
@@ -1826,122 +1861,122 @@ public:
 };
 typedef CContainedWindowT<CWindow> CContainedWindow;
 
-#define BEGIN_MSG_MAP(theClass)                                                                                                \
-public:                                                                                                                        \
-    BOOL ProcessWindowMessage(HWND GCCU(hWnd), UINT GCCU(uMsg), WPARAM GCCU(wParam), LPARAM GCCU(lParam), LRESULT &GCCU(lResult), DWORD dwMsgMapID = 0)    \
-    {                                                                                                                        \
-        BOOL GCCU(bHandled) = TRUE;                                                                                            \
-        Unused(hWnd);                                                                                                        \
-        Unused(uMsg);                                                                                                        \
-        Unused(wParam);                                                                                                        \
-        Unused(lParam);                                                                                                        \
-        Unused(lResult);                                                                                                    \
-        Unused(bHandled);                                                                                                    \
-        switch(dwMsgMapID)                                                                                                    \
-        {                                                                                                                    \
+#define BEGIN_MSG_MAP(theClass)     \
+public:                             \
+    BOOL ProcessWindowMessage(HWND GCCU(hWnd), UINT GCCU(uMsg), WPARAM GCCU(wParam), LPARAM GCCU(lParam), LRESULT &GCCU(lResult), DWORD dwMsgMapID = 0) \
+    {                               \
+        BOOL GCCU(bHandled) = TRUE; \
+        Unused(hWnd);               \
+        Unused(uMsg);               \
+        Unused(wParam);             \
+        Unused(lParam);             \
+        Unused(lResult);            \
+        Unused(bHandled);           \
+        switch(dwMsgMapID)          \
+        {                           \
         case 0:
 
-#define ALT_MSG_MAP(map)                                                                        \
-            break;                                                                                \
+#define ALT_MSG_MAP(map) \
+            break;       \
         case map:
 
-#define END_MSG_MAP()                                                                            \
-            break;                                                                                \
-        default:                                                                                \
-            ATLASSERT(FALSE);                                                                    \
-            break;                                                                                \
-        }                                                                                        \
-        return FALSE;                                                                            \
+#define END_MSG_MAP()   \
+            break;      \
+        default:        \
+            ATLASSERT(FALSE); \
+            break;      \
+        }               \
+        return FALSE;   \
     }
 
-#define MESSAGE_HANDLER(msg, func)                                                                \
-    if (uMsg == msg)                                                                            \
-    {                                                                                            \
-        bHandled = TRUE;                                                                        \
-        lResult = func(uMsg, wParam, lParam, bHandled);                                            \
-        if (bHandled)                                                                            \
-            return TRUE;                                                                        \
+#define MESSAGE_HANDLER(msg, func)  \
+    if (uMsg == msg)                \
+    {                               \
+        bHandled = TRUE;            \
+        lResult = func(uMsg, wParam, lParam, bHandled); \
+        if (bHandled)               \
+            return TRUE;            \
     }
 
-#define MESSAGE_RANGE_HANDLER(msgFirst, msgLast, func)                                            \
-    if (uMsg >= msgFirst && uMsg <= msgLast)                                                    \
-    {                                                                                            \
-        bHandled = TRUE;                                                                        \
-        lResult = func(uMsg, wParam, lParam, bHandled);                                            \
-        if (bHandled)                                                                            \
-            return TRUE;                                                                        \
+#define MESSAGE_RANGE_HANDLER(msgFirst, msgLast, func)  \
+    if (uMsg >= msgFirst && uMsg <= msgLast)            \
+    {                                                   \
+        bHandled = TRUE;                                \
+        lResult = func(uMsg, wParam, lParam, bHandled); \
+        if (bHandled)                                   \
+            return TRUE;                                \
     }
 
-#define COMMAND_HANDLER(id, code, func)                                                         \
-    if (uMsg == WM_COMMAND && id == LOWORD(wParam) && code == HIWORD(wParam))                   \
-    {                                                                                           \
-        bHandled = TRUE;                                                                        \
-        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled);                 \
-        if (bHandled)                                                                           \
-            return TRUE;                                                                        \
+#define COMMAND_HANDLER(id, code, func) \
+    if (uMsg == WM_COMMAND && id == LOWORD(wParam) && code == HIWORD(wParam)) \
+    {                                   \
+        bHandled = TRUE;                \
+        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled); \
+        if (bHandled)                   \
+            return TRUE;                \
     }
 
-#define COMMAND_ID_HANDLER(id, func)                                                            \
-    if (uMsg == WM_COMMAND && id == LOWORD(wParam))                                                \
-    {                                                                                            \
-        bHandled = TRUE;                                                                        \
-        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled);                    \
-        if (bHandled)                                                                            \
-            return TRUE;                                                                        \
+#define COMMAND_ID_HANDLER(id, func)    \
+    if (uMsg == WM_COMMAND && id == LOWORD(wParam)) \
+    {                                   \
+        bHandled = TRUE;                \
+        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled); \
+        if (bHandled)                   \
+            return TRUE;                \
     }
 
-#define COMMAND_CODE_HANDLER(code, func)                                                            \
-    if (uMsg == WM_COMMAND && code == HIWORD(wParam))                                                \
-    {                                                                                            \
-        bHandled = TRUE;                                                                        \
-        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled);                    \
-        if (bHandled)                                                                            \
-            return TRUE;                                                                        \
+#define COMMAND_CODE_HANDLER(code, func)    \
+    if (uMsg == WM_COMMAND && code == HIWORD(wParam)) \
+    {                                       \
+        bHandled = TRUE;                    \
+        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled); \
+        if (bHandled)                       \
+            return TRUE;                    \
     }
 
-#define COMMAND_RANGE_HANDLER(idFirst, idLast, func)                                            \
-    if (uMsg == WM_COMMAND && LOWORD(wParam) >= idFirst  && LOWORD(wParam) <= idLast)            \
-    {                                                                                            \
-        bHandled = TRUE;                                                                        \
-        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled);                    \
-        if (bHandled)                                                                            \
-            return TRUE;                                                                        \
+#define COMMAND_RANGE_HANDLER(idFirst, idLast, func)    \
+    if (uMsg == WM_COMMAND && LOWORD(wParam) >= idFirst && LOWORD(wParam) <= idLast) \
+    {                                                   \
+        bHandled = TRUE;                                \
+        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled); \
+        if (bHandled)                                   \
+            return TRUE;                                \
     }
 
-#define NOTIFY_CODE_HANDLER(cd, func)                                                            \
-    if(uMsg == WM_NOTIFY && cd == ((LPNMHDR)lParam)->code)                                        \
-    {                                                                                            \
-        bHandled = TRUE;                                                                        \
-        lResult = func((int)wParam, (LPNMHDR)lParam, bHandled);                                    \
-        if (bHandled)                                                                            \
-            return TRUE;                                                                        \
+#define NOTIFY_CODE_HANDLER(cd, func)   \
+    if (uMsg == WM_NOTIFY && cd == ((LPNMHDR)lParam)->code) \
+    {                                   \
+        bHandled = TRUE;                \
+        lResult = func((int)wParam, (LPNMHDR)lParam, bHandled); \
+        if (bHandled)                   \
+            return TRUE;                \
     }
 
-#define NOTIFY_HANDLER(id, cd, func)                                                            \
-    if(uMsg == WM_NOTIFY && id == ((LPNMHDR)lParam)->idFrom && cd == ((LPNMHDR)lParam)->code)    \
-    {                                                                                            \
-        bHandled = TRUE;                                                                        \
-        lResult = func((int)wParam, (LPNMHDR)lParam, bHandled);                                    \
-        if (bHandled)                                                                            \
-            return TRUE;                                                                        \
+#define NOTIFY_HANDLER(id, cd, func)    \
+    if (uMsg == WM_NOTIFY && id == ((LPNMHDR)lParam)->idFrom && cd == ((LPNMHDR)lParam)->code) \
+    {                                   \
+        bHandled = TRUE;                \
+        lResult = func((int)wParam, (LPNMHDR)lParam, bHandled); \
+        if (bHandled)                   \
+            return TRUE;                \
     }
 
-#define CHAIN_MSG_MAP(theChainClass) \
-    { \
+#define CHAIN_MSG_MAP(theChainClass)    \
+    {                                   \
         if (theChainClass::ProcessWindowMessage(hWnd, uMsg, wParam, lParam, lResult)) \
-            return TRUE; \
+            return TRUE;                \
     }
 
-#define DECLARE_WND_CLASS_EX(WndClassName, style, bkgnd)                                        \
-static ATL::CWndClassInfo& GetWndClassInfo()                                                    \
-{                                                                                                \
-    static ATL::CWndClassInfo wc =                                                                \
-    {                                                                                            \
-        { sizeof(WNDCLASSEX), style, StartWindowProc,                                            \
-          0, 0, NULL, NULL, NULL, (HBRUSH)(bkgnd + 1), NULL, WndClassName, NULL },                \
-        NULL, NULL, IDC_ARROW, TRUE, 0, _T("")                                                    \
-    };                                                                                            \
-    return wc;                                                                                    \
+#define DECLARE_WND_CLASS_EX(WndClassName, style, bkgnd)    \
+static ATL::CWndClassInfo& GetWndClassInfo()                \
+{                                                           \
+    static ATL::CWndClassInfo wc =                          \
+    {                                                       \
+        { sizeof(WNDCLASSEX), style, StartWindowProc,       \
+          0, 0, NULL, NULL, NULL, (HBRUSH)(bkgnd + 1), NULL, WndClassName, NULL }, \
+        NULL, NULL, IDC_ARROW, TRUE, 0, _T("")              \
+    };                                                      \
+    return wc;                                              \
 }
 
 struct _ATL_WNDCLASSINFOW

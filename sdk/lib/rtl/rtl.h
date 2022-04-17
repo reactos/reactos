@@ -9,13 +9,15 @@
 #ifndef RTL_H
 #define RTL_H
 
-/* We're a core NT DLL, we don't import syscalls */
+/* We are a core NT DLL, we don't import syscalls */
 #define _INC_SWPRINTF_INL_
 #undef __MSVCRT__
 
 /* C Headers */
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#ifndef _BLDR_
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
@@ -42,6 +44,12 @@
 
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
+
+#else
+
+#include <ndk/rtlfuncs.h>
+
+#endif /* _BLDR_ */
 
 /* Internal RTL header */
 #include "rtlp.h"

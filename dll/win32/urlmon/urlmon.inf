@@ -598,17 +598,17 @@ DESC_LOCAL="Bilgisayarınız"
 ZICON_LOCAL="explorer.exe#0100"
 
 NAME_INTRANET="Yerli İç Ağ"
-DESC_INTRANET="Bu yer, kurumunuzun iç ağı üzerinde olan tüm Umûmî Ağ sitelerini içerir."
+DESC_INTRANET="Bu yer, kurumunuzun iç ağı üzerinde olan tüm Genel Ağ sitelerini içerir."
 ZICON_INTRANET="shell32.dll#0018"
 
 NAME_TRUSTED="Güvenli Siteler"
-DESC_TRUSTED="Bu yer, bilgisayarınıza veyâ verinize zarar vermemeye güvendiğiniz Umûmî Ağ sitelerini içerir."
+DESC_TRUSTED="Bu yer, bilgisayarınıza veya verinize zarar vermemeye güvendiğiniz Genel Ağ sitelerini içerir."
 ZICON_TRUSTED="inetcpl.cpl#00004480"
 
-NAME_INTERNET="Umûmî Ağ"
-DESC_INTERNET="Bu yer, başka yerlerde koymadığınız tüm Umûmî Ağ sitelerini içerir."
+NAME_INTERNET="Genel Ağ"
+DESC_INTERNET="Bu yer, başka yerlerde koymadığınız tüm Genel Ağ sitelerini içerir."
 ZICON_INTERNET="inetcpl.cpl#001313"
 
 NAME_UNTRUSTED="Kısıtlanmış Siteler"
-DESC_UNTRUSTED="Bu yer, bilgisayarınıza veyâ verinize potansiyel olarak zarar verebilecek Umûmî Ağ sitelerini içerir."
+DESC_UNTRUSTED="Bu yer, bilgisayarınıza veya verinize potansiyel olarak zarar verebilecek Genel Ağ sitelerini içerir."
 ZICON_UNTRUSTED="inetcpl.cpl#00004481"

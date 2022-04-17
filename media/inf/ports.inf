@@ -195,13 +195,13 @@ StdMfg = "(Štandardné porty)"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-PortsClassName = "Dizilik ve Koşut Girişler"
+PortsClassName = "Seri ve Paralel Bağlantı Noktaları"
 
 StdMfg = "(Ölçünlü Girişler)"
-*PNP0500.DeviceDesc = "Dizilik Bağlantı Girişi"
-*PNP0501.DeviceDesc = "Dizilik Bağlantı Girişi"
-*PNP0400.DeviceDesc = "Ölçünlü LPT Yazıcı Girişi"
-*PNP0401.DeviceDesc = "ECP Yazıcı Girişi"
+*PNP0500.DeviceDesc = "Seri Bağlantı Noktası"
+*PNP0501.DeviceDesc = "Seri Bağlantı Noktası"
+*PNP0400.DeviceDesc = "Standart LPT Yazıcı Bağlantı Noktası"
+*PNP0401.DeviceDesc = "ECP Yazıcı Bağlantı Noktası"
 
 [Strings.0422]
 ReactOS = "Команди ReactOS"
@@ -228,3 +228,13 @@ StdMfg = "(标准端口)"
 *PNP0501.DeviceDesc = "串行通信端口"
 *PNP0400.DeviceDesc = "标准 LPT 打印机端口"
 *PNP0401.DeviceDesc = "ECP 打印机端口"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+PortsClassName = "Portas (COM & LPT)"
+
+StdMfg = "(Tipos de porta padrão)"
+*PNP0500.DeviceDesc = "Porta de comunicações série"
+*PNP0501.DeviceDesc = "Porta de comunicações série"
+*PNP0400.DeviceDesc = "Porta paralela padrão"
+*PNP0401.DeviceDesc = "Porta de impressora ECP"

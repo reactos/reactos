@@ -26,7 +26,7 @@
 
  /* UTF-8 */
  #pragma code_page(65001)
- 
+
 #ifdef LANGUAGE_CS_CZ
     #include "lang/cs-CZ.rc"
 #endif
@@ -111,7 +111,7 @@
 #define WINE_PRODUCTVERSION_STR "8.00.6001.18939"
 
 #include "wine/wine_common_ver.rc"
- 
+
 /* @makedep: inetcpl.ico */
 ICO_MAIN ICON "resources/inetcpl.ico"
 ICO_INTERNET ICON "resources/inetcpl.ico"

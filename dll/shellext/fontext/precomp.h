@@ -36,8 +36,6 @@ HRESULT _CFontMenu_CreateInstance(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY ap
 HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
                                     REFIID riid, LPVOID* ppvOut);
 
-HRESULT _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida);
-
 inline BOOL IsFontDotExt(LPCWSTR pchDotExt)
 {
     static const LPCWSTR array[] =

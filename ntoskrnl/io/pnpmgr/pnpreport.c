@@ -155,15 +155,19 @@ IoReportDetectedDevice(
     _In_ BOOLEAN ResourceAssigned,
     _Inout_ PDEVICE_OBJECT *DeviceObject)
 {
+    UNICODE_STRING Control = RTL_CONSTANT_STRING(L"Control");
+    UNICODE_STRING DeviceReportedName = RTL_CONSTANT_STRING(L"DeviceReported");
+    OBJECT_ATTRIBUTES ObjectAttributes;
     PDEVICE_NODE DeviceNode;
     PDEVICE_OBJECT Pdo;
     NTSTATUS Status;
-    HANDLE InstanceKey;
+    HANDLE InstanceKey, ControlKey;
     UNICODE_STRING ValueName, ServiceLongName, ServiceName;
     WCHAR HardwareId[256];
     PWCHAR IfString;
     ULONG IdLength;
     ULONG LegacyValue;
+    ULONG DeviceReported = 1;
 
     DPRINT("IoReportDetectedDevice (DeviceObject %p, *DeviceObject %p)\n",
            DeviceObject, DeviceObject ? *DeviceObject : NULL);
@@ -265,6 +269,39 @@ IoReportDetectedDevice(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Failed to write the Legacy value: 0x%x\n", Status);
+    }
+    Status = ZwSetValueKey(InstanceKey, &DeviceReportedName, 0, REG_DWORD, &DeviceReported, sizeof(DeviceReported));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed to write the DeviceReported value: 0x%x\n", Status);
+    }
+
+    /* Set DeviceReported=1 in Control subkey */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Control,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               InstanceKey,
+                               NULL);
+    Status = ZwCreateKey(&ControlKey,
+                         KEY_SET_VALUE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+    if (NT_SUCCESS(Status))
+    {
+        Status = ZwSetValueKey(ControlKey,
+                               &DeviceReportedName,
+                               0,
+                               REG_DWORD,
+                               &DeviceReported,
+                               sizeof(DeviceReported));
+        ZwClose(ControlKey);
+    }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to set ReportedDevice=1 for device %wZ (status 0x%08lx)\n", &instancePath, Status);
     }
 
     /* Add DETECTEDInterfaceType\DriverName */
@@ -376,7 +413,7 @@ IoReportResourceForDetection(IN PDRIVER_OBJECT DriverObject,
         ResourceList = DriverList;
 
     /* Look for a resource conflict */
-    Status = IopDetectResourceConflict(ResourceList, FALSE, NULL);
+    Status = IopDetectResourceConflict(ResourceList, TRUE, NULL);
     if (Status == STATUS_CONFLICTING_ADDRESSES)
     {
         /* Oh noes */

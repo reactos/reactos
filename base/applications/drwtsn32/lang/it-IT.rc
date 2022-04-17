@@ -10,5 +10,5 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "ReactOS Crash Reporter"
-    IDS_USER_ALERT_MESSAGE "L'applicazione %ls ha smesso di funzionare. Le informazioni su questo crash sono state salvate in:\r\n\r\n%ls"
+    IDS_USER_ALERT_MESSAGE "L'applicazione %ls ha smesso di funzionare. Le informazioni su questo crash sono state salvate in:\n\n%ls"
 END

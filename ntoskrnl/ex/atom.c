@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ATOM 'motA'
-
 /* GLOBALS ****************************************************************/
 
 /*
@@ -249,7 +247,7 @@ NtFindAtom(IN PWSTR AtomName,
     PRTL_ATOM_TABLE AtomTable = ExpGetGlobalAtomTable();
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    LPWSTR CapturedName = NULL;
+    _SEH2_VOLATILE LPWSTR CapturedName;
     ULONG CapturedSize;
     RTL_ATOM SafeAtom;
     PAGED_CODE();
@@ -283,20 +281,12 @@ NtFindAtom(IN PWSTR AtomName,
                 /* Allocate an aligned buffer + the null char */
                 CapturedSize = ((AtomNameLength + sizeof(WCHAR)) &~
                                 (sizeof(WCHAR) -1));
-                CapturedName = ExAllocatePoolWithTag(PagedPool,
-                                                     CapturedSize,
-                                                     TAG_ATOM);
-                if (!CapturedName)
-                {
-                    /* Fail the call */
-                    Status = STATUS_INSUFFICIENT_RESOURCES;
-                }
-                else
-                {
-                    /* Copy the name and null-terminate it */
-                    RtlCopyMemory(CapturedName, AtomName, AtomNameLength);
-                    CapturedName[AtomNameLength / sizeof(WCHAR)] = UNICODE_NULL;
-                }
+                CapturedName = ExAllocatePoolWithQuotaTag(PagedPool,
+                                                          CapturedSize,
+                                                          TAG_ATOM);
+                /* Copy the name and null-terminate it */
+                RtlCopyMemory(CapturedName, AtomName, AtomNameLength);
+                CapturedName[AtomNameLength / sizeof(WCHAR)] = UNICODE_NULL;
 
                 /* Probe the atom too */
                 if (Atom) ProbeForWriteUshort(Atom);
@@ -304,6 +294,11 @@ NtFindAtom(IN PWSTR AtomName,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            if (CapturedName != AtomName)
+            {
+                ExFreePoolWithTag(CapturedName, TAG_ATOM);
+            }
+
             /* Return the exception code */
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
@@ -314,7 +309,7 @@ NtFindAtom(IN PWSTR AtomName,
     Status = RtlLookupAtomInAtomTable(AtomTable, CapturedName, &SafeAtom);
     if (NT_SUCCESS(Status) && (Atom))
     {
-        /* Success and caller wants the atom back.. .enter SEH */
+        /* Success and caller wants the atom back... enter SEH */
         _SEH2_TRY
         {
             /* Return the atom */

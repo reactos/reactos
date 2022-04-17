@@ -1,6 +1,6 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Options des téléphones et modems"
     IDS_CPLSYSTEMDESCRIPTION "Configurez vos règles de téléphonie et les paramètres de votre modem."

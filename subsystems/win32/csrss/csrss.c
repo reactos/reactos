@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #define NTOS_MODE_USER
+#include <ndk/exfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 
@@ -42,7 +43,9 @@ _main(int argc,
 {
     KPRIORITY BasePriority = (8 + 1) + 4;
     NTSTATUS Status;
-    //ULONG Response; // see the #if 0
+#if defined (_X86_)
+    ULONG Response;
+#endif
     UNREFERENCED_PARAMETER(envp);
     UNREFERENCED_PARAMETER(DebugFlag);
 
@@ -52,6 +55,7 @@ _main(int argc,
                             &BasePriority,
                             sizeof(KPRIORITY));
 
+#if defined (_X86_)
     /* Give us IOPL so that we can access the VGA registers */
     Status = NtSetInformationProcess(NtCurrentProcess(),
                                      ProcessUserModeIOPL,
@@ -61,15 +65,14 @@ _main(int argc,
     {
         /* Raise a hard error */
         DPRINT1("CSRSS: Could not raise IOPL, Status: 0x%08lx\n", Status);
-#if 0
         Status = NtRaiseHardError(STATUS_IO_PRIVILEGE_FAILED,
                                   0,
                                   0,
                                   NULL,
                                   OptionOk,
                                   &Response);
-#endif
     }
+#endif
 
     /* Initialize CSR through CSRSRV */
     Status = CsrServerInitialization(argc, argv);

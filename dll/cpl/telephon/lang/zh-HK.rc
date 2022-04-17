@@ -1,0 +1,15 @@
+/*
+ * PROJECT:     ReactOS Telephony Control Panel Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * REFERENCES:  Chinese (Traditional) resource file
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLSYSTEMNAME "電話和數據機選項"
+    IDS_CPLSYSTEMDESCRIPTION "設定您的電話撥號規則和數據機設定。"
+END

@@ -28,6 +28,9 @@ extern KMUTANT MmSystemLoadLock;
 
 extern ULONG MmNumberOfPagingFiles;
 
+extern SIZE_T MmTotalNonPagedPoolQuota;
+extern SIZE_T MmTotalPagedPoolQuota;
+
 extern PVOID MmUnloadedDrivers;
 extern PVOID MmLastUnloadedDrivers;
 extern PVOID MmTriageActionTaken;
@@ -46,10 +49,25 @@ extern SIZE_T MmtotalCommitLimitMaximum;
 extern PVOID MiDebugMapping; // internal
 extern PMMPTE MmDebugPte; // internal
 
+extern KSPIN_LOCK MmPfnLock;
+
 struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
 typedef ULONG_PTR SWAPENTRY;
+
+//
+// Pool Quota values
+//
+#define MI_QUOTA_NON_PAGED_NEEDED_PAGES             64
+#define MI_NON_PAGED_QUOTA_MIN_RESIDENT_PAGES       200
+#define MI_CHARGE_PAGED_POOL_QUOTA                  0x80000
+#define MI_CHARGE_NON_PAGED_POOL_QUOTA              0x10000
+
+//
+// Special IRQL value (found in assertions)
+//
+#define MM_NOIRQL ((KIRQL)0xFFFFFFFF)
 
 //
 // MmDbgCopyMemory Flags
@@ -175,6 +193,7 @@ typedef ULONG_PTR SWAPENTRY;
 
 typedef struct _MM_SECTION_SEGMENT
 {
+    LONG64 RefCount;
     PFILE_OBJECT FileObject;
 
     FAST_MUTEX Lock;		/* lock which protects the page directory */
@@ -194,7 +213,6 @@ typedef struct _MM_SECTION_SEGMENT
 		ULONG Characteristics;
 	} Image;
 
-	LONG64 RefCount;
 	ULONG SegFlags;
 
     ULONGLONG LastPage;
@@ -204,9 +222,10 @@ typedef struct _MM_SECTION_SEGMENT
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
 {
-    PFILE_OBJECT FileObject;
-
     LONG64 RefCount;
+    PFILE_OBJECT FileObject;
+    ULONG SectionCount;
+    LONG MapCount;
     ULONG SegFlags;
 
     SECTION_IMAGE_INFORMATION ImageInformation;
@@ -219,6 +238,7 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
 #define MM_DATAFILE_SEGMENT                 (0x2)
 #define MM_SEGMENT_INDELETE                 (0x4)
 #define MM_SEGMENT_INCREATE                 (0x8)
+#define MM_IMAGE_SECTION_FLUSH_DELETE       (0x10)
 
 
 #define MA_GetStartingAddress(_MemoryArea) ((_MemoryArea)->VadNode.StartingVpn << PAGE_SHIFT)
@@ -275,7 +295,7 @@ void
 MI_SET_PROCESS_USTR(PUNICODE_STRING ustr)
 {
     PWSTR pos, strEnd;
-    int i;
+    ULONG i;
 
     if (!ustr->Buffer || ustr->Length == 0)
     {
@@ -407,6 +427,7 @@ typedef struct _MMPFN
     MI_PFN_USAGES PfnUsage;
     CHAR ProcessName[16];
 #define MI_SET_PFN_PROCESS_NAME(pfn, x) memcpy(pfn->ProcessName, x, min(sizeof(x), sizeof(pfn->ProcessName)))
+    PVOID CallSite;
 #endif
 
     // HACK until WS lists are supported
@@ -636,12 +657,21 @@ MiFreePoolPages(
 
 /* pool.c *******************************************************************/
 
+_Requires_lock_held_(PspQuotaLock)
 BOOLEAN
 NTAPI
-MiRaisePoolQuota(
-    IN POOL_TYPE PoolType,
-    IN ULONG CurrentMaxQuota,
-    OUT PULONG NewMaxQuota
+MmRaisePoolQuota(
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T CurrentMaxQuota,
+    _Out_ PSIZE_T NewMaxQuota
+);
+
+_Requires_lock_held_(PspQuotaLock)
+VOID
+NTAPI
+MmReturnPoolQuota(
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T QuotaToReturn
 );
 
 /* mdl.c *********************************************************************/
@@ -932,7 +962,11 @@ MmGetSectionAssociation(PFN_NUMBER Page,
                         PLARGE_INTEGER Offset);
 
 /* freelist.c **********************************************************/
-
+_IRQL_raises_(DISPATCH_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Requires_lock_not_held_(MmPfnLock)
+_Acquires_lock_(MmPfnLock)
+_IRQL_saves_
 FORCEINLINE
 KIRQL
 MiAcquirePfnLock(VOID)
@@ -940,14 +974,20 @@ MiAcquirePfnLock(VOID)
     return KeAcquireQueuedSpinLock(LockQueuePfnLock);
 }
 
+_Requires_lock_held_(MmPfnLock)
+_Releases_lock_(MmPfnLock)
+_IRQL_requires_(DISPATCH_LEVEL)
 FORCEINLINE
 VOID
 MiReleasePfnLock(
-    _In_ KIRQL OldIrql)
+    _In_ _IRQL_restores_ KIRQL OldIrql)
 {
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 }
 
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_Requires_lock_not_held_(MmPfnLock)
+_Acquires_lock_(MmPfnLock)
 FORCEINLINE
 VOID
 MiAcquirePfnLockAtDpcLevel(VOID)
@@ -959,6 +999,9 @@ MiAcquirePfnLockAtDpcLevel(VOID)
     KeAcquireQueuedSpinLockAtDpcLevel(LockQueue);
 }
 
+_Requires_lock_held_(MmPfnLock)
+_Releases_lock_(MmPfnLock)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 FORCEINLINE
 VOID
 MiReleasePfnLockFromDpcLevel(VOID)
@@ -970,7 +1013,7 @@ MiReleasePfnLockFromDpcLevel(VOID)
     ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 }
 
-#define MI_ASSERT_PFN_LOCK_HELD() ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL)
+#define MI_ASSERT_PFN_LOCK_HELD() NT_ASSERT((KeGetCurrentIrql() >= DISPATCH_LEVEL) && (MmPfnLock != 0))
 
 FORCEINLINE
 PMMPFN
@@ -1434,7 +1477,7 @@ MmFlushSegment(
     _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
     _In_opt_ PLARGE_INTEGER Offset,
     _In_ ULONG Length,
-    _In_opt_ PIO_STATUS_BLOCK Iosb);
+    _Out_opt_ PIO_STATUS_BLOCK Iosb);
 
 NTSTATUS
 NTAPI
@@ -1468,9 +1511,25 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
                                  BOOLEAN PageOut,
                                  ULONG_PTR *InEntry);
 
+_When_(OldIrql == MM_NOIRQL, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(OldIrql == MM_NOIRQL, _Requires_lock_not_held_(MmPfnLock))
+_When_(OldIrql != MM_NOIRQL, _Requires_lock_held_(MmPfnLock))
+_When_(OldIrql != MM_NOIRQL, _Releases_lock_(MmPfnLock))
+_When_(OldIrql != MM_NOIRQL, _IRQL_requires_(DISPATCH_LEVEL))
 VOID
 NTAPI
-MmDereferenceSegment(PMM_SECTION_SEGMENT Segment);
+MmDereferenceSegmentWithLock(
+    _In_ PMM_SECTION_SEGMENT Segment,
+    _In_ _When_(OldIrql != MM_NOIRQL, _IRQL_restores_) KIRQL OldIrql);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Requires_lock_not_held_(MmPfnLock)
+FORCEINLINE
+VOID
+MmDereferenceSegment(PMM_SECTION_SEGMENT Segment)
+{
+    MmDereferenceSegmentWithLock(Segment, MM_NOIRQL);
+}
 
 NTSTATUS
 NTAPI

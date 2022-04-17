@@ -340,7 +340,7 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
     }
 }
 
-static 
+static
 VOID
 WriteLineSettings(PPREFERENCES_CONTEXT Context, HWND hwndDlg)
 {
@@ -576,11 +576,11 @@ DlgPreferencesProc(HWND hwndDlg,
                       IDCANCEL);
             break;
         }
-        
+
         case WM_SYSCOLORCHANGE:
         {
             HWND hwndControls;
-            
+
             /* Forward WM_SYSCOLORCHANGE */
             hwndControls = GetDlgItem(hwndDlg, IDC_CONTROLS);
             SendMessage(hwndControls, WM_SYSCOLORCHANGE, 0, 0);
@@ -1342,7 +1342,7 @@ CreateApplicationWindow(
         hWnd = CreateWindowEx(WS_EX_WINDOWEDGE | WS_EX_CONTROLPARENT,
                               SZ_APP_CLASS,
                               lpAppTitle,
-                              WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, 
+                              WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
                               0, 0, 300, 315,
                               NULL,
                               LoadMenu(hAppInstance,

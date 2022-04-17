@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CEnumFonts implementation
- * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2019 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include "precomp.h"
@@ -77,7 +77,7 @@ public:
 public:
     DECLARE_NOT_AGGREGATABLE(CEnumFonts)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
-    
+
     BEGIN_COM_MAP(CEnumFonts)
         COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
     END_COM_MAP()

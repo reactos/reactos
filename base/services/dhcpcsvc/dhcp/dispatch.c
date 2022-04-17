@@ -41,6 +41,9 @@
 
 #include <rosdhcp.h>
 
+#define NDEBUG
+#include <reactos/debug.h>
+
 //#include <sys/ioctl.h>
 
 //#include <net/if_media.h>
@@ -48,7 +51,8 @@
 //#include <poll.h>
 
 extern SOCKET DhcpSocket;
-HANDLE AdapterStateChangedEvent = NULL;
+extern HANDLE hAdapterStateChangedEvent;
+
 struct protocol *protocols = NULL;
 struct timeout *timeouts = NULL;
 static struct timeout *free_timeouts = NULL;
@@ -71,12 +75,7 @@ dispatch(HANDLE hStopEvent)
     HANDLE Events[3];
     int EventCount = 2;
 
-    Events[0] = StartAdapterDiscovery();
-    if (!Events[0])
-         return;
-
-    AdapterStateChangedEvent = Events[0];
-
+    Events[0] = hAdapterStateChangedEvent;
     Events[1] = hStopEvent;
     Events[2] = WSA_INVALID_EVENT;
 
@@ -157,6 +156,7 @@ dispatch(HANDLE hStopEvent)
         else if (count == WAIT_OBJECT_0 + 1)
         {
             /* Stop event signalled */
+            DPRINT("Dispatch thread stop event!\n");
             break;
         }
         else if (count == WAIT_OBJECT_0 + 2)
@@ -183,12 +183,11 @@ dispatch(HANDLE hStopEvent)
         }
     } while (1);
 
-    AdapterStateChangedEvent = NULL;
-    CloseHandle(Events[0]);
-    CloseHandle(Events[1]);
     WSACloseEvent(Events[2]);
 
     ApiUnlock();
+
+    DPRINT("Dispatch thread stopped!\n");
 }
 
 void

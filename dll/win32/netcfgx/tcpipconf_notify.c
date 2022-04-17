@@ -397,7 +397,7 @@ TcpipFilterSettingsDlg(
         case WM_COMMAND:
             if (HIWORD(wParam) == BN_CLICKED)
             {
-                switch (LOWORD(wParam)) 
+                switch (LOWORD(wParam))
                 {
                     case IDC_TCP_ALLOW_ALL:
                         if (SendDlgItemMessageW(hwndDlg, IDC_TCP_ALLOW_ALL, BM_GETCHECK, 0, 0) == BST_CHECKED)
@@ -583,8 +583,8 @@ TcpipAdvancedOptDlg(
             if (LOWORD(wParam) == IDC_OPTPROP)
             {
                 DialogBoxParamW(netcfgx_hInstance,
-                                MAKEINTRESOURCEW(IDD_TCPIP_FILTER_DLG), 
-                                GetParent(hwndDlg), 
+                                MAKEINTRESOURCEW(IDD_TCPIP_FILTER_DLG),
+                                GetParent(hwndDlg),
                                 TcpipFilterSettingsDlg,
                                 (LPARAM)GetWindowLongPtr(hwndDlg, DWLP_USER));
                 break;
@@ -635,7 +635,7 @@ InsertIpAddressToListView(
         li.iItem = itemCount;
         li.iSubItem = 0;
         dwIpAddr = pAddr->IpAddress;
-        swprintf(szBuffer, L"%lu.%lu.%lu.%lu", 
+        swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
                  FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
 
         li.pszText = szBuffer;
@@ -645,7 +645,7 @@ InsertIpAddressToListView(
             if (bSubMask)
             {
                 dwIpAddr = pAddr->u.Subnetmask;
-                swprintf(szBuffer, L"%lu.%lu.%lu.%lu", 
+                swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
                          FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
             }
             else
@@ -1576,7 +1576,7 @@ InitializeTcpipAdvancedDNSDlg(
     while(pAddr)
     {
         dwIpAddr = pAddr->IpAddress;
-        swprintf(szBuffer, L"%lu.%lu.%lu.%lu", 
+        swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
                  FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
 
         SendDlgItemMessageW(hwndDlg, IDC_DNSADDRLIST, LB_ADDSTRING, 0, (LPARAM)szBuffer);
@@ -2527,7 +2527,7 @@ TcpipBasicDlg(
         case WM_COMMAND:
             if (HIWORD(wParam) == BN_CLICKED)
             {
-                switch (LOWORD(wParam)) 
+                switch (LOWORD(wParam))
                 {
                     case IDC_USEDHCP:
                         if (SendDlgItemMessageW(hwndDlg, IDC_USEDHCP, BM_GETCHECK, 0, 0) == BST_CHECKED)
@@ -2950,7 +2950,7 @@ Initialize(TcpipConfNotifyImpl * This)
 
 HRESULT
 WINAPI
-INetCfgComponentPropertyUi_fnMergePropPages( 
+INetCfgComponentPropertyUi_fnMergePropPages(
     INetCfgComponentPropertyUi * iface,
     DWORD *pdwDefPages,
     BYTE **pahpspPrivate,
@@ -3076,7 +3076,7 @@ INetCfgComponentControl_fnRelease(
 
 HRESULT
 WINAPI
-INetCfgComponentControl_fnInitialize( 
+INetCfgComponentControl_fnInitialize(
     INetCfgComponentControl * iface,
     INetCfgComponent *pIComp,
     INetCfg *pINetCfg,
@@ -3106,12 +3106,12 @@ CreateMultiSzString(IP_ADDR * pAddr, COPY_TYPE Type, LPDWORD Size, BOOL bComma)
         if (Type == IPADDR)
         {
             dwIpAddr = pTemp->IpAddress;
-            swprintf(szBuffer, L"%lu.%lu.%lu.%lu", 
+            swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
                     FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }else if (Type == SUBMASK)
         {
             dwIpAddr = pTemp->u.Subnetmask;
-            swprintf(szBuffer, L"%lu.%lu.%lu.%lu", 
+            swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
                     FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }
         else if (Type == METRIC)
@@ -3136,12 +3136,12 @@ CreateMultiSzString(IP_ADDR * pAddr, COPY_TYPE Type, LPDWORD Size, BOOL bComma)
         if (Type == IPADDR)
         {
             dwIpAddr = pTemp->IpAddress;
-            swprintf(pStr, L"%lu.%lu.%lu.%lu", 
+            swprintf(pStr, L"%lu.%lu.%lu.%lu",
                     FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }else if (Type == SUBMASK)
         {
             dwIpAddr = pTemp->u.Subnetmask;
-            swprintf(pStr, L"%lu.%lu.%lu.%lu", 
+            swprintf(pStr, L"%lu.%lu.%lu.%lu",
                     FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }
         else if (Type == METRIC)
@@ -3209,7 +3209,7 @@ INetCfgComponentControl_fnApplyRegistryChanges(
         }
         if (pCurrentConfig->pFilter)
         {
-            RegSetValueExW(hKey, L"EnableSecurityFilters", 0, REG_DWORD, 
+            RegSetValueExW(hKey, L"EnableSecurityFilters", 0, REG_DWORD,
                       (LPBYTE)&pCurrentConfig->pFilter->EnableSecurityFilters, sizeof(DWORD));
         }
         RegCloseKey(hKey);
@@ -3235,19 +3235,19 @@ INetCfgComponentControl_fnApplyRegistryChanges(
         {
             if (pCurrentConfig->pFilter->szTCPAllowedPorts)
             {
-                RegSetValueExW(hKey, L"TCPAllowedPorts", 0, REG_MULTI_SZ, 
+                RegSetValueExW(hKey, L"TCPAllowedPorts", 0, REG_MULTI_SZ,
                        (LPBYTE)pCurrentConfig->pFilter->szTCPAllowedPorts,
                         pCurrentConfig->pFilter->TCPSize);
             }
             if (pCurrentConfig->pFilter->szUDPAllowedPorts)
             {
-                RegSetValueExW(hKey, L"UDPAllowedPorts", 0, REG_MULTI_SZ, 
+                RegSetValueExW(hKey, L"UDPAllowedPorts", 0, REG_MULTI_SZ,
                        (LPBYTE)pCurrentConfig->pFilter->szUDPAllowedPorts,
                         pCurrentConfig->pFilter->UDPSize);
             }
             if (pCurrentConfig->pFilter->szRawIPAllowedProtocols)
             {
-                RegSetValueExW(hKey, L"RawIPAllowedProtocols", 0, REG_MULTI_SZ, 
+                RegSetValueExW(hKey, L"RawIPAllowedProtocols", 0, REG_MULTI_SZ,
                        (LPBYTE)pCurrentConfig->pFilter->szRawIPAllowedProtocols,
                         pCurrentConfig->pFilter->IPSize);
             }
@@ -3312,14 +3312,14 @@ INetCfgComponentControl_fnApplyRegistryChanges(
                              &pCurrentConfig->Ip->NTEContext,
                              &NTEInstance);
             }
-            
+
             pStr = CreateMultiSzString(pCurrentConfig->Ip, IPADDR, &dwSize, FALSE);
             if(pStr)
             {
                 RegSetValueExW(hKey, L"IPAddress", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
                 CoTaskMemFree(pStr);
             }
-            
+
             pStr = CreateMultiSzString(pCurrentConfig->Ip, SUBMASK, &dwSize, FALSE);
             if(pStr)
             {

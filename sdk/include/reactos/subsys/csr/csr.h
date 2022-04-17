@@ -80,10 +80,6 @@ CsrProbeForWrite(IN PVOID Address,
                  IN ULONG Length,
                  IN ULONG Alignment);
 
-NTSTATUS
-NTAPI
-CsrIdentifyAlertableThread(VOID);
-
 HANDLE
 NTAPI
 CsrGetProcessId(VOID);
@@ -91,6 +87,10 @@ CsrGetProcessId(VOID);
 NTSTATUS
 NTAPI
 CsrNewThread(VOID);
+
+NTSTATUS
+NTAPI
+CsrIdentifyAlertableThread(VOID);
 
 NTSTATUS
 NTAPI

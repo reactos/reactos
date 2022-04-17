@@ -17,6 +17,7 @@ list(APPEND SOURCE
     detach.c
     detail.c
     diskpart.c
+    dump.c
     expand.c
     extend.c
     filesystems.c
@@ -28,6 +29,7 @@ list(APPEND SOURCE
     interpreter.c
     list.c
     merge.c
+    misc.c
     offline.c
     online.c
     partlist.c

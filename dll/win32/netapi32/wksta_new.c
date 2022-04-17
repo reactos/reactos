@@ -319,7 +319,7 @@ NetGetJoinInformation(
     _Out_ LPWSTR *lpNameBuffer,
     _Out_ PNETSETUP_JOIN_STATUS BufferType)
 {
-    NET_API_STATUS status;
+    NET_API_STATUS status = NERR_Success;
 
     TRACE("NetGetJoinInformation(%s %p %p)\n",
           debugstr_w(lpServer), lpNameBuffer, BufferType);
@@ -327,6 +327,9 @@ NetGetJoinInformation(
     if (lpNameBuffer == NULL || BufferType == NULL)
         return ERROR_INVALID_PARAMETER;
 
+    /* Disabled because of CORE-17679 */
+#if 0
+    *lpNameBuffer = NULL;
     RpcTryExcept
     {
         status = NetrGetJoinInformation((LPWSTR)lpServer,
@@ -338,6 +341,10 @@ NetGetJoinInformation(
         status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+#endif
+
+    *lpNameBuffer = NULL;
+    *BufferType = NetSetupUnknownStatus;
 
     return status;
 }

@@ -144,6 +144,12 @@ NtfsFCBIsCompressed(PNTFS_FCB Fcb)
 }
 
 BOOLEAN
+NtfsFCBIsEncrypted(PNTFS_FCB Fcb)
+{
+    return ((Fcb->Entry.FileAttributes & NTFS_FILE_TYPE_ENCRYPTED) == NTFS_FILE_TYPE_ENCRYPTED);
+}
+
+BOOLEAN
 NtfsFCBIsRoot(PNTFS_FCB Fcb)
 {
     return (wcscmp(Fcb->PathName, L"\\") == 0);

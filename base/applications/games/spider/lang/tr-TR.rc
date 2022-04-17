@@ -12,7 +12,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Kâğıt Arkalığı Seç"
+CAPTION "Kağıt Sırtını Seç"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -49,7 +49,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Spider Solitaire"
-    IDS_SPI_ABOUT "Spider Solitaire, Gregor Schneider tarafından.\n\nCardLib sürümü: 1.0"
+    IDS_SPI_ABOUT "Spider Solitaire, Gregor Schneider tarafından yazılmıştır.\n\nCardLib sürümü: 1.0"
     IDS_SPI_QUIT "Şimdiki oyundan çıkılsın mı?"
     IDS_SPI_WIN "Tebrikler, kazandınız!"
     IDS_SPI_DEAL "Yeniden dağıtılsın mı?"

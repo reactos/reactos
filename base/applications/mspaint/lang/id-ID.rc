@@ -8,6 +8,8 @@
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-id-ID.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "Be&rkas"
@@ -191,6 +193,17 @@ BEGIN
     PUSHBUTTON "Batal", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Fonts"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
@@ -198,7 +211,7 @@ BEGIN
     IDS_INFOTITLE "Paint untuk ReactOS"
     IDS_INFOTEXT "Tersedia di bawah GNU Lesser General Public License (LGPL, see www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Ingin menyimpan perubahan untuk %s?"
-    IDS_DEFAULTFILENAME "Tanpa Nama.bmp"
+    IDS_DEFAULTFILENAME "Tanpa Nama"
     IDS_MINIATURETITLE "Miniatur"
     IDS_TOOLTIP1 "Pilihan Bebas"
     IDS_TOOLTIP2 "Pilihan"
@@ -225,4 +238,8 @@ BEGIN
     IDS_ANGLE "Sudut hanya tersedia antara -89 and 89."
     IDS_LOADERRORTEXT "Berkas %s tidak bisa dimuat."
     IDS_ENLARGEPROMPTTEXT "Gambar pada papan klip lebih besar dari kanvas.\nPerbesar kanvas?"
+    IDS_BOLD "Bold"
+    IDS_ITALIC "Italic"
+    IDS_UNDERLINE "Underline"
+    IDS_VERTICAL "Vertical"
 END

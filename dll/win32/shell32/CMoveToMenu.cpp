@@ -100,6 +100,9 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
         }
         case BFFM_SELCHANGED:
         {
+            if (!this_)
+                break;
+
             WCHAR szPath[MAX_PATH];
             LPCITEMIDLIST pidl = reinterpret_cast<LPCITEMIDLIST>(lParam);
 
@@ -124,10 +127,9 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 
 HRESULT CMoveToMenu::DoRealMove(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 {
-    CComHeapPtr<CIDA> pCIDA;
-    HRESULT hr = _GetCidlFromDataObject(m_pDataObject, &pCIDA);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    CDataObjectHIDA pCIDA(m_pDataObject);
+    if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
+        return pCIDA.hr();
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);
     if (!pidlParent)
@@ -191,9 +193,8 @@ CStringW CMoveToMenu::DoGetFileTitle()
 {
     CStringW ret = L"(file)";
 
-    CComHeapPtr<CIDA> pCIDA;
-    HRESULT hr = _GetCidlFromDataObject(m_pDataObject, &pCIDA);
-    if (FAILED_UNEXPECTEDLY(hr))
+    CDataObjectHIDA pCIDA(m_pDataObject);
+    if (FAILED_UNEXPECTEDLY(pCIDA.hr()))
         return ret;
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);

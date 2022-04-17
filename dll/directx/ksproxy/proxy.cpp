@@ -2431,7 +2431,7 @@ CKsProxy::GetPinName(
         swprintf(Buffer, L"Output%lu", PinCount);
     }
 
-    // allocate pin name 
+    // allocate pin name
     PinName = (LPWSTR)CoTaskMemAlloc((wcslen(Buffer)+1) * sizeof(WCHAR));
     if (!PinName)
         return E_OUTOFMEMORY;
@@ -2697,7 +2697,7 @@ CKsProxy::Save(IPropertyBag *pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties
 
 //-------------------------------------------------------------------
 // IBaseFilter interface
-//	
+//
 
 HRESULT
 STDMETHODCALLTYPE

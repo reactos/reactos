@@ -1,10 +1,10 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/internal/io.h
-* PURPOSE:         Internal header for the I/O Manager
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*/
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/include/internal/io.h
+ * PURPOSE:         Internal header for the I/O Manager
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
 
 #include "ntdddisk.h"
 
@@ -80,6 +80,10 @@
 // Unable to create symbolic link pointing to the RAM disk device
 //
 #define RD_SYMLINK_CREATE_FAILED 5
+//
+// Unable to create system root path when creating the RAM disk
+//
+#define RD_SYSROOT_INIT_FAILED 6
 
 //
 // Max traversal of reparse points for a single open in IoParseDevice
@@ -405,18 +409,6 @@ typedef struct _DRIVER_INFORMATION
     ULONG Processed;
     NTSTATUS Status;
 } DRIVER_INFORMATION, *PDRIVER_INFORMATION;
-
-//
-// Boot Driver Node
-//
-typedef struct _BOOT_DRIVER_NODE
-{
-    BOOT_DRIVER_LIST_ENTRY ListEntry;
-    UNICODE_STRING Group;
-    UNICODE_STRING Name;
-    ULONG Tag;
-    ULONG ErrorControl;
-} BOOT_DRIVER_NODE, *PBOOT_DRIVER_NODE;
 
 //
 // List of Bus Type GUIDs

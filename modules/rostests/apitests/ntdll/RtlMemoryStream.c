@@ -35,14 +35,14 @@ BOOL CompareStructsAndSaveForLater(PRTL_MEMORY_STREAM pold, PRTL_MEMORY_STREAM p
     BOOL equal = TRUE;
 
     // Compare
-    if (pold->Vtbl != pnew->Vtbl) {  if (equal) { trace("%s: \n", at); equal = FALSE; } trace("Vtbl changed from %p to %p\n", pold->Vtbl, pnew->Vtbl);}
-    if (pold->RefCount != pnew->RefCount) {  if (equal) { trace("%s: \n", at); equal = FALSE; } trace("RefCount changed from %ld to %ld\n", pold->RefCount, pnew->RefCount); }
-    if (pold->Unk1 != pnew->Unk1) {  if (equal) { trace("%s: \n", at); equal = FALSE; } trace("Unk1 changed from %lu to %lu\n", pold->Unk1, pnew->Unk1); }
-    if (pold->Current != pnew->Current) {  if (equal) { trace("%s: \n", at); equal = FALSE; } trace("Current changed from %p to %p\n", pold->Current, pnew->Current); }
-    if (pold->Start != pnew->Start) {  if (equal) { trace("%s: \n", at); equal = FALSE; } trace("Start changed from %p to %p\n", pold->Start, pnew->Start); }
-    if (pold->End != pnew->End) {  if (equal) { trace("%s: \n", at); equal = FALSE; } trace("End changed from %p to %p\n", pold->End, pnew->End); }
-    if (pold->FinalRelease != pnew->FinalRelease) {  if (equal) { trace("%s: \n", at); equal = FALSE; } trace("FinalRelease changed from %p to %p\n", pold->FinalRelease, pnew->FinalRelease); }
-    if (pold->ProcessHandle != pnew->ProcessHandle) {  if (equal) { trace("%s: \n", at); equal = FALSE; } trace("ProcessHandle changed from %p to %p\n", pold->ProcessHandle, pnew->ProcessHandle); }
+    if (pold->Vtbl != pnew->Vtbl) {  if (equal) { trace("%s:\n", at); equal = FALSE; } trace("Vtbl changed from %p to %p\n", pold->Vtbl, pnew->Vtbl);}
+    if (pold->RefCount != pnew->RefCount) {  if (equal) { trace("%s:\n", at); equal = FALSE; } trace("RefCount changed from %ld to %ld\n", pold->RefCount, pnew->RefCount); }
+    if (pold->Unk1 != pnew->Unk1) {  if (equal) { trace("%s:\n", at); equal = FALSE; } trace("Unk1 changed from %lu to %lu\n", pold->Unk1, pnew->Unk1); }
+    if (pold->Current != pnew->Current) {  if (equal) { trace("%s:\n", at); equal = FALSE; } trace("Current changed from %p to %p\n", pold->Current, pnew->Current); }
+    if (pold->Start != pnew->Start) {  if (equal) { trace("%s:\n", at); equal = FALSE; } trace("Start changed from %p to %p\n", pold->Start, pnew->Start); }
+    if (pold->End != pnew->End) {  if (equal) { trace("%s:\n", at); equal = FALSE; } trace("End changed from %p to %p\n", pold->End, pnew->End); }
+    if (pold->FinalRelease != pnew->FinalRelease) {  if (equal) { trace("%s:\n", at); equal = FALSE; } trace("FinalRelease changed from %p to %p\n", pold->FinalRelease, pnew->FinalRelease); }
+    if (pold->ProcessHandle != pnew->ProcessHandle) {  if (equal) { trace("%s:\n", at); equal = FALSE; } trace("ProcessHandle changed from %p to %p\n", pold->ProcessHandle, pnew->ProcessHandle); }
 
     // Save
     pold->Vtbl = pnew->Vtbl;

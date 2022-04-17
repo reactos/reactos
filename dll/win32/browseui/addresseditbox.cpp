@@ -52,7 +52,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetOwner(IUnknown *pOwner)
         HRESULT hResult = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
         if (SUCCEEDED(hResult))
             AtlUnadvise(browserService, DIID_DWebBrowserEvents, fAdviseCookie);
-        fSite = NULL; 
+        fSite = NULL;
     }
     // connect to browser connection point
     return 0;
@@ -168,8 +168,8 @@ cleanup:
     if (pidlCurrent)
         ILFree(pidlCurrent);
     if (address != input)
-        delete [] address;
-    delete [] input;
+        delete[] address;
+    delete[] input;
 
     return hr;
 }
@@ -191,23 +191,23 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 {
     HRESULT hr;
 
-    /* 
-     * Parse the path is it wasn't parsed
+    /*
+     * Parse the path if it wasn't parsed
      */
     if (!pidlLastParsed)
+    {
         hr = ParseNow(0);
 
+        /* If the destination path doesn't exist then display an error message */
+        if (hr == HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+            return ShowFileNotFoundError(hr);
+
+        if (!pidlLastParsed)
+            return E_FAIL;
+    }
+
     /*
-     * If the destination path doesn't exist then display an error message
-     */
-    if (hr == HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
-        return ShowFileNotFoundError(hr);
-
-    if (!pidlLastParsed)
-        return E_FAIL;
-
-    /* 
-     * Get the IShellBrowser and IBrowserService interfaces of the shell browser 
+     * Get the IShellBrowser and IBrowserService interfaces of the shell browser
      */
     CComPtr<IShellBrowser> pisb;
     hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
@@ -238,14 +238,14 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     if (hr == 0)
         return S_OK;
 
-    /* 
-     * Attempt to browse to the parsed pidl 
+    /*
+     * Attempt to browse to the parsed pidl
      */
     hr = pisb->BrowseObject(pidlLastParsed, 0);
     if (SUCCEEDED(hr))
         return hr;
 
-    /* 
+    /*
      * Browsing to the pidl failed so it's not a folder. So invoke its defaule command.
      */
     HWND topLevelWindow;

@@ -74,7 +74,7 @@ CheckTerminalDeviceType(IN LPCTSTR pszName)
         }
         else
         if ( _wcsnicmp(DeviceName, DosLPTDevice, 3) == 0 ||
-             _wcsnicmp(DeviceName, DosCOMDevice, 3) == 0 || 
+             _wcsnicmp(DeviceName, DosCOMDevice, 3) == 0 ||
              _wcsnicmp(DeviceName, DosPRNDevice, 3) == 0 ||
              _wcsnicmp(DeviceName, DosAUXDevice, 3) == 0 ||
              _wcsnicmp(DeviceName, DosNULDevice, 3) == 0 )

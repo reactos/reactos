@@ -124,6 +124,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/fstub/fstubex.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/fstub/halstub.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/fstub/translate.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/bootanim.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/inbv.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/inbvport.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/adapter.c
@@ -151,7 +152,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/symlink.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/util.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/volume.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/arbs.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/arbiters.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/devaction.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/devnode.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/plugplay.c
@@ -280,6 +281,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sd.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/semgr.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sid.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sqos.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/srm.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/token.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/vf/driver.c
@@ -297,6 +299,7 @@ if(ARCH STREQUAL "i386")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/ctxswitch.S
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/trap.s
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/usercall_asm.S
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/zeropage.S
         ${REACTOS_SOURCE_DIR}/ntoskrnl/rtl/i386/stack.S)
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/i386/cmhardwr.c
@@ -326,7 +329,8 @@ elseif(ARCH STREQUAL "amd64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/boot.S
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/ctxswitch.S
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/trap.S
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/usercall_asm.S)
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/usercall_asm.S
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/zeropage.S)
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/i386/cmhardwr.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/i386/page.c
@@ -367,22 +371,6 @@ elseif(ARCH STREQUAL "arm")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/arm/init.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/arm/psctx.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/rtl/arm/rtlexcpt.c)
-elseif(ARCH STREQUAL "powerpc")
-    list(APPEND ASM_SOURCE
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/powerpc/main_asm.S
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/powerpc/ctxhelp.S)
-    list(APPEND SOURCE
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/config/powerpc/cmhardwr.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/powerpc/cpu.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/powerpc/exp.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/powerpc/kiinit.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/powerpc/ppc_irq.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/powerpc/stubs.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/powerpc/systimer.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/powerpc/thrdini.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/powerpc/ctxswitch.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/powerpc/pfault.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/powerpc/page.c)
 endif()
 
 if(NOT _WINKD_)

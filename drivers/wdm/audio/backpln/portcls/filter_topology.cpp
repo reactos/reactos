@@ -14,27 +14,11 @@
 
 #include <debug.h>
 
-class CPortFilterTopology : public IPortFilterTopology
+class CPortFilterTopology : public CUnknownImpl<IPortFilterTopology>
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
     IMP_IPortFilterTopology;
     CPortFilterTopology(IUnknown *OuterUnknown){}
     virtual ~CPortFilterTopology(){}
@@ -43,7 +27,6 @@ protected:
     IPortTopology * m_Port;
     SUBDEVICE_DESCRIPTOR * m_Descriptor;
     ISubdevice * m_SubDevice;
-    LONG m_Ref;
 };
 
 

@@ -68,9 +68,9 @@ HRESULT WINAPI CAdminToolsFolder::CreateViewObject(HWND hwndOwner, REFIID riid, 
 HRESULT WINAPI CAdminToolsFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut)
 {
     static const DWORD dwAdminToolsAttributes =
-        SFGAO_STORAGE | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSANCESTOR | 
+        SFGAO_STORAGE | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSANCESTOR |
         SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
-        
+
     if(cidl)
         return m_pisfInner->GetAttributesOf(cidl, apidl, rgfInOut);
 
@@ -174,7 +174,7 @@ HRESULT WINAPI CAdminToolsFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
     if (!m_pidlInner)
         return E_OUTOFMEMORY;
 
-    return SHELL32_CoCreateInitSF(m_pidlInner, 
+    return SHELL32_CoCreateInitSF(m_pidlInner,
                                   &CLSID_ShellFSFolder,
                                   CSIDL_COMMON_ADMINTOOLS,
                                   IID_PPV_ARG(IShellFolder2, &m_pisfInner));

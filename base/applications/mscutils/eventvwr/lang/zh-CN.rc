@@ -1,4 +1,11 @@
-/* Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
+/*
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ * TRANSLATORS: Copyright 2017 Li Keqing <forucial@icloud.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -27,16 +34,29 @@ BEGIN
     END
     POPUP "选项(&O)"
     BEGIN
-        MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
-        MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
+        MENUITEM "事件详情视图(&V)", IDM_EVENT_DETAILS_VIEW
+        MENUITEM "网格线(&G)", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
-        MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
+        MENUITEM "退出时保存设置(&S)", IDM_SAVE_SETTINGS
     END
     POPUP "帮助(&H)"
     BEGIN
         MENUITEM "帮助内容(&E)", IDM_HELP
         MENUITEM SEPARATOR
         MENUITEM "关于(&A)...", IDM_ABOUT
+    END
+END
+
+IDM_EVENTWR_CTX MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "打开事件日志(&O)...", IDM_OPEN_EVENTLOG
+        MENUITEM "保存事件日志为(&S)...", IDM_SAVE_EVENTLOG
+        MENUITEM SEPARATOR
+        MENUITEM "清除所有事件(&C)", IDM_CLEAR_EVENTS
+        MENUITEM "重命名(&R)\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "日志设置(&T)...", IDM_EVENTLOG_SETTINGS
     END
 END
 
@@ -63,21 +83,21 @@ IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "宋体", 400, 0, 0x1
 BEGIN
-    LTEXT "日期:", IDC_STATIC, 8, 5, 31, 8
+    LTEXT "日期：", IDC_STATIC, 8, 5, 31, 8
     EDITTEXT IDC_EVENTDATESTATIC, 46, 5, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "来源:", IDC_STATIC, 104, 5, 36, 8
+    LTEXT "来源：", IDC_STATIC, 104, 5, 36, 8
     EDITTEXT IDC_EVENTSOURCESTATIC, 140, 5, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "时间:", IDC_STATIC, 8, 15, 31, 8
+    LTEXT "时间：", IDC_STATIC, 8, 15, 31, 8
     EDITTEXT IDC_EVENTTIMESTATIC, 46, 15, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "分类:", IDC_STATIC, 103, 15, 36, 8
+    LTEXT "分类：", IDC_STATIC, 103, 15, 36, 8
     EDITTEXT IDC_EVENTCATEGORYSTATIC, 140, 15, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "类型:", IDC_STATIC, 8, 25, 31, 8
+    LTEXT "类型：", IDC_STATIC, 8, 25, 31, 8
     EDITTEXT IDC_EVENTTYPESTATIC, 46, 25, 47, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "事件 ID:", IDC_STATIC, 103, 25, 36, 8
+    LTEXT "事件 ID：", IDC_STATIC, 103, 25, 36, 8
     EDITTEXT IDC_EVENTIDSTATIC, 140, 25, 82, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "用户(&U):", IDC_STATIC, 8, 35, 36, 8
+    LTEXT "用户(&U)：", IDC_STATIC, 8, 35, 36, 8
     EDITTEXT IDC_EVENTUSERSTATIC, 46, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "计算机(&C):", IDC_STATIC, 8, 45, 36, 8
+    LTEXT "计算机(&C)：", IDC_STATIC, 8, 45, 36, 8
     EDITTEXT IDC_EVENTCOMPUTERSTATIC, 46, 45, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
 
     PUSHBUTTON "", IDC_PREVIOUS, 230, 5, 28, 14, BS_ICON
@@ -98,22 +118,22 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "通用"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "显示名称(&D):", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "显示名称(&D)：", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "日志名(&L):", IDC_STATIC, 7, 25, 60, 8
+    LTEXT "日志名(&L)：", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "日志文件(&F):", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "日志文件(&F)：", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "大小:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "大小：", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "创建时间:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "创建时间：", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "修改时间:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "修改时间：", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "访问时间:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "访问时间：", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "日志大小", IDC_STATIC, 7, 106, 238, 99
-    LTEXT "日志大小上限(&M):", IDC_STATIC, 17, 122, 58, 8
+    LTEXT "日志大小上限(&M)：", IDC_STATIC, 17, 122, 58, 8
     EDITTEXT IDC_EDIT_MAXLOGSIZE, 80, 119, 40, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
@@ -144,8 +164,8 @@ BEGIN
     IDS_EVENTLOG_USER "用户日志"
     IDS_SAVE_FILTER "事件日志 (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件日志吗？"
-    IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
-    IDS_EVENTSTRINGIDNOTFOUND "来源 ( %s ) 中的事件 ID ( %lu ) 的描述无法找到。本地计算机可能没有显示来自远程计算机消息所必需的注册表信息或消息 DLL 文件。\n\nThe following information is part of the event:\n\n"
+    IDS_RESTOREDEFAULTS "你想要将这个日志的所有设置恢复为默认值吗？"
+    IDS_EVENTSTRINGIDNOTFOUND "无法找到来源（%s）中的事件 ID（%lu）的描述。本地计算机可能没有显示来自远程计算机的消息所必需的注册表信息或消息 DLL 文件。\n\n下面的信息是事件的一部分：\n\n"
 END
 
 STRINGTABLE
@@ -153,16 +173,15 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "ReactOS Event Viewer\n\
 \n\
-EventVwr [computer name] [/l:<event log file>] [/?]\n\
+EventVwr [计算机名] [/L:<事件日志文件>] [/?]\n\
 \n\
-""computer name"" : Specifies the remote computer where to connect\n\
-\tto retrieve the events to display. If no name is specified, the\n\
-\tlocal computer is used.\n\
+""计算机名"" ：指定从哪台远程计算机上获取要查看的日志。\n\
+\t如果没有指定名称，则使用本地计算机。\n\
 \n\
-/l:<event log file> : Specifies which event log file to open.\n\
-\tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
+/L:<事件日志文件> ：指定要查看的事件日志文件/\n\
+\t只支持 .evt 格式的事件日志文件（NT ≤ 5.2）。\n\
 \n\
-/? : Displays this help message.\n\
+/? ：显示这条帮助。\n\
 "
     IDS_EVENTLOGFILE "Event Log File"
 END
@@ -180,7 +199,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
+    IDS_BYTES_FORMAT "字节" // "%s bytes"
     // "%1!ls! (%2!ls! bytes)"
 END
 
@@ -198,15 +217,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "事件类型:       %s\r\n\
-事件源:        %s\r\n\
-事件类别:       %s\r\n\
-事件 ID:      %s\r\n\
-日期:         %s\r\n\
-时间:         %s\r\n\
-用户:         %s\r\n\
-电脑:         %s\r\n\
-描述:\r\n%s"
+    IDS_COPY "事件类型：      %s\r\n\
+事件源：       %s\r\n\
+事件类别：      %s\r\n\
+事件 ID：     %s\r\n\
+日期：        %s\r\n\
+时间：        %s\r\n\
+用户：        %s\r\n\
+电脑：        %s\r\n\
+描述：\r\n%s"
 END
 
 STRINGTABLE

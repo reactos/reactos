@@ -1,15 +1,15 @@
 /*
  * PROJECT:         ReactOS Utility Manager (Accessibility)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         English (United States of America) translation resource
+ * PURPOSE:         Chinese (Traditional) translation resource
  * COPYRIGHT:       Copyright 2019-2020 George Bișoc (george.bisoc@reactos.org)
- * TRANSLATOR:      2020 Aobi Chan CL (eason066 at gmail dot com)
+ * TRANSLATOR:      Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_FAIL_INIT "無法初始化 Utility Manager library！錯誤碼︰%lu."
+    IDS_FAIL_INIT "無法初始化協助工具管理員程式庫！錯誤碼︰%lu。"
     IDS_FAIL_INIT_TITLE "初始化失敗"
 END

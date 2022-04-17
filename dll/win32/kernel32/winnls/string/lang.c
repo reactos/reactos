@@ -36,7 +36,11 @@ DEBUG_CHANNEL(nls);
 extern int wine_fold_string(int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen);
 extern int wine_get_sortkey(int flags, const WCHAR *src, int srclen, char *dst, int dstlen);
 extern int wine_compare_string(int flags, const WCHAR *str1, int len1, const WCHAR *str2, int len2);
+#ifdef __REACTOS__
+extern UINT GetLocalisedText(IN UINT uID, IN LPWSTR lpszDest, IN UINT cchDest, IN LANGID lang);
+#else
 extern UINT GetLocalisedText(IN UINT uID, IN LPWSTR lpszDest, IN UINT cchDest);
+#endif
 #define NLSRC_OFFSET 5000 /* FIXME */
 
 extern HMODULE kernel32_handle;
@@ -3235,7 +3239,7 @@ EnumSystemCodePagesW (
 {
     ENUMSYSTEMCODEPAGES_CALLBACKS procs;
 
-    TRACE("(%p,0x%08X,0x%08lX)\n", lpCodePageEnumProc, dwFlags);
+    TRACE("(%p,0x%08X)\n", lpCodePageEnumProc, dwFlags);
 
     procs.procA = NULL;
     procs.procW = lpCodePageEnumProc;
@@ -3257,7 +3261,7 @@ EnumSystemCodePagesA (
 {
     ENUMSYSTEMCODEPAGES_CALLBACKS procs;
 
-    TRACE("(%p,0x%08X,0x%08lX)\n", lpCodePageEnumProc, dwFlags);
+    TRACE("(%p,0x%08X)\n", lpCodePageEnumProc, dwFlags);
 
     procs.procA = lpCodePageEnumProc;
     procs.procW = NULL;
@@ -3503,16 +3507,28 @@ BOOL WINAPI EnumUILanguagesW(UILANGUAGE_ENUMPROCW pUILangEnumProc, DWORD dwFlags
 }
 
 static int
+#ifdef __REACTOS__
+NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData, LANGID lang)
+#else
 NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
+#endif
 {
     /* FIXME: move *.nls resources out of kernel32 into locale.nls */
     Location += NLSRC_OFFSET;
     Location &= 0xFFFF;
 
     if (cchData == 0)
+#ifdef __REACTOS__
+        return GetLocalisedText(Location, NULL, 0, lang);
+#else
         return GetLocalisedText(Location, NULL, 0);
+#endif
 
+#ifdef __REACTOS__
+    if (GetLocalisedText(Location, szFriendlyName, (UINT)cchData, lang))
+#else
     if (GetLocalisedText(Location, szFriendlyName, (UINT)cchData))
+#endif
         return strlenW(szFriendlyName) + 1;
 
     return 0;
@@ -3564,7 +3580,11 @@ INT WINAPI GetGeoInfoW(GEOID geoid, GEOTYPE geotype, LPWSTR data, int data_len, 
     switch (geotype) {
     case GEO_FRIENDLYNAME:
     {
+#ifdef __REACTOS__
+        return NLS_GetGeoFriendlyName(geoid, data, data_len, lang);
+#else
         return NLS_GetGeoFriendlyName(geoid, data, data_len);
+#endif
     }
     case GEO_NATION:
         val = geoid;

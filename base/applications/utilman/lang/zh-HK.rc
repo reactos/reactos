@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     ReactOS Utility Manager (Accessibility)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATOR:  Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE
+BEGIN
+    IDS_FAIL_INIT "無法初始化 Utility Manager library！錯誤碼︰%lu。"
+    IDS_FAIL_INIT_TITLE "初始化失敗"
+END

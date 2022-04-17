@@ -220,7 +220,7 @@ struct _xmlSchematronParserCtxt {
 /**
  * xmlSchematronPErrMemory:
  * @node: a context node
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle an out of memory condition
  */
@@ -268,7 +268,7 @@ xmlSchematronPErr(xmlSchematronParserCtxtPtr ctxt, xmlNodePtr node, int error,
 /**
  * xmlSchematronVTypeErrMemory:
  * @node: a context node
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle an out of memory condition
  */

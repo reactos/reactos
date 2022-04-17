@@ -24,7 +24,7 @@ BEGIN
     POPUP "แฟ้ม"
     BEGIN
         MENUITEM "สร้างใหม่\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "เปิด...\tCtrl+O", CMD_OPEN
         MENUITEM "บันทืก\tCtrl+S", CMD_SAVE
         MENUITEM "บันทืกเป็น...", CMD_SAVE_AS

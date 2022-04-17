@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     Dr. Watson crash reporter
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     es-ES resource file
+ * COPYRIGHT:   Copyright 2021 Javier Fernández, aka "Elhoir" <elhoir AT gmail DOT com>
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "Informador de fallos de ReactOS"
+    IDS_USER_ALERT_MESSAGE "La aplicación %ls ha fallado. Información acerca del fallo ha sido guardada en:\n\n%ls"
+END

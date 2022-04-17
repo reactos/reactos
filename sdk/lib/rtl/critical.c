@@ -72,7 +72,7 @@ RtlpCreateCriticalSectionSem(PRTL_CRITICAL_SECTION CriticalSection)
             hNewEvent = INVALID_HANDLE_VALUE;
         }
 
-        DPRINT("Created Event: %p \n", hNewEvent);
+        DPRINT("Created Event: %p\n", hNewEvent);
 
         /* Exchange the LockSemaphore field with the new handle, if it is still 0 */
         if (InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,

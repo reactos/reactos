@@ -921,18 +921,18 @@ UDFCloseAllXXXDelayedInDir(
     IN BOOLEAN          System
     )
 {
-    PUDF_FILE_INFO*    PassedList = NULL;
-    ULONG              PassedListSize = 0;
-    PUDF_FILE_INFO*    FoundList = NULL;
-    ULONG              FoundListSize = 0;
-    NTSTATUS           RC;
-    ULONG              i;
-    BOOLEAN            ResAcq = FALSE;
-    BOOLEAN            AcquiredVcb = FALSE;
-    UDFNTRequiredFCB*  NtReqFcb;
-    PUDF_FILE_INFO     CurFileInfo;
-    PFE_LIST_ENTRY     CurListPtr;
-    PFE_LIST_ENTRY*    ListPtrArray = NULL;
+    PUDF_FILE_INFO*         PassedList = NULL;
+    ULONG                   PassedListSize = 0;
+    PUDF_FILE_INFO*         FoundList = NULL;
+    ULONG                   FoundListSize = 0;
+    NTSTATUS                RC;
+    ULONG                   i;
+    _SEH2_VOLATILE BOOLEAN  ResAcq = FALSE;
+    _SEH2_VOLATILE BOOLEAN  AcquiredVcb = FALSE;
+    UDFNTRequiredFCB*       NtReqFcb;
+    PUDF_FILE_INFO          CurFileInfo;
+    PFE_LIST_ENTRY          CurListPtr;
+    PFE_LIST_ENTRY*         ListPtrArray = NULL;
 
     _SEH2_TRY {
 

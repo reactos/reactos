@@ -1,12 +1,6 @@
 #pragma once
 #include "internal/kd.h"
 
-/* DEFINES *******************************************************************/
-
-/* formerly located in kdbg/kdb_symbols.c */
-#define TAG_KDBS 'SBDK'
-#define TAG_KDBG 'GBDK'
-
 /* TYPES *********************************************************************/
 
 /* from kdb.c */
@@ -148,7 +142,6 @@ KdbpRpnEvaluateParsedExpression(
 BOOLEAN
 KdbpSymFindModule(
     IN PVOID Address  OPTIONAL,
-    IN LPCWSTR Name  OPTIONAL,
     IN INT Index  OPTIONAL,
     OUT PLDR_DATA_TABLE_ENTRY* pLdrEntry);
 
@@ -160,7 +153,8 @@ KdbSymPrintAddress(
 
 VOID
 KdbSymProcessSymbols(
-    IN PLDR_DATA_TABLE_ENTRY LdrEntry);
+    _Inout_ PLDR_DATA_TABLE_ENTRY LdrEntry,
+    _In_ BOOLEAN Load);
 
 /* from kdb.c */
 

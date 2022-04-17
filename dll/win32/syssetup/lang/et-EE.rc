@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Süsteemi lokaat peaks olema ühtiv nende programmide keelega, mida soovid kasutada. Kasutaja lokaat määrab, kuidas näidatakse numbreid, valuutat ja kuupäeva.", IDC_STATIC, 53, 7, 253, 24
-    LTEXT "", IDC_LOCALETEXT, 53, 31, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "Süsteemi või kasutaja lokaadi muutmiseks vajutage Täpsusta.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "Tä&psusta...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "Klaviatuuriasetus määrab tähemärgid, mis klaviatuuril kirjutades ilmuvad.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Klaviatuuriasetuse muutmiseks vajuta Täp&susta.", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Täp&susta...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -110,9 +111,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Komponentide registreerimine", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -174,10 +178,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Arvutile tuleb anda nimi ja administraatori parool."
     IDS_LOCALETITLE "Regionaalsed seaded"
     IDS_LOCALESUBTITLE "ReactOS'i saab kohandada erinevatele regioonidele ja keeltele vastavaks."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Kuupäev ja kellaaeg"
     IDS_DATETIMESUBTITLE "Sisesta õige kellaaeg ja kuupäev."
-    IDS_PROCESSTITLE "Komponentide registreerimine"
-    IDS_PROCESSSUBTITLE "Palun oota..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Välimus"
     IDS_THEMESELECTIONSUBTITLE "Vali endale eelistatav teema."
 END
@@ -186,7 +192,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS'i paigaldus"
     IDS_UNKNOWN_ERROR "Tundmatu viga"
-    IDS_REGISTERING_COMPONENTS "Komponentide registreerimine..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary ebaõnnestus: "
     IDS_GETPROCADDR_FAILED "GetProcAddr ebaõnnestus: "
     IDS_REGSVR_FAILED "DllRegisterServer ebaõnnestus: "
@@ -244,7 +249,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."

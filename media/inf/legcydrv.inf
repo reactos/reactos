@@ -50,3 +50,10 @@ LegacyDriverClassName = "Драйверы устройств не Plug and Play"
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 LegacyDriverClassName = "Tak ve Çalıştır Olmayan Sürücüler"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+LegacyDriverClassName = "Controladores incompativeis com PnP"
+
+[Strings.0C04]
+LegacyDriverClassName = "非隨插即用驅動程式"

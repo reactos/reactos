@@ -70,12 +70,10 @@ typedef struct _GRAPHICS_DEVICE
     PDEVMODEENTRY    pDevModeList;
     LPWSTR           pDiplayDrivers;
     LPWSTR           pwszDescription;
-    DWORD            dwUnknown;
-    PVOID            pUnknown;
+    DWORD            dwMonCnt;
+    PVIDEO_MONITOR_DEVICE pvMonDev;
     PFILE_OBJECT     FileObject;
     DWORD            ProtocolType;
-    ULONG            iDefaultMode;
-    ULONG            iCurrentMode;
 } GRAPHICS_DEVICE, *PGRAPHICS_DEVICE;
 
 typedef struct _PDEVOBJ
@@ -97,7 +95,7 @@ typedef struct _PDEVOBJ
 //  HFONT                     hlfntAnsiVariable;
 //  HFONT                     hlfntAnsiFixed;
     HSURF                     ahsurf[HS_DDI_MAX];
-//  PUNICODE_STRING           pusPrtDataFileName;
+    PWSTR                     pusPrtDataFileName; // DRIVER_INFO_2->pDataFile
 //  PVOID                     pDevHTInfo;
 //  RFONT *                   prfntActive;
 //  RFONT *                   prfntInactive;
@@ -106,9 +104,10 @@ typedef struct _PDEVOBJ
 //  ULONG                     cDirectDrawDisableLocks;
 //  PVOID                     TypeOneInfo;
     PVOID                     pvGammaRamp;    /* Gamma ramp pointer. */
-//  PVOID                     RemoteTypeOne;
-    ULONG                     ulHorzRes;
-    ULONG                     ulVertRes;
+    PVOID                     RemoteTypeOne;
+    SIZEL                     szlMetaRes;     /* if PDEV_META_DEVICE */
+   // ULONG                     ulHorzRes;
+   // ULONG                     ulVertRes;
 //  PFN_DrvSetPointerShape    pfnDrvSetPointerShape;
 //  PFN_DrvMovePointer        pfnDrvMovePointer;
     PFN_DrvMovePointer        pfnMovePointer;
@@ -129,8 +128,8 @@ typedef struct _PDEVOBJ
     POINTL                    ptlOrigion;
     PDEVMODEW                 pdmwDev;        /* Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size. */
 //  DWORD                     Unknown3;
-    FLONG                     DxDd_Flags;     /* DxDD active status flags. */
-//  LONG                      devAttr;
+    FLONG                     DxDd_Flags;     /* DxDD active status flags set by CapabilityOverride Registry Key while Create Info DC type */
+    DWORD                     dwAccelerationLevel; /* Set by Accelerations.Level (0 - 5) Registry Key while Create Info DC type */
 //  PVOID                     WatchDogContext;
 //  ULONG                     WatchDogs;
     union
@@ -149,11 +148,6 @@ typedef struct _PDEVOBJ
     UINT SafetyRemoveCount;
     struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
 } PDEVOBJ, *PPDEVOBJ;
-
-/* Globals ********************************************************************/
-
-extern PPDEVOBJ gppdevPrimary;
-
 
 /* Function prototypes ********************************************************/
 
@@ -213,10 +207,41 @@ PDEVOBJ_bSwitchMode(
     PPDEVOBJ ppdev,
     PDEVMODEW pdm);
 
-PDEVMODEW
+BOOL
 NTAPI
-PDEVOBJ_pdmMatchDevMode(
-    PPDEVOBJ ppdev,
-    PDEVMODEW pdm);
+PDEVOBJ_bDynamicModeChange(
+    _Inout_ PPDEVOBJ ppdev,
+    _Inout_ PPDEVOBJ ppdev2);
+
+VOID
+PDEVOBJ_vEnableDisplay(
+    _Inout_ PPDEVOBJ ppdev);
+
+BOOL
+PDEVOBJ_bDisableDisplay(
+    _Inout_ PPDEVOBJ ppdev);
+
+PPDEVOBJ
+PDEVOBJ_Create(
+    _In_opt_ PGRAPHICS_DEVICE pGraphicsDevice,
+    _In_opt_ PDEVMODEW pdm,
+    _In_ ULONG dwAccelerationLevel,
+    _In_ ULONG ldevtype);
+
+/* Change display settings:
+ * - pustrDeviceName: name of the device to change settings. Can be NULL to specify whole display surface
+ * - RequestedMode: new parameters for device. Ignored if pstrDeviceName is NULL
+ * - pmdevOld: old MDEVOBJ. Can be NULL if we are creating the first one
+ * - ppdevNew: MDEVOBJ created by this function, with the new settings
+ * - bSearchClosestMode: do we need to search exact requested mode, or a mostly similar one
+ * Return value: a DISP_CHANGE_* value
+ */
+LONG
+PDEVOBJ_lChangeDisplaySettings(
+    _In_opt_ PUNICODE_STRING pustrDeviceName,
+    _In_opt_ PDEVMODEW RequestedMode,
+    _In_opt_ PMDEVOBJ pmdevOld,
+    _Out_ PMDEVOBJ *ppmdevNew,
+    _In_ BOOL bSearchClosestMode);
 
 #endif /* !__WIN32K_PDEVOBJ_H */

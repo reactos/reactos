@@ -1,5 +1,10 @@
-// Traditional Chinese translation by Chan Chilung 2021 <eason066@gmail.com>
-
+/*
+ * PROJECT:     ReactOS National Language Support
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
+ 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
@@ -53,7 +58,7 @@ BEGIN
     10029 "10029 (MAC - 拉丁文 II)"
     10079 "10079 (MAC - 冰島文)"
     10081 "10081 (MAC - 土耳其文)"
-    10082 "10082 (MAC - 克羅地亞)"
+    10082 "10082 (MAC - 克羅埃西亞)"
 
     65000 "65000 (UTF-7)"
     65001 "65001 (UTF-8)"
@@ -167,7 +172,7 @@ BEGIN
 
     52936 "52936 (HZ-GB2312 簡體中文)"
     54936 "54936 (GB18030 簡體中文)"
-    
+
 /* Locations */
     2+NLSRC_OFFSET "安地卡及巴布達"
     3+NLSRC_OFFSET "阿富汗"

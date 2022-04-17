@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2020, Intel Corp.
+ * Copyright (C) 2000 - 2021, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  * NO WARRANTY
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
@@ -216,6 +216,76 @@ ACPI_RSCONVERT_INFO     AcpiRsConvertPinFunction[13] =
     {ACPI_RSC_MOVE_GPIO_RES,   ACPI_RS_OFFSET (Data.PinFunction.VendorData),
                         AML_OFFSET (PinFunction.VendorOffset),
                         0},
+};
+
+
+/*******************************************************************************
+ *
+ * AcpiRsConvertCsi2SerialBus
+ *
+ ******************************************************************************/
+
+ACPI_RSCONVERT_INFO     AcpiRsConvertCsi2SerialBus[14] =
+{
+    {ACPI_RSC_INITGET,  ACPI_RESOURCE_TYPE_SERIAL_BUS,
+                        ACPI_RS_SIZE (ACPI_RESOURCE_CSI2_SERIALBUS),
+                        ACPI_RSC_TABLE_SIZE (AcpiRsConvertCsi2SerialBus)},
+
+    {ACPI_RSC_INITSET,  ACPI_RESOURCE_NAME_SERIAL_BUS,
+                        sizeof (AML_RESOURCE_CSI2_SERIALBUS),
+                        0},
+
+    {ACPI_RSC_MOVE8,    ACPI_RS_OFFSET (Data.CommonSerialBus.RevisionId),
+                        AML_OFFSET (CommonSerialBus.RevisionId),
+                        1},
+
+    {ACPI_RSC_MOVE8,    ACPI_RS_OFFSET (Data.Csi2SerialBus.Type),
+                        AML_OFFSET (Csi2SerialBus.Type),
+                        1},
+
+    {ACPI_RSC_1BITFLAG, ACPI_RS_OFFSET (Data.Csi2SerialBus.ProducerConsumer),
+                        AML_OFFSET (Csi2SerialBus.Flags),
+                        1},
+
+    {ACPI_RSC_1BITFLAG, ACPI_RS_OFFSET (Data.Csi2SerialBus.SlaveMode),
+                        AML_OFFSET (Csi2SerialBus.Flags),
+                        0},
+
+    {ACPI_RSC_2BITFLAG, ACPI_RS_OFFSET (Data.Csi2SerialBus.PhyType),
+                        AML_OFFSET (Csi2SerialBus.TypeSpecificFlags),
+                        0},
+
+    {ACPI_RSC_6BITFLAG, ACPI_RS_OFFSET (Data.Csi2SerialBus.LocalPortInstance),
+                        AML_OFFSET (Csi2SerialBus.TypeSpecificFlags),
+                        2},
+
+    {ACPI_RSC_MOVE8,    ACPI_RS_OFFSET (Data.Csi2SerialBus.TypeRevisionId),
+                        AML_OFFSET (Csi2SerialBus.TypeRevisionId),
+                        1},
+
+    /* Vendor data */
+
+    {ACPI_RSC_COUNT_SERIAL_VEN, ACPI_RS_OFFSET (Data.Csi2SerialBus.VendorLength),
+                        AML_OFFSET (Csi2SerialBus.TypeDataLength),
+                        AML_RESOURCE_CSI2_MIN_DATA_LEN},
+
+    {ACPI_RSC_MOVE_SERIAL_VEN,  ACPI_RS_OFFSET (Data.Csi2SerialBus.VendorData),
+                        0,
+                        sizeof (AML_RESOURCE_CSI2_SERIALBUS)},
+
+    /* Resource Source */
+
+    {ACPI_RSC_MOVE8,    ACPI_RS_OFFSET (Data.Csi2SerialBus.ResourceSource.Index),
+                        AML_OFFSET (Csi2SerialBus.ResSourceIndex),
+                        1},
+
+    {ACPI_RSC_COUNT_SERIAL_RES, ACPI_RS_OFFSET (Data.Csi2SerialBus.ResourceSource.StringLength),
+                        AML_OFFSET (Csi2SerialBus.TypeDataLength),
+                        sizeof (AML_RESOURCE_CSI2_SERIALBUS)},
+
+    {ACPI_RSC_MOVE_SERIAL_RES,  ACPI_RS_OFFSET (Data.Csi2SerialBus.ResourceSource.StringPtr),
+                        AML_OFFSET (Csi2SerialBus.TypeDataLength),
+                        sizeof (AML_RESOURCE_CSI2_SERIALBUS)},
 };
 
 

@@ -381,8 +381,12 @@ PspDeleteProcess(IN PVOID ObjectBody)
     /* Dereference the Device Map */
     ObDereferenceDeviceMap(Process);
 
-    /* Destroy the Quota Block */
-    PspDestroyQuotaBlock(Process);
+    /*
+     * Dereference the quota block, the function
+     * will invoke a quota block cleanup if the
+     * block itself is no longer used by anybody.
+     */
+    PspDereferenceQuotaBlock(Process, Process->QuotaBlock);
 }
 
 VOID
@@ -927,7 +931,7 @@ PsExitSpecialApc(IN PKAPC Apc,
     NTSTATUS Status;
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG,
-            "Apc: %p SystemArgument2: %p \n", Apc, SystemArgument2);
+            "Apc: %p SystemArgument2: %p\n", Apc, SystemArgument2);
 
     /* Don't do anything unless we are in User-Mode */
     if (Apc->SystemArgument2)
@@ -950,7 +954,7 @@ PspExitNormalApc(IN PVOID NormalContext,
     PKAPC Apc = (PKAPC)SystemArgument1;
     PETHREAD Thread = PsGetCurrentThread();
     PAGED_CODE();
-    PSTRACE(PS_KILL_DEBUG, "SystemArgument2: %p \n", SystemArgument2);
+    PSTRACE(PS_KILL_DEBUG, "SystemArgument2: %p\n", SystemArgument2);
 
     /* This should never happen */
     ASSERT(!(((ULONG_PTR)SystemArgument2) & 1));

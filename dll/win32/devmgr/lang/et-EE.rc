@@ -233,7 +233,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Ressursisätted:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -295,8 +295,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS Seadmehaldur"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
-  IDS_CONFIRM_DISABLE       "Selle seadme keelamine põhjustab selle töötamise lakkamise.\r\nKas soovite kindlasti seda keelata?"
-  IDS_CONFIRM_UNINSTALL     "Hoiatus: Hakkate seda seadet süsteemist desinstallima.\r\nKas soovite jätkata?"
+  IDS_CONFIRM_DISABLE       "Selle seadme keelamine põhjustab selle töötamise lakkamise.\nKas soovite kindlasti seda keelata?"
+  IDS_CONFIRM_UNINSTALL     "Hoiatus: Hakkate seda seadet süsteemist desinstallima.\nKas soovite jätkata?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -329,7 +329,7 @@ BEGIN
   IDS_HINT_DISABLE      " Keelab valitud seadme."
   IDS_HINT_UPDATE       " Käivitab valitud seadme jaoks draiveritarkvara värskendamise viisardi."
   IDS_HINT_UNINSTALL    " Desinstallib valitud seadme draiveri."
-  IDS_HINT_ADD          " Lisage arvutisse pärandseade (mitteisehäälestuv)." 
+  IDS_HINT_ADD          " Lisage arvutisse pärandseade (mitteisehäälestuv)."
   IDS_HINT_ABOUT        " Teave programmi ReactOS Seadmehaldur kohta."
   IDS_HINT_EXIT         " Väljub programmist."
 

@@ -26,12 +26,12 @@ void NewGame(void)
             lScore = lScore - 52;
         else
             lScore = -52;
-        
+
         if (dwOptions & OPTION_THREE_CARDS)
             dwWasteTreshold = 2;
         else
             dwWasteTreshold = 0;
-       
+
     }
     else
     {
@@ -262,7 +262,7 @@ bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, CardStack &dragcards)
             {
                 lScore = lScore + 10;
             }
-    
+
             UpdateStatusBar();
         }
     }

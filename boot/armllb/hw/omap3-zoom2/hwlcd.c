@@ -34,7 +34,7 @@ LlbHwOmap3LcdInitialize(VOID)
     /* Now turn on the functional and interface clocks in the CORE domain */
     WRITE_REGISTER_ULONG(0x48004a00, 0x03fffe29); /* Functional clocks */
     WRITE_REGISTER_ULONG(0x48004a10, 0x3ffffffb); /* Interface clocks */
-    
+
     /* The HS I2C interface is now on, configure it */
     WRITE_REGISTER_USHORT(0x48070024, 0x0);    /* Disable I2c */
     WRITE_REGISTER_USHORT(0x48070030, 0x17);   /* Configure clock divider */
@@ -44,7 +44,7 @@ LlbHwOmap3LcdInitialize(VOID)
     WRITE_REGISTER_USHORT(0x4807000c, 0x636f); /* Select wakeup bits */
     WRITE_REGISTER_USHORT(0x48070014, 0x4343); /* Disable DMA */
     WRITE_REGISTER_USHORT(0x48070024, 0x8000); /* Enable I2C */
-    
+
     /*
      * Set the VPLL2 to cover all device groups instead of just P3.
      * This essentially enables the VRRTC to power up the LCD panel.
@@ -59,7 +59,7 @@ LlbHwOmap3LcdInitialize(VOID)
 
     /* Set GPIO pin 7 signal on the TWL4030 ON. This powers the LCD backlight */
     LlbHwOmap3TwlWrite1(0x49, 0xA4, 0x80);
-   
+
     /* Now go on the McSPI interface and program it on for the channel */
     WRITE_REGISTER_ULONG(0x48098010, 0x15);
     WRITE_REGISTER_ULONG(0x48098020, 0x1);
@@ -77,7 +77,7 @@ LlbHwOmap3LcdInitialize(VOID)
 
     /* Reset the Display Controller (DISPC) */
     WRITE_REGISTER_ULONG(0x48050410, 0x00000005); // DISPC_SYSCONFIG
-    
+
     /* Set the frame buffer address */
 	WRITE_REGISTER_ULONG(0x48050480, 0x800A0000); // DISPC_GFX_BA0
 
@@ -102,7 +102,7 @@ LlbHwGetScreenWidth(VOID)
 {
     return 800;
 }
- 
+
 ULONG
 NTAPI
 LlbHwGetScreenHeight(VOID)

@@ -5,12 +5,12 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 IDD_PROPPAGEMAIN DIALOGEX 0, 0, 252, 205
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Oyun Denetleyicileri"
+CAPTION "Oyun Kontrolcüleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
-    LTEXT "Bu ayarlar, bilgisayarınızda yüklü olan oyun denetleyicilerini yapılandırmanızda yardımcı olur.", -1, 33, 7, 214, 20, NOT WS_GROUP
-    GROUPBOX "&Yüklü Oyun Denetleyicileri", -1, 7, 34, 238, 117
+    LTEXT "Bu ayarlar, bilgisayarınızda yüklü olan oyun kontrolcülerini yapılandırmanızda yardımcı olur.", -1, 33, 7, 214, 20, NOT WS_GROUP
+    GROUPBOX "&Yüklü Oyun Kontrolcüleri", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
     PUSHBUTTON "&Ekle...", IDC_ADD_BUTTON, 35, 129, 65, 14
     PUSHBUTTON "&Sil", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED
@@ -28,7 +28,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
     LTEXT "Aşağıdaki listeden bir oyun denetleyicisi seçiniz, ardından ""Tamam""a tıklayınız. Eğer oyun denetleyiciniz listede gözükmüyorsa ""Özel...""e tıklayınız.", -1, 35, 7, 210, 33
-    LTEXT "&Oyun Denetleyicileri:", -1, 8, 45, 126, 8
+    LTEXT "&Oyun Kontrolcüleri:", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Dümenleri ve Ayaklıkları Etkinleştir", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 100, 10, WS_GROUP
     LTEXT "O&yun Bağlantı Noktası:", -1, 7, 134, 38, 8, NOT WS_VISIBLE
@@ -47,7 +47,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Değişik Özellikler", -1, 7, 7, 245, 52
     AUTORADIOBUTTON "&Oyun Çubuğu", IDC_JOYSTICK_RADIO, 17, 23, 55, 10
-    AUTORADIOBUTTON "&Uçuş Dümeni veyâ Uçuş Çubuğu", IDC_FLIGHT_YOKE_RADIO, 147, 23, 89, 10
+    AUTORADIOBUTTON "&Uçuş Dümeni veya Uçuş Çubuğu", IDC_FLIGHT_YOKE_RADIO, 147, 23, 89, 10
     AUTORADIOBUTTON "Oyun &Kolu", IDC_GAME_PAD_RADIO, 17, 40, 65, 10
     AUTORADIOBUTTON "&Yarış Arabası Denetleyicisi", IDC_RACE_CAR_RADIO, 147, 40, 93, 10
     GROUPBOX "Eksenler", -1, 7, 67, 116, 44, WS_GROUP
@@ -79,7 +79,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Oyun Denetleyicileri"
+    IDS_CPLSYSTEMNAME "Oyun Kontrolcüleri"
     IDS_CPLSYSTEMDESCRIPTION "Oyun çubukları ve oyun kolları gibi oyun denetleyicisi donanımlarını ekler, kaldırır ve yapılandırır."
     IDS_CONTROLLER "Denetleyici"
     IDS_STATUS "Durum"

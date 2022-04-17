@@ -285,7 +285,7 @@ WlanQueryInterface(IN HANDLE hClientHandle,
         return ERROR_INVALID_PARAMETER;
 
     UNIMPLEMENTED;
-    return ERROR_SUCCESS;    
+    return ERROR_SUCCESS;
 }
 
 DWORD
@@ -299,8 +299,8 @@ WlanGetInterfaceCapability(IN HANDLE hClientHandle,
         return ERROR_INVALID_PARAMETER;
 
     UNIMPLEMENTED;
-    return ERROR_SUCCESS;        
-}  
+    return ERROR_SUCCESS;
+}
 
 DWORD WINAPI WlanRegisterNotification(IN HANDLE hClientHandle,
                                       IN DWORD dwNotifSource,
@@ -325,7 +325,7 @@ WlanReasonCodeToString(IN DWORD dwReasonCode,
         return ERROR_INVALID_PARAMETER;
 
     UNIMPLEMENTED;
-    return ERROR_SUCCESS;        
+    return ERROR_SUCCESS;
 }
 
 DWORD
@@ -343,7 +343,7 @@ WlanIhvControl(IN HANDLE hClientHandle,
         return ERROR_INVALID_PARAMETER;
 
     UNIMPLEMENTED;
-    return ERROR_SUCCESS;        
+    return ERROR_SUCCESS;
 }
 
 DWORD
@@ -367,7 +367,7 @@ WlanSetSecuritySettings(IN HANDLE hClientHandle,
     }
     RpcEndExcept;
 
-    return dwResult;     
+    return dwResult;
 }
 
 DWORD
@@ -382,7 +382,7 @@ WlanGetAvailableNetworkList(IN HANDLE hClientHandle,
         return ERROR_INVALID_PARAMETER;
 
     UNIMPLEMENTED;
-    return ERROR_SUCCESS;        
+    return ERROR_SUCCESS;
 }
 
 void __RPC_FAR * __RPC_USER

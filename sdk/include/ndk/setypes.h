@@ -109,6 +109,16 @@ typedef struct _TOKEN_ACCESS_INFORMATION
      SE_GROUP_INTEGRITY_ENABLED)
 
 //
+// Privilege token filtering flags
+//
+#define DISABLE_MAX_PRIVILEGE 0x1
+#define SANDBOX_INERT         0x2
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define LUA_TOKEN             0x4
+#define WRITE_RESTRICTED      0x8
+#endif
+
+//
 // Proxy Class enumeration
 //
 typedef enum _PROXY_CLASS

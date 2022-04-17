@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ATMT 'TotA' /* Atom table */
-#define TAG_RTHL 'LHtR' /* Heap Lock */
-
 extern ULONG NtGlobalFlag;
 
 typedef struct _RTL_RANGE_ENTRY
@@ -114,10 +111,6 @@ RtlpAllocateMemory(ULONG Bytes,
                                  Tag);
 }
 
-
-#define TAG_USTR        'RTSU'
-#define TAG_ASTR        'RTSA'
-#define TAG_OSTR        'RTSO'
 VOID
 NTAPI
 RtlpFreeMemory(PVOID Mem,

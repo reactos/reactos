@@ -112,7 +112,7 @@ device."
 DATE [/T][Datum]\n\n\
   /T           nur Datum anzeigen\n\n\
 Der Befehl DATE ohne Parameter zeigt das aktuelle Datum an und fragt nach\n\
-einem neuen. Drücken Sie die EINGABETASTE, um das bisherige Datum zu behalten."
+einem neuen. Drücken Sie ENTER, um das bisherige Datum zu behalten."
     STRING_DEL_HELP1 "Löscht eine oder mehrere Dateien.\n\n\
 DEL [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
 DELETE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
@@ -393,7 +393,7 @@ TITLE [Zeichenfolge]\n\n\
 TIME [/T][Zeit]\n\n\
   /T    nur anzeigen\n\n\
 TIME ohne Parameter zeigt die aktuelle Systemzeit an und fragt nach der neuen\n\
-Uhrzeit. Drücken Sie die EINGABETASTE, um die bisherige Zeit beizubehalten."
+Uhrzeit. Drücken Sie ENTER, um die bisherige Zeit beizubehalten."
     STRING_TIME_HELP2 "Geben Sie eine neue Zeit ein: "
     STRING_TIMER_HELP1 "Verstrichene %d Millisekunden\n"
     STRING_TIMER_HELP2 "Verstrichene %02d%c%02d%c%02d%c%02d\n"

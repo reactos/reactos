@@ -308,7 +308,7 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
 }
 
 LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{ 
+{
     switch (msg)
     {
         case WM_KEYDOWN:

@@ -113,7 +113,6 @@ static ULONG get_refcount(IUnknown *iface)
   return IUnknown_Release(iface);
 }
 
-#if 0 /*avoid CORE-16799*/
 #define CHECK_TYPEINFO(disp,expected_riid) _check_typeinfo((IDispatch *)disp, expected_riid, __LINE__)
 static void _check_typeinfo(IDispatch* disp, REFIID expected_riid, int line)
 {
@@ -138,15 +137,12 @@ static void _check_typeinfo(IDispatch* disp, REFIID expected_riid, int line)
     ITypeInfo_ReleaseTypeAttr(typeinfo, typeattr);
     ITypeInfo_Release(typeinfo);
 }
-#endif
 
 static void test_Interfaces(void)
 {
   IRichEditOle *reOle = NULL, *reOle1 = NULL;
   ITextDocument *txtDoc = NULL;
-#if 0 /*avoid CORE-16799*/
   ITextDocument2Old *txtDoc2Old = NULL;
-#endif
   ITextSelection *txtSel = NULL, *txtSel2;
   IUnknown *punk;
   HRESULT hres;
@@ -174,9 +170,7 @@ static void test_Interfaces(void)
                                  (void **) &txtDoc);
   ok(hres == S_OK, "IRichEditOle_QueryInterface\n");
   ok(txtDoc != NULL, "IRichEditOle_QueryInterface\n");
-#if 0 /*avoid CORE-16799*/
   CHECK_TYPEINFO(txtDoc, &IID_ITextDocument);
-#endif
 
   hres = ITextDocument_GetSelection(txtDoc, NULL);
   ok(hres == E_INVALIDARG, "ITextDocument_GetSelection: 0x%x\n", hres);
@@ -228,7 +222,6 @@ static void test_Interfaces(void)
   hres = IRichEditOle_QueryInterface(reOle, &IID_IOleInPlaceSite, (void **) &punk);
   ok(hres == E_NOINTERFACE, "IRichEditOle_QueryInterface\n");
 
-#if 0 /*avoid CORE-16799*/
   hres = IRichEditOle_QueryInterface(reOle, &IID_ITextDocument2Old, (void **)&txtDoc2Old);
   ok(hres == S_OK, "IRichEditOle_QueryInterface\n");
   ok(txtDoc2Old != NULL, "IRichEditOle_QueryInterface\n");
@@ -238,7 +231,6 @@ static void test_Interfaces(void)
   CHECK_TYPEINFO(txtDoc2Old, &IID_ITextDocument);
 
   ITextDocument2Old_Release(txtDoc2Old);
-#endif
 
   ITextDocument_Release(txtDoc);
   IRichEditOle_Release(reOle);
@@ -253,7 +245,6 @@ static void test_Interfaces(void)
 
   ITextSelection_Release(txtSel);
 
-#if 0 /*avoid CORE-16799*/
   w = new_richedit(NULL);
   res = SendMessageA(w, EM_GETOLEINTERFACE, 0, (LPARAM)&reOle);
   ok(res, "SendMessage\n");
@@ -266,7 +257,6 @@ static void test_Interfaces(void)
   ITextDocument2Old_Release(txtDoc2Old);
   IRichEditOle_Release(reOle);
   DestroyWindow(w);
-#endif
 }
 
 static void test_ITextDocument_Open(void)

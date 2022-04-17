@@ -54,6 +54,7 @@ list(APPEND SOURCE
     ntuser/NtUserFindExistingCursorIcon.c
     ntuser/NtUserGetClassInfo.c
 #    ntuser/NtUserGetIconInfo.c
+    ntuser/NtUserGetThreadState.c
     ntuser/NtUserGetTitleBarInfo.c
     ntuser/NtUserProcessConnect.c
     ntuser/NtUserRedrawWindow.c
@@ -85,7 +86,7 @@ add_importlibs(win32knt_apitest
     msvcrt
     kernel32
     ntdll)
-add_delay_importlibs(win32knt_apitest win32u)
+add_delay_importlibs(win32knt_apitest win32u imm32)
 add_dependencies(win32knt_apitest xdk)
 add_pch(win32knt_apitest win32nt.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET win32knt_apitest)

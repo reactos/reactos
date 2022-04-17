@@ -23,6 +23,7 @@ EnumerateRunningServices(VOID)
     INT i;
     INT nError = 0;
     DWORD dwError = ERROR_SUCCESS;
+    BOOL ret;
 
     hManager = OpenSCManagerW(NULL,
                               SERVICES_ACTIVE_DATABASE,
@@ -34,14 +35,22 @@ EnumerateRunningServices(VOID)
         goto done;
     }
 
-    EnumServicesStatusW(hManager,
-                        SERVICE_WIN32,
-                        SERVICE_ACTIVE,
-                        NULL,
-                        0,
-                        &dwBufferSize,
-                        &dwServiceCount,
-                        &dwResumeHandle);
+    ret = EnumServicesStatusW(hManager,
+                              SERVICE_WIN32,
+                              SERVICE_ACTIVE,
+                              NULL,
+                              0,
+                              &dwBufferSize,
+                              &dwServiceCount,
+                              &dwResumeHandle);
+    if (ret)
+    {
+        /* Nothing to enumerate ?! */
+        goto done;
+    }
+    dwError = GetLastError();
+    if (dwError != ERROR_INSUFFICIENT_BUFFER)
+        goto done;
 
     if (dwBufferSize != 0)
     {

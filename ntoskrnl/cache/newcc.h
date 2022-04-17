@@ -160,3 +160,16 @@ CcpPinMappedData(IN PNOCC_CACHE_MAP Map,
                  IN ULONG Length,
                  IN ULONG Flags,
                  IN OUT PVOID *Bcb);
+
+ULONG
+MmGetReferenceCountPageWithoutLock(PFN_NUMBER Page)
+{
+    ULONG Ret;
+    KIRQL OldIrql = MiAcquirePfnLock();
+
+    Ret = MmGetReferenceCountPage(Page);
+
+    MiReleasePfnLock(OldIrql);
+
+    return Ret;
+}

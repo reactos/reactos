@@ -1143,12 +1143,10 @@ static BOOL add_mf_comment(HDC hdc, HENHMETAFILE emf)
     if(!chunk) goto end;
 
     chunk->magic = WMFC_MAGIC;
-    chunk->unk04 = 1;
-    chunk->unk06 = 0;
-    chunk->unk08 = 0;
-    chunk->unk0a = 1;
+    chunk->comment_type = 0x1;
+    chunk->version = 0x00010000;
     chunk->checksum = 0; /* We fixup the first chunk's checksum before returning from GetWinMetaFileBits */
-    chunk->unk0e = 0;
+    chunk->flags = 0;
     chunk->num_chunks = (size + max_chunk_size - 1) / max_chunk_size;
     chunk->chunk_size = max_chunk_size;
     chunk->remaining_size = size;

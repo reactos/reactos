@@ -6,7 +6,7 @@
 * PURPOSE:         devmgr.dll interface
 * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
 *                  Ged Murphy (gedmurphy@reactos.org)
-* NOTES:           
+* NOTES:
 *                  Some helpful resources:
 *                    http://support.microsoft.com/default.aspx?scid=kb;%5BLN%5D;815320
 *                    http://www.jsiinc.com/SUBO/tip7400/rh7482.htm

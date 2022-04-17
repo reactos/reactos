@@ -3,35 +3,34 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\r\n\
-Sposób użycia: tracert [-d] [-h maks_przes] [-j lista_hostów] [-w limit_czasu] nazwa_celu \r\n\r\n\
-Opcje:\r\n\
-    -d                 Nie rozpoznawaj adresów jako nazw hostów.\r\n\
-    -h maks_przes      Maksymalna liczba przeskoków w poszukiwaniu celu.\r\n\
-    -j lista_hostów    Swobodna trasa źródłowa według listy lista_hostów.\r\n\
-    -w limit_czasu     Limit czasu oczekiwania na odpowiedź w milisekundach.\r\n\
-    -4                 Wymuś używanie IPv4.\r\n\
-    -6                 Wymuś używanie IPv6.\r\n\
-\r\n"
+    IDS_USAGE "\n\
+Sposób użycia: tracert [-d] [-h maks_przes] [-j lista_hostów] [-w limit_czasu] nazwa_celu\n\n\
+Opcje:\n\
+    -d                 Nie rozpoznawaj adresów jako nazw hostów.\n\
+    -h maks_przes      Maksymalna liczba przeskoków w poszukiwaniu celu.\n\
+    -j lista_hostów    Swobodna trasa źródłowa według listy lista_hostów.\n\
+    -w limit_czasu     Limit czasu oczekiwania na odpowiedź w milisekundach.\n\
+    -4                 Wymuś używanie IPv4.\n\
+    -6                 Wymuś używanie IPv6.\n\
+\n"
 
-    IDS_INVALID_OPTION  "%1 nie jest prawidłową opcją polecenia.\r\n"
-    IDS_TRACE_INFO      "\r\nTrasa śledzenia do %1 [%2]\r\nprzewyższa maksymalną liczbę przeskoków %3!u!\r\n\r\n"
-    IDS_TRACE_COMPLETE  "\r\nŚledzenie zakończone.\r\n"
-    IDS_UNABLE_RESOLVE  "Nie można rozpoznać nazwy systemu docelowego %1.\r\n"
+    IDS_INVALID_OPTION  "%1 nie jest prawidłową opcją polecenia.\n"
+    IDS_TRACE_INFO      "\nTrasa śledzenia do %1 [%2]\nprzewyższa maksymalną liczbę przeskoków %3!u!\n\n"
+    IDS_TRACE_COMPLETE  "\nŚledzenie zakończone.\n"
+    IDS_UNABLE_RESOLVE  "Nie można rozpoznać nazwy systemu docelowego %1.\n"
 
-    IDS_GEN_FAILURE     "Błąd ogólny.\r\n"
-    IDS_TRANSMIT_FAILED "Transmisja nie powiodła się. (Błąd %1!u!)\r\n"
+    IDS_GEN_FAILURE     "Błąd ogólny.\n"
+    IDS_TRANSMIT_FAILED "Transmisja nie powiodła się. (Błąd %1!u!)\n"
 
-    IDS_HOP_COUNT       "%1!3lu!  %0\r\n"
-    IDS_HOP_TIME        "%1!4lu! ms  %0\r\n"
-    IDS_HOP_ZERO,       "  <1 ms  %0\r\n"
-    IDS_TIMEOUT         "   *     %0\r\n"
+    IDS_HOP_COUNT       "%1!3lu!  %0\n"
+    IDS_HOP_TIME        "%1!4lu! ms  %0\n"
+    IDS_HOP_ZERO        "  <1 ms  %0\n"
+    IDS_TIMEOUT         "   *     %0\n"
     IDS_HOP_RES_INFO    "%1 [%2]"
     IDS_HOP_IP_INFO     "%1"
     IDS_LINEBREAK       "\r\n"
-    IDS_REQ_TIMED_OUT   "Upłynął limit czasu żądania.\r\n"
+    IDS_REQ_TIMED_OUT   "Upłynął limit czasu żądania.\n"
     IDS_HOP_RESPONSE    "  raporty: "
-    IDS_DEST_HOST_UNREACHABLE "Host docelowy nieosiągalny.\r\n"
-    IDS_DEST_NET_UNREACHABLE  "Sieć docelowa nieosiągalna.\r\n"
-
+    IDS_DEST_HOST_UNREACHABLE "Host docelowy nieosiągalny.\n"
+    IDS_DEST_NET_UNREACHABLE  "Sieć docelowa nieosiągalna.\n"
 END

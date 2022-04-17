@@ -4,7 +4,7 @@
  * FILE:            drivers/mouclass/mouclass.c
  * PURPOSE:         Mouse class driver
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "mouclass.h"
@@ -297,7 +297,7 @@ CreateClassDeviceObject(
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 	DeviceNameU.Length = 0;
 	DeviceNameU.MaximumLength =
-		wcslen(L"\\Device\\") * sizeof(WCHAR)    /* "\Device\" */
+		(USHORT)wcslen(L"\\Device\\") * sizeof(WCHAR)    /* "\Device\" */
 		+ DriverExtension->DeviceBaseName.Length /* "PointerClass" */
 		+ 4 * sizeof(WCHAR)                      /* Id between 0 and 9999 */
 		+ sizeof(UNICODE_NULL);                  /* Final NULL char */
@@ -812,7 +812,15 @@ ClassPnp(
 	switch (IrpSp->MinorFunction)
 	{
 		case IRP_MN_START_DEVICE:
-		    Status = ForwardIrpAndWait(DeviceObject, Irp);
+			if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
+			{
+				Status = Irp->IoStatus.Status;
+			}
+			else
+			{
+				Status = STATUS_UNSUCCESSFUL;
+			}
+
 			if (NT_SUCCESS(Status))
 			{
 				InitializeObjectAttributes(&ObjectAttributes,

@@ -31,7 +31,7 @@ BEGIN
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Kâğıt Arkalığı Seç"
+CAPTION "Kağıt Sırtını Seç"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -56,7 +56,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
-    IDS_SOL_ABOUT "Solitaire, J Brown tarafından.\n\nCardLib sürümü: 1.0"
+    IDS_SOL_ABOUT "Solitaire, J Brown tarafından yazılmıştır.\n\nCardLib sürümü: 1.0"
     IDS_SOL_QUIT "Şimdiki oyundan çıkılsın mı?"
     IDS_SOL_WIN "Tebrikler, kazandınız!"
     IDS_SOL_DEAL "Yeniden dağıtılsın mı?"
@@ -72,7 +72,7 @@ BEGIN
     BEGIN
         MENUITEM "&Dağıt\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
+        MENUITEM "&Geri al", IDM_GAME_UNDO, GRAYED
         MENUITEM "D&esteler...", IDM_GAME_DECK
         MENUITEM "&Seçenekler...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

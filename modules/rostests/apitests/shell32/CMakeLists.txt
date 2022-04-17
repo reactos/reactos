@@ -20,6 +20,7 @@ list(APPEND SOURCE
     SHAppBarMessage.cpp
     SHChangeNotify.cpp
     SHCreateDataObject.cpp
+    SHCreateFileDataObject.cpp
     SHCreateFileExtractIconW.cpp
     SHParseDisplayName.cpp
     ShellExecCmdLine.cpp
@@ -27,6 +28,7 @@ list(APPEND SOURCE
     ShellExecuteW.cpp
     ShellHook.cpp
     ShellState.cpp
+    SHGetAttributesFromDataObject.cpp
     SHLimitInputEdit.cpp
     menu.cpp
     shelltest.cpp)
@@ -39,6 +41,11 @@ add_executable(shell32_apitest
     ${PCH_SKIP_SOURCE}
     resource.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_apitest.def)
+
+set_target_properties(shell32_apitest
+    PROPERTIES
+    ENABLE_EXPORTS TRUE
+    DEFINE_SYMBOL "")
 
 target_link_libraries(shell32_apitest wine uuid ${PSEH_LIB} cpprt atl_classes)
 set_module_type(shell32_apitest win32cui)

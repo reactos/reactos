@@ -46,7 +46,7 @@ PspDumpThreads(BOOLEAN IncludeSystem)
                 nThreads++;
 
                 /* Print the Info */
-                DbgPrint("State %u Affinity %08x Priority %d PID.TID %d.%d Name %.8s Stack: \n",
+                DbgPrint("State %u Affinity %08x Priority %d PID.TID %d.%d Name %.8s Stack:\n",
                          Thread->Tcb.State,
                          Thread->Tcb.Affinity,
                          Thread->Tcb.Priority,

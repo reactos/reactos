@@ -30,7 +30,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 # check that the ARCH (target architecture) variable is defined
 if(NOT ARCH)
-    message(FATAL_ERROR "Target architecture (ARCH) is not defined. Please, choose one of: i386, amd64, arm")
+    message(FATAL_ERROR "Target architecture (ARCH) is not defined. Please, choose one of: i386, amd64, arm, arm64")
 endif()
 # Now the ARCH variable will be in lowercase.
 # It is needed because STREQUAL comparison
@@ -40,7 +40,7 @@ endif()
 string(TOLOWER ${ARCH} ARCH)
 
 # set possible values for cmake GUI
-set_property(CACHE ARCH PROPERTY STRINGS "i386" "amd64" "arm")
+set_property(CACHE ARCH PROPERTY STRINGS "i386" "amd64" "arm" "arm64")
 
 # Alternative WinNT-compatible architecture string
 if(ARCH STREQUAL "i386")
@@ -68,7 +68,11 @@ include(sdk/cmake/config.cmake)
 # Compiler flags handling
 include(sdk/cmake/compilerflags.cmake)
 
-add_definitions(-D__REACTOS__)
+add_definitions(
+    -D__REACTOS__
+    # swprintf without count argument is used in most of the codebase
+    -D_CRT_NON_CONFORMING_SWPRINTFS
+)
 
 # There doesn't seem to be a standard for __FILE__ being relative or absolute, so detect it at runtime.
 file(RELATIVE_PATH _PATH_PREFIX ${REACTOS_BINARY_DIR} ${REACTOS_SOURCE_DIR})
@@ -139,10 +143,6 @@ if(NOT CMAKE_CROSSCOMPILING)
         endif()
         if(MSVC_VERSION GREATER 1699)
             add_definitions(/D_ALLOW_KEYWORD_MACROS)
-        endif()
-        if(NOT USE_CLANG_CL)
-            # FIXME: Inspect
-            add_definitions(/Dinline=__inline)
         endif()
     endif()
     add_subdirectory(sdk/include/host)
@@ -267,6 +267,9 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         if(SARCH STREQUAL "omap3-zoom2")
             add_definitions(-D_ZOOM2_)
         endif()
+    elseif(ARCH STREQUAL "arm64")
+        # GNU tools refer to arm64 as aarch64
+        add_definitions(-D_ARM64_ -D__arm64__ -D__aarch64__ -D_WIN64)
     endif()
 
     # Other
@@ -276,6 +279,8 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     elseif(ARCH STREQUAL "amd64")
         add_compile_definitions(USE_COMPILER_EXCEPTIONS)
     elseif(ARCH STREQUAL "arm")
+        add_compile_definitions(USE_COMPILER_EXCEPTIONS)
+    elseif(ARCH STREQUAL "arm64")
         add_compile_definitions(USE_COMPILER_EXCEPTIONS)
     endif()
 

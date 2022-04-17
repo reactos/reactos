@@ -8,7 +8,7 @@ BEGIN
     "^C", CMD_COPY
     "^B", CMD_SEARCH
     "^T", CMD_GOTO
-    "^R", CMD_REPLACE
+    "R", CMD_REPLACE, VIRTKEY, CONTROL
     "^N", CMD_NEW
     "N", CMD_NEW_WINDOW, VIRTKEY,CONTROL , SHIFT
     "^A", CMD_OPEN
@@ -26,7 +26,7 @@ BEGIN
     POPUP "&Archivo"
     BEGIN
         MENUITEM "&Nuevo\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Abrir\tCtrl+A", CMD_OPEN
         MENUITEM "&Guardar\tCtrl+G", CMD_SAVE
         MENUITEM "Guardar &como...", CMD_SAVE_AS
@@ -152,7 +152,7 @@ bloc de notas.\n Utilice otro editor."
 inténtelo de nuevo"
     STRING_DOESNOTEXIST "El archivo '%s'\nno existe\n\n ¿Desea crear \
 un nuevo archivo?"
-    STRING_NOTSAVED "El texto en el archivo '%s' ha cambiado\n\n \
+    STRING_NOTSAVED "El texto en el archivo '%s' ha cambiado\n\n\
 ¿Desea guardar los cambios?"
     STRING_NOTFOUND "No se encontró '%s'."
     STRING_OUT_OF_MEMORY "No hay suficiente memoria para terminar esta \

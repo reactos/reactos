@@ -11,11 +11,11 @@ BEGIN
     LTEXT "Bu bilgisayar için en uygun ayarlarla bir güç düzeni seçiniz. Aşağıdaki ayarların değiştirilmesinin seçili düzeni değiştireceğini göz önünde bulundurunuz.", -1, 37, 6, 209, 36
     GROUPBOX "&Güç Düzenleri", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Ayrı Kaydet...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "&Farklı Kaydet...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "&Sil", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
     GROUPBOX "Bilinmiyor", IDC_GRPDETAIL, 6, 95, 240, 136
     LTEXT "Bilgisyar:", IDC_SAT, 12, 109, 60, 12
-    LTEXT "Prize Takılıyken", IDC_SAC, 123, 110, 45, 15
+    LTEXT "Adaptöre Takılıyken", IDC_SAC, 123, 110, 45, 15
     ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
     LTEXT "Pilde Çalışıyorken", IDC_SDC, 195, 110, 45, 15
     ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
@@ -42,7 +42,7 @@ BEGIN
     LTEXT "Bu bilgisayar için en uygun ayarlarla bir güç düzeni seçiniz. Aşağıdaki ayarların değiştirilmesinin seçili düzeni değiştireceğini göz önünde bulundurunuz.", -1, 37, 6, 209, 36
     GROUPBOX "&Güç Düzenleri", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
-    PUSHBUTTON "&Ayrı Kaydet...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "&Farklı Kaydet...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "&Sil", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
     GROUPBOX "Bilinmiyor", IDC_GRPDETAIL, 6, 95, 240, 136
     LTEXT "&Monitörü Kapat:", IDC_MONITOR, 13, 148, 84, 10

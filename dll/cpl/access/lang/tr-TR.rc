@@ -12,10 +12,10 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Yapışkan Tuşlar'ı Kullan", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Ayarlar", IDC_STICKY_BUTTON, 144, 49, 90, 14
-    GROUPBOX "Süzgeç Tuşları", -1, 6, 79, 234, 67
-    LTEXT "ReactOS'un kısa veya yinelenen tuş vuruşlarını yok saymasını veya yinelenme hızını yavaşlatmasını istiyorsanız Süzgeç Tuşları'nı kullanınız.",
+    GROUPBOX "Filtre Anahtarlar", -1, 6, 79, 234, 67
+    LTEXT "ReactOS'un kısa veya yinelenen tuş vuruşlarını yok saymasını veya yinelenme hızını yavaşlatmasını istiyorsanız Filtre Anahtarları'nı kullanınız.",
           -1, 12, 89, 222, 29
-    AUTOCHECKBOX "&Süzgeç Tuşları'nı Kullan", IDC_FILTER_BOX, 12, 121, 126, 14
+    AUTOCHECKBOX "&Filtre Anahtarları'nı Kullan", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "Aya&rlar", IDC_FILTER_BUTTON, 144, 121, 90, 14
     GROUPBOX "Geçiş Tuşları", -1, 6, 148, 234, 62
     LTEXT "Caps Lock'a, Num Lock'a ve Scroll Lock'a basarken ses duymanızı istiyorsanız Geçiş Tuşları'nı kullanınız.",
@@ -38,10 +38,10 @@ BEGIN
     LTEXT "&Aşağıdaki Uyarıyı Kullan:", IDC_SENTRY_TEXT, 12, 72, 222, 11
     COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    GROUPBOX "Ses Göster", -1, 6, 115, 234, 67
-    LTEXT "Konuşma alt yazılarını ve çıkardıkları sesleri göstermek için, programlarınıza bildirmek için Ses Göster'i kullanınız.",
+    GROUPBOX "Sesleri Göster", -1, 6, 115, 234, 67
+    LTEXT "Konuşma alt yazılarını ve çıkardıkları sesleri göstermek için, programlarınıza bildirmek için Sesleri Göster'i kullanınız.",
           -1, 12, 125, 222, 29
-    AUTOCHECKBOX "S&es Göster'i Kullan", IDC_SSHOW_BOX, 12, 148, 222, 14
+    AUTOCHECKBOX "S&esleri Göster'i Kullan", IDC_SSHOW_BOX, 12, 148, 222, 14
 END
 
 IDD_PROPPAGEDISPLAY DIALOGEX 0, 0, 246, 228
@@ -54,8 +54,8 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Yüksek Karşıtlık Kullan", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Ayarlar", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
-    GROUPBOX "İmleç Ayarları", -1, 6, 79, 234, 115
-    LTEXT "İmleç genişliğini ve imlecin yanıp sönme hızını değiştirmek için sürgüleri kullanınız.",
+    GROUPBOX "İşaretçi Ayarları", -1, 6, 79, 234, 115
+    LTEXT "İşaretçi genişliğini ve imlecin yanıp sönme hızını değiştirmek için sürgüleri kullanınız.",
           -1, 12, 88, 222, 20
     CTEXT "Ya&nıp Sönme Hızı:", -1, 12, 115, 222, 11
     LTEXT "Yok", -1, 18, 130, 36, 11
@@ -75,10 +75,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Fare"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Fare Düğmeleri", -1, 6, 11, 234, 62
+    GROUPBOX "Fare Tuşları", -1, 6, 11, 234, 62
     LTEXT "İmleci klavyenizdeki sayısal klavye ile denetlemek istiyorsanız bu seçeneği kullanınız.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Fare Düğmeleri'ni Kullan", IDC_MOUSE_BOX, 12, 49, 126, 14
+    AUTOCHECKBOX "&Fare Tuşları'nı Kullan", IDC_MOUSE_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Ayarlar", IDC_MOUSE_BUTTON, 144, 49, 90, 14
 END
 
@@ -98,7 +98,7 @@ BEGIN
     AUTOCHECKBOX "B&ir özellik açıldığında ve kapatıldığında bir ses çıkar", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
     GROUPBOX "Seri Tuş Aygıtları", -1, 6, 115, 234, 47
-    LTEXT "Seri Tuş Aygıtları, klavye ve fare özellikleri için seçimlik erişim sağlar.",
+    LTEXT "Seri Tuş Aygıtları, klavye ve fare özellikleri için seri bağlantı noktası erişimi sağlar.",
           -1, 12, 124, 222, 20
     AUTOCHECKBOX "&Seri tuş aygıtlarını destekle", IDC_SERIAL_BOX, 12, 142, 126, 14
     PUSHBUTTON "&Ayarlar", IDC_SERIAL_BUTTON, 144, 142, 90, 14
@@ -134,11 +134,11 @@ END
 
 IDD_FILTERKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Süzgeç Tuşları Ayarları"
+CAPTION "Filtre Anahtarı Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Klavye Kısayolu", -1, 6, 11, 234, 62
-    LTEXT "Süzgeç Düğmeleri için kısayol:\nSağ Shift'e 8 saniye süresince basılı tutunuz.",
+    LTEXT "Süzgeç Tuşları için kısayol:\nSağ Shift'e 8 saniye süresince basılı tutunuz.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Kısayol kullan", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "Süzgeç Ayarları", -1, 6, 79, 234, 79
@@ -151,9 +151,9 @@ BEGIN
     LTEXT "Ayar&ları sınamak için buraya tıklayınız ve bir şeyler yazınız:", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
     GROUPBOX "Bildirimler", -1, 6, 161, 234, 41
-    AUTOCHECKBOX "&Düğmelere basıldığında veya düğmeler doğrulandığında ses çıkar", IDC_FILTER_SOUND_CHECK,
+    AUTOCHECKBOX "&Tuşlara basıldığında veya tuşlar doğrulandığında ses çıkar", IDC_FILTER_SOUND_CHECK,
                  12, 169, 222, 10
-    AUTOCHECKBOX "&Ekranda Süzgeç Düğmeleri durumunu göster", IDC_FILTER_STATUS_CHECK,
+    AUTOCHECKBOX "&Ekranda Filtre Anahtarlarının durumunu göster", IDC_FILTER_STATUS_CHECK,
                  12, 188, 222, 10
     DEFPUSHBUTTON "Tamam", IDOK, 135, 207, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 189, 207, 50, 14
@@ -161,11 +161,11 @@ END
 
 IDD_TOGGLEKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Geçiş Düğmeleri Ayarları"
+CAPTION "Geçiş Tuşları Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Klavye kısayolu", -1, 6, 11, 234, 62
-    LTEXT "Geçiş Düğmeleri için kısayol:\nScroll Lock'a beş saniye süresince basılı tutunuz.",
+    LTEXT "Geçiş Tuşları için kısayol:\nScroll Lock'a beş saniye süresince basılı tutunuz.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Kısayol kullan", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "Tamam", IDOK, 135, 207, 50, 14
@@ -199,13 +199,13 @@ BEGIN
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Kısayol kullan", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
-    GROUPBOX "İmleç Hızı", -1, 6, 83, 234, 83
+    GROUPBOX "İşaretçi Hızı", -1, 6, 83, 234, 83
     LTEXT "&En yüksek hız:", -1, 12, 96, 48, 11
     LTEXT "Düşük", -1, 66, 96, 18, 11
     CONTROL "", IDC_MOUSEKEYS_SPEED_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 94, 114, 20
     LTEXT "Yüksek", -1, 204, 96, 18, 11
-    LTEXT "İ&vme:", -1, 12, 123, 48, 11
+    LTEXT "H&ızlandır:", -1, 12, 123, 48, 11
     LTEXT "Az", -1, 66, 123, 18, 11
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
@@ -223,10 +223,10 @@ END
 
 IDD_BOUNCEKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Gelişmiş Süzgeç Düğmeleri Ayarları"
+CAPTION "Gelişmiş Filtre Anahtarları Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Sıçrama Düğmeleri", -1, 6, 11, 234, 47
+    GROUPBOX "Sıçrama Anahtarları", -1, 6, 11, 234, 47
     LTEXT "Ş&undan daha hızlı yinelenen tuş vuruşlarını yok say:", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -238,7 +238,7 @@ END
 
 IDD_REPEATKEYSOPTIONS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Gelişmiş Süzgeç Düğmeleri Ayarları"
+CAPTION "Gelişmiş Filtre Anahtarı Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Yinelenen Düğmeler", -1, 6, 11, 234, 106
@@ -268,7 +268,7 @@ CAPTION "Seri Tuş Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Seri Tuşlar", -1, 6, 11, 234, 92
-    LTEXT "Seçimlik bir giriş aygıtı bağlayacağınız bağlantı noktasını seçiniz.",
+    LTEXT "Seri bağlantı için bir giriş aygıtı bağlayacağınız bağlantı noktasını seçiniz.",
           -1, 12, 20, 222, 20
     LTEXT "&Seri bağlantı noktası:", -1, 12, 34, 222, 20
     COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 45, 222, 56,

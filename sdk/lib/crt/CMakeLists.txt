@@ -1,28 +1,28 @@
 
 include_directories(include)
+#include_directories(.)
 
 add_definitions(-D_CRTBLD)
 
-if(ARCH STREQUAL "i386")
-    list(APPEND CHKSTK_ASM_SOURCE except/i386/chkstk_asm.s)
-    if(NOT MSVC)
-        list(APPEND CHKSTK_SOURCE except/i386/chkstk_ms.s)
-    endif()
-elseif(ARCH STREQUAL "amd64")
-    list(APPEND CHKSTK_ASM_SOURCE except/amd64/chkstk_ms.s)
-elseif(ARCH STREQUAL "arm")
-    list(APPEND CHKSTK_ASM_SOURCE except/arm/chkstk_asm.s)
-    if(NOT MSVC)
-        list(APPEND CHKSTK_SOURCE except/arm/chkstk_ms.s)
-    endif()
-elseif(ARCH STREQUAL "powerpc")
-    list(APPEND CHKSTK_ASM_SOURCE except/powerpc/chkstk_asm.s)
-endif()
-
-add_asm_files(chkstk_lib_asm ${CHKSTK_ASM_SOURCE})
-add_library(chkstk ${CHKSTK_SOURCE} ${chkstk_lib_asm})
-set_target_properties(chkstk PROPERTIES LINKER_LANGUAGE "C")
-add_dependencies(chkstk asm)
+include(conio/conio.cmake)
+include(direct/direct.cmake)
+include(except/except.cmake)
+include(float/float.cmake)
+include(math/math.cmake)
+include(mbstring/mbstring.cmake)
+include(mem/mem.cmake)
+include(misc/misc.cmake)
+include(printf/printf.cmake)
+include(process/process.cmake)
+include(search/search.cmake)
+include(setjmp/setjmp.cmake)
+include(startup/startup.cmake)
+include(stdio/stdio.cmake)
+include(stdlib/stdlib.cmake)
+include(string/string.cmake)
+include(time/time.cmake)
+include(wine/wine.cmake)
+include(wstring/wstring.cmake)
 
 include(crt.cmake)
 include(libcntpr.cmake)
@@ -45,37 +45,3 @@ add_library(user32_wsprintf
 
 add_dependencies(user32_wsprintf psdk)
 target_compile_definitions(user32_wsprintf PRIVATE _USER32_WSPRINTF)
-
-add_library(memcmp mem/memcmp.c)
-add_dependencies(memcmp psdk)
-
-add_library(getopt misc/getopt.c)
-target_compile_definitions(getopt PRIVATE _DLL __USE_CRTIMP)
-add_dependencies(getopt psdk)
-
-add_library(strtol
-    string/ctype.c
-    string/iswctype.c
-    string/strtoi64.c
-    string/strtol.c
-    string/strtoul.c
-    string/strtoull.c
-    string/wctype.c)
-target_compile_definitions(strtol PRIVATE _LIBCNT_)
-add_dependencies(strtol psdk)
-
-
-if(ARCH STREQUAL "i386")
-    list(APPEND ATAN2_ASM_SOURCE math/i386/atan2_asm.s)
-elseif(ARCH STREQUAL "amd64")
-    list(APPEND ATAN2_ASM_SOURCE math/amd64/atan2.S)
-elseif(ARCH STREQUAL "arm")
-    list(APPEND ATAN2_ASM_SOURCE math/arm/atan2.s)
-endif()
-
-add_asm_files(atan2_asm ${ATAN2_ASM_SOURCE})
-add_library(atan2 ${atan2_asm})
-set_target_properties(atan2 PROPERTIES LINKER_LANGUAGE "C")
-add_dependencies(atan2 asm)
-
-

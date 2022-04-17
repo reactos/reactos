@@ -19,9 +19,14 @@
 /* INCLUDES ******************************************************************/
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(PELOADER);
+
+/* GLOBALS *******************************************************************/
+
+PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback = NULL;
+
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -110,7 +115,7 @@ PeLdrpBindImportName(
     //      DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
 
     /* Check passed DllBase param */
-    if(DllBase == NULL)
+    if (DllBase == NULL)
     {
         WARN("DllBase == NULL!\n");
         return FALSE;
@@ -245,9 +250,9 @@ PeLdrpBindImportName(
         ((ULONG_PTR)ForwarderName < ((ULONG_PTR)ExportDirectory + ExportSize)))
     {
         PLDR_DATA_TABLE_ENTRY DataTableEntry;
-        CHAR ForwardDllName[255];
         PIMAGE_EXPORT_DIRECTORY RefExportDirectory;
         ULONG RefExportSize;
+        CHAR ForwardDllName[256];
 
         TRACE("PeLdrpBindImportName(): ForwarderName %s\n", ForwarderName);
 
@@ -255,7 +260,7 @@ PeLdrpBindImportName(
         RtlCopyMemory(ForwardDllName, ForwarderName, sizeof(ForwardDllName));
 
         /* Strip out the symbol name */
-        *strrchr(ForwardDllName,'.') = '\0';
+        *strrchr(ForwardDllName, '.') = ANSI_NULL;
 
         /* Check if the target image is already loaded */
         if (!PeLdrCheckForLoadedDll(ModuleListHead, ForwardDllName, &DataTableEntry))
@@ -264,7 +269,7 @@ PeLdrpBindImportName(
             if (strchr(ForwardDllName, '.') == NULL)
             {
                 /* Name does not have an extension, append '.dll' */
-                strcat(ForwardDllName, ".dll");
+                RtlStringCbCatA(ForwardDllName, sizeof(ForwardDllName), ".dll");
             }
 
             /* Now let's try to load it! */
@@ -351,16 +356,19 @@ PeLdrpLoadAndScanReferencedDll(
     PVOID BasePA = NULL;
 
     /* Prepare the full path to the file to be loaded */
-    strcpy(FullDllName, DirectoryPath);
-    strcat(FullDllName, ImportName);
+    RtlStringCbCopyA(FullDllName, sizeof(FullDllName), DirectoryPath);
+    RtlStringCbCatA(FullDllName, sizeof(FullDllName), ImportName);
 
     TRACE("Loading referenced DLL: %s\n", FullDllName);
+
+    if (PeLdrImportDllLoadCallback)
+        PeLdrImportDllLoadCallback(FullDllName);
 
     /* Load the image */
     Success = PeLdrLoadImage(FullDllName, LoaderBootDriver, &BasePA);
     if (!Success)
     {
-        ERR("PeLdrLoadImage() failed\n");
+        ERR("PeLdrLoadImage('%s') failed\n", FullDllName);
         return Success;
     }
 
@@ -372,7 +380,9 @@ PeLdrpLoadAndScanReferencedDll(
                                           DataTableEntry);
     if (!Success)
     {
-        ERR("PeLdrAllocateDataTableEntry() failed\n");
+        /* Cleanup and bail out */
+        ERR("PeLdrAllocateDataTableEntry('%s') failed\n", FullDllName);
+        MmFreeMemory(BasePA);
         return Success;
     }
 
@@ -384,7 +394,10 @@ PeLdrpLoadAndScanReferencedDll(
     Success = PeLdrScanImportDescriptorTable(ModuleListHead, DirectoryPath, *DataTableEntry);
     if (!Success)
     {
+        /* Cleanup and bail out */
         ERR("PeLdrScanImportDescriptorTable() failed\n");
+        PeLdrFreeDataTableEntry(*DataTableEntry);
+        MmFreeMemory(BasePA);
         return Success;
     }
 
@@ -590,12 +603,12 @@ PeLdrAllocateDataTableEntry(
     OUT PLDR_DATA_TABLE_ENTRY *NewEntry)
 {
     PVOID BaseVA = PaToVa(BasePA);
-    PWSTR Buffer;
+    PWSTR BaseDllNameBuffer, Buffer;
     PLDR_DATA_TABLE_ENTRY DataTableEntry;
     PIMAGE_NT_HEADERS NtHeaders;
     USHORT Length;
 
-    TRACE("PeLdrAllocateDataTableEntry(, '%s', '%s', %p)\n",
+    TRACE("PeLdrAllocateDataTableEntry('%s', '%s', %p)\n",
           BaseDllName, FullDllName, BasePA);
 
     /* Allocate memory for a data table entry, zero-initialize it */
@@ -603,12 +616,12 @@ PeLdrAllocateDataTableEntry(
                                                            TAG_WLDR_DTE);
     if (DataTableEntry == NULL)
         return FALSE;
-    RtlZeroMemory(DataTableEntry, sizeof(LDR_DATA_TABLE_ENTRY));
 
     /* Get NT headers from the image */
     NtHeaders = RtlImageNtHeader(BasePA);
 
     /* Initialize corresponding fields of DTE based on NT headers value */
+    RtlZeroMemory(DataTableEntry, sizeof(LDR_DATA_TABLE_ENTRY));
     DataTableEntry->DllBase = BaseVA;
     DataTableEntry->SizeOfImage = NtHeaders->OptionalHeader.SizeOfImage;
     DataTableEntry->EntryPoint = RVA(BaseVA, NtHeaders->OptionalHeader.AddressOfEntryPoint);
@@ -624,12 +637,17 @@ PeLdrAllocateDataTableEntry(
         FrLdrHeapFree(DataTableEntry, TAG_WLDR_DTE);
         return FALSE;
     }
-    RtlZeroMemory(Buffer, Length);
+
+    /* Save Buffer, in case of later failure */
+    BaseDllNameBuffer = Buffer;
 
     DataTableEntry->BaseDllName.Length = Length;
     DataTableEntry->BaseDllName.MaximumLength = Length;
     DataTableEntry->BaseDllName.Buffer = PaToVa(Buffer);
-    while (*BaseDllName != 0)
+
+    RtlZeroMemory(Buffer, Length);
+    Length /= sizeof(WCHAR);
+    while (Length--)
     {
         *Buffer++ = *BaseDllName++;
     }
@@ -640,15 +658,18 @@ PeLdrAllocateDataTableEntry(
     Buffer = (PWSTR)FrLdrHeapAlloc(Length, TAG_WLDR_NAME);
     if (Buffer == NULL)
     {
+        FrLdrHeapFree(BaseDllNameBuffer, TAG_WLDR_NAME);
         FrLdrHeapFree(DataTableEntry, TAG_WLDR_DTE);
         return FALSE;
     }
-    RtlZeroMemory(Buffer, Length);
 
     DataTableEntry->FullDllName.Length = Length;
     DataTableEntry->FullDllName.MaximumLength = Length;
     DataTableEntry->FullDllName.Buffer = PaToVa(Buffer);
-    while (*FullDllName != 0)
+
+    RtlZeroMemory(Buffer, Length);
+    Length /= sizeof(WCHAR);
+    while (Length--)
     {
         *Buffer++ = *FullDllName++;
     }
@@ -678,8 +699,8 @@ PeLdrAllocateDataTableEntry(
 
     /* Insert this DTE to a list in the LPB */
     InsertTailList(ModuleListHead, &DataTableEntry->InLoadOrderLinks);
-    TRACE("Inserting DTE %p, name='%.*S' DllBase=%p \n", DataTableEntry,
-          DataTableEntry->BaseDllName.Length / 2,
+    TRACE("Inserting DTE %p, name='%.*S' DllBase=%p\n", DataTableEntry,
+          DataTableEntry->BaseDllName.Length / sizeof(WCHAR),
           VaToPa(DataTableEntry->BaseDllName.Buffer),
           DataTableEntry->DllBase);
 
@@ -688,6 +709,20 @@ PeLdrAllocateDataTableEntry(
 
     /* Return success */
     return TRUE;
+}
+
+VOID
+PeLdrFreeDataTableEntry(
+    // _In_ PLIST_ENTRY ModuleListHead,
+    _In_ PLDR_DATA_TABLE_ENTRY Entry)
+{
+    // ASSERT(ModuleListHead);
+    ASSERT(Entry);
+
+    RemoveEntryList(&Entry->InLoadOrderLinks);
+    FrLdrHeapFree(VaToPa(Entry->FullDllName.Buffer), TAG_WLDR_NAME);
+    FrLdrHeapFree(VaToPa(Entry->BaseDllName.Buffer), TAG_WLDR_NAME);
+    FrLdrHeapFree(Entry, TAG_WLDR_DTE);
 }
 
 /*
@@ -714,13 +749,13 @@ PeLdrLoadImage(
     LARGE_INTEGER Position;
     ULONG i, BytesRead;
 
-    TRACE("PeLdrLoadImage(%s, %ld, *)\n", FileName, MemoryType);
+    TRACE("PeLdrLoadImage('%s', %ld)\n", FileName, MemoryType);
 
     /* Open the image file */
     Status = ArcOpen((PSTR)FileName, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
-        WARN("ArcOpen(FileName: '%s') failed. Status: %u\n", FileName, Status);
+        WARN("ArcOpen('%s') failed. Status: %u\n", FileName, Status);
         return FALSE;
     }
 
@@ -728,8 +763,7 @@ PeLdrLoadImage(
     Status = ArcRead(FileId, HeadersBuffer, SECTOR_SIZE * 2, &BytesRead);
     if (Status != ESUCCESS)
     {
-        ERR("ArcRead(File: '%s') failed. Status: %u\n", FileName, Status);
-        UiMessageBox("Error reading from file.");
+        ERR("ArcRead('%s') failed. Status: %u\n", FileName, Status);
         ArcClose(FileId);
         return FALSE;
     }
@@ -739,7 +773,6 @@ PeLdrLoadImage(
     if (!NtHeaders)
     {
         ERR("No NT header found in \"%s\"\n", FileName);
-        UiMessageBox("Error: No NT header found.");
         ArcClose(FileId);
         return FALSE;
     }
@@ -748,7 +781,6 @@ PeLdrLoadImage(
     if (((NtHeaders->FileHeader.Characteristics & IMAGE_FILE_EXECUTABLE_IMAGE) == 0))
     {
         ERR("Not an executable image \"%s\"\n", FileName);
-        UiMessageBox("Not an executable image.");
         ArcClose(FileId);
         return FALSE;
     }
@@ -757,26 +789,25 @@ PeLdrLoadImage(
     NumberOfSections = NtHeaders->FileHeader.NumberOfSections;
     SectionHeader = IMAGE_FIRST_SECTION(NtHeaders);
 
-    /* Try to allocate this memory, if fails - allocate somewhere else */
+    /* Try to allocate this memory; if it fails, allocate somewhere else */
     PhysicalBase = MmAllocateMemoryAtAddress(NtHeaders->OptionalHeader.SizeOfImage,
                        (PVOID)((ULONG)NtHeaders->OptionalHeader.ImageBase & (KSEG0_BASE - 1)),
                        MemoryType);
 
     if (PhysicalBase == NULL)
     {
-        /* It's ok, we don't panic - let's allocate again at any other "low" place */
+        /* Don't fail, allocate again at any other "low" place */
         PhysicalBase = MmAllocateMemoryWithType(NtHeaders->OptionalHeader.SizeOfImage, MemoryType);
 
         if (PhysicalBase == NULL)
         {
             ERR("Failed to alloc %lu bytes for image %s\n", NtHeaders->OptionalHeader.SizeOfImage, FileName);
-            UiMessageBox("Failed to alloc pages for image.");
             ArcClose(FileId);
             return FALSE;
         }
     }
 
-    /* This is the real image base - in form of a virtual address */
+    /* This is the real image base, in form of a virtual address */
     VirtualBase = PaToVa(PhysicalBase);
 
     TRACE("Base PA: 0x%X, VA: 0x%X\n", PhysicalBase, VirtualBase);
@@ -789,10 +820,10 @@ PeLdrLoadImage(
         Status = ArcRead(FileId, (PUCHAR)PhysicalBase + sizeof(HeadersBuffer), NtHeaders->OptionalHeader.SizeOfHeaders - sizeof(HeadersBuffer), &BytesRead);
         if (Status != ESUCCESS)
         {
-            ERR("ArcRead(File: '%s') failed. Status: %u\n", FileName, Status);
-            UiMessageBox("Error reading headers.");
+            ERR("ArcRead('%s') failed. Status: %u\n", FileName, Status);
+            // UiMessageBox("Error reading headers.");
             ArcClose(FileId);
-            return FALSE;
+            goto Failure;
         }
     }
 
@@ -807,9 +838,6 @@ PeLdrLoadImage(
 
     /* Load the first section */
     SectionHeader = IMAGE_FIRST_SECTION(NtHeaders);
-
-    /* Fill output parameters */
-    *ImageBasePA = PhysicalBase;
 
     /* Walk through each section and read it (check/fix any possible
        bad situations, if they arise) */
@@ -852,7 +880,7 @@ PeLdrLoadImage(
             }
         }
 
-        /* Size of data is less than the virtual size - fill up the remainder with zeroes */
+        /* Size of data is less than the virtual size: fill up the remainder with zeroes */
         if (SizeOfRawData < VirtualSize)
         {
             TRACE("PeLdrLoadImage(): SORD %d < VS %d\n", SizeOfRawData, VirtualSize);
@@ -862,25 +890,35 @@ PeLdrLoadImage(
         SectionHeader++;
     }
 
-    /* We are done with the file - close it */
+    /* We are done with the file, close it */
     ArcClose(FileId);
 
-    /* If loading failed - return right now */
+    /* If loading failed, return right now */
     if (Status != ESUCCESS)
-        return FALSE;
+        goto Failure;
 
     /* Relocate the image, if it needs it */
     if (NtHeaders->OptionalHeader.ImageBase != (ULONG_PTR)VirtualBase)
     {
         WARN("Relocating %p -> %p\n", NtHeaders->OptionalHeader.ImageBase, VirtualBase);
-        return (BOOLEAN)LdrRelocateImageWithBias(PhysicalBase,
-                                                 (ULONG_PTR)VirtualBase - (ULONG_PTR)PhysicalBase,
-                                                 "FreeLdr",
-                                                 TRUE,
-                                                 TRUE, /* in case of conflict still return success */
-                                                 FALSE);
+        Status = LdrRelocateImageWithBias(PhysicalBase,
+                                          (ULONG_PTR)VirtualBase - (ULONG_PTR)PhysicalBase,
+                                          "FreeLdr",
+                                          ESUCCESS,
+                                          ESUCCESS, /* In case of conflict still return success */
+                                          ENOEXEC);
+        if (Status != ESUCCESS)
+            goto Failure;
     }
+
+    /* Fill output parameters */
+    *ImageBasePA = PhysicalBase;
 
     TRACE("PeLdrLoadImage() done, PA = %p\n", *ImageBasePA);
     return TRUE;
+
+Failure:
+    /* Cleanup and bail out */
+    MmFreeMemory(PhysicalBase);
+    return FALSE;
 }

@@ -411,8 +411,6 @@ getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
     WCHAR wszPath[MAX_PATH];
     WCHAR wszAutoRunInfPath[MAX_PATH];
     WCHAR wszValue[MAX_PATH], wszTemp[MAX_PATH];
-    static const WCHAR wszAutoRunInf[] = { 'a','u','t','o','r','u','n','.','i','n','f',0 };
-    static const WCHAR wszAutoRun[] = { 'a','u','t','o','r','u','n',0 };
 
     // get path
     if (!ILGetDisplayNameExW(psf, pidl, wszPath, 0))
@@ -422,10 +420,10 @@ getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
 
     // build the full path of autorun.inf
     StringCchCopyW(wszAutoRunInfPath, _countof(wszAutoRunInfPath), wszPath);
-    PathAppendW(wszAutoRunInfPath, wszAutoRunInf);
+    PathAppendW(wszAutoRunInfPath, L"autorun.inf");
 
     // autorun.inf --> wszValue
-    if (GetPrivateProfileStringW(wszAutoRun, L"icon", NULL, wszValue, _countof(wszValue),
+    if (GetPrivateProfileStringW(L"autorun", L"icon", NULL, wszValue, _countof(wszValue),
                                  wszAutoRunInfPath) && wszValue[0] != 0)
     {
         // wszValue --> wszTemp
@@ -564,9 +562,9 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     if (pidlRoot == NULL)
         return E_OUTOFMEMORY;
 
-    HRESULT hr = CRegFolder_CreateInstance(&CLSID_MyComputer, 
-                                           pidlRoot, 
-                                           L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 
+    HRESULT hr = CRegFolder_CreateInstance(&CLSID_MyComputer,
+                                           pidlRoot,
+                                           L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
                                            L"MyComputer",
                                            IID_PPV_ARG(IShellFolder2, &m_regFolder));
 
@@ -667,7 +665,7 @@ HRESULT WINAPI CDrivesFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcRese
         return m_regFolder->BindToObject(pidl, pbcReserved, riid, ppvOut);
 
     CHAR* pchDrive = _ILGetDataPointer(pidl)->u.drive.szDriveName;
-    
+
     PERSIST_FOLDER_TARGET_INFO pfti = {0};
     pfti.dwAttributes = -1;
     pfti.csidl = -1;
@@ -723,7 +721,7 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
     CHAR* pszDrive2 = _ILGetDataPointer(pidl2)->u.drive.szDriveName;
 
     int result;
-    switch(LOWORD(lParam)) 
+    switch(LOWORD(lParam))
     {
         case 0:        /* name */
         {
@@ -977,8 +975,6 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
     {
         WCHAR wszDrive[18] = {0};
         DWORD dwVolumeSerialNumber, dwMaximumComponentLength, dwFileSystemFlags;
-        static const WCHAR wszOpenBracket[] = {' ', '(', 0};
-        static const WCHAR wszCloseBracket[] = {')', 0};
 
         lstrcpynW(wszDrive, pszPath, 4);
         pszPath[0] = L'\0';
@@ -1012,10 +1008,10 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
                     pszPath[MAX_PATH-7] = L'\0';
             }
         }
-        wcscat (pszPath, wszOpenBracket);
+        wcscat (pszPath, L" (");
         wszDrive[2] = L'\0';
         wcscat (pszPath, wszDrive);
-        wcscat (pszPath, wszCloseBracket);
+        wcscat (pszPath, L")");
     }
 
     if (SUCCEEDED(hr))

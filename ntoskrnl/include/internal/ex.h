@@ -1537,6 +1537,14 @@ XIPInit(
 #define InterlockedCompareExchangeSizeT(Destination, Exchange, Comperand) \
    (SIZE_T)InterlockedCompareExchangePointer((PVOID*)(Destination), (PVOID)(SIZE_T)(Exchange), (PVOID)(SIZE_T)(Comperand))
 
+#ifdef _WIN64
+#define InterlockedExchangeSizeT(Target, Value) \
+    (SIZE_T)InterlockedExchange64((PLONG64)Target, (LONG64)Value)
+#else
+#define InterlockedExchangeSizeT(Target, Value) \
+    (SIZE_T)InterlockedExchange((PLONG)Target, (LONG)Value)
+#endif
+
 #define ExfInterlockedCompareExchange64UL(Destination, Exchange, Comperand) \
    (ULONGLONG)ExfInterlockedCompareExchange64((PLONGLONG)(Destination), (PLONGLONG)(Exchange), (PLONGLONG)(Comperand))
 

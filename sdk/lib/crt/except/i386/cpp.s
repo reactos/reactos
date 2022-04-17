@@ -159,7 +159,7 @@ _call_handler:
     push esi
     push edi
     mov ebp, [esp + 24]
-    call dword ptr [esp + 29]
+    call dword ptr [esp + 20]
     pop edi
     pop esi
     pop ebx

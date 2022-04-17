@@ -811,57 +811,27 @@ StretchDIBits(
     BOOL Hit = FALSE;
 
     DPRINT("StretchDIBits %p : %p : %u\n", lpBits, lpBitsInfo, iUsage);
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-        return MFDRV_StretchBlt( hdc,
-                XDest,
-                YDest,
-                nDestWidth,
-                nDestHeight,
-                XSrc,
-                YSrc,
-                nSrcWidth,
-                nSrcHeight,
-                lpBits,
-                lpBitsInfo,
-                iUsage,
-                dwRop);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return 0;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_StretchBlt(hdc,
-                        XDest,
-                        YDest,
-                        nDestWidth,
-                        nDestHeight,
-                        XSrc,
-                        YSrc,
-                        nSrcWidth,
-                        nSrcHeight,
-                        lpBits,
-                        lpBitsInfo,
-                        iUsage,
-                        dwRop);
-            }
-            return 0;
-        }
-    }
-#endif
+
+    HANDLE_METADC( int,
+                   StretchDIBits,
+                   0,
+                   hdc,
+                   XDest,
+                   YDest,
+                   nDestWidth,
+                   nDestHeight,
+                   XSrc,
+                   YSrc,
+                   nSrcWidth,
+                   nSrcHeight,
+                   lpBits,
+                   lpBitsInfo,
+                   iUsage,
+                   dwRop );
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return 0;
 
-    pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage, &ConvertedInfoSize,
-        FALSE);
+    pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage, &ConvertedInfoSize, FALSE);
     if (!pConvertedInfo)
     {
         return 0;
@@ -907,10 +877,22 @@ StretchDIBits(
      (pConvertedInfo->bmiHeader.biCompression == BI_JPEG ||
      pConvertedInfo->bmiHeader.biCompression  == BI_PNG )) )*/
     {
-        LinesCopied = NtGdiStretchDIBitsInternal(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc,
-            YSrc, nSrcWidth, nSrcHeight, pvSafeBits, pConvertedInfo, (DWORD) iUsage, dwRop,
-            ConvertedInfoSize, cjBmpScanSize,
-            NULL);
+        LinesCopied = NtGdiStretchDIBitsInternal( hdc,
+                                                  XDest,
+                                                  YDest,
+                                                  nDestWidth,
+                                                  nDestHeight,
+                                                  XSrc,
+                                                  YSrc,
+                                                  nSrcWidth,
+                                                  nSrcHeight,
+                                                  pvSafeBits,
+                                                  pConvertedInfo,
+                                                  (DWORD) iUsage,
+                                                  dwRop,
+                                                  ConvertedInfoSize,
+                                                  cjBmpScanSize,
+                                                  NULL );
     }
     if (pvSafeBits)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
@@ -921,61 +903,45 @@ StretchDIBits(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
 GetBitmapAttributes(HBITMAP hbm)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    if ( GDI_HANDLE_IS_STOCKOBJ(hbm) )
+    {
+        return SC_BB_STOCKOBJ;
+    }
     return 0;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBITMAP
 WINAPI
 SetBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    if ( dwFlags & ~SC_BB_STOCKOBJ )
+    {
+        return NULL;
+    }
+    return NtGdiSetBitmapAttributes( hbm, dwFlags );
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBITMAP
 WINAPI
 ClearBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    if ( dwFlags & ~SC_BB_STOCKOBJ )
+    {
+        return NULL;
+    }
+    return NtGdiClearBitmapAttributes( hbm, dwFlags );;
 }
 
-/*
- * @unimplemented
- *
- */
-HBITMAP
-WINAPI
-GdiConvertBitmapV5(
-    HBITMAP in_format_BitMap,
-    HBITMAP src_BitMap,
-    INT bpp,
-    INT unuse)
-{
-    /* FIXME guessing the prototypes */
-
-    /*
-     * it have create a new bitmap with desired in format,
-     * then convert it src_bitmap to new format
-     * and return it as HBITMAP
-     */
-
-    return FALSE;
-}
 

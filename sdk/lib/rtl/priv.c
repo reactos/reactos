@@ -387,9 +387,12 @@ RtlReleasePrivilege(IN PVOID ReturnedState)
     else
     {
         /* Otherwise, restore old state */
-        ZwAdjustPrivilegesToken(State->Token, FALSE,
-                                State->OldPrivileges, 0, NULL, NULL);
-
+        Status = ZwAdjustPrivilegesToken(State->Token, FALSE,
+                                         State->OldPrivileges, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlRaiseStatus(Status);
+        }
     }
 
     /* If we used a different buffer for old privileges, just free it */

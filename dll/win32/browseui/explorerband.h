@@ -96,7 +96,7 @@ private:
     HRESULT UpdateBrowser(LPITEMIDLIST pidlGoto);
     HTREEITEM InsertItem(HTREEITEM hParent, IShellFolder *psfParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
     HTREEITEM InsertItem(HTREEITEM hParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
-    BOOL InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo); 
+    BOOL InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo);
     BOOL NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert, BOOL bSelect);
     BOOL DeleteItem(LPITEMIDLIST toDelete);
     BOOL RenameItem(HTREEITEM toRename, LPITEMIDLIST newPidl);

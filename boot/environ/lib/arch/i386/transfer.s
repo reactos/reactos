@@ -30,7 +30,7 @@ _Archx86TransferTo32BitApplicationAsm:
     push esi
     push edi
     push ebx
- 
+
     /* Save data segments */
     push es
     push ds

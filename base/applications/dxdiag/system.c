@@ -40,7 +40,7 @@ GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR R
 }
 
 
-static 
+static
 BOOL
 GetDirectXVersion(WCHAR * szBuffer)
 {
@@ -109,7 +109,7 @@ VOID GetSystemCPU(WCHAR *szBuffer)
     the program is not running in WOW64. */
     fnIsWow64Process = (ISWOW64PROC)GetProcAddress(
         GetModuleHandleW(L"kernel32"), "IsWow64Process");
-    
+
     if (fnIsWow64Process != NULL)
         fnIsWow64Process(GetCurrentProcess(), &isWow64);
 

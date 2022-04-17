@@ -1907,7 +1907,7 @@ ShowPartitionSizeInputBox(SHORT Left,
     coPos.X = Left + 2;
     coPos.Y = Top + 2;
     strcpy(Buffer, MUIGetString(STRING_PARTITIONSIZE));
-    iLeft = coPos.X + strlen(Buffer) + 1;
+    iLeft = coPos.X + (USHORT)strlen(Buffer) + 1;
     iTop = coPos.Y;
 
     WriteConsoleOutputCharacterA(StdOutput,
@@ -3970,7 +3970,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
             CONSOLE_NormalTextXY(8, Line, 60, 1);
 
             Line = 15;
-            
+
             CONSOLE_InvertTextXY(8, Line, 60, 1);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -4099,7 +4099,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
  *  Calls InstallVBRToPartition() if VBR installation is chosen.
  *  Otherwise both InstallVBRToPartition() and InstallMbrBootCodeToDisk()
  *  are called if both MBR and VBR installation is chosen.
- * 
+ *
  * RETURNS
  *   Number of the next page.
  */

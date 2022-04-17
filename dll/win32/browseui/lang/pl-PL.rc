@@ -4,7 +4,7 @@
  *    http://www.reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
- *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (May, 2021) 
+ *    Polish translation updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (May, 2021)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -113,7 +113,7 @@ BEGIN
         END
         MENUITEM "&Otwórz folder", IDM_OPEN_FOLDER
         MENUITEM "Pokaż &tekst", IDM_SHOW_TEXT
-    END    
+    END
 END
 
 /* Dialogs */

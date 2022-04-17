@@ -79,7 +79,7 @@ VOID TestGlobalClasses(VOID)
     ok( c != 0, "\n");
     ok( d == 0, "\n");
     ok (b == c, "\n");
-   
+
     a = _GetClassAtom(L"TestClass2", hmod);
     b = _RegisterClass(L"TestClass2", hmod, CS_GLOBALCLASS, DefWindowProcW);
     c = _GetClassAtom(L"TestClass2", hmod);
@@ -126,7 +126,7 @@ VOID TestGlobalClasses(VOID)
     ok( c == 0, "\n");
     ok( d != 0, "\n");
     ok( e == 0, "\n");
-    
+
     a = _GetClassAtom(L"ScrollBar", hmod);
     UnregisterClassW(L"ScrollBar", hmod);
     b = _GetClassAtom(L"ScrollBar", hmod);
@@ -138,22 +138,22 @@ VOID TestGlobalClasses(VOID)
     //ok( d != 0, "Wrong value for d. Expected != 0, got 0\n");
     //ok_int(a, c);
     //ok_int(a, d); /* In Windows 10 and WHS testbot the last 4 tests fail */
-    
+
     a = _GetClassAtom(L"ListBox", (HMODULE)0xdead);
     UnregisterClassW(L"ListBox", (HMODULE)0xdead);
     b = _GetClassAtom(L"ListBox", (HMODULE)0xdead);
     ok( a != 0, "\n");
     ok( b == 0, "\n");
-    
+
     a = _RegisterClass(L"TestClass5", (HMODULE)0xdead, CS_GLOBALCLASS, DefWindowProcW);
     b = _GetClassAtom(L"TestClass5", hmod);
     UnregisterClassW(L"TestClass5", hmod);
     c = _GetClassAtom(L"TestClass5", (HMODULE)0xdead);
     d = _GetClassAtom(L"TestClass5", hmod);
     ok( a != 0, "\n");
-    ok( b != 0, "\n");    
+    ok( b != 0, "\n");
     ok( c == 0, "\n");
-    ok( d == 0, "\n");    
+    ok( d == 0, "\n");
 }
 
 VOID TestVersionedClasses(VOID)
@@ -173,7 +173,7 @@ VOID TestVersionedClasses(VOID)
         skip("Loading manifests failed. Skipping TestVersionedClasses\n");
         return;
     }
-    
+
     a = _RegisterClass(L"VersionTestClass1", hmod, 0, DefWindowProcA);
     proc1 = _GetWndproc(L"VersionTestClass1", hmod);
     b = _RegisterClass(L"VersionTestClass1", hmod, 0, DefWindowProcW);
@@ -196,7 +196,7 @@ VOID TestVersionedClasses(VOID)
     ok (proc3 == DefWindowProcW, "Got 0x%p, expected 0x%p\n", proc3, DefWindowProcW);
     ok (proc4 == DefWindowProcW, "Got 0x%p, expected 0x%p\n", proc4, DefWindowProcW);
     ok (proc5 == DefWindowProcA, "\n");
-    
+
     a = _GetClassAtom(L"Button", hmod);
     b = _RegisterClass(L"Button", hmod, CS_GLOBALCLASS, DefWindowProcA);
     proc1 = _GetWndproc(L"Button", (HMODULE)0xdead);
@@ -215,7 +215,7 @@ VOID TestVersionedClasses(VOID)
     ok( proc1 != DefWindowProcA, "Got 0x%p, expected not 0x%p\n", proc1, DefWindowProcA);
     ok( proc2 == DefWindowProcA, "Got 0x%p, expected 0x%p\n", proc2, DefWindowProcA);
     ok( proc3 == DefWindowProcA, "Got 0x%p, expected 0x%p\n", proc3, DefWindowProcA);
-    
+
     a = _RegisterClass(L"VersionTestClass2", hmod, CS_GLOBALCLASS, DefWindowProcW);
     proc1 = _GetWndproc(L"VersionTestClass2", (HMODULE)0xdead);
     b = _RegisterClass(L"VersionTestClass2", hmod, 0, DefWindowProcA);

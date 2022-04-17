@@ -39,7 +39,7 @@ BEGIN
     LTEXT "希望 ReactOS 能够在系统发出声音时发出可视警告，请用“声音卫士”。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用“声音卫士”(&S)", IDC_SENTRY_BOX, 12, 49, 90, 14
-    LTEXT "选择视觉警告:", IDC_SENTRY_TEXT, 12, 72, 222, 11
+    LTEXT "选择视觉警告：", IDC_SENTRY_TEXT, 12, 72, 222, 11
     COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "声音显示", -1, 6, 115, 234, 67
@@ -61,12 +61,12 @@ BEGIN
     GROUPBOX "光标选项", -1, 6, 79, 234, 115
     LTEXT "移动滑杆来改变光标闪烁的速度(光标闪烁速度)和光标的宽度。",
           -1, 12, 88, 222, 20
-    CTEXT "闪烁速度(&R):", -1, 12, 115, 222, 11
+    CTEXT "闪烁速度(&R)：", -1, 12, 115, 222, 11
     LTEXT "无", -1, 18, 130, 36, 11
     LTEXT "快", -1, 192, 130, 36, 11
     CONTROL "", IDC_CURSOR_BLINK_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 124, 126, 20
-    CTEXT "宽度(&W):", -1, 12, 151, 222, 11
+    CTEXT "宽度(&W)：", -1, 12, 151, 222, 11
     LTEXT "窄", -1, 18, 171, 36, 11
     LTEXT "宽", -1, 192, 171, 36, 11
     CONTROL "", IDC_CURSOR_WIDTH_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
@@ -92,7 +92,7 @@ CAPTION "常规"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     GROUPBOX "自动重置", -1, 6, 11, 234, 47
-    AUTOCHECKBOX "关闭辅助功能特征，在空闲(&T):",
+    AUTOCHECKBOX "在空闲该时长后关闭辅助功能(&T)：",
                  IDC_RESET_BOX, 12, 18, 222, 14
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -119,7 +119,7 @@ CAPTION "粘滞键设置"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "键盘快捷键", -1, 6, 11, 234, 62
-    LTEXT "粘滞键的快捷键是:\n将 SHIFT 键按五次后激活。",
+    LTEXT "粘滞键的快捷键是：\n将 SHIFT 键按五次后激活。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷键(&C)", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "选项", -1, 6, 83, 234, 44
@@ -142,7 +142,7 @@ CAPTION "筛选键设置"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "键盘快捷键", -1, 6, 11, 234, 62
-    LTEXT "筛选键的快捷键是:\n将右手的 SHIFT 键按住八秒钟。",
+    LTEXT "筛选键的快捷键是：\n将右手的 SHIFT 键按住八秒钟。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷键(&U)", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
     GROUPBOX "筛选器选项", -1, 6, 79, 234, 79
@@ -152,7 +152,7 @@ BEGIN
                     12, 106, 120, 20, BS_TOP | BS_MULTILINE
     PUSHBUTTON "设置(&S)", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
     PUSHBUTTON "设置(&E)", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
-    LTEXT "在此处单击并键入字符来测试筛选键设置(&C):", -1, 12, 129, 222, 11
+    LTEXT "在此处单击并键入字符来测试筛选键设置(&C)：", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
     GROUPBOX "通知", -1, 6, 161, 234, 41
     AUTOCHECKBOX "当按键或键被接受时发出声响(&B)", IDC_FILTER_SOUND_CHECK,
@@ -169,7 +169,7 @@ CAPTION "切换键设置"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "键盘快捷键", -1, 6, 11, 234, 62
-    LTEXT "切换键的快捷键是:\n将 NUM LOCK 键按住五秒钟。",
+    LTEXT "切换键的快捷键是：\n将 NUM LOCK 键按住五秒钟。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷键(&S)", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
     DEFPUSHBUTTON "确定", IDOK, 135, 207, 50, 14
@@ -182,11 +182,11 @@ CAPTION "高对比度设置"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "键盘快捷键", -1, 6, 11, 234, 62
-    LTEXT "高对比度的快捷键是:\n同时按住左 Alt 键、左 SHIFT 键和 PRINT SCREEN 键。",
+    LTEXT "高对比度的快捷键是：\n同时按住左 Alt 键、左 SHIFT 键和 PRINT SCREEN 键。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用快捷键(&U)", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
     GROUPBOX "高对比度外观方案", -1, 6, 83, 234, 44
-    LTEXT "目前的高对比度方案为:", -1, 12, 94, 222, 11
+    LTEXT "目前的高对比度方案为：", -1, 12, 94, 222, 11
     COMBOBOX IDC_CONTRAST_COMBO, 12, 103, 222, 56,
              CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "确定", IDOK, 135, 207, 50, 14
@@ -234,7 +234,7 @@ BEGIN
     LTEXT "忽略重复的击键比快：(&I)", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "试验区:(&T)", -1, 6, 68, 48, 11
+    LTEXT "试验区：(&T)", -1, 6, 68, 48, 11
     EDITTEXT IDC_BOUNCE_TEST_EDIT, 60, 65, 180, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "确定", IDOK, 135, 207, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 189, 207, 50, 14
@@ -274,10 +274,10 @@ BEGIN
     GROUPBOX "串行键", -1, 6, 11, 234, 92
     LTEXT "选择用于连接其他输入设备的端口。",
           -1, 12, 20, 222, 20
-    LTEXT "串行口(&S):", -1, 12, 34, 222, 20
+    LTEXT "串行口(&S)：", -1, 12, 34, 222, 20
     COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 45, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "波特率(&B):", -1, 12, 65, 222, 20
+    LTEXT "波特率(&B)：", -1, 12, 65, 222, 20
     COMBOBOX IDC_SERIAL_BAUD_COMBO, 12, 76, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "确定", IDOK, 135, 207, 50, 14

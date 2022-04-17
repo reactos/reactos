@@ -270,7 +270,7 @@ static void Test_GradientCaptions(void)
 
 START_TEST(SystemParametersInfo)
 {
-    RegisterSimpleClass(SysParamsTestProc, L"sysparamstest"); 
+    RegisterSimpleClass(SysParamsTestProc, L"sysparamstest");
     hWnd1 = CreateWindowW(L"sysparamstest", L"sysparamstest", WS_OVERLAPPEDWINDOW,
                         20, 20, 300, 300, NULL, NULL, 0, NULL);
 

@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     Logon ScreenSaver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Hong Kong) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung <elton328@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION "登入螢幕保護程式"
+    IDS_TEXT "沒有需要設定的選項。"
+END

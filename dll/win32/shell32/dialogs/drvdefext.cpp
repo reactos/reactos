@@ -24,14 +24,13 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <devguid.h>
 
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-static const GUID GUID_DEVCLASS_DISKDRIVE = {0x4d36e967L, 0xe325, 0x11ce, {0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18}};
 
 typedef enum
 {
@@ -266,7 +265,7 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
                     pDrawItem->rcItem.right, pDrawItem->rcItem.bottom - 10);
 
             SelectObject(pDrawItem->hDC, hMagBrush);
-            
+
             if (m_FreeSpacePerc > 0)
             {
                 Pie(pDrawItem->hDC, pDrawItem->rcItem.left, pDrawItem->rcItem.top, pDrawItem->rcItem.right,
@@ -419,14 +418,14 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     {
         /* volume label textbox */
         SendMessage(GetDlgItem(hwndDlg, 14000), EM_SETREADONLY, TRUE, 0);
-        
+
         /* disk compression */
         ShowWindow(GetDlgItem(hwndDlg, 14011), FALSE);
 
         /* index */
         ShowWindow(GetDlgItem(hwndDlg, 14012), FALSE);
     }
-    
+
     HICON hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IconId), IMAGE_ICON, 32, 32, LR_SHARED);
     if (hIcon)
         SendDlgItemMessageW(hwndDlg, 14016, STM_SETICON, (WPARAM)hIcon, 0);
@@ -483,7 +482,7 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     GetDlgItemTextW(hwndDlg, 14009, wszFormat, _countof(wszFormat));
     swprintf(wszBuf, wszFormat, m_wszDrive[0]);
     SetDlgItemTextW(hwndDlg, 14009, wszBuf);
-    
+
     /* show disk cleanup button only for fixed drives */
     ShowWindow(GetDlgItem(hwndDlg, 14010), DriveType == DRIVE_FIXED);
 }
@@ -653,10 +652,12 @@ CDrvDefExt::HardwarePageProc(
     {
         case WM_INITDIALOG:
         {
-            GUID Guid = GUID_DEVCLASS_DISKDRIVE;
+            GUID Guids[2];
+            Guids[0] = GUID_DEVCLASS_DISKDRIVE;
+            Guids[1] = GUID_DEVCLASS_CDROM;
 
             /* create the hardware page */
-            DeviceCreateHardwarePageEx(hwndDlg, &Guid, 1, HWPD_STANDARDLIST);
+            DeviceCreateHardwarePageEx(hwndDlg, Guids, _countof(Guids), HWPD_STANDARDLIST);
             break;
         }
     }

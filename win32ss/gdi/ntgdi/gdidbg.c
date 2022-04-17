@@ -32,6 +32,7 @@ DBG_CHANNEL DbgChannels[DbgChCount] = {
     {L"EngLDev", DbgChEngLDev},
     {L"EngLine", DbgChEngLine},
     {L"EngMapping", DbgChEngMapping},
+    {L"EngMDev", DbgChEngMDev},
     {L"EngPDev", DbgChEngPDev},
     {L"EngSurface", DbgChEngSurface},
     {L"EngWnd", DbgChEngWnd},

@@ -86,7 +86,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(
         LPCRECT prcBorder,
         IUnknown *punkToolbarSite,
-        BOOL fReserved) 
+        BOOL fReserved)
     {
         /* No need to implement this method */
         return E_NOTIMPL;
@@ -174,7 +174,7 @@ public:
     }
 
     /*****************************************************************************/
-    
+
     virtual HRESULT STDMETHODCALLTYPE SetClient(
         IN IUnknown *punkClient)
     {

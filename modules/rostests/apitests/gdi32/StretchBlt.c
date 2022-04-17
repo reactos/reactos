@@ -45,7 +45,7 @@
  *
  * But there are three "special" cases where no flip is done (there is a copy/scale only) and the "-1" is not used.
  * These are as follows:
- * 1) 
+ * 1)
  * StretchBlt(DestDC,   DestX + DestWidth,     DestY,   -DestWidth,   DestHeight,  // Both Widths negative
  *            SourceDC, SourceX + SourceWidth, SourceY, -SourceWidth, SourceHeight, SRCCOPY); // Case0101 (5)
  * 2)
@@ -466,7 +466,7 @@ static void test_StretchBlt(void)
     expected[3] = 0x000000FF;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             1, 1, -2, -2, 0, 0, 2, 2, expected, __LINE__); // Case 0011 (3) - Both Flip. 
+                             1, 1, -2, -2, 0, 0, 2, 2, expected, __LINE__); // Case 0011 (3) - Both Flip.
 
     expected[0] = 0x0000FF00;
     expected[1] = 0x000000FF;
@@ -474,7 +474,7 @@ static void test_StretchBlt(void)
     expected[3] = 0x00FF0000;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             1, 1, -2, -2, 0, 1, 2, -2, expected, __LINE__); // Case 0010 (2) - Horizontal Flip. 
+                             1, 1, -2, -2, 0, 1, 2, -2, expected, __LINE__); // Case 0010 (2) - Horizontal Flip.
 
     expected[0] = 0x00FF0000;
     expected[1] = 0xFF000000;
@@ -482,7 +482,7 @@ static void test_StretchBlt(void)
     expected[3] = 0x0000FF00;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             1, 1, -2, -2, 1, 0, -2, 2, expected, __LINE__); // Case 0001 (1) - Vertical Flip. 
+                             1, 1, -2, -2, 1, 0, -2, 2, expected, __LINE__); // Case 0001 (1) - Vertical Flip.
 
     expected[0] = 0x000000FF;
     expected[1] = 0x0000FF00;
@@ -800,7 +800,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     }
 
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                            1, 1, -2, -2, 0, 1, 2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 0010 (2) - Horizontal Flip. 
+                            1, 1, -2, -2, 0, 1, 2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 0010 (2) - Horizontal Flip.
 
     if ((SrcTopDown || DstTopDown) && !(SrcTopDown && DstTopDown))
     {
@@ -818,7 +818,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     }
 
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                            1, 1, -2, -2, 1, 0, -2, 2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 0001 (1) - Vertical Flip. 
+                            1, 1, -2, -2, 1, 0, -2, 2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 0001 (1) - Vertical Flip.
 
     if ((SrcTopDown || DstTopDown) && !(SrcTopDown && DstTopDown))
     {

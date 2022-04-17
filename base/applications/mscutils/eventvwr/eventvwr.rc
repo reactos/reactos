@@ -76,6 +76,9 @@ IDI_COPY ICON "res/copy.ico"
 #ifdef LANGUAGE_PT_BR
     #include "lang/pt-BR.rc"
 #endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/pt-PT.rc"
+#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
@@ -99,6 +102,9 @@ IDI_COPY ICON "res/copy.ico"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_HK
+    #include "lang/zh-HK.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"

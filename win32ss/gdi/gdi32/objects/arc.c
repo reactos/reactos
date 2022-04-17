@@ -54,15 +54,15 @@ AngleArc(
     _In_ FLOAT eStartAngle,
     _In_ FLOAT eSweepAngle)
 {
-    HANDLE_METADC(BOOL,
+    HANDLE_EMETAFDC(BOOL,
                   AngleArc,
                   FALSE,
                   hdc,
                   x,
                   y,
                   dwRadius,
-                  RCAST(DWORD, eStartAngle),
-                  RCAST(DWORD, eSweepAngle));
+                  eStartAngle,
+                  eSweepAngle);
 
     if ( GdiConvertAndCheckDC(hdc) == NULL ) return FALSE;
 
@@ -87,7 +87,7 @@ ArcTo(
     _In_ INT xRadial2,
     _In_ INT yRadial2)
 {
-    HANDLE_METADC(BOOL,
+    HANDLE_EMETAFDC(BOOL,
                   ArcTo,
                   FALSE,
                   hdc,

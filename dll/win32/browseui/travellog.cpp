@@ -279,7 +279,7 @@ HRESULT CTravelLog::FindRelativeEntry(int _offset, CTravelEntry **foundEntry)
     }
     if (curEntry == NULL)
         return E_INVALIDARG;
-    
+
     *foundEntry = curEntry;
 
     TRACE("CTravelLog::FindRelativeEntry for offset %d, returning %p\n", offset, *foundEntry);
@@ -398,7 +398,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetTravelEntry(IUnknown *punk, int iOffset
 {
     CTravelEntry                            *destinationEntry;
     HRESULT                                 hResult;
-    
+
     hResult = FindRelativeEntry(iOffset, &destinationEntry);
     if (FAILED(hResult))
         return hResult;

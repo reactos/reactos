@@ -52,8 +52,8 @@ struct test_data Tests[] =
     {__LINE__, L"\\\\?\\", NULL, 0, E_INVALIDARG, 0},
     /* Tests for the shell: protocol */
     {__LINE__, L"shell:", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},
-    {__LINE__, L"shell::", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},   
-    {__LINE__, L"shell:::", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},   
+    {__LINE__, L"shell::", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},
+    {__LINE__, L"shell:::", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},
     {__LINE__, L"shell:::{", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},
     {__LINE__, L"shell:fail", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},
     {__LINE__, L"shell:::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
@@ -87,8 +87,8 @@ struct test_data Tests[] =
     {__LINE__, L"ftp://ftp.gnu.org/gnu/octave/", L"ftp://ftp.gnu.org/gnu/octave/", 0, S_OK, T_VISTA_PLUS},
     /* Tests for CRegFolder */
     {__LINE__, L"::", NULL, 0, CO_E_CLASSSTRING, 0},
-    {__LINE__, L"::{", NULL, 0, CO_E_CLASSSTRING, 0},  
-    {__LINE__, L"::{ ", NULL, 0, CO_E_CLASSSTRING, 0},  
+    {__LINE__, L"::{", NULL, 0, CO_E_CLASSSTRING, 0},
+    {__LINE__, L"::{ ", NULL, 0, CO_E_CLASSSTRING, 0},
     {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
     {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D} ", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
     {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}a", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},

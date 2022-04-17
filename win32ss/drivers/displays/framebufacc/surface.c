@@ -21,7 +21,7 @@
 
 #include "framebufacc.h"
 
-BOOL 
+BOOL
 InitSurface(PPDEV ppdev,
             BOOL bForcemapping)
 {
@@ -48,12 +48,12 @@ InitSurface(PPDEV ppdev,
    }
 
    /* Check if mapping is need it */
-   if ((!bForcemapping) && 
+   if ((!bForcemapping) &&
        (!RemappingNeeded))
    {
        return TRUE;
    }
-   
+
 
    /*
     * Map the framebuffer into our memory.
@@ -78,7 +78,7 @@ InitSurface(PPDEV ppdev,
    /*
     * Video memory cached
     *
-    * We maby should only ask max 8MB as cached ?, think of the video ram length is 256MB 
+    * We maby should only ask max 8MB as cached ?, think of the video ram length is 256MB
     */
 
     ppdev->pVideoMemCache = NULL;
@@ -152,7 +152,7 @@ DrvEnableSurface(
    /* Setup surface and force the mapping */
    if (!InitSurface(ppdev, TRUE))
    {
-       return FALSE;
+       return NULL;
    }
 
    /* Rest the desktop vitual position */
@@ -180,7 +180,7 @@ DrvEnableSurface(
          break;
 
       default:
-         return FALSE;
+         return NULL;
    }
 
    ppdev->iDitherFormat = BitmapType;
@@ -193,7 +193,7 @@ DrvEnableSurface(
                                      ppdev->ScreenPtr);
    if (hSurface == NULL)
    {
-      return FALSE;
+      return NULL;
    }
 
    /* Which api we hooking to */
@@ -203,11 +203,11 @@ DrvEnableSurface(
     * Associate the surface with our device.
     */
 
-                
+
    if (!EngAssociateSurface(hSurface, ppdev->hDevEng, ppdev->dwHooks))
    {
       EngDeleteSurface(hSurface);
-      return FALSE;
+      return NULL;
    }
 
    ppdev->hSurfEng = hSurface;
@@ -306,7 +306,7 @@ DrvAssertMode(
                                            ppdev->ScreenDelta, NULL);
             }
 
-            /* if the pRealVideoMem == ppdev->pRealVideoMem are 
+            /* if the pRealVideoMem == ppdev->pRealVideoMem are
              * the Result is then TRUE
              */
       }

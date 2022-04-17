@@ -209,7 +209,7 @@ LoadXYCoordWnd(IN PPREFERENCES_CONTEXT PrefContext)
 
     /* Cache the Y coordinate point */
     PrefContext->MixerWindow->WndPosY = dwData;
-    
+
     RegCloseKey(hKey);
     return TRUE;
 }
@@ -222,7 +222,7 @@ SaveXYCoordWnd(IN HWND hWnd,
     LONG lResult;
     TCHAR DeviceMixerSettings[256];
     WINDOWPLACEMENT wp;
-    
+
     /* Get the placement coordinate data from the window */
     wp.length = sizeof(WINDOWPLACEMENT);
     GetWindowPlacement(hWnd, &wp);

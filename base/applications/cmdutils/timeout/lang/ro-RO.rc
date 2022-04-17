@@ -4,9 +4,9 @@
  * PURPOSE:     Timeout Utility in Romanian language
  * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
  */
- 
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
- 
+
 STRINGTABLE
 BEGIN
     IDS_USAGE "Utilitatea Timeout de ReactOS\n\

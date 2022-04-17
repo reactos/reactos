@@ -1128,7 +1128,7 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
             ULONG HblankDuration;
             ULONG VerticalRetraceStart = VgaCrtcRegisters[VGA_CRTC_START_VERT_RETRACE_REG];
             ULONG VerticalRetraceEnd;
-    
+
             VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS8) << 6;
             VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS9) << 2;
 

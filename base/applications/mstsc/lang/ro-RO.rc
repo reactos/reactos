@@ -1,9 +1,9 @@
-/* 
+/*
  * FILE:        base/applications/mstsc/lang/ro-RO.rc
  *              ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot com)
  */
- 
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_GENERAL DIALOGEX 0, 0, 242, 175

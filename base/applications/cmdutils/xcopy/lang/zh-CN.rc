@@ -1,22 +1,28 @@
-/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/*
+ * PROJECT:     xcopy command
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
     STRING_INVPARMS, "无效的参数数目 - 使用 xcopy /? 查看帮助\n"
-    STRING_INVPARM,  "无效的参数 '%1' - 使用 xcopy /? 查看帮助\n"
+    STRING_INVPARM,  "无效的参数“%1” - 使用 xcopy /? 查看帮助\n"
     STRING_PAUSE,    "请按 <Enter> 开始复制\n"
     STRING_SIMCOPY,  "%1!d! 个文件将被复制\n"
     STRING_COPY,     "%1!d! 个文件已复制\n"
-    STRING_QISDIR,   "'%1' 在目标系统上是文件名或\n\
+    STRING_QISDIR,   "“%1” 在目标系统上是文件名或\n\
                      目录吗？\n\
-                     (F - 文件, D - 目录)\n"
+                     （F - 文件，D - 目录）\n"
     STRING_SRCPROMPT,"%1? (Yes|No)\n"
-    STRING_OVERWRITE,"要覆盖 %1 吗? (Yes|No|All)\n"
-    STRING_COPYFAIL, "从 '%1' 到 '%2' 复制失败， r/c %3!d!\n"
-    STRING_OPENFAIL, "无法打开 '%1'\n"
-    STRING_READFAIL, "读取 '%1' 时失败\n"
+    STRING_OVERWRITE,"要覆盖 %1 吗？ (Yes|No|All)\n"
+    STRING_COPYFAIL, "从“%1”到“%2”复制失败， r/c %3!d!\n"
+    STRING_OPENFAIL, "无法打开“%1”\n"
+    STRING_READFAIL, "读取“%1”时失败\n"
     STRING_YES_CHAR, "Y"
     STRING_NO_CHAR,  "N"
     STRING_ALL_CHAR, "A"
@@ -26,11 +32,11 @@ STRINGTABLE
     STRING_HELP,
 "XCOPY - 复制源文件或目录树到目标。\n\
 \n\
-语法:\n\
+语法：\n\
 XCOPY 源 [目标] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
-\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y] [/K]\n\
 \n\
-地点:\n\
+详细说明：\n\
 \n\
 [/I]  如果目标不存在并且复制超过两个或更多文件则\n\
 \t假设目标是个目录。\n\
@@ -52,7 +58,7 @@ XCOPY 源 [目标] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 [/A]  仅复制具有存档属性设置的文件。\n\
 [/M]  仅复制具有存档属性设置的文件，并删除\n\
 \t存档属性。\n\
-[/K]  Copy file attributes, without this attributes are not preserved.\n\
+[/K]  复制文件属性。不指定该选项则不保留属性。\n\
 [/D | /D:m-d-y] 复制指定日期后的新文件或新修改的文件。\n\
 \t\t如果指定没有日期，则只复制目标中比源中旧的文件。\n\n"
 

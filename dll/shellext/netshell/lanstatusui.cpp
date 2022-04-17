@@ -146,7 +146,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->Status  != 2)
         {
             hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC), IMAGE_ICON, 32, 32, LR_SHARED);
-            pContext->Status = 2; 
+            pContext->Status = 2;
         }
         else if (pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 3)
         {
@@ -295,7 +295,7 @@ InsertColumnToListView(
 static
 VOID
 AddIPAddressToListView(
-    HWND hDlgCtrl, 
+    HWND hDlgCtrl,
     PIP_ADDR_STRING pAddr,
     INT Index)
 {
@@ -660,7 +660,7 @@ LANStatusUiDlg(
             {
                 if (pContext)
                 {
-                    ShowNetConnectionProperties(pContext->pNet, GetParent(pContext->hwndDlg)); 
+                    ShowNetConnectionProperties(pContext->pNet, GetParent(pContext->hwndDlg));
                     BringWindowToTop(GetParent(pContext->hwndDlg));
                 }
                 break;
@@ -700,7 +700,7 @@ InitializePropertyDialog(
 
     /* get the IfTable */
     dwSize = 0;
-    dwResult = GetAdaptersInfo(NULL, &dwSize); 
+    dwResult = GetAdaptersInfo(NULL, &dwSize);
     if (dwResult!= ERROR_BUFFER_OVERFLOW)
     {
         CoTaskMemFree(pStr);

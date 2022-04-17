@@ -4,6 +4,7 @@
  * PURPOSE:     Comparing text files
  * COPYRIGHT:   Copyright 2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
+
 #include "fc.h"
 
 #define IS_SPACE(ch) ((ch) == TEXT(' ') || (ch) == TEXT('\t'))
@@ -510,7 +511,7 @@ Resync(FILECOMPARE *pFC, struct list **pptr0, struct list **pptr1)
     return FCRET_DIFFERENT;
 }
 
-static FCRET 
+static FCRET
 Finalize(FILECOMPARE* pFC, struct list *ptr0, struct list* ptr1, BOOL fDifferent)
 {
     if (!ptr0 && !ptr1)

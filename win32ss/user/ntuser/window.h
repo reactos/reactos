@@ -79,4 +79,27 @@ LONG_PTR FASTCALL co_UserSetWindowLongPtr(HWND, DWORD, LONG_PTR, BOOL);
 HWND FASTCALL IntGetWindow(HWND,UINT);
 LRESULT co_UserFreeWindow(PWND,PPROCESSINFO,PTHREADINFO,BOOLEAN);
 
+#define HWND_TERMINATOR ((HWND)(ULONG_PTR)1)
+
+typedef struct tagWINDOWLIST
+{
+    struct tagWINDOWLIST *pNextList;
+    HWND *phwndLast;
+    HWND *phwndEnd;
+    PTHREADINFO pti;
+    HWND ahwnd[ANYSIZE_ARRAY]; /* Terminated by HWND_TERMINATOR */
+} WINDOWLIST, *PWINDOWLIST;
+
+extern PWINDOWLIST gpwlList;
+extern PWINDOWLIST gpwlCache;
+
+#define WL_IS_BAD(pwl)   ((pwl)->phwndEnd <= (pwl)->phwndLast)
+#define WL_CAPACITY(pwl) ((pwl)->phwndEnd - &((pwl)->ahwnd[0]))
+
+PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti);
+VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget);
+
+/* Undocumented dwFlags for IntBuildHwndList */
+#define IACE_LIST  0x0002
+
 /* EOF */

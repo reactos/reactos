@@ -94,6 +94,7 @@ int wmain(int argc, const LPWSTR argv[])
     timeout = 0;
 
     CreatePartitionList();
+    CreateVolumeList();
 
     /* If there are no command arguments, then go straight to the interpreter */
     if (argc < 2)
@@ -190,6 +191,7 @@ int wmain(int argc, const LPWSTR argv[])
     ConResPuts(StdOut, IDS_APP_LEAVING);
 
 done:
+    DestroyVolumeList();
     DestroyPartitionList();
 
     return result;

@@ -7,21 +7,6 @@
 #include "shelltest.h"
 #include "undocshell.h"
 
-static UINT s_uShellHookMsg = 0;
-static HWND s_hwndHookViewer = NULL;
-static HWND s_hwndParent = NULL;
-static HWND s_hwndTarget = NULL;
-static UINT s_nWindowCreatedCount = 0;
-static WCHAR s_szName[] = L"ReactOS ShellHook testcase";
-
-static HWND
-DoCreateWindow(HWND hwndParent, DWORD style, DWORD exstyle)
-{
-    return CreateWindowExW(exstyle, s_szName, s_szName, style,
-                           CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
-                           hwndParent, NULL, GetModuleHandleW(NULL), NULL);
-}
-
 struct TEST_ENTRY
 {
     INT lineno;
@@ -47,7 +32,7 @@ struct TEST_ENTRY
 #define TYPE_1 FALSE, TRUE
 #define TYPE_2 TRUE, TRUE
 
-static const TEST_ENTRY s_entries[] =
+static const TEST_ENTRY s_entries1[] =
 {
     // TYPE_0
     { __LINE__, 0, TYPE_0, STYLE_0, EXSTYLE_0 },
@@ -260,7 +245,152 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, 0, TYPE_2, STYLE_2, EXSTYLE_3, STYLE_2, EXSTYLE_3 },
 };
 
-static const size_t s_num_entries = sizeof(s_entries) / sizeof(s_entries[0]);
+typedef struct RUDEAPP_TEST_ENTRY
+{
+    INT lineno;
+    UINT nCount;
+    DWORD style;
+    DWORD exstyle;
+    BOOL bSetForeground;
+    BOOL bFullscreen;
+    BOOL bSetFullscreen;
+} RUDEAPP_TEST_ENTRY;
+
+static const RUDEAPP_TEST_ENTRY s_entries2[] =
+{
+    /* STYLE_0 */
+    { __LINE__, 0, STYLE_0, EXSTYLE_0, FALSE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_0, FALSE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_0, FALSE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_0, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_0, TRUE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_0, TRUE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_0, TRUE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_0, TRUE, TRUE, TRUE },
+
+    { __LINE__, 0, STYLE_0, EXSTYLE_1, FALSE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_1, FALSE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_1, FALSE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_1, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_1, TRUE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_1, TRUE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_1, TRUE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_1, TRUE, TRUE, TRUE },
+
+    { __LINE__, 0, STYLE_0, EXSTYLE_2, FALSE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_2, FALSE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_2, FALSE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_2, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_2, TRUE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_2, TRUE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_2, TRUE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_2, TRUE, TRUE, TRUE },
+
+    { __LINE__, 0, STYLE_0, EXSTYLE_3, FALSE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_3, FALSE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_3, FALSE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_3, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_3, TRUE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_3, TRUE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_3, TRUE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_0, EXSTYLE_3, TRUE, TRUE, TRUE },
+
+    /* STYLE_1 */
+    { __LINE__, 0, STYLE_1, EXSTYLE_0, FALSE, FALSE, FALSE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_0, FALSE, FALSE, TRUE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_0, FALSE, TRUE, FALSE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_0, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_0, TRUE, FALSE, FALSE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_0, TRUE, FALSE, TRUE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_0, TRUE, TRUE, FALSE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_0, TRUE, TRUE, TRUE },
+
+    { __LINE__, 0, STYLE_1, EXSTYLE_1, FALSE, FALSE, FALSE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_1, FALSE, FALSE, TRUE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_1, FALSE, TRUE, FALSE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_1, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_1, TRUE, FALSE, FALSE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_1, TRUE, FALSE, TRUE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_1, TRUE, TRUE, FALSE },
+    { __LINE__, 1, STYLE_1, EXSTYLE_1, TRUE, TRUE, TRUE },
+
+    { __LINE__, 0, STYLE_1, EXSTYLE_2, FALSE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_2, FALSE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_2, FALSE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_2, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_2, TRUE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_2, TRUE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_2, TRUE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_2, TRUE, TRUE, TRUE },
+
+    { __LINE__, 0, STYLE_1, EXSTYLE_3, FALSE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_3, FALSE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_3, FALSE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_3, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_3, TRUE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_3, TRUE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_3, TRUE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_1, EXSTYLE_3, TRUE, TRUE, TRUE },
+
+    /* STYLE_2 */
+    { __LINE__, 0, STYLE_2, EXSTYLE_0, FALSE, FALSE, FALSE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_0, FALSE, FALSE, TRUE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_0, FALSE, TRUE, FALSE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_0, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_0, TRUE, FALSE, FALSE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_0, TRUE, FALSE, TRUE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_0, TRUE, TRUE, FALSE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_0, TRUE, TRUE, TRUE },
+
+    { __LINE__, 0, STYLE_2, EXSTYLE_1, FALSE, FALSE, FALSE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_1, FALSE, FALSE, TRUE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_1, FALSE, TRUE, FALSE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_1, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_1, TRUE, FALSE, FALSE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_1, TRUE, FALSE, TRUE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_1, TRUE, TRUE, FALSE },
+    { __LINE__, 1, STYLE_2, EXSTYLE_1, TRUE, TRUE, TRUE },
+
+    { __LINE__, 0, STYLE_2, EXSTYLE_2, FALSE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_2, FALSE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_2, FALSE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_2, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_2, TRUE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_2, TRUE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_2, TRUE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_2, TRUE, TRUE, TRUE },
+
+    { __LINE__, 0, STYLE_2, EXSTYLE_3, FALSE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_3, FALSE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_3, FALSE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_3, FALSE, TRUE, TRUE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_3, TRUE, FALSE, FALSE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_3, TRUE, FALSE, TRUE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_3, TRUE, TRUE, FALSE },
+    { __LINE__, 0, STYLE_2, EXSTYLE_3, TRUE, TRUE, TRUE },
+};
+
+static UINT s_uShellHookMsg = 0;
+static HWND s_hwndHookViewer = NULL;
+static HWND s_hwndParent = NULL;
+static HWND s_hwndTarget = NULL;
+static UINT s_nWindowCreatedCount = 0;
+static UINT s_nRudeAppActivated = 0;
+static WCHAR s_szName[] = L"ReactOS ShellHook testcase";
+
+static HWND
+DoCreateWindow(HWND hwndParent, DWORD style, DWORD exstyle, BOOL bFullscreen = FALSE)
+{
+    INT x = CW_USEDEFAULT, y = CW_USEDEFAULT, cx = 100, cy = 100;
+    if (bFullscreen)
+    {
+        x = y = 0;
+        cx = GetSystemMetrics(SM_CXSCREEN);
+        cy = GetSystemMetrics(SM_CYSCREEN);
+    }
+    return CreateWindowExW(exstyle, s_szName, s_szName, style, x, y, cx, cy,
+                           hwndParent, NULL, GetModuleHandleW(NULL), NULL);
+}
 
 static void DoTestEntryPart1(const TEST_ENTRY *pEntry)
 {
@@ -300,6 +430,34 @@ static void DoTestEntryPart2(const TEST_ENTRY *pEntry)
     }
 }
 
+static void DoRudeAppTest1(const RUDEAPP_TEST_ENTRY *pEntry)
+{
+    s_hwndParent = NULL;
+
+    DWORD style = pEntry->style;
+    DWORD exstyle = pEntry->exstyle;
+
+    s_nRudeAppActivated = 0;
+    s_hwndTarget = DoCreateWindow(s_hwndParent, style, exstyle, pEntry->bFullscreen);
+    if (pEntry->bSetForeground)
+        SetForegroundWindow(s_hwndTarget);
+    if (pEntry->bSetFullscreen)
+    {
+        MoveWindow(s_hwndTarget, 0, 0,
+                   GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), TRUE);
+    }
+}
+
+static void DoRudeAppTest2(const RUDEAPP_TEST_ENTRY *pEntry)
+{
+    ok(s_nRudeAppActivated == pEntry->nCount,
+       "Line %d: s_nRudeAppActivated expected %u but was %u\n",
+       pEntry->lineno, pEntry->nCount, s_nRudeAppActivated);
+
+    PostMessageW(s_hwndTarget, WM_CLOSE, 0, 0);
+    s_hwndTarget = NULL;
+}
+
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -312,10 +470,18 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
                 ++s_nWindowCreatedCount;
                 break;
+
+            case HSHELL_RUDEAPPACTIVATED:
+                if ((HWND)lParam != s_hwndTarget)
+                    break;
+                ++s_nRudeAppActivated;
+                break;
         }
     }
 #define ID_IGNITION 1000
 #define ID_BURNING 2000
+#define ID_RUDEAPPTEST1 3000
+#define ID_RUDEAPPTEST2 4000
     switch (uMsg)
     {
         case WM_CREATE:
@@ -328,20 +494,38 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (ID_IGNITION <= wParam && wParam < ID_BURNING)
             {
                 INT i = (INT)wParam - ID_IGNITION;
-                DoTestEntryPart1(&s_entries[i]);
+                DoTestEntryPart1(&s_entries1[i]);
                 PostMessageW(hwnd, WM_COMMAND, ID_BURNING + i, 0);
             }
-            else if (ID_BURNING <= wParam)
+            else if (ID_BURNING <= wParam && wParam < ID_RUDEAPPTEST1)
             {
                 INT i = (INT)wParam - ID_BURNING;
-                DoTestEntryPart2(&s_entries[i]);
+                DoTestEntryPart2(&s_entries1[i]);
                 ++i;
-                if (i == (INT)s_num_entries)
+                if (i == (INT)_countof(s_entries1))
+                {
+                    PostMessageW(hwnd, WM_COMMAND, ID_RUDEAPPTEST1, 0);
+                    break;
+                }
+                PostMessageW(hwnd, WM_COMMAND, ID_IGNITION + i, 0);
+            }
+            else if (ID_RUDEAPPTEST1 <= wParam && wParam < ID_RUDEAPPTEST2)
+            {
+                INT i = (INT)wParam - ID_RUDEAPPTEST1;
+                DoRudeAppTest1(&s_entries2[i]);
+                PostMessageW(hwnd, WM_COMMAND, ID_RUDEAPPTEST2 + i, 0);
+            }
+            else if (ID_RUDEAPPTEST2 <= wParam)
+            {
+                INT i = (INT)wParam - ID_RUDEAPPTEST2;
+                DoRudeAppTest2(&s_entries2[i]);
+                ++i;
+                if (i == (INT)_countof(s_entries2))
                 {
                     PostQuitMessage(0);
                     break;
                 }
-                PostMessageW(hwnd, WM_COMMAND, ID_IGNITION + i, 0);
+                PostMessageW(hwnd, WM_COMMAND, ID_RUDEAPPTEST1 + i, 0);
             }
             break;
         default:

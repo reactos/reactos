@@ -58,7 +58,7 @@ static void test_RtlQueryTimeZoneInformation(void)
     dwRet = GetTimeZoneInformation(&tziOld);
 
     ok(dwRet == TIME_ZONE_ID_STANDARD || dwRet == TIME_ZONE_ID_UNKNOWN || dwRet == TIME_ZONE_ID_DAYLIGHT,
-        "Get Time Zone Name failed with error = %ld.\n", GetLastError()); 
+        "Get Time Zone Name failed with error = %ld.\n", GetLastError());
 
     // Adjust the time zone information
 
@@ -82,7 +82,7 @@ static void test_RtlQueryTimeZoneInformation(void)
 
     SetLastError(0xDEADBEEF);
 
-    ok(SetTimeZoneInformation(&tziNew) , 
+    ok(SetTimeZoneInformation(&tziNew) ,
         "Set Time Zone Information failed with error = %ld.\n", GetLastError());
 
     // if we got an error the function failed, so there is not much else we can do
@@ -98,7 +98,7 @@ static void test_RtlQueryTimeZoneInformation(void)
     dwRet = GetTimeZoneInformation(&tziTest);
 
     ok(dwRet == TIME_ZONE_ID_STANDARD || dwRet == TIME_ZONE_ID_UNKNOWN || dwRet == TIME_ZONE_ID_DAYLIGHT,
-        "Get Time Zone Information Returned failed with error = %ld.\n", GetLastError()); 
+        "Get Time Zone Information Returned failed with error = %ld.\n", GetLastError());
 
     ok(!wcscmp(tziTest.StandardName, tziNew.StandardName),
         "Standard Time Zone Name = %ls, expected %ls.\n", tziTest.StandardName, tziNew.StandardName);

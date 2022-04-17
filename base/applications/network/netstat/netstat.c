@@ -434,7 +434,6 @@ BOOL ShowTcpTable(VOID)
     {
         ConResPrintf(StdErr, IDS_ERROR_TCP_SNAPSHOT);
         DoFormatMessage(error);
-        HeapFree(GetProcessHeap(), 0, tcpTable);
         return FALSE;
     }
 

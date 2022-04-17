@@ -21,6 +21,7 @@ DefaultDestDir = 12
 %GenericBulkOnlyTransport.DeviceDesc% = USBBulkOnly_Inst,USB\Class_08&SubClass_06&Prot_50 ; SCSI devices
 ; usbstor.sys supports usb-cdroms but cdrom.sys from ReactOS does not like it
 %GenericBulkOnlyTransport.DeviceDesc% = USBBulkOnly_Inst,USB\Class_08&SubClass_02&Prot_50 ; SFF-8020i (ATAPI)
+%GenericBulkOnlyTransport.DeviceDesc% = USBBulkOnly_Inst,USB\Class_08&SubClass_05&Prot_50 ; SFF-8070i (ATAPI Removable/Rewritable)
 
 ;-------------------------- USB STORAGE DRIVER --------------------------
 
@@ -46,6 +47,10 @@ ReactOS = "ReactOS Team"
 
 GenericMfg = "(Generic USB devices)"
 GenericBulkOnlyTransport.DeviceDesc = "USB Storage device"
+
+[Strings.0404]
+GenericMfg = "（標準 USB 裝置）"
+GenericBulkOnlyTransport.DeviceDesc = "USB 儲存裝置"
 
 [Strings.0405]
 GenericMfg = "(Generická USB zařízení)"
@@ -95,7 +100,7 @@ GenericBulkOnlyTransport.DeviceDesc = "USB úložné zariadenie"
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 
-GenericMfg = "(Umûmî USB Aygıtları)"
+GenericMfg = "(Genel USB Aygıtları)"
 GenericBulkOnlyTransport.DeviceDesc = "USB Depolama Aygıtı"
 
 [Strings.0422]
@@ -108,5 +113,9 @@ GenericMfg = "(Standartiniai USB įrenginiai)"
 GenericBulkOnlyTransport.DeviceDesc = "USB atminties įrenginys"
 
 [Strings.0804]
-GenericMfg = "(通用 USB 设备)"
+GenericMfg = "（通用 USB 设备）"
 GenericBulkOnlyTransport.DeviceDesc = "USB 存储设备"
+
+[Strings.0c04]
+GenericMfg = "（標準 USB 裝置）"
+GenericBulkOnlyTransport.DeviceDesc = "USB 儲存裝置"

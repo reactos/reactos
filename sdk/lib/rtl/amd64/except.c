@@ -70,7 +70,7 @@ RtlpGetExceptionAddress(VOID)
 
 BOOLEAN
 NTAPI
-RtplUnwindInternal(
+RtlpUnwindInternal(
     _In_opt_ PVOID TargetFrame,
     _In_opt_ PVOID TargetIp,
     _In_ PEXCEPTION_RECORD ExceptionRecord,
@@ -101,7 +101,7 @@ RtlDispatchException(
     }
 
     /* Call the internal unwind routine */
-    Handled = RtplUnwindInternal(NULL, // TargetFrame
+    Handled = RtlpUnwindInternal(NULL, // TargetFrame
                                  NULL, // TargetIp
                                  ExceptionRecord,
                                  0, // ReturnValue

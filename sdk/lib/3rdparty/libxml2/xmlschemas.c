@@ -860,6 +860,7 @@ struct _xmlSchemaIDCMatcher {
     int sizeKeySeqs;
     xmlSchemaItemListPtr targets; /* list of target-node
                                      (xmlSchemaPSVIIDCNodePtr) entries */
+    xmlHashTablePtr htab;
 };
 
 /*
@@ -1002,11 +1003,11 @@ struct _xmlSchemaValidCtxt {
     int xsiAssemble;
 
     int depth;
-    xmlSchemaNodeInfoPtr *elemInfos; /* array of element informations */
+    xmlSchemaNodeInfoPtr *elemInfos; /* array of element information */
     int sizeElemInfos;
     xmlSchemaNodeInfoPtr inode; /* the current element information */
 
-    xmlSchemaIDCAugPtr aidcs; /* a list of augmented IDC informations */
+    xmlSchemaIDCAugPtr aidcs; /* a list of augmented IDC information */
 
     xmlSchemaIDCStateObjPtr xpathStates; /* first active state object. */
     xmlSchemaIDCStateObjPtr xpathStatePool; /* first stored state object. */
@@ -1053,6 +1054,18 @@ typedef xmlSchemaSubstGroup *xmlSchemaSubstGroupPtr;
 struct _xmlSchemaSubstGroup {
     xmlSchemaElementPtr head;
     xmlSchemaItemListPtr members;
+};
+
+/**
+ * xmlIDCHashEntry:
+ *
+ * an entry in hash tables to quickly look up keys/uniques
+ */
+typedef struct _xmlIDCHashEntry xmlIDCHashEntry;
+typedef xmlIDCHashEntry *xmlIDCHashEntryPtr;
+struct _xmlIDCHashEntry {
+    xmlIDCHashEntryPtr next; /* next item with same hash */
+    int index;               /* index into associated item list */
 };
 
 /************************************************************************
@@ -1478,6 +1491,7 @@ xmlSchemaWildcardPCToString(int pc)
  * @val: the precomputed value
  * @retValue: the returned value
  * @ws: the whitespace type of the value
+ * @for_hash: non-zero if this is supposed to generate a string for hashing
  *
  * Get a the canonical representation of the value.
  * The caller has to free the returned retValue.
@@ -1486,9 +1500,10 @@ xmlSchemaWildcardPCToString(int pc)
  *         API errors or if the value type is not supported yet.
  */
 static int
-xmlSchemaGetCanonValueWhtspExt(xmlSchemaValPtr val,
-			       xmlSchemaWhitespaceValueType ws,
-			       xmlChar **retValue)
+xmlSchemaGetCanonValueWhtspExt_1(xmlSchemaValPtr val,
+			         xmlSchemaWhitespaceValueType ws,
+			         xmlChar **retValue,
+				 int for_hash)
 {
     int list;
     xmlSchemaValType valType;
@@ -1522,6 +1537,20 @@ xmlSchemaGetCanonValueWhtspExt(xmlSchemaValPtr val,
 			xmlFree((xmlChar *) value2);
 		    goto internal_error;
 		}
+		if (for_hash && valType == XML_SCHEMAS_DECIMAL) {
+		    /* We can mostly use the canonical value for hashing,
+		       except in the case of decimal.  There the canonical
+		       representation requires a trailing '.0' even for
+		       non-fractional numbers, but for the derived integer
+		       types it forbids any decimal point.  Nevertheless they
+		       compare equal if the value is equal.  We need to generate
+		       the same hash value for this to work, and it's easiest
+		       to just cut off the useless '.0' suffix for the
+		       decimal type.  */
+		    int len = xmlStrlen(value2);
+		    if (len > 2 && value2[len-1] == '0' && value2[len-2] == '.')
+		      ((xmlChar*)value2)[len-2] = 0;
+		}
 		value = value2;
 	}
 	if (*retValue == NULL)
@@ -1546,6 +1575,22 @@ internal_error:
     if (value2 != NULL)
 	xmlFree((xmlChar *) value2);
     return (-1);
+}
+
+static int
+xmlSchemaGetCanonValueWhtspExt(xmlSchemaValPtr val,
+			       xmlSchemaWhitespaceValueType ws,
+			       xmlChar **retValue)
+{
+    return xmlSchemaGetCanonValueWhtspExt_1(val, ws, retValue, 0);
+}
+
+static int
+xmlSchemaGetCanonValueHash(xmlSchemaValPtr val,
+			   xmlChar **retValue)
+{
+    return xmlSchemaGetCanonValueWhtspExt_1(val, XML_SCHEMA_WHITESPACE_COLLAPSE,
+					    retValue, 1);
 }
 
 /**
@@ -1873,7 +1918,7 @@ xmlSchemaPSimpleErr(const char *msg)
 /**
  * xmlSchemaPErrMemory:
  * @node: a context node
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle an out of memory condition
  */
@@ -1995,7 +2040,7 @@ xmlSchemaPErrExt(xmlSchemaParserCtxtPtr ctxt, xmlNodePtr node, int error,
 /**
  * xmlSchemaVTypeErrMemory:
  * @node: a context node
- * @extra:  extra informations
+ * @extra:  extra information
  *
  * Handle an out of memory condition
  */
@@ -6031,7 +6076,7 @@ xmlSchemaPValAttrID(xmlSchemaParserCtxtPtr ctxt,
 /**
  * xmlGetMaxOccurs:
  * @ctxt:  a schema validation context
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * Get the maxOccurs property
  *
@@ -6074,7 +6119,16 @@ xmlGetMaxOccurs(xmlSchemaParserCtxtPtr ctxt, xmlNodePtr node,
 	return (def);
     }
     while ((*cur >= '0') && (*cur <= '9')) {
-        ret = ret * 10 + (*cur - '0');
+        if (ret > INT_MAX / 10) {
+            ret = INT_MAX;
+        } else {
+            int digit = *cur - '0';
+            ret *= 10;
+            if (ret > INT_MAX - digit)
+                ret = INT_MAX;
+            else
+                ret += digit;
+        }
         cur++;
     }
     while (IS_BLANK_CH(*cur))
@@ -6096,7 +6150,7 @@ xmlGetMaxOccurs(xmlSchemaParserCtxtPtr ctxt, xmlNodePtr node,
 /**
  * xmlGetMinOccurs:
  * @ctxt:  a schema validation context
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * Get the minOccurs property
  *
@@ -6126,7 +6180,16 @@ xmlGetMinOccurs(xmlSchemaParserCtxtPtr ctxt, xmlNodePtr node,
         return (def);
     }
     while ((*cur >= '0') && (*cur <= '9')) {
-        ret = ret * 10 + (*cur - '0');
+        if (ret > INT_MAX / 10) {
+            ret = INT_MAX;
+        } else {
+            int digit = *cur - '0';
+            ret *= 10;
+            if (ret > INT_MAX - digit)
+                ret = INT_MAX;
+            else
+                ret += digit;
+        }
         cur++;
     }
     while (IS_BLANK_CH(*cur))
@@ -6193,7 +6256,7 @@ xmlSchemaPGetBoolNodeValue(xmlSchemaParserCtxtPtr ctxt,
 /**
  * xmlGetBooleanProp:
  * @ctxt:  a schema validation context
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  * @name:  the attribute name
  * @def:  the default value
  *
@@ -6481,7 +6544,7 @@ xmlSchemaCheckReference(xmlSchemaParserCtxtPtr pctxt,
  * xmlSchemaParseLocalAttributes:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  * @type:  the hosting type where the attributes will be anchored
  *
  * Parses attribute uses and attribute declarations and
@@ -6523,7 +6586,7 @@ xmlSchemaParseLocalAttributes(xmlSchemaParserCtxtPtr ctxt, xmlSchemaPtr schema,
  * xmlSchemaParseAnnotation:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema Attribute declaration
  * *WARNING* this interface is highly subject to change
@@ -6643,7 +6706,7 @@ xmlSchemaParseAnnotation(xmlSchemaParserCtxtPtr ctxt, xmlNodePtr node, int neede
  * xmlSchemaParseFacet:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema Facet declaration
  * *WARNING* this interface is highly subject to change
@@ -6734,7 +6797,7 @@ xmlSchemaParseFacet(xmlSchemaParserCtxtPtr ctxt, xmlSchemaPtr schema,
  * xmlSchemaParseWildcardNs:
  * @ctxt:  a schema parser context
  * @wildc:  the wildcard, already created
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * Parses the attribute "processContents" and "namespace"
  * of a xsd:anyAttribute and xsd:any.
@@ -6901,7 +6964,7 @@ xmlSchemaPCheckParticleCorrect_2(xmlSchemaParserCtxtPtr ctxt,
  * xmlSchemaParseAny:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * Parsea a XML schema <any> element. A particle and wildcard
  * will be created (except if minOccurs==maxOccurs==0, in this case
@@ -6996,7 +7059,7 @@ xmlSchemaParseAny(xmlSchemaParserCtxtPtr ctxt, xmlSchemaPtr schema,
  * xmlSchemaParseNotation:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema Notation declaration
  *
@@ -7043,7 +7106,7 @@ xmlSchemaParseNotation(xmlSchemaParserCtxtPtr ctxt, xmlSchemaPtr schema,
  * xmlSchemaParseAnyAttribute:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema AnyAttribute declaration
  * *WARNING* this interface is highly subject to change
@@ -7113,7 +7176,7 @@ xmlSchemaParseAnyAttribute(xmlSchemaParserCtxtPtr ctxt,
  * xmlSchemaParseAttribute:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema Attribute declaration
  * *WARNING* this interface is highly subject to change
@@ -7656,7 +7719,7 @@ xmlSchemaParseGlobalAttribute(xmlSchemaParserCtxtPtr pctxt,
  * xmlSchemaParseAttributeGroupRef:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * Parse an attribute group definition reference.
  * Note that a reference to an attribute group does not
@@ -7789,7 +7852,7 @@ xmlSchemaParseAttributeGroupRef(xmlSchemaParserCtxtPtr pctxt,
  * xmlSchemaParseAttributeGroupDefinition:
  * @pctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema Attribute Group declaration
  * *WARNING* this interface is highly subject to change
@@ -8220,7 +8283,7 @@ xmlSchemaAddAnnotation(xmlSchemaAnnotItemPtr annItem,
  * xmlSchemaParseIDCSelectorAndField:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * Parses a XML Schema identity-constraint definition's
  * <selector> and <field> elements.
@@ -8318,7 +8381,7 @@ xmlSchemaParseIDCSelectorAndField(xmlSchemaParserCtxtPtr ctxt,
  * xmlSchemaParseIDC:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * Parses a XML Schema identity-constraint definition.
  *
@@ -8465,7 +8528,7 @@ xmlSchemaParseIDC(xmlSchemaParserCtxtPtr ctxt,
  * xmlSchemaParseElement:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  * @topLevel: indicates if this is global declaration
  *
  * Parses a XML schema element declaration.
@@ -8864,7 +8927,7 @@ return_null:
  * xmlSchemaParseUnion:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema Union definition
  * *WARNING* this interface is highly subject to change
@@ -9033,7 +9096,7 @@ xmlSchemaParseUnion(xmlSchemaParserCtxtPtr ctxt, xmlSchemaPtr schema,
  * xmlSchemaParseList:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema List definition
  * *WARNING* this interface is highly subject to change
@@ -9144,7 +9207,7 @@ xmlSchemaParseList(xmlSchemaParserCtxtPtr ctxt, xmlSchemaPtr schema,
  * xmlSchemaParseSimpleType:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema Simple Type definition
  * *WARNING* this interface is highly subject to change
@@ -9455,7 +9518,7 @@ xmlSchemaParseModelGroupDefRef(xmlSchemaParserCtxtPtr ctxt,
  * xmlSchemaParseModelGroupDefinition:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * Parses a XML schema model group definition.
  *
@@ -10293,7 +10356,7 @@ xmlSchemaBuildAbsoluteURI(xmlDictPtr dict, const xmlChar* location,
  * xmlSchemaAddSchemaDoc:
  * @pctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * Parse an included (and to-be-redefined) XML schema document.
  *
@@ -10717,7 +10780,7 @@ exit_failure:
  * xmlSchemaParseImport:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema Import definition
  * *WARNING* this interface is highly subject to change
@@ -11209,7 +11272,7 @@ xmlSchemaParseInclude(xmlSchemaParserCtxtPtr pctxt, xmlSchemaPtr schema,
  * xmlSchemaParseModelGroup:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  * @type: the "compositor" type
  * @particleNeeded: if a a model group with a particle
  *
@@ -11489,7 +11552,7 @@ xmlSchemaParseModelGroup(xmlSchemaParserCtxtPtr ctxt, xmlSchemaPtr schema,
  * xmlSchemaParseRestriction:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema Restriction definition
  * *WARNING* this interface is highly subject to change
@@ -11792,7 +11855,7 @@ xmlSchemaParseRestriction(xmlSchemaParserCtxtPtr ctxt, xmlSchemaPtr schema,
  * xmlSchemaParseExtension:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * Parses an <extension>, which is found inside a
  * <simpleContent> or <complexContent>.
@@ -11928,7 +11991,7 @@ xmlSchemaParseExtension(xmlSchemaParserCtxtPtr ctxt, xmlSchemaPtr schema,
  * xmlSchemaParseSimpleContent:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema SimpleContent definition
  * *WARNING* this interface is highly subject to change
@@ -12018,7 +12081,7 @@ xmlSchemaParseSimpleContent(xmlSchemaParserCtxtPtr ctxt,
  * xmlSchemaParseComplexContent:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema ComplexContent definition
  * *WARNING* this interface is highly subject to change
@@ -12113,7 +12176,7 @@ xmlSchemaParseComplexContent(xmlSchemaParserCtxtPtr ctxt,
  * xmlSchemaParseComplexType:
  * @ctxt:  a schema validation context
  * @schema:  the schema being built
- * @node:  a subtree containing XML Schema informations
+ * @node:  a subtree containing XML Schema information
  *
  * parse a XML schema Complex Type definition
  * *WARNING* this interface is highly subject to change
@@ -14658,6 +14721,7 @@ xmlSchemaGetUnionSimpleTypeMemberTypes(xmlSchemaTypePtr type)
     return (NULL);
 }
 
+#if 0
 /**
  * xmlSchemaGetParticleTotalRangeMin:
  * @particle: the particle
@@ -14713,7 +14777,6 @@ xmlSchemaGetParticleTotalRangeMin(xmlSchemaParticlePtr particle)
     }
 }
 
-#if 0
 /**
  * xmlSchemaGetParticleTotalRangeMax:
  * @particle: the particle
@@ -14776,6 +14839,48 @@ xmlSchemaGetParticleTotalRangeMax(xmlSchemaParticlePtr particle)
 #endif
 
 /**
+ * xmlSchemaGetParticleEmptiable:
+ * @particle: the particle
+ *
+ * Returns 1 if emptiable, 0 otherwise.
+ */
+static int
+xmlSchemaGetParticleEmptiable(xmlSchemaParticlePtr particle)
+{
+    xmlSchemaParticlePtr part;
+    int emptiable;
+
+    if ((particle->children == NULL) || (particle->minOccurs == 0))
+	return (1);
+
+    part = (xmlSchemaParticlePtr) particle->children->children;
+    if (part == NULL)
+        return (1);
+
+    while (part != NULL) {
+        if ((part->children->type == XML_SCHEMA_TYPE_ELEMENT) ||
+            (part->children->type == XML_SCHEMA_TYPE_ANY))
+            emptiable = (part->minOccurs == 0);
+        else
+            emptiable = xmlSchemaGetParticleEmptiable(part);
+        if (particle->children->type == XML_SCHEMA_TYPE_CHOICE) {
+            if (emptiable)
+                return (1);
+        } else {
+	    /* <all> and <sequence> */
+            if (!emptiable)
+                return (0);
+        }
+        part = (xmlSchemaParticlePtr) part->next;
+    }
+
+    if (particle->children->type == XML_SCHEMA_TYPE_CHOICE)
+        return (0);
+    else
+        return (1);
+}
+
+/**
  * xmlSchemaIsParticleEmptiable:
  * @particle: the particle
  *
@@ -14797,10 +14902,8 @@ xmlSchemaIsParticleEmptiable(xmlSchemaParticlePtr particle)
     * SPEC (2) "Its {term} is a group and the minimum part of the
     * effective total range of that group, [...] is 0."
     */
-    if (WXS_IS_MODEL_GROUP(particle->children)) {
-	if (xmlSchemaGetParticleTotalRangeMin(particle) == 0)
-	    return (1);
-    }
+    if (WXS_IS_MODEL_GROUP(particle->children))
+	return (xmlSchemaGetParticleEmptiable(particle));
     return (0);
 }
 
@@ -14938,7 +15041,7 @@ xmlSchemaCheckTypeDefCircularInternal(xmlSchemaParserCtxtPtr pctxt,
     }
     if (ancestor->flags & XML_SCHEMAS_TYPE_MARKED) {
 	/*
-	* Avoid inifinite recursion on circular types not yet checked.
+	* Avoid infinite recursion on circular types not yet checked.
 	*/
 	return (0);
     }
@@ -20961,7 +21064,7 @@ xmlSchemaFixupComponents(xmlSchemaParserCtxtPtr pctxt,
 		break;
 	    case XML_SCHEMA_EXTRA_ATTR_USE_PROHIB:
 		/*
-		* Handle attribue prohibition which had a
+		* Handle attribute prohibition which had a
 		* "ref" attribute.
 		*/
 		xmlSchemaResolveAttrUseProhibReferences(
@@ -22293,6 +22396,17 @@ xmlSchemaIDCFreeIDCTable(xmlSchemaPSVIIDCBindingPtr bind)
     }
 }
 
+static void
+xmlFreeIDCHashEntry (void *payload, const xmlChar *name ATTRIBUTE_UNUSED)
+{
+    xmlIDCHashEntryPtr e = payload, n;
+    while (e) {
+	n = e->next;
+	xmlFree(e);
+	e = n;
+    }
+}
+
 /**
  * xmlSchemaIDCFreeMatcherList:
  * @matcher: the first IDC matcher in the list
@@ -22331,6 +22445,8 @@ xmlSchemaIDCFreeMatcherList(xmlSchemaIDCMatcherPtr matcher)
 	    }
 	    xmlSchemaItemListFree(matcher->targets);
 	}
+	if (matcher->htab != NULL)
+	  xmlHashFree(matcher->htab, xmlFreeIDCHashEntry);
 	xmlFree(matcher);
 	matcher = next;
     }
@@ -22380,6 +22496,10 @@ xmlSchemaIDCReleaseMatcherList(xmlSchemaValidCtxtPtr vctxt,
 	    }
 	    xmlSchemaItemListFree(matcher->targets);
 	    matcher->targets = NULL;
+	}
+	if (matcher->htab != NULL) {
+	    xmlHashFree(matcher->htab, xmlFreeIDCHashEntry);
+	    matcher->htab = NULL;
 	}
 	matcher->next = NULL;
 	/*
@@ -22615,10 +22735,10 @@ next_sto:
 }
 
 static const xmlChar *
-xmlSchemaFormatIDCKeySequence(xmlSchemaValidCtxtPtr vctxt,
-			      xmlChar **buf,
-			      xmlSchemaPSVIIDCKeyPtr *seq,
-			      int count)
+xmlSchemaFormatIDCKeySequence_1(xmlSchemaValidCtxtPtr vctxt,
+				xmlChar **buf,
+				xmlSchemaPSVIIDCKeyPtr *seq,
+				int count, int for_hash)
 {
     int i, res;
     xmlChar *value = NULL;
@@ -22626,9 +22746,13 @@ xmlSchemaFormatIDCKeySequence(xmlSchemaValidCtxtPtr vctxt,
     *buf = xmlStrdup(BAD_CAST "[");
     for (i = 0; i < count; i++) {
 	*buf = xmlStrcat(*buf, BAD_CAST "'");
-	res = xmlSchemaGetCanonValueWhtspExt(seq[i]->val,
-	    xmlSchemaGetWhiteSpaceFacetValue(seq[i]->type),
-	    &value);
+	if (!for_hash)
+	    res = xmlSchemaGetCanonValueWhtspExt(seq[i]->val,
+		    xmlSchemaGetWhiteSpaceFacetValue(seq[i]->type),
+		    &value);
+	else {
+	    res = xmlSchemaGetCanonValueHash(seq[i]->val, &value);
+	}
 	if (res == 0)
 	    *buf = xmlStrcat(*buf, BAD_CAST value);
 	else {
@@ -22648,6 +22772,24 @@ xmlSchemaFormatIDCKeySequence(xmlSchemaValidCtxtPtr vctxt,
     *buf = xmlStrcat(*buf, BAD_CAST "]");
 
     return (BAD_CAST *buf);
+}
+
+static const xmlChar *
+xmlSchemaFormatIDCKeySequence(xmlSchemaValidCtxtPtr vctxt,
+			      xmlChar **buf,
+			      xmlSchemaPSVIIDCKeyPtr *seq,
+			      int count)
+{
+    return xmlSchemaFormatIDCKeySequence_1(vctxt, buf, seq, count, 0);
+}
+
+static const xmlChar *
+xmlSchemaHashKeySequence(xmlSchemaValidCtxtPtr vctxt,
+			 xmlChar **buf,
+			 xmlSchemaPSVIIDCKeyPtr *seq,
+			 int count)
+{
+    return xmlSchemaFormatIDCKeySequence_1(vctxt, buf, seq, count, 1);
 }
 
 /**
@@ -23011,15 +23153,25 @@ create_key:
 	    if ((idc->type != XML_SCHEMA_TYPE_IDC_KEYREF) &&
 		(targets->nbItems != 0)) {
 		xmlSchemaPSVIIDCKeyPtr ckey, bkey, *bkeySeq;
+		xmlIDCHashEntryPtr e;
 
-		i = 0;
 		res = 0;
+
+		if (!matcher->htab)
+		    e = NULL;
+		else {
+		    xmlChar *value = NULL;
+		    xmlSchemaHashKeySequence(vctxt, &value, *keySeq, nbKeys);
+		    e = xmlHashLookup(matcher->htab, value);
+		    FREE_AND_NULL(value);
+		}
+
 		/*
 		* Compare the key-sequences, key by key.
 		*/
-		do {
+		for (;e; e = e->next) {
 		    bkeySeq =
-			((xmlSchemaPSVIIDCNodePtr) targets->items[i])->keys;
+			((xmlSchemaPSVIIDCNodePtr) targets->items[e->index])->keys;
 		    for (j = 0; j < nbKeys; j++) {
 			ckey = (*keySeq)[j];
 			bkey = bkeySeq[j];
@@ -23040,9 +23192,8 @@ create_key:
 			*/
 			break;
 		    }
-		    i++;
-		} while (i < targets->nbItems);
-		if (i != targets->nbItems) {
+		}
+		if (e) {
 		    xmlChar *str = NULL, *strB = NULL;
 		    /*
 		    * TODO: Try to report the key-sequence.
@@ -23119,6 +23270,24 @@ create_key:
 		    xmlFree(ntItem);
 		}
 		return (-1);
+	    }
+	    if (idc->type != XML_SCHEMA_TYPE_IDC_KEYREF) {
+		xmlChar *value = NULL;
+		xmlIDCHashEntryPtr r, e;
+		if (!matcher->htab)
+		  matcher->htab = xmlHashCreate(4);
+		xmlSchemaHashKeySequence(vctxt, &value, ntItem->keys, nbKeys);
+		e = xmlMalloc(sizeof *e);
+		e->index = targets->nbItems - 1;
+		r = xmlHashLookup(matcher->htab, value);
+		if (r) {
+		    e->next = r->next;
+		    r->next = e;
+		} else {
+		    e->next = NULL;
+		    xmlHashAddEntry(matcher->htab, value, e);
+		}
+		FREE_AND_NULL(value);
 	    }
 
 	    goto selector_leave;
@@ -23376,6 +23545,10 @@ xmlSchemaIDCFillNodeTables(xmlSchemaValidCtxtPtr vctxt,
 	    matcher->targets->items = NULL;
 	    matcher->targets->sizeItems = 0;
 	    matcher->targets->nbItems = 0;
+	    if (matcher->htab) {
+		xmlHashFree(matcher->htab, xmlFreeIDCHashEntry);
+		matcher->htab = NULL;
+	    }
 	} else {
 	    /*
 	    * Compare the key-sequences and add to the IDC node-table.
@@ -23823,6 +23996,7 @@ xmlSchemaCheckCVCIDCKeyRef(xmlSchemaValidCtxtPtr vctxt)
 	    int i, j, k, res, nbFields, hasDupls;
 	    xmlSchemaPSVIIDCKeyPtr *refKeys, *keys;
 	    xmlSchemaPSVIIDCNodePtr refNode = NULL;
+	    xmlHashTablePtr table = NULL;
 
 	    nbFields = matcher->aidc->def->nbFields;
 
@@ -23840,26 +24014,52 @@ xmlSchemaCheckCVCIDCKeyRef(xmlSchemaValidCtxtPtr vctxt)
 	    /*
 	    * Search for a matching key-sequences.
 	    */
+	    if (bind) {
+		table = xmlHashCreate(bind->nbNodes * 2);
+		for (j = 0; j < bind->nbNodes; j++) {
+		    xmlChar *value;
+		    xmlIDCHashEntryPtr r, e;
+		    keys = bind->nodeTable[j]->keys;
+		    xmlSchemaHashKeySequence(vctxt, &value, keys, nbFields);
+		    e = xmlMalloc(sizeof *e);
+		    e->index = j;
+		    r = xmlHashLookup(table, value);
+		    if (r) {
+			e->next = r->next;
+			r->next = e;
+		    } else {
+			e->next = NULL;
+			xmlHashAddEntry(table, value, e);
+		    }
+		    FREE_AND_NULL(value);
+		}
+	    }
 	    for (i = 0; i < matcher->targets->nbItems; i++) {
 		res = 0;
 		refNode = matcher->targets->items[i];
 		if (bind != NULL) {
+		    xmlChar *value;
+		    xmlIDCHashEntryPtr e;
 		    refKeys = refNode->keys;
-		    for (j = 0; j < bind->nbNodes; j++) {
-			keys = bind->nodeTable[j]->keys;
+		    xmlSchemaHashKeySequence(vctxt, &value, refKeys, nbFields);
+		    e = xmlHashLookup(table, value);
+		    FREE_AND_NULL(value);
+		    res = 0;
+		    for (;e; e = e->next) {
+			keys = bind->nodeTable[e->index]->keys;
 			for (k = 0; k < nbFields; k++) {
 			    res = xmlSchemaAreValuesEqual(keys[k]->val,
-				refKeys[k]->val);
+							  refKeys[k]->val);
 			    if (res == 0)
-				break;
+			        break;
 			    else if (res == -1) {
 				return (-1);
 			    }
 			}
 			if (res == 1) {
 			    /*
-			    * Match found.
-			    */
+			     * Match found.
+			     */
 			    break;
 			}
 		    }
@@ -23913,6 +24113,9 @@ xmlSchemaCheckCVCIDCKeyRef(xmlSchemaValidCtxtPtr vctxt)
 		    FREE_AND_NULL(str);
 		    FREE_AND_NULL(strB);
 		}
+	    }
+	    if (table) {
+		xmlHashFree(table, xmlFreeIDCHashEntry);
 	    }
 	}
 	matcher = matcher->next;
@@ -24184,7 +24387,7 @@ xmlSchemaValidateFacets(xmlSchemaAbstractCtxtPtr actxt,
 			unsigned long length,
 			int fireErrors)
 {
-    int ret, error = 0;
+    int ret, error = 0, found;
 
     xmlSchemaTypePtr tmpType;
     xmlSchemaFacetLinkPtr facetLink;
@@ -24308,103 +24511,98 @@ WXS_IS_LIST:
     }
 
 pattern_and_enum:
-    if (error >= 0) {
-	int found = 0;
-	/*
-	* Process enumerations. Facet values are in the value space
-	* of the defining type's base type. This seems to be a bug in the
-	* XML Schema 1.0 spec. Use the whitespace type of the base type.
-	* Only the first set of enumerations in the ancestor-or-self axis
-	* is used for validation.
-	*/
-	ret = 0;
-	tmpType = type;
-	do {
-	    for (facet = tmpType->facets; facet != NULL; facet = facet->next) {
-		if (facet->type != XML_SCHEMA_FACET_ENUMERATION)
-		    continue;
-		found = 1;
-		ret = xmlSchemaAreValuesEqual(facet->val, val);
-		if (ret == 1)
-		    break;
-		else if (ret < 0) {
-		    AERROR_INT("xmlSchemaValidateFacets",
-			"validating against an enumeration facet");
-		    return (-1);
-		}
-	    }
-	    if (ret != 0)
-		break;
-	    /*
-	    * Break on the first set of enumerations. Any additional
-	    *  enumerations which might be existent on the ancestors
-	    *  of the current type are restricted by this set; thus
-	    *  *must* *not* be taken into account.
-	    */
-	    if (found)
-		break;
-	    tmpType = tmpType->baseType;
-	} while ((tmpType != NULL) &&
-	    (tmpType->type != XML_SCHEMA_TYPE_BASIC));
-	if (found && (ret == 0)) {
-	    ret = XML_SCHEMAV_CVC_ENUMERATION_VALID;
-	    if (fireErrors) {
-		xmlSchemaFacetErr(actxt, ret, node,
-		    value, 0, type, NULL, NULL, NULL, NULL);
-	    } else
-		return (ret);
-	    if (error == 0)
-		error = ret;
-	}
+    found = 0;
+    /*
+    * Process enumerations. Facet values are in the value space
+    * of the defining type's base type. This seems to be a bug in the
+    * XML Schema 1.0 spec. Use the whitespace type of the base type.
+    * Only the first set of enumerations in the ancestor-or-self axis
+    * is used for validation.
+    */
+    ret = 0;
+    tmpType = type;
+    do {
+        for (facet = tmpType->facets; facet != NULL; facet = facet->next) {
+            if (facet->type != XML_SCHEMA_FACET_ENUMERATION)
+                continue;
+            found = 1;
+            ret = xmlSchemaAreValuesEqual(facet->val, val);
+            if (ret == 1)
+                break;
+            else if (ret < 0) {
+                AERROR_INT("xmlSchemaValidateFacets",
+                    "validating against an enumeration facet");
+                return (-1);
+            }
+        }
+        if (ret != 0)
+            break;
+        /*
+        * Break on the first set of enumerations. Any additional
+        *  enumerations which might be existent on the ancestors
+        *  of the current type are restricted by this set; thus
+        *  *must* *not* be taken into account.
+        */
+        if (found)
+            break;
+        tmpType = tmpType->baseType;
+    } while ((tmpType != NULL) &&
+        (tmpType->type != XML_SCHEMA_TYPE_BASIC));
+    if (found && (ret == 0)) {
+        ret = XML_SCHEMAV_CVC_ENUMERATION_VALID;
+        if (fireErrors) {
+            xmlSchemaFacetErr(actxt, ret, node,
+                value, 0, type, NULL, NULL, NULL, NULL);
+        } else
+            return (ret);
+        if (error == 0)
+            error = ret;
     }
 
-    if (error >= 0) {
-	int found;
-	/*
-	* Process patters. Pattern facets are ORed at type level
-	* and ANDed if derived. Walk the base type axis.
-	*/
-	tmpType = type;
-	facet = NULL;
-	do {
-	    found = 0;
-	    for (facetLink = tmpType->facetSet; facetLink != NULL;
-		facetLink = facetLink->next) {
-		if (facetLink->facet->type != XML_SCHEMA_FACET_PATTERN)
-		    continue;
-		found = 1;
-		/*
-		* NOTE that for patterns, @value needs to be the
-		* normalized value.
-		*/
-		ret = xmlRegexpExec(facetLink->facet->regexp, value);
-		if (ret == 1)
-		    break;
-		else if (ret < 0) {
-		    AERROR_INT("xmlSchemaValidateFacets",
-			"validating against a pattern facet");
-		    return (-1);
-		} else {
-		    /*
-		    * Save the last non-validating facet.
-		    */
-		    facet = facetLink->facet;
-		}
-	    }
-	    if (found && (ret != 1)) {
-		ret = XML_SCHEMAV_CVC_PATTERN_VALID;
-		if (fireErrors) {
-		    xmlSchemaFacetErr(actxt, ret, node,
-			value, 0, type, facet, NULL, NULL, NULL);
-		} else
-		    return (ret);
-		if (error == 0)
-		    error = ret;
-		break;
-	    }
-	    tmpType = tmpType->baseType;
-	} while ((tmpType != NULL) && (tmpType->type != XML_SCHEMA_TYPE_BASIC));
-    }
+    /*
+    * Process patters. Pattern facets are ORed at type level
+    * and ANDed if derived. Walk the base type axis.
+    */
+    tmpType = type;
+    facet = NULL;
+    do {
+        found = 0;
+        for (facetLink = tmpType->facetSet; facetLink != NULL;
+            facetLink = facetLink->next) {
+            if (facetLink->facet->type != XML_SCHEMA_FACET_PATTERN)
+                continue;
+            found = 1;
+            /*
+            * NOTE that for patterns, @value needs to be the
+            * normalized value.
+            */
+            ret = xmlRegexpExec(facetLink->facet->regexp, value);
+            if (ret == 1)
+                break;
+            else if (ret < 0) {
+                AERROR_INT("xmlSchemaValidateFacets",
+                    "validating against a pattern facet");
+                return (-1);
+            } else {
+                /*
+                * Save the last non-validating facet.
+                */
+                facet = facetLink->facet;
+            }
+        }
+        if (found && (ret != 1)) {
+            ret = XML_SCHEMAV_CVC_PATTERN_VALID;
+            if (fireErrors) {
+                xmlSchemaFacetErr(actxt, ret, node,
+                    value, 0, type, facet, NULL, NULL, NULL);
+            } else
+                return (ret);
+            if (error == 0)
+                error = ret;
+            break;
+        }
+        tmpType = tmpType->baseType;
+    } while ((tmpType != NULL) && (tmpType->type != XML_SCHEMA_TYPE_BASIC));
 
     return (error);
 }
@@ -27802,7 +28000,7 @@ xmlSchemaIsValid(xmlSchemaValidCtxtPtr ctxt)
  * @warn: the warning function
  * @ctx: the functions context
  *
- * Set the error and warning callback informations
+ * Set the error and warning callback information
  */
 void
 xmlSchemaSetValidErrors(xmlSchemaValidCtxtPtr ctxt,
@@ -27847,7 +28045,7 @@ xmlSchemaSetValidStructuredErrors(xmlSchemaValidCtxtPtr ctxt,
  * @warn: the warning function result
  * @ctx: the functions context result
  *
- * Get the error and warning callback informations
+ * Get the error and warning callback information
  *
  * Returns -1 in case of error and 0 otherwise
  */
@@ -27937,6 +28135,10 @@ xmlSchemaVDocWalk(xmlSchemaValidCtxtPtr vctxt)
 	/* VAL TODO: Error code? */
 	VERROR(1, NULL, "The document has no document element");
 	return (1);
+    }
+    for (node = valRoot->next; node != NULL; node = node->next) {
+        if (node->type == XML_ELEMENT_NODE)
+            VERROR(1, NULL, "The document has more than one top element");
     }
     vctxt->depth = -1;
     vctxt->validationRoot = valRoot;
@@ -28095,7 +28297,6 @@ xmlSchemaPreRun(xmlSchemaValidCtxtPtr vctxt) {
     vctxt->nberrors = 0;
     vctxt->depth = -1;
     vctxt->skipDepth = -1;
-    vctxt->xsiAssemble = 0;
     vctxt->hasKeyrefs = 0;
 #ifdef ENABLE_IDC_NODE_TABLES_TEST
     vctxt->createIDCNodeTables = 1;
@@ -28273,13 +28474,13 @@ struct _xmlSchemaSplitSAXData {
 struct _xmlSchemaSAXPlug {
     unsigned int magic;
 
-    /* the original callbacks informations */
+    /* the original callbacks information */
     xmlSAXHandlerPtr     *user_sax_ptr;
     xmlSAXHandlerPtr      user_sax;
     void                **user_data_ptr;
     void                 *user_data;
 
-    /* the block plugged back and validation informations */
+    /* the block plugged back and validation information */
     xmlSAXHandler         schemas_sax;
     xmlSchemaValidCtxtPtr ctxt;
 };

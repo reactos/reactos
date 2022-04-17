@@ -70,7 +70,7 @@ PDRVENABLEDATA pded)
         pded->iDriverVersion = DDI_DRIVER_VERSION_NT4;
 // eVb: 1.2 [END]
 
-    return(TRUE);
+    return TRUE;
 }
 
 /******************************Public*Routine******************************\
@@ -97,7 +97,7 @@ HANDLE      hDriver)        // Handle to base driver
 {
     GDIINFO GdiInfo;
     DEVINFO DevInfo;
-    PPDEV   ppdev = (PPDEV) NULL;
+    PPDEV   ppdev = NULL;
 
     UNREFERENCED_PARAMETER(pwszLogAddress);
     UNREFERENCED_PARAMETER(pwszDeviceName);
@@ -106,10 +106,10 @@ HANDLE      hDriver)        // Handle to base driver
 
     ppdev = (PPDEV) EngAllocMem(0, sizeof(PDEV), ALLOC_TAG);
 
-    if (ppdev == (PPDEV) NULL)
+    if (ppdev == NULL)
     {
         RIP("DISP DrvEnablePDEV failed EngAllocMem\n");
-        return((DHPDEV) 0);
+        return NULL;
     }
 
     memset(ppdev, 0, sizeof(PDEV));
@@ -151,12 +151,12 @@ HANDLE      hDriver)        // Handle to base driver
 
     memcpy(pGdiInfo, &GdiInfo, min(cjGdiInfo, sizeof(GDIINFO)));
 
-    return((DHPDEV) ppdev);
+    return (DHPDEV)ppdev;
 
     // Error case for failure.
 error_free:
     EngFreeMem(ppdev);
-    return((DHPDEV) 0);
+    return NULL;
 }
 
 /******************************Public*Routine******************************\
@@ -213,7 +213,7 @@ DHPDEV dhpdev)
     if (!bInitSURF(ppdev, TRUE))
     {
         RIP("DISP DrvEnableSurface failed bInitSURF\n");
-        return(FALSE);
+        return NULL;
     }
 
     sizl.cx = ppdev->cxScreen;
@@ -223,7 +223,7 @@ DHPDEV dhpdev)
     {
         if (!bInit256ColorPalette(ppdev)) {
             RIP("DISP DrvEnableSurface failed to init the 8bpp palette\n");
-            return(FALSE);
+            return NULL;
         }
         ulBitmapType = BMF_8BPP;
         flHooks = HOOKS_BMF8BPP;
@@ -251,10 +251,10 @@ DHPDEV dhpdev)
                                            sizl,
                                            ulBitmapType);
 
-    if (hsurf == (HSURF) 0)
+    if (hsurf == NULL)
     {
         RIP("DISP DrvEnableSurface failed EngCreateDeviceSurface\n");
-        return(FALSE);
+        return NULL;
     }
 // eVb: 1.4 [END]
 
@@ -269,12 +269,12 @@ DHPDEV dhpdev)
                            NULL))
     {
         RIP("DISP DrvEnableSurface failed EngModifySurface\n");
-        return(FALSE);
+        return NULL;
     }
 // eVb: 1.5 [END]
     ppdev->hsurfEng = hsurf;
 
-    return(hsurf);
+    return hsurf;
 }
 
 /******************************Public*Routine******************************\
@@ -289,7 +289,7 @@ DHPDEV dhpdev)
 {
     EngDeleteSurface(((PPDEV) dhpdev)->hsurfEng);
     vDisableSURF((PPDEV) dhpdev);
-    ((PPDEV) dhpdev)->hsurfEng = (HSURF) 0;
+    ((PPDEV) dhpdev)->hsurfEng = NULL;
 }
 
 /******************************Public*Routine******************************\
@@ -318,7 +318,7 @@ BOOL bEnable)
         if (!bInitSURF(ppdev, FALSE))
         {
             DISPDBG((0, "DISP DrvAssertMode failed bInitSURF\n"));
-            return (FALSE);
+            return FALSE;
         }
 
         if (pjScreen != ppdev->pjScreen) {
@@ -333,11 +333,11 @@ BOOL bEnable)
                                    NULL))
             {
                 DISPDBG((0, "DISP DrvAssertMode failed EngModifySurface\n"));
-                return (FALSE);
+                return FALSE;
             }
         }
 // eVb: 1.6 [END]
-        return (TRUE);
+        return TRUE;
     }
     else
     {

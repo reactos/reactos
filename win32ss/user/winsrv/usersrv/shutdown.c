@@ -755,7 +755,7 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
     /* Do not kill Winlogon */
     if (CsrProcess->ClientId.UniqueProcess == UlongToHandle(LogonProcessId))
     {
-        DPRINT("Not killing Winlogon; CsrProcess->ShutdownFlags = %lu\n", 
+        DPRINT("Not killing Winlogon; CsrProcess->ShutdownFlags = %lu\n",
                CsrProcess->ShutdownFlags);
 
         /* Returning CsrShutdownCsrProcess means that we handled this process by doing nothing */

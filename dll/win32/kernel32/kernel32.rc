@@ -53,6 +53,9 @@
 #ifdef LANGUAGE_ZH_CN
     #include "winnls/lang/zh-CN.rc"
 #endif
+#ifdef LANGUAGE_ZH_HK
+    #include "winnls/lang/zh-HK.rc"
+#endif
 #ifdef LANGUAGE_ZH_TW
     #include "winnls/lang/zh-TW.rc"
 #endif

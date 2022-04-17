@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Fitxategia"
     BEGIN
         MENUITEM "&Berria\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Ireki\tCtrl+O", CMD_OPEN
         MENUITEM "&Gorde\tCtrl+S", CMD_SAVE
         MENUITEM "Gorde &honela...", CMD_SAVE_AS
@@ -150,7 +150,7 @@ ohar-blokarentzat.\n Erabili beste editore bat."
 berriz saiatu"
     STRING_DOESNOTEXIST "'%s'\nFitxategia ez dago\n\n ¿Fitxategi berri bat \
 sortu nahi duzu?"
-    STRING_NOTSAVED "'%s'Fitxategiaren testua  aldatu egin da\n\n \
+    STRING_NOTSAVED "'%s'Fitxategiaren testua  aldatu egin da\n\n\
 Aldaketak gorde nahi dituzu?"
     STRING_NOTFOUND "Ez da aurkitu '%s'."
     STRING_OUT_OF_MEMORY "Ez dago memoria nahikorik lan hau\

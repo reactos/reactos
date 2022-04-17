@@ -157,7 +157,7 @@ SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
             if (Status == STATUS_SUCCESS)
             {
                 SampRegCloseKey(&NamesKey);
-                Status = STATUS_ALIAS_EXISTS;
+                Status = STATUS_GROUP_EXISTS;
             }
             else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
                 Status = STATUS_SUCCESS;
@@ -192,7 +192,7 @@ SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
             if (Status == STATUS_SUCCESS)
             {
                 SampRegCloseKey(&NamesKey);
-                Status = STATUS_ALIAS_EXISTS;
+                Status = STATUS_USER_EXISTS;
             }
             else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
                 Status = STATUS_SUCCESS;

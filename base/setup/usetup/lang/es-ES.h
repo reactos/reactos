@@ -1534,14 +1534,14 @@ static MUI_ENTRY etESBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalaci\242n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "Installing the bootloader onto the media, please wait...",
+        "Instalando sector de arranque en el disco, espere por favor...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

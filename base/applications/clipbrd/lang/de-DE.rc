@@ -32,8 +32,8 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_CLIPBOARD "Clipboard Viewer"
-    STRING_CLIPFILE  "Clipboard Element"
+    STRING_CLIPBOARD "Zwischenablagenanzeige"
+    STRING_CLIPFILE  "Zwischenablagen-Element"
     STRING_DELETE_MSG "Soll der Inhalt der Zwischenablage gelöscht werden?"
     STRING_DELETE_TITLE "Zwischenablage löschen"
     STRING_FORMAT_NT "Zwischenablagedateien für ReactOS (*.clp)"

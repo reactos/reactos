@@ -525,7 +525,7 @@ CBDADeviceControl_fnConstructor(
 
     if (FAILED(hr))
     {
-        // release 
+        // release
        pObject->Release();
        return E_NOINTERFACE;
     }

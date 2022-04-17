@@ -1901,7 +1901,7 @@ SplitBTreeNode(PB_TREE Tree,
             CaseSensitive ? "TRUE" : "FALSE");
 
 #ifndef NDEBUG
-    DumpBTreeNode(Node, 0, 0);
+    DumpBTreeNode(Tree, Node, 0, 0);
 #endif
 
     // Create the right hand sibling
@@ -2020,10 +2020,10 @@ SplitBTreeNode(PB_TREE Tree,
 
 #ifndef NDEBUG
     DPRINT1("Left-hand node after split:\n");
-    DumpBTreeNode(Node, 0, 0);
+    DumpBTreeNode(Tree, Node, 0, 0);
 
     DPRINT1("Right-hand sibling node after split:\n");
-    DumpBTreeNode(*NewRightHandSibling, 0, 0);
+    DumpBTreeNode(Tree, *NewRightHandSibling, 0, 0);
 #endif
 
     return STATUS_SUCCESS;

@@ -1,4 +1,4 @@
-; File generated automatically, do not edit! 
+; File generated automatically, do not edit!
 
 .code
 PUBLIC _stub_FastcallFunction

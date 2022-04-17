@@ -108,13 +108,28 @@ PnPMonitor.DeviceDesc = "Монитор Plug and Play"
 
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
-MonitorClassName = "Göstergeçler"
+MonitorClassName = "Monitörler"
 
-StdMfg = "(Ölçünlü Göstergeç Türleri)"
-DefaultMonitor.DeviceDesc = "Ön Tanımlı Göstergeç"
-PnPMonitor.DeviceDesc = "Tak ve Çalıştır Göstergeç"
+StdMfg = "(Standart Monitör Türleri)"
+DefaultMonitor.DeviceDesc = "Varsayılan Monitör"
+PnPMonitor.DeviceDesc = "Tak ve Çalıştır Monitör"
 
 [Strings.0804]
 StdMfg = "(标准监视器类型)"
 DefaultMonitor.DeviceDesc = "默认监视器"
 PnPMonitor.DeviceDesc = "即插即用监视器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+MonitorClassName = "Monitores"
+
+StdMfg = "(Monitores genéricos)"
+DefaultMonitor.DeviceDesc = "Monitor predefinido"
+PnPMonitor.DeviceDesc = "Monitor Plug and Play"
+
+[Strings.0C04]
+MonitorClassName = "顯示器"
+
+StdMfg = "(標準顯示器類型)"
+DefaultMonitor.DeviceDesc = "預設顯示器"
+PnPMonitor.DeviceDesc = "隨插即用顯示器"

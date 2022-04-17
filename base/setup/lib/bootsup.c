@@ -85,7 +85,7 @@ CreateFreeLoaderReactOSEntries(
 #ifdef _WINKD_
     /* ReactOS_VBoxDebug */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_VBoxDebug");
-    BootEntry->FriendlyName = L"\"ReactOS (VBoxDebug)\"";
+    BootEntry->FriendlyName = L"\"ReactOS (VBox Debug)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=VBOX /SOS";
     AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_VBoxDebug"));
 #endif
@@ -126,21 +126,20 @@ CreateFreeLoaderReactOSEntries(
 #endif
 
 
-#if DBG
+    /* DefaultOS=ReactOS */
+#if DBG && !defined(_WINKD_)
     if (IsUnattendedSetup)
     {
-        /* DefaultOS=ReactOS */
-#ifndef _WINKD_
         BootOptions.CurrentBootEntryKey = MAKESTRKEY(L"ReactOS_KdSerial");
-#else
-        BootOptions.CurrentBootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
-#endif
     }
     else
 #endif
     {
-        /* DefaultOS=ReactOS */
+#if DBG
+        BootOptions.CurrentBootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
+#else
         BootOptions.CurrentBootEntryKey = MAKESTRKEY(L"ReactOS");
+#endif
     }
 
 #if DBG
@@ -1260,9 +1259,7 @@ InstallVBRToPartition(
     /*
     else if (wcsicmp(FileSystemName, L"EXT2")  == 0 ||
              wcsicmp(FileSystemName, L"EXT3")  == 0 ||
-             wcsicmp(FileSystemName, L"EXT4")  == 0 ||
-             wcsicmp(FileSystemName, L"FFS")   == 0 ||
-             wcsicmp(FileSystemName, L"REISERFS") == 0)
+             wcsicmp(FileSystemName, L"EXT4")  == 0)
     {
         return STATUS_NOT_SUPPORTED;
     }

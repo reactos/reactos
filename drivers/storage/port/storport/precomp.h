@@ -179,11 +179,6 @@ MiniportStartIo(
 /* misc.c */
 
 NTSTATUS
-ForwardIrpAndWait(
-    _In_ PDEVICE_OBJECT LowerDevice,
-    _In_ PIRP Irp);
-
-NTSTATUS
 NTAPI
 ForwardIrpAndForget(
     _In_ PDEVICE_OBJECT LowerDevice,

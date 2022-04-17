@@ -32,7 +32,6 @@
 /* Public headers */
 #ifdef __REACTOS__
 #define NTOSAPI
-#define printf TuiPrintf
 #include <ntddk.h>
 #include <ntifs.h>
 #include <ioaccess.h>
@@ -76,7 +75,6 @@
 #include <options.h>
 #include <oslist.h>
 #include <ramdisk.h>
-#include <ui.h>
 #include <ver.h>
 
 /* NTOS loader */
@@ -93,10 +91,8 @@
 #include <fs/btrfs.h>
 
 /* UI support */
-#include <ui/gui.h>
-#include <ui/minitui.h>
-#include <ui/noui.h>
-#include <ui/tui.h>
+#define printf TuiPrintf
+#include <ui.h>
 #include <ui/video.h>
 
 /* Arch specific includes */

@@ -49,7 +49,7 @@ VOID PrintResString(HINSTANCE hInstance, UINT uID, UINT MaxWidth, BOOL bAlignLef
 {
     if (!hInstance)
         return;
-    
+
     WCHAR StringBuffer[RES_STR_MAXLEN];
     LoadStringW(hInstance, uID, StringBuffer, _countof(StringBuffer));
     PrintString(StringBuffer, MaxWidth, bAlignLeft);
@@ -96,7 +96,7 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, UINT MaxWidth, HINSTANCE hInstance)
         *pNumberStr = L'0' + (MemorySize / Mod);
         MemorySize %= Mod;
         pNumberStr++;
-        
+
         if (i != 1 && i % 3 == 1)
         {
             *pNumberStr = L',';

@@ -36,13 +36,13 @@ FLOATOBJ_bConvertToLong(FLOATOBJ *pf, PLONG pl)
     {
         return FALSE;
     }
-    
+
     if (pef->lExp < 2)
     {
         *pl = 0;
         return TRUE;
     }
-    
+
     *pl = EngMulDiv(pef->lMant, 1 << (pef->lExp - 2), 0x40000000);
     return TRUE;
 }

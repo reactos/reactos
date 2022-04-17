@@ -40,7 +40,12 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #ifdef __REACTOS__
+
+#include <shlobj.h>
+#include <shlwapi_undoc.h>
+
 int WINAPI IsNetDrive(int drive);
+
 #else
 
 /* Get a function pointer from a DLL handle */
@@ -1127,17 +1132,32 @@ BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath,DWORD dwWhich)
   if (dwWhich)
   {
     LPCWSTR szExt = PathFindExtensionW(lpszPath);
+#ifndef __REACTOS__
     if (!*szExt || dwWhich & 0x40)
+#else
+    if (!*szExt || dwWhich & WHICH_OPTIONAL)
+#endif
     {
       size_t iChoose = 0;
       int iLen = lstrlenW(lpszPath);
       if (iLen > (MAX_PATH - 5))
         return FALSE;
+#ifndef __REACTOS__
       while ( (dwWhich & 0x1) && pszExts[iChoose][0] )
+#else
+      while (pszExts[iChoose][0])
+#endif
       {
+#ifdef __REACTOS__
+        if (dwWhich & 0x1)
+        {
+#endif
         lstrcpyW(lpszPath + iLen, pszExts[iChoose]);
         if (PathFileExistsW(lpszPath))
           return TRUE;
+#ifdef __REACTOS__
+        }
+#endif
         iChoose++;
         dwWhich >>= 1;
       }

@@ -280,7 +280,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "CREATE OPTIONS:\r\nNOTA: Il nome dell'ozione comprende il simbolo di uguale.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
+    IDS_HELP_OPTIONS "CREATE OPTIONS:\nNOTA: Il nome dell'ozione comprende il simbolo di uguale.\n type= <own|share|interact|kernel|filesys|rec>\n       (default = own)\n start= <boot|system|auto|demand|disabled>\n       (default = demand)\n error= <normal|severe|critical|ignore>\n       (default = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies(separated by / (forward slash))>\n obj= <AccountName|ObjectName>\n       (default = LocalSystem)\n password= <password>\n"
 END
 
 /* Hints */

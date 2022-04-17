@@ -5,7 +5,7 @@
  *    Updated by Marcin Mikołajczak <me@m4sk.in> (September, 2017)
  *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (May, 2021)
  */
- 
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_SHUTDOWNCOMPUTER DIALOGEX 45, 22, 194, 52

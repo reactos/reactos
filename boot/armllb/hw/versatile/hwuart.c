@@ -53,26 +53,26 @@ LlbHwVersaUartInitialize(VOID)
     /* Query peripheral rate, hardcore baudrate */
     ClockRate = LlbHwGetPClk();
     Baudrate = 115200;
-    
+
     /* Calculate baudrate clock divider and remainder */
     Divider = ClockRate / (16 * Baudrate);
     Remainder = ClockRate % (16 * Baudrate);
-    
+
     /* Calculate the fractional part */
     Fraction = (8 * Remainder / Baudrate) >> 1;
     Fraction += (8 * Remainder / Baudrate) & 1;
-    
+
     /* Disable interrupts */
     WRITE_REGISTER_ULONG(UART_PL011_CR, 0);
-    
+
     /* Set the baud rate to 115200 bps */
     WRITE_REGISTER_ULONG(UART_PL011_IBRD, Divider);
     WRITE_REGISTER_ULONG(UART_PL011_FBRD, Fraction);
-    
+
     /* Set 8 bits for data, 1 stop bit, no parity, FIFO enabled */
     WRITE_REGISTER_ULONG(UART_PL011_LCRH,
                          UART_PL011_LCRH_WLEN_8 | UART_PL011_LCRH_FEN);
-    
+
     /* Clear and enable FIFO */
     WRITE_REGISTER_ULONG(UART_PL011_CR,
                          UART_PL011_CR_UARTEN |
@@ -106,9 +106,9 @@ LlbHwGetUartBase(IN ULONG Port)
     }
     else if (Port == 1)
     {
-        return 0x101F2000;        
+        return 0x101F2000;
     }
-    
+
     return 0;
 }
 

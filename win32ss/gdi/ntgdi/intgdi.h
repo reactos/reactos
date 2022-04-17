@@ -97,7 +97,7 @@ NTSTATUS
 APIENTRY
 NtGdiFlushUserBatch(
     VOID);
-    
+
 DWORD
 APIENTRY
 NtDxEngGetRedirectionBitmap(

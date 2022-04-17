@@ -486,8 +486,8 @@ typedef union _USB2_TT_ENDPOINT_PARAMS {
   struct {
     ULONG TransferType           : 4;
     ULONG Direction              : 1;
-    USB_DEVICE_SPEED DeviceSpeed : 2;
-    BOOL EndpointMoved           : 1;
+    ULONG DeviceSpeed            : 2;
+    ULONG EndpointMoved          : 1;
     ULONG Reserved               : 24;
   };
   ULONG AsULONG;
@@ -744,7 +744,6 @@ USBPORT_DoneTransfer(
 
 /* debug.c */
 ULONG
-NTAPI
 USBPORT_DbgPrint(
   IN PVOID MiniPortExtension,
   IN ULONG Level,

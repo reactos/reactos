@@ -26,7 +26,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kısayol Oluştur"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Bu sihirbaz, yerel ya da ağdaki programlara, dosyalara,\nklasörlere, bilgisayarlara ve İnternet adreslerine\nkısayollar oluşturmanıza yardımcı olur.", -1, 120, 15, 200, 30
+    LTEXT "Bu sihirbaz, yerel ya da ağdaki programlara, dosyalara,\ndizinlere, bilgisayarlara ve İnternet adreslerine\nkısayollar oluşturmanıza yardımcı olur.", -1, 120, 15, 200, 30
     LTEXT "Ögenin konumunu yazınız:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "&Göz At...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
@@ -45,7 +45,7 @@ END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Kısayolları ve Klasörleri Sil"
+CAPTION "Kısayolları ve Dizinleri Sil"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Başlat menüsünden bir öge silmek için ögeyi seçiniz ve Sil'e tıklayınız.", -1, 10, 10, 192, 16
@@ -83,7 +83,7 @@ BEGIN
     IDS_NEW_INTERNET_SHORTCUT "Yeni İnternet Kısayolu"
     IDS_DWL_FAILED "Gecko paketini indirme başarısız oldu. Onu indirmek için bir İnternet bağlantızın olması gerekir. Kur, Gecko'yu kuramdan devam edecektir."
     IDS_CANTMAKEINETSHORTCUT "İnternet kısayolu oluşturma başarısız oldu."
-    IDS_CANTMAKESHORTCUT "KIsayol oluşturma başarısız oldu."
+    IDS_CANTMAKESHORTCUT "Kısayol oluşturma başarısız oldu."
     IDS_NO_MEMORY "Ayrılacak bellek yok!"
     IDS_NO_DIRECTORY "Hiç dizin verilmedi!"
     IDS_INVALID_PATH "Verilen yol geçersiz!"

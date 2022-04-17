@@ -28,7 +28,7 @@
 #endif
 
 /*
- * Windows platforms may define except
+ * Windows platforms may define except 
  */
 #undef except
 
@@ -37,9 +37,9 @@
 #include <math.h>
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 /* MS C-runtime has functions which can be used in order to determine if
-   a given floating-point variable contains NaN, (+-)INF. These are
+   a given floating-point variable contains NaN, (+-)INF. These are 
    preferred, because floating-point technology is considered proprietary
-   by MS and we can assume that their functions know more about their
+   by MS and we can assume that their functions know more about their 
    oddities than we do. */
 #include <float.h>
 /* Bjorn Reese figured a quite nice construct for isinf() using the _fpclass

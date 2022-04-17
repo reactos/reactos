@@ -98,7 +98,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEX wcex;
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.cbSize = sizeof(wcex);
 
     wcex.style            = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProc;
@@ -170,9 +170,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         hEditWnd = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), TEXT(""), WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_AUTOHSCROLL|ES_LEFT|ES_MULTILINE, 0, 0, 0, 0, hWnd, NULL, hInst, NULL);
         hDisplayWnd = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), TEXT(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|ES_MULTILINE, 0, 0, 0, 0, hWnd, NULL, hInst, NULL);
 
-        memset(&ncm, 0, sizeof(NONCLIENTMETRICS));
-        ncm.cbSize = sizeof(NONCLIENTMETRICS);
-        SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
+        ZeroMemory(&ncm, sizeof(ncm));
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
 
         hFont = CreateFontIndirect(&ncm.lfMessageFont);
 
@@ -382,8 +382,8 @@ INT_PTR CALLBACK CaptureDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARA
     case WM_COMMAND:
         if (LOWORD(wParam) == IDC_BROWSE)
         {
-            memset(&ofn, 0, sizeof(OPENFILENAME));
-            ofn.lStructSize = sizeof(OPENFILENAME);
+            ZeroMemory(&ofn, sizeof(ofn));
+            ofn.lStructSize = sizeof(ofn);
             ofn.hwndOwner = hDlg;
             ofn.hInstance = hInst;
             ofn.lpstrFilter = NULL;

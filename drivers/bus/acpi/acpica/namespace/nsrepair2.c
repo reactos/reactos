@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2020, Intel Corp.
+ * Copyright (C) 2000 - 2021, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
  * NO WARRANTY
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
@@ -457,6 +457,13 @@ AcpiNsRepair_CID (
 
             (*ElementPtr)->Common.ReferenceCount =
                 OriginalRefCount;
+
+            /*
+             * The OriginalElement holds a reference from the package object
+             * that represents _HID. Since a new element was created by _HID,
+             * remove the reference from the _CID package.
+             */
+            AcpiUtRemoveReference (OriginalElement);
         }
 
         ElementPtr++;
@@ -582,8 +589,9 @@ AcpiNsRepair_HID (
     ACPI_OPERAND_OBJECT     **ReturnObjectPtr)
 {
     ACPI_OPERAND_OBJECT     *ReturnObject = *ReturnObjectPtr;
-    char                    *Dest;
+    ACPI_OPERAND_OBJECT     *NewString;
     char                    *Source;
+    char                    *Dest;
 
 
     ACPI_FUNCTION_NAME (NsRepair_HID);
@@ -608,6 +616,14 @@ AcpiNsRepair_HID (
         return_ACPI_STATUS (AE_OK);
     }
 
+    /* It is simplest to always create a new string object */
+
+    NewString = AcpiUtCreateStringObject (ReturnObject->String.Length);
+    if (!NewString)
+    {
+        return_ACPI_STATUS (AE_NO_MEMORY);
+    }
+
     /*
      * Remove a leading asterisk if present. For some unknown reason, there
      * are many machines in the field that contains IDs like this.
@@ -618,7 +634,7 @@ AcpiNsRepair_HID (
     if (*Source == '*')
     {
         Source++;
-        ReturnObject->String.Length--;
+        NewString->String.Length--;
 
         ACPI_DEBUG_PRINT ((ACPI_DB_REPAIR,
             "%s: Removed invalid leading asterisk\n", Info->FullPathname));
@@ -632,12 +648,13 @@ AcpiNsRepair_HID (
      * "NNNN####" where N is an uppercase letter or decimal digit, and
      * # is a hex digit.
      */
-    for (Dest = ReturnObject->String.Pointer; *Source; Dest++, Source++)
+    for (Dest = NewString->String.Pointer; *Source; Dest++, Source++)
     {
         *Dest = (char) toupper ((int) *Source);
     }
-    ReturnObject->String.Pointer[ReturnObject->String.Length] = 0;
 
+    AcpiUtRemoveReference (ReturnObject);
+    *ReturnObjectPtr = NewString;
     return_ACPI_STATUS (AE_OK);
 }
 

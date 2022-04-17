@@ -6,6 +6,7 @@
 #include <atlcoll.h>
 
 #include "misc.h"
+#include "configparser.h"
 
 
 #define MAX_SCRNSHOT_NUM 16
@@ -54,7 +55,7 @@ public:
     ATL::CSimpleArray<LCID> m_LanguageLCIDs;
     ATL::CSimpleArray<ATL::CStringW> m_szScrnshotLocation;
     ATL::CStringW m_szIconLocation;
-    ATL::CStringW m_szPkgName; // software's package name. 
+    ATL::CStringW m_szPkgName; // software's package name.
 
     ULONG m_SizeBytes;
 
@@ -128,8 +129,4 @@ public:
     CAvailableApplicationInfo* FindAppByPkgName(const ATL::CStringW& szPkgName) const;
     ATL::CSimpleArray<CAvailableApplicationInfo> FindAppsByPkgNameList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
     //ATL::CSimpleArray<CAvailableApplicationInfo> GetSelected() const;
-
-    const ATL::CStringW& GetFolderPath() const;
-    const ATL::CStringW& GetAppPath() const;
-    const ATL::CStringW& GetCabPath() const;
 };

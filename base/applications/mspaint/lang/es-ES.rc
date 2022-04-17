@@ -10,6 +10,8 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
+//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-es-ES.bmp"
+
 ID_MENU MENU
 BEGIN
     POPUP "&Archivo"
@@ -193,6 +195,17 @@ BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 170, 24, 48, 14
 END
 
+IDD_FONTS DIALOG 0, 0, 225, 25
+CAPTION "Tipografías"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX IDD_FONTSNAMES, 5, 5, 110, 200, CBS_HASSTRINGS | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | CBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDD_FONTSSIZES, 120, 5, 35, 250, CBS_HASSTRINGS | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDD_FONTSTOOLBAR, "ToolbarWindow32", TBSTYLE_TOOLTIPS | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NOMOVEY, 160, 5, 60, 20
+END
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
@@ -200,7 +213,7 @@ BEGIN
     IDS_INFOTITLE "Paint para ReactOS"
     IDS_INFOTEXT "Disponible bajo los términos de la GNU Lesser General Public License (LGPL, ver www.gnu.org)"
     IDS_SAVEPROMPTTEXT "¿Guardar cambios a %s?"
-    IDS_DEFAULTFILENAME "Sin título.bmp"
+    IDS_DEFAULTFILENAME "Sin título"
     IDS_MINIATURETITLE "Miniatura"
     IDS_TOOLTIP1 "Selección de forma libre"
     IDS_TOOLTIP2 "Selección"
@@ -227,4 +240,8 @@ BEGIN
     IDS_ANGLE "El ángulo debe de estar entre -89 y 89."
     IDS_LOADERRORTEXT "No se pudo cargar el archivo %s."
     IDS_ENLARGEPROMPTTEXT "La imagen en el Portapapeles es más grande que el lienzo.\n¿Quieres adaptar las dimensiones del lienzo a su nuevo tamaño?"
+    IDS_BOLD "Negrita"
+    IDS_ITALIC "Cursiva"
+    IDS_UNDERLINE "Subrayado"
+    IDS_VERTICAL "Vertical"
 END

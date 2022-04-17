@@ -122,14 +122,6 @@ init_client(void)
     inaddr_any.s_addr = INADDR_ANY;
     bootp_packet_handler = do_packet;
 
-    if (PipeInit() == INVALID_HANDLE_VALUE)
-    {
-        DbgPrint("DHCPCSVC: PipeInit() failed!\n");
-        AdapterStop();
-        ApiFree();
-        return 0; // FALSE
-    }
-
     return 1; // TRUE
 }
 

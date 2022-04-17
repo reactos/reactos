@@ -51,7 +51,7 @@ MAIN_MENU MENU
   END
  }
  POPUP "&Yardım" {
-   MENUITEM "&Yardım Üzerine Yardım", MNID_HELP_HELPON
+   MENUITEM "&Yardım Hakkında", MNID_HELP_HELPON
    MENUITEM "&Wine Yardım Hakkında...", MNID_HELP_ABOUT
  }
 }
@@ -86,7 +86,7 @@ STID_BACK, 		"&Geri"
 STID_ALL_FILES, 	"Tüm Dosyalar (*.*)"
 STID_HELP_FILES_HLP, 	"Yardım Dosyaları (*.hlp)"
 STID_FILE_NOT_FOUND_s	"""%s"" bulunamıyor. Bu dosyayı kendiniz bulmak istiyor musunuz?"
-STID_NO_RICHEDIT	"Zengin metin gerçekleştirmesi bulunamıyor. Çıkılacaktır."
+STID_NO_RICHEDIT	"Zengin metin dosyası bulunamıyor. Çıkılacaktır."
 STID_PSH_INDEX,		"Yardım Konuları: "
 }
 

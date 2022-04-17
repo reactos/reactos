@@ -839,7 +839,7 @@ PCHAR ClassIDtoClassName( USHORT ClassID )
 
     case CLASS_ANY:
         return ClassAny;
-        
+
     default:
         return "Unknown";
     }

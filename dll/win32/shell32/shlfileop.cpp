@@ -35,9 +35,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define NEW_FILENAME_ON_COPY_TRIES 100
 
-static const WCHAR wWildcardFile[] = {'*',0};
-static const WCHAR wWildcardChars[] = {'*','?',0};
-
 typedef struct
 {
     SHFILEOPSTRUCTW *req;
@@ -87,8 +84,6 @@ static BOOL _FileOpCount(FILE_OPERATION *op, LPWSTR pwszBuf, BOOL bFolder, DWORD
 
 /* Confirm dialogs with an optional "Yes To All" as used in file operations confirmations
  */
-static const WCHAR CONFIRM_MSG_PROP[] = {'W','I','N','E','_','C','O','N','F','I','R','M',0};
-
 struct confirm_msg_info
 {
     LPWSTR lpszText;
@@ -139,7 +134,7 @@ static INT_PTR ConfirmMsgBox_Paint(HWND hDlg)
     /* this will remap the rect to dialog coords */
     MapWindowPoints(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), hDlg, (LPPOINT)&r, 2);
     hOldFont = (HFONT)SelectObject(hdc, (HFONT)SendDlgItemMessageW(hDlg, IDC_YESTOALL_MESSAGE, WM_GETFONT, 0, 0));
-    DrawTextW(hdc, (LPWSTR)GetPropW(hDlg, CONFIRM_MSG_PROP), -1, &r, DT_NOPREFIX | DT_PATH_ELLIPSIS | DT_WORDBREAK);
+    DrawTextW(hdc, (LPWSTR)GetPropW(hDlg, L"WINE_CONFIRM"), -1, &r, DT_NOPREFIX | DT_PATH_ELLIPSIS | DT_WORDBREAK);
     SelectObject(hdc, hOldFont);
     EndPaint(hDlg, &ps);
 
@@ -157,7 +152,7 @@ static INT_PTR ConfirmMsgBox_Init(HWND hDlg, LPARAM lParam)
 
     SetWindowTextW(hDlg, info->lpszCaption);
     ShowWindow(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), SW_HIDE);
-    SetPropW(hDlg, CONFIRM_MSG_PROP, info->lpszText);
+    SetPropW(hDlg, L"WINE_CONFIRM", info->lpszText);
     SendDlgItemMessageW(hDlg, IDC_YESTOALL_ICON, STM_SETICON, (WPARAM)info->hIcon, 0);
 
     /* compute the text height and resize the dialog */
@@ -379,7 +374,7 @@ BOOL SHELL_DeleteDirectoryW(FILE_OPERATION *op, LPCWSTR pszDir, BOOL bShowUI)
     WCHAR   szTemp[MAX_PATH];
 
     /* Make sure the directory exists before eventually prompting the user */
-    PathCombineW(szTemp, pszDir, wWildcardFile);
+    PathCombineW(szTemp, pszDir, L"*");
     hFind = FindFirstFileW(szTemp, &wfd);
     if (hFind == INVALID_HANDLE_VALUE)
       return FALSE;
@@ -551,7 +546,7 @@ static void _SetOperationTexts(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest) {
         default:
             return;
     }
-    
+
     FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
                    op->szBuilderString, 0, 0, szFinalString, sizeof(szFinalString), (va_list*)args);
 
@@ -574,11 +569,11 @@ DWORD CALLBACK SHCopyProgressRoutine(
     FILE_OPERATION *op = (FILE_OPERATION *) lpData;
 
     if (op->progress) {
-        /* 
-         * This is called at the start of each file. To keop less state, 
+        /*
+         * This is called at the start of each file. To keop less state,
          * I'm adding the file to the completed size here, and the re-subtracting
          * it when drawing the progress bar.
-         */ 
+         */
         if (dwCallbackReason & CALLBACK_STREAM_SWITCH)
             op->completedSize.QuadPart += TotalFileSize.QuadPart;
 
@@ -586,7 +581,7 @@ DWORD CALLBACK SHCopyProgressRoutine(
                                     TotalFileSize.QuadPart +
                                     TotalBytesTransferred.QuadPart
                                   , op->totalSize.QuadPart);
-    
+
 
         op->bCancelled = op->progress->HasUserCancelled();
     }
@@ -663,6 +658,48 @@ EXTERN_C DWORD WINAPI Win32DeleteFileW(LPCWSTR path)
     return (SHNotifyDeleteFileW(NULL, path) == ERROR_SUCCESS);
 }
 
+#ifdef __REACTOS__
+/************************************************************************
+ * CheckForError          [internal]
+ *
+ * Show message box if operation failed
+ *
+ * PARAMS
+ *  op         [I]   File Operation context
+ *  error      [I]   Error code
+ *  src        [I]   Source file full name
+ *
+ */
+static DWORD CheckForError(FILE_OPERATION *op, DWORD error, LPCWSTR src)
+{
+    CStringW strTitle, strMask, strText;
+    LPWSTR lpMsgBuffer;
+
+    if (error == ERROR_SUCCESS || (op->req->fFlags & (FOF_NOERRORUI | FOF_SILENT)))
+        goto exit;
+
+    strTitle.LoadStringW(op->req->wFunc == FO_COPY ? IDS_COPYERRORTITLE : IDS_MOVEERRORTITLE);
+
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                   NULL,
+                   error,
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                   (LPWSTR)&lpMsgBuffer,
+                   0,
+                   NULL);
+
+    strText.Format(op->req->wFunc == FO_COPY ? IDS_COPYERROR : IDS_MOVEERROR,
+                   PathFindFileNameW(src),
+                   lpMsgBuffer);
+
+    MessageBoxW(op->req->hwnd, strText, strTitle, MB_ICONERROR);
+    LocalFree(lpMsgBuffer);
+
+exit:
+    return error;
+}
+#endif
+
 /************************************************************************
  * SHNotifyMoveFile          [internal]
  *
@@ -710,7 +747,27 @@ static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
         SHChangeNotify(isdir ? SHCNE_RMDIR : SHCNE_DELETE, SHCNF_PATHW, src, NULL);
         return ERROR_SUCCESS;
     }
+
+#ifdef __REACTOS__
+    return CheckForError(op, GetLastError(), src);
+#else
     return GetLastError();
+#endif
+}
+
+static BOOL SHIsCdRom(LPCWSTR path)
+{
+    WCHAR tmp[] = { L"A:\\" };
+
+    if (!path || !path[0])
+        return FALSE;
+
+    if (path[1] != UNICODE_NULL && path[1] != ':')
+        return FALSE;
+
+    tmp[0] = path[0];
+
+    return GetDriveTypeW(tmp) == DRIVE_CDROM;
 }
 
 /************************************************************************
@@ -753,11 +810,23 @@ static DWORD SHNotifyCopyFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
     ret = CopyFileExW(src, dest, SHCopyProgressRoutine, op, &op->bCancelled, bFailIfExists);
     if (ret)
     {
+        // We are copying from a CD-ROM volume, which is readonly
+        if (SHIsCdRom(src))
+        {
+            attribs = GetFileAttributesW(dest);
+            attribs &= ~FILE_ATTRIBUTE_READONLY;
+            SetFileAttributesW(dest, attribs);
+        }
+
         SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, dest, NULL);
         return ERROR_SUCCESS;
     }
 
+#ifdef __REACTOS__
+    return CheckForError(op, GetLastError(), src);
+#else
     return GetLastError();
+#endif
 }
 
 /*************************************************************************
@@ -909,7 +978,7 @@ int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES s
 static DWORD SHFindAttrW(LPCWSTR pName, BOOL fileOnly)
 {
     WIN32_FIND_DATAW wfd;
-    BOOL b_FileMask = fileOnly && (NULL != StrPBrkW(pName, wWildcardChars));
+    BOOL b_FileMask = fileOnly && (NULL != StrPBrkW(pName, L"*?"));
     DWORD dwAttr = INVALID_FILE_ATTRIBUTES;
     HANDLE hFind = FindFirstFileW(pName, &wfd);
 
@@ -1187,7 +1256,7 @@ static HRESULT parse_file_list(FILE_LIST *flList, LPCWSTR szFiles)
         }
 
         /* parse wildcard files if they are in the filename */
-        if (StrPBrkW(szCurFile, wWildcardChars))
+        if (StrPBrkW(szCurFile, L"*?"))
         {
             parse_wildcard_files(flList, szCurFile, &i);
             flList->bAnyFromWildcard = TRUE;
@@ -1267,8 +1336,6 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
     FILE_LIST flFromNew, flToNew;
 
-    static const WCHAR wildCardFiles[] = {'*','.','*',0};
-
     if (IsDotDir(feFrom->szFilename))
         return;
 
@@ -1313,7 +1380,7 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     szTo[lstrlenW(szTo) + 1] = '\0';
     SHNotifyCreateDirectoryW(szTo, NULL);
 
-    PathCombineW(szFrom, feFrom->szFullPath, wildCardFiles);
+    PathCombineW(szFrom, feFrom->szFullPath, L"*.*");
     szFrom[lstrlenW(szFrom) + 1] = '\0';
 
     ZeroMemory(&flFromNew, sizeof(FILE_LIST));
@@ -1513,7 +1580,7 @@ static HRESULT copy_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *f
                 return ERROR_CANCELLED;
             }
         }
-        
+
         if (op->progress != NULL)
             op->bCancelled |= op->progress->HasUserCancelled();
         /* Vista return code. XP would return e.g. ERROR_FILE_NOT_FOUND, ERROR_ALREADY_EXISTS */
@@ -1531,9 +1598,8 @@ static BOOL confirm_delete_list(HWND hWnd, DWORD fFlags, BOOL fTrash, const FILE
     if (flFrom->dwNumFiles > 1)
     {
         WCHAR tmp[8];
-        const WCHAR format[] = {'%','d',0};
 
-        wnsprintfW(tmp, sizeof(tmp)/sizeof(tmp[0]), format, flFrom->dwNumFiles);
+        wnsprintfW(tmp, sizeof(tmp)/sizeof(tmp[0]), L"%d", flFrom->dwNumFiles);
         return SHELL_ConfirmDialogW(hWnd, (fTrash?ASK_TRASH_MULTIPLE_ITEM:ASK_DELETE_MULTIPLE_ITEM), tmp, NULL);
     }
     else
@@ -1653,14 +1719,12 @@ static void move_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
     FILE_LIST flFromNew, flToNew;
 
-    static const WCHAR wildCardFiles[] = {'*','.','*',0};
-
     if (IsDotDir(feFrom->szFilename))
         return;
 
     SHNotifyCreateDirectoryW(szDestPath, NULL);
 
-    PathCombineW(szFrom, feFrom->szFullPath, wildCardFiles);
+    PathCombineW(szFrom, feFrom->szFullPath, L"*.*");
     szFrom[lstrlenW(szFrom) + 1] = '\0';
 
     lstrcpyW(szTo, szDestPath);
@@ -1753,7 +1817,7 @@ static DWORD move_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flF
             move_to_dir(op, entryToMove, fileDest);
         else
             SHNotifyMoveFileW(op, entryToMove->szFullPath, fileDest->szFullPath, IsAttribDir(entryToMove->attributes));
-    
+
         if (op->progress != NULL)
             op->bCancelled |= op->progress->HasUserCancelled();
         /* Should fire on progress dialog only */
@@ -1952,9 +2016,9 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
         goto cleanup;
 #endif
     if (lpFileOp->wFunc != FO_RENAME && !(lpFileOp->fFlags & FOF_SILENT)) {
-        ret = CoCreateInstance(CLSID_ProgressDialog, 
-                               NULL, 
-                               CLSCTX_INPROC_SERVER, 
+        ret = CoCreateInstance(CLSID_ProgressDialog,
+                               NULL,
+                               CLSCTX_INPROC_SERVER,
                                IID_PPV_ARG(IProgressDialog, &op.progress));
         if (FAILED(ret))
             goto cleanup;
@@ -2232,7 +2296,7 @@ EXTERN_C HRESULT WINAPI SHPathPrepareForWriteA(HWND hwnd, IUnknown *modless, LPC
 }
 
 
-/* 
+/*
  * The two following background operations were modified from filedefext.cpp
  * They use an inordinate amount of mutable state across the string functions,
  * so are not easy to follow and care is required when modifying.
@@ -2243,11 +2307,11 @@ _FileOpCountManager(FILE_OPERATION *op, const FILE_LIST *from)
 {
     DWORD ticks = GetTickCount();
     FILE_ENTRY *entryToCount;
-    
+
     for (UINT i = 0; i < from->dwNumFiles; i++)
     {
         entryToCount = &from->feFiles[i];
-        
+
         WCHAR theFileName[MAX_PATH];
         StringCchCopyW(theFileName, MAX_PATH, entryToCount->szFullPath);
         _FileOpCount(op, theFileName, IsAttribDir(entryToCount->attributes), &ticks);

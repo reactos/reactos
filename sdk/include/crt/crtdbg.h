@@ -10,14 +10,6 @@
 
 #pragma pack(push,_CRT_PACKING)
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void *)0)
-#endif
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -88,11 +80,6 @@ extern "C" {
     size_t lHighWaterCount;
     size_t lTotalCount;
   } _CrtMemState;
-
-#ifndef _STATIC_ASSERT
-#define _STATIC_ASSERT(expr) extern char (*static_assert(void)) [(expr) ? 1 : -1]
-#endif
-
 
 // Debug reporting functions
 

@@ -9,6 +9,10 @@
 #define WIN7_COMPAT_MODE 1
 #endif
 
+#if DBG && !defined(_DEBUG)
+    #define _DEBUG     // CORE-17505
+#endif
+
 #include <stdio.h>
 #include <tchar.h>
 
@@ -43,8 +47,8 @@
 #include <shlguid_undoc.h>
 #include <undocshell.h>
 
-#include <rosctrls.h>
-#include <rosdlgs.h>
+#include <ui/rosctrls.h>
+#include <ui/rosdlgs.h>
 #include <shellutils.h>
 
 #include "tmschema.h"
@@ -68,7 +72,7 @@ extern BOOL bExplorerIsShell;
  * explorer.c
  */
 
-static inline 
+static inline
 LONG
 SetWindowStyle(IN HWND hWnd,
                IN LONG dwStyleMask,
@@ -312,14 +316,14 @@ CreateStartMenu(IN ITrayWindow *Tray,
 /*
  * startmnucust.cpp
  */
-VOID 
+VOID
 ShowCustomizeClassic(HINSTANCE, HWND);
 
 /*
 * startmnusite.cpp
 */
 
-HRESULT 
+HRESULT
 CStartMenuSite_CreateInstance(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 /*

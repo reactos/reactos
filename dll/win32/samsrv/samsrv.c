@@ -120,6 +120,10 @@ SamIInitialize(VOID)
             return Status;
     }
 
+    Status = SampInitializeDisplayCache();
+    if (!NT_SUCCESS(Status))
+        return Status;
+
     RtlInitializeResource(&SampResource);
 
     /* Initialize the SAM database */

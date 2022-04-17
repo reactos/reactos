@@ -215,7 +215,7 @@ int oldXMLWDcompatibility = 0; /* DEPRECATED */
 /**
  * xmlParserDebugEntities:
  *
- * Global setting, asking the parser to print out debugging informations.
+ * Global setting, asking the parser to print out debugging information.
  * while handling entities.
  * Disabled by default
  */

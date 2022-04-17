@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2009 Piotr Caban
- * Copyright (C) 2016 Henry Tang Ih
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,6 +14,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 /* Chinese text is encoded in UTF-8 */
@@ -75,49 +77,49 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-    IDS_TO_PRIMITIVE        "將物件轉換為原始類型的錯誤"
-    IDS_INVALID_CALL_ARG    "不正確程序呼叫或參數"
-    IDS_SUBSCRIPT_OUT_OF_RANGE "下標超出範圍"
-    IDS_OBJECT_REQUIRED     "所需的物件"
-    IDS_CREATE_OBJ_ERROR    "自動化伺服器不能創建物件"
-    IDS_NO_PROPERTY         "物件不支援此屬性或方法"
-    IDS_UNSUPPORTED_ACTION  "物件不支援此操作"
-    IDS_ARG_NOT_OPT         "參數不可選"
+    IDS_TO_PRIMITIVE        "轉換物件到基本類型時發生錯誤"
+    IDS_INVALID_CALL_ARG    "無效的程序呼叫或引數"
+    IDS_SUBSCRIPT_OUT_OF_RANGE "註標超出範圍"
+    IDS_OBJECT_REQUIRED     "需要物件"
+    IDS_CREATE_OBJ_ERROR    "自動作業伺服器無法建立物件"
+    IDS_NO_PROPERTY         "物件不支援這個屬性或方法"
+    IDS_UNSUPPORTED_ACTION  "物件不支援這個操作"
+    IDS_ARG_NOT_OPT         "這個"
     IDS_SYNTAX_ERROR        "語法錯誤"
-    IDS_SEMICOLON           "預期 ';'"
-    IDS_LBRACKET            "預期 '('"
-    IDS_RBRACKET            "預期 ')'"
-    IDS_EXPECTED_IDENTIFIER "預期的識別碼"
-    IDS_EXPECTED_ASSIGN     "預期 '='"
-    IDS_INVALID_CHAR        "不正確字元"
-    IDS_UNTERMINATED_STR    "未終止的字串常量"
-    IDS_MISPLACED_RETURN    "'return' 函數外部語句"
-    IDS_INVALID_BREAK       "不能有  'break' 外環路"
-    IDS_INVALID_CONTINUE    "不能有  'continue' 外環路"
-    IDS_LABEL_REDEFINED     "重新定義了標籤"
-    IDS_LABEL_NOT_FOUND     "未找到標籤"
-    IDS_EXPECTED_CCEND      "預期  '@end'"
+    IDS_SEMICOLON           "預期為 ';'"
+    IDS_LBRACKET            "預期為 '('"
+    IDS_RBRACKET            "預期為 ')'"
+    IDS_EXPECTED_IDENTIFIER "預期為識別碼"
+    IDS_EXPECTED_ASSIGN     "預期為 '='"
+    IDS_INVALID_CHAR        "無效的字元"
+    IDS_UNTERMINATED_STR    "未終結的字串常數"
+    IDS_MISPLACED_RETURN    "'return' 敘述位於函式之外"
+    IDS_INVALID_BREAK       "在迴圈之外不可有 'break'"
+    IDS_INVALID_CONTINUE    "在迴圈之外不可有 'continue'"
+    IDS_LABEL_REDEFINED     "標貼重複定義"
+    IDS_LABEL_NOT_FOUND     "找不到標貼"
+    IDS_EXPECTED_CCEND      "預期為 '@end'"
     IDS_DISABLED_CC         "條件編譯已關閉"
-    IDS_EXPECTED_AT         "預期 '@'"
-    IDS_NOT_FUNC            "應為函數"
-    IDS_NOT_DATE            "'[object]' 不是一個日期物件"
-    IDS_NOT_NUM             "預期的號碼"
-    IDS_OBJECT_EXPECTED     "缺少物件"
-    IDS_ILLEGAL_ASSIGN      "非法轉讓"
+    IDS_EXPECTED_AT         "預期為 '@'"
+    IDS_NOT_FUNC            "預期為函式"
+    IDS_NOT_DATE            "'[object]' 並非日期物件"
+    IDS_NOT_NUM             "預期為數字"
+    IDS_OBJECT_EXPECTED     "預期為物件"
+    IDS_ILLEGAL_ASSIGN      "不合法的指派"
     IDS_UNDEFINED           "'|' 未定義"
-    IDS_NOT_BOOL            "布林物件預期"
-    IDS_INVALID_DELETE      "不能刪除 '|'"
-    IDS_NOT_VBARRAY         "VBArray 物件預期"
-    IDS_JSCRIPT_EXPECTED    "JScript 物件預期"
-    IDS_REGEXP_SYNTAX_ERROR "正則運算式中的語法錯誤"
-    IDS_URI_INVALID_CODING  "被解碼的 URI 不正確"
-    IDS_URI_INVALID_CHAR    "要編碼的 URI 包含不正確字元"
-    IDS_FRACTION_DIGITS_OUT_OF_RANGE "數位的小數部分的位數是超出範圍"
-    IDS_PRECISION_OUT_OF_RANGE "精度是超出範圍"
-    IDS_INVALID_LENGTH      "陣列長度必須為一個有限的正整數"
-    IDS_ARRAY_EXPECTED      "預期的陣列物件"
-    IDS_INVALID_WRITABLE_PROP_DESC "'writable' attribute on the property descriptor cannot be set to 'true' on this object"
-    IDS_NONCONFIGURABLE_REDEFINED  "Cannot redefine non-configurable property '|'"
-    IDS_NONWRITABLE_MODIFIED       "Cannot modify non-writable property '|'"
-    IDS_PROP_DESC_MISMATCH         "Property cannot have both accessors and a value"
+    IDS_NOT_BOOL            "預期為布林值物件"
+    IDS_INVALID_DELETE      "無法刪除 '|'"
+    IDS_NOT_VBARRAY         "預期為 VBArray 物件"
+    IDS_JSCRIPT_EXPECTED    "預期為 JScript 物件"
+    IDS_REGEXP_SYNTAX_ERROR "正規表示式語法發生錯誤"
+    IDS_URI_INVALID_CODING  "要編碼的 URI 內含無效字元"
+    IDS_URI_INVALID_CHAR    "要編碼的 URI 內含無效字元"
+    IDS_FRACTION_DIGITS_OUT_OF_RANGE "要編碼的 URI 內含無效字元"
+    IDS_PRECISION_OUT_OF_RANGE "精確度超出範圍"
+    IDS_INVALID_LENGTH      "陣列長度必須是有限正整數"
+    IDS_ARRAY_EXPECTED      "預期為陣列物件"
+    IDS_INVALID_WRITABLE_PROP_DESC "無法在這個物件更改屬性描述符中的 'writable' 屬性為 'true'"
+    IDS_NONCONFIGURABLE_REDEFINED  "無法重新定義不可設定的屬性 '|'"
+    IDS_NONWRITABLE_MODIFIED       "無法修改不可寫入的屬性 '|'"
+    IDS_PROP_DESC_MISMATCH         "屬性不可同時有存取子和值"
 }

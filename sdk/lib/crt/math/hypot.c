@@ -17,6 +17,10 @@
  */
 #include <precomp.h>
 
+#if (_MSC_VER >= 1920)
+#pragma function(_hypot)
+#endif
+
 /* Approximate square roots of DBL_MAX and DBL_MIN.  Numbers
    between these two shouldn't neither overflow nor underflow
    when squared.  */

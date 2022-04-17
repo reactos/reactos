@@ -24,7 +24,7 @@ BEGIN
     POPUP "&Fayl"
     BEGIN
         MENUITEM "&Yangi\tCtrl+N", CMD_NEW
-        MENUITEM "&New Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "Oc&hmoq...\tCtrl+O", CMD_OPEN
         MENUITEM "&Saqlamoq\tCtrl+S", CMD_SAVE
         MENUITEM "Quyid&agicha saqlamoq...", CMD_SAVE_AS

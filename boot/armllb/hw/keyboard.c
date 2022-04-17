@@ -100,7 +100,7 @@ CHAR LlbHwScanCodeToAsciiTable[58][2] =
     {   0,0   } ,
     { ' ',' ' } ,
 };
- 
+
 /* EXTENDED KEY TABLE *********************************************************/
 
 UCHAR LlbHwExtendedScanCodeTable[128] =
@@ -143,14 +143,14 @@ UCHAR LlbHwExtendedScanCodeTable[128] =
 /* FUNCTIONS ******************************************************************/
 
 USHORT LlbKbdLastScanCode;
- 
+
 UCHAR
 NTAPI
 LlbKbdTranslateScanCode(IN USHORT ScanCode,
                         IN PUCHAR KeyCode)
 {
     ULONG LastScanCode;
-    
+
     /* Check for extended scan codes */
     if ((ScanCode == 0xE0) || (ScanCode == 0xE1))
  	{
@@ -166,7 +166,7 @@ LlbKbdTranslateScanCode(IN USHORT ScanCode,
  		LlbKbdLastScanCode = 0;
  		return 0;
  	}
- 	
+
  	/* Only act on the break, not the make */
     if (ScanCode > 0x80) return 0;
 
@@ -183,10 +183,10 @@ LlbKbdTranslateScanCode(IN USHORT ScanCode,
  		{
  		    /* E0 extended codes */
  		    case 0xE0:
- 		    
+
  		        /* Skip bogus codes */
  			    if ((ScanCode == 0x2A) || (ScanCode == 0x36)) return 0;
- 			    
+
  			    /* Lookup the code for it */
                 if (!LlbHwExtendedScanCodeTable[ScanCode]) return 0;
  				*KeyCode = LlbHwExtendedScanCodeTable[ScanCode];
@@ -194,7 +194,7 @@ LlbKbdTranslateScanCode(IN USHORT ScanCode,
 
             /* E1 extended codes */
  		    case 0xE1:
- 		    
+
  		        /* Only recognize one (the SYSREQ/PAUSE sequence) */
                 if (ScanCode != 0x1D) return 0;
  			    LlbKbdLastScanCode = 0x100;
@@ -202,7 +202,7 @@ LlbKbdTranslateScanCode(IN USHORT ScanCode,
 
             /* PAUSE sequence */
  		    case 0x100:
- 		    
+
  		        /* Make sure it's the one */
                 if (ScanCode != 0x45) return 0;
  				*KeyCode = E1_PAUSE;
@@ -219,22 +219,22 @@ LlbKbdTranslateScanCode(IN USHORT ScanCode,
 	/* Translation success */
  	return 1;
  }
- 
+
 CHAR
 NTAPI
 LlbKeyboardGetChar(VOID)
 {
     UCHAR ScanCode, KeyCode;
-    
+
     do
     {
         /* Read the scan code and convert it to a virtual key code */
         ScanCode = LlbHwKbdRead();
     } while (!LlbKbdTranslateScanCode(ScanCode, &KeyCode));
-    
+
     /* Is this ASCII? */
     if (KeyCode > 96) return ScanCode;
-    
+
     /* Return the ASCII character */
     return LlbHwScanCodeToAsciiTable[KeyCode][0];
 }

@@ -118,6 +118,9 @@ MachInit(const char *CmdLine)
 {
     if (!Pc98ArchTest())
     {
+        ERR("This is not a supported PC98!\n");
+
+        /* Disable and halt the CPU */
         _disable();
         __halt();
 
@@ -126,7 +129,7 @@ MachInit(const char *CmdLine)
     }
 
     /* Setup vtbl */
-    RtlZeroMemory(&MachVtbl, sizeof(MACHVTBL));
+    RtlZeroMemory(&MachVtbl, sizeof(MachVtbl));
     MachVtbl.ConsPutChar = Pc98ConsPutChar;
     MachVtbl.ConsKbHit = Pc98ConsKbHit;
     MachVtbl.ConsGetCh = Pc98ConsGetCh;

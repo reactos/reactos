@@ -1,8 +1,8 @@
 /*
- * PROJECT:     SYSSETUP Hindi Translation
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Hindi translation of SYSSETUP
- * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ * PROJECT:     ReactOS System Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hindi resource file
+ * TRANSLATORS: Copyright 2019 Arnav Bhatt <arnavbhatt2004@gmail.com>
  */
 
 LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
@@ -80,12 +80,13 @@ CAPTION "रिऐक्ट ओएस सेटअप"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "सिस्टम लोकेल को उन एप्लिकेशन की भाषा से मेल खाना चाहिए जिनका आप उपयोग करना चाहते हैं। उपयोगकर्ता का स्थान नियंत्रित करता है कि संख्याएँ, मुद्राएँ और दिनांक कैसे दिखाई देते हैं।", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "सिस्टम लोकेल को उन एप्लिकेशन की भाषा से मेल खाना चाहिए जिनका आप उपयोग करना चाहते हैं। उपयोगकर्ता का स्थान नियंत्रित करता है कि संख्याएँ, मुद्राएँ और दिनांक कैसे दिखाई देते हैं।", IDC_STATIC, 53, 7, 253, 25
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "सिस्टम या उपयोगकर्ता लोकेल सेटिंग बदलने के लिए, अनुकूलित करें पर क्लिक करें।", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "&अनुकूलित...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "कीबोर्ड लेआउट आपके द्वारा टाइप किए जाने पर दिखाई देने वाले अक्षरों को नियंत्रित करता है।", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "कीबोर्ड लेआउट बदलने के लिए, अनुकूलित करें पर क्लिक करें।", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "&अनुकूलित...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -117,9 +118,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "रिऐक्ट ओएस सेटअप"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "कॉम्पोनेन्ट का दर्ज होना", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -181,10 +185,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "आपको अपने कंप्यूटर के लिए एक नाम और एक एडमिनिस्ट्रेटर पासवर्ड प्रदान करना होगा।"
     IDS_LOCALETITLE "क्षेत्रीय सेटिंग"
     IDS_LOCALESUBTITLE "आप विभिन्न क्षेत्रों और भाषाओं के लिए रिऐक्ट ओएस को अनुकूलित कर सकते हैं।"
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "दिनांक और समय"
     IDS_DATETIMESUBTITLE "अपने कंप्यूटर के लिए सही तारीख और समय निर्धारित करें।"
-    IDS_PROCESSTITLE "कम्पोनन्ट का दर्ज"
-    IDS_PROCESSSUBTITLE "कृपया प्रतीक्षा करें..."
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "दिखावट"
     IDS_THEMESELECTIONSUBTITLE "अपनी पसंद का थीम चुनें।"
 
@@ -194,7 +200,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "रिऐक्ट ओएस सेटअप"
     IDS_UNKNOWN_ERROR "अज्ञात त्रुटि"
-    IDS_REGISTERING_COMPONENTS "कॉम्पोनेन्ट का दर्ज होना..."
     IDS_LOADLIBRARY_FAILED "लोडलाइब्रेरी विफल रहा: "
     IDS_GETPROCADDR_FAILED "गैटप्रौकऐड्र विफल रहा: "
     IDS_REGSVR_FAILED "डीललरजिस्टरसर्वर विफल रहा: "
@@ -252,7 +257,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."

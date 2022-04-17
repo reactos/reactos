@@ -1842,7 +1842,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         /* Check if we were attached */
         if (ProcessHandle != NtCurrentProcess())
         {
-            /* Detach and derefernece the process */
+            /* Detach and dereference the process */
             KeUnstackDetachProcess(&ApcState);
             ObDereferenceObject(TargetProcess);
         }
@@ -1955,7 +1955,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     /* Check if we were attached */
     if (ProcessHandle != NtCurrentProcess())
     {
-        /* Detach and derefernece the process */
+        /* Detach and dereference the process */
         KeUnstackDetachProcess(&ApcState);
         ObDereferenceObject(TargetProcess);
     }
@@ -5210,8 +5210,10 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     SIZE_T PRegionSize;
     PVOID PBaseAddress;
     LONG_PTR AlreadyDecommitted, CommitReduction = 0;
+    LONG_PTR FirstCommit;
     ULONG_PTR StartingAddress, EndingAddress;
     PMMVAD Vad;
+    PMMVAD NewVad;
     NTSTATUS Status;
     PEPROCESS Process;
     PMMSUPPORT AddressSpace;
@@ -5437,6 +5439,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                 if ((EndingAddress >> PAGE_SHIFT) == Vad->EndingVpn)
                 {
                     //
+                    // Case D (freeing the entire region)
+                    //
                     // This is the easiest one to handle -- it is identical to
                     // the code path above when the caller sets a zero region size
                     // and the whole VAD is destroyed
@@ -5448,15 +5452,23 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                 else
                 {
                     //
+                    // Case A (freeing a part at the beginning)
+                    //
                     // This case is pretty easy too -- we compute a bunch of
                     // pages to decommit, and then push the VAD's starting address
                     // a bit further down, then decrement the commit charge
                     //
-                    // NOT YET IMPLEMENTED IN ARM3.
-                    //
-                    DPRINT1("Case A not handled\n");
-                    Status = STATUS_FREE_VM_NOT_AT_BASE;
-                    goto FailPath;
+                    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
+                    CommitReduction = MiCalculatePageCommitment(StartingAddress,
+                                                                EndingAddress,
+                                                                Vad,
+                                                                Process);
+                    Vad->u.VadFlags.CommitCharge -= CommitReduction;
+                    // For ReactOS: shrink the corresponding memory area
+                    ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
+                    ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
+                    Vad->StartingVpn = (EndingAddress + 1) >> PAGE_SHIFT;
+                    MemoryArea->VadNode.StartingVpn = Vad->StartingVpn;
 
                     //
                     // After analyzing the VAD, set it to NULL so that we don't
@@ -5472,8 +5484,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                 //
                 if ((EndingAddress >> PAGE_SHIFT) == Vad->EndingVpn)
                 {
-                    PMEMORY_AREA MemoryArea;
-
+                    //
+                    // Case C (freeing a part at the end)
                     //
                     // This is pretty easy and similar to case A. We compute the
                     // amount of pages to decommit, update the VAD's commit charge
@@ -5487,7 +5499,6 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                                                                 Process);
                     Vad->u.VadFlags.CommitCharge -= CommitReduction;
                     // For ReactOS: shrink the corresponding memory area
-                    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)StartingAddress);
                     ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
                     ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
                     Vad->EndingVpn = (StartingAddress - 1) >> PAGE_SHIFT;
@@ -5496,16 +5507,73 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                 else
                 {
                     //
-                    // This is case B and the hardest one. Because we are removing
-                    // a chunk of memory from the very middle of the VAD, we must
-                    // actually split the VAD into two new VADs and compute the
-                    // commit charges for each of them, and reinsert new charges.
+                    // Case B (freeing a part in the middle)
                     //
-                    // NOT YET IMPLEMENTED IN ARM3.
+                    // This is the hardest one. Because we are removing a chunk
+                    // of memory from the very middle of the VAD, we must actually
+                    // split the VAD into two new VADs and compute the commit
+                    // charges for each of them, and reinsert new charges.
                     //
-                    DPRINT1("Case B not handled\n");
-                    Status = STATUS_FREE_VM_NOT_AT_BASE;
-                    goto FailPath;
+                    NewVad = ExAllocatePoolZero(NonPagedPool, sizeof(MMVAD_LONG), 'SdaV');
+                    if (NewVad == NULL)
+                    {
+                        DPRINT1("Failed to allocate a VAD!\n");
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        goto FailPath;
+                    }
+
+                    //
+                    // This new VAD describes the second chunk, so we keep the end
+                    // address of the original and adjust the start to point past
+                    // the released region.
+                    // The commit charge will be calculated below.
+                    //
+                    NewVad->StartingVpn = (EndingAddress + 1) >> PAGE_SHIFT;
+                    NewVad->EndingVpn = Vad->EndingVpn;
+                    NewVad->u.LongFlags = Vad->u.LongFlags;
+                    NewVad->u.VadFlags.CommitCharge = 0;
+                    ASSERT(NewVad->EndingVpn >= NewVad->StartingVpn);
+
+                    //
+                    // TODO: charge quota for the new VAD
+                    //
+
+                    //
+                    // Get the commit charge for the released region
+                    //
+                    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
+                    CommitReduction = MiCalculatePageCommitment(StartingAddress,
+                                                                EndingAddress,
+                                                                Vad,
+                                                                Process);
+
+                    //
+                    // Adjust the end of the original VAD (first chunk).
+                    // For ReactOS: shrink the corresponding memory area
+                    //
+                    ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
+                    ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
+                    Vad->EndingVpn = (StartingAddress - 1) >> PAGE_SHIFT;
+                    MemoryArea->VadNode.EndingVpn = Vad->EndingVpn;
+
+                    //
+                    // Now the addresses for both VADs are consistent,
+                    // so insert the new one.
+                    // ReactOS: This will take care of creating a second MEMORY_AREA.
+                    //
+                    MiInsertVad(NewVad, &Process->VadRoot);
+
+                    //
+                    // Calculate the commit charge for the first split.
+                    // The second chunk's size is the original size, minus the
+                    // released region's size, minus this first chunk.
+                    //
+                    FirstCommit = MiCalculatePageCommitment(Vad->StartingVpn << PAGE_SHIFT,
+                                                            StartingAddress - 1,
+                                                            Vad,
+                                                            Process);
+                    NewVad->u.VadFlags.CommitCharge = Vad->u.VadFlags.CommitCharge - CommitReduction - FirstCommit;
+                    Vad->u.VadFlags.CommitCharge = FirstCommit;
                 }
 
                 //
@@ -5617,7 +5685,7 @@ FinalPath:
     goto FinalPath;
 
     //
-    // In the failure path, we detach and derefernece the target process, and
+    // In the failure path, we detach and dereference the target process, and
     // return whatever failure code was sent.
     //
 FailPath:

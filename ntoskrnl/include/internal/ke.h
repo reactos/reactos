@@ -986,16 +986,22 @@ VOID
 NTAPI
 KeThawExecution(IN BOOLEAN Enable);
 
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_Acquires_nonreentrant_lock_(*LockHandle->Lock)
+_Acquires_exclusive_lock_(*LockHandle->Lock)
 VOID
 FASTCALL
 KeAcquireQueuedSpinLockAtDpcLevel(
-    IN OUT PKSPIN_LOCK_QUEUE LockQueue
+    _Inout_ PKSPIN_LOCK_QUEUE LockQueue
 );
 
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_Releases_nonreentrant_lock_(*LockHandle->Lock)
+_Releases_exclusive_lock_(*LockHandle->Lock)
 VOID
 FASTCALL
 KeReleaseQueuedSpinLockFromDpcLevel(
-    IN OUT PKSPIN_LOCK_QUEUE LockQueue
+    _Inout_ PKSPIN_LOCK_QUEUE LockQueue
 );
 
 VOID

@@ -98,7 +98,7 @@ HCELL_INDEX
 NTAPI
 CmpFindValueByName(IN PHHIVE Hive,
                    IN PCM_KEY_NODE KeyNode,
-                   IN PUNICODE_STRING Name)
+                   IN PCUNICODE_STRING Name)
 {
     HCELL_INDEX CellIndex;
 
@@ -194,7 +194,7 @@ CmpValueToData(IN PHHIVE Hive,
     if (BufferAllocated)
     {
         /* Free the buffer and bugcheck */
-        CmpFree(Buffer, 0);
+        Hive->Free(Buffer, 0);
         KeBugCheckEx(REGISTRY_ERROR, 8, 0, (ULONG_PTR)Hive, (ULONG_PTR)Value);
     }
 

@@ -87,7 +87,7 @@ CHAR DosReadCharacter(WORD FileHandle, BOOLEAN Echo)
     WORD BytesRead;
     PDOS_FILE_DESCRIPTOR Descriptor = NULL;
     WORD OldDeviceInfo;
-    
+
     /* Find the standard input descriptor and switch it to binary mode */
     Descriptor = DosGetHandleFileDescriptor(FileHandle);
     if (Descriptor)

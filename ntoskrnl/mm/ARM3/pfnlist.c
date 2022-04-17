@@ -254,6 +254,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
     Entry->PfnUsage = MI_PFN_CURRENT_USAGE;
     memcpy(Entry->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
+    Entry->CallSite = _ReturnAddress();
     MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
     MI_SET_PROCESS2("Not Set");
 #endif
@@ -462,6 +463,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
     Pfn1->PfnUsage = MI_PFN_CURRENT_USAGE;
     memcpy(Pfn1->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
+    Pfn1->CallSite = _ReturnAddress();
     MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
     MI_SET_PROCESS2("Not Set");
 #endif
@@ -596,9 +598,6 @@ MiRemoveZeroPage(IN ULONG Color)
     return PageIndex;
 }
 
-/* HACK for keeping legacy Mm alive */
-extern BOOLEAN MmRosNotifyAvailablePage(PFN_NUMBER PageFrameIndex);
-
 VOID
 NTAPI
 MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
@@ -625,13 +624,6 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     ASSERT(Pfn1->u3.e1.RemovalRequested == 0);
     ASSERT(Pfn1->u4.VerifierAllocation == 0);
     ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
-
-    /* HACK HACK HACK : Feed the page to legacy Mm */
-    if (MmRosNotifyAvailablePage(PageFrameIndex))
-    {
-        DPRINT1("Legacy Mm eating ARM3 page!.\n");
-        return;
-    }
 
     /* Get the free page list and increment its count */
     ListHead = &MmFreePageListHead;
@@ -710,6 +702,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
 #if MI_TRACE_PFNS
     Pfn1->PfnUsage = MI_USAGE_FREE_PAGE;
     RtlZeroMemory(Pfn1->ProcessName, 16);
+    Pfn1->CallSite = NULL;
 #endif
 }
 
@@ -940,6 +933,7 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
             ASSERT(MI_PFN_CURRENT_USAGE == MI_USAGE_NOT_SET);
             Pfn1->PfnUsage = MI_USAGE_FREE_PAGE;
             RtlZeroMemory(Pfn1->ProcessName, 16);
+            Pfn1->CallSite = NULL;
 #endif
     }
     else if (ListName == ModifiedPageList)

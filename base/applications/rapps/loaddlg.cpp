@@ -40,7 +40,7 @@
 
 #include <debug.h>
 
-#include <rosctrls.h>
+#include <ui/rosctrls.h>
 #include <windowsx.h>
 #include <process.h>
 #undef SubclassWindow
@@ -406,16 +406,23 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
 
         bCancelled = FALSE;
 
-        hIconBg = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICON);
-        hIconSm = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
+        if (hMainWnd)
+        {
+            hIconBg = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICON);
+            hIconSm = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
+        }
+        if (!hMainWnd || (!hIconBg || !hIconSm))
+        {
+            /* Load the default icon */
+            hIconBg = hIconSm = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+        }
 
         if (hIconBg && hIconSm)
         {
-            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM) hIconBg);
-            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) hIconSm);
+            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM)hIconBg);
+            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
         }
 
-        SetWindowLongPtrW(Dlg, GWLP_USERDATA, 0);
         HWND Item = GetDlgItem(Dlg, IDC_DOWNLOAD_PROGRESS);
         if (Item)
         {
@@ -448,7 +455,6 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         DownloadParam *param = new DownloadParam(Dlg, AppsDownloadList, szCaption);
         unsigned int ThreadId;
         HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, (void *) param, 0, &ThreadId);
-
         if (!Thread)
         {
             return FALSE;
@@ -529,7 +535,7 @@ BOOL ShowLastError(
     DWORD dwLastError)
 {
     CLocalPtr<WCHAR> lpMsg;
-    
+
     if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                         FORMAT_MESSAGE_IGNORE_INSERTS |
                         (bInetError ? FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
@@ -622,7 +628,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP);
             break;
         }
-        
+
         if (!IsWindow(hDlg)) goto end;
         SetWindowTextW(hDlg, szNewCaption.GetString());
 
@@ -1030,12 +1036,12 @@ BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInf
     return TRUE;
 }
 
-BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal)
+BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo)
 {
     if (!pAppInfo)
         return FALSE;
 
-    CDownloadManager::Download(*pAppInfo, bIsModal);
+    CDownloadManager::Download(*pAppInfo, FALSE);
     return TRUE;
 }
 

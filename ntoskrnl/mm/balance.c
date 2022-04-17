@@ -29,10 +29,7 @@ MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 
 MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 static ULONG MiMinimumAvailablePages;
-static LIST_ENTRY AllocationListHead;
-static KSPIN_LOCK AllocationListLock;
 static ULONG MiMinimumPagesPerRun;
-
 static CLIENT_ID MiBalancerThreadId;
 static HANDLE MiBalancerThreadHandle = NULL;
 static KEVENT MiBalancerEvent;
@@ -48,8 +45,6 @@ NTAPI
 MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
 {
     memset(MiMemoryConsumers, 0, sizeof(MiMemoryConsumers));
-    InitializeListHead(&AllocationListHead);
-    KeInitializeSpinLock(&AllocationListLock);
 
     /* Set up targets. */
     MiMinimumAvailablePages = 256;
@@ -212,16 +207,24 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
                 Process = Entry->Process;
                 Address = Entry->Address;
 
+                ObReferenceObject(Process);
+
+                if (!ExAcquireRundownProtection(&Process->RundownProtect))
+                {
+                    ObDereferenceObject(Process);
+                    MiReleasePfnLock(OldIrql);
+                    continue;
+                }
+
                 MiReleasePfnLock(OldIrql);
 
                 KeStackAttachProcess(&Process->Pcb, &ApcState);
-
-                MmLockAddressSpace(&Process->Vm);
+                MiLockProcessWorkingSet(Process, PsGetCurrentThread());
 
                 /* Be sure this is still valid. */
-                PMMPTE Pte = MiAddressToPte(Address);
-                if (Pte->u.Hard.Valid)
+                if (MmIsAddressValid(Address))
                 {
+                    PMMPTE Pte = MiAddressToPte(Address);
                     Accessed = Accessed || Pte->u.Hard.Accessed;
                     Pte->u.Hard.Accessed = 0;
 
@@ -229,9 +232,11 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
                     //KeInvalidateTlbEntry(Address);
                 }
 
-                MmUnlockAddressSpace(&Process->Vm);
+                MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
 
                 KeUnstackDetachProcess(&ApcState);
+                ExReleaseRundownProtection(&Process->RundownProtect);
+                ObDereferenceObject(Process);
             }
 
             if (!Accessed)
@@ -348,46 +353,6 @@ MiBalancerThread(PVOID Unused)
             KeBugCheck(MEMORY_MANAGEMENT);
         }
     }
-}
-
-BOOLEAN MmRosNotifyAvailablePage(PFN_NUMBER Page)
-{
-    PLIST_ENTRY Entry;
-    PMM_ALLOCATION_REQUEST Request;
-    PMMPFN Pfn1;
-
-    /* Make sure the PFN lock is held */
-    MI_ASSERT_PFN_LOCK_HELD();
-
-    if (!MiMinimumAvailablePages)
-    {
-        /* Dirty way to know if we were initialized. */
-        return FALSE;
-    }
-
-    Entry = ExInterlockedRemoveHeadList(&AllocationListHead, &AllocationListLock);
-    if (!Entry)
-        return FALSE;
-
-    Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
-    MiZeroPhysicalPage(Page);
-    Request->Page = Page;
-
-    Pfn1 = MiGetPfnEntry(Page);
-    ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
-    Pfn1->u3.e2.ReferenceCount = 1;
-    Pfn1->u3.e1.PageLocation = ActiveAndValid;
-
-    /* This marks the PFN as a ReactOS PFN */
-    Pfn1->u4.AweAllocation = TRUE;
-
-    /* Allocate the extra ReactOS Data and zero it out */
-    Pfn1->u1.SwapEntry = 0;
-    Pfn1->RmapListHead = NULL;
-
-    KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
-
-    return TRUE;
 }
 
 CODE_SEG("INIT")

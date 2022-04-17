@@ -20,6 +20,8 @@
 #include <winreg.h>
 #include <wincon.h>
 
+#include <errno.h>
+
 #include <conutils.h>
 
 /*
@@ -150,8 +152,9 @@ typedef struct _DISKENTRY
 
     ULONG DiskNumber;
     USHORT Port;
-    USHORT Bus;
-    USHORT Id;
+    USHORT PathId;
+    USHORT TargetId;
+    USHORT Lun;
 
     /* Has the partition list been modified? */
     BOOLEAN Dirty;
@@ -170,14 +173,32 @@ typedef struct _DISKENTRY
 
 } DISKENTRY, *PDISKENTRY;
 
+typedef struct _VOLENTRY
+{
+    LIST_ENTRY ListEntry;
+
+    ULONG VolumeNumber;
+    WCHAR VolumeName[MAX_PATH];
+
+    WCHAR DriveLetter;
+
+    PWSTR pszLabel;
+    PWSTR pszFilesystem;
+    UINT DriveType;
+    ULARGE_INTEGER Size;
+
+} VOLENTRY, *PVOLENTRY;
+
 
 /* GLOBAL VARIABLES ***********************************************************/
 
 extern LIST_ENTRY DiskListHead;
 extern LIST_ENTRY BiosDiskListHead;
+extern LIST_ENTRY VolumeListHead;
 
 extern PDISKENTRY CurrentDisk;
 extern PPARTENTRY CurrentPartition;
+extern PVOLENTRY  CurrentVolume;
 
 /* PROTOTYPES *****************************************************************/
 
@@ -225,6 +246,9 @@ BOOL detail_main(INT argc, LPWSTR *argv);
 
 /* diskpart.c */
 
+/* dump.c */
+BOOL dump_main(INT argc, LPWSTR *argv);
+
 /* expand.c */
 BOOL expand_main(INT argc, LPWSTR *argv);
 
@@ -261,6 +285,26 @@ BOOL list_main(INT argc, LPWSTR *argv);
 /* merge.c */
 BOOL merge_main(INT argc, LPWSTR *argv);
 
+/* misc.c */
+BOOL
+IsDecString(
+    _In_ PWSTR pszDecString);
+
+BOOL
+IsHexString(
+    _In_ PWSTR pszHexString);
+
+BOOL
+HasPrefix(
+    _In_ PWSTR pszString,
+    _In_ PWSTR pszPrefix);
+
+ULONGLONG
+RoundingDivide(
+    _In_ ULONGLONG Dividend,
+    _In_ ULONGLONG Divisor);
+
+
 /* offline.c */
 BOOL offline_main(INT argc, LPWSTR *argv);
 
@@ -273,6 +317,12 @@ CreatePartitionList(VOID);
 
 VOID
 DestroyPartitionList(VOID);
+
+NTSTATUS
+CreateVolumeList(VOID);
+
+VOID
+DestroyVolumeList(VOID);
 
 /* recover.c */
 BOOL recover_main(INT argc, LPWSTR *argv);

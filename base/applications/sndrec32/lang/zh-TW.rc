@@ -1,10 +1,9 @@
 /*
- * PROJECT:    ReactOS Sound Recorder
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/sndrec32/lang/zh-TW.rc
- * PURPOSE:    Chinese (Traditional) resource file
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
- *             Chan Chilung <eason066@gmail.com>
+ * PROJECT:     ReactOS Sound Recorder
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung <elton328@gmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -17,7 +16,7 @@ END
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "檔案"
+    POPUP "檔案(&F)"
     BEGIN
         MENUITEM "新增(&N)", ID_FILE_NEW
         MENUITEM "開啟(&O)...", ID_FILE_OPEN
@@ -44,13 +43,13 @@ BEGIN
     END
     POPUP "效果(&S)"
     BEGIN
-        MENUITEM "調高音量 (25%)(&I)", ID_EFFECTS_INCVOL
-        MENUITEM "減小音量(&D)", ID_EFFECTS_DECVOL
+        MENUITEM "調高音量（25%）(&I)", ID_EFFECTS_INCVOL
+        MENUITEM "調低音量(&D)", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "增加速度 (100%)(&I)", ID_EFFECTS_INCSPD
+        MENUITEM "增加速度（100%）(&I)", ID_EFFECTS_INCSPD
         MENUITEM "降低速度(&D)", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
-        MENUITEM "添加回音(&A)", ID_EFFECTS_ECHO
+        MENUITEM "新增回音(&A)", ID_EFFECTS_ECHO
         MENUITEM "反轉(&R)", ID_EFFECTS_REVERSE
     END
     POPUP "說明(&?)"

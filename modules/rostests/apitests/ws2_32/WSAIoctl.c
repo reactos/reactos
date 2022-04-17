@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for WSHIoctl:
- *                  - SIO_GET_INTERFACE_LIST 
+ *                  - SIO_GET_INTERFACE_LIST
  * PROGRAMMERS:     Andreas Maier
  */
 
@@ -38,7 +38,7 @@ BOOL Test_WSAIoctl_InitTest(
     pTable = (PMIB_IPADDRTABLE)malloc(TableSize);
     *ppTable = pTable;
     ret = GetIpAddrTable(pTable, &TableSize, TRUE);
-    if (ret != NO_ERROR) 
+    if (ret != NO_ERROR)
     {
         skip("GetIpAddrTable failed with %ld. Abort Testing.\n", ret);
         return FALSE;
@@ -78,7 +78,7 @@ void Test_WSAIoctl_GetInterfaceList()
     PMIB_IPADDRTABLE pTable = NULL;
     PMIB_IPADDRROW pRow;
 
-    /* Get PMIB_IPADDRTABE - these results we should get from wshtcpip.dll too. */ 
+    /* Get PMIB_IPADDRTABE - these results we should get from wshtcpip.dll too. */
     /* pTable is allocated by Test_WSAIoctl_InitTest! */
     if (!Test_WSAIoctl_InitTest(&pTable))
         goto cleanup;
@@ -113,12 +113,12 @@ void Test_WSAIoctl_GetInterfaceList()
     HeapFree(GetProcessHeap(), 0, buf);
     buf = NULL;
 
-    /* Do the Ioctl 
-       In most cases no loop is done. 
-       Only if WSAIoctl fails with WSAEFAULT (buffer to small) we need to retry with a 
+    /* Do the Ioctl
+       In most cases no loop is done.
+       Only if WSAIoctl fails with WSAEFAULT (buffer to small) we need to retry with a
        larger buffer */
     i1 = 0;
-    while (TRUE) 
+    while (TRUE)
     {
         if (buf != NULL)
         {
@@ -155,8 +155,8 @@ void Test_WSAIoctl_GetInterfaceList()
 
     /* Calculate how many INTERFACE_INFO we got */
     infoCount = BytesReturned / sizeof(INTERFACE_INFO);
-    ok(infoCount == pTable->dwNumEntries, 
-       "Wrong count of entries! Got %ld, expected %ld.\n", pTable->dwNumEntries, infoCount);    
+    ok(infoCount == pTable->dwNumEntries,
+       "Wrong count of entries! Got %ld, expected %ld.\n", pTable->dwNumEntries, infoCount);
 
     if (winetest_debug >= 2)
     {
@@ -195,7 +195,7 @@ void Test_WSAIoctl_GetInterfaceList()
         }
 
         /* iiFlags
-         * Don't know if this value is fix for SIO_GET_INTERFACE_LIST! */ 
+         * Don't know if this value is fix for SIO_GET_INTERFACE_LIST! */
         iiFlagsExpected = IFF_BROADCAST | IFF_MULTICAST;
         if ((pRow->wType & MIB_IPADDR_DISCONNECTED) == 0)
             iiFlagsExpected |= IFF_UP;
@@ -205,10 +205,10 @@ void Test_WSAIoctl_GetInterfaceList()
             /* on Windows 7 loopback has broadcast flag cleared */
             //iiFlagsExpected &= ~IFF_BROADCAST;
         }
-        
+
         ok_hex(ifInfo[i1].iiFlags, iiFlagsExpected);
         ok_hex(ifInfo[i1].iiAddress.AddressIn.sin_addr.s_addr, pRow->dwAddr);
-        // dwBCastAddr is not the "real" Broadcast-Address. 
+        // dwBCastAddr is not the "real" Broadcast-Address.
         BCastAddr = (pRow->dwBCastAddr == 1 && (iiFlagsExpected & IFF_BROADCAST) != 0) ? 0xFFFFFFFF : 0x0;
         ok_hex(ifInfo[i1].iiBroadcastAddress.AddressIn.sin_addr.s_addr, BCastAddr);
         ok_hex(ifInfo[i1].iiNetmask.AddressIn.sin_addr.s_addr, pRow->dwMask);

@@ -4,7 +4,7 @@
  * FILE:            drivers/kbdclass/kbdclass.c
  * PURPOSE:         Keyboard class driver
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "kbdclass.h"
@@ -163,12 +163,21 @@ ClassDeviceControl(
 			while (Entry != Head)
 			{
 				PPORT_DEVICE_EXTENSION DevExt = CONTAINING_RECORD(Entry, PORT_DEVICE_EXTENSION, ListEntry);
-				NTSTATUS IntermediateStatus;
 
 				IoGetCurrentIrpStackLocation(Irp)->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
-				IntermediateStatus = ForwardIrpAndWait(DevExt->DeviceObject, Irp);
-				if (!NT_SUCCESS(IntermediateStatus))
-					Status = IntermediateStatus;
+
+				if (IoForwardIrpSynchronously(DevExt->LowerDevice, Irp))
+				{
+					if (!NT_SUCCESS(Irp->IoStatus.Status))
+					{
+						Status = Irp->IoStatus.Status;
+					}
+				}
+				else
+				{
+					Status = STATUS_UNSUCCESSFUL;
+				}
+				
 				Entry = Entry->Flink;
 			}
 			break;
@@ -321,7 +330,7 @@ CreateClassDeviceObject(
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 	DeviceNameU.Length = 0;
 	DeviceNameU.MaximumLength =
-		wcslen(L"\\Device\\") * sizeof(WCHAR)    /* "\Device\" */
+		(USHORT)wcslen(L"\\Device\\") * sizeof(WCHAR) /* "\Device\" */
 		+ DriverExtension->DeviceBaseName.Length /* "KeyboardClass" */
 		+ 4 * sizeof(WCHAR)                      /* Id between 0 and 9999 */
 		+ sizeof(UNICODE_NULL);                  /* Final NULL char */
@@ -836,7 +845,15 @@ ClassPnp(
 	switch (IrpSp->MinorFunction)
 	{
 		case IRP_MN_START_DEVICE:
-		    Status = ForwardIrpAndWait(DeviceObject, Irp);
+			if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
+			{
+				Status = Irp->IoStatus.Status;
+			}
+			else
+			{
+				Status = STATUS_UNSUCCESSFUL;
+			}
+
 			if (NT_SUCCESS(Status))
 			{
 				InitializeObjectAttributes(&ObjectAttributes,

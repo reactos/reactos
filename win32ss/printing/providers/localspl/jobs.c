@@ -1475,7 +1475,7 @@ FreeJob(PLOCAL_JOB pJob)
     // Free memory for the optional fields if they are present.
     if (pJob->pwszOutputFile)
         DllFreeSplStr(pJob->pwszOutputFile);
-    
+
     if (pJob->pwszPrintProcessorParameters)
         DllFreeSplStr(pJob->pwszPrintProcessorParameters);
 

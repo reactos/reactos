@@ -65,7 +65,7 @@ BEGIN
     PUSHBUTTON "Cancel", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Добавяне/премахване на приложения"
     IDS_CPLSYSTEMDESCRIPTION "Слага приложения и създава препратки."

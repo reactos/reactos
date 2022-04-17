@@ -980,7 +980,7 @@ typedef struct _XSTATE_SAVE {
   struct _KTHREAD* Thread;
   UCHAR Level;
   XSTATE_CONTEXT XStateContext;
-#elif defined(_IA64_) || defined(_ARM_)
+#elif defined(_IA64_) || defined(_ARM_) || defined(_ARM64_)
   ULONG Dummy;
 #elif defined(_X86_)
   _ANONYMOUS_UNION union {
@@ -1087,11 +1087,6 @@ typedef struct _NT_TIB64 {
   ULONG64 Self;
 } NT_TIB64,*PNT_TIB64;
 
-#define NX_SUPPORT_POLICY_ALWAYSOFF 0
-#define NX_SUPPORT_POLICY_ALWAYSON  1
-#define NX_SUPPORT_POLICY_OPTIN     2
-#define NX_SUPPORT_POLICY_OPTOUT    3
-
 _IRQL_requires_same_
 _Function_class_(EXPAND_STACK_CALLOUT)
 typedef VOID
@@ -1146,6 +1141,16 @@ typedef struct _XSTATE_CONFIGURATION {
 } XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
 
 #define MAX_WOW64_SHARED_ENTRIES 16
+
+//
+// Flags for NXSupportPolicy
+//
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+#define NX_SUPPORT_POLICY_ALWAYSOFF 0
+#define NX_SUPPORT_POLICY_ALWAYSON  1
+#define NX_SUPPORT_POLICY_OPTIN     2
+#define NX_SUPPORT_POLICY_OPTOUT    3
+#endif
 
 typedef struct _KUSER_SHARED_DATA {
   ULONG TickCountLowDeprecated;

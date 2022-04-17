@@ -76,7 +76,7 @@ PDRVENABLEDATA pded)
         pded->iDriverVersion = DDI_DRIVER_VERSION_NT4;
 // eVb: 1.2 [END]
 
-    return(TRUE);
+    return TRUE;
 }
 
 /******************************Public*Routine******************************\
@@ -103,7 +103,7 @@ HANDLE      hDriver)        // Handle to base driver
 {
     GDIINFO GdiInfo;
     DEVINFO DevInfo;
-    PPDEV   ppdev = (PPDEV) NULL;
+    PPDEV   ppdev = NULL;
 
     UNREFERENCED_PARAMETER(pwszLogAddress);
     UNREFERENCED_PARAMETER(pwszDeviceName);
@@ -112,10 +112,10 @@ HANDLE      hDriver)        // Handle to base driver
 
     ppdev = (PPDEV) EngAllocMem(0, sizeof(PDEV), ALLOC_TAG);
 
-    if (ppdev == (PPDEV) NULL)
+    if (ppdev == NULL)
     {
         RIP("DISP DrvEnablePDEV failed EngAllocMem\n");
-        return((DHPDEV) 0);
+        return NULL;
     }
 
     memset(ppdev, 0, sizeof(PDEV));
@@ -161,12 +161,12 @@ HANDLE      hDriver)        // Handle to base driver
 
     memcpy(pGdiInfo, &GdiInfo, min(cjGdiInfo, sizeof(GDIINFO)));
 
-    return((DHPDEV) ppdev);
+    return (DHPDEV)ppdev;
 
     // Error case for failure.
 error_free:
     EngFreeMem(ppdev);
-    return((DHPDEV) 0);
+    return NULL;
 }
 
 /******************************Public*Routine******************************\
@@ -226,7 +226,7 @@ DHPDEV dhpdev)
     if (!bInitSURF(ppdev, TRUE))
     {
         RIP("DISP DrvEnableSurface failed bInitSURF\n");
-        return(FALSE);
+        return NULL;
     }
 
     sizl.cx = ppdev->cxScreen;
@@ -238,7 +238,7 @@ DHPDEV dhpdev)
     {
         if (!bInit256ColorPalette(ppdev)) {
             RIP("DISP DrvEnableSurface failed to init the 8bpp palette\n");
-            return(FALSE);
+            return NULL;
         }
         ulBitmapType = BMF_8BPP;
         flHooks = HOOKS_BMF8BPP;
@@ -266,14 +266,14 @@ DHPDEV dhpdev)
 #endif
 // eVb: 1.3 [END]
 // eVb: 1.4 [DDK Change] - Use EngCreateDeviceSurface instead of EngCreateBitmap
-    hsurf = (HSURF)EngCreateDeviceSurface((DHSURF)ppdev, 
+    hsurf = (HSURF)EngCreateDeviceSurface((DHSURF)ppdev,
                                            sizl,
                                            ulBitmapType);
 
-    if (hsurf == (HSURF) 0)
+    if (hsurf == NULL)
     {
         RIP("DISP DrvEnableSurface failed EngCreateDeviceSurface\n");
-        return(FALSE);
+        return NULL;
     }
 // eVb: 1.4 [END]
 
@@ -288,16 +288,16 @@ DHPDEV dhpdev)
                            NULL))
     {
         RIP("DISP DrvEnableSurface failed EngModifySurface\n");
-        return(FALSE);
+        return NULL;
     }
 // eVb: 1.5 [END]
     ppdev->hsurfEng = hsurf;
 // eVb: 1.4 [VGARISC Change] - Allocate 4BPP DIB that will store GDI drawing
     hSurfBitmap = (HSURF)EngCreateBitmap(sizl, 0, ulBitmapType, 0, NULL);
-    if (hSurfBitmap == (HSURF) 0)
+    if (hSurfBitmap == NULL)
     {
         RIP("DISP DrvEnableSurface failed EngCreateBitmap\n");
-        return(FALSE);
+        return NULL;
     }
 
     if ( !EngModifySurface(hSurfBitmap,
@@ -310,17 +310,17 @@ DHPDEV dhpdev)
                            NULL))
     {
         RIP("DISP DrvEnableSurface failed second EngModifySurface\n");
-        return(FALSE);
+        return NULL;
     }
 
     ppdev->pso = EngLockSurface(hSurfBitmap);
     if (ppdev->pso == NULL)
     {
         RIP("DISP DrvEnableSurface failed EngLockSurface\n");
-        return(FALSE);
+        return NULL;
     }
 // eVb: 1.4 [END]
-    return(hsurf);
+    return hsurf;
 }
 
 /******************************Public*Routine******************************\
@@ -335,7 +335,7 @@ DHPDEV dhpdev)
 {
     EngDeleteSurface(((PPDEV) dhpdev)->hsurfEng);
     vDisableSURF((PPDEV) dhpdev);
-    ((PPDEV) dhpdev)->hsurfEng = (HSURF) 0;
+    ((PPDEV) dhpdev)->hsurfEng = NULL;
 }
 
 /******************************Public*Routine******************************\

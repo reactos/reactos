@@ -14,19 +14,38 @@
 #include <stdio.h>
 
 #include <windows.h>
-#include <commctrl.h>
 #include <debug.h>
-#include <uxtheme.h>
-#include <vsstyle.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
 #include "commctrl.h"
+#include "strsafe.h"
 
 #include "osk_res.h"
 
 /* TYPES **********************************************************************/
+
+typedef struct _KEY
+{
+    LPCWSTR name;
+    INT_PTR scancode;
+    INT x;
+    INT y;
+    INT cx;
+    INT cy;
+    INT flags;
+    BOOL translate;
+} KEY, *PKEY;
+
+typedef struct _KEYBOARD_STRUCT
+{
+    PKEY Keys;
+    INT KeyCount;
+    SIZE Size;
+    POINT LedTextStart;
+    SIZE LedTextSize;
+    INT LedTextOffset; 
+    POINT LedStart;
+    SIZE LedSize;
+    INT LedGap;
+} KEYBOARD_STRUCT, *PKEYBOARD_STRUCT;
 
 typedef struct
 {
@@ -34,6 +53,10 @@ typedef struct
     HWND       hMainWnd;
     HBRUSH     hBrushGreenLed;
     UINT_PTR   iTimer;
+    PKEYBOARD_STRUCT Keyboard;
+    HWND*      hKeys;
+    HFONT      hFont;
+    WCHAR      szTitle[MAX_PATH];
     /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
     HWND       hActiveWnd;
 
@@ -44,6 +67,8 @@ typedef struct
     BOOL       bAlwaysOnTop;
     INT        PosX;
     INT        PosY;
+    WCHAR      FontFaceName[LF_FACESIZE];
+    LONG       FontHeight;
 } OSK_GLOBALS;
 
 typedef struct
@@ -56,15 +81,18 @@ typedef struct
 
 /* PROTOTYPES *****************************************************************/
 
+/* keyboard.c */
+extern KEYBOARD_STRUCT StandardKeyboard;
+extern KEYBOARD_STRUCT EnhancedKeyboard;
+
 /* main.c */
 int OSK_SetImage(int IdDlgItem, int IdResource);
-int OSK_DlgInitDialog(HWND hDlg);
-int OSK_DlgClose(void);
-int OSK_DlgTimer(void);
-BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl);
+LRESULT OSK_Create(HWND hwnd);
+int OSK_Close(void);
+int OSK_Timer(void);
+BOOL OSK_Command(WPARAM wCommand, HWND hWndControl);
 BOOL OSK_ReleaseKey(WORD ScanCode);
-INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
-LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw);
+LRESULT APIENTRY OSK_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 DWORD WINAPI OSK_WarningDlgThread(LPVOID lpParameter);
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 VOID OSK_RestoreDlgPlacement(HWND hDlg);
@@ -72,21 +100,39 @@ VOID OSK_RefreshLEDKeys(VOID);
 INT_PTR CALLBACK OSK_WarningProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 /* settings.c */
-LONG LoadDataFromRegistry(IN LPCWSTR lpValueDataName,
-                          OUT PDWORD pdwValueData);
+LONG LoadDWORDFromRegistry(IN LPCWSTR lpValueDataName,
+                           OUT PDWORD pdwValueData);
 
-LONG SaveDataToRegistry(IN LPCWSTR lpValueDataName,
-                        IN DWORD dwValueData);
+LONG LoadStringFromRegistry(IN LPCWSTR lpValueDataName,
+                            OUT LPWSTR lpValueData,
+                            IN OUT LPUINT cchCount);
+
+LONG SaveDWORDToRegistry(IN LPCWSTR lpValueDataName,
+                         IN DWORD dwValueData);
+
+LONG SaveStringToRegistry(IN LPCWSTR lpValueDataName,
+                          IN LPCWSTR lpValueData,
+                          IN UINT cchCount);
 
 VOID LoadSettings(VOID);
 VOID SaveSettings(VOID);
 
 /* DEFINES ********************************************************************/
 
+#define SCANCODE_MASK 0xFF
+
 extern OSK_GLOBALS Globals;
 
-#define countof(x) (sizeof(x) / sizeof((x)[0]))
-#define MAX_BUFF 256
+#define OSK_CLASS L"OSKMainWindow"
+#define DEFAULT_FONTSIZE 15
+
+/* OSK_SetKeys reasons */
+enum SetKeys_Reason
+{
+    SETKEYS_INIT,
+    SETKEYS_LAYOUT,
+    SETKEYS_LANG
+};
 
 #endif /* _OSK_PRECOMP_H */
 

@@ -86,6 +86,31 @@ XboxInitializePCI(VOID)
         PciData |= 0x00020200;
         WRITE_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT, PciData);
     }
+
+    /* Select AGP to PCI bridge */
+    PciCfg1.u.bits.DeviceNumber = 30;
+    /* Select register VendorID & DeviceID */
+    PciCfg1.u.bits.RegisterNumber = 0x00;
+
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+    PciData = READ_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT);
+
+    if (PciData == 0x01B710DE)
+    {
+        /* Zero out uninitialized AGP Host bridge BARs */
+
+        /* Select register BAR0 */
+        PciCfg1.u.bits.RegisterNumber = 0x10;
+        WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+        /* Zero it out */
+        WRITE_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT, 0);
+
+        /* Select register BAR1 */
+        PciCfg1.u.bits.RegisterNumber = 0x14;
+        WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+        /* Zero it out */
+        WRITE_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT, 0);
+    }
 }
 
 VOID

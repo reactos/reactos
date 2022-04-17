@@ -4,7 +4,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
+    STRING_FILE_NOT_FOUND "找不到文件 - “%s”\n"
     STRING_ATTRIB_HELP "显示或更改文件属性。\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] 文件 ...\n\
        [/S [/D]]\n\n\

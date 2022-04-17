@@ -247,30 +247,11 @@ static UINT DISTINCT_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
-static UINT DISTINCT_find_matching_rows( struct tagMSIVIEW *view, UINT col,
-    UINT val, UINT *row, MSIITERHANDLE *handle )
-{
-    MSIDISTINCTVIEW *dv = (MSIDISTINCTVIEW*)view;
-    UINT r;
-
-    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
-
-    if( !dv->table )
-         return ERROR_FUNCTION_FAILED;
-
-    r = dv->table->ops->find_matching_rows( dv->table, col, val, row, handle );
-
-    if( *row > dv->row_count )
-        return ERROR_NO_MORE_ITEMS;
-
-    *row = dv->translation[ *row ];
-
-    return r;
-}
-
 static const MSIVIEWOPS distinct_ops =
 {
     DISTINCT_fetch_int,
+    NULL,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -282,8 +263,6 @@ static const MSIVIEWOPS distinct_ops =
     DISTINCT_get_column_info,
     DISTINCT_modify,
     DISTINCT_delete,
-    DISTINCT_find_matching_rows,
-    NULL,
     NULL,
     NULL,
     NULL,
@@ -308,7 +287,7 @@ UINT DISTINCT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table )
     dv = msi_alloc_zero( sizeof *dv );
     if( !dv )
         return ERROR_FUNCTION_FAILED;
-    
+
     /* fill the structure */
     dv->view.ops = &distinct_ops;
     msiobj_addref( &db->hdr );

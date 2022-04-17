@@ -91,9 +91,9 @@ static BOOL WINAPI SdbpWriteStringtable(PDB pdb)
 
 /**
  * Creates new shim database file
- * 
+ *
  * If a file already exists on specified path, that file shall be overwritten.
- * 
+ *
  * @note Use SdbCloseDatabaseWrite to close the database opened with this function.
  *
  * @param [in]  path    Path to the new shim database.
@@ -313,7 +313,7 @@ BOOL WINAPI SdbWriteBinaryTagFromFile(PDB pdb, TAG tag, LPCWSTR path)
  *
  * @param [in]  pdb  Handle to the shim database.
  * @param [in]  tag TAG for the list
- *                  
+ *
  *                  RETURNS Success: TAGID of the newly created list, or TAGID_NULL on failure.
  *
  * @return  A TAGID.

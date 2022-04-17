@@ -1,5 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
-   Translation improved by Chan Chilung 2021 (eason066@gmail.com) */
+/*
+ * PROJECT:     ReactOS Picture and Fax Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -21,7 +26,7 @@ BEGIN
     IDS_TOOLTIP_ROT_COUNCW "逆時針旋轉 (Ctrl+L)"
     IDS_TOOLTIP_DELETE "刪除 (DEL)"
     IDS_TOOLTIP_PRINT "列印 (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS "另存新檔...(Ctrl+S)"
+    IDS_TOOLTIP_SAVEAS "另存新檔... (Ctrl+S)"
     IDS_TOOLTIP_MODIFY "修改 (Ctrl+E)"
     IDS_TOOLTIP_HELP_TOC "說明主題 (F1)"
 END

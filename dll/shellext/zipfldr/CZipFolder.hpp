@@ -5,10 +5,6 @@
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
  */
 
-
-EXTERN_C HRESULT WINAPI SHCreateFileExtractIconW(LPCWSTR pszPath, DWORD dwFileAttributes, REFIID riid, void **ppv);
-
-
 struct FolderViewColumns
 {
     int iResource;
@@ -17,7 +13,7 @@ struct FolderViewColumns
     int fmt;
 };
 
-static FolderViewColumns g_ColumnDefs[] = 
+static FolderViewColumns g_ColumnDefs[] =
 {
     { IDS_COL_NAME,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   25, LVCFMT_LEFT },
     { IDS_COL_TYPE,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   20, LVCFMT_LEFT },

@@ -242,9 +242,9 @@
 // #ifdef LANGUAGE_HI_IN
     // #include "lang/hi-IN.h"
 // #endif
-// #ifdef LANGUAGE_HR_HR
-    // #include "lang/hr-HR.h"
-// #endif
+#ifdef LANGUAGE_HR_HR
+    #include "lang/hr-HR.h"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.h"
 #endif
@@ -514,7 +514,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"00001404", L"Chinese (Macau S.A.R.)", enUSPages, enUSErrorEntries, enUSStrings},
 #endif
 #ifdef LANGUAGE_HR_HR
-    {L"0000041A", L"Croatian", enUSPages, enUSErrorEntries, enUSStrings},
+    {L"0000041A", L"Croatian", hrHRPages, hrHRErrorEntries, hrHRStrings},
 #endif
 #ifdef LANGUAGE_CS_CZ
     {L"00000405", L"Czech", csCZPages, csCZErrorEntries, csCZStrings},

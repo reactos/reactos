@@ -144,9 +144,9 @@ ACPI\ACPI0003.DeviceDesc = "AC адаптер"
 ReactOS = "ReactOS Takımı"
 BatteryClassName = "Piller"
 
-GenericMfg = "(Umûmî Piler)"
+GenericMfg = "(Genel Piller)"
 ACPI\PNP0C0A.DeviceDesc = "ACPI Uyumlu Denetim Yöntemi Pili"
-ACPI\ACPI0003.DeviceDesc = "AC Uyarlayıcı"
+ACPI\ACPI0003.DeviceDesc = "AC Adaptörü"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"
@@ -159,3 +159,17 @@ ACPI\ACPI0003.DeviceDesc = "AC адаптер"
 GenericMfg = "(通用电池)"
 ACPI\PNP0C0A.DeviceDesc = "ACPI 兼容控制模式电池"
 ACPI\ACPI0003.DeviceDesc = "交流适配器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+BatteryClassName = "Baterias"
+GenericMfg = "(Baterias genéricas)"
+ACPI\PNP0C0A.DeviceDesc = "Método de control de bateria compativel com ACPI"
+ACPI\ACPI0003.DeviceDesc = "Adaptador de corrente alterna"
+
+[Strings.0C04]
+BatteryClassName = "電池"
+
+GenericMfg = "(標準電池)"
+ACPI\PNP0C0A.DeviceDesc = "ACPI 相容控制模式電池"
+ACPI\ACPI0003.DeviceDesc = "交流配接器"

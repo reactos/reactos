@@ -133,7 +133,7 @@ HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMA
 class CIDLDataObj :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDataObject,
-    public IAsyncOperation 
+    public IAsyncOperation
 {
 private:
     CSimpleArray<FORMATETC> m_Formats;
@@ -355,7 +355,7 @@ HRESULT WINAPI CIDLDataObj::InOperation(BOOL *pfInAsyncOp)
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
-HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync) 
+HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync)
 {
     TRACE("(%p)->()\n", this);
     m_doasync = fDoOpAsync;
@@ -399,4 +399,16 @@ HRESULT WINAPI SHCreateDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUIT
         return IDataObject_Constructor(NULL, pidlFolder, apidl, cidl, TRUE, (IDataObject **)ppv);
     }
     return E_FAIL;
+}
+
+/*************************************************************************
+ * SHCreateFileDataObject       [SHELL32.740]
+ *
+ */
+
+HRESULT WINAPI SHCreateFileDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, IDataObject* pDataInner, IDataObject** ppDataObj)
+{
+    if (pDataInner)
+        UNIMPLEMENTED;
+    return IDataObject_Constructor(NULL, pidlFolder, apidl, cidl, TRUE, ppDataObj);
 }

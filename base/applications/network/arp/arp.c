@@ -39,6 +39,8 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 
+#include <arp_msg.h>
+
 /*
  * Globals
  */
@@ -168,19 +170,19 @@ DWORD PrintEntries(PMIB_IPNETROW pIpAddRow)
     switch (pIpAddRow->dwType)
     {
         case MIB_IPNET_TYPE_DYNAMIC:
-            PrintMessage(10007);
+            PrintMessage(MSG_ARP_DYNAMIC);
             break;
 
         case MIB_IPNET_TYPE_STATIC:
-            PrintMessage(10008);
+            PrintMessage(MSG_ARP_STATIC);
             break;
 
         case MIB_IPNET_TYPE_INVALID:
-            PrintMessage(10006);
+            PrintMessage(MSG_ARP_INVALID);
             break;
 
         case MIB_IPNET_TYPE_OTHER:
-            PrintMessage(10005);
+            PrintMessage(MSG_ARP_OTHER);
             break;
     }
     _putts(_T(""));
@@ -217,7 +219,7 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     pIpNetTable = (PMIB_IPNETTABLE)HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpNetTable == NULL)
     {
-        PrintMessage(10004);
+        PrintMessage(MSG_ARP_NO_MEMORY);
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
     }
@@ -235,7 +237,7 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     /* check there are entries in the table */
     if (pIpNetTable->dwNumEntries == 0)
     {
-        PrintMessage(10018);
+        PrintMessage(MSG_ARP_NO_ENTRIES);
         goto cleanup;
     }
 
@@ -249,7 +251,7 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     pIpAddrTable = (PMIB_IPADDRTABLE)HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpAddrTable == NULL)
     {
-        PrintMessage(10004);
+        PrintMessage(MSG_ARP_NO_MEMORY);
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
     }
@@ -300,12 +302,12 @@ DWORD DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     /* Print message and leave if there are no relevant ARP entries */
     if (dwCount == 0)
     {
-        PrintMessage(10018);
+        PrintMessage(MSG_ARP_NO_ENTRIES);
         goto cleanup;
     }
 
     /* print header, including interface IP address and index number */
-    PrintMessageV(10003, szIntIpAddr, pIpNetTable->table[0].dwIndex);
+    PrintMessageV(MSG_ARP_INTERFACE, szIntIpAddr, pIpNetTable->table[0].dwIndex);
 
     /* go through all ARP entries */
     for (i = 0; i < pIpNetTable->dwNumEntries; i++)
@@ -365,14 +367,14 @@ DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     dwIpAddr = inet_addr(pszInetAddr);
     if (dwIpAddr == INADDR_NONE)
     {
-        PrintMessageV(10001, pszInetAddr);
+        PrintMessageV(MSG_ARP_BAD_IP_ADDRESS, pszInetAddr);
         return ERROR_INVALID_PARAMETER;
     }
 
     /* check MAC address */
     if (strlen(pszEthAddr) != 17)
     {
-        PrintMessageV(10002, pszEthAddr);
+        PrintMessageV(MSG_ARP_BAD_ARGUMENT, pszEthAddr);
         return ERROR_INVALID_PARAMETER;
     }
 
@@ -383,7 +385,7 @@ DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
 
         if (!isxdigit(pszEthAddr[i]))
         {
-            PrintMessageV(10002, pszEthAddr);
+            PrintMessageV(MSG_ARP_BAD_ARGUMENT, pszEthAddr);
             return ERROR_INVALID_PARAMETER;
         }
     }
@@ -396,7 +398,7 @@ DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     pIpNetTable = (PMIB_IPNETTABLE)HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpNetTable == NULL)
     {
-        PrintMessage(10004);
+        PrintMessage(MSG_ARP_NO_MEMORY);
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
     }
@@ -415,7 +417,7 @@ DWORD Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     pAddHost = (PMIB_IPNETROW)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
     if (pAddHost == NULL)
     {
-        PrintMessage(10004);
+        PrintMessage(MSG_ARP_NO_MEMORY);
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
     }
@@ -518,7 +520,7 @@ DWORD Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
         dwIpAddr = inet_addr(pszInetAddr);
         if (dwIpAddr == INADDR_NONE)
         {
-            PrintMessageV(10001, pszInetAddr);
+            PrintMessageV(MSG_ARP_BAD_IP_ADDRESS, pszInetAddr);
             return ERROR_INVALID_PARAMETER;
         }
     }
@@ -531,7 +533,7 @@ DWORD Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     pIpNetTable = (PMIB_IPNETTABLE) HeapAlloc(GetProcessHeap(), 0, Size);
     if (pIpNetTable == NULL)
     {
-        PrintMessage(10004);
+        PrintMessage(MSG_ARP_NO_MEMORY);
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
     }
@@ -550,7 +552,7 @@ DWORD Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     pDelHost = (MIB_IPNETROW *)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPNETROW));
     if (pDelHost == NULL)
     {
-        PrintMessage(10004);
+        PrintMessage(MSG_ARP_NO_MEMORY);
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
     }
@@ -613,7 +615,7 @@ cleanup:
  */
 VOID Usage(VOID)
 {
-    PrintMessage(10000);
+    PrintMessage(MSG_ARP_SYNTAX);
 }
 
 /*

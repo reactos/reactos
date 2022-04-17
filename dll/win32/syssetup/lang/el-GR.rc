@@ -74,11 +74,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Οι τοπικές ρυθμισεις πρέπει να ταιριάζουν με τη γλώσσα των εφαρμογών  που θέλετε να χρησιμοποιήσετε. Επίσης ελέγχουν τον τρόπο  με τον οποίο θα εμφανίζονται οι αριθμοί, τα νομίσματα και οι ημερομηνίες.", IDC_STATIC, 53, 7, 253, 31
-    LTEXT "", IDC_LOCALETEXT, 53, 31, 250, 16
+    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
     LTEXT "Για να αλλάξετε τις τοπικές ρυθμίσεις, πατήστε το κουμπί 'Προσαρμογή'.", IDC_STATIC, 53, 57, 184, 16
     PUSHBUTTON "&Προσαρμογή...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "Η διάταξη πληκτρολογίου έλέγχει τους χαρακτήρες που θα εμφανίζονται καθώς πληκτρολογείτε.", IDC_STATIC, 53, 86, 253, 20
-    LTEXT "", IDC_LAYOUTTEXT, 53, 102, 253, 16
+    LTEXT "%s", IDC_LAYOUTTEXT, 53, 106, 253, 16
     LTEXT "Για να αλλάξετε τη διάταξη του πληκτρολογίου, πατήστε το κουμπί 'Προσαρμογή'.", IDC_STATIC, 53, 122, 184, 16
     PUSHBUTTON "Π&ροσαρμογή...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -110,9 +111,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Εγκατάσταση του ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
-    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+    LTEXT "Καταχώρηση στοιχείων στο μητρώο", IDC_TASKTEXT1, 65, 27, 232, 8
+    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "", IDC_ITEM, 21, 85, 275, 8
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -174,10 +178,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Πρέπει να δώσετε ένα όνομα και έναν κωδικό πρόσβασης για τον υπολογιστή σας."
     IDS_LOCALETITLE "Τοπικές ρυθμίσεις"
     IDS_LOCALESUBTITLE "Μπορείτε να προσαρμόσετε το ReactOS για διαφορετικές περιοχές και γλώσσες."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Ημερομηνία και ώρα"
     IDS_DATETIMESUBTITLE "Ορίστε τη σωστή ημερομηνία και ώρα για τον υπολογιστή σας."
-    IDS_PROCESSTITLE "Τίτλος"
-    IDS_PROCESSSUBTITLE "Υπότιτλος"
+    IDS_PROCESSTITLE "Finishing the Installation"
+    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
     IDS_THEMESELECTIONTITLE "Appearance"
     IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
 END
@@ -186,7 +192,6 @@ STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "Εγκατάσταση του ReactOS"
     IDS_UNKNOWN_ERROR "Άγνωστο σφάλμα"
-    IDS_REGISTERING_COMPONENTS "Καταχώρηση στοιχείων στο μητρώο..."
     IDS_LOADLIBRARY_FAILED "Το LoadLibrary απέτυχε: "
     IDS_GETPROCADDR_FAILED "Το GetProcAddr απέτυχε: "
     IDS_REGSVR_FAILED "Το DllRegisterServer απέτυχε: "
@@ -244,7 +249,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
-    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behaviour of the system."
+    IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
     IDS_PRODUCTSERVERNAME "ReactOS Server"
     IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."

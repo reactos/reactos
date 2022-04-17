@@ -33,6 +33,8 @@ MapGlobalUserHeap(IN  PEPROCESS Process,
 static __inline PVOID
 UserHeapAlloc(SIZE_T Bytes)
 {
+    /* User heap has no lock, using global user lock instead. */
+    ASSERT(UserIsEnteredExclusive());
     return RtlAllocateHeap(GlobalUserHeap,
                            HEAP_NO_SERIALIZE,
                            Bytes);
@@ -41,6 +43,8 @@ UserHeapAlloc(SIZE_T Bytes)
 static __inline BOOL
 UserHeapFree(PVOID lpMem)
 {
+    /* User heap has no lock, using global user lock instead. */
+    ASSERT(UserIsEnteredExclusive());
     return RtlFreeHeap(GlobalUserHeap,
                        HEAP_NO_SERIALIZE,
                        lpMem);
@@ -59,6 +63,9 @@ UserHeapReAlloc(PVOID lpMem,
 #else
     SIZE_T PrevSize;
     PVOID pNew;
+
+    /* User heap has no lock, using global user lock instead. */
+    ASSERT(UserIsEnteredExclusive());
 
     PrevSize = RtlSizeHeap(GlobalUserHeap,
                            HEAP_NO_SERIALIZE,

@@ -50,7 +50,7 @@ if(NOT MSVC)
     add_subdirectory(rsym)
 
     add_host_tool(pefixup pefixup.c)
-if (ARCH STREQUAL "amd64")
+if (ARCH STREQUAL "amd64" OR ARCH STREQUAL "arm64")
     target_compile_definitions(pefixup PRIVATE _TARGET_PE64)
 endif()
     target_link_libraries(pefixup PRIVATE host_includes)

@@ -353,7 +353,7 @@ static UCHAR XmsRealloc(WORD Handle, WORD NewSize)
         RtlSetBits(&AllocBitmap, BlockNumber, HandleEntry->Size);
         return XMS_STATUS_OUT_OF_MEMORY;
     }
-    
+
     return XMS_STATUS_SUCCESS;
 }
 
@@ -435,7 +435,7 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
                 break;
             }
 
-            // NOTE: We implicitely suppose that we always have HMA.
+            // NOTE: We implicitly suppose that we always have HMA.
             // If not, we should fail there with the XMS_STATUS_HMA_DOES_NOT_EXIST
             // error code.
 

@@ -104,9 +104,9 @@ DrawClock(HDC hdc, PCLOCKDATA pClockData)
 static VOID
 DrawHands(HDC hdc, SYSTEMTIME * pst, BOOL fChange, INT Radius)
 {
-     POINT pt[3][5] = { {{0, (INT)-Radius/6}, {(INT)Radius/9, 0}, 
+     POINT pt[3][5] = { {{0, (INT)-Radius/6}, {(INT)Radius/9, 0},
 	     {0, (INT)Radius/1.8}, {(INT)-Radius/9, 0}, {0, (INT)-Radius/6}},
-     {{0, (INT)-Radius/4.5}, {(INT)Radius/18, 0}, {0, (INT) Radius*0.89}, 
+     {{0, (INT)-Radius/4.5}, {(INT)Radius/18, 0}, {0, (INT) Radius*0.89},
 	     {(INT)-Radius/18, 0}, {0, (INT)-Radius/4.5}},
      {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, (INT) Radius*0.89}} };
      INT i, iAngle[3];

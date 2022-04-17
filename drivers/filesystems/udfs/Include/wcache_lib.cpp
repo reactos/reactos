@@ -1128,10 +1128,11 @@ WCacheUpdatePacket(
                             (PVOID)WCacheSectorAddr(block_array, Lba0),
                             BS) != BS);
             }
-            if(mod)
+            if(mod) {
                 DbgCopyMemory(tmp_buff2 + (i << BSh),
                             (PVOID)WCacheSectorAddr(block_array, Lba0),
                             BS);
+            }
         }
     }
 

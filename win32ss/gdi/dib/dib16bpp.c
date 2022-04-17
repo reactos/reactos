@@ -283,7 +283,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     if (bTopToBottom)
     {
       /* This sets SourceLine to the bottom line */
-      SourceLine += BltInfo->SourceSurface->lDelta 
+      SourceLine += BltInfo->SourceSurface->lDelta
         * (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1);
     }
 
@@ -314,7 +314,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     DPRINT("16BPP Case Selected with DestRect Width of '%d'.\n",
            BltInfo->DestRect.right - BltInfo->DestRect.left);
 
-    DPRINT("BMF_16BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+    DPRINT("BMF_16BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n",
            BltInfo->DestRect.left, BltInfo->DestRect.top,
            BltInfo->DestRect.right, BltInfo->DestRect.bottom,
            BltInfo->DestRect.right - BltInfo->DestRect.left);
@@ -576,7 +576,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_24BPP:
 
-    DPRINT("BMF_24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+    DPRINT("BMF_24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n",
            BltInfo->DestRect.left, BltInfo->DestRect.top,
            BltInfo->DestRect.right, BltInfo->DestRect.bottom,
            BltInfo->DestRect.right - BltInfo->DestRect.left);

@@ -1,15 +1,16 @@
 ; VGA miniport driver
 [AddReg]
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video Save"
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\drivers\vgamp.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Tag",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","VgaCompatible",0x00010001,1
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","Group",0x00000000,"Video Save"
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","ImagePath",0x00020000,"system32\drivers\vga.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","Tag",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave\Video","Service",0x00000000,"VgaSave"
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave\Device0","VgaCompatible",0x00010001,1
 
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.VRefresh",0x00010001,1
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.BitsPerPel",0x00010001,8
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.XResolution",0x00010001,640
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.YResolution",0x00010001,480
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave\Device0","DefaultSettings.VRefresh",0x00010001,1
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave\Device0","DefaultSettings.BitsPerPel",0x00010001,8
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave\Device0","DefaultSettings.XResolution",0x00010001,640
+HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave\Device0","DefaultSettings.YResolution",0x00010001,480

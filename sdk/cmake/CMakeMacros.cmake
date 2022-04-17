@@ -287,10 +287,10 @@ function(add_cd_file)
     endif()
 
     # do we add it to all CDs?
-    list(FIND _CD_FOR all __cd)
+    list(FIND _CD_FOR "all" __cd)
     if(NOT __cd EQUAL -1)
-        list(REMOVE_AT _CD_FOR __cd)
-        list(INSERT _CD_FOR __cd "bootcd;livecd;regtest")
+        list(REMOVE_ITEM _CD_FOR "all")
+        list(APPEND _CD_FOR "bootcd;livecd;regtest")
     endif()
 
     # do we add it to bootcd?
@@ -669,8 +669,10 @@ function(set_module_type MODULE TYPE)
 
     if(TYPE STREQUAL kernel)
         # Kernels are executables with exports
-        set_property(TARGET ${MODULE} PROPERTY ENABLE_EXPORTS TRUE)
-        set_target_properties(${MODULE} PROPERTIES DEFINE_SYMBOL "")
+        set_target_properties(${MODULE}
+            PROPERTIES
+            ENABLE_EXPORTS TRUE
+            DEFINE_SYMBOL "")
     endif()
 
     if(${TYPE} STREQUAL win32ocx)
@@ -794,7 +796,8 @@ function(create_registry_hives)
     # LiveCD hives
     list(APPEND _livecd_inf_files
         ${_registry_inf}
-        ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.inf)
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.inf
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/caroots.inf)
     if(SARCH STREQUAL "xbox")
         list(APPEND _livecd_inf_files
             ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst_xbox.inf)

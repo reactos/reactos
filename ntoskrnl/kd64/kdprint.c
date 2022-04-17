@@ -445,7 +445,7 @@ KdpDprintf(
     STRING String;
     USHORT Length;
     va_list ap;
-    CHAR Buffer[100];
+    CHAR Buffer[512];
 
     /* Format the string */
     va_start(ap, Format);

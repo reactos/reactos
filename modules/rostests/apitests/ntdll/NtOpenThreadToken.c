@@ -56,7 +56,7 @@ START_TEST(NtOpenThreadToken)
             }
         }
     }
-    
+
     TokenHandle = NULL;
     Status = NtSetInformationThread(NtCurrentThread(),
                                     ThreadImpersonationToken,

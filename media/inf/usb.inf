@@ -124,9 +124,9 @@ USB\CLASS_09.DeviceDesc = "Generický rozbočovač USB"
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 
-GenericMfg = "(Umûmî USB Göbekleri)"
+GenericMfg = "(Genel USB Göbekleri)"
 USB\COMPOSITE.DeviceDesc = "USB Bileşik Aygıt"
-USB\CLASS_09.DeviceDesc = "Umûmî USB Göbeği"
+USB\CLASS_09.DeviceDesc = "Genel USB Göbeği"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"
@@ -142,3 +142,13 @@ USB\CLASS_09.DeviceDesc = "Standartinis USB šakotuvas"
 GenericMfg = "(通用 USB 集线器)"
 USB\COMPOSITE.DeviceDesc = "USB 聚合设备"
 USB\CLASS_09.DeviceDesc = "通用 USB 集线器"
+
+[Strings.0816]
+ReactOS = "Equipa ReactOS"
+GenericMfg = "(Hub USB padrão)"
+USB\CLASS_09.DeviceDesc = "Hub USB padrão"
+
+[Strings.0C04]
+GenericMfg = "(標準 USB 集線器)"
+USB\COMPOSITE.DeviceDesc = "USB 複合裝置"
+USB\CLASS_09.DeviceDesc = "標準 USB 集線器"

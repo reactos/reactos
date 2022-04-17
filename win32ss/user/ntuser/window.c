@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Windows
  * FILE:             win32ss/user/ntuser/window.c
- * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
@@ -11,7 +12,27 @@ DBG_DEFAULT_CHANNEL(UserWnd);
 
 INT gNestedWindowLimit = 50;
 
+PWINDOWLIST gpwlList = NULL;
+PWINDOWLIST gpwlCache = NULL;
+
 /* HELPER FUNCTIONS ***********************************************************/
+
+PVOID FASTCALL
+IntReAllocatePoolWithTag(
+    POOL_TYPE PoolType,
+    PVOID pOld,
+    SIZE_T cbOld,
+    SIZE_T cbNew,
+    ULONG Tag)
+{
+    PVOID pNew = ExAllocatePoolWithTag(PoolType, cbNew, Tag);
+    if (!pNew)
+        return NULL;
+
+    RtlCopyMemory(pNew, pOld, min(cbOld, cbNew));
+    ExFreePoolWithTag(pOld, Tag);
+    return pNew;
+}
 
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam)
 {
@@ -100,6 +121,7 @@ PWND FASTCALL ValidateHwndNoErr(HWND hWnd)
 }
 
 /* Temp HACK */
+// Win: ValidateHwnd
 PWND FASTCALL UserGetWindowObject(HWND hWnd)
 {
     PWND Window;
@@ -739,7 +761,7 @@ IntGetWindowProc(PWND pWnd,
    PCLS Class;
    WNDPROC gcpd, Ret = 0;
 
-   ASSERT(UserIsEnteredExclusive() == TRUE);
+   ASSERT(UserIsEnteredExclusive());
 
    Class = pWnd->pcls;
 
@@ -1242,6 +1264,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    return WndOldParent;
 }
 
+// Win: xxxSetParent
 HWND FASTCALL
 co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 {
@@ -1318,6 +1341,135 @@ IntUnlinkWindow(PWND Wnd)
         Wnd->spwndParent->spwndChild = Wnd->spwndNext;
 
     Wnd->spwndPrev = Wnd->spwndNext = NULL;
+}
+
+BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
+{
+    PWINDOWLIST pwlOld, pwlNew;
+    SIZE_T ibOld, ibNew;
+
+#define GROW_COUNT 8
+    pwlOld = *ppwl;
+    ibOld = (LPBYTE)pwlOld->phwndLast - (LPBYTE)pwlOld;
+    ibNew = ibOld + GROW_COUNT * sizeof(HWND);
+#undef GROW_COUNT
+    pwlNew = IntReAllocatePoolWithTag(PagedPool, pwlOld, ibOld, ibNew, USERTAG_WINDOWLIST);
+    if (!pwlNew)
+        return FALSE;
+
+    pwlNew->phwndLast = (HWND *)((LPBYTE)pwlNew + ibOld);
+    pwlNew->phwndEnd = (HWND *)((LPBYTE)pwlNew + ibNew);
+    *ppwl = pwlNew;
+    return TRUE;
+}
+
+PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFlags)
+{
+    ASSERT(!WL_IS_BAD(pwl));
+
+    for (; pwnd; pwnd = pwnd->spwndNext)
+    {
+        if (!pwl->pti || pwl->pti == pwnd->head.pti)
+        {
+            *(pwl->phwndLast) = UserHMGetHandle(pwnd);
+            ++(pwl->phwndLast);
+
+            if (pwl->phwndLast == pwl->phwndEnd && !IntGrowHwndList(&pwl))
+                break;
+        }
+
+        if ((dwFlags & IACE_CHILDREN) && pwnd->spwndChild)
+        {
+            pwl = IntPopulateHwndList(pwl, pwnd->spwndChild, IACE_CHILDREN | IACE_LIST);
+            if (WL_IS_BAD(pwl))
+                break;
+        }
+
+        if (!(dwFlags & IACE_LIST))
+            break;
+    }
+
+    return pwl;
+}
+
+// Win: BuildHwndList
+PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
+{
+    PWINDOWLIST pwl;
+    DWORD cbWL;
+
+    if (gpwlCache)
+    {
+        pwl = gpwlCache;
+        gpwlCache = NULL;
+    }
+    else
+    {
+#define INITIAL_COUNT 32
+        cbWL = sizeof(WINDOWLIST) + (INITIAL_COUNT - 1) * sizeof(HWND);
+        pwl = ExAllocatePoolWithTag(PagedPool, cbWL, USERTAG_WINDOWLIST);
+        if (!pwl)
+            return NULL;
+
+        pwl->phwndEnd = &pwl->ahwnd[INITIAL_COUNT];
+#undef INITIAL_COUNT
+    }
+
+    pwl->pti = pti;
+    pwl->phwndLast = pwl->ahwnd;
+    pwl = IntPopulateHwndList(pwl, pwnd, dwFlags);
+    if (WL_IS_BAD(pwl))
+    {
+        ExFreePoolWithTag(pwl, USERTAG_WINDOWLIST);
+        return NULL;
+    }
+
+    *(pwl->phwndLast) = HWND_TERMINATOR;
+
+    if (dwFlags & 0x8)
+    {
+        // TODO:
+    }
+
+    pwl->pti = GetW32ThreadInfo();
+    pwl->pNextList = gpwlList;
+    gpwlList = pwl;
+
+    return pwl;
+}
+
+// Win: FreeHwndList
+VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget)
+{
+    PWINDOWLIST pwl, *ppwl;
+
+    for (ppwl = &gpwlList; *ppwl; ppwl = &(*ppwl)->pNextList)
+    {
+        if (*ppwl != pwlTarget)
+            continue;
+
+        *ppwl = pwlTarget->pNextList;
+
+        if (gpwlCache)
+        {
+            if (WL_CAPACITY(pwlTarget) > WL_CAPACITY(gpwlCache))
+            {
+                pwl = gpwlCache;
+                gpwlCache = pwlTarget;
+                ExFreePoolWithTag(pwl, USERTAG_WINDOWLIST);
+            }
+            else
+            {
+                ExFreePoolWithTag(pwlTarget, USERTAG_WINDOWLIST);
+            }
+        }
+        else
+        {
+            gpwlCache = pwlTarget;
+        }
+
+        break;
+    }
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -1623,6 +1775,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    PTHREADINFO pti = NULL;
    BOOL MenuChanged;
    BOOL bUnicodeWindow;
+   PCALLPROCDATA pcpd;
 
    pti = pdeskCreated ? gptiDesktopThread : GetW32ThreadInfo();
 
@@ -1715,6 +1868,10 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pWnd->ExStyle = Cs->dwExStyle;
    pWnd->cbwndExtra = pWnd->pcls->cbwndExtra;
    pWnd->pActCtx = acbiBuffer;
+
+   if (pti->spDefaultImc && Class->atomClassName != gpsi->atomSysClass[ICLS_BUTTON])
+      pWnd->hImc = UserHMGetHandle(pti->spDefaultImc);
+
    pWnd->InternalPos.MaxPos.x  = pWnd->InternalPos.MaxPos.y  = -1;
    pWnd->InternalPos.IconPos.x = pWnd->InternalPos.IconPos.y = -1;
 
@@ -1769,7 +1926,16 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
     see what problems this would cause. */
 
    // Set WndProc from Class.
-   pWnd->lpfnWndProc  = pWnd->pcls->lpfnWndProc;
+   if (IsCallProcHandle(pWnd->pcls->lpfnWndProc))
+   {
+      pcpd = UserGetObject(gHandleTable, pWnd->pcls->lpfnWndProc, TYPE_CALLPROC);
+      if (pcpd)
+         pWnd->lpfnWndProc = pcpd->pfnClientPrevious;
+   }
+   else
+   {
+      pWnd->lpfnWndProc = pWnd->pcls->lpfnWndProc;
+   }
 
    // GetWindowProc, test for non server side default classes and set WndProc.
     if ( pWnd->pcls->fnid <= FNID_GHOST && pWnd->pcls->fnid >= FNID_BUTTON )
@@ -1964,6 +2130,7 @@ Error:
 
 /*
  * @implemented
+ * Win: xxxCreateWindowEx
  */
 PWND FASTCALL
 co_UserCreateWindowEx(CREATESTRUCTW* Cs,
@@ -2190,14 +2357,9 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    Window->rcClient = Window->rcWindow;
 
-   /* Link the window */
-   if (NULL != ParentWindow)
+   if (Window->spwndNext || Window->spwndPrev)
    {
-      /* Link the window into the siblings list */
-      if ((Cs->style & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
-          IntLinkHwnd(Window, HWND_BOTTOM);
-      else
-          IntLinkHwnd(Window, hwndInsertAfter);
+      ERR("Window 0x%p has been linked too early!\n", Window);
    }
 
    if (!(Window->state2 & WNDS2_WIN31COMPAT))
@@ -2210,10 +2372,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    {
       if ( !IntIsTopLevelWindow(Window) )
       {
-         if (pti != Window->spwndParent->head.pti)
+         if (pti != ParentWindow->head.pti)
          {
             //ERR("CreateWindow Parent in.\n");
-            UserAttachThreadInput(pti, Window->spwndParent->head.pti, TRUE);
+            UserAttachThreadInput(pti, ParentWindow->head.pti, TRUE);
          }
       }
    }
@@ -2224,6 +2386,16 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    {
       ERR("co_UserCreateWindowEx(): NCCREATE message failed\n");
       goto cleanup;
+   }
+
+   /* Link the window */
+   if (ParentWindow != NULL)
+   {
+      /* Link the window into the siblings list */
+      if ((Cs->style & (WS_CHILD | WS_MAXIMIZE)) == WS_CHILD)
+          IntLinkHwnd(Window, HWND_BOTTOM);
+      else
+          IntLinkHwnd(Window, hwndInsertAfter);
    }
 
    /* Send the WM_NCCALCSIZE message */
@@ -2454,8 +2626,6 @@ NtUserCreateWindowEx(
     lstrClassName.Buffer = NULL;
     lstrClsVersion.Buffer = NULL;
 
-    ASSERT(plstrWindowName);
-
     if ( (dwStyle & (WS_POPUP|WS_CHILD)) != WS_CHILD)
     {
         /* check hMenu is valid handle */
@@ -2575,7 +2745,7 @@ cleanup:
    return hwnd;
 }
 
-
+// Win: xxxDestroyWindow
 BOOLEAN co_UserDestroyWindow(PVOID Object)
 {
    HWND hWnd;
@@ -3932,8 +4102,9 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 #define GWLP_CONSOLE_LEADER_PID 0
 #define GWLP_CONSOLE_LEADER_TID 4
 
-   PWND pWnd;
    DWORD_PTR Result;
+   PWND pWnd, pwndActive;
+   PTHREADINFO pti, ptiActive;
    DECLARE_RETURN(UINT);
 
    TRACE("Enter NtUserQueryWindow\n");
@@ -3985,7 +4156,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       case QUERY_WINDOW_ISHUNG:
-         Result = (DWORD_PTR)MsqIsHung(pWnd->head.pti, MSQ_HUNG);
+         Result = (pWnd->fnid == FNID_GHOST) || MsqIsHung(pWnd->head.pti, MSQ_HUNG);
          break;
 
       case QUERY_WINDOW_REAL_ID:
@@ -3996,19 +4167,33 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          Result = (pWnd->head.pti->MessageQueue == gpqForeground);
          break;
 
-      case QUERY_WINDOW_DEFAULT_IME:
-         ERR("QUERY_WINDOW_DEFAULT_IME: FIXME\n");
-         Result = 0;
+      case QUERY_WINDOW_DEFAULT_IME: /* default IME window */
+         if (pWnd->head.pti->spwndDefaultIme)
+            Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spwndDefaultIme);
+         else
+            Result = 0;
          break;
 
-      case QUERY_WINDOW_DEFAULT_ICONTEXT:
-         ERR("QUERY_WINDOW_DEFAULT_ICONTEXT: FIXME\n");
-         Result = 0;
+      case QUERY_WINDOW_DEFAULT_ICONTEXT: /* default input context handle */
+         if (pWnd->head.pti->spDefaultImc)
+            Result = (DWORD_PTR)UserHMGetHandle(pWnd->head.pti->spDefaultImc);
+         else
+            Result = 0;
          break;
 
       case QUERY_WINDOW_ACTIVE_IME:
-         ERR("QUERY_WINDOW_ACTIVE_IME: FIXME\n");
          Result = 0;
+         if (gpqForeground && gpqForeground->spwndActive)
+         {
+             pwndActive = gpqForeground->spwndActive;
+             pti = PsGetCurrentThreadWin32Thread();
+             if (pti->rpdesk == pwndActive->head.rpdesk)
+             {
+                ptiActive = pwndActive->head.pti;
+                if (ptiActive->spwndDefaultIme)
+                   Result = (DWORD_PTR)UserHMGetHandle(ptiActive->spwndDefaultIme);
+             }
+         }
          break;
 
       default:
