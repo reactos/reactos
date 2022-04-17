@@ -2,7 +2,7 @@
  * SetupAPI device installer
  *
  * Copyright 2000 Andreas Mohr for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1636,6 +1636,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
     cr = CM_Create_DevInst_ExW(&DevInst,
                                (DEVINSTID)DeviceName,
                                RootDevInst,
+                               CM_CREATE_DEVINST_PHANTOM |
                                (CreationFlags & DICD_GENERATE_ID) ?
                                      CM_CREATE_DEVINST_GENERATE_ID : 0,
                                set->hMachine);
