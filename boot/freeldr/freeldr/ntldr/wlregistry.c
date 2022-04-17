@@ -515,7 +515,7 @@ WinLdrScanRegistry(
 
     /* Find all boot drivers */
     Success = CmpFindDrivers(SystemHive,
-                             (HCELL_INDEX)CurrentControlSetKey,
+                             HKEY_TO_HCI(CurrentControlSetKey),
                              BootLoad,
                              BootFileSystem,
                              BootDriverListHead);
@@ -524,7 +524,7 @@ WinLdrScanRegistry(
 
     /* Sort by group/tag */
     Success = CmpSortDriverList(SystemHive,
-                                (HCELL_INDEX)CurrentControlSetKey,
+                                HKEY_TO_HCI(CurrentControlSetKey),
                                 BootDriverListHead);
     if (!Success)
         goto Quit;

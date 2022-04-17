@@ -32,9 +32,14 @@ static HCELL_INDEX SystemRootCell;
 PHHIVE SystemHive = NULL;
 HKEY CurrentControlSetKey = NULL;
 
+#define HCI_TO_HKEY(CellIndex)          ((HKEY)(ULONG_PTR)(CellIndex))
+#ifndef HKEY_TO_HCI // See also registry.h
+#define HKEY_TO_HCI(hKey)               ((HCELL_INDEX)(ULONG_PTR)(hKey))
+#endif
+
 #define GET_HHIVE(CmHive)               (&((CmHive)->Hive))
 #define GET_HHIVE_FROM_HKEY(hKey)       GET_HHIVE(CmSystemHive)
-#define GET_CM_KEY_NODE(hHive, hKey)    ((PCM_KEY_NODE)HvGetCell(hHive, (HCELL_INDEX)hKey))
+#define GET_CM_KEY_NODE(hHive, hKey)    ((PCM_KEY_NODE)HvGetCell(hHive, HKEY_TO_HCI(hKey)))
 
 PVOID
 NTAPI
@@ -129,7 +134,7 @@ RegInitCurrentControlSet(
         return FALSE;
     }
 
-    CurrentControlSetKey = (HKEY)ControlCell;
+    CurrentControlSetKey = HCI_TO_HKEY(ControlCell);
 
     /* Verify it is accessible */
     KeyNode = (PCM_KEY_NODE)HvGetCell(SystemHive, ControlCell);
@@ -208,10 +213,10 @@ RegEnumKey(
     {
         TRACE("RegEnumKey index out of bounds (%d) in key (%.*s)\n",
               Index, KeyNode->NameLength, KeyNode->Name);
-        HvReleaseCell(Hive, (HCELL_INDEX)Key);
+        HvReleaseCell(Hive, HKEY_TO_HCI(Key));
         return ERROR_NO_MORE_ITEMS;
     }
-    HvReleaseCell(Hive, (HCELL_INDEX)Key);
+    HvReleaseCell(Hive, HKEY_TO_HCI(Key));
 
     /* Get the value cell */
     SubKeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
@@ -247,7 +252,7 @@ RegEnumKey(
     HvReleaseCell(Hive, CellIndex);
 
     if (SubKey != NULL)
-        *SubKey = (HKEY)CellIndex;
+        *SubKey = HCI_TO_HKEY(CellIndex);
 
     TRACE("RegEnumKey done -> %u, '%.*S'\n", *NameSize, *NameSize, Name);
     return ERROR_SUCCESS;
@@ -315,7 +320,7 @@ RegOpenKey(
     else
     {
         /* Use the parent key */
-        CellIndex = (HCELL_INDEX)ParentKey;
+        CellIndex = HKEY_TO_HCI(ParentKey);
     }
 
     /* Check if this is the root key */
@@ -330,7 +335,7 @@ RegOpenKey(
         if (RtlEqualUnicodeString(&SubKeyName, &CurrentControlSet, TRUE))
         {
             /* Use the CurrentControlSetKey and update the remaining path */
-            CellIndex = (HCELL_INDEX)CurrentControlSetKey;
+            CellIndex = HKEY_TO_HCI(CurrentControlSetKey);
             RemainingPath = TempPath;
         }
     }
@@ -366,7 +371,7 @@ RegOpenKey(
     }
 
     HvReleaseCell(Hive, CellIndex);
-    *Key = (HKEY)CellIndex;
+    *Key = HCI_TO_HKEY(CellIndex);
 
     return ERROR_SUCCESS;
 }
@@ -438,10 +443,10 @@ RegQueryValue(
     {
         TRACE("RegQueryValue value not found in key (%.*s)\n",
               KeyNode->NameLength, KeyNode->Name);
-        HvReleaseCell(Hive, (HCELL_INDEX)Key);
+        HvReleaseCell(Hive, HKEY_TO_HCI(Key));
         return ERROR_FILE_NOT_FOUND;
     }
-    HvReleaseCell(Hive, (HCELL_INDEX)Key);
+    HvReleaseCell(Hive, HKEY_TO_HCI(Key));
 
     /* Get the value cell */
     ValueCell = (PCM_KEY_VALUE)HvGetCell(Hive, CellIndex);
@@ -490,7 +495,7 @@ RegEnumValue(
         (Index >= KeyNode->ValueList.Count))
     {
         ERR("RegEnumValue: index invalid\n");
-        HvReleaseCell(Hive, (HCELL_INDEX)Key);
+        HvReleaseCell(Hive, HKEY_TO_HCI(Key));
         return ERROR_NO_MORE_ITEMS;
     }
 
@@ -532,7 +537,7 @@ RegEnumValue(
 
     HvReleaseCell(Hive, ValueListCell->KeyList[Index]);
     HvReleaseCell(Hive, KeyNode->ValueList.List);
-    HvReleaseCell(Hive, (HCELL_INDEX)Key);
+    HvReleaseCell(Hive, HKEY_TO_HCI(Key));
 
     TRACE("RegEnumValue done -> %u, '%.*S'\n", *NameSize, *NameSize, ValueName);
     return ERROR_SUCCESS;

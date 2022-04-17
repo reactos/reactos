@@ -77,7 +77,7 @@
  * the other bits specify index into the hive file. The value HCELL_NULL
  * (-1) is reserved for marking invalid cells.
  */
-typedef ULONG_PTR HCELL_INDEX, *PHCELL_INDEX;
+typedef ULONG HCELL_INDEX, *PHCELL_INDEX;
 
 //
 // Cell Magic Values
@@ -152,11 +152,7 @@ typedef struct _HBASE_BLOCK
        of the full name of the hive file */
     WCHAR FileName[HIVE_FILENAME_MAXLEN + 1];
 
-#ifdef _WIN64
-    ULONG Reserved1[98];
-#else
     ULONG Reserved1[99];
-#endif
 
     /* Checksum of first 0x200 bytes */
     ULONG CheckSum;
@@ -167,7 +163,6 @@ typedef struct _HBASE_BLOCK
 } HBASE_BLOCK, *PHBASE_BLOCK;
 
 C_ASSERT(sizeof(HBASE_BLOCK) == HBLOCK_SIZE);
-C_ASSERT(FIELD_OFFSET(HBASE_BLOCK, CheckSum) == 0x200 - sizeof(ULONG));
 
 typedef struct _HBIN
 {

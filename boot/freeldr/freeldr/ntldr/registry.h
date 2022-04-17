@@ -25,6 +25,8 @@
 
 typedef HANDLE HKEY, *PHKEY;
 
+#define HKEY_TO_HCI(hKey)               ((HCELL_INDEX)(ULONG_PTR)(hKey))
+
 BOOLEAN
 RegImportBinaryHive(
     _In_ PVOID ChunkBase,
