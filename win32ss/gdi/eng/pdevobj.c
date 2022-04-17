@@ -768,7 +768,7 @@ PDEVOBJ_lChangeDisplaySettings(
     _Out_ PMDEVOBJ *ppmdevNew,
     _In_ BOOL bSearchClosestMode)
 {
-    PGRAPHICS_DEVICE pGraphicsDevice;
+    PGRAPHICS_DEVICE pGraphicsDevice = NULL;
     PMDEVOBJ pmdev = NULL;
     PDEVMODEW pdm = NULL;
     ULONG lRet = DISP_CHANGE_SUCCESSFUL;
