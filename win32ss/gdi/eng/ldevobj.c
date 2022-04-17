@@ -174,6 +174,9 @@ LDEVOBJ_bEnableDriver(
     ASSERT(pldev);
     ASSERT(pldev->cRefs == 0);
 
+    if (pldev->ldevtype == LDEV_IMAGE)
+        return TRUE;
+
     /* Call the drivers DrvEnableDriver function */
     RtlZeroMemory(&ded, sizeof(ded));
     if (!pfnEnableDriver(GDI_ENGINE_VERSION, sizeof(ded), &ded))
@@ -204,6 +207,9 @@ LDEVOBJ_vDisableDriver(
     ASSERT(pldev->cRefs == 0);
 
     TRACE("LDEVOBJ_vDisableDriver('%wZ')\n", &pldev->pGdiDriverInfo->DriverName);
+
+    if (pldev->ldevtype == LDEV_IMAGE)
+        return;
 
     if (pldev->pfn.DisableDriver)
     {
@@ -430,20 +436,16 @@ LDEVOBJ_pLoadDriver(
             goto leave;
         }
 
-        /* Shall we load a driver? */
-        if (ldevtype != LDEV_IMAGE)
+        /* Load the driver */
+        if (!LDEVOBJ_bEnableDriver(pldev, pldev->pGdiDriverInfo->EntryPoint))
         {
-            /* Load the driver */
-            if (!LDEVOBJ_bEnableDriver(pldev, pldev->pGdiDriverInfo->EntryPoint))
-            {
-                ERR("LDEVOBJ_bEnableDriver failed\n");
+            ERR("LDEVOBJ_bEnableDriver failed\n");
 
-                /* Unload the image. */
-                LDEVOBJ_bUnloadImage(pldev);
-                LDEVOBJ_vFreeLDEV(pldev);
-                pldev = NULL;
-                goto leave;
-            }
+            /* Unload the image. */
+            LDEVOBJ_bUnloadImage(pldev);
+            LDEVOBJ_vFreeLDEV(pldev);
+            pldev = NULL;
+            goto leave;
         }
 
         /* Insert the LDEV into the global list */
