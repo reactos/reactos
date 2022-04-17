@@ -256,7 +256,7 @@ jobs:
 
   build-msbuild-i386:
     name: MSBuild (i386)
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
     - name: Install Flex and Bison
       run: |
