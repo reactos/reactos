@@ -55,9 +55,10 @@ typedef struct tagIMEHOTKEY
     HKL    hKL;
 } IMEHOTKEY, *PIMEHOTKEY;
 
-PIMEHOTKEY gpImeHotKeyList = NULL;
-LCID glcid = 0;
+PIMEHOTKEY gpImeHotKeyList = NULL; // Win: gpImeHotKeyListHeader
+LCID glcidSystem = 0; // Win: glcidSystem
 
+// Win: GetAppImeCompatFlags
 DWORD FASTCALL IntGetImeCompatFlags(PTHREADINFO pti)
 {
     if (!pti)
@@ -66,6 +67,7 @@ DWORD FASTCALL IntGetImeCompatFlags(PTHREADINFO pti)
     return pti->ppi->dwImeCompatFlags;
 }
 
+// Win: GetLangIdMatchLevel
 UINT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
 {
     LCID lcid;
@@ -86,15 +88,16 @@ UINT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
     if (HotKeyLangId == LANGIDFROMLCID(lcid))
         return 2;
 
-    if (glcid == 0)
-        ZwQueryDefaultLocale(FALSE, &glcid);
+    if (glcidSystem == 0)
+        ZwQueryDefaultLocale(FALSE, &glcidSystem);
 
-    if (HotKeyLangId == LANGIDFROMLCID(glcid))
+    if (HotKeyLangId == LANGIDFROMLCID(glcidSystem))
         return 1;
 
     return 0;
 }
 
+// Win: GetActiveHKL
 HKL FASTCALL IntGetActiveKeyboardLayout(VOID)
 {
     PTHREADINFO pti;
@@ -109,6 +112,7 @@ HKL FASTCALL IntGetActiveKeyboardLayout(VOID)
     return UserGetKeyboardLayout(0);
 }
 
+// Win: GetHotKeyLangID
 static LANGID FASTCALL IntGetImeHotKeyLangId(DWORD dwHotKeyId)
 {
 #define IME_CHOTKEY 0x10
@@ -155,6 +159,7 @@ static VOID FASTCALL IntAddImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
     }
 }
 
+// Win: FindImeHotKeyByID
 static PIMEHOTKEY FASTCALL IntGetImeHotKeyById(PIMEHOTKEY pList, DWORD dwHotKeyId)
 {
     PIMEHOTKEY pNode;
@@ -166,6 +171,7 @@ static PIMEHOTKEY FASTCALL IntGetImeHotKeyById(PIMEHOTKEY pList, DWORD dwHotKeyI
     return NULL;
 }
 
+// Win: FindImeHotKeyByKeyWithLang
 static PIMEHOTKEY APIENTRY
 IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight,
                             UINT uVirtualKey, LANGID TargetLangId)
@@ -197,6 +203,7 @@ IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight,
     return NULL;
 }
 
+// Win: DeleteImeHotKey
 static VOID FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
 {
     PIMEHOTKEY pNode;
@@ -219,6 +226,7 @@ static VOID FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
     }
 }
 
+// Win: FindImeHotKeyByKey
 PIMEHOTKEY
 IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVirtualKey)
 {
@@ -486,6 +494,7 @@ Quit:
     return ret;
 }
 
+// Win: GetTopLevelWindow
 PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
 {
     if (!pwnd)
@@ -526,7 +535,7 @@ NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
     if (IS_IME_HKL(hNewKL) != IS_IME_HKL(hOldKL))
         pti->hklPrev = hOldKL;
 
-    pti->KeyboardLayout = pNewKL;
+    UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pNewKL);
 
 Quit:
     UserLeave();
@@ -566,6 +575,7 @@ DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
     return dwRealCount;
 }
 
+// Win: xxxImmProcessKey
 UINT FASTCALL
 IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
                  WPARAM wParam, LPARAM lParam)
@@ -739,6 +749,7 @@ Quit:
     return ret;
 }
 
+// Win: SetConvMode
 static VOID FASTCALL UserSetImeConversionKeyState(PTHREADINFO pti, DWORD dwConversion)
 {
     HKL hKL;
@@ -1494,6 +1505,7 @@ Quit:
     return ret;
 }
 
+// Win: UpdateInputContext
 BOOL FASTCALL UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
 {
     PTHREADINFO pti = GetW32ThreadInfo();
