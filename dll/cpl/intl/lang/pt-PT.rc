@@ -35,9 +35,9 @@ BEGIN
     LTEXT "Para ver ou modificar os idiomas ou métodos que pode utilizar para introduzir texto, clique em 'Detalhes'.", -1, 12, 15, 220, 18
     PUSHBUTTON "&Detalhes...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Suporte a idiomas adicionais", -1, 5, 62, 234, 82
-    LTEXT "A maioria dos idiomas são instalados por predefinição. Para instalar idiomas adicionais, seleccione abaixo, a caixa de verificação adequada.", -1, 12, 72, 220, 18
-    AUTOCHECKBOX "I&nstalar arquivos para idiomas de escrita complexa e da direita para a esquerda", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
-    AUTOCHECKBOX "In&stalar arquivos para idiomas do Leste Asiático", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
+    LTEXT "A maioria dos idiomas são instalados por predefinição. Para instalar idiomas adicionais, seleccione abaixo, a caixa de verificação adequada.", -1, 12, 72, 225, 18
+    AUTOCHECKBOX "I&nstalar ficheiros para idiomas de escrita complexa e da direita para a esquerda", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    AUTOCHECKBOX "In&stalar ficheiros para idiomas do Leste Asiático", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -48,7 +48,7 @@ BEGIN
     GROUPBOX "Idioma para programas não-Unicode", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Esta definição de sistema permite aos programas não-Unicode apresentar menus e diálogos no seu idioma de origem. Não afecta os programas Unicode, mas se aplica a todos os utilizadores deste computador.", -1, 14, 18, 223, 33
-    LTEXT "&Seleccione um idioma que corresponda à versão dos programas traduzidos não-Unicode que deseja usar:", -1, 14, 55, 223, 18
+    LTEXT "&Seleccione um idioma que corresponda à versão dos programas traduzidos não-Unicode que deseja utilizar:", -1, 14, 55, 223, 18
     GROUPBOX "&Tabelas de conversão de páginas de código", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Predefinições de conta de utilizador", -1, 5, 193, 234, 32

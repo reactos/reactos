@@ -698,7 +698,7 @@ const MUI_LANGUAGE MUILanguageList[] =
     {L"00000415", L"1250", L"852", L"10029", L"Polish", L"191", LatinFonts, plPLLayouts},
 #endif
 #ifdef LANGUAGE_PT_PT
-    {L"00000816", L"1252", L"850", L"10000", L"Portuguese (Portugal)", L"193", LatinFonts, ptPTLayouts},
+    {L"00000816", L"1252", L"850", L"10000", L"Português (Portugal)", L"193", LatinFonts, ptPTLayouts},
 #endif
 #ifdef LANGUAGE_PT_BR
     {L"00000416", L"1252", L"850", L"10000", L"Portuguese (Brazil)", L"32", LatinFonts, ptBRLayouts},

@@ -40,7 +40,7 @@ BEGIN
         BEGIN
             MENUITEM "(Vazio)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "&Configurações", IDM_SETTINGS
+        POPUP "D&efinições", IDM_SETTINGS
         BEGIN
             MENUITEM "&Painel de Controle", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
