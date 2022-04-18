@@ -2983,6 +2983,51 @@ CreateDeviceInstance(LPWSTR pszDeviceID)
 }
 
 
+static
+CONFIGRET
+GenerateDeviceID(
+    _Inout_ LPWSTR pszDeviceID,
+    _In_ PNP_RPC_STRING_LEN ulLength)
+{
+    WCHAR szGeneratedInstance[MAX_DEVICE_ID_LEN];
+    HKEY hKey;
+    DWORD dwInstanceNumber;
+    DWORD dwError = ERROR_SUCCESS;
+    CONFIGRET ret = CR_SUCCESS;
+
+    /* Generated ID is: Root\<Device ID>\<Instance number> */
+    dwInstanceNumber = 0;
+    while (dwError == ERROR_SUCCESS)
+    {
+        if (dwInstanceNumber >= 10000)
+            return CR_FAILURE;
+
+        swprintf(szGeneratedInstance, L"Root\\%ls\\%04lu",
+                 pszDeviceID, dwInstanceNumber);
+
+        /* Try to open the enum key of the device instance */
+        dwError = RegOpenKeyEx(hEnumKey, szGeneratedInstance, 0, KEY_QUERY_VALUE, &hKey);
+        if (dwError == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            dwInstanceNumber++;
+        }
+    }
+
+    /* pszDeviceID is an out parameter too for generated IDs */
+    if (wcslen(szGeneratedInstance) > ulLength)
+    {
+        ret = CR_BUFFER_SMALL;
+    }
+    else
+    {
+        wcscpy(pszDeviceID, szGeneratedInstance);
+    }
+
+    return ret;
+}
+
+
 /* Function 28 */
 DWORD
 WINAPI
@@ -3010,36 +3055,10 @@ PNP_CreateDevInst(
 
     if (ulFlags & CM_CREATE_DEVNODE_GENERATE_ID)
     {
-        WCHAR szGeneratedInstance[MAX_DEVICE_ID_LEN];
-        DWORD dwInstanceNumber;
-        DWORD dwError = ERROR_SUCCESS;
-        HKEY hKey;
-
-        /* Generated ID is: Root\<Device ID>\<Instance number> */
-        dwInstanceNumber = 0;
-        while (dwError == ERROR_SUCCESS)
-        {
-            swprintf(szGeneratedInstance, L"Root\\%ls\\%04lu",
-                     pszDeviceID, dwInstanceNumber);
-
-            /* Try to open the enum key of the device instance */
-            dwError = RegOpenKeyEx(hEnumKey, szGeneratedInstance, 0, KEY_QUERY_VALUE, &hKey);
-            if (dwError == ERROR_SUCCESS)
-            {
-                RegCloseKey(hKey);
-                dwInstanceNumber++;
-            }
-        }
-
-        /* pszDeviceID is an out parameter too for generated IDs */
-        if (wcslen(szGeneratedInstance) > ulLength)
-        {
-            ret = CR_BUFFER_SMALL;
-        }
-        else
-        {
-            wcscpy(pszDeviceID, szGeneratedInstance);
-        }
+        ret = GenerateDeviceID(pszDeviceID,
+                               ulLength);
+        if (ret != CR_SUCCESS)
+            return ret;
     }
 
     /* Create the device instance */
