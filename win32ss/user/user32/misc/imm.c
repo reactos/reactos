@@ -721,7 +721,7 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 
         if (gfConIme == -1)
         {
-            gfConIme = (INT)NtUserGetThreadState(THREADSTATE_CHECKCOMIME);
+            gfConIme = (INT)NtUserGetThreadState(THREADSTATE_CHECKCONIME);
             if (gfConIme)
                 pimeui->fCtrlShowStatus = FALSE;
         }

@@ -335,7 +335,7 @@ NtUserGetThreadState(
       case THREADSTATE_ISWINLOGON2:
          ret = (gpidLogon == PsGetCurrentProcessId());
          break;
-      case THREADSTATE_CHECKCOMIME:
+      case THREADSTATE_CHECKCONIME:
          /* FIXME */
          break;
    }
