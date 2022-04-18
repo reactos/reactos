@@ -414,6 +414,17 @@ IsRootDeviceInstanceID(
 
 
 static
+BOOL
+IsPresentDeviceInstanceID(
+    _In_ LPWSTR pszDeviceInstanceID)
+{
+    DWORD ulStatus, ulProblem;
+
+    return (GetDeviceStatus(pszDeviceInstanceID, &ulStatus, &ulProblem) == CR_SUCCESS);
+}
+
+
+static
 CONFIGRET
 OpenConfigurationKey(
     _In_ LPCWSTR pszDeviceID,
@@ -781,10 +792,29 @@ PNP_GetRelatedDeviceInstance(
     if (!IsValidDeviceInstanceID(pDeviceID))
         return CR_INVALID_DEVINST;
 
-    /* The root device does not have a parent device or sibling devices */
-    if ((ulRelationship == PNP_GET_PARENT_DEVICE_INSTANCE) ||
-        (ulRelationship == PNP_GET_SIBLING_DEVICE_INSTANCE))
+    if (ulRelationship == PNP_GET_PARENT_DEVICE_INSTANCE)
     {
+        /* The root device does not have a parent */
+        if (IsRootDeviceInstanceID(pDeviceID))
+            return CR_NO_SUCH_DEVINST;
+
+        /* Return the root device for non existing devices */
+        if (!IsPresentDeviceInstanceID(pDeviceID))
+        {
+            if ((wcslen(szRootDeviceInstanceID) + 1) > *pulLength)
+            {
+                *pulLength = wcslen(szRootDeviceInstanceID) + 1;
+                return CR_BUFFER_SMALL;
+            }
+
+            wcscpy(pRelatedDeviceId, szRootDeviceInstanceID);
+            *pulLength = wcslen(szRootDeviceInstanceID) + 1;
+            return CR_SUCCESS;
+        }
+    }
+    else if (ulRelationship == PNP_GET_SIBLING_DEVICE_INSTANCE)
+    {
+        /* The root device does not have siblings */
         if (IsRootDeviceInstanceID(pDeviceID))
             return CR_NO_SUCH_DEVINST;
     }
