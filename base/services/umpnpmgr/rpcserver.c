@@ -3012,39 +3012,38 @@ PNP_CreateDevInst(
     {
         WCHAR szGeneratedInstance[MAX_DEVICE_ID_LEN];
         DWORD dwInstanceNumber;
+        DWORD dwError = ERROR_SUCCESS;
+        HKEY hKey;
 
         /* Generated ID is: Root\<Device ID>\<Instance number> */
         dwInstanceNumber = 0;
-        do
+        while (dwError == ERROR_SUCCESS)
         {
             swprintf(szGeneratedInstance, L"Root\\%ls\\%04lu",
                      pszDeviceID, dwInstanceNumber);
 
-            /* Try to create a device instance with this ID */
-            ret = CreateDeviceInstance(szGeneratedInstance);
-
-            dwInstanceNumber++;
+            /* Try to open the enum key of the device instance */
+            dwError = RegOpenKeyEx(hEnumKey, szGeneratedInstance, 0, KEY_QUERY_VALUE, &hKey);
+            if (dwError == ERROR_SUCCESS)
+            {
+                RegCloseKey(hKey);
+                dwInstanceNumber++;
+            }
         }
-        while (ret == CR_ALREADY_SUCH_DEVINST);
 
-        if (ret == CR_SUCCESS)
+        /* pszDeviceID is an out parameter too for generated IDs */
+        if (wcslen(szGeneratedInstance) > ulLength)
         {
-            /* pszDeviceID is an out parameter too for generated IDs */
-            if (wcslen(szGeneratedInstance) > ulLength)
-            {
-                ret = CR_BUFFER_SMALL;
-            }
-            else
-            {
-                wcscpy(pszDeviceID, szGeneratedInstance);
-            }
+            ret = CR_BUFFER_SMALL;
+        }
+        else
+        {
+            wcscpy(pszDeviceID, szGeneratedInstance);
         }
     }
-    else
-    {
-        /* Create the device instance */
-        ret = CreateDeviceInstance(pszDeviceID);
-    }
+
+    /* Create the device instance */
+    ret = CreateDeviceInstance(pszDeviceID);
 
     DPRINT("PNP_CreateDevInst() done (returns %lx)\n", ret);
 
