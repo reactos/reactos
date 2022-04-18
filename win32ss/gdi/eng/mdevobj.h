@@ -5,14 +5,16 @@
 
 typedef struct _PDEVOBJ *PPDEVOBJ;
 
+typedef struct _MDEVDISPLAY
+{
+    PPDEVOBJ ppdev;
+} MDEVDISPLAY, *PMDEVDISPLAY;
+
 typedef struct _MDEVOBJ
 {
     ULONG cDev;
     PPDEVOBJ ppdevGlobal;
-    struct
-    {
-        PPDEVOBJ ppdev;
-    } dev[10]; /* FIXME: max number of displays. Needs dynamic allocation */
+    MDEVDISPLAY dev[0];
 } MDEVOBJ, *PMDEVOBJ;
 
 /* Globals ********************************************************************/
