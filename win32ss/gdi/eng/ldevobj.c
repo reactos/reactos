@@ -596,11 +596,13 @@ LDEVOBJ_bBuildDevmodeList(
         if (!pdminfo)
         {
             ERR("Could not allocate devmodeinfo\n");
+            ExFreePoolWithTag(pdm, GDITAG_DEVMODE);
             continue;
         }
 
         pdminfo->cbdevmode = cbSize;
         RtlCopyMemory(pdminfo->adevmode, pdm, cbSize);
+        ExFreePoolWithTag(pdm, GDITAG_DEVMODE);
 
         /* Attach the mode info to the device */
         pdminfo->pdmiNext = pGraphicsDevice->pdevmodeInfo;
