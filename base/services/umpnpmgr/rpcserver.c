@@ -3052,6 +3052,7 @@ PNP_CreateDevInst(
     PNP_RPC_STRING_LEN ulLength,
     DWORD ulFlags)
 {
+    HKEY hKey = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
     DPRINT("PNP_CreateDevInst(%p %S %S %lu 0x%08lx)\n",
@@ -3075,8 +3076,18 @@ PNP_CreateDevInst(
             return ret;
     }
 
+    /* Try to open the device instance key */
+    RegOpenKeyEx(hEnumKey, pszDeviceID, 0, KEY_READ | KEY_WRITE, &hKey);
+
     if (ulFlags & CM_CREATE_DEVNODE_PHANTOM)
     {
+        /* Fail, if the device already exists */
+        if (hKey != NULL)
+        {
+            ret = CR_ALREADY_SUCH_DEVINST;
+            goto done;
+        }
+
         /* Create the phantom device instance */
         ret = CreateDeviceInstance(pszDeviceID, TRUE);
     }
@@ -3085,6 +3096,10 @@ PNP_CreateDevInst(
         /* Create the device instance */
         ret = CreateDeviceInstance(pszDeviceID, FALSE);
     }
+
+done:
+    if (hKey)
+        RegCloseKey(hKey);
 
     DPRINT("PNP_CreateDevInst() done (returns %lx)\n", ret);
 
