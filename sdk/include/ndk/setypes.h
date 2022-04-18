@@ -204,6 +204,14 @@ typedef struct _SECURITY_TOKEN_PROXY_DATA
 //
 // Token and auxiliary data
 //
+// ===================!!!IMPORTANT NOTE!!!=====================
+// ImageFileName, ProcessCid, ThreadCid and CreateMethod field
+// names are taken from Windows Server 2003 SP2 checked build
+// WinDBG debug extensions command purposes (such as !logonsession
+// command respectively). As such names are hardcoded, we have
+// to be compatible with them. THESE FIELD NAMES MUST NOT BE
+// CHANGED!!!
+// ============================================================
 typedef struct _TOKEN
 {
     TOKEN_SOURCE TokenSource;                         /* 0x00 */
@@ -236,7 +244,13 @@ typedef struct _TOKEN
     PSECURITY_TOKEN_AUDIT_DATA AuditData;             /* 0x94 */
     PSEP_LOGON_SESSION_REFERENCES LogonSession;       /* 0x98 */
     LUID OriginatingLogonSession;                     /* 0x9C */
-    ULONG VariablePart;                               /* 0xA4 */
+#if DBG
+    UCHAR ImageFileName[16];                          /* 0xA4 */
+    HANDLE ProcessCid;                                /* 0xB4 */
+    HANDLE ThreadCid;                                 /* 0xB8 */
+    ULONG CreateMethod;                               /* 0xBC */
+#endif
+    ULONG VariablePart;                               /* 0xC0 */
 } TOKEN, *PTOKEN;
 
 typedef struct _AUX_ACCESS_DATA

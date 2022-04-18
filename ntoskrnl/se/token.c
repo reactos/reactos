@@ -1086,6 +1086,17 @@ SepDuplicateToken(
         goto Quit;
     }
 
+    /* Fill in token debug information */
+#if DBG
+    RtlCopyMemory(AccessToken->ImageFileName,
+                  PsGetCurrentProcess()->ImageFileName,
+                  min(sizeof(AccessToken->ImageFileName), sizeof(PsGetCurrentProcess()->ImageFileName)));
+
+    AccessToken->ProcessCid = PsGetCurrentProcessId();
+    AccessToken->ThreadCid = PsGetCurrentThreadId();
+    AccessToken->CreateMethod = TOKEN_DUPLICATE_METHOD;
+#endif
+
     /* Assign the data that reside in the TOKEN's variable information area */
     AccessToken->VariableLength = VariableLength;
     EndMem = (PVOID)&AccessToken->VariablePart;
@@ -1844,6 +1855,32 @@ SepCreateToken(
         goto Quit;
     }
 
+    /* Fill in token debug information */
+#if DBG
+    /*
+     * We must determine ourselves that the current
+     * process is not the initial CPU one. The initial
+     * process is not a "real" process, that is, the
+     * Process Manager has not yet been initialized and
+     * as a matter of fact we are creating a token before
+     * any process gets created by Ps. If it turns out
+     * that the current process is the initial CPU process
+     * where token creation execution takes place, don't
+     * do anything.
+     */
+    if (PsGetCurrentProcess() != &KiInitialProcess)
+    {
+        RtlCopyMemory(AccessToken->ImageFileName,
+                      PsGetCurrentProcess()->ImageFileName,
+                      min(sizeof(AccessToken->ImageFileName), sizeof(PsGetCurrentProcess()->ImageFileName)));
+
+        AccessToken->ProcessCid = PsGetCurrentProcessId();
+        AccessToken->ThreadCid = PsGetCurrentThreadId();
+    }
+
+    AccessToken->CreateMethod = TOKEN_CREATE_METHOD;
+#endif
+
     /* Assign the data that reside in the TOKEN's variable information area */
     AccessToken->VariableLength = VariableLength;
     EndMem = (PVOID)&AccessToken->VariablePart;
@@ -2180,6 +2217,17 @@ SepPerformTokenFiltering(
         DPRINT1("SepPerformTokenFiltering(): Failed to insert the logon session into token (Status 0x%lx)\n", Status);
         goto Quit;
     }
+
+    /* Fill in token debug information */
+#if DBG
+    RtlCopyMemory(AccessToken->ImageFileName,
+                  PsGetCurrentProcess()->ImageFileName,
+                  min(sizeof(AccessToken->ImageFileName), sizeof(PsGetCurrentProcess()->ImageFileName)));
+
+    AccessToken->ProcessCid = PsGetCurrentProcessId();
+    AccessToken->ThreadCid = PsGetCurrentThreadId();
+    AccessToken->CreateMethod = TOKEN_FILTER_METHOD;
+#endif
 
     /* Assign the data that reside in the token's variable information area */
     AccessToken->VariableLength = VariableLength;
