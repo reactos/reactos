@@ -2877,8 +2877,11 @@ done:
 }
 
 
-static CONFIGRET
-CreateDeviceInstance(LPWSTR pszDeviceID)
+static
+CONFIGRET
+CreateDeviceInstance(
+    _In_ LPWSTR pszDeviceID,
+    _In_ BOOL bPhantomDevice)
 {
     WCHAR szEnumerator[MAX_DEVICE_ID_LEN];
     WCHAR szDevice[MAX_DEVICE_ID_LEN];
@@ -2960,6 +2963,17 @@ CreateDeviceInstance(LPWSTR pszDeviceID)
     if (lError != ERROR_SUCCESS)
     {
         return CR_REGISTRY_ERROR;
+    }
+
+    if (bPhantomDevice)
+    {
+        DWORD dwPhantomValue = 1;
+        RegSetValueExW(hKeyInstance,
+                       L"Phantom",
+                       0,
+                       REG_DWORD,
+                       (PBYTE)&dwPhantomValue,
+                       sizeof(dwPhantomValue));
     }
 
     /* Create the 'Control' sub key */
@@ -3061,8 +3075,16 @@ PNP_CreateDevInst(
             return ret;
     }
 
-    /* Create the device instance */
-    ret = CreateDeviceInstance(pszDeviceID);
+    if (ulFlags & CM_CREATE_DEVNODE_PHANTOM)
+    {
+        /* Create the phantom device instance */
+        ret = CreateDeviceInstance(pszDeviceID, TRUE);
+    }
+    else
+    {
+        /* Create the device instance */
+        ret = CreateDeviceInstance(pszDeviceID, FALSE);
+    }
 
     DPRINT("PNP_CreateDevInst() done (returns %lx)\n", ret);
 
