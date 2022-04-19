@@ -1299,7 +1299,7 @@ VOID FASTCALL IntImeSetTopMost(PWND pImeWnd, BOOL bTopMost, PWND pwndInsertBefor
         if (IS_WND_IMELIKE(pwndChild) && pwndChild != pwndInsertAfter &&
             pwndChild->head.pti == pImeWnd->head.pti)
         {
-            // Find pImeWnd from the children
+            // Find pImeWnd from the owners
             for (pwndNode = pwndChild; pwndNode; pwndNode = pwndNode->spwndOwner)
             {
                 if (pwndNode != pImeWnd)
