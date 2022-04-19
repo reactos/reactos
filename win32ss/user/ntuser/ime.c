@@ -1299,12 +1299,13 @@ VOID FASTCALL IntImeSetTopMost(PWND pImeWnd, BOOL bTopMost, PWND pwndInsertBefor
         if (IS_WND_IMELIKE(pwndChild) && pwndChild != pwndInsertAfter &&
             pwndChild->head.pti == pImeWnd->head.pti)
         {
-            // Adjust the ordering and the linking
+            // Find pImeWnd from the children
             for (pwndNode = pwndChild; pwndNode; pwndNode = pwndNode->spwndOwner)
             {
                 if (pwndNode != pImeWnd)
                     continue;
 
+                // Adjust the ordering and the linking
                 IntUnlinkWindow(pwndChild);
 
                 if (bTopMost)
@@ -1317,6 +1318,7 @@ VOID FASTCALL IntImeSetTopMost(PWND pImeWnd, BOOL bTopMost, PWND pwndInsertBefor
                 else
                     IntLinkHwnd(pwndChild, UserHMGetHandle(pwndInsertAfter));
 
+                // Update the preferred position
                 pwndInsertAfter = pwndChild;
                 break;
             }
