@@ -96,8 +96,6 @@
  * types, they are not completely linked together.
  */
 
-#pragma once
-
 #include "pshpack1.h"
 
 /* ======================================== *
@@ -1390,7 +1388,7 @@ union codeview_symbol
     struct
     {
 	short int	        len;	        /* Total length of this entry */
-	short int	        id;		/* Always S_BPREL_V1 */
+	short int	        id;		/* Always S_BPREL32_16t */
 	unsigned int	        offset;	        /* Stack offset relative to BP */
 	unsigned short	        symtype;
         struct p_string         p_name;
@@ -1399,7 +1397,7 @@ union codeview_symbol
     struct
     {
 	short int	        len;	        /* Total length of this entry */
-	short int	        id;		/* Always S_BPREL_V2 */
+	short int	        id;		/* Always S_BPREL32_ST */
 	unsigned int	        offset;	        /* Stack offset relative to EBP */
 	unsigned int	        symtype;
         struct p_string         p_name;
@@ -1408,7 +1406,7 @@ union codeview_symbol
     struct
     {
         short int               len;            /* Total length of this entry */
-        short int               id;             /* Always S_BPREL_V3 */
+        short int               id;             /* Always S_BPREL32 */
         int                     offset;         /* Stack offset relative to BP */
         unsigned int            symtype;
         char                    name[1];
@@ -1417,7 +1415,7 @@ union codeview_symbol
     struct
     {
         short int               len;            /* Total length of this entry */
-        short int               id;             /* Always S_BPREL_V3 */
+        short int               id;             /* Always S_BPREL32 */
         int                     offset;         /* Stack offset relative to BP */
         unsigned int            symtype;
         unsigned short          reg;
@@ -1437,7 +1435,7 @@ union codeview_symbol
     struct
     {
 	short int	        len;	        /* Total length of this entry */
-	short int	        id;		/* Always S_REGISTER_V2 */
+	short int	        id;		/* Always S_REGISTER_ST */
         unsigned int            type;           /* check whether type & reg are correct */
         unsigned short          reg;
         struct p_string         p_name;
@@ -1447,7 +1445,7 @@ union codeview_symbol
     struct
     {
 	short int	        len;	        /* Total length of this entry */
-	short int	        id;		/* Always S_REGISTER_V3 */
+	short int	        id;		/* Always S_REGISTER */
         unsigned int            type;           /* check whether type & reg are correct */
         unsigned short          reg;
         char                    name[1];
@@ -1658,82 +1656,82 @@ union codeview_symbol
     } heap_alloc_site;
 };
 
-#define S_COMPILAND_V1  0x0001
-#define S_REGISTER_V1   0x0002
-#define S_CONSTANT_V1   0x0003
-#define S_UDT_V1        0x0004
-#define S_SSEARCH_V1    0x0005
-#define S_END_V1        0x0006
-#define S_SKIP_V1       0x0007
-#define S_CVRESERVE_V1  0x0008
-#define S_OBJNAME_V1    0x0009
-#define S_ENDARG_V1     0x000a
-#define S_COBOLUDT_V1   0x000b
-#define S_MANYREG_V1    0x000c
-#define S_RETURN_V1     0x000d
-#define S_ENTRYTHIS_V1  0x000e
+#define S_COMPILE       0x0001
+#define S_REGISTER_16t  0x0002
+#define S_CONSTANT_16t  0x0003
+#define S_UDT_16t       0x0004
+#define S_SSEARCH       0x0005
+#define S_END           0x0006
+#define S_SKIP          0x0007
+#define S_CVRESERVE     0x0008
+#define S_OBJNAME_ST    0x0009
+#define S_ENDARG        0x000a
+#define S_COBOLUDT_16t  0x000b
+#define S_MANYREG_16t   0x000c
+#define S_RETURN        0x000d
+#define S_ENTRYTHIS     0x000e
 
-#define S_BPREL_V1      0x0200
-#define S_LDATA_V1      0x0201
-#define S_GDATA_V1      0x0202
-#define S_PUB_V1        0x0203
-#define S_LPROC_V1      0x0204
-#define S_GPROC_V1      0x0205
-#define S_THUNK_V1      0x0206
-#define S_BLOCK_V1      0x0207
-#define S_WITH_V1       0x0208
-#define S_LABEL_V1      0x0209
-#define S_CEXMODEL_V1   0x020a
-#define S_VFTPATH_V1    0x020b
-#define S_REGREL_V1     0x020c
-#define S_LTHREAD_V1    0x020d
-#define S_GTHREAD_V1    0x020e
+#define S_BPREL32_16t   0x0200
+#define S_LDATA32_16t   0x0201
+#define S_GDATA32_16t   0x0202
+#define S_PUB32_16t     0x0203
+#define S_LPROC32_16t   0x0204
+#define S_GPROC32_16t   0x0205
+#define S_THUNK32_ST    0x0206
+#define S_BLOCK32_ST    0x0207
+#define S_WITH32_ST     0x0208
+#define S_LABEL32_ST    0x0209
+#define S_CEXMODEL32    0x020a
+#define S_VFTABLE32_16t 0x020b
+#define S_REGREL32_16t  0x020c
+#define S_LTHREAD32_16t 0x020d
+#define S_GTHREAD32_16t 0x020e
 
-#define S_PROCREF_V1    0x0400
-#define S_DATAREF_V1    0x0401
-#define S_ALIGN_V1      0x0402
-#define S_LPROCREF_V1   0x0403
+#define S_PROCREF_ST    0x0400
+#define S_DATAREF_ST    0x0401
+#define S_ALIGN         0x0402
+#define S_LPROCREF_ST   0x0403
 
-#define S_REGISTER_V2   0x1001 /* Variants with new 32-bit type indices */
-#define S_CONSTANT_V2   0x1002
-#define S_UDT_V2        0x1003
-#define S_COBOLUDT_V2   0x1004
-#define S_MANYREG_V2    0x1005
-#define S_BPREL_V2      0x1006
-#define S_LDATA_V2      0x1007
-#define S_GDATA_V2      0x1008
-#define S_PUB_V2        0x1009
-#define S_LPROC_V2      0x100a
-#define S_GPROC_V2      0x100b
-#define S_VFTTABLE_V2   0x100c
-#define S_REGREL_V2     0x100d
-#define S_LTHREAD_V2    0x100e
-#define S_GTHREAD_V2    0x100f
-#define S_FRAMEINFO_V2  0x1012
-#define S_COMPILAND_V2  0x1013
+#define S_REGISTER_ST   0x1001 /* Variants with new 32-bit type indices */
+#define S_CONSTANT_ST   0x1002
+#define S_UDT_ST        0x1003
+#define S_COBOLUDT_ST   0x1004
+#define S_MANYREG_ST    0x1005
+#define S_BPREL32_ST    0x1006
+#define S_LDATA32_ST    0x1007
+#define S_GDATA32_ST    0x1008
+#define S_PUB32_ST      0x1009
+#define S_LPROC32_ST    0x100a
+#define S_GPROC32_ST    0x100b
+#define S_VFTABLE32     0x100c
+#define S_REGREL32_ST   0x100d
+#define S_LTHREAD32_ST  0x100e
+#define S_GTHREAD32_ST  0x100f
+#define S_FRAMEPROC     0x1012
+#define S_COMPILE2_ST   0x1013
 
-#define S_COMPILAND_V3  0x1101
-#define S_THUNK_V3      0x1102
-#define S_BLOCK_V3      0x1103
-#define S_WITH_V3       0x1104
-#define S_LABEL_V3      0x1105
-#define S_REGISTER_V3   0x1106
-#define S_CONSTANT_V3   0x1107
-#define S_UDT_V3        0x1108
-#define S_COBOLUDT_V3   0x1109
-#define S_MANYREG_V3    0x110A
-#define S_BPREL_V3      0x110B
-#define S_LDATA_V3      0x110C
-#define S_GDATA_V3      0x110D
-#define S_PUB_V3        0x110E
-#define S_LPROC_V3      0x110F
-#define S_GPROC_V3      0x1110
-#define S_REGREL_V3     0x1111
-#define S_LTHREAD_V3    0x1112
-#define S_GTHREAD_V3    0x1113
+#define S_OBJNAME       0x1101
+#define S_THUNK32       0x1102
+#define S_BLOCK32       0x1103
+#define S_WITH32        0x1104
+#define S_LABEL32       0x1105
+#define S_REGISTER      0x1106
+#define S_CONSTANT      0x1107
+#define S_UDT           0x1108
+#define S_COBOLUDT      0x1109
+#define S_MANYREG       0x110A
+#define S_BPREL32       0x110B
+#define S_LDATA32       0x110C
+#define S_GDATA32       0x110D
+#define S_PUB32         0x110E
+#define S_LPROC32       0x110F
+#define S_GPROC32       0x1110
+#define S_REGREL32      0x1111
+#define S_LTHREAD32     0x1112
+#define S_GTHREAD32     0x1113
 #define S_LPROCMIPS     0x1114
 #define S_GPROCMIPS     0x1115
-#define S_MSTOOL_V3     0x1116  /* compiler command line options and build information */
+#define S_COMPILE2      0x1116  /* compiler command line options and build information */
 #define S_MANYREG2      0x1117
 #define S_LPROCIA64     0x1118
 #define S_GPROCIA64     0x1119
@@ -1748,9 +1746,9 @@ union codeview_symbol
 #define S_MANREGREL     0x1122
 #define S_MANMANYREG2   0x1123
 #define S_UNAMESPACE    0x1124
-#define S_PUB_FUNC1_V3  0x1125  /* didn't get the difference between the two */
-#define S_DATAREF_V3    0x1126
-#define S_PUB_FUNC2_V3  0x1127
+#define S_PROCREF       0x1125  /* didn't get the difference between the two */
+#define S_DATAREF       0x1126
+#define S_LPROCREF      0x1127
 #define S_ANNOTATIONREF 0x1128
 #define S_TOKENREF      0x1129
 #define S_GMANPROC      0x112A
@@ -1765,25 +1763,25 @@ union codeview_symbol
 #define S_LOCAL_2005    0x1133
 #define S_DEFRANGE_2005 0x1134
 #define S_DEFRANGE2_2005 0x1135
-#define S_SECTINFO_V3   0x1136
-#define S_SUBSECTINFO_V3 0x1137
-#define S_ENTRYPOINT_V3 0x1138
+#define S_SECTION       0x1136
+#define S_COFFGROUP     0x1137
+#define S_EXPORT        0x1138
 #define S_CALLSITEINFO  0x1139
-#define S_SECUCOOKIE_V3 0x113A
+#define S_FRAMECOOKIE   0x113A
 #define S_DISCARDED     0x113B
-#define S_MSTOOLINFO_V3 0x113C
-#define S_MSTOOLENV_V3  0x113D
+#define S_COMPILE3      0x113C
+#define S_ENVBLOCK      0x113D
 
-#define S_LOCAL_VS2013      0x113E
-#define S_DEFRANGE_VS2013   0x113F
+#define S_LOCAL             0x113E
+#define S_DEFRANGE          0x113F
 #define S_DEFRANGE_SUBFIELD 0x1140
 #define S_DEFRANGE_REGISTER 0x1141
 #define S_DEFRANGE_FRAMEPOINTER_REL     0x1142
 #define S_DEFRANGE_SUBFIELD_REGISTER    0x1143
-#define S_FPOFF_VS2013      0x1144
+#define S_DEFRANGE_FRAMEPOINTER_REL_FULL_SCOPE      0x1144
 #define S_DEFRANGE_REGISTER_REL         0x1145
-#define S_LPROC32_VS2013    0x1146
-#define S_GPROC32_VS2013    0x1147
+#define S_LPROC32_ID        0x1146
+#define S_GPROC32_ID        0x1147
 #define S_LPROCMIPS_ID      0x1148
 #define S_GPROCMIPS_ID      0x1149
 #define S_LPROCIA64_ID      0x114A

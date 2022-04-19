@@ -20,10 +20,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
+
+static D3DQUERYTYPE d3dquerytype_from_wined3d(enum wined3d_query_type type)
+{
+    return (D3DQUERYTYPE)type;
+}
+
+static enum wined3d_query_type wined3d_query_type_from_d3d(D3DQUERYTYPE type)
+{
+    return (enum wined3d_query_type)type;
+}
 
 static inline struct d3d9_query *impl_from_IDirect3DQuery9(IDirect3DQuery9 *iface)
 {
@@ -99,7 +108,7 @@ static D3DQUERYTYPE WINAPI d3d9_query_GetType(IDirect3DQuery9 *iface)
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    type = wined3d_query_get_type(query->wined3d_query);
+    type = d3dquerytype_from_wined3d(wined3d_query_get_type(query->wined3d_query));
     wined3d_mutex_unlock();
 
     return type;
@@ -199,7 +208,7 @@ HRESULT query_init(struct d3d9_query *query, struct d3d9_device *device, D3DQUER
     query->refcount = 1;
 
     wined3d_mutex_lock();
-    if (FAILED(hr = wined3d_query_create(device->wined3d_device, type,
+    if (FAILED(hr = wined3d_query_create(device->wined3d_device, wined3d_query_type_from_d3d(type),
             query, &d3d9_null_wined3d_parent_ops, &query->wined3d_query)))
     {
         wined3d_mutex_unlock();

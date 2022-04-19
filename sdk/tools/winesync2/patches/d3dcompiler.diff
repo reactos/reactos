@@ -1,0 +1,37 @@
+diff --git a/dll/directx/wine/d3dcompiler_43/compiler.c b/dll/directx/wine/d3dcompiler_43/compiler.c
+index f60585a..97a7832 100644
+--- a/dll/directx/wine/d3dcompiler_43/compiler.c
++++ b/dll/directx/wine/d3dcompiler_43/compiler.c
+@@ -1050,8 +1050,10 @@ end:
+     return hr;
+ }
+ 
++#ifndef __REACTOS__
+ HRESULT WINAPI D3DLoadModule(const void *data, SIZE_T size, ID3D11Module **module)
+ {
+     FIXME("data %p, size %lu, module %p stub!\n", data, size, module);
+     return E_NOTIMPL;
+ }
++#endif
+diff --git a/dll/directx/wine/d3dcompiler_43/ppl.l b/dll/directx/wine/d3dcompiler_43/ppl.l
+index 568ccb4..bc2c4e4 100644
+--- a/dll/directx/wine/d3dcompiler_43/ppl.l
++++ b/dll/directx/wine/d3dcompiler_43/ppl.l
+@@ -873,7 +873,7 @@ static int make_number(int radix, YYSTYPE *val, const char *str, int len)
+ 	if(is_u && is_ll)
+ 	{
+ 		errno = 0;
+-		val->ull = strtoull(str, NULL, radix);
++		val->ull = _strtoui64(str, NULL, radix);
+ 		if (val->ull == ULLONG_MAX && errno == ERANGE)
+ 		    ppy_error("integer constant %s is too large\n", str);
+ 		return tULONGLONG;
+@@ -881,7 +881,7 @@ static int make_number(int radix, YYSTYPE *val, const char *str, int len)
+ 	else if(!is_u && is_ll)
+ 	{
+ 		errno = 0;
+-		val->sll = strtoll(str, NULL, radix);
++		val->sll = _strtoui64(str, NULL, radix);
+ 		if ((val->sll == LLONG_MIN || val->sll == LLONG_MAX) && errno == ERANGE)
+ 		    ppy_error("integer constant %s is too large\n", str);
+ 		return tSLONGLONG;

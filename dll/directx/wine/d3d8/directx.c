@@ -20,17 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-
 #include "d3d8_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
@@ -81,6 +70,7 @@ static ULONG WINAPI d3d8_Release(IDirect3D8 *iface)
         wined3d_decref(d3d8->wined3d);
         wined3d_mutex_unlock();
 
+        heap_free(d3d8->wined3d_outputs);
         heap_free(d3d8);
     }
 
@@ -104,15 +94,10 @@ static HRESULT WINAPI d3d8_RegisterSoftwareDevice(IDirect3D8 *iface, void *init_
 static UINT WINAPI d3d8_GetAdapterCount(IDirect3D8 *iface)
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
-    HRESULT hr;
 
     TRACE("iface %p.\n", iface);
 
-    wined3d_mutex_lock();
-    hr = wined3d_get_adapter_count(d3d8->wined3d);
-    wined3d_mutex_unlock();
-
-    return hr;
+    return d3d8->wined3d_output_count;
 }
 
 static HRESULT WINAPI d3d8_GetAdapterIdentifier(IDirect3D8 *iface, UINT adapter,
@@ -120,29 +105,36 @@ static HRESULT WINAPI d3d8_GetAdapterIdentifier(IDirect3D8 *iface, UINT adapter,
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
     struct wined3d_adapter_identifier adapter_id;
+    struct wined3d_adapter *wined3d_adapter;
+    unsigned int output_idx;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, flags %#x, identifier %p.\n",
             iface, adapter, flags, identifier);
 
+    output_idx = adapter;
+    if (output_idx >= d3d8->wined3d_output_count)
+        return D3DERR_INVALIDCALL;
+
     adapter_id.driver = identifier->Driver;
     adapter_id.driver_size = sizeof(identifier->Driver);
     adapter_id.description = identifier->Description;
     adapter_id.description_size = sizeof(identifier->Description);
-    adapter_id.device_name = NULL; /* d3d9 only */
-    adapter_id.device_name_size = 0; /* d3d9 only */
 
-    wined3d_mutex_lock();
-    hr = wined3d_get_adapter_identifier(d3d8->wined3d, adapter, flags, &adapter_id);
-    wined3d_mutex_unlock();
+    /* D3DENUM_NO_WHQL_LEVEL -> WINED3DENUM_WHQL_LEVEL */
+    flags ^= D3DENUM_NO_WHQL_LEVEL;
 
-    identifier->DriverVersion = adapter_id.driver_version;
-    identifier->VendorId = adapter_id.vendor_id;
-    identifier->DeviceId = adapter_id.device_id;
-    identifier->SubSysId = adapter_id.subsystem_id;
-    identifier->Revision = adapter_id.revision;
-    memcpy(&identifier->DeviceIdentifier, &adapter_id.device_identifier, sizeof(identifier->DeviceIdentifier));
-    identifier->WHQLLevel = adapter_id.whql_level;
+    wined3d_adapter = wined3d_output_get_adapter(d3d8->wined3d_outputs[output_idx]);
+    if (SUCCEEDED(hr = wined3d_adapter_get_identifier(wined3d_adapter, flags, &adapter_id)))
+    {
+        identifier->DriverVersion = adapter_id.driver_version;
+        identifier->VendorId = adapter_id.vendor_id;
+        identifier->DeviceId = adapter_id.device_id;
+        identifier->SubSysId = adapter_id.subsystem_id;
+        identifier->Revision = adapter_id.revision;
+        memcpy(&identifier->DeviceIdentifier, &adapter_id.device_identifier, sizeof(identifier->DeviceIdentifier));
+        identifier->WHQLLevel = adapter_id.whql_level;
+    }
 
     return hr;
 }
@@ -150,29 +142,38 @@ static HRESULT WINAPI d3d8_GetAdapterIdentifier(IDirect3D8 *iface, UINT adapter,
 static UINT WINAPI d3d8_GetAdapterModeCount(IDirect3D8 *iface, UINT adapter)
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
-    HRESULT hr;
+    unsigned int output_idx, count;
 
     TRACE("iface %p, adapter %u.\n", iface, adapter);
 
+    output_idx = adapter;
+    if (output_idx >= d3d8->wined3d_output_count)
+        return 0;
+
     wined3d_mutex_lock();
-    hr = wined3d_get_adapter_mode_count(d3d8->wined3d, adapter,
+    count = wined3d_output_get_mode_count(d3d8->wined3d_outputs[output_idx],
             WINED3DFMT_UNKNOWN, WINED3D_SCANLINE_ORDERING_UNKNOWN);
     wined3d_mutex_unlock();
 
-    return hr;
+    return count;
 }
 
 static HRESULT WINAPI d3d8_EnumAdapterModes(IDirect3D8 *iface, UINT adapter, UINT mode_idx, D3DDISPLAYMODE *mode)
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
     struct wined3d_display_mode wined3d_mode;
+    unsigned int output_idx;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, mode_idx %u, mode %p.\n",
             iface, adapter, mode_idx, mode);
 
+    output_idx = adapter;
+    if (output_idx >= d3d8->wined3d_output_count)
+        return D3DERR_INVALIDCALL;
+
     wined3d_mutex_lock();
-    hr = wined3d_enum_adapter_modes(d3d8->wined3d, adapter, WINED3DFMT_UNKNOWN,
+    hr = wined3d_output_get_mode(d3d8->wined3d_outputs[output_idx], WINED3DFMT_UNKNOWN,
             WINED3D_SCANLINE_ORDERING_UNKNOWN, mode_idx, &wined3d_mode);
     wined3d_mutex_unlock();
 
@@ -191,13 +192,18 @@ static HRESULT WINAPI d3d8_GetAdapterDisplayMode(IDirect3D8 *iface, UINT adapter
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
     struct wined3d_display_mode wined3d_mode;
+    unsigned int output_idx;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, mode %p.\n",
             iface, adapter, mode);
 
+    output_idx = adapter;
+    if (output_idx >= d3d8->wined3d_output_count)
+        return D3DERR_INVALIDCALL;
+
     wined3d_mutex_lock();
-    hr = wined3d_get_adapter_display_mode(d3d8->wined3d, adapter, &wined3d_mode, NULL);
+    hr = wined3d_output_get_display_mode(d3d8->wined3d_outputs[output_idx], &wined3d_mode, NULL);
     wined3d_mutex_unlock();
 
     if (SUCCEEDED(hr))
@@ -215,16 +221,22 @@ static HRESULT WINAPI d3d8_CheckDeviceType(IDirect3D8 *iface, UINT adapter, D3DD
         D3DFORMAT display_format, D3DFORMAT backbuffer_format, BOOL windowed)
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
+    unsigned int output_idx;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, device_type %#x, display_format %#x, backbuffer_format %#x, windowed %#x.\n",
             iface, adapter, device_type, display_format, backbuffer_format, windowed);
 
+    output_idx = adapter;
+    if (output_idx >= d3d8->wined3d_output_count)
+        return D3DERR_INVALIDCALL;
+
     if (!windowed && display_format != D3DFMT_X8R8G8B8 && display_format != D3DFMT_R5G6B5)
         return WINED3DERR_NOTAVAILABLE;
 
     wined3d_mutex_lock();
-    hr = wined3d_check_device_type(d3d8->wined3d, adapter, device_type, wined3dformat_from_d3dformat(display_format),
+    hr = wined3d_check_device_type(d3d8->wined3d, d3d8->wined3d_outputs[output_idx],
+            wined3d_device_type_from_d3d(device_type), wined3dformat_from_d3dformat(display_format),
             wined3dformat_from_d3dformat(backbuffer_format), windowed);
     wined3d_mutex_unlock();
 
@@ -236,31 +248,40 @@ static HRESULT WINAPI d3d8_CheckDeviceFormat(IDirect3D8 *iface, UINT adapter, D3
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
     enum wined3d_resource_type wined3d_rtype;
+    struct wined3d_adapter *wined3d_adapter;
+    unsigned int bind_flags;
+    unsigned int output_idx;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, device_type %#x, adapter_format %#x, usage %#x, resource_type %#x, format %#x.\n",
             iface, adapter, device_type, adapter_format, usage, resource_type, format);
 
-    if (!adapter_format)
+    output_idx = adapter;
+    if (output_idx >= d3d8->wined3d_output_count)
+        return D3DERR_INVALIDCALL;
+
+    if (adapter_format != D3DFMT_X8R8G8B8 && adapter_format != D3DFMT_R5G6B5
+            && adapter_format != D3DFMT_X1R5G5B5)
     {
         WARN("Invalid adapter format.\n");
-        return D3DERR_INVALIDCALL;
+        return adapter_format ? D3DERR_NOTAVAILABLE : D3DERR_INVALIDCALL;
     }
 
+    bind_flags = wined3d_bind_flags_from_d3d8_usage(usage);
     usage = usage & (WINED3DUSAGE_MASK | WINED3DUSAGE_QUERY_MASK);
     switch (resource_type)
     {
         case D3DRTYPE_CUBETEXTURE:
             usage |= WINED3DUSAGE_LEGACY_CUBEMAP;
         case D3DRTYPE_TEXTURE:
-            usage |= WINED3DUSAGE_TEXTURE;
+            bind_flags |= WINED3D_BIND_SHADER_RESOURCE;
         case D3DRTYPE_SURFACE:
             wined3d_rtype = WINED3D_RTYPE_TEXTURE_2D;
             break;
 
         case D3DRTYPE_VOLUMETEXTURE:
         case D3DRTYPE_VOLUME:
-            usage |= WINED3DUSAGE_TEXTURE;
+            bind_flags |= WINED3D_BIND_SHADER_RESOURCE;
             wined3d_rtype = WINED3D_RTYPE_TEXTURE_3D;
             break;
 
@@ -275,8 +296,20 @@ static HRESULT WINAPI d3d8_CheckDeviceFormat(IDirect3D8 *iface, UINT adapter, D3
     }
 
     wined3d_mutex_lock();
-    hr = wined3d_check_device_format(d3d8->wined3d, adapter, device_type, wined3dformat_from_d3dformat(adapter_format),
-            usage, wined3d_rtype, wined3dformat_from_d3dformat(format));
+    wined3d_adapter = wined3d_output_get_adapter(d3d8->wined3d_outputs[output_idx]);
+    if (format == D3DFMT_RESZ && resource_type == D3DRTYPE_SURFACE && usage == D3DUSAGE_RENDERTARGET)
+    {
+        DWORD levels;
+
+        hr = wined3d_check_device_multisample_type(wined3d_adapter, wined3d_device_type_from_d3d(device_type),
+                WINED3DFMT_D24_UNORM_S8_UINT, FALSE, WINED3D_MULTISAMPLE_NON_MASKABLE, &levels);
+        if (SUCCEEDED(hr) && !levels)
+            hr = D3DERR_NOTAVAILABLE;
+    }
+    else
+        hr = wined3d_check_device_format(d3d8->wined3d, wined3d_adapter, wined3d_device_type_from_d3d(device_type),
+                wined3dformat_from_d3dformat(adapter_format), usage, bind_flags, wined3d_rtype,
+                wined3dformat_from_d3dformat(format));
     wined3d_mutex_unlock();
 
     return hr;
@@ -286,16 +319,23 @@ static HRESULT WINAPI d3d8_CheckDeviceMultiSampleType(IDirect3D8 *iface, UINT ad
         D3DFORMAT format, BOOL windowed, D3DMULTISAMPLE_TYPE multisample_type)
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
+    struct wined3d_adapter *wined3d_adapter;
+    unsigned int output_idx;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, device_type %#x, format %#x, windowed %#x, multisample_type %#x.\n",
             iface, adapter, device_type, format, windowed, multisample_type);
 
+    output_idx = adapter;
+    if (output_idx >= d3d8->wined3d_output_count)
+        return D3DERR_INVALIDCALL;
+
     if (multisample_type > D3DMULTISAMPLE_16_SAMPLES)
         return D3DERR_INVALIDCALL;
 
     wined3d_mutex_lock();
-    hr = wined3d_check_device_multisample_type(d3d8->wined3d, adapter, device_type,
+    wined3d_adapter = wined3d_output_get_adapter(d3d8->wined3d_outputs[output_idx]);
+    hr = wined3d_check_device_multisample_type(wined3d_adapter, wined3d_device_type_from_d3d(device_type),
             wined3dformat_from_d3dformat(format), windowed,
             (enum wined3d_multisample_type)multisample_type, NULL);
     wined3d_mutex_unlock();
@@ -307,13 +347,20 @@ static HRESULT WINAPI d3d8_CheckDepthStencilMatch(IDirect3D8 *iface, UINT adapte
         D3DFORMAT adapter_format, D3DFORMAT rt_format, D3DFORMAT ds_format)
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
+    struct wined3d_adapter *wined3d_adapter;
+    unsigned int output_idx;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, device_type %#x, adapter_format %#x, rt_format %#x, ds_format %#x.\n",
             iface, adapter, device_type, adapter_format, rt_format, ds_format);
 
+    output_idx = adapter;
+    if (output_idx >= d3d8->wined3d_output_count)
+        return D3DERR_INVALIDCALL;
+
     wined3d_mutex_lock();
-    hr = wined3d_check_depth_stencil_match(d3d8->wined3d, adapter, device_type,
+    wined3d_adapter = wined3d_output_get_adapter(d3d8->wined3d_outputs[output_idx]);
+    hr = wined3d_check_depth_stencil_match(wined3d_adapter, wined3d_device_type_from_d3d(device_type),
             wined3dformat_from_d3dformat(adapter_format), wined3dformat_from_d3dformat(rt_format),
             wined3dformat_from_d3dformat(ds_format));
     wined3d_mutex_unlock();
@@ -324,19 +371,26 @@ static HRESULT WINAPI d3d8_CheckDepthStencilMatch(IDirect3D8 *iface, UINT adapte
 static HRESULT WINAPI d3d8_GetDeviceCaps(IDirect3D8 *iface, UINT adapter, D3DDEVTYPE device_type, D3DCAPS8 *caps)
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
-    WINED3DCAPS wined3d_caps;
+    struct wined3d_adapter *wined3d_adapter;
+    struct wined3d_caps wined3d_caps;
+    unsigned int output_idx;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, device_type %#x, caps %p.\n", iface, adapter, device_type, caps);
+
+    output_idx = adapter;
+    if (output_idx >= d3d8->wined3d_output_count)
+        return D3DERR_INVALIDCALL;
 
     if (!caps)
         return D3DERR_INVALIDCALL;
 
     wined3d_mutex_lock();
-    hr = wined3d_get_device_caps(d3d8->wined3d, adapter, device_type, &wined3d_caps);
+    wined3d_adapter = wined3d_output_get_adapter(d3d8->wined3d_outputs[output_idx]);
+    hr = wined3d_get_device_caps(wined3d_adapter, wined3d_device_type_from_d3d(device_type), &wined3d_caps);
     wined3d_mutex_unlock();
 
-    d3dcaps_from_wined3dcaps(caps, &wined3d_caps);
+    d3dcaps_from_wined3dcaps(caps, &wined3d_caps, adapter);
 
     return hr;
 }
@@ -345,12 +399,17 @@ static HMONITOR WINAPI d3d8_GetAdapterMonitor(IDirect3D8 *iface, UINT adapter)
 {
     struct d3d8 *d3d8 = impl_from_IDirect3D8(iface);
     struct wined3d_output_desc desc;
+    unsigned int output_idx;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u.\n", iface, adapter);
 
+    output_idx = adapter;
+    if (output_idx >= d3d8->wined3d_output_count)
+        return NULL;
+
     wined3d_mutex_lock();
-    hr = wined3d_get_output_desc(d3d8->wined3d, adapter, &desc);
+    hr = wined3d_output_get_desc(d3d8->wined3d_outputs[output_idx], &desc);
     wined3d_mutex_unlock();
 
     if (FAILED(hr))
@@ -417,16 +476,49 @@ BOOL d3d8_init(struct d3d8 *d3d8)
     DWORD flags = WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING
             | WINED3D_HANDLE_RESTORE | WINED3D_PIXEL_CENTER_INTEGER
             | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR | WINED3D_NO_PRIMITIVE_RESTART
-            | WINED3D_LEGACY_CUBEMAP_FILTERING | WINED3D_LIMIT_VIEWPORT;
+            | WINED3D_LEGACY_CUBEMAP_FILTERING;
+    unsigned int adapter_idx, output_idx, adapter_count, output_count = 0;
+    struct wined3d_adapter *wined3d_adapter;
 
     d3d8->IDirect3D8_iface.lpVtbl = &d3d8_vtbl;
     d3d8->refcount = 1;
 
     wined3d_mutex_lock();
     d3d8->wined3d = wined3d_create(flags);
-    wined3d_mutex_unlock();
     if (!d3d8->wined3d)
+    {
+        wined3d_mutex_unlock();
         return FALSE;
+    }
 
+    adapter_count = wined3d_get_adapter_count(d3d8->wined3d);
+    for (adapter_idx = 0; adapter_idx < adapter_count; ++adapter_idx)
+    {
+        wined3d_adapter = wined3d_get_adapter(d3d8->wined3d, adapter_idx);
+        output_count += wined3d_adapter_get_output_count(wined3d_adapter);
+    }
+
+    d3d8->wined3d_outputs = heap_calloc(output_count, sizeof(*d3d8->wined3d_outputs));
+    if (!d3d8->wined3d_outputs)
+    {
+        wined3d_decref(d3d8->wined3d);
+        wined3d_mutex_unlock();
+        return FALSE;
+    }
+
+    d3d8->wined3d_output_count = 0;
+    for (adapter_idx = 0; adapter_idx < adapter_count; ++adapter_idx)
+    {
+        wined3d_adapter = wined3d_get_adapter(d3d8->wined3d, adapter_idx);
+        output_count = wined3d_adapter_get_output_count(wined3d_adapter);
+        for (output_idx = 0; output_idx < output_count; ++output_idx)
+        {
+            d3d8->wined3d_outputs[d3d8->wined3d_output_count] =
+                    wined3d_adapter_get_output(wined3d_adapter, output_idx);
+            ++d3d8->wined3d_output_count;
+        }
+    }
+
+    wined3d_mutex_unlock();
     return TRUE;
 }

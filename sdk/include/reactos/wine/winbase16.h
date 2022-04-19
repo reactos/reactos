@@ -23,8 +23,8 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
+#include <winternl.h>
 #include <wine/windef16.h>
-#include <wine/library.h>
 
 #include <pshpack1.h>
 
@@ -217,8 +217,6 @@ enum arg_types
     ARG_VARARG    /* start of varargs */
 };
 
-#include <poppack.h>
-
 #define INVALID_HANDLE_VALUE16  ((HANDLE16) -1)
 #define INFINITE16      0xFFFF
 
@@ -250,8 +248,9 @@ typedef struct {
 /*
  * NE Header OPERATING SYSTEM
  */
-#define NE_OSFLAGS_UNKNOWN      0x01
-#define NE_OSFLAGS_WINDOWS      0x04
+#define NE_OSFLAGS_UNKNOWN      0x00
+#define NE_OSFLAGS_OS2          0x01
+#define NE_OSFLAGS_WINDOWS      0x02
 
 /*
  * NE Header ADDITIONAL FLAGS
@@ -300,23 +299,26 @@ typedef struct
      */
 } NE_TYPEINFO;
 
-#define NE_RSCTYPE_CURSOR         0x8001
-#define NE_RSCTYPE_BITMAP         0x8002
-#define NE_RSCTYPE_ICON           0x8003
-#define NE_RSCTYPE_MENU           0x8004
-#define NE_RSCTYPE_DIALOG         0x8005
-#define NE_RSCTYPE_STRING         0x8006
-#define NE_RSCTYPE_FONTDIR        0x8007
-#define NE_RSCTYPE_FONT           0x8008
-#define NE_RSCTYPE_ACCELERATOR    0x8009
-#define NE_RSCTYPE_RCDATA         0x800a
-#define NE_RSCTYPE_GROUP_CURSOR   0x800c
-#define NE_RSCTYPE_GROUP_ICON     0x800e
+#define NE_RSCTYPE_CURSOR             0x8001
+#define NE_RSCTYPE_BITMAP             0x8002
+#define NE_RSCTYPE_ICON               0x8003
+#define NE_RSCTYPE_MENU               0x8004
+#define NE_RSCTYPE_DIALOG             0x8005
+#define NE_RSCTYPE_STRING             0x8006
+#define NE_RSCTYPE_FONTDIR            0x8007
+#define NE_RSCTYPE_FONT               0x8008
+#define NE_RSCTYPE_ACCELERATOR        0x8009
+#define NE_RSCTYPE_RCDATA             0x800a
+#define NE_RSCTYPE_GROUP_CURSOR       0x800c
+#define NE_RSCTYPE_GROUP_ICON         0x800e
+#define NE_RSCTYPE_SCALABLE_FONTPATH  0x80cc   /* Resource found in .fot files */
 
+#include <poppack.h>
 
 #define __AHSHIFT  3  /* don't change! */
 #define __AHINCR   (1 << __AHSHIFT)
 
+/* undocumented functions */
 
 typedef struct tagSYSLEVEL
 {
@@ -324,7 +326,23 @@ typedef struct tagSYSLEVEL
     INT              level;
 } SYSLEVEL;
 
-/* undocumented functions */
+/* [GS]etProcessDword offsets */
+#define  GPD_APP_COMPAT_FLAGS    (-56)
+#define  GPD_LOAD_DONE_EVENT     (-52)
+#define  GPD_HINSTANCE16         (-48)
+#define  GPD_WINDOWS_VERSION     (-44)
+#define  GPD_THDB                (-40)
+#define  GPD_PDB                 (-36)
+#define  GPD_STARTF_SHELLDATA    (-32)
+#define  GPD_STARTF_HOTKEY       (-28)
+#define  GPD_STARTF_SHOWWINDOW   (-24)
+#define  GPD_STARTF_SIZE         (-20)
+#define  GPD_STARTF_POSITION     (-16)
+#define  GPD_STARTF_FLAGS        (-12)
+#define  GPD_PARENT              (- 8)
+#define  GPD_FLAGS               (- 4)
+#define  GPD_USERDATA            (  0)
+
 WORD        WINAPI AllocCStoDSAlias16(WORD);
 WORD        WINAPI AllocDStoCSAlias16(WORD);
 HGLOBAL16   WINAPI AllocResource16(HINSTANCE16,HRSRC16,DWORD);
@@ -332,12 +350,14 @@ WORD        WINAPI AllocSelector16(WORD);
 WORD        WINAPI AllocSelectorArray16(WORD);
 VOID        WINAPI DirectedYield16(HTASK16);
 HGLOBAL16   WINAPI DirectResAlloc16(HINSTANCE16,WORD,UINT16);
+void        WINAPI DisposeLZ32Handle(HANDLE);
+HANDLE      WINAPI DosFileHandleToWin32Handle(HFILE);
 HANDLE16    WINAPI FarGetOwner16(HGLOBAL16);
 VOID        WINAPI FarSetOwner16(HGLOBAL16,HANDLE16);
 FARPROC16   WINAPI FileCDR16(FARPROC16);
 WORD        WINAPI FreeSelector16(WORD);
 HANDLE16    WINAPI GetAtomHandle16(ATOM);
-HANDLE16    WINAPI GetCodeHandle16(FARPROC16);
+DWORD       WINAPI GetCodeHandle16(FARPROC16);
 BOOL16      WINAPI GetCodeInfo16(FARPROC16,SEGINFO*);
 DWORD       WINAPI GetCurrentPDB16(void);
 HTASK16     WINAPI GetCurrentTask(void);
@@ -351,7 +371,9 @@ INT16       WINAPI GetInstanceData16(HINSTANCE16,WORD,INT16);
 BOOL16      WINAPI GetModuleName16(HINSTANCE16,LPSTR,INT16);
 INT16       WINAPI GetModuleUsage16(HINSTANCE16);
 UINT16      WINAPI GetNumTasks16(void);
+VOID        WINAPI GetpWin16Lock(SYSLEVEL**);
 SEGPTR      WINAPI GetpWin16Lock16(void);
+DWORD       WINAPI GetProcessDword(DWORD,INT);
 DWORD       WINAPI GetSelectorLimit16(WORD);
 FARPROC16   WINAPI GetSetKernelDOSProc16(FARPROC16 DosProc);
 HINSTANCE16 WINAPI GetTaskDS16(void);
@@ -380,10 +402,14 @@ WORD        WINAPI LocalHeapSize16(void);
 BOOL16      WINAPI LocalInit16(HANDLE16,WORD,WORD);
 FARPROC16   WINAPI LocalNotify16(FARPROC16);
 HTASK16     WINAPI LockCurrentTask16(BOOL16);
+DWORD       WINAPI MapLS(LPCVOID);
+LPVOID      WINAPI MapSL(DWORD);
 VOID        WINAPI OldYield16(void);
 VOID        WINAPI WIN32_OldYield16(void);
 VOID        WINAPI PostEvent16(HTASK16);
 WORD        WINAPI PrestoChangoSelector16(WORD,WORD);
+VOID        WINAPI ReleaseThunkLock(DWORD*);
+VOID        WINAPI RestoreThunkLock(DWORD);
 WORD        WINAPI SelectorAccessRights16(WORD,WORD,WORD);
 void        WINAPI SetFastQueue16(DWORD,HQUEUE16);
 VOID        WINAPI SetPriority16(HTASK16,INT16);
@@ -392,17 +418,24 @@ WORD        WINAPI SetSelectorLimit16(WORD,DWORD);
 HQUEUE16    WINAPI SetTaskQueue16(HTASK16,HQUEUE16);
 HQUEUE16    WINAPI SetThreadQueue16(DWORD,HQUEUE16);
 VOID        WINAPI SwitchStackTo16(WORD,WORD,WORD);
+VOID        WINAPI UnMapLS(DWORD);
 BOOL16      WINAPI WaitEvent16(HTASK16);
+HFILE       WINAPI Win32HandleToDosFileHandle(HANDLE);
 VOID        WINAPI WriteOutProfiles16(void);
 VOID        WINAPI hmemcpy16(LPVOID,LPCVOID,LONG);
+VOID        WINAPI _CheckNotSysLevel(SYSLEVEL *lock);
+DWORD       WINAPI _ConfirmSysLevel(SYSLEVEL*);
+DWORD       WINAPI _ConfirmWin16Lock(void);
 VOID        WINAPI _CreateSysLevel(SYSLEVEL*,INT);
+VOID        WINAPI _EnterSysLevel(SYSLEVEL*);
 VOID        WINAPI _EnterWin16Lock(void);
+VOID        WINAPI _LeaveSysLevel(SYSLEVEL*);
 VOID        WINAPI _LeaveWin16Lock(void);
 
 
 INT16       WINAPI AccessResource16(HINSTANCE16,HRSRC16);
 ATOM        WINAPI AddAtom16(LPCSTR);
-UINT16      WINAPI CompareString16(DWORD,DWORD,LPCSTR,DWORD,LPCSTR,DWORD);
+INT16       WINAPI CompareString16(LCID,DWORD,LPCSTR,INT16,LPCSTR,INT16);
 BOOL16      WINAPI CreateDirectory16(LPCSTR,LPVOID);
 BOOL16      WINAPI DefineHandleTable16(WORD);
 ATOM        WINAPI DeleteAtom16(ATOM);
@@ -459,6 +492,7 @@ BOOL16      WINAPI GlobalUnlock16(HGLOBAL16);
 BOOL16      WINAPI GlobalUnWire16(HGLOBAL16);
 SEGPTR      WINAPI GlobalWire16(HGLOBAL16);
 WORD        WINAPI InitAtomTable16(WORD);
+void        WINAPI InitTask16(CONTEXT*);
 BOOL16      WINAPI IsBadCodePtr16(SEGPTR);
 BOOL16      WINAPI IsBadHugeReadPtr16(SEGPTR,DWORD);
 BOOL16      WINAPI IsBadHugeWritePtr16(SEGPTR,DWORD);
@@ -482,6 +516,8 @@ BOOL16      WINAPI LocalUnlock16(HLOCAL16);
 LPVOID      WINAPI LockResource16(HGLOBAL16);
 HGLOBAL16   WINAPI LockSegment16(HGLOBAL16);
 FARPROC16   WINAPI MakeProcInstance16(FARPROC16,HANDLE16);
+HMODULE     WINAPI MapHModuleSL(WORD);
+WORD        WINAPI MapHModuleLS(HMODULE);
 HFILE16     WINAPI OpenFile16(LPCSTR,OFSTRUCT*,UINT16);
 DWORD       WINAPI RegCloseKey16(HKEY);
 DWORD       WINAPI RegCreateKey16(HKEY,LPCSTR,PHKEY);
@@ -493,7 +529,7 @@ DWORD       WINAPI RegOpenKey16(HKEY,LPCSTR,PHKEY);
 DWORD       WINAPI RegQueryValue16(HKEY,LPCSTR,LPSTR,LPDWORD);
 DWORD       WINAPI RegQueryValueEx16(HKEY,LPCSTR,LPDWORD,LPDWORD,LPBYTE,LPDWORD);
 DWORD       WINAPI RegSetValue16(HKEY,LPCSTR,DWORD,LPCSTR,DWORD);
-DWORD       WINAPI RegSetValueEx16(HKEY,LPCSTR,DWORD,DWORD,CONST BYTE*,DWORD);
+DWORD       WINAPI RegSetValueEx16(HKEY,LPCSTR,DWORD,DWORD,const BYTE*,DWORD);
 BOOL16      WINAPI RemoveDirectory16(LPCSTR);
 BOOL16      WINAPI SetCurrentDirectory16(LPCSTR);
 UINT16      WINAPI SetErrorMode16(UINT16);
@@ -526,10 +562,9 @@ BOOL16      WINAPI WritePrivateProfileSection16(LPCSTR,LPCSTR,LPCSTR);
 BOOL16      WINAPI WritePrivateProfileStruct16(LPCSTR,LPCSTR,LPVOID,UINT16,LPCSTR);
 BOOL16      WINAPI WriteProfileSection16(LPCSTR,LPCSTR);
 
-/* Some optimizations */
-static inline LPVOID WINAPI MapSL( SEGPTR segptr )
-{
-    return (char *)wine_ldt_copy.base[SELECTOROF(segptr) >> __AHSHIFT] + OFFSETOF(segptr);
-}
+#define CURRENT_STACK16 ((STACK16FRAME *)MapSL((SEGPTR)NtCurrentTeb()->SystemReserved1[0]))
+#define CURRENT_DS      (CURRENT_STACK16->ds)
+#define CURRENT_SP      (((WORD *)NtCurrentTeb()->SystemReserved1)[0])
+#define CURRENT_SS      (((WORD *)NtCurrentTeb()->SystemReserved1)[1])
 
 #endif /* __WINE_WINE_WINBASE16_H */

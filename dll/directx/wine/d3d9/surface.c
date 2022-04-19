@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
@@ -223,9 +222,9 @@ static HRESULT WINAPI d3d9_surface_GetDesc(IDirect3DSurface9 *iface, D3DSURFACE_
 
     desc->Format = d3dformat_from_wined3dformat(wined3d_desc.format);
     desc->Type = D3DRTYPE_SURFACE;
-    desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage);
+    desc->Usage = d3dusage_from_wined3dusage(wined3d_desc.usage, wined3d_desc.bind_flags);
     desc->Pool = d3dpool_from_wined3daccess(wined3d_desc.access, wined3d_desc.usage);
-    desc->MultiSampleType = wined3d_desc.multisample_type;
+    desc->MultiSampleType = d3dmultisample_type_from_wined3d(wined3d_desc.multisample_type);
     desc->MultiSampleQuality = wined3d_desc.multisample_quality;
     desc->Width = wined3d_desc.width;
     desc->Height = wined3d_desc.height;
@@ -249,7 +248,7 @@ static HRESULT WINAPI d3d9_surface_LockRect(IDirect3DSurface9 *iface,
 
     wined3d_mutex_lock();
     hr = wined3d_resource_map(wined3d_texture_get_resource(surface->wined3d_texture), surface->sub_resource_idx,
-            &map_desc, rect ? &box : NULL, wined3dmapflags_from_d3dmapflags(flags));
+            &map_desc, rect ? &box : NULL, wined3dmapflags_from_d3dmapflags(flags, 0));
     wined3d_mutex_unlock();
 
     if (SUCCEEDED(hr))
@@ -258,6 +257,8 @@ static HRESULT WINAPI d3d9_surface_LockRect(IDirect3DSurface9 *iface,
         locked_rect->pBits = map_desc.data;
     }
 
+    if (hr == E_INVALIDARG)
+        return D3DERR_INVALIDCALL;
     return hr;
 }
 
@@ -400,7 +401,7 @@ static const struct wined3d_parent_ops d3d9_view_wined3d_parent_ops =
 struct d3d9_device *d3d9_surface_get_device(const struct d3d9_surface *surface)
 {
     IDirect3DDevice9Ex *device;
-    device = surface->texture ? surface->texture->parent_device : surface->parent_device;
+    device = surface->texture ? &surface->texture->parent_device->IDirect3DDevice9Ex_iface : surface->parent_device;
     return impl_from_IDirect3DDevice9Ex(device);
 }
 

@@ -19,7 +19,6 @@
  *
  */
 
-#include "config.h"
 #include "initguid.h"
 #include "d3d8_private.h"
 #include "wine/debug.h"
@@ -56,73 +55,93 @@ IDirect3D8 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT sdk_version)
     return &object->IDirect3D8_iface;
 }
 
-/***********************************************************************
- *              ValidateVertexShader (D3D8.@)
- */
-HRESULT WINAPI ValidateVertexShader(DWORD *vertexshader, DWORD *reserved1, DWORD *reserved2,
-                                    BOOL return_error, char **errors)
+/* FIXME: We should probably use libvkd3d-shader for validation. */
+HRESULT WINAPI ValidateVertexShader(const DWORD *vs_code, const DWORD *declaration,
+        const D3DCAPS8 *caps, BOOL return_error, char **errors)
 {
     const char *message = "";
+    SIZE_T message_size;
     HRESULT hr = E_FAIL;
 
-    TRACE("(%p %p %p %d %p): semi-stub\n", vertexshader, reserved1, reserved2, return_error, errors);
+    TRACE("vs_code %p, declaration %p, caps %p, return_error %#x, errors %p.\n",
+            vs_code, declaration, caps, return_error, errors);
 
-    if (!vertexshader)
+    if (!vs_code)
     {
-        message = "(Global Validation Error) Version Token: Code pointer cannot be NULL.\n";
+        message = "Invalid code pointer.\n";
         goto done;
     }
 
-    switch (*vertexshader)
+    switch (*vs_code)
     {
-        case 0xFFFE0101:
-        case 0xFFFE0100:
-            hr = S_OK;
+        case D3DVS_VERSION(1, 1):
+        case D3DVS_VERSION(1, 0):
             break;
 
         default:
-            WARN("Invalid shader version token %#x.\n", *vertexshader);
-            message = "(Global Validation Error) Version Token: Unsupported vertex shader version.\n";
+            message = "Unsupported shader version.\n";
+            goto done;
     }
 
+    if (caps && *vs_code > caps->VertexShaderVersion)
+    {
+        message = "Shader version not supported by caps.\n";
+        goto done;
+    }
+
+    hr = S_OK;
+
 done:
-    if (!return_error) message = "";
-    if (errors && (*errors = HeapAlloc(GetProcessHeap(), 0, strlen(message) + 1)))
-        strcpy(*errors, message);
+    if (!return_error)
+        message = "";
+    message_size = strlen(message) + 1;
+    if (errors && (*errors = heap_alloc(message_size)))
+        memcpy(*errors, message, message_size);
 
     return hr;
 }
 
-/***********************************************************************
- *              ValidatePixelShader (D3D8.@)
- */
-HRESULT WINAPI ValidatePixelShader(DWORD *pixelshader, DWORD *reserved1, BOOL return_error, char **errors)
+HRESULT WINAPI ValidatePixelShader(const DWORD *ps_code,
+        const D3DCAPS8 *caps, BOOL return_error, char **errors)
 {
     const char *message = "";
+    SIZE_T message_size;
     HRESULT hr = E_FAIL;
 
-    TRACE("(%p %p %d %p): semi-stub\n", pixelshader, reserved1, return_error, errors);
+    TRACE("ps_code %p, caps %p, return_error %#x, errors %p.\n",
+            ps_code, caps, return_error, errors);
 
-    if (!pixelshader)
+    if (!ps_code)
         return E_FAIL;
 
-   switch (*pixelshader)
-   {
-        case 0xFFFF0100:
-        case 0xFFFF0101:
-        case 0xFFFF0102:
-        case 0xFFFF0103:
-        case 0xFFFF0104:
-            hr = S_OK;
+    switch (*ps_code)
+    {
+        case D3DPS_VERSION(1, 4):
+        case D3DPS_VERSION(1, 3):
+        case D3DPS_VERSION(1, 2):
+        case D3DPS_VERSION(1, 1):
+        case D3DPS_VERSION(1, 0):
             break;
+
         default:
-            WARN("Invalid shader version token %#x.\n", *pixelshader);
-            message = "(Global Validation Error) Version Token: Unsupported pixel shader version.\n";
+            message = "Unsupported shader version.\n";
+            goto done;
     }
 
-    if (!return_error) message = "";
-    if (errors && (*errors = HeapAlloc(GetProcessHeap(), 0, strlen(message) + 1)))
-        strcpy(*errors, message);
+    if (caps && *ps_code > caps->PixelShaderVersion)
+    {
+        message = "Shader version not supported by caps.\n";
+        goto done;
+    }
+
+    hr = S_OK;
+
+done:
+    if (!return_error)
+        message = "";
+    message_size = strlen(message) + 1;
+    if (errors && (*errors = heap_alloc(message_size)))
+        memcpy(*errors, message, message_size);
 
     return hr;
 }

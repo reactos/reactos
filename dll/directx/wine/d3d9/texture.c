@@ -18,24 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 static inline struct d3d9_texture *impl_from_IDirect3DTexture9(IDirect3DTexture9 *iface)
 {
-    return CONTAINING_RECORD((IDirect3DBaseTexture9 *)iface, struct d3d9_texture, IDirect3DBaseTexture9_iface);
+    return CONTAINING_RECORD(iface, struct d3d9_texture, IDirect3DBaseTexture9_iface);
 }
 
 static inline struct d3d9_texture *impl_from_IDirect3DCubeTexture9(IDirect3DCubeTexture9 *iface)
 {
-    return CONTAINING_RECORD((IDirect3DBaseTexture9 *)iface, struct d3d9_texture, IDirect3DBaseTexture9_iface);
+    return CONTAINING_RECORD(iface, struct d3d9_texture, IDirect3DBaseTexture9_iface);
 }
 
 static inline struct d3d9_texture *impl_from_IDirect3DVolumeTexture9(IDirect3DVolumeTexture9 *iface)
 {
-    return CONTAINING_RECORD((IDirect3DBaseTexture9 *)iface, struct d3d9_texture, IDirect3DBaseTexture9_iface);
+    return CONTAINING_RECORD(iface, struct d3d9_texture, IDirect3DBaseTexture9_iface);
 }
 
 static void STDMETHODCALLTYPE srv_wined3d_object_destroyed(void *parent)
@@ -80,7 +79,7 @@ static struct wined3d_shader_resource_view *d3d9_texture_acquire_shader_resource
 
 static void d3d9_texture_cleanup(struct d3d9_texture *texture)
 {
-    IDirect3DDevice9Ex *parent_device = texture->parent_device;
+    IDirect3DDevice9Ex *parent_device = &texture->parent_device->IDirect3DDevice9Ex_iface;
     struct d3d9_surface *surface;
 
     wined3d_mutex_lock();
@@ -101,7 +100,7 @@ void d3d9_texture_gen_auto_mipmap(struct d3d9_texture *texture)
     if (!(texture->flags & D3D9_TEXTURE_MIPMAP_DIRTY))
         return;
     d3d9_texture_acquire_shader_resource_view(texture);
-    wined3d_shader_resource_view_generate_mipmaps(texture->wined3d_srv);
+    wined3d_device_context_generate_mipmaps(texture->parent_device->immediate_context, texture->wined3d_srv);
     texture->flags &= ~D3D9_TEXTURE_MIPMAP_DIRTY;
 }
 
@@ -142,7 +141,7 @@ static ULONG WINAPI d3d9_texture_2d_AddRef(IDirect3DTexture9 *iface)
     {
         struct d3d9_surface *surface;
 
-        IDirect3DDevice9Ex_AddRef(texture->parent_device);
+        IDirect3DDevice9Ex_AddRef(&texture->parent_device->IDirect3DDevice9Ex_iface);
         wined3d_mutex_lock();
         LIST_FOR_EACH_ENTRY(surface, &texture->rtv_list, struct d3d9_surface, rtv_entry)
         {
@@ -173,7 +172,7 @@ static HRESULT WINAPI d3d9_texture_2d_GetDevice(IDirect3DTexture9 *iface, IDirec
 
     TRACE("iface %p, device %p.\n", iface, device);
 
-    *device = (IDirect3DDevice9 *)texture->parent_device;
+    *device = (IDirect3DDevice9 *)&texture->parent_device->IDirect3DDevice9Ex_iface;
     IDirect3DDevice9_AddRef(*device);
 
     TRACE("Returning device %p.\n", *device);
@@ -368,7 +367,7 @@ static HRESULT WINAPI d3d9_texture_2d_GetLevelDesc(IDirect3DTexture9 *iface, UIN
         desc->Type = D3DRTYPE_SURFACE;
         desc->Usage = texture->usage;
         desc->Pool = d3dpool_from_wined3daccess(wined3d_desc.access, wined3d_desc.usage);
-        desc->MultiSampleType = wined3d_desc.multisample_type;
+        desc->MultiSampleType = d3dmultisample_type_from_wined3d(wined3d_desc.multisample_type);
         desc->MultiSampleQuality = wined3d_desc.multisample_quality;
         desc->Width = wined3d_desc.width;
         desc->Height = wined3d_desc.height;
@@ -540,11 +539,11 @@ static ULONG WINAPI d3d9_texture_cube_AddRef(IDirect3DCubeTexture9 *iface)
     {
         struct d3d9_surface *surface;
 
-        IDirect3DDevice9Ex_AddRef(texture->parent_device);
+        IDirect3DDevice9Ex_AddRef(&texture->parent_device->IDirect3DDevice9Ex_iface);
         wined3d_mutex_lock();
         LIST_FOR_EACH_ENTRY(surface, &texture->rtv_list, struct d3d9_surface, rtv_entry)
         {
-            wined3d_rendertarget_view_decref(surface->wined3d_rtv);
+            wined3d_rendertarget_view_incref(surface->wined3d_rtv);
         }
         wined3d_texture_incref(texture->wined3d_texture);
         wined3d_mutex_unlock();
@@ -571,7 +570,7 @@ static HRESULT WINAPI d3d9_texture_cube_GetDevice(IDirect3DCubeTexture9 *iface, 
 
     TRACE("iface %p, device %p.\n", iface, device);
 
-    *device = (IDirect3DDevice9 *)texture->parent_device;
+    *device = (IDirect3DDevice9 *)&texture->parent_device->IDirect3DDevice9Ex_iface;
     IDirect3DDevice9_AddRef(*device);
 
     TRACE("Returning device %p.\n", *device);
@@ -775,7 +774,7 @@ static HRESULT WINAPI d3d9_texture_cube_GetLevelDesc(IDirect3DCubeTexture9 *ifac
         desc->Type = D3DRTYPE_SURFACE;
         desc->Usage = texture->usage;
         desc->Pool = d3dpool_from_wined3daccess(wined3d_desc.access, wined3d_desc.usage);
-        desc->MultiSampleType = wined3d_desc.multisample_type;
+        desc->MultiSampleType = d3dmultisample_type_from_wined3d(wined3d_desc.multisample_type);
         desc->MultiSampleQuality = wined3d_desc.multisample_quality;
         desc->Width = wined3d_desc.width;
         desc->Height = wined3d_desc.height;
@@ -962,7 +961,7 @@ static ULONG WINAPI d3d9_texture_3d_AddRef(IDirect3DVolumeTexture9 *iface)
 
     if (ref == 1)
     {
-        IDirect3DDevice9Ex_AddRef(texture->parent_device);
+        IDirect3DDevice9Ex_AddRef(&texture->parent_device->IDirect3DDevice9Ex_iface);
         wined3d_mutex_lock();
         wined3d_texture_incref(texture->wined3d_texture);
         wined3d_mutex_unlock();
@@ -989,7 +988,7 @@ static HRESULT WINAPI d3d9_texture_3d_GetDevice(IDirect3DVolumeTexture9 *iface, 
 
     TRACE("iface %p, device %p.\n", iface, device);
 
-    *device = (IDirect3DDevice9 *)texture->parent_device;
+    *device = (IDirect3DDevice9 *)&texture->parent_device->IDirect3DDevice9Ex_iface;
     IDirect3DDevice9_AddRef(*device);
 
     TRACE("Returning device %p.\n", *device);
@@ -1297,9 +1296,17 @@ static const struct wined3d_parent_ops d3d9_texture_wined3d_parent_ops =
 HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
         UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool)
 {
+    struct wined3d_adapter *wined3d_adapter;
     struct wined3d_resource_desc desc;
+    unsigned int output_idx;
     DWORD flags = 0;
     HRESULT hr;
+
+    if (pool == D3DPOOL_MANAGED && device->d3d_parent->extended)
+    {
+        WARN("Managed resources are not supported by d3d9ex devices.\n");
+        return D3DERR_INVALIDCALL;
+    }
 
     texture->IDirect3DBaseTexture9_iface.lpVtbl = (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_2d_vtbl;
     d3d9_resource_init(&texture->resource);
@@ -1311,22 +1318,23 @@ HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
     desc.multisample_type = WINED3D_MULTISAMPLE_NONE;
     desc.multisample_quality = 0;
     desc.usage = wined3dusage_from_d3dusage(usage);
-    desc.usage |= WINED3DUSAGE_TEXTURE;
     if (pool == D3DPOOL_SCRATCH)
         desc.usage |= WINED3DUSAGE_SCRATCH;
-    desc.access = wined3daccess_from_d3dpool(pool, usage)
-            | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+    desc.bind_flags = wined3d_bind_flags_from_d3d9_usage(usage) | WINED3D_BIND_SHADER_RESOURCE;
+    desc.access = wined3daccess_from_d3dpool(pool, usage);
     desc.width = width;
     desc.height = height;
     desc.depth = 1;
     desc.size = 0;
 
-    if (pool != D3DPOOL_DEFAULT || (usage & D3DUSAGE_DYNAMIC))
-        flags |= WINED3D_TEXTURE_CREATE_MAPPABLE;
-
     if (is_gdi_compat_wined3dformat(desc.format))
         flags |= WINED3D_TEXTURE_CREATE_GET_DC;
 
+    if (usage & D3DUSAGE_WRITEONLY)
+    {
+        WARN("Texture can't be created with the D3DUSAGE_WRITEONLY flags, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
     if (usage & D3DUSAGE_AUTOGENMIPMAP)
     {
         if (pool == D3DPOOL_SYSTEMMEM)
@@ -1339,9 +1347,25 @@ HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
             WARN("D3DUSAGE_AUTOGENMIPMAP texture with %u levels, returning D3DERR_INVALIDCALL.\n", levels);
             return D3DERR_INVALIDCALL;
         }
-        flags |= WINED3D_TEXTURE_CREATE_GENERATE_MIPMAPS;
+        wined3d_mutex_lock();
+        output_idx = device->adapter_ordinal;
+        wined3d_adapter = wined3d_output_get_adapter(device->d3d_parent->wined3d_outputs[output_idx]);
+        hr = wined3d_check_device_format(device->d3d_parent->wined3d, wined3d_adapter,
+                WINED3D_DEVICE_TYPE_HAL, WINED3DFMT_B8G8R8A8_UNORM, WINED3DUSAGE_QUERY_GENMIPMAP,
+                WINED3D_BIND_SHADER_RESOURCE, WINED3D_RTYPE_TEXTURE_2D, wined3dformat_from_d3dformat(format));
+        wined3d_mutex_unlock();
+        if (hr == D3D_OK)
+        {
+            flags |= WINED3D_TEXTURE_CREATE_GENERATE_MIPMAPS;
+            levels = 0;
+        }
+        else
+        {
+            WARN("D3DUSAGE_AUTOGENMIPMAP not supported on D3DFORMAT %#x, creating a texture "
+                    "with a single level.\n", format);
+            levels = 1;
+        }
         texture->autogen_filter_type = D3DTEXF_LINEAR;
-        levels = 0;
     }
     else
     {
@@ -1349,6 +1373,8 @@ HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
     }
     if (!levels)
         levels = wined3d_log2i(max(width, height)) + 1;
+    if (pool == D3DPOOL_SYSTEMMEM)
+        flags |= WINED3D_TEXTURE_CREATE_RECORD_DIRTY_REGIONS;
 
     wined3d_mutex_lock();
     hr = wined3d_texture_create(device->wined3d_device, &desc, 1, levels, flags,
@@ -1360,8 +1386,8 @@ HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
         return hr;
     }
 
-    texture->parent_device = &device->IDirect3DDevice9Ex_iface;
-    IDirect3DDevice9Ex_AddRef(texture->parent_device);
+    texture->parent_device = device;
+    IDirect3DDevice9Ex_AddRef(&texture->parent_device->IDirect3DDevice9Ex_iface);
 
     return D3D_OK;
 }
@@ -1373,6 +1399,12 @@ HRESULT cubetexture_init(struct d3d9_texture *texture, struct d3d9_device *devic
     DWORD flags = 0;
     HRESULT hr;
 
+    if (pool == D3DPOOL_MANAGED && device->d3d_parent->extended)
+    {
+        WARN("Managed resources are not supported by d3d9ex devices.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
     texture->IDirect3DBaseTexture9_iface.lpVtbl = (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_cube_vtbl;
     d3d9_resource_init(&texture->resource);
     list_init(&texture->rtv_list);
@@ -1383,22 +1415,24 @@ HRESULT cubetexture_init(struct d3d9_texture *texture, struct d3d9_device *devic
     desc.multisample_type = WINED3D_MULTISAMPLE_NONE;
     desc.multisample_quality = 0;
     desc.usage = wined3dusage_from_d3dusage(usage);
-    desc.usage |= WINED3DUSAGE_LEGACY_CUBEMAP | WINED3DUSAGE_TEXTURE;
+    desc.usage |= WINED3DUSAGE_LEGACY_CUBEMAP;
     if (pool == D3DPOOL_SCRATCH)
         desc.usage |= WINED3DUSAGE_SCRATCH;
-    desc.access = wined3daccess_from_d3dpool(pool, usage)
-            | WINED3D_RESOURCE_ACCESS_MAP_R | WINED3D_RESOURCE_ACCESS_MAP_W;
+    desc.bind_flags = wined3d_bind_flags_from_d3d9_usage(usage) | WINED3D_BIND_SHADER_RESOURCE;
+    desc.access = wined3daccess_from_d3dpool(pool, usage);
     desc.width = edge_length;
     desc.height = edge_length;
     desc.depth = 1;
     desc.size = 0;
 
-    if (pool != D3DPOOL_DEFAULT || (usage & D3DUSAGE_DYNAMIC))
-        flags |= WINED3D_TEXTURE_CREATE_MAPPABLE;
-
     if (is_gdi_compat_wined3dformat(desc.format))
         flags |= WINED3D_TEXTURE_CREATE_GET_DC;
 
+    if (usage & D3DUSAGE_WRITEONLY)
+    {
+        WARN("Texture can't be created with the D3DUSAGE_WRITEONLY flags, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
     if (usage & D3DUSAGE_AUTOGENMIPMAP)
     {
         if (pool == D3DPOOL_SYSTEMMEM)
@@ -1421,6 +1455,8 @@ HRESULT cubetexture_init(struct d3d9_texture *texture, struct d3d9_device *devic
     }
     if (!levels)
         levels = wined3d_log2i(edge_length) + 1;
+    if (pool == D3DPOOL_SYSTEMMEM)
+        flags |= WINED3D_TEXTURE_CREATE_RECORD_DIRTY_REGIONS;
 
     wined3d_mutex_lock();
     hr = wined3d_texture_create(device->wined3d_device, &desc, 6, levels, flags,
@@ -1432,8 +1468,8 @@ HRESULT cubetexture_init(struct d3d9_texture *texture, struct d3d9_device *devic
         return hr;
     }
 
-    texture->parent_device = &device->IDirect3DDevice9Ex_iface;
-    IDirect3DDevice9Ex_AddRef(texture->parent_device);
+    texture->parent_device = device;
+    IDirect3DDevice9Ex_AddRef(&texture->parent_device->IDirect3DDevice9Ex_iface);
 
     return D3D_OK;
 }
@@ -1442,7 +1478,18 @@ HRESULT volumetexture_init(struct d3d9_texture *texture, struct d3d9_device *dev
         UINT width, UINT height, UINT depth, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool)
 {
     struct wined3d_resource_desc desc;
+    DWORD flags = 0;
     HRESULT hr;
+
+    if (pool == D3DPOOL_MANAGED && device->d3d_parent->extended)
+    {
+        WARN("Managed resources are not supported by d3d9ex devices.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    /* In d3d9, 3D textures can't be used as rendertarget or depth/stencil buffer. */
+    if (usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+        return D3DERR_INVALIDCALL;
 
     texture->IDirect3DBaseTexture9_iface.lpVtbl = (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_3d_vtbl;
     d3d9_resource_init(&texture->resource);
@@ -1454,15 +1501,20 @@ HRESULT volumetexture_init(struct d3d9_texture *texture, struct d3d9_device *dev
     desc.multisample_type = WINED3D_MULTISAMPLE_NONE;
     desc.multisample_quality = 0;
     desc.usage = wined3dusage_from_d3dusage(usage);
-    desc.usage |= WINED3DUSAGE_TEXTURE;
     if (pool == D3DPOOL_SCRATCH)
         desc.usage |= WINED3DUSAGE_SCRATCH;
+    desc.bind_flags = wined3d_bind_flags_from_d3d9_usage(usage) | WINED3D_BIND_SHADER_RESOURCE;
     desc.access = wined3daccess_from_d3dpool(pool, usage);
     desc.width = width;
     desc.height = height;
     desc.depth = depth;
     desc.size = 0;
 
+    if (usage & D3DUSAGE_WRITEONLY)
+    {
+        WARN("Texture can't be created with the D3DUSAGE_WRITEONLY flags, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
     if (usage & D3DUSAGE_AUTOGENMIPMAP)
     {
         WARN("D3DUSAGE_AUTOGENMIPMAP volume texture is not supported, returning D3DERR_INVALIDCALL.\n");
@@ -1470,9 +1522,11 @@ HRESULT volumetexture_init(struct d3d9_texture *texture, struct d3d9_device *dev
     }
     if (!levels)
         levels = wined3d_log2i(max(max(width, height), depth)) + 1;
+    if (pool == D3DPOOL_SYSTEMMEM)
+        flags |= WINED3D_TEXTURE_CREATE_RECORD_DIRTY_REGIONS;
 
     wined3d_mutex_lock();
-    hr = wined3d_texture_create(device->wined3d_device, &desc, 1, levels, 0,
+    hr = wined3d_texture_create(device->wined3d_device, &desc, 1, levels, flags,
             NULL, texture, &d3d9_texture_wined3d_parent_ops, &texture->wined3d_texture);
     wined3d_mutex_unlock();
     if (FAILED(hr))
@@ -1481,8 +1535,8 @@ HRESULT volumetexture_init(struct d3d9_texture *texture, struct d3d9_device *dev
         return hr;
     }
 
-    texture->parent_device = &device->IDirect3DDevice9Ex_iface;
-    IDirect3DDevice9Ex_AddRef(texture->parent_device);
+    texture->parent_device = device;
+    IDirect3DDevice9Ex_AddRef(&texture->parent_device->IDirect3DDevice9Ex_iface);
 
     return D3D_OK;
 }
