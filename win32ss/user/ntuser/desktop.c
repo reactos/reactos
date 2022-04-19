@@ -1344,7 +1344,6 @@ PWND FASTCALL co_GetDesktopWindow(PWND pWnd)
     return NULL;
 }
 
-// Win: _GetDesktopWindow
 HWND FASTCALL IntGetDesktopWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
@@ -1356,6 +1355,7 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
     return pdo->DesktopWindow;
 }
 
+// Win: _GetDesktopWindow
 PWND FASTCALL UserGetDesktopWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
@@ -1369,7 +1369,6 @@ PWND FASTCALL UserGetDesktopWindow(VOID)
     return UserGetWindowObject(pdo->DesktopWindow);
 }
 
-// Win: _GetMessageWindow
 HWND FASTCALL IntGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
@@ -1382,6 +1381,7 @@ HWND FASTCALL IntGetMessageWindow(VOID)
     return pdo->spwndMessage->head.h;
 }
 
+// Win: _GetMessageWindow
 PWND FASTCALL UserGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();

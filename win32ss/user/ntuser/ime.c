@@ -24,6 +24,8 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 #define IS_WND_IMELIKE(pwnd) \
     (((pwnd)->pcls->style & CS_IME) || \
      ((pwnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
+#define IS_WND_MENU(pWnd) \
+    ((pWnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_MENU])
 
 // The special virtual keys for Japanese: Used for key states.
 // https://www.kthree.co.jp/kihelp/index.html?page=app/vkey&type=html
@@ -1142,11 +1144,199 @@ Quit:
     return ret;
 }
 
+// Win: ImeSetFutureOwner
+VOID FASTCALL IntImeSetFutureOwner(PWND pImeWnd, PWND pwndOldOwner)
+{
+    PWND pwndNode, pwndOwner, pwndParent, pwndSibling;
+    PTHREADINFO pti = pImeWnd->head.pti;
+
+    if (!pwndOldOwner || (pwndOldOwner->style & WS_CHILD))
+        return;
+
+    for (pwndNode = pwndOldOwner; ; pwndNode = pwndOwner)
+    {
+        pwndOwner = pwndNode->spwndOwner;
+        if (!pwndOwner || pwndOwner->head.pti != pti)
+            break;
+    }
+
+    if (IS_WND_IMELIKE(pwndNode) ||
+        ((pwndNode->state2 & WNDS2_BOTTOMMOST) && !(pwndOldOwner->state2 & WNDS2_BOTTOMMOST)))
+    {
+        pwndNode = pwndOldOwner;
+    }
+
+    pwndParent = pwndNode->spwndParent;
+    if (pwndOldOwner != pwndNode || !pwndParent)
+    {
+        pImeWnd->spwndOwner = pwndNode;
+        return;
+    }
+
+    for (pwndSibling = pwndParent->spwndChild; pwndSibling; pwndSibling = pwndSibling->spwndNext)
+    {
+        if (pwndNode->head.pti != pwndSibling->head.pti)
+            continue;
+
+        if (IS_WND_MENU(pwndSibling) || IS_WND_IMELIKE(pwndSibling))
+            continue;
+
+        if (pwndSibling->state2 & WNDS2_INDESTROY)
+            continue;
+
+        if (pwndNode == pwndSibling || (pwndSibling->style & WS_CHILD))
+            continue;
+
+        if (pwndSibling->spwndOwner == NULL ||
+            pwndSibling->head.pti != pwndSibling->spwndOwner->head.pti)
+        {
+            pwndNode = pwndSibling;
+            break;
+        }
+    }
+
+    pImeWnd->spwndOwner = pwndNode;
+}
+
+// Win: GetLastTopMostWindowNoIME
+PWND FASTCALL IntGetLastTopMostWindowNoIME(PWND pwndIME)
+{
+    PWND pwndNode, pwndOwner, pwndLastTopMost = NULL;
+    BOOL bFound;
+
+    pwndNode = UserGetDesktopWindow();
+    if (!pwndNode || pwndNode->spwndChild == NULL)
+        return NULL;
+
+    for (pwndNode = pwndNode->spwndChild;
+         pwndNode && (pwndNode->ExStyle & WS_EX_TOPMOST);
+         pwndNode = pwndNode->spwndNext)
+    {
+        bFound = FALSE;
+
+        if (IS_WND_IMELIKE(pwndNode))
+        {
+            for (pwndOwner = pwndNode; pwndOwner; pwndOwner = pwndOwner->spwndOwner)
+            {
+                if (pwndIME == pwndOwner)
+                {
+                    bFound = TRUE;
+                    break;
+                }
+            }
+        }
+
+        if (!bFound)
+            pwndLastTopMost = pwndNode;
+    }
+
+    return pwndLastTopMost;
+}
+
+// Win: ImeSetTopMost
+VOID FASTCALL IntImeSetTopMost(PWND pImeWnd, BOOL bTopMost, PWND pwndInsertBefore)
+{
+    PWND pwndParent, pwndChild, pwndNode, pwndSave, pwndNext, pwndInsertAfter = NULL;
+
+    pwndParent = pImeWnd->spwndParent;
+    if (!pwndParent)
+        return;
+
+    pwndChild = pwndParent->spwndChild;
+
+    if (!bTopMost)
+    {
+        // Calculate pwndInsertAfter
+        pwndInsertAfter = IntGetLastTopMostWindowNoIME(pImeWnd);
+        if (pwndInsertBefore)
+        {
+            for (pwndNode = pwndInsertAfter; pwndNode; pwndNode = pwndNode->spwndNext)
+            {
+                if (pwndNode->spwndNext == pwndInsertBefore)
+                    break;
+
+                if (pwndNode == pImeWnd)
+                    return;
+            }
+
+            if (!pwndNode)
+                return;
+
+            pwndInsertAfter = pwndNode;
+        }
+
+        // Adjust pwndInsertAfter if the owner is bottom-most
+        if (pImeWnd->spwndOwner->state2 & WNDS2_BOTTOMMOST)
+        {
+            for (pwndNode = pwndInsertAfter; pwndNode; pwndNode = pwndNode->spwndNext)
+            {
+                if (pwndNode == pImeWnd->spwndOwner)
+                    break;
+
+                if (!IS_WND_IMELIKE(pwndNode))
+                    pwndInsertAfter = pwndNode;
+            }
+        }
+    }
+
+    pwndSave = pwndInsertAfter;
+
+    while (pwndChild)
+    {
+        pwndNext = pwndChild->spwndNext;
+
+        if (pwndChild != pwndInsertAfter && IS_WND_IMELIKE(pwndChild) &&
+            pwndChild->head.pti == pImeWnd->head.pti)
+        {
+            for (pwndNode = pwndChild; pwndNode; pwndNode = pwndNode->spwndOwner)
+            {
+                if (pwndNode != pImeWnd)
+                    continue;
+
+                IntUnlinkWindow(pwndChild);
+
+                if (bTopMost)
+                    pwndChild->ExStyle |= WS_EX_TOPMOST;
+                else
+                    pwndChild->ExStyle &= ~WS_EX_TOPMOST;
+
+                if (!pwndInsertAfter)
+                    IntLinkHwnd(pwndChild, HWND_TOP);
+                else
+                    IntLinkHwnd(pwndChild, UserHMGetHandle(pwndInsertAfter));
+
+                pwndInsertAfter = pwndChild;
+                break;
+            }
+        }
+
+        pwndChild = pwndNext;
+        if (pwndChild && pwndChild == pwndSave && pwndInsertAfter)
+            pwndChild = pwndInsertAfter->spwndNext;
+    }
+}
+
+// Win: ImeCheckTopmost
+VOID FASTCALL IntImeCheckTopmost(PWND pImeWnd)
+{
+    BOOL bTopMost;
+    PWND pwndOwner = pImeWnd->spwndOwner, pwndTarget = NULL;
+
+    if (!pwndOwner)
+        return;
+
+    if (pImeWnd->head.pti != gptiForeground)
+        pwndTarget = pwndOwner;
+
+    bTopMost = !!(pwndOwner->ExStyle & WS_EX_TOPMOST);
+    IntImeSetTopMost(pImeWnd, bTopMost, pwndTarget);
+}
+
 BOOL NTAPI
 NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
 {
     BOOL ret = FALSE;
-    PWND pImeWnd, pwndFocus, pwndTopLevel, pwnd, pwndActive;
+    PWND pImeWnd, pwndFocus, pwndTopLevel, pwndNode, pwndActive;
     PTHREADINFO ptiIme;
 
     UserEnterExclusive();
@@ -1169,9 +1359,9 @@ NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
 
         pwndTopLevel = IntGetTopLevelWindow(pwndFocus);
 
-        for (pwnd = pwndTopLevel; pwnd; pwnd = pwnd->spwndOwner)
+        for (pwndNode = pwndTopLevel; pwndNode; pwndNode = pwndNode->spwndOwner)
         {
-            if (pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME])
+            if (pwndNode->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME])
             {
                 pwndTopLevel = NULL;
                 break;
@@ -1179,7 +1369,7 @@ NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
         }
 
         pImeWnd->spwndOwner = pwndTopLevel;
-        // TODO:
+        IntImeCheckTopmost(pImeWnd);
     }
     else
     {
@@ -1194,10 +1384,10 @@ NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
             }
             else
             {
-                // TODO:
+                IntImeSetFutureOwner(pImeWnd, pImeWnd->spwndOwner);
             }
 
-            // TODO:
+            IntImeCheckTopmost(pImeWnd);
         }
     }
 
