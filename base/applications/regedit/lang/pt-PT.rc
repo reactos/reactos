@@ -512,24 +512,24 @@ END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Procurar"
+CAPTION "Localizar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Find Next", IDOK, 197, 7, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 197, 24, 50, 14
-    GROUPBOX "Look at", IDC_STATIC, 7, 25, 63, 51
-    LTEXT "&Procurar:", IDC_STATIC, 7, 8, 37, 10
-    EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
+    DEFPUSHBUTTON "&Localizar seguinte", IDOK, 177, 7, 70, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 177, 24, 70, 14
+    GROUPBOX "Observar", IDC_STATIC, 7, 25, 63, 51
+    LTEXT "&Localizar:", IDC_STATIC, 7, 8, 37, 10
+    EDITTEXT IDC_FINDWHAT, 47, 7, 122, 13, ES_AUTOHSCROLL
     CONTROL "&Chaves", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 36, 35, 8
     CONTROL "&Valores", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 48, 36, 8
     CONTROL "&Dados", IDC_LOOKAT_DATA, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 60, 42, 8
-    CONTROL "Corresponder apenas &string inteira", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
-            WS_TABSTOP, 83, 32, 94, 13
-    CONTROL "Cor&respondencia &", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
-            WS_TABSTOP, 83, 48, 90, 12
+    CONTROL "Corresponder &apenas cadeia completa", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 40, 144, 13
+    CONTROL "Co&rrespondencia exacta", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 83, 56, 120, 12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50

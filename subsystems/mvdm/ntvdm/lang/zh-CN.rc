@@ -12,8 +12,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_VDM_DUMPMEM_TXT,    "内存转储 (文本) (&T)"
-    IDS_VDM_DUMPMEM_BIN,    "内存转储 (二进制) (&B)"
+    IDS_VDM_DUMPMEM_TXT,    "内存转储（文本）(&T)"
+    IDS_VDM_DUMPMEM_BIN,    "内存转储（二进制）(&B)"
     IDS_VDM_MOUNT_FLOPPY,   "在驱动器 %d 中插入软盘 <%s>..."
     IDS_VDM_EJECT_FLOPPY,   "弹出驱动器 %d 中的软盘"
     IDS_VDM_QUIT       ,    "退出 ReactOS DOS 虚拟机 (&Q)"

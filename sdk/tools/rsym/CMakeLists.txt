@@ -9,6 +9,8 @@ elseif(ARCH STREQUAL "amd64")
     add_host_tool(rsym rsym64.c)
 elseif(ARCH STREQUAL "arm")
     add_executable(rsym rsym64.c)
+elseif(ARCH STREQUAL "arm64")
+    add_executable(rsym rsym64.c)
 endif()
 
 target_link_libraries(rsym PRIVATE host_includes rsym_common dbghelphost unicode)

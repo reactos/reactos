@@ -3,7 +3,7 @@
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * FILE:            dll/win32/profmap/profmap.c
  * PURPOSE:         ReactOS User Profile Mapping API
- * COPYRIGHT:       Copyright 2019 Oleg Dubinskiy (oleg.dubinskij2013@yandex.ua)
+ * COPYRIGHT:       Copyright 2019 Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
  */
 
 /* INCLUDES *******************************************************************/

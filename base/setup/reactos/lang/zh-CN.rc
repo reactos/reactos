@@ -6,7 +6,7 @@ CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     LTEXT "欢迎使用 ReactOS 安装程序", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "您不能直接从此 CD 安装 ReactOS！请重新启动并从 CD 引导您的电脑以便安装 ReactOS。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "您暂时不能直接从此 CD 安装 ReactOS！请重新启动并从 CD 引导您的电脑以便安装 ReactOS。", IDC_STATIC, 115, 40, 195, 100
     LTEXT "点击完成退出安装。", IDC_STATIC, 115, 169, 195, 17
 END
 

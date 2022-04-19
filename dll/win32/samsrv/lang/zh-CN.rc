@@ -1,5 +1,11 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan 2019 <njlyf2011@hotmail.com> */
+/*
+ * PROJECT:     Security Account Manager (SAM) Server
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2015 Henry Tang Ih <henrytang2@hotmail.com>
+ *              Copyright 2019 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -16,20 +22,20 @@ BEGIN
     IDS_ALIAS_POWER_USERS_COMMENT "高级用户拥有大多数管理权限，但存在一些限制。"
     IDS_ALIAS_USERS_NAME "用户"
     IDS_ALIAS_USERS_COMMENT "防止用户进行对系统进行全面更改。"
-    IDS_ALIAS_PRINT_OPS_NAME "Print Operators"
-    IDS_ALIAS_PRINT_OPS_COMMENT "Members can administer domain printers"
-    IDS_ALIAS_BACKUP_OPS_NAME "Backup Operators"
-    IDS_ALIAS_BACKUP_OPS_COMMENT "Backup Operators can override security restrictions for the sole purpose of backing up or restoring files"
-    IDS_ALIAS_REPLICATOR_NAME "Replicator"
-    IDS_ALIAS_REPLICATOR_COMMENT "Supports file replication in a domain"
-    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Remote Desktop Users"
-    IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Members in this group are granted the right to logon remotely"
-    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Network Configuration Operators"
-    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Members in this group can have some administrative privileges to manage configuration of networking features"
-    IDS_ALIAS_MONITORING_USERS_NAME "Performance Monitor Users"
-    IDS_ALIAS_MONITORING_USERS_COMMENT "Members of this group have remote access to monitor this computer"
-    IDS_ALIAS_LOGGING_USERS_NAME "Performance Log Users"
-    IDS_ALIAS_LOGGING_USERS_COMMENT "Members of this group have remote access to schedule logging of performance counters on this computer"
+    IDS_ALIAS_PRINT_OPS_NAME "打印机管理员"
+    IDS_ALIAS_PRINT_OPS_COMMENT "打印机管理员可以管理域中的打印机。"
+    IDS_ALIAS_BACKUP_OPS_NAME "备份管理员"
+    IDS_ALIAS_BACKUP_OPS_COMMENT "备份管理员可为备份或还原文件的目的而越过安全限制。"
+    IDS_ALIAS_REPLICATOR_NAME "拷贝员"
+    IDS_ALIAS_REPLICATOR_COMMENT "拷贝员能够在域中制作文件的拷贝。"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "远程桌面用户"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "远程桌面用户能够从远端登录到该计算机。"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "网络配置管理员"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "网络配置管理员具有管理网络特性的权限。"
+    IDS_ALIAS_MONITORING_USERS_NAME "性能监控用户"
+    IDS_ALIAS_MONITORING_USERS_COMMENT "性能监控用户能够从远端监视此计算机的性能数据。"
+    IDS_ALIAS_LOGGING_USERS_NAME "性能记录用户"
+    IDS_ALIAS_LOGGING_USERS_COMMENT "性能记录用户能够从远端计划该计算机上性能统计器的记录。"
     /*
      * ATTENTION:
      *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and

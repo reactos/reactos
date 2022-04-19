@@ -47,16 +47,16 @@ InitMetrics(VOID)
         ZwClose(hKey);
     }
 
-    /* FIXME: HACK, due to missing PDEV on first init */
-    if (!gppdevPrimary)
+    /* FIXME: HACK, due to missing MDEV on first init */
+    if (!gpmdev)
     {
         Width = 640;
         Height = 480;
     }
     else
     {
-        Width = gppdevPrimary->gdiinfo.ulHorzRes;
-        Height = gppdevPrimary->gdiinfo.ulVertRes;
+        Width = gpmdev->ppdevGlobal->gdiinfo.ulHorzRes;
+        Height = gpmdev->ppdevGlobal->gdiinfo.ulVertRes;
     }
 
     /* Screen sizes */

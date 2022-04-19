@@ -188,7 +188,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS 程式管理員"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "搜尋…"
+    IDS_SEARCH_TEXT "搜尋..."
     IDS_INSTALL "安裝"
     IDS_UNINSTALL "解除安裝"
     IDS_MODIFY "修改"
@@ -222,7 +222,7 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "詳細資料"
     IDS_APP_DISPLAY_LIST "列表"
     IDS_APP_DISPLAY_TILE "並排"
-    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_NO_SEARCH_RESULTS "沒有搜尋結果"
 END
 
 STRINGTABLE

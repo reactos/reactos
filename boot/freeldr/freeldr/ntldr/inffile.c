@@ -225,7 +225,7 @@ static
 PINFCACHESECTION
 InfpCacheAddSection(
     PINFCACHE Cache,
-    PCHAR Name)
+    PCSTR Name)
 {
     PINFCACHESECTION Section = NULL;
     SIZE_T Size;
@@ -308,7 +308,7 @@ static
 PVOID
 InfpAddKeyToLine(
     PINFCACHELINE Line,
-    PCHAR Key)
+    PCSTR Key)
 {
     if (Line == NULL)
         return NULL;
@@ -330,7 +330,7 @@ static
 PVOID
 InfpAddFieldToLine(
     PINFCACHELINE Line,
-    PCHAR Data)
+    PCSTR Data)
 {
     PINFCACHEFIELD Field;
     SIZE_T Size;
@@ -1134,7 +1134,7 @@ InfFindNextLine (
 BOOLEAN
 InfFindFirstMatchLine (
     PINFCONTEXT ContextIn,
-    PCHAR Key,
+    PCSTR Key,
     PINFCONTEXT ContextOut)
 {
     PINFCACHELINE CacheLine;
@@ -1171,7 +1171,7 @@ InfFindFirstMatchLine (
 BOOLEAN
 InfFindNextMatchLine (
     PINFCONTEXT ContextIn,
-    PCHAR Key,
+    PCSTR Key,
     PINFCONTEXT ContextOut)
 {
     PINFCACHELINE CacheLine;
@@ -1208,7 +1208,7 @@ InfFindNextMatchLine (
 LONG
 InfGetLineCount(
     HINF InfHandle,
-    PCHAR Section)
+    PCSTR Section)
 {
     PINFCACHE Cache;
     PINFCACHESECTION CacheSection;
@@ -1490,8 +1490,8 @@ InfGetStringField (
 BOOLEAN
 InfGetData (
     PINFCONTEXT Context,
-    PCHAR *Key,
-    PCHAR *Data)
+    PCSTR *Key,
+    PCSTR *Data)
 {
     PINFCACHELINE CacheKey;
 

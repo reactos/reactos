@@ -49,7 +49,7 @@ ImmNt3JTrans(DWORD dwCount, LPTRANSMSG pTrans, LPINPUTCONTEXTDX pIC,
 
     // clone the message list
     cbTempList = (dwCount + 1) * sizeof(TRANSMSG);
-    pTempList = Imm32HeapAlloc(HEAP_ZERO_MEMORY, cbTempList);
+    pTempList = ImmLocalAlloc(HEAP_ZERO_MEMORY, cbTempList);
     if (pTempList == NULL)
         return 0;
     RtlCopyMemory(pTempList, pTrans, dwCount * sizeof(TRANSMSG));
@@ -166,7 +166,7 @@ DoDefault:
         }
     }
 
-    Imm32HeapFree(pTempList);
+    ImmLocalFree(pTempList);
     return ret;
 }
 

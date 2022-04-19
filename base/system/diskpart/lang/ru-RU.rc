@@ -20,12 +20,12 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Диск"
+    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Тип"
     IDS_DETAIL_INFO_STATUS "Состояние"
-    IDS_DETAIL_INFO_PATH "Путь"
-    IDS_DETAIL_INFO_TARGET "Цель"
-    IDS_DETAIL_INFO_LUN_ID "LUN ID"
+    IDS_DETAIL_INFO_PATH   "Path   : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Target : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Путь к диску"
     IDS_DETAIL_INFO_CURR_RO_STATE "Текущее состояние ""Только для чтения"""
     IDS_DETAIL_INFO_RO "Только для чтения"
@@ -34,6 +34,11 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Hibernation File диск"
     IDS_DETAIL_INFO_CRASH_DSK "Crashdump диск"
     IDS_DETAIL_INFO_CLST_DSK "Кластерный диск"
+    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
+    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
 END
 
 /* Detail header titles */
@@ -46,7 +51,9 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Раздел %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nДиск с разметкой элементов не выбран.\nУкажите диск и повторите попытку.\n\n"
-    IDS_LIST_VOLUME_HEAD "Том ###\tИмя\tМетка\n"
+    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
+    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "  Volume %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
@@ -68,6 +75,7 @@ BEGIN
     IDS_SELECT_PARTITION_INVALID "\nОшибка в разметке диска.\n\n"
     IDS_SELECT_NO_VOLUME "\nТом на диске не указан.\nВыберите том диска и повторите.\n\n"
     IDS_SELECT_VOLUME "\nВыбран текущим %lu том диска.\n\n"
+    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
 END
 
 /* Disk Status */

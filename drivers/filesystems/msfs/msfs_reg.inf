@@ -1,5 +1,6 @@
-; Mailslot filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","ErrorControl",0x00010001,0x00000000
+; Mailslot Filesystem driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","ImagePath",0x00020000,"system32\drivers\msfs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Start",0x00010001,0x00000001

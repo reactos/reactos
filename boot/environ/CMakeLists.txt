@@ -101,7 +101,7 @@ endif()
 
 set_entrypoint(bootmgfw EfiEntry)
 
-target_link_libraries(bootmgfw bootlib cportlib cmlib rtl libcntpr)
+target_link_libraries(bootmgfw bootlib cportlib cmlib blrtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
@@ -149,7 +149,7 @@ else()
     set_entrypoint(rosload OslMain)
 endif()
 
-target_link_libraries(rosload bootlib cportlib cmlib rtl libcntpr)
+target_link_libraries(rosload bootlib cportlib cmlib blrtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)

@@ -26,6 +26,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USEDEFFRQUENCY "使用硬體預設設定"
+    IDS_USEDEFFRQUENCY "使用硬件預設設定"
     IDS_FREQFMT "%u 赫茲"
 END

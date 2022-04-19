@@ -234,22 +234,25 @@ BasepProbeForDllManifest(
     OUT PVOID *ActCtx
 );
 
-__declspec(noreturn)
+DECLSPEC_NORETURN
 VOID
 WINAPI
-BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
-                  LPVOID lpParameter);
+BaseThreadStartup(
+    _In_ LPTHREAD_START_ROUTINE lpStartAddress,
+    _In_ LPVOID lpParameter);
 
-__declspec(noreturn)
+DECLSPEC_NORETURN
 VOID
 WINAPI
 BaseFiberStartup(VOID);
 
-typedef UINT (WINAPI *PPROCESS_START_ROUTINE)(VOID);
+typedef DWORD (WINAPI *PPROCESS_START_ROUTINE)(VOID);
 
+DECLSPEC_NORETURN
 VOID
 WINAPI
-BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress);
+BaseProcessStartup(
+    _In_ PPROCESS_START_ROUTINE lpStartAddress);
 
 PVOID
 WINAPI

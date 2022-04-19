@@ -1,0 +1,288 @@
+; NETNV.INF
+
+; Installation file for nForce-based NICs
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Net
+ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 08/01/2021,1.00
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%nVidiaMfg% = nVidiaMfg
+
+[ControlFlags]
+ExcludeFromSelect = *
+
+[nVidiaMfg]
+%NVNET.DeviceDesc% = NVNET_Inst_V1.ndi,PCI\VEN_10DE&DEV_01C3
+%NVNET.DeviceDesc% = NVNET_Inst_V1.ndi,PCI\VEN_10DE&DEV_0066
+%NVNET.DeviceDesc% = NVNET_Inst_V1.ndi,PCI\VEN_10DE&DEV_00D6
+%NVNET.DeviceDesc% = NVNET_Inst_V2.ndi,PCI\VEN_10DE&DEV_0086
+%NVNET.DeviceDesc% = NVNET_Inst_V2.ndi,PCI\VEN_10DE&DEV_008C
+%NVNET.DeviceDesc% = NVNET_Inst_V2.ndi,PCI\VEN_10DE&DEV_00E6
+%NVNET.DeviceDesc% = NVNET_Inst_V2.ndi,PCI\VEN_10DE&DEV_00DF
+%NVNET.DeviceDesc% = NVNET_Inst_V2.ndi,PCI\VEN_10DE&DEV_0056
+%NVNET.DeviceDesc% = NVNET_Inst_V2.ndi,PCI\VEN_10DE&DEV_0057
+%NVNET.DeviceDesc% = NVNET_Inst_V2.ndi,PCI\VEN_10DE&DEV_0037
+%NVNET.DeviceDesc% = NVNET_Inst_V2.ndi,PCI\VEN_10DE&DEV_0038
+%NVNET.DeviceDesc% = NVNET_Inst_V1.ndi,PCI\VEN_10DE&DEV_0268
+%NVNET.DeviceDesc% = NVNET_Inst_V1.ndi,PCI\VEN_10DE&DEV_0269
+%NVNET.DeviceDesc% = NVNET_Inst_V3.ndi,PCI\VEN_10DE&DEV_0372
+%NVNET.DeviceDesc% = NVNET_Inst_V3.ndi,PCI\VEN_10DE&DEV_0373
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_03E5
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_03E6
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_03EE
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_03EF
+%NVNET.DeviceDesc% = NVNET_Inst_V5.ndi,PCI\VEN_10DE&DEV_0450
+%NVNET.DeviceDesc% = NVNET_Inst_V5.ndi,PCI\VEN_10DE&DEV_0451
+%NVNET.DeviceDesc% = NVNET_Inst_V5.ndi,PCI\VEN_10DE&DEV_0452
+%NVNET.DeviceDesc% = NVNET_Inst_V5.ndi,PCI\VEN_10DE&DEV_0453
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_054C
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_054D
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_054E
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_054F
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_07DC
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_07DD
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_07DE
+%NVNET.DeviceDesc% = NVNET_Inst_V4.ndi,PCI\VEN_10DE&DEV_07DF
+%NVNET.DeviceDesc% = NVNET_Inst_V6.ndi,PCI\VEN_10DE&DEV_0760
+%NVNET.DeviceDesc% = NVNET_Inst_V6.ndi,PCI\VEN_10DE&DEV_0761
+%NVNET.DeviceDesc% = NVNET_Inst_V6.ndi,PCI\VEN_10DE&DEV_0762
+%NVNET.DeviceDesc% = NVNET_Inst_V6.ndi,PCI\VEN_10DE&DEV_0763
+%NVNET.DeviceDesc% = NVNET_Inst_V7.ndi,PCI\VEN_10DE&DEV_0AB0
+%NVNET.DeviceDesc% = NVNET_Inst_V7.ndi,PCI\VEN_10DE&DEV_0AB1
+%NVNET.DeviceDesc% = NVNET_Inst_V7.ndi,PCI\VEN_10DE&DEV_0AB2
+%NVNET.DeviceDesc% = NVNET_Inst_V7.ndi,PCI\VEN_10DE&DEV_0AB3
+%NVNET.DeviceDesc% = NVNET_Inst_V7.ndi,PCI\VEN_10DE&DEV_0D7D
+
+;----------------------------- NVNET DRIVER -----------------------------
+
+[NVNET_Inst_V1.ndi.NT]
+Characteristics = 0x84 ; NCF_PHYSICAL | NCF_HAS_UI
+BusType = 5 ; PCIBus
+CopyFiles = NVNET_CopyFiles.NT
+AddReg = NVNET_AddReg, NVNET_Generic, NVNET_Flow
+
+[NVNET_Inst_V2.ndi.NT]
+Characteristics = 0x84
+BusType = 5
+CopyFiles = NVNET_CopyFiles.NT
+AddReg = NVNET_AddReg, NVNET_Generic, NVNET_Flow, NVNET_Jumbo, NVNET_Offload
+
+[NVNET_Inst_V3.ndi.NT]
+Characteristics = 0x84
+BusType = 5
+CopyFiles = NVNET_CopyFiles.NT
+AddReg = NVNET_AddReg, NVNET_Generic, NVNET_Flow_V2, NVNET_Jumbo, NVNET_Offload, NVNET_VLAN
+
+[NVNET_Inst_V4.ndi.NT]
+Characteristics = 0x84
+BusType = 5
+CopyFiles = NVNET_CopyFiles.NT
+AddReg = NVNET_AddReg, NVNET_Generic, NVNET_Flow_V2
+
+[NVNET_Inst_V5.ndi.NT]
+Characteristics = 0x84
+BusType = 5
+CopyFiles = NVNET_CopyFiles.NT
+AddReg = NVNET_AddReg, NVNET_Generic, NVNET_Flow_V2, NVNET_Jumbo
+
+[NVNET_Inst_V6.ndi.NT]
+Characteristics = 0x84
+BusType = 5
+CopyFiles = NVNET_CopyFiles.NT
+AddReg = NVNET_AddReg, NVNET_Generic, NVNET_Flow_V2, NVNET_Offload
+
+[NVNET_Inst_V7.ndi.NT]
+Characteristics = 0x84
+BusType = 5
+CopyFiles = NVNET_CopyFiles.NT
+AddReg = NVNET_AddReg, NVNET_Generic, NVNET_Flow_V2, NVNET_Jumbo, NVNET_Offload
+
+[NVNET_CopyFiles.NT]
+nvnet.sys
+
+[NVNET_Inst_V1.ndi.NT.Services]
+AddService = nvnet, 2, NVNET_Service_Inst, NVNET_EventLog
+
+[NVNET_Inst_V2.ndi.NT.Services]
+AddService = nvnet, 2, NVNET_Service_Inst, NVNET_EventLog
+
+[NVNET_Inst_V3.ndi.NT.Services]
+AddService = nvnet, 2, NVNET_Service_Inst, NVNET_EventLog
+
+[NVNET_Inst_V4.ndi.NT.Services]
+AddService = nvnet, 2, NVNET_Service_Inst, NVNET_EventLog
+
+[NVNET_Inst_V5.ndi.NT.Services]
+AddService = nvnet, 2, NVNET_Service_Inst, NVNET_EventLog
+
+[NVNET_Inst_V6.ndi.NT.Services]
+AddService = nvnet, 2, NVNET_Service_Inst, NVNET_EventLog
+
+[NVNET_Inst_V7.ndi.NT.Services]
+AddService = nvnet, 2, NVNET_Service_Inst, NVNET_EventLog
+
+[NVNET_AddReg]
+HKR, Ndi,            Service,    0, "nvnet"
+HKR, Ndi\Interfaces, UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces, LowerRange, 0, "ethernet"
+
+[NVNET_Generic]
+HKR, Ndi\params\OptimizationMode,      ParamDesc, 0, %OM%
+HKR, Ndi\params\OptimizationMode,      type,      0, "enum"
+HKR, Ndi\params\OptimizationMode,      default,   0, "0"
+HKR, Ndi\params\OptimizationMode\enum, "0",       0, "%M1%"
+HKR, Ndi\params\OptimizationMode\enum, "1",       0, "%M2%"
+HKR, Ndi\params\OptimizationMode\enum, "2",       0, "%M3%"
+
+HKR, Ndi\params\NetworkAddress,        ParamDesc, 0, %NA%
+HKR, Ndi\params\NetworkAddress,        type,      0, "edit"
+HKR, Ndi\params\NetworkAddress,        LimitText, 0, "12"
+HKR, Ndi\params\NetworkAddress,        UpperCase, 0, "1"
+HKR, Ndi\params\NetworkAddress,        default,   0, " "
+HKR, Ndi\params\NetworkAddress,        optional,  0, "1"
+
+HKR, Ndi\params\SpeedDuplex,           ParamDesc, 0, %SD%
+HKR, Ndi\params\SpeedDuplex,           type,      0, "enum"
+HKR, Ndi\params\SpeedDuplex,           default,   0, "0"
+HKR, Ndi\params\SpeedDuplex\enum,      "0",       0, "%Auto%"
+HKR, Ndi\params\SpeedDuplex\enum,      "1",       0, "10HD"
+HKR, Ndi\params\SpeedDuplex\enum,      "2",       0, "10FD"
+HKR, Ndi\params\SpeedDuplex\enum,      "3",       0, "100HD"
+HKR, Ndi\params\SpeedDuplex\enum,      "4",       0, "100FD"
+
+[NVNET_Flow]
+HKR, Ndi\params\FlowControl,           ParamDesc, 0, %FC%
+HKR, Ndi\params\FlowControl,           type,      0, "enum"
+HKR, Ndi\params\FlowControl,           default,   0, "1"
+HKR, Ndi\params\FlowControl\enum,      "0",       0, "%No%"
+HKR, Ndi\params\FlowControl\enum,      "1",       0, "%Auto%"
+HKR, Ndi\params\FlowControl\enum,      "2",       0, "%FlowRx%"
+
+[NVNET_Flow_V2]
+HKR, Ndi\params\FlowControl,           ParamDesc, 0, %FC%
+HKR, Ndi\params\FlowControl,           type,      0, "enum"
+HKR, Ndi\params\FlowControl,           default,   0, "1"
+HKR, Ndi\params\FlowControl\enum,      "0",       0, "%No%"
+HKR, Ndi\params\FlowControl\enum,      "1",       0, "%Auto%"
+HKR, Ndi\params\FlowControl\enum,      "2",       0, "%FRx%"
+HKR, Ndi\params\FlowControl\enum,      "3",       0, "%FTx%"
+HKR, Ndi\params\FlowControl\enum,      "4",       0, "%FBoth%"
+
+[NVNET_Offload]
+HKR, Ndi\params\ChecksumOffload,       ParamDesc, 0, %CO%
+HKR, Ndi\params\ChecksumOffload,       type,      0, "enum"
+HKR, Ndi\params\ChecksumOffload,       default,   0, "1"
+HKR, Ndi\params\ChecksumOffload\enum,  "0",       0, "%No%"
+HKR, Ndi\params\ChecksumOffload\enum,  "1",       0, "%Yes%"
+
+HKR, Ndi\params\LargeSendOffload,       ParamDesc, 0, %LS%
+HKR, Ndi\params\LargeSendOffload,       type,      0, "enum"
+HKR, Ndi\params\LargeSendOffload,       default,   0, "1"
+HKR, Ndi\params\LargeSendOffload\enum,  "0",       0, "%No%"
+HKR, Ndi\params\LargeSendOffload\enum,  "1",       0, "%Yes%"
+
+[NVNET_Jumbo]
+HKR, Ndi\params\JumboSize,             ParamDesc, 0, %JF%
+HKR, Ndi\params\JumboSize,             type,      0, "int"
+HKR, Ndi\params\JumboSize,             default,   0, "1514"
+HKR, Ndi\params\JumboSize,             min,       0, "1514"
+HKR, Ndi\params\JumboSize,             max,       0, "9014"
+HKR, Ndi\params\JumboSize,             step,      0, "1"
+HKR, Ndi\params\JumboSize,             base,      0, "10"
+
+[NVNET_VLAN]
+HKR, Ndi\params\Priority,              ParamDesc, 0, %PP%
+HKR, Ndi\params\Priority,              type,      0, "enum"
+HKR, Ndi\params\Priority,              default,   0, "1"
+HKR, Ndi\params\Priority\enum,         "0",       0, "%No%"
+HKR, Ndi\params\Priority\enum,         "1",       0, "%Yes%"
+
+HKR, Ndi\params\VlanTag,               ParamDesc, 0, %VT%
+HKR, Ndi\params\VlanTag,               type,      0, "enum"
+HKR, Ndi\params\VlanTag,               default,   0, "1"
+HKR, Ndi\params\VlanTag\enum,          "0",       0, "%No%"
+HKR, Ndi\params\VlanTag\enum,          "1",       0, "%Yes%"
+
+HKR, Ndi\params\VlanID,                ParamDesc, 0, %VI%
+HKR, Ndi\params\VlanID,                type,      0, "long"
+HKR, Ndi\params\VlanID,                default,   0, "0"
+HKR, Ndi\params\VlanID,                min,       0, "0"
+HKR, Ndi\params\VlanID,                max,       0, "4095"
+HKR, Ndi\params\VlanID,                step,      0, "1"
+HKR, Ndi\params\VlanID,                base,      0, "10"
+
+[NVNET_Service_Inst]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %12%\nvnet.sys
+LoadOrderGroup = NDIS
+
+[NVNET_EventLog]
+AddReg = NVNET_EventLog_AddReg
+
+[NVNET_EventLog_AddReg]
+HKR, , EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll"
+HKR, , TypesSupported,   0x00010001, 7
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+
+nVidiaMfg = "nVidia"
+
+OM = "Optimization Mode"
+M1 = "Dynamic"
+M2 = "CPU"
+M3 = "Throughput"
+NA = "Network Address"
+SD = "Speed & Duplex"
+Auto = "Auto"
+CO = "Checksum Offload"
+LS = "Large Send Offload"
+FC = "Flow Control"
+FRx = "Rx Pause"
+FTx = "Tx Pause"
+FBoth = "Rx & Tx Pause"
+No = "No"
+Yes = "Yes"
+PP = "Packet Priority"
+VT = "VLAN Tagging"
+VI = "VLAN ID"
+JF = "Jumbo Frame"
+
+NVNET.DeviceDesc = "nVidia nForce PCI Ethernet Controller"
+
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+
+OM = "Оптимизировать"
+M1 = "Динамически"
+M2 = "Нагрузку на ЦП"
+M3 = "Пропускную способность"
+NA = "Сетевой адрес"
+SD = "Скорость и дуплекс"
+Auto = "Авто"
+CO = "Разгрузка контрольной суммы"
+LS = "Разгрузка при большой отправке"
+FC = "Управление потоком"
+FRx = "Кадры паузы приема"
+FTx = "Кадры паузы передачи"
+FBoth = "Кадры паузы приема и передачи"
+No = "Нет"
+Yes = "Да"
+PP = "Приоритет кадров"
+VT = "Маркировка кадров"
+JF = "Кадры большого размера"
+
+NVNET.DeviceDesc = "nVidia nForce PCI сетевой контроллер"

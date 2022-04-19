@@ -696,6 +696,7 @@ error:
 VOID
 UserDisplayNotifyShutdown(PPROCESSINFO ppiCurrent);
 
+// Win: xxxDestroyThreadInfo
 NTSTATUS
 NTAPI
 ExitThreadCallback(PETHREAD Thread)
@@ -783,6 +784,7 @@ ExitThreadCallback(PETHREAD Thread)
             ASSERT(FALSE);
             return STATUS_UNSUCCESSFUL;
         }
+        UserAssignmentUnlock((PVOID*)&ptiCurrent->spDefaultImc);
 
         if (ppiCurrent && ppiCurrent->ptiList == ptiCurrent && !ptiCurrent->ptiSibling &&
             ppiCurrent->W32PF_flags & W32PF_CLASSESREGISTERED)

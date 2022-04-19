@@ -1,10 +1,10 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/internal/io.h
-* PURPOSE:         Internal header for the I/O Manager
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*/
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/include/internal/io.h
+ * PURPOSE:         Internal header for the I/O Manager
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
 
 #include "ntdddisk.h"
 
@@ -409,18 +409,6 @@ typedef struct _DRIVER_INFORMATION
     ULONG Processed;
     NTSTATUS Status;
 } DRIVER_INFORMATION, *PDRIVER_INFORMATION;
-
-//
-// Boot Driver Node
-//
-typedef struct _BOOT_DRIVER_NODE
-{
-    BOOT_DRIVER_LIST_ENTRY ListEntry;
-    UNICODE_STRING Group;
-    UNICODE_STRING Name;
-    ULONG Tag;
-    ULONG ErrorControl;
-} BOOT_DRIVER_NODE, *PBOOT_DRIVER_NODE;
 
 //
 // List of Bus Type GUIDs

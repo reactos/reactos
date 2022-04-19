@@ -12,7 +12,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 STRINGTABLE
 BEGIN
     IDS_USAGE "终止一个会话。\n\n\
-  /v\t\t显示已执行操作的信息。\n\
+  /v\t\t显示要执行的操作的信息。\n\
   /?\t\t显示该信息。\n\n"
     IDS_LOGOFF_REMOTE "正在终止远程端的会话。"
     IDS_LOGOFF_LOCAL "正在终止本机的当前会话。"

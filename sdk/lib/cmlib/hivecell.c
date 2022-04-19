@@ -29,13 +29,13 @@ HvpGetCellHeader(
         ASSERT(CellBlock < RegistryHive->Storage[CellType].Length);
         Block = (PVOID)RegistryHive->Storage[CellType].BlockList[CellBlock].BlockAddress;
         ASSERT(Block != NULL);
-        return (PVOID)((ULONG_PTR)Block + CellOffset);
+        return (PHCELL)((ULONG_PTR)Block + CellOffset);
     }
     else
     {
         ASSERT(HvGetCellType(CellIndex) == Stable);
-        return (PVOID)((ULONG_PTR)RegistryHive->BaseBlock + HBLOCK_SIZE +
-                       CellIndex);
+        return (PHCELL)((ULONG_PTR)RegistryHive->BaseBlock + HBLOCK_SIZE +
+                        CellIndex);
     }
 }
 
@@ -63,13 +63,12 @@ HvIsCellAllocated(IN PHHIVE RegistryHive,
     return FALSE;
 }
 
-PVOID CMAPI
-HvGetCell(
-    PHHIVE RegistryHive,
-    HCELL_INDEX CellIndex)
+PCELL_DATA CMAPI
+HvpGetCellData(
+    _In_ PHHIVE Hive,
+    _In_ HCELL_INDEX CellIndex)
 {
-    ASSERT(CellIndex != HCELL_NIL);
-    return (PVOID)(HvpGetCellHeader(RegistryHive, CellIndex) + 1);
+    return (PCELL_DATA)(HvpGetCellHeader(Hive, CellIndex) + 1);
 }
 
 static __inline LONG CMAPI

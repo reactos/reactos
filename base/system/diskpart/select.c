@@ -21,8 +21,7 @@ SelectDisk(
 {
     PLIST_ENTRY Entry;
     PDISKENTRY DiskEntry;
-    LONG lValue;
-    LPWSTR endptr = NULL;
+    ULONG ulValue;
 
     DPRINT("Select Disk()\n");
 
@@ -41,9 +40,14 @@ SelectDisk(
         return;
     }
 
-    lValue = wcstol(argv[2], &endptr, 10);
-    if (((lValue == 0) && (endptr == argv[2])) ||
-        (lValue < 0))
+    if (!IsDecString(argv[2]))
+    {
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+        return;
+    }
+
+    ulValue = wcstoul(argv[2], NULL, 10);
+    if ((ulValue == 0) && (errno == ERANGE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
         return;
@@ -56,7 +60,7 @@ SelectDisk(
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
-        if (DiskEntry->DiskNumber == (ULONG)lValue)
+        if (DiskEntry->DiskNumber == ulValue)
         {
             CurrentDisk = DiskEntry;
             CurrentPartition = NULL;
@@ -79,8 +83,7 @@ SelectPartition(
 {
     PLIST_ENTRY Entry;
     PPARTENTRY PartEntry;
-    LONG lValue;
-    LPWSTR endptr = NULL;
+    ULONG ulValue;
     ULONG PartNumber = 1;
 
     DPRINT("Select Partition()\n");
@@ -106,9 +109,14 @@ SelectPartition(
         return;
     }
 
-    lValue = wcstol(argv[2], &endptr, 10);
-    if (((lValue == 0) && (endptr == argv[2])) ||
-        (lValue < 0))
+    if (!IsDecString(argv[2]))
+    {
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+        return;
+    }
+
+    ulValue = wcstoul(argv[2], NULL, 10);
+    if ((ulValue == 0) && (errno == ERANGE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
         return;
@@ -121,7 +129,7 @@ SelectPartition(
 
         if (PartEntry->PartitionType != 0)
         {
-            if (PartNumber == (ULONG)lValue)
+            if (PartNumber == ulValue)
             {
                 CurrentPartition = PartEntry;
                 ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
@@ -141,7 +149,7 @@ SelectPartition(
 
         if (PartEntry->PartitionType != 0)
         {
-            if (PartNumber == (ULONG)lValue)
+            if (PartNumber == ulValue)
             {
                 CurrentPartition = PartEntry;
                 ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
@@ -154,6 +162,67 @@ SelectPartition(
     }
 
     ConResPuts(StdErr, IDS_SELECT_PARTITION_INVALID);
+}
+
+
+static
+VOID
+SelectVolume(
+    INT argc,
+    LPWSTR *argv)
+{
+    PLIST_ENTRY Entry;
+    PVOLENTRY VolumeEntry;
+    ULONG ulValue;
+
+    DPRINT("SelectVolume()\n");
+
+    if (argc > 3)
+    {
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+        return;
+    }
+
+    if (argc == 2)
+    {
+        if (CurrentDisk == NULL)
+            ConResPuts(StdOut, IDS_SELECT_NO_VOLUME);
+        else
+            ConResPrintf(StdOut, IDS_SELECT_VOLUME, CurrentVolume->VolumeNumber);
+        return;
+    }
+
+    if (!IsDecString(argv[2]))
+    {
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+        return;
+    }
+
+    ulValue = wcstoul(argv[2], NULL, 10);
+    if ((ulValue == 0) && (errno == ERANGE))
+    {
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+        return;
+    }
+
+    CurrentVolume = NULL;
+
+    Entry = VolumeListHead.Flink;
+    while (Entry != &VolumeListHead)
+    {
+        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+        if (VolumeEntry->VolumeNumber == ulValue)
+        {
+            CurrentVolume = VolumeEntry;
+            ConResPrintf(StdOut, IDS_SELECT_VOLUME, CurrentVolume->VolumeNumber);
+            return;
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    ConResPuts(StdErr, IDS_SELECT_VOLUME_INVALID);
 }
 
 
@@ -174,6 +243,8 @@ select_main(
         SelectDisk(argc, argv);
     else if (!wcsicmp(argv[1], L"partition"))
         SelectPartition(argc, argv);
+    else if (!wcsicmp(argv[1], L"volume"))
+        SelectVolume(argc, argv);
     else
         ConResPuts(StdOut, IDS_HELP_CMD_SELECT);
 

@@ -369,6 +369,10 @@ typedef ULONG NDIS_OID, *PNDIS_OID;
 #define OID_PNP_WAKE_UP_OK                      0xFD020200
 #define OID_PNP_WAKE_UP_ERROR                   0xFD020201
 
+#define NDIS_PNP_WAKE_UP_MAGIC_PACKET           0x00000001
+#define NDIS_PNP_WAKE_UP_PATTERN_MATCH          0x00000002
+#define NDIS_PNP_WAKE_UP_LINK_CHANGE            0x00000004
+
 /* TCP and IP OIDs */
 #define OID_TCP_TASK_OFFLOAD                    0xFC010201
 #define OID_TCP_TASK_IPSEC_ADD_SA               0xFC010202

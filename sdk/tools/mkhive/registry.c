@@ -733,7 +733,7 @@ RegSetValueExW(
     else
     {
         /* The value already exists, use it. Get the value cell. */
-        ValueCell = HvGetCell(&Key->RegistryHive->Hive, CellIndex);
+        ValueCell = (PCM_KEY_VALUE)HvGetCell(&Key->RegistryHive->Hive, CellIndex);
         ASSERT(ValueCell != NULL);
         Status = STATUS_SUCCESS;
     }
@@ -887,7 +887,7 @@ RegQueryValueExW(
         return ERROR_FILE_NOT_FOUND; // STATUS_OBJECT_NAME_NOT_FOUND;
 
     /* Get the value cell */
-    ValueCell = HvGetCell(Hive, CellIndex);
+    ValueCell = (PCM_KEY_VALUE)HvGetCell(Hive, CellIndex);
     ASSERT(ValueCell != NULL);
 
     RepGetValueData(Hive, ValueCell, lpType, lpData, lpcbData);

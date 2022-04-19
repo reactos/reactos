@@ -41,7 +41,8 @@ DceCreateDisplayDC(VOID)
 {
   UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
 
-  co_IntGraphicsCheck(TRUE);
+  if (!co_IntGraphicsCheck(TRUE))
+    KeBugCheckEx(VIDEO_DRIVER_INIT_FAILURE, 0, 0, 0, USER_VERSION);
 
   return IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
 }

@@ -1,5 +1,11 @@
-/* Simpified Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> 2011 */
-/* Translation has been changed by Luo Yufan in 2018 (njlyf2011@hotmail.com) */
+/*
+ * PROJECT:     ReactOS Userinit Logon Application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -9,9 +15,9 @@ CAPTION "ReactOS LiveCD"
 FONT 9, "宋体"
 BEGIN
     CONTROL "IDB_LOGO", IDC_LOCALELOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
-    RTEXT "语言(&L):", IDC_STATIC, 20, 109, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    RTEXT "语言(&L)：", IDC_STATIC, 20, 109, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_LANGUAGELIST, 132, 107, 176, 142, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    RTEXT "键盘布局(&K):", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    RTEXT "键盘布局(&K)：", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_LAYOUTLIST, 132, 130, 176, 81, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "请选择您的语言和键盘布局，请单击下一步继续。", IDC_STATIC, 7, 152, 300, 8
 
@@ -38,12 +44,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SHELL_FAIL "Userinit 无法启动外壳程序！"
+    IDS_SHELL_FAIL "Userinit 无法启动用户界面 shell 程序！"
     IDS_INSTALLER_FAIL "Userinit 启动安装程序失败！"
-    IDS_CANCEL_CONFIRM "您确定要退出 ReactOS LiveCD 吗?\n如果选择退出，您的计算机将重新启动。"
+    IDS_CANCEL_CONFIRM "您确定要退出 ReactOS LiveCD 吗？\n如果选择退出，您的计算机将重新启动。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SPAIN "西班牙语 (西班牙)"
+    IDS_SPAIN "西班牙语（西班牙）"
 END

@@ -13,15 +13,6 @@
 
 /* FUNCTIONS ******************************************************************/
 
-ULONGLONG
-RoundingDivide(
-   IN ULONGLONG Dividend,
-   IN ULONGLONG Divisor)
-{
-    return (Dividend + Divisor / 2) / Divisor;
-}
-
-
 static
 VOID
 ListDisk(VOID)
@@ -220,7 +211,48 @@ static
 VOID
 ListVolume(VOID)
 {
+    PLIST_ENTRY Entry;
+    PVOLENTRY VolumeEntry;
+    ULONGLONG VolumeSize;
+    LPWSTR lpSizeUnit;
+
     ConResPuts(StdOut, IDS_LIST_VOLUME_HEAD);
+    ConResPuts(StdOut, IDS_LIST_VOLUME_LINE);
+
+    Entry = VolumeListHead.Flink;
+    while (Entry != &VolumeListHead)
+    {
+        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+        VolumeSize = VolumeEntry->Size.QuadPart;
+        if (VolumeSize >= 10737418240) /* 10 GB */
+        {
+            VolumeSize = RoundingDivide(VolumeSize, 1073741824);
+            lpSizeUnit = L"GB";
+        }
+        else if (VolumeSize >= 10485760) /* 10 MB */
+        {
+            VolumeSize = RoundingDivide(VolumeSize, 1048576);
+            lpSizeUnit = L"MB";
+        }
+        else
+        {
+            VolumeSize = RoundingDivide(VolumeSize, 1024);
+            lpSizeUnit = L"KB";
+        }
+
+        ConResPrintf(StdOut, IDS_LIST_VOLUME_FORMAT,
+                     VolumeEntry->VolumeNumber,
+                     VolumeEntry->DriveLetter,
+                     (VolumeEntry->pszLabel) ? VolumeEntry->pszLabel : L"",
+                     (VolumeEntry->pszFilesystem) ? VolumeEntry->pszFilesystem : L"",
+                     VolumeEntry->DriveType,
+                     VolumeSize, lpSizeUnit);
+
+        Entry = Entry->Flink;
+    }
+
+    ConPuts(StdOut, L"\n\n");
 }
 
 static

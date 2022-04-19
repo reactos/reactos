@@ -280,7 +280,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "СЪЗДАВАНЕ НА ВЪЗМОЖНОСТ:\nБЕЛЕЖКА: Името на възможността включва знака за равенство.\n type= <own|share|interact|kernel|filesys|rec>\n       (подразбирано = own)\n start= <boot|system|auto|demand|disabled>\n       (подразбирано = demand) \n error= <normal|severe|critical|ignore>\n       (подразбирано = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies(separated by / (forward slash))>\n obj= <AccountName|ObjectName>\n       (подразбирано = LocalSystem)\n password= <password>\n"
+    IDS_HELP_OPTIONS "СЪЗДАВАНЕ НА ВЪЗМОЖНОСТ:\nБЕЛЕЖКА: Името на възможността включва знака за равенство.\n type= <own|share|interact|kernel|filesys|rec>\n       (подразбирано = own)\n start= <boot|system|auto|demand|disabled>\n       (подразбирано = demand)\n error= <normal|severe|critical|ignore>\n       (подразбирано = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies(separated by / (forward slash))>\n obj= <AccountName|ObjectName>\n       (подразбирано = LocalSystem)\n password= <password>\n"
 END
 
 /* Hints */

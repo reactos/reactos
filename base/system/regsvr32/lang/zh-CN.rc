@@ -10,7 +10,7 @@ BEGIN
 /c -	控制台输出\n\
 /i -	调用 DllInstall 并传递给它一个可选的 [命令行]；当使用 /u 时调用 DLL 卸载\n\
 /n -	不要调用 DllRegisterServer；这个选项必须和 /i 一起使用"
-    IDS_NoDllSpecified "没有 DLL 名称被指定。"
+    IDS_NoDllSpecified "没有指定 DLL 名称。"
     IDS_InvalidFlag "未知标志：%s"
     IDS_SwitchN_NoI "未知标志：/n 必须和 /i 一起使用"
     IDS_DllNotLoaded "LoadLibrary('%s') 失败。\nGetLastError 返回 0x%08x。"

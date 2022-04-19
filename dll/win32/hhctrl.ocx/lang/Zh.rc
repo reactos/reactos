@@ -27,9 +27,9 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 STRINGTABLE
 BEGIN
     IDS_CONTENTS     "内容(&C)"
-    IDS_INDEX        "目录(&N)"
-    IDS_SEARCH       "搜寻(&S)"
-    IDS_FAVORITES    "最爱(&I)"
+    IDS_INDEX        "索引(&N)"
+    IDS_SEARCH       "搜索(&S)"
+    IDS_FAVORITES    "收藏(&I)"
 
     IDS_HIDETABS     "隐藏选项卡(&T)"
     IDS_SHOWTABS     "显示选项卡(&T)"

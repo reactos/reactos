@@ -49,18 +49,18 @@ InfFindNextLine (PINFCONTEXT ContextIn,
 
 BOOLEAN
 InfFindFirstMatchLine (PINFCONTEXT ContextIn,
-               PCHAR Key,
+               PCSTR Key,
                PINFCONTEXT ContextOut);
 
 BOOLEAN
 InfFindNextMatchLine (PINFCONTEXT ContextIn,
-              PCHAR Key,
+              PCSTR Key,
               PINFCONTEXT ContextOut);
 
 
 LONG
 InfGetLineCount (HINF InfHandle,
-         PCHAR Section);
+         PCSTR Section);
 
 LONG
 InfGetFieldCount (PINFCONTEXT Context);
@@ -96,8 +96,8 @@ InfGetStringField (PINFCONTEXT Context,
 
 BOOLEAN
 InfGetData (PINFCONTEXT Context,
-        PCHAR *Key,
-        PCHAR *Data);
+        PCSTR *Key,
+        PCSTR *Data);
 
 BOOLEAN
 InfGetDataField (PINFCONTEXT Context,

@@ -121,6 +121,7 @@ PWND FASTCALL ValidateHwndNoErr(HWND hWnd)
 }
 
 /* Temp HACK */
+// Win: ValidateHwnd
 PWND FASTCALL UserGetWindowObject(HWND hWnd)
 {
     PWND Window;
@@ -1263,6 +1264,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    return WndOldParent;
 }
 
+// Win: xxxSetParent
 HWND FASTCALL
 co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 {
@@ -1390,6 +1392,7 @@ PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFla
     return pwl;
 }
 
+// Win: BuildHwndList
 PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
 {
     PWINDOWLIST pwl;
@@ -1435,6 +1438,7 @@ PWINDOWLIST FASTCALL IntBuildHwndList(PWND pwnd, DWORD dwFlags, PTHREADINFO pti)
     return pwl;
 }
 
+// Win: FreeHwndList
 VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget)
 {
     PWINDOWLIST pwl, *ppwl;
@@ -1864,6 +1868,10 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pWnd->ExStyle = Cs->dwExStyle;
    pWnd->cbwndExtra = pWnd->pcls->cbwndExtra;
    pWnd->pActCtx = acbiBuffer;
+
+   if (pti->spDefaultImc && Class->atomClassName != gpsi->atomSysClass[ICLS_BUTTON])
+      pWnd->hImc = UserHMGetHandle(pti->spDefaultImc);
+
    pWnd->InternalPos.MaxPos.x  = pWnd->InternalPos.MaxPos.y  = -1;
    pWnd->InternalPos.IconPos.x = pWnd->InternalPos.IconPos.y = -1;
 
@@ -2122,6 +2130,7 @@ Error:
 
 /*
  * @implemented
+ * Win: xxxCreateWindowEx
  */
 PWND FASTCALL
 co_UserCreateWindowEx(CREATESTRUCTW* Cs,
@@ -2617,8 +2626,6 @@ NtUserCreateWindowEx(
     lstrClassName.Buffer = NULL;
     lstrClsVersion.Buffer = NULL;
 
-    ASSERT(plstrWindowName);
-
     if ( (dwStyle & (WS_POPUP|WS_CHILD)) != WS_CHILD)
     {
         /* check hMenu is valid handle */
@@ -2738,7 +2745,7 @@ cleanup:
    return hwnd;
 }
 
-
+// Win: xxxDestroyWindow
 BOOLEAN co_UserDestroyWindow(PVOID Object)
 {
    HWND hWnd;

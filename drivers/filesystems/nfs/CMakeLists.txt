@@ -23,3 +23,4 @@ endif()
 set_property(TARGET nfs41_driver PROPERTY C_STANDARD 90)
 
 add_cd_file(TARGET nfs41_driver DESTINATION reactos/system32/drivers FOR all)
+add_registry_inf(nfs41_reg.inf)

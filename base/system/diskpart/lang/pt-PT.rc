@@ -20,12 +20,12 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disco"
+    IDS_DETAIL_INFO_DISK_ID "Disco ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Tipo"
     IDS_DETAIL_INFO_STATUS "Estado"
-    IDS_DETAIL_INFO_PATH "Caminho"
-    IDS_DETAIL_INFO_TARGET "Alvo"
-    IDS_DETAIL_INFO_LUN_ID "LUN ID"
+    IDS_DETAIL_INFO_PATH   "Caminho : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Alvo    : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "LUN ID  : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Caminho de localização"
     IDS_DETAIL_INFO_CURR_RO_STATE "Estado actual somente de leitura"
     IDS_DETAIL_INFO_RO "Apenas leitura"
@@ -34,6 +34,11 @@ BEGIN
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Ficheiro de hibernação de disco"
     IDS_DETAIL_INFO_CRASH_DSK "Despejo de memória de disco"
     IDS_DETAIL_INFO_CLST_DSK "Disco em cluster"
+    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
+    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
 END
 
 /* Detail header titles */
@@ -46,7 +51,9 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  -------  ---------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partição %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nSem discos para listar Partições.\nPor favor seleccione um disco e tente novamente.\n\n"
-    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label\n"
+    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
+    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "  Volume %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
@@ -68,6 +75,7 @@ BEGIN
     IDS_SELECT_PARTITION_INVALID "\nInvalid partition.\n\n"
     IDS_SELECT_NO_VOLUME "\nNenhum volume actualmente seleccionado.\nPor favor seleccione um disco e tente novamente.\n\n"
     IDS_SELECT_VOLUME "\nVolume %lu é agora o volume seleccionado.\n\n"
+    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
 END
 
 /* Disk Status */

@@ -37,10 +37,10 @@ BEGIN
     END
     POPUP "效果(&S)"
     BEGIN
-        MENUITEM "增加音量(每次 25%)(&I)", ID_EFFECTS_INCVOL
+        MENUITEM "增加音量（每次 25%）(&I)", ID_EFFECTS_INCVOL
         MENUITEM "减少音量(&D)", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "增加速度(每次 100%)(&I)", ID_EFFECTS_INCSPD
+        MENUITEM "增加速度（每次 100%）(&I)", ID_EFFECTS_INCSPD
         MENUITEM "减少速度(&D)", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
         MENUITEM "添加回音(&A)", ID_EFFECTS_ECHO

@@ -21,9 +21,14 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 #define LANGID_CHINESE_TRADITIONAL  MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_TRADITIONAL)
 #define LANGID_NEUTRAL              MAKELANGID(LANG_NEUTRAL,  SUBLANG_NEUTRAL)
 
+// The IME-like windows are the IME windows and the IME UI windows.
+// The IME window's class name is "IME".
+// The IME UI window behaves the User Interface of IME for the user.
 #define IS_WND_IMELIKE(pwnd) \
     (((pwnd)->pcls->style & CS_IME) || \
      ((pwnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
+#define IS_WND_MENU(pWnd) \
+    ((pWnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_MENU])
 
 // The special virtual keys for Japanese: Used for key states.
 // https://www.kthree.co.jp/kihelp/index.html?page=app/vkey&type=html
@@ -55,9 +60,10 @@ typedef struct tagIMEHOTKEY
     HKL    hKL;
 } IMEHOTKEY, *PIMEHOTKEY;
 
-PIMEHOTKEY gpImeHotKeyList = NULL;
-LCID glcid = 0;
+PIMEHOTKEY gpImeHotKeyList = NULL; // Win: gpImeHotKeyListHeader
+LCID glcidSystem = 0; // Win: glcidSystem
 
+// Win: GetAppImeCompatFlags
 DWORD FASTCALL IntGetImeCompatFlags(PTHREADINFO pti)
 {
     if (!pti)
@@ -66,6 +72,7 @@ DWORD FASTCALL IntGetImeCompatFlags(PTHREADINFO pti)
     return pti->ppi->dwImeCompatFlags;
 }
 
+// Win: GetLangIdMatchLevel
 UINT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
 {
     LCID lcid;
@@ -86,15 +93,16 @@ UINT FASTCALL IntGetImeHotKeyLanguageScore(HKL hKL, LANGID HotKeyLangId)
     if (HotKeyLangId == LANGIDFROMLCID(lcid))
         return 2;
 
-    if (glcid == 0)
-        ZwQueryDefaultLocale(FALSE, &glcid);
+    if (glcidSystem == 0)
+        ZwQueryDefaultLocale(FALSE, &glcidSystem);
 
-    if (HotKeyLangId == LANGIDFROMLCID(glcid))
+    if (HotKeyLangId == LANGIDFROMLCID(glcidSystem))
         return 1;
 
     return 0;
 }
 
+// Win: GetActiveHKL
 HKL FASTCALL IntGetActiveKeyboardLayout(VOID)
 {
     PTHREADINFO pti;
@@ -109,6 +117,7 @@ HKL FASTCALL IntGetActiveKeyboardLayout(VOID)
     return UserGetKeyboardLayout(0);
 }
 
+// Win: GetHotKeyLangID
 static LANGID FASTCALL IntGetImeHotKeyLangId(DWORD dwHotKeyId)
 {
 #define IME_CHOTKEY 0x10
@@ -134,6 +143,7 @@ static LANGID FASTCALL IntGetImeHotKeyLangId(DWORD dwHotKeyId)
     return LANGID_NEUTRAL;
 }
 
+// Win: AddImeHotKey
 static VOID FASTCALL IntAddImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
 {
     PIMEHOTKEY pNode;
@@ -154,6 +164,7 @@ static VOID FASTCALL IntAddImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
     }
 }
 
+// Win: FindImeHotKeyByID
 static PIMEHOTKEY FASTCALL IntGetImeHotKeyById(PIMEHOTKEY pList, DWORD dwHotKeyId)
 {
     PIMEHOTKEY pNode;
@@ -165,6 +176,7 @@ static PIMEHOTKEY FASTCALL IntGetImeHotKeyById(PIMEHOTKEY pList, DWORD dwHotKeyI
     return NULL;
 }
 
+// Win: FindImeHotKeyByKeyWithLang
 static PIMEHOTKEY APIENTRY
 IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight,
                             UINT uVirtualKey, LANGID TargetLangId)
@@ -196,6 +208,7 @@ IntGetImeHotKeyByKeyAndLang(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight,
     return NULL;
 }
 
+// Win: DeleteImeHotKey
 static VOID FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
 {
     PIMEHOTKEY pNode;
@@ -218,6 +231,7 @@ static VOID FASTCALL IntDeleteImeHotKey(PIMEHOTKEY *ppList, PIMEHOTKEY pHotKey)
     }
 }
 
+// Win: FindImeHotKeyByKey
 PIMEHOTKEY
 IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVirtualKey)
 {
@@ -279,6 +293,7 @@ IntGetImeHotKeyByKey(PIMEHOTKEY pList, UINT uModKeys, UINT uLeftRight, UINT uVir
     return ret;
 }
 
+// Win: CheckImeHotKey
 PIMEHOTKEY IntCheckImeHotKey(PUSER_MESSAGE_QUEUE MessageQueue, UINT uVirtualKey, LPARAM lParam)
 {
     PIMEHOTKEY pHotKey;
@@ -329,6 +344,7 @@ PIMEHOTKEY IntCheckImeHotKey(PUSER_MESSAGE_QUEUE MessageQueue, UINT uVirtualKey,
     return NULL;
 }
 
+// Win: FreeImeHotKeys
 VOID FASTCALL IntFreeImeHotKeys(VOID)
 {
     PIMEHOTKEY pNode, pNext;
@@ -340,6 +356,7 @@ VOID FASTCALL IntFreeImeHotKeys(VOID)
     gpImeHotKeyList = NULL;
 }
 
+// Win: SetImeHotKey
 static BOOL APIENTRY
 IntSetImeHotKey(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DWORD dwAction)
 {
@@ -482,6 +499,7 @@ Quit:
     return ret;
 }
 
+// Win: GetTopLevelWindow
 PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
 {
     if (!pwnd)
@@ -493,6 +511,7 @@ PWND FASTCALL IntGetTopLevelWindow(PWND pwnd)
     return pwnd;
 }
 
+// Win: AssociateInputContext
 HIMC FASTCALL IntAssociateInputContext(PWND pWnd, PIMC pImc)
 {
     HIMC hOldImc = pWnd->hImc;
@@ -521,13 +540,14 @@ NtUserSetThreadLayoutHandles(HKL hNewKL, HKL hOldKL)
     if (IS_IME_HKL(hNewKL) != IS_IME_HKL(hOldKL))
         pti->hklPrev = hOldKL;
 
-    pti->KeyboardLayout = pNewKL;
+    UserAssignmentLock((PVOID*)&pti->KeyboardLayout, pNewKL);
 
 Quit:
     UserLeave();
     return 0;
 }
 
+// Win: BuildHimcList
 DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
 {
     PIMC pIMC;
@@ -560,6 +580,7 @@ DWORD FASTCALL UserBuildHimcList(PTHREADINFO pti, DWORD dwCount, HIMC *phList)
     return dwRealCount;
 }
 
+// Win: xxxImmProcessKey
 UINT FASTCALL
 IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT uMsg,
                  WPARAM wParam, LPARAM lParam)
@@ -733,6 +754,7 @@ Quit:
     return ret;
 }
 
+// Win: SetConvMode
 static VOID FASTCALL UserSetImeConversionKeyState(PTHREADINFO pti, DWORD dwConversion)
 {
     HKL hKL;
@@ -938,6 +960,7 @@ Quit:
     return ret;
 }
 
+// Win: GetImeInfoEx
 BOOL FASTCALL UserGetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pInfoEx, IMEINFOEXCLASS SearchType)
 {
     PKL pkl, pklHead;
@@ -1064,6 +1087,7 @@ Quit:
     return ret;
 }
 
+// Win: SetImeInfoEx
 BOOL FASTCALL UserSetImeInfoEx(LPVOID pUnknown, PIMEINFOEX pImeInfoEx)
 {
     PKL pklHead, pkl;
@@ -1123,11 +1147,212 @@ Quit:
     return ret;
 }
 
+// Choose the preferred owner of the IME window.
+// Win: ImeSetFutureOwner
+VOID FASTCALL IntImeSetFutureOwner(PWND pImeWnd, PWND pwndOwner)
+{
+    PWND pwndNode, pwndNextOwner, pwndParent, pwndSibling;
+    PTHREADINFO pti = pImeWnd->head.pti;
+
+    if (!pwndOwner || (pwndOwner->style & WS_CHILD)) // invalid owner
+        return;
+
+    // Get the top-level owner of the same thread
+    for (pwndNode = pwndOwner; ; pwndNode = pwndNextOwner)
+    {
+        pwndNextOwner = pwndNode->spwndOwner;
+        if (!pwndNextOwner || pwndNextOwner->head.pti != pti)
+            break;
+    }
+
+    // Don't choose the IME-like windows and the bottom-most windows unless necessary.
+    if (IS_WND_IMELIKE(pwndNode) ||
+        ((pwndNode->state2 & WNDS2_BOTTOMMOST) && !(pwndOwner->state2 & WNDS2_BOTTOMMOST)))
+    {
+        pwndNode = pwndOwner;
+    }
+
+    pwndParent = pwndNode->spwndParent;
+    if (!pwndParent || pwndOwner != pwndNode)
+    {
+        pImeWnd->spwndOwner = pwndNode;
+        return;
+    }
+
+    for (pwndSibling = pwndParent->spwndChild; pwndSibling; pwndSibling = pwndSibling->spwndNext)
+    {
+        if (pwndNode->head.pti != pwndSibling->head.pti)
+            continue;
+
+        if (IS_WND_MENU(pwndSibling) || IS_WND_IMELIKE(pwndSibling))
+            continue;
+
+        if (pwndSibling->state2 & WNDS2_INDESTROY)
+            continue;
+
+        if (pwndNode == pwndSibling || (pwndSibling->style & WS_CHILD))
+            continue;
+
+        if (pwndSibling->spwndOwner == NULL ||
+            pwndSibling->head.pti != pwndSibling->spwndOwner->head.pti)
+        {
+            pwndNode = pwndSibling;
+            break;
+        }
+    }
+
+    pImeWnd->spwndOwner = pwndNode;
+}
+
+// Get the last non-IME-like top-most window on the desktop.
+// Win: GetLastTopMostWindowNoIME
+PWND FASTCALL IntGetLastTopMostWindowNoIME(PWND pImeWnd)
+{
+    PWND pwndNode, pwndOwner, pwndLastTopMost = NULL;
+    BOOL bFound;
+
+    pwndNode = UserGetDesktopWindow();
+    if (!pwndNode || pwndNode->spwndChild == NULL)
+        return NULL;
+
+    for (pwndNode = pwndNode->spwndChild;
+         pwndNode && (pwndNode->ExStyle & WS_EX_TOPMOST);
+         pwndNode = pwndNode->spwndNext)
+    {
+        bFound = FALSE;
+
+        if (IS_WND_IMELIKE(pwndNode)) // An IME-like window
+        {
+            // Search the IME window from owners
+            for (pwndOwner = pwndNode; pwndOwner; pwndOwner = pwndOwner->spwndOwner)
+            {
+                if (pImeWnd == pwndOwner)
+                {
+                    bFound = TRUE;
+                    break;
+                }
+            }
+        }
+
+        if (!bFound)
+            pwndLastTopMost = pwndNode;
+    }
+
+    return pwndLastTopMost;
+}
+
+// Adjust the ordering of the windows around the IME window.
+// Win: ImeSetTopMost
+VOID FASTCALL IntImeSetTopMost(PWND pImeWnd, BOOL bTopMost, PWND pwndInsertBefore)
+{
+    PWND pwndParent, pwndChild, pwndNode, pwndNext, pwndInsertAfter = NULL;
+    PWND pwndInsertAfterSave;
+
+    pwndParent = pImeWnd->spwndParent;
+    if (!pwndParent)
+        return;
+
+    pwndChild = pwndParent->spwndChild;
+
+    if (!bTopMost)
+    {
+        // Calculate pwndInsertAfter
+        pwndInsertAfter = IntGetLastTopMostWindowNoIME(pImeWnd);
+        if (pwndInsertBefore)
+        {
+            for (pwndNode = pwndInsertAfter; pwndNode; pwndNode = pwndNode->spwndNext)
+            {
+                if (pwndNode->spwndNext == pwndInsertBefore)
+                    break;
+
+                if (pwndNode == pImeWnd)
+                    return;
+            }
+
+            if (!pwndNode)
+                return;
+
+            pwndInsertAfter = pwndNode;
+        }
+
+        // Adjust pwndInsertAfter if the owner is bottom-most
+        if (pImeWnd->spwndOwner->state2 & WNDS2_BOTTOMMOST)
+        {
+            for (pwndNode = pwndInsertAfter; pwndNode; pwndNode = pwndNode->spwndNext)
+            {
+                if (pwndNode == pImeWnd->spwndOwner)
+                    break;
+
+                if (!IS_WND_IMELIKE(pwndNode))
+                    pwndInsertAfter = pwndNode;
+            }
+        }
+    }
+
+    pwndInsertAfterSave = pwndInsertAfter;
+
+    while (pwndChild)
+    {
+        pwndNext = pwndChild->spwndNext;
+
+        // If pwndChild is a good IME-like window, ...
+        if (IS_WND_IMELIKE(pwndChild) && pwndChild != pwndInsertAfter &&
+            pwndChild->head.pti == pImeWnd->head.pti)
+        {
+            // Find pImeWnd from the owners
+            for (pwndNode = pwndChild; pwndNode; pwndNode = pwndNode->spwndOwner)
+            {
+                if (pwndNode != pImeWnd)
+                    continue;
+
+                // Adjust the ordering and the linking
+                IntUnlinkWindow(pwndChild);
+
+                if (bTopMost)
+                    pwndChild->ExStyle |= WS_EX_TOPMOST;
+                else
+                    pwndChild->ExStyle &= ~WS_EX_TOPMOST;
+
+                if (!pwndInsertAfter)
+                    IntLinkHwnd(pwndChild, HWND_TOP);
+                else
+                    IntLinkHwnd(pwndChild, UserHMGetHandle(pwndInsertAfter));
+
+                // Update the preferred position
+                pwndInsertAfter = pwndChild;
+                break;
+            }
+        }
+
+        // Get the next child, with ignoring pwndInsertAfterSave
+        pwndChild = pwndNext;
+        if (pwndChild && pwndChild == pwndInsertAfterSave && pwndInsertAfter)
+            pwndChild = pwndInsertAfter->spwndNext;
+    }
+}
+
+// Make the IME window top-most if necessary.
+// Win: ImeCheckTopmost
+VOID FASTCALL IntImeCheckTopmost(PWND pImeWnd)
+{
+    BOOL bTopMost;
+    PWND pwndOwner = pImeWnd->spwndOwner, pwndInsertBefore = NULL;
+
+    if (!pwndOwner)
+        return;
+
+    if (pImeWnd->head.pti != gptiForeground)
+        pwndInsertBefore = pwndOwner;
+
+    bTopMost = !!(pwndOwner->ExStyle & WS_EX_TOPMOST);
+    IntImeSetTopMost(pImeWnd, bTopMost, pwndInsertBefore);
+}
+
 BOOL NTAPI
 NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
 {
     BOOL ret = FALSE;
-    PWND pImeWnd, pwndFocus, pwndTopLevel, pwnd, pwndActive;
+    PWND pImeWnd, pwndFocus, pwndTopLevel, pwndNode, pwndActive;
     PTHREADINFO ptiIme;
 
     UserEnterExclusive();
@@ -1150,9 +1375,9 @@ NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
 
         pwndTopLevel = IntGetTopLevelWindow(pwndFocus);
 
-        for (pwnd = pwndTopLevel; pwnd; pwnd = pwnd->spwndOwner)
+        for (pwndNode = pwndTopLevel; pwndNode; pwndNode = pwndNode->spwndOwner)
         {
-            if (pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME])
+            if (pwndNode->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME])
             {
                 pwndTopLevel = NULL;
                 break;
@@ -1160,7 +1385,7 @@ NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
         }
 
         pImeWnd->spwndOwner = pwndTopLevel;
-        // TODO:
+        IntImeCheckTopmost(pImeWnd);
     }
     else
     {
@@ -1175,10 +1400,10 @@ NtUserSetImeOwnerWindow(HWND hImeWnd, HWND hwndFocus)
             }
             else
             {
-                // TODO:
+                IntImeSetFutureOwner(pImeWnd, pImeWnd->spwndOwner);
             }
 
-            // TODO:
+            IntImeCheckTopmost(pImeWnd);
         }
     }
 
@@ -1223,19 +1448,19 @@ VOID UserFreeInputContext(PVOID Object)
 {
     PTHRDESKHEAD ObjHead = Object;
     PDESKTOP pDesk = ObjHead->rpdesk;
-    PIMC pIMC = Object, *ppIMC;
+    PIMC pNode, pIMC = Object;
     PTHREADINFO pti;
 
     if (!pIMC)
         return;
 
-    /* Find the IMC in the list and remove it */
+    // Remove pIMC from the list except spDefaultImc
     pti = pIMC->head.pti;
-    for (ppIMC = &pti->spDefaultImc; *ppIMC; ppIMC = &(*ppIMC)->pImcNext)
+    for (pNode = pti->spDefaultImc; pNode; pNode = pNode->pImcNext)
     {
-        if (*ppIMC == pIMC)
+        if (pNode->pImcNext == pIMC)
         {
-            *ppIMC = pIMC->pImcNext;
+            pNode->pImcNext = pIMC->pImcNext;
             break;
         }
     }
@@ -1249,67 +1474,75 @@ VOID UserFreeInputContext(PVOID Object)
 BOOLEAN UserDestroyInputContext(PVOID Object)
 {
     PIMC pIMC = Object;
-
-    if (!pIMC)
+    if (!pIMC || !UserMarkObjectDestroy(pIMC))
         return TRUE;
-
-    UserMarkObjectDestroy(pIMC);
 
     return UserDeleteObject(UserHMGetHandle(pIMC), TYPE_INPUTCONTEXT);
 }
 
-BOOL NTAPI NtUserDestroyInputContext(HIMC hIMC)
+// Win: DestroyInputContext
+BOOL IntDestroyInputContext(PIMC pIMC)
 {
-    PIMC pIMC;
-    BOOL ret = FALSE;
+    HIMC hIMC = UserHMGetHandle(pIMC);
+    PTHREADINFO pti = pIMC->head.pti;
+    PWND pwndChild;
+    PWINDOWLIST pwl;
     HWND *phwnd;
     PWND pWnd;
-    PWINDOWLIST pwl;
-    PTHREADINFO pti;
 
-    UserEnterExclusive();
-
-    if (!IS_IMM_MODE())
+    if (pti != gptiCurrent)
     {
-        ERR("!IS_IMM_MODE()\n");
-        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        goto Quit;
+        EngSetLastError(ERROR_ACCESS_DENIED);
+        return FALSE;
     }
 
-    pIMC = UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
-    if (!pIMC)
-        goto Quit;
+    if (pIMC == pti->spDefaultImc)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-    pti = pIMC->head.pti;
-    if (pti != GetW32ThreadInfo() || pIMC == pti->spDefaultImc)
-        goto Quit;
-
-    UserMarkObjectDestroy(pIMC);
-
-    pwl = IntBuildHwndList(pti->rpdesk->pDeskInfo->spwnd->spwndChild,
-                           IACE_CHILDREN | IACE_LIST, pti);
+    pwndChild = pti->rpdesk->pDeskInfo->spwnd->spwndChild;
+    pwl = IntBuildHwndList(pwndChild, IACE_LIST | IACE_CHILDREN, pti);
     if (pwl)
     {
         for (phwnd = pwl->ahwnd; *phwnd != HWND_TERMINATOR; ++phwnd)
         {
-            pWnd = ValidateHwndNoErr(*phwnd);
-            if (!pWnd)
-                continue;
-
-            if (pWnd->hImc == hIMC)
+            pWnd = UserGetObjectNoErr(gHandleTable, *phwnd, TYPE_WINDOW);
+            if (pWnd && pWnd->hImc == hIMC)
                 IntAssociateInputContext(pWnd, pti->spDefaultImc);
         }
 
         IntFreeHwndList(pwl);
     }
 
-    ret = UserDeleteObject(hIMC, TYPE_INPUTCONTEXT);
+    UserDeleteObject(hIMC, TYPE_INPUTCONTEXT);
+    return TRUE;
+}
+
+BOOL NTAPI NtUserDestroyInputContext(HIMC hIMC)
+{
+    BOOL ret = FALSE;
+    PIMC pIMC;
+
+    UserEnterExclusive();
+
+    if (!IS_IMM_MODE())
+    {
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        goto Quit;
+    }
+
+    pIMC = UserGetObjectNoErr(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
+    if (pIMC)
+        ret = IntDestroyInputContext(pIMC);
 
 Quit:
     UserLeave();
     return ret;
 }
 
+// Win: CreateInputContext
 PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
 {
     PIMC pIMC;
@@ -1346,7 +1579,7 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
     else // First time. It's the default IMC.
     {
         // Add the first one (default) to the list.
-        pti->spDefaultImc = pIMC;
+        UserAssignmentLock((PVOID*)&pti->spDefaultImc, pIMC);
         pIMC->pImcNext = NULL;
     }
 
@@ -1361,14 +1594,18 @@ NtUserCreateInputContext(ULONG_PTR dwClientImcData)
     PIMC pIMC;
     HIMC ret = NULL;
 
-    if (!dwClientImcData)
-        return NULL;
-
     UserEnterExclusive();
 
     if (!IS_IMM_MODE())
     {
         ERR("!IS_IMM_MODE()\n");
+        EngSetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        goto Quit;
+    }
+
+    if (!dwClientImcData)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         goto Quit;
     }
 
@@ -1381,6 +1618,7 @@ Quit:
     return ret;
 }
 
+// Win: AssociateInputContextEx
 DWORD FASTCALL IntAssociateInputContextEx(PWND pWnd, PIMC pIMC, DWORD dwFlags)
 {
     DWORD ret = 0;
@@ -1473,6 +1711,7 @@ Quit:
     return ret;
 }
 
+// Win: UpdateInputContext
 BOOL FASTCALL UserUpdateInputContext(PIMC pIMC, DWORD dwType, DWORD_PTR dwValue)
 {
     PTHREADINFO pti = GetW32ThreadInfo();

@@ -2532,11 +2532,11 @@ Quickie:
     DPRINT("Status: %lx %S %S\n", Status, StaticBuffer, TempDynamicString.Buffer);
     if ((StaticString) && (StaticBuffer) && (StaticBuffer != StaticString->Buffer))
     {
-        RtlpFreeMemory(StaticBuffer, TAG_USTR);
+        RtlpFreeStringMemory(StaticBuffer, TAG_USTR);
     }
     if (TempDynamicString.Buffer)
     {
-        RtlpFreeMemory(TempDynamicString.Buffer, TAG_USTR);
+        RtlpFreeStringMemory(TempDynamicString.Buffer, TAG_USTR);
     }
 
     /* Print out any unusual errors */

@@ -14,7 +14,7 @@ elseif(OPTIMIZE STREQUAL "3")
 elseif(OPTIMIZE STREQUAL "4")
     add_compile_options(/Ob0 /Od)
 elseif(OPTIMIZE STREQUAL "5")
-    add_compile_options(/Gy /Ob2 /Os /Ox /GS-)
+    add_compile_options(/Ob2 /Os /Ox /GS-)
 endif()
 
 # Always use string pooling: this helps reducing the binaries size since a lot
@@ -55,7 +55,7 @@ if(ARCH STREQUAL "i386")
     endif()
 endif()
 
-# CLang default to -fno-common from version 11 onward. We are not rady for this now
+# CLang default to -fno-common from version 11 onward. We are not ready for this now
 if (USE_CLANG_CL)
     add_compile_options(-fcommon)
 endif()
@@ -114,7 +114,7 @@ else()
 # - C4022: pointer type mismatch for parameter
 # - C4028: formal parameter different from declaration
 # - C4047: different level of indirection
-# - TODO: C4090: different 'modifier' qualifiers (for C programs only;
+# - C4090: different 'modifier' qualifiers (for C programs only;
 #          for C++ programs, the compiler error C2440 is issued)
 # - C4098: void function returning a value
 # - C4113: parameter lists differ
@@ -130,7 +130,7 @@ else()
 # - C4700: uninitialized variable usage
 # - C4715: 'function': not all control paths return a value
 # - C4716: function must return a value
-add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
+add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4090 /we4098 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
 
 # - C4101: unreferenced local variable
 # - C4189: local variable initialized but not referenced
@@ -414,10 +414,14 @@ set(PSEH_LIB "pseh")
 # Use a full path for the x86 version of ml when using x64 VS.
 # It's not a problem when using the DDK/WDK because, in x64 mode,
 # both the x86 and x64 versions of ml are available.
-if((ARCH STREQUAL "amd64") AND (DEFINED ENV{VCToolsInstallDir}))
-    set(CMAKE_ASM16_COMPILER $ENV{VCToolsInstallDir}/bin/HostX86/x86/ml.exe)
-elseif((ARCH STREQUAL "amd64") AND (DEFINED ENV{VCINSTALLDIR}))
-    set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
+if(ARCH STREQUAL "amd64")
+    if((MSVC_VERSION LESS_EQUAL 1900) AND (DEFINED ENV{VCINSTALLDIR}))
+        set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
+    elseif(DEFINED ENV{VCToolsInstallDir})
+        set(CMAKE_ASM16_COMPILER $ENV{VCToolsInstallDir}/bin/HostX86/x86/ml.exe)
+    else()
+        set(CMAKE_ASM16_COMPILER ml.exe)
+    endif()
 elseif(ARCH STREQUAL "arm")
     set(CMAKE_ASM16_COMPILER armasm.exe)
 elseif(ARCH STREQUAL "arm64")

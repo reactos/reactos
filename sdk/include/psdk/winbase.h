@@ -2127,15 +2127,15 @@ DWORD WINAPI GetEnvironmentVariableA(LPCSTR,LPSTR,DWORD);
 DWORD WINAPI GetEnvironmentVariableW(LPCWSTR,LPWSTR,DWORD);
 BOOL WINAPI GetExitCodeProcess(HANDLE,PDWORD);
 BOOL WINAPI GetExitCodeThread(HANDLE,PDWORD);
-DWORD WINAPI GetFileAttributesA(LPCSTR);
+DWORD WINAPI GetFileAttributesA(LPCSTR lpFileName);
 #if (_WIN32_WINNT >= 0x0600)
 BOOL WINAPI GetFileAttributesByHandle(HANDLE,LPDWORD,DWORD);
 DWORD WINAPI GetFinalPathNameByHandleA(HANDLE,LPSTR,DWORD,DWORD);
 DWORD WINAPI GetFinalPathNameByHandleW(HANDLE,LPWSTR,DWORD,DWORD);
 #endif
-DWORD WINAPI GetFileAttributesW(LPCWSTR);
-BOOL WINAPI GetFileAttributesExA(LPCSTR,GET_FILEEX_INFO_LEVELS,PVOID);
-BOOL WINAPI GetFileAttributesExW(LPCWSTR,GET_FILEEX_INFO_LEVELS,PVOID);
+DWORD WINAPI GetFileAttributesW(LPCWSTR lpFileName);
+BOOL WINAPI GetFileAttributesExA(LPCSTR lpFileName, GET_FILEEX_INFO_LEVELS fInfoLevelId, PVOID lpFileInformation);
+BOOL WINAPI GetFileAttributesExW(LPCWSTR lpFileName, GET_FILEEX_INFO_LEVELS fInfoLevelId, PVOID lpFileInformation);
 #if (_WIN32_WINNT >= 0x0600)
 BOOL WINAPI GetFileBandwidthReservation(_In_ HANDLE, _Out_ LPDWORD, _Out_ LPDWORD, _Out_ LPBOOL, _Out_ LPDWORD, _Out_ LPDWORD);
 #endif
@@ -3106,11 +3106,11 @@ UINT WINAPI SetErrorMode(UINT);
 BOOL WINAPI SetEvent(HANDLE);
 VOID WINAPI SetFileApisToANSI(void);
 VOID WINAPI SetFileApisToOEM(void);
-BOOL WINAPI SetFileAttributesA(LPCSTR,DWORD);
+BOOL WINAPI SetFileAttributesA(LPCSTR lpFileName, DWORD dwFileAttributes);
 #if (_WIN32_WINNT >= 0x0600)
 BOOL WINAPI SetFileAttributesByHandle(HANDLE,DWORD,DWORD);
 #endif
-BOOL WINAPI SetFileAttributesW(LPCWSTR,DWORD);
+BOOL WINAPI SetFileAttributesW(LPCWSTR lpFileName, DWORD dwFileAttributes);
 #if (_WIN32_WINNT >= 0x0600)
 BOOL WINAPI SetFileBandwidthReservation(_In_ HANDLE, _In_ DWORD, _In_ DWORD, _In_ BOOL, _Out_ LPDWORD, _Out_ LPDWORD);
 BOOL WINAPI SetFileCompletionNotificationModes(_In_ HANDLE, _In_ UCHAR);

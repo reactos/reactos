@@ -29,6 +29,7 @@ list(APPEND SOURCE
     interpreter.c
     list.c
     merge.c
+    misc.c
     offline.c
     online.c
     partlist.c

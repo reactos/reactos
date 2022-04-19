@@ -343,15 +343,15 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Erroreak bilatzea", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "Aukera honekin erroreak bilatuko dira \nbolumenean.", -1, 40, 25, 160, 20
+    LTEXT "Aukera honekin erroreak bilatuko dira\nbolumenean.", -1, 40, 25, 160, 20
     PUSHBUTTON "&Bilatu orain...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Desfragmentazioa", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "Aukera honekin bolumeneko fitxategiak \ndesfragmentatuko dira.", -1, 40, 85, 160, 20
+    LTEXT "Aukera honekin bolumeneko fitxategiak\ndesfragmentatuko dira.", -1, 40, 85, 160, 20
     PUSHBUTTON "&Desfragmentatu orain...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Babeskopia", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "Aukera honekin bolumeneko fitxategien \nbabeskopia egingo da.", -1, 40, 150, 160, 20
+    LTEXT "Aukera honekin bolumeneko fitxategien\nbabeskopia egingo da.", -1, 40, 150, 160, 20
     PUSHBUTTON "&Egin babeskopia orain...", 14002, 90, 170, 130, 15, WS_TABSTOP
 END
 

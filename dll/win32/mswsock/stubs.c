@@ -446,7 +446,7 @@ StopWsdpService()
  */
 VOID
 WINAPI
-SvchostPushServiceGlobals(SVCHOST_GLOBALS *lpGlobals)
+SvchostPushServiceGlobals(PSVCHOST_GLOBAL_DATA lpGlobals)
 {
   OutputDebugStringW(L"mswsock SvchostPushServiceGlobals stub called\n");
 }

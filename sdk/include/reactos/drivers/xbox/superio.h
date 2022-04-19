@@ -70,7 +70,7 @@ LpcWriteRegister(UCHAR Register, UCHAR Value)
     WRITE_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1), Value);
 }
 
-#ifndef __FREELDR_H
+#ifndef _BLDR_
 FORCEINLINE
 ULONG
 LpcDetectSuperIO(VOID)
@@ -105,7 +105,7 @@ LpcGetIoBase()
     return Base;
 }
 
-#ifndef __FREELDR_H
+#ifndef _BLDR_
 FORCEINLINE
 ULONG
 LpcGetIoBaseMPU()
@@ -128,7 +128,7 @@ LpcGetIrqPrimary()
     return LpcReadRegister(LPC_CONFIG_DEVICE_INTERRUPT_PRIMARY);
 }
 
-#ifndef __FREELDR_H
+#ifndef _BLDR_
 FORCEINLINE
 ULONG
 LpcGetIrqSecondary()

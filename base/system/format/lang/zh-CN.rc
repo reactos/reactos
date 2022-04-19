@@ -6,12 +6,12 @@ STRINGTABLE
 BEGIN
     STRING_HELP "用法：%s 驱动器: [-FS:文件系统] [-V:卷标] [-Q] [-A:大小] [-C]\n\n\
   [驱动器:]           指定要格式化的驱动器。\n\
-  -FS:文件系统        指定文件系统的类型 (%s)。\n\
+  -FS:文件系统        指定文件系统的类型（%s）。\n\
   -V:卷标             指定卷标。\n\
   -Q                  执行快速格式化。\n\
   -A:大小             覆盖默认分配单元的大小。通常用途时强烈推荐默认设置。\n\
-                        NTFS 支持 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
-                        FAT 支持 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                        NTFS 支持 512、1024、2048、4096、8192、16K、32K、64K。\n\
+                        FAT 支持 8192、16K、32K、64K、128K、256K。\n\
                         NTFS 压缩不支持 4096 以上的分配单元大小。\n\
   -C                  在新卷上创建的文件默认将会被压缩。\n\n"
     STRING_COMPLETE   "已完成百分之 %lu。\r"
@@ -27,14 +27,14 @@ BEGIN
     STRING_FILESYSTEM "文件系统的类型是 %s。\n"
     STRING_LABEL_NAME_EDIT "为驱动器 %C 输入当前卷标："
     STRING_ERROR_LABEL "输入的卷标不正确。\n"
-    STRING_YN_FORMAT "\n警告：不可移动磁盘驱动器 %C: 上的所有数据都将丢失！\n确认要格式化吗 (Y/N)？"
+    STRING_YN_FORMAT "\n警告：不可移动磁盘驱动器 %C: 上的所有数据都将丢失！\n确认要格式化吗（Y/N）？"
     STRING_YES_NO_FAQ "YN"
     STRING_VERIFYING "正在检验"
     STRING_FAST_FMT "正在快速格式化"
     STRING_CREATE_FSYS "正在创建文件系统结构。\n"
     STRING_FMT_COMPLETE "格式化完成。\n"
     STRING_VOL_COMPRESS "卷不支持压缩。\n"
-    STRING_ENTER_LABEL "卷标 (11 个字符，Enter 忽略)？"
+    STRING_ENTER_LABEL "卷标（11 个字符，Enter 忽略）？"
     STRING_NO_LABEL "无法为卷添加卷标"
     STRING_FREE_SPACE "\n%I64d 字节总磁盘空间。\n%I64d 字节可用。\n"
     STRING_SERIAL_NUMBER "\n卷的序列号是 %04X-%04X\n"

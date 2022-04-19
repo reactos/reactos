@@ -6,7 +6,6 @@
  *              Copyright 2002, 2003, 2007 CodeWeavers, Aric Stewart
  *              Copyright 2017 James Tabor <james.tabor@reactos.org>
  *              Copyright 2018 Amine Khaldi <amine.khaldi@reactos.org>
- *              Copyright 2020 Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
  *              Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -14,8 +13,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
-HANDLE g_hImm32Heap = NULL;
+HANDLE ghImmHeap = NULL; // Win: pImmHeap
 
+// Win: StrToUInt
 HRESULT APIENTRY
 Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase)
 {
@@ -28,6 +28,7 @@ Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase)
     return S_OK;
 }
 
+// Win: UIntToStr
 HRESULT APIENTRY
 Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff)
 {
@@ -49,6 +50,7 @@ BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
     return (wPrimary == LANG_JAPANESE || wPrimary == LANG_KOREAN);
 }
 
+// Win: IsAnsiIMC
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 {
     BOOL ret;
@@ -63,7 +65,7 @@ BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA)
 {
     INT cch = lstrlenA(pszA);
-    LPWSTR pszW = Imm32HeapAlloc(0, (cch + 1) * sizeof(WCHAR));
+    LPWSTR pszW = ImmLocalAlloc(0, (cch + 1) * sizeof(WCHAR));
     if (pszW == NULL)
         return NULL;
     cch = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszA, cch, pszW, cch + 1);
@@ -75,7 +77,7 @@ LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW)
 {
     INT cchW = lstrlenW(pszW);
     INT cchA = (cchW + 1) * sizeof(WCHAR);
-    LPSTR pszA = Imm32HeapAlloc(0, cchA);
+    LPSTR pszA = ImmLocalAlloc(0, cchA);
     if (!pszA)
         return NULL;
     cchA = WideCharToMultiByte(CP_ACP, 0, pszW, cchW, pszA, cchA, NULL, NULL);
@@ -116,6 +118,7 @@ LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage)
     return cchAnsi;
 }
 
+// Win: InternalGetSystemPathName
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName)
 {
     if (!pszFileName[0] || !GetSystemDirectoryW(pszPath, cchPath))
@@ -125,6 +128,7 @@ BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileNam
     return TRUE;
 }
 
+// Win: LFontAtoLFontW
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
 {
     size_t cch;
@@ -137,6 +141,7 @@ VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW)
     plfW->lfFaceName[cch] = 0;
 }
 
+// Win: LFontWtoLFontA
 VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA)
 {
     size_t cch;
@@ -162,6 +167,7 @@ static PVOID FASTCALL DesktopPtrToUser(PVOID ptr)
         return (PVOID)NtUserCallOneParam((DWORD_PTR)ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING);
 }
 
+// Win: HMValidateHandle
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 {
     UINT index;
@@ -173,11 +179,11 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
     if (!NtUserValidateHandleSecure(hObject))
         return NULL;
 
-    ht = g_SharedInfo.aheList; /* handle table */
+    ht = gSharedInfo.aheList; /* handle table */
     ASSERT(ht);
     /* ReactOS-Specific! */
-    ASSERT(g_SharedInfo.ulSharedDelta != 0);
-    he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - g_SharedInfo.ulSharedDelta);
+    ASSERT(gSharedInfo.ulSharedDelta != 0);
+    he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - gSharedInfo.ulSharedDelta);
 
     index = (LOWORD(hObject) - FIRST_USER_HANDLE) >> 1;
     if ((INT)index < 0 || ht->nb_handles <= index || he[index].type != uType)
@@ -207,6 +213,7 @@ PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
     return ValidateHandleNoErr(hwnd, TYPE_WINDOW);
 }
 
+// Win: TestInputContextProcess
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 {
     HIMC hIMC;
@@ -219,20 +226,22 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
     return dwProcessID == (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
 }
 
-LPVOID APIENTRY Imm32HeapAlloc(DWORD dwFlags, DWORD dwBytes)
+// Win: ImmLocalAlloc
+LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
 {
-    if (!g_hImm32Heap)
+    if (!ghImmHeap)
     {
-        g_hImm32Heap = RtlGetProcessHeap();
-        if (g_hImm32Heap == NULL)
+        ghImmHeap = RtlGetProcessHeap();
+        if (ghImmHeap == NULL)
             return NULL;
     }
-    return HeapAlloc(g_hImm32Heap, dwFlags, dwBytes);
+    return HeapAlloc(ghImmHeap, dwFlags, dwBytes);
 }
 
+// Win: MakeIMENotify
 BOOL APIENTRY
-Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
-                  DWORD_PTR dwCommand, DWORD_PTR dwData)
+Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
+                   DWORD_PTR dwCommand, DWORD_PTR dwData)
 {
     DWORD dwThreadId;
     HKL hKL;
@@ -262,7 +271,8 @@ Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD
     return TRUE;
 }
 
-DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
+// Win: BuildHimcList
+DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList)
 {
 #define INITIAL_COUNT 0x40
 #define MAX_RETRY 10
@@ -270,18 +280,18 @@ DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
     DWORD dwCount = INITIAL_COUNT, cRetry = 0;
     HIMC *phNewList;
 
-    phNewList = Imm32HeapAlloc(0, dwCount * sizeof(HIMC));
+    phNewList = ImmLocalAlloc(0, dwCount * sizeof(HIMC));
     if (phNewList == NULL)
         return 0;
 
     Status = NtUserBuildHimcList(dwThreadId, dwCount, phNewList, &dwCount);
     while (Status == STATUS_BUFFER_TOO_SMALL)
     {
-        Imm32HeapFree(phNewList);
+        ImmLocalFree(phNewList);
         if (cRetry++ >= MAX_RETRY)
             return 0;
 
-        phNewList = Imm32HeapAlloc(0, dwCount * sizeof(HIMC));
+        phNewList = ImmLocalAlloc(0, dwCount * sizeof(HIMC));
         if (phNewList == NULL)
             return 0;
 
@@ -290,7 +300,7 @@ DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
 
     if (NT_ERROR(Status) || !dwCount)
     {
-        Imm32HeapFree(phNewList);
+        ImmLocalFree(phNewList);
         return 0;
     }
 
@@ -300,6 +310,7 @@ DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList)
 #undef MAX_RETRY
 }
 
+// Win: ConvertImeMenuItemInfoAtoW
 INT APIENTRY
 Imm32ImeMenuAnsiToWide(const IMEMENUITEMINFOA *pItemA, LPIMEMENUITEMINFOW pItemW,
                        UINT uCodePage, BOOL bBitmap)
@@ -326,6 +337,7 @@ Imm32ImeMenuAnsiToWide(const IMEMENUITEMINFOA *pItemA, LPIMEMENUITEMINFOW pItemW
     return ret;
 }
 
+// Win: ConvertImeMenuItemInfoWtoA
 INT APIENTRY
 Imm32ImeMenuWideToAnsi(const IMEMENUITEMINFOW *pItemW, LPIMEMENUITEMINFOA pItemA,
                        UINT uCodePage)
@@ -349,6 +361,7 @@ Imm32ImeMenuWideToAnsi(const IMEMENUITEMINFOW *pItemW, LPIMEMENUITEMINFOA pItemA
     return ret;
 }
 
+// Win: GetImeModeSaver
 PIME_STATE APIENTRY
 Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
 {
@@ -361,7 +374,7 @@ Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
     }
     if (!pState)
     {
-        pState = Imm32HeapAlloc(HEAP_ZERO_MEMORY, sizeof(IME_STATE));
+        pState = ImmLocalAlloc(HEAP_ZERO_MEMORY, sizeof(IME_STATE));
         if (pState)
         {
             pState->wLang = Lang;
@@ -372,6 +385,7 @@ Imm32FetchImeState(LPINPUTCONTEXTDX pIC, HKL hKL)
     return pState;
 }
 
+// Win: GetImePrivateModeSaver
 PIME_SUBSTATE APIENTRY
 Imm32FetchImeSubState(PIME_STATE pState, HKL hKL)
 {
@@ -381,7 +395,7 @@ Imm32FetchImeSubState(PIME_STATE pState, HKL hKL)
         if (pSubState->hKL == hKL)
             return pSubState;
     }
-    pSubState = Imm32HeapAlloc(0, sizeof(IME_SUBSTATE));
+    pSubState = ImmLocalAlloc(0, sizeof(IME_SUBSTATE));
     if (!pSubState)
         return NULL;
     pSubState->dwValue = 0;
@@ -391,6 +405,7 @@ Imm32FetchImeSubState(PIME_STATE pState, HKL hKL)
     return pSubState;
 }
 
+// Win: RestorePrivateMode
 BOOL APIENTRY
 Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 {
@@ -403,6 +418,7 @@ Imm32LoadImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
     return FALSE;
 }
 
+// Win: SavePrivateMode
 BOOL APIENTRY
 Imm32SaveImeStateSentence(LPINPUTCONTEXTDX pIC, PIME_STATE pState, HKL hKL)
 {
@@ -546,6 +562,7 @@ static FN_GetFileVersionInfoW s_fnGetFileVersionInfoW = NULL;
 static FN_GetFileVersionInfoSizeW s_fnGetFileVersionInfoSizeW = NULL;
 static FN_VerQueryValueW s_fnVerQueryValueW = NULL;
 
+// Win: LoadFixVersionInfo
 static BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
 {
     UINT cbFixed = 0;
@@ -562,6 +579,7 @@ static BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     return TRUE;
 }
 
+// Win: GetVersionDatum
 static LPWSTR APIENTRY
 Imm32GetVerInfoValue(LPCVOID pVerInfo, LPWSTR pszKey, DWORD cchKey, LPCWSTR pszName)
 {
@@ -578,6 +596,7 @@ Imm32GetVerInfoValue(LPCVOID pVerInfo, LPWSTR pszKey, DWORD cchKey, LPCWSTR pszN
     return (cbValue ? pszValue : NULL);
 }
 
+// Win: LoadVarVersionInfo
 BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
 {
     BOOL ret;
@@ -615,6 +634,7 @@ BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     return TRUE;
 }
 
+// Win: LoadVersionInfo
 BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
 {
     HINSTANCE hinstVersion;
@@ -650,7 +670,7 @@ BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
     if (!cbVerInfo)
         goto Quit;
 
-    pVerInfo = Imm32HeapAlloc(0, cbVerInfo);
+    pVerInfo = ImmLocalAlloc(0, cbVerInfo);
     if (!pVerInfo)
         goto Quit;
 
@@ -661,7 +681,7 @@ BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx)
         ret = Imm32LoadImeLangAndDesc(pImeInfoEx, pVerInfo);
     }
 
-    Imm32HeapFree(pVerInfo);
+    ImmLocalFree(pVerInfo);
 
 Quit:
     if (bLoaded)
@@ -669,7 +689,8 @@ Quit:
     return ret;
 }
 
-HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID)
+// Win: AssignNewLayout
+HKL APIENTRY Imm32AssignNewLayout(UINT cKLs, const REG_IME *pLayouts, WORD wLangID)
 {
     UINT iKL, wID, wLow = 0xE0FF, wHigh = 0xE01F, wNextID = 0;
 
@@ -714,7 +735,8 @@ HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID)
     return (HKL)(DWORD_PTR)MAKELONG(wLangID, wNextID);
 }
 
-UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts)
+// Win: GetImeLayout
+UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
 {
     HKEY hkeyLayouts, hkeyIME;
     WCHAR szImeFileName[80], szImeKey[20];
@@ -781,7 +803,8 @@ UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts)
     return nCount;
 }
 
-BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
+// Win: WriteImeLayout
+BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout)
 {
     UINT iPreload;
     HKEY hkeyLayouts, hkeyIME, hkeyPreload;
@@ -877,7 +900,8 @@ typedef INT (WINAPI *FN_LZOpenFileW)(LPWSTR, LPOFSTRUCT, WORD);
 typedef LONG (WINAPI *FN_LZCopy)(INT, INT);
 typedef VOID (WINAPI *FN_LZClose)(INT);
 
-BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile)
+// Win: CopyImeFile
+BOOL APIENTRY Imm32CopyImeFile(LPWSTR pszOldFile, LPCWSTR pszNewFile)
 {
     BOOL ret = FALSE, bLoaded = FALSE;
     HMODULE hinstLZ32;
@@ -930,14 +954,6 @@ Quit:
     if (bLoaded)
         FreeLibrary(hinstLZ32);
     return ret;
-}
-
-/***********************************************************************
- *		CtfImmIsTextFrameServiceDisabled(IMM32.@)
- */
-BOOL WINAPI CtfImmIsTextFrameServiceDisabled(VOID)
-{
-    return !!(GetWin32ClientInfo()->CI_flags & CI_TFSDISABLED);
 }
 
 /***********************************************************************
