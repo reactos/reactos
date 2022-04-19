@@ -21,6 +21,9 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 #define LANGID_CHINESE_TRADITIONAL  MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_TRADITIONAL)
 #define LANGID_NEUTRAL              MAKELANGID(LANG_NEUTRAL,  SUBLANG_NEUTRAL)
 
+// The IME-like windows are the IME windows and the IME UI windows.
+// The IME window's class name is "IME".
+// The IME UI window behaves the User Interface of IME for the user.
 #define IS_WND_IMELIKE(pwnd) \
     (((pwnd)->pcls->style & CS_IME) || \
      ((pwnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
@@ -1144,30 +1147,33 @@ Quit:
     return ret;
 }
 
+// Choose the preferred owner of the IME window.
 // Win: ImeSetFutureOwner
-VOID FASTCALL IntImeSetFutureOwner(PWND pImeWnd, PWND pwndOldOwner)
+VOID FASTCALL IntImeSetFutureOwner(PWND pImeWnd, PWND pwndOwner)
 {
-    PWND pwndNode, pwndOwner, pwndParent, pwndSibling;
+    PWND pwndNode, pwndNextOwner, pwndParent, pwndSibling;
     PTHREADINFO pti = pImeWnd->head.pti;
 
-    if (!pwndOldOwner || (pwndOldOwner->style & WS_CHILD))
+    if (!pwndOwner || (pwndOwner->style & WS_CHILD)) // invalid owner
         return;
 
-    for (pwndNode = pwndOldOwner; ; pwndNode = pwndOwner)
+    // Get the top-level owner of the same thread
+    for (pwndNode = pwndOwner; ; pwndNode = pwndNextOwner)
     {
-        pwndOwner = pwndNode->spwndOwner;
-        if (!pwndOwner || pwndOwner->head.pti != pti)
+        pwndNextOwner = pwndNode->spwndOwner;
+        if (!pwndNextOwner || pwndNextOwner->head.pti != pti)
             break;
     }
 
+    // Don't choose the IME-like windows and the bottom-most windows unless necessary.
     if (IS_WND_IMELIKE(pwndNode) ||
-        ((pwndNode->state2 & WNDS2_BOTTOMMOST) && !(pwndOldOwner->state2 & WNDS2_BOTTOMMOST)))
+        ((pwndNode->state2 & WNDS2_BOTTOMMOST) && !(pwndOwner->state2 & WNDS2_BOTTOMMOST)))
     {
-        pwndNode = pwndOldOwner;
+        pwndNode = pwndOwner;
     }
 
     pwndParent = pwndNode->spwndParent;
-    if (pwndOldOwner != pwndNode || !pwndParent)
+    if (!pwndParent || pwndOwner != pwndNode)
     {
         pImeWnd->spwndOwner = pwndNode;
         return;
@@ -1198,8 +1204,9 @@ VOID FASTCALL IntImeSetFutureOwner(PWND pImeWnd, PWND pwndOldOwner)
     pImeWnd->spwndOwner = pwndNode;
 }
 
+// Get the last non-IME-like top-most window on the desktop.
 // Win: GetLastTopMostWindowNoIME
-PWND FASTCALL IntGetLastTopMostWindowNoIME(PWND pwndIME)
+PWND FASTCALL IntGetLastTopMostWindowNoIME(PWND pImeWnd)
 {
     PWND pwndNode, pwndOwner, pwndLastTopMost = NULL;
     BOOL bFound;
@@ -1214,11 +1221,12 @@ PWND FASTCALL IntGetLastTopMostWindowNoIME(PWND pwndIME)
     {
         bFound = FALSE;
 
-        if (IS_WND_IMELIKE(pwndNode))
+        if (IS_WND_IMELIKE(pwndNode)) // An IME-like window
         {
+            // Search the IME window from owners
             for (pwndOwner = pwndNode; pwndOwner; pwndOwner = pwndOwner->spwndOwner)
             {
-                if (pwndIME == pwndOwner)
+                if (pImeWnd == pwndOwner)
                 {
                     bFound = TRUE;
                     break;
@@ -1233,10 +1241,12 @@ PWND FASTCALL IntGetLastTopMostWindowNoIME(PWND pwndIME)
     return pwndLastTopMost;
 }
 
+// Adjust the ordering of the windows around the IME window.
 // Win: ImeSetTopMost
 VOID FASTCALL IntImeSetTopMost(PWND pImeWnd, BOOL bTopMost, PWND pwndInsertBefore)
 {
-    PWND pwndParent, pwndChild, pwndNode, pwndSave, pwndNext, pwndInsertAfter = NULL;
+    PWND pwndParent, pwndChild, pwndNode, pwndNext, pwndInsertAfter = NULL;
+    PWND pwndInsertAfterSave;
 
     pwndParent = pImeWnd->spwndParent;
     if (!pwndParent)
@@ -1279,15 +1289,17 @@ VOID FASTCALL IntImeSetTopMost(PWND pImeWnd, BOOL bTopMost, PWND pwndInsertBefor
         }
     }
 
-    pwndSave = pwndInsertAfter;
+    pwndInsertAfterSave = pwndInsertAfter;
 
     while (pwndChild)
     {
         pwndNext = pwndChild->spwndNext;
 
-        if (pwndChild != pwndInsertAfter && IS_WND_IMELIKE(pwndChild) &&
+        // If pwndChild is a good IME-like window, ...
+        if (IS_WND_IMELIKE(pwndChild) && pwndChild != pwndInsertAfter &&
             pwndChild->head.pti == pImeWnd->head.pti)
         {
+            // Adjust the ordering and the linking
             for (pwndNode = pwndChild; pwndNode; pwndNode = pwndNode->spwndOwner)
             {
                 if (pwndNode != pImeWnd)
@@ -1310,26 +1322,28 @@ VOID FASTCALL IntImeSetTopMost(PWND pImeWnd, BOOL bTopMost, PWND pwndInsertBefor
             }
         }
 
+        // Get the next child, with ignoring pwndInsertAfterSave
         pwndChild = pwndNext;
-        if (pwndChild && pwndChild == pwndSave && pwndInsertAfter)
+        if (pwndChild && pwndChild == pwndInsertAfterSave && pwndInsertAfter)
             pwndChild = pwndInsertAfter->spwndNext;
     }
 }
 
+// Make the IME window top-most if necessary.
 // Win: ImeCheckTopmost
 VOID FASTCALL IntImeCheckTopmost(PWND pImeWnd)
 {
     BOOL bTopMost;
-    PWND pwndOwner = pImeWnd->spwndOwner, pwndTarget = NULL;
+    PWND pwndOwner = pImeWnd->spwndOwner, pwndInsertBefore = NULL;
 
     if (!pwndOwner)
         return;
 
     if (pImeWnd->head.pti != gptiForeground)
-        pwndTarget = pwndOwner;
+        pwndInsertBefore = pwndOwner;
 
     bTopMost = !!(pwndOwner->ExStyle & WS_EX_TOPMOST);
-    IntImeSetTopMost(pImeWnd, bTopMost, pwndTarget);
+    IntImeSetTopMost(pImeWnd, bTopMost, pwndInsertBefore);
 }
 
 BOOL NTAPI
