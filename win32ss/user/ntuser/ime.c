@@ -1815,67 +1815,67 @@ Quit:
 BOOL IntIsChildSameThread(PWND pwndParent, PWND pwndChild)
 {
     PWND pwnd, pwndOwner, pwndNode;
-    PTHREADINFO pti = pwndChild->head.pti;
-    BOOL bFoundOwner, bFoundImeLike;
+    PTHREADINFO ptiChild = pwndChild->head.pti;
+    BOOL bFoundImeLikeOwner, bFoundImeLikeAncestor, bFoundImeLike;
 
     for (pwnd = pwndParent->spwndChild; pwnd; pwnd = pwnd->spwndNext)
     {
+        if (pwnd == pwndChild || pwnd->head.pti != ptiChild || IS_WND_MENU(pwnd))
+            continue;
+
         if (!IS_WND_CHILD(pwnd))
         {
-            if (IS_WND_MENU(pwnd))
-                continue;
-
-            bFoundOwner = FALSE;
+            // Find an IME-like owner
+            bFoundImeLikeOwner = FALSE;
             for (pwndOwner = pwnd; pwndOwner; pwndOwner = pwndOwner->spwndOwner)
             {
                 if (IS_WND_IMELIKE(pwndOwner))
                 {
-                    bFoundOwner = TRUE;
+                    bFoundImeLikeOwner = TRUE;
                     break;
                 }
             }
-
-            if (bFoundOwner)
+            if (bFoundImeLikeOwner)
                 continue;
         }
 
-        if (pwnd == pwndChild || pwnd->head.pti != pti)
-            continue;
+        pwndNode = pwnd;
 
-        bFoundImeLike = FALSE;
-
-        for (pwndNode = pwnd; IS_WND_CHILD(pwndNode); pwndNode = pwndNode->spwndParent)
+        if (IS_WND_CHILD(pwndNode))
         {
-            if (pwndNode->head.pti != pti)
-                break;
-
-            if (IS_WND_IMELIKE(pwndNode))
+            // Find an IME-like ancestor of the same thread
+            bFoundImeLikeAncestor = FALSE;
+            for (; IS_WND_CHILD(pwndNode); pwndNode = pwndNode->spwndParent)
             {
-                bFoundImeLike = TRUE;
-                break;
-            }
-        }
+                if (pwndNode->head.pti != ptiChild)
+                    break;
 
-        if (bFoundImeLike)
-            continue;
+                if (IS_WND_IMELIKE(pwndNode))
+                    bFoundImeLikeAncestor = TRUE;
+            }
+            if (bFoundImeLikeAncestor)
+                continue;
+            // Now, pwndNode is the non-child ancestor.
+        }
 
         if (!IS_WND_CHILD(pwndNode))
         {
+            // Find an IME-like owner from the current pwndNode
+            bFoundImeLikeOwner = FALSE;
             for (; pwndNode; pwndNode = pwndNode->spwndOwner)
             {
-                if (pwndNode->head.pti != pti)
+                if (pwndNode->head.pti != ptiChild)
                     break;
 
                 if (IS_WND_IMELIKE(pwndNode))
                 {
-                    bFoundImeLike = TRUE;
+                    bFoundImeLikeOwner = TRUE;
                     break;
                 }
             }
+            if (!bFoundImeLikeOwner)
+                return TRUE;
         }
-
-        if (!bFoundImeLike)
-            return TRUE;
     }
 
     return FALSE;
@@ -1925,6 +1925,7 @@ BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
 }
 
 // Can we destroy the default IME window for the non-child target window?
+// If so, this function sets spwndOwner to NULL.
 // Win: ImeCanDestroyDefIME
 BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
 {
