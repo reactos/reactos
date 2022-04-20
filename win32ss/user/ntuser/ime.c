@@ -21,15 +21,6 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 #define LANGID_CHINESE_TRADITIONAL  MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_TRADITIONAL)
 #define LANGID_NEUTRAL              MAKELANGID(LANG_NEUTRAL,  SUBLANG_NEUTRAL)
 
-// The IME-like windows are the IME windows and the IME UI windows.
-// The IME window's class name is "IME".
-// The IME UI window behaves the User Interface of IME for the user.
-#define IS_WND_IMELIKE(pwnd) \
-    (((pwnd)->pcls->style & CS_IME) || \
-     ((pwnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
-#define IS_WND_MENU(pWnd) \
-    ((pWnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_MENU])
-
 // The special virtual keys for Japanese: Used for key states.
 // https://www.kthree.co.jp/kihelp/index.html?page=app/vkey&type=html
 #define VK_DBE_ALPHANUMERIC 0xF0
@@ -1818,6 +1809,181 @@ NtUserQueryInputContext(HIMC hIMC, DWORD dwType)
 Quit:
     UserLeave();
     return ret;
+}
+
+// Win: IsChildSameThread
+BOOL IntIsChildSameThread(PWND pwndParent, PWND pwndChild)
+{
+    PWND pwnd, pwndOwner, pwndNode;
+    PTHREADINFO pti = pwndChild->head.pti;
+    BOOL bFoundOwner, bFoundImeLike;
+
+    for (pwnd = pwndParent->spwndChild; pwnd; pwnd = pwnd->spwndNext)
+    {
+        if (!IS_WND_CHILD(pwnd))
+        {
+            if (IS_WND_MENU(pwnd))
+                continue;
+
+            bFoundOwner = FALSE;
+            for (pwndOwner = pwnd; pwndOwner; pwndOwner = pwndOwner->spwndOwner)
+            {
+                if (IS_WND_IMELIKE(pwndOwner))
+                {
+                    bFoundOwner = TRUE;
+                    break;
+                }
+            }
+
+            if (bFoundOwner)
+                continue;
+        }
+
+        if (pwnd == pwndChild || pwnd->head.pti != pti)
+            continue;
+
+        bFoundImeLike = FALSE;
+
+        for (pwndNode = pwnd; IS_WND_CHILD(pwndNode); pwndNode = pwndNode->spwndParent)
+        {
+            if (pwndNode->head.pti != pti)
+                break;
+
+            if (IS_WND_IMELIKE(pwndNode))
+            {
+                bFoundImeLike = TRUE;
+                break;
+            }
+        }
+
+        if (bFoundImeLike)
+            continue;
+
+        if (!IS_WND_CHILD(pwndNode))
+        {
+            for (; pwndNode; pwndNode = pwndNode->spwndOwner)
+            {
+                if (pwndNode->head.pti != pti)
+                    break;
+
+                if (IS_WND_IMELIKE(pwndNode))
+                {
+                    bFoundImeLike = TRUE;
+                    break;
+                }
+            }
+        }
+
+        if (!bFoundImeLike)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+// Can we destroy the default IME window for the target child window?
+// Win: ImeCanDestroyDefIMEforChild
+BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
+{
+    PWND pwndNode;
+    PIMEUI pimeui;
+    IMEUI SafeImeUI;
+
+    pimeui = ((PIMEWND)pImeWnd)->pimeui;
+    if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(pimeui, sizeof(IMEUI), 1);
+        SafeImeUI = *pimeui;
+        if (!SafeImeUI.fChildThreadDef)
+            return FALSE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ;
+    }
+    _SEH2_END;
+
+    if (pwndTarget->spwndParent == NULL ||
+        pwndTarget->head.pti == pwndTarget->spwndParent->head.pti)
+    {
+        return FALSE;
+    }
+
+    for (pwndNode = pwndTarget; pwndNode; pwndNode = pwndNode->spwndParent)
+    {
+        if (pwndNode == pwndNode->head.rpdesk->pDeskInfo->spwnd)
+            break;
+
+        if (IntIsChildSameThread(pwndNode->spwndParent, pwndTarget))
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+// Can we destroy the default IME window for the non-child target window?
+// Win: ImeCanDestroyDefIME
+BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
+{
+    PWND pwndNode;
+    PIMEUI pimeui;
+    IMEUI SafeImeUI;
+
+    pimeui = ((PIMEWND)pImeWnd)->pimeui;
+
+    if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(pimeui, sizeof(IMEUI), 1);
+        SafeImeUI = *pimeui;
+        if (SafeImeUI.fDestroy)
+            return FALSE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ;
+    }
+    _SEH2_END;
+
+    if (pImeWnd->spwndOwner)
+    {
+        for (pwndNode = pImeWnd->spwndOwner; pwndNode; pwndNode = pwndNode->spwndOwner)
+        {
+            if (pwndNode == pwndTarget)
+                break;
+        }
+
+        if (!pwndNode)
+            return FALSE;
+    }
+
+    for (pwndNode = pwndTarget; pwndNode; pwndNode = pwndNode->spwndOwner)
+    {
+        if (IS_WND_IMELIKE(pwndNode))
+            return FALSE;
+    }
+
+    IntImeSetFutureOwner(pImeWnd, pwndTarget);
+
+    for (pwndNode = pImeWnd->spwndOwner; pwndNode; pwndNode = pwndNode->spwndNext)
+    {
+        if (pwndNode == pImeWnd)
+            break;
+    }
+
+    if (pwndNode == pImeWnd)
+        IntImeCheckTopmost(pImeWnd);
+
+    if (pImeWnd->spwndOwner && pwndTarget != pImeWnd->spwndOwner)
+        return FALSE;
+
+    pImeWnd->spwndOwner = NULL;
+    return TRUE;
 }
 
 /* EOF */
