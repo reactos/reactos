@@ -1811,16 +1811,16 @@ Quit:
     return ret;
 }
 
-// Returns TRUE if there is any different-thread owner, or any same-thread
-// non-IME-related window of pwndTarget, that is other than pwndTarget, around pwndParent.
+// Searchs a non-IME-related window of the same thread of pwndTarget,
+// other than pwndTarget, around pwndParent. Returns TRUE if found.
 //
 // Win: IsChildSameThread
-BOOL IntNoImeRelatedWindowOfSameThread(PWND pwndParent, PWND pwndTarget)
+BOOL IntFindNonImeRelatedWndOfSameThread(PWND pwndParent, PWND pwndTarget)
 {
     PWND pwnd, pwndOwner, pwndNode;
     PTHREADINFO ptiTarget = pwndTarget->head.pti;
-    BOOL bFoundImeLikeOwner, bFoundImeLikeAncestor;
 
+    // For all the children of pwndParent, ...
     for (pwnd = pwndParent->spwndChild; pwnd; pwnd = pwnd->spwndNext)
     {
         if (pwnd == pwndTarget || pwnd->head.pti != ptiTarget || IS_WND_MENU(pwnd))
@@ -1829,16 +1829,16 @@ BOOL IntNoImeRelatedWindowOfSameThread(PWND pwndParent, PWND pwndTarget)
         if (!IS_WND_CHILD(pwnd))
         {
             // Check if any IME-like owner.
-            bFoundImeLikeOwner = FALSE;
+            BOOL bFound1 = FALSE;
             for (pwndOwner = pwnd; pwndOwner; pwndOwner = pwndOwner->spwndOwner)
             {
                 if (IS_WND_IMELIKE(pwndOwner))
                 {
-                    bFoundImeLikeOwner = TRUE;
+                    bFound1 = TRUE;
                     break;
                 }
             }
-            if (bFoundImeLikeOwner)
+            if (bFound1)
                 continue; // Skip if any IME-like owner.
         }
 
@@ -1846,8 +1846,8 @@ BOOL IntNoImeRelatedWindowOfSameThread(PWND pwndParent, PWND pwndTarget)
 
         if (IS_WND_CHILD(pwndNode))
         {
-            // Check if any different-thread child ancestor or any same-thread IME-like ancestor.
-            bFoundImeLikeAncestor = FALSE;
+            // Check if any same-thread IME-like ancestor.
+            BOOL bFound2 = FALSE;
             for (; IS_WND_CHILD(pwndNode); pwndNode = pwndNode->spwndParent)
             {
                 if (pwndNode->head.pti != ptiTarget)
@@ -1855,19 +1855,19 @@ BOOL IntNoImeRelatedWindowOfSameThread(PWND pwndParent, PWND pwndTarget)
 
                 if (IS_WND_IMELIKE(pwndNode))
                 {
-                    bFoundImeLikeAncestor = TRUE;
+                    bFound2 = TRUE;
                     break;
                 }
             }
-            if (bFoundImeLikeAncestor)
+            if (bFound2)
                 continue;
             // Now, pwndNode is non-child or non-same-thread window.
         }
 
         if (!IS_WND_CHILD(pwndNode)) // pwndNode is non-child
         {
-            // Check if any different-thread owner or any same-thread IME-like owner.
-            bFoundImeLikeOwner = FALSE;
+            // Check if any same-thread IME-like owner.
+            BOOL bFound3 = FALSE;
             for (; pwndNode; pwndNode = pwndNode->spwndOwner)
             {
                 if (pwndNode->head.pti != ptiTarget)
@@ -1875,13 +1875,15 @@ BOOL IntNoImeRelatedWindowOfSameThread(PWND pwndParent, PWND pwndTarget)
 
                 if (IS_WND_IMELIKE(pwndNode))
                 {
-                    bFoundImeLikeOwner = TRUE;
+                    bFound3 = TRUE;
                     break;
                 }
             }
-            if (!bFoundImeLikeOwner)
-                return TRUE;
+            if (bFound3)
+                continue;
         }
+
+        return TRUE;
     }
 
     return FALSE;
@@ -1923,7 +1925,7 @@ BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
         if (pwndNode == pwndNode->head.rpdesk->pDeskInfo->spwnd)
             break;
 
-        if (IntNoImeRelatedWindowOfSameThread(pwndNode->spwndParent, pwndTarget))
+        if (IntFindNonImeRelatedWndOfSameThread(pwndNode->spwndParent, pwndTarget))
             return FALSE;
     }
 
