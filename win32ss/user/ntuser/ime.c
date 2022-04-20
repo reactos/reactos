@@ -1811,8 +1811,8 @@ Quit:
     return ret;
 }
 
-// Returns TRUE if there is no IME-related window of the same thread of pwndTarget,
-// around pwndParent.
+// Returns TRUE if there is no IME-related window of the same thread of
+// pwndTarget, that is other than pwndTarget, around pwndParent.
 //
 // Win: IsChildSameThread
 BOOL IntNoImeRelatedWindowOfSameThread(PWND pwndParent, PWND pwndTarget)
