@@ -1811,8 +1811,8 @@ Quit:
     return ret;
 }
 
-// Returns TRUE if there is no IME-related window of the same thread of
-// pwndTarget, that is other than pwndTarget, around pwndParent.
+// Returns TRUE if there is any different-thread owner, or any same-thread
+// non-IME-related window of pwndTarget, that is other than pwndTarget, around pwndParent.
 //
 // Win: IsChildSameThread
 BOOL IntNoImeRelatedWindowOfSameThread(PWND pwndParent, PWND pwndTarget)
@@ -1839,14 +1839,14 @@ BOOL IntNoImeRelatedWindowOfSameThread(PWND pwndParent, PWND pwndTarget)
                 }
             }
             if (bFoundImeLikeOwner)
-                continue; // Skip IME-related windows.
+                continue; // Skip if any IME-like owner.
         }
 
         pwndNode = pwnd;
 
         if (IS_WND_CHILD(pwndNode))
         {
-            // Check if any IME-like ancestor of the same thread.
+            // Check if any different-thread child ancestor or any same-thread IME-like ancestor.
             bFoundImeLikeAncestor = FALSE;
             for (; IS_WND_CHILD(pwndNode); pwndNode = pwndNode->spwndParent)
             {
@@ -1860,13 +1860,13 @@ BOOL IntNoImeRelatedWindowOfSameThread(PWND pwndParent, PWND pwndTarget)
                 }
             }
             if (bFoundImeLikeAncestor)
-                continue; // Skip if the IME-like ancestor is found.
-            // Now, pwndNode is the non-child ancestor of the same thread.
+                continue;
+            // Now, pwndNode is non-child or non-same-thread window.
         }
 
-        if (!IS_WND_CHILD(pwndNode))
+        if (!IS_WND_CHILD(pwndNode)) // pwndNode is non-child
         {
-            // Check if any IME-like owner from the current pwndNode.
+            // Check if any different-thread owner or any same-thread IME-like owner.
             bFoundImeLikeOwner = FALSE;
             for (; pwndNode; pwndNode = pwndNode->spwndOwner)
             {
@@ -1880,7 +1880,7 @@ BOOL IntNoImeRelatedWindowOfSameThread(PWND pwndParent, PWND pwndTarget)
                 }
             }
             if (!bFoundImeLikeOwner)
-                return TRUE; // The IME-like ancestor of the same thread is not found.
+                return TRUE;
         }
     }
 
