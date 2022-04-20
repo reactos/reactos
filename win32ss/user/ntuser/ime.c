@@ -1851,11 +1851,14 @@ BOOL IntIsChildSameThread(PWND pwndParent, PWND pwndChild)
                     break;
 
                 if (IS_WND_IMELIKE(pwndNode))
+                {
                     bFoundImeLikeAncestor = TRUE;
+                    break;
+                }
             }
             if (bFoundImeLikeAncestor)
-                continue;
-            // Now, pwndNode is the non-child ancestor.
+                continue; // The IME-like ancestor is found.
+            // Now, pwndNode is the non-child ancestor of the same thread.
         }
 
         if (!IS_WND_CHILD(pwndNode))
