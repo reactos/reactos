@@ -1901,6 +1901,7 @@ BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
     if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
         return FALSE;
 
+    // Check IMEUI.fChildThreadDef
     _SEH2_TRY
     {
         ProbeForRead(pimeui, sizeof(IMEUI), 1);
@@ -1914,6 +1915,7 @@ BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_END;
 
+    // The parent of pwndTarget is NULL or of the same thread of pwndTarget?
     if (pwndTarget->spwndParent == NULL ||
         pwndTarget->head.pti == pwndTarget->spwndParent->head.pti)
     {
@@ -1946,6 +1948,7 @@ BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
     if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
         return FALSE;
 
+    // Check IMEUI.fDestroy
     _SEH2_TRY
     {
         ProbeForRead(pimeui, sizeof(IMEUI), 1);
@@ -1959,6 +1962,7 @@ BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_END;
 
+    // Any ancestor of pImeWnd has pwndTarget?
     if (pImeWnd->spwndOwner)
     {
         for (pwndNode = pImeWnd->spwndOwner; pwndNode; pwndNode = pwndNode->spwndOwner)
@@ -1971,23 +1975,24 @@ BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
             return FALSE;
     }
 
+    // Any ancestor of pwndTarget is IME-like?
     for (pwndNode = pwndTarget; pwndNode; pwndNode = pwndNode->spwndOwner)
     {
         if (IS_WND_IMELIKE(pwndNode))
             return FALSE;
     }
 
+    // Adjust the ordering and top-mode status
     IntImeSetFutureOwner(pImeWnd, pwndTarget);
-
     for (pwndNode = pImeWnd->spwndOwner; pwndNode; pwndNode = pwndNode->spwndNext)
     {
         if (pwndNode == pImeWnd)
             break;
     }
-
     if (pwndNode == pImeWnd)
         IntImeCheckTopmost(pImeWnd);
 
+    // Is the owner of pImeWnd NULL or pwndTarget?
     if (pImeWnd->spwndOwner && pwndTarget != pImeWnd->spwndOwner)
         return FALSE;
 
