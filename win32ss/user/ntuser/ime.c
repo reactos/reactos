@@ -1816,7 +1816,7 @@ BOOL IntIsChildSameThread(PWND pwndParent, PWND pwndChild)
 {
     PWND pwnd, pwndOwner, pwndNode;
     PTHREADINFO ptiChild = pwndChild->head.pti;
-    BOOL bFoundImeLikeOwner, bFoundImeLikeAncestor, bFoundImeLike;
+    BOOL bFoundImeLikeOwner, bFoundImeLikeAncestor;
 
     for (pwnd = pwndParent->spwndChild; pwnd; pwnd = pwnd->spwndNext)
     {
