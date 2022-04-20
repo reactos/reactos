@@ -658,7 +658,7 @@ LRESULT co_UserFreeWindow(PWND Window,
          ThreadData->rpdesk->rpwinstaParent->ShellListView = NULL;
    }
 
-  if (IS_IMM_MODE() && Window == ThreadData->spwndDefaultIme)
+   if (IS_IMM_MODE() && Window == ThreadData->spwndDefaultIme)
       UserAssignmentUnlock((PVOID*)&(ThreadData->spwndDefaultIme));
 
    /* Fixes dialog test_focus breakage due to r66237. */
