@@ -1944,7 +1944,6 @@ BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
     IMEUI SafeImeUI;
 
     pimeui = ((PIMEWND)pImeWnd)->pimeui;
-
     if (!pimeui || (LONG_PTR)pimeui == (LONG_PTR)-1)
         return FALSE;
 
@@ -1962,7 +1961,7 @@ BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_END;
 
-    // Any ancestor of pImeWnd has pwndTarget?
+    // Any ancestor of pImeWnd is pwndTarget?
     if (pImeWnd->spwndOwner)
     {
         for (pwndNode = pImeWnd->spwndOwner; pwndNode; pwndNode = pwndNode->spwndOwner)
