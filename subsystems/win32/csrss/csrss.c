@@ -41,7 +41,7 @@ _main(int argc,
       char *envp[],
       int DebugFlag)
 {
-    KPRIORITY BasePriority = (8 + 1) + 4;
+    KPRIORITY BasePriority = PROCESS_PRIORITY_NORMAL_FOREGROUND + 4;
     NTSTATUS Status;
 #if defined (_X86_)
     ULONG Response;
@@ -49,11 +49,11 @@ _main(int argc,
     UNREFERENCED_PARAMETER(envp);
     UNREFERENCED_PARAMETER(DebugFlag);
 
-    /* Set the Priority */
+    /* Set the base priority */
     NtSetInformationProcess(NtCurrentProcess(),
                             ProcessBasePriority,
                             &BasePriority,
-                            sizeof(KPRIORITY));
+                            sizeof(BasePriority));
 
 #if defined (_X86_)
     /* Give us IOPL so that we can access the VGA registers */
