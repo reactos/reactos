@@ -658,6 +658,9 @@ LRESULT co_UserFreeWindow(PWND Window,
          ThreadData->rpdesk->rpwinstaParent->ShellListView = NULL;
    }
 
+   if (IS_IMM_MODE() && Window == ThreadData->spwndDefaultIme)
+      UserAssignmentUnlock((PVOID*)&(ThreadData->spwndDefaultIme));
+
    /* Fixes dialog test_focus breakage due to r66237. */
    if (ThreadData->MessageQueue->spwndFocus == Window)
       ThreadData->MessageQueue->spwndFocus = NULL;
@@ -2762,7 +2765,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    TRACE("co_UserDestroyWindow(Window = 0x%p, hWnd = 0x%p)\n", Window, hWnd);
 
    /* Check for owner thread */
-   if ( Window->head.pti != PsGetCurrentThreadWin32Thread())
+   if (Window->head.pti != ti)
    {
        /* Check if we are destroying the desktop window */
        if (! ((Window->head.rpdesk->dwDTFlags & DF_DESTROYED) && Window == Window->head.rpdesk->pDeskInfo->spwnd))
@@ -2917,6 +2920,22 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
 
    /* Send destroy messages */
    IntSendDestroyMsg(UserHMGetHandle(Window));
+
+   // Destroy the default IME window if necessary
+   if (IS_IMM_MODE() && !(ti->TIF_flags & TIF_INCLEANUP) &&
+       ti->spwndDefaultIme && !IS_WND_IMELIKE(Window) && !(Window->state & WNDS_DESTROYED))
+   {
+       if (IS_WND_CHILD(Window))
+       {
+           if (IntImeCanDestroyDefIMEforChild(ti->spwndDefaultIme, Window))
+               co_UserDestroyWindow(ti->spwndDefaultIme);
+       }
+       else
+       {
+           if (IntImeCanDestroyDefIME(ti->spwndDefaultIme, Window))
+               co_UserDestroyWindow(ti->spwndDefaultIme);
+       }
+   }
 
    if (!IntIsWindow(UserHMGetHandle(Window)))
    {
