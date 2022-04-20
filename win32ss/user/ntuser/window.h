@@ -102,17 +102,15 @@ VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget);
 /* Undocumented dwFlags for IntBuildHwndList */
 #define IACE_LIST  0x0002
 
-#define IS_WND_MENU(pWnd) \
-    ((pWnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_MENU])
-
 #define IS_WND_CHILD(pWnd) ((pWnd)->style & WS_CHILD)
+#define IS_WND_MENU(pWnd) ((pWnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_MENU])
 
 // The IME-like windows are the IME windows and the IME UI windows.
 // The IME window's class name is "IME".
 // The IME UI window behaves the User Interface of IME for the user.
-#define IS_WND_IMELIKE(pwnd) \
-    (((pwnd)->pcls->style & CS_IME) || \
-     ((pwnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
+#define IS_WND_IMELIKE(pWnd) \
+    (((pWnd)->pcls->style & CS_IME) || \
+     ((pWnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
 
 BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget);
 BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget);
