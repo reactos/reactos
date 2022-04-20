@@ -1889,6 +1889,102 @@ BOOL IntFindNonImeRelatedWndOfSameThread(PWND pwndParent, PWND pwndTarget)
     return FALSE;
 }
 
+// The target window needs the IME window?
+// Win: WantImeWindow(pwndParent, pwndTarget)
+BOOL FASTCALL IntWantImeWindow(PWND pwndTarget)
+{
+    PDESKTOP rpdesk;
+    PWINSTATION_OBJECT rpwinstaParent;
+    PWND pwndNode, pwndParent = pwndTarget->spwndParent;
+
+    if (gptiCurrent->TIF_flags & TIF_DISABLEIME)
+        return FALSE;
+
+    if (pwndTarget->state & WNDS_SERVERSIDEWINDOWPROC)
+        return FALSE;
+
+    rpdesk = pwndTarget->head.rpdesk;
+    if (!rpdesk)
+        return FALSE;
+
+    rpwinstaParent = rpdesk->rpwinstaParent;
+    if (!rpwinstaParent || (rpwinstaParent->Flags & WSS_NOIO))
+        return FALSE;
+
+    for (pwndNode = pwndParent; pwndParent; pwndNode = pwndNode->spwndParent)
+    {
+        if (rpdesk != pwndNode->head.rpdesk)
+            break;
+
+        if (pwndNode == rpdesk->spwndMessage)
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+// Create the default IME window for the target window.
+// Win: xxxCreateDefaultImeWindow(pwndTarget, ATOM, hInst)
+PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
+{
+    LARGE_STRING WindowName;
+    UNICODE_STRING ClassName;
+    PWND pImeWnd;
+    PIMEUI pimeui;
+    CREATESTRUCTW Cs;
+    USER_REFERENCE_ENTRY Ref;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    HANDLE pid = PsGetThreadProcessId(pti->pEThread);
+
+    if (!(pti->spDefaultImc) && pid == gpidLogon)
+        UserCreateInputContext(0);
+
+    if (!(pti->spDefaultImc) || IS_WND_IMELIKE(pwndTarget) || !(pti->rpdesk->pheapDesktop))
+        return NULL;
+
+    if (IS_WND_CHILD(pwndTarget) && !(pwndTarget->style & WS_VISIBLE) &&
+        pwndTarget->spwndParent->head.pti->ppi != pti->ppi)
+    {
+        return NULL;
+    }
+
+    ClassName.Buffer = (LPWSTR)(ULONG_PTR)gpsi->atomSysClass[ICLS_IME];
+    ClassName.Length = 0;
+    ClassName.MaximumLength = 0;
+
+    RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&WindowName, L"Default IME", 0);
+
+    UserRefObjectCo(pwndTarget, &Ref);
+
+    RtlZeroMemory(&Cs, sizeof(Cs));
+    Cs.style = WS_POPUP | WS_DISABLED;
+    Cs.hInstance = hInst;
+    Cs.lpszName = (LPCWSTR)&WindowName;
+    Cs.lpszClass = (LPCWSTR)&ClassName;
+    Cs.hwndParent = UserHMGetHandle(pwndTarget);
+
+    pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL, WINVER);
+    if (pImeWnd)
+    {
+        pimeui = ((PIMEWND)pImeWnd)->pimeui;
+        _SEH2_TRY
+        {
+            ProbeForWrite(pimeui, sizeof(IMEUI), 1);
+            pimeui->fDefault = TRUE;
+            if (IS_WND_CHILD(pwndTarget) && pwndTarget->spwndParent->head.pti != pti)
+                pimeui->fChildThreadDef = TRUE;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ;
+        }
+        _SEH2_END;
+    }
+
+    UserDerefObjectCo(pwndTarget);
+    return pImeWnd;
+}
+
 // Can we destroy the default IME window for the target child window?
 // Win: ImeCanDestroyDefIMEforChild
 BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)

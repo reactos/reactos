@@ -1775,7 +1775,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 {
    PWND pWnd = NULL;
    HWND hWnd;
-   PTHREADINFO pti = NULL;
+   PTHREADINFO pti;
    BOOL MenuChanged;
    BOOL bUnicodeWindow;
    PCALLPROCDATA pcpd;
@@ -2027,6 +2027,27 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       pWnd->strName.MaximumLength = WindowName->Length + sizeof(UNICODE_NULL);
    }
 
+   /* Create the IME window for pWnd */
+   if (IS_IMM_MODE() && !(pti->spwndDefaultIme) && IntWantImeWindow(pWnd))
+   {
+      PWND pwndDefaultIme = co_IntCreateDefaultImeWindow(pWnd, pWnd->hModule);
+      UserAssignmentLock((PVOID*)&(pti->spwndDefaultIme), pwndDefaultIme);
+
+      if (pwndDefaultIme && (pti->pClientInfo->CI_flags & CI_IMMACTIVATE))
+      {
+         USER_REFERENCE_ENTRY Ref;
+         HKL hKL;
+
+         UserRefObjectCo(pwndDefaultIme, &Ref);
+
+         hKL = pti->KeyboardLayout->hkl;
+         co_IntSendMessage(UserHMGetHandle(pwndDefaultIme), WM_IME_SYSTEM, 0x19, (LPARAM)hKL);
+         pti->pClientInfo->CI_flags &= ~CI_IMMACTIVATE;
+
+         UserDerefObjectCo(pwndDefaultIme);
+      }
+   }
+
    /* Correct the window style. */
    if ((pWnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD)
    {
@@ -2133,7 +2154,8 @@ Error:
 
 /*
  * @implemented
- * Win: xxxCreateWindowEx
+ * Win: xxxCreateWindowEx(Cs->dwExStyle, ***, ClassName, WindowName, Cs->style,
+ *                        Cs->x, Cs->y, Cs->cx, Cs->cy, Cs->hwndParent, ...)
  */
 PWND FASTCALL
 co_UserCreateWindowEx(CREATESTRUCTW* Cs,
@@ -2748,6 +2770,49 @@ cleanup:
    return hwnd;
 }
 
+// Win: xxxDW_DestroyOwnedWindows
+VOID FASTCALL IntDestroyOwnedWindows(PWND Window)
+{
+    HWND* List;
+    HWND* phWnd;
+    PWND pWnd;
+    PTHREADINFO pti = Window->head.pti;
+    USER_REFERENCE_ENTRY Ref;
+
+    List = IntWinListOwnedPopups(Window);
+    if (!List)
+        return;
+
+    for (phWnd = List; *phWnd; ++phWnd)
+    {
+        pWnd = ValidateHwndNoErr(*phWnd);
+        if (pWnd == NULL)
+            continue;
+        ASSERT(pWnd->spwndOwner == Window);
+        ASSERT(pWnd != Window);
+
+        if (IS_IMM_MODE() && !(pti->TIF_flags & TIF_INCLEANUP) &&
+            pWnd == pti->spwndDefaultIme)
+        {
+            continue;
+        }
+
+        pWnd->spwndOwner = NULL;
+        if (IntWndBelongsToThread(pWnd, PsGetCurrentThreadWin32Thread()))
+        {
+            UserRefObjectCo(pWnd, &Ref); // Temp HACK?
+            co_UserDestroyWindow(pWnd);
+            UserDerefObjectCo(pWnd); // Temp HACK?
+        }
+        else
+        {
+            ERR("IntWndBelongsToThread(0x%p) is FALSE, ignoring.\n", pWnd);
+        }
+    }
+
+    ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+}
+
 // Win: xxxDestroyWindow
 BOOLEAN co_UserDestroyWindow(PVOID Object)
 {
@@ -2876,37 +2941,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
     /* Recursively destroy owned windows */
     if (!(Window->style & WS_CHILD))
     {
-        HWND* List;
-        HWND* phWnd;
-        PWND pWnd;
-
-        List = IntWinListOwnedPopups(Window);
-        if (List)
-        {
-            for (phWnd = List; *phWnd; ++phWnd)
-            {
-                pWnd = ValidateHwndNoErr(*phWnd);
-                if (pWnd == NULL)
-                    continue;
-                ASSERT(pWnd->spwndOwner == Window);
-                ASSERT(pWnd != Window);
-
-                pWnd->spwndOwner = NULL;
-                if (IntWndBelongsToThread(pWnd, PsGetCurrentThreadWin32Thread()))
-                {
-                    USER_REFERENCE_ENTRY Ref;
-                    UserRefObjectCo(pWnd, &Ref); // Temp HACK?
-                    co_UserDestroyWindow(pWnd);
-                    UserDerefObjectCo(pWnd); // Temp HACK?
-                }
-                else
-                {
-                    ERR("IntWndBelongsToThread(0x%p) is FALSE, ignoring.\n", pWnd);
-                }
-            }
-
-            ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
-        }
+        IntDestroyOwnedWindows(Window);
     }
 
     /* Generate mouse move message for the next window */

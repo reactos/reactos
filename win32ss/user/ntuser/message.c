@@ -1442,6 +1442,7 @@ UserPostMessage( HWND Wnd,
     return TRUE;
 }
 
+// Win: xxxSendMessage(PWND, Msg, wParam, lParam)
 LRESULT FASTCALL
 co_IntSendMessage( HWND hWnd,
                    UINT Msg,
@@ -1727,6 +1728,9 @@ co_IntSendMessageNoWait(HWND hWnd,
    message parameters cannot include pointers. Otherwise, the operation will fail.
    The functions will return before the receiving thread has had a chance to
    process the message and the sender will free the memory before it is used.
+
+   Win: xxxSendMessageCallback(PWND, Msg, wParam, lParam,
+                               CompletionCallback, CompletionCallbackContext, uResult)
 */
 LRESULT FASTCALL
 co_IntSendMessageWithCallBack( HWND hWnd,
