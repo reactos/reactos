@@ -1911,7 +1911,7 @@ BOOL FASTCALL IntWantImeWindow(PWND pwndTarget)
     if (!rpwinstaParent || (rpwinstaParent->Flags & WSS_NOIO))
         return FALSE;
 
-    for (pwndNode = pwndParent; pwndParent; pwndNode = pwndNode->spwndParent)
+    for (pwndNode = pwndParent; pwndNode; pwndNode = pwndNode->spwndParent)
     {
         if (rpdesk != pwndNode->head.rpdesk)
             break;
