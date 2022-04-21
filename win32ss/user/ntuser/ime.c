@@ -1903,7 +1903,7 @@ BOOL FASTCALL IntWantImeWindow(PWND pwndTarget)
     if (IS_WND_IMELIKE(pwndTarget))
         return FALSE;
 
-    if (pwndTarget->fnid == FNID_MESSAGEWND)
+    if (pwndTarget->fnid == FNID_DESKTOP || pwndTarget->fnid == FNID_MESSAGEWND)
         return FALSE;
 
     if (pwndTarget->state & WNDS_SERVERSIDEWINDOWPROC)
