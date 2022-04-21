@@ -1900,10 +1900,13 @@ BOOL FASTCALL IntWantImeWindow(PWND pwndTarget)
     if (gptiCurrent->TIF_flags & TIF_DISABLEIME)
         return FALSE;
 
-    if (pwndTarget->state & WNDS_SERVERSIDEWINDOWPROC)
+    if (IS_WND_IMELIKE(pwndTarget))
         return FALSE;
 
-    if (pwndTarget->fnid == FNID_DESKTOP || pwndTarget->fnid == FNID_MESSAGEWND)
+    if (pwndTarget->fnid == FNID_MESSAGEWND)
+        return FALSE;
+
+    if (pwndTarget->state & WNDS_SERVERSIDEWINDOWPROC)
         return FALSE;
 
     rpdesk = pwndTarget->head.rpdesk;

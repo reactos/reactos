@@ -1249,6 +1249,7 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
+// Win: ImmDllInitialize
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
     HKL hKL;
