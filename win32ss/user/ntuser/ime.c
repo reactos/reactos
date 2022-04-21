@@ -1903,6 +1903,9 @@ BOOL FASTCALL IntWantImeWindow(PWND pwndTarget)
     if (pwndTarget->state & WNDS_SERVERSIDEWINDOWPROC)
         return FALSE;
 
+    if (pwndTarget->fnid == FNID_DESKTOP || pwndTarget->fnid == FNID_MESSAGEWND)
+        return FALSE;
+
     rpdesk = pwndTarget->head.rpdesk;
     if (!rpdesk)
         return FALSE;
