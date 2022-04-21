@@ -660,10 +660,15 @@ LRESULT co_UserFreeWindow(PWND Window,
          ThreadData->rpdesk->rpwinstaParent->ShellListView = NULL;
    }
 
+   if (ThreadData->spwndDefaultIme &&
+       ThreadData->spwndDefaultIme->spwndOwner == Window)
+   {
+       ThreadData->spwndDefaultIme->spwndOwner = NULL;
+   }
+
    if (IS_IMM_MODE() && Window == ThreadData->spwndDefaultIme)
    {
       ERR("spwndDefaultIme:%p\n", ThreadData->spwndDefaultIme);
-      ThreadData->spwndDefaultIme->spwndOwner = NULL;
       UserAssignmentUnlock((PVOID*)&(ThreadData->spwndDefaultIme));
    }
 
@@ -2897,7 +2902,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    }
 
    /* Adjust last active */
-   if (Window != ti->spwndDefaultIme && (pwndTemp = Window->spwndOwner))
+   if ((pwndTemp = Window->spwndOwner))
    {
       while (pwndTemp->spwndOwner)
          pwndTemp = pwndTemp->spwndOwner;
