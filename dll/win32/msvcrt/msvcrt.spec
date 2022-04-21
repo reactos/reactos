@@ -1197,10 +1197,10 @@
 @ cdecl _wexecvpe(wstr ptr ptr)
 @ cdecl _wfdopen(long wstr)
 @ cdecl _wfindfirst(wstr ptr)
-# stub _wfindfirst64
+@ cdecl _wfindfirst64(wstr ptr)
 @ cdecl _wfindfirsti64(wstr ptr)
 @ cdecl _wfindnext(long ptr)
-# stub _wfindnext64
+@ cdecl _wfindnext64(long ptr)
 @ cdecl _wfindnexti64(long ptr)
 @ cdecl _wfopen(wstr wstr)
 @ cdecl -version=0x600+ _wfopen_s(ptr wstr wstr)
