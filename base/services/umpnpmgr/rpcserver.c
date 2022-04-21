@@ -3009,6 +3009,10 @@ GenerateDeviceID(
     DWORD dwError = ERROR_SUCCESS;
     CONFIGRET ret = CR_SUCCESS;
 
+    /* Fail, if the device name contains backslashes */
+    if (wcschr(pszDeviceID, L'\\') != NULL)
+        return CR_INVALID_DEVICE_ID;
+
     /* Generated ID is: Root\<Device ID>\<Instance number> */
     dwInstanceNumber = 0;
     while (dwError == ERROR_SUCCESS)
