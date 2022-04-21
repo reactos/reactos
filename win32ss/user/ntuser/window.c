@@ -578,6 +578,8 @@ LRESULT co_UserFreeWindow(PWND Window,
 
    ASSERT(Window);
 
+   ERR("Window:%p, spwndDefaultIme:%p\n", Window, ThreadData->spwndDefaultIme);
+
    if(Window->state2 & WNDS2_INDESTROY)
    {
       TRACE("Tried to call co_UserFreeWindow() twice\n");
@@ -659,7 +661,10 @@ LRESULT co_UserFreeWindow(PWND Window,
    }
 
    if (IS_IMM_MODE() && Window == ThreadData->spwndDefaultIme)
+   {
+      ERR("spwndDefaultIme:%p\n", ThreadData->spwndDefaultIme);
       UserAssignmentUnlock((PVOID*)&(ThreadData->spwndDefaultIme));
+   }
 
    /* Fixes dialog test_focus breakage due to r66237. */
    if (ThreadData->MessageQueue->spwndFocus == Window)
@@ -2031,6 +2036,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    if (IS_IMM_MODE() && !(pti->spwndDefaultIme) && IntWantImeWindow(pWnd))
    {
       PWND pwndDefaultIme = co_IntCreateDefaultImeWindow(pWnd, pWnd->hModule);
+      ERR("pwndDefaultIme: %p\n", pwndDefaultIme);
       UserAssignmentLock((PVOID*)&(pti->spwndDefaultIme), pwndDefaultIme);
 
       if (pwndDefaultIme && (pti->pClientInfo->CI_flags & CI_IMMACTIVATE))
@@ -2840,6 +2846,8 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
        }
    }
 
+   ERR("ti:%p, Window:%p, spwndDefaultIme:%p\n", ti, Window, ti->spwndDefaultIme);
+
    /* If window was created successfully and it is hooked */
    if ((Window->state2 & WNDS2_WMCREATEMSGPROCESSED))
    {
@@ -2960,6 +2968,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    if (IS_IMM_MODE() && !(ti->TIF_flags & TIF_INCLEANUP) &&
        ti->spwndDefaultIme && !IS_WND_IMELIKE(Window) && !(Window->state & WNDS_DESTROYED))
    {
+       ERR("ti->spwndDefaultIme:%p\n", ti->spwndDefaultIme);
        if (IS_WND_CHILD(Window))
        {
            if (IntImeCanDestroyDefIMEforChild(ti->spwndDefaultIme, Window))

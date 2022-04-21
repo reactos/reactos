@@ -59,6 +59,7 @@ static void Test1(void)
     }
     ImmUnlockIMC(hNewIMC);
     SetFocus(hwndEdit);
+    DebugBreak();
     pIC = ImmLockIMC(hIMC);
     ok(pIC != NULL, "ImmLockIMC failed\n");
     if (pIC != NULL)

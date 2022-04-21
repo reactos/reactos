@@ -825,12 +825,21 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
 
     pClientImc = ImmLockClientImc(hIMC);
     if (!pClientImc)
+    {
+        ERR("!pClientImc\n");
         return NULL;
+    }
 
     RtlEnterCriticalSection(&pClientImc->cs);
 
     if (pClientImc->hInputContext)
-        goto Finish;
+    {
+        pIC = LocalLock(pClientImc->hInputContext);
+        if (pIC)
+            goto Finish;
+        else
+            goto Quit;
+    }
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
     if (dwThreadId == GetCurrentThreadId() && Imm32IsCiceroMode() && !Imm32Is16BitMode())
@@ -847,13 +856,17 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     }
 
     if (!NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME))
+    {
+        ERR("!QIC_DEFAULTWINDOWIME\n");
         goto Quit;
+    }
 
     hIC = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
     pIC = LocalLock(hIC);
     if (!pIC)
     {
         LocalFree(hIC);
+        ERR("!pIC\n");
         goto Quit;
     }
     pClientImc->hInputContext = hIC;
@@ -862,10 +875,12 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     if (!Imm32CreateInputContext(hIMC, pIC, pClientImc, hNewKL, fSelect))
     {
         pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
+        ERR("!Imm32CreateInputContext\n");
         goto Quit;
     }
 
 Finish:
+    ERR("Finish\n");
     CtfImmTIMCreateInputContext(hIMC);
     RtlLeaveCriticalSection(&pClientImc->cs);
     InterlockedIncrement(&pClientImc->cLockObj);
@@ -1017,6 +1032,7 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
 {
     TRACE("(%p)\n", hIMC);
+    ERR("ImmLockIMC\n");
     return Imm32InternalLockIMC(hIMC, TRUE);
 }
 
