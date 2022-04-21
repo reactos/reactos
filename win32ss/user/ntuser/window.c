@@ -578,8 +578,6 @@ LRESULT co_UserFreeWindow(PWND Window,
 
    ASSERT(Window);
 
-   ERR("Window:%p, spwndDefaultIme:%p\n", Window, ThreadData->spwndDefaultIme);
-
    if(Window->state2 & WNDS2_INDESTROY)
    {
       TRACE("Tried to call co_UserFreeWindow() twice\n");
@@ -663,12 +661,11 @@ LRESULT co_UserFreeWindow(PWND Window,
    if (ThreadData->spwndDefaultIme &&
        ThreadData->spwndDefaultIme->spwndOwner == Window)
    {
-       ThreadData->spwndDefaultIme->spwndOwner = NULL;
+      ThreadData->spwndDefaultIme->spwndOwner = NULL;
    }
 
    if (IS_IMM_MODE() && Window == ThreadData->spwndDefaultIme)
    {
-      ERR("spwndDefaultIme:%p\n", ThreadData->spwndDefaultIme);
       UserAssignmentUnlock((PVOID*)&(ThreadData->spwndDefaultIme));
    }
 
@@ -2042,7 +2039,6 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    if (IS_IMM_MODE() && !(pti->spwndDefaultIme) && IntWantImeWindow(pWnd))
    {
       PWND pwndDefaultIme = co_IntCreateDefaultImeWindow(pWnd, pWnd->hModule);
-      ERR("pwndDefaultIme: %p\n", pwndDefaultIme);
       UserAssignmentLock((PVOID*)&(pti->spwndDefaultIme), pwndDefaultIme);
 
       if (pwndDefaultIme && (pti->pClientInfo->CI_flags & CI_IMMACTIVATE))
@@ -2851,8 +2847,6 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
            return FALSE;
        }
    }
-
-   ERR("ti:%p, Window:%p, spwndDefaultIme:%p\n", ti, Window, ti->spwndDefaultIme);
 
    /* If window was created successfully and it is hooked */
    if ((Window->state2 & WNDS2_WMCREATEMSGPROCESSED))
