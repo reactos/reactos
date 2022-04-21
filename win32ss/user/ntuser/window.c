@@ -2971,16 +2971,12 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
        if (IS_WND_CHILD(Window))
        {
            if (IntImeCanDestroyDefIMEforChild(ti->spwndDefaultIme, Window))
-           {
                co_UserDestroyWindow(ti->spwndDefaultIme);
-           }
        }
        else
        {
            if (IntImeCanDestroyDefIME(ti->spwndDefaultIme, Window))
-           {
                co_UserDestroyWindow(ti->spwndDefaultIme);
-           }
        }
    }
 

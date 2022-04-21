@@ -148,14 +148,22 @@ co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd, BOOL Clear)
 // Win: xxxFocusSetInputContext
 VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
 {
-    PTHREADINFO pti = pWnd->head.pti;
-    PWND pImeWnd = pti->spwndDefaultIme;
+    PTHREADINFO pti;
+    PWND pImeWnd;
     USER_REFERENCE_ENTRY Ref;
     HWND hImeWnd;
     WPARAM wParam;
     LPARAM lParam;
 
-    if (IS_WND_IMELIKE(pWnd) || !pImeWnd || (pti->TIF_flags & TIF_INCLEANUP))
+    if (!pWnd || !pWnd->pcls || IS_WND_IMELIKE(pWnd))
+        return;
+
+    pti = pWnd->head.pti;
+    if (!pti || (pti->TIF_flags & TIF_INCLEANUP))
+        return;
+
+    pImeWnd = pti->spwndDefaultIme;
+    if (!pImeWnd)
         return;
 
     UserRefObjectCo(pImeWnd, &Ref);
@@ -165,7 +173,7 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
     lParam = (LPARAM)UserHMGetHandle(pWnd);
 
     if (bCallback)
-        co_IntSendMessageWithCallBack(hImeWnd, WM_IME_SYSTEM, wParam, lParam, NULL, 1, 0);
+        co_IntSendMessageWithCallBack(hImeWnd, WM_IME_SYSTEM, wParam, lParam, NULL, 1, NULL);
     else
         co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, wParam, lParam);
 
