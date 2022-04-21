@@ -2968,7 +2968,6 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    if (IS_IMM_MODE() && !(ti->TIF_flags & TIF_INCLEANUP) &&
        ti->spwndDefaultIme && !IS_WND_IMELIKE(Window) && !(Window->state & WNDS_DESTROYED))
    {
-       ERR("ti->spwndDefaultIme:%p\n", ti->spwndDefaultIme);
        if (IS_WND_CHILD(Window))
        {
            if (IntImeCanDestroyDefIMEforChild(ti->spwndDefaultIme, Window))
