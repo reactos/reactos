@@ -189,8 +189,23 @@ data32 MACRO opcode:VARARG
     opcode
 ENDM
 
-UNIMPLEMENTED MACRO name
+UNIMPLEMENTED2 MACRO file, line, func
+    jmp UNIMPLEMENTED2_IMPL
+UNIMPLEMENTED_MSG: .ascii "WARNING:  %s at %s:%d is UNIMPLEMENTED!", 10, 0
+UNIMPLEMENTED_FUNC: .ascii "&func&", 0
+UNIMPLEMENTED_FILE: .ascii file, 0
+EXTERN DbgPrint:PROC
+UNIMPLEMENTED2_IMPL:
+    sub rsp, 28h
+    mov r9, line
+    lea r8, UNIMPLEMENTED_FILE
+    lea rdx, UNIMPLEMENTED_FUNC
+    lea rcx, UNIMPLEMENTED_MSG
+    call DbgPrint
+    add rsp, 28h
+    xor eax, eax
 ENDM
+#define UNIMPLEMENTED UNIMPLEMENTED2 __FILE__, __LINE__,
 
 absolute MACRO address
     __absolute__address__ = address
@@ -389,7 +404,7 @@ ENDM
 
 .macro UNIMPLEMENTED2 file, line, func
     jmp 4f
-1:  .ascii "Unimplemented", CR, LF, NUL
+1:  .ascii "Unimplemented %s (%s:%d)", CR, LF, NUL
 2:  .asciz "\func"
 3:  .asciz \file
 4:
