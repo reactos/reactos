@@ -663,6 +663,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    if (IS_IMM_MODE() && Window == ThreadData->spwndDefaultIme)
    {
       ERR("spwndDefaultIme:%p\n", ThreadData->spwndDefaultIme);
+      ThreadData->spwndDefaultIme->spwndOwner = NULL;
       UserAssignmentUnlock((PVOID*)&(ThreadData->spwndDefaultIme));
    }
 
@@ -2896,7 +2897,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    }
 
    /* Adjust last active */
-   if ((pwndTemp = Window->spwndOwner))
+   if (Window != ti->spwndDefaultIme && (pwndTemp = Window->spwndOwner))
    {
       while (pwndTemp->spwndOwner)
          pwndTemp = pwndTemp->spwndOwner;
@@ -2972,12 +2973,16 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
        if (IS_WND_CHILD(Window))
        {
            if (IntImeCanDestroyDefIMEforChild(ti->spwndDefaultIme, Window))
+           {
                co_UserDestroyWindow(ti->spwndDefaultIme);
+           }
        }
        else
        {
            if (IntImeCanDestroyDefIME(ti->spwndDefaultIme, Window))
+           {
                co_UserDestroyWindow(ti->spwndDefaultIme);
+           }
        }
    }
 
