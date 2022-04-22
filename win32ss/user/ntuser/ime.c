@@ -1933,7 +1933,7 @@ BOOL FASTCALL IntWantImeWindow(PWND pwndTarget)
 // Win: xxxCreateDefaultImeWindow(pwndTarget, ATOM, hInst)
 PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
 {
-    LARGE_STRING WindowName;
+    LARGE_UNICODE_STRING WindowName;
     UNICODE_STRING ClassName = { 0, 0, (PWCH)(ULONG_PTR)gpsi->atomSysClass[ICLS_IME] };
     PWND pImeWnd;
     PIMEUI pimeui;
@@ -1961,9 +1961,10 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
     Cs.hInstance = hInst;
     Cs.hwndParent = UserHMGetHandle(pwndTarget);
 
-    RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&WindowName, L"Default IME", 0);
+    RtlInitLargeUnicodeString(&WindowName, L"Default IME", 0);
 
-    pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL, WINVER);
+    // NOTE: LARGE_UNICODE_STRING is compatible to LARGE_STRING.
+    pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, (PLARGE_STRING)&WindowName, NULL, WINVER);
     if (pImeWnd)
     {
         pimeui = ((PIMEWND)pImeWnd)->pimeui;
