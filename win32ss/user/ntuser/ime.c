@@ -1889,7 +1889,7 @@ BOOL IntFindNonImeRelatedWndOfSameThread(PWND pwndParent, PWND pwndTarget)
     return FALSE;
 }
 
-// The target window needs the IME window?
+// Determines whether the target window needs the IME window.
 // Win: WantImeWindow(pwndParent, pwndTarget)
 BOOL FASTCALL IntWantImeWindow(PWND pwndTarget)
 {
