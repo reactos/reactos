@@ -1965,8 +1965,6 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
     RtlZeroMemory(&Cs, sizeof(Cs));
     Cs.style = WS_POPUP | WS_DISABLED;
     Cs.hInstance = hInst;
-    Cs.lpszName = (LPCWSTR)&WindowName;
-    Cs.lpszClass = (LPCWSTR)&ClassName;
     Cs.hwndParent = UserHMGetHandle(pwndTarget);
 
     pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL, WINVER);
