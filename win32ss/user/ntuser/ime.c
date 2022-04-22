@@ -1986,7 +1986,7 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
     return pImeWnd;
 }
 
-// Can we destroy the default IME window for the target child window?
+// Determines whether the system can destroy the default IME window for the target child window.
 // Win: ImeCanDestroyDefIMEforChild
 BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
 {
@@ -2031,8 +2031,7 @@ BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
     return TRUE;
 }
 
-// Can we destroy the default IME window for the non-child target window?
-// If so, this function sets spwndOwner to NULL.
+// Determines whether the system can destroy the default IME window for the non-child target window.
 // Win: ImeCanDestroyDefIME
 BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
 {
