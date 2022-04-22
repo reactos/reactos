@@ -174,7 +174,7 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
     lParam = (LPARAM)UserHMGetHandle(pWnd);
 
     if (bCallback)
-        co_IntSendMessageWithCallBack(hImeWnd, WM_IME_SYSTEM, wParam, lParam, NULL, 1, NULL);
+        co_IntSendMessageWithCallBack(hImeWnd, WM_IME_SYSTEM, wParam, lParam, NULL, 0, NULL);
     else
         co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, wParam, lParam);
 
