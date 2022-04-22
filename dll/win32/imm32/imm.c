@@ -830,7 +830,13 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     RtlEnterCriticalSection(&pClientImc->cs);
 
     if (pClientImc->hInputContext)
-        goto Finish;
+    {
+        pIC = LocalLock(pClientImc->hInputContext);
+        if (pIC)
+            goto Success;
+        else
+            goto Failure;
+    }
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
     if (dwThreadId == GetCurrentThreadId() && Imm32IsCiceroMode() && !Imm32Is16BitMode())
@@ -847,14 +853,14 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     }
 
     if (!NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME))
-        goto Quit;
+        goto Failure;
 
     hIC = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
     pIC = LocalLock(hIC);
     if (!pIC)
     {
         LocalFree(hIC);
-        goto Quit;
+        goto Failure;
     }
     pClientImc->hInputContext = hIC;
 
@@ -862,17 +868,17 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     if (!Imm32CreateInputContext(hIMC, pIC, pClientImc, hNewKL, fSelect))
     {
         pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
-        goto Quit;
+        goto Failure;
     }
 
-Finish:
+Success:
     CtfImmTIMCreateInputContext(hIMC);
     RtlLeaveCriticalSection(&pClientImc->cs);
     InterlockedIncrement(&pClientImc->cLockObj);
     ImmUnlockClientImc(pClientImc);
     return pIC;
 
-Quit:
+Failure:
     RtlLeaveCriticalSection(&pClientImc->cs);
     ImmUnlockClientImc(pClientImc);
     return NULL;
@@ -1243,6 +1249,7 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
+// Win: ImmDllInitialize
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
     HKL hKL;
