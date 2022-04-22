@@ -207,19 +207,12 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 LPVOID FASTCALL ValidateHandle(HANDLE hObject, UINT uType)
 {
     LPVOID pvObj = ValidateHandleNoErr(hObject, uType);
-    if (pvObj == NULL)
+    if (!pvObj)
     {
-        switch (uType)
-        {
-            case TYPE_WINDOW:
-                SetLastError(ERROR_INVALID_WINDOW_HANDLE);
-                break;
-
-            case TYPE_INPUTCONTEXT:
-            default:
-                SetLastError(ERROR_INVALID_HANDLE);
-                break;
-        }
+        if (uType == TYPE_WINDOW)
+            SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+        else
+            SetLastError(ERROR_INVALID_HANDLE);
     }
     return pvObj;
 }
