@@ -1977,7 +1977,7 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ;
+            NOTHING;
         }
         _SEH2_END;
     }
