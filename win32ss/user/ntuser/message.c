@@ -1442,7 +1442,6 @@ UserPostMessage( HWND Wnd,
     return TRUE;
 }
 
-// Win: xxxSendMessage(PWND, Msg, wParam, lParam)
 LRESULT FASTCALL
 co_IntSendMessage( HWND hWnd,
                    UINT Msg,
