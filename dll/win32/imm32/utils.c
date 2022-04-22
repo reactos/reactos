@@ -167,7 +167,7 @@ static PVOID FASTCALL DesktopPtrToUser(PVOID ptr)
         return (PVOID)NtUserCallOneParam((DWORD_PTR)ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING);
 }
 
-// Win: HMValidateHandle
+// Win: HMValidateHandleNoRip
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 {
     UINT index;
@@ -203,14 +203,25 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
     return ptr;
 }
 
-PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
+// Win: HMValidateHandle
+LPVOID FASTCALL ValidateHandle(HANDLE hObject, UINT uType)
 {
-    /* See if the window is cached */
-    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
-    if (hwnd == ClientInfo->CallbackWnd.hWnd)
-        return ClientInfo->CallbackWnd.pWnd;
+    LPVOID pvObj = ValidateHandleNoErr(hObject, uType);
+    if (pvObj == NULL)
+    {
+        switch (uType)
+        {
+            case TYPE_WINDOW:
+                SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+                break;
 
-    return ValidateHandleNoErr(hwnd, TYPE_WINDOW);
+            case TYPE_INPUTCONTEXT:
+            default:
+                SetLastError(ERROR_INVALID_HANDLE);
+                break;
+        }
+    }
+    return pvObj;
 }
 
 // Win: TestInputContextProcess
