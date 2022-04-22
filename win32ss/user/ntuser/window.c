@@ -8,6 +8,7 @@
  */
 
 #include <win32k.h>
+#include <ddk/immdev.h>
 DBG_DEFAULT_CHANNEL(UserWnd);
 
 INT gNestedWindowLimit = 50;
@@ -2049,7 +2050,8 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
          UserRefObjectCo(pwndDefaultIme, &Ref);
 
          hKL = pti->KeyboardLayout->hkl;
-         co_IntSendMessage(UserHMGetHandle(pwndDefaultIme), WM_IME_SYSTEM, 0x19, (LPARAM)hKL);
+         co_IntSendMessage(UserHMGetHandle(pwndDefaultIme), WM_IME_SYSTEM,
+                           IMS_ACTIVATELAYOUT, (LPARAM)hKL);
          pti->pClientInfo->CI_flags &= ~CI_IMMACTIVATE;
 
          UserDerefObjectCo(pwndDefaultIme);
@@ -2162,8 +2164,6 @@ Error:
 
 /*
  * @implemented
- * Win: xxxCreateWindowEx(Cs->dwExStyle, ***, ClassName, WindowName, Cs->style,
- *                        Cs->x, Cs->y, Cs->cx, Cs->cy, Cs->hwndParent, ...)
  */
 PWND FASTCALL
 co_UserCreateWindowEx(CREATESTRUCTW* Cs,
