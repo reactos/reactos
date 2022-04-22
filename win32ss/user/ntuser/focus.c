@@ -7,6 +7,7 @@
  */
 
 #include <win32k.h>
+#include <ddk/immdev.h>
 DBG_DEFAULT_CHANNEL(UserFocus);
 
 PUSER_MESSAGE_QUEUE gpqForeground = NULL;
@@ -169,7 +170,7 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
     UserRefObjectCo(pImeWnd, &Ref);
 
     hImeWnd = UserHMGetHandle(pImeWnd);
-    wParam = (bActivate ? 0x17 : 0x18);
+    wParam = (bActivate ? IMS_ACTIVATE : IMS_DEACTIVATE);
     lParam = (LPARAM)UserHMGetHandle(pWnd);
 
     if (bCallback)

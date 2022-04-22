@@ -664,11 +664,11 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             // TODO:
             break;
 
-        case 0x17:
+        case IMS_ACTIVATE:
             User32SetImeActivenessOfWindow((HWND)lParam, TRUE);
             break;
 
-        case 0x18:
+        case IMS_DEACTIVATE:
             User32SetImeActivenessOfWindow((HWND)lParam, FALSE);
             break;
 
