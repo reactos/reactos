@@ -833,9 +833,9 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     {
         pIC = LocalLock(pClientImc->hInputContext);
         if (pIC)
-            goto Finish;
+            goto Success;
         else
-            goto Quit;
+            goto Failure;
     }
 
     dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
@@ -853,14 +853,14 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     }
 
     if (!NtUserQueryInputContext(hIMC, QIC_DEFAULTWINDOWIME))
-        goto Quit;
+        goto Failure;
 
     hIC = LocalAlloc(LHND, sizeof(INPUTCONTEXTDX));
     pIC = LocalLock(hIC);
     if (!pIC)
     {
         LocalFree(hIC);
-        goto Quit;
+        goto Failure;
     }
     pClientImc->hInputContext = hIC;
 
@@ -868,17 +868,17 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     if (!Imm32CreateInputContext(hIMC, pIC, pClientImc, hNewKL, fSelect))
     {
         pClientImc->hInputContext = LocalFree(pClientImc->hInputContext);
-        goto Quit;
+        goto Failure;
     }
 
-Finish:
+Success:
     CtfImmTIMCreateInputContext(hIMC);
     RtlLeaveCriticalSection(&pClientImc->cs);
     InterlockedIncrement(&pClientImc->cLockObj);
     ImmUnlockClientImc(pClientImc);
     return pIC;
 
-Quit:
+Failure:
     RtlLeaveCriticalSection(&pClientImc->cs);
     ImmUnlockClientImc(pClientImc);
     return NULL;
