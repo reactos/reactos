@@ -170,7 +170,7 @@ VOID IntFocusSetInputContext(PWND pWnd, BOOL bActivate, BOOL bCallback)
     UserRefObjectCo(pImeWnd, &Ref);
 
     hImeWnd = UserHMGetHandle(pImeWnd);
-    wParam = (bActivate ? IMS_ACTIVATE : IMS_DEACTIVATE);
+    wParam = (bActivate ? IMS_IMEACTIVATE : IMS_IMEDEACTIVATE);
     lParam = (LPARAM)UserHMGetHandle(pWnd);
 
     if (bCallback)

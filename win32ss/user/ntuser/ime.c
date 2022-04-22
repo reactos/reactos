@@ -1933,7 +1933,7 @@ BOOL FASTCALL IntWantImeWindow(PWND pwndTarget)
 // Win: xxxCreateDefaultImeWindow(pwndTarget, ATOM, hInst)
 PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
 {
-    LARGE_STRING WindowName;
+    LARGE_UNICODE_STRING WindowName;
     UNICODE_STRING ClassName;
     PWND pImeWnd;
     PIMEUI pimeui;
@@ -1958,7 +1958,7 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
     ClassName.Length = 0;
     ClassName.MaximumLength = 0;
 
-    RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&WindowName, L"Default IME", 0);
+    RtlInitLargeUnicodeString(&WindowName, L"Default IME", 0);
 
     UserRefObjectCo(pwndTarget, &Ref);
 
@@ -1969,7 +1969,7 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
     Cs.lpszClass = (LPCWSTR)&ClassName;
     Cs.hwndParent = UserHMGetHandle(pwndTarget);
 
-    pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL, WINVER);
+    pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, (PLARGE_STRING)&WindowName, NULL, WINVER);
     if (pImeWnd)
     {
         pimeui = ((PIMEWND)pImeWnd)->pimeui;
@@ -1982,7 +1982,7 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ;
+            NOTHING;
         }
         _SEH2_END;
     }
@@ -2013,7 +2013,7 @@ BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ;
+        NOTHING;
     }
     _SEH2_END;
 
@@ -2059,7 +2059,7 @@ BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ;
+        NOTHING;
     }
     _SEH2_END;
 
