@@ -1934,7 +1934,7 @@ BOOL FASTCALL IntWantImeWindow(PWND pwndTarget)
 PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
 {
     LARGE_STRING WindowName;
-    UNICODE_STRING ClassName;
+    UNICODE_STRING ClassName = { 0, 0, (PWCH)(ULONG_PTR)gpsi->atomSysClass[ICLS_IME] };
     PWND pImeWnd;
     PIMEUI pimeui;
     CREATESTRUCTW Cs;
@@ -1954,18 +1954,14 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
         return NULL;
     }
 
-    ClassName.Buffer = (LPWSTR)(ULONG_PTR)gpsi->atomSysClass[ICLS_IME];
-    ClassName.Length = 0;
-    ClassName.MaximumLength = 0;
-
-    RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&WindowName, L"Default IME", 0);
-
     UserRefObjectCo(pwndTarget, &Ref);
 
     RtlZeroMemory(&Cs, sizeof(Cs));
     Cs.style = WS_POPUP | WS_DISABLED;
     Cs.hInstance = hInst;
     Cs.hwndParent = UserHMGetHandle(pwndTarget);
+
+    RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&WindowName, L"Default IME", 0);
 
     pImeWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL, WINVER);
     if (pImeWnd)
