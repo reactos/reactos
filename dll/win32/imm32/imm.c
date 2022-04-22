@@ -509,7 +509,7 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
     if (!IS_IMM_MODE())
         return NULL;
 
-    pWnd = ValidateHwndNoErr(hWnd);
+    pWnd = ValidateHwnd(hWnd);
     if (!pWnd)
         return NULL;
 
@@ -555,7 +555,7 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
         return FALSE;
 
     hwndFocus = (HWND)NtUserQueryWindow(hWnd, QUERY_WINDOW_FOCUS);
-    pFocusWnd = ValidateHwndNoErr(hwndFocus);
+    pFocusWnd = ValidateHwnd(hwndFocus);
     if (pFocusWnd)
         hOldIMC = pFocusWnd->hImc;
 
@@ -566,7 +566,7 @@ BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
             return TRUE;
 
         case 1:
-            pFocusWnd = ValidateHwndNoErr(hwndFocus);
+            pFocusWnd = ValidateHwnd(hwndFocus);
             if (pFocusWnd)
             {
                 hIMC = pFocusWnd->hImc;
@@ -647,7 +647,7 @@ BOOL APIENTRY Imm32DestroyInputContext(HIMC hIMC, HKL hKL, BOOL bKeep)
     if (!hIMC || !IS_IMM_MODE())
         return FALSE;
 
-    pIMC = ValidateHandleNoErr(hIMC, TYPE_INPUTCONTEXT);
+    pIMC = ValidateHandle(hIMC, TYPE_INPUTCONTEXT);
     if (!pIMC || pIMC->head.pti != Imm32CurrentPti())
     {
         ERR("invalid pIMC: %p\n", pIMC);
@@ -916,7 +916,7 @@ PCLIENTIMC WINAPI ImmLockClientImc(HIMC hImc)
     if (!hImc)
         return NULL;
 
-    pIMC = ValidateHandleNoErr(hImc, TYPE_INPUTCONTEXT);
+    pIMC = ValidateHandle(hImc, TYPE_INPUTCONTEXT);
     if (!pIMC || !Imm32CheckImcProcess(pIMC))
         return NULL;
 
@@ -986,7 +986,7 @@ static HIMC APIENTRY ImmGetSaveContext(HWND hWnd, DWORD dwContextFlags)
         goto Quit;
     }
 
-    pWnd = ValidateHwndNoErr(hWnd);
+    pWnd = ValidateHwnd(hWnd);
     if (!pWnd || Imm32IsCrossProcessAccess(hWnd))
         return NULL;
 

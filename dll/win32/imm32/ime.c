@@ -1692,7 +1692,7 @@ BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 
     TRACE("(%p, %p, 0x%lX, %p)", hKL, hWnd, dwMode, lpData);
 
-    if (!ValidateHwndNoErr(hWnd) || Imm32IsCrossProcessAccess(hWnd))
+    if (!ValidateHwnd(hWnd) || Imm32IsCrossProcessAccess(hWnd))
         return FALSE;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
@@ -1746,7 +1746,7 @@ BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
 
     TRACE("(%p, %p, 0x%lX, %p)", hKL, hWnd, dwMode, lpData);
 
-    if (!ValidateHwndNoErr(hWnd) || Imm32IsCrossProcessAccess(hWnd))
+    if (!ValidateHwnd(hWnd) || Imm32IsCrossProcessAccess(hWnd))
         return FALSE;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
