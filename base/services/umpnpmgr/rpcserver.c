@@ -3097,6 +3097,13 @@ PNP_CreateDevInst(
     }
     else
     {
+        /* Fail, if the device exists and is present */
+        if ((hKey != NULL) && (IsPresentDeviceInstanceID(pszDeviceID)))
+        {
+            ret = CR_ALREADY_SUCH_DEVINST;
+            goto done;
+        }
+
         /* Create the device instance */
         ret = CreateDeviceInstance(pszDeviceID, FALSE);
     }
