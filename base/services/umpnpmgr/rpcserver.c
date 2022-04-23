@@ -3057,6 +3057,7 @@ PNP_CreateDevInst(
     DWORD ulFlags)
 {
     HKEY hKey = NULL;
+    DWORD dwSize, dwPhantom;
     CONFIGRET ret = CR_SUCCESS;
 
     DPRINT("PNP_CreateDevInst(%p %S %S %lu 0x%08lx)\n",
@@ -3104,8 +3105,26 @@ PNP_CreateDevInst(
             goto done;
         }
 
-        /* Create the device instance */
-        ret = CreateDeviceInstance(pszDeviceID, FALSE);
+        /* If it does not already exist ... */
+        if (hKey == NULL)
+        {
+            /* Create the device instance */
+            ret = CreateDeviceInstance(pszDeviceID, FALSE);
+
+            /* Open the device instance key */
+            RegOpenKeyEx(hEnumKey, pszDeviceID, 0, KEY_READ | KEY_WRITE, &hKey);
+        }
+
+        /* If the device instance is a phantom, turn it into an non-phantom */
+        if (hKey != NULL)
+        {
+            dwPhantom = 0;
+            dwSize = sizeof(DWORD);
+            RegQueryValueEx(hKey, L"Phantom", NULL, NULL, (PBYTE)&dwPhantom, &dwSize);
+
+            if (dwPhantom != 0)
+                RegDeleteValue(hKey, L"Phantom");
+        }
     }
 
 done:
