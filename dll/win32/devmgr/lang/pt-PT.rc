@@ -317,7 +317,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Abrir a caixa de diálogo Propriedade para a selecção actual."
+  IDS_HINT_PROPERTIES   " Abrir a caixa de diálogo ""Propriedades"" para a selecção actual."
   IDS_HINT_SCAN         " Verificar se há novos dispositivos plug and play."
   IDS_HINT_ENABLE       " Habilita o dispositivo seleccionado."
   IDS_HINT_DISABLE      " Desabilita o dispositivo seleccionado."

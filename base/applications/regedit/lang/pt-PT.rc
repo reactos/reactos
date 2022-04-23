@@ -178,7 +178,7 @@ BEGIN
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
              ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
-    PUSHBUTTON "Cancearl", IDCANCEL, 196, 154, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 196, 154, 50, 14
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
@@ -238,7 +238,7 @@ BEGIN
     LTEXT "Portas:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Dados específicos do despositivo:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "Dados específicos do dispositivo:", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
     GROUPBOX "Utilização", IDC_STATIC, 10, 219, 125, 39
@@ -248,7 +248,7 @@ BEGIN
     LTEXT "Exclusivo do controlador", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
     RTEXT "Tipo de Interface:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummero:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "Bus número:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
     RTEXT "Versão:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
@@ -291,10 +291,10 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Adiciona um novo valor texto."
     ID_EDIT_NEW_BINARYVALUE "Adiciona um novo valor binário."
     ID_EDIT_NEW_DWORDVALUE "Adiciona um novo valor DWORD."
-    ID_REGISTRY_IMPORTREGISTRYFILE "Importa um arquivo texto para o registo."
+    ID_REGISTRY_IMPORTREGISTRYFILE "Importa um ficheiro de texto para o registo."
     ID_REGISTRY_EXPORTREGISTRYFILE "Exporta todo ou parte do registo para um ficheiro de texto."
-    ID_REGISTRY_LOADHIVE "Carrega um arquivo de secção no registo"
-    ID_REGISTRY_UNLOADHIVE "Descarrega um arquivo de secção no registo"
+    ID_REGISTRY_LOADHIVE "Carrega um ficheiro de secção no registo"
+    ID_REGISTRY_UNLOADHIVE "Descarrega um ficheiro de secção no registo"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Liga a um registo num computador remoto."
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Desliga um registo de um computador remoto."
     ID_REGISTRY_PRINT "Imprime todo ou parte do registo."
@@ -312,7 +312,7 @@ BEGIN
     ID_VIEW_REFRESH "Actualiza a janela."
     ID_EDIT_DELETE "Exclui a seleccão."
     ID_EDIT_RENAME "Renomeia a seleccão."
-    ID_EDIT_COPYKEYNAME "Copia o nome da chave seleccionada para a Área de transferência."
+    ID_EDIT_COPYKEYNAME "Copia o nome da chave seleccionada para a área de transferência."
     ID_EDIT_FIND "Localiza um texto numa chave, valor ou dado."
     ID_EDIT_FINDNEXT "Localiza a próxima ocorrência do texto especificado na pesquisa anterior."
 END
