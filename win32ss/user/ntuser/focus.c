@@ -614,9 +614,10 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
 VOID FASTCALL
 IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
 {
-   PWND pWndPrev;
+   PWND pWndPrev, pRealWndPrev;
    PUSER_MESSAGE_QUEUE ThreadQueue = pti->MessageQueue; // Queue can change...
    HWND hwndPrev;
+   USER_REFERENCE_ENTRY Ref;
 
    ThreadQueue->QF_flags &= ~QF_FOCUSNULLSINCEACTIVE;
    if (!pWnd && ThreadQueue->spwndActive)
@@ -624,7 +625,13 @@ IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
       ThreadQueue->QF_flags |= QF_FOCUSNULLSINCEACTIVE;
    }
 
-   pWndPrev = ThreadQueue->spwndFocus;
+   pRealWndPrev = pWndPrev = ThreadQueue->spwndFocus;
+   if (pRealWndPrev)
+   {
+      UserRefObjectCo(pRealWndPrev, &Ref);
+      if (!ValidateHwndNoErr(UserHMGetHandle(pRealWndPrev)))
+         pWndPrev = NULL;
+   }
 
    /* check if the specified window can be set in the input data of a given queue */
    if (!pWnd || ThreadQueue == pWnd->head.pti->MessageQueue)
@@ -667,6 +674,9 @@ IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
          }
       }
    }
+
+   if (pRealWndPrev)
+      UserDerefObjectCo(pRealWndPrev);
 }
 
 BOOL FASTCALL
