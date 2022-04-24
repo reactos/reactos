@@ -3056,8 +3056,10 @@ PNP_CreateDevInst(
     PNP_RPC_STRING_LEN ulLength,
     DWORD ulFlags)
 {
+    PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ControlData;
     HKEY hKey = NULL;
     DWORD dwSize, dwPhantom;
+    NTSTATUS Status;
     CONFIGRET ret = CR_SUCCESS;
 
     DPRINT("PNP_CreateDevInst(%p %S %S %lu 0x%08lx)\n",
@@ -3115,7 +3117,18 @@ PNP_CreateDevInst(
             RegOpenKeyEx(hEnumKey, pszDeviceID, 0, KEY_READ | KEY_WRITE, &hKey);
         }
 
-        /* If the device instance is a phantom, turn it into an non-phantom */
+        /* Create a device node for the device */
+        RtlInitUnicodeString(&ControlData.DeviceInstance, pszDeviceID);
+        Status = NtPlugPlayControl(PlugPlayControlInitializeDevice,
+                                   &ControlData,
+                                   sizeof(ControlData));
+        if (!NT_SUCCESS(Status))
+        {
+            ret = CR_FAILURE;
+            goto done;
+        }
+
+        /* If the device is a phantom device, turn it into a normal device */
         if (hKey != NULL)
         {
             dwPhantom = 0;
