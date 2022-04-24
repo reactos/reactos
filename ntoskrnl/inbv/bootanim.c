@@ -602,8 +602,10 @@ DisplayBootBitmap(
 #endif
         }
 #else
+#ifdef INBV_ROTBAR_IMPLEMENTED
         /* Use default status bar */
         Bar = InbvGetResourceAddress(IDB_BAR_WKSTA);
+#endif
 #endif
 
         /* Make sure we have a logo */
