@@ -617,6 +617,7 @@ IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
    PWND pWndPrev;
    PUSER_MESSAGE_QUEUE ThreadQueue = pti->MessageQueue; // Queue can change...
    HWND hwndPrev;
+   USER_REFERENCE_ENTRY Ref;
 
    ThreadQueue->QF_flags &= ~QF_FOCUSNULLSINCEACTIVE;
    if (!pWnd && ThreadQueue->spwndActive)
@@ -625,6 +626,8 @@ IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
    }
 
    pWndPrev = ThreadQueue->spwndFocus;
+   if (pWndPrev)
+      UserRefObjectCo(pWndPrev, &Ref);
 
    /* check if the specified window can be set in the input data of a given queue */
    if (!pWnd || ThreadQueue == pWnd->head.pti->MessageQueue)
@@ -667,6 +670,9 @@ IntSendFocusMessages( PTHREADINFO pti, PWND pWnd)
          }
       }
    }
+
+   if (pWndPrev)
+      UserDerefObjectCo(pWndPrev);
 }
 
 BOOL FASTCALL
