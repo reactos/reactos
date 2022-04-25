@@ -104,7 +104,7 @@ License: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later.html)
 URL: http://www.citi.umich.edu/projects/nfsv4/windows/readme.html
 
 Title: Microsoft fastfat File System Driver
-Path: drivers/filesystems/fastfat_new
+Path: drivers/filesystems/fastfat
 Used Version: git commit 16022c5
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
 URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys/fastfat
