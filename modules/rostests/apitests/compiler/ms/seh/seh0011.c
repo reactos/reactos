@@ -6,7 +6,6 @@
 #include "seh.h"
 
 char test[] = "SEH0011.c";
-int perfect;
 
 void AccessViolation(PLONG BlackHole, PLONG BadAddress) {
   *BlackHole += *BadAddress;

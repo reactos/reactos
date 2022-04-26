@@ -24,6 +24,11 @@ extern "C" {
 #define IMC_GETSOFTKBDPOS               0x0013
 #define IMC_SETSOFTKBDPOS               0x0014
 
+/* wParam for WM_IME_SYSTEM */
+#define IMS_IMEACTIVATE         0x17
+#define IMS_IMEDEACTIVATE       0x18
+#define IMS_ACTIVATELAYOUT      0x19
+
 #define IMMGWL_IMC       0
 #define IMMGWL_PRIVATE   (sizeof(LONG))
 

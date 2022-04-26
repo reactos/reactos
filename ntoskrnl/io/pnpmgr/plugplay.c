@@ -186,6 +186,48 @@ IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
     return Status;
 }
 
+
+static
+NTSTATUS
+IopInitializeDevice(
+    _In_ PPLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ControlData)
+{
+    UNICODE_STRING DeviceInstance;
+    PDEVICE_OBJECT DeviceObject;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    DPRINT("IopInitializeDevice(%p)\n", ControlData);
+
+    Status = IopCaptureUnicodeString(&DeviceInstance, &ControlData->DeviceInstance);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    DPRINT("Device: %wZ\n", &DeviceInstance);
+
+    /* Leave, if the device already exists */
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
+    if (DeviceInstance.Buffer != NULL)
+    {
+        DPRINT("Device %wZ already exists!\n", &DeviceInstance);
+        Status = STATUS_SUCCESS;
+        goto done;
+    }
+
+    ObDereferenceObject(DeviceObject);
+
+    DPRINT("Device %wZ does not exist!\n", &DeviceInstance);
+
+    /* FIXME: Create a device node for the device instan*/
+
+done:
+    ExFreePool(DeviceInstance.Buffer);
+
+    return Status;
+}
+
+
 /*
  * Remove the current PnP event from the tail of the event queue
  * and signal IopPnpNotifyEvent if there is yet another event in the queue.
@@ -1308,7 +1350,11 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
 
 //        case PlugPlayControlRegisterNewDevice:
 //        case PlugPlayControlDeregisterDevice:
-//        case PlugPlayControlInitializeDevice:
+
+        case PlugPlayControlInitializeDevice:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return IopInitializeDevice((PPLUGPLAY_CONTROL_DEVICE_CONTROL_DATA)Buffer);
 
         case PlugPlayControlStartDevice:
         case PlugPlayControlResetDevice:

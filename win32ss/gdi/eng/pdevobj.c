@@ -139,7 +139,7 @@ PDEVOBJ_vRelease(
         {
             gppdevList = ppdev->ppdevNext;
         }
-        else
+        else if (gppdevList)
         {
             PPDEVOBJ ppdevCurrent = gppdevList;
             BOOL found = FALSE;
@@ -153,10 +153,6 @@ PDEVOBJ_vRelease(
             if (found)
                 ppdevCurrent->ppdevNext = ppdev->ppdevNext;
         }
-
-        /* Is this the primary one ? */
-        if (ppdev == gpmdev->ppdevGlobal)
-            gpmdev->ppdevGlobal = NULL;
 
         /* Unload display driver */
         EngUnloadImage(ppdev->pldev);

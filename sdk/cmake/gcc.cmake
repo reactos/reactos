@@ -39,7 +39,8 @@ if(STACK_PROTECTOR)
 endif()
 
 # Compiler Core
-add_compile_options(-pipe -fms-extensions -fno-strict-aliasing)
+# note: -fno-common is default since GCC 10
+add_compile_options(-pipe -fms-extensions -fno-strict-aliasing -fno-common)
 
 # Prevent GCC from searching any of the default directories.
 # The case for C++ is handled through the reactos_c++ INTERFACE library
@@ -54,7 +55,6 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-microsoft>")
     add_compile_options(-Wno-pragma-pack)
     add_compile_options(-fno-associative-math)
-    add_compile_options(-fcommon)
 
     if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0)
         # disable "libcall optimization"
