@@ -32,7 +32,7 @@ private:
 
 public:
     CDesktopThread();
-    virtual ~CDesktopThread();
+    ~CDesktopThread();
 
     HRESULT Initialize(ITrayWindow *pTray);
     void Destroy();
@@ -40,7 +40,7 @@ public:
 
 /*******************************************************************/
 
-CDesktopThread::CDesktopThread() :
+CDesktopThread::CDesktopThread():
     m_Tray(NULL),
     m_hInitEvent(NULL),
     m_hThread(NULL)
@@ -74,8 +74,8 @@ HRESULT CDesktopThread::Initialize(ITrayWindow *pTray)
     if (!m_hThread)
     {   
         CloseHandle(m_hInitEvent);
-
         m_hInitEvent = NULL;
+
         m_Tray = NULL;
 
         return E_FAIL;
@@ -99,10 +99,11 @@ HRESULT CDesktopThread::Initialize(ITrayWindow *pTray)
         else
         {
             CloseHandle(m_hThread);
-            CloseHandle(m_hInitEvent);
-
             m_hThread = NULL;
+
+            CloseHandle(m_hInitEvent);
             m_hInitEvent = NULL;
+
             m_Tray = NULL;
 
             return E_FAIL;
@@ -120,8 +121,8 @@ void CDesktopThread::Destroy()
         
         if (WaitResult == WAIT_TIMEOUT)
         {
-            /* Send WM_CLOSE message to the thread. */
-            PostThreadMessageW(GetThreadId(m_hThread), WM_CLOSE, 0, 0);
+            /* Send WM_QUIT message to the thread. */
+            PostThreadMessageW(GetThreadId(m_hThread), WM_QUIT, 0, 0);
             
             WaitForSingleObject(m_hThread, INFINITE);
         }
@@ -136,10 +137,7 @@ void CDesktopThread::Destroy()
         m_hInitEvent = NULL;
     }
 
-    if (m_Tray)
-    {
-        m_Tray = NULL;
-    }
+    m_Tray = NULL;
 }
 
 DWORD CDesktopThread::DesktopThreadProc()
