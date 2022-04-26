@@ -60,7 +60,7 @@ BEGIN
     IDS_LIST_PARTITION_NO_DISK "\n这里没有要列出分区的磁盘。\n请选择一个磁盘，再试一次。\n\n"
     IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
-    IDS_LIST_VOLUME_FORMAT "  Volume %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_FORMAT "  Volume %-3lu   %c   %-11.11s  %-5s  %10u  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
