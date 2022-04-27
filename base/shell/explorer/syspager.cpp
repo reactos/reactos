@@ -717,7 +717,7 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
     InternalIconData * notifyItem;
     WCHAR text[] = L"";
 
-    TRACE("Adding icon %d from hWnd %08x flags%s%s state%s%s",
+    TRACE("Adding icon %d from hWnd %08x flags%s%s state%s%s\n",
         iconData->uID, iconData->hWnd,
         (iconData->uFlags & NIF_ICON) ? " ICON" : "",
         (iconData->uFlags & NIF_STATE) ? " STATE" : "",
@@ -727,7 +727,7 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
     int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
     if (index >= 0)
     {
-        TRACE("Icon %d from hWnd %08x ALREADY EXISTS!", iconData->uID, iconData->hWnd);
+        TRACE("Icon %d from hWnd %08x ALREADY EXISTS!\n", iconData->uID, iconData->hWnd);
         return FALSE;
     }
 
@@ -764,7 +764,7 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
             if (iIcon < 0)
             {
                 notifyItem->hIcon = NULL;
-                TRACE("Shared icon requested, but HICON not found!!!");
+                TRACE("Shared icon requested, but HICON not found!!!\n");
             }
             tbBtn.iBitmap = iIcon;
         }
@@ -816,13 +816,13 @@ BOOL CNotifyToolbar::SwitchVersion(_In_ CONST NOTIFYICONDATA *iconData)
     int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
     if (index < 0)
     {
-        WARN("Icon %d from hWnd %08x DOES NOT EXIST!", iconData->uID, iconData->hWnd);
+        WARN("Icon %d from hWnd %08x DOES NOT EXIST!\n", iconData->uID, iconData->hWnd);
         return FALSE;
     }
 
     if (iconData->uVersion != 0 && iconData->uVersion != NOTIFYICON_VERSION)
     {
-        WARN("Tried to set the version of icon %d from hWnd %08x, to an unknown value %d. Vista+ program?", iconData->uID, iconData->hWnd, iconData->uVersion);
+        WARN("Tried to set the version of icon %d from hWnd %08x, to an unknown value %d. Vista+ program?\n", iconData->uID, iconData->hWnd, iconData->uVersion);
         return FALSE;
     }
 
@@ -901,7 +901,7 @@ BOOL CNotifyToolbar::UpdateButton(_In_ CONST NOTIFYICONDATA *iconData)
             }
             else
             {
-                TRACE("Shared icon requested, but HICON not found!!! IGNORING!");
+                TRACE("Shared icon requested, but HICON not found!!! IGNORING!\n");
             }
         }
         else
@@ -942,7 +942,7 @@ BOOL CNotifyToolbar::RemoveButton(_In_ CONST NOTIFYICONDATA *iconData)
 {
     InternalIconData * notifyItem;
 
-    TRACE("Removing icon %d from hWnd %08x", iconData->uID, iconData->hWnd);
+    TRACE("Removing icon %d from hWnd %08x\n", iconData->uID, iconData->hWnd);
 
     int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
     if (index < 0)
