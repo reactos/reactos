@@ -33,10 +33,6 @@ extern PDRIVER_OBJECT drvobj;
 BTRFS_UUID boot_uuid; // initialized to 0
 uint64_t boot_subvol = 0;
 
-#ifndef _MSC_VER
-NTSTATUS RtlUnicodeStringPrintf(PUNICODE_STRING DestinationString, const WCHAR* pszFormat, ...); // not in mingw
-#endif
-
 // Not in any headers? Windbg knows about it though.
 #define DOE_START_PENDING 0x10
 
@@ -244,6 +240,34 @@ static void get_system_root(system_root* sr) {
     ExFreePool(target.Buffer);
 }
 
+static void append_int_to_us(UNICODE_STRING* us, unsigned int n) {
+    unsigned int num, digits = 0;
+    WCHAR* ptr;
+
+    if (n == 0) {
+        us->Buffer[us->Length / sizeof(WCHAR)] = '0';
+        us->Length += sizeof(WCHAR);
+        return;
+    }
+
+    num = n;
+
+    while (num > 0) {
+        digits++;
+        num /= 10;
+    }
+
+    ptr = &us->Buffer[(us->Length / sizeof(WCHAR)) + digits - 1];
+
+    while (n > 0) {
+        *ptr = L'0' + (n % 10);
+        ptr--;
+        n /= 10;
+    }
+
+    us->Length += digits * sizeof(WCHAR);
+}
+
 static void change_symlink(uint32_t disk_num, uint32_t partition_num, BTRFS_UUID* uuid) {
     NTSTATUS Status;
     UNICODE_STRING us, us2;
@@ -252,15 +276,21 @@ static void change_symlink(uint32_t disk_num, uint32_t partition_num, BTRFS_UUID
     unsigned int i;
 #endif
 
+    static const WCHAR dev_path1[] = L"\\Device\\Harddisk";
+    static const WCHAR dev_path2[] = L"\\Partition";
+
     us.Buffer = symlink;
-    us.Length = 0;
+    us.Length = sizeof(dev_path1) - sizeof(WCHAR);
     us.MaximumLength = sizeof(symlink);
 
-    Status = RtlUnicodeStringPrintf(&us, L"\\Device\\Harddisk%u\\Partition%u", disk_num, partition_num);
-    if (!NT_SUCCESS(Status)) {
-        ERR("RtlUnicodeStringPrintf returned %08lx\n", Status);
-        return;
-    }
+    RtlCopyMemory(symlink, dev_path1, sizeof(dev_path1) - sizeof(WCHAR));
+
+    append_int_to_us(&us, disk_num);
+
+    RtlCopyMemory(&us.Buffer[us.Length / sizeof(WCHAR)], dev_path2, sizeof(dev_path2) - sizeof(WCHAR));
+    us.Length += sizeof(dev_path2) - sizeof(WCHAR);
+
+    append_int_to_us(&us, partition_num);
 
     Status = IoDeleteSymbolicLink(&us);
     if (!NT_SUCCESS(Status))

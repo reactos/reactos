@@ -19,6 +19,11 @@
 
 extern tFsRtlValidateReparsePointBuffer fFsRtlValidateReparsePointBuffer;
 
+typedef struct {
+    uint32_t unknown;
+    char name[1];
+} REPARSE_DATA_BUFFER_LX_SYMLINK;
+
 NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject, void* buffer, DWORD buflen, ULONG_PTR* retlen) {
     USHORT subnamelen, printnamelen, i;
     ULONG stringlen;
@@ -171,17 +176,18 @@ end:
     return Status;
 }
 
-static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, bool write, LIST_ENTRY* rollback) {
+static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, LIST_ENTRY* rollback) {
     NTSTATUS Status;
-    ULONG minlen;
     ULONG tlength;
-    UNICODE_STRING subname;
     ANSI_STRING target;
+    bool target_alloc = false;
     LARGE_INTEGER offset, time;
     BTRFS_TIME now;
-    USHORT i;
 
-    if (write) {
+    if (rdb->ReparseTag == IO_REPARSE_TAG_SYMLINK) {
+        UNICODE_STRING subname;
+        ULONG minlen, len;
+
         minlen = offsetof(REPARSE_DATA_BUFFER, SymbolicLinkReparseBuffer.PathBuffer) + sizeof(WCHAR);
         if (buflen < minlen) {
             WARN("buffer was less than minimum length (%lu < %lu)\n", buflen, minlen);
@@ -197,54 +203,81 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REP
         subname.MaximumLength = subname.Length = rdb->SymbolicLinkReparseBuffer.SubstituteNameLength;
 
         TRACE("substitute name = %.*S\n", (int)(subname.Length / sizeof(WCHAR)), subname.Buffer);
-    }
 
-    fcb->type = BTRFS_TYPE_SYMLINK;
-    fcb->inode_item.st_mode |= __S_IFLNK;
-    fcb->inode_item.generation = fcb->Vcb->superblock.generation; // so we don't confuse btrfs send on Linux
-
-    if (fileref && fileref->dc)
-        fileref->dc->type = fcb->type;
-
-    if (write) {
-        Status = truncate_file(fcb, 0, Irp, rollback);
-        if (!NT_SUCCESS(Status)) {
-            ERR("truncate_file returned %08lx\n", Status);
-            return Status;
-        }
-
-        Status = utf16_to_utf8(NULL, 0, (PULONG)&target.Length, subname.Buffer, subname.Length);
+        Status = utf16_to_utf8(NULL, 0, &len, subname.Buffer, subname.Length);
         if (!NT_SUCCESS(Status)) {
             ERR("utf16_to_utf8 1 failed with error %08lx\n", Status);
             return Status;
         }
 
-        target.MaximumLength = target.Length;
+        target.MaximumLength = target.Length = (USHORT)len;
         target.Buffer = ExAllocatePoolWithTag(PagedPool, target.MaximumLength, ALLOC_TAG);
         if (!target.Buffer) {
             ERR("out of memory\n");
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        Status = utf16_to_utf8(target.Buffer, target.Length, (PULONG)&target.Length, subname.Buffer, subname.Length);
+        target_alloc = true;
+
+        Status = utf16_to_utf8(target.Buffer, target.Length, &len, subname.Buffer, subname.Length);
         if (!NT_SUCCESS(Status)) {
             ERR("utf16_to_utf8 2 failed with error %08lx\n", Status);
             ExFreePool(target.Buffer);
             return Status;
         }
 
-        for (i = 0; i < target.MaximumLength; i++) {
+        for (USHORT i = 0; i < target.Length; i++) {
             if (target.Buffer[i] == '\\')
                 target.Buffer[i] = '/';
         }
+    } else if (rdb->ReparseTag == IO_REPARSE_TAG_LX_SYMLINK) {
+        REPARSE_DATA_BUFFER_LX_SYMLINK* buf;
 
-        offset.QuadPart = 0;
-        tlength = target.Length;
-        Status = write_file2(fcb->Vcb, Irp, offset, target.Buffer, &tlength, false, true,
-                             true, false, false, rollback);
+        if (buflen < offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) + rdb->ReparseDataLength) {
+            WARN("buffer was less than expected length (%lu < %u)\n", buflen,
+                 offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) + rdb->ReparseDataLength);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        buf = (REPARSE_DATA_BUFFER_LX_SYMLINK*)rdb->GenericReparseBuffer.DataBuffer;
+
+        if (buflen < offsetof(REPARSE_DATA_BUFFER_LX_SYMLINK, name)) {
+            WARN("buffer was less than minimum length (%u < %u)\n", rdb->ReparseDataLength, offsetof(REPARSE_DATA_BUFFER_LX_SYMLINK, name));
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        target.Buffer = buf->name;
+        target.Length = target.MaximumLength = rdb->ReparseDataLength - offsetof(REPARSE_DATA_BUFFER_LX_SYMLINK, name);
+    } else {
+        ERR("unexpected reparse tag %08lx\n", rdb->ReparseTag);
+        return STATUS_INTERNAL_ERROR;
+    }
+
+    fcb->type = BTRFS_TYPE_SYMLINK;
+    fcb->inode_item.st_mode &= ~__S_IFMT;
+    fcb->inode_item.st_mode |= __S_IFLNK;
+    fcb->inode_item.generation = fcb->Vcb->superblock.generation; // so we don't confuse btrfs send on Linux
+
+    if (fileref && fileref->dc)
+        fileref->dc->type = fcb->type;
+
+    Status = truncate_file(fcb, 0, Irp, rollback);
+    if (!NT_SUCCESS(Status)) {
+        ERR("truncate_file returned %08lx\n", Status);
+
+        if (target_alloc)
+            ExFreePool(target.Buffer);
+
+        return Status;
+    }
+
+    offset.QuadPart = 0;
+    tlength = target.Length;
+    Status = write_file2(fcb->Vcb, Irp, offset, target.Buffer, &tlength, false, true,
+                            true, false, false, rollback);
+
+    if (target_alloc)
         ExFreePool(target.Buffer);
-    } else
-        Status = STATUS_SUCCESS;
 
     KeQuerySystemTime(&time);
     win_time_to_unix(time, &now);
@@ -298,7 +331,7 @@ NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, cc
 
     if (fcb->type == BTRFS_TYPE_FILE &&
         ((tag == IO_REPARSE_TAG_SYMLINK && rdb->SymbolicLinkReparseBuffer.Flags & SYMLINK_FLAG_RELATIVE) || tag == IO_REPARSE_TAG_LX_SYMLINK)) {
-        Status = set_symlink(Irp, fileref, fcb, ccb, rdb, buflen, tag == IO_REPARSE_TAG_SYMLINK, rollback);
+        Status = set_symlink(Irp, fileref, fcb, ccb, rdb, buflen, rollback);
         fcb->atts |= FILE_ATTRIBUTE_REPARSE_POINT;
     } else {
         LARGE_INTEGER offset, time;
