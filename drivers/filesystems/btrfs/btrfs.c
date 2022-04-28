@@ -5923,7 +5923,7 @@ static void check_cpu() {
 
 #ifndef _MSC_VER
     {
-        uint32_t eax, ebx, ecx, edx, xcr0;
+        uint32_t eax, ebx, ecx, edx;
 
         __cpuid(1, eax, ebx, ecx, edx);
 
@@ -5935,10 +5935,17 @@ static void check_cpu() {
         if (__get_cpuid_count(7, 0, &eax, &ebx, &ecx, &edx))
             have_avx2 = ebx & bit_AVX2;
 
-        if (have_avx2) { // check if supported by OS
-            __asm__("xgetbv" : "=a" (xcr0) : "c" (0) : "edx" );
+        if (have_avx2) {
+            // check Windows has enabled AVX2 - Windows 10 doesn't immediately
 
-            if ((xcr0 & 6) != 6)
+            if (__readcr4() & (1 << 18)) {
+                uint32_t xcr0;
+
+                __asm__("xgetbv" : "=a" (xcr0) : "c" (0) : "edx" );
+
+                if ((xcr0 & 6) != 6)
+                    have_avx2 = false;
+            } else
                 have_avx2 = false;
         }
     }
@@ -5954,9 +5961,14 @@ static void check_cpu() {
         have_avx2 = cpu_info[1] & (1 << 5);
 
         if (have_avx2) {
-            uint32_t xcr0 = (uint32_t)_xgetbv(0);
+            // check Windows has enabled AVX2 - Windows 10 doesn't immediately
 
-            if ((xcr0 & 6) != 6)
+            if (__readcr4() & (1 << 18)) {
+                uint32_t xcr0 = (uint32_t)_xgetbv(0);
+
+                if ((xcr0 & 6) != 6)
+                    have_avx2 = false;
+            } else
                 have_avx2 = false;
         }
     }
