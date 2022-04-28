@@ -2326,7 +2326,7 @@ static NTSTATUS rename_file_to_stream(device_extension* Vcb, file_ref* fileref, 
 
     dc = ExAllocatePoolWithTag(PagedPool, sizeof(dir_child), ALLOC_TAG);
     if (!dc) {
-        ERR("short read\n");
+        ERR("out of memory\n");
         Status = STATUS_INSUFFICIENT_RESOURCES;;
         ExFreePool(utf8.Buffer);
         ExFreePool(utf16.Buffer);
@@ -2561,8 +2561,9 @@ static NTSTATUS set_rename_information(device_extension* Vcb, PIRP Irp, PFILE_OB
     } else {
         LONG i;
 
-        while (fnlen > 0 && (fri->FileName[fnlen - 1] == '/' || fri->FileName[fnlen - 1] == '\\'))
+        while (fnlen > 0 && (fri->FileName[fnlen - 1] == '/' || fri->FileName[fnlen - 1] == '\\')) {
             fnlen--;
+        }
 
         if (fnlen == 0)
             return STATUS_INVALID_PARAMETER;
@@ -2621,13 +2622,9 @@ static NTSTATUS set_rename_information(device_extension* Vcb, PIRP Irp, PFILE_OB
 
     TRACE("fnus = %.*S\n", (int)(fnus.Length / sizeof(WCHAR)), fnus.Buffer);
 
-    for (unsigned int i = 0 ; i < fnus.Length / sizeof(WCHAR); i++) {
-        if (fnus.Buffer[i] == ':') {
-            TRACE("colon in filename\n");
-            Status = STATUS_OBJECT_NAME_INVALID;
-            goto end;
-        }
-    }
+    Status = check_file_name_valid(&fnus, false, false);
+    if (!NT_SUCCESS(Status))
+        goto end;
 
     origutf8len = fileref->dc->utf8.Length;
 
@@ -3444,8 +3441,9 @@ static NTSTATUS set_link_information(device_extension* Vcb, PIRP Irp, PFILE_OBJE
         tfofcb = tfo->FsContext;
         parfcb = tfofcb;
 
-        while (fnlen > 0 && (fli->FileName[fnlen - 1] == '/' || fli->FileName[fnlen - 1] == '\\'))
+        while (fnlen > 0 && (fli->FileName[fnlen - 1] == '/' || fli->FileName[fnlen - 1] == '\\')) {
             fnlen--;
+        }
 
         if (fnlen == 0)
             return STATUS_INVALID_PARAMETER;
@@ -3484,6 +3482,10 @@ static NTSTATUS set_link_information(device_extension* Vcb, PIRP Irp, PFILE_OBJE
     fnus.Length = fnus.MaximumLength = (uint16_t)(fnlen * sizeof(WCHAR));
 
     TRACE("fnus = %.*S\n", (int)(fnus.Length / sizeof(WCHAR)), fnus.Buffer);
+
+    Status = check_file_name_valid(&fnus, false, false);
+    if (!NT_SUCCESS(Status))
+        goto end;
 
     Status = utf16_to_utf8(NULL, 0, &utf8len, fn, (ULONG)fnlen * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))

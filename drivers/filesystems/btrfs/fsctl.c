@@ -2874,7 +2874,7 @@ static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, KPROCESSOR_MODE proc
         return STATUS_INTERNAL_ERROR;
     }
 
-    volume_removal(drvobj, &pnp_name);
+    volume_removal(&pnp_name);
 
     ExAcquireResourceExclusiveLite(&Vcb->tree_lock, true);
 
