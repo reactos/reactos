@@ -566,7 +566,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
                 else
                     len = (ULONG)ed2->size;
 
-                len = len * sizeof(uint32_t) / Vcb->superblock.sector_size;
+                len = (len * sizeof(uint32_t)) >> Vcb->sector_shift;
 
                 ext2->csum = ExAllocatePoolWithTag(PagedPool, len, ALLOC_TAG);
                 if (!ext2->csum) {
@@ -1719,7 +1719,7 @@ static NTSTATUS rename_stream_to_file(device_extension* Vcb, file_ref* fileref, 
             }
 
             ExFreePool(ed);
-        } else if (adsdata.Length % Vcb->superblock.sector_size) {
+        } else if (adsdata.Length & (Vcb->superblock.sector_size - 1)) {
             char* newbuf = ExAllocatePoolWithTag(PagedPool, (uint16_t)sector_align(adsdata.Length, Vcb->superblock.sector_size), ALLOC_TAG);
             if (!newbuf) {
                 ERR("out of memory\n");

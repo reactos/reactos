@@ -48,11 +48,7 @@
 #undef INITGUID
 #endif
 
-#ifdef _MSC_VER
 #include <ntstrsafe.h>
-#else
-NTSTATUS RtlStringCbVPrintfA(char* pszDest, size_t cbDest, const char* pszFormat, va_list argList); // not in mingw
-#endif
 
 #define INCOMPAT_SUPPORTED (BTRFS_INCOMPAT_FLAGS_MIXED_BACKREF | BTRFS_INCOMPAT_FLAGS_DEFAULT_SUBVOL | BTRFS_INCOMPAT_FLAGS_MIXED_GROUPS | \
                             BTRFS_INCOMPAT_FLAGS_COMPRESS_LZO | BTRFS_INCOMPAT_FLAGS_BIG_METADATA | BTRFS_INCOMPAT_FLAGS_RAID56 | \
@@ -113,6 +109,7 @@ bool degraded_wait = true;
 KEVENT mountmgr_thread_event;
 bool shutting_down = false;
 ERESOURCE boot_lock;
+bool is_windows_8;
 extern uint64_t boot_subvol;
 
 #ifdef _DEBUG
@@ -597,9 +594,9 @@ static void calculate_total_space(_In_ device_extension* Vcb, _Out_ uint64_t* to
         dfactor = 1;
     }
 
-    sectors_used = (Vcb->superblock.bytes_used / Vcb->superblock.sector_size) * nfactor / dfactor;
+    sectors_used = (Vcb->superblock.bytes_used >> Vcb->sector_shift) * nfactor / dfactor;
 
-    *totalsize = (Vcb->superblock.total_bytes / Vcb->superblock.sector_size) * nfactor / dfactor;
+    *totalsize = (Vcb->superblock.total_bytes >> Vcb->sector_shift) * nfactor / dfactor;
     *freespace = sectors_used > *totalsize ? 0 : (*totalsize - sectors_used);
 }
 
@@ -1200,7 +1197,6 @@ NTSTATUS create_root(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) devi
                      _Out_ root** rootptr, _In_ bool no_tree, _In_ uint64_t offset, _In_opt_ PIRP Irp) {
     NTSTATUS Status;
     root* r;
-    tree* t = NULL;
     ROOT_ITEM* ri;
     traverse_ptr tp;
 
@@ -1217,28 +1213,9 @@ NTSTATUS create_root(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) devi
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if (!no_tree) {
-        t = ExAllocatePoolWithTag(PagedPool, sizeof(tree), ALLOC_TAG);
-        if (!t) {
-            ERR("out of memory\n");
-            ExFreePool(r->nonpaged);
-            ExFreePool(r);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        t->nonpaged = NULL;
-
-        t->is_unique = true;
-        t->uniqueness_determined = true;
-        t->buf = NULL;
-    }
-
     ri = ExAllocatePoolWithTag(PagedPool, sizeof(ROOT_ITEM), ALLOC_TAG);
     if (!ri) {
         ERR("out of memory\n");
-
-        if (t)
-            ExFreePool(t);
 
         ExFreePool(r->nonpaged);
         ExFreePool(r);
@@ -1248,7 +1225,7 @@ NTSTATUS create_root(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) devi
     r->id = id;
     r->treeholder.address = 0;
     r->treeholder.generation = Vcb->superblock.generation;
-    r->treeholder.tree = t;
+    r->treeholder.tree = NULL;
     r->lastinode = 0;
     r->dirty = false;
     r->received = false;
@@ -1272,10 +1249,6 @@ NTSTATUS create_root(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) devi
     if (!NT_SUCCESS(Status)) {
         ERR("insert_tree_item returned %08lx\n", Status);
         ExFreePool(ri);
-
-        if (t)
-            ExFreePool(t);
-
         ExFreePool(r->nonpaged);
         ExFreePool(r);
         return Status;
@@ -1286,6 +1259,26 @@ NTSTATUS create_root(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) devi
     InsertTailList(&Vcb->roots, &r->list_entry);
 
     if (!no_tree) {
+        tree* t = ExAllocatePoolWithTag(PagedPool, sizeof(tree), ALLOC_TAG);
+        if (!t) {
+            ERR("out of memory\n");
+
+            delete_tree_item(Vcb, &tp);
+
+            ExFreePool(r->nonpaged);
+            ExFreePool(r);
+            ExFreePool(ri);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        t->nonpaged = NULL;
+
+        t->is_unique = true;
+        t->uniqueness_determined = true;
+        t->buf = NULL;
+
+        r->treeholder.tree = t;
+
         RtlZeroMemory(&t->header, sizeof(tree_header));
         t->header.fs_uuid = tp.tree->header.fs_uuid;
         t->header.address = 0;
@@ -1493,7 +1486,9 @@ static void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_matc
 
     // no point looking for hardlinks if st_nlink == 1
     if (fileref->fcb->inode_item.st_nlink == 1) {
+        ExAcquireResourceExclusiveLite(&fcb->Vcb->fileref_lock, true);
         send_notification_fileref(fileref, filter_match, action, stream);
+        ExReleaseResourceLite(&fcb->Vcb->fileref_lock);
         return;
     }
 
@@ -2417,7 +2412,6 @@ static NTSTATUS __stdcall drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIR
     // messages belonging to other devices.
 
     if (FileObject && FileObject->FsContext) {
-        LONG oc;
         ccb* ccb;
         file_ref* fileref;
         bool locked = true;
@@ -2439,13 +2433,6 @@ static NTSTATUS __stdcall drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIR
         if (ccb)
             FsRtlNotifyCleanup(fcb->Vcb->NotifySync, &fcb->Vcb->DirNotifyList, ccb);
 
-        if (fileref) {
-            oc = InterlockedDecrement(&fileref->open_count);
-#ifdef DEBUG_FCB_REFCOUNTS
-            ERR("fileref %p: open_count now %i\n", fileref, oc);
-#endif
-        }
-
         if (ccb && ccb->options & FILE_DELETE_ON_CLOSE && fileref)
             fileref->delete_on_close = true;
 
@@ -2464,84 +2451,91 @@ static NTSTATUS __stdcall drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIR
             // FIXME - flush all of subvol's fcbs
         }
 
-        if (fileref && (oc == 0 || (fileref->delete_on_close && fileref->posix_delete))) {
-            if (!fcb->Vcb->removing) {
-                if (oc == 0 && fileref->fcb->inode_item.st_nlink == 0 && fileref != fcb->Vcb->root_fileref &&
-                    fcb != fcb->Vcb->volume_fcb && !fcb->ads) { // last handle closed on POSIX-deleted file
-                    LIST_ENTRY rollback;
+        if (fileref) {
+            LONG oc = InterlockedDecrement(&fileref->open_count);
+#ifdef DEBUG_FCB_REFCOUNTS
+            ERR("fileref %p: open_count now %i\n", fileref, oc);
+#endif
 
-                    InitializeListHead(&rollback);
+            if (oc == 0 || (fileref->delete_on_close && fileref->posix_delete)) {
+                if (!fcb->Vcb->removing) {
+                    if (oc == 0 && fileref->fcb->inode_item.st_nlink == 0 && fileref != fcb->Vcb->root_fileref &&
+                        fcb != fcb->Vcb->volume_fcb && !fcb->ads) { // last handle closed on POSIX-deleted file
+                        LIST_ENTRY rollback;
 
-                    Status = delete_fileref_fcb(fileref, FileObject, Irp, &rollback);
-                    if (!NT_SUCCESS(Status)) {
-                        ERR("delete_fileref_fcb returned %08lx\n", Status);
-                        do_rollback(fcb->Vcb, &rollback);
-                        ExReleaseResourceLite(fileref->fcb->Header.Resource);
-                        ExReleaseResourceLite(&fcb->Vcb->tree_lock);
-                        goto exit;
-                    }
+                        InitializeListHead(&rollback);
 
-                    clear_rollback(&rollback);
+                        Status = delete_fileref_fcb(fileref, FileObject, Irp, &rollback);
+                        if (!NT_SUCCESS(Status)) {
+                            ERR("delete_fileref_fcb returned %08lx\n", Status);
+                            do_rollback(fcb->Vcb, &rollback);
+                            ExReleaseResourceLite(fileref->fcb->Header.Resource);
+                            ExReleaseResourceLite(&fcb->Vcb->tree_lock);
+                            goto exit;
+                        }
 
-                    mark_fcb_dirty(fileref->fcb);
-                } else if (fileref->delete_on_close && fileref != fcb->Vcb->root_fileref && fcb != fcb->Vcb->volume_fcb) {
-                    LIST_ENTRY rollback;
+                        clear_rollback(&rollback);
 
-                    InitializeListHead(&rollback);
+                        mark_fcb_dirty(fileref->fcb);
+                    } else if (fileref->delete_on_close && fileref != fcb->Vcb->root_fileref && fcb != fcb->Vcb->volume_fcb) {
+                        LIST_ENTRY rollback;
 
-                    if (!fileref->fcb->ads || fileref->dc) {
-                        if (fileref->fcb->ads) {
-                            send_notification_fileref(fileref->parent, fcb->type == BTRFS_TYPE_DIRECTORY ? FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME,
-                                                      FILE_ACTION_REMOVED, &fileref->dc->name);
-                        } else
-                            send_notification_fileref(fileref, fcb->type == BTRFS_TYPE_DIRECTORY ? FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME, FILE_ACTION_REMOVED, NULL);
-                    }
+                        InitializeListHead(&rollback);
 
-                    ExReleaseResourceLite(fcb->Header.Resource);
-                    locked = false;
+                        if (!fileref->fcb->ads || fileref->dc) {
+                            if (fileref->fcb->ads) {
+                                send_notification_fileref(fileref->parent, fcb->type == BTRFS_TYPE_DIRECTORY ? FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME,
+                                                        FILE_ACTION_REMOVED, &fileref->dc->name);
+                            } else
+                                send_notification_fileref(fileref, fcb->type == BTRFS_TYPE_DIRECTORY ? FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME, FILE_ACTION_REMOVED, NULL);
+                        }
 
-                    // fileref_lock needs to be acquired before fcb->Header.Resource
-                    ExAcquireResourceExclusiveLite(&fcb->Vcb->fileref_lock, true);
-
-                    Status = delete_fileref(fileref, FileObject, oc > 0 && fileref->posix_delete, Irp, &rollback);
-                    if (!NT_SUCCESS(Status)) {
-                        ERR("delete_fileref returned %08lx\n", Status);
-                        do_rollback(fcb->Vcb, &rollback);
-                        ExReleaseResourceLite(&fcb->Vcb->fileref_lock);
-                        ExReleaseResourceLite(&fcb->Vcb->tree_lock);
-                        goto exit;
-                    }
-
-                    ExReleaseResourceLite(&fcb->Vcb->fileref_lock);
-
-                    clear_rollback(&rollback);
-                } else if (FileObject->Flags & FO_CACHE_SUPPORTED && FileObject->SectionObjectPointer->DataSectionObject) {
-                    IO_STATUS_BLOCK iosb;
-
-                    if (locked) {
                         ExReleaseResourceLite(fcb->Header.Resource);
                         locked = false;
+
+                        // fileref_lock needs to be acquired before fcb->Header.Resource
+                        ExAcquireResourceExclusiveLite(&fcb->Vcb->fileref_lock, true);
+
+                        Status = delete_fileref(fileref, FileObject, oc > 0 && fileref->posix_delete, Irp, &rollback);
+                        if (!NT_SUCCESS(Status)) {
+                            ERR("delete_fileref returned %08lx\n", Status);
+                            do_rollback(fcb->Vcb, &rollback);
+                            ExReleaseResourceLite(&fcb->Vcb->fileref_lock);
+                            ExReleaseResourceLite(&fcb->Vcb->tree_lock);
+                            goto exit;
+                        }
+
+                        ExReleaseResourceLite(&fcb->Vcb->fileref_lock);
+
+                        clear_rollback(&rollback);
+                    } else if (FileObject->Flags & FO_CACHE_SUPPORTED && FileObject->SectionObjectPointer->DataSectionObject) {
+                        IO_STATUS_BLOCK iosb;
+
+                        if (locked) {
+                            ExReleaseResourceLite(fcb->Header.Resource);
+                            locked = false;
+                        }
+
+                        CcFlushCache(FileObject->SectionObjectPointer, NULL, 0, &iosb);
+
+                        if (!NT_SUCCESS(iosb.Status))
+                            ERR("CcFlushCache returned %08lx\n", iosb.Status);
+
+                        if (!ExIsResourceAcquiredSharedLite(fcb->Header.PagingIoResource)) {
+                            ExAcquireResourceExclusiveLite(fcb->Header.PagingIoResource, true);
+                            ExReleaseResourceLite(fcb->Header.PagingIoResource);
+                        }
+
+                        CcPurgeCacheSection(FileObject->SectionObjectPointer, NULL, 0, false);
+
+                        TRACE("flushed cache on close (FileObject = %p, fcb = %p, AllocationSize = %I64x, FileSize = %I64x, ValidDataLength = %I64x)\n",
+                            FileObject, fcb, fcb->Header.AllocationSize.QuadPart, fcb->Header.FileSize.QuadPart, fcb->Header.ValidDataLength.QuadPart);
                     }
-
-                    CcFlushCache(FileObject->SectionObjectPointer, NULL, 0, &iosb);
-
-                    if (!NT_SUCCESS(iosb.Status))
-                        ERR("CcFlushCache returned %08lx\n", iosb.Status);
-
-                    if (!ExIsResourceAcquiredSharedLite(fcb->Header.PagingIoResource)) {
-                        ExAcquireResourceExclusiveLite(fcb->Header.PagingIoResource, true);
-                        ExReleaseResourceLite(fcb->Header.PagingIoResource);
-                    }
-
-                    CcPurgeCacheSection(FileObject->SectionObjectPointer, NULL, 0, false);
-
-                    TRACE("flushed cache on close (FileObject = %p, fcb = %p, AllocationSize = %I64x, FileSize = %I64x, ValidDataLength = %I64x)\n",
-                        FileObject, fcb, fcb->Header.AllocationSize.QuadPart, fcb->Header.FileSize.QuadPart, fcb->Header.ValidDataLength.QuadPart);
                 }
-            }
 
-            if (fcb->Vcb && fcb != fcb->Vcb->volume_fcb)
-                CcUninitializeCacheMap(FileObject, NULL, NULL);
+                if (fcb->Vcb && fcb != fcb->Vcb->volume_fcb)
+                    CcUninitializeCacheMap(FileObject, NULL, NULL);
+            }
         }
 
         if (locked)
@@ -2860,6 +2854,8 @@ static NTSTATUS read_superblock(_In_ device_extension* Vcb, _In_ PDEVICE_OBJECT 
 
             if (sb->sector_size == 0)
                 WARN("superblock sector size was 0\n");
+            else if (sb->sector_size & (sb->sector_size - 1))
+                WARN("superblock sector size was not power of 2\n");
             else if (sb->node_size < sizeof(tree_header) + sizeof(internal_node) || sb->node_size > 0x10000)
                 WARN("invalid node size %x\n", sb->node_size);
             else if ((sb->node_size % sb->sector_size) != 0)
@@ -3715,7 +3711,7 @@ void protect_superblocks(_Inout_ chunk* c) {
     // I realize this confuses physical and logical addresses, but this is what btrfs-progs does -
     // evidently Linux assumes the chunk at 0 is always SINGLE.
     if (c->offset < superblock_addrs[0])
-        space_list_subtract(c, false, c->offset, superblock_addrs[0] - c->offset, NULL);
+        space_list_subtract(c, c->offset, superblock_addrs[0] - c->offset, NULL);
 
     while (superblock_addrs[i] != 0) {
         CHUNK_ITEM* ci = c->chunk_item;
@@ -3746,7 +3742,7 @@ void protect_superblocks(_Inout_ chunk* c) {
                     TRACE("startoff = %I64x, superblock = %I64x\n", startoff + cis[j].offset, superblock_addrs[i]);
 #endif
 
-                    space_list_subtract(c, false, c->offset + off_start, off_end - off_start, NULL);
+                    space_list_subtract(c, c->offset + off_start, off_end - off_start, NULL);
                 }
             }
         } else if (ci->type & BLOCK_FLAG_RAID5) {
@@ -3765,7 +3761,7 @@ void protect_superblocks(_Inout_ chunk* c) {
 
                     TRACE("cutting out %I64x, size %I64x\n", c->offset + off_start, off_end - off_start);
 
-                    space_list_subtract(c, false, c->offset + off_start, off_end - off_start, NULL);
+                    space_list_subtract(c, c->offset + off_start, off_end - off_start, NULL);
                 }
             }
         } else if (ci->type & BLOCK_FLAG_RAID6) {
@@ -3784,7 +3780,7 @@ void protect_superblocks(_Inout_ chunk* c) {
 
                     TRACE("cutting out %I64x, size %I64x\n", c->offset + off_start, off_end - off_start);
 
-                    space_list_subtract(c, false, c->offset + off_start, off_end - off_start, NULL);
+                    space_list_subtract(c, c->offset + off_start, off_end - off_start, NULL);
                 }
             }
         } else { // SINGLE, DUPLICATE, RAID1, RAID1C3, RAID1C4
@@ -3797,7 +3793,7 @@ void protect_superblocks(_Inout_ chunk* c) {
                     off_start = ((superblock_addrs[i] - cis[j].offset) / c->chunk_item->stripe_length) * c->chunk_item->stripe_length;
                     off_end = sector_align(superblock_addrs[i] - cis[j].offset + sizeof(superblock), c->chunk_item->stripe_length);
 
-                    space_list_subtract(c, false, c->offset + off_start, off_end - off_start, NULL);
+                    space_list_subtract(c, c->offset + off_start, off_end - off_start, NULL);
                 }
             }
         }
@@ -4320,6 +4316,17 @@ static bool still_has_superblock(_In_ PDEVICE_OBJECT device, _In_ PFILE_OBJECT f
     return true;
 }
 
+static void calculate_sector_shift(device_extension* Vcb) {
+    uint32_t ss = Vcb->superblock.sector_size;
+
+    Vcb->sector_shift = 0;
+
+    while (!(ss & 1)) {
+        Vcb->sector_shift++;
+        ss >>= 1;
+    }
+}
+
 static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     PIO_STACK_LOCATION IrpSp;
     PDEVICE_OBJECT NewDeviceObject = NULL;
@@ -4560,6 +4567,8 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     if (Vcb->options.readonly)
         Vcb->readonly = true;
+
+    calculate_sector_shift(Vcb);
 
     Vcb->superblock.generation++;
     Vcb->superblock.incompat_flags |= BTRFS_INCOMPAT_FLAGS_MIXED_BACKREF;
@@ -5149,6 +5158,8 @@ static NTSTATUS verify_volume(_In_ PDEVICE_OBJECT devobj) {
         if (locked) ExReleaseResourceLite(&Vcb->tree_lock);
         return STATUS_WRONG_VOLUME;
     }
+
+    Status = STATUS_SUCCESS;
 
     InterlockedIncrement(&Vcb->open_files); // so pnp_surprise_removal doesn't uninit the device while we're still using it
 
@@ -5877,17 +5888,24 @@ static void init_serial(bool first_time) {
 
 #if !defined(__REACTOS__) && (defined(_X86_) || defined(_AMD64_))
 static void check_cpu() {
-    unsigned int cpuInfo[4];
     bool have_sse42;
 
 #ifndef _MSC_VER
-    __get_cpuid(1, &cpuInfo[0], &cpuInfo[1], &cpuInfo[2], &cpuInfo[3]);
-    have_sse42 = cpuInfo[2] & bit_SSE4_2;
-    have_sse2 = cpuInfo[3] & bit_SSE2;
+    {
+        uint32_t eax, ebx, ecx, edx;
+
+        __cpuid(1, eax, ebx, ecx, edx);
+        have_sse42 = ecx & bit_SSE4_2;
+        have_sse2 = edx & bit_SSE2;
+    }
 #else
-    __cpuid(cpuInfo, 1);
-    have_sse42 = cpuInfo[2] & (1 << 20);
-    have_sse2 = cpuInfo[3] & (1 << 26);
+    {
+        unsigned int cpu_info[4];
+
+        __cpuid(cpu_info, 1);
+        have_sse42 = cpu_info[2] & (1 << 20);
+        have_sse2 = cpu_info[3] & (1 << 26);
+    }
 #endif
 
     if (have_sse42) {
@@ -6091,7 +6109,7 @@ NTSTATUS __stdcall AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Physica
     *anp = ')';
 
     Status = IoCreateDevice(drvobj, sizeof(volume_device_extension), &volname, FILE_DEVICE_DISK,
-                            WdmlibRtlIsNtDdiVersionAvailable(NTDDI_WIN8) ? FILE_DEVICE_ALLOW_APPCONTAINER_TRAVERSAL : 0, false, &voldev);
+                            is_windows_8 ? FILE_DEVICE_ALLOW_APPCONTAINER_TRAVERSAL : 0, false, &voldev);
     if (!NT_SUCCESS(Status)) {
         ERR("IoCreateDevice returned %08lx\n", Status);
         goto end2;
@@ -6162,6 +6180,17 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
     HANDLE regh;
     OBJECT_ATTRIBUTES oa, system_thread_attributes;
     ULONG dispos;
+    RTL_OSVERSIONINFOW ver;
+
+    ver.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOW);
+
+    Status = RtlGetVersion(&ver);
+    if (!NT_SUCCESS(Status)) {
+        ERR("RtlGetVersion returned %08lx\n", Status);
+        return Status;
+    }
+
+    is_windows_8 = ver.dwMajorVersion > 6 || (ver.dwMajorVersion == 6 && ver.dwMinorVersion >= 2);
 
     InitializeListHead(&uid_map_list);
     InitializeListHead(&gid_map_list);
@@ -6201,7 +6230,7 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
     check_cpu();
 #endif
 
-    if (WdmlibRtlIsNtDdiVersionAvailable(NTDDI_WIN8)) {
+    if (ver.dwMajorVersion > 6 || (ver.dwMajorVersion == 6 && ver.dwMinorVersion >= 2)) { // Windows 8 or above
         UNICODE_STRING name;
         tPsIsDiskCountersEnabled fPsIsDiskCountersEnabled;
 
@@ -6241,7 +6270,7 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
         fFsRtlCheckLockForOplockRequest = NULL;
     }
 
-    if (WdmlibRtlIsNtDdiVersionAvailable(NTDDI_WIN7)) {
+    if (ver.dwMajorVersion > 6 || (ver.dwMajorVersion == 6 && ver.dwMinorVersion >= 1)) { // Windows 7 or above
         UNICODE_STRING name;
 
         RtlInitUnicodeString(&name, L"IoUnregisterPlugPlayNotificationEx");
@@ -6254,7 +6283,7 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
         fFsRtlAreThereCurrentOrInProgressFileLocks = NULL;
     }
 
-    if (WdmlibRtlIsNtDdiVersionAvailable(NTDDI_VISTA)) {
+    if (ver.dwMajorVersion >= 6) { // Windows Vista or above
         UNICODE_STRING name;
 
         RtlInitUnicodeString(&name, L"FsRtlGetEcpListFromIrp");

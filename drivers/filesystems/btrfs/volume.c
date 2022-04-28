@@ -953,7 +953,7 @@ NTSTATUS __stdcall pnp_removal(PVOID NotificationStructure, PVOID Context) {
         TRACE("GUID_TARGET_DEVICE_QUERY_REMOVE\n");
 
         if (pdode->vde && pdode->vde->mounted_device)
-            return pnp_query_remove_device(pdode->vde->mounted_device, NULL);
+            pnp_query_remove_device(pdode->vde->mounted_device, NULL);
     }
 
     return STATUS_SUCCESS;
