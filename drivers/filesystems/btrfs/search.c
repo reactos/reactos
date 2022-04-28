@@ -903,7 +903,7 @@ void __stdcall mountmgr_thread(_In_ void* context) {
                 break;
             }
 
-            Status = dev_ioctl(mountmgr, IOCTL_MOUNTMGR_QUERY_POINTS, &mmp, sizeof(MOUNTMGR_MOUNT_POINTS), mmps2, mmps.Size,
+            Status = dev_ioctl(mountmgr, IOCTL_MOUNTMGR_QUERY_POINTS, &mmp, sizeof(MOUNTMGR_MOUNT_POINT), mmps2, mmps.Size,
                                false, NULL);
             if (!NT_SUCCESS(Status))
                 ERR("IOCTL_MOUNTMGR_QUERY_POINTS returned %08lx\n", Status);

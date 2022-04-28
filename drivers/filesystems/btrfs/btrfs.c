@@ -667,6 +667,9 @@ static bool lie_about_fs_type() {
     INIT_UNICODE_STRING(fsutil, L"FSUTIL.EXE");
     INIT_UNICODE_STRING(storsvc, L"STORSVC.DLL");
 
+    /* Not doing a Volkswagen, honest! Some IFS tests won't run if not recognized FS. */
+    INIT_UNICODE_STRING(ifstest, L"IFSTEST.EXE");
+
     if (!PsGetCurrentProcess())
         return false;
 
@@ -731,6 +734,15 @@ static bool lie_about_fs_type() {
             name.Length = name.MaximumLength = usstorsvc.Length;
 
             blacklist = FsRtlAreNamesEqual(&name, &usstorsvc, true, NULL);
+        }
+
+        if (!blacklist && entry->FullDllName.Length >= usifstest.Length) {
+            UNICODE_STRING name;
+
+            name.Buffer = &entry->FullDllName.Buffer[(entry->FullDllName.Length - usifstest.Length) / sizeof(WCHAR)];
+            name.Length = name.MaximumLength = usifstest.Length;
+
+            blacklist = FsRtlAreNamesEqual(&name, &usifstest, true, NULL);
         }
 
         if (blacklist) {
@@ -1833,10 +1845,6 @@ void reap_fileref(device_extension* Vcb, file_ref* fr) {
 
     // FIXME - do delete if needed
 
-    ExDeleteResourceLite(&fr->nonpaged->fileref_lock);
-
-    ExFreeToNPagedLookasideList(&Vcb->fileref_np_lookaside, fr->nonpaged);
-
     // FIXME - throw error if children not empty
 
     if (fr->fcb->fileref == fr)
@@ -2161,7 +2169,6 @@ void uninit(_In_ device_extension* Vcb) {
     ExDeletePagedLookasideList(&Vcb->fcb_lookaside);
     ExDeletePagedLookasideList(&Vcb->name_bit_lookaside);
     ExDeleteNPagedLookasideList(&Vcb->range_lock_lookaside);
-    ExDeleteNPagedLookasideList(&Vcb->fileref_np_lookaside);
     ExDeleteNPagedLookasideList(&Vcb->fcb_np_lookaside);
 
     ZwClose(Vcb->flush_thread_handle);
@@ -4709,7 +4716,6 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     ExInitializePagedLookasideList(&Vcb->fcb_lookaside, NULL, NULL, 0, sizeof(fcb), ALLOC_TAG, 0);
     ExInitializePagedLookasideList(&Vcb->name_bit_lookaside, NULL, NULL, 0, sizeof(name_bit), ALLOC_TAG, 0);
     ExInitializeNPagedLookasideList(&Vcb->range_lock_lookaside, NULL, NULL, 0, sizeof(range_lock), ALLOC_TAG, 0);
-    ExInitializeNPagedLookasideList(&Vcb->fileref_np_lookaside, NULL, NULL, 0, sizeof(file_ref_nonpaged), ALLOC_TAG, 0);
     ExInitializeNPagedLookasideList(&Vcb->fcb_np_lookaside, NULL, NULL, 0, sizeof(fcb_nonpaged), ALLOC_TAG, 0);
     init_lookaside = true;
 
@@ -5027,7 +5033,6 @@ exit2:
                 ExDeletePagedLookasideList(&Vcb->fcb_lookaside);
                 ExDeletePagedLookasideList(&Vcb->name_bit_lookaside);
                 ExDeleteNPagedLookasideList(&Vcb->range_lock_lookaside);
-                ExDeleteNPagedLookasideList(&Vcb->fileref_np_lookaside);
                 ExDeleteNPagedLookasideList(&Vcb->fcb_np_lookaside);
             }
 
@@ -5764,27 +5769,43 @@ exit:
     return Status;
 }
 
-bool is_file_name_valid(_In_ PUNICODE_STRING us, _In_ bool posix, _In_ bool stream) {
+NTSTATUS check_file_name_valid(_In_ PUNICODE_STRING us, _In_ bool posix, _In_ bool stream) {
     ULONG i;
 
     if (us->Length < sizeof(WCHAR))
-        return false;
+        return STATUS_OBJECT_NAME_INVALID;
 
     if (us->Length > 255 * sizeof(WCHAR))
-        return false;
+        return STATUS_OBJECT_NAME_INVALID;
 
     for (i = 0; i < us->Length / sizeof(WCHAR); i++) {
         if (us->Buffer[i] == '/' || us->Buffer[i] == 0 ||
             (!posix && (us->Buffer[i] == '/' || us->Buffer[i] == ':')) ||
             (!posix && !stream && (us->Buffer[i] == '<' || us->Buffer[i] == '>' || us->Buffer[i] == '"' ||
             us->Buffer[i] == '|' || us->Buffer[i] == '?' || us->Buffer[i] == '*' || (us->Buffer[i] >= 1 && us->Buffer[i] <= 31))))
-            return false;
+            return STATUS_OBJECT_NAME_INVALID;
     }
 
     if (us->Buffer[0] == '.' && (us->Length == sizeof(WCHAR) || (us->Length == 2 * sizeof(WCHAR) && us->Buffer[1] == '.')))
-        return false;
+        return STATUS_OBJECT_NAME_INVALID;
 
-    return true;
+    /* The Linux driver expects filenames with a maximum length of 255 bytes - make sure
+     * that our UTF-8 length won't be longer than that. */
+    if (us->Length >= 85 * sizeof(WCHAR)) {
+        NTSTATUS Status;
+        ULONG utf8len;
+
+        Status = utf16_to_utf8(NULL, 0, &utf8len, us->Buffer, us->Length);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        if (utf8len > 255)
+            return STATUS_OBJECT_NAME_INVALID;
+        else if (stream && utf8len > 250) // minus five bytes for "user."
+            return STATUS_OBJECT_NAME_INVALID;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 void chunk_lock_range(_In_ device_extension* Vcb, _In_ chunk* c, _In_ uint64_t start, _In_ uint64_t length) {
@@ -6519,7 +6540,7 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
     IoRegisterFileSystem(DeviceObject);
 
-    IoRegisterBootDriverReinitialization(DriverObject, check_system_root, NULL);
+    check_system_root();
 
     return STATUS_SUCCESS;
 }

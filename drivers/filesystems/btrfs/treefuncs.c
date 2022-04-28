@@ -2177,6 +2177,9 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                     Status = handle_batch_collision(Vcb, bi, tp.tree, tp.item, td, &br->items, &ignore);
                     if (!NT_SUCCESS(Status)) {
                         ERR("handle_batch_collision returned %08lx\n", Status);
+#ifdef _DEBUG
+                        int3;
+#endif
 
                         if (td)
                             ExFreeToPagedLookasideList(&Vcb->tree_data_lookaside, td);
@@ -2258,6 +2261,9 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                                 Status = handle_batch_collision(Vcb, bi2, tp.tree, td2, td, &br->items, &ignore);
                                 if (!NT_SUCCESS(Status)) {
                                     ERR("handle_batch_collision returned %08lx\n", Status);
+#ifdef _DEBUG
+                                    int3;
+#endif
                                     return Status;
                                 }
                             }

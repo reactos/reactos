@@ -1263,13 +1263,6 @@ static bool is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
         bfs = malloc(bfssize);
 
         Status = NtDeviceIoControlFile(h2, NULL, NULL, NULL, &iosb, IOCTL_BTRFS_QUERY_FILESYSTEMS, NULL, 0, bfs, bfssize);
-        if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
-#ifdef __REACTOS__
-            if (bfs) free(bfs);
-#endif
-            NtClose(h2);
-            return false;
-        }
     } while (Status == STATUS_BUFFER_OVERFLOW);
 
     if (!NT_SUCCESS(Status))
