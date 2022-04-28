@@ -731,9 +731,6 @@ NTSTATUS lzo_compress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32_t 
     uint8_t* comp_data;
     lzo_stream stream;
     uint32_t* out_size;
-#ifdef __REACTOS__
-    unsigned int i;
-#endif // __REACTOS__
 
     num_pages = (unsigned int)sector_align(inlen, LZO_PAGE_SIZE) / LZO_PAGE_SIZE;
 
@@ -764,11 +761,7 @@ NTSTATUS lzo_compress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32_t 
     stream.in = inbuf;
     stream.out = comp_data + (2 * sizeof(uint32_t));
 
-#ifndef __REACTOS__
     for (unsigned int i = 0; i < num_pages; i++) {
-#else
-    for (i = 0; i < num_pages; i++) {
-#endif // __REACTOS__
         uint32_t* pagelen = (uint32_t*)(stream.out - sizeof(uint32_t));
 
         stream.inlen = (uint32_t)min(LZO_PAGE_SIZE, outlen - (i * LZO_PAGE_SIZE));
@@ -891,10 +884,6 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
     LIST_ENTRY* le;
     uint64_t address, extaddr;
     void* csum = NULL;
-#ifdef __REACTOS__
-    int32_t i2;
-    uint32_t i3, j;
-#endif // __REACTOS__
 
     if (fcb->Vcb->options.compress_type != 0 && fcb->prop_compression == PropCompression_None)
         type = fcb->Vcb->options.compress_type;
@@ -934,11 +923,7 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
         if (!NT_SUCCESS(Status)) {
             ERR("add_calc_job_comp returned %08lx\n", Status);
 
-#ifndef __REACTOS__
             for (unsigned int j = 0; j < i; j++) {
-#else
-            for (j = 0; j < i; j++) {
-#endif // __REACTOS__
                 KeWaitForSingleObject(&parts[j].cj->event, Executive, KernelMode, false, NULL);
                 ExFreePool(parts[j].cj);
             }
@@ -950,7 +935,6 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
 
     Status = STATUS_SUCCESS;
 
-#ifndef __REACTOS__
     for (int i = num_parts - 1; i >= 0; i--) {
         calc_thread_main(fcb->Vcb, parts[i].cj);
 
@@ -959,35 +943,18 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
         if (!NT_SUCCESS(parts[i].cj->Status))
             Status = parts[i].cj->Status;
     }
-#else
-    for (i2 = num_parts - 1; i2 >= 0; i2--) {
-        calc_thread_main(fcb->Vcb, parts[i].cj);
-
-        KeWaitForSingleObject(&parts[i2].cj->event, Executive, KernelMode, false, NULL);
-
-        if (!NT_SUCCESS(parts[i2].cj->Status))
-            Status = parts[i2].cj->Status;
-    }
-#endif // __REACTOS__
 
     if (!NT_SUCCESS(Status)) {
         ERR("calc job returned %08lx\n", Status);
 
-#ifndef __REACTOS__
         for (unsigned int i = 0; i < num_parts; i++) {
             ExFreePool(parts[i].cj);
         }
-#else
-        for (i3 = 0; i3 < num_parts; i3++) {
-            ExFreePool(parts[i3].cj);
-        }
-#endif // __REACTOS__
 
         ExFreePool(parts);
         return Status;
     }
 
-#ifndef __REACTOS__
     for (unsigned int i = 0; i < num_parts; i++) {
         if (parts[i].cj->space_left >= fcb->Vcb->superblock.sector_size) {
             parts[i].compression_type = type;
@@ -1013,33 +980,6 @@ NTSTATUS write_compressed(fcb* fcb, uint64_t start_data, uint64_t end_data, void
         buflen += parts[i].outlen;
         ExFreePool(parts[i].cj);
     }
-#else
-    for (i3 = 0; i3 < num_parts; i3++) {
-        if (parts[i3].cj->space_left >= fcb->Vcb->superblock.sector_size) {
-            parts[i3].compression_type = type;
-            parts[i3].outlen = parts[i3].inlen - parts[i3].cj->space_left;
-
-            if (type == BTRFS_COMPRESSION_LZO)
-                fcb->Vcb->superblock.incompat_flags |= BTRFS_INCOMPAT_FLAGS_COMPRESS_LZO;
-            else if (type == BTRFS_COMPRESSION_ZSTD)
-                fcb->Vcb->superblock.incompat_flags |= BTRFS_INCOMPAT_FLAGS_COMPRESS_ZSTD;
-
-            if ((parts[i3].outlen % fcb->Vcb->superblock.sector_size) != 0) {
-                unsigned int newlen = (unsigned int)sector_align(parts[i3].outlen, fcb->Vcb->superblock.sector_size);
-
-                RtlZeroMemory(parts[i3].buf + parts[i3].outlen, newlen - parts[i3].outlen);
-
-                parts[i3].outlen = newlen;
-            }
-        } else {
-            parts[i3].compression_type = BTRFS_COMPRESSION_NONE;
-            parts[i3].outlen = (unsigned int)sector_align(parts[i3].inlen, fcb->Vcb->superblock.sector_size);
-        }
-
-        buflen += parts[i3].outlen;
-        ExFreePool(parts[i3].cj);
-    }
-#endif // __REACTOS__
 
     // check if first 128 KB of file is incompressible
 

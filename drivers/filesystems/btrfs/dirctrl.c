@@ -640,18 +640,6 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
             return STATUS_SUCCESS;
         }
 
-        case FileObjectIdInformation:
-            FIXME("STUB: FileObjectIdInformation\n");
-            return STATUS_NOT_IMPLEMENTED;
-
-        case FileQuotaInformation:
-            FIXME("STUB: FileQuotaInformation\n");
-            return STATUS_NOT_IMPLEMENTED;
-
-        case FileReparsePointInformation:
-            FIXME("STUB: FileReparsePointInformation\n");
-            return STATUS_NOT_IMPLEMENTED;
-
         default:
             WARN("Unknown FileInformationClass %u\n", IrpSp->Parameters.QueryDirectory.FileInformationClass);
             return STATUS_NOT_IMPLEMENTED;

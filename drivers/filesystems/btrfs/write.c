@@ -4228,8 +4228,6 @@ NTSTATUS write_file2(device_extension* Vcb, PIRP Irp, LARGE_INTEGER offset, void
 
     if (fcb->ads)
         make_inline = false;
-    else if (fcb->type == BTRFS_TYPE_SYMLINK)
-        make_inline = newlength <= (Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node) - offsetof(EXTENT_DATA, data[0]));
     else
         make_inline = newlength <= fcb->Vcb->options.max_inline;
 

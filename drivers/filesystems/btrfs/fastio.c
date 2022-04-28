@@ -494,10 +494,8 @@ static BOOLEAN __stdcall fast_io_unlock_all_by_key(PFILE_OBJECT FileObject, PVOI
 
 #ifdef __REACTOS__
 _Function_class_(FAST_IO_ACQUIRE_FILE)
-static void __stdcall fast_io_acquire_for_create_section(_In_ PFILE_OBJECT FileObject) {
-#else
-static void fast_io_acquire_for_create_section(_In_ PFILE_OBJECT FileObject) {
 #endif /* __REACTOS__ */
+static void __stdcall fast_io_acquire_for_create_section(_In_ PFILE_OBJECT FileObject) {
     fcb* fcb;
 
     TRACE("(%p)\n", FileObject);
@@ -516,10 +514,8 @@ static void fast_io_acquire_for_create_section(_In_ PFILE_OBJECT FileObject) {
 
 #ifdef __REACTOS__
 _Function_class_(FAST_IO_RELEASE_FILE)
-static void __stdcall fast_io_release_for_create_section(_In_ PFILE_OBJECT FileObject) {
-#else
-static void fast_io_release_for_create_section(_In_ PFILE_OBJECT FileObject) {
 #endif /* __REACTOS__ */
+static void __stdcall fast_io_release_for_create_section(_In_ PFILE_OBJECT FileObject) {
     fcb* fcb;
 
     TRACE("(%p)\n", FileObject);
