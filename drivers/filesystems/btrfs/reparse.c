@@ -24,7 +24,7 @@ typedef struct {
     char name[1];
 } REPARSE_DATA_BUFFER_LX_SYMLINK;
 
-NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject, void* buffer, DWORD buflen, ULONG_PTR* retlen) {
+NTSTATUS get_reparse_point(PFILE_OBJECT FileObject, void* buffer, DWORD buflen, ULONG_PTR* retlen) {
     USHORT subnamelen, printnamelen, i;
     ULONG stringlen;
     DWORD reqlen;
@@ -33,7 +33,7 @@ NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
     ccb* ccb = FileObject->FsContext2;
     NTSTATUS Status;
 
-    TRACE("(%p, %p, %p, %lx, %p)\n", DeviceObject, FileObject, buffer, buflen, retlen);
+    TRACE("(%p, %p, %lx, %p)\n", FileObject, buffer, buflen, retlen);
 
     if (!ccb)
         return STATUS_INVALID_PARAMETER;
@@ -234,15 +234,16 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REP
         REPARSE_DATA_BUFFER_LX_SYMLINK* buf;
 
         if (buflen < offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) + rdb->ReparseDataLength) {
-            WARN("buffer was less than expected length (%lu < %u)\n", buflen,
-                 offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) + rdb->ReparseDataLength);
+            WARN("buffer was less than expected length (%lu < %lu)\n", buflen,
+                 (unsigned long)(offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer) + rdb->ReparseDataLength));
             return STATUS_INVALID_PARAMETER;
         }
 
         buf = (REPARSE_DATA_BUFFER_LX_SYMLINK*)rdb->GenericReparseBuffer.DataBuffer;
 
         if (buflen < offsetof(REPARSE_DATA_BUFFER_LX_SYMLINK, name)) {
-            WARN("buffer was less than minimum length (%u < %u)\n", rdb->ReparseDataLength, offsetof(REPARSE_DATA_BUFFER_LX_SYMLINK, name));
+            WARN("buffer was less than minimum length (%u < %lu)\n", rdb->ReparseDataLength,
+                 (unsigned long)(offsetof(REPARSE_DATA_BUFFER_LX_SYMLINK, name)));
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -397,7 +398,7 @@ NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, cc
     return STATUS_SUCCESS;
 }
 
-NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
+NTSTATUS set_reparse_point(PIRP Irp) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     void* buffer = Irp->AssociatedIrp.SystemBuffer;
@@ -409,7 +410,7 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     file_ref* fileref;
     LIST_ENTRY rollback;
 
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
+    TRACE("(%p)\n", Irp);
 
     InitializeListHead(&rollback);
 
@@ -470,7 +471,7 @@ end:
     return Status;
 }
 
-NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
+NTSTATUS delete_reparse_point(PIRP Irp) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     REPARSE_DATA_BUFFER* rdb = Irp->AssociatedIrp.SystemBuffer;
@@ -481,7 +482,7 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     file_ref* fileref;
     LIST_ENTRY rollback;
 
-    TRACE("(%p, %p)\n", DeviceObject, Irp);
+    TRACE("(%p)\n", Irp);
 
     InitializeListHead(&rollback);
 

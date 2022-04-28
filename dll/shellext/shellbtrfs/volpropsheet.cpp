@@ -1590,9 +1590,7 @@ INT_PTR BtrfsChangeDriveLetter::DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
     return false;
 }
 
-#ifdef __REACTOS__
-INT_PTR CALLBACK VolPropSheetDlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
+static INT_PTR __stdcall dlg_proc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     BtrfsChangeDriveLetter* bcdl;
 
     if (uMsg == WM_INITDIALOG) {
@@ -1603,24 +1601,9 @@ INT_PTR CALLBACK VolPropSheetDlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 
     return bcdl->DlgProc(hwndDlg, uMsg, wParam, lParam);
 }
-#endif
 
 void BtrfsChangeDriveLetter::show() {
-#ifndef __REACTOS__
-    DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_DRIVE_LETTER), hwnd, [](HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-        BtrfsChangeDriveLetter* bcdl;
-
-        if (uMsg == WM_INITDIALOG) {
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
-            bcdl = (BtrfsChangeDriveLetter*)lParam;
-        } else
-            bcdl = (BtrfsChangeDriveLetter*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
-
-        return bcdl->DlgProc(hwndDlg, uMsg, wParam, lParam);
-    }, (LPARAM)this);
-#else
-    DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_DRIVE_LETTER), hwnd, VolPropSheetDlgproc, (LPARAM)this);
-#endif
+    DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_DRIVE_LETTER), hwnd, dlg_proc, (LPARAM)this);
 }
 
 #ifdef __cplusplus

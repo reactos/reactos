@@ -552,9 +552,7 @@ NTSTATUS alloc_chunk(device_extension* Vcb, uint64_t flags, chunk** pc, bool ful
         }
     }
 
-    if (type == 0 || type == BLOCK_FLAG_DUPLICATE || type == BLOCK_FLAG_RAID1 || type == BLOCK_FLAG_RAID1C3 || type == BLOCK_FLAG_RAID1C4)
-        factor = 1;
-    else if (type == BLOCK_FLAG_RAID0)
+    if (type == BLOCK_FLAG_RAID0)
         factor = num_stripes;
     else if (type == BLOCK_FLAG_RAID10)
         factor = num_stripes / sub_stripes;
@@ -562,6 +560,8 @@ NTSTATUS alloc_chunk(device_extension* Vcb, uint64_t flags, chunk** pc, bool ful
         factor = num_stripes - 1;
     else if (type == BLOCK_FLAG_RAID6)
         factor = num_stripes - 2;
+    else
+        factor = 1; // SINGLE, DUPLICATE, RAID1, RAID1C3, RAID1C4
 
     if (stripe_size * factor > max_chunk_size)
         stripe_size = max_chunk_size / factor;

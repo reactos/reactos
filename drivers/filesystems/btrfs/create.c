@@ -387,7 +387,7 @@ static NTSTATUS split_path(device_extension* Vcb, PUNICODE_STRING path, LIST_ENT
             if (nb->us.Buffer[i] == ':') {
                 name_bit* nb2;
 
-                if (nb->us.Buffer[i+1] == 0) {
+                if (i + 1 == nb->us.Length / sizeof(WCHAR)) {
                     WARN("zero-length stream name\n");
                     Status = STATUS_OBJECT_NAME_INVALID;
                     goto cleanup;
@@ -709,7 +709,7 @@ NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lo
     bool atts_set = false, sd_set = false, no_data;
     LIST_ENTRY* lastle = NULL;
     EXTENT_DATA* ed = NULL;
-    uint64_t fcbs_version;
+    uint64_t fcbs_version = 0;
     uint32_t hash;
 
     hash = calc_crc32c(0xffffffff, (uint8_t*)&inode, sizeof(uint64_t));
@@ -1687,7 +1687,7 @@ NTSTATUS open_fileref(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusiv
     UNICODE_STRING fnus2;
     file_ref *dir, *sf, *sf2;
     LIST_ENTRY parts;
-    bool has_stream;
+    bool has_stream = false;
     NTSTATUS Status;
     LIST_ENTRY* le;
 
@@ -4658,7 +4658,7 @@ loaded:
         if (!NT_SUCCESS(Status))
             goto exit;
     } else {
-        file_ref* existing_file;
+        file_ref* existing_file = NULL;
 
         Status = file_create(Irp, Vcb, FileObject, related, loaded_related, &fn, RequestedDisposition, options, &existing_file, rollback);
 

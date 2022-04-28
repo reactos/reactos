@@ -79,6 +79,8 @@ NTSTATUS pnp_surprise_removal(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
     TRACE("(%p, %p)\n", DeviceObject, Irp);
 
+    UNUSED(Irp);
+
     if (DeviceObject->Vpb->Flags & VPB_MOUNTED) {
         ExAcquireResourceExclusiveLite(&Vcb->tree_lock, true);
 

@@ -25,6 +25,8 @@ static BOOLEAN __stdcall fast_query_basic_info(PFILE_OBJECT FileObject, BOOLEAN 
     fcb* fcb;
     ccb* ccb;
 
+    UNUSED(DeviceObject);
+
     FsRtlEnterFileSystem();
 
     TRACE("(%p, %u, %p, %p, %p)\n", FileObject, wait, fbi, IoStatus, DeviceObject);
@@ -98,6 +100,8 @@ static BOOLEAN __stdcall fast_query_standard_info(PFILE_OBJECT FileObject, BOOLE
     ccb* ccb;
     bool ads;
     ULONG adssize;
+
+    UNUSED(DeviceObject);
 
     FsRtlEnterFileSystem();
 
@@ -197,6 +201,10 @@ static BOOLEAN __stdcall fast_io_query_network_open_info(PFILE_OBJECT FileObject
     fcb* fcb;
     ccb* ccb;
     file_ref* fileref;
+
+    UNUSED(Wait);
+    UNUSED(IoStatus); // FIXME - really? What about IoStatus->Information?
+    UNUSED(DeviceObject);
 
     FsRtlEnterFileSystem();
 
@@ -372,6 +380,8 @@ static BOOLEAN __stdcall fast_io_lock(PFILE_OBJECT FileObject, PLARGE_INTEGER Fi
     BOOLEAN ret;
     fcb* fcb = FileObject->FsContext;
 
+    UNUSED(DeviceObject);
+
     TRACE("(%p, %I64x, %I64x, %p, %lx, %u, %u, %p, %p)\n", FileObject, FileOffset ? FileOffset->QuadPart : 0, Length ? Length->QuadPart : 0,
           ProcessId, Key, FailImmediately, ExclusiveLock, IoStatus, DeviceObject);
 
@@ -402,6 +412,8 @@ static BOOLEAN __stdcall fast_io_unlock_single(PFILE_OBJECT FileObject, PLARGE_I
                                                ULONG Key, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
     fcb* fcb = FileObject->FsContext;
 
+    UNUSED(DeviceObject);
+
     TRACE("(%p, %I64x, %I64x, %p, %lx, %p, %p)\n", FileObject, FileOffset ? FileOffset->QuadPart : 0, Length ? Length->QuadPart : 0,
           ProcessId, Key, IoStatus, DeviceObject);
 
@@ -427,6 +439,8 @@ static BOOLEAN __stdcall fast_io_unlock_single(PFILE_OBJECT FileObject, PLARGE_I
 _Function_class_(FAST_IO_UNLOCK_ALL)
 static BOOLEAN __stdcall fast_io_unlock_all(PFILE_OBJECT FileObject, PEPROCESS ProcessId, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
     fcb* fcb = FileObject->FsContext;
+
+    UNUSED(DeviceObject);
 
     TRACE("(%p, %p, %p, %p)\n", FileObject, ProcessId, IoStatus, DeviceObject);
 
@@ -457,6 +471,8 @@ _Function_class_(FAST_IO_UNLOCK_ALL_BY_KEY)
 static BOOLEAN __stdcall fast_io_unlock_all_by_key(PFILE_OBJECT FileObject, PVOID ProcessId, ULONG Key,
                                                    PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
     fcb* fcb = FileObject->FsContext;
+
+    UNUSED(DeviceObject);
 
     TRACE("(%p, %p, %lx, %p, %p)\n", FileObject, ProcessId, Key, IoStatus, DeviceObject);
 

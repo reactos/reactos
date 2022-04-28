@@ -506,6 +506,10 @@ void __stdcall check_system_root(PDRIVER_OBJECT DriverObject, PVOID Context, ULO
 
     TRACE("(%p, %p, %lu)\n", DriverObject, Context, Count);
 
+    UNUSED(DriverObject);
+    UNUSED(Context);
+    UNUSED(Count);
+
     // wait for any PNP notifications in progress to finish
     ExAcquireResourceExclusiveLite(&boot_lock, TRUE);
     ExReleaseResourceLite(&boot_lock);

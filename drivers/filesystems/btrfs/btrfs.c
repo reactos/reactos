@@ -63,9 +63,6 @@ DEFINE_GUID(BtrfsBusInterface, 0x4d414874, 0x6865, 0x6761, 0x6d, 0x65, 0x83, 0x6
 
 PDRIVER_OBJECT drvobj;
 PDEVICE_OBJECT master_devobj, busobj;
-#ifndef __REACTOS__
-bool have_sse2 = false;
-#endif
 uint64_t num_reads = 0;
 LIST_ENTRY uid_map_list, gid_map_list;
 LIST_ENTRY VcbList;
@@ -123,6 +120,9 @@ static void init_serial(bool first_time);
 #endif
 
 static NTSTATUS close_file(_In_ PFILE_OBJECT FileObject, _In_ PIRP Irp);
+static void __stdcall do_xor_basic(uint8_t* buf1, uint8_t* buf2, uint32_t len);
+
+xor_func do_xor = do_xor_basic;
 
 typedef struct {
     KEVENT Event;
@@ -280,6 +280,49 @@ bool is_top_level(_In_ PIRP Irp) {
     }
 
     return false;
+}
+
+static void __stdcall do_xor_basic(uint8_t* buf1, uint8_t* buf2, uint32_t len) {
+    uint32_t j;
+
+#if defined(_ARM_) || defined(_ARM64_)
+    uint64x2_t x1, x2;
+
+    if (((uintptr_t)buf1 & 0xf) == 0 && ((uintptr_t)buf2 & 0xf) == 0) {
+        while (len >= 16) {
+            x1 = vld1q_u64((const uint64_t*)buf1);
+            x2 = vld1q_u64((const uint64_t*)buf2);
+            x1 = veorq_u64(x1, x2);
+            vst1q_u64((uint64_t*)buf1, x1);
+
+            buf1 += 16;
+            buf2 += 16;
+            len -= 16;
+        }
+    }
+#endif
+
+#if defined(_AMD64_) || defined(_ARM64_)
+    while (len > 8) {
+        *(uint64_t*)buf1 ^= *(uint64_t*)buf2;
+        buf1 += 8;
+        buf2 += 8;
+        len -= 8;
+    }
+#endif
+
+    while (len > 4) {
+        *(uint32_t*)buf1 ^= *(uint32_t*)buf2;
+        buf1 += 4;
+        buf2 += 4;
+        len -= 4;
+    }
+
+    for (j = 0; j < len; j++) {
+        *buf1 ^= *buf2;
+        buf1++;
+        buf2++;
+    }
 }
 
 _Function_class_(DRIVER_UNLOAD)
@@ -520,7 +563,7 @@ static NTSTATUS __stdcall drv_flush_buffers(_In_ PDEVICE_OBJECT DeviceObject, _I
     top_level = is_top_level(Irp);
 
     if (Vcb && Vcb->type == VCB_TYPE_VOLUME) {
-        Status = vol_flush_buffers(DeviceObject, Irp);
+        Status = STATUS_SUCCESS;
         goto end;
     } else if (!Vcb || Vcb->type != VCB_TYPE_FS) {
         Status = STATUS_SUCCESS;
@@ -726,14 +769,8 @@ NTSTATUS utf8_to_utf16(WCHAR* dest, ULONG dest_max, ULONG* dest_len, char* src, 
     uint8_t* in = (uint8_t*)src;
     uint16_t* out = (uint16_t*)dest;
     ULONG needed = 0, left = dest_max / sizeof(uint16_t);
-#ifdef __REACTOS__
-    ULONG i;
-
-    for (i = 0; i < src_len; ++i) {
-#else
 
     for (ULONG i = 0; i < src_len; i++) {
-#endif
         uint32_t cp;
 
         if (!(in[i] & 0x80))
@@ -816,14 +853,8 @@ NTSTATUS utf16_to_utf8(char* dest, ULONG dest_max, ULONG* dest_len, WCHAR* src, 
     uint8_t* out = (uint8_t*)dest;
     ULONG in_len = src_len / sizeof(uint16_t);
     ULONG needed = 0, left = dest_max;
-#ifdef __REACTOS__
-    ULONG i = 0;
-
-    for (i = 0; i < in_len; i++) {
-#else
 
     for (ULONG i = 0; i < in_len; i++) {
-#endif
         uint32_t cp = *in;
         in++;
 
@@ -934,7 +965,7 @@ static NTSTATUS __stdcall drv_query_volume_information(_In_ PDEVICE_OBJECT Devic
     top_level = is_top_level(Irp);
 
     if (Vcb && Vcb->type == VCB_TYPE_VOLUME) {
-        Status = vol_query_volume_information(DeviceObject, Irp);
+        Status = STATUS_INVALID_DEVICE_REQUEST;
         goto end;
     } else if (!Vcb || Vcb->type != VCB_TYPE_FS) {
         Status = STATUS_INVALID_PARAMETER;
@@ -1091,9 +1122,9 @@ static NTSTATUS __stdcall drv_query_volume_information(_In_ PDEVICE_OBJECT Devic
 
             orig_label_len = label_len;
 
-            if (IrpSp->Parameters.QueryVolume.Length < sizeof(FILE_FS_VOLUME_INFORMATION) - sizeof(WCHAR) + label_len) {
-                if (IrpSp->Parameters.QueryVolume.Length > sizeof(FILE_FS_VOLUME_INFORMATION) - sizeof(WCHAR))
-                    label_len = IrpSp->Parameters.QueryVolume.Length - sizeof(FILE_FS_VOLUME_INFORMATION) + sizeof(WCHAR);
+            if (IrpSp->Parameters.QueryVolume.Length < offsetof(FILE_FS_VOLUME_INFORMATION, VolumeLabel) + label_len) {
+                if (IrpSp->Parameters.QueryVolume.Length > offsetof(FILE_FS_VOLUME_INFORMATION, VolumeLabel))
+                    label_len = IrpSp->Parameters.QueryVolume.Length - offsetof(FILE_FS_VOLUME_INFORMATION, VolumeLabel);
                 else
                     label_len = 0;
 
@@ -1102,12 +1133,12 @@ static NTSTATUS __stdcall drv_query_volume_information(_In_ PDEVICE_OBJECT Devic
 
             TRACE("label_len = %lu\n", label_len);
 
-            ffvi.VolumeCreationTime.QuadPart = 0; // FIXME
+            RtlZeroMemory(&ffvi, offsetof(FILE_FS_VOLUME_INFORMATION, VolumeLabel));
+
             ffvi.VolumeSerialNumber = Vcb->superblock.uuid.uuid[12] << 24 | Vcb->superblock.uuid.uuid[13] << 16 | Vcb->superblock.uuid.uuid[14] << 8 | Vcb->superblock.uuid.uuid[15];
             ffvi.VolumeLabelLength = orig_label_len;
-            ffvi.SupportsObjects = false;
 
-            RtlCopyMemory(data, &ffvi, min(sizeof(FILE_FS_VOLUME_INFORMATION) - sizeof(WCHAR), IrpSp->Parameters.QueryVolume.Length));
+            RtlCopyMemory(data, &ffvi, min(offsetof(FILE_FS_VOLUME_INFORMATION, VolumeLabel), IrpSp->Parameters.QueryVolume.Length));
 
             if (label_len > 0) {
                 ULONG bytecount;
@@ -1124,7 +1155,7 @@ static NTSTATUS __stdcall drv_query_volume_information(_In_ PDEVICE_OBJECT Devic
 
             ExReleaseResourceLite(&Vcb->tree_lock);
 
-            BytesCopied = sizeof(FILE_FS_VOLUME_INFORMATION) - sizeof(WCHAR) + label_len;
+            BytesCopied = offsetof(FILE_FS_VOLUME_INFORMATION, VolumeLabel) + label_len;
             Status = overflow ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS;
             break;
         }
@@ -1384,7 +1415,7 @@ static NTSTATUS __stdcall drv_set_volume_information(_In_ PDEVICE_OBJECT DeviceO
     top_level = is_top_level(Irp);
 
     if (Vcb && Vcb->type == VCB_TYPE_VOLUME) {
-        Status = vol_set_volume_information(DeviceObject, Irp);
+        Status = STATUS_INVALID_DEVICE_REQUEST;
         goto end;
     } else if (!Vcb || Vcb->type != VCB_TYPE_FS) {
         Status = STATUS_INVALID_PARAMETER;
@@ -1779,12 +1810,8 @@ void reap_fcbs(device_extension* Vcb) {
 }
 
 void free_fileref(_Inout_ file_ref* fr) {
-    LONG rc;
-
-    rc = InterlockedDecrement(&fr->refcount);
-#ifdef __REACTOS__
-    (void)rc;
-#endif
+#if defined(_DEBUG) || defined(DEBUG_FCB_REFCOUNTS)
+    LONG rc = InterlockedDecrement(&fr->refcount);
 
 #ifdef DEBUG_FCB_REFCOUNTS
     ERR("fileref %p: refcount now %i\n", fr, rc);
@@ -1795,6 +1822,9 @@ void free_fileref(_Inout_ file_ref* fr) {
         ERR("fileref %p: refcount now %li\n", fr, rc);
         int3;
     }
+#endif
+#else
+    InterlockedDecrement(&fr->refcount);
 #endif
 }
 
@@ -2383,7 +2413,8 @@ static NTSTATUS __stdcall drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIR
     top_level = is_top_level(Irp);
 
     if (Vcb && Vcb->type == VCB_TYPE_VOLUME) {
-        Status = vol_cleanup(DeviceObject, Irp);
+        Irp->IoStatus.Information = 0;
+        Status = STATUS_SUCCESS;
         goto exit;
     } else if (DeviceObject == master_devobj) {
         TRACE("closing file system\n");
@@ -5215,7 +5246,7 @@ static NTSTATUS __stdcall drv_file_system_control(_In_ PDEVICE_OBJECT DeviceObje
     top_level = is_top_level(Irp);
 
     if (Vcb && Vcb->type == VCB_TYPE_VOLUME) {
-        Status = vol_file_system_control(DeviceObject, Irp);
+        Status = STATUS_INVALID_DEVICE_REQUEST;
         goto end;
     } else if (!Vcb || (Vcb->type != VCB_TYPE_FS && Vcb->type != VCB_TYPE_CONTROL)) {
         Status = STATUS_INVALID_PARAMETER;
@@ -5295,7 +5326,7 @@ static NTSTATUS __stdcall drv_lock_control(_In_ PDEVICE_OBJECT DeviceObject, _In
     top_level = is_top_level(Irp);
 
     if (Vcb && Vcb->type == VCB_TYPE_VOLUME) {
-        Status = vol_lock_control(DeviceObject, Irp);
+        Status = STATUS_INVALID_DEVICE_REQUEST;
 
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -5460,7 +5491,7 @@ static NTSTATUS __stdcall drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PI
     top_level = is_top_level(Irp);
 
     if (Vcb && Vcb->type == VCB_TYPE_VOLUME) {
-        Status = vol_shutdown(DeviceObject, Irp);
+        Status = STATUS_INVALID_DEVICE_REQUEST;
         goto end;
     }
 
@@ -5888,15 +5919,28 @@ static void init_serial(bool first_time) {
 
 #if !defined(__REACTOS__) && (defined(_X86_) || defined(_AMD64_))
 static void check_cpu() {
-    bool have_sse42;
+    bool have_sse2 = false, have_sse42 = false, have_avx2 = false;
 
 #ifndef _MSC_VER
     {
-        uint32_t eax, ebx, ecx, edx;
+        uint32_t eax, ebx, ecx, edx, xcr0;
 
         __cpuid(1, eax, ebx, ecx, edx);
-        have_sse42 = ecx & bit_SSE4_2;
-        have_sse2 = edx & bit_SSE2;
+
+        if (__get_cpuid(1, &eax, &ebx, &ecx, &edx)) {
+            have_sse42 = ecx & bit_SSE4_2;
+            have_sse2 = edx & bit_SSE2;
+        }
+
+        if (__get_cpuid_count(7, 0, &eax, &ebx, &ecx, &edx))
+            have_avx2 = ebx & bit_AVX2;
+
+        if (have_avx2) { // check if supported by OS
+            __asm__("xgetbv" : "=a" (xcr0) : "c" (0) : "edx" );
+
+            if ((xcr0 & 6) != 6)
+                have_avx2 = false;
+        }
     }
 #else
     {
@@ -5905,6 +5949,16 @@ static void check_cpu() {
         __cpuid(cpu_info, 1);
         have_sse42 = cpu_info[2] & (1 << 20);
         have_sse2 = cpu_info[3] & (1 << 26);
+
+        __cpuidex(cpu_info, 7, 0);
+        have_avx2 = cpu_info[1] & (1 << 5);
+
+        if (have_avx2) {
+            uint32_t xcr0 = (uint32_t)_xgetbv(0);
+
+            if ((xcr0 & 6) != 6)
+                have_avx2 = false;
+        }
     }
 #endif
 
@@ -5914,10 +5968,19 @@ static void check_cpu() {
     } else
         TRACE("SSE4.2 not supported\n");
 
-    if (have_sse2)
+    if (have_sse2) {
         TRACE("SSE2 is supported\n");
-    else
+
+        if (!have_avx2)
+            do_xor = do_xor_sse2;
+    } else
         TRACE("SSE2 is not supported\n");
+
+    if (have_avx2) {
+        TRACE("AVX2 is supported\n");
+        do_xor = do_xor_avx2;
+    } else
+        TRACE("AVX2 is not supported\n");
 }
 #endif
 
@@ -6046,6 +6109,8 @@ NTSTATUS __stdcall AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Physica
     WCHAR arc_name[(sizeof(arc_name_prefix) / sizeof(WCHAR)) - 1 + 37];
 
     TRACE("(%p, %p)\n", DriverObject, PhysicalDeviceObject);
+
+    UNUSED(DriverObject);
 
     ExAcquireResourceSharedLite(&pdo_list_lock, true);
 
