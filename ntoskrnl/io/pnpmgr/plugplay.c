@@ -245,8 +245,14 @@ IopInitializeDevice(
     }
 
     /* Set the device instance of the device node */
-    StatusUnused = RtlDuplicateUnicodeString(0, &DeviceInstance, &DeviceNode->InstancePath);
-    UNREFERENCED_PARAMETER(StatusUnused);
+    Status = RtlDuplicateUnicodeString(0, &DeviceInstance, &DeviceNode->InstancePath);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlDuplicateUnicodeString() failed (Status 0x%08lx)\n", Status);
+        IopFreeDeviceNode(DeviceNode);
+        IoDeleteDevice(DeviceObject);
+        goto done;
+    }
 
     /* Insert as a root enumerated device node */
     PiInsertDevNode(DeviceNode, IopRootDeviceNode);
