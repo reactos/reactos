@@ -22,7 +22,10 @@
 #include <ntddscsi.h>
 #include <ntddstor.h>
 
-#define MAX_CSUM_SIZE (4096 - sizeof(tree_header) - sizeof(leaf_node))
+/* cf. __MAX_CSUM_ITEMS in Linux - it needs sizeof(leaf_node) bytes free
+ * so it can do a split. Linux tries to get it so a run will fit in a
+ * sector, but the MAX_CSUM_ITEMS logic is wrong... */
+#define MAX_CSUM_SIZE (4096 - sizeof(tree_header) - (2 * sizeof(leaf_node)))
 
 // #define DEBUG_WRITE_LOOPS
 

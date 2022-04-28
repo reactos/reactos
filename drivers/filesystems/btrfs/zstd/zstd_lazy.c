@@ -621,7 +621,7 @@ FORCE_INLINE_TEMPLATE size_t ZSTD_HcFindBestMatch_extDict_selectMLS (
 *********************************/
 typedef enum { search_hashChain, search_binaryTree } searchMethod_e;
 
-FORCE_INLINE_TEMPLATE size_t
+size_t
 ZSTD_compressBlock_lazy_generic(
                         ZSTD_matchState_t* ms, seqStore_t* seqStore,
                         U32 rep[ZSTD_REP_NUM],

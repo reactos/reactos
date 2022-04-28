@@ -4389,10 +4389,8 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
     TRACE("(%p, %p)\n", DeviceObject, Irp);
 
-    if (DeviceObject != master_devobj) {
-        Status = STATUS_INVALID_DEVICE_REQUEST;
-        goto exit;
-    }
+    if (DeviceObject != master_devobj)
+        return STATUS_INVALID_DEVICE_REQUEST;
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
     DeviceToMount = IrpSp->Parameters.MountVolume.DeviceObject;
@@ -4412,7 +4410,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
         if (!not_pnp) {
             Status = STATUS_UNRECOGNIZED_VOLUME;
-            goto exit2;
+            goto exit;
         }
     } else {
         PDEVICE_OBJECT pdo;
@@ -4451,7 +4449,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
         if (!vde || vde->type != VCB_TYPE_VOLUME) {
             vde = NULL;
             Status = STATUS_UNRECOGNIZED_VOLUME;
-            goto exit2;
+            goto exit;
         }
     }
 
@@ -4472,11 +4470,13 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
                 if (pdode->num_children == 0) {
                     ERR("error - number of devices is zero\n");
                     Status = STATUS_INTERNAL_ERROR;
-                    goto exit2;
+                    ExReleaseResourceLite(&pdode->child_lock);
+                    goto exit;
                 }
 
                 Status = STATUS_DEVICE_NOT_READY;
-                goto exit2;
+                ExReleaseResourceLite(&pdode->child_lock);
+                goto exit;
             }
 
             le = le2;
@@ -4485,6 +4485,7 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
         if (pdode->num_children == 0 || pdode->children_loaded == 0) {
             ERR("error - number of devices is zero\n");
             Status = STATUS_INTERNAL_ERROR;
+            ExReleaseResourceLite(&pdode->child_lock);
             goto exit;
         }
 
@@ -4519,6 +4520,10 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     if (!NT_SUCCESS(Status)) {
         ERR("IoCreateDevice returned %08lx\n", Status);
         Status = STATUS_UNRECOGNIZED_VOLUME;
+
+        if (pdode)
+            ExReleaseResourceLite(&pdode->child_lock);
+
         goto exit;
     }
 
@@ -4558,18 +4563,29 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
         else if (Irp->Tail.Overlay.Thread)
             IoSetHardErrorOrVerifyDevice(Irp, readobj);
 
+        if (pdode)
+            ExReleaseResourceLite(&pdode->child_lock);
+
         goto exit;
     }
 
     if (!vde && Vcb->superblock.num_devices > 1) {
         ERR("cannot mount multi-device FS with non-PNP device\n");
         Status = STATUS_UNRECOGNIZED_VOLUME;
+
+        if (pdode)
+            ExReleaseResourceLite(&pdode->child_lock);
+
         goto exit;
     }
 
     Status = registry_load_volume_options(Vcb);
     if (!NT_SUCCESS(Status)) {
         ERR("registry_load_volume_options returned %08lx\n", Status);
+
+        if (pdode)
+            ExReleaseResourceLite(&pdode->child_lock);
+
         goto exit;
     }
 
@@ -4579,7 +4595,13 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     if (pdode && pdode->children_loaded < pdode->num_children && (!Vcb->options.allow_degraded || !finished_probing || degraded_wait)) {
         ERR("could not mount as %I64u device(s) missing\n", pdode->num_children - pdode->children_loaded);
         Status = STATUS_DEVICE_NOT_READY;
+        ExReleaseResourceLite(&pdode->child_lock);
         goto exit;
+    }
+
+    if (pdode) {
+        // Windows holds DeviceObject->DeviceLock, guaranteeing that mount_vol is serialized
+        ExReleaseResourceLite(&pdode->child_lock);
     }
 
     if (Vcb->options.ignore) {
@@ -5014,10 +5036,6 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     ExInitializeResourceLite(&Vcb->send_load_lock);
 
 exit:
-    if (pdode)
-        ExReleaseResourceLite(&pdode->child_lock);
-
-exit2:
     if (Vcb) {
         ExReleaseResourceLite(&Vcb->tree_lock);
         ExReleaseResourceLite(&Vcb->load_lock);
@@ -5784,6 +5802,14 @@ NTSTATUS check_file_name_valid(_In_ PUNICODE_STRING us, _In_ bool posix, _In_ bo
             (!posix && !stream && (us->Buffer[i] == '<' || us->Buffer[i] == '>' || us->Buffer[i] == '"' ||
             us->Buffer[i] == '|' || us->Buffer[i] == '?' || us->Buffer[i] == '*' || (us->Buffer[i] >= 1 && us->Buffer[i] <= 31))))
             return STATUS_OBJECT_NAME_INVALID;
+
+        /* Don't allow unpaired surrogates ("WTF-16") */
+
+        if ((us->Buffer[i] & 0xfc00) == 0xdc00 && (i == 0 || ((us->Buffer[i-1] & 0xfc00) != 0xd800)))
+            return STATUS_OBJECT_NAME_INVALID;
+
+        if ((us->Buffer[i] & 0xfc00) == 0xd800 && (i == (us->Length / sizeof(WCHAR)) - 1 || ((us->Buffer[i+1] & 0xfc00) != 0xdc00)))
+            return STATUS_OBJECT_NAME_INVALID;
     }
 
     if (us->Buffer[0] == '.' && (us->Length == sizeof(WCHAR) || (us->Length == 2 * sizeof(WCHAR) && us->Buffer[1] == '.')))
@@ -6290,6 +6316,8 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
 
     is_windows_8 = ver.dwMajorVersion > 6 || (ver.dwMajorVersion == 6 && ver.dwMinorVersion >= 2);
 
+    KeInitializeSpinLock(&fve_data_lock);
+
     InitializeListHead(&uid_map_list);
     InitializeListHead(&gid_map_list);
 
@@ -6516,12 +6544,12 @@ NTSTATUS __stdcall DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_S
     ExInitializeResourceLite(&boot_lock);
 
     Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange, PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
-                                            (PVOID)&GUID_DEVINTERFACE_VOLUME, DriverObject, volume_notification, DriverObject, &notification_entry2);
+                                            (PVOID)&GUID_DEVINTERFACE_VOLUME, DriverObject, volume_notification, NULL, &notification_entry2);
     if (!NT_SUCCESS(Status))
         ERR("IoRegisterPlugPlayNotification returned %08lx\n", Status);
 
     Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange, PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
-                                            (PVOID)&GUID_DEVINTERFACE_HIDDEN_VOLUME, DriverObject, volume_notification, DriverObject, &notification_entry3);
+                                            (PVOID)&GUID_DEVINTERFACE_HIDDEN_VOLUME, DriverObject, volume_notification, NULL, &notification_entry3);
     if (!NT_SUCCESS(Status))
         ERR("IoRegisterPlugPlayNotification returned %08lx\n", Status);
 

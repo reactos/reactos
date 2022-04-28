@@ -1774,11 +1774,11 @@ NTSTATUS open_fileref(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusiv
         name_bit* nb;
 
         nb = CONTAINING_RECORD(RemoveTailList(&parts), name_bit, list_entry);
-        ExFreePool(nb);
+        ExFreeToPagedLookasideList(&Vcb->name_bit_lookaside, nb);
 
         if (has_stream && !IsListEmpty(&parts)) {
             nb = CONTAINING_RECORD(RemoveTailList(&parts), name_bit, list_entry);
-            ExFreePool(nb);
+            ExFreeToPagedLookasideList(&Vcb->name_bit_lookaside, nb);
 
             has_stream = false;
         }
@@ -1876,6 +1876,8 @@ NTSTATUS add_dir_child(fcb* fcb, uint64_t inode, bool subvol, PANSI_STRING utf8,
         ERR("out of memory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    RtlZeroMemory(dc, sizeof(dir_child));
 
     dc->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, utf8->Length, ALLOC_TAG);
     if (!dc->utf8.Buffer) {
