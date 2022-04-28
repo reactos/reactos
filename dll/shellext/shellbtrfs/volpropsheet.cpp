@@ -97,7 +97,7 @@ HRESULT __stdcall BtrfsVolPropSheet::Initialize(PCIDLIST_ABSOLUTE pidlFolder, ID
         return E_FAIL;
     }
 
-    if (DragQueryFileW((HDROP)stgm.hGlobal, 0, fnbuf, sizeof(fnbuf) / sizeof(MAX_PATH))) {
+    if (DragQueryFileW((HDROP)stgm.hGlobal, 0, fnbuf, sizeof(fnbuf) / sizeof(WCHAR))) {
         fn = fnbuf;
 
         win_handle h = CreateFileW(fn.c_str(), FILE_TRAVERSE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,

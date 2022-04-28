@@ -36,10 +36,6 @@
 
 #define SEF_AVOID_PRIVILEGE_CHECK 0x08 // on MSDN but not in any header files(?)
 
-#ifndef _MSC_VER // not in mingw yet
-#define DEVICE_DSM_FLAG_TRIM_NOT_FS_ALLOCATED 0x80000000
-#endif
-
 #define SEF_SACL_AUTO_INHERIT 0x02
 
 extern LIST_ENTRY VcbList;
@@ -5030,7 +5026,7 @@ static NTSTATUS get_retrieval_pointers(device_extension* Vcb, PFILE_OBJECT FileO
 
     ExAcquireResourceSharedLite(fcb->Header.Resource, true);
 
-    try {
+    _SEH2_TRY {
         LIST_ENTRY* le = fcb->extents.Flink;
         extent* first_ext = NULL;
         unsigned int num_extents = 0, first_extent_num = 0, i;
@@ -5067,7 +5063,7 @@ static NTSTATUS get_retrieval_pointers(device_extension* Vcb, PFILE_OBJECT FileO
 
         if (!first_ext) {
             Status = STATUS_END_OF_FILE;
-            leave;
+            _SEH2_LEAVE;
         }
 
         out->ExtentCount = num_extents - first_extent_num;
@@ -5090,7 +5086,7 @@ static NTSTATUS get_retrieval_pointers(device_extension* Vcb, PFILE_OBJECT FileO
             if (ext->offset > last_off) {
                 if (outlen < sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER)) {
                     Status = STATUS_BUFFER_OVERFLOW;
-                    leave;
+                    _SEH2_LEAVE;
                 }
 
                 out->Extents[i].NextVcn.QuadPart = ext->offset >> Vcb->sector_shift;
@@ -5103,7 +5099,7 @@ static NTSTATUS get_retrieval_pointers(device_extension* Vcb, PFILE_OBJECT FileO
 
             if (outlen < sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER)) {
                 Status = STATUS_BUFFER_OVERFLOW;
-                leave;
+                _SEH2_LEAVE;
             }
 
             out->Extents[i].NextVcn.QuadPart = (ext->offset + ext->extent_data.decoded_size) >> Vcb->sector_shift;
@@ -5125,7 +5121,7 @@ static NTSTATUS get_retrieval_pointers(device_extension* Vcb, PFILE_OBJECT FileO
         if (num_sectors << Vcb->sector_shift > last_off) {
             if (outlen < sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER)) {
                 Status = STATUS_BUFFER_OVERFLOW;
-                leave;
+                _SEH2_LEAVE;
             }
 
             out->Extents[i].NextVcn.QuadPart = num_sectors;
@@ -5136,9 +5132,9 @@ static NTSTATUS get_retrieval_pointers(device_extension* Vcb, PFILE_OBJECT FileO
         }
 
         Status = STATUS_SUCCESS;
-    } finally {
+    } _SEH2_FINALLY {
         ExReleaseResourceLite(fcb->Header.Resource);
-    }
+    } _SEH2_END;
 
     return Status;
 }
@@ -5235,7 +5231,7 @@ static NTSTATUS get_csum_info(device_extension* Vcb, PFILE_OBJECT FileObject, bt
 
     ExAcquireResourceSharedLite(fcb->Header.Resource, true);
 
-    try {
+    _SEH2_TRY {
         LIST_ENTRY* le;
         uint8_t* ptr;
         uint64_t last_off;
@@ -5244,17 +5240,17 @@ static NTSTATUS get_csum_info(device_extension* Vcb, PFILE_OBJECT FileObject, bt
 
         if (fcb->ads) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            leave;
+            _SEH2_LEAVE;
         }
 
         if (fcb->type == BTRFS_TYPE_DIRECTORY) {
             Status = STATUS_FILE_IS_A_DIRECTORY;
-            leave;
+            _SEH2_LEAVE;
         }
 
         if (fcb->inode_item.flags & BTRFS_INODE_NODATASUM) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            leave;
+            _SEH2_LEAVE;
         }
 
         buf->csum_type = Vcb->superblock.csum_type;
@@ -5273,7 +5269,7 @@ static NTSTATUS get_csum_info(device_extension* Vcb, PFILE_OBJECT FileObject, bt
                 buf->num_sectors = 0;
                 *retlen = offsetof(btrfs_csum_info, data[0]);
                 Status = STATUS_SUCCESS;
-                leave;
+                _SEH2_LEAVE;
             }
 
             le = le->Flink;
@@ -5284,7 +5280,7 @@ static NTSTATUS get_csum_info(device_extension* Vcb, PFILE_OBJECT FileObject, bt
         if (buflen < offsetof(btrfs_csum_info, data[0]) + (buf->csum_length * buf->num_sectors)) {
             Status = STATUS_BUFFER_OVERFLOW;
             *retlen = offsetof(btrfs_csum_info, data[0]);
-            leave;
+            _SEH2_LEAVE;
         }
 
         ptr = buf->data;
@@ -5333,9 +5329,9 @@ static NTSTATUS get_csum_info(device_extension* Vcb, PFILE_OBJECT FileObject, bt
 
         *retlen = offsetof(btrfs_csum_info, data[0]) + (buf->csum_length * buf->num_sectors);
         Status = STATUS_SUCCESS;
-    } finally {
+    } _SEH2_FINALLY {
         ExReleaseResourceLite(fcb->Header.Resource);
-    }
+    } _SEH2_END;
 
     return Status;
 }

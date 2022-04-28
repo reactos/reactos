@@ -727,6 +727,13 @@ next:
     if (!dc)
         return STATUS_NO_MORE_FILES;
 
+    if (dc->root_dir && fileref->parent) { // hide $Root dir unless in apparent root, to avoid recursion
+        if (dc->list_entry_index.Flink == &fileref->fcb->dir_children_index)
+            return STATUS_NO_MORE_FILES;
+
+        dc = CONTAINING_RECORD(dc->list_entry_index.Flink, dir_child, list_entry_index);
+    }
+
     de->key = dc->key;
     de->name = dc->name;
     de->type = dc->type;

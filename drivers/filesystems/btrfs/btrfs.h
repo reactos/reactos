@@ -15,6 +15,7 @@ static const uint64_t superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0
 #define BTRFS_MAGIC         0x4d5f53665248425f
 #define MAX_LABEL_SIZE      0x100
 #define SUBVOL_ROOT_INODE   0x100
+#define BTRFS_LAST_FREE_OBJECTID    0xffffffffffffff00
 
 #define TYPE_INODE_ITEM        0x01
 #define TYPE_INODE_REF         0x0C
