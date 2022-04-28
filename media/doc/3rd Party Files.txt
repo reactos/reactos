@@ -77,7 +77,7 @@ Title: WinBtrfs
 Path: dll/shellext/shellbtrfs
 Path: drivers/filesystems/btrfs
 Path: sdk/lib/fslib/btrfslib
-Used Version: 1.7.2
+Used Version: 1.8.0
 License: LGPL-3.0-or-later (https://spdx.org/licenses/LGPL-3.0-or-later.html)
 URL: https://github.com/maharmstone/btrfs
 
