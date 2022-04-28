@@ -195,6 +195,10 @@ NTSTATUS find_file_in_dir(PUNICODE_STRING filename, fcb* fcb, root** subvol, uin
     } else
         fnus = *filename;
 
+    Status = check_file_name_valid(filename, false, false);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
     hash = calc_crc32c(0xffffffff, (uint8_t*)fnus.Buffer, fnus.Length);
 
     c = hash >> 24;
@@ -1604,6 +1608,9 @@ NTSTATUS open_fileref_child(_Requires_lock_held_(_Curr_->tree_lock) _Requires_ex
             TRACE("could not find %.*S\n", (int)(name->Length / sizeof(WCHAR)), name->Buffer);
 
             return lastpart ? STATUS_OBJECT_NAME_NOT_FOUND : STATUS_OBJECT_PATH_NOT_FOUND;
+        } else if (Status == STATUS_OBJECT_NAME_INVALID) {
+            TRACE("invalid filename: %.*S\n", (int)(name->Length / sizeof(WCHAR)), name->Buffer);
+            return Status;
         } else if (!NT_SUCCESS(Status)) {
             ERR("find_file_in_dir returned %08lx\n", Status);
             return Status;
@@ -1804,7 +1811,7 @@ NTSTATUS open_fileref(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusiv
         Status = open_fileref_child(Vcb, sf, &nb->us, cs, lastpart, streampart, pooltype, &sf2, Irp);
 
         if (!NT_SUCCESS(Status)) {
-            if (Status == STATUS_OBJECT_PATH_NOT_FOUND || Status == STATUS_OBJECT_NAME_NOT_FOUND)
+            if (Status == STATUS_OBJECT_PATH_NOT_FOUND || Status == STATUS_OBJECT_NAME_NOT_FOUND || Status == STATUS_OBJECT_NAME_INVALID)
                 TRACE("open_fileref_child returned %08lx\n", Status);
             else
                 ERR("open_fileref_child returned %08lx\n", Status);
@@ -4668,7 +4675,7 @@ loaded:
             TRACE("file doesn't exist, returning STATUS_OBJECT_NAME_NOT_FOUND\n");
             goto exit;
         }
-    } else if (Status == STATUS_OBJECT_PATH_NOT_FOUND) {
+    } else if (Status == STATUS_OBJECT_PATH_NOT_FOUND || Status == STATUS_OBJECT_NAME_INVALID) {
         TRACE("open_fileref returned %08lx\n", Status);
         goto exit;
     } else {

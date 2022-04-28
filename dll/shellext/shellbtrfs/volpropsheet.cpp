@@ -1476,7 +1476,7 @@ HRESULT __stdcall BtrfsVolPropSheet::ReplacePage(UINT uPageID, LPFNADDPROPSHEETP
 void BtrfsChangeDriveLetter::do_change(HWND hwndDlg) {
     unsigned int sel = (unsigned int)SendDlgItemMessageW(hwndDlg, IDC_DRIVE_LETTER_COMBO, CB_GETCURSEL, 0, 0);
 
-    if (sel >= 0 && sel < letters.size()) {
+    if (sel < letters.size()) {
         wstring dd;
 
         if (fn.length() == 3 && fn[1] == L':' && fn[2] == L'\\') {

@@ -354,18 +354,11 @@ static BOOLEAN __stdcall fast_io_write(PFILE_OBJECT FileObject, PLARGE_INTEGER F
         return false;
     }
 
-    if (!ExAcquireResourceExclusiveLite(fcb->Header.Resource, Wait)) {
-        ExReleaseResourceLite(&fcb->Vcb->tree_lock);
-        FsRtlExitFileSystem();
-        return false;
-    }
-
     ret = FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 
     if (ret)
         fcb->inode_item.st_size = fcb->Header.FileSize.QuadPart;
 
-    ExReleaseResourceLite(fcb->Header.Resource);
     ExReleaseResourceLite(&fcb->Vcb->tree_lock);
 
     FsRtlExitFileSystem();
