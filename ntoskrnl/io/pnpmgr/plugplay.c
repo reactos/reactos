@@ -195,7 +195,7 @@ IopInitializeDevice(
     UNICODE_STRING DeviceInstance;
     PDEVICE_OBJECT DeviceObject;
     PDEVICE_NODE DeviceNode;
-    NTSTATUS Status = STATUS_SUCCESS, StatusUnused;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("IopInitializeDevice(%p)\n", ControlData);
 
