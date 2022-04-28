@@ -164,33 +164,33 @@ static void add_trim_entry(device* dev, uint64_t address, uint64_t size) {
 }
 
 static void clean_space_cache_chunk(device_extension* Vcb, chunk* c) {
+    LIST_ENTRY* le;
     ULONG type;
 
-    if (Vcb->trim && !Vcb->options.no_trim) {
-        if (c->chunk_item->type & BLOCK_FLAG_DUPLICATE)
-            type = BLOCK_FLAG_DUPLICATE;
-        else if (c->chunk_item->type & BLOCK_FLAG_RAID0)
-            type = BLOCK_FLAG_RAID0;
-        else if (c->chunk_item->type & BLOCK_FLAG_RAID1)
-            type = BLOCK_FLAG_DUPLICATE;
-        else if (c->chunk_item->type & BLOCK_FLAG_RAID10)
-            type = BLOCK_FLAG_RAID10;
-        else if (c->chunk_item->type & BLOCK_FLAG_RAID5)
-            type = BLOCK_FLAG_RAID5;
-        else if (c->chunk_item->type & BLOCK_FLAG_RAID6)
-            type = BLOCK_FLAG_RAID6;
-        else if (c->chunk_item->type & BLOCK_FLAG_RAID1C3)
-            type = BLOCK_FLAG_DUPLICATE;
-        else if (c->chunk_item->type & BLOCK_FLAG_RAID1C4)
-            type = BLOCK_FLAG_DUPLICATE;
-        else // SINGLE
-            type = BLOCK_FLAG_DUPLICATE;
-    }
+    if (c->chunk_item->type & BLOCK_FLAG_DUPLICATE)
+        type = BLOCK_FLAG_DUPLICATE;
+    else if (c->chunk_item->type & BLOCK_FLAG_RAID0)
+        type = BLOCK_FLAG_RAID0;
+    else if (c->chunk_item->type & BLOCK_FLAG_RAID1)
+        type = BLOCK_FLAG_DUPLICATE;
+    else if (c->chunk_item->type & BLOCK_FLAG_RAID10)
+        type = BLOCK_FLAG_RAID10;
+    else if (c->chunk_item->type & BLOCK_FLAG_RAID5)
+        type = BLOCK_FLAG_RAID5;
+    else if (c->chunk_item->type & BLOCK_FLAG_RAID6)
+        type = BLOCK_FLAG_RAID6;
+    else if (c->chunk_item->type & BLOCK_FLAG_RAID1C3)
+        type = BLOCK_FLAG_DUPLICATE;
+    else if (c->chunk_item->type & BLOCK_FLAG_RAID1C4)
+        type = BLOCK_FLAG_DUPLICATE;
+    else // SINGLE
+        type = BLOCK_FLAG_DUPLICATE;
 
-    while (!IsListEmpty(&c->deleting)) {
-        space* s = CONTAINING_RECORD(c->deleting.Flink, space, list_entry);
+    le = c->deleting.Flink;
+    while (le != &c->deleting) {
+        space* s = CONTAINING_RECORD(le, space, list_entry);
 
-        if (Vcb->trim && !Vcb->options.no_trim && (!Vcb->options.no_barrier || !(c->chunk_item->type & BLOCK_FLAG_METADATA))) {
+        if (!Vcb->options.no_barrier || !(c->chunk_item->type & BLOCK_FLAG_METADATA)) {
             CHUNK_ITEM_STRIPE* cis = (CHUNK_ITEM_STRIPE*)&c->chunk_item[1];
 
             if (type == BLOCK_FLAG_DUPLICATE) {
@@ -270,8 +270,7 @@ static void clean_space_cache_chunk(device_extension* Vcb, chunk* c) {
             // FIXME - RAID5(?), RAID6(?)
         }
 
-        RemoveEntryList(&s->list_entry);
-        ExFreePool(s);
+        le = le->Flink;
     }
 }
 
@@ -414,8 +413,18 @@ static void clean_space_cache(device_extension* Vcb) {
         if (c->space_changed) {
             acquire_chunk_lock(c, Vcb);
 
-            if (c->space_changed)
-                clean_space_cache_chunk(Vcb, c);
+            if (c->space_changed) {
+                if (Vcb->trim && !Vcb->options.no_trim)
+                    clean_space_cache_chunk(Vcb, c);
+
+                space_list_merge(&c->space, &c->space_size, &c->deleting);
+
+                while (!IsListEmpty(&c->deleting)) {
+                    space* s = CONTAINING_RECORD(RemoveHeadList(&c->deleting), space, list_entry);
+
+                    ExFreePool(s);
+                }
+            }
 
             c->space_changed = false;
 
@@ -725,7 +734,7 @@ static bool insert_tree_extent_skinny(device_extension* Vcb, uint8_t level, uint
 
     acquire_chunk_lock(c, Vcb);
 
-    space_list_subtract(c, false, address, Vcb->superblock.node_size, rollback);
+    space_list_subtract(c, address, Vcb->superblock.node_size, rollback);
 
     release_chunk_lock(c, Vcb);
 
@@ -857,7 +866,7 @@ static bool insert_tree_extent(device_extension* Vcb, uint8_t level, uint64_t ro
 
     acquire_chunk_lock(c, Vcb);
 
-    space_list_subtract(c, false, address, Vcb->superblock.node_size, rollback);
+    space_list_subtract(c, address, Vcb->superblock.node_size, rollback);
 
     release_chunk_lock(c, Vcb);
 
@@ -2639,7 +2648,7 @@ void add_checksum_entry(device_extension* Vcb, uint64_t address, ULONG length, v
                 length2 -= il;
 
                 if (length2 > 0) {
-                    off += il * Vcb->superblock.sector_size;
+                    off += (uint64_t)il << Vcb->sector_shift;
                     data = (uint8_t*)data + (il * Vcb->csum_size);
                 }
             } while (length2 > 0);
@@ -2653,14 +2662,14 @@ void add_checksum_entry(device_extension* Vcb, uint64_t address, ULONG length, v
 
         // FIXME - check entry is TYPE_EXTENT_CSUM?
 
-        if (tp.item->key.offset < address && tp.item->key.offset + (tp.item->size * Vcb->superblock.sector_size / Vcb->csum_size) >= address)
+        if (tp.item->key.offset < address && tp.item->key.offset + (((uint64_t)tp.item->size << Vcb->sector_shift) / Vcb->csum_size) >= address)
             startaddr = tp.item->key.offset;
         else
             startaddr = address;
 
         searchkey.obj_id = EXTENT_CSUM_ID;
         searchkey.obj_type = TYPE_EXTENT_CSUM;
-        searchkey.offset = address + (length * Vcb->superblock.sector_size);
+        searchkey.offset = address + (length << Vcb->sector_shift);
 
         Status = find_item(Vcb, Vcb->checksum_root, &tp, &searchkey, false, Irp);
         if (!NT_SUCCESS(Status)) {
@@ -2670,16 +2679,16 @@ void add_checksum_entry(device_extension* Vcb, uint64_t address, ULONG length, v
 
         tplen = tp.item->size / Vcb->csum_size;
 
-        if (tp.item->key.offset + (tplen * Vcb->superblock.sector_size) >= address + (length * Vcb->superblock.sector_size))
-            endaddr = tp.item->key.offset + (tplen * Vcb->superblock.sector_size);
+        if (tp.item->key.offset + (tplen << Vcb->sector_shift) >= address + (length << Vcb->sector_shift))
+            endaddr = tp.item->key.offset + (tplen << Vcb->sector_shift);
         else
-            endaddr = address + (length * Vcb->superblock.sector_size);
+            endaddr = address + (length << Vcb->sector_shift);
 
         TRACE("cs starts at %I64x (%lx sectors)\n", address, length);
         TRACE("startaddr = %I64x\n", startaddr);
         TRACE("endaddr = %I64x\n", endaddr);
 
-        len = (ULONG)((endaddr - startaddr) / Vcb->superblock.sector_size);
+        len = (ULONG)((endaddr - startaddr) >> Vcb->sector_shift);
 
         checksums = ExAllocatePoolWithTag(PagedPool, Vcb->csum_size * len, ALLOC_TAG);
         if (!checksums) {
@@ -2714,11 +2723,11 @@ void add_checksum_entry(device_extension* Vcb, uint64_t address, ULONG length, v
         while (tp.item->key.offset < endaddr) {
             if (tp.item->key.offset >= startaddr) {
                 if (tp.item->size > 0) {
-                    ULONG itemlen = (ULONG)min((len - (tp.item->key.offset - startaddr) / Vcb->superblock.sector_size) * Vcb->csum_size, tp.item->size);
+                    ULONG itemlen = (ULONG)min((len - ((tp.item->key.offset - startaddr) >> Vcb->sector_shift)) * Vcb->csum_size, tp.item->size);
 
-                    RtlCopyMemory((uint8_t*)checksums + ((tp.item->key.offset - startaddr) * Vcb->csum_size / Vcb->superblock.sector_size),
+                    RtlCopyMemory((uint8_t*)checksums + (((tp.item->key.offset - startaddr) * Vcb->csum_size) >> Vcb->sector_shift),
                                   tp.item->data, itemlen);
-                    RtlClearBits(&bmp, (ULONG)((tp.item->key.offset - startaddr) / Vcb->superblock.sector_size), itemlen / Vcb->csum_size);
+                    RtlClearBits(&bmp, (ULONG)((tp.item->key.offset - startaddr) >> Vcb->sector_shift), itemlen / Vcb->csum_size);
                 }
 
                 Status = delete_tree_item(Vcb, &tp);
@@ -2737,11 +2746,11 @@ void add_checksum_entry(device_extension* Vcb, uint64_t address, ULONG length, v
         }
 
         if (!csum) { // deleted
-            RtlSetBits(&bmp, (ULONG)((address - startaddr) / Vcb->superblock.sector_size), length);
+            RtlSetBits(&bmp, (ULONG)((address - startaddr) >> Vcb->sector_shift), length);
         } else {
-            RtlCopyMemory((uint8_t*)checksums + ((address - startaddr) * Vcb->csum_size / Vcb->superblock.sector_size),
+            RtlCopyMemory((uint8_t*)checksums + (((address - startaddr) * Vcb->csum_size) >> Vcb->sector_shift),
                           csum, length * Vcb->csum_size);
-            RtlClearBits(&bmp, (ULONG)((address - startaddr) / Vcb->superblock.sector_size), length);
+            RtlClearBits(&bmp, (ULONG)((address - startaddr) >> Vcb->sector_shift), length);
         }
 
         runlength = RtlFindFirstRunClear(&bmp, &index);
@@ -2777,7 +2786,7 @@ void add_checksum_entry(device_extension* Vcb, uint64_t address, ULONG length, v
 
                 RtlCopyMemory(data, (uint8_t*)checksums + (Vcb->csum_size * index), Vcb->csum_size * rl);
 
-                off = startaddr + UInt32x32To64(index, Vcb->superblock.sector_size);
+                off = startaddr + ((uint64_t)index << Vcb->sector_shift);
 
                 Status = insert_tree_item(Vcb, Vcb->checksum_root, EXTENT_CSUM_ID, TYPE_EXTENT_CSUM, off, data, Vcb->csum_size * rl, NULL, Irp);
                 if (!NT_SUCCESS(Status)) {
@@ -3661,7 +3670,7 @@ static NTSTATUS update_tree_extents_recursive(device_extension* Vcb, tree* t, PI
 
 static NTSTATUS do_splits(device_extension* Vcb, PIRP Irp, LIST_ENTRY* rollback) {
     ULONG level, max_level;
-    uint32_t min_size;
+    uint32_t min_size, min_size_fst;
     bool empty, done_deletions = false;
     NTSTATUS Status;
     tree* t;
@@ -3770,6 +3779,7 @@ static NTSTATUS do_splits(device_extension* Vcb, PIRP Irp, LIST_ENTRY* rollback)
     }
 
     min_size = (Vcb->superblock.node_size - sizeof(tree_header)) / 2;
+    min_size_fst = (Vcb->superblock.node_size - sizeof(tree_header)) / 4;
 
     for (level = 0; level <= max_level; level++) {
         LIST_ENTRY* le;
@@ -3779,8 +3789,9 @@ static NTSTATUS do_splits(device_extension* Vcb, PIRP Irp, LIST_ENTRY* rollback)
         while (le != &Vcb->trees) {
             t = CONTAINING_RECORD(le, tree, list_entry);
 
-            if (t->write && t->header.level == level && t->header.num_items > 0 && t->parent && t->size < min_size &&
-                t->root->id != BTRFS_ROOT_FREE_SPACE && is_tree_unique(Vcb, t, Irp)) {
+            if (t->write && t->header.level == level && t->header.num_items > 0 && t->parent &&
+                ((t->size < min_size && t->root->id != BTRFS_ROOT_FREE_SPACE) || (t->size < min_size_fst && t->root->id == BTRFS_ROOT_FREE_SPACE)) &&
+                is_tree_unique(Vcb, t, Irp)) {
                 bool done;
 
                 do {
@@ -4649,7 +4660,7 @@ cont:
                 }
 
                 if (!(fcb->inode_item.flags & BTRFS_INODE_NODATASUM))
-                    add_checksum_entry(fcb->Vcb, er->address, (ULONG)(er->skip_start / fcb->Vcb->superblock.sector_size), NULL, NULL);
+                    add_checksum_entry(fcb->Vcb, er->address, (ULONG)(er->skip_start >> fcb->Vcb->sector_shift), NULL, NULL);
 
                 acquire_chunk_lock(er->chunk, fcb->Vcb);
 
@@ -4703,7 +4714,7 @@ cont:
                 }
 
                 if (!(fcb->inode_item.flags & BTRFS_INODE_NODATASUM))
-                    add_checksum_entry(fcb->Vcb, er->address + er->length - er->skip_end, (ULONG)(er->skip_end / fcb->Vcb->superblock.sector_size), NULL, NULL);
+                    add_checksum_entry(fcb->Vcb, er->address + er->length - er->skip_end, (ULONG)(er->skip_end >> fcb->Vcb->sector_shift), NULL, NULL);
 
                 acquire_chunk_lock(er->chunk, fcb->Vcb);
 
@@ -4902,9 +4913,9 @@ NTSTATUS flush_fcb(fcb* fcb, bool cache, LIST_ENTRY* batchlist, PIRP Irp) {
 
                 if (ed2->size > 0) { // not sparse
                     if (ext->extent_data.compression == BTRFS_COMPRESSION_NONE)
-                        add_checksum_entry(fcb->Vcb, ed2->address + ed2->offset, (ULONG)(ed2->num_bytes / fcb->Vcb->superblock.sector_size), ext->csum, Irp);
+                        add_checksum_entry(fcb->Vcb, ed2->address + ed2->offset, (ULONG)(ed2->num_bytes >> fcb->Vcb->sector_shift), ext->csum, Irp);
                     else
-                        add_checksum_entry(fcb->Vcb, ed2->address, (ULONG)(ed2->size / fcb->Vcb->superblock.sector_size), ext->csum, Irp);
+                        add_checksum_entry(fcb->Vcb, ed2->address, (ULONG)(ed2->size >> fcb->Vcb->sector_shift), ext->csum, Irp);
                 }
             }
 
@@ -4933,7 +4944,7 @@ NTSTATUS flush_fcb(fcb* fcb, bool cache, LIST_ENTRY* batchlist, PIRP Irp) {
                             chunk* c;
 
                             if (ext->extent_data.compression == BTRFS_COMPRESSION_NONE && ext->csum) {
-                                ULONG len = (ULONG)((ed2->num_bytes + ned2->num_bytes) / fcb->Vcb->superblock.sector_size);
+                                ULONG len = (ULONG)((ed2->num_bytes + ned2->num_bytes) >> fcb->Vcb->sector_shift);
                                 void* csum;
 
                                 csum = ExAllocatePoolWithTag(NonPagedPool, len * fcb->Vcb->csum_size, ALLOC_TAG);
@@ -4943,9 +4954,9 @@ NTSTATUS flush_fcb(fcb* fcb, bool cache, LIST_ENTRY* batchlist, PIRP Irp) {
                                     goto end;
                                 }
 
-                                RtlCopyMemory(csum, ext->csum, (ULONG)(ed2->num_bytes * fcb->Vcb->csum_size / fcb->Vcb->superblock.sector_size));
-                                RtlCopyMemory((uint8_t*)csum + (ed2->num_bytes * fcb->Vcb->csum_size / fcb->Vcb->superblock.sector_size), nextext->csum,
-                                              (ULONG)(ned2->num_bytes * fcb->Vcb->csum_size / fcb->Vcb->superblock.sector_size));
+                                RtlCopyMemory(csum, ext->csum, (ULONG)((ed2->num_bytes * fcb->Vcb->csum_size) >> fcb->Vcb->sector_shift));
+                                RtlCopyMemory((uint8_t*)csum + ((ed2->num_bytes * fcb->Vcb->csum_size) >> fcb->Vcb->sector_shift), nextext->csum,
+                                              (ULONG)((ned2->num_bytes * fcb->Vcb->csum_size) >> fcb->Vcb->sector_shift));
 
                                 ExFreePool(ext->csum);
                                 ext->csum = csum;
@@ -5738,7 +5749,7 @@ static NTSTATUS drop_chunk(device_extension* Vcb, chunk* c, LIST_ENTRY* batchlis
 
 static NTSTATUS partial_stripe_read(device_extension* Vcb, chunk* c, partial_stripe* ps, uint64_t startoff, uint16_t parity, ULONG offset, ULONG len) {
     NTSTATUS Status;
-    ULONG sl = (ULONG)(c->chunk_item->stripe_length / Vcb->superblock.sector_size);
+    ULONG sl = (ULONG)(c->chunk_item->stripe_length >> Vcb->sector_shift);
     CHUNK_ITEM_STRIPE* cis = (CHUNK_ITEM_STRIPE*)&c->chunk_item[1];
 
     while (len > 0) {
@@ -5748,8 +5759,8 @@ static NTSTATUS partial_stripe_read(device_extension* Vcb, chunk* c, partial_str
         stripe = (parity + (offset / sl) + 1) % c->chunk_item->num_stripes;
 
         if (c->devices[stripe]->devobj) {
-            Status = sync_read_phys(c->devices[stripe]->devobj, c->devices[stripe]->fileobj, cis[stripe].offset + startoff + ((offset % sl) * Vcb->superblock.sector_size),
-                                    readlen * Vcb->superblock.sector_size, ps->data + (offset * Vcb->superblock.sector_size), false);
+            Status = sync_read_phys(c->devices[stripe]->devobj, c->devices[stripe]->fileobj, cis[stripe].offset + startoff + ((offset % sl) << Vcb->sector_shift),
+                                    readlen << Vcb->sector_shift, ps->data + (offset << Vcb->sector_shift), false);
             if (!NT_SUCCESS(Status)) {
                 ERR("sync_read_phys returned %08lx\n", Status);
                 return Status;
@@ -5758,7 +5769,7 @@ static NTSTATUS partial_stripe_read(device_extension* Vcb, chunk* c, partial_str
             uint16_t i;
             uint8_t* scratch;
 
-            scratch = ExAllocatePoolWithTag(NonPagedPool, readlen * Vcb->superblock.sector_size, ALLOC_TAG);
+            scratch = ExAllocatePoolWithTag(NonPagedPool, readlen << Vcb->sector_shift, ALLOC_TAG);
             if (!scratch) {
                 ERR("out of memory\n");
                 return STATUS_INSUFFICIENT_RESOURCES;
@@ -5772,23 +5783,23 @@ static NTSTATUS partial_stripe_read(device_extension* Vcb, chunk* c, partial_str
                     }
 
                     if (i == 0 || (stripe == 0 && i == 1)) {
-                        Status = sync_read_phys(c->devices[i]->devobj, c->devices[i]->fileobj, cis[i].offset + startoff + ((offset % sl) * Vcb->superblock.sector_size),
-                                                readlen * Vcb->superblock.sector_size, ps->data + (offset * Vcb->superblock.sector_size), false);
+                        Status = sync_read_phys(c->devices[i]->devobj, c->devices[i]->fileobj, cis[i].offset + startoff + ((offset % sl) << Vcb->sector_shift),
+                                                readlen << Vcb->sector_shift, ps->data + (offset << Vcb->sector_shift), false);
                         if (!NT_SUCCESS(Status)) {
                             ERR("sync_read_phys returned %08lx\n", Status);
                             ExFreePool(scratch);
                             return Status;
                         }
                     } else {
-                        Status = sync_read_phys(c->devices[i]->devobj, c->devices[i]->fileobj, cis[i].offset + startoff + ((offset % sl) * Vcb->superblock.sector_size),
-                                                readlen * Vcb->superblock.sector_size, scratch, false);
+                        Status = sync_read_phys(c->devices[i]->devobj, c->devices[i]->fileobj, cis[i].offset + startoff + ((offset % sl) << Vcb->sector_shift),
+                                                readlen << Vcb->sector_shift, scratch, false);
                         if (!NT_SUCCESS(Status)) {
                             ERR("sync_read_phys returned %08lx\n", Status);
                             ExFreePool(scratch);
                             return Status;
                         }
 
-                        do_xor(ps->data + (offset * Vcb->superblock.sector_size), scratch, readlen * Vcb->superblock.sector_size);
+                        do_xor(ps->data + (offset << Vcb->sector_shift), scratch, readlen << Vcb->sector_shift);
                     }
                 }
             }
@@ -5798,7 +5809,7 @@ static NTSTATUS partial_stripe_read(device_extension* Vcb, chunk* c, partial_str
             uint8_t* scratch;
             uint16_t k, i, logstripe, error_stripe, num_errors = 0;
 
-            scratch = ExAllocatePoolWithTag(NonPagedPool, (c->chunk_item->num_stripes + 2) * readlen * Vcb->superblock.sector_size, ALLOC_TAG);
+            scratch = ExAllocatePoolWithTag(NonPagedPool, (c->chunk_item->num_stripes + 2) * readlen << Vcb->sector_shift, ALLOC_TAG);
             if (!scratch) {
                 ERR("out of memory\n");
                 return STATUS_INSUFFICIENT_RESOURCES;
@@ -5808,8 +5819,8 @@ static NTSTATUS partial_stripe_read(device_extension* Vcb, chunk* c, partial_str
             for (k = 0; k < c->chunk_item->num_stripes; k++) {
                 if (i != stripe) {
                     if (c->devices[i]->devobj) {
-                        Status = sync_read_phys(c->devices[i]->devobj, c->devices[i]->fileobj, cis[i].offset + startoff + ((offset % sl) * Vcb->superblock.sector_size),
-                                                readlen * Vcb->superblock.sector_size, scratch + (k * readlen * Vcb->superblock.sector_size), false);
+                        Status = sync_read_phys(c->devices[i]->devobj, c->devices[i]->fileobj, cis[i].offset + startoff + ((offset % sl) << Vcb->sector_shift),
+                                                readlen << Vcb->sector_shift, scratch + (k * readlen << Vcb->sector_shift), false);
                         if (!NT_SUCCESS(Status)) {
                             ERR("sync_read_phys returned %08lx\n", Status);
                             num_errors++;
@@ -5834,20 +5845,20 @@ static NTSTATUS partial_stripe_read(device_extension* Vcb, chunk* c, partial_str
                 for (k = 0; k < c->chunk_item->num_stripes - 1; k++) {
                     if (k != logstripe) {
                         if (k == 0 || (k == 1 && logstripe == 0)) {
-                            RtlCopyMemory(ps->data + (offset * Vcb->superblock.sector_size), scratch + (k * readlen * Vcb->superblock.sector_size),
-                                          readlen * Vcb->superblock.sector_size);
+                            RtlCopyMemory(ps->data + (offset << Vcb->sector_shift), scratch + (k * readlen << Vcb->sector_shift),
+                                          readlen << Vcb->sector_shift);
                         } else {
-                            do_xor(ps->data + (offset * Vcb->superblock.sector_size), scratch + (k * readlen * Vcb->superblock.sector_size),
-                                   readlen * Vcb->superblock.sector_size);
+                            do_xor(ps->data + (offset << Vcb->sector_shift), scratch + (k * readlen << Vcb->sector_shift),
+                                   readlen << Vcb->sector_shift);
                         }
                     }
                 }
             } else {
-                raid6_recover2(scratch, c->chunk_item->num_stripes, readlen * Vcb->superblock.sector_size, logstripe,
-                               error_stripe, scratch + (c->chunk_item->num_stripes * readlen * Vcb->superblock.sector_size));
+                raid6_recover2(scratch, c->chunk_item->num_stripes, readlen << Vcb->sector_shift, logstripe,
+                               error_stripe, scratch + (c->chunk_item->num_stripes * readlen << Vcb->sector_shift));
 
-                RtlCopyMemory(ps->data + (offset * Vcb->superblock.sector_size), scratch + (c->chunk_item->num_stripes * readlen * Vcb->superblock.sector_size),
-                              readlen * Vcb->superblock.sector_size);
+                RtlCopyMemory(ps->data + (offset << Vcb->sector_shift), scratch + (c->chunk_item->num_stripes * readlen << Vcb->sector_shift),
+                              readlen << Vcb->sector_shift);
             }
 
             ExFreePool(scratch);
@@ -5907,8 +5918,8 @@ NTSTATUS flush_partial_stripe(device_extension* Vcb, chunk* c, partial_stripe* p
         runlength = RtlFindNextForwardRunClear(&ps->bmp, index + runlength, &index);
     }
 
-    if (last1 < ps_length / Vcb->superblock.sector_size) {
-        Status = partial_stripe_read(Vcb, c, ps, startoff, parity2, last1, (ULONG)((ps_length / Vcb->superblock.sector_size) - last1));
+    if (last1 < ps_length >> Vcb->sector_shift) {
+        Status = partial_stripe_read(Vcb, c, ps, startoff, parity2, last1, (ULONG)((ps_length >> Vcb->sector_shift) - last1));
         if (!NT_SUCCESS(Status)) {
             ERR("partial_stripe_read returned %08lx\n", Status);
             return Status;

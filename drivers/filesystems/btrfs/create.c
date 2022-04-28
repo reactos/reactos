@@ -43,6 +43,10 @@ static const WCHAR root_dir_utf16[] = L"$Root";
 #define ATOMIC_CREATE_ECP_IN_OP_FLAG_CASE_SENSITIVE_FLAGS_SPECIFIED       1
 #define ATOMIC_CREATE_ECP_OUT_OP_FLAG_CASE_SENSITIVE_FLAGS_SET            1
 
+#ifndef SL_IGNORE_READONLY_ATTRIBUTE
+#define SL_IGNORE_READONLY_ATTRIBUTE 0x40 // introduced in Windows 10, not in mingw
+#endif
+
 typedef struct _FILE_TIMESTAMPS {
     LARGE_INTEGER CreationTime;
     LARGE_INTEGER LastAccessTime;
@@ -469,10 +473,10 @@ NTSTATUS load_csum(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb
             if (start < tp.item->key.offset)
                 j = 0;
             else
-                j = ((start - tp.item->key.offset) / Vcb->superblock.sector_size) + i;
+                j = ((start - tp.item->key.offset) >> Vcb->sector_shift) + i;
 
-            if (j * Vcb->csum_size > tp.item->size || tp.item->key.offset > start + (i * Vcb->superblock.sector_size)) {
-                ERR("checksum not found for %I64x\n", start + (i * Vcb->superblock.sector_size));
+            if (j * Vcb->csum_size > tp.item->size || tp.item->key.offset > start + (i << Vcb->sector_shift)) {
+                ERR("checksum not found for %I64x\n", start + (i << Vcb->sector_shift));
                 return STATUS_INTERNAL_ERROR;
             }
 
@@ -2046,23 +2050,29 @@ static NTSTATUS file_create_parse_ea(fcb* fcb, FILE_FULL_EA_INFORMATION* ea) {
                 goto end;
             }
 
-            RtlCopyMemory(&val, item->value.Buffer, sizeof(uint32_t));
-
-            if (fcb->type != BTRFS_TYPE_DIRECTORY)
-                allowed |= __S_IFIFO | __S_IFCHR | __S_IFBLK | __S_IFSOCK;
+            val = *(uint32_t*)item->value.Buffer;
 
             fcb->inode_item.st_mode &= ~allowed;
             fcb->inode_item.st_mode |= val & allowed;
 
             if (fcb->type != BTRFS_TYPE_DIRECTORY) {
-                if ((fcb->inode_item.st_mode & __S_IFCHR) == __S_IFCHR)
+                if (__S_ISTYPE(val, __S_IFCHR)) {
                     fcb->type = BTRFS_TYPE_CHARDEV;
-                else if ((fcb->inode_item.st_mode & __S_IFBLK) == __S_IFBLK)
+                    fcb->inode_item.st_mode &= ~__S_IFMT;
+                    fcb->inode_item.st_mode |= __S_IFCHR;
+                } else if (__S_ISTYPE(val, __S_IFBLK)) {
                     fcb->type = BTRFS_TYPE_BLOCKDEV;
-                else if ((fcb->inode_item.st_mode & __S_IFIFO) == __S_IFIFO)
+                    fcb->inode_item.st_mode &= ~__S_IFMT;
+                    fcb->inode_item.st_mode |= __S_IFBLK;
+                } else if (__S_ISTYPE(val, __S_IFIFO)) {
                     fcb->type = BTRFS_TYPE_FIFO;
-                else if ((fcb->inode_item.st_mode & __S_IFSOCK) == __S_IFSOCK)
+                    fcb->inode_item.st_mode &= ~__S_IFMT;
+                    fcb->inode_item.st_mode |= __S_IFIFO;
+                } else if (__S_ISTYPE(val, __S_IFSOCK)) {
                     fcb->type = BTRFS_TYPE_SOCKET;
+                    fcb->inode_item.st_mode &= ~__S_IFMT;
+                    fcb->inode_item.st_mode |= __S_IFSOCK;
+                }
             }
 
             RemoveEntryList(&item->list_entry);
@@ -2718,7 +2728,7 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (parfileref->fcb->atts & FILE_ATTRIBUTE_READONLY) {
+    if (parfileref->fcb->atts & FILE_ATTRIBUTE_READONLY && !(IrpSp->Flags & SL_IGNORE_READONLY_ATTRIBUTE)) {
         free_fileref(parfileref);
         return STATUS_ACCESS_DENIED;
     }
@@ -3011,8 +3021,10 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
     if (Vcb->readonly)
         return STATUS_MEDIA_WRITE_PROTECTED;
 
-    if (options & FILE_DELETE_ON_CLOSE && IrpSp->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_READONLY)
+    if (options & FILE_DELETE_ON_CLOSE && IrpSp->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_READONLY &&
+        !(IrpSp->Flags & SL_IGNORE_READONLY_ATTRIBUTE)) {
         return STATUS_CANNOT_DELETE;
+    }
 
     if (fFsRtlGetEcpListFromIrp && fFsRtlGetNextExtraCreateParameter) {
         if (NT_SUCCESS(fFsRtlGetEcpListFromIrp(Irp, &ecp_list)) && ecp_list) {
@@ -3228,6 +3240,7 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
         if (acec->ReparseBufferLength > sizeof(uint32_t) && *(uint32_t*)acec->ReparseBuffer == IO_REPARSE_TAG_SYMLINK) {
             fileref->fcb->inode_item.st_mode &= ~(__S_IFIFO | __S_IFCHR | __S_IFBLK | __S_IFSOCK);
             fileref->fcb->type = BTRFS_TYPE_FILE;
+            fileref->fcb->atts &= ~FILE_ATTRIBUTE_DIRECTORY;
         }
 
         if (fileref->fcb->type == BTRFS_TYPE_SOCKET || fileref->fcb->type == BTRFS_TYPE_FIFO ||
@@ -3545,7 +3558,7 @@ static void fcb_load_csums(_Requires_lock_held_(_Curr_->tree_lock) device_extens
             EXTENT_DATA2* ed2 = (EXTENT_DATA2*)&ext->extent_data.data[0];
             uint64_t len;
 
-            len = (ext->extent_data.compression == BTRFS_COMPRESSION_NONE ? ed2->num_bytes : ed2->size) / Vcb->superblock.sector_size;
+            len = (ext->extent_data.compression == BTRFS_COMPRESSION_NONE ? ed2->num_bytes : ed2->size) >> Vcb->sector_shift;
 
             ext->csum = ExAllocatePoolWithTag(NonPagedPool, (ULONG)(len * Vcb->csum_size), ALLOC_TAG);
             if (!ext->csum) {
@@ -3633,8 +3646,9 @@ static NTSTATUS open_file2(device_extension* Vcb, ULONG RequestedDisposition, PO
         sf = sf->parent;
     }
 
-    readonly = (!fileref->fcb->ads && fileref->fcb->atts & FILE_ATTRIBUTE_READONLY) || (fileref->fcb->ads && fileref->parent->fcb->atts & FILE_ATTRIBUTE_READONLY) ||
-                is_subvol_readonly(fileref->fcb->subvol, Irp) || fileref->fcb == Vcb->dummy_fcb || Vcb->readonly;
+    readonly = (!fileref->fcb->ads && fileref->fcb->atts & FILE_ATTRIBUTE_READONLY && !(IrpSp->Flags & SL_IGNORE_READONLY_ATTRIBUTE)) ||
+               (fileref->fcb->ads && fileref->parent->fcb->atts & FILE_ATTRIBUTE_READONLY && !(IrpSp->Flags & SL_IGNORE_READONLY_ATTRIBUTE)) ||
+               is_subvol_readonly(fileref->fcb->subvol, Irp) || fileref->fcb == Vcb->dummy_fcb || Vcb->readonly;
 
     if (options & FILE_DELETE_ON_CLOSE && (fileref == Vcb->root_fileref || readonly)) {
         free_fileref(fileref);
@@ -4845,6 +4859,11 @@ NTSTATUS __stdcall drv_create(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
         if (flags & SL_STOP_ON_SYMLINK) {
             TRACE("SL_STOP_ON_SYMLINK\n");
             flags &= ~SL_STOP_ON_SYMLINK;
+        }
+
+        if (flags & SL_IGNORE_READONLY_ATTRIBUTE) {
+            TRACE("SL_IGNORE_READONLY_ATTRIBUTE\n");
+            flags &= ~SL_IGNORE_READONLY_ATTRIBUTE;
         }
 
         if (flags)
