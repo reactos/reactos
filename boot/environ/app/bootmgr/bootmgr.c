@@ -432,7 +432,7 @@ BmpFatalErrorMessageFilter (
             *ErrorResourceId = 9019;
             Result = 2;
             break;
-        case 0xC0210000:
+        case STATUS_FVE_LOCKED_VOLUME:
             *ErrorResourceId = 9013;
             break;
     }
@@ -2319,7 +2319,7 @@ BmpTransferExecution (
         }
 
         /* STATUS_FVE_LOCKED_VOLUME -- bitlocker volume is locked */
-        if (Status == 0xC0210000)
+        if (Status == STATUS_FVE_LOCKED_VOLUME)
         {
             /* Launch recovery mode */
             *LaunchCode = 4;
