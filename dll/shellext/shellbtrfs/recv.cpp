@@ -1513,10 +1513,10 @@ static INT_PTR CALLBACK stub_RecvProgressDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
     BtrfsRecv* br;
 
     if (uMsg == WM_INITDIALOG) {
-        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
         br = (BtrfsRecv*)lParam;
     } else {
-        br = (BtrfsRecv*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+        br = (BtrfsRecv*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
     }
 
     if (br)

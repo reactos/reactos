@@ -514,10 +514,10 @@ static INT_PTR CALLBACK stub_SendDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
     BtrfsSend* bs;
 
     if (uMsg == WM_INITDIALOG) {
-        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
         bs = (BtrfsSend*)lParam;
     } else
-        bs = (BtrfsSend*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+        bs = (BtrfsSend*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     if (bs)
         return bs->SendDlgProc(hwndDlg, uMsg, wParam, lParam);

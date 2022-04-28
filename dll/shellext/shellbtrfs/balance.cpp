@@ -42,7 +42,9 @@
 #include <shlwapi.h>
 #include <uxtheme.h>
 
-static uint64_t convtypes2[] = { BLOCK_FLAG_SINGLE, BLOCK_FLAG_DUPLICATE, BLOCK_FLAG_RAID0, BLOCK_FLAG_RAID1, BLOCK_FLAG_RAID5, BLOCK_FLAG_RAID6, BLOCK_FLAG_RAID10 };
+static uint64_t convtypes2[] = { BLOCK_FLAG_SINGLE, BLOCK_FLAG_DUPLICATE, BLOCK_FLAG_RAID0, BLOCK_FLAG_RAID1,
+                                 BLOCK_FLAG_RAID5, BLOCK_FLAG_RAID1C3, BLOCK_FLAG_RAID6, BLOCK_FLAG_RAID10,
+                                 BLOCK_FLAG_RAID1C4 };
 
 static WCHAR hex_digit(uint8_t u) {
     if (u >= 0xa && u <= 0xf)
@@ -245,7 +247,7 @@ void BtrfsBalance::RefreshBalanceDlg(HWND hwndDlg, bool first) {
                 CheckDlgButton(hwndDlg, IDC_METADATA, BST_UNCHECKED);
                 CheckDlgButton(hwndDlg, IDC_SYSTEM, BST_UNCHECKED);
 
-                SendMessage(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), PBM_SETPOS, 0, 0);
+                SendMessageW(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), PBM_SETPOS, 0, 0);
             }
 
             EnableWindow(GetDlgItem(hwndDlg, IDC_DATA_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ? true : false);
@@ -566,10 +568,10 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
 
                     wstring_sprintf(t, u, bd->dev_id, s.c_str());
 
-                    SendMessage(devcb, CB_ADDSTRING, 0, (LPARAM)t.c_str());
+                    SendMessageW(devcb, CB_ADDSTRING, 0, (LPARAM)t.c_str());
 
                     if (opts->devid == bd->dev_id)
-                        SendMessage(devcb, CB_SETCURSEL, num_devices, 0);
+                        SendMessageW(devcb, CB_SETCURSEL, num_devices, 0);
 
                     num_devices++;
 
@@ -592,10 +594,10 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
                     if (!load_string(module, convtypes[i], s))
                         throw last_error(GetLastError());
 
-                    SendMessage(convcb, CB_ADDSTRING, 0, (LPARAM)s.c_str());
+                    SendMessageW(convcb, CB_ADDSTRING, 0, (LPARAM)s.c_str());
 
                     if (opts->convert == convtypes2[i])
-                        SendMessage(convcb, CB_SETCURSEL, i, 0);
+                        SendMessageW(convcb, CB_SETCURSEL, i, 0);
 
                     i++;
 
@@ -839,10 +841,10 @@ static INT_PTR CALLBACK stub_BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
     BtrfsBalance* bb;
 
     if (uMsg == WM_INITDIALOG) {
-        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
         bb = (BtrfsBalance*)lParam;
     } else {
-        bb = (BtrfsBalance*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+        bb = (BtrfsBalance*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
     }
 
     if (bb)
@@ -964,10 +966,10 @@ static INT_PTR CALLBACK stub_BalanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wPar
     BtrfsBalance* bb;
 
     if (uMsg == WM_INITDIALOG) {
-        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
         bb = (BtrfsBalance*)lParam;
     } else {
-        bb = (BtrfsBalance*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+        bb = (BtrfsBalance*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
     }
 
     if (bb)

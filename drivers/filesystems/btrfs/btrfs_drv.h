@@ -201,17 +201,8 @@ typedef struct _FSCTL_SET_INTEGRITY_INFORMATION_BUFFER {
 #ifndef __REACTOS__
 #ifndef _MSC_VER
 #define __drv_aliasesMem
-#define _Requires_lock_held_(a)
-#define _Requires_exclusive_lock_held_(a)
-#define _Releases_lock_(a)
-#define _Releases_exclusive_lock_(a)
 #define _Dispatch_type_(a)
-#define _Create_lock_level_(a)
 #define _Lock_level_order_(a,b)
-#define _Has_lock_level_(a)
-#define _Requires_lock_not_held_(a)
-#define _Acquires_exclusive_lock_(a)
-#define _Acquires_shared_lock_(a)
 #endif
 #endif // __REACTOS__
 

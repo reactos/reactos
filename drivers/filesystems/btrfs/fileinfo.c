@@ -5807,7 +5807,7 @@ NTSTATUS __stdcall drv_set_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
                 goto end2;
             }
 
-            if (Irp->RequestorMode == KernelMode) {
+            if (Irp->RequestorMode == KernelMode || ccb->access & FILE_WRITE_ATTRIBUTES) {
                 RtlCopyMemory(&fcb->inode_item.st_uid, item->value.Buffer, sizeof(uint32_t));
                 fcb->sd_dirty = true;
                 fcb->sd_deleted = false;
@@ -5822,7 +5822,7 @@ NTSTATUS __stdcall drv_set_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
                 goto end2;
             }
 
-            if (Irp->RequestorMode == KernelMode)
+            if (Irp->RequestorMode == KernelMode || ccb->access & FILE_WRITE_ATTRIBUTES)
                 RtlCopyMemory(&fcb->inode_item.st_gid, item->value.Buffer, sizeof(uint32_t));
 
             RemoveEntryList(&item->list_entry);
@@ -5834,7 +5834,7 @@ NTSTATUS __stdcall drv_set_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
                 goto end2;
             }
 
-            if (Irp->RequestorMode == KernelMode) {
+            if (Irp->RequestorMode == KernelMode || ccb->access & FILE_WRITE_ATTRIBUTES) {
                 uint32_t allowed = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH | S_ISGID | S_ISVTX | S_ISUID;
                 uint32_t val;
 

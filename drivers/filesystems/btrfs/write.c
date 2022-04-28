@@ -3298,6 +3298,14 @@ NTSTATUS truncate_file(fcb* fcb, uint64_t end, PIRP Irp, LIST_ENTRY* rollback) {
             }
 
             fcb->inode_item.st_blocks += end;
+
+            fcb->inode_item.st_size = end;
+            fcb->inode_item_changed = true;
+            TRACE("setting st_size to %I64x\n", end);
+
+            fcb->Header.AllocationSize.QuadPart = sector_align(fcb->inode_item.st_size, fcb->Vcb->superblock.sector_size);
+            fcb->Header.FileSize.QuadPart = fcb->inode_item.st_size;
+            fcb->Header.ValidDataLength.QuadPart = fcb->inode_item.st_size;
         }
 
         ExFreePool(buf);
