@@ -801,6 +801,7 @@ static NTSTATUS create_directory_fcb(device_extension* Vcb, root* r, fcb* parfcb
 
     fcb->subvol = r;
     fcb->inode = InterlockedIncrement64(&r->lastinode);
+    fcb->hash = calc_crc32c(0xffffffff, (uint8_t*)&fcb->inode, sizeof(uint64_t));
     fcb->type = BTRFS_TYPE_DIRECTORY;
 
     fcb->inode_item.generation = Vcb->superblock.generation;
@@ -872,7 +873,7 @@ static NTSTATUS create_directory_fcb(device_extension* Vcb, root* r, fcb* parfcb
     RtlZeroMemory(fcb->hash_ptrs_uc, sizeof(LIST_ENTRY*) * 256);
 
     acquire_fcb_lock_exclusive(Vcb);
-    InsertTailList(&r->fcbs, &fcb->list_entry);
+    add_fcb_to_subvol(fcb);
     InsertTailList(&Vcb->all_fcbs, &fcb->list_entry_all);
     r->fcbs_version++;
     release_fcb_lock(Vcb);
@@ -882,6 +883,68 @@ static NTSTATUS create_directory_fcb(device_extension* Vcb, root* r, fcb* parfcb
     *pfcb = fcb;
 
     return STATUS_SUCCESS;
+}
+
+void add_fcb_to_subvol(_In_ _Requires_exclusive_lock_held_(_Curr_->Vcb->fcb_lock) fcb* fcb) {
+    LIST_ENTRY* lastle = NULL;
+    uint32_t hash = fcb->hash;
+
+    if (fcb->subvol->fcbs_ptrs[hash >> 24]) {
+        LIST_ENTRY* le = fcb->subvol->fcbs_ptrs[hash >> 24];
+
+        while (le != &fcb->subvol->fcbs) {
+            struct _fcb* fcb2 = CONTAINING_RECORD(le, struct _fcb, list_entry);
+
+            if (fcb2->hash > hash) {
+                lastle = le->Blink;
+                break;
+            }
+
+            le = le->Flink;
+        }
+    }
+
+    if (!lastle) {
+        uint8_t c = hash >> 24;
+
+        if (c != 0xff) {
+            uint8_t d = c + 1;
+
+            do {
+                if (fcb->subvol->fcbs_ptrs[d]) {
+                    lastle = fcb->subvol->fcbs_ptrs[d]->Blink;
+                    break;
+                }
+
+                d++;
+            } while (d != 0);
+        }
+    }
+
+    if (lastle) {
+        InsertHeadList(lastle, &fcb->list_entry);
+
+        if (lastle == &fcb->subvol->fcbs || (CONTAINING_RECORD(lastle, struct _fcb, list_entry)->hash >> 24) != (hash >> 24))
+            fcb->subvol->fcbs_ptrs[hash >> 24] = &fcb->list_entry;
+    } else {
+        InsertTailList(&fcb->subvol->fcbs, &fcb->list_entry);
+
+        if (fcb->list_entry.Blink == &fcb->subvol->fcbs || (CONTAINING_RECORD(fcb->list_entry.Blink, struct _fcb, list_entry)->hash >> 24) != (hash >> 24))
+            fcb->subvol->fcbs_ptrs[hash >> 24] = &fcb->list_entry;
+    }
+}
+
+void remove_fcb_from_subvol(_In_ _Requires_exclusive_lock_held_(_Curr_->Vcb->fcb_lock) fcb* fcb) {
+    uint8_t c = fcb->hash >> 24;
+
+    if (fcb->subvol->fcbs_ptrs[c] == &fcb->list_entry) {
+        if (fcb->list_entry.Flink != &fcb->subvol->fcbs && (CONTAINING_RECORD(fcb->list_entry.Flink, struct _fcb, list_entry)->hash >> 24) == c)
+            fcb->subvol->fcbs_ptrs[c] = fcb->list_entry.Flink;
+        else
+            fcb->subvol->fcbs_ptrs[c] = NULL;
+    }
+
+    RemoveEntryList(&fcb->list_entry);
 }
 
 static NTSTATUS move_across_subvols(file_ref* fileref, ccb* ccb, file_ref* destdir, PANSI_STRING utf8, PUNICODE_STRING fnus, PIRP Irp, LIST_ENTRY* rollback) {
@@ -930,6 +993,7 @@ static NTSTATUS move_across_subvols(file_ref* fileref, ccb* ccb, file_ref* destd
 
             if (!NT_SUCCESS(Status)) {
                 ERR("add_children_to_move_list returned %08lx\n", Status);
+                ExReleaseResourceLite(me->fileref->fcb->Header.Resource);
                 goto end;
             }
         }
@@ -950,8 +1014,6 @@ static NTSTATUS move_across_subvols(file_ref* fileref, ccb* ccb, file_ref* destd
         if (me->fileref->fcb->inode != SUBVOL_ROOT_INODE && me->fileref->fcb != fileref->fcb->Vcb->dummy_fcb) {
             if (!me->dummyfcb) {
                 ULONG defda;
-                bool inserted = false;
-                LIST_ENTRY* le3;
 
                 ExAcquireResourceExclusiveLite(me->fileref->fcb->Header.Resource, true);
 
@@ -964,6 +1026,7 @@ static NTSTATUS move_across_subvols(file_ref* fileref, ccb* ccb, file_ref* destd
 
                 me->dummyfcb->subvol = me->fileref->fcb->subvol;
                 me->dummyfcb->inode = me->fileref->fcb->inode;
+                me->dummyfcb->hash = me->fileref->fcb->hash;
 
                 if (!me->dummyfcb->ads) {
                     me->dummyfcb->sd_dirty = me->fileref->fcb->sd_dirty;
@@ -983,6 +1046,7 @@ static NTSTATUS move_across_subvols(file_ref* fileref, ccb* ccb, file_ref* destd
 
                     me->fileref->fcb->subvol = destdir->fcb->subvol;
                     me->fileref->fcb->inode = InterlockedIncrement64(&destdir->fcb->subvol->lastinode);
+                    me->fileref->fcb->hash = calc_crc32c(0xffffffff, (uint8_t*)&me->fileref->fcb->inode, sizeof(uint64_t));
                     me->fileref->fcb->inode_item.st_nlink = 1;
 
                     defda = get_file_attributes(me->fileref->fcb->Vcb, me->fileref->fcb->subvol, me->fileref->fcb->inode,
@@ -1042,31 +1106,20 @@ static NTSTATUS move_across_subvols(file_ref* fileref, ccb* ccb, file_ref* destd
 
                         le2 = le2->Flink;
                     }
+
+                    add_fcb_to_subvol(me->dummyfcb);
+                    remove_fcb_from_subvol(me->fileref->fcb);
+                    add_fcb_to_subvol(me->fileref->fcb);
                 } else {
                     me->fileref->fcb->subvol = me->parent->fileref->fcb->subvol;
                     me->fileref->fcb->inode = me->parent->fileref->fcb->inode;
+                    me->fileref->fcb->hash = me->parent->fileref->fcb->hash;
+
+                    // put stream after parent in FCB list
+                    InsertHeadList(&me->parent->fileref->fcb->list_entry, &me->fileref->fcb->list_entry);
                 }
 
                 me->fileref->fcb->created = true;
-
-                InsertHeadList(&me->fileref->fcb->list_entry, &me->dummyfcb->list_entry);
-                RemoveEntryList(&me->fileref->fcb->list_entry);
-
-                le3 = destdir->fcb->subvol->fcbs.Flink;
-                while (le3 != &destdir->fcb->subvol->fcbs) {
-                    fcb* fcb = CONTAINING_RECORD(le3, struct _fcb, list_entry);
-
-                    if (fcb->inode > me->fileref->fcb->inode) {
-                        InsertHeadList(le3->Blink, &me->fileref->fcb->list_entry);
-                        inserted = true;
-                        break;
-                    }
-
-                    le3 = le3->Flink;
-                }
-
-                if (!inserted)
-                    InsertTailList(&destdir->fcb->subvol->fcbs, &me->fileref->fcb->list_entry);
 
                 InsertTailList(&me->fileref->fcb->Vcb->all_fcbs, &me->dummyfcb->list_entry_all);
 
@@ -1159,7 +1212,7 @@ static NTSTATUS move_across_subvols(file_ref* fileref, ccb* ccb, file_ref* destd
         if (le == move_list.Flink && (me->fileref->dc->utf8.Length != utf8->Length || RtlCompareMemory(me->fileref->dc->utf8.Buffer, utf8->Buffer, utf8->Length) != utf8->Length))
             name_changed = true;
 
-        if ((le == move_list.Flink || me->fileref->fcb->inode == SUBVOL_ROOT_INODE) && !me->dummyfileref->oldutf8.Buffer) {
+        if (!me->dummyfileref->oldutf8.Buffer) {
             me->dummyfileref->oldutf8.Buffer = ExAllocatePoolWithTag(PagedPool, me->fileref->dc->utf8.Length, ALLOC_TAG);
             if (!me->dummyfileref->oldutf8.Buffer) {
                 ERR("out of memory\n");
@@ -1773,10 +1826,17 @@ static NTSTATUS rename_stream_to_file(device_extension* Vcb, file_ref* fileref, 
     dummyfcb->Vcb = Vcb;
     dummyfcb->subvol = fileref->fcb->subvol;
     dummyfcb->inode = fileref->fcb->inode;
+    dummyfcb->hash = fileref->fcb->hash;
     dummyfcb->adsxattr = fileref->fcb->adsxattr;
     dummyfcb->adshash = fileref->fcb->adshash;
     dummyfcb->ads = true;
     dummyfcb->deleted = true;
+
+    acquire_fcb_lock_exclusive(Vcb);
+    add_fcb_to_subvol(dummyfcb);
+    InsertTailList(&Vcb->all_fcbs, &dummyfcb->list_entry_all);
+    dummyfcb->subvol->fcbs_version++;
+    release_fcb_lock(Vcb);
 
     // FIXME - dummyfileref as well?
 
@@ -1839,9 +1899,10 @@ static NTSTATUS rename_stream(device_extension* Vcb, file_ref* fileref, ccb* ccb
     if (fn.Length == 0)
         return rename_stream_to_file(Vcb, fileref, ccb, flags, Irp, rollback);
 
-    if (!is_file_name_valid(&fn, false, true)) {
+    Status = check_file_name_valid(&fn, false, true);
+    if (!NT_SUCCESS(Status)) {
         WARN("invalid stream name %.*S\n", (int)(fn.Length / sizeof(WCHAR)), fn.Buffer);
-        return STATUS_OBJECT_NAME_INVALID;
+        return Status;
     }
 
     if (!(flags & FILE_RENAME_IGNORE_READONLY_ATTRIBUTE) && fileref->parent->fcb->atts & FILE_ATTRIBUTE_READONLY) {
@@ -1989,10 +2050,17 @@ static NTSTATUS rename_stream(device_extension* Vcb, file_ref* fileref, ccb* ccb
     dummyfcb->Vcb = Vcb;
     dummyfcb->subvol = fileref->fcb->subvol;
     dummyfcb->inode = fileref->fcb->inode;
+    dummyfcb->hash = fileref->fcb->hash;
     dummyfcb->adsxattr = fileref->fcb->adsxattr;
     dummyfcb->adshash = fileref->fcb->adshash;
     dummyfcb->ads = true;
     dummyfcb->deleted = true;
+
+    acquire_fcb_lock_exclusive(Vcb);
+    add_fcb_to_subvol(dummyfcb);
+    InsertTailList(&Vcb->all_fcbs, &dummyfcb->list_entry_all);
+    dummyfcb->subvol->fcbs_version++;
+    release_fcb_lock(Vcb);
 
     mark_fcb_dirty(dummyfcb);
 
@@ -2078,9 +2146,10 @@ static NTSTATUS rename_file_to_stream(device_extension* Vcb, file_ref* fileref, 
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (!is_file_name_valid(&fn, false, true)) {
+    Status = check_file_name_valid(&fn, false, true);
+    if (!NT_SUCCESS(Status)) {
         WARN("invalid stream name %.*S\n", (int)(fn.Length / sizeof(WCHAR)), fn.Buffer);
-        return STATUS_OBJECT_NAME_INVALID;
+        return Status;
     }
 
     if (!(flags & FILE_RENAME_IGNORE_READONLY_ATTRIBUTE) && fileref->fcb->atts & FILE_ATTRIBUTE_READONLY) {
@@ -2468,9 +2537,6 @@ static NTSTATUS set_rename_information(device_extension* Vcb, PIRP Irp, PFILE_OB
     SECURITY_SUBJECT_CONTEXT subjcont;
     ACCESS_MASK access;
     ULONG flags;
-#ifdef __REACTOS__
-    unsigned int i;
-#endif
 
     InitializeListHead(&rollback);
 
@@ -2504,7 +2570,7 @@ static NTSTATUS set_rename_information(device_extension* Vcb, PIRP Irp, PFILE_OB
         for (i = fnlen - 1; i >= 0; i--) {
             if (fri->FileName[i] == '\\' || fri->FileName[i] == '/') {
                 fn = &fri->FileName[i+1];
-                fnlen = (fri->FileNameLength / sizeof(WCHAR)) - i - 1;
+                fnlen -= i + 1;
                 break;
             }
         }
@@ -2555,11 +2621,7 @@ static NTSTATUS set_rename_information(device_extension* Vcb, PIRP Irp, PFILE_OB
 
     TRACE("fnus = %.*S\n", (int)(fnus.Length / sizeof(WCHAR)), fnus.Buffer);
 
-#ifndef __REACTOS__
     for (unsigned int i = 0 ; i < fnus.Length / sizeof(WCHAR); i++) {
-#else
-    for (i = 0 ; i < fnus.Length / sizeof(WCHAR); i++) {
-#endif
         if (fnus.Buffer[i] == ':') {
             TRACE("colon in filename\n");
             Status = STATUS_OBJECT_NAME_INVALID;

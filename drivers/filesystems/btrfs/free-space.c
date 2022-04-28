@@ -1150,6 +1150,7 @@ static NTSTATUS allocate_cache_chunk(device_extension* Vcb, chunk* c, bool* chan
         c->cache->subvol = Vcb->root_root;
 
         c->cache->inode = InterlockedIncrement64(&Vcb->root_root->lastinode);
+        c->cache->hash = calc_crc32c(0xffffffff, (uint8_t*)&c->cache->inode, sizeof(uint64_t));
 
         c->cache->type = BTRFS_TYPE_FILE;
         c->cache->created = true;
@@ -1213,6 +1214,8 @@ static NTSTATUS allocate_cache_chunk(device_extension* Vcb, chunk* c, bool* chan
 
         c->cache->extents_changed = true;
         InsertTailList(&Vcb->all_fcbs, &c->cache->list_entry_all);
+
+        add_fcb_to_subvol(c->cache);
 
         Status = flush_fcb(c->cache, true, batchlist, Irp);
         if (!NT_SUCCESS(Status)) {

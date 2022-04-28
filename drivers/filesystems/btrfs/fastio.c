@@ -499,6 +499,50 @@ static BOOLEAN __stdcall fast_io_unlock_all_by_key(PFILE_OBJECT FileObject, PVOI
     return true;
 }
 
+#ifdef __REACTOS__
+_Function_class_(FAST_IO_ACQUIRE_FILE)
+static void __stdcall fast_io_acquire_for_create_section(_In_ PFILE_OBJECT FileObject) {
+#else
+static void fast_io_acquire_for_create_section(_In_ PFILE_OBJECT FileObject) {
+#endif /* __REACTOS__ */
+    fcb* fcb;
+
+    TRACE("(%p)\n", FileObject);
+
+    if (!FileObject)
+        return;
+
+    fcb = FileObject->FsContext;
+
+    if (!fcb)
+        return;
+
+    ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, true);
+    ExAcquireResourceExclusiveLite(fcb->Header.Resource, true);
+}
+
+#ifdef __REACTOS__
+_Function_class_(FAST_IO_RELEASE_FILE)
+static void __stdcall fast_io_release_for_create_section(_In_ PFILE_OBJECT FileObject) {
+#else
+static void fast_io_release_for_create_section(_In_ PFILE_OBJECT FileObject) {
+#endif /* __REACTOS__ */
+    fcb* fcb;
+
+    TRACE("(%p)\n", FileObject);
+
+    if (!FileObject)
+        return;
+
+    fcb = FileObject->FsContext;
+
+    if (!fcb)
+        return;
+
+    ExReleaseResourceLite(fcb->Header.Resource);
+    ExReleaseResourceLite(&fcb->Vcb->tree_lock);
+}
+
 void init_fast_io_dispatch(FAST_IO_DISPATCH** fiod) {
     RtlZeroMemory(&FastIoDispatch, sizeof(FastIoDispatch));
 
@@ -513,6 +557,8 @@ void init_fast_io_dispatch(FAST_IO_DISPATCH** fiod) {
     FastIoDispatch.FastIoUnlockSingle = fast_io_unlock_single;
     FastIoDispatch.FastIoUnlockAll = fast_io_unlock_all;
     FastIoDispatch.FastIoUnlockAllByKey = fast_io_unlock_all_by_key;
+    FastIoDispatch.AcquireFileForNtCreateSection = fast_io_acquire_for_create_section;
+    FastIoDispatch.ReleaseFileForNtCreateSection = fast_io_release_for_create_section;
     FastIoDispatch.FastIoQueryNetworkOpenInfo = fast_io_query_network_open_info;
     FastIoDispatch.AcquireForModWrite = fast_io_acquire_for_mod_write;
     FastIoDispatch.MdlRead = FsRtlMdlReadDev;

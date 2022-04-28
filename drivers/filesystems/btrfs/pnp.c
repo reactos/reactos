@@ -188,6 +188,18 @@ static NTSTATUS bus_pnp(bus_device_extension* bde, PIRP Irp) {
     bool handled = false;
 
     switch (IrpSp->MinorFunction) {
+        case IRP_MN_START_DEVICE:
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        case IRP_MN_SURPRISE_REMOVAL:
+        case IRP_MN_REMOVE_DEVICE:
+            Status = STATUS_SUCCESS;
+            handled = true;
+            break;
+
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+            Status = STATUS_UNSUCCESSFUL;
+            handled = true;
+            break;
         case IRP_MN_QUERY_CAPABILITIES:
             Status = bus_query_capabilities(Irp);
             handled = true;

@@ -317,6 +317,11 @@ NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, cc
 
     // FIXME - die if not file or directory
 
+    if (fcb->type == BTRFS_TYPE_DIRECTORY && fcb->inode_item.st_size > 0) {
+        TRACE("directory not empty\n");
+        return STATUS_DIRECTORY_NOT_EMPTY;
+    }
+
     if (buflen < sizeof(ULONG)) {
         WARN("buffer was not long enough to hold tag\n");
         return STATUS_INVALID_BUFFER_SIZE;
@@ -328,7 +333,10 @@ NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, cc
         return Status;
     }
 
-    RtlCopyMemory(&tag, rdb, sizeof(ULONG));
+    tag = *(ULONG*)rdb;
+
+    if (tag == IO_REPARSE_TAG_MOUNT_POINT && fcb->type != BTRFS_TYPE_DIRECTORY)
+        return STATUS_NOT_A_DIRECTORY;
 
     if (fcb->type == BTRFS_TYPE_FILE &&
         ((tag == IO_REPARSE_TAG_SYMLINK && rdb->SymbolicLinkReparseBuffer.Flags & SYMLINK_FLAG_RELATIVE) || tag == IO_REPARSE_TAG_LX_SYMLINK)) {
