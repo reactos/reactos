@@ -307,6 +307,9 @@ static NTSTATUS vol_query_device_name(volume_device_extension* vde, PIRP Irp) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PMOUNTDEV_NAME name;
 
+    if (IrpSp->FileObject && IrpSp->FileObject->FsContext)
+        return STATUS_INVALID_PARAMETER;
+
     if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUNTDEV_NAME)) {
         Irp->IoStatus.Information = sizeof(MOUNTDEV_NAME);
         return STATUS_BUFFER_TOO_SMALL;
