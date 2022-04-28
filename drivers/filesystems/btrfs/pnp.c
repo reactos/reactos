@@ -200,6 +200,7 @@ static NTSTATUS bus_pnp(bus_device_extension* bde, PIRP Irp) {
             Status = STATUS_UNSUCCESSFUL;
             handled = true;
             break;
+
         case IRP_MN_QUERY_CAPABILITIES:
             Status = bus_query_capabilities(Irp);
             handled = true;

@@ -633,9 +633,6 @@ static NTSTATUS add_parents(device_extension* Vcb, PIRP Irp) {
                     KEY searchkey;
                     traverse_ptr tp;
                     NTSTATUS Status;
-#ifdef __REACTOS__
-                    tree* t2;
-#endif
 
                     searchkey.obj_id = t->root->id;
                     searchkey.obj_type = TYPE_ROOT_ITEM;
@@ -677,11 +674,7 @@ static NTSTATUS add_parents(device_extension* Vcb, PIRP Irp) {
                         }
                     }
 
-#ifndef __REACTOS__
                     tree* t2 = tp.tree;
-#else
-                    t2 = tp.tree;
-#endif
                     while (t2) {
                         t2->write = true;
 
@@ -2892,9 +2885,6 @@ static NTSTATUS update_chunk_usage(device_extension* Vcb, PIRP Irp, LIST_ENTRY* 
         }
 
         if (c->used != c->oldused) {
-#ifdef __REACTOS__
-            uint64_t old_phys_used, phys_used;
-#endif
             searchkey.obj_id = c->offset;
             searchkey.obj_type = TYPE_BLOCK_GROUP_ITEM;
             searchkey.offset = c->chunk_item->size;
@@ -2956,19 +2946,7 @@ static NTSTATUS update_chunk_usage(device_extension* Vcb, PIRP Irp, LIST_ENTRY* 
                 goto end;
             }
 
-#ifndef __REACTOS__
-            uint64_t old_phys_used = chunk_estimate_phys_size(Vcb, c, c->oldused);
-            uint64_t phys_used = chunk_estimate_phys_size(Vcb, c, c->used);
-#else
-            old_phys_used = chunk_estimate_phys_size(Vcb, c, c->oldused);
-            phys_used = chunk_estimate_phys_size(Vcb, c, c->used);
-#endif
-
-            if (Vcb->superblock.bytes_used + phys_used > old_phys_used)
-                Vcb->superblock.bytes_used += phys_used - old_phys_used;
-            else
-                Vcb->superblock.bytes_used = 0;
-
+            Vcb->superblock.bytes_used += c->used - c->oldused;
             c->oldused = c->used;
         }
 
@@ -4316,7 +4294,7 @@ static NTSTATUS create_chunk(device_extension* Vcb, chunk* c, PIRP Irp) {
     c->created = false;
     c->oldused = c->used;
 
-    Vcb->superblock.bytes_used += chunk_estimate_phys_size(Vcb, c, c->used);
+    Vcb->superblock.bytes_used += c->used;
 
     return STATUS_SUCCESS;
 }
@@ -5437,9 +5415,6 @@ static NTSTATUS drop_chunk(device_extension* Vcb, chunk* c, LIST_ENTRY* batchlis
     KEY searchkey;
     traverse_ptr tp;
     uint64_t i, factor;
-#ifdef __REACTOS__
-    uint64_t phys_used;
-#endif
     CHUNK_ITEM_STRIPE* cis = (CHUNK_ITEM_STRIPE*)&c->chunk_item[1];;
 
     TRACE("dropping chunk %I64x\n", c->offset);
@@ -5706,16 +5681,7 @@ static NTSTATUS drop_chunk(device_extension* Vcb, chunk* c, LIST_ENTRY* batchlis
             Vcb->superblock.incompat_flags &= ~BTRFS_INCOMPAT_FLAGS_RAID1C34;
     }
 
-#ifndef __REACTOS__
-    uint64_t phys_used = chunk_estimate_phys_size(Vcb, c, c->oldused);
-#else
-    phys_used = chunk_estimate_phys_size(Vcb, c, c->oldused);
-#endif // __REACTOS__
-
-    if (phys_used < Vcb->superblock.bytes_used)
-        Vcb->superblock.bytes_used -= phys_used;
-    else
-        Vcb->superblock.bytes_used = 0;
+    Vcb->superblock.bytes_used -= c->oldused;
 
     ExFreePool(c->chunk_item);
     ExFreePool(c->devices);
@@ -6828,9 +6794,6 @@ static void flush_disk_caches(device_extension* Vcb) {
     LIST_ENTRY* le;
     ioctl_context context;
     ULONG num;
-#ifdef __REACTOS__
-    unsigned int i;
-#endif
 
     context.left = 0;
 
@@ -6908,11 +6871,7 @@ nextdev:
 
     KeWaitForSingleObject(&context.Event, Executive, KernelMode, false, NULL);
 
-#ifndef __REACTOS__
     for (unsigned int i = 0; i < num; i++) {
-#else
-    for (i = 0; i < num; i++) {
-#endif
         if (context.stripes[i].Irp)
             IoFreeIrp(context.stripes[i].Irp);
     }

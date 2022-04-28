@@ -387,7 +387,8 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     r->root_item.inode.st_blocks = subvol->root_item.inode.st_blocks;
     r->root_item.inode.st_nlink = 1;
     r->root_item.inode.st_mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH; // 40755
-    r->root_item.inode.flags = 0xffffffff80000000; // FIXME - find out what these mean
+    r->root_item.inode.flags = 0x80000000; // FIXME - find out what these mean
+    r->root_item.inode.flags_ro = 0xffffffff; // FIXME - find out what these mean
     r->root_item.generation = Vcb->superblock.generation;
     r->root_item.objid = subvol->root_item.objid;
     r->root_item.block_number = address;
@@ -935,7 +936,8 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
     r->root_item.inode.st_blocks = Vcb->superblock.node_size;
     r->root_item.inode.st_nlink = 1;
     r->root_item.inode.st_mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH; // 40755
-    r->root_item.inode.flags = 0xffffffff80000000; // FIXME - find out what these mean
+    r->root_item.inode.flags = 0x80000000; // FIXME - find out what these mean
+    r->root_item.inode.flags_ro = 0xffffffff; // FIXME - find out what these mean
 
     if (bcs->readonly)
         r->root_item.flags |= BTRFS_SUBVOL_READONLY;

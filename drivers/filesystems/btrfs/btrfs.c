@@ -54,7 +54,8 @@
                             BTRFS_INCOMPAT_FLAGS_COMPRESS_LZO | BTRFS_INCOMPAT_FLAGS_BIG_METADATA | BTRFS_INCOMPAT_FLAGS_RAID56 | \
                             BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF | BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA | BTRFS_INCOMPAT_FLAGS_NO_HOLES | \
                             BTRFS_INCOMPAT_FLAGS_COMPRESS_ZSTD | BTRFS_INCOMPAT_FLAGS_METADATA_UUID | BTRFS_INCOMPAT_FLAGS_RAID1C34)
-#define COMPAT_RO_SUPPORTED (BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE | BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE_VALID)
+#define COMPAT_RO_SUPPORTED (BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE | BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE_VALID | \
+                             BTRFS_COMPAT_RO_FLAGS_VERITY)
 
 static const WCHAR device_name[] = {'\\','B','t','r','f','s',0};
 static const WCHAR dosdevice_name[] = {'\\','D','o','s','D','e','v','i','c','e','s','\\','B','t','r','f','s',0};
@@ -3116,7 +3117,8 @@ static NTSTATUS look_for_roots(_Requires_exclusive_lock_held_(_Curr_->tree_lock)
         reloc_root->root_item.inode.st_blocks = Vcb->superblock.node_size;
         reloc_root->root_item.inode.st_nlink = 1;
         reloc_root->root_item.inode.st_mode = 040755;
-        reloc_root->root_item.inode.flags = 0xffffffff80000000;
+        reloc_root->root_item.inode.flags = 0x80000000;
+        reloc_root->root_item.inode.flags_ro = 0xffffffff;
         reloc_root->root_item.objid = SUBVOL_ROOT_INODE;
         reloc_root->root_item.bytes_used = Vcb->superblock.node_size;
 
@@ -3840,32 +3842,6 @@ void protect_superblocks(_Inout_ chunk* c) {
     }
 }
 
-uint64_t chunk_estimate_phys_size(device_extension* Vcb, chunk* c, uint64_t u) {
-    uint64_t nfactor, dfactor;
-
-    if (c->chunk_item->type & BLOCK_FLAG_DUPLICATE || c->chunk_item->type & BLOCK_FLAG_RAID1 || c->chunk_item->type & BLOCK_FLAG_RAID10) {
-        nfactor = 1;
-        dfactor = 2;
-    } else if (c->chunk_item->type & BLOCK_FLAG_RAID5) {
-        nfactor = Vcb->superblock.num_devices - 1;
-        dfactor = Vcb->superblock.num_devices;
-    } else if (c->chunk_item->type & BLOCK_FLAG_RAID6) {
-        nfactor = Vcb->superblock.num_devices - 2;
-        dfactor = Vcb->superblock.num_devices;
-    } else if (c->chunk_item->type & BLOCK_FLAG_RAID1C3) {
-        nfactor = 1;
-        dfactor = 3;
-    } else if (c->chunk_item->type & BLOCK_FLAG_RAID1C4) {
-        nfactor = 1;
-        dfactor = 4;
-    } else {
-        nfactor = 1;
-        dfactor = 1;
-    }
-
-    return u * dfactor / nfactor;
-}
-
 NTSTATUS find_chunk_usage(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_opt_ PIRP Irp) {
     LIST_ENTRY* le = Vcb->chunks.Flink;
     chunk* c;
@@ -3898,7 +3874,7 @@ NTSTATUS find_chunk_usage(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_ex
 
                 TRACE("chunk %I64x has %I64x bytes used\n", c->offset, c->used);
 
-                Vcb->superblock.bytes_used += chunk_estimate_phys_size(Vcb, c, bgi->used);
+                Vcb->superblock.bytes_used += bgi->used;
             } else {
                 ERR("(%I64x;%I64x,%x,%I64x) is %u bytes, expected %Iu\n",
                     Vcb->extent_root->id, tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(BLOCK_GROUP_ITEM));

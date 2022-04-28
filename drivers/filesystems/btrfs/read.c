@@ -683,9 +683,6 @@ static NTSTATUS read_data_raid5(device_extension* Vcb, uint8_t* buf, uint64_t ad
                 runlength = RtlFindFirstRunClear(&ps->bmp, &index);
 
                 while (runlength != 0) {
-#ifdef __REACTOS__
-                    uint64_t runstart, runend, start, end;
-#endif
                     if (index >= ps->bmplen)
                         break;
 
@@ -695,17 +692,11 @@ static NTSTATUS read_data_raid5(device_extension* Vcb, uint8_t* buf, uint64_t ad
                         if (runlength == 0)
                             break;
                     }
-#ifndef __REACTOS__
+
                     uint64_t runstart = ps->address + (index << Vcb->sector_shift);
                     uint64_t runend = runstart + (runlength << Vcb->sector_shift);
                     uint64_t start = max(runstart, addr);
                     uint64_t end = min(runend, addr + length);
-#else
-                    runstart = ps->address + (index * Vcb->sector_shift);
-                    runend = runstart + (runlength * Vcb->sector_shift);
-                    start = max(runstart, addr);
-                    end = min(runend, addr + length);
-#endif
 
                     if (end > start)
                         RtlCopyMemory(buf + start - addr, &ps->data[start - ps->address], (ULONG)(end - start));
@@ -1039,9 +1030,6 @@ static NTSTATUS read_data_raid6(device_extension* Vcb, uint8_t* buf, uint64_t ad
                 runlength = RtlFindFirstRunClear(&ps->bmp, &index);
 
                 while (runlength != 0) {
-#ifdef __REACTOS__
-                    uint64_t runstart, runend, start, end;
-#endif
                     if (index >= ps->bmplen)
                         break;
 
@@ -1052,17 +1040,10 @@ static NTSTATUS read_data_raid6(device_extension* Vcb, uint8_t* buf, uint64_t ad
                             break;
                     }
 
-#ifndef __REACTOS__
                     uint64_t runstart = ps->address + (index << Vcb->sector_shift);
                     uint64_t runend = runstart + (runlength << Vcb->sector_shift);
                     uint64_t start = max(runstart, addr);
                     uint64_t end = min(runend, addr + length);
-#else
-                    runstart = ps->address + (index * Vcb->sector_shift);
-                    runend = runstart + (runlength * Vcb->sector_shift);
-                    start = max(runstart, addr);
-                    end = min(runend, addr + length);
-#endif
 
                     if (end > start)
                         RtlCopyMemory(buf + start - addr, &ps->data[start - ps->address], (ULONG)(end - start));
@@ -3191,12 +3172,8 @@ nextitem:
                 RtlCopyMemory(rp->data, rp->buf + rp->bumpoff, rp->read);
         } else {
             uint8_t* buf = rp->buf;
-#ifdef __REACTOS__
-            unsigned int i;
-            for (i = 0; i < rp->num_extents; i++) {
-#else
+
             for (unsigned int i = 0; i < rp->num_extents; i++) {
-#endif // __REACTOS__
                 uint8_t *decomp = NULL, *buf2;
                 ULONG outlen, inlen, off2;
                 uint32_t inpageoff = 0;
