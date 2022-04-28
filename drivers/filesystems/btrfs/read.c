@@ -466,7 +466,7 @@ static NTSTATUS read_data_raid0(device_extension* Vcb, uint8_t* buf, uint64_t ad
 
 static NTSTATUS read_data_raid10(device_extension* Vcb, uint8_t* buf, uint64_t addr, uint32_t length, read_data_context* context,
                                  CHUNK_ITEM* ci, device** devices, uint64_t generation, uint64_t offset) {
-    uint16_t stripe;
+    uint16_t stripe = 0;
     NTSTATUS Status;
     bool checksum_error = false;
     CHUNK_ITEM_STRIPE* cis = (CHUNK_ITEM_STRIPE*)&ci[1];
@@ -653,7 +653,7 @@ static NTSTATUS read_data_raid5(device_extension* Vcb, uint8_t* buf, uint64_t ad
     NTSTATUS Status;
     bool checksum_error = false;
     CHUNK_ITEM_STRIPE* cis = (CHUNK_ITEM_STRIPE*)&ci[1];
-    uint16_t j, stripe;
+    uint16_t j, stripe = 0;
     bool no_success = true;
 
     for (j = 0; j < ci->num_stripes; j++) {
@@ -950,7 +950,7 @@ void raid6_recover2(uint8_t* sectors, uint16_t num_stripes, ULONG sector_size, u
         if (missing != 0)
             galois_divpower(out, (uint8_t)missing, sector_size);
     } else { // reconstruct from p and q
-        uint16_t x, y, stripe;
+        uint16_t x = missing1, y = missing2, stripe;
         uint8_t gyx, gx, denom, a, b, *p, *q, *pxy, *qxy;
         uint32_t j;
 
@@ -962,11 +962,6 @@ void raid6_recover2(uint8_t* sectors, uint16_t num_stripes, ULONG sector_size, u
         if (stripe == missing1 || stripe == missing2) {
             RtlZeroMemory(qxy, sector_size);
             RtlZeroMemory(pxy, sector_size);
-
-            if (stripe == missing1)
-                x = stripe;
-            else
-                y = stripe;
         } else {
             RtlCopyMemory(qxy, sectors + (stripe * sector_size), sector_size);
             RtlCopyMemory(pxy, sectors + (stripe * sector_size), sector_size);
@@ -980,10 +975,7 @@ void raid6_recover2(uint8_t* sectors, uint16_t num_stripes, ULONG sector_size, u
             if (stripe != missing1 && stripe != missing2) {
                 do_xor(qxy, sectors + (stripe * sector_size), sector_size);
                 do_xor(pxy, sectors + (stripe * sector_size), sector_size);
-            } else if (stripe == missing1)
-                x = stripe;
-            else if (stripe == missing2)
-                y = stripe;
+            }
         } while (stripe > 0);
 
         gyx = gpow2(y > x ? (y-x) : (255-x+y));
@@ -1015,7 +1007,7 @@ static NTSTATUS read_data_raid6(device_extension* Vcb, uint8_t* buf, uint64_t ad
     NTSTATUS Status;
     bool checksum_error = false;
     CHUNK_ITEM_STRIPE* cis = (CHUNK_ITEM_STRIPE*)&ci[1];
-    uint16_t stripe, j;
+    uint16_t stripe = 0, j;
     bool no_success = true;
 
     for (j = 0; j < ci->num_stripes; j++) {
@@ -1117,7 +1109,7 @@ static NTSTATUS read_data_raid6(device_extension* Vcb, uint8_t* buf, uint64_t ad
 
     if (context->tree) {
         uint8_t* sector;
-        uint16_t k, physstripe, parity1, parity2, error_stripe;
+        uint16_t k, physstripe, parity1, parity2, error_stripe = 0;
         uint64_t off;
         bool recovered = false, failed = false;
         ULONG num_errors = 0;
@@ -1321,7 +1313,7 @@ static NTSTATUS read_data_raid6(device_extension* Vcb, uint8_t* buf, uint64_t ad
             physstripe = (parity2 + stripe + 1) % ci->num_stripes;
 
             if (!devices[physstripe] || !devices[physstripe]->devobj || (context->csum && !check_sector_csum(Vcb, buf + (i << Vcb->sector_shift), ptr))) {
-                uint16_t error_stripe;
+                uint16_t error_stripe = 0;
                 bool recovered = false, failed = false;
                 ULONG num_errors = 0;
 
@@ -2018,7 +2010,7 @@ NTSTATUS read_data(_In_ device_extension* Vcb, _In_ uint64_t addr, _In_ uint32_t
         uint16_t endoffstripe, parity;
         uint32_t *stripeoff, pos;
         PMDL master_mdl;
-        PFN_NUMBER *pfns, dummy;
+        PFN_NUMBER *pfns, dummy = 0;
         bool need_dummy = false;
 
         get_raid0_offset(addr - offset, ci->stripe_length, ci->num_stripes - 1, &startoff, &startoffstripe);
@@ -2277,7 +2269,7 @@ NTSTATUS read_data(_In_ device_extension* Vcb, _In_ uint64_t addr, _In_ uint32_t
         uint16_t endoffstripe, parity1;
         uint32_t *stripeoff, pos;
         PMDL master_mdl;
-        PFN_NUMBER *pfns, dummy;
+        PFN_NUMBER *pfns, dummy = 0;
         bool need_dummy = false;
 
         get_raid0_offset(addr - offset, ci->stripe_length, ci->num_stripes - 2, &startoff, &startoffstripe);
@@ -3243,39 +3235,29 @@ nextitem:
                     inpageoff = inoff % LZO_PAGE_SIZE;
                 }
 
-                if (off2 != 0) {
-                    outlen = off2 + min(rp->read, (uint32_t)(rp->extents[i].ed_num_bytes - rp->extents[i].off));
+                /* Previous versions of this code decompressed directly into the destination buffer,
+                 * but unfortunately that can't be relied on - Windows likes to use dummy pages sometimes
+                 * when mmap-ing, which breaks the backtracking used by e.g. zstd. */
 
-                    decomp = ExAllocatePoolWithTag(pool_type, outlen, ALLOC_TAG);
-                    if (!decomp) {
-                        ERR("out of memory\n");
-                        Status = STATUS_INSUFFICIENT_RESOURCES;
-                        goto exit;
-                    }
-                } else
+                if (off2 != 0)
+                    outlen = off2 + min(rp->read, (uint32_t)(rp->extents[i].ed_num_bytes - rp->extents[i].off));
+                else
                     outlen = min(rp->read, (uint32_t)(rp->extents[i].ed_num_bytes - rp->extents[i].off));
+
+                decomp = ExAllocatePoolWithTag(pool_type, outlen, ALLOC_TAG);
+                if (!decomp) {
+                    ERR("out of memory\n");
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto exit;
+                }
 
                 ccj = (comp_calc_job*)ExAllocatePoolWithTag(pool_type, sizeof(comp_calc_job), ALLOC_TAG);
                 if (!ccj) {
                     ERR("out of memory\n");
 
-                    if (decomp)
-                        ExFreePool(decomp);
+                    ExFreePool(decomp);
 
                     Status = STATUS_INSUFFICIENT_RESOURCES;
-                    goto exit;
-                }
-
-                Status = add_calc_job_decomp(fcb->Vcb, rp->compression, buf2, inlen, decomp ? decomp : rp->data, outlen,
-                                             inpageoff, &ccj->cj);
-                if (!NT_SUCCESS(Status)) {
-                    ERR("add_calc_job_decomp returned %08lx\n", Status);
-
-                    if (decomp)
-                        ExFreePool(decomp);
-
-                    ExFreePool(ccj);
-
                     goto exit;
                 }
 
@@ -3284,6 +3266,17 @@ nextitem:
 
                 ccj->offset = off2;
                 ccj->length = (size_t)min(rp->read, rp->extents[i].ed_num_bytes - rp->extents[i].off);
+
+                Status = add_calc_job_decomp(fcb->Vcb, rp->compression, buf2, inlen, decomp, outlen,
+                                             inpageoff, &ccj->cj);
+                if (!NT_SUCCESS(Status)) {
+                    ERR("add_calc_job_decomp returned %08lx\n", Status);
+
+                    ExFreePool(decomp);
+                    ExFreePool(ccj);
+
+                    goto exit;
+                }
 
                 InsertTailList(&calc_jobs, &ccj->list_entry);
 
@@ -3317,10 +3310,8 @@ nextitem:
         if (!NT_SUCCESS(ccj->cj->Status))
             Status = ccj->cj->Status;
 
-        if (ccj->decomp) {
-            RtlCopyMemory(ccj->data, (uint8_t*)ccj->decomp + ccj->offset, ccj->length);
-            ExFreePool(ccj->decomp);
-        }
+        RtlCopyMemory(ccj->data, (uint8_t*)ccj->decomp + ccj->offset, ccj->length);
+        ExFreePool(ccj->decomp);
 
         ExFreePool(ccj);
     }

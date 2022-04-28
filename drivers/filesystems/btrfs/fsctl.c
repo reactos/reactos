@@ -17,6 +17,7 @@
 
 #include "btrfs_drv.h"
 #include "btrfsioctl.h"
+#include "crc32c.h"
 #include <ntddstor.h>
 #include <ntdddisk.h>
 #ifndef __REACTOS__
@@ -2179,10 +2180,10 @@ end:
     return Status;
 }
 
-static NTSTATUS get_object_id(device_extension* Vcb, PFILE_OBJECT FileObject, FILE_OBJECTID_BUFFER* buf, ULONG buflen, ULONG_PTR* retlen) {
+static NTSTATUS get_object_id(PFILE_OBJECT FileObject, FILE_OBJECTID_BUFFER* buf, ULONG buflen, ULONG_PTR* retlen) {
     fcb* fcb;
 
-    TRACE("(%p, %p, %p, %lx, %p)\n", Vcb, FileObject, buf, buflen, retlen);
+    TRACE("(%p, %p, %lx, %p)\n", FileObject, buf, buflen, retlen);
 
     if (!FileObject) {
         ERR("FileObject was NULL\n");
@@ -4965,6 +4966,343 @@ static NTSTATUS fsctl_oplock(device_extension* Vcb, PIRP* Pirp) {
     return Status;
 }
 
+static NTSTATUS get_retrieval_pointers(device_extension* Vcb, PFILE_OBJECT FileObject, STARTING_VCN_INPUT_BUFFER* in,
+                                       ULONG inlen, RETRIEVAL_POINTERS_BUFFER* out, ULONG outlen, ULONG_PTR* retlen) {
+    NTSTATUS Status;
+    fcb* fcb;
+
+    TRACE("get_retrieval_pointers(%p, %p, %p, %lx, %p, %lx, %p)\n", Vcb, FileObject, in, inlen,
+                                                                    out, outlen, retlen);
+
+    if (!FileObject)
+        return STATUS_INVALID_PARAMETER;
+
+    fcb = FileObject->FsContext;
+
+    if (!fcb)
+        return STATUS_INVALID_PARAMETER;
+
+    if (inlen < sizeof(STARTING_VCN_INPUT_BUFFER) || in->StartingVcn.QuadPart < 0)
+        return STATUS_INVALID_PARAMETER;
+
+    if (!out)
+        return STATUS_INVALID_PARAMETER;
+
+    if (outlen < offsetof(RETRIEVAL_POINTERS_BUFFER, Extents[0]))
+        return STATUS_BUFFER_TOO_SMALL;
+
+    ExAcquireResourceSharedLite(fcb->Header.Resource, true);
+
+    try {
+        LIST_ENTRY* le = fcb->extents.Flink;
+        extent* first_ext = NULL;
+        unsigned int num_extents = 0, first_extent_num = 0, i;
+        uint64_t num_sectors, last_off = 0;
+
+        num_sectors = (fcb->inode_item.st_size + Vcb->superblock.sector_size - 1) >> Vcb->sector_shift;
+
+        while (le != &fcb->extents) {
+            extent* ext = CONTAINING_RECORD(le, extent, list_entry);
+
+            if (ext->ignore || ext->extent_data.type == EXTENT_TYPE_INLINE) {
+                le = le->Flink;
+                continue;
+            }
+
+            if (ext->offset > last_off)
+                num_extents++;
+
+            if ((ext->offset >> Vcb->sector_shift) <= (uint64_t)in->StartingVcn.QuadPart &&
+                (ext->offset + ext->extent_data.decoded_size) >> Vcb->sector_shift > (uint64_t)in->StartingVcn.QuadPart) {
+                first_ext = ext;
+                first_extent_num = num_extents;
+            }
+
+            num_extents++;
+
+            last_off = ext->offset + ext->extent_data.decoded_size;
+
+            le = le->Flink;
+        }
+
+        if (num_sectors > last_off >> Vcb->sector_shift)
+            num_extents++;
+
+        if (!first_ext) {
+            Status = STATUS_END_OF_FILE;
+            leave;
+        }
+
+        out->ExtentCount = num_extents - first_extent_num;
+        out->StartingVcn.QuadPart = first_ext->offset >> Vcb->sector_shift;
+        outlen -= offsetof(RETRIEVAL_POINTERS_BUFFER, Extents[0]);
+        *retlen = offsetof(RETRIEVAL_POINTERS_BUFFER, Extents[0]);
+
+        le = &first_ext->list_entry;
+        i = 0;
+        last_off = 0;
+
+        while (le != &fcb->extents) {
+            extent* ext = CONTAINING_RECORD(le, extent, list_entry);
+
+            if (ext->ignore || ext->extent_data.type == EXTENT_TYPE_INLINE) {
+                le = le->Flink;
+                continue;
+            }
+
+            if (ext->offset > last_off) {
+                if (outlen < sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER)) {
+                    Status = STATUS_BUFFER_OVERFLOW;
+                    leave;
+                }
+
+                out->Extents[i].NextVcn.QuadPart = ext->offset >> Vcb->sector_shift;
+                out->Extents[i].Lcn.QuadPart = -1;
+
+                outlen -= sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER);
+                *retlen += sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER);
+                i++;
+            }
+
+            if (outlen < sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER)) {
+                Status = STATUS_BUFFER_OVERFLOW;
+                leave;
+            }
+
+            out->Extents[i].NextVcn.QuadPart = (ext->offset + ext->extent_data.decoded_size) >> Vcb->sector_shift;
+
+            if (ext->extent_data.compression == BTRFS_COMPRESSION_NONE) {
+                EXTENT_DATA2* ed2 = (EXTENT_DATA2*)ext->extent_data.data;
+
+                out->Extents[i].Lcn.QuadPart = (ed2->address + ed2->offset) >> Vcb->sector_shift;
+            } else
+                out->Extents[i].Lcn.QuadPart = -1;
+
+            outlen -= sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER);
+            *retlen += sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER);
+            i++;
+
+            le = le->Flink;
+        }
+
+        if (num_sectors << Vcb->sector_shift > last_off) {
+            if (outlen < sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER)) {
+                Status = STATUS_BUFFER_OVERFLOW;
+                leave;
+            }
+
+            out->Extents[i].NextVcn.QuadPart = num_sectors;
+            out->Extents[i].Lcn.QuadPart = -1;
+
+            outlen -= sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER);
+            *retlen += sizeof(LARGE_INTEGER) + sizeof(LARGE_INTEGER);
+        }
+
+        Status = STATUS_SUCCESS;
+    } finally {
+        ExReleaseResourceLite(fcb->Header.Resource);
+    }
+
+    return Status;
+}
+
+static NTSTATUS add_csum_sparse_extents(device_extension* Vcb, uint64_t sparse_extents, uint8_t** ptr, bool found, void* hash_ptr) {
+    if (!found) {
+        uint8_t* sector = ExAllocatePoolWithTag(PagedPool, Vcb->superblock.sector_size, ALLOC_TAG);
+
+        if (!sector) {
+            ERR("out of memory\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        memset(sector, 0, Vcb->superblock.sector_size);
+
+        get_sector_csum(Vcb, sector, hash_ptr);
+
+        ExFreePool(sector);
+    }
+
+    switch (Vcb->superblock.csum_type) {
+        case CSUM_TYPE_CRC32C: {
+            uint32_t* csum = (uint32_t*)*ptr;
+            uint32_t sparse_hash = *(uint32_t*)hash_ptr;
+
+            for (uint64_t i = 0; i < sparse_extents; i++) {
+                csum[i] = sparse_hash;
+            }
+
+            break;
+        }
+
+        case CSUM_TYPE_XXHASH: {
+            uint64_t* csum = (uint64_t*)*ptr;
+            uint64_t sparse_hash = *(uint64_t*)hash_ptr;
+
+            for (uint64_t i = 0; i < sparse_extents; i++) {
+                csum[i] = sparse_hash;
+            }
+
+            break;
+        }
+
+        case CSUM_TYPE_SHA256:
+        case CSUM_TYPE_BLAKE2: {
+            uint8_t* csum = (uint8_t*)*ptr;
+
+            for (uint64_t i = 0; i < sparse_extents; i++) {
+                memcpy(csum, hash_ptr, 32);
+                csum += 32;
+            }
+
+            break;
+        }
+
+        default:
+            ERR("unrecognized hash type %x\n", Vcb->superblock.csum_type);
+            return STATUS_INTERNAL_ERROR;
+    }
+
+    *ptr += sparse_extents * Vcb->csum_size;
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS get_csum_info(device_extension* Vcb, PFILE_OBJECT FileObject, btrfs_csum_info* buf, ULONG buflen,
+                              ULONG_PTR* retlen, KPROCESSOR_MODE processor_mode) {
+    NTSTATUS Status;
+    fcb* fcb;
+    ccb* ccb;
+
+    TRACE("get_csum_info(%p, %p, %p, %lx, %p, %x)\n", Vcb, FileObject, buf, buflen, retlen, processor_mode);
+
+    if (!FileObject)
+        return STATUS_INVALID_PARAMETER;
+
+    fcb = FileObject->FsContext;
+    ccb = FileObject->FsContext2;
+
+    if (!fcb || !ccb)
+        return STATUS_INVALID_PARAMETER;
+
+    if (!buf)
+        return STATUS_INVALID_PARAMETER;
+
+    if (buflen < offsetof(btrfs_csum_info, data[0]))
+        return STATUS_BUFFER_TOO_SMALL;
+
+
+    if (processor_mode == UserMode && !(ccb->access & (FILE_READ_DATA | FILE_WRITE_DATA))) {
+        WARN("insufficient privileges\n");
+        return STATUS_ACCESS_DENIED;
+    }
+
+    ExAcquireResourceSharedLite(fcb->Header.Resource, true);
+
+    try {
+        LIST_ENTRY* le;
+        uint8_t* ptr;
+        uint64_t last_off;
+        uint8_t sparse_hash[MAX_HASH_SIZE];
+        bool sparse_hash_found = false;
+
+        if (fcb->ads) {
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            leave;
+        }
+
+        if (fcb->type == BTRFS_TYPE_DIRECTORY) {
+            Status = STATUS_FILE_IS_A_DIRECTORY;
+            leave;
+        }
+
+        if (fcb->inode_item.flags & BTRFS_INODE_NODATASUM) {
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            leave;
+        }
+
+        buf->csum_type = Vcb->superblock.csum_type;
+        buf->csum_length = Vcb->csum_size;
+
+        le = fcb->extents.Flink;
+        while (le != &fcb->extents) {
+            extent* ext = CONTAINING_RECORD(le, extent, list_entry);
+
+            if (ext->ignore) {
+                le = le->Flink;
+                continue;
+            }
+
+            if (ext->extent_data.type == EXTENT_TYPE_INLINE) {
+                buf->num_sectors = 0;
+                *retlen = offsetof(btrfs_csum_info, data[0]);
+                Status = STATUS_SUCCESS;
+                leave;
+            }
+
+            le = le->Flink;
+        }
+
+        buf->num_sectors = (fcb->inode_item.st_size + Vcb->superblock.sector_size - 1) >> Vcb->sector_shift;
+
+        if (buflen < offsetof(btrfs_csum_info, data[0]) + (buf->csum_length * buf->num_sectors)) {
+            Status = STATUS_BUFFER_OVERFLOW;
+            *retlen = offsetof(btrfs_csum_info, data[0]);
+            leave;
+        }
+
+        ptr = buf->data;
+        last_off = 0;
+
+        le = fcb->extents.Flink;
+        while (le != &fcb->extents) {
+            extent* ext = CONTAINING_RECORD(le, extent, list_entry);
+            EXTENT_DATA2* ed2;
+
+            if (ext->ignore || ext->extent_data.type == EXTENT_TYPE_INLINE) {
+                le = le->Flink;
+                continue;
+            }
+
+            if (ext->offset > last_off) {
+                uint64_t sparse_extents = (ext->offset - last_off) >> Vcb->sector_shift;
+
+                add_csum_sparse_extents(Vcb, sparse_extents, &ptr, sparse_hash_found, sparse_hash);
+                sparse_hash_found = true;
+            }
+
+            ed2 = (EXTENT_DATA2*)ext->extent_data.data;
+
+            if (ext->extent_data.compression != BTRFS_COMPRESSION_NONE)
+                memset(ptr, 0, (ed2->num_bytes >> Vcb->sector_shift) * Vcb->csum_size); // dummy value for compressed extents
+            else {
+                if (ext->csum)
+                    memcpy(ptr, ext->csum, (ed2->num_bytes >> Vcb->sector_shift) * Vcb->csum_size);
+                else
+                    memset(ptr, 0, (ed2->num_bytes >> Vcb->sector_shift) * Vcb->csum_size);
+
+                ptr += (ed2->num_bytes >> Vcb->sector_shift) * Vcb->csum_size;
+            }
+
+            last_off = ext->offset + ed2->num_bytes;
+
+            le = le->Flink;
+        }
+
+        if (buf->num_sectors > last_off >> Vcb->sector_shift) {
+            uint64_t sparse_extents = buf->num_sectors - (last_off >> Vcb->sector_shift);
+
+            add_csum_sparse_extents(Vcb, sparse_extents, &ptr, sparse_hash_found, sparse_hash);
+        }
+
+        *retlen = offsetof(btrfs_csum_info, data[0]) + (buf->csum_length * buf->num_sectors);
+        Status = STATUS_SUCCESS;
+    } finally {
+        ExReleaseResourceLite(fcb->Header.Resource);
+    }
+
+    return Status;
+}
+
 NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP* Pirp, uint32_t type) {
     PIRP Irp = *Pirp;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -5065,8 +5403,11 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP* Pirp, uint32_t type) {
             break;
 
         case FSCTL_GET_RETRIEVAL_POINTERS:
-            WARN("STUB: FSCTL_GET_RETRIEVAL_POINTERS\n");
-            Status = STATUS_INVALID_DEVICE_REQUEST;
+            Status = get_retrieval_pointers(DeviceObject->DeviceExtension, IrpSp->FileObject,
+                                            IrpSp->Parameters.FileSystemControl.Type3InputBuffer,
+                                            IrpSp->Parameters.FileSystemControl.InputBufferLength,
+                                            Irp->UserBuffer, IrpSp->Parameters.FileSystemControl.OutputBufferLength,
+                                            &Irp->IoStatus.Information);
             break;
 
         case FSCTL_MOVE_FILE:
@@ -5093,8 +5434,8 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP* Pirp, uint32_t type) {
             break;
 
         case FSCTL_GET_OBJECT_ID:
-            Status = get_object_id(DeviceObject->DeviceExtension, IrpSp->FileObject, Irp->UserBuffer,
-                                   IrpSp->Parameters.FileSystemControl.OutputBufferLength, &Irp->IoStatus.Information);
+            Status = get_object_id(IrpSp->FileObject, Irp->UserBuffer, IrpSp->Parameters.FileSystemControl.OutputBufferLength,
+                                   &Irp->IoStatus.Information);
             break;
 
         case FSCTL_DELETE_OBJECT_ID:
@@ -5103,16 +5444,16 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP* Pirp, uint32_t type) {
             break;
 
         case FSCTL_SET_REPARSE_POINT:
-            Status = set_reparse_point(DeviceObject, Irp);
+            Status = set_reparse_point(Irp);
             break;
 
         case FSCTL_GET_REPARSE_POINT:
-            Status = get_reparse_point(DeviceObject, IrpSp->FileObject, Irp->AssociatedIrp.SystemBuffer,
+            Status = get_reparse_point(IrpSp->FileObject, Irp->AssociatedIrp.SystemBuffer,
                                        IrpSp->Parameters.FileSystemControl.OutputBufferLength, &Irp->IoStatus.Information);
             break;
 
         case FSCTL_DELETE_REPARSE_POINT:
-            Status = delete_reparse_point(DeviceObject, Irp);
+            Status = delete_reparse_point(Irp);
             break;
 
         case FSCTL_ENUM_USN_DATA:
@@ -5136,8 +5477,8 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP* Pirp, uint32_t type) {
             break;
 
         case FSCTL_CREATE_OR_GET_OBJECT_ID:
-            Status = get_object_id(DeviceObject->DeviceExtension, IrpSp->FileObject, Irp->UserBuffer,
-                                   IrpSp->Parameters.FileSystemControl.OutputBufferLength, &Irp->IoStatus.Information);
+            Status = get_object_id(IrpSp->FileObject, Irp->UserBuffer, IrpSp->Parameters.FileSystemControl.OutputBufferLength,
+                                   &Irp->IoStatus.Information);
             break;
 
         case FSCTL_SET_SPARSE:
@@ -5556,6 +5897,12 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP* Pirp, uint32_t type) {
         case FSCTL_BTRFS_RESIZE:
             Status = resize_device(DeviceObject->DeviceExtension, Irp->AssociatedIrp.SystemBuffer,
                                    IrpSp->Parameters.FileSystemControl.InputBufferLength, Irp);
+            break;
+
+        case FSCTL_BTRFS_GET_CSUM_INFO:
+            Status = get_csum_info(DeviceObject->DeviceExtension, IrpSp->FileObject, Irp->AssociatedIrp.SystemBuffer,
+                                   IrpSp->Parameters.FileSystemControl.OutputBufferLength, &Irp->IoStatus.Information,
+                                   Irp->RequestorMode);
             break;
 
         default:

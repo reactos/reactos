@@ -1377,7 +1377,7 @@ static NTSTATUS scrub_extent(device_extension* Vcb, chunk* c, ULONG type, uint64
     scrub_context context;
     CHUNK_ITEM_STRIPE* cis;
     NTSTATUS Status;
-    uint16_t startoffstripe, num_missing, allowed_missing;
+    uint16_t startoffstripe = 0, num_missing, allowed_missing;
 
     TRACE("(%p, %p, %lx, %I64x, %x, %p)\n", Vcb, c, type, offset, size, csum);
 
@@ -1788,8 +1788,8 @@ static void scrub_raid5_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
         return;
 
     for (ULONG i = 0; i < sectors_per_stripe; i++) {
-        ULONG num_errors = 0, bad_off;
-        uint64_t bad_stripe;
+        ULONG num_errors = 0, bad_off = 0;
+        uint64_t bad_stripe = 0;
         bool alloc = false;
 
         stripe = (parity + 1) % c->chunk_item->num_stripes;
@@ -2006,8 +2006,8 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
 
     for (ULONG i = 0; i < sectors_per_stripe; i++) {
         ULONG num_errors = 0;
-        uint64_t bad_stripe1, bad_stripe2;
-        ULONG bad_off1, bad_off2;
+        uint64_t bad_stripe1 = 0, bad_stripe2 = 0;
+        ULONG bad_off1 = 0, bad_off2 = 0;
         bool alloc = false;
 
         stripe = (parity1 + 2) % c->chunk_item->num_stripes;
@@ -2071,7 +2071,6 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
             }
         } else if (num_errors == 1) {
             uint32_t len;
-            uint16_t stripe_num, bad_stripe_num;
             uint64_t addr = c->offset + (stripe_start * (c->chunk_item->num_stripes - 2) * c->chunk_item->stripe_length) + (bad_off1 << Vcb->sector_shift);
             uint8_t* scratch;
 
@@ -2091,6 +2090,8 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
             stripe = parity1 == 0 ? (c->chunk_item->num_stripes - 1) : (parity1 - 1);
 
             if (c->devices[parity2]->devobj) {
+                uint16_t stripe_num, bad_stripe_num = 0;
+
                 stripe_num = c->chunk_item->num_stripes - 3;
                 while (stripe != parity2) {
                     galois_double(scratch, len);
@@ -2275,7 +2276,7 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
 
             ExFreePool(scratch);
         } else if (num_errors == 2 && missing_devices == 0) {
-            uint16_t x, y, k;
+            uint16_t x = 0, y = 0, k;
             uint64_t addr;
             uint32_t len = (RtlCheckBit(&context->is_tree, bad_off1) || RtlCheckBit(&context->is_tree, bad_off2)) ? Vcb->superblock.node_size : Vcb->superblock.sector_size;
             uint8_t gyx, gx, denom, a, b, *p, *q, *pxy, *qxy;
@@ -2837,7 +2838,7 @@ static NTSTATUS scrub_chunk_raid56(device_extension* Vcb, chunk* c, uint64_t* of
     KEY searchkey;
     traverse_ptr tp;
     bool b;
-    uint64_t full_stripe_len, stripe, stripe_start, stripe_end, total_data = 0;
+    uint64_t full_stripe_len, stripe, stripe_start = 0, stripe_end = 0, total_data = 0;
     ULONG num_extents = 0, num_parity_stripes = c->chunk_item->type & BLOCK_FLAG_RAID6 ? 2 : 1;
 
     full_stripe_len = (c->chunk_item->num_stripes - num_parity_stripes) * c->chunk_item->stripe_length;
@@ -2925,7 +2926,7 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
     traverse_ptr tp;
     bool b = false, tree_run = false;
     ULONG type, num_extents = 0;
-    uint64_t total_data = 0, tree_run_start, tree_run_end;
+    uint64_t total_data = 0, tree_run_start = 0, tree_run_end = 0;
 
     TRACE("chunk %I64x\n", c->offset);
 

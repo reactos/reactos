@@ -309,7 +309,7 @@ static void write_reg_key(HKEY root, const wstring& keyname, const WCHAR* val, c
 
 static void register_clsid(const GUID clsid, const WCHAR* description) {
     WCHAR* clsidstring;
-    wstring inproc, progid, clsidkeyname;
+    wstring inproc, clsidkeyname;
     WCHAR dllpath[MAX_PATH];
 
     StringFromCLSID(clsid, &clsidstring);
@@ -317,11 +317,9 @@ static void register_clsid(const GUID clsid, const WCHAR* description) {
     try {
 #ifndef __REACTOS__
         inproc = L"CLSID\\"s + clsidstring + L"\\InprocServer32"s;
-        progid = L"CLSID\\"s + clsidstring + L"\\ProgId"s;
         clsidkeyname = L"CLSID\\"s + clsidstring;
 #else
         inproc = wstring(L"CLSID\\") + clsidstring + wstring(L"\\InprocServer32");
-        progid = wstring(L"CLSID\\") + clsidstring + wstring(L"\\ProgId");
         clsidkeyname = wstring(L"CLSID\\") + clsidstring;
 #endif
 

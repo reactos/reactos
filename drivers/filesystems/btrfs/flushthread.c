@@ -5816,6 +5816,8 @@ static NTSTATUS partial_stripe_read(device_extension* Vcb, chunk* c, partial_str
             }
 
             i = (parity + 1) % c->chunk_item->num_stripes;
+            logstripe = (c->chunk_item->num_stripes + c->chunk_item->num_stripes - 1 - parity + stripe) % c->chunk_item->num_stripes;
+
             for (k = 0; k < c->chunk_item->num_stripes; k++) {
                 if (i != stripe) {
                     if (c->devices[i]->devobj) {
@@ -5835,8 +5837,7 @@ static NTSTATUS partial_stripe_read(device_extension* Vcb, chunk* c, partial_str
                         ExFreePool(scratch);
                         return STATUS_UNEXPECTED_IO_ERROR;
                     }
-                } else
-                    logstripe = k;
+                }
 
                 i = (i + 1) % c->chunk_item->num_stripes;
             }

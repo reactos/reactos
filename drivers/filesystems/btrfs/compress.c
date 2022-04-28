@@ -703,13 +703,18 @@ NTSTATUS zstd_decompress(uint8_t* inbuf, uint32_t inlen, uint8_t* outbuf, uint32
     output.size = outlen;
     output.pos = 0;
 
-    read = ZSTD_decompressStream(stream, &output, &input);
+    do {
+        read = ZSTD_decompressStream(stream, &output, &input);
 
-    if (ZSTD_isError(read)) {
-        ERR("ZSTD_decompressStream failed: %s\n", ZSTD_getErrorName(read));
-        Status = STATUS_INTERNAL_ERROR;
-        goto end;
-    }
+        if (ZSTD_isError(read)) {
+            ERR("ZSTD_decompressStream failed: %s\n", ZSTD_getErrorName(read));
+            Status = STATUS_INTERNAL_ERROR;
+            goto end;
+        }
+
+        if (output.pos == output.size)
+            break;
+    } while (read != 0);
 
     Status = STATUS_SUCCESS;
 

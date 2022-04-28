@@ -1061,11 +1061,7 @@ static void unserialize(void* data, ULONG len, WCHAR* s) {
     }
 }
 
-#ifdef __REACTOS__
-extern "C" {
-#endif
-
-void CALLBACK StartBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
+extern "C" void CALLBACK StartBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     try {
         WCHAR *s, *vol, *block;
         win_handle h, token;
@@ -1126,7 +1122,7 @@ void CALLBACK StartBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int 
     }
 }
 
-void CALLBACK PauseBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
+extern "C" void CALLBACK PauseBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     try {
         win_handle h, token;
         TOKEN_PRIVILEGES tp;
@@ -1173,7 +1169,7 @@ void CALLBACK PauseBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int 
     }
 }
 
-void CALLBACK StopBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
+extern "C" void CALLBACK StopBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     try {
         win_handle h, token;
         TOKEN_PRIVILEGES tp;
@@ -1217,7 +1213,3 @@ void CALLBACK StopBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int n
         error_message(hwnd, e.what());
     }
 }
-
-#ifdef __REACTOS__
-} /* extern "C" */
-#endif

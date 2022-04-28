@@ -66,10 +66,6 @@
 #include "btrfs.h"
 #include "btrfsioctl.h"
 
-#if !defined(__REACTOS__) && (defined(_X86_) || defined(_AMD64_))
-#include <emmintrin.h>
-#endif
-
 #ifdef __REACTOS__
 C_ASSERT(sizeof(bool) == 1);
 #endif
@@ -134,14 +130,16 @@ C_ASSERT(sizeof(bool) == 1);
 #define try __try
 #define except __except
 #define finally __finally
+#define leave __leave
 #else
 #define try if (1)
 #define except(x) if (0 && (x))
 #define finally if (1)
+#define leave
 #endif
 
 #ifndef __REACTOS__
-#ifdef __GNUC__
+#ifndef InterlockedIncrement64
 #define InterlockedIncrement64(a) __sync_add_and_fetch(a, 1)
 #endif
 #endif // __REACTOS__
@@ -1102,6 +1100,12 @@ __inline static uint32_t get_extent_data_refcount(uint8_t type, void* data) {
     }
 }
 
+// in xor-gas.S
+#if defined(_X86_) || defined(_AMD64_)
+void __stdcall do_xor_sse2(uint8_t* buf1, uint8_t* buf2, uint32_t len);
+void __stdcall do_xor_avx2(uint8_t* buf1, uint8_t* buf2, uint32_t len);
+#endif
+
 // in btrfs.c
 _Ret_maybenull_
 device* find_device_from_uuid(_In_ device_extension* Vcb, _In_ BTRFS_UUID* uuid);
@@ -1130,6 +1134,10 @@ NTSTATUS dev_ioctl(_In_ PDEVICE_OBJECT DeviceObject, _In_ ULONG ControlCode, _In
 bool is_file_name_valid(_In_ PUNICODE_STRING us, _In_ bool posix, _In_ bool stream);
 void send_notification_fileref(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream);
 void queue_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream);
+
+typedef void (__stdcall *xor_func)(uint8_t* buf1, uint8_t* buf2, uint32_t len);
+
+extern xor_func do_xor;
 
 #ifdef DEBUG_CHUNK_LOCKS
 #define acquire_chunk_lock(c, Vcb) { ExAcquireResourceExclusiveLite(&c->lock, true); InterlockedIncrement(&Vcb->chunk_locks_held); }
@@ -1175,8 +1183,6 @@ bool check_superblock_checksum(superblock* sb);
 #else
 #define funcname __func__
 #endif
-
-extern bool have_sse2;
 
 extern uint32_t mount_compress;
 extern uint32_t mount_compress_force;
@@ -1229,8 +1235,8 @@ void _debug_message(_In_ const char* func, _In_ char* s, ...) __attribute__((for
 
 #else
 
-#define TRACE(s, ...)
-#define WARN(s, ...)
+#define TRACE(s, ...) do { } while(0)
+#define WARN(s, ...) do { } while(0)
 #define FIXME(s, ...) DbgPrint("Btrfs FIXME : %s : " s, funcname, ##__VA_ARGS__)
 #define ERR(s, ...) DbgPrint("Btrfs ERR : %s : " s, funcname, ##__VA_ARGS__)
 
@@ -1424,10 +1430,10 @@ void insert_dir_child_into_hash_lists(fcb* fcb, dir_child* dc);
 void remove_dir_child_from_hash_lists(fcb* fcb, dir_child* dc);
 
 // in reparse.c
-NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject, void* buffer, DWORD buflen, ULONG_PTR* retlen);
+NTSTATUS get_reparse_point(PFILE_OBJECT FileObject, void* buffer, DWORD buflen, ULONG_PTR* retlen);
 NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, ccb* ccb, file_ref* fileref, PIRP Irp, LIST_ENTRY* rollback);
-NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS set_reparse_point(PIRP Irp);
+NTSTATUS delete_reparse_point(PIRP Irp);
 
 // in create.c
 
@@ -1605,21 +1611,7 @@ NTSTATUS vol_create(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 NTSTATUS vol_close(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 NTSTATUS vol_read(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 NTSTATUS vol_write(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_query_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_set_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_query_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_set_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_flush_buffers(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_query_volume_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_set_volume_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_cleanup(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_directory_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_file_system_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_lock_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 NTSTATUS vol_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_shutdown(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS vol_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 void add_volume_device(superblock* sb, PUNICODE_STRING devpath, uint64_t length, ULONG disk_num, ULONG part_num);
 NTSTATUS mountmgr_add_drive_letter(PDEVICE_OBJECT mountmgr, PUNICODE_STRING devpath);
 
@@ -1732,49 +1724,6 @@ static __inline bool write_fcb_compressed(fcb* fcb) {
         return true;
 
     return false;
-}
-
-static __inline void do_xor(uint8_t* buf1, uint8_t* buf2, uint32_t len) {
-    uint32_t j;
-#ifndef __REACTOS__
-#if defined(_X86_) || defined(_AMD64_)
-    __m128i x1, x2;
-
-    if (have_sse2 && ((uintptr_t)buf1 & 0xf) == 0 && ((uintptr_t)buf2 & 0xf) == 0) {
-        while (len >= 16) {
-            x1 = _mm_load_si128((__m128i*)buf1);
-            x2 = _mm_load_si128((__m128i*)buf2);
-            x1 = _mm_xor_si128(x1, x2);
-            _mm_store_si128((__m128i*)buf1, x1);
-
-            buf1 += 16;
-            buf2 += 16;
-            len -= 16;
-        }
-    }
-#elif defined(_ARM_) || defined(_ARM64_)
-    uint64x2_t x1, x2;
-
-    if (((uintptr_t)buf1 & 0xf) == 0 && ((uintptr_t)buf2 & 0xf) == 0) {
-        while (len >= 16) {
-            x1 = vld1q_u64((const uint64_t*)buf1);
-            x2 = vld1q_u64((const uint64_t*)buf2);
-            x1 = veorq_u64(x1, x2);
-            vst1q_u64((uint64_t*)buf1, x1);
-
-            buf1 += 16;
-            buf2 += 16;
-            len -= 16;
-        }
-    }
-#endif
-#endif // __REACTOS__
-
-    for (j = 0; j < len; j++) {
-        *buf1 ^= *buf2;
-        buf1++;
-        buf2++;
-    }
 }
 
 #ifdef DEBUG_FCB_REFCOUNTS

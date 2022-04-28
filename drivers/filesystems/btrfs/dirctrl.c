@@ -1174,7 +1174,7 @@ NTSTATUS __stdcall drv_directory_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP
     top_level = is_top_level(Irp);
 
     if (Vcb && Vcb->type == VCB_TYPE_VOLUME) {
-        Status = vol_directory_control(DeviceObject, Irp);
+        Status = STATUS_INVALID_DEVICE_REQUEST;
         goto end;
     } else if (!Vcb || Vcb->type != VCB_TYPE_FS) {
         Status = STATUS_INVALID_PARAMETER;

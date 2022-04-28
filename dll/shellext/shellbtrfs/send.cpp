@@ -532,11 +532,7 @@ void BtrfsSend::Open(HWND hwnd, LPWSTR path) {
         throw last_error(GetLastError());
 }
 
-#ifdef __REACTOS__
-extern "C" {
-#endif
-
-void CALLBACK SendSubvolGUIW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
+extern "C" void CALLBACK SendSubvolGUIW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     try {
         win_handle token;
         TOKEN_PRIVILEGES tp;
@@ -564,10 +560,6 @@ void CALLBACK SendSubvolGUIW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int
         error_message(hwnd, e.what());
     }
 }
-
-#ifdef __REACTOS__
-} /* extern "C" */
-#endif
 
 static void send_subvol(const wstring& subvol, const wstring& file, const wstring& parent, const vector<wstring>& clones) {
     char* buf;
@@ -682,11 +674,7 @@ static void send_subvol(const wstring& subvol, const wstring& file, const wstrin
     free(buf);
 }
 
-#ifdef __REACTOS__
-extern "C" {
-#endif
-
-void CALLBACK SendSubvolW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
+extern "C" void CALLBACK SendSubvolW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     vector<wstring> args;
     wstring subvol = L"", parent = L"", file = L"";
     vector<wstring> clones;
@@ -742,7 +730,3 @@ void CALLBACK SendSubvolW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nC
         }
     }
 }
-
-#ifdef __REACTOS__
-} /* extern "C" */
-#endif
