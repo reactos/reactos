@@ -46,10 +46,6 @@ typedef struct {
 static NTSTATUS create_chunk(device_extension* Vcb, chunk* c, PIRP Irp);
 static NTSTATUS update_tree_extents(device_extension* Vcb, tree* t, PIRP Irp, LIST_ENTRY* rollback);
 
-#ifndef _MSC_VER // not in mingw yet
-#define DEVICE_DSM_FLAG_TRIM_NOT_FS_ALLOCATED 0x80000000
-#endif
-
 _Function_class_(IO_COMPLETION_ROUTINE)
 static NTSTATUS __stdcall write_completion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID conptr) {
     write_context* context = conptr;

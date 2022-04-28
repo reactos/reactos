@@ -397,7 +397,7 @@ static bool get_last_inode(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock
         return false;
     }
 
-    if (tp.item->key.obj_type == TYPE_INODE_ITEM || (tp.item->key.obj_type == TYPE_ROOT_ITEM && !(tp.item->key.obj_id & 0x8000000000000000))) {
+    if ((tp.item->key.obj_type == TYPE_INODE_ITEM || tp.item->key.obj_type == TYPE_ROOT_ITEM) && tp.item->key.obj_id <= BTRFS_LAST_FREE_OBJECTID) {
         r->lastinode = tp.item->key.obj_id;
         TRACE("last inode for tree %I64x is %I64x\n", r->id, r->lastinode);
         return true;
@@ -408,7 +408,7 @@ static bool get_last_inode(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock
 
         TRACE("moving on to %I64x,%x,%I64x\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset);
 
-        if (tp.item->key.obj_type == TYPE_INODE_ITEM || (tp.item->key.obj_type == TYPE_ROOT_ITEM && !(tp.item->key.obj_id & 0x8000000000000000))) {
+        if ((tp.item->key.obj_type == TYPE_INODE_ITEM || tp.item->key.obj_type == TYPE_ROOT_ITEM) && tp.item->key.obj_id <= BTRFS_LAST_FREE_OBJECTID) {
             r->lastinode = tp.item->key.obj_id;
             TRACE("last inode for tree %I64x is %I64x\n", r->id, r->lastinode);
             return true;

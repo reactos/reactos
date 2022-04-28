@@ -126,7 +126,7 @@ C_ASSERT(sizeof(bool) == 1);
 
 #define BTRFS_VOLUME_PREFIX L"\\Device\\Btrfs{"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__clang__)
 #define try __try
 #define except __except
 #define finally __finally
@@ -1633,7 +1633,7 @@ extern BTRFS_UUID boot_uuid;
 // not in mingw yet
 #ifndef _MSC_VER
 typedef struct {
-    FSRTL_COMMON_FCB_HEADER DUMMYSTRUCTNAME;
+    FSRTL_COMMON_FCB_HEADER Header;
     PFAST_MUTEX FastMutex;
     LIST_ENTRY FilterContexts;
     EX_PUSH_LOCK PushLock;
@@ -1652,7 +1652,7 @@ typedef struct {
 #endif
 #else
 typedef struct {
-    FSRTL_COMMON_FCB_HEADER DUMMYSTRUCTNAME;
+    FSRTL_COMMON_FCB_HEADER Header;
     PFAST_MUTEX FastMutex;
     LIST_ENTRY FilterContexts;
     EX_PUSH_LOCK PushLock;

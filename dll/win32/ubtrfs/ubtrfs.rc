@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,7,7,0
- PRODUCTVERSION 1,7,7,0
+ FILEVERSION 1,7,8,0
+ PRODUCTVERSION 1,7,8,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -68,12 +68,12 @@ BEGIN
         BLOCK "080904b0"
         BEGIN
             VALUE "FileDescription", "Btrfs utility DLL"
-            VALUE "FileVersion", "1.7.7"
+            VALUE "FileVersion", "1.7.8"
             VALUE "InternalName", "ubtrfs"
             VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016-21"
             VALUE "OriginalFilename", "ubtrfs.dll"
             VALUE "ProductName", "WinBtrfs"
-            VALUE "ProductVersion", "1.7.7"
+            VALUE "ProductVersion", "1.7.8"
         END
     END
     BLOCK "VarFileInfo"
