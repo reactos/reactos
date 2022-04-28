@@ -195,7 +195,7 @@ IopInitializeDevice(
     UNICODE_STRING DeviceInstance;
     PDEVICE_OBJECT DeviceObject;
     PDEVICE_NODE DeviceNode;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_SUCCESS, StatusUnused;
 
     DPRINT("IopInitializeDevice(%p)\n", ControlData);
 
@@ -245,8 +245,8 @@ IopInitializeDevice(
     }
 
     /* Set the device instance of the device node */
-    RtlDuplicateUnicodeString(0, &DeviceInstance, &DeviceNode->InstancePath);
-
+    StatusUnused = RtlDuplicateUnicodeString(0, &DeviceInstance, &DeviceNode->InstancePath);
+    UNREFERENCED_PARAMETER(StatusUnused);
 
     /* Insert as a root enumerated device node */
     PiInsertDevNode(DeviceNode, IopRootDeviceNode);
