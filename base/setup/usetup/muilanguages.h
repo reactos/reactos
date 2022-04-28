@@ -703,7 +703,7 @@ const MUI_LANGUAGE_RESOURCE ResourceList[] =
     {L"00000416", L"Portuguese (Brazil)", ptBRPages, ptBRErrorEntries, ptBRStrings},
 #endif
 #ifdef LANGUAGE_PT_PT
-    {L"00000816", L"Português (Portugal)", ptPTPages, ptPTErrorEntries, ptPTStrings},
+    {L"00000816", L"Portuguese (Portugal)", ptPTPages, ptPTErrorEntries, ptPTStrings},
 #endif
 #ifdef LANGUAGE_PA_IN
     {L"00000446", L"Punjabi (India)", enUSPages, enUSErrorEntries, enUSStrings},
