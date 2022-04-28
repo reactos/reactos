@@ -2326,7 +2326,7 @@ VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd)
         ProbeForWrite(pImeWnd, sizeof(IMEWND), 1);
         SafeImeUI = *((PIMEWND)pImeWnd)->pimeui;
 
-        bShow = gfIMEShowStatus && SafeImeUI.fCtrlShowStatus;
+        bShow = (gfIMEShowStatus == TRUE) && SafeImeUI.fCtrlShowStatus;
 
         pWnd = ValidateHwndNoErr(pimeui->hwndIMC);
         if (!pWnd)
