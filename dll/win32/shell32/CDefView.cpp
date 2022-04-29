@@ -532,7 +532,7 @@ void CDefView::UpdateStatusbar()
     LRESULT lResult;
     m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)szPartText, &lResult);
 
-    // Don't bother with the extra processing if we only have one StatusBar part
+    /* Don't bother with the extra processing if we only have one StatusBar part. */
     if (!m_isParentFolderSpecial)
     {
         DWORD uTotalFileSize = 0;
@@ -541,7 +541,7 @@ void CDefView::UpdateStatusbar()
         INT nItem = -1;
         bool bIsOnlyFoldersSelected = true;
 
-        // If we have something selected then only count selected file sizes
+        /* If we have something selected then only count selected file sizes. */
         if (cSelectedItems)
         {
             uFileFlags = LVNI_SELECTED;
@@ -559,8 +559,8 @@ void CDefView::UpdateStatusbar()
             }
         }
 
-        // Don't show the file size text if there is 0 bytes in the folder OR we only have
-        // folders selected.
+        /* Don't show the file size text if there is 0 bytes in the folder
+         * OR we only have folders selected. */
         if ((cSelectedItems && !bIsOnlyFoldersSelected) || uTotalFileSize)
         {
             StrFormatByteSizeW(uTotalFileSize, szPartText, _countof(szPartText));
@@ -572,7 +572,7 @@ void CDefView::UpdateStatusbar()
 
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
 
-        // If we are in a Recycle Bin folder then show no text for the location part
+        /* If we are in a Recycle Bin folder then show no text for the location part. */
         if (!_ILIsBitBucket(m_pidlParent))
         {
             LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText, _countof(szPartText));
@@ -1260,14 +1260,16 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     BOOL bPreviousParentSpecial = m_isParentFolderSpecial;
 
-    // A folder is special if it is the Desktop folder, a network folder, or a Control Panel folder
+    /* A folder is special if it is the Desktop folder,
+     * a network folder, or a Control Panel folder. */
     m_isParentFolderSpecial = _ILIsDesktop(m_pidlParent) || _ILIsNetHood(m_pidlParent) 
         || _ILIsControlPanel(ILFindLastID(m_pidlParent));
 
-    // Only force Status Bar part refresh if the state changed from the preivous folder
+    /* Only force StatusBar part refresh if the state
+     * changed from the preivous folder. */
     if (bPreviousParentSpecial != m_isParentFolderSpecial)
     {
-        // This handles changing StatusBar parts
+        /* This handles changing StatusBar parts. */
         _ForceStatusBarResize();
     }
 
@@ -2526,7 +2528,7 @@ HRESULT WINAPI CDefView::UIActivate(UINT uState)
     {
         _ForceStatusBarResize();
 
-        // Set the text for the status bar
+        /* Set the text for the status bar */
         UpdateStatusbar();
     }
 
@@ -3585,8 +3587,8 @@ void CDefView::_HandleStatusBarResize(int nWidth)
     const int nRightPartsLength = nFileSizePartLength + nLocationPartLength;
     int nObjectsPartLength = nWidth - nRightPartsLength;
     
-    // If the window is small enough just divide each part into thirds
-    // This is the behavior of Windows Server 2003
+    /* If the window is small enough just divide each part into thirds
+     * This is the behavior of Windows Server 2003. */
     if (nObjectsPartLength <= nLocationPartLength)
         nObjectsPartLength = nFileSizePartLength = nWidth / 3;
 
@@ -3597,15 +3599,15 @@ void CDefView::_HandleStatusBarResize(int nWidth)
 
 void CDefView::_ForceStatusBarResize()
 {
-    // Get the handle for the status bar
+    /* Get the handle for the status bar */
     HWND fStatusBar;
     m_pShellBrowser->GetControlWindow(FCW_STATUS, &fStatusBar);
 
-    // Get the size of our status bar
+    /* Get the size of our status bar */
     RECT statusBarSize;
     ::GetWindowRect(fStatusBar, &statusBarSize);
 
-    // Resize the status bar
+    /* Resize the status bar */
     _HandleStatusBarResize(statusBarSize.right - statusBarSize.left);
 }
 
