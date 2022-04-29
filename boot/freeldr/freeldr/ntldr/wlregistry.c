@@ -65,7 +65,7 @@ WinLdrLoadSystemHive(
     Status = ArcGetFileInformation(FileId, &FileInfo);
     if (Status != ESUCCESS)
     {
-        WARN("Hive file has 0 size!");
+        WARN("Hive file has 0 size!\n");
         ArcClose(FileId);
         return FALSE;
     }
@@ -78,7 +78,7 @@ WinLdrLoadSystemHive(
 
     if (HiveDataPhysical == NULL)
     {
-        WARN("Could not alloc memory for hive!");
+        WARN("Could not alloc memory for hive!\n");
         ArcClose(FileId);
         return FALSE;
     }
@@ -226,7 +226,7 @@ WinLdrGetNLSNames(
     rc = RegOpenKey(ControlSet, L"Control\\NLS\\CodePage", &hKey);
     if (rc != ERROR_SUCCESS)
     {
-        //TRACE("Couldn't open CodePage registry key");
+        //TRACE("Couldn't open CodePage registry key\n");
         return FALSE;
     }
 
@@ -235,7 +235,7 @@ WinLdrGetNLSNames(
     rc = RegQueryValue(hKey, L"ACP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //TRACE("Couldn't get ACP NLS setting");
+        //TRACE("Couldn't get ACP NLS setting\n");
         goto Quit;
     }
 
@@ -244,7 +244,7 @@ WinLdrGetNLSNames(
                        (PUCHAR)AnsiFileName->Buffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //TRACE("ACP NLS Setting exists, but isn't readable");
+        //TRACE("ACP NLS Setting exists, but isn't readable\n");
         //goto Quit;
         AnsiFileName->Length = 0;
         RtlAppendUnicodeToString(AnsiFileName, L"c_1252.nls"); // HACK: ReactOS bug CORE-6105
@@ -259,7 +259,7 @@ WinLdrGetNLSNames(
     rc = RegQueryValue(hKey, L"OEMCP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //TRACE("Couldn't get OEMCP NLS setting");
+        //TRACE("Couldn't get OEMCP NLS setting\n");
         goto Quit;
     }
 
@@ -268,7 +268,7 @@ WinLdrGetNLSNames(
                        (PUCHAR)OemFileName->Buffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //TRACE("OEMCP NLS setting exists, but isn't readable");
+        //TRACE("OEMCP NLS setting exists, but isn't readable\n");
         //goto Quit;
         OemFileName->Length = 0;
         RtlAppendUnicodeToString(OemFileName, L"c_437.nls"); // HACK: ReactOS bug CORE-6105
@@ -284,7 +284,7 @@ WinLdrGetNLSNames(
                        (PUCHAR)OemHalFileName->Buffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //TRACE("Couldn't get OEMHAL NLS setting");
+        //TRACE("Couldn't get OEMHAL NLS setting\n");
         //goto Quit;
         RtlInitEmptyUnicodeString(OemHalFileName, NULL, 0);
     }
@@ -299,7 +299,7 @@ WinLdrGetNLSNames(
     rc = RegOpenKey(ControlSet, L"Control\\NLS\\Language", &hKey);
     if (rc != ERROR_SUCCESS)
     {
-        //TRACE("Couldn't open Language registry key");
+        //TRACE("Couldn't open Language registry key\n");
         return FALSE;
     }
 
@@ -308,7 +308,7 @@ WinLdrGetNLSNames(
     rc = RegQueryValue(hKey, L"Default", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //TRACE("Couldn't get Language Default setting");
+        //TRACE("Couldn't get Language Default setting\n");
         goto Quit;
     }
 
@@ -317,7 +317,7 @@ WinLdrGetNLSNames(
                        (PUCHAR)LangFileName->Buffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
     {
-        //TRACE("Language Default setting exists, but isn't readable");
+        //TRACE("Language Default setting exists, but isn't readable\n");
         //goto Quit;
         LangFileName->Length = 0;
         RtlAppendUnicodeToString(LangFileName, L"l_intl.nls");
