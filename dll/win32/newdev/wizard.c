@@ -1,7 +1,7 @@
 /*
  * New device installer (newdev.dll)
  *
- * Copyright 2006 Hervé Poussineau (hpoussin@reactos.org)
+ * Copyright 2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,6 +41,13 @@ CenterWindow(
 
     GetWindowRect(hWndParent, &rcParent);
     GetWindowRect(hWnd, &rcWindow);
+
+    /* Check if the child window fits inside the parent window */
+    if (rcWindow.left < rcParent.left || rcWindow.top < rcParent.top ||
+        rcWindow.right > rcParent.right || rcWindow.bottom > rcParent.bottom)
+    {
+        return;
+    }
 
     SetWindowPos(
         hWnd,
