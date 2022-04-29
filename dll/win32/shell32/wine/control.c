@@ -824,7 +824,7 @@ Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
     // Add button to TaskBar
     ShowWindow(applet->hWnd, SW_SHOWMINNOACTIVE);
 
-    // Engaging the corresponding button in the Taskbar
+    // Activate the corresponding button in the Taskbar
     CoInitialize(NULL);
     if (CoCreateInstance(&CLSID_TaskbarList,
                          NULL, CLSCTX_INPROC_SERVER,
