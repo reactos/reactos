@@ -728,9 +728,7 @@ void Test_CursorIcon()
     HBITMAP hbmMask;
     CURSORINFO CursorInfo;
 
-    /*
-         On XP sp3 GetObject reports a 32x32 bitmap.
-    */
+    /* On XP sp3 GetObject reports a 32x32 bitmap. */
     hbmMask = CreateBitmap(32, 64, 1, 1, src_mask);
     GetObjectW(hbmMask, sizeof(BITMAP), &bmp);
     ok(bmp.bmWidth == (bmp.bmHeight / 2), "ERR UNICODE CursorIcon RECT got %ldx%ld\n", bmp.bmWidth, bmp.bmHeight);
