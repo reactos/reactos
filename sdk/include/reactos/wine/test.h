@@ -698,28 +698,22 @@ const char *wine_dbgstr_an( const CHAR *str, intptr_t n )
 
 const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n )
 {
-    char *dst, *res;
-    size_t size;
+    char *res;
+    static const char hex[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+    char buffer[300], *dst = buffer;
 
+    if (!str) return "(null)";
     if (!((ULONG_PTR)str >> 16))
     {
-        if (!str) return "(null)";
         res = get_temp_buffer( 6 );
         sprintf( res, "#%04x", LOWORD(str) );
         return res;
     }
-    if (n == -1)
-    {
-        const WCHAR *end = str;
-        while (*end) end++;
-        n = end - str;
-    }
-    if (n < 0) n = 0;
-    size = 12 + min( 300, n * 5 );
-    dst = res = get_temp_buffer( size );
+    if (IsBadStringPtrW(str,n)) return "(invalid)";
+    if (n == -1) for (n = 0; str[n]; n++) ;
     *dst++ = 'L';
     *dst++ = '"';
-    while (n-- > 0 && dst <= res + size - 10)
+    while (n-- > 0 && dst <= buffer + sizeof(buffer) - 10)
     {
         WCHAR c = *str++;
         switch (c)
@@ -730,14 +724,15 @@ const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n )
         case '"':  *dst++ = '\\'; *dst++ = '"'; break;
         case '\\': *dst++ = '\\'; *dst++ = '\\'; break;
         default:
-            if (c >= ' ' && c <= 126)
-                *dst++ = (char)c;
-            else
+            if (c < ' ' || c >= 127)
             {
                 *dst++ = '\\';
-                sprintf(dst,"%04x",c);
-                dst+=4;
+                *dst++ = hex[(c >> 12) & 0x0f];
+                *dst++ = hex[(c >> 8) & 0x0f];
+                *dst++ = hex[(c >> 4) & 0x0f];
+                *dst++ = hex[c & 0x0f];
             }
+            else *dst++ = (char)c;
         }
     }
     *dst++ = '"';
@@ -747,8 +742,10 @@ const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n )
         *dst++ = '.';
         *dst++ = '.';
     }
-    *dst++ = 0;
-    release_temp_buffer( res, dst - res );
+    *dst = 0;
+
+    res = get_temp_buffer(strlen(buffer + 1));
+    strcpy(res, buffer);
     return res;
 }
 
