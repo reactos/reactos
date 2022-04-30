@@ -2212,7 +2212,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     BOOL bDifferent = FALSE;
     USER_REFERENCE_ENTRY Ref;
 
-    // Attach the process if necessary
+    // Attach to the process if necessary
     if (ptiIME != GetW32ThreadInfo())
     {
         bDifferent = TRUE;
