@@ -2147,7 +2147,7 @@ BOOL FASTCALL IntCheckImeShowStatus(PWND pwndIme, PTHREADINFO pti)
         if (pti && pti != pwndNode->head.pti)
             continue;
 
-        // Attach the process if necessary
+        // Attach to the process if necessary
         bDifferent = FALSE;
         if (pwndNode->head.pti->ppi != ptiCurrent->ppi)
         {
