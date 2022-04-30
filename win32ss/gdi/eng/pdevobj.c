@@ -379,7 +379,6 @@ PDEVOBJ_vRefreshModeList(
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVMODEINFO pdminfo, pdmiNext;
-    PDEVMODEW newDevMode;
 
     /* Lock the PDEV */
     EngAcquireSemaphore(ppdev->hsemDevLock);
@@ -398,12 +397,8 @@ PDEVOBJ_vRefreshModeList(
     ExFreePoolWithTag(pGraphicsDevice->pDevModeList, GDITAG_GDEVICE);
     pGraphicsDevice->pDevModeList = NULL;
 
-    /* Search an available display mode */
-    if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, ppdev->pdmwDev, &newDevMode, TRUE))
-    {
-        ExFreePoolWithTag(ppdev->pdmwDev, GDITAG_DEVMODE);
-        ppdev->pdmwDev = newDevMode;
-    }
+    /* Update available display mode list */
+    LDEVOBJ_bBuildDevmodeList(pGraphicsDevice);
 
     /* Unlock PDEV */
     EngReleaseSemaphore(ppdev->hsemDevLock);
