@@ -2255,7 +2255,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     ret = co_IntSendMessage(UserHMGetHandle(pwndUI), uMsg, wParam, lParam);
     UserDerefObjectCo(pwndUI);
 
-    // Attach the process if necessary
+    // Attach to the process if necessary
     if (bDifferent)
         KeAttachProcess(&(ptiIME->ppi->peProcess->Pcb));
 
