@@ -810,8 +810,11 @@ Control_EnumWinProc(
 /**
  * This function makes the system control applet accessible via the taskbar.
  *
- * @param applet Pointer of system control applet
- * @param index Number of applet in a system control library
+ * @param applet
+ * Pointer of system control applet.
+ *
+ * @param index
+ * Number of applet in a system control library.
  */
 static void
 Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
@@ -821,10 +824,10 @@ Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
     SetWindowTextW(applet->hWnd, applet->info[index].name);
     SendMessageW(applet->hWnd, WM_SETICON, ICON_SMALL, (LPARAM)applet->info[index].icon);
 
-    // Add button to TaskBar
+    /* Add button to the taskbar */
     ShowWindow(applet->hWnd, SW_SHOWMINNOACTIVE);
 
-    // Activate the corresponding button in the Taskbar
+    /* Activate the corresponding button in the taskbar */
     CoInitialize(NULL);
     if (CoCreateInstance(&CLSID_TaskbarList,
                          NULL, CLSCTX_INPROC_SERVER,
