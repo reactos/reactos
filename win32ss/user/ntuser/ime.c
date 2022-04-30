@@ -2346,7 +2346,7 @@ VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd)
     }
     _SEH2_END;
 
-    // Detach the process if necessary
+    // Detach from the process if necessary
     if (pti != ptiIME)
         KeDetachProcess();
 
