@@ -2288,7 +2288,7 @@ IntSendOpenStatusNotify(PTHREADINFO ptiIME, PIMEUI pimeui, PWND pWnd, BOOL bOpen
     PTHREADINFO ptiWnd = pWnd->head.pti;
     USER_REFERENCE_ENTRY Ref;
 
-    if (ptiWnd->dwExpWinVer >= 0x400 && pWnd->hImc)
+    if (ptiWnd->dwExpWinVer >= WINVER_WINNT4 && pWnd->hImc)
     {
         UserRefObjectCo(pWnd, &Ref);
         co_IntSendMessage(UserHMGetHandle(pWnd), WM_IME_NOTIFY, wParam, 0);
