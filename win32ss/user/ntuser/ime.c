@@ -2247,7 +2247,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     }
     _SEH2_END;
 
-    // Detach the process if necessary
+    // Detach from the process if necessary
     if (bDifferent)
         KeDetachProcess();
 
