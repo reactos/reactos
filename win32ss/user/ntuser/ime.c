@@ -2316,7 +2316,7 @@ VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd)
     pti = PsGetCurrentThreadWin32Thread();
     ptiIME = pImeWnd->head.pti;
 
-    // Attach the process if necessary
+    // Attach to the process if necessary
     if (pti != ptiIME)
         KeAttachProcess(&(ptiIME->ppi->peProcess->Pcb));
 
