@@ -1465,10 +1465,11 @@ VOID UserFreeInputContext(PVOID Object)
 BOOLEAN UserDestroyInputContext(PVOID Object)
 {
     PIMC pIMC = Object;
-    if (!pIMC || !UserMarkObjectDestroy(pIMC))
+    if (!pIMC)
         return TRUE;
 
-    return UserDeleteObject(UserHMGetHandle(pIMC), TYPE_INPUTCONTEXT);
+    UserDeleteObject(UserHMGetHandle(pIMC), TYPE_INPUTCONTEXT);
+    return TRUE;
 }
 
 // Win: DestroyInputContext
