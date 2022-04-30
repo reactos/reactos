@@ -582,6 +582,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
    return Object;
 }
 
+// Win: HMMarkObjectDestroy
 BOOL
 FASTCALL
 UserMarkObjectDestroy(PVOID Object)
@@ -595,7 +596,7 @@ UserMarkObjectDestroy(PVOID Object)
 
     entry->flags |= HANDLEENTRY_DESTROY;
 
-    if (ObjHead->cLockObj > 1)
+    if (ObjHead->cLockObj > 0)
     {
         entry->flags &= ~HANDLEENTRY_INDESTROY;
         TRACE("Count %d\n",ObjHead->cLockObj);
