@@ -476,7 +476,7 @@ DisplayBootBitmap(
     PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL, Header = NULL, Footer = NULL;
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
-    UCHAR Buffer[24 * 9];
+    UCHAR Buffer[RTL_NUMBER_OF(RotBarBuffer)];
     PVOID Bar = NULL, LineBmp = NULL;
     ROT_BAR_TYPE TempRotBarSelection = RB_UNSPECIFIED;
     NTSTATUS Status;
