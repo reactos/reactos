@@ -2359,37 +2359,14 @@ VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd)
         IntCheckImeShowStatus(pImeWnd, NULL);
 }
 
-// Win: xxxSetIMEShowStatus
-BOOL FASTCALL IntSetIMEShowStatus(BOOL bShow)
+// Win: xxxBroadcastImeShowStatusChange
+BOOL FASTCALL IntBroadcastImeShowStatusChange(PWND pImeWnd, BOOL bShow)
 {
-    PWND pwndFocus, pImeWnd;
-    PTHREADINFO pti;
-    USER_REFERENCE_ENTRY Ref;
-
     if (gfIMEShowStatus == bShow || !IS_IMM_MODE())
         return TRUE;
 
     gfIMEShowStatus = bShow;
-
-    if (!gpqForeground)
-        return TRUE;
-
-    pwndFocus = gpqForeground->spwndFocus;
-    if (!pwndFocus)
-        return TRUE;
-
-    pti = pwndFocus->head.pti;
-    if (pti->TIF_flags & TIF_INCLEANUP)
-        return TRUE;
-
-    pImeWnd = pti->spwndDefaultIme;
-    if (pImeWnd)
-    {
-        UserRefObjectCo(pImeWnd, &Ref);
-        IntNotifyImeShowStatus(pImeWnd);
-        UserDerefObjectCo(pImeWnd);
-    }
-
+    IntNotifyImeShowStatus(pImeWnd);
     return TRUE;
 }
 

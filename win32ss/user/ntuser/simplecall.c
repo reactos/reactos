@@ -900,7 +900,7 @@ NtUserCallHwndParamLock(
     switch (Routine)
     {
         case TWOPARAM_ROUTINE_IMESHOWSTATUSCHANGE:
-            Ret = IntSetIMEShowStatus(!!Param);
+            Ret = IntBroadcastImeShowStatusChange(Window, !!Param);
             break;
 
         case TWOPARAM_ROUTINE_VALIDATERGN:
