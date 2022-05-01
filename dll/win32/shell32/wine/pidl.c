@@ -1921,7 +1921,7 @@ BOOL _ILIsControlPanel(LPCITEMIDLIST pidl)
 {
     IID *iid = _ILGetGUIDPointer(pidl);
 
-    TRACE("(%p)\n",pidl);
+    TRACE("(%p)\n", pidl);
 
     if (iid)
         return IsEqualIID(iid, &CLSID_ControlPanel);

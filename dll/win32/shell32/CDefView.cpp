@@ -567,7 +567,7 @@ void CDefView::UpdateStatusbar()
         }
         else
         {
-            szPartText[0] = 0;
+            *szPartText = 0;
         }
 
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
@@ -1266,7 +1266,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         || _ILIsControlPanel(ILFindLastID(m_pidlParent));
 
     /* Only force StatusBar part refresh if the state
-     * changed from the preivous folder. */
+     * changed from the previous folder. */
     if (bPreviousParentSpecial != m_isParentFolderSpecial)
     {
         /* This handles changing StatusBar parts. */
@@ -3582,7 +3582,7 @@ void CDefView::_HandleStatusBarResize(int nWidth)
         return;
     }
 
-    int nFileSizePartLength = 125;
+    const int nFileSizePartLength = 125;
     const int nLocationPartLength = 150;
     const int nRightPartsLength = nFileSizePartLength + nLocationPartLength;
     int nObjectsPartLength = nWidth - nRightPartsLength;
