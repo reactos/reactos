@@ -2325,11 +2325,12 @@ VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd)
     _SEH2_TRY
     {
         ProbeForWrite(pImeWnd, sizeof(IMEWND), 1);
-        SafeImeUI = *((PIMEWND)pImeWnd)->pimeui;
+        pimeui = ((PIMEWND)pImeWnd)->pimeui;
+        SafeImeUI = *pimeui;
 
         bShow = (gfIMEShowStatus == TRUE) && SafeImeUI.fCtrlShowStatus;
 
-        pWnd = ValidateHwndNoErr(pimeui->hwndIMC);
+        pWnd = ValidateHwndNoErr(SafeImeUI.hwndIMC);
         if (!pWnd)
             pWnd = ptiIME->MessageQueue->spwndFocus;
 
