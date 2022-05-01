@@ -1393,9 +1393,13 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
 
                if (List[i] == Owner)
                {
-                  if (i > 0) hWndInsertAfter = List[i-1];
-                  else hWndInsertAfter = topmost ? HWND_TOPMOST : HWND_TOP;
-                  break;
+                   if (i > 0)
+                   {
+                       if (List[i-1] != Window->head.h)  
+                           hWndInsertAfter = List[i-1];
+                   }
+                   else hWndInsertAfter = topmost ? HWND_TOPMOST : HWND_TOP;
+                   break;
                }
 
                if (hWndInsertAfter == HWND_TOP || hWndInsertAfter ==  HWND_NOTOPMOST)
