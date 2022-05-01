@@ -2158,7 +2158,7 @@ BOOL FASTCALL IntCheckImeShowStatus(PWND pwndIme, PTHREADINFO pti)
         // Get pwndIMC and update IMEUI.fShowStatus flag
         _SEH2_TRY
         {
-            ProbeForRead(pimeui, sizeof(IMEUI), 1);
+            ProbeForWrite(pimeui, sizeof(IMEUI), 1);
             SafeImeUI = *pimeui;
             if (SafeImeUI.fShowStatus)
             {
