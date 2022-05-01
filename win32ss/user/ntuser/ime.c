@@ -2364,12 +2364,12 @@ BOOL FASTCALL IntSetIMEShowStatus(BOOL bShow)
     PTHREADINFO pti;
     USER_REFERENCE_ENTRY Ref;
 
-    if (gfIMEShowStatus == bShow)
+    if (gfIMEShowStatus == bShow || !IS_IMM_MODE())
         return TRUE;
 
     gfIMEShowStatus = bShow;
 
-    if (!IS_IMM_MODE() || !gpqForeground)
+    if (!gpqForeground)
         return TRUE;
 
     pwndFocus = gpqForeground->spwndFocus;
