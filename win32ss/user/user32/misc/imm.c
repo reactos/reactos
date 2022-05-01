@@ -573,7 +573,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             if (User32GetImeShowStatus() == !lParam)
             {
                 hImeWnd = UserHMGetHandle(pimeui->spwnd);
-                NtUserCallHwndParamLock(hImeWnd, lParam, X_ROUTINE_IMESHOWSTATUSCHANGE);
+                NtUserCallHwndParamLock(hImeWnd, lParam, TWOPARAM_ROUTINE_IMESHOWSTATUSCHANGE);
             }
             break;
 
