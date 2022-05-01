@@ -3582,7 +3582,7 @@ void CDefView::_HandleStatusBarResize(int nWidth)
         return;
     }
 
-    const int nFileSizePartLength = 125;
+    int nFileSizePartLength = 125;
     const int nLocationPartLength = 150;
     const int nRightPartsLength = nFileSizePartLength + nLocationPartLength;
     int nObjectsPartLength = nWidth - nRightPartsLength;
