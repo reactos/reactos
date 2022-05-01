@@ -2235,7 +2235,8 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     if (!pwndUI)
         goto Quit;
 
-    // Lock the IME procedure
+    // Increment the recursion count of the IME procedure.
+    // See also ImeWndProc_common of user32.
     _SEH2_TRY
     {
         ProbeForWrite(&pimeui->nCntInIMEProc, sizeof(LONG), 1);
@@ -2259,7 +2260,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     if (bDifferent)
         KeAttachProcess(&(ptiIME->ppi->peProcess->Pcb));
 
-    // Unlock the IME procedure
+    // Decrement the recursion count of the IME procedure
     _SEH2_TRY
     {
         ProbeForWrite(&pimeui->nCntInIMEProc, sizeof(LONG), 1);
