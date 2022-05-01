@@ -2235,7 +2235,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     if (!pwndUI)
         goto Quit;
 
-    // Lock the IME processor
+    // Lock the IME procedure
     _SEH2_TRY
     {
         ProbeForWrite(&pimeui->nCntInIMEProc, sizeof(LONG), 1);
@@ -2259,7 +2259,7 @@ IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, 
     if (bDifferent)
         KeAttachProcess(&(ptiIME->ppi->peProcess->Pcb));
 
-    // Unlock the IME processor
+    // Unlock the IME procedure
     _SEH2_TRY
     {
         ProbeForWrite(&pimeui->nCntInIMEProc, sizeof(LONG), 1);
