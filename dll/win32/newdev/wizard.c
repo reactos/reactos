@@ -259,8 +259,8 @@ FindDriverProc(
         {
             /* Update device configuration */
             SetFailedInstall(DevInstData->hDevInfo,
-                &DevInstData->devInfoData,
-                TRUE);
+                             &DevInstData->devInfoData,
+                             TRUE);
         }
         PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 0, 0);
     }
@@ -523,8 +523,8 @@ WelcomeDlgProc(
             if (!DevInstData->bUpdate)
             {
                 SetFailedInstall(DevInstData->hDevInfo,
-                    &DevInstData->devInfoData,
-                    TRUE);
+                                 &DevInstData->devInfoData,
+                                 TRUE);
             }
             break;
         }
