@@ -1395,10 +1395,13 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
                {
                    if (i > 0)
                    {
-                       if (List[i-1] != Window->head.h)  
-                           hWndInsertAfter = List[i-1];
+                       if (List[i - 1] != Window->head.h)  
+                           hWndInsertAfter = List[i - 1];
                    }
-                   else hWndInsertAfter = topmost ? HWND_TOPMOST : HWND_TOP;
+                   else
+                   {
+                       hWndInsertAfter = topmost ? HWND_TOPMOST : HWND_TOP;
+                   }
                    break;
                }
 
