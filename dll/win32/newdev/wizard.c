@@ -255,11 +255,13 @@ FindDriverProc(
     }
     else
     {
-        /* Update device configuration */
-        SetFailedInstall(DevInstData->hDevInfo,
-                         &DevInstData->devInfoData,
-                         TRUE);
-
+        if (!DevInstData->bUpdate)
+        {
+            /* Update device configuration */
+            SetFailedInstall(DevInstData->hDevInfo,
+                &DevInstData->devInfoData,
+                TRUE);
+        }
         PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 0, 0);
     }
     return 0;
@@ -518,9 +520,12 @@ WelcomeDlgProc(
                 (WPARAM)TRUE,
                 (LPARAM)0);
 
-            SetFailedInstall(DevInstData->hDevInfo,
-                             &DevInstData->devInfoData,
-                             TRUE);
+            if (!DevInstData->bUpdate)
+            {
+                SetFailedInstall(DevInstData->hDevInfo,
+                    &DevInstData->devInfoData,
+                    TRUE);
+            }
             break;
         }
 
