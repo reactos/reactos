@@ -1465,10 +1465,11 @@ VOID UserFreeInputContext(PVOID Object)
 BOOLEAN UserDestroyInputContext(PVOID Object)
 {
     PIMC pIMC = Object;
-    if (!pIMC || !UserMarkObjectDestroy(pIMC))
+    if (!pIMC)
         return TRUE;
 
-    return UserDeleteObject(UserHMGetHandle(pIMC), TYPE_INPUTCONTEXT);
+    UserDeleteObject(UserHMGetHandle(pIMC), TYPE_INPUTCONTEXT);
+    return TRUE;
 }
 
 // Win: DestroyInputContext
@@ -1560,6 +1561,7 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
 
     // Release the extra reference (UserCreateObject added 2 references).
     UserDereferenceObject(pIMC);
+    ASSERT(pIMC->head.cLockObj == 1);
 
     if (dwClientImcData) // Non-first time.
     {
@@ -1572,6 +1574,7 @@ PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData)
         // Add the first one (default) to the list.
         UserAssignmentLock((PVOID*)&pti->spDefaultImc, pIMC);
         pIMC->pImcNext = NULL;
+        ASSERT(pIMC->head.cLockObj == 2); // UserAssignmentUnlock'ed at ExitThreadCallback
     }
 
     pIMC->dwClientImcData = dwClientImcData; // Set it.
