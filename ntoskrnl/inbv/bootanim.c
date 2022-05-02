@@ -28,13 +28,6 @@
  */
 // #define REACTOS_SKUS
 
-typedef enum _ROT_BAR_TYPE
-{
-    RB_UNSPECIFIED,
-    RB_SQUARE_CELLS,
-    RB_PROGRESS_BAR
-} ROT_BAR_TYPE;
-
 /*
  * BitBltAligned() alignments
  */
@@ -80,6 +73,13 @@ typedef enum _ROT_BAR_STATUS
     RBS_STOP_ANIMATE,
     RBS_STATUS_MAX
 } ROT_BAR_STATUS;
+
+typedef enum _ROT_BAR_TYPE
+{
+    RB_UNSPECIFIED,
+    RB_SQUARE_CELLS,
+    RB_PROGRESS_BAR
+} ROT_BAR_TYPE;
 
 static BOOLEAN RotBarThreadActive = FALSE;
 static ROT_BAR_TYPE RotBarSelection = RB_UNSPECIFIED;
@@ -346,6 +346,8 @@ InbvRotationThread(
     ULONG X, Y, Index, Total;
     LARGE_INTEGER Delay = {{0}};
 
+    UNREFERENCED_PARAMETER(Context);
+
     InbvAcquireLock();
     if (RotBarSelection == RB_SQUARE_CELLS)
     {
@@ -378,7 +380,7 @@ InbvRotationThread(
 
         if (RotBarSelection == RB_SQUARE_CELLS)
         {
-            Delay.QuadPart = -800000; // 80 ms
+            Delay.QuadPart = -800000LL; // 80 ms
             Total = 18;
             Index %= Total;
 
@@ -409,7 +411,7 @@ InbvRotationThread(
         }
         else if (RotBarSelection == RB_PROGRESS_BAR)
         {
-            Delay.QuadPart = -600000; // 60 ms
+            Delay.QuadPart = -600000LL; // 60 ms
             Total = SCREEN_WIDTH;
             Index %= Total;
 
