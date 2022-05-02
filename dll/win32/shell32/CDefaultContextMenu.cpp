@@ -720,8 +720,9 @@ HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink)
             else
                 dwKey = MK_SHIFT;
         }
-        else {
-            ERR("No drop effect obtained");
+        else
+        {
+            ERR("No drop effect obtained\n");
         }
         GlobalUnlock(medium2.hGlobal);
     }
@@ -850,7 +851,7 @@ CDefaultContextMenu::DoProperties(
 HRESULT
 CDefaultContextMenu::DoUndo(LPCMINVOKECOMMANDINFO lpcmi)
 {
-    ERR("TODO: Undo");
+    ERR("TODO: Undo\n");
     return E_NOTIMPL;
 }
 

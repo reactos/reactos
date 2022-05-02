@@ -2363,7 +2363,7 @@ UserRealizePalette(HDC hdc)
          if ( hWndDesktop != hWnd )
          {
             PWND pWnd = UserGetWindowObject(hWndDesktop);
-            ERR("RealizePalette Desktop.");
+            ERR("RealizePalette Desktop.\n");
             hdc = UserGetWindowDC(pWnd);
             IntPaintDesktop(hdc);
             UserReleaseDC(pWnd,hdc,FALSE);

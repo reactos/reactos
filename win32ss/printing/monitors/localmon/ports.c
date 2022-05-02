@@ -266,7 +266,7 @@ _CreateNonspooledPort(PLOCALMON_PORT pPort)
         if (!*p)
         {
             // We reached the end of the list without finding a mapping.
-            ERR("Can't find a suitable mapping for the port \"%S\"!", pPort->pwszPortName);
+            ERR("Can't find a suitable mapping for the port \"%S\"!\n", pPort->pwszPortName);
             goto Cleanup;
         }
 

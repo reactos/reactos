@@ -380,7 +380,7 @@ BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah)
 
   if (puah->m_size == sizeof(USERAPIHOOKINFO))
   {
-     WARN("RegisterUserApiHook: %S and %S",puah->m_dllname1, puah->m_funname1);
+     WARN("RegisterUserApiHook: %S and %S\n", puah->m_dllname1, puah->m_funname1);
      RtlInitUnicodeString(&m_dllname1, puah->m_dllname1);
      RtlInitUnicodeString(&m_funname1, puah->m_funname1);
      return NtUserRegisterUserApiHook( &m_dllname1, &m_funname1, 0, 0);

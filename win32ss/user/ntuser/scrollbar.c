@@ -503,7 +503,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    if(!SBID_IS_VALID(nBar)) /* Assures nBar is 0, 1, or 2 */
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      ERR("Trying to set scrollinfo for unknown scrollbar type %d", nBar);
+      ERR("Trying to set scrollinfo for unknown scrollbar type %d\n", nBar);
       return FALSE;
    }
 
@@ -1409,7 +1409,7 @@ NtUserEnableScrollBar(
    if(wSBflags != SB_BOTH && !SBID_IS_VALID(wSBflags))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      ERR("Trying to set scrollinfo for unknown scrollbar type %u", wSBflags);
+      ERR("Trying to set scrollinfo for unknown scrollbar type %u\n", wSBflags);
       RETURN(FALSE);
    }
 

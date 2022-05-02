@@ -1220,7 +1220,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     if (SUCCEEDED(QueryInterface(IID_PPV_ARG(IDropTarget, &pdt))))
     {
         if (FAILED(RegisterDragDrop(m_hWnd, pdt)))
-            ERR("Registering Drag Drop Failed");
+            ERR("Registering Drag Drop Failed\n");
     }
 
     /* register for receiving notifications */
