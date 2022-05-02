@@ -1389,9 +1389,9 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Get the SOS setting */
     SosEnabled = (CommandLine && strstr(CommandLine, "SOS") != NULL);
 
-    /* Setup the boot driver */
+    /* Setup the boot video driver */
     InbvEnableBootDriver(!NoGuiBoot);
-    InbvDriverInitialize(LoaderBlock, IDB_MAX_RESOURCE);
+    InbvDriverInitialize(LoaderBlock, IDB_MAX_RESOURCES);
 
     /* Check if GUI boot is enabled */
     if (!NoGuiBoot)
