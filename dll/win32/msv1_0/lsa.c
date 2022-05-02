@@ -81,7 +81,7 @@ NTAPI
 LsaSpFreeCredentialsHandle(
     _In_ LSA_SEC_HANDLE CredentialHandle)
 {
-    TRACE("LsaSpFreeCredentialsHandle(0x%p)", CredentialHandle);
+    TRACE("LsaSpFreeCredentialsHandle(0x%p)\n", CredentialHandle);
     return STATUS_NOT_IMPLEMENTED;
 }
 

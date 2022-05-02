@@ -165,7 +165,7 @@ START_TEST(ShellState)
     LPBYTE pb;
     int ret;
 
-    trace("GetVersion(): 0x%08lX", GetVersion());
+    trace("GetVersion(): 0x%08lX\n", GetVersion());
 
     osinfo.dwOSVersionInfoSize = sizeof(osinfo);
     GetVersionEx(&osinfo);

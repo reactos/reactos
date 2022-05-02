@@ -283,7 +283,7 @@ Options_RunDLLCommon(HWND hWnd, HINSTANCE hInst, int fOptions, DWORD nCmdShow)
 
         case 1:
             // show taskbar options dialog
-            FIXME("notify explorer to show taskbar options dialog");
+            FIXME("notify explorer to show taskbar options dialog\n");
             //PostMessage(GetShellWindow(), WM_USER+22, fOptions, 0);
             break;
 

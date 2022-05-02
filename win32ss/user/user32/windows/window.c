@@ -1975,7 +1975,7 @@ ScrollWindowEx(HWND hWnd,
 {
     if (flags & SW_SMOOTHSCROLL)
     {
-       FIXME("SW_SMOOTHSCROLL not supported.");
+       FIXME("SW_SMOOTHSCROLL not supported.\n");
        // Fall through....
     }
     return NtUserScrollWindowEx(hWnd,
