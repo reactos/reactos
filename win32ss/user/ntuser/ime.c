@@ -1468,6 +1468,7 @@ BOOLEAN UserDestroyInputContext(PVOID Object)
     if (!pIMC)
         return TRUE;
 
+    UserMarkObjectDestroy(pIMC);
     UserDeleteObject(UserHMGetHandle(pIMC), TYPE_INPUTCONTEXT);
     return TRUE;
 }
