@@ -596,7 +596,7 @@ UserMarkObjectDestroy(PVOID Object)
 
     entry->flags |= HANDLEENTRY_DESTROY;
 
-    if (ObjHead->cLockObj > 0)
+    if (ObjHead->cLockObj > 1)
     {
         entry->flags &= ~HANDLEENTRY_INDESTROY;
         TRACE("Count %d\n",ObjHead->cLockObj);
