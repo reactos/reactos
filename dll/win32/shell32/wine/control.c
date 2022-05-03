@@ -29,6 +29,8 @@
 #define NO_SHLWAPI_REG
 #include <shlwapi.h>
 #include <shellapi.h>
+#define COBJMACROS
+#include <shobjidl.h>
 #include <wine/debug.h>
 
 #include <strsafe.h>
@@ -804,6 +806,43 @@ Control_EnumWinProc(
     }
     return TRUE; // continue enumeration
 }
+
+/**
+ * This function makes the system control applet accessible via the taskbar.
+ *
+ * @param applet
+ * Pointer of system control applet.
+ *
+ * @param index
+ * Number of applet in a system control library.
+ */
+static void
+Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
+{
+    ITaskbarList* pTaskbar = NULL;
+
+    SetWindowTextW(applet->hWnd, applet->info[index].name);
+    SendMessageW(applet->hWnd, WM_SETICON, ICON_SMALL, (LPARAM)applet->info[index].icon);
+
+    /* Add button to the taskbar */
+    ShowWindow(applet->hWnd, SW_SHOWMINNOACTIVE);
+
+    /* Activate the corresponding button in the taskbar */
+    CoInitialize(NULL);
+    if (CoCreateInstance(&CLSID_TaskbarList,
+                         NULL, CLSCTX_INPROC_SERVER,
+                         &IID_ITaskbarList,
+                         (LPVOID*)&pTaskbar) == S_OK)
+    {
+        if (ITaskbarList_HrInit(pTaskbar) == S_OK)
+        {
+            ITaskbarList_ActivateTab(pTaskbar, applet->hWnd);
+        }
+        ITaskbarList_Release(pTaskbar);
+    }
+    CoUninitialize();
+}
+
 #endif /* __REACTOS__ */
 
 static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
@@ -956,6 +995,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
         {
             SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLName), (HANDLE)MAKEINTATOM(aCPLPath));
             SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLFlags), UlongToHandle(sp + 1));
+            Control_ShowAppletInTaskbar(applet, sp);
 #endif
 
         if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
