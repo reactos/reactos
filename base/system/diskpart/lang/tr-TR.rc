@@ -53,7 +53,7 @@ BEGIN
     IDS_LIST_PARTITION_NO_DISK "\nBölümleri listelemek için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
-    IDS_LIST_VOLUME_FORMAT "  Volume %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_FORMAT "  Volume %-3lu   %c   %-11.11s  %-5s  %10u  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */
