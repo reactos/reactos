@@ -23,7 +23,7 @@
 #define TEST_PATHA "C:\\SHExplorerParseCmdLine.test"
 #define TEST_PATHW WIDEN(TEST_PATHA)
 
-typedef UINT_PTR (WINAPI * SHExplorerParseCmdLine_Type)(PEXPLORER_CMDLINE_PARSE_RESULTS);
+typedef UINT_PTR (WINAPI *SHExplorerParseCmdLine_Type)(PEXPLORER_CMDLINE_PARSE_RESULTS);
 static SHExplorerParseCmdLine_Type pSHExplorerParseCmdLine;
 
 #define PIDL_IS_UNTOUCHED -1
