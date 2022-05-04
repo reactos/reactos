@@ -1396,17 +1396,17 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
                   /* We found its Owner, so we must handle it here. */
                   if (i > 0)
                   {
-                     if (List[i-1] != Window->head.h)
+                     if (List[i - 1] != Window->head.h)
                      {
-                     /* Do not allow hWndInsertAfter to become equal to
-                      * Window->head.h. This would cause the window to
-                      * reference itself. */
-                         hWndInsertAfter = List[i-1];
+                        /* Do not allow hWndInsertAfter to become equal to
+                         * Window->head.h. This would cause the window to
+                         * reference itself. */
+                        hWndInsertAfter = List[i - 1];
                      }
                      else
                      {
-                     /* If hWndInsertAfter is equal to Window->head.h */
-                         return hWndInsertAfter;
+                        /* If hWndInsertAfter is equal to Window->head.h */
+                        return hWndInsertAfter;
                      }
                   }
                   else
