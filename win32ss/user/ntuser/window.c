@@ -1560,7 +1560,7 @@ NtUserBuildHwndList(
          {
             if (bGoDown)
             {
-               if(dwCount++ < cHwnd && phwndList)
+               if (dwCount++ < cHwnd && phwndList)
                {
                   _SEH2_TRY
                   {
