@@ -1560,7 +1560,7 @@ NtUserBuildHwndList(
          {
             if (bGoDown)
             {
-               if(dwCount++ < *pcHwndNeeded && phwndList)
+               if(dwCount++ < cHwnd && phwndList)
                {
                   _SEH2_TRY
                   {
@@ -1638,7 +1638,7 @@ NtUserBuildHwndList(
             Window = ValidateHwndNoErr(List[i]);
             if (Window && Window->head.pti == W32Thread)
             {
-               if (dwCount < *pcHwndNeeded && phwndList)
+               if (dwCount < cHwnd && phwndList)
                {
                   _SEH2_TRY
                   {
