@@ -101,6 +101,7 @@ VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget);
 
 /* Undocumented dwFlags for IntBuildHwndList */
 #define IACE_LIST  0x0002
+#define IACE_IMM   0x0008
 
 #define IS_WND_CHILD(pWnd) ((pWnd)->style & WS_CHILD)
 #define IS_WND_MENU(pWnd) ((pWnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_MENU])
