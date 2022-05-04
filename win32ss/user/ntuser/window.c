@@ -1514,10 +1514,7 @@ NtUserBuildHwndList(
    ULONG dwCount = 0;
 
    if (pcHwndNeeded == NULL)
-   {
-       UserLeave();
        return ERROR_INVALID_PARAMETER;
-   }
 
    UserEnterExclusive();
 
