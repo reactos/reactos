@@ -20,7 +20,7 @@ BEGIN
     EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
     GROUPBOX "Velocidade de intermitência do cursor:", -1, 5, 145, 236, 50
     LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
-    LTEXT "Nenhuma", -1, 40, 165, 25, 10
+    LTEXT "Nenhuma", -1, 35, 165, 30, 10
     LTEXT "Alta", -1, 200, 165, 30, 10
     CONTROL "", IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END

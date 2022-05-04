@@ -40,7 +40,7 @@ BEGIN
         BEGIN
             MENUITEM "(Vazio)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "&Configurações", IDM_SETTINGS
+        POPUP "D&efinições", IDM_SETTINGS
         BEGIN
             MENUITEM "&Painel de Controle", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
@@ -190,11 +190,11 @@ BEGIN
     IDS_PROPERTIES "P&ropriedades"
     IDS_OPEN_ALL_USERS "A&brir Todos os Utilizadores"
     IDS_EXPLORE_ALL_USERS "E&xplorar Todos os Utilizadores"
-    IDS_STARTUP_ERROR "O sistema não pode iniciar o explorer porque o registo está corrompido ou inacessível."
+    IDS_STARTUP_ERROR "O sistema não pode iniciar o Explorador porque o registo está corrompido ou inacessível."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "da Barra de Tarefas e Menu Iniciar"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Barra de Tarefas e Menu Iniciar"
     IDS_RESTORE_ALL "&Mostrar janelas abertas"
 END

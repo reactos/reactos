@@ -243,11 +243,11 @@ void wstring_sprintf(wstring& s, wstring fmt, ...) {
 #pragma warning(pop)
 #endif
 
-extern "C" STDAPI DllCanUnloadNow(void) {
+STDAPI DllCanUnloadNow(void) {
     return objs_loaded == 0 ? S_OK : S_FALSE;
 }
 
-extern "C" STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     if (rclsid == CLSID_ShellBtrfsIconHandler) {
         Factory* fact = new Factory;
         if (!fact)
@@ -309,7 +309,7 @@ static void write_reg_key(HKEY root, const wstring& keyname, const WCHAR* val, c
 
 static void register_clsid(const GUID clsid, const WCHAR* description) {
     WCHAR* clsidstring;
-    wstring inproc, progid, clsidkeyname;
+    wstring inproc, clsidkeyname;
     WCHAR dllpath[MAX_PATH];
 
     StringFromCLSID(clsid, &clsidstring);
@@ -317,11 +317,9 @@ static void register_clsid(const GUID clsid, const WCHAR* description) {
     try {
 #ifndef __REACTOS__
         inproc = L"CLSID\\"s + clsidstring + L"\\InprocServer32"s;
-        progid = L"CLSID\\"s + clsidstring + L"\\ProgId"s;
         clsidkeyname = L"CLSID\\"s + clsidstring;
 #else
         inproc = wstring(L"CLSID\\") + clsidstring + wstring(L"\\InprocServer32");
-        progid = wstring(L"CLSID\\") + clsidstring + wstring(L"\\ProgId");
         clsidkeyname = wstring(L"CLSID\\") + clsidstring;
 #endif
 
@@ -499,7 +497,7 @@ static void unreg_prop_sheet_handler(const wstring& filetype, const wstring& nam
 #endif
 }
 
-extern "C" STDAPI DllRegisterServer(void) {
+STDAPI DllRegisterServer(void) {
     try {
         register_clsid(CLSID_ShellBtrfsIconHandler, COM_DESCRIPTION_ICON_HANDLER);
         register_clsid(CLSID_ShellBtrfsContextMenu, COM_DESCRIPTION_CONTEXT_MENU);
@@ -522,7 +520,7 @@ extern "C" STDAPI DllRegisterServer(void) {
     return S_OK;
 }
 
-extern "C" STDAPI DllUnregisterServer(void) {
+STDAPI DllUnregisterServer(void) {
     try {
         unreg_prop_sheet_handler(L"Folder", ICON_OVERLAY_NAME);
         unreg_prop_sheet_handler(L"*", ICON_OVERLAY_NAME);
@@ -543,7 +541,7 @@ extern "C" STDAPI DllUnregisterServer(void) {
     return S_OK;
 }
 
-extern "C" STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine) {
+STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine) {
     if (bInstall)
         return DllRegisterServer();
     else

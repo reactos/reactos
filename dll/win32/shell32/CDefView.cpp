@@ -2,6 +2,7 @@
  *    ShellView
  *
  *    Copyright 1998,1999    <juergen.schmied@debitel.net>
+ *    Copyright 2022         Russell Johnson <russell.johnson@superdark.net>
  *
  * This is the view visualizing the data provided by the shellfolder.
  * No direct access to data from pidls should be done from here.
@@ -117,10 +118,13 @@ class CDefView :
         CComPtr<IContextMenu>     m_pCM;
 
         BOOL                      m_isEditing;
+        BOOL                      m_isParentFolderSpecial;
 
         CLSID m_Category;
         BOOL  m_Destroyed;
         SFVM_CUSTOMVIEWINFO_DATA  m_viewinfo_data;
+
+        HICON                     m_hMyComputerIcon;
 
     private:
         HRESULT _MergeToolbar();
@@ -129,6 +133,8 @@ class CDefView :
         HRESULT _GetSnapToGrid();
         void _MoveSelectionOnAutoArrange(POINT pt);
         INT _FindInsertableIndexFromPoint(POINT pt);
+        void _HandleStatusBarResize(int width);
+        void _ForceStatusBarResize();
 
     public:
         CDefView();
@@ -393,6 +399,7 @@ CDefView::CDefView() :
     m_iDragOverItem(0),
     m_cScrollDelay(0),
     m_isEditing(FALSE),
+    m_isParentFolderSpecial(FALSE),
     m_Destroyed(FALSE)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
@@ -402,6 +409,8 @@ CDefView::CDefView() :
     m_viewinfo_data.clrText = GetSysColor(COLOR_WINDOWTEXT);
     m_viewinfo_data.clrTextBack = GetSysColor(COLOR_WINDOW);
     m_viewinfo_data.hbmBack = NULL;
+
+    m_hMyComputerIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_COMPUTER_DESKTOP));
 }
 
 CDefView::~CDefView()
@@ -505,21 +514,74 @@ void CDefView::CheckToolbar()
 void CDefView::UpdateStatusbar()
 {
     WCHAR szFormat[MAX_PATH] = {0};
-    WCHAR szObjects[MAX_PATH] = {0};
+    WCHAR szPartText[MAX_PATH] = {0};
     UINT cSelectedItems;
 
     cSelectedItems = m_ListView.GetSelectedCount();
     if (cSelectedItems)
     {
         LoadStringW(shell32_hInstance, IDS_OBJECTS_SELECTED, szFormat, _countof(szFormat));
-        StringCchPrintfW(szObjects, MAX_PATH, szFormat, cSelectedItems);
+        StringCchPrintfW(szPartText, _countof(szPartText), szFormat, cSelectedItems);
     }
     else
     {
         LoadStringW(shell32_hInstance, IDS_OBJECTS, szFormat, _countof(szFormat));
-        StringCchPrintfW(szObjects, MAX_PATH, szFormat, m_ListView.GetItemCount());
+        StringCchPrintfW(szPartText, _countof(szPartText), szFormat, m_ListView.GetItemCount());
     }
-    m_pShellBrowser->SetStatusTextSB(szObjects);
+
+    LRESULT lResult;
+    m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)szPartText, &lResult);
+
+    /* Don't bother with the extra processing if we only have one StatusBar part. */
+    if (!m_isParentFolderSpecial)
+    {
+        DWORD uTotalFileSize = 0;
+        WORD uFileFlags = LVNI_ALL;
+        LPARAM pIcon = NULL;
+        INT nItem = -1;
+        bool bIsOnlyFoldersSelected = true;
+
+        /* If we have something selected then only count selected file sizes. */
+        if (cSelectedItems)
+        {
+            uFileFlags = LVNI_SELECTED;
+        }
+
+        while ((nItem = m_ListView.GetNextItem(nItem, uFileFlags)) >= 0)
+        {
+            PCUITEMID_CHILD pidl = _PidlByItem(nItem);
+
+            uTotalFileSize += _ILGetFileSize(pidl, NULL, 0);
+
+            if (!_ILIsFolder(pidl))
+            {
+                bIsOnlyFoldersSelected = false;
+            }
+        }
+
+        /* Don't show the file size text if there is 0 bytes in the folder
+         * OR we only have folders selected. */
+        if ((cSelectedItems && !bIsOnlyFoldersSelected) || uTotalFileSize)
+        {
+            StrFormatByteSizeW(uTotalFileSize, szPartText, _countof(szPartText));
+        }
+        else
+        {
+            *szPartText = 0;
+        }
+
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
+
+        /* If we are in a Recycle Bin folder then show no text for the location part. */
+        if (!_ILIsBitBucket(m_pidlParent))
+        {
+            LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText, _countof(szPartText));
+            pIcon = (LPARAM)m_hMyComputerIcon;
+        }
+
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
+    }
 }
 
 /**********************************************************
@@ -1158,7 +1220,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     if (SUCCEEDED(QueryInterface(IID_PPV_ARG(IDropTarget, &pdt))))
     {
         if (FAILED(RegisterDragDrop(m_hWnd, pdt)))
-            ERR("Registering Drag Drop Failed");
+            ERR("Registering Drag Drop Failed\n");
     }
 
     /* register for receiving notifications */
@@ -1195,6 +1257,21 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
+
+    BOOL bPreviousParentSpecial = m_isParentFolderSpecial;
+
+    /* A folder is special if it is the Desktop folder,
+     * a network folder, or a Control Panel folder. */
+    m_isParentFolderSpecial = _ILIsDesktop(m_pidlParent) || _ILIsNetHood(m_pidlParent) 
+        || _ILIsControlPanel(ILFindLastID(m_pidlParent));
+
+    /* Only force StatusBar part refresh if the state
+     * changed from the previous folder. */
+    if (bPreviousParentSpecial != m_isParentFolderSpecial)
+    {
+        /* This handles changing StatusBar parts. */
+        _ForceStatusBarResize();
+    }
 
     UpdateStatusbar();
 
@@ -1644,6 +1721,9 @@ LRESULT CDefView::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled
     }
 
     _DoFolderViewCB(SFVM_SIZE, 0, 0);
+
+    _HandleStatusBarResize(wWidth);
+    UpdateStatusbar();
 
     return 0;
 }
@@ -2432,10 +2512,6 @@ HRESULT WINAPI CDefView::EnableModeless(BOOL fEnable)
 
 HRESULT WINAPI CDefView::UIActivate(UINT uState)
 {
-    // CHAR szName[MAX_PATH];
-    LRESULT lResult;
-    int nPartArray[1] = { -1};
-
     TRACE("(%p)->(state=%x) stub\n", this, uState);
 
     /* don't do anything if the state isn't really changing */
@@ -2450,18 +2526,10 @@ HRESULT WINAPI CDefView::UIActivate(UINT uState)
     /* only do This if we are active */
     if (uState != SVUIA_DEACTIVATE)
     {
+        _ForceStatusBarResize();
 
-        /*
-            GetFolderPath is not a method of IShellFolder
-            IShellFolder_GetFolderPath( m_pSFParent, szName, sizeof(szName) );
-        */
-        /* set the number of parts */
-        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETPARTS, 1, (LPARAM)nPartArray, &lResult);
-
-        /* set the text for the parts */
-        /*
-            m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXTA, 0, (LPARAM)szName, &lResult);
-        */
+        /* Set the text for the status bar */
+        UpdateStatusbar();
     }
 
     return S_OK;
@@ -3501,6 +3569,46 @@ INT CDefView::_FindInsertableIndexFromPoint(POINT pt)
     }
 
     return nCount;
+}
+
+void CDefView::_HandleStatusBarResize(int nWidth)
+{
+    LRESULT lResult;
+
+    if (m_isParentFolderSpecial)
+    {
+        int nPartArray[] = {-1};
+        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETPARTS, _countof(nPartArray), (LPARAM)nPartArray, &lResult);
+        return;
+    }
+
+    int nFileSizePartLength = 125;
+    const int nLocationPartLength = 150;
+    const int nRightPartsLength = nFileSizePartLength + nLocationPartLength;
+    int nObjectsPartLength = nWidth - nRightPartsLength;
+    
+    /* If the window is small enough just divide each part into thirds
+     * This is the behavior of Windows Server 2003. */
+    if (nObjectsPartLength <= nLocationPartLength)
+        nObjectsPartLength = nFileSizePartLength = nWidth / 3;
+
+    int nPartArray[] = {nObjectsPartLength, nObjectsPartLength + nFileSizePartLength, -1};
+    
+    m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETPARTS, _countof(nPartArray), (LPARAM)nPartArray, &lResult);
+}
+
+void CDefView::_ForceStatusBarResize()
+{
+    /* Get the handle for the status bar */
+    HWND fStatusBar;
+    m_pShellBrowser->GetControlWindow(FCW_STATUS, &fStatusBar);
+
+    /* Get the size of our status bar */
+    RECT statusBarSize;
+    ::GetWindowRect(fStatusBar, &statusBarSize);
+
+    /* Resize the status bar */
+    _HandleStatusBarResize(statusBarSize.right - statusBarSize.left);
 }
 
 typedef CSimpleMap<LPARAM, INT> CLParamIndexMap;

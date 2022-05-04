@@ -379,7 +379,6 @@ PDEVOBJ_vRefreshModeList(
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVMODEINFO pdminfo, pdmiNext;
-    PDEVMODEW newDevMode;
 
     /* Lock the PDEV */
     EngAcquireSemaphore(ppdev->hsemDevLock);
@@ -398,12 +397,8 @@ PDEVOBJ_vRefreshModeList(
     ExFreePoolWithTag(pGraphicsDevice->pDevModeList, GDITAG_GDEVICE);
     pGraphicsDevice->pDevModeList = NULL;
 
-    /* Search an available display mode */
-    if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, ppdev->pdmwDev, &newDevMode, TRUE))
-    {
-        ExFreePoolWithTag(ppdev->pdmwDev, GDITAG_DEVMODE);
-        ppdev->pdmwDev = newDevMode;
-    }
+    /* Update available display mode list */
+    LDEVOBJ_bBuildDevmodeList(pGraphicsDevice);
 
     /* Unlock PDEV */
     EngReleaseSemaphore(ppdev->hsemDevLock);
@@ -493,7 +488,7 @@ PDEVOBJ_Create(
         {
             RtlCopyMemory(ppdev->pdmwDev, pdm, pdm->dmSize + pdm->dmDriverExtra);
             /* FIXME: this must be done in a better way */
-            pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_ATTACHED_TO_DESKTOP;
+            pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_PRIMARY_DEVICE | DISPLAY_DEVICE_ATTACHED_TO_DESKTOP;
         }
     }
 

@@ -21,7 +21,7 @@ END
 
 IDM_CABINET_MAINMENU MENUEX
 BEGIN
-    POPUP "&Arquivo", FCIDM_MENU_FILE
+    POPUP "F&icheiro", FCIDM_MENU_FILE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Fechar", IDM_FILE_CLOSE
@@ -30,14 +30,14 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
     END
-    POPUP "E&xibir", FCIDM_MENU_VIEW
+    POPUP "&Mostrar", FCIDM_MENU_VIEW
     BEGIN
         POPUP "&Barras de ferramentas", IDM_VIEW_TOOLBARS
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "Barra de &status", IDM_VIEW_STATUSBAR
-        POPUP "Barra do E&xplorer", IDM_VIEW_EXPLORERBAR
+        MENUITEM "Barra de &estado", IDM_VIEW_STATUSBAR
+        POPUP "Barra do E&xplorador", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Pesquisa\tCtrl+E", IDM_EXPLORERBAR_SEARCH
             MENUITEM "&Favoritos\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
@@ -105,7 +105,7 @@ BEGIN
             MENUITEM "Icones &pequenos", IDM_SMALL_ICONS
         END
         MENUITEM "&Abrir pasta", IDM_OPEN_FOLDER
-        MENUITEM "&Exibir texto", IDM_SHOW_TEXT
+        MENUITEM "&Mostrar texto", IDM_SHOW_TEXT
     END
 END
 
@@ -233,7 +233,7 @@ STRINGTABLE
 BEGIN
     9281 "Volta à página anterior."
     9282 "Vai para a próxima página."
-    9283 "Permite que você altere as configurações."
+    9283 "Permite alterar as configurações."
     9285 "Vai para a sua página inicial."
 END
 
@@ -305,7 +305,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UP "Acima"
+    IDS_UP "Nível acima"
 END
 
 STRINGTABLE
@@ -317,7 +317,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Voltar|Avançar|Acima|Pesquisar|Pastas|Mover para|Copiar para|Excluir|Desfazer|Modos de exibição|Parar|Actualizar|Página inicial|Mapear unidade|Desconectar|Favoritos|Histórico|Tela inteira|Propriedades|Recortar|Copiar|Colar|Opções de pasta||"
+    IDS_STANDARD_TOOLBAR, "|Voltar|Avançar|Acima|Pesquisar|Pastas|Mover para|Copiar para|Excluir|Desfazer|Modos de exibição|Parar|Actualizar|Página inicial|Mapear unidade|Desconectar|Favoritos|Histórico|Ecrã inteiro|Propriedades|Recortar|Copiar|Colar|Opções de pasta||"
 END
 
 STRINGTABLE
@@ -342,5 +342,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_PARSE_ADDR_ERR_TITLE "Explorador do ReactOS"
-    IDS_PARSE_ADDR_ERR_TEXT "O explorador do ReactOS não encontrou '%1'. Verifique a ortografia e tente novamente."
+    IDS_PARSE_ADDR_ERR_TEXT "O Explorador do ReactOS não encontrou '%1'. Verifique a ortografia e tente novamente."
 END

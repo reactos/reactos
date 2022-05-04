@@ -285,8 +285,8 @@ static void load_free_space_bitmap(device_extension* Vcb, chunk* c, uint64_t off
                 break;
         }
 
-        addr = offset + (index * Vcb->superblock.sector_size);
-        length = Vcb->superblock.sector_size * runlength;
+        addr = offset + (index << Vcb->sector_shift);
+        length = runlength << Vcb->sector_shift;
 
         add_space_entry(&c->space, &c->space_size, addr, length);
         index += runlength;
@@ -470,7 +470,7 @@ NTSTATUS load_stored_free_space_cache(device_extension* Vcb, chunk* c, bool load
     uint64_t inode, *generation;
     uint8_t* data;
     NTSTATUS Status;
-    uint32_t *checksums, crc32, i, num_sectors, num_valid_sectors, size;
+    uint32_t *checksums, crc32, num_sectors, num_valid_sectors, size;
     FREE_SPACE_ENTRY* fse;
     uint64_t num_entries, num_bitmaps, extent_length, bmpnum, off, total_space = 0, superblock_size;
     LIST_ENTRY *le, rollback;
@@ -563,7 +563,7 @@ NTSTATUS load_stored_free_space_cache(device_extension* Vcb, chunk* c, bool load
     if (size > c->cache->inode_item.st_size)
         RtlZeroMemory(&data[c->cache->inode_item.st_size], (ULONG)(size - c->cache->inode_item.st_size));
 
-    num_sectors = size / Vcb->superblock.sector_size;
+    num_sectors = size >> Vcb->sector_shift;
 
     generation = (uint64_t*)(data + (num_sectors * sizeof(uint32_t)));
 
@@ -574,7 +574,7 @@ NTSTATUS load_stored_free_space_cache(device_extension* Vcb, chunk* c, bool load
 
     extent_length = (num_sectors * sizeof(uint32_t)) + sizeof(uint64_t) + (num_entries * sizeof(FREE_SPACE_ENTRY));
 
-    num_valid_sectors = (ULONG)((sector_align(extent_length, Vcb->superblock.sector_size) / Vcb->superblock.sector_size) + num_bitmaps);
+    num_valid_sectors = (ULONG)((sector_align(extent_length, Vcb->superblock.sector_size) >> Vcb->sector_shift) + num_bitmaps);
 
     if (num_valid_sectors > num_sectors) {
         ERR("free space cache for %I64x was %u sectors, expected at least %u\n", c->offset, num_sectors, num_valid_sectors);
@@ -583,13 +583,13 @@ NTSTATUS load_stored_free_space_cache(device_extension* Vcb, chunk* c, bool load
 
     checksums = (uint32_t*)data;
 
-    for (i = 0; i < num_valid_sectors; i++) {
-        if (i * Vcb->superblock.sector_size > sizeof(uint32_t) * num_sectors)
-            crc32 = ~calc_crc32c(0xffffffff, &data[i * Vcb->superblock.sector_size], Vcb->superblock.sector_size);
-        else if ((i + 1) * Vcb->superblock.sector_size < sizeof(uint32_t) * num_sectors)
+    for (uint32_t i = 0; i < num_valid_sectors; i++) {
+        if (i << Vcb->sector_shift > sizeof(uint32_t) * num_sectors)
+            crc32 = ~calc_crc32c(0xffffffff, &data[i << Vcb->sector_shift], Vcb->superblock.sector_size);
+        else if ((i + 1) << Vcb->sector_shift < sizeof(uint32_t) * num_sectors)
             crc32 = 0; // FIXME - test this
         else
-            crc32 = ~calc_crc32c(0xffffffff, &data[sizeof(uint32_t) * num_sectors], ((i + 1) * Vcb->superblock.sector_size) - (sizeof(uint32_t) * num_sectors));
+            crc32 = ~calc_crc32c(0xffffffff, &data[sizeof(uint32_t) * num_sectors], ((i + 1) << Vcb->sector_shift) - (sizeof(uint32_t) * num_sectors));
 
         if (crc32 != checksums[i]) {
             WARN("checksum %u was %08x, expected %08x\n", i, crc32, checksums[i]);
@@ -600,8 +600,8 @@ NTSTATUS load_stored_free_space_cache(device_extension* Vcb, chunk* c, bool load
     off = (sizeof(uint32_t) * num_sectors) + sizeof(uint64_t);
 
     bmpnum = 0;
-    for (i = 0; i < num_entries; i++) {
-        if ((off + sizeof(FREE_SPACE_ENTRY)) / Vcb->superblock.sector_size != off / Vcb->superblock.sector_size)
+    for (uint32_t i = 0; i < num_entries; i++) {
+        if ((off + sizeof(FREE_SPACE_ENTRY)) >> Vcb->sector_shift != off >> Vcb->sector_shift)
             off = sector_align(off, Vcb->superblock.sector_size);
 
         fse = (FREE_SPACE_ENTRY*)&data[off];
@@ -623,18 +623,18 @@ NTSTATUS load_stored_free_space_cache(device_extension* Vcb, chunk* c, bool load
     }
 
     if (num_bitmaps > 0) {
-        bmpnum = sector_align(off, Vcb->superblock.sector_size) / Vcb->superblock.sector_size;
+        bmpnum = sector_align(off, Vcb->superblock.sector_size) >> Vcb->sector_shift;
         off = (sizeof(uint32_t) * num_sectors) + sizeof(uint64_t);
 
-        for (i = 0; i < num_entries; i++) {
-            if ((off + sizeof(FREE_SPACE_ENTRY)) / Vcb->superblock.sector_size != off / Vcb->superblock.sector_size)
+        for (uint32_t i = 0; i < num_entries; i++) {
+            if ((off + sizeof(FREE_SPACE_ENTRY)) >> Vcb->sector_shift != off >> Vcb->sector_shift)
                 off = sector_align(off, Vcb->superblock.sector_size);
 
             fse = (FREE_SPACE_ENTRY*)&data[off];
 
             if (fse->type == FREE_SPACE_BITMAP) {
                 // FIXME - make sure we don't overflow the buffer here
-                load_free_space_bitmap(Vcb, c, fse->offset, &data[bmpnum * Vcb->superblock.sector_size], &total_space);
+                load_free_space_bitmap(Vcb, c, fse->offset, &data[bmpnum << Vcb->sector_shift], &total_space);
                 bmpnum++;
             }
 
@@ -778,7 +778,7 @@ static NTSTATUS load_stored_free_space_tree(device_extension* Vcb, chunk* c, PIR
             uint64_t lastoff;
             ULONG bmpl;
 
-            explen = (ULONG)(tp.item->key.offset / (Vcb->superblock.sector_size * 8));
+            explen = (ULONG)(tp.item->key.offset >> Vcb->sector_shift) / 8;
 
             if (tp.item->size < explen) {
                 WARN("(%I64x,%x,%I64x) was %u bytes, expected %lu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, explen);
@@ -803,7 +803,7 @@ static NTSTATUS load_stored_free_space_tree(device_extension* Vcb, chunk* c, PIR
             // We copy the bitmap because it supposedly has to be ULONG-aligned
             RtlCopyMemory(bmparr, tp.item->data, tp.item->size);
 
-            bmpl = (ULONG)tp.item->key.offset / Vcb->superblock.sector_size;
+            bmpl = (ULONG)tp.item->key.offset >> Vcb->sector_shift;
 
             RtlInitializeBitMap(&bmp, bmparr, bmpl);
 
@@ -824,8 +824,8 @@ static NTSTATUS load_stored_free_space_tree(device_extension* Vcb, chunk* c, PIR
                         break;
                 }
 
-                runstart = tp.item->key.obj_id + (index * Vcb->superblock.sector_size);
-                runend = runstart + (runlength * Vcb->superblock.sector_size);
+                runstart = tp.item->key.obj_id + (index << Vcb->sector_shift);
+                runend = runstart + (runlength << Vcb->sector_shift);
 
                 if (runstart > lastoff) {
                     Status = add_space_entry(&c->space, &c->space_size, lastoff, runstart - lastoff);
@@ -1077,20 +1077,20 @@ static NTSTATUS allocate_cache_chunk(device_extension* Vcb, chunk* c, bool* chan
 
     new_cache_size = sizeof(uint64_t) + (num_entries * sizeof(FREE_SPACE_ENTRY));
 
-    num_sectors = (uint32_t)sector_align(new_cache_size, Vcb->superblock.sector_size) / Vcb->superblock.sector_size;
+    num_sectors = (uint32_t)sector_align(new_cache_size, Vcb->superblock.sector_size) >> Vcb->sector_shift;
     num_sectors = (uint32_t)sector_align(num_sectors, CACHE_INCREMENTS);
 
     // adjust for padding
     // FIXME - there must be a more efficient way of doing this
     new_cache_size = sizeof(uint64_t) + (sizeof(uint32_t) * num_sectors);
     for (i = 0; i < num_entries; i++) {
-        if ((new_cache_size / Vcb->superblock.sector_size) != ((new_cache_size + sizeof(FREE_SPACE_ENTRY)) / Vcb->superblock.sector_size))
+        if ((new_cache_size >> Vcb->sector_shift) != ((new_cache_size + sizeof(FREE_SPACE_ENTRY)) >> Vcb->sector_shift))
             new_cache_size = sector_align(new_cache_size, Vcb->superblock.sector_size);
 
         new_cache_size += sizeof(FREE_SPACE_ENTRY);
     }
 
-    new_cache_size = sector_align(new_cache_size, CACHE_INCREMENTS * Vcb->superblock.sector_size);
+    new_cache_size = sector_align(new_cache_size, CACHE_INCREMENTS << Vcb->sector_shift);
 
     TRACE("chunk %I64x: cache_size = %I64x, new_cache_size = %I64x\n", c->offset, c->cache ? c->cache->inode_item.st_size : 0, new_cache_size);
 
@@ -1150,6 +1150,7 @@ static NTSTATUS allocate_cache_chunk(device_extension* Vcb, chunk* c, bool* chan
         c->cache->subvol = Vcb->root_root;
 
         c->cache->inode = InterlockedIncrement64(&Vcb->root_root->lastinode);
+        c->cache->hash = calc_crc32c(0xffffffff, (uint8_t*)&c->cache->inode, sizeof(uint64_t));
 
         c->cache->type = BTRFS_TYPE_FILE;
         c->cache->created = true;
@@ -1213,6 +1214,8 @@ static NTSTATUS allocate_cache_chunk(device_extension* Vcb, chunk* c, bool* chan
 
         c->cache->extents_changed = true;
         InsertTailList(&Vcb->all_fcbs, &c->cache->list_entry_all);
+
+        add_fcb_to_subvol(c->cache);
 
         Status = flush_fcb(c->cache, true, batchlist, Irp);
         if (!NT_SUCCESS(Status)) {
@@ -1651,19 +1654,41 @@ void space_list_add2(LIST_ENTRY* list, LIST_ENTRY* list_size, uint64_t address, 
         add_rollback_space(rollback, true, list, list_size, address, length, c);
 }
 
-static void space_list_merge(LIST_ENTRY* spacelist, LIST_ENTRY* spacelist_size, LIST_ENTRY* deleting) {
+void space_list_merge(LIST_ENTRY* spacelist, LIST_ENTRY* spacelist_size, LIST_ENTRY* deleting) {
+    LIST_ENTRY* le = deleting->Flink;
+
+    while (le != deleting) {
+        space* s = CONTAINING_RECORD(le, space, list_entry);
+
+        space_list_add2(spacelist, spacelist_size, s->address, s->size, NULL, NULL);
+
+        le = le->Flink;
+    }
+}
+
+static NTSTATUS copy_space_list(LIST_ENTRY* old_list, LIST_ENTRY* new_list) {
     LIST_ENTRY* le;
 
-    if (!IsListEmpty(deleting)) {
-        le = deleting->Flink;
-        while (le != deleting) {
-            space* s = CONTAINING_RECORD(le, space, list_entry);
+    le = old_list->Flink;
+    while (le != old_list) {
+        space* s = CONTAINING_RECORD(le, space, list_entry);
+        space* s2;
 
-            space_list_add2(spacelist, spacelist_size, s->address, s->size, NULL, NULL);
-
-            le = le->Flink;
+        s2 = ExAllocatePoolWithTag(PagedPool, sizeof(space), ALLOC_TAG);
+        if (!s2) {
+            ERR("out of memory\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
+
+        s2->address = s->address;
+        s2->size = s->size;
+
+        InsertTailList(new_list, &s2->list_entry);
+
+        le = le->Flink;
     }
+
+    return STATUS_SUCCESS;
 }
 
 static NTSTATUS update_chunk_cache(device_extension* Vcb, chunk* c, BTRFS_TIME* now, LIST_ENTRY* batchlist, PIRP Irp, LIST_ENTRY* rollback) {
@@ -1673,10 +1698,8 @@ static NTSTATUS update_chunk_cache(device_extension* Vcb, chunk* c, BTRFS_TIME* 
     FREE_SPACE_ITEM* fsi;
     void* data;
     uint64_t num_entries, *cachegen, off;
-    uint32_t *checksums, num_sectors, i;
-    LIST_ENTRY* le;
-
-    space_list_merge(&c->space, &c->space_size, &c->deleting);
+    uint32_t *checksums, num_sectors;
+    LIST_ENTRY space_list, deleting;
 
     data = ExAllocatePoolWithTag(NonPagedPool, (ULONG)c->cache->inode_item.st_size, ALLOC_TAG);
     if (!data) {
@@ -1686,17 +1709,38 @@ static NTSTATUS update_chunk_cache(device_extension* Vcb, chunk* c, BTRFS_TIME* 
 
     RtlZeroMemory(data, (ULONG)c->cache->inode_item.st_size);
 
+    InitializeListHead(&space_list);
+    InitializeListHead(&deleting);
+
+    Status = copy_space_list(&c->space, &space_list);
+    if (!NT_SUCCESS(Status)) {
+        ERR("copy_space_list returned %08lx\n", Status);
+        goto end;
+    }
+
+    Status = copy_space_list(&c->deleting, &deleting);
+    if (!NT_SUCCESS(Status)) {
+        ERR("copy_space_list returned %08lx\n", Status);
+
+        while (!IsListEmpty(&space_list)) {
+            ExFreePool(CONTAINING_RECORD(RemoveHeadList(&space_list), space, list_entry));
+        }
+
+        goto end;
+    }
+
+    space_list_merge(&space_list, NULL, &deleting);
+
     num_entries = 0;
-    num_sectors = (uint32_t)(c->cache->inode_item.st_size / Vcb->superblock.sector_size);
+    num_sectors = (uint32_t)(c->cache->inode_item.st_size >> Vcb->sector_shift);
     off = (sizeof(uint32_t) * num_sectors) + sizeof(uint64_t);
 
-    le = c->space.Flink;
-    while (le != &c->space) {
+    while (!IsListEmpty(&space_list)) {
         FREE_SPACE_ENTRY* fse;
 
-        space* s = CONTAINING_RECORD(le, space, list_entry);
+        space* s = CONTAINING_RECORD(RemoveHeadList(&space_list), space, list_entry);
 
-        if ((off + sizeof(FREE_SPACE_ENTRY)) / Vcb->superblock.sector_size != off / Vcb->superblock.sector_size)
+        if ((off + sizeof(FREE_SPACE_ENTRY)) >> Vcb->sector_shift != off >> Vcb->sector_shift)
             off = sector_align(off, Vcb->superblock.sector_size);
 
         fse = (FREE_SPACE_ENTRY*)((uint8_t*)data + off);
@@ -1707,8 +1751,6 @@ static NTSTATUS update_chunk_cache(device_extension* Vcb, chunk* c, BTRFS_TIME* 
         num_entries++;
 
         off += sizeof(FREE_SPACE_ENTRY);
-
-        le = le->Flink;
     }
 
     // update INODE_ITEM
@@ -1765,13 +1807,13 @@ static NTSTATUS update_chunk_cache(device_extension* Vcb, chunk* c, BTRFS_TIME* 
 
     // FIXME - if we know sector is fully zeroed, use cached checksum
 
-    for (i = 0; i < num_sectors; i++) {
-        if (i * Vcb->superblock.sector_size > sizeof(uint32_t) * num_sectors)
-            checksums[i] = ~calc_crc32c(0xffffffff, (uint8_t*)data + (i * Vcb->superblock.sector_size), Vcb->superblock.sector_size);
-        else if ((i + 1) * Vcb->superblock.sector_size < sizeof(uint32_t) * num_sectors)
+    for (uint32_t i = 0; i < num_sectors; i++) {
+        if (i << Vcb->sector_shift > sizeof(uint32_t) * num_sectors)
+            checksums[i] = ~calc_crc32c(0xffffffff, (uint8_t*)data + (i << Vcb->sector_shift), Vcb->superblock.sector_size);
+        else if ((i + 1) << Vcb->sector_shift < sizeof(uint32_t) * num_sectors)
             checksums[i] = 0; // FIXME - test this
         else
-            checksums[i] = ~calc_crc32c(0xffffffff, (uint8_t*)data + (sizeof(uint32_t) * num_sectors), ((i + 1) * Vcb->superblock.sector_size) - (sizeof(uint32_t) * num_sectors));
+            checksums[i] = ~calc_crc32c(0xffffffff, (uint8_t*)data + (sizeof(uint32_t) * num_sectors), ((i + 1) << Vcb->sector_shift) - (sizeof(uint32_t) * num_sectors));
     }
 
     // write cache
@@ -1792,10 +1834,192 @@ end:
     return Status;
 }
 
-static NTSTATUS update_chunk_cache_tree(device_extension* Vcb, chunk* c, LIST_ENTRY* batchlist) {
+static NTSTATUS update_chunk_cache_tree(device_extension* Vcb, chunk* c, PIRP Irp) {
     NTSTATUS Status;
-    LIST_ENTRY* le;
+    LIST_ENTRY space_list;
     FREE_SPACE_INFO* fsi;
+    KEY searchkey;
+    traverse_ptr tp;
+    uint32_t fsi_count = 0;
+
+    InitializeListHead(&space_list);
+
+    Status = copy_space_list(&c->space, &space_list);
+    if (!NT_SUCCESS(Status)) {
+        ERR("copy_space_list returned %08lx\n", Status);
+        return Status;
+    }
+
+    space_list_merge(&space_list, NULL, &c->deleting);
+
+    searchkey.obj_id = c->offset;
+    searchkey.obj_type = TYPE_FREE_SPACE_EXTENT;
+    searchkey.offset = 0xffffffffffffffff;
+
+    Status = find_item(Vcb, Vcb->space_root, &tp, &searchkey, false, Irp);
+    if (Status == STATUS_NOT_FOUND)
+        goto after_tree_walk;
+    else if (!NT_SUCCESS(Status)) {
+        ERR("find_item returned %08lx\n", Status);
+
+        while (!IsListEmpty(&space_list)) {
+            ExFreePool(CONTAINING_RECORD(RemoveHeadList(&space_list), space, list_entry));
+        }
+
+        return Status;
+    }
+
+    while (!IsListEmpty(&space_list) && tp.item->key.obj_id < c->offset + c->chunk_item->size) {
+        traverse_ptr next_tp;
+
+        if (tp.item->key.obj_type == TYPE_FREE_SPACE_EXTENT) {
+            space* s = CONTAINING_RECORD(space_list.Flink, space, list_entry);
+
+            if (s->address < tp.item->key.obj_id || (s->address == tp.item->key.obj_id && s->size < tp.item->key.offset)) {
+                // add entry
+
+                Status = insert_tree_item(Vcb, Vcb->space_root, s->address, TYPE_FREE_SPACE_EXTENT, s->size, NULL, 0,
+                                          NULL, Irp);
+                if (!NT_SUCCESS(Status)) {
+                    ERR("insert_tree_item returned %08lx\n", Status);
+
+                    while (!IsListEmpty(&space_list)) {
+                        ExFreePool(CONTAINING_RECORD(RemoveHeadList(&space_list), space, list_entry));
+                    }
+
+                    return Status;
+                }
+
+                fsi_count++;
+
+                ExFreePool(s);
+                RemoveHeadList(&space_list);
+                continue;
+            } else if (s->address == tp.item->key.obj_id && s->size == tp.item->key.offset) {
+                // unchanged entry
+
+                fsi_count++;
+
+                ExFreePool(s);
+                RemoveHeadList(&space_list);
+            } else {
+                // remove entry
+
+                Status = delete_tree_item(Vcb, &tp);
+                if (!NT_SUCCESS(Status)) {
+                    ERR("delete_tree_item returned %08lx\n", Status);
+
+                    while (!IsListEmpty(&space_list)) {
+                        ExFreePool(CONTAINING_RECORD(RemoveHeadList(&space_list), space, list_entry));
+                    }
+
+                    return Status;
+                }
+            }
+        } else if (tp.item->key.obj_type == TYPE_FREE_SPACE_BITMAP) {
+            Status = delete_tree_item(Vcb, &tp);
+            if (!NT_SUCCESS(Status)) {
+                ERR("delete_tree_item returned %08lx\n", Status);
+
+                while (!IsListEmpty(&space_list)) {
+                    ExFreePool(CONTAINING_RECORD(RemoveHeadList(&space_list), space, list_entry));
+                }
+
+                return Status;
+            }
+        }
+
+        if (!find_next_item(Vcb, &tp, &next_tp, false, Irp))
+            goto after_tree_walk;
+
+        tp = next_tp;
+    }
+
+    // after loop, delete remaining tree items for this chunk
+
+    while (tp.item->key.obj_id < c->offset + c->chunk_item->size) {
+        traverse_ptr next_tp;
+
+        if (tp.item->key.obj_type == TYPE_FREE_SPACE_EXTENT || tp.item->key.obj_type == TYPE_FREE_SPACE_BITMAP) {
+            Status = delete_tree_item(Vcb, &tp);
+            if (!NT_SUCCESS(Status)) {
+                ERR("delete_tree_item returned %08lx\n", Status);
+                return Status;
+            }
+        }
+
+        if (!find_next_item(Vcb, &tp, &next_tp, false, NULL))
+            break;
+
+        tp = next_tp;
+    }
+
+after_tree_walk:
+    // after loop, insert remaining space_list entries
+
+    while (!IsListEmpty(&space_list)) {
+        space* s = CONTAINING_RECORD(RemoveHeadList(&space_list), space, list_entry);
+
+        Status = insert_tree_item(Vcb, Vcb->space_root, s->address, TYPE_FREE_SPACE_EXTENT, s->size, NULL, 0,
+                                  NULL, Irp);
+        if (!NT_SUCCESS(Status)) {
+            ERR("insert_tree_item returned %08lx\n", Status);
+
+            while (!IsListEmpty(&space_list)) {
+                ExFreePool(CONTAINING_RECORD(RemoveHeadList(&space_list), space, list_entry));
+            }
+
+            return Status;
+        }
+
+        fsi_count++;
+
+        ExFreePool(s);
+    }
+
+    // change TYPE_FREE_SPACE_INFO in place if present, and insert otherwise
+
+    searchkey.obj_id = c->offset;
+    searchkey.obj_type = TYPE_FREE_SPACE_INFO;
+    searchkey.offset = c->chunk_item->size;
+
+    Status = find_item(Vcb, Vcb->space_root, &tp, &searchkey, false, Irp);
+    if (!NT_SUCCESS(Status) && Status != STATUS_NOT_FOUND) {
+        ERR("find_item returned %08lx\n", Status);
+        return Status;
+    }
+
+    if (NT_SUCCESS(Status) && !keycmp(tp.item->key, searchkey)) {
+        if (tp.item->size == sizeof(FREE_SPACE_INFO)) {
+            tree* t;
+
+            // change in place if possible
+
+            fsi = (FREE_SPACE_INFO*)tp.item->data;
+
+            fsi->count = fsi_count;
+            fsi->flags = 0;
+
+            tp.tree->write = true;
+
+            t = tp.tree;
+            while (t) {
+                if (t->paritem && t->paritem->ignore) {
+                    t->paritem->ignore = false;
+                    t->parent->header.num_items++;
+                    t->parent->size += sizeof(internal_node);
+                }
+
+                t->header.generation = Vcb->superblock.generation;
+                t = t->parent;
+            }
+
+            return STATUS_SUCCESS;
+        } else
+            delete_tree_item(Vcb, &tp);
+    }
+
+    // insert FREE_SPACE_INFO
 
     fsi = ExAllocatePoolWithTag(PagedPool, sizeof(FREE_SPACE_INFO), ALLOC_TAG);
     if (!fsi) {
@@ -1803,41 +2027,13 @@ static NTSTATUS update_chunk_cache_tree(device_extension* Vcb, chunk* c, LIST_EN
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    space_list_merge(&c->space, &c->space_size, &c->deleting);
-
-    fsi->count = 0;
+    fsi->count = fsi_count;
     fsi->flags = 0;
 
-    le = c->space.Flink;
-    while (le != &c->space) {
-        space* s = CONTAINING_RECORD(le, space, list_entry);
-
-        fsi->count++;
-
-        Status = insert_tree_item_batch(batchlist, Vcb, Vcb->space_root, s->address, TYPE_FREE_SPACE_EXTENT, s->size,
-                                        NULL, 0, Batch_Insert);
-        if (!NT_SUCCESS(Status)) {
-            ERR("insert_tree_item_batch returned %08lx\n", Status);
-            ExFreePool(fsi);
-            return Status;
-        }
-
-        le = le->Flink;
-    }
-
-    Status = insert_tree_item_batch(batchlist, Vcb, Vcb->space_root, c->offset, TYPE_FREE_SPACE_INFO, c->chunk_item->size,
-                                    NULL, 0, Batch_DeleteFreeSpace);
+    Status = insert_tree_item(Vcb, Vcb->space_root, c->offset, TYPE_FREE_SPACE_INFO, c->chunk_item->size, fsi, sizeof(fsi),
+                              NULL, Irp);
     if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item_batch returned %08lx\n", Status);
-        ExFreePool(fsi);
-        return Status;
-    }
-
-    Status = insert_tree_item_batch(batchlist, Vcb, Vcb->space_root, c->offset, TYPE_FREE_SPACE_INFO, c->chunk_item->size,
-                                    fsi, sizeof(FREE_SPACE_INFO), Batch_Insert);
-    if (!NT_SUCCESS(Status)) {
-        ERR("insert_tree_item_batch returned %08lx\n", Status);
-        ExFreePool(fsi);
+        ERR("insert_tree_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -1915,13 +2111,11 @@ NTSTATUS update_chunk_caches(device_extension* Vcb, PIRP Irp, LIST_ENTRY* rollba
 }
 
 NTSTATUS update_chunk_caches_tree(device_extension* Vcb, PIRP Irp) {
-    LIST_ENTRY *le, batchlist;
+    LIST_ENTRY *le;
     NTSTATUS Status;
     chunk* c;
 
     Vcb->superblock.compat_ro_flags |= BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE_VALID;
-
-    InitializeListHead(&batchlist);
 
     ExAcquireResourceSharedLite(&Vcb->chunk_lock, true);
 
@@ -1931,13 +2125,12 @@ NTSTATUS update_chunk_caches_tree(device_extension* Vcb, PIRP Irp) {
 
         if (c->space_changed) {
             acquire_chunk_lock(c, Vcb);
-            Status = update_chunk_cache_tree(Vcb, c, &batchlist);
+            Status = update_chunk_cache_tree(Vcb, c, Irp);
             release_chunk_lock(c, Vcb);
 
             if (!NT_SUCCESS(Status)) {
                 ERR("update_chunk_cache_tree(%I64x) returned %08lx\n", c->offset, Status);
                 ExReleaseResourceLite(&Vcb->chunk_lock);
-                clear_batch_list(Vcb, &batchlist);
                 return Status;
             }
         }
@@ -1946,12 +2139,6 @@ NTSTATUS update_chunk_caches_tree(device_extension* Vcb, PIRP Irp) {
     }
 
     ExReleaseResourceLite(&Vcb->chunk_lock);
-
-    Status = commit_batch_list(Vcb, &batchlist, Irp);
-    if (!NT_SUCCESS(Status)) {
-        ERR("commit_batch_list returned %08lx\n", Status);
-        return Status;
-    }
 
     return STATUS_SUCCESS;
 }
@@ -2044,13 +2231,11 @@ void space_list_subtract2(LIST_ENTRY* list, LIST_ENTRY* list_size, uint64_t addr
     }
 }
 
-void space_list_subtract(chunk* c, bool deleting, uint64_t address, uint64_t length, LIST_ENTRY* rollback) {
-    LIST_ENTRY* list;
-
-    list = deleting ? &c->deleting : &c->space;
-
+void space_list_subtract(chunk* c, uint64_t address, uint64_t length, LIST_ENTRY* rollback) {
     c->changed = true;
     c->space_changed = true;
 
-    space_list_subtract2(list, deleting ? NULL : &c->space_size, address, length, c, rollback);
+    space_list_subtract2(&c->space, &c->space_size, address, length, c, rollback);
+
+    space_list_subtract2(&c->deleting, NULL, address, length, c, rollback);
 }

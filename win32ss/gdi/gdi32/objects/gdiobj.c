@@ -206,7 +206,7 @@ GetObjectW(
             break;
 
         case GDI_OBJECT_TYPE_BRUSH:
-            if (!lpBuffer || !cbSize) return sizeof(LOGBRUSH);
+            if (!lpBuffer) return sizeof(LOGBRUSH);
             break;
 
         case GDI_OBJECT_TYPE_BITMAP:

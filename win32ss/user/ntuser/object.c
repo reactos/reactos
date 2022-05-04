@@ -582,6 +582,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
    return Object;
 }
 
+// Win: HMMarkObjectDestroy
 BOOL
 FASTCALL
 UserMarkObjectDestroy(PVOID Object)

@@ -75,7 +75,7 @@ static void find_devices(HWND hwnd, const GUID* guid, const mountmgr& mm, vector
 
     static const wstring dosdevices = L"\\DosDevices\\";
 
-    h = SetupDiGetClassDevs(guid, nullptr, 0, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
+    h = SetupDiGetClassDevsW(guid, nullptr, 0, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
 
     if (h != INVALID_HANDLE_VALUE) {
         DWORD index = 0;
@@ -629,10 +629,10 @@ static INT_PTR CALLBACK stub_DeviceAddDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wP
     BtrfsDeviceAdd* bda;
 
     if (uMsg == WM_INITDIALOG) {
-        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
         bda = (BtrfsDeviceAdd*)lParam;
     } else {
-        bda = (BtrfsDeviceAdd*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+        bda = (BtrfsDeviceAdd*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
     }
 
     if (bda)
@@ -824,10 +824,10 @@ static INT_PTR CALLBACK stub_DeviceResizeDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
     BtrfsDeviceResize* bdr;
 
     if (uMsg == WM_INITDIALOG) {
-        SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)lParam);
         bdr = (BtrfsDeviceResize*)lParam;
     } else
-        bdr = (BtrfsDeviceResize*)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+        bdr = (BtrfsDeviceResize*)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     if (bdr)
         return bdr->DeviceResizeDlgProc(hwndDlg, uMsg, wParam, lParam);

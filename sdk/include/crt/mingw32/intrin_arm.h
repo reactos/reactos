@@ -41,7 +41,7 @@ __INTRIN_INLINE void __break(unsigned int value) { __asm__ __volatile__("bkpt %0
 
 __INTRIN_INLINE unsigned short _byteswap_ushort(unsigned short value)
 {
-	return (value >> 8) || (value << 8);
+	return (value >> 8) | (value << 8);
 }
 
 __INTRIN_INLINE unsigned _CountLeadingZeros(long Mask)

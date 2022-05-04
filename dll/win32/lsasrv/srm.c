@@ -106,7 +106,7 @@ LsapRmServerThread(
                                         &Message.Header);
         if (!NT_SUCCESS(Status))
         {
-            ERR("LsapRmServerThread - Failed to get message: 0x%lx", Status);
+            ERR("LsapRmServerThread - Failed to get message: 0x%lx\n", Status);
             ReplyMessage = NULL;
             continue;
         }

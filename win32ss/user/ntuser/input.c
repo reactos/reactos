@@ -764,7 +764,7 @@ NtUserSendInput(
                     uRet++;
                 break;
             case INPUT_HARDWARE:
-                FIXME("INPUT_HARDWARE not supported!");
+                FIXME("INPUT_HARDWARE not supported!\n");
                 break;
             default:
                 ERR("SendInput(): Invalid input type: 0x%x\n", SafeInput.type);

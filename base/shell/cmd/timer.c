@@ -32,7 +32,7 @@ PrintElapsedTime (DWORD time,INT format)
 {
     DWORD h,m,s,ms;
 
-    TRACE ("PrintElapsedTime(%d,%d)",time,format);
+    TRACE("PrintElapsedTime(%lu, %d)\n", time, format);
 
     switch (format)
     {
