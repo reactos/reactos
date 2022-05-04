@@ -733,7 +733,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
         /* Open the PCI key */
         InitializeObjectAttributes(&ObjectAttributes,
                                    RegistryPath,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    NULL,
                                    NULL);
         Status = ZwOpenKey(&KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
