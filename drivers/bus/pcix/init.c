@@ -712,8 +712,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     /* Setup initial loop variables */
     KeyHandle = NULL;
-    ParametersKey = NULL;
-    DebugKey = NULL;
     ControlSetKey = NULL;
     do
     {
@@ -745,11 +743,19 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                             KEY_QUERY_VALUE,
                             &ParametersKey,
                             &Status);
-        //if (!Result) break;
-
-        /* Build the list of all known PCI erratas */
-        Status = PciBuildHackTable(ParametersKey);
-        //if (!NT_SUCCESS(Status)) break;
+        if (Result)
+        {
+            /* Build the list of all known PCI erratas */
+            Status = PciBuildHackTable(ParametersKey);
+            ZwClose(ParametersKey);
+            // TODO: Should we fail here? See also 'ReactOS SetupLDR Hack' in PciGetHackFlags().
+            //if (!NT_SUCCESS(Status)) break;
+        }
+        else
+        {
+            // TODO: Should we fail here? See also 'ReactOS SetupLDR Hack' in PciGetHackFlags().
+            //break;
+        }
 
         /* Open the debug key, if it exists */
         Result = PciOpenKey(L"Debug",
@@ -761,6 +767,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
         {
             /* There are PCI debug devices, go discover them */
             Status = PciGetDebugPorts(DebugKey);
+            ZwClose(DebugKey);
             if (!NT_SUCCESS(Status)) break;
         }
 
@@ -869,8 +876,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     /* Close all opened keys, return driver status to PnP Manager */
     if (KeyHandle) ZwClose(KeyHandle);
     if (ControlSetKey) ZwClose(ControlSetKey);
-    if (ParametersKey) ZwClose(ParametersKey);
-    if (DebugKey) ZwClose(DebugKey);
     return Status;
 }
 
