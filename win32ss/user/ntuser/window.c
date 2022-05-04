@@ -1506,7 +1506,7 @@ NtUserBuildHwndList(
    HWND hwndParent,
    BOOLEAN bChildren,
    ULONG dwThreadId,
-   LPARAM lParam,
+   ULONG lParam,
    HWND* pWnd,
    ULONG* pBufSize)
 {
