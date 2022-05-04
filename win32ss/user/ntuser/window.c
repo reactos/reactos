@@ -1355,6 +1355,7 @@ IntUnlinkWindow(PWND Wnd)
     Wnd->spwndPrev = Wnd->spwndNext = NULL;
 }
 
+// Win: ExpandWindowList
 BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
 {
     PWINDOWLIST pwlOld, pwlNew;
@@ -1375,6 +1376,7 @@ BOOL FASTCALL IntGrowHwndList(PWINDOWLIST *ppwl)
     return TRUE;
 }
 
+// Win: InternalBuildHwndList
 PWINDOWLIST FASTCALL IntPopulateHwndList(PWINDOWLIST pwl, PWND pwnd, DWORD dwFlags)
 {
     ASSERT(!WL_IS_BAD(pwl));
