@@ -1561,9 +1561,9 @@ NtUserBuildHwndList(
     HWND hwndParent,
     BOOLEAN bChildren,
     ULONG dwThreadId,
-    ULONG lParam,
-    HWND *pWnd,
-    ULONG *pBufSize);
+    ULONG cHwnd,
+    HWND *phwndList,
+    ULONG *pcHwndNeeded);
 
 NTSTATUS
 NTAPI

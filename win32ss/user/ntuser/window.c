@@ -1500,26 +1500,26 @@ VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget)
  * @implemented
  */
 NTSTATUS
-APIENTRY
+NTAPI
 NtUserBuildHwndList(
    HDESK hDesktop,
    HWND hwndParent,
    BOOLEAN bChildren,
    ULONG dwThreadId,
-   ULONG lParam,
-   HWND* pWnd,
-   ULONG* pBufSize)
+   ULONG cHwnd,
+   HWND* phwndList,
+   ULONG* pcHwndNeeded)
 {
    NTSTATUS Status;
    ULONG dwCount = 0;
 
-   UserEnterExclusive();
-
-   if (pBufSize == 0)
+   if (pcHwndNeeded == NULL)
    {
-       Status = ERROR_INVALID_PARAMETER;
-       goto Quit;
+       UserLeave();
+       return ERROR_INVALID_PARAMETER;
    }
+
+   UserEnterExclusive();
 
    if (hwndParent || !dwThreadId)
    {
@@ -1563,13 +1563,13 @@ NtUserBuildHwndList(
          {
             if (bGoDown)
             {
-               if(dwCount++ < *pBufSize && pWnd)
+               if(dwCount++ < *pcHwndNeeded && phwndList)
                {
                   _SEH2_TRY
                   {
-                     ProbeForWrite(pWnd, sizeof(HWND), 1);
-                     *pWnd = Window->head.h;
-                     pWnd++;
+                     ProbeForWrite(phwndList, sizeof(HWND), 1);
+                     *phwndList = Window->head.h;
+                     phwndList++;
                   }
                   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                   {
@@ -1578,7 +1578,6 @@ NtUserBuildHwndList(
                   _SEH2_END
                   if(!NT_SUCCESS(Status))
                   {
-                     SetLastNtError(Status);
                      break;
                   }
                }
@@ -1642,13 +1641,13 @@ NtUserBuildHwndList(
             Window = ValidateHwndNoErr(List[i]);
             if (Window && Window->head.pti == W32Thread)
             {
-               if (dwCount < *pBufSize && pWnd)
+               if (dwCount < *pcHwndNeeded && phwndList)
                {
                   _SEH2_TRY
                   {
-                     ProbeForWrite(pWnd, sizeof(HWND), 1);
-                     *pWnd = Window->head.h;
-                     pWnd++;
+                     ProbeForWrite(phwndList, sizeof(HWND), 1);
+                     *phwndList = Window->head.h;
+                     phwndList++;
                   }
                   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                   {
@@ -1658,7 +1657,6 @@ NtUserBuildHwndList(
                   if (!NT_SUCCESS(Status))
                   {
                      ERR("Failure to build window list!\n");
-                     SetLastNtError(Status);
                      break;
                   }
                }
@@ -1671,10 +1669,11 @@ NtUserBuildHwndList(
       ObDereferenceObject(Thread);
    }
 
-   *pBufSize = dwCount;
+   *pcHwndNeeded = dwCount;
    Status = STATUS_SUCCESS;
 
 Quit:
+   SetLastNtError(Status);
    UserLeave();
    return Status;
 }
