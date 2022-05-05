@@ -1400,12 +1400,14 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
                      {
                         /* Do not allow hWndInsertAfter to become equal to
                          * Window->head.h. This would cause the window to
-                         * reference itself. */
+                         * reference itself. This changes the passed in
+                         * hWndInsertAfter which will be handled below. */
                         hWndInsertAfter = List[i - 1];
                      }
                      else
                      {
-                        /* If hWndInsertAfter is equal to Window->head.h */
+                        /* If we cannot do 'hWndInsertAfter = List[i - 1]' then
+                         * exit here returning hWndInsertAfter as passed in. */
                         return hWndInsertAfter;
                      }
                   }
