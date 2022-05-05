@@ -23,7 +23,7 @@ BEGIN
     IDS_DETAIL_INFO_DISK_ID "Disco ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Tipo"
     IDS_DETAIL_INFO_STATUS "Estado"
-    IDS_DETAIL_INFO_PATH "Caminho : %hu\n"
+    IDS_DETAIL_INFO_PATH   "Caminho : %hu\n"
     IDS_DETAIL_INFO_TARGET "Alvo    : %hu\n"
     IDS_DETAIL_INFO_LUN_ID "LUN ID  : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Caminho de localização"
@@ -35,7 +35,7 @@ BEGIN
     IDS_DETAIL_INFO_CRASH_DSK "Despejo de memória de disco"
     IDS_DETAIL_INFO_CLST_DSK "Disco em cluster"
     IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
-    IDS_DETAIL_PARTITION_TYPE "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
     IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
     IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
     IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
@@ -53,7 +53,7 @@ BEGIN
     IDS_LIST_PARTITION_NO_DISK "\nSem discos para listar Partições.\nPor favor seleccione um disco e tente novamente.\n\n"
     IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
-    IDS_LIST_VOLUME_FORMAT "  Volume %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_FORMAT "  Volume %-3lu   %c   %-11.11s  %-5s  %10u  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */

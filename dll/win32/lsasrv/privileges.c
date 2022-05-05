@@ -133,7 +133,7 @@ LsarpLookupPrivilegeDisplayName(PRPC_UNICODE_STRING Name,
     ULONG Index;
     UINT nLength;
 
-    TRACE("LsarpLookupPrivilegeDisplayName(%p 0x%04hu 0x%04hu %p %p)",
+    TRACE("LsarpLookupPrivilegeDisplayName(%p 0x%04hu 0x%04hu %p %p)\n",
           Name, ClientLanguage, ClientSystemDefaultLanguage, DisplayName, LanguageReturned);
 
     if (Name->Length == 0 || Name->Buffer == NULL)

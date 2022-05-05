@@ -2,6 +2,7 @@
  *
  * Copyright 2001 Eric Pouech
  * Copyright 2008 Owen Rudge
+ * Copyright 2022 Raymond Czerny
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,6 +29,8 @@
 #define NO_SHLWAPI_REG
 #include <shlwapi.h>
 #include <shellapi.h>
+#define COBJMACROS
+#include <shobjidl.h>
 #include <wine/debug.h>
 
 #include <strsafe.h>
@@ -736,6 +739,112 @@ static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 }
 #endif
 
+#ifdef __REACTOS__
+
+/** Structure for in and out data when
+ *  search for the cpl dialog of first instance
+ */
+typedef struct tagAppDlgFindData
+{
+    PCWSTR    szAppFile;  /**< Full path to applet library as search parameter */
+    UINT_PTR  sAppletNo;  /**< Number of applet in a system control library as search parameter */
+    ATOM      aCPLName;   /**< to read window property 'CPLName' */
+    ATOM      aCPLFlags;  /**< to read window property 'CPLFlags'*/
+    HWND      hRunDLL;    /**< to skip self instance */
+    HWND      hDlgResult; /**< Returned dialog handle or NULL if not found */
+} AppDlgFindData;
+
+/**
+ * Callback function to search applet dialog
+ * @param hwnd A handle to a top-level window.
+ * @param lParam Pointer of AppDlgFindData
+ * @return TRUE: continue enumeration, FALSE: stop enumeration
+ */
+static BOOL CALLBACK
+Control_EnumWinProc(
+    _In_ HWND   hwnd,
+    _In_ LPARAM lParam)
+{
+    AppDlgFindData* pData = (AppDlgFindData*)lParam;
+    WCHAR szClassName[256] = L"";
+
+    if (pData->hRunDLL == hwnd)
+    {
+        // Skip self instance
+        return TRUE;
+    }
+
+    if (GetClassNameW(hwnd, szClassName, _countof(szClassName)))
+    {
+        // Note: A comparison on identical is not possible, the class names are different.
+        // ReactOS: 'rundll32_window'
+        // WinXP: 'RunDLL'
+        // other OS: not checked
+        if (StrStrIW(szClassName, L"rundll32") != NULL)
+        {
+            UINT_PTR sAppletNo;
+
+            sAppletNo = (UINT_PTR)GetPropW(hwnd, (LPTSTR)MAKEINTATOM(pData->aCPLFlags));
+            if (sAppletNo == pData->sAppletNo)
+            {
+                HANDLE hRes;
+                WCHAR szAppFile[MAX_PATH];
+
+                hRes = GetPropW(hwnd, (LPTSTR)MAKEINTATOM(pData->aCPLName));
+                GlobalGetAtomNameW((ATOM)HandleToUlong(hRes), szAppFile, _countof(szAppFile));
+                if (wcscmp(szAppFile, pData->szAppFile) == 0)
+                {
+                    HWND hDialog = GetLastActivePopup(hwnd);
+                    if (IsWindow(hDialog))
+                    {
+                        pData->hDlgResult = hDialog;
+                        return FALSE; // stop enumeration
+                    }
+                }
+            }
+        }
+    }
+    return TRUE; // continue enumeration
+}
+
+/**
+ * This function makes the system control applet accessible via the taskbar.
+ *
+ * @param applet
+ * Pointer of system control applet.
+ *
+ * @param index
+ * Number of applet in a system control library.
+ */
+static void
+Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
+{
+    ITaskbarList* pTaskbar = NULL;
+
+    SetWindowTextW(applet->hWnd, applet->info[index].name);
+    SendMessageW(applet->hWnd, WM_SETICON, ICON_SMALL, (LPARAM)applet->info[index].icon);
+
+    /* Add button to the taskbar */
+    ShowWindow(applet->hWnd, SW_SHOWMINNOACTIVE);
+
+    /* Activate the corresponding button in the taskbar */
+    CoInitialize(NULL);
+    if (CoCreateInstance(&CLSID_TaskbarList,
+                         NULL, CLSCTX_INPROC_SERVER,
+                         &IID_ITaskbarList,
+                         (LPVOID*)&pTaskbar) == S_OK)
+    {
+        if (ITaskbarList_HrInit(pTaskbar) == S_OK)
+        {
+            ITaskbarList_ActivateTab(pTaskbar, applet->hWnd);
+        }
+        ITaskbarList_Release(pTaskbar);
+    }
+    CoUninitialize();
+}
+
+#endif /* __REACTOS__ */
+
 static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
    /* forms to parse:
     *	foo.cpl,@sp,str
@@ -828,6 +937,10 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 #ifdef __REACTOS__
     ULONG_PTR cookie;
     BOOL bActivated;
+    ATOM aCPLName;
+    ATOM aCPLFlags;
+    ATOM aCPLPath;
+    AppDlgFindData findData;
 #endif
         /* we've been given a textual parameter (or none at all) */
         if (sp == -1) {
@@ -846,10 +959,52 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 
 #ifdef __REACTOS__
         bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
+
+        aCPLPath = GlobalFindAtomW(applet->cmd);
+        if (!aCPLPath)
+        {
+            aCPLPath = GlobalAddAtomW(applet->cmd);
+        }
+
+        aCPLName = GlobalFindAtomW(L"CPLName");
+        if (!aCPLName)
+        {
+            aCPLName = GlobalAddAtomW(L"CPLName");
+        }
+
+        aCPLFlags = GlobalFindAtomW(L"CPLFlags");
+        if (!aCPLFlags)
+        {
+            aCPLFlags = GlobalAddAtomW(L"CPLFlags");
+        }
+
+        findData.szAppFile = applet->cmd;
+        findData.sAppletNo = (UINT_PTR)(sp + 1);
+        findData.aCPLName = aCPLName;
+        findData.aCPLFlags = aCPLFlags;
+        findData.hRunDLL = applet->hWnd;
+        findData.hDlgResult = NULL;
+        // Find the dialog of this applet in the first instance.
+        // Note: The simpler functions "FindWindow" or "FindWindowEx" does not find this type of dialogs.
+        EnumWindows(Control_EnumWinProc, (LPARAM)&findData);
+        if (findData.hDlgResult)
+        {
+            BringWindowToTop(findData.hDlgResult);
+        }
+        else
+        {
+            SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLName), (HANDLE)MAKEINTATOM(aCPLPath));
+            SetPropW(applet->hWnd, (LPTSTR)MAKEINTATOM(aCPLFlags), UlongToHandle(sp + 1));
+            Control_ShowAppletInTaskbar(applet, sp);
 #endif
 
         if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
             applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
+#ifdef __REACTOS__
+            RemovePropW(applet->hWnd, applet->cmd);
+            GlobalDeleteAtom(aCPLPath);
+        }
+#endif
 
         Control_UnloadApplet(applet);
 

@@ -186,7 +186,10 @@ class wine_sync:
                     warning_message += 'Error while applying patch to ' + new_reactos_path + '\n'
 
                 if delta.status == pygit2.GIT_DELTA_DELETED:
-                    self.reactos_index.remove(old_reactos_path)
+                    try:
+                        self.reactos_index.remove(old_reactos_path)
+                    except IOError as err:
+                        warning_message += 'Error while removing file ' + old_reactos_path + '\n'
                 # here we check if the file exists. We don't complain, because applying the patch already failed anyway
                 elif os.path.isfile(os.path.join(self.reactos_src, new_reactos_path)):
                     self.reactos_index.add(new_reactos_path)

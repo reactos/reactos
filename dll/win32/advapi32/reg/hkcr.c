@@ -39,7 +39,7 @@ GetKeyName(HKEY hKey, PUNICODE_STRING KeyName)
     NameInformation = RtlAllocateHeap(RtlGetProcessHeap(), 0, InfoLength);
     if (NameInformation == NULL)
     {
-        ERR("Failed to allocate %lu bytes", InfoLength);
+        ERR("Failed to allocate %lu bytes\n", InfoLength);
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 

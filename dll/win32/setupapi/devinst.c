@@ -2,7 +2,7 @@
  * SetupAPI device installer
  *
  * Copyright 2000 Andreas Mohr for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1583,6 +1583,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
     DEVINST RootDevInst;
     DEVINST DevInst;
     WCHAR GenInstanceId[MAX_DEVICE_ID_LEN];
+    DWORD dwFlags;
 
     TRACE("%s(%p %s %s %s %p %x %p)\n", __FUNCTION__, DeviceInfoSet, debugstr_w(DeviceName),
         debugstr_guid(ClassGuid), debugstr_w(DeviceDescription),
@@ -1632,12 +1633,15 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
         return FALSE;
     }
 
+    dwFlags = CM_CREATE_DEVINST_PHANTOM;
+    if (CreationFlags & DICD_GENERATE_ID)
+        dwFlags |= CM_CREATE_DEVINST_GENERATE_ID;
+
     /* Create the new device instance */
     cr = CM_Create_DevInst_ExW(&DevInst,
                                (DEVINSTID)DeviceName,
                                RootDevInst,
-                               (CreationFlags & DICD_GENERATE_ID) ?
-                                     CM_CREATE_DEVINST_GENERATE_ID : 0,
+                               dwFlags,
                                set->hMachine);
     if (cr != CR_SUCCESS)
     {

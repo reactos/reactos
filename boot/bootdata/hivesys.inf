@@ -1466,11 +1466,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "SpoolerGroup", \
  "AudioGroup", \
  "SmartCardGroup", \
- "NetworkProvider" \
+ "NetworkProvider", \
  "RemoteValidation", \
  "NetDDEGroup", \
  "Parallel arbitrator", \
- "Extended Base" \
+ "Extended Base", \
  "PCI Configuration", \
  "MS Transactions"
 
@@ -1579,7 +1579,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\swenum","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","DisplayName",0x00000000,%AUDIO_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Description",0x00000000,%AUDIO_SERVICE_DESCRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Group",0x00000000,"Audio"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Group",0x00000000,"AudioGroup"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ImagePath",0x00020000,"%SystemRoot%\system32\audiosrv.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Start",0x00010001,0x00000003
@@ -1674,7 +1674,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver\Parameters","ServiceDll",0x
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","DisplayName",0x00000000,%WORKSTATION_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Description",0x00000000,%WORKSTATION_SERVICE_DESCRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"Network Provider"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"NetworkProvider"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Start",0x00010001,0x00000002
@@ -1684,7 +1684,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation\Parameters","ServiceDl
 ; Multiple UNC provider driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ImagePath",0x00020000,"system32\drivers\mup.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Type",0x00010001,0x00000002
@@ -1705,7 +1705,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","Type",0x00010001,0x00000020
 
 ; NTFS filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ImagePath",0x00020000,"system32\drivers\ntfs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Start",0x00010001,0x00000003
@@ -2180,55 +2180,17 @@ HKLM,"SYSTEM\CurrentControlSet\Services\DcomLaunch\Parameters","ServiceDll",0x00
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Type",0x00010001,0x00000001
 
 ; Virtual FAT filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Group",0x00000000,"Boot File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ImagePath",0x00020000,"system32\drivers\fastfat.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Type",0x00010001,0x00000002
 
 ; RAM Disk class driver
-HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ImagePath",0x00020000,"system32\drivers\ramdisk.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Type",0x00010001,0x00000002
-
-; EXT2 Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ImagePath",0x00020000,"system32\drivers\ext2fs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Type",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","CodePage",0x00000000,"default"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","WritingSupport",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","CheckingBitmap",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","Ext3ForceWriting",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","AutoMount",0x00010001,0x00000001
-
-; BTRFS Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ImagePath",0x00020000,"system32\drivers\btrfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Type",0x00010001,0x00000002
-
-; NFS Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Group",0x00000000,"Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ImagePath",0x00020000,"system32\drivers\nfs41_driver.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Type",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","DeviceName",0x00000000,\Device\nfs41_driver
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","Name",0x00000000,"NFS41 Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","ProviderPath",0x00000000,System32\nfs41_np.dll
-
-; NFS daemon
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","DisplayName",0x00000000,"NFSv4.1 Client"
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ImagePath",0x00020000,"%SystemRoot%\system32\nfsd.exe --noldap"
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Type",0x00010001,0x00000001
 
 ; Filesystem Filter Manager driver
 HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","ErrorControl",0x00010001,0x00000003

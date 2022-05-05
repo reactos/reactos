@@ -7,7 +7,7 @@
 
 #include "ws2_32.h"
 
-CHAR LocalAddress[sizeof("255.255.255.255")];
+static CHAR LocalAddress[sizeof("255.255.255.255")];
 #define PORT 58888
 
 static

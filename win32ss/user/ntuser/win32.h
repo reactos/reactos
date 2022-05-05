@@ -53,7 +53,6 @@ extern HANDLE hModuleWin;    // This Win32k Instance.
 extern struct _CLS *SystemClassList;
 extern BOOL RegisteredSysClasses;
 
-#include <pshpack1.h>
 // FIXME: Move to ntuser.h
 typedef struct _TL
 {
@@ -163,8 +162,6 @@ typedef struct _THREADINFO
 #endif
 #endif // __cplusplus
 } THREADINFO;
-
-#include <poppack.h>
 
 
 #define IntReferenceThreadInfo(pti) \

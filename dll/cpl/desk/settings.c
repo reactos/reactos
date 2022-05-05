@@ -191,6 +191,7 @@ AddDisplayDevice(IN PSETTINGS_DATA pData, IN const DISPLAY_DEVICE *DisplayDevice
     newEntry->InitialSettings.dmPelsWidth = newEntry->CurrentSettings->dmPelsWidth;
     newEntry->InitialSettings.dmPelsHeight = newEntry->CurrentSettings->dmPelsHeight;
     newEntry->InitialSettings.dmBitsPerPel = newEntry->CurrentSettings->dmBitsPerPel;
+    newEntry->InitialSettings.dmDisplayFrequency = newEntry->CurrentSettings->dmDisplayFrequency;
 
     /* Count different resolutions */
     for (Current = newEntry->Settings; Current != NULL; Current = Current->Flink)
@@ -770,6 +771,7 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
         pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
         pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
         pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel = pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
+        pData->CurrentDisplayDevice->InitialSettings.dmDisplayFrequency = pData->CurrentDisplayDevice->CurrentSettings->dmDisplayFrequency;
     }
     else
     {
@@ -789,6 +791,7 @@ ApplyDisplaySettings(HWND hwndDlg, PSETTINGS_DATA pData)
                 pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth = pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth;
                 pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight = pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight;
                 pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel = pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel;
+                pData->CurrentDisplayDevice->CurrentSettings->dmDisplayFrequency = pData->CurrentDisplayDevice->InitialSettings.dmDisplayFrequency;
                 UpdateDisplay(hwndDlg, pData, TRUE);
                 break;
 

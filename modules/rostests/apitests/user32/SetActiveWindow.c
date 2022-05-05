@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-HWND hWnd1, hWnd2;
+static HWND hWnd1, hWnd2;
 
 /* FIXME: test for HWND_TOP, etc...*/
 static int get_iwnd(HWND hWnd)
@@ -92,7 +92,7 @@ static void destroy_test_window()
     UnregisterClassW(L"testClass", 0);
 }
 
-MSG_ENTRY activate2to1_chain[]={
+static MSG_ENTRY activate2to1_chain[]={
       {2,WM_NCACTIVATE},
       {2,WM_ACTIVATE},
       {1,WM_WINDOWPOSCHANGING, SENT,0, SWP_NOSIZE|SWP_NOMOVE},
@@ -103,7 +103,7 @@ MSG_ENTRY activate2to1_chain[]={
       {1,WM_SETFOCUS},
       {0,0}};
 
-MSG_ENTRY activate1to2_chain[]={
+static MSG_ENTRY activate1to2_chain[]={
       {1,WM_NCACTIVATE},
       {1,WM_ACTIVATE},
       {2,WM_WINDOWPOSCHANGING, SENT,0, SWP_NOSIZE|SWP_NOMOVE},

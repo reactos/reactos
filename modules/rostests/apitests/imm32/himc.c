@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-START_TEST(himc)
+static void Test1(void)
 {
     DWORD style;
     HWND hwndEdit, hwndStatic;
@@ -151,4 +151,45 @@ START_TEST(himc)
 
     DestroyWindow(hwndEdit);
     DestroyWindow(hwndStatic);
+}
+
+static void Test2(void)
+{
+    static const LPCSTR apszClasses[] =
+    {
+        "BUTTON",
+        "COMBOBOX",
+        "EDIT",
+        "LISTBOX",
+        "SCROLLBAR",
+        "STATIC"
+    };
+    size_t i;
+    HIMC hIMC;
+    HWND hwnd;
+
+    for (i = 0; i < _countof(apszClasses); ++i)
+    {
+        LPCSTR pszClass = apszClasses[i];
+        hwnd = CreateWindowA(pszClass, NULL, WS_VISIBLE, 0, 0, 0, 0, NULL, NULL,
+                             GetModuleHandle(NULL), NULL);
+        ok(hwnd != NULL, "CreateWindow(%s) failed\n", pszClass);
+
+        hIMC = ImmGetContext(hwnd);
+
+        if (lstrcmpiA(pszClass, "BUTTON") == 0)
+            ok(hIMC == NULL, "hIMC was %p\n", hIMC);
+        else
+            ok(hIMC != NULL, "hIMC was NULL\n");
+
+        ImmReleaseContext(hwnd, hIMC);
+
+        DestroyWindow(hwnd);
+    }
+}
+
+START_TEST(himc)
+{
+    Test1();
+    Test2();
 }

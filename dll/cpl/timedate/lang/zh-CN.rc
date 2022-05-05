@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Timedate Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2012 yinwh <yinwh79@163.com>
+ *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
@@ -36,7 +45,7 @@ BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "自动与 Internet 时间服务器同步(&S)",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-    LTEXT "服务器:", IDC_SERVERTEXT, 34, 22, 28, 13
+    LTEXT "服务器：", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON "立即更新(&U)", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
@@ -47,13 +56,13 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "日期和时间"
     IDS_CPLDESCRIPTION "请为您的计算机设置日期、时间和时区信息"
-    IDS_TIMEZONETEXT "当前时区: %s"
+    IDS_TIMEZONETEXT "当前时区：%s"
     IDS_TIMEZONEINVALID "无效的"
     IDS_TIMEZONEUNKNOWN "未知"
-    IDS_INETTIMESUCSYNC "时间已成功同步，在 %s 在 %s 在 %s"
-    IDS_INETTIMENEXTSYNC "下次同步:%s 在 %s"
+    IDS_INETTIMESUCSYNC "时间已成功与 %s 同步，%s %s"
+    IDS_INETTIMENEXTSYNC "下次同步：%s %s"
     IDS_INETTIMESYNCING "请稍候，ReactOS 正在同步 %s"
     IDS_INETTIMEERROR "在 ReactOS 同步时发生了一个错误。%s"
-    IDS_INETTIMESUCFILL "Please type a NTP server name in order to synchronize the time"
-    IDS_INETTIMEWELCOME "Select a NTP server from the list or type a NTP server name to synchronize the computer's time"
+    IDS_INETTIMESUCFILL "请输入一个 NTP 服务器的名称来同步时间"
+    IDS_INETTIMEWELCOME "从列表中选择一个 NTP 服务器的名称来同步该计算机的时间"
 END

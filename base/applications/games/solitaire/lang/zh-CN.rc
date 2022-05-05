@@ -55,12 +55,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "纸牌"
-    IDS_SOL_ABOUT "纸牌由 J Brown 开发\n\nCardLib 版本 1.0."
-    IDS_SOL_QUIT "退出当前游戏?"
-    IDS_SOL_WIN "恭喜你，你赢了!!"
-    IDS_SOL_DEAL "再玩一次?"
-    IDS_SOL_SCORE "得分: %d"
-    IDS_SOL_TIME "时间: %d"
+    IDS_SOL_ABOUT "纸牌由 J Brown 开发\n\nCardLib 版本 1.0。"
+    IDS_SOL_QUIT "退出当前游戏？"
+    IDS_SOL_WIN "恭喜你，你赢了！"
+    IDS_SOL_DEAL "再玩一次？"
+    IDS_SOL_SCORE "得分：%d"
+    IDS_SOL_TIME "时间：%d"
 END
 
 /* Menus */

@@ -196,6 +196,9 @@ NORMAL_NORMALGROUPEXPAND_BMP BITMAP "bitmaps/dummy.bmp"
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
 #ifdef LANGUAGE_ZH_HK
     #include "lang/zh-HK.rc"
 #endif

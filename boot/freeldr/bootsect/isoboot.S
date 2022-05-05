@@ -1147,8 +1147,8 @@ dapa:
 
 
 // Extend the size to cover one 2K-sized sector
-.org 2047
-    .byte 0
+.org 2046
+    .word HEX(0aa55)    // BootSector signature
 
 .endcode16
 

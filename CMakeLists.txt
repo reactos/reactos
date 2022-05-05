@@ -280,6 +280,8 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         add_compile_definitions(USE_COMPILER_EXCEPTIONS)
     elseif(ARCH STREQUAL "arm")
         add_compile_definitions(USE_COMPILER_EXCEPTIONS)
+    elseif(ARCH STREQUAL "arm64")
+        add_compile_definitions(USE_COMPILER_EXCEPTIONS)
     endif()
 
     # Activate support for assembly source files

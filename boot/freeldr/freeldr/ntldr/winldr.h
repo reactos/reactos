@@ -61,6 +61,7 @@ typedef struct _LOADER_SYSTEM_BLOCK
 } LOADER_SYSTEM_BLOCK, *PLOADER_SYSTEM_BLOCK;
 
 extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
+/**/extern PCWSTR BootFileSystem;/**/
 
 
 // conversion.c
@@ -70,7 +71,6 @@ PVOID PaToVa(PVOID Pa);
 VOID List_PaToVa(_In_ LIST_ENTRY *ListEntry);
 #endif
 VOID ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start);
-
 
 // winldr.c
 extern BOOLEAN SosEnabled;
@@ -117,6 +117,25 @@ WinLdrInitSystemHive(
 BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                              IN PCSTR SystemRoot);
 
+BOOLEAN
+WinLdrLoadNLSData(
+    _Inout_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ PCSTR DirectoryPath,
+    _In_ PCUNICODE_STRING AnsiFileName,
+    _In_ PCUNICODE_STRING OemFileName,
+    _In_ PCUNICODE_STRING LangFileName, // CaseTable
+    _In_ PCUNICODE_STRING OemHalFileName);
+
+BOOLEAN
+WinLdrAddDriverToList(
+    _Inout_ PLIST_ENTRY DriverListHead,
+    _In_ BOOLEAN InsertAtHead,
+    _In_ PCWSTR DriverName,
+    _In_opt_ PCWSTR ImagePath,
+    _In_opt_ PCWSTR GroupName,
+    _In_ ULONG ErrorControl,
+    _In_ ULONG Tag);
+
 // winldr.c
 VOID
 WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -124,17 +143,6 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                        PCSTR SystemPath,
                        PCSTR BootPath,
                        USHORT VersionToBoot);
-BOOLEAN
-WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                  IN PCSTR DirectoryPath,
-                  IN PCSTR AnsiFileName,
-                  IN PCSTR OemFileName,
-                  IN PCSTR LanguageFileName);
-BOOLEAN
-WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
-                      PWSTR RegistryPath,
-                      PWSTR ImagePath,
-                      PWSTR ServiceName);
 
 VOID
 WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);

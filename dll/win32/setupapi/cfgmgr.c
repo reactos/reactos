@@ -5948,6 +5948,19 @@ CM_Locate_DevNode_ExW(
     if (pDeviceID != NULL && lstrlenW(pDeviceID) != 0)
     {
         lstrcpyW(DeviceIdBuffer, pDeviceID);
+
+        RpcTryExcept
+        {
+            /* Validate the device ID */
+            ret = PNP_ValidateDeviceInstance(BindingHandle,
+                                             DeviceIdBuffer,
+                                             ulFlags);
+        }
+        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ret = RpcStatusToCmStatus(RpcExceptionCode());
+        }
+        RpcEndExcept;
     }
     else
     {
@@ -5963,24 +5976,9 @@ CM_Locate_DevNode_ExW(
             ret = RpcStatusToCmStatus(RpcExceptionCode());
         }
         RpcEndExcept;
-
-        if (ret != CR_SUCCESS)
-            return CR_FAILURE;
     }
+
     TRACE("DeviceIdBuffer: %s\n", debugstr_w(DeviceIdBuffer));
-
-    RpcTryExcept
-    {
-        /* Validate the device ID */
-        ret = PNP_ValidateDeviceInstance(BindingHandle,
-                                         DeviceIdBuffer,
-                                         ulFlags);
-    }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        ret = RpcStatusToCmStatus(RpcExceptionCode());
-    }
-    RpcEndExcept;
 
     if (ret == CR_SUCCESS)
     {

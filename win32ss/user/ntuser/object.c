@@ -582,6 +582,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
    return Object;
 }
 
+// Win: HMMarkObjectDestroy
 BOOL
 FASTCALL
 UserMarkObjectDestroy(PVOID Object)
@@ -800,4 +801,40 @@ NtUserValidateHandleSecure(
 CLEANUP:
    UserLeave();
    END_CLEANUP;
+}
+
+// Win: HMAssignmentLock
+PVOID FASTCALL UserAssignmentLock(PVOID *ppvObj, PVOID pvNew)
+{
+    PVOID pvOld = *ppvObj;
+    *ppvObj = pvNew;
+
+    if (pvOld && pvOld == pvNew)
+        return pvOld;
+
+    if (pvNew)
+        UserReferenceObject(pvNew);
+
+    if (pvOld)
+    {
+        if (UserDereferenceObject(pvOld))
+            pvOld = NULL;
+    }
+
+    return pvOld;
+}
+
+// Win: HMAssignmentUnlock
+PVOID FASTCALL UserAssignmentUnlock(PVOID *ppvObj)
+{
+    PVOID pvOld = *ppvObj;
+    *ppvObj = NULL;
+
+    if (pvOld)
+    {
+        if (UserDereferenceObject(pvOld))
+            pvOld = NULL;
+    }
+
+    return pvOld;
 }

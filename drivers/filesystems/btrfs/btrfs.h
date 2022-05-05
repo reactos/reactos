@@ -9,12 +9,16 @@
 #pragma once
 
 #include <stdint.h>
+#ifndef __REACTOS__
+#include <assert.h>
+#endif // __REACTOS__
 
 static const uint64_t superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4000000000000, 0 };
 
 #define BTRFS_MAGIC         0x4d5f53665248425f
 #define MAX_LABEL_SIZE      0x100
 #define SUBVOL_ROOT_INODE   0x100
+#define BTRFS_LAST_FREE_OBJECTID    0xffffffffffffff00
 
 #define TYPE_INODE_ITEM        0x01
 #define TYPE_INODE_REF         0x0C
@@ -100,10 +104,13 @@ static const uint64_t superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0
 #define BTRFS_INODE_DIRSYNC     0x400
 #define BTRFS_INODE_COMPRESS    0x800
 
+#define BTRFS_INODE_RO_VERITY   0x1
+
 #define BTRFS_SUBVOL_READONLY   0x1
 
 #define BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE          0x1
 #define BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE_VALID    0x2
+#define BTRFS_COMPAT_RO_FLAGS_VERITY                    0x4
 
 #define BTRFS_INCOMPAT_FLAGS_MIXED_BACKREF      0x0001
 #define BTRFS_INCOMPAT_FLAGS_DEFAULT_SUBVOL     0x0002
@@ -287,7 +294,8 @@ typedef struct {
     uint32_t st_gid;
     uint32_t st_mode;
     uint64_t st_rdev;
-    uint64_t flags;
+    uint32_t flags;
+    uint32_t flags_ro;
     uint64_t sequence;
     uint8_t reserved[32];
     BTRFS_TIME st_atime;
@@ -295,6 +303,10 @@ typedef struct {
     BTRFS_TIME st_mtime;
     BTRFS_TIME otime;
 } INODE_ITEM;
+
+#ifndef __REACTOS__
+static_assert(sizeof(INODE_ITEM) == 0xa0, "INODE_ITEM has wrong size");
+#endif // __REACTOS__
 
 typedef struct {
     INODE_ITEM inode;

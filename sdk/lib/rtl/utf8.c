@@ -1,15 +1,18 @@
 /*
- * PROJECT:         ReactOS Kernel - Vista+ APIs
- * LICENSE:         GPL v2 - See COPYING in the top level directory
- * FILE:            lib/drivers/ntoskrnl_vista/rtl.c
- * PURPOSE:         Rtl functions of Vista+
- * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS Kernel - Vista+ APIs
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Rtl functions of Vista+
+ * COPYRIGHT:   2016 Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <ntdef.h>
-#include <ntifs.h>
+/* INCLUDES ******************************************************************/
 
-typedef UCHAR BYTE;
+#include <rtl_vista.h>
+
+#define NDEBUG
+#include <debug.h>
+
+/* FUNCTIONS *****************************************************************/
 
 /******************************************************************************
  * RtlUnicodeToUTF8N [NTDLL.@]

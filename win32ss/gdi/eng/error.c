@@ -21,6 +21,7 @@ EngGetLastError(VOID)
 /*
  * @implemented
  * http://msdn.microsoft.com/en-us/library/ff565015%28VS.85%29.aspx
+ * Win: UserSetLastError
  */
 VOID
 APIENTRY

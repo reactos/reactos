@@ -15,7 +15,7 @@ struct test_info {
     WCHAR* ExpectedDesktp;
 };
 
-struct test_info TestResults[] =
+static struct test_info TestResults[] =
 {
     {L"WinSta0",L"Default"},
     {L"WinSta0",L"Default"},

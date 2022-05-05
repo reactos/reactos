@@ -195,6 +195,15 @@ typedef struct tagIMC
     HWND           hImeWnd;
 } IMC, *PIMC;
 
+#ifndef _WIN64
+C_ASSERT(offsetof(IMC, head.h) == 0x0);
+C_ASSERT(offsetof(IMC, head.cLockObj) == 0x4);
+C_ASSERT(offsetof(IMC, head.pti) == 0x8);
+C_ASSERT(offsetof(IMC, pImcNext) == 0x14);
+C_ASSERT(offsetof(IMC, dwClientImcData) == 0x18);
+C_ASSERT(offsetof(IMC, hImeWnd) == 0x1c);
+#endif
+
 typedef struct _PROCDESKHEAD
 {
     HEAD;
@@ -1552,9 +1561,9 @@ NtUserBuildHwndList(
     HWND hwndParent,
     BOOLEAN bChildren,
     ULONG dwThreadId,
-    ULONG lParam,
-    HWND *pWnd,
-    ULONG *pBufSize);
+    ULONG cHwnd,
+    HWND *phwndList,
+    ULONG *pcHwndNeeded);
 
 NTSTATUS
 NTAPI
@@ -2569,7 +2578,7 @@ enum ThreadStateRoutines
     THREADSTATE_OLDKEYBOARDLAYOUT,
     THREADSTATE_ISWINLOGON,
     THREADSTATE_ISWINLOGON2,
-    THREADSTATE_UNKNOWN17,
+    THREADSTATE_CHECKCONIME,
     THREADSTATE_GETTHREADINFO,
     THREADSTATE_PROGMANWINDOW, /* FIXME: Delete this HACK */
     THREADSTATE_TASKMANWINDOW, /* FIXME: Delete this HACK */

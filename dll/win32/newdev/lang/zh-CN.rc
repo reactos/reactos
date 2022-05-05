@@ -9,10 +9,10 @@ CAPTION "设备安装"
 FONT 9, "宋体"
 BEGIN
     LTEXT "欢迎", IDC_WELCOMETITLE, 120, 8, 195, 24
-    LTEXT "此向导将安装新的设备驱动程序:", IDC_STATIC, 120, 21, 195, 16
+    LTEXT "此向导将安装新的设备驱动程序：", IDC_STATIC, 120, 21, 195, 16
     LTEXT "单击下一步继续。", IDC_STATIC, 120, 169, 195, 16
     LTEXT "未知设备", IDC_DEVICE, 148, 36, 147, 17
-    LTEXT "警告! 安装自定义的设备可能会冻结您的计算机或使其无法启动!", IDC_STATIC, 120, 59, 195, 16
+    LTEXT "警告！安装自定义的设备可能会冻结您的计算机或使其无法启动！", IDC_STATIC, 120, 59, 195, 16
     CONTROL "自动安装驱动程序", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "从特定位置安装驱动程序", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
@@ -73,7 +73,7 @@ CAPTION "设备安装"
 FONT 9, "宋体"
 BEGIN
     LTEXT "安装完成", IDC_FINISHTITLE, 120, 8, 195, 12
-    LTEXT "您需要重新启动才能完成安装:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "您需要重新启动才能完成安装：", IDC_STATIC, 120, 32, 195, 16
     LTEXT "单击完成关闭向导。", IDC_STATIC, 120, 174, 195, 12
     LTEXT "未知设备", IDC_DEVICE, 148, 53, 147, 17
 END
@@ -84,7 +84,7 @@ CAPTION "设备安装"
 FONT 9, "宋体"
 BEGIN
     LTEXT "安装完成", IDC_FINISHTITLE, 120, 8, 195, 12
-    LTEXT "向导已完成安装的驱动程序:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "向导已完成安装的驱动程序：", IDC_STATIC, 120, 32, 195, 16
     LTEXT "单击完成关闭向导。", IDC_STATIC, 120, 174, 195, 12
     LTEXT "未知设备", IDC_DEVICE, 148, 53, 147, 17
 END

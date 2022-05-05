@@ -6,7 +6,6 @@
  *              Copyright 2002, 2003, 2007 CodeWeavers, Aric Stewart
  *              Copyright 2017 James Tabor <james.tabor@reactos.org>
  *              Copyright 2018 Amine Khaldi <amine.khaldi@reactos.org>
- *              Copyright 2020 Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
  *              Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -215,6 +214,7 @@ Imm32CompClauseWideToAnsi(const DWORD *source, INT slen, LPCWSTR text,
 #define CS_DoAttr CS_DoStrA
 #define CS_DoClause CS_DoStrA
 
+// Win: InternalGetCompositionStringA
 LONG APIENTRY
 Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                  LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsiClient, UINT uCodePage)
@@ -365,6 +365,7 @@ Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
     return dwBufLen;
 }
 
+// Win: InternalGetCompositionStringW
 LONG APIENTRY
 Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                  LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsiClient, UINT uCodePage)
@@ -513,9 +514,10 @@ Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
     return dwBufLen;
 }
 
+// Win: ImmSetCompositionStringWorker
 BOOL APIENTRY
-Imm32SetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLen,
-                            LPVOID pRead, DWORD dwReadLen, BOOL bAnsiAPI)
+ImmSetCompositionStringAW(HIMC hIMC, DWORD dwIndex, LPVOID pComp, DWORD dwCompLen,
+                          LPVOID pRead, DWORD dwReadLen, BOOL bAnsiAPI)
 {
     BOOL ret = FALSE, bAnsiClient;
     LPVOID pCompNew = NULL, pReadNew = NULL;
@@ -935,8 +937,7 @@ ImmSetCompositionStringA(HIMC hIMC, DWORD dwIndex, LPVOID lpComp, DWORD dwCompLe
 {
     TRACE("(%p, %lu, %p, %lu, %p, %lu)\n",
           hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
-    return Imm32SetCompositionStringAW(hIMC, dwIndex, lpComp, dwCompLen,
-                                       lpRead, dwReadLen, TRUE);
+    return ImmSetCompositionStringAW(hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen, TRUE);
 }
 
 /***********************************************************************
@@ -948,6 +949,5 @@ ImmSetCompositionStringW(HIMC hIMC, DWORD dwIndex, LPVOID lpComp, DWORD dwCompLe
 {
     TRACE("(%p, %lu, %p, %lu, %p, %lu)\n",
           hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen);
-    return Imm32SetCompositionStringAW(hIMC, dwIndex, lpComp, dwCompLen,
-                                       lpRead, dwReadLen, FALSE);
+    return ImmSetCompositionStringAW(hIMC, dwIndex, lpComp, dwCompLen, lpRead, dwReadLen, FALSE);
 }

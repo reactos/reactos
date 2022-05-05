@@ -4,7 +4,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\n输入 ""CLIP /?"" 了解用法信息。\n"
+    IDS_USAGE "\n输入 “CLIP /?” 了解用法信息。\n"
     IDS_HELP "\n将命令行程序的输出重定向到剪贴板。\n\n\
 CLIP [/?]\n\n\
     /?  显示此帮助消息。\n"

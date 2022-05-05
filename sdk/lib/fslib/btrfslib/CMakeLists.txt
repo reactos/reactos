@@ -9,13 +9,10 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/drivers/filesystems/btrfs/xxhash.c
     btrfslib.c)
 
-if(ARCH STREQUAL "i386")
-    list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/drivers/filesystems/btrfs/crc32c-x86.S)
-elseif(ARCH STREQUAL "amd64")
-    list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/drivers/filesystems/btrfs/crc32c-amd64.S)
+if((ARCH STREQUAL "i386") OR (ARCH STREQUAL "amd64"))
+    list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/drivers/filesystems/btrfs/crc32c.S)
+    add_asm_files(btrfs_asm ${ASM_SOURCE})
 endif()
-
-add_asm_files(btrfs_asm ${ASM_SOURCE})
 
 add_library(btrfslib ${SOURCE} ${btrfs_asm})
 target_compile_definitions(btrfslib PRIVATE _USRDLL)

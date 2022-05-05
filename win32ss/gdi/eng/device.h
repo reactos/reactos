@@ -23,21 +23,14 @@ PGRAPHICS_DEVICE
 NTAPI
 EngpFindGraphicsDevice(
     _In_opt_ PUNICODE_STRING pustrDevice,
-    _In_ ULONG iDevNum,
-    _In_ DWORD dwFlags);
+    _In_ ULONG iDevNum);
 
 PGRAPHICS_DEVICE
 NTAPI
 EngpRegisterGraphicsDevice(
     _In_ PUNICODE_STRING pustrDeviceName,
     _In_ PUNICODE_STRING pustrDiplayDrivers,
-    _In_ PUNICODE_STRING pustrDescription,
-    _In_ PDEVMODEW pdmDefault);
-
-BOOLEAN
-EngpPopulateDeviceModeList(
-    _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
-    _In_ PDEVMODEW pdmDefault);
+    _In_ PUNICODE_STRING pustrDescription);
 
 NTSTATUS
 EngpUpdateGraphicsDeviceList(VOID);

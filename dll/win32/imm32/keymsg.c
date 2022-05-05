@@ -6,7 +6,6 @@
  *              Copyright 2002, 2003, 2007 CodeWeavers, Aric Stewart
  *              Copyright 2017 James Tabor <james.tabor@reactos.org>
  *              Copyright 2018 Amine Khaldi <amine.khaldi@reactos.org>
- *              Copyright 2020 Oleg Dubinskiy <oleg.dubinskij2013@yandex.ua>
  *              Copyright 2020-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -180,6 +179,7 @@ BOOL APIENTRY Imm32KEnglish(HIMC hIMC)
     return TRUE;
 }
 
+// Win: HotKeyIDDispatcher
 BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID)
 {
     PIMEDPI pImeDpi;
@@ -236,6 +236,7 @@ BOOL APIENTRY Imm32ProcessHotKey(HWND hWnd, HIMC hIMC, HKL hKL, DWORD dwHotKeyID
     return ret;
 }
 
+// Win: ImmIsUIMessageWorker
 static BOOL APIENTRY
 ImmIsUIMessageAW(HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
 {
@@ -556,7 +557,8 @@ Quit:
     return ret;
 }
 
-LRESULT APIENTRY Imm32RequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
+// Win: ImmRequestMessageWorker
+LRESULT APIENTRY ImmRequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, BOOL bAnsi)
 {
     LRESULT ret = 0;
     LPINPUTCONTEXT pIC;
@@ -572,7 +574,7 @@ LRESULT APIENTRY Imm32RequestMessageAW(HIMC hIMC, WPARAM wParam, LPARAM lParam, 
 
     hWnd = pIC->hWnd;
     if (hWnd)
-        pWnd = ValidateHwndNoErr(hWnd);
+        pWnd = ValidateHwnd(hWnd);
 
     if (pWnd && pWnd->head.pti == Imm32CurrentPti())
         ret = Imm32ProcessRequest(hIMC, pWnd, (DWORD)wParam, (LPVOID)lParam, bAnsi);
@@ -1037,7 +1039,7 @@ Quit:
 LRESULT WINAPI ImmRequestMessageA(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 {
     TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
-    return Imm32RequestMessageAW(hIMC, wParam, lParam, TRUE);
+    return ImmRequestMessageAW(hIMC, wParam, lParam, TRUE);
 }
 
 /***********************************************************************
@@ -1046,7 +1048,7 @@ LRESULT WINAPI ImmRequestMessageA(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 LRESULT WINAPI ImmRequestMessageW(HIMC hIMC, WPARAM wParam, LPARAM lParam)
 {
     TRACE("(%p, %p, %p)\n", hIMC, wParam, lParam);
-    return Imm32RequestMessageAW(hIMC, wParam, lParam, FALSE);
+    return ImmRequestMessageAW(hIMC, wParam, lParam, FALSE);
 }
 
 /***********************************************************************

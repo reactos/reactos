@@ -755,6 +755,21 @@ static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
 #endif
 }
 
+static BOOL SHIsCdRom(LPCWSTR path)
+{
+    WCHAR tmp[] = { L"A:\\" };
+
+    if (!path || !path[0])
+        return FALSE;
+
+    if (path[1] != UNICODE_NULL && path[1] != ':')
+        return FALSE;
+
+    tmp[0] = path[0];
+
+    return GetDriveTypeW(tmp) == DRIVE_CDROM;
+}
+
 /************************************************************************
  * SHNotifyCopyFile          [internal]
  *
@@ -795,6 +810,14 @@ static DWORD SHNotifyCopyFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
     ret = CopyFileExW(src, dest, SHCopyProgressRoutine, op, &op->bCancelled, bFailIfExists);
     if (ret)
     {
+        // We are copying from a CD-ROM volume, which is readonly
+        if (SHIsCdRom(src))
+        {
+            attribs = GetFileAttributesW(dest);
+            attribs &= ~FILE_ATTRIBUTE_READONLY;
+            SetFileAttributesW(dest, attribs);
+        }
+
         SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, dest, NULL);
         return ERROR_SUCCESS;
     }

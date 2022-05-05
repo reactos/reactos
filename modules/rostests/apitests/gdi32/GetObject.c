@@ -11,6 +11,27 @@
 
 #define INVALID_POINTER ((PVOID)(ULONG_PTR)0xdeadbeefdeadbeefULL)
 
+UCHAR src_mask[] = {
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,255,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+};
+
+
 void
 Test_General(void)
 {
@@ -701,6 +722,28 @@ Test_Region(void)
     DeleteObject(hRgn);
 }
 
+void Test_CursorIcon()
+{
+    BITMAP bmp;
+    HBITMAP hbmMask;
+    CURSORINFO CursorInfo;
+
+    /* On XP sp3 GetObject reports a 32x32 bitmap. */
+    hbmMask = CreateBitmap(32, 64, 1, 1, src_mask);
+    GetObjectW(hbmMask, sizeof(BITMAP), &bmp);
+    ok(bmp.bmWidth == (bmp.bmHeight / 2), "ERR UNICODE CursorIcon RECT got %ldx%ld\n", bmp.bmWidth, bmp.bmHeight);
+    ok(bmp.bmHeight == 64, "ERR UNICODE CursorIcon Height got %ld\n", bmp.bmHeight);
+    DeleteObject(hbmMask);
+
+    CursorInfo.cbSize = sizeof(CURSORINFO);
+    GetCursorInfo(&CursorInfo);
+    ok(CursorInfo.hCursor != NULL, "Invalid HCURSOR Handler\n");
+    ok(CursorInfo.flags != 0, "Mouse cursor is hidden\n");
+    GetObject(CursorInfo.hCursor, sizeof(BITMAP), &bmp);
+    ok(bmp.bmWidth == bmp.bmHeight / 2, "ERR CursorIcon RECT got %ldx%ld\n", bmp.bmWidth, bmp.bmHeight);
+    ok(bmp.bmHeight == 64, "ERR CursorIcon Height got %ld\n", bmp.bmHeight);
+}
+
 START_TEST(GetObject)
 {
 
@@ -716,5 +759,6 @@ START_TEST(GetObject)
     Test_ExtPen(); // not implemented yet in ROS
     Test_MetaDC();
     Test_Region();
+    Test_CursorIcon();
 }
 

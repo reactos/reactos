@@ -93,7 +93,7 @@ PSAMPR_SERVER_NAME_bind(PSAMPR_SERVER_NAME pszSystemName)
              (nLength - nNameLength != 2)) ||
             (nNameLength == 0))
         {
-            WARN("Invalid server name %S", pszSystemName);
+            WARN("Invalid server name %S\n", pszSystemName);
             RpcRaiseException(STATUS_OBJECT_NAME_INVALID);
         }
     }

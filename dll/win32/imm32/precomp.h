@@ -69,30 +69,31 @@ typedef struct REG_IME
     WCHAR szFileName[80];   /* The IME module filename */
 } REG_IME, *PREG_IME;
 
-extern HMODULE g_hImm32Inst;
-extern RTL_CRITICAL_SECTION g_csImeDpi;
-extern PIMEDPI g_pImeDpiList;
+extern HMODULE ghImm32Inst;
+extern RTL_CRITICAL_SECTION gcsImeDpi;
+extern PIMEDPI gpImeDpiList;
 extern PSERVERINFO gpsi;
-extern SHAREDINFO g_SharedInfo;
-extern BYTE g_bClientRegd;
-extern HANDLE pImmHeap;
+extern SHAREDINFO gSharedInfo;
+extern HANDLE ghImmHeap;
 
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName);
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);
 VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA);
-PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType);
+LPVOID FASTCALL ValidateHandle(HANDLE hObject, UINT uType);
+#define ValidateHwndNoErr(hwnd) ValidateHandleNoErr((hwnd), TYPE_WINDOW)
+#define ValidateHwnd(hwnd) ValidateHandle((hwnd), TYPE_WINDOW)
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC);
 
 LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes);
-#define ImmLocalFree(lpData) HeapFree(pImmHeap, 0, (lpData))
+#define ImmLocalFree(lpData) HeapFree(ghImmHeap, 0, (lpData))
 
 LPWSTR APIENTRY Imm32WideFromAnsi(LPCSTR pszA);
 LPSTR APIENTRY Imm32AnsiFromWide(LPCWSTR pszW);
 LONG APIENTRY IchWideFromAnsi(LONG cchAnsi, LPCSTR pchAnsi, UINT uCodePage);
 LONG APIENTRY IchAnsiFromWide(LONG cchWide, LPCWSTR pchWide, UINT uCodePage);
-PIMEDPI APIENTRY ImmLockOrLoadImeDpi(HKL hKL);
-LPINPUTCONTEXT APIENTRY Imm32LockIMCEx(HIMC hIMC, BOOL fSelect);
+PIMEDPI APIENTRY Imm32FindOrLoadImeDpi(HKL hKL);
+LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect);
 BOOL APIENTRY Imm32ReleaseIME(HKL hKL);
 BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID);
 
@@ -103,6 +104,7 @@ static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
     return (dwImeThreadId != dwThreadId);
 }
 
+// Win: TestWindowProcess
 static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
 {
     return (NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) !=
@@ -124,10 +126,10 @@ CandidateListAnsiToWide(const CANDIDATELIST *pAnsiCL, LPCANDIDATELIST pWideCL, D
                         UINT uCodePage);
 
 BOOL APIENTRY
-Imm32NotifyAction(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
-                  DWORD_PTR dwCommand, DWORD_PTR dwData);
+Imm32MakeIMENotify(HIMC hIMC, HWND hwnd, DWORD dwAction, DWORD_PTR dwIndex, DWORD_PTR dwValue,
+                   DWORD_PTR dwCommand, DWORD_PTR dwData);
 
-DWORD APIENTRY Imm32AllocAndBuildHimcList(DWORD dwThreadId, HIMC **pphList);
+DWORD APIENTRY Imm32BuildHimcList(DWORD dwThreadId, HIMC **pphList);
 
 INT APIENTRY
 Imm32ImeMenuAnsiToWide(const IMEMENUITEMINFOA *pItemA, LPIMEMENUITEMINFOW pItemW,
@@ -152,10 +154,10 @@ Imm32ReconvertWideFromAnsi(LPRECONVERTSTRING pDest, const RECONVERTSTRING *pSrc,
 HRESULT APIENTRY Imm32StrToUInt(LPCWSTR pszText, LPDWORD pdwValue, ULONG nBase);
 HRESULT APIENTRY Imm32UIntToStr(DWORD dwValue, ULONG nBase, LPWSTR pszBuff, USHORT cchBuff);
 BOOL APIENTRY Imm32LoadImeVerInfo(PIMEINFOEX pImeInfoEx);
-UINT APIENTRY Imm32GetRegImes(PREG_IME pLayouts, UINT cLayouts);
-BOOL APIENTRY Imm32WriteRegIme(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
-HKL APIENTRY Imm32GetNextHKL(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
-BOOL APIENTRY Imm32CopyFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
+UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts);
+BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayout);
+HKL APIENTRY Imm32AssignNewLayout(UINT cKLs, const REG_IME *pLayouts, WORD wLangID);
+BOOL APIENTRY Imm32CopyImeFile(LPWSTR pszOldFile, LPCWSTR pszNewFile);
 
 static inline PTHREADINFO FASTCALL Imm32CurrentPti(VOID)
 {

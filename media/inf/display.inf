@@ -65,9 +65,9 @@ StdMfg = "(Standard display adapters)"
 VGA.DeviceDesc = "VGA-compatible graphics card"
 
 [Strings.0404]
-DisplayClassName = "顯示配接器"
+DisplayClassName = "顯示介面卡"
 
-StdMfg = "(標準顯示配接器)"
+StdMfg = "（標準顯示介面卡）"
 VGA.DeviceDesc = "VGA 相容顯示卡"
 
 [Strings.0405]
@@ -159,7 +159,7 @@ StdMfg = "(Standartinis vaizdo adapteris)"
 VGA.DeviceDesc = "Su VGA suderinama vaizdo plokštė"
 
 [Strings.0804]
-StdMfg = "(标准显示适配器)"
+StdMfg = "（标准显示适配器）"
 VGA.DeviceDesc = "VGA 兼容显示卡"
 
 [Strings.0816]
@@ -170,7 +170,7 @@ StdMfg = "(Adaptador de vídeo padrão)"
 VGA.DeviceDesc = "Adaptador de vídeo compatível com VGA"
 
 [Strings.0C04]
-DisplayClassName = "顯示配接器"
+DisplayClassName = "顯示介面卡"
 
-StdMfg = "(標準顯示配接器)"
+StdMfg = "（標準顯示介面卡）"
 VGA.DeviceDesc = "VGA 相容顯示卡"

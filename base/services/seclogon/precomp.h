@@ -28,7 +28,7 @@
 #include <wine/debug.h>
 
 extern HINSTANCE hDllInstance;
-extern SVCHOST_GLOBALS *lpServiceGlobals;
+extern PSVCHOST_GLOBAL_DATA lpServiceGlobals;
 
 DWORD
 StartRpcServer(VOID);

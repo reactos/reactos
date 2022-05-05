@@ -1,0 +1,7 @@
+; BTRFS Filesystem driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ImagePath",0x00020000,"system32\drivers\btrfs.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Type",0x00010001,0x00000002

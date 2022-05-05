@@ -31,10 +31,10 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 DWORD
 StartRpcServer(VOID)
 {
-    ULONG Status;
+    NTSTATUS Status;
 
-    Status = ((LPSTART_RPC_SERVER)lpServiceGlobals->RpcpStartRpcServer)(L"seclogon", ISeclogon_v1_0_s_ifspec);
-    TRACE("RpcpStartRpcServer returned 0x%08lx\n", Status);
+    Status = lpServiceGlobals->StartRpcServer(L"seclogon", ISeclogon_v1_0_s_ifspec);
+    TRACE("StartRpcServer returned 0x%08lx\n", Status);
 
     return RtlNtStatusToDosError(Status);
 }
@@ -43,10 +43,10 @@ StartRpcServer(VOID)
 DWORD
 StopRpcServer(VOID)
 {
-    ULONG Status;
+    NTSTATUS Status;
 
-    Status = ((LPSTOP_RPC_SERVER)lpServiceGlobals->RpcpStopRpcServer)(ISeclogon_v1_0_s_ifspec);
-    TRACE("RpcpStopRpcServer returned 0x%08lx\n", Status);
+    Status = lpServiceGlobals->StopRpcServer(ISeclogon_v1_0_s_ifspec);
+    TRACE("StopRpcServer returned 0x%08lx\n", Status);
 
     return RtlNtStatusToDosError(Status);
 }

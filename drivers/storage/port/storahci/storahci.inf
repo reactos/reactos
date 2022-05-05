@@ -69,6 +69,11 @@ ROS                     = "ReactOS"
 DeviceDesc              = "AHCI SATA Driver"
 SATA_AHCI.DeviceDesc    = "Standard SATA AHCI Controller"
 
+[Strings.0404]
+ROS                     = "ReactOS"
+DeviceDesc              = "AHCI SATA 驅動程式"
+SATA_AHCI.DeviceDesc    = "標準 SATA AHCI 控制器"
+
 [Strings.0418]
 ROS                     = "ReactOS"
 DeviceDesc              = "Modúl-pilot SATA AHCI"
@@ -78,6 +83,16 @@ SATA_AHCI.DeviceDesc    = "Dispozitiv de control standard AHCI SATA"
 ROS                     = "ReactOS"
 DeviceDesc              = "AHCI SATA Sürücüsü"
 SATA_AHCI.DeviceDesc    = "Ölçünlü SATA AHCI Denetleyicisi"
+
+[Strings.0804]
+ROS                     = "ReactOS"
+DeviceDesc              = "AHCI SATA 驱动程序"
+SATA_AHCI.DeviceDesc    = "标准 SATA AHCI 控制器"
+
+[Strings.0c04]
+ROS                     = "ReactOS"
+DeviceDesc              = "AHCI SATA 驅動程式"
+SATA_AHCI.DeviceDesc    = "標準 SATA AHCI 控制器"
 
 SPSVCINST_ASSOCSERVICE = 0x00000002
 SERVICE_KERNEL_DRIVER  = 1

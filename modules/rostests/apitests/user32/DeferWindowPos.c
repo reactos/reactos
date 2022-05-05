@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-HWND hWnd1, hWnd2, hWnd3, hWnd4;
+static HWND hWnd1, hWnd2, hWnd3, hWnd4;
 
 /* FIXME: test for HWND_TOP, etc...*/
 static int get_iwnd(HWND hWnd)

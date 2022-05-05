@@ -324,6 +324,12 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_PROCESS_PAGE_SETPRIORITY_LOW:
             DoSetPriority(IDLE_PRIORITY_CLASS);
             break;
+        case ID_PROCESS_PAGE_PROPERTIES:
+            ProcessPage_OnProperties();
+            break;
+        case ID_PROCESS_PAGE_OPENFILELOCATION:
+            ProcessPage_OnOpenFileLocation();
+            break;
 
 /* ShutDown items */
         case ID_SHUTDOWN_STANDBY:

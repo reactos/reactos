@@ -35,6 +35,7 @@ _scwprintf(
 
 /*
  * Test the Thread to verify and validate it. Hard to the core tests are required.
+ * Win: PtiFromThreadId
  */
 PTHREADINFO
 FASTCALL
@@ -334,7 +335,7 @@ NtUserGetThreadState(
       case THREADSTATE_ISWINLOGON2:
          ret = (gpidLogon == PsGetCurrentProcessId());
          break;
-      case THREADSTATE_UNKNOWN17:
+      case THREADSTATE_CHECKCONIME:
          /* FIXME */
          break;
    }

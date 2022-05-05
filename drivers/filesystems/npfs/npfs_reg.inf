@@ -1,5 +1,6 @@
-; Named Pipe filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000
+; Named Pipe Filesystem driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ImagePath",0x00020000,"system32\drivers\npfs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Start",0x00010001,0x00000001

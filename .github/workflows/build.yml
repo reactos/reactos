@@ -78,14 +78,19 @@ jobs:
   build-msvc:
     strategy:
       matrix:
-        toolset: ['14.2', '14.1'] # VS 2019, 2017
+        os: [windows-latest, windows-2019]
+        toolset: ['14.2', '14.1', '14.0'] # VS 2019, 2017, and 2015 (see below)
         arch: [i386, amd64]
         config: [Debug, Release]
-        include:
-        - arch: i386 # Not compiling on amd64 prompt
-          toolset: '14.0' # VS 2015
+        exclude: # VS 2019, 2017 only with windows-latest; VS 2015 only with windows-2019
+          - os: windows-2019
+            toolset: '14.2'
+          - os: windows-2019
+            toolset: '14.1'
+          - os: windows-latest
+            toolset: '14.0'
       fail-fast: false
-    runs-on: windows-latest
+    runs-on: ${{matrix.os}}
     steps:
     - name: Install ninja
       run: choco install -y ninja
@@ -115,7 +120,7 @@ jobs:
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
     - name: Build
-      run: cmake --build build  -- -k0
+      run: cmake --build build -- -k0
     - name: Generate ISOs
       run: cmake --build build --target bootcd --target livecd
     - name: Upload ISOs
@@ -256,7 +261,7 @@ jobs:
 
   build-msbuild-i386:
     name: MSBuild (i386)
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
     - name: Install Flex and Bison
       run: |

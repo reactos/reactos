@@ -21,11 +21,11 @@ BEGIN
     IDS_PWR_METER             "开放式电源表(&O)"
     IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "剩余 %u%%"
-    IDS_PWR_CHARGING          "%u%% and charging"
+    IDS_PWR_CHARGING          "%u%% 正在充电"
     IDS_PWR_UNKNOWN_REMAINING "未知剩余"
     IDS_PWR_AC "交流电源"
-    IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! 小时 剩余 (%3!u!%%) "
-    IDS_PWR_MINUTES_REMAINING "%1!u! 分钟 剩余 (%2!u!%%) "
+    IDS_PWR_HOURS_REMAINING "剩余 %1!u!:%2!02u!（%3!u!%%）"
+    IDS_PWR_MINUTES_REMAINING "剩余 %1!u! 分钟（%2!u!%%）"
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "安全地删除硬件"
@@ -33,18 +33,18 @@ BEGIN
     IDS_HOTPLUG_REMOVE_3 "安全地删除 %s"
     IDS_HOTPLUG_RUN "shell32.dll,Control_RunDLL hotplug.dll"
     IDS_HOTPLUG_COMMA ", "
-    IDS_HOTPLUG_DRIVE " - 磁盘(%s)"
-    IDS_HOTPLUG_DRIVES " - 磁盘(%s)"
+    IDS_HOTPLUG_DRIVE " - 磁盘（%s）"
+    IDS_HOTPLUG_DRIVES " - 磁盘（%s）"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIRES "此硬件所需""安全删除"""
-    IDS_HOTPLUG_CLICK "删除这个硬件之前, 单击此图标并选择您想要删除的硬件。"
+    IDS_HOTPLUG_REQUIRES "此硬件需要“安全删除”"
+    IDS_HOTPLUG_CLICK "删除这个硬件之前，单击此图标并选择您想要删除的硬件。"
 
     //Volume related strings
     IDS_VOL_VOLUME "音量"
     IDS_VOL_ADJUST "调整音频属性(&A)"
     IDS_VOL_OPEN "打开音量控制(&O)"
     IDS_VOL_RUN "SNDVOL32.EXE"
-    IDS_VOL_MUTED "(静音)"
+    IDS_VOL_MUTED "（静音）"
 
     //Keyboard-Mouse related strings
     IDS_KEYS_STICKY "粘滞键"

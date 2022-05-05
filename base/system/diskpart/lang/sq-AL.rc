@@ -25,7 +25,7 @@ BEGIN
     IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
     IDS_DETAIL_INFO_TYPE "Tipi"
     IDS_DETAIL_INFO_STATUS "Gjendja"
-    IDS_DETAIL_INFO_PATH "Path   : %hu\n"
+    IDS_DETAIL_INFO_PATH   "Path   : %hu\n"
     IDS_DETAIL_INFO_TARGET "Target : %hu\n"
     IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Rruga e vendndodhjes"
@@ -37,7 +37,7 @@ BEGIN
     IDS_DETAIL_INFO_CRASH_DSK "Hedhja e te dhenave Disk"
     IDS_DETAIL_INFO_CLST_DSK "Grupimet ne Disk"
     IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
-    IDS_DETAIL_PARTITION_TYPE "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
     IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
     IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
     IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
@@ -55,7 +55,7 @@ BEGIN
     IDS_LIST_PARTITION_NO_DISK "\nThere is no disk to list partitions.\nPlease select a disk and try again.\n\n"
     IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
-    IDS_LIST_VOLUME_FORMAT "  Volume %3lu   %c   %-11s  %-5s  %10u  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_FORMAT "  Volume %-3lu   %c   %-11.11s  %-5s  %10u  %4I64u %-2s\n"
 END
 
 /* RESCAN command string */

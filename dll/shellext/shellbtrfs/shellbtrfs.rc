@@ -61,8 +61,8 @@ IDI_ICON1               ICON                    "subvol.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,7,2,0
- PRODUCTVERSION 1,7,2,0
+ FILEVERSION 1,8,0,0
+ PRODUCTVERSION 1,8,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -78,12 +78,12 @@ BEGIN
         BLOCK "080904b0"
         BEGIN
             VALUE "FileDescription", "WinBtrfs shell extension"
-            VALUE "FileVersion", "1.7.2"
+            VALUE "FileVersion", "1.8.0"
             VALUE "InternalName", "btrfs"
-            VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016-20"
+            VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016-22"
             VALUE "OriginalFilename", "shellbtrfs.dll"
             VALUE "ProductName", "WinBtrfs"
-            VALUE "ProductVersion", "1.7.2"
+            VALUE "ProductVersion", "1.8.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -221,7 +221,7 @@ BEGIN
     CONTROL         "",IDC_USAGE_END_SPINNER,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,77,94,11,14
     LTEXT           "% to",IDC_STATIC,39,97,16,8
     CONTROL         "&Device:",IDC_DEVID,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,104,6,34,10
-    COMBOBOX        IDC_DEVID_COMBO,141,6,155,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_DEVID_COMBO,141,6,155,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "%",IDC_STATIC,91,97,8,8
     CONTROL         "Device &range:",IDC_DRANGE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,104,19,59,10
     EDITTEXT        IDC_DRANGE_END,159,32,40,14,ES_AUTOHSCROLL | ES_NUMBER
@@ -244,7 +244,7 @@ BEGIN
     CONTROL         "",IDC_STRIPES_END_SPINNER,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,272,32,11,14
     LTEXT           "to",IDC_STATIC,242,35,8,8
     CONTROL         "&Convert:",IDC_CONVERT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,210,49,36,10
-    COMBOBOX        IDC_CONVERT_COMBO,248,49,48,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CONVERT_COMBO,248,49,48,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "So&ft",IDC_SOFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,210,64,28,10
 END
 
@@ -376,7 +376,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,7,40,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,74,40,50,14
-    COMBOBOX        IDC_DRIVE_LETTER_COMBO,64,17,60,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_DRIVE_LETTER_COMBO,64,17,60,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Drive letter:",IDC_STATIC,15,19,45,8
 END
 

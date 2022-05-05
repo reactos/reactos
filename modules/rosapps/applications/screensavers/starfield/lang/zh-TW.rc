@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Starfield ScreenSaver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
- * TRANSLATORS: Copyright 2021 Chan Chilung (eason066@gmail.com)
+ * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL

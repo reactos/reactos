@@ -2726,7 +2726,7 @@ QueryColorProfile(
         {
             if (!IsValidDevmodeNoSizeW( pdevmode ) )
             {
-                ERR("DeviceCapabilitiesW : Devode Invalid");
+                ERR("QueryColorProfile : Devode Invalid\n");
                 return FALSE;
             }
         }

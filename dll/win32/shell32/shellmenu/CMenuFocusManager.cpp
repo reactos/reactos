@@ -338,7 +338,7 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
     StackEntry * entry = NULL;
     if (IsTrackedWindow(child, &entry) == S_OK)
     {
-        TRACE("MouseMove");
+        TRACE("MouseMove\n");
     }
 
     BOOL isTracking = FALSE;

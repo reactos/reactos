@@ -9,13 +9,13 @@ FONT 9, "宋体"
 BEGIN
     ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
     GROUPBOX "渲染器设置", -1, 5, 25, 230, 90
-    LTEXT "渲染器(&R):", -1, 15, 42, 37, 10
+    LTEXT "渲染器(&R)：", -1, 15, 42, 37, 10
     COMBOBOX IDC_RENDERER, 55, 40, 160, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "这将覆盖图形驱动程序的默认设置! 您可以选择""默认""恢复默认设置", -1, 15, 60, 210, 40
+    LTEXT "这将覆盖图形驱动程序的默认设置！您可以选择“默认”恢复默认设置", -1, 15, 60, 210, 40
     GROUPBOX "调试", -1, 5, 125, 230, 90
-    LTEXT "调试频道:", -1, 15, 142, 65, 10
+    LTEXT "调试频道：", -1, 15, 142, 65, 10
     COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "启用或禁用来自 opengl32 的调试输出。\n\n警告: 选择 ""Set"" or ""Clear"" 将会覆盖当前 DEBUGCHANNEL 环境变量的内容！", -1, 15, 165, 210, 40
+    LTEXT "启用或禁用来自 opengl32 的调试输出。\n\n警告：选择“Set”或“Clear”将会覆盖当前 DEBUGCHANNEL 环境变量的内容！", -1, 15, 165, 210, 40
 END
 
 STRINGTABLE

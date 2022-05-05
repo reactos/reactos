@@ -10,7 +10,6 @@
 #define finish()
 
 char test[] = "SEH0035.c";
-int perfect;
 
 int main() {
   ULONG Index1;

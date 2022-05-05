@@ -9,11 +9,17 @@
 #include <win32k.h>
 #define NDEBUG
 #include <debug.h>
-
-PPDEVOBJ gppdevPrimary = NULL;
+DBG_DEFAULT_CHANNEL(EngPDev);
 
 static PPDEVOBJ gppdevList = NULL;
 static HSEMAPHORE ghsemPDEV;
+
+BOOL
+APIENTRY
+MultiEnableDriver(
+    _In_ ULONG iEngineVersion,
+    _In_ ULONG cj,
+    _Inout_bytecount_(cj) PDRVENABLEDATA pded);
 
 CODE_SEG("INIT")
 NTSTATUS
@@ -83,6 +89,8 @@ PDEVOBJ_vDeletePDEV(
     PPDEVOBJ ppdev)
 {
     EngDeleteSemaphore(ppdev->hsemDevLock);
+    if (ppdev->pdmwDev)
+        ExFreePoolWithTag(ppdev->pdmwDev, GDITAG_DEVMODE);
     if (ppdev->pEDDgpl)
         ExFreePoolWithTag(ppdev->pEDDgpl, GDITAG_PDEV);
     ExFreePoolWithTag(ppdev, GDITAG_PDEV);
@@ -108,6 +116,7 @@ PDEVOBJ_vRelease(
         {
             /* Release the surface and let the driver free it */
             SURFACE_ShareUnlockSurface(ppdev->pSurface);
+            TRACE("DrvDisableSurface(dhpdev %p)\n", ppdev->dhpdev);
             ppdev->pfn.DisableSurface(ppdev->dhpdev);
         }
 
@@ -121,6 +130,7 @@ PDEVOBJ_vRelease(
         if (ppdev->dhpdev != NULL)
         {
             /* Disable the PDEV */
+            TRACE("DrvDisablePDEV(dhpdev %p)\n", ppdev->dhpdev);
             ppdev->pfn.DisablePDEV(ppdev->dhpdev);
         }
 
@@ -129,7 +139,7 @@ PDEVOBJ_vRelease(
         {
             gppdevList = ppdev->ppdevNext;
         }
-        else
+        else if (gppdevList)
         {
             PPDEVOBJ ppdevCurrent = gppdevList;
             BOOL found = FALSE;
@@ -144,9 +154,8 @@ PDEVOBJ_vRelease(
                 ppdevCurrent->ppdevNext = ppdev->ppdevNext;
         }
 
-        /* Is this the primary one ? */
-        if (ppdev == gppdevPrimary)
-            gppdevPrimary = NULL;
+        /* Unload display driver */
+        EngUnloadImage(ppdev->pldev);
 
         /* Free it */
         PDEVOBJ_vDeletePDEV(ppdev);
@@ -159,19 +168,25 @@ PDEVOBJ_vRelease(
 BOOL
 NTAPI
 PDEVOBJ_bEnablePDEV(
-    PPDEVOBJ ppdev,
-    PDEVMODEW pdevmode,
-    PWSTR pwszLogAddress)
+    _In_ PPDEVOBJ ppdev,
+    _In_ PDEVMODEW pdevmode,
+    _In_ PWSTR pwszLogAddress)
 {
     PFN_DrvEnablePDEV pfnEnablePDEV;
     ULONG i;
-
-    DPRINT("PDEVOBJ_bEnablePDEV()\n");
 
     /* Get the DrvEnablePDEV function */
     pfnEnablePDEV = ppdev->pldev->pfn.EnablePDEV;
 
     /* Call the drivers DrvEnablePDEV function */
+    TRACE("DrvEnablePDEV(pdevmode %p (%dx%dx%d %d Hz) hdev %p (%S))\n",
+        pdevmode,
+        ppdev->pGraphicsDevice ? pdevmode->dmPelsWidth : 0,
+        ppdev->pGraphicsDevice ? pdevmode->dmPelsHeight : 0,
+        ppdev->pGraphicsDevice ? pdevmode->dmBitsPerPel : 0,
+        ppdev->pGraphicsDevice ? pdevmode->dmDisplayFrequency : 0,
+        ppdev,
+        ppdev->pGraphicsDevice ? ppdev->pGraphicsDevice->szNtDeviceName : L"");
     ppdev->dhpdev = pfnEnablePDEV(pdevmode,
                                   pwszLogAddress,
                                   HS_DDI_MAX,
@@ -181,11 +196,12 @@ PDEVOBJ_bEnablePDEV(
                                   sizeof(DEVINFO),
                                   &ppdev->devinfo,
                                   (HDEV)ppdev,
-                                  ppdev->pGraphicsDevice->pwszDescription,
-                                  ppdev->pGraphicsDevice->DeviceObject);
+                                  ppdev->pGraphicsDevice ? ppdev->pGraphicsDevice->pwszDescription : NULL,
+                                  ppdev->pGraphicsDevice ? ppdev->pGraphicsDevice->DeviceObject : NULL);
+    TRACE("DrvEnablePDEV(pdevmode %p hdev %p) => dhpdev %p\n", pdevmode, ppdev, ppdev->dhpdev);
     if (ppdev->dhpdev == NULL)
     {
-        DPRINT1("Failed to enable PDEV\n");
+        ERR("Failed to enable PDEV\n");
         return FALSE;
     }
 
@@ -215,7 +231,7 @@ PDEVOBJ_bEnablePDEV(
             ppdev->ahsurf[i] = gahsurfHatch[i];
     }
 
-    DPRINT("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
+    TRACE("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
 
     return TRUE;
 }
@@ -226,7 +242,64 @@ PDEVOBJ_vCompletePDEV(
     PPDEVOBJ ppdev)
 {
     /* Call the drivers DrvCompletePDEV function */
+    TRACE("DrvCompletePDEV(dhpdev %p hdev %p)\n", ppdev->dhpdev, ppdev);
     ppdev->pldev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
+}
+
+static
+VOID
+PDEVOBJ_vFilterDriverHooks(
+    _In_ PPDEVOBJ ppdev)
+{
+    PLDEVOBJ pldev = ppdev->pldev;
+    ULONG dwAccelerationLevel = ppdev->dwAccelerationLevel;
+
+    if (!pldev->pGdiDriverInfo)
+        return;
+    if (pldev->ldevtype != LDEV_DEVICE_DISPLAY)
+        return;
+
+    if (dwAccelerationLevel >= 1)
+    {
+        ppdev->apfn[INDEX_DrvSetPointerShape] = NULL;
+        ppdev->apfn[INDEX_DrvCreateDeviceBitmap] = NULL;
+    }
+
+    if (dwAccelerationLevel >= 2)
+    {
+        /* Remove sophisticated display accelerations */
+        ppdev->pSurface->flags &= ~(HOOK_STRETCHBLT |
+                                    HOOK_FILLPATH |
+                                    HOOK_GRADIENTFILL |
+                                    HOOK_LINETO |
+                                    HOOK_ALPHABLEND |
+                                    HOOK_TRANSPARENTBLT);
+    }
+
+    if (dwAccelerationLevel >= 3)
+    {
+        /* Disable DirectDraw and Direct3D accelerations */
+        /* FIXME: need to call DxDdSetAccelLevel */
+        UNIMPLEMENTED;
+    }
+
+    if (dwAccelerationLevel >= 4)
+    {
+        /* Remove almost all display accelerations */
+        ppdev->pSurface->flags &= ~HOOK_FLAGS |
+                                   HOOK_BITBLT |
+                                   HOOK_COPYBITS |
+                                   HOOK_TEXTOUT |
+                                   HOOK_STROKEPATH |
+                                   HOOK_SYNCHRONIZE;
+
+    }
+
+    if (dwAccelerationLevel >= 5)
+    {
+        /* Disable all display accelerations */
+        UNIMPLEMENTED;
+    }
 }
 
 PSURFACE
@@ -240,10 +313,12 @@ PDEVOBJ_pSurface(
     if (ppdev->pSurface == NULL)
     {
         /* Call the drivers DrvEnableSurface */
+        TRACE("DrvEnableSurface(dhpdev %p)\n", ppdev->dhpdev);
         hsurf = ppdev->pldev->pfn.EnableSurface(ppdev->dhpdev);
+        TRACE("DrvEnableSurface(dhpdev %p) => hsurf %p\n", ppdev->dhpdev, hsurf);
         if (hsurf== NULL)
         {
-            DPRINT1("Failed to create PDEV surface!\n");
+            ERR("Failed to create PDEV surface!\n");
             return NULL;
         }
 
@@ -255,8 +330,46 @@ PDEVOBJ_pSurface(
     /* Increment reference count */
     GDIOBJ_vReferenceObjectByPointer(&ppdev->pSurface->BaseObject);
 
-    DPRINT("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
     return ppdev->pSurface;
+}
+
+VOID
+PDEVOBJ_vEnableDisplay(
+    _Inout_ PPDEVOBJ ppdev)
+{
+    BOOL assertVal;
+
+    if (!(ppdev->flFlags & PDEV_DISABLED))
+        return;
+
+    /* Try to enable display until success */
+    do
+    {
+        TRACE("DrvAssertMode(dhpdev %p, TRUE)\n", ppdev->dhpdev);
+        assertVal = ppdev->pfn.AssertMode(ppdev->dhpdev, TRUE);
+        TRACE("DrvAssertMode(dhpdev %p, TRUE) => %d\n", ppdev->dhpdev, assertVal);
+    } while (!assertVal);
+
+    ppdev->flFlags &= ~PDEV_DISABLED;
+}
+
+BOOL
+PDEVOBJ_bDisableDisplay(
+    _Inout_ PPDEVOBJ ppdev)
+{
+    BOOL assertVal;
+
+    if (ppdev->flFlags & PDEV_DISABLED)
+        return TRUE;
+
+    TRACE("DrvAssertMode(dhpdev %p, FALSE)\n", ppdev->dhpdev);
+    assertVal = ppdev->pfn.AssertMode(ppdev->dhpdev, FALSE);
+    TRACE("DrvAssertMode(dhpdev %p, FALSE) => %d\n", ppdev->dhpdev, assertVal);
+
+    if (assertVal)
+        ppdev->flFlags |= PDEV_DISABLED;
+
+    return assertVal;
 }
 
 VOID
@@ -266,17 +379,11 @@ PDEVOBJ_vRefreshModeList(
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVMODEINFO pdminfo, pdmiNext;
-    DEVMODEW dmDefault;
-    DEVMODEW dmCurrent;
 
     /* Lock the PDEV */
     EngAcquireSemaphore(ppdev->hsemDevLock);
 
     pGraphicsDevice = ppdev->pGraphicsDevice;
-
-    /* Remember our default mode */
-    dmDefault = *pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm;
-    dmCurrent = *ppdev->pdmwDev;
 
     /* Clear out the modes */
     for (pdminfo = pGraphicsDevice->pdevmodeInfo;
@@ -290,127 +397,100 @@ PDEVOBJ_vRefreshModeList(
     ExFreePoolWithTag(pGraphicsDevice->pDevModeList, GDITAG_GDEVICE);
     pGraphicsDevice->pDevModeList = NULL;
 
-    /* Now re-populate the list */
-    if (!EngpPopulateDeviceModeList(pGraphicsDevice, &dmDefault))
-    {
-        DPRINT1("FIXME: EngpPopulateDeviceModeList failed, we just destroyed a perfectly good mode list\n");
-    }
-
-    ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, &dmCurrent);
+    /* Update available display mode list */
+    LDEVOBJ_bBuildDevmodeList(pGraphicsDevice);
 
     /* Unlock PDEV */
     EngReleaseSemaphore(ppdev->hsemDevLock);
 }
 
-PDEVMODEW
-NTAPI
-PDEVOBJ_pdmMatchDevMode(
-    PPDEVOBJ ppdev,
-    PDEVMODEW pdm)
-{
-    PGRAPHICS_DEVICE pGraphicsDevice;
-    PDEVMODEW pdmCurrent;
-    ULONG i;
-    DWORD dwFields;
-
-    pGraphicsDevice = ppdev->pGraphicsDevice;
-
-    for (i = 0; i < pGraphicsDevice->cDevModes; i++)
-    {
-        pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
-
-        /* Compare asked DEVMODE fields
-         * Only compare those that are valid in both DEVMODE structs */
-        dwFields = pdmCurrent->dmFields & pdm->dmFields;
-
-        /* For now, we only need those */
-        if ((dwFields & DM_BITSPERPEL) &&
-            (pdmCurrent->dmBitsPerPel != pdm->dmBitsPerPel)) continue;
-        if ((dwFields & DM_PELSWIDTH) &&
-            (pdmCurrent->dmPelsWidth != pdm->dmPelsWidth)) continue;
-        if ((dwFields & DM_PELSHEIGHT) &&
-            (pdmCurrent->dmPelsHeight != pdm->dmPelsHeight)) continue;
-        if ((dwFields & DM_DISPLAYFREQUENCY) &&
-            (pdmCurrent->dmDisplayFrequency != pdm->dmDisplayFrequency)) continue;
-
-        /* Match! Return the DEVMODE */
-        return pdmCurrent;
-    }
-
-    /* Nothing found */
-    return NULL;
-}
-
-static
 PPDEVOBJ
-EngpCreatePDEV(
-    PUNICODE_STRING pustrDeviceName,
-    PDEVMODEW pdm)
+PDEVOBJ_Create(
+    _In_opt_ PGRAPHICS_DEVICE pGraphicsDevice,
+    _In_opt_ PDEVMODEW pdm,
+    _In_ ULONG dwAccelerationLevel,
+    _In_ ULONG ldevtype)
 {
-    PGRAPHICS_DEVICE pGraphicsDevice;
-    PPDEVOBJ ppdev;
+    PPDEVOBJ ppdev, ppdevMatch = NULL;
+    PLDEVOBJ pldev;
+    PSURFACE pSurface;
 
-    DPRINT("EngpCreatePDEV(%wZ, %p)\n", pustrDeviceName, pdm);
+    TRACE("PDEVOBJ_Create(%p %p %d)\n", pGraphicsDevice, pdm, ldevtype);
 
-    /* Try to find the GRAPHICS_DEVICE */
-    if (pustrDeviceName)
+    if (ldevtype != LDEV_DEVICE_META)
     {
-        pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0, 0);
-        if (!pGraphicsDevice)
+        ASSERT(pGraphicsDevice);
+        ASSERT(pdm);
+        /* Search if we already have a PPDEV with the required characteristics.
+         * We will compare the graphics device, the devmode and the desktop
+         */
+        for (ppdev = gppdevList; ppdev; ppdev = ppdev->ppdevNext)
         {
-            DPRINT1("No GRAPHICS_DEVICE found for %ls!\n",
-                    pustrDeviceName ? pustrDeviceName->Buffer : 0);
-            return NULL;
+            if (ppdev->pGraphicsDevice == pGraphicsDevice)
+            {
+                PDEVOBJ_vReference(ppdev);
+
+                if (RtlEqualMemory(pdm, ppdev->pdmwDev, sizeof(DEVMODEW)) &&
+                    ppdev->dwAccelerationLevel == dwAccelerationLevel)
+                {
+                    PDEVOBJ_vReference(ppdev);
+                    ppdevMatch = ppdev;
+                }
+                else
+                {
+                    PDEVOBJ_bDisableDisplay(ppdev);
+                }
+
+                PDEVOBJ_vRelease(ppdev);
+            }
+        }
+
+        if (ppdevMatch)
+        {
+            PDEVOBJ_vEnableDisplay(ppdevMatch);
+
+            return ppdevMatch;
         }
     }
+
+    /* Try to get a display driver */
+    if (ldevtype == LDEV_DEVICE_META)
+        pldev = LDEVOBJ_pLoadInternal(MultiEnableDriver, ldevtype);
     else
+        pldev = LDEVOBJ_pLoadDriver(pdm->dmDeviceName, ldevtype);
+    if (!pldev)
     {
-        ASSERT(gpPrimaryGraphicsDevice);
-        pGraphicsDevice = gpPrimaryGraphicsDevice;
+        ERR("Could not load display driver '%S'\n",
+             (ldevtype == LDEV_DEVICE_META) ? L"" : pdm->dmDeviceName);
+        return NULL;
     }
 
     /* Allocate a new PDEVOBJ */
     ppdev = PDEVOBJ_AllocPDEV();
     if (!ppdev)
     {
-        DPRINT1("failed to allocate a PDEV\n");
+        ERR("failed to allocate a PDEV\n");
         return NULL;
     }
 
-    /* If no DEVMODEW is given, ... */
-    if (!pdm)
+    if (ldevtype != LDEV_DEVICE_META)
     {
-        /* ... use the device's default one */
-        pdm = pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm;
-        DPRINT("Using iDefaultMode = %lu\n", pGraphicsDevice->iDefaultMode);
+        ppdev->pGraphicsDevice = pGraphicsDevice;
+
+        // DxEngGetHdevData asks for Graphics DeviceObject in hSpooler field
+        ppdev->hSpooler = ppdev->pGraphicsDevice->DeviceObject;
+
+        /* Keep selected resolution */
+        if (ppdev->pdmwDev)
+            ExFreePoolWithTag(ppdev->pdmwDev, GDITAG_DEVMODE);
+        ppdev->pdmwDev = ExAllocatePoolWithTag(PagedPool, pdm->dmSize + pdm->dmDriverExtra, GDITAG_DEVMODE);
+        if (ppdev->pdmwDev)
+        {
+            RtlCopyMemory(ppdev->pdmwDev, pdm, pdm->dmSize + pdm->dmDriverExtra);
+            /* FIXME: this must be done in a better way */
+            pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_PRIMARY_DEVICE | DISPLAY_DEVICE_ATTACHED_TO_DESKTOP;
+        }
     }
-
-    /* Try to get a diplay driver */
-    ppdev->pldev = EngLoadImageEx(pdm->dmDeviceName, LDEV_DEVICE_DISPLAY);
-    if (!ppdev->pldev)
-    {
-        DPRINT1("Could not load display driver '%ls', '%ls'\n",
-                pGraphicsDevice->pDiplayDrivers,
-                pdm->dmDeviceName);
-        PDEVOBJ_vRelease(ppdev);
-        return NULL;
-    }
-
-    /* Copy the function table */
-    ppdev->pfn = ppdev->pldev->pfn;
-
-    /* Set MovePointer function */
-    ppdev->pfnMovePointer = ppdev->pfn.MovePointer;
-    if (!ppdev->pfnMovePointer)
-        ppdev->pfnMovePointer = EngMovePointer;
-
-    ppdev->pGraphicsDevice = pGraphicsDevice;
-
-    // DxEngGetHdevData asks for Graphics DeviceObject in hSpooler field
-    ppdev->hSpooler = ppdev->pGraphicsDevice->DeviceObject;
-
-    // Should we change the ative mode of pGraphicsDevice ?
-    ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
 
     /* FIXME! */
     ppdev->flFlags = PDEV_DISPLAY;
@@ -418,19 +498,46 @@ EngpCreatePDEV(
     /* HACK: Don't use the pointer */
     ppdev->Pointer.Exclude.right = -1;
 
+    /* Initialize PDEV */
+    ppdev->pldev = pldev;
+    ppdev->dwAccelerationLevel = dwAccelerationLevel;
+
     /* Call the driver to enable the PDEV */
     if (!PDEVOBJ_bEnablePDEV(ppdev, pdm, NULL))
     {
-        DPRINT1("Failed to enable PDEV!\n");
+        ERR("Failed to enable PDEV!\n");
         PDEVOBJ_vRelease(ppdev);
+        EngUnloadImage(pldev);
         return NULL;
     }
 
-    /* FIXME: this must be done in a better way */
-    pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_ATTACHED_TO_DESKTOP;
+    /* Copy the function table */
+    ppdev->pfn = ppdev->pldev->pfn;
 
     /* Tell the driver that the PDEV is ready */
     PDEVOBJ_vCompletePDEV(ppdev);
+
+    /* Create the initial surface */
+    pSurface = PDEVOBJ_pSurface(ppdev);
+    if (!pSurface)
+    {
+        ERR("Failed to create surface\n");
+        PDEVOBJ_vRelease(ppdev);
+        EngUnloadImage(pldev);
+        return NULL;
+    }
+
+    /* Remove some acceleration capabilities from driver */
+    PDEVOBJ_vFilterDriverHooks(ppdev);
+
+    /* Set MovePointer function */
+    ppdev->pfnMovePointer = ppdev->pfn.MovePointer;
+    if (!ppdev->pfnMovePointer)
+        ppdev->pfnMovePointer = EngMovePointer;
+
+    /* Insert the PDEV into the list */
+    ppdev->ppdevNext = gppdevList;
+    gppdevList = ppdev;
 
     /* Return the PDEV */
     return ppdev;
@@ -451,9 +558,9 @@ SwitchPointer(
     *ppvPointer2 = pvTemp;
 }
 
-VOID
+BOOL
 NTAPI
-PDEVOBJ_vSwitchPdev(
+PDEVOBJ_bDynamicModeChange(
     PPDEVOBJ ppdev,
     PPDEVOBJ ppdev2)
 {
@@ -502,6 +609,8 @@ PDEVOBJ_vSwitchPdev(
     /* Notify each driver instance of its new HDEV association */
     ppdev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
     ppdev2->pfn.CompletePDEV(ppdev2->dhpdev, (HDEV)ppdev2);
+
+    return TRUE;
 }
 
 
@@ -511,7 +620,6 @@ PDEVOBJ_bSwitchMode(
     PPDEVOBJ ppdev,
     PDEVMODEW pdm)
 {
-    UNICODE_STRING ustrDevice;
     PPDEVOBJ ppdevTmp;
     PSURFACE pSurface;
     BOOL retval = FALSE;
@@ -525,18 +633,17 @@ PDEVOBJ_bSwitchMode(
     DPRINT1("PDEVOBJ_bSwitchMode, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
 
     // Lookup the GraphicsDevice + select DEVMODE
-    // pdm = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
+    // pdm = LDEVOBJ_bProbeAndCaptureDevmode(ppdev, pdm);
 
     /* 1. Temporarily disable the current PDEV and reset video to its default mode */
-    if (!ppdev->pfn.AssertMode(ppdev->dhpdev, FALSE))
+    if (!PDEVOBJ_bDisableDisplay(ppdev))
     {
-        DPRINT1("DrvAssertMode(FALSE) failed\n");
+        DPRINT1("PDEVOBJ_bDisableDisplay() failed\n");
         goto leave;
     }
 
     /* 2. Create new PDEV */
-    RtlInitUnicodeString(&ustrDevice, ppdev->pGraphicsDevice->szWinDeviceName);
-    ppdevTmp = EngpCreatePDEV(&ustrDevice, pdm);
+    ppdevTmp = PDEVOBJ_Create(ppdev->pGraphicsDevice, pdm, 0, LDEV_DEVICE_DISPLAY);
     if (!ppdevTmp)
     {
         DPRINT1("Failed to create a new PDEV\n");
@@ -557,14 +664,19 @@ PDEVOBJ_bSwitchMode(
     /* 6. Copy old PDEV state to new PDEV instance */
 
     /* 7. Switch the PDEVs */
-    PDEVOBJ_vSwitchPdev(ppdev, ppdevTmp);
+    if (!PDEVOBJ_bDynamicModeChange(ppdev, ppdevTmp))
+    {
+        DPRINT1("PDEVOBJ_bDynamicModeChange() failed\n");
+        PDEVOBJ_vRelease(ppdevTmp);
+        goto leave2;
+    }
 
     /* 8. Disable DirectDraw */
 
     PDEVOBJ_vRelease(ppdevTmp);
 
     /* Update primary display capabilities */
-    if (ppdev == gppdevPrimary)
+    if (ppdev == gpmdev->ppdevGlobal)
     {
         PDEVOBJ_vGetDeviceCaps(ppdev, &GdiHandleTable->DevCaps);
     }
@@ -574,10 +686,7 @@ PDEVOBJ_bSwitchMode(
 
 leave2:
     /* Set the new video mode, or restore the original one in case of failure */
-    if (!ppdev->pfn.AssertMode(ppdev->dhpdev, TRUE))
-    {
-        DPRINT1("DrvAssertMode(TRUE) failed\n");
-    }
+    PDEVOBJ_vEnableDisplay(ppdev);
 
 leave:
     /* Unlock everything else */
@@ -597,8 +706,9 @@ EngpGetPDEV(
     _In_opt_ PUNICODE_STRING pustrDeviceName)
 {
     UNICODE_STRING ustrCurrent;
-    PPDEVOBJ ppdev;
+    PPDEVOBJ ppdev = NULL;
     PGRAPHICS_DEVICE pGraphicsDevice;
+    ULONG i;
 
     /* Acquire PDEV lock */
     EngAcquireSemaphore(ghsemPDEV);
@@ -607,24 +717,25 @@ EngpGetPDEV(
     if (pustrDeviceName)
     {
         /* Loop all present PDEVs */
-        for (ppdev = gppdevList; ppdev; ppdev = ppdev->ppdevNext)
+        for (i = 0; i < gpmdev->cDev; i++)
         {
             /* Get a pointer to the GRAPHICS_DEVICE */
-            pGraphicsDevice = ppdev->pGraphicsDevice;
+            pGraphicsDevice = gpmdev->dev[i].ppdev->pGraphicsDevice;
 
             /* Compare the name */
             RtlInitUnicodeString(&ustrCurrent, pGraphicsDevice->szWinDeviceName);
             if (RtlEqualUnicodeString(pustrDeviceName, &ustrCurrent, FALSE))
             {
                 /* Found! */
+                ppdev = gpmdev->dev[i].ppdev;
                 break;
             }
         }
     }
-    else
+    else if (gpmdev)
     {
         /* Otherwise use the primary PDEV */
-        ppdev = gppdevPrimary;
+        ppdev = gpmdev->ppdevGlobal;
     }
 
     /* Did we find one? */
@@ -633,29 +744,177 @@ EngpGetPDEV(
         /* Yes, reference the PDEV */
         PDEVOBJ_vReference(ppdev);
     }
-    else
-    {
-        /* No, create a new PDEV for the given device */
-        ppdev = EngpCreatePDEV(pustrDeviceName, NULL);
-        if (ppdev)
-        {
-            /* Insert the PDEV into the list */
-            ppdev->ppdevNext = gppdevList;
-            gppdevList = ppdev;
-
-            /* Set as primary PDEV, if we don't have one yet */
-            if (!gppdevPrimary)
-            {
-                gppdevPrimary = ppdev;
-                ppdev->pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_PRIMARY_DEVICE;
-            }
-        }
-    }
 
     /* Release PDEV lock */
     EngReleaseSemaphore(ghsemPDEV);
 
     return ppdev;
+}
+
+LONG
+PDEVOBJ_lChangeDisplaySettings(
+    _In_opt_ PUNICODE_STRING pustrDeviceName,
+    _In_opt_ PDEVMODEW RequestedMode,
+    _In_opt_ PMDEVOBJ pmdevOld,
+    _Out_ PMDEVOBJ *ppmdevNew,
+    _In_ BOOL bSearchClosestMode)
+{
+    PGRAPHICS_DEVICE pGraphicsDevice = NULL;
+    PMDEVOBJ pmdev = NULL;
+    PDEVMODEW pdm = NULL;
+    ULONG lRet = DISP_CHANGE_SUCCESSFUL;
+    ULONG i, j;
+
+    TRACE("PDEVOBJ_lChangeDisplaySettings('%wZ' '%dx%dx%d (%d Hz)' %p %p)\n",
+        pustrDeviceName,
+        RequestedMode ? RequestedMode->dmPelsWidth : 0,
+        RequestedMode ? RequestedMode->dmPelsHeight : 0,
+        RequestedMode ? RequestedMode->dmBitsPerPel : 0,
+        RequestedMode ? RequestedMode->dmDisplayFrequency : 0,
+        pmdevOld, ppmdevNew);
+
+    if (pustrDeviceName)
+    {
+        pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0);
+        if (!pGraphicsDevice)
+        {
+            ERR("Wrong device name provided: '%wZ'\n", pustrDeviceName);
+            lRet = DISP_CHANGE_BADPARAM;
+            goto cleanup;
+        }
+    }
+    else if (RequestedMode)
+    {
+        pGraphicsDevice = gpPrimaryGraphicsDevice;
+        if (!pGraphicsDevice)
+        {
+            ERR("Wrong device'\n");
+            lRet = DISP_CHANGE_BADPARAM;
+            goto cleanup;
+        }
+    }
+
+    if (pGraphicsDevice)
+    {
+        if (!LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, RequestedMode, &pdm, bSearchClosestMode))
+        {
+            ERR("DrvProbeAndCaptureDevmode() failed\n");
+            lRet = DISP_CHANGE_BADMODE;
+            goto cleanup;
+        }
+    }
+
+    /* Here, we know that input parameters were correct */
+
+    {
+        /* Create new MDEV. Note that if we provide a device name,
+         * MDEV will only contain one device.
+         * */
+
+        if (pmdevOld)
+        {
+            /* Disable old MDEV */
+            if (MDEVOBJ_bDisable(pmdevOld))
+            {
+                /* Create new MDEV. On failure, reenable old MDEV */
+                pmdev = MDEVOBJ_Create(pustrDeviceName, pdm);
+                if (!pmdev)
+                    MDEVOBJ_vEnable(pmdevOld);
+            }
+        }
+        else
+        {
+            pmdev = MDEVOBJ_Create(pustrDeviceName, pdm);
+        }
+
+        if (!pmdev)
+        {
+            ERR("Failed to create new MDEV\n");
+            lRet = DISP_CHANGE_FAILED;
+            goto cleanup;
+        }
+
+        lRet = DISP_CHANGE_SUCCESSFUL;
+        *ppmdevNew = pmdev;
+
+        /* We now have to do the mode switch */
+
+        if (pustrDeviceName && pmdevOld)
+        {
+            /* We changed settings of one device. Add other devices which were already present */
+            for (i = 0; i < pmdevOld->cDev; i++)
+            {
+                for (j = 0; j < pmdev->cDev; j++)
+                {
+                    if (pmdev->dev[j].ppdev->pGraphicsDevice == pmdevOld->dev[i].ppdev->pGraphicsDevice)
+                    {
+                        if (PDEVOBJ_bDynamicModeChange(pmdevOld->dev[i].ppdev, pmdev->dev[j].ppdev))
+                        {
+                            PPDEVOBJ tmp = pmdevOld->dev[i].ppdev;
+                            pmdevOld->dev[i].ppdev = pmdev->dev[j].ppdev;
+                            pmdev->dev[j].ppdev = tmp;
+                        }
+                        else
+                        {
+                            ERR("Failed to apply new settings\n");
+                            UNIMPLEMENTED;
+                            ASSERT(FALSE);
+                        }
+                        break;
+                    }
+                }
+                if (j == pmdev->cDev)
+                {
+                    PDEVOBJ_vReference(pmdevOld->dev[i].ppdev);
+                    pmdev->dev[pmdev->cDev].ppdev = pmdevOld->dev[i].ppdev;
+                    pmdev->cDev++;
+                }
+            }
+        }
+
+        if (pmdev->cDev == 1)
+        {
+            pmdev->ppdevGlobal = pmdev->dev[0].ppdev;
+        }
+        else
+        {
+            /* Enable MultiDriver */
+            pmdev->ppdevGlobal = PDEVOBJ_Create(NULL, (PDEVMODEW)pmdev, 0, LDEV_DEVICE_META);
+            if (!pmdev->ppdevGlobal)
+            {
+                WARN("Failed to create meta-device. Using only first display\n");
+                PDEVOBJ_vReference(pmdev->dev[0].ppdev);
+                pmdev->ppdevGlobal = pmdev->dev[0].ppdev;
+            }
+        }
+
+        if (pmdevOld)
+        {
+            /* Search PDEVs which were in pmdevOld, but are not anymore in pmdev, and disable them */
+            for (i = 0; i < pmdevOld->cDev; i++)
+            {
+                for (j = 0; j < pmdev->cDev; j++)
+                {
+                    if (pmdev->dev[j].ppdev->pGraphicsDevice == pmdevOld->dev[i].ppdev->pGraphicsDevice)
+                        break;
+                }
+                if (j == pmdev->cDev)
+                    PDEVOBJ_bDisableDisplay(pmdevOld->dev[i].ppdev);
+            }
+        }
+    }
+
+cleanup:
+    if (lRet != DISP_CHANGE_SUCCESSFUL)
+    {
+        *ppmdevNew = NULL;
+        if (pmdev)
+            MDEVOBJ_vDestroy(pmdev);
+        if (pdm && pdm != RequestedMode)
+            ExFreePoolWithTag(pdm, GDITAG_DEVMODE);
+    }
+
+    return lRet;
 }
 
 INT
@@ -734,6 +993,34 @@ PDEVOBJ_vGetDeviceCaps(
 
 
 /** Exported functions ********************************************************/
+
+/*
+ * @implemented
+ */
+BOOL
+APIENTRY
+EngQueryDeviceAttribute(
+    _In_ HDEV hdev,
+    _In_ ENG_DEVICE_ATTRIBUTE devAttr,
+    _In_reads_bytes_(cjInSize) PVOID pvIn,
+    _In_ ULONG cjInSize,
+    _Out_writes_bytes_(cjOutSize) PVOID pvOut,
+    _In_ ULONG cjOutSize)
+{
+    PPDEVOBJ ppdev = (PPDEVOBJ)hdev;
+
+    if (devAttr != QDA_ACCELERATION_LEVEL)
+        return FALSE;
+
+    if (cjOutSize >= sizeof(DWORD))
+    {
+        /* Set all Accelerations Level Key to enabled Full 0 to 5 turned off. */
+        *(DWORD*)pvOut = ppdev->dwAccelerationLevel;
+        return TRUE;
+    }
+
+    return FALSE;
+}
 
 _Must_inspect_result_ _Ret_z_
 LPWSTR
@@ -979,8 +1266,7 @@ PDEVOBJ_sizl(PPDEVOBJ ppdev, PSIZEL psizl)
 {
     if (ppdev->flFlags & PDEV_META_DEVICE)
     {
-        psizl->cx = ppdev->ulHorzRes;
-        psizl->cy = ppdev->ulVertRes;
+        *psizl = ppdev->szlMetaRes;
     }
     else
     {

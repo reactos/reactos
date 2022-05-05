@@ -15,7 +15,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(seclogon);
 /* GLOBALS ******************************************************************/
 
 HINSTANCE hDllInstance;
-SVCHOST_GLOBALS *lpServiceGlobals;
+PSVCHOST_GLOBAL_DATA lpServiceGlobals;
 
 static WCHAR ServiceName[] = L"seclogon";
 
@@ -112,7 +112,7 @@ ServiceControlHandlerEx(
 VOID
 WINAPI
 SvchostPushServiceGlobals(
-    _In_ SVCHOST_GLOBALS *lpGlobals)
+    _In_ PSVCHOST_GLOBAL_DATA lpGlobals)
 {
     TRACE("SvchostPushServiceGlobals(%p)\n", lpGlobals);
     lpServiceGlobals = lpGlobals;

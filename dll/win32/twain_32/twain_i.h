@@ -45,11 +45,11 @@ typedef struct tagActiveDS
     HWND                event_window;
 } activeDS;
 
-TW_UINT16 DSM_twCC DECLSPEC_HIDDEN;             /* current condition code of Source Manager */
+extern TW_UINT16 DSM_twCC DECLSPEC_HIDDEN;             /* current condition code of Source Manager */
 
-activeDS *activeSources DECLSPEC_HIDDEN;	/* list of active data sources */
+extern activeDS *activeSources DECLSPEC_HIDDEN; /* list of active data sources */
 
-HINSTANCE DSM_hinstance DECLSPEC_HIDDEN;
+extern HINSTANCE DSM_hinstance DECLSPEC_HIDDEN;
 
 /* Implementation of operation triplets (From Application to Source Manager) */
 extern TW_UINT16 TWAIN_CloseDS

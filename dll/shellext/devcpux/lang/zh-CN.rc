@@ -7,13 +7,13 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "处理器"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "功能:", -1, 7, 23, 50, 8
+    LTEXT "功能：", -1, 7, 23, 50, 8
     LTEXT "test", IDC_FEATURES, 57, 23, 181, 8
-    LTEXT "型号:", -1, 7, 38, 50, 8
+    LTEXT "型号：", -1, 7, 38, 50, 8
     LTEXT "test", IDC_MODEL, 57, 38, 181, 8
-    LTEXT "步进:", -1, 7, 53, 50, 51
+    LTEXT "步进：", -1, 7, 53, 50, 51
     LTEXT "test", IDC_STEPPING, 57, 53, 181, 8
-    LTEXT "核心速度:", -1, 7, 68, 50, 8
+    LTEXT "核心速度：", -1, 7, 68, 50, 8
     LTEXT "test", IDC_CORESPEED, 57, 68, 181, 8
 END
 

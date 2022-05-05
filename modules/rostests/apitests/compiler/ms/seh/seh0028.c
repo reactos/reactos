@@ -6,7 +6,6 @@
 #include "seh.h"
 
 char test[] = "SEH0028.c";
-int perfect;
 
 void addtwo(long First, long Second, long *Place) {
   RaiseException(EXCEPTION_INT_OVERFLOW, 0, /*no flags*/ 0, 0);

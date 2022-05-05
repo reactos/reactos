@@ -112,9 +112,9 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A registar componentes", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "A instalar itens do menu iniciar", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Guardando as configurações", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "A remover ficheiros temporários", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
@@ -159,12 +159,12 @@ BEGIN
     LTEXT "Relatórios por segundo", -1, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     RTEXT "&Detecção da roda:", -1, 27, 55, 90, 8
-    COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 120, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     RTEXT "&Tamanho da memória intermédia:", -1, 27, 75, 90, 8
     LTEXT "pacotes", -1, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
-    AUTOCHECKBOX "&Inicialização rápida", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
+    AUTOCHECKBOX "&Iniciação rápida", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
     PUSHBUTTON "&Predefinições", IDC_PS2MOUSEDEFAULTS, 195, 188, 50, 14
 END
 
@@ -172,8 +172,8 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Agradecimentos"
     IDS_ACKSUBTITLE "Os ombros nos quais o ReactOS se apoia e informações de licença"
-    IDS_OWNERTITLE "Personalize seu Software"
-    IDS_OWNERSUBTITLE "A Instalação utiliza esta informação para personalizar o ReactOS."
+    IDS_OWNERTITLE "Personalize o seu Software"
+    IDS_OWNERSUBTITLE "A Instalação utiliza estas informações para personalizar o ReactOS."
     IDS_COMPUTERTITLE "Nome do computador e palavra-passe do administrador"
     IDS_COMPUTERSUBTITLE "Deve fornecer um nome e palavra-passe de administrador para o seu computador."
     IDS_LOCALETITLE "Configurações Regionais"
@@ -182,8 +182,8 @@ BEGIN
     IDS_LAYOUTTEXT "O método e idioma de entrada de texto padrão é: Estilo de teclado %s"
     IDS_DATETIMETITLE "Data e Hora"
     IDS_DATETIMESUBTITLE "Definir a data e a hora correctas para o seu computador."
-    IDS_PROCESSTITLE "Finishing the Installation"
-    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
+    IDS_PROCESSTITLE "Finalizando a instalação."
+    IDS_PROCESSSUBTITLE "Aguarde enquanto a Instalação conclui as etapas finais."
     IDS_THEMESELECTIONTITLE "Aparência"
     IDS_THEMESELECTIONSUBTITLE "Seleccione o tema perferido."
 END
@@ -227,15 +227,15 @@ END
 /* ATTENTION: Synchronize these strings with dll/win32/shell32/lang */
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMFILES "%SystemDrive%\\Arquivos de programas"
-    IDS_COMMONFILES "Arquivos comuns"
+    IDS_PROGRAMFILES "%SystemDrive%\\Ficheiros de programas"
+    IDS_COMMONFILES "Ficheiros comuns"
 END
 
 STRINGTABLE
 BEGIN
     IDS_DETECTIONDISABLED "Detecção desabilitada"
-    IDS_LOOKFORWHEEL "A detectar o roda do rato"
-    IDS_ASSUMEPRESENT "Assume roda está presente"
+    IDS_LOOKFORWHEEL "Detectar a roda do rato"
+    IDS_ASSUMEPRESENT "Assumir que roda está presente"
 END
 
 STRINGTABLE
@@ -252,7 +252,7 @@ BEGIN
     IDS_PRODUCTSUBTITLE "Pode escolher uma opção de produto que afecta o comportamento do sistema."
     IDS_PRODUCTSERVERNAME "Servidor ReactOS"
     IDS_PRODUCTWORKSTATIONNAME "Estação de trabalho ReactOS"
-    IDS_PRODUCTSERVERINFO "O sistema será reconhecido como um servidor. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" são independentes de ""Meus documentos""."
-    IDS_PRODUCTWORKSTATIONINFO "O sistema será reconhecido como uma estação de trabalho. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" estão em ""Meus documentos""."
+    IDS_PRODUCTSERVERINFO "O sistema será reconhecido como um servidor. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" serão independentes de ""Meus documentos""."
+    IDS_PRODUCTWORKSTATIONINFO "O sistema será reconhecido como uma estação de trabalho. As pastas privadas ""Minhas imagens"", ""Meus vídeos"" e ""Minhas músicas"" ficarão em ""Meus documentos""."
     IDS_DEFAULT "(Padrão)"
 END

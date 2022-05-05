@@ -47,7 +47,7 @@ DOMAIN_SID_DATA DomainSidData[8] =
     { &AliasBackupOpsSid, DOMAIN_ALIAS_RID_BACKUP_OPS },
 };
 
-PSVCHOST_GLOBALS g_pSvchostSharedGlobals;
+PSVCHOST_GLOBAL_DATA g_pSvchostSharedGlobals;
 DWORD g_SvchostInitFlag;
 HANDLE g_hHeap;
 
@@ -148,13 +148,13 @@ SvchostBuildSharedGlobals (
     g_pSvchostSharedGlobals->AliasBackupOpsSid = AliasBackupOpsSid;
 
     /* Write the pointers to the callbacks */
-    g_pSvchostSharedGlobals->RpcpStartRpcServer = RpcpStartRpcServer;
-    g_pSvchostSharedGlobals->RpcpStopRpcServer = RpcpStopRpcServer;
-    g_pSvchostSharedGlobals->RpcpStopRpcServerEx = RpcpStopRpcServerEx;
-    g_pSvchostSharedGlobals->SvcNetBiosOpen = SvcNetBiosOpen;
-    g_pSvchostSharedGlobals->SvcNetBiosClose = SvcNetBiosClose;
-    g_pSvchostSharedGlobals->SvcNetBiosReset = SvcNetBiosReset;
-    g_pSvchostSharedGlobals->SvcRegisterStopCallback = SvcRegisterStopCallback;
+    g_pSvchostSharedGlobals->StartRpcServer = RpcpStartRpcServer;
+    g_pSvchostSharedGlobals->StopRpcServer = RpcpStopRpcServer;
+    g_pSvchostSharedGlobals->StopRpcServerEx = RpcpStopRpcServerEx;
+    g_pSvchostSharedGlobals->NetBiosOpen = SvcNetBiosOpen;
+    g_pSvchostSharedGlobals->NetBiosClose = SvcNetBiosClose;
+    g_pSvchostSharedGlobals->NetBiosReset = SvcNetBiosReset;
+    g_pSvchostSharedGlobals->RegisterStopCallback = SvcRegisterStopCallback;
 }
 
 VOID

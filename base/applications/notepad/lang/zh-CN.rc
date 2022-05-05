@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Notepad
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
- * TRANSLATOR:  Copyright 2018, 2022 Luo Yufan <njlyf2011@hotmail.com>
+ * TRANSLATORS: Copyright 2018, 2022 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2021-2022 Wu Haotian <rigoligo03@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -151,27 +152,27 @@ BEGIN
     STRING_UNTITLED "未命名"
     STRING_ALL_FILES "所有文件 (*.*)"
     STRING_TEXT_FILES_TXT "文本文件 (*.txt)"
-    STRING_TOOLARGE "文件 '%s' 太大，记事本无法打开它。\n\
+    STRING_TOOLARGE "文件“%s”太大，记事本无法打开它。\n\
 请使用其他的编辑器。"
     STRING_NOTEXT "您没有输入任何文本。\
 \n请输入一些再试试"
-    STRING_DOESNOTEXIST "文件 '%s'\n不存在\n\n\
+    STRING_DOESNOTEXIST "文件“%s”\n不存在\n\n\
 您想新建一个文件吗？"
-    STRING_NOTSAVED "文件 '%s'\n已经被更改\n\n\
+    STRING_NOTSAVED "文件“%s”\n已经被更改\n\n\
 是否保存更改？"
-    STRING_NOTFOUND "找不到文件 '%s'"
-    STRING_OUT_OF_MEMORY "没有足够的内存可以用来完成此项任务。 \
+    STRING_NOTFOUND "找不到文件“%s”"
+    STRING_OUT_OF_MEMORY "内存不足，无法完成此操作。\
 \n请关闭一些程序释放内存后再试。"
-    STRING_CANNOTFIND "找不到 '%s'"
+    STRING_CANNOTFIND "找不到“%s”"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
-    STRING_UNICODE_BE "Unicode (大端)"
+    STRING_UNICODE_BE "Unicode（大端）"
     STRING_UTF8 "UTF-8"
-    STRING_CRLF "Windows (CR + LF)"
-    STRING_LF "Unix (LF)"
-    STRING_CR "Mac (CR)"
-    STRING_LINE_COLUMN "行 %d, 列 %d"
-    STRING_PRINTERROR "无法打印文件 '%s'。\n\n请确保打印机已打开，并且已正确配置。"
+    STRING_CRLF "Windows（CR + LF）"
+    STRING_LF "Unix（LF）"
+    STRING_CR "Mac（CR）"
+    STRING_LINE_COLUMN "行 %d，列 %d"
+    STRING_PRINTERROR "无法打印文件“%s”。\n\n请确保打印机已打开，并且已正确配置。"
 
     STRING_TEXT_DOCUMENT "文本文档"
     STRING_NOTEPAD_AUTHORS "版权所有 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

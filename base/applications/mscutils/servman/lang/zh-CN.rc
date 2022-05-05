@@ -84,15 +84,15 @@ BEGIN
     PUSHBUTTON "停止(&T)", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
     PUSHBUTTON "暂停(&P)", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
     PUSHBUTTON "恢复(&R)", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
-    LTEXT "服务名称: ", IDC_STATIC, 4, 11, 53, 11
-    LTEXT "显示名称: ", IDC_STATIC, 4, 29, 53, 11
-    LTEXT "描述: ", IDC_STATIC, 4, 51, 53, 11
-    LTEXT "可执行文件路径: ", IDC_STATIC, 6, 73, 82, 9
-    LTEXT "启动类型: ", IDC_STATIC, 6, 108, 53, 11
-    LTEXT "服务状态: ", IDC_STATIC, 4, 138, 53, 11
+    LTEXT "服务名称：", IDC_STATIC, 4, 11, 53, 11
+    LTEXT "显示名称：", IDC_STATIC, 4, 29, 53, 11
+    LTEXT "描述：", IDC_STATIC, 4, 51, 53, 11
+    LTEXT "可执行文件路径：", IDC_STATIC, 6, 73, 82, 9
+    LTEXT "启动类型：", IDC_STATIC, 6, 108, 53, 11
+    LTEXT "服务状态：", IDC_STATIC, 4, 138, 53, 11
     LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
     LTEXT "你可以在这里指定当你从这里启动该服务时所应用的参数。", IDC_STATIC, 6, 177, 240, 15
-    LTEXT "启动参数: ", IDC_STATIC, 6, 200, 58, 11
+    LTEXT "启动参数：", IDC_STATIC, 6, 200, 58, 11
     EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "编辑", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
@@ -102,7 +102,7 @@ CAPTION "登录"
 FONT 9, "宋体", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
-    LTEXT "作为...登录: ", IDC_STATIC, 7, 7, 238, 8
+    LTEXT "作为...登录：", IDC_STATIC, 7, 7, 238, 8
     AUTORADIOBUTTON "本地系统帐户(&L)", IDC_LOGON_SYSTEMACCOUNT, 7, 22, 238, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "本账户(&T):", IDC_LOGON_THISACCOUNT, 7, 52, 60, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE
     AUTOCHECKBOX "允许与桌面交互的服务(&W)", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
@@ -130,10 +130,10 @@ BEGIN
     COMBOBOX IDC_SECOND_FAILURE, 104, 39, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "随后的失败:", IDC_STATIC, 7, 58, 92, 8
     COMBOBOX IDC_SUBSEQUENT_FAILURES, 104, 56, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "在...之后重制计数器(&O):", IDC_STATIC, 7, 75, 72, 8
+    LTEXT "在此时长之后重置计数器(&O):", IDC_STATIC, 7, 75, 72, 8
     EDITTEXT IDC_RESET_TIME, 104, 73, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "日", IDC_STATIC, 150, 75, 95, 8
-    LTEXT "在...之后重启服务(&V):", IDC_RESTART_TEXT1, 7, 92, 92, 8
+    LTEXT "在此时长之后重启服务(&V):", IDC_RESTART_TEXT1, 7, 92, 92, 8
     EDITTEXT IDC_RESTART_TIME, 104, 90, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "分", IDC_RESTART_TEXT2, 150, 92, 95, 8
     GROUPBOX "运行程序", IDC_RUN_GROUPBOX, 7, 108, 238, 80
@@ -142,7 +142,7 @@ BEGIN
     PUSHBUTTON "浏览(&B)...", IDC_BROWSE_PROGRAM, 180, 131, 58, 14
     LTEXT "命令行参数(&C):", IDC_RUN_TEXT2, 14, 155, 108, 8
     EDITTEXT IDC_PARAMETERS, 128, 152, 110, 14
-    AUTOCHECKBOX "附加失败次数到命令行尾(&E) (/fail=%1%)", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "附加失败次数到命令行尾(&E)（/fail=%1%）", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
     PUSHBUTTON "重启计算机选项(&R)...", IDC_RESTART_OPTIONS, 116, 197, 129, 14
 END
 
@@ -157,7 +157,7 @@ BEGIN
     CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW |
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
-    LTEXT "一些服务依赖于其他服务，系统驱动程序和加载顺序组。如果一个系统组件被停止或者没有正确运行，被其依赖的服务也会被影响。", IDC_STATIC, 8, 7, 238, 26
+    LTEXT "一些服务依赖于其他服务，系统驱动程序和加载顺序组。如果一个系统组件被停止或者没有正确运行，依赖它的服务也会被影响。", IDC_STATIC, 8, 7, 238, 26
     LTEXT "这个服务依赖于以下的组件", IDC_STATIC, 8, 57, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
@@ -178,7 +178,7 @@ BEGIN
     LTEXT "描述 :", IDC_STATIC, 12, 86, 44, 9
     PUSHBUTTON "确定", IDOK, 126, 192, 44, 13
     PUSHBUTTON "取消", IDCANCEL, 176, 192, 46, 13
-    LTEXT "附加选项 (点击帮助以获得详细信息)", IDC_STATIC, 10, 151, 134, 9
+    LTEXT "附加选项（点击帮助以获得详细信息）", IDC_STATIC, 10, 151, 134, 9
     PUSHBUTTON "帮助(&H)", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
@@ -189,7 +189,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
     ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
     LTEXT "您确定要删除以下的服务吗？这个操作是不可撤销的！", IDC_STATIC, 50, 6, 125, 25
-    LTEXT "服务名称:", IDC_STATIC, 6, 40, 80, 9
+    LTEXT "服务名称：", IDC_STATIC, 6, 40, 80, 9
     LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
     EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL |
              WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
@@ -250,7 +250,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NUM_SERVICES "服务总数: %d"
+    IDS_NUM_SERVICES "服务总数：%d"
     IDS_STOP_DEPENDS "当 %s 停止时，这些服务也将被停止"
     IDS_NO_DEPENDS "<无依赖>"
 END
@@ -276,13 +276,13 @@ BEGIN
     IDS_PROGRESS_INFO_RESUME "ReactOS 正在尝试恢复以下服务"
     IDS_CREATE_SUCCESS "成功创建服务"
     IDS_DELETE_SUCCESS "成功删除服务"
-    IDS_CREATE_REQ "标记有\n星号 (*) 的字段是必填的"
+    IDS_CREATE_REQ "标记有\n星号（*）的字段是必填的"
     IDS_DELETE_STOP "您必须在删除该服务前停止它！"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "创建选项:\n注意：选项名包含了等号(=)。\n type= <own|share|interact|kernel|filesys|rec>\n       (default = own)\n start= <boot|system|auto|demand|disabled>\n       (default = demand)\n error= <normal|severe|critical|ignore>\n       (default = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies(separated by / (forward slash))>\n obj= <AccountName|ObjectName>\n       (default = LocalSystem)\n password= <password>\n"
+    IDS_HELP_OPTIONS "创建选项：\r\n注意：选项名包含了等号（=）。\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
 END
 
 /* Hints */
