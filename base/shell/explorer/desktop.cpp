@@ -34,7 +34,7 @@ public:
     CDesktopThread();
     ~CDesktopThread();
 
-    HRESULT Initialize(ITrayWindow *pTray);
+    HRESULT Initialize(ITrayWindow* pTray);
     void Destroy();
 };
 
@@ -52,7 +52,7 @@ CDesktopThread::~CDesktopThread()
     Destroy();
 }
 
-HRESULT CDesktopThread::Initialize(ITrayWindow *pTray)
+HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
 {
     HANDLE Handles[2];
 
@@ -62,7 +62,6 @@ HRESULT CDesktopThread::Initialize(ITrayWindow *pTray)
     }
 
     m_hInitEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
-
     if (!m_hInitEvent)
     {
         return E_FAIL;
@@ -121,9 +120,8 @@ void CDesktopThread::Destroy()
         
         if (WaitResult == WAIT_TIMEOUT)
         {
-            /* Send WM_QUIT message to the thread. */
+            /* Send WM_QUIT message to the thread and wait for it to terminate */
             PostThreadMessageW(GetThreadId(m_hThread), WM_QUIT, 0, 0);
-            
             WaitForSingleObject(m_hThread, INFINITE);
         }
 
@@ -149,14 +147,12 @@ DWORD CDesktopThread::DesktopThreadProc()
     OleInitialize(NULL);
 
     hRet = m_Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
-
     if (!SUCCEEDED(hRet))
     {
         return 1;
     }
 
     hDesktop = _SHCreateDesktop(pSdt);
-
     if (!hDesktop)
     {
         return 1;
@@ -178,7 +174,7 @@ DWORD CDesktopThread::DesktopThreadProc()
 
 DWORD WINAPI CDesktopThread::s_DesktopThreadProc(LPVOID lpParameter)
 {
-    CDesktopThread *pDesktopThread = static_cast<CDesktopThread*>(lpParameter);
+    CDesktopThread* pDesktopThread = static_cast<CDesktopThread*>(lpParameter);
     return pDesktopThread->DesktopThreadProc();
 }
 
@@ -189,7 +185,6 @@ DesktopCreateWindow(IN OUT ITrayWindow *Tray)
 {
     CDesktopThread *pDesktopThread = new CDesktopThread();
     HRESULT hres = pDesktopThread->Initialize(Tray);
-
     if (FAILED_UNEXPECTEDLY(hres))
     {
         delete pDesktopThread;
@@ -202,6 +197,6 @@ DesktopCreateWindow(IN OUT ITrayWindow *Tray)
 VOID
 DesktopDestroyShellWindow(IN HANDLE hDesktop)
 {
-    CDesktopThread *pDesktopThread = reinterpret_cast<CDesktopThread*>(hDesktop);
+    CDesktopThread* pDesktopThread = reinterpret_cast<CDesktopThread*>(hDesktop);
     delete pDesktopThread;
 }
