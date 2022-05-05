@@ -140,7 +140,7 @@ class CRecyclerDropTarget :
         }
 
         HRESULT WINAPI Drop(IDataObject *pDataObject,
-                                       DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+                            DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
         {
             TRACE("(%p) object dropped on recycle bin, effect %u\n", this, *pdwEffect);
 
