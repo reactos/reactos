@@ -149,45 +149,29 @@ IsActiveSessionCountLimited()
 VERSIONHELPERAPI
 IsReactOS()
 {
+    HKEY hKey;
     BOOL bResult = FALSE;
-    HMODULE hMod;
 
-    hMod = GetModuleHandleW(L"ntdll");
-
-    if (hMod)   // should always be loaded
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKey) == ERROR_SUCCESS)
     {
-        DWORD dwLen;
-        WCHAR szFullPath[MAX_PATH];
+        WCHAR szProductName[30];
+        DWORD dwLength = sizeof(szProductName);
 
-        dwLen = GetModuleFileNameW(hMod, szFullPath, MAX_PATH);
-        if (dwLen)
+        if (RegGetValueW(hKey,
+                         NULL,
+                         L"ProductName",
+                         RRF_RT_REG_SZ | RRF_ZEROONFAILURE,
+                         NULL,
+                         szProductName,
+                         &dwLength) == ERROR_SUCCESS)
         {
-            DWORD dwSize;
-
-            szFullPath[dwLen] = 0; // required by Windows XP
-            dwSize = GetFileVersionInfoSizeW(szFullPath, NULL);
-            if (dwSize)
-            {
-                BOOL bProduct;
-                UINT cchVer = 0;
-                LPCWSTR lszValue = NULL;
-                LPVOID VerInfo = NULL;
-
-                VerInfo  = HeapAlloc(GetProcessHeap(), 0, dwSize);
-                GetFileVersionInfoW(szFullPath, 0L, dwSize, VerInfo);
-                bProduct = VerQueryValueW(VerInfo,
-                                          L"\\StringFileInfo\\000004B0\\ProductName",
-                                          (LPVOID*)&lszValue,
-                                          &cchVer);
-                if (bProduct)
-                {
-                    bResult = (wcsstr(lszValue, L"ReactOS") != NULL);
-                }
-                HeapFree(GetProcessHeap(), 0, VerInfo);
-            }
+            bResult = (wcscmp(L"ReactOS", szProductName) == 0);
         }
     }
-
     return bResult;
 }
 #endif // __REACTOS__
