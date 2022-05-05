@@ -1514,7 +1514,7 @@ NtUserBuildHwndList(
    ULONG dwCount = 0;
 
    if (pcHwndNeeded == NULL)
-       return ERROR_INVALID_PARAMETER;
+       return STATUS_INVALID_PARAMETER;
 
    UserEnterExclusive();
 
@@ -1527,7 +1527,7 @@ NtUserBuildHwndList(
       {
          if(hDesktop == NULL && !(Desktop = IntGetActiveDesktop()))
          {
-            Status = ERROR_INVALID_HANDLE;
+            Status = STATUS_INVALID_HANDLE;
             goto Quit;
          }
 
@@ -1539,7 +1539,7 @@ NtUserBuildHwndList(
                                               &Desktop);
             if(!NT_SUCCESS(Status))
             {
-                Status = ERROR_INVALID_HANDLE;
+                Status = STATUS_INVALID_HANDLE;
                 goto Quit;
             }
          }
@@ -1615,14 +1615,14 @@ NtUserBuildHwndList(
       if (!NT_SUCCESS(Status))
       {
          ERR("Thread Id is not valid!\n");
-         Status = ERROR_INVALID_PARAMETER;
+         Status = STATUS_INVALID_PARAMETER;
          goto Quit;
       }
       if (!(W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread))
       {
          ObDereferenceObject(Thread);
          TRACE("Tried to enumerate windows of a non gui thread\n");
-         Status = ERROR_INVALID_PARAMETER;
+         Status = STATUS_INVALID_PARAMETER;
          goto Quit;
       }
 
