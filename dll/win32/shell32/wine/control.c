@@ -839,9 +839,9 @@ Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
     /* Activate the corresponding button in the taskbar */
     CoInitialize(NULL);
     if (CoCreateInstance(&CLSID_TaskbarList,
-                            NULL, CLSCTX_INPROC_SERVER,
-                            &IID_ITaskbarList,
-                            (LPVOID*)&pTaskbar) == S_OK)
+                         NULL, CLSCTX_INPROC_SERVER,
+                         &IID_ITaskbarList,
+                         (LPVOID*)&pTaskbar) == S_OK)
     {
         if (ITaskbarList_HrInit(pTaskbar) == S_OK)
         {
