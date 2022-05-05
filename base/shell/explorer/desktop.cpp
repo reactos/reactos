@@ -149,12 +149,14 @@ DWORD CDesktopThread::DesktopThreadProc()
     hRet = m_Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
     if (!SUCCEEDED(hRet))
     {
+        OleUninitialize();
         return 1;
     }
 
     hDesktop = _SHCreateDesktop(pSdt);
     if (!hDesktop)
     {
+        OleUninitialize();
         return 1;
     }
 
@@ -162,6 +164,7 @@ DWORD CDesktopThread::DesktopThreadProc()
     {
         /* Failed to notify that we initialized successfully, kill ourselves
            to make the main thread wake up! */
+        OleUninitialize();
         return 1;
     }
 
