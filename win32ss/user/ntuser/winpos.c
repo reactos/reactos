@@ -1396,18 +1396,24 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
                   /* We found its Owner, so we must handle it here. */
                   if (i > 0)
                   {
-                     if (List[i - 1] != Window->head.h)
+                     if (List[i - 1] != UserHMGetHandle(Window))
                      {
-                        /* Do not allow hWndInsertAfter to become equal to
-                         * Window->head.h. This would cause the window to
-                         * reference itself. This changes the passed in
-                         * hWndInsertAfter which will be handled below. */
+                        /*
+                         * If the popup to be inserted is not already just
+                         * before the Owner, insert it there. The modified
+                         * hWndInsertAfter will be handled below.
+                         *
+                         * (NOTE: Do not allow hWndInsertAfter to become equal
+                         * to the popup's window handle, as this would cause
+                         * the popup to link to itself).
+                         */
                         hWndInsertAfter = List[i - 1];
                      }
                      else
                      {
-                        /* If we cannot do 'hWndInsertAfter = List[i - 1]' then
-                         * exit here returning hWndInsertAfter as passed in. */
+                        /* If the popup to be inserted is already
+                         * before the Owner, we are done. */
+                        ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
                         return hWndInsertAfter;
                      }
                   }
