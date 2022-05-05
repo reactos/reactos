@@ -207,10 +207,43 @@ static PVOID AllocSysObject(
     return Object;
 }
 
+_Success_(return!=NULL)
+static PVOID AllocSysObjectCB(
+    _In_ PDESKTOP pDesk,
+    _In_ PTHREADINFO pti,
+    _In_ SIZE_T Size,
+    _Out_ PVOID* ObjectOwner)
+{
+    PVOID Object;
+
+    UNREFERENCED_PARAMETER(pDesk);
+    UNREFERENCED_PARAMETER(pti);
+    ASSERT(Size > sizeof(HEAD));
+
+    /* Allocate the clipboard data */
+    // FIXME: This allocation should be done on the current session pool;
+    // however ReactOS' MM doesn't support session pool yet.
+    Object = ExAllocatePoolZero(/* SESSION_POOL_MASK | */ PagedPool, Size, USERTAG_CLIPBOARD);
+    if (!Object)
+    {
+        ERR("ExAllocatePoolZero failed. No object created.\n");
+        return NULL;
+    }
+
+    *ObjectOwner = NULL;
+    return Object;
+}
+
 static void FreeSysObject(
     _In_ PVOID Object)
 {
     UserHeapFree(Object);
+}
+
+static void FreeSysObjectCB(
+    _In_ PVOID Object)
+{
+    ExFreePoolWithTag(Object, USERTAG_CLIPBOARD);
 }
 
 static const struct
@@ -226,7 +259,7 @@ static const struct
     { AllocProcMarkObject,      IntDestroyCurIconObject,    FreeCurIconObject },    /* TYPE_CURSOR */
     { AllocSysObject,           /*UserSetWindowPosCleanup*/NULL, FreeSysObject },   /* TYPE_SETWINDOWPOS */
     { AllocDeskThreadObject,    IntRemoveHook,              FreeDeskThreadObject }, /* TYPE_HOOK */
-    { AllocSysObject,           /*UserClipDataCleanup*/NULL,FreeSysObject },        /* TYPE_CLIPDATA */
+    { AllocSysObjectCB,         /*UserClipDataCleanup*/NULL,FreeSysObjectCB },      /* TYPE_CLIPDATA */
     { AllocDeskProcObject,      DestroyCallProc,            FreeDeskProcObject },   /* TYPE_CALLPROC */
     { AllocProcMarkObject,      UserDestroyAccelTable,      FreeProcMarkObject },   /* TYPE_ACCELTABLE */
     { NULL,                     NULL,                       NULL },                 /* TYPE_DDEACCESS */
