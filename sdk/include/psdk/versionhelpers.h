@@ -26,7 +26,6 @@
 
 #include <specstrings.h>
 #include <winreg.h>
-#include <string.h>
 
 #ifdef __cplusplus
 #define VERSIONHELPERAPI inline bool
@@ -154,30 +153,25 @@ IsReactOS()
     HKEY hKey;
     BOOL bResult = FALSE;
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-                     0,
-                     KEY_QUERY_VALUE,
-                     &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKey) == ERROR_SUCCESS)
     {
-        TCHAR szProductName[30];
+        WCHAR szProductName[30];
         DWORD dwLength = sizeof(szProductName);
 
-        if (RegGetValue(hKey,
-                        NULL,
-                        TEXT("ProductName"),
-                        RRF_RT_REG_SZ | RRF_ZEROONFAILURE,
-                        NULL,
-                        szProductName,
-                        &dwLength) == ERROR_SUCCESS)
+        if (RegGetValueW(hKey,
+                         NULL,
+                         L"ProductName",
+                         RRF_RT_REG_SZ | RRF_ZEROONFAILURE,
+                         NULL,
+                         szProductName,
+                         &dwLength) == ERROR_SUCCESS)
         {
-#ifdef UNICODE
             bResult = (wcscmp(L"ReactOS", szProductName) == 0);
-#else
-            bResult = (strcmp("ReactOS", szProductName) == 0);
-#endif
         }
-        RegCloseKey(hKey);
     }
     return bResult;
 }
