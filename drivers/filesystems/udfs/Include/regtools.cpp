@@ -26,7 +26,7 @@ RegTGetKeyHandle(
     InitializeObjectAttributes(
         &ObjectAttributes,
         &NameString,
-        OBJ_CASE_INSENSITIVE,
+        OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
         hRootKey,
         NULL
         );
@@ -276,4 +276,3 @@ RegTGetStringValue(
     }
     return retval;
 } // end RegTGetStringValue()
-

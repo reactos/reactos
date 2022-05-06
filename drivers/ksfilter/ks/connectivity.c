@@ -265,7 +265,7 @@ KspReadMediaCategory(
     RtlFreeUnicodeString(&GuidString);
 
     /* initialize object attributes */
-    InitializeObjectAttributes(&ObjectAttributes, &Path, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &Path, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
     /* open the key */
     Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
@@ -839,4 +839,3 @@ KsHandleSizedListQuery(
         return STATUS_BUFFER_TOO_SMALL;
     }
 }
-
