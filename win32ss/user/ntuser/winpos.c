@@ -1899,8 +1899,10 @@ co_WinPosSetWindowPos(
       if (UserIsDesktopWindow(Window->spwndParent))
          co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (WPARAM)Window->head.h, 0);
 
-      Window->style &= ~WS_VISIBLE; //IntSetStyle( Window, 0, WS_VISIBLE );
-      Window->head.pti->cVisWindows--;
+      //IntSetStyle(Window, 0, WS_VISIBLE);
+      if (Window->style & WS_VISIBLE) Window->head.pti->cVisWindows--;
+      Window->style &= ~WS_VISIBLE;
+
       IntNotifyWinEvent(EVENT_OBJECT_HIDE, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
@@ -1923,8 +1925,10 @@ co_WinPosSetWindowPos(
             UpdateShellHook(Window);
       }
 
-      Window->style |= WS_VISIBLE; //IntSetStyle( Window, WS_VISIBLE, 0 );
-      Window->head.pti->cVisWindows++;
+      //IntSetStyle(Window, WS_VISIBLE, 0);
+      if (!(Window->style & WS_VISIBLE)) Window->head.pti->cVisWindows++;
+      Window->style |= WS_VISIBLE;
+
       IntNotifyWinEvent(EVENT_OBJECT_SHOW, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
    }
    else

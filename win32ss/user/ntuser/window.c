@@ -564,7 +564,7 @@ UserFreeWindowInfo(PTHREADINFO ti, PWND Wnd)
  * Destroy storage associated to a window. "Internals" p.358
  *
  * This is the "functional" DestroyWindows function i.e. all stuff
- * done in CreateWindow is undone here and not in DestroyWindow :-P
+ * done in IntCreateWindow is undone here and not in DestroyWindow :-P
  */
 LRESULT co_UserFreeWindow(PWND Window,
                           PPROCESSINFO ProcessData,
@@ -585,8 +585,9 @@ LRESULT co_UserFreeWindow(PWND Window,
       return 0;
    }
    Window->state2 |= WNDS2_INDESTROY;
+
+   if (Window->style & WS_VISIBLE) Window->head.pti->cVisWindows--;
    Window->style &= ~WS_VISIBLE;
-   Window->head.pti->cVisWindows--;
 
 
    /* remove the window already at this point from the thread window list so we
@@ -2832,6 +2833,7 @@ VOID FASTCALL IntDestroyOwnedWindows(PWND Window)
     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
 }
 
+// Destroys a window created with co_UserCreateWindowEx().
 // Win: xxxDestroyWindow
 BOOLEAN co_UserDestroyWindow(PVOID Object)
 {

@@ -1199,7 +1199,7 @@ IntUserSetActiveWindow(
              //ERR("IntUserSetActiveWindow 3 Go Out!\n");
              break;
          }
-         AllowFG = !pti->cVisWindows; // Nothing is visable.
+         AllowFG = !pti->cVisWindows; // Nothing is visible.
          //ERR("IntUserSetActiveWindow 3a DoFG = %d AllowFG = %d\n",DoFG,AllowFG);
       }
       else //if (ThreadQueue != Wnd->head.pti->MessageQueue)
