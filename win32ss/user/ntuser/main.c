@@ -490,7 +490,6 @@ InitThreadCallback(PETHREAD Thread)
     /* Mark the process as having threads */
     ptiCurrent->ppi->W32PF_flags |= W32PF_THREADCONNECTED;
 
-    InitializeListHead(&ptiCurrent->WindowListHead);
     InitializeListHead(&ptiCurrent->W32CallbackListHead);
     InitializeListHead(&ptiCurrent->PostedMessagesListHead);
     InitializeListHead(&ptiCurrent->SentMessagesListHead);

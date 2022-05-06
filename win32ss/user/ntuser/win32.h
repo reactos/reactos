@@ -153,7 +153,6 @@ typedef struct _THREADINFO
     // Accounting of queue bit sets, the rest are flags. QS_TIMER QS_PAINT counts are handled in thread information.
     DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
 
-    LIST_ENTRY WindowListHead;
     LIST_ENTRY W32CallbackListHead;
     SINGLE_LIST_ENTRY  ReferencesList;
     ULONG cExclusiveLocks;

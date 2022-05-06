@@ -718,12 +718,14 @@ typedef struct _WND
     struct _WND *spwndLastActive;
     HIMC hImc; // Input context associated with this window.
     LONG_PTR dwUserData;
+
     PVOID pActCtx;
     //PD3DMATRIX pTransForm;
     struct _WND *spwndClipboardListener;
     DWORD ExStyle2;
 
     /* ReactOS */
+
     struct
     {
         RECT NormalRect;
@@ -739,8 +741,6 @@ typedef struct _WND
 
     /* Scrollbar info */
     PSBINFOEX pSBInfoex; // convert to PSBINFO
-    /* Entry in the list of thread windows. */
-    LIST_ENTRY ThreadListEntry;
 
     PVOID DialogPointer;
 } WND, *PWND;

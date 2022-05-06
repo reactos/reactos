@@ -590,11 +590,6 @@ LRESULT co_UserFreeWindow(PWND Window,
    Window->style &= ~WS_VISIBLE;
 
 
-   /* remove the window already at this point from the thread window list so we
-      don't get into trouble when destroying the thread windows while we're still
-      in co_UserFreeWindow() */
-   RemoveEntryList(&Window->ThreadListEntry);
-
    BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
 
    IntDeRegisterShellHookWindow(UserHMGetHandle(Window));
@@ -714,7 +709,7 @@ LRESULT co_UserFreeWindow(PWND Window,
         && (Menu = UserGetMenuObject(Window->SystemMenu)))
    {
       IntDestroyMenuObject(Menu, TRUE);
-      Window->SystemMenu = (HMENU)0;
+      Window->SystemMenu = NULL;
    }
 
    DceFreeWindowDCE(Window);    /* Always do this to catch orphaned DCs */
@@ -752,9 +747,9 @@ LRESULT co_UserFreeWindow(PWND Window,
       GreDeleteObject(Window->hrgnClip);
       Window->hrgnClip = NULL;
    }
+
    Window->head.pti->cWindows--;
 
-//   ASSERT(Window != NULL);
    UserFreeWindowInfo(Window->head.pti, Window);
 
    UserDereferenceObject(Window);
@@ -1627,9 +1622,6 @@ NtUserBuildHwndList(
          goto Quit;
       }
 
-     // Do not use Thread link list due to co_UserFreeWindow!!!
-     // Current = W32Thread->WindowListHead.Flink;
-     // Fixes Api:CreateWindowEx tests!!!
       List = IntWinListChildren(UserGetDesktopWindow());
       if (List)
       {
@@ -2149,9 +2141,6 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
           UserAttachThreadInput(pti, pWnd->spwndOwner->head.pti, TRUE);
        }
    }
-
-   /* Insert the window into the thread's window list. */
-   InsertTailList (&pti->WindowListHead, &pWnd->ThreadListEntry);
 
    /* Handle "CS_CLASSDC", it is tested first. */
    if ( (pWnd->pcls->style & CS_CLASSDC) && !(pWnd->pcls->pdce) )

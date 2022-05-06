@@ -3285,7 +3285,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     }
 
     /* Make sure that we don't own any window in the current desktop */
-    if (!IsListEmpty(&pti->WindowListHead))
+    if (pti->cWindows != 0)
     {
         if (pdesk)
             ObDereferenceObject(pdesk);
