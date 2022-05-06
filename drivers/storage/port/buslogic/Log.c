@@ -35,11 +35,19 @@ BOOLEAN LogMessage(PCHAR szFormat, ...)
 
 	//DbgPrint("\n Initializing Object attributes");
 
+#ifndef __REACTOS__
 	InitializeObjectAttributes (&objectAttributes,
 								(PUNICODE_STRING)&fileName,
 								OBJ_CASE_INSENSITIVE,
 								NULL,
 								NULL );
+#else
+	InitializeObjectAttributes (&objectAttributes,
+								(PUNICODE_STRING)&fileName,
+								OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+								NULL,
+								NULL );
+#endif
 
 	DbgPrint("\n BusLogic - Creating the file");
 
