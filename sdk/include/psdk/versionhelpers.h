@@ -25,6 +25,7 @@
 #define _versionhelpers_H_INCLUDED_
 
 #include <specstrings.h>
+#include <winreg.h>
 
 #ifdef __cplusplus
 #define VERSIONHELPERAPI inline bool
