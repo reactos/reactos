@@ -3285,13 +3285,16 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         }
     }
 
-    /* Make sure that we don't own any window in the current desktop */
-    if (pti->cWindows != 0)
+    /* Make sure that we don't own any window or have hooks in the current desktop */
+    if ((pti->cWindows != 0) || pti->fsHooks)
     {
         if (pdesk)
             ObDereferenceObject(pdesk);
-        ERR("Attempted to change thread desktop although thread 0x%p (process 0x%p '%s') has %lu windows!\n",
-            pti, pti->ppi->peProcess, pti->ppi->peProcess->ImageFileName, pti->cWindows);
+
+        ERR("Attempted to change thread desktop although thread 0x%p (process 0x%p '%s') has %lu windows / %s hooks!\n",
+            pti, pti->ppi->peProcess, pti->ppi->peProcess->ImageFileName,
+            pti->cWindows, (pti->fsHooks ? "some" : "no"));
+
         EngSetLastError(ERROR_BUSY);
         return FALSE;
     }
