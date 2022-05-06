@@ -1510,7 +1510,8 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
             if ((pWindowPos->flags & SWP_SHOWWINDOW) != 0)
             {
                 HDESK hdesk = UserOpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
-                IntSetThreadDesktop(hdesk, FALSE);
+                if (!IntSetThreadDesktop(hdesk, FALSE))
+                    ObCloseHandle(hdesk, UserMode);
             }
             break;
         }
@@ -3260,7 +3261,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
 
     ASSERT(NtCurrentTeb());
 
-    TRACE("IntSetThreadDesktop hDesktop:0x%p, FOF:%i\n",hDesktop, FreeOnFailure);
+    TRACE("IntSetThreadDesktop hDesktop:0x%p, FOF:%i\n", hDesktop, FreeOnFailure);
 
     pti = PsGetCurrentThreadWin32Thread();
     pci = pti->pClientInfo;
@@ -3289,7 +3290,8 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     {
         if (pdesk)
             ObDereferenceObject(pdesk);
-        ERR("Attempted to change thread desktop although the thread has windows!\n");
+        ERR("Attempted to change thread desktop although thread 0x%p (process 0x%p '%s') has %lu windows!\n",
+            pti, pti->ppi->peProcess, pti->ppi->peProcess->ImageFileName, pti->cWindows);
         EngSetLastError(ERROR_BUSY);
         return FALSE;
     }
