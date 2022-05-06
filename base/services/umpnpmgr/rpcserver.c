@@ -2541,8 +2541,11 @@ PNP_GetInterfaceDeviceList(
     DPRINT("PNP_GetInterfaceDeviceList(%p %p %S %p %p 0x%08lx)\n",
            hBinding, InterfaceGuid, pszDeviceID, Buffer, pulLength, ulFlags);
 
-    if (!IsValidDeviceInstanceID(pszDeviceID))
-        return CR_INVALID_DEVINST;
+    if (pszDeviceID != NULL && pszDeviceID[0] != L'\0')
+    {
+        if (!IsValidDeviceInstanceID(pszDeviceID))
+            return CR_INVALID_DEVINST;
+    }
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pszDeviceID);
@@ -2588,8 +2591,11 @@ PNP_GetInterfaceDeviceListSize(
     DPRINT("PNP_GetInterfaceDeviceListSize(%p %p %p %S 0x%08lx)\n",
            hBinding, pulLen, InterfaceGuid, pszDeviceID, ulFlags);
 
-    if (!IsValidDeviceInstanceID(pszDeviceID))
-        return CR_INVALID_DEVINST;
+    if (pszDeviceID != NULL && pszDeviceID[0] != L'\0')
+    {
+        if (!IsValidDeviceInstanceID(pszDeviceID))
+            return CR_INVALID_DEVINST;
+    }
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          pszDeviceID);
@@ -2611,7 +2617,7 @@ PNP_GetInterfaceDeviceListSize(
         ret = NtStatusToCrError(Status);
     }
 
-    DPRINT("PNP_GetInterfaceDeviceListSize() done (returns %lx)\n", ret);
+    DPRINT("PNP_GetInterfaceDeviceListSize() done (listSize %lx,returns %lx)\n",*pulLen , ret);
     return ret;
 }
 
