@@ -35,6 +35,21 @@ static const CHAR CmpIntelID[]       = "GenuineIntel";
 static const CHAR CmpAmdID[]         = "AuthenticAMD";
 static const CHAR CmpCentaurID[]     = "CentaurHauls";
 
+typedef union _CPU_SIGNATURE
+{
+    struct
+    {
+        ULONG Step : 4;
+        ULONG Model : 4;
+        ULONG Family : 4;
+        ULONG Unused : 4;
+        ULONG ExtendedModel : 4;
+        ULONG ExtendedFamily : 8;
+        ULONG Unused2 : 4;
+    };
+    ULONG AsULONG;
+} CPU_SIGNATURE;
+
 /* FUNCTIONS *****************************************************************/
 
 ULONG
@@ -82,6 +97,7 @@ NTAPI
 KiSetProcessorType(VOID)
 {
     CPU_INFO CpuInfo;
+    CPU_SIGNATURE CpuSignature;
     ULONG Stepping, Type;
 
     /* Do CPUID 1 now */
@@ -89,17 +105,14 @@ KiSetProcessorType(VOID)
 
     /*
      * Get the Stepping and Type. The stepping contains both the
-     * Model and the Step, while the Type contains the returned Type.
-     * We ignore the family.
+     * Model and the Step, while the Type contains the returned Family.
      *
      * For the stepping, we convert this: zzzzzzxy into this: x0y
      */
-    Stepping = CpuInfo.Eax & 0xF0;
-    Stepping <<= 4;
-    Stepping += (CpuInfo.Eax & 0xFF);
-    Stepping &= 0xF0F;
-    Type = CpuInfo.Eax & 0xF00;
-    Type >>= 8;
+    CpuSignature.AsULONG = CpuInfo.Eax;
+    Stepping = CpuSignature.Model;
+    Stepping = (Stepping << 8) | CpuSignature.Step;
+    Type = CpuSignature.Family;
 
     /* Save them in the PRCB */
     KeGetCurrentPrcb()->CpuID = TRUE;
