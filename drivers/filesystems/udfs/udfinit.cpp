@@ -649,7 +649,7 @@ UDFDismountDevice(
 
         InitializeObjectAttributes ( &ObjectAttributes,
                                      unicodeCdRomDeviceName,
-                                     OBJ_CASE_INSENSITIVE,
+                                     OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                      NULL,
                                      NULL );
 

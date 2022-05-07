@@ -129,7 +129,7 @@ OpenKey(
     RtlInitUnicodeString(&SubKeyName, lpSubKeyName);
 
     /* initialize key attributes */
-    InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, hKey, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF, hKey, NULL);
 
     /* open the key */
     Status = ZwOpenKey(OutKey, DesiredAccess, &ObjectAttributes);

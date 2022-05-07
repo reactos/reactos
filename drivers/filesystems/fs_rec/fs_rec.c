@@ -238,7 +238,7 @@ FsRecRegisterFs(IN PDRIVER_OBJECT DriverObject,
     RtlInitUnicodeString(&DeviceName, FsName);
     InitializeObjectAttributes(&ObjectAttributes,
                                &DeviceName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                0,
                                NULL);
 

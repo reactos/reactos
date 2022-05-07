@@ -239,7 +239,7 @@ KsMapModuleName(
     RtlAppendUnicodeStringToString(&SubKeyName, ModuleName);
 
     /* initialize subkey attributes */
-    InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE, hKey, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, hKey, NULL);
 
     /* now open the subkey */
     Status = ZwOpenKey(&hSubKey, GENERIC_READ, &ObjectAttributes);
@@ -263,6 +263,3 @@ KsMapModuleName(
     /* return status */
     return Status;
 }
-
-
-
