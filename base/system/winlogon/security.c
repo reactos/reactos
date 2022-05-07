@@ -1446,21 +1446,12 @@ AllowAccessOnSession(
         goto Quit;
     }
 
-/*
- * FIXME: Desktop security management is broken. The application desktop gets created
- * with CreateDesktopW() API call with an initial and defined security  descriptor for it yet
- * when we are giving access to the logged in user, SetUserObjectSecurity() API call fails to set
- * new security because the desktop in question has no prior security  descriptor (when it's
- * been assigned even before!!!). This chunk of code must be enabled when this gets fixed.
- */
-#if 0
     /* Allow application desktop access to this user within this session */
     if (!AllowDesktopAccessToUser(Session->ApplicationDesktop, LogonSid))
     {
         ERR("AllowAccessOnSession(): Failed to allow application desktop access to the logon user!\n");
         goto Quit;
     }
-#endif
 
     /* Get the length of this logon SID */
     SidLength = GetLengthSid(LogonSid);
