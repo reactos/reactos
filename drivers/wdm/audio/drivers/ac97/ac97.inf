@@ -18,7 +18,7 @@
 Signature="$CHICAGO$"
 Class=MEDIA
 ClassGUID={4d36e96c-e325-11ce-bfc1-08002be10318}
-provider=%ProviderName%
+Provider=%ReactOS%
 ;;The following line is used only when the INF comes with the Windows system
 ;;IHV needs to comment out the following line for their OEM redistributed disk.
 ;;LayoutFile=layout.inf, layout1.inf, layout2.inf
@@ -334,7 +334,7 @@ AddService = ac97, 0x00000002, ac97_Service_Inst
 
 
 [Strings]
-ProviderName="FooProviderName"
+ReactOS="ReactOS Team"
 MfgName="Intel"
 DiskDescription="AC'97 WDM Driver Disk"
 
@@ -354,6 +354,9 @@ ac97.DeviceDesc="Intel 82801 AC'97 Audio Controller"
 ac97.Wave.szPname="AC'97 Sound Card"
 ac97.Topology.szPname="AC'97 Mixer"
 
+ac97.SvcDesc = "Service for AC'97 Driver (WDM)"
+
+;; Registry (non-localizeable)
 MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"
 
 Proxy.CLSID="{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
@@ -363,8 +366,6 @@ KSCATEGORY_CAPTURE="{65E8773D-8F56-11D0-A3B9-00A0C9223196}"
 KSCATEGORY_REALTIME="{EB115FFC-10C8-4964-831D-6DCB02E6F23F}"
 KSNAME_Wave="Wave"
 KSNAME_Topology="Topology"
-
-ac97.SvcDesc = "Service for AC'97 Driver (WDM)"
 
 ;; Nodes (non-localizeable)
 ICHGUID.PhoneVolume     ="{0A8C1A87-42B0-11D2-95D2-00C04FB925D3}"
@@ -397,7 +398,6 @@ ICHGUID.Surround        ="{81FBB14B-1BEE-4bf5-92EE-FFC4F75F326D}"
 ICHGUID.Center          ="{2D97372F-9CF6-4fd6-9E56-C68BACDF360D}"
 ICHGUID.LFE             ="{B60C4274-3BFD-430b-8364-D947E7D304B1}"
 ICHGUID.Front           ="{070395E2-BE7C-4b4d-B529-40CB9BFCF995}"
-
 
 ;; Nodes (localizeable)
 ICHNode.PhoneVolume     ="Phone Volume"
@@ -432,10 +432,8 @@ ICHPin.LFE              ="Subwoofer"
 ICHPin.Front            ="Front Speaker"
 
 [Strings.0407]
-ProviderName="FooProviderName"
-MfgName="Intel"
+DiskDescription="Diskette für AC'97 WDM Treiber"
 
-DiskDescription="Diskette für AC'97 WDM Treiberbeispiel"
 ac97_440MX.DeviceDesc="Intel 82440MX AC'97 Audiocontroller"
 ac97_AA.DeviceDesc="Intel 82801AA AC'97 Audiocontroller"
 ac97_AB.DeviceDesc="Intel 82801AB AC'97 Audiocontroller"
@@ -452,53 +450,9 @@ ac97.DeviceDesc="Intel 82801 AC'97 Audiocontroller"
 ac97.Wave.szPname="AC'97 Musikkarte"
 ac97.Topology.szPname="AC'97 Mixer"
 
-MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"
-
-Proxy.CLSID="{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
-KSCATEGORY_AUDIO="{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
-KSCATEGORY_RENDER="{65E8773E-8F56-11D0-A3B9-00A0C9223196}"
-KSCATEGORY_CAPTURE="{65E8773D-8F56-11D0-A3B9-00A0C9223196}"
-KSCATEGORY_REALTIME="{EB115FFC-10C8-4964-831D-6DCB02E6F23F}"
-KSNAME_Wave="Wave"
-KSNAME_Topology="Topology"
-
-ac97.SvcDesc = "Installationshilfe für AC'97 Treiberbeispiel (WDM)"
-
-
-;; Nodes (non-localizeable)
-ICHGUID.PhoneVolume     ="{0A8C1A87-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.PhoneMute       ="{0A8C1A88-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.LineInMute      ="{0A8C1A91-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.MainMix         ="{0A8C1A9B-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.3DBypass        ="{0A8C1A9E-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.3DEnable        ="{766DB5A4-6E94-11D2-9ADE-00C04F8EFB68}"
-ICHGUID.BeepMix         ="{0A8C1A9F-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.HPVolume        ="{0A8C1AA5-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.HPMute          ="{0A8C1AA6-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.MonoOutSelect   ="{0A8C1AA9-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.WaveInSelect    ="{0A8C1AAE-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.MasterInVolume  ="{0A8C1AAF-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.MasterInMute    ="{0A8C1AB0-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.MicInVolume     ="{0A8C1AB2-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.MicInMute       ="{0A8C1AB3-42B0-11D2-95D2-00C04FB925D3}"
-ICHGUID.SimulStereo     ="{B3AD50B5-3849-4983-ADD7-25E6268F912D}"
-ICHGUID.SurroundVolume  ="{A4B68BA4-6958-4ab4-BB01-E23C6F027C88}"
-ICHGUID.SurroundMute    ="{22654FBC-AC8F-4224-B19F-D858D2E10BDD}"
-ICHGUID.CenterVolume    ="{9B0F1946-ABD2-47a8-A778-BB86CDE1A167}"
-ICHGUID.CenterMute      ="{BEEF51ED-1041-43f8-9B96-5863D0A9342D}"
-ICHGUID.LFEVolume       ="{455FA6F2-21EC-4df4-B1E4-3155209797F3}"
-ICHGUID.LFEMute         ="{4A4D9210-C780-4768-BFD2-525FDBF4FCB4}"
-ICHGUID.FrontVolume     ="{9F4801BD-F746-4c7a-8A9D-F6E99004CC98}"
-ICHGUID.FrontMute       ="{C8E03B2A-EBD9-4554-A750-8E4472750A5B}"
-
-;; Pins (non-localizeable)
-ICHGUID.Surround        ="{81FBB14B-1BEE-4bf5-92EE-FFC4F75F326D}"
-ICHGUID.Center          ="{2D97372F-9CF6-4fd6-9E56-C68BACDF360D}"
-ICHGUID.LFE             ="{B60C4274-3BFD-430b-8364-D947E7D304B1}"
-ICHGUID.Front           ="{070395E2-BE7C-4b4d-B529-40CB9BFCF995}"
+ac97.SvcDesc = "Dienst für AC'97 Treiber (WDM)"
 
 ;; Nodes (localizeable)
-
 ICHNode.PhoneVolume     ="Phone Lautstärke"
 ICHNode.PhoneMute       ="Phone Aus"
 ICHNode.LineInMute      ="Line In Aus"
@@ -506,6 +460,8 @@ ICHNode.MainMix         ="Hauptmixer"
 ICHNode.3DBypass        ="3D umgehen"
 ICHNode.3DEnable        ="3D Aktivieren"
 ICHNode.BeepMix         ="Piepmixer"
+ICHNode.HPVolume        ="Kopfhörer Lautstärke"
+ICHNode.HPMute          ="Kopfhörer Aus"
 ICHNode.MonoOutSelect   ="Mono Ausgang Selektor"
 ICHNode.WaveInSelect    ="Aufnahme Selektor"
 ICHNode.MasterInVolume  ="Aufnahme Lautstärke"
@@ -520,11 +476,64 @@ ICHNode.CenterMute      ="Lautsprecher Mitte Aus"
 ICHNode.LFEVolume       ="Bass Lautsprecherlautstärke"
 ICHNode.LFEMute         ="Bass Lautsprecher Aus"
 ICHNode.FrontVolume     ="Lautsprecherlautstärke Vorne"
-ICHNode.HPVolume        ="Kopfh�rer Lautst�rke"
-ICHNode.HPMute          ="Kopfh�rer Aus"
+ICHNode.FrontMute       ="Lautsprecherlautstärke Aus"
 
 ;; Pins
 ICHPin.Surround         ="Lautsprecher Hinten"
 ICHPin.Center           ="Lautsprecher Mitte"
 ICHPin.LFE              ="Bass Lautsprecher"
 ICHPin.Front            ="Lautsprecher Vorne"
+
+[Strings.0419]
+ReactOS="Команда ReactOS"
+DiskDescription="Диск с драйвером AC'97 WDM"
+
+ac97_440MX.DeviceDesc="Intel 82440MX AC'97 аудиоконтроллер"
+ac97_AA.DeviceDesc="Intel 82801AA AC'97 аудиоконтроллер"
+ac97_AB.DeviceDesc="Intel 82801AB AC'97 аудиоконтроллер"
+ac97_BA.DeviceDesc="Intel 82801BA/BAM AC'97 аудиоконтроллер"
+ac97_CA.DeviceDesc="Intel 82801CA/CAM AC'97 аудиоконтроллер"
+ac97_DB.DeviceDesc="Intel 82801DB/DBL/DBM AC'97 аудиоконтроллер"
+ac97_EB.DeviceDesc="Intel 82801EB/ER AC'97 аудиоконтроллер"
+ac97_FB.DeviceDesc="Intel 82801FB/FBM/FR/FW/FRW AC'97 аудиоконтроллер"
+ac97_GB.DeviceDesc="Intel 82801GB/GR/GDH/GBM/GHM AC'97 аудиоконтроллер"
+ac97_6300ESB.DeviceDesc="Intel 6300ESB AC'97 аудиоконтроллер"
+ac97_63xxESB.DeviceDesc="Intel 631xESB/632xESB AC'97 аудиоконтроллер"
+ac97.DeviceDesc="Intel 82801 AC'97 аудиоконтроллер"
+
+ac97.Wave.szPname="Звуковая карта AC'97"
+ac97.Topology.szPname="Микшер AC'97"
+
+ac97.SvcDesc = "Служба для драйвера AC'97 (WDM)"
+
+;; Nodes (localizeable)
+ICHNode.PhoneVolume     ="Телефон"
+ICHNode.PhoneMute       ="Заглушить телефон"
+ICHNode.LineInMute      ="Заглушить линейный вход"
+ICHNode.MainMix         ="Главный микшер"
+ICHNode.3DBypass        ="Отключить 3D"
+ICHNode.3DEnable        ="Включить 3D"
+ICHNode.BeepMix         ="Динамик ПК"
+ICHNode.HPVolume        ="Наушники"
+ICHNode.HPMute          ="Заглушить наушники"
+ICHNode.MonoOutSelect   ="Моно выход"
+ICHNode.WaveInSelect    ="Звуковой вход"
+ICHNode.MasterInVolume  ="Мастер вход"
+ICHNode.MasterInMute    ="Заглушить мастер вход"
+ICHNode.MicInVolume     ="Микрофон"
+ICHNode.MicInMute       ="Заглушить микрофон"
+ICHNode.SimulStereo     ="Симулятор стерео"
+ICHNode.SurroundVolume  ="Задние динамики"
+ICHNode.SurroundMute    ="Заглушить задние динамики"
+ICHNode.CenterVolume    ="Центральный динамик"
+ICHNode.CenterMute      ="Заглушить центральный динамик"
+ICHNode.LFEVolume       ="Сабвуфер"
+ICHNode.LFEMute         ="Заглушить сабвуфер"
+ICHNode.FrontVolume     ="Передние динамики"
+ICHNode.FrontMute       ="Заглушить передние динамики"
+
+;; Pins
+ICHPin.Surround         ="Задние динамики"
+ICHPin.Center           ="Центральный динамик"
+ICHPin.LFE              ="Сабвуфер"
+ICHPin.Front            ="Передние динамики"
