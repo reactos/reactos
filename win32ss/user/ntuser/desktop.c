@@ -128,6 +128,14 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                             (PVOID*)&Desktop);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Assign security to the desktop we have created */
+    Status = IntAssignDesktopSecurityOnParse(WinStaObject, Desktop, AccessState);
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(Desktop);
+        return Status;
+    }
+
     /* Initialize the desktop */
     Status = UserInitializeDesktop(Desktop, RemainingName, WinStaObject);
     if (!NT_SUCCESS(Status))

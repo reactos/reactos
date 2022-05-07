@@ -86,6 +86,13 @@ IntQueryUserSecurityIdentification(
 
 NTSTATUS
 NTAPI
+IntAssignDesktopSecurityOnParse(
+    _In_ PWINSTATION_OBJECT WinSta,
+    _In_ PDESKTOP Desktop,
+    _In_ PACCESS_STATE AccessState);
+
+NTSTATUS
+NTAPI
 IntCreateServiceSecurity(
     _Out_ PSECURITY_DESCRIPTOR *ServiceSd);
 

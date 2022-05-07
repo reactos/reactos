@@ -237,6 +237,72 @@ IntQueryUserSecurityIdentification(
 
 /**
  * @brief
+ * Assigns a security descriptor to the desktop
+ * object during a desktop object parse procedure.
+ *
+ * @param[in] WinSta
+ * A pointer to a window station object, of which
+ * such object contains its own security descriptor
+ * that will be captured.
+ *
+ * @param[in] Desktop
+ * A pointer to a desktop object that is created
+ * during a parse procedure.
+ *
+ * @param[in] AccessState
+ * A pointer to an access state structure that
+ * describes the progress state of an access in
+ * action.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the function has successfully
+ * assigned new security descriptor to the desktop object.
+ * A NTSTATUS failure code is returned otherwise.
+ */
+NTSTATUS
+NTAPI
+IntAssignDesktopSecurityOnParse(
+    _In_ PWINSTATION_OBJECT WinSta,
+    _In_ PDESKTOP Desktop,
+    _In_ PACCESS_STATE AccessState)
+{
+    NTSTATUS Status;
+    PSECURITY_DESCRIPTOR CapturedDescriptor;
+    BOOLEAN MemoryAllocated;
+
+    /*
+     * Capture the security descriptor from
+     * the window station. The window station
+     * in question has a descriptor that is
+     * inheritable and contains desktop access
+     * rights as well.
+     */
+    Status = ObGetObjectSecurity(WinSta,
+                                 &CapturedDescriptor,
+                                 &MemoryAllocated);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("IntAssignDesktopSecurityOnParse(): Failed to capture the security descriptor from window station (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Assign new security to the desktop */
+    Status = ObAssignSecurity(AccessState,
+                              CapturedDescriptor,
+                              Desktop,
+                              ExDesktopObjectType);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("IntAssignDesktopSecurityOnParse(): Failed to assign security information to the desktop object (Status 0x%08lx)\n", Status);
+    }
+
+    /* Release the descriptor that we have captured */
+    ObReleaseObjectSecurity(CapturedDescriptor, MemoryAllocated);
+    return Status;
+}
+
+/**
+ * @brief
  * Creates a security descriptor for the service.
  *
  * @param[out] ServiceSd
