@@ -301,7 +301,7 @@ PDEVOBJ_vFilterDriverHooks(
     if (dwAccelerationLevel >= 5)
     {
         /* Disable all display accelerations */
-        UNIMPLEMENTED;
+        /* (nothing to do. Already handled in PDEVOBJ_Create) */
     }
 }
 
@@ -506,7 +506,8 @@ PDEVOBJ_Create(
     ppdev->dwAccelerationLevel = dwAccelerationLevel;
 
     /* Copy the function table */
-    if (pdm->dmFields & (DM_PANNINGWIDTH | DM_PANNINGHEIGHT))
+    if ((ldevtype == LDEV_DEVICE_DISPLAY && dwAccelerationLevel >= 5) ||
+        pdm->dmFields & (DM_PANNINGWIDTH | DM_PANNINGHEIGHT))
     {
         ULONG i;
 
