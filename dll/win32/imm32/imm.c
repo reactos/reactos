@@ -491,7 +491,7 @@ BOOL WINAPI ImmActivateLayout(HKL hKL)
 
 static VOID APIENTRY Imm32CiceroSetActiveContext(HIMC hIMC, BOOL fActive, HWND hWnd, HKL hKL)
 {
-    FIXME("We have to do something\n");
+    TRACE("We have to do something\n");
 }
 
 /***********************************************************************
