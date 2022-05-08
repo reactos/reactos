@@ -112,9 +112,13 @@ VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget);
     (((pWnd)->pcls->style & CS_IME) || \
      ((pWnd)->pcls->atomClassName == gpsi->atomSysClass[ICLS_IME]))
 
+extern BOOL gfIMEShowStatus;
+
 BOOL FASTCALL IntWantImeWindow(PWND pwndTarget);
 PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst);
 BOOL FASTCALL IntImeCanDestroyDefIMEforChild(PWND pImeWnd, PWND pwndTarget);
 BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget);
+BOOL FASTCALL IntBroadcastImeShowStatusChange(PWND pImeWnd, BOOL bShow);
+VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd);
 
 /* EOF */

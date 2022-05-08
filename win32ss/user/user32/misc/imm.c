@@ -23,16 +23,18 @@ BOOL gbImmInitializing = FALSE; // Win: bImmInitializing
 
 INT gfConIme = -1; // Win: gfConIme
 
-// Win: GetTopLevelWindow
-PWND FASTCALL User32GetTopLevelWindow(PWND pwnd)
+HWND FASTCALL IntGetTopLevelWindow(HWND hWnd)
 {
-    if (!pwnd)
-        return NULL;
+    DWORD style;
 
-    while (pwnd->style & WS_CHILD)
-        pwnd = pwnd->spwndParent;
+    for (; hWnd; hWnd = GetParent(hWnd))
+    {
+        style = (DWORD)GetWindowLongPtrW(hWnd, GWL_STYLE);
+        if (!(style & WS_CHILD))
+            break;
+    }
 
-    return pwnd;
+    return hWnd;
 }
 
 /* define stub functions */
@@ -573,7 +575,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             if (User32GetImeShowStatus() == !lParam)
             {
                 hImeWnd = UserHMGetHandle(pimeui->spwnd);
-                NtUserCallHwndParamLock(hImeWnd, lParam, X_ROUTINE_IMESHOWSTATUSCHANGE);
+                NtUserCallHwndParamLock(hImeWnd, lParam, TWOPARAM_ROUTINE_IMESHOWSTATUSCHANGE);
             }
             break;
 
@@ -707,7 +709,7 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
     HIMC hIMC;
     LPINPUTCONTEXTDX pIC;
     HWND hwndFocus, hwndOldImc, hwndNewImc, hImeWnd, hwndActive, hwndOwner;
-    PWND pwndFocus, pwndOldImc, pwndNewImc, pImeWnd, pwndOwner;
+    PWND pwndFocus, pImeWnd, pwndOwner;
     COMPOSITIONFORM CompForm;
 
     pimeui->fActivate = !!wParam;
@@ -813,10 +815,8 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             hwndNewImc = pimeui->hwndIMC;
             if (pimeui->fShowStatus)
             {
-                pwndNewImc = ValidateHwnd(hwndNewImc);
-                pwndOldImc = ValidateHwnd(hwndOldImc);
-                if (pwndNewImc && pwndOldImc && pwndNewImc != pwndOldImc &&
-                    User32GetTopLevelWindow(pwndNewImc) != User32GetTopLevelWindow(pwndOldImc))
+                if (hwndOldImc && hwndNewImc && hwndOldImc != hwndNewImc &&
+                    IntGetTopLevelWindow(hwndOldImc) != IntGetTopLevelWindow(hwndNewImc))
                 {
                     User32NotifyOpenStatus(pimeui, hwndOldImc, FALSE);
                     User32NotifyOpenStatus(pimeui, hwndNewImc, TRUE);

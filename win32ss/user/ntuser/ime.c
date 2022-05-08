@@ -41,6 +41,7 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 HIMC ghIMC = NULL;
 BOOL gfImeOpen = (BOOL)-1;
 DWORD gdwImeConversion = (DWORD)-1;
+BOOL gfIMEShowStatus = (BOOL)-1;
 
 typedef struct tagIMEHOTKEY
 {
@@ -2102,6 +2103,270 @@ BOOL FASTCALL IntImeCanDestroyDefIME(PWND pImeWnd, PWND pwndTarget)
         return FALSE;
 
     pImeWnd->spwndOwner = NULL;
+    return TRUE;
+}
+
+// Update IMEUI.fShowStatus flags and Send the WM_IME_NOTIFY messages.
+// Win: xxxCheckImeShowStatus
+BOOL FASTCALL IntCheckImeShowStatus(PWND pwndIme, PTHREADINFO pti)
+{
+    BOOL ret = FALSE, bDifferent;
+    PWINDOWLIST pwl;
+    HWND *phwnd;
+    PWND pwndNode, pwndIMC;
+    PTHREADINFO ptiCurrent = GetW32ThreadInfo();
+    PIMEUI pimeui;
+    IMEUI SafeImeUI;
+
+    if (pwndIme->state2 & WNDS2_INDESTROY)
+        return FALSE;
+
+    // Build a window list
+    pwl = IntBuildHwndList(pwndIme->spwndParent->spwndChild, IACE_LIST, NULL);
+    if (!pwl)
+        return FALSE;
+
+    ret = TRUE;
+    for (phwnd = pwl->ahwnd; *phwnd != HWND_TERMINATOR; ++phwnd)
+    {
+        pwndNode = ValidateHwndNoErr(*phwnd);
+
+        if (!pwndNode || pwndIme == pwndNode)
+            continue;
+
+        if (pwndNode->pcls->atomClassName != gpsi->atomSysClass[ICLS_IME] ||
+            (pwndNode->state2 & WNDS2_INDESTROY))
+        {
+            continue;
+        }
+
+        pimeui = ((PIMEWND)pwndNode)->pimeui;
+        if (!pimeui || pimeui == (PIMEUI)-1)
+            continue;
+
+        if (pti && pti != pwndNode->head.pti)
+            continue;
+
+        // Attach to the process if necessary
+        bDifferent = FALSE;
+        if (pwndNode->head.pti->ppi != ptiCurrent->ppi)
+        {
+            KeAttachProcess(&(pwndNode->head.pti->ppi->peProcess->Pcb));
+            bDifferent = TRUE;
+        }
+
+        // Get pwndIMC and update IMEUI.fShowStatus flag
+        _SEH2_TRY
+        {
+            ProbeForWrite(pimeui, sizeof(IMEUI), 1);
+            SafeImeUI = *pimeui;
+            if (SafeImeUI.fShowStatus)
+            {
+                pwndIMC = ValidateHwndNoErr(pimeui->hwndIMC);
+                if (pwndIMC)
+                    pimeui->fShowStatus = FALSE;
+            }
+            else
+            {
+                pwndIMC = NULL;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            pwndIMC = NULL;
+        }
+        _SEH2_END;
+
+        // Detach from the process if necessary
+        if (bDifferent)
+            KeDetachProcess();
+
+        // Send the WM_IME_NOTIFY message
+        if (pwndIMC && pwndIMC->head.pti && !(pwndIMC->head.pti->TIF_flags & TIF_INCLEANUP))
+        {
+            HWND hImeWnd;
+            USER_REFERENCE_ENTRY Ref;
+
+            UserRefObjectCo(pwndIMC, &Ref);
+
+            hImeWnd = UserHMGetHandle(pwndIMC);
+            co_IntSendMessage(hImeWnd, WM_IME_NOTIFY, IMN_CLOSESTATUSWINDOW, 0);
+
+            UserDerefObjectCo(pwndIMC);
+        }
+    }
+
+    // Free the window list
+    IntFreeHwndList(pwl);
+    return ret;
+}
+
+// Send a UI message.
+// Win: xxxSendMessageToUI
+LRESULT FASTCALL
+IntSendMessageToUI(PTHREADINFO ptiIME, PIMEUI pimeui, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PWND pwndUI;
+    LRESULT ret = 0;
+    IMEUI SafeImeUI;
+    BOOL bDifferent = FALSE;
+    USER_REFERENCE_ENTRY Ref;
+
+    // Attach to the process if necessary
+    if (ptiIME != GetW32ThreadInfo())
+    {
+        bDifferent = TRUE;
+        KeAttachProcess(&(ptiIME->ppi->peProcess->Pcb));
+    }
+
+    // Get the pwndUI
+    _SEH2_TRY
+    {
+        ProbeForRead(pimeui, sizeof(IMEUI), 1);
+        SafeImeUI = *pimeui;
+        pwndUI = ValidateHwndNoErr(SafeImeUI.hwndUI);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        pwndUI = NULL;
+    }
+    _SEH2_END;
+
+    if (!pwndUI)
+        goto Quit;
+
+    // Increment the recursion count of the IME procedure.
+    // See also ImeWndProc_common of user32.
+    _SEH2_TRY
+    {
+        ProbeForWrite(&pimeui->nCntInIMEProc, sizeof(LONG), 1);
+        InterlockedIncrement(&pimeui->nCntInIMEProc);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        goto Quit;
+    }
+    _SEH2_END;
+
+    // Detach from the process if necessary
+    if (bDifferent)
+        KeDetachProcess();
+
+    UserRefObjectCo(pwndUI, &Ref);
+    ret = co_IntSendMessage(UserHMGetHandle(pwndUI), uMsg, wParam, lParam);
+    UserDerefObjectCo(pwndUI);
+
+    // Attach to the process if necessary
+    if (bDifferent)
+        KeAttachProcess(&(ptiIME->ppi->peProcess->Pcb));
+
+    // Decrement the recursion count of the IME procedure
+    _SEH2_TRY
+    {
+        ProbeForWrite(&pimeui->nCntInIMEProc, sizeof(LONG), 1);
+        InterlockedDecrement(&pimeui->nCntInIMEProc);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        goto Quit;
+    }
+    _SEH2_END;
+
+Quit:
+    // Detach from the process if necessary
+    if (bDifferent)
+        KeDetachProcess();
+
+    return ret;
+}
+
+// Send the open status notification.
+// Win: xxxSendOpenStatusNotify
+VOID FASTCALL
+IntSendOpenStatusNotify(PTHREADINFO ptiIME, PIMEUI pimeui, PWND pWnd, BOOL bOpen)
+{
+    WPARAM wParam = (bOpen ? IMN_OPENSTATUSWINDOW : IMN_CLOSESTATUSWINDOW);
+    PTHREADINFO ptiWnd = pWnd->head.pti;
+    USER_REFERENCE_ENTRY Ref;
+
+    if (ptiWnd->dwExpWinVer >= WINVER_WINNT4 && pWnd->hImc)
+    {
+        UserRefObjectCo(pWnd, &Ref);
+        co_IntSendMessage(UserHMGetHandle(pWnd), WM_IME_NOTIFY, wParam, 0);
+        UserDerefObjectCo(pWnd);
+    }
+    else
+    {
+        IntSendMessageToUI(ptiIME, pimeui, WM_IME_NOTIFY, wParam, 0);
+    }
+}
+
+// Update the IME status and send a notification.
+// Win: xxxNotifyImeShowStatus
+VOID FASTCALL IntNotifyImeShowStatus(PWND pImeWnd)
+{
+    PIMEUI pimeui;
+    PWND pWnd;
+    PTHREADINFO pti, ptiIME;
+    BOOL bShow, bSendNotify = FALSE;
+    IMEUI SafeImeUI;
+
+    if (!IS_IMM_MODE() || (pImeWnd->state2 & WNDS2_INDESTROY))
+        return;
+
+    pti = PsGetCurrentThreadWin32Thread();
+    ptiIME = pImeWnd->head.pti;
+
+    // Attach to the process if necessary
+    if (pti != ptiIME)
+        KeAttachProcess(&(ptiIME->ppi->peProcess->Pcb));
+
+    // Get an IMEUI and check whether hwndIMC is valid and update fShowStatus
+    _SEH2_TRY
+    {
+        ProbeForWrite(pImeWnd, sizeof(IMEWND), 1);
+        pimeui = ((PIMEWND)pImeWnd)->pimeui;
+        SafeImeUI = *pimeui;
+
+        bShow = (gfIMEShowStatus == TRUE) && SafeImeUI.fCtrlShowStatus;
+
+        pWnd = ValidateHwndNoErr(SafeImeUI.hwndIMC);
+        if (!pWnd)
+            pWnd = ptiIME->MessageQueue->spwndFocus;
+
+        if (pWnd)
+        {
+            bSendNotify = TRUE;
+            pimeui->fShowStatus = bShow;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (pti != ptiIME)
+            KeDetachProcess();
+        return;
+    }
+    _SEH2_END;
+
+    // Detach from the process if necessary
+    if (pti != ptiIME)
+        KeDetachProcess();
+
+    if (bSendNotify)
+        IntSendOpenStatusNotify(ptiIME, &SafeImeUI, pWnd, bShow);
+
+    if (!(pImeWnd->state2 & WNDS2_INDESTROY))
+        IntCheckImeShowStatus(pImeWnd, NULL);
+}
+
+// Win: xxxBroadcastImeShowStatusChange
+BOOL FASTCALL IntBroadcastImeShowStatusChange(PWND pImeWnd, BOOL bShow)
+{
+    if (gfIMEShowStatus == bShow || !IS_IMM_MODE())
+        return TRUE;
+
+    gfIMEShowStatus = bShow;
+    IntNotifyImeShowStatus(pImeWnd);
     return TRUE;
 }
 
