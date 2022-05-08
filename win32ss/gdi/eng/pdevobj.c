@@ -21,6 +21,9 @@ MultiEnableDriver(
     _In_ ULONG cj,
     _Inout_bytecount_(cj) PDRVENABLEDATA pded);
 
+extern DRVFN gPanDispDrvFn[];
+extern ULONG gPanDispDrvCount;
+
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
@@ -503,7 +506,24 @@ PDEVOBJ_Create(
     ppdev->dwAccelerationLevel = dwAccelerationLevel;
 
     /* Copy the function table */
-    ppdev->pfn = ppdev->pldev->pfn;
+    if (pdm->dmFields & (DM_PANNINGWIDTH | DM_PANNINGHEIGHT))
+    {
+        ULONG i;
+
+        /* Initialize missing fields */
+        if (!(pdm->dmFields & DM_PANNINGWIDTH))
+            pdm->dmPanningWidth = pdm->dmPelsWidth;
+        if (!(pdm->dmFields & DM_PANNINGHEIGHT))
+            pdm->dmPanningHeight = pdm->dmPelsHeight;
+
+        /* Replace vtable by panning vtable */
+        for (i = 0; i < gPanDispDrvCount; i++)
+            ppdev->apfn[gPanDispDrvFn[i].iFunc] = gPanDispDrvFn[i].pfn;
+    }
+    else
+    {
+        ppdev->pfn = ppdev->pldev->pfn;
+    }
 
     /* Call the driver to enable the PDEV */
     if (!PDEVOBJ_bEnablePDEV(ppdev, pdm, NULL))
