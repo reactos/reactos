@@ -176,7 +176,7 @@ PDEVOBJ_bEnablePDEV(
     ULONG i;
 
     /* Get the DrvEnablePDEV function */
-    pfnEnablePDEV = ppdev->pldev->pfn.EnablePDEV;
+    pfnEnablePDEV = ppdev->pfn.EnablePDEV;
 
     /* Call the drivers DrvEnablePDEV function */
     TRACE("DrvEnablePDEV(pdevmode %p (%dx%dx%d %d Hz) hdev %p (%S))\n",
@@ -243,7 +243,7 @@ PDEVOBJ_vCompletePDEV(
 {
     /* Call the drivers DrvCompletePDEV function */
     TRACE("DrvCompletePDEV(dhpdev %p hdev %p)\n", ppdev->dhpdev, ppdev);
-    ppdev->pldev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
+    ppdev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
 }
 
 static
@@ -314,7 +314,7 @@ PDEVOBJ_pSurface(
     {
         /* Call the drivers DrvEnableSurface */
         TRACE("DrvEnableSurface(dhpdev %p)\n", ppdev->dhpdev);
-        hsurf = ppdev->pldev->pfn.EnableSurface(ppdev->dhpdev);
+        hsurf = ppdev->pfn.EnableSurface(ppdev->dhpdev);
         TRACE("DrvEnableSurface(dhpdev %p) => hsurf %p\n", ppdev->dhpdev, hsurf);
         if (hsurf== NULL)
         {
@@ -502,6 +502,9 @@ PDEVOBJ_Create(
     ppdev->pldev = pldev;
     ppdev->dwAccelerationLevel = dwAccelerationLevel;
 
+    /* Copy the function table */
+    ppdev->pfn = ppdev->pldev->pfn;
+
     /* Call the driver to enable the PDEV */
     if (!PDEVOBJ_bEnablePDEV(ppdev, pdm, NULL))
     {
@@ -510,9 +513,6 @@ PDEVOBJ_Create(
         EngUnloadImage(pldev);
         return NULL;
     }
-
-    /* Copy the function table */
-    ppdev->pfn = ppdev->pldev->pfn;
 
     /* Tell the driver that the PDEV is ready */
     PDEVOBJ_vCompletePDEV(ppdev);
