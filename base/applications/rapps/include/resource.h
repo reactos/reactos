@@ -84,7 +84,6 @@
 #define ID_RESETDB               561
 #define ID_CHECK_ALL             562
 #define ID_SEARCH                563
-#define ID_TOOLBAR_INSTALL       564
 
 /* Strings */
 #define IDS_APPTITLE             100
