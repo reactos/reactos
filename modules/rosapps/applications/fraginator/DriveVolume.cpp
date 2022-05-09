@@ -214,9 +214,8 @@ bool DriveVolume::GetBitmap (void)
 
     if (reallBitmap == NULL)
     {
-        //Fail "miserably"
-        //We don't have enought memory left
-        wprintf(L"\nNot enought memory to read volume bitmap\n");
+        // Fail "miserably"
+        wprintf(L"\nNot enough memory to read volume bitmap\n");
         HeapFree(GetProcessHeap(), 0, Bitmap);
         return (false);
     }
