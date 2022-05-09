@@ -819,10 +819,35 @@ Control_EnumWinProc(
 static void
 Control_ShowAppletInTaskbar(CPlApplet* applet, UINT index)
 {
+    HICON hSmallIcon;
     ITaskbarList* pTaskbar = NULL;
 
+    /* Try to add a taskbar button only if the applet's parent window is the desktop */
+    if (GetParent(applet->hWnd) != NULL)
+    {
+        return;
+    }
+
     SetWindowTextW(applet->hWnd, applet->info[index].name);
-    SendMessageW(applet->hWnd, WM_SETICON, ICON_SMALL, (LPARAM)applet->info[index].icon);
+
+    /* Try loading the small icon for the taskbar button */
+    hSmallIcon = (HICON)LoadImageW(applet->hModule,
+                                   MAKEINTRESOURCEW(applet->info[index].idIcon),
+                                   IMAGE_ICON,
+                                   GetSystemMetrics(SM_CXSMICON),
+                                   GetSystemMetrics(SM_CYSMICON),
+                                   0);
+    if (hSmallIcon)
+    {
+        SendMessageW(applet->hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hSmallIcon);
+    }
+    else
+    {
+        if (applet->info[index].icon)
+        {
+            SendMessageW(applet->hWnd, WM_SETICON, ICON_SMALL, (LPARAM)applet->info[index].icon);
+        }
+    }
 
     /* Add button to the taskbar */
     ShowWindow(applet->hWnd, SW_SHOWMINNOACTIVE);
