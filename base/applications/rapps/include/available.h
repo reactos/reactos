@@ -75,6 +75,9 @@ public:
     BOOL HasLanguageInfo() const;
     BOOL HasNativeLanguage() const;
     BOOL HasEnglishLanguage() const;
+    inline BOOL IsInstalling() const { return m_isInstalling; };
+    inline VOID StartInstalling() { m_isInstalling = TRUE; };
+    inline VOID FinishInstalling() { m_isInstalling = FALSE; };
     BOOL IsInstalled() const;
     BOOL HasInstalledVersion() const;
     BOOL HasUpdate() const;
@@ -84,6 +87,7 @@ public:
     VOID SetLastWriteTime(FILETIME* ftTime);
 
 private:
+    BOOL m_isInstalling;
     BOOL m_IsInstalled;
     BOOL m_HasLanguageInfo;
     BOOL m_HasInstalledVersion;

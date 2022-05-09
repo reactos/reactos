@@ -1614,11 +1614,12 @@ BOOL CApplicationView::ProcessWindowMessage(HWND hwnd, UINT message, WPARAM wPar
                 LPNMITEMACTIVATE Item = (LPNMITEMACTIVATE)lParam;
                 if (Item->iItem != -1)
                 {
+                    CAvailableApplicationInfo *pApplicationInfo = (CAvailableApplicationInfo *)m_ListView->GetItemData(Item->iItem);
                     /* this won't do anything if the program is already installed */
 
-                    if (ApplicationViewType == AppViewTypeAvailableApps)
+                    if (ApplicationViewType == AppViewTypeAvailableApps && (!pApplicationInfo || !pApplicationInfo->IsInstalling()))
                     {
-                        m_MainWindow->InstallApplication((CAvailableApplicationInfo *)m_ListView->GetItemData(Item->iItem));
+                        m_MainWindow->InstallApplication(pApplicationInfo);
                     }
                 }
             }

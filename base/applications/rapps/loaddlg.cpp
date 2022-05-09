@@ -83,13 +83,11 @@ ATL::CStringW LoadStatusString(DownloadStatus StatusParam)
 struct DownloadInfo
 {
     DownloadInfo() {}
-    DownloadInfo(const CAvailableApplicationInfo& AppInfo)
-        : DLType(DLTYPE_APPLICATION)
-        , szUrl(AppInfo.m_szUrlDownload)
-        , szName(AppInfo.m_szName)
-        , szSHA1(AppInfo.m_szSHA1)
-        , SizeInBytes(AppInfo.m_SizeBytes)
+    DownloadInfo(CAvailableApplicationInfo* pAppInfo)
+        : DLType(DLTYPE_APPLICATION), szUrl(pAppInfo->m_szUrlDownload), szName(pAppInfo->m_szName),
+          szSHA1(pAppInfo->m_szSHA1), SizeInBytes(pAppInfo->m_SizeBytes)
     {
+        pApplicationInfo = pAppInfo;
     }
 
     DownloadType DLType;
@@ -97,6 +95,7 @@ struct DownloadInfo
     ATL::CStringW szName;
     ATL::CStringW szSHA1;
     ULONG SizeInBytes;
+    CAvailableApplicationInfo *pApplicationInfo;
 };
 
 struct DownloadParam
@@ -366,7 +365,7 @@ class CDownloadManager
     static BOOL bModal;
     static VOID UpdateProgress(HWND hDlg, ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText);
 public:
-    static VOID Add(DownloadInfo info);
+    static VOID Add(const DownloadInfo& info);
     static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
     static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static unsigned int WINAPI ThreadFunc(LPVOID Context);
@@ -381,7 +380,7 @@ CDownloaderProgress                     CDownloadManager::ProgressBar;
 BOOL                                    CDownloadManager::bCancelled = FALSE;
 BOOL                                    CDownloadManager::bModal = FALSE;
 
-VOID CDownloadManager::Add(DownloadInfo info)
+VOID CDownloadManager::Add(const DownloadInfo& info)
 {
     AppsDownloadList.Add(info);
 }
@@ -612,6 +611,11 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
         else
         {
+            if (InfoArray[iAppId].pApplicationInfo->IsInstalling())
+            {
+                continue;
+            }
+            InfoArray[iAppId].pApplicationInfo->StartInstalling();
             Path = SettingsInfo.szDownloadDir;
         }
 
@@ -971,6 +975,8 @@ run:
             {
                 ShowLastError(hMainWnd, FALSE, GetLastError());
             }
+
+            InfoArray[iAppId].pApplicationInfo->FinishInstalling();
         }
 
 end:
@@ -1019,7 +1025,7 @@ VOID CDownloadManager::LaunchDownloadDialog(BOOL bIsModal)
 // CDownloadManager
 
 
-BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal)
+BOOL DownloadListOfApplications(ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal)
 {
     if (AppsList.GetSize() == 0)
         return FALSE;
@@ -1027,7 +1033,7 @@ BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInf
     // Initialize shared variables
     for (INT i = 0; i < AppsList.GetSize(); ++i)
     {
-        CDownloadManager::Add(AppsList[i]); // implicit conversion to DownloadInfo
+        CDownloadManager::Add(&AppsList[i]); // implicit conversion to DownloadInfo
     }
 
     // Create a dialog and issue a download process
@@ -1041,7 +1047,8 @@ BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo)
     if (!pAppInfo)
         return FALSE;
 
-    CDownloadManager::Download(*pAppInfo, FALSE);
+    CDownloadManager::Download(pAppInfo, FALSE);
+
     return TRUE;
 }
 
