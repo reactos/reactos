@@ -86,37 +86,6 @@ setCx86(UCHAR reg, UCHAR data)
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
-VOID
-NTAPI
-KiSetProcessorType(VOID)
-{
-    CPU_INFO CpuInfo;
-    ULONG Stepping, Type;
-
-    /* Do CPUID 1 now */
-    KiCpuId(&CpuInfo, 1);
-
-    /*
-     * Get the Stepping and Type. The stepping contains both the
-     * Model and the Step, while the Type contains the returned Type.
-     * We ignore the family.
-     *
-     * For the stepping, we convert this: zzzzzzxy into this: x0y
-     */
-    Stepping = CpuInfo.Eax & 0xF0;
-    Stepping <<= 4;
-    Stepping += (CpuInfo.Eax & 0xFF);
-    Stepping &= 0xF0F;
-    Type = CpuInfo.Eax & 0xF00;
-    Type >>= 8;
-
-    /* Save them in the PRCB */
-    KeGetCurrentPrcb()->CpuID = TRUE;
-    KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
-    KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
-}
-
-CODE_SEG("INIT")
 ULONG
 NTAPI
 KiGetCpuVendor(VOID)
@@ -166,6 +135,37 @@ KiGetCpuVendor(VOID)
     /* Unknown CPU */
     DPRINT1("%s CPU support not fully tested!\n", Prcb->VendorString);
     return CPU_UNKNOWN;
+}
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+KiSetProcessorType(VOID)
+{
+    CPU_INFO CpuInfo;
+    ULONG Stepping, Type;
+
+    /* Do CPUID 1 now */
+    KiCpuId(&CpuInfo, 1);
+
+    /*
+     * Get the Stepping and Type. The stepping contains both the
+     * Model and the Step, while the Type contains the returned Type.
+     * We ignore the family.
+     *
+     * For the stepping, we convert this: zzzzzzxy into this: x0y
+     */
+    Stepping = CpuInfo.Eax & 0xF0;
+    Stepping <<= 4;
+    Stepping += (CpuInfo.Eax & 0xFF);
+    Stepping &= 0xF0F;
+    Type = CpuInfo.Eax & 0xF00;
+    Type >>= 8;
+
+    /* Save them in the PRCB */
+    KeGetCurrentPrcb()->CpuID = TRUE;
+    KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
+    KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
 }
 
 CODE_SEG("INIT")
