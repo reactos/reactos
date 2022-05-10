@@ -31,6 +31,31 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+typedef struct tagMYHOTKEYENTRY
+{
+    DWORD  dwHotKeyId;
+    UINT   uVirtualKey;
+    UINT   uModifiers;
+    HKL    hKL;
+} MYHOTKEYENTRY, *PMYHOTKEYENTRY;
+
+MYHOTKEYENTRY DefaultHotKeyTableJ[] =
+{
+    { IME_JHOTKEY_CLOSE_OPEN, VK_KANJI, MOD_IGNORE_ALL_MODIFIER, NULL },
+};
+
+MYHOTKEYENTRY DefaultHotKeyTableT[] =
+{
+    { IME_THOTKEY_IME_NONIME_TOGGLE, VK_SPACE, MOD_LEFT | MOD_RIGHT | MOD_CONTROL, NULL },
+    { IME_THOTKEY_SHAPE_TOGGLE, VK_SPACE, MOD_LEFT | MOD_RIGHT | MOD_SHIFT, NULL },
+};
+
+MYHOTKEYENTRY DefaultHotKeyTableC[] =
+{
+    { IME_CHOTKEY_IME_NONIME_TOGGLE, VK_SPACE, MOD_LEFT | MOD_RIGHT | MOD_CONTROL, NULL },
+    { IME_CHOTKEY_SHAPE_TOGGLE, VK_SPACE, MOD_LEFT | MOD_RIGHT | MOD_SHIFT, NULL },
+};
+
 /*
  * @implemented
  */
@@ -328,6 +353,187 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
     return NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName,
                                       NULL, &ustrKLID,
                                       dwhkl, Flags);
+}
+
+// The far-east flags
+#define FE_JAPANESE             (1 << 0)
+#define FE_CHINESE_TRADITIONAL  (1 << 1)
+#define FE_CHINESE_SIMPLIFIED   (1 << 2)
+#define FE_KOREAN               (1 << 3)
+
+// Sets the far-east flags
+// Win: SetFeKeyboardFlags
+VOID FASTCALL IntSetFeKeyboardFlags(LANGID LangID, PBYTE pbFlags)
+{
+    switch (LangID)
+    {
+        case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT):
+            *pbFlags |= FE_JAPANESE;
+            break;
+
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL):
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_HONGKONG):
+            *pbFlags |= FE_CHINESE_TRADITIONAL;
+            break;
+
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED):
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SINGAPORE):
+            *pbFlags |= FE_CHINESE_SIMPLIFIED;
+            break;
+
+        case MAKELANGID(LANG_KOREAN, SUBLANG_KOREAN):
+            *pbFlags |= FE_KOREAN;
+            break;
+
+        default:
+            break;
+    }
+}
+
+BOOL APIENTRY
+CliImmSetHotKeyWorker(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DWORD dwAction)
+{
+    if (dwAction == SETIMEHOTKEY_ADD)
+    {
+        if (IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId && dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST)
+        {
+            if (!hKL)
+                goto Failure;
+        }
+        else
+        {
+            if (hKL)
+                goto Failure;
+
+            if (IME_KHOTKEY_SHAPE_TOGGLE <= dwHotKeyId &&
+                dwHotKeyId < IME_THOTKEY_IME_NONIME_TOGGLE)
+            {
+                goto Failure;
+            }
+        }
+
+#define MOD_ALL_MODS (MOD_ALT | MOD_CONTROL | MOD_SHIFT | MOD_WIN)
+        if ((uModifiers & MOD_ALL_MODS) && !(uModifiers & (MOD_LEFT | MOD_RIGHT)))
+        {
+            goto Failure;
+        }
+#undef MOD_ALL_MODS
+    }
+
+    return NtUserSetImeHotKey(dwHotKeyId, uModifiers, uVirtualKey, hKL, dwAction);
+
+Failure:
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
+
+VOID APIENTRY CliSetDefaultImeHotKeys(PMYHOTKEYENTRY pEntries, UINT nCount, BOOL bCheck)
+{
+    UINT uVirtualKey, uModifiers;
+    HKL hKL;
+
+    while (nCount-- > 0)
+    {
+        if (!bCheck || !NtUserGetImeHotKey(pEntries->dwHotKeyId, &uModifiers, &uVirtualKey, &hKL))
+        {
+            CliImmSetHotKeyWorker(pEntries->dwHotKeyId,
+                                  pEntries->uModifiers,
+                                  pEntries->uVirtualKey,
+                                  pEntries->hKL,
+                                  SETIMEHOTKEY_ADD);
+        }
+        ++pEntries;
+    }
+}
+
+VOID APIENTRY CliGetPreloadKeyboardLayouts(BYTE* pbFlags)
+{
+    WCHAR szValue[9], szKeyName[4];
+    UNICODE_STRING ValueString;
+    DWORD dwKL, ret;
+    UINT iNumber;
+
+    for (iNumber = 1; iNumber < 1000; ++iNumber)
+    {
+        StringCchPrintfW(szKeyName, _countof(szKeyName), L"%d", iNumber);
+        ret = GetPrivateProfileStringW(L"Preload", szKeyName, L"", szValue, _countof(szValue),
+                                       L"keyboardlayout.ini");
+        if (ret == -1 || !szValue[0])
+            break;
+
+        RtlInitUnicodeString(&ValueString, szValue);
+        RtlUnicodeStringToInteger(&ValueString, 16, &dwKL);
+
+        IntSetFeKeyboardFlags(LOWORD(dwKL), pbFlags);
+    }
+}
+
+BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
+{
+    // FIXME:
+    return FALSE;
+}
+
+VOID APIENTRY CliImmInitializeHotKeys(DWORD dwAction, HKL hKL)
+{
+    UINT nCount;
+    LPHKL pList;
+    UINT iIndex;
+    LANGID LangID;
+    BYTE bFlags = 0;
+    BOOL bCheck;
+
+    NtUserSetImeHotKey(0, 0, 0, NULL, SETIMEHOTKEY_DELETEALL);
+
+    bCheck = CliGetImeHotKeysFromRegistry();
+
+    if (dwAction == SETIMEHOTKEY_DELETEALL)
+    {
+        LangID = LANGIDFROMLCID(GetUserDefaultLCID());
+        IntSetFeKeyboardFlags(LangID, &bFlags);
+        CliGetPreloadKeyboardLayouts(&bFlags);
+    }
+    else
+    {
+        nCount = NtUserGetKeyboardLayoutList(0, NULL);
+        if (!nCount)
+            return;
+
+        pList = RtlAllocateHeap(RtlGetProcessHeap(), 0, nCount * sizeof(HKL));
+        if (!pList)
+            return;
+
+        NtUserGetKeyboardLayoutList(nCount, pList);
+
+        for (iIndex = 0; iIndex < nCount; ++iIndex)
+        {
+            LangID = LOWORD(pList[iIndex]);
+            IntSetFeKeyboardFlags(LangID, &bFlags);
+        }
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pList);
+    }
+
+    if (bFlags & FE_JAPANESE)
+        CliSetDefaultImeHotKeys(DefaultHotKeyTableJ, _countof(DefaultHotKeyTableJ), bCheck);
+
+    if (bFlags & FE_CHINESE_TRADITIONAL)
+        CliSetDefaultImeHotKeys(DefaultHotKeyTableT, _countof(DefaultHotKeyTableT), bCheck);
+
+    if (bFlags & FE_CHINESE_SIMPLIFIED)
+        CliSetDefaultImeHotKeys(DefaultHotKeyTableC, _countof(DefaultHotKeyTableC), bCheck);
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI UnloadKeyboardLayout(HKL hKL)
+{
+    if (!NtUserUnloadKeyboardLayout(hKL))
+        return FALSE;
+
+    CliImmInitializeHotKeys(SETIMEHOTKEY_DELETE, hKL);
+    return TRUE;
 }
 
 /*
