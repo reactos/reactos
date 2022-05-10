@@ -526,7 +526,7 @@ BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
     HKEY hKey;
     LONG error;
     BOOL ret = FALSE;
-    DWORD dwIndex, cbKeyName;
+    DWORD dwIndex, cchKeyName;
     WCHAR szKeyName[16];
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER,
@@ -539,8 +539,8 @@ BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
 
     for (dwIndex = 0; ; ++dwIndex)
     {
-        cbKeyName = sizeof(szKeyName);
-        error = RegEnumKeyExW(hKey, dwIndex, szKeyName, &cbKeyName, NULL, NULL, NULL, NULL);
+        cchKeyName = _countof(szKeyName);
+        error = RegEnumKeyExW(hKey, dwIndex, szKeyName, &cchKeyName, NULL, NULL, NULL, NULL);
         if (error == ERROR_NO_MORE_ITEMS || error != ERROR_SUCCESS)
             break;
 
