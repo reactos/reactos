@@ -59,6 +59,251 @@ IMEHOTKEYENTRY DefaultHotKeyTableC[] =
     { IME_CHOTKEY_SHAPE_TOGGLE, VK_SPACE, MOD_LEFT | MOD_RIGHT | MOD_SHIFT, NULL },
 };
 
+// The far-east flags
+#define FE_JAPANESE             (1 << 0)
+#define FE_CHINESE_TRADITIONAL  (1 << 1)
+#define FE_CHINESE_SIMPLIFIED   (1 << 2)
+#define FE_KOREAN               (1 << 3)
+
+// Sets the far-east flags
+// Win: SetFeKeyboardFlags
+VOID FASTCALL IntSetFeKeyboardFlags(LANGID LangID, PBYTE pbFlags)
+{
+    switch (LangID)
+    {
+        case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT):
+            *pbFlags |= FE_JAPANESE;
+            break;
+
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL):
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_HONGKONG):
+            *pbFlags |= FE_CHINESE_TRADITIONAL;
+            break;
+
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED):
+        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SINGAPORE):
+            *pbFlags |= FE_CHINESE_SIMPLIFIED;
+            break;
+
+        case MAKELANGID(LANG_KOREAN, SUBLANG_KOREAN):
+            *pbFlags |= FE_KOREAN;
+            break;
+
+        default:
+            break;
+    }
+}
+
+DWORD FASTCALL CliReadRegistryValue(HANDLE hKey, LPCWSTR pszName)
+{
+    DWORD dwType, cbValue;
+    BYTE abValue[8];
+    LONG error;
+
+    cbValue = sizeof(abValue);
+    error = RegQueryValueExW(hKey, pszName, NULL, &dwType, abValue, &cbValue);
+    if (error != ERROR_SUCCESS || cbValue < sizeof(DWORD) || dwType != REG_BINARY)
+        return 0;
+
+    return *(LPDWORD)abValue;
+}
+
+BOOL APIENTRY
+CliImmSetHotKeyWorker(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DWORD dwAction)
+{
+    if (dwAction == SETIMEHOTKEY_ADD)
+    {
+        if (IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId && dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST)
+        {
+            if (!hKL)
+                goto Failure;
+        }
+        else
+        {
+            if (hKL)
+                goto Failure;
+
+            if (IME_KHOTKEY_SHAPE_TOGGLE <= dwHotKeyId &&
+                dwHotKeyId < IME_THOTKEY_IME_NONIME_TOGGLE)
+            {
+                goto Failure;
+            }
+        }
+
+#define MOD_ALL_MODS (MOD_ALT | MOD_CONTROL | MOD_SHIFT | MOD_WIN)
+        if ((uModifiers & MOD_ALL_MODS) && !(uModifiers & (MOD_LEFT | MOD_RIGHT)))
+            goto Failure;
+#undef MOD_ALL_MODS
+    }
+
+    return NtUserSetImeHotKey(dwHotKeyId, uModifiers, uVirtualKey, hKL, dwAction);
+
+Failure:
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
+
+BOOL FASTCALL CliSetSingleHotKey(LPCWSTR pszSubKey, HANDLE hKey)
+{
+    LONG error;
+    HKEY hSubKey;
+    DWORD dwHotKeyId = 0;
+    UINT uModifiers = 0, uVirtualKey = 0;
+    HKL hKL = NULL;
+    UNICODE_STRING ustrName;
+
+    error = RegOpenKeyExW(hKey, pszSubKey, 0, KEY_READ, &hSubKey);
+    if (error != ERROR_SUCCESS)
+        return FALSE;
+
+    RtlInitUnicodeString(&ustrName, pszSubKey);
+    RtlUnicodeStringToInteger(&ustrName, 16, &dwHotKeyId);
+
+    uModifiers = CliReadRegistryValue(hSubKey, L"Key Modifiers");
+    hKL = (HKL)(ULONG_PTR)CliReadRegistryValue(hSubKey, L"Target IME");
+    uVirtualKey = CliReadRegistryValue(hSubKey, L"Virtual Key");
+
+    RegCloseKey(hSubKey);
+
+    return CliImmSetHotKeyWorker(dwHotKeyId, uModifiers, uVirtualKey, hKL, SETIMEHOTKEY_ADD);
+}
+
+BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
+{
+    HKEY hKey;
+    LONG error;
+    BOOL ret = FALSE;
+    DWORD dwIndex, cchKeyName;
+    WCHAR szKeyName[16];
+
+    error = RegOpenKeyExW(HKEY_CURRENT_USER,
+                          L"Control Panel\\Input Method\\Hot Keys",
+                          0,
+                          KEY_ALL_ACCESS,
+                          &hKey);
+    if (error != ERROR_SUCCESS)
+        return ret;
+
+    for (dwIndex = 0; ; ++dwIndex)
+    {
+        cchKeyName = _countof(szKeyName);
+        error = RegEnumKeyExW(hKey, dwIndex, szKeyName, &cchKeyName, NULL, NULL, NULL, NULL);
+        if (error == ERROR_NO_MORE_ITEMS || error != ERROR_SUCCESS)
+            break;
+
+        szKeyName[_countof(szKeyName) - 1] = 0;
+
+        if (CliSetSingleHotKey(szKeyName, hKey))
+            ret = TRUE;
+    }
+
+    RegCloseKey(hKey);
+    return ret;
+}
+
+VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
+{
+    WCHAR szValueName[8], szValue[16];
+    UNICODE_STRING ValueString;
+    DWORD dwKL, cbValue, dwType;
+    UINT iNumber;
+    HKEY hKey;
+    LONG error;
+
+    error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_READ, &hKey);
+    if (error != ERROR_SUCCESS)
+        return;
+
+    for (iNumber = 1; iNumber < 1000; ++iNumber)
+    {
+        StringCchPrintfW(szValueName, _countof(szValueName), L"%u", iNumber);
+
+        cbValue = sizeof(szValue);
+        error = RegQueryValueExW(hKey, szValueName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
+        if (error != ERROR_SUCCESS || dwType != REG_SZ)
+            break;
+
+        szValue[_countof(szValue) - 1] = 0;
+
+        RtlInitUnicodeString(&ValueString, szValue);
+        RtlUnicodeStringToInteger(&ValueString, 16, &dwKL);
+
+        IntSetFeKeyboardFlags(LOWORD(dwKL), pbFlags);
+    }
+
+    RegCloseKey(hKey);
+}
+
+VOID APIENTRY CliSetDefaultImeHotKeys(PIMEHOTKEYENTRY pEntries, UINT nCount, BOOL bCheck)
+{
+    UINT uVirtualKey, uModifiers;
+    HKL hKL;
+
+    while (nCount-- > 0)
+    {
+        if (!bCheck || !NtUserGetImeHotKey(pEntries->dwHotKeyId, &uModifiers, &uVirtualKey, &hKL))
+        {
+            CliImmSetHotKeyWorker(pEntries->dwHotKeyId,
+                                  pEntries->uModifiers,
+                                  pEntries->uVirtualKey,
+                                  pEntries->hKL,
+                                  SETIMEHOTKEY_ADD);
+        }
+        ++pEntries;
+    }
+}
+
+VOID APIENTRY CliImmInitializeHotKeys(DWORD dwAction, HKL hKL)
+{
+    UINT nCount;
+    LPHKL pList;
+    UINT iIndex;
+    LANGID LangID;
+    BYTE bFlags = 0;
+    BOOL bCheck;
+
+    NtUserSetImeHotKey(0, 0, 0, NULL, SETIMEHOTKEY_DELETEALL);
+
+    bCheck = CliGetImeHotKeysFromRegistry();
+
+    if (dwAction == SETIMEHOTKEY_DELETEALL)
+    {
+        LangID = LANGIDFROMLCID(GetUserDefaultLCID());
+        IntSetFeKeyboardFlags(LangID, &bFlags);
+
+        CliGetPreloadKeyboardLayouts(&bFlags);
+    }
+    else
+    {
+        nCount = NtUserGetKeyboardLayoutList(0, NULL);
+        if (!nCount)
+            return;
+
+        pList = RtlAllocateHeap(RtlGetProcessHeap(), 0, nCount * sizeof(HKL));
+        if (!pList)
+            return;
+
+        NtUserGetKeyboardLayoutList(nCount, pList);
+
+        for (iIndex = 0; iIndex < nCount; ++iIndex)
+        {
+            LangID = LOWORD(pList[iIndex]);
+            IntSetFeKeyboardFlags(LangID, &bFlags);
+        }
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pList);
+    }
+
+    if (bFlags & FE_JAPANESE)
+        CliSetDefaultImeHotKeys(DefaultHotKeyTableJ, _countof(DefaultHotKeyTableJ), bCheck);
+
+    if (bFlags & FE_CHINESE_TRADITIONAL)
+        CliSetDefaultImeHotKeys(DefaultHotKeyTableT, _countof(DefaultHotKeyTableT), bCheck);
+
+    if (bFlags & FE_CHINESE_SIMPLIFIED)
+        CliSetDefaultImeHotKeys(DefaultHotKeyTableC, _countof(DefaultHotKeyTableC), bCheck);
+}
+
 /*
  * @implemented
  */
@@ -356,252 +601,6 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
     return NtUserLoadKeyboardLayoutEx(NULL, 0, &ustrKbdName,
                                       NULL, &ustrKLID,
                                       dwhkl, Flags);
-}
-
-// The far-east flags
-#define FE_JAPANESE             (1 << 0)
-#define FE_CHINESE_TRADITIONAL  (1 << 1)
-#define FE_CHINESE_SIMPLIFIED   (1 << 2)
-#define FE_KOREAN               (1 << 3)
-
-// Sets the far-east flags
-// Win: SetFeKeyboardFlags
-VOID FASTCALL IntSetFeKeyboardFlags(LANGID LangID, PBYTE pbFlags)
-{
-    switch (LangID)
-    {
-        case MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT):
-            *pbFlags |= FE_JAPANESE;
-            break;
-
-        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL):
-        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_HONGKONG):
-            *pbFlags |= FE_CHINESE_TRADITIONAL;
-            break;
-
-        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED):
-        case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SINGAPORE):
-            *pbFlags |= FE_CHINESE_SIMPLIFIED;
-            break;
-
-        case MAKELANGID(LANG_KOREAN, SUBLANG_KOREAN):
-            *pbFlags |= FE_KOREAN;
-            break;
-
-        default:
-            break;
-    }
-}
-
-BOOL APIENTRY
-CliImmSetHotKeyWorker(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL hKL, DWORD dwAction)
-{
-    if (dwAction == SETIMEHOTKEY_ADD)
-    {
-        if (IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId && dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST)
-        {
-            if (!hKL)
-                goto Failure;
-        }
-        else
-        {
-            if (hKL)
-                goto Failure;
-
-            if (IME_KHOTKEY_SHAPE_TOGGLE <= dwHotKeyId &&
-                dwHotKeyId < IME_THOTKEY_IME_NONIME_TOGGLE)
-            {
-                goto Failure;
-            }
-        }
-
-#define MOD_ALL_MODS (MOD_ALT | MOD_CONTROL | MOD_SHIFT | MOD_WIN)
-        if ((uModifiers & MOD_ALL_MODS) && !(uModifiers & (MOD_LEFT | MOD_RIGHT)))
-        {
-            goto Failure;
-        }
-#undef MOD_ALL_MODS
-    }
-
-    return NtUserSetImeHotKey(dwHotKeyId, uModifiers, uVirtualKey, hKL, dwAction);
-
-Failure:
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-}
-
-VOID APIENTRY CliSetDefaultImeHotKeys(PIMEHOTKEYENTRY pEntries, UINT nCount, BOOL bCheck)
-{
-    UINT uVirtualKey, uModifiers;
-    HKL hKL;
-
-    while (nCount-- > 0)
-    {
-        if (!bCheck || !NtUserGetImeHotKey(pEntries->dwHotKeyId, &uModifiers, &uVirtualKey, &hKL))
-        {
-            CliImmSetHotKeyWorker(pEntries->dwHotKeyId,
-                                  pEntries->uModifiers,
-                                  pEntries->uVirtualKey,
-                                  pEntries->hKL,
-                                  SETIMEHOTKEY_ADD);
-        }
-        ++pEntries;
-    }
-}
-
-VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
-{
-    WCHAR szValueName[8], szValue[16];
-    UNICODE_STRING ValueString;
-    DWORD dwKL, cbValue, dwType;
-    UINT iNumber;
-    HKEY hKey;
-    LONG error;
-
-    error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_READ, &hKey);
-    if (error != ERROR_SUCCESS)
-        return;
-
-    for (iNumber = 1; iNumber < 1000; ++iNumber)
-    {
-        StringCchPrintfW(szValueName, _countof(szValueName), L"%u", iNumber);
-
-        cbValue = sizeof(szValue);
-        error = RegQueryValueExW(hKey, szValueName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
-        if (error != ERROR_SUCCESS || dwType != REG_SZ)
-            break;
-
-        szValue[_countof(szValue) - 1] = 0;
-
-        RtlInitUnicodeString(&ValueString, szValue);
-        RtlUnicodeStringToInteger(&ValueString, 16, &dwKL);
-
-        IntSetFeKeyboardFlags(LOWORD(dwKL), pbFlags);
-    }
-
-    RegCloseKey(hKey);
-}
-
-DWORD FASTCALL CliReadRegistryValue(HANDLE hKey, LPCWSTR pszName)
-{
-    DWORD dwType, cbValue;
-    BYTE abValue[8];
-    LONG error;
-
-    cbValue = sizeof(abValue);
-    error = RegQueryValueExW(hKey, pszName, NULL, &dwType, abValue, &cbValue);
-    if (error != ERROR_SUCCESS || cbValue < sizeof(DWORD) || dwType != REG_BINARY)
-        return 0;
-
-    return *(LPDWORD)abValue;
-}
-
-BOOL FASTCALL CliSetSingleHotKey(LPCWSTR pszSubKey, HANDLE hKey)
-{
-    LONG error;
-    HKEY hSubKey;
-    DWORD dwHotKeyId = 0;
-    UINT uModifiers = 0, uVirtualKey = 0;
-    HKL hKL = NULL;
-    UNICODE_STRING ustrName;
-
-    error = RegOpenKeyExW(hKey, pszSubKey, 0, KEY_READ, &hSubKey);
-    if (error != ERROR_SUCCESS)
-        return FALSE;
-
-    RtlInitUnicodeString(&ustrName, pszSubKey);
-    RtlUnicodeStringToInteger(&ustrName, 16, &dwHotKeyId);
-
-    uModifiers = CliReadRegistryValue(hSubKey, L"Key Modifiers");
-    hKL = (HKL)(ULONG_PTR)CliReadRegistryValue(hSubKey, L"Target IME");
-    uVirtualKey = CliReadRegistryValue(hSubKey, L"Virtual Key");
-
-    RegCloseKey(hSubKey);
-
-    return CliImmSetHotKeyWorker(dwHotKeyId, uModifiers, uVirtualKey, hKL, SETIMEHOTKEY_ADD);
-}
-
-BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
-{
-    HKEY hKey;
-    LONG error;
-    BOOL ret = FALSE;
-    DWORD dwIndex, cchKeyName;
-    WCHAR szKeyName[16];
-
-    error = RegOpenKeyExW(HKEY_CURRENT_USER,
-                          L"Control Panel\\Input Method\\Hot Keys",
-                          0,
-                          KEY_ALL_ACCESS,
-                          &hKey);
-    if (error != ERROR_SUCCESS)
-        return ret;
-
-    for (dwIndex = 0; ; ++dwIndex)
-    {
-        cchKeyName = _countof(szKeyName);
-        error = RegEnumKeyExW(hKey, dwIndex, szKeyName, &cchKeyName, NULL, NULL, NULL, NULL);
-        if (error == ERROR_NO_MORE_ITEMS || error != ERROR_SUCCESS)
-            break;
-
-        szKeyName[_countof(szKeyName) - 1] = 0;
-
-        if (CliSetSingleHotKey(szKeyName, hKey))
-            ret = TRUE;
-    }
-
-    RegCloseKey(hKey);
-    return ret;
-}
-
-VOID APIENTRY CliImmInitializeHotKeys(DWORD dwAction, HKL hKL)
-{
-    UINT nCount;
-    LPHKL pList;
-    UINT iIndex;
-    LANGID LangID;
-    BYTE bFlags = 0;
-    BOOL bCheck;
-
-    NtUserSetImeHotKey(0, 0, 0, NULL, SETIMEHOTKEY_DELETEALL);
-
-    bCheck = CliGetImeHotKeysFromRegistry();
-
-    if (dwAction == SETIMEHOTKEY_DELETEALL)
-    {
-        LangID = LANGIDFROMLCID(GetUserDefaultLCID());
-        IntSetFeKeyboardFlags(LangID, &bFlags);
-        CliGetPreloadKeyboardLayouts(&bFlags);
-    }
-    else
-    {
-        nCount = NtUserGetKeyboardLayoutList(0, NULL);
-        if (!nCount)
-            return;
-
-        pList = RtlAllocateHeap(RtlGetProcessHeap(), 0, nCount * sizeof(HKL));
-        if (!pList)
-            return;
-
-        NtUserGetKeyboardLayoutList(nCount, pList);
-
-        for (iIndex = 0; iIndex < nCount; ++iIndex)
-        {
-            LangID = LOWORD(pList[iIndex]);
-            IntSetFeKeyboardFlags(LangID, &bFlags);
-        }
-
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pList);
-    }
-
-    if (bFlags & FE_JAPANESE)
-        CliSetDefaultImeHotKeys(DefaultHotKeyTableJ, _countof(DefaultHotKeyTableJ), bCheck);
-
-    if (bFlags & FE_CHINESE_TRADITIONAL)
-        CliSetDefaultImeHotKeys(DefaultHotKeyTableT, _countof(DefaultHotKeyTableT), bCheck);
-
-    if (bFlags & FE_CHINESE_SIMPLIFIED)
-        CliSetDefaultImeHotKeys(DefaultHotKeyTableC, _countof(DefaultHotKeyTableC), bCheck);
 }
 
 /*
