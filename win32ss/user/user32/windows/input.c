@@ -458,8 +458,9 @@ VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 
     for (iNumber = 1; iNumber < 1000; ++iNumber)
     {
-        // Also check the INI file...
         StringCchPrintfW(szKeyName, _countof(szKeyName), L"%u", iNumber);
+
+        // This code should cause redirection to the registry...
         ret = GetPrivateProfileStringW(L"Preload", szKeyName, L"", szValue, _countof(szValue),
                                        L"keyboardlayout.ini");
         if (ret == (DWORD)-1 || !szValue[0])
