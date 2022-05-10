@@ -451,26 +451,35 @@ VOID APIENTRY CliSetDefaultImeHotKeys(PIMEHOTKEYENTRY pEntries, UINT nCount, BOO
 
 VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 {
-    WCHAR szValue[9], szKeyName[4];
+    WCHAR szValueName[8], szValue[16];
     UNICODE_STRING ValueString;
-    DWORD dwKL, ret;
+    DWORD dwKL, cbValue, dwType;
     UINT iNumber;
+    HKEY hKey;
+    LONG error;
+
+    error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload", 0, KEY_READ, &hKey);
+    if (error != ERROR_SUCCESS)
+        return;
 
     for (iNumber = 1; iNumber < 1000; ++iNumber)
     {
-        StringCchPrintfW(szKeyName, _countof(szKeyName), L"%u", iNumber);
+        StringCchPrintfW(szValueName, _countof(szValueName), L"%u", iNumber);
 
-        // This code should cause redirection to the registry...
-        ret = GetPrivateProfileStringW(L"Preload", szKeyName, L"", szValue, _countof(szValue),
-                                       L"keyboardlayout.ini");
-        if (ret == (DWORD)-1 || !szValue[0])
+        cbValue = sizeof(szValue);
+        error = RegQueryValueExW(hKey, szValueName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
+        if (error != ERROR_SUCCESS || dwType != REG_SZ)
             break;
+
+        szValue[_countof(szValue) - 1] = 0;
 
         RtlInitUnicodeString(&ValueString, szValue);
         RtlUnicodeStringToInteger(&ValueString, 16, &dwKL);
 
         IntSetFeKeyboardFlags(LOWORD(dwKL), pbFlags);
     }
+
+    RegCloseKey(hKey);
 }
 
 BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
