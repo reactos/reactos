@@ -87,11 +87,11 @@ public:
     VOID SetLastWriteTime(FILETIME* ftTime);
 
 private:
-    BOOL m_IsInstalling;
     BOOL m_IsInstalled;
     BOOL m_HasLanguageInfo;
     BOOL m_HasInstalledVersion;
-    CConfigParser* m_Parser;
+    BOOL m_IsInstalling;
+    CConfigParser *m_Parser;
 
     inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString);
 
