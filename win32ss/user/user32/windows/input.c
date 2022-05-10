@@ -458,10 +458,11 @@ VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 
     for (iNumber = 1; iNumber < 1000; ++iNumber)
     {
-        StringCchPrintfW(szKeyName, _countof(szKeyName), L"%d", iNumber);
+        // Also check the INI file...
+        StringCchPrintfW(szKeyName, _countof(szKeyName), L"%u", iNumber);
         ret = GetPrivateProfileStringW(L"Preload", szKeyName, L"", szValue, _countof(szValue),
                                        L"keyboardlayout.ini");
-        if (ret == -1 || !szValue[0])
+        if (ret == (DWORD)-1 || !szValue[0])
             break;
 
         RtlInitUnicodeString(&ValueString, szValue);
