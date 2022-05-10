@@ -544,6 +544,8 @@ BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
         if (error == ERROR_NO_MORE_ITEMS || error != ERROR_SUCCESS)
             break;
 
+        szKeyName[_countof(szKeyName) - 1] = 0;
+
         if (CliSetSingleHotKey(szKeyName, hKey))
             ret = TRUE;
     }
