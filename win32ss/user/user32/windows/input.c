@@ -482,10 +482,74 @@ VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
     RegCloseKey(hKey);
 }
 
+DWORD FASTCALL CliReadRegistryValue(HANDLE hKey, LPCWSTR pszName)
+{
+    DWORD dwType, cbValue;
+    BYTE abValue[8];
+    LONG error;
+
+    cbValue = sizeof(abValue);
+    error = RegQueryValueExW(hKey, pszName, NULL, &dwType, abValue, &cbValue);
+    if (error != ERROR_SUCCESS || cbValue < sizeof(DWORD) || dwType != REG_BINARY)
+        return 0;
+
+    return *(LPDWORD)abValue;
+}
+
+BOOL FASTCALL CliSetSingleHotKey(LPCWSTR pszSubKey, HANDLE hKey)
+{
+    LONG error;
+    HKEY hSubKey;
+    DWORD dwHotKeyId = 0;
+    UINT uModifiers = 0, uVirtualKey = 0;
+    HKL hKL = NULL;
+    UNICODE_STRING ustrName;
+
+    error = RegOpenKeyExW(hKey, pszSubKey, 0, KEY_READ, &hSubKey);
+    if (error != ERROR_SUCCESS)
+        return FALSE;
+
+    RtlInitUnicodeString(&ustrName, pszSubKey);
+    RtlUnicodeStringToInteger(&ustrName, 16, &dwHotKeyId);
+
+    uModifiers = CliReadRegistryValue(hSubKey, L"Key Modifiers");
+    hKL = (HKL)(ULONG_PTR)CliReadRegistryValue(hSubKey, L"Target IME");
+    uVirtualKey = CliReadRegistryValue(hSubKey, L"Virtual Key");
+
+    RegCloseKey(hSubKey);
+
+    return CliImmSetHotKeyWorker(dwHotKeyId, uModifiers, uVirtualKey, hKL, SETIMEHOTKEY_ADD);
+}
+
 BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
 {
-    // FIXME:
-    return FALSE;
+    HKEY hKey;
+    LONG error;
+    BOOL ret = FALSE;
+    DWORD dwIndex, cbKeyName;
+    WCHAR szKeyName[16];
+
+    error = RegOpenKeyExW(HKEY_CURRENT_USER,
+                          L"Control Panel\\Input Method\\Hot Keys",
+                          0,
+                          KEY_ALL_ACCESS,
+                          &hKey);
+    if (error != ERROR_SUCCESS)
+        return ret;
+
+    for (dwIndex = 0; ; ++dwIndex)
+    {
+        cbKeyName = sizeof(szKeyName);
+        error = RegEnumKeyExW(hKey, dwIndex, szKeyName, &cbKeyName, NULL, NULL, NULL, NULL);
+        if (error == ERROR_NO_MORE_ITEMS || error != ERROR_SUCCESS)
+            break;
+
+        if (CliSetSingleHotKey(szKeyName, hKey))
+            ret = TRUE;
+    }
+
+    RegCloseKey(hKey);
+    return ret;
 }
 
 VOID APIENTRY CliImmInitializeHotKeys(DWORD dwAction, HKL hKL)
