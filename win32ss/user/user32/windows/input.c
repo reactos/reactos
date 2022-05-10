@@ -96,16 +96,15 @@ VOID FASTCALL IntSetFeKeyboardFlags(LANGID LangID, PBYTE pbFlags)
 
 DWORD FASTCALL CliReadRegistryValue(HANDLE hKey, LPCWSTR pszName)
 {
-    DWORD dwType, cbValue;
-    BYTE abValue[8];
+    DWORD dwType, dwValue, cbValue;
     LONG error;
 
-    cbValue = sizeof(abValue);
-    error = RegQueryValueExW(hKey, pszName, NULL, &dwType, abValue, &cbValue);
-    if (error != ERROR_SUCCESS || cbValue < sizeof(DWORD) || dwType != REG_BINARY)
+    cbValue = sizeof(dwValue);
+    error = RegQueryValueExW(hKey, pszName, NULL, &dwType, (LPBYTE)&dwValue, &cbValue);
+    if (error != ERROR_SUCCESS || cbValue < sizeof(DWORD))
         return 0;
 
-    return *(LPDWORD)abValue;
+    return dwValue;
 }
 
 BOOL APIENTRY
