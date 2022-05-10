@@ -31,29 +31,29 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
-typedef struct tagMYHOTKEYENTRY
+typedef struct tagIMEHOTKEYENTRY
 {
     DWORD  dwHotKeyId;
     UINT   uVirtualKey;
     UINT   uModifiers;
     HKL    hKL;
-} MYHOTKEYENTRY, *PMYHOTKEYENTRY;
+} IMEHOTKEYENTRY, *PIMEHOTKEYENTRY;
 
 // Japanese
-MYHOTKEYENTRY DefaultHotKeyTableJ[] =
+IMEHOTKEYENTRY DefaultHotKeyTableJ[] =
 {
     { IME_JHOTKEY_CLOSE_OPEN, VK_KANJI, MOD_IGNORE_ALL_MODIFIER, NULL },
 };
 
 // Chinese Traditional
-MYHOTKEYENTRY DefaultHotKeyTableT[] =
+IMEHOTKEYENTRY DefaultHotKeyTableT[] =
 {
     { IME_THOTKEY_IME_NONIME_TOGGLE, VK_SPACE, MOD_LEFT | MOD_RIGHT | MOD_CONTROL, NULL },
     { IME_THOTKEY_SHAPE_TOGGLE, VK_SPACE, MOD_LEFT | MOD_RIGHT | MOD_SHIFT, NULL },
 };
 
 // Chinese Simplified
-MYHOTKEYENTRY DefaultHotKeyTableC[] =
+IMEHOTKEYENTRY DefaultHotKeyTableC[] =
 {
     { IME_CHOTKEY_IME_NONIME_TOGGLE, VK_SPACE, MOD_LEFT | MOD_RIGHT | MOD_CONTROL, NULL },
     { IME_CHOTKEY_SHAPE_TOGGLE, VK_SPACE, MOD_LEFT | MOD_RIGHT | MOD_SHIFT, NULL },
@@ -430,7 +430,7 @@ Failure:
     return FALSE;
 }
 
-VOID APIENTRY CliSetDefaultImeHotKeys(PMYHOTKEYENTRY pEntries, UINT nCount, BOOL bCheck)
+VOID APIENTRY CliSetDefaultImeHotKeys(PIMEHOTKEYENTRY pEntries, UINT nCount, BOOL bCheck)
 {
     UINT uVirtualKey, uModifiers;
     HKL hKL;
