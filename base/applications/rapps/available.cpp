@@ -18,8 +18,8 @@
 // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& AvlbStrings)
     : m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
-      m_HasInstalledVersion(FALSE), m_IsInstalling(FALSE), m_IsInstalled(FALSE),
-      m_HasLanguageInfo(FALSE)
+      m_IsInstalling(FALSE), m_IsInstalled(FALSE),
+      m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
 {
     RetrieveGeneralInfo(AvlbStrings);
 }
