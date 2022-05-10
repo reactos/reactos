@@ -446,7 +446,7 @@ VOID APIENTRY CliSetDefaultImeHotKeys(PMYHOTKEYENTRY pEntries, UINT nCount, BOOL
     }
 }
 
-VOID APIENTRY CliGetPreloadKeyboardLayouts(BYTE* pbFlags)
+VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 {
     WCHAR szValue[9], szKeyName[4];
     UNICODE_STRING ValueString;
