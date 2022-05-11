@@ -2825,20 +2825,20 @@ TranslateMessageEx(CONST MSG *lpMsg, UINT Flags)
 BOOL WINAPI
 TranslateMessage(CONST MSG *lpMsg)
 {
-  BOOL Ret = FALSE;
+    BOOL ret;
 
-// Ref: msdn ImmGetVirtualKey:
-// http://msdn.microsoft.com/en-us/library/aa912145.aspx
-/*
-  if ( (LOWORD(lpMsg->wParam) != VK_PROCESSKEY) ||
-       !(Ret = IMM_ImmTranslateMessage( lpMsg->hwnd,
-                                        lpMsg->message,
-                                        lpMsg->wParam,
-                                        lpMsg->lParam)) )*/
-  {
-     Ret = TranslateMessageEx((LPMSG)lpMsg, 0);
-  }
-  return Ret;
+    // http://msdn.microsoft.com/en-us/library/aa912145.aspx
+    if (LOWORD(lpMsg->wParam) == VK_PROCESSKEY)
+    {
+        ret = IMM_FN(ImmTranslateMessage)(lpMsg->hwnd,
+                                          lpMsg->message,
+                                          lpMsg->wParam,
+                                          lpMsg->lParam);
+        if (ret)
+            return ret;
+    }
+
+    return TranslateMessageEx((LPMSG)lpMsg, 0);
 }
 
 
