@@ -203,7 +203,7 @@ BOOL FASTCALL CliGetImeHotKeysFromRegistry(VOID)
 VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 {
     WCHAR szValueName[8], szValue[16];
-    UNICODE_STRING ValueString;
+    UNICODE_STRING ustrValue;
     DWORD dwKL, cbValue, dwType;
     UINT iNumber;
     HKEY hKey;
@@ -224,8 +224,8 @@ VOID APIENTRY CliGetPreloadKeyboardLayouts(PBYTE pbFlags)
 
         szValue[_countof(szValue) - 1] = 0;
 
-        RtlInitUnicodeString(&ValueString, szValue);
-        RtlUnicodeStringToInteger(&ValueString, 16, &dwKL);
+        RtlInitUnicodeString(&ustrValue, szValue);
+        RtlUnicodeStringToInteger(&ustrValue, 16, &dwKL);
 
         IntSetFeKeyboardFlags(LOWORD(dwKL), pbFlags);
     }
