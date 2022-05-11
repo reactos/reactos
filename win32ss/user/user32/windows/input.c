@@ -125,6 +125,7 @@ CliImmSetHotKeyWorker(DWORD dwHotKeyId, UINT uModifiers, UINT uVirtualKey, HKL h
             if (IME_KHOTKEY_SHAPE_TOGGLE <= dwHotKeyId &&
                 dwHotKeyId < IME_THOTKEY_IME_NONIME_TOGGLE)
             {
+                // The Korean cannot set the IME hotkeys
                 goto Failure;
             }
         }
