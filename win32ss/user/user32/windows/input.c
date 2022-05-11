@@ -162,57 +162,59 @@ CliSaveImeHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL, BOOL bD
     // Open "Control Panel"
     error = RegCreateKeyExW(HKEY_CURRENT_USER, L"Control Panel", 0, NULL, 0, KEY_ALL_ACCESS,
                             NULL, &hControlPanel, NULL);
-    if (error != ERROR_SUCCESS)
-        return FALSE;
+    if (error == ERROR_SUCCESS)
+    {
+        // Open "Input Method"
+        error = RegCreateKeyExW(hControlPanel, L"Input Method", 0, NULL, 0, KEY_ALL_ACCESS,
+                                NULL, &hInputMethod, NULL);
+        if (error == ERROR_SUCCESS)
+        {
+            // Open "Hot Keys"
+            error = RegCreateKeyExW(hInputMethod, L"Hot Keys", 0, NULL, 0, KEY_ALL_ACCESS,
+                                    NULL, &hHotKeys, NULL);
+            if (error == ERROR_SUCCESS)
+            {
+                // Open "Key"
+                StringCchPrintfW(szName, _countof(szName), L"%08lX", dwID);
+                error = RegCreateKeyExW(hHotKeys, szName, 0, NULL, 0, KEY_ALL_ACCESS,
+                                        NULL, &hKey, NULL);
+                if (error == ERROR_SUCCESS)
+                {
+                    bRevertOnFailure = TRUE;
 
-    // Open "Input Method"
-    error = RegCreateKeyExW(hControlPanel, L"Input Method", 0, NULL, 0, KEY_ALL_ACCESS,
-                            NULL, &hInputMethod, NULL);
-    if (error != ERROR_SUCCESS)
-        goto Quit;
-
-    // Open "Hot Keys"
-    error = RegCreateKeyExW(hInputMethod, L"Hot Keys", 0, NULL, 0, KEY_ALL_ACCESS,
-                            NULL, &hHotKeys, NULL);
-    if (error != ERROR_SUCCESS)
-        goto Quit;
-
-    // Open "Key"
-    StringCchPrintfW(szName, _countof(szName), L"%08lX", dwID);
-    error = RegCreateKeyExW(hHotKeys, szName, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, NULL);
-    if (error != ERROR_SUCCESS)
-        goto Quit;
-
-    bRevertOnFailure = TRUE;
-
-    error = RegSetValueExW(hKey, L"Virtual Key", 0, REG_BINARY,
-                           (LPBYTE)&uVirtualKey, sizeof(uVirtualKey));
-    if (error != ERROR_SUCCESS)
-        goto Quit;
-
-    error = RegSetValueExW(hKey, L"Key Modifiers", 0, REG_BINARY,
-                           (LPBYTE)&uModifiers, sizeof(uModifiers));
-    if (error != ERROR_SUCCESS)
-        goto Quit;
-
-    error = RegSetValueExW(hKey, L"Target IME", 0, REG_BINARY, (LPBYTE)&hKL, sizeof(hKL));
-    if (error != ERROR_SUCCESS)
-        goto Quit;
-
-    ret = TRUE;
-    bRevertOnFailure = FALSE;
-
-Quit:
-    if (hKey)
-        RegCloseKey(hKey);
-    if (hHotKeys)
-        RegCloseKey(hHotKeys);
-    if (hInputMethod)
-        RegCloseKey(hInputMethod);
-    if (hControlPanel)
+                    // Set "Virtual Key"
+                    error = RegSetValueExW(hKey, L"Virtual Key", 0, REG_BINARY,
+                                           (LPBYTE)&uVirtualKey, sizeof(uVirtualKey));
+                    if (error == ERROR_SUCCESS)
+                    {
+                        // Set "Key Modifiers"
+                        error = RegSetValueExW(hKey, L"Key Modifiers", 0, REG_BINARY,
+                                               (LPBYTE)&uModifiers, sizeof(uModifiers));
+                        if (error == ERROR_SUCCESS)
+                        {
+                            // Set "Target IME"
+                            error = RegSetValueExW(hKey, L"Target IME", 0, REG_BINARY,
+                                                   (LPBYTE)&hKL, sizeof(hKL));
+                            if (error == ERROR_SUCCESS)
+                            {
+                                // Success!
+                                ret = TRUE;
+                                bRevertOnFailure = FALSE;
+                            }
+                        }
+                    }
+                    RegCloseKey(hKey);
+                }
+                RegCloseKey(hHotKeys);
+            }
+            RegCloseKey(hInputMethod);
+        }
         RegCloseKey(hControlPanel);
+    }
+
     if (bRevertOnFailure)
         CliSaveImeHotKey(dwID, uVirtualKey, uModifiers, hKL, TRUE);
+
     return ret;
 }
 
