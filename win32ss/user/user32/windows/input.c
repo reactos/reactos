@@ -143,6 +143,106 @@ Failure:
     return FALSE;
 }
 
+BOOL APIENTRY
+CliSaveImeHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL, BOOL bDelete)
+{
+    WCHAR szName[MAX_PATH];
+    LONG error;
+    HKEY hControlPanel = NULL, hInputMethod = NULL, hHotKeys = NULL, hKey = NULL;
+    BOOL ret = FALSE, bRevert = FALSE;
+
+    if (bDelete)
+    {
+        StringCchPrintfW(szName, _countof(szName),
+                         L"Control Panel\\Input Method\\Hot Keys\\%08lX", dwID);
+        error = RegDeleteKeyW(HKEY_CURRENT_USER, szName);
+        return (error == ERROR_SUCCESS);
+    }
+
+    // Open "Control Panel"
+    error = RegCreateKeyExW(HKEY_CURRENT_USER, L"Control Panel", 0, NULL, 0, KEY_ALL_ACCESS,
+                            NULL, &hControlPanel, NULL);
+    if (error != ERROR_SUCCESS)
+        return FALSE;
+
+    // Open "Input Method"
+    error = RegCreateKeyExW(hControlPanel, L"Input Method", 0, NULL, 0, KEY_ALL_ACCESS,
+                            NULL, &hInputMethod, NULL);
+    if (error != ERROR_SUCCESS)
+        goto Quit;
+
+    // Open "Hot Keys"
+    error = RegCreateKeyExW(hInputMethod, L"Hot Keys", 0, NULL, 0, KEY_ALL_ACCESS,
+                            NULL, &hHotKeys, NULL);
+    if (error != ERROR_SUCCESS)
+        goto Quit;
+
+    // Open "Key"
+    StringCchPrintfW(szName, _countof(szName), L"%08lX", dwID);
+    error = RegCreateKeyExW(hHotKeys, szName, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, NULL);
+    if (error != ERROR_SUCCESS)
+        goto Quit;
+
+    bRevert = TRUE;
+
+    error = RegSetValueExW(hKey, L"Virtual Key", 0, REG_BINARY,
+                           (LPBYTE)&uVirtualKey, sizeof(uVirtualKey));
+    if (error != ERROR_SUCCESS)
+        goto Quit;
+
+    error = RegSetValueExW(hKey, L"Key Modifiers", 0, REG_BINARY,
+                           (LPBYTE)&uModifiers, sizeof(uModifiers));
+    if (error != ERROR_SUCCESS)
+        goto Quit;
+
+    error = RegSetValueExW(hKey, L"Target IME", 0, REG_BINARY, (LPBYTE)&hKL, sizeof(hKL));
+    if (error != ERROR_SUCCESS)
+        goto Quit;
+
+    ret = TRUE;
+    bRevert = FALSE;
+
+Quit:
+    if (hKey)
+        RegCloseKey(hKey);
+    if (hHotKeys)
+        RegCloseKey(hHotKeys);
+    if (hInputMethod)
+        RegCloseKey(hInputMethod);
+    if (hControlPanel)
+        RegCloseKey(hControlPanel);
+    if (bRevert)
+        CliSaveImeHotKey(dwID, uVirtualKey, uModifiers, hKL, TRUE);
+    return ret;
+}
+
+/*
+ * @implemented
+ * Same as imm32!ImmSetHotKey.
+ */
+BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL)
+{
+    BOOL ret;
+
+    if (uVirtualKey == 0)
+    {
+        ret = CliSaveImeHotKey(dwID, uModifiers, uVirtualKey, hKL, TRUE);
+        if (ret)
+            CliImmSetHotKeyWorker(dwID, uModifiers, uVirtualKey, hKL, SETIMEHOTKEY_DELETE);
+        return ret;
+    }
+
+    ret = CliImmSetHotKeyWorker(dwID, uModifiers, uVirtualKey, hKL, SETIMEHOTKEY_ADD);
+    if (ret)
+    {
+        ret = CliSaveImeHotKey(dwID, uModifiers, uVirtualKey, hKL, FALSE);
+        if (!ret)
+            CliImmSetHotKeyWorker(dwID, uModifiers, uVirtualKey, hKL, SETIMEHOTKEY_DELETE);
+    }
+
+    return ret;
+}
+
 BOOL FASTCALL CliSetSingleHotKey(LPCWSTR pszSubKey, HANDLE hKey)
 {
     LONG error;
