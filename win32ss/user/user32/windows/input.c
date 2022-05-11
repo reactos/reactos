@@ -224,7 +224,7 @@ BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL h
 {
     BOOL ret;
 
-    if (uVirtualKey == 0)
+    if (uVirtualKey == 0) // Delete?
     {
         ret = CliSaveImeHotKey(dwID, uModifiers, uVirtualKey, hKL, TRUE);
         if (ret)
@@ -232,11 +232,12 @@ BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL h
         return ret;
     }
 
+    // Add
     ret = CliImmSetHotKeyWorker(dwID, uModifiers, uVirtualKey, hKL, SETIMEHOTKEY_ADD);
     if (ret)
     {
         ret = CliSaveImeHotKey(dwID, uModifiers, uVirtualKey, hKL, FALSE);
-        if (!ret)
+        if (!ret) // Failure?
             CliImmSetHotKeyWorker(dwID, uModifiers, uVirtualKey, hKL, SETIMEHOTKEY_DELETE);
     }
 
