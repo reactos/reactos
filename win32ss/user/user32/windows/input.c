@@ -149,7 +149,7 @@ CliSaveImeHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL, BOOL bD
     WCHAR szName[MAX_PATH];
     LONG error;
     HKEY hControlPanel = NULL, hInputMethod = NULL, hHotKeys = NULL, hKey = NULL;
-    BOOL ret = FALSE, bRevert = FALSE;
+    BOOL ret = FALSE, bRevertOnFailure = FALSE;
 
     if (bDelete)
     {
@@ -183,7 +183,7 @@ CliSaveImeHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL, BOOL bD
     if (error != ERROR_SUCCESS)
         goto Quit;
 
-    bRevert = TRUE;
+    bRevertOnFailure = TRUE;
 
     error = RegSetValueExW(hKey, L"Virtual Key", 0, REG_BINARY,
                            (LPBYTE)&uVirtualKey, sizeof(uVirtualKey));
@@ -200,7 +200,7 @@ CliSaveImeHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL, BOOL bD
         goto Quit;
 
     ret = TRUE;
-    bRevert = FALSE;
+    bRevertOnFailure = FALSE;
 
 Quit:
     if (hKey)
@@ -211,7 +211,7 @@ Quit:
         RegCloseKey(hInputMethod);
     if (hControlPanel)
         RegCloseKey(hControlPanel);
-    if (bRevert)
+    if (bRevertOnFailure)
         CliSaveImeHotKey(dwID, uVirtualKey, uModifiers, hKL, TRUE);
     return ret;
 }
