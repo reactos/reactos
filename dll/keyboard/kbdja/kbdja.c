@@ -54,7 +54,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_LCONTROL,
   'A',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
-  'L',          SC_40,      SC_41,     VK_EMPTY,
+  'L',          SC_40,      SC_41,     VK_PROCESSKEY,
   VK_LSHIFT,    VK_OEM_6,
   /* - 2c - */
   /* Third letters row */
@@ -211,7 +211,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '7',         0, {'7', '\''} },
   { '8',         0, {'8', '('} },
   { '9',         0, {'9', ')'} },
-  { '0',         0, {'0', 0xff} },
+  { '0',         0, {'0',  0 } },
 
   /*Japanese Keys*/
   { SC_13,  0, { '^','~'} },
