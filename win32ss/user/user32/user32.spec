@@ -703,7 +703,7 @@
 694 stdcall UnhookWindowsHook(long ptr)
 695 stdcall UnhookWindowsHookEx(long) NtUserUnhookWindowsHookEx
 696 stdcall UnionRect(ptr ptr ptr)
-697 stdcall UnloadKeyboardLayout(long) NtUserUnloadKeyboardLayout
+697 stdcall UnloadKeyboardLayout(ptr)
 698 stdcall UnlockWindowStation(long) NtUserUnlockWindowStation
 699 stdcall UnpackDDElParam(long long ptr ptr)
 700 stdcall UnregisterClassA(str long)
