@@ -2838,7 +2838,8 @@ TranslateMessage(CONST MSG *lpMsg)
             return ret;
     }
 
-    return TranslateMessageEx((LPMSG)lpMsg, 0);
+    ret = TranslateMessageEx((LPMSG)lpMsg, 0);
+    return ret;
 }
 
 
