@@ -279,12 +279,13 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x0f, L"Tab" },
   { 0x1c, L"Enter" },
   { 0x1d, L"Ctrl" },
+  { 0x29, L"\u534A\u89D2/\u5168\u89D2" }, /* Hankaku/Zenkaku */
   { 0x2a, L"Shift" },
   { 0x36, L"Right Shift" },
   { 0x37, L"Num *" },
   { 0x38, L"Alt" },
   { 0x39, L"Space" },
-  { 0x3a, L"CAPLOK Lock" },
+  { 0x3a, L"Caps Lock" },
   { 0x3b, L"F1" },
   { 0x3c, L"F2" },
   { 0x3d, L"F3" },
@@ -313,6 +314,9 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x54, L"Sys Req" },
   { 0x57, L"F11" },
   { 0x58, L"F12" },
+  { 0x70, L"\u3072\u3089\u304C\u306A" },    /* Hiragana */
+  { 0x79, L"\u5909\u63DB" },                /* Henkan (Convert) */
+  { 0x7b, L"\u7121\u5909\u63DB" },          /* Mu-Henkan (Non-Convert) */
   { 0x7c, L"F13" },
   { 0x7d, L"F14" },
   { 0x7e, L"F15" },
@@ -325,12 +329,14 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x85, L"F22" },
   { 0x86, L"F23" },
   { 0x87, L"F24" },
+  { 0xf1, L"ImeOff" },
+  { 0xf2, L"ImeOn" },
   { 0, NULL },
 };
 
 ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x1c, L"Num Enter" },
-  { 0x1d, L"Right Ctrl" },
+  { 0x1d, L"Right Control" },
   { 0x35, L"Num /" },
   { 0x37, L"Prnt Scrn" },
   { 0x38, L"Right Alt" },
@@ -339,8 +345,8 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x47, L"Home" },
   { 0x48, L"Up" },
   { 0x49, L"Page Up" },
-  { 0x4a, L"Left" },
-  { 0x4c, L"Center" },
+  { 0x4a, L"-" },
+  { 0x4b, L"Left" },
   { 0x4d, L"Right" },
   { 0x4f, L"End" },
   { 0x50, L"Down" },
@@ -348,9 +354,9 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x52, L"Insert" },
   { 0x53, L"Delete" },
   { 0x54, L"<ReactOS>" },
-  { 0x55, L"Help" },
-  { 0x56, L"Left Windows" },
-  { 0x5b, L"Right Windows" },
+  { 0x5b, L"Left <ReactOS>" },
+  { 0x5c, L"Right <ReactOS>" },
+  { 0x5d, L"Application" },
   { 0, NULL },
 };
 
