@@ -1137,6 +1137,12 @@ IopReinitializeBootDrivers(
     VOID
 );
 
+NTSTATUS
+IopCreateLegacyDriverNode(
+    _In_ PCUNICODE_STRING ServiceName,
+    _In_ HANDLE ServiceHandle
+);
+
 //
 // File Routines
 //

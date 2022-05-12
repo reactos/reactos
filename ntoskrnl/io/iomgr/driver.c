@@ -538,6 +538,21 @@ IopInitializeDriverModule(
     if (!(NtHeaders->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_WDM_DRIVER))
         driverObject->Flags |= DRVO_LEGACY_DRIVER;
 
+    if (driverObject->Flags & DRVO_LEGACY_DRIVER)
+    {
+       Status = IopCreateLegacyDriverNode(&ServiceName, ServiceHandle);
+       if (!NT_SUCCESS(Status))
+        {
+            ObMakeTemporaryObject(driverObject);
+            ObDereferenceObject(driverObject);
+            ExFreePoolWithTag(nameInfo, TAG_IO);
+            RtlFreeUnicodeString(&ServiceName);
+            RtlFreeUnicodeString(&DriverName);
+            MmUnloadSystemImage(ModuleObject);
+            return Status;
+        }
+    }
+
     driverObject->DriverSection = ModuleObject;
     driverObject->DriverStart = ModuleObject->DllBase;
     driverObject->DriverSize = ModuleObject->SizeOfImage;
@@ -558,6 +573,8 @@ IopInitializeDriverModule(
     Status = ObInsertObject(driverObject, NULL, FILE_READ_DATA, 0, NULL, &hDriver);
     if (!NT_SUCCESS(Status))
     {
+        ObMakeTemporaryObject(driverObject);
+        ObDereferenceObject(driverObject);
         ExFreePoolWithTag(nameInfo, TAG_IO);
         RtlFreeUnicodeString(&ServiceName);
         RtlFreeUnicodeString(&DriverName);
@@ -577,7 +594,9 @@ IopInitializeDriverModule(
 
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(nameInfo, TAG_IO); // container for RegistryPath
+        ObMakeTemporaryObject(driverObject);
+        ObDereferenceObject(driverObject);
+        ExFreePoolWithTag(nameInfo, TAG_IO);
         RtlFreeUnicodeString(&ServiceName);
         RtlFreeUnicodeString(&DriverName);
         return Status;
@@ -2179,6 +2198,230 @@ NTSTATUS NTAPI
 NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
     return IopUnloadDriver(DriverServiceName, FALSE);
+}
+
+/**
+ * @brief
+ * Creates the default registry key entries under \\Registry\\Machine\\System\\
+ * CurrentControlSet\\Enum\\Root\\LEGACY_<ServiceName> for each legacy device driver.
+ *
+ * @param[in] ServiceName
+ * Name of the service.
+ *
+ * @param[in] ServiceHandle
+ * Handle to service registry key.
+ *
+ * @return
+ * Status
+ *
+ **/
+
+NTSTATUS
+IopCreateLegacyDriverNode(
+    _In_ PCUNICODE_STRING ServiceName,
+    _In_ HANDLE ServiceHandle)
+{
+    UNICODE_STRING RootKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\Root\\");
+    UNICODE_STRING LegacyPrefix = RTL_CONSTANT_STRING(L"LEGACY_");
+    UNICODE_STRING KeyString, KeyValueStr, SubKeyName, ServiceName1, DisplayName;
+    HANDLE RootKeyHandle, KeyHandle, NodeHandle;
+    PKEY_VALUE_FULL_INFORMATION KeyValueInfo;
+    ULONG RegValue;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    DPRINT("legacy driver: '%wZ'\n", ServiceName);
+
+    Status = IopOpenRegistryKeyEx(&RootKeyHandle,
+                                  NULL,
+                                  &RootKeyPath,
+                                  KEY_ALL_ACCESS);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Try to create the sub key or open it */
+    SubKeyName.MaximumLength = LegacyPrefix.Length + ServiceName->Length + sizeof(UNICODE_NULL);
+    SubKeyName.Length = 0;
+    SubKeyName.Buffer = ExAllocatePoolWithTag(PagedPool, SubKeyName.MaximumLength, TAG_IO);
+    if (SubKeyName.Buffer == NULL)
+    {
+        DPRINT1("No SubKeyName.Buffer!\n");
+        ZwClose(RootKeyHandle);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlAppendUnicodeStringToString(&SubKeyName, &LegacyPrefix);
+    RtlAppendUnicodeStringToString(&SubKeyName, ServiceName);
+
+    Status = IopCreateRegistryKeyEx(&KeyHandle,
+                                    RootKeyHandle,
+                                    &SubKeyName,
+                                    KEY_ALL_ACCESS,
+                                    REG_OPTION_NON_VOLATILE,
+                                    NULL);
+
+    ExFreePoolWithTag(SubKeyName.Buffer, TAG_IO);
+    ZwClose(RootKeyHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose(KeyHandle);
+        return Status;
+    }
+
+    RtlInitUnicodeString(&KeyString, L"NextInstance");
+    RegValue = 1;
+    Status = ZwSetValueKey(KeyHandle,
+                           &KeyString,
+                           0,
+                           REG_DWORD,
+                           &RegValue,
+                           sizeof(RegValue));
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose(KeyHandle);
+        return Status;
+    }
+
+    RtlInitUnicodeString(&KeyString, L"000");
+    Status = IopCreateRegistryKeyEx(&NodeHandle,
+                                    KeyHandle,
+                                    &KeyString,
+                                    KEY_ALL_ACCESS,
+                                    REG_OPTION_NON_VOLATILE,
+                                    NULL);
+
+    ZwClose(KeyHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Make a copy of the service name string to get and store it NULL-terminated */
+    Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                       ServiceName,
+                                       &ServiceName1);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    RtlInitUnicodeString(&KeyString, L"Service");
+    Status = ZwSetValueKey(NodeHandle,
+                           &KeyString,
+                           0,
+                           REG_SZ,
+                           ServiceName1.Buffer,
+                           ServiceName1.Length + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeUnicodeString(&ServiceName1);
+        goto Quit;
+    }
+
+    /* Try to get the DisplayName value from the service key
+     * and use it as the DeviceDesc entry. */
+    RtlInitEmptyUnicodeString(&DisplayName, NULL, 0);
+
+    Status = IopGetRegistryValue(ServiceHandle, L"DisplayName", &KeyValueInfo);
+    if (NT_SUCCESS(Status))
+    {
+        if ((KeyValueInfo->Type == REG_SZ) &&
+            (KeyValueInfo->DataLength > sizeof(UNICODE_NULL)))
+        {
+            DisplayName.Length = KeyValueInfo->DataLength - sizeof(UNICODE_NULL);
+            DisplayName.MaximumLength = KeyValueInfo->DataLength;
+            DisplayName.Buffer = ExAllocatePoolWithTag(PagedPool, DisplayName.MaximumLength, TAG_IO);
+            if (DisplayName.Buffer != NULL)
+            {
+                RtlStringCbCopyNW(DisplayName.Buffer,
+                                  DisplayName.MaximumLength,
+                                  (PVOID)((ULONG_PTR)KeyValueInfo + KeyValueInfo->DataOffset),
+                                  DisplayName.Length);
+            }
+        }
+        ExFreePool(KeyValueInfo);
+    }
+
+    /* If there is no DisplayName we just use the ServiceName. */
+    if (DisplayName.Buffer == NULL)
+    {
+        if (DisplayName.Buffer != NULL)
+            ExFreePool(DisplayName.Buffer);
+        DisplayName = ServiceName1;
+    }
+
+    RtlInitUnicodeString(&KeyString, L"DeviceDesc");
+    Status = ZwSetValueKey(NodeHandle,
+                           &KeyString,
+                           0,
+                           REG_SZ,
+                           DisplayName.Buffer,
+                           DisplayName.Length + sizeof(UNICODE_NULL));
+
+    if (DisplayName.Buffer != ServiceName1.Buffer)
+        ExFreePoolWithTag(DisplayName.Buffer, TAG_IO);
+    RtlFreeUnicodeString(&ServiceName1);
+
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quit;
+    }
+
+    RtlInitUnicodeString(&KeyString, L"Legacy");
+    RegValue = 1;
+    Status = ZwSetValueKey(NodeHandle,
+                           &KeyString,
+                           0,
+                           REG_DWORD,
+                           &RegValue,
+                           sizeof(RegValue));
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quit;
+    }
+
+    RtlInitUnicodeString(&KeyString, L"ConfigFlags");
+    RegValue = 0;
+    Status = ZwSetValueKey(NodeHandle,
+                  &KeyString,
+                  0,
+                  REG_DWORD,
+                  &RegValue,
+                  sizeof(RegValue));
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quit;
+    }
+
+    RtlInitUnicodeString(&KeyString, L"Class");
+    RtlInitUnicodeString(&KeyValueStr, L"LegacyDriver");
+    Status = ZwSetValueKey(NodeHandle,
+                           &KeyString,
+                           0,
+                           REG_SZ,
+                           KeyValueStr.Buffer,
+                           KeyValueStr.Length + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quit;
+    }
+
+    /* Add the class GUID for legacy drivers*/
+    RtlInitUnicodeString(&KeyString, L"ClassGUID");
+    RtlInitUnicodeString(&KeyValueStr, L"{8ECC055D-047F-11D1-A537-0000F8753ED1}");
+    Status = ZwSetValueKey(NodeHandle,
+                           &KeyString,
+                           0,
+                           REG_SZ,
+                           KeyValueStr.Buffer,
+                           KeyValueStr.Length + sizeof(UNICODE_NULL));
+
+Quit:
+    ZwClose(NodeHandle);
+    return Status;
 }
 
 /* EOF */
