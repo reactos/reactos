@@ -29,12 +29,6 @@
 #define KNUMS     KBDNUMPAD|KBDSPECIAL /* Special + number pad */
 #define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
 
-/* temporary */
-#define SC_13 0xde
-#define SC_27 0xc0
-#define SC_40 0xbb
-#define SC_41 0xba
-
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row */
   /* - 00 - */
@@ -42,19 +36,19 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
   '3',          '4',          '5',          '6',
   '7',          '8',          '9',          '0',
-  VK_OEM_MINUS, SC_13,    VK_BACK,
+  VK_OEM_MINUS, VK_OEM_7,     VK_BACK,
   /* - 0f - */
   /* First Letters Row */
   VK_TAB,       'Q',          'W',          'E',
   'R',          'T',          'Y',          'U',
   'I',          'O',          'P',
-  SC_27,     VK_OEM_4,     VK_RETURN,
+  VK_OEM_3,     VK_OEM_4,     VK_RETURN,
   /* - 1d - */
   /* Second Letters Row */
   VK_LCONTROL,
   'A',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
-  'L',          SC_40,      SC_41,     VK_PROCESSKEY,
+  'L',          VK_OEM_PLUS,  VK_OEM_1,     VK_PROCESSKEY,
   VK_LSHIFT,    VK_OEM_6,
   /* - 2c - */
   /* Third letters row */
@@ -214,10 +208,10 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '0',         0, {'0',  0 } },
 
   /*Japanese Keys*/
-  { SC_13,  0, { '^','~'} },
-  { SC_27,  0, { '@','`'} },
-  { SC_40,  0, { ';','+'} },
-  { SC_41,  0, { ':','*'} },
+  { VK_OEM_7,     0, { '^','~'} },
+  { VK_OEM_3,     0, { '@','`'} },
+  { VK_OEM_PLUS,  0, { ';','+'} },
+  { VK_OEM_1,     0, { ':','*'} },
 
   /* Specials */
   /* Ctrl-_ generates US */
