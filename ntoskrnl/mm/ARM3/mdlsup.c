@@ -158,6 +158,10 @@ MiMapLockedPagesInUserSpace(
 
     MiInsertVad((PMMVAD)Vad, &Process->VadRoot);
 
+    Status = PsChargeProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
+    if (!NT_SUCCESS(Status))
+        goto Error;
+
     /* Check if this is uncached */
     if (CacheAttribute != MiCached)
     {
@@ -319,6 +323,7 @@ MiUnmapLockedPagesInUserSpace(
     /* Remove it from the process VAD tree */
     ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
     MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
+    PsReturnProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
 
     /* MiRemoveNode should have removed us if we were the hint */
     ASSERT(Process->VadRoot.NodeHint != Vad);
