@@ -325,7 +325,17 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x79, L"\u5909\u63DB" },                /* Henkan (Convert) */
   { 0x7b, L"\u7121\u5909\u63DB" },          /* Mu-Henkan (Non-Convert) */
   { 0x7c, L"F13" },
-  { 0x7d, L"\\" },
+  { 0x7d, L"F14" },
+  { 0x7e, L"F15" },
+  { 0x7f, L"F16" },
+  { 0x80, L"F17" },
+  { 0x81, L"F18" },
+  { 0x82, L"F19" },
+  { 0x83, L"F20" },
+  { 0x84, L"F21" },
+  { 0x85, L"F22" },
+  { 0x86, L"F23" },
+  { 0x87, L"F24" },
   { 0xf1, L"ImeOff" },
   { 0xf2, L"ImeOn" },
   { 0, NULL },
