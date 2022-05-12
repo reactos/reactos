@@ -102,8 +102,8 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* One more f-key */
   VK_F24,
   /* - 77 - */
-  VK_EMPTY, VK_EMPTY, VK_EMPTY, VK_EMPTY,
-  VK_EMPTY, VK_EMPTY, VK_OEM_5, VK_EMPTY, /* PA1 */
+  VK_EMPTY, VK_EMPTY, VK_CONVERT, VK_EMPTY,
+  VK_NONCONVERT, VK_EMPTY, VK_OEM_5, VK_EMPTY, /* PA1 */
   VK_EMPTY,
   /* - 80 - */
   0
