@@ -212,13 +212,6 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { VK_OEM_3,     0, { '@','`'} },
   { VK_OEM_PLUS,  0, { ';','+'} },
   { VK_OEM_1,     0, { ':','*'} },
-
-  /* Specials */
-  /* Ctrl-_ generates US */
-  { VK_OEM_PLUS    ,0, {';', '+'} },
-  { VK_OEM_1       ,0, {';', ':'} },
-  { VK_OEM_7       ,0, {'\'','\"'} },
-  { VK_OEM_3       ,0, {'`', '~'} },
   { VK_OEM_COMMA   ,0, {',', '<'} },
   { VK_OEM_PERIOD  ,0, {'.', '>'} },
   { VK_OEM_2       ,0, {'/', '?'} },
