@@ -72,12 +72,12 @@ extern "C" {
 	defined(__POWERPC__) || defined(POWERPC) || defined(__powerpc) || \
 	defined(__powerpc__) || defined(__powerpc64__) || defined(__ppc__) || \
 	defined(__hpux) || defined(_MIPSEB) || defined(mc68000) || \
-	defined(__s390__) || defined(__s390x__) || defined(sel)
+	defined(__s390__) || defined(__s390x__) || defined(sel) || (defined(__arm64__) && defined(__APPLE__))
 #define	CPU_BIG_ENDIAN
 #define	IS_BIG_ENDIAN 1
 #define	IS_LITTLE_ENDIAN 0
 #else
-	error "Can't detect CPU architechture"
+#error "Can't detect CPU architechture"
 #endif
 
 #endif	/* HAVE_C_BIGENDIAN */
@@ -169,7 +169,7 @@ static inline UInt64_t bswap_64(x)
 	return (r.ll);
 }
 #else
-	error "bswap_64 unsupported"
+#error "bswap_64 unsupported"
 #endif
 
 #ifdef CPU_BIG_ENDIAN
