@@ -61,7 +61,7 @@ extern "C" {
 		__BYTE_ORDER == __LITTLE_ENDIAN) || \
 	defined(CPU_IA32) || defined(CPU_X64) || \
 	defined(__ia64) || defined(__ia64__) || defined(__alpha__) || defined(_M_ALPHA) || \
-	defined(vax) || defined(MIPSEL) || defined(_ARM_)
+	defined(vax) || defined(MIPSEL) || defined(_ARM_) || defined(__arm64__)
 #define	CPU_LITTLE_ENDIAN
 #define	IS_BIG_ENDIAN 0
 #define	IS_LITTLE_ENDIAN 1
@@ -77,7 +77,7 @@ extern "C" {
 #define	IS_BIG_ENDIAN 1
 #define	IS_LITTLE_ENDIAN 0
 #else
-	error "Can't detect CPU architechture"
+#error "Can't detect CPU architechture"
 #endif
 
 #endif	/* HAVE_C_BIGENDIAN */
@@ -169,7 +169,7 @@ static inline UInt64_t bswap_64(x)
 	return (r.ll);
 }
 #else
-	error "bswap_64 unsupported"
+#error "bswap_64 unsupported"
 #endif
 
 #ifdef CPU_BIG_ENDIAN
