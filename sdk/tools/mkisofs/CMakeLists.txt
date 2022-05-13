@@ -17,7 +17,8 @@ include_directories(
 # Reference: http://opensource.stackexchange.com/questions/2094
 
 add_library(libmdigest
-    schilytools/libmdigest/sha3.c)
+    schilytools/libmdigest/sha3.c
+    schilytools/libmdigest/byte_order.c)
 
 add_library(libschily
     schilytools/libschily/stdio/cvmod.c
