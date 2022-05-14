@@ -1,6 +1,13 @@
-/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
-/* Imporved by Li Keqing <auroracloud4096@gmail.com>, Luo Yufan (njlyf2011@hotmail.com) */
-/* Improved by He Yang <1160386205@qq.com> */
+/*
+ * PROJECT:     ReactOS Applications Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ *              Copyright Li Keqing <auroracloud4096@gmail.com>
+ *              Copyright Luke Luo (njlyf2011@hotmail.com)
+ *              Copyright He Yang <1160386205@qq.com>
+ */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDR_MAINMENU MENU
@@ -197,7 +204,7 @@ BEGIN
     IDS_APPLICATIONS "应用程序"
     IDS_CHOOSE_FOLDER_TEXT "请选择用来保存下载文件的文件夹："
     IDS_CHOOSE_FOLDER_ERROR "您选择的文件夹不存在。是否创建？"
-    IDS_URL_INVALID "您指定的URL无效或不支持。请更正！"
+    IDS_URL_INVALID "您指定的 URL 无效或不受支持。请更正。"
     IDS_APP_REG_REMOVE "您确定要从注册表删除该程序的数据吗？"
     IDS_INFORMATION "信息"
     IDS_UNABLE_TO_DOWNLOAD "无法下载该软件包！找不到网络的地址！"
@@ -253,7 +260,7 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "应用程序数据库"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "正在更新数据库…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "正在更新数据库…（非官方源）"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "正在更新数据库（非官方源）…"
 END
 
 STRINGTABLE

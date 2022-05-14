@@ -11,7 +11,7 @@
 /* UTF-8 */
 #pragma code_page(65001)
 
-/* Translated by Luo Yufan (njlyf2011@hotmail.com) on 2018-11-13 */
+/* Translated by Luke Luo (njlyf2011@hotmail.com) on 2018-11-13 */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -60,7 +60,7 @@ BEGIN
     IDS_TITLE,          "字体名称替代"
     IDS_FONTNAME,       "字体名称"
     IDS_SUBSTITUTE,     "替代"
-    IDS_ENTERNAME,      "(请输入字体名称...)"
+    IDS_ENTERNAME,      "（请输入字体名称...）"
     IDS_IMPORT,         "导入"
     IDS_EXPORT,         "导出"
     IDS_CANTIMPORT,     "无法导入。"
@@ -73,7 +73,7 @@ BEGIN
     IDS_QUERYDELETE,    "您确定要删除此项目吗？"
     IDS_CANTOPENKEY,    "无法打开注册表键值。"
     IDS_REBOOTNOW,      "注册表已经更新。现在需要重启系统吗？"
-    IDS_ABOUT,          "FontSub (字体名称替代) 版本 0.5\r\nby 片山博文MZ 和 The ReactOS Team\r\n\r\n本软件基于 CC0 1.0 许可证发布。"
+    IDS_ABOUT,          "FontSub （字体名称替代） 版本 0.5\r\nby 片山博文MZ 和 The ReactOS Team\r\n\r\n本软件基于 CC0 1.0 许可证发布。"
 END
 
 IDD_ADD DIALOGEX 0, 0, 315, 65

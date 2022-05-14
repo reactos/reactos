@@ -1,6 +1,11 @@
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+/*
+ * PROJECT:     System Information
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2018, 2022 Luke Luo (njlyf2011@hotmail.com)
+ */
 
-/* Translated by Luo Yufan (njlyf2011@hotmail.com) on 2018-11-13 */
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -37,7 +42,7 @@ IDS_REG_ORG,                 "注册组织"
 IDS_PRODUCT_ID,              "产品 ID"
 IDS_INST_DATE,               "安装日期"
 IDS_UP_TIME,                 "系统开机时间"
-IDS_UP_TIME_FORMAT,          "%u 日, %u 小时, %u 分钟, %u 秒"
+IDS_UP_TIME_FORMAT,          "%u 日，%u 小时，%u 分钟，%u 秒"
 IDS_SYS_MANUFACTURER,        "系统制造商"
 IDS_SYS_MODEL,               "系统型号"
 IDS_SYS_TYPE,                "系统类型"
