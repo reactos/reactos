@@ -59,8 +59,8 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* Bottom Row */
   VK_MULTIPLY | KBDMULTIVK,
                 VK_LMENU,     VK_SPACE,
-                                            /* FIXME: This value should be (VK_OEM_ATTN | KBDSPECIAL).
-                                                      Please fix the caps state in special handling. */
+                                            /* FIXME: This should be (VK_OEM_ATTN | KBDSPECIAL).
+                                                      Please fix the caps in special handling. */
                                             VK_CAPITAL | KBDSPECIAL,
 
   /* - 3b - */
