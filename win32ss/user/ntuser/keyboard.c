@@ -811,6 +811,15 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 
     /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
     wSimpleVk = IntSimplifyVk(wVk);
+
+    if (wSimpleVk == VK_OEM_ATTN &&
+        PRIMARYLANGID(gusLanguageID) == LANG_JAPANESE &&
+        IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+    {
+        /* Japanese special! */
+        wSimpleVk = VK_CAPITAL;
+    }
+
     bWasSimpleDown = IS_KEY_DOWN(gafAsyncKeyState, wSimpleVk);
 
     /* Update key without shifts */
