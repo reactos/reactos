@@ -820,6 +820,11 @@ GreMovePointer(
             pdc->ppdev->pfnMovePointer(pso, x, y, prcl);
         else if (pdc->ppdev->flFlags & PDEV_SOFTWARE_POINTER)
             EngMovePointer(pso, x, y, prcl);
+
+        /* If panning device, and we're not hiding the cursor, notify cursor's current position.
+         * (driver may already have been called if it also supports hardware pointers) */
+        if (pdc->ppdev->devinfo.flGraphicsCaps & GCAPS_PANNING && y >= 0)
+            pdc->ppdev->pfnMovePointer(pso, x, y - pso->sizlBitmap.cy, NULL);
     }
 
     /* Release PDEV lock */
