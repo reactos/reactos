@@ -812,12 +812,16 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
     wSimpleVk = IntSimplifyVk(wVk);
 
-    if (wSimpleVk == VK_OEM_ATTN &&
-        PRIMARYLANGID(gusLanguageID) == LANG_JAPANESE &&
-        IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+    if (PRIMARYLANGID(gusLanguageID) == LANG_JAPANESE)
     {
         /* Japanese special! */
-        wSimpleVk = VK_CAPITAL;
+        if (IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT))
+        {
+            if (wSimpleVk == VK_OEM_ATTN)
+                wSimpleVk = VK_CAPITAL;
+            else if (wSimpleVk == VK_OEM_COPY)
+                wSimpleVk = VK_OEM_FINISH;
+        }
     }
 
     bWasSimpleDown = IS_KEY_DOWN(gafAsyncKeyState, wSimpleVk);
