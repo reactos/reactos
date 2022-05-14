@@ -589,6 +589,15 @@ LRESULT co_UserFreeWindow(PWND Window,
    if (Window->style & WS_VISIBLE) Window->head.pti->cVisWindows--;
    Window->style &= ~WS_VISIBLE;
 
+   /*ERR*/TRACE("FREE Window 0x%p\n", Window);
+
+   /*
+    * For simplicity purposes, do the following list unlinkings here,
+    * even though in theory they should be done instead by any caller
+    * to co_UserFreeWindow() since those are initialized in success cases
+    * by co_UserCreateWindowEx().
+    */
+   IntUnlinkWindow(Window);
 
    BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
 
@@ -605,7 +614,7 @@ LRESULT co_UserFreeWindow(PWND Window,
             if (!IntWndBelongsToThread(Child, ThreadData))
             {
                /* send WM_DESTROY messages to windows not belonging to the same thread */
-               co_IntSendMessage( UserHMGetHandle(Child), WM_ASYNC_DESTROYWINDOW, 0, 0 );
+               co_IntSendMessage(UserHMGetHandle(Child), WM_ASYNC_DESTROYWINDOW, 0, 0);
             }
             else
                co_UserFreeWindow(Child, ProcessData, ThreadData, SendMessages);
@@ -714,13 +723,11 @@ LRESULT co_UserFreeWindow(PWND Window,
 
    DceFreeWindowDCE(Window);    /* Always do this to catch orphaned DCs */
 
-   IntUnlinkWindow(Window);
-
    if (Window->PropListItems)
    {
       UserRemoveWindowProps(Window);
       TRACE("Window->PropListItems %lu\n",Window->PropListItems);
-      ASSERT(Window->PropListItems==0);
+      ASSERT(Window->PropListItems == 0);
    }
 
    UserReferenceObject(Window);
@@ -1847,7 +1854,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       goto AllocError;
    }
 
-   TRACE("Created window object with handle %p\n", hWnd);
+   /*ERR*/TRACE("Created window object 0x%p with handle %p\n", pWnd, hWnd);
 
    if (pdeskCreated && pdeskCreated->DesktopWindow == NULL )
    {  /* HACK: Helper for win32csr/desktopbg.c */
@@ -2158,8 +2165,13 @@ AllocError:
    ERR("IntCreateWindow Allocation Error.\n");
    SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
 Error:
-   if(pWnd)
+   if (pWnd)
+   {
+      __debugbreak();
+      // /* Release the extra reference (UserCreateObject added 2 references) */
       UserDereferenceObject(pWnd);
+      // co_UserFreeWindow(pWnd, pti->ppi, pti, FALSE);
+   }
    return NULL;
 }
 
@@ -2837,7 +2849,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    hWnd = Window->head.h;
    ti = PsGetCurrentThreadWin32Thread();
 
-   TRACE("co_UserDestroyWindow(Window = 0x%p, hWnd = 0x%p)\n", Window, hWnd);
+   /*ERR*/TRACE("co_UserDestroyWindow(Window = 0x%p, hWnd = 0x%p)\n", Window, hWnd);
 
    /* Check for owner thread */
    if (Window->head.pti != ti)
@@ -2988,7 +3000,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    }
 
    /* Destroy the window storage */
-   co_UserFreeWindow(Window, PsGetCurrentProcessWin32Process(), PsGetCurrentThreadWin32Thread(), TRUE);
+   co_UserFreeWindow(Window, ti->ppi, ti, TRUE);
 
    return TRUE;
 }
