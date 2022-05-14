@@ -68,6 +68,7 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     TCHAR szCaption[MAX_STRING_LEN];
     TCHAR szNotepad[MAX_STRING_LEN];
     TCHAR szFilename[MAX_STRING_LEN];
+    static TCHAR s_szOldCaption[MAX_STRING_LEN] = TEXT("");
 
     /* Load the name of the application */
     LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, ARRAY_SIZE(szNotepad));
@@ -94,8 +95,13 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
             (isModified ? _T("*") : _T("")), szFilename, szNotepad);
     }
 
-    /* Update the window caption */
-    SetWindowText(Globals.hMainWnd, szCaption);
+    if (s_szOldCaption[0] == 0 || _tcscmp(szCaption, s_szOldCaption) != 0)
+    {
+        /* Update the window caption */
+        SetWindowText(Globals.hMainWnd, szCaption);
+
+        StringCchCopy(s_szOldCaption, ARRAY_SIZE(s_szOldCaption), szCaption);
+    }
 }
 
 int DIALOG_StringMsgBox(HWND hParent, int formatId, LPCTSTR szString, DWORD dwFlags)
