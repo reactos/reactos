@@ -57,7 +57,7 @@ typedef struct _COMMAND
     PWSTR cmd3;
     BOOL (*func)(INT, WCHAR**);
     INT help;
-    INT help_desc;
+    INT help_detail;
 } COMMAND, *PCOMMAND;
 
 extern COMMAND cmds[];

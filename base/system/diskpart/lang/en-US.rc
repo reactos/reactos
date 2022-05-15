@@ -39,6 +39,11 @@ BEGIN
     IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_HELP_FORMAT_STRING "%-11.11s - %s"
+END
+
 /* Detail header titles */
 STRINGTABLE
 BEGIN
@@ -98,44 +103,313 @@ END
 /* Help Command Descriptions */
 STRINGTABLE
 BEGIN
-    IDS_HELP_CMD_DESC_ACTIVE "ACTIVE\t\t- Mark the selected partition as active.\n"
-    IDS_HELP_CMD_DESC_ADD "ADD\t\t- Add a mirror to a simple volume.\n"
-    IDS_HELP_CMD_DESC_ASSIGN "ASSIGN\t\t- Assign a drive letter or mount point to the selected volume.\n"
-    IDS_HELP_CMD_DESC_ATTACH "ATTACH\t\t- Attaches a virtual disk file.\n"
-    IDS_HELP_CMD_DESC_ATTRIBUTES "ATTRIBUTES\t- Manipulate volume or disk attributes.\n"
-    IDS_HELP_CMD_DESC_AUTOMOUNT "AUTOMOUNT\t- Enable and Disable automatic mounting of basic volumes.\n"
-    IDS_HELP_CMD_DESC_BREAK "BREAK\t\t- Break a mirror set.\n"
-    IDS_HELP_CMD_DESC_CLEAN "CLEAN\t\t- Clear the configuration information, or all information, off\n\t\t  the disk.\n"
-    IDS_HELP_CMD_DESC_COMPACT "COMPACT\t\t- Attempts to reduce the physical size of the file.\n"
-    IDS_HELP_CMD_DESC_CONVERT "CONVERT\t\t- Convert between different disk formats.\n"
-    IDS_HELP_CMD_DESC_CREATE "CREATE\t\t- Create a volume, partition, or virtual disk.\n"
-    IDS_HELP_CMD_DESC_DELETE "DELETE\t\t- Delete an object.\n"
-    IDS_HELP_CMD_DESC_DETACH "DETACH\t\t- Detaches a virtual disk file.\n"
-    IDS_HELP_CMD_DESC_DETAIL "DETAIL\t\t- Provide details about an object.\n"
-    IDS_HELP_CMD_DESC_EXIT "EXIT\t\t- Exit DiskPart.\n"
-    IDS_HELP_CMD_DESC_EXPAND "EXPAND\t\t- Expands the maximum size available on a virtual disk.\n"
-    IDS_HELP_CMD_DESC_EXTEND "EXTEND\t\t- Extend a volume.\n"
-    IDS_HELP_CMD_DESC_FS "FILESYSTEMS\t- Display current and supported file systems on the volume.\n"
-    IDS_HELP_CMD_DESC_FORMAT "FORMAT\t\t- Format the volume or partition.\n"
-    IDS_HELP_CMD_DESC_GPT "GPT\t\t- Assign attributes to the selected GPT partition.\n"
-    IDS_HELP_CMD_DESC_HELP "HELP\t\t- Display a list of commands.\n"
-    IDS_HELP_CMD_DESC_IMPORT "IMPORT\t\t- Import a disk group.\n"
-    IDS_HELP_CMD_DESC_INACTIVE "INACTIVE\t- Mark the selected partition as inactive.\n"
-    IDS_HELP_CMD_DESC_LIST "LIST\t\t- Display a list of objects.\n"
-    IDS_HELP_CMD_DESC_MERGE "MERGE\t\t- Merges a child disk with its parents.\n"
-    IDS_HELP_CMD_DESC_OFFLINE "OFFLINE\t\t- Offline an object that is currently marked as online.\n"
-    IDS_HELP_CMD_DESC_ONLINE "ONLINE\t\t- Online an object that is currently marked as offline.\n"
-    IDS_HELP_CMD_DESC_RECOVER "RECOVER\t\t- Refreshes the state of all disks in the invalid pack,\n\t\t  and resynchronizes mirrored volumes and RAID5 volumes\n\t\t  that have stale plex or parity data.\n"
-    IDS_HELP_CMD_DESC_REM "REM\t\t- Does nothing. This is used to comment scripts.\n"
-    IDS_HELP_CMD_DESC_REMOVE "REMOVE\t\t- Remove a drive letter or mount point assignment.\n"
-    IDS_HELP_CMD_DESC_REPAIR "REPAIR\t\t- Repair a RAID-5 volume with a failed member.\n"
-    IDS_HELP_CMD_DESC_RESCAN "RESCAN\t\t- Rescan the computer looking for disks and volumes.\n"
-    IDS_HELP_CMD_DESC_RETAIN "RETAIN\t\t- Place a retained partition under a simple volume.\n"
-    IDS_HELP_CMD_DESC_SAN "SAN\t\t- Display or set the SAN policy for the currently booted OS.\n"
-    IDS_HELP_CMD_DESC_SELECT "SELECT\t\t- Shift the focus to an object.\n"
-    IDS_HELP_CMD_DESC_SETID "SETID\t\t- Change the partition type.\n"
-    IDS_HELP_CMD_DESC_SHRINK "SHRINK\t\t- Reduce the size of the selected volume.\n"
-    IDS_HELP_CMD_DESC_UNIQUEID "UNIQUEID\t- Displays or sets the GUID partition table (GPT) identifier\n\t\t  or master boot record (MBR) signature of a disk."
+    IDS_HELP_ACTIVE                    "Mark the selected partition as active.\n"
+    IDS_HELP_ADD                       "Add a mirror to a simple volume.\n"
+    IDS_HELP_ASSIGN                    "Assign a drive letter or mount point to the selected volume.\n"
+    IDS_HELP_ATTACH                    "Attaches a virtual disk file.\n"
+    IDS_HELP_ATTRIBUTES                "Manipulate volume or disk attributes.\n"
+    IDS_HELP_AUTOMOUNT                 "Enable and Disable automatic mounting of basic volumes.\n"
+    IDS_HELP_BREAK                     "Break a mirror set.\n"
+    IDS_HELP_CLEAN                     "Clear the configuration information, or all information, off\n              the disk.\n"
+    IDS_HELP_COMPACT                   "Attempts to reduce the physical size of the file.\n"
+    IDS_HELP_CONVERT                   "Convert between different disk formats.\n"
+
+    IDS_HELP_CREATE                    "Create a volume, partition, or virtual disk.\n"
+    IDS_HELP_CREATE_PARTITION          "Create a partition.\n"
+    IDS_HELP_CREATE_PARTITION_EFI      "Create an EFI system partition.\n"
+    IDS_HELP_CREATE_PARTITION_EXTENDED "Create an extended partition.\n"
+    IDS_HELP_CREATE_PARTITION_LOGICAL  "Create a logical drive.\n"
+    IDS_HELP_CREATE_PARTITION_MSR      "Create an MSR partition.\n"
+    IDS_HELP_CREATE_PARTITION_PRIMARY  "Create a primary partition.\n"
+    IDS_HELP_CREATE_VOLUME             "Create a volume.\n"
+    IDS_HELP_CREATE_VDISK              "Create a virtual disk file.\n"
+
+    IDS_HELP_DELETE                    "Delete an object.\n"
+    IDS_HELP_DETACH                    "Detaches a virtual disk file.\n"
+
+    IDS_HELP_DETAIL                    "Provide details about an object.\n"
+    IDS_HELP_DETAIL_DISK               "Print disk details.\n"
+    IDS_HELP_DETAIL_PARTITION          "Print partition details.\n"
+    IDS_HELP_DETAIL_VOLUME             "Print volume details.\n"
+
+    IDS_HELP_EXIT                      "Exit DiskPart.\n"
+    IDS_HELP_EXPAND                    "Expands the maximum size available on a virtual disk.\n"
+    IDS_HELP_EXTEND                    "Extend a volume.\n"
+    IDS_HELP_FILESYSTEMS               "Display current and supported file systems on the volume.\n"
+    IDS_HELP_FORMAT                    "Format the volume or partition.\n"
+    IDS_HELP_GPT                       "Assign attributes to the selected GPT partition.\n"
+    IDS_HELP_HELP                      "Display a list of commands.\n"
+    IDS_HELP_IMPORT                    "Import a disk group.\n"
+    IDS_HELP_INACTIVE                  "Mark the selected partition as inactive.\n"
+
+    IDS_HELP_LIST                      "Display a list of objects.\n"
+    IDS_HELP_LIST_DISK                 "List disks.\n"
+    IDS_HELP_LIST_PARTITION            "List partitions.\n"
+    IDS_HELP_LIST_VOLUME               "List volumes.\n"
+    IDS_HELP_LIST_VDISK                "List virtual disk files.\n"
+
+    IDS_HELP_MERGE                     "Merges a child disk with its parents.\n"
+    IDS_HELP_OFFLINE                   "Offline an object that is currently marked as online.\n"
+    IDS_HELP_ONLINE                    "Online an object that is currently marked as offline.\n"
+    IDS_HELP_RECOVER                   "Refreshes the state of all disks in the invalid pack,\n              and resynchronizes mirrored volumes and RAID5 volumes\n              that have stale plex or parity data.\n"
+    IDS_HELP_REM                       "Does nothing. This is used to comment scripts.\n"
+    IDS_HELP_REMOVE                    "Remove a drive letter or mount point assignment.\n"
+    IDS_HELP_REPAIR                    "Repair a RAID-5 volume with a failed member.\n"
+    IDS_HELP_RESCAN                    "Rescan the computer looking for disks and volumes.\n"
+    IDS_HELP_RETAIN                    "Place a retained partition under a simple volume.\n"
+    IDS_HELP_SAN                       "Display or set the SAN policy for the currently booted OS.\n"
+
+    IDS_HELP_SELECT                    "Shift the focus to an object.\n"
+    IDS_HELP_SELECT_DISK               "Moves the focus to the disk.\n"
+    IDS_HELP_SELECT_PARTITION          "Moves the focus to the partition.\n"
+    IDS_HELP_SELECT_VOLUME             "Moves the focus to the volume.\n"
+    IDS_HELP_SELECT_VDISK              "Moves the focus to the virtual disk.\n"
+
+    IDS_HELP_SETID                     "Change the partition type.\n"
+    IDS_HELP_SHRINK                    "Reduce the size of the selected volume.\n"
+
+    IDS_HELP_UNIQUEID                  "Displays or sets the GUID partition table (GPT) identifier\n              or master boot record (MBR) signature of a disk.\n"
+    IDS_HELP_UNIQUEID_DISK             "Displays or sets the GUID partition table (GPT) identifier\n              or master boot record (MBR) signature of a disk.\n"
+END
+
+/* Active help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_ACTIVE "<Add ACTIVE command help text here>\n"
+END
+
+/* Add help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_ADD "<Add ADD command help text here>\n"
+END
+
+/* Assign help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_ASSIGN "<Add ASSIGN command help text here>\n"
+END
+
+/* Attach help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_ATTACH "<Add ATTACH command help text here>\n"
+END
+
+/* Attributes Command Messages */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_ATTRIBUTES "<Add ATTRIBUTES command help text here>\n"
+END
+
+/* Automount help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_AUTOMOUNT "<Add AUTOMOUNT command help text here>\n"
+END
+
+/* Break help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_BREAK "<Add BREAK command help text here>\n"
+END
+
+/* Clean help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_CLEAN "<Add CLEAN command help text here>\n"
+END
+
+/* Compact help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_COMPACT "<Add COMPACT command help text here>\n"
+END
+
+/* Convert help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_CONVERT "<Add CONVERT command help text here>\n"
+END
+
+/* Create help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_CREATE_PARTITION_EFI "<Add CREATE PARTITION EFI command help text here>\n"
+    IDS_COMMAND_CREATE_PARTITION_EXTENDED "<Add CREATE PARTITION EXTENDED command help text here>\n"
+    IDS_COMMAND_CREATE_PARTITION_LOGICAL"<Add CREATE PARTITION LOGICAL command help text here>\n"
+    IDS_COMMAND_CREATE_PARTITION_MSR"<Add CREATE PARTITION MSR command help text here>\n"
+    IDS_COMMAND_CREATE_PARTITION_PRIMARY"<Add CREATE PARTITION PRIMARY command help text here>\n"
+END
+
+/* Delete help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_DELETE "<Add DELETE command help text here>\n"
+END
+
+/* Delete help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_DETAIL_DISK "<Add DETAIL DISK command help text here>\n"
+    IDS_COMMAND_DETAIL_PARTITION "<Add DETAIL PARTITION command help text here>\n"
+    IDS_COMMAND_DETAIL_VOLUME "<Add DETAIL VOLUME command help text here>\n"
+END
+
+/* Detach help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_DETACH "<Add DETACH command help text here>\n"
+END
+
+/* Exit help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_EXIT "<Add EXIT command help text here>\n"
+END
+
+/* Expand help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_EXPAND "<Add EXPAND command help text here>\n"
+END
+
+/* Extend help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_EXTEND "<Add EXTEND command help text here>\n"
+END
+
+/* Filesystems help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_FILESYSTEMS "<Add FILESYSTEMS command help text here>\n"
+END
+
+/* Format help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_FORMAT "<Add FORMAT command help text here>\n"
+END
+
+/* GPT help description */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_GPT "<Add GPT command help text here>\n"
+END
+
+/* Help help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_HELP "<Add HELP command help text here>\n"
+END
+
+/* Import help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_IMPORT "<Add IMPORT command help text here>\n"
+END
+
+/* Inactive help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_INACTIVE "<Add INTERACTIVE command help text here>\n"
+END
+
+/* List help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_LIST_DISK "<Add LIST DISK command help text here>\n"
+    IDS_COMMAND_LIST_PARTITION "<Add LIST PARTITION command help text here>\n"
+    IDS_COMMAND_LIST_VOLUME "<Add LIST VOLUME command help text here>\n"
+    IDS_COMMAND_LIST_VDISK "<Add LIST VDISK command help text here>\n"
+END
+
+/* Merge help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_MERGE "<Add MERGE command help text here>\n"
+END
+
+/* Offline help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_OFFLINE "<Add OFFLINE command help text here>\n"
+END
+
+/* Online help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_ONLINE "<Add ONLINE command help text here>\n"
+END
+
+/* Recover help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_RECOVER "<Add RECOVER command help text here>\n"
+END
+
+/* Rem help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_REM "<Add REM command help text here>\n"
+END
+
+/* Remove help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_REMOVE "<Add REMOVE command help text here>\n"
+END
+
+/* Repair help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_REPAIR "<Add REPAIR command help text here>\n"
+END
+
+/* Rescan help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_RESCAN "<Add RESCAN command help text here>\n"
+END
+
+/* Retain help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_RETAIN "<Add RETAIN command help text here>\n"
+END
+
+/* San help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_SAN "<Add SAN command help text here>\n"
+END
+
+/* Select help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_SELECT_DISK "<Add SELECT DISK command help text here>\n"
+    IDS_COMMAND_SELECT_PARTITION "<Add SELECT PARTITION command help text here>\n"
+    IDS_COMMAND_SELECT_VOLUME "<Add SELECT VOLUME command help text here>\n"
+    IDS_COMMAND_SELECT_VDISK "<Add SELECT VDISK command help text here>\n"
+END
+
+/* Setid help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_SETID "<Add SETID command help text here>\n"
+END
+
+/* Setid help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_SHRINK "<Add SHRINK command help text here>\n"
+END
+
+/* Uniqueid help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_COMMAND_UNIQUEID_DISK "<Add UNIQUEID DISK command help text here>\n"
 END
 
 /* Common Error Messages */
@@ -144,303 +418,4 @@ BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Error opening script: %s\n"
     IDS_ERROR_MSG_BAD_ARG "Error processing argument: %s\n"
     IDS_ERROR_INVALID_ARGS "Invalid arguments\n"
-END
-
-/* Active help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ACTIVE "\n\
-<Add active command help text here>\n\n"
-END
-
-/* Add help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ADD "\n\
-<Add add command help text here>\n\n"
-END
-
-/* Assign help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ASSIGN "\n\
-<Add assign command help text here>\n\n"
-END
-
-/* Attach help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ATTACH "\n\
-<Add attach command help text here>\n\n"
-END
-
-/* Attributes Command Messages */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ATTRIBUTES "\n\
-<Add attributes command help text here>\n\n"
-END
-
-/* Automount help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_AUTOMOUNT "\n\
-<Add automount command help text here>\n\n"
-END
-
-/* Break help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_BREAK "\n\
-<Add break command help text here>\n\n"
-END
-
-/* Clean help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_CLEAN "\n\
-<Add clean command help text here>\n\n"
-END
-
-/* Compact help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_COMPACT "\n\
-<Add compact command help text here>\n\n"
-END
-
-/* Convert help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_CONVERT "\n\
-<Add convert command help text here>\n\n"
-END
-
-/* Convert help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_CREATE "\n\
-PARTITION   - Create a partition.\n\
-VOLUME      - Create a volume.\n\
-VDISK       - Create a virtual disk file.\n\n"
-
-    IDS_HELP_CMD_CREATE_PARTITION "\n\
-EFI         - Create an EFI system partition.\n\
-EXTENDED    - Create an extended partition.\n\
-LOGICAL     - Create a logical drive.\n\
-MSR         - Create an MSR partition.\n\
-PRIMARY     - Create a primary partition.\n\n"
-
-    IDS_HELP_CMD_CREATE_PARTITION_EXTENDED "\n\
-    Create an exteded partition.\n\n"
-
-    IDS_HELP_CMD_CREATE_PARTITION_LOGICAL "\n\
-    Create a logical drive.\n\n"
-
-    IDS_HELP_CMD_CREATE_PARTITION_PRIMARY "\n\
-    Create a primary partition.\n\n"
-END
-
-/* Delete help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_DELETE "\n\
-<Add delete command help text here>\n\n"
-END
-
-/* Delete help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_DETAIL "\n\
-<Add detail command help text here>\n\n"
-    IDS_HELP_CMD_DETAIL_DISK "\n\
-<Add detail disk command help text here>\n\n"
-    IDS_HELP_CMD_DETAIL_PARTITION "\n\
-<Add detail partition command help text here>\n\n"
-    IDS_HELP_CMD_DETAIL_VOLUME "\n\
-<Add detail volume command help text here>\n\n"
-END
-
-/* Detach help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_DETACH "\n\
-<Add detach command help text here>\n\n"
-END
-
-/* Expand help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_EXPAND "\n\
-<Add expand command help text here>\n\n"
-END
-
-/* Extend help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_EXTEND "\n\
-<Add extend command help text here>\n\n"
-END
-
-/* Filesystems help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_FILESYSTEMS "\n\
-<Add filesystems command help text here>\n\n"
-END
-
-/* Format help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_FORMAT "\n\
-<Add format command help text here>\n\n"
-END
-
-/* GPT help description */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_GPT "\n\
-<Add gpt command help text here>\n\n"
-END
-
-/* Help help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_HELP "\n\
-<Add help command help text here>\n\n"
-END
-
-/* Import help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_IMPORT "\n\
-<Add import command help text here>\n\n"
-END
-
-/* Inactive help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_INACTIVE "\n\
-<Add inactive command help text here>\n\n"
-END
-
-/* List help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_LIST "\n\
-DISK        - Show a list of disks.\n\
-PARTITION   - Show a list of partitions on the selected disk.\n\
-VOLUME      - Show a list of volumes.\n\
-VDISK       - Show a list of virtual disk files.\n\n"
-    IDS_HELP_CMD_LIST_DISK "\n\
-    Display a list of disks.\n\n\
-Syntax: LIST DISK\n\n\
-    Shows a list of disks and additional infomation about the disks.\n\n\
-Example:\n\n\
-    LIST DISK\n\n"
-END
-
-/* Merge help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_MERGE "\n\
-<Add merge command help text here>\n\n"
-END
-
-/* Offline help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_OFFLINE "\n\
-<Add OFFLINE command help text here>\n\n"
-END
-
-/* Online help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_ONLINE "\n\
-<Add ONLINE command help text here>\n\n"
-END
-
-/* Recover help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_RECOVER "\n\
-<Add RECOVER command help text here>\n\n"
-END
-
-/* Remove help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_REMOVE "\n\
-<Add REMOVE command help text here>\n\n"
-END
-
-/* Repair help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_REPAIR "\n\
-<Add REPAIR command help text here>\n\n"
-END
-
-/* Rescan help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_RESCAN "\n\
-<Add RESCAN command help text here>\n\n"
-END
-
-/* Retain help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_RETAIN "\n\
-<Add RETAIN command help text here>\n\n"
-END
-
-/* San help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_SAN "\n\
-<Add SAN command help text here>\n\n"
-END
-
-/* Select help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_SELECT "\n\
-DISK        - Moves the focus to the disk.\n\
-PARTITION   - Moves the focus to the partition.\n\
-VOLUME      - Moves the focus to the volume.\n\
-VDISK       - Moves the focus to the virtual disk.\n\n"
-    IDS_HELP_CMD_SELECT_DISK "\n\
-<Add SELECT DISK command help text here>\n\n"
-    IDS_HELP_CMD_SELECT_PARTITION "\n\
-<Add SELECT PARTITION command help text here>\n\n"
-    IDS_HELP_CMD_SELECT_VOLUME "\n\
-<Add SELECT VOLUME command help text here>\n\n"
-    IDS_HELP_CMD_SELECT_VDISK "\n\
-<Add SELECT VDISK command help text here>\n\n"
-END
-
-/* Setid help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_SETID "\n\
-<Add SETID command help text here>\n\n"
-END
-
-/* Setid help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_SHRINK "\n\
-<Add SHRINK command help text here>\n\n"
-END
-
-/* Uniqueid help descriptions */
-STRINGTABLE
-BEGIN
-    IDS_HELP_CMD_UNIQUEID "\n\
-DISK        - Used to display or set the ID of a GUID partition table\n\
-              or the Signature of an MBR partition table.\n\n"
-    IDS_HELP_CMD_UNIQUEID_DISK "\n\
-<Add UNIQUEID DISK command help text here>\n\n"
 END
