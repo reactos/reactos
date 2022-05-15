@@ -27,8 +27,8 @@ HWND hProcessPage;                      /* Process List Property Page */
 
 HWND hProcessPageListCtrl;              /* Process ListCtrl Window */
 HWND hProcessPageHeaderCtrl;            /* Process Header Control */
-HWND hProcessPageEndProcessButton;      /* Process End Process button */
-HWND hProcessPageShowAllProcessesButton;/* Process Show All Processes checkbox */
+static HWND hProcessPageEndProcessButton;      /* Process End Process button */
+static HWND hProcessPageShowAllProcessesButton;/* Process Show All Processes checkbox */
 BOOL bProcessPageSelectionMade = FALSE; /* Is item in ListCtrl selected */
 
 static int  nProcessPageWidth;

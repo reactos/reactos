@@ -10,28 +10,24 @@
 
 HICON TrayIcon_GetProcessorUsageIcon(void)
 {
-    HICON     hTrayIcon = NULL;
-    HDC       hScreenDC = NULL;
-    HDC       hDC = NULL;
-    HBITMAP   hBitmap = NULL;
-    HBITMAP   hOldBitmap = NULL;
-    HBITMAP   hBitmapMask = NULL;
-    ICONINFO  iconInfo;
-    ULONG     ProcessorUsage;
-    int       nLinesToDraw;
-    HBRUSH    hBitmapBrush = NULL;
-    RECT      rc;
+    HICON    hTrayIcon = NULL;
+    HDC      hScreenDC = NULL;
+    HDC      hDC = NULL;
+    HBITMAP  hBitmap = NULL;
+    HBITMAP  hOldBitmap = NULL;
+    HBITMAP  hBitmapMask = NULL;
+    ICONINFO iconInfo;
+    ULONG    ProcessorUsage;
+    int      nLinesToDraw;
+    HBRUSH   hBitmapBrush = NULL;
+    RECT     rc;
 
-    /*
-     * Get a handle to the screen DC
-     */
+    /* Get a handle to the screen DC */
     hScreenDC = GetDC(NULL);
     if (!hScreenDC)
         goto done;
 
-    /*
-     * Create our own DC from it
-     */
+    /* Create our own DC from it */
     hDC = CreateCompatibleDC(hScreenDC);
     if (!hDC)
         goto done;
@@ -52,7 +48,7 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
      * Select the bitmap into our device context
      * so we can draw on it.
      */
-    hOldBitmap = (HBITMAP) SelectObject(hDC, hBitmap);
+    hOldBitmap = SelectObject(hDC, hBitmap);
 
     /*
      * Get the cpu usage
@@ -71,9 +67,7 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
     rc.right = 13;
     rc.bottom = 13;
 
-    /*
-     * Now draw the cpu usage
-     */
+    /* Now draw the cpu usage */
     if (nLinesToDraw)
         FillRect(hDC, &rc, hBitmapBrush);
 
@@ -105,9 +99,7 @@ done:
     if (hBitmapMask)
         DeleteObject(hBitmapMask);
 
-    /*
-     * Return the newly created tray icon (if successful)
-     */
+    /* Return the newly created tray icon (if successful) */
     return hTrayIcon;
 }
 
