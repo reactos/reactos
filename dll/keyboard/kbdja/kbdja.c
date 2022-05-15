@@ -48,16 +48,17 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_LCONTROL,
   'A',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
-  'L',          VK_OEM_PLUS,  VK_OEM_1,     VK_PROCESSKEY,
+  'L',          VK_OEM_PLUS,  VK_OEM_1,     VK_KANJI | KBDSPECIAL,
   VK_LSHIFT,    VK_OEM_6,
   /* - 2c - */
   /* Third letters row */
   'Z',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
-  VK_OEM_PERIOD,VK_OEM_2, VK_RSHIFT,
+  VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT | KBDEXT,
   /* - 37 - */
   /* Bottom Row */
-  VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
+  VK_MULTIPLY | KBDMULTIVK,
+                VK_LMENU,     VK_SPACE,     VK_OEM_ATTN | KBDSPECIAL,
 
   /* - 3b - */
   /* F-Keys */
@@ -88,16 +89,15 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_F13, VK_F14, VK_F15, VK_F16, VK_F17, VK_F18, VK_F19, VK_F20,
   VK_F21, VK_F22, VK_F23,
   /* - 6f - */
-  /* Not sure who uses these codes */
-  VK_EMPTY, VK_EMPTY, VK_EMPTY,
+  VK_EMPTY, VK_OEM_COPY | KBDSPECIAL, VK_EMPTY,
   /* - 72 - */
   VK_EMPTY, VK_OEM_102, VK_EMPTY, VK_EMPTY,
   /* - 76 - */
   /* One more f-key */
   VK_F24,
   /* - 77 - */
-  VK_EMPTY, VK_EMPTY, VK_CONVERT, VK_EMPTY,
-  VK_NONCONVERT, VK_EMPTY, VK_OEM_5, VK_EMPTY, /* PA1 */
+  VK_EMPTY, VK_EMPTY, VK_CONVERT | KBDSPECIAL, VK_EMPTY,
+  VK_NONCONVERT | KBDSPECIAL, VK_EMPTY, VK_OEM_5, VK_EMPTY, /* PA1 */
   VK_EMPTY,
   /* - 80 - */
   0
@@ -205,7 +205,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '7',         0, {'7', '\''} },
   { '8',         0, {'8', '('} },
   { '9',         0, {'9', ')'} },
-  { '0',         0, {'0',  0 } },
+  { '0',         0, {'0', WCH_NONE} },
 
   /*Japanese Keys*/
   { VK_OEM_7,     0, { '^','~'} },
