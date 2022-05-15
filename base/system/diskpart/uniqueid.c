@@ -13,18 +13,18 @@
 
 /* FUNCTIONS ******************************************************************/
 
-static
-VOID
+BOOL
 UniqueIdDisk(
     _In_ INT argc,
-    _In_ LPWSTR *argv)
+    _In_ PWSTR *argv)
 {
-    ULONG ulLength, ulValue;
+    PWSTR pszSuffix = NULL;
+    ULONG ulValue;
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return;
+        return TRUE;
     }
 
     if (argc == 2)
@@ -32,39 +32,34 @@ UniqueIdDisk(
         ConPuts(StdOut, L"\n");
         ConPrintf(StdOut, L"Disk ID: %08lx\n", CurrentDisk->LayoutBuffer->Signature);
         ConPuts(StdOut, L"\n");
-        return;
+        return TRUE;
     }
 
     if (argc != 3)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
-    ulLength = wcslen(argv[2]);
-    if ((ulLength <= 3) || (ulLength > 11))
+    if (!HasPrefix(argv[2], L"ID=", &pszSuffix))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
-    if (!HasPrefix(argv[2], L"ID="))
+    if ((pszSuffix == NULL) ||
+        (wcslen(pszSuffix) > 8) ||
+        (IsHexString(pszSuffix) == FALSE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
-    if (!IsHexString(&argv[2][3]))
-    {
-        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
-    }
-
-    ulValue = wcstoul(&argv[2][3], NULL, 16);
+    ulValue = wcstoul(pszSuffix, NULL, 16);
     if ((ulValue == 0) && (errno == ERANGE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     ConPrintf(StdOut, L"Setting the disk signature is not implemented yet!\n");
@@ -73,24 +68,6 @@ UniqueIdDisk(
     CurrentDisk->LayoutBuffer->Signature = ulValue;
 //    SetDiskLayout(CurrentDisk);
 #endif
-
-}
-
-
-BOOL uniqueid_main(INT argc, LPWSTR *argv)
-{
-    /* gets the first word from the string */
-    if (argc == 1)
-    {
-        ConResPuts(StdOut, IDS_HELP_CMD_UNIQUEID);
-        return TRUE;
-    }
-
-    /* determines which details to print (disk, partition, etc.) */
-    if (!wcsicmp(argv[1], L"disk"))
-        UniqueIdDisk(argc, argv);
-    else
-        ConResPuts(StdOut, IDS_HELP_CMD_UNIQUEID);
 
     return TRUE;
 }

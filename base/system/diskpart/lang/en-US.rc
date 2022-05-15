@@ -220,7 +220,25 @@ END
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_CREATE "\n\
-<Add create command help text here>\n\n"
+PARTITION   - Create a partition.\n\
+VOLUME      - Create a volume.\n\
+VDISK       - Create a virtual disk file.\n\n"
+
+    IDS_HELP_CMD_CREATE_PARTITION "\n\
+EFI         - Create an EFI system partition.\n\
+EXTENDED    - Create an extended partition.\n\
+LOGICAL     - Create a logical drive.\n\
+MSR         - Create an MSR partition.\n\
+PRIMARY     - Create a primary partition.\n\n"
+
+    IDS_HELP_CMD_CREATE_PARTITION_EXTENDED "\n\
+    Create an exteded partition.\n\n"
+
+    IDS_HELP_CMD_CREATE_PARTITION_LOGICAL "\n\
+    Create a logical drive.\n\n"
+
+    IDS_HELP_CMD_CREATE_PARTITION_PRIMARY "\n\
+    Create a primary partition.\n\n"
 END
 
 /* Delete help description */
@@ -235,6 +253,12 @@ STRINGTABLE
 BEGIN
     IDS_HELP_CMD_DETAIL "\n\
 <Add detail command help text here>\n\n"
+    IDS_HELP_CMD_DETAIL_DISK "\n\
+<Add detail disk command help text here>\n\n"
+    IDS_HELP_CMD_DETAIL_PARTITION "\n\
+<Add detail partition command help text here>\n\n"
+    IDS_HELP_CMD_DETAIL_VOLUME "\n\
+<Add detail volume command help text here>\n\n"
 END
 
 /* Detach help description */
@@ -304,7 +328,16 @@ END
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_LIST "\n\
-<Add list command help text here>\n\n"
+DISK        - Show a list of disks.\n\
+PARTITION   - Show a list of partitions on the selected disk.\n\
+VOLUME      - Show a list of volumes.\n\
+VDISK       - Show a list of virtual disk files.\n\n"
+    IDS_HELP_CMD_LIST_DISK "\n\
+    Display a list of disks.\n\n\
+Syntax: LIST DISK\n\n\
+    Shows a list of disks and additional infomation about the disks.\n\n\
+Example:\n\n\
+    LIST DISK\n\n"
 END
 
 /* Merge help descriptions */
@@ -374,7 +407,18 @@ END
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_SELECT "\n\
-<Add SELECT command help text here>\n\n"
+DISK        - Moves the focus to the disk.\n\
+PARTITION   - Moves the focus to the partition.\n\
+VOLUME      - Moves the focus to the volume.\n\
+VDISK       - Moves the focus to the virtual disk.\n\n"
+    IDS_HELP_CMD_SELECT_DISK "\n\
+<Add SELECT DISK command help text here>\n\n"
+    IDS_HELP_CMD_SELECT_PARTITION "\n\
+<Add SELECT PARTITION command help text here>\n\n"
+    IDS_HELP_CMD_SELECT_VOLUME "\n\
+<Add SELECT VOLUME command help text here>\n\n"
+    IDS_HELP_CMD_SELECT_VDISK "\n\
+<Add SELECT VDISK command help text here>\n\n"
 END
 
 /* Setid help descriptions */
@@ -395,5 +439,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_HELP_CMD_UNIQUEID "\n\
-<Add UNIQUEID command help text here>\n\n"
+DISK        - Used to display or set the ID of a GUID partition table\n\
+              or the Signature of an MBR partition table.\n\n"
+    IDS_HELP_CMD_UNIQUEID_DISK "\n\
+<Add UNIQUEID DISK command help text here>\n\n"
 END

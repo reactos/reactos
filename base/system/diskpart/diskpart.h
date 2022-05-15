@@ -52,7 +52,9 @@
 
 typedef struct _COMMAND
 {
-    LPWSTR name;
+    PWSTR cmd1;
+    PWSTR cmd2;
+    PWSTR cmd3;
     BOOL (*func)(INT, WCHAR**);
     INT help;
     INT help_desc;
@@ -233,7 +235,20 @@ BOOL compact_main(INT argc, LPWSTR *argv);
 BOOL convert_main(INT argc, LPWSTR *argv);
 
 /* create.c */
-BOOL create_main(INT argc, LPWSTR *argv);
+BOOL
+CreateExtendedPartition(
+    INT argc,
+    PWSTR *argv);
+
+BOOL
+CreateLogicalPartition(
+    INT argc,
+    PWSTR *argv);
+
+BOOL
+CreatePrimaryPartition(
+    INT argc,
+    PWSTR *argv);
 
 /* delete.c */
 BOOL delete_main(INT argc, LPWSTR *argv);
@@ -242,7 +257,20 @@ BOOL delete_main(INT argc, LPWSTR *argv);
 BOOL detach_main(INT argc, LPWSTR *argv);
 
 /* detail.c */
-BOOL detail_main(INT argc, LPWSTR *argv);
+BOOL
+DetailDisk(
+    INT argc,
+    PWSTR *argv);
+
+BOOL
+DetailPartition(
+    INT argc,
+    PWSTR *argv);
+
+BOOL
+DetailVolume(
+    INT argc,
+    PWSTR *argv);
 
 /* diskpart.c */
 
@@ -266,7 +294,8 @@ BOOL gpt_main(INT argc, LPWSTR *argv);
 
 /* help.c */
 BOOL help_main(INT argc, LPWSTR *argv);
-VOID help_cmdlist(VOID);
+VOID HelpCommandList(VOID);
+BOOL HelpCommand(PCOMMAND pCommand);
 
 /* import. c */
 BOOL import_main(INT argc, LPWSTR *argv);
@@ -280,7 +309,25 @@ BOOL InterpretCmd(INT argc, LPWSTR *argv);
 VOID InterpretMain(VOID);
 
 /* list.c */
-BOOL list_main(INT argc, LPWSTR *argv);
+BOOL
+ListDisk(
+    INT argc,
+    PWSTR *argv);
+
+BOOL
+ListPartition(
+    INT argc,
+    PWSTR *argv);
+
+BOOL
+ListVolume(
+    INT argc,
+    PWSTR *argv);
+
+BOOL
+ListVirtualDisk(
+    INT argc,
+    PWSTR *argv);
 
 /* merge.c */
 BOOL merge_main(INT argc, LPWSTR *argv);
@@ -297,7 +344,8 @@ IsHexString(
 BOOL
 HasPrefix(
     _In_ PWSTR pszString,
-    _In_ PWSTR pszPrefix);
+    _In_ PWSTR pszPrefix,
+    _Out_opt_ PWSTR *pszSuffix);
 
 ULONGLONG
 RoundingDivide(
@@ -343,8 +391,26 @@ BOOL retain_main(INT argc, LPWSTR *argv);
 BOOL san_main(INT argc, LPWSTR *argv);
 
 /* select.c */
-BOOL select_main(INT argc, LPWSTR *argv);
+BOOL
+SelectDisk(
+    INT argc,
+    PWSTR *argv);
 
+BOOL
+SelectPartition(
+    INT argc,
+    PWSTR *argv);
+
+BOOL
+SelectVolume(
+    INT argc,
+    PWSTR *argv);
+/*
+BOOL
+SelectVirtualDisk(
+    INT argc,
+    PWSTR *argv);
+*/
 /* setid.c */
 BOOL setid_main(INT argc, LPWSTR *argv);
 
@@ -352,6 +418,9 @@ BOOL setid_main(INT argc, LPWSTR *argv);
 BOOL shrink_main(INT argc, LPWSTR *argv);
 
 /* uniqueid.c */
-BOOL uniqueid_main(INT argc, LPWSTR *argv);
+BOOL
+UniqueIdDisk(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 #endif /* DISKPART_H */

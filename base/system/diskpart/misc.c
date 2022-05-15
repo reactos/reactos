@@ -57,9 +57,17 @@ IsHexString(
 BOOL
 HasPrefix(
     _In_ PWSTR pszString,
-    _In_ PWSTR pszPrefix)
+    _In_ PWSTR pszPrefix,
+    _Out_opt_ PWSTR *ppszSuffix)
 {
-    return (_wcsnicmp(pszString, pszPrefix, wcslen(pszPrefix)) == 0);
+    INT nPrefixLength, ret;
+
+    nPrefixLength = wcslen(pszPrefix);
+    ret = _wcsnicmp(pszString, pszPrefix, nPrefixLength);
+    if ((ret == 0) && (ppszSuffix != NULL))
+        *ppszSuffix = &pszString[nPrefixLength];
+
+    return (ret == 0);
 }
 
 

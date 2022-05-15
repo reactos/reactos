@@ -13,9 +13,10 @@
 
 /* FUNCTIONS ******************************************************************/
 
-static
-VOID
-ListDisk(VOID)
+BOOL
+ListDisk(
+    INT argc,
+    PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PDISKENTRY DiskEntry;
@@ -68,11 +69,15 @@ ListDisk(VOID)
     }
 
     ConPuts(StdOut, L"\n\n");
+
+    return TRUE;
 }
 
-static
-VOID
-ListPartition(VOID)
+
+BOOL
+ListPartition(
+    INT argc,
+    PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PPARTENTRY PartEntry;
@@ -85,7 +90,7 @@ ListPartition(VOID)
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_LIST_PARTITION_NO_DISK);
-        return;
+        return TRUE;
     }
 
     /* Header labels */
@@ -205,11 +210,15 @@ ListPartition(VOID)
     }
 
     ConPuts(StdOut, L"\n");
+
+    return TRUE;
 }
 
-static
-VOID
-ListVolume(VOID)
+
+BOOL
+ListVolume(
+    INT argc,
+    PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
@@ -253,38 +262,16 @@ ListVolume(VOID)
     }
 
     ConPuts(StdOut, L"\n\n");
+
+    return TRUE;
 }
 
-static
-VOID
-ListVdisk(VOID)
-{
-    ConPuts(StdOut, L"List VDisk!!\n");
-}
 
 BOOL
-list_main(
+ListVirtualDisk(
     INT argc,
-    LPWSTR *argv)
+    PWSTR *argv)
 {
-    /* gets the first word from the string */
-    if (argc == 1)
-    {
-        ConResPuts(StdOut, IDS_HELP_CMD_LIST);
-        return TRUE;
-    }
-
-    /* determines which to list (disk, partition, etc.) */
-    if (!wcsicmp(argv[1], L"disk"))
-        ListDisk();
-    else if (!wcsicmp(argv[1], L"partition"))
-        ListPartition();
-    else if (!wcsicmp(argv[1], L"volume"))
-        ListVolume();
-    else if (!wcsicmp(argv[1], L"vdisk"))
-        ListVdisk();
-    else
-        ConResPuts(StdOut, IDS_HELP_CMD_LIST);
-
+    ConPuts(StdOut, L"ListVirtualDisk()!\n");
     return TRUE;
 }

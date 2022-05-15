@@ -9,10 +9,11 @@
 #include "diskpart.h"
 
 /*
- * help_cmdlist():
+ * HelpCommandList():
  * shows all the available commands and basic descriptions for diskpart
  */
-VOID help_cmdlist(VOID)
+VOID
+HelpCommandList(VOID)
 {
     PCOMMAND cmdptr;
 
@@ -21,11 +22,27 @@ VOID help_cmdlist(VOID)
     ConPuts(StdOut, L"\n");
 
     /* List all the commands and the basic descriptions */
-    for (cmdptr = cmds; cmdptr->name; cmdptr++)
-        ConResPuts(StdOut, cmdptr->help_desc);
+    for (cmdptr = cmds; cmdptr->cmd1; cmdptr++)
+        if (cmdptr->help_desc != IDS_NONE)
+            ConResPuts(StdOut, cmdptr->help_desc);
 
     ConPuts(StdOut, L"\n");
 }
+
+
+BOOL
+HelpCommand(
+    PCOMMAND pCommand)
+{
+    if (pCommand->help != IDS_NONE)
+    {
+        ConResPuts(StdOut, pCommand->help);
+//        ConPuts(StdOut, L"\n");
+    }
+
+    return TRUE;
+}
+
 
 /* help_main(char *arg):
  * main entry point for the help command. Gives help to users who needs it.
@@ -33,24 +50,51 @@ VOID help_cmdlist(VOID)
 BOOL help_main(INT argc, LPWSTR *argv)
 {
     PCOMMAND cmdptr;
+    PCOMMAND cmdptr1 = NULL;
+    PCOMMAND cmdptr2 = NULL;
+    PCOMMAND cmdptr3 = NULL;
 
     if (argc == 1)
     {
-        help_cmdlist();
+        HelpCommandList();
         return TRUE;
     }
 
     /* Scan internal command table */
-    for (cmdptr = cmds; cmdptr->name; cmdptr++)
+    for (cmdptr = cmds; cmdptr->cmd1; cmdptr++)
     {
-        if (_wcsicmp(argv[1], cmdptr->name) == 0)
-        {
-            ConResPuts(StdOut, cmdptr->help);
-            return TRUE;
-        }
+        if ((cmdptr1 == NULL) &&
+            (wcsicmp(argv[1], cmdptr->cmd1) == 0))
+            cmdptr1 = cmdptr;
+
+        if ((cmdptr2 == NULL) &&
+            (argc >= 3) &&
+            (wcsicmp(argv[1], cmdptr->cmd1) == 0) &&
+            (wcsicmp(argv[2], cmdptr->cmd2) == 0))
+            cmdptr2 = cmdptr;
+
+        if ((cmdptr3 == NULL) &&
+            (argc >= 4) &&
+            (wcsicmp(argv[1], cmdptr->cmd1) == 0) &&
+            (wcsicmp(argv[2], cmdptr->cmd2) == 0) &&
+            (wcsicmp(argv[3], cmdptr->cmd3) == 0))
+            cmdptr3 = cmdptr;
     }
 
-    help_cmdlist();
+    if (cmdptr3 != NULL)
+    {
+        return HelpCommand(cmdptr3);
+    }
+    else if (cmdptr2 != NULL)
+    {
+        return HelpCommand(cmdptr2);
+    }
+    else if (cmdptr1 != NULL)
+    {
+        return HelpCommand(cmdptr1);
+    }
+
+    HelpCommandList();
 
     return TRUE;
 }
