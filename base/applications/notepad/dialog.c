@@ -84,6 +84,8 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     {
         StringCbPrintf(szCaption, sizeof(szCaption), _T("%s - %s"),
                        szFilename, szNotepad);
+
+        Globals.bWasModified = FALSE;
     }
     else
     {
