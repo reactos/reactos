@@ -68,7 +68,6 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     TCHAR szCaption[MAX_STRING_LEN];
     TCHAR szNotepad[MAX_STRING_LEN];
     TCHAR szFilename[MAX_STRING_LEN];
-    static TCHAR s_szOldCaption[MAX_STRING_LEN] = TEXT("");
 
     /* Load the name of the application */
     LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, ARRAY_SIZE(szNotepad));
@@ -90,18 +89,22 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     {
         BOOL isModified = (SendMessage(Globals.hEdit, EM_GETMODIFY, 0, 0) ? TRUE : FALSE);
 
+        if (isModified == Globals.bWasModified)
+        {
+            /* We are in the same state as before, don't change the caption */
+            return;
+        }
+
+        /* We will modify the caption below */
+        Globals.bWasModified = isModified;
+
         /* Update the caption based upon if the user has modified the contents of the file or not */
         StringCbPrintf(szCaption, sizeof(szCaption), _T("%s%s - %s"),
             (isModified ? _T("*") : _T("")), szFilename, szNotepad);
     }
 
-    if (s_szOldCaption[0] == 0 || _tcscmp(szCaption, s_szOldCaption) != 0)
-    {
-        /* Update the window caption */
-        SetWindowText(Globals.hMainWnd, szCaption);
-
-        StringCchCopy(s_szOldCaption, ARRAY_SIZE(s_szOldCaption), szCaption);
-    }
+    /* Update the window caption */
+    SetWindowText(Globals.hMainWnd, szCaption);
 }
 
 int DIALOG_StringMsgBox(HWND hParent, int formatId, LPCTSTR szString, DWORD dwFlags)
