@@ -68,13 +68,25 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     TCHAR szCaption[MAX_STRING_LEN];
     TCHAR szNotepad[MAX_STRING_LEN];
     TCHAR szFilename[MAX_STRING_LEN];
-    BOOL isModified = !!SendMessage(Globals.hEdit, EM_GETMODIFY, 0, 0);
+    BOOL isModified;
 
-    if (!clearModifyAlert && isModified == Globals.bWasModified)
+    if (clearModifyAlert)
     {
-        /* We are in the same state as before, don't change the caption */
-        return;
+        /* When a file is being opened or created, there is no need to have
+         * the edited flag shown when the file has not been edited yet. */
+        isModified = FALSE;
     }
+    else
+    {
+        /* Check whether the user has modified the file or not. If we are
+         * in the same state as before, don't change the caption. */
+        isModified = !!SendMessage(Globals.hEdit, EM_GETMODIFY, 0, 0);
+        if (isModified == Globals.bWasModified)
+            return;
+    }
+
+    /* Remember the state for later calls */
+    Globals.bWasModified = isModified;
 
     /* Load the name of the application */
     LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, ARRAY_SIZE(szNotepad));
@@ -85,26 +97,10 @@ void UpdateWindowCaption(BOOL clearModifyAlert)
     else
         LoadString(Globals.hInstance, STRING_UNTITLED, szFilename, ARRAY_SIZE(szFilename));
 
-    /* When a file is being opened or created, there is no need to have the edited flag shown
-       when the new or opened file has not been edited yet */
-    if (clearModifyAlert)
-    {
-        StringCbPrintf(szCaption, sizeof(szCaption), _T("%s - %s"),
-                       szFilename, szNotepad);
+    /* Update the window caption based upon whether the user has modified the file or not */
+    StringCbPrintf(szCaption, sizeof(szCaption), _T("%s%s - %s"),
+                   (isModified ? _T("*") : _T("")), szFilename, szNotepad);
 
-        Globals.bWasModified = FALSE;
-    }
-    else
-    {
-        /* Update the caption based upon if the user has modified the contents of the file or not */
-        StringCbPrintf(szCaption, sizeof(szCaption), _T("%s%s - %s"),
-            (isModified ? _T("*") : _T("")), szFilename, szNotepad);
-
-        /* We will modify the caption below */
-        Globals.bWasModified = isModified;
-    }
-
-    /* Update the window caption */
     SetWindowText(Globals.hMainWnd, szCaption);
 }
 
