@@ -322,27 +322,32 @@ public:
         int wndHeight = wndRect.bottom - wndRect.top;
         int xPos = wndCenterRect.left + ((wndCenterWidth - wndWidth + 1) >> 1);
         int yPos = wndCenterRect.top + ((wndCenterHeight - wndHeight + 1) >> 1);
-        RECT rcWork;
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWork, 0);
 
-        if (xPos + wndWidth > rcWork.right)
+        if (!(::GetWindowLong(hWndCenter, GWL_STYLE) & WS_CHILD))
         {
-            xPos = rcWork.right - wndWidth;
-        }
-        else if (xPos < 0)
-        {
-            xPos = 0;
-        }
+            MONITORINFO m_MonInfo;
+            m_MonInfo.cbSize = sizeof(MONITORINFO);
+            HMONITOR hMonitor = MonitorFromWindow(hWndCenter, MONITOR_DEFAULTTOPRIMARY);
+            GetMonitorInfo(hMonitor, &m_MonInfo);
 
-        if (yPos + wndHeight > rcWork.bottom)
-        {
-            yPos = rcWork.bottom - wndHeight;
+            if (xPos + wndWidth > m_MonInfo.rcWork.right)
+            {
+                xPos = m_MonInfo.rcWork.right - wndWidth;
+            }
+            else if (xPos < m_MonInfo.rcWork.left)
+            {
+                xPos = m_MonInfo.rcWork.left;
+            }
+
+            if (yPos + wndHeight > m_MonInfo.rcWork.bottom)
+            {
+                yPos = m_MonInfo.rcWork.bottom - wndHeight;
+            }
+            if (yPos < m_MonInfo.rcWork.top)
+            {
+                yPos = m_MonInfo.rcWork.top;
+            }
         }
-        else if (yPos < 0)
-        {
-            yPos = 0;
-        }
-        
         return ::MoveWindow(m_hWnd,
                             xPos,
                             yPos,
