@@ -4518,7 +4518,7 @@ NtSetInformationToken(
                     {
                         PACL CapturedAcl;
 
-                        /* Capture and copy the dacl */
+                        /* Capture, validate, and copy the DACL */
                         Status = SepCaptureAcl(InputAcl,
                                                PreviousMode,
                                                PagedPool,

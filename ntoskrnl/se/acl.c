@@ -329,15 +329,15 @@ SepCreateImpersonationTokenDacl(
  *
  * @param[in] AccessMode
  * Processor level access mode. The processor mode determines how
- * are the input arguments probed.
+ * the input arguments are probed.
  *
  * @param[in] PoolType
  * Pool type for new captured ACL for creation. The pool type determines
- * how the ACL data should reside in the pool memory.
+ * in which memory pool the ACL data should reside.
  *
  * @param[in] CaptureIfKernel
- * If set to TRUE and the processor access mode being KernelMode, we're
- * capturing an ACL directly in the kernel. Otherwise we're capturing
+ * If set to TRUE and the processor access mode being KernelMode, we are
+ * capturing an ACL directly in the kernel. Otherwise we are capturing
  * within a kernel mode driver.
  *
  * @param[out] CapturedAcl
@@ -357,11 +357,19 @@ SepCaptureAcl(
     _Out_ PACL *CapturedAcl)
 {
     PACL NewAcl;
-    ULONG AclSize = 0;
-    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG AclSize;
 
     PAGED_CODE();
 
+    /* If in kernel mode and we do not capture, just
+     * return the given ACL and don't validate it. */
+    if ((AccessMode == KernelMode) && !CaptureIfKernel)
+    {
+        *CapturedAcl = InputAcl;
+        return STATUS_SUCCESS;
+    }
+
+    /* Otherwise, capture and validate the ACL, depending on the access mode */
     if (AccessMode != KernelMode)
     {
         _SEH2_TRY
@@ -381,59 +389,56 @@ SepCaptureAcl(
         }
         _SEH2_END;
 
+        /* Validate the minimal size an ACL can have */
+        if (AclSize < sizeof(ACL))
+            return STATUS_INVALID_ACL;
+
         NewAcl = ExAllocatePoolWithTag(PoolType,
                                        AclSize,
                                        TAG_ACL);
-        if (NewAcl != NULL)
-        {
-            _SEH2_TRY
-            {
-                RtlCopyMemory(NewAcl,
-                              InputAcl,
-                              AclSize);
+        if (!NewAcl)
+            return STATUS_INSUFFICIENT_RESOURCES;
 
-                *CapturedAcl = NewAcl;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                /* Free the ACL and return the exception code */
-                ExFreePoolWithTag(NewAcl, TAG_ACL);
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
-            }
-            _SEH2_END;
-        }
-        else
+        _SEH2_TRY
         {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
+            RtlCopyMemory(NewAcl, InputAcl, AclSize);
         }
-    }
-    else if (!CaptureIfKernel)
-    {
-        *CapturedAcl = InputAcl;
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Free the ACL and return the exception code */
+            ExFreePoolWithTag(NewAcl, TAG_ACL);
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
     }
     else
     {
         AclSize = InputAcl->AclSize;
 
+        /* Validate the minimal size an ACL can have */
+        if (AclSize < sizeof(ACL))
+            return STATUS_INVALID_ACL;
+
         NewAcl = ExAllocatePoolWithTag(PoolType,
                                        AclSize,
                                        TAG_ACL);
+        if (!NewAcl)
+            return STATUS_INSUFFICIENT_RESOURCES;
 
-        if (NewAcl != NULL)
-        {
-            RtlCopyMemory(NewAcl,
-                          InputAcl,
-                          AclSize);
-
-            *CapturedAcl = NewAcl;
-        }
-        else
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-        }
+        RtlCopyMemory(NewAcl, InputAcl, AclSize);
     }
 
-    return Status;
+    /* Validate the captured ACL */
+    if (!RtlValidAcl(NewAcl))
+    {
+        /* Free the ACL and fail */
+        ExFreePoolWithTag(NewAcl, TAG_ACL);
+        return STATUS_INVALID_ACL;
+    }
+
+    /* It's valid, return it */
+    *CapturedAcl = NewAcl;
+    return STATUS_SUCCESS;
 }
 
 /**
