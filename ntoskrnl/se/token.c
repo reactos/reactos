@@ -1277,8 +1277,8 @@ SepDuplicateToken(
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Quit;
         }
-        EndMem = (PVOID)AccessToken->DynamicPart;
 
+        EndMem = (PVOID)AccessToken->DynamicPart;
         AccessToken->DefaultDacl = EndMem;
 
         RtlCopyMemory(AccessToken->DefaultDacl,
@@ -1973,8 +1973,8 @@ SepCreateToken(
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Quit;
         }
-        EndMem = (PVOID)AccessToken->DynamicPart;
 
+        EndMem = (PVOID)AccessToken->DynamicPart;
         AccessToken->DefaultDacl = EndMem;
 
         RtlCopyMemory(AccessToken->DefaultDacl,
@@ -2306,6 +2306,64 @@ SepPerformTokenFiltering(
         }
     }
 
+    /*
+     * Insert the restricted SIDs into the token on
+     * the request by the caller.
+     */
+    if (RestrictedSidsIntoToken != NULL)
+    {
+        for (RestrictedSidsInList = 0; RestrictedSidsInList < RestrictedSidsCount; RestrictedSidsInList++)
+        {
+            /* Did the caller assign attributes to the restricted SIDs? */
+            if (RestrictedSidsIntoToken[RestrictedSidsInList].Attributes != 0)
+            {
+                /* There mustn't be any attributes, bail out */
+                DPRINT1("SepPerformTokenFiltering(): There mustn't be any attributes to restricted SIDs!\n");
+                Status = STATUS_INVALID_PARAMETER;
+                goto Quit;
+            }
+        }
+
+        /*
+         * Ensure that the token can hold the restricted SIDs
+         * (the variable length is calculated at the beginning
+         * of the routine call).
+         */
+        ASSERT(VariableLength >= RestrictedSidsLength);
+
+        /*
+         * Now let's begin inserting the restricted SIDs into the filtered
+         * access token from the list the caller gave us.
+         */
+        AccessToken->RestrictedSidCount = RestrictedSidsCount;
+        AccessToken->RestrictedSids = EndMem;
+        EndMem = (PVOID)((ULONG_PTR)EndMem + RestrictedSidsLength);
+        VariableLength -= RestrictedSidsLength;
+
+        RtlCopyMemory(AccessToken->RestrictedSids,
+                      RestrictedSidsIntoToken,
+                      AccessToken->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
+
+        /*
+         * As we've copied the restricted SIDs into
+         * the token, we must assign them the following
+         * combination of attributes SE_GROUP_ENABLED,
+         * SE_GROUP_ENABLED_BY_DEFAULT and SE_GROUP_MANDATORY.
+         * With such attributes we estabilish that restricting
+         * SIDs into the token are enabled for access checks.
+         */
+        for (RestrictedSidsInToken = 0; RestrictedSidsInToken < AccessToken->RestrictedSidCount; RestrictedSidsInToken++)
+        {
+            AccessToken->RestrictedSids[RestrictedSidsInToken].Attributes |= (SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY);
+        }
+
+        /*
+         * As we added restricted SIDs into the token, mark
+         * it as restricted.
+         */
+        AccessToken->TokenFlags |= TOKEN_IS_RESTRICTED;
+    }
+
     /* Search for the primary group */
     Status = SepFindPrimaryGroupAndDefaultOwner(AccessToken,
                                                 Token->PrimaryGroup,
@@ -2515,64 +2573,6 @@ SepPerformTokenFiltering(
                 continue;
             }
         }
-    }
-
-    /*
-     * Insert the restricted SIDs into the token on
-     * the request by the caller.
-     */
-    if (RestrictedSidsIntoToken != NULL)
-    {
-        for (RestrictedSidsInList = 0; RestrictedSidsInList < RestrictedSidsCount; RestrictedSidsInList++)
-        {
-            /* Did the caller assign attributes to the restricted SIDs? */
-            if (RestrictedSidsIntoToken[RestrictedSidsInList].Attributes != 0)
-            {
-                /* There mustn't be any attributes, bail out */
-                DPRINT1("SepPerformTokenFiltering(): There mustn't be any attributes to restricted SIDs!\n");
-                Status = STATUS_INVALID_PARAMETER;
-                goto Quit;
-            }
-        }
-
-        /*
-         * Ensure that the token can hold the restricted SIDs
-         * (the variable length is calculated at the beginning
-         * of the routine call).
-         */
-        ASSERT(VariableLength >= RestrictedSidsLength);
-
-        /*
-         * Now let's begin inserting the restricted SIDs into the filtered
-         * access token from the list the caller gave us.
-         */
-        AccessToken->RestrictedSidCount = RestrictedSidsCount;
-        AccessToken->RestrictedSids = EndMem;
-        EndMem = (PVOID)((ULONG_PTR)EndMem + RestrictedSidsLength);
-        VariableLength -= RestrictedSidsLength;
-
-        RtlCopyMemory(AccessToken->RestrictedSids,
-                      RestrictedSidsIntoToken,
-                      AccessToken->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
-
-        /*
-         * As we've copied the restricted SIDs into
-         * the token, we must assign them the following
-         * combination of attributes SE_GROUP_ENABLED,
-         * SE_GROUP_ENABLED_BY_DEFAULT and SE_GROUP_MANDATORY.
-         * With such attributes we estabilish that restricting
-         * SIDs into the token are enabled for access checks.
-         */
-        for (RestrictedSidsInToken = 0; RestrictedSidsInToken < AccessToken->RestrictedSidCount; RestrictedSidsInToken++)
-        {
-            AccessToken->RestrictedSids[RestrictedSidsInToken].Attributes |= (SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY);
-        }
-
-        /*
-         * As we added restricted SIDs into the token, mark
-         * it as restricted.
-         */
-        AccessToken->TokenFlags |= TOKEN_IS_RESTRICTED;
     }
 
     /* We've finally filtered the token, return it to the caller */
@@ -5045,7 +5045,7 @@ SepAdjustGroups(
 
     PAGED_CODE();
 
-    /* Ensure that the token we get is not plain garbage */
+    /* Ensure that the token we get is valid */
     ASSERT(Token);
 
     /* Initialize the counters and begin the work */
