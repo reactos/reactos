@@ -20,7 +20,7 @@
  */
 
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
+/* Translation has been updated by Luke Luo 2018-2022 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -107,10 +107,10 @@ CAPTION "内容"
 BEGIN
 
     GROUPBOX    "证书", IDC_STATIC, 4, 4, 312, 50
-    LTEXT       "使用证书可正确标识您自己、证书颁发机构和颁发商的身份。",
+    LTEXT       "证书用于您的个人身份识别以及验证证书颁发机构和发布者的身份。",
                 IDC_STATIC, 58, 14, 252, 18
     PUSHBUTTON  "证书(&C)...", IDC_CERT, 146, 34, 80, 14
-    PUSHBUTTON	"发行商(&B)...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
+    PUSHBUTTON	"发布者(&B)...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
 
 END
 
