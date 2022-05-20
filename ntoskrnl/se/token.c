@@ -2254,27 +2254,9 @@ SepPerformTokenFiltering(
         EndMem = (PVOID)((ULONG_PTR)EndMem + PrivilegesLength);
         VariableLength -= PrivilegesLength;
 
-        if (PreviousMode != KernelMode)
-        {
-            _SEH2_TRY
-            {
-                RtlCopyMemory(AccessToken->Privileges,
-                              Token->Privileges,
-                              AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(goto Quit);
-            }
-            _SEH2_END;
-        }
-        else
-        {
-            RtlCopyMemory(AccessToken->Privileges,
-                          Token->Privileges,
-                          AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
-        }
+        RtlCopyMemory(AccessToken->Privileges,
+                      Token->Privileges,
+                      AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
     }
 
     /* Copy the user and groups */
@@ -2287,39 +2269,17 @@ SepPerformTokenFiltering(
         EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
         VariableLength -= ((ULONG_PTR)EndMem - (ULONG_PTR)AccessToken->UserAndGroups);
 
-        if (PreviousMode != KernelMode)
+        Status = RtlCopySidAndAttributesArray(AccessToken->UserAndGroupCount,
+                                              Token->UserAndGroups,
+                                              VariableLength,
+                                              AccessToken->UserAndGroups,
+                                              EndMem,
+                                              &EndMem,
+                                              &VariableLength);
+        if (!NT_SUCCESS(Status))
         {
-            _SEH2_TRY
-            {
-                Status = RtlCopySidAndAttributesArray(AccessToken->UserAndGroupCount,
-                                                      Token->UserAndGroups,
-                                                      VariableLength,
-                                                      AccessToken->UserAndGroups,
-                                                      EndMem,
-                                                      &EndMem,
-                                                      &VariableLength);
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(goto Quit);
-            }
-            _SEH2_END;
-        }
-        else
-        {
-            Status = RtlCopySidAndAttributesArray(AccessToken->UserAndGroupCount,
-                                                  Token->UserAndGroups,
-                                                  VariableLength,
-                                                  AccessToken->UserAndGroups,
-                                                  EndMem,
-                                                  &EndMem,
-                                                  &VariableLength);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("SepPerformTokenFiltering(): Failed to copy the groups into token (Status 0x%lx)\n", Status);
-                goto Quit;
-            }
+            DPRINT1("SepPerformTokenFiltering(): Failed to copy the groups into token (Status 0x%lx)\n", Status);
+            goto Quit;
         }
     }
 
@@ -2333,39 +2293,17 @@ SepPerformTokenFiltering(
         EndMem = &AccessToken->RestrictedSids[AccessToken->RestrictedSidCount];
         VariableLength -= ((ULONG_PTR)EndMem - (ULONG_PTR)AccessToken->RestrictedSids);
 
-        if (PreviousMode != KernelMode)
+        Status = RtlCopySidAndAttributesArray(AccessToken->RestrictedSidCount,
+                                              Token->RestrictedSids,
+                                              VariableLength,
+                                              AccessToken->RestrictedSids,
+                                              EndMem,
+                                              &EndMem,
+                                              &VariableLength);
+        if (!NT_SUCCESS(Status))
         {
-            _SEH2_TRY
-            {
-                Status = RtlCopySidAndAttributesArray(AccessToken->RestrictedSidCount,
-                                                      Token->RestrictedSids,
-                                                      VariableLength,
-                                                      AccessToken->RestrictedSids,
-                                                      EndMem,
-                                                      &EndMem,
-                                                      &VariableLength);
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(goto Quit);
-            }
-            _SEH2_END;
-        }
-        else
-        {
-            Status = RtlCopySidAndAttributesArray(AccessToken->RestrictedSidCount,
-                                                  Token->RestrictedSids,
-                                                  VariableLength,
-                                                  AccessToken->RestrictedSids,
-                                                  EndMem,
-                                                  &EndMem,
-                                                  &VariableLength);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("SepPerformTokenFiltering(): Failed to copy the restricted SIDs into token (Status 0x%lx)\n", Status);
-                goto Quit;
-            }
+            DPRINT1("SepPerformTokenFiltering(): Failed to copy the restricted SIDs into token (Status 0x%lx)\n", Status);
+            goto Quit;
         }
     }
 
@@ -2614,27 +2552,9 @@ SepPerformTokenFiltering(
         EndMem = (PVOID)((ULONG_PTR)EndMem + RestrictedSidsLength);
         VariableLength -= RestrictedSidsLength;
 
-        if (PreviousMode != KernelMode)
-        {
-            _SEH2_TRY
-            {
-                RtlCopyMemory(AccessToken->RestrictedSids,
-                              RestrictedSidsIntoToken,
-                              AccessToken->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(goto Quit);
-            }
-            _SEH2_END;
-        }
-        else
-        {
-            RtlCopyMemory(AccessToken->RestrictedSids,
-                          RestrictedSidsIntoToken,
-                          AccessToken->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
-        }
+        RtlCopyMemory(AccessToken->RestrictedSids,
+                      RestrictedSidsIntoToken,
+                      AccessToken->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
 
         /*
          * As we've copied the restricted SIDs into
