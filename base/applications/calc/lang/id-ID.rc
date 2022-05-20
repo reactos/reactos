@@ -1,4 +1,11 @@
-LANGUAGE LANG_INDONESIAN SUBLANG_DEFAULT
+/*
+ * PROJECT:     ReactOS Calc
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Indonesian resource file
+ * TRANSLATORS: Copyright 2022 Wilson Simanjuntak <wilsontulus5@gmail.com>
+ */
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 /* Dialogs */
 
@@ -383,7 +390,7 @@ BEGIN
         MENUITEM "&Ilmiah", IDM_VIEW_SCIENTIFIC
         MENUITEM "K&onversi", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Group d&igits", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Grup d&igit", IDM_VIEW_GROUP, CHECKED
     END
     POPUP "&Bantuan"
     BEGIN
@@ -429,8 +436,8 @@ END
 /* Angles */
 STRINGTABLE
 BEGIN
-    IDS_ANGLE_ARCMINUTES "Menit busur"
-    IDS_ANGLE_ARCSECONDS "Detik busur"
+    IDS_ANGLE_ARCMINUTES "Busur menit"
+    IDS_ANGLE_ARCSECONDS "Busur detik"
     IDS_ANGLE_DEGREES "Derajat"
     IDS_ANGLE_GRADIANS "Gradian"
     IDS_ANGLE_RADIANS "Radian"
@@ -449,7 +456,7 @@ BEGIN
     IDS_AREA_DANBO "Danbo"
     IDS_AREA_HECTARES "Hektar"
     IDS_AREA_JEONGBO "Jeongbo"
-    IDS_AREA_MORGEN_HUNGARY "Morgen (Hungary)"
+    IDS_AREA_MORGEN_HUNGARY "Morgen (Hungaria)"
     IDS_AREA_MU "Mu"
     IDS_AREA_PING "Ping"
     IDS_AREA_PYEONG "Pyeong"
@@ -542,7 +549,7 @@ BEGIN
     IDS_LENGTH_FATHOMS "Fathom"
     IDS_LENGTH_FATHOMS_HUNGARY "Fathom (Hungaria)"
     IDS_LENGTH_FEET "Kaki"
-    IDS_LENGTH_FURLONGS "Furlongs"
+    IDS_LENGTH_FURLONGS "Furlong"
     IDS_LENGTH_GAN "Gan"
     IDS_LENGTH_HANDS "Tangan"
     IDS_LENGTH_HUNH "Hunh"
@@ -555,7 +562,7 @@ BEGIN
     IDS_LENGTH_KILOMETERS "Kilometer"
     IDS_LENGTH_LAR "Lar"
     IDS_LENGTH_LIGHT_YEARS "Tahun cahaya"
-    IDS_LENGTH_LINKS_UK "Links (UK)"
+    IDS_LENGTH_LINKS_UK "Link (UK)"
     IDS_LENGTH_METERS "Meter"
     IDS_LENGTH_MICRONS "Mikron"
     IDS_LENGTH_MILES "Mil"
@@ -594,7 +601,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES "Atmosfir"
-    IDS_PRESSURE_BARS "Bars"
+    IDS_PRESSURE_BARS "Bar"
     IDS_PRESSURE_HECTOPASCALS "Hektopascal"
     IDS_PRESSURE_KILOPASCALS "Kilopascal"
     IDS_PRESSURE_MM_OF_MERCURY "Milimeter merkuri"
@@ -641,11 +648,11 @@ END
 /* Volumes */
 STRINGTABLE
 BEGIN
-    IDS_VOLUME_BARRELS_UK "Barrel (UK)"
-    IDS_VOLUME_BARRELS_OIL "Barrel minyak"
+    IDS_VOLUME_BARRELS_UK "Barel (UK)"
+    IDS_VOLUME_BARRELS_OIL "Barel minyak"
     IDS_VOLUME_BUN "Bun"
-    IDS_VOLUME_BUSHELS_UK "Bushels (UK)"
-    IDS_VOLUME_BUSHELS_US "Bushels (US)"
+    IDS_VOLUME_BUSHELS_UK "Bushel (UK)"
+    IDS_VOLUME_BUSHELS_US "Bushel (US)"
     IDS_VOLUME_CUBIC_CENTIMETERS "Centimeter kubik"
     IDS_VOLUME_CUBIC_FEET "Kaki kubik"
     IDS_VOLUME_CUBIC_INCHES "Inci Kubik"
@@ -664,9 +671,9 @@ BEGIN
     IDS_VOLUME_LITERS "Liter"
     IDS_VOLUME_MAL "Mal"
     IDS_VOLUME_MILLILITERS "Mililiter"
-    IDS_VOLUME_PINTS_UK "Pints (UK)"
-    IDS_VOLUME_PINTS_DRY_US "Pints, beku (US)"
-    IDS_VOLUME_PINTS_LIQUID_US "Pints, cair (US)"
+    IDS_VOLUME_PINTS_UK "Pint (UK)"
+    IDS_VOLUME_PINTS_DRY_US "Pint, beku (US)"
+    IDS_VOLUME_PINTS_LIQUID_US "Pint, cair (US)"
     IDS_VOLUME_QUARTS_UK "Quart (UK)"
     IDS_VOLUME_QUARTS_DRY_US "Quart, beku (US)"
     IDS_VOLUME_QUARTS_LIQUID_US "Quart, cair (US)"
@@ -699,7 +706,7 @@ BEGIN
     IDS_WEIGHT_OUNCES_AVOIRDUPOIS "Ons, avoirdupois"
     IDS_WEIGHT_OUNCES_TROY "Ons, troy"
     IDS_WEIGHT_POUNDS "Pon"
-    IDS_WEIGHT_QUINTAL_METRIC "Kuintal (metric)"
+    IDS_WEIGHT_QUINTAL_METRIC "Kuintal (metrik)"
     IDS_WEIGHT_SALOUNG "Saloung"
     IDS_WEIGHT_STONES "Batu"
     IDS_WEIGHT_TAMLUNG "Tamlung"
