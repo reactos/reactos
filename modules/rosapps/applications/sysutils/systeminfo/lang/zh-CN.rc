@@ -2,7 +2,7 @@
  * PROJECT:     System Information
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
- * TRANSLATORS: Copyright 2018, 2022 Luke Luo (njlyf2011@hotmail.com)
+ * TRANSLATORS: Copyright 2018, 2022 Luke Luo <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
