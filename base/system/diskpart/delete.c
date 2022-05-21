@@ -8,7 +8,26 @@
 
 #include "diskpart.h"
 
-BOOL delete_main(INT argc, LPWSTR *argv)
+BOOL
+DeleteDisk(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
+{
+    return TRUE;
+}
+
+BOOL
+DeletePartition(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
+{
+    return TRUE;
+}
+
+BOOL
+DeleteVolume(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     return TRUE;
 }

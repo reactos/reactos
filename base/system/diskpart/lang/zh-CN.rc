@@ -134,6 +134,10 @@ BEGIN
     IDS_HELP_CREATE_VDISK              "Create a virtual disk file.\n"
 
     IDS_HELP_DELETE                    "删除对象。\n"
+    IDS_HELP_DELETE_DISK               "Delete a disk.\n"
+    IDS_HELP_DELETE_PARTITION          "Delete a partition.\n"
+    IDS_HELP_DELETE_VOLUME             "Delete a volume.\n"
+
     IDS_HELP_DETACH                    "分离虚拟磁盘文件。\n"
 
     IDS_HELP_DETAIL                    "提供有关对象的详细信息。\n"
@@ -254,7 +258,9 @@ END
 /* Delete help description */
 STRINGTABLE
 BEGIN
-    IDS_COMMAND_DELETE "<Add DELETE command help text here>\n"
+    IDS_COMMAND_DELETE_DISK "<Add DELETE DISK command help text here>\n"
+    IDS_COMMAND_DELETE_PARTITION "<Add DELETE PARTITION command help text here>\n"
+    IDS_COMMAND_DELETE_VOLUME "<Add DELETE VOLUME command help text here>\n"
 END
 
 /* Delete help description */

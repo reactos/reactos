@@ -44,8 +44,7 @@ HexDump(
 }
 
 
-static
-VOID
+BOOL
 DumpDisk(
     _In_ INT argc,
     _In_ LPWSTR *argv)
@@ -72,7 +71,7 @@ DumpDisk(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return;
+        return TRUE;
     }
 
     Sector = _wcstoi64(argv[2], &endptr, 0);
@@ -80,7 +79,7 @@ DumpDisk(
         (Sector < 0))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     pSectorBuffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CurrentDisk->BytesPerSector);
@@ -139,12 +138,11 @@ done:
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, pSectorBuffer);
 
-    return;
+    return TRUE;
 }
 
 
-static
-VOID
+BOOL
 DumpPartition(
     _In_ INT argc,
     _In_ LPWSTR *argv)
@@ -172,13 +170,13 @@ DumpPartition(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return;
+        return TRUE;
     }
 
     if (CurrentPartition == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
-        return;
+        return TRUE;
     }
 
     Sector = _wcstoi64(argv[2], &endptr, 0);
@@ -186,7 +184,7 @@ DumpPartition(
         (Sector < 0))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return;
+        return TRUE;
     }
 
     pSectorBuffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CurrentDisk->BytesPerSector);
@@ -245,34 +243,6 @@ done:
         NtClose(FileHandle);
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, pSectorBuffer);
-
-    return;
-}
-
-
-BOOL
-dump_main(
-    _In_ INT argc,
-    _In_ LPWSTR *argv)
-{
-    /* gets the first word from the string */
-#if 0
-    if (argc == 1)
-    {
-        ConResPuts(StdOut, IDS_HELP_CMD_LIST);
-        return TRUE;
-    }
-#endif
-
-    /* determines which to list (disk, partition, etc.) */
-    if (!wcsicmp(argv[1], L"disk"))
-        DumpDisk(argc, argv);
-    else if (!wcsicmp(argv[1], L"partition"))
-        DumpPartition(argc, argv);
-#if 0
-    else
-        ConResPuts(StdOut, IDS_HELP_CMD_LIST);
-#endif
 
     return TRUE;
 }

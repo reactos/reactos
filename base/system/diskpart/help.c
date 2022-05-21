@@ -28,7 +28,10 @@ HelpCommandList(VOID)
     /* List all the commands and the basic descriptions */
     for (cmdptr = cmds; cmdptr->cmd1; cmdptr++)
     {
-        if (cmdptr->cmd1 != NULL && cmdptr->cmd2 == NULL && cmdptr->cmd3 == NULL)
+        if ((cmdptr->cmd1 != NULL) &&
+            (cmdptr->cmd2 == NULL) &&
+            (cmdptr->cmd3 == NULL) &&
+            (cmdptr->help != IDS_NONE))
         {
             K32LoadStringW(GetModuleHandle(NULL), cmdptr->help, szOutput, ARRAYSIZE(szOutput));
             ConPrintf(StdOut, szFormat, cmdptr->cmd1, szOutput);
@@ -57,7 +60,10 @@ HelpCommand(
     {
         if (pCommand->cmd1 != NULL && pCommand->cmd2 == NULL && pCommand->cmd3 == NULL)
         {
-            if (wcsicmp(pCommand->cmd1, cmdptr->cmd1) == 0 && cmdptr->cmd2 != NULL && cmdptr->cmd3 == NULL)
+            if ((wcsicmp(pCommand->cmd1, cmdptr->cmd1) == 0) &&
+                (cmdptr->cmd2 != NULL) &&
+                (cmdptr->cmd3 == NULL) &&
+                (cmdptr->help != IDS_NONE))
             {
                 K32LoadStringW(GetModuleHandle(NULL), cmdptr->help, szOutput, ARRAYSIZE(szOutput));
                 ConPrintf(StdOut, szFormat, cmdptr->cmd2, szOutput);
@@ -68,7 +74,8 @@ HelpCommand(
         {
             if ((wcsicmp(pCommand->cmd1, cmdptr->cmd1) == 0) &&
                 (wcsicmp(pCommand->cmd2, cmdptr->cmd2) == 0) &&
-                (cmdptr->cmd3 != NULL))
+                (cmdptr->cmd3 != NULL) &&
+                (cmdptr->help != IDS_NONE))
             {
                 K32LoadStringW(GetModuleHandle(NULL), cmdptr->help, szOutput, ARRAYSIZE(szOutput));
                 ConPrintf(StdOut, szFormat, cmdptr->cmd3, szOutput);

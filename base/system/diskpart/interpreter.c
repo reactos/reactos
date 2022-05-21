@@ -36,7 +36,11 @@ COMMAND cmds[] =
     {L"CREATE",      L"VOLUME",    NULL,        NULL,                    IDS_HELP_CREATE_VOLUME,             IDS_NONE},
     {L"CREATE",      L"VDISK",     NULL,        NULL,                    IDS_HELP_CREATE_VDISK,              IDS_NONE},
 
-    {L"DELETE",      NULL,         NULL,        delete_main,             IDS_HELP_DELETE,                    IDS_COMMAND_DELETE},
+    {L"DELETE",      NULL,         NULL,        NULL,                    IDS_HELP_DELETE,                    IDS_NONE},
+    {L"DELETE",      L"DISK",      NULL,        DeleteDisk,              IDS_HELP_DELETE_DISK,               IDS_COMMAND_DELETE_DISK},
+    {L"DELETE",      L"PARTITION", NULL,        DeletePartition,         IDS_HELP_DELETE_PARTITION,          IDS_COMMAND_DELETE_PARTITION},
+    {L"DELETE",      L"VOLUME",    NULL,        DeleteVolume,            IDS_HELP_DELETE_VOLUME,             IDS_COMMAND_DELETE_VOLUME},
+
     {L"DETACH",      NULL,         NULL,        detach_main,             IDS_HELP_DETACH,                    IDS_COMMAND_DETACH},
 
     {L"DETAIL",      NULL,         NULL,        NULL,                    IDS_HELP_DETAIL,                    IDS_NONE},
@@ -44,7 +48,9 @@ COMMAND cmds[] =
     {L"DETAIL",      L"PARTITION", NULL,        DetailPartition,         IDS_HELP_DETAIL_PARTITION,          IDS_COMMAND_DETAIL_PARTITION},
     {L"DETAIL",      L"VOLUME",    NULL,        DetailVolume,            IDS_HELP_DETAIL_VOLUME,             IDS_COMMAND_DETAIL_VOLUME},
 
-    {L"DUMP",        NULL,         NULL,        dump_main,               IDS_NONE,                           IDS_NONE},
+    {L"DUMP",        NULL,         NULL,        NULL,                    IDS_NONE,                           IDS_NONE},
+    {L"DUMP",        L"DISK",      NULL,        DumpDisk,                IDS_NONE,                           IDS_NONE},
+    {L"DUMP",        L"PARTITION", NULL,        DumpPartition,           IDS_NONE,                           IDS_NONE},
     {L"EXIT",        NULL,         NULL,        NULL,                    IDS_HELP_EXIT,                      IDS_COMMAND_EXIT},
 
     {L"EXPAND",      NULL,         NULL,        expand_main,             IDS_HELP_EXPAND,                    IDS_COMMAND_EXPAND},

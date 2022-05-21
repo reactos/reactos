@@ -129,6 +129,10 @@ BEGIN
     IDS_HELP_CREATE_VDISK              "Create a virtual disk file.\n"
 
     IDS_HELP_DELETE                    "Fshin një objekt.\n"
+    IDS_HELP_DELETE_DISK               "Delete a disk.\n"
+    IDS_HELP_DELETE_PARTITION          "Delete a partition.\n"
+    IDS_HELP_DELETE_VOLUME             "Delete a volume.\n"
+
     IDS_HELP_DETACH                    "Heq nga lidhja nje dokument nga disku virtual.\n"
 
     IDS_HELP_DETAIL                    "Shfaq detaje mbi një objekt.\n"
@@ -249,7 +253,9 @@ END
 /* Delete help description */
 STRINGTABLE
 BEGIN
-    IDS_COMMAND_DELETE "<Add DELETE command help text here>\n"
+    IDS_COMMAND_DELETE_DISK "<Add DELETE DISK command help text here>\n"
+    IDS_COMMAND_DELETE_PARTITION "<Add DELETE PARTITION command help text here>\n"
+    IDS_COMMAND_DELETE_VOLUME "<Add DELETE VOLUME command help text here>\n"
 END
 
 /* Delete help description */

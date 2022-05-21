@@ -237,21 +237,35 @@ BOOL convert_main(INT argc, LPWSTR *argv);
 /* create.c */
 BOOL
 CreateExtendedPartition(
-    INT argc,
-    PWSTR *argv);
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 BOOL
 CreateLogicalPartition(
-    INT argc,
-    PWSTR *argv);
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 BOOL
 CreatePrimaryPartition(
-    INT argc,
-    PWSTR *argv);
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* delete.c */
-BOOL delete_main(INT argc, LPWSTR *argv);
+BOOL
+DeleteDisk(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
+BOOL
+DeletePartition(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
+BOOL
+DeleteVolume(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
 
 /* detach.c */
 BOOL detach_main(INT argc, LPWSTR *argv);
@@ -275,7 +289,16 @@ DetailVolume(
 /* diskpart.c */
 
 /* dump.c */
-BOOL dump_main(INT argc, LPWSTR *argv);
+BOOL
+DumpDisk(
+    _In_ INT argc,
+    _In_ LPWSTR *argv);
+
+BOOL
+DumpPartition(
+    _In_ INT argc,
+    _In_ LPWSTR *argv);
+
 
 /* expand.c */
 BOOL expand_main(INT argc, LPWSTR *argv);
