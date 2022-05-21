@@ -88,7 +88,10 @@ HelpCommand(
                 (wcsicmp(pCommand->cmd2, cmdptr->cmd2) == 0) &&
                 (wcsicmp(pCommand->cmd3, cmdptr->cmd3) == 0) &&
                 (cmdptr->help_detail != IDS_NONE))
+            {
                 ConResPuts(StdOut, cmdptr->help_detail);
+                bSubCommands = TRUE;
+            }
         }
     }
 
