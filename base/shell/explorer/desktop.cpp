@@ -143,36 +143,35 @@ DWORD CDesktopThread::DesktopThreadProc()
     CComPtr<IShellDesktopTray> pSdt;
     HANDLE hDesktop;
     HRESULT hRet;
+    DWORD dwResult = 1;
 
     OleInitialize(NULL);
 
     hRet = m_Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
     if (!SUCCEEDED(hRet))
     {
-        OleUninitialize();
-        return 1;
+        goto Cleanup;
     }
 
     hDesktop = _SHCreateDesktop(pSdt);
     if (!hDesktop)
     {
-        OleUninitialize();
-        return 1;
+        goto Cleanup;
     }
 
     if (!SetEvent(m_hInitEvent))
     {
         /* Failed to notify that we initialized successfully, kill ourselves
-           to make the main thread wake up! */
-        OleUninitialize();
-        return 1;
+         * to make the main thread wake up! */
+        goto Cleanup;
     }
 
     _SHDesktopMessageLoop(hDesktop);
+    dwResult = 0;
 
+Cleanup:
     OleUninitialize();
-
-    return 0;
+    return dwResult;
 }
 
 DWORD WINAPI CDesktopThread::s_DesktopThreadProc(LPVOID lpParameter)
