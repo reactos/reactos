@@ -49,15 +49,24 @@ typedef struct _CMD_LINE_CACHE
     struct _CMD_LINE_CACHE* pnext;
 } CMD_LINE_CACHE, *PCMD_LINE_CACHE;
 
-BOOL	PerfDataInitialize(void);
-void	PerfDataUninitialize(void);
-void	PerfDataRefresh(void);
+BOOL PerfDataInitialize(VOID);
+VOID PerfDataUninitialize(VOID);
+VOID PerfDataRefresh(VOID);
+
+VOID PerfDataAcquireLock(VOID);
+VOID PerfDataReleaseLock(VOID);
 
 BOOL	PerfDataGet(ULONG Index, PPERFDATA *lppData);
 ULONG	PerfDataGetProcessIndex(ULONG pid);
 ULONG	PerfDataGetProcessCount(void);
-ULONG	PerfDataGetProcessorUsage(void);
-ULONG	PerfDataGetProcessorSystemUsage(void);
+
+ULONG PerfDataGetProcessorCount(VOID);
+ULONG PerfDataGetProcessorUsage(VOID);
+ULONG PerfDataGetProcessorSystemUsage(VOID);
+/****/
+ULONG PerfDataGetProcessorUsagePerCPU(ULONG CPUIndex);
+ULONG PerfDataGetProcessorSystemUsagePerCPU(ULONG CPUIndex);
+/****/
 
 BOOL	PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, ULONG nMaxCount);
 ULONG	PerfDataGetProcessId(ULONG Index);

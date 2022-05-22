@@ -235,10 +235,10 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             PerformancePage_OnViewShowKernelTimes();
             break;
         case ID_VIEW_CPUHISTORY_ONEGRAPHALL:
-            PerformancePage_OnViewCPUHistoryOneGraphAll();
+            PerformancePage_OnViewCPUHistoryGraph(TRUE);
             break;
         case ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU:
-            PerformancePage_OnViewCPUHistoryOneGraphPerCPU();
+            PerformancePage_OnViewCPUHistoryGraph(FALSE);
             break;
         case ID_VIEW_UPDATESPEED_HIGH:
         case ID_VIEW_UPDATESPEED_NORMAL:
@@ -703,9 +703,8 @@ BOOL OnCreate(HWND hWnd)
     SetUpdateSpeed(hWnd);
 
     /*
-     * Refresh the performance data
-     * Sample it twice so we can establish
-     * the delta values & cpu usage
+     * Refresh the performance data. Sample it twice
+     * so we can establish the delta values & cpu usage.
      */
     PerfDataRefresh();
     PerfDataRefresh();
