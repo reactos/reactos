@@ -14,6 +14,7 @@ list(APPEND SOURCE
     security.c
     setup.c
     shutdown.c
+    sound.c
     winlogon.c
     wlx.c
     winlogon.h

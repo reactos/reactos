@@ -265,6 +265,17 @@ typedef enum _NOTIFICATION_TYPE
     LastHandler
 } NOTIFICATION_TYPE, *PNOTIFICATION_TYPE;
 
+typedef enum _WL_SYSTEM_SOUND
+{
+    SYSTEMSND_DEFAULT,
+    SYSTEMSND_LOGON,
+    SYSTEMSND_LOGOFF,
+    SYSTEMSND_ASTERISK,
+    SYSTEMSND_EXCLAMATION,
+    SYSTEMSND_CRITICAL_STOP,
+    SYSTEMSND_QUESTION
+} WL_SYSTEM_SOUND, *PWL_SYSTEM_SOUND;
+
 extern HINSTANCE hAppInstance;
 extern PWLSESSION WLSession;
 
@@ -374,12 +385,13 @@ StartSystemShutdown(
     IN BOOLEAN bRebootAfterShutdown,
     IN ULONG dwReason);
 
-/* winlogon.c */
+/* sound.c */
 BOOL
-PlaySoundRoutine(IN LPCWSTR FileName,
-                 IN UINT Logon,
-                 IN UINT Flags);
+PlaySystemSound(
+    IN PWLSESSION Session,
+    IN WL_SYSTEM_SOUND Sound);
 
+/* winlogon.c */
 BOOL
 DisplayStatusMessage(IN PWLSESSION Session,
                      IN HDESK hDesktop,
