@@ -688,6 +688,15 @@ LDEVOBJ_bGetClosestMode(
     if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, RequestedMode, pSelectedMode, FALSE))
         return TRUE;
 
+    /* Search 60 Hz (if not already specified) */
+    if (!(RequestedMode->dmFields & DM_DISPLAYFREQUENCY))
+    {
+        RequestedMode->dmDisplayFrequency = 60;
+        RequestedMode->dmFields |= DM_DISPLAYFREQUENCY;
+        if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, RequestedMode, pSelectedMode, FALSE))
+            return TRUE;
+    }
+
     /* Fall back to first mode */
     WARN("Fall back to first available mode\n");
     *pSelectedMode = pGraphicsDevice->pDevModeList[0].pdm;
