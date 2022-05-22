@@ -1047,8 +1047,7 @@ SepDuplicateToken(
     }
 
     /* Copy the immutable fields */
-    RtlCopyLuid(&AccessToken->TokenSource.SourceIdentifier,
-                &Token->TokenSource.SourceIdentifier);
+    AccessToken->TokenSource.SourceIdentifier = Token->TokenSource.SourceIdentifier;
     RtlCopyMemory(AccessToken->TokenSource.SourceName,
                   Token->TokenSource.SourceName,
                   sizeof(Token->TokenSource.SourceName));
@@ -1062,7 +1061,7 @@ SepDuplicateToken(
     SepAcquireTokenLockShared(Token);
 
     AccessToken->SessionId = Token->SessionId;
-    RtlCopyLuid(&AccessToken->ModifiedId, &Token->ModifiedId);
+    AccessToken->ModifiedId = Token->ModifiedId;
 
     AccessToken->TokenFlags = Token->TokenFlags & ~TOKEN_SESSION_NOT_REFERENCED;
 
@@ -1097,7 +1096,7 @@ SepDuplicateToken(
     AccessToken->CreateMethod = TOKEN_DUPLICATE_METHOD;
 #endif
 
-    /* Assign the data that reside in the TOKEN's variable information area */
+    /* Assign the data that reside in the token's variable information area */
     AccessToken->VariableLength = VariableLength;
     EndMem = (PVOID)&AccessToken->VariablePart;
 
@@ -1264,7 +1263,7 @@ SepDuplicateToken(
     // other data, the code will require adaptations.
     //
 
-    /* Now allocate the TOKEN's dynamic information area and set the data */
+    /* Now allocate the token's dynamic information area and set the data */
     AccessToken->DynamicAvailable = 0; // Unused memory in the dynamic area.
     AccessToken->DynamicPart = NULL;
     if (Token->DynamicPart && Token->DefaultDacl)
@@ -1810,8 +1809,7 @@ SepCreateToken(
     /* Zero out the buffer and initialize the token */
     RtlZeroMemory(AccessToken, TotalSize);
 
-    RtlCopyLuid(&AccessToken->TokenId, &TokenId);
-
+    AccessToken->TokenId = TokenId;
     AccessToken->TokenType = TokenType;
     AccessToken->ImpersonationLevel = ImpersonationLevel;
 
@@ -1820,19 +1818,18 @@ SepCreateToken(
     if (!NT_SUCCESS(Status))
         goto Quit;
 
-    RtlCopyLuid(&AccessToken->TokenSource.SourceIdentifier,
-                &TokenSource->SourceIdentifier);
+    AccessToken->TokenSource.SourceIdentifier = TokenSource->SourceIdentifier;
     RtlCopyMemory(AccessToken->TokenSource.SourceName,
                   TokenSource->SourceName,
                   sizeof(TokenSource->SourceName));
 
     AccessToken->ExpirationTime = *ExpirationTime;
-    RtlCopyLuid(&AccessToken->ModifiedId, &ModifiedId);
+    AccessToken->ModifiedId = ModifiedId;
 
     AccessToken->TokenFlags = TokenFlags & ~TOKEN_SESSION_NOT_REFERENCED;
 
     /* Copy and reference the logon session */
-    RtlCopyLuid(&AccessToken->AuthenticationId, AuthenticationId);
+    AccessToken->AuthenticationId = *AuthenticationId;
     Status = SepRmReferenceLogonSession(&AccessToken->AuthenticationId);
     if (!NT_SUCCESS(Status))
     {
@@ -1878,7 +1875,7 @@ SepCreateToken(
     AccessToken->CreateMethod = TOKEN_CREATE_METHOD;
 #endif
 
-    /* Assign the data that reside in the TOKEN's variable information area */
+    /* Assign the data that reside in the token's variable information area */
     AccessToken->VariableLength = VariableLength;
     EndMem = (PVOID)&AccessToken->VariablePart;
 
@@ -1960,7 +1957,7 @@ SepCreateToken(
     AccessToken->PrimaryGroup = AccessToken->UserAndGroups[PrimaryGroupIndex].Sid;
     AccessToken->DefaultOwnerIndex = DefaultOwnerIndex;
 
-    /* Now allocate the TOKEN's dynamic information area and set the data */
+    /* Now allocate the token's dynamic information area and set the data */
     AccessToken->DynamicAvailable = 0; // Unused memory in the dynamic area.
     AccessToken->DynamicPart = NULL;
     if (DefaultDacl != NULL)
@@ -2181,16 +2178,14 @@ SepPerformTokenFiltering(
     AccessToken->ImpersonationLevel = Token->ImpersonationLevel;
 
     /* Copy the immutable fields */
-    RtlCopyLuid(&AccessToken->TokenSource.SourceIdentifier,
-                &Token->TokenSource.SourceIdentifier);
+    AccessToken->TokenSource.SourceIdentifier = Token->TokenSource.SourceIdentifier;
     RtlCopyMemory(AccessToken->TokenSource.SourceName,
                   Token->TokenSource.SourceName,
                   sizeof(Token->TokenSource.SourceName));
 
-    RtlCopyLuid(&AccessToken->AuthenticationId, &Token->AuthenticationId);
-    RtlCopyLuid(&AccessToken->ParentTokenId, &Token->TokenId);
-    RtlCopyLuid(&AccessToken->OriginatingLogonSession,
-                &Token->OriginatingLogonSession);
+    AccessToken->AuthenticationId = Token->AuthenticationId;
+    AccessToken->ParentTokenId = Token->TokenId;
+    AccessToken->OriginatingLogonSession = Token->OriginatingLogonSession;
 
     AccessToken->ExpirationTime = Token->ExpirationTime;
 
@@ -4100,8 +4095,7 @@ NtQueryInformationToken(
                 {
                     if (TokenInformationLength >= RequiredLength)
                     {
-                        RtlCopyLuid(&to->OriginatingLogonSession,
-                                    &Token->AuthenticationId);
+                        to->OriginatingLogonSession = Token->AuthenticationId;
                     }
                     else
                     {
@@ -5436,9 +5430,7 @@ NtAdjustGroupsToken(
 Quit:
     /* Allocate a new ID for the token as we made changes */
     if (ChangesMade)
-    {
         ExAllocateLocallyUniqueId(&Token->ModifiedId);
-    }
 
     /* Unlock and dereference the token */
     SepReleaseTokenLock(Token);
