@@ -1059,7 +1059,7 @@ SepDuplicateToken(
     AccessToken->OriginatingLogonSession = Token->OriginatingLogonSession;
 
     /* Lock the source token and copy the mutable fields */
-    SepAcquireTokenLockExclusive(Token);
+    SepAcquireTokenLockShared(Token);
 
     AccessToken->SessionId = Token->SessionId;
     RtlCopyLuid(&AccessToken->ModifiedId, &Token->ModifiedId);
@@ -1286,22 +1286,19 @@ SepDuplicateToken(
                       Token->DefaultDacl->AclSize);
     }
 
-    /* Unlock the source token */
-    SepReleaseTokenLock(Token);
-
-    /* Return the token */
+    /* Return the token to the caller */
     *NewAccessToken = AccessToken;
     Status = STATUS_SUCCESS;
 
 Quit:
     if (!NT_SUCCESS(Status))
     {
-        /* Unlock the source token */
-        SepReleaseTokenLock(Token);
-
         /* Dereference the token, the delete procedure will clean it up */
         ObDereferenceObject(AccessToken);
     }
+
+    /* Unlock the source token */
+    SepReleaseTokenLock(Token);
 
     return Status;
 }
@@ -2086,8 +2083,8 @@ SepPerformTokenFiltering(
     _In_ KPROCESSOR_MODE PreviousMode,
     _Out_ PTOKEN *FilteredToken)
 {
-    PTOKEN AccessToken;
     NTSTATUS Status;
+    PTOKEN AccessToken;
     PVOID EndMem;
     ULONG RestrictedSidsLength;
     ULONG PrivilegesLength;
@@ -2100,10 +2097,12 @@ SepPerformTokenFiltering(
     BOOLEAN WantPrivilegesDisabled;
     BOOLEAN FoundPrivilege;
     BOOLEAN FoundGroup;
+
     PAGED_CODE();
 
-    /* Ensure that the token we get is not garbage */
+    /* Ensure that the source token is valid, and lock it */
     ASSERT(Token);
+    SepAcquireTokenLockShared(Token);
 
     /* Assume the caller doesn't want privileges disabled */
     WantPrivilegesDisabled = FALSE;
@@ -2159,6 +2158,9 @@ SepPerformTokenFiltering(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SepPerformTokenFiltering(): Failed to create the filtered token object (Status 0x%lx)\n", Status);
+
+        /* Unlock the source token and bail out */
+        SepReleaseTokenLock(Token);
         return Status;
     }
 
@@ -2168,10 +2170,7 @@ SepPerformTokenFiltering(
     /* Set up a lock for the new token */
     Status = SepCreateTokenLock(AccessToken);
     if (!NT_SUCCESS(Status))
-    {
-        ObDereferenceObject(AccessToken);
-        return Status;
-    }
+        goto Quit;
 
     /* Allocate new IDs for the token */
     ExAllocateLocallyUniqueId(&AccessToken->TokenId);
@@ -2576,7 +2575,7 @@ SepPerformTokenFiltering(
         AccessToken->TokenFlags |= TOKEN_IS_RESTRICTED;
     }
 
-    /* We've finally filtered the token, give it to the caller */
+    /* We've finally filtered the token, return it to the caller */
     *FilteredToken = AccessToken;
     Status = STATUS_SUCCESS;
     DPRINT("SepPerformTokenFiltering(): The token has been filtered!\n");
@@ -2584,9 +2583,12 @@ SepPerformTokenFiltering(
 Quit:
     if (!NT_SUCCESS(Status))
     {
-        /* Dereference the token */
+        /* Dereference the created token */
         ObDereferenceObject(AccessToken);
     }
+
+    /* Unlock the source token */
+    SepReleaseTokenLock(Token);
 
     return Status;
 }
@@ -2903,12 +2905,6 @@ SepCreateSystemAnonymousLogonTokenNoEveryone(VOID)
  * operations and that the access token has been filtered. STATUS_INVALID_PARAMETER
  * is returned if one or more of the parameter are not valid. A failure NTSTATUS code
  * is returned otherwise.
- *
- * @remarks
- * WARNING -- The caller IS RESPONSIBLE for locking the existing access token
- *            before attempting to do any kind of filtering operation into
- *            the token. The lock MUST BE RELEASED after this kernel routine
- *            has finished doing its work.
  */
 NTSTATUS
 NTAPI
@@ -2925,6 +2921,7 @@ SeFilterToken(
     ULONG PrivilegesCount = 0;
     ULONG SidsCount = 0;
     ULONG RestrictedSidsCount = 0;
+
     PAGED_CODE();
 
     /* Begin copying the counters */
@@ -2969,11 +2966,11 @@ SeFilterToken(
                             NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("SeFilterToken(): Failed to insert the token (Status 0x%lx)\n", Status);
+        DPRINT1("SeFilterToken(): Failed to insert the filtered token (Status 0x%lx)\n", Status);
         return Status;
     }
 
-    /* Give it to the caller */
+    /* Return it to the caller */
     *FilteredToken = AccessToken;
     return Status;
 }
@@ -6661,7 +6658,7 @@ NtFilterToken(
     }
     _SEH2_END;
 
-    /* Reference the token and do the job */
+    /* Reference the token */
     Status = ObReferenceObjectByHandle(ExistingTokenHandle,
                                        TOKEN_DUPLICATE,
                                        SeTokenObjectType,
@@ -6673,9 +6670,6 @@ NtFilterToken(
         DPRINT1("NtFilterToken(): Failed to reference the token (Status 0x%lx)\n", Status);
         return Status;
     }
-
-    /* Lock the token */
-    SepAcquireTokenLockExclusive(Token);
 
     /* Capture the group SIDs */
     if (SidsToDisable != NULL)
@@ -6734,7 +6728,7 @@ NtFilterToken(
         }
     }
 
-    /* Call the internal API so that it can filter the token for us */
+    /* Call the internal API */
     Status = SepPerformTokenFiltering(Token,
                                       CapturedPrivileges,
                                       CapturedSids,
@@ -6751,7 +6745,7 @@ NtFilterToken(
         goto Quit;
     }
 
-    /* We got our filtered token, insert it to the handle */
+    /* Insert the filtered token and retrieve a handle to it */
     Status = ObInsertObject(FilteredToken,
                             NULL,
                             HandleInfo.GrantedAccess,
@@ -6760,11 +6754,11 @@ NtFilterToken(
                             &FilteredTokenHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtFilterToken(): Failed to insert the filtered token object into the handle (Status 0x%lx)\n", Status);
+        DPRINT1("NtFilterToken(): Failed to insert the filtered token (Status 0x%lx)\n", Status);
         goto Quit;
     }
 
-    /* And give it to the caller once we're done */
+    /* And return it to the caller once we're done */
     _SEH2_TRY
     {
         *NewTokenHandle = FilteredTokenHandle;
@@ -6777,17 +6771,15 @@ NtFilterToken(
     _SEH2_END;
 
 Quit:
-    /* Unlock and dereference the token */
-    SepReleaseTokenLock(Token);
+    /* Dereference the token */
     ObDereferenceObject(Token);
 
-    /* Release all the stuff we've captured */
+    /* Release all the captured data */
     if (CapturedSids != NULL)
     {
         SeReleaseSidAndAttributesArray(CapturedSids,
                                        PreviousMode,
                                        TRUE);
-        CapturedSids = NULL;
     }
 
     if (CapturedPrivileges != NULL)
@@ -6795,7 +6787,6 @@ Quit:
         SeReleaseLuidAndAttributesArray(CapturedPrivileges,
                                         PreviousMode,
                                         TRUE);
-        CapturedPrivileges = NULL;
     }
 
     if (CapturedRestrictedSids != NULL)
@@ -6803,7 +6794,6 @@ Quit:
         SeReleaseSidAndAttributesArray(CapturedRestrictedSids,
                                        PreviousMode,
                                        TRUE);
-        CapturedRestrictedSids = NULL;
     }
 
     return Status;
