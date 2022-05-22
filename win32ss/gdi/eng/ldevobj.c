@@ -669,6 +669,8 @@ LDEVOBJ_bBuildDevmodeList(
     return TRUE;
 }
 
+/* Search the closest display mode according to some settings.
+ * Note that we don't care about the DM_* flags in dmFields, but check if value != 0 instead */
 static
 BOOL
 LDEVOBJ_bGetClosestMode(
@@ -676,31 +678,57 @@ LDEVOBJ_bGetClosestMode(
     _In_ PDEVMODEW RequestedMode,
     _Out_ PDEVMODEW *pSelectedMode)
 {
-    if (pGraphicsDevice->cDevModes == 0)
-        return FALSE;
+    DEVMODEW dmDiff;
+    PDEVMODEW pdmCurrent, pdmBest = NULL;
+    ULONG i;
 
-    /* Search a 32bit mode (if not already specified) */
-    if (!(RequestedMode->dmFields & DM_BITSPERPEL))
+    /* Use a DEVMODE to keep the differences between best mode found and expected mode.
+     * Initialize fields to max value so we can find better modes. */
+    dmDiff.dmPelsWidth = 0xffffffff;
+    dmDiff.dmPelsHeight = 0xffffffff;
+    dmDiff.dmBitsPerPel = 0xffffffff;
+    dmDiff.dmDisplayFrequency = 0xffffffff;
+
+    /* Search the closest mode */
+#define DM_DIFF(field) (RequestedMode->field > pdmCurrent->field ? (RequestedMode->field - pdmCurrent->field) : (pdmCurrent->field - RequestedMode->field))
+    for (i = 0; i < pGraphicsDevice->cDevModes; i++)
     {
-        RequestedMode->dmBitsPerPel = 32;
-        RequestedMode->dmFields |= DM_BITSPERPEL;
-    }
-    if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, RequestedMode, pSelectedMode, FALSE))
-        return TRUE;
+        pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
 
-    /* Search 60 Hz (if not already specified) */
-    if (!(RequestedMode->dmFields & DM_DISPLAYFREQUENCY))
+        /* Skip current mode if it is worse than best mode found */
+        if (RequestedMode->dmPelsWidth != 0 && DM_DIFF(dmPelsWidth) > dmDiff.dmPelsWidth)
+            continue;
+        if (RequestedMode->dmPelsHeight != 0 && DM_DIFF(dmPelsHeight) > dmDiff.dmPelsHeight)
+            continue;
+        if (RequestedMode->dmBitsPerPel != 0 && DM_DIFF(dmBitsPerPel) > dmDiff.dmBitsPerPel)
+            continue;
+        if (RequestedMode->dmDisplayFrequency != 0 && DM_DIFF(dmDisplayFrequency) > dmDiff.dmDisplayFrequency)
+            continue;
+
+        /* Better (or equivalent) mode found. Update differences */
+        dmDiff.dmPelsWidth = DM_DIFF(dmPelsWidth);
+        dmDiff.dmPelsHeight = DM_DIFF(dmPelsHeight);
+        dmDiff.dmBitsPerPel = DM_DIFF(dmBitsPerPel);
+        dmDiff.dmDisplayFrequency = DM_DIFF(dmDisplayFrequency);
+        pdmBest = pdmCurrent;
+    }
+#undef DM_DIFF
+
+    if (pdmBest)
     {
-        RequestedMode->dmDisplayFrequency = 60;
-        RequestedMode->dmFields |= DM_DISPLAYFREQUENCY;
-        if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, RequestedMode, pSelectedMode, FALSE))
-            return TRUE;
+        TRACE("Closest display mode to '%dx%dx%d %d Hz' is '%dx%dx%d %d Hz'\n",
+              RequestedMode->dmPelsWidth,
+              RequestedMode->dmPelsHeight,
+              RequestedMode->dmBitsPerPel,
+              RequestedMode->dmDisplayFrequency,
+              pdmBest->dmPelsWidth,
+              pdmBest->dmPelsHeight,
+              pdmBest->dmBitsPerPel,
+              pdmBest->dmDisplayFrequency);
     }
 
-    /* Fall back to first mode */
-    WARN("Fall back to first available mode\n");
-    *pSelectedMode = pGraphicsDevice->pDevModeList[0].pdm;
-    return TRUE;
+    *pSelectedMode = pdmBest;
+    return pdmBest != NULL;
 }
 
 BOOL
