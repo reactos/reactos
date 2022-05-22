@@ -141,7 +141,7 @@ BEGIN
     LTEXT "Terheq monitorimin e ikonave të përputhet me marrëveshje fizike të vëzhguesit tuaj.", -1, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
-    LTEXT "&Ekran", 1820, 3, 107, 70, 9
+    LTEXT "&Ekran:", 1820, 3, 107, 70, 9
     LTEXT "<none>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "&Zona ekranit", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
@@ -160,7 +160,7 @@ CAPTION "Përgjithshëm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ekran", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Font Masa", -1, 14, 20, 222, 9
+    LTEXT "Font Masa:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Pajtueshmëri", -1, 7, 67, 237, 97
