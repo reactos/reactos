@@ -124,6 +124,101 @@ EngpUpdateGraphicsDeviceList(VOID)
     return STATUS_SUCCESS;
 }
 
+/* Open display settings registry key
+ * Returns NULL in case of error. */
+static HKEY
+EngpGetRegistryHandleFromDeviceMap(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice)
+{
+    static const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
+    HKEY hKey;
+    WCHAR szDeviceKey[256];
+    ULONG cbSize;
+    NTSTATUS Status;
+
+    /* Open the device map registry key */
+    Status = RegOpenKey(KEY_VIDEO, &hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open HARDWARE\\DEVICEMAP\\VIDEO registry key: status 0x%08x\n", Status);
+        return NULL;
+    }
+
+    /* Query the registry path */
+    cbSize = sizeof(szDeviceKey);
+    RegQueryValue(hKey,
+                  pGraphicsDevice->szNtDeviceName,
+                  REG_SZ,
+                  szDeviceKey,
+                  &cbSize);
+    ZwClose(hKey);
+
+    /* Open the registry key */
+    Status = RegOpenKey(szDeviceKey, &hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Could not open registry key '%S': status 0x%08x\n", szDeviceKey, Status);
+        return NULL;
+    }
+
+    return hKey;
+}
+
+NTSTATUS
+EngpGetDisplayDriverParameters(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice,
+    _Out_ PDEVMODEW pdm,
+    _Out_opt_ PDWORD pdwAccelerationLevel)
+{
+    HKEY hKey;
+    DWORD dwDummy;
+    NTSTATUS Status;
+    RTL_QUERY_REGISTRY_TABLE DisplaySettingsTable[] =
+    {
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"Acceleration.Level",
+            pdwAccelerationLevel ? pdwAccelerationLevel : &dwDummy,
+            REG_NONE, NULL, 0
+        },
+#define READ(field, str) \
+        { \
+            NULL, \
+            RTL_QUERY_REGISTRY_DIRECT, \
+            L ##str, \
+            &pdm->field, \
+            REG_NONE, NULL, 0 \
+        },
+    READ(dmBitsPerPel, "DefaultSettings.BitsPerPel")
+    READ(dmPelsWidth, "DefaultSettings.XResolution")
+    READ(dmPelsHeight, "DefaultSettings.YResolution")
+    READ(dmDisplayFlags, "DefaultSettings.Flags")
+    READ(dmDisplayFrequency, "DefaultSettings.VRefresh")
+    READ(dmPanningWidth, "DefaultSettings.XPanning")
+    READ(dmPanningHeight, "DefaultSettings.YPanning")
+    READ(dmDisplayOrientation, "DefaultSettings.Orientation")
+    READ(dmDisplayFixedOutput, "DefaultSettings.FixedOutput")
+    READ(dmPosition.x, "Attach.RelativeX")
+    READ(dmPosition.y, "Attach.RelativeY")
+#undef READ
+        {0}
+    };
+
+    hKey = EngpGetRegistryHandleFromDeviceMap(pGraphicsDevice);
+    if (!hKey)
+        return STATUS_UNSUCCESSFUL;
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                                    (PWSTR)hKey,
+                                    DisplaySettingsTable,
+                                    NULL,
+                                    NULL);
+
+    ZwClose(hKey);
+    return Status;
+}
+
 extern VOID
 UserRefreshDisplay(IN PPDEVOBJ ppdev);
 
