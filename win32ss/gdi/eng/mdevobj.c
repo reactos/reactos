@@ -99,62 +99,10 @@ MDEVOBJ_Create(
 
         if (!pdm)
         {
-            /* No settings requested. Read default settings from registry to dmDefault */
-            HKEY hKey;
-            WCHAR DeviceKey[128];
-            ULONG cbSize;
-            NTSTATUS Status;
-            DWORD dwValue;
-
+            /* No settings requested. Provide nothing and LDEVOBJ_bProbeAndCaptureDevmode
+             * will read default settings from registry */
             RtlZeroMemory(&dmDefault, sizeof(dmDefault));
             dmDefault.dmSize = sizeof(dmDefault);
-
-            Status = RegOpenKey(L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO", &hKey);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Ignore this device and continue */
-                ERR("Failed to open VIDEO key: status 0x%08x\n", Status);
-                continue;
-            }
-            cbSize = sizeof(DeviceKey);
-            Status = RegQueryValue(hKey,
-                                   pGraphicsDevice->szNtDeviceName,
-                                   REG_SZ,
-                                   DeviceKey,
-                                   &cbSize);
-            ZwClose(hKey);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Ignore this device and continue */
-                ERR("Failed to open get device key for '%S': status 0x%08x\n", pGraphicsDevice->szNtDeviceName, Status);
-                continue;
-            }
-            Status = RegOpenKey(DeviceKey, &hKey);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Ignore this device and continue */
-                ERR("Failed to open open device key '%S' for '%S': status 0x%08x\n", DeviceKey, pGraphicsDevice->szNtDeviceName, Status);
-                continue;
-            }
-#define READ(field, str, flag) \
-    if (RegReadDWORD(hKey, L##str, &dwValue)) \
-    { \
-        dmDefault.field = dwValue; \
-        dmDefault.dmFields |= flag; \
-    }
-            READ(dmBitsPerPel, "DefaultSettings.BitsPerPel", DM_BITSPERPEL);
-            READ(dmPelsWidth, "DefaultSettings.XResolution", DM_PELSWIDTH);
-            READ(dmPelsHeight, "DefaultSettings.YResolution", DM_PELSHEIGHT);
-            READ(dmDisplayFlags, "DefaultSettings.Flags", DM_DISPLAYFLAGS);
-            READ(dmDisplayFrequency, "DefaultSettings.VRefresh", DM_DISPLAYFREQUENCY);
-            READ(dmPanningWidth, "DefaultSettings.XPanning", DM_PANNINGWIDTH);
-            READ(dmPanningHeight, "DefaultSettings.YPanning", DM_PANNINGHEIGHT);
-            READ(dmDisplayOrientation, "DefaultSettings.Orientation", DM_DISPLAYORIENTATION);
-            READ(dmDisplayFixedOutput, "DefaultSettings.FixedOutput", DM_DISPLAYFIXEDOUTPUT);
-            READ(dmPosition.x, "Attach.RelativeX", DM_POSITION);
-            READ(dmPosition.y, "Attach.RelativeY", DM_POSITION);
-            RegReadDWORD(hKey, L"Acceleration.Level", &dwAccelerationLevel);
-            ZwClose(hKey);
         }
 
         /* Get or create a PDEV for these settings */

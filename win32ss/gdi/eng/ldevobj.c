@@ -710,54 +710,111 @@ LDEVOBJ_bProbeAndCaptureDevmode(
     _Out_ PDEVMODEW *pSelectedMode,
     _In_ BOOL bSearchClosestMode)
 {
+    DEVMODEW dmSearch;
     PDEVMODEW pdmCurrent, pdm, pdmSelected = NULL;
     ULONG i;
-    DWORD dwFields;
+    ULONG ulVirtualWidth = 0, ulVirtualHeight = 0;
+    BOOL bResult = TRUE;
+    NTSTATUS Status;
 
     if (!LDEVOBJ_bBuildDevmodeList(pGraphicsDevice))
         return FALSE;
 
+    /* At first, load information from registry */
+    RtlZeroMemory(&dmSearch, sizeof(dmSearch));
+    Status = EngpGetDisplayDriverParameters(pGraphicsDevice, &dmSearch, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("EngpGetDisplayDriverParameters() failed with status 0x%08x\n", Status);
+        return FALSE;
+    }
+
+    /* Override values with the new ones provided */
+
+    _SEH2_TRY
+    {
+        bSearchClosestMode |= RequestedMode->dmFields == 0;
+
+        /* Copy standard fields (if provided) */
+        if (RequestedMode->dmFields & DM_BITSPERPEL && RequestedMode->dmBitsPerPel != 0)
+            dmSearch.dmBitsPerPel = RequestedMode->dmBitsPerPel;
+        if (RequestedMode->dmFields & DM_PELSWIDTH && RequestedMode->dmPelsWidth != 0)
+            dmSearch.dmPelsWidth = RequestedMode->dmPelsWidth;
+        if (RequestedMode->dmFields & DM_PELSHEIGHT && RequestedMode->dmPelsHeight != 0)
+            dmSearch.dmPelsHeight = RequestedMode->dmPelsHeight;
+        if (RequestedMode->dmFields & DM_DISPLAYFREQUENCY && RequestedMode->dmDisplayFrequency != 0)
+            dmSearch.dmDisplayFrequency = RequestedMode->dmDisplayFrequency;
+
+        if ((RequestedMode->dmFields & (DM_PANNINGWIDTH | DM_PANNINGHEIGHT)) == (DM_PANNINGWIDTH | DM_PANNINGHEIGHT) &&
+            RequestedMode->dmPanningWidth != 0 && RequestedMode->dmPanningHeight != 0 &&
+            RequestedMode->dmPanningWidth < dmSearch.dmPelsWidth &&
+            RequestedMode->dmPanningHeight < dmSearch.dmPelsHeight)
+        {
+            /* Get new panning values */
+            ulVirtualWidth = RequestedMode->dmPelsWidth;
+            ulVirtualHeight = RequestedMode->dmPelsHeight;
+            dmSearch.dmPelsWidth = RequestedMode->dmPanningWidth;
+            dmSearch.dmPelsHeight = RequestedMode->dmPanningHeight;
+        }
+        else if (dmSearch.dmPanningWidth != 0 && dmSearch.dmPanningHeight != 0 &&
+                 dmSearch.dmPanningWidth < dmSearch.dmPelsWidth &&
+                 dmSearch.dmPanningHeight < dmSearch.dmPelsHeight)
+        {
+            /* Keep existing panning values */
+            ulVirtualWidth = dmSearch.dmPelsWidth;
+            ulVirtualHeight = dmSearch.dmPelsHeight;
+            dmSearch.dmPelsWidth = dmSearch.dmPanningWidth;
+            dmSearch.dmPelsHeight = dmSearch.dmPanningHeight;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bResult = FALSE;
+    }
+    _SEH2_END;
+
+    if (!bResult)
+        return FALSE;
+
     if (bSearchClosestMode)
     {
-        /* Search the closest mode */
-        if (!LDEVOBJ_bGetClosestMode(pGraphicsDevice, RequestedMode, &pdmSelected))
-            return FALSE;
-        ASSERT(pdmSelected);
+        if (LDEVOBJ_bGetClosestMode(pGraphicsDevice, &dmSearch, &pdmSelected))
+        {
+            /* Ok, found a closest mode. Update search */
+            dmSearch.dmBitsPerPel = pdmSelected->dmBitsPerPel;
+            dmSearch.dmPelsWidth = pdmSelected->dmPelsWidth;
+            dmSearch.dmPelsHeight = pdmSelected->dmPelsHeight;
+            dmSearch.dmDisplayFrequency = pdmSelected->dmDisplayFrequency;
+        }
     }
-    else
+
+    /* Now, search the exact mode to return to caller */
+    for (i = 0; i < pGraphicsDevice->cDevModes; i++)
     {
-        /* Search if requested mode exists */
-        for (i = 0; i < pGraphicsDevice->cDevModes; i++)
-        {
-            pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
+        pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
 
-            /* Compare asked DEVMODE fields
-             * Only compare those that are valid in both DEVMODE structs */
-            dwFields = pdmCurrent->dmFields & RequestedMode->dmFields;
+        /* For now, we only need those */
+        if (pdmCurrent->dmBitsPerPel != dmSearch.dmBitsPerPel)
+            continue;
+        if (pdmCurrent->dmPelsWidth != dmSearch.dmPelsWidth)
+            continue;
+        if (pdmCurrent->dmPelsHeight != dmSearch.dmPelsHeight)
+            continue;
+        if (pdmCurrent->dmDisplayFrequency != dmSearch.dmDisplayFrequency)
+            continue;
 
-            /* For now, we only need those */
-            if ((dwFields & DM_BITSPERPEL) &&
-                (pdmCurrent->dmBitsPerPel != RequestedMode->dmBitsPerPel)) continue;
-            if ((dwFields & DM_PELSWIDTH) &&
-                (pdmCurrent->dmPelsWidth != RequestedMode->dmPelsWidth)) continue;
-            if ((dwFields & DM_PELSHEIGHT) &&
-                (pdmCurrent->dmPelsHeight != RequestedMode->dmPelsHeight)) continue;
-            if ((dwFields & DM_DISPLAYFREQUENCY) &&
-                (pdmCurrent->dmDisplayFrequency != RequestedMode->dmDisplayFrequency)) continue;
+        pdmSelected = pdmCurrent;
+        break;
+    }
 
-            pdmSelected = pdmCurrent;
-            break;
-        }
-
-        if (!pdmSelected)
-        {
-            WARN("Requested mode not found (%dx%dx%d %d Hz)\n",
-                RequestedMode->dmFields & DM_PELSWIDTH ? RequestedMode->dmPelsWidth : 0,
-                RequestedMode->dmFields & DM_PELSHEIGHT ? RequestedMode->dmPelsHeight : 0,
-                RequestedMode->dmFields & DM_BITSPERPEL ? RequestedMode->dmBitsPerPel : 0,
-                RequestedMode->dmFields & DM_DISPLAYFREQUENCY ? RequestedMode->dmDisplayFrequency : 0);
-            return FALSE;
-        }
+    if (!pdmSelected)
+    {
+        ERR("Requested mode not found (%dx%dx%d %d Hz)\n",
+            dmSearch.dmPelsWidth,
+            dmSearch.dmPelsHeight,
+            dmSearch.dmBitsPerPel,
+            dmSearch.dmDisplayFrequency);
+        return FALSE;
     }
 
     /* Allocate memory for output */
@@ -770,6 +827,18 @@ LDEVOBJ_bProbeAndCaptureDevmode(
     RtlCopyMemory((PVOID)((ULONG_PTR)pdm + pdm->dmSize),
                   (PVOID)((ULONG_PTR)pdmSelected + pdmSelected->dmSize),
                   pdmSelected->dmDriverExtra);
+
+    /* Add back panning */
+    if (ulVirtualWidth != 0 && ulVirtualHeight != 0 &&
+        pdm->dmPelsWidth < ulVirtualWidth &&
+        pdm->dmPelsHeight < ulVirtualHeight)
+    {
+        pdm->dmFields |= DM_PANNINGWIDTH | DM_PANNINGHEIGHT;
+        pdm->dmPanningWidth = pdm->dmPelsWidth;
+        pdm->dmPanningHeight = pdm->dmPelsHeight;
+        pdm->dmPelsWidth = ulVirtualWidth;
+        pdm->dmPelsHeight = ulVirtualHeight;
+    }
 
     *pSelectedMode = pdm;
     return TRUE;
