@@ -21,6 +21,9 @@
     #include <crtdbg.h>
 #endif
 
+#include <assert.h>
+#define ASSERT assert
+
 #define WIN32_NO_STATUS
 
 #include <windef.h>
@@ -38,8 +41,9 @@
 #include "column.h"
 #include "taskmgr.h"
 #include "perfdata.h"
-#include "procpage.h"
 #include "applpage.h"
+#include "procpage.h"
+#include "perfpage.h"
 #include "endproc.h"
 #include "graph.h"
 #include "graphctl.h"
