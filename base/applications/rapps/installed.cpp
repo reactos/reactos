@@ -53,6 +53,7 @@ void CInstalledApplicationInfo::EnsureDetailsLoaded()
             ZeroMemory(&InstallLocalTime, sizeof(InstallLocalTime));
             // Check if we have 8 characters to parse the datetime.
             // Maybe other formats exist as well?
+            szInstallDate = szInstallDate.Trim();
             if (szInstallDate.GetLength() == 8)
             {
                 InstallLocalTime.wYear = wcstol(szInstallDate.Left(4).GetString(), NULL, 10);
