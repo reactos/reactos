@@ -688,14 +688,6 @@ LDEVOBJ_bGetClosestMode(
     if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, RequestedMode, pSelectedMode, FALSE))
         return TRUE;
 
-    /* Remove panning (if specified) */
-    if (RequestedMode->dmFields & (DM_PANNINGWIDTH | DM_PANNINGHEIGHT))
-    {
-        RequestedMode->dmFields &= ~(DM_PANNINGWIDTH | DM_PANNINGHEIGHT);
-        if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, RequestedMode, pSelectedMode, FALSE))
-            return TRUE;
-    }
-
     /* Fall back to first mode */
     WARN("Fall back to first available mode\n");
     *pSelectedMode = pGraphicsDevice->pDevModeList[0].pdm;
@@ -726,36 +718,21 @@ LDEVOBJ_bProbeAndCaptureDevmode(
     else
     {
         /* Search if requested mode exists */
-        DWORD dmPelsWidth = RequestedMode->dmPelsWidth;
-        DWORD dmPelsHeight = RequestedMode->dmPelsHeight;
-        DWORD dmFields = RequestedMode->dmFields;
-
-        if (dmFields & DM_PANNINGWIDTH)
-        {
-            dmFields |= DM_PELSWIDTH;
-            dmPelsWidth = RequestedMode->dmPanningWidth;
-        }
-        if (dmFields & DM_PANNINGHEIGHT)
-        {
-            dmFields |= DM_PELSHEIGHT;
-            dmPelsHeight = RequestedMode->dmPanningHeight;
-        }
-
         for (i = 0; i < pGraphicsDevice->cDevModes; i++)
         {
             pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
 
             /* Compare asked DEVMODE fields
              * Only compare those that are valid in both DEVMODE structs */
-            dwFields = pdmCurrent->dmFields & dmFields;
+            dwFields = pdmCurrent->dmFields & RequestedMode->dmFields;
 
             /* For now, we only need those */
             if ((dwFields & DM_BITSPERPEL) &&
                 (pdmCurrent->dmBitsPerPel != RequestedMode->dmBitsPerPel)) continue;
             if ((dwFields & DM_PELSWIDTH) &&
-                (pdmCurrent->dmPelsWidth != dmPelsWidth)) continue;
+                (pdmCurrent->dmPelsWidth != RequestedMode->dmPelsWidth)) continue;
             if ((dwFields & DM_PELSHEIGHT) &&
-                (pdmCurrent->dmPelsHeight != dmPelsHeight)) continue;
+                (pdmCurrent->dmPelsHeight != RequestedMode->dmPelsHeight)) continue;
             if ((dwFields & DM_DISPLAYFREQUENCY) &&
                 (pdmCurrent->dmDisplayFrequency != RequestedMode->dmDisplayFrequency)) continue;
 
@@ -766,10 +743,10 @@ LDEVOBJ_bProbeAndCaptureDevmode(
         if (!pdmSelected)
         {
             WARN("Requested mode not found (%dx%dx%d %d Hz)\n",
-                dmFields & DM_PELSWIDTH ? dmPelsWidth : 0,
-                dmFields & DM_PELSHEIGHT ? dmPelsHeight : 0,
-                dmFields & DM_BITSPERPEL ? RequestedMode->dmBitsPerPel : 0,
-                dmFields & DM_DISPLAYFREQUENCY ? RequestedMode->dmDisplayFrequency : 0);
+                RequestedMode->dmFields & DM_PELSWIDTH ? RequestedMode->dmPelsWidth : 0,
+                RequestedMode->dmFields & DM_PELSHEIGHT ? RequestedMode->dmPelsHeight : 0,
+                RequestedMode->dmFields & DM_BITSPERPEL ? RequestedMode->dmBitsPerPel : 0,
+                RequestedMode->dmFields & DM_DISPLAYFREQUENCY ? RequestedMode->dmDisplayFrequency : 0);
             return FALSE;
         }
     }
@@ -784,22 +761,6 @@ LDEVOBJ_bProbeAndCaptureDevmode(
     RtlCopyMemory((PVOID)((ULONG_PTR)pdm + pdm->dmSize),
                   (PVOID)((ULONG_PTR)pdmSelected + pdmSelected->dmSize),
                   pdmSelected->dmDriverExtra);
-
-    if (!bSearchClosestMode)
-    {
-        if (RequestedMode->dmFields & DM_PANNINGWIDTH)
-        {
-            pdm->dmFields |= DM_PANNINGWIDTH;
-            pdm->dmPanningWidth = pdm->dmPelsWidth;
-            pdm->dmPelsWidth = RequestedMode->dmPelsWidth;
-        }
-        if (RequestedMode->dmFields & DM_PANNINGHEIGHT)
-        {
-            pdm->dmFields |= DM_PANNINGHEIGHT;
-            pdm->dmPanningHeight = pdm->dmPelsHeight;
-            pdm->dmPelsHeight = RequestedMode->dmPelsHeight;
-        }
-    }
 
     *pSelectedMode = pdm;
     return TRUE;
