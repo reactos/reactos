@@ -5256,7 +5256,6 @@ NtAdjustGroupsToken(
     ULONG NewStateSize = 0;
     PSID_AND_ATTRIBUTES CapturedGroups = NULL;
     BOOLEAN ChangesMade = FALSE;
-    BOOLEAN LockAndReferenceAcquired = FALSE;
 
     PAGED_CODE();
 
@@ -5363,12 +5362,11 @@ NtAdjustGroupsToken(
                                            TRUE);
         }
 
-        goto Quit;
+        return Status;
     }
 
     /* Lock the token */
     SepAcquireTokenLockExclusive(Token);
-    LockAndReferenceAcquired = TRUE;
 
     /* Count the number of groups to be changed */
     Status = SepAdjustGroups(Token,
@@ -5442,13 +5440,9 @@ Quit:
         ExAllocateLocallyUniqueId(&Token->ModifiedId);
     }
 
-    /* Have we successfully acquired the lock and referenced the token before? */
-    if (LockAndReferenceAcquired)
-    {
-        /* Unlock and dereference the token */
-        SepReleaseTokenLock(Token);
-        ObDereferenceObject(Token);
-    }
+    /* Unlock and dereference the token */
+    SepReleaseTokenLock(Token);
+    ObDereferenceObject(Token);
 
     /* Release the captured groups */
     if (CapturedGroups != NULL)
