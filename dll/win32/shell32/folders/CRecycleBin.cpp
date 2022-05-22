@@ -1018,6 +1018,83 @@ TRASH_TrashFile(LPCWSTR wszPath)
     return DeleteFileToRecycleBin(wszPath);
 }
 
+static void TRASH_PlayEmptyRecycleBinSound()
+{
+    CRegKey regKey;
+    CHeapPtr<TCHAR> pszValue;
+    CHeapPtr<TCHAR> pszSndPath;
+    DWORD dwType, dwSize;
+    LONG lError;
+
+    /* Open sound key */
+    lError = regKey.Open(HKEY_CURRENT_USER,
+                         _T("AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current"),
+                         KEY_READ);
+
+    if (lError != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    /* Get the value size */
+    lError = regKey.QueryValue(NULL, &dwType, NULL, &dwSize);
+
+    if (lError != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    /* Allocate a buffer for the value */
+    if (!pszValue.AllocateBytes(dwSize))
+    {
+        return;
+    }
+
+    /* Get the value */
+    lError = regKey.QueryValue(NULL, &dwType, pszValue, &dwSize);
+
+    if (lError != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    if (dwType == REG_EXPAND_SZ)
+    {
+        /* Get full path length, including the NULL terminator */
+        dwSize = ExpandEnvironmentStrings(pszValue, NULL, 0);
+
+        if (dwSize == 0)
+        {
+            return;
+        }
+
+        /* Allocate a buffer for the path */
+        if (!pszSndPath.Allocate(dwSize))
+        {
+            return;
+        }
+
+        /* Get the path */
+        if (ExpandEnvironmentStrings(pszValue, pszSndPath, dwSize) == 0)
+        {
+            return;
+        }
+    }
+    else if (dwType == REG_SZ)
+    {
+        /* The type is REG_SZ, no need to expand */
+        pszSndPath = pszValue;
+    }
+    else
+    {
+        /* Invalid type */
+        return;
+    }
+
+    /* Play sound */
+    PlaySound(pszSndPath, NULL, SND_FILENAME | SND_ASYNC | SND_NODEFAULT);
+}
+
 /*************************************************************************
  * SHUpdateCRecycleBinIcon                                [SHELL32.@]
  *
@@ -1064,8 +1141,8 @@ HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
 
 HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 {
-    WCHAR szPath[MAX_PATH] = {0}, szBuffer[MAX_PATH];
-    DWORD dwSize, dwType, count;
+    WCHAR szBuffer[MAX_PATH];
+    DWORD count;
     LONG ret;
     IShellFolder *pDesktop, *pRecycleBin;
     PIDLIST_ABSOLUTE pidlRecycleBin;
@@ -1157,22 +1234,8 @@ HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 
     if (!(dwFlags & SHERB_NOSOUND))
     {
-        dwSize = sizeof(szPath);
-        ret = RegGetValueW(HKEY_CURRENT_USER,
-                           L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current",
-                           NULL,
-                           RRF_RT_REG_SZ,
-                           &dwType,
-                           (PVOID)szPath,
-                           &dwSize);
-        if (ret != ERROR_SUCCESS)
-            return S_OK;
-
-        if (dwType != REG_EXPAND_SZ) /* type dismatch */
-            return S_OK;
-
-        szPath[_countof(szPath)-1] = L'\0';
-        PlaySoundW(szPath, NULL, SND_FILENAME);
+        /* Play empty recycle bin sound */
+        TRASH_PlayEmptyRecycleBinSound();
     }
     return S_OK;
 }
