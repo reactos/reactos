@@ -1,6 +1,8 @@
 #include "precomp.h"
 
 #include <tchar.h>
+#include <winreg.h>
+#include <cfgmgr32.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -8,6 +10,8 @@
 #include "resource.h"
 
 static HINSTANCE hInstance;
+static BOOL bFoundAdapter;
+static DEVINST diAdapter;
 
 #ifdef UNICODE
 typedef INT_PTR (WINAPI *PDEVICEPROPERTIES)(HWND,LPCWSTR,LPCWSTR,BOOL);
@@ -17,11 +21,115 @@ typedef INT_PTR (WINAPI *PDEVICEPROPERTIES)(HWND,LPCSTR,LPCSTR,BOOL);
 #define FUNC_DEVICEPROPERTIES "DevicePropertiesA"
 #endif
 
+/**
+ * @brief
+ * Converts a Hardware ID (DeviceID from EnumDisplayDevices)
+ * to an unique Device Instance ID.
+ *
+ * @param[in] lpDeviceID
+ * A pointer to a null-terminated string
+ * containing a Hardware ID concatenated with driver key.
+ * e.g. "Monitor\Default_Monitor\{4D36E96E-E325-11CE-BFC1-08002BE10318}\0000"
+ *
+ * @return
+ * A pointer to a null-terminated string
+ * containing an unique Device Instance ID
+ * or NULL in case of error.
+ * e.g. "DISPLAY\DEFAULT_MONITOR\4&2ABFAA30&0&00000001&00&02"
+ *
+ * @remarks
+ * The caller must free the returned string with LocalFree.
+ */
 static LPTSTR
 GetMonitorDevInstID(LPCTSTR lpDeviceID)
 {
-    /* FIXME: Implement, allocate returned string with LocalAlloc! */
-    return NULL;
+    CONFIGRET cr;
+    DEVINST diChild;
+    TCHAR szProperty[256];
+    DWORD dwSize;
+    LPTSTR lpDevInstId = NULL;
+
+    if (!bFoundAdapter)
+        return NULL;
+
+    /* Look for child monitor devices of selected video adapter */
+    cr = CM_Get_Child(&diChild, diAdapter, 0);
+    if (cr != CR_SUCCESS)
+    {
+        DPRINT1("CM_Get_Child failed: %d\n", cr);
+        return NULL;
+    }
+
+    do
+    {
+        /* Get Hardware ID for each of them */
+        dwSize = sizeof(szProperty) - sizeof(TCHAR);
+
+        cr = CM_Get_DevNode_Registry_Property(diChild,
+                                              CM_DRP_HARDWAREID,
+                                              NULL,
+                                              szProperty,
+                                              &dwSize,
+                                              0);
+        if (cr != CR_SUCCESS)
+        {
+            DPRINT1("CM_Get_DevNode_Registry_Property failed: %d\n", cr);
+            continue;
+        }
+
+        /* Concatenate with driver key */
+        _tcscat(szProperty, TEXT("\\"));
+        dwSize = sizeof(szProperty) - sizeof(TCHAR);
+        dwSize -= _tcslen(szProperty) * sizeof(TCHAR);
+
+        cr = CM_Get_DevNode_Registry_Property(diChild,
+                                              CM_DRP_DRIVER,
+                                              NULL,
+                                              szProperty + _tcslen(szProperty),
+                                              &dwSize,
+                                              0);
+        if (cr != CR_SUCCESS)
+        {
+            DPRINT1("CM_Get_DevNode_Registry_Property failed: %d\n", cr);
+            continue;
+        }
+
+        /* If the strings match, this is our monitor device node */
+        if (_tcscmp(szProperty, lpDeviceID) == 0)
+        {
+            cr = CM_Get_Device_ID_Size(&dwSize,
+                                       diChild,
+                                       0);
+            if (cr != CR_SUCCESS)
+            {
+                DPRINT1("CM_Get_Device_ID_Size failed: %d\n", cr);
+                break;
+            }
+
+            lpDevInstId = LocalAlloc(LMEM_FIXED,
+                                     (dwSize + 1) * sizeof(TCHAR));
+            if (lpDevInstId == NULL)
+            {
+                DPRINT1("LocalAlloc failed\n");
+                break;
+            }
+
+            cr = CM_Get_Device_ID(diChild,
+                                  lpDevInstId,
+                                  dwSize + 1,
+                                  0);
+            if (cr != CR_SUCCESS)
+            {
+                DPRINT1("CM_Get_Device_ID failed: %d\n", cr);
+                LocalFree((HLOCAL)lpDevInstId);
+                lpDevInstId = NULL;
+            }
+
+            break;
+        }
+    } while (CM_Get_Sibling(&diChild, diChild, 0) == CR_SUCCESS);
+
+    return lpDevInstId;
 }
 
 static VOID
@@ -44,9 +152,9 @@ ShowMonitorProperties(PDESKMONITOR This)
                 if (pDeviceProperties != NULL)
                 {
                     pDeviceProperties(This->hwndDlg,
-                                       NULL,
-                                       This->SelMonitor->dd.DeviceID,
-                                       FALSE);
+                                      NULL,
+                                      lpDevInstID,
+                                      FALSE);
                 }
 
                 FreeLibrary(hDevMgr);
@@ -61,6 +169,7 @@ static VOID
 UpdateMonitorSelection(PDESKMONITOR This)
 {
     INT i;
+    LPTSTR lpDevInstID = NULL;
 
     if (This->dwMonitorCount > 1)
     {
@@ -83,9 +192,15 @@ UpdateMonitorSelection(PDESKMONITOR This)
     else
         This->SelMonitor = This->Monitors;
 
+    if (This->SelMonitor != NULL)
+        lpDevInstID = GetMonitorDevInstID(This->SelMonitor->dd.DeviceID);
+
     EnableWindow(GetDlgItem(This->hwndDlg,
                             IDC_MONITORPROPERTIES),
-                 This->SelMonitor != NULL);
+                 lpDevInstID != NULL && lpDevInstID[0] != TEXT('\0'));
+
+    if (lpDevInstID != NULL)
+        LocalFree((HLOCAL)lpDevInstID);
 }
 
 static VOID
@@ -230,6 +345,8 @@ static VOID
 InitMonitorDialog(PDESKMONITOR This)
 {
     PDESKMONINFO pmi, pminext, *pmilink;
+    LPTSTR lpDeviceId;
+    CONFIGRET cr;
     DISPLAY_DEVICE dd;
     BOOL bRet;
     INT i;
@@ -247,6 +364,21 @@ InitMonitorDialog(PDESKMONITOR This)
 
     This->SelMonitor = NULL;
     This->dwMonitorCount = 0;
+
+    bFoundAdapter = FALSE;
+    lpDeviceId = QueryDeskCplString(This->pdtobj,
+                                    RegisterClipboardFormat(DESK_EXT_DISPLAYID));
+
+    if (lpDeviceId != NULL && lpDeviceId[0] != TEXT('\0'))
+    {
+        cr = CM_Locate_DevNode(&diAdapter,
+                               lpDeviceId,
+                               CM_LOCATE_DEVNODE_NORMAL);
+        bFoundAdapter = (cr == CR_SUCCESS);
+
+        if (!bFoundAdapter)
+            DPRINT1("CM_Locate_DevNode failed: %d\n", cr);
+    }
 
     if (This->lpDisplayDevice != NULL)
         LocalFree((HLOCAL)This->lpDisplayDevice);
