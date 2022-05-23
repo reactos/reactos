@@ -237,7 +237,8 @@ UserEnumDisplayDevices(
     DWORD dwFlags)
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
-    ULONG cbSize;
+    PWCHAR pHardwareId;
+    ULONG cbSize, dwLength;
     HKEY hkey;
     NTSTATUS Status;
 
@@ -280,8 +281,58 @@ UserEnumDisplayDevices(
     RtlStringCbCopyW(pdispdev->DeviceName, sizeof(pdispdev->DeviceName), pGraphicsDevice->szWinDeviceName);
     RtlStringCbCopyW(pdispdev->DeviceString, sizeof(pdispdev->DeviceString), pGraphicsDevice->pwszDescription);
     pdispdev->StateFlags = pGraphicsDevice->StateFlags;
-    // FIXME: fill in DEVICE ID
     pdispdev->DeviceID[0] = UNICODE_NULL;
+
+    /* Fill in DeviceID */
+    if (pGraphicsDevice->PhysDeviceHandle != NULL)
+    {
+        Status = IoGetDeviceProperty(pGraphicsDevice->PhysDeviceHandle,
+                                     DevicePropertyHardwareID,
+                                     0,
+                                     NULL,
+                                     &dwLength);
+
+        if (Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            pHardwareId = ExAllocatePoolWithTag(PagedPool,
+                                                dwLength,
+                                                USERTAG_DISPLAYINFO);
+            if (!pHardwareId)
+            {
+                EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Status = IoGetDeviceProperty(pGraphicsDevice->PhysDeviceHandle,
+                                         DevicePropertyHardwareID,
+                                         dwLength,
+                                         pHardwareId,
+                                         &dwLength);
+
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("IoGetDeviceProperty() failed with status 0x%08lx\n", Status);
+            }
+            else
+            {
+                /* For video adapters it should be the first Hardware ID
+                 * which usually is the longest one and unique enough */
+                RtlStringCbCopyW(pdispdev->DeviceID, sizeof(pdispdev->DeviceID), pHardwareId);
+
+                /* For monitors it should be the first Hardware ID
+                 * concatenated with the unique driver registry key */
+
+                /* FIXME: Handle monitors! */
+                TRACE("Hardware ID: %ls\n", pdispdev->DeviceID);
+            }
+
+            ExFreePoolWithTag(pHardwareId, USERTAG_DISPLAYINFO);
+        }
+        else
+        {
+            ERR("IoGetDeviceProperty() failed with status 0x%08lx\n", Status);
+        }
+    }
 
     return STATUS_SUCCESS;
 }

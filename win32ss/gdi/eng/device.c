@@ -349,7 +349,7 @@ EngpRegisterGraphicsDevice(
     // TODO: Set flags according to the results.
     // if (Win32kCallbacks.bACPI)
     // if (Win32kCallbacks.DualviewFlags & ???)
-    // Win32kCallbacks.pPhysDeviceObject;
+    pGraphicsDevice->PhysDeviceHandle = Win32kCallbacks.pPhysDeviceObject;
 
     /* Copy the device name */
     RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,

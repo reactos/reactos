@@ -630,6 +630,8 @@ VideoPortInitWin32kCallbacks(
     _In_ ULONG BufferLength,
     _Out_ PULONG_PTR Information)
 {
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
     *Information = sizeof(VIDEO_WIN32K_CALLBACKS);
     if (BufferLength < sizeof(VIDEO_WIN32K_CALLBACKS))
     {
@@ -643,7 +645,7 @@ VideoPortInitWin32kCallbacks(
 
     /* Return reasonable values to Win32k */
     Win32kCallbacks->bACPI = FALSE;
-    Win32kCallbacks->pPhysDeviceObject = DeviceObject;
+    Win32kCallbacks->pPhysDeviceObject = DeviceExtension->PhysicalDeviceObject;
     Win32kCallbacks->DualviewFlags = 0;
 
     return STATUS_SUCCESS;
