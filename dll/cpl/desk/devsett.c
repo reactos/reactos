@@ -199,27 +199,40 @@ pCDevSettings_GetDeviceInstanceId(const WCHAR *pszDevice)
 
     DevInfo = SetupDiGetClassDevsW(NULL, pszDevice, NULL, DIGCF_ALLCLASSES | DIGCF_PRESENT);
     if (DevInfo == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("SetupDiGetClassDevsW(\"%ws\") failed: %d\n", pszDevice, GetLastError());
         return NULL;
+    }
 
     ZeroMemory(&InfoData, sizeof(InfoData));
     InfoData.cbSize = sizeof(InfoData);
 
     /* Try to enumerate the first matching device */
     if (!SetupDiEnumDeviceInfo(DevInfo, 0, &InfoData))
+    {
+        DPRINT1("SetupDiEnumDeviceInfo failed: %d\n", GetLastError());
         return NULL;
+    }
 
     if (SetupDiGetDeviceInstanceId(DevInfo, &InfoData, NULL, 0, &BufLen) ||
         GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
+        DPRINT1("SetupDiGetDeviceInstanceId failed: %d\n", GetLastError());
         return NULL;
+    }
 
     lpDevInstId = LocalAlloc(LMEM_FIXED,
                              (BufLen + 1) * sizeof(WCHAR));
 
     if (lpDevInstId == NULL)
+    {
+        DPRINT1("LocalAlloc failed\n");
         return NULL;
+    }
 
     if (!SetupDiGetDeviceInstanceId(DevInfo, &InfoData, lpDevInstId, BufLen, NULL))
     {
+        DPRINT1("SetupDiGetDeviceInstanceId failed: %d\n", GetLastError());
         LocalFree((HLOCAL)lpDevInstId);
         lpDevInstId = NULL;
     }
