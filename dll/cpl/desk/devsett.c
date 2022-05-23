@@ -168,47 +168,64 @@ pCDevSettings_GetMonitorDevice(const WCHAR *pszDisplayDevice)
     return str;
 }
 
+/**
+ * @brief
+ * Converts a Hardware ID (DeviceID from EnumDisplayDevices)
+ * to an unique Device Instance ID.
+ *
+ * @param[in] pszDevice
+ * A pointer to a null-terminated Unicode string
+ * containing a Hardware ID.
+ * e.g. "PCI\VEN_80EE&DEV_BEEF&SUBSYS_00000000&REV_00"
+ *
+ * @return
+ * A pointer to a null-terminated Unicode string
+ * containing an unique Device Instance ID
+ * or NULL in case of error.
+ * e.g. "PCI\VEN_80EE&DEV_BEEF&SUBSYS_00000000&REV_00\3&267A616A&0&10"
+ *
+ * @remarks
+ * The caller must free the returned string with LocalFree.
+ */
 static PWSTR
 pCDevSettings_GetDeviceInstanceId(const WCHAR *pszDevice)
 {
-    DEVINST DevInst;
-    CONFIGRET cr;
+    HDEVINFO DevInfo;
+    SP_DEVINFO_DATA InfoData;
     ULONG BufLen;
     LPWSTR lpDevInstId = NULL;
 
-    DPRINT1("CDevSettings::GetDeviceInstanceId(%ws) UNIMPLEMENTED!\n", pszDevice);
+    DPRINT("CDevSettings::GetDeviceInstanceId(%ws)!\n", pszDevice);
 
-    cr = CM_Locate_DevNodeW(&DevInst,
-                            (DEVINSTID_W)pszDevice,
-                            CM_LOCATE_DEVNODE_NORMAL);
-    if (cr == CR_SUCCESS)
+    DevInfo = SetupDiGetClassDevsW(NULL, pszDevice, NULL, DIGCF_ALLCLASSES | DIGCF_PRESENT);
+    if (DevInfo == INVALID_HANDLE_VALUE)
+        return NULL;
+
+    ZeroMemory(&InfoData, sizeof(InfoData));
+    InfoData.cbSize = sizeof(InfoData);
+
+    /* Try to enumerate the first matching device */
+    if (!SetupDiEnumDeviceInfo(DevInfo, 0, &InfoData))
+        return NULL;
+
+    if (SetupDiGetDeviceInstanceId(DevInfo, &InfoData, NULL, 0, &BufLen) ||
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        return NULL;
+
+    lpDevInstId = LocalAlloc(LMEM_FIXED,
+                             (BufLen + 1) * sizeof(WCHAR));
+
+    if (lpDevInstId == NULL)
+        return NULL;
+
+    if (!SetupDiGetDeviceInstanceId(DevInfo, &InfoData, lpDevInstId, BufLen, NULL))
     {
-        DPRINT1("Success1\n");
-        cr = CM_Get_Device_ID_Size(&BufLen,
-                                   DevInst,
-                                   0);
-        if (cr == CR_SUCCESS)
-        {
-            DPRINT1("Success2\n");
-            lpDevInstId = LocalAlloc(LMEM_FIXED,
-                                     (BufLen + 1) * sizeof(WCHAR));
-
-            if (lpDevInstId != NULL)
-            {
-                DPRINT1("Success3\n");
-                cr = CM_Get_Device_IDW(DevInst,
-                                       lpDevInstId,
-                                       BufLen,
-                                       0);
-
-                if (cr != CR_SUCCESS)
-                {
-                    LocalFree((HLOCAL)lpDevInstId);
-                    lpDevInstId = NULL;
-                }
-                DPRINT1("instance id: %ws\n", lpDevInstId);
-            }
-        }
+        LocalFree((HLOCAL)lpDevInstId);
+        lpDevInstId = NULL;
+    }
+    else
+    {
+        DPRINT("instance id: %ws\n", lpDevInstId);
     }
 
     return lpDevInstId;

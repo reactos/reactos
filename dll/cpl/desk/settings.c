@@ -330,7 +330,7 @@ SettingsOnInitDialog(IN HWND hwndDlg)
     /* Get video cards list */
     pData->DisplayDeviceList = NULL;
     displayDevice.cb = sizeof(displayDevice);
-    while (EnumDisplayDevices(NULL, iDevNum, &displayDevice, 0x1))
+    while (EnumDisplayDevices(NULL, iDevNum, &displayDevice, EDD_GET_DEVICE_INTERFACE_NAME))
     {
         if ((displayDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0)
         {
