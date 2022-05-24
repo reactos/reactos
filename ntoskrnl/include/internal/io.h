@@ -1143,6 +1143,11 @@ IopCreateLegacyDriverNode(
     _In_ HANDLE ServiceHandle
 );
 
+VOID
+IopDeleteLegacyDriverNode(
+    _In_ PCUNICODE_STRING ServiceName
+);
+
 //
 // File Routines
 //

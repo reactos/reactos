@@ -622,7 +622,6 @@ IopInitializeDriverModule(
 
     /* Copy the name and set it in the driver extension */
     RtlCopyUnicodeString(&serviceKeyName, &ServiceName);
-    RtlFreeUnicodeString(&ServiceName);
     driverObject->DriverExtension->ServiceKeyName = serviceKeyName;
 
     /* Make a copy of the driver name to store in the driver object */
@@ -651,9 +650,15 @@ IopInitializeDriverModule(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("'%wZ' initialization failed, status (0x%08lx)\n", &DriverName, Status);
+        if (driverObject->Flags & DRVO_LEGACY_DRIVER)
+        {
+            IopDeleteLegacyDriverNode(&ServiceName);
+        }
         // return a special status value in case of failure
         Status = STATUS_FAILED_DRIVER_ENTRY;
     }
+
+    RtlFreeUnicodeString(&ServiceName);
 
     /* HACK: We're going to say if we don't have any DOs from DriverEntry, then we're not legacy.
      * Other parts of the I/O manager depend on this behavior */
@@ -2422,6 +2427,115 @@ IopCreateLegacyDriverNode(
 Quit:
     ZwClose(NodeHandle);
     return Status;
+}
+
+/**
+ * @brief
+ * Deletes the LEGACY_xxx key under \\Registry\\Machine\\System\\
+ * CurrentControlSet\\Enum\\Root\\.
+ *
+ * @param[in] ServiceName
+ * Name of the service.
+ *
+ * @return
+ * none
+ *
+ **/
+
+VOID
+IopDeleteLegacyDriverNode(
+    _In_ PCUNICODE_STRING ServiceName)
+{
+    UNICODE_STRING RootKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\Root\\");
+    UNICODE_STRING LegacyPrefix = RTL_CONSTANT_STRING(L"LEGACY_");
+    UNICODE_STRING KeyString, ServiceKey;
+    HANDLE RootKeyHandle, ServiceHandle, NodeHandle;
+    PKEY_VALUE_FULL_INFORMATION KeyValueInfo;
+    ULONG Legacy;
+    NTSTATUS Status;
+
+    PAGED_CODE()
+
+    DPRINT("delete legacy enum key: '%wZ'\n", ServiceName);
+
+    Status = IopOpenRegistryKeyEx(&RootKeyHandle,
+                                  NULL,
+                                  &RootKeyPath,
+                                  KEY_ALL_ACCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        return;
+    }
+
+    ServiceKey.MaximumLength = LegacyPrefix.Length + ServiceName->Length + sizeof(UNICODE_NULL);
+    ServiceKey.Length = 0;
+    ServiceKey.Buffer = ExAllocatePoolWithTag(PagedPool, ServiceKey.MaximumLength, TAG_IO);
+    if (ServiceKey.Buffer == NULL)
+    {
+        goto Quit;
+    }
+
+    RtlAppendUnicodeStringToString(&ServiceKey, &LegacyPrefix);
+    RtlAppendUnicodeStringToString(&ServiceKey, ServiceName);
+    Status = IopOpenRegistryKeyEx(&ServiceHandle,
+                                  RootKeyHandle,
+                                  &ServiceKey,
+                                  KEY_ALL_ACCESS);
+
+    ExFreePoolWithTag(ServiceKey.Buffer, TAG_IO);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quit;
+    }
+
+    RtlInitUnicodeString(&KeyString, L"000");
+    Status = IopOpenRegistryKeyEx(&NodeHandle,
+                                  ServiceHandle,
+                                  &KeyString,
+                                  KEY_ALL_ACCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quit;
+    }
+
+    Status = IopGetRegistryValue(NodeHandle, L"Legacy", &KeyValueInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quit;
+    }
+
+    Legacy = 0;
+
+    /* Read the Legacy value */
+    if ((KeyValueInfo->Type == REG_DWORD) &&
+        (KeyValueInfo->DataLength >= sizeof(ULONG)))
+    {
+        Legacy = *(PULONG)((ULONG_PTR)KeyValueInfo +
+                           KeyValueInfo->DataOffset);
+    }
+    ExFreePool(KeyValueInfo);
+
+    /* Check if it is a legacy device driver. */
+    if (Legacy == 0)
+    {
+        goto Quit;
+    }
+
+    /* Delete the node and service key. */
+    ZwDeleteKey(NodeHandle);
+    ZwDeleteKey(ServiceHandle);
+
+Quit:
+
+    if (NodeHandle)
+        ZwClose(NodeHandle);
+
+    if (ServiceHandle)
+        ZwClose(ServiceHandle);
+
+    ZwClose(RootKeyHandle);
+
+    return;
 }
 
 /* EOF */
