@@ -237,6 +237,7 @@ UserEnumDisplayDevices(
     DWORD dwFlags)
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
+    PDEVICE_OBJECT pdo;
     PWCHAR pHardwareId;
     ULONG cbSize, dwLength;
     HKEY hkey;
@@ -284,9 +285,19 @@ UserEnumDisplayDevices(
     pdispdev->DeviceID[0] = UNICODE_NULL;
 
     /* Fill in DeviceID */
-    if (pGraphicsDevice->PhysDeviceHandle != NULL)
+    if (!pustrDevice)
+        pdo = pGraphicsDevice->PhysDeviceHandle;
+    else
+#if 0
+        pdo = pGraphicsDevice->pvMonDev[iDevNum].pdo;
+#else
+        /* FIXME: pvMonDev not initialized, see EngpRegisterGraphicsDevice */
+        pdo = NULL;
+#endif
+
+    if (pdo != NULL)
     {
-        Status = IoGetDeviceProperty(pGraphicsDevice->PhysDeviceHandle,
+        Status = IoGetDeviceProperty(pdo,
                                      DevicePropertyHardwareID,
                                      0,
                                      NULL,
@@ -303,7 +314,7 @@ UserEnumDisplayDevices(
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            Status = IoGetDeviceProperty(pGraphicsDevice->PhysDeviceHandle,
+            Status = IoGetDeviceProperty(pdo,
                                          DevicePropertyHardwareID,
                                          dwLength,
                                          pHardwareId,
@@ -319,10 +330,19 @@ UserEnumDisplayDevices(
                  * which usually is the longest one and unique enough */
                 RtlStringCbCopyW(pdispdev->DeviceID, sizeof(pdispdev->DeviceID), pHardwareId);
 
-                /* For monitors it should be the first Hardware ID
-                 * concatenated with the unique driver registry key */
+                if (pustrDevice)
+                {
+                    /* For monitors it should be the first Hardware ID,
+                     * which we already have obtained above,
+                     * concatenated with the unique driver registry key */
 
-                /* FIXME: Handle monitors! */
+                    RtlStringCbCatW(pdispdev->DeviceID, sizeof(pdispdev->DeviceID), L"\\");
+
+                    /* FIXME: DevicePropertyDriverKeyName string should be appended */
+                    pHardwareId[0] = UNICODE_NULL;
+                    RtlStringCbCatW(pdispdev->DeviceID, sizeof(pdispdev->DeviceID), pHardwareId);
+                }
+
                 TRACE("Hardware ID: %ls\n", pdispdev->DeviceID);
             }
 

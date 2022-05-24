@@ -790,6 +790,11 @@ IntVideoPortDispatchDeviceControl(
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
+        case IOCTL_VIDEO_ENUM_MONITOR_PDO:
+            WARN_(VIDEOPRT, "- IOCTL_VIDEO_ENUM_MONITOR_PDO is UNIMPLEMENTED!\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
         case IOCTL_VIDEO_INIT_WIN32K_CALLBACKS:
             INFO_(VIDEOPRT, "- IOCTL_VIDEO_INIT_WIN32K_CALLBACKS\n");
             Status = VideoPortInitWin32kCallbacks(DeviceObject,

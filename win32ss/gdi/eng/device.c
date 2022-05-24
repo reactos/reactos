@@ -351,6 +351,19 @@ EngpRegisterGraphicsDevice(
     // if (Win32kCallbacks.DualviewFlags & ???)
     pGraphicsDevice->PhysDeviceHandle = Win32kCallbacks.pPhysDeviceObject;
 
+    /* FIXME: Enumerate children monitor devices for this video adapter
+     *
+     * - Force the adapter to re-enumerate its monitors:
+     *   IoSynchronousInvalidateDeviceRelations(pdo, BusRelations)
+     *
+     * - Retrieve all monitor PDOs from VideoPrt:
+     *   EngDeviceIoControl(0x%p, IOCTL_VIDEO_ENUM_MONITOR_PDO)
+     *
+     * - Initialize these fields and structures accordingly:
+     *   pGraphicsDevice->dwMonCnt
+     *   pGraphicsDevice->pvMonDev[0..dwMonCnt-1]
+     */
+
     /* Copy the device name */
     RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,
                       sizeof(pGraphicsDevice->szNtDeviceName),
@@ -445,7 +458,7 @@ EngpFindGraphicsDevice(
 
     if (pustrDevice && pustrDevice->Buffer)
     {
-        /* Loop through the list of devices */
+        /* Find specified video adapter by name */
         for (pGraphicsDevice = gpGraphicsDeviceFirst;
              pGraphicsDevice;
              pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
@@ -457,10 +470,21 @@ EngpFindGraphicsDevice(
                 break;
             }
         }
+
+        if (pGraphicsDevice)
+        {
+            /* Validate selected monitor number */
+#if 0
+            if (iDevNum >= pGraphicsDevice->dwMonCnt)
+                pGraphicsDevice = NULL;
+#else
+            /* FIXME: dwMonCnt not initialized, see EngpRegisterGraphicsDevice */
+#endif
+        }
     }
     else
     {
-        /* Loop through the list of devices */
+        /* Select video adapter by device number */
         for (pGraphicsDevice = gpGraphicsDeviceFirst, i = 0;
              pGraphicsDevice && i < iDevNum;
              pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice, i++);
