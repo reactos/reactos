@@ -1868,7 +1868,7 @@ MUI_ERROR idIDErrorEntries[] =
     },
     {
         // ERROR_NO_SOURCE_DRIVE
-        "Penyetelan tidak dapat menemukan sumber media.\n",
+        "Penyetelan tidak dapat menemukan drive sumber.\n",
         "ENTER = Mulai ulang komputer"
     },
     {
