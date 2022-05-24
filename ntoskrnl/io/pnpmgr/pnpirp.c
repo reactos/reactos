@@ -288,8 +288,7 @@ PiIrpQueryPnPDeviceState(
     PAGED_CODE();
 
     ASSERT(DeviceNode);
-    ASSERT(DeviceNode->State == DeviceNodeResourcesAssigned ||
-           DeviceNode->State == DeviceNodeStartPostWork ||
+    ASSERT(DeviceNode->State == DeviceNodeStartPostWork ||
            DeviceNode->State == DeviceNodeStarted);
 
     ULONG_PTR longState;

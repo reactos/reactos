@@ -1502,6 +1502,72 @@ done:
     return Status;
 }
 
+/**
+ * @brief      Processes the IoInvalidateDeviceState request
+ *
+ * Sends IRP_MN_QUERY_PNP_DEVICE_STATE request and sets device node's flags
+ * according to the result.
+ * Tree reenumeration should be started upon a successful return of the function.
+ * 
+ * @todo       Do not return STATUS_SUCCESS if nothing is changed.
+ */
+static
+NTSTATUS
+PiUpdateDeviceState(
+    _In_ PDEVICE_NODE DeviceNode)
+{
+    PNP_DEVICE_STATE PnPFlags;
+    NTSTATUS Status;
+
+    Status = PiIrpQueryPnPDeviceState(DeviceNode, &PnPFlags);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    if (PnPFlags & PNP_DEVICE_NOT_DISABLEABLE)
+        DeviceNode->UserFlags |= DNUF_NOT_DISABLEABLE;
+    else
+        DeviceNode->UserFlags &= ~DNUF_NOT_DISABLEABLE;
+
+    if (PnPFlags & PNP_DEVICE_DONT_DISPLAY_IN_UI)
+        DeviceNode->UserFlags |= DNUF_DONT_SHOW_IN_UI;
+    else
+        DeviceNode->UserFlags &= ~DNUF_DONT_SHOW_IN_UI;
+
+    if (PnPFlags & PNP_DEVICE_REMOVED || PnPFlags & PNP_DEVICE_DISABLED)
+    {
+        PiSetDevNodeProblem(DeviceNode,
+                            PnPFlags & PNP_DEVICE_DISABLED 
+                            ? CM_PROB_HARDWARE_DISABLED
+                            : CM_PROB_DEVICE_NOT_THERE);
+
+        PiSetDevNodeState(DeviceNode, DeviceNodeAwaitingQueuedRemoval);
+    }
+    else if (PnPFlags & PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED)
+    {
+        // Query resource rebalance
+
+        if (PnPFlags & PNP_DEVICE_FAILED)
+            DeviceNode->Flags &= DNF_NON_STOPPED_REBALANCE;
+        else
+            DeviceNode->Flags |= DNF_NON_STOPPED_REBALANCE;
+
+        // Clear DNF_NO_RESOURCE_REQUIRED just in case (will be set back if needed)
+        DeviceNode->Flags &= ~DNF_NO_RESOURCE_REQUIRED;
+
+        // This will be caught up later by enumeration
+        DeviceNode->Flags |= DNF_RESOURCE_REQUIREMENTS_CHANGED;
+    }
+    else if (PnPFlags & PNP_DEVICE_FAILED)
+    {
+        PiSetDevNodeProblem(DeviceNode, CM_PROB_FAILED_POST_START);
+        PiSetDevNodeState(DeviceNode, DeviceNodeAwaitingQueuedRemoval);
+    }
+
+    return STATUS_SUCCESS;
+}
+
 static
 NTSTATUS
 PiStartDeviceFinal(
@@ -1553,7 +1619,7 @@ PiStartDeviceFinal(
     }
 
     // Query the device state (IRP_MN_QUERY_PNP_DEVICE_STATE)
-    PiQueueDeviceAction(DeviceNode->PhysicalDeviceObject, PiActionQueryState, NULL, NULL);
+    PiUpdateDeviceState(DeviceNode);
 
     DPRINT("Sending GUID_DEVICE_ARRIVAL %wZ\n", &DeviceNode->InstancePath);
     IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL, &DeviceNode->InstancePath);
@@ -2025,72 +2091,6 @@ IopRemoveDevice(PDEVICE_NODE DeviceNode)
     return Status;
 }
 
-/**
- * @brief      Processes the IoInvalidateDeviceState request
- *
- * Sends IRP_MN_QUERY_PNP_DEVICE_STATE request and sets device node's flags
- * according to the result.
- * Tree reenumeration should be started upon a successful return of the function.
- * 
- * @todo       Do not return STATUS_SUCCESS if nothing is changed.
- */
-static
-NTSTATUS
-PiUpdateDeviceState(
-    _In_ PDEVICE_NODE DeviceNode)
-{
-    PNP_DEVICE_STATE PnPFlags;
-    NTSTATUS Status;
-
-    Status = PiIrpQueryPnPDeviceState(DeviceNode, &PnPFlags);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    if (PnPFlags & PNP_DEVICE_NOT_DISABLEABLE)
-        DeviceNode->UserFlags |= DNUF_NOT_DISABLEABLE;
-    else
-        DeviceNode->UserFlags &= ~DNUF_NOT_DISABLEABLE;
-
-    if (PnPFlags & PNP_DEVICE_DONT_DISPLAY_IN_UI)
-        DeviceNode->UserFlags |= DNUF_DONT_SHOW_IN_UI;
-    else
-        DeviceNode->UserFlags &= ~DNUF_DONT_SHOW_IN_UI;
-
-    if (PnPFlags & PNP_DEVICE_REMOVED || PnPFlags & PNP_DEVICE_DISABLED)
-    {
-        PiSetDevNodeProblem(DeviceNode,
-                            PnPFlags & PNP_DEVICE_DISABLED 
-                            ? CM_PROB_HARDWARE_DISABLED
-                            : CM_PROB_DEVICE_NOT_THERE);
-
-        PiSetDevNodeState(DeviceNode, DeviceNodeAwaitingQueuedRemoval);
-    }
-    else if (PnPFlags & PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED)
-    {
-        // Query resource rebalance
-
-        if (PnPFlags & PNP_DEVICE_FAILED)
-            DeviceNode->Flags &= DNF_NON_STOPPED_REBALANCE;
-        else
-            DeviceNode->Flags |= DNF_NON_STOPPED_REBALANCE;
-
-        // Clear DNF_NO_RESOURCE_REQUIRED just in case (will be set back if needed)
-        DeviceNode->Flags &= ~DNF_NO_RESOURCE_REQUIRED;
-
-        // This will be caught up later by enumeration
-        DeviceNode->Flags |= DNF_RESOURCE_REQUIREMENTS_CHANGED;
-    }
-    else if (PnPFlags & PNP_DEVICE_FAILED)
-    {
-        PiSetDevNodeProblem(DeviceNode, CM_PROB_FAILED_POST_START);
-        PiSetDevNodeState(DeviceNode, DeviceNodeAwaitingQueuedRemoval);
-    }
-
-    return STATUS_SUCCESS;
-}
-
 static
 NTSTATUS
 PiEnumerateDevice(
@@ -2386,6 +2386,7 @@ PiDevNodeStateMachine(
                 break;
             case DeviceNodeStartPostWork:
                 DPRINT("DeviceNodeStartPostWork %wZ\n", &currentNode->InstancePath);
+                // TODO: inspect the status
                 status = PiStartDeviceFinal(currentNode);
                 doProcessAgain = TRUE;
                 break;
@@ -2599,13 +2600,20 @@ PipDeviceActionWorker(
                 break;
 
             case PiActionQueryState:
-                // First, do a IRP_MN_QUERY_PNP_DEVICE_STATE request,
-                // it will update node's flags and then do enumeration if something changed
-                status = PiUpdateDeviceState(deviceNode);
-                if (NT_SUCCESS(status))
+                // This action is only valid for started devices. If the device is not yet
+                // started, the PnP manager issues IRP_MN_QUERY_PNP_DEVICE_STATE by itself.
+                if (deviceNode->State == DeviceNodeStarted)
                 {
-                    PiDevNodeStateMachine(deviceNode);
+                    // Issue a IRP_MN_QUERY_PNP_DEVICE_STATE request: it will update node's flags
+                    // and then do enumeration if something has changed
+                    status = PiUpdateDeviceState(deviceNode);
+                    if (NT_SUCCESS(status))
+                    {
+                        PiDevNodeStateMachine(deviceNode);
+                    }
                 }
+                // TODO: Windows may return STATUS_DELETE_PENDING here
+                status = STATUS_SUCCESS;                
                 break;
 
             default:
