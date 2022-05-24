@@ -71,7 +71,7 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
     m_hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (LPVOID)this, 0, NULL);
 
     if (!m_hThread)
-    {   
+    {
         CloseHandle(m_hInitEvent);
         m_hInitEvent = NULL;
 
@@ -108,7 +108,6 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
             return E_FAIL;
         }
     }
-    
     return S_OK;
 }
 
@@ -117,7 +116,6 @@ void CDesktopThread::Destroy()
     if (m_hThread)
     {
         DWORD WaitResult = WaitForSingleObject(m_hThread, 0);
-        
         if (WaitResult == WAIT_TIMEOUT)
         {
             /* Send WM_QUIT message to the thread and wait for it to terminate */
