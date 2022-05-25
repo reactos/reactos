@@ -33,14 +33,14 @@ endif()
 add_definitions(/D__STDC__=1)
 
 # Ignore any "standard" include paths, and do not use any default CRT library.
-if(NOT USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/X /Zl)
 endif()
 
 # Disable buffer security checks by default.
 add_compile_options(/GS-)
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CL_SHOWINCLUDES_PREFIX "Note: including file: ")
 endif()
 
@@ -48,7 +48,7 @@ endif()
 # default for older compilers. See CORE-6507
 if(ARCH STREQUAL "i386")
     # Clang's IA32 means i386, which doesn't have cmpxchg8b
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         add_compile_options(-march=${OARCH})
     else()
         add_compile_options(/arch:IA32)
@@ -93,7 +93,7 @@ if (MSVC_IDE)
 endif()
 
 # On x86 Debug builds, if it's not Clang-CL or msbuild, treat all warnings as errors
-if ((ARCH STREQUAL "i386") AND (CMAKE_BUILD_TYPE STREQUAL "Debug") AND (NOT USE_CLANG_CL) AND (NOT MSVC_IDE))
+if ((ARCH STREQUAL "i386") AND (CMAKE_BUILD_TYPE STREQUAL "Debug") AND (CMAKE_C_COMPILER_ID STREQUAL "MSVC") AND (NOT MSVC_IDE))
     set(TREAT_ALL_WARNINGS_AS_ERRORS=TRUE)
 endif()
 
@@ -140,7 +140,7 @@ endif()
 # - C4115: named type definition in parentheses
 add_compile_options(/w14115)
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-nostdinc;-Wno-multichar;-Wno-char-subscripts;-Wno-microsoft-enum-forward-reference;-Wno-pragma-pack;-Wno-microsoft-anon-tag;-Wno-parentheses-equality;-Wno-unknown-pragmas>")
 endif()
 
@@ -152,7 +152,7 @@ add_compile_definitions($<$<CONFIG:Release>:NDEBUG>)
 
 # Hotpatchable images
 if(ARCH STREQUAL "i386")
-    if(NOT USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
         add_compile_options(/hotpatch)
     endif()
     set(_hotpatch_link_flag "/FUNCTIONPADMIN:5")
@@ -432,7 +432,7 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
     get_defines(_defines)
     get_includes(_includes)
 
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(_no_std_includes_flag "-nostdinc")
     else()
         set(_no_std_includes_flag "/X")
@@ -519,7 +519,7 @@ function(add_linker_script _target _linker_script_file)
 
     # Create the additional linker response file.
     set(_generated_file "${_generated_file_path_prefix}.rsp")
-    if(USE_CLANG_CL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
         set(_no_std_includes_flag "-nostdinc")
     else()
         set(_no_std_includes_flag "/X")

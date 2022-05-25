@@ -245,7 +245,8 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     # Arch Options
     if(ARCH STREQUAL "i386")
-        if(NOT USE_CLANG_CL)
+        # clang-cl defines this one for itself
+        if(NOT (MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang"))
             add_definitions(-D_M_IX86)
         endif()
         add_definitions(-D_X86_ -D__i386__ -Di386)

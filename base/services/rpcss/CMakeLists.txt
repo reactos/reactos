@@ -16,7 +16,7 @@ list(APPEND SOURCE
 include_directories(${REACTOS_BINARY_DIR}/sdk/include/reactos/wine)
 add_executable(rpcss ${SOURCE} rpcss.rc)
 
-if(USE_CLANG_CL)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(rpcss PRIVATE "-Wno-cast-calling-convention")
 endif()
 
