@@ -13,3 +13,4 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Mizu_16x9_A.png DESTINATION
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Mizu_16x9_B.png DESTINATION reactos/Web/Wallpaper FOR all)
 add_subdirectory(Angelus)
 add_subdirectory(Silhouette)
+add_subdirectory(Myslivets)
