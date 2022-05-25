@@ -40,7 +40,7 @@ if(MSVC AND ARCH STREQUAL "amd64")
     target_compile_options(ntdll_winetest PRIVATE /wd4334)
 endif()
 
-if(USE_CLANG_CL OR (NOT MSVC))
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(ntdll_winetest PRIVATE "-Wno-format")
 endif()
 

@@ -485,12 +485,12 @@ add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WIT
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,-fexceptions,-fno-exceptions>>")
 
 # G++ shipped with ROSBE uses sjlj exceptions on i386. Tell Clang it is so
-if (CLANG AND (ARCH STREQUAL "i386"))
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND ARCH STREQUAL "i386")
     add_compile_options("$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>>:-fsjlj-exceptions>")
 endif()
 
 # Find default G++ libraries
-if (CLANG)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER_TARGET}-g++)
 else()
     set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER})

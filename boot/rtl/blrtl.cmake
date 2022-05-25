@@ -7,7 +7,7 @@ add_definitions(
 set(NTOS_RTL_SOURCE_DIR "${REACTOS_SOURCE_DIR}/sdk/lib/rtl")
 include_directories(${NTOS_RTL_SOURCE_DIR})
 
-if (GCC)
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Enable this again. CORE-17637
     add_compile_options(-Wunused-result)
 endif()

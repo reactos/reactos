@@ -48,7 +48,7 @@ list(APPEND SOURCE
 
 add_executable(nfsd ${SOURCE} nfsd.rc)
 
-if(MSVC AND (NOT USE_CLANG_CL))
+if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     # Disable warning C4477 (printf format warnings)
     target_compile_options(nfsd PRIVATE /wd4477)
 else()
