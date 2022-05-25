@@ -13,6 +13,23 @@ $if (_WDMDDK_)
 #define PROFILE_LEVEL           15
 #define HIGH_LEVEL              15
 
+#define SharedUserData          ((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
+
+#define PAGE_SIZE               0x1000
+#define PAGE_SHIFT              12L
+
+#define PAUSE_PROCESSOR YieldProcessor();
+
+/* FIXME: Based on AMD64 but needed to compile apps */
+#define KERNEL_STACK_SIZE                   12288
+#define KERNEL_LARGE_STACK_SIZE             61440
+#define KERNEL_LARGE_STACK_COMMIT KERNEL_STACK_SIZE
+/* FIXME End */
+
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
+
 NTSYSAPI
 PKTHREAD
 NTAPI
