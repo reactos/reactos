@@ -255,6 +255,7 @@ typedef struct _KARM64_ARCH_STATE
     ULONG64 Mair_El1;
     ULONG64 Vbar_El1;
 } KARM64_ARCH_STATE, *PKARM64_ARCH_STATE;
+
 typedef struct _KPROCESSOR_STATE
 {
     KSPECIAL_REGISTERS SpecialRegisters; // 0
