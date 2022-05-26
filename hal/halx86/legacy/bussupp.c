@@ -787,7 +787,9 @@ ShowSize(ULONG x)
 CODE_SEG("INIT")
 VOID
 NTAPI
-HalpDebugPciDumpBus(IN ULONG i,
+HalpDebugPciDumpBus(IN PBUS_HANDLER BusHandler,
+                    IN PCI_SLOT_NUMBER PciSlot,
+                    IN ULONG i,
                     IN ULONG j,
                     IN ULONG k,
                     IN PPCI_COMMON_CONFIG PciData)
@@ -963,12 +965,30 @@ HalpDebugPciDumpBus(IN ULONG i,
             Mem = 0;
         if (Mem)
         {
+            ULONG PciBar = 0xFFFFFFFF;
+
+            HalpWritePCIConfig(BusHandler,
+                               PciSlot,
+                               &PciBar,
+                               FIELD_OFFSET(PCI_COMMON_HEADER, u.type0.BaseAddresses[b]),
+                               sizeof(ULONG));
+            HalpReadPCIConfig(BusHandler,
+                              PciSlot,
+                              &PciBar,
+                              FIELD_OFFSET(PCI_COMMON_HEADER, u.type0.BaseAddresses[b]),
+                              sizeof(ULONG));
+            HalpWritePCIConfig(BusHandler,
+                               PciSlot,
+                               &Mem,
+                               FIELD_OFFSET(PCI_COMMON_HEADER, u.type0.BaseAddresses[b]),
+                               sizeof(ULONG));
+
             /* Decode the address type */
-            if (Mem & PCI_ADDRESS_IO_SPACE)
+            if (PciBar & PCI_ADDRESS_IO_SPACE)
             {
                 /* Guess the size */
                 Size = 1 << 2;
-                while (!(Mem & Size) && (Size)) Size <<= 1;
+                while (!(PciBar & Size) && (Size)) Size <<= 1;
 
                 /* Print it out */
                 DbgPrint("\tI/O ports at %04lx", Mem & PCI_ADDRESS_IO_ADDRESS_MASK);
@@ -977,8 +997,8 @@ HalpDebugPciDumpBus(IN ULONG i,
             else
             {
                 /* Guess the size */
-                Size = 1 << 8;
-                while (!(Mem & Size) && (Size)) Size <<= 1;
+                Size = 1 << 4;
+                while (!(PciBar & Size) && (Size)) Size <<= 1;
 
                 /* Print it out */
                 DbgPrint("\tMemory at %08lx (%d-bit, %sprefetchable)",
@@ -1102,7 +1122,7 @@ HalpInitializePciBus(VOID)
                 if (PciData->VendorID == PCI_INVALID_VENDORID) continue;
 
                 /* Print out the entry */
-                HalpDebugPciDumpBus(i, j, k, PciData);
+                HalpDebugPciDumpBus(BusHandler, PciSlot, i, j, k, PciData);
 
                 /* Check if this is a Cardbus bridge */
                 if (PCI_CONFIGURATION_TYPE(PciData) == PCI_CARDBUS_BRIDGE_TYPE)
