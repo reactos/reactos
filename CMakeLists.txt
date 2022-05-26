@@ -76,7 +76,8 @@ add_definitions(
 
 # There doesn't seem to be a standard for __FILE__ being relative or absolute, so detect it at runtime.
 file(RELATIVE_PATH _PATH_PREFIX ${REACTOS_BINARY_DIR} ${REACTOS_SOURCE_DIR})
-if (NOT MSVC AND (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+if (NOT MSVC AND ((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "8.0.0")
+               OR (CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "10.0.0")))
     # Thankfully, GCC has this
     add_compile_options(-ffile-prefix-map=${REACTOS_SOURCE_DIR}=)
     add_compile_options(-ffile-prefix-map=${_PATH_PREFIX}=)
