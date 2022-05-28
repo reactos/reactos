@@ -128,20 +128,20 @@ InterpretCmd(
     for (cmdptr = cmds; cmdptr->cmd1; cmdptr++)
     {
         if ((cmdptr1 == NULL) &&
-            (wcsicmp(argv[0], cmdptr->cmd1) == 0))
+            (cmdptr->cmd1 != NULL) && (wcsicmp(argv[0], cmdptr->cmd1) == 0))
             cmdptr1 = cmdptr;
 
         if ((cmdptr2 == NULL) &&
             (argc >= 2) &&
-            (wcsicmp(argv[0], cmdptr->cmd1) == 0) &&
-            (wcsicmp(argv[1], cmdptr->cmd2) == 0))
+            (cmdptr->cmd1 != NULL) && (wcsicmp(argv[0], cmdptr->cmd1) == 0) &&
+            (cmdptr->cmd2 != NULL) && (wcsicmp(argv[1], cmdptr->cmd2) == 0))
             cmdptr2 = cmdptr;
 
         if ((cmdptr3 == NULL) &&
             (argc >= 3) &&
-            (wcsicmp(argv[0], cmdptr->cmd1) == 0) &&
-            (wcsicmp(argv[1], cmdptr->cmd2) == 0) &&
-            (wcsicmp(argv[2], cmdptr->cmd3) == 0))
+            (cmdptr->cmd1 != NULL) && (wcsicmp(argv[0], cmdptr->cmd1) == 0) &&
+            (cmdptr->cmd2 != NULL) && (wcsicmp(argv[1], cmdptr->cmd2) == 0) &&
+            (cmdptr->cmd3 != NULL) && (wcsicmp(argv[2], cmdptr->cmd3) == 0))
             cmdptr3 = cmdptr;
     }
 
