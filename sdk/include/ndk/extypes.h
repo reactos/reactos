@@ -841,6 +841,14 @@ typedef struct _SYSTEM_PERFORMANCE_INFORMATION
     ULONG FirstLevelTbFills;
     ULONG SecondLevelTbFills;
     ULONG SystemCalls;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    ULONGLONG CcTotalDirtyPages;
+    ULONGLONG CcDirtyPageThreshold;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    LONGLONG ResidentAvailablePages;
+    ULONGLONG SharedCommittedPages;
+#endif
 } SYSTEM_PERFORMANCE_INFORMATION, *PSYSTEM_PERFORMANCE_INFORMATION;
 
 // Class 3
