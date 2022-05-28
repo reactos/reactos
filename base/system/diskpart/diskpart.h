@@ -94,13 +94,14 @@ typedef struct _PARTENTRY
 
     BOOLEAN BootIndicator;
     UCHAR PartitionType;
-    ULONG HiddenSectors;
+    ULONG OnDiskPartitionNumber;
     ULONG PartitionNumber;
     ULONG PartitionIndex;
 
     CHAR DriveLetter;
     CHAR VolumeLabel[17];
     CHAR FileSystemName[9];
+    FORMATSTATE FormatState;
 
     BOOLEAN LogicalPartition;
 
@@ -112,8 +113,6 @@ typedef struct _PARTENTRY
 
     /* Partition was created automatically. */
     BOOLEAN AutoCreate;
-
-    FORMATSTATE FormatState;
 
     /* Partition must be checked */
     BOOLEAN NeedsCheck;
@@ -383,6 +382,11 @@ BOOL offline_main(INT argc, LPWSTR *argv);
 BOOL online_main(INT argc, LPWSTR *argv);
 
 /* partlist.c */
+ULONGLONG
+AlignDown(
+    _In_ ULONGLONG Value,
+    _In_ ULONG Alignment);
+
 NTSTATUS
 CreatePartitionList(VOID);
 
@@ -394,6 +398,30 @@ CreateVolumeList(VOID);
 
 VOID
 DestroyVolumeList(VOID);
+
+NTSTATUS
+WritePartitions(
+    _In_ PDISKENTRY DiskEntry);
+
+VOID
+UpdateDiskLayout(
+    _In_ PDISKENTRY DiskEntry);
+
+PPARTENTRY
+GetPrevUnpartitionedEntry(
+    _In_ PPARTENTRY PartEntry);
+
+PPARTENTRY
+GetNextUnpartitionedEntry(
+    _In_ PPARTENTRY PartEntry);
+
+ULONG
+GetPrimaryPartitionCount(
+    _In_ PDISKENTRY DiskEntry);
+
+NTSTATUS
+DismountVolume(
+    IN PPARTENTRY PartEntry);
 
 /* recover.c */
 BOOL recover_main(INT argc, LPWSTR *argv);
