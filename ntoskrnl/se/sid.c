@@ -414,6 +414,146 @@ SepReleaseSid(
 
 /**
  * @brief
+ * Checks if a SID is present in a token.
+ *
+ * @param[in] _Token
+ * A valid token object.
+ *
+ * @param[in] PrincipalSelfSid
+ * A principal self SID.
+ *
+ * @param[in] _Sid
+ * A regular SID.
+ *
+ * @param[in] Deny
+ * If set to TRUE, the caller expected that a SID in a token
+ * must be a deny-only SID, that is, access checks are performed
+ * only for deny-only ACEs of the said SID.
+ *
+ * @param[in] Restricted
+ * If set to TRUE, the caller expects that a SID in a token is
+ * restricted (by the general definition, a token is restricted).
+ *
+ * @return
+ * Returns TRUE if the specified SID in the call is present in the token,
+ * FALSE otherwise.
+ */
+BOOLEAN
+NTAPI
+SepSidInTokenEx(
+    _In_ PACCESS_TOKEN _Token,
+    _In_ PSID PrincipalSelfSid,
+    _In_ PSID _Sid,
+    _In_ BOOLEAN Deny,
+    _In_ BOOLEAN Restricted)
+{
+    ULONG SidIndex;
+    PTOKEN Token = (PTOKEN)_Token;
+    PISID TokenSid, Sid = (PISID)_Sid;
+    PSID_AND_ATTRIBUTES SidAndAttributes;
+    ULONG SidCount, SidLength;
+    USHORT SidMetadata;
+    PAGED_CODE();
+
+    /* Check if a principal SID was given, and this is our current SID already */
+    if ((PrincipalSelfSid) && (RtlEqualSid(SePrincipalSelfSid, Sid)))
+    {
+        /* Just use the principal SID in this case */
+        Sid = PrincipalSelfSid;
+    }
+
+    /* Check if this is a restricted token or not */
+    if (Restricted)
+    {
+        /* Use the restricted SIDs and count */
+        SidAndAttributes = Token->RestrictedSids;
+        SidCount = Token->RestrictedSidCount;
+    }
+    else
+    {
+        /* Use the normal SIDs and count */
+        SidAndAttributes = Token->UserAndGroups;
+        SidCount = Token->UserAndGroupCount;
+    }
+
+    /* Do checks here by hand instead of the usual 4 function calls */
+    SidLength = FIELD_OFFSET(SID,
+                             SubAuthority[Sid->SubAuthorityCount]);
+    SidMetadata = *(PUSHORT)&Sid->Revision;
+
+    /* Loop every SID */
+    for (SidIndex = 0; SidIndex < SidCount; SidIndex++)
+    {
+        TokenSid = (PISID)SidAndAttributes->Sid;
+#if SE_SID_DEBUG
+        UNICODE_STRING sidString;
+        RtlConvertSidToUnicodeString(&sidString, TokenSid, TRUE);
+        DPRINT1("SID in Token: %wZ\n", &sidString);
+        RtlFreeUnicodeString(&sidString);
+#endif
+        /* Check if the SID metadata matches */
+        if (*(PUSHORT)&TokenSid->Revision == SidMetadata)
+        {
+            /* Check if the SID data matches */
+            if (RtlEqualMemory(Sid, TokenSid, SidLength))
+            {
+                /*
+                 * Check if the group is enabled, or used for deny only.
+                 * Otherwise we have to check if this is the first user.
+                 * We understand that by looking if this SID is not
+                 * restricted, this is the first element we are iterating
+                 * and that it doesn't have SE_GROUP_USE_FOR_DENY_ONLY
+                 * attribute.
+                 */
+                if ((!Restricted && (SidIndex == 0) && !(SidAndAttributes->Attributes & SE_GROUP_USE_FOR_DENY_ONLY)) ||
+                    (SidAndAttributes->Attributes & SE_GROUP_ENABLED) ||
+                    ((Deny) && (SidAndAttributes->Attributes & SE_GROUP_USE_FOR_DENY_ONLY)))
+                {
+                    /* SID is present */
+                    return TRUE;
+                }
+                else
+                {
+                    /* SID is not present */
+                    return FALSE;
+                }
+            }
+        }
+
+        /* Move to the next SID */
+        SidAndAttributes++;
+    }
+
+    /* SID is not present */
+    return FALSE;
+}
+
+/**
+ * @brief
+ * Checks if a SID is present in a token.
+ *
+ * @param[in] _Token
+ * A valid token object.
+ *
+ * @param[in] _Sid
+ * A regular SID.
+ *
+ * @return
+ * Returns TRUE if the specified SID in the call is present in the token,
+ * FALSE otherwise.
+ */
+BOOLEAN
+NTAPI
+SepSidInToken(
+    _In_ PACCESS_TOKEN _Token,
+    _In_ PSID Sid)
+{
+    /* Call extended API */
+    return SepSidInTokenEx(_Token, NULL, Sid, FALSE, FALSE);
+}
+
+/**
+ * @brief
  * Captures a security identifier from a
  * given access control entry. This identifier
  * is valid for the whole of its lifetime.
