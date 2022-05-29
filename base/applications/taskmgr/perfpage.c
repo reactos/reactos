@@ -600,14 +600,20 @@ void RefreshPerformancePage(void)
      */
     nBarsUsed1 = CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0;
     nBarsUsed2 = PhysicalMemoryTotal ? ((PhysicalMemoryAvailable * 100) / PhysicalMemoryTotal) : 0;
+    // nBarsUsed2 = PhysicalMemoryTotal ? (((PhysicalMemoryTotal - PhysicalMemoryAvailable) * 100) / PhysicalMemoryTotal) : 0;
     GraphCtrl_AddPoint(&MemUsageHistoryGraph, nBarsUsed1, nBarsUsed2);
 
     // CpuUsageGraph.Maximum  = 100;
     CpuUsageGraph.Current1 = CpuUsage;
     CpuUsageGraph.Current2 = CpuKernelUsage;
 
-    Meter_CommitChargeTotal = CommitChargeTotal;
-    Meter_CommitChargeLimit = CommitChargeLimit;
+    //
+    // TODO: The memory gauge may show the commit charge (Win2000/XP/2003),
+    // or show the **physical** memory amount (Windows Vista+). Have something
+    // to set the preference...
+    //
+    Meter_CommitChargeTotal = (PhysicalMemoryTotal - PhysicalMemoryAvailable); // CommitChargeTotal;
+    Meter_CommitChargeLimit = PhysicalMemoryTotal; // CommitChargeLimit;
 
     // MemUsageGraph.Maximum = Meter_CommitChargeLimit;
     if (Meter_CommitChargeLimit)
