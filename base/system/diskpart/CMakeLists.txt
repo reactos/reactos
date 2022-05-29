@@ -55,4 +55,5 @@ if(MSVC)
 endif()
 
 add_pch(diskpart diskpart.h SOURCE)
+add_message_headers(UNICODE diskpart_msg.mc)
 add_cd_file(TARGET diskpart DESTINATION reactos/system32 FOR all)

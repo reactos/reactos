@@ -186,7 +186,7 @@ DetailPartition(
     }
 
     if (bVolumeFound == FALSE)
-        ConPuts(StdOut, L"\nThere is no volume associated with this partition.\n");
+        ConResPuts(StdOut, IDS_DETAIL_NO_VOLUME);
 
     ConPuts(StdOut, L"\n");
 
@@ -241,7 +241,7 @@ DetailVolume(
     }
 
     if (bDiskFound == FALSE)
-        ConPuts(StdOut, L"\nThere are no disks attached to this volume.\n");
+        ConResPuts(StdOut, IDS_DETAIL_NO_DISKS);
 
     /* TODO: Print more volume details */
 

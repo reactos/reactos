@@ -9,6 +9,7 @@
 #pragma once
 
 #define IDS_NONE -1
+#define MSG_NONE 0
 
 #define IDS_APP_HEADER        0
 #define IDS_APP_USAGE         1
@@ -37,6 +38,9 @@
 #define IDS_DETAIL_PARTITION_HIDDEN    1132
 #define IDS_DETAIL_PARTITION_ACTIVE    1133
 #define IDS_DETAIL_PARTITION_OFFSET    1134
+
+#define IDS_DETAIL_NO_DISKS            1135
+#define IDS_DETAIL_NO_VOLUME           1136
 
 #define IDS_HELP_FORMAT_STRING         1200
 
@@ -147,60 +151,6 @@
 
 #define IDS_HELP_UNIQUEID                  117
 #define IDS_HELP_UNIQUEID_DISK             118
-
-
-#define IDS_COMMAND_ACTIVE                     1000
-#define IDS_COMMAND_ADD                        1001
-#define IDS_COMMAND_ASSIGN                     1002
-#define IDS_COMMAND_ATTACH                     1003
-#define IDS_COMMAND_ATTRIBUTES                 1004
-#define IDS_COMMAND_AUTOMOUNT                  1005
-#define IDS_COMMAND_BREAK                      1006
-#define IDS_COMMAND_CLEAN                      1007
-#define IDS_COMMAND_COMPACT                    1008
-#define IDS_COMMAND_CONVERT                    1009
-#define IDS_COMMAND_CREATE_PARTITION_EFI       1010
-#define IDS_COMMAND_CREATE_PARTITION_EXTENDED  1011
-#define IDS_COMMAND_CREATE_PARTITION_LOGICAL   1012
-#define IDS_COMMAND_CREATE_PARTITION_MSR       1013
-#define IDS_COMMAND_CREATE_PARTITION_PRIMARY   1014
-#define IDS_COMMAND_DELETE_DISK                1015
-#define IDS_COMMAND_DELETE_PARTITION           1016
-#define IDS_COMMAND_DELETE_VOLUME              1017
-#define IDS_COMMAND_DETACH                     1018
-#define IDS_COMMAND_DETAIL_DISK                1019
-#define IDS_COMMAND_DETAIL_PARTITION           1020
-#define IDS_COMMAND_DETAIL_VOLUME              1021
-#define IDS_COMMAND_EXIT                       1022
-#define IDS_COMMAND_EXPAND                     1023
-#define IDS_COMMAND_EXTEND                     1024
-#define IDS_COMMAND_FILESYSTEMS                1025
-#define IDS_COMMAND_FORMAT                     1026
-#define IDS_COMMAND_GPT                        1027
-#define IDS_COMMAND_HELP                       1028
-#define IDS_COMMAND_IMPORT                     1029
-#define IDS_COMMAND_INACTIVE                   1030
-#define IDS_COMMAND_LIST_DISK                  1031
-#define IDS_COMMAND_LIST_PARTITION             1032
-#define IDS_COMMAND_LIST_VOLUME                1033
-#define IDS_COMMAND_LIST_VDISK                 1034
-#define IDS_COMMAND_MERGE                      1035
-#define IDS_COMMAND_ONLINE                     1036
-#define IDS_COMMAND_OFFLINE                    1037
-#define IDS_COMMAND_RECOVER                    1038
-#define IDS_COMMAND_REM                        1039
-#define IDS_COMMAND_REMOVE                     1040
-#define IDS_COMMAND_REPAIR                     1041
-#define IDS_COMMAND_RESCAN                     1042
-#define IDS_COMMAND_RETAIN                     1043
-#define IDS_COMMAND_SAN                        1044
-#define IDS_COMMAND_SELECT_DISK                1045
-#define IDS_COMMAND_SELECT_PARTITION           1046
-#define IDS_COMMAND_SELECT_VOLUME              1047
-#define IDS_COMMAND_SELECT_VDISK               1048
-#define IDS_COMMAND_SETID                      1049
-#define IDS_COMMAND_SHRINK                     1050
-#define IDS_COMMAND_UNIQUEID_DISK              1051
 
 #define IDS_ERROR_MSG_NO_SCRIPT  2000
 #define IDS_ERROR_MSG_BAD_ARG    2001

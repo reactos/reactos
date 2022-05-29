@@ -57,7 +57,7 @@ typedef struct _COMMAND
     PWSTR cmd3;
     BOOL (*func)(INT, WCHAR**);
     INT help;
-    INT help_detail;
+    DWORD help_detail;
 } COMMAND, *PCOMMAND;
 
 extern COMMAND cmds[];
@@ -392,6 +392,9 @@ RoundingDivide(
     _In_ ULONGLONG Dividend,
     _In_ ULONGLONG Divisor);
 
+VOID
+PrintMessageString(
+    _In_ DWORD dwMessage);
 
 /* offline.c */
 BOOL offline_main(INT argc, LPWSTR *argv);

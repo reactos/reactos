@@ -87,17 +87,17 @@ HelpCommand(
             if ((wcsicmp(pCommand->cmd1, cmdptr->cmd1) == 0) &&
                 (wcsicmp(pCommand->cmd2, cmdptr->cmd2) == 0) &&
                 (wcsicmp(pCommand->cmd3, cmdptr->cmd3) == 0) &&
-                (cmdptr->help_detail != IDS_NONE))
+                (cmdptr->help_detail != MSG_NONE))
             {
-                ConResPuts(StdOut, cmdptr->help_detail);
+                PrintMessageString(cmdptr->help_detail);
                 bSubCommands = TRUE;
             }
         }
     }
 
-    if ((bSubCommands == FALSE) && (pCommand->help_detail != IDS_NONE))
+    if ((bSubCommands == FALSE) && (pCommand->help_detail != MSG_NONE))
     {
-        ConResPuts(StdOut, pCommand->help_detail);
+        PrintMessageString(pCommand->help_detail);
     }
 
     ConPuts(StdOut, L"\n");
