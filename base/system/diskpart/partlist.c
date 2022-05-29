@@ -1315,8 +1315,7 @@ AddVolumeToList(
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
 
-
-    ConPrintf(StdOut, L"AddVolumeToList(%s)\n", pszVolumeName);
+    DPRINT("AddVolumeToList(%S)\n", pszVolumeName);
 
     VolumeEntry = RtlAllocateHeap(RtlGetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
