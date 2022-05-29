@@ -361,6 +361,14 @@ ListVirtualDisk(
     INT argc,
     PWSTR *argv);
 
+VOID
+PrintDisk(
+    _In_ PDISKENTRY DiskEntry);
+
+VOID
+PrintVolume(
+    _In_ PVOLENTRY VolumeEntry);
+
 /* merge.c */
 BOOL merge_main(INT argc, LPWSTR *argv);
 
