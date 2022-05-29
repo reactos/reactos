@@ -1188,35 +1188,183 @@ DestroyPartitionList(VOID)
 
 static
 VOID
+GetVolumeExtents(
+    _In_ HANDLE VolumeHandle,
+    _In_ PVOLENTRY VolumeEntry)
+{
+    DWORD dwBytesReturned = 0, dwLength, i;
+    PVOLUME_DISK_EXTENTS pExtents;
+    BOOL bResult;
+    DWORD dwError;
+
+    dwLength = sizeof(VOLUME_DISK_EXTENTS);
+    pExtents = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
+    if (pExtents == NULL)
+        return;
+
+    bResult = DeviceIoControl(VolumeHandle,
+                              IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
+                              NULL,
+                              0,
+                              pExtents,
+                              dwLength,
+                              &dwBytesReturned,
+                              NULL);
+    if (!bResult)
+    {
+        dwError = GetLastError();
+
+        if (dwError != ERROR_MORE_DATA)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pExtents);
+            return;
+        }
+        else
+        {
+            dwLength = sizeof(VOLUME_DISK_EXTENTS) + ((pExtents->NumberOfDiskExtents - 1) * sizeof(DISK_EXTENT));
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pExtents);
+            pExtents = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, dwLength);
+            if (pExtents == NULL)
+            {
+                return;
+            }
+
+            bResult = DeviceIoControl(VolumeHandle,
+                                      IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
+                                      NULL,
+                                      0,
+                                      pExtents,
+                                      dwLength,
+                                      &dwBytesReturned,
+                                      NULL);
+            if (!bResult)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, pExtents);
+                return;
+            }
+        }
+    }
+
+    for (i = 0; i < pExtents->NumberOfDiskExtents; i++)
+        VolumeEntry->Size.QuadPart += pExtents->Extents[i].ExtentLength.QuadPart;
+
+    VolumeEntry->pExtents = pExtents;
+}
+
+
+static
+VOID
+GetVolumeType(
+    HANDLE VolumeHandle,
+    _In_ PVOLENTRY VolumeEntry)
+{
+    FILE_FS_DEVICE_INFORMATION DeviceInfo;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+
+    Status = NtQueryVolumeInformationFile(VolumeHandle,
+                                          &IoStatusBlock,
+                                          &DeviceInfo,
+                                          sizeof(FILE_FS_DEVICE_INFORMATION),
+                                          FileFsDeviceInformation);
+    if (!NT_SUCCESS(Status))
+        return;
+
+    switch (DeviceInfo.DeviceType)
+    {
+        case FILE_DEVICE_CD_ROM:
+        case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
+            VolumeEntry->VolumeType = VOLUME_TYPE_CDROM;
+            break;
+
+        case FILE_DEVICE_DISK:
+        case FILE_DEVICE_DISK_FILE_SYSTEM:
+            if (DeviceInfo.Characteristics & FILE_REMOVABLE_MEDIA)
+                VolumeEntry->VolumeType = VOLUME_TYPE_REMOVABLE;
+            else
+                VolumeEntry->VolumeType = VOLUME_TYPE_PARTITION;
+            break;
+
+        default:
+            VolumeEntry->VolumeType = VOLUME_TYPE_UNKNOWN;
+            break;
+    }
+}
+
+
+static
+VOID
 AddVolumeToList(
     ULONG ulVolumeNumber,
     PWSTR pszVolumeName)
 {
     PVOLENTRY VolumeEntry;
+    HANDLE VolumeHandle;
 
-    WCHAR szPathNames[256];
-    DWORD dwLength;
+    DWORD dwError, dwLength;
+    WCHAR szPathNames[MAX_PATH + 1];
     WCHAR szVolumeName[MAX_PATH + 1];
     WCHAR szFilesystem[MAX_PATH + 1];
 
+    DWORD  CharCount            = 0;
+    WCHAR  DeviceName[MAX_PATH] = L"";
+    size_t Index                = 0;
+
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
+
+
+    ConPrintf(StdOut, L"AddVolumeToList(%s)\n", pszVolumeName);
 
     VolumeEntry = RtlAllocateHeap(RtlGetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
                                   sizeof(VOLENTRY));
     if (VolumeEntry == NULL)
+        return;
+
+    VolumeEntry->VolumeNumber = ulVolumeNumber;
+    wcscpy(VolumeEntry->VolumeName, pszVolumeName);
+
+    Index = wcslen(pszVolumeName) - 1;
+
+    pszVolumeName[Index] = L'\0';
+
+    CharCount = QueryDosDeviceW(&pszVolumeName[4], DeviceName, ARRAYSIZE(DeviceName)); 
+
+    pszVolumeName[Index] = L'\\';
+
+    if (CharCount == 0)
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry);
         return;
     }
 
+    DPRINT("DeviceName: %S\n", DeviceName);
 
-    if (GetVolumePathNamesForVolumeNameW(pszVolumeName,
-                                     szPathNames,
-                                     256,
-                                     &dwLength))
+    RtlInitUnicodeString(&Name, DeviceName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               0,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&VolumeHandle,
+                        SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &Iosb,
+                        0,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT);
+    if (NT_SUCCESS(Status))
     {
-        VolumeEntry->DriveLetter = szPathNames[0];
+        GetVolumeType(VolumeHandle, VolumeEntry);
+        GetVolumeExtents(VolumeHandle, VolumeEntry);
+        NtClose(VolumeHandle);
+    }
 
-        if (GetVolumeInformationW(szPathNames,
+    if (GetVolumeInformationW(pszVolumeName,
                               szVolumeName,
                               MAX_PATH + 1,
                               NULL, //  [out, optional] LPDWORD lpVolumeSerialNumber,
@@ -1224,31 +1372,39 @@ AddVolumeToList(
                               NULL, //  [out, optional] LPDWORD lpFileSystemFlags,
                               szFilesystem,
                               MAX_PATH + 1))
-        {
-            VolumeEntry->pszLabel = RtlAllocateHeap(RtlGetProcessHeap(),
-                                                    0,
-                                                    (wcslen(szVolumeName) + 1) * sizeof(WCHAR));
-            if (VolumeEntry->pszLabel)
-                wcscpy(VolumeEntry->pszLabel, szVolumeName);
+    {
+        VolumeEntry->pszLabel = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                0,
+                                                (wcslen(szVolumeName) + 1) * sizeof(WCHAR));
+        if (VolumeEntry->pszLabel)
+            wcscpy(VolumeEntry->pszLabel, szVolumeName);
 
+        VolumeEntry->pszFilesystem = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                     0,
+                                                     (wcslen(szFilesystem) + 1) * sizeof(WCHAR));
+        if (VolumeEntry->pszFilesystem)
+            wcscpy(VolumeEntry->pszFilesystem, szFilesystem);
+    }
+    else
+    {
+        dwError = GetLastError();
+        if (dwError == ERROR_UNRECOGNIZED_VOLUME)
+        {
             VolumeEntry->pszFilesystem = RtlAllocateHeap(RtlGetProcessHeap(),
                                                          0,
-                                                         (wcslen(szFilesystem) + 1) * sizeof(WCHAR));
+                                                         (3 + 1) * sizeof(WCHAR));
             if (VolumeEntry->pszFilesystem)
-                wcscpy(VolumeEntry->pszFilesystem, szFilesystem);
-
-            VolumeEntry->DriveType = GetDriveType(szPathNames);
-
-            GetDiskFreeSpaceExW(szPathNames,
-                                NULL, //  [out, optional] PULARGE_INTEGER lpFreeBytesAvailableToCaller,
-                                &VolumeEntry->Size, //  [out, optional] PULARGE_INTEGER lpTotalNumberOfBytes,
-                                NULL //    [out, optional] PULARGE_INTEGER lpTotalNumberOfFreeBytes
-                                );
+                wcscpy(VolumeEntry->pszFilesystem, L"RAW");
         }
     }
 
-    VolumeEntry->VolumeNumber = ulVolumeNumber;
-    wcscpy(VolumeEntry->VolumeName, pszVolumeName);
+    if (GetVolumePathNamesForVolumeNameW(pszVolumeName,
+                                         szPathNames,
+                                         ARRAYSIZE(szPathNames),
+                                         &dwLength))
+    {
+        VolumeEntry->DriveLetter = szPathNames[0];
+    }
 
     InsertTailList(&VolumeListHead,
                    &VolumeEntry->ListEntry);
@@ -1312,6 +1468,9 @@ DestroyVolumeList(VOID)
 
         if (VolumeEntry->pszFilesystem)
             RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry->pszFilesystem);
+
+        if (VolumeEntry->pExtents)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry->pExtents);
 
         /* Release disk entry */
         RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry);

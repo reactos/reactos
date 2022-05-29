@@ -26,6 +26,7 @@ ListDisk(
     LPWSTR lpFreeUnit;
 
     /* Header labels */
+    ConPuts(StdOut, L"\n");
     ConResPuts(StdOut, IDS_LIST_DISK_HEAD);
     ConResPuts(StdOut, IDS_LIST_DISK_LINE);
 
@@ -55,7 +56,7 @@ ListDisk(
         lpFreeUnit = L"B";
 
         ConResPrintf(StdOut, IDS_LIST_DISK_FORMAT,
-                     (CurrentDisk == DiskEntry) ? L'*': ' ',
+                     (CurrentDisk == DiskEntry) ? L'*' : L' ',
                      DiskEntry->DiskNumber,
                      L"Online",
                      DiskSize,
@@ -94,6 +95,7 @@ ListPartition(
     }
 
     /* Header labels */
+    ConPuts(StdOut, L"\n");
     ConResPuts(StdOut, IDS_LIST_PARTITION_HEAD);
     ConResPuts(StdOut, IDS_LIST_PARTITION_LINE);
 
@@ -141,7 +143,7 @@ ListPartition(
             }
 
             ConResPrintf(StdOut, IDS_LIST_PARTITION_FORMAT,
-                         (CurrentPartition == PartEntry) ? L'*': ' ',
+                         (CurrentPartition == PartEntry) ? L'*' : L' ',
                          PartNumber++,
                          IsContainerPartition(PartEntry->PartitionType) ? L"Extended" : L"Primary",
                          PartSize,
@@ -197,7 +199,7 @@ ListPartition(
             }
 
             ConResPrintf(StdOut, IDS_LIST_PARTITION_FORMAT,
-                         (CurrentPartition == PartEntry) ? L'*': ' ',
+                         (CurrentPartition == PartEntry) ? L'*' : L' ',
                          PartNumber++,
                          L"Logical",
                          PartSize,
@@ -223,8 +225,10 @@ ListVolume(
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
     ULONGLONG VolumeSize;
-    LPWSTR lpSizeUnit;
+    PWSTR pszSizeUnit;
+    PWSTR pszVolumeType;
 
+    ConPuts(StdOut, L"\n");
     ConResPuts(StdOut, IDS_LIST_VOLUME_HEAD);
     ConResPuts(StdOut, IDS_LIST_VOLUME_LINE);
 
@@ -237,31 +241,52 @@ ListVolume(
         if (VolumeSize >= 10737418240) /* 10 GB */
         {
             VolumeSize = RoundingDivide(VolumeSize, 1073741824);
-            lpSizeUnit = L"GB";
+            pszSizeUnit = L"GB";
         }
         else if (VolumeSize >= 10485760) /* 10 MB */
         {
             VolumeSize = RoundingDivide(VolumeSize, 1048576);
-            lpSizeUnit = L"MB";
+            pszSizeUnit = L"MB";
         }
         else
         {
             VolumeSize = RoundingDivide(VolumeSize, 1024);
-            lpSizeUnit = L"KB";
+            pszSizeUnit = L"KB";
+        }
+
+        switch (VolumeEntry->VolumeType)
+        {
+            case VOLUME_TYPE_CDROM:
+                pszVolumeType = L"DVD";
+                break;
+
+            case VOLUME_TYPE_PARTITION:
+                pszVolumeType = L"Partition";
+                break;
+
+            case VOLUME_TYPE_REMOVABLE:
+                pszVolumeType = L"Removable";
+                break;
+
+            case VOLUME_TYPE_UNKNOWN:
+            default:
+                pszVolumeType = L"Unknown";
+                break;
         }
 
         ConResPrintf(StdOut, IDS_LIST_VOLUME_FORMAT,
+                     (CurrentVolume == VolumeEntry) ? L'*' : L' ',
                      VolumeEntry->VolumeNumber,
                      VolumeEntry->DriveLetter,
                      (VolumeEntry->pszLabel) ? VolumeEntry->pszLabel : L"",
                      (VolumeEntry->pszFilesystem) ? VolumeEntry->pszFilesystem : L"",
-                     VolumeEntry->DriveType,
-                     VolumeSize, lpSizeUnit);
+                     pszVolumeType,
+                     VolumeSize, pszSizeUnit);
 
         Entry = Entry->Flink;
     }
 
-    ConPuts(StdOut, L"\n\n");
+    ConPuts(StdOut, L"\n");
 
     return TRUE;
 }

@@ -44,16 +44,16 @@ END
 /* Detail header titles */
 STRINGTABLE
 BEGIN
-    IDS_LIST_DISK_HEAD "\n  Disk ###    Durum      Boyut     Boş     Dev  Gpt\n"
+    IDS_LIST_DISK_HEAD "  Disk ###    Durum      Boyut     Boş     Dev  Gpt\n"
     IDS_LIST_DISK_LINE "  --------  ----------  -------  -------  ---  ---\n"
     IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s   %4I64u %-2s  %1s   %1s\n"
-    IDS_LIST_PARTITION_HEAD "\n      Bölüm              Tür        Boyut    Ofset\n"
+    IDS_LIST_PARTITION_HEAD "      Bölüm              Tür        Boyut    Ofset\n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Bölüm %2lu       %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nBölümleri listelemek için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
-    IDS_LIST_VOLUME_FORMAT "  Volume %-3lu   %c   %-11.11s  %-5s  %10u  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
 END
 
 STRINGTABLE

@@ -83,6 +83,14 @@ typedef enum _FORMATSTATE
     Formatted
 } FORMATSTATE, *PFORMATSTATE;
 
+typedef enum _VOLUME_TYPE
+{
+    VOLUME_TYPE_CDROM,
+    VOLUME_TYPE_PARTITION,
+    VOLUME_TYPE_REMOVABLE,
+    VOLUME_TYPE_UNKNOWN
+} VOLUME_TYPE, *PVOLUME_TYPE;
+
 typedef struct _PARTENTRY
 {
     LIST_ENTRY ListEntry;
@@ -185,8 +193,10 @@ typedef struct _VOLENTRY
 
     PWSTR pszLabel;
     PWSTR pszFilesystem;
-    UINT DriveType;
+    VOLUME_TYPE VolumeType;
     ULARGE_INTEGER Size;
+
+    PVOLUME_DISK_EXTENTS pExtents;
 
 } VOLENTRY, *PVOLENTRY;
 
