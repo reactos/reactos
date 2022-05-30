@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS W32Time Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Portuguese resource file
- * TRANSLATORS: Jose Carlos Jesus (zecarlos1957@hotmail.com)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATORS: Copyright 2022 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
