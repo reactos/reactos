@@ -15,6 +15,8 @@ elseif(ARCH STREQUAL "amd64")
   add_asm_files(cpprt_asm amd64/cpprt.s)
 elseif(ARCH STREQUAL "arm")
   add_asm_files(cpprt_asm arm/cpprt.s)
+elseif(ARCH STREQUAL "arm64")
+  add_asm_files(cpprt_asm arm64/cpprt.s)
 endif()
 
 add_library(cpprt ${SOURCE} ${cpprt_asm})
