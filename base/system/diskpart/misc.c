@@ -84,20 +84,9 @@ VOID
 PrintMessageString(
     _In_ DWORD dwMessage)
 {
-    PWSTR pBuffer;
-
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
-                   FORMAT_MESSAGE_IGNORE_INSERTS,
-                   NULL, //hModuleNetMsg,
-                   dwMessage,
-                   LANG_USER_DEFAULT,
-                   (LPWSTR)&pBuffer,
-                   0,
-                   NULL);
-    if (pBuffer)
-    {
-        ConPuts(StdOut, pBuffer);
-        LocalFree(pBuffer);
-        pBuffer = NULL;
-    }
+    ConMsgPuts(StdOut,
+               FORMAT_MESSAGE_FROM_HMODULE,
+               NULL, //hModuleNetMsg,
+               dwMessage,
+               LANG_USER_DEFAULT);
 }
