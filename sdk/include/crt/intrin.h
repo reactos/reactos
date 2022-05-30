@@ -826,7 +826,7 @@ void _mm_stream_si64x(__int64 *, __int64);
 #endif
 #endif /* _M_X64 */
 
-#if defined(_M_ARM) || defined(_M_X64)
+#if defined(_M_ARM) || defined(_M_X64) || defined(_M_ARM64)
 
 __int64 _InterlockedAnd64(_Interlocked_operand_ __int64 volatile * _Value, __int64 _Mask);
 __int64 _InterlockedDecrement64(_Interlocked_operand_ __int64 volatile * _Addend);

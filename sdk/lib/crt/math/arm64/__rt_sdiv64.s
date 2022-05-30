@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Implementation of atan2
+ * PURPOSE:     Implementation of __rt_sdiv64
  * COPYRIGHT:   Copyright 2022 Justin Miller<justinmiller100@gmail.com>
  */
 
@@ -13,8 +13,8 @@
 
     TEXTAREA
 
-    LEAF_ENTRY atan2
-    LEAF_END atan2
+    NESTED_ENTRY __rt_sdiv64
+    NESTED_END __rt_sdiv64
 
     END
 /* EOF */
