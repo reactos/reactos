@@ -6,7 +6,7 @@ CAPTION "Opções regionais"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Padrões e formatos", -1, 5, 5, 234, 162
-    LTEXT "Esta opção influencia a forma como alguns programas formatam números, unidades monetárias, horários e datas.", -1, 14, 17, 220, 25
+    LTEXT "Esta opção influencia a forma como alguns programas formatam números, unidades monetárias, datas e horas.", -1, 14, 17, 220, 25
     LTEXT "Selecci&one um item para definir as suas preferências ou clique em 'Personalizar' para escolher seus próprios formatos:", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Personalizar...", IDC_SETUP_BUTTON, 178, 56, 52, 13
@@ -22,7 +22,7 @@ BEGIN
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Localização", -1, 5, 172, 234, 55
-    LTEXT "Para aj&udar os serviços a fornecer-lhe informações locais, tal como notícias e meteorologia, seleccione a sua localização actual:", -1, 14, 184, 210, 24
+    LTEXT "Para aj&udar os serviços a fornecer-lhe informação local, tal como notícias e meteorologia, seleccione a sua localização actual:", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -65,7 +65,7 @@ BEGIN
     EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Negativo:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Símbolo decimal:", -1, 8, 67, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Separador decimal:", -1, 8, 67, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Nº de &casas decimais:", -1, 8, 83, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNDIGDEC, 137, 81, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -77,11 +77,11 @@ BEGIN
     COMBOBOX IDC_NUMBERSNSIGNSYM, 137, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Formato de número negativo:", -1, 8, 149, 100, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Exibir &zeros à esquerda:", -1, 8, 166, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Apresentar &zeros à esquerda:", -1, 8, 166, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Separador de lis&ta:", -1, 8, 181, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Sistema de &medidas:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Sistema de &medida:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -97,11 +97,11 @@ BEGIN
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "&Símbolo da unidade monetária:", -1, 10, 51, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Formato de moeda &positivo:", -1, 10, 68, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Formato monetário &positivo:", -1, 10, 68, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Formato de moeda &negativo:", -1, 10, 85, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Formato monetário &negativo:", -1, 10, 85, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYNEGVALUE, 134, 83, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Sím&bolo decimal:", -1, 10, 111, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Separador decimal:", -1, 10, 111, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECSEP, 134, 109, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Nº de &casas decimais:", -1, 10, 128, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECNUM, 134, 126, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -119,16 +119,16 @@ BEGIN
     GROUPBOX "Exemplo", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
     LTEXT "Exemplo de hora:", -1, 13, 21, 54, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Formato de hora:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Formato da hora:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEFORMAT, 149, 50, 84, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Separador de hora:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "&Separador da hora:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMESEPARATOR, 149, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Sí&mbolo a.m.:", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Símbolo &AM.:", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEAMSYMBOL, 149, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Sím&bolo p.m.:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Símbolo &PM.:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEPMSYMBOL, 149, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
-    LTEXT "Notação de formato de hora\nh = hora     m = minuto     s = segundo     t = a.m. ou p.m.\n\nh = 12 horas\nH = 24 horas\n\nhh, mm, ss = com zero à esquerda\nh, m, s = sem zero à esquerda", -1, 13, 150, 214, 66, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Notação do formato da hora\nh = hora     m = minuto     s = segundo     t = AM. ou PM.\n\nh = 12 horas\nH = 24 horas\n\nhh, mm, ss = com zero à esquerda\nh, m, s = sem zero à esquerda", -1, 13, 150, 214, 66, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
@@ -137,12 +137,12 @@ CAPTION "Data"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Calendário", -1, 7, 7, 230, 74
-    LTEXT "&Quando for dig. 1 ano de 2 dígitos, interpretá-lo como 1 ano entre:", -1, 13, 18, 215, 8
+    LTEXT "&Quando um ano de 2 dígitos é introduzido, interpretar como um ano entre:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "e", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "",IDC_SCR_MAX_YEAR, "msctls_updown32", UDS_NOTHOUSANDS | UDS_WRAP | UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 113, 30, 10, 12
-    LTEXT "&Tipo de calendário:", -1, 13, 48, 56, 10
+    LTEXT "&Tipo de calendário:", -1, 13, 48, 60, 10
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     LTEXT "Calendário &Hijri:", -1, 13, 65, 60, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
@@ -170,8 +170,8 @@ CAPTION "Classificação"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Classificação", -1, 7, 7, 230, 74
-    LTEXT "Os métodos de classificação alteram a maneira como os programas classificam caracteres, palavras, arquivos e pastas.", -1, 14, 17, 220, 25
-    LTEXT "&Selecione o método de classificação a ser usado com este idioma:", -1, 14, 37, 220, 22
+    LTEXT "Os métodos de classificação alteram a maneira como os programas classificam caracteres, palavras, ficheiros e pastas.", -1, 14, 17, 220, 25
+    LTEXT "&Seleccione o método de classificação a ser usado com este idioma:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -180,7 +180,7 @@ BEGIN
     IDS_CUSTOMIZE_TITLE "Personalizar opções regionais"
     IDS_SPAIN "Espanhol (Espanha)"
     IDS_METRIC "Métrico"
-    IDS_IMPERIAL "Imperial"
+    IDS_IMPERIAL "Inglês"
 END
 
 STRINGTABLE
@@ -201,8 +201,8 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "Erro"
     IDS_ERROR_SYMBOL_SEPARATE "Um ou mais caracteres digitados para Separador de data são inválidos."
-    IDS_ERROR_SYMBOL_FORMAT_SHORT "Um ou mais caracteres que você digitou para o formato Data abreviada são inválidos."
-    IDS_ERROR_SYMBOL_FORMAT_LONG "Um ou mais caracteres que você digitou para o formato Data por extenso são inválidos."
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "Um ou mais caracteres que digitou para o formato Data abreviada são inválidos."
+    IDS_ERROR_SYMBOL_FORMAT_LONG "Um ou mais caracteres que digitou para o formato Data por extenso são inválidos."
     IDS_ERROR_OEM_CODE_PAGE "Erro ao ler a tabela de conversão de página de código OEM"
     IDS_ERROR_ANSI_CODE_PAGE "Erro ao ler a tabela de conversão de página de código ANSI"
     IDS_ERROR_INT_KEY_REG "Erro ao abrir a chave: HKCU\\Control Panel\\International"
