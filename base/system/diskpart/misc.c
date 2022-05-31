@@ -78,15 +78,3 @@ RoundingDivide(
 {
     return (Dividend + Divisor / 2) / Divisor;
 }
-
-
-VOID
-PrintMessageString(
-    _In_ DWORD dwMessage)
-{
-    ConMsgPuts(StdOut,
-               FORMAT_MESSAGE_FROM_HMODULE,
-               NULL, //hModuleNetMsg,
-               dwMessage,
-               LANG_USER_DEFAULT);
-}

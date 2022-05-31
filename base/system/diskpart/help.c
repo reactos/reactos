@@ -89,7 +89,11 @@ HelpCommand(
                 (wcsicmp(pCommand->cmd3, cmdptr->cmd3) == 0) &&
                 (cmdptr->help_detail != MSG_NONE))
             {
-                PrintMessageString(cmdptr->help_detail);
+                ConMsgPuts(StdOut,
+                           FORMAT_MESSAGE_FROM_HMODULE,
+                           NULL,
+                           cmdptr->help_detail,
+                           LANG_USER_DEFAULT);
                 bSubCommands = TRUE;
             }
         }
@@ -97,7 +101,11 @@ HelpCommand(
 
     if ((bSubCommands == FALSE) && (pCommand->help_detail != MSG_NONE))
     {
-        PrintMessageString(pCommand->help_detail);
+        ConMsgPuts(StdOut,
+                   FORMAT_MESSAGE_FROM_HMODULE,
+                   NULL,
+                   pCommand->help_detail,
+                   LANG_USER_DEFAULT);
     }
 
     ConPuts(StdOut, L"\n");
