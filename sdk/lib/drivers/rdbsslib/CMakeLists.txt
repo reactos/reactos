@@ -7,6 +7,6 @@ list(APPEND SOURCE
     rdbss.c)
 
 add_library(rdbsslib ${SOURCE})
-add_ntddi_defines(rdbsslib xp)
+set_ntddi_defines(rdbsslib win2003)
 target_link_libraries(rdbsslib PRIVATE pseh)
 add_dependencies(rdbsslib bugcodes xdk)

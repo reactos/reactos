@@ -11,6 +11,6 @@ list(APPEND SOURCE
 add_library(ntoskrnl_vista ${SOURCE})
 target_link_libraries(ntoskrnl_vista PRIVATE pseh) # rtl_vista)
 add_dependencies(ntoskrnl_vista bugcodes xdk)
-add_ntddi_defines(ntoskrnl_vista vista)
+set_ntddi_defines(ntoskrnl_vista vista)
 
 target_compile_definitions(ntoskrnl_vista PUBLIC NTKRNLVISTA)

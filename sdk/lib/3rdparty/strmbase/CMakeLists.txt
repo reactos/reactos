@@ -20,6 +20,6 @@ list(APPEND SOURCE
     precomp.h)
 
 add_library(strmbase ${SOURCE})
-add_ntddi_defines(strmbase vista)
+set_ntddi_defines(strmbase vista)
 add_pch(strmbase precomp.h SOURCE)
 add_dependencies(strmbase psdk dxsdk)

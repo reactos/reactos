@@ -115,7 +115,7 @@ endif()
 set(USE_DUMMY_PSEH FALSE CACHE BOOL
 "Whether to disable PSEH support.")
 
-set(TARGET_VERSION "" CACHE STRING "The Windows platform version to target, if different from the default. Valid values are win10 win8.1 win8 win7 vista.")
+set(TARGET_VERSION "" CACHE STRING "The Windows platform version to target, if different from the default. Valid values are win10, win8.1, win8, win7, vista, win2003.")
 
 if(NOT TARGET_VERSION STREQUAL "")
     string(TOLOWER ${TARGET_VERSION} TARGET_VERSION)

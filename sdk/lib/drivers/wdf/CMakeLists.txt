@@ -184,10 +184,9 @@ list(APPEND SOURCE_KM
 # add_registry_inf(wdf01000_reg.inf)
 
 add_library(wdf01000 ${SOURCE_SHARED} ${SOURCE_KM})
-add_ntddi_defines(wdf01000 win8.1 PUBLIC)
 
 # Any component linking against wdf01000 must also target win8.1.
-add_ntddi_defines(wdf01000 win8.1)
+set_ntddi_defines(wdf01000 win8.1 PUBLIC)
 
 target_compile_definitions(wdf01000
     PUBLIC WDF_DEVICE_NO_WDMSEC_H

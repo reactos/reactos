@@ -577,7 +577,7 @@ list(APPEND VALID_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativ
 list(APPEND KERNEL_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver)
 list(APPEND NATIVE_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll)
 
-function(add_ntddi_defines MODULE TARGET_VERSION)
+function(set_ntddi_defines MODULE TARGET_VERSION)
     cmake_parse_arguments(ntddi "PUBLIC" "" "" "" ${ARGN})
 
     if(TARGET_VERSION STREQUAL "win10")
@@ -600,10 +600,12 @@ function(add_ntddi_defines MODULE TARGET_VERSION)
         set(TARGET_VERSION_SYMBOL _WIN32_WINNT_LONGHORN)
         set(TARGET_IE_VERSION_SYMBOL _WIN32_IE_IE70)
         set(TARGET_NTDDI_VERSION_SYMBOL NTDDI_LONGHORN)
-    else()
         set(TARGET_IE_VERSION_SYMBOL _WIN32_IE_WS03SP1)
+    elseif(TARGET_VERSION STREQUAL "win2003")
         set(TARGET_VERSION_SYMBOL _WIN32_WINNT_WS03)
         set(TARGET_NTDDI_VERSION_SYMBOL NTDDI_WS03SP1)
+    else()
+        message(FATAL_ERROR "Unrecognized TARGET_VERSION ${TARGET_VERSION}")
     endif()
 
     if(ntddi_PUBLIC)
@@ -735,11 +737,11 @@ function(set_module_type MODULE TYPE)
 
     # Set the Windows version being compiled for
     if(TARGET_VERSION)
-        add_ntddi_defines(${MODULE} ${TARGET_VERSION})
+        set_ntddi_defines(${MODULE} ${TARGET_VERSION})
     elseif(__module_TARGET_VERSION)
-        add_ntddi_defines(${MODULE} ${__module_TARGET_VERSION})
+        set_ntddi_defines(${MODULE} ${__module_TARGET_VERSION})
     else()
-        add_ntddi_defines(${MODULE} xp)
+        set_ntddi_defines(${MODULE} win2003)
     endif()
 
     # Do compiler specific stuff
