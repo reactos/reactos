@@ -11,6 +11,7 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
               )
 
 LanguageNames=(English=0x409:MSG00409
+               German=0x407:MSG00407
                Polish=0x415:MSG00415
                Portugese=0x816:MSG00416
                Romanian=0x418:MSG00418
@@ -27,6 +28,9 @@ SymbolicName=MSG_COMMAND_ACTIVE
 Severity=Informational
 Facility=System
 Language=English
+<Add ACTIVE command help text here>
+.
+Language=German
 <Add ACTIVE command help text here>
 .
 Language=Polish
@@ -62,6 +66,9 @@ Facility=System
 Language=English
 <Add ADD command help text here>
 .
+Language=German
+<Add ADD command help text here>
+.
 Language=Polish
 <Add ADD command help text here>
 .
@@ -93,6 +100,9 @@ SymbolicName=MSG_COMMAND_ASSIGN
 Severity=Informational
 Facility=System
 Language=English
+<Add ASSIGN command help text here>
+.
+Language=German
 <Add ASSIGN command help text here>
 .
 Language=Polish
@@ -128,6 +138,9 @@ Facility=System
 Language=English
 <Add ATTACH command help text here>
 .
+Language=German
+<Add ATTACH command help text here>
+.
 Language=Polish
 <Add ATTACH command help text here>
 .
@@ -161,6 +174,9 @@ Facility=System
 Language=English
 <Add ATTRIBUTES command help text here>
 .
+Language=German
+<Add ATTRIBUTES command help text here>
+.
 Language=Polish
 <Add ATTRIBUTES command help text here>
 .
@@ -192,6 +208,9 @@ SymbolicName=MSG_COMMAND_AUTOMOUNT
 Severity=Informational
 Facility=System
 Language=English
+<Add AUTOMOUNT command help text here>
+.
+Language=German
 <Add AUTOMOUNT command help text here>
 .
 Language=Polish
@@ -228,6 +247,9 @@ Facility=System
 Language=English
 <Add BREAK command help text here>
 .
+Language=German
+<Add BREAK command help text here>
+.
 Language=Polish
 <Add BREAK command help text here>
 .
@@ -259,6 +281,9 @@ SymbolicName=MSG_COMMAND_CLEAN
 Severity=Informational
 Facility=System
 Language=English
+<Add CLEAN command help text here>
+.
+Language=German
 <Add CLEAN command help text here>
 .
 Language=Polish
@@ -294,6 +319,9 @@ Facility=System
 Language=English
 <Add COMPACT command help text here>
 .
+Language=German
+<Add COMPACT command help text here>
+.
 Language=Polish
 <Add COMPACT command help text here>
 .
@@ -325,6 +353,9 @@ SymbolicName=MSG_COMMAND_CONVERT
 Severity=Informational
 Facility=System
 Language=English
+<Add CONVERT command help text here>
+.
+Language=German
 <Add CONVERT command help text here>
 .
 Language=Polish
@@ -360,6 +391,9 @@ Facility=System
 Language=English
 <Add CREATE PARTITION EFI command help text here>
 .
+Language=German
+<Add CREATE PARTITION EFI command help text here>
+.
 Language=Polish
 <Add CREATE PARTITION EFI command help text here>
 .
@@ -391,6 +425,9 @@ SymbolicName=MSG_COMMAND_CREATE_PARTITION_EXTENDED
 Severity=Informational
 Facility=System
 Language=English
+<Add CREATE PARTITION EXTENDED command help text here>
+.
+Language=German
 <Add CREATE PARTITION EXTENDED command help text here>
 .
 Language=Polish
@@ -426,6 +463,9 @@ Facility=System
 Language=English
 <Add CREATE PARTITION LOGICAL command help text here>
 .
+Language=German
+<Add CREATE PARTITION LOGICAL command help text here>
+.
 Language=Polish
 <Add CREATE PARTITION LOGICAL command help text here>
 .
@@ -457,6 +497,9 @@ SymbolicName=MSG_COMMAND_CREATE_PARTITION_MSR
 Severity=Informational
 Facility=System
 Language=English
+<Add CREATE PARTITION MSR command help text here>
+.
+Language=German
 <Add CREATE PARTITION MSR command help text here>
 .
 Language=Polish
@@ -492,6 +535,9 @@ Facility=System
 Language=English
 <Add CREATE PARTITION PRIMARY command help text here>
 .
+Language=German
+<Add CREATE PARTITION PRIMARY command help text here>
+.
 Language=Polish
 <Add CREATE PARTITION PRIMARY command help text here>
 .
@@ -523,6 +569,9 @@ SymbolicName=MSG_COMMAND_DELETE_DISK
 Severity=Informational
 Facility=System
 Language=English
+<Add DELETE DISK command help text here>
+.
+Language=German
 <Add DELETE DISK command help text here>
 .
 Language=Polish
@@ -558,6 +607,9 @@ Facility=System
 Language=English
 <Add DELETE PARTITION command help text here>
 .
+Language=German
+<Add DELETE PARTITION command help text here>
+.
 Language=Polish
 <Add DELETE PARTITION command help text here>
 .
@@ -589,6 +641,9 @@ SymbolicName=MSG_COMMAND_DELETE_VOLUME
 Severity=Informational
 Facility=System
 Language=English
+<Add DELETE VOLUME command help text here>
+.
+Language=German
 <Add DELETE VOLUME command help text here>
 .
 Language=Polish
@@ -624,6 +679,9 @@ Facility=System
 Language=English
 <Add DETAIL DISK command help text here>
 .
+Language=German
+<Add DETAIL DISK command help text here>
+.
 Language=Polish
 <Add DETAIL DISK command help text here>
 .
@@ -656,6 +714,9 @@ Facility=System
 Language=English
 <Add DETAIL PARTITION command help text here>
 .
+Language=German
+<Add DETAIL PARTITION command help text here>
+.
 Language=Polish
 <Add DETAIL PARTITION command help text here>
 .
@@ -686,6 +747,9 @@ SymbolicName=MSG_COMMAND_DETAIL_VOLUME
 Severity=Informational
 Facility=System
 Language=English
+<Add DETAIL VOLUME command help text here>
+.
+Language=German
 <Add DETAIL VOLUME command help text here>
 .
 Language=Polish
@@ -721,6 +785,9 @@ Facility=System
 Language=English
 <Add DETACH command help text here>
 .
+Language=German
+<Add DETACH command help text here>
+.
 Language=Polish
 <Add DETACH command help text here>
 .
@@ -752,31 +819,94 @@ SymbolicName=MSG_COMMAND_EXIT
 Severity=Informational
 Facility=System
 Language=English
-<Add EXIT command help text here>
+    Exits the DiskPart command interpreter.
+
+Syntax:  EXIT
+
+Example:
+
+    EXIT
+.
+Language=German
+    Beendet den Befehlsinterpreter DiskPart.
+
+Syntax:  EXIT
+
+Beispiel:
+
+    EXIT
 .
 Language=Polish
-<Add EXIT command help text here>
+    Exits the DiskPart command interpreter.
+
+Syntax:  EXIT
+
+Example:
+
+    EXIT
 .
 Language=Portugese
-<Add EXIT command help text here>
+    Exits the DiskPart command interpreter.
+
+Syntax:  EXIT
+
+Example:
+
+    EXIT
 .
 Language=Romanian
-<Add EXIT command help text here>
+    Exits the DiskPart command interpreter.
+
+Syntax:  EXIT
+
+Example:
+
+    EXIT
 .
 Language=Russian
-<Add EXIT command help text here>
+    Exits the DiskPart command interpreter.
+
+Syntax:  EXIT
+
+Example:
+
+    EXIT
 .
 Language=Albanian
-<Add EXIT command help text here>
+    Exits the DiskPart command interpreter.
+
+Syntax:  EXIT
+
+Example:
+
+    EXIT
 .
 Language=Turkish
-<Add EXIT command help text here>
+    Exits the DiskPart command interpreter.
+
+Syntax:  EXIT
+
+Example:
+
+    EXIT
 .
 Language=Chinese
-<Add EXIT command help text here>
+    Exits the DiskPart command interpreter.
+
+Syntax:  EXIT
+
+Example:
+
+    EXIT
 .
 Language=Taiwanese
-<Add EXIT command help text here>
+    Exits the DiskPart command interpreter.
+
+Syntax:  EXIT
+
+Example:
+
+    EXIT
 .
 
 
@@ -785,6 +915,9 @@ SymbolicName=MSG_COMMAND_EXPAND
 Severity=Informational
 Facility=System
 Language=English
+<Add EXPAND command help text here>
+.
+Language=German
 <Add EXPAND command help text here>
 .
 Language=Polish
@@ -820,6 +953,9 @@ Facility=System
 Language=English
 <Add EXTEND command help text here>
 .
+Language=German
+<Add EXTEND command help text here>
+.
 Language=Polish
 <Add EXTEND command help text here>
 .
@@ -851,6 +987,9 @@ SymbolicName=MSG_COMMAND_FILESYSTEMS
 Severity=Informational
 Facility=System
 Language=English
+<Add FILESYSTEMS command help text here>
+.
+Language=German
 <Add FILESYSTEMS command help text here>
 .
 Language=Polish
@@ -886,6 +1025,9 @@ Facility=System
 Language=English
 <Add FORMAT command help text here>
 .
+Language=German
+<Add FORMAT command help text here>
+.
 Language=Polish
 <Add FORMAT command help text here>
 .
@@ -917,6 +1059,9 @@ SymbolicName=MSG_COMMAND_GPT
 Severity=Informational
 Facility=System
 Language=English
+<Add GPT command help text here>
+.
+Language=German
 <Add GPT command help text here>
 .
 Language=Polish
@@ -952,6 +1097,9 @@ Facility=System
 Language=English
 <Add HELP command help text here>
 .
+Language=German
+<Add HELP command help text here>
+.
 Language=Polish
 <Add HELP command help text here>
 .
@@ -983,6 +1131,9 @@ SymbolicName=MSG_COMMAND_IMPORT
 Severity=Informational
 Facility=System
 Language=English
+<Add IMPORT command help text here>
+.
+Language=German
 <Add IMPORT command help text here>
 .
 Language=Polish
@@ -1018,6 +1169,9 @@ Facility=System
 Language=English
 <Add INACTIVE command help text here>
 .
+Language=German
+<Add INACTIVE command help text here>
+.
 Language=Polish
 <Add INACTIVE command help text here>
 .
@@ -1051,6 +1205,9 @@ Facility=System
 Language=English
 <Add LIST DISK command help text here>
 .
+Language=German
+<Add LIST DISK command help text here>
+.
 Language=Polish
 <Add LIST DISK command help text here>
 .
@@ -1081,6 +1238,9 @@ SymbolicName=MSG_COMMAND_LIST_PARTITION
 Severity=Informational
 Facility=System
 Language=English
+<Add LIST PARTITION command help text here>
+.
+Language=German
 <Add LIST PARTITION command help text here>
 .
 Language=Polish
@@ -1116,6 +1276,9 @@ Facility=System
 Language=English
 <Add LIST VOLUME command help text here>
 .
+Language=German
+<Add LIST VOLUME command help text here>
+.
 Language=Polish
 <Add LIST VOLUME command help text here>
 .
@@ -1147,6 +1310,9 @@ SymbolicName=MSG_COMMAND_LIST_VDISK
 Severity=Informational
 Facility=System
 Language=English
+<Add LIST VDISK command help text here>
+.
+Language=German
 <Add LIST VDISK command help text here>
 .
 Language=Polish
@@ -1182,6 +1348,9 @@ Facility=System
 Language=English
 <Add MERGE command help text here>
 .
+Language=German
+<Add MERGE command help text here>
+.
 Language=Polish
 <Add MERGE command help text here>
 .
@@ -1213,6 +1382,9 @@ SymbolicName=MSG_COMMAND_OFFLINE
 Severity=Informational
 Facility=System
 Language=English
+<Add OFFLINE command help text here>
+.
+Language=German
 <Add OFFLINE command help text here>
 .
 Language=Polish
@@ -1248,6 +1420,9 @@ Facility=System
 Language=English
 <Add ONLINE command help text here>
 .
+Language=German
+<Add ONLINE command help text here>
+.
 Language=Polish
 <Add ONLINE command help text here>
 .
@@ -1279,6 +1454,9 @@ SymbolicName=MSG_COMMAND_RECOVER
 Severity=Informational
 Facility=System
 Language=English
+<Add RECOVER command help text here>
+.
+Language=German
 <Add RECOVER command help text here>
 .
 Language=Polish
@@ -1314,6 +1492,9 @@ Facility=System
 Language=English
 <Add REM command help text here>
 .
+Language=German
+<Add REM command help text here>
+.
 Language=Polish
 <Add REM command help text here>
 .
@@ -1345,6 +1526,9 @@ SymbolicName=MSG_COMMAND_REMOVE
 Severity=Informational
 Facility=System
 Language=English
+<Add REMOVE command help text here>
+.
+Language=German
 <Add REMOVE command help text here>
 .
 Language=Polish
@@ -1380,6 +1564,9 @@ Facility=System
 Language=English
 <Add REPAIR command help text here>
 .
+Language=German
+<Add REPAIR command help text here>
+.
 Language=Polish
 <Add REPAIR command help text here>
 .
@@ -1411,31 +1598,95 @@ SymbolicName=MSG_COMMAND_RESCAN
 Severity=Informational
 Facility=System
 Language=English
-<Add RESCAN command help text here>
+    Locates new disks that may have been added to the computer.
+
+Syntax:  RESCAN
+
+Example:
+
+    RESCAN
+.
+Language=German
+    Sucht nach neuen Datenträgern, die dem Computer möglicherweise
+    hinzugefügt wurden.
+
+Syntax:  RESCAN
+
+Beispiel:
+
+    RESCAN
 .
 Language=Polish
-<Add RESCAN command help text here>
+    Locates new disks that may have been added to the computer.
+
+Syntax:  RESCAN
+
+Example:
+
+    RESCAN
 .
 Language=Portugese
-<Add RESCAN command help text here>
+    Locates new disks that may have been added to the computer.
+
+Syntax:  RESCAN
+
+Example:
+
+    RESCAN
 .
 Language=Romanian
-<Add RESCAN command help text here>
+    Locates new disks that may have been added to the computer.
+
+Syntax:  RESCAN
+
+Example:
+
+    RESCAN
 .
 Language=Russian
-<Add RESCAN command help text here>
+    Locates new disks that may have been added to the computer.
+
+Syntax:  RESCAN
+
+Example:
+
+    RESCAN
 .
 Language=Albanian
-<Add RESCAN command help text here>
+    Locates new disks that may have been added to the computer.
+
+Syntax:  RESCAN
+
+Example:
+
+    RESCAN
 .
 Language=Turkish
-<Add RESCAN command help text here>
+    Locates new disks that may have been added to the computer.
+
+Syntax:  RESCAN
+
+Example:
+
+    RESCAN
 .
 Language=Chinese
-<Add RESCAN command help text here>
+    Locates new disks that may have been added to the computer.
+
+Syntax:  RESCAN
+
+Example:
+
+    RESCAN
 .
 Language=Taiwanese
-<Add RESCAN command help text here>
+    Locates new disks that may have been added to the computer.
+
+Syntax:  RESCAN
+
+Example:
+
+    RESCAN
 .
 
 
@@ -1444,6 +1695,9 @@ SymbolicName=MSG_COMMAND_RETAIN
 Severity=Informational
 Facility=System
 Language=English
+<Add RETAIN command help text here>
+.
+Language=German
 <Add RETAIN command help text here>
 .
 Language=Polish
@@ -1479,6 +1733,9 @@ Facility=System
 Language=English
 <Add SAN command help text here>
 .
+Language=German
+<Add SAN command help text here>
+.
 Language=Polish
 <Add SAN command help text here>
 .
@@ -1510,6 +1767,9 @@ SymbolicName=MSG_COMMAND_SELECT_DISK
 Severity=Informational
 Facility=System
 Language=English
+<Add SELECT DISK command help text here>
+.
+Language=German
 <Add SELECT DISK command help text here>
 .
 Language=Polish
@@ -1545,6 +1805,9 @@ Facility=System
 Language=English
 <Add SELECT PARTITION command help text here>
 .
+Language=German
+<Add SELECT PARTITION command help text here>
+.
 Language=Polish
 <Add SELECT PARTITION command help text here>
 .
@@ -1576,6 +1839,9 @@ SymbolicName=MSG_COMMAND_SELECT_VOLUME
 Severity=Informational
 Facility=System
 Language=English
+<Add SELECT VOLUME command help text here>
+.
+Language=German
 <Add SELECT VOLUME command help text here>
 .
 Language=Polish
@@ -1611,6 +1877,9 @@ Facility=System
 Language=English
 <Add SELECT VDISK command help text here>
 .
+Language=German
+<Add SELECT VDISK command help text here>
+.
 Language=Polish
 <Add SELECT VDISK command help text here>
 .
@@ -1642,6 +1911,9 @@ SymbolicName=MSG_COMMAND_SETID
 Severity=Informational
 Facility=System
 Language=English
+<Add SETID command help text here>
+.
+Language=German
 <Add SETID command help text here>
 .
 Language=Polish
@@ -1677,6 +1949,9 @@ Facility=System
 Language=English
 <Add SHRINK command help text here>
 .
+Language=German
+<Add SHRINK command help text here>
+.
 Language=Polish
 <Add SHRINK command help text here>
 .
@@ -1708,6 +1983,9 @@ SymbolicName=MSG_COMMAND_UNIQUEID_DISK
 Severity=Informational
 Facility=System
 Language=English
+<Add UNIQUEID DISK command help text here>
+.
+Language=German
 <Add UNIQUEID DISK command help text here>
 .
 Language=Polish

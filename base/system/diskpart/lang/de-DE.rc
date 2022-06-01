@@ -1,0 +1,187 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+/* Basic application information */
+STRINGTABLE
+BEGIN
+    IDS_APP_HEADER "ReactOS DiskPart"
+    IDS_APP_USAGE "\nDisk Partitioning Interpreter.\n\n\
+Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
+/S filename\tRuns the given script.\n\
+/T timeout\tTimeout in seconds to prevent DiskPart usage overlap.\n\
+/?\t\tDisplay this help message.\n\n"
+    IDS_APP_LICENSE "Licensed under the GNU GPLv2\n"
+    IDS_APP_CURR_COMPUTER "On computer: %s\n\n"
+    IDS_APP_LEAVING "\nLeaving DiskPart...\n"
+    IDS_APP_PROMPT "DISKPART> "
+END
+
+/* Disk Information Labels */
+STRINGTABLE
+BEGIN
+    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
+    IDS_DETAIL_INFO_TYPE "Type"
+    IDS_DETAIL_INFO_STATUS "Status"
+    IDS_DETAIL_INFO_PATH   "Path   : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Target : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
+    IDS_DETAIL_INFO_LOC_PATH "Location Path"
+    IDS_DETAIL_INFO_CURR_RO_STATE "Current Read-only State"
+    IDS_DETAIL_INFO_RO "Read-only"
+    IDS_DETAIL_INFO_BOOT_DSK "Boot Disk"
+    IDS_DETAIL_INFO_PAGE_FILE_DSK "Pagefile Disk"
+    IDS_DETAIL_INFO_HIBER_FILE_DSK "Hibernation File Disk"
+    IDS_DETAIL_INFO_CRASH_DSK "Crashdump Disk"
+    IDS_DETAIL_INFO_CLST_DSK "Clustered Disk"
+    IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
+    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
+    IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
+    IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
+    IDS_DETAIL_NO_DISKS "\nThere are no disks attached to this volume.\n"
+    IDS_DETAIL_NO_VOLUME "\nThere is no volume associated with this partition.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HELP_FORMAT_STRING "%-11.11s - %s"
+END
+
+/* Detail header titles */
+STRINGTABLE
+BEGIN
+    IDS_LIST_DISK_HEAD "  Disk ###  Status      Size     Free     Dyn  Gpt\n"
+    IDS_LIST_DISK_LINE "  --------  ----------  -------  -------  ---  ---\n"
+    IDS_LIST_DISK_FORMAT "%c Disk %-3lu  %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
+    IDS_LIST_PARTITION_HEAD "  Partition ###  Type              Size     Offset\n"
+    IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
+    IDS_LIST_PARTITION_FORMAT "%c Partition %-3lu  %-16s  %4I64u %-2s  %4I64u %-2s\n"
+    IDS_LIST_PARTITION_NO_DISK "\nThere is no disk to list partitions.\nPlease select a disk and try again.\n\n"
+    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
+    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
+END
+
+/* RESCAN command string */
+STRINGTABLE
+BEGIN
+    IDS_RESCAN_START "\nPlease wait while DiskPart scans your configuration...\n"
+    IDS_RESCAN_END "\nDiskPart has finished scanning your configuration.\n\n"
+END
+
+/* Select command strings */
+STRINGTABLE
+BEGIN
+    IDS_SELECT_NO_DISK "\nThere is no disk currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_DISK "\nDisk %lu is now the selected disk.\n\n"
+    IDS_SELECT_DISK_INVALID "\nInvalid disk.\n\n"
+    IDS_SELECT_NO_PARTITION "\nThere is no partition currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_PARTITION "\nPartition %lu is now the selected partition.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nThere is no disk for selecting a partition.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_PARTITION_INVALID "\nInvalid partition.\n\n"
+    IDS_SELECT_NO_VOLUME "\nThere is no volume currently selected.\nPlease select a disk and try again.\n\n"
+    IDS_SELECT_VOLUME "\nVolume %lu is now the selected volume.\n\n"
+    IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
+END
+
+/* Disk Status */
+STRINGTABLE
+BEGIN
+    IDS_STATUS_YES "Yes"
+    IDS_STATUS_NO "No"
+    IDS_STATUS_DISK_HEALTHY "Healthy"
+    IDS_STATUS_DISK_SICK "Sick"
+    IDS_STATUS_UNAVAILABLE "UNAVAILABLE"
+    IDS_STATUS_ONLINE "Online"
+    IDS_STATUS_OFFLINE "Offline"
+    IDS_STATUS_NO_MEDIA "No Media"
+END
+
+/* CMD Messages for commands */
+STRINGTABLE
+BEGIN
+    IDS_MSG_ARG_SYNTAX_ERROR "The argument(s) specified for this command are not valid.\nFor more information on the command type:"
+END
+
+/* Help Command Descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_ACTIVE                    "Mark the selected partition as active.\n"
+    IDS_HELP_ADD                       "Add a mirror to a simple volume.\n"
+    IDS_HELP_ASSIGN                    "Assign a drive letter or mount point to the selected volume.\n"
+    IDS_HELP_ATTACH                    "Attaches a virtual disk file.\n"
+    IDS_HELP_ATTRIBUTES                "Manipulate volume or disk attributes.\n"
+    IDS_HELP_AUTOMOUNT                 "Enable and Disable automatic mounting of basic volumes.\n"
+    IDS_HELP_BREAK                     "Break a mirror set.\n"
+    IDS_HELP_CLEAN                     "Clear the configuration information, or all information, off\n              the disk.\n"
+    IDS_HELP_COMPACT                   "Attempts to reduce the physical size of the file.\n"
+    IDS_HELP_CONVERT                   "Convert between different disk formats.\n"
+
+    IDS_HELP_CREATE                    "Create a volume, partition, or virtual disk.\n"
+    IDS_HELP_CREATE_PARTITION          "Create a partition.\n"
+    IDS_HELP_CREATE_PARTITION_EFI      "Create an EFI system partition.\n"
+    IDS_HELP_CREATE_PARTITION_EXTENDED "Create an extended partition.\n"
+    IDS_HELP_CREATE_PARTITION_LOGICAL  "Create a logical drive.\n"
+    IDS_HELP_CREATE_PARTITION_MSR      "Create an MSR partition.\n"
+    IDS_HELP_CREATE_PARTITION_PRIMARY  "Create a primary partition.\n"
+    IDS_HELP_CREATE_VOLUME             "Create a volume.\n"
+    IDS_HELP_CREATE_VDISK              "Create a virtual disk file.\n"
+
+    IDS_HELP_DELETE                    "Delete an object.\n"
+    IDS_HELP_DELETE_DISK               "Delete a disk.\n"
+    IDS_HELP_DELETE_PARTITION          "Delete a partition.\n"
+    IDS_HELP_DELETE_VOLUME             "Delete a volume.\n"
+
+    IDS_HELP_DETACH                    "Detaches a virtual disk file.\n"
+
+    IDS_HELP_DETAIL                    "Provide details about an object.\n"
+    IDS_HELP_DETAIL_DISK               "Print disk details.\n"
+    IDS_HELP_DETAIL_PARTITION          "Print partition details.\n"
+    IDS_HELP_DETAIL_VOLUME             "Print volume details.\n"
+
+    IDS_HELP_EXIT                      "Exit DiskPart.\n"
+    IDS_HELP_EXPAND                    "Expands the maximum size available on a virtual disk.\n"
+    IDS_HELP_EXTEND                    "Extend a volume.\n"
+    IDS_HELP_FILESYSTEMS               "Display current and supported file systems on the volume.\n"
+    IDS_HELP_FORMAT                    "Format the volume or partition.\n"
+    IDS_HELP_GPT                       "Assign attributes to the selected GPT partition.\n"
+    IDS_HELP_HELP                      "Display a list of commands.\n"
+    IDS_HELP_IMPORT                    "Import a disk group.\n"
+    IDS_HELP_INACTIVE                  "Mark the selected partition as inactive.\n"
+
+    IDS_HELP_LIST                      "Display a list of objects.\n"
+    IDS_HELP_LIST_DISK                 "List disks.\n"
+    IDS_HELP_LIST_PARTITION            "List partitions.\n"
+    IDS_HELP_LIST_VOLUME               "List volumes.\n"
+    IDS_HELP_LIST_VDISK                "List virtual disk files.\n"
+
+    IDS_HELP_MERGE                     "Merges a child disk with its parents.\n"
+    IDS_HELP_OFFLINE                   "Offline an object that is currently marked as online.\n"
+    IDS_HELP_ONLINE                    "Online an object that is currently marked as offline.\n"
+    IDS_HELP_RECOVER                   "Refreshes the state of all disks in the invalid pack,\n              and resynchronizes mirrored volumes and RAID5 volumes\n              that have stale plex or parity data.\n"
+    IDS_HELP_REM                       "Does nothing. This is used to comment scripts.\n"
+    IDS_HELP_REMOVE                    "Remove a drive letter or mount point assignment.\n"
+    IDS_HELP_REPAIR                    "Repair a RAID-5 volume with a failed member.\n"
+    IDS_HELP_RESCAN                    "Rescan the computer looking for disks and volumes.\n"
+    IDS_HELP_RETAIN                    "Place a retained partition under a simple volume.\n"
+    IDS_HELP_SAN                       "Display or set the SAN policy for the currently booted OS.\n"
+
+    IDS_HELP_SELECT                    "Shift the focus to an object.\n"
+    IDS_HELP_SELECT_DISK               "Moves the focus to the disk.\n"
+    IDS_HELP_SELECT_PARTITION          "Moves the focus to the partition.\n"
+    IDS_HELP_SELECT_VOLUME             "Moves the focus to the volume.\n"
+    IDS_HELP_SELECT_VDISK              "Moves the focus to the virtual disk.\n"
+
+    IDS_HELP_SETID                     "Change the partition type.\n"
+    IDS_HELP_SHRINK                    "Reduce the size of the selected volume.\n"
+
+    IDS_HELP_UNIQUEID                  "Displays or sets the GUID partition table (GPT) identifier\n              or master boot record (MBR) signature of a disk.\n"
+    IDS_HELP_UNIQUEID_DISK             "Displays or sets the GUID partition table (GPT) identifier\n              or master boot record (MBR) signature of a disk.\n"
+END
+
+/* Common Error Messages */
+STRINGTABLE
+BEGIN
+    IDS_ERROR_MSG_NO_SCRIPT "Error opening script: %s\n"
+    IDS_ERROR_MSG_BAD_ARG "Error processing argument: %s\n"
+    IDS_ERROR_INVALID_ARGS "Invalid arguments\n"
+END
