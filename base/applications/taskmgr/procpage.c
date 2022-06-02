@@ -937,48 +937,57 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     return ret;
 }
 
-static BOOL DevicePathToDosPath(LPWSTR lpPath, DWORD dwSize)
+static DWORD DevicePathToDosPath(LPCWSTR lpDevicePath, LPWSTR lpDosPath, DWORD dwDosPathLength)
 {
     WCHAR cDrive;
+    DWORD dwRet = 0;
 
-    /* Check if lpPath is a device path */
-    if (_wcsnicmp(lpPath, L"\\Device\\", 8) != 0)
+    /* Check if lpDevicePath is a device path */
+    if (_wcsnicmp(lpDevicePath, L"\\Device\\", 8) != 0)
     {
-        return FALSE;
+        return 0;
     }
 
-    for (cDrive = L'A'; cDrive <= L'Z'; cDrive++)
+    for (cDrive = L'A'; cDrive <= L'`'; cDrive++)
     {
         WCHAR szDrive[3];
-        WCHAR szDevPath[MAX_PATH];
+        WCHAR szDeviceName[MAX_PATH];
 
         szDrive[0] = cDrive;
         szDrive[1] = L':';
         szDrive[2] = UNICODE_NULL;
 
-        if (QueryDosDeviceW(szDrive, szDevPath, _countof(szDevPath)) != 0)
+        if (QueryDosDeviceW(szDrive, szDeviceName, _countof(szDeviceName)) != 0)
         {
-            size_t len = wcslen(szDevPath);
+            size_t len = wcslen(szDeviceName);
 
-            if (_wcsnicmp(lpPath, szDevPath, len) == 0)
+            if (_wcsnicmp(lpDevicePath, szDeviceName, len) == 0)
             {
-                StringCbPrintfW(lpPath, dwSize, L"%s%s", szDrive, lpPath + len);
-                
-                return TRUE;
+                /* Get required length, including the NULL terminator */
+                dwRet = _countof(szDrive) + wcslen(lpDevicePath + len);
+
+                if (lpDosPath && dwDosPathLength >= dwRet)
+                {
+                    StringCchPrintfW(lpDosPath, dwDosPathLength, L"%s%s", szDrive, lpDevicePath + len);
+                    
+                    dwRet -= 1;
+                }
+
+                break;
             }
         }
     }
 
-    return FALSE;
+    return dwRet;
 }
 
 static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD dwLength)
 {
     BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
     PVOID DynamicBuffer = NULL;
-    PUNICODE_STRING ImagePath;
-    LPWSTR pszExePath = NULL;
+    PUNICODE_STRING ExePath;
     ULONG SizeNeeded;
+    LPWSTR pszExePath = NULL;
     NTSTATUS Status;
     DWORD dwRet = 0;
 
@@ -1003,11 +1012,11 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
                                            SizeNeeded,
                                            &SizeNeeded);
 
-        ImagePath = (PUNICODE_STRING)DynamicBuffer;
+        ExePath = DynamicBuffer;
     }
     else
     {
-        ImagePath = (PUNICODE_STRING)StaticBuffer;
+        ExePath = (PUNICODE_STRING)StaticBuffer;
     }
 
     if (!NT_SUCCESS(Status))
@@ -1015,28 +1024,21 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
         goto Cleanup;
     }
 
-    pszExePath = HeapAlloc(GetProcessHeap(), 0, ImagePath->Length + sizeof(WCHAR));
+    pszExePath = HeapAlloc(GetProcessHeap(), 0, ExePath->Length + sizeof(WCHAR));
 
     if (!pszExePath)
     {
         goto Cleanup;
     }
 
-    StringCbCopyNW(pszExePath, ImagePath->Length + sizeof(WCHAR), ImagePath->Buffer, ImagePath->Length);
+    StringCbCopyNW(pszExePath, ExePath->Length + sizeof(WCHAR), ExePath->Buffer, ExePath->Length);
 
-    if (!DevicePathToDosPath(pszExePath, ImagePath->Length + sizeof(WCHAR)))
-    {
-        goto Cleanup;
-    }
-
-    dwRet = wcslen(pszExePath) + 1;
-
-    if (lpExePath && dwLength >= dwRet)
-    {
-        StringCchCopyW(lpExePath, dwLength, pszExePath);
-
-        dwRet -= 1;
-    }
+    /* HACK: Convert device path format into Win32 path format
+     * 
+     * Use ProcessImageFileNameWin32 instead if the kernel
+     * supports it
+     */
+    dwRet = DevicePathToDosPath(pszExePath, lpExePath, dwLength);
 
 Cleanup:
     if (pszExePath)
