@@ -4787,6 +4787,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert the VAD!\n");
+            ExFreePoolWithTag(Vad, 'SdaV');
             goto FailPathNoLock;
         }
 
