@@ -28,34 +28,245 @@ SymbolicName=MSG_COMMAND_ACTIVE
 Severity=Informational
 Facility=System
 Language=English
-<Add ACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as active.
+
+Syntax:  ACTIVE
+
+    Writes a value to the disk which is read by the basic input/output
+    system (BIOS) at boot. This value specifies that the partition is
+    a valid system partition.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        DiskPart verifies only that the partition is capable of containing the
+        operating system startup files. DiskPart does not check the contents of
+        the partition. If you mistakenly mark a partition as active and it does
+        not contain the operating system startup files, your computer might not
+        start.
+
+Example:
+
+    ACTIVE
 .
 Language=German
-<Add ACTIVE command help text here>
+    Markiert auf Datenträgern mit MBR-Datenträgerformat (Master Boot
+    Record) die Partition, die den Fokus hat, als aktive Partition.
+
+Syntax:  ACTIVE
+
+    Schreibt einen Wert auf den Datenträger, der Beim Start vom BIOS
+    (Basic Input/Output System) gelesen wird. Durch diesen Wert wird
+    angegeben, dass die Partition eine gültige Systempartition ist.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss eine
+    Partition ausgewählt sein.
+
+    Vorsicht:
+
+        DiskPart überprüft nur, ob die Partition in der Lage ist, die
+        Startdateien des Betriebssystems aufzunehmen. Der Inhalt der Partition
+        wird hierbei nicht überprüft. Falls versehentlich eine Partition als
+        aktiv markiert wird, die nicht die Startdateien des Betriebssystems
+        enthält, kann der Computer möglicherweise nicht gestartet werden.
+
+Beispiel:
+
+    ACTIVE
 .
 Language=Polish
-<Add ACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as active.
+
+Syntax:  ACTIVE
+
+    Writes a value to the disk which is read by the basic input/output
+    system (BIOS) at boot. This value specifies that the partition is
+    a valid system partition.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        DiskPart verifies only that the partition is capable of containing the
+        operating system startup files. DiskPart does not check the contents of
+        the partition. If you mistakenly mark a partition as active and it does
+        not contain the operating system startup files, your computer might not
+        start.
+
+Example:
+
+    ACTIVE
 .
 Language=Portugese
-<Add ACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as active.
+
+Syntax:  ACTIVE
+
+    Writes a value to the disk which is read by the basic input/output
+    system (BIOS) at boot. This value specifies that the partition is
+    a valid system partition.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        DiskPart verifies only that the partition is capable of containing the
+        operating system startup files. DiskPart does not check the contents of
+        the partition. If you mistakenly mark a partition as active and it does
+        not contain the operating system startup files, your computer might not
+        start.
+
+Example:
+
+    ACTIVE
 .
 Language=Romanian
-<Add ACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as active.
+
+Syntax:  ACTIVE
+
+    Writes a value to the disk which is read by the basic input/output
+    system (BIOS) at boot. This value specifies that the partition is
+    a valid system partition.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        DiskPart verifies only that the partition is capable of containing the
+        operating system startup files. DiskPart does not check the contents of
+        the partition. If you mistakenly mark a partition as active and it does
+        not contain the operating system startup files, your computer might not
+        start.
+
+Example:
+
+    ACTIVE
 .
 Language=Russian
-<Add ACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as active.
+
+Syntax:  ACTIVE
+
+    Writes a value to the disk which is read by the basic input/output
+    system (BIOS) at boot. This value specifies that the partition is
+    a valid system partition.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        DiskPart verifies only that the partition is capable of containing the
+        operating system startup files. DiskPart does not check the contents of
+        the partition. If you mistakenly mark a partition as active and it does
+        not contain the operating system startup files, your computer might not
+        start.
+
+Example:
+
+    ACTIVE
 .
 Language=Albanian
-<Add ACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as active.
+
+Syntax:  ACTIVE
+
+    Writes a value to the disk which is read by the basic input/output
+    system (BIOS) at boot. This value specifies that the partition is
+    a valid system partition.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        DiskPart verifies only that the partition is capable of containing the
+        operating system startup files. DiskPart does not check the contents of
+        the partition. If you mistakenly mark a partition as active and it does
+        not contain the operating system startup files, your computer might not
+        start.
+
+Example:
+
+    ACTIVE
 .
 Language=Turkish
-<Add ACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as active.
+
+Syntax:  ACTIVE
+
+    Writes a value to the disk which is read by the basic input/output
+    system (BIOS) at boot. This value specifies that the partition is
+    a valid system partition.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        DiskPart verifies only that the partition is capable of containing the
+        operating system startup files. DiskPart does not check the contents of
+        the partition. If you mistakenly mark a partition as active and it does
+        not contain the operating system startup files, your computer might not
+        start.
+
+Example:
+
+    ACTIVE
 .
 Language=Chinese
-<Add ACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as active.
+
+Syntax:  ACTIVE
+
+    Writes a value to the disk which is read by the basic input/output
+    system (BIOS) at boot. This value specifies that the partition is
+    a valid system partition.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        DiskPart verifies only that the partition is capable of containing the
+        operating system startup files. DiskPart does not check the contents of
+        the partition. If you mistakenly mark a partition as active and it does
+        not contain the operating system startup files, your computer might not
+        start.
+
+Example:
+
+    ACTIVE
 .
 Language=Taiwanese
-<Add ACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as active.
+
+Syntax:  ACTIVE
+
+    Writes a value to the disk which is read by the basic input/output
+    system (BIOS) at boot. This value specifies that the partition is
+    a valid system partition.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        DiskPart verifies only that the partition is capable of containing the
+        operating system startup files. DiskPart does not check the contents of
+        the partition. If you mistakenly mark a partition as active and it does
+        not contain the operating system startup files, your computer might not
+        start.
+
+Example:
+
+    ACTIVE
 .
 
 
@@ -1167,34 +1378,237 @@ SymbolicName=MSG_COMMAND_INACTIVE
 Severity=Informational
 Facility=System
 Language=English
-<Add INACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as inactive.
+
+Syntax:  INACTIVE
+
+    The computer may start from the next option specified in the BIOS such as a
+    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
+    environment (such as Remote Installation Services (RIS)) when you restart
+    the computer.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Your computer might not start without an active partition. Do not mark
+        a system or boot partition as inactive unless you are an experienced
+        user with a thorough understanding of Windows storage management.
+
+Example:
+
+    INACTIVE
 .
 Language=German
-<Add INACTIVE command help text here>
+    Markiert auf Datenträgern mit MBR-Datenträgerformat (Master Boot
+    Record) die Partition, die den Fokus hat, als inaktive Partition.
+
+Syntax:  INACTIVE
+
+    Der Computer kann über die nächste im BIOS angegebene Option gestartet
+    werden, z.B. von einem CD-ROM-Laufwerk oder aus einer PXE-basierten
+    (Pre-Boot eXecution Environment) Startumgebung (z.B.
+    Remoteinstallationsdienste, RIS), wenn der Computer neu startet.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss eine
+    Partition ausgewählt sein.
+
+    Vorsicht:
+
+        Möglicherweise kann der Computer nicht gestartet werden, wenn es
+        keine aktive Partition gibt. Markieren Sie eine System- oder
+        Startpartition nur dann als inaktiv, wenn Sie ein erfahrener
+        Benutzer und mit der ReactOS-Speicherverwaltung umfassend vertraut
+        sind.
+
+Beispiel:
+
+    INACTIVE
 .
 Language=Polish
-<Add INACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as inactive.
+
+Syntax:  INACTIVE
+
+    The computer may start from the next option specified in the BIOS such as a
+    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
+    environment (such as Remote Installation Services (RIS)) when you restart
+    the computer.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Your computer might not start without an active partition. Do not mark
+        a system or boot partition as inactive unless you are an experienced
+        user with a thorough understanding of Windows storage management.
+
+Example:
+
+    INACTIVE
 .
 Language=Portugese
-<Add INACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as inactive.
+
+Syntax:  INACTIVE
+
+    The computer may start from the next option specified in the BIOS such as a
+    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
+    environment (such as Remote Installation Services (RIS)) when you restart
+    the computer.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Your computer might not start without an active partition. Do not mark
+        a system or boot partition as inactive unless you are an experienced
+        user with a thorough understanding of Windows storage management.
+
+Example:
+
+    INACTIVE
 .
 Language=Romanian
-<Add INACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as inactive.
+
+Syntax:  INACTIVE
+
+    The computer may start from the next option specified in the BIOS such as a
+    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
+    environment (such as Remote Installation Services (RIS)) when you restart
+    the computer.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Your computer might not start without an active partition. Do not mark
+        a system or boot partition as inactive unless you are an experienced
+        user with a thorough understanding of Windows storage management.
+
+Example:
+
+    INACTIVE
 .
 Language=Russian
-<Add INACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as inactive.
+
+Syntax:  INACTIVE
+
+    The computer may start from the next option specified in the BIOS such as a
+    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
+    environment (such as Remote Installation Services (RIS)) when you restart
+    the computer.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Your computer might not start without an active partition. Do not mark
+        a system or boot partition as inactive unless you are an experienced
+        user with a thorough understanding of Windows storage management.
+
+Example:
+
+    INACTIVE
 .
 Language=Albanian
-<Add INACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as inactive.
+
+Syntax:  INACTIVE
+
+    The computer may start from the next option specified in the BIOS such as a
+    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
+    environment (such as Remote Installation Services (RIS)) when you restart
+    the computer.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Your computer might not start without an active partition. Do not mark
+        a system or boot partition as inactive unless you are an experienced
+        user with a thorough understanding of Windows storage management.
+
+Example:
+
+    INACTIVE
 .
 Language=Turkish
-<Add INACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as inactive.
+
+Syntax:  INACTIVE
+
+    The computer may start from the next option specified in the BIOS such as a
+    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
+    environment (such as Remote Installation Services (RIS)) when you restart
+    the computer.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Your computer might not start without an active partition. Do not mark
+        a system or boot partition as inactive unless you are an experienced
+        user with a thorough understanding of Windows storage management.
+
+Example:
+
+    INACTIVE
 .
 Language=Chinese
-<Add INACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as inactive.
+
+Syntax:  INACTIVE
+
+    The computer may start from the next option specified in the BIOS such as a
+    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
+    environment (such as Remote Installation Services (RIS)) when you restart
+    the computer.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Your computer might not start without an active partition. Do not mark
+        a system or boot partition as inactive unless you are an experienced
+        user with a thorough understanding of Windows storage management.
+
+Example:
+
+    INACTIVE
 .
 Language=Taiwanese
-<Add INACTIVE command help text here>
+    On disks with master boot record (MBR) disk formatting, marks
+    the partition with focus as inactive.
+
+Syntax:  INACTIVE
+
+    The computer may start from the next option specified in the BIOS such as a
+    CD-ROM drive or a Pre-Boot eXecution Environment (PXE)-based boot
+    environment (such as Remote Installation Services (RIS)) when you restart
+    the computer.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Your computer might not start without an active partition. Do not mark
+        a system or boot partition as inactive unless you are an experienced
+        user with a thorough understanding of Windows storage management.
+
+Example:
+
+    INACTIVE
 .
 
 
