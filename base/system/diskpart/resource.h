@@ -18,6 +18,10 @@
 #define IDS_APP_LEAVING       4
 #define IDS_APP_PROMPT        5
 
+#define IDS_CREATE_PARTITION_FAIL      1050
+#define IDS_CREATE_PARTITION_SUCCESS   1051
+
+
 #define IDS_DETAIL_INFO_DISK_ID        1107
 #define IDS_DETAIL_INFO_TYPE           1108
 #define IDS_DETAIL_INFO_STATUS         1109

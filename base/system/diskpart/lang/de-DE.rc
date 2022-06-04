@@ -15,6 +15,12 @@ Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
     IDS_APP_PROMPT "DISKPART> "
 END
 
+STRINGTABLE
+BEGIN
+    IDS_CREATE_PARTITION_FAIL "\nDie angegebene Partition konnte nicht erstellt werden.\n"
+    IDS_CREATE_PARTITION_SUCCESS "\nDie angegebene Partition wurde erfolgreich erstellt.\n"
+END
+
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN

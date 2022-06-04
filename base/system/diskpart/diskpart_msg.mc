@@ -492,34 +492,216 @@ SymbolicName=MSG_COMMAND_CLEAN
 Severity=Informational
 Facility=System
 Language=English
-<Add CLEAN command help text here>
+    Removes any and all partition or volume formatting from the disk with
+    focus.
+
+Syntax:  CLEAN [ALL]
+
+    ALL         Specifies that each and every byte\sector on the disk is set to
+                zero, which completely deletes all data contained on the disk.
+
+    On master boot record (MBR) disks, only the MBR partitioning information
+    and hidden sector information are overwritten. On GUID partition table
+    (GPT) disks, the GPT partitioning information, including the Protective
+    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
+    and the last 1MB of the disk are zeroed. This erases any disk formatting 
+    that had been previously applied to the disk. The disk's state after 
+    cleaning the disk is 'UNINITIALIZED'.
+
+Example:
+
+    CLEAN
 .
 Language=German
-<Add CLEAN command help text here>
+    Entfernt alle Partitions- oder Volumeformatierungen von dem Datenträger
+    mit dem Fokus.
+
+Syntax:  CLEAN [ALL]
+
+    ALL         Gibt an, dass jedes Byte\jeder Sektor auf dem Datenträger
+                auf Null gesetzt wird. Damit werden alle auf dem Datenträger
+                enthaltenen Daten vollständig gelöscht.
+
+    Auf MBR-Datenträgern (Master Boot Record) werden nur MBR-
+    Partitionierungsinformationen und Informationen zu ausgeblendeten
+    Sektoren überschrieben. Auf GUID-Partitionstabellen-Datenträgern
+    (GPT) werden die GPT-Partitionierungsinformationen (einschließlich
+    Schutz-MBR) überschrieben. If the ALL parameter is not used, the first 1MB
+    and the last 1MB of the disk are zeroed. This erases any disk formatting 
+    that had been previously applied to the disk. The disk's state after 
+    cleaning the disk is 'UNINITIALIZED'.
+
+Example:
+
+    CLEAN
 .
 Language=Polish
-<Add CLEAN command help text here>
+    Removes any and all partition or volume formatting from the disk with
+    focus.
+
+Syntax:  CLEAN [ALL]
+
+    ALL         Specifies that each and every byte\sector on the disk is set to
+                zero, which completely deletes all data contained on the disk.
+
+    On master boot record (MBR) disks, only the MBR partitioning information
+    and hidden sector information are overwritten. On GUID partition table
+    (GPT) disks, the GPT partitioning information, including the Protective
+    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
+    and the last 1MB of the disk are zeroed. This erases any disk formatting 
+    that had been previously applied to the disk. The disk's state after 
+    cleaning the disk is 'UNINITIALIZED'.
+
+Example:
+
+    CLEAN
 .
 Language=Portugese
-<Add CLEAN command help text here>
+    Removes any and all partition or volume formatting from the disk with
+    focus.
+
+Syntax:  CLEAN [ALL]
+
+    ALL         Specifies that each and every byte\sector on the disk is set to
+                zero, which completely deletes all data contained on the disk.
+
+    On master boot record (MBR) disks, only the MBR partitioning information
+    and hidden sector information are overwritten. On GUID partition table
+    (GPT) disks, the GPT partitioning information, including the Protective
+    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
+    and the last 1MB of the disk are zeroed. This erases any disk formatting 
+    that had been previously applied to the disk. The disk's state after 
+    cleaning the disk is 'UNINITIALIZED'.
+
+Example:
+
+    CLEAN
 .
 Language=Romanian
-<Add CLEAN command help text here>
+    Removes any and all partition or volume formatting from the disk with
+    focus.
+
+Syntax:  CLEAN [ALL]
+
+    ALL         Specifies that each and every byte\sector on the disk is set to
+                zero, which completely deletes all data contained on the disk.
+
+    On master boot record (MBR) disks, only the MBR partitioning information
+    and hidden sector information are overwritten. On GUID partition table
+    (GPT) disks, the GPT partitioning information, including the Protective
+    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
+    and the last 1MB of the disk are zeroed. This erases any disk formatting 
+    that had been previously applied to the disk. The disk's state after 
+    cleaning the disk is 'UNINITIALIZED'.
+
+Example:
+
+    CLEAN
 .
 Language=Russian
-<Add CLEAN command help text here>
+    Removes any and all partition or volume formatting from the disk with
+    focus.
+
+Syntax:  CLEAN [ALL]
+
+    ALL         Specifies that each and every byte\sector on the disk is set to
+                zero, which completely deletes all data contained on the disk.
+
+    On master boot record (MBR) disks, only the MBR partitioning information
+    and hidden sector information are overwritten. On GUID partition table
+    (GPT) disks, the GPT partitioning information, including the Protective
+    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
+    and the last 1MB of the disk are zeroed. This erases any disk formatting 
+    that had been previously applied to the disk. The disk's state after 
+    cleaning the disk is 'UNINITIALIZED'.
+
+Example:
+
+    CLEAN
 .
 Language=Albanian
-<Add CLEAN command help text here>
+    Removes any and all partition or volume formatting from the disk with
+    focus.
+
+Syntax:  CLEAN [ALL]
+
+    ALL         Specifies that each and every byte\sector on the disk is set to
+                zero, which completely deletes all data contained on the disk.
+
+    On master boot record (MBR) disks, only the MBR partitioning information
+    and hidden sector information are overwritten. On GUID partition table
+    (GPT) disks, the GPT partitioning information, including the Protective
+    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
+    and the last 1MB of the disk are zeroed. This erases any disk formatting 
+    that had been previously applied to the disk. The disk's state after 
+    cleaning the disk is 'UNINITIALIZED'.
+
+Example:
+
+    CLEAN
 .
 Language=Turkish
-<Add CLEAN command help text here>
+    Removes any and all partition or volume formatting from the disk with
+    focus.
+
+Syntax:  CLEAN [ALL]
+
+    ALL         Specifies that each and every byte\sector on the disk is set to
+                zero, which completely deletes all data contained on the disk.
+
+    On master boot record (MBR) disks, only the MBR partitioning information
+    and hidden sector information are overwritten. On GUID partition table
+    (GPT) disks, the GPT partitioning information, including the Protective
+    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
+    and the last 1MB of the disk are zeroed. This erases any disk formatting 
+    that had been previously applied to the disk. The disk's state after 
+    cleaning the disk is 'UNINITIALIZED'.
+
+Example:
+
+    CLEAN
 .
 Language=Chinese
-<Add CLEAN command help text here>
+    Removes any and all partition or volume formatting from the disk with
+    focus.
+
+Syntax:  CLEAN [ALL]
+
+    ALL         Specifies that each and every byte\sector on the disk is set to
+                zero, which completely deletes all data contained on the disk.
+
+    On master boot record (MBR) disks, only the MBR partitioning information
+    and hidden sector information are overwritten. On GUID partition table
+    (GPT) disks, the GPT partitioning information, including the Protective
+    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
+    and the last 1MB of the disk are zeroed. This erases any disk formatting 
+    that had been previously applied to the disk. The disk's state after 
+    cleaning the disk is 'UNINITIALIZED'.
+
+Example:
+
+    CLEAN
 .
 Language=Taiwanese
-<Add CLEAN command help text here>
+    Removes any and all partition or volume formatting from the disk with
+    focus.
+
+Syntax:  CLEAN [ALL]
+
+    ALL         Specifies that each and every byte\sector on the disk is set to
+                zero, which completely deletes all data contained on the disk.
+
+    On master boot record (MBR) disks, only the MBR partitioning information
+    and hidden sector information are overwritten. On GUID partition table
+    (GPT) disks, the GPT partitioning information, including the Protective
+    MBR, is overwritten. If the ALL parameter is not used, the first 1MB
+    and the last 1MB of the disk are zeroed. This erases any disk formatting 
+    that had been previously applied to the disk. The disk's state after 
+    cleaning the disk is 'UNINITIALIZED'.
+
+Example:
+
+    CLEAN
 .
 
 
@@ -2325,7 +2507,64 @@ SymbolicName=MSG_COMMAND_SETID
 Severity=Informational
 Facility=System
 Language=English
-<Add SETID command help text here>
+    Changes the partition type field for the partition with focus.
+
+Syntax:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
+
+    ID={<BYTE> | <GUID>}
+
+                Specifies the new partition type.
+                For master boot record (MBR) disks, you can specify a partition
+                type byte, in hexadecimal form, for the partition. Any
+                partition type byte can be specified with this parameter except
+                for type 0x42 (LDM partition). Note that the leading '0x' is 
+                omitted when specifying the hexadecimal partition type.
+
+                For GUID partition table (GPT) disks you can specify a
+                partition type GUID for the partition. Recognized GUIDs
+                include:
+
+                    EFI System partition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    Basic data partition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                Any partition type GUID can be specified with this parameter
+                except for the following:
+
+                    Microsoft Reserved partition:
+                        e3c9e316-0b5c-4db8-817d-f92df00215a
+
+                    LDM Metadata partition on a dynamic disk:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM Data partition on a dynamic disk:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Cluster Metadata partition:
+                        db97dba9-0840-4bae-97f0-ffb9a327c7e1
+
+
+                Other than the limitations mentioned, DiskPart otherwise does
+                not check the partition type for validity except to ensure that
+                it is a byte in hexadecimal form or a GUID.
+
+    OVERRIDE    Enables DiskPart to force the file system on the volume to
+                dismount before changing the partition type. When changing
+                the partition type, DiskPart will attempt to lock and dismount
+                the file system on the volume. If this parameter is not specified,
+                and the call to lock the file system fails, (because some other
+                application has an open handle to the volume), the entire
+                operation will fail. When this parameter is specified, the
+                dismount is forced even if the call to lock the file system
+                fails. When a file system is dismounted, all opened handles to
+                the volume will become invalid.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.\r\n\r\n    Intended for Original Equipment Manufacturer (OEM) use only.\r\n\r\n    A partition must be selected for this operation to succeed.\r\n\r\n    Caution:\r\n\r\n        Changing partition type fields with this parameter might cause your\r\n        computer to fail or be unable to start up. Unless you are an OEM or an\r\n        IT professional experienced with GPT disks, do not change partition\r\n        type fields on GPT disks using this parameter. Instead, always use the\r\n        CREATE PARTITION EFI command to create EFI System partitions, the\r\n        CREATE PARTITION MSR command to create Microsoft Reserved partitions,\r\n        and the CREATE PARTITION PRIMARY command without the ID parameter to\r\n        create primary partitions on GPT disks.\r\n\r\n    This command does not work on dynamic disks nor on Microsoft Reserved\r\n    partitions.\r\n\r\n    Example:\r\n\r\n    SET ID=07 OVERRIDE\r\n    SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7\r\n"
 .
 Language=German
 <Add SETID command help text here>

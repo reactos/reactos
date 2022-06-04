@@ -17,6 +17,12 @@ Utilizare: DISKPART [/S numefișier] [/T timplimită] [/?]\n\n\
     IDS_APP_PROMPT "DISKPART> "
 END
 
+STRINGTABLE
+BEGIN
+    IDS_CREATE_PARTITION_FAIL "\nDiskPart was unable to create the specified partition.\n"
+    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
+END
+
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN

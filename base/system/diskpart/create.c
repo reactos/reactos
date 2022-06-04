@@ -27,6 +27,7 @@ CreateExtendedPartition(
 #endif
     INT i;
     PWSTR pszSuffix = NULL;
+    NTSTATUS Status;
 
     if (CurrentDisk == NULL)
     {
@@ -128,6 +129,7 @@ CreateExtendedPartition(
         PartEntry->FormatState = Unformatted;
         PartEntry->FileSystemName[0] = L'\0';
 
+        CurrentPartition = PartEntry;
         CurrentDisk->Dirty = TRUE;
     }
     else
@@ -140,6 +142,7 @@ CreateExtendedPartition(
             PartEntry->FormatState = Unformatted;
             PartEntry->FileSystemName[0] = L'\0';
 
+            CurrentPartition = PartEntry;
             CurrentDisk->Dirty = TRUE;
         }
         else if (PartEntry->SectorCount.QuadPart > ullSectorCount)
@@ -168,12 +171,21 @@ CreateExtendedPartition(
 
             InsertTailList(ListEntry, &NewPartEntry->ListEntry);
 
+            CurrentPartition = NewPartEntry;
             CurrentDisk->Dirty = TRUE;
         }
     }
 
     UpdateDiskLayout(CurrentDisk);
-    WritePartitions(CurrentDisk);
+    Status = WritePartitions(CurrentDisk);
+    if (!NT_SUCCESS(Status))
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
+        CurrentPartition = NULL;
+        return TRUE;
+    }
+
+    ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
 
     return TRUE;
 }
@@ -195,6 +207,7 @@ CreateLogicalPartition(
     UCHAR PartitionType = 6;
     INT i, length;
     PWSTR pszSuffix = NULL;
+    NTSTATUS Status;
 
     if (CurrentDisk == NULL)
     {
@@ -312,6 +325,7 @@ CreateLogicalPartition(
             PartEntry->FormatState = Unformatted;
             PartEntry->FileSystemName[0] = L'\0';
 
+            CurrentPartition = PartEntry;
             CurrentDisk->Dirty = TRUE;
             break;
         }
@@ -325,6 +339,7 @@ CreateLogicalPartition(
                 PartEntry->FormatState = Unformatted;
                 PartEntry->FileSystemName[0] = L'\0';
 
+                CurrentPartition = PartEntry;
                 CurrentDisk->Dirty = TRUE;
                 break;
             }
@@ -354,6 +369,7 @@ CreateLogicalPartition(
 
                 InsertTailList(ListEntry, &NewPartEntry->ListEntry);
 
+                CurrentPartition = NewPartEntry;
                 CurrentDisk->Dirty = TRUE;
                 break;
             }
@@ -361,7 +377,15 @@ CreateLogicalPartition(
     }
 
     UpdateDiskLayout(CurrentDisk);
-    WritePartitions(CurrentDisk);
+    Status = WritePartitions(CurrentDisk);
+    if (!NT_SUCCESS(Status))
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
+        CurrentPartition = NULL;
+        return TRUE;
+    }
+
+    ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
 
     return TRUE;
 }
@@ -383,6 +407,7 @@ CreatePrimaryPartition(
     UCHAR PartitionType = 6;
     INT i, length;
     PWSTR pszSuffix = NULL;
+    NTSTATUS Status;
 
     if (CurrentDisk == NULL)
     {
@@ -506,6 +531,7 @@ CreatePrimaryPartition(
             PartEntry->FormatState = Unformatted;
             PartEntry->FileSystemName[0] = L'\0';
 
+            CurrentPartition = PartEntry;
             CurrentDisk->Dirty = TRUE;
             break;
         }
@@ -519,6 +545,7 @@ CreatePrimaryPartition(
                 PartEntry->FormatState = Unformatted;
                 PartEntry->FileSystemName[0] = L'\0';
 
+                CurrentPartition = PartEntry;
                 CurrentDisk->Dirty = TRUE;
                 break;
             }
@@ -548,6 +575,7 @@ CreatePrimaryPartition(
 
                 InsertTailList(ListEntry, &NewPartEntry->ListEntry);
 
+                CurrentPartition = NewPartEntry;
                 CurrentDisk->Dirty = TRUE;
                 break;
             }
@@ -555,7 +583,15 @@ CreatePrimaryPartition(
     }
 
     UpdateDiskLayout(CurrentDisk);
-    WritePartitions(CurrentDisk);
+    Status = WritePartitions(CurrentDisk);
+    if (!NT_SUCCESS(Status))
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
+        CurrentPartition = NULL;
+        return TRUE;
+    }
+
+    ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
 
     return TRUE;
 }
