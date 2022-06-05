@@ -531,7 +531,7 @@ Syntax:  CLEAN [ALL]
     that had been previously applied to the disk. The disk's state after 
     cleaning the disk is 'UNINITIALIZED'.
 
-Example:
+Beispiel:
 
     CLEAN
 .
@@ -1047,7 +1047,7 @@ Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
     Partitionen könnnen nicht von dynamischen Datenträgern gelöscht oder auf
     dynamischen Datenträgern erstellt werden.
 
-Example:
+Beispiel:
 
     DELETE PARTITION
 .
@@ -1302,34 +1302,125 @@ SymbolicName=MSG_COMMAND_DETAIL_DISK
 Severity=Informational
 Facility=System
 Language=English
-<Add DETAIL DISK command help text here>
+    Displays the properties of the selected disk and the list of volumes on
+    the disk.
+
+Syntax:  DETAIL DISK
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL DISK
 .
 Language=German
-<Add DETAIL DISK command help text here>
+    Zeigt die Eigenschaften des ausgewählten Datenträgers und die Liste der
+    Volumes auf dem Datenträger an.
+
+Syntax:  DETAIL DISK
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    Datenträger ausgewählt sein.
+
+Beispiel:
+
+    DETAIL DISK
 .
 Language=Polish
-<Add DETAIL DISK command help text here>
+    Displays the properties of the selected disk and the list of volumes on
+    the disk.
+
+Syntax:  DETAIL DISK
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL DISK
 .
 Language=Portugese
-<Add DETAIL DISK command help text here>
+    Displays the properties of the selected disk and the list of volumes on
+    the disk.
+
+Syntax:  DETAIL DISK
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL DISK
 .
 Language=Romanian
-<Add DETAIL DISK command help text here>
+    Displays the properties of the selected disk and the list of volumes on
+    the disk.
+
+Syntax:  DETAIL DISK
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL DISK
 .
 Language=Russian
-<Add DETAIL DISK command help text here>
+    Displays the properties of the selected disk and the list of volumes on
+    the disk.
+
+Syntax:  DETAIL DISK
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL DISK
 .
 Language=Albanian
-<Add DETAIL DISK command help text here>
+    Displays the properties of the selected disk and the list of volumes on
+    the disk.
+
+Syntax:  DETAIL DISK
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL DISK
 .
 Language=Turkish
-<Add DETAIL DISK command help text here>
+    Displays the properties of the selected disk and the list of volumes on
+    the disk.
+
+Syntax:  DETAIL DISK
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL DISK
 .
 Language=Chinese
-<Add DETAIL DISK command help text here>
+    Displays the properties of the selected disk and the list of volumes on
+    the disk.
+
+Syntax:  DETAIL DISK
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL DISK
 .
 Language=Taiwanese
-<Add DETAIL DISK command help text here>
+    Displays the properties of the selected disk and the list of volumes on
+    the disk.
+
+Syntax:  DETAIL DISK
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL DISK
 .
 
 MessageId=10020
