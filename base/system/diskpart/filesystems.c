@@ -8,7 +8,30 @@
 
 #include "diskpart.h"
 
-BOOL filesystems_main(INT argc, LPWSTR *argv)
+#define NDEBUG
+#include <debug.h>
+
+
+BOOL
+filesystems_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
+    if (CurrentVolume == NULL)
+    {
+        ConResPuts(StdOut, IDS_SELECT_NO_VOLUME);
+        return TRUE;
+    }
+
+    ConPuts(StdOut, L"\n");
+    ConResPuts(StdOut, IDS_FILESYSTEMS_CURRENT);
+    ConPuts(StdOut, L"\n");
+    ConResPrintf(StdOut, IDS_FILESYSTEMS_TYPE, (CurrentVolume->pszFilesystem == NULL) ? L"RAW" : CurrentVolume->pszFilesystem);
+    ConResPrintf(StdOut, IDS_FILESYSTEMS_CLUSTERSIZE);
+
+    ConPuts(StdOut, L"\n");
+    ConResPuts(StdOut, IDS_FILESYSTEMS_FORMATTING);
+    ConPuts(StdOut, L"\n");
+
     return TRUE;
 }

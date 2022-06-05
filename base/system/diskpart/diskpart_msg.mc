@@ -998,34 +998,266 @@ SymbolicName=MSG_COMMAND_DELETE_PARTITION
 Severity=Informational
 Facility=System
 Language=English
-<Add DELETE PARTITION command help text here>
+Deletes the partition with focus.
+
+Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
+                Typically, DiskPart only permits you to delete known data
+                partitions.
+
+    You cannot delete the system partition, boot partition, or any partition
+    that contains the active paging file or crash dump (memory dump) filed.
+
+    A partition must be selected for this operation to succeed.
+
+    Partitions cannot be deleted from dynamic disks or created on dynamic
+    disks.
+
+Example:
+
+    DELETE PARTITION
 .
 Language=German
-<Add DELETE PARTITION command help text here>
+Löscht die Partition, die den Fokus hat.
+
+Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten. Ohne den Parameter NOERR wird DiskPart bei
+                einem Fehler mit dem entsprechenden Fehlercode beendet.
+
+    OVERRIDE    Ermöglicht DiskPart das Löschen einer beliebigen Partition
+                unabhängig von deren Typ. Normalerweise gestattet DiskPart
+                nur das Löschen bekannter Datenpartitionen.
+
+    Sie können keine Systempartition, Startpartition oder Partition löschen,
+    die eine aktive Auslagerungsdatei oder ein Absturzabbild (Speicherabbild)
+    enthält.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss eine
+    Partition ausgewählt sein.
+
+    Partitionen könnnen nicht von dynamischen Datenträgern gelöscht oder auf
+    dynamischen Datenträgern erstellt werden.
+
+Example:
+
+    DELETE PARTITION
 .
 Language=Polish
-<Add DELETE PARTITION command help text here>
+Deletes the partition with focus.
+
+Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
+                Typically, DiskPart only permits you to delete known data
+                partitions.
+
+    You cannot delete the system partition, boot partition, or any partition
+    that contains the active paging file or crash dump (memory dump) filed.
+
+    A partition must be selected for this operation to succeed.
+
+    Partitions cannot be deleted from dynamic disks or created on dynamic
+    disks.
+
+Example:
+
+    DELETE PARTITION
 .
 Language=Portugese
-<Add DELETE PARTITION command help text here>
+Deletes the partition with focus.
+
+Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
+                Typically, DiskPart only permits you to delete known data
+                partitions.
+
+    You cannot delete the system partition, boot partition, or any partition
+    that contains the active paging file or crash dump (memory dump) filed.
+
+    A partition must be selected for this operation to succeed.
+
+    Partitions cannot be deleted from dynamic disks or created on dynamic
+    disks.
+
+Example:
+
+    DELETE PARTITION
 .
 Language=Romanian
-<Add DELETE PARTITION command help text here>
+Deletes the partition with focus.
+
+Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
+                Typically, DiskPart only permits you to delete known data
+                partitions.
+
+    You cannot delete the system partition, boot partition, or any partition
+    that contains the active paging file or crash dump (memory dump) filed.
+
+    A partition must be selected for this operation to succeed.
+
+    Partitions cannot be deleted from dynamic disks or created on dynamic
+    disks.
+
+Example:
+
+    DELETE PARTITION
 .
 Language=Russian
-<Add DELETE PARTITION command help text here>
+Deletes the partition with focus.
+
+Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
+                Typically, DiskPart only permits you to delete known data
+                partitions.
+
+    You cannot delete the system partition, boot partition, or any partition
+    that contains the active paging file or crash dump (memory dump) filed.
+
+    A partition must be selected for this operation to succeed.
+
+    Partitions cannot be deleted from dynamic disks or created on dynamic
+    disks.
+
+Example:
+
+    DELETE PARTITION
 .
 Language=Albanian
-<Add DELETE PARTITION command help text here>
+Deletes the partition with focus.
+
+Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
+                Typically, DiskPart only permits you to delete known data
+                partitions.
+
+    You cannot delete the system partition, boot partition, or any partition
+    that contains the active paging file or crash dump (memory dump) filed.
+
+    A partition must be selected for this operation to succeed.
+
+    Partitions cannot be deleted from dynamic disks or created on dynamic
+    disks.
+
+Example:
+
+    DELETE PARTITION
 .
 Language=Turkish
-<Add DELETE PARTITION command help text here>
+Deletes the partition with focus.
+
+Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
+                Typically, DiskPart only permits you to delete known data
+                partitions.
+
+    You cannot delete the system partition, boot partition, or any partition
+    that contains the active paging file or crash dump (memory dump) filed.
+
+    A partition must be selected for this operation to succeed.
+
+    Partitions cannot be deleted from dynamic disks or created on dynamic
+    disks.
+
+Example:
+
+    DELETE PARTITION
 .
 Language=Chinese
-<Add DELETE PARTITION command help text here>
+Deletes the partition with focus.
+
+Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
+                Typically, DiskPart only permits you to delete known data
+                partitions.
+
+    You cannot delete the system partition, boot partition, or any partition
+    that contains the active paging file or crash dump (memory dump) filed.
+
+    A partition must be selected for this operation to succeed.
+
+    Partitions cannot be deleted from dynamic disks or created on dynamic
+    disks.
+
+Example:
+
+    DELETE PARTITION
 .
 Language=Taiwanese
-<Add DELETE PARTITION command help text here>
+Deletes the partition with focus.
+
+Syntax:  DELETE PARTITION [NOERR] [OVERRIDE]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    OVERRIDE    Enables DiskPart to delete any partition regardless of type.
+                Typically, DiskPart only permits you to delete known data
+                partitions.
+
+    You cannot delete the system partition, boot partition, or any partition
+    that contains the active paging file or crash dump (memory dump) filed.
+
+    A partition must be selected for this operation to succeed.
+
+    Partitions cannot be deleted from dynamic disks or created on dynamic
+    disks.
+
+Example:
+
+    DELETE PARTITION
 .
 
 
@@ -1380,34 +1612,126 @@ SymbolicName=MSG_COMMAND_FILESYSTEMS
 Severity=Informational
 Facility=System
 Language=English
-<Add FILESYSTEMS command help text here>
+    Displays information about the current file system for the selected
+    volume, and the supported file systems for formatting the volume.
+
+Syntax:  FILESYSTEMS
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    FILESYSTEMS
 .
 Language=German
-<Add FILESYSTEMS command help text here>
+    Zeigt Informationen zum aktuelle Dateisystem für das ausgewählte
+    Volume und die unterstützten Dateisysteme zum Formatieren des
+    Volumes an.
+
+Syntax:  FILESYSTEMS
+
+    Damit diesr Vorgang erfolgreich ausgeführt werden kann, muss ein
+    Volume ausgewählt sein.
+
+Beispiel:
+
+    FILESYSTEMS
 .
 Language=Polish
-<Add FILESYSTEMS command help text here>
+    Displays information about the current file system for the selected
+    volume, and the supported file systems for formatting the volume.
+
+Syntax:  FILESYSTEMS
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    FILESYSTEMS
 .
 Language=Portugese
-<Add FILESYSTEMS command help text here>
+    Displays information about the current file system for the selected
+    volume, and the supported file systems for formatting the volume.
+
+Syntax:  FILESYSTEMS
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    FILESYSTEMS
 .
 Language=Romanian
-<Add FILESYSTEMS command help text here>
+    Displays information about the current file system for the selected
+    volume, and the supported file systems for formatting the volume.
+
+Syntax:  FILESYSTEMS
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    FILESYSTEMS
 .
 Language=Russian
-<Add FILESYSTEMS command help text here>
+    Displays information about the current file system for the selected
+    volume, and the supported file systems for formatting the volume.
+
+Syntax:  FILESYSTEMS
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    FILESYSTEMS
 .
 Language=Albanian
-<Add FILESYSTEMS command help text here>
+    Displays information about the current file system for the selected
+    volume, and the supported file systems for formatting the volume.
+
+Syntax:  FILESYSTEMS
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    FILESYSTEMS
 .
 Language=Turkish
-<Add FILESYSTEMS command help text here>
+    Displays information about the current file system for the selected
+    volume, and the supported file systems for formatting the volume.
+
+Syntax:  FILESYSTEMS
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    FILESYSTEMS
 .
 Language=Chinese
-<Add FILESYSTEMS command help text here>
+    Displays information about the current file system for the selected
+    volume, and the supported file systems for formatting the volume.
+
+Syntax:  FILESYSTEMS
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    FILESYSTEMS
 .
 Language=Taiwanese
-<Add FILESYSTEMS command help text here>
+    Displays information about the current file system for the selected
+    volume, and the supported file systems for formatting the volume.
+
+Syntax:  FILESYSTEMS
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    FILESYSTEMS
 .
 
 

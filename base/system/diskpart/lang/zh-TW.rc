@@ -73,6 +73,14 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
+    IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
+    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: \n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_HELP_FORMAT_STRING "%-11.11s - %s"
 END
 
