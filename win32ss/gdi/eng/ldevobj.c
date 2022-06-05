@@ -750,7 +750,7 @@ LDEVOBJ_bProbeAndCaptureDevmode(
 
     /* At first, load information from registry */
     RtlZeroMemory(&dmSearch, sizeof(dmSearch));
-    Status = EngpGetDisplayDriverParameters(pGraphicsDevice, &dmSearch, NULL);
+    Status = EngpGetDisplayDriverParameters(pGraphicsDevice, &dmSearch);
     if (!NT_SUCCESS(Status))
     {
         ERR("EngpGetDisplayDriverParameters() failed with status 0x%08x\n", Status);

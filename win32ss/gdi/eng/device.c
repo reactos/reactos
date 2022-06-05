@@ -167,21 +167,12 @@ EngpGetRegistryHandleFromDeviceMap(
 NTSTATUS
 EngpGetDisplayDriverParameters(
     _In_ PGRAPHICS_DEVICE pGraphicsDevice,
-    _Out_ PDEVMODEW pdm,
-    _Out_opt_ PDWORD pdwAccelerationLevel)
+    _Out_ PDEVMODEW pdm)
 {
     HKEY hKey;
-    DWORD dwDummy;
     NTSTATUS Status;
     RTL_QUERY_REGISTRY_TABLE DisplaySettingsTable[] =
     {
-        {
-            NULL,
-            RTL_QUERY_REGISTRY_DIRECT,
-            L"Acceleration.Level",
-            pdwAccelerationLevel ? pdwAccelerationLevel : &dwDummy,
-            REG_NONE, NULL, 0
-        },
 #define READ(field, str) \
         { \
             NULL, \
@@ -217,6 +208,38 @@ EngpGetDisplayDriverParameters(
 
     ZwClose(hKey);
     return Status;
+}
+
+DWORD
+EngpGetDisplayDriverAccelerationLevel(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice)
+{
+    HKEY hKey;
+    DWORD dwAccelerationLevel = 0;
+    RTL_QUERY_REGISTRY_TABLE DisplaySettingsTable[] =
+    {
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"Acceleration.Level",
+            &dwAccelerationLevel,
+            REG_NONE, NULL, 0
+        },
+        {0}
+    };
+
+    hKey = EngpGetRegistryHandleFromDeviceMap(pGraphicsDevice);
+    if (!hKey)
+        return 0;
+
+    RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                           (PWSTR)hKey,
+                           DisplaySettingsTable,
+                           NULL,
+                           NULL);
+    ZwClose(hKey);
+
+    return dwAccelerationLevel;
 }
 
 extern VOID

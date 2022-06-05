@@ -38,15 +38,20 @@ EngpUpdateGraphicsDeviceList(VOID);
 /* Read configuration of a graphics card from registry:
  * - pGraphicsDevice: instance of the graphics card
  * - pdm: on output, contains the values read in registry
- * - pdwAccelerationLevel: acceleration level stored in registry
  * Return value: a STATUS_* value
  * Assume that pdm has already been zero-filled.
  * Note that dmFields is not updated. */
 NTSTATUS
 EngpGetDisplayDriverParameters(
     _In_ PGRAPHICS_DEVICE pGraphicsDevice,
-    _Out_ PDEVMODEW pdm,
-    _Out_opt_ PDWORD pdwAccelerationLevel);
+    _Out_ PDEVMODEW pdm);
+
+/* Read acceleration level of a graphics card from registry
+ * - pGraphicsDevice: instance of the graphics card
+ * - Return value: acceleration level stored in registry */
+DWORD
+EngpGetDisplayDriverAccelerationLevel(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice);
 
 CODE_SEG("INIT")
 NTSTATUS

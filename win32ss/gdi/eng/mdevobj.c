@@ -105,6 +105,8 @@ MDEVOBJ_Create(
             dmDefault.dmSize = sizeof(dmDefault);
         }
 
+        dwAccelerationLevel = EngpGetDisplayDriverAccelerationLevel(pGraphicsDevice);
+
         /* Get or create a PDEV for these settings */
         if (LDEVOBJ_bProbeAndCaptureDevmode(pGraphicsDevice, pdm ? pdm : &dmDefault, &localPdm, !pdm))
         {
