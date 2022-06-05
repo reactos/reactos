@@ -11,8 +11,6 @@
 
 #include "proclist.h"
 
-#include <strsafe.h>
-
 #include <ndk/psfuncs.h>
 
 #define CMP(x1, x2)\
