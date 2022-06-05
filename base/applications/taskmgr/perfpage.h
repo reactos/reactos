@@ -11,7 +11,6 @@
 extern "C" {
 #endif
 
-extern HWND hPerformancePage;   /* Performance Property Page */
 INT_PTR CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 void RefreshPerformancePage(void);

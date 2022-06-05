@@ -70,16 +70,17 @@ typedef struct
 
 } TASKMANAGER_SETTINGS, *LPTASKMANAGER_SETTINGS;
 
-/* Global Variables: */
-extern	HINSTANCE	hInst;						/* current instance */
-extern	HWND		hMainWnd;					/* Main Window */
-extern	HWND		hStatusWnd;					/* Status Bar Window */
-extern	HWND		hTabWnd;					/* Tab Control Window */
-extern	int			nMinimumWidth;				/* Minimum width of the dialog (OnSize()'s cx) */
-extern	int			nMinimumHeight;				/* Minimum height of the dialog (OnSize()'s cy) */
-extern	int			nOldWidth;					/* Holds the previous client area width */
-extern	int			nOldHeight;					/* Holds the previous client area height */
-extern	TASKMANAGER_SETTINGS	TaskManagerSettings;
+/* Global Variables */
+extern HINSTANCE hInst;     /* Current instance */
+extern HWND hMainWnd;       /* Main Window */
+extern HWND hStatusWnd;     /* Status Bar Window */
+extern HWND hTabWnd;        /* Tab Control Window */
+extern HWND g_hPages[];     /* Pages */
+extern int nMinimumWidth;   /* Minimum width of the dialog (OnSize()'s cx) */
+extern int nMinimumHeight;  /* Minimum height of the dialog (OnSize()'s cy) */
+extern int nOldWidth;       /* Holds the previous client area width */
+extern int nOldHeight;      /* Holds the previous client area height */
+extern TASKMANAGER_SETTINGS TaskManagerSettings;
 
 /* Forward declarations of functions included in this code module: */
 INT_PTR CALLBACK TaskManagerWndProc(HWND, UINT, WPARAM, LPARAM);

@@ -28,7 +28,6 @@ static HWND hMemUsageGraph; /* MEM Usage Graph */
 static TM_GAUGE_CONTROL CpuUsageGraph = {0};
 static TM_GAUGE_CONTROL MemUsageGraph = {0};
 
-HWND hPerformancePage; /* Performance Property Page */
 static int nPerformancePageWidth;
 static int nPerformancePageHeight;
 static int lastX, lastY;
@@ -522,11 +521,11 @@ void RefreshPerformancePage(void)
                              &CommitChargePeak);
 
     _ui64tow(CommitChargeTotal, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_COMMIT_CHARGE_TOTAL, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_COMMIT_CHARGE_TOTAL, Text);
     _ui64tow(CommitChargeLimit, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_COMMIT_CHARGE_LIMIT, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_COMMIT_CHARGE_LIMIT, Text);
     _ui64tow(CommitChargePeak, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_COMMIT_CHARGE_PEAK, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_COMMIT_CHARGE_PEAK, Text);
 
     /*
      * Update the kernel memory info
@@ -536,11 +535,11 @@ void RefreshPerformancePage(void)
                              &KernelMemoryNonPaged);
 
     _ui64tow(KernelMemoryTotal, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_KERNEL_MEMORY_TOTAL, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_KERNEL_MEMORY_TOTAL, Text);
     _ui64tow(KernelMemoryPaged, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_KERNEL_MEMORY_PAGED, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_KERNEL_MEMORY_PAGED, Text);
     _ui64tow(KernelMemoryNonPaged, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_KERNEL_MEMORY_NONPAGED, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_KERNEL_MEMORY_NONPAGED, Text);
 
     /*
      * Update the physical memory info
@@ -550,11 +549,11 @@ void RefreshPerformancePage(void)
                                &PhysicalMemorySystemCache);
 
     _ui64tow(PhysicalMemoryTotal, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_PHYSICAL_MEMORY_TOTAL, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_PHYSICAL_MEMORY_TOTAL, Text);
     _ui64tow(PhysicalMemoryAvailable, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_PHYSICAL_MEMORY_AVAILABLE, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_PHYSICAL_MEMORY_AVAILABLE, Text);
     _ui64tow(PhysicalMemorySystemCache, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, Text);
 
     /*
      * Update the totals info
@@ -564,11 +563,11 @@ void RefreshPerformancePage(void)
     TotalProcesses = PerfDataGetProcessCount();
 
     _ultow(TotalHandles, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_TOTALS_HANDLE_COUNT, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_TOTALS_HANDLE_COUNT, Text);
     _ultow(TotalThreads, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_TOTALS_THREAD_COUNT, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_TOTALS_THREAD_COUNT, Text);
     _ultow(TotalProcesses, Text, 10);
-    SetDlgItemTextW(hPerformancePage, IDC_TOTALS_PROCESS_COUNT, Text);
+    SetDlgItemTextW(g_hPages[2], IDC_TOTALS_PROCESS_COUNT, Text);
 
     /*
      * Get the CPU usage
