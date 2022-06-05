@@ -86,6 +86,7 @@ COMMAND cmds[] =
     {L"SELECT",      L"VOLUME",    NULL,        SelectVolume,            IDS_HELP_SELECT_VOLUME,             MSG_COMMAND_SELECT_VOLUME},
 //    {L"SELECT",      L"VDISK",     NULL,        SelectVirtualDisk,       IDS_HELP_SELECT_VDISK,              MSG_COMMAND_SELECT_VDISK},
 
+    {L"SET",         NULL,         NULL,        setid_main,              IDS_HELP_SETID,                     MSG_COMMAND_SETID},
     {L"SETID",       NULL,         NULL,        setid_main,              IDS_HELP_SETID,                     MSG_COMMAND_SETID},
     {L"SHRINK",      NULL,         NULL,        shrink_main,             IDS_HELP_SHRINK,                    MSG_COMMAND_SHRINK},
 
