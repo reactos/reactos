@@ -11,6 +11,19 @@
 #define NDEBUG
 #include <debug.h>
 
+static
+BOOL
+IsKnownPartition(
+    _In_ PPARTENTRY PartEntry)
+{
+    if (IsRecognizedPartition(PartEntry->PartitionType) ||
+        IsContainerPartition(PartEntry->PartitionType))
+        return TRUE;
+
+    return FALSE;
+}
+
+
 BOOL
 DeleteDisk(
     _In_ INT argc,
@@ -29,6 +42,8 @@ DeletePartition(
     PPARTENTRY NextPartEntry;
     PPARTENTRY LogicalPartEntry;
     PLIST_ENTRY Entry;
+    INT i;
+    BOOL bOverride = FALSE;
     NTSTATUS Status;
 
     DPRINT("DeletePartition()\n");
@@ -47,6 +62,31 @@ DeletePartition(
 
     ASSERT(CurrentPartition->PartitionType != PARTITION_ENTRY_UNUSED);
 
+    for (i = 2; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NOERR\n");
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
+        else if (_wcsicmp(argv[i], L"override") == 0)
+        {
+            /* noerr */
+            DPRINT("OVERRIDE\n");
+            bOverride = TRUE;
+        }
+        else
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
+        }
+    }
+
+
     /* Clear the system partition if it is being deleted */
 #if 0
     if (List->SystemPartition == PartEntry)
@@ -55,6 +95,12 @@ DeletePartition(
         List->SystemPartition = NULL;
     }
 #endif
+
+    if ((bOverride == FALSE) && (IsKnownPartition(CurrentPartition) == FALSE))
+    {
+        ConResPuts(StdOut, IDS_DELETE_PARTITION_FAIL);
+        return FALSE;
+    }
 
     /* Check which type of partition (primary/logical or extended) is being deleted */
     if (CurrentDisk->ExtendedPartition == CurrentPartition)

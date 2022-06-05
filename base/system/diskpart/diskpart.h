@@ -19,6 +19,7 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <wincon.h>
+#include <winioctl.h>
 
 #include <errno.h>
 
