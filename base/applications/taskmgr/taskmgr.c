@@ -100,6 +100,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     HANDLE hToken;
     TOKEN_PRIVILEGES tkp;
     HANDLE hMutex;
+    HACCEL hAccelTable;
+    MSG msg;
 
     /* check wether we're already running or not */
     hMutex = CreateMutexW(NULL, TRUE, L"taskmgrros");
@@ -139,16 +141,16 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
      * so that we can debug processes
      */
 
-    /* Get a token for this process.  */
+    /* Get a token for this process */
     if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
     {
-        /* Get the LUID for the debug privilege.  */
+        /* Get the LUID for the debug privilege */
         if (LookupPrivilegeValueW(NULL, SE_DEBUG_NAME, &tkp.Privileges[0].Luid))
         {
-            tkp.PrivilegeCount = 1;  /* one privilege to set */
+            tkp.PrivilegeCount = 1;  /* One privilege to set */
             tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-            /* Get the debug privilege for this process. */
+            /* Get the debug privilege for this process */
             AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
         }
         CloseHandle(hToken);
@@ -163,20 +165,61 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
         return -1;
     }
 
+    /* Initialize the Windows Common Controls DLL */
+    InitCommonControls();
+
     /*
      * Set our shutdown parameters: we want to shutdown the very last,
      * without displaying any end task dialog if needed.
      */
     SetProcessShutdownParameters(1, SHUTDOWN_NORETRY);
 
-    DialogBoxW(hInst, (LPCWSTR)IDD_TASKMGR_DIALOG, NULL, TaskManagerWndProc);
+    hAccelTable = LoadAcceleratorsW(hInst, MAKEINTRESOURCEW(IDA_ACCEL));
+
+    /* Create the modeless main window and dispatch messages,
+     * also handling keyboard accelerators. */
+    hMainWnd = CreateDialogW(hInst, (LPCWSTR)IDD_TASKMGR_DIALOG, NULL, TaskManagerWndProc);
+    ShowWindow(hMainWnd, TaskManagerSettings.Maximized ? SW_MAXIMIZE : nCmdShow);
+
+    /* Message loop */
+    while (/*IsWindow(hMainWnd) &&*/ GetMessageW(&msg, NULL, 0, 0))
+    {
+        ///*
+        // * PropSheet_GetCurrentPageHwnd returns NULL when the user clicks the OK or Cancel button
+        // * and after all of the pages have been notified. Apply button doesn't cause this to happen.
+        // * We can then use the DestroyWindow function to destroy the property sheet.
+        // */
+        //if (PropSheet_GetCurrentPageHwnd(hMainWnd) == NULL)
+        //    break;
+
+        /* Process accelerators - Handled by main window and currently-selected page */
+        if (TranslateAcceleratorW(hMainWnd, hAccelTable, &msg))
+            continue;
+        if (TranslateAcceleratorW(g_hPages[TaskManagerSettings.ActiveTabPage], hAccelTable, &msg))
+            continue;
+
+        /* Process message */
+        if (!IsDialogMessageW(hMainWnd, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
+    }
+
+    if (hWindowMenu)
+        DestroyMenu(hWindowMenu);
+
+    DestroyAcceleratorTable(hAccelTable);
+
+    /* Get rid of the allocated command line cache, if any */
+    PerfDataDeallocCommandLineCache();
+    /* Cleanup perf data */
+    PerfDataUninitialize();
 
     /* Save our settings to the registry */
     SaveSettings();
-    PerfDataUninitialize();
+
     CloseHandle(hMutex);
-    if (hWindowMenu)
-        DestroyMenu(hWindowMenu);
     return 0;
 }
 
@@ -184,27 +227,44 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 INT_PTR CALLBACK
 TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-#if 0
-    HDC              hdc;
-    PAINTSTRUCT      ps;
-    RECT             rc;
-#endif
-    LPRECT           pRC;
-    LPNMHDR          pnmh;
-    WINDOWPLACEMENT  wp;
-
-    switch (message) {
+    switch (message)
+    {
     case WM_INITDIALOG:
+    {
         // For now, the Help dialog menu item is disabled because of lacking of HTML Help support
         EnableMenuItem(GetMenu(hDlg), ID_HELP_TOPICS, MF_BYCOMMAND | MF_GRAYED);
-        hMainWnd = hDlg;
         return OnCreate(hDlg);
+    }
+
+    case WM_DESTROY:
+    {
+        WINDOWPLACEMENT wp;
+
+        ShowWindow(hDlg, SW_HIDE);
+        TrayIcon_RemoveIcon();
+        wp.length = sizeof(WINDOWPLACEMENT);
+        GetWindowPlacement(hDlg, &wp);
+        TaskManagerSettings.Left = wp.rcNormalPosition.left;
+        TaskManagerSettings.Top = wp.rcNormalPosition.top;
+        TaskManagerSettings.Right = wp.rcNormalPosition.right;
+        TaskManagerSettings.Bottom = wp.rcNormalPosition.bottom;
+        if (IsZoomed(hDlg) || (wp.flags & WPF_RESTORETOMAXIMIZED))
+            TaskManagerSettings.Maximized = TRUE;
+        else
+            TaskManagerSettings.Maximized = FALSE;
+
+        PostQuitMessage(0);
+        break;
+    }
 
     case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) {
-            EndDialog(hDlg, LOWORD(wParam));
-            return TRUE;
+    {
+        if (LOWORD(wParam) == IDCANCEL)
+        {
+            DestroyWindow(hDlg);
+            break;
         }
+
         /* Process menu commands */
         switch (LOWORD(wParam))
         {
@@ -270,16 +330,16 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_WINDOWS_BRINGTOFRONT:
             ApplicationPage_OnWindowsBringToFront();
             break;
-        case ID_APPLICATION_PAGE_SWITCHTO:
+        case ID_APPLICATION_PAGE_SWITCHTO:  // IDC_SWITCHTO
             ApplicationPage_OnSwitchTo();
             break;
-        case ID_APPLICATION_PAGE_ENDTASK:
+        case ID_APPLICATION_PAGE_ENDTASK:   // IDC_ENDTASK
             ApplicationPage_OnEndTask();
             break;
         case ID_APPLICATION_PAGE_GOTOPROCESS:
             ApplicationPage_OnGotoProcess();
             break;
-        case ID_PROCESS_PAGE_ENDPROCESS:
+        case ID_PROCESS_PAGE_ENDPROCESS:    // IDC_ENDPROCESS
             ProcessPage_OnEndProcess();
             break;
         case ID_PROCESS_PAGE_ENDPROCESSTREE:
@@ -316,7 +376,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             ProcessPage_OnOpenFileLocation();
             break;
 
-/* ShutDown items */
+        /* ShutDown items */
         case ID_SHUTDOWN_STANDBY:
             ShutDown_StandBy();
             break;
@@ -349,16 +409,18 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             OnAbout();
             break;
         case ID_FILE_EXIT:
-            EndDialog(hDlg, IDOK);
+            DestroyWindow(hDlg);
             break;
         }
         break;
+    }
 
     case WM_ONTRAYICON:
+    {
         switch(lParam)
         {
         case WM_RBUTTONDOWN:
-            {
+        {
             POINT pt;
             BOOL OnTop;
             HMENU hMenu, hPopupMenu;
@@ -372,19 +434,20 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             if(IsWindowVisible(hMainWnd))
             {
-              DeleteMenu(hPopupMenu, ID_RESTORE, MF_BYCOMMAND);
+                DeleteMenu(hPopupMenu, ID_RESTORE, MF_BYCOMMAND);
             }
             else
             {
-              SetMenuDefaultItem(hPopupMenu, ID_RESTORE, FALSE);
+                SetMenuDefaultItem(hPopupMenu, ID_RESTORE, FALSE);
             }
 
             if(OnTop)
             {
-              CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_CHECKED);
-            } else
+                CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_CHECKED);
+            }
+            else
             {
-              CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_UNCHECKED);
+                CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_UNCHECKED);
             }
 
             SetForegroundWindow(hMainWnd);
@@ -392,15 +455,18 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             DestroyMenu(hMenu);
             break;
-            }
+        }
+
         case WM_LBUTTONDBLCLK:
             TaskManager_OnRestoreMainWindow();
             break;
         }
         break;
+    }
 
     case WM_NOTIFY:
-        pnmh = (LPNMHDR)lParam;
+    {
+        LPNMHDR pnmh = (LPNMHDR)lParam;
         if ((pnmh->hwndFrom == hTabWnd) &&
             (pnmh->idFrom == IDC_TAB))
         {
@@ -418,11 +484,13 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+    }
 
     case WM_SIZING:
+    {
         /* Make sure the user is sizing the dialog */
         /* in an acceptable range */
-        pRC = (LPRECT)lParam;
+        LPRECT pRC = (LPRECT)lParam;
         if ((wParam == WMSZ_LEFT) || (wParam == WMSZ_TOPLEFT) || (wParam == WMSZ_BOTTOMLEFT)) {
             /* If the width is too small enlarge it to the minimum */
             if (nMinimumWidth > (pRC->right - pRC->left))
@@ -442,38 +510,18 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 pRC->bottom = pRC->top + nMinimumHeight;
         }
         return TRUE;
-        break;
+    }
 
     case WM_SIZE:
-        /* Handle the window sizing in it's own function */
         OnSize(wParam, LOWORD(lParam), HIWORD(lParam));
         break;
 
     case WM_MOVE:
-        /* Handle the window moving in it's own function */
         OnMove(wParam, LOWORD(lParam), HIWORD(lParam));
         break;
 
-    case WM_DESTROY:
-        ShowWindow(hDlg, SW_HIDE);
-        TrayIcon_RemoveIcon();
-        wp.length = sizeof(WINDOWPLACEMENT);
-        GetWindowPlacement(hDlg, &wp);
-        TaskManagerSettings.Left = wp.rcNormalPosition.left;
-        TaskManagerSettings.Top = wp.rcNormalPosition.top;
-        TaskManagerSettings.Right = wp.rcNormalPosition.right;
-        TaskManagerSettings.Bottom = wp.rcNormalPosition.bottom;
-        if (IsZoomed(hDlg) || (wp.flags & WPF_RESTORETOMAXIMIZED))
-            TaskManagerSettings.Maximized = TRUE;
-        else
-            TaskManagerSettings.Maximized = FALSE;
-        /* Get rid of the allocated command line cache, if any */
-        PerfDataDeallocCommandLineCache();
-        if (hWindowMenu)
-            DestroyMenu(hWindowMenu);
-        return DefWindowProcW(hDlg, message, wParam, lParam);
-
     case WM_TIMER:
+    {
         /* Refresh the performance data */
         PerfDataRefresh();
         RefreshApplicationPage();
@@ -481,6 +529,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         RefreshPerformancePage();
         TrayIcon_UpdateIcon();
         break;
+    }
 
     case WM_MENUSELECT:
         TaskManager_OnMenuSelect(hDlg, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
@@ -537,10 +586,7 @@ BOOL OnCreate(HWND hWnd)
     TCITEM  item;
     DWORD   len = 0;
 
-    SendMessageW(hMainWnd, WM_SETICON, ICON_BIG, (LPARAM)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_TASKMANAGER)));
-
-    /* Initialize the Windows Common Controls DLL */
-    InitCommonControls();
+    SendMessageW(hWnd, WM_SETICON, ICON_BIG, (LPARAM)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_TASKMANAGER)));
 
     /* Get the minimum window sizes */
     GetWindowRect(hWnd, &rc);
@@ -549,8 +595,11 @@ BOOL OnCreate(HWND hWnd)
 
     /* Create the status bar */
     hStatusWnd = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS, L"", hWnd, STATUS_WINDOW);
-    if(!hStatusWnd)
+    if (!hStatusWnd)
         return FALSE;
+
+    /* Save the global window handle */
+    hMainWnd = hWnd;
 
     /* Create the status bar panes */
     nParts[0] = STATUS_SIZE1;
@@ -560,15 +609,9 @@ BOOL OnCreate(HWND hWnd)
 
     /* Create tab pages */
     hTabWnd = GetDlgItem(hWnd, IDC_TAB);
-#if 1
-    hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hWnd, ApplicationPageWndProc); EnableDialogTheme(hApplicationPage);
-    hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hWnd, ProcessPageWndProc); EnableDialogTheme(hProcessPage);
-    hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hWnd, PerformancePageWndProc); EnableDialogTheme(hPerformancePage);
-#else
-    hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hTabWnd, ApplicationPageWndProc); EnableDialogTheme(hApplicationPage);
-    hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hTabWnd, ProcessPageWndProc); EnableDialogTheme(hProcessPage);
-    hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hTabWnd, PerformancePageWndProc); EnableDialogTheme(hPerformancePage);
-#endif
+    hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hWnd /*hTabWnd*/, ApplicationPageWndProc); EnableDialogTheme(hApplicationPage);
+    hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hWnd /*hTabWnd*/, ProcessPageWndProc); EnableDialogTheme(hProcessPage);
+    hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hWnd /*hTabWnd*/, PerformancePageWndProc); EnableDialogTheme(hPerformancePage);
 
     /* Insert tabs */
     LoadStringW(hInst, IDS_TAB_APPS, szTemp, 256);
@@ -611,8 +654,6 @@ BOOL OnCreate(HWND hWnd)
         MoveWindow(hPerformancePage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
 #endif
     }
-    if (TaskManagerSettings.Maximized)
-        ShowWindow(hWnd, SW_MAXIMIZE);
 
     /* Set the always on top style */
     hMenu = GetMenu(hWnd);
