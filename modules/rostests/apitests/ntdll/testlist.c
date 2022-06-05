@@ -31,6 +31,7 @@ extern void func_NtProtectVirtualMemory(void);
 extern void func_NtQueryInformationFile(void);
 extern void func_NtQueryInformationProcess(void);
 extern void func_NtQueryInformationThread(void);
+extern void func_NtQueryInformationToken(void);
 extern void func_NtQueryKey(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
 extern void func_NtQuerySystemInformation(void);
@@ -41,6 +42,7 @@ extern void func_NtSaveKey(void);
 extern void func_NtSetInformationFile(void);
 extern void func_NtSetInformationProcess(void);
 extern void func_NtSetInformationThread(void);
+extern void func_NtSetInformationToken(void);
 extern void func_NtSetValueKey(void);
 extern void func_NtSetVolumeInformationFile(void);
 extern void func_NtSystemInformation(void);
@@ -119,6 +121,7 @@ const struct test winetest_testlist[] =
     { "NtQueryInformationFile",         func_NtQueryInformationFile },
     { "NtQueryInformationProcess",      func_NtQueryInformationProcess },
     { "NtQueryInformationThread",       func_NtQueryInformationThread },
+    { "NtQueryInformationToken",        func_NtQueryInformationToken },
     { "NtQueryKey",                     func_NtQueryKey },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },
     { "NtQuerySystemInformation",       func_NtQuerySystemInformation },
@@ -129,6 +132,7 @@ const struct test winetest_testlist[] =
     { "NtSetInformationFile",           func_NtSetInformationFile },
     { "NtSetInformationProcess",        func_NtSetInformationProcess },
     { "NtSetInformationThread",         func_NtSetInformationThread },
+    { "NtSetInformationToken",          func_NtSetInformationToken },
     { "NtSetValueKey",                  func_NtSetValueKey},
     { "NtSetVolumeInformationFile",     func_NtSetVolumeInformationFile },
     { "NtSystemInformation",            func_NtSystemInformation },

@@ -35,6 +35,7 @@ list(APPEND SOURCE
     NtQueryInformationFile.c
     NtQueryInformationProcess.c
     NtQueryInformationThread.c
+    NtQueryInformationToken.c
     NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
     NtQuerySystemInformation.c
@@ -45,6 +46,7 @@ list(APPEND SOURCE
     NtSetInformationFile.c
     NtSetInformationProcess.c
     NtSetInformationThread.c
+    NtSetInformationToken.c
     NtSetValueKey.c
     NtSetVolumeInformationFile.c
     NtUnloadDriver.c
