@@ -111,7 +111,7 @@ TrayIcon_Update(
     BOOL  bRetVal;
 
     if (!*szMsg)
-        LoadStringW(hInst, IDS_MSG_TRAYICONCPUUSAGE, szMsg, ARRAYSIZE(szMsg));
+        LoadStringW(hInst, IDS_MSG_TRAYICONCPUUSAGE, szMsg, _countof(szMsg));
 
     ZeroMemory(&nid, sizeof(nid));
 
@@ -125,7 +125,7 @@ TrayIcon_Update(
     nid.uCallbackMessage = WM_ONTRAYICON;
     nid.hIcon = hIcon;
 
-    wsprintfW(nid.szTip, szMsg, CpuUsage);
+    StringCchPrintfW(nid.szTip, _countof(nid.szTip), szMsg, CpuUsage);
 
     bRetVal = Shell_NotifyIconW(dwMessage, &nid);
 
