@@ -9,7 +9,6 @@
 
 #pragma once
 
-extern HWND hProcessPage;           /* Process List Property Page */
 extern HWND hProcessPageListCtrl;   /* Process ListCtrl Window */
 extern HWND hProcessPageHeaderCtrl; /* Process Header Control */
 

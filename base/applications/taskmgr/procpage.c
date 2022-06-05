@@ -23,8 +23,6 @@ typedef struct
     ULONG ProcessId;
 } PROCESS_PAGE_LIST_ITEM, *LPPROCESS_PAGE_LIST_ITEM;
 
-HWND hProcessPage;                      /* Process List Property Page */
-
 HWND hProcessPageListCtrl;              /* Process ListCtrl Window */
 HWND hProcessPageHeaderCtrl;            /* Process Header Control */
 static HWND hProcessPageEndProcessButton;      /* Process End Process button */
@@ -446,7 +444,7 @@ DWORD WINAPI ProcessPageRefreshThread(PVOID Parameter)
         {
             UpdateProcesses();
 
-            if (IsWindowVisible(hProcessPage))
+            if (IsWindowVisible(g_hPages[1]))
                 InvalidateRect(hProcessPageListCtrl, NULL, FALSE);
 
             ProcessPageUpdate();

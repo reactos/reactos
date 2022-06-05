@@ -17,7 +17,6 @@ typedef struct
     BOOL    bHung;
 } APPLICATION_PAGE_LIST_ITEM, *LPAPPLICATION_PAGE_LIST_ITEM;
 
-HWND            hApplicationPage;               /* Application List Property Page */
 HWND            hApplicationPageListCtrl;       /* Application ListCtrl Window */
 HWND            hApplicationPageEndTaskButton;  /* Application End Task button */
 HWND            hApplicationPageSwitchToButton; /* Application Switch To button */
