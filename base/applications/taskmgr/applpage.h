@@ -9,8 +9,6 @@
 
 #pragma once
 
-extern    HWND        hApplicationPage;                /* Application List Property Page */
-
 extern    HWND        hApplicationPageListCtrl;        /* Application ListCtrl Window */
 extern    HWND        hApplicationPageEndTaskButton;    /* Application End Task button */
 extern    HWND        hApplicationPageSwitchToButton;    /* Application Switch To button */
