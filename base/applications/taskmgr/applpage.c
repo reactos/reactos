@@ -140,6 +140,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         switch (LOWORD(wParam))
         {
         case IDC_ENDTASK:
+        // case IDC_ENDPROCESS:
             ApplicationPage_OnEndTask();
             break;
         case IDC_SWITCHTO:
@@ -195,11 +196,6 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_NOTIFY:
         ApplicationPageOnNotify(wParam, lParam);
-        break;
-
-    case WM_KEYDOWN:
-        if (wParam == VK_DELETE)
-            ProcessPage_OnEndProcess();
         break;
     }
 
