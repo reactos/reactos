@@ -21,6 +21,12 @@ BEGIN
     IDS_CREATE_PARTITION_SUCCESS "\nDie angegebene Partition wurde erfolgreich erstellt.\n"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_DELETE_PARTITION_FAIL "\nDie gewählte Partition konnte nicht gelöscht werden.\nVergewissern Sie sich, dass die Partition wirklich gelöscht werden kann.\n"
+    IDS_DELETE_PARTITION_SUCCESS "\nDer gewählte Partition wurde erfolgreich gelöscht.\n"
+END
+
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN

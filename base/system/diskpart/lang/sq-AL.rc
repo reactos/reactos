@@ -25,6 +25,12 @@ BEGIN
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_DELETE_PARTITION_FAIL "\nDiskPart failed to delete the selected partition.\nPlease make sure the selected partition is valid to delete.\n"
+    IDS_DELETE_PARTITION_SUCCESS "\nDiskPart successfully deleted the selected partition.\n"
+END
+
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN

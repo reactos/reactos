@@ -29,6 +29,7 @@ DeletePartition(
     PPARTENTRY NextPartEntry;
     PPARTENTRY LogicalPartEntry;
     PLIST_ENTRY Entry;
+    NTSTATUS Status;
 
     DPRINT("DeletePartition()\n");
 
@@ -139,7 +140,14 @@ DeletePartition(
     CurrentPartition = NULL;
 
     UpdateDiskLayout(CurrentDisk);
-    WritePartitions(CurrentDisk);
+    Status = WritePartitions(CurrentDisk);
+    if (!NT_SUCCESS(Status))
+    {
+        ConResPuts(StdOut, IDS_DELETE_PARTITION_FAIL);
+        return TRUE;
+    }
+
+    ConResPuts(StdOut, IDS_DELETE_PARTITION_SUCCESS);
 
     return TRUE;
 }
