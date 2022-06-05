@@ -166,8 +166,9 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         /* Handle the button clicks */
         switch (LOWORD(wParam))
         {
-                case IDC_ENDPROCESS:
-                        ProcessPage_OnEndProcess();
+        case IDC_ENDTASK:
+        case IDC_ENDPROCESS:
+            ProcessPage_OnEndProcess();
         }
         break;
 
@@ -206,11 +207,6 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_NOTIFY:
         ProcessPageOnNotify(wParam, lParam);
-        break;
-
-    case WM_KEYDOWN:
-        if (wParam == VK_DELETE)
-            ProcessPage_OnEndProcess();
         break;
     }
 
