@@ -25,6 +25,8 @@
 #include <wingdi.h>
 #include <htmlhelp.h>
 
+#define IDI_HHICON      100
+
 #define IDS_CONTENTS    1
 #define IDS_INDEX       2
 #define IDS_SEARCH      3
