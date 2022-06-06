@@ -26,6 +26,8 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "Help"
+
     IDS_CONTENTS     "&Contenido"
     IDS_INDEX        "Í&ndice"
     IDS_SEARCH       "&Buscar"

@@ -25,6 +25,8 @@ LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "Help"
+
     IDS_CONTENTS     "&Vsebina"
     IDS_INDEX        "I&ndeks"
     IDS_SEARCH       "&Iskanje"

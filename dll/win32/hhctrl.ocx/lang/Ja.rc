@@ -27,6 +27,8 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "Help"
+
     IDS_CONTENTS     "目次(&C)"
     IDS_INDEX        "索引(&N)"
     IDS_SEARCH       "検索(&S)"

@@ -24,6 +24,8 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "Help"
+
     IDS_CONTENTS     "&Spis treści"
     IDS_INDEX        "&Indeks"
     IDS_SEARCH       "&Wyszukaj"

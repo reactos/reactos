@@ -26,6 +26,8 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "Help"
+
     IDS_CONTENTS     "&Turinys"
     IDS_INDEX        "&Rodyklė"
     IDS_SEARCH       "&Paieška"

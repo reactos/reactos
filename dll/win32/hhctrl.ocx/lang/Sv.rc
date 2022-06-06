@@ -23,6 +23,8 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "Help"
+
     IDS_CONTENTS     "&Innehåll"
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "&Sök"

@@ -28,6 +28,8 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "Help"
+
     IDS_CONTENTS     "&Зміст"
     IDS_INDEX        "&Вказівник"
     IDS_SEARCH       "&Пошук"

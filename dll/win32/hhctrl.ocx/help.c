@@ -171,7 +171,7 @@ static inline BOOL navigation_visible(HHInfo *info)
 }
 
 /* Loads a string from the resource file */
-static LPWSTR HH_LoadString(DWORD dwID)
+LPWSTR HH_LoadString(DWORD dwID)
 {
     LPWSTR string = NULL;
     LPCWSTR stringresource;
