@@ -26,6 +26,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_ACTIVE_FAIL "\nDiskPart was unable to mark the partition active.\nMake sure the partition is valid.\n"
+    IDS_ACTIVE_SUCCESS "\nDiskPart marked the current partition as active.\n"
+    IDS_ACTIVE_ALREADY "\nThe current partition is already marked as active.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart was unable to create the specified partition.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
 END
@@ -62,6 +69,26 @@ BEGIN
     IDS_DETAIL_NO_VOLUME "\nThere is no volume associated with this partition.\n"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
+    IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
+    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: \n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HELP_FORMAT_STRING "%-11.11s - %s"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INACTIVE_FAIL "\nDiskPart was unable to mark the partition inactive.\nMake sure the partition is valid.\n"
+    IDS_INACTIVE_SUCCESS "\nDiskPart marked the current partition as inactive.\n"
+    IDS_INACTIVE_ALREADY "\nThe current partition is already marked as inactive.\n"
+END
+
 /* Detail header titles */
 STRINGTABLE
 BEGIN
@@ -75,19 +102,6 @@ BEGIN
     IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
     IDS_LIST_VOLUME_FORMAT "%c  Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
-    IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
-    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: \n"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_HELP_FORMAT_STRING "%-11.11s - %s"
 END
 
 /* RESCAN command string */

@@ -18,17 +18,15 @@
 #define IDS_APP_LEAVING       4
 #define IDS_APP_PROMPT        5
 
+#define IDS_ACTIVE_FAIL                1000
+#define IDS_ACTIVE_SUCCESS             1001
+#define IDS_ACTIVE_ALREADY             1002
+
 #define IDS_CREATE_PARTITION_FAIL      1050
 #define IDS_CREATE_PARTITION_SUCCESS   1051
 
 #define IDS_DELETE_PARTITION_FAIL      1070
 #define IDS_DELETE_PARTITION_SUCCESS   1071
-
-#define IDS_FILESYSTEMS_CURRENT        1090
-#define IDS_FILESYSTEMS_FORMATTING     1091
-#define IDS_FILESYSTEMS_TYPE           1092
-#define IDS_FILESYSTEMS_CLUSTERSIZE    1093
-
 
 #define IDS_DETAIL_INFO_DISK_ID        1107
 #define IDS_DETAIL_INFO_TYPE           1108
@@ -54,7 +52,17 @@
 #define IDS_DETAIL_NO_DISKS            1135
 #define IDS_DETAIL_NO_VOLUME           1136
 
+#define IDS_FILESYSTEMS_CURRENT        1180
+#define IDS_FILESYSTEMS_FORMATTING     1181
+#define IDS_FILESYSTEMS_TYPE           1182
+#define IDS_FILESYSTEMS_CLUSTERSIZE    1183
+
 #define IDS_HELP_FORMAT_STRING         1200
+
+#define IDS_INACTIVE_FAIL              1210
+#define IDS_INACTIVE_SUCCESS           1211
+#define IDS_INACTIVE_ALREADY           1212
+
 
 #define IDS_LIST_DISK_HEAD             3300
 #define IDS_LIST_DISK_LINE             3301
