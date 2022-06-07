@@ -48,7 +48,7 @@ UniqueIdDisk(
     }
 
     if ((pszSuffix == NULL) ||
-        (wcslen(pszSuffix) > 8) ||
+        (wcslen(pszSuffix) != 8) ||
         (IsHexString(pszSuffix) == FALSE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
@@ -62,12 +62,11 @@ UniqueIdDisk(
         return TRUE;
     }
 
-    ConPrintf(StdOut, L"Setting the disk signature is not implemented yet!\n");
-#if 0
-    DPRINT1("New Signature: %lx\n", ulValue);
+    DPRINT("New Signature: 0x%08lx\n", ulValue);
     CurrentDisk->LayoutBuffer->Signature = ulValue;
-//    SetDiskLayout(CurrentDisk);
-#endif
+    CurrentDisk->Dirty = TRUE;
+    UpdateDiskLayout(CurrentDisk);
+    WritePartitions(CurrentDisk);
 
     return TRUE;
 }
