@@ -2979,7 +2979,29 @@ Syntax:  SET ID={<BYTE> | <GUID>} [OVERRIDE] [NOERR]
     NOERR       For scripting only. When an error is encountered, DiskPart
                 continues to process commands as if the error did not occur.
                 Without the NOERR parameter, an error causes DiskPart to exit
-                with an error code.\r\n\r\n    Intended for Original Equipment Manufacturer (OEM) use only.\r\n\r\n    A partition must be selected for this operation to succeed.\r\n\r\n    Caution:\r\n\r\n        Changing partition type fields with this parameter might cause your\r\n        computer to fail or be unable to start up. Unless you are an OEM or an\r\n        IT professional experienced with GPT disks, do not change partition\r\n        type fields on GPT disks using this parameter. Instead, always use the\r\n        CREATE PARTITION EFI command to create EFI System partitions, the\r\n        CREATE PARTITION MSR command to create Microsoft Reserved partitions,\r\n        and the CREATE PARTITION PRIMARY command without the ID parameter to\r\n        create primary partitions on GPT disks.\r\n\r\n    This command does not work on dynamic disks nor on Microsoft Reserved\r\n    partitions.\r\n\r\n    Example:\r\n\r\n    SET ID=07 OVERRIDE\r\n    SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7\r\n"
+                with an error code.
+
+    Intended for Original Equipment Manufacturer (OEM) use only.
+
+    A partition must be selected for this operation to succeed.
+
+    Caution:
+
+        Changing partition type fields with this parameter might cause your
+        computer to fail or be unable to start up. Unless you are an OEM or an
+        IT professional experienced with GPT disks, do not change partition
+        type fields on GPT disks using this parameter. Instead, always use the
+        CREATE PARTITION EFI command to create EFI System partitions, the
+        CREATE PARTITION MSR command to create Microsoft Reserved partitions,
+        and the CREATE PARTITION PRIMARY command without the ID parameter to
+        create primary partitions on GPT disks.
+
+    This command does not work on dynamic disks nor on Microsoft Reserved
+    partitions.
+
+Example:
+    SET ID=07 OVERRIDE
+    SET ID=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
 .
 Language=German
 <Add SETID command help text here>
@@ -3051,32 +3073,276 @@ SymbolicName=MSG_COMMAND_UNIQUEID_DISK
 Severity=Informational
 Facility=System
 Language=English
-<Add UNIQUEID DISK command help text here>
+    Displays or sets the GUID partition table (GPT) identifier or master boot
+    record (MBR) signature for the disk with focus.
+
+Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+
+    ID={<DWORD> | <GUID>}
+
+                For MBR disks, you can specify a four-byte (DWORD) value in
+                hexadecimal form for the signature.
+
+                For GPT disks, specify a GUID for the identifier.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A disk must be selected for this operation to succeed.  This command works
+    on basic and dynamic disks.
+
+Example:
+
+    UNIQUEID DISK
+    UNIQUEID DISK ID=5f1b2c36
+    UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=German
-<Add UNIQUEID DISK command help text here>
+    Dient zum Anzeigen oder Festlegen des GPT-Bezeichners (GPT =
+    GUID-Partitionstabelle) oder der MBR-Signatur (Master Boot Record)
+    für den Datenträger, der den Fokus hat.
+
+Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+
+    ID={<DWORD> | <GUID>}
+
+                Für MBR-Datenträger können Sie einen Wert mit einer
+                Länge von vier Bytes (DWORD) im Hexadezimalformat für die
+                Signatur angeben.
+
+                Für GPT-Datenträger können Sie einen GUID für den
+                Bezeichner angeben.
+
+    NOERR       Nur für Skripting. Wenn ein Fehler auftritt, setzt DiskPart
+                die Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten. Ohne den Parameter NOERR wird DiskPart bei
+                einem Fehler mit dem entsprechenden Fehlercode beendet.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    Datenträger ausgewählt sein. Der Befehl kann für Basisdatenträger und
+    dynamische Datenträger verwendet werden.
+
+Beispiel:
+
+    UNIQUEID DISK
+    UNIQUEID DISK ID=5f1b2c36
+    UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Polish
-<Add UNIQUEID DISK command help text here>
+    Displays or sets the GUID partition table (GPT) identifier or master boot
+    record (MBR) signature for the disk with focus.
+
+Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+
+    ID={<DWORD> | <GUID>}
+
+                For MBR disks, you can specify a four-byte (DWORD) value in
+                hexadecimal form for the signature.
+
+                For GPT disks, specify a GUID for the identifier.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A disk must be selected for this operation to succeed.  This command works
+    on basic and dynamic disks.
+
+Example:
+
+    UNIQUEID DISK
+    UNIQUEID DISK ID=5f1b2c36
+    UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Portugese
-<Add UNIQUEID DISK command help text here>
+    Displays or sets the GUID partition table (GPT) identifier or master boot
+    record (MBR) signature for the disk with focus.
+
+Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+
+    ID={<DWORD> | <GUID>}
+
+                For MBR disks, you can specify a four-byte (DWORD) value in
+                hexadecimal form for the signature.
+
+                For GPT disks, specify a GUID for the identifier.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A disk must be selected for this operation to succeed.  This command works
+    on basic and dynamic disks.
+
+Example:
+
+    UNIQUEID DISK
+    UNIQUEID DISK ID=5f1b2c36
+    UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Romanian
-<Add UNIQUEID DISK command help text here>
+    Displays or sets the GUID partition table (GPT) identifier or master boot
+    record (MBR) signature for the disk with focus.
+
+Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+
+    ID={<DWORD> | <GUID>}
+
+                For MBR disks, you can specify a four-byte (DWORD) value in
+                hexadecimal form for the signature.
+
+                For GPT disks, specify a GUID for the identifier.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A disk must be selected for this operation to succeed.  This command works
+    on basic and dynamic disks.
+
+Example:
+
+    UNIQUEID DISK
+    UNIQUEID DISK ID=5f1b2c36
+    UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Russian
-<Add UNIQUEID DISK command help text here>
+    Displays or sets the GUID partition table (GPT) identifier or master boot
+    record (MBR) signature for the disk with focus.
+
+Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+
+    ID={<DWORD> | <GUID>}
+
+                For MBR disks, you can specify a four-byte (DWORD) value in
+                hexadecimal form for the signature.
+
+                For GPT disks, specify a GUID for the identifier.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A disk must be selected for this operation to succeed.  This command works
+    on basic and dynamic disks.
+
+Example:
+
+    UNIQUEID DISK
+    UNIQUEID DISK ID=5f1b2c36
+    UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Albanian
-<Add UNIQUEID DISK command help text here>
+    Displays or sets the GUID partition table (GPT) identifier or master boot
+    record (MBR) signature for the disk with focus.
+
+Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+
+    ID={<DWORD> | <GUID>}
+
+                For MBR disks, you can specify a four-byte (DWORD) value in
+                hexadecimal form for the signature.
+
+                For GPT disks, specify a GUID for the identifier.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A disk must be selected for this operation to succeed.  This command works
+    on basic and dynamic disks.
+
+Example:
+
+    UNIQUEID DISK
+    UNIQUEID DISK ID=5f1b2c36
+    UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Turkish
-<Add UNIQUEID DISK command help text here>
+    Displays or sets the GUID partition table (GPT) identifier or master boot
+    record (MBR) signature for the disk with focus.
+
+Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+
+    ID={<DWORD> | <GUID>}
+
+                For MBR disks, you can specify a four-byte (DWORD) value in
+                hexadecimal form for the signature.
+
+                For GPT disks, specify a GUID for the identifier.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A disk must be selected for this operation to succeed.  This command works
+    on basic and dynamic disks.
+
+Example:
+
+    UNIQUEID DISK
+    UNIQUEID DISK ID=5f1b2c36
+    UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Chinese
-<Add UNIQUEID DISK command help text here>
+    Displays or sets the GUID partition table (GPT) identifier or master boot
+    record (MBR) signature for the disk with focus.
+
+Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+
+    ID={<DWORD> | <GUID>}
+
+                For MBR disks, you can specify a four-byte (DWORD) value in
+                hexadecimal form for the signature.
+
+                For GPT disks, specify a GUID for the identifier.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A disk must be selected for this operation to succeed.  This command works
+    on basic and dynamic disks.
+
+Example:
+
+    UNIQUEID DISK
+    UNIQUEID DISK ID=5f1b2c36
+    UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
 Language=Taiwanese
-<Add UNIQUEID DISK command help text here>
+    Displays or sets the GUID partition table (GPT) identifier or master boot
+    record (MBR) signature for the disk with focus.
+
+Syntax:  UNIQUEID DISK [ID={<DWORD> | <GUID>}]  [NOERR]
+
+    ID={<DWORD> | <GUID>}
+
+                For MBR disks, you can specify a four-byte (DWORD) value in
+                hexadecimal form for the signature.
+
+                For GPT disks, specify a GUID for the identifier.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A disk must be selected for this operation to succeed.  This command works
+    on basic and dynamic disks.
+
+Example:
+
+    UNIQUEID DISK
+    UNIQUEID DISK ID=5f1b2c36
+    UNIQUEID DISK ID=baf784e7-6bbd-4cfb-aaac-e86c96e166ee
 .
