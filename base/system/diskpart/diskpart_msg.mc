@@ -3199,34 +3199,216 @@ SymbolicName=MSG_COMMAND_SELECT_PARTITION
 Severity=Informational
 Facility=System
 Language=English
-<Add SELECT PARTITION command help text here>
+    Selects the specified partition and shifts the focus to it.
+
+Syntax:  SELECT PARTITION=<N>
+
+    PARTITION=<N>
+
+                The number of the partition to receive the focus.
+
+    If no partition is specified, the select command lists the current
+    partition with focus. You can specify the partition by its number. You can
+    view the numbers of all partitions on the current disk by using the list
+    partition command.
+
+    You must first select a disk using the DiskPart select disk command before
+    you can select a partition.
+
+Example:
+
+    SELECT PARTITION=1
 .
 Language=German
-<Add SELECT PARTITION command help text here>
+    Wählt die angegebene Partition aus und setzt den Fokus auf diese
+    Partition.
+
+Syntax:  SELECT PARTITION=<N>
+
+    PARTITION=<N>
+
+            Die Nummer der Partition, die den Fokus erhalten soll.
+
+    Wenn keine Partition angegeben ist, listet der Befehl SELECT die
+    aktuelle Partition auf, die den Fokus hat. Sie können die Partition
+    mit ihrer Nummer angeben. Mit dem Befehl LIST PARTITION können die
+    Nummern aller auf dem aktuellen Datenträger enthaltenen Partitionen
+    angezeigt werden.
+
+    Bevor Sie eine Partition auswählen können, müssen Sie zunächst mit dem
+    DiskPart-Befehl SELECT DISK einen Datenträger auswählen.
+
+Beispiel:
+
+    SELECT PARTITION=1
 .
 Language=Polish
-<Add SELECT PARTITION command help text here>
+    Selects the specified partition and shifts the focus to it.
+
+Syntax:  SELECT PARTITION=<N>
+
+    PARTITION=<N>
+
+                The number of the partition to receive the focus.
+
+    If no partition is specified, the select command lists the current
+    partition with focus. You can specify the partition by its number. You can
+    view the numbers of all partitions on the current disk by using the list
+    partition command.
+
+    You must first select a disk using the DiskPart select disk command before
+    you can select a partition.
+
+Example:
+
+    SELECT PARTITION=1
 .
 Language=Portugese
-<Add SELECT PARTITION command help text here>
+    Selects the specified partition and shifts the focus to it.
+
+Syntax:  SELECT PARTITION=<N>
+
+    PARTITION=<N>
+
+                The number of the partition to receive the focus.
+
+    If no partition is specified, the select command lists the current
+    partition with focus. You can specify the partition by its number. You can
+    view the numbers of all partitions on the current disk by using the list
+    partition command.
+
+    You must first select a disk using the DiskPart select disk command before
+    you can select a partition.
+
+Example:
+
+    SELECT PARTITION=1
 .
 Language=Romanian
-<Add SELECT PARTITION command help text here>
+    Selects the specified partition and shifts the focus to it.
+
+Syntax:  SELECT PARTITION=<N>
+
+    PARTITION=<N>
+
+                The number of the partition to receive the focus.
+
+    If no partition is specified, the select command lists the current
+    partition with focus. You can specify the partition by its number. You can
+    view the numbers of all partitions on the current disk by using the list
+    partition command.
+
+    You must first select a disk using the DiskPart select disk command before
+    you can select a partition.
+
+Example:
+
+    SELECT PARTITION=1
 .
 Language=Russian
-<Add SELECT PARTITION command help text here>
+    Selects the specified partition and shifts the focus to it.
+
+Syntax:  SELECT PARTITION=<N>
+
+    PARTITION=<N>
+
+                The number of the partition to receive the focus.
+
+    If no partition is specified, the select command lists the current
+    partition with focus. You can specify the partition by its number. You can
+    view the numbers of all partitions on the current disk by using the list
+    partition command.
+
+    You must first select a disk using the DiskPart select disk command before
+    you can select a partition.
+
+Example:
+
+    SELECT PARTITION=1
 .
 Language=Albanian
-<Add SELECT PARTITION command help text here>
+    Selects the specified partition and shifts the focus to it.
+
+Syntax:  SELECT PARTITION=<N>
+
+    PARTITION=<N>
+
+                The number of the partition to receive the focus.
+
+    If no partition is specified, the select command lists the current
+    partition with focus. You can specify the partition by its number. You can
+    view the numbers of all partitions on the current disk by using the list
+    partition command.
+
+    You must first select a disk using the DiskPart select disk command before
+    you can select a partition.
+
+Example:
+
+    SELECT PARTITION=1
 .
 Language=Turkish
-<Add SELECT PARTITION command help text here>
+    Selects the specified partition and shifts the focus to it.
+
+Syntax:  SELECT PARTITION=<N>
+
+    PARTITION=<N>
+
+                The number of the partition to receive the focus.
+
+    If no partition is specified, the select command lists the current
+    partition with focus. You can specify the partition by its number. You can
+    view the numbers of all partitions on the current disk by using the list
+    partition command.
+
+    You must first select a disk using the DiskPart select disk command before
+    you can select a partition.
+
+Example:
+
+    SELECT PARTITION=1
 .
 Language=Chinese
-<Add SELECT PARTITION command help text here>
+    Selects the specified partition and shifts the focus to it.
+
+Syntax:  SELECT PARTITION=<N>
+
+    PARTITION=<N>
+
+                The number of the partition to receive the focus.
+
+    If no partition is specified, the select command lists the current
+    partition with focus. You can specify the partition by its number. You can
+    view the numbers of all partitions on the current disk by using the list
+    partition command.
+
+    You must first select a disk using the DiskPart select disk command before
+    you can select a partition.
+
+Example:
+
+    SELECT PARTITION=1
 .
 Language=Taiwanese
-<Add SELECT PARTITION command help text here>
+    Selects the specified partition and shifts the focus to it.
+
+Syntax:  SELECT PARTITION=<N>
+
+    PARTITION=<N>
+
+                The number of the partition to receive the focus.
+
+    If no partition is specified, the select command lists the current
+    partition with focus. You can specify the partition by its number. You can
+    view the numbers of all partitions on the current disk by using the list
+    partition command.
+
+    You must first select a disk using the DiskPart select disk command before
+    you can select a partition.
+
+Example:
+
+    SELECT PARTITION=1
 .
 
 
