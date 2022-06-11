@@ -235,12 +235,12 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
                                          ExSemaphoreInfoClass,
                                          sizeof(ExSemaphoreInfoClass) /
                                          sizeof(ExSemaphoreInfoClass[0]),
+                                         ICIF_PROBE_READ_WRITE,
                                          SemaphoreInformation,
                                          SemaphoreInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode,
-                                         TRUE);
+                                         PreviousMode);
     if (!NT_SUCCESS(Status))
     {
         /* Invalid buffers */

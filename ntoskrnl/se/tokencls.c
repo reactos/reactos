@@ -492,12 +492,12 @@ NtQueryInformationToken(
     Status = DefaultQueryInfoBufferCheck(TokenInformationClass,
                                          SeTokenInformationClass,
                                          RTL_NUMBER_OF(SeTokenInformationClass),
+                                         ICIF_PROBE_READ_WRITE | ICIF_FORCE_RETURN_LENGTH_PROBE,
                                          TokenInformation,
                                          TokenInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode,
-                                         TRUE);
+                                         PreviousMode);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtQueryInformationToken() failed, Status: 0x%x\n", Status);
