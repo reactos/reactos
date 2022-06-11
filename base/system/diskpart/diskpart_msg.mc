@@ -2778,34 +2778,419 @@ SymbolicName=MSG_COMMAND_SELECT_DISK
 Severity=Informational
 Facility=System
 Language=English
-<Add SELECT DISK command help text here>
+    Selects the specified disk and shifts the focus to it.
+
+Syntax:  SELECT DISK=<N>
+         SELECT DISK=SYSTEM
+         SELECT DISK=NEXT
+         SELECT DISK=<Path>
+
+    DISK=<N>
+                The DiskPart disk index number of the disk to receive
+                focus.
+
+    DISK=<Path>
+                The location path of the disk to receive focus.
+
+    DISK=SYSTEM
+                On BIOS machines, BIOS disk 0 will receive focus.
+                On EFI machines, the disk containing the ESP partition
+                used for the current boot will receive focus. On EFI
+                machines, if there is no ESP, or there is more than
+                one ESP present, or the machine is booted from Windows PE,
+                the command will fail.
+
+    DISK=NEXT
+                Once a disk is selected, this command is used to iterate
+                over all disks in the disk list. The next disk in the list
+                will receive focus. If the next disk is the start of the
+                enumeration, the command will fail and no disk will have
+                focus.
+
+    If no options are specified, the select command lists the disk that
+    currently has the focus. You can view the DiskPart index numbers
+    for all disks on the computer by using the LIST DISK command.
+
+Example:
+
+    SELECT DISK=1
+    SELECT DISK=SYSTEM
+    SELECT DISK=NEXT
+    SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=German
-<Add SELECT DISK command help text here>
+    Dient zum Auswählen des angegebenen Datenträgers sowie zum
+    Festlegen des Fokus auf den Datenträger.
+
+Syntax:  SELECT DISK=<N>
+         SELECT DISK=SYSTEM
+         SELECT DISK=NEXT
+         SELECT DISK=<Path>
+
+    DISK=<N>
+                Die DiskPart-Datenträgerindexnummer des Datenträgers, auf
+                den der Fokus festgelegt werden soll.
+
+    DISK=<Pfad>
+                Der Speicherortpfad des Datenträgers, auf den der Fokus
+                festgelegt werden soll.
+
+    DISK=SYSTEM
+                Bei BIOS-Computern erhält der BIOS-Datenträger "0" den
+                Fokus. Bei EFI-Computern erhält der Datenträger mit der
+                ESP-Partition, der für den aktuellen Startvorgang verwendet
+                wird, den Fokus. Bei EFI-Computern ohne ESP oder mit
+                mehreren ESPs (oder beim Start des Computers unter Ver-
+                wendung von Windows PE) tritt bei Verwendung des Befehls
+                ein Fehler auf.
+
+    DISK=NEXT
+                Nach Auswahl eines Datenträgers erfolgt mithilfe dieses
+                Befehls eine Iteration durch alle Datenträger in der Daten-
+                trägerliste. Der nächste Datenträger in der Liste erhält den
+                Fokus. Handelt es sich beim nächsten Datenträger um den
+                Beginn der Aufzählung, tritt bei dem Befehl ein Fehler auf, und
+                keiner der Datenträger erhält den Fokus.
+
+    Ohne Angabe von Optionen wird mithilfe des Befehls "Select" der
+    Datenträger angegeben, der derzeit den Fokus besitzt. Verwenden
+    Sie zum Anzeigen der DiskPart-Indexnummern für alle Datenträger
+    des Computers den Befehl "LIST DISK".
+
+Beispiele:
+
+    SELECT DISK=1
+    SELECT DISK=SYSTEM
+    SELECT DISK=NEXT
+    SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Polish
-<Add SELECT DISK command help text here>
+    Selects the specified disk and shifts the focus to it.
+
+Syntax:  SELECT DISK=<N>
+         SELECT DISK=SYSTEM
+         SELECT DISK=NEXT
+         SELECT DISK=<Path>
+
+    DISK=<N>
+                The DiskPart disk index number of the disk to receive
+                focus.
+
+    DISK=<Path>
+                The location path of the disk to receive focus.
+
+    DISK=SYSTEM
+                On BIOS machines, BIOS disk 0 will receive focus.
+                On EFI machines, the disk containing the ESP partition
+                used for the current boot will receive focus. On EFI
+                machines, if there is no ESP, or there is more than
+                one ESP present, or the machine is booted from Windows PE,
+                the command will fail.
+
+    DISK=NEXT
+                Once a disk is selected, this command is used to iterate
+                over all disks in the disk list. The next disk in the list
+                will receive focus. If the next disk is the start of the
+                enumeration, the command will fail and no disk will have
+                focus.
+
+    If no options are specified, the select command lists the disk that
+    currently has the focus. You can view the DiskPart index numbers
+    for all disks on the computer by using the LIST DISK command.
+
+Example:
+
+    SELECT DISK=1
+    SELECT DISK=SYSTEM
+    SELECT DISK=NEXT
+    SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Portugese
-<Add SELECT DISK command help text here>
+    Selects the specified disk and shifts the focus to it.
+
+Syntax:  SELECT DISK=<N>
+         SELECT DISK=SYSTEM
+         SELECT DISK=NEXT
+         SELECT DISK=<Path>
+
+    DISK=<N>
+                The DiskPart disk index number of the disk to receive
+                focus.
+
+    DISK=<Path>
+                The location path of the disk to receive focus.
+
+    DISK=SYSTEM
+                On BIOS machines, BIOS disk 0 will receive focus.
+                On EFI machines, the disk containing the ESP partition
+                used for the current boot will receive focus. On EFI
+                machines, if there is no ESP, or there is more than
+                one ESP present, or the machine is booted from Windows PE,
+                the command will fail.
+
+    DISK=NEXT
+                Once a disk is selected, this command is used to iterate
+                over all disks in the disk list. The next disk in the list
+                will receive focus. If the next disk is the start of the
+                enumeration, the command will fail and no disk will have
+                focus.
+
+    If no options are specified, the select command lists the disk that
+    currently has the focus. You can view the DiskPart index numbers
+    for all disks on the computer by using the LIST DISK command.
+
+Example:
+
+    SELECT DISK=1
+    SELECT DISK=SYSTEM
+    SELECT DISK=NEXT
+    SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Romanian
-<Add SELECT DISK command help text here>
+    Selects the specified disk and shifts the focus to it.
+
+Syntax:  SELECT DISK=<N>
+         SELECT DISK=SYSTEM
+         SELECT DISK=NEXT
+         SELECT DISK=<Path>
+
+    DISK=<N>
+                The DiskPart disk index number of the disk to receive
+                focus.
+
+    DISK=<Path>
+                The location path of the disk to receive focus.
+
+    DISK=SYSTEM
+                On BIOS machines, BIOS disk 0 will receive focus.
+                On EFI machines, the disk containing the ESP partition
+                used for the current boot will receive focus. On EFI
+                machines, if there is no ESP, or there is more than
+                one ESP present, or the machine is booted from Windows PE,
+                the command will fail.
+
+    DISK=NEXT
+                Once a disk is selected, this command is used to iterate
+                over all disks in the disk list. The next disk in the list
+                will receive focus. If the next disk is the start of the
+                enumeration, the command will fail and no disk will have
+                focus.
+
+    If no options are specified, the select command lists the disk that
+    currently has the focus. You can view the DiskPart index numbers
+    for all disks on the computer by using the LIST DISK command.
+
+Example:
+
+    SELECT DISK=1
+    SELECT DISK=SYSTEM
+    SELECT DISK=NEXT
+    SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Russian
-<Add SELECT DISK command help text here>
+    Selects the specified disk and shifts the focus to it.
+
+Syntax:  SELECT DISK=<N>
+         SELECT DISK=SYSTEM
+         SELECT DISK=NEXT
+         SELECT DISK=<Path>
+
+    DISK=<N>
+                The DiskPart disk index number of the disk to receive
+                focus.
+
+    DISK=<Path>
+                The location path of the disk to receive focus.
+
+    DISK=SYSTEM
+                On BIOS machines, BIOS disk 0 will receive focus.
+                On EFI machines, the disk containing the ESP partition
+                used for the current boot will receive focus. On EFI
+                machines, if there is no ESP, or there is more than
+                one ESP present, or the machine is booted from Windows PE,
+                the command will fail.
+
+    DISK=NEXT
+                Once a disk is selected, this command is used to iterate
+                over all disks in the disk list. The next disk in the list
+                will receive focus. If the next disk is the start of the
+                enumeration, the command will fail and no disk will have
+                focus.
+
+    If no options are specified, the select command lists the disk that
+    currently has the focus. You can view the DiskPart index numbers
+    for all disks on the computer by using the LIST DISK command.
+
+Example:
+
+    SELECT DISK=1
+    SELECT DISK=SYSTEM
+    SELECT DISK=NEXT
+    SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Albanian
-<Add SELECT DISK command help text here>
+    Selects the specified disk and shifts the focus to it.
+
+Syntax:  SELECT DISK=<N>
+         SELECT DISK=SYSTEM
+         SELECT DISK=NEXT
+         SELECT DISK=<Path>
+
+    DISK=<N>
+                The DiskPart disk index number of the disk to receive
+                focus.
+
+    DISK=<Path>
+                The location path of the disk to receive focus.
+
+    DISK=SYSTEM
+                On BIOS machines, BIOS disk 0 will receive focus.
+                On EFI machines, the disk containing the ESP partition
+                used for the current boot will receive focus. On EFI
+                machines, if there is no ESP, or there is more than
+                one ESP present, or the machine is booted from Windows PE,
+                the command will fail.
+
+    DISK=NEXT
+                Once a disk is selected, this command is used to iterate
+                over all disks in the disk list. The next disk in the list
+                will receive focus. If the next disk is the start of the
+                enumeration, the command will fail and no disk will have
+                focus.
+
+    If no options are specified, the select command lists the disk that
+    currently has the focus. You can view the DiskPart index numbers
+    for all disks on the computer by using the LIST DISK command.
+
+Example:
+
+    SELECT DISK=1
+    SELECT DISK=SYSTEM
+    SELECT DISK=NEXT
+    SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Turkish
-<Add SELECT DISK command help text here>
+    Selects the specified disk and shifts the focus to it.
+
+Syntax:  SELECT DISK=<N>
+         SELECT DISK=SYSTEM
+         SELECT DISK=NEXT
+         SELECT DISK=<Path>
+
+    DISK=<N>
+                The DiskPart disk index number of the disk to receive
+                focus.
+
+    DISK=<Path>
+                The location path of the disk to receive focus.
+
+    DISK=SYSTEM
+                On BIOS machines, BIOS disk 0 will receive focus.
+                On EFI machines, the disk containing the ESP partition
+                used for the current boot will receive focus. On EFI
+                machines, if there is no ESP, or there is more than
+                one ESP present, or the machine is booted from Windows PE,
+                the command will fail.
+
+    DISK=NEXT
+                Once a disk is selected, this command is used to iterate
+                over all disks in the disk list. The next disk in the list
+                will receive focus. If the next disk is the start of the
+                enumeration, the command will fail and no disk will have
+                focus.
+
+    If no options are specified, the select command lists the disk that
+    currently has the focus. You can view the DiskPart index numbers
+    for all disks on the computer by using the LIST DISK command.
+
+Example:
+
+    SELECT DISK=1
+    SELECT DISK=SYSTEM
+    SELECT DISK=NEXT
+    SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Chinese
-<Add SELECT DISK command help text here>
+    Selects the specified disk and shifts the focus to it.
+
+Syntax:  SELECT DISK=<N>
+         SELECT DISK=SYSTEM
+         SELECT DISK=NEXT
+         SELECT DISK=<Path>
+
+    DISK=<N>
+                The DiskPart disk index number of the disk to receive
+                focus.
+
+    DISK=<Path>
+                The location path of the disk to receive focus.
+
+    DISK=SYSTEM
+                On BIOS machines, BIOS disk 0 will receive focus.
+                On EFI machines, the disk containing the ESP partition
+                used for the current boot will receive focus. On EFI
+                machines, if there is no ESP, or there is more than
+                one ESP present, or the machine is booted from Windows PE,
+                the command will fail.
+
+    DISK=NEXT
+                Once a disk is selected, this command is used to iterate
+                over all disks in the disk list. The next disk in the list
+                will receive focus. If the next disk is the start of the
+                enumeration, the command will fail and no disk will have
+                focus.
+
+    If no options are specified, the select command lists the disk that
+    currently has the focus. You can view the DiskPart index numbers
+    for all disks on the computer by using the LIST DISK command.
+
+Example:
+
+    SELECT DISK=1
+    SELECT DISK=SYSTEM
+    SELECT DISK=NEXT
+    SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 Language=Taiwanese
-<Add SELECT DISK command help text here>
+    Selects the specified disk and shifts the focus to it.
+
+Syntax:  SELECT DISK=<N>
+         SELECT DISK=SYSTEM
+         SELECT DISK=NEXT
+         SELECT DISK=<Path>
+
+    DISK=<N>
+                The DiskPart disk index number of the disk to receive
+                focus.
+
+    DISK=<Path>
+                The location path of the disk to receive focus.
+
+    DISK=SYSTEM
+                On BIOS machines, BIOS disk 0 will receive focus.
+                On EFI machines, the disk containing the ESP partition
+                used for the current boot will receive focus. On EFI
+                machines, if there is no ESP, or there is more than
+                one ESP present, or the machine is booted from Windows PE,
+                the command will fail.
+
+    DISK=NEXT
+                Once a disk is selected, this command is used to iterate
+                over all disks in the disk list. The next disk in the list
+                will receive focus. If the next disk is the start of the
+                enumeration, the command will fail and no disk will have
+                focus.
+
+    If no options are specified, the select command lists the disk that
+    currently has the focus. You can view the DiskPart index numbers
+    for all disks on the computer by using the LIST DISK command.
+
+Example:
+
+    SELECT DISK=1
+    SELECT DISK=SYSTEM
+    SELECT DISK=NEXT
+    SELECT DISK=PCIROOT(0)#PCI(0100)#ATA(C00T00L01)
 .
 
 
