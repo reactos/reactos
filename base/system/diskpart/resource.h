@@ -89,6 +89,12 @@
 #define IDS_SELECT_VOLUME              4408
 #define IDS_SELECT_VOLUME_INVALID      4409
 
+#define IDS_SETID_FAIL                 4450
+#define IDS_SETID_SUCCESS              4451
+#define IDS_SETID_INVALID_FORMAT       4452
+#define IDS_SETID_INVALID_TYPE         4453
+
+
 #define IDS_STATUS_YES          31
 #define IDS_STATUS_NO           32
 #define IDS_STATUS_DISK_HEALTHY 33

@@ -120,6 +120,14 @@ BEGIN
     IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_SETID_FAIL "\nDiskPart was unable to change the partition type.\n"
+    IDS_SETID_SUCCESS "\nThe partition type was changed successfully.\n"
+    IDS_SETID_INVALID_FORMAT "\nThe format of the partition type is invalid.\n"
+    IDS_SETID_INVALID_TYPE "\nThe partition type is invalid.\n"
+END
+
 /* Disk Status */
 STRINGTABLE
 BEGIN
