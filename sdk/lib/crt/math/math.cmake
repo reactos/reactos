@@ -53,6 +53,7 @@ if(ARCH STREQUAL "i386")
     )
 elseif(ARCH STREQUAL "amd64")
     list(APPEND LIBCNTPR_MATH_SOURCE
+        math/amd64/_set_statfp.c
         math/ceil.c
         math/cos.c
         math/sin.c
