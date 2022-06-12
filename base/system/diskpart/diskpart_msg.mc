@@ -2472,34 +2472,156 @@ SymbolicName=MSG_COMMAND_LIST_PARTITION
 Severity=Informational
 Facility=System
 Language=English
-<Add LIST PARTITION command help text here>
+    Displays a list of partitions in the partition table for the selected disk.
+
+Syntax:  LIST PARTITION
+
+    On dynamic disks, the partitions do not neccessarily correspond to the
+    dynamic volumes on the disk. Partitions may not be created or deleted
+    on dynamic disks.
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    LIST PARTITION
 .
 Language=German
-<Add LIST PARTITION command help text here>
+    Zeigt eine Liste der Partitionen in der Partitionstabelle für den
+    ausgewählten Datenträger an.
+
+Syntax:  LIST PARTITION
+
+    Auf dynamischen Datenträgern entsprechen die Partitionen nicht unbedingt
+    den dynamischen Volumes auf dem Datenträger. Partitionen werden auf
+    dynamischen Datenträgern möglicherweise nicht erstellt oder gelöscht.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    Datenträger ausgewählt werden.
+
+Beispiel:
+
+    LIST PARTITION
 .
 Language=Polish
-<Add LIST PARTITION command help text here>
+    Displays a list of partitions in the partition table for the selected disk.
+
+Syntax:  LIST PARTITION
+
+    On dynamic disks, the partitions do not neccessarily correspond to the
+    dynamic volumes on the disk. Partitions may not be created or deleted
+    on dynamic disks.
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    LIST PARTITION
 .
 Language=Portugese
-<Add LIST PARTITION command help text here>
+    Displays a list of partitions in the partition table for the selected disk.
+
+Syntax:  LIST PARTITION
+
+    On dynamic disks, the partitions do not neccessarily correspond to the
+    dynamic volumes on the disk. Partitions may not be created or deleted
+    on dynamic disks.
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    LIST PARTITION
 .
 Language=Romanian
-<Add LIST PARTITION command help text here>
+    Displays a list of partitions in the partition table for the selected disk.
+
+Syntax:  LIST PARTITION
+
+    On dynamic disks, the partitions do not neccessarily correspond to the
+    dynamic volumes on the disk. Partitions may not be created or deleted
+    on dynamic disks.
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    LIST PARTITION
 .
 Language=Russian
-<Add LIST PARTITION command help text here>
+    Displays a list of partitions in the partition table for the selected disk.
+
+Syntax:  LIST PARTITION
+
+    On dynamic disks, the partitions do not neccessarily correspond to the
+    dynamic volumes on the disk. Partitions may not be created or deleted
+    on dynamic disks.
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    LIST PARTITION
 .
 Language=Albanian
-<Add LIST PARTITION command help text here>
+    Displays a list of partitions in the partition table for the selected disk.
+
+Syntax:  LIST PARTITION
+
+    On dynamic disks, the partitions do not neccessarily correspond to the
+    dynamic volumes on the disk. Partitions may not be created or deleted
+    on dynamic disks.
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    LIST PARTITION
 .
 Language=Turkish
-<Add LIST PARTITION command help text here>
+    Displays a list of partitions in the partition table for the selected disk.
+
+Syntax:  LIST PARTITION
+
+    On dynamic disks, the partitions do not neccessarily correspond to the
+    dynamic volumes on the disk. Partitions may not be created or deleted
+    on dynamic disks.
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    LIST PARTITION
 .
 Language=Chinese
-<Add LIST PARTITION command help text here>
+    Displays a list of partitions in the partition table for the selected disk.
+
+Syntax:  LIST PARTITION
+
+    On dynamic disks, the partitions do not neccessarily correspond to the
+    dynamic volumes on the disk. Partitions may not be created or deleted
+    on dynamic disks.
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    LIST PARTITION
 .
 Language=Taiwanese
-<Add LIST PARTITION command help text here>
+    Displays a list of partitions in the partition table for the selected disk.
+
+Syntax:  LIST PARTITION
+
+    On dynamic disks, the partitions do not neccessarily correspond to the
+    dynamic volumes on the disk. Partitions may not be created or deleted
+    on dynamic disks.
+
+    A disk must be selected for this operation to succeed.
+
+Example:
+
+    LIST PARTITION
 .
 
 
