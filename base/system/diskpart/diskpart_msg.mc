@@ -2214,34 +2214,257 @@ SymbolicName=MSG_COMMAND_LIST_DISK
 Severity=Informational
 Facility=System
 Language=English
-<Add LIST DISK command help text here>
+    Displays a list of disks.
+
+Syntax:  LIST DISK
+
+    Displays a list of disks and information about them, such as their
+    size, amount of available free space, whether the disk is a basic
+    or dynamic disk, and whether the disk uses the master boot record
+    (MBR) or GUID partition table (GPT) partition style. The disk marked
+    with an asterisk (*) has focus.
+
+    Note that the FREE column does not display the total amount of free
+    space on the disk, but rather the amount of usable free space left
+    on the disk. For example, if you have a 10GB disk with 4 primary
+    partitions covering 5GB, there is no usable free space left (no
+    more partitions may be created). Another example would be you have
+    a 10GB disk with 3 primary partitions and an extended partition
+    covering 8GB. The exended partition is of size 3GB with one logical
+    drive of size 2GB. The disk will show only 1GB as free - the
+    1GB of free space in the extended partition.
+
+Example:
+
+    LIST DISK
 .
 Language=German
-<Add LIST DISK command help text here>
+    Zeigt eine Liste der Datenträger an.
+
+Syntax:  LIST DISK
+
+    Zeigt eine Liste mit Datenträgern und entsprechenden Informa-
+    tionen an - beispielsweise Größe, verfügbarer Speicherplatz sowie
+    Angaben dazu, ob es sich bei dem Datenträger um einen
+    Basisdatenträger oder um einen dynamischer Datenträger handelt
+    und ob der MBR- oder der GUID-Partitionsstil (Master Boot Record
+    oder GUID-Partitionstabelle) verwendet wird.
+    Den Fokus besitzt der mit einem Sternchen (*) markierte Datenträger.
+
+    In der Spalte "FREE" wird nicht der gesamte freie Speicherplatz
+    auf dem Datenträger, sondern der verbleibende, verwendbare freie
+    Speicherplatz angezeigt. Bei einem Datenträger mit 10 GB mit
+    4 primären Partitionen zu 5 GB verbleibt beispielsweise kein freier
+    verwendbarer Speicherplatz (es können keine weiteren Partitionen
+    erstellt werden). Ein weiteres Beispiel ist ein 10 GB Datenträger mit
+    3 primären Partitionen und einer erweiterten Partition mit 8 GB. Die
+    erweiterte Partition besitzt eine Größe von 3 GB mit einem logischen
+    Laufwerk (2 GB). Für den Datenträger wird nur 1 GB als frei
+    angezeigt - 1 GB freier Speicherplatz in der erweiterten Partition.
+
+Beispiel:
+
+    LIST DISK
 .
 Language=Polish
-<Add LIST DISK command help text here>
+    Displays a list of disks.
+
+Syntax:  LIST DISK
+
+    Displays a list of disks and information about them, such as their
+    size, amount of available free space, whether the disk is a basic
+    or dynamic disk, and whether the disk uses the master boot record
+    (MBR) or GUID partition table (GPT) partition style. The disk marked
+    with an asterisk (*) has focus.
+
+    Note that the FREE column does not display the total amount of free
+    space on the disk, but rather the amount of usable free space left
+    on the disk. For example, if you have a 10GB disk with 4 primary
+    partitions covering 5GB, there is no usable free space left (no
+    more partitions may be created). Another example would be you have
+    a 10GB disk with 3 primary partitions and an extended partition
+    covering 8GB. The exended partition is of size 3GB with one logical
+    drive of size 2GB. The disk will show only 1GB as free - the
+    1GB of free space in the extended partition.
+
+Example:
+
+    LIST DISK
 .
 Language=Portugese
-<Add LIST DISK command help text here>
+    Displays a list of disks.
+
+Syntax:  LIST DISK
+
+    Displays a list of disks and information about them, such as their
+    size, amount of available free space, whether the disk is a basic
+    or dynamic disk, and whether the disk uses the master boot record
+    (MBR) or GUID partition table (GPT) partition style. The disk marked
+    with an asterisk (*) has focus.
+
+    Note that the FREE column does not display the total amount of free
+    space on the disk, but rather the amount of usable free space left
+    on the disk. For example, if you have a 10GB disk with 4 primary
+    partitions covering 5GB, there is no usable free space left (no
+    more partitions may be created). Another example would be you have
+    a 10GB disk with 3 primary partitions and an extended partition
+    covering 8GB. The exended partition is of size 3GB with one logical
+    drive of size 2GB. The disk will show only 1GB as free - the
+    1GB of free space in the extended partition.
+
+Example:
+
+    LIST DISK
 .
 Language=Romanian
-<Add LIST DISK command help text here>
+    Displays a list of disks.
+
+Syntax:  LIST DISK
+
+    Displays a list of disks and information about them, such as their
+    size, amount of available free space, whether the disk is a basic
+    or dynamic disk, and whether the disk uses the master boot record
+    (MBR) or GUID partition table (GPT) partition style. The disk marked
+    with an asterisk (*) has focus.
+
+    Note that the FREE column does not display the total amount of free
+    space on the disk, but rather the amount of usable free space left
+    on the disk. For example, if you have a 10GB disk with 4 primary
+    partitions covering 5GB, there is no usable free space left (no
+    more partitions may be created). Another example would be you have
+    a 10GB disk with 3 primary partitions and an extended partition
+    covering 8GB. The exended partition is of size 3GB with one logical
+    drive of size 2GB. The disk will show only 1GB as free - the
+    1GB of free space in the extended partition.
+
+Example:
+
+    LIST DISK
 .
 Language=Russian
-<Add LIST DISK command help text here>
+    Displays a list of disks.
+
+Syntax:  LIST DISK
+
+    Displays a list of disks and information about them, such as their
+    size, amount of available free space, whether the disk is a basic
+    or dynamic disk, and whether the disk uses the master boot record
+    (MBR) or GUID partition table (GPT) partition style. The disk marked
+    with an asterisk (*) has focus.
+
+    Note that the FREE column does not display the total amount of free
+    space on the disk, but rather the amount of usable free space left
+    on the disk. For example, if you have a 10GB disk with 4 primary
+    partitions covering 5GB, there is no usable free space left (no
+    more partitions may be created). Another example would be you have
+    a 10GB disk with 3 primary partitions and an extended partition
+    covering 8GB. The exended partition is of size 3GB with one logical
+    drive of size 2GB. The disk will show only 1GB as free - the
+    1GB of free space in the extended partition.
+
+Example:
+
+    LIST DISK
 .
 Language=Albanian
-<Add LIST DISK command help text here>
+    Displays a list of disks.
+
+Syntax:  LIST DISK
+
+    Displays a list of disks and information about them, such as their
+    size, amount of available free space, whether the disk is a basic
+    or dynamic disk, and whether the disk uses the master boot record
+    (MBR) or GUID partition table (GPT) partition style. The disk marked
+    with an asterisk (*) has focus.
+
+    Note that the FREE column does not display the total amount of free
+    space on the disk, but rather the amount of usable free space left
+    on the disk. For example, if you have a 10GB disk with 4 primary
+    partitions covering 5GB, there is no usable free space left (no
+    more partitions may be created). Another example would be you have
+    a 10GB disk with 3 primary partitions and an extended partition
+    covering 8GB. The exended partition is of size 3GB with one logical
+    drive of size 2GB. The disk will show only 1GB as free - the
+    1GB of free space in the extended partition.
+
+Example:
+
+    LIST DISK
 .
 Language=Turkish
-<Add LIST DISK command help text here>
+    Displays a list of disks.
+
+Syntax:  LIST DISK
+
+    Displays a list of disks and information about them, such as their
+    size, amount of available free space, whether the disk is a basic
+    or dynamic disk, and whether the disk uses the master boot record
+    (MBR) or GUID partition table (GPT) partition style. The disk marked
+    with an asterisk (*) has focus.
+
+    Note that the FREE column does not display the total amount of free
+    space on the disk, but rather the amount of usable free space left
+    on the disk. For example, if you have a 10GB disk with 4 primary
+    partitions covering 5GB, there is no usable free space left (no
+    more partitions may be created). Another example would be you have
+    a 10GB disk with 3 primary partitions and an extended partition
+    covering 8GB. The exended partition is of size 3GB with one logical
+    drive of size 2GB. The disk will show only 1GB as free - the
+    1GB of free space in the extended partition.
+
+Example:
+
+    LIST DISK
 .
 Language=Chinese
-<Add LIST DISK command help text here>
+    Displays a list of disks.
+
+Syntax:  LIST DISK
+
+    Displays a list of disks and information about them, such as their
+    size, amount of available free space, whether the disk is a basic
+    or dynamic disk, and whether the disk uses the master boot record
+    (MBR) or GUID partition table (GPT) partition style. The disk marked
+    with an asterisk (*) has focus.
+
+    Note that the FREE column does not display the total amount of free
+    space on the disk, but rather the amount of usable free space left
+    on the disk. For example, if you have a 10GB disk with 4 primary
+    partitions covering 5GB, there is no usable free space left (no
+    more partitions may be created). Another example would be you have
+    a 10GB disk with 3 primary partitions and an extended partition
+    covering 8GB. The exended partition is of size 3GB with one logical
+    drive of size 2GB. The disk will show only 1GB as free - the
+    1GB of free space in the extended partition.
+
+Example:
+
+    LIST DISK
 .
 Language=Taiwanese
-<Add LIST DISK command help text here>
+    Displays a list of disks.
+
+Syntax:  LIST DISK
+
+    Displays a list of disks and information about them, such as their
+    size, amount of available free space, whether the disk is a basic
+    or dynamic disk, and whether the disk uses the master boot record
+    (MBR) or GUID partition table (GPT) partition style. The disk marked
+    with an asterisk (*) has focus.
+
+    Note that the FREE column does not display the total amount of free
+    space on the disk, but rather the amount of usable free space left
+    on the disk. For example, if you have a 10GB disk with 4 primary
+    partitions covering 5GB, there is no usable free space left (no
+    more partitions may be created). Another example would be you have
+    a 10GB disk with 3 primary partitions and an extended partition
+    covering 8GB. The exended partition is of size 3GB with one logical
+    drive of size 2GB. The disk will show only 1GB as free - the
+    1GB of free space in the extended partition.
+
+Example:
+
+    LIST DISK
 .
 
 MessageId=10033
