@@ -19,7 +19,7 @@ OpenCurrentToken(VOID)
                                &Token);
     if (!Success)
     {
-        ok(0, "OpenProcessToken() has failed to get the process' token (error code: %lu)!\n", GetLastError());
+        ok(FALSE, "OpenProcessToken() has failed to get the process' token (error code: %lu)!\n", GetLastError());
         return NULL;
     }
 
@@ -52,7 +52,7 @@ QueryTokenUserTests(
     UserToken = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
     if (!UserToken)
     {
-        ok(0, "Failed to allocate from heap for token user (required buffer length %lu)!\n", BufferLength);
+        ok(FALSE, "Failed to allocate from heap for token user (required buffer length %lu)!\n", BufferLength);
         return;
     }
 
@@ -98,7 +98,7 @@ QueryTokenGroupsTests(
     Groups = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
     if (!Groups)
     {
-        ok(0, "Failed to allocate from heap for token groups (required buffer length %lu)!\n", BufferLength);
+        ok(FALSE, "Failed to allocate from heap for token groups (required buffer length %lu)!\n", BufferLength);
         return;
     }
 
@@ -142,7 +142,7 @@ QueryTokenPrivilegesTests(
     Privileges = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
     if (!Privileges)
     {
-        ok(0, "Failed to allocate from heap for token privileges (required buffer length %lu)!\n", BufferLength);
+        ok(FALSE, "Failed to allocate from heap for token privileges (required buffer length %lu)!\n", BufferLength);
         return;
     }
 
@@ -187,7 +187,7 @@ QueryTokenOwnerTests(
     Owner = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
     if (!Owner)
     {
-        ok(0, "Failed to allocate from heap for token owner (required buffer length %lu)!\n", BufferLength);
+        ok(FALSE, "Failed to allocate from heap for token owner (required buffer length %lu)!\n", BufferLength);
         return;
     }
 
@@ -235,7 +235,7 @@ QueryTokenPrimaryGroupTests(
     PrimaryGroup = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
     if (!PrimaryGroup)
     {
-        ok(0, "Failed to allocate from heap for token primary group (required buffer length %lu)!\n", BufferLength);
+        ok(FALSE, "Failed to allocate from heap for token primary group (required buffer length %lu)!\n", BufferLength);
         return;
     }
 
@@ -281,7 +281,7 @@ QueryTokenDefaultDaclTests(
     Dacl = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
     if (!Dacl)
     {
-        ok(0, "Failed to allocate from heap for token default DACL (required buffer length %lu)!\n", BufferLength);
+        ok(FALSE, "Failed to allocate from heap for token default DACL (required buffer length %lu)!\n", BufferLength);
         return;
     }
 
@@ -327,7 +327,7 @@ QueryTokenSourceTests(
     Source = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
     if (!Source)
     {
-        ok(0, "Failed to allocate from heap for token source (required buffer length %lu)!\n", BufferLength);
+        ok(FALSE, "Failed to allocate from heap for token source (required buffer length %lu)!\n", BufferLength);
         return;
     }
 
@@ -423,7 +423,7 @@ QueryTokenImpersonationTests(
                               &DupToken);
     if (!NT_SUCCESS(Status))
     {
-        ok(0, "Failed to duplicate token (Status code %lx)!\n", Status);
+        ok(FALSE, "Failed to duplicate token (Status code %lx)!\n", Status);
         return;
     }
 
@@ -515,7 +515,7 @@ QueryTokenRestrictedSidsTest(
     RestrictedGroups = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
     if (!RestrictedGroups)
     {
-        ok(0, "Failed to allocate from heap for restricted SIDs (required buffer length %lu)!\n", BufferLength);
+        ok(FALSE, "Failed to allocate from heap for restricted SIDs (required buffer length %lu)!\n", BufferLength);
         return;
     }
 
@@ -541,7 +541,7 @@ QueryTokenRestrictedSidsTest(
                                          &WorldSid);
     if (!NT_SUCCESS(Status))
     {
-        ok(0, "Failed to allocate World SID (Status code %lx)!\n", Status);
+        ok(FALSE, "Failed to allocate World SID (Status code %lx)!\n", Status);
         return;
     }
 
@@ -557,7 +557,7 @@ QueryTokenRestrictedSidsTest(
                            &FilteredToken);
     if (!NT_SUCCESS(Status))
     {
-        ok(0, "Failed to filter the current token (Status code %lx)!\n", Status);
+        ok(FALSE, "Failed to filter the current token (Status code %lx)!\n", Status);
         RtlFreeHeap(RtlGetProcessHeap(), 0, WorldSid);
         return;
     }
@@ -572,7 +572,7 @@ QueryTokenRestrictedSidsTest(
     RestrictedGroups = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
     if (!RestrictedGroups)
     {
-        ok(0, "Failed to allocate from heap for restricted SIDs (required buffer length %lu)!\n", BufferLength);
+        ok(FALSE, "Failed to allocate from heap for restricted SIDs (required buffer length %lu)!\n", BufferLength);
         RtlFreeHeap(RtlGetProcessHeap(), 0, WorldSid);
         return;
     }
@@ -615,6 +615,59 @@ QueryTokenSessionIdTests(
                                      &BufferLength);
     ok_ntstatus(Status, STATUS_SUCCESS);
     ok(SessionId == 0, "The session ID of current token must be 0 (current session %lu)!\n", SessionId);
+}
+
+static
+VOID
+QueryTokenIsSandboxInert(
+    _In_ HANDLE Token)
+{
+    NTSTATUS Status;
+    ULONG IsTokenInert;
+    ULONG BufferLength;
+    HANDLE FilteredToken;
+
+    /*
+     * Query the sandbox inert token information,
+     * it must not be inert.
+     */
+    Status = NtQueryInformationToken(Token,
+                                     TokenSandBoxInert,
+                                     &IsTokenInert,
+                                     sizeof(ULONG),
+                                     &BufferLength);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok(IsTokenInert == FALSE, "The token must not be a sandbox inert one!\n");
+
+    /*
+     * Try to turn the token into an inert
+     * one by filtering it.
+     */
+    Status = NtFilterToken(Token,
+                           SANDBOX_INERT,
+                           NULL,
+                           NULL,
+                           NULL,
+                           &FilteredToken);
+    if (!NT_SUCCESS(Status))
+    {
+        ok(FALSE, "Failed to filter the current token (Status code %lx)!\n", Status);
+        return;
+    }
+
+    /*
+     * Now do a query again, this time
+     * the token should be inert.
+     */
+    Status = NtQueryInformationToken(FilteredToken,
+                                     TokenSandBoxInert,
+                                     &IsTokenInert,
+                                     sizeof(ULONG),
+                                     &BufferLength);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok(IsTokenInert == TRUE, "The token must be a sandbox inert one after filtering!\n");
+
+    CloseHandle(FilteredToken);
 }
 
 static
@@ -693,6 +746,7 @@ START_TEST(NtQueryInformationToken)
     QueryTokenStatisticsTests(Token);
     QueryTokenRestrictedSidsTest(Token);
     QueryTokenSessionIdTests(Token);
+    QueryTokenIsSandboxInert(Token);
     QueryTokenOriginTests(Token);
 
     CloseHandle(Token);
