@@ -1182,6 +1182,27 @@ SeCopyClientToken(
 
 /**
  * @brief
+ * Determines if a token is a sandbox inert token or not,
+ * based upon the token flags.
+ *
+ * @param[in] Token
+ * A valid access token to determine if such token is inert.
+ *
+ * @return
+ * Returns TRUE if the token is inert, FALSE otherwise.
+ */
+BOOLEAN
+NTAPI
+SeTokenIsInert(
+    _In_ PTOKEN Token)
+{
+    PAGED_CODE();
+
+    return (((PTOKEN)Token)->TokenFlags & TOKEN_SANDBOX_INERT) != 0;
+}
+
+/**
+ * @brief
  * Internal function that deals with access token object destruction and deletion.
  * The function is used solely by the object manager mechanism that handles the life
  * management of a token object.

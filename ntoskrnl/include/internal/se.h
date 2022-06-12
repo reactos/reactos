@@ -443,6 +443,11 @@ SeCopyClientToken(
     _In_ KPROCESSOR_MODE PreviousMode,
     _Out_ PACCESS_TOKEN* NewToken);
 
+BOOLEAN
+NTAPI
+SeTokenIsInert(
+    _In_ PTOKEN Token);
+
 ULONG
 RtlLengthSidAndAttributes(
     _In_ ULONG Count,

@@ -984,9 +984,26 @@ NtQueryInformationToken(
             }
 
             case TokenSandBoxInert:
-                DPRINT1("NtQueryInformationToken(TokenSandboxInert) not implemented\n");
-                Status = STATUS_NOT_IMPLEMENTED;
+            {
+                ULONG IsTokenSandBoxInert;
+
+                DPRINT("NtQueryInformationToken(TokenSandBoxInert)\n");
+
+                IsTokenSandBoxInert = SeTokenIsInert(Token);
+                _SEH2_TRY
+                {
+                    /* Buffer size was already verified, no need to check here again */
+                    *(PULONG)TokenInformation = IsTokenSandBoxInert;
+                    *ReturnLength = sizeof(ULONG);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
                 break;
+            }
 
             case TokenSessionId:
             {
