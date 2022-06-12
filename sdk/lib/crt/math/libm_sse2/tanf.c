@@ -39,10 +39,12 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
+#ifdef _MSC_VER
 // Disable "C4163: not available as intrinsic function" warning that older
 // compilers may issue here.
 #pragma warning(disable:4163)
 #pragma function(tanf)
+#endif
 
 /* tan(x) approximation valid on the interval [-pi/4,pi/4].
    If recip is true return -1/tan(x) instead. */
@@ -72,7 +74,7 @@ float tanf(float x)
   double r, dx;
   int region, xneg;
 
-  unsigned long ux, ax;
+  unsigned long long ux, ax;
 
   dx = x;
 
@@ -135,7 +137,7 @@ float tanf(float x)
         piby2_3tail =  8.47842766036889956997e-32; /* 0x397b839a252049c1 */
       double t, rhead, rtail;
       int npi2;
-      unsigned long uy, xexp, expdiff;
+      unsigned long long uy, xexp, expdiff;
       xexp  = ax >> EXPSHIFTBITS_DP64;
       /* How many pi/2 is dx a multiple of? */
       if (ax <= 0x400f6a7a2955385e) /* 5pi/4 */

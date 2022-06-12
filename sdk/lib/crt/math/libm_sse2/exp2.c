@@ -58,7 +58,7 @@ double FN_PROTOTYPE(_exp2)(double x)
 
   double y, z1, z2, z, hx, tx, y1, y2;
   int m;
-  unsigned long ux, ax;
+  unsigned long long ux, ax;
 
   /*
     Computation of exp2(x).
@@ -121,7 +121,7 @@ double FN_PROTOTYPE(_exp2)(double x)
       else
         {
           /* Split x into hx (head) and tx (tail). */
-          unsigned long u;
+          unsigned long long u;
           hx = x;
           GET_BITS_DP64(hx, u);
           u &= 0xfffffffff8000000;

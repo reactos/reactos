@@ -55,7 +55,7 @@ float FN_PROTOTYPE(_hypotf)(float x, float y)
     const double large = 3.40282346638528859812e+38; /* 0x47efffffe0000000 */
 
 
-  unsigned long ux, uy, avx, avy;
+  unsigned long long ux, uy, avx, avy;
 
   GET_BITS_DP64(x, avx);
   avx &= ~SIGNBIT_DP64;

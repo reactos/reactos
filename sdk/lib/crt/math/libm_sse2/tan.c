@@ -98,7 +98,7 @@ static inline double tan_piby4(double x, double xx, int recip)
     {
       /* Compute -1.0/(t1 + t2) accurately */
       double trec, trec_top, z1, z2, t;
-      unsigned long u;
+      unsigned long long u;
       t = t1 + t2;
       GET_BITS_DP64(t, u);
       u &= 0xffffffff00000000;
@@ -115,14 +115,16 @@ static inline double tan_piby4(double x, double xx, int recip)
     return t1 + t2;
 }
 
+#ifdef _MSC_VER
 #pragma function(tan)
+#endif
 
 double tan(double x)
 {
   double r, rr;
   int region, xneg;
 
-  unsigned long ux, ax;
+  unsigned long long ux, ax;
   GET_BITS_DP64(x, ux);
   ax = (ux & ~SIGNBIT_DP64);
   if (ax <= 0x3fe921fb54442d18) /* abs(x) <= pi/4 */
@@ -183,7 +185,7 @@ double tan(double x)
         piby2_3tail =  8.47842766036889956997e-32; /* 0x397b839a252049c1 */
       double t, rhead, rtail;
       int npi2;
-      unsigned long uy, xexp, expdiff;
+      unsigned long long uy, xexp, expdiff;
       xexp  = ax >> EXPSHIFTBITS_DP64;
       /* How many pi/2 is x a multiple of? */
       if (ax <= 0x400f6a7a2955385e) /* 5pi/4 */

@@ -46,7 +46,7 @@
    are not checked */
 static inline void splitDouble(double x, int *e, double *m)
 {
-  unsigned long ux, uy;
+  unsigned long long ux, uy;
   GET_BITS_DP64(x, ux);
   uy = ux;
   ux &= EXPBITS_DP64;
@@ -66,7 +66,7 @@ static inline void splitDouble(double x, int *e, double *m)
    assumption, e will be even on exit. */
 static inline void splitDouble_2(double x, int *e, double *m)
 {
-  unsigned long ux, vx;
+  unsigned long long ux, vx;
   GET_BITS_DP64(x, ux);
   vx = ux;
   ux &= EXPBITS_DP64;
@@ -117,7 +117,7 @@ static inline double scaleDouble_1(double x, int n)
 {
   double t;
   /* Construct the number t = 2.0**n */
-  PUT_BITS_DP64(((long)n + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t);
+  PUT_BITS_DP64(((long long)n + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t);
   return x*t;
 }
 #endif /* USE_SCALEDOUBLE_1 */
@@ -133,8 +133,8 @@ static inline double scaleDouble_2(double x, int n)
   n1 = n / 2;
   n2 = n - n1;
   /* Construct the numbers t1 = 2.0**n1 and t2 = 2.0**n2 */
-  PUT_BITS_DP64(((long)n1 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t1);
-  PUT_BITS_DP64(((long)n2 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t2);
+  PUT_BITS_DP64(((long long)n1 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t1);
+  PUT_BITS_DP64(((long long)n2 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t2);
   return (x*t1)*t2;
 }
 #endif /* USE_SCALEDOUBLE_2 */
@@ -151,9 +151,9 @@ static inline double scaleDouble_3(double x, int n)
   n2 = (n - n1) / 2;
   n3 = n - n1 - n2;
   /* Construct the numbers t1 = 2.0**n1, t2 = 2.0**n2 and t3 = 2.0**n3 */
-  PUT_BITS_DP64(((long)n1 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t1);
-  PUT_BITS_DP64(((long)n2 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t2);
-  PUT_BITS_DP64(((long)n3 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t3);
+  PUT_BITS_DP64(((long long)n1 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t1);
+  PUT_BITS_DP64(((long long)n2 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t2);
+  PUT_BITS_DP64(((long long)n3 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, t3);
   return ((x*t1)*t2)*t3;
 }
 #endif /* USE_SCALEDOUBLE_3 */
@@ -393,7 +393,7 @@ static inline double infinity_with_flags(int flags)
 {
   double z;
   raise_fpsw_flags(flags);
-  PUT_BITS_DP64((unsigned long)(BIASEDEMAX_DP64 + 1) << EXPSHIFTBITS_DP64, z);
+  PUT_BITS_DP64((unsigned long long)(BIASEDEMAX_DP64 + 1) << EXPSHIFTBITS_DP64, z);
   return z;
 }
 #endif /* USE_INFINITY_WITH_FLAGS */
@@ -419,7 +419,7 @@ static inline float infinityf_with_flags(int flags)
 double _handle_error(
         char *fname,
         int opcode,
-        unsigned long value,
+        unsigned long long value,
         int type,
         int flags,
         int error,
@@ -430,7 +430,7 @@ double _handle_error(
 float _handle_errorf(
         char *fname,
         int opcode,
-        unsigned long value,
+        unsigned long long value,
         int type,
         int flags,
         int error,
@@ -744,9 +744,9 @@ static inline void splitexpf(float x, float logbase,
 /* Scales up a double (normal or denormal) whose bit pattern is given
    as ux by 2**1024. There are no checks that the input number is
    scalable by that amount. */
-static inline void scaleUpDouble1024(unsigned long ux, unsigned long *ur)
+static inline void scaleUpDouble1024(unsigned long long ux, unsigned long long *ur)
 {
-  unsigned long uy;
+  unsigned long long uy;
   double y;
 
   if ((ux & EXPBITS_DP64) == 0)
@@ -773,17 +773,17 @@ static inline void scaleUpDouble1024(unsigned long ux, unsigned long *ur)
 #if defined(USE_SCALEDOWNDOUBLE)
 /* Scales down a double whose bit pattern is given as ux by 2**k.
    There are no checks that the input number is scalable by that amount. */
-static inline void scaleDownDouble(unsigned long ux, int k,
-                                   unsigned long *ur)
+static inline void scaleDownDouble(unsigned long long ux, int k,
+                                   unsigned long long *ur)
 {
-  unsigned long uy, uk, ax, xsign;
+  unsigned long long uy, uk, ax, xsign;
   int n, shift;
   xsign = ux & SIGNBIT_DP64;
   ax = ux & ~SIGNBIT_DP64;
   n = (int)((ax & EXPBITS_DP64) >> EXPSHIFTBITS_DP64) - k;
   if (n > 0)
     {
-      uk = (unsigned long)n << EXPSHIFTBITS_DP64;
+      uk = (unsigned long long)n << EXPSHIFTBITS_DP64;
       uy = (ax & ~EXPBITS_DP64) | uk;
     }
   else
@@ -898,7 +898,7 @@ static inline double sqrt_amd_inline(double x)
                = 2^(e/2) * [ sqrt(c) + sqrt(c)*q ]
     */
 
-  unsigned long ux, ax, u;
+  unsigned long long ux, ax, u;
   double r1, r2, c, y, p, q, r, twop, z, rtc, rtc_lead, rtc_trail;
   int e, denorm = 0, index;
 
@@ -1213,13 +1213,13 @@ static inline double sqrt_amd_inline(double x)
   if (denorm)
     {
       /* Scale by 2**(e-30) */
-      PUT_BITS_DP64(((long)(e - 30) + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, r);
+      PUT_BITS_DP64(((long long)(e - 30) + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, r);
       z *= r;
     }
   else
     {
       /* Scale by 2**e */
-      PUT_BITS_DP64(((long)e + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, r);
+      PUT_BITS_DP64(((long long)e + EXPBIAS_DP64) << EXPSHIFTBITS_DP64, r);
       z *= r;
     }
 
@@ -1586,7 +1586,7 @@ static const float rt_jby32_trail_table_float[97] = {
 #endif /* SQRTF_AMD_INLINE */
 
 #ifdef USE_LOG_KERNEL_AMD
-static inline void log_kernel_amd64(double x, unsigned long ux, int *xexp, double *r1, double *r2)
+static inline void log_kernel_amd64(double x, unsigned long long ux, int *xexp, double *r1, double *r2)
 {
 
   int expadjust;
@@ -1755,7 +1755,7 @@ static inline void log_kernel_amd64(double x, unsigned long ux, int *xexp, doubl
     cb_2 = 1.24999999978138668903e-02,  /* 0x3f89999999865ede */
     cb_3 = 2.23219810758559851206e-03;  /* 0x3f6249423bd94741 */
 
-  static const unsigned long
+  static const unsigned long long
     log_thresh1 = 0x3fee0faa00000000,
     log_thresh2 = 0x3ff1082c00000000;
 
@@ -1885,7 +1885,7 @@ static inline void log_kernel_amd64(double x, unsigned long ux, int *xexp, doubl
 
 #ifdef DEBUGGING_PRINT
 #include <stdio.h>
-char *d2b(long d, int bitsper, int point)
+char *d2b(long long d, int bitsper, int point)
 {
   static char buff[200];
   int i, j;
@@ -1915,7 +1915,7 @@ char *d2b(long d, int bitsper, int point)
    extra precision, and return the result in r.
    Return value "region" tells how many lots of pi/2 were subtracted
    from x to put it in the range [-pi/4,pi/4], mod 4. */
-static inline void __remainder_piby2f_inline(unsigned long ux, double *r, int *region)
+static inline void __remainder_piby2f_inline(unsigned long long ux, double *r, int *region)
 {
 
       /* This method simulates multi-precision floating-point
@@ -1925,13 +1925,13 @@ static inline void __remainder_piby2f_inline(unsigned long ux, double *r, int *r
 #else
 #define bitsper 36
 #endif
-      unsigned long res[10];
-      unsigned long u, carry, mask, mant, nextbits;
+      unsigned long long res[10];
+      unsigned long long u, carry, mask, mant, nextbits;
       int first, last, i, rexp, xexp, resexp, ltb, determ, bc;
       double dx;
       static const double
         piby2 = 1.57079632679489655800e+00; /* 0x3ff921fb54442d18 */
-      static unsigned long pibits[] =
+      static unsigned long long pibits[] =
       {
         0LL,
         5215LL, 13000023176LL, 11362338026LL, 67174558139LL,
@@ -1943,7 +1943,7 @@ static inline void __remainder_piby2f_inline(unsigned long ux, double *r, int *r
       ux = ((ux & MANTBITS_DP64) | IMPBIT_DP64) >> 29;
 
 
-      /* Now ux is the mantissa bit pattern of x as a long integer */
+      /* Now ux is the mantissa bit pattern of x as a long long integer */
       mask = 1;
       mask = (mask << bitsper) - 1;
 
@@ -2073,7 +2073,7 @@ static inline void __remainder_piby2f_inline(unsigned long ux, double *r, int *r
 #endif
 
       /* Put the result exponent rexp onto the mantissa pattern */
-      u = ((unsigned long)rexp + EXPBIAS_DP64) << EXPSHIFTBITS_DP64;
+      u = ((unsigned long long)rexp + EXPBIAS_DP64) << EXPSHIFTBITS_DP64;
       ux = (mant & MANTBITS_DP64) | u;
       if (determ)
         /* If we negated the mantissa we negate x too */

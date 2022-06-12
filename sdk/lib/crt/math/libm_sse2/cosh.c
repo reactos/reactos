@@ -41,8 +41,10 @@ THE SOFTWARE.
 #undef USE_VAL_WITH_FLAGS
 #undef USE_HANDLE_ERROR
 
-
+#ifdef _MSC_VER
 #pragma function(cosh)
+#endif
+
 double cosh(double x)
 {
   /*
@@ -230,10 +232,10 @@ double cosh(double x)
     3.64177136406482197344e+06,  /* 0x414bc8d5ae99ad14 */
     7.63580561355670914054e+06}; /* 0x415d20d76744835c */
 
-  unsigned long ux, aux, xneg;
+  unsigned long long ux, aux, xneg;
   double y, z, z1, z2;
   int m;
-
+  
   /* Special cases */
 
   GET_BITS_DP64(x, ux);

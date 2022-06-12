@@ -34,7 +34,7 @@ THE SOFTWARE.
 double FN_PROTOTYPE(_copysign)(double x, double y)
 {
 
-  unsigned long ux, uy;
+  unsigned long long ux, uy;
   GET_BITS_DP64(x, ux);
   GET_BITS_DP64(y, uy);
   if ((ux ^ uy) & SIGNBIT_DP64)

@@ -49,7 +49,7 @@ double sqrt(double x)
   return sqrt_amd_inline(x);
 #else
   double r;
-  unsigned long ux;
+  unsigned long long ux;
   GET_BITS_DP64(x, ux);
 
   /* Check for special cases for Microsoft error handling */

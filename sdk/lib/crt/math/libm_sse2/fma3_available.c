@@ -26,16 +26,18 @@ THE SOFTWARE.
 
 #ifdef TEST_STANDALONE
 #include <stdio.h>
+#ifdef _MSC_VER
 #pragma section (".CRT$XIC",long,read)
-typedef void (__cdecl *_PIFV)(void);
+#define _CRTALLOC(x) __declspec(allocate(x))
+#endif /* _MSC_VER */
 #else
+#include <intrin.h>
 #include <sect_attribs.h>
-#include <windows.h>
-#include <cruntime.h>
-#include <internal.h>
+#undef _CRTALLOC
+#define _CRTALLOC(x)
 #endif
 
-#define _CRTALLOC(x) __declspec(allocate(x))
+typedef int (__cdecl *_PIFV)(void); // FIXME: include process.h?
 
 int __fma3_is_available = 0;
 int __use_fma3_lib = 0;

@@ -45,7 +45,9 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
+#ifdef _MSC_VER
 #pragma function(atan2)
+#endif
 
 double FN_PROTOTYPE(atan2)(double y, double x)
 {
@@ -558,7 +560,7 @@ double FN_PROTOTYPE(atan2)(double y, double x)
 
   /* Find properties of arguments x and y. */
 
-  unsigned long ux, ui, aux, xneg, uy, auy, yneg;
+  unsigned long long ux, ui, aux, xneg, uy, auy, yneg;
 
   GET_BITS_DP64(x, ux);
   GET_BITS_DP64(y, uy);

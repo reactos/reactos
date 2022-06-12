@@ -37,7 +37,9 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
+#ifdef _MSC_VER
 #pragma function(atan)
+#endif
 
 double FN_PROTOTYPE(atan)(double x)
 {
@@ -49,7 +51,7 @@ double FN_PROTOTYPE(atan)(double x)
 
   /* Find properties of argument x. */
 
-  unsigned long ux, aux, xneg;
+  unsigned long long ux, aux, xneg;
   GET_BITS_DP64(x, ux);
   aux = ux & ~SIGNBIT_DP64;
   xneg = (ux != aux);

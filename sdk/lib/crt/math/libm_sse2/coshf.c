@@ -41,10 +41,12 @@ THE SOFTWARE.
 #undef USE_VALF_WITH_FLAGS
 #undef USE_HANDLE_ERRORF
 
+#ifdef _MSC_VER
 // Disable "C4163: not available as intrinsic function" warning that older
 // compilers may issue here.
 #pragma warning(disable:4163)
 #pragma function(coshf)
+#endif
 
 float coshf(float fx)
 {
@@ -154,7 +156,7 @@ float coshf(float fx)
     7.93006726156715250000e+14,  /* 0x430689e221bc8d5a */
     2.15561577355759750000e+15}; /* 0x431ea215a1d20d76 */
 
-  unsigned long ux, aux, xneg;
+  unsigned long long ux, aux, xneg;
   unsigned int uhx;
   double x = fx, y, z, z1, z2;
   int m;
@@ -169,6 +171,7 @@ float coshf(float fx)
       if (LAMBDA_DP64 + x  > 1.0) return valf_with_flags((float)1.0, AMD_F_INEXACT); /* with inexact */
     }
   else if (aux >= PINFBITPATT_DP64) /* |x| is NaN or Inf */
+    {
       if (aux > PINFBITPATT_DP64) /* x is NaN */
       {
         GET_BITS_SP32(fx, uhx);
@@ -177,6 +180,7 @@ float coshf(float fx)
       }
       else     /* x is infinity */
         return infinityf_with_flags(0);
+    }
   xneg = (aux != ux);
 
   y = x;

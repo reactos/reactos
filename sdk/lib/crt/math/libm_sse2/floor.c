@@ -37,10 +37,10 @@ THE SOFTWARE.
 double FN_PROTOTYPE(floor)(double x)
 {
   double r;
-  long rexp, xneg;
+  long long rexp, xneg;
 
 
-  unsigned long ux, ax, ur, mask;
+  unsigned long long ux, ax, ur, mask;
 
   GET_BITS_DP64(x, ux);
   ax = ux & (~SIGNBIT_DP64);

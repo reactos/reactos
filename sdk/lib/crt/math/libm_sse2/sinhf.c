@@ -41,11 +41,12 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
+#ifdef _MSC_VER
 // Disable "C4163: not available as intrinsic function" warning that older
 // compilers may issue here.
 #pragma warning(disable:4163)
 #pragma function(sinhf)
-
+#endif
 
 float sinhf(float fx)
 {
@@ -153,7 +154,7 @@ float sinhf(float fx)
     7.93006726156715250000e+14,  /* 0x430689e221bc8d5a */
     2.15561577355759750000e+15}; /* 0x431ea215a1d20d76 */
 
-  unsigned long ux, aux, xneg;
+  unsigned long long ux, aux, xneg;
   double x = fx, y, z, z1, z2;
   int m;
 

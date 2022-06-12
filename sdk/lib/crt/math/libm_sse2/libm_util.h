@@ -27,17 +27,9 @@
 #define LIBM_UTIL_AMD_H_INCLUDED 1
 
 #define inline __inline
-#undef long
-#define long __int64
 
-#include "emmintrin.h"
-#include "float.h"
-
-
-
-/* Compile-time verification that type long is the same size
-   as type double (i.e. we are really on a 64-bit machine) */
-void check_long_against_double_size(int machine_is_64_bit[(sizeof(long) == sizeof(double))?1:-1]); 
+#include <emmintrin.h>
+#include <float.h>
 
 
 /* Definitions for double functions on 64 bit machines */
@@ -98,7 +90,7 @@ void check_long_against_double_size(int machine_is_64_bit[(sizeof(long) == sizeo
 #define CLASS_POSITIVE_INFINITY 10
 
 #define OLD_BITS_SP32(x) (*((unsigned int *)&x))
-#define OLD_BITS_DP64(x) (*((unsigned long *)&x))
+#define OLD_BITS_DP64(x) (*((unsigned long long *)&x))
 
 /* Alternatives to the above functions which don't have
    problems when using high optimization levels on gcc */
@@ -117,13 +109,13 @@ void check_long_against_double_size(int machine_is_64_bit[(sizeof(long) == sizeo
 
 #define GET_BITS_DP64(x, ux) \
   { \
-    volatile union {double d; unsigned long i;} _bitsy; \
+    volatile union {double d; unsigned long long i;} _bitsy; \
     _bitsy.d = (x); \
     ux = _bitsy.i; \
   }
 #define PUT_BITS_DP64(ux, x) \
   { \
-    volatile union {double d; unsigned long i;} _bitsy; \
+    volatile union {double d; unsigned long long i;} _bitsy; \
     _bitsy.i = (ux); \
     x = _bitsy.d; \
   }
