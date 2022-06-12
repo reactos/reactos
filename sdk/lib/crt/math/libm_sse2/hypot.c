@@ -39,6 +39,9 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
+#if (_MSC_VER >= 1920) // VS 2019+ / Compiler version 14.20
+#pragma function(_hypot)
+#endif
 
 double FN_PROTOTYPE(_hypot)(double x, double y)
 {
@@ -49,10 +52,10 @@ double FN_PROTOTYPE(_hypot)(double x, double y)
 
 #ifdef FAST_BUT_GREATER_THAN_ONE_ULP
   double r, retval;
-  unsigned long xexp, yexp, ux, uy;
+  unsigned long long xexp, yexp, ux, uy;
 #else  
   double u, r, retval, hx, tx, x2, hy, ty, y2, hs, ts;
-  unsigned long xexp, yexp, ux, uy, ut;
+  unsigned long long xexp, yexp, ux, uy, ut;
 #endif
   int dexp, expadjust;
 

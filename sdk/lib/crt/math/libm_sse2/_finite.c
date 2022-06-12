@@ -33,7 +33,7 @@ int FN_PROTOTYPE(_finite)(double x)
 {
 
 
-  unsigned long ux;
+  unsigned long long ux;
   GET_BITS_DP64(x, ux);
   return (int)(((ux & ~SIGNBIT_DP64) - PINFBITPATT_DP64) >> 63);
 }

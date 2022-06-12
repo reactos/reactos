@@ -66,7 +66,7 @@ typedef UINT_PTR AWORD; //  x86-64 safe
 typedef union
 {
 	float f;
-	unsigned long l;
+    unsigned long long l;
 } LFLOAT;
 
 //typedef struct
@@ -78,7 +78,7 @@ typedef unsigned _int64 QWORD;
 typedef union
 {
 	double f;
-	unsigned long l[2];
+    unsigned long long l[2];
 } LDOUBLE;
 
 typedef __declspec(align(16)) struct
@@ -313,7 +313,7 @@ typedef struct {
     unsigned char opcode;
     unsigned char rmbyte;
     union {
-        unsigned long offset;       // this will need work for x86-64
+        unsigned long long offset; // this will need work for x86-64
         unsigned char imm8;
     } data;
     

@@ -64,7 +64,7 @@ float remainderf(float x, float y)
 {
   double dx, dy, scale, w, t;
   int i, ntimes, xexp, yexp;
-  unsigned long ux, uy, ax, ay;
+  unsigned long long ux, uy, ax, ay;
 
   unsigned int sw;
 
@@ -190,11 +190,11 @@ float remainderf(float x, float y)
       ntimes = (xexp - yexp) / 24;
 
       /* Set w = y * 2^(24*ntimes) */
-      PUT_BITS_DP64((unsigned long)(ntimes * 24 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64,
+      PUT_BITS_DP64((unsigned long long)(ntimes * 24 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64,
                     scale);
       w = scale * dy;
       /* Set scale = 2^(-24) */
-      PUT_BITS_DP64((unsigned long)(-24 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64,
+      PUT_BITS_DP64((unsigned long long)(-24 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64,
                     scale);
     }
 

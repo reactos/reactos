@@ -32,7 +32,7 @@ double FN_PROTOTYPE(_chgsign)(double x)
   /* Returns x with its sign reversed.
      NaNs are not considered special; their sign bits are handled
      the same as for any other number */
-  unsigned long u;
+  unsigned long long u;
   GET_BITS_DP64(x, u);
   u ^= SIGNBIT_DP64;
   PUT_BITS_DP64(u, x);

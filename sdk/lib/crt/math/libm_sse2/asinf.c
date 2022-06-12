@@ -37,11 +37,12 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
+#ifdef _MSC_VER
 // Disable "C4163: not available as intrinsic function" warning that older
 // compilers may issue here.
 #pragma warning(disable:4163)
 #pragma function(asinf)
-
+#endif
 
 float FN_PROTOTYPE(asinf)(float x)
 {

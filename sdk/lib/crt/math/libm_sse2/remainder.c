@@ -52,7 +52,7 @@ static inline void dekker_mul12(double x, double y,
 {
   double hx, tx, hy, ty;
   /* Split x into hx (head) and tx (tail). Do the same for y. */
-  unsigned long u;
+  unsigned long long u;
   GET_BITS_DP64(x, u);
   u &= 0xfffffffff8000000;
   PUT_BITS_DP64(u, hx);
@@ -79,7 +79,7 @@ double remainder(double x, double y)
 {
   double dx, dy, scale, w, t, v, c, cc;
   int i, ntimes, xexp, yexp;
-  unsigned long u, ux, uy, ax, ay, todd;
+  unsigned long long u, ux, uy, ax, ay, todd;
   unsigned int sw;
 
   dx = x;
@@ -227,7 +227,7 @@ double remainder(double x, double y)
       w = scaleDouble_3(dy, ntimes * 52);
 
       /* Set scale = 2^(-52) */
-      PUT_BITS_DP64((unsigned long)(-52 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64,
+      PUT_BITS_DP64((unsigned long long)(-52 + EXPBIAS_DP64) << EXPSHIFTBITS_DP64,
                     scale);
     }
 
@@ -252,7 +252,7 @@ double remainder(double x, double y)
          it loses the last (106th) bit of its quad precision result. */
 
       /* Set dx = dx - w * t, where t is equal to trunc(dx/w). */
-      t = (double)(long)(dx / w);
+      t = (double)(long long)(dx / w);
       /* At this point, t may be one too large due to
          rounding of dx/w */
 
@@ -277,8 +277,8 @@ double remainder(double x, double y)
 
   /* One more time */
   /* Variable todd says whether the integer t is odd or not */
-  t = (double)(long)(dx / w);
-  todd = ((long)(dx / w)) & 1;
+  t = (double)(long long)(dx / w);
+  todd = ((long long)(dx / w)) & 1;
   dekker_mul12(w, t, &c, &cc);
   v = dx - c;
   dx = v + (((dx - v) - c) - cc);

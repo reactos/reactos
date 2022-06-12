@@ -42,11 +42,11 @@ void __remainder_piby2(double x, double *r, double *rr, int *region)
         piby2_part2 = 1.58932547122958567343e-08, /* 0x3e5110b460000000 */
         piby2_part3 = 6.12323399573676480327e-17; /* 0x3c91a62633145c06 */
       const int bitsper = 10;
-      unsigned long res[500];
-      unsigned long ux, u, carry, mask, mant, highbitsrr;
+      unsigned long long res[500];
+      unsigned long long ux, u, carry, mask, mant, highbitsrr;
       int first, last, i, rexp, xexp, resexp, ltb, determ;
       double xx, t;
-      static unsigned long pibits[] =
+      static unsigned long long pibits[] =
       {
         0,    0,    0,    0,    0,    0,
         162,  998,   54,  915,  580,   84,  671,  777,  855,  839,
@@ -204,7 +204,7 @@ void __remainder_piby2(double x, double *r, double *rr, int *region)
 
 
       /* Put the result exponent rexp onto the mantissa pattern */
-      u = ((unsigned long)rexp + EXPBIAS_DP64) << EXPSHIFTBITS_DP64;
+      u = ((unsigned long long)rexp + EXPBIAS_DP64) << EXPSHIFTBITS_DP64;
       ux = (mant & MANTBITS_DP64) | u;
       if (determ)
         /* If we negated the mantissa we negate x too */
@@ -213,7 +213,7 @@ void __remainder_piby2(double x, double *r, double *rr, int *region)
 
       /* Create the bit pattern for rr */
       highbitsrr >>= 12; /* Note this is shifted one place too far */
-      u = ((unsigned long)rexp + EXPBIAS_DP64 - 53) << EXPSHIFTBITS_DP64;
+      u = ((unsigned long long)rexp + EXPBIAS_DP64 - 53) << EXPSHIFTBITS_DP64;
       PUT_BITS_DP64(u, t);
       u |= highbitsrr;
       PUT_BITS_DP64(u, xx);

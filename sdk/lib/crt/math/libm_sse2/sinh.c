@@ -43,8 +43,10 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
-
+#ifdef _MSC_VER
 #pragma function(sinh)
+#endif
+
 double sinh(double x)
 {
   /*
@@ -229,7 +231,7 @@ double sinh(double x)
     3.64177136406482197344e+06,  /* 0x414bc8d5ae99ad14 */
     7.63580561355670914054e+06}; /* 0x415d20d76744835c */
 
-  unsigned long ux, aux, xneg;
+  unsigned long long ux, aux, xneg;
   double y, z, z1, z2;
   int m;
 

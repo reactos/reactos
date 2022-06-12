@@ -41,10 +41,12 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
+#ifdef _MSC_VER
 // Disable "C4163: not available as intrinsic function" warning that older
 // compilers may issue here.
 #pragma warning(disable:4163)
 #pragma function(atan2f)
+#endif
 
 float FN_PROTOTYPE(atan2f)(float fy, float fx)
 {
@@ -310,7 +312,7 @@ float FN_PROTOTYPE(atan2f)(float fy, float fx)
 
   /* Find properties of arguments x and y. */
 
-  unsigned long ux, aux, xneg, uy, auy, yneg;
+  unsigned long long ux, aux, xneg, uy, auy, yneg;
 
   GET_BITS_DP64(x, ux);
   GET_BITS_DP64(y, uy);

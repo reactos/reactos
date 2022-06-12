@@ -32,20 +32,20 @@ THE SOFTWARE.
    extra precision, and return the result in r.
    Return value "region" tells how many lots of pi/2 were subtracted
    from x to put it in the range [-pi/4,pi/4], mod 4. */
-void __remainder_piby2f(unsigned long ux, double *r, int *region)
+void __remainder_piby2f(unsigned long long ux, double *r, int *region)
 {
 
 
       /* This method simulates multi-precision floating-point
          arithmetic and is accurate for all 1 <= x < infinity */
 #define bitsper 36
-      unsigned long res[10];
-      unsigned long u, carry, mask, mant, nextbits;
+      unsigned long long res[10];
+      unsigned long long u, carry, mask, mant, nextbits;
       int first, last, i, rexp, xexp, resexp, ltb, determ, bc;
       double dx;
       static const double
         piby2 = 1.57079632679489655800e+00; /* 0x3ff921fb54442d18 */
-      static unsigned long pibits[] =
+      static unsigned long long pibits[] =
       {
         0LL,
         5215LL, 13000023176LL, 11362338026LL, 67174558139LL,
@@ -156,7 +156,7 @@ void __remainder_piby2f(unsigned long ux, double *r, int *region)
 
 
       /* Put the result exponent rexp onto the mantissa pattern */
-      u = ((unsigned long)rexp + EXPBIAS_DP64) << EXPSHIFTBITS_DP64;
+      u = ((unsigned long long)rexp + EXPBIAS_DP64) << EXPSHIFTBITS_DP64;
       ux = (mant & MANTBITS_DP64) | u;
       if (determ)
         /* If we negated the mantissa we negate x too */

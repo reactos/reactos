@@ -37,8 +37,9 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
-
+#ifdef _MSC_VER
 #pragma function(acos)
+#endif
 
 double FN_PROTOTYPE(acos)(double x)
 {
@@ -69,7 +70,7 @@ double FN_PROTOTYPE(acos)(double x)
   double u, y, s=0.0, r;
   int xexp, xnan, transform=0;
 
-  unsigned long ux, aux, xneg;
+  unsigned long long ux, aux, xneg;
   GET_BITS_DP64(x, ux);
   aux = ux & ~SIGNBIT_DP64;
   xneg = (ux & SIGNBIT_DP64);
@@ -133,7 +134,7 @@ double FN_PROTOTYPE(acos)(double x)
       else
 	{
 	  double c, s1;
-	  unsigned long us;
+	  unsigned long long us;
 	  GET_BITS_DP64(s, us);
 	  PUT_BITS_DP64(0xffffffff00000000 & us, s1);
 	  c = (r-s1*s1)/(s+s1);

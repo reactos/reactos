@@ -33,8 +33,8 @@ double modf(double x, double *iptr)
      each with the same sign as x. */
 
 
-  long xexp;
-  unsigned long ux, ax, mask;
+  long long xexp;
+  unsigned long long ux, ax, mask;
 
   GET_BITS_DP64(x, ux);
   ax = ux & (~SIGNBIT_DP64);

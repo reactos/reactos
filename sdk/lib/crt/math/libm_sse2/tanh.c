@@ -39,8 +39,10 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
-
+#ifdef _MSC_VER
 #pragma function(tanh)
+#endif
+
 double tanh(double x)
 {
   /*
@@ -57,7 +59,7 @@ double tanh(double x)
     log2_by_32_tail = 5.68948749532545630390e-11, /* 0x3dcf473de6af278e */
     large_threshold = 20.0; /* 0x4034000000000000 */
 
-  unsigned long ux, aux, xneg;
+  unsigned long long ux, aux, xneg;
   double y, z, p, z1, z2;
   int m;
 

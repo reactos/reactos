@@ -37,7 +37,9 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
+#ifdef _MSC_VER
 #pragma function(asin)
+#endif
 
 double FN_PROTOTYPE(asin)(double x)
 {
@@ -65,7 +67,7 @@ double FN_PROTOTYPE(asin)(double x)
   double u, v, y, s=0.0, r;
   int xexp, xnan, transform=0;
 
-  unsigned long ux, aux, xneg;
+  unsigned long long ux, aux, xneg;
   GET_BITS_DP64(x, ux);
   aux = ux & ~SIGNBIT_DP64;
   xneg = (ux & SIGNBIT_DP64);
@@ -127,7 +129,7 @@ double FN_PROTOTYPE(asin)(double x)
     { /* Reconstruct asin carefully in transformed region */
         {
           double c, s1, p, q;
-          unsigned long us;
+          unsigned long long us;
           GET_BITS_DP64(s, us);
           PUT_BITS_DP64(0xffffffff00000000 & us, s1);
           c = (r-s1*s1)/(s+s1);

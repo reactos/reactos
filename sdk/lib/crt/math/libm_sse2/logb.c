@@ -38,8 +38,8 @@ THE SOFTWARE.
 double _logb(double x)
 {
 
-  unsigned long ux;
-  long u;
+  unsigned long long ux;
+  long long u;
   GET_BITS_DP64(x, ux);
   u = ((ux & EXPBITS_DP64) >> EXPSHIFTBITS_DP64) - EXPBIAS_DP64;
   if ((ux & ~SIGNBIT_DP64) == 0)
