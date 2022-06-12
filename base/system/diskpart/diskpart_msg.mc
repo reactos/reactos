@@ -3417,34 +3417,226 @@ SymbolicName=MSG_COMMAND_SELECT_VOLUME
 Severity=Informational
 Facility=System
 Language=English
-<Add SELECT VOLUME command help text here>
+    Selects the specified volume and shifts the focus to it.
+
+Syntax:  SELECT VOLUME={<N> | <D>}
+
+    VOLUME=<N>  The number of the volume to receive the focus.
+
+    VOLUME=<D>  The drive letter or mounted folder path of the volume
+                to receive the focus.
+
+    If no volume is specified, the select command lists the current volume with
+    focus. You can specify the volume by number, drive letter, or mounted folder
+    path. On a basic disk, selecting a volume also gives the corresponding
+    partition focus. You can view the numbers of all volumes on the computer by
+    using the list volume command.
+
+Example:
+
+    SELECT VOLUME=1
+    SELECT VOLUME=C
+    SELECT VOLUME=C:\\MountH
 .
 Language=German
-<Add SELECT VOLUME command help text here>
+    Wählt das angegebene Volume aus und setzt den Fokus auf dieses Volume.
+
+Syntax:  SELECT VOLUME={<N> | <L>}
+
+    VOLUME=<N>  Die Nummer des Volumes, das den Fokus erhalten soll.
+
+    VOLUME=<L>  Der Laufwerkbuchstabe oder Pfad des eingebundenen Ordners des
+                Volumes, das den Fokus erhalten soll.
+
+    Wenn kein Volume angegeben ist, listet der Befehl SELECT das aktuelle
+    Volume auf, das den Fokus besitzt. Sie können das Volume mit einer Nummer,
+    einem Laufwerkbuchstaben oder dem Pfad des eingebundenen
+    Ordners angeben.
+    Auf einem Basisdatenträger erhält bei Auswahl eines Volumes auch die
+    entsprechende Partition den Fokus. Mit dem Befehl LIST VOLUME können Sie
+    die Nummern aller auf dem Computer vorhandenen Volumes anzeigen.
+
+Beispiel:
+
+    SELECT VOLUME=1
+    SELECT VOLUME=C
+    SELECT VOLUME=C:\\MountH
 .
 Language=Polish
-<Add SELECT VOLUME command help text here>
+    Selects the specified volume and shifts the focus to it.
+
+Syntax:  SELECT VOLUME={<N> | <D>}
+
+    VOLUME=<N>  The number of the volume to receive the focus.
+
+    VOLUME=<D>  The drive letter or mounted folder path of the volume
+                to receive the focus.
+
+    If no volume is specified, the select command lists the current volume with
+    focus. You can specify the volume by number, drive letter, or mounted folder
+    path. On a basic disk, selecting a volume also gives the corresponding
+    partition focus. You can view the numbers of all volumes on the computer by
+    using the list volume command.
+
+Example:
+
+    SELECT VOLUME=1
+    SELECT VOLUME=C
+    SELECT VOLUME=C:\\MountH
 .
 Language=Portugese
-<Add SELECT VOLUME command help text here>
+    Selects the specified volume and shifts the focus to it.
+
+Syntax:  SELECT VOLUME={<N> | <D>}
+
+    VOLUME=<N>  The number of the volume to receive the focus.
+
+    VOLUME=<D>  The drive letter or mounted folder path of the volume
+                to receive the focus.
+
+    If no volume is specified, the select command lists the current volume with
+    focus. You can specify the volume by number, drive letter, or mounted folder
+    path. On a basic disk, selecting a volume also gives the corresponding
+    partition focus. You can view the numbers of all volumes on the computer by
+    using the list volume command.
+
+Example:
+
+    SELECT VOLUME=1
+    SELECT VOLUME=C
+    SELECT VOLUME=C:\\MountH
 .
 Language=Romanian
-<Add SELECT VOLUME command help text here>
+    Selects the specified volume and shifts the focus to it.
+
+Syntax:  SELECT VOLUME={<N> | <D>}
+
+    VOLUME=<N>  The number of the volume to receive the focus.
+
+    VOLUME=<D>  The drive letter or mounted folder path of the volume
+                to receive the focus.
+
+    If no volume is specified, the select command lists the current volume with
+    focus. You can specify the volume by number, drive letter, or mounted folder
+    path. On a basic disk, selecting a volume also gives the corresponding
+    partition focus. You can view the numbers of all volumes on the computer by
+    using the list volume command.
+
+Example:
+
+    SELECT VOLUME=1
+    SELECT VOLUME=C
+    SELECT VOLUME=C:\\MountH
 .
 Language=Russian
-<Add SELECT VOLUME command help text here>
+    Selects the specified volume and shifts the focus to it.
+
+Syntax:  SELECT VOLUME={<N> | <D>}
+
+    VOLUME=<N>  The number of the volume to receive the focus.
+
+    VOLUME=<D>  The drive letter or mounted folder path of the volume
+                to receive the focus.
+
+    If no volume is specified, the select command lists the current volume with
+    focus. You can specify the volume by number, drive letter, or mounted folder
+    path. On a basic disk, selecting a volume also gives the corresponding
+    partition focus. You can view the numbers of all volumes on the computer by
+    using the list volume command.
+
+Example:
+
+    SELECT VOLUME=1
+    SELECT VOLUME=C
+    SELECT VOLUME=C:\\MountH
 .
 Language=Albanian
-<Add SELECT VOLUME command help text here>
+    Selects the specified volume and shifts the focus to it.
+
+Syntax:  SELECT VOLUME={<N> | <D>}
+
+    VOLUME=<N>  The number of the volume to receive the focus.
+
+    VOLUME=<D>  The drive letter or mounted folder path of the volume
+                to receive the focus.
+
+    If no volume is specified, the select command lists the current volume with
+    focus. You can specify the volume by number, drive letter, or mounted folder
+    path. On a basic disk, selecting a volume also gives the corresponding
+    partition focus. You can view the numbers of all volumes on the computer by
+    using the list volume command.
+
+Example:
+
+    SELECT VOLUME=1
+    SELECT VOLUME=C
+    SELECT VOLUME=C:\\MountH
 .
 Language=Turkish
-<Add SELECT VOLUME command help text here>
+    Selects the specified volume and shifts the focus to it.
+
+Syntax:  SELECT VOLUME={<N> | <D>}
+
+    VOLUME=<N>  The number of the volume to receive the focus.
+
+    VOLUME=<D>  The drive letter or mounted folder path of the volume
+                to receive the focus.
+
+    If no volume is specified, the select command lists the current volume with
+    focus. You can specify the volume by number, drive letter, or mounted folder
+    path. On a basic disk, selecting a volume also gives the corresponding
+    partition focus. You can view the numbers of all volumes on the computer by
+    using the list volume command.
+
+Example:
+
+    SELECT VOLUME=1
+    SELECT VOLUME=C
+    SELECT VOLUME=C:\\MountH
 .
 Language=Chinese
-<Add SELECT VOLUME command help text here>
+    Selects the specified volume and shifts the focus to it.
+
+Syntax:  SELECT VOLUME={<N> | <D>}
+
+    VOLUME=<N>  The number of the volume to receive the focus.
+
+    VOLUME=<D>  The drive letter or mounted folder path of the volume
+                to receive the focus.
+
+    If no volume is specified, the select command lists the current volume with
+    focus. You can specify the volume by number, drive letter, or mounted folder
+    path. On a basic disk, selecting a volume also gives the corresponding
+    partition focus. You can view the numbers of all volumes on the computer by
+    using the list volume command.
+
+Example:
+
+    SELECT VOLUME=1
+    SELECT VOLUME=C
+    SELECT VOLUME=C:\\MountH
 .
 Language=Taiwanese
-<Add SELECT VOLUME command help text here>
+    Selects the specified volume and shifts the focus to it.
+
+Syntax:  SELECT VOLUME={<N> | <D>}
+
+    VOLUME=<N>  The number of the volume to receive the focus.
+
+    VOLUME=<D>  The drive letter or mounted folder path of the volume
+                to receive the focus.
+
+    If no volume is specified, the select command lists the current volume with
+    focus. You can specify the volume by number, drive letter, or mounted folder
+    path. On a basic disk, selecting a volume also gives the corresponding
+    partition focus. You can view the numbers of all volumes on the computer by
+    using the list volume command.
+
+Example:
+
+    SELECT VOLUME=1
+    SELECT VOLUME=C
+    SELECT VOLUME=C:\\MountH
 .
 
 
