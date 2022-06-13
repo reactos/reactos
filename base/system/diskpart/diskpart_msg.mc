@@ -2630,34 +2630,104 @@ SymbolicName=MSG_COMMAND_LIST_VOLUME
 Severity=Informational
 Facility=System
 Language=English
-<Add LIST VOLUME command help text here>
+    Displays a list of basic and dynamic volumes which are installed on the local
+    machine.
+
+Syntax:  LIST VOLUME
+
+Example:
+
+    LIST VOLUME
 .
 Language=German
-<Add LIST VOLUME command help text here>
+    Zeigt eine Liste der Basisvolumes und dynamischen Volumes an, die auf dem
+    lokalen Computer installiert sind.
+
+Syntax:  LIST VOLUME
+
+Beispiel:
+
+    LIST VOLUME
 .
 Language=Polish
-<Add LIST VOLUME command help text here>
+    Displays a list of basic and dynamic volumes which are installed on the local
+    machine.
+
+Syntax:  LIST VOLUME
+
+Example:
+
+    LIST VOLUME
 .
 Language=Portugese
-<Add LIST VOLUME command help text here>
+    Displays a list of basic and dynamic volumes which are installed on the local
+    machine.
+
+Syntax:  LIST VOLUME
+
+Example:
+
+    LIST VOLUME
 .
 Language=Romanian
-<Add LIST VOLUME command help text here>
+    Displays a list of basic and dynamic volumes which are installed on the local
+    machine.
+
+Syntax:  LIST VOLUME
+
+Example:
+
+    LIST VOLUME
 .
 Language=Russian
-<Add LIST VOLUME command help text here>
+    Displays a list of basic and dynamic volumes which are installed on the local
+    machine.
+
+Syntax:  LIST VOLUME
+
+Example:
+
+    LIST VOLUME
 .
 Language=Albanian
-<Add LIST VOLUME command help text here>
+    Displays a list of basic and dynamic volumes which are installed on the local
+    machine.
+
+Syntax:  LIST VOLUME
+
+Example:
+
+    LIST VOLUME
 .
 Language=Turkish
-<Add LIST VOLUME command help text here>
+    Displays a list of basic and dynamic volumes which are installed on the local
+    machine.
+
+Syntax:  LIST VOLUME
+
+Example:
+
+    LIST VOLUME
 .
 Language=Chinese
-<Add LIST VOLUME command help text here>
+    Displays a list of basic and dynamic volumes which are installed on the local
+    machine.
+
+Syntax:  LIST VOLUME
+
+Example:
+
+    LIST VOLUME
 .
 Language=Taiwanese
-<Add LIST VOLUME command help text here>
+    Displays a list of basic and dynamic volumes which are installed on the local
+    machine.
+
+Syntax:  LIST VOLUME
+
+Example:
+
+    LIST VOLUME
 .
 
 
