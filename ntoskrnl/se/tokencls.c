@@ -481,7 +481,7 @@ NtQueryInformationToken(
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode;
     PTOKEN Token;
-    ULONG RequiredLength;
+    ULONG RequiredLength = 0;
     union
     {
         PSID PSid;
