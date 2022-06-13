@@ -966,7 +966,7 @@ static DWORD DevicePathToDosPath(LPCWSTR lpDevicePath, LPWSTR lpDosPath, DWORD d
                 /* Get required length, including the NULL terminator */
                 dwRet = _countof(szDrive) + wcslen(lpDevicePath + len);
 
-                if (lpDosPath && dwDosPathLength >= dwRet)
+                if (dwDosPathLength >= dwRet)
                 {
                     StringCchPrintfW(lpDosPath, dwDosPathLength, L"%s%s", szDrive, lpDevicePath + len);
                     
@@ -986,8 +986,8 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
     BYTE StaticBuffer[sizeof(UNICODE_STRING) + (MAX_PATH * sizeof(WCHAR))];
     PVOID DynamicBuffer = NULL;
     PUNICODE_STRING ExePath;
-    ULONG SizeNeeded;
     LPWSTR pszExePath = NULL;
+    ULONG SizeNeeded;
     NTSTATUS Status;
     DWORD dwRet = 0;
 
@@ -1034,22 +1034,13 @@ static DWORD GetProcessExecutablePath(HANDLE hProcess, LPWSTR lpExePath, DWORD d
     StringCbCopyNW(pszExePath, ExePath->Length + sizeof(WCHAR), ExePath->Buffer, ExePath->Length);
 
     /* HACK: Convert device path format into Win32 path format
-     * 
      * Use ProcessImageFileNameWin32 instead if the kernel
-     * supports it
-     */
+     * supports it */
     dwRet = DevicePathToDosPath(pszExePath, lpExePath, dwLength);
 
 Cleanup:
-    if (pszExePath)
-    {
-        HeapFree(GetProcessHeap(), 0, pszExePath);
-    }
-
-    if (DynamicBuffer)
-    {
-        HeapFree(GetProcessHeap(), 0, DynamicBuffer);
-    }
+    HeapFree(GetProcessHeap(), 0, pszExePath);
+    HeapFree(GetProcessHeap(), 0, DynamicBuffer);
 
     return dwRet;
 }
@@ -1072,11 +1063,11 @@ static DWORD GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, D
 
         uLength = GetSystemDirectoryW(szSystemDir, _countof(szSystemDir));
 
-        if (uLength != 0)
+        if (uLength != 0 && uLength < _countof(szSystemDir))
         {
             dwRet = uLength + _countof(szKernelExe);
 
-            if (lpExePath && dwLength >= dwRet)
+            if (dwLength >= dwRet)
             {
                 StringCchPrintfW(lpExePath, dwLength, L"%s%s", szSystemDir, szKernelExe);
 
@@ -1104,90 +1095,48 @@ static DWORD GetProcessExecutablePathById(DWORD dwProcessId, LPWSTR lpExePath, D
 void ProcessPage_OnProperties(void)
 {
     DWORD dwProcessId;
-    LPWSTR pszExePath;
+    WCHAR szExePath[MAX_PATH];
     DWORD dwLength;
     SHELLEXECUTEINFOW info = { 0 };
 
     dwProcessId = GetSelectedProcessId();
-    dwLength = GetProcessExecutablePathById(dwProcessId, NULL, 0);
+    dwLength = GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath));
 
-    if (dwLength == 0)
+    if (dwLength == 0 || dwLength > _countof(szExePath))
     {
         return;
-    }
-
-    pszExePath = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
-
-    if (!pszExePath)
-    {
-        return;
-    }
-
-    if (GetProcessExecutablePathById(dwProcessId, pszExePath, dwLength) == 0)
-    {
-        goto Cleanup;
     }
 
     info.cbSize = sizeof(SHELLEXECUTEINFOW);
     info.fMask = SEE_MASK_INVOKEIDLIST;
     info.hwnd = NULL;
     info.lpVerb = L"properties";
-    info.lpFile = pszExePath;
+    info.lpFile = szExePath;
     info.lpParameters = L"";
     info.lpDirectory = NULL;
     info.nShow = SW_SHOW;
     info.hInstApp = NULL;
 
     ShellExecuteExW(&info);
-
-Cleanup:
-    HeapFree(GetProcessHeap(), 0, pszExePath);
 }
 
 void ProcessPage_OnOpenFileLocation(void)
 {
     DWORD dwProcessId;
-    LPWSTR pszExePath;
-    LPWSTR pszCmdLine = NULL;
+    WCHAR szExePath[MAX_PATH];
+    WCHAR szCmdLine[MAX_PATH + 10];
     DWORD dwLength;
 
     dwProcessId = GetSelectedProcessId();
-    dwLength = GetProcessExecutablePathById(dwProcessId, NULL, 0);
+    dwLength = GetProcessExecutablePathById(dwProcessId, szExePath, _countof(szExePath));
 
-    if (dwLength == 0)
+    if (dwLength == 0 || dwLength > _countof(szExePath))
     {
         return;
     }
 
-    pszExePath = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
-
-    if (!pszExePath)
-    {
-        return;
-    }
-
-    if (GetProcessExecutablePathById(dwProcessId, pszExePath, dwLength) == 0)
-    {
-        goto Cleanup;
-    }
-    
-    pszCmdLine = HeapAlloc(GetProcessHeap(), 0, (dwLength + 10) * sizeof(WCHAR));
-
-    if (!pszCmdLine)
-    {
-        goto Cleanup;
-    }
-
-    StringCchPrintfW(pszCmdLine, dwLength + 10, L"/select,\"%s\"", pszExePath);
+    StringCchPrintfW(szCmdLine, _countof(szCmdLine), L"/select,\"%s\"", szExePath);
 
     /* Open file explorer and select the exe file */
-    ShellExecuteW(NULL, L"open", L"explorer.exe", pszCmdLine, NULL, SW_SHOWNORMAL);
-
-Cleanup:
-    if (pszCmdLine)
-    {
-        HeapFree(GetProcessHeap(), 0, pszCmdLine);
-    }
-
-    HeapFree(GetProcessHeap(), 0, pszExePath);
+    ShellExecuteW(NULL, L"open", L"explorer.exe", szCmdLine, NULL, SW_SHOWNORMAL);
 }
