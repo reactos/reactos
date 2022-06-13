@@ -450,8 +450,11 @@ SeQueryInformationToken(
  * Length of the token information buffer, in bytes.
  *
  * @param[out] ReturnLength
- * If specified in the call, the function returns the total length size of the token
- * information buffer..
+ * A pointer to a variable provided by the caller that receives the actual length
+ * of the buffer pointed by TokenInformation, in bytes. If TokenInformation is NULL
+ * and TokenInformationLength is 0, this parameter receives the required length
+ * needed to store the buffer information in memory. This parameter must not
+ * be NULL!
  *
  * @return
  * Returns STATUS_SUCCESS if information querying has completed successfully.
@@ -459,8 +462,9 @@ SeQueryInformationToken(
  * the token information buffer is not greater than the required length.
  * STATUS_INVALID_HANDLE is returned if the token handle is not a valid one.
  * STATUS_INVALID_INFO_CLASS is returned if the information class is not a valid
- * one (that is, the class doesn't belong to TOKEN_INFORMATION_CLASS). A failure
- * NTSTATUS code is returned otherwise.
+ * one (that is, the class doesn't belong to TOKEN_INFORMATION_CLASS).
+ * STATUS_ACCESS_VIOLATION is returned if ReturnLength is NULL. A failure NTSTATUS
+ * code is returned otherwise.
  */
 _Must_inspect_result_
 __kernel_entry
@@ -542,10 +546,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                    *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -587,10 +588,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                    *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -623,10 +621,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                    *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -660,10 +655,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                   *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -697,10 +689,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                    *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -742,10 +731,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                    *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -774,10 +760,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                   *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -806,10 +789,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                    *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -846,10 +826,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                    *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -887,10 +864,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                    *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -919,10 +893,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                    *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -969,10 +940,7 @@ NtQueryInformationToken(
                         Status = STATUS_BUFFER_TOO_SMALL;
                     }
 
-                    if (ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredLength;
-                    }
+                    *ReturnLength = RequiredLength;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -1018,11 +986,7 @@ NtQueryInformationToken(
                     {
                         /* Buffer size was already verified, no need to check here again */
                         *(PULONG)TokenInformation = SessionId;
-
-                        if (ReturnLength != NULL)
-                        {
-                            *ReturnLength = sizeof(ULONG);
-                        }
+                        *ReturnLength = RequiredLength;
                     }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
