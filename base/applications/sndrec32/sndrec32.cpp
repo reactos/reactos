@@ -11,6 +11,8 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <winnls.h>
+#include <uxtheme.h>
+#include <vssym32.h>
 
 #include "sndrec32.h"
 #include "shellapi.h"
@@ -38,11 +40,11 @@ HWND main_win;
 HWND wave_win;
 HWND slider;
 HWND buttons[5];
-HBITMAP butbmps[5];
-HBITMAP butbmps_dis[5];
+HTHEME buttontheme[5];
+LPCTSTR buttxts[5];
+HFONT hfButtonCaption;
 WNDPROC buttons_std_proc;
 
-BOOL butdisabled[5];
 BOOL stopped_flag;
 BOOL isnew;
 BOOL display_dur;
@@ -126,19 +128,38 @@ _tWinMain(HINSTANCE hInstance,
     /* Set font size */
     s_info.lfMenuFont.lfHeight = 14;
 
-    /* Inits buttons bitmaps */
+    /* get the language layout */
+    DWORD layout;
+    GetProcessDefaultLayout(&layout);
 
-    butbmps[0] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP2_START));
-    butbmps[1] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP2_END));
-    butbmps[2] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP2_PLAY));
-    butbmps[3] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP2_STOP));
-    butbmps[4] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP2_REC));
+    /* Init button texts, exchange rewind and forward in case we use an RTL layout*/
+    if (layout == LAYOUT_RTL)
+    {
+        buttxts[BUTSTART_ID] = TEXT("44");  // rewind
+        buttxts[BUTEND_ID] = TEXT("33");    // forward
+        buttxts[BUTPLAY_ID] = TEXT("3");        // play
+    }
+    else
+    {
+        buttxts[BUTSTART_ID] = TEXT("33");  // rewind
+        buttxts[BUTEND_ID] = TEXT("44");    // forward
+        buttxts[BUTPLAY_ID] = TEXT("4");        // play
+    }
+    buttxts[BUTSTOP_ID] = TEXT("g");        // stop
+    buttxts[BUTREC_ID] = TEXT("n");         // record
 
-    butbmps_dis[0] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP2_START_DIS));
-    butbmps_dis[1] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP2_END_DIS));
-    butbmps_dis[2] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP2_PLAY_DIS));
-    butbmps_dis[3] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP2_STOP_DIS));
-    butbmps_dis[4] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP2_REC_DIS));
+    /* Create a Marlett Font */
+    hfButtonCaption = CreateFont(0, 0, 0, 0,
+                                 FW_BOLD,
+                                 FALSE,
+                                 FALSE,
+                                 FALSE,
+                                 SYMBOL_CHARSET,
+                                 OUT_DEFAULT_PRECIS,
+                                 CLIP_DEFAULT_PRECIS,
+                                 DEFAULT_QUALITY,
+                                 DEFAULT_PITCH | FF_DECORATIVE,
+                                 TEXT("Marlett"));
 
     /* Inits audio devices and buffers */
 
@@ -451,12 +472,12 @@ WndProc(HWND hWnd,
                 return FALSE;
             }
 
-            /* Creating ALL the buttons */
-            for (int i = 0; i < 5; ++i)
+            /* Create the audio control buttons, associate a theme handle and use the Marlett font on them */
+            for (UINT i = 0; i < _countof(buttons); ++i)
             {
                 buttons[i] = CreateWindow(TEXT("button"),
-                                          TEXT(""),
-                                          WS_CHILD | WS_VISIBLE | BS_BITMAP,
+                                          buttxts[i],
+                                          WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_CENTER | BS_TEXT | BS_OWNERDRAW,
                                           BUTTONS_CX + (i * (BUTTONS_W + ((i == 0) ? 0 : BUTTONS_SPACE))),
                                           BUTTONS_CY,
                                           BUTTONS_W,
@@ -471,10 +492,12 @@ WndProc(HWND hWnd,
                     return FALSE;
                 }
 
-                /* Realize the button bmp image */
-                SendMessage(buttons[i], BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)butbmps[i]);
+                buttontheme[i] = OpenThemeData(buttons[i], L"Button");
+
+                /* Use Marlett font on this button */
+                SendMessage(buttons[i], WM_SETFONT, (WPARAM)hfButtonCaption, (LPARAM)TRUE);
                 UpdateWindow(buttons[i]);
-                disable_but(i);
+                EnableWindow(GetDlgItem(hWnd, i), FALSE);
             }
 
             /* Creating the SLIDER window */
@@ -502,7 +525,7 @@ WndProc(HWND hWnd,
                         (LPARAM)MAKELONG(slider_min, slider_max));
 
             UpdateWindow(slider);
-            enable_but(BUTREC_ID);
+            EnableWindow(buttons[BUTREC_ID], TRUE);
             EnableWindow(slider, FALSE);
             break;
 
@@ -529,8 +552,6 @@ WndProc(HWND hWnd,
 
         case WM_COMMAND:
             wmId = LOWORD(wParam);
-            if ((wmId >= 0) && (wmId < 5) && (butdisabled[wmId] != FALSE))
-                break;
 
             switch (wmId)
             {
@@ -546,11 +567,11 @@ WndProc(HWND hWnd,
 
                         AUD_BUF->reset();
 
-                        enable_but(BUTREC_ID);
-                        disable_but(BUTSTART_ID);
-                        disable_but(BUTEND_ID);
-                        disable_but(BUTSTOP_ID);
-                        disable_but(BUTPLAY_ID);
+                        EnableWindow(buttons[BUTREC_ID], TRUE);
+                        EnableWindow(buttons[BUTSTART_ID], FALSE);
+                        EnableWindow(buttons[BUTEND_ID], FALSE);
+                        EnableWindow(buttons[BUTSTOP_ID], FALSE);
+                        EnableWindow(buttons[BUTPLAY_ID], FALSE);
 
                         samples_max = AUD_BUF->total_samples();
                         slider_pos = 0;
@@ -651,10 +672,10 @@ WndProc(HWND hWnd,
 
                     AUD_OUT->play();
 
-                    disable_but(BUTSTART_ID);
-                    disable_but(BUTEND_ID);
-                    disable_but(BUTREC_ID);
-                    disable_but(BUTPLAY_ID);
+                    EnableWindow(buttons[BUTSTART_ID], FALSE);
+                    EnableWindow(buttons[BUTEND_ID], FALSE);
+                    EnableWindow(buttons[BUTREC_ID], FALSE);
+                    EnableWindow(buttons[BUTPLAY_ID], FALSE);
 
                     SetTimer(hWnd, 1, 250, 0);
                     SetTimer(hWnd, WAVEBAR_TIMERID, WAVEBAR_TIMERTIME, 0);
@@ -676,10 +697,10 @@ WndProc(HWND hWnd,
 
                         EnableMenuItem((HMENU)IDR_MENU1, ID_FILE_SAVEAS, MF_ENABLED);
 
-                        enable_but(BUTSTART_ID);
-                        enable_but(BUTEND_ID);
-                        enable_but(BUTREC_ID);
-                        enable_but(BUTPLAY_ID);
+                        EnableWindow(buttons[BUTSTART_ID], TRUE);
+                        EnableWindow(buttons[BUTEND_ID], TRUE);
+                        EnableWindow(buttons[BUTREC_ID], TRUE);
+                        EnableWindow(buttons[BUTPLAY_ID], TRUE);
 
                         EnableMenuItem(GetMenu(hWnd), ID_FILE_SAVEAS, MF_ENABLED);
                         EnableWindow(slider, TRUE);
@@ -696,10 +717,10 @@ WndProc(HWND hWnd,
                     {
                         AUD_OUT->pause();
 
-                        enable_but(BUTSTART_ID);
-                        enable_but(BUTEND_ID);
-                        enable_but(BUTREC_ID);
-                        enable_but(BUTPLAY_ID);
+                        EnableWindow(buttons[BUTSTART_ID], TRUE);
+                        EnableWindow(buttons[BUTEND_ID], TRUE);
+                        EnableWindow(buttons[BUTREC_ID], TRUE);
+                        EnableWindow(buttons[BUTPLAY_ID], TRUE);
 
                     }
 
@@ -723,12 +744,11 @@ WndProc(HWND hWnd,
 
                     AUD_IN->start_recording();
 
-                    enable_but(BUTSTOP_ID);
-
-                    disable_but(BUTSTART_ID);
-                    disable_but(BUTEND_ID);
-                    disable_but(BUTREC_ID);
-                    disable_but(BUTPLAY_ID);
+                    EnableWindow(buttons[BUTSTOP_ID], TRUE);
+                    EnableWindow(buttons[BUTSTART_ID], FALSE);
+                    EnableWindow(buttons[BUTEND_ID], FALSE);
+                    EnableWindow(buttons[BUTREC_ID], FALSE);
+                    EnableWindow(buttons[BUTPLAY_ID], FALSE);
 
                     isnew = FALSE;
 
@@ -753,7 +773,7 @@ WndProc(HWND hWnd,
                         KillTimer(hWnd, 1);
                         KillTimer(hWnd, WAVEBAR_TIMERID);
                         slider_pos = 0;
-                        enable_but(BUTPLAY_ID);
+                        EnableWindow(buttons[BUTPLAY_ID], TRUE);
                         stopped_flag = FALSE;
                     }
 
@@ -765,6 +785,39 @@ WndProc(HWND hWnd,
                     InvalidateRect(wave_win, 0, TRUE);
                     SendMessage(wave_win, WM_USER, 0, 0);
                     break;
+            }
+            break;
+
+        case WM_THEMECHANGED:
+            switch ((UINT)wParam)
+            {
+                case BUTSTART_ID:
+                case BUTEND_ID:
+                case BUTPLAY_ID:
+                case BUTSTOP_ID:
+                case BUTREC_ID:
+                {
+                    CloseThemeData (buttontheme[(UINT)wParam]);
+                    buttontheme[(UINT)wParam] = OpenThemeData (hWnd, L"Button");
+                    return TRUE;
+                }
+                break;
+            }
+            break;
+
+        case WM_DRAWITEM:
+            switch ((UINT)wParam)
+            {
+                case BUTSTART_ID:
+                case BUTEND_ID:
+                case BUTPLAY_ID:
+                case BUTSTOP_ID:
+                case BUTREC_ID:
+                {
+                    DrawButton((UINT)wParam, lParam);
+                    return TRUE;
+                }
+                break;
             }
             break;
 
@@ -880,6 +933,18 @@ WndProc(HWND hWnd,
             break;
 
         case WM_DESTROY:
+            if (hfButtonCaption)
+            {
+                DeleteObject(hfButtonCaption);
+            }
+
+            for (UINT i = 0; i < _countof(buttontheme); ++i)
+            {
+                if (buttontheme[i])
+                {
+                    CloseThemeData(buttontheme[i]);
+                }
+            }
             PostQuitMessage(0);
             break;
         default:
@@ -889,14 +954,103 @@ WndProc(HWND hWnd,
     return 0;
 }
 
-void l_play_finished(void)
+void DrawButton(UINT ButtonID, LPARAM lParam)
+{
+    LPDRAWITEMSTRUCT lpdis = (DRAWITEMSTRUCT*)lParam;
+    SIZE size;
+    LRESULT ButtonStatus;
+    UINT ButtonStyle;
+    int lpdx[] = {8,8}, captionspacer = 0;
+    COLORREF OriginalCol;
+
+    /* Add a defined spacing of 8px for the rewind and forward text */
+    if (ButtonID < BUTPLAY_ID)
+    {
+        captionspacer=8;
+    }
+
+    /* Make the color of the record button red and all others black */
+    if (ButtonID == BUTREC_ID)
+    {
+        OriginalCol = SetTextColor(lpdis->hDC, RGB(255, 0, 0));
+    }
+    else
+    {
+        OriginalCol = SetTextColor(lpdis->hDC, RGB(0, 0, 0));
+    }
+
+    if ((ButtonID >= BUTSTART_ID) && (ButtonID <= BUTREC_ID))
+    {
+        ButtonStatus = SendMessage(buttons[ButtonID], BM_GETSTATE, NULL, NULL);
+    }
+
+    if(buttontheme[ButtonID])
+    {
+        ButtonStyle = PBS_NORMAL;
+        if (ButtonStatus & BST_PUSHED)
+        {
+            ButtonStyle = PBS_PRESSED;
+        }
+        else if (ButtonStatus & BST_HOT)
+        {
+            ButtonStyle = PBS_HOT;
+        }
+        else if (!IsWindowEnabled(buttons[ButtonID]))
+        {
+            ButtonStyle = PBS_DISABLED;
+            SetTextColor(lpdis->hDC, GetSysColor(COLOR_GRAYTEXT));
+        }
+        DrawThemeBackground(buttontheme[ButtonID], lpdis->hDC, BP_PUSHBUTTON, ButtonStyle, &lpdis->rcItem, 0);
+    }
+    else
+    {
+        ButtonStyle = DFCS_BUTTONPUSH;
+        if (ButtonStatus & BST_PUSHED)
+        {
+            ButtonStyle |= DFCS_PUSHED;
+        }
+        else if (ButtonStatus & BST_HOT)
+        {
+            ButtonStyle |= DFCS_HOT;
+        }
+        else if (!IsWindowEnabled(buttons[ButtonID]))
+        {
+            ButtonStyle |= DFCS_INACTIVE;
+            SetTextColor(lpdis->hDC, GetSysColor(COLOR_GRAYTEXT));
+        }
+        DrawFrameControl(lpdis->hDC, &lpdis->rcItem, DFC_BUTTON, ButtonStyle);
+    }
+
+    SetBkMode(lpdis->hDC, TRANSPARENT);
+    GetTextExtentPoint32(lpdis->hDC, buttxts[ButtonID], _tcslen(buttxts[ButtonID]), &size);
+    ExtTextOut(lpdis->hDC,
+              ((lpdis->rcItem.right - lpdis->rcItem.left) - size.cx + captionspacer) / 2,
+              ((lpdis->rcItem.bottom - lpdis->rcItem.top) - size.cy) / 2,
+              ETO_CLIPPED,
+              &lpdis->rcItem,
+              buttxts[ButtonID],
+              _tcslen(buttxts[ButtonID]),
+              lpdx);
+
+
+    if ((ButtonStatus & BST_FOCUS))
+    {
+        InflateRect(&lpdis->rcItem, -3, -3);
+        DrawFocusRect(lpdis->hDC, &lpdis->rcItem);
+    }
+
+    /* restore the original text color */
+    SetTextColor(lpdis->hDC, OriginalCol);
+}
+
+void l_play_finished()
 {
     stopped_flag = true;
 
-    enable_but(BUTSTART_ID);
-    enable_but(BUTEND_ID);
-    enable_but(BUTREC_ID);
-    enable_but(BUTPLAY_ID);
+    EnableWindow(buttons[BUTSTART_ID], TRUE);
+    EnableWindow(buttons[BUTEND_ID], TRUE);
+    EnableWindow(buttons[BUTREC_ID], TRUE);
+    EnableWindow(buttons[BUTPLAY_ID], TRUE);
 
     InvalidateRect(wave_win, 0, TRUE);
 }
@@ -908,18 +1062,6 @@ void l_audio_arrival(unsigned int samples_arrival)
 
 void l_buffer_resized(unsigned int new_size)
 {
-}
-
-VOID enable_but(DWORD id)
-{
-    butdisabled[id] = FALSE;
-    SendMessage(buttons[id], BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)butbmps[id]);
-}
-
-VOID disable_but(DWORD id)
-{
-    butdisabled[id] = TRUE;
-    SendMessage(buttons[id], BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)butbmps_dis[id]);
 }
 
 BOOL open_wav(TCHAR *f)
@@ -1028,11 +1170,11 @@ BOOL open_wav(TCHAR *f)
 
     CloseHandle(file);
 
-    enable_but(BUTPLAY_ID);
-    enable_but(BUTSTOP_ID);
-    enable_but(BUTSTART_ID);
-    enable_but(BUTEND_ID);
-    enable_but(BUTREC_ID);
+    EnableWindow(buttons[BUTPLAY_ID], TRUE);
+    EnableWindow(buttons[BUTSTOP_ID], TRUE);
+    EnableWindow(buttons[BUTSTART_ID], TRUE);
+    EnableWindow(buttons[BUTEND_ID], TRUE);
+    EnableWindow(buttons[BUTREC_ID], TRUE);
 
     samples_max = AUD_BUF->samples_received();
 
