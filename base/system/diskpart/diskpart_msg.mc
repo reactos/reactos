@@ -1903,34 +1903,156 @@ SymbolicName=MSG_COMMAND_HELP
 Severity=Informational
 Facility=System
 Language=English
-<Add HELP command help text here>
+    Displays a list of the available commands or detailed help information for a
+    specified command.
+
+Syntax:  HELP [<COMMAND>]
+
+    <COMMAND>   The command for which to display detail help.
+
+    If no command is specified, HELP will display all possible commands.
+
+Example:
+
+    HELP
+    HELP CREATE PARTITION PRIMARY
 .
 Language=German
-<Add HELP command help text here>
+    Zeigt eine Liste der verfügbaren Befehle oder detaillierte
+    Hilfeinformationen zu einem bestimmten Befehl an.
+
+Syntax:  HELP [<BEFEHL>]
+
+    <BEFEHL>   Der Befehl, zu dem eine detaillierte Hilfe angezeigt
+               werden soll.
+
+    Wenn kein Befehl angegeben ist, werden mit HELP alle verfügbaren Befehle
+    angezeigt.
+
+Beispiel:
+
+    HELP
+    HELP CREATE PARTITION PRIMARY
 .
 Language=Polish
-<Add HELP command help text here>
+    Displays a list of the available commands or detailed help information for a
+    specified command.
+
+Syntax:  HELP [<COMMAND>]
+
+    <COMMAND>   The command for which to display detail help.
+
+    If no command is specified, HELP will display all possible commands.
+
+Example:
+
+    HELP
+    HELP CREATE PARTITION PRIMARY
 .
 Language=Portugese
-<Add HELP command help text here>
+    Displays a list of the available commands or detailed help information for a
+    specified command.
+
+Syntax:  HELP [<COMMAND>]
+
+    <COMMAND>   The command for which to display detail help.
+
+    If no command is specified, HELP will display all possible commands.
+
+Example:
+
+    HELP
+    HELP CREATE PARTITION PRIMARY
 .
 Language=Romanian
-<Add HELP command help text here>
+    Displays a list of the available commands or detailed help information for a
+    specified command.
+
+Syntax:  HELP [<COMMAND>]
+
+    <COMMAND>   The command for which to display detail help.
+
+    If no command is specified, HELP will display all possible commands.
+
+Example:
+
+    HELP
+    HELP CREATE PARTITION PRIMARY
 .
 Language=Russian
-<Add HELP command help text here>
+    Displays a list of the available commands or detailed help information for a
+    specified command.
+
+Syntax:  HELP [<COMMAND>]
+
+    <COMMAND>   The command for which to display detail help.
+
+    If no command is specified, HELP will display all possible commands.
+
+Example:
+
+    HELP
+    HELP CREATE PARTITION PRIMARY
 .
 Language=Albanian
-<Add HELP command help text here>
+    Displays a list of the available commands or detailed help information for a
+    specified command.
+
+Syntax:  HELP [<COMMAND>]
+
+    <COMMAND>   The command for which to display detail help.
+
+    If no command is specified, HELP will display all possible commands.
+
+Example:
+
+    HELP
+    HELP CREATE PARTITION PRIMARY
 .
 Language=Turkish
-<Add HELP command help text here>
+    Displays a list of the available commands or detailed help information for a
+    specified command.
+
+Syntax:  HELP [<COMMAND>]
+
+    <COMMAND>   The command for which to display detail help.
+
+    If no command is specified, HELP will display all possible commands.
+
+Example:
+
+    HELP
+    HELP CREATE PARTITION PRIMARY
 .
 Language=Chinese
-<Add HELP command help text here>
+    Displays a list of the available commands or detailed help information for a
+    specified command.
+
+Syntax:  HELP [<COMMAND>]
+
+    <COMMAND>   The command for which to display detail help.
+
+    If no command is specified, HELP will display all possible commands.
+
+Example:
+
+    HELP
+    HELP CREATE PARTITION PRIMARY
 .
 Language=Taiwanese
-<Add HELP command help text here>
+    Displays a list of the available commands or detailed help information for a
+    specified command.
+
+Syntax:  HELP [<COMMAND>]
+
+    <COMMAND>   The command for which to display detail help.
+
+    If no command is specified, HELP will display all possible commands.
+
+Example:
+
+    HELP
+    HELP CREATE PARTITION PRIMARY
 .
 
 
