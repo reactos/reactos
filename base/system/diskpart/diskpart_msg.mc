@@ -1428,34 +1428,115 @@ SymbolicName=MSG_COMMAND_DETAIL_PARTITION
 Severity=Informational
 Facility=System
 Language=English
-<Add DETAIL PARTITION command help text here>
+    Displays the properties for the selected partition.
+
+Syntax:  DETAIL PARTITION
+
+    A partition must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL PARTITION
 .
 Language=German
-<Add DETAIL PARTITION command help text here>
+    Zeigt die Eigenschaften für die ausgewählte Partition an.
+
+Syntax:  DETAIL PARTITION
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss eine
+    Partition ausgewählt sein.
+
+Beispiel:
+
+    DETAIL PARTITION
 .
 Language=Polish
-<Add DETAIL PARTITION command help text here>
+    Displays the properties for the selected partition.
+
+Syntax:  DETAIL PARTITION
+
+    A partition must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL PARTITION
 .
 Language=Portugese
-<Add DETAIL PARTITION command help text here>
+    Displays the properties for the selected partition.
+
+Syntax:  DETAIL PARTITION
+
+    A partition must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL PARTITION
 .
 Language=Romanian
-<Add DETAIL PARTITION command help text here>
+    Displays the properties for the selected partition.
+
+Syntax:  DETAIL PARTITION
+
+    A partition must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL PARTITION
 .
 Language=Russian
-<Add DETAIL PARTITION command help text here>
+    Displays the properties for the selected partition.
+
+Syntax:  DETAIL PARTITION
+
+    A partition must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL PARTITION
 .
 Language=Albanian
-<Add DETAIL PARTITION command help text here>
+    Displays the properties for the selected partition.
+
+Syntax:  DETAIL PARTITION
+
+    A partition must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL PARTITION
 .
 Language=Turkish
-<Add DETAIL PARTITION command help text here>
+    Displays the properties for the selected partition.
+
+Syntax:  DETAIL PARTITION
+
+    A partition must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL PARTITION
 .
 Language=Chinese
-<Add DETAIL PARTITION command help text here>
+    Displays the properties for the selected partition.
+
+Syntax:  DETAIL PARTITION
+
+    A partition must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL PARTITION
 .
 Language=Taiwanese
-<Add DETAIL PARTITION command help text here>
+    Displays the properties for the selected partition.
+
+Syntax:  DETAIL PARTITION
+
+    A partition must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL PARTITION
 .
 
 MessageId=10021
