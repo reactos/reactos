@@ -1544,34 +1544,125 @@ SymbolicName=MSG_COMMAND_DETAIL_VOLUME
 Severity=Informational
 Facility=System
 Language=English
-<Add DETAIL VOLUME command help text here>
+    Displays the properties for the selected volume and the list of disks on
+    which the volume resides.
+
+Syntax:  DETAIL VOLUME
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL VOLUME
 .
 Language=German
-<Add DETAIL VOLUME command help text here>
+    Zeigt die Eigenschaften für das ausgewählte Volume und die Liste der
+    Datenträger, die sich auf dem Volume befinden, an.
+
+Syntax:  DETAIL VOLUME
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein Volume
+    ausgewählt sein.
+
+Beispiel:
+
+    DETAIL VOLUME
 .
 Language=Polish
-<Add DETAIL VOLUME command help text here>
+    Displays the properties for the selected volume and the list of disks on
+    which the volume resides.
+
+Syntax:  DETAIL VOLUME
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL VOLUME
 .
 Language=Portugese
-<Add DETAIL VOLUME command help text here>
+    Displays the properties for the selected volume and the list of disks on
+    which the volume resides.
+
+Syntax:  DETAIL VOLUME
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL VOLUME
 .
 Language=Romanian
-<Add DETAIL VOLUME command help text here>
+    Displays the properties for the selected volume and the list of disks on
+    which the volume resides.
+
+Syntax:  DETAIL VOLUME
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL VOLUME
 .
 Language=Russian
-<Add DETAIL VOLUME command help text here>
+    Displays the properties for the selected volume and the list of disks on
+    which the volume resides.
+
+Syntax:  DETAIL VOLUME
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL VOLUME
 .
 Language=Albanian
-<Add DETAIL VOLUME command help text here>
+    Displays the properties for the selected volume and the list of disks on
+    which the volume resides.
+
+Syntax:  DETAIL VOLUME
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL VOLUME
 .
 Language=Turkish
-<Add DETAIL VOLUME command help text here>
+    Displays the properties for the selected volume and the list of disks on
+    which the volume resides.
+
+Syntax:  DETAIL VOLUME
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL VOLUME
 .
 Language=Chinese
-<Add DETAIL VOLUME command help text here>
+    Displays the properties for the selected volume and the list of disks on
+    which the volume resides.
+
+Syntax:  DETAIL VOLUME
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL VOLUME
 .
 Language=Taiwanese
-<Add DETAIL VOLUME command help text here>
+    Displays the properties for the selected volume and the list of disks on
+    which the volume resides.
+
+Syntax:  DETAIL VOLUME
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    DETAIL VOLUME
 .
 
 
