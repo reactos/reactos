@@ -24,6 +24,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CLEAN_FAIL "\nDer Datenträger konnte nicht bereinigt werden.\nMöglicherweise können die Daten auf diesem Datenträger nicht wiederhergestellt werden.\n"
+    IDS_CLEAN_SUCCESS "\nDer Datenträger wurde bereinigt.\n"
+    IDS_CLEAN_SYSTEM "\nDer gewählte Datenträger ist zum Ausführen des Computers erforderlich und kann nicht bereinigt werden.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDie angegebene Partition konnte nicht erstellt werden.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDie angegebene Partition wurde erfolgreich erstellt.\n"
 END

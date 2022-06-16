@@ -22,6 +22,7 @@
 #include <winioctl.h>
 
 #include <errno.h>
+#include <strsafe.h>
 
 #include <conutils.h>
 
@@ -439,7 +440,16 @@ GetPrimaryPartitionCount(
 
 NTSTATUS
 DismountVolume(
-    IN PPARTENTRY PartEntry);
+    _In_ PPARTENTRY PartEntry);
+
+PVOLENTRY
+GetVolumeFromPartition(
+    _In_ PPARTENTRY PartEntry);
+
+VOID
+RemoveVolume(
+    _In_ PVOLENTRY VolumeEntry);
+
 
 /* recover.c */
 BOOL recover_main(INT argc, LPWSTR *argv);

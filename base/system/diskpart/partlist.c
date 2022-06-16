@@ -10,7 +10,6 @@
 
 #include "diskpart.h"
 #include <ntddscsi.h>
-#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1635,7 +1634,7 @@ IsSamePrimaryLayoutEntry(
 
 ULONG
 GetPrimaryPartitionCount(
-    IN PDISKENTRY DiskEntry)
+    _In_ PDISKENTRY DiskEntry)
 {
     PLIST_ENTRY Entry;
     PPARTENTRY PartEntry;
@@ -1657,7 +1656,7 @@ GetPrimaryPartitionCount(
 static
 ULONG
 GetLogicalPartitionCount(
-    IN PDISKENTRY DiskEntry)
+    _In_ PDISKENTRY DiskEntry)
 {
     PLIST_ENTRY ListEntry;
     PPARTENTRY PartEntry;
@@ -1679,7 +1678,7 @@ GetLogicalPartitionCount(
 static
 BOOLEAN
 ReAllocateLayoutBuffer(
-    IN PDISKENTRY DiskEntry)
+    _In_ PDISKENTRY DiskEntry)
 {
     PDRIVE_LAYOUT_INFORMATION NewLayoutBuffer;
     ULONG NewPartitionCount;
@@ -1731,7 +1730,7 @@ ReAllocateLayoutBuffer(
 
 VOID
 UpdateDiskLayout(
-    IN PDISKENTRY DiskEntry)
+    _In_ PDISKENTRY DiskEntry)
 {
     PPARTITION_INFORMATION PartitionInfo;
     PPARTITION_INFORMATION LinkInfo = NULL;
@@ -1901,7 +1900,7 @@ UpdateDiskLayout(
 
 PPARTENTRY
 GetPrevUnpartitionedEntry(
-    IN PPARTENTRY PartEntry)
+    _In_ PPARTENTRY PartEntry)
 {
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
     PPARTENTRY PrevPartEntry;
@@ -1930,7 +1929,7 @@ GetPrevUnpartitionedEntry(
 
 PPARTENTRY
 GetNextUnpartitionedEntry(
-    IN PPARTENTRY PartEntry)
+    _In_ PPARTENTRY PartEntry)
 {
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
     PPARTENTRY NextPartEntry;
@@ -1958,7 +1957,7 @@ GetNextUnpartitionedEntry(
 
 NTSTATUS
 DismountVolume(
-    IN PPARTENTRY PartEntry)
+    _In_ PPARTENTRY PartEntry)
 {
     NTSTATUS Status;
     NTSTATUS LockStatus;
@@ -2061,6 +2060,69 @@ DismountVolume(
     NtClose(PartitionHandle);
 
     return Status;
+}
+
+
+PVOLENTRY
+GetVolumeFromPartition(
+    _In_ PPARTENTRY PartEntry)
+{
+    PLIST_ENTRY Entry;
+    PVOLENTRY VolumeEntry;
+    ULONG i;
+
+    if ((PartEntry == NULL) ||
+        (PartEntry->DiskEntry == NULL))
+        return NULL;
+
+    Entry = VolumeListHead.Flink;
+    while (Entry != &VolumeListHead)
+    {
+        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+        if (VolumeEntry->pExtents == NULL)
+            return NULL;
+
+        for (i = 0; i < VolumeEntry->pExtents->NumberOfDiskExtents; i++)
+        {
+            if (VolumeEntry->pExtents->Extents[i].DiskNumber == PartEntry->DiskEntry->DiskNumber)
+            {
+                if ((VolumeEntry->pExtents->Extents[i].StartingOffset.QuadPart == PartEntry->StartSector.QuadPart * PartEntry->DiskEntry->BytesPerSector) &&
+                    (VolumeEntry->pExtents->Extents[i].ExtentLength.QuadPart == PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector))
+                    return VolumeEntry;
+            }
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    return NULL;
+}
+
+
+VOID
+RemoveVolume(
+    _In_ PVOLENTRY VolumeEntry)
+{
+    if (VolumeEntry == NULL)
+        return;
+
+    if (VolumeEntry == CurrentVolume)
+        CurrentVolume = NULL;
+
+    RemoveEntryList(&VolumeEntry->ListEntry);
+
+    if (VolumeEntry->pszLabel)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry->pszLabel);
+
+    if (VolumeEntry->pszFilesystem)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry->pszFilesystem);
+
+    if (VolumeEntry->pExtents)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry->pExtents);
+
+    /* Release disk entry */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry);
 }
 
 /* EOF */

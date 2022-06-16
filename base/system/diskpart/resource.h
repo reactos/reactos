@@ -22,6 +22,10 @@
 #define IDS_ACTIVE_SUCCESS             1001
 #define IDS_ACTIVE_ALREADY             1002
 
+#define IDS_CLEAN_FAIL                 1020
+#define IDS_CLEAN_SUCCESS              1021
+#define IDS_CLEAN_SYSTEM               1022
+
 #define IDS_CREATE_PARTITION_FAIL      1050
 #define IDS_CREATE_PARTITION_SUCCESS   1051
 
