@@ -926,34 +926,1073 @@ SymbolicName=MSG_COMMAND_CREATE_PARTITION_PRIMARY
 Severity=Informational
 Facility=System
 Language=English
-<Add CREATE PARTITION PRIMARY command help text here>
+    Creates a primary partition on the basic disk with focus.
+
+Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+            [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more
+                unallocated space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ID={<BYTE> | <GUID>}
+
+                Specifies the partition type.
+
+                Intended for Original Equipment Manufacturer (OEM) use only.
+
+                For master boot record (MBR) disks, you can specify a partition
+                type byte, in hexadecimal form, for the partition. If this
+                parameter is not specified for an MBR disk, the command creates
+                a partition of type 0x06 (specifies no file system is installed).
+
+                    LDM data partition:
+                        0x42
+
+                    Recovery partition:
+                        0x27
+
+                    Recognized OEM Ids:
+                        0x12
+                        0x84
+                        0xDE
+                        0xFE
+                        0xA0
+
+                For GUID partition table (GPT) disks you can specify a
+                partition type GUID for the partition you want to create.
+                Recognized GUIDs include:
+
+                    EFI System partition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    Microsoft Reserved partition:
+                        e3c9e316-0b5c-4db8-817d-f92df00215ae
+
+                    Basic data partition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                    LDM Metadata partition on a dynamic disk:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM Data partition on a dynamic disk:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Recovery partition:
+                        de94bba4-06d1-4d40-a16a-bfd50179d6ac
+
+                If this parameter is not specified for a GPT disk, the command
+                creates a basic data partition.
+
+                Any partition type byte or GUID can be specified with this
+                parameter. DiskPart does not check the partition type for
+                validity except to ensure that it is a byte in hexadecimal form
+                or a GUID.
+
+                Caution:
+
+                    Creating partitions with this parameter might cause your
+                    computer to fail or be unable to start up. Unless you are
+                    an OEM or an IT professional experienced with GPT disks, do
+                    not create partitions on GPT disks using this parameter.
+                    Instead, always use the CREATE PARTITION EFI command to
+                    create EFI System partitions, the CREATE PARTITION MSR
+                    command to create Microsoft Reserved partitions, and the
+                    CREATE PARTITION PRIMARY command without this parameter to
+                    create primary partitions on GPT disks.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After you create the partition, the focus automatically shifts to the new
+    partition. The partition does not receive a drive letter. You must use the
+    assign command to assign a drive letter to the partition.
+
+    A basic disk must be selected for this operation to succeed.
+
+    If a partition type is not specified, the disk is uninitialized and disk
+    size is greater than 2TB, it will be initialized to GPT.
+
+Example:
+
+    CREATE PARTITION PRIMARY SIZE=1000
+    CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    CREATE PARTITION PRIMARY SIZE=10000 ID=12
+    CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=German
-<Add CREATE PARTITION PRIMARY command help text here>
+    Erstellt eine primäre Partition auf dem Basisdatenträger, der den Fokus
+    hat.
+
+Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>]
+            [ID={<BYTE> | <GUID>}] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    Die Größe der Partition in MB. Falls keine Größe angegeben ist,
+                wird die Partition erweitert, bis sie den gesamten
+                verfügbaren Speicherplatz im aktuellen Bereich umfasst.
+
+    OFFSET=<N>  Das Offset, in Kilobyte (KB), an dem die Partition erstellt
+                werden soll. Falls kein Offset angegeben ist, wird die
+                Partition in der ersten Datenträgererweiterung platziert, die
+                eine ausreichende Größe besitzt.
+
+    ID={<BYTE> | <GUID>}
+
+                Gibt den Partitionstyp an.
+
+                Zur ausschließlichen Verwendung durch Originalgerätehersteller.
+
+                Für MBR-Datenträger (Master Boot Record) können Sie für
+                die Partition ein Partitionstypbyte im Hexadezimalformat
+                angeben. Falls dieser Parameter für einen MBR-Datenträger
+                nicht angegeben ist, erstellt der Befehl eine Partition des
+                Typs 0x06 (gibt an, dass kein Dateisystem installiert ist).
+
+                    LDM-Datenpartition:
+                        0x42
+
+                    Wiederherstellungspartition:
+                        0x27
+
+                    Erkannte OEM-IDs:
+                        0x12
+                        0x84
+                        0xDE
+                        0xFE
+                        0xA0
+
+                Für GPT-Datenträger (GPT = GUID-Partitionstabelle) können Sie
+                einen Partitionstyp-GUID für die zu erstellende Partition
+                angeben. Zu den erkannten GUIDs gehören:
+
+                    EFI-Systempartition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    MSR-Partition (Microsoft Reserved):
+                        e3c9e316-0b5c-4db8-817d-f92df00215ae
+
+                    Basisdatenpartition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                    LDM-Metadatenpartition auf einem dynamischen Datenträger:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM-Datenpartition auf einem dynamischen Datenträger:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Wiederherstellungspartition:
+                        de94bba4-06d1-4d40-a16a-bfd50179d6ac
+
+                Wenn dieser Parameter für einen GPT-Datenträger nicht angegeben
+                ist, wird mit diesem Befehl eine Basisdatenpartition erstellt.
+
+                Mit diesem Parameter kann ein beliebiger Partitionstyp
+                oder ein beliebiger GUID angegeben werden. DiskPart überprüft
+                die Gültigkeit dieses Partitions-GUIDs nicht. Es wird lediglich
+                sichergestellt, dass es sich um ein Byte im Hexadezimalformat
+                oder um einen GUID handelt.
+
+                Vorsicht:
+
+                    Das Erstellen von Partitionen mit diesem Parameter kann
+                    dazu führen, dass der Computer fehlerhaft arbeitet oder
+                    nicht mehr gestartet werden kann. Sofern Sie kein Original-
+                    gerätehersteller oder IT-Fachmann sind, der mit GPT-Daten-
+                    trägern vertraut ist, sollten Sie keine Partitionen auf
+                    GPT-Datenträgern mit diesem Parameter erstellen.
+                    Verwenden Sie stattdessen immer den Befehl
+                    CREATE PARTITION EFI zum Erstellen von EFI-System-
+                    Partitionen, den Befehl CREATE PARTITION MSR zum Erstellen
+                    von MSR-Partitionen und den Befehl
+                    CREATE PARTITION PRIMARY (ohne diesen Parameter) zum
+                    Erstellen von primären Partitionen auf GPT-Datenträgern.
+
+    ALIGN=<N>   Wird normalerweise bei Hardware-RAID-Arrays mit logischen
+                Gerätenummern (LUN) zur Verbesserung der Leistung verwendet. Das
+                Offset der Partition ist ein Vielfaches von <N>. Bei Angabe des
+                Parameters OFFSET wird dieser auf das nächste Vielfache von <N>
+                gerundet.
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten. Ohne den Parameter NOERR wird DiskPart bei
+                einem Fehler mit dem entsprechenden Fehlercode beendet.
+
+    Nachdem Sie die Partition erstellt haben, wird der Fokus automatisch auf
+    die neue Partition gesetzt. Diese Partition erhält keinen Laufwerkbuch-
+    staben. Sie müssen der Partition mit dem Befehl ASSIGN einen Laufwerkbuch-
+    staben zuweisen.
+
+    Damit dieser Vorgang erfolgreich durchgeführt werden kann, muss ein Basis-
+    datenträger ausgewählt sein. Falls kein Partitionstyp angegeben ist, wird die Initialisierung
+    des Datenträgers aufgehoben, und wenn der Datenträger größer ist als 2 TB,
+    wird er für GPT initialisiert.
+
+Beispiel:
+
+    CREATE PARTITION PRIMARY SIZE=1000
+    CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    CREATE PARTITION PRIMARY SIZE=10000 ID=12
+    CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Polish
-<Add CREATE PARTITION PRIMARY command help text here>
+    Creates a primary partition on the basic disk with focus.
+
+Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+            [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more
+                unallocated space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ID={<BYTE> | <GUID>}
+
+                Specifies the partition type.
+
+                Intended for Original Equipment Manufacturer (OEM) use only.
+
+                For master boot record (MBR) disks, you can specify a partition
+                type byte, in hexadecimal form, for the partition. If this
+                parameter is not specified for an MBR disk, the command creates
+                a partition of type 0x06 (specifies no file system is installed).
+
+                    LDM data partition:
+                        0x42
+
+                    Recovery partition:
+                        0x27
+
+                    Recognized OEM Ids:
+                        0x12
+                        0x84
+                        0xDE
+                        0xFE
+                        0xA0
+
+                For GUID partition table (GPT) disks you can specify a
+                partition type GUID for the partition you want to create.
+                Recognized GUIDs include:
+
+                    EFI System partition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    Microsoft Reserved partition:
+                        e3c9e316-0b5c-4db8-817d-f92df00215ae
+
+                    Basic data partition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                    LDM Metadata partition on a dynamic disk:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM Data partition on a dynamic disk:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Recovery partition:
+                        de94bba4-06d1-4d40-a16a-bfd50179d6ac
+
+                If this parameter is not specified for a GPT disk, the command
+                creates a basic data partition.
+
+                Any partition type byte or GUID can be specified with this
+                parameter. DiskPart does not check the partition type for
+                validity except to ensure that it is a byte in hexadecimal form
+                or a GUID.
+
+                Caution:
+
+                    Creating partitions with this parameter might cause your
+                    computer to fail or be unable to start up. Unless you are
+                    an OEM or an IT professional experienced with GPT disks, do
+                    not create partitions on GPT disks using this parameter.
+                    Instead, always use the CREATE PARTITION EFI command to
+                    create EFI System partitions, the CREATE PARTITION MSR
+                    command to create Microsoft Reserved partitions, and the
+                    CREATE PARTITION PRIMARY command without this parameter to
+                    create primary partitions on GPT disks.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After you create the partition, the focus automatically shifts to the new
+    partition. The partition does not receive a drive letter. You must use the
+    assign command to assign a drive letter to the partition.
+
+    A basic disk must be selected for this operation to succeed.
+
+    If a partition type is not specified, the disk is uninitialized and disk
+    size is greater than 2TB, it will be initialized to GPT.
+
+Example:
+
+    CREATE PARTITION PRIMARY SIZE=1000
+    CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    CREATE PARTITION PRIMARY SIZE=10000 ID=12
+    CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Portugese
-<Add CREATE PARTITION PRIMARY command help text here>
+    Creates a primary partition on the basic disk with focus.
+
+Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+            [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more
+                unallocated space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ID={<BYTE> | <GUID>}
+
+                Specifies the partition type.
+
+                Intended for Original Equipment Manufacturer (OEM) use only.
+
+                For master boot record (MBR) disks, you can specify a partition
+                type byte, in hexadecimal form, for the partition. If this
+                parameter is not specified for an MBR disk, the command creates
+                a partition of type 0x06 (specifies no file system is installed).
+
+                    LDM data partition:
+                        0x42
+
+                    Recovery partition:
+                        0x27
+
+                    Recognized OEM Ids:
+                        0x12
+                        0x84
+                        0xDE
+                        0xFE
+                        0xA0
+
+                For GUID partition table (GPT) disks you can specify a
+                partition type GUID for the partition you want to create.
+                Recognized GUIDs include:
+
+                    EFI System partition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    Microsoft Reserved partition:
+                        e3c9e316-0b5c-4db8-817d-f92df00215ae
+
+                    Basic data partition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                    LDM Metadata partition on a dynamic disk:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM Data partition on a dynamic disk:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Recovery partition:
+                        de94bba4-06d1-4d40-a16a-bfd50179d6ac
+
+                If this parameter is not specified for a GPT disk, the command
+                creates a basic data partition.
+
+                Any partition type byte or GUID can be specified with this
+                parameter. DiskPart does not check the partition type for
+                validity except to ensure that it is a byte in hexadecimal form
+                or a GUID.
+
+                Caution:
+
+                    Creating partitions with this parameter might cause your
+                    computer to fail or be unable to start up. Unless you are
+                    an OEM or an IT professional experienced with GPT disks, do
+                    not create partitions on GPT disks using this parameter.
+                    Instead, always use the CREATE PARTITION EFI command to
+                    create EFI System partitions, the CREATE PARTITION MSR
+                    command to create Microsoft Reserved partitions, and the
+                    CREATE PARTITION PRIMARY command without this parameter to
+                    create primary partitions on GPT disks.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After you create the partition, the focus automatically shifts to the new
+    partition. The partition does not receive a drive letter. You must use the
+    assign command to assign a drive letter to the partition.
+
+    A basic disk must be selected for this operation to succeed.
+
+    If a partition type is not specified, the disk is uninitialized and disk
+    size is greater than 2TB, it will be initialized to GPT.
+
+Example:
+
+    CREATE PARTITION PRIMARY SIZE=1000
+    CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    CREATE PARTITION PRIMARY SIZE=10000 ID=12
+    CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Romanian
-<Add CREATE PARTITION PRIMARY command help text here>
+    Creates a primary partition on the basic disk with focus.
+
+Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+            [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more
+                unallocated space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ID={<BYTE> | <GUID>}
+
+                Specifies the partition type.
+
+                Intended for Original Equipment Manufacturer (OEM) use only.
+
+                For master boot record (MBR) disks, you can specify a partition
+                type byte, in hexadecimal form, for the partition. If this
+                parameter is not specified for an MBR disk, the command creates
+                a partition of type 0x06 (specifies no file system is installed).
+
+                    LDM data partition:
+                        0x42
+
+                    Recovery partition:
+                        0x27
+
+                    Recognized OEM Ids:
+                        0x12
+                        0x84
+                        0xDE
+                        0xFE
+                        0xA0
+
+                For GUID partition table (GPT) disks you can specify a
+                partition type GUID for the partition you want to create.
+                Recognized GUIDs include:
+
+                    EFI System partition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    Microsoft Reserved partition:
+                        e3c9e316-0b5c-4db8-817d-f92df00215ae
+
+                    Basic data partition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                    LDM Metadata partition on a dynamic disk:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM Data partition on a dynamic disk:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Recovery partition:
+                        de94bba4-06d1-4d40-a16a-bfd50179d6ac
+
+                If this parameter is not specified for a GPT disk, the command
+                creates a basic data partition.
+
+                Any partition type byte or GUID can be specified with this
+                parameter. DiskPart does not check the partition type for
+                validity except to ensure that it is a byte in hexadecimal form
+                or a GUID.
+
+                Caution:
+
+                    Creating partitions with this parameter might cause your
+                    computer to fail or be unable to start up. Unless you are
+                    an OEM or an IT professional experienced with GPT disks, do
+                    not create partitions on GPT disks using this parameter.
+                    Instead, always use the CREATE PARTITION EFI command to
+                    create EFI System partitions, the CREATE PARTITION MSR
+                    command to create Microsoft Reserved partitions, and the
+                    CREATE PARTITION PRIMARY command without this parameter to
+                    create primary partitions on GPT disks.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After you create the partition, the focus automatically shifts to the new
+    partition. The partition does not receive a drive letter. You must use the
+    assign command to assign a drive letter to the partition.
+
+    A basic disk must be selected for this operation to succeed.
+
+    If a partition type is not specified, the disk is uninitialized and disk
+    size is greater than 2TB, it will be initialized to GPT.
+
+Example:
+
+    CREATE PARTITION PRIMARY SIZE=1000
+    CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    CREATE PARTITION PRIMARY SIZE=10000 ID=12
+    CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Russian
-<Add CREATE PARTITION PRIMARY command help text here>
+    Creates a primary partition on the basic disk with focus.
+
+Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+            [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more
+                unallocated space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ID={<BYTE> | <GUID>}
+
+                Specifies the partition type.
+
+                Intended for Original Equipment Manufacturer (OEM) use only.
+
+                For master boot record (MBR) disks, you can specify a partition
+                type byte, in hexadecimal form, for the partition. If this
+                parameter is not specified for an MBR disk, the command creates
+                a partition of type 0x06 (specifies no file system is installed).
+
+                    LDM data partition:
+                        0x42
+
+                    Recovery partition:
+                        0x27
+
+                    Recognized OEM Ids:
+                        0x12
+                        0x84
+                        0xDE
+                        0xFE
+                        0xA0
+
+                For GUID partition table (GPT) disks you can specify a
+                partition type GUID for the partition you want to create.
+                Recognized GUIDs include:
+
+                    EFI System partition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    Microsoft Reserved partition:
+                        e3c9e316-0b5c-4db8-817d-f92df00215ae
+
+                    Basic data partition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                    LDM Metadata partition on a dynamic disk:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM Data partition on a dynamic disk:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Recovery partition:
+                        de94bba4-06d1-4d40-a16a-bfd50179d6ac
+
+                If this parameter is not specified for a GPT disk, the command
+                creates a basic data partition.
+
+                Any partition type byte or GUID can be specified with this
+                parameter. DiskPart does not check the partition type for
+                validity except to ensure that it is a byte in hexadecimal form
+                or a GUID.
+
+                Caution:
+
+                    Creating partitions with this parameter might cause your
+                    computer to fail or be unable to start up. Unless you are
+                    an OEM or an IT professional experienced with GPT disks, do
+                    not create partitions on GPT disks using this parameter.
+                    Instead, always use the CREATE PARTITION EFI command to
+                    create EFI System partitions, the CREATE PARTITION MSR
+                    command to create Microsoft Reserved partitions, and the
+                    CREATE PARTITION PRIMARY command without this parameter to
+                    create primary partitions on GPT disks.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After you create the partition, the focus automatically shifts to the new
+    partition. The partition does not receive a drive letter. You must use the
+    assign command to assign a drive letter to the partition.
+
+    A basic disk must be selected for this operation to succeed.
+
+    If a partition type is not specified, the disk is uninitialized and disk
+    size is greater than 2TB, it will be initialized to GPT.
+
+Example:
+
+    CREATE PARTITION PRIMARY SIZE=1000
+    CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    CREATE PARTITION PRIMARY SIZE=10000 ID=12
+    CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Albanian
-<Add CREATE PARTITION PRIMARY command help text here>
+    Creates a primary partition on the basic disk with focus.
+
+Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+            [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more
+                unallocated space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ID={<BYTE> | <GUID>}
+
+                Specifies the partition type.
+
+                Intended for Original Equipment Manufacturer (OEM) use only.
+
+                For master boot record (MBR) disks, you can specify a partition
+                type byte, in hexadecimal form, for the partition. If this
+                parameter is not specified for an MBR disk, the command creates
+                a partition of type 0x06 (specifies no file system is installed).
+
+                    LDM data partition:
+                        0x42
+
+                    Recovery partition:
+                        0x27
+
+                    Recognized OEM Ids:
+                        0x12
+                        0x84
+                        0xDE
+                        0xFE
+                        0xA0
+
+                For GUID partition table (GPT) disks you can specify a
+                partition type GUID for the partition you want to create.
+                Recognized GUIDs include:
+
+                    EFI System partition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    Microsoft Reserved partition:
+                        e3c9e316-0b5c-4db8-817d-f92df00215ae
+
+                    Basic data partition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                    LDM Metadata partition on a dynamic disk:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM Data partition on a dynamic disk:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Recovery partition:
+                        de94bba4-06d1-4d40-a16a-bfd50179d6ac
+
+                If this parameter is not specified for a GPT disk, the command
+                creates a basic data partition.
+
+                Any partition type byte or GUID can be specified with this
+                parameter. DiskPart does not check the partition type for
+                validity except to ensure that it is a byte in hexadecimal form
+                or a GUID.
+
+                Caution:
+
+                    Creating partitions with this parameter might cause your
+                    computer to fail or be unable to start up. Unless you are
+                    an OEM or an IT professional experienced with GPT disks, do
+                    not create partitions on GPT disks using this parameter.
+                    Instead, always use the CREATE PARTITION EFI command to
+                    create EFI System partitions, the CREATE PARTITION MSR
+                    command to create Microsoft Reserved partitions, and the
+                    CREATE PARTITION PRIMARY command without this parameter to
+                    create primary partitions on GPT disks.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After you create the partition, the focus automatically shifts to the new
+    partition. The partition does not receive a drive letter. You must use the
+    assign command to assign a drive letter to the partition.
+
+    A basic disk must be selected for this operation to succeed.
+
+    If a partition type is not specified, the disk is uninitialized and disk
+    size is greater than 2TB, it will be initialized to GPT.
+
+Example:
+
+    CREATE PARTITION PRIMARY SIZE=1000
+    CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    CREATE PARTITION PRIMARY SIZE=10000 ID=12
+    CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Turkish
-<Add CREATE PARTITION PRIMARY command help text here>
+    Creates a primary partition on the basic disk with focus.
+
+Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+            [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more
+                unallocated space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ID={<BYTE> | <GUID>}
+
+                Specifies the partition type.
+
+                Intended for Original Equipment Manufacturer (OEM) use only.
+
+                For master boot record (MBR) disks, you can specify a partition
+                type byte, in hexadecimal form, for the partition. If this
+                parameter is not specified for an MBR disk, the command creates
+                a partition of type 0x06 (specifies no file system is installed).
+
+                    LDM data partition:
+                        0x42
+
+                    Recovery partition:
+                        0x27
+
+                    Recognized OEM Ids:
+                        0x12
+                        0x84
+                        0xDE
+                        0xFE
+                        0xA0
+
+                For GUID partition table (GPT) disks you can specify a
+                partition type GUID for the partition you want to create.
+                Recognized GUIDs include:
+
+                    EFI System partition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    Microsoft Reserved partition:
+                        e3c9e316-0b5c-4db8-817d-f92df00215ae
+
+                    Basic data partition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                    LDM Metadata partition on a dynamic disk:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM Data partition on a dynamic disk:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Recovery partition:
+                        de94bba4-06d1-4d40-a16a-bfd50179d6ac
+
+                If this parameter is not specified for a GPT disk, the command
+                creates a basic data partition.
+
+                Any partition type byte or GUID can be specified with this
+                parameter. DiskPart does not check the partition type for
+                validity except to ensure that it is a byte in hexadecimal form
+                or a GUID.
+
+                Caution:
+
+                    Creating partitions with this parameter might cause your
+                    computer to fail or be unable to start up. Unless you are
+                    an OEM or an IT professional experienced with GPT disks, do
+                    not create partitions on GPT disks using this parameter.
+                    Instead, always use the CREATE PARTITION EFI command to
+                    create EFI System partitions, the CREATE PARTITION MSR
+                    command to create Microsoft Reserved partitions, and the
+                    CREATE PARTITION PRIMARY command without this parameter to
+                    create primary partitions on GPT disks.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After you create the partition, the focus automatically shifts to the new
+    partition. The partition does not receive a drive letter. You must use the
+    assign command to assign a drive letter to the partition.
+
+    A basic disk must be selected for this operation to succeed.
+
+    If a partition type is not specified, the disk is uninitialized and disk
+    size is greater than 2TB, it will be initialized to GPT.
+
+Example:
+
+    CREATE PARTITION PRIMARY SIZE=1000
+    CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    CREATE PARTITION PRIMARY SIZE=10000 ID=12
+    CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Chinese
-<Add CREATE PARTITION PRIMARY command help text here>
+    Creates a primary partition on the basic disk with focus.
+
+Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+            [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more
+                unallocated space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ID={<BYTE> | <GUID>}
+
+                Specifies the partition type.
+
+                Intended for Original Equipment Manufacturer (OEM) use only.
+
+                For master boot record (MBR) disks, you can specify a partition
+                type byte, in hexadecimal form, for the partition. If this
+                parameter is not specified for an MBR disk, the command creates
+                a partition of type 0x06 (specifies no file system is installed).
+
+                    LDM data partition:
+                        0x42
+
+                    Recovery partition:
+                        0x27
+
+                    Recognized OEM Ids:
+                        0x12
+                        0x84
+                        0xDE
+                        0xFE
+                        0xA0
+
+                For GUID partition table (GPT) disks you can specify a
+                partition type GUID for the partition you want to create.
+                Recognized GUIDs include:
+
+                    EFI System partition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    Microsoft Reserved partition:
+                        e3c9e316-0b5c-4db8-817d-f92df00215ae
+
+                    Basic data partition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                    LDM Metadata partition on a dynamic disk:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM Data partition on a dynamic disk:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Recovery partition:
+                        de94bba4-06d1-4d40-a16a-bfd50179d6ac
+
+                If this parameter is not specified for a GPT disk, the command
+                creates a basic data partition.
+
+                Any partition type byte or GUID can be specified with this
+                parameter. DiskPart does not check the partition type for
+                validity except to ensure that it is a byte in hexadecimal form
+                or a GUID.
+
+                Caution:
+
+                    Creating partitions with this parameter might cause your
+                    computer to fail or be unable to start up. Unless you are
+                    an OEM or an IT professional experienced with GPT disks, do
+                    not create partitions on GPT disks using this parameter.
+                    Instead, always use the CREATE PARTITION EFI command to
+                    create EFI System partitions, the CREATE PARTITION MSR
+                    command to create Microsoft Reserved partitions, and the
+                    CREATE PARTITION PRIMARY command without this parameter to
+                    create primary partitions on GPT disks.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After you create the partition, the focus automatically shifts to the new
+    partition. The partition does not receive a drive letter. You must use the
+    assign command to assign a drive letter to the partition.
+
+    A basic disk must be selected for this operation to succeed.
+
+    If a partition type is not specified, the disk is uninitialized and disk
+    size is greater than 2TB, it will be initialized to GPT.
+
+Example:
+
+    CREATE PARTITION PRIMARY SIZE=1000
+    CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    CREATE PARTITION PRIMARY SIZE=10000 ID=12
+    CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 Language=Taiwanese
-<Add CREATE PARTITION PRIMARY command help text here>
+    Creates a primary partition on the basic disk with focus.
+
+Syntax:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>}]
+            [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more
+                unallocated space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ID={<BYTE> | <GUID>}
+
+                Specifies the partition type.
+
+                Intended for Original Equipment Manufacturer (OEM) use only.
+
+                For master boot record (MBR) disks, you can specify a partition
+                type byte, in hexadecimal form, for the partition. If this
+                parameter is not specified for an MBR disk, the command creates
+                a partition of type 0x06 (specifies no file system is installed).
+
+                    LDM data partition:
+                        0x42
+
+                    Recovery partition:
+                        0x27
+
+                    Recognized OEM Ids:
+                        0x12
+                        0x84
+                        0xDE
+                        0xFE
+                        0xA0
+
+                For GUID partition table (GPT) disks you can specify a
+                partition type GUID for the partition you want to create.
+                Recognized GUIDs include:
+
+                    EFI System partition:
+                        c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+
+                    Microsoft Reserved partition:
+                        e3c9e316-0b5c-4db8-817d-f92df00215ae
+
+                    Basic data partition:
+                        ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+
+                    LDM Metadata partition on a dynamic disk:
+                        5808c8aa-7e8f-42e0-85d2-e1e90434cfb3
+
+                    LDM Data partition on a dynamic disk:
+                        af9b60a0-1431-4f62-bc68-3311714a69ad
+
+                    Recovery partition:
+                        de94bba4-06d1-4d40-a16a-bfd50179d6ac
+
+                If this parameter is not specified for a GPT disk, the command
+                creates a basic data partition.
+
+                Any partition type byte or GUID can be specified with this
+                parameter. DiskPart does not check the partition type for
+                validity except to ensure that it is a byte in hexadecimal form
+                or a GUID.
+
+                Caution:
+
+                    Creating partitions with this parameter might cause your
+                    computer to fail or be unable to start up. Unless you are
+                    an OEM or an IT professional experienced with GPT disks, do
+                    not create partitions on GPT disks using this parameter.
+                    Instead, always use the CREATE PARTITION EFI command to
+                    create EFI System partitions, the CREATE PARTITION MSR
+                    command to create Microsoft Reserved partitions, and the
+                    CREATE PARTITION PRIMARY command without this parameter to
+                    create primary partitions on GPT disks.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After you create the partition, the focus automatically shifts to the new
+    partition. The partition does not receive a drive letter. You must use the
+    assign command to assign a drive letter to the partition.
+
+    A basic disk must be selected for this operation to succeed.
+
+    If a partition type is not specified, the disk is uninitialized and disk
+    size is greater than 2TB, it will be initialized to GPT.
+
+Example:
+
+    CREATE PARTITION PRIMARY SIZE=1000
+    CREATE PARTITION PRIMARY SIZE=128 ID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    CREATE PARTITION PRIMARY SIZE=10000 ID=12
+    CREATE PARTITION PRIMARY SIZE=10000 ID=DE
 .
 
 
@@ -3229,7 +4268,7 @@ Example:
     ASSIGN f:
 .
 Language=German
-    Bietet eine M\xF6glichkeit, einem Skript Kommentare hinzuzufügen.
+    Bietet eine Möglichkeit, einem Skript Kommentare hinzuzufügen.
 
 Syntax:  REM
 
