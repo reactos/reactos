@@ -3210,34 +3210,194 @@ SymbolicName=MSG_COMMAND_REM
 Severity=Informational
 Facility=System
 Language=English
-<Add REM command help text here>
+    Provides a way to add comments to a script.
+
+Syntax:  REM
+
+Example:
+
+    In this example script, REM is used to provide a comment about what the
+    script does.
+
+    REM These commands set up 3 drives.
+    CREATE PARTITION PRIMARY SIZE=2048
+    ASSIGN d:
+    CREATE PARTITION EXTEND
+    CREATE PARTITION LOGICAL SIZE=2048
+    ASSIGN e:
+    CREATE PARTITION LOGICAL
+    ASSIGN f:
 .
 Language=German
-<Add REM command help text here>
+    Bietet eine M\xF6glichkeit, einem Skript Kommentare hinzuzufügen.
+
+Syntax:  REM
+
+Beispiel:
+
+    In diesem Beispielskript wird mit REM ein Kommentar eingeleitet, mit
+    dem die Funktion des Skripts erläutert wird.
+
+    REM Mit diesen Befehlen werden drei Laufwerke eingerichtet.
+    CREATE PARITION PRIMARY SIZE=2048
+    ASSIGN d:
+    CREATE PARTITION EXTEND
+    CREATE PARTITION LOGICAL SIZE=2048
+    ASSIGN e:
+    CREATE PARTITION LOGICAL
+    ASSIGN f:
 .
 Language=Polish
-<Add REM command help text here>
+    Provides a way to add comments to a script.
+
+Syntax:  REM
+
+Example:
+
+    In this example script, REM is used to provide a comment about what the
+    script does.
+
+    REM These commands set up 3 drives.
+    CREATE PARTITION PRIMARY SIZE=2048
+    ASSIGN d:
+    CREATE PARTITION EXTEND
+    CREATE PARTITION LOGICAL SIZE=2048
+    ASSIGN e:
+    CREATE PARTITION LOGICAL
+    ASSIGN f:
 .
 Language=Portugese
-<Add REM command help text here>
+    Provides a way to add comments to a script.
+
+Syntax:  REM
+
+Example:
+
+    In this example script, REM is used to provide a comment about what the
+    script does.
+
+    REM These commands set up 3 drives.
+    CREATE PARTITION PRIMARY SIZE=2048
+    ASSIGN d:
+    CREATE PARTITION EXTEND
+    CREATE PARTITION LOGICAL SIZE=2048
+    ASSIGN e:
+    CREATE PARTITION LOGICAL
+    ASSIGN f:
 .
 Language=Romanian
-<Add REM command help text here>
+    Provides a way to add comments to a script.
+
+Syntax:  REM
+
+Example:
+
+    In this example script, REM is used to provide a comment about what the
+    script does.
+
+    REM These commands set up 3 drives.
+    CREATE PARTITION PRIMARY SIZE=2048
+    ASSIGN d:
+    CREATE PARTITION EXTEND
+    CREATE PARTITION LOGICAL SIZE=2048
+    ASSIGN e:
+    CREATE PARTITION LOGICAL
+    ASSIGN f:
 .
 Language=Russian
-<Add REM command help text here>
+    Provides a way to add comments to a script.
+
+Syntax:  REM
+
+Example:
+
+    In this example script, REM is used to provide a comment about what the
+    script does.
+
+    REM These commands set up 3 drives.
+    CREATE PARTITION PRIMARY SIZE=2048
+    ASSIGN d:
+    CREATE PARTITION EXTEND
+    CREATE PARTITION LOGICAL SIZE=2048
+    ASSIGN e:
+    CREATE PARTITION LOGICAL
+    ASSIGN f:
 .
 Language=Albanian
-<Add REM command help text here>
+    Provides a way to add comments to a script.
+
+Syntax:  REM
+
+Example:
+
+    In this example script, REM is used to provide a comment about what the
+    script does.
+
+    REM These commands set up 3 drives.
+    CREATE PARTITION PRIMARY SIZE=2048
+    ASSIGN d:
+    CREATE PARTITION EXTEND
+    CREATE PARTITION LOGICAL SIZE=2048
+    ASSIGN e:
+    CREATE PARTITION LOGICAL
+    ASSIGN f:
 .
 Language=Turkish
-<Add REM command help text here>
+    Provides a way to add comments to a script.
+
+Syntax:  REM
+
+Example:
+
+    In this example script, REM is used to provide a comment about what the
+    script does.
+
+    REM These commands set up 3 drives.
+    CREATE PARTITION PRIMARY SIZE=2048
+    ASSIGN d:
+    CREATE PARTITION EXTEND
+    CREATE PARTITION LOGICAL SIZE=2048
+    ASSIGN e:
+    CREATE PARTITION LOGICAL
+    ASSIGN f:
 .
 Language=Chinese
-<Add REM command help text here>
+    Provides a way to add comments to a script.
+
+Syntax:  REM
+
+Example:
+
+    In this example script, REM is used to provide a comment about what the
+    script does.
+
+    REM These commands set up 3 drives.
+    CREATE PARTITION PRIMARY SIZE=2048
+    ASSIGN d:
+    CREATE PARTITION EXTEND
+    CREATE PARTITION LOGICAL SIZE=2048
+    ASSIGN e:
+    CREATE PARTITION LOGICAL
+    ASSIGN f:
 .
 Language=Taiwanese
-<Add REM command help text here>
+    Provides a way to add comments to a script.
+
+Syntax:  REM
+
+Example:
+
+    In this example script, REM is used to provide a comment about what the
+    script does.
+
+    REM These commands set up 3 drives.
+    CREATE PARTITION PRIMARY SIZE=2048
+    ASSIGN d:
+    CREATE PARTITION EXTEND
+    CREATE PARTITION LOGICAL SIZE=2048
+    ASSIGN e:
+    CREATE PARTITION LOGICAL
+    ASSIGN f:
 .
 
 
