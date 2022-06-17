@@ -854,34 +854,368 @@ SymbolicName=MSG_COMMAND_CREATE_PARTITION_LOGICAL
 Severity=Informational
 Facility=System
 Language=English
-<Add CREATE PARTITION LOGICAL command help text here>
+    Creates a logical partition in an extended partition.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If you
+                specify a size for the logical partition, it must be smaller
+                than the extended partition. If no size is given, the partition
+                continues until there is no more free space in the extended
+                partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new logical partition.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=German
-<Add CREATE PARTITION LOGICAL command help text here>
+    Erstellt eine logische Partition in einer erweiterten Partition.
+    Gilt nur für MBR-Datenträger (Master Boot Record).
+
+Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    Die Größe der Partition in MB. Die Länge der Partition in MB.
+                Die Länge der Partition in Byte entspricht mindestens dem durch
+                N angegebenen Wert. Wenn Sie eine Größe für die logische
+                Partition angeben, muss diese kleiner sein als die erweiterte
+                Partition. Falls keine Größe angegeben ist, wird die Partition
+                erweitert, bis sie den gesamten freien Speicherplatz im
+                Bereich umfasst.
+
+    OFFSET=<N>  Das Offset, in Kilobyte (KB), an dem die Partition erstellt
+                wird. Falls kein Offset angegeben ist, wird die Partition im
+                ersten Datenträgerbereich erstellt, der eine ausreichende Größe
+                für die Partition hat.
+
+    ALIGN=<N>   Wird normalerweise bei Hardware-RAID-Arrays mit logischen
+                Gerätenummern (LUN) zur Verbesserung der Leistung verwendet. Das
+                Offset der Partition ist ein Vielfaches von <N>. Bei Angabe des
+                Parameters OFFSET wird dieser auf das nächste Vielfache von <N>
+                gerundet.
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten. Ohne den Parameter NOERR wird DiskPart bei einem
+                Fehler mit dem entsprechenden Fehlercode beendet.
+
+    Nachdem die Partition erstellt wurde, wird der Fokus automatisch auf die
+    neue logische Partition gesetzt.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    MBR-Basisdatenträger ausgewählt sein.
+
+Beispiel:
+
+    CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Polish
-<Add CREATE PARTITION LOGICAL command help text here>
+    Creates a logical partition in an extended partition.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If you
+                specify a size for the logical partition, it must be smaller
+                than the extended partition. If no size is given, the partition
+                continues until there is no more free space in the extended
+                partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new logical partition.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Portugese
-<Add CREATE PARTITION LOGICAL command help text here>
+    Creates a logical partition in an extended partition.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If you
+                specify a size for the logical partition, it must be smaller
+                than the extended partition. If no size is given, the partition
+                continues until there is no more free space in the extended
+                partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new logical partition.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Romanian
-<Add CREATE PARTITION LOGICAL command help text here>
+    Creates a logical partition in an extended partition.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If you
+                specify a size for the logical partition, it must be smaller
+                than the extended partition. If no size is given, the partition
+                continues until there is no more free space in the extended
+                partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new logical partition.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Russian
-<Add CREATE PARTITION LOGICAL command help text here>
+    Creates a logical partition in an extended partition.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If you
+                specify a size for the logical partition, it must be smaller
+                than the extended partition. If no size is given, the partition
+                continues until there is no more free space in the extended
+                partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new logical partition.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Albanian
-<Add CREATE PARTITION LOGICAL command help text here>
+    Creates a logical partition in an extended partition.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If you
+                specify a size for the logical partition, it must be smaller
+                than the extended partition. If no size is given, the partition
+                continues until there is no more free space in the extended
+                partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new logical partition.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Turkish
-<Add CREATE PARTITION LOGICAL command help text here>
+    Creates a logical partition in an extended partition.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If you
+                specify a size for the logical partition, it must be smaller
+                than the extended partition. If no size is given, the partition
+                continues until there is no more free space in the extended
+                partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new logical partition.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Chinese
-<Add CREATE PARTITION LOGICAL command help text here>
+    Creates a logical partition in an extended partition.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If you
+                specify a size for the logical partition, it must be smaller
+                than the extended partition. If no size is given, the partition
+                continues until there is no more free space in the extended
+                partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new logical partition.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION LOGICAL SIZE=1000
 .
 Language=Taiwanese
-<Add CREATE PARTITION LOGICAL command help text here>
+    Creates a logical partition in an extended partition.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If you
+                specify a size for the logical partition, it must be smaller
+                than the extended partition. If no size is given, the partition
+                continues until there is no more free space in the extended
+                partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is created.
+                If no offset is given, the partition is placed in the first disk
+                extent that is large enough to hold it.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new logical partition.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION LOGICAL SIZE=1000
 .
 
 
