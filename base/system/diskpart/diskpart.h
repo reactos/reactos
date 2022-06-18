@@ -394,6 +394,14 @@ RoundingDivide(
     _In_ ULONGLONG Dividend,
     _In_ ULONGLONG Divisor);
 
+PWSTR
+DuplicateQuotedString(
+    _In_ PWSTR pszInString);
+
+PWSTR
+DuplicateString(
+    _In_ PWSTR pszInString);
+
 /* offline.c */
 BOOL offline_main(INT argc, LPWSTR *argv);
 

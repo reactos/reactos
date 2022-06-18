@@ -229,6 +229,7 @@ InterpretMain(VOID)
     LPWSTR args_vector[MAX_ARGS_COUNT];
     INT args_count = 0;
     BOOL bWhiteSpace = TRUE;
+    BOOL bQuote = FALSE;
     BOOL bRun = TRUE;
     LPWSTR ptr;
 
@@ -243,17 +244,21 @@ InterpretMain(VOID)
         /* Get input from the user. */
         fgetws(input_line, MAX_STRING_SIZE, stdin);
 
+        bQuote = FALSE;
         ptr = input_line;
         while (*ptr != 0)
         {
-            if (iswspace(*ptr) || *ptr == L'\n')
+            if (*ptr == L'"')
+                bQuote = !bQuote;
+
+            if ((iswspace(*ptr) && (bQuote == FALSE))|| *ptr == L'\n')
             {
                 *ptr = 0;
                 bWhiteSpace = TRUE;
             }
             else
             {
-                if ((bWhiteSpace != FALSE) && (args_count < MAX_ARGS_COUNT))
+                if ((bWhiteSpace != FALSE) && (bQuote == FALSE) && (args_count < MAX_ARGS_COUNT))
                 {
                     args_vector[args_count] = ptr;
                     args_count++;
