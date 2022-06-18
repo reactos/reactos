@@ -818,34 +818,381 @@ SymbolicName=MSG_COMMAND_CREATE_PARTITION_EXTENDED
 Severity=Informational
 Facility=System
 Language=English
-<Add CREATE PARTITION EXTENDED command help text here>
+    Creates an extended partition on the disk with focus.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the extended partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition will start
+                at the beginning of the first free space on the disk that
+                is large enough to hold the new partition.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new partition. Only one extended partition can be created per disk. This
+    command fails if you attempt to create an extended partition within another
+    extended partition. You must create an extended partition before you can
+    create logical partitions.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=German
-<Add CREATE PARTITION EXTENDED command help text here>
+    Erstellt eine erweiterte Partition auf dem Datenträger, der den Fokus
+    besitzt.
+    Gilt nur für MBR-Datenträger (Master Boot Record).
+
+Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    Die Größe der Partition in MB. Falls keine Größe angegeben
+                ist, wird die Partition erweitert, bis auf der erweiterten
+                Partition kein freier Speicherplatz mehr vorhanden ist.
+
+    OFFSET=<N>  Das Offset, in Kilobyte (KB), in dem die Partition
+                erstellt wird. Wird kein Offset angegeben, beginnt die
+                Partition am Anfang des ersten freien Speicherplatz auf dem
+                Datenträger, der eine ausreichende Größe für die neue Partition
+                besitzt.
+
+    ALIGN=<N>   Wird normalerweise bei Hardware-RAID-Arrays mit logischen
+                Gerätenummern (LUN) zur Verbesserung der Leistung verwendet. Das
+                Offset der Partition ist ein Vielfaches von <N>. Bei Angabe des
+                Parameters OFFSET wird dieser auf das nächste Vielfache von <N>
+                gerundet.
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten.
+                Ohne den Parameter NOERR wird DiskPart bei einem Fehler mit
+                dem entsprechenden Fehlercode beendet.
+
+    Nachdem die Partition erstellt wurde, wird der Fokus automatisch auf die
+    neue Partition gesetzt. Auf jedem Datenträger kann jeweils nur eine
+    erw. Partition erstellt werden. Dieser Befehl kann nicht ausgeführt
+    werden, wenn versucht wird, eine erweiterte Partition innerhalb einer
+    anderen erweiterten Partition zu erstellen. Sie müssen zuerst eine
+    erweiterte Partition erstellen, bevor logische Partitionen erstellt werden
+    können.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    MBR-Basisdatenträger ausgewählt werden.
+
+Beispiel:
+
+    CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Polish
-<Add CREATE PARTITION EXTENDED command help text here>
+    Creates an extended partition on the disk with focus.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the extended partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition will start
+                at the beginning of the first free space on the disk that
+                is large enough to hold the new partition.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new partition. Only one extended partition can be created per disk. This
+    command fails if you attempt to create an extended partition within another
+    extended partition. You must create an extended partition before you can
+    create logical partitions.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Portugese
-<Add CREATE PARTITION EXTENDED command help text here>
+    Creates an extended partition on the disk with focus.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the extended partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition will start
+                at the beginning of the first free space on the disk that
+                is large enough to hold the new partition.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new partition. Only one extended partition can be created per disk. This
+    command fails if you attempt to create an extended partition within another
+    extended partition. You must create an extended partition before you can
+    create logical partitions.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Romanian
-<Add CREATE PARTITION EXTENDED command help text here>
+    Creates an extended partition on the disk with focus.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the extended partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition will start
+                at the beginning of the first free space on the disk that
+                is large enough to hold the new partition.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new partition. Only one extended partition can be created per disk. This
+    command fails if you attempt to create an extended partition within another
+    extended partition. You must create an extended partition before you can
+    create logical partitions.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Russian
-<Add CREATE PARTITION EXTENDED command help text here>
+    Creates an extended partition on the disk with focus.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the extended partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition will start
+                at the beginning of the first free space on the disk that
+                is large enough to hold the new partition.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new partition. Only one extended partition can be created per disk. This
+    command fails if you attempt to create an extended partition within another
+    extended partition. You must create an extended partition before you can
+    create logical partitions.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Albanian
-<Add CREATE PARTITION EXTENDED command help text here>
+    Creates an extended partition on the disk with focus.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the extended partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition will start
+                at the beginning of the first free space on the disk that
+                is large enough to hold the new partition.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new partition. Only one extended partition can be created per disk. This
+    command fails if you attempt to create an extended partition within another
+    extended partition. You must create an extended partition before you can
+    create logical partitions.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Turkish
-<Add CREATE PARTITION EXTENDED command help text here>
+    Creates an extended partition on the disk with focus.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the extended partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition will start
+                at the beginning of the first free space on the disk that
+                is large enough to hold the new partition.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new partition. Only one extended partition can be created per disk. This
+    command fails if you attempt to create an extended partition within another
+    extended partition. You must create an extended partition before you can
+    create logical partitions.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Chinese
-<Add CREATE PARTITION EXTENDED command help text here>
+    Creates an extended partition on the disk with focus.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the extended partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition will start
+                at the beginning of the first free space on the disk that
+                is large enough to hold the new partition.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new partition. Only one extended partition can be created per disk. This
+    command fails if you attempt to create an extended partition within another
+    extended partition. You must create an extended partition before you can
+    create logical partitions.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EXTENDED SIZE=1000
 .
 Language=Taiwanese
-<Add CREATE PARTITION EXTENDED command help text here>
+    Creates an extended partition on the disk with focus.
+    Applies to master boot record (MBR) disks only.
+
+Syntax:  CREATE PARTITION EXTENDED [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the extended partition.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition will start
+                at the beginning of the first free space on the disk that
+                is large enough to hold the new partition.
+
+    ALIGN=<N>   Typically used with hardware RAID Logical Unit Number (LUN)
+                arrays to improve performance. The partition offset will be
+                a multiple of <N>. If the OFFSET parameter is specified, it
+                will be rounded to the closest multiple of <N>.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus automatically shifts to the
+    new partition. Only one extended partition can be created per disk. This
+    command fails if you attempt to create an extended partition within another
+    extended partition. You must create an extended partition before you can
+    create logical partitions.
+
+    A basic MBR disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EXTENDED SIZE=1000
 .
 
 
