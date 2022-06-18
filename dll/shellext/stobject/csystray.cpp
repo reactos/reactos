@@ -22,6 +22,7 @@ const int g_NumIcons = _countof(g_IconHandlers);
 
 CSysTray::CSysTray() : dwServicesEnabled(0)
 {
+    wm_SHELLHOOK = RegisterWindowMessageW(L"SHELLHOOK");
     wm_DESTROYWINDOW = RegisterWindowMessageW(L"CSysTray_DESTROY");
 }
 
@@ -128,6 +129,8 @@ HRESULT CSysTray::InitIcons()
         }
     }
 
+    MouseKeys_Init(this);
+
     return InitNetShell();
 }
 
@@ -143,6 +146,8 @@ HRESULT CSysTray::ShutdownIcons()
             FAILED_UNEXPECTEDLY(hr);
         }
     }
+
+    MouseKeys_Shutdown(this);
 
     return ShutdownNetShell();
 }
@@ -318,6 +323,17 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
     {
         return DestroyWindow();
     }
+
+    if (wm_SHELLHOOK && uMsg == wm_SHELLHOOK)
+    {
+        if (wParam == HSHELL_ACCESSIBILITYSTATE && lParam == ACCESS_MOUSEKEYS)
+        {
+            MouseKeys_Update(this);
+        }
+        lResult = 0L;
+        return TRUE;
+    }
+
     switch (uMsg)
     {
     case WM_NCCREATE:
@@ -328,6 +344,7 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         GetServicesEnabled();
         InitIcons();
         SetTimer(1, 2000, NULL);
+        RegisterShellHookWindow(hWnd);
         return TRUE;
 
     case WM_TIMER:
@@ -337,8 +354,16 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
             ProcessIconMessage(uMsg, wParam, lParam, lResult);
         return TRUE;
 
+    case WM_SETTINGCHANGE:
+        if (wParam == SPI_SETMOUSEKEYS)
+        {
+            MouseKeys_Update(this);
+        }
+        break;
+
     case WM_DESTROY:
         KillTimer(1);
+        DeregisterShellHookWindow(hWnd);
         ShutdownIcons();
         PostQuitMessage(0);
         return TRUE;
