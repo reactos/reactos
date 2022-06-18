@@ -29,7 +29,7 @@ class CSysTray :
     // TODO: keep icon handlers here
 
     DWORD dwServicesEnabled;
-    HWND hwndSysTray;
+    UINT wm_DESTROYWINDOW;
 
     static DWORD WINAPI s_SysTrayThreadProc(PVOID param);
     HRESULT SysTrayMessageLoop();
