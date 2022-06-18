@@ -26,7 +26,6 @@ NTSTATUS GdiThreadDestroy(PETHREAD Thread);
 
 PSERVERINFO gpsi = NULL; // Global User Server Information.
 
-USHORT gusLanguageID;
 PPROCESSINFO ppiScrnSaver;
 PPROCESSINFO gppiList = NULL;
 
@@ -1050,15 +1049,6 @@ DriverEntry(
     NT_ROF(MsqInitializeImpl());
     NT_ROF(InitTimerImpl());
     NT_ROF(InitDCEImpl());
-
-    gusLanguageID = UserGetLanguageID();
-
-    /* Initialize FreeType library */
-    if (!InitFontSupport())
-    {
-        DPRINT1("Unable to initialize font support\n");
-        return Status;
-    }
 
     return STATUS_SUCCESS;
 }
