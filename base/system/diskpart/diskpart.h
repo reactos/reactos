@@ -190,6 +190,7 @@ typedef struct _VOLENTRY
 
     ULONG VolumeNumber;
     WCHAR VolumeName[MAX_PATH];
+    WCHAR DeviceName[MAX_PATH];
 
     WCHAR DriveLetter;
 

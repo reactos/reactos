@@ -74,7 +74,7 @@ BEGIN
     IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
     IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
     IDS_FILESYSTEMS_TYPE "Type        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: \n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: %lu\n"
 END
 
 STRINGTABLE
@@ -235,4 +235,5 @@ BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Erro ao abrir o script: %s\n"
     IDS_ERROR_MSG_BAD_ARG "Erro ao processar o argumento: %s\n"
     IDS_ERROR_INVALID_ARGS "Argumento inválido\n"
+    IDS_ERROR_NO_MEDIUM "No medium in device.\n"
 END

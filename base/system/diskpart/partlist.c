@@ -1254,7 +1254,7 @@ GetVolumeExtents(
 static
 VOID
 GetVolumeType(
-    HANDLE VolumeHandle,
+    _In_ HANDLE VolumeHandle,
     _In_ PVOLENTRY VolumeEntry)
 {
     FILE_FS_DEVICE_INFORMATION DeviceInfo;
@@ -1306,7 +1306,6 @@ AddVolumeToList(
     WCHAR szFilesystem[MAX_PATH + 1];
 
     DWORD  CharCount            = 0;
-    WCHAR  DeviceName[MAX_PATH] = L"";
     size_t Index                = 0;
 
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1329,7 +1328,7 @@ AddVolumeToList(
 
     pszVolumeName[Index] = L'\0';
 
-    CharCount = QueryDosDeviceW(&pszVolumeName[4], DeviceName, ARRAYSIZE(DeviceName)); 
+    CharCount = QueryDosDeviceW(&pszVolumeName[4], VolumeEntry->DeviceName, ARRAYSIZE(VolumeEntry->DeviceName)); 
 
     pszVolumeName[Index] = L'\\';
 
@@ -1339,9 +1338,9 @@ AddVolumeToList(
         return;
     }
 
-    DPRINT("DeviceName: %S\n", DeviceName);
+    DPRINT("DeviceName: %S\n", VolumeEntry->DeviceName);
 
-    RtlInitUnicodeString(&Name, DeviceName);
+    RtlInitUnicodeString(&Name, VolumeEntry->DeviceName);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,

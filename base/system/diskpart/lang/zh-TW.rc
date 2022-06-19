@@ -75,7 +75,7 @@ BEGIN
     IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
     IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
     IDS_FILESYSTEMS_TYPE "Type        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: \n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: %lu\n"
 END
 
 STRINGTABLE
@@ -236,4 +236,5 @@ BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "錯誤開始的指令碼: %s\n"
     IDS_ERROR_MSG_BAD_ARG "錯誤處理參數: %s\n"
     IDS_ERROR_INVALID_ARGS "無效的參數\n"
+    IDS_ERROR_NO_MEDIUM "No medium in device.\n"
 END
