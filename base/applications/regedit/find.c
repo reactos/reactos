@@ -160,9 +160,6 @@ BOOL RegFindRecurse(
     if (lResult != ERROR_SUCCESS)
         return FALSE;
 
-    if (pszValueName == NULL)
-        pszValueName = s_empty;
-
     lResult = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL, NULL, NULL,
                               &c, NULL, NULL, NULL, NULL);
     if (lResult != ERROR_SUCCESS)
@@ -194,6 +191,9 @@ BOOL RegFindRecurse(
     }
 
     qsort(ppszNames, c, sizeof(LPWSTR), compare);
+
+    if (pszValueName == NULL)
+        pszValueName = ppszNames[0];
 
     for(i = 0; i < c; i++)
     {
@@ -370,12 +370,13 @@ BOOL RegFindWalk(
     LPWSTR *ppszNames = NULL;
 
     hBaseKey = *phKey;
+
+    if (wcslen(pszSubKey) >= _countof(szSubKey))
+        return FALSE;
+
     if (RegFindRecurse(hBaseKey, pszSubKey, pszValueName, ppszFoundSubKey,
                        ppszFoundValueName))
         return TRUE;
-
-    if (wcslen(pszSubKey) >= MAX_PATH)
-        return FALSE;
 
     wcscpy(szSubKey, pszSubKey);
     while(szSubKey[0] != 0)
@@ -687,10 +688,18 @@ BOOL FindNext(HWND hWnd)
     {
         GetKeyName(szFullKey, COUNT_OF(szFullKey), hKeyRoot, pszFoundSubKey);
         SelectNode(g_pChildWnd->hTreeWnd, szFullKey);
-        SetValueName(g_pChildWnd->hListWnd, pszFoundValueName);
         free(pszFoundSubKey);
-        free(pszFoundValueName);
-        SetFocus(g_pChildWnd->hListWnd);
+
+        if (pszFoundValueName != NULL)
+        {
+            SetValueName(g_pChildWnd->hListWnd, pszFoundValueName);
+            free(pszFoundValueName);
+            SetFocus(g_pChildWnd->hListWnd);
+        }
+        else
+        {
+            SetFocus(g_pChildWnd->hTreeWnd);
+        }
     }
     return fSuccess || s_bAbort;
 }
