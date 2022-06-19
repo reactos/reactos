@@ -3723,34 +3723,663 @@ SymbolicName=MSG_COMMAND_FORMAT
 Severity=Informational
 Facility=System
 Language=English
-<Add FORMAT command help text here>
+    Formats the specified volume for use with ReactOS.
+
+Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+                [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
+                [NOERR]
+
+    FS=<FS>     Specifies the type of file system. If no file system is given,
+                the default file system displayed by the FILESYSTEMS command is
+                used.
+
+    REVISION=<X.XX>
+
+                Specifies the file system revision (if applicable).
+
+    RECOMMENDED If specified, use the recommended file system and revision
+                instead of the default if a recommendation exists. The
+                recommended file system (if one exists) is displayed by the
+                FILESYSTEMS command.
+
+    LABEL=<"label">
+
+                Specifies the volume label.
+
+    UNIT=<N>    Overrides the default allocation unit size. Default settings
+                are strongly recommended for general use. The default
+                allocation unit size for a particular file system is displayed
+                by the FILESYSTEMS command.
+
+                NTFS compression is not supported for allocation unit sizes
+                above 4096.
+
+    QUICK       Performs a quick format.
+
+    COMPRESS    NTFS only: Files created on the new volume will be compressed
+                by default.
+
+    OVERRIDE    Forces the file system to dismount first if necessary. All
+                opened handles to the volume would no longer be valid.
+
+    DUPLICATE   UDF Only: This flag applies to UDF format, version 2.5 or
+                higher.
+                This flag instructs the format operation to duplicate the file
+                system meta-data to a second set of sectors on the disk. The
+                duplicate meta-data is used by applications, for example repair
+                or recovery applications. If the primary meta-data sectors are
+                found to be corrupted, the file system meta-data will be read
+                from the duplicate sectors.
+
+    NOWAIT      Forces the command to return immediately while the format
+                process is still in progress. If NOWAIT is not specified,
+                DiskPart will display format progress in percentage.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A volume must be selected for this operation to succeed.
+
+Examples:
+
+    FORMAT FS=NTFS LABEL="New Volume" QUICK COMPRESS
+    FORMAT RECOMMENDED OVERRIDE
 .
 Language=German
-<Add FORMAT command help text here>
+    Formatiert das angegebene Volume für die Verwendung mit ReactOS.
+
+Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+                [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
+                [NOERR]
+
+    FS=<FS>     Gibt den Typ des Dateisystems an. Falls kein Dateisystem
+                angegeben wurde, wird das durch den Befehl
+                "FILESYSTEMS" angezeigte Standarddateisystem
+                verwendet.
+
+    REVISION=<X.XX>
+
+                Gibt die Dateisystemversion an (sofern zutreffend).
+
+    RECOMMENDED Sofern angegeben, werden anstelle der Standardein-
+                stellung das empfohlene Dateisystem und die Version verwendet,
+                falls eine Empfehlung vorhanden ist. Das empfohlene Dateisystem
+                (sofern vorhanden) wird durch den Befehl "FILESYSTEMS"
+                angezeigt.
+
+    LABEL=<"label">
+                Gibt die Volumebezeichnung an.
+
+    UNIT=<N>    Überschreibt die standardmäßige Größe der
+                Zuteilungseinheit. Für die allgemeine Verwendung
+                werden dringend die Standardeinstellungen
+                empfohlen.
+                Die standardmäßige Größe der Zuteilungseinheit
+                für ein bestimmtes Dateisystem wird durch den
+                Befehl "FILESYSTEMS" angezeigt.
+
+                NTFS-Komprimierung wird für Zuteilungseinheitsgrößen
+                über 4096 nicht unterstützt.
+
+    QUICK       Führt eine Schnellformatierung aus.
+
+    COMPRESS    nur NTFS: Auf dem neuen Volume erstellte Dateien
+                werden standardmäßig komprimiert.
+
+    OVERRIDE    Erzwingt ggf. die Aufhebung der Bereitstellung des
+                Dateisystems als ersten Schritt. Alle geöffneten Handles für
+                das Volume besäßen keine Gültigkeit mehr.
+
+    DUPLICATE   nur UDF: Dieses Kennzeichen gilt für das UDF-Format,
+                Version 2.5 oder höher. Durch dieses Kennzeichen wird der
+                Formatvorgang angewiesen, die Dateisystem-Metadaten
+                auf einem zweiten Sektorensatz auf dem Datenträger zu
+                duplizieren. Die duplizierten Metadaten werden von
+                Anwendungen verwendet, beispielsweise für Reparatur-
+                oder Wiederherstellungsanwendungen.
+                Wird festgestellt, dass primäre Metadatensektoren beschädigt
+                sind, werden die Dateisystem-Metadaten aus den doppelten
+                Sektoren gelesen.
+
+    NOWAIT      Erzwingt die sofortige Rückgabe des Befehls, während der
+                Formatierungsprozess noch stattfindet. Falls "NOWAIT" nicht
+                angegeben wurde, wird der Fortschritt des Formatierungs-
+                vorgangs von DiskPart in Prozent angezeigt.
+
+    NOERR       Nur für Skripting. Wird ein Fehler festgestellt, werden
+                Befehle weiterhin so verarbeitet, als wäre der Fehler
+                nicht aufgetreten. Ohne den Parameter "NOERR"
+                wird DiskPart aufgrund eines Fehlers mit einem
+                Fehlercode beendet.
+
+    Damit dieser Vorgang erfolgreich ist, muss ein Volume ausgewählt werden.
+
+Beispiele:
+
+    FORMAT FS=NTFS LABEL="Neues Volume" QUICK COMPRESS
+    FORMAT RECOMMENDED OVERRIDE
 .
 Language=Polish
-<Add FORMAT command help text here>
+    Formats the specified volume for use with ReactOS.
+
+Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+                [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
+                [NOERR]
+
+    FS=<FS>     Specifies the type of file system. If no file system is given,
+                the default file system displayed by the FILESYSTEMS command is
+                used.
+
+    REVISION=<X.XX>
+
+                Specifies the file system revision (if applicable).
+
+    RECOMMENDED If specified, use the recommended file system and revision
+                instead of the default if a recommendation exists. The
+                recommended file system (if one exists) is displayed by the
+                FILESYSTEMS command.
+
+    LABEL=<"label">
+
+                Specifies the volume label.
+
+    UNIT=<N>    Overrides the default allocation unit size. Default settings
+                are strongly recommended for general use. The default
+                allocation unit size for a particular file system is displayed
+                by the FILESYSTEMS command.
+
+                NTFS compression is not supported for allocation unit sizes
+                above 4096.
+
+    QUICK       Performs a quick format.
+
+    COMPRESS    NTFS only: Files created on the new volume will be compressed
+                by default.
+
+    OVERRIDE    Forces the file system to dismount first if necessary. All
+                opened handles to the volume would no longer be valid.
+
+    DUPLICATE   UDF Only: This flag applies to UDF format, version 2.5 or
+                higher.
+                This flag instructs the format operation to duplicate the file
+                system meta-data to a second set of sectors on the disk. The
+                duplicate meta-data is used by applications, for example repair
+                or recovery applications. If the primary meta-data sectors are
+                found to be corrupted, the file system meta-data will be read
+                from the duplicate sectors.
+
+    NOWAIT      Forces the command to return immediately while the format
+                process is still in progress. If NOWAIT is not specified,
+                DiskPart will display format progress in percentage.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A volume must be selected for this operation to succeed.
+
+Examples:
+
+    FORMAT FS=NTFS LABEL="New Volume" QUICK COMPRESS
+    FORMAT RECOMMENDED OVERRIDE
 .
 Language=Portugese
-<Add FORMAT command help text here>
+    Formats the specified volume for use with ReactOS.
+
+Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+                [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
+                [NOERR]
+
+    FS=<FS>     Specifies the type of file system. If no file system is given,
+                the default file system displayed by the FILESYSTEMS command is
+                used.
+
+    REVISION=<X.XX>
+
+                Specifies the file system revision (if applicable).
+
+    RECOMMENDED If specified, use the recommended file system and revision
+                instead of the default if a recommendation exists. The
+                recommended file system (if one exists) is displayed by the
+                FILESYSTEMS command.
+
+    LABEL=<"label">
+
+                Specifies the volume label.
+
+    UNIT=<N>    Overrides the default allocation unit size. Default settings
+                are strongly recommended for general use. The default
+                allocation unit size for a particular file system is displayed
+                by the FILESYSTEMS command.
+
+                NTFS compression is not supported for allocation unit sizes
+                above 4096.
+
+    QUICK       Performs a quick format.
+
+    COMPRESS    NTFS only: Files created on the new volume will be compressed
+                by default.
+
+    OVERRIDE    Forces the file system to dismount first if necessary. All
+                opened handles to the volume would no longer be valid.
+
+    DUPLICATE   UDF Only: This flag applies to UDF format, version 2.5 or
+                higher.
+                This flag instructs the format operation to duplicate the file
+                system meta-data to a second set of sectors on the disk. The
+                duplicate meta-data is used by applications, for example repair
+                or recovery applications. If the primary meta-data sectors are
+                found to be corrupted, the file system meta-data will be read
+                from the duplicate sectors.
+
+    NOWAIT      Forces the command to return immediately while the format
+                process is still in progress. If NOWAIT is not specified,
+                DiskPart will display format progress in percentage.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A volume must be selected for this operation to succeed.
+
+Examples:
+
+    FORMAT FS=NTFS LABEL="New Volume" QUICK COMPRESS
+    FORMAT RECOMMENDED OVERRIDE
 .
 Language=Romanian
-<Add FORMAT command help text here>
+    Formats the specified volume for use with ReactOS.
+
+Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+                [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
+                [NOERR]
+
+    FS=<FS>     Specifies the type of file system. If no file system is given,
+                the default file system displayed by the FILESYSTEMS command is
+                used.
+
+    REVISION=<X.XX>
+
+                Specifies the file system revision (if applicable).
+
+    RECOMMENDED If specified, use the recommended file system and revision
+                instead of the default if a recommendation exists. The
+                recommended file system (if one exists) is displayed by the
+                FILESYSTEMS command.
+
+    LABEL=<"label">
+
+                Specifies the volume label.
+
+    UNIT=<N>    Overrides the default allocation unit size. Default settings
+                are strongly recommended for general use. The default
+                allocation unit size for a particular file system is displayed
+                by the FILESYSTEMS command.
+
+                NTFS compression is not supported for allocation unit sizes
+                above 4096.
+
+    QUICK       Performs a quick format.
+
+    COMPRESS    NTFS only: Files created on the new volume will be compressed
+                by default.
+
+    OVERRIDE    Forces the file system to dismount first if necessary. All
+                opened handles to the volume would no longer be valid.
+
+    DUPLICATE   UDF Only: This flag applies to UDF format, version 2.5 or
+                higher.
+                This flag instructs the format operation to duplicate the file
+                system meta-data to a second set of sectors on the disk. The
+                duplicate meta-data is used by applications, for example repair
+                or recovery applications. If the primary meta-data sectors are
+                found to be corrupted, the file system meta-data will be read
+                from the duplicate sectors.
+
+    NOWAIT      Forces the command to return immediately while the format
+                process is still in progress. If NOWAIT is not specified,
+                DiskPart will display format progress in percentage.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A volume must be selected for this operation to succeed.
+
+Examples:
+
+    FORMAT FS=NTFS LABEL="New Volume" QUICK COMPRESS
+    FORMAT RECOMMENDED OVERRIDE
 .
 Language=Russian
-<Add FORMAT command help text here>
+    Formats the specified volume for use with ReactOS.
+
+Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+                [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
+                [NOERR]
+
+    FS=<FS>     Specifies the type of file system. If no file system is given,
+                the default file system displayed by the FILESYSTEMS command is
+                used.
+
+    REVISION=<X.XX>
+
+                Specifies the file system revision (if applicable).
+
+    RECOMMENDED If specified, use the recommended file system and revision
+                instead of the default if a recommendation exists. The
+                recommended file system (if one exists) is displayed by the
+                FILESYSTEMS command.
+
+    LABEL=<"label">
+
+                Specifies the volume label.
+
+    UNIT=<N>    Overrides the default allocation unit size. Default settings
+                are strongly recommended for general use. The default
+                allocation unit size for a particular file system is displayed
+                by the FILESYSTEMS command.
+
+                NTFS compression is not supported for allocation unit sizes
+                above 4096.
+
+    QUICK       Performs a quick format.
+
+    COMPRESS    NTFS only: Files created on the new volume will be compressed
+                by default.
+
+    OVERRIDE    Forces the file system to dismount first if necessary. All
+                opened handles to the volume would no longer be valid.
+
+    DUPLICATE   UDF Only: This flag applies to UDF format, version 2.5 or
+                higher.
+                This flag instructs the format operation to duplicate the file
+                system meta-data to a second set of sectors on the disk. The
+                duplicate meta-data is used by applications, for example repair
+                or recovery applications. If the primary meta-data sectors are
+                found to be corrupted, the file system meta-data will be read
+                from the duplicate sectors.
+
+    NOWAIT      Forces the command to return immediately while the format
+                process is still in progress. If NOWAIT is not specified,
+                DiskPart will display format progress in percentage.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A volume must be selected for this operation to succeed.
+
+Examples:
+
+    FORMAT FS=NTFS LABEL="New Volume" QUICK COMPRESS
+    FORMAT RECOMMENDED OVERRIDE
 .
 Language=Albanian
-<Add FORMAT command help text here>
+    Formats the specified volume for use with ReactOS.
+
+Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+                [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
+                [NOERR]
+
+    FS=<FS>     Specifies the type of file system. If no file system is given,
+                the default file system displayed by the FILESYSTEMS command is
+                used.
+
+    REVISION=<X.XX>
+
+                Specifies the file system revision (if applicable).
+
+    RECOMMENDED If specified, use the recommended file system and revision
+                instead of the default if a recommendation exists. The
+                recommended file system (if one exists) is displayed by the
+                FILESYSTEMS command.
+
+    LABEL=<"label">
+
+                Specifies the volume label.
+
+    UNIT=<N>    Overrides the default allocation unit size. Default settings
+                are strongly recommended for general use. The default
+                allocation unit size for a particular file system is displayed
+                by the FILESYSTEMS command.
+
+                NTFS compression is not supported for allocation unit sizes
+                above 4096.
+
+    QUICK       Performs a quick format.
+
+    COMPRESS    NTFS only: Files created on the new volume will be compressed
+                by default.
+
+    OVERRIDE    Forces the file system to dismount first if necessary. All
+                opened handles to the volume would no longer be valid.
+
+    DUPLICATE   UDF Only: This flag applies to UDF format, version 2.5 or
+                higher.
+                This flag instructs the format operation to duplicate the file
+                system meta-data to a second set of sectors on the disk. The
+                duplicate meta-data is used by applications, for example repair
+                or recovery applications. If the primary meta-data sectors are
+                found to be corrupted, the file system meta-data will be read
+                from the duplicate sectors.
+
+    NOWAIT      Forces the command to return immediately while the format
+                process is still in progress. If NOWAIT is not specified,
+                DiskPart will display format progress in percentage.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A volume must be selected for this operation to succeed.
+
+Examples:
+
+    FORMAT FS=NTFS LABEL="New Volume" QUICK COMPRESS
+    FORMAT RECOMMENDED OVERRIDE
 .
 Language=Turkish
-<Add FORMAT command help text here>
+    Formats the specified volume for use with ReactOS.
+
+Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+                [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
+                [NOERR]
+
+    FS=<FS>     Specifies the type of file system. If no file system is given,
+                the default file system displayed by the FILESYSTEMS command is
+                used.
+
+    REVISION=<X.XX>
+
+                Specifies the file system revision (if applicable).
+
+    RECOMMENDED If specified, use the recommended file system and revision
+                instead of the default if a recommendation exists. The
+                recommended file system (if one exists) is displayed by the
+                FILESYSTEMS command.
+
+    LABEL=<"label">
+
+                Specifies the volume label.
+
+    UNIT=<N>    Overrides the default allocation unit size. Default settings
+                are strongly recommended for general use. The default
+                allocation unit size for a particular file system is displayed
+                by the FILESYSTEMS command.
+
+                NTFS compression is not supported for allocation unit sizes
+                above 4096.
+
+    QUICK       Performs a quick format.
+
+    COMPRESS    NTFS only: Files created on the new volume will be compressed
+                by default.
+
+    OVERRIDE    Forces the file system to dismount first if necessary. All
+                opened handles to the volume would no longer be valid.
+
+    DUPLICATE   UDF Only: This flag applies to UDF format, version 2.5 or
+                higher.
+                This flag instructs the format operation to duplicate the file
+                system meta-data to a second set of sectors on the disk. The
+                duplicate meta-data is used by applications, for example repair
+                or recovery applications. If the primary meta-data sectors are
+                found to be corrupted, the file system meta-data will be read
+                from the duplicate sectors.
+
+    NOWAIT      Forces the command to return immediately while the format
+                process is still in progress. If NOWAIT is not specified,
+                DiskPart will display format progress in percentage.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A volume must be selected for this operation to succeed.
+
+Examples:
+
+    FORMAT FS=NTFS LABEL="New Volume" QUICK COMPRESS
+    FORMAT RECOMMENDED OVERRIDE
 .
 Language=Chinese
-<Add FORMAT command help text here>
+    Formats the specified volume for use with ReactOS.
+
+Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+                [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
+                [NOERR]
+
+    FS=<FS>     Specifies the type of file system. If no file system is given,
+                the default file system displayed by the FILESYSTEMS command is
+                used.
+
+    REVISION=<X.XX>
+
+                Specifies the file system revision (if applicable).
+
+    RECOMMENDED If specified, use the recommended file system and revision
+                instead of the default if a recommendation exists. The
+                recommended file system (if one exists) is displayed by the
+                FILESYSTEMS command.
+
+    LABEL=<"label">
+
+                Specifies the volume label.
+
+    UNIT=<N>    Overrides the default allocation unit size. Default settings
+                are strongly recommended for general use. The default
+                allocation unit size for a particular file system is displayed
+                by the FILESYSTEMS command.
+
+                NTFS compression is not supported for allocation unit sizes
+                above 4096.
+
+    QUICK       Performs a quick format.
+
+    COMPRESS    NTFS only: Files created on the new volume will be compressed
+                by default.
+
+    OVERRIDE    Forces the file system to dismount first if necessary. All
+                opened handles to the volume would no longer be valid.
+
+    DUPLICATE   UDF Only: This flag applies to UDF format, version 2.5 or
+                higher.
+                This flag instructs the format operation to duplicate the file
+                system meta-data to a second set of sectors on the disk. The
+                duplicate meta-data is used by applications, for example repair
+                or recovery applications. If the primary meta-data sectors are
+                found to be corrupted, the file system meta-data will be read
+                from the duplicate sectors.
+
+    NOWAIT      Forces the command to return immediately while the format
+                process is still in progress. If NOWAIT is not specified,
+                DiskPart will display format progress in percentage.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A volume must be selected for this operation to succeed.
+
+Examples:
+
+    FORMAT FS=NTFS LABEL="New Volume" QUICK COMPRESS
+    FORMAT RECOMMENDED OVERRIDE
 .
 Language=Taiwanese
-<Add FORMAT command help text here>
+    Formats the specified volume for use with ReactOS.
+
+Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
+                [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
+                [NOERR]
+
+    FS=<FS>     Specifies the type of file system. If no file system is given,
+                the default file system displayed by the FILESYSTEMS command is
+                used.
+
+    REVISION=<X.XX>
+
+                Specifies the file system revision (if applicable).
+
+    RECOMMENDED If specified, use the recommended file system and revision
+                instead of the default if a recommendation exists. The
+                recommended file system (if one exists) is displayed by the
+                FILESYSTEMS command.
+
+    LABEL=<"label">
+
+                Specifies the volume label.
+
+    UNIT=<N>    Overrides the default allocation unit size. Default settings
+                are strongly recommended for general use. The default
+                allocation unit size for a particular file system is displayed
+                by the FILESYSTEMS command.
+
+                NTFS compression is not supported for allocation unit sizes
+                above 4096.
+
+    QUICK       Performs a quick format.
+
+    COMPRESS    NTFS only: Files created on the new volume will be compressed
+                by default.
+
+    OVERRIDE    Forces the file system to dismount first if necessary. All
+                opened handles to the volume would no longer be valid.
+
+    DUPLICATE   UDF Only: This flag applies to UDF format, version 2.5 or
+                higher.
+                This flag instructs the format operation to duplicate the file
+                system meta-data to a second set of sectors on the disk. The
+                duplicate meta-data is used by applications, for example repair
+                or recovery applications. If the primary meta-data sectors are
+                found to be corrupted, the file system meta-data will be read
+                from the duplicate sectors.
+
+    NOWAIT      Forces the command to return immediately while the format
+                process is still in progress. If NOWAIT is not specified,
+                DiskPart will display format progress in percentage.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A volume must be selected for this operation to succeed.
+
+Examples:
+
+    FORMAT FS=NTFS LABEL="New Volume" QUICK COMPRESS
+    FORMAT RECOMMENDED OVERRIDE
 .
 
 
@@ -4005,7 +4634,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of Windows storage management.
+        user with a thorough understanding of ReactOS storage management.
 
 Example:
 
@@ -4054,7 +4683,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of Windows storage management.
+        user with a thorough understanding of ReactOS storage management.
 
 Example:
 
@@ -4077,7 +4706,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of Windows storage management.
+        user with a thorough understanding of ReactOS storage management.
 
 Example:
 
@@ -4100,7 +4729,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of Windows storage management.
+        user with a thorough understanding of ReactOS storage management.
 
 Example:
 
@@ -4123,7 +4752,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of Windows storage management.
+        user with a thorough understanding of ReactOS storage management.
 
 Example:
 
@@ -4146,7 +4775,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of Windows storage management.
+        user with a thorough understanding of ReactOS storage management.
 
 Example:
 
@@ -4169,7 +4798,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of Windows storage management.
+        user with a thorough understanding of ReactOS storage management.
 
 Example:
 
@@ -4192,7 +4821,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of Windows storage management.
+        user with a thorough understanding of ReactOS storage management.
 
 Example:
 
@@ -4215,7 +4844,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of Windows storage management.
+        user with a thorough understanding of ReactOS storage management.
 
 Example:
 
