@@ -905,9 +905,83 @@ NtQueryInformationToken(
             }
 
             case TokenGroupsAndPrivileges:
-                DPRINT1("NtQueryInformationToken(TokenGroupsAndPrivileges) not implemented\n");
-                Status = STATUS_NOT_IMPLEMENTED;
+            {
+                PSID Sid, RestrictedSid;
+                ULONG SidLen, RestrictedSidLen;
+                ULONG UserGroupLength, RestrictedSidLength, PrivilegeLength;
+                PTOKEN_GROUPS_AND_PRIVILEGES GroupsAndPrivs = (PTOKEN_GROUPS_AND_PRIVILEGES)TokenInformation;
+
+                DPRINT("NtQueryInformationToken(TokenGroupsAndPrivileges)\n");
+                UserGroupLength = RtlLengthSidAndAttributes(Token->UserAndGroupCount, Token->UserAndGroups);
+                RestrictedSidLength = RtlLengthSidAndAttributes(Token->RestrictedSidCount, Token->RestrictedSids);
+                PrivilegeLength = Token->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+
+                RequiredLength = sizeof(TOKEN_GROUPS_AND_PRIVILEGES) +
+                                 UserGroupLength + RestrictedSidLength + PrivilegeLength;
+
+                _SEH2_TRY
+                {
+                    if (TokenInformationLength >= RequiredLength)
+                    {
+                        GroupsAndPrivs->SidCount = Token->UserAndGroupCount;
+                        GroupsAndPrivs->SidLength = UserGroupLength;
+                        GroupsAndPrivs->Sids = (PSID_AND_ATTRIBUTES)(GroupsAndPrivs + 1);
+
+                        Sid = (PSID)((ULONG_PTR)GroupsAndPrivs->Sids + (Token->UserAndGroupCount * sizeof(SID_AND_ATTRIBUTES)));
+                        SidLen = UserGroupLength - (Token->UserAndGroupCount * sizeof(SID_AND_ATTRIBUTES));
+                        Status = RtlCopySidAndAttributesArray(Token->UserAndGroupCount,
+                                                              Token->UserAndGroups,
+                                                              SidLen,
+                                                              GroupsAndPrivs->Sids,
+                                                              Sid,
+                                                              &Unused.PSid,
+                                                              &Unused.Ulong);
+                        NT_ASSERT(NT_SUCCESS(Status));
+
+                        GroupsAndPrivs->RestrictedSidCount = Token->RestrictedSidCount;
+                        GroupsAndPrivs->RestrictedSidLength = RestrictedSidLength;
+                        GroupsAndPrivs->RestrictedSids = NULL;
+                        if (SeTokenIsRestricted(Token))
+                        {
+                            GroupsAndPrivs->RestrictedSids = (PSID_AND_ATTRIBUTES)((ULONG_PTR)GroupsAndPrivs->Sids + UserGroupLength);
+
+                            RestrictedSid = (PSID)((ULONG_PTR)GroupsAndPrivs->RestrictedSids + (Token->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES)));
+                            RestrictedSidLen = RestrictedSidLength - (Token->RestrictedSidCount * sizeof(SID_AND_ATTRIBUTES));
+                            Status = RtlCopySidAndAttributesArray(Token->RestrictedSidCount,
+                                                                  Token->RestrictedSids,
+                                                                  RestrictedSidLen,
+                                                                  GroupsAndPrivs->RestrictedSids,
+                                                                  RestrictedSid,
+                                                                  &Unused.PSid,
+                                                                  &Unused.Ulong);
+                            NT_ASSERT(NT_SUCCESS(Status));
+                        }
+
+                        GroupsAndPrivs->PrivilegeCount = Token->PrivilegeCount;
+                        GroupsAndPrivs->PrivilegeLength = PrivilegeLength;
+                        GroupsAndPrivs->Privileges = (PLUID_AND_ATTRIBUTES)((ULONG_PTR)(GroupsAndPrivs + 1) +
+                                                     UserGroupLength + RestrictedSidLength);
+                        RtlCopyLuidAndAttributesArray(Token->PrivilegeCount,
+                                                      Token->Privileges,
+                                                      GroupsAndPrivs->Privileges);
+
+                        GroupsAndPrivs->AuthenticationId = Token->AuthenticationId;
+                    }
+                    else
+                    {
+                        Status = STATUS_BUFFER_TOO_SMALL;
+                    }
+
+                    *ReturnLength = RequiredLength;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
                 break;
+            }
 
             case TokenRestrictedSids:
             {
