@@ -25,7 +25,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_DEFTITLE     "Help"
+    IDS_DEFTITLE     "HTML Help"
 
     IDS_CONTENTS     "&Inhalt"
     IDS_INDEX        "I&ndex"

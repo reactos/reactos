@@ -23,7 +23,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_DEFTITLE     "Help"
+    IDS_DEFTITLE     "HTML Help"
 
     IDS_CONTENTS     "&İçindekiler"
     IDS_INDEX        "&Dizin"

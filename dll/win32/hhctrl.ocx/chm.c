@@ -460,7 +460,7 @@ BOOL LoadWinTypeFromCHM(HHInfo *info)
     /* merge the new data with any pre-existing HH_WINTYPE structure */
     MergeChmProperties(&wintype, info, FALSE);
     if (!info->WinType.pszCaption)
-        info->WinType.pszCaption = info->stringsW.pszCaption = (info->pCHMInfo->defTitle) ? strdupW(info->pCHMInfo->defTitle) : HH_LoadString(IDS_DEFTITLE);
+        info->WinType.pszCaption = info->stringsW.pszCaption = (info->pCHMInfo->defTitle ? strdupW(info->pCHMInfo->defTitle) : HH_LoadString(IDS_DEFTITLE));
     if (!info->WinType.pszFile)
         info->WinType.pszFile    = info->stringsW.pszFile    = strdupW(info->pCHMInfo->defTopic ? info->pCHMInfo->defTopic : empty);
     if (!info->WinType.pszToc)

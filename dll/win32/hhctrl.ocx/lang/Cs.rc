@@ -27,7 +27,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_DEFTITLE     "Help"
+    IDS_DEFTITLE     "HTML Help"
 
     IDS_CONTENTS     "&Obsah"
     IDS_INDEX        "I&ndex"

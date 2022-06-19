@@ -24,7 +24,7 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_DEFTITLE     "Help"
+    IDS_DEFTITLE     "HTML Help"
 
     IDS_CONTENTS     "목록(&C)"
     IDS_INDEX        "인덱스(&N)"

@@ -23,7 +23,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_DEFTITLE     "Help"
+    IDS_DEFTITLE     "HTML Help"
 
     IDS_CONTENTS     "&Innehåll"
     IDS_INDEX        "I&ndex"
