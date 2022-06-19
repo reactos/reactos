@@ -26,6 +26,8 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "HTML Help"
+
     IDS_CONTENTS     "&Содержание"
     IDS_INDEX        "&Оглавление"
     IDS_SEARCH       "&Поиск"

@@ -23,6 +23,8 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "HTML Help"
+
     IDS_CONTENTS     "&Περιεχόμενα"
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "&Αναζήτηση"

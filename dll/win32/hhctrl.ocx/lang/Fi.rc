@@ -23,6 +23,8 @@ LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "HTML Help"
+
     IDS_CONTENTS     "&Sisällys"
     IDS_INDEX        "&Hakemisto"
     IDS_SEARCH       "&Etsi"

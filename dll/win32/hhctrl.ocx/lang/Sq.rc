@@ -26,6 +26,8 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "HTML Help"
+
     IDS_CONTENTS     "Përmbajtja"
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "Kerko"

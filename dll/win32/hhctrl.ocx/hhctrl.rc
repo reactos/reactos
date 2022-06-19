@@ -114,6 +114,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "wine/wine_common_ver.rc"
 
+/* help viewer window icon */
+IDI_HHICON ICON "res/hh.ico"
+
 /* @makedep: hhtoolbar.bmp */
 IDB_HHTOOLBAR BITMAP "res/hhtoolbar.bmp"
 

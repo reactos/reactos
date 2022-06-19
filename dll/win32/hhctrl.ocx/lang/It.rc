@@ -27,6 +27,8 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "HTML Help"
+
     IDS_CONTENTS     "&Contenuti"
     IDS_INDEX        "&Indice"
     IDS_SEARCH       "&Ricerca"

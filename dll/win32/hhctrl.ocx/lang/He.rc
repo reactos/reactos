@@ -25,6 +25,8 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "HTML Help"
+
     IDS_CONTENTS     "תוכ&ן"
     IDS_INDEX        "&אינקס"
     IDS_SEARCH       "&חפש"

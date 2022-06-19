@@ -26,6 +26,8 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+    IDS_DEFTITLE     "Aide HTML"
+
     IDS_CONTENTS     "Somm&aire"
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "&Recherche"
