@@ -422,6 +422,7 @@ DisplayAdapterDlgProc(HWND hwndDlg,
                     SetWindowLongPtr(hwndDlg,
                                      DWLP_MSGRESULT,
                                      ApplyDisplayAdapterChanges(This));
+                    Ret = TRUE;
                     break;
                 }
 
