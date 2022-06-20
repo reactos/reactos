@@ -21,7 +21,9 @@
 
 #include "hhctrl.h"
 #include "stream.h"
+#ifdef __REACTOS__
 #include "resource.h"
+#endif
 
 #include "winreg.h"
 #include "shlwapi.h"
@@ -460,7 +462,11 @@ BOOL LoadWinTypeFromCHM(HHInfo *info)
     /* merge the new data with any pre-existing HH_WINTYPE structure */
     MergeChmProperties(&wintype, info, FALSE);
     if (!info->WinType.pszCaption)
+#ifdef __REACTOS__
         info->WinType.pszCaption = info->stringsW.pszCaption = (info->pCHMInfo->defTitle ? strdupW(info->pCHMInfo->defTitle) : HH_LoadString(IDS_DEFTITLE));
+#else
+        info->WinType.pszCaption = info->stringsW.pszCaption = strdupW(info->pCHMInfo->defTitle ? info->pCHMInfo->defTitle : empty);
+#endif
     if (!info->WinType.pszFile)
         info->WinType.pszFile    = info->stringsW.pszFile    = strdupW(info->pCHMInfo->defTopic ? info->pCHMInfo->defTopic : empty);
     if (!info->WinType.pszToc)

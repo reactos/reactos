@@ -23,8 +23,9 @@ LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
     IDS_DEFTITLE     "HTML Help"
-
+#endif
     IDS_CONTENTS     "&Inhoud"
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "&Zoeken"
