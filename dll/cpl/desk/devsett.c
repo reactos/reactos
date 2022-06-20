@@ -38,6 +38,10 @@ typedef struct _CDevSettings
 
     DESK_EXT_INTERFACE ExtInterface;
 
+    PDEVMODEW lpOrigDevMode;
+    PDEVMODEW lpCurDevMode;
+    PDEVMODEW * DevModes;
+    DWORD nDevModes;
     DWORD StateFlags;
 
     union
@@ -285,28 +289,63 @@ PDEVMODEW DESK_EXT_CALLBACK
 CDevSettings_EnumAllModes(PVOID Context,
                           DWORD Index)
 {
-    //PCDevSettings This = impl_from_IDataObject((IDataObject *)Context);
-    /* FIXME: Implement */
+    PCDevSettings This = impl_from_IDataObject((IDataObject *)Context);
+    DWORD i, idx = 0;
+
     DPRINT1("CDevSettings::EnumAllModes(%u)\n", Index);
+
+    if (!This->DevModes)
+        return NULL;
+
+    for (i = 0; i < This->nDevModes; i++)
+    {
+        /* FIXME: Add more sanity checks */
+        if (!This->DevModes[i])
+            continue;
+
+        if (idx == Index)
+            return This->DevModes[i];
+
+        idx++;
+    }
+
     return NULL;
 }
 
 PDEVMODEW DESK_EXT_CALLBACK
 CDevSettings_GetCurrentMode(PVOID Context)
 {
-    //PCDevSettings This = impl_from_IDataObject((IDataObject *)Context);
-    /* FIXME: Implement */
+    PCDevSettings This = impl_from_IDataObject((IDataObject *)Context);
+
     DPRINT1("CDevSettings::GetCurrentMode\n");
-    return NULL;
+    return This->lpCurDevMode;
 }
 
 BOOL DESK_EXT_CALLBACK
 CDevSettings_SetCurrentMode(PVOID Context,
-                            const DEVMODEW *pDevMode)
+                            DEVMODEW *pDevMode)
 {
-    //PCDevSettings This = impl_from_IDataObject((IDataObject *)Context);
-    /* FIXME: Implement */
+    PCDevSettings This = impl_from_IDataObject((IDataObject *)Context);
+    DWORD i;
+
     DPRINT1("CDevSettings::SetCurrentMode(0x%p)\n", pDevMode);
+
+    if (!This->DevModes)
+        return FALSE;
+
+    for (i = 0; i < This->nDevModes; i++)
+    {
+        /* FIXME: Add more sanity checks */
+        if (!This->DevModes[i])
+            continue;
+
+        if (This->DevModes[i] == pDevMode)
+        {
+            This->lpCurDevMode = pDevMode;
+            return TRUE;
+        }
+    }
+
     return FALSE;
 }
 
@@ -455,7 +494,13 @@ pCDevSettings_Initialize(PCDevSettings This,
                          PDISPLAY_DEVICE_ENTRY DisplayDeviceInfo)
 {
     HKEY hKey;
+    DWORD i = 0, dwSize;
+    DEVMODEW devmode;
 
+    This->lpOrigDevMode = NULL;
+    This->lpCurDevMode = NULL;
+    This->DevModes = NULL;
+    This->nDevModes = 0;
     This->Flags = 0;
     This->StateFlags = DisplayDeviceInfo->DeviceStateFlags;
     DPRINT1("This->StateFlags: %x\n", This->StateFlags);
@@ -498,7 +543,7 @@ pCDevSettings_Initialize(PCDevSettings This,
     if (hKey != NULL)
     {
         DWORD dw = 0;
-        DWORD dwType, dwSize;
+        DWORD dwType;
 
         dwSize = sizeof(dw);
         if (RegQueryValueEx(hKey,
@@ -515,6 +560,80 @@ pCDevSettings_Initialize(PCDevSettings This,
         RegCloseKey(hKey);
     }
 
+    /* Initialize display modes */
+    ZeroMemory(&devmode, sizeof(devmode));
+    devmode.dmSize = (WORD)sizeof(devmode);
+    while (EnumDisplaySettingsExW(This->pDisplayDevice, i, &devmode, EDS_RAWMODE))
+    {
+        dwSize = devmode.dmSize + devmode.dmDriverExtra;
+        PDEVMODEW pDevMode = LocalAlloc(LMEM_FIXED, dwSize);
+        PDEVMODEW * DevModesNew = NULL;
+
+        if (pDevMode)
+        {
+            CopyMemory(pDevMode,
+                       &devmode,
+                       dwSize);
+
+            dwSize = (This->nDevModes + 1) * sizeof(pDevMode);
+            DevModesNew = LocalAlloc(LMEM_FIXED, dwSize);
+            if (DevModesNew)
+            {
+                if (This->DevModes)
+                {
+                    CopyMemory(DevModesNew,
+                               This->DevModes,
+                               This->nDevModes * sizeof(pDevMode));
+
+                    LocalFree(This->DevModes);
+                }
+
+                This->DevModes = DevModesNew;
+                This->DevModes[This->nDevModes++] = pDevMode;
+            }
+            else
+            {
+                DPRINT1("LocalAlloc failed to allocate %d bytes\n", dwSize);
+                return E_OUTOFMEMORY;
+            }
+        }
+        else
+        {
+            DPRINT1("LocalAlloc failed to allocate %d bytes\n", dwSize);
+            return E_OUTOFMEMORY;
+        }
+
+        devmode.dmDriverExtra = 0;
+        i++;
+    }
+
+    /* FIXME: Detect duplicated modes and mark them.
+     * Enumeration functions should check these marks
+     * and skip corresponding array entries. */
+
+    /* Get current display mode */
+    ZeroMemory(&devmode, sizeof(devmode));
+    devmode.dmSize = (WORD)sizeof(devmode);
+    if (EnumDisplaySettingsExW(This->pDisplayDevice, ENUM_CURRENT_SETTINGS, &devmode, 0))
+    {
+        for (i = 0; i < This->nDevModes; i++)
+        {
+            PDEVMODEW CurMode = This->DevModes[i];
+
+            if (!CurMode)
+                continue;
+
+            if (((CurMode->dmFields & DM_PELSWIDTH) && devmode.dmPelsWidth == CurMode->dmPelsWidth) &&
+                ((CurMode->dmFields & DM_PELSHEIGHT) && devmode.dmPelsHeight == CurMode->dmPelsHeight) &&
+                ((CurMode->dmFields & DM_BITSPERPEL) && devmode.dmBitsPerPel == CurMode->dmBitsPerPel) &&
+                ((CurMode->dmFields & DM_DISPLAYFREQUENCY) && devmode.dmDisplayFrequency == CurMode->dmDisplayFrequency))
+            {
+                This->lpOrigDevMode = This->lpCurDevMode = CurMode;
+                break;
+            }
+        }
+    }
+
     /* Initialize the shell extension interface */
     pCDevSettings_InitializeExtInterface(This);
 
@@ -524,6 +643,15 @@ pCDevSettings_Initialize(PCDevSettings This,
 static VOID
 pCDevSettings_Free(PCDevSettings This)
 {
+    This->lpOrigDevMode = NULL;
+    This->lpCurDevMode = NULL;
+    while (This->nDevModes)
+    {
+        LocalFree(This->DevModes[--This->nDevModes]);
+    }
+    LocalFree(This->DevModes);
+    This->DevModes = NULL;
+
     pCDevSettings_FreeString(&This->pDisplayDevice);
     pCDevSettings_FreeString(&This->pDisplayName);
     pCDevSettings_FreeString(&This->pDisplayKey);
@@ -942,7 +1070,38 @@ LONG WINAPI
 DisplaySaveSettings(PVOID pContext,
                     HWND hwndPropSheet)
 {
-    //PCDevSettings This = impl_from_IDataObject((IDataObject *)Context);
-    DPRINT("DisplaySaveSettings() UNIMPLEMENTED!\n");
-    return DISP_CHANGE_BADPARAM;
+    PCDevSettings This = impl_from_IDataObject((IDataObject *)pContext);
+    LONG rc = DISP_CHANGE_SUCCESSFUL;
+
+    if (This->lpCurDevMode != This->lpOrigDevMode)
+    {
+        SETTINGS_ENTRY seOrig, seCur;
+        BOOL Ret;
+
+        seOrig.dmPelsWidth = This->lpOrigDevMode->dmPelsWidth;
+        seOrig.dmPelsHeight = This->lpOrigDevMode->dmPelsHeight;
+        seOrig.dmBitsPerPel = This->lpOrigDevMode->dmBitsPerPel;
+        seOrig.dmDisplayFrequency = This->lpOrigDevMode->dmDisplayFrequency;
+
+        seCur.dmPelsWidth = This->lpCurDevMode->dmPelsWidth;
+        seCur.dmPelsHeight = This->lpCurDevMode->dmPelsHeight;
+        seCur.dmBitsPerPel = This->lpCurDevMode->dmBitsPerPel;
+        seCur.dmDisplayFrequency = This->lpCurDevMode->dmDisplayFrequency;
+
+        Ret = SwitchDisplayMode(hwndPropSheet,
+                                This->pDisplayDevice,
+                                &seOrig,
+                                &seCur,
+                                &rc);
+
+        if (rc == DISP_CHANGE_SUCCESSFUL)
+        {
+            if (Ret)
+                This->lpOrigDevMode = This->lpCurDevMode;
+            else
+                This->lpCurDevMode = This->lpOrigDevMode;
+        }
+    }
+
+    return rc;
 }
