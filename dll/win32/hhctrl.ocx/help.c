@@ -181,8 +181,8 @@ LPWSTR HH_LoadString(DWORD dwID)
     iSize = LoadStringW(hhctrl_hinstance, dwID, (LPWSTR)&stringresource, 0);
 
     string = heap_alloc((iSize + 2) * sizeof(WCHAR)); /* some strings (tab text) needs double-null termination */
-    memcpy(string, stringresource, iSize*sizeof(WCHAR));
-    string[iSize] = 0;
+    memcpy(string, stringresource, iSize * sizeof(WCHAR));
+    string[iSize] = UNICODE_NULL;
 
     return string;
 }
