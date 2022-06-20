@@ -2,7 +2,7 @@
 include(ExternalProject)
 
 function(setup_host_tools)
-    list(APPEND HOST_TOOLS bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink txt2nls utf16le xml2sdb)
+    list(APPEND HOST_TOOLS asmpp bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink txt2nls utf16le xml2sdb)
     if(NOT MSVC)
         list(APPEND HOST_TOOLS rsym pefixup)
     endif()
