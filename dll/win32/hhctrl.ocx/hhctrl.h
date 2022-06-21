@@ -229,7 +229,9 @@ WCHAR *GetDocumentTitle(CHMInfo*,LPCWSTR) DECLSPEC_HIDDEN;
 extern struct list window_list DECLSPEC_HIDDEN;
 HHInfo *CreateHelpViewer(HHInfo*,LPCWSTR,HWND) DECLSPEC_HIDDEN;
 void ReleaseHelpViewer(HHInfo*) DECLSPEC_HIDDEN;
+#ifdef __REACTOS__
 LPWSTR HH_LoadString(DWORD dwID) DECLSPEC_HIDDEN;
+#endif
 BOOL NavigateToUrl(HHInfo*,LPCWSTR) DECLSPEC_HIDDEN;
 BOOL NavigateToChm(HHInfo*,LPCWSTR,LPCWSTR) DECLSPEC_HIDDEN;
 void MergeChmProperties(HH_WINTYPEW*,HHInfo*,BOOL) DECLSPEC_HIDDEN;

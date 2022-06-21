@@ -25,9 +25,10 @@
 #include <wingdi.h>
 #include <htmlhelp.h>
 
+#ifdef __REACTOS__
 #define IDI_HHICON      100
-
 #define IDS_DEFTITLE    0
+#endif
 #define IDS_CONTENTS    1
 #define IDS_INDEX       2
 #define IDS_SEARCH      3

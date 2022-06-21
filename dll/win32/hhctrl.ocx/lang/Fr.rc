@@ -26,8 +26,9 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
     IDS_DEFTITLE     "Aide HTML"
-
+#endif
     IDS_CONTENTS     "Somm&aire"
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "&Recherche"

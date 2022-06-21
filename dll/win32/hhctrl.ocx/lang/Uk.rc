@@ -28,8 +28,9 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
     IDS_DEFTITLE     "HTML Help"
-
+#endif
     IDS_CONTENTS     "&Зміст"
     IDS_INDEX        "&Вказівник"
     IDS_SEARCH       "&Пошук"

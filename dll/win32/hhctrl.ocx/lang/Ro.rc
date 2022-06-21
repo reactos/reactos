@@ -27,8 +27,9 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
     IDS_DEFTITLE     "HTML Help"
-
+#endif
     IDS_CONTENTS     "C&uprins"
     IDS_INDEX        "In&dex"
     IDS_SEARCH       "&Caută"

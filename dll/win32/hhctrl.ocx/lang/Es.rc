@@ -26,8 +26,9 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
     IDS_DEFTITLE     "HTML Help"
-
+#endif
     IDS_CONTENTS     "&Contenido"
     IDS_INDEX        "Í&ndice"
     IDS_SEARCH       "&Buscar"

@@ -24,8 +24,9 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
+#ifdef __REACTOS__
     IDS_DEFTITLE     "HTML Help"
-
+#endif
     IDS_CONTENTS     "목록(&C)"
     IDS_INDEX        "인덱스(&N)"
     IDS_SEARCH       "찾기(&S)"
