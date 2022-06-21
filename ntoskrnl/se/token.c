@@ -637,6 +637,147 @@ SepRemoveUserGroupToken(
 }
 
 /**
+ * @brief
+ * Computes the exact available dynamic area of an access
+ * token whilst querying token statistics.
+ *
+ * @param[in] DynamicCharged
+ * The current charged dynamic area of an access token.
+ * This must not be 0!
+ *
+ * @param[in] PrimaryGroup
+ * A pointer to a primary group SID.
+ *
+ * @param[in] DefaultDacl
+ * If provided, this pointer points to a default DACL of an
+ * access token.
+ *
+ * @return
+ * Returns the calculated available dynamic area.
+ */
+ULONG
+SepComputeAvailableDynamicSpace(
+    _In_ ULONG DynamicCharged,
+    _In_ PSID PrimaryGroup,
+    _In_opt_ PACL DefaultDacl)
+{
+    ULONG DynamicAvailable;
+
+    PAGED_CODE();
+
+    /* A token's dynamic area is always charged */
+    ASSERT(DynamicCharged != 0);
+
+    /*
+     * Take into account the default DACL if
+     * the token has one. Otherwise the occupied
+     * space is just the present primary group.
+     */
+    DynamicAvailable = DynamicCharged - RtlLengthSid(PrimaryGroup);
+    if (DefaultDacl)
+    {
+        DynamicAvailable -= DefaultDacl->AclSize;
+    }
+
+    return DynamicAvailable;
+}
+
+/**
+ * @brief
+ * Re-builds the dynamic part area of an access token
+ * during an a default DACL or primary group replacement
+ * within the said token if the said dynamic area can't
+ * hold the new security content.
+ *
+ * @param[in] AccessToken
+ * A pointer to an access token where its dynamic part
+ * is to be re-built and expanded based upon the new
+ * dynamic part size provided by the caller. Dynamic
+ * part expansion is not always guaranteed. See Remarks
+ * for further information.
+ *
+ * @param[in] NewDynamicPartSize
+ * The new dynamic part size.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the function has completed its
+ * operations successfully. STATUS_INSUFFICIENT_RESOURCES
+ * is returned if the new dynamic part could not be allocated.
+ *
+ * @remarks
+ * STATUS_SUCCESS does not indicate if the function has re-built
+ * the dynamic part of a token. If the current dynamic area size
+ * suffices the new dynamic area length provided by the caller
+ * then the dynamic area can hold the new security content buffer
+ * so dynamic part expansion is not necessary.
+ */
+NTSTATUS
+SepRebuildDynamicPartOfToken(
+    _Inout_ PTOKEN AccessToken,
+    _In_ ULONG NewDynamicPartSize)
+{
+    PVOID NewDynamicPart;
+    PVOID PreviousDynamicPart;
+    ULONG CurrentDynamicLength;
+
+    PAGED_CODE();
+
+    /* Sanity checks */
+    ASSERT(AccessToken);
+    ASSERT(NewDynamicPartSize != 0);
+
+    /*
+     * Compute the exact length of the available
+     * dynamic part of the access token.
+     */
+    CurrentDynamicLength = AccessToken->DynamicAvailable + RtlLengthSid(AccessToken->PrimaryGroup);
+    if (AccessToken->DefaultDacl)
+    {
+        CurrentDynamicLength += AccessToken->DefaultDacl->AclSize;
+    }
+
+    /*
+     * Figure out if the current dynamic part is too small
+     * to fit new contents inside the said dynamic part.
+     * Rebuild the dynamic area and expand it if necessary.
+     */
+    if (CurrentDynamicLength < NewDynamicPartSize)
+    {
+        NewDynamicPart = ExAllocatePoolWithTag(PagedPool,
+                                               NewDynamicPartSize,
+                                               TAG_TOKEN_DYNAMIC);
+        if (NewDynamicPart == NULL)
+        {
+            DPRINT1("SepRebuildDynamicPartOfToken(): Insufficient resources to allocate new dynamic part!\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Copy the existing dynamic part */
+        PreviousDynamicPart = AccessToken->DynamicPart;
+        RtlCopyMemory(NewDynamicPart, PreviousDynamicPart, CurrentDynamicLength);
+
+        /* Update the available dynamic area and assign new dynamic */
+        AccessToken->DynamicAvailable += NewDynamicPartSize - CurrentDynamicLength;
+        AccessToken->DynamicPart = NewDynamicPart;
+
+        /* Move the contents (primary group and default DACL) addresses as well */
+        AccessToken->PrimaryGroup = (PSID)((ULONG_PTR)AccessToken->DynamicPart +
+                                    ((ULONG_PTR)AccessToken->PrimaryGroup - (ULONG_PTR)PreviousDynamicPart));
+        if (AccessToken->DefaultDacl != NULL)
+        {
+            AccessToken->DefaultDacl = (PACL)((ULONG_PTR)AccessToken->DynamicPart +
+                                       ((ULONG_PTR)AccessToken->DefaultDacl - (ULONG_PTR)PreviousDynamicPart));
+        }
+
+        /* And discard the previous dynamic part */
+        DPRINT("SepRebuildDynamicPartOfToken(): The dynamic part has been re-built with success!\n");
+        ExFreePoolWithTag(PreviousDynamicPart, TAG_TOKEN_DYNAMIC);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/**
  * @unimplemented
  * @brief
  * Frees (de-allocates) the proxy data memory block of a token.
