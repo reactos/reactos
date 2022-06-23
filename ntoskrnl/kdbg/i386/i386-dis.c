@@ -63,14 +63,13 @@ KdbpNopPrintDisasm(void* Ignored, const char* fmt, ...)
 
 static int
 KdbpReadMemory(uintptr_t Addr, unsigned char* Data, unsigned int Length,
-	       struct disassemble_info * Ignored)
+               struct disassemble_info * Ignored)
 {
   return KdbpSafeReadMemory(Data, (void *)Addr, Length); /* 0 means no error */
 }
 
 static void
-KdbpMemoryError(int Status, uintptr_t Addr,
-	        struct disassemble_info * Ignored)
+KdbpMemoryError(int Status, uintptr_t Addr, struct disassemble_info * Ignored)
 {
 }
 
@@ -79,7 +78,7 @@ KdbpPrintAddressInCode(uintptr_t Addr, struct disassemble_info * Ignored)
 {
     if (!KdbSymPrintAddress((void*)Addr, NULL))
     {
-      KdbPrintf("<%08x>", Addr);
+        KdbPrintf("<%p>", (void*)Addr);
     }
 }
 
