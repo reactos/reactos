@@ -18,9 +18,9 @@
 //
 #ifndef VER_LEGALCOPYRIGHT_STR
 #if defined(RC_INVOKED) && !defined(WIN16)
-#define VER_LEGALCOPYRIGHT_STR L"\251 ReactOS Foundation. All rights reserved."
+#define VER_LEGALCOPYRIGHT_STR L"\251 ReactOS Project. All rights reserved."
 #else
-#define VER_LEGALCOPYRIGHT_STR "Copyright (c) ReactOS Foundation. All rights reserved."
+#define VER_LEGALCOPYRIGHT_STR "Copyright (c) ReactOS Project. All rights reserved."
 #endif
 #endif
 
@@ -29,9 +29,9 @@
 //
 #ifndef VER_PRODUCTNAME_STR
 #ifdef RC_INVOKED
-#define VER_PRODUCTNAME_STR L"ReactOS\256 Operating System"
+#define VER_PRODUCTNAME_STR L"ReactOS Operating System"
 #else
-#define VER_PRODUCTNAME_STR "ReactOS (R) Operating System"
+#define VER_PRODUCTNAME_STR "ReactOS Operating System"
 #endif
 #endif
 
