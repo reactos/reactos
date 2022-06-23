@@ -190,13 +190,13 @@ License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
 URL: http://savannah.gnu.org/projects/freefont/
 
 Title: GNU adns
-Path: sdk/lib/adns
+Path: sdk/lib/3rdparty/adns
 Used Version: 1.0 REV 5
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
 URL: http://www.gnu.org/software/adns/, http://adns.jgaa.com
 
 Title: CardLib
-Path: sdk/lib/cardlib
+Path: sdk/lib/3rdparty/cardlib
 Used Version: 2005-07-14
 License:
 URL: http://www.catch22.net/tuts/cardlib
@@ -208,7 +208,7 @@ License: Modified BSD License (sdk/lib/drivers/lwip/COPYING)
 URL: https://savannah.nongnu.org/projects/lwip/
 
 Title: FreeType
-Path: sdk/lib/freetype
+Path: sdk/lib/3rdparty/freetype
 Used Version: 2.9.0
 License: FTL (https://spdx.org/licenses/FTL.html)
 URL: http://www.freetype.org
@@ -220,37 +220,37 @@ License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
 URL: https://github.com/dosfstools/dosfstools
 
 Title: libmpg123 (used by winemp3.acm)
-Path: sdk/lib/libmpg123
+Path: sdk/lib/3rdparty/libmpg123
 Used Version: 1.26.1
 License: LGPL-2.1 (https://spdx.org/licenses/LGPL-2.1.html)
 URL: http://www.mpg123.de/
 
 Title: libsamplerate
-Path: sdk/lib/libsamplerate
+Path: sdk/lib/3rdparty/libsamplerate
 Used Version: 0.1.9
 License: BSD-2-Clause (https://spdx.org/licenses/BSD-2-Clause.html)
 URL: http://www.mega-nerd.com/SRC/download.html
 
 Title: win-iconv
-Path: sdk/lib/libwin-iconv
+Path: sdk/lib/3rdparty/libwin-iconv
 Used Version: git commit 8765259
 License:
 URL: https://github.com/win-iconv/win-iconv
 
 Title: LibXML
-Path: sdk/lib/libxml2
+Path: sdk/lib/3rdparty/libxml2
 Used Version: 2.9.12
 License: MIT (https://spdx.org/licenses/MIT.htmlf)
 URL: http://xmlsoft.org, ftp://xmlsoft.org/libxml2/
 
 Title: STLport
-Path: sdk/lib/stlport
+Path: sdk/lib/3rdparty/stlport
 Used Version: 5.2.1
 License: BSD-2-Clause (https://spdx.org/licenses/BSD-2-Clause.html)
 URL: http://stlport.sourceforge.net/
 
 Title: ZLib
-Path: sdk/lib/zlib
+Path: sdk/lib/3rdparty/zlib
 Used Version: 1.2.11
 License: Zlib (https://spdx.org/licenses/Zlib.html)
 URL: http://www.zlib.net
