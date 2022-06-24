@@ -1069,7 +1069,7 @@ DEFINE_TEST(test_yield_5)
 	return test_yield_5_helper() == return_positive() && test_yield_5_ret == return_positive();
 }
 
-int test_yield_6_ret;
+static int test_yield_6_ret;
 
 static
 int test_yield_6_helper(void)

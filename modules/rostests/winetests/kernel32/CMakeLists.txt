@@ -56,7 +56,7 @@ if(MSVC)
     endif()
 endif()
 
-if(USE_CLANG_CL OR (NOT MSVC))
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(kernel32_winetest PRIVATE "-Wno-format")
 endif()
 

@@ -58,6 +58,8 @@ add_library(freetype ${SOURCE})
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND ARCH STREQUAL "amd64")
     # error C4312: 'type cast': conversion from 'unsigned long' to 'void *' of greater size
     remove_target_compile_option(freetype "/we4312")
-elseif(GCC)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(freetype PRIVATE -fno-builtin-malloc)
 endif()

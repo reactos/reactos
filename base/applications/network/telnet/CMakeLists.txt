@@ -35,7 +35,7 @@ if (NOT MSVC)
     target_compile_definitions(telnet PRIVATE _CRT_NONSTDC_NO_DEPRECATE)
 endif()
 
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(telnet PRIVATE -Wno-restrict $<$<COMPILE_LANGUAGE:CXX>:-Wno-narrowing>)
 endif()
 

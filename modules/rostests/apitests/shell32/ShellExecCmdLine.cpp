@@ -609,13 +609,7 @@ static void CleanupNewlyCreatedWindows(void)
             }
         }
         if (!bFound)
-        {
-            DWORD dwPID;
-            GetWindowThreadProcessId(s_wi1.phwnd[i1], &dwPID);
-            HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, TRUE, dwPID);
-            TerminateProcess(hProcess, -1);
-            CloseHandle(hProcess);
-        }
+            PostMessageW(s_wi1.phwnd[i1], WM_CLOSE, 0, 0);
     }
     free(s_wi1.phwnd);
     ZeroMemory(&s_wi1, sizeof(s_wi1));

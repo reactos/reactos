@@ -50,11 +50,12 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
     return STATUS_SUCCESS;
 }
 
-__declspec(noreturn)
+DECLSPEC_NORETURN
 VOID
 WINAPI
-BaseThreadStartup(IN LPTHREAD_START_ROUTINE lpStartAddress,
-                  IN LPVOID lpParameter)
+BaseThreadStartup(
+    _In_ LPTHREAD_START_ROUTINE lpStartAddress,
+    _In_ LPVOID lpParameter)
 {
     /* Attempt to call the Thread Start Address */
     _SEH2_TRY
@@ -67,7 +68,7 @@ BaseThreadStartup(IN LPTHREAD_START_ROUTINE lpStartAddress,
         }
 
         /* Get the exit code from the Thread Start */
-        ExitThread((lpStartAddress)((PVOID)lpParameter));
+        ExitThread(lpStartAddress(lpParameter));
     }
     _SEH2_EXCEPT(UnhandledExceptionFilter(_SEH2_GetExceptionInformation()))
     {

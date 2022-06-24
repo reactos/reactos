@@ -742,19 +742,13 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
         return E_INVALIDARG;
     }
 
-    if (iColumn >= 3)
-    {
-        /* Return an empty string when we area asked for a column we don't support.
-           Only  the regfolder is supposed to do this as it supports less columns compared to other folder
-           and its contents are supposed to be presented alongside items that support more columns. */
-        return SHSetStrRet(&psd->str, "");
-    }
-
     switch(iColumn)
     {
         case 0:        /* name */
             return GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-        case 1:        /* comments */
+        case 1:        /* type */
+            return SHSetStrRet(&psd->str, IDS_SYSTEMFOLDER);
+        case 4:        /* comments */
             HKEY hKey;
             if (!HCR_RegOpenClassIDKey(*clsid, &hKey))
                 return SHSetStrRet(&psd->str, "");
@@ -764,8 +758,11 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
             RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
             RegCloseKey(hKey);
             return S_OK;
-        case 2:        /* type */
-            return SHSetStrRet(&psd->str, IDS_SYSTEMFOLDER);
+        default:
+            /* Return an empty string when we area asked for a column we don't support.
+               Only  the regfolder is supposed to do this as it supports less columns compared to other folder
+               and its contents are supposed to be presented alongside items that support more columns. */
+            return SHSetStrRet(&psd->str, "");
     }
     return E_FAIL;
 }

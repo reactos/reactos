@@ -111,58 +111,6 @@ LDEVOBJ_vFreeLDEV(
     ExFreePoolWithTag(pldev, GDITAG_LDEV);
 }
 
-PDEVMODEINFO
-NTAPI
-LDEVOBJ_pdmiGetModes(
-    _In_ PLDEVOBJ pldev,
-    _In_ HANDLE hDriver)
-{
-    ULONG cbSize, cbFull;
-    PDEVMODEINFO pdminfo;
-
-    TRACE("LDEVOBJ_pdmiGetModes(%p, %p)\n", pldev, hDriver);
-
-    /* Mirror drivers may omit this function */
-    if (!pldev->pfn.GetModes)
-    {
-        return NULL;
-    }
-
-    /* Call the driver to get the required size */
-    cbSize = pldev->pfn.GetModes(hDriver, 0, NULL);
-    if (!cbSize)
-    {
-        ERR("DrvGetModes returned 0\n");
-        return NULL;
-    }
-
-    /* Add space for the header */
-    cbFull = cbSize + FIELD_OFFSET(DEVMODEINFO, adevmode);
-
-    /* Allocate a buffer for the DEVMODE array */
-    pdminfo = ExAllocatePoolWithTag(PagedPool, cbFull, GDITAG_DEVMODE);
-    if (!pdminfo)
-    {
-        ERR("Could not allocate devmodeinfo\n");
-        return NULL;
-    }
-
-    pdminfo->pldev = pldev;
-    pdminfo->cbdevmode = cbSize;
-
-    /* Call the driver again to fill the buffer */
-    cbSize = pldev->pfn.GetModes(hDriver, cbSize, pdminfo->adevmode);
-    if (!cbSize)
-    {
-        /* Could not get modes */
-        ERR("returned size %lu(%lu)\n", cbSize, pdminfo->cbdevmode);
-        ExFreePoolWithTag(pdminfo, GDITAG_DEVMODE);
-        pdminfo = NULL;
-    }
-
-    return pdminfo;
-}
-
 static
 BOOL
 LDEVOBJ_bLoadImage(
@@ -213,51 +161,24 @@ LDEVOBJ_bLoadImage(
 }
 
 static
-VOID
-LDEVOBJ_vUnloadImage(
-    _Inout_ PLDEVOBJ pldev)
-{
-    NTSTATUS Status;
-
-    /* Make sure we have a driver info */
-    ASSERT(pldev && pldev->pGdiDriverInfo != NULL);
-
-    /* Check if we have loaded a driver */
-    if (pldev->pfn.DisableDriver)
-    {
-        /* Call the unload function */
-        pldev->pfn.DisableDriver();
-    }
-
-    /* Unload the driver */
-    Status = ZwSetSystemInformation(SystemUnloadGdiDriverInformation,
-                                    &pldev->pGdiDriverInfo->SectionPointer,
-                                    sizeof(HANDLE));
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Failed to unload the driver, this is bad.\n");
-    }
-
-    /* Free the driver info structure */
-    ExFreePoolWithTag(pldev->pGdiDriverInfo, GDITAG_LDEV);
-    pldev->pGdiDriverInfo = NULL;
-}
-
-static
 BOOL
 LDEVOBJ_bEnableDriver(
-    _Inout_ PLDEVOBJ pldev)
+    _Inout_ PLDEVOBJ pldev,
+    _In_ PFN_DrvEnableDriver pfnEnableDriver)
 {
-    PFN_DrvEnableDriver pfnEnableDriver;
     DRVENABLEDATA ded;
     ULONG i;
 
-    /* Make sure we have a driver info */
-    ASSERT(pldev && pldev->pGdiDriverInfo != NULL);
+    TRACE("LDEVOBJ_bEnableDriver('%wZ')\n", &pldev->pGdiDriverInfo->DriverName);
+
+    ASSERT(pldev);
+    ASSERT(pldev->cRefs == 0);
+
+    if (pldev->ldevtype == LDEV_IMAGE)
+        return TRUE;
 
     /* Call the drivers DrvEnableDriver function */
     RtlZeroMemory(&ded, sizeof(ded));
-    pfnEnableDriver = pldev->pGdiDriverInfo->EntryPoint;
     if (!pfnEnableDriver(GDI_ENGINE_VERSION, sizeof(ded), &ded))
     {
         ERR("DrvEnableDriver failed\n");
@@ -275,6 +196,26 @@ LDEVOBJ_bEnableDriver(
 
     /* Return success. */
     return TRUE;
+}
+
+static
+VOID
+LDEVOBJ_vDisableDriver(
+    _Inout_ PLDEVOBJ pldev)
+{
+    ASSERT(pldev);
+    ASSERT(pldev->cRefs == 0);
+
+    TRACE("LDEVOBJ_vDisableDriver('%wZ')\n", &pldev->pGdiDriverInfo->DriverName);
+
+    if (pldev->ldevtype == LDEV_IMAGE)
+        return;
+
+    if (pldev->pfn.DisableDriver)
+    {
+        /* Call the unload function */
+        pldev->pfn.DisableDriver();
+    }
 }
 
 static
@@ -323,9 +264,87 @@ LDEVOBJ_pvFindImageProcAddress(
     return pvProcAdress;
 }
 
+static
+BOOL
+LDEVOBJ_bUnloadImage(
+    _Inout_ PLDEVOBJ pldev)
+{
+    NTSTATUS Status;
+
+    /* Make sure we have a driver info */
+    ASSERT(pldev && pldev->pGdiDriverInfo != NULL);
+    ASSERT(pldev->cRefs == 0);
+
+    TRACE("LDEVOBJ_bUnloadImage('%wZ')\n", &pldev->pGdiDriverInfo->DriverName);
+
+    /* Unload the driver */
+#if 0
+    Status = ZwSetSystemInformation(SystemUnloadGdiDriverInformation,
+                                    &pldev->pGdiDriverInfo->SectionPointer,
+                                    sizeof(HANDLE));
+#else
+    /* Unfortunately, ntoskrnl allows unloading a driver, but fails loading
+     * it again with STATUS_IMAGE_ALREADY_LOADED. Prevent this problem by
+     * never unloading any driver.
+     */
+    UNIMPLEMENTED;
+    Status = STATUS_NOT_IMPLEMENTED;
+#endif
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    ExFreePoolWithTag(pldev->pGdiDriverInfo, GDITAG_LDEV);
+    pldev->pGdiDriverInfo = NULL;
+
+    return TRUE;
+}
+
+PLDEVOBJ
+LDEVOBJ_pLoadInternal(
+    _In_ PFN_DrvEnableDriver pfnEnableDriver,
+    _In_ ULONG ldevtype)
+{
+    PLDEVOBJ pldev;
+
+    TRACE("LDEVOBJ_pLoadInternal(%lu)\n", ldevtype);
+
+    /* Lock loader */
+    EngAcquireSemaphore(ghsemLDEVList);
+
+    /* Allocate a new LDEVOBJ */
+    pldev = LDEVOBJ_AllocLDEV(ldevtype);
+    if (!pldev)
+    {
+        ERR("Could not allocate LDEV\n");
+        goto leave;
+    }
+
+    /* Load the driver */
+    if (!LDEVOBJ_bEnableDriver(pldev, pfnEnableDriver))
+    {
+        ERR("LDEVOBJ_bEnableDriver failed\n");
+        LDEVOBJ_vFreeLDEV(pldev);
+        pldev = NULL;
+        goto leave;
+    }
+
+    /* Insert the LDEV into the global list */
+    InsertHeadList(&gleLdevListHead, &pldev->leLink);
+
+    /* Increase ref count */
+    pldev->cRefs++;
+
+leave:
+    /* Unlock loader */
+    EngReleaseSemaphore(ghsemLDEVList);
+
+    TRACE("LDEVOBJ_pLoadInternal returning %p\n", pldev);
+    return pldev;
+}
+
 PLDEVOBJ
 NTAPI
-EngLoadImageEx(
+LDEVOBJ_pLoadDriver(
     _In_z_ LPWSTR pwszDriverName,
     _In_ ULONG ldevtype)
 {
@@ -336,7 +355,7 @@ EngLoadImageEx(
     SIZE_T cwcLength;
     LPWSTR pwsz;
 
-    TRACE("EngLoadImageEx(%ls, %lu)\n", pwszDriverName, ldevtype);
+    TRACE("LDEVOBJ_pLoadDriver(%ls, %lu)\n", pwszDriverName, ldevtype);
     ASSERT(pwszDriverName);
 
     /* Initialize buffer for the the driver name */
@@ -417,20 +436,16 @@ EngLoadImageEx(
             goto leave;
         }
 
-        /* Shall we load a driver? */
-        if (ldevtype != LDEV_IMAGE)
+        /* Load the driver */
+        if (!LDEVOBJ_bEnableDriver(pldev, pldev->pGdiDriverInfo->EntryPoint))
         {
-            /* Load the driver */
-            if (!LDEVOBJ_bEnableDriver(pldev))
-            {
-                ERR("LDEVOBJ_bEnableDriver failed\n");
+            ERR("LDEVOBJ_bEnableDriver failed\n");
 
-                /* Unload the image. */
-                LDEVOBJ_vUnloadImage(pldev);
-                LDEVOBJ_vFreeLDEV(pldev);
-                pldev = NULL;
-                goto leave;
-            }
+            /* Unload the image. */
+            LDEVOBJ_bUnloadImage(pldev);
+            LDEVOBJ_vFreeLDEV(pldev);
+            pldev = NULL;
+            goto leave;
         }
 
         /* Insert the LDEV into the global list */
@@ -444,10 +459,418 @@ leave:
     /* Unlock loader */
     EngReleaseSemaphore(ghsemLDEVList);
 
-    TRACE("EngLoadImageEx returning %p\n", pldev);
+    TRACE("LDEVOBJ_pLoadDriver returning %p\n", pldev);
     return pldev;
 }
 
+static
+VOID
+LDEVOBJ_vDereference(
+    _Inout_ PLDEVOBJ pldev)
+{
+    /* Lock loader */
+    EngAcquireSemaphore(ghsemLDEVList);
+
+    /* Decrement reference count */
+    ASSERT(pldev->cRefs > 0);
+    pldev->cRefs--;
+
+    /* More references left? */
+    if (pldev->cRefs > 0)
+    {
+        EngReleaseSemaphore(ghsemLDEVList);
+        return;
+    }
+
+    LDEVOBJ_vDisableDriver(pldev);
+
+    if (LDEVOBJ_bUnloadImage(pldev))
+    {
+        /* Remove ldev from the list */
+        RemoveEntryList(&pldev->leLink);
+
+        /* Free the driver info structure */
+        LDEVOBJ_vFreeLDEV(pldev);
+    }
+    else
+    {
+        WARN("Failed to unload driver '%wZ', trying to re-enable it.\n", &pldev->pGdiDriverInfo->DriverName);
+        LDEVOBJ_bEnableDriver(pldev, pldev->pGdiDriverInfo->EntryPoint);
+
+        /* Increment again reference count */
+        pldev->cRefs++;
+    }
+
+    /* Unlock loader */
+    EngReleaseSemaphore(ghsemLDEVList);
+}
+
+ULONG
+LDEVOBJ_ulGetDriverModes(
+    _In_ LPWSTR pwszDriverName,
+    _In_ HANDLE hDriver,
+    _Out_ PDEVMODEW *ppdm)
+{
+    PLDEVOBJ pldev = NULL;
+    ULONG cbSize = 0;
+    PDEVMODEW pdm = NULL;
+
+    TRACE("LDEVOBJ_ulGetDriverModes('%ls', %p)\n", pwszDriverName, hDriver);
+
+    pldev = LDEVOBJ_pLoadDriver(pwszDriverName, LDEV_DEVICE_DISPLAY);
+    if (!pldev)
+        goto cleanup;
+
+    /* Mirror drivers may omit this function */
+    if (!pldev->pfn.GetModes)
+        goto cleanup;
+
+    /* Call the driver to get the required size */
+    cbSize = pldev->pfn.GetModes(hDriver, 0, NULL);
+    if (!cbSize)
+    {
+        ERR("DrvGetModes returned 0\n");
+        goto cleanup;
+    }
+
+    /* Allocate a buffer for the DEVMODE array */
+    pdm = ExAllocatePoolWithTag(PagedPool, cbSize, GDITAG_DEVMODE);
+    if (!pdm)
+    {
+        ERR("Could not allocate devmodeinfo\n");
+        goto cleanup;
+    }
+
+    /* Call the driver again to fill the buffer */
+    cbSize = pldev->pfn.GetModes(hDriver, cbSize, pdm);
+    if (!cbSize)
+    {
+        /* Could not get modes */
+        ERR("DrvrGetModes returned 0 on second call\n");
+        ExFreePoolWithTag(pdm, GDITAG_DEVMODE);
+        pdm = NULL;
+    }
+
+cleanup:
+    if (pldev)
+        LDEVOBJ_vDereference(pldev);
+
+    *ppdm = pdm;
+    return cbSize;
+}
+
+BOOL
+LDEVOBJ_bBuildDevmodeList(
+    _Inout_ PGRAPHICS_DEVICE pGraphicsDevice)
+{
+    PWSTR pwsz;
+    PDEVMODEINFO pdminfo;
+    PDEVMODEW pdm, pdmEnd;
+    ULONG i, cModes = 0;
+    ULONG cbSize, cbFull;
+
+    if (pGraphicsDevice->pdevmodeInfo)
+        return TRUE;
+    ASSERT(pGraphicsDevice->pDevModeList == NULL);
+
+    pwsz = pGraphicsDevice->pDiplayDrivers;
+
+    /* Loop through the driver names
+     * This is a REG_MULTI_SZ string */
+    for (; *pwsz; pwsz += wcslen(pwsz) + 1)
+    {
+        /* Get the mode list from the driver */
+        TRACE("Trying driver: %ls\n", pwsz);
+        cbSize = LDEVOBJ_ulGetDriverModes(pwsz, pGraphicsDevice->DeviceObject, &pdm);
+        if (!cbSize)
+        {
+            WARN("Driver %ls returned no valid mode\n", pwsz);
+            continue;
+        }
+
+        /* Add space for the header */
+        cbFull = cbSize + FIELD_OFFSET(DEVMODEINFO, adevmode);
+
+        /* Allocate a buffer for the DEVMODE array */
+        pdminfo = ExAllocatePoolWithTag(PagedPool, cbFull, GDITAG_DEVMODE);
+        if (!pdminfo)
+        {
+            ERR("Could not allocate devmodeinfo\n");
+            ExFreePoolWithTag(pdm, GDITAG_DEVMODE);
+            continue;
+        }
+
+        pdminfo->cbdevmode = cbSize;
+        RtlCopyMemory(pdminfo->adevmode, pdm, cbSize);
+        ExFreePoolWithTag(pdm, GDITAG_DEVMODE);
+
+        /* Attach the mode info to the device */
+        pdminfo->pdmiNext = pGraphicsDevice->pdevmodeInfo;
+        pGraphicsDevice->pdevmodeInfo = pdminfo;
+
+        /* Loop all DEVMODEs */
+        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
+        for (pdm = pdminfo->adevmode;
+             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
+             pdm = (DEVMODEW*)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
+        {
+            /* Count this DEVMODE */
+            cModes++;
+
+            /* Some drivers like the VBox driver don't fill the dmDeviceName
+               with the name of the display driver. So fix that here. */
+            RtlStringCbCopyW(pdm->dmDeviceName, sizeof(pdm->dmDeviceName), pwsz);
+        }
+    }
+
+    if (!pGraphicsDevice->pdevmodeInfo || cModes == 0)
+    {
+        ERR("No devmodes\n");
+        return FALSE;
+    }
+
+    /* Allocate an index buffer */
+    pGraphicsDevice->cDevModes = cModes;
+    pGraphicsDevice->pDevModeList = ExAllocatePoolWithTag(PagedPool,
+                                                          cModes * sizeof(DEVMODEENTRY),
+                                                          GDITAG_GDEVICE);
+    if (!pGraphicsDevice->pDevModeList)
+    {
+        ERR("No devmode list\n");
+        return FALSE;
+    }
+
+    /* Loop through all DEVMODEINFOs */
+    for (pdminfo = pGraphicsDevice->pdevmodeInfo, i = 0;
+         pdminfo;
+         pdminfo = pdminfo->pdmiNext)
+    {
+        /* Calculate End of the DEVMODEs */
+        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
+
+        /* Loop through the DEVMODEs */
+        for (pdm = pdminfo->adevmode;
+             (pdm + 1 <= pdmEnd) && (pdm->dmSize != 0);
+             pdm = (PDEVMODEW)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
+        {
+            TRACE("    %S has mode %lux%lux%lu(%lu Hz)\n",
+                  pdm->dmDeviceName,
+                  pdm->dmPelsWidth,
+                  pdm->dmPelsHeight,
+                  pdm->dmBitsPerPel,
+                  pdm->dmDisplayFrequency);
+
+            /* Initialize the entry */
+            pGraphicsDevice->pDevModeList[i].dwFlags = 0;
+            pGraphicsDevice->pDevModeList[i].pdm = pdm;
+            i++;
+        }
+    }
+    return TRUE;
+}
+
+/* Search the closest display mode according to some settings.
+ * Note that we don't care about the DM_* flags in dmFields, but check if value != 0 instead */
+static
+BOOL
+LDEVOBJ_bGetClosestMode(
+    _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
+    _In_ PDEVMODEW RequestedMode,
+    _Out_ PDEVMODEW *pSelectedMode)
+{
+    DEVMODEW dmDiff;
+    PDEVMODEW pdmCurrent, pdmBest = NULL;
+    ULONG i;
+
+    /* Use a DEVMODE to keep the differences between best mode found and expected mode.
+     * Initialize fields to max value so we can find better modes. */
+    dmDiff.dmPelsWidth = 0xffffffff;
+    dmDiff.dmPelsHeight = 0xffffffff;
+    dmDiff.dmBitsPerPel = 0xffffffff;
+    dmDiff.dmDisplayFrequency = 0xffffffff;
+
+    /* Search the closest mode */
+#define DM_DIFF(field) (RequestedMode->field > pdmCurrent->field ? (RequestedMode->field - pdmCurrent->field) : (pdmCurrent->field - RequestedMode->field))
+    for (i = 0; i < pGraphicsDevice->cDevModes; i++)
+    {
+        pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
+
+        /* Skip current mode if it is worse than best mode found */
+        if (RequestedMode->dmPelsWidth != 0 && DM_DIFF(dmPelsWidth) > dmDiff.dmPelsWidth)
+            continue;
+        if (RequestedMode->dmPelsHeight != 0 && DM_DIFF(dmPelsHeight) > dmDiff.dmPelsHeight)
+            continue;
+        if (RequestedMode->dmBitsPerPel != 0 && DM_DIFF(dmBitsPerPel) > dmDiff.dmBitsPerPel)
+            continue;
+        if (RequestedMode->dmDisplayFrequency != 0 && DM_DIFF(dmDisplayFrequency) > dmDiff.dmDisplayFrequency)
+            continue;
+
+        /* Better (or equivalent) mode found. Update differences */
+        dmDiff.dmPelsWidth = DM_DIFF(dmPelsWidth);
+        dmDiff.dmPelsHeight = DM_DIFF(dmPelsHeight);
+        dmDiff.dmBitsPerPel = DM_DIFF(dmBitsPerPel);
+        dmDiff.dmDisplayFrequency = DM_DIFF(dmDisplayFrequency);
+        pdmBest = pdmCurrent;
+    }
+#undef DM_DIFF
+
+    if (pdmBest)
+    {
+        TRACE("Closest display mode to '%dx%dx%d %d Hz' is '%dx%dx%d %d Hz'\n",
+              RequestedMode->dmPelsWidth,
+              RequestedMode->dmPelsHeight,
+              RequestedMode->dmBitsPerPel,
+              RequestedMode->dmDisplayFrequency,
+              pdmBest->dmPelsWidth,
+              pdmBest->dmPelsHeight,
+              pdmBest->dmBitsPerPel,
+              pdmBest->dmDisplayFrequency);
+    }
+
+    *pSelectedMode = pdmBest;
+    return pdmBest != NULL;
+}
+
+BOOL
+LDEVOBJ_bProbeAndCaptureDevmode(
+    _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
+    _In_ PDEVMODEW RequestedMode,
+    _Out_ PDEVMODEW *pSelectedMode,
+    _In_ BOOL bSearchClosestMode)
+{
+    DEVMODEW dmSearch;
+    PDEVMODEW pdmCurrent, pdm, pdmSelected = NULL;
+    ULONG i;
+    ULONG ulVirtualWidth = 0, ulVirtualHeight = 0;
+    BOOL bResult = TRUE;
+    NTSTATUS Status;
+
+    if (!LDEVOBJ_bBuildDevmodeList(pGraphicsDevice))
+        return FALSE;
+
+    /* At first, load information from registry */
+    RtlZeroMemory(&dmSearch, sizeof(dmSearch));
+    Status = EngpGetDisplayDriverParameters(pGraphicsDevice, &dmSearch);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("EngpGetDisplayDriverParameters() failed with status 0x%08x\n", Status);
+        return FALSE;
+    }
+
+    /* Override values with the new ones provided */
+
+    _SEH2_TRY
+    {
+        bSearchClosestMode |= RequestedMode->dmFields == 0;
+
+        /* Copy standard fields (if provided) */
+        if (RequestedMode->dmFields & DM_BITSPERPEL && RequestedMode->dmBitsPerPel != 0)
+            dmSearch.dmBitsPerPel = RequestedMode->dmBitsPerPel;
+        if (RequestedMode->dmFields & DM_PELSWIDTH && RequestedMode->dmPelsWidth != 0)
+            dmSearch.dmPelsWidth = RequestedMode->dmPelsWidth;
+        if (RequestedMode->dmFields & DM_PELSHEIGHT && RequestedMode->dmPelsHeight != 0)
+            dmSearch.dmPelsHeight = RequestedMode->dmPelsHeight;
+        if (RequestedMode->dmFields & DM_DISPLAYFREQUENCY && RequestedMode->dmDisplayFrequency != 0)
+            dmSearch.dmDisplayFrequency = RequestedMode->dmDisplayFrequency;
+
+        if ((RequestedMode->dmFields & (DM_PANNINGWIDTH | DM_PANNINGHEIGHT)) == (DM_PANNINGWIDTH | DM_PANNINGHEIGHT) &&
+            RequestedMode->dmPanningWidth != 0 && RequestedMode->dmPanningHeight != 0 &&
+            RequestedMode->dmPanningWidth < dmSearch.dmPelsWidth &&
+            RequestedMode->dmPanningHeight < dmSearch.dmPelsHeight)
+        {
+            /* Get new panning values */
+            ulVirtualWidth = RequestedMode->dmPelsWidth;
+            ulVirtualHeight = RequestedMode->dmPelsHeight;
+            dmSearch.dmPelsWidth = RequestedMode->dmPanningWidth;
+            dmSearch.dmPelsHeight = RequestedMode->dmPanningHeight;
+        }
+        else if (dmSearch.dmPanningWidth != 0 && dmSearch.dmPanningHeight != 0 &&
+                 dmSearch.dmPanningWidth < dmSearch.dmPelsWidth &&
+                 dmSearch.dmPanningHeight < dmSearch.dmPelsHeight)
+        {
+            /* Keep existing panning values */
+            ulVirtualWidth = dmSearch.dmPelsWidth;
+            ulVirtualHeight = dmSearch.dmPelsHeight;
+            dmSearch.dmPelsWidth = dmSearch.dmPanningWidth;
+            dmSearch.dmPelsHeight = dmSearch.dmPanningHeight;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bResult = FALSE;
+    }
+    _SEH2_END;
+
+    if (!bResult)
+        return FALSE;
+
+    if (bSearchClosestMode)
+    {
+        if (LDEVOBJ_bGetClosestMode(pGraphicsDevice, &dmSearch, &pdmSelected))
+        {
+            /* Ok, found a closest mode. Update search */
+            dmSearch.dmBitsPerPel = pdmSelected->dmBitsPerPel;
+            dmSearch.dmPelsWidth = pdmSelected->dmPelsWidth;
+            dmSearch.dmPelsHeight = pdmSelected->dmPelsHeight;
+            dmSearch.dmDisplayFrequency = pdmSelected->dmDisplayFrequency;
+        }
+    }
+
+    /* Now, search the exact mode to return to caller */
+    for (i = 0; i < pGraphicsDevice->cDevModes; i++)
+    {
+        pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
+
+        /* For now, we only need those */
+        if (pdmCurrent->dmBitsPerPel != dmSearch.dmBitsPerPel)
+            continue;
+        if (pdmCurrent->dmPelsWidth != dmSearch.dmPelsWidth)
+            continue;
+        if (pdmCurrent->dmPelsHeight != dmSearch.dmPelsHeight)
+            continue;
+        if (pdmCurrent->dmDisplayFrequency != dmSearch.dmDisplayFrequency)
+            continue;
+
+        pdmSelected = pdmCurrent;
+        break;
+    }
+
+    if (!pdmSelected)
+    {
+        ERR("Requested mode not found (%dx%dx%d %d Hz)\n",
+            dmSearch.dmPelsWidth,
+            dmSearch.dmPelsHeight,
+            dmSearch.dmBitsPerPel,
+            dmSearch.dmDisplayFrequency);
+        return FALSE;
+    }
+
+    /* Allocate memory for output */
+    pdm = ExAllocatePoolZero(PagedPool, pdmSelected->dmSize + pdmSelected->dmDriverExtra, GDITAG_DEVMODE);
+    if (!pdm)
+        return FALSE;
+
+    /* Copy selected mode */
+    RtlCopyMemory(pdm, pdmSelected, pdmSelected->dmSize);
+    RtlCopyMemory((PVOID)((ULONG_PTR)pdm + pdm->dmSize),
+                  (PVOID)((ULONG_PTR)pdmSelected + pdmSelected->dmSize),
+                  pdmSelected->dmDriverExtra);
+
+    /* Add back panning */
+    if (ulVirtualWidth != 0 && ulVirtualHeight != 0 &&
+        pdm->dmPelsWidth < ulVirtualWidth &&
+        pdm->dmPelsHeight < ulVirtualHeight)
+    {
+        pdm->dmFields |= DM_PANNINGWIDTH | DM_PANNINGHEIGHT;
+        pdm->dmPanningWidth = pdm->dmPelsWidth;
+        pdm->dmPanningHeight = pdm->dmPelsHeight;
+        pdm->dmPelsWidth = ulVirtualWidth;
+        pdm->dmPelsHeight = ulVirtualHeight;
+    }
+
+    *pSelectedMode = pdm;
+    return TRUE;
+}
 
 /** Exported functions ********************************************************/
 
@@ -456,7 +879,7 @@ APIENTRY
 EngLoadImage(
     _In_ LPWSTR pwszDriverName)
 {
-    return (HANDLE)EngLoadImageEx(pwszDriverName, LDEV_IMAGE);
+    return (HANDLE)LDEVOBJ_pLoadDriver(pwszDriverName, LDEV_IMAGE);
 }
 
 
@@ -470,25 +893,7 @@ EngUnloadImage(
     /* Make sure the LDEV is in the list */
     ASSERT((pldev->leLink.Flink != NULL) &&  (pldev->leLink.Blink != NULL));
 
-    /* Lock loader */
-    EngAcquireSemaphore(ghsemLDEVList);
-
-    /* Decrement reference count */
-    pldev->cRefs--;
-
-    /* No more references left? */
-    if (pldev->cRefs == 0)
-    {
-        /* Remove ldev from the list */
-        RemoveEntryList(&pldev->leLink);
-
-        /* Unload the image and free the LDEV */
-        LDEVOBJ_vUnloadImage(pldev);
-        LDEVOBJ_vFreeLDEV(pldev);
-    }
-
-    /* Unlock loader */
-    EngReleaseSemaphore(ghsemLDEVList);
+    LDEVOBJ_vDereference(pldev);
 }
 
 

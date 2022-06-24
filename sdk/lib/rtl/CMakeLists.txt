@@ -5,7 +5,7 @@ add_definitions(
     -D_NTSYSTEM_
     -D_NTDLLBUILD_)
 
-if (GCC)
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Enable this again. CORE-17637
     add_compile_options(-Wunused-result)
 endif()

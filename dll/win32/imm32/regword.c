@@ -99,7 +99,7 @@ ImmEnumRegisterWordA(HKL hKL, REGISTERWORDENUMPROCA lpfnEnumProc,
     ENUM_WORD_W2A EnumDataW2A;
     PIMEDPI pImeDpi;
 
-    TRACE("(%p, %p, %s, 0x%lX, %s, %p)", hKL, lpfnEnumProc, debugstr_a(lpszReading),
+    TRACE("(%p, %p, %s, 0x%lX, %s, %p)\n", hKL, lpfnEnumProc, debugstr_a(lpszReading),
           dwStyle, debugstr_a(lpszRegister), lpData);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
@@ -155,7 +155,7 @@ ImmEnumRegisterWordW(HKL hKL, REGISTERWORDENUMPROCW lpfnEnumProc,
     ENUM_WORD_A2W EnumDataA2W;
     PIMEDPI pImeDpi;
 
-    TRACE("(%p, %p, %s, 0x%lX, %s, %p)", hKL, lpfnEnumProc, debugstr_w(lpszReading),
+    TRACE("(%p, %p, %s, 0x%lX, %s, %p)\n", hKL, lpfnEnumProc, debugstr_w(lpszReading),
           dwStyle, debugstr_w(lpszRegister), lpData);
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);

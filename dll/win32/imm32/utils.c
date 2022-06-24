@@ -50,6 +50,7 @@ BOOL APIENTRY Imm32IsSystemJapaneseOrKorean(VOID)
     return (wPrimary == LANG_JAPANESE || wPrimary == LANG_KOREAN);
 }
 
+// Win: IsAnsiIMC
 BOOL WINAPI Imm32IsImcAnsi(HIMC hIMC)
 {
     BOOL ret;
@@ -166,6 +167,7 @@ static PVOID FASTCALL DesktopPtrToUser(PVOID ptr)
         return (PVOID)NtUserCallOneParam((DWORD_PTR)ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING);
 }
 
+// Win: HMValidateHandleNoRip
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
 {
     UINT index;
@@ -201,16 +203,21 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
     return ptr;
 }
 
-PWND FASTCALL ValidateHwndNoErr(HWND hwnd)
+// Win: HMValidateHandle
+LPVOID FASTCALL ValidateHandle(HANDLE hObject, UINT uType)
 {
-    /* See if the window is cached */
-    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
-    if (hwnd == ClientInfo->CallbackWnd.hWnd)
-        return ClientInfo->CallbackWnd.pWnd;
+    LPVOID pvObj = ValidateHandleNoErr(hObject, uType);
+    if (pvObj)
+        return pvObj;
 
-    return ValidateHandleNoErr(hwnd, TYPE_WINDOW);
+    if (uType == TYPE_WINDOW)
+        SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+    else
+        SetLastError(ERROR_INVALID_HANDLE);
+    return NULL;
 }
 
+// Win: TestInputContextProcess
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
 {
     HIMC hIMC;
@@ -223,6 +230,7 @@ BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC)
     return dwProcessID == (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
 }
 
+// Win: ImmLocalAlloc
 LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes)
 {
     if (!ghImmHeap)

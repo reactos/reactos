@@ -532,12 +532,12 @@ NtQueryTimer(IN HANDLE TimerHandle,
                                          ExTimerInfoClass,
                                          sizeof(ExTimerInfoClass) /
                                          sizeof(ExTimerInfoClass[0]),
+                                         ICIF_PROBE_READ_WRITE,
                                          TimerInformation,
                                          TimerInformationLength,
                                          ReturnLength,
                                          NULL,
-                                         PreviousMode,
-                                         TRUE);
+                                         PreviousMode);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the Timer Object */

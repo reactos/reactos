@@ -35,37 +35,22 @@ static const CHAR CmpIntelID[]       = "GenuineIntel";
 static const CHAR CmpAmdID[]         = "AuthenticAMD";
 static const CHAR CmpCentaurID[]     = "CentaurHauls";
 
-/* FUNCTIONS *****************************************************************/
-
-VOID
-NTAPI
-KiSetProcessorType(VOID)
+typedef union _CPU_SIGNATURE
 {
-    CPU_INFO CpuInfo;
-    ULONG Stepping, Type;
+    struct
+    {
+        ULONG Step : 4;
+        ULONG Model : 4;
+        ULONG Family : 4;
+        ULONG Unused : 4;
+        ULONG ExtendedModel : 4;
+        ULONG ExtendedFamily : 8;
+        ULONG Unused2 : 4;
+    };
+    ULONG AsULONG;
+} CPU_SIGNATURE;
 
-    /* Do CPUID 1 now */
-    KiCpuId(&CpuInfo, 1);
-
-    /*
-     * Get the Stepping and Type. The stepping contains both the
-     * Model and the Step, while the Type contains the returned Type.
-     * We ignore the family.
-     *
-     * For the stepping, we convert this: zzzzzzxy into this: x0y
-     */
-    Stepping = CpuInfo.Eax & 0xF0;
-    Stepping <<= 4;
-    Stepping += (CpuInfo.Eax & 0xFF);
-    Stepping &= 0xF0F;
-    Type = CpuInfo.Eax & 0xF00;
-    Type >>= 8;
-
-    /* Save them in the PRCB */
-    KeGetCurrentPrcb()->CpuID = TRUE;
-    KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
-    KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
-}
+/* FUNCTIONS *****************************************************************/
 
 ULONG
 NTAPI
@@ -107,6 +92,59 @@ KiGetCpuVendor(VOID)
     return Prcb->CpuVendor;
 }
 
+VOID
+NTAPI
+KiSetProcessorType(VOID)
+{
+    CPU_INFO CpuInfo;
+    CPU_SIGNATURE CpuSignature;
+    BOOLEAN ExtendModel;
+    ULONG Stepping, Type, Vendor;
+
+    /* This initializes Prcb->CpuVendor */
+    Vendor = KiGetCpuVendor();
+
+    /* Do CPUID 1 now */
+    KiCpuId(&CpuInfo, 1);
+
+    /*
+     * Get the Stepping and Type. The stepping contains both the
+     * Model and the Step, while the Type contains the returned Family.
+     *
+     * For the stepping, we convert this: zzzzzzxy into this: x0y
+     */
+    CpuSignature.AsULONG = CpuInfo.Eax;
+    Stepping = CpuSignature.Model;
+    ExtendModel = (CpuSignature.Family == 15);
+#if ( (NTDDI_VERSION >= NTDDI_WINXPSP2) && (NTDDI_VERSION < NTDDI_WS03) ) || (NTDDI_VERSION >= NTDDI_WS03SP1)
+    if (CpuSignature.Family == 6)
+    {
+        ExtendModel |= (Vendor == CPU_INTEL);
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+        ExtendModel |= (Vendor == CPU_CENTAUR);
+#endif
+    }
+#endif
+    if (ExtendModel)
+    {
+        /* Add ExtendedModel to distinguish from non-extended values. */
+        Stepping |= (CpuSignature.ExtendedModel << 4);
+    }
+    Stepping = (Stepping << 8) | CpuSignature.Step;
+    Type = CpuSignature.Family;
+    if (CpuSignature.Family == 15)
+    {
+        /* Add ExtendedFamily to distinguish from non-extended values.
+         * It must not be larger than 0xF0 to avoid overflow. */
+        Type += min(CpuSignature.ExtendedFamily, 0xF0);
+    }
+
+    /* Save them in the PRCB */
+    KeGetCurrentPrcb()->CpuID = TRUE;
+    KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
+    KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
+}
+
 ULONG
 NTAPI
 KiGetFeatureBits(VOID)
@@ -117,7 +155,7 @@ KiGetFeatureBits(VOID)
     CPU_INFO CpuInfo;
 
     /* Get the Vendor ID */
-    Vendor = KiGetCpuVendor();
+    Vendor = Prcb->CpuVendor;
 
     /* Make sure we got a valid vendor ID at least. */
     if (!Vendor) return FeatureBits;

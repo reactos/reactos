@@ -38,8 +38,10 @@
 #define TAG_KDBG 'GBDK'
 
 /* Kernel Tags */
-#define TAG_KNMI    'IMNK'
-#define TAG_KERNEL  '  eK'
+#define TAG_KNMI                    'IMNK'
+#define TAG_KERNEL                  '  eK'
+#define TAG_FLOATING_POINT_FX       'xFpF'
+#define TAG_FLOATING_POINT_CONTEXT  'oCpF'
 
 /* File-System Run-Time Library Tags */
 #define TAG_UNC    'nuSF'
@@ -159,6 +161,7 @@
 #define TAG_LOGON_NOTIFICATION 'nLeS'
 #define TAG_SID_AND_ATTRIBUTES 'aSeS'
 #define TAG_SID_VALIDATE       'vSeS'
+#define TAG_ACCESS_CHECK_RIGHT 'rCeS'
 
 /* LPC Tags */
 #define TAG_LPC_MESSAGE           'McpL'

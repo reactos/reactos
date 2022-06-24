@@ -55,32 +55,6 @@ typedef struct _DESKTOP
 #define DT_GWL_PROCESSID 0
 #define DT_GWL_THREADID  4
 
-#define DESKTOP_READ       STANDARD_RIGHTS_READ      | \
-                           DESKTOP_ENUMERATE         | \
-                           DESKTOP_READOBJECTS
-
-#define DESKTOP_WRITE       STANDARD_RIGHTS_WRITE    | \
-                            DESKTOP_CREATEMENU       | \
-                            DESKTOP_CREATEWINDOW     | \
-                            DESKTOP_HOOKCONTROL      | \
-                            DESKTOP_JOURNALPLAYBACK  | \
-                            DESKTOP_JOURNALRECORD    | \
-                            DESKTOP_WRITEOBJECTS
-
-#define DESKTOP_EXECUTE     STANDARD_RIGHTS_EXECUTE  | \
-                            DESKTOP_SWITCHDESKTOP
-
-#define DESKTOP_ALL_ACCESS  STANDARD_RIGHTS_REQUIRED | \
-                            DESKTOP_CREATEMENU       | \
-                            DESKTOP_CREATEWINDOW     | \
-                            DESKTOP_ENUMERATE        | \
-                            DESKTOP_HOOKCONTROL      | \
-                            DESKTOP_JOURNALPLAYBACK  | \
-                            DESKTOP_JOURNALRECORD    | \
-                            DESKTOP_READOBJECTS      | \
-                            DESKTOP_SWITCHDESKTOP    | \
-                            DESKTOP_WRITEOBJECTS
-
 extern PDESKTOP gpdeskInputDesktop;
 extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;

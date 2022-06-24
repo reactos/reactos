@@ -177,7 +177,7 @@ PciOpenKey(IN PWCHAR KeyName,
     RtlInitUnicodeString(&KeyString, KeyName);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyString,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                RootKey,
                                NULL);
 

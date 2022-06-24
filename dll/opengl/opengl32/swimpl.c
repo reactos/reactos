@@ -1028,7 +1028,7 @@ WRITE_COLOR_SPAN(32, ULONG, 4)
 static void write_monocolor_span_frontbuffer(struct sw_framebuffer* fb, GLuint n, GLint x, GLint y,
         const GLubyte mask[], COLORREF Color)
 {
-    TRACE("Writing monocolor span at %u %u (%u), Color 0x%08x", x, y, n, Color);
+    TRACE("Writing monocolor span at %u %u (%u), Color 0x%08x\n", x, y, n, Color);
 
     if (mask)
     {

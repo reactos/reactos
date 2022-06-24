@@ -6,7 +6,6 @@
 #include "seh.h"
 
 char test[] = "SEH0004.c";
-int perfect;
 
 int main() {
 

@@ -41,7 +41,7 @@ HRESULT APIENTRY CtfImmTIMDestroyInputContext(HIMC hIMC)
 // Win: CtfImmTIMCreateInputContext
 HRESULT APIENTRY CtfImmTIMCreateInputContext(HIMC hIMC)
 {
-    FIXME("(%p)\n", hIMC);
+    TRACE("(%p)\n", hIMC);
     return E_NOTIMPL;
 }
 

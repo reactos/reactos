@@ -21,13 +21,25 @@
 #include <freeldr.h>
 #include <cmlib.h>
 #include "registry.h"
+#include <internal/cmboot.h>
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(REGISTRY);
 
-static PCMHIVE CmHive;
-static PCM_KEY_NODE RootKeyNode;
-HKEY CurrentControlSetKey;
+static PCMHIVE CmSystemHive;
+static HCELL_INDEX SystemRootCell;
+
+PHHIVE SystemHive = NULL;
+HKEY CurrentControlSetKey = NULL;
+
+#define HCI_TO_HKEY(CellIndex)          ((HKEY)(ULONG_PTR)(CellIndex))
+#ifndef HKEY_TO_HCI // See also registry.h
+#define HKEY_TO_HCI(hKey)               ((HCELL_INDEX)(ULONG_PTR)(hKey))
+#endif
+
+#define GET_HHIVE(CmHive)               (&((CmHive)->Hive))
+#define GET_HHIVE_FROM_HKEY(hKey)       GET_HHIVE(CmSystemHive)
+#define GET_CM_KEY_NODE(hHive, hKey)    ((PCM_KEY_NODE)HvGetCell(hHive, HKEY_TO_HCI(hKey)))
 
 PVOID
 NTAPI
@@ -37,9 +49,7 @@ CmpAllocate(
     IN ULONG Tag)
 {
     UNREFERENCED_PARAMETER(Paged);
-    UNREFERENCED_PARAMETER(Tag);
-
-    return FrLdrTempAlloc(Size, Tag);
+    return FrLdrHeapAlloc(Size, Tag);
 }
 
 VOID
@@ -49,7 +59,7 @@ CmpFree(
     IN ULONG Quota)
 {
     UNREFERENCED_PARAMETER(Quota);
-    FrLdrTempFree(Ptr, 0);
+    FrLdrHeapFree(Ptr, 0);
 }
 
 BOOLEAN
@@ -58,12 +68,13 @@ RegImportBinaryHive(
     _In_ ULONG ChunkSize)
 {
     NTSTATUS Status;
+    PCM_KEY_NODE KeyNode;
 
     TRACE("RegImportBinaryHive(%p, 0x%lx)\n", ChunkBase, ChunkSize);
 
     /* Allocate and initialize the hive */
-    CmHive = CmpAllocate(sizeof(CMHIVE), FALSE, 'eviH');
-    Status = HvInitialize(&CmHive->Hive,
+    CmSystemHive = FrLdrTempAlloc(sizeof(CMHIVE), 'eviH');
+    Status = HvInitialize(GET_HHIVE(CmSystemHive),
                           HINIT_FLAT, // HINIT_MEMORY_INPLACE
                           0,
                           0,
@@ -79,113 +90,59 @@ RegImportBinaryHive(
     if (!NT_SUCCESS(Status))
     {
         ERR("Corrupted hive %p!\n", ChunkBase);
-        CmpFree(CmHive, 0);
+        FrLdrTempFree(CmSystemHive, 'eviH');
         return FALSE;
     }
 
     /* Save the root key node */
-    RootKeyNode = (PCM_KEY_NODE)HvGetCell(&CmHive->Hive, CmHive->Hive.BaseBlock->RootCell);
+    SystemHive = GET_HHIVE(CmSystemHive);
+    SystemRootCell = SystemHive->BaseBlock->RootCell;
+    ASSERT(SystemRootCell != HCELL_NIL);
 
-    TRACE("RegImportBinaryHive done\n");
+    /* Verify it is accessible */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(SystemHive, SystemRootCell);
+    ASSERT(KeyNode);
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+    HvReleaseCell(SystemHive, SystemRootCell);
+
     return TRUE;
 }
 
-LONG
+BOOLEAN
 RegInitCurrentControlSet(
     _In_ BOOLEAN LastKnownGood)
 {
-    WCHAR ControlSetKeyName[80];
-    HKEY SelectKey;
-    HKEY SystemKey;
-    ULONG CurrentSet = 0;
-    ULONG DefaultSet = 0;
-    ULONG LastKnownGoodSet = 0;
-    ULONG DataSize;
-    LONG Error;
+    UNICODE_STRING ControlSetName;
+    HCELL_INDEX ControlCell;
+    PCM_KEY_NODE KeyNode;
+    BOOLEAN AutoSelect;
 
     TRACE("RegInitCurrentControlSet\n");
 
-    Error = RegOpenKey(NULL,
-                       L"\\Registry\\Machine\\SYSTEM\\Select",
-                       &SelectKey);
-    if (Error != ERROR_SUCCESS)
+    /* Choose which control set to open and set it as the new "Current" */
+    RtlInitUnicodeString(&ControlSetName,
+                         LastKnownGood ? L"LastKnownGood"
+                                       : L"Default");
+
+    ControlCell = CmpFindControlSet(SystemHive,
+                                    SystemRootCell,
+                                    &ControlSetName,
+                                    &AutoSelect);
+    if (ControlCell == HCELL_NIL)
     {
-        ERR("RegOpenKey('SYSTEM\\Select') failed (Error %lu)\n", Error);
-        return Error;
+        ERR("CmpFindControlSet('%wZ') failed\n", &ControlSetName);
+        return FALSE;
     }
 
-    DataSize = sizeof(ULONG);
-    Error = RegQueryValue(SelectKey,
-                          L"Default",
-                          NULL,
-                          (PUCHAR)&DefaultSet,
-                          &DataSize);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegQueryValue('Default') failed (Error %lu)\n", Error);
-        RegCloseKey(SelectKey);
-        return Error;
-    }
+    CurrentControlSetKey = HCI_TO_HKEY(ControlCell);
 
-    DataSize = sizeof(ULONG);
-    Error = RegQueryValue(SelectKey,
-                          L"LastKnownGood",
-                          NULL,
-                          (PUCHAR)&LastKnownGoodSet,
-                          &DataSize);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegQueryValue('LastKnownGood') failed (Error %lu)\n", Error);
-        RegCloseKey(SelectKey);
-        return Error;
-    }
+    /* Verify it is accessible */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(SystemHive, ControlCell);
+    ASSERT(KeyNode);
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+    HvReleaseCell(SystemHive, ControlCell);
 
-    RegCloseKey(SelectKey);
-
-    CurrentSet = (LastKnownGood) ? LastKnownGoodSet : DefaultSet;
-    wcscpy(ControlSetKeyName, L"ControlSet");
-    switch(CurrentSet)
-    {
-        case 1:
-            wcscat(ControlSetKeyName, L"001");
-            break;
-        case 2:
-            wcscat(ControlSetKeyName, L"002");
-            break;
-        case 3:
-            wcscat(ControlSetKeyName, L"003");
-            break;
-        case 4:
-            wcscat(ControlSetKeyName, L"004");
-            break;
-        case 5:
-            wcscat(ControlSetKeyName, L"005");
-            break;
-    }
-
-    Error = RegOpenKey(NULL,
-                       L"\\Registry\\Machine\\SYSTEM",
-                       &SystemKey);
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegOpenKey('SYSTEM') failed (Error %lu)\n", Error);
-        return Error;
-    }
-
-    Error = RegOpenKey(SystemKey,
-                       ControlSetKeyName,
-                       &CurrentControlSetKey);
-
-    RegCloseKey(SystemKey);
-
-    if (Error != ERROR_SUCCESS)
-    {
-        ERR("RegOpenKey('%S') failed (Error %lu)\n", ControlSetKeyName, Error);
-        return Error;
-    }
-
-    TRACE("RegInitCurrentControlSet done\n");
-    return ERROR_SUCCESS;
+    return TRUE;
 }
 
 static
@@ -229,6 +186,7 @@ GetNextPathElement(
     return TRUE;
 }
 
+#if 0
 LONG
 RegEnumKey(
     _In_ HKEY Key,
@@ -237,7 +195,7 @@ RegEnumKey(
     _Inout_ PULONG NameSize,
     _Out_opt_ PHKEY SubKey)
 {
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = GET_HHIVE_FROM_HKEY(Key);
     PCM_KEY_NODE KeyNode, SubKeyNode;
     HCELL_INDEX CellIndex;
     USHORT NameLength;
@@ -246,7 +204,8 @@ RegEnumKey(
           Key, Index, Name, NameSize, NameSize ? *NameSize : 0);
 
     /* Get the key node */
-    KeyNode = (PCM_KEY_NODE)Key;
+    KeyNode = GET_CM_KEY_NODE(Hive, Key);
+    ASSERT(KeyNode);
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     CellIndex = CmpFindSubKeyByNumber(Hive, KeyNode, Index);
@@ -254,8 +213,10 @@ RegEnumKey(
     {
         TRACE("RegEnumKey index out of bounds (%d) in key (%.*s)\n",
               Index, KeyNode->NameLength, KeyNode->Name);
+        HvReleaseCell(Hive, HKEY_TO_HCI(Key));
         return ERROR_NO_MORE_ITEMS;
     }
+    HvReleaseCell(Hive, HKEY_TO_HCI(Key));
 
     /* Get the value cell */
     SubKeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
@@ -288,16 +249,15 @@ RegEnumKey(
 
     *NameSize = NameLength + sizeof(WCHAR);
 
-    /**/HvReleaseCell(Hive, CellIndex);/**/
+    HvReleaseCell(Hive, CellIndex);
 
     if (SubKey != NULL)
-        *SubKey = (HKEY)SubKeyNode;
-    // else
-        // RegCloseKey((HKEY)SubKeyNode);
+        *SubKey = HCI_TO_HKEY(CellIndex);
 
     TRACE("RegEnumKey done -> %u, '%.*S'\n", *NameSize, *NameSize, Name);
     return ERROR_SUCCESS;
 }
+#endif
 
 LONG
 RegOpenKey(
@@ -307,7 +267,7 @@ RegOpenKey(
 {
     UNICODE_STRING RemainingPath, SubKeyName;
     UNICODE_STRING CurrentControlSet = RTL_CONSTANT_STRING(L"CurrentControlSet");
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = (ParentKey ? GET_HHIVE_FROM_HKEY(ParentKey) : GET_HHIVE(CmSystemHive));
     PCM_KEY_NODE KeyNode;
     HCELL_INDEX CellIndex;
 
@@ -316,11 +276,8 @@ RegOpenKey(
     /* Initialize the remaining path name */
     RtlInitUnicodeString(&RemainingPath, KeyName);
 
-    /* Get the parent key node */
-    KeyNode = (PCM_KEY_NODE)ParentKey;
-
     /* Check if we have a parent key */
-    if (KeyNode == NULL)
+    if (ParentKey == NULL)
     {
         UNICODE_STRING SubKeyName1, SubKeyName2, SubKeyName3;
         UNICODE_STRING RegistryPath = RTL_CONSTANT_STRING(L"Registry");
@@ -358,13 +315,16 @@ RegOpenKey(
         }
 
         /* Use the root key */
-        KeyNode = RootKeyNode;
+        CellIndex = SystemRootCell;
+    }
+    else
+    {
+        /* Use the parent key */
+        CellIndex = HKEY_TO_HCI(ParentKey);
     }
 
-    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
-
     /* Check if this is the root key */
-    if (KeyNode == RootKeyNode)
+    if (CellIndex == SystemRootCell)
     {
         UNICODE_STRING TempPath = RemainingPath;
 
@@ -375,20 +335,29 @@ RegOpenKey(
         if (RtlEqualUnicodeString(&SubKeyName, &CurrentControlSet, TRUE))
         {
             /* Use the CurrentControlSetKey and update the remaining path */
-            KeyNode = (PCM_KEY_NODE)CurrentControlSetKey;
+            CellIndex = HKEY_TO_HCI(CurrentControlSetKey);
             RemainingPath = TempPath;
         }
     }
+
+    /* Get the key node */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
+    ASSERT(KeyNode);
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     TRACE("RegOpenKey: RemainingPath '%wZ'\n", &RemainingPath);
 
     /* Loop while there are path elements */
     while (GetNextPathElement(&SubKeyName, &RemainingPath))
     {
+        HCELL_INDEX NextCellIndex;
+
         TRACE("RegOpenKey: next element '%wZ'\n", &SubKeyName);
 
         /* Get the next sub key */
-        CellIndex = CmpFindSubKeyByName(Hive, KeyNode, &SubKeyName);
+        NextCellIndex = CmpFindSubKeyByName(Hive, KeyNode, &SubKeyName);
+        HvReleaseCell(Hive, CellIndex);
+        CellIndex = NextCellIndex;
         if (CellIndex == HCELL_NIL)
         {
             WARN("Did not find sub key '%wZ' (full: %S)\n", &SubKeyName, KeyName);
@@ -398,11 +367,12 @@ RegOpenKey(
         /* Get the found key */
         KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CellIndex);
         ASSERT(KeyNode);
+        ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
     }
 
-    *Key = (HKEY)KeyNode;
+    HvReleaseCell(Hive, CellIndex);
+    *Key = HCI_TO_HKEY(CellIndex);
 
-    TRACE("RegOpenKey done\n");
     return ERROR_SUCCESS;
 }
 
@@ -452,7 +422,7 @@ RegQueryValue(
     _Out_opt_ PUCHAR Data,
     _Inout_opt_ PULONG DataSize)
 {
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = GET_HHIVE_FROM_HKEY(Key);
     PCM_KEY_NODE KeyNode;
     PCM_KEY_VALUE ValueCell;
     HCELL_INDEX CellIndex;
@@ -462,7 +432,8 @@ RegQueryValue(
           Key, ValueName, Type, Data, DataSize);
 
     /* Get the key node */
-    KeyNode = (PCM_KEY_NODE)Key;
+    KeyNode = GET_CM_KEY_NODE(Hive, Key);
+    ASSERT(KeyNode);
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     /* Initialize value name string */
@@ -472,8 +443,10 @@ RegQueryValue(
     {
         TRACE("RegQueryValue value not found in key (%.*s)\n",
               KeyNode->NameLength, KeyNode->Name);
+        HvReleaseCell(Hive, HKEY_TO_HCI(Key));
         return ERROR_FILE_NOT_FOUND;
     }
+    HvReleaseCell(Hive, HKEY_TO_HCI(Key));
 
     /* Get the value cell */
     ValueCell = (PCM_KEY_VALUE)HvGetCell(Hive, CellIndex);
@@ -483,7 +456,6 @@ RegQueryValue(
 
     HvReleaseCell(Hive, CellIndex);
 
-    TRACE("RegQueryValue success\n");
     return ERROR_SUCCESS;
 }
 
@@ -503,7 +475,7 @@ RegEnumValue(
     _Out_opt_ PUCHAR Data,
     _Inout_opt_ PULONG DataSize)
 {
-    PHHIVE Hive = &CmHive->Hive;
+    PHHIVE Hive = GET_HHIVE_FROM_HKEY(Key);
     PCM_KEY_NODE KeyNode;
     PCELL_DATA ValueListCell;
     PCM_KEY_VALUE ValueCell;
@@ -513,7 +485,8 @@ RegEnumValue(
           Key, Index, ValueName, NameSize, Type, Data, DataSize, *DataSize);
 
     /* Get the key node */
-    KeyNode = (PCM_KEY_NODE)Key;
+    KeyNode = GET_CM_KEY_NODE(Hive, Key);
+    ASSERT(KeyNode);
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
     /* Check if the index is valid */
@@ -522,6 +495,7 @@ RegEnumValue(
         (Index >= KeyNode->ValueList.Count))
     {
         ERR("RegEnumValue: index invalid\n");
+        HvReleaseCell(Hive, HKEY_TO_HCI(Key));
         return ERROR_NO_MORE_ITEMS;
     }
 
@@ -563,6 +537,7 @@ RegEnumValue(
 
     HvReleaseCell(Hive, ValueListCell->KeyList[Index]);
     HvReleaseCell(Hive, KeyNode->ValueList.List);
+    HvReleaseCell(Hive, HKEY_TO_HCI(Key));
 
     TRACE("RegEnumValue done -> %u, '%.*S'\n", *NameSize, *NameSize, ValueName);
     return ERROR_SUCCESS;

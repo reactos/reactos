@@ -114,13 +114,26 @@ NtUserCallNoParam(DWORD Routine)
             break;
         }
 
+        case NOPARAM_ROUTINE_GETIMESHOWSTATUS:
+            Result = !!gfIMEShowStatus;
+            break;
+
         /* this is a ReactOS only case and is needed for gui-on-demand */
         case NOPARAM_ROUTINE_ISCONSOLEMODE:
             Result = (ScreenDeviceContext == NULL);
             break;
 
         case NOPARAM_ROUTINE_UPDATEPERUSERIMMENABLING:
-            gpsi->dwSRVIFlags |= SRVINFO_IMM32; // Always set.
+            // TODO: This should also check the registry!
+            // see https://www.pctipsbox.com/fix-available-for-ie7-memory-leaks-on-xp-sp3/ for more information
+            if (NLS_MB_CODE_PAGE_TAG)
+            {
+                gpsi->dwSRVIFlags |= SRVINFO_IMM32;
+            }
+            else
+            {
+                gpsi->dwSRVIFlags &= ~SRVINFO_IMM32;
+            }
             Result = TRUE; // Always return TRUE.
             break;
 
@@ -895,11 +908,10 @@ NtUserCallHwndParamLock(
 
     switch (Routine)
     {
-        case X_ROUTINE_IMESHOWSTATUSCHANGE:
-        {
-            // TODO:
+        case TWOPARAM_ROUTINE_IMESHOWSTATUSCHANGE:
+            Ret = IntBroadcastImeShowStatusChange(Window, !!Param);
             break;
-        }
+
         case TWOPARAM_ROUTINE_VALIDATERGN:
         {
             PREGION Rgn = REGION_LockRgn((HRGN)Param);

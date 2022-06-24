@@ -630,6 +630,8 @@ VideoPortInitWin32kCallbacks(
     _In_ ULONG BufferLength,
     _Out_ PULONG_PTR Information)
 {
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+
     *Information = sizeof(VIDEO_WIN32K_CALLBACKS);
     if (BufferLength < sizeof(VIDEO_WIN32K_CALLBACKS))
     {
@@ -643,7 +645,7 @@ VideoPortInitWin32kCallbacks(
 
     /* Return reasonable values to Win32k */
     Win32kCallbacks->bACPI = FALSE;
-    Win32kCallbacks->pPhysDeviceObject = DeviceObject;
+    Win32kCallbacks->pPhysDeviceObject = DeviceExtension->PhysicalDeviceObject;
     Win32kCallbacks->DualviewFlags = 0;
 
     return STATUS_SUCCESS;
@@ -785,6 +787,11 @@ IntVideoPortDispatchDeviceControl(
         case IOCTL_VIDEO_QUERY_DISPLAY_BRIGHTNESS:
         case IOCTL_VIDEO_SET_DISPLAY_BRIGHTNESS:
             WARN_(VIDEOPRT, "- IOCTL_VIDEO_*_BRIGHTNESS are UNIMPLEMENTED!\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case IOCTL_VIDEO_ENUM_MONITOR_PDO:
+            WARN_(VIDEOPRT, "- IOCTL_VIDEO_ENUM_MONITOR_PDO is UNIMPLEMENTED!\n");
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 

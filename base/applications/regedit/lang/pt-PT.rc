@@ -14,7 +14,7 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "&Arquivo"
+    POPUP "&Ficheiro"
     BEGIN
         MENUITEM "Sai&r", ID_REGISTRY_EXIT
     END
@@ -28,14 +28,14 @@ IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Registo"
     BEGIN
-        MENUITEM "&Importar arquivo do Registo...", ID_REGISTRY_IMPORTREGISTRYFILE
-        MENUITEM "&Exportar arquivo do Registo...", ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Importar ficheiro de Registo...", ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Exportar ficheiro de Registo...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Load Hive...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Unload Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Carregar ramo de registo...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Descarregar ramo de registo...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Ligar Registo da rede...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "&Desligar Registo da rede...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "&Ligar ao Registo de rede...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "&Desligar do Registo de rede...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Im&primir...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -49,24 +49,24 @@ BEGIN
         BEGIN
             MENUITEM "&Chave", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "Valor &Texto", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valor da &cadeia", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valor &Binário", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "Valor &Multi-String", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "Valor &Expand. String", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Valor &Multi-cadeia", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Valor c&adeia expansível", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "&Permissões...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Excluir\tDel", ID_EDIT_DELETE
-        MENUITEM "&Renomear", ID_EDIT_RENAME
+        MENUITEM "&Mudar o nome", ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Copiar nome da chave", ID_EDIT_COPYKEYNAME
+        MENUITEM "&Copiar nome de chave", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
         MENUITEM "&Localizar...\tCtrl+F", ID_EDIT_FIND
-        MENUITEM "L&ocalizar próxima\tF3", ID_EDIT_FINDNEXT
+        MENUITEM "L&ocalizar seguinte\tF3", ID_EDIT_FINDNEXT
     END
-    POPUP "E&xibir"
+    POPUP "&Ver"
     BEGIN
         MENUITEM "&Barra de status", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
@@ -81,9 +81,9 @@ BEGIN
     END
     POPUP "Aj&uda"
     BEGIN
-        MENUITEM "&Topics da Ajuda", ID_HELP_HELPTOPICS
+        MENUITEM "&Tópicos da Ajuda", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Sobre o Editor do Registo", ID_HELP_ABOUT
+        MENUITEM "&Acerca do Editor de Registo", ID_HELP_ABOUT
     END
 END
 
@@ -95,7 +95,7 @@ BEGIN
         MENUITEM "Modificar dados binários", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
         MENUITEM "&Excluir\tDel", ID_EDIT_DELETE
-        MENUITEM "&Renomear", ID_EDIT_RENAME
+        MENUITEM "&Mudar o nome", ID_EDIT_RENAME
     END
     POPUP ""
     BEGIN
@@ -103,11 +103,11 @@ BEGIN
         BEGIN
             MENUITEM "&Chave", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "Valor &Texto", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valor da &cadeia", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valor &Binário", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "Valor &Multi-String", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "valor &Expand String", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Valor &Multi-cadeia", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Valor c&adeia expansível", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
     END
     POPUP ""
@@ -117,16 +117,16 @@ BEGIN
         BEGIN
             MENUITEM "&Chave", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&String Value", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binary Value", ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD Value", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "Valor &Multi-String", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "Valor &Expand String", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Valor da &cadeia", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valor &Binário", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Valor &DWORD", ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "Valor &Multi-cadeia", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Valor c&adeia expansível", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Localizar...", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Apagar", ID_TREE_DELETE
-        MENUITEM "&Renomear", ID_TREE_RENAME
+        MENUITEM "&Eliminar", ID_TREE_DELETE
+        MENUITEM "&Mudar o nome", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportar", ID_TREE_EXPORT
         MENUITEM "&Permissões...", ID_TREE_PERMISSIONS
@@ -139,14 +139,14 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Exportar", ID_TREE_EXPORT
         MENUITEM SEPARATOR
-        MENUITEM "Unload Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Descarregar ramo de registo...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN
         MENUITEM "C&ortar", ID_HEXEDIT_CUT
         MENUITEM "&Copiar", ID_HEXEDIT_COPY
         MENUITEM "&Colar", ID_HEXEDIT_PASTE
-        MENUITEM "&Apagar", ID_HEXEDIT_DELETE
+        MENUITEM "&Excluir", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
         MENUITEM "Seleccionar &Tudo", ID_HEXEDIT_SELECT_ALL
     END
@@ -169,26 +169,26 @@ END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit Multi-String"
+CAPTION "Editar Multi-Cadeia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Valor &nome:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Nome do valor:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "&Valor dados:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "&Dados do valor:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
              ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
-    PUSHBUTTON "Cancearl", IDCANCEL, 196, 154, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 196, 154, 50, 14
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit Binary Value"
+CAPTION "Editar valor binário"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Valor &nome:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Nome do valor:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "&Valor dados:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "&Dados do valor:", IDC_STATIC, 6, 35, 161, 8
     CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
     DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 196, 154, 50, 14
@@ -196,12 +196,12 @@ END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit DWORD"
+CAPTION "Editar valor DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Valor &nome:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Nome do valor:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "&Valor dados:", IDC_STATIC, 6, 35, 161, 8
+    LTEXT "&Dados do valor:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
     GROUPBOX "Base", IDC_STATIC, 130, 35, 116, 39
     AUTORADIOBUTTON "&Hexadecimal", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
@@ -212,7 +212,7 @@ END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resource List"
+CAPTION "Lista de recursos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
@@ -223,39 +223,39 @@ END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resources"
+CAPTION "Recursos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
     CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
-    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    LTEXT "Interrupções:", IDC_STATIC, 10, 48, 35, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "Memoria:", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
-    LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
+    LTEXT "Portas:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "Dados específicos do dispositivo:", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
-    GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
-    LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
-    LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Device exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
+    GROUPBOX "Utilização", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "Indeterminado", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "Partilhado", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "Exclusivo do dispositivo", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "Exclusivo do controlador", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "Tipo de Interface:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "Bus número:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
-    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
+    RTEXT "Versão:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
+    RTEXT "Revisão:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
     DEFPUSHBUTTON "OK", IDOK, 92, 263, 40, 14
-    PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+    PUSHBUTTON "&Dados...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
 END
 
 /* String Tables */
@@ -278,7 +278,7 @@ STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU "Contém comandos para trabalhar com o Registo inteiro."
     ID_EDIT_MENU "Contém comandos para edição de valores ou chaves."
-    ID_VIEW_MENU "Contém comandos para personalização da janela do Registro."
+    ID_VIEW_MENU "Contém comandos para personalização da janela do Registo."
     ID_FAVOURITES_MENU "Contém comandos para acessar chaves frequentemente usadas."
     ID_HELP_MENU "Contém comandos para exibição da ajuda e informações sobre o Editor do Registo."
     ID_EDIT_NEW_MENU "Contém comandos para criação de novas chaves ou valores"
@@ -291,10 +291,10 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Adiciona um novo valor texto."
     ID_EDIT_NEW_BINARYVALUE "Adiciona um novo valor binário."
     ID_EDIT_NEW_DWORDVALUE "Adiciona um novo valor DWORD."
-    ID_REGISTRY_IMPORTREGISTRYFILE "Importa um arquivo texto para o registro."
-    ID_REGISTRY_EXPORTREGISTRYFILE "Exporta todo ou parte do registo para um arquivo texto."
-    ID_REGISTRY_LOADHIVE "Carrega um arquivo de secção no registo"
-    ID_REGISTRY_UNLOADHIVE "Descarrega um arquivo de seção no registro"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Importa um ficheiro de texto para o registo."
+    ID_REGISTRY_EXPORTREGISTRYFILE "Exporta todo ou parte do registo para um ficheiro de texto."
+    ID_REGISTRY_LOADHIVE "Carrega um ficheiro de secção no registo"
+    ID_REGISTRY_UNLOADHIVE "Descarrega um ficheiro de secção no registo"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Liga a um registo num computador remoto."
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Desliga um registo de um computador remoto."
     ID_REGISTRY_PRINT "Imprime todo ou parte do registo."
@@ -307,12 +307,12 @@ BEGIN
     ID_REGISTRY_EXIT "Encerra o Editor do Registo."
     ID_FAVOURITES_ADDTOFAVOURITES "Adiciona chaves na lista de favoritos."
     ID_FAVOURITES_REMOVEFAVOURITE "Remove chaves da lista de favoritos."
-    ID_VIEW_STATUSBAR "Mostra ou oculta a barra de status."
+    ID_VIEW_STATUSBAR "Mostra ou oculta a barra de estado."
     ID_VIEW_SPLIT "Altera a posição da divisão entre os painéis."
     ID_VIEW_REFRESH "Actualiza a janela."
     ID_EDIT_DELETE "Exclui a seleccão."
     ID_EDIT_RENAME "Renomeia a seleccão."
-    ID_EDIT_COPYKEYNAME "Copia o nome da chave seleccionada para a Área de transferência."
+    ID_EDIT_COPYKEYNAME "Copia o nome da chave seleccionada para a área de transferência."
     ID_EDIT_FIND "Localiza um texto numa chave, valor ou dado."
     ID_EDIT_FINDNEXT "Localiza a próxima ocorrência do texto especificado na pesquisa anterior."
 END
@@ -325,19 +325,19 @@ BEGIN
     IDS_BAD_VALUE "Não pode perguntar o valor '%s'"
     IDS_UNSUPPORTED_TYPE "Não pode editar chaves deste tipo (%ld)"
     IDS_TOO_BIG_VALUE "Valor é muito grande (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "Os dados do tipo REG_MULTI_SZ não podem conter strings vazias.\nAs strings vazias foram removidas da lista."
+    IDS_MULTI_SZ_EMPTY_STRING "Os dados do tipo REG_MULTI_SZ não podem conter cadeias vazias.\nAs cadeias vazias foram removidas da lista."
     IDS_QUERY_DELETE_KEY_ONE "Tem certeza que deseja excluir esta chave?"
     IDS_QUERY_DELETE_KEY_MORE "Tem certeza que deseja excluir estas chaves?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Confirme exclusão da chave"
     IDS_QUERY_DELETE_ONE "Tem certeza que deseja excluir este valor?"
-    IDS_QUERY_DELETE_MORE "Tem certeza que deseja excluir estes valores??"
+    IDS_QUERY_DELETE_MORE "Tem certeza que deseja excluir estes valores?"
     IDS_QUERY_DELETE_CONFIRM "Confirme a exclusão do Valor"
     IDS_ERR_DELVAL_CAPTION "Erro ao apagar Valor"
     IDS_ERR_DELETEVALUE "Não foi possível apagar todos os valores especificados!"
     IDS_ERR_RENVAL_CAPTION "Erro ao Renomear Valor"
     IDS_ERR_RENVAL_TOEMPTY "Não foi possível renomear %s. O nome do valor especificado está vazio. Tente outro nome."
     IDS_QUERY_IMPORT_HIVE_CAPTION "Confirme a restauração da chave"
-    IDS_QUERY_IMPORT_HIVE_MSG "A chave será restaurada no topo da chave atualmente selecionada.\nTodos os valores e subchaves desta chave serão excluídos.\nDeseja continuar a operação?"
+    IDS_QUERY_IMPORT_HIVE_MSG "A chave será restaurada no topo da chave actualmente seleccionada.\nTodos os valores e subchaves desta chave serão excluídos.\nDeseja continuar a operação?"
     IDS_NEW_KEY "Nova chave #%d"
     IDS_NEW_VALUE "Novo valor #%d"
 END
@@ -345,7 +345,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY "(valor binário de comprimento zero)"
-    IDS_DEFAULT_VALUE_NAME "(Por default)"
+    IDS_DEFAULT_VALUE_NAME "(Predefinição)"
     IDS_VALUE_NOT_SET "(valor não atribuido)"
     IDS_UNKNOWN_TYPE "tipo desconhecido: (0x%lx)"
     IDS_MY_COMPUTER "O meu computador"
@@ -358,12 +358,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE "Arquivo de registo"
-    IDS_FLT_REGFILES "Arquivos de registo (*.reg)"
+    IDS_FLT_REGFILE "Ficheiro de registo"
+    IDS_FLT_REGFILES "Ficheiro de registo (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "Arquivo de secção do registo (*.*)"
+    IDS_FLT_HIVFILES "Ficheiro de secção do registo (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
-    IDS_FLT_REGEDIT4 "Win9x/NT4 Arquivos de registo (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4 "Win9x/NT4 Ficheiros de registo (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "Todos os ficheiros (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
@@ -389,7 +389,7 @@ STRINGTABLE
 BEGIN
     IDS_INHERIT_THISKEYONLY "Sómente esta chave"
     IDS_INHERIT_THISKEYANDSUBKEYS "Esta chave e sub-chave"
-    IDS_INHERIT_SUBKEYSONLY "Somente sub-chaves"
+    IDS_INHERIT_SUBKEYSONLY "Sómente sub-chaves"
 END
 
 STRINGTABLE
@@ -404,8 +404,8 @@ STRINGTABLE
 BEGIN
     IDS_IMPORT_PROMPT "Adicionar informações pode, inadvertidamente, alterar ou excluir valores e fazer com que os componentes parem de funcionar correctamente.\nSe não confiar na fonte dessas informações em '%s', não as adicione ao registro.\n\nTem certeza de que deseja continuar ?"
     IDS_IMPORT_OK "As chaves e valores contidos em '%s' foram adicionados com sucesso ao registo."
-    IDS_IMPORT_ERROR "Não é possível importar '%s': Erro ao abrir o arquivo. Pode haver um erro no sistema de ficheiros  ou o arquivo pode não existir."
-    IDS_EXPORT_ERROR "Não é possível exportar '%s': Erro ao criar ou gravar no arquivo. Pode haver um erro no disco ou no sistema de ficheiros."
+    IDS_IMPORT_ERROR "Não é possível importar '%s': Erro ao abrir o ficheiro. Pode haver um erro no sistema de ficheiros  ou o arquivo pode não existir."
+    IDS_EXPORT_ERROR "Não é possível exportar '%s': Erro ao criar ou gravar no ficheiro. Pode haver um erro no disco ou no sistema de ficheiros."
 END
 
 STRINGTABLE

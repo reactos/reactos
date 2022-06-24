@@ -45,30 +45,43 @@ void CInstalledApplicationInfo::EnsureDetailsLoaded()
         GetApplicationRegString(L"Contact", szContact);
         GetApplicationRegString(L"URLUpdateInfo", szURLUpdateInfo);
         GetApplicationRegString(L"URLInfoAbout", szURLInfoAbout);
-        if (GetApplicationRegString(L"InstallDate", szInstallDate) == FALSE)
+
+        DWORD dwInstallTimeStamp;
+        SYSTEMTIME InstallLocalTime;
+        if (GetApplicationRegString(L"InstallDate", szInstallDate))
         {
-            // It might be a DWORD (Unix timestamp). try again.
-            DWORD dwInstallTimeStamp;
-            if (GetApplicationRegDword(L"InstallDate", &dwInstallTimeStamp))
+            ZeroMemory(&InstallLocalTime, sizeof(InstallLocalTime));
+            // Check if we have 8 characters to parse the datetime.
+            // Maybe other formats exist as well?
+            szInstallDate = szInstallDate.Trim();
+            if (szInstallDate.GetLength() == 8)
             {
-                FILETIME InstallFileTime;
-                SYSTEMTIME InstallSystemTime, InstallLocalTime;
-
-                UnixTimeToFileTime(dwInstallTimeStamp, &InstallFileTime);
-                FileTimeToSystemTime(&InstallFileTime, &InstallSystemTime);
-
-                // convert to localtime
-                SystemTimeToTzSpecificLocalTime(NULL, &InstallSystemTime, &InstallLocalTime);
-
-                // convert to readable date string
-                int cchTimeStrLen = GetDateFormatW(LOCALE_USER_DEFAULT, 0, &InstallLocalTime, NULL, 0, 0);
-
-                GetDateFormatW(
-                    LOCALE_USER_DEFAULT, // use default locale for current user
-                    0, &InstallLocalTime, NULL, szInstallDate.GetBuffer(cchTimeStrLen), cchTimeStrLen);
-                szInstallDate.ReleaseBuffer();
+                InstallLocalTime.wYear = wcstol(szInstallDate.Left(4).GetString(), NULL, 10);
+                InstallLocalTime.wMonth = wcstol(szInstallDate.Mid(4, 2).GetString(), NULL, 10);
+                InstallLocalTime.wDay = wcstol(szInstallDate.Mid(6, 2).GetString(), NULL, 10);
             }
         }
+        // It might be a DWORD (Unix timestamp). try again.
+        else if (GetApplicationRegDword(L"InstallDate", &dwInstallTimeStamp))
+        {
+            FILETIME InstallFileTime;
+            SYSTEMTIME InstallSystemTime;
+
+            UnixTimeToFileTime(dwInstallTimeStamp, &InstallFileTime);
+            FileTimeToSystemTime(&InstallFileTime, &InstallSystemTime);
+
+            // convert to localtime
+            SystemTimeToTzSpecificLocalTime(NULL, &InstallSystemTime, &InstallLocalTime);
+        }
+
+        // convert to readable date string
+        int cchTimeStrLen = GetDateFormatW(LOCALE_USER_DEFAULT, 0, &InstallLocalTime, NULL, 0, 0);
+
+        GetDateFormatW(
+            LOCALE_USER_DEFAULT, // use default locale for current user
+            0, &InstallLocalTime, NULL, szInstallDate.GetBuffer(cchTimeStrLen), cchTimeStrLen);
+        szInstallDate.ReleaseBuffer();
+
         GetApplicationRegString(L"InstallLocation", szInstallLocation);
         GetApplicationRegString(L"InstallSource", szInstallSource);
         DWORD dwWindowsInstaller = 0;

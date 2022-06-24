@@ -139,7 +139,7 @@ BEGIN
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
     LTEXT "תצוגה:", 1820, 3, 107, 70, 9
     LTEXT "<none>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
-    GROUPBOX "גודל תצוגה:", 1818, 3, 127, 115, 43
+    GROUPBOX "גודל תצוגה", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
     LTEXT "פחות", 1815, 9, 137, 25, 9, NOT WS_GROUP
     LTEXT "יותר", 1816, 93, 137, 20, 9, NOT WS_GROUP
@@ -156,7 +156,7 @@ CAPTION "כללי"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "תצוגה", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "גודל גופן", -1, 14, 20, 222, 9
+    LTEXT "גודל גופן:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "תאימות", -1, 7, 67, 237, 97

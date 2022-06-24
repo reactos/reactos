@@ -10,14 +10,8 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
 ; Default locale for the keyboard layout
 HKU,".DEFAULT\Keyboard Layout\Preload","1",0x00000000,"00000409"
 
-; Cdfs (ISO96660) filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000000
-
 ; Cdrom class driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Start",0x00010001,0x00000000
-
-; FIXME: Disable NTFS driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Start",0x00010001,0x00000004
 
 ; Reset BootExecute to an empty value: AutoChk should not start in MiniNT mode
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","BootExecute",0x00010000,""

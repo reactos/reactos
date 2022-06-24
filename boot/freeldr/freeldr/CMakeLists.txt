@@ -48,6 +48,7 @@ list(APPEND FREELDR_BOOTLIB_SOURCE
     lib/mm/heap.c)
 
 list(APPEND FREELDR_NTLDR_SOURCE
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
     ntldr/conversion.c
     ntldr/registry.c
     ntldr/winldr.c
@@ -210,7 +211,7 @@ add_library(freeldr_common
     ${FREELDR_NTLDR_SOURCE}
     ${FREELDR_BOOTMGR_SOURCE})
 
-if(USE_CLANG_CL)
+if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # We need to reduce the binary size
     target_compile_options(freeldr_common PRIVATE "/Os")
 endif()
@@ -218,7 +219,7 @@ if(NOT MSVC AND ARCH STREQUAL "i386" AND SARCH STREQUAL "xbox")
   # Prevent a warning when doing a memcmp with address 0
   set_source_files_properties(arch/i386/xbox/xboxmem.c PROPERTIES COMPILE_FLAGS "-Wno-nonnull")
 endif()
-if(ARCH STREQUAL "amd64" AND NOT MSVC)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Prevent using SSE (not support in freeldr)
     target_compile_options(freeldr_common PUBLIC -mno-sse)
 endif()

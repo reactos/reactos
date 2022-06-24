@@ -302,7 +302,7 @@ HalpBorrowTss(VOID)
     // Get the current TSS and its GDT entry
     //
     Tss = Ke386GetTr();
-    TssGdt = &((PKIPCR)KeGetPcr())->GDT[Tss / sizeof(KGDTENTRY)];
+    TssGdt = &KeGetPcr()->GDT[Tss / sizeof(KGDTENTRY)];
 
     //
     // Get the KTSS limit and check if it has IOPM space
@@ -324,7 +324,7 @@ HalpBorrowTss(VOID)
     //
     // Get the "real" TSS
     //
-    TssGdt = &((PKIPCR)KeGetPcr())->GDT[KGDT_TSS / sizeof(KGDTENTRY)];
+    TssGdt = &KeGetPcr()->GDT[KGDT_TSS / sizeof(KGDTENTRY)];
     TssBase = (PKTSS)(ULONG_PTR)(TssGdt->BaseLow |
                                  TssGdt->HighWord.Bytes.BaseMid << 16 |
                                  TssGdt->HighWord.Bytes.BaseHi << 24);
@@ -358,7 +358,7 @@ HalpReturnTss(VOID)
     //
     // Get the original TSS
     //
-    TssGdt = &((PKIPCR)KeGetPcr())->GDT[HalpSavedTss / sizeof(KGDTENTRY)];
+    TssGdt = &KeGetPcr()->GDT[HalpSavedTss / sizeof(KGDTENTRY)];
     TssBase = (PKTSS)(ULONG_PTR)(TssGdt->BaseLow |
                                  TssGdt->HighWord.Bytes.BaseMid << 16 |
                                  TssGdt->HighWord.Bytes.BaseHi << 24);
@@ -670,7 +670,7 @@ HalpBiosDisplayReset(VOID)
     // the cmpxchg8b lock errata. Unprotect them here so we can set our custom
     // invalid op-code handler.
     //
-    IdtPte = HalAddressToPte(((PKIPCR)KeGetPcr())->IDT);
+    IdtPte = HalAddressToPte(KeGetPcr()->IDT);
     RestoreWriteProtection = IdtPte->Write != 0;
     IdtPte->Write = 1;
 

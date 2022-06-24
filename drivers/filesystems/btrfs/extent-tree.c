@@ -1024,7 +1024,7 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, uint64_t address, uint6
                         }
 
                         if (!superseded)
-                            add_checksum_entry(Vcb, address, (ULONG)(size / Vcb->superblock.sector_size), NULL, Irp);
+                            add_checksum_entry(Vcb, address, (ULONG)(size >> Vcb->sector_shift), NULL, Irp);
 
                         return STATUS_SUCCESS;
                     }
@@ -1090,7 +1090,7 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, uint64_t address, uint6
                         }
 
                         if (!superseded)
-                            add_checksum_entry(Vcb, address, (ULONG)(size / Vcb->superblock.sector_size), NULL, Irp);
+                            add_checksum_entry(Vcb, address, (ULONG)(size >> Vcb->sector_shift), NULL, Irp);
 
                         return STATUS_SUCCESS;
                     }
@@ -1296,7 +1296,7 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, uint64_t address, uint6
                 }
 
                 if (!superseded)
-                    add_checksum_entry(Vcb, address, (ULONG)(size / Vcb->superblock.sector_size), NULL, Irp);
+                    add_checksum_entry(Vcb, address, (ULONG)(size >> Vcb->sector_shift), NULL, Irp);
 
                 return STATUS_SUCCESS;
             }
@@ -1379,7 +1379,7 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, uint64_t address, uint6
                 }
 
                 if (!superseded)
-                    add_checksum_entry(Vcb, address, (ULONG)(size / Vcb->superblock.sector_size), NULL, Irp);
+                    add_checksum_entry(Vcb, address, (ULONG)(size >> Vcb->sector_shift), NULL, Irp);
 
                 return STATUS_SUCCESS;
             }
@@ -1505,7 +1505,7 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, uint64_t address, uint6
             }
 
             if (!superseded)
-                add_checksum_entry(Vcb, address, (ULONG)(size / Vcb->superblock.sector_size), NULL, Irp);
+                add_checksum_entry(Vcb, address, (ULONG)(size >> Vcb->sector_shift), NULL, Irp);
 
             return STATUS_SUCCESS;
         }

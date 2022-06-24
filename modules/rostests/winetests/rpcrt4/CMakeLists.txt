@@ -40,11 +40,12 @@ endif()
 
 add_executable(rpcrt4_winetest ${SOURCE})
 
-if(USE_CLANG_CL OR (NOT MSVC))
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(rpcrt4_winetest PRIVATE "-Wno-format")
-    if(USE_CLANG_CL)
-        target_compile_options(rpcrt4_winetest PRIVATE "-Wno-cast-calling-convention")
-    endif()
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(rpcrt4_winetest PRIVATE "-Wno-cast-calling-convention")
 endif()
 
 target_link_libraries(rpcrt4_winetest uuid wine ${PSEH_LIB})

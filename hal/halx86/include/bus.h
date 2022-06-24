@@ -244,21 +244,18 @@ typedef struct _PCI_TYPE0_CFG_CYCLE_BITS
     } u;
 } PCI_TYPE0_CFG_CYCLE_BITS, *PPCI_TYPE0_CFG_CYCLE_BITS;
 
-typedef struct _PCI_TYPE1_CFG_CYCLE_BITS
+typedef union _PCI_TYPE1_CFG_CYCLE_BITS
 {
-    union
+    struct
     {
-        struct
-        {
-            ULONG Reserved1:2;
-            ULONG RegisterNumber:6;
-            ULONG FunctionNumber:3;
-            ULONG DeviceNumber:5;
-            ULONG BusNumber:8;
-            ULONG Reserved2:8;
-        } bits;
-        ULONG AsULONG;
-    } u;
+        ULONG InUse:2;
+        ULONG RegisterNumber:6;
+        ULONG FunctionNumber:3;
+        ULONG DeviceNumber:5;
+        ULONG BusNumber:8;
+        ULONG Reserved2:8;
+    };
+    ULONG AsULONG;
 } PCI_TYPE1_CFG_CYCLE_BITS, *PPCI_TYPE1_CFG_CYCLE_BITS;
 
 typedef struct _ARRAY
@@ -395,6 +392,24 @@ HalpAssignPCISlotResources(
     IN ULONG Slot,
     IN OUT PCM_RESOURCE_LIST *pAllocatedResources
 );
+
+CODE_SEG("INIT")
+ULONG
+HalpPhase0GetPciDataByOffset(
+    _In_ ULONG Bus,
+    _In_ PCI_SLOT_NUMBER PciSlot,
+    _Out_writes_bytes_all_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
+
+CODE_SEG("INIT")
+ULONG
+HalpPhase0SetPciDataByOffset(
+    _In_ ULONG Bus,
+    _In_ PCI_SLOT_NUMBER PciSlot,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
 
 /* NON-LEGACY */
 

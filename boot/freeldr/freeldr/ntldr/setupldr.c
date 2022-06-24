@@ -135,17 +135,22 @@ SetupLdrInitErrataInf(
 }
 
 static VOID
-SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, PCSTR SearchPath)
+SetupLdrScanBootDrivers(
+    _Inout_ PLIST_ENTRY BootDriverListHead,
+    _In_ HINF InfHandle,
+    _In_ PCSTR SearchPath)
 {
     INFCONTEXT InfContext, dirContext;
-    BOOLEAN Success;
     PCSTR Media, DriverName, dirIndex, ImagePath;
-    WCHAR ServiceName[256];
-    WCHAR ImagePathW[256];
+    BOOLEAN Success;
+    WCHAR ImagePathW[MAX_PATH];
+    WCHAR DriverNameW[256];
 
-    /* Open inf section */
+    UNREFERENCED_PARAMETER(SearchPath);
+
+    /* Open INF section */
     if (!InfFindFirstLine(InfHandle, "SourceDisksFiles", NULL, &InfContext))
-        return;
+        goto Quit;
 
     /* Load all listed boot drivers */
     do
@@ -158,30 +163,51 @@ SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, PCSTR Se
                 InfFindFirstLine(InfHandle, "Directories", dirIndex, &dirContext) &&
                 InfGetDataField(&dirContext, 1, &ImagePath))
             {
-                /* Convert name to widechar */
-                swprintf(ServiceName, L"%S", DriverName);
-
                 /* Prepare image path */
-                swprintf(ImagePathW, L"%S", ImagePath);
-                wcscat(ImagePathW, L"\\");
-                wcscat(ImagePathW, ServiceName);
+                RtlStringCbPrintfW(ImagePathW, sizeof(ImagePathW),
+                                   L"%S\\%S", ImagePath, DriverName);
 
-                /* Remove .sys extension */
-                ServiceName[wcslen(ServiceName) - 4] = 0;
+                /* Convert name to unicode and remove .sys extension */
+                RtlStringCbPrintfW(DriverNameW, sizeof(DriverNameW),
+                                   L"%S", DriverName);
+                DriverNameW[wcslen(DriverNameW) - 4] = UNICODE_NULL;
 
                 /* Add it to the list */
                 Success = WinLdrAddDriverToList(BootDriverListHead,
-                                                L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+                                                FALSE,
+                                                DriverNameW,
                                                 ImagePathW,
-                                                ServiceName);
+                                                NULL,
+                                                SERVICE_ERROR_NORMAL,
+                                                -1);
                 if (!Success)
                 {
-                    ERR("Could not add boot driver '%s', '%s'\n", SearchPath, DriverName);
-                    return;
+                    ERR("Could not add boot driver '%s'\n", DriverName);
+                    /* Ignore and continue adding other drivers */
                 }
             }
         }
     } while (InfFindNextLine(&InfContext, &InfContext));
+
+Quit:
+    /* Finally, add the boot filesystem driver to the list */
+    if (BootFileSystem)
+    {
+        TRACE("Adding filesystem driver %S\n", BootFileSystem);
+        Success = WinLdrAddDriverToList(BootDriverListHead,
+                                        FALSE,
+                                        BootFileSystem,
+                                        NULL,
+                                        L"Boot File System",
+                                        SERVICE_ERROR_CRITICAL,
+                                        -1);
+        if (!Success)
+            ERR("Failed to add filesystem driver %S\n", BootFileSystem);
+    }
+    else
+    {
+        TRACE("No required filesystem driver\n");
+    }
 }
 
 

@@ -1,5 +1,5 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
+/* Translation has been changed by Luke Luo 2022 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -34,7 +34,7 @@ STRINGTABLE
 5000, "Modern"
 5001, "视觉样式"
 5002, "ReactOS 基金会"
-5003, "Polar，基于 Win10 的项目"
+5003, "Polar，基于叫 win10 项目"
 5004, "基于 GNU/GPL 3.0，于 2018 年发行"
 5005, "https://reactos.org/"
 5006, "版本 1.0"

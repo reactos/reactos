@@ -67,6 +67,7 @@ TestShellExecuteEx(const WCHAR* Name, BOOL ExpectedResult)
 {
     SHELLEXECUTEINFOW ShellExecInfo;
     BOOL Result;
+
     ZeroMemory(&ShellExecInfo, sizeof(ShellExecInfo));
     ShellExecInfo.cbSize = sizeof(ShellExecInfo);
     ShellExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI;
@@ -74,6 +75,7 @@ TestShellExecuteEx(const WCHAR* Name, BOOL ExpectedResult)
     ShellExecInfo.nShow = SW_SHOWNORMAL;
     ShellExecInfo.lpFile = Name;
     ShellExecInfo.lpDirectory = NULL;
+
     Result = ShellExecuteExW(&ShellExecInfo);
     ok(Result == ExpectedResult, "ShellExecuteEx lpFile %s failed. Error: %lu\n", wine_dbgstr_w(Name), GetLastError());
     if (ShellExecInfo.hProcess)
@@ -209,6 +211,27 @@ static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+static void CleanupNewlyCreatedWindows(void)
+{
+    EnumWindows(EnumWindowsProc, (LPARAM)&s_wi1);
+    for (UINT i1 = 0; i1 < s_wi1.count; ++i1)
+    {
+        BOOL bFound = FALSE;
+        for (UINT i0 = 0; i0 < s_wi0.count; ++i0)
+        {
+            if (s_wi1.phwnd[i1] == s_wi0.phwnd[i0])
+            {
+                bFound = TRUE;
+                break;
+            }
+        }
+        if (!bFound)
+            PostMessageW(s_wi1.phwnd[i1], WM_CLOSE, 0, 0);
+    }
+    free(s_wi1.phwnd);
+    ZeroMemory(&s_wi1, sizeof(s_wi1));
+}
+
 static VOID DoTestEntry(const TEST_ENTRY *pEntry)
 {
     SHELLEXECUTEINFOA info = { sizeof(info) };
@@ -238,24 +261,7 @@ static VOID DoTestEntry(const TEST_ENTRY *pEntry)
 
     WaitForInputIdle(info.hProcess, INFINITE);
 
-    // close newly opened windows
-    EnumWindows(EnumWindowsProc, (LPARAM)&s_wi1);
-    for (UINT i1 = 0; i1 < s_wi1.count; ++i1)
-    {
-        BOOL bFound = FALSE;
-        for (UINT i0 = 0; i0 < s_wi0.count; ++i0)
-        {
-            if (s_wi1.phwnd[i1] == s_wi0.phwnd[i0])
-            {
-                bFound = TRUE;
-                break;
-            }
-        }
-        if (!bFound)
-            PostMessageW(s_wi1.phwnd[i1], WM_CLOSE, 0, 0);
-    }
-    free(s_wi1.phwnd);
-    ZeroMemory(&s_wi1, sizeof(s_wi1));
+    CleanupNewlyCreatedWindows();
 
     if (WaitForSingleObject(info.hProcess, 10 * 1000) == WAIT_TIMEOUT)
     {

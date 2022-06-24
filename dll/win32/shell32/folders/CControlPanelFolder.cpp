@@ -333,7 +333,7 @@ HRESULT WINAPI CControlPanelFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE
         case 0:        /* name */
             result = wcsicmp(pData1->szName + pData1->offsDispName, pData2->szName + pData2->offsDispName);
             break;
-        case 1:        /* comment */
+        case 4:        /* comment */
             result = wcsicmp(pData1->szName + pData1->offsComment, pData2->szName + pData2->offsComment);
             break;
         default:
@@ -581,7 +581,7 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
         {
             case 0:        /* name */
                 return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsDispName);
-            case 1:        /* comment */
+            case 4:        /* comment */
                 return SHSetStrRet(&psd->str, pCPanel->szName + pCPanel->offsComment);
         }
     }

@@ -111,7 +111,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Instalar"
     IDS_TOOLTIP_UNINSTALL "Desinstalar"
     IDS_TOOLTIP_MODIFY "Modificar"
-    IDS_TOOLTIP_SETTINGS "Configurações"
+    IDS_TOOLTIP_SETTINGS "Definições"
     IDS_TOOLTIP_REFRESH "Actualizar"
     IDS_TOOLTIP_UPDATE_DB "Actualizar Base de dados"
     IDS_TOOLTIP_EXIT "Sair"

@@ -55,6 +55,7 @@ DWORD
 ScmCreateSids(VOID)
 {
     SID_IDENTIFIER_AUTHORITY NullAuthority = {SECURITY_NULL_SID_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
     PULONG pSubAuthority;
     ULONG ulLength1 = RtlLengthRequiredSid(1);
@@ -78,7 +79,7 @@ ScmCreateSids(VOID)
         return ERROR_OUTOFMEMORY;
     }
 
-    RtlInitializeSid(pWorldSid, &NullAuthority, 1);
+    RtlInitializeSid(pWorldSid, &WorldAuthority, 1);
     pSubAuthority = RtlSubAuthoritySid(pWorldSid, 0);
     *pSubAuthority = SECURITY_WORLD_RID;
 

@@ -97,6 +97,13 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
         return STATUS_NO_MEMORY;
     }
 
+    Status = PsChargeProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Vad, 'ldaV');
+        return Status;
+    }
+
     /* Success */
     return STATUS_SUCCESS;
 }
@@ -154,6 +161,9 @@ MmDeleteTeb(IN PEPROCESS Process,
 
         /* Remove the VAD */
         ExFreePool(Vad);
+
+        /* Return the quota the VAD used */
+        PsReturnProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
     }
 
     /* Release the address space lock */
@@ -842,7 +852,8 @@ MmCreateTeb(IN PEPROCESS Process,
 #ifdef _M_AMD64
 static
 NTSTATUS
-MiInsertSharedUserPageVad(VOID)
+MiInsertSharedUserPageVad(
+    _In_ PEPROCESS Process)
 {
     PMMVAD_LONG Vad;
     ULONG_PTR BaseAddress;
@@ -889,6 +900,18 @@ MiInsertSharedUserPageVad(VOID)
         ExFreePoolWithTag(Vad, 'ldaV');
         return Status;
     }
+
+    if (Process->QuotaBlock != NULL)
+    {
+        Status = PsChargeProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Ran out of quota.\n");
+            ExFreePoolWithTag(Vad, 'ldaV');
+            return Status;
+        }
+    }
+
 
     /* Success */
     return STATUS_SUCCESS;
@@ -1012,7 +1035,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
 
 #ifdef _M_AMD64
     /* On x64 we need a VAD for the shared user page */
-    Status = MiInsertSharedUserPageVad();
+    Status = MiInsertSharedUserPageVad(Process);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("MiCreateSharedUserPageVad() failed: 0x%lx\n", Status);
@@ -1300,6 +1323,9 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
 
         /* Free the VAD memory */
         ExFreePool(Vad);
+
+        /* Return the quota the VAD used */
+        PsReturnProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
     }
 
     /* Lock the working set */

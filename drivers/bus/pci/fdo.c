@@ -49,6 +49,30 @@ FdoLocateChildDevice(
     return STATUS_UNSUCCESSFUL;
 }
 
+static
+BOOLEAN
+PciIsDebuggingDevice(
+    _In_ ULONG Bus,
+    _In_ PCI_SLOT_NUMBER SlotNumber)
+{
+    ULONG i;
+
+    if (!HasDebuggingDevice)
+        return FALSE;
+
+    for (i = 0; i < RTL_NUMBER_OF(PciDebuggingDevice); ++i)
+    {
+        if (PciDebuggingDevice[i].InUse &&
+            PciDebuggingDevice[i].BusNumber == Bus &&
+            PciDebuggingDevice[i].DeviceNumber == SlotNumber.u.bits.DeviceNumber &&
+            PciDebuggingDevice[i].FunctionNumber == SlotNumber.u.bits.FunctionNumber)
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
 
 static NTSTATUS
 FdoEnumerateDevices(
@@ -92,7 +116,9 @@ FdoEnumerateDevices(
                                  &PciConfig,
                                  PCI_COMMON_HDR_LENGTH);
             DPRINT("Size %lu\n", Size);
-            if (Size < PCI_COMMON_HDR_LENGTH)
+            if (Size != PCI_COMMON_HDR_LENGTH ||
+                PciConfig.VendorID == PCI_INVALID_VENDORID ||
+                PciConfig.VendorID == 0)
             {
                 if (FunctionNumber == 0)
                 {
@@ -111,12 +137,6 @@ FdoEnumerateDevices(
                    PciConfig.VendorID,
                    PciConfig.DeviceID);
 
-            if (PciConfig.VendorID == 0 && PciConfig.DeviceID == 0)
-            {
-                DPRINT("Filter out devices with null vendor and device ID\n");
-                continue;
-            }
-
             Status = FdoLocateChildDevice(&Device, DeviceExtension, SlotNumber, &PciConfig);
             if (!NT_SUCCESS(Status))
             {
@@ -131,6 +151,27 @@ FdoEnumerateDevices(
                               sizeof(PCI_DEVICE));
 
                 Device->BusNumber = DeviceExtension->BusNumber;
+
+                if (PciIsDebuggingDevice(DeviceExtension->BusNumber, SlotNumber))
+                {
+                    Device->IsDebuggingDevice = TRUE;
+
+                    /*
+                     * ReactOS-specific: apply a hack
+                     * to prevent driver installation for the debugging device.
+                     * NOTE: Nothing to do for IEEE 1394 devices; NT5.1 and NT5.2
+                     * support IEEE 1394 debugging.
+                     *
+                     * FIXME: We should set the device problem code
+                     * CM_PROB_USED_BY_DEBUGGER instead.
+                     */
+                    if (PciConfig.BaseClass != PCI_CLASS_SERIAL_BUS_CTLR ||
+                        PciConfig.SubClass != PCI_SUBCLASS_SB_IEEE1394)
+                    {
+                        PciConfig.VendorID = 0xDEAD;
+                        PciConfig.DeviceID = 0xBEEF;
+                    }
+                }
 
                 RtlCopyMemory(&Device->SlotNumber,
                               &SlotNumber,

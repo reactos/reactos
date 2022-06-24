@@ -33,10 +33,18 @@ Author:
 #define IPI_SYNCH_REQUEST       10
 #define MAXIMUM_VECTOR          0x100
 
+//
+// Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
+//
 #define KSEG0_BASE 0x80000000
 
-#define PRCB_MAJOR_VERSION 1
-#define PRCB_BUILD_DEBUG 1
+//
+// PRCB Flags
+//
+#define PRCB_MINOR_VERSION      1
+#define PRCB_MAJOR_VERSION      1
+#define PRCB_BUILD_DEBUG        1
+#define PRCB_BUILD_UNIPROCESSOR 2
 
 #ifndef ROUND_UP
 #define ROUND_UP(x,y) (((x) + ((y)-1)) & ~((y)-1))

@@ -6,7 +6,7 @@ CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Selamat datang di Penuntun Penyetelan ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS belum bisa dipasang dari CD secara langsung! Mohon mulai ulang komputer inidari CD secara berurutan untuk memasang ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOS belum bisa dipasang dari CD secara langsung! Mohon mulai ulang komputer ini dari CD secara berurutan untuk memasang ReactOS.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Klik selesai untuk keluar dari penyetelan.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -16,7 +16,7 @@ CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Pasang ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
+    LTEXT "Pasang instalasi ReactOS yang baru. Ini tidak akan menjaga berkas, pengaturan, dan program Anda. Anda bisa membuat perubahan pada disk dan partisi.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
     AUTORADIOBUTTON "Perbarui atau perbaiki ReactOS", IDC_UPDATE, 7, 50, 277, 10
     LTEXT "Perbarui atau perbaiki salinan terpasang dari ReactOS. Pilihan ini tetap menyimpan berkas, Pengaturan dan program. Pilihan ini hanya tersedia jika ReactOS telah terpasang di komputer ini.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
     LTEXT "Klik lanjut untuk meneruskan.", IDC_STATIC, 7, 128, 297, 8
@@ -112,7 +112,7 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Direktori tujuan:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "Saya mengonfirmasikan bahwa seluruh penyetelan pemasangan ini adalah benar. Saya juga mengerti bahwa\nReactOS adalah perangkat lunak alpha-quality dan mungkin saja merusak komputer saya serta data saya.",
+    AUTOCHECKBOX "Saya mengonfirmasikan bahwa seluruh penyetelan pemasangan ini adalah benar. Saya juga mengerti bahwa\nReactOS adalah perangkat lunak kualitas alpha dan mungkin saja merusak komputer maupun data saya.",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
     LTEXT "Mohon konfirmasi bahwa seluruh penyetelan pemasangan adalah benar,\nkemudian klik Pasang untuk memulai proses pemasangan.", IDC_STATIC, 7, 124, 303, 18
 END
@@ -122,7 +122,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Memasang berkas...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "Pasang berkas...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "tes.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 7, 120, 303, 8
 END
@@ -133,7 +133,7 @@ CAPTION "Menyelesaikan Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Menyelesaikan Penuntun Penyetelan ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Anda menyelesaikan babak pertama Penyetelan ReactOS dengan berhasil.", IDC_STATIC, 115, 50, 195, 10
+    LTEXT "Anda menyelesaikan tahap pertama Penyetelan ReactOS dengan berhasil.", IDC_STATIC, 115, 50, 195, 10
     LTEXT "Ketika tombol Selesai ditekan, komputer akan memulai ulang.", IDC_STATIC, 115, 80, 195, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
     LTEXT "Jika terdapat CD pada drive, keluarkan. Lalu, untuk memulai ulang komputer, klik Selesai.", IDC_STATIC, 115, 169, 195, 17
@@ -149,8 +149,8 @@ BEGIN
     IDS_DRIVESUBTITLE "Menyiapkan pemasangan partisi, folder sistem dan bootloader"
     IDS_PROCESSTITLE "Penyetelan partisi, penyalinan berkas dan sistem"
     IDS_PROCESSSUBTITLE "Buat dan format partisi, salin berkas, pasang dan setel bootloader"
-    IDS_RESTARTTITLE "Penyetelan babak pertama selesai"
-    IDS_RESTARTSUBTITLE "Babak pertama dari penyetelan ini telah selesai, mulai ulang untuk meneruskan ke babak kedua"
+    IDS_RESTARTTITLE "Penyetelan tahap pertama selesai"
+    IDS_RESTARTSUBTITLE "Babak pertama dari penyetelan ini telah selesai, mulai ulang untuk meneruskan ke tahap kedua"
     IDS_SUMMARYTITLE "Ringkasan Pemasangan"
     IDS_SUMMARYSUBTITLE "Cek daftar properti pemasangan sebelum menerapkan pemasangan perangkat"
     IDS_ABORTSETUP "ReactOS tidak sepenuhnya terpasang pada komputer ini. Jika kamu keluar dari penyetelan ini, kamu harus menjalankan lagi penyetelan ini untuk memasang ReactOS. Yakin ingin keluar?"

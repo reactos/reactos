@@ -64,6 +64,7 @@ typedef enum _BGRT_IMAGE_TYPE
 //
 // ACPI Generic Register Address
 //
+#include <pshpack1.h>
 typedef struct _GEN_ADDR
 {
     UCHAR AddressSpaceID;
@@ -76,7 +77,6 @@ typedef struct _GEN_ADDR
 //
 // ACPI BIOS Structures (packed)
 //
-#include <pshpack1.h>
 typedef struct  _RSDP
 {
     ULONGLONG Signature;

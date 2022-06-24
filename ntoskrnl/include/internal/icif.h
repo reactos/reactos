@@ -2,8 +2,7 @@
  * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Internal header for information classes info interface
- * COPYRIGHT:   Copyright ???
- *              Copyright 2020-2021 George Bișoc <george.bisoc@reactos.org>
+ * COPYRIGHT:   Copyright 2020-2022 George Bișoc <george.bisoc@reactos.org>
  */
 
 #pragma once
@@ -21,6 +20,10 @@
 #define ICIF_QUERY_SIZE_VARIABLE 0x4
 #define ICIF_SET_SIZE_VARIABLE   0x8
 #define ICIF_SIZE_VARIABLE (ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE)
+
+#define ICIF_PROBE_READ_WRITE          0x0
+#define ICIF_PROBE_READ                0x1
+#define ICIF_FORCE_RETURN_LENGTH_PROBE 0x2
 
 typedef struct _INFORMATION_CLASS_INFO
 {

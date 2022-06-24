@@ -27,7 +27,7 @@ DefaultDestDir = 12
 CopyFiles = pc98vid_CopyFiles.NT
 
 [pc98vid_CopyFiles.NT]
-vga.sys
+vgapnp.sys
 
 [Pc98Vid_Inst.NT.Services]
 AddService = vga, 0x00000002, vga_Service_Inst
@@ -36,7 +36,7 @@ AddService = vga, 0x00000002, vga_Service_Inst
 ServiceType   = 1
 StartType     = 1
 ErrorControl  = 0
-ServiceBinary = %12%\vga.sys
+ServiceBinary = %12%\vgapnp.sys
 LoadOrderGroup = Video
 
 [vga.SoftwareSettings]

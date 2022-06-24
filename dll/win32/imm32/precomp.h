@@ -79,8 +79,10 @@ extern HANDLE ghImmHeap;
 BOOL Imm32GetSystemLibraryPath(LPWSTR pszPath, DWORD cchPath, LPCWSTR pszFileName);
 VOID APIENTRY LogFontAnsiToWide(const LOGFONTA *plfA, LPLOGFONTW plfW);
 VOID APIENTRY LogFontWideToAnsi(const LOGFONTW *plfW, LPLOGFONTA plfA);
-PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
 LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType);
+LPVOID FASTCALL ValidateHandle(HANDLE hObject, UINT uType);
+#define ValidateHwndNoErr(hwnd) ValidateHandleNoErr((hwnd), TYPE_WINDOW)
+#define ValidateHwnd(hwnd) ValidateHandle((hwnd), TYPE_WINDOW)
 BOOL APIENTRY Imm32CheckImcProcess(PIMC pIMC);
 
 LPVOID APIENTRY ImmLocalAlloc(DWORD dwFlags, DWORD dwBytes);
@@ -102,6 +104,7 @@ static inline BOOL Imm32IsCrossThreadAccess(HIMC hIMC)
     return (dwImeThreadId != dwThreadId);
 }
 
+// Win: TestWindowProcess
 static inline BOOL Imm32IsCrossProcessAccess(HWND hWnd)
 {
     return (NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) !=

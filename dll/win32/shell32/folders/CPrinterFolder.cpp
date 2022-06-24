@@ -102,10 +102,13 @@ static LPITEMIDLIST _ILCreatePrinterItem(PRINTER_INFO_4W *pi)
     PIDLPrinterStruct * p;
     int size0 = (char*)&tmp.u.cprinter.szName - (char*)&tmp.u.cprinter;
     int size = size0;
-    SIZE_T cchPrinterName, cchServerName;
+    SIZE_T cchPrinterName = 0;
+    SIZE_T cchServerName = 0;
 
-    cchPrinterName = wcslen(pi->pPrinterName);
-    cchServerName = wcslen(pi->pServerName);
+    if (pi->pPrinterName)
+        cchPrinterName = wcslen(pi->pPrinterName);
+    if (pi->pServerName)
+        cchServerName = wcslen(pi->pServerName);
     if ((cchPrinterName + cchServerName) > (MAXUSHORT - 2))
     {
         return NULL;

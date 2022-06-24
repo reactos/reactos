@@ -1579,7 +1579,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\swenum","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","DisplayName",0x00000000,%AUDIO_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Description",0x00000000,%AUDIO_SERVICE_DESCRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Group",0x00000000,"Audio"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Group",0x00000000,"AudioGroup"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ImagePath",0x00020000,"%SystemRoot%\system32\audiosrv.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Start",0x00010001,0x00000003
@@ -1674,7 +1674,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver\Parameters","ServiceDll",0x
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","DisplayName",0x00000000,%WORKSTATION_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Description",0x00000000,%WORKSTATION_SERVICE_DESCRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"Network Provider"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"NetworkProvider"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Start",0x00010001,0x00000002
@@ -1684,7 +1684,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation\Parameters","ServiceDl
 ; Multiple UNC provider driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ImagePath",0x00020000,"system32\drivers\mup.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Type",0x00010001,0x00000002
@@ -1705,7 +1705,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","Type",0x00010001,0x00000020
 
 ; NTFS filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ImagePath",0x00020000,"system32\drivers\ntfs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Start",0x00010001,0x00000003
@@ -2180,55 +2180,17 @@ HKLM,"SYSTEM\CurrentControlSet\Services\DcomLaunch\Parameters","ServiceDll",0x00
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Type",0x00010001,0x00000001
 
 ; Virtual FAT filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Group",0x00000000,"Boot File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ImagePath",0x00020000,"system32\drivers\fastfat.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Type",0x00010001,0x00000002
 
 ; RAM Disk class driver
-HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ImagePath",0x00020000,"system32\drivers\ramdisk.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Type",0x00010001,0x00000002
-
-; EXT2 Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ImagePath",0x00020000,"system32\drivers\ext2fs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Type",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","CodePage",0x00000000,"default"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","WritingSupport",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","CheckingBitmap",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","Ext3ForceWriting",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs\Parameters","AutoMount",0x00010001,0x00000001
-
-; BTRFS Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ImagePath",0x00020000,"system32\drivers\btrfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Type",0x00010001,0x00000002
-
-; NFS Filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Group",0x00000000,"Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ImagePath",0x00020000,"system32\drivers\nfs41_driver.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Type",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","DeviceName",0x00000000,\Device\nfs41_driver
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","Name",0x00000000,"NFS41 Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","ProviderPath",0x00000000,System32\nfs41_np.dll
-
-; NFS daemon
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","DisplayName",0x00000000,"NFSv4.1 Client"
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ImagePath",0x00020000,"%SystemRoot%\system32\nfsd.exe --noldap"
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Type",0x00010001,0x00000001
 
 ; Filesystem Filter Manager driver
 HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","ErrorControl",0x00010001,0x00000003
@@ -2733,6 +2695,162 @@ US_DVORAK_RIGHT = "Angielski (Dvoraka dla praworęcznych)"
 US_INTERNATIONAL = "Międzynarodowy (USA)"
 UZBEK_CYRILLIC = "Uzbecki (Cyrylica)"
 VIETNAMESE = "Wietnamski"
+
+; LANG_PORTUGUESE SUBLANG_NEUTRAL
+[Strings.0016]
+
+; Services names and descriptions
+AUDIO_SERVICE="Serviços de Audio do ReactOS"
+AUDIO_SERVICE_DESCRIPTION="Fornece recursos de áudio para aplicações"
+
+BITS_SERVICE="Serviço de transferência inteligente em segundo plano"
+BITS_SERVICE_DESCRIPTION="Transfere dados entre clientes e servidores em segundo plano."
+
+BROWSER_SERVICE="Navegador de computador"
+BROWSER_SERVICE_DESCRIPTION="Mantém uma lista actualizada de computadores na rede e fornece essa lista aos computadores designados como navegadores."
+
+DCOMLAUNCH_SERVICE="DCOM - Lançador de processo de servidor"
+DCOMLAUNCH_SERVICE_DESCRIPTION="Fornece funcionalidades de lançamento para serviços DCOM."
+
+EVENTLOG_SERVICE="Registo de Eventos"
+EVENTLOG_SERVICE_DESCRIPTION="Regista eventos ou mensagens enviadas pelo sistema operativo num banco de dados acessíveis através do visualizador de eventos."
+
+MSISERVER_SERVICE="Instalador do ReactOS"
+MSISERVER_SERVICE_DESCRIPTION="Controla a instalação, manutenção e remoção de software empacotado como um MSI (Instalador do Windows)."
+
+NETLOGON_SERVICE="Inicio de sessão de rede"
+NETLOGON_SERVICE_DESCRIPTION="Suporta a autenticação pass-through dos eventos de início de sessão de conta para os computadores num domínio."
+
+PLUGPLAY_SERVICE="Plug and Play"
+PLUGPLAY_SERVICE_DESCRIPTION="Permite que o computador identifique e se adapte a alterações de hardware com pouca ou nenhuma intervenção do utilizador."
+
+RPCSS_SERVICE="Chamada de procedimento remoto (RPC)"
+RPCSS_SERVICE_DESCRIPTION="Fornece um mapeador de pontos finais e outros serviços RPC."
+
+SAMSS_SERVICE="Gestor de contas de segurança"
+SAMSS_SERVICE_DESCRIPTION="A iniciação deste serviço sinaliza a outros serviços que o Gestor de contas de segurança (SAM) está pronto para aceitar solicitações. A desactivação deste serviço impedirá que outros serviços no sistema sejam notificados quando o SAM estiver pronto, o que provocará a incorrecta iniciação desses serviços. Este serviço não deve ser desactivado."
+
+SCHEDULE_SERVICE="Programador de tarefas"
+SCHEDULE_SERVICE_DESCRIPTION="Permite ao utilizador configurar e agendar tarefas automatizadas neste computador. Se este serviço estiver parado, estas tarefas não serão executadas nas horas agendadas."
+
+SECLOGON_SERVICE="Inicio de sessão secundário"
+SECLOGON_SERVICE_DESCRIPTION="Activa processos de início sob credenciais alternativas."
+
+SERVER_SERVICE="Servidor"
+SERVER_SERVICE_DESCRIPTION="Suporta a partilha de ficheiros, impressoras e recursos de rede."
+
+SPOOLER_SERVICE="Spooler de impressão"
+SPOOLER_SERVICE_DESCRIPTION="Carrega ficheiros na memória para impressão posterior."
+
+TCPSVCS_SERVICE="Serviços TCP/IP simples"
+TCPSVCS_SERVICE_DECRIPTION="Soporta os seguintes serviços TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
+
+TELNETD_SERVICE="Serviço Telnet do ReactOS"
+TELNETD_SERVICE_DESCRIPTION="Permite que um utilizador remoto inicie sessão e execute programas neste computador."
+
+THEMES_SERVICE="Temas"
+THEMES_SERVICE_DESCRIPTION="Fornece a gestão de temas por parte dos utilizadores.."
+
+WINMGMT_SERVICE="Infra-estrutura de gestão do ReactOS"
+WINMGMT_SERVICE_DESCRIPTION="Fornece interface para informações de gestão do sistema."
+
+WLANSVC_SERVICE="Serviço WLAN"
+WLANSVC_SERVICE_DESCRIPTION="Serviço de redes inalámbricas WLAN."
+
+WORKSTATION_SERVICE="Estação de trabalho"
+WORKSTATION_SERVICE_DESCRIPTION="Cria e mantém cliente de ligações de rede a servidores remotos."
+
+WUAUSERV_SERVICE="Actualizações automáticas"
+WUAUSERV_SERVICE_DESCRIPTION="Permite a transferência e instalação de actualizações do ReactOS."
+
+; Keyboard layouts
+ALBANIAN = "Albanês"
+ARABIC_101 = "Árabe (101)"
+ARABIC_102 = "Árabe (102)"
+ARABIC_102_AZERTY = "Árabe (102) AZERTY"
+ARMENIAN_EASTERN = "Arménio oriental"
+ARMENIAN_WESTERN = "Arménio ocidental"
+ASSAMESE = "Asamês"
+AZERI_CYRILLIC = "Azerí cirílico"
+AZERI_LATIN = "Azerí latino"
+BELARUSIAN = "Bielorrusso"
+BELGIAN_DUTCH = "Belga (Holandês)"
+BELGIAN_FRENCH = "Belga (Francês)"
+BENGALI = "Bengalí"
+BENGALI_INSCRIPT = "Bengalí - INSCRIPT"
+BULGARIAN_BDS = "Búlgaro BDS 5237-1978"
+BULGARIAN_PHONETIC = "Búlgaro fonético clássico"
+BULGARIAN_PHONETIC_BDS = "Búlgaro fonético BDS 5237-2006"
+BURMESE = "Birmano"
+CANADIAN_FRENCH = "Francês canadense (Herdado)"
+CANADIAN_MULTILINGUAL = "Canadense estandarte multilingüe"
+CROATIAN = "Croata"
+CZECH = "Checo"
+CZECH_QWERTY = "Checo (QWERTY)"
+DANISH = "Danês"
+DEVANAGARI = "Devanagari - INSCRIPT"
+DUTCH = "Holandês"
+ESPERANTO = "Esperanto"
+ESTONIAN = "Estonio"
+GERMAN_ERGO = "Alemão (de_ergo)"
+GERMAN_NEO = "Alemão (NEO-1.1)"
+GERMAN_RISTOME = "Alemão (RISTOME)"
+GERMAN = "Alemão"
+GREEK = "Grêgo"
+GUJARATI = "Gujarati"
+IRISH = "Irlandês"
+FAEROESE = "Faeroese"
+FINNISH = "Finês"
+FRENCH = "Francês"
+GEORGIAN = "Georgiano"
+HEBREW = "Hebreu"
+HUNGARIAN = "Húngaro"
+ICELANDIC = "Islandês"
+ITALIAN = "Italiano"
+JAPANESE = "Japonês"
+KAZAKH = "Kazajo"
+KOREAN = "Coreano"
+LATIN_AMERICAN = "Espanhol (America Latina)"
+LATVIAN = "Letão"
+LATVIAN_QWERTY = "Letão (QWERTY)"
+LITHUANIAN = "Lituano"
+MACEDONIAN = "Macedonia (FYRO)"
+MALAYALAM = "Malabari"
+NORWEGIAN = "Norueguês"
+POLISH_214 = "Polaco (214)"
+POLISH_PROGRAMMERS = "Polaco (Programmers)"
+PORTUGESE = "Português (Portugal)"
+PORTUGESE_BRAZILIAN = "Português (Brasil ABNT2)"
+ROMANIAN_LEGACY = "Romano (Legacy)"
+ROMANIAN_STANDARD = "Romano (Standard)"
+RUSSIAN = "Russo"
+RUSSIAN_TYPEWRITER = "Russo (Máquina de escrever)"
+SERBIAN_CYRILLIC = "Sérvio (Cirílico)"
+SERBIAN_LATIN = "Sérvio (Latin)"
+SLOVAK = "Eslovaco"
+SLOVAK_QWERTY = "Eslovaco (QWERTY)"
+SPANISH = "Espanhol"
+SWEDISH = "Sueco"
+SWISS_FRENCH = "Suiço (Francês)"
+SWISS_GERMAN = "Suiço (Alemão)"
+TATAR = "Tártaro"
+THAI_KEDMANEE = "Tailandês Kedmanee"
+THAI_KEDMANEE_NON_SHIFTLOCK = "Tailandês Kedmanee (sin-BloqMayus)"
+THAI_PATTACHOTE = "Tailandês Pattachote"
+THAI_PATTACHOTE_NON_SHIFTLOCK = "Tailandês Pattachote (sin-BloqMayus)"
+TURKISH_Q = "Turco Q"
+TURKISH_F = "Turco F"
+UK = "Reino Unido"
+UKRAINIAN = "Ucraniano"
+UKRAINIAN_STUDENT = "Ucraniano (Estudantil)"
+US = "Estados Unidos"
+US_ARABIC = "Inglês EEUU (IBM Arabic 238_L)"
+US_DVORAK = "EEUU-Dvorak"
+US_DVORAK_LEFT = "EEUU Dvorak para surdos"
+US_DVORAK_RIGHT = "EEUU Dvorak para destros"
+US_INTERNATIONAL = "EEUU Internacional"
+UZBEK_CYRILLIC = "Uzbek (Cyrillic)"
+VIETNAMESE = "Vietnamita"
 
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]

@@ -18,6 +18,7 @@
 #include "btrfs_drv.h"
 #include "crc32c.h"
 
+__attribute__((nonnull(1,3,4,5)))
 NTSTATUS load_tree(device_extension* Vcb, uint64_t addr, uint8_t* buf, root* r, tree** pt) {
     tree_header* th;
     tree* t;
@@ -191,6 +192,7 @@ NTSTATUS load_tree(device_extension* Vcb, uint64_t addr, uint8_t* buf, root* r, 
     return STATUS_SUCCESS;
 }
 
+__attribute__((nonnull(1,2,3,4)))
 static NTSTATUS do_load_tree2(device_extension* Vcb, tree_holder* th, uint8_t* buf, root* r, tree* t, tree_data* td) {
     if (!th->tree) {
         NTSTATUS Status;
@@ -216,6 +218,7 @@ static NTSTATUS do_load_tree2(device_extension* Vcb, tree_holder* th, uint8_t* b
     return STATUS_SUCCESS;
 }
 
+__attribute__((nonnull(1,2,3)))
 NTSTATUS do_load_tree(device_extension* Vcb, tree_holder* th, root* r, tree* t, tree_data* td, PIRP Irp) {
     NTSTATUS Status;
     uint8_t* buf;
@@ -258,6 +261,7 @@ NTSTATUS do_load_tree(device_extension* Vcb, tree_holder* th, root* r, tree* t, 
     return Status;
 }
 
+__attribute__((nonnull(1)))
 void free_tree(tree* t) {
     tree* par;
     root* r = t->root;
@@ -314,6 +318,7 @@ void free_tree(tree* t) {
     ExFreePool(t);
 }
 
+__attribute__((nonnull(1)))
 static __inline tree_data* first_item(tree* t) {
     LIST_ENTRY* le = t->itemlist.Flink;
 
@@ -323,6 +328,7 @@ static __inline tree_data* first_item(tree* t) {
     return CONTAINING_RECORD(le, tree_data, list_entry);
 }
 
+__attribute__((nonnull(1,2)))
 static __inline tree_data* prev_item(tree* t, tree_data* td) {
     LIST_ENTRY* le = td->list_entry.Blink;
 
@@ -332,6 +338,7 @@ static __inline tree_data* prev_item(tree* t, tree_data* td) {
     return CONTAINING_RECORD(le, tree_data, list_entry);
 }
 
+__attribute__((nonnull(1,2)))
 static __inline tree_data* next_item(tree* t, tree_data* td) {
     LIST_ENTRY* le = td->list_entry.Flink;
 
@@ -341,6 +348,7 @@ static __inline tree_data* next_item(tree* t, tree_data* td) {
     return CONTAINING_RECORD(le, tree_data, list_entry);
 }
 
+__attribute__((nonnull(1,2,3,4)))
 static NTSTATUS next_item2(device_extension* Vcb, tree* t, tree_data* td, traverse_ptr* tp) {
     tree_data* td2 = next_item(t, td);
     tree* t2;
@@ -366,6 +374,7 @@ static NTSTATUS next_item2(device_extension* Vcb, tree* t, tree_data* td, traver
     return find_item_to_level(Vcb, t2->root, tp, &td2->key, false, t->header.level, NULL);
 }
 
+__attribute__((nonnull(1,2,3,4,5)))
 NTSTATUS skip_to_difference(device_extension* Vcb, traverse_ptr* tp, traverse_ptr* tp2, bool* ended1, bool* ended2) {
     NTSTATUS Status;
     tree *t1, *t2;
@@ -441,6 +450,7 @@ NTSTATUS skip_to_difference(device_extension* Vcb, traverse_ptr* tp, traverse_pt
     }
 }
 
+__attribute__((nonnull(1,2,3,4)))
 static NTSTATUS find_item_in_tree(device_extension* Vcb, tree* t, traverse_ptr* tp, const KEY* searchkey, bool ignore, uint8_t level, PIRP Irp) {
     int cmp;
     tree_data *td, *lasttd;
@@ -546,6 +556,7 @@ static NTSTATUS find_item_in_tree(device_extension* Vcb, tree* t, traverse_ptr* 
     }
 }
 
+__attribute__((nonnull(1,2,3,4)))
 NTSTATUS find_item(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_ root* r, _Out_ traverse_ptr* tp,
                    _In_ const KEY* searchkey, _In_ bool ignore, _In_opt_ PIRP Irp) {
     NTSTATUS Status;
@@ -566,6 +577,7 @@ NTSTATUS find_item(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension
     return Status;
 }
 
+__attribute__((nonnull(1,2,3,4)))
 NTSTATUS find_item_to_level(device_extension* Vcb, root* r, traverse_ptr* tp, const KEY* searchkey, bool ignore, uint8_t level, PIRP Irp) {
     NTSTATUS Status;
 
@@ -590,6 +602,7 @@ NTSTATUS find_item_to_level(device_extension* Vcb, root* r, traverse_ptr* tp, co
     return Status;
 }
 
+__attribute__((nonnull(1,2,3)))
 bool find_next_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, const traverse_ptr* tp, traverse_ptr* next_tp, bool ignore, PIRP Irp) {
     tree* t;
     tree_data *td = NULL, *next;
@@ -648,6 +661,9 @@ bool find_next_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
 
         fi = first_item(t);
 
+        if (!fi)
+            return false;
+
         if (!fi->treeholder.tree) {
             Status = do_load_tree(Vcb, &fi->treeholder, t->parent->root, t, fi, Irp);
             if (!NT_SUCCESS(Status)) {
@@ -661,6 +677,9 @@ bool find_next_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
 
     next_tp->tree = t;
     next_tp->item = first_item(t);
+
+    if (!next_tp->item)
+        return false;
 
     if (!ignore && next_tp->item->ignore) {
         traverse_ptr ntp2;
@@ -687,6 +706,7 @@ bool find_next_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
     return true;
 }
 
+__attribute__((nonnull(1)))
 static __inline tree_data* last_item(tree* t) {
     LIST_ENTRY* le = t->itemlist.Blink;
 
@@ -696,6 +716,7 @@ static __inline tree_data* last_item(tree* t) {
     return CONTAINING_RECORD(le, tree_data, list_entry);
 }
 
+__attribute__((nonnull(1,2,3)))
 bool find_prev_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, const traverse_ptr* tp, traverse_ptr* prev_tp, PIRP Irp) {
     tree* t;
     tree_data* td;
@@ -754,6 +775,7 @@ bool find_prev_item(_Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
     return true;
 }
 
+__attribute__((nonnull(1,2)))
 void free_trees_root(device_extension* Vcb, root* r) {
     LIST_ENTRY* le;
     ULONG level;
@@ -791,6 +813,7 @@ void free_trees_root(device_extension* Vcb, root* r) {
     }
 }
 
+__attribute__((nonnull(1)))
 void free_trees(device_extension* Vcb) {
     LIST_ENTRY* le;
     ULONG level;
@@ -834,6 +857,7 @@ void free_trees(device_extension* Vcb) {
 #pragma warning(push)
 #pragma warning(suppress: 28194)
 #endif
+__attribute__((nonnull(1,3)))
 void add_rollback(_In_ LIST_ENTRY* rollback, _In_ enum rollback_type type, _In_ __drv_aliasesMem void* ptr) {
     rollback_item* ri;
 
@@ -855,6 +879,7 @@ void add_rollback(_In_ LIST_ENTRY* rollback, _In_ enum rollback_type type, _In_ 
 #pragma warning(push)
 #pragma warning(suppress: 28194)
 #endif
+__attribute__((nonnull(1,2)))
 NTSTATUS insert_tree_item(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_ root* r, _In_ uint64_t obj_id,
                           _In_ uint8_t obj_type, _In_ uint64_t offset, _In_reads_bytes_opt_(size) _When_(return >= 0, __drv_aliasesMem) void* data,
                           _In_ uint16_t size, _Out_opt_ traverse_ptr* ptp, _In_opt_ PIRP Irp) {
@@ -877,25 +902,20 @@ NTSTATUS insert_tree_item(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock)
 
     Status = find_item(Vcb, r, &tp, &searchkey, true, Irp);
     if (Status == STATUS_NOT_FOUND) {
-        if (r) {
-            if (!r->treeholder.tree) {
-                Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, Irp);
-                if (!NT_SUCCESS(Status)) {
-                    ERR("do_load_tree returned %08lx\n", Status);
-                    return Status;
-                }
+        if (!r->treeholder.tree) {
+            Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, Irp);
+            if (!NT_SUCCESS(Status)) {
+                ERR("do_load_tree returned %08lx\n", Status);
+                return Status;
             }
+        }
 
-            if (r->treeholder.tree && r->treeholder.tree->header.num_items == 0) {
-                tp.tree = r->treeholder.tree;
-                tp.item = NULL;
-            } else {
-                ERR("error: unable to load tree for root %I64x\n", r->id);
-                return STATUS_INTERNAL_ERROR;
-            }
+        if (r->treeholder.tree && r->treeholder.tree->header.num_items == 0) {
+            tp.tree = r->treeholder.tree;
+            tp.item = NULL;
         } else {
-            ERR("error: find_item returned %08lx\n", Status);
-            return Status;
+            ERR("error: unable to load tree for root %I64x\n", r->id);
+            return STATUS_INTERNAL_ERROR;
         }
     } else if (!NT_SUCCESS(Status)) {
         ERR("find_item returned %08lx\n", Status);
@@ -987,6 +1007,7 @@ NTSTATUS insert_tree_item(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock)
 #pragma warning(pop)
 #endif
 
+__attribute__((nonnull(1,2)))
 NTSTATUS delete_tree_item(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _Inout_ traverse_ptr* tp) {
     tree* t;
     uint64_t gen;
@@ -1026,6 +1047,7 @@ NTSTATUS delete_tree_item(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock)
     return STATUS_SUCCESS;
 }
 
+__attribute__((nonnull(1)))
 void clear_rollback(LIST_ENTRY* rollback) {
     while (!IsListEmpty(rollback)) {
         LIST_ENTRY* le = RemoveHeadList(rollback);
@@ -1047,6 +1069,7 @@ void clear_rollback(LIST_ENTRY* rollback) {
     }
 }
 
+__attribute__((nonnull(1,2)))
 void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
     NTSTATUS Status;
     rollback_item* ri;
@@ -1062,23 +1085,32 @@ void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
 
                 re->ext->ignore = true;
 
-                if (re->ext->extent_data.type == EXTENT_TYPE_REGULAR || re->ext->extent_data.type == EXTENT_TYPE_PREALLOC) {
-                    EXTENT_DATA2* ed2 = (EXTENT_DATA2*)re->ext->extent_data.data;
+                switch (re->ext->extent_data.type) {
+                    case EXTENT_TYPE_REGULAR:
+                    case EXTENT_TYPE_PREALLOC: {
+                        EXTENT_DATA2* ed2 = (EXTENT_DATA2*)re->ext->extent_data.data;
 
-                    if (ed2->size != 0) {
-                        chunk* c = get_chunk_from_address(Vcb, ed2->address);
+                        if (ed2->size != 0) {
+                            chunk* c = get_chunk_from_address(Vcb, ed2->address);
 
-                        if (c) {
-                            Status = update_changed_extent_ref(Vcb, c, ed2->address, ed2->size, re->fcb->subvol->id,
-                                                               re->fcb->inode, re->ext->offset - ed2->offset, -1,
-                                                               re->fcb->inode_item.flags & BTRFS_INODE_NODATASUM, false, NULL);
+                            if (c) {
+                                Status = update_changed_extent_ref(Vcb, c, ed2->address, ed2->size, re->fcb->subvol->id,
+                                                                re->fcb->inode, re->ext->offset - ed2->offset, -1,
+                                                                re->fcb->inode_item.flags & BTRFS_INODE_NODATASUM, false, NULL);
 
-                            if (!NT_SUCCESS(Status))
-                                ERR("update_changed_extent_ref returned %08lx\n", Status);
+                                if (!NT_SUCCESS(Status))
+                                    ERR("update_changed_extent_ref returned %08lx\n", Status);
+                            }
+
+                            re->fcb->inode_item.st_blocks -= ed2->num_bytes;
                         }
 
-                        re->fcb->inode_item.st_blocks -= ed2->num_bytes;
+                        break;
                     }
+
+                    case EXTENT_TYPE_INLINE:
+                        re->fcb->inode_item.st_blocks -= re->ext->extent_data.decoded_size;
+                    break;
                 }
 
                 ExFreePool(re);
@@ -1091,23 +1123,32 @@ void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
 
                 re->ext->ignore = false;
 
-                if (re->ext->extent_data.type == EXTENT_TYPE_REGULAR || re->ext->extent_data.type == EXTENT_TYPE_PREALLOC) {
-                    EXTENT_DATA2* ed2 = (EXTENT_DATA2*)re->ext->extent_data.data;
+                switch (re->ext->extent_data.type) {
+                    case EXTENT_TYPE_REGULAR:
+                    case EXTENT_TYPE_PREALLOC: {
+                        EXTENT_DATA2* ed2 = (EXTENT_DATA2*)re->ext->extent_data.data;
 
-                    if (ed2->size != 0) {
-                        chunk* c = get_chunk_from_address(Vcb, ed2->address);
+                        if (ed2->size != 0) {
+                            chunk* c = get_chunk_from_address(Vcb, ed2->address);
 
-                        if (c) {
-                            Status = update_changed_extent_ref(Vcb, c, ed2->address, ed2->size, re->fcb->subvol->id,
-                                                               re->fcb->inode, re->ext->offset - ed2->offset, 1,
-                                                               re->fcb->inode_item.flags & BTRFS_INODE_NODATASUM, false, NULL);
+                            if (c) {
+                                Status = update_changed_extent_ref(Vcb, c, ed2->address, ed2->size, re->fcb->subvol->id,
+                                                                re->fcb->inode, re->ext->offset - ed2->offset, 1,
+                                                                re->fcb->inode_item.flags & BTRFS_INODE_NODATASUM, false, NULL);
 
-                            if (!NT_SUCCESS(Status))
-                                ERR("update_changed_extent_ref returned %08lx\n", Status);
+                                if (!NT_SUCCESS(Status))
+                                    ERR("update_changed_extent_ref returned %08lx\n", Status);
+                            }
+
+                            re->fcb->inode_item.st_blocks += ed2->num_bytes;
                         }
 
-                        re->fcb->inode_item.st_blocks += ed2->num_bytes;
+                        break;
                     }
+
+                    case EXTENT_TYPE_INLINE:
+                        re->fcb->inode_item.st_blocks += re->ext->extent_data.decoded_size;
+                    break;
                 }
 
                 ExFreePool(re);
@@ -1175,7 +1216,8 @@ void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
     }
 }
 
-static void find_tree_end(tree* t, KEY* tree_end, bool* no_end) {
+__attribute__((nonnull(1,2,3)))
+static NTSTATUS find_tree_end(tree* t, KEY* tree_end, bool* no_end) {
     tree* p;
 
     p = t;
@@ -1183,8 +1225,11 @@ static void find_tree_end(tree* t, KEY* tree_end, bool* no_end) {
         tree_data* pi;
 
         if (!p->parent) {
+            tree_end->obj_id = 0xffffffffffffffff;
+            tree_end->obj_type = 0xff;
+            tree_end->offset = 0xffffffffffffffff;
             *no_end = true;
-            return;
+            return STATUS_SUCCESS;
         }
 
         pi = p->paritem;
@@ -1194,13 +1239,16 @@ static void find_tree_end(tree* t, KEY* tree_end, bool* no_end) {
 
             *tree_end = td->key;
             *no_end = false;
-            return;
+            return STATUS_SUCCESS;
         }
 
         p = p->parent;
     } while (p);
+
+    return STATUS_INTERNAL_ERROR;
 }
 
+__attribute__((nonnull(1,2)))
 void clear_batch_list(device_extension* Vcb, LIST_ENTRY* batchlist) {
     while (!IsListEmpty(batchlist)) {
         LIST_ENTRY* le = RemoveHeadList(batchlist);
@@ -1217,6 +1265,7 @@ void clear_batch_list(device_extension* Vcb, LIST_ENTRY* batchlist) {
     }
 }
 
+__attribute__((nonnull(1,2,3)))
 static void add_delete_inode_extref(device_extension* Vcb, batch_item* bi, LIST_ENTRY* listhead) {
     batch_item* bi2;
     LIST_ENTRY* le;
@@ -1265,6 +1314,7 @@ static void add_delete_inode_extref(device_extension* Vcb, batch_item* bi, LIST_
     InsertTailList(listhead, &bi2->list_entry);
 }
 
+__attribute__((nonnull(1,2,3,4,6,7)))
 static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tree* t, tree_data* td, tree_data* newtd, LIST_ENTRY* listhead, bool* ignore) {
     if (bi->operation == Batch_Delete || bi->operation == Batch_SetXattr || bi->operation == Batch_DirItem || bi->operation == Batch_InodeRef ||
         bi->operation == Batch_InodeExtRef || bi->operation == Batch_DeleteDirItem || bi->operation == Batch_DeleteInodeRef ||
@@ -1849,6 +1899,7 @@ static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tr
     return STATUS_SUCCESS;
 }
 
+__attribute__((nonnull(1,2)))
 static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tree_lock) device_extension* Vcb, batch_root* br, PIRP Irp) {
     LIST_ENTRY* le;
     NTSTATUS Status;
@@ -1875,7 +1926,11 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
             return Status;
         }
 
-        find_tree_end(tp.tree, &tree_end, &no_end);
+        Status = find_tree_end(tp.tree, &tree_end, &no_end);
+        if (!NT_SUCCESS(Status)) {
+            ERR("find_tree_end returned %08lx\n", Status);
+            return Status;
+        }
 
         if (bi->operation == Batch_DeleteInode) {
             if (tp.item->key.obj_id == bi->key.obj_id) {
@@ -1946,7 +2001,11 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                 if (find_next_item(Vcb, &tp, &tp2, false, Irp)) {
                     if (tp2.item->key.obj_id == bi->key.obj_id && tp2.item->key.obj_type == bi->key.obj_type) {
                         tp = tp2;
-                        find_tree_end(tp.tree, &tree_end, &no_end);
+                        Status = find_tree_end(tp.tree, &tree_end, &no_end);
+                        if (!NT_SUCCESS(Status)) {
+                            ERR("find_tree_end returned %08lx\n", Status);
+                            return Status;
+                        }
                     }
                 }
             }
@@ -2118,6 +2177,9 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                     Status = handle_batch_collision(Vcb, bi, tp.tree, tp.item, td, &br->items, &ignore);
                     if (!NT_SUCCESS(Status)) {
                         ERR("handle_batch_collision returned %08lx\n", Status);
+#ifdef _DEBUG
+                        int3;
+#endif
 
                         if (td)
                             ExFreeToPagedLookasideList(&Vcb->tree_data_lookaside, td);
@@ -2199,6 +2261,9 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
                                 Status = handle_batch_collision(Vcb, bi2, tp.tree, td2, td, &br->items, &ignore);
                                 if (!NT_SUCCESS(Status)) {
                                     ERR("handle_batch_collision returned %08lx\n", Status);
+#ifdef _DEBUG
+                                    int3;
+#endif
                                     return Status;
                                 }
                             }
@@ -2278,6 +2343,7 @@ static NTSTATUS commit_batch_list_root(_Requires_exclusive_lock_held_(_Curr_->tr
     return STATUS_SUCCESS;
 }
 
+__attribute__((nonnull(1,2)))
 NTSTATUS commit_batch_list(_Requires_exclusive_lock_held_(_Curr_->tree_lock) device_extension* Vcb, LIST_ENTRY* batchlist, PIRP Irp) {
     NTSTATUS Status;
 

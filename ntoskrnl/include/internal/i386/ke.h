@@ -235,6 +235,17 @@ typedef struct _LARGE_IDENTITY_MAP
     PVOID PagesList[30];
 } LARGE_IDENTITY_MAP, *PLARGE_IDENTITY_MAP;
 
+//
+// Floating Point Internal Context Structure
+//
+typedef struct _FLOATING_SAVE_CONTEXT
+{
+    PKTHREAD CurrentThread;
+    KIRQL OldNpxIrql;
+    PFX_SAVE_AREA Buffer;
+    PFX_SAVE_AREA PfxSaveArea;
+} FLOATING_SAVE_CONTEXT, *PFLOATING_SAVE_CONTEXT;
+
 /* Diable interrupts and return whether they were enabled before */
 FORCEINLINE
 BOOLEAN

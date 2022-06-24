@@ -108,8 +108,8 @@ KiInitializePcr(IN PKIPCR Pcr,
     Pcr->MinorVersion = PCR_MINOR_VERSION;
 
     /* Set the PRCB Version */
-    Pcr->Prcb.MajorVersion = 1;
-    Pcr->Prcb.MinorVersion = 1;
+    Pcr->Prcb.MajorVersion = PRCB_MAJOR_VERSION;
+    Pcr->Prcb.MinorVersion = PRCB_MINOR_VERSION;
 
     /* Set the Build Type */
     Pcr->Prcb.BuildType = 0;

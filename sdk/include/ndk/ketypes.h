@@ -1213,7 +1213,7 @@ typedef struct _KTHREAD
         };
     };
     KSPIN_LOCK ApcQueueLock;
-#ifndef _M_AMD64 // [
+#if !defined(_M_AMD64) && !defined(_M_ARM64) // [
     ULONG ContextSwitches;
     volatile UCHAR State;
     UCHAR NpxState;
@@ -1263,7 +1263,7 @@ typedef struct _KTHREAD
         SINGLE_LIST_ENTRY SwapListEntry;
     };
     PKQUEUE Queue;
-#ifndef _M_AMD64 // [
+#if !defined(_M_AMD64) && !defined(_M_ARM64) // [
     ULONG WaitTime;
     union
     {

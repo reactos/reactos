@@ -2,7 +2,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Configurações"
+CAPTION "Definições"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Seleccione os serviços desejados para cada idioma de entrada mostrado na lista. Use os botões 'Adicionar' e 'Remover' para modificar a lista.", -1, 9, 6, 238, 25
@@ -12,17 +12,17 @@ BEGIN
     PUSHBUTTON "&Remover", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Propriedades...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Preferências", -1, 7, 185, 240, 36
-    PUSHBUTTON "&Configurações de tecla...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    PUSHBUTTON "&Definições de tecla...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Configurações avançadas"
+CAPTION "Definições avançadas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Configurações de sistema", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Desabilitar serviços de texto avançado", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "Marque esta caixa de selecção para desabilitar os serviços de texto avançado em todos os programas. Isto não é recomendado para utilizadores do Leste Asiático porque irá fechar a barra de idiomas.", -1, 14, 40, 230, 35
+    GROUPBOX "Configuração do sistema", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Desactivar os serviços avançados de texto", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
+    LTEXT "Seleccione esta caixa de verificação para desligar os serviços avançados de texto em todos os programas. Isto não é recomendado para utilizadores do Leste Asiático porque fecha a barra de idiomas.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163

@@ -4787,6 +4787,16 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert the VAD!\n");
+            ExFreePoolWithTag(Vad, 'SdaV');
+            goto FailPathNoLock;
+        }
+
+        // Charge quotas for the VAD
+        Status = PsChargeProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Quota exceeded.\n");
+            ExFreePoolWithTag(Vad, 'SdaV');
             goto FailPathNoLock;
         }
 
@@ -5416,6 +5426,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
             MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
             ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
             MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
+            PsReturnProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
         }
         else
         {
@@ -5448,6 +5459,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
                     ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
                     MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
+                    PsReturnProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
                 }
                 else
                 {
@@ -5522,6 +5534,17 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                         goto FailPath;
                     }
 
+                    // Charge quota for the new VAD
+                    Status = PsChargeProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
+
+                    if (!NT_SUCCESS(Status))
+                    {
+                        DPRINT1("Ran out of process quota whilst creating new VAD!\n");
+                        ExFreePoolWithTag(NewVad, 'SdaV');
+                        Status = STATUS_QUOTA_EXCEEDED;
+                        goto FailPath;
+                    }
+
                     //
                     // This new VAD describes the second chunk, so we keep the end
                     // address of the original and adjust the start to point past
@@ -5533,10 +5556,6 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     NewVad->u.LongFlags = Vad->u.LongFlags;
                     NewVad->u.VadFlags.CommitCharge = 0;
                     ASSERT(NewVad->EndingVpn >= NewVad->StartingVpn);
-
-                    //
-                    // TODO: charge quota for the new VAD
-                    //
 
                     //
                     // Get the commit charge for the released region

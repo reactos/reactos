@@ -355,6 +355,7 @@ Quit:
     return ret;
 }
 
+// Win: ImmGetImeMenuItemsInterProcess
 DWORD APIENTRY
 Imm32GetImeMenuItemWCrossProcess(HIMC hIMC, DWORD dwFlags, DWORD dwType, LPVOID lpImeParentMenu,
                                  LPVOID lpImeMenu, DWORD dwSize)
@@ -1689,9 +1690,9 @@ BOOL WINAPI ImmConfigureIMEA(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
     REGISTERWORDW RegWordW;
     LPREGISTERWORDA pRegWordA;
 
-    TRACE("(%p, %p, 0x%lX, %p)", hKL, hWnd, dwMode, lpData);
+    TRACE("(%p, %p, 0x%lX, %p)\n", hKL, hWnd, dwMode, lpData);
 
-    if (!ValidateHwndNoErr(hWnd) || Imm32IsCrossProcessAccess(hWnd))
+    if (!ValidateHwnd(hWnd) || Imm32IsCrossProcessAccess(hWnd))
         return FALSE;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);
@@ -1743,9 +1744,9 @@ BOOL WINAPI ImmConfigureIMEW(HKL hKL, HWND hWnd, DWORD dwMode, LPVOID lpData)
     REGISTERWORDA RegWordA;
     LPREGISTERWORDW pRegWordW;
 
-    TRACE("(%p, %p, 0x%lX, %p)", hKL, hWnd, dwMode, lpData);
+    TRACE("(%p, %p, 0x%lX, %p)\n", hKL, hWnd, dwMode, lpData);
 
-    if (!ValidateHwndNoErr(hWnd) || Imm32IsCrossProcessAccess(hWnd))
+    if (!ValidateHwnd(hWnd) || Imm32IsCrossProcessAccess(hWnd))
         return FALSE;
 
     pImeDpi = Imm32FindOrLoadImeDpi(hKL);

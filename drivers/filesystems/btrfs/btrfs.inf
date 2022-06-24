@@ -2,7 +2,7 @@
 ;;; WinBtrfs
 ;;;
 ;;;
-;;; Copyright (c) 2016-20 Mark Harmstone
+;;; Copyright (c) 2016-22 Mark Harmstone
 ;;;
 
 [Version]
@@ -10,7 +10,7 @@ Signature   = "$Windows NT$"
 Class       = Volume
 ClassGuid   = {71a27cdd-812a-11d0-bec7-08002be2092f}
 Provider    = %Me%
-DriverVer   = 04/10/2020,1.7.2.0
+DriverVer   = 03/12/2022,1.8.0
 CatalogFile = btrfs.cat
 
 [DestinationDirs]
@@ -77,7 +77,7 @@ DelService = %ServiceName%,0x200      ;Ensure service is stopped before deleting
 DisplayName      = %ServiceName%
 Description      = %ServiceDescription%
 ServiceBinary    = %12%\%DriverName%.sys    ;%windir%\system32\drivers\
-ServiceType      = 1
+ServiceType      = 2
 StartType        = 1                        ;SERVICE_SYSTEM_START
 ErrorControl     = 1
 LoadOrderGroup   = "File System"

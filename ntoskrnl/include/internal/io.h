@@ -1,10 +1,10 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/internal/io.h
-* PURPOSE:         Internal header for the I/O Manager
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*/
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/include/internal/io.h
+ * PURPOSE:         Internal header for the I/O Manager
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
 
 #include "ntdddisk.h"
 
@@ -411,18 +411,6 @@ typedef struct _DRIVER_INFORMATION
 } DRIVER_INFORMATION, *PDRIVER_INFORMATION;
 
 //
-// Boot Driver Node
-//
-typedef struct _BOOT_DRIVER_NODE
-{
-    BOOT_DRIVER_LIST_ENTRY ListEntry;
-    UNICODE_STRING Group;
-    UNICODE_STRING Name;
-    ULONG Tag;
-    ULONG ErrorControl;
-} BOOT_DRIVER_NODE, *PBOOT_DRIVER_NODE;
-
-//
 // List of Bus Type GUIDs
 //
 typedef struct _IO_BUS_TYPE_GUID_LIST
@@ -539,7 +527,8 @@ typedef enum _DEVICE_ACTION
     PiActionEnumRootDevices,
     PiActionResetDevice,
     PiActionAddBootDevices,
-    PiActionStartDevice
+    PiActionStartDevice,
+    PiActionQueryState,
 } DEVICE_ACTION;
 
 //
@@ -1414,6 +1403,16 @@ NTSTATUS
 PiIrpQueryDeviceRelations(
     _In_ PDEVICE_NODE DeviceNode,
     _In_ DEVICE_RELATION_TYPE Type);
+
+NTSTATUS
+PiIrpQueryResources(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Out_ PCM_RESOURCE_LIST *Resources);
+
+NTSTATUS
+PiIrpQueryResourceRequirements(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Out_ PIO_RESOURCE_REQUIREMENTS_LIST *Resources);
 
 NTSTATUS
 PiIrpQueryDeviceText(

@@ -1,4 +1,3 @@
-# Functions exported by Win2003 SP1
 @ stdcall CMP_GetBlockedDriverInfo(wstr ptr long ptr)
 @ stdcall CMP_GetServerSideDeviceInstallFlags(ptr long ptr)
 @ stdcall CMP_Init_Detection(long)
@@ -236,8 +235,8 @@
 @ stdcall SetupCommitFileQueue(long long ptr ptr) SetupCommitFileQueueA
 @ stdcall SetupCommitFileQueueA(long long ptr ptr)
 @ stdcall SetupCommitFileQueueW(long long ptr ptr)
-@ stub SetupConfigureWmiFromInfSectionA
-@ stub SetupConfigureWmiFromInfSectionW
+@ stub -version=0x502+ SetupConfigureWmiFromInfSectionA
+@ stub -version=0x502+ SetupConfigureWmiFromInfSectionW
 @ stdcall SetupCopyErrorA(long str str str str str long long str long ptr)
 @ stdcall SetupCopyErrorW(long wstr wstr wstr wstr wstr long long wstr long ptr)
 @ stdcall SetupCopyOEMInfA(str str long long ptr long ptr ptr)
@@ -291,8 +290,8 @@
 @ stdcall SetupDiEnumDeviceInterfaces(long ptr ptr long ptr)
 @ stdcall SetupDiEnumDriverInfoA(long ptr long long ptr)
 @ stdcall SetupDiEnumDriverInfoW(long ptr long long ptr)
-@ stub SetupDiGetActualModelsSectionA
-@ stub SetupDiGetActualModelsSectionW
+@ stub -version=0x502+ SetupDiGetActualModelsSectionA
+@ stub -version=0x502+ SetupDiGetActualModelsSectionW
 @ stdcall SetupDiGetActualSectionToInstallA(long str str long ptr ptr)
 @ stdcall SetupDiGetActualSectionToInstallExA(long str ptr str long ptr ptr ptr)
 @ stdcall SetupDiGetActualSectionToInstallExW(long wstr ptr wstr long ptr ptr ptr)
@@ -369,7 +368,7 @@
 @ stdcall SetupDiRegisterDeviceInfo(ptr ptr long ptr ptr ptr)
 @ stdcall SetupDiRemoveDevice(ptr ptr)
 @ stdcall SetupDiRemoveDeviceInterface(ptr ptr)
-@ stdcall SetupDiRestartDevices(ptr ptr)
+@ stdcall -version=0x502+ SetupDiRestartDevices(ptr ptr)
 @ stdcall SetupDiSelectBestCompatDrv(ptr ptr)
 @ stdcall SetupDiSelectDevice(ptr ptr)
 @ stub SetupDiSelectOEMDrv
@@ -565,7 +564,7 @@
 @ stdcall pSetupInstallCatalog(wstr wstr ptr)
 @ stub pSetupInstallStopEx
 @ stdcall pSetupIsGuidNull(ptr)
-@ stub pSetupIsLocalSystem
+@ stub -version=0x502+ pSetupIsLocalSystem
 @ stdcall pSetupIsUserAdmin()
 @ stub pSetupMakeSurePathExists
 @ stdcall pSetupMalloc(long) MyMalloc

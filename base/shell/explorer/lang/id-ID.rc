@@ -8,10 +8,10 @@ BEGIN
         MENUITEM "&Atur Tanggal/Jam", ID_SHELL_CMD_ADJUST_DAT
         MENUITEM "Atur &Pemberitahuan...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
-        MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
-        MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
-        MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show the Desktop", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "Rang&kai Jendela", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Susun Jendela &Horizontal", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Susun Jendela V&ertikal", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Tampilkan Desktop", ID_SHELL_CMD_SHOW_DESKTOP
         MENUITEM "&Urungkan", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
         MENUITEM "&Manajer Tugas", ID_SHELL_CMD_OPEN_TASKMGR
@@ -111,7 +111,7 @@ END
 
 IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Sesuaikan menu mulai klasik"
+CAPTION "Sesuaikan Menu Mulai Klasik"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX         "Menu mulai", IDC_STATIC, 8, 7, 218, 114
@@ -140,7 +140,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Jangan lakukan pemeriksaan ini pada saat mulai", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "Ada berkas atau folder %s yang bisa menyebabkan tidak berfungsinya aplikasi terkait. mengubah nama %s akan menyelesaikan masalah ini. Ubah nama sekarang?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "Ada berkas atau folder %s yang bisa menyebabkan tidak berfungsinya aplikasi terkait. Mengubah nama ke %s akan menyelesaikan masalah ini. Ubah nama sekarang?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
